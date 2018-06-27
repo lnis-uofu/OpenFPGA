@@ -1,0 +1,13 @@
+# editor backup files
+*~
+
+# log files
+**/logs
+*.log
+
+# Jupyter / iPython
+.ipynb_checkpoints/
+__pycache__/
+*.py[cod]
+*$py.class
+
