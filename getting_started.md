@@ -4,6 +4,13 @@ Clone the [FPGA-SPICE git repository:](https://github.com/tangxifan/tangxifan-ed
 [//todo]: # (change to final repository location)
 `git clone https://github.com/tangxifan/tangxifan-eda-tools.git `
 
+There is a submodule in the repository so move to the OpenFPGA directory and clone that too:
+`cd OpenFPGA`
+
+`git submodule init`
+
+`git submodule update`
+
 Go to the `VPR` dirctory and build the tool:
 `cd tangxifan-eda-tools/branches/vpr7_rram/vpr/`
 `make `
