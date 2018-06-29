@@ -5,6 +5,7 @@ Clone the [FPGA-SPICE git repository:](https://github.com/tangxifan/tangxifan-ed
 `git clone https://github.com/tangxifan/tangxifan-eda-tools.git `
 
 There is a submodule in the repository so move to the OpenFPGA directory and clone that too:
+
 `cd OpenFPGA`
 
 `git submodule init`
