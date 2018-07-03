@@ -1,0 +1,4 @@
+*.out
+*.place
+*.route
+*.net
