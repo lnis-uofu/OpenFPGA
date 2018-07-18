@@ -11,3 +11,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# vpr
+*.out
+*.place
+*.route
+*.net
+*.rpt
