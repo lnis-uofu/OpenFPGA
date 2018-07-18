@@ -44,7 +44,7 @@
     <switch type="mux" name="ipin_cblock" R="1516.380005" Cout="0." Cin="0.000000e+00" Tdel="7.362000e-11" mux_trans_size="1.240240" buf_size="auto"/>
   </switchlist>
   <segmentlist>
-    <segment freq="1.000000" length="4" type="unidir">
+    <segment freq="1.000000" length="4" type="unidir" Rmetal="0.000000" Cmetal="0.000000e+00">
       <mux name="switchblock"/>
       <sb type="pattern">1 1 1 1 1</sb>
       <cb type="pattern">1 1 1 1</cb>
@@ -108,13 +108,13 @@
     <!-- Define general purpose logic block (CLB) begin -->
     <pb_type name="clb">
       <input name="I" num_pins="10"/>
-      <output name="O" num_pins="1"/>
+      <output name="O" num_pins="3"/>
       <clock name="clk" num_pins="1"/>
 
       <!-- Describe basic logic element. -->
 
       <!-- Define 4-LUT mode -->
-      <pb_type name="ble4" num_pb="1">
+      <pb_type name="ble4" num_pb="3">
         <input name="in" num_pins="4"/>
         <output name="out" num_pins="1"/>
         <clock name="clk" num_pins="1"/> 
@@ -142,7 +142,7 @@
         </pb_type>
 
         <interconnect>
-          <direct name="direct1" input="ble4.in" output="lut4[0:0].in"/>
+          <direct name="direct1" input="ble4.in" output="lut4.in"/>
           <direct name="direct2" input="lut4.out" output="ff.D">
             <!-- Advanced user option that tells CAD tool to find LUT+FF pairs in netlist -->
             <pack_pattern name="ble6" in_port="lut4.out" out_port="ff.D"/>
@@ -158,13 +158,13 @@
         <!-- Keyword 'complete' indicates a fully connected crossbar to get logical equivalence at inputs of CLB 
              here, the crossbar takes input from the clb and the feedback output from the ble.
              crossbar output goes to the ble input. -->
-        <complete name="crossbar" input="clb.I ble4[0:0].out" output="ble4[0:0].in">
-          <delay_constant max="5.735000e-11" in_port="clb.I" out_port="ble4[0:0].in" />
-          <delay_constant max="5.428000e-11" in_port="ble4[0:0].out" out_port="ble4[0:0].in" />
+        <complete name="crossbar" input="clb.I ble4[2:0].out" output="ble4[2:0].in">
+          <delay_constant max="5.735000e-11" in_port="clb.I" out_port="ble4[2:0].in" />
+          <delay_constant max="5.428000e-11" in_port="ble4[2:0].out" out_port="ble4[2:0].in" />
         </complete>
-        <complete name="clks" input="clb.clk" output="ble4[0:0].clk">
+        <complete name="clks" input="clb.clk" output="ble4[2:0].clk">
         </complete>
-        <direct name="clbouts1" input="ble4[0:0].out" output="clb.O"/>
+        <direct name="clbouts1" input="ble4[2:0].out" output="clb.O"/>
       </interconnect>
 
       <!-- Every input pin is driven by 15% of the tracks in a channel, every output pin is driven by 25% of the tracks in a channel -->
