@@ -1,0 +1,172 @@
+.model tlc.sim
+.inputs in1
+.inputs in2
+.inputs in3
+.outputs out11
+.outputs out12
+.outputs out13
+.outputs out14
+.outputs out15
+.latch out1 in4 0
+.latch out2 in5 0
+.latch out3 in6 0
+.latch out4 in7 0
+.latch out5 in8 0
+.latch out6 in9 0
+.latch out7 in10 0
+.latch out8 in11 0
+.latch out9 in12 0
+.latch out10 in13 0
+.names in1 in1*
+0 1
+.names in3 in3*
+0 1
+.names in4 in4*
+0 1
+.names in5 in5*
+0 1
+.names in6 in6*
+0 1
+.names in7 in7*
+0 1
+.names in8 in8*
+0 1
+.names in1* in4* in5* in6* in7 g_1and1
+11111 1
+.names in1* in4 in5 in6* in7* g_1and2
+11111 1
+.names in1* in4 in5 in6 in7* g_1and3
+11111 1
+.names in1* in3 in8* g_1and4
+111 1
+.names in1* in3* in8 g_1and5
+111 1
+.names in1* in4 in5* in7* g_1and6
+1111 1
+.names in1* in4* in5 in7* g_1and7
+1111 1
+.names in1* in5* in6 in7* g_1and8
+1111 1
+.names in1* in4* in6 in7* g_1and9
+1111 1
+.names in1* in4* in7* g_1and10
+111 1
+.names g_1and1 g_1and10 out1
+00 0
+.names g_1and6 g_1and7 out2
+00 0
+.names g_1and2 g_1and8 g_1and9 out3
+000 0
+.names g_1and1 g_1and3 out4
+00 0
+.names g_1and4 g_1and5 out5
+00 0
+.names in1 gin1*
+0 1
+.names in2 gin2*
+0 1
+.names in4 gin4*
+0 1
+.names in5 gin5*
+0 1
+.names in6 gin6*
+0 1
+.names in7 gin7*
+0 1
+.names in9 gin9*
+0 1
+.names in10 gin10*
+0 1
+.names in11 gin11*
+0 1
+.names in12 gin12*
+0 1
+.names in13 gin13*
+0 1
+.names gin1* gin4* gin5* gin6* gin9* in12 g_2and1
+111111 1
+.names gin1* gin4* gin5* gin6* gin9* in11 g_2and2
+111111 1
+.names gin1* gin4* gin5* gin6* gin9* in13 g_2and3
+111111 1
+.names gin1* gin4* gin5* gin6* gin9* in10 g_2and4
+111111 1
+.names gin1* in6 in7 in10 in11 gin12* gin13* g_2and5
+1111111 1
+.names gin1* in5 in7 in10 in11 gin12* gin13* g_2and6
+1111111 1
+.names gin1* in4 in7 in10 in11 gin12* gin13* g_2and7
+1111111 1
+.names gin1* in6 in7 in10 in11 in12 gin13* g_2and8
+1111111 1
+.names gin1* in5 in7 in10 in11 in12 gin13* g_2and9
+1111111 1
+.names gin1* in4 in7 in10 in11 in12 gin13* g_2and10
+1111111 1
+.names gin1* in6 in7 gin10* gin11* gin12* in13 g_2and11
+1111111 1
+.names gin1* in5 in7 gin10* gin11* gin12* in13 g_2and12
+1111111 1
+.names gin1* in4 in7 gin10* gin11* gin12* in13 g_2and13
+1111111 1
+.names gin1* in9 in10 in11 gin12* gin13* g_2and14
+111111 1
+.names gin1* in6 in7 in10 gin11* gin13* g_2and15
+111111 1
+.names gin1* in5 in7 in10 gin11* gin13* g_2and16
+111111 1
+.names gin1* in4 in7 in10 gin11* gin13* g_2and17
+111111 1
+.names gin1* in9 in10 in11 in12 gin13* g_2and18
+111111 1
+.names gin1* in9 gin10* gin11* gin12* in13 g_2and19
+111111 1
+.names gin1* in9 in10 gin11* gin13* g_2and20
+11111 1
+.names gin1* gin10* in12 gin13* g_2and21
+1111 1
+.names gin1* in6 in7 gin10* gin13* g_2and22
+11111 1
+.names gin1* in5 in7 gin10* gin13* g_2and23
+11111 1
+.names gin1* in4 in7 gin10* gin13* g_2and24
+11111 1
+.names gin1* gin7* gin9* in12 g_2and25
+1111 1
+.names gin1* gin7* gin9* in11 g_2and26
+1111 1
+.names gin1* gin7* gin9* in13 g_2and27
+1111 1
+.names gin1* gin2* in9 g_2and28
+111 1
+.names gin1* in2 gin9* g_2and29
+111 1
+.names gin1* gin7* gin9* in10 g_2and30
+1111 1
+.names gin1* gin11* in12 gin13* g_2and31
+1111 1
+.names gin1* in9 gin10* gin13* g_2and32
+1111 1
+.names gin1* gin10* in11 gin13* g_2and33
+1111 1
+.names g_2and28 g_2and29 out6
+00 0
+.names g_2and4 g_2and11 g_2and12 g_2and13 g_2and19 g_2and22 g_2and23 g_2and24 g_2and30 g_2and32 out7
+0000000000 0
+.names g_2and2 g_2and15 g_2and16 g_2and17 g_2and20 g_2and26 g_2and33 out8
+0000000 0
+.names g_2and1 g_2and5 g_2and6 g_2and7 g_2and14 g_2and21 g_2and25 g_2and31 out9
+00000000 0
+.names g_2and3 g_2and8 g_2and9 g_2and10 g_2and11 g_2and12 g_2and13 g_2and18 g_2and19 g_2and27 out10
+0000000000 0
+.names g_2and28 g_2and29 out11
+00 0
+.names g_2and4 g_2and11 g_2and12 g_2and13 g_2and19 g_2and22 g_2and23 g_2and24 g_2and30 g_2and32 out12
+0000000000 0
+.names g_2and2 g_2and15 g_2and16 g_2and17 g_2and20 g_2and26 g_2and33 out13
+0000000 0
+.names g_2and1 g_2and5 g_2and6 g_2and7 g_2and14 g_2and21 g_2and25 g_2and31 out14
+00000000 0
+.names g_2and3 g_2and8 g_2and9 g_2and10 g_2and11 g_2and12 g_2and13 g_2and18 g_2and19 g_2and27 out15
+0000000000 0
+.end

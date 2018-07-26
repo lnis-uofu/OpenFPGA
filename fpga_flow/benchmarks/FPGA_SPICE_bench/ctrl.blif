@@ -1,0 +1,358 @@
+.model top
+.inputs opcode[0] opcode[1] opcode[2] opcode[3] opcode[4] op_ext[0] \
+ op_ext[1]
+.outputs sel_reg_dst[0] sel_reg_dst[1] sel_alu_opB[0] sel_alu_opB[1] \
+ alu_op[0] alu_op[1] alu_op[2] alu_op_ext[0] alu_op_ext[1] alu_op_ext[2] \
+ alu_op_ext[3] halt reg_write sel_pc_opA sel_pc_opB beqz bnez bgez bltz \
+ jump Cin invA invB sign mem_write sel_wb
+.names opcode[0] opcode[1] n35
+10 1
+.names opcode[3] opcode[4] n36
+11 1
+.names n35 n36 n37
+11 1
+.names opcode[1] opcode[3] n38
+11 1
+.names opcode[4] n38 n39
+11 1
+.names n37 n39 n40
+00 1
+.names opcode[2] n40 n41
+00 1
+.names opcode[1] opcode[3] n42
+01 1
+.names opcode[4] n42 n43
+11 1
+.names opcode[3] opcode[4] n44
+00 1
+.names n36 n44 n45
+00 1
+.names opcode[1] n45 n46
+10 1
+.names n43 n46 n47
+00 1
+.names opcode[2] n47 n48
+10 1
+.names n41 n48 sel_reg_dst[0]
+00 0
+.names opcode[0] n36 n50
+00 1
+.names opcode[0] n50 n51
+00 1
+.names opcode[1] n51 n52
+00 1
+.names opcode[3] n44 n53
+00 1
+.names opcode[1] n53 n54
+10 1
+.names n52 n54 n55
+00 1
+.names opcode[2] n55 n56
+00 1
+.names opcode[3] opcode[4] n57
+01 1
+.names opcode[3] n57 n58
+00 1
+.names opcode[1] n58 n59
+10 1
+.names opcode[1] n59 n60
+10 1
+.names opcode[2] n60 n61
+10 1
+.names n56 n61 sel_reg_dst[1]
+00 1
+.names opcode[0] n45 n63
+00 1
+.names opcode[3] n36 n64
+10 1
+.names opcode[0] n64 n65
+10 1
+.names n63 n65 n66
+00 1
+.names opcode[1] n66 n67
+10 1
+.names n52 n67 n68
+00 1
+.names opcode[2] n68 n69
+00 1
+.names opcode[2] n69 sel_alu_opB[0]
+00 1
+.names opcode[0] opcode[3] n71
+00 1
+.names n57 n71 n72
+01 1
+.names opcode[0] n45 n73
+10 1
+.names n72 n73 n74
+00 1
+.names opcode[1] n74 n75
+00 1
+.names n54 n75 n76
+00 1
+.names opcode[2] n76 n77
+00 1
+.names opcode[2] n53 n78
+10 1
+.names n77 n78 sel_alu_opB[1]
+00 1
+.names opcode[0] opcode[3] n80
+01 1
+.names opcode[4] op_ext[0] n81
+11 1
+.names n80 n81 n82
+11 1
+.names opcode[3] op_ext[1] n83
+10 1
+.names n36 n83 n84
+01 1
+.names opcode[3] op_ext[0] n85
+10 1
+.names n36 n85 n86
+01 1
+.names opcode[3] op_ext[0] n87
+11 1
+.names n86 n87 n88
+00 1
+.names op_ext[1] n88 n89
+10 1
+.names n84 n89 n90
+00 1
+.names opcode[0] n90 n91
+10 1
+.names n82 n91 n92
+00 1
+.names opcode[1] n92 n93
+10 1
+.names opcode[2] n93 n94
+00 1
+.names opcode[0] n53 n95
+10 1
+.names opcode[0] n95 n96
+10 1
+.names opcode[2] n96 n97
+10 1
+.names n94 n97 alu_op[0]
+00 1
+.names opcode[3] op_ext[1] n99
+11 1
+.names n84 n99 n100
+00 1
+.names opcode[1] n100 n101
+10 1
+.names opcode[2] n101 n102
+00 1
+.names opcode[1] n54 n103
+10 1
+.names opcode[2] n103 n104
+10 1
+.names n102 n104 alu_op[1]
+00 1
+.names opcode[1] n36 n106
+00 1
+.names n44 n106 n107
+01 1
+.names n44 n50 n108
+01 1
+.names opcode[0] n58 n109
+10 1
+.names n108 n109 n110
+00 1
+.names opcode[1] n110 n111
+10 1
+.names n107 n111 n112
+00 1
+.names opcode[2] n112 n113
+00 1
+.names opcode[2] opcode[3] n114
+11 1
+.names opcode[4] n114 n115
+11 1
+.names n113 n115 alu_op[2]
+00 0
+.names opcode[1] opcode[2] n117
+00 1
+.names n52 n117 n118
+01 1
+.names opcode[1] n74 n119
+10 1
+.names n37 n119 n120
+00 1
+.names opcode[2] n120 n121
+10 1
+.names n118 n121 alu_op_ext[0]
+00 0
+.names opcode[0] n53 n123
+00 1
+.names opcode[0] n123 n124
+00 1
+.names opcode[1] n124 n125
+10 1
+.names opcode[1] opcode[2] n126
+10 1
+.names n125 n126 n127
+01 1
+.names opcode[1] opcode[2] n128
+11 1
+.names n45 n128 n129
+01 1
+.names n127 n129 alu_op_ext[1]
+00 0
+.names n106 n125 n131
+00 1
+.names opcode[2] n131 n132
+00 1
+.names n61 n132 alu_op_ext[2]
+00 1
+.names n80 n109 n134
+00 1
+.names opcode[1] n134 n135
+10 1
+.names opcode[2] n107 n136
+00 1
+.names n135 n136 n137
+01 1
+.names n78 n137 alu_op_ext[3]
+00 1
+.names opcode[0] n58 n139
+00 1
+.names opcode[0] n139 n140
+00 1
+.names opcode[1] n140 n141
+00 1
+.names opcode[1] n141 n142
+00 1
+.names opcode[2] n142 n143
+00 1
+.names opcode[2] n143 halt
+00 1
+.names opcode[1] n134 n145
+00 1
+.names n59 n145 n146
+00 1
+.names opcode[2] n146 n147
+00 1
+.names opcode[1] opcode[4] n148
+01 1
+.names opcode[1] n64 n149
+10 1
+.names n148 n149 n150
+00 1
+.names opcode[2] n150 n151
+10 1
+.names n147 n151 reg_write
+00 0
+.names opcode[0] n109 n153
+10 1
+.names opcode[2] n153 n154
+10 1
+.names opcode[2] n154 sel_pc_opA
+10 1
+.names opcode[2] n140 n156
+10 1
+.names opcode[2] n156 sel_pc_opB
+10 1
+.names opcode[0] n64 n158
+00 1
+.names opcode[0] n158 n159
+00 1
+.names opcode[1] n159 n160
+00 1
+.names opcode[1] n160 n161
+00 1
+.names opcode[2] n161 n162
+10 1
+.names opcode[2] n162 beqz
+10 1
+.names opcode[0] n65 n164
+10 1
+.names opcode[1] n164 n165
+00 1
+.names opcode[1] n165 n166
+00 1
+.names opcode[2] n166 n167
+10 1
+.names opcode[2] n167 bnez
+10 1
+.names opcode[1] n164 n169
+10 1
+.names opcode[1] n169 n170
+10 1
+.names opcode[2] n170 n171
+10 1
+.names opcode[2] n171 bgez
+10 1
+.names opcode[1] n159 n173
+10 1
+.names opcode[1] n173 n174
+10 1
+.names opcode[2] n174 n175
+10 1
+.names opcode[2] n175 bltz
+10 1
+.names opcode[2] n58 n177
+10 1
+.names opcode[2] n177 jump
+10 1
+.names opcode[0] opcode[1] n179
+11 1
+.names n88 n179 n180
+01 1
+.names n35 n65 n181
+10 1
+.names opcode[2] n181 n182
+00 1
+.names n180 n182 n183
+01 1
+.names opcode[1] n51 n184
+10 1
+.names n106 n184 n185
+00 1
+.names opcode[2] n185 n186
+10 1
+.names n183 n186 Cin
+00 1
+.names op_ext[0] n36 n188
+11 1
+.names op_ext[1] n188 n189
+00 1
+.names op_ext[1] n189 n190
+00 1
+.names opcode[0] n190 n191
+10 1
+.names opcode[0] n191 n192
+10 1
+.names opcode[1] n192 n193
+10 1
+.names n165 n193 n194
+00 1
+.names opcode[2] n194 n195
+00 1
+.names opcode[2] n195 invA
+00 1
+.names n90 n179 n197
+01 1
+.names opcode[2] n197 n198
+00 1
+.names n186 n198 invB
+00 1
+.names opcode[1] n124 n200
+00 1
+.names opcode[1] n96 n201
+10 1
+.names n200 n201 n202
+00 1
+.names opcode[2] n202 n203
+00 1
+.names opcode[2] n203 mem_write
+00 1
+.names opcode[1] n96 n205
+00 1
+.names opcode[1] n205 n206
+00 1
+.names opcode[2] n206 n207
+00 1
+.names opcode[2] n207 sel_wb
+00 1
+.names sign
+ 1
+.end

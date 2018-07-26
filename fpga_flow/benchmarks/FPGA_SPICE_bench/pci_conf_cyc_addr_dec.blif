@@ -1,0 +1,259 @@
+# Benchmark "pci_conf_cyc_addr_dec" written by ABC on Mon Aug 29 15:33:11 2005
+.model pci_conf_cyc_addr_dec
+.inputs ccyc_addr_in[0] ccyc_addr_in[1] ccyc_addr_in[2] ccyc_addr_in[3] \
+ ccyc_addr_in[4] ccyc_addr_in[5] ccyc_addr_in[6] ccyc_addr_in[7] \
+ ccyc_addr_in[8] ccyc_addr_in[9] ccyc_addr_in[10] ccyc_addr_in[11] \
+ ccyc_addr_in[12] ccyc_addr_in[13] ccyc_addr_in[14] ccyc_addr_in[15] \
+ ccyc_addr_in[16] ccyc_addr_in[17] ccyc_addr_in[18] ccyc_addr_in[19] \
+ ccyc_addr_in[20] ccyc_addr_in[21] ccyc_addr_in[22] ccyc_addr_in[23] \
+ ccyc_addr_in[24] ccyc_addr_in[25] ccyc_addr_in[26] ccyc_addr_in[27] \
+ ccyc_addr_in[28] ccyc_addr_in[29] ccyc_addr_in[30] ccyc_addr_in[31]
+.outputs ccyc_addr_out[0] ccyc_addr_out[1] ccyc_addr_out[2] \
+ ccyc_addr_out[3] ccyc_addr_out[4] ccyc_addr_out[5] ccyc_addr_out[6] \
+ ccyc_addr_out[7] ccyc_addr_out[8] ccyc_addr_out[9] ccyc_addr_out[10] \
+ ccyc_addr_out[11] ccyc_addr_out[12] ccyc_addr_out[13] ccyc_addr_out[14] \
+ ccyc_addr_out[15] ccyc_addr_out[16] ccyc_addr_out[17] ccyc_addr_out[18] \
+ ccyc_addr_out[19] ccyc_addr_out[20] ccyc_addr_out[21] ccyc_addr_out[22] \
+ ccyc_addr_out[23] ccyc_addr_out[24] ccyc_addr_out[25] ccyc_addr_out[26] \
+ ccyc_addr_out[27] ccyc_addr_out[28] ccyc_addr_out[29] ccyc_addr_out[30] \
+ ccyc_addr_out[31]
+.names [64]
+ 0
+.names [65]
+ 1
+.names ccyc_addr_in[1] ccyc_addr_out[1]
+1 1
+.names ccyc_addr_in[2] ccyc_addr_out[2]
+1 1
+.names ccyc_addr_in[3] ccyc_addr_out[3]
+1 1
+.names ccyc_addr_in[4] ccyc_addr_out[4]
+1 1
+.names ccyc_addr_in[5] ccyc_addr_out[5]
+1 1
+.names ccyc_addr_in[6] ccyc_addr_out[6]
+1 1
+.names ccyc_addr_in[7] ccyc_addr_out[7]
+1 1
+.names ccyc_addr_in[8] ccyc_addr_out[8]
+1 1
+.names ccyc_addr_in[9] ccyc_addr_out[9]
+1 1
+.names ccyc_addr_in[10] ccyc_addr_out[10]
+1 1
+.names [126] [98] [115] ccyc_addr_out[30]
+00- 1
+--0 1
+.names [147] [98] [151] ccyc_addr_out[29]
+00- 1
+--0 1
+.names [131] [97] [123] ccyc_addr_out[28]
+00- 1
+--0 1
+.names [120] [97] [116] ccyc_addr_out[27]
+00- 1
+--0 1
+.names [105] ccyc_addr_out[0] [143] ccyc_addr_out[31]
+00- 1
+--0 1
+.names [134] [99] [118] ccyc_addr_out[26]
+00- 1
+--0 1
+.names [142] [99] [138] ccyc_addr_out[25]
+00- 1
+--0 1
+.names [145] [104] [144] ccyc_addr_out[24]
+00- 1
+--0 1
+.names [122] [104] [148] ccyc_addr_out[23]
+00- 1
+--0 1
+.names [121] [106] [152] ccyc_addr_out[22]
+00- 1
+--0 1
+.names [119] [106] [117] ccyc_addr_out[21]
+00- 1
+--0 1
+.names [128] [107] [133] ccyc_addr_out[20]
+00- 1
+--0 1
+.names [130] [107] [125] ccyc_addr_out[19]
+00- 1
+--0 1
+.names [137] [102] [132] ccyc_addr_out[18]
+00- 1
+--0 1
+.names [139] [102] [135] ccyc_addr_out[17]
+00- 1
+--0 1
+.names [140] [100] [141] ccyc_addr_out[16]
+00- 1
+--0 1
+.names [129] [100] [158] ccyc_addr_out[15]
+00- 1
+--0 1
+.names [146] [101] [153] ccyc_addr_out[14]
+00- 1
+--0 1
+.names [149] [101] [154] ccyc_addr_out[13]
+00- 1
+--0 1
+.names [150] [103] [157] ccyc_addr_out[12]
+00- 1
+--0 1
+.names [124] [103] [136] ccyc_addr_out[11]
+00- 1
+--0 1
+.names [108] [168] [97]
+11 0
+.names [109] ccyc_addr_in[12] [98]
+11 0
+.names [111] ccyc_addr_in[12] [99]
+11 0
+.names [112] [168] [100]
+11 0
+.names [113] ccyc_addr_in[12] [101]
+11 0
+.names [112] ccyc_addr_in[12] [102]
+11 0
+.names [113] [168] [103]
+11 0
+.names [111] [168] [104]
+11 0
+.names [155] [127] ccyc_addr_in[13] [105]
+111 0
+.names [114] ccyc_addr_in[12] [106]
+11 0
+.names [114] [168] [107]
+11 0
+.names [110] [108]
+0 1
+.names [110] [109]
+0 1
+.names [171] [165] [167] [110]
+111 0
+.names [156] [167] [111]
+00 1
+.names [159] [167] [112]
+00 1
+.names [159] ccyc_addr_in[13] [113]
+00 1
+.names [156] ccyc_addr_in[13] [114]
+00 1
+.names ccyc_addr_in[30] ccyc_addr_out[0] [115]
+11 0
+.names ccyc_addr_in[27] ccyc_addr_out[0] [116]
+11 0
+.names ccyc_addr_in[21] ccyc_addr_out[0] [117]
+11 0
+.names ccyc_addr_in[26] ccyc_addr_out[0] [118]
+11 0
+.names [163] ccyc_addr_out[0] [119]
+00 0
+.names [163] ccyc_addr_out[0] [120]
+00 0
+.names ccyc_addr_in[11] [162] [121]
+11 0
+.names [163] ccyc_addr_out[0] [122]
+00 0
+.names ccyc_addr_in[28] ccyc_addr_out[0] [123]
+11 0
+.names [163] ccyc_addr_out[0] [124]
+00 0
+.names ccyc_addr_in[19] ccyc_addr_out[0] [125]
+11 0
+.names [160] [162] [126]
+11 0
+.names [165] [171] [127]
+11 1
+.names [160] [162] [128]
+11 0
+.names [163] ccyc_addr_out[0] [129]
+00 0
+.names [163] ccyc_addr_out[0] [130]
+00 0
+.names [160] [162] [131]
+11 0
+.names ccyc_addr_in[18] ccyc_addr_out[0] [132]
+11 0
+.names ccyc_addr_in[20] ccyc_addr_out[0] [133]
+11 0
+.names [160] [162] [134]
+11 0
+.names ccyc_addr_in[17] ccyc_addr_out[0] [135]
+11 0
+.names [160] ccyc_addr_out[0] [136]
+11 0
+.names [160] [162] [137]
+11 0
+.names ccyc_addr_in[25] ccyc_addr_out[0] [138]
+11 0
+.names [163] ccyc_addr_out[0] [139]
+00 0
+.names ccyc_addr_in[11] [162] [140]
+11 0
+.names ccyc_addr_in[16] ccyc_addr_out[0] [141]
+11 0
+.names [163] ccyc_addr_out[0] [142]
+00 0
+.names ccyc_addr_in[31] ccyc_addr_out[0] [143]
+11 0
+.names ccyc_addr_in[24] ccyc_addr_out[0] [144]
+11 0
+.names [160] [162] [145]
+11 0
+.names [160] [162] [146]
+11 0
+.names [163] ccyc_addr_out[0] [147]
+00 0
+.names ccyc_addr_in[23] ccyc_addr_out[0] [148]
+11 0
+.names [163] ccyc_addr_in[0] [149]
+00 0
+.names ccyc_addr_in[11] [162] [150]
+11 0
+.names ccyc_addr_in[29] ccyc_addr_out[0] [151]
+11 0
+.names ccyc_addr_in[22] ccyc_addr_out[0] [152]
+11 0
+.names [165] [166] [153]
+00 0
+.names [167] [166] [154]
+00 0
+.names [163] ccyc_addr_in[12] [155]
+00 1
+.names [172] ccyc_addr_in[14] [156]
+11 0
+.names [168] [166] [157]
+00 0
+.names [170] [166] [158]
+00 0
+.names [172] [169] [159]
+11 0
+.names [164] [160]
+0 1
+.names [166] ccyc_addr_out[0]
+0 1
+.names ccyc_addr_in[0] [162]
+0 1
+.names ccyc_addr_in[11] [163]
+1 1
+.names ccyc_addr_in[11] [164]
+0 1
+.names ccyc_addr_in[14] [165]
+0 1
+.names ccyc_addr_in[0] [166]
+0 1
+.names ccyc_addr_in[13] [167]
+0 1
+.names ccyc_addr_in[12] [168]
+0 1
+.names ccyc_addr_in[14] [169]
+0 1
+.names [171] [170]
+0 1
+.names [172] [171]
+0 1
+.names ccyc_addr_in[15] [172]
+0 1
+.end

@@ -1,0 +1,220 @@
+.model apex7
+.inputs CAPSD CAT0 CAT1 CAT2 CAT3 CAT4 CAT5 VACC MMERR IBT0 IBT1 IBT2 \
+ICLR LSD ACCRPY VERR_N RATR MARSSR VLENESR VSUMESR PLUTO0 PLUTO1 PLUTO2 \
+PLUTO3 PLUTO4 PLUTO5 ORWD_N OWL_N PY END FBI WATCH OVACC KBG_N DEL1 \
+COMPPAR VST0 VST1 STAR0 STAR1 STAR2 STAR3 BULL0 BULL1 BULL2 BULL3 \
+BULL4 BULL5 BULL6
+.outputs SDO LSD_P ACCRPY_P VERR_F RATR_P MARSSR_P VLENESR_P VSUMESR_P \
+PLUTO0_P PLUTO1_P PLUTO2_P PLUTO3_P PLUTO4_P PLUTO5_P ORWD_F OWL_F PY_P \
+END_P FBI_P WATCH_P OVACC_P KBG_F DEL1_P COMPPAR_P VST0_P VST1_P \
+STAR0_P STAR1_P STAR2_P STAR3_P BULL0_P BULL1_P BULL2_P BULL3_P \
+BULL4_P BULL5_P BULL6_P
+.names FBI STAR3 C2G5 _260_m_ LSD OWL_N LSD_P
+0---11 1
+-0--11 1
+--1-11 1
+1000-- 1
+.names ACCRPY OWL_N _199_m__inv _219_m_ ACCRPY_P
+11-- 1
+--00 1
+.names VERR_N WATCH _199_m__inv _42_m_ TIMOT OWL_N _219_m_ VERR_F
+-----01 1
+100---- 1
+1-0-0-- 1
+1--10-- 1
+.names RATR OWL_N _886_m_ COMPPAR _58_m__inv RATR_P
+--1-- 1
+11--- 1
+---00 1
+.names MARSSR OWL_N C29G7 TIMOT MARSSR_P
+11-- 1
+--01 1
+.names VLENESR OWL_N KBG_N VLENESR_P
+11- 1
+-10 1
+.names VSUMESR OWL_N VST1 _58_m__inv VSUMESR_P
+11-- 1
+--10 1
+.names IBT0 PLUTO0 OWL_N _1015_m_ _894_m_ PLUTO0_P
+-11-- 1
+0--11 1
+.names IBT0 PLUTO1 OWL_N _1015_m_ _894_m_ PLUTO1_P
+-11-- 1
+1--11 1
+.names IBT1 PLUTO2 OWL_N IBT0 IBT2 _1015_m_ PLUTO2_P
+-11--- 1
+0--011 1
+.names IBT1 PLUTO3 OWL_N IBT0 IBT2 _1015_m_ PLUTO3_P
+-11--- 1
+0--111 1
+.names IBT1 PLUTO4 OWL_N IBT0 IBT2 _1015_m_ PLUTO4_P
+-11--- 1
+1--011 1
+.names IBT1 PLUTO5 OWL_N IBT0 IBT2 _1015_m_ PLUTO5_P
+-11--- 1
+1--111 1
+.names WATCH C1G3 ORWD_F
+0- 1
+-0 1
+.names WATCH TIMOT ICLR END KBG_N OWL_F
+0-001 1
+-0001 1
+.names PY DEL1 _89_m_ _90_m_ PY_P
+1-1- 1
+-1-1 1
+.names _58_m__inv _199_m__inv _219_m_ END_P
+0-- 1
+-00 1
+.names ORWD_N FBI _99_m_ _80_m_ _254_m__inv _260_m_ C2G5 _219_m_ STAR2 \
+_2087_m_ FBI_P
+-1---0---- 1
+0---00---- 1
+---000---- 1
+0-----10-- 1
+-1----10-- 1
+---0--10-- 1
+-1----1-11 1
+--1---1-11 1
+.names VACC OWL_N OVACC C29G7 WATCH_P
+---0 1
+011- 1
+.names VACC ICLR OVACC_P
+10 1
+.names KBG_N _199_m__inv _42_m_ OWL_N _219_m_ KBG_F
+10--- 1
+1-1-- 1
+---01 1
+.names CAPSD ICLR DEL1_P
+10 1
+.names FBI DEL1 COMPPAR _219_m_ OWL_N COMPPAR_P
+-100- 1
+0-1-1 1
+-01-1 1
+.names VST0 VST1 _89_m_ _90_m_ VST0_P
+1-1- 1
+-1-1 1
+.names PY VST1 _89_m_ _90_m_ VST1_P
+-11- 1
+1--1 1
+.names STAR0 _254_m__inv _44_m__inv STAR0_P
+00- 1
+1-0 1
+.names STAR0 STAR1 _99_m_ _44_m__inv _2087_m_ _80_m_ _219_m_ STAR1_P
+-1-0--- 1
+101---- 1
+01--1-- 1
+1----00 1
+.names STAR2 _99_m_ _44_m__inv C2G5 _80_m_ _219_m_ _2087_m_ STAR2_P
+1-0---- 1
+-1-0--- 1
+1-----1 1
+0---10- 1
+.names OWL_N STAR2 STAR3 _254_m__inv _44_m__inv _2087_m_ _80_m_ \
+STAR3_P
+--1-0-- 1
+--1--1- 1
+101---- 1
+-100--1 1
+.names BULL0 C29G7 OWL_N WATCH BULL0_P
+00-- 1
+1-10 1
+.names BULL1 _1214_m_ BULL0 C29G7 BULL1_P
+11-- 1
+0-10 1
+.names BULL1 BULL2 _1214_m_ BULL0 C29G7 BULL2_P
+-11-- 1
+10-10 1
+.names OWL_N BULL3 _226_m_ BULL3_P
+111 1
+100 1
+.names BULL4 OWL_N BULL3 _226_m_ _873_m_ BULL4_P
+0---1 1
+110-- 1
+11-1- 1
+.names BULL5 BULL4_P BULL4 _873_m_ OWL_N BULL3 _226_m_ BULL5_P
+11----- 1
+0-11--- 1
+1---10- 1
+1---1-1 1
+.names BULL2 BULL3 BULL4 BULL5 BULL6 _1214_m_ _873_m_ _226_m_ OWL_N \
+BULL6_P
+----11--- 1
+0---1---1 1
+-0--1---1 1
+--0-1---1 1
+---01---1 1
+--110-1-- 1
+-111-1-0- 1
+.names STAR2 _80_m_ C2G5
+1- 1
+-0 1
+.names C1G3 C29G7 _260_m_
+0- 1
+-1 1
+.names ORWD_F _219_m_ C2G5 _199_m__inv
+00- 1
+-01 1
+.names OWL_N FBI _219_m_
+0- 1
+-0 1
+.names STAR3 ORWD_F C2G5 CAT1 WATCH CAT0 _894_m_ _42_m_
+00----- 1
+-01---- 1
+0--0101 1
+--10101 1
+.names BULL0 BULL3 BULL4 BULL5 BULL6 BULL1 BULL2 TIMOT
+0010110 1
+.names MMERR VST0 _58_m__inv _886_m_
+000 1
+.names OWL_N END _58_m__inv
+0- 1
+-0 1
+.names OWL_N WATCH C29G7
+0- 1
+-0 1
+.names _886_m_ C29G7 TIMOT COMPPAR _58_m__inv VST1 OWL_N KBG_N _1015_m_
+1------- 1
+-01----- 1
+---00--- 1
+----01-- 1
+------10 1
+.names IBT1 IBT2 _894_m_
+10 1
+.names CAT1 CAT2 CAT3 CAT4 CAT5 IBT0 _894_m_ CAT0 IBT1 IBT2 C1G3
+0----11--- 1
+-----010-- 1
+----01--11 1
+---0-0--11 1
+--0--1--01 1
+-0---0--01 1
+.names ICLR FBI _89_m_
+00 1
+.names ICLR FBI _90_m_
+01 1
+.names ORWD_N _260_m_ _99_m_
+00 1
+.names STAR0 STAR1 _80_m_
+11 1
+.names _99_m_ _219_m_ _254_m__inv
+01 1
+.names OWL_N _80_m_ _2087_m_
+10 1
+.names ORWD_N OWL_N FBI ORWD_F _44_m__inv
+-0-- 1
+--1- 1
+0--0 1
+.names OWL_N BULL0 BULL1 WATCH _1214_m_
+10-- 1
+1-0- 1
+1--0 1
+.names WATCH BULL0 BULL1 BULL2 _226_m_
+0--- 1
+-0-- 1
+--0- 1
+---0 1
+.names OWL_N BULL3 _226_m_ _873_m_
+110 1
+.names VST0 SDO
+1 1
+.end
+
