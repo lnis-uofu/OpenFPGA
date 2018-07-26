@@ -1,0 +1,1446 @@
+# Benchmark "sasc" written by ABC on Mon Aug 29 15:33:11 2005
+.model sasc
+.inputs clk rst rxd_i cts_i sio_ce sio_ce_x4 re_i we_i din_i[0] din_i[1] \
+ din_i[2] din_i[3] din_i[4] din_i[5] din_i[6] din_i[7]
+.outputs txd_o rts_o full_o empty_o dout_o[0] dout_o[1] dout_o[2] dout_o[3] \
+ dout_o[4] dout_o[5] dout_o[6] dout_o[7]
+
+.latch rx_fifo_gb_reg_in rx_fifo_gb_reg  2
+.latch \rx_fifo_wp_reg[0]_in \rx_fifo_wp_reg[0]  0
+.latch \rx_fifo_mem_reg[1][6]_in \rx_fifo_mem_reg[1][6]  2
+.latch \rx_fifo_mem_reg[1][7]_in \rx_fifo_mem_reg[1][7]  2
+.latch \rx_fifo_mem_reg[2][0]_in \rx_fifo_mem_reg[2][0]  2
+.latch \rx_fifo_mem_reg[2][1]_in \rx_fifo_mem_reg[2][1]  2
+.latch \rx_fifo_mem_reg[2][2]_in \rx_fifo_mem_reg[2][2]  2
+.latch \rx_fifo_mem_reg[2][3]_in \rx_fifo_mem_reg[2][3]  2
+.latch \rx_fifo_mem_reg[2][4]_in \rx_fifo_mem_reg[2][4]  2
+.latch \rx_fifo_mem_reg[2][5]_in \rx_fifo_mem_reg[2][5]  2
+.latch \rx_fifo_mem_reg[2][6]_in \rx_fifo_mem_reg[2][6]  2
+.latch \rx_fifo_mem_reg[2][7]_in \rx_fifo_mem_reg[2][7]  2
+.latch \rx_fifo_mem_reg[1][0]_in \rx_fifo_mem_reg[1][0]  2
+.latch \rx_fifo_mem_reg[1][1]_in \rx_fifo_mem_reg[1][1]  2
+.latch \rx_fifo_mem_reg[1][2]_in \rx_fifo_mem_reg[1][2]  2
+.latch \rx_fifo_mem_reg[1][3]_in \rx_fifo_mem_reg[1][3]  2
+.latch \rx_fifo_mem_reg[1][4]_in \rx_fifo_mem_reg[1][4]  2
+.latch \rx_fifo_mem_reg[1][5]_in \rx_fifo_mem_reg[1][5]  2
+.latch \rx_fifo_mem_reg[3][0]_in \rx_fifo_mem_reg[3][0]  2
+.latch \rx_fifo_mem_reg[3][1]_in \rx_fifo_mem_reg[3][1]  2
+.latch \rx_fifo_mem_reg[3][2]_in \rx_fifo_mem_reg[3][2]  2
+.latch \rx_fifo_mem_reg[3][3]_in \rx_fifo_mem_reg[3][3]  2
+.latch \rx_fifo_mem_reg[3][4]_in \rx_fifo_mem_reg[3][4]  2
+.latch \rx_fifo_mem_reg[3][5]_in \rx_fifo_mem_reg[3][5]  2
+.latch \rx_fifo_mem_reg[3][6]_in \rx_fifo_mem_reg[3][6]  2
+.latch \rx_fifo_mem_reg[3][7]_in \rx_fifo_mem_reg[3][7]  2
+.latch \rx_fifo_mem_reg[0][0]_in \rx_fifo_mem_reg[0][0]  2
+.latch \rx_fifo_mem_reg[0][1]_in \rx_fifo_mem_reg[0][1]  2
+.latch \rx_fifo_mem_reg[0][2]_in \rx_fifo_mem_reg[0][2]  2
+.latch \rx_fifo_mem_reg[0][3]_in \rx_fifo_mem_reg[0][3]  2
+.latch \rx_fifo_mem_reg[0][4]_in \rx_fifo_mem_reg[0][4]  2
+.latch \rx_fifo_mem_reg[0][5]_in \rx_fifo_mem_reg[0][5]  2
+.latch \rx_fifo_mem_reg[0][6]_in \rx_fifo_mem_reg[0][6]  2
+.latch \rx_fifo_mem_reg[0][7]_in \rx_fifo_mem_reg[0][7]  2
+.latch \rx_bit_cnt_reg[1]_in \rx_bit_cnt_reg[1]  2
+.latch \rx_fifo_wp_reg[1]_in \rx_fifo_wp_reg[1]  0
+.latch \rx_bit_cnt_reg[3]_in \rx_bit_cnt_reg[3]  2
+.latch \rx_bit_cnt_reg[0]_in \rx_bit_cnt_reg[0]  2
+.latch \rx_bit_cnt_reg[2]_in \rx_bit_cnt_reg[2]  2
+.latch \rxr_reg[3]_in \rxr_reg[3]  2
+.latch \rxr_reg[9]_in \rxr_reg[9]  2
+.latch \rxr_reg[2]_in \rxr_reg[2]  2
+.latch \rxr_reg[4]_in \rxr_reg[4]  2
+.latch \rxr_reg[5]_in \rxr_reg[5]  2
+.latch \rxr_reg[6]_in \rxr_reg[6]  2
+.latch \rxr_reg[8]_in \rxr_reg[8]  2
+.latch \rxr_reg[7]_in \rxr_reg[7]  2
+.latch \tx_bit_cnt_reg[3]_in \tx_bit_cnt_reg[3]  2
+.latch tx_fifo_gb_reg_in tx_fifo_gb_reg  2
+.latch \hold_reg_reg[6]_in \hold_reg_reg[6]  2
+.latch \hold_reg_reg[7]_in \hold_reg_reg[7]  2
+.latch \hold_reg_reg[8]_in \hold_reg_reg[8]  2
+.latch \hold_reg_reg[1]_in \hold_reg_reg[1]  2
+.latch \hold_reg_reg[2]_in \hold_reg_reg[2]  2
+.latch \hold_reg_reg[3]_in \hold_reg_reg[3]  2
+.latch \hold_reg_reg[4]_in \hold_reg_reg[4]  2
+.latch \tx_bit_cnt_reg[2]_in \tx_bit_cnt_reg[2]  2
+.latch \hold_reg_reg[5]_in \hold_reg_reg[5]  2
+.latch txf_empty_r_reg_in txf_empty_r_reg  2
+.latch \tx_fifo_mem_reg[2][1]_in \tx_fifo_mem_reg[2][1]  2
+.latch \dpll_state_reg[0]_in \dpll_state_reg[0]  1
+.latch rts_o_reg_in  rts_o_reg  2
+.latch \tx_bit_cnt_reg[0]_in \tx_bit_cnt_reg[0]  2
+.latch \tx_fifo_mem_reg[1][0]_in \tx_fifo_mem_reg[1][0]  2
+.latch \tx_fifo_mem_reg[1][1]_in \tx_fifo_mem_reg[1][1]  2
+.latch \tx_fifo_mem_reg[1][2]_in \tx_fifo_mem_reg[1][2]  2
+.latch \tx_fifo_mem_reg[1][3]_in \tx_fifo_mem_reg[1][3]  2
+.latch \tx_fifo_mem_reg[1][4]_in \tx_fifo_mem_reg[1][4]  2
+.latch \tx_fifo_mem_reg[1][6]_in \tx_fifo_mem_reg[1][6]  2
+.latch \tx_fifo_mem_reg[1][7]_in \tx_fifo_mem_reg[1][7]  2
+.latch \tx_fifo_mem_reg[2][0]_in \tx_fifo_mem_reg[2][0]  2
+.latch \tx_fifo_mem_reg[2][2]_in \tx_fifo_mem_reg[2][2]  2
+.latch \tx_fifo_mem_reg[2][3]_in \tx_fifo_mem_reg[2][3]  2
+.latch \tx_fifo_mem_reg[2][4]_in \tx_fifo_mem_reg[2][4]  2
+.latch \tx_fifo_mem_reg[2][6]_in \tx_fifo_mem_reg[2][6]  2
+.latch \tx_fifo_mem_reg[2][7]_in \tx_fifo_mem_reg[2][7]  2
+.latch txd_o_reg_in  txd_o_reg  2
+.latch \tx_fifo_rp_reg[1]_in \tx_fifo_rp_reg[1]  0
+.latch \hold_reg_reg[0]_in \hold_reg_reg[0]  2
+.latch \tx_fifo_mem_reg[1][5]_in \tx_fifo_mem_reg[1][5]  2
+.latch \tx_fifo_mem_reg[2][5]_in \tx_fifo_mem_reg[2][5]  2
+.latch \tx_fifo_mem_reg[3][1]_in \tx_fifo_mem_reg[3][1]  2
+.latch \tx_fifo_mem_reg[3][6]_in \tx_fifo_mem_reg[3][6]  2
+.latch rx_valid_r_reg_in rx_valid_r_reg  2
+.latch \tx_fifo_mem_reg[3][5]_in \tx_fifo_mem_reg[3][5]  2
+.latch change_reg_in change_reg  2
+.latch \tx_fifo_mem_reg[0][0]_in \tx_fifo_mem_reg[0][0]  2
+.latch \tx_fifo_mem_reg[0][3]_in \tx_fifo_mem_reg[0][3]  2
+.latch \tx_fifo_mem_reg[0][4]_in \tx_fifo_mem_reg[0][4]  2
+.latch \tx_fifo_mem_reg[0][7]_in \tx_fifo_mem_reg[0][7]  2
+.latch \tx_fifo_mem_reg[0][2]_in \tx_fifo_mem_reg[0][2]  2
+.latch \tx_fifo_mem_reg[3][0]_in \tx_fifo_mem_reg[3][0]  2
+.latch \tx_fifo_mem_reg[3][2]_in \tx_fifo_mem_reg[3][2]  2
+.latch \tx_fifo_mem_reg[3][3]_in \tx_fifo_mem_reg[3][3]  2
+.latch \tx_fifo_mem_reg[3][4]_in \tx_fifo_mem_reg[3][4]  2
+.latch \tx_fifo_mem_reg[3][7]_in \tx_fifo_mem_reg[3][7]  2
+.latch \rx_fifo_rp_reg[1]_in \rx_fifo_rp_reg[1]  0
+.latch \hold_reg_reg[9]_in \hold_reg_reg[9]  2
+.latch \tx_fifo_mem_reg[0][6]_in \tx_fifo_mem_reg[0][6]  2
+.latch \tx_fifo_mem_reg[0][5]_in \tx_fifo_mem_reg[0][5]  2
+.latch \tx_fifo_mem_reg[0][1]_in \tx_fifo_mem_reg[0][1]  2
+.latch \tx_bit_cnt_reg[1]_in \tx_bit_cnt_reg[1]  2
+.latch rx_sio_ce_reg_in rx_sio_ce_reg  2
+.latch shift_en_r_reg_in shift_en_r_reg  2
+.latch \tx_fifo_wp_reg[1]_in \tx_fifo_wp_reg[1]  0
+.latch \dpll_state_reg[1]_in \dpll_state_reg[1]  0
+.latch rx_valid_reg_in rx_valid_reg  2
+.latch \rx_fifo_rp_reg[0]_in \rx_fifo_rp_reg[0]  0
+.latch rx_go_reg_in  rx_go_reg  2
+.latch \tx_fifo_rp_reg[0]_in \tx_fifo_rp_reg[0]  0
+.latch load_reg_in   load_reg  2
+.latch rx_sio_ce_r2_reg_in rx_sio_ce_r2_reg  2
+.latch \tx_fifo_wp_reg[0]_in \tx_fifo_wp_reg[0]  0
+.latch shift_en_reg_in shift_en_reg  2
+.latch rx_sio_ce_r1_reg_in rx_sio_ce_r1_reg  2
+.latch rxd_r_reg_in  rxd_r_reg  2
+.latch rxd_s_reg_in  rxd_s_reg  2
+
+.names [145]
+ 0
+.names [146]
+ 1
+.names rx_fifo_gb_reg [147]
+1 1
+.names \rx_fifo_wp_reg[0] [148]
+1 1
+.names \rx_fifo_mem_reg[1][6] [149]
+1 1
+.names \rx_fifo_mem_reg[1][7] [150]
+1 1
+.names \rx_fifo_mem_reg[2][0] [151]
+1 1
+.names \rx_fifo_mem_reg[2][1] [152]
+1 1
+.names \rx_fifo_mem_reg[2][2] [153]
+1 1
+.names \rx_fifo_mem_reg[2][3] [154]
+1 1
+.names \rx_fifo_mem_reg[2][4] [155]
+1 1
+.names \rx_fifo_mem_reg[2][5] [156]
+1 1
+.names \rx_fifo_mem_reg[2][6] [157]
+1 1
+.names \rx_fifo_mem_reg[2][7] [158]
+1 1
+.names \rx_fifo_mem_reg[1][0] [159]
+1 1
+.names \rx_fifo_mem_reg[1][1] [160]
+1 1
+.names \rx_fifo_mem_reg[1][2] [161]
+1 1
+.names \rx_fifo_mem_reg[1][3] [162]
+1 1
+.names \rx_fifo_mem_reg[1][4] [163]
+1 1
+.names \rx_fifo_mem_reg[1][5] [164]
+1 1
+.names \rx_fifo_mem_reg[3][0] [165]
+1 1
+.names \rx_fifo_mem_reg[3][1] [166]
+1 1
+.names \rx_fifo_mem_reg[3][2] [167]
+1 1
+.names \rx_fifo_mem_reg[3][3] [168]
+1 1
+.names \rx_fifo_mem_reg[3][4] [169]
+1 1
+.names \rx_fifo_mem_reg[3][5] [170]
+1 1
+.names \rx_fifo_mem_reg[3][6] [171]
+1 1
+.names \rx_fifo_mem_reg[3][7] [172]
+1 1
+.names \rx_fifo_mem_reg[0][0] [173]
+1 1
+.names \rx_fifo_mem_reg[0][1] [174]
+1 1
+.names \rx_fifo_mem_reg[0][2] [175]
+1 1
+.names \rx_fifo_mem_reg[0][3] [176]
+1 1
+.names \rx_fifo_mem_reg[0][4] [177]
+1 1
+.names \rx_fifo_mem_reg[0][5] [178]
+1 1
+.names \rx_fifo_mem_reg[0][6] [179]
+1 1
+.names \rx_fifo_mem_reg[0][7] [180]
+1 1
+.names [230] [607] [648] rx_fifo_gb_reg_in
+11- 0
+--1 0
+.names \rx_bit_cnt_reg[1] [182]
+1 1
+.names \rx_fifo_wp_reg[1] [183]
+1 1
+.names \rx_bit_cnt_reg[3] [184]
+1 1
+.names [672] [625] [232] \rx_fifo_wp_reg[0]_in
+00- 1
+--0 1
+.names [414] [150] [242] \rx_fifo_mem_reg[1][7]_in
+01- 1
+1-1 1
+.names [352] [151] [242] \rx_fifo_mem_reg[2][0]_in
+01- 1
+1-1 1
+.names [353] [152] [245] \rx_fifo_mem_reg[2][1]_in
+01- 1
+1-1 1
+.names [413] [149] [244] \rx_fifo_mem_reg[1][6]_in
+01- 1
+1-1 1
+.names \rx_bit_cnt_reg[0] [190]
+1 1
+.names \rx_bit_cnt_reg[2] [191]
+1 1
+.names [355] [154] [243] \rx_fifo_mem_reg[2][3]_in
+01- 1
+1-1 1
+.names [354] [153] [245] \rx_fifo_mem_reg[2][2]_in
+01- 1
+1-1 1
+.names [356] [155] [242] \rx_fifo_mem_reg[2][4]_in
+01- 1
+1-1 1
+.names [357] [156] [243] \rx_fifo_mem_reg[2][5]_in
+01- 1
+1-1 1
+.names [358] [157] [245] \rx_fifo_mem_reg[2][6]_in
+01- 1
+1-1 1
+.names [359] [158] [244] \rx_fifo_mem_reg[2][7]_in
+01- 1
+1-1 1
+.names [417] [160] [242] \rx_fifo_mem_reg[1][1]_in
+01- 1
+1-1 1
+.names [415] [159] [245] \rx_fifo_mem_reg[1][0]_in
+01- 1
+1-1 1
+.names [416] [161] [242] \rx_fifo_mem_reg[1][2]_in
+01- 1
+1-1 1
+.names [418] [162] [243] \rx_fifo_mem_reg[1][3]_in
+01- 1
+1-1 1
+.names [419] [163] [242] \rx_fifo_mem_reg[1][4]_in
+01- 1
+1-1 1
+.names [420] [164] [244] \rx_fifo_mem_reg[1][5]_in
+01- 1
+1-1 1
+.names [360] [165] [244] \rx_fifo_mem_reg[3][0]_in
+01- 1
+1-1 1
+.names [361] [166] [245] \rx_fifo_mem_reg[3][1]_in
+01- 1
+1-1 1
+.names [362] [167] [243] \rx_fifo_mem_reg[3][2]_in
+01- 1
+1-1 1
+.names [363] [168] [244] \rx_fifo_mem_reg[3][3]_in
+01- 1
+1-1 1
+.names [364] [169] [244] \rx_fifo_mem_reg[3][4]_in
+01- 1
+1-1 1
+.names [366] [170] [243] \rx_fifo_mem_reg[3][5]_in
+01- 1
+1-1 1
+.names [367] [171] [245] \rx_fifo_mem_reg[3][6]_in
+01- 1
+1-1 1
+.names [368] [172] [245] \rx_fifo_mem_reg[3][7]_in
+01- 1
+1-1 1
+.names [373] [173] [244] \rx_fifo_mem_reg[0][0]_in
+01- 1
+1-1 1
+.names [369] [174] [243] \rx_fifo_mem_reg[0][1]_in
+01- 1
+1-1 1
+.names [374] [175] [245] \rx_fifo_mem_reg[0][2]_in
+01- 1
+1-1 1
+.names [375] [176] [244] \rx_fifo_mem_reg[0][3]_in
+01- 1
+1-1 1
+.names [378] [177] [242] \rx_fifo_mem_reg[0][4]_in
+01- 1
+1-1 1
+.names [376] [178] [242] \rx_fifo_mem_reg[0][5]_in
+01- 1
+1-1 1
+.names [372] [179] [243] \rx_fifo_mem_reg[0][6]_in
+01- 1
+1-1 1
+.names [377] [180] [243] \rx_fifo_mem_reg[0][7]_in
+01- 1
+1-1 1
+.names \rxr_reg[3] [220]
+1 1
+.names \rxr_reg[9] [221]
+1 1
+.names \rxr_reg[2] [222]
+1 1
+.names \rxr_reg[4] [223]
+1 1
+.names \rxr_reg[5] [224]
+1 1
+.names \rxr_reg[6] [225]
+1 1
+.names \rxr_reg[8] [226]
+1 1
+.names \rxr_reg[7] [227]
+1 1
+.names [543] [246] rst \rx_bit_cnt_reg[1]_in
+00- 1
+--0 1
+.names [251] [543] rst \rx_bit_cnt_reg[3]_in
+00- 1
+--0 1
+.names [322] [247] [500] [230]
+111 0
+.names [253] [467] \rx_bit_cnt_reg[0]_in
+00 1
+.names [672] [625] [232]
+11 0
+.names [252] [467] \rx_bit_cnt_reg[2]_in
+00 1
+.names rxd_r_reg_in [221] [280] \rxr_reg[9]_in
+01- 1
+1-1 1
+.names [220] [222] [280] \rxr_reg[2]_in
+01- 1
+1-1 1
+.names [223] [220] [280] \rxr_reg[3]_in
+01- 1
+1-1 1
+.names [224] [223] [280] \rxr_reg[4]_in
+01- 1
+1-1 1
+.names [225] [224] [280] \rxr_reg[5]_in
+01- 1
+1-1 1
+.names [227] [225] [280] \rxr_reg[6]_in
+01- 1
+1-1 1
+.names [226] [227] [280] \rxr_reg[7]_in
+01- 1
+1-1 1
+.names [221] [226] [280] \rxr_reg[8]_in
+01- 1
+1-1 1
+.names [247] [242]
+0 1
+.names [248] [243]
+0 1
+.names [249] [244]
+0 1
+.names [250] [245]
+0 1
+.names [575] [270] [182] [280] [246]
+11-- 0
+--11 0
+.names [673] [247]
+0 1
+.names [673] [248]
+0 1
+.names [673] [249]
+0 1
+.names [673] [250]
+0 1
+.names [184] [280] [267] [251]
+11- 0
+--1 0
+.names [191] [280] [263] [252]
+11- 0
+--1 0
+.names [629] [280] [262] [253]
+11- 0
+--1 0
+.names \tx_bit_cnt_reg[3] [254]
+1 1
+.names tx_fifo_gb_reg [255]
+0 1
+.names \hold_reg_reg[6] [256]
+0 1
+.names \hold_reg_reg[7] [257]
+0 1
+.names \hold_reg_reg[8] [258]
+0 1
+.names \hold_reg_reg[1] [259]
+0 1
+.names \hold_reg_reg[2] [260]
+0 1
+.names \hold_reg_reg[3] [261]
+0 1
+.names [629] [280] [262]
+00 1
+.names [501] [280] [263]
+00 1
+.names \hold_reg_reg[4] [264]
+0 1
+.names \tx_bit_cnt_reg[2] [265]
+1 1
+.names \hold_reg_reg[5] [266]
+0 1
+.names [453] [280] [267]
+00 1
+.names txf_empty_r_reg [268]
+0 1
+.names [329] [598] rst \tx_bit_cnt_reg[3]_in
+00- 1
+--0 1
+.names [280] [270]
+0 1
+.names [327] [591] \tx_bit_cnt_reg[2]_in
+00 1
+.names [513] [383] [598] \hold_reg_reg[6]_in
+01- 1
+1-1 1
+.names [511] [382] [598] \hold_reg_reg[5]_in
+01- 1
+1-1 1
+.names [514] [384] [598] \hold_reg_reg[7]_in
+01- 1
+1-1 1
+.names [516] [385] [598] \hold_reg_reg[8]_in
+01- 1
+1-1 1
+.names [521] [386] [598] \hold_reg_reg[1]_in
+01- 1
+1-1 1
+.names [517] [387] [632] \hold_reg_reg[2]_in
+01- 1
+1-1 1
+.names [515] [388] [632] \hold_reg_reg[3]_in
+01- 1
+1-1 1
+.names [533] [389] [632] \hold_reg_reg[4]_in
+01- 1
+1-1 1
+.names [433] [328] [280]
+11 0
+.names [572] [371] [648] tx_fifo_gb_reg_in
+11- 0
+--1 0
+.names \tx_fifo_mem_reg[2][1] [282]
+1 1
+.names \dpll_state_reg[0] [283]
+1 1
+.names rts_o_reg rts_o
+1 1
+.names \tx_bit_cnt_reg[0] [285]
+1 1
+.names \tx_fifo_mem_reg[1][0] [286]
+1 1
+.names \tx_fifo_mem_reg[1][1] [287]
+1 1
+.names \tx_fifo_mem_reg[1][2] [288]
+1 1
+.names \tx_fifo_mem_reg[1][3] [289]
+1 1
+.names \tx_fifo_mem_reg[1][4] [290]
+1 1
+.names \tx_fifo_mem_reg[1][6] [291]
+1 1
+.names \tx_fifo_mem_reg[1][7] [292]
+1 1
+.names \tx_fifo_mem_reg[2][0] [293]
+1 1
+.names \tx_fifo_mem_reg[2][2] [294]
+1 1
+.names \tx_fifo_mem_reg[2][3] [295]
+1 1
+.names \tx_fifo_mem_reg[2][4] [296]
+1 1
+.names \tx_fifo_mem_reg[2][6] [297]
+1 1
+.names \tx_fifo_mem_reg[2][7] [298]
+1 1
+.names txd_o_reg txd_o
+1 1
+.names \tx_fifo_rp_reg[1] [300]
+1 1
+.names \hold_reg_reg[0] [301]
+1 1
+.names \tx_fifo_mem_reg[1][5] [302]
+1 1
+.names \tx_fifo_mem_reg[2][5] [303]
+1 1
+.names [381] rst txf_empty_r_reg_in
+11 0
+.names \tx_fifo_mem_reg[3][1] [305]
+1 1
+.names \tx_fifo_mem_reg[3][6] [306]
+1 1
+.names rx_valid_r_reg [307]
+0 1
+.names \tx_fifo_mem_reg[3][5] [308]
+1 1
+.names change_reg [309]
+1 1
+.names \tx_fifo_mem_reg[0][0] [310]
+1 1
+.names \tx_fifo_mem_reg[0][3] [311]
+1 1
+.names \tx_fifo_mem_reg[0][4] [312]
+1 1
+.names \tx_fifo_mem_reg[0][7] [313]
+1 1
+.names \tx_fifo_mem_reg[0][2] [314]
+1 1
+.names \tx_fifo_mem_reg[3][0] [315]
+1 1
+.names \tx_fifo_mem_reg[3][2] [316]
+1 1
+.names \tx_fifo_mem_reg[3][3] [317]
+1 1
+.names \tx_fifo_mem_reg[3][4] [318]
+1 1
+.names \tx_fifo_mem_reg[3][7] [319]
+1 1
+.names \rx_fifo_rp_reg[1] [320]
+1 1
+.names \hold_reg_reg[9] [321]
+1 1
+.names [671] [631] [412] [322]
+00- 1
+--0 1
+.names \tx_fifo_mem_reg[0][6] [323]
+1 1
+.names \tx_fifo_mem_reg[0][5] [324]
+1 1
+.names \tx_fifo_mem_reg[0][1] [325]
+1 1
+.names \tx_bit_cnt_reg[1] [326]
+1 1
+.names [265] [595] [423] [327]
+11- 0
+--1 0
+.names rx_sio_ce_reg [328]
+1 1
+.names [583] [254] [405] [329]
+11- 0
+--1 0
+.names [291] [478] we_i \tx_fifo_mem_reg[1][6]_in
+01- 1
+1-1 1
+.names [292] [479] we_i \tx_fifo_mem_reg[1][7]_in
+01- 1
+1-1 1
+.names [293] [480] we_i \tx_fifo_mem_reg[2][0]_in
+01- 1
+1-1 1
+.names [282] [486] we_i \tx_fifo_mem_reg[2][1]_in
+01- 1
+1-1 1
+.names [294] [481] we_i \tx_fifo_mem_reg[2][2]_in
+01- 1
+1-1 1
+.names [295] [482] we_i \tx_fifo_mem_reg[2][3]_in
+01- 1
+1-1 1
+.names [296] [483] we_i \tx_fifo_mem_reg[2][4]_in
+01- 1
+1-1 1
+.names [303] [471] we_i \tx_fifo_mem_reg[2][5]_in
+01- 1
+1-1 1
+.names [297] [484] we_i \tx_fifo_mem_reg[2][6]_in
+01- 1
+1-1 1
+.names [298] [485] we_i \tx_fifo_mem_reg[2][7]_in
+01- 1
+1-1 1
+.names [445] [448] dout_o[4]
+11 0
+.names [446] [447] dout_o[0]
+11 0
+.names shift_en_r_reg [342]
+1 1
+.names [444] [449] dout_o[6]
+11 0
+.names [687] [499] [632] \tx_fifo_rp_reg[1]_in
+01- 1
+1-1 1
+.names [495] [490] [598] \hold_reg_reg[0]_in
+11- 0
+--1 0
+.names [443] [450] dout_o[7]
+11 0
+.names [439] [440] dout_o[5]
+11 0
+.names [437] [451] dout_o[3]
+11 0
+.names [436] [438] dout_o[2]
+11 0
+.names [441] [442] dout_o[1]
+11 0
+.names [452] [626] empty_o
+00 1
+.names [222] [151] [502] [352]
+01- 1
+1-1 1
+.names [220] [152] [502] [353]
+01- 1
+1-1 1
+.names [223] [153] [502] [354]
+01- 1
+1-1 1
+.names [224] [154] [502] [355]
+01- 1
+1-1 1
+.names [225] [155] [502] [356]
+01- 1
+1-1 1
+.names [227] [156] [502] [357]
+01- 1
+1-1 1
+.names [226] [157] [502] [358]
+01- 1
+1-1 1
+.names [221] [158] [502] [359]
+01- 1
+1-1 1
+.names [222] [165] [689] [360]
+01- 1
+1-1 1
+.names [220] [166] [689] [361]
+01- 1
+1-1 1
+.names [223] [167] [689] [362]
+01- 1
+1-1 1
+.names [224] [168] [689] [363]
+01- 1
+1-1 1
+.names [225] [169] [689] [364]
+01- 1
+1-1 1
+.names [573] [590] [457] \dpll_state_reg[0]_in
+111 0
+.names [227] [170] [689] [366]
+01- 1
+1-1 1
+.names [226] [171] [689] [367]
+01- 1
+1-1 1
+.names [221] [172] [689] [368]
+01- 1
+1-1 1
+.names [174] [220] [504] [369]
+01- 1
+1-1 1
+.names [678] rts_o_reg_in
+0 1
+.names [458] [555] we_i [371]
+111 0
+.names [179] [226] [504] [372]
+01- 1
+1-1 1
+.names [173] [222] [504] [373]
+01- 1
+1-1 1
+.names [175] [223] [504] [374]
+01- 1
+1-1 1
+.names [176] [224] [504] [375]
+01- 1
+1-1 1
+.names [178] [227] [504] [376]
+01- 1
+1-1 1
+.names [180] [221] [504] [377]
+01- 1
+1-1 1
+.names [177] [225] [504] [378]
+01- 1
+1-1 1
+.names [434] rst txd_o_reg_in
+11 0
+.names [487] [632] rst \tx_bit_cnt_reg[0]_in
+00- 1
+--0 1
+.names [617] [461] [639] [655] [381]
+11-- 0
+--11 0
+.names [544] [535] [462] [382]
+111 0
+.names [567] [548] [464] [383]
+111 0
+.names [561] [498] [465] [384]
+111 0
+.names [549] [494] [466] [385]
+111 0
+.names [570] [537] [468] [386]
+111 0
+.names [571] [536] [469] [387]
+111 0
+.names [569] [493] [470] [388]
+111 0
+.names [547] [496] [463] [389]
+111 0
+.names [286] [472] we_i \tx_fifo_mem_reg[1][0]_in
+01- 1
+1-1 1
+.names [287] [473] we_i \tx_fifo_mem_reg[1][1]_in
+01- 1
+1-1 1
+.names [288] [474] we_i \tx_fifo_mem_reg[1][2]_in
+01- 1
+1-1 1
+.names [289] [476] we_i \tx_fifo_mem_reg[1][3]_in
+01- 1
+1-1 1
+.names [290] [477] we_i \tx_fifo_mem_reg[1][4]_in
+01- 1
+1-1 1
+.names [302] [475] we_i \tx_fifo_mem_reg[1][5]_in
+01- 1
+1-1 1
+.names [315] [529] we_i \tx_fifo_mem_reg[3][0]_in
+01- 1
+1-1 1
+.names [305] [530] we_i \tx_fifo_mem_reg[3][1]_in
+01- 1
+1-1 1
+.names [316] [512] we_i \tx_fifo_mem_reg[3][2]_in
+01- 1
+1-1 1
+.names [319] [534] we_i \tx_fifo_mem_reg[3][7]_in
+01- 1
+1-1 1
+.names [317] [531] we_i \tx_fifo_mem_reg[3][3]_in
+01- 1
+1-1 1
+.names [318] [520] we_i \tx_fifo_mem_reg[3][4]_in
+01- 1
+1-1 1
+.names [308] [532] we_i \tx_fifo_mem_reg[3][5]_in
+01- 1
+1-1 1
+.names [563] [460] rx_sio_ce_reg_in
+00 1
+.names [306] [522] we_i \tx_fifo_mem_reg[3][6]_in
+01- 1
+1-1 1
+.names [489] [583] [405]
+00 1
+.names \tx_fifo_wp_reg[1] [406]
+1 1
+.names \dpll_state_reg[1] [407]
+1 1
+.names [461] [653] full_o
+11 1
+.names [631] [538] re_i \rx_fifo_rp_reg[1]_in
+01- 1
+1-1 1
+.names rx_valid_reg rx_valid_r_reg_in
+1 1
+.names [497] [321] \hold_reg_reg[9]_in
+00 0
+.names [631] [671] [412]
+11 0
+.names [226] [149] [540] [413]
+01- 1
+1-1 1
+.names [221] [150] [540] [414]
+01- 1
+1-1 1
+.names [222] [159] [540] [415]
+01- 1
+1-1 1
+.names [223] [161] [540] [416]
+01- 1
+1-1 1
+.names [220] [160] [540] [417]
+01- 1
+1-1 1
+.names [224] [162] [540] [418]
+01- 1
+1-1 1
+.names [225] [163] [540] [419]
+01- 1
+1-1 1
+.names [227] [164] [540] [420]
+01- 1
+1-1 1
+.names [491] [591] \tx_bit_cnt_reg[1]_in
+00 1
+.names [508] [648] [589] change_reg_in
+00- 1
+--0 1
+.names [488] [595] [423]
+00 1
+.names [310] [523] we_i \tx_fifo_mem_reg[0][0]_in
+01- 1
+1-1 1
+.names [325] [528] we_i \tx_fifo_mem_reg[0][1]_in
+01- 1
+1-1 1
+.names [314] [524] we_i \tx_fifo_mem_reg[0][2]_in
+01- 1
+1-1 1
+.names [311] [525] we_i \tx_fifo_mem_reg[0][3]_in
+01- 1
+1-1 1
+.names [312] [526] we_i \tx_fifo_mem_reg[0][4]_in
+01- 1
+1-1 1
+.names [324] [519] we_i \tx_fifo_mem_reg[0][5]_in
+01- 1
+1-1 1
+.names [323] [527] we_i \tx_fifo_mem_reg[0][6]_in
+01- 1
+1-1 1
+.names [313] [518] we_i \tx_fifo_mem_reg[0][7]_in
+01- 1
+1-1 1
+.names \rx_fifo_rp_reg[0] [432]
+1 1
+.names rx_go_reg [433]
+1 1
+.names [551] sio_ce [639] txd_o [434]
+11-- 0
+--11 0
+.names [610] [596] [648] shift_en_r_reg_in
+11- 0
+--1 0
+.names [153] [559] [167] [581] [436]
+11-- 0
+--11 0
+.names [154] [559] [168] [581] [437]
+11-- 0
+--11 0
+.names [161] [557] [175] [582] [438]
+11-- 0
+--11 0
+.names [156] [559] [170] [581] [439]
+11-- 0
+--11 0
+.names [164] [557] [178] [582] [440]
+11-- 0
+--11 0
+.names [152] [559] [166] [581] [441]
+11-- 0
+--11 0
+.names [160] [557] [174] [582] [442]
+11-- 0
+--11 0
+.names [557] [150] [582] [180] [443]
+11-- 0
+--11 0
+.names [149] [557] [179] [582] [444]
+11-- 0
+--11 0
+.names [155] [559] [169] [581] [445]
+11-- 0
+--11 0
+.names [151] [559] [165] [581] [446]
+11-- 0
+--11 0
+.names [159] [557] [173] [582] [447]
+11-- 0
+--11 0
+.names [163] [557] [177] [582] [448]
+11-- 0
+--11 0
+.names [157] [559] [171] [581] [449]
+11-- 0
+--11 0
+.names [559] [158] [581] [172] [450]
+11-- 0
+--11 0
+.names [162] [557] [176] [582] [451]
+11-- 0
+--11 0
+.names [657] [452]
+0 1
+.names [184] [565] [453]
+01 1
+10 1
+.names \tx_fifo_rp_reg[0] [454]
+1 1
+.names load_reg [455]
+1 1
+.names [554] [615] [573] \dpll_state_reg[1]_in
+111 0
+.names [627] [613] [309] [576] [457]
+11-- 0
+--11 0
+.names [688] [564] [458]
+01 1
+10 1
+.names [662] [564] we_i \tx_fifo_wp_reg[1]_in
+01- 1
+1-1 1
+.names rx_sio_ce_r2_reg [460]
+1 1
+.names [556] [555] [461]
+00 1
+.names [619] [312] [296] [578] [462]
+11-- 0
+--11 0
+.names [619] [311] [289] [694] [463]
+11-- 0
+--11 0
+.names [302] [694] [303] [578] [464]
+11-- 0
+--11 0
+.names [601] [306] [291] [694] [465]
+11-- 0
+--11 0
+.names [619] [313] [292] [694] [466]
+11-- 0
+--11 0
+.names [543] [648] [467]
+00 0
+.names [601] [315] [293] [578] [468]
+11-- 0
+--11 0
+.names [601] [305] [282] [578] [469]
+11-- 0
+--11 0
+.names [601] [316] [288] [694] [470]
+11-- 0
+--11 0
+.names din_i[5] [303] [579] [471]
+01- 1
+1-1 1
+.names din_i[0] [286] [695] [472]
+01- 1
+1-1 1
+.names din_i[1] [287] [695] [473]
+01- 1
+1-1 1
+.names din_i[2] [288] [695] [474]
+01- 1
+1-1 1
+.names din_i[5] [302] [695] [475]
+01- 1
+1-1 1
+.names din_i[3] [289] [695] [476]
+01- 1
+1-1 1
+.names din_i[4] [290] [695] [477]
+01- 1
+1-1 1
+.names din_i[6] [291] [695] [478]
+01- 1
+1-1 1
+.names din_i[7] [292] [695] [479]
+01- 1
+1-1 1
+.names din_i[0] [293] [579] [480]
+01- 1
+1-1 1
+.names din_i[2] [294] [618] [481]
+01- 1
+1-1 1
+.names din_i[3] [295] [618] [482]
+01- 1
+1-1 1
+.names din_i[4] [296] [579] [483]
+01- 1
+1-1 1
+.names din_i[6] [297] [618] [484]
+01- 1
+1-1 1
+.names din_i[7] [298] [579] [485]
+01- 1
+1-1 1
+.names din_i[1] [282] [618] [486]
+01- 1
+1-1 1
+.names [285] [596] [552] [487]
+11- 0
+--1 0
+.names [585] [265] [553] [488]
+11- 0
+--1 0
+.names [254] [568] [489]
+01 1
+10 1
+.names [259] [596] [490]
+00 0
+.names [326] [595] [541] [491]
+11- 0
+--1 0
+.names [599] [560] rx_valid_reg_in
+00 1
+.names [294] [578] [493]
+11 0
+.names [298] [578] [494]
+11 0
+.names [596] [301] [495]
+11 0
+.names [295] [578] [496]
+11 0
+.names [596] [612] [497]
+11 0
+.names [297] [578] [498]
+11 0
+.names [694] [578] [499]
+00 0
+.names [692] [603] [500]
+01 1
+10 1
+.names [588] [191] [542] [501]
+11- 0
+--1 0
+.names [507] [502]
+0 1
+.names [625] [682] [503]
+11 0
+.names [505] [504]
+0 1
+.names [603] [685] [505]
+11 0
+.names \tx_fifo_wp_reg[0] [506]
+1 1
+.names [679] [507]
+0 1
+.names rxd_r_reg_in [587] [508]
+01 1
+10 1
+.names [644] [182] [184] [643] rx_go_reg_in
+1111 0
+.names shift_en_reg [510]
+1 1
+.names [646] [637] [583] [511]
+01- 1
+1-1 1
+.names din_i[2] [316] [661] [512]
+01- 1
+1-1 1
+.names [635] [646] [595] [513]
+01- 1
+1-1 1
+.names [649] [635] [595] [514]
+01- 1
+1-1 1
+.names [641] [640] [595] [515]
+01- 1
+1-1 1
+.names [321] [649] [595] [516]
+01- 1
+1-1 1
+.names [640] [642] [583] [517]
+01- 1
+1-1 1
+.names [313] din_i[7] [600] [518]
+01- 1
+1-1 1
+.names [324] din_i[5] [600] [519]
+01- 1
+1-1 1
+.names din_i[4] [318] [661] [520]
+01- 1
+1-1 1
+.names [642] [634] [583] [521]
+01- 1
+1-1 1
+.names din_i[6] [306] [661] [522]
+01- 1
+1-1 1
+.names [310] din_i[0] [600] [523]
+01- 1
+1-1 1
+.names [314] din_i[2] [600] [524]
+01- 1
+1-1 1
+.names [311] din_i[3] [600] [525]
+01- 1
+1-1 1
+.names [312] din_i[4] [600] [526]
+01- 1
+1-1 1
+.names [323] din_i[6] [600] [527]
+01- 1
+1-1 1
+.names [325] din_i[1] [600] [528]
+01- 1
+1-1 1
+.names din_i[0] [315] [661] [529]
+01- 1
+1-1 1
+.names din_i[1] [305] [661] [530]
+01- 1
+1-1 1
+.names din_i[3] [317] [661] [531]
+01- 1
+1-1 1
+.names din_i[5] [308] [661] [532]
+01- 1
+1-1 1
+.names [637] [641] [583] [533]
+01- 1
+1-1 1
+.names din_i[7] [319] [661] [534]
+01- 1
+1-1 1
+.names [290] [694] [535]
+11 0
+.names [287] [694] [536]
+11 0
+.names [286] [694] [537]
+11 0
+.names [577] [562] [538]
+00 0
+.names re_i [691] \rx_fifo_rp_reg[0]_in
+01 1
+10 1
+.names [558] [540]
+0 1
+.names [616] [614] [595] [541]
+11- 0
+--1 0
+.names [588] [191] [542]
+00 1
+.names [602] [587] [543]
+00 1
+.names [601] [318] [544]
+11 0
+.names [628] [632] \tx_fifo_rp_reg[0]_in
+01 1
+10 1
+.names [563] rx_sio_ce_r2_reg_in
+0 1
+.names [601] [317] [547]
+11 0
+.names [601] [308] [548]
+11 0
+.names [601] [319] [549]
+11 0
+.names [594] cts_i load_reg_in
+00 1
+.names [593] [301] [551]
+00 0
+.names [285] [596] [552]
+00 1
+.names [585] [265] [553]
+00 1
+.names [576] [554]
+0 1
+.names [628] [630] [597] [555]
+11- 0
+--1 0
+.names [662] [687] [556]
+01 1
+10 1
+.names [562] [557]
+1 1
+.names [566] [558]
+0 1
+.names [577] [559]
+1 1
+.names [629] [184] [560]
+11 0
+.names [619] [323] [561]
+11 0
+.names [692] [631] [562]
+00 1
+.names rx_sio_ce_r1_reg [563]
+0 1
+.names [609] [618] [564]
+11 0
+.names [611] [191] [565]
+11 0
+.names [625] [685] [566]
+11 0
+.names [619] [324] [567]
+11 0
+.names [621] [265] [568]
+11 0
+.names [619] [314] [569]
+11 0
+.names [619] [310] [570]
+11 0
+.names [619] [325] [571]
+11 0
+.names [612] [653] [572]
+11 0
+.names [613] [407] [652] [573]
+111 0
+.names [630] we_i \tx_fifo_wp_reg[0]_in
+01 1
+10 1
+.names [629] [182] [575]
+01 1
+10 1
+.names sio_ce_x4 rx_sio_ce_r1_reg_in [576]
+11 1
+.names [691] [665] [577]
+00 1
+.names [592] [578]
+0 1
+.names [586] [579]
+0 1
+.names [604] [616] shift_en_reg_in
+00 0
+.names [692] [665] [581]
+00 1
+.names [692] [665] [582]
+11 1
+.names [620] [583]
+0 1
+.names [454] [688] [584]
+11 0
+.names [621] [585]
+0 1
+.names [618] [586]
+0 1
+.names rxd_r_reg [587]
+0 1
+.names [611] [588]
+0 1
+.names [309] [647] rst [589]
+111 0
+.names [647] [283] [590]
+11 0
+.names [632] [648] [591]
+00 0
+.names [650] [300] [592]
+11 0
+.names [510] [342] [593]
+00 1
+.names [510] [655] [594]
+00 0
+.names [620] [595]
+0 1
+.names [620] [596]
+0 1
+.names [628] [630] [597]
+00 1
+.names [612] [598]
+0 1
+.names [191] [182] [599]
+00 0
+.names [608] [600]
+0 1
+.names [622] [601]
+0 1
+.names rxd_r_reg_in [433] [602]
+00 0
+.names [625] [603]
+0 1
+.names [656] [254] [604]
+11 0
+.names [407] [652] rx_sio_ce_r1_reg_in
+00 1
+.names [651] [693] [606]
+00 0
+.names re_i [645] [607]
+00 0
+.names [664] [663] [608]
+11 0
+.names [506] [663] [609]
+11 0
+.names [342] [639] [610]
+11 0
+.names [643] [636] [611]
+00 1
+.names [632] [612]
+0 1
+.names [309] [647] [613]
+00 1
+.names [633] [326] [614]
+11 0
+.names [647] [407] [615]
+11 0
+.names [633] [326] [616]
+00 0
+.names [639] [653] [617]
+00 1
+.names [664] [406] [618]
+11 0
+.names [650] [688] [619]
+11 1
+.names [654] [639] [620]
+00 1
+.names [633] [638] [621]
+00 1
+.names [650] [688] [622]
+00 0
+.names [680] [693] [623]
+11 0
+.names rxd_s_reg rxd_r_reg_in
+1 1
+.names [680] [625]
+0 1
+.names [645] [626]
+0 1
+.names [407] [283] [627]
+00 1
+.names [650] [628]
+0 1
+.names [643] [629]
+0 1
+.names [664] [630]
+0 1
+.names [665] [631]
+0 1
+.names [455] sio_ce [632]
+11 1
+.names [285] [633]
+0 1
+.names [259] [634]
+0 1
+.names [257] [635]
+0 1
+.names [182] [636]
+0 1
+.names [266] [637]
+0 1
+.names [326] [638]
+0 1
+.names sio_ce [639]
+0 1
+.names [261] [640]
+0 1
+.names [264] [641]
+0 1
+.names [260] [642]
+0 1
+.names [190] [643]
+0 1
+.names [191] [644]
+0 1
+.names [147] [645]
+0 1
+.names [256] [646]
+0 1
+.names sio_ce_x4 [647]
+0 1
+.names rst [648]
+0 1
+.names [258] [649]
+0 1
+.names [454] [650]
+0 1
+.names [148] [651]
+0 1
+.names [283] [652]
+0 1
+.names [255] [653]
+0 1
+.names [510] [654]
+0 1
+.names [268] [655]
+0 1
+.names [265] [656]
+0 1
+.names [659] [658] [657]
+00 1
+.names [676] [658]
+0 1
+.names [660] [666] [659]
+11 0
+.names [683] [665] [660]
+11 0
+.names [662] [630] [661]
+11 0
+.names [663] [662]
+0 1
+.names [406] [663]
+0 1
+.names [506] [664]
+0 1
+.names [320] [665]
+0 1
+.names [684] [320] [666]
+11 0
+.names [681] [320] [147] [667]
+111 0
+.names [669] [686] [147] [668]
+111 0
+.names [320] [669]
+0 1
+.names [671] [683] [672] \rx_fifo_wp_reg[1]_in
+01- 1
+1-1 1
+.names [679] [566] [671]
+11 0
+.names [678] [677] [672]
+11 0
+.names [674] [677] [673]
+11 0
+.names [675] [676] [674]
+11 0
+.names [668] [667] [675]
+11 0
+.names [606] [623] [676]
+11 0
+.names [307] rx_valid_r_reg_in [677]
+11 1
+.names [674] [678]
+1 1
+.names [682] [680] [679]
+11 0
+.names [148] [680]
+0 1
+.names [686] [681]
+0 1
+.names [685] [682]
+0 1
+.names [684] [683]
+0 1
+.names [685] [684]
+1 1
+.names [686] [685]
+1 1
+.names [183] [686]
+0 1
+.names [688] [687]
+0 1
+.names [300] [688]
+0 1
+.names [690] [689]
+0 1
+.names [503] [690]
+0 1
+.names [692] [691]
+0 1
+.names [693] [692]
+1 1
+.names [432] [693]
+0 1
+.names [584] [694]
+0 1
+.names [609] [695]
+1 1
+.names rxd_i rxd_s_reg_in
+1 1
+.end

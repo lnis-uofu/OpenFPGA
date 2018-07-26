@@ -1,0 +1,1189 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+ABSOLUTE	include/physical_types.h	/^	ABSOLUTE, FRACTIONAL$/;"	e	enum:e_Fc_type
+ARCH_TYPES_H	include/arch_types.h	9;"	d
+Aspect	include/physical_types.h	/^	float Aspect;$/;"	m	struct:s_clb_grid
+BI_DIRECTIONAL	include/physical_types.h	/^	UNI_DIRECTIONAL, BI_DIRECTIONAL$/;"	e	enum:e_directionality
+BOTTOM	include/physical_types.h	/^	TOP = 0, RIGHT = 1, BOTTOM = 2, LEFT = 3$/;"	e	enum:e_side
+BOUNDARY	include/physical_types.h	/^	BOUNDARY = 0, FILL, COL_REPEAT, COL_REL$/;"	e	enum:e_grid_loc_type
+BUFSIZE	include/util.h	23;"	d
+C	include/arch_types_mrfpga.h	/^  float C; $/;"	m	struct:s_memristor_inf
+C	include/arch_types_mrfpga.h	/^  float C;$/;"	m	struct:s_buffer_inf
+C	include/physical_types.h	/^		float C;$/;"	m	union:s_port_power::__anon3
+CAD_TYPES_H	include/cad_types.h	5;"	d
+CHECK_RAND	util.c	734;"	d	file:
+CHUNK_SIZE	util.c	208;"	d	file:
+COL_REL	include/physical_types.h	/^	BOUNDARY = 0, FILL, COL_REPEAT, COL_REL$/;"	e	enum:e_grid_loc_type
+COL_REPEAT	include/physical_types.h	/^	BOUNDARY = 0, FILL, COL_REPEAT, COL_REL$/;"	e	enum:e_grid_loc_type
+COMPLETE_INTERC	include/physical_types.h	/^	COMPLETE_INTERC = 1, DIRECT_INTERC = 2, MUX_INTERC = 3$/;"	e	enum:e_interconnect
+CONV	include/arch_types_mrfpga.h	/^  CONV = 0, MONO, STTRAM, PCRAM_Xie, PCRAM_Pierre, NEM $/;"	e	enum:e_tech_comp
+C_internal	include/physical_types.h	/^	float C_internal; \/*Internal capacitance of the pb *\/$/;"	m	struct:s_pb_type_power
+C_ipin_cblock	include/physical_types.h	/^	float C_ipin_cblock;$/;"	m	struct:s_arch
+C_ipin_cblock	include/physical_types.h	/^	float C_ipin_cblock;$/;"	m	struct:s_timing_inf
+C_wire	include/physical_types.h	/^	float C_wire; \/* Wire capacitance (per meter) *\/$/;"	m	struct:s_clock_network
+C_wire	include/physical_types.h	/^	float C_wire;$/;"	m	struct:s_pb_graph_pin_power
+C_wire_local	include/physical_types.h	/^	float C_wire_local; \/* Capacitance of local interconnect (per meter) *\/$/;"	m	struct:s_power_arch
+Chans	include/physical_types.h	/^	t_chan_width_dist Chans;$/;"	m	struct:s_arch
+CheckElement	read_xml_util.c	/^void CheckElement(INP ezxml_t Node, INP const char *Name) {$/;"	f
+Cin	include/physical_types.h	/^	float Cin;$/;"	m	struct:s_switch_inf
+Cmetal	include/physical_types.h	/^	float Cmetal;$/;"	m	struct:s_segment_inf
+CountChildren	read_xml_util.c	/^extern int CountChildren(INP ezxml_t Node, INP const char *Name,$/;"	f
+CountTokens	ReadLine.c	/^int CountTokens(INP char **Tokens) {$/;"	f
+CountTokensInString	read_xml_util.c	/^extern void CountTokensInString(INP const char *Str, OUTP int *Num,$/;"	f
+Cout	include/physical_types.h	/^	float Cout;$/;"	m	struct:s_switch_inf
+CreateModelLibrary	read_xml_arch_file.c	/^static void CreateModelLibrary(OUTP struct s_arch *arch) {$/;"	f	file:
+Cseg_global	include/arch_types_mrfpga.h	/^  float Cseg_global;$/;"	m	struct:s_arch_mrfpga
+DELTA	include/physical_types.h	/^	UNIFORM, GAUSSIAN, PULSE, DELTA$/;"	e	enum:e_stat
+DIRECT_INTERC	include/physical_types.h	/^	COMPLETE_INTERC = 1, DIRECT_INTERC = 2, MUX_INTERC = 3$/;"	e	enum:e_interconnect
+DRIVER	include/physical_types.h	/^	OPEN = -1, DRIVER = 0, RECEIVER = 1$/;"	e	enum:e_pin_type
+Directs	include/physical_types.h	/^	t_direct_inf *Directs;$/;"	m	struct:s_arch
+EMPTY_TYPE	read_xml_arch_file.c	/^static t_type_ptr EMPTY_TYPE = NULL;$/;"	v	file:
+EMPTY_TYPE_INDEX	include/read_xml_arch_file.h	15;"	d
+ERRTAG	include/util.h	26;"	d
+ERR_PORT	include/logic_types.h	/^	IN_PORT, OUT_PORT, INOUT_PORT, ERR_PORT$/;"	e	enum:PORTS
+EZXML_BUFSIZE	include/ezxml.h	37;"	d
+EZXML_DUP	include/ezxml.h	40;"	d
+EZXML_ERRL	include/ezxml.h	41;"	d
+EZXML_NAMEM	include/ezxml.h	38;"	d
+EZXML_NIL	ezxml.c	/^char *EZXML_NIL[] = { NULL }; \/* empty, null terminated array of strings *\/$/;"	v
+EZXML_NOMMAP	ezxml.c	26;"	d	file:
+EZXML_TXTM	include/ezxml.h	39;"	d
+EZXML_WS	ezxml.c	64;"	d	file:
+E_ANNOT_PIN_TO_PIN_CAPACITANCE	include/physical_types.h	/^	E_ANNOT_PIN_TO_PIN_CAPACITANCE,$/;"	e	enum:e_pin_to_pin_annotation_type
+E_ANNOT_PIN_TO_PIN_CAPACITANCE_C	include/physical_types.h	/^	E_ANNOT_PIN_TO_PIN_CAPACITANCE_C = 0$/;"	e	enum:e_pin_to_pin_capacitance_annotations
+E_ANNOT_PIN_TO_PIN_CONSTANT	include/physical_types.h	/^	E_ANNOT_PIN_TO_PIN_MATRIX = 0, E_ANNOT_PIN_TO_PIN_CONSTANT$/;"	e	enum:e_pin_to_pin_annotation_format
+E_ANNOT_PIN_TO_PIN_DELAY	include/physical_types.h	/^	E_ANNOT_PIN_TO_PIN_DELAY = 0,$/;"	e	enum:e_pin_to_pin_annotation_type
+E_ANNOT_PIN_TO_PIN_DELAY_CLOCK_TO_Q_MAX	include/physical_types.h	/^	E_ANNOT_PIN_TO_PIN_DELAY_CLOCK_TO_Q_MAX,$/;"	e	enum:e_pin_to_pin_delay_annotations
+E_ANNOT_PIN_TO_PIN_DELAY_CLOCK_TO_Q_MIN	include/physical_types.h	/^	E_ANNOT_PIN_TO_PIN_DELAY_CLOCK_TO_Q_MIN,$/;"	e	enum:e_pin_to_pin_delay_annotations
+E_ANNOT_PIN_TO_PIN_DELAY_MAX	include/physical_types.h	/^	E_ANNOT_PIN_TO_PIN_DELAY_MAX,$/;"	e	enum:e_pin_to_pin_delay_annotations
+E_ANNOT_PIN_TO_PIN_DELAY_MIN	include/physical_types.h	/^	E_ANNOT_PIN_TO_PIN_DELAY_MIN = 0,$/;"	e	enum:e_pin_to_pin_delay_annotations
+E_ANNOT_PIN_TO_PIN_DELAY_THOLD	include/physical_types.h	/^	E_ANNOT_PIN_TO_PIN_DELAY_THOLD$/;"	e	enum:e_pin_to_pin_delay_annotations
+E_ANNOT_PIN_TO_PIN_DELAY_TSETUP	include/physical_types.h	/^	E_ANNOT_PIN_TO_PIN_DELAY_TSETUP,$/;"	e	enum:e_pin_to_pin_delay_annotations
+E_ANNOT_PIN_TO_PIN_MATRIX	include/physical_types.h	/^	E_ANNOT_PIN_TO_PIN_MATRIX = 0, E_ANNOT_PIN_TO_PIN_CONSTANT$/;"	e	enum:e_pin_to_pin_annotation_format
+E_ANNOT_PIN_TO_PIN_MODE_SELECT	include/physical_types.h	/^	E_ANNOT_PIN_TO_PIN_MODE_SELECT$/;"	e	enum:e_pin_to_pin_annotation_type
+E_ANNOT_PIN_TO_PIN_MODE_SELECT_MODE_NAME	include/physical_types.h	/^	E_ANNOT_PIN_TO_PIN_MODE_SELECT_MODE_NAME = 0$/;"	e	enum:e_pin_to_pin_mode_select_annotations
+E_ANNOT_PIN_TO_PIN_PACK_PATTERN	include/physical_types.h	/^	E_ANNOT_PIN_TO_PIN_PACK_PATTERN,$/;"	e	enum:e_pin_to_pin_annotation_type
+E_ANNOT_PIN_TO_PIN_PACK_PATTERN_NAME	include/physical_types.h	/^	E_ANNOT_PIN_TO_PIN_PACK_PATTERN_NAME = 0$/;"	e	enum:e_pin_to_pin_pack_pattern_annotations
+E_CUSTOM_PIN_DISTR	include/physical_types.h	/^	E_SPREAD_PIN_DISTR = 1, E_CUSTOM_PIN_DISTR = 2$/;"	e	enum:e_pin_location_distr
+E_SPREAD_PIN_DISTR	include/physical_types.h	/^	E_SPREAD_PIN_DISTR = 1, E_CUSTOM_PIN_DISTR = 2$/;"	e	enum:e_pin_location_distr
+EchoArch	read_xml_arch_file.c	/^void EchoArch(INP const char *EchoFile, INP const t_type_descriptor * Types,$/;"	f
+FALSE	include/util.h	/^	FALSE, TRUE$/;"	e	enum:__anon4
+FC_ABS	read_xml_arch_file.c	/^	FC_ABS, FC_FRAC, FC_FULL$/;"	e	enum:Fc_type	file:
+FC_FRAC	read_xml_arch_file.c	/^	FC_ABS, FC_FRAC, FC_FULL$/;"	e	enum:Fc_type	file:
+FC_FULL	read_xml_arch_file.c	/^	FC_ABS, FC_FRAC, FC_FULL$/;"	e	enum:Fc_type	file:
+FF_size	include/physical_types.h	/^	float FF_size;$/;"	m	struct:s_power_arch
+FILL	include/physical_types.h	/^	BOUNDARY = 0, FILL, COL_REPEAT, COL_REL$/;"	e	enum:e_grid_loc_type
+FILL_TYPE	read_xml_arch_file.c	/^static t_type_ptr FILL_TYPE = NULL;$/;"	v	file:
+FRACTIONAL	include/physical_types.h	/^	ABSOLUTE, FRACTIONAL$/;"	e	enum:e_Fc_type
+FRAGMENT_THRESHOLD	util.c	209;"	d	file:
+FULL	include/physical_types.h	/^	SUBSET, WILTON, UNIVERSAL, FULL$/;"	e	enum:e_switch_block_type
+Fc	include/physical_types.h	/^	float *Fc; \/* [0..num_pins-1] *\/$/;"	m	struct:s_type_descriptor
+Fc_type	read_xml_arch_file.c	/^enum Fc_type {$/;"	g	file:
+FindElement	read_xml_util.c	/^ezxml_t FindElement(INP ezxml_t Parent, INP const char *Name,$/;"	f
+FindFirstElement	read_xml_util.c	/^ezxml_t FindFirstElement(INP ezxml_t Parent, INP const char *Name,$/;"	f
+FindProperty	read_xml_util.c	/^FindProperty(INP ezxml_t Parent, INP const char *Name, INP boolean Required) {$/;"	f
+FreeNode	read_xml_util.c	/^void FreeNode(INOUTP ezxml_t Node) {$/;"	f
+FreeSpice	read_xml_spice_util.c	/^void FreeSpice(t_spice* spice) {$/;"	f
+FreeSpiceMeasParams	read_xml_spice_util.c	/^void FreeSpiceMeasParams(t_spice_meas_params* meas_params) {$/;"	f
+FreeSpiceModel	read_xml_spice_util.c	/^void FreeSpiceModel(t_spice_model* spice_model) {$/;"	f
+FreeSpiceModelBuffer	read_xml_spice_util.c	/^void FreeSpiceModelBuffer(t_spice_model_buffer* spice_model_buffer) {$/;"	f
+FreeSpiceModelNetlist	read_xml_spice_util.c	/^void FreeSpiceModelNetlist(t_spice_model_netlist* spice_model_netlist) {$/;"	f
+FreeSpiceModelPassGateLogic	read_xml_spice_util.c	/^void FreeSpiceModelPassGateLogic(t_spice_model_pass_gate_logic* spice_model_pass_gate_logic) {$/;"	f
+FreeSpiceModelPort	read_xml_spice_util.c	/^void FreeSpiceModelPort(t_spice_model_port* spice_model_port) {$/;"	f
+FreeSpiceModelWireParam	read_xml_spice_util.c	/^void FreeSpiceModelWireParam(t_spice_model_wire_param* spice_model_wire_param) {$/;"	f
+FreeSpiceMonteCarloParams	read_xml_spice_util.c	/^void FreeSpiceMonteCarloParams(t_spice_mc_params* mc_params) {$/;"	f
+FreeSpiceMuxArch	read_xml_spice_util.c	/^void FreeSpiceMuxArch(t_spice_mux_arch* spice_mux_arch) {$/;"	f
+FreeSpiceParams	read_xml_spice_util.c	/^void FreeSpiceParams(t_spice_params* params) {$/;"	f
+FreeSpiceStimulateParams	read_xml_spice_util.c	/^void FreeSpiceStimulateParams(t_spice_stimulate_params* stimulate_params) {$/;"	f
+FreeSpiceVariationParams	read_xml_spice_util.c	/^void FreeSpiceVariationParams(t_spice_mc_variation_params* mc_variation_params) {$/;"	f
+FreeSramInf	read_xml_spice_util.c	/^void FreeSramInf(t_sram_inf* sram_inf) {$/;"	f
+FreeSramInfOrgz	read_xml_spice_util.c	/^void FreeSramInfOrgz(t_sram_inf_orgz* sram_inf_orgz) {$/;"	f
+FreeTokens	ReadLine.c	/^void FreeTokens(INOUTP char ***TokensPtr) {$/;"	f
+Fs	include/physical_types.h	/^	int Fs;$/;"	m	struct:s_arch
+GAUSSIAN	include/physical_types.h	/^	UNIFORM, GAUSSIAN, PULSE, DELTA$/;"	e	enum:e_stat
+GetBooleanProperty	read_xml_util.c	/^extern boolean GetBooleanProperty(INP ezxml_t Parent, INP char *Name,$/;"	f
+GetFloatProperty	read_xml_util.c	/^extern float GetFloatProperty(INP ezxml_t Parent, INP char *Name,$/;"	f
+GetIntProperty	read_xml_util.c	/^extern int GetIntProperty(INP ezxml_t Parent, INP char *Name,$/;"	f
+GetNodeTokens	read_xml_util.c	/^GetNodeTokens(INP ezxml_t Node) {$/;"	f
+H	include/physical_types.h	/^	int H;$/;"	m	struct:s_clb_grid
+IA	util.c	731;"	d	file:
+IC	util.c	732;"	d	file:
+IM	util.c	733;"	d	file:
+INOUTP	include/util.h	21;"	d
+INOUT_PORT	include/logic_types.h	/^	IN_PORT, OUT_PORT, INOUT_PORT, ERR_PORT$/;"	e	enum:PORTS
+INP	include/util.h	19;"	d
+IN_PORT	include/logic_types.h	/^	IN_PORT, OUT_PORT, INOUT_PORT, ERR_PORT$/;"	e	enum:PORTS
+IO_TYPE	read_xml_arch_file.c	/^static t_type_ptr IO_TYPE = NULL;$/;"	v	file:
+IO_TYPE_INDEX	include/read_xml_arch_file.h	16;"	d
+InitSpice	read_xml_spice_util.c	/^void InitSpice(t_spice* spice) {$/;"	f
+InitSpiceMeasParams	read_xml_spice_util.c	/^void InitSpiceMeasParams(t_spice_meas_params* meas_params) {$/;"	f
+InitSpiceMonteCarloParams	read_xml_spice_util.c	/^void InitSpiceMonteCarloParams(t_spice_mc_params* mc_params) {$/;"	f
+InitSpiceParams	read_xml_spice_util.c	/^void InitSpiceParams(t_spice_params* params) {$/;"	f
+InitSpiceStimulateParams	read_xml_spice_util.c	/^void InitSpiceStimulateParams(t_spice_stimulate_params* stimulate_params) {$/;"	f
+InitSpiceVariationParams	read_xml_spice_util.c	/^void InitSpiceVariationParams(t_spice_mc_variation_params* mc_variation_params) {$/;"	f
+IsAuto	include/physical_types.h	/^	boolean IsAuto;$/;"	m	struct:s_clb_grid
+IsWhitespace	read_xml_util.c	/^boolean IsWhitespace(char c) {$/;"	f
+LATCH_CLASS	include/physical_types.h	/^	UNKNOWN_CLASS = 0, LUT_CLASS = 1, LATCH_CLASS = 2, MEMORY_CLASS = 3$/;"	e	enum:e_pb_type_class
+LEFT	include/physical_types.h	/^	TOP = 0, RIGHT = 1, BOTTOM = 2, LEFT = 3$/;"	e	enum:e_side
+LINKEDLIST_H	fpga_spice_include/linkedlist.h	2;"	d
+LOGIC_TYPES_H	include/logic_types.h	10;"	d
+LUT_CLASS	include/physical_types.h	/^	UNKNOWN_CLASS = 0, LUT_CLASS = 1, LATCH_CLASS = 2, MEMORY_CLASS = 3$/;"	e	enum:e_pb_type_class
+LUT_transistor_size	include/physical_types.h	/^	float LUT_transistor_size;$/;"	m	struct:s_power_arch
+LookaheadNodeTokens	read_xml_util.c	/^LookaheadNodeTokens(INP ezxml_t Node) {$/;"	f
+MAX_CHANNEL_WIDTH	include/arch_types.h	25;"	d
+MEMORY_CLASS	include/physical_types.h	/^	UNKNOWN_CLASS = 0, LUT_CLASS = 1, LATCH_CLASS = 2, MEMORY_CLASS = 3$/;"	e	enum:e_pb_type_class
+MONO	include/arch_types_mrfpga.h	/^  CONV = 0, MONO, STTRAM, PCRAM_Xie, PCRAM_Pierre, NEM $/;"	e	enum:e_tech_comp
+MUX_INTERC	include/physical_types.h	/^	COMPLETE_INTERC = 1, DIRECT_INTERC = 2, MUX_INTERC = 3$/;"	e	enum:e_interconnect
+NEM	include/arch_types_mrfpga.h	/^  CONV = 0, MONO, STTRAM, PCRAM_Xie, PCRAM_Pierre, NEM $/;"	e	enum:e_tech_comp
+NUM_MODELS_IN_LIBRARY	include/read_xml_arch_file.h	14;"	d
+OPEN	include/physical_types.h	/^	OPEN = -1, DRIVER = 0, RECEIVER = 1$/;"	e	enum:e_pin_type
+OUTP	include/util.h	20;"	d
+OUT_PORT	include/logic_types.h	/^	IN_PORT, OUT_PORT, INOUT_PORT, ERR_PORT$/;"	e	enum:PORTS
+PB_PIN_CLOCK	include/physical_types.h	/^	PB_PIN_CLOCK$/;"	e	enum:e_pb_graph_pin_type
+PB_PIN_INPAD	include/physical_types.h	/^	PB_PIN_INPAD,$/;"	e	enum:e_pb_graph_pin_type
+PB_PIN_NORMAL	include/physical_types.h	/^	PB_PIN_NORMAL = 0,$/;"	e	enum:e_pb_graph_pin_type
+PB_PIN_OUTPAD	include/physical_types.h	/^	PB_PIN_OUTPAD,$/;"	e	enum:e_pb_graph_pin_type
+PB_PIN_SEQUENTIAL	include/physical_types.h	/^	PB_PIN_SEQUENTIAL,$/;"	e	enum:e_pb_graph_pin_type
+PB_PIN_TERMINAL	include/physical_types.h	/^	PB_PIN_TERMINAL,$/;"	e	enum:e_pb_graph_pin_type
+PCRAM_Pierre	include/arch_types_mrfpga.h	/^  CONV = 0, MONO, STTRAM, PCRAM_Xie, PCRAM_Pierre, NEM $/;"	e	enum:e_tech_comp
+PCRAM_Xie	include/arch_types_mrfpga.h	/^  CONV = 0, MONO, STTRAM, PCRAM_Xie, PCRAM_Pierre, NEM $/;"	e	enum:e_tech_comp
+PHYSICAL_TYPES_H	include/physical_types.h	27;"	d
+PORTS	include/logic_types.h	/^enum PORTS {$/;"	g
+POWER_BUFFER_TYPE_ABSOLUTE_SIZE	include/physical_types.h	/^	POWER_BUFFER_TYPE_ABSOLUTE_SIZE$/;"	e	enum:__anon2
+POWER_BUFFER_TYPE_AUTO	include/physical_types.h	/^	POWER_BUFFER_TYPE_AUTO,$/;"	e	enum:__anon2
+POWER_BUFFER_TYPE_NONE	include/physical_types.h	/^	POWER_BUFFER_TYPE_NONE,$/;"	e	enum:__anon2
+POWER_BUFFER_TYPE_UNDEFINED	include/physical_types.h	/^	POWER_BUFFER_TYPE_UNDEFINED = 0,$/;"	e	enum:__anon2
+POWER_METHOD_ABSOLUTE	include/physical_types.h	/^	POWER_METHOD_ABSOLUTE \/* Dynamic: Aboslute, Static: Absolute *\/$/;"	e	enum:e_power_estimation_method_
+POWER_METHOD_AUTO_SIZES	include/physical_types.h	/^	POWER_METHOD_AUTO_SIZES, \/* Transistor-level, auto-sized buffers\/wires *\/$/;"	e	enum:e_power_estimation_method_
+POWER_METHOD_C_INTERNAL	include/physical_types.h	/^	POWER_METHOD_C_INTERNAL, \/* Dynamic: Equiv. Internal capacitance, Static: Absolute *\/$/;"	e	enum:e_power_estimation_method_
+POWER_METHOD_IGNORE	include/physical_types.h	/^	POWER_METHOD_UNDEFINED = 0, POWER_METHOD_IGNORE, \/* Ignore power of this PB, and all children PB *\/$/;"	e	enum:e_power_estimation_method_
+POWER_METHOD_SPECIFY_SIZES	include/physical_types.h	/^	POWER_METHOD_SPECIFY_SIZES, \/* Transistor-level, user-specified buffers\/wires *\/$/;"	e	enum:e_power_estimation_method_
+POWER_METHOD_SUM_OF_CHILDREN	include/physical_types.h	/^	POWER_METHOD_SUM_OF_CHILDREN, \/* Ignore power of this PB, but consider children *\/$/;"	e	enum:e_power_estimation_method_
+POWER_METHOD_TOGGLE_PINS	include/physical_types.h	/^	POWER_METHOD_TOGGLE_PINS, \/* Dynamic: Energy per pin toggle, Static: Absolute *\/$/;"	e	enum:e_power_estimation_method_
+POWER_METHOD_UNDEFINED	include/physical_types.h	/^	POWER_METHOD_UNDEFINED = 0, POWER_METHOD_IGNORE, \/* Ignore power of this PB, and all children PB *\/$/;"	e	enum:e_power_estimation_method_
+POWER_WIRE_TYPE_ABSOLUTE_LENGTH	include/physical_types.h	/^	POWER_WIRE_TYPE_ABSOLUTE_LENGTH,$/;"	e	enum:__anon1
+POWER_WIRE_TYPE_AUTO	include/physical_types.h	/^	POWER_WIRE_TYPE_AUTO$/;"	e	enum:__anon1
+POWER_WIRE_TYPE_C	include/physical_types.h	/^	POWER_WIRE_TYPE_C,$/;"	e	enum:__anon1
+POWER_WIRE_TYPE_IGNORED	include/physical_types.h	/^	POWER_WIRE_TYPE_IGNORED,$/;"	e	enum:__anon1
+POWER_WIRE_TYPE_RELATIVE_LENGTH	include/physical_types.h	/^	POWER_WIRE_TYPE_RELATIVE_LENGTH,$/;"	e	enum:__anon1
+POWER_WIRE_TYPE_UNDEFINED	include/physical_types.h	/^	POWER_WIRE_TYPE_UNDEFINED = 0,$/;"	e	enum:__anon1
+PULSE	include/physical_types.h	/^	UNIFORM, GAUSSIAN, PULSE, DELTA$/;"	e	enum:e_stat
+PrintPb_types_rec	read_xml_arch_file.c	/^static void PrintPb_types_rec(INP FILE * Echo, INP const t_pb_type * pb_type,$/;"	f	file:
+ProcessCB_SB	read_xml_arch_file.c	/^static void ProcessCB_SB(INOUTP ezxml_t Node, INOUTP boolean * list,$/;"	f	file:
+ProcessChanWidthDistr	read_xml_arch_file.c	/^static void ProcessChanWidthDistr(INOUTP ezxml_t Node,$/;"	f	file:
+ProcessChanWidthDistrDir	read_xml_arch_file.c	/^static void ProcessChanWidthDistrDir(INOUTP ezxml_t Node, OUTP t_chan * chan) {$/;"	f	file:
+ProcessClocks	read_xml_arch_file.c	/^static void ProcessClocks(ezxml_t Parent, t_clock_arch * clocks) {$/;"	f	file:
+ProcessComplexBlockProps	read_xml_arch_file.c	/^static void ProcessComplexBlockProps(ezxml_t Node, t_type_descriptor * Type) {$/;"	f	file:
+ProcessComplexBlocks	read_xml_arch_file.c	/^static void ProcessComplexBlocks(INOUTP ezxml_t Node,$/;"	f	file:
+ProcessDevice	read_xml_arch_file.c	/^static void ProcessDevice(INOUTP ezxml_t Node, OUTP struct s_arch *arch,$/;"	f	file:
+ProcessDirects	read_xml_arch_file.c	/^static void ProcessDirects(INOUTP ezxml_t Parent, OUTP t_direct_inf **Directs,$/;"	f	file:
+ProcessInterconnect	read_xml_arch_file.c	/^static void ProcessInterconnect(INOUTP ezxml_t Parent, t_mode * mode) {$/;"	f	file:
+ProcessLayout	read_xml_arch_file.c	/^static void ProcessLayout(INOUTP ezxml_t Node, OUTP struct s_arch *arch) {$/;"	f	file:
+ProcessLutClass	read_xml_arch_file.c	/^void ProcessLutClass(INOUTP t_pb_type *lut_pb_type) {$/;"	f
+ProcessMemoryClass	read_xml_arch_file.c	/^static void ProcessMemoryClass(INOUTP t_pb_type *mem_pb_type) {$/;"	f	file:
+ProcessMode	read_xml_arch_file.c	/^static void ProcessMode(INOUTP ezxml_t Parent, t_mode * mode,$/;"	f	file:
+ProcessModels	read_xml_arch_file.c	/^static void ProcessModels(INOUTP ezxml_t Node, OUTP struct s_arch *arch) {$/;"	f	file:
+ProcessMrFPGATiming	read_xml_mrfpga.c	/^void ProcessMrFPGATiming(INOUTP ezxml_t Cur, $/;"	f
+ProcessPb_Type	read_xml_arch_file.c	/^static void ProcessPb_Type(INOUTP ezxml_t Parent, t_pb_type * pb_type,$/;"	f	file:
+ProcessPb_TypePort	read_xml_arch_file.c	/^static void ProcessPb_TypePort(INOUTP ezxml_t Parent, t_port * port,$/;"	f	file:
+ProcessPb_TypePort_Power	read_xml_arch_file.c	/^static void ProcessPb_TypePort_Power(ezxml_t Parent, t_port * port,$/;"	f	file:
+ProcessPb_TypePower	read_xml_arch_file.c	/^static void ProcessPb_TypePower(ezxml_t Parent, t_pb_type * pb_type) {$/;"	f	file:
+ProcessPb_TypePowerEstMethod	read_xml_arch_file.c	/^static void ProcessPb_TypePowerEstMethod(ezxml_t Parent, t_pb_type * pb_type) {$/;"	f	file:
+ProcessPb_TypePowerPinToggle	read_xml_arch_file.c	/^static void ProcessPb_TypePowerPinToggle(ezxml_t parent, t_pb_type * pb_type) {$/;"	f	file:
+ProcessPinToPinAnnotations	read_xml_arch_file.c	/^static void ProcessPinToPinAnnotations(ezxml_t Parent,$/;"	f	file:
+ProcessPower	read_xml_arch_file.c	/^static void ProcessPower( INOUTP ezxml_t parent,$/;"	f	file:
+ProcessSegments	read_xml_arch_file.c	/^static void ProcessSegments(INOUTP ezxml_t Parent,$/;"	f	file:
+ProcessSpiceMCVariationParams	read_xml_spice.c	/^static void ProcessSpiceMCVariationParams(ezxml_t Parent,$/;"	f	file:
+ProcessSpiceMeasParams	read_xml_spice.c	/^static void ProcessSpiceMeasParams(ezxml_t Parent,$/;"	f	file:
+ProcessSpiceModel	read_xml_spice.c	/^static void ProcessSpiceModel(ezxml_t Parent,$/;"	f	file:
+ProcessSpiceModelBuffer	read_xml_spice.c	/^static void ProcessSpiceModelBuffer(ezxml_t Node,$/;"	f	file:
+ProcessSpiceModelPassGateLogic	read_xml_spice.c	/^static void ProcessSpiceModelPassGateLogic(ezxml_t Node,$/;"	f	file:
+ProcessSpiceModelPort	read_xml_spice.c	/^static void ProcessSpiceModelPort(ezxml_t Node,$/;"	f	file:
+ProcessSpiceModelWireParam	read_xml_spice.c	/^static void ProcessSpiceModelWireParam(ezxml_t Parent,$/;"	f	file:
+ProcessSpiceMonteCarloParams	read_xml_spice.c	/^static void ProcessSpiceMonteCarloParams(ezxml_t Parent, $/;"	f	file:
+ProcessSpiceParams	read_xml_spice.c	/^static void ProcessSpiceParams(ezxml_t Parent,$/;"	f	file:
+ProcessSpiceSRAM	read_xml_spice.c	/^void ProcessSpiceSRAM(INOUTP ezxml_t Node, OUTP struct s_arch* arch) {$/;"	f
+ProcessSpiceSRAMOrganization	read_xml_spice.c	/^void ProcessSpiceSRAMOrganization(INOUTP ezxml_t Node, $/;"	f	file:
+ProcessSpiceSettings	read_xml_spice.c	/^void ProcessSpiceSettings(ezxml_t Parent,$/;"	f
+ProcessSpiceStimulateParams	read_xml_spice.c	/^static void ProcessSpiceStimulateParams(ezxml_t Parent,$/;"	f	file:
+ProcessSpiceStimulateParamsRiseFall	read_xml_spice.c	/^static void ProcessSpiceStimulateParamsRiseFall(ezxml_t Parent,$/;"	f	file:
+ProcessSpiceTechLibTransistors	read_xml_spice.c	/^static void ProcessSpiceTechLibTransistors(ezxml_t Parent,$/;"	f	file:
+ProcessSpiceTransistorType	read_xml_spice.c	/^static void ProcessSpiceTransistorType(ezxml_t Parent,$/;"	f	file:
+ProcessSwitchSegmentPatterns	read_xml_arch_file.c	/^static void ProcessSwitchSegmentPatterns(INOUTP ezxml_t Parent,$/;"	f	file:
+ProcessSwitches	read_xml_arch_file.c	/^static void ProcessSwitches(INOUTP ezxml_t Parent,$/;"	f	file:
+ProcessTechComp	read_xml_mrfpga.c	/^ProcessTechComp(INOUTP ezxml_t Node,$/;"	f
+ProcessTechHack	read_xml_mrfpga.c	/^ProcessTechHack(INOUTP ezxml_t Node,$/;"	f
+ProcessTechnology	read_xml_mrfpga.c	/^ProcessTechnology(INOUTP ezxml_t Node,$/;"	f
+ProcessWireBuffer	read_xml_mrfpga.c	/^ProcessWireBuffer(INOUTP ezxml_t Node,$/;"	f
+Process_Fc	read_xml_arch_file.c	/^static void Process_Fc(ezxml_t Node, t_type_descriptor * Type) {$/;"	f	file:
+ProcessmrFPGA	read_xml_mrfpga.c	/^ProcessmrFPGA(INOUTP ezxml_t Node,$/;"	f
+R	include/arch_types_mrfpga.h	/^  float R; $/;"	m	struct:s_memristor_inf
+R	include/arch_types_mrfpga.h	/^  float R;$/;"	m	struct:s_buffer_inf
+R	include/physical_types.h	/^	float R;$/;"	m	struct:s_switch_inf
+READLINE_H	include/ReadLine.h	2;"	d
+READ_XML_ARCH_FILE_H	include/read_xml_arch_file.h	2;"	d
+READ_XML_UTIL_H	include/read_xml_util.h	2;"	d
+RECEIVER	include/physical_types.h	/^	OPEN = -1, DRIVER = 0, RECEIVER = 1$/;"	e	enum:e_pin_type
+RIGHT	include/physical_types.h	/^	TOP = 0, RIGHT = 1, BOTTOM = 2, LEFT = 3$/;"	e	enum:e_side
+R_minW_nmos	include/physical_types.h	/^	float R_minW_nmos;$/;"	m	struct:s_arch
+R_minW_pmos	include/physical_types.h	/^	float R_minW_pmos;$/;"	m	struct:s_arch
+R_opin_cblock	include/arch_types_mrfpga.h	/^  float R_opin_cblock;$/;"	m	struct:s_arch_mrfpga
+R_opin_cblock	include/physical_types.h	/^    float R_opin_cblock;$/;"	m	struct:s_timing_inf
+ReadLineTokens	ReadLine.c	/^ReadLineTokens(INOUTP FILE * InFile, INOUTP int *LineNum) {$/;"	f
+Rmetal	include/physical_types.h	/^	float Rmetal;$/;"	m	struct:s_segment_inf
+Rseg_global	include/arch_types_mrfpga.h	/^  float Rseg_global;$/;"	m	struct:s_arch_mrfpga
+SBType	include/physical_types.h	/^	enum e_switch_block_type SBType;$/;"	m	struct:s_arch	typeref:enum:s_arch::e_switch_block_type
+SDCFile	include/physical_types.h	/^	char * SDCFile; \/* only here for convenience of passing to path_delay.c *\/$/;"	m	struct:s_timing_inf
+SPICE_ABS	fpga_spice_include/spice_types.h	/^  SPICE_FRAC, SPICE_ABS$/;"	e	enum:e_spice_accuracy_type
+SPICE_FRAC	fpga_spice_include/spice_types.h	/^  SPICE_FRAC, SPICE_ABS$/;"	e	enum:e_spice_accuracy_type
+SPICE_LIB_ACADEMIA	fpga_spice_include/spice_types.h	/^  SPICE_LIB_INDUSTRY,SPICE_LIB_ACADEMIA$/;"	e	enum:e_spice_tech_lib_type
+SPICE_LIB_INDUSTRY	fpga_spice_include/spice_types.h	/^  SPICE_LIB_INDUSTRY,SPICE_LIB_ACADEMIA$/;"	e	enum:e_spice_tech_lib_type
+SPICE_MODEL_BUF_BUF	fpga_spice_include/spice_types.h	/^  SPICE_MODEL_BUF_BUF$/;"	e	enum:e_spice_model_buffer_type
+SPICE_MODEL_BUF_INV	fpga_spice_include/spice_types.h	/^  SPICE_MODEL_BUF_INV, $/;"	e	enum:e_spice_model_buffer_type
+SPICE_MODEL_CHAN_WIRE	fpga_spice_include/spice_types.h	/^  SPICE_MODEL_CHAN_WIRE, $/;"	e	enum:e_spice_model_type
+SPICE_MODEL_DESIGN_CMOS	fpga_spice_include/spice_types.h	/^  SPICE_MODEL_DESIGN_CMOS, $/;"	e	enum:e_spice_model_design_tech
+SPICE_MODEL_DESIGN_RRAM	fpga_spice_include/spice_types.h	/^  SPICE_MODEL_DESIGN_RRAM$/;"	e	enum:e_spice_model_design_tech
+SPICE_MODEL_FF	fpga_spice_include/spice_types.h	/^  SPICE_MODEL_FF, $/;"	e	enum:e_spice_model_type
+SPICE_MODEL_GND	fpga_spice_include/spice_types.h	/^  SPICE_MODEL_GND, $/;"	e	enum:e_spice_model_type
+SPICE_MODEL_HARDLOGIC	fpga_spice_include/spice_types.h	/^  SPICE_MODEL_HARDLOGIC,$/;"	e	enum:e_spice_model_type
+SPICE_MODEL_INVBUF	fpga_spice_include/spice_types.h	/^  SPICE_MODEL_INVBUF, $/;"	e	enum:e_spice_model_type
+SPICE_MODEL_IOPAD	fpga_spice_include/spice_types.h	/^  SPICE_MODEL_IOPAD, $/;"	e	enum:e_spice_model_type
+SPICE_MODEL_LUT	fpga_spice_include/spice_types.h	/^  SPICE_MODEL_LUT, $/;"	e	enum:e_spice_model_type
+SPICE_MODEL_MUX	fpga_spice_include/spice_types.h	/^  SPICE_MODEL_MUX, $/;"	e	enum:e_spice_model_type
+SPICE_MODEL_PASSGATE	fpga_spice_include/spice_types.h	/^  SPICE_MODEL_PASSGATE $/;"	e	enum:e_spice_model_type
+SPICE_MODEL_PASS_GATE_TRANSISTOR	fpga_spice_include/spice_types.h	/^  SPICE_MODEL_PASS_GATE_TRANSMISSION, SPICE_MODEL_PASS_GATE_TRANSISTOR$/;"	e	enum:e_spice_model_pass_gate_logic_type
+SPICE_MODEL_PASS_GATE_TRANSMISSION	fpga_spice_include/spice_types.h	/^  SPICE_MODEL_PASS_GATE_TRANSMISSION, SPICE_MODEL_PASS_GATE_TRANSISTOR$/;"	e	enum:e_spice_model_pass_gate_logic_type
+SPICE_MODEL_PORT_BL	fpga_spice_include/spice_types.h	/^  SPICE_MODEL_PORT_BL,$/;"	e	enum:e_spice_model_port_type
+SPICE_MODEL_PORT_BLB	fpga_spice_include/spice_types.h	/^  SPICE_MODEL_PORT_BLB,$/;"	e	enum:e_spice_model_port_type
+SPICE_MODEL_PORT_CLOCK	fpga_spice_include/spice_types.h	/^  SPICE_MODEL_PORT_CLOCK, $/;"	e	enum:e_spice_model_port_type
+SPICE_MODEL_PORT_INOUT	fpga_spice_include/spice_types.h	/^  SPICE_MODEL_PORT_INOUT, $/;"	e	enum:e_spice_model_port_type
+SPICE_MODEL_PORT_INPUT	fpga_spice_include/spice_types.h	/^  SPICE_MODEL_PORT_INPUT, $/;"	e	enum:e_spice_model_port_type
+SPICE_MODEL_PORT_OUTPUT	fpga_spice_include/spice_types.h	/^  SPICE_MODEL_PORT_OUTPUT, $/;"	e	enum:e_spice_model_port_type
+SPICE_MODEL_PORT_SRAM	fpga_spice_include/spice_types.h	/^  SPICE_MODEL_PORT_SRAM,$/;"	e	enum:e_spice_model_port_type
+SPICE_MODEL_PORT_WL	fpga_spice_include/spice_types.h	/^  SPICE_MODEL_PORT_WL,$/;"	e	enum:e_spice_model_port_type
+SPICE_MODEL_PORT_WLB	fpga_spice_include/spice_types.h	/^  SPICE_MODEL_PORT_WLB$/;"	e	enum:e_spice_model_port_type
+SPICE_MODEL_SCFF	fpga_spice_include/spice_types.h	/^  SPICE_MODEL_SCFF,$/;"	e	enum:e_spice_model_type
+SPICE_MODEL_SRAM	fpga_spice_include/spice_types.h	/^  SPICE_MODEL_SRAM, $/;"	e	enum:e_spice_model_type
+SPICE_MODEL_STRUCTURE_CROSSBAR	fpga_spice_include/spice_types.h	/^  SPICE_MODEL_STRUCTURE_CROSSBAR $/;"	e	enum:e_spice_model_structure
+SPICE_MODEL_STRUCTURE_MULTILEVEL	fpga_spice_include/spice_types.h	/^  SPICE_MODEL_STRUCTURE_MULTILEVEL, $/;"	e	enum:e_spice_model_structure
+SPICE_MODEL_STRUCTURE_ONELEVEL	fpga_spice_include/spice_types.h	/^  SPICE_MODEL_STRUCTURE_ONELEVEL, $/;"	e	enum:e_spice_model_structure
+SPICE_MODEL_STRUCTURE_TREE	fpga_spice_include/spice_types.h	/^  SPICE_MODEL_STRUCTURE_TREE, $/;"	e	enum:e_spice_model_structure
+SPICE_MODEL_VDD	fpga_spice_include/spice_types.h	/^  SPICE_MODEL_VDD, $/;"	e	enum:e_spice_model_type
+SPICE_MODEL_WIRE	fpga_spice_include/spice_types.h	/^  SPICE_MODEL_WIRE, $/;"	e	enum:e_spice_model_type
+SPICE_SRAM_MEMORY_BANK	fpga_spice_include/spice_types.h	/^  SPICE_SRAM_MEMORY_BANK$/;"	e	enum:e_sram_orgz
+SPICE_SRAM_SCAN_CHAIN	fpga_spice_include/spice_types.h	/^  SPICE_SRAM_SCAN_CHAIN,$/;"	e	enum:e_sram_orgz
+SPICE_SRAM_STANDALONE	fpga_spice_include/spice_types.h	/^  SPICE_SRAM_STANDALONE,$/;"	e	enum:e_sram_orgz
+SPICE_TRANS_IO_NMOS	fpga_spice_include/spice_types.h	/^  SPICE_TRANS_NMOS, SPICE_TRANS_PMOS, SPICE_TRANS_IO_NMOS, SPICE_TRANS_IO_PMOS$/;"	e	enum:e_spice_trans_type
+SPICE_TRANS_IO_PMOS	fpga_spice_include/spice_types.h	/^  SPICE_TRANS_NMOS, SPICE_TRANS_PMOS, SPICE_TRANS_IO_NMOS, SPICE_TRANS_IO_PMOS$/;"	e	enum:e_spice_trans_type
+SPICE_TRANS_NMOS	fpga_spice_include/spice_types.h	/^  SPICE_TRANS_NMOS, SPICE_TRANS_PMOS, SPICE_TRANS_IO_NMOS, SPICE_TRANS_IO_PMOS$/;"	e	enum:e_spice_trans_type
+SPICE_TRANS_PMOS	fpga_spice_include/spice_types.h	/^  SPICE_TRANS_NMOS, SPICE_TRANS_PMOS, SPICE_TRANS_IO_NMOS, SPICE_TRANS_IO_PMOS$/;"	e	enum:e_spice_trans_type
+STTRAM	include/arch_types_mrfpga.h	/^  CONV = 0, MONO, STTRAM, PCRAM_Xie, PCRAM_Pierre, NEM $/;"	e	enum:e_tech_comp
+SUBSET	include/physical_types.h	/^	SUBSET, WILTON, UNIVERSAL, FULL$/;"	e	enum:e_switch_block_type
+SWSEG_UNBUF_CB	include/physical_types.h	/^  SWSEG_UNBUF_SB, SWSEG_UNBUF_CB$/;"	e	enum:e_swseg_pattern_type
+SWSEG_UNBUF_SB	include/physical_types.h	/^  SWSEG_UNBUF_SB, SWSEG_UNBUF_CB$/;"	e	enum:e_swseg_pattern_type
+Segments	include/physical_types.h	/^	t_segment_inf * Segments;$/;"	m	struct:s_arch
+SetupEmptyType	read_xml_arch_file.c	/^static void SetupEmptyType(void) {$/;"	f	file:
+SetupGridLocations	read_xml_arch_file.c	/^static void SetupGridLocations(ezxml_t Locations, t_type_descriptor * Type) {$/;"	f	file:
+SetupPinEquivalenceAutoDetect	read_xml_arch_file.c	/^void SetupPinEquivalenceAutoDetect(ezxml_t Parent, t_type_descriptor* Type) {$/;"	f	file:
+SetupPinLocationsAndPinClasses	read_xml_arch_file.c	/^static void SetupPinLocationsAndPinClasses(ezxml_t Locations,$/;"	f	file:
+Switches	include/physical_types.h	/^	struct s_switch_inf *Switches;$/;"	m	struct:s_arch	typeref:struct:s_arch::s_switch_inf
+SyncModelsPbTypes	read_xml_arch_file.c	/^static void SyncModelsPbTypes(INOUTP struct s_arch *arch,$/;"	f	file:
+SyncModelsPbTypes_rec	read_xml_arch_file.c	/^static void SyncModelsPbTypes_rec(INOUTP struct s_arch *arch,$/;"	f	file:
+TOKENS	include/arch_types.h	19;"	d
+TOP	include/physical_types.h	/^	TOP = 0, RIGHT = 1, BOTTOM = 2, LEFT = 3$/;"	e	enum:e_side
+TRUE	include/util.h	/^	FALSE, TRUE$/;"	e	enum:__anon4
+T_ipin_cblock	include/physical_types.h	/^	float T_ipin_cblock;$/;"	m	struct:s_arch
+T_ipin_cblock	include/physical_types.h	/^	float T_ipin_cblock;$/;"	m	struct:s_timing_inf
+T_opin_cblock	include/arch_types_mrfpga.h	/^  float T_opin_cblock;$/;"	m	struct:s_arch_mrfpga
+T_opin_cblock	include/physical_types.h	/^    float T_opin_cblock;$/;"	m	struct:s_timing_inf
+Tdel	include/arch_types_mrfpga.h	/^  float Tdel; $/;"	m	struct:s_memristor_inf
+Tdel	include/arch_types_mrfpga.h	/^  float Tdel;$/;"	m	struct:s_buffer_inf
+Tdel	include/physical_types.h	/^	float Tdel;$/;"	m	struct:s_switch_inf
+UNDEFINED	include/arch_types.h	22;"	d
+UNIFORM	include/physical_types.h	/^	UNIFORM, GAUSSIAN, PULSE, DELTA$/;"	e	enum:e_stat
+UNIVERSAL	include/physical_types.h	/^	SUBSET, WILTON, UNIVERSAL, FULL$/;"	e	enum:e_switch_block_type
+UNI_DIRECTIONAL	include/physical_types.h	/^	UNI_DIRECTIONAL, BI_DIRECTIONAL$/;"	e	enum:e_directionality
+UNKNOWN_CLASS	include/physical_types.h	/^	UNKNOWN_CLASS = 0, LUT_CLASS = 1, LATCH_CLASS = 2, MEMORY_CLASS = 3$/;"	e	enum:e_pb_type_class
+UTIL_H	include/util.h	2;"	d
+UpdateAndCheckModels	read_xml_arch_file.c	/^static void UpdateAndCheckModels(INOUTP struct s_arch *arch) {$/;"	f	file:
+VPR_VERSION	include/arch_types.h	16;"	d
+W	include/physical_types.h	/^	int W;$/;"	m	struct:s_clb_grid
+WARNTAG	include/util.h	27;"	d
+WILTON	include/physical_types.h	/^	SUBSET, WILTON, UNIVERSAL, FULL$/;"	e	enum:e_switch_block_type
+WIRE_MODEL_PIE	fpga_spice_include/spice_types.h	/^  WIRE_MODEL_PIE,$/;"	e	enum:e_wire_model_type
+WIRE_MODEL_T	fpga_spice_include/spice_types.h	/^  WIRE_MODEL_T$/;"	e	enum:e_wire_model_type
+XmlReadArch	read_xml_arch_file.c	/^void XmlReadArch(INP const char *ArchFile, INP boolean timing_enabled,$/;"	f
+_EZXML_H	include/ezxml.h	26;"	d
+abs_variation	fpga_spice_include/spice_types.h	/^  float abs_variation;$/;"	m	struct:s_spice_mc_variation_params
+absolute_length	include/physical_types.h	/^		float absolute_length;$/;"	m	union:s_port_power::__anon3
+absolute_power_per_instance	include/physical_types.h	/^	t_power_usage absolute_power_per_instance; \/* User-provided absolute power per block *\/$/;"	m	struct:s_pb_type_power
+accuracy	fpga_spice_include/spice_types.h	/^  float accuracy;$/;"	m	struct:s_spice_meas_params
+accuracy_type	fpga_spice_include/spice_types.h	/^  enum e_spice_accuracy_type accuracy_type;$/;"	m	struct:s_spice_meas_params	typeref:enum:s_spice_meas_params::e_spice_accuracy_type
+addr	fpga_spice_include/spice_types.h	/^  int addr; \/* Address to write the value *\/$/;"	m	struct:s_conf_bit
+advanced_rram_design	fpga_spice_include/spice_types.h	/^  boolean advanced_rram_design;$/;"	m	struct:s_spice_model_design_tech_info
+alloc_and_load_default_child_for_pb_type	read_xml_arch_file.c	/^static void alloc_and_load_default_child_for_pb_type( INOUTP t_pb_type *pb_type,$/;"	f	file:
+alloc_ivector_and_copy_int_list	util.c	/^void alloc_ivector_and_copy_int_list(t_linked_int ** list_head_ptr,$/;"	f
+alloc_matrix	util.c	/^alloc_matrix(int nrmin, int nrmax, int ncmin, int ncmax, size_t elsize) {$/;"	f
+alloc_matrix3	util.c	/^alloc_matrix3(int nrmin, int nrmax, int ncmin, int ncmax, int ndmin, int ndmax,$/;"	f
+alloc_matrix4	util.c	/^alloc_matrix4(int nrmin, int nrmax, int ncmin, int ncmax, int ndmin, int ndmax,$/;"	f
+annotations	include/physical_types.h	/^	t_pin_to_pin_annotation *annotations; \/* [0..num_annotations-1] *\/$/;"	m	struct:s_interconnect
+annotations	include/physical_types.h	/^	t_pin_to_pin_annotation *annotations; \/* [0..num_annotations-1] *\/$/;"	m	struct:s_pb_type
+arch_mrfpga	include/physical_types.h	/^    t_arch_mrfpga arch_mrfpga;$/;"	m	struct:s_arch
+area	fpga_spice_include/spice_types.h	/^  float area; \/\/Xifan TANG$/;"	m	struct:s_sram_inf
+area	include/physical_types.h	/^	float area;$/;"	m	struct:s_type_descriptor
+attr	include/ezxml.h	/^	char ***attr; \/* default attributes *\/$/;"	m	struct:ezxml_root
+attr	include/ezxml.h	/^	char **attr; \/* tag attributes { name, value, name, value, ... NULL } *\/$/;"	m	struct:ezxml
+auto_select_sim_num_clk_cycle	fpga_spice_include/spice_types.h	/^  int auto_select_sim_num_clk_cycle;$/;"	m	struct:s_spice_meas_params
+autosize_buffer	include/physical_types.h	/^	boolean autosize_buffer; \/* autosize clock buffers *\/$/;"	m	struct:s_clock_network
+available_in_packing	include/physical_types.h	/^    int available_in_packing;$/;"	m	struct:s_mode
+base_cost	include/cad_types.h	/^	float base_cost; \/* base cost of pattern eg. If a group of logical blocks match a pattern of smaller primitives, that is better than the same group using bigger primitives *\/$/;"	m	struct:s_pack_patterns
+base_cost	include/cad_types.h	/^	float base_cost; \/* cost independant of current status of packing *\/$/;"	m	struct:s_cluster_placement_primitive
+bl	fpga_spice_include/spice_types.h	/^  t_conf_bit* bl;$/;"	m	struct:s_conf_bit_info
+blif_model	include/physical_types.h	/^	char *blif_model;$/;"	m	struct:s_pb_type
+block_id	include/cad_types.h	/^	int block_id;$/;"	m	struct:s_pack_pattern_block
+boolean	include/util.h	/^typedef int boolean;$/;"	t
+boolean	include/util.h	/^} boolean;$/;"	t	typeref:enum:__anon4
+buf_size	include/physical_types.h	/^	float buf_size;$/;"	m	struct:s_switch_inf
+buffer_info	fpga_spice_include/spice_types.h	/^  t_spice_model_buffer* buffer_info;$/;"	m	struct:s_spice_model_design_tech_info
+buffer_size	include/physical_types.h	/^	float buffer_size; \/* if not autosized, the clock buffer size *\/$/;"	m	struct:s_clock_network
+buffer_size	include/physical_types.h	/^	float buffer_size;$/;"	m	struct:s_pb_graph_pin_power
+buffer_size	include/physical_types.h	/^	float buffer_size;$/;"	m	struct:s_port_power
+buffer_type	include/physical_types.h	/^	e_power_buffer_type buffer_type;$/;"	m	struct:s_port_power
+buffered	include/physical_types.h	/^	boolean buffered;$/;"	m	struct:s_switch_inf
+cap_val	fpga_spice_include/spice_types.h	/^  float cap_val; $/;"	m	struct:s_spice_model_wire_param
+capacitance	include/physical_types.h	/^	float capacitance;$/;"	m	struct:s_pb_graph_edge
+capacity	include/physical_types.h	/^	int capacity;$/;"	m	struct:s_type_descriptor
+captab	fpga_spice_include/spice_types.h	/^  int captab;$/;"	m	struct:s_spice_params
+cat_llists	linkedlist.c	/^t_llist* cat_llists(t_llist* head1,$/;"	f
+cb	include/physical_types.h	/^	boolean *cb;$/;"	m	struct:s_segment_inf
+cb_len	include/physical_types.h	/^	int cb_len;$/;"	m	struct:s_segment_inf
+cb_switches	include/physical_types.h	/^    t_switch_inf* cb_switches;$/;"	m	struct:s_arch
+cb_type_descriptors	read_xml_arch_file.c	/^static struct s_type_descriptor *cb_type_descriptors;$/;"	v	typeref:struct:s_type_descriptor	file:
+cbx_index_high	fpga_spice_include/spice_types.h	/^  int** cbx_index_high;$/;"	m	struct:s_spice_model
+cbx_index_low	fpga_spice_include/spice_types.h	/^  int** cbx_index_low;$/;"	m	struct:s_spice_model
+cby_index_high	fpga_spice_include/spice_types.h	/^  int** cby_index_high;$/;"	m	struct:s_spice_model
+cby_index_low	fpga_spice_include/spice_types.h	/^  int** cby_index_low;$/;"	m	struct:s_spice_model
+chain_name	include/physical_types.h	/^	char *chain_name;$/;"	m	struct:s_port
+chain_root_pin	include/cad_types.h	/^	t_pb_graph_pin *chain_root_pin; \/* pointer to logic block input pin that drives this chain from the preceding logic block *\/	$/;"	m	struct:s_pack_patterns
+chan_length	fpga_spice_include/spice_types.h	/^  float chan_length;$/;"	m	struct:s_spice_transistor_type
+chan_width_io	include/physical_types.h	/^	float chan_width_io;$/;"	m	struct:s_chan_width_dist
+chan_x_dist	include/physical_types.h	/^	t_chan chan_x_dist;$/;"	m	struct:s_chan_width_dist
+chan_y_dist	include/physical_types.h	/^	t_chan chan_y_dist;$/;"	m	struct:s_chan_width_dist
+check_spice_models	read_xml_spice.c	/^static void check_spice_models(int num_spice_model,$/;"	f	file:
+check_tech_lib	read_xml_spice.c	/^static void check_tech_lib(t_spice_tech_lib tech_lib, $/;"	f	file:
+child	include/ezxml.h	/^	ezxml_t child; \/* head of sub tag list, NULL if none *\/$/;"	m	struct:ezxml
+child_pb_graph_nodes	include/physical_types.h	/^	struct s_pb_graph_node ***child_pb_graph_nodes; \/* [0..num_modes-1][0..num_pb_type_in_mode-1][0..num_pb-1] *\/$/;"	m	struct:s_pb_graph_node	typeref:struct:s_pb_graph_node::s_pb_graph_node
+chunk_ptr_head	include/util.h	/^	struct s_linked_vptr *chunk_ptr_head; $/;"	m	struct:s_chunk	typeref:struct:s_chunk::s_linked_vptr
+class_inf	include/physical_types.h	/^	struct s_class *class_inf; \/* [0..num_class-1] *\/$/;"	m	struct:s_type_descriptor	typeref:struct:s_type_descriptor::s_class
+class_type	include/physical_types.h	/^	enum e_pb_type_class class_type;$/;"	m	struct:s_pb_type	typeref:enum:s_pb_type::e_pb_type_class
+clb_grid	include/physical_types.h	/^	struct s_clb_grid clb_grid;$/;"	m	struct:s_arch	typeref:struct:s_arch::s_clb_grid
+clock	include/physical_types.h	/^	char * clock;$/;"	m	struct:s_pin_to_pin_annotation
+clock_inf	include/physical_types.h	/^	t_clock_network *clock_inf; \/* Details about each clock *\/$/;"	m	struct:s_clock_arch
+clock_pins	include/physical_types.h	/^	t_pb_graph_pin **clock_pins; \/* [0..num_clock_ports-1] [0..num_port_pins-1]*\/$/;"	m	struct:s_pb_graph_node
+clock_slew_fall_time	fpga_spice_include/spice_types.h	/^  float clock_slew_fall_time;  $/;"	m	struct:s_spice_stimulate_params
+clock_slew_fall_type	fpga_spice_include/spice_types.h	/^  enum e_spice_accuracy_type clock_slew_fall_type;$/;"	m	struct:s_spice_stimulate_params	typeref:enum:s_spice_stimulate_params::e_spice_accuracy_type
+clock_slew_rise_time	fpga_spice_include/spice_types.h	/^  float clock_slew_rise_time;  $/;"	m	struct:s_spice_stimulate_params
+clock_slew_rise_type	fpga_spice_include/spice_types.h	/^  enum e_spice_accuracy_type clock_slew_rise_type;$/;"	m	struct:s_spice_stimulate_params	typeref:enum:s_spice_stimulate_params::e_spice_accuracy_type
+clocks	include/physical_types.h	/^	t_clock_arch * clocks;$/;"	m	struct:s_arch
+close	ezxml.c	61;"	d	file:
+cluster_placement_primitive	include/physical_types.h	/^	struct s_cluster_placement_primitive *cluster_placement_primitive; \/* pointer to indexing structure useful during packing stage *\/$/;"	m	struct:s_pb_graph_node	typeref:struct:s_pb_graph_node::s_cluster_placement_primitive
+cmos_variation	fpga_spice_include/spice_types.h	/^  t_spice_mc_variation_params cmos_variation;$/;"	m	struct:s_spice_mc_params
+cnt	fpga_spice_include/spice_types.h	/^  int cnt; \/* Used in mux_testbench only*\/$/;"	m	struct:s_spice_mux_model
+cnt	fpga_spice_include/spice_types.h	/^  int cnt;$/;"	m	struct:s_spice_model
+col_rel	include/physical_types.h	/^	float col_rel;$/;"	m	struct:s_grid_loc_def
+conf_bit_head	fpga_spice_include/spice_types.h	/^  t_llist* conf_bit_head; $/;"	m	struct:s_sram_orgz_info
+connections	include/cad_types.h	/^	struct s_pack_pattern_connections *connections; \/* linked list of connections of logic blocks in pattern *\/$/;"	m	struct:s_pack_pattern_block	typeref:struct:s_pack_pattern_block::s_pack_pattern_connections
+cont	util.c	/^static int cont; \/* line continued? *\/$/;"	v	file:
+create_llist	linkedlist.c	/^t_llist* create_llist(int len) {$/;"	f
+cur	include/ezxml.h	/^	ezxml_t cur; \/* current xml tree insertion point *\/$/;"	m	struct:ezxml_root
+current_random	util.c	/^static unsigned int current_random = 0;$/;"	v	file:
+data	include/util.h	/^	int data;$/;"	m	struct:s_linked_int
+data_vptr	include/util.h	/^	void *data_vptr;$/;"	m	struct:s_linked_vptr
+dc	include/physical_types.h	/^	float dc;$/;"	m	struct:s_chan
+default_mode_num_conf_bits	include/physical_types.h	/^    int default_mode_num_conf_bits;$/;"	m	struct:s_pb_type
+default_mode_num_iopads	include/physical_types.h	/^    int default_mode_num_iopads;$/;"	m	struct:s_pb_type
+default_mode_num_mode_bits	include/physical_types.h	/^    int default_mode_num_mode_bits;$/;"	m	struct:s_pb_type
+default_mode_num_reserved_conf_bits	include/physical_types.h	/^    int default_mode_num_reserved_conf_bits;$/;"	m	struct:s_pb_type
+default_val	fpga_spice_include/spice_types.h	/^  int default_val;$/;"	m	struct:s_spice_model_port
+define_idle_mode	include/physical_types.h	/^    int define_idle_mode;   $/;"	m	struct:s_mode
+define_physical_mode	include/physical_types.h	/^    int define_physical_mode;   $/;"	m	struct:s_mode
+delay_max	include/physical_types.h	/^	float delay_max;$/;"	m	struct:s_pb_graph_edge
+delay_min	include/physical_types.h	/^	float delay_min;$/;"	m	struct:s_pb_graph_edge
+delete_in_vptr_list	util.c	/^delete_in_vptr_list(struct s_linked_vptr *head) {$/;"	f
+dens	include/physical_types.h	/^	float dens; \/* Switching density of net assigned to this clock *\/$/;"	m	struct:s_clock_network
+density	fpga_spice_include/spice_types.h	/^  float density;$/;"	m	struct:s_spice_net_info
+depth	include/physical_types.h	/^	int depth; \/* depth of pb_type *\/$/;"	m	struct:s_pb_type
+design_tech	fpga_spice_include/spice_types.h	/^  enum e_spice_model_design_tech design_tech;$/;"	m	struct:s_spice_model	typeref:enum:s_spice_model::e_spice_model_design_tech
+design_tech_info	fpga_spice_include/spice_types.h	/^  t_spice_model_design_tech_info design_tech_info;$/;"	m	struct:s_spice_model
+dir	include/logic_types.h	/^	enum PORTS dir; \/* port direction *\/$/;"	m	struct:s_model_ports	typeref:enum:s_model_ports::PORTS
+directionality	include/physical_types.h	/^	enum e_directionality directionality;$/;"	m	struct:s_segment_inf	typeref:enum:s_segment_inf::e_directionality
+dptr	fpga_spice_include/linkedlist.h	/^  void* dptr;$/;"	m	struct:s_llist
+driver_pin	include/physical_types.h	/^	int driver_pin;$/;"	m	struct:s_pb_graph_edge
+driver_set	include/physical_types.h	/^	int driver_set;$/;"	m	struct:s_pb_graph_edge
+dump_structural_verilog	fpga_spice_include/spice_types.h	/^  boolean dump_structural_verilog;$/;"	m	struct:s_spice_model
+dynamic	include/physical_types.h	/^	float dynamic;$/;"	m	struct:s_power_usage
+e	include/ezxml.h	/^	char *e; \/* end of work area *\/$/;"	m	struct:ezxml_root
+e_Fc_type	include/physical_types.h	/^enum e_Fc_type {$/;"	g
+e_directionality	include/physical_types.h	/^enum e_directionality {$/;"	g
+e_grid_loc_type	include/physical_types.h	/^enum e_grid_loc_type {$/;"	g
+e_interconnect	include/physical_types.h	/^enum e_interconnect {$/;"	g
+e_pb_graph_pin_type	include/physical_types.h	/^enum e_pb_graph_pin_type {$/;"	g
+e_pb_type_class	include/physical_types.h	/^enum e_pb_type_class {$/;"	g
+e_pin_location_distr	include/physical_types.h	/^enum e_pin_location_distr {$/;"	g
+e_pin_to_pin_annotation_format	include/physical_types.h	/^enum e_pin_to_pin_annotation_format {$/;"	g
+e_pin_to_pin_annotation_type	include/physical_types.h	/^enum e_pin_to_pin_annotation_type {$/;"	g
+e_pin_to_pin_capacitance_annotations	include/physical_types.h	/^enum e_pin_to_pin_capacitance_annotations {$/;"	g
+e_pin_to_pin_delay_annotations	include/physical_types.h	/^enum e_pin_to_pin_delay_annotations {$/;"	g
+e_pin_to_pin_mode_select_annotations	include/physical_types.h	/^enum e_pin_to_pin_mode_select_annotations {$/;"	g
+e_pin_to_pin_pack_pattern_annotations	include/physical_types.h	/^enum e_pin_to_pin_pack_pattern_annotations {$/;"	g
+e_pin_type	include/physical_types.h	/^enum e_pin_type {$/;"	g
+e_power_buffer_type	include/physical_types.h	/^} e_power_buffer_type;$/;"	t	typeref:enum:__anon2
+e_power_estimation_method	include/physical_types.h	/^typedef enum e_power_estimation_method_ e_power_estimation_method;$/;"	t	typeref:enum:e_power_estimation_method_
+e_power_estimation_method_	include/physical_types.h	/^enum e_power_estimation_method_ {$/;"	g
+e_power_wire_type	include/physical_types.h	/^} e_power_wire_type;$/;"	t	typeref:enum:__anon1
+e_side	include/physical_types.h	/^enum e_side {$/;"	g
+e_spice_accuracy_type	fpga_spice_include/spice_types.h	/^enum e_spice_accuracy_type {$/;"	g
+e_spice_model_buffer_type	fpga_spice_include/spice_types.h	/^enum e_spice_model_buffer_type {$/;"	g
+e_spice_model_design_tech	fpga_spice_include/spice_types.h	/^enum e_spice_model_design_tech {$/;"	g
+e_spice_model_pass_gate_logic_type	fpga_spice_include/spice_types.h	/^enum e_spice_model_pass_gate_logic_type {$/;"	g
+e_spice_model_port_type	fpga_spice_include/spice_types.h	/^enum e_spice_model_port_type {$/;"	g
+e_spice_model_structure	fpga_spice_include/spice_types.h	/^enum e_spice_model_structure {$/;"	g
+e_spice_model_type	fpga_spice_include/spice_types.h	/^enum e_spice_model_type {$/;"	g
+e_spice_tech_lib_type	fpga_spice_include/spice_types.h	/^enum e_spice_tech_lib_type {$/;"	g
+e_spice_trans_type	fpga_spice_include/spice_types.h	/^enum e_spice_trans_type {$/;"	g
+e_sram_orgz	fpga_spice_include/spice_types.h	/^enum e_sram_orgz {$/;"	g
+e_stat	include/physical_types.h	/^enum e_stat {$/;"	g
+e_switch_block_type	include/physical_types.h	/^enum e_switch_block_type {$/;"	g
+e_swseg_pattern_type	include/physical_types.h	/^enum e_swseg_pattern_type {$/;"	g
+e_tech_comp	include/arch_types_mrfpga.h	/^enum e_tech_comp { $/;"	g
+e_wire_model_type	fpga_spice_include/spice_types.h	/^enum e_wire_model_type {$/;"	g
+energy_per_toggle	include/physical_types.h	/^	float energy_per_toggle;$/;"	m	struct:s_port_power
+ent	include/ezxml.h	/^	char **ent; \/* general entities (ampersand sequences) *\/$/;"	m	struct:ezxml_root
+equivalent	include/physical_types.h	/^	boolean equivalent;$/;"	m	struct:s_port
+err	include/ezxml.h	/^	char err[EZXML_ERRL]; \/* error string *\/$/;"	m	struct:ezxml_root
+estimation_method	include/physical_types.h	/^	e_power_estimation_method estimation_method;$/;"	m	struct:s_pb_type_power
+exist	fpga_spice_include/spice_types.h	/^  int exist;$/;"	m	struct:s_spice_model_buffer
+ezxml	include/ezxml.h	/^struct ezxml {$/;"	s
+ezxml_add_child	ezxml.c	/^ezxml_t ezxml_add_child(ezxml_t xml, char *name, size_t off) {$/;"	f
+ezxml_add_child_d	include/ezxml.h	149;"	d
+ezxml_ampencode	ezxml.c	/^ezxml_ampencode(const char *s, size_t len, char **dst, size_t * dlen,$/;"	f	file:
+ezxml_attr	ezxml.c	/^ezxml_attr(ezxml_t xml, const char *attr) {$/;"	f
+ezxml_char_content	ezxml.c	/^static void ezxml_char_content(ezxml_root_t root, char *s,$/;"	f	file:
+ezxml_child	ezxml.c	/^ezxml_t ezxml_child(ezxml_t xml, const char *name) {$/;"	f
+ezxml_close_tag	ezxml.c	/^static ezxml_t ezxml_close_tag(ezxml_root_t root, char *name, char *s) {$/;"	f	file:
+ezxml_cut	ezxml.c	/^ezxml_t ezxml_cut(ezxml_t xml) {$/;"	f
+ezxml_decode	ezxml.c	/^ezxml_decode(char *s, char **ent, char t) {$/;"	f	file:
+ezxml_ent_ok	ezxml.c	/^static int ezxml_ent_ok(char *name, char *s, char **ent) {$/;"	f	file:
+ezxml_err	ezxml.c	/^static ezxml_t ezxml_err(ezxml_root_t root, char *s, const char *err, ...) {$/;"	f	file:
+ezxml_error	ezxml.c	/^ezxml_error(ezxml_t xml) {$/;"	f
+ezxml_free	ezxml.c	/^void ezxml_free(ezxml_t xml) {$/;"	f
+ezxml_free_attr	ezxml.c	/^static void ezxml_free_attr(char **attr) {$/;"	f	file:
+ezxml_get	ezxml.c	/^ezxml_t ezxml_get(ezxml_t xml, ...) {$/;"	f
+ezxml_idx	ezxml.c	/^ezxml_t ezxml_idx(ezxml_t xml, int idx) {$/;"	f
+ezxml_insert	ezxml.c	/^ezxml_t ezxml_insert(ezxml_t xml, ezxml_t dest, size_t off) {$/;"	f
+ezxml_internal_dtd	ezxml.c	/^static short ezxml_internal_dtd(ezxml_root_t root, char *s,$/;"	f	file:
+ezxml_move	include/ezxml.h	178;"	d
+ezxml_name	include/ezxml.h	108;"	d
+ezxml_new	ezxml.c	/^ezxml_t ezxml_new(char *name) {$/;"	f
+ezxml_new_d	include/ezxml.h	142;"	d
+ezxml_next	include/ezxml.h	101;"	d
+ezxml_open_tag	ezxml.c	/^static void ezxml_open_tag(ezxml_root_t root, int line, char *name, char **attr) {$/;"	f	file:
+ezxml_parse_fd	ezxml.c	/^ezxml_t ezxml_parse_fd(int fd) {$/;"	f
+ezxml_parse_file	ezxml.c	/^ezxml_t ezxml_parse_file(const char *file) {$/;"	f
+ezxml_parse_fp	ezxml.c	/^ezxml_t ezxml_parse_fp(FILE * fp) {$/;"	f
+ezxml_parse_str	ezxml.c	/^ezxml_t ezxml_parse_str(char *s, size_t len) {$/;"	f
+ezxml_pi	ezxml.c	/^ezxml_pi(ezxml_t xml, const char *target) {$/;"	f
+ezxml_proc_inst	ezxml.c	/^static void ezxml_proc_inst(ezxml_root_t root, char *s, size_t len) {$/;"	f	file:
+ezxml_remove	include/ezxml.h	181;"	d
+ezxml_root	include/ezxml.h	/^struct ezxml_root { \/* additional data for the root tag *\/$/;"	s
+ezxml_root_t	include/ezxml.h	/^typedef struct ezxml_root *ezxml_root_t;$/;"	t	typeref:struct:ezxml_root
+ezxml_set_attr	ezxml.c	/^ezxml_t ezxml_set_attr(ezxml_t xml, char *name, char *value) {$/;"	f
+ezxml_set_attr_d	include/ezxml.h	164;"	d
+ezxml_set_flag	ezxml.c	/^ezxml_t ezxml_set_flag(ezxml_t xml, short flag) {$/;"	f
+ezxml_set_txt	ezxml.c	/^ezxml_t ezxml_set_txt(ezxml_t xml, char *txt) {$/;"	f
+ezxml_set_txt_d	include/ezxml.h	156;"	d
+ezxml_str2utf8	ezxml.c	/^ezxml_str2utf8(char **s, size_t * len) {$/;"	f	file:
+ezxml_t	include/ezxml.h	/^typedef struct ezxml *ezxml_t;$/;"	t	typeref:struct:ezxml
+ezxml_toxml	ezxml.c	/^ezxml_toxml(ezxml_t xml) {$/;"	f
+ezxml_toxml_r	ezxml.c	/^ezxml_toxml_r(ezxml_t xml, char **s, size_t * len, size_t * max, size_t start,$/;"	f	file:
+ezxml_txt	include/ezxml.h	111;"	d
+ezxml_vget	ezxml.c	/^ezxml_t ezxml_vget(ezxml_t xml, va_list ap) {$/;"	f
+f_per_stage	fpga_spice_include/spice_types.h	/^  int f_per_stage;$/;"	m	struct:s_spice_model_buffer
+fan_in	include/physical_types.h	/^    int fan_in;$/;"	m	struct:s_interconnect
+fan_out	include/physical_types.h	/^    int fan_out;$/;"	m	struct:s_interconnect
+fast	fpga_spice_include/spice_types.h	/^  int fast;$/;"	m	struct:s_spice_params
+file_exists	util.c	/^boolean file_exists(const char * filename) {$/;"	f
+file_line_number	util.c	/^int file_line_number; \/* file in line number being parsed *\/$/;"	v
+findPortByName	read_xml_arch_file.c	/^static t_port * findPortByName(const char * name, t_pb_type * pb_type,$/;"	f	file:
+find_length_llist	linkedlist.c	/^int find_length_llist(t_llist* head) {$/;"	f
+flags	include/ezxml.h	/^	short flags; \/* additional information *\/$/;"	m	struct:ezxml
+format	include/physical_types.h	/^	enum e_pin_to_pin_annotation_format format;$/;"	m	struct:s_pin_to_pin_annotation	typeref:enum:s_pin_to_pin_annotation::e_pin_to_pin_annotation_format
+frac_cb	include/physical_types.h	/^	float frac_cb;$/;"	m	struct:s_segment_inf
+frac_sb	include/physical_types.h	/^	float frac_sb;$/;"	m	struct:s_segment_inf
+free_chunk_memory	util.c	/^void free_chunk_memory(t_chunk *chunk_info) {$/;"	f
+free_int_list	util.c	/^void free_int_list(t_linked_int ** int_list_head_ptr) {$/;"	f
+free_ivec_matrix	util.c	/^void free_ivec_matrix(struct s_ivec **ivec_matrix, int nrmin, int nrmax,$/;"	f
+free_ivec_matrix3	util.c	/^void free_ivec_matrix3(struct s_ivec ***ivec_matrix3, int nrmin, int nrmax,$/;"	f
+free_ivec_vector	util.c	/^void free_ivec_vector(struct s_ivec *ivec_vector, int nrmin, int nrmax) {$/;"	f
+free_llist	linkedlist.c	/^void free_llist(t_llist* head) {$/;"	f
+free_matrix	util.c	/^void free_matrix(void *vptr, int nrmin, int nrmax, int ncmin, size_t elsize) {$/;"	f
+free_matrix3	util.c	/^void free_matrix3(void *vptr, int nrmin, int nrmax, int ncmin, int ncmax,$/;"	f
+free_matrix4	util.c	/^void free_matrix4(void *vptr, int nrmin, int nrmax, int ncmin, int ncmax,$/;"	f
+freq	fpga_spice_include/spice_types.h	/^  float freq; $/;"	m	struct:s_spice_net_info
+frequency	include/physical_types.h	/^	int frequency;$/;"	m	struct:s_segment_inf
+from_block	include/cad_types.h	/^	t_pack_pattern_block *from_block;$/;"	m	struct:s_pack_pattern_connections
+from_pin	include/cad_types.h	/^	t_pb_graph_pin *from_pin;$/;"	m	struct:s_pack_pattern_connections
+from_pin	include/physical_types.h	/^	char *from_pin;$/;"	m	struct:s_direct_inf
+grid_conf_bits_lsb	fpga_spice_include/spice_types.h	/^  int** grid_conf_bits_lsb;$/;"	m	struct:s_sram_orgz_info
+grid_conf_bits_msb	fpga_spice_include/spice_types.h	/^  int** grid_conf_bits_msb;$/;"	m	struct:s_sram_orgz_info
+grid_index_high	fpga_spice_include/spice_types.h	/^  int** grid_index_high;$/;"	m	struct:s_spice_model
+grid_index_low	fpga_spice_include/spice_types.h	/^  int** grid_index_low;$/;"	m	struct:s_spice_model
+grid_loc_def	include/physical_types.h	/^	struct s_grid_loc_def *grid_loc_def; \/* [0..num_def-1] *\/$/;"	m	struct:s_type_descriptor	typeref:struct:s_type_descriptor::s_grid_loc_def
+grid_loc_type	include/physical_types.h	/^	enum e_grid_loc_type grid_loc_type;$/;"	m	struct:s_grid_loc_def	typeref:enum:s_grid_loc_def::e_grid_loc_type
+grid_logic_tile_area	include/physical_types.h	/^	float grid_logic_tile_area;$/;"	m	struct:s_arch
+grid_reserved_conf_bits	fpga_spice_include/spice_types.h	/^  int** grid_reserved_conf_bits;$/;"	m	struct:s_sram_orgz_info
+height	include/physical_types.h	/^	int height;$/;"	m	struct:s_type_descriptor
+idle_mode_name	include/physical_types.h	/^    char* idle_mode_name;$/;"	m	struct:s_pb_type
+include_netlist	fpga_spice_include/spice_types.h	/^  t_spice_model_netlist* include_netlist;$/;"	m	struct:s_spice_model
+include_netlists	fpga_spice_include/spice_types.h	/^  t_spice_model_netlist* include_netlists; $/;"	m	struct:s_spice
+included	fpga_spice_include/spice_types.h	/^  int included;$/;"	m	struct:s_spice_model_netlist
+incremental_cost	include/cad_types.h	/^	float incremental_cost; \/* cost dependant on current status of packing *\/$/;"	m	struct:s_cluster_placement_primitive
+index	fpga_spice_include/spice_types.h	/^  int index;$/;"	m	struct:s_conf_bit_info
+index	include/cad_types.h	/^	int index; \/* array index  for pattern*\/$/;"	m	struct:s_pack_patterns
+index	include/logic_types.h	/^	int index; \/* indexing for array look-up *\/$/;"	m	struct:s_model_ports
+index	include/logic_types.h	/^	int index;$/;"	m	struct:s_model
+index	include/physical_types.h	/^	int index; \/* index of type descriptor in array (allows for index referencing) *\/$/;"	m	struct:s_type_descriptor
+index	include/physical_types.h	/^	int index;$/;"	m	struct:s_mode
+index	include/physical_types.h	/^	int index;$/;"	m	struct:s_port
+index_in_top_tb	fpga_spice_include/spice_types.h	/^  int index_in_top_tb;$/;"	m	struct:s_conf_bit_info
+infer_annotations	include/physical_types.h	/^	boolean infer_annotations;$/;"	m	struct:s_interconnect
+infer_pattern	include/physical_types.h	/^	boolean infer_pattern; \/*If TRUE, infer pattern based on patterns connected to it*\/$/;"	m	struct:s_pb_graph_edge
+init_arch_mrfpga	read_xml_mrfpga.c	/^void init_arch_mrfpga(t_arch_mrfpga* arch_mrfpga) {$/;"	f
+init_buffer_inf	read_xml_mrfpga.c	/^void init_buffer_inf(t_buffer_inf* buffer_inf) {$/;"	f
+init_memristor_inf	read_xml_mrfpga.c	/^void init_memristor_inf(t_memristor_inf* memristor_inf) {$/;"	f
+init_val	fpga_spice_include/spice_types.h	/^  int init_val;$/;"	m	struct:s_spice_net_info
+inport_link_pin	include/cad_types.h	/^	int inport_link_pin; \/* applicable pin of chain input port *\/$/;"	m	struct:s_model_chain_pattern
+input_buffer	fpga_spice_include/spice_types.h	/^  t_spice_model_buffer* input_buffer;$/;"	m	struct:s_spice_model
+input_edges	include/physical_types.h	/^	struct s_pb_graph_edge** input_edges; \/* [0..num_input_edges] *\/$/;"	m	struct:s_pb_graph_pin	typeref:struct:s_pb_graph_pin::s_pb_graph_edge
+input_level	fpga_spice_include/spice_types.h	/^  int* input_level;  \/* [0...num_input] *\/$/;"	m	struct:s_spice_mux_arch
+input_link_port	include/cad_types.h	/^	t_model_ports *input_link_port; \/* pointer to port of chain input *\/$/;"	m	struct:s_model_chain_pattern
+input_offset	fpga_spice_include/spice_types.h	/^  int* input_offset; \/* [0...num_input] *\/ $/;"	m	struct:s_spice_mux_arch
+input_pin_class_size	include/physical_types.h	/^	int *input_pin_class_size; \/* Stores the number of pins that belong to a particular input pin class *\/$/;"	m	struct:s_pb_graph_node
+input_pins	include/physical_types.h	/^	char * input_pins;$/;"	m	struct:s_pin_to_pin_annotation
+input_pins	include/physical_types.h	/^	struct s_pb_graph_pin *** input_pins; \/\/ [0..num_input_ports-1][0..num_pins_per_port-1]$/;"	m	struct:s_interconnect_pins	typeref:struct:s_interconnect_pins::s_pb_graph_pin
+input_pins	include/physical_types.h	/^	t_pb_graph_pin **input_pins; \/* [0..num_input_ports-1] [0..num_port_pins-1]*\/$/;"	m	struct:s_pb_graph_node
+input_pins	include/physical_types.h	/^	t_pb_graph_pin **input_pins;$/;"	m	struct:s_pb_graph_edge
+input_ports_eq_auto_detect	include/physical_types.h	/^    boolean input_ports_eq_auto_detect;$/;"	m	struct:s_type_descriptor
+input_slew_fall_time	fpga_spice_include/spice_types.h	/^  float input_slew_fall_time;  $/;"	m	struct:s_spice_stimulate_params
+input_slew_fall_type	fpga_spice_include/spice_types.h	/^  enum e_spice_accuracy_type input_slew_fall_type;$/;"	m	struct:s_spice_stimulate_params	typeref:enum:s_spice_stimulate_params::e_spice_accuracy_type
+input_slew_rise_time	fpga_spice_include/spice_types.h	/^  float input_slew_rise_time;  $/;"	m	struct:s_spice_stimulate_params
+input_slew_rise_type	fpga_spice_include/spice_types.h	/^  enum e_spice_accuracy_type input_slew_rise_type;$/;"	m	struct:s_spice_stimulate_params	typeref:enum:s_spice_stimulate_params::e_spice_accuracy_type
+input_string	include/physical_types.h	/^	char *input_string;$/;"	m	struct:s_interconnect
+input_thres_pct_fall	fpga_spice_include/spice_types.h	/^  float input_thres_pct_fall;$/;"	m	struct:s_spice_meas_params
+input_thres_pct_rise	fpga_spice_include/spice_types.h	/^  float input_thres_pct_rise;$/;"	m	struct:s_spice_meas_params
+inputs	include/logic_types.h	/^	t_model_ports *inputs; \/* linked list of input\/clock ports *\/$/;"	m	struct:s_model
+insert_in_int_list	util.c	/^insert_in_int_list(t_linked_int * head, int data,$/;"	f
+insert_in_vptr_list	util.c	/^insert_in_vptr_list(struct s_linked_vptr *head, void *vptr_to_add) {$/;"	f
+insert_llist_node	linkedlist.c	/^t_llist* insert_llist_node(t_llist* cur) {$/;"	f
+insert_llist_node_before_head	linkedlist.c	/^t_llist* insert_llist_node_before_head(t_llist* old_head) {$/;"	f
+insert_node_to_int_list	util.c	/^insert_node_to_int_list(struct s_linked_int *head, int int_to_add) {$/;"	f
+instances	include/logic_types.h	/^	void *instances;$/;"	m	struct:s_model
+interconnect	include/physical_types.h	/^	t_interconnect * interconnect;$/;"	m	struct:s_interconnect_pins
+interconnect	include/physical_types.h	/^	t_interconnect * interconnect;$/;"	m	struct:s_pb_graph_edge
+interconnect	include/physical_types.h	/^	t_interconnect *interconnect;$/;"	m	struct:s_mode
+interconnect_pins	include/physical_types.h	/^	t_interconnect_pins ** interconnect_pins; \/* [0..num_modes-1][0..num_interconnect_in_mode] *\/$/;"	m	struct:s_pb_graph_node
+interconnect_power	include/physical_types.h	/^	t_interconnect_power * interconnect_power;$/;"	m	struct:s_interconnect
+inv_spice_model	fpga_spice_include/spice_types.h	/^  t_spice_model* inv_spice_model;$/;"	m	struct:s_spice_model_port
+inv_spice_model_name	fpga_spice_include/spice_types.h	/^  char* inv_spice_model_name;$/;"	m	struct:s_spice_model_port
+io_vdd	fpga_spice_include/spice_types.h	/^  float io_vdd;$/;"	m	struct:s_spice_tech_lib
+ipin_mux_trans_size	include/physical_types.h	/^	float ipin_mux_trans_size;$/;"	m	struct:s_arch
+ipow	util.c	/^int ipow(int base, int exp) {$/;"	f
+is_Fc_frac	include/physical_types.h	/^	boolean *is_Fc_frac; \/* [0..num_pins-1] *\/$/;"	m	struct:s_type_descriptor
+is_Fc_full_flex	include/physical_types.h	/^	boolean *is_Fc_full_flex; \/* [0..num_pins-1] *\/$/;"	m	struct:s_type_descriptor
+is_accurate	include/arch_types_mrfpga.h	/^  boolean is_accurate;$/;"	m	struct:s_arch_mrfpga
+is_block_optional	include/cad_types.h	/^	boolean *is_block_optional; \/* [0..num_blocks-1] is the block_id in this pattern mandatory or optional to form a molecule *\/$/;"	m	struct:s_pack_patterns
+is_chain	include/cad_types.h	/^	boolean is_chain; \/* Does this pattern chain across logic blocks *\/$/;"	m	struct:s_pack_patterns
+is_clock	include/logic_types.h	/^	boolean is_clock; \/* clock? *\/$/;"	m	struct:s_model_ports
+is_clock	include/physical_types.h	/^	boolean is_clock;$/;"	m	struct:s_port
+is_config_enable	fpga_spice_include/spice_types.h	/^  boolean is_config_enable;$/;"	m	struct:s_spice_model_port
+is_default	fpga_spice_include/spice_types.h	/^  int is_default;$/;"	m	struct:s_spice_model
+is_forced_connection	include/physical_types.h	/^	boolean is_forced_connection; \/* This output pin connects to one and only one input pin *\/$/;"	m	struct:s_pb_graph_pin
+is_global	fpga_spice_include/spice_types.h	/^  boolean is_global;$/;"	m	struct:s_spice_model_port
+is_global_pin	include/physical_types.h	/^	boolean *is_global_pin; \/* [0..num_pins-1] *\/$/;"	m	struct:s_type_descriptor
+is_isolation	include/arch_types_mrfpga.h	/^  boolean is_isolation;$/;"	m	struct:s_arch_mrfpga
+is_junction	include/arch_types_mrfpga.h	/^  boolean is_junction;$/;"	m	struct:s_arch_mrfpga
+is_mrFPGA	include/arch_types_mrfpga.h	/^  boolean is_mrFPGA;$/;"	m	struct:s_arch_mrfpga
+is_non_clock_global	include/logic_types.h	/^	boolean is_non_clock_global; \/* not a clock but is a special, global, control signal (eg global asynchronous reset, etc) *\/$/;"	m	struct:s_model_ports
+is_non_clock_global	include/physical_types.h	/^	boolean is_non_clock_global;$/;"	m	struct:s_port
+is_opin_cblock_defined	include/arch_types_mrfpga.h	/^  int is_opin_cblock_defined;$/;"	m	struct:s_arch_mrfpga
+is_prog	fpga_spice_include/spice_types.h	/^  boolean is_prog;$/;"	m	struct:s_spice_model_port
+is_reset	fpga_spice_include/spice_types.h	/^  boolean is_reset;$/;"	m	struct:s_spice_model_port
+is_set	fpga_spice_include/spice_types.h	/^  boolean is_set;$/;"	m	struct:s_spice_model_port
+is_show_pass_trans	include/arch_types_mrfpga.h	/^  boolean is_show_pass_trans;$/;"	m	struct:s_arch_mrfpga
+is_show_sram	include/arch_types_mrfpga.h	/^  boolean is_show_sram;$/;"	m	struct:s_arch_mrfpga
+is_stack	include/arch_types_mrfpga.h	/^  boolean is_stack;$/;"	m	struct:s_arch_mrfpga
+is_wire_buffer	include/arch_types_mrfpga.h	/^  boolean is_wire_buffer;$/;"	m	struct:s_arch_mrfpga
+leakage	include/physical_types.h	/^	float leakage;$/;"	m	struct:s_power_usage
+leakage_default_mode	include/physical_types.h	/^	int leakage_default_mode; \/* Default mode for leakage analysis, if block has no set mode *\/$/;"	m	struct:s_pb_type_power
+len	include/ezxml.h	/^	size_t len; \/* length of allocated memory for mmap, -1 for malloc *\/$/;"	m	struct:ezxml_root
+length	include/physical_types.h	/^	int length;$/;"	m	struct:s_segment_inf
+level	fpga_spice_include/spice_types.h	/^  int level;$/;"	m	struct:s_spice_model_wire_param
+limit_value	util.c	/^int limit_value(int cur, int max, const char *name) {$/;"	f
+line	include/ezxml.h	/^	int line;$/;"	m	struct:ezxml
+line	include/physical_types.h	/^	int line;$/;"	m	struct:s_direct_inf
+line_num	include/physical_types.h	/^	int line_num; \/* Interconnect is processed later, need to know what line number it messed up on to give proper error message *\/$/;"	m	struct:s_interconnect
+line_num	include/physical_types.h	/^	int line_num; \/* used to report what line number this annotation is found in architecture file *\/$/;"	m	struct:s_pin_to_pin_annotation
+list	include/util.h	/^	int *list;$/;"	m	struct:s_ivec
+list_of_connectable_input_pin_ptrs	include/physical_types.h	/^	struct s_pb_graph_pin ***list_of_connectable_input_pin_ptrs; \/* [0..depth-1][0..num_connectable_primtive_input_pins-1] what input pins this output can connect to without exiting cluster at given depth *\/$/;"	m	struct:s_pb_graph_pin	typeref:struct:s_pb_graph_pin::s_pb_graph_pin
+local_interc_factor	include/physical_types.h	/^	float local_interc_factor;$/;"	m	struct:s_power_arch
+logical_effort_factor	include/physical_types.h	/^	float logical_effort_factor;$/;"	m	struct:s_power_arch
+longline	include/physical_types.h	/^	boolean longline;$/;"	m	struct:s_segment_inf
+lut_input_buffer	fpga_spice_include/spice_types.h	/^  t_spice_model_buffer* lut_input_buffer;$/;"	m	struct:s_spice_model
+m	include/ezxml.h	/^	char *m; \/* original xml string *\/$/;"	m	struct:ezxml_root
+main	ezxml.c	/^main(int argc,$/;"	f
+main	main.c	/^int main(int argc, char **argv) {$/;"	f
+main_best_buffer_list	include/arch_types_mrfpga.h	/^  t_linked_int* main_best_buffer_list;$/;"	m	struct:s_arch_mrfpga
+max_internal_delay	include/physical_types.h	/^	float max_internal_delay;$/;"	m	struct:s_pb_type
+max_pins_per_side	include/arch_types_mrfpga.h	/^  int max_pins_per_side;$/;"	m	struct:s_arch_mrfpga
+mc_params	fpga_spice_include/spice_types.h	/^  t_spice_mc_params mc_params;$/;"	m	struct:s_spice_params
+mc_sim	fpga_spice_include/spice_types.h	/^  boolean mc_sim;$/;"	m	struct:s_spice_mc_params
+meas_params	fpga_spice_include/spice_types.h	/^  t_spice_meas_params meas_params;$/;"	m	struct:s_spice_params
+mem_avail	include/util.h	/^	int mem_avail; \/* number of bytes left in the current chunk *\/$/;"	m	struct:s_chunk
+mem_bank_info	fpga_spice_include/spice_types.h	/^  t_mem_bank_info* mem_bank_info; \/* Only be allocated when orgz type is memory bank *\/$/;"	m	struct:s_sram_orgz_info
+mem_model	fpga_spice_include/spice_types.h	/^  t_spice_model* mem_model; \/* SPICE model of a memory bit *\/$/;"	m	struct:s_mem_bank_info
+mem_model	fpga_spice_include/spice_types.h	/^  t_spice_model* mem_model; \/* SPICE model of a memory bit *\/$/;"	m	struct:s_scff_info
+mem_model	fpga_spice_include/spice_types.h	/^  t_spice_model* mem_model; \/* SPICE model of a memory bit *\/$/;"	m	struct:s_standalone_sram_info
+memristor_inf	include/arch_types_mrfpga.h	/^  t_memristor_inf memristor_inf;$/;"	m	struct:s_arch_mrfpga
+messagelogger	include/util.h	/^typedef unsigned char (*messagelogger)( TIO_MessageMode_t messageMode,$/;"	t
+min_size	include/logic_types.h	/^	int min_size; \/* minimum number of pins *\/$/;"	m	struct:s_model_ports
+min_width	fpga_spice_include/spice_types.h	/^  float min_width;$/;"	m	struct:s_spice_transistor_type
+mode_bits	include/physical_types.h	/^    char* mode_bits; \/* Mode bits to select *\/$/;"	m	struct:s_pb_type
+mode_power	include/physical_types.h	/^	t_mode_power * mode_power;$/;"	m	struct:s_mode
+mode_select	fpga_spice_include/spice_types.h	/^  boolean mode_select;$/;"	m	struct:s_spice_model_port
+model	include/cad_types.h	/^	t_model *model; \/* block associated with chain *\/$/;"	m	struct:s_model_chain_pattern
+model	include/physical_types.h	/^	t_model *model;$/;"	m	struct:s_pb_type
+model_library	include/physical_types.h	/^	t_model *model_library;$/;"	m	struct:s_arch
+model_name	fpga_spice_include/spice_types.h	/^  char* model_name;$/;"	m	struct:s_spice_transistor_type
+model_netlist	fpga_spice_include/spice_types.h	/^  char* model_netlist; \/* SPICE netlist provided by user *\/$/;"	m	struct:s_spice_model
+model_port	include/physical_types.h	/^	t_model_ports *model_port;$/;"	m	struct:s_port
+model_ref	fpga_spice_include/spice_types.h	/^  char* model_ref;$/;"	m	struct:s_spice_tech_lib
+models	include/physical_types.h	/^	t_model *models;$/;"	m	struct:s_arch
+modes	include/physical_types.h	/^	t_mode *modes; \/* [0..num_modes-1] *\/$/;"	m	struct:s_pb_type
+mux_num_level	fpga_spice_include/spice_types.h	/^  int mux_num_level;$/;"	m	struct:s_spice_model_design_tech_info
+mux_trans_size	include/physical_types.h	/^	float mux_trans_size;$/;"	m	struct:s_switch_inf
+mux_transistor_size	include/physical_types.h	/^	float mux_transistor_size;$/;"	m	struct:s_power_arch
+my_atoi	util.c	/^int my_atoi(const char *str) {$/;"	f
+my_calloc	util.c	/^my_calloc(size_t nelem, size_t size) {$/;"	f
+my_chunk_malloc	util.c	/^my_chunk_malloc(size_t size, t_chunk *chunk_info) {$/;"	f
+my_fgets	util.c	/^my_fgets(char *buf, int max_size, FILE * fp) {$/;"	f
+my_fopen	util.c	/^my_fopen(const char *fname, const char *flag, int prompt) {$/;"	f
+my_frand	util.c	/^float my_frand(void) {$/;"	f
+my_free	read_xml_spice_util.c	/^void my_free(void* ptr) {$/;"	f
+my_irand	util.c	/^int my_irand(int imax) {$/;"	f
+my_malloc	util.c	/^my_malloc(size_t size) {$/;"	f
+my_realloc	util.c	/^my_realloc(void *ptr, size_t size) {$/;"	f
+my_srandom	util.c	/^void my_srandom(int seed) {$/;"	f
+my_strdup	util.c	/^my_strdup(const char *str) {$/;"	f
+my_strncpy	util.c	/^my_strncpy(char *dest, const char *src, size_t size) {$/;"	f
+my_strtok	util.c	/^my_strtok(char *ptr, const char *tokens, FILE * fp, char *buf) {$/;"	f
+name	fpga_spice_include/spice_types.h	/^  char* name;$/;"	m	struct:s_spice_model
+name	include/cad_types.h	/^	char *name; \/* name of this chain of logic *\/$/;"	m	struct:s_model_chain_pattern
+name	include/cad_types.h	/^	char *name; \/* name of this logic model pattern *\/$/;"	m	struct:s_pack_patterns
+name	include/ezxml.h	/^	char *name; \/* tag name *\/$/;"	m	struct:ezxml
+name	include/logic_types.h	/^	char *name; \/* name of this logic model *\/$/;"	m	struct:s_model
+name	include/logic_types.h	/^	char *name; \/* name of this port *\/$/;"	m	struct:s_model_ports
+name	include/physical_types.h	/^	char *name;$/;"	m	struct:s_direct_inf
+name	include/physical_types.h	/^	char *name;$/;"	m	struct:s_interconnect
+name	include/physical_types.h	/^	char *name;$/;"	m	struct:s_switch_inf
+name	include/physical_types.h	/^	char *name;$/;"	m	struct:s_type_descriptor
+name	include/physical_types.h	/^	char* name;$/;"	m	struct:s_mode
+name	include/physical_types.h	/^	char* name;$/;"	m	struct:s_pb_type
+name	include/physical_types.h	/^	char* name;$/;"	m	struct:s_port
+nelem	include/util.h	/^	int nelem;$/;"	m	struct:s_ivec
+next	fpga_spice_include/linkedlist.h	/^  t_llist* next;$/;"	m	struct:s_llist
+next	include/cad_types.h	/^	struct s_model_chain_pattern *next; \/* next chain (linked list) *\/$/;"	m	struct:s_model_chain_pattern	typeref:struct:s_model_chain_pattern::s_model_chain_pattern
+next	include/cad_types.h	/^	struct s_pack_pattern_connections *next;$/;"	m	struct:s_pack_pattern_connections	typeref:struct:s_pack_pattern_connections::s_pack_pattern_connections
+next	include/ezxml.h	/^	ezxml_t next; \/* next tag with same name in this section at this depth *\/$/;"	m	struct:ezxml
+next	include/logic_types.h	/^	struct s_model *next; \/* next model (linked list) *\/$/;"	m	struct:s_model	typeref:struct:s_model::s_model
+next	include/logic_types.h	/^	struct s_model_ports *next; \/* next port *\/$/;"	m	struct:s_model_ports	typeref:struct:s_model_ports::s_model_ports
+next	include/util.h	/^	struct s_linked_int *next;$/;"	m	struct:s_linked_int	typeref:struct:s_linked_int::s_linked_int
+next	include/util.h	/^	struct s_linked_vptr *next;$/;"	m	struct:s_linked_vptr	typeref:struct:s_linked_vptr::s_linked_vptr
+next_mem_loc_ptr	include/util.h	/^	char *next_mem_loc_ptr;\/* pointer to the first available (free) *$/;"	m	struct:s_chunk
+next_primitive	include/cad_types.h	/^	struct s_cluster_placement_primitive *next_primitive;$/;"	m	struct:s_cluster_placement_primitive	typeref:struct:s_cluster_placement_primitive::s_cluster_placement_primitive
+nint	include/util.h	24;"	d
+nmos_size	fpga_spice_include/spice_types.h	/^  float nmos_size;$/;"	m	struct:s_spice_model_pass_gate_logic
+nominal_vdd	fpga_spice_include/spice_types.h	/^  float nominal_vdd;$/;"	m	struct:s_spice_tech_lib
+num_annotations	include/physical_types.h	/^	int num_annotations;$/;"	m	struct:s_interconnect
+num_annotations	include/physical_types.h	/^	int num_annotations;$/;"	m	struct:s_pb_type
+num_bl	fpga_spice_include/spice_types.h	/^  int num_bl; \/* Number of Bit Lines in total *\/$/;"	m	struct:s_mem_bank_info
+num_blocks	include/cad_types.h	/^	int num_blocks; \/* number of blocks in pattern *\/$/;"	m	struct:s_pack_patterns
+num_cb_switch	include/physical_types.h	/^    int num_cb_switch;$/;"	m	struct:s_arch
+num_class	include/physical_types.h	/^	int num_class;$/;"	m	struct:s_type_descriptor
+num_clock_pins	include/physical_types.h	/^	int *num_clock_pins; \/* [0..num_clock_ports - 1] *\/$/;"	m	struct:s_pb_graph_node
+num_clock_pins	include/physical_types.h	/^	int num_clock_pins;$/;"	m	struct:s_pb_type
+num_clock_ports	include/physical_types.h	/^	int num_clock_ports;$/;"	m	struct:s_pb_graph_node
+num_clocks	fpga_spice_include/spice_types.h	/^  int num_clocks;$/;"	m	struct:s_spice_stimulate_params
+num_connectable_primtive_input_pins	include/physical_types.h	/^	int *num_connectable_primtive_input_pins; \/* [0..depth-1] number of input pins that this output pin can reach without exiting cluster at given depth *\/$/;"	m	struct:s_pb_graph_pin
+num_directs	include/physical_types.h	/^	int num_directs;$/;"	m	struct:s_arch
+num_drivers	include/physical_types.h	/^	int num_drivers;$/;"	m	struct:s_type_descriptor
+num_global_clocks	include/physical_types.h	/^	int num_global_clocks;$/;"	m	struct:s_clock_arch
+num_grid_loc_def	include/physical_types.h	/^	int num_grid_loc_def;$/;"	m	struct:s_type_descriptor
+num_include_netlist	fpga_spice_include/spice_types.h	/^  int num_include_netlist;$/;"	m	struct:s_spice
+num_input	fpga_spice_include/spice_types.h	/^  int num_input;$/;"	m	struct:s_spice_mux_arch
+num_input_basis	fpga_spice_include/spice_types.h	/^  int num_input_basis;$/;"	m	struct:s_spice_mux_arch
+num_input_edges	include/physical_types.h	/^	int num_input_edges;$/;"	m	struct:s_pb_graph_pin
+num_input_last_level	fpga_spice_include/spice_types.h	/^  int num_input_last_level;$/;"	m	struct:s_spice_mux_arch
+num_input_per_level	fpga_spice_include/spice_types.h	/^  int* num_input_per_level; \/* [0...num_level] *\/$/;"	m	struct:s_spice_mux_arch
+num_input_pin_class	include/physical_types.h	/^	int num_input_pin_class; \/* number of pin classes that this input pb_graph_node has *\/$/;"	m	struct:s_pb_graph_node
+num_input_pins	include/physical_types.h	/^	int *num_input_pins; \/* [0..num_input_ports - 1] *\/$/;"	m	struct:s_pb_graph_node
+num_input_pins	include/physical_types.h	/^	int num_input_pins; \/* inputs not including clock pins *\/$/;"	m	struct:s_pb_type
+num_input_pins	include/physical_types.h	/^	int num_input_pins;$/;"	m	struct:s_pb_graph_edge
+num_input_ports	include/physical_types.h	/^	int num_input_ports;$/;"	m	struct:s_interconnect_power
+num_input_ports	include/physical_types.h	/^	int num_input_ports;$/;"	m	struct:s_pb_graph_node
+num_interconnect	include/physical_types.h	/^	int num_interconnect;$/;"	m	struct:s_mode
+num_level	fpga_spice_include/spice_types.h	/^  int num_level;$/;"	m	struct:s_spice_mux_arch
+num_mc_points	fpga_spice_include/spice_types.h	/^  int num_mc_points;$/;"	m	struct:s_spice_mc_params
+num_mem_bit	fpga_spice_include/spice_types.h	/^  int num_mem_bit; \/* Number of memory bits in total *\/$/;"	m	struct:s_mem_bank_info
+num_mem_bit	fpga_spice_include/spice_types.h	/^  int num_mem_bit; \/* Number of memory bits in total *\/$/;"	m	struct:s_scff_info
+num_mem_bit	fpga_spice_include/spice_types.h	/^  int num_mem_bit; \/* Number of memory bits in total *\/$/;"	m	struct:s_standalone_sram_info
+num_modes	include/physical_types.h	/^	int num_modes;$/;"	m	struct:s_pb_type
+num_mux	include/physical_types.h	/^    int num_mux;$/;"	m	struct:s_interconnect
+num_normal_switch	include/arch_types_mrfpga.h	/^  short num_normal_switch;$/;"	m	struct:s_arch_mrfpga
+num_output_edges	include/physical_types.h	/^	int num_output_edges;$/;"	m	struct:s_pb_graph_pin
+num_output_pin_class	include/physical_types.h	/^	int num_output_pin_class; \/* number of output pin classes that this pb_graph_node has *\/$/;"	m	struct:s_pb_graph_node
+num_output_pins	include/physical_types.h	/^	int *num_output_pins; \/* [0..num_output_ports - 1] *\/$/;"	m	struct:s_pb_graph_node
+num_output_pins	include/physical_types.h	/^	int num_output_pins;$/;"	m	struct:s_pb_graph_edge
+num_output_pins	include/physical_types.h	/^	int num_output_pins;$/;"	m	struct:s_pb_type
+num_output_ports	include/physical_types.h	/^	int num_output_ports;$/;"	m	struct:s_interconnect_power
+num_output_ports	include/physical_types.h	/^	int num_output_ports;$/;"	m	struct:s_pb_graph_node
+num_pack_patterns	include/physical_types.h	/^	int num_pack_patterns;$/;"	m	struct:s_pb_graph_edge
+num_pb	include/physical_types.h	/^	int num_pb;$/;"	m	struct:s_pb_type
+num_pb_type_children	include/physical_types.h	/^	int num_pb_type_children;$/;"	m	struct:s_mode
+num_pin_loc_assignments	include/physical_types.h	/^	int **num_pin_loc_assignments; \/* [0..height-1][0..3] *\/$/;"	m	struct:s_type_descriptor
+num_pin_timing	include/physical_types.h	/^	int num_pin_timing; \/* primitive ipin to opin timing *\/$/;"	m	struct:s_pb_graph_pin
+num_pins	include/physical_types.h	/^	int num_pins;$/;"	m	struct:s_class
+num_pins	include/physical_types.h	/^	int num_pins;$/;"	m	struct:s_port
+num_pins	include/physical_types.h	/^	int num_pins;$/;"	m	struct:s_type_descriptor
+num_pins_per_port	include/physical_types.h	/^	int num_pins_per_port;$/;"	m	struct:s_interconnect_power
+num_port	fpga_spice_include/spice_types.h	/^  int num_port;$/;"	m	struct:s_spice_model
+num_ports	include/physical_types.h	/^	int num_ports;$/;"	m	struct:s_pb_type
+num_receivers	include/physical_types.h	/^	int num_receivers;$/;"	m	struct:s_type_descriptor
+num_scff	fpga_spice_include/spice_types.h	/^  int num_scff; \/* Number of Scan-chain flip-flops *\/$/;"	m	struct:s_scff_info
+num_segments	include/physical_types.h	/^	int num_segments;$/;"	m	struct:s_arch
+num_sigma	fpga_spice_include/spice_types.h	/^  int num_sigma;$/;"	m	struct:s_spice_mc_variation_params
+num_sim_clock_cycles	fpga_spice_include/spice_types.h	/^  int num_sim_clock_cycles;$/;"	m	struct:s_spicetb_info
+num_spice_model	fpga_spice_include/spice_types.h	/^  int num_spice_model;$/;"	m	struct:s_spice
+num_sram	fpga_spice_include/spice_types.h	/^  int num_sram; \/* Number of SRAMs in total *\/$/;"	m	struct:s_standalone_sram_info
+num_switches	include/physical_types.h	/^	int num_switches;$/;"	m	struct:s_arch
+num_swseg_pattern	include/physical_types.h	/^    int num_swseg_pattern;$/;"	m	struct:s_arch
+num_transistor_type	fpga_spice_include/spice_types.h	/^  int num_transistor_type;$/;"	m	struct:s_spice_tech_lib
+num_value_prop_pairs	include/physical_types.h	/^	int num_value_prop_pairs;$/;"	m	struct:s_pin_to_pin_annotation
+num_wl	fpga_spice_include/spice_types.h	/^  int num_wl; \/* Number of Word Lines in total *\/$/;"	m	struct:s_mem_bank_info
+off	include/ezxml.h	/^	size_t off; \/* tag offset from start of parent tag character content *\/$/;"	m	struct:ezxml
+op_clock_freq	fpga_spice_include/spice_types.h	/^  float op_clock_freq; \/* Operation clock frequency*\/$/;"	m	struct:s_spice_stimulate_params
+open	ezxml.c	58;"	d	file:
+opin_switch	include/physical_types.h	/^	short opin_switch;$/;"	m	struct:s_segment_inf
+opin_to_cb	include/physical_types.h	/^    boolean opin_to_cb;$/;"	m	struct:s_type_descriptor
+ordered	include/ezxml.h	/^	ezxml_t ordered; \/* next tag, same section and depth, in original order *\/$/;"	m	struct:ezxml
+out_file_prefix	util.c	/^char *out_file_prefix = NULL;$/;"	v
+outport_link_pin	include/cad_types.h	/^	int outport_link_pin; \/* applicable pin of chain output port *\/$/;"	m	struct:s_model_chain_pattern
+output_buffer	fpga_spice_include/spice_types.h	/^  t_spice_model_buffer* output_buffer;$/;"	m	struct:s_spice_model
+output_edges	include/physical_types.h	/^	struct s_pb_graph_edge** output_edges; \/* [0..num_output_edges] *\/$/;"	m	struct:s_pb_graph_pin	typeref:struct:s_pb_graph_pin::s_pb_graph_edge
+output_link_port	include/cad_types.h	/^	t_model_ports *output_link_port; \/* pointer to port of chain output *\/$/;"	m	struct:s_model_chain_pattern
+output_pin_class_size	include/physical_types.h	/^	int *output_pin_class_size; \/* Stores the number of pins that belong to a particular output pin class *\/$/;"	m	struct:s_pb_graph_node
+output_pins	include/physical_types.h	/^	char * output_pins;$/;"	m	struct:s_pin_to_pin_annotation
+output_pins	include/physical_types.h	/^	struct s_pb_graph_pin *** output_pins; \/\/ [0..num_output_ports-1][0..num_pins_per_port-1]$/;"	m	struct:s_interconnect_pins	typeref:struct:s_interconnect_pins::s_pb_graph_pin
+output_pins	include/physical_types.h	/^	t_pb_graph_pin **output_pins; \/* [0..num_output_ports-1] [0..num_port_pins-1]*\/$/;"	m	struct:s_pb_graph_node
+output_pins	include/physical_types.h	/^	t_pb_graph_pin **output_pins;$/;"	m	struct:s_pb_graph_edge
+output_ports_eq_auto_detect	include/physical_types.h	/^    boolean output_ports_eq_auto_detect;$/;"	m	struct:s_type_descriptor
+output_string	include/physical_types.h	/^	char *output_string;$/;"	m	struct:s_interconnect
+output_thres_pct_fall	fpga_spice_include/spice_types.h	/^  float output_thres_pct_fall;$/;"	m	struct:s_spice_meas_params
+output_thres_pct_rise	fpga_spice_include/spice_types.h	/^  float output_thres_pct_rise;$/;"	m	struct:s_spice_meas_params
+outputs	include/logic_types.h	/^	t_model_ports *outputs; \/* linked list of output ports *\/$/;"	m	struct:s_model
+pack_pattern_indices	include/physical_types.h	/^	int *pack_pattern_indices; \/*[0..num_pack_patterns(of_edge)-1]*\/$/;"	m	struct:s_pb_graph_edge
+pack_pattern_names	include/physical_types.h	/^	char **pack_pattern_names; \/*[0..num_pack_patterns(of_edge)-1]*\/$/;"	m	struct:s_pb_graph_edge
+parent	include/ezxml.h	/^	ezxml_t parent; \/* parent tag, NULL if current tag is root tag *\/$/;"	m	struct:ezxml
+parent_mode	include/physical_types.h	/^	t_mode * parent_mode;$/;"	m	struct:s_interconnect
+parent_mode	include/physical_types.h	/^	t_mode *parent_mode;$/;"	m	struct:s_pb_type
+parent_mode_index	include/physical_types.h	/^	int parent_mode_index;$/;"	m	struct:s_interconnect
+parent_node	include/physical_types.h	/^	struct s_pb_graph_node *parent_node;$/;"	m	struct:s_pb_graph_pin	typeref:struct:s_pb_graph_pin::s_pb_graph_node
+parent_pb_graph_node	include/physical_types.h	/^	struct s_pb_graph_node *parent_pb_graph_node;$/;"	m	struct:s_pb_graph_node	typeref:struct:s_pb_graph_node::s_pb_graph_node
+parent_pb_type	include/physical_types.h	/^	struct s_pb_type *parent_pb_type;$/;"	m	struct:s_mode	typeref:struct:s_mode::s_pb_type
+parent_pb_type	include/physical_types.h	/^	struct s_pb_type *parent_pb_type;$/;"	m	struct:s_port	typeref:struct:s_port::s_pb_type
+parent_pin_class	include/physical_types.h	/^	int *parent_pin_class; \/* [0..depth-1] the grouping of pins that this particular pin belongs to *\/$/;"	m	struct:s_pb_graph_pin
+parent_spice_model	fpga_spice_include/spice_types.h	/^  t_spice_model* parent_spice_model;$/;"	m	struct:s_conf_bit_info
+parent_spice_model_index	fpga_spice_include/spice_types.h	/^  int parent_spice_model_index;$/;"	m	struct:s_conf_bit_info
+pass_gate_info	fpga_spice_include/spice_types.h	/^  t_spice_model_pass_gate_logic* pass_gate_info;$/;"	m	struct:s_spice_model_design_tech_info
+pass_gate_logic	fpga_spice_include/spice_types.h	/^  t_spice_model_pass_gate_logic* pass_gate_logic;$/;"	m	struct:s_spice_model
+path	fpga_spice_include/spice_types.h	/^  char* path;$/;"	m	struct:s_spice_model_netlist
+path	fpga_spice_include/spice_types.h	/^  char* path;$/;"	m	struct:s_spice_tech_lib
+pattern_index	include/cad_types.h	/^	int pattern_index; \/* index of pattern that this block is a part of *\/$/;"	m	struct:s_pack_pattern_block
+pattern_length	include/physical_types.h	/^  int pattern_length;$/;"	m	struct:s_swseg_pattern_inf
+patterns	include/physical_types.h	/^  boolean* patterns;$/;"	m	struct:s_swseg_pattern_inf
+pb_graph_head	include/physical_types.h	/^	t_pb_graph_node *pb_graph_head;$/;"	m	struct:s_type_descriptor
+pb_graph_node	include/cad_types.h	/^	t_pb_graph_node *pb_graph_node;$/;"	m	struct:s_cluster_placement_primitive
+pb_node_power	include/physical_types.h	/^	t_pb_graph_node_power * pb_node_power;$/;"	m	struct:s_pb_graph_node
+pb_type	include/cad_types.h	/^	const t_pb_type *pb_type; \/* pb_type that this block is an instance of *\/$/;"	m	struct:s_pack_pattern_block
+pb_type	include/physical_types.h	/^	struct s_pb_type *pb_type;$/;"	m	struct:s_pb_graph_node	typeref:struct:s_pb_graph_node::s_pb_type
+pb_type	include/physical_types.h	/^	struct s_pb_type *pb_type;$/;"	m	struct:s_type_descriptor	typeref:struct:s_type_descriptor::s_pb_type
+pb_type_children	include/physical_types.h	/^	struct s_pb_type *pb_type_children; \/* [0..num_child_pb_types] *\/$/;"	m	struct:s_mode	typeref:struct:s_mode::s_pb_type
+pb_type_power	include/physical_types.h	/^	t_pb_type_power * pb_type_power;$/;"	m	struct:s_pb_type
+pb_types	include/logic_types.h	/^	struct s_linked_vptr *pb_types; \/* Physical block types that implement this model *\/$/;"	m	struct:s_model	typeref:struct:s_model::s_linked_vptr
+peak	include/physical_types.h	/^	float peak;$/;"	m	struct:s_chan
+period	include/physical_types.h	/^	float period; \/* Period of clock *\/$/;"	m	struct:s_clock_network
+physical_mode_name	include/physical_types.h	/^    char* physical_mode_name;$/;"	m	struct:s_pb_type
+physical_mode_num_conf_bits	include/physical_types.h	/^    int physical_mode_num_conf_bits;$/;"	m	struct:s_pb_type
+physical_mode_num_iopads	include/physical_types.h	/^    int physical_mode_num_iopads;$/;"	m	struct:s_pb_type
+physical_mode_num_reserved_conf_bits	include/physical_types.h	/^    int physical_mode_num_reserved_conf_bits;$/;"	m	struct:s_pb_type
+pi	include/ezxml.h	/^	char ***pi; \/* processing instructions *\/$/;"	m	struct:ezxml_root
+pin_class	include/physical_types.h	/^	int *pin_class; \/* [0..num_pins-1] *\/$/;"	m	struct:s_type_descriptor
+pin_class	include/physical_types.h	/^	int pin_class;$/;"	m	struct:s_pb_graph_pin
+pin_count_in_cluster	include/physical_types.h	/^	int pin_count_in_cluster;$/;"	m	struct:s_pb_graph_pin
+pin_height	include/physical_types.h	/^	int *pin_height; \/* [0..num_pins-1] *\/$/;"	m	struct:s_type_descriptor
+pin_index_per_side	include/physical_types.h	/^    int* pin_index_per_side;$/;"	m	struct:s_type_descriptor
+pin_loc_assignments	include/physical_types.h	/^	char ****pin_loc_assignments; \/* [0..height-1][0..3][0..num_tokens-1][0..string_name] *\/$/;"	m	struct:s_type_descriptor
+pin_location_distribution	include/physical_types.h	/^	enum e_pin_location_distr pin_location_distribution;$/;"	m	struct:s_type_descriptor	typeref:enum:s_type_descriptor::e_pin_location_distr
+pin_number	include/physical_types.h	/^	int pin_number;$/;"	m	struct:s_pb_graph_pin
+pin_power	include/physical_types.h	/^	t_pb_graph_pin_power * pin_power;$/;"	m	struct:s_pb_graph_pin
+pin_ptc_to_side	include/physical_types.h	/^    int* pin_ptc_to_side;$/;"	m	struct:s_type_descriptor
+pin_timing	include/physical_types.h	/^	struct s_pb_graph_pin** pin_timing; \/* primitive ipin to opin timing *\/$/;"	m	struct:s_pb_graph_pin	typeref:struct:s_pb_graph_pin::s_pb_graph_pin
+pin_timing_del_max	include/physical_types.h	/^	float *pin_timing_del_max; \/* primitive ipin to opin timing *\/$/;"	m	struct:s_pb_graph_pin
+pin_toggle_initialized	include/physical_types.h	/^	boolean pin_toggle_initialized;$/;"	m	struct:s_port_power
+pinlist	include/physical_types.h	/^	int *pinlist; \/* [0..num_pins - 1] *\/$/;"	m	struct:s_class
+pinloc	include/physical_types.h	/^	int ***pinloc; \/* [0..height-1][0..3][0..num_pins-1] *\/$/;"	m	struct:s_type_descriptor
+placement_index	include/physical_types.h	/^	int placement_index;$/;"	m	struct:s_pb_graph_node
+pmos_size	fpga_spice_include/spice_types.h	/^  float pmos_size;$/;"	m	struct:s_spice_model_pass_gate_logic
+pn_ratio	fpga_spice_include/spice_types.h	/^  float pn_ratio;$/;"	m	struct:s_spice_tech_lib
+port	include/physical_types.h	/^	t_port *port;$/;"	m	struct:s_pb_graph_pin
+port_class	include/physical_types.h	/^	char * port_class;$/;"	m	struct:s_port
+port_index_by_type	include/physical_types.h	/^	int port_index_by_type;$/;"	m	struct:s_port
+port_info_initialized	include/physical_types.h	/^	boolean port_info_initialized;$/;"	m	struct:s_interconnect_power
+port_power	include/physical_types.h	/^	t_port_power * port_power;$/;"	m	struct:s_port
+ports	fpga_spice_include/spice_types.h	/^  t_spice_model_port* ports;$/;"	m	struct:s_spice_model
+ports	include/physical_types.h	/^	t_port *ports; \/* [0..num_ports] *\/$/;"	m	struct:s_pb_type
+post	fpga_spice_include/spice_types.h	/^  int post;$/;"	m	struct:s_spice_params
+power	include/physical_types.h	/^	t_power_arch * power;$/;"	m	struct:s_arch
+power_buffer_size	include/physical_types.h	/^	float power_buffer_size;$/;"	m	struct:s_switch_inf
+power_buffer_type	include/physical_types.h	/^	e_power_buffer_type power_buffer_type;$/;"	m	struct:s_switch_inf
+power_gated	fpga_spice_include/spice_types.h	/^  boolean power_gated;$/;"	m	struct:s_spice_model_design_tech_info
+power_method_inherited	read_xml_arch_file.c	/^e_power_estimation_method power_method_inherited($/;"	f
+power_usage	include/physical_types.h	/^	t_power_usage power_usage; \/* Power usage of this mode *\/$/;"	m	struct:s_mode_power
+power_usage	include/physical_types.h	/^	t_power_usage power_usage; \/* Total power usage of this pb type *\/$/;"	m	struct:s_pb_type_power
+power_usage	include/physical_types.h	/^	t_power_usage power_usage;$/;"	m	struct:s_interconnect_power
+power_usage_bufs_wires	include/physical_types.h	/^	t_power_usage power_usage_bufs_wires; \/* Power dissipated in local buffers and wire switching (Subset of total power) *\/$/;"	m	struct:s_pb_type_power
+prefix	fpga_spice_include/spice_types.h	/^  char* prefix; $/;"	m	struct:s_spice_model_port
+prefix	fpga_spice_include/spice_types.h	/^  char* prefix; \/* Prefix when it show up in the spice netlist *\/$/;"	m	struct:s_spice_model
+print_help	main.c	/^void print_help() {$/;"	f
+print_int_matrix3	util.c	/^void print_int_matrix3(int ***vptr, int nrmin, int nrmax, int ncmin, int ncmax,$/;"	f
+priority	include/physical_types.h	/^	int priority;$/;"	m	struct:s_grid_loc_def
+prob	include/physical_types.h	/^	float prob; \/* Static probability of net assigned to this clock *\/$/;"	m	struct:s_clock_network
+probability	fpga_spice_include/spice_types.h	/^  float probability;$/;"	m	struct:s_spice_net_info
+prog_clock_freq	fpga_spice_include/spice_types.h	/^  float prog_clock_freq; \/* Programming clock frequency, used during programming phase only *\/$/;"	m	struct:s_spice_stimulate_params
+prop	include/physical_types.h	/^	int * prop; \/* [0..num_value_prop_pairs - 1] *\/$/;"	m	struct:s_pin_to_pin_annotation
+pwh	fpga_spice_include/spice_types.h	/^  float pwh;$/;"	m	struct:s_spice_net_info
+pwl	fpga_spice_include/spice_types.h	/^  float pwl;$/;"	m	struct:s_spice_net_info
+read	ezxml.c	59;"	d	file:
+read_xml_spice	include/physical_types.h	/^    boolean read_xml_spice;$/;"	m	struct:s_arch
+relative_length	include/physical_types.h	/^		float relative_length;$/;"	m	union:s_port_power::__anon3
+remove_llist_node	linkedlist.c	/^void remove_llist_node(t_llist* cur) { $/;"	f
+repeat	include/physical_types.h	/^	int repeat;$/;"	m	struct:s_grid_loc_def
+res_val	fpga_spice_include/spice_types.h	/^  float res_val;$/;"	m	struct:s_spice_model_wire_param
+reserved_bl	fpga_spice_include/spice_types.h	/^  int reserved_bl; \/* Number of reserved BLs shared by overall RRAM circuits *\/$/;"	m	struct:s_mem_bank_info
+reserved_wl	fpga_spice_include/spice_types.h	/^  int reserved_wl; \/* Number of reserved WLs shared by overall RRAM circuits *\/$/;"	m	struct:s_mem_bank_info
+reverse_llist	linkedlist.c	/^t_llist* reverse_llist(t_llist* head) {$/;"	f
+reverse_scaled	include/physical_types.h	/^	boolean reverse_scaled;  \/* Scale by (1-prob) *\/$/;"	m	struct:s_port_power
+roff	fpga_spice_include/spice_types.h	/^  float roff;$/;"	m	struct:s_spice_model_design_tech_info
+ron	fpga_spice_include/spice_types.h	/^  float ron;$/;"	m	struct:s_spice_model_design_tech_info
+root_block	include/cad_types.h	/^	t_pack_pattern_block *root_block; \/* root block used by this pattern *\/$/;"	m	struct:s_pack_patterns
+rram_pass_tran_value	include/arch_types_mrfpga.h	/^  float rram_pass_tran_value;$/;"	m	struct:s_arch_mrfpga
+rram_variation	fpga_spice_include/spice_types.h	/^  t_spice_mc_variation_params rram_variation;$/;"	m	struct:s_spice_mc_params
+s	include/ezxml.h	/^	char *s; \/* start of work area *\/$/;"	m	struct:ezxml_root
+s_arch	include/physical_types.h	/^struct s_arch {$/;"	s
+s_arch_mrfpga	include/arch_types_mrfpga.h	/^struct s_arch_mrfpga {$/;"	s
+s_buffer_inf	include/arch_types_mrfpga.h	/^struct s_buffer_inf { $/;"	s
+s_chan	include/physical_types.h	/^typedef struct s_chan {$/;"	s
+s_chan_width_dist	include/physical_types.h	/^typedef struct s_chan_width_dist {$/;"	s
+s_chunk	include/util.h	/^typedef struct s_chunk {$/;"	s
+s_class	include/physical_types.h	/^struct s_class {$/;"	s
+s_clb_grid	include/physical_types.h	/^struct s_clb_grid {$/;"	s
+s_clock_arch	include/physical_types.h	/^struct s_clock_arch {$/;"	s
+s_clock_network	include/physical_types.h	/^struct s_clock_network {$/;"	s
+s_cluster_placement_primitive	include/cad_types.h	/^typedef struct s_cluster_placement_primitive {$/;"	s
+s_conf_bit	fpga_spice_include/spice_types.h	/^struct s_conf_bit {$/;"	s
+s_conf_bit_info	fpga_spice_include/spice_types.h	/^struct s_conf_bit_info {$/;"	s
+s_direct_inf	include/physical_types.h	/^typedef struct s_direct_inf {$/;"	s
+s_grid_loc_def	include/physical_types.h	/^typedef struct s_grid_loc_def {$/;"	s
+s_interconnect	include/physical_types.h	/^struct s_interconnect {$/;"	s
+s_interconnect_pins	include/physical_types.h	/^struct s_interconnect_pins {$/;"	s
+s_interconnect_power	include/physical_types.h	/^struct s_interconnect_power {$/;"	s
+s_ivec	include/util.h	/^typedef struct s_ivec {$/;"	s
+s_linked_int	include/util.h	/^typedef struct s_linked_int {$/;"	s
+s_linked_vptr	include/util.h	/^typedef struct s_linked_vptr {$/;"	s
+s_llist	fpga_spice_include/linkedlist.h	/^struct s_llist$/;"	s
+s_mem_bank_info	fpga_spice_include/spice_types.h	/^struct s_mem_bank_info {$/;"	s
+s_memristor_inf	include/arch_types_mrfpga.h	/^struct s_memristor_inf { $/;"	s
+s_mode	include/physical_types.h	/^struct s_mode {$/;"	s
+s_mode_power	include/physical_types.h	/^struct s_mode_power {$/;"	s
+s_model	include/logic_types.h	/^typedef struct s_model {$/;"	s
+s_model_chain_pattern	include/cad_types.h	/^typedef struct s_model_chain_pattern {$/;"	s
+s_model_ports	include/logic_types.h	/^typedef struct s_model_ports {$/;"	s
+s_pack_pattern_block	include/cad_types.h	/^typedef struct s_pack_pattern_block {$/;"	s
+s_pack_pattern_connections	include/cad_types.h	/^typedef struct s_pack_pattern_connections {$/;"	s
+s_pack_patterns	include/cad_types.h	/^typedef struct s_pack_patterns {$/;"	s
+s_pb_graph_edge	include/physical_types.h	/^struct s_pb_graph_edge {$/;"	s
+s_pb_graph_node	include/physical_types.h	/^struct s_pb_graph_node {$/;"	s
+s_pb_graph_node_power	include/physical_types.h	/^struct s_pb_graph_node_power {$/;"	s
+s_pb_graph_pin	include/physical_types.h	/^struct s_pb_graph_pin {$/;"	s
+s_pb_graph_pin_power	include/physical_types.h	/^struct s_pb_graph_pin_power {$/;"	s
+s_pb_type	include/physical_types.h	/^struct s_pb_type {$/;"	s
+s_pb_type_power	include/physical_types.h	/^struct s_pb_type_power {$/;"	s
+s_pin_to_pin_annotation	include/physical_types.h	/^struct s_pin_to_pin_annotation {$/;"	s
+s_port	include/physical_types.h	/^struct s_port {$/;"	s
+s_port_power	include/physical_types.h	/^struct s_port_power {$/;"	s
+s_power_arch	include/physical_types.h	/^struct s_power_arch {$/;"	s
+s_power_usage	include/physical_types.h	/^struct s_power_usage {$/;"	s
+s_reserved_syntax_char	fpga_spice_include/spice_types.h	/^struct s_reserved_syntax_char {$/;"	s
+s_scff_info	fpga_spice_include/spice_types.h	/^struct s_scff_info {$/;"	s
+s_segment_inf	include/physical_types.h	/^typedef struct s_segment_inf {$/;"	s
+s_spice	fpga_spice_include/spice_types.h	/^struct s_spice {$/;"	s
+s_spice_mc_params	fpga_spice_include/spice_types.h	/^struct s_spice_mc_params {$/;"	s
+s_spice_mc_variation_params	fpga_spice_include/spice_types.h	/^struct s_spice_mc_variation_params {$/;"	s
+s_spice_meas_params	fpga_spice_include/spice_types.h	/^struct s_spice_meas_params {$/;"	s
+s_spice_model	fpga_spice_include/spice_types.h	/^struct s_spice_model {$/;"	s
+s_spice_model_buffer	fpga_spice_include/spice_types.h	/^struct s_spice_model_buffer {$/;"	s
+s_spice_model_design_tech_info	fpga_spice_include/spice_types.h	/^struct s_spice_model_design_tech_info {$/;"	s
+s_spice_model_netlist	fpga_spice_include/spice_types.h	/^struct s_spice_model_netlist {$/;"	s
+s_spice_model_pass_gate_logic	fpga_spice_include/spice_types.h	/^struct s_spice_model_pass_gate_logic {$/;"	s
+s_spice_model_port	fpga_spice_include/spice_types.h	/^struct s_spice_model_port {$/;"	s
+s_spice_model_wire_param	fpga_spice_include/spice_types.h	/^struct s_spice_model_wire_param {$/;"	s
+s_spice_mux_arch	fpga_spice_include/spice_types.h	/^struct s_spice_mux_arch {$/;"	s
+s_spice_mux_model	fpga_spice_include/spice_types.h	/^struct s_spice_mux_model {$/;"	s
+s_spice_net_info	fpga_spice_include/spice_types.h	/^struct s_spice_net_info {$/;"	s
+s_spice_params	fpga_spice_include/spice_types.h	/^struct s_spice_params {$/;"	s
+s_spice_stimulate_params	fpga_spice_include/spice_types.h	/^struct s_spice_stimulate_params {$/;"	s
+s_spice_tech_lib	fpga_spice_include/spice_types.h	/^struct s_spice_tech_lib {$/;"	s
+s_spice_transistor_type	fpga_spice_include/spice_types.h	/^struct s_spice_transistor_type {$/;"	s
+s_spicetb_info	fpga_spice_include/spice_types.h	/^struct s_spicetb_info {$/;"	s
+s_sram_inf	fpga_spice_include/spice_types.h	/^struct s_sram_inf {$/;"	s
+s_sram_inf_orgz	fpga_spice_include/spice_types.h	/^struct s_sram_inf_orgz {$/;"	s
+s_sram_orgz_info	fpga_spice_include/spice_types.h	/^struct s_sram_orgz_info {$/;"	s
+s_standalone_sram_info	fpga_spice_include/spice_types.h	/^struct s_standalone_sram_info {$/;"	s
+s_switch_inf	include/physical_types.h	/^typedef struct s_switch_inf {$/;"	s
+s_swseg_pattern_inf	include/physical_types.h	/^struct s_swseg_pattern_inf {$/;"	s
+s_timing_inf	include/physical_types.h	/^typedef struct s_timing_inf {$/;"	s
+s_type_descriptor	include/physical_types.h	/^struct s_type_descriptor \/* TODO rename this.  maybe physical type descriptor or complex logic block or physical logic block*\/$/;"	s
+sb	include/physical_types.h	/^	boolean *sb;$/;"	m	struct:s_segment_inf
+sb_index_high	fpga_spice_include/spice_types.h	/^  int** sb_index_high;$/;"	m	struct:s_spice_model
+sb_index_low	fpga_spice_include/spice_types.h	/^  int** sb_index_low;$/;"	m	struct:s_spice_model
+sb_len	include/physical_types.h	/^	int sb_len;$/;"	m	struct:s_segment_inf
+scaled_by_pin	include/physical_types.h	/^	t_pb_graph_pin * scaled_by_pin;$/;"	m	struct:s_pb_graph_pin_power
+scaled_by_port	include/physical_types.h	/^	t_port * scaled_by_port;$/;"	m	struct:s_port_power
+scaled_by_port_pin_idx	include/physical_types.h	/^	int scaled_by_port_pin_idx;$/;"	m	struct:s_port_power
+scff_info	fpga_spice_include/spice_types.h	/^  t_scff_info* scff_info; \/* Only be allocated when orgz type is scan-chain *\/$/;"	m	struct:s_sram_orgz_info
+scratch_pad	include/physical_types.h	/^	int scratch_pad; \/* temporary data structure useful to store traversal info *\/$/;"	m	struct:s_pb_graph_pin
+search_in_int_list	util.c	/^t_linked_int* search_in_int_list(t_linked_int* int_list_head, $/;"	f
+search_llist_tail	linkedlist.c	/^t_llist* search_llist_tail(t_llist* head) {$/;"	f
+seg_direction_type	include/physical_types.h	/^  enum e_directionality seg_direction_type;$/;"	m	struct:s_swseg_pattern_inf	typeref:enum:s_swseg_pattern_inf::e_directionality
+seg_length	include/physical_types.h	/^  int seg_length;$/;"	m	struct:s_swseg_pattern_inf
+seg_switch	include/physical_types.h	/^    short seg_switch;$/;"	m	struct:s_segment_inf
+sibling	include/ezxml.h	/^	ezxml_t sibling; \/* next tag with different name in same section and depth *\/$/;"	m	struct:ezxml
+sim_clock_freq_slack	fpga_spice_include/spice_types.h	/^  float sim_clock_freq_slack;$/;"	m	struct:s_spice_stimulate_params
+sim_num_clock_cycle	fpga_spice_include/spice_types.h	/^  int sim_num_clock_cycle; \/* Number of clock cycle in simulation *\/$/;"	m	struct:s_spice_meas_params
+sim_temp	fpga_spice_include/spice_types.h	/^  int sim_temp; \/* Simulation Temperature*\/$/;"	m	struct:s_spice_params
+size	fpga_spice_include/spice_types.h	/^  float size;$/;"	m	struct:s_spice_model_buffer
+size	fpga_spice_include/spice_types.h	/^  int size;$/;"	m	struct:s_spice_model_port
+size	fpga_spice_include/spice_types.h	/^  int size;$/;"	m	struct:s_spice_mux_model
+size	include/logic_types.h	/^	int size; \/* maximum number of pins *\/$/;"	m	struct:s_model_ports
+slew_fall	fpga_spice_include/spice_types.h	/^  float slew_fall;$/;"	m	struct:s_spice_net_info
+slew_lower_thres_pct_fall	fpga_spice_include/spice_types.h	/^  float slew_lower_thres_pct_fall;$/;"	m	struct:s_spice_meas_params
+slew_lower_thres_pct_rise	fpga_spice_include/spice_types.h	/^  float slew_lower_thres_pct_rise;$/;"	m	struct:s_spice_meas_params
+slew_rise	fpga_spice_include/spice_types.h	/^  float slew_rise;$/;"	m	struct:s_spice_net_info
+slew_upper_thres_pct_fall	fpga_spice_include/spice_types.h	/^  float slew_upper_thres_pct_fall;$/;"	m	struct:s_spice_meas_params
+slew_upper_thres_pct_rise	fpga_spice_include/spice_types.h	/^  float slew_upper_thres_pct_rise;$/;"	m	struct:s_spice_meas_params
+snprintf	ezxml.c	57;"	d	file:
+spice	include/physical_types.h	/^    t_spice* spice;$/;"	m	struct:s_arch
+spice_model	fpga_spice_include/spice_types.h	/^  t_spice_model* spice_model; \/\/ Xifan TANG: Spice Support$/;"	m	struct:s_sram_inf_orgz
+spice_model	fpga_spice_include/spice_types.h	/^  t_spice_model* spice_model;$/;"	m	struct:s_spice_model_buffer
+spice_model	fpga_spice_include/spice_types.h	/^  t_spice_model* spice_model;$/;"	m	struct:s_spice_model_pass_gate_logic
+spice_model	fpga_spice_include/spice_types.h	/^  t_spice_model* spice_model;$/;"	m	struct:s_spice_model_port
+spice_model	fpga_spice_include/spice_types.h	/^  t_spice_model* spice_model;$/;"	m	struct:s_spice_mux_model
+spice_model	include/physical_types.h	/^    t_spice_model* spice_model;$/;"	m	struct:s_interconnect
+spice_model	include/physical_types.h	/^    t_spice_model* spice_model;$/;"	m	struct:s_pb_type
+spice_model	include/physical_types.h	/^    t_spice_model* spice_model;$/;"	m	struct:s_segment_inf
+spice_model	include/physical_types.h	/^    t_spice_model* spice_model;$/;"	m	struct:s_switch_inf
+spice_model_name	fpga_spice_include/spice_types.h	/^  char* spice_model_name; \/\/ Xifan TANG: Spice Support$/;"	m	struct:s_sram_inf_orgz
+spice_model_name	fpga_spice_include/spice_types.h	/^  char* spice_model_name;$/;"	m	struct:s_spice_model_buffer
+spice_model_name	fpga_spice_include/spice_types.h	/^  char* spice_model_name;$/;"	m	struct:s_spice_model_pass_gate_logic
+spice_model_name	fpga_spice_include/spice_types.h	/^  char* spice_model_name;$/;"	m	struct:s_spice_model_port
+spice_model_name	include/physical_types.h	/^    char* spice_model_name;$/;"	m	struct:s_interconnect
+spice_model_name	include/physical_types.h	/^    char* spice_model_name;$/;"	m	struct:s_pb_type
+spice_model_name	include/physical_types.h	/^    char* spice_model_name;$/;"	m	struct:s_segment_inf
+spice_model_name	include/physical_types.h	/^    char* spice_model_name;$/;"	m	struct:s_switch_inf
+spice_model_port	include/physical_types.h	/^    t_spice_model_port* spice_model_port;$/;"	m	struct:s_port
+spice_models	fpga_spice_include/spice_types.h	/^  t_spice_model* spice_models;$/;"	m	struct:s_spice
+spice_mux_arch	fpga_spice_include/spice_types.h	/^  t_spice_mux_arch* spice_mux_arch;$/;"	m	struct:s_spice_mux_model
+spice_params	fpga_spice_include/spice_types.h	/^  t_spice_params spice_params;$/;"	m	struct:s_spice
+spice_reserved	fpga_spice_include/spice_types.h	/^  boolean spice_reserved;$/;"	m	struct:s_reserved_syntax_char
+spice_sram_inf_orgz	fpga_spice_include/spice_types.h	/^  t_sram_inf_orgz* spice_sram_inf_orgz;$/;"	m	struct:s_sram_inf
+spot_int_in_array	util.c	/^int spot_int_in_array(int array_len, int* array,$/;"	f
+sram_bit	fpga_spice_include/spice_types.h	/^  t_conf_bit* sram_bit;$/;"	m	struct:s_conf_bit_info
+sram_inf	include/physical_types.h	/^    t_sram_inf sram_inf;$/;"	m	struct:s_arch
+standalone	include/ezxml.h	/^	short standalone; \/* non-zero if <?xml standalone="yes"?> *\/$/;"	m	struct:ezxml_root
+standalone_sram_info	fpga_spice_include/spice_types.h	/^  t_standalone_sram_info* standalone_sram_info; \/* Only be allocated when orgz type is standalone *\/$/;"	m	struct:s_sram_orgz_info
+start_col	include/physical_types.h	/^	int start_col;$/;"	m	struct:s_grid_loc_def
+start_seg_switch	include/arch_types_mrfpga.h	/^  short start_seg_switch;$/;"	m	struct:s_arch_mrfpga
+stimulate_params	fpga_spice_include/spice_types.h	/^  t_spice_stimulate_params stimulate_params;$/;"	m	struct:s_spice_params
+structure	fpga_spice_include/spice_types.h	/^  enum e_spice_model_structure structure;$/;"	m	struct:s_spice_model_design_tech_info	typeref:enum:s_spice_model_design_tech_info::e_spice_model_structure
+structure	fpga_spice_include/spice_types.h	/^  enum e_spice_model_structure structure;$/;"	m	struct:s_spice_mux_arch	typeref:enum:s_spice_mux_arch::e_spice_model_structure
+structure	include/physical_types.h	/^    enum e_spice_model_structure structure;$/;"	m	struct:s_switch_inf	typeref:enum:s_switch_inf::e_spice_model_structure
+switch_num_level	include/physical_types.h	/^    int switch_num_level;$/;"	m	struct:s_switch_inf
+swseg_patterns	include/physical_types.h	/^    t_swseg_pattern_inf* swseg_patterns;$/;"	m	struct:s_arch
+syntax_char	fpga_spice_include/spice_types.h	/^  char syntax_char;$/;"	m	struct:s_reserved_syntax_char
+t_arch	include/physical_types.h	/^typedef struct s_arch t_arch;$/;"	t	typeref:struct:s_arch
+t_arch_mrfpga	include/arch_types_mrfpga.h	/^typedef struct s_arch_mrfpga t_arch_mrfpga;$/;"	t	typeref:struct:s_arch_mrfpga
+t_buffer_inf	include/arch_types_mrfpga.h	/^typedef struct s_buffer_inf t_buffer_inf;$/;"	t	typeref:struct:s_buffer_inf
+t_chan	include/physical_types.h	/^} t_chan;$/;"	t	typeref:struct:s_chan
+t_chan_width_dist	include/physical_types.h	/^} t_chan_width_dist;$/;"	t	typeref:struct:s_chan_width_dist
+t_chunk	include/util.h	/^} t_chunk;$/;"	t	typeref:struct:s_chunk
+t_class	include/physical_types.h	/^typedef struct s_class t_class;$/;"	t	typeref:struct:s_class
+t_clock_arch	include/physical_types.h	/^typedef struct s_clock_arch t_clock_arch;$/;"	t	typeref:struct:s_clock_arch
+t_clock_network	include/physical_types.h	/^typedef struct s_clock_network t_clock_network;$/;"	t	typeref:struct:s_clock_network
+t_cluster_placement_primitive	include/cad_types.h	/^} t_cluster_placement_primitive;$/;"	t	typeref:struct:s_cluster_placement_primitive
+t_conf_bit	fpga_spice_include/spice_types.h	/^typedef struct s_conf_bit t_conf_bit;$/;"	t	typeref:struct:s_conf_bit
+t_conf_bit_info	fpga_spice_include/spice_types.h	/^typedef struct s_conf_bit_info t_conf_bit_info;$/;"	t	typeref:struct:s_conf_bit_info
+t_direct_inf	include/physical_types.h	/^} t_direct_inf;$/;"	t	typeref:struct:s_direct_inf
+t_grid_loc_def	include/physical_types.h	/^} t_grid_loc_def;$/;"	t	typeref:struct:s_grid_loc_def
+t_interconnect	include/physical_types.h	/^typedef struct s_interconnect t_interconnect;$/;"	t	typeref:struct:s_interconnect
+t_interconnect_pins	include/physical_types.h	/^typedef struct s_interconnect_pins t_interconnect_pins;$/;"	t	typeref:struct:s_interconnect_pins
+t_interconnect_power	include/physical_types.h	/^typedef struct s_interconnect_power t_interconnect_power;$/;"	t	typeref:struct:s_interconnect_power
+t_ivec	include/util.h	/^} t_ivec;$/;"	t	typeref:struct:s_ivec
+t_linked_int	include/util.h	/^} t_linked_int;$/;"	t	typeref:struct:s_linked_int
+t_linked_vptr	include/util.h	/^} t_linked_vptr;$/;"	t	typeref:struct:s_linked_vptr
+t_llist	fpga_spice_include/linkedlist.h	/^typedef struct s_llist t_llist;$/;"	t	typeref:struct:s_llist
+t_mem_bank_info	fpga_spice_include/spice_types.h	/^typedef struct s_mem_bank_info t_mem_bank_info;$/;"	t	typeref:struct:s_mem_bank_info
+t_memristor_inf	include/arch_types_mrfpga.h	/^typedef struct s_memristor_inf t_memristor_inf;$/;"	t	typeref:struct:s_memristor_inf
+t_mode	include/physical_types.h	/^typedef struct s_mode t_mode;$/;"	t	typeref:struct:s_mode
+t_mode_power	include/physical_types.h	/^typedef struct s_mode_power t_mode_power;$/;"	t	typeref:struct:s_mode_power
+t_model	include/logic_types.h	/^} t_model;$/;"	t	typeref:struct:s_model
+t_model_chain_pattern	include/cad_types.h	/^} t_model_chain_pattern;$/;"	t	typeref:struct:s_model_chain_pattern
+t_model_ports	include/logic_types.h	/^} t_model_ports;$/;"	t	typeref:struct:s_model_ports
+t_pack_pattern_block	include/cad_types.h	/^} t_pack_pattern_block;$/;"	t	typeref:struct:s_pack_pattern_block
+t_pack_pattern_connections	include/cad_types.h	/^} t_pack_pattern_connections;$/;"	t	typeref:struct:s_pack_pattern_connections
+t_pack_patterns	include/cad_types.h	/^} t_pack_patterns;$/;"	t	typeref:struct:s_pack_patterns
+t_pb_graph_edge	include/physical_types.h	/^typedef struct s_pb_graph_edge t_pb_graph_edge;$/;"	t	typeref:struct:s_pb_graph_edge
+t_pb_graph_node	include/physical_types.h	/^typedef struct s_pb_graph_node t_pb_graph_node;$/;"	t	typeref:struct:s_pb_graph_node
+t_pb_graph_node_power	include/physical_types.h	/^typedef struct s_pb_graph_node_power t_pb_graph_node_power;$/;"	t	typeref:struct:s_pb_graph_node_power
+t_pb_graph_pin	include/physical_types.h	/^typedef struct s_pb_graph_pin t_pb_graph_pin;$/;"	t	typeref:struct:s_pb_graph_pin
+t_pb_graph_pin_power	include/physical_types.h	/^typedef struct s_pb_graph_pin_power t_pb_graph_pin_power;$/;"	t	typeref:struct:s_pb_graph_pin_power
+t_pb_type	include/physical_types.h	/^typedef struct s_pb_type t_pb_type;$/;"	t	typeref:struct:s_pb_type
+t_pb_type_power	include/physical_types.h	/^typedef struct s_pb_type_power t_pb_type_power;$/;"	t	typeref:struct:s_pb_type_power
+t_pin_to_pin_annotation	include/physical_types.h	/^typedef struct s_pin_to_pin_annotation t_pin_to_pin_annotation;$/;"	t	typeref:struct:s_pin_to_pin_annotation
+t_port	include/physical_types.h	/^typedef struct s_port t_port;$/;"	t	typeref:struct:s_port
+t_port_power	include/physical_types.h	/^typedef struct s_port_power t_port_power;$/;"	t	typeref:struct:s_port_power
+t_power_arch	include/physical_types.h	/^typedef struct s_power_arch t_power_arch;$/;"	t	typeref:struct:s_power_arch
+t_power_estimation_method	include/physical_types.h	/^typedef enum e_power_estimation_method_ t_power_estimation_method;$/;"	t	typeref:enum:e_power_estimation_method_
+t_power_usage	include/physical_types.h	/^typedef struct s_power_usage t_power_usage;$/;"	t	typeref:struct:s_power_usage
+t_reserved_syntax_char	fpga_spice_include/spice_types.h	/^typedef struct s_reserved_syntax_char t_reserved_syntax_char;$/;"	t	typeref:struct:s_reserved_syntax_char
+t_scff_info	fpga_spice_include/spice_types.h	/^typedef struct s_scff_info t_scff_info;$/;"	t	typeref:struct:s_scff_info
+t_segment_inf	include/physical_types.h	/^} t_segment_inf;$/;"	t	typeref:struct:s_segment_inf
+t_spice	fpga_spice_include/spice_types.h	/^typedef struct s_spice t_spice;$/;"	t	typeref:struct:s_spice
+t_spice_mc_params	fpga_spice_include/spice_types.h	/^typedef struct s_spice_mc_params t_spice_mc_params;$/;"	t	typeref:struct:s_spice_mc_params
+t_spice_mc_variation_params	fpga_spice_include/spice_types.h	/^typedef struct s_spice_mc_variation_params t_spice_mc_variation_params;$/;"	t	typeref:struct:s_spice_mc_variation_params
+t_spice_meas_params	fpga_spice_include/spice_types.h	/^typedef struct s_spice_meas_params t_spice_meas_params;$/;"	t	typeref:struct:s_spice_meas_params
+t_spice_model	fpga_spice_include/spice_types.h	/^typedef struct s_spice_model t_spice_model;$/;"	t	typeref:struct:s_spice_model
+t_spice_model_buffer	fpga_spice_include/spice_types.h	/^typedef struct s_spice_model_buffer t_spice_model_buffer;$/;"	t	typeref:struct:s_spice_model_buffer
+t_spice_model_design_tech_info	fpga_spice_include/spice_types.h	/^typedef struct s_spice_model_design_tech_info t_spice_model_design_tech_info;$/;"	t	typeref:struct:s_spice_model_design_tech_info
+t_spice_model_netlist	fpga_spice_include/spice_types.h	/^typedef struct s_spice_model_netlist t_spice_model_netlist;$/;"	t	typeref:struct:s_spice_model_netlist
+t_spice_model_pass_gate_logic	fpga_spice_include/spice_types.h	/^typedef struct s_spice_model_pass_gate_logic t_spice_model_pass_gate_logic;$/;"	t	typeref:struct:s_spice_model_pass_gate_logic
+t_spice_model_port	fpga_spice_include/spice_types.h	/^typedef struct s_spice_model_port t_spice_model_port;$/;"	t	typeref:struct:s_spice_model_port
+t_spice_model_wire_param	fpga_spice_include/spice_types.h	/^typedef struct s_spice_model_wire_param t_spice_model_wire_param;$/;"	t	typeref:struct:s_spice_model_wire_param
+t_spice_mux_arch	fpga_spice_include/spice_types.h	/^typedef struct s_spice_mux_arch t_spice_mux_arch;$/;"	t	typeref:struct:s_spice_mux_arch
+t_spice_mux_model	fpga_spice_include/spice_types.h	/^typedef struct s_spice_mux_model t_spice_mux_model;$/;"	t	typeref:struct:s_spice_mux_model
+t_spice_net_info	fpga_spice_include/spice_types.h	/^typedef struct s_spice_net_info t_spice_net_info;$/;"	t	typeref:struct:s_spice_net_info
+t_spice_params	fpga_spice_include/spice_types.h	/^typedef struct s_spice_params t_spice_params;$/;"	t	typeref:struct:s_spice_params
+t_spice_stimulate_params	fpga_spice_include/spice_types.h	/^typedef struct s_spice_stimulate_params t_spice_stimulate_params;$/;"	t	typeref:struct:s_spice_stimulate_params
+t_spice_tech_lib	fpga_spice_include/spice_types.h	/^typedef struct s_spice_tech_lib t_spice_tech_lib;$/;"	t	typeref:struct:s_spice_tech_lib
+t_spice_transistor_type	fpga_spice_include/spice_types.h	/^typedef struct s_spice_transistor_type t_spice_transistor_type;$/;"	t	typeref:struct:s_spice_transistor_type
+t_spicetb_info	fpga_spice_include/spice_types.h	/^typedef struct s_spicetb_info t_spicetb_info;$/;"	t	typeref:struct:s_spicetb_info
+t_sram_inf	fpga_spice_include/spice_types.h	/^typedef struct s_sram_inf t_sram_inf;$/;"	t	typeref:struct:s_sram_inf
+t_sram_inf_orgz	fpga_spice_include/spice_types.h	/^typedef struct s_sram_inf_orgz t_sram_inf_orgz;$/;"	t	typeref:struct:s_sram_inf_orgz
+t_sram_orgz_info	fpga_spice_include/spice_types.h	/^typedef struct s_sram_orgz_info t_sram_orgz_info;$/;"	t	typeref:struct:s_sram_orgz_info
+t_standalone_sram_info	fpga_spice_include/spice_types.h	/^typedef struct s_standalone_sram_info t_standalone_sram_info;$/;"	t	typeref:struct:s_standalone_sram_info
+t_switch_block_type	include/physical_types.h	/^typedef enum e_switch_block_type t_switch_block_type;$/;"	t	typeref:enum:e_switch_block_type
+t_switch_inf	include/physical_types.h	/^} t_switch_inf;$/;"	t	typeref:struct:s_switch_inf
+t_swseg_pattern_inf	include/physical_types.h	/^typedef struct s_swseg_pattern_inf t_swseg_pattern_inf;$/;"	t	typeref:struct:s_swseg_pattern_inf
+t_timing_inf	include/physical_types.h	/^} t_timing_inf;$/;"	t	typeref:struct:s_timing_inf
+t_type_descriptor	include/physical_types.h	/^typedef struct s_type_descriptor t_type_descriptor;$/;"	t	typeref:struct:s_type_descriptor
+t_type_ptr	include/physical_types.h	/^typedef const struct s_type_descriptor *t_type_ptr;$/;"	t	typeref:struct:s_type_descriptor
+tap_buf_level	fpga_spice_include/spice_types.h	/^  int tap_buf_level;$/;"	m	struct:s_spice_model_buffer
+tapered_buf	fpga_spice_include/spice_types.h	/^  int tapered_buf; \/*Valid only when this is a buffer*\/$/;"	m	struct:s_spice_model_buffer
+tb_cnt	fpga_spice_include/spice_types.h	/^  int tb_cnt;$/;"	m	struct:s_spice_model
+tb_name	fpga_spice_include/spice_types.h	/^  char* tb_name;$/;"	m	struct:s_spicetb_info
+tech_comp	include/arch_types_mrfpga.h	/^  enum e_tech_comp tech_comp;$/;"	m	struct:s_arch_mrfpga	typeref:enum:s_arch_mrfpga::e_tech_comp
+tech_lib	fpga_spice_include/spice_types.h	/^  t_spice_tech_lib tech_lib;$/;"	m	struct:s_spice
+temp_net_num	include/physical_types.h	/^    int temp_net_num;$/;"	m	struct:s_pb_graph_pin
+temp_scratch_pad	include/physical_types.h	/^	void *temp_scratch_pad; \/* temporary data, useful for keeping track of things when traversing data structure *\/$/;"	m	struct:s_pb_graph_node
+timing_analysis_enabled	include/physical_types.h	/^	boolean timing_analysis_enabled;$/;"	m	struct:s_timing_inf
+to_block	include/cad_types.h	/^	t_pack_pattern_block *to_block;$/;"	m	struct:s_pack_pattern_connections
+to_pin	include/cad_types.h	/^	t_pb_graph_pin *to_pin;$/;"	m	struct:s_pack_pattern_connections
+to_pin	include/physical_types.h	/^	char *to_pin;$/;"	m	struct:s_direct_inf
+total_pb_pins	include/physical_types.h	/^	int total_pb_pins; \/* only valid for top-level *\/$/;"	m	struct:s_pb_graph_node
+transistor_cnt	include/physical_types.h	/^	float transistor_cnt;$/;"	m	struct:s_interconnect_power
+transistor_cnt_buffers	include/physical_types.h	/^	float transistor_cnt_buffers;$/;"	m	struct:s_pb_graph_node_power
+transistor_cnt_interc	include/physical_types.h	/^	float transistor_cnt_interc; \/* Total transistor size of the interconnect in this pb *\/$/;"	m	struct:s_pb_graph_node_power
+transistor_cnt_pb_children	include/physical_types.h	/^	float transistor_cnt_pb_children; \/* Total transistor size of this pb *\/$/;"	m	struct:s_pb_graph_node_power
+transistor_type	fpga_spice_include/spice_types.h	/^  char* transistor_type;$/;"	m	struct:s_spice_tech_lib
+transistor_types	fpga_spice_include/spice_types.h	/^  t_spice_transistor_type* transistor_types;$/;"	m	struct:s_spice_tech_lib
+transistors_per_SRAM_bit	include/physical_types.h	/^	float transistors_per_SRAM_bit;$/;"	m	struct:s_power_arch
+tsu_tco	include/physical_types.h	/^	float tsu_tco; \/* For sequential logic elements, this is the setup time (if input) or clock-to-q time (if output) *\/$/;"	m	struct:s_pb_graph_pin
+txt	include/ezxml.h	/^	char *txt; \/* tag character content, empty string if none *\/$/;"	m	struct:ezxml
+type	fpga_spice_include/spice_types.h	/^  enum e_spice_model_buffer_type type;$/;"	m	struct:s_spice_model_buffer	typeref:enum:s_spice_model_buffer::e_spice_model_buffer_type
+type	fpga_spice_include/spice_types.h	/^  enum e_spice_model_pass_gate_logic_type type;$/;"	m	struct:s_spice_model_pass_gate_logic	typeref:enum:s_spice_model_pass_gate_logic::e_spice_model_pass_gate_logic_type
+type	fpga_spice_include/spice_types.h	/^  enum e_spice_model_port_type type;$/;"	m	struct:s_spice_model_port	typeref:enum:s_spice_model_port::e_spice_model_port_type
+type	fpga_spice_include/spice_types.h	/^  enum e_spice_model_type type;$/;"	m	struct:s_spice_model	typeref:enum:s_spice_model::e_spice_model_type
+type	fpga_spice_include/spice_types.h	/^  enum e_spice_tech_lib_type type;$/;"	m	struct:s_spice_tech_lib	typeref:enum:s_spice_tech_lib::e_spice_tech_lib_type
+type	fpga_spice_include/spice_types.h	/^  enum e_spice_trans_type type;$/;"	m	struct:s_spice_transistor_type	typeref:enum:s_spice_transistor_type::e_spice_trans_type
+type	fpga_spice_include/spice_types.h	/^  enum e_sram_orgz type;$/;"	m	struct:s_sram_inf_orgz	typeref:enum:s_sram_inf_orgz::e_sram_orgz
+type	fpga_spice_include/spice_types.h	/^  enum e_sram_orgz type;$/;"	m	struct:s_sram_orgz_info	typeref:enum:s_sram_orgz_info::e_sram_orgz
+type	fpga_spice_include/spice_types.h	/^  enum e_wire_model_type type;$/;"	m	struct:s_spice_model_wire_param	typeref:enum:s_spice_model_wire_param::e_wire_model_type
+type	include/physical_types.h	/^	enum PORTS type;$/;"	m	struct:s_port	typeref:enum:s_port::PORTS
+type	include/physical_types.h	/^	enum e_interconnect type;$/;"	m	struct:s_interconnect	typeref:enum:s_interconnect::e_interconnect
+type	include/physical_types.h	/^	enum e_pb_graph_pin_type type; \/* Is a sequential logic element (TRUE), inpad\/outpad (TRUE), or neither (FALSE) *\/$/;"	m	struct:s_pb_graph_pin	typeref:enum:s_pb_graph_pin::e_pb_graph_pin_type
+type	include/physical_types.h	/^	enum e_pin_to_pin_annotation_type type;$/;"	m	struct:s_pin_to_pin_annotation	typeref:enum:s_pin_to_pin_annotation::e_pin_to_pin_annotation_type
+type	include/physical_types.h	/^	enum e_pin_type type;$/;"	m	struct:s_class	typeref:enum:s_class::e_pin_type
+type	include/physical_types.h	/^	enum e_stat type;$/;"	m	struct:s_chan	typeref:enum:s_chan::e_stat
+type	include/physical_types.h	/^    char* type;$/;"	m	struct:s_switch_inf
+type	include/physical_types.h	/^  enum e_swseg_pattern_type type;$/;"	m	struct:s_swseg_pattern_inf	typeref:enum:s_swseg_pattern_inf::e_swseg_pattern_type
+u	include/ezxml.h	/^	char *u; \/* UTF-8 conversion of string if original was UTF-16 *\/$/;"	m	struct:ezxml_root
+unbuf_switch	include/physical_types.h	/^  short unbuf_switch;$/;"	m	struct:s_swseg_pattern_inf
+used	include/logic_types.h	/^	int used;$/;"	m	struct:s_model
+val	fpga_spice_include/spice_types.h	/^  int val; \/* binary value to be writtent: either 0 or 1 *\/$/;"	m	struct:s_conf_bit
+valid	include/cad_types.h	/^	boolean valid;$/;"	m	struct:s_cluster_placement_primitive
+value	include/physical_types.h	/^	char ** value; \/* [0..num_value_prop_pairs - 1] *\/$/;"	m	struct:s_pin_to_pin_annotation
+variation_on	fpga_spice_include/spice_types.h	/^  boolean variation_on;$/;"	m	struct:s_spice_mc_variation_params
+verilog_netlist	fpga_spice_include/spice_types.h	/^  char* verilog_netlist; \/* Verilog netlist provided by user *\/$/;"	m	struct:s_spice_model
+verilog_reserved	fpga_spice_include/spice_types.h	/^  boolean verilog_reserved;$/;"	m	struct:s_reserved_syntax_char
+verilog_sram_inf_orgz	fpga_spice_include/spice_types.h	/^  t_sram_inf_orgz* verilog_sram_inf_orgz;$/;"	m	struct:s_sram_inf
+vpr_crit_path_delay	fpga_spice_include/spice_types.h	/^  float vpr_crit_path_delay; \/* Reference operation clock frequency *\/$/;"	m	struct:s_spice_stimulate_params
+vpr_printf	util.c	/^messagelogger vpr_printf = PrintHandlerMessage;$/;"	v
+width	include/physical_types.h	/^	float width;$/;"	m	struct:s_chan
+wire	include/physical_types.h	/^	} wire;$/;"	m	struct:s_port_power	typeref:union:s_port_power::__anon3
+wire_buffer_inf	include/arch_types_mrfpga.h	/^  t_buffer_inf wire_buffer_inf;$/;"	m	struct:s_arch_mrfpga
+wire_param	fpga_spice_include/spice_types.h	/^  t_spice_model_wire_param* wire_param;$/;"	m	struct:s_spice_model
+wire_switch	include/physical_types.h	/^	short wire_switch;$/;"	m	struct:s_segment_inf
+wire_type	include/physical_types.h	/^	e_power_wire_type wire_type;$/;"	m	struct:s_port_power
+wl	fpga_spice_include/spice_types.h	/^  t_conf_bit* wl;$/;"	m	struct:s_conf_bit_info
+wprog_reset_nmos	fpga_spice_include/spice_types.h	/^  float wprog_reset_nmos;$/;"	m	struct:s_spice_model_design_tech_info
+wprog_reset_pmos	fpga_spice_include/spice_types.h	/^  float wprog_reset_pmos;$/;"	m	struct:s_spice_model_design_tech_info
+wprog_set_nmos	fpga_spice_include/spice_types.h	/^  float wprog_set_nmos;$/;"	m	struct:s_spice_model_design_tech_info
+wprog_set_pmos	fpga_spice_include/spice_types.h	/^  float wprog_set_pmos;$/;"	m	struct:s_spice_model_design_tech_info
+write	ezxml.c	60;"	d	file:
+x_offset	include/physical_types.h	/^	int x_offset;$/;"	m	struct:s_direct_inf
+xml	include/ezxml.h	/^	struct ezxml xml; \/* is a super-struct built on top of ezxml struct *\/$/;"	m	struct:ezxml_root	typeref:struct:ezxml_root::ezxml
+xpeak	include/physical_types.h	/^	float xpeak;$/;"	m	struct:s_chan
+y_offset	include/physical_types.h	/^	int y_offset;$/;"	m	struct:s_direct_inf
+z_offset	include/physical_types.h	/^	int z_offset;$/;"	m	struct:s_direct_inf

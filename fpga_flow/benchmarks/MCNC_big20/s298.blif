@@ -1,0 +1,308 @@
+.model s298.bench
+.inputs G0 G1 G2
+.outputs G117 G132 G66 G118 G133 G67
+.wire_load_slope 0.00
+.latch     G29 G10  0
+.latch     G30 G11  0
+.latch     G34 G12  0
+.latch     G39 G13  0
+.latch     G44 G14  0
+.latch     G56 G15  0
+.latch     G86 G16  0
+.latch     G92 G17  0
+.latch     G98 G18  0
+.latch     G102 G19  0
+.latch     G107 G20  0
+.latch     G113 G21  0
+.latch     G119 G22  0
+.latch     G125 G23  0
+.names II210 G117
+0 1
+.names II235 G132
+0 1
+.names II155 G66
+0 1
+.names II213 G118
+0 1
+.names II238 G133
+0 1
+.names II158 G67
+0 1
+.names G10 G130 G29
+00 1
+.names G31 G32 G33 G130 G30
+0000 1
+.names G35 G36 G37 G130 G34
+0000 1
+.names G42 G43 G39
+00 1
+.names G48 G49 G53 G44
+000 1
+.names G57 G58 G130 G56
+000 1
+.names G88 G89 G90 G112 G86
+0000 1
+.names G94 G95 G97 G92
+000 1
+.names G100 G101 G98
+00 1
+.names G105 G106 G102
+00 1
+.names G110 G111 G107
+00 1
+.names G115 G116 G113
+00 1
+.names G122 G123 G130 G119
+000 1
+.names G128 G129 G130 G125
+000 1
+.names II229 G130
+0 1
+.names G130 G28
+0 1
+.names G10 G38
+0 1
+.names G13 G40
+0 1
+.names G12 G45
+0 1
+.names G11 G46
+0 1
+.names G14 G50
+0 1
+.names G23 G51
+0 1
+.names G11 G54
+0 1
+.names G13 G55
+0 1
+.names G12 G59
+0 1
+.names G22 G60
+0 1
+.names G15 G64
+0 1
+.names G16 II155
+0 1
+.names G17 II158
+0 1
+.names G10 G76
+0 1
+.names G11 G82
+0 1
+.names G16 G87
+0 1
+.names G12 G91
+0 1
+.names G17 G93
+0 1
+.names G14 G96
+0 1
+.names G18 G99
+0 1
+.names G13 G103
+0 1
+.names G62 G63 G112
+00 1
+.names G112 G108
+0 1
+.names G21 G114
+0 1
+.names G18 II210
+0 1
+.names G19 II213
+0 1
+.names II221 G124
+0 1
+.names G124 G120
+0 1
+.names G22 G121
+0 1
+.names G2 II221
+0 1
+.names II232 G131
+0 1
+.names G131 G126
+0 1
+.names G23 G127
+0 1
+.names G0 II229
+0 1
+.names G1 II232
+0 1
+.names G20 II235
+0 1
+.names G21 II238
+0 1
+.names G28 G50 G26
+11 1
+.names G51 G28 G27
+11 1
+.names G10 G45 G13 G31
+111 1
+.names G10 G11 G32
+11 1
+.names G38 G46 G33
+11 1
+.names G10 G11 G12 G35
+111 1
+.names G38 G45 G36
+11 1
+.names G46 G45 G37
+11 1
+.names G12 G11 G10 G41
+0-- 1
+-0- 1
+--0 1
+.names G40 G41 G42
+11 1
+.names G50 G40 G47
+00 1
+.names G45 G46 G10 G47 G48
+1111 1
+.names G13 G45 G46 G10 G52
+0--- 1
+-0-- 1
+--0- 1
+---0 1
+.names G50 G51 G52 G49
+111 1
+.names G14 G55 G61
+00 1
+.names G59 G11 G60 G61 G57
+1111 1
+.names G59 G54 G22 G61 G65
+0--- 1
+-0-- 1
+--0- 1
+---0 1
+.names G64 G65 G58
+11 1
+.names G59 G11 G60 G61 G62
+1111 1
+.names G64 G65 G63
+11 1
+.names G12 G14 G19 G74
+111 1
+.names G82 G91 G14 G75
+111 1
+.names G14 G87 G88
+11 1
+.names G103 G96 G89
+11 1
+.names G91 G103 G90
+11 1
+.names G93 G13 G94
+11 1
+.names G96 G13 G95
+11 1
+.names G99 G14 G12 G100
+111 1
+.names G74 G75 G104
+00 1
+.names G103 G108 G104 G105
+111 1
+.names G71 G72 G73 G14 G109
+0--- 1
+-0-- 1
+--0- 1
+---0 1
+.names G108 G109 G110
+11 1
+.names G10 G112 G111
+11 1
+.names G114 G14 G115
+11 1
+.names G120 G121 G122
+11 1
+.names G124 G22 G123
+11 1
+.names G126 G127 G128
+11 1
+.names G131 G23 G129
+11 1
+.names G38 G46 G45 G40 G24
+1--- 1
+-1-- 1
+--1- 1
+---1 1
+.names G38 G11 G12 G25
+1-- 1
+-1- 1
+--1 1
+.names G11 G12 G13 G96 G68
+1--- 1
+-1-- 1
+--1- 1
+---1 1
+.names G103 G18 G69
+1- 1
+-1 1
+.names G103 G14 G70
+1- 1
+-1 1
+.names G82 G12 G13 G71
+1-- 1
+-1- 1
+--1 1
+.names G91 G20 G72
+1- 1
+-1 1
+.names G103 G20 G73
+1- 1
+-1 1
+.names G112 G103 G96 G19 G77
+1--- 1
+-1-- 1
+--1- 1
+---1 1
+.names G108 G76 G78
+1- 1
+-1 1
+.names G103 G14 G79
+1- 1
+-1 1
+.names G11 G14 G80
+1- 1
+-1 1
+.names G12 G13 G81
+1- 1
+-1 1
+.names G11 G12 G13 G96 G83
+1--- 1
+-1-- 1
+--1- 1
+---1 1
+.names G82 G91 G14 G84
+1-- 1
+-1- 1
+--1 1
+.names G91 G96 G17 G85
+1-- 1
+-1- 1
+--1 1
+.names G24 G25 G28 G43
+0-- 1
+-0- 1
+--0 1
+.names G83 G84 G85 G108 G97
+0--- 1
+-0-- 1
+--0- 1
+---0 1
+.names G68 G69 G70 G108 G101
+0--- 1
+-0-- 1
+--0- 1
+---0 1
+.names G77 G78 G106
+0- 1
+-0 1
+.names G79 G80 G81 G108 G116
+0--- 1
+-0-- 1
+--0- 1
+---0 1
+.names G26 G27 G53
+00 1
+.end

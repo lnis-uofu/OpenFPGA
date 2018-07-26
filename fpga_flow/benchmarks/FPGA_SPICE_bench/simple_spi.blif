@@ -1,0 +1,2055 @@
+# Benchmark "simple_spi" written by ABC on Mon Aug 29 15:33:11 2005
+.model simple_spi
+.inputs clk_i rst_i cyc_i stb_i we_i miso_i adr_i[0] adr_i[1] dat_i[0] \
+ dat_i[1] dat_i[2] dat_i[3] dat_i[4] dat_i[5] dat_i[6] dat_i[7]
+.outputs dat_o[0] dat_o[1] dat_o[2] dat_o[3] dat_o[4] dat_o[5] dat_o[6] \
+ dat_o[7] ack_o inta_o sck_o mosi_o
+
+.latch \tcnt_reg[1]_in \tcnt_reg[1]  2
+.latch rfifo_gb_reg_in rfifo_gb_reg  2
+.latch \tcnt_reg[0]_in \tcnt_reg[0]  2
+.latch spif_reg_in   spif_reg  2
+.latch \rfifo_wp_reg[1]_in \rfifo_wp_reg[1]  0
+.latch \rfifo_wp_reg[0]_in \rfifo_wp_reg[0]  0
+.latch \rfifo_mem_reg[1][4]_in \rfifo_mem_reg[1][4]  2
+.latch \rfifo_mem_reg[1][5]_in \rfifo_mem_reg[1][5]  2
+.latch \rfifo_mem_reg[1][6]_in \rfifo_mem_reg[1][6]  2
+.latch \rfifo_mem_reg[1][7]_in \rfifo_mem_reg[1][7]  2
+.latch \rfifo_mem_reg[1][8]_in \rfifo_mem_reg[1][8]  2
+.latch \rfifo_mem_reg[2][1]_in \rfifo_mem_reg[2][1]  2
+.latch \rfifo_mem_reg[2][2]_in \rfifo_mem_reg[2][2]  2
+.latch \rfifo_mem_reg[2][3]_in \rfifo_mem_reg[2][3]  2
+.latch \rfifo_mem_reg[2][4]_in \rfifo_mem_reg[2][4]  2
+.latch \rfifo_mem_reg[2][5]_in \rfifo_mem_reg[2][5]  2
+.latch \rfifo_mem_reg[2][6]_in \rfifo_mem_reg[2][6]  2
+.latch \rfifo_mem_reg[2][7]_in \rfifo_mem_reg[2][7]  2
+.latch \rfifo_mem_reg[2][8]_in \rfifo_mem_reg[2][8]  2
+.latch \rfifo_mem_reg[1][1]_in \rfifo_mem_reg[1][1]  2
+.latch \rfifo_mem_reg[1][2]_in \rfifo_mem_reg[1][2]  2
+.latch \rfifo_mem_reg[1][3]_in \rfifo_mem_reg[1][3]  2
+.latch \rfifo_mem_reg[3][1]_in \rfifo_mem_reg[3][1]  2
+.latch \rfifo_mem_reg[3][2]_in \rfifo_mem_reg[3][2]  2
+.latch \rfifo_mem_reg[3][3]_in \rfifo_mem_reg[3][3]  2
+.latch \rfifo_mem_reg[3][4]_in \rfifo_mem_reg[3][4]  2
+.latch \rfifo_mem_reg[3][5]_in \rfifo_mem_reg[3][5]  2
+.latch \rfifo_mem_reg[3][6]_in \rfifo_mem_reg[3][6]  2
+.latch \rfifo_mem_reg[3][7]_in \rfifo_mem_reg[3][7]  2
+.latch \rfifo_mem_reg[3][8]_in \rfifo_mem_reg[3][8]  2
+.latch \rfifo_mem_reg[0][1]_in \rfifo_mem_reg[0][1]  2
+.latch \rfifo_mem_reg[0][2]_in \rfifo_mem_reg[0][2]  2
+.latch \rfifo_mem_reg[0][4]_in \rfifo_mem_reg[0][4]  2
+.latch \rfifo_mem_reg[0][5]_in \rfifo_mem_reg[0][5]  2
+.latch \rfifo_mem_reg[0][6]_in \rfifo_mem_reg[0][6]  2
+.latch \rfifo_mem_reg[0][8]_in \rfifo_mem_reg[0][8]  2
+.latch \rfifo_mem_reg[0][3]_in \rfifo_mem_reg[0][3]  2
+.latch \rfifo_mem_reg[0][7]_in \rfifo_mem_reg[0][7]  2
+.latch sck_o_reg_in  sck_o_reg  2
+.latch \state_reg[0]_in \state_reg[0]  2
+.latch \bcnt_reg[0]_in \bcnt_reg[0]  2
+.latch \bcnt_reg[2]_in \bcnt_reg[2]  2
+.latch \clkcnt_reg[8]_in \clkcnt_reg[8]  2
+.latch \treg_reg[7]_in \treg_reg[7]  2
+.latch \bcnt_reg[1]_in \bcnt_reg[1]  2
+.latch \treg_reg[2]_in \treg_reg[2]  2
+.latch \treg_reg[3]_in \treg_reg[3]  2
+.latch \treg_reg[4]_in \treg_reg[4]  2
+.latch \treg_reg[5]_in \treg_reg[5]  2
+.latch \treg_reg[6]_in \treg_reg[6]  2
+.latch \treg_reg[0]_in \treg_reg[0]  2
+.latch \treg_reg[1]_in \treg_reg[1]  2
+.latch \clkcnt_reg[10]_in \clkcnt_reg[10]  2
+.latch \clkcnt_reg[7]_in \clkcnt_reg[7]  2
+.latch \clkcnt_reg[4]_in \clkcnt_reg[4]  2
+.latch \clkcnt_reg[3]_in \clkcnt_reg[3]  2
+.latch \clkcnt_reg[6]_in \clkcnt_reg[6]  2
+.latch \clkcnt_reg[9]_in \clkcnt_reg[9]  2
+.latch \clkcnt_reg[2]_in \clkcnt_reg[2]  2
+.latch \clkcnt_reg[0]_in \clkcnt_reg[0]  2
+.latch \clkcnt_reg[1]_in \clkcnt_reg[1]  2
+.latch \clkcnt_reg[5]_in \clkcnt_reg[5]  2
+.latch \state_reg[1]_in \state_reg[1]  2
+.latch rfwe_reg_in   rfwe_reg  2
+.latch \clkcnt_reg[11]_in \clkcnt_reg[11]  2
+.latch \dat_o_reg[6]_in \dat_o_reg[6]  2
+.latch wfifo_gb_reg_in wfifo_gb_reg  2
+.latch \dat_o_reg[3]_in \dat_o_reg[3]  2
+.latch \dat_o_reg[2]_in \dat_o_reg[2]  2
+.latch \dat_o_reg[1]_in \dat_o_reg[1]  2
+.latch \dat_o_reg[5]_in \dat_o_reg[5]  2
+.latch \dat_o_reg[0]_in \dat_o_reg[0]  2
+.latch wcol_reg_in   wcol_reg  2
+.latch \dat_o_reg[7]_in \dat_o_reg[7]  2
+.latch \dat_o_reg[4]_in \dat_o_reg[4]  2
+.latch \rfifo_rp_reg[1]_in \rfifo_rp_reg[1]  0
+.latch \wfifo_rp_reg[1]_in \wfifo_rp_reg[1]  0
+.latch \rfifo_rp_reg[0]_in \rfifo_rp_reg[0]  0
+.latch \wfifo_mem_reg[2][5]_in \wfifo_mem_reg[2][5]  2
+.latch \wfifo_mem_reg[1][7]_in \wfifo_mem_reg[1][7]  2
+.latch \wfifo_mem_reg[2][1]_in \wfifo_mem_reg[2][1]  2
+.latch \wfifo_mem_reg[1][5]_in \wfifo_mem_reg[1][5]  2
+.latch \wfifo_wp_reg[1]_in \wfifo_wp_reg[1]  0
+.latch \wfifo_wp_reg[0]_in \wfifo_wp_reg[0]  0
+.latch \wfifo_mem_reg[1][1]_in \wfifo_mem_reg[1][1]  2
+.latch \wfifo_mem_reg[1][2]_in \wfifo_mem_reg[1][2]  2
+.latch \wfifo_mem_reg[1][3]_in \wfifo_mem_reg[1][3]  2
+.latch \wfifo_mem_reg[1][4]_in \wfifo_mem_reg[1][4]  2
+.latch \wfifo_mem_reg[1][6]_in \wfifo_mem_reg[1][6]  2
+.latch \wfifo_mem_reg[1][8]_in \wfifo_mem_reg[1][8]  2
+.latch \wfifo_mem_reg[2][2]_in \wfifo_mem_reg[2][2]  2
+.latch \wfifo_mem_reg[2][3]_in \wfifo_mem_reg[2][3]  2
+.latch \wfifo_mem_reg[2][4]_in \wfifo_mem_reg[2][4]  2
+.latch \wfifo_mem_reg[2][6]_in \wfifo_mem_reg[2][6]  2
+.latch \wfifo_mem_reg[2][7]_in \wfifo_mem_reg[2][7]  2
+.latch \wfifo_mem_reg[2][8]_in \wfifo_mem_reg[2][8]  2
+.latch \wfifo_mem_reg[0][5]_in \wfifo_mem_reg[0][5]  2
+.latch \wfifo_mem_reg[3][5]_in \wfifo_mem_reg[3][5]  2
+.latch \wfifo_mem_reg[3][1]_in \wfifo_mem_reg[3][1]  2
+.latch \wfifo_mem_reg[0][8]_in \wfifo_mem_reg[0][8]  2
+.latch \wfifo_mem_reg[0][1]_in \wfifo_mem_reg[0][1]  2
+.latch \wfifo_mem_reg[0][2]_in \wfifo_mem_reg[0][2]  2
+.latch \wfifo_mem_reg[0][3]_in \wfifo_mem_reg[0][3]  2
+.latch \wfifo_mem_reg[0][4]_in \wfifo_mem_reg[0][4]  2
+.latch \wfifo_mem_reg[0][7]_in \wfifo_mem_reg[0][7]  2
+.latch \wfifo_mem_reg[0][6]_in \wfifo_mem_reg[0][6]  2
+.latch \wfifo_mem_reg[3][2]_in \wfifo_mem_reg[3][2]  2
+.latch \wfifo_mem_reg[3][3]_in \wfifo_mem_reg[3][3]  2
+.latch \wfifo_mem_reg[3][4]_in \wfifo_mem_reg[3][4]  2
+.latch \wfifo_mem_reg[3][6]_in \wfifo_mem_reg[3][6]  2
+.latch \wfifo_mem_reg[3][7]_in \wfifo_mem_reg[3][7]  2
+.latch \wfifo_mem_reg[3][8]_in \wfifo_mem_reg[3][8]  2
+.latch \sper_reg[5]_in \sper_reg[5]  0
+.latch wfre_reg_in   wfre_reg  2
+.latch \sper_reg[0]_in \sper_reg[0]  0
+.latch \sper_reg[1]_in \sper_reg[1]  0
+.latch \sper_reg[2]_in \sper_reg[2]  0
+.latch \sper_reg[3]_in \sper_reg[3]  0
+.latch \sper_reg[4]_in \sper_reg[4]  0
+.latch \sper_reg[6]_in \sper_reg[6]  0
+.latch \sper_reg[7]_in \sper_reg[7]  0
+.latch \spcr_reg[7]_in \spcr_reg[7]  0
+.latch \spcr_reg[5]_in \spcr_reg[5]  0
+.latch \spcr_reg[0]_in \spcr_reg[0]  0
+.latch \spcr_reg[2]_in \spcr_reg[2]  0
+.latch \spcr_reg[4]_in \spcr_reg[4]  1
+.latch \spcr_reg[1]_in \spcr_reg[1]  0
+.latch \spcr_reg[3]_in \spcr_reg[3]  0
+.latch \spcr_reg[6]_in \spcr_reg[6]  0
+.latch \wfifo_rp_reg[0]_in \wfifo_rp_reg[0]  0
+.latch ack_o_reg_in  ack_o_reg  0
+.latch inta_o_reg_in inta_o_reg  2
+
+.names [160]
+ 0
+.names [161]
+ 1
+.names \tcnt_reg[1] [162]
+1 1
+.names rfifo_gb_reg [163]
+1 1
+.names [243] [203] \tcnt_reg[1]_in
+11 0
+.names \tcnt_reg[0] [165]
+1 1
+.names spif_reg [166]
+1 1
+.names [574] [241] [767] rfifo_gb_reg_in
+11- 0
+--1 0
+.names \rfifo_wp_reg[1] [168]
+1 1
+.names \rfifo_wp_reg[0] [169]
+1 1
+.names \rfifo_mem_reg[1][4] [170]
+1 1
+.names \rfifo_mem_reg[1][5] [171]
+1 1
+.names \rfifo_mem_reg[1][6] [172]
+1 1
+.names \rfifo_mem_reg[1][7] [173]
+1 1
+.names \rfifo_mem_reg[1][8] [174]
+1 1
+.names \rfifo_mem_reg[2][1] [175]
+1 1
+.names \rfifo_mem_reg[2][2] [176]
+1 1
+.names \rfifo_mem_reg[2][3] [177]
+1 1
+.names \rfifo_mem_reg[2][4] [178]
+1 1
+.names \rfifo_mem_reg[2][5] [179]
+1 1
+.names \rfifo_mem_reg[2][6] [180]
+1 1
+.names \rfifo_mem_reg[2][7] [181]
+1 1
+.names \rfifo_mem_reg[2][8] [182]
+1 1
+.names \rfifo_mem_reg[1][1] [183]
+1 1
+.names \rfifo_mem_reg[1][2] [184]
+1 1
+.names \rfifo_mem_reg[1][3] [185]
+1 1
+.names \rfifo_mem_reg[3][1] [186]
+1 1
+.names \rfifo_mem_reg[3][2] [187]
+1 1
+.names \rfifo_mem_reg[3][3] [188]
+1 1
+.names \rfifo_mem_reg[3][4] [189]
+1 1
+.names \rfifo_mem_reg[3][5] [190]
+1 1
+.names \rfifo_mem_reg[3][6] [191]
+1 1
+.names \rfifo_mem_reg[3][7] [192]
+1 1
+.names \rfifo_mem_reg[3][8] [193]
+1 1
+.names \rfifo_mem_reg[0][1] [194]
+1 1
+.names \rfifo_mem_reg[0][2] [195]
+1 1
+.names \rfifo_mem_reg[0][4] [196]
+1 1
+.names \rfifo_mem_reg[0][5] [197]
+1 1
+.names \rfifo_mem_reg[0][6] [198]
+1 1
+.names \rfifo_mem_reg[0][8] [199]
+1 1
+.names \rfifo_mem_reg[0][3] [200]
+1 1
+.names \rfifo_mem_reg[0][7] [201]
+1 1
+.names [531] [239] spif_reg_in
+11 0
+.names [240] [836] [203]
+11 0
+.names [465] [244] [831] \tcnt_reg[0]_in
+01- 1
+1-1 1
+.names [640] [172] [272] \rfifo_mem_reg[1][6]_in
+01- 1
+1-1 1
+.names [641] [173] [272] \rfifo_mem_reg[1][7]_in
+01- 1
+1-1 1
+.names [650] [174] [272] \rfifo_mem_reg[1][8]_in
+01- 1
+1-1 1
+.names [648] [175] [272] \rfifo_mem_reg[2][1]_in
+01- 1
+1-1 1
+.names [644] [176] [272] \rfifo_mem_reg[2][2]_in
+01- 1
+1-1 1
+.names [647] [178] [272] \rfifo_mem_reg[2][4]_in
+01- 1
+1-1 1
+.names [646] [177] [272] \rfifo_mem_reg[2][3]_in
+01- 1
+1-1 1
+.names [645] [179] [272] \rfifo_mem_reg[2][5]_in
+01- 1
+1-1 1
+.names [654] [180] [272] \rfifo_mem_reg[2][6]_in
+01- 1
+1-1 1
+.names [643] [181] [272] \rfifo_mem_reg[2][7]_in
+01- 1
+1-1 1
+.names [651] [182] [272] \rfifo_mem_reg[2][8]_in
+01- 1
+1-1 1
+.names [649] [183] [272] \rfifo_mem_reg[1][1]_in
+01- 1
+1-1 1
+.names [653] [184] [272] \rfifo_mem_reg[1][2]_in
+01- 1
+1-1 1
+.names [655] [185] [272] \rfifo_mem_reg[1][3]_in
+01- 1
+1-1 1
+.names [705] [186] [272] \rfifo_mem_reg[3][1]_in
+01- 1
+1-1 1
+.names [698] [187] [272] \rfifo_mem_reg[3][2]_in
+01- 1
+1-1 1
+.names [706] [188] [272] \rfifo_mem_reg[3][3]_in
+01- 1
+1-1 1
+.names [697] [189] [272] \rfifo_mem_reg[3][4]_in
+01- 1
+1-1 1
+.names [701] [190] [272] \rfifo_mem_reg[3][5]_in
+01- 1
+1-1 1
+.names [699] [191] [272] \rfifo_mem_reg[3][6]_in
+01- 1
+1-1 1
+.names [700] [192] [272] \rfifo_mem_reg[3][7]_in
+01- 1
+1-1 1
+.names [702] [193] [272] \rfifo_mem_reg[3][8]_in
+01- 1
+1-1 1
+.names [743] [194] [272] \rfifo_mem_reg[0][1]_in
+01- 1
+1-1 1
+.names [744] [195] [272] \rfifo_mem_reg[0][2]_in
+01- 1
+1-1 1
+.names [745] [200] [272] \rfifo_mem_reg[0][3]_in
+01- 1
+1-1 1
+.names [746] [196] [272] \rfifo_mem_reg[0][4]_in
+01- 1
+1-1 1
+.names [736] [197] [272] \rfifo_mem_reg[0][5]_in
+01- 1
+1-1 1
+.names [737] [198] [272] \rfifo_mem_reg[0][6]_in
+01- 1
+1-1 1
+.names [747] [201] [272] \rfifo_mem_reg[0][7]_in
+01- 1
+1-1 1
+.names [748] [199] [272] \rfifo_mem_reg[0][8]_in
+01- 1
+1-1 1
+.names [248] [252] [971] \rfifo_wp_reg[1]_in
+11- 0
+--1 0
+.names [246] [247] [971] \rfifo_wp_reg[0]_in
+11- 0
+--1 0
+.names [652] [170] [272] \rfifo_mem_reg[1][4]_in
+01- 1
+1-1 1
+.names [642] [171] [272] \rfifo_mem_reg[1][5]_in
+01- 1
+1-1 1
+.names [249] [627] [876] [239]
+111 0
+.names [253] [245] [240]
+11 0
+.names [250] [722] [241]
+11 0
+.names sck_o_reg sck_o
+1 1
+.names [809] [272] [473] [844] [243]
+11-- 0
+--11 0
+.names [776] [272] [268] [244]
+00- 1
+--0 1
+.names [270] [853] [165] [245]
+111 0
+.names [882] [272] [246]
+11 0
+.names [882] [272] [247]
+00 0
+.names [168] [272] [248]
+11 0
+.names [272] [859] [249]
+00 1
+.names [685] [272] [250]
+00 1
+.names \state_reg[0] [251]
+1 1
+.names [760] [272] [252]
+00 0
+.names [269] [876] [253]
+11 0
+.names \bcnt_reg[0] [254]
+1 1
+.names [267] sck_o_reg_in
+0 1
+.names \bcnt_reg[2] [256]
+1 1
+.names \clkcnt_reg[8] [257]
+1 1
+.names \treg_reg[7] mosi_o
+1 1
+.names \bcnt_reg[1] [259]
+1 1
+.names \treg_reg[2] [260]
+1 1
+.names \treg_reg[3] [261]
+1 1
+.names \treg_reg[4] [262]
+1 1
+.names \treg_reg[5] [263]
+1 1
+.names \treg_reg[6] [264]
+1 1
+.names \treg_reg[0] [265]
+1 1
+.names \treg_reg[1] [266]
+1 1
+.names [932] [771] [267]
+11 0
+.names [165] [297] [268]
+11 0
+.names [297] [903] [269]
+00 1
+.names [297] [902] [270]
+00 1
+.names [279] \state_reg[0]_in
+0 1
+.names [285] [272]
+0 1
+.names [298] [333] \clkcnt_reg[8]_in
+11 0
+.names [414] [300] [814] \treg_reg[0]_in
+11- 0
+--1 0
+.names [322] [975] [971] \bcnt_reg[2]_in
+11- 0
+--1 0
+.names [415] [308] [859] \treg_reg[1]_in
+11- 0
+--1 0
+.names [416] [309] [859] \treg_reg[2]_in
+11- 0
+--1 0
+.names [417] [311] [859] \treg_reg[3]_in
+11- 0
+--1 0
+.names [299] [771] [279]
+11 0
+.names [418] [312] [814] \treg_reg[4]_in
+11- 0
+--1 0
+.names [419] [313] [814] \treg_reg[5]_in
+11- 0
+--1 0
+.names [420] [314] [859] \treg_reg[6]_in
+11- 0
+--1 0
+.names [315] [411] [814] \treg_reg[7]_in
+11- 0
+--1 0
+.names [305] [975] [971] \bcnt_reg[1]_in
+11- 0
+--1 0
+.names [297] [285]
+0 1
+.names \clkcnt_reg[10] [286]
+1 1
+.names \clkcnt_reg[7] [287]
+1 1
+.names \clkcnt_reg[4] [288]
+1 1
+.names \clkcnt_reg[3] [289]
+1 1
+.names \clkcnt_reg[6] [290]
+1 1
+.names \clkcnt_reg[9] [291]
+1 1
+.names \clkcnt_reg[2] [292]
+1 1
+.names \clkcnt_reg[0] [293]
+1 1
+.names \clkcnt_reg[1] [294]
+1 1
+.names \clkcnt_reg[5] [295]
+1 1
+.names \state_reg[1] [296]
+1 1
+.names rfwe_reg [297]
+0 1
+.names [537] [388] [324] [298]
+11- 0
+--1 0
+.names [365] [528] [372] [758] [299]
+1111 0
+.names [358] [977] [265] [973] [300]
+11-- 0
+--11 0
+.names [325] rfwe_reg_in
+0 1
+.names [348] [332] \clkcnt_reg[4]_in
+11 0
+.names [351] [334] \clkcnt_reg[0]_in
+11 0
+.names [350] [337] \clkcnt_reg[2]_in
+11 0
+.names [356] [977] [873] [973] [305]
+11-- 0
+--11 0
+.names \clkcnt_reg[11] [306]
+1 1
+.names [340] [338] \clkcnt_reg[3]_in
+11 0
+.names [359] [977] [266] [973] [308]
+11-- 0
+--11 0
+.names [360] [977] [260] [973] [309]
+11-- 0
+--11 0
+.names \dat_o_reg[6] dat_o[6]
+1 1
+.names [361] [977] [261] [973] [311]
+11-- 0
+--11 0
+.names [362] [977] [262] [973] [312]
+11-- 0
+--11 0
+.names [363] [977] [263] [973] [313]
+11-- 0
+--11 0
+.names [364] [977] [264] [973] [314]
+11-- 0
+--11 0
+.names [357] [977] [973] mosi_o [315]
+11-- 0
+--11 0
+.names [353] [334] \clkcnt_reg[1]_in
+11 0
+.names [349] [336] \clkcnt_reg[10]_in
+11 0
+.names [354] [332] \clkcnt_reg[5]_in
+11 0
+.names [335] [343] \clkcnt_reg[7]_in
+11 0
+.names [365] [830] [339] \state_reg[1]_in
+00- 1
+--0 1
+.names [370] [333] \clkcnt_reg[9]_in
+11 0
+.names [373] [977] [869] [973] [322]
+11-- 0
+--11 0
+.names [341] [331] \clkcnt_reg[6]_in
+11 0
+.names [753] [382] [838] [324]
+11- 0
+--1 0
+.names [371] [778] [512] [977] [325]
+1111 0
+.names wfifo_gb_reg [326]
+1 1
+.names \dat_o_reg[3] dat_o[3]
+1 1
+.names \dat_o_reg[2] dat_o[2]
+1 1
+.names \dat_o_reg[1] dat_o[1]
+1 1
+.names \dat_o_reg[5] dat_o[5]
+1 1
+.names [735] [374] [331]
+11 0
+.names [806] [375] [332]
+11 0
+.names [374] [828] [333]
+11 0
+.names [805] [375] [334]
+11 0
+.names [375] [461] [335]
+11 0
+.names [375] [828] [486] [336]
+111 0
+.names [772] [374] [337]
+11 0
+.names [733] [424] [338]
+11 0
+.names [382] [977] [296] [512] [339]
+1111 0
+.names [624] [388] [340]
+11 0
+.names [551] [388] [341]
+11 0
+.names [384] [694] \dat_o_reg[6]_in
+11 0
+.names [577] [388] [343]
+11 0
+.names \dat_o_reg[0] dat_o[0]
+1 1
+.names wcol_reg [345]
+0 1
+.names \dat_o_reg[7] dat_o[7]
+1 1
+.names \dat_o_reg[4] dat_o[4]
+1 1
+.names [818] [570] [388] [348]
+01- 1
+1-1 1
+.names [514] [388] [349]
+11 0
+.names [678] [388] [350]
+11 0
+.names [894] [877] [388] [351]
+01- 1
+1-1 1
+.names [494] [533] [375] \clkcnt_reg[11]_in
+11- 0
+--1 0
+.names [749] [388] [353]
+11 0
+.names [536] [388] [354]
+11 0
+.names [387] [423] [355]
+11 0
+.names [707] [873] [442] [356]
+01- 1
+1-1 1
+.names [264] mosi_o [441] [357]
+01- 1
+1-1 1
+.names miso_i [265] [445] [358]
+01- 1
+1-1 1
+.names [265] [266] [447] [359]
+01- 1
+1-1 1
+.names [266] [260] [445] [360]
+01- 1
+1-1 1
+.names [260] [261] [447] [361]
+01- 1
+1-1 1
+.names [261] [262] [446] [362]
+01- 1
+1-1 1
+.names [262] [263] [445] [363]
+01- 1
+1-1 1
+.names [263] [264] [446] [364]
+01- 1
+1-1 1
+.names [407] [794] [365]
+11 0
+.names [690] [547] [413] \dat_o_reg[1]_in
+111 0
+.names [817] [412] [767] wfifo_gb_reg_in
+11- 0
+--1 0
+.names [408] [691] \dat_o_reg[2]_in
+11 0
+.names [409] [638] \dat_o_reg[3]_in
+11 0
+.names [449] [388] [370]
+11 0
+.names [382] [371]
+0 1
+.names [386] [978] [372]
+11 0
+.names [679] [869] [444] [373]
+01- 1
+1-1 1
+.names [388] [374]
+0 1
+.names [388] [375]
+0 1
+.names [448] [637] \dat_o_reg[7]_in
+11 0
+.names [639] [450] \dat_o_reg[0]_in
+11 0
+.names [686] [798] [439] wcol_reg_in
+11- 0
+--1 0
+.names \rfifo_rp_reg[1] [379]
+1 1
+.names \wfifo_rp_reg[1] [380]
+1 1
+.names [454] [860] [692] \dat_o_reg[4]_in
+00- 1
+--0 1
+.names [407] [382]
+0 1
+.names [455] [860] [693] \dat_o_reg[5]_in
+00- 1
+--0 1
+.names [456] [795] [849] [512] [384]
+11-- 0
+--11 0
+.names \rfifo_rp_reg[0] [385]
+1 1
+.names [832] [866] [525] [386]
+01- 1
+1-1 1
+.names [482] [897] [387]
+11 0
+.names [424] [388]
+0 1
+.names \wfifo_mem_reg[2][5] [389]
+1 1
+.names \wfifo_mem_reg[1][7] [390]
+1 1
+.names \wfifo_mem_reg[2][1] [391]
+1 1
+.names \wfifo_mem_reg[1][5] [392]
+1 1
+.names \wfifo_wp_reg[1] [393]
+1 1
+.names \wfifo_wp_reg[0] [394]
+1 1
+.names \wfifo_mem_reg[1][1] [395]
+1 1
+.names \wfifo_mem_reg[1][2] [396]
+1 1
+.names \wfifo_mem_reg[1][3] [397]
+1 1
+.names \wfifo_mem_reg[1][4] [398]
+1 1
+.names \wfifo_mem_reg[1][6] [399]
+1 1
+.names \wfifo_mem_reg[1][8] [400]
+1 1
+.names \wfifo_mem_reg[2][2] [401]
+1 1
+.names \wfifo_mem_reg[2][3] [402]
+1 1
+.names \wfifo_mem_reg[2][4] [403]
+1 1
+.names \wfifo_mem_reg[2][6] [404]
+1 1
+.names \wfifo_mem_reg[2][7] [405]
+1 1
+.names \wfifo_mem_reg[2][8] [406]
+1 1
+.names [441] [407]
+0 1
+.names [498] [795] [625] [798] [408]
+11-- 0
+--11 0
+.names [499] [795] [626] [798] [409]
+11-- 0
+--11 0
+.names \wfifo_mem_reg[0][5] [410]
+1 1
+.names [496] [976] [411]
+11 0
+.names [773] [552] [732] [412]
+111 0
+.names [497] [795] [413]
+11 0
+.names [501] [976] [414]
+11 0
+.names [502] [976] [415]
+11 0
+.names [503] [976] [416]
+11 0
+.names [504] [976] [417]
+11 0
+.names [505] [976] [418]
+11 0
+.names [506] [976] [419]
+11 0
+.names [507] [976] [420]
+11 0
+.names \wfifo_mem_reg[3][5] [421]
+1 1
+.names [526] [830] \wfifo_rp_reg[1]_in
+00 1
+.names [524] sck_o [423]
+11 0
+.names [753] [525] [424]
+11 0
+.names \wfifo_mem_reg[3][1] [425]
+1 1
+.names \wfifo_mem_reg[0][8] [426]
+1 1
+.names \wfifo_mem_reg[0][1] [427]
+1 1
+.names \wfifo_mem_reg[0][2] [428]
+1 1
+.names \wfifo_mem_reg[0][3] [429]
+1 1
+.names \wfifo_mem_reg[0][4] [430]
+1 1
+.names \wfifo_mem_reg[0][7] [431]
+1 1
+.names \wfifo_mem_reg[0][6] [432]
+1 1
+.names \wfifo_mem_reg[3][2] [433]
+1 1
+.names \wfifo_mem_reg[3][3] [434]
+1 1
+.names \wfifo_mem_reg[3][4] [435]
+1 1
+.names \wfifo_mem_reg[3][6] [436]
+1 1
+.names \wfifo_mem_reg[3][7] [437]
+1 1
+.names \wfifo_mem_reg[3][8] [438]
+1 1
+.names [529] [891] [831] [439]
+00- 1
+--0 1
+.names [491] [830] \rfifo_rp_reg[1]_in
+00 1
+.names [482] [441]
+0 1
+.names [482] [442]
+0 1
+.names [482] [443]
+0 1
+.names [482] [444]
+0 1
+.names [483] [445]
+0 1
+.names [483] [446]
+0 1
+.names [483] [447]
+0 1
+.names [534] [795] [826] [473] [448]
+11-- 0
+--11 0
+.names [575] [917] [489] [449]
+00- 1
+--0 1
+.names [535] [795] [757] [630] [450]
+11-- 0
+--11 0
+.names [395] [557] [628] \wfifo_mem_reg[1][1]_in
+01- 1
+1-1 1
+.names [546] [512] \wfifo_wp_reg[0]_in
+11 1
+.names [585] [586] [971] \wfifo_wp_reg[1]_in
+11- 0
+--1 0
+.names [864] [197] [549] [454]
+11- 0
+--1 0
+.names [864] [198] [550] [455]
+11- 0
+--1 0
+.names [785] [710] [589] [456]
+111 0
+.names [400] [558] [628] \wfifo_mem_reg[1][8]_in
+01- 1
+1-1 1
+.names \sper_reg[5] [458]
+1 1
+.names wfre_reg [459]
+1 1
+.names \sper_reg[0] [460]
+1 1
+.names \sper_reg[1] [461]
+1 1
+.names \sper_reg[2] [462]
+1 1
+.names \sper_reg[3] [463]
+1 1
+.names \sper_reg[4] [464]
+1 1
+.names \sper_reg[6] [465]
+1 1
+.names [397] [568] [628] \wfifo_mem_reg[1][3]_in
+01- 1
+1-1 1
+.names [398] [555] [628] \wfifo_mem_reg[1][4]_in
+01- 1
+1-1 1
+.names [392] [567] [628] \wfifo_mem_reg[1][5]_in
+01- 1
+1-1 1
+.names [399] [556] [628] \wfifo_mem_reg[1][6]_in
+01- 1
+1-1 1
+.names [390] [554] [628] \wfifo_mem_reg[1][7]_in
+01- 1
+1-1 1
+.names [402] [564] [628] \wfifo_mem_reg[2][3]_in
+01- 1
+1-1 1
+.names [403] [560] [628] \wfifo_mem_reg[2][4]_in
+01- 1
+1-1 1
+.names \sper_reg[7] [473]
+1 1
+.names [389] [566] [628] \wfifo_mem_reg[2][5]_in
+01- 1
+1-1 1
+.names [405] [565] [628] \wfifo_mem_reg[2][7]_in
+01- 1
+1-1 1
+.names [396] [553] [628] \wfifo_mem_reg[1][2]_in
+01- 1
+1-1 1
+.names [406] [562] [628] \wfifo_mem_reg[2][8]_in
+01- 1
+1-1 1
+.names [401] [559] [628] \wfifo_mem_reg[2][2]_in
+01- 1
+1-1 1
+.names [404] [561] [628] \wfifo_mem_reg[2][6]_in
+01- 1
+1-1 1
+.names [391] [563] [628] \wfifo_mem_reg[2][1]_in
+01- 1
+1-1 1
+.names [571] [572] [830] \rfifo_rp_reg[0]_in
+11- 0
+--1 0
+.names [524] [482]
+0 1
+.names [525] [483]
+0 1
+.names \spcr_reg[7] [484]
+1 1
+.names \spcr_reg[5] [485]
+1 1
+.names \spcr_reg[0] [486]
+1 1
+.names [427] [611] [628] \wfifo_mem_reg[0][1]_in
+01- 1
+1-1 1
+.names \spcr_reg[2] [488]
+1 1
+.names [575] [917] [489]
+11 0
+.names [432] [600] [628] \wfifo_mem_reg[0][6]_in
+01- 1
+1-1 1
+.names [682] [880] [576] [491]
+11- 0
+--1 0
+.names [573] [623] [492]
+11 0
+.names [429] [606] [628] \wfifo_mem_reg[0][3]_in
+01- 1
+1-1 1
+.names [569] [870] [494]
+11 0
+.names [410] [607] [628] \wfifo_mem_reg[0][5]_in
+01- 1
+1-1 1
+.names [670] [616] [631] [496]
+111 0
+.names [783] [668] [632] [497]
+111 0
+.names [755] [673] [633] [498]
+111 0
+.names [808] [754] [634] [499]
+111 0
+.names \spcr_reg[4] [500]
+1 1
+.names [671] [719] [590] [501]
+111 0
+.names [674] [618] [591] [502]
+111 0
+.names [669] [734] [592] [503]
+111 0
+.names [667] [619] [593] [504]
+111 0
+.names [683] [620] [594] [505]
+111 0
+.names [675] [614] [595] [506]
+111 0
+.names [665] [621] [596] [507]
+111 0
+.names [435] [598] [628] \wfifo_mem_reg[3][4]_in
+01- 1
+1-1 1
+.names [426] [603] [628] \wfifo_mem_reg[0][8]_in
+01- 1
+1-1 1
+.names \spcr_reg[1] [510]
+1 1
+.names \spcr_reg[3] [511]
+1 1
+.names \spcr_reg[6] [512]
+1 1
+.names \wfifo_rp_reg[0] [513]
+1 1
+.names [871] [615] [514]
+01 1
+10 1
+.names [434] [602] [628] \wfifo_mem_reg[3][3]_in
+01- 1
+1-1 1
+.names [430] [599] [628] \wfifo_mem_reg[0][4]_in
+01- 1
+1-1 1
+.names [431] [601] [628] \wfifo_mem_reg[0][7]_in
+01- 1
+1-1 1
+.names [425] [608] [628] \wfifo_mem_reg[3][1]_in
+01- 1
+1-1 1
+.names [433] [612] [628] \wfifo_mem_reg[3][2]_in
+01- 1
+1-1 1
+.names [436] [610] [628] \wfifo_mem_reg[3][6]_in
+01- 1
+1-1 1
+.names [437] [604] [628] \wfifo_mem_reg[3][7]_in
+01- 1
+1-1 1
+.names [438] [609] [628] \wfifo_mem_reg[3][8]_in
+01- 1
+1-1 1
+.names [421] [605] [628] \wfifo_mem_reg[3][5]_in
+01- 1
+1-1 1
+.names [548] [524]
+0 1
+.names [548] [525]
+0 1
+.names [622] [459] [907] [879] [526]
+11-- 0
+--11 0
+.names [428] [597] [628] \wfifo_mem_reg[0][2]_in
+01- 1
+1-1 1
+.names [949] [866] [765] [528]
+00- 1
+--0 1
+.names [626] [732] [529]
+11 1
+.names [731] [927] [928] [530]
+111 0
+.names [801] [627] [531]
+11 0
+.names [617] [625] wfre_reg_in
+00 1
+.names [948] [766] [727] [823] [533]
+1111 0
+.names [786] [666] [696] [534]
+111 0
+.names [784] [672] [695] [535]
+111 0
+.names [867] [688] [536]
+01 1
+10 1
+.names [922] [916] [680] [537]
+01- 1
+1-1 1
+.names [656] [460] [708] \sper_reg[0]_in
+01- 1
+1-1 1
+.names [657] [461] [708] \sper_reg[1]_in
+01- 1
+1-1 1
+.names [658] [462] [708] \sper_reg[2]_in
+01- 1
+1-1 1
+.names [659] [463] [708] \sper_reg[3]_in
+01- 1
+1-1 1
+.names [660] [464] [708] \sper_reg[4]_in
+01- 1
+1-1 1
+.names [661] [458] [708] \sper_reg[5]_in
+01- 1
+1-1 1
+.names [662] [465] [708] \sper_reg[6]_in
+01- 1
+1-1 1
+.names [663] [473] [708] \sper_reg[7]_in
+01- 1
+1-1 1
+.names [881] [732] [546]
+01 1
+10 1
+.names [630] [163] [798] [547]
+111 0
+.names [939] [548]
+0 1
+.names [751] [635] [549]
+11 0
+.names [750] [636] [550]
+11 0
+.names [725] [854] [613] [551]
+00- 1
+--0 1
+.names [721] [879] [629] [552]
+00- 1
+--0 1
+.names dat_i[1] [396] [723] [553]
+01- 1
+1-1 1
+.names dat_i[6] [390] [723] [554]
+01- 1
+1-1 1
+.names dat_i[3] [398] [790] [555]
+01- 1
+1-1 1
+.names dat_i[5] [399] [790] [556]
+01- 1
+1-1 1
+.names dat_i[0] [395] [723] [557]
+01- 1
+1-1 1
+.names dat_i[7] [400] [790] [558]
+01- 1
+1-1 1
+.names dat_i[1] [401] [724] [559]
+01- 1
+1-1 1
+.names dat_i[3] [403] [724] [560]
+01- 1
+1-1 1
+.names dat_i[5] [404] [793] [561]
+01- 1
+1-1 1
+.names dat_i[7] [406] [793] [562]
+01- 1
+1-1 1
+.names dat_i[0] [391] [724] [563]
+01- 1
+1-1 1
+.names dat_i[2] [402] [793] [564]
+01- 1
+1-1 1
+.names dat_i[6] [405] [724] [565]
+01- 1
+1-1 1
+.names dat_i[4] [389] [793] [566]
+01- 1
+1-1 1
+.names dat_i[4] [392] [723] [567]
+01- 1
+1-1 1
+.names dat_i[2] [397] [790] [568]
+01- 1
+1-1 1
+.names [766] [823] [727] [569]
+111 0
+.names [874] [811] [570]
+01 1
+10 1
+.names [682] [884] [571]
+11 0
+.names [682] [884] [572]
+00 0
+.names [949] [788] [573]
+11 0
+.names [682] [163] [574]
+11 0
+.names [688] [862] [868] [863] [575]
+1111 0
+.names [822] [820] [682] [576]
+11- 0
+--1 0
+.names [878] [727] [577]
+01 1
+10 1
+.names [703] [486] [708] \spcr_reg[0]_in
+01- 1
+1-1 1
+.names [738] [510] [708] \spcr_reg[1]_in
+01- 1
+1-1 1
+.names [739] [488] [708] \spcr_reg[2]_in
+01- 1
+1-1 1
+.names [740] [511] [708] \spcr_reg[3]_in
+01- 1
+1-1 1
+.names [741] [485] [708] \spcr_reg[5]_in
+01- 1
+1-1 1
+.names [704] [836] [708] \spcr_reg[6]_in
+01- 1
+1-1 1
+.names [742] [484] [708] \spcr_reg[7]_in
+01- 1
+1-1 1
+.names [687] [872] [585]
+11 0
+.names [721] [732] [586]
+11 0
+.names [689] [500] \spcr_reg[4]_in
+00 0
+.names [677] [831] \wfifo_rp_reg[0]_in
+11 1
+.names [827] [192] [664] [589]
+11- 0
+--1 0
+.names [764] [425] [395] [763] [590]
+11-- 0
+--11 0
+.names [764] [433] [718] [591]
+11- 0
+--1 0
+.names [764] [434] [397] [763] [592]
+11-- 0
+--11 0
+.names [764] [435] [712] [593]
+11- 0
+--1 0
+.names [764] [421] [716] [594]
+11- 0
+--1 0
+.names [764] [436] [709] [595]
+11- 0
+--1 0
+.names [764] [437] [720] [596]
+11- 0
+--1 0
+.names [428] dat_i[1] [769] [597]
+01- 1
+1-1 1
+.names dat_i[3] [435] [768] [598]
+01- 1
+1-1 1
+.names [430] dat_i[3] [769] [599]
+01- 1
+1-1 1
+.names [432] dat_i[5] [769] [600]
+01- 1
+1-1 1
+.names [431] dat_i[6] [769] [601]
+01- 1
+1-1 1
+.names dat_i[2] [434] [768] [602]
+01- 1
+1-1 1
+.names [426] dat_i[7] [769] [603]
+01- 1
+1-1 1
+.names dat_i[6] [437] [768] [604]
+01- 1
+1-1 1
+.names dat_i[4] [421] [768] [605]
+01- 1
+1-1 1
+.names [429] dat_i[2] [769] [606]
+01- 1
+1-1 1
+.names [410] dat_i[4] [769] [607]
+01- 1
+1-1 1
+.names dat_i[0] [425] [768] [608]
+01- 1
+1-1 1
+.names dat_i[7] [438] [768] [609]
+01- 1
+1-1 1
+.names dat_i[5] [436] [768] [610]
+01- 1
+1-1 1
+.names [427] dat_i[0] [769] [611]
+01- 1
+1-1 1
+.names dat_i[1] [433] [768] [612]
+01- 1
+1-1 1
+.names [725] [854] [613]
+11 0
+.names [399] [763] [614]
+11 0
+.names [713] [725] [615]
+00 1
+.names [400] [763] [616]
+11 0
+.names [859] [975] [617]
+00 0
+.names [396] [763] [618]
+11 0
+.names [398] [763] [619]
+11 0
+.names [392] [763] [620]
+11 0
+.names [390] [763] [621]
+11 0
+.names [789] [763] [622]
+00 0
+.names [511] [950] [953] [954] [623]
+1111 0
+.names [681] [624]
+0 1
+.names [949] [625]
+0 1
+.names [684] [626]
+0 1
+.names [798] dat_i[7] [752] [627]
+111 0
+.names [687] [628]
+0 1
+.names [721] [879] [629]
+11 0
+.names [803] [722] [630]
+00 1
+.names [764] [438] [730] [631]
+11- 0
+--1 0
+.names [827] [187] [717] [632]
+11- 0
+--1 0
+.names [864] [200] [729] [633]
+11- 0
+--1 0
+.names [178] [792] [714] [634]
+11- 0
+--1 0
+.names [179] [792] [715] [635]
+11- 0
+--1 0
+.names [180] [792] [711] [636]
+11- 0
+--1 0
+.names [849] [484] [166] [798] [637]
+11-- 0
+--11 0
+.names [511] [849] [463] [826] [638]
+11-- 0
+--11 0
+.names [486] [849] [460] [826] [639]
+11-- 0
+--11 0
+.names [263] [172] [845] [640]
+01- 1
+1-1 1
+.names [264] [173] [845] [641]
+01- 1
+1-1 1
+.names [262] [171] [791] [642]
+01- 1
+1-1 1
+.names [264] [181] [841] [643]
+01- 1
+1-1 1
+.names [266] [176] [841] [644]
+01- 1
+1-1 1
+.names [262] [179] [841] [645]
+01- 1
+1-1 1
+.names [260] [177] [841] [646]
+01- 1
+1-1 1
+.names [261] [178] [841] [647]
+01- 1
+1-1 1
+.names [265] [175] [841] [648]
+01- 1
+1-1 1
+.names [265] [183] [791] [649]
+01- 1
+1-1 1
+.names mosi_o [174] [845] [650]
+01- 1
+1-1 1
+.names mosi_o [182] [841] [651]
+01- 1
+1-1 1
+.names [261] [170] [791] [652]
+01- 1
+1-1 1
+.names [266] [184] [845] [653]
+01- 1
+1-1 1
+.names [263] [180] [841] [654]
+01- 1
+1-1 1
+.names [260] [185] [791] [655]
+01- 1
+1-1 1
+.names [460] dat_i[0] [826] [656]
+01- 1
+1-1 1
+.names [461] dat_i[1] [826] [657]
+01- 1
+1-1 1
+.names [462] dat_i[2] [826] [658]
+01- 1
+1-1 1
+.names [463] dat_i[3] [826] [659]
+01- 1
+1-1 1
+.names [464] dat_i[4] [826] [660]
+01- 1
+1-1 1
+.names [458] dat_i[5] [826] [661]
+01- 1
+1-1 1
+.names [465] dat_i[6] [826] [662]
+01- 1
+1-1 1
+.names [473] dat_i[7] [826] [663]
+01- 1
+1-1 1
+.names [899] [822] [664]
+00 1
+.names [770] [431] [665]
+11 0
+.names [174] [797] [666]
+11 0
+.names [770] [430] [667]
+11 0
+.names [184] [797] [668]
+11 0
+.names [770] [429] [669]
+11 0
+.names [770] [426] [670]
+11 0
+.names [770] [427] [671]
+11 0
+.names [183] [797] [672]
+11 0
+.names [185] [797] [673]
+11 0
+.names [770] [428] [674]
+11 0
+.names [770] [432] [675]
+11 0
+.names ack_o_reg ack_o
+1 1
+.names [459] [855] [677]
+01 1
+10 1
+.names [726] [678]
+0 1
+.names [728] [679]
+0 1
+.names [942] [774] [680]
+11 0
+.names [812] [915] [774] [681]
+11- 0
+--1 0
+.names [858] [901] [804] [682]
+111 0
+.names [770] [410] [683]
+11 0
+.names [950] [954] [326] [684]
+111 0
+.names [880] [913] [787] [685]
+01- 1
+1-1 1
+.names dat_i[6] [752] [686]
+11 1
+.names [732] [687]
+0 1
+.names [847] [918] [688]
+00 1
+.names [849] [752] [689]
+11 1
+.names [510] [849] [461] [826] [690]
+11-- 0
+--11 0
+.names [488] [849] [462] [826] [691]
+11-- 0
+--11 0
+.names [500] [849] [464] [826] [692]
+11-- 0
+--11 0
+.names [485] [849] [458] [826] [693]
+11-- 0
+--11 0
+.names [826] [465] [891] [798] [694]
+11-- 0
+--11 0
+.names [827] [186] [175] [792] [695]
+11-- 0
+--11 0
+.names [827] [193] [182] [792] [696]
+11-- 0
+--11 0
+.names [261] [189] [825] [697]
+01- 1
+1-1 1
+.names [266] [187] [825] [698]
+01- 1
+1-1 1
+.names [263] [191] [825] [699]
+01- 1
+1-1 1
+.names [264] [192] [825] [700]
+01- 1
+1-1 1
+.names [262] [190] [825] [701]
+01- 1
+1-1 1
+.names mosi_o [193] [825] [702]
+01- 1
+1-1 1
+.names [894] [849] [782] [703]
+00- 1
+--0 1
+.names [849] [844] [780] [704]
+00- 1
+--0 1
+.names [265] [186] [825] [705]
+01- 1
+1-1 1
+.names [260] [188] [825] [706]
+01- 1
+1-1 1
+.names [759] [707]
+0 1
+.names [752] [708]
+0 1
+.names [404] [789] [709]
+11 1
+.names [181] [792] [710]
+11 0
+.names [172] [797] [711]
+11 1
+.names [403] [789] [712]
+11 1
+.names [823] [802] [713]
+11 0
+.names [170] [797] [714]
+11 1
+.names [171] [797] [715]
+11 1
+.names [389] [789] [716]
+11 1
+.names [176] [792] [717]
+11 1
+.names [401] [789] [718]
+11 1
+.names [391] [789] [719]
+11 0
+.names [405] [789] [720]
+11 1
+.names [793] [790] [721]
+11 0
+.names [884] [882] [807] [722]
+11- 0
+--1 0
+.names [761] [723]
+0 1
+.names [762] [724]
+0 1
+.names [848] [846] [919] [725]
+111 0
+.names [813] [812] [726]
+11 1
+.names [779] [811] [727]
+00 1
+.names [839] [869] [778] [728]
+11- 0
+--1 0
+.names [177] [792] [729]
+11 1
+.names [406] [789] [730]
+11 1
+.names [511] [897] [832] [731]
+01- 1
+1-1 1
+.names [777] [804] [732]
+11 1
+.names [781] [824] [733]
+11 0
+.names [402] [789] [734]
+11 0
+.names [775] [735]
+0 1
+.names [197] [262] [856] [736]
+01- 1
+1-1 1
+.names [198] [263] [856] [737]
+01- 1
+1-1 1
+.names [510] dat_i[1] [849] [738]
+01- 1
+1-1 1
+.names [488] dat_i[2] [849] [739]
+01- 1
+1-1 1
+.names [511] dat_i[3] [849] [740]
+01- 1
+1-1 1
+.names [485] dat_i[5] [849] [741]
+01- 1
+1-1 1
+.names [484] dat_i[7] [849] [742]
+01- 1
+1-1 1
+.names [194] [265] [856] [743]
+01- 1
+1-1 1
+.names [195] [266] [856] [744]
+01- 1
+1-1 1
+.names [200] [260] [856] [745]
+01- 1
+1-1 1
+.names [196] [261] [856] [746]
+01- 1
+1-1 1
+.names [201] [264] [856] [747]
+01- 1
+1-1 1
+.names [199] mosi_o [856] [748]
+01- 1
+1-1 1
+.names [810] [749]
+0 1
+.names [827] [191] [750]
+11 0
+.names [827] [190] [751]
+11 0
+.names [777] [752]
+1 1
+.names [844] [765] [753]
+00 1
+.names [827] [189] [754]
+11 0
+.names [827] [188] [755]
+11 0
+.names [865] ack_o ack_o_reg_in
+00 1
+.names [163] [816] [757]
+00 1
+.names [821] [885] [758]
+00 0
+.names [254] [873] [829] [759]
+11- 0
+--1 0
+.names [787] [760]
+0 1
+.names [790] [761]
+0 1
+.names [793] [762]
+0 1
+.names [796] [763]
+0 1
+.names [799] [764]
+1 1
+.names [974] [765]
+0 1
+.names [878] [871] [766]
+00 1
+.names rst_i [512] [767]
+11 0
+.names [881] [872] [768]
+11 0
+.names [800] [769]
+0 1
+.names [890] [893] [770]
+11 1
+.names [814] [771]
+0 1
+.names [837] [824] [772]
+11 0
+.names [954] [773]
+0 1
+.names [811] [774]
+0 1
+.names [852] [486] [461] [775]
+11- 0
+--1 0
+.names [465] [876] [834] [776]
+11- 0
+--1 0
+.names [858] we_i [777]
+11 1
+.names [832] [778]
+0 1
+.names [848] [868] [779]
+11 0
+.names [849] dat_i[6] [780]
+11 0
+.names [843] [461] [781]
+00 1
+.names [849] dat_i[0] [782]
+11 0
+.names [864] [195] [783]
+11 0
+.names [864] [194] [784]
+11 0
+.names [864] [201] [785]
+11 0
+.names [864] [199] [786]
+11 0
+.names [841] [845] [787]
+11 0
+.names [861] [842] [788]
+11 0
+.names [819] [789]
+0 1
+.names [881] [908] [790]
+11 0
+.names [835] [791]
+0 1
+.names [820] [792]
+0 1
+.names [912] [872] [793]
+11 0
+.names [821] [794]
+0 1
+.names [860] [795]
+0 1
+.names [855] [893] [796]
+11 0
+.names [822] [797]
+0 1
+.names [816] [798]
+0 1
+.names [890] [893] [799]
+00 1
+.names [912] [908] [800]
+11 0
+.names [906] [859] [801]
+00 1
+.names [878] [854] [802]
+00 1
+.names [880] [168] [803]
+01 1
+10 1
+.names [860] [892] [804]
+00 1
+.names [857] [510] [805]
+00 0
+.names [852] [461] [806]
+00 0
+.names [904] [895] [807]
+11 1
+.names [864] [196] [808]
+11 0
+.names [902] [844] [809]
+00 1
+.names [883] [877] [846] [810]
+11- 0
+--1 0
+.names [965] [957] [886] [958] [811]
+1111 0
+.names [846] [957] [812]
+11 0
+.names [846] [957] [813]
+00 0
+.names [836] [814]
+0 1
+.names [885] [296] [815]
+11 0
+.names [910] adr_i[1] [816]
+00 0
+.names [907] [326] [817]
+11 0
+.names [843] [818]
+0 1
+.names [890] [879] [819]
+11 0
+.names [904] [379] [820]
+11 0
+.names [251] [914] [821]
+11 0
+.names [884] [913] [822]
+11 0
+.names [920] [823]
+0 1
+.names [486] [510] [824]
+11 0
+.names [882] [168] [825]
+11 0
+.names adr_i[0] adr_i[1] [826]
+11 1
+.names [850] [827]
+0 1
+.names [510] [461] [828]
+11 1
+.names [839] [829]
+0 1
+.names [512] [830]
+0 1
+.names [844] [831]
+0 1
+.names [979] [909] [911] [832]
+111 0
+.names inta_o_reg inta_o
+1 1
+.names [876] [165] [834]
+00 1
+.names [845] [835]
+0 1
+.names [971] [836]
+0 1
+.names [857] [837]
+0 1
+.names [894] [888] [838]
+00 0
+.names [979] [909] [839]
+11 0
+.names [893] [908] [840]
+11 0
+.names [895] [168] [841]
+11 0
+.names [898] [511] [842]
+11 0
+.names [894] [460] [843]
+11 1
+.names [512] [844]
+0 1
+.names [169] [889] [845]
+11 0
+.names [958] [886] [846]
+11 1
+.names [925] [886] [847]
+11 0
+.names [926] [925] [848]
+11 1
+.names [910] [887] [849]
+11 1
+.names [904] [913] [850]
+00 0
+.names [893] [908] [851]
+00 0
+.names [905] [900] [852]
+00 1
+.names [876] [853]
+0 1
+.names [868] [854]
+0 1
+.names [890] [855]
+0 1
+.names [895] [889] [856]
+11 1
+.names [900] [888] [857]
+11 0
+.names [865] [858]
+0 1
+.names [512] [859]
+0 1
+.names [910] adr_i[1] [860]
+11 0
+.names [488] [897] [861]
+11 0
+.names [878] [862]
+0 1
+.names [926] [922] [863]
+11 1
+.names [904] [913] [864]
+11 1
+.names cyc_i stb_i [865]
+11 0
+.names [885] [866]
+0 1
+.names [926] [867]
+0 1
+.names [924] [868]
+1 1
+.names [911] [869]
+0 1
+.names [948] [870]
+0 1
+.names [947] [871]
+0 1
+.names [908] [872]
+0 1
+.names [909] [873]
+0 1
+.names [925] [874]
+0 1
+.names [484] [166] inta_o_reg_in
+11 1
+.names [165] [162] [876]
+00 1
+.names [886] [877]
+0 1
+.names [959] [878]
+0 1
+.names [893] [879]
+0 1
+.names [913] [880]
+0 1
+.names [912] [881]
+0 1
+.names [895] [882]
+0 1
+.names [958] [883]
+0 1
+.names [904] [884]
+0 1
+.names [251] [885]
+0 1
+.names [293] [886]
+0 1
+.names adr_i[1] [887]
+0 1
+.names [461] [888]
+0 1
+.names [168] [889]
+0 1
+.names [513] [890]
+0 1
+.names [345] [891]
+0 1
+.names ack_o [892]
+0 1
+.names [380] [893]
+0 1
+.names [486] [894]
+0 1
+.names [169] [895]
+0 1
+.names [296] [896]
+0 1
+.names sck_o [897]
+0 1
+.names [488] [898]
+0 1
+.names [173] [899]
+0 1
+.names [460] [900]
+0 1
+.names we_i [901]
+0 1
+.names [162] [902]
+0 1
+.names [473] [903]
+0 1
+.names [385] [904]
+0 1
+.names [510] [905]
+0 1
+.names [166] [906]
+0 1
+.names [459] [907]
+0 1
+.names [393] [908]
+0 1
+.names [259] [909]
+0 1
+.names adr_i[0] [910]
+0 1
+.names [256] [911]
+0 1
+.names [394] [912]
+0 1
+.names [379] [913]
+0 1
+.names [296] [914]
+0 1
+.names [965] [915]
+0 1
+.names [922] [916]
+0 1
+.names [921] [917]
+0 1
+.names [919] [958] [918]
+11 0
+.names [943] [919]
+0 1
+.names [921] [922] [920]
+11 0
+.names [291] [921]
+0 1
+.names [257] [922]
+0 1
+.names [295] [923]
+0 1
+.names [290] [924]
+0 1
+.names [960] [925]
+1 1
+.names [923] [926]
+1 1
+.names [929] [930] [927]
+00 1
+.names [944] [943] [928]
+00 1
+.names [940] [929]
+0 1
+.names [942] [930]
+0 1
+.names [257] [291] [931]
+00 1
+.names [933] [934] [938] [932]
+111 0
+.names [355] [794] [933]
+11 0
+.names [935] [936] [934]
+00 1
+.names [897] [815] [935]
+00 1
+.names [423] [530] [937] [936]
+11- 0
+--1 0
+.names [978] [937]
+0 1
+.names [492] [976] [938]
+11 0
+.names [940] [961] [955] [939]
+111 0
+.names [945] [941] [940]
+00 1
+.names [931] [941]
+0 1
+.names [956] [966] [942]
+00 1
+.names [965] [957] [943]
+11 0
+.names [964] [958] [944]
+11 0
+.names [946] [947] [945]
+11 0
+.names [306] [946]
+0 1
+.names [286] [947]
+0 1
+.names [946] [948]
+1 1
+.names [950] [951] [953] [949]
+111 0
+.names [851] [840] [950]
+11 0
+.names [912] [890] [952] [951]
+00- 1
+--0 1
+.names [912] [890] [952]
+11 0
+.names [326] [953]
+0 1
+.names [951] [954]
+1 1
+.names [980] [956] [955]
+00 1
+.names [924] [923] [956]
+11 0
+.names [292] [957]
+0 1
+.names [294] [958]
+0 1
+.names [287] [959]
+0 1
+.names [288] [960]
+0 1
+.names [962] [963] [961]
+00 1
+.names [960] [959] [962]
+11 0
+.names [964] [965] [963]
+11 0
+.names [293] [964]
+0 1
+.names [289] [965]
+0 1
+.names [960] [959] [966]
+11 0
+.names [968] [969] [970] \bcnt_reg[0]_in
+00- 1
+--0 1
+.names [254] [979] [443] [968]
+01- 1
+1-1 1
+.names [296] [512] [251] [969]
+111 0
+.names [971] [972] [970]
+00 0
+.names [512] [971]
+0 1
+.names [973] [254] [765] [972]
+11- 0
+--1 0
+.names [821] [815] [973]
+11 0
+.names [896] [885] [974]
+11 0
+.names [765] [975]
+0 1
+.names [974] [976]
+0 1
+.names [978] [977]
+1 1
+.names [885] [914] [978]
+00 1
+.names [254] [979]
+0 1
+.names [981] [982] [980]
+11 0
+.names [292] [981]
+0 1
+.names [294] [982]
+0 1
+.end

@@ -1,0 +1,1103 @@
+.model TOP
+.inputs Psh2 Psh1 Psh0 Popsel3 Popsel2 Popsel1 Popsel0 Pmusel4 Pmusel3 Pmusel2 \
+Pmusel1 PinD15 PinD14 PinD13 PinD12 PinD11 PinD10 PinD9 PinD8 PinD7 PinD6 \
+PinD5 PinD4 PinD3 PinD2 PinD1 PinD0 PinC15 PinC14 PinC13 PinC12 PinC11 PinC10 \
+PinC9 PinC8 PinC7 PinC6 PinC5 PinC4 PinC3 PinC2 PinC1 PinC0 PinB15 PinB14 \
+PinB13 PinB12 PinB11 PinB10 PinB9 PinB8 PinB7 PinB6 PinB5 PinB4 PinB3 PinB2 \
+PinB1 PinB0 PinA15 PinA14 PinA13 PinA12 PinA11 PinA10 PinA9 PinA8 PinA7 PinA6 \
+PinA5 PinA4 PinA3 PinA2 PinA1 PinA0
+.outputs PO15 PO14 PO13 PO12 PO11 PO10 PO9 PO8 PO7 PO6 PO5 PO4 PO3 PO2 PO1 PO0
+.names n1 PO15
+0 1
+.names n2 PO14
+0 1
+.names n3 PO13
+0 1
+.names n4 PO12
+0 1
+.names n5 PO11
+0 1
+.names n6 PO10
+0 1
+.names n7 PO9
+0 1
+.names n8 PO8
+0 1
+.names n9 PO7
+0 1
+.names n10 PO6
+0 1
+.names n11 PO5
+0 1
+.names n12 PO4
+0 1
+.names n13 PO3
+0 1
+.names n14 PO2
+0 1
+.names n15 PO1
+0 1
+.names n16 PO0
+0 1
+.names n184 n185 n36 n120 n1
+111- 1
+11-1 1
+.names n194 n193 n120 n2
+11- 1
+1-1 1
+.names n205 n199 n120 n3
+11- 1
+1-1 1
+.names n212 n96 n209 n4
+11- 1
+1-1 1
+.names n109 n218 n217 n344 n5
+11-- 1
+-11- 1
+-1-0 1
+.names n222 n224 n225 n354 n6
+111- 1
+-110 1
+.names n81 n86 n87 n354 n7
+111- 1
+-110 1
+.names n97 n91 n96 n8
+11- 1
+1-1 1
+.names n110 n108 n109 n9
+11- 1
+1-1 1
+.names n121 n114 n120 n10
+11- 1
+1-1 1
+.names n131 n125 n120 n11
+11- 1
+1-1 1
+.names n139 n96 n135 n12
+11- 1
+1-1 1
+.names n152 n143 n120 n13
+11- 1
+1-1 1
+.names n160 n96 n156 n14
+11- 1
+1-1 1
+.names n233 n229 n96 n15
+11- 1
+1-1 1
+.names n241 n237 n96 n16
+11- 1
+1-1 1
+.names n164 n309 n18
+11 1
+.names n34 n35 n20
+1- 1
+-1 1
+.names PinD12 PinB12 n18 n20 n17
+00-- 1
+-01- 1
+0--1 1
+--11 1
+.names PinD9 PinB9 n18 n20 n22
+00-- 1
+-01- 1
+0--1 1
+--11 1
+.names PinD14 PinB14 n18 n20 n25
+00-- 1
+-01- 1
+0--1 1
+--11 1
+.names PinD10 PinB10 n18 n20 n28
+00-- 1
+-01- 1
+0--1 1
+--11 1
+.names PinD11 PinB11 n18 n20 n31
+00-- 1
+-01- 1
+0--1 1
+--11 1
+.names Pmusel2 Pmusel1 n34
+11 1
+00 1
+.names Pmusel4 Pmusel3 n35
+1- 1
+-0 1
+.names PinD15 PinB15 n18 n20 n36
+00-- 1
+-01- 1
+0--1 1
+--11 1
+.names Psh2 n36 n40
+0- 1
+-1 1
+.names n40 Psh2 n31 n39
+11- 1
+1-1 1
+.names PinD13 PinB13 n18 n20 n41
+00-- 1
+-01- 1
+0--1 1
+--11 1
+.names n22 n208 n92 n207 n46
+1-1- 1
+-11- 1
+1--1 1
+-1-1 1
+.names n378 n93 n39 n353 n47
+1-1- 1
+-11- 1
+1--1 1
+-1-1 1
+.names Psh2 n351 n45
+1- 1
+-1 1
+.names n46 n47 n17 n45 n44
+111- 1
+11-1 1
+.names Pmusel2 PinC7 PinA7 n49
+11- 1
+0-1 1
+-11 1
+.names Pmusel4 n49 n76 n384 n48
+0--0 1
+010- 1
+.names Pmusel2 PinC6 PinA6 n54
+11- 1
+0-1 1
+-11 1
+.names Pmusel4 n54 n76 n386 n53
+0--0 1
+010- 1
+.names Pmusel2 PinC5 PinA5 n57
+11- 1
+0-1 1
+-11 1
+.names Pmusel4 n57 n76 n389 n56
+0--0 1
+010- 1
+.names Pmusel2 PinC3 PinA3 n60
+11- 1
+0-1 1
+-11 1
+.names Pmusel4 n60 n76 n394 n59
+0--0 1
+010- 1
+.names Pmusel2 PinC2 PinA2 n63
+11- 1
+0-1 1
+-11 1
+.names Pmusel4 n63 n76 n396 n62
+0--0 1
+010- 1
+.names Pmusel2 PinC1 PinA1 n66
+11- 1
+0-1 1
+-11 1
+.names Pmusel4 n66 n76 n409 n65
+0--0 1
+010- 1
+.names Pmusel2 PinC0 PinA0 n69
+11- 1
+0-1 1
+-11 1
+.names Pmusel4 n69 n76 n413 n68
+0--0 1
+010- 1
+.names Pmusel2 PinC4 PinA4 n72
+11- 1
+0-1 1
+-11 1
+.names Pmusel4 n72 n76 n392 n71
+0--0 1
+010- 1
+.names PinD8 PinB8 n348 n349 n77
+00-- 1
+-01- 1
+0--1 1
+--11 1
+.names Pmusel3 Pmusel1 n76
+1- 1
+-0 1
+.names n77 n76 n376 n74
+11- 1
+1-0 1
+.names Pmusel2 PinC9 PinA9 n79
+11- 1
+0-1 1
+-11 1
+.names Pmusel4 n76 n79 n377 n78
+0--0 1
+001- 1
+.names Popsel1 Popsel0 n82
+11 1
+00 1
+.names PinA9 n20 n78 n261 n83
+0-01 1
+-101 1
+.names Popsel0 Popsel1 n84
+1- 1
+-1 1
+.names n82 n83 n44 n84 n81
+1-1- 1
+-11- 1
+1--1 1
+-1-1 1
+.names n109 n242 n344 n86
+1-- 1
+-1- 1
+--0 1
+.names n44 n120 n87
+1- 1
+-1 1
+.names PinD8 PinB8 n18 n20 n88
+00-- 1
+-01- 1
+0--1 1
+--11 1
+.names n102 n207 n31 n45 n94
+1-1- 1
+-11- 1
+1--1 1
+-1-1 1
+.names n381 n382 n28 n360 n95
+111- 1
+11-1 1
+.names Psh2 n22 n41 n92
+01- 1
+1-1 1
+-11 1
+.names Psh1 Psh0 n93
+1- 1
+-0 1
+.names n94 n95 n92 n93 n91
+111- 1
+11-1 1
+.names n383 n359 n380 n379 n97
+11-- 1
+1-11 1
+.names n84 n120 n354 n96
+11- 1
+-10 1
+.names PinD7 PinB7 n18 n20 n98
+00-- 1
+-01- 1
+0--1 1
+--11 1
+.names n115 n207 n28 n45 n103
+1-1- 1
+-11- 1
+1--1 1
+-1-1 1
+.names n385 n382 n22 n360 n104
+111- 1
+11-1 1
+.names Psh2 n17 n88 n102
+11- 1
+0-1 1
+-11 1
+.names n103 n104 n102 n93 n101
+111- 1
+11-1 1
+.names n264 n279 n106
+1- 1
+-1 1
+.names n253 n266 n107
+11 1
+00 1
+.names n106 n107 n105
+1- 1
+-1 1
+.names n270 n359 n101 n96 n110
+1-1- 1
+-11- 1
+1--1 1
+-1-1 1
+.names n105 n267 n108
+11 1
+00 1
+.names Popsel3 n345 n109
+1- 1
+-1 1
+.names PinD6 PinB6 n18 n20 n111
+00-- 1
+-01- 1
+0--1 1
+--11 1
+.names n126 n207 n22 n45 n116
+1-1- 1
+-11- 1
+1--1 1
+-1-1 1
+.names n387 n88 n360 n117
+11- 1
+1-1 1
+.names Psh2 n31 n98 n115
+11- 1
+0-1 1
+-11 1
+.names n116 n117 n115 n93 n114
+111- 1
+11-1 1
+.names PinA6 n20 n53 n277 n119
+0-01 1
+-101 1
+.names n82 n119 n114 n84 n118
+1-1- 1
+-11- 1
+1--1 1
+-1-1 1
+.names n109 n118 n274 n354 n121
+11-- 1
+-10- 1
+1--0 1
+--00 1
+.names Popsel3 Popsel2 n84 n120
+1-- 1
+-0- 1
+--0 1
+.names PinD5 PinB5 n18 n20 n122
+00-- 1
+-01- 1
+0--1 1
+--11 1
+.names n136 n207 n88 n45 n127
+1-1- 1
+-11- 1
+1--1 1
+-1-1 1
+.names n390 n98 n360 n128
+11- 1
+1-1 1
+.names Psh2 n28 n111 n126
+11- 1
+0-1 1
+-11 1
+.names n127 n128 n126 n93 n125
+111- 1
+11-1 1
+.names PinA5 n20 n56 n282 n130
+0-01 1
+-101 1
+.names n82 n130 n125 n84 n129
+1-1- 1
+-11- 1
+1--1 1
+-1-1 1
+.names n109 n129 n278 n354 n131
+11-- 1
+-10- 1
+1--0 1
+--00 1
+.names PinD4 PinB4 n18 n20 n132
+00-- 1
+-01- 1
+0--1 1
+--11 1
+.names n144 n207 n98 n45 n137
+1-1- 1
+-11- 1
+1--1 1
+-1-1 1
+.names n393 n111 n360 n138
+11- 1
+1-1 1
+.names Psh2 n22 n122 n136
+11- 1
+0-1 1
+-11 1
+.names n137 n138 n136 n93 n135
+111- 1
+11-1 1
+.names n283 n109 n285 n359 n139
+1-1- 1
+-11- 1
+1--1 1
+-1-1 1
+.names PinD3 PinB3 n18 n20 n140
+00-- 1
+-01- 1
+0--1 1
+--11 1
+.names n157 n207 n111 n45 n145
+1-1- 1
+-11- 1
+1--1 1
+-1-1 1
+.names n395 n122 n360 n146
+11- 1
+1-1 1
+.names Psh2 n88 n132 n144
+11- 1
+0-1 1
+-11 1
+.names n145 n146 n144 n93 n143
+111- 1
+11-1 1
+.names n248 n335 n148
+1- 1
+-1 1
+.names n245 n253 n149
+11 1
+00 1
+.names n148 n149 n147
+1- 1
+-1 1
+.names PinA3 n20 n59 n293 n151
+0-01 1
+-101 1
+.names n82 n151 n143 n84 n150
+1-1- 1
+-11- 1
+1--1 1
+-1-1 1
+.names n109 n150 n289 n354 n152
+11-- 1
+-11- 1
+1--0 1
+--10 1
+.names PinD2 PinB2 n18 n20 n153
+00-- 1
+-01- 1
+0--1 1
+--11 1
+.names n230 n207 n122 n45 n158
+1-1- 1
+-11- 1
+1--1 1
+-1-1 1
+.names n397 n132 n360 n159
+11- 1
+1-1 1
+.names Psh2 n98 n140 n157
+11- 1
+0-1 1
+-11 1
+.names n158 n159 n157 n93 n156
+111- 1
+11-1 1
+.names n109 n294 n295 n359 n160
+1-1- 1
+-01- 1
+1--1 1
+-0-1 1
+.names Pmusel2 PinC15 PinA15 n162
+11- 1
+0-1 1
+-11 1
+.names Pmusel4 n76 n162 n399 n161
+0--0 1
+001- 1
+.names Pmusel2 Pmusel1 n35 n164
+0-- 1
+-0- 1
+--1 1
+.names Pmusel2 PinC14 PinA14 n168
+11- 1
+0-1 1
+-11 1
+.names Pmusel4 n76 n168 n400 n167
+0--0 1
+001- 1
+.names Pmusel2 PinC13 PinA13 n171
+11- 1
+0-1 1
+-11 1
+.names Pmusel4 n76 n171 n401 n170
+0--0 1
+001- 1
+.names Pmusel2 PinC12 PinA12 n174
+11- 1
+0-1 1
+-11 1
+.names Pmusel4 n76 n174 n403 n173
+0--0 1
+001- 1
+.names Pmusel2 PinC11 PinA11 n177
+11- 1
+0-1 1
+-11 1
+.names Pmusel4 n76 n177 n406 n176
+0--0 1
+001- 1
+.names Pmusel2 PinC10 PinA10 n180
+11- 1
+0-1 1
+-11 1
+.names Pmusel4 n76 n180 n407 n179
+0--0 1
+001- 1
+.names PinA15 n20 n161 n306 n183
+0-01 1
+-101 1
+.names n82 n183 n36 n84 n182
+1-1- 1
+-11- 1
+1--1 1
+-1-1 1
+.names n182 n354 n184
+1- 1
+-0 1
+.names n109 n189 n301 n190 n185
+1--- 1
+-1-- 1
+--1- 1
+---1 1
+.names Psh2 Psh1 Psh0 n187
+00- 1
+1-1 1
+-01 1
+.names n187 n93 n186
+11 1
+.names n299 n318 n189
+1- 1
+-1 1
+.names n253 n303 n190
+11 1
+00 1
+.names n189 n190 n188
+1- 1
+-1 1
+.names PinC14 n167 n312 n309 n192
+001- 1
+-011 1
+.names n25 n36 n186 n193
+11- 1
+1-1 1
+-10 1
+.names n82 n192 n193 n84 n191
+1-1- 1
+-11- 1
+1--1 1
+-1-1 1
+.names n109 n191 n307 n354 n194
+11-- 1
+-11- 1
+1--0 1
+--10 1
+.names Psh2 Psh1 n36 n353 n195
+--00 1
+010- 1
+.names Psh1 n40 n41 n186 n202
+1-1- 1
+-11- 1
+1--0 1
+-1-0 1
+.names Psh2 n93 n200
+1- 1
+-1 1
+.names n25 n195 n202 n200 n199
+101- 1
+-011 1
+.names PinC13 n170 n309 n316 n204
+00-1 1
+-011 1
+.names n82 n204 n199 n84 n203
+1-1- 1
+-11- 1
+1--1 1
+-1-1 1
+.names n109 n203 n313 n354 n205
+11-- 1
+-10- 1
+1--0 1
+--00 1
+.names Psh2 n351 n208
+0- 1
+-1 1
+.names Psh0 Psh1 n207
+1- 1
+-1 1
+.names n208 Psh2 n207 n206
+11- 1
+1-1 1
+.names n41 n200 n25 n360 n210
+1-1- 1
+-11- 1
+1--1 1
+-1-1 1
+.names n36 n40 n45 n351 n211
+11-- 1
+-11- 1
+1--0 1
+--10 1
+.names n210 n211 n17 n206 n209
+111- 1
+11-1 1
+.names n109 n317 n319 n359 n212
+1-1- 1
+-01- 1
+1--1 1
+-0-1 1
+.names n17 n200 n41 n360 n214
+1-1- 1
+-11- 1
+1--1 1
+-1-1 1
+.names n25 n40 n45 n351 n215
+11-- 1
+-11- 1
+1--0 1
+--10 1
+.names n214 n215 n31 n206 n213
+111- 1
+11-1 1
+.names n323 n359 n213 n96 n218
+1-1- 1
+-11- 1
+1--1 1
+-1-1 1
+.names n253 n257 n217
+11 1
+00 1
+.names n378 n207 n41 n45 n220
+1-1- 1
+-11- 1
+1--1 1
+-1-1 1
+.names n408 n382 n17 n360 n221
+111- 1
+11-1 1
+.names n220 n221 n39 n93 n219
+111- 1
+11-1 1
+.names PinA10 n20 n179 n329 n223
+0-01 1
+-101 1
+.names n82 n223 n219 n84 n222
+1-1- 1
+-11- 1
+1--1 1
+-1-1 1
+.names n109 n255 n344 n224
+1-- 1
+-1- 1
+--0 1
+.names n219 n120 n225
+1- 1
+-1 1
+.names PinD1 PinB1 n18 n20 n226
+00-- 1
+-01- 1
+0--1 1
+--11 1
+.names n411 n207 n132 n45 n231
+1-1- 1
+-11- 1
+1--1 1
+-1-1 1
+.names n410 n140 n360 n232
+11- 1
+1-1 1
+.names Psh2 n111 n153 n230
+11- 1
+0-1 1
+-11 1
+.names n231 n232 n230 n93 n229
+111- 1
+11-1 1
+.names n109 n330 n334 n359 n233
+11-- 1
+-10- 1
+1--1 1
+--01 1
+.names PinD0 PinB0 n18 n20 n234
+00-- 1
+-01- 1
+0--1 1
+--11 1
+.names n140 n45 n411 n93 n239
+1-1- 1
+-11- 1
+1--1 1
+-1-1 1
+.names n414 n415 n153 n360 n240
+111- 1
+11-1 1
+.names n186 n234 n239 n240 n237
+0-11 1
+-111 1
+.names n336 n359 n340 n109 n241
+1-1- 1
+-11- 1
+1--1 1
+-1-1 1
+.names n79 n341 n244
+10 1
+.names n244 n253 n242
+11 1
+00 1
+.names n63 n341 n245
+10 1
+.names n60 n341 n247
+10 1
+.names n247 n253 n246
+11 1
+00 1
+.names n66 n341 n249
+10 1
+.names n249 n253 n248
+11 1
+00 1
+.names n69 n341 n251
+10 1
+.names n251 n253 n250
+11 1
+00 1
+.names n162 n341 n253
+10 1
+.names n341 n376 n254
+1- 1
+-0 1
+.names n253 n254 n252
+01 1
+10 1
+.names n180 n341 n256
+10 1
+.names n253 n256 n255
+11 1
+00 1
+.names n177 n341 n257
+10 1
+.names PinC9 n164 n309 n261
+0-- 1
+-11 1
+.names n72 n341 n263
+10 1
+.names n253 n263 n262
+11 1
+00 1
+.names n57 n341 n265
+10 1
+.names n253 n265 n264
+11 1
+00 1
+.names n54 n341 n266
+10 1
+.names n49 n341 n268
+10 1
+.names n253 n268 n267
+11 1
+00 1
+.names PinC7 n164 n309 n273
+0-- 1
+-11 1
+.names PinA7 n20 n48 n273 n270
+0-01 1
+-101 1
+.names n106 n107 n274
+01 1
+10 1
+.names PinC6 n164 n309 n277
+0-- 1
+-11 1
+.names n262 n343 n279
+1- 1
+-1 1
+.names n279 n264 n278
+01 1
+10 1
+.names PinC5 n164 n309 n282
+0-- 1
+-11 1
+.names n262 n343 n283
+11 1
+00 1
+.names PinC4 n164 n309 n288
+0-- 1
+-11 1
+.names PinA4 n20 n71 n288 n285
+0-01 1
+-101 1
+.names n147 n246 n289
+11 1
+00 1
+.names PinC3 n164 n309 n293
+0-- 1
+-11 1
+.names n148 n149 n294
+01 1
+10 1
+.names PinC2 n164 n309 n298
+0-- 1
+-11 1
+.names PinA2 n20 n62 n298 n295
+0-01 1
+-101 1
+.names n174 n341 n300
+10 1
+.names n253 n300 n299
+11 1
+00 1
+.names n168 n341 n302
+10 1
+.names n253 n302 n301
+11 1
+00 1
+.names n171 n341 n303
+10 1
+.names PinC15 n164 n309 n306
+0-- 1
+-11 1
+.names n188 n301 n307
+11 1
+00 1
+.names PinC14 PinA14 n20 n164 n312
+00-- 1
+0-1- 1
+-0-1 1
+--11 1
+.names Pmusel4 Pmusel3 Pmusel2 Pmusel1 n309
+0--- 1
+-1-- 1
+--1- 1
+---1 1
+.names n189 n190 n313
+01 1
+10 1
+.names PinC13 PinA13 n20 n164 n316
+00-- 1
+0-1- 1
+-0-1 1
+--11 1
+.names n262 n264 n107 n267 n344 n318
+1---- 1
+-1--- 1
+--1-- 1
+---1- 1
+----1 1
+.names n318 n299 n317
+01 1
+10 1
+.names PinC12 PinA12 n20 n164 n322
+00-- 1
+0-1- 1
+-0-1 1
+--11 1
+.names PinC12 n173 n309 n322 n319
+00-1 1
+-011 1
+.names PinC11 n164 n309 n326
+0-- 1
+-11 1
+.names PinA11 n20 n176 n326 n323
+0-01 1
+-101 1
+.names PinC10 n164 n309 n329
+0-- 1
+-11 1
+.names PinC1 n164 n309 n333
+0-- 1
+-11 1
+.names PinA1 n20 n65 n333 n330
+0-01 1
+-101 1
+.names n250 n253 n335
+1- 1
+-0 1
+.names n335 n248 n334
+01 1
+10 1
+.names PinC0 n164 n309 n339
+0-- 1
+-11 1
+.names PinA0 n20 n68 n339 n336
+0-01 1
+-101 1
+.names n250 n253 n340
+01 1
+10 1
+.names Pmusel4 Pmusel3 n34 n341
+0-- 1
+-1- 1
+--1 1
+.names n149 n246 n248 n250 n253 n343
+1---- 1
+-1--- 1
+--1-- 1
+---1- 1
+----0 1
+.names n242 n252 n255 n217 n343 n344
+1---- 1
+-1--- 1
+--1-- 1
+---1- 1
+----1 1
+.names Popsel2 n84 n345
+11 1
+00 1
+.names Pmusel3 Pmusel2 Pmusel1 n348
+0-- 1
+-1- 1
+--1 1
+.names Pmusel3 Pmusel2 Pmusel1 n349
+1-- 1
+-0- 1
+--1 1
+.names Psh1 Psh0 n351
+0- 1
+-0 1
+.names Psh1 Psh0 n353
+0- 1
+-1 1
+.names Popsel3 Popsel2 n354
+10 1
+.names n82 n354 n359
+1- 1
+-0 1
+.names Psh2 n353 n360
+1- 1
+-1 1
+.names Psh2 n353 n363
+0- 1
+-1 1
+.names Pmusel2 PinC8 PinA8 n376
+11- 1
+0-1 1
+-11 1
+.names PinD9 PinB9 n348 n349 n377
+00-- 1
+-01- 1
+0--1 1
+--11 1
+.names Psh2 n25 n28 n378
+11- 1
+0-1 1
+-11 1
+.names Pmusel4 PinA8 n20 n74 n379
+10-- 1
+1-1- 1
+-0-1 1
+--11 1
+.names PinC8 n164 n309 n380
+0-- 1
+-11 1
+.names n88 n208 n381
+1- 1
+-1 1
+.names n353 n40 n382
+1- 1
+-1 1
+.names n109 n252 n344 n383
+1-- 1
+-1- 1
+--0 1
+.names PinD7 PinB7 n348 n349 n384
+00-- 1
+-01- 1
+0--1 1
+--11 1
+.names n98 n208 n385
+1- 1
+-1 1
+.names PinD6 PinB6 n348 n349 n386
+00-- 1
+-01- 1
+0--1 1
+--11 1
+.names n25 n363 n111 n208 n387
+1-1- 1
+-11- 1
+1--1 1
+-1-1 1
+.names PinD5 PinB5 n348 n349 n389
+00-- 1
+-01- 1
+0--1 1
+--11 1
+.names n41 n363 n122 n208 n390
+1-1- 1
+-11- 1
+1--1 1
+-1-1 1
+.names PinD4 PinB4 n348 n349 n392
+00-- 1
+-01- 1
+0--1 1
+--11 1
+.names n17 n363 n132 n208 n393
+1-1- 1
+-11- 1
+1--1 1
+-1-1 1
+.names PinD3 PinB3 n348 n349 n394
+00-- 1
+-01- 1
+0--1 1
+--11 1
+.names n31 n363 n140 n208 n395
+1-1- 1
+-11- 1
+1--1 1
+-1-1 1
+.names PinD2 PinB2 n348 n349 n396
+00-- 1
+-01- 1
+0--1 1
+--11 1
+.names n28 n363 n153 n208 n397
+1-1- 1
+-11- 1
+1--1 1
+-1-1 1
+.names PinD15 PinB15 n348 n349 n399
+00-- 1
+-01- 1
+0--1 1
+--11 1
+.names PinD14 PinB14 n348 n349 n400
+00-- 1
+-01- 1
+0--1 1
+--11 1
+.names PinD13 PinB13 n348 n349 n401
+00-- 1
+-01- 1
+0--1 1
+--11 1
+.names PinD12 PinB12 n348 n349 n403
+00-- 1
+-01- 1
+0--1 1
+--11 1
+.names PinD11 PinB11 n348 n349 n406
+00-- 1
+-01- 1
+0--1 1
+--11 1
+.names PinD10 PinB10 n348 n349 n407
+00-- 1
+-01- 1
+0--1 1
+--11 1
+.names n28 n208 n408
+1- 1
+-1 1
+.names PinD1 PinB1 n348 n349 n409
+00-- 1
+-01- 1
+0--1 1
+--11 1
+.names n22 n363 n226 n208 n410
+1-1- 1
+-11- 1
+1--1 1
+-1-1 1
+.names Psh2 n122 n226 n411
+11- 1
+0-1 1
+-11 1
+.names PinD0 PinB0 n348 n349 n413
+00-- 1
+-01- 1
+0--1 1
+--11 1
+.names n88 n363 n414
+1- 1
+-1 1
+.names Psh2 n132 n207 n415
+0-- 1
+-1- 1
+--1 1
+.end

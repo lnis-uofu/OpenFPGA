@@ -1,0 +1,515 @@
+# Benchmark "steppermotordrive" written by ABC on Mon Aug 29 15:33:12 2005
+.model steppermotordrive
+.inputs clock Direction StepEnable ProvideStaticHolding
+.outputs StepDrive[0] StepDrive[1] StepDrive[2] StepDrive[3]
+
+.latch \StepCounter_reg[16]_in \StepCounter_reg[16]  2
+.latch \StepCounter_reg[15]_in \StepCounter_reg[15]  2
+.latch \StepCounter_reg[11]_in \StepCounter_reg[11]  2
+.latch \StepDrive_reg[0]_in \StepDrive_reg[0]  2
+.latch \StepDrive_reg[1]_in \StepDrive_reg[1]  2
+.latch \StepCounter_reg[17]_in \StepCounter_reg[17]  2
+.latch \StepCounter_reg[12]_in \StepCounter_reg[12]  2
+.latch \StepCounter_reg[14]_in \StepCounter_reg[14]  2
+.latch \state_reg[1]_in \state_reg[1]  2
+.latch \StepDrive_reg[2]_in \StepDrive_reg[2]  2
+.latch \StepCounter_reg[8]_in \StepCounter_reg[8]  2
+.latch \StepCounter_reg[10]_in \StepCounter_reg[10]  2
+.latch \StepDrive_reg[3]_in \StepDrive_reg[3]  2
+.latch InternalStepEnable_reg_in InternalStepEnable_reg  2
+.latch \StepCounter_reg[13]_in \StepCounter_reg[13]  2
+.latch \StepCounter_reg[7]_in \StepCounter_reg[7]  2
+.latch \StepCounter_reg[3]_in \StepCounter_reg[3]  2
+.latch \StepCounter_reg[6]_in \StepCounter_reg[6]  2
+.latch \state_reg[0]_in \state_reg[0]  2
+.latch \StepCounter_reg[2]_in \StepCounter_reg[2]  2
+.latch \StepCounter_reg[9]_in \StepCounter_reg[9]  2
+.latch \StepCounter_reg[0]_in \StepCounter_reg[0]  2
+.latch \StepCounter_reg[4]_in \StepCounter_reg[4]  2
+.latch \StepCounter_reg[5]_in \StepCounter_reg[5]  2
+.latch \StepCounter_reg[1]_in \StepCounter_reg[1]  2
+
+.names [33]
+ 0
+.names [34]
+ 1
+.names \StepCounter_reg[16] [35]
+1 1
+.names \StepCounter_reg[15] [36]
+1 1
+.names \StepCounter_reg[11] [37]
+1 1
+.names \StepDrive_reg[0] StepDrive[0]
+1 1
+.names \StepDrive_reg[1] StepDrive[1]
+1 1
+.names [42] \StepCounter_reg[16]_in
+0 1
+.names \StepCounter_reg[17] [41]
+1 1
+.names [54] [100] [42]
+11 0
+.names [65] [95] \StepDrive_reg[0]_in
+11 0
+.names [63] [95] \StepDrive_reg[1]_in
+11 0
+.names \StepCounter_reg[12] [45]
+1 1
+.names \StepCounter_reg[14] [46]
+1 1
+.names \state_reg[1] [47]
+1 1
+.names \StepDrive_reg[2] StepDrive[2]
+1 1
+.names \StepCounter_reg[8] [49]
+1 1
+.names \StepCounter_reg[10] [50]
+1 1
+.names \StepDrive_reg[3] StepDrive[3]
+1 1
+.names InternalStepEnable_reg [52]
+1 1
+.names \StepCounter_reg[13] [53]
+1 1
+.names [143] [35] [241] [54]
+01- 1
+1-1 1
+.names \StepCounter_reg[7] [55]
+1 1
+.names \StepCounter_reg[3] [56]
+1 1
+.names \StepCounter_reg[6] [57]
+1 1
+.names \state_reg[0] [58]
+1 1
+.names \StepCounter_reg[2] [59]
+1 1
+.names \StepCounter_reg[9] [60]
+1 1
+.names \StepCounter_reg[0] [61]
+1 1
+.names [78] [95] \StepDrive_reg[2]_in
+11 0
+.names [100] StepDrive[1] [75] [63]
+11- 0
+--1 0
+.names [109] [146] [76] \state_reg[1]_in
+00- 1
+--0 1
+.names [100] StepDrive[0] [87] [65]
+11- 0
+--1 0
+.names [84] [100] \StepCounter_reg[14]_in
+11 1
+.names [169] [100] \StepCounter_reg[13]_in
+11 1
+.names [77] InternalStepEnable_reg_in
+0 1
+.names [93] [98] \StepCounter_reg[10]_in
+00 1
+.names \StepCounter_reg[4] [70]
+1 1
+.names \StepCounter_reg[5] [71]
+1 1
+.names \StepCounter_reg[1] [72]
+1 1
+.names [89] [95] \StepDrive_reg[3]_in
+11 0
+.names [92] [100] \StepCounter_reg[8]_in
+11 1
+.names [119] [146] [75]
+00 1
+.names [146] [47] [76]
+11 0
+.names [100] [133] StepEnable [77]
+11- 0
+--1 0
+.names [131] [178] [179] StepDrive[2] [78]
+11-- 0
+--11 0
+.names [125] [58] [259] \state_reg[0]_in
+01- 1
+1-1 1
+.names [107] [97] \StepCounter_reg[3]_in
+00 1
+.names [97] [230] \StepCounter_reg[0]_in
+00 1
+.names [108] [98] \StepCounter_reg[2]_in
+00 1
+.names [101] [97] \StepCounter_reg[9]_in
+00 1
+.names [132] [103] [84]
+01 1
+10 1
+.names [96] [97] \StepCounter_reg[7]_in
+00 1
+.names [106] [97] \StepCounter_reg[6]_in
+00 1
+.names [118] [146] [87]
+00 1
+.names [105] [178] \StepCounter_reg[4]_in
+00 1
+.names [126] [223] [179] StepDrive[3] [89]
+11-- 0
+--11 0
+.names [114] [100] \StepCounter_reg[1]_in
+11 1
+.names [104] [178] \StepCounter_reg[5]_in
+00 1
+.names [151] [117] [102] [92]
+00- 1
+--0 1
+.names [204] [236] [99] [93]
+11- 0
+--1 0
+.names [161] [94]
+0 1
+.names [136] [223] [95]
+11 0
+.names [148] [234] [96]
+01 1
+10 1
+.names [100] [97]
+0 1
+.names [259] [98]
+0 1
+.names [204] [236] [99]
+00 1
+.names [223] [100]
+0 1
+.names [60] [157] [101]
+01 1
+10 1
+.names [151] [117] [102]
+11 0
+.names [111] [204] [103]
+00 1
+.names [71] [229] [104]
+01 1
+10 1
+.names [70] [153] [105]
+01 1
+10 1
+.names [135] [210] [106]
+01 1
+10 1
+.names [122] [233] [107]
+01 1
+10 1
+.names [113] [128] [110] [108]
+11- 0
+--1 0
+.names [124] Direction [112] [109]
+11- 0
+--1 0
+.names [113] [128] [110]
+00 1
+.names [244] [186] [111]
+11 0
+.names [119] Direction [112]
+00 1
+.names [196] [113]
+0 1
+.names [130] [230] [114]
+01 1
+10 1
+.names [71] [55] [115]
+11 0
+.names [217] [116]
+0 1
+.names [194] [117]
+0 1
+.names [124] [118]
+0 1
+.names [58] [47] [134] [119]
+11- 0
+--1 0
+.names [140] [215] [120]
+00 1
+.names [138] [170] [121]
+00 1
+.names [202] [122]
+0 1
+.names [140] [123]
+0 1
+.names [47] [58] [124]
+01 1
+10 1
+.names [52] [58] [125]
+01 1
+10 1
+.names [47] [142] [126]
+00 1
+.names [139] [140] [127]
+11 0
+.names [253] [128]
+0 1
+.names [215] [129]
+0 1
+.names [190] [130]
+0 1
+.names [47] [52] [131]
+11 1
+.names [138] [132]
+0 1
+.names [142] [133]
+0 1
+.names [58] [47] [134]
+00 1
+.names [228] [135]
+0 1
+.names ProvideStaticHolding [52] [136]
+00 1
+.names [37] [137]
+0 1
+.names [46] [138]
+0 1
+.names [53] [139]
+0 1
+.names [45] [140]
+0 1
+.names [55] [141]
+0 1
+.names [52] [142]
+0 1
+.names [35] [143]
+0 1
+.names [60] [144]
+0 1
+.names [60] [236] [145]
+11 0
+.names [147] [52] [146]
+11 0
+.names [180] [147]
+0 1
+.names [227] [148]
+0 1
+.names [248] [197] [150] [149]
+111 0
+.names [228] [202] [150]
+00 1
+.names [152] [153] [151]
+00 0
+.names [191] [232] [152]
+00 0
+.names [201] [154] [153]
+11 0
+.names [192] [154]
+0 1
+.names [115] [155]
+0 1
+.names [140] [144] [156]
+00 0
+.names [158] [157]
+0 1
+.names [229] [182] [158]
+00 1
+.names [145] [160] [159]
+00 1
+.names [227] [194] [160]
+00 0
+.names [168] [161]
+0 1
+.names [137] [162]
+0 1
+.names [36] [163]
+0 1
+.names [165] \StepCounter_reg[11]_in
+0 1
+.names [166] [259] [165]
+11 0
+.names [94] [129] [167] [166]
+00- 1
+--0 1
+.names [168] [37] [167]
+11 0
+.names [235] [159] [168]
+11 0
+.names [170] [171] [169]
+01 1
+10 1
+.names [53] [170]
+0 1
+.names [172] [181] [189] [171]
+111 0
+.names [229] [172]
+0 1
+.names [174] [177] [178] \StepCounter_reg[15]_in
+11- 0
+--1 0
+.names [175] [36] [174]
+11 0
+.names [161] [176] [175]
+11 0
+.names [120] [121] [176]
+11 1
+.names [121] [120] [161] [163] [177]
+1111 0
+.names [179] [178]
+0 1
+.names [180] [179]
+1 1
+.names [225] [224] [180]
+11 0
+.names [182] [181]
+0 1
+.names [193] [155] [182]
+11 0
+.names [184] [185] [183]
+00 1
+.names [231] [35] [184]
+11 0
+.names [186] [187] [188] [185]
+111 0
+.names [116] [186]
+0 1
+.names [156] [187]
+0 1
+.names [121] [36] [188]
+11 1
+.names [156] [116] [189]
+00 1
+.names [252] [190]
+1 1
+.names [70] [71] [191]
+11 0
+.names [59] [56] [192]
+11 0
+.names [194] [228] [193]
+00 1
+.names [49] [194]
+0 1
+.names [46] [36] [195]
+00 0
+.names [252] [250] [196]
+00 1
+.names [237] [203] [197]
+00 1
+.names [191] [192] [198]
+00 1
+.names [228] [141] [199]
+00 1
+.names [194] [250] [200]
+00 0
+.names [250] [190] [201]
+00 1
+.names [56] [202]
+0 1
+.names [70] [203]
+0 1
+.names [205] [207] [148] [193] [204]
+1111 0
+.names [202] [206] [205]
+00 1
+.names [59] [71] [70] [206]
+111 0
+.names [208] [250] [207]
+00 1
+.names [209] [60] [208]
+11 0
+.names [252] [209]
+0 1
+.names [211] [61] [213] [210]
+111 0
+.names [212] [202] [211]
+00 1
+.names [209] [212]
+0 1
+.names [206] [213]
+0 1
+.names [200] [214]
+0 1
+.names [37] [215]
+0 1
+.names [226] [217] [49] [216]
+111 0
+.names [37] [50] [217]
+11 1
+.names [127] [195] [218]
+00 1
+.names [220] \StepCounter_reg[12]_in
+0 1
+.names [221] [222] [100] [220]
+111 0
+.names [123] [246] [221]
+00 0
+.names [246] [123] [222]
+11 0
+.names [260] [223]
+0 1
+.names [216] [218] [239] [224]
+111 0
+.names [41] [35] [225]
+11 1
+.names [228] [227] [226]
+11 0
+.names [55] [227]
+0 1
+.names [57] [228]
+0 1
+.names [250] [251] [229]
+00 0
+.names [250] [230]
+0 1
+.names [251] [231]
+0 1
+.names [199] [232]
+0 1
+.names [248] [233]
+0 1
+.names [235] [234]
+0 1
+.names [149] [235]
+0 1
+.names [50] [236]
+1 1
+.names [71] [237]
+0 1
+.names [239] [238]
+0 1
+.names [162] [236] [60] [239]
+111 0
+.names [190] [232] [240]
+00 1
+.names [242] [240] [238] [214] [241]
+1111 0
+.names [243] [242]
+0 1
+.names [198] [244] [245] [243]
+111 0
+.names [170] [140] [244]
+00 1
+.names [138] [163] [245]
+00 1
+.names [247] [246]
+0 1
+.names [240] [238] [214] [198] [247]
+1111 0
+.names [249] [248]
+0 1
+.names [61] [72] [59] [249]
+111 0
+.names [61] [250]
+0 1
+.names [209] [59] [56] [70] [251]
+1111 0
+.names [72] [252]
+0 1
+.names [59] [253]
+0 1
+.names [255] [257] [98] \StepCounter_reg[17]_in
+11- 0
+--1 0
+.names [256] [41] [255]
+11 0
+.names [183] [181] [230] [256]
+111 0
+.names [183] [181] [230] [258] [257]
+1111 0
+.names [41] [258]
+0 1
+.names [260] [259]
+1 1
+.names [224] [225] [260]
+11 0
+.end
