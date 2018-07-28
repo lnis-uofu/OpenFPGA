@@ -153,6 +153,19 @@ void save_routing(struct s_trace **best_routing,
         }
 		for (iclass = 0; iclass < type->num_class; iclass++) {
 			num_local_opins = clb_opins_used_locally[iblk][iclass].nelem;
+            /* clb_opins_used_locally may be changed.
+             * Reallocate saved_clb_opins_used_locally if needed 
+             */ 
+            if (0 == num_local_opins) {
+		      if (NULL != saved_clb_opins_used_locally[iblk][iclass].list) {
+		        free(saved_clb_opins_used_locally[iblk][iclass].list);
+              }
+		      saved_clb_opins_used_locally[iblk][iclass].list = NULL;
+            } else { 
+		      saved_clb_opins_used_locally[iblk][iclass].list = (int*)my_realloc(saved_clb_opins_used_locally[iblk][iclass].list,
+	                                                                             clb_opins_used_locally[iblk][iclass].nelem * sizeof(int));
+            }
+            /* Fill the list of saved_clb_opins_used_locally */
 			for (ipin = 0; ipin < num_local_opins; ipin++) {
 				saved_clb_opins_used_locally[iblk][iclass].list[ipin] =
 						clb_opins_used_locally[iblk][iclass].list[ipin];
@@ -288,7 +301,7 @@ boolean try_route(int width_fac, struct s_router_opts router_opts,
 			directs, num_directs, FALSE,
 			&tmp, 
             // Xifan TANG: Add Switch Segment Pattern Support
-            det_routing_arch.num_swseg_pattern, swseg_patterns, TRUE, TRUE); 
+            det_routing_arch.num_swseg_pattern, swseg_patterns, FALSE, TRUE); 
 
 	end = clock();
 #ifdef CLOCKS_PER_SEC
@@ -1369,6 +1382,8 @@ void auto_detect_and_reserve_locally_used_opins(float pres_fac, boolean rip_up_l
       if (DRIVER != type->class_inf[iclass].type) {
         continue;
       }
+
+      /* Always 0 for pads and for RECEIVER (IPIN) classes */
 	  num_local_opin = clb_opins_used_locally[iblk][iclass].nelem;
 	  /* Have to reserve (use) some OPINs */
       ipin = 0;

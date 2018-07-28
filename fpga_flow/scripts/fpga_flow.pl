@@ -1281,14 +1281,20 @@ sub run_m2net_m2net($ $ $ $ $)
 sub run_cirkit_mig_mccl_map($ $ $) {
   my ($bm,$blif_out,$log) = @_;
   my ($bm_aig, $bm_v) = ($blif_out, $blif_out);
+  my ($abc_cmd_log, $cirkit_cmd_log) = ($blif_out, $blif_out);
+
   $bm_aig =~ s/blif$/aig/;
   $bm_v =~ s/blif$/v/;
+  $abc_cmd_log =~ s/\.blif$/_abc.cmd/g; 
+  $cirkit_cmd_log =~ s/\.blif$/_cirkit.cmd/g; 
 
   # Get ABC path
   my ($abc_dir,$abc_name) = &split_prog_path($conf_ptr->{dir_path}->{abc_path}->{val});
+
   # Get Cirkit path
   my ($cirkit_dir,$cirkit_name) = &split_prog_path($conf_ptr->{dir_path}->{cirkit_path}->{val});
   my ($lut_num) = $opt_ptr->{K_val};
+
   # Before we run this blif, identify it is a combinational or sequential
   my ($abc_seq_optimize) = ("");
   if (("on" eq $opt_ptr->{abc_scl})&&("seq" eq &check_blif_type($bm))) {
@@ -1297,16 +1303,36 @@ sub run_cirkit_mig_mccl_map($ $ $) {
   my ($fpga_synthesis_method) = ("if");
   #my ($fpga_synthesis_method) = ("fpga");
   
+    my ($ABC_CMD_FH) = (FileHandle->new);
+  if ($ABC_CMD_FH->open("> $abc_cmd_log")) {
+    print "INFO: auto generating cmds for ABC ($abc_cmd_log) ...\n";
+  } else {
+    die "ERROR: fail to auto generating cmds for ABC ($abc_cmd_log) ...\n";
+  }
+  # Output the standard format (refer to VTR_flow script)
+  print $ABC_CMD_FH "read_blif $bm; strash; write $bm_aig; quit;\n";
+  close($ABC_CMD_FH);
+
   # Run ABC to rewrite blif to AIG in verilog format
   chdir $abc_dir;
-  system("/bin/csh -cx './$abc_name -c \"read_blif $bm; strash writ $bm_aig; quit;\" > $log'");
+  system("/bin/csh -cx './$abc_name -F $abc_cmd_log > $log'");
   if (!(-e $bm_aig)) {
     die "ERROR: Fail ABC for benchmark $bm.\n";
   }
 
+  my ($CIRKIT_CMD_FH) = (FileHandle->new);
+  if ($CIRKIT_CMD_FH->open("> $cirkit_cmd_log")) {
+    print "INFO: auto generating cmds for Cirkit ($cirkit_cmd_log) ...\n";
+  } else {
+    die "ERROR: fail to auto generating cmds for Cirkit ($cirkit_cmd_log) ...\n";
+  }
+  # Output the standard format (refer to VTR_flow script)
+  print $CIRKIT_CMD_FH "read_aiger $bm_aig; xmglut -k 4; write_verilog -x $bm_v; read_verilog -x --as_mig $bm_v; fpga --blif_name $blif_out; quit;\n";
+  close($CIRKIT_CMD_FH);
+
   chdir $cirkit_dir;
   # Run FPGA ABC
-  system("/bin/csh -cx './$cirkit_name -c \"read_aiger $bm_aig; xmglut -k 4; write_verilog -x $bm_v; read_verilog -x --as_mig $bm_v; fpga -c 2 --blif_name $blif_out; quit;\" >> $log'");
+  system("/bin/csh -cx './$cirkit_name -f $cirkit_cmd_log >> $log'");
 
   if (!(-e $blif_out)) {
     die "ERROR: Fail Cirkit for benchmark $bm.\n";
@@ -1372,7 +1398,7 @@ sub run_ace_in_flow($ $ $ $ $ $ $) {
     }
   }
 
-  if (!(-e $act_file)) {
+  if (("on" eq $opt_ptr->{power})&&(!(-e $act_file))) {
     die "ERROR: Fail ACE2 for benchmark $act_file.\n";
   }
 }
@@ -2579,9 +2605,9 @@ sub parse_benchmark_selected_flow($ $) {
   } elsif ($flow_type eq "vtr_mccl") {
     &parse_vtr_flow_results("vtr_mccl", $benchmark, $conf_ptr->{flow_conf}->{vpr_arch}->{val});
   } elsif ($flow_type eq "mccl") {
-    &parse_standard_flow_results("mccl", $benchmark, $conf_ptr->{flow_conf}->{vpr_arch}->{val});
+    &parse_standard_flow_results("mccl", $benchmark, $conf_ptr->{flow_conf}->{vpr_arch}->{val}, "abc_black_box");
   } elsif ($flow_type eq "mig_mccl") {
-    &parse_standard_flow_results("mig_mccl", $benchmark, $conf_ptr->{flow_conf}->{vpr_arch}->{val});
+    &parse_standard_flow_results("mig_mccl", $benchmark, $conf_ptr->{flow_conf}->{vpr_arch}->{val}, "abc_black_box");
   } else {
     die "ERROR: unsupported flow type ($flow_type) is chosen!\n";
   } 
