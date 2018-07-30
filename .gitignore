@@ -17,3 +17,12 @@ __pycache__/
 *.route
 *.net
 *.rpt
+
+# build files
+*.d
+*.o
+*.a
+vpr7_rram/vpr/vpr
+vpr7_rram/printhandler/printhandlerdemo
+vpr7_rram/libarchfpga/read_arch
+vpr7_rram/pcre/pcredemo
