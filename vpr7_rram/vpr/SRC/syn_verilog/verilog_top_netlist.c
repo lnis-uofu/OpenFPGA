@@ -582,6 +582,10 @@ void dump_verilog_defined_grids(FILE* fp) {
   /* Normal Grids */
   for (ix = 1; ix < (nx + 1); ix++) {
     for (iy = 1; iy < (ny + 1); iy++) {
+      /* Bypass EMPTY grid */
+      if (EMPTY_TYPE == grid[ix][iy].type) {
+        continue;
+      }
       assert(IO_TYPE != grid[ix][iy].type);
       dump_verilog_defined_one_grid(fp, ix, iy);
     }
@@ -591,6 +595,10 @@ void dump_verilog_defined_grids(FILE* fp) {
   /* LEFT side */
   ix = 0;
   for (iy = 1; iy < (ny + 1); iy++) {
+    /* Bypass EMPTY grid */
+    if (EMPTY_TYPE == grid[ix][iy].type) {
+      continue;
+    }
     assert(IO_TYPE == grid[ix][iy].type);
     dump_verilog_defined_one_grid(fp, ix, iy);
   }
@@ -598,6 +606,10 @@ void dump_verilog_defined_grids(FILE* fp) {
   /* RIGHT side */
   ix = nx + 1;
   for (iy = 1; iy < (ny + 1); iy++) {
+    /* Bypass EMPTY grid */
+    if (EMPTY_TYPE == grid[ix][iy].type) {
+      continue;
+    }
     assert(IO_TYPE == grid[ix][iy].type);
     dump_verilog_defined_one_grid(fp, ix, iy);
   }
@@ -605,6 +617,10 @@ void dump_verilog_defined_grids(FILE* fp) {
   /* BOTTOM side */
   iy = 0;
   for (ix = 1; ix < (nx + 1); ix++) {
+    /* Bypass EMPTY grid */
+    if (EMPTY_TYPE == grid[ix][iy].type) {
+      continue;
+    }
     assert(IO_TYPE == grid[ix][iy].type);
     dump_verilog_defined_one_grid(fp, ix, iy);
   } 
@@ -612,6 +628,10 @@ void dump_verilog_defined_grids(FILE* fp) {
   /* TOP side */
   iy = ny + 1;
   for (ix = 1; ix < (nx + 1); ix++) {
+    /* Bypass EMPTY grid */
+    if (EMPTY_TYPE == grid[ix][iy].type) {
+      continue;
+    }
     assert(IO_TYPE == grid[ix][iy].type);
     dump_verilog_defined_one_grid(fp, ix, iy);
   } 
@@ -937,13 +957,19 @@ void dump_verilog_defined_connection_boxes(FILE* fp) {
   /* X - channels [1...nx][0..ny]*/
   for (iy = 0; iy < (ny + 1); iy++) {
     for (ix = 1; ix < (nx + 1); ix++) {
-      dump_verilog_defined_one_connection_box(fp, cbx_info[ix][iy]);
+      if ((TRUE == is_cb_exist(CHANX, ix, iy))
+         &&(0 < count_cb_info_num_ipin_rr_nodes(cbx_info[ix][iy]))) {
+        dump_verilog_defined_one_connection_box(fp, cbx_info[ix][iy]);
+      }
     }
   }
   /* Y - channels [1...ny][0..nx]*/
   for (ix = 0; ix < (nx + 1); ix++) {
     for (iy = 1; iy < (ny + 1); iy++) {
-      dump_verilog_defined_one_connection_box(fp, cby_info[ix][iy]);
+      if ((TRUE == is_cb_exist(CHANY, ix, iy))
+         &&(0 < count_cb_info_num_ipin_rr_nodes(cby_info[ix][iy]))) {
+        dump_verilog_defined_one_connection_box(fp, cby_info[ix][iy]);
+      }
     }
   }
  

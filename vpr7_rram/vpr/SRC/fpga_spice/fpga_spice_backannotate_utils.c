@@ -266,6 +266,38 @@ int get_rr_node_index_in_sb_info(t_rr_node* cur_rr_node,
   return ret; /* Return an invalid value: nonthing is found*/
 }
 
+/* Check if the src_rr_node is just a wire crossing this switch box
+ *        ---------
+ *        |       |
+ *    ------------------>
+ *        |       |
+ *        ---------
+ * Strategy:
+ * Check each driver rr_node of this src_rr_node,
+ * see if they are in the opin_rr_node, chan_rr_node lists of sb_rr_info
+ */
+int is_rr_node_exist_opposite_side_in_sb_info(t_sb cur_sb_info,
+                                              t_rr_node* src_rr_node, 
+                                              int chan_side) {
+  int oppo_chan_side = -1;
+  int interc, index;
+
+  oppo_chan_side = get_opposite_side(chan_side); 
+
+  /* See if we can find the same src_rr_node in the opposite chan_side 
+   * if there is one, it means a shorted wire across the SB 
+   */
+  index = get_rr_node_index_in_sb_info(src_rr_node, cur_sb_info, oppo_chan_side, IN_PORT);
+
+  interc = 0;
+  if (-1 != index) {
+    interc = 1;
+  }
+
+  return interc;
+}
+
+
 /* Get the side and index of a given rr_node in a SB_info 
  * Return cur_rr_node_side & cur_rr_node_index
  */
@@ -519,7 +551,7 @@ void backannotate_clb_nets_init_val() {
       iblk = vpack_net[inet].node_block[0];
       switch (logical_block[iblk].type) {
       case VPACK_COMB:
-        vpack_net[inet].spice_net_info->init_val = get_lut_output_init_val(&(logical_block[iblk]));
+        vpack_net[inet].spice_net_info->init_val = get_logical_block_output_init_val(&(logical_block[iblk]));
         if (logical_block[iblk].init_val != vpack_net[inet].spice_net_info->init_val) {
           iter_end = 0;
         }
@@ -1717,6 +1749,7 @@ void build_one_switch_block_info(t_sb* cur_sb, int sb_x, int sb_y,
   cur_sb->opin_rr_node_grid_side = (int**)my_malloc(sizeof(int*)*cur_sb->num_sides); /* 4 sides */
 
   /* Find all rr_nodes of channels */
+  /* Side: TOP => 0, RIGHT => 1, BOTTOM => 2, LEFT => 3 */
   for (side = 0; side < 4; side++) {
     switch (side) {
     case 0:
@@ -1921,7 +1954,7 @@ void build_one_switch_block_info(t_sb* cur_sb, int sb_x, int sb_y,
       /* Side: TOP => 0, RIGHT => 1, BOTTOM => 2, LEFT => 3 */
       /* Alloc */
       cur_sb->chan_rr_node[side] = get_chan_rr_nodes(&(cur_sb->chan_width[side]), CHANX, ix, iy, 
-                                                 LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices);
+                                                     LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices);
       cur_sb->chan_rr_node_direction[side] = (enum PORTS*)my_malloc(sizeof(enum PORTS)*cur_sb->chan_width[side]);
       /* Collect rr_nodes for Tracks for left: chanx[x][y] */
       for (itrack = 0; itrack < cur_sb->chan_width[side]; itrack++) {
@@ -2352,12 +2385,15 @@ void spice_backannotate_vpr_post_route_info(t_det_routing_arch RoutingArch,
                                             boolean parasitic_net_estimation_off) {
 
   vpr_printf(TIO_MESSAGE_INFO, "Start backannotating post route information for SPICE modeling...\n");
+
   /* Give spice_name_tag for each pb*/
   vpr_printf(TIO_MESSAGE_INFO, "Generate SPICE name tags for pbs...\n");
   gen_spice_name_tags_all_pbs();
+
   /* Build previous node lists for each rr_node */
   vpr_printf(TIO_MESSAGE_INFO, "Building previous node list for all Routing Resource Nodes...\n");
   build_prev_node_list_rr_nodes(num_rr_nodes, rr_node);
+
   /* Build driver switches for each rr_node*/
   vpr_printf(TIO_MESSAGE_INFO, "Identifying driver switches for all Routing Resource Nodes...\n");
   identify_rr_node_driver_switch(RoutingArch, num_rr_nodes, rr_node);
@@ -2365,15 +2401,18 @@ void spice_backannotate_vpr_post_route_info(t_det_routing_arch RoutingArch,
   /* Build Array for each Switch block and Connection block */ 
   vpr_printf(TIO_MESSAGE_INFO, "Collecting detailed information for each Switch block...\n");
   alloc_and_build_switch_blocks_info(RoutingArch, num_rr_nodes, rr_node, rr_node_indices);
+
   vpr_printf(TIO_MESSAGE_INFO, "Collecting detailed information for each to Connection block...\n");
   alloc_and_build_connection_blocks_info(RoutingArch, num_rr_nodes, rr_node, rr_node_indices);
 
   /* This function should go very first because it gives all the net_num */
   vpr_printf(TIO_MESSAGE_INFO,"Back annotating mapping information to global routing resource nodes...\n");
   back_annotate_rr_node_map_info();
+
   /* Update local_rr_graphs to match post-route results*/
   vpr_printf(TIO_MESSAGE_INFO, "Update CLB local routing graph to match post-route results...\n");
   update_grid_pbs_post_route_rr_graph();
+
   vpr_printf(TIO_MESSAGE_INFO,"Back annotating mapping information to local routing resource nodes...\n");
   back_annotate_pb_rr_node_map_info();
 

@@ -1468,7 +1468,9 @@ static void ProcessMode(INOUTP ezxml_t Parent, t_mode * mode,
         mode->define_physical_mode = 0;
       }
     }
-    /* More option: specify if this mode is available during packing */
+    /* Spice Model Support: Xifan TANG
+     * More option: specify if this mode is available during packing 
+     */
     mode->available_in_packing = GetBooleanProperty(Parent, "available_in_packing", FALSE, TRUE);
     /* END */
 
@@ -2446,6 +2448,9 @@ static void ProcessMemoryClass(INOUTP t_pb_type *mem_pb_type) {
 		mem_pb_type->modes[0].interconnect[i].parent_mode =
 				&mem_pb_type->modes[0];
 	}
+
+    /* Xifan TANG: Memory default idle mode */
+    mem_pb_type->modes[0].define_idle_mode = 1;
 
 	/* Process interconnect */
 	i_inter = 0;

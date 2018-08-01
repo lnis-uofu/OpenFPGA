@@ -427,6 +427,7 @@ static void ProcessSpiceTransistorType(ezxml_t Parent,
 static void ProcessSpiceModelBuffer(ezxml_t Node,
                                     t_spice_model_buffer* buffer) {
   boolean read_buf_info = FALSE;
+  boolean read_spice_model = FALSE;
   char* Prop = NULL;
   /* Be smart to find all the details */
   /* Find "exist"*/
@@ -442,12 +443,16 @@ static void ProcessSpiceModelBuffer(ezxml_t Node,
 
   /* If buffer existed, we need to further find the spice_model_name */
   if (1 == buffer->exist) {
-    buffer->spice_model_name = my_strdup(FindProperty(Node, "spice_model_name", TRUE));
-    ezxml_set_attr(Node, "spice_model_name", NULL); 
+    read_buf_info = FALSE;
+    read_spice_model = TRUE;
   } else if (0 == strcmp("design_technology", Node->name)) {
   /* Only under the design technology Node, this contains buffer information */
     read_buf_info = TRUE;
+    read_spice_model = FALSE;
   }
+
+  buffer->spice_model_name = my_strdup(FindProperty(Node, "spice_model_name", read_spice_model));
+  ezxml_set_attr(Node, "spice_model_name", NULL); 
 
   /*Find Type*/
   Prop = my_strdup(FindProperty(Node, "topology", read_buf_info));

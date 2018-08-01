@@ -2013,18 +2013,30 @@ void dump_verilog_pb_graph_node_rec(FILE* fp,
       assert(0 == cur_pb_type->num_modes);
       /* Consider the num_pb, create all the subckts*/
       dump_verilog_pb_primitive_verilog_model(fp, formatted_subckt_prefix, 
-                                      cur_pb, cur_pb_graph_node, pb_type_index, cur_pb_type->spice_model, 0);
+                                              cur_pb, cur_pb_graph_node,
+                                              pb_type_index, cur_pb_type->spice_model, 0);
       /* update the number of SRAM, I/O pads */
       /* update stamped iopad counter */
       stamped_iopad_cnt += cur_pb->num_iopads;
       /* update stamped sram counter */
       stamped_sram_cnt += cur_pb->num_conf_bits;
       break;
-    case UNKNOWN_CLASS:
     case MEMORY_CLASS:
+      child_pb = get_hardlogic_child_pb(cur_pb, mode_index); 
       /* Consider the num_pb, create all the subckts*/
       dump_verilog_pb_primitive_verilog_model(fp, formatted_subckt_prefix, 
-                                        cur_pb, cur_pb_graph_node, pb_type_index, cur_pb_type->spice_model, 0);
+                                              child_pb, cur_pb_graph_node, 
+                                              pb_type_index, cur_pb_type->spice_model, 0);
+      /* update the number of SRAM, I/O pads */
+      /* update stamped iopad counter */
+      stamped_iopad_cnt += cur_pb->num_iopads;
+      /* update stamped sram counter */
+      stamped_sram_cnt += cur_pb->num_conf_bits;
+      break;  
+    case UNKNOWN_CLASS:
+      /* Consider the num_pb, create all the subckts*/
+      dump_verilog_pb_primitive_verilog_model(fp, formatted_subckt_prefix, 
+                                              cur_pb, cur_pb_graph_node, pb_type_index, cur_pb_type->spice_model, 0);
       /* update the number of SRAM, I/O pads */
       /* update stamped iopad counter */
       stamped_iopad_cnt += cur_pb->num_iopads;
@@ -3160,7 +3172,9 @@ void dump_verilog_grid_blocks(FILE* fp,
   /* generate_grid_subckt, type_descriptor of each grid defines the capacity,
    * for example, each grid may contains more than one top-level pb_types, such as I/O
    */
-  if ((NULL == grid[ix][iy].type)||(0 != grid[ix][iy].offset)) {
+  if ((NULL == grid[ix][iy].type)
+     ||(EMPTY_TYPE == grid[ix][iy].type)
+     ||(0 != grid[ix][iy].offset)) {
     /* Update the grid_index_high for each spice_model */
     update_spice_models_grid_index_high(ix, iy, arch->spice->num_spice_model, arch->spice->spice_models);
     return; 
@@ -3363,7 +3377,9 @@ void dump_verilog_physical_grid_blocks(FILE* fp,
   /* generate_grid_subckt, type_descriptor of each grid defines the capacity,
    * for example, each grid may contains more than one top-level pb_types, such as I/O
    */
-  if ((NULL == grid[ix][iy].type)||(0 != grid[ix][iy].offset)) {
+  if ((NULL == grid[ix][iy].type)
+      ||(EMPTY_TYPE == grid[ix][iy].type)
+      ||(0 != grid[ix][iy].offset)) {
     /* Update the grid_index_high for each spice_model */
     update_spice_models_grid_index_high(ix, iy, arch->spice->num_spice_model, arch->spice->spice_models);
     return; 

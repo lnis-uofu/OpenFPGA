@@ -1285,8 +1285,14 @@ void fprint_spice_pb_graph_node_rec(FILE* fp,
                                       cur_pb, cur_pb_graph_node, 
                                       pb_type_index, cur_pb_type->spice_model, 0);
       break;
-    case UNKNOWN_CLASS:
     case MEMORY_CLASS:
+      child_pb = get_hardlogic_child_pb(cur_pb, mode_index); 
+      /* Consider the num_pb, create all the subckts*/
+      fprint_pb_primitive_spice_model(fp, formatted_subckt_prefix, 
+                                      child_pb, cur_pb_graph_node, 
+                                      pb_type_index, cur_pb_type->spice_model, 0);
+      break; 
+    case UNKNOWN_CLASS:
       /* Consider the num_pb, create all the subckts*/
       fprint_pb_primitive_spice_model(fp, formatted_subckt_prefix, 
                                       cur_pb, cur_pb_graph_node, 
@@ -2113,7 +2119,9 @@ void fprint_grid_physical_blocks(FILE* fp,
   /* generate_grid_subckt, type_descriptor of each grid defines the capacity,
    * for example, each grid may contains more than one top-level pb_types, such as I/O
    */
-  if ((NULL == grid[ix][iy].type)||(0 != grid[ix][iy].offset)) {
+  if ((NULL == grid[ix][iy].type)
+      ||(EMPTY_TYPE == grid[ix][iy].type)
+      ||(0 != grid[ix][iy].offset)) {
     /* Update the grid_index_high for each spice_model */
     update_spice_models_grid_index_high(ix, iy, arch->spice->num_spice_model, arch->spice->spice_models);
     return; 
@@ -2227,11 +2235,15 @@ void fprint_grid_blocks(FILE* fp,
   /* generate_grid_subckt, type_descriptor of each grid defines the capacity,
    * for example, each grid may contains more than one top-level pb_types, such as I/O
    */
-  if ((NULL == grid[ix][iy].type)||(0 != grid[ix][iy].offset)) {
+  /* Bypass EMPTY_TYPE */
+  if ((NULL == grid[ix][iy].type)
+     ||(EMPTY_TYPE == grid[ix][iy].type)
+     ||(0 != grid[ix][iy].offset)) {
     /* Update the grid_index_high for each spice_model */
     update_spice_models_grid_index_high(ix, iy, arch->spice->num_spice_model, arch->spice->spice_models);
     return; 
   }
+
   capacity= grid[ix][iy].type->capacity;
   assert(0 < capacity);
 

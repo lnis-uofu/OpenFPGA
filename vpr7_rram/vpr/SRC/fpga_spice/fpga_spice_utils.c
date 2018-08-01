@@ -1321,6 +1321,24 @@ char** my_strtok(char* str,
   return ret;
 }
 
+int get_opposite_side(int side){
+ 
+  switch (side) {
+  case 0:
+    return 2;
+  case 1:
+    return 3;
+  case 2:
+    return 0;
+  case 3:
+    return 1;
+  default:
+    vpr_printf(TIO_MESSAGE_ERROR, "(File:%s, [LINE%d])Invalid side index. Should be [0,3].\n",
+               __FILE__, __LINE__);
+    exit(1);
+  }
+}
+
 char* convert_side_index_to_string(int side) {
   switch (side) {
   case 0:
@@ -1779,14 +1797,27 @@ int find_pb_mapped_logical_block_rec(t_pb* cur_pb,
 
   if ((pb_spice_model == cur_pb->pb_graph_node->pb_type->spice_model)
     &&(0 == strcmp(cur_pb->spice_name_tag, pb_spice_name_tag))) {
-    /* Special for LUT... They have sub modes!!!*/
-    if (SPICE_MODEL_LUT == pb_spice_model->type) {
-      mode_index = cur_pb->mode;
+    /* Return the logic block we may find */
+    switch (pb_spice_model->type) {
+    case SPICE_MODEL_LUT :
+      /* Special for LUT... They have sub modes!!!*/
       assert(NULL != cur_pb->child_pbs);
       return cur_pb->child_pbs[0][0].logical_block; 
+    case SPICE_MODEL_FF:
+      assert(pb_spice_model == logical_block[cur_pb->logical_block].mapped_spice_model);
+      return cur_pb->logical_block;
+    case SPICE_MODEL_HARDLOGIC:
+      if (NULL != cur_pb->child_pbs) {
+        return cur_pb->child_pbs[0][0].logical_block; 
+      } else {
+        assert(pb_spice_model == logical_block[cur_pb->logical_block].mapped_spice_model);
+        return cur_pb->logical_block;
+      } 
+    default:
+      vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid spice model type!\n",
+                 __FILE__, __LINE__);
+      exit(1);
     }
-    assert(pb_spice_model == logical_block[cur_pb->logical_block].mapped_spice_model);
-    return cur_pb->logical_block;
   }
   
   /* Go recursively ... */
@@ -2156,6 +2187,7 @@ int find_pb_type_idle_mode_index(t_pb_type cur_pb_type) {
       num_idle_mode++;
     }
   } 
+
   assert(1 == num_idle_mode); 
 
   return idle_mode_index;
@@ -2691,8 +2723,8 @@ int rr_node_drive_switch_box(t_rr_node* src_rr_node,
   assert((!(0 > switch_box_x))&&(!(switch_box_x > (nx + 1)))); 
   assert((!(0 > switch_box_y))&&(!(switch_box_y > (ny + 1)))); 
   /* Valid des_rr_node coordinator */
-  assert((!(switch_box_x < (des_rr_node->xlow-1)))&&(!(switch_box_x > (des_rr_node->xhigh+1))));
-  assert((!(switch_box_y < (des_rr_node->ylow-1)))&&(!(switch_box_y > (des_rr_node->yhigh+1))));
+  assert((!(switch_box_x < (des_rr_node->xlow - 1)))&&(!(switch_box_x > (des_rr_node->xhigh + 1))));
+  assert((!(switch_box_y < (des_rr_node->ylow - 1)))&&(!(switch_box_y > (des_rr_node->yhigh + 1))));
 
   /* Check the src_rr_node coordinator */
   switch (chan_side) {
@@ -2714,14 +2746,16 @@ int rr_node_drive_switch_box(t_rr_node* src_rr_node,
     case CHANX:
       assert(src_rr_node->ylow == src_rr_node->yhigh);
       if ((switch_box_y == src_rr_node->ylow)
-         &&(!(switch_box_x < (src_rr_node->xlow-1)))&&(!(switch_box_x > (src_rr_node->xhigh+1)))) {
+         &&(!(switch_box_x < (src_rr_node->xlow - 1)))
+         &&(!(switch_box_x > (src_rr_node->xhigh + 1)))) {
         return 1;
       }
       break;
     case CHANY:
       assert(src_rr_node->xlow == src_rr_node->xhigh);
       if ((switch_box_x == src_rr_node->xlow)
-         &&(!(switch_box_y < src_rr_node->ylow))&&(!(switch_box_y > src_rr_node->yhigh))) {
+         &&(!(switch_box_y < src_rr_node->ylow))
+         &&(!(switch_box_y > src_rr_node->yhigh))) {
         return 1;
       }
       break;
@@ -2757,7 +2791,8 @@ int rr_node_drive_switch_box(t_rr_node* src_rr_node,
     case CHANY:
       assert(src_rr_node->xlow == src_rr_node->xhigh);
       if ((switch_box_x == src_rr_node->xlow)
-         &&(!(switch_box_y < (src_rr_node->ylow-1)))&&(!(switch_box_y > (src_rr_node->yhigh+1)))) {
+         &&(!(switch_box_y < (src_rr_node->ylow - 1)))
+         &&(!(switch_box_y > (src_rr_node->yhigh + 1)))) {
         return 1;
       }
       break;
@@ -2770,7 +2805,7 @@ int rr_node_drive_switch_box(t_rr_node* src_rr_node,
   case BOTTOM:
     /* Following cases:
      *          |               
-     *        \   /  
+     *        \ | /  
      *          |
      */
     /* The destination rr_node only have one condition!!! */
@@ -2786,14 +2821,16 @@ int rr_node_drive_switch_box(t_rr_node* src_rr_node,
     case CHANX:
       assert(src_rr_node->ylow == src_rr_node->yhigh);
       if ((switch_box_y == src_rr_node->ylow)
-         &&(!(switch_box_x < (src_rr_node->xlow-1)))&&(!(switch_box_x > (src_rr_node->xhigh+1)))) {
+         &&(!(switch_box_x < (src_rr_node->xlow - 1)))
+         &&(!(switch_box_x > (src_rr_node->xhigh + 1)))) {
         return 1;
       }
       break;
     case CHANY:
       assert(src_rr_node->xlow == src_rr_node->xhigh);
       if ((switch_box_x == src_rr_node->xlow)
-         &&(!((switch_box_y+1) < src_rr_node->ylow))&&(!((switch_box_y+1) > src_rr_node->yhigh))) {
+         &&(!((switch_box_y + 1) < src_rr_node->ylow))
+         &&(!((switch_box_y + 1) > src_rr_node->yhigh))) {
         return 1;
       }
       break;
@@ -2822,14 +2859,16 @@ int rr_node_drive_switch_box(t_rr_node* src_rr_node,
     case CHANX:
       assert(src_rr_node->ylow == src_rr_node->yhigh);
       if ((switch_box_y == src_rr_node->ylow)
-         &&(!((switch_box_x+1) < src_rr_node->xlow))&&(!((switch_box_x+1) > src_rr_node->xhigh))) {
+         &&(!((switch_box_x + 1) < src_rr_node->xlow))
+         &&(!((switch_box_x + 1) > src_rr_node->xhigh))) {
         return 1;
       }
       break;
     case CHANY:
       assert(src_rr_node->xlow == src_rr_node->xhigh);
       if ((switch_box_x == src_rr_node->xlow)
-         &&(!(switch_box_y < (src_rr_node->ylow-1)))&&(!(switch_box_y > (src_rr_node->yhigh+1)))) {
+         &&(!(switch_box_y < (src_rr_node->ylow - 1)))
+         &&(!(switch_box_y > (src_rr_node->yhigh + 1)))) {
         return 1;
       }
       break;
@@ -2945,26 +2984,6 @@ void find_drive_rr_nodes_switch_box(int switch_box_x,
   assert(cur_index == (*num_drive_rr_nodes));
 
   return;
-}
-
-int is_sb_interc_between_segments(int switch_box_x, 
-                                  int switch_box_y, 
-                                  t_rr_node* src_rr_node, 
-                                  int chan_side) {
-  int inode;
-  int cur_sb_num_drive_rr_nodes = 0;
-
-  for (inode = 0; inode < src_rr_node->num_drive_rr_nodes; inode++) {
-    if (1 == rr_node_drive_switch_box(src_rr_node->drive_rr_nodes[inode], src_rr_node, 
-                                      switch_box_x, switch_box_y, chan_side)) { 
-      cur_sb_num_drive_rr_nodes++;
-    }
-  }
-  if (0 == cur_sb_num_drive_rr_nodes) {
-    return 1;
-  } else {
-    return 0;
-  }
 }
 
 /* Count the number of configuration bits of a spice model */
@@ -3957,7 +3976,9 @@ void init_one_grid_num_conf_bits(int ix, int iy,
   assert((!(0 > ix))&&(!(ix > (nx + 1)))); 
   assert((!(0 > iy))&&(!(iy > (ny + 1)))); 
  
-  if ((NULL == grid[ix][iy].type)||(0 != grid[ix][iy].offset)) {
+  if ((NULL == grid[ix][iy].type)
+     ||(EMPTY_TYPE == grid[ix][iy].type)
+     ||(0 != grid[ix][iy].offset)) {
     /* Empty grid, directly return */
     return; 
   }
@@ -4378,7 +4399,9 @@ void init_one_grid_num_iopads(int ix, int iy) {
   assert((!(0 > ix))&&(!(ix > (nx + 1)))); 
   assert((!(0 > iy))&&(!(iy > (ny + 1)))); 
  
-  if ((NULL == grid[ix][iy].type)||(0 != grid[ix][iy].offset)) {
+  if ((NULL == grid[ix][iy].type)
+     ||(EMPTY_TYPE == grid[ix][iy].type)
+     ||(0 != grid[ix][iy].offset)) {
     /* Empty grid, directly return */
     return; 
   }
@@ -5723,7 +5746,9 @@ int get_lut_output_init_val(t_logical_block* lut_logical_block) {
         && ( NULL != lut_logical_block->pb->pb_graph_node)
         && ( NULL != lut_logical_block->pb->pb_graph_node->pb_type));
   lut_spice_model = lut_logical_block->pb->pb_graph_node->pb_type->parent_mode->parent_pb_type->spice_model;
+
   assert(SPICE_MODEL_LUT == lut_spice_model->type);
+
   sram_ports = find_spice_model_ports(lut_spice_model, SPICE_MODEL_PORT_SRAM, 
                                       &num_sram_port, TRUE);
   assert(1 == num_sram_port);
@@ -5772,6 +5797,39 @@ int get_lut_output_init_val(t_logical_block* lut_logical_block) {
   return output_init_val;
 }
 
+/* Deteremine the initial value of an output of a logical block 
+ * The logical block could be a LUT, a memory block or a multiplier 
+ */
+int get_logical_block_output_init_val(t_logical_block* cur_logical_block) {
+  int output_init_val = 0;
+  t_spice_model* cur_spice_model = NULL;
+
+  /* Get the spice_model of current logical_block */
+  assert((NULL != cur_logical_block->pb)
+        && ( NULL != cur_logical_block->pb->pb_graph_node)
+        && ( NULL != cur_logical_block->pb->pb_graph_node->pb_type));
+  cur_spice_model = cur_logical_block->pb->pb_graph_node->pb_type->parent_mode->parent_pb_type->spice_model;
+
+  /* Switch to specific cases*/
+  switch (cur_spice_model->type) {
+  case SPICE_MODEL_LUT:
+    /* Determine the initial value from LUT inputs */
+    output_init_val = get_lut_output_init_val(cur_logical_block);
+    break;
+  case SPICE_MODEL_HARDLOGIC:
+    /* We have no information, give a default 0 now... 
+     * TODO: find a smarter way!
+     */
+    output_init_val = 0;
+    break;
+  default:
+    vpr_printf(TIO_MESSAGE_ERROR, "(File:%s,[LINE%d])Invalid type of SPICE MODEL (name=%s) in determining the initial output value of logical block(name=%s)!\n",
+               __FILE__, __LINE__, cur_spice_model->name, cur_logical_block->name);
+    exit(1); 
+  }
+  
+  return output_init_val;
+}
 
 /* Functions to manipulate struct sram_orgz_info */
 t_sram_orgz_info* alloc_one_sram_orgz_info() {
@@ -6900,6 +6958,9 @@ void config_spice_models_sram_port_spice_model(int num_spice_model,
   return;
 }
 
+/* Return the child_pb of a LUT pb
+ * Because the mapping information is stored in the child_pb!!!
+ */
 t_pb* get_lut_child_pb(t_pb* cur_lut_pb,
                        int mode_index) {
 
@@ -6910,6 +6971,21 @@ t_pb* get_lut_child_pb(t_pb* cur_lut_pb,
 
   return (&(cur_lut_pb->child_pbs[0][0])); 
 }
+
+/* Return the child_pb of a hardlogic  pb
+ * Because the mapping information is stored in the child_pb!!!
+ */
+t_pb* get_hardlogic_child_pb(t_pb* cur_hardlogic_pb,
+                             int mode_index) {
+
+  assert(SPICE_MODEL_HARDLOGIC == cur_hardlogic_pb->pb_graph_node->pb_type->spice_model->type);
+
+  assert(1 == cur_hardlogic_pb->pb_graph_node->pb_type->modes[mode_index].num_pb_type_children);
+  assert(1 == cur_hardlogic_pb->pb_graph_node->pb_type->num_pb);
+
+  return (&(cur_hardlogic_pb->child_pbs[0][0])); 
+}
+
 
 int get_grid_pin_height(int grid_x, int grid_y, int pin_index) {
   int pin_height;
@@ -7010,7 +7086,7 @@ void check_spice_models_grid_tb_cnt(int num_spice_models,
     if (spice_model_type_to_check != spice_model[imodel].type) {
       continue;
     }
-    assert(spice_model[imodel].tb_cnt = spice_model[imodel].grid_index_high[grid_x][grid_y]);
+    assert(spice_model[imodel].tb_cnt == spice_model[imodel].grid_index_high[grid_x][grid_y]);
   }
 
   return;
@@ -7027,4 +7103,47 @@ boolean check_negative_variation(float avg_val,
 
   return exist_neg_val;
 }
+
+/* Check if this cby_info exists, it may be covered by a heterogenous block */
+boolean is_cb_exist(t_rr_type cb_type,
+                    int cb_x, int cb_y) {
+  boolean cb_exist = TRUE;
+
+  /* Check */
+  assert((!(0 > cb_x))&&(!(cb_x > (nx + 1)))); 
+  assert((!(0 > cb_y))&&(!(cb_y > (ny + 1)))); 
+
+  switch (cb_type) {
+  case CHANX:
+    /* Border case */
+    /* Check the grid under this CB */
+    if ((NULL == grid[cb_x][cb_y].type) 
+       ||(EMPTY_TYPE == grid[cb_x][cb_y].type) 
+       ||(1 <  grid[cb_x][cb_y].type->height)) {
+      cb_exist = FALSE;
+    }
+    break;
+  case CHANY:
+    break;
+  default:
+    vpr_printf(TIO_MESSAGE_ERROR, "(File:%s, [LINE%d])Invalid CB type! Should be CHANX or CHANY.\n",
+               __FILE__, __LINE__);
+    exit(1);
+  }
+
+  return cb_exist;
+}
+
+/* Count the number of IPIN rr_nodes in a CB_info struct */
+int count_cb_info_num_ipin_rr_nodes(t_cb cur_cb_info) {
+  int side;
+  int cnt = 0;
+
+  for (side = 0; side < cur_cb_info.num_sides; side++) {
+    cnt += cur_cb_info.num_ipin_rr_nodes[side];
+  }
+
+  return cnt; 
+}
+
     

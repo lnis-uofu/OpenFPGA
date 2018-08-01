@@ -35,10 +35,10 @@ void dump_verilog_switch_box_mux(FILE* fp,
                                  t_rr_node** drive_rr_nodes,
                                  int switch_index);
 
-int count_verilog_switch_box_interc_conf_bits(int switch_box_x, int switch_box_y, int chan_side, 
+int count_verilog_switch_box_interc_conf_bits(t_sb cur_sb_info, int chan_side, 
                                               t_rr_node* cur_rr_node);
 
-int count_verilog_switch_box_interc_reserved_conf_bits(int switch_box_x, int switch_box_y, int chan_side, 
+int count_verilog_switch_box_interc_reserved_conf_bits(t_sb cur_sb_info, int chan_side, 
                                                        t_rr_node* cur_rr_node);
 
 void dump_verilog_switch_box_interc(FILE* fp, 

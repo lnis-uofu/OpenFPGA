@@ -461,7 +461,8 @@ void fprint_spice_hardlogic_testbench_rec_pb_graph_node_hardlogics(FILE* fp,
   assert(NULL != cur_pb_type);
   /* Until we reach a FF */
   if (NULL != cur_pb_type->spice_model) {
-    if (SPICE_MODEL_FF != cur_pb_type->spice_model->type) {
+    if ((SPICE_MODEL_FF != cur_pb_type->spice_model->type)
+      &&(SPICE_MODEL_HARDLOGIC != cur_pb_type->spice_model->type)) {
       return;
     }
     /* Generate rec_prefix */
@@ -572,7 +573,9 @@ void fprint_spice_hardlogic_testbench_call_one_grid_defined_hardlogics(FILE* fp,
   int iblk;
   char* prefix = NULL;
  
-  if (NULL == grid[ix][iy].type) {
+  if ((NULL == grid[ix][iy].type)
+     ||(EMPTY_TYPE == grid[ix][iy].type)
+     ||(0 != grid[ix][iy].offset)) {
     return; 
   }
 
@@ -798,8 +801,10 @@ int fprint_spice_one_hardlogic_testbench(char* formatted_spice_dir,
   fclose(fp);
 
   if (0 < tb_num_hardlogic) {
+    /*
     vpr_printf(TIO_MESSAGE_INFO, "Writing Grid[%d][%d] SPICE Hard Logic Testbench for %s...\n",
                grid_x, grid_y, circuit_name);
+    */
     /* Push the testbench to the linked list */
     tb_head = add_one_spice_tb_info_to_llist(tb_head, hardlogic_testbench_file_path, 
                                              max_sim_num_clock_cycles);

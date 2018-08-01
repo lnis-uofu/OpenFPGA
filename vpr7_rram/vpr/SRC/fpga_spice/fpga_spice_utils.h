@@ -104,6 +104,8 @@ char** my_strtok(char* str,
                  char* delims, 
                  int* len);
 
+int get_opposite_side(int side);
+
 char* convert_side_index_to_string(int side);
 
 char* convert_chan_type_to_string(t_rr_type chan_type);
@@ -277,11 +279,6 @@ void find_drive_rr_nodes_switch_box(int switch_box_x,
                                     t_rr_node*** drive_rr_nodes,
                                     int* switch_index);
 
-int is_sb_interc_between_segments(int switch_box_x, 
-                                  int switch_box_y, 
-                                  t_rr_node* src_rr_node, 
-                                  int chan_side);
-
 int count_num_sram_bits_one_spice_model(t_spice_model* cur_spice_model,
                                         int mux_size);
 
@@ -451,6 +448,8 @@ char** assign_lut_truth_table(t_logical_block* mapped_logical_block,
 
 int get_lut_output_init_val(t_logical_block* lut_logical_block);
 
+int get_logical_block_output_init_val(t_logical_block* cur_logical_block);
+
 /* Functions to manipulate structs of SRAM orgz */
 t_sram_orgz_info* alloc_one_sram_orgz_info();
 
@@ -584,6 +583,9 @@ void config_spice_models_sram_port_spice_model(int num_spice_model,
 t_pb* get_lut_child_pb(t_pb* cur_lut_pb,
                        int mode_index);
 
+t_pb* get_hardlogic_child_pb(t_pb* cur_hardlogic_pb,
+                             int mode_index);
+
 int get_grid_pin_height(int grid_x, int grid_y, int pin_index);
 
 void determine_sb_port_coordinator(t_sb cur_sb_info, int side, 
@@ -603,3 +605,8 @@ void check_spice_models_grid_tb_cnt(int num_spice_models,
 
 boolean check_negative_variation(float avg_val, 
                                  t_spice_mc_variation_params variation_params);
+
+boolean is_cb_exist(t_rr_type cb_type,
+                    int cb_x, int cb_y);
+
+int count_cb_info_num_ipin_rr_nodes(t_cb cur_cb_info);

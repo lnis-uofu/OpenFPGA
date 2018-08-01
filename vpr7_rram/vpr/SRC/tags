@@ -1617,8 +1617,8 @@ count_verilog_connection_box_one_side_conf_bits	syn_verilog/verilog_routing.c	/^
 count_verilog_connection_box_one_side_reserved_conf_bits	syn_verilog/verilog_routing.c	/^int count_verilog_connection_box_one_side_reserved_conf_bits(int num_ipin_rr_nodes,$/;"	f
 count_verilog_connection_box_reserved_conf_bits	syn_verilog/verilog_routing.c	/^int count_verilog_connection_box_reserved_conf_bits(t_cb* cur_cb_info) {$/;"	f
 count_verilog_switch_box_conf_bits	syn_verilog/verilog_routing.c	/^int count_verilog_switch_box_conf_bits(t_sb* cur_sb_info) {$/;"	f
-count_verilog_switch_box_interc_conf_bits	syn_verilog/verilog_routing.c	/^int count_verilog_switch_box_interc_conf_bits(int switch_box_x, int switch_box_y, int chan_side, $/;"	f
-count_verilog_switch_box_interc_reserved_conf_bits	syn_verilog/verilog_routing.c	/^int count_verilog_switch_box_interc_reserved_conf_bits(int switch_box_x, int switch_box_y, int chan_side, $/;"	f
+count_verilog_switch_box_interc_conf_bits	syn_verilog/verilog_routing.c	/^int count_verilog_switch_box_interc_conf_bits(t_sb cur_sb_info, int chan_side, $/;"	f
+count_verilog_switch_box_interc_reserved_conf_bits	syn_verilog/verilog_routing.c	/^int count_verilog_switch_box_interc_reserved_conf_bits(t_sb cur_sb_info, int chan_side, $/;"	f
 count_verilog_switch_box_reserved_conf_bits	syn_verilog/verilog_routing.c	/^int count_verilog_switch_box_reserved_conf_bits(t_sb* cur_sb_info) {$/;"	f
 cpd	base/vpr_types.h	/^	float ** cpd;$/;"	m	struct:s_timing_stats
 cpt_subckt_name	spice/spice_globals.c	/^char* cpt_subckt_name = "cpt";$/;"	v
@@ -2310,7 +2310,6 @@ fprint_spice_hardlogic_testbench_rec_pb_graph_node_hardlogics	spice/spice_hardlo
 fprint_spice_hardlogic_testbench_rec_pb_hardlogics	spice/spice_hardlogic_testbench.c	/^void fprint_spice_hardlogic_testbench_rec_pb_hardlogics(FILE* fp, $/;"	f
 fprint_spice_hardlogic_testbench_stimulations	spice/spice_hardlogic_testbench.c	/^void fprint_spice_hardlogic_testbench_stimulations(FILE* fp, int grid_x, int grid_y, $/;"	f	file:
 fprint_spice_head	spice/spice_utils.c	/^void fprint_spice_head(FILE* fp,$/;"	f
-fprint_spice_headers	spice/spice_heads.c	/^void fprint_spice_headers(char* include_dir_path,$/;"	f
 fprint_spice_idle_block	spice/spice_pbtypes.c	/^void fprint_spice_idle_block(FILE* fp,$/;"	f
 fprint_spice_idle_pb_graph_node_rec	spice/spice_pbtypes.c	/^void fprint_spice_idle_pb_graph_node_rec(FILE* fp,$/;"	f
 fprint_spice_include_key_subckts	spice/spice_utils.c	/^void fprint_spice_include_key_subckts(FILE* fp,$/;"	f
@@ -2605,6 +2604,7 @@ get_grid_pin_height	fpga_spice/fpga_spice_utils.c	/^int get_grid_pin_height(int 
 get_grid_side_pin_rr_nodes	fpga_spice/fpga_spice_backannotate_utils.c	/^t_rr_node** get_grid_side_pin_rr_nodes(int* num_pin_rr_nodes,$/;"	f
 get_grid_side_pins	route/rr_graph_opincb.c	/^void get_grid_side_pins(int grid_x, int grid_y, $/;"	f	file:
 get_grid_testbench_one_grid_num_sim_clock_cycles	spice/spice_grid_testbench.c	/^int get_grid_testbench_one_grid_num_sim_clock_cycles(FILE* fp, $/;"	f
+get_hardlogic_child_pb	fpga_spice/fpga_spice_utils.c	/^t_pb* get_hardlogic_child_pb(t_pb* cur_hardlogic_pb,$/;"	f
 get_hash_entry	util/hash.c	/^get_hash_entry(struct s_hash **hash_table, char *name) {$/;"	f
 get_hash_stats	util/hash.c	/^void get_hash_stats(struct s_hash **hash_table, char *hash_table_name){$/;"	f
 get_heap_head	route/route_common.c	/^get_heap_head(void) {$/;"	f
@@ -2616,6 +2616,7 @@ get_int_list_length	mrfpga/buffer_insertion.c	/^static int get_int_list_length( 
 get_ipin_switch_index	route/rr_graph_opincb.c	/^int get_ipin_switch_index(t_rr_node* ipin) {$/;"	f	file:
 get_keypress_input	base/graphics.c	/^static bool get_keypress_input, get_mouse_move_input;$/;"	v	file:
 get_length_and_bends_stats	base/stats.c	/^void get_length_and_bends_stats(void) {$/;"	f
+get_logical_block_output_init_val	fpga_spice/fpga_spice_utils.c	/^int get_logical_block_output_init_val(t_logical_block* cur_logical_block) {$/;"	f
 get_longest_segment_length	place/timing_place_lookup.c	/^static int get_longest_segment_length($/;"	f	file:
 get_lut_child_pb	fpga_spice/fpga_spice_utils.c	/^t_pb* get_lut_child_pb(t_pb* cur_lut_pb,$/;"	f
 get_lut_output_init_val	fpga_spice/fpga_spice_utils.c	/^int get_lut_output_init_val(t_logical_block* lut_logical_block) {$/;"	f
@@ -2640,6 +2641,7 @@ get_non_updateable_bb	place/place.c	/^static void get_non_updateable_bb(int inet
 get_num_bends_and_length	base/stats.c	/^void get_num_bends_and_length(int inet, int *bends_ptr, int *len_ptr,$/;"	f
 get_num_conn	base/check_netlist.c	/^static int get_num_conn(int bnum) {$/;"	f	file:
 get_opin_direct_connecions	route/rr_graph.c	/^static int get_opin_direct_connecions(int x, int y, int opin, INOUTP t_linked_edge ** edge_list_ptr, INP t_ivec *** L_rr_node_indices, $/;"	f	file:
+get_opposite_side	fpga_spice/fpga_spice_utils.c	/^int get_opposite_side(int side){$/;"	f
 get_pb_graph_node_pin_from_block_pin	util/vpr_utils.c	/^t_pb_graph_pin* get_pb_graph_node_pin_from_block_pin(int iblock, int ipin) {$/;"	f
 get_pb_graph_node_pin_from_clb_net	util/vpr_utils.c	/^t_pb_graph_pin* get_pb_graph_node_pin_from_clb_net(int inet, int ipin) {$/;"	f
 get_pb_graph_node_pin_from_model_port_pin	util/vpr_utils.c	/^t_pb_graph_pin* get_pb_graph_node_pin_from_model_port_pin(t_model_ports *model_port, int model_pin, t_pb_graph_node *pb_graph_node) {$/;"	f
@@ -2923,6 +2925,7 @@ is_accurate	../../libarchfpga/include/arch_types_mrfpga.h	/^  boolean is_accurat
 is_any_but	timing/slre.c	/^static int is_any_but(const unsigned char *p, int len, const char *s,$/;"	f	file:
 is_any_of	timing/slre.c	/^static int is_any_of(const unsigned char *p, int len, const char *s, int *ofs) {$/;"	f	file:
 is_block_optional	../../libarchfpga/include/cad_types.h	/^	boolean *is_block_optional; \/* [0..num_blocks-1] is the block_id in this pattern mandatory or optional to form a molecule *\/$/;"	m	struct:s_pack_patterns
+is_cb_exist	fpga_spice/fpga_spice_utils.c	/^boolean is_cb_exist(t_rr_type cb_type,$/;"	f
 is_cbox	route/rr_graph2.c	/^boolean is_cbox(INP int chan, INP int seg, INP int track,$/;"	f
 is_chain	../../libarchfpga/include/cad_types.h	/^	boolean is_chain; \/* Does this pattern chain across logic blocks *\/$/;"	m	struct:s_pack_patterns
 is_clock	../../libarchfpga/include/logic_types.h	/^	boolean is_clock; \/* clock? *\/$/;"	m	struct:s_model_ports
@@ -2959,7 +2962,7 @@ is_opin_in_direct_list	route/pb_pin_eq_auto_detect.c	/^boolean is_opin_in_direct
 is_pin_open	pack/cluster_legality.c	/^boolean is_pin_open(int i) {$/;"	f
 is_prog	../../libarchfpga/fpga_spice_include/spice_types.h	/^  boolean is_prog;$/;"	m	struct:s_spice_model_port
 is_reset	../../libarchfpga/fpga_spice_include/spice_types.h	/^  boolean is_reset;$/;"	m	struct:s_spice_model_port
-is_sb_interc_between_segments	fpga_spice/fpga_spice_utils.c	/^int is_sb_interc_between_segments(int switch_box_x, $/;"	f
+is_rr_node_exist_opposite_side_in_sb_info	fpga_spice/fpga_spice_backannotate_utils.c	/^int is_rr_node_exist_opposite_side_in_sb_info(t_sb cur_sb_info,$/;"	f
 is_sbox	route/rr_graph2.c	/^boolean is_sbox(INP int chan, INP int wire_seg, INP int sb_seg, INP int track,$/;"	f
 is_set	../../libarchfpga/fpga_spice_include/spice_types.h	/^  boolean is_set;$/;"	m	struct:s_spice_model_port
 is_show_pass_trans	../../libarchfpga/include/arch_types_mrfpga.h	/^  boolean is_show_pass_trans;$/;"	m	struct:s_arch_mrfpga
@@ -4395,6 +4398,7 @@ spice_print_grid_testbench	base/vpr_types.h	/^  boolean spice_print_grid_testben
 spice_print_grid_testbench	spice/spice_grid_testbench.c	/^void spice_print_grid_testbench(char* formatted_spice_dir,$/;"	f
 spice_print_hardlogic_testbench	base/vpr_types.h	/^  boolean spice_print_hardlogic_testbench; $/;"	m	struct:s_spice_opts
 spice_print_hardlogic_testbench	spice/spice_hardlogic_testbench.c	/^void spice_print_hardlogic_testbench(char* formatted_spice_dir,$/;"	f
+spice_print_headers	spice/spice_heads.c	/^void spice_print_headers(char* include_dir_path,$/;"	f
 spice_print_lut_testbench	base/vpr_types.h	/^  boolean spice_print_lut_testbench; $/;"	m	struct:s_spice_opts
 spice_print_lut_testbench	spice/spice_lut_testbench.c	/^void spice_print_lut_testbench(char* formatted_spice_dir,$/;"	f
 spice_print_mux_testbench	spice/spice_mux_testbench.c	/^void spice_print_mux_testbench(char* formatted_spice_dir,$/;"	f
@@ -4981,6 +4985,7 @@ vpr_init_pre_place_and_route	base/vpr_api.c	/^void vpr_init_pre_place_and_route(
 vpr_pack	base/vpr_api.c	/^void vpr_pack(INP t_vpr_setup vpr_setup, INP t_arch arch) {$/;"	f
 vpr_place_and_route	base/vpr_api.c	/^void vpr_place_and_route(INP t_vpr_setup vpr_setup, INP t_arch arch) {$/;"	f
 vpr_power_estimation	base/vpr_api.c	/^void vpr_power_estimation(t_vpr_setup vpr_setup, t_arch Arch) {$/;"	f
+vpr_print_spice_netlists	spice/spice_api.c	/^void vpr_print_spice_netlists(t_vpr_setup vpr_setup,$/;"	f
 vpr_print_title	base/vpr_api.c	/^void vpr_print_title(void) {$/;"	f
 vpr_print_usage	base/vpr_api.c	/^void vpr_print_usage(void) {$/;"	f
 vpr_printf	../../libarchfpga/util.c	/^messagelogger vpr_printf = PrintHandlerMessage;$/;"	v
@@ -4990,7 +4995,6 @@ vpr_resync_post_route_netlist_to_TI_CLAY_v1_architecture	base/vpr_api.c	/^t_trac
 vpr_set_output_file_name	base/vpr_api.c	/^void vpr_set_output_file_name(enum e_output_files ename, const char *name,$/;"	f
 vpr_setup_vpr	base/vpr_api.c	/^void vpr_setup_vpr(INP t_options *Options, INP boolean TimingEnabled,$/;"	f
 vpr_show_setup	base/vpr_api.c	/^void vpr_show_setup(INP t_options options, INP t_vpr_setup vpr_setup) {$/;"	f
-vpr_spice_print_netlists	spice/spice_api.c	/^void vpr_spice_print_netlists(t_vpr_setup vpr_setup,$/;"	f
 vpr_to_phy_track	route/rr_graph2.c	/^static int vpr_to_phy_track(INP int itrack, INP int chan_num, INP int seg_num,$/;"	f	file:
 watch_edges	route/rr_graph.c	/^void watch_edges(int inode, t_linked_edge * edge_list_head) {$/;"	f
 which_button	base/graphics.c	/^static int which_button (Window win) $/;"	f	file:

@@ -322,10 +322,14 @@ int fprint_spice_routing_testbench_call_one_cb_tb(FILE* fp,
   /* print average cb input density */
   switch(chan_type) { 
   case CHANX:
+    /*
     vpr_printf(TIO_MESSAGE_INFO,"Average density of CBX[%d][%d] inputs is %.2g.\n", x, y, average_cb_input_density);
+    */
     break;
   case CHANY:
+    /*
     vpr_printf(TIO_MESSAGE_INFO,"Average density of CBY[%d][%d] inputs is %.2g.\n", x, y, average_cb_input_density);
+    */
     break;
   default: 
     vpr_printf(TIO_MESSAGE_ERROR, "(File:%s, [LINE%d])Invalid type of channel!\n", __FILE__, __LINE__);
@@ -527,7 +531,9 @@ int fprint_spice_routing_testbench_call_one_sb_tb(FILE* fp,
   fprintf(fp, ".meas tran energy_per_cycle_sram_sb param='dynamic_power_sram_sb*clock_period'\n");
 
   /* print average sb input density */
+  /*
   vpr_printf(TIO_MESSAGE_INFO,"Average density of SB[%d][%d] inputs is %.2g.\n", x, y, average_sb_input_density);
+  */
 
   /* Free */
  
@@ -735,8 +741,15 @@ void spice_print_cb_testbench(char* formatted_spice_dir,
   int cnt = 0;
   int used = 0;
 
+  /* X-channel Connection Blocks */
+  vpr_printf(TIO_MESSAGE_INFO,"Generating X-channel Connection Block testbench...\n");
   for (iy = 0; iy < (ny+1); iy++) {
     for (ix = 1; ix < (nx+1); ix++) {
+      /* Bypass non-exist CBs */
+      if ((FALSE == is_cb_exist(CHANX, ix, iy))
+         ||(0 == count_cb_info_num_ipin_rr_nodes(cbx_info[ix][iy]))) {
+        continue;
+      }
       cb_testbench_name = (char*)my_malloc(sizeof(char)*( strlen(circuit_name) 
                                             + 4 + strlen(my_itoa(ix)) + 2 + strlen(my_itoa(iy)) + 1
                                             + strlen(spice_cb_testbench_postfix)  + 1 ));
@@ -753,8 +766,16 @@ void spice_print_cb_testbench(char* formatted_spice_dir,
       my_free(cb_testbench_name);
     }  
   } 
+
+  /* Y-channel Connection Blocks */
+  vpr_printf(TIO_MESSAGE_INFO,"Generating Y-channel Connection Block testbench...\n");
   for (ix = 0; ix < (nx+1); ix++) {
     for (iy = 1; iy < (ny+1); iy++) {
+      /* Bypass non-exist CBs */
+      if ((FALSE == is_cb_exist(CHANY, ix, iy))
+         ||(0 == count_cb_info_num_ipin_rr_nodes(cby_info[ix][iy]))) {
+        continue;
+      }
       cb_testbench_name = (char*)my_malloc(sizeof(char)*( strlen(circuit_name) 
                                             + 4 + strlen(my_itoa(ix)) + 2 + strlen(my_itoa(iy)) + 1
                                             + strlen(spice_cb_testbench_postfix)  + 1 ));
@@ -773,7 +794,7 @@ void spice_print_cb_testbench(char* formatted_spice_dir,
   } 
   /* Update the global counter */
   num_used_cb_tb = cnt;
-  vpr_printf(TIO_MESSAGE_INFO,"No. of generated CB testbench = %d\n", num_used_cb_tb);
+  vpr_printf(TIO_MESSAGE_INFO,"No. of generated Connection Block testbench = %d\n", num_used_cb_tb);
 
   
   return;
@@ -793,6 +814,8 @@ void spice_print_sb_testbench(char* formatted_spice_dir,
   int ix, iy;
   int cnt = 0;
   int used = 0;
+
+  vpr_printf(TIO_MESSAGE_INFO,"Generating Switch Block testbench...\n");
 
   for (ix = 0; ix < (nx+1); ix++) {
     for (iy = 0; iy < (ny+1); iy++) {
@@ -814,7 +837,7 @@ void spice_print_sb_testbench(char* formatted_spice_dir,
   } 
   /* Update the global counter */
   num_used_sb_tb = cnt;
-  vpr_printf(TIO_MESSAGE_INFO,"No. of generated SB testbench = %d\n", num_used_sb_tb);
+  vpr_printf(TIO_MESSAGE_INFO,"No. of generated Switch Block testbench = %d\n", num_used_sb_tb);
 
   return;
 }

@@ -130,7 +130,9 @@ void fprint_spice_grid_testbench_call_one_defined_grid(FILE* fp, int ix, int iy)
   }
 
   /* if ((NULL == grid[ix][iy].type)||(0 != grid[ix][iy].offset)||(0 == grid[ix][iy].usage)) { */
-  if ((NULL == grid[ix][iy].type)||(0 != grid[ix][iy].offset)) {
+  if ((NULL == grid[ix][iy].type)
+     ||(EMPTY_TYPE == grid[ix][iy].type)
+     ||(0 != grid[ix][iy].offset)) {
     return;
   }
 
@@ -488,7 +490,9 @@ int fprint_spice_one_grid_testbench(char* formatted_spice_dir,
   fclose(fp);
 
   if (0 < tb_num_grid) {
+    /* 
     vpr_printf(TIO_MESSAGE_INFO, "Writing Grid[%d][%d] Testbench for %s...\n", grid_x, grid_y, circuit_name);
+    */
     /* Push the testbench to the linked list */
     tb_head = add_one_spice_tb_info_to_llist(tb_head, grid_testbench_file_path, 
                                              max_sim_num_clock_cycles);
@@ -515,6 +519,8 @@ void spice_print_grid_testbench(char* formatted_spice_dir,
   int ix, iy;
   int cnt = 0;
   int used;
+
+  vpr_printf(TIO_MESSAGE_INFO,"Generating grid testbench...\n");
 
   for (ix = 1; ix < (nx+1); ix++) {
     for (iy = 1; iy < (ny+1); iy++) {

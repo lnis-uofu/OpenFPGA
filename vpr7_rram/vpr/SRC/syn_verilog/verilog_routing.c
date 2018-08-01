@@ -269,7 +269,7 @@ void dump_verilog_grid_side_pin_with_given_index(FILE* fp, t_rr_type pin_type,
   }
 
   /* Output the pins on the side*/ 
-  height = grid[x][y].offset;
+  height = get_grid_pin_height(x, y, pin_index);
   if (1 == type->pinloc[height][side][pin_index]) {
     /* Not sure if we need to plus a height */
     /* fprintf(fp, "grid_%d__%d__pin_%d__%d__%d_ ", x, y, height, side, pin_index); */
@@ -281,7 +281,7 @@ void dump_verilog_grid_side_pin_with_given_index(FILE* fp, t_rr_type pin_type,
       fprintf(fp, ",\n");
     }
   } else {
-    vpr_printf(TIO_MESSAGE_ERROR, "(File:%s, [LINE%d])Fail to print a grid pin (x=%d, y=%d, height=%d, side=%d, index=%d)",
+    vpr_printf(TIO_MESSAGE_ERROR, "(File:%s, [LINE%d])Fail to print a grid pin (x=%d, y=%d, height=%d, side=%d, index=%d)\n",
               __FILE__, __LINE__, x, y, height, side, pin_index);
     exit(1);
   } 
@@ -331,7 +331,7 @@ void dump_verilog_grid_side_pins(FILE* fp,
   }
 
   /* Output the pins on the side*/ 
-  height = grid[x][y].offset;
+  height = get_grid_pin_height(x, y, ipin);
   for (ipin = 0; ipin < type->num_pins; ipin++) {
     class_id = type->pin_class[ipin];
     if ((1 == type->pinloc[height][side][ipin])&&(pin_class_type == type->class_inf[class_id].type)) {
@@ -834,7 +834,7 @@ void dump_verilog_switch_box_mux(FILE* fp,
 }
 
 /* Count the number of configuration bits of a rr_node*/
-int count_verilog_switch_box_interc_conf_bits(int switch_box_x, int switch_box_y, int chan_side, 
+int count_verilog_switch_box_interc_conf_bits(t_sb cur_sb_info, int chan_side, 
                                               t_rr_node* cur_rr_node) {
   int num_conf_bits = 0;
   int switch_idx = 0;
@@ -848,7 +848,7 @@ int count_verilog_switch_box_interc_conf_bits(int switch_box_x, int switch_box_y
   }
 
   /* Determine if the interc lies inside a channel wire, that is interc between segments */
-  if (1 == is_sb_interc_between_segments(switch_box_x, switch_box_y, cur_rr_node, chan_side)) {
+  if (1 == is_rr_node_exist_opposite_side_in_sb_info(cur_sb_info, cur_rr_node, chan_side)) {
     num_drive_rr_nodes = 0;
   } else {
     num_drive_rr_nodes = cur_rr_node->num_drive_rr_nodes;
@@ -869,7 +869,7 @@ int count_verilog_switch_box_interc_conf_bits(int switch_box_x, int switch_box_y
 }
 
 /* Count the number of reserved configuration bits of a rr_node*/
-int count_verilog_switch_box_interc_reserved_conf_bits(int switch_box_x, int switch_box_y, int chan_side, 
+int count_verilog_switch_box_interc_reserved_conf_bits(t_sb cur_sb_info, int chan_side, 
                                                        t_rr_node* cur_rr_node) {
   int num_reserved_conf_bits = 0;
   int switch_idx = 0;
@@ -883,7 +883,7 @@ int count_verilog_switch_box_interc_reserved_conf_bits(int switch_box_x, int swi
   }
 
   /* Determine if the interc lies inside a channel wire, that is interc between segments */
-  if (1 == is_sb_interc_between_segments(switch_box_x, switch_box_y, cur_rr_node, chan_side)) {
+  if (1 == is_rr_node_exist_opposite_side_in_sb_info(cur_sb_info, cur_rr_node, chan_side)) {
     num_drive_rr_nodes = 0;
   } else {
     num_drive_rr_nodes = cur_rr_node->num_drive_rr_nodes;
@@ -932,7 +932,7 @@ void dump_verilog_switch_box_interc(FILE* fp,
   */
 
   /* Determine if the interc lies inside a channel wire, that is interc between segments */
-  if (1 == is_sb_interc_between_segments(sb_x, sb_y, cur_rr_node, chan_side)) {
+  if (1 == is_rr_node_exist_opposite_side_in_sb_info(*cur_sb_info, cur_rr_node, chan_side)) {
     num_drive_rr_nodes = 0;
     drive_rr_nodes = NULL;
   } else {
@@ -971,7 +971,7 @@ int count_verilog_switch_box_reserved_conf_bits(t_sb* cur_sb_info) {
       switch (cur_sb_info->chan_rr_node_direction[side][itrack]) {
       case OUT_PORT:
         temp_num_reserved_conf_bits =
-                 count_verilog_switch_box_interc_reserved_conf_bits(cur_sb_info->x, cur_sb_info->y, side, 
+                 count_verilog_switch_box_interc_reserved_conf_bits(*cur_sb_info, side, 
                                                                     cur_sb_info->chan_rr_node[side][itrack]);
         /* Always select the largest number of reserved conf_bits */
         if (temp_num_reserved_conf_bits > num_reserved_conf_bits) {
@@ -1000,7 +1000,7 @@ int count_verilog_switch_box_conf_bits(t_sb* cur_sb_info) {
     for (itrack = 0; itrack < cur_sb_info->chan_width[side]; itrack++) {
       switch (cur_sb_info->chan_rr_node_direction[side][itrack]) {
       case OUT_PORT:
-        num_conf_bits += count_verilog_switch_box_interc_conf_bits(cur_sb_info->x, cur_sb_info->y, side, 
+        num_conf_bits += count_verilog_switch_box_interc_conf_bits(*cur_sb_info, side, 
                                                                    cur_sb_info->chan_rr_node[side][itrack]);
         break;
       case IN_PORT:
@@ -1864,7 +1864,7 @@ void dump_verilog_routing_resources(char* subckt_dir,
   /* Switch Boxes*/
   for (ix = 0; ix < (nx + 1); ix++) {
     for (iy = 0; iy < (ny + 1); iy++) {
-      vpr_printf(TIO_MESSAGE_INFO, "Writing Switch Boxes[%d][%d]...\n", ix, iy);
+      /* vpr_printf(TIO_MESSAGE_INFO, "Writing Switch Boxes[%d][%d]...\n", ix, iy); */
       update_spice_models_routing_index_low(ix, iy, SOURCE, arch.spice->num_spice_model, arch.spice->spice_models);
       dump_verilog_routing_switch_box_subckt(fp, &(sb_info[ix][iy]),
                                              LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices);
@@ -1876,20 +1876,26 @@ void dump_verilog_routing_resources(char* subckt_dir,
   /* X - channels [1...nx][0..ny]*/
   for (iy = 0; iy < (ny + 1); iy++) {
     for (ix = 1; ix < (nx + 1); ix++) {
-      vpr_printf(TIO_MESSAGE_INFO, "Writing X-direction Connection Boxes[%d][%d]...\n", ix, iy);
+      /* vpr_printf(TIO_MESSAGE_INFO, "Writing X-direction Connection Boxes[%d][%d]...\n", ix, iy); */
       update_spice_models_routing_index_low(ix, iy, CHANX, arch.spice->num_spice_model, arch.spice->spice_models);
-      dump_verilog_routing_connection_box_subckt(fp, &(cbx_info[ix][iy]),
-                                                 LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices); 
+      if ((TRUE == is_cb_exist(CHANX, ix, iy))
+         &&(0 < count_cb_info_num_ipin_rr_nodes(cbx_info[ix][iy]))) {
+        dump_verilog_routing_connection_box_subckt(fp, &(cbx_info[ix][iy]),
+                                                   LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices); 
+      }
       update_spice_models_routing_index_high(ix, iy, CHANX, arch.spice->num_spice_model, arch.spice->spice_models);
     }
   }
   /* Y - channels [1...ny][0..nx]*/
   for (ix = 0; ix < (nx + 1); ix++) {
     for (iy = 1; iy < (ny + 1); iy++) {
-      vpr_printf(TIO_MESSAGE_INFO, "Writing Y-direction Connection Boxes[%d][%d]...\n", ix, iy);
+      /* vpr_printf(TIO_MESSAGE_INFO, "Writing Y-direction Connection Boxes[%d][%d]...\n", ix, iy); */
       update_spice_models_routing_index_low(ix, iy, CHANY, arch.spice->num_spice_model, arch.spice->spice_models);
-      dump_verilog_routing_connection_box_subckt(fp, &(cby_info[ix][iy]),
-                                                 LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices); 
+      if ((TRUE == is_cb_exist(CHANY, ix, iy)) 
+         &&(0 < count_cb_info_num_ipin_rr_nodes(cby_info[ix][iy]))) {
+        dump_verilog_routing_connection_box_subckt(fp, &(cby_info[ix][iy]),
+                                                   LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices); 
+      }
       update_spice_models_routing_index_high(ix, iy, CHANY, arch.spice->num_spice_model, arch.spice->spice_models);
     }
   }

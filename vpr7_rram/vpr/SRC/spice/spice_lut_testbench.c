@@ -263,7 +263,10 @@ void fprint_spice_lut_testbench_one_pb_graph_node_lut(FILE* fp,
   if (OPEN != logical_block_index) {
     logical_block[logical_block_index].temp_used = 1;
   }
+
+  /* Increment the counter of the LUT spice model */
   tb_num_luts++;
+  pb_spice_model->tb_cnt++;
 
   /* Free */
   my_free(input_net_num);
@@ -402,7 +405,9 @@ void fprint_spice_lut_testbench_call_one_grid_defined_luts(FILE* fp, int ix, int
     exit(1);
   }
  
-  if (NULL == grid[ix][iy].type) {
+  if ((NULL == grid[ix][iy].type) 
+     ||(EMPTY_TYPE == grid[ix][iy].type)
+     ||(0 != grid[ix][iy].offset)) {
     return; 
   }
 
@@ -623,7 +628,7 @@ int fprint_spice_one_lut_testbench(char* formatted_spice_dir,
   } 
 
   /* Reset tb_cnt for all the spice models */
-  init_spice_models_tb_cnt(arch.spice->num_spice_model, arch.spice->spice_models);
+  init_spice_models_grid_tb_cnt(arch.spice->num_spice_model, arch.spice->spice_models, grid_x, grid_y);
   
   /*vpr_printf(TIO_MESSAGE_INFO, "Writing LUT Testbench for %s...\n", circuit_name);*/
   testbench_load_cnt = 0;
@@ -686,8 +691,10 @@ int fprint_spice_one_lut_testbench(char* formatted_spice_dir,
   fclose(fp);
 
   if (0 < tb_num_luts) {
+    /*
     vpr_printf(TIO_MESSAGE_INFO, "Writing Grid[%d][%d] SPICE LUT Testbench for %s...\n",
                grid_x, grid_y, circuit_name);
+    */
     /* Push the testbench to the linked list */
     tb_head = add_one_spice_tb_info_to_llist(tb_head, lut_testbench_file_path, 
                                              max_sim_num_clock_cycles);
@@ -715,6 +722,8 @@ void spice_print_lut_testbench(char* formatted_spice_dir,
   int ix, iy;
   int cnt = 0;
   int used;
+
+  vpr_printf(TIO_MESSAGE_INFO,"Generating LUT testbench...\n");
 
   for (ix = 1; ix < (nx+1); ix++) {
     for (iy = 1; iy < (ny+1); iy++) {
