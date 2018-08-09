@@ -15,6 +15,7 @@
 #include "rr_graph2.h"
 #include "linkedlist.h"
 
+/*
 typedef struct s_clb_to_clb_directs {
 	t_type_descriptor *from_clb_type;
 	int from_clb_pin_start_index;
@@ -23,6 +24,7 @@ typedef struct s_clb_to_clb_directs {
 	int to_clb_pin_start_index;
 	int to_clb_pin_end_index;
 } t_clb_to_clb_directs;
+*/
 
 typedef struct s_num_mapped_opins_stats t_num_mapped_opins_stats;
 struct s_num_mapped_opins_stats{

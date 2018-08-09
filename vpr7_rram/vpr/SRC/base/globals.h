@@ -136,5 +136,9 @@ extern t_cb** cby_info;
 /* Xifan TANG: detailed runtime statistics */
 extern float pack_route_time;
 
+/* Xifan TANG: clb_to_clb_directs*/
+extern int num_clb2clb_directs;
+extern t_clb_to_clb_directs* clb2clb_direct;
+
 #endif
 

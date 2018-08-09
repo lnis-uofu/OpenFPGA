@@ -92,6 +92,7 @@ char* spice_tb_global_config_done_port_name = "gconfig_done";
 char* spice_tb_global_set_port_name = "gset";
 char* spice_tb_global_reset_port_name = "greset";
 char* spice_tb_global_vdd_localrouting_port_name = "gvdd_local_interc";
+char* spice_tb_global_vdd_direct_port_name = "gvdd_direct_interc";
 char* spice_tb_global_vdd_io_port_name = "gvdd_io";
 char* spice_tb_global_vdd_hardlogic_port_name = "gvdd_hardlogic";
 char* spice_tb_global_vdd_sram_port_name = "gvdd_sram";

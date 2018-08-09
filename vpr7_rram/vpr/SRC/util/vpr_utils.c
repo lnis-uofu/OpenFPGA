@@ -1154,3 +1154,103 @@ void alloc_and_load_idirect_from_blk_pin(t_direct_inf* directs, int num_directs,
 
 }
 
+/**
+ * Xifan Tang: Move this function from rr_graph.c 
+ * since it is useful and general to parse clb to clb directs
+ * Parse out which CLB pins should connect directly to which other CLB pins then store that in a clb_to_clb_directs data structure
+ * This data structure supplements the the info in the "directs" data structure
+ * TODO: The function that does this parsing in placement is poorly done because it lacks generality on heterogeniety, should replace with this one
+ */
+t_clb_to_clb_directs * alloc_and_load_clb_to_clb_directs(INP t_direct_inf *directs, 
+                                                         INP int num_directs) {
+	int i, j;
+	t_clb_to_clb_directs *clb_to_clb_directs;
+	char *pb_type_name, *port_name;
+	int start_pin_index, end_pin_index;
+	t_pb_type *pb_type;
+
+	clb_to_clb_directs = (t_clb_to_clb_directs*)my_calloc(num_directs, sizeof(t_clb_to_clb_directs));
+
+	pb_type_name = NULL;
+	port_name = NULL;
+
+	for(i = 0; i < num_directs; i++) {
+		pb_type_name = (char*)my_malloc((strlen(directs[i].from_pin) + strlen(directs[i].to_pin)) * sizeof(char));
+		port_name = (char*)my_malloc((strlen(directs[i].from_pin) + strlen(directs[i].to_pin)) * sizeof(char));
+
+		// Load from pins
+		// Parse out the pb_type name, port name, and pin range
+		parse_direct_pin_name(directs[i].from_pin, directs[i].line, &start_pin_index, &end_pin_index, pb_type_name, port_name);
+
+		// Figure out which type, port, and pin is used
+		for(j = 0; j < num_types; j++) {
+			if(strcmp(type_descriptors[j].name, pb_type_name) == 0) {
+				break;
+			}
+		}
+		assert(j < num_types);
+		clb_to_clb_directs[i].from_clb_type = &type_descriptors[j];
+		pb_type = clb_to_clb_directs[i].from_clb_type->pb_type;
+
+		for(j = 0; j < pb_type->num_ports; j++) {
+			if(strcmp(pb_type->ports[j].name, port_name) == 0) {
+				break;
+			}
+		}
+		assert(j < pb_type->num_ports);
+
+		if(start_pin_index == OPEN) {
+			assert(start_pin_index == end_pin_index);
+			start_pin_index = 0;
+			end_pin_index = pb_type->ports[j].num_pins - 1;
+		}
+		get_blk_pin_from_port_pin(clb_to_clb_directs[i].from_clb_type->index, j, start_pin_index, &clb_to_clb_directs[i].from_clb_pin_start_index);
+		get_blk_pin_from_port_pin(clb_to_clb_directs[i].from_clb_type->index, j, end_pin_index, &clb_to_clb_directs[i].from_clb_pin_end_index);
+
+		// Load to pins
+		// Parse out the pb_type name, port name, and pin range
+		parse_direct_pin_name(directs[i].to_pin, directs[i].line, &start_pin_index, &end_pin_index, pb_type_name, port_name);
+
+		// Figure out which type, port, and pin is used
+		for(j = 0; j < num_types; j++) {
+			if(strcmp(type_descriptors[j].name, pb_type_name) == 0) {
+				break;
+			}
+		}
+		assert(j < num_types);
+		clb_to_clb_directs[i].to_clb_type = &type_descriptors[j];
+		pb_type = clb_to_clb_directs[i].to_clb_type->pb_type;
+
+		for(j = 0; j < pb_type->num_ports; j++) {
+			if(strcmp(pb_type->ports[j].name, port_name) == 0) {
+				break;
+			}
+		}
+		assert(j < pb_type->num_ports);
+
+		if(start_pin_index == OPEN) {
+			assert(start_pin_index == end_pin_index);
+			start_pin_index = 0;
+			end_pin_index = pb_type->ports[j].num_pins - 1;
+		}
+
+		get_blk_pin_from_port_pin(clb_to_clb_directs[i].to_clb_type->index, j, start_pin_index, &clb_to_clb_directs[i].to_clb_pin_start_index);
+		get_blk_pin_from_port_pin(clb_to_clb_directs[i].to_clb_type->index, j, end_pin_index, &clb_to_clb_directs[i].to_clb_pin_end_index);
+
+		if(abs(clb_to_clb_directs[i].from_clb_pin_start_index - clb_to_clb_directs[i].from_clb_pin_end_index) != abs(clb_to_clb_directs[i].to_clb_pin_start_index - clb_to_clb_directs[i].to_clb_pin_end_index)) {
+			vpr_printf(TIO_MESSAGE_ERROR, "[LINE %d] Range mismatch from %s to %s.\n", directs[i].line, directs[i].from_pin, directs[i].to_pin);
+				exit(1);
+		}
+
+        /* Xifan Tang: assign values to x,y,z_offset */
+        clb_to_clb_directs[i].x_offset = directs[i].x_offset;
+        clb_to_clb_directs[i].y_offset = directs[i].y_offset;
+        clb_to_clb_directs[i].z_offset = directs[i].z_offset;
+        /* Xifan Tang: give the name */
+        clb_to_clb_directs[i].name = my_strdup(directs[i].name);
+
+		free(pb_type_name);
+		free(port_name);
+	}
+	return clb_to_clb_directs;
+}

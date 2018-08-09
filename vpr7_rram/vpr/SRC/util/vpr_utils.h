@@ -41,6 +41,8 @@ void alloc_and_load_idirect_from_blk_pin(t_direct_inf* directs, int num_directs,
 void parse_direct_pin_name(char * src_string, int line, int * start_pin_index, 
 		int * end_pin_index, char * pb_type_name, char * port_name);
 
+t_clb_to_clb_directs *alloc_and_load_clb_to_clb_directs(INP t_direct_inf *directs, INP int num_directs);
+
 
 void free_cb(t_pb *pb);
 void free_pb_stats(t_pb *pb);

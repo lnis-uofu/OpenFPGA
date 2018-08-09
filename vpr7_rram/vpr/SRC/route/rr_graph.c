@@ -44,6 +44,7 @@ typedef struct s_mux_size_distribution {
 	struct s_mux_size_distribution *next;
 } t_mux_size_distribution;
 
+/*
 typedef struct s_clb_to_clb_directs {
 	t_type_descriptor *from_clb_type;
 	int from_clb_pin_start_index;
@@ -52,6 +53,7 @@ typedef struct s_clb_to_clb_directs {
 	int to_clb_pin_start_index;
 	int to_clb_pin_end_index;
 } t_clb_to_clb_directs;
+*/
 
 /* Xifan TANG: opin_to_cb support */
 #include "pb_pin_eq_auto_detect.h"
@@ -160,7 +162,9 @@ static void alloc_net_rr_terminals(void);
 
 static void alloc_and_load_rr_clb_source(t_ivec *** L_rr_node_indices);
 
+/*
 static t_clb_to_clb_directs *alloc_and_load_clb_to_clb_directs(INP t_direct_inf *directs, INP int num_directs);
+*/
 
 #if 0
 static void load_uniform_opin_switch_pattern_paired(INP int *Fc_out,
@@ -2771,7 +2775,6 @@ print_distribution(FILE * fptr,
  * Parse out which CLB pins should connect directly to which other CLB pins then store that in a clb_to_clb_directs data structure
  * This data structure supplements the the info in the "directs" data structure
  * TODO: The function that does this parsing in placement is poorly done because it lacks generality on heterogeniety, should replace with this one
- */
 static t_clb_to_clb_directs * alloc_and_load_clb_to_clb_directs(INP t_direct_inf *directs, INP int num_directs) {
 	int i, j;
 	t_clb_to_clb_directs *clb_to_clb_directs;
@@ -2857,6 +2860,7 @@ static t_clb_to_clb_directs * alloc_and_load_clb_to_clb_directs(INP t_direct_inf
 	}
 	return clb_to_clb_directs;
 }
+ */
 
 /* Add all direct clb-pin-to-clb-pin edges to given opin */ 
 static int get_opin_direct_connecions(int x, int y, int opin, INOUTP t_linked_edge ** edge_list_ptr, INP t_ivec *** L_rr_node_indices, 

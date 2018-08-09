@@ -138,3 +138,8 @@ void dump_verilog_grid_common_port(FILE* fp, t_spice_model* cur_verilog_model,
 
 void dump_verilog_sram_config_bus_internal_wires(FILE* fp, t_sram_orgz_info* cur_sram_orgz_info, 
                                                  int lsb, int msb);
+
+void dump_verilog_toplevel_one_grid_side_pin_with_given_index(FILE* fp, t_rr_type pin_type, 
+                                                              int pin_index, int side,
+                                                              int x, int y,
+                                                              boolean dump_port_type);

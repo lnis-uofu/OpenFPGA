@@ -875,6 +875,9 @@ typedef struct s_direct_inf {
 	int y_offset;
 	int z_offset;
 	int line;
+    /* Xifan Tang: FPGA-SPICE support */
+    char* spice_model_name;
+    t_spice_model* spice_model;
 } t_direct_inf;
 
 

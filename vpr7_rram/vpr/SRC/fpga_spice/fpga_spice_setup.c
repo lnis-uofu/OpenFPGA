@@ -505,6 +505,38 @@ void init_check_arch_spice_models(t_arch* arch,
     }
   } 
 
+  /* Step E: Direct connections between CLBs */
+  for (i = 0; i < arch->num_directs; i++) {
+    if (NULL == arch->Directs[i].spice_model_name) {
+      arch->Directs[i].spice_model = 
+        get_default_spice_model(SPICE_MODEL_WIRE,
+                                arch->spice->num_spice_model, 
+                                arch->spice->spice_models); 
+      continue;
+    } else {
+      arch->Directs[i].spice_model = 
+        find_name_matched_spice_model(arch->Directs[i].spice_model_name,
+                                      arch->spice->num_spice_model, 
+                                      arch->spice->spice_models); 
+    }
+    /* Check SPICE model type */
+    if (NULL == arch->Directs[i].spice_model) {
+      vpr_printf(TIO_MESSAGE_ERROR, "(FILE:%s, LINE[%d])Invalid SPICE model name(%s) of CLB to CLB Direct Connection (name=%s) is undefined in SPICE models!\n",
+                                    __FILE__ ,__LINE__, 
+                                    arch->Directs[i].spice_model_name, 
+                                    arch->Directs[i].name);
+      exit(1);
+    } else if (SPICE_MODEL_CHAN_WIRE != arch->Directs[i].spice_model->type) {
+      vpr_printf(TIO_MESSAGE_ERROR, "(FILE:%s, LINE[%d])Invalid SPICE model(%s) type of CLB to CLB Direct Connection (name=%s)! Should be chan_wire!\n",
+                                    __FILE__ , __LINE__, 
+                                    arch->Directs[i].spice_model_name, 
+                                    arch->Directs[i].name);
+      exit(1);
+    }
+    /* Copy it to clb2clb_directs */
+    clb2clb_direct[i].spice_model = arch->Directs[i].spice_model; 
+  } 
+
   /* 2. Search Complex Blocks (Pb_Types), Link spice_model according to the spice_model_name*/
   for (i = 0; i < num_types; i++) {
     if (type_descriptors[i].pb_type) {

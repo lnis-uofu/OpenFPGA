@@ -2019,3 +2019,63 @@ void dump_verilog_sram_config_bus_internal_wires(FILE* fp, t_sram_orgz_info* cur
   return;
 }
 
+void dump_verilog_toplevel_one_grid_side_pin_with_given_index(FILE* fp, t_rr_type pin_type, 
+                                                              int pin_index, int side,
+                                                              int x, int y,
+                                                              boolean dump_port_type) {
+  int height;  
+  t_type_ptr type = NULL;
+  char* verilog_port_type = NULL;
+
+  /* Check the file handler*/ 
+  if (NULL == fp) {
+    vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid file handler.\n", 
+               __FILE__, __LINE__); 
+    exit(1);
+  }
+  /* Check */
+  assert((!(0 > x))&&(!(x > (nx + 1)))); 
+  assert((!(0 > y))&&(!(y > (ny + 1)))); 
+  type = grid[x][y].type;
+  assert(NULL != type);
+
+  assert((!(0 > pin_index))&&(pin_index < type->num_pins));
+  assert((!(0 > side))&&(!(side > 3)));
+
+  /* Assign the type of PIN*/ 
+  switch (pin_type) {
+  case IPIN:
+  /* case SINK: */
+    verilog_port_type = "output";
+    break;
+  /* case SOURCE: */
+  case OPIN:
+    verilog_port_type = "input";
+    break;
+  /* SINK and SOURCE are hypothesis nodes */
+  default:
+    vpr_printf(TIO_MESSAGE_ERROR, "(File:%s, [LINE%d])Invalid pin_type!\n", __FILE__, __LINE__);
+    exit(1); 
+  }
+
+  /* Output the pins on the side*/ 
+  height = get_grid_pin_height(x, y, pin_index);
+  if (1 == type->pinloc[height][side][pin_index]) {
+    /* Not sure if we need to plus a height */
+    /* fprintf(fp, "grid_%d__%d__pin_%d__%d__%d_ ", x, y, height, side, pin_index); */
+    if (TRUE == dump_port_type) {
+      fprintf(fp, "%s ", verilog_port_type);
+    }
+    fprintf(fp, " grid_%d__%d__pin_%d__%d__%d_", x, y, height, side, pin_index);
+    if (TRUE == dump_port_type) {
+      fprintf(fp, ",\n");
+    }
+  } else {
+    vpr_printf(TIO_MESSAGE_ERROR, "(File:%s, [LINE%d])Fail to print a grid pin (x=%d, y=%d, height=%d, side=%d, index=%d)\n",
+              __FILE__, __LINE__, x, y, height, side, pin_index);
+    exit(1);
+  } 
+
+  return;
+}
+

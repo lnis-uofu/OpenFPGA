@@ -169,6 +169,11 @@ void fprint_top_netlist_stimulations(FILE* fp,
                                                  spice_tb_global_vdd_localrouting_port_name,
                                                  "vsp");
 
+  fprintf(fp, "***** Global VDD for CLB to CLB direct connection *****\n");
+  fprint_spice_testbench_global_vdd_port_stimuli(fp, 
+                                                 spice_tb_global_vdd_direct_port_name,
+                                                 "vsp");
+
   fprintf(fp, "***** Global VDD for local routing SRAMs *****\n");
   fprint_spice_testbench_global_vdd_port_stimuli(fp, 
                                                  spice_tb_global_vdd_localrouting_sram_port_name,
@@ -573,6 +578,8 @@ void fprint_top_netlist_measurements(FILE* fp,
     fprintf(fp, ".measure tran leakage_power_io find p(Vgvdd_io) at=0\n");
     /* Global power of Local Interconnections*/
     fprintf(fp, ".measure tran leakage_power_local_interc find p(Vgvdd_local_interc) at=0\n");
+    /* Global power of CLB to CLB direct connections*/
+    fprintf(fp, ".measure tran leakage_power_direct_interc find p(Vgvdd_direct_interc) at=0\n");
   } else {
     /* Leakage power of SRAMs */
     fprintf(fp, ".measure tran leakage_power_sram_local_routing avg p(Vgvdd_sram_local_routing) from=0 to='clock_period'\n");
@@ -583,6 +590,8 @@ void fprint_top_netlist_measurements(FILE* fp,
     fprintf(fp, ".measure tran leakage_power_io avg p(Vgvdd_io) from=0 to='clock_period'\n");
     /* Global power of Local Interconnections*/
     fprintf(fp, ".measure tran leakage_power_local_interc avg p(Vgvdd_local_interc) from=0 to='clock_period'\n");
+    /* Global power of CLB to CLB Direct Interconnections*/
+    fprintf(fp, ".measure tran leakage_power_direct_interc avg p(Vgvdd_direct_interc) from=0 to='clock_period'\n");
   }
   /* Leakge power of Hard logic */
   fprint_measure_vdds_spice_model(fp, SPICE_MODEL_HARDLOGIC, SPICE_MEASURE_LEAKAGE_POWER, num_clock_cycle, spice, leakage_only);
@@ -621,6 +630,10 @@ void fprint_top_netlist_measurements(FILE* fp,
   fprintf(fp, ".measure tran dynamic_power_local_interc avg p(Vgvdd_local_interc) from='clock_period' to='%d*clock_period'\n", num_clock_cycle);
   fprintf(fp, ".measure tran energy_per_cycle_local_routing \n ");
   fprintf(fp, "+ param='dynamic_power_local_interc*clock_period'\n");
+  /* Dynamic power of Direct connection */
+  fprintf(fp, ".measure tran dynamic_power_direct_interc avg p(Vgvdd_direct_interc) from='clock_period' to='%d*clock_period'\n", num_clock_cycle);
+  fprintf(fp, ".measure tran energy_per_cycle_direct_interc \n ");
+  fprintf(fp, "+ param='dynamic_power_direct_interc*clock_period'\n");
   /* Dynamic power of Hard Logic */
   fprint_measure_vdds_spice_model(fp, SPICE_MODEL_HARDLOGIC, SPICE_MEASURE_DYNAMIC_POWER, num_clock_cycle, spice, leakage_only);
   /* Dynamic power of LUTs */
@@ -711,6 +724,9 @@ void spice_print_top_netlist(char* circuit_name,
   
   /* Quote Routing structures: Switch Boxes */
   fprint_call_defined_switch_boxes(fp); 
+
+  /* Apply CLB to CLB direct connections */
+  fprint_spice_clb2clb_directs(fp, num_clb2clb_directs, clb2clb_direct);
 
   /* Add stimulations */
   fprint_top_netlist_stimulations(fp, num_clock, spice);

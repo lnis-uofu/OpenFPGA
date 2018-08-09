@@ -14,6 +14,9 @@
 #include "mrfpga_globals.h"
 /* END */
 
+/* Xifan Tang: include for supporting Direct Parsing */
+#include "vpr_utils.h"
+
 static void SetupOperation(INP t_options Options,
 		OUTP enum e_operation *Operation);
 static void SetupPackerOpts(INP t_options Options, INP boolean TimingEnabled,
@@ -50,6 +53,9 @@ static void SetupFpgaSpiceOpts(t_options Options,
                                t_fpga_spice_opts* fpga_spice_opts,
                                t_arch* arch);
 /* end */
+/* Xifan Tang: Parse CLB to CLB direct connections */
+static void alloc_and_init_globals_clb_to_clb_directs(int num_directs, 
+                                                      t_direct_inf* directs);
 
 /* mrFPGA */
 static void SetupSwitches_mrFPGA(INP t_arch Arch,
@@ -280,6 +286,9 @@ void SetupVPR(INP t_options *Options, INP boolean TimingEnabled,
     /* Build the complex block graph */
 	vpr_printf(TIO_MESSAGE_INFO, "Building complex block graph.\n");
 	alloc_and_load_all_pb_graphs(PowerOpts->do_power);
+
+    /* Xifan Tang: Initialize the clb to clb directs */
+    alloc_and_init_globals_clb_to_clb_directs(Arch->num_directs, Arch->Directs); 
 
 	if (getEchoEnabled() && isEchoFileEnabled(E_ECHO_PB_GRAPH)) {
 		echo_pb_graph(getEchoFileName(E_ECHO_PB_GRAPH));
@@ -1113,6 +1122,16 @@ static void SetupFpgaSpiceOpts(t_options Options,
 
   return;
 }
+
+/* Initialize the global variables for clb to clb directs */
+static 
+void alloc_and_init_globals_clb_to_clb_directs(int num_directs, 
+                                               t_direct_inf* directs) {
+  num_clb2clb_directs = num_directs;
+  clb2clb_direct = alloc_and_load_clb_to_clb_directs(directs, num_directs);
+
+  return;
+} 
 
 /* mrFPGA : Reshaped by Xifan TANG */
 static void set_max_pins_per_side() {

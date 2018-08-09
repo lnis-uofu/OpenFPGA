@@ -104,3 +104,7 @@ t_cb** cby_info = NULL;
 
 /* Xifan TANG: detailed runtime statistics */
 float pack_route_time = 0.;
+
+/* Xifan TANG: clb_to_clb_directs*/
+int num_clb2clb_directs = 0;
+t_clb_to_clb_directs* clb2clb_direct = NULL;

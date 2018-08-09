@@ -332,7 +332,7 @@ float power_usage_mux_for_callibration(int num_inputs, float transistor_size) {
 
 	power_usage_mux_multilevel(&power_usage,
 			power_get_mux_arch(num_inputs, transistor_size), prob, dens, 0,
-			FALSE, power_callib_period);
+			FALSE, power_callib_period); /* Xifan: turn output_restore to be true */
 
 	free(dens);
 	free(prob);

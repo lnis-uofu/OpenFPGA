@@ -2126,7 +2126,7 @@ void fprint_grid_physical_blocks(FILE* fp,
     update_spice_models_grid_index_high(ix, iy, arch->spice->num_spice_model, arch->spice->spice_models);
     return; 
   }
-  capacity= grid[ix][iy].type->capacity;
+  capacity = grid[ix][iy].type->capacity;
   assert(0 < capacity);
 
   /* Make the sub-circuit name*/

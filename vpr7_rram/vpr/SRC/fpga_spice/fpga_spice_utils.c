@@ -1422,6 +1422,19 @@ t_spice_model* find_iopad_spice_model(int num_spice_model,
   return ret;
 }
 
+/* Check if the grid coorindate given is in the range */
+boolean is_grid_coordinate_in_range(int x_min, 
+                                    int x_max,
+                                    int grid_x) {
+  /* See if x is in the range */
+  if ((x_min > grid_x)
+     ||(x_max < grid_x)) {
+    return FALSE;
+  } 
+
+  /* Reach here, means all in the range */
+  return TRUE;
+}
 
 char* generate_string_spice_model_type(enum e_spice_model_type spice_model_type) {
   char* ret = NULL;
@@ -2713,9 +2726,7 @@ int rr_node_drive_switch_box(t_rr_node* src_rr_node,
                              int chan_side) {
   
   /* Make sure a valid src_rr_node and des_rr_node */
-  if (NULL == src_rr_node) {
   assert(NULL != src_rr_node);
-  }
   assert(NULL != des_rr_node);
   /* The src_rr_node should be either CHANX or CHANY */
   assert((CHANX == des_rr_node->type)||(CHANY == des_rr_node->type));
@@ -7009,6 +7020,62 @@ int get_grid_pin_height(int grid_x, int grid_y, int pin_index) {
   pin_height = grid_type->pin_height[pin_index];
   
   return pin_height;
+}
+
+int get_grid_pin_side(int grid_x, int grid_y, int pin_index) {
+  int pin_height, side, pin_side;
+  t_type_ptr grid_type = NULL;
+
+  /* Get type */
+  grid_type = grid[grid_x][grid_y].type;
+
+  /* Return if this is an empty type */
+  if ((NULL == grid_type)
+     ||(EMPTY_TYPE == grid_type)) {
+    return -1;
+  }
+
+  /* Check if the pin index is in the range */
+  assert ( ((0 == pin_index) || (0 < pin_index))
+          &&(pin_index < grid_type->num_pins) );
+
+  /* Find the pin_height */
+  pin_height = get_grid_pin_height(grid_x, grid_y, pin_index);
+
+  pin_side = -1;
+  for (side = 0; side < 4; side++) {
+    /* Bypass corner cases */
+    /* Pin can only locate on BOTTOM side, when grid is on TOP border */
+    if ((ny == grid_y)&&(2 != side)) {
+      continue;
+    }
+    /* Pin can only locate on LEFT side, when grid is on RIGHT border */
+    if ((nx == grid_x)&&(3 != side)) {
+      continue;
+    }
+    /* Pin can only locate on the TOP side, when grid is on BOTTOM border */
+    if ((0 == grid_y)&&(0 != side)) {
+      continue;
+    }
+    /* Pin can only locate on the RIGHT side, when grid is on LEFT border */
+    if ((0 == grid_x)&&(1 != side)) {
+      continue;
+    }
+    if (1 == grid_type->pinloc[pin_height][side][pin_index]) {
+      if (-1 != pin_side) { 
+        vpr_printf(TIO_MESSAGE_ERROR, "(%s, [LINE%d]) Duplicated pin(index:%d) on two sides: %s and %s of type (name=%s)!\n",
+                   __FILE__, __LINE__, 
+                   pin_index, 
+                   convert_side_index_to_string(pin_side),
+                   convert_side_index_to_string(side),
+                   grid_type->name);
+        exit(1);
+      }
+      pin_side = side;
+    }
+  }
+  
+  return pin_side;
 }
 
 void determine_sb_port_coordinator(t_sb cur_sb_info, int side, 

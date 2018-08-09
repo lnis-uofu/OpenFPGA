@@ -106,6 +106,14 @@ void fprint_call_defined_one_switch_box(FILE* fp,
 
 void fprint_call_defined_switch_boxes(FILE* fp);
 
+void fprint_spice_toplevel_one_grid_side_pin_with_given_index(FILE* fp, 
+                                                              int pin_index, int side,
+                                                              int x, int y);
+
+void fprint_spice_clb2clb_directs(FILE* fp, 
+                                  int num_directs, 
+                                  t_clb_to_clb_directs* direct);
+
 void fprint_one_design_param_w_wo_variation(FILE* fp,
                                             char* param_name,
                                             float avg_val,

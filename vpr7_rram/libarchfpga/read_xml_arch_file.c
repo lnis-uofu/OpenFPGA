@@ -3445,6 +3445,13 @@ static void ProcessDirects(INOUTP ezxml_t Parent, OUTP t_direct_inf **Directs,
 					Node->line);
 			exit(1);
 		}
+        /* Spice Model Support: Xifan TANG
+         * We should have a spice_model_name for this direct connection 
+         */
+        (*Directs)[i].spice_model_name = my_strdup(FindProperty(Node, "spice_model_name", FALSE));
+        (*Directs)[i].spice_model = NULL;
+         ezxml_set_attr(Node,"spice_model_name",NULL);
+ 
 
 		(*Directs)[i].line = Node->line;
 		/* Should I check that the direct chain offset is not greater than the chip? How? */

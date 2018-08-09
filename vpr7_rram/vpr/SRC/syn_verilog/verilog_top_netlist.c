@@ -571,6 +571,7 @@ void dump_verilog_defined_one_grid(FILE* fp,
 
 
 /***** Print (call) the defined grids *****/
+static 
 void dump_verilog_defined_grids(FILE* fp) {
   int ix, iy;
 
@@ -642,6 +643,7 @@ void dump_verilog_defined_grids(FILE* fp) {
 /* Call defined channels. 
  * Ensure the port name here is co-herent to other sub-circuits(SB,CB,grid)!!!
  */
+static 
 void dump_verilog_defined_one_channel(FILE* fp,
                                       t_rr_type chan_type, int x, int y,
                                       int LL_num_rr_nodes, t_rr_node* LL_rr_node,
@@ -782,6 +784,7 @@ void dump_verilog_defined_one_channel(FILE* fp,
 }
 
 /* Call the sub-circuits for channels : Channel X and Channel Y*/
+static 
 void dump_verilog_defined_channels(FILE* fp,
                                    int LL_num_rr_nodes, t_rr_node* LL_rr_node,
                                    t_ivec*** LL_rr_node_indices) {
@@ -816,6 +819,7 @@ void dump_verilog_defined_channels(FILE* fp,
  * spice_routing.c : dump_verilog_conneciton_box_interc
  * Should be more clever to use the original function
  */
+static 
 void dump_verilog_defined_one_connection_box(FILE* fp,
                                              t_cb cur_cb_info) {
   int itrack, inode, side, x, y;
@@ -944,6 +948,7 @@ void dump_verilog_defined_one_connection_box(FILE* fp,
 }
 
 /* Call the sub-circuits for connection boxes */
+static 
 void dump_verilog_defined_connection_boxes(FILE* fp) {
   int ix, iy;
 
@@ -980,6 +985,7 @@ void dump_verilog_defined_connection_boxes(FILE* fp) {
  * TODO: This function is also copied from
  * spice_routing.c : dump_verilog_routing_switch_box_subckt
  */
+static 
 void dump_verilog_defined_one_switch_box(FILE* fp,
                                          t_sb cur_sb_info) {
   int ix, iy, side, itrack, x, y, inode;
@@ -1074,6 +1080,7 @@ void dump_verilog_defined_one_switch_box(FILE* fp,
   return;
 }
 
+static 
 void dump_verilog_defined_switch_boxes(FILE* fp) {
   int ix, iy;
 
@@ -1093,8 +1100,140 @@ void dump_verilog_defined_switch_boxes(FILE* fp) {
   return;
 }
 
+/* Apply a CLB to CLB direct connection to a SPICE netlist 
+ */
+static 
+void dump_verilog_one_clb2clb_direct(FILE* fp, 
+                                     int from_grid_x, int from_grid_y,
+                                     int to_grid_x, int to_grid_y,
+                                     t_clb_to_clb_directs* cur_direct) {
+  int ipin, cur_from_clb_pin_index, cur_to_clb_pin_index;
+  int cur_from_clb_pin_side, cur_to_clb_pin_side;
+
+  /* Check the file handler*/ 
+  if (NULL == fp) {
+    vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid file handler.\n", 
+               __FILE__, __LINE__); 
+    exit(1);
+  }
+
+  /* Check bandwidth match between from_clb and to_clb pins */
+  if (0 != (cur_direct->from_clb_pin_end_index - cur_direct->from_clb_pin_start_index 
+     - cur_direct->to_clb_pin_end_index - cur_direct->to_clb_pin_start_index)) {
+    vpr_printf(TIO_MESSAGE_ERROR, "(%s, [LINE%d]) Unmatch pin bandwidth in direct connection (name=%s)!\n",
+               __FILE__, __LINE__, cur_direct->name);
+    exit(1);
+  }
+
+  for (ipin = 0; ipin < cur_direct->from_clb_pin_end_index - cur_direct->from_clb_pin_start_index; ipin++) {
+    /* Update pin index and get the side of the pins on grids */
+    cur_from_clb_pin_index = cur_direct->from_clb_pin_start_index + ipin;
+    cur_to_clb_pin_index = cur_direct->to_clb_pin_start_index + ipin;
+    cur_from_clb_pin_side = get_grid_pin_side(from_grid_x, from_grid_y, cur_from_clb_pin_index); 
+    cur_to_clb_pin_side = get_grid_pin_side(to_grid_x, to_grid_y, cur_to_clb_pin_index); 
+    /* Call the subckt that has already been defined before */
+    fprintf(fp, "%s ", cur_direct->spice_model->name);
+    fprintf(fp, "%s_%d_ (", cur_direct->spice_model->prefix, cur_direct->spice_model->cnt); 
+    /* Dump global ports */
+    if  (0 < rec_dump_verilog_spice_model_global_ports(fp, cur_direct->spice_model, FALSE, FALSE)) {
+      fprintf(fp, ",\n");
+    }
+    /* Input: Print the source grid pin */
+    dump_verilog_toplevel_one_grid_side_pin_with_given_index(fp, OPIN,
+                                                             cur_from_clb_pin_index,
+                                                             cur_from_clb_pin_side,
+                                                             from_grid_x, from_grid_y,
+                                                             FALSE);
+    fprintf(fp, ", ");
+    /* Output: Print the destination grid pin */
+    dump_verilog_toplevel_one_grid_side_pin_with_given_index(fp, IPIN, 
+                                                             cur_to_clb_pin_index,
+                                                             cur_to_clb_pin_side,
+                                                             to_grid_x, from_grid_y,
+                                                             FALSE);
+    fprintf(fp, ");\n");
+  
+    /* Stats the number of spice_model used*/
+    cur_direct->spice_model->cnt++; 
+  }
+
+  return;
+}                 
+
+/* Apply CLB to CLB direct connections to a Verilog netlist 
+ */
+static 
+void dump_verilog_clb2clb_directs(FILE* fp, 
+                                  int num_directs, t_clb_to_clb_directs* direct) {
+  int ix, iy, idirect;   
+  int to_clb_x, to_clb_y;
+
+  /* Check the file handler*/ 
+  if (NULL == fp) {
+    vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid file handler.\n", 
+               __FILE__, __LINE__); 
+    exit(1);
+  }
+
+  fprintf(fp, "//----- BEGIN CLB to CLB Direct Connections -----\n");   
+
+  /* Scan the grid, visit each grid and apply direct connections */
+  for (ix = 0; ix < (nx + 1); ix++) {
+    for (iy = 0; iy < (ny + 1); iy++) {
+      /* Bypass EMPTY_TYPE*/
+      if ((NULL == grid[ix][iy].type)
+         || (EMPTY_TYPE == grid[ix][iy].type)) {
+        continue;
+      }
+      /* Check each clb2clb directs, 
+       * see if a match to the type
+       */ 
+      for (idirect = 0; idirect < num_directs; idirect++) {
+        /* Bypass unmatch types */
+        if (grid[ix][iy].type != direct[idirect].from_clb_type) {
+          continue;
+        }
+        /* Apply x/y_offset */ 
+        to_clb_x = ix + direct[idirect].x_offset;
+        to_clb_y = iy + direct[idirect].y_offset;
+        /* see if the destination CLB is in the bound */
+        if ((FALSE == is_grid_coordinate_in_range(0, nx, to_clb_x))
+           ||(FALSE == is_grid_coordinate_in_range(0, ny, to_clb_y))) {
+          continue;
+        }
+        /* Check if capacity (z_offset) is in the range 
+        if (FALSE == is_grid_coordinate_in_range(0, grid[ix][iy].type->capacity, grid[ix][iy].type->z + direct[idirect].z_offset)) {
+          continue;
+        }
+        */
+        /* Check if the to_clb_type matches */
+        if (grid[to_clb_x][to_clb_y].type != direct[idirect].to_clb_type) {
+          continue;
+        }
+        /* Bypass x/y_offset =  1 
+         * since it may be addressed in Connection blocks 
+        if (1 == (x_offset + y_offset)) {
+          continue;
+        }
+         */
+        /* Now we can print a direct connection with the spice models */
+        dump_verilog_one_clb2clb_direct(fp, 
+                                        ix, iy, 
+                                        to_clb_x, to_clb_y, 
+                                        &direct[idirect]);
+      }
+    }
+  }
+
+  fprintf(fp, "//----- END CLB to CLB Direct Connections -----\n");   
+
+  return;
+
+}
+
 /** Dump Standalone SRAMs 
  */
+static 
 void dump_verilog_configuration_circuits_standalone_srams(FILE* fp) {
   int i;
   /* Check */
@@ -1123,6 +1262,7 @@ void dump_verilog_configuration_circuits_standalone_srams(FILE* fp) {
 
 /** Dump scan-chains 
  */
+static 
 void dump_verilog_configuration_circuits_scan_chains(FILE* fp) {
   int i;
   /* Check */
@@ -1151,6 +1291,7 @@ void dump_verilog_configuration_circuits_scan_chains(FILE* fp) {
 }
 
 /* Dump a memory bank to configure all the Bit lines and Word lines */
+static 
 void dump_verilog_configuration_circuits_memory_bank(FILE* fp, 
                                                      t_sram_orgz_info* cur_sram_orgz_info) {
   int bl_decoder_size, wl_decoder_size;
@@ -1226,6 +1367,7 @@ void dump_verilog_configuration_circuits_memory_bank(FILE* fp,
  * 2. Memory banks
  * 3. Standalone SRAMs
  */
+static 
 void dump_verilog_configuration_circuits(FILE* fp) {
   switch(sram_verilog_orgz_info->type) {
   case SPICE_SRAM_STANDALONE:
@@ -1534,6 +1676,7 @@ void dump_verilog_top_testbench_call_top_module(FILE* fp,
  * (2) BL = 1 && WL = 1;
  * (3) BL = 1 && WL = 0 with a paired conf_bit;
  */
+static 
 int dump_verilog_top_testbench_find_num_config_clock_cycles(t_llist* head) {
   int cnt = 0;
   t_llist* temp = head; 
@@ -2600,6 +2743,9 @@ void dump_verilog_top_netlist(char* circuit_name,
   
   /* Quote Routing structures: Switch Boxes */
   dump_verilog_defined_switch_boxes(fp); 
+
+  /* Apply CLB to CLB direct connections */
+  dump_verilog_clb2clb_directs(fp, num_clb2clb_directs, clb2clb_direct);
 
   /* Dump configuration circuits */
   dump_verilog_configuration_circuits(fp);

@@ -1086,6 +1086,25 @@ enum e_cost_indices {
 	CHANX_COST_INDEX_START
 };
 
+/* Xifan Tang: Move this struct from rr_graph.c to here
+ * This is a general representation on clb_to_clb_directs
+ */
+typedef struct s_clb_to_clb_directs {
+	t_type_descriptor *from_clb_type;
+	int from_clb_pin_start_index;
+	int from_clb_pin_end_index;
+	t_type_descriptor *to_clb_type;
+	int to_clb_pin_start_index;
+	int to_clb_pin_end_index;
+    /* Xifan Tang: add useful addition info to this struct */
+	int x_offset;
+	int y_offset;
+	int z_offset;
+    t_spice_model* spice_model;
+    char* name;
+} t_clb_to_clb_directs;
+
+
 /* Gives the index of the SOURCE, SINK, OPIN, IPIN, etc. member of           *
  * rr_indexed_data.                                                          */
 

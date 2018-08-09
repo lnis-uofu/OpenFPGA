@@ -117,6 +117,10 @@ void init_spice_net_info(t_spice_net_info* spice_net_info);
 t_spice_model* find_iopad_spice_model(int num_spice_model,
                                       t_spice_model* spice_models);
 
+boolean is_grid_coordinate_in_range(int x_min,
+                                    int x_max, 
+                                    int grid_x);
+
 char* generate_string_spice_model_type(enum e_spice_model_type spice_model_type);
 
 int determine_io_grid_side(int x,
@@ -587,6 +591,8 @@ t_pb* get_hardlogic_child_pb(t_pb* cur_hardlogic_pb,
                              int mode_index);
 
 int get_grid_pin_height(int grid_x, int grid_y, int pin_index);
+
+int get_grid_pin_side(int grid_x, int grid_y, int pin_index);
 
 void determine_sb_port_coordinator(t_sb cur_sb_info, int side, 
                                    int* port_x, int* port_y);

@@ -25,6 +25,10 @@ int is_rr_node_exist_opposite_side_in_sb_info(t_sb cur_sb_info,
                                               t_rr_node* src_rr_node, 
                                               int chan_side);
 
+boolean check_drive_rr_node_imply_short(t_sb cur_sb_info,
+                                        t_rr_node* src_rr_node, 
+                                        int chan_side);
+
 void get_rr_node_side_and_index_in_sb_info(t_rr_node* cur_rr_node,
                                           t_sb cur_sb_info,
                                           enum PORTS rr_node_direction,

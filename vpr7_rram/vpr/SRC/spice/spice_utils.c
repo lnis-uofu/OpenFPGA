@@ -1342,6 +1342,161 @@ void fprint_call_defined_switch_boxes(FILE* fp) {
   return;
 }
 
+void fprint_spice_toplevel_one_grid_side_pin_with_given_index(FILE* fp, 
+                                                              int pin_index, int side,
+                                                              int x, int y) {
+  t_type_ptr type;
+  int height;
+
+  /* Check the file handler*/ 
+  if (NULL == fp) {
+    vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid file handler.\n", 
+               __FILE__, __LINE__); 
+    exit(1);
+  }
+
+  /* Check */
+  assert((!(0 > x))&&(!(x > (nx + 1)))); 
+  assert((!(0 > y))&&(!(y > (ny + 1)))); 
+  
+  type = grid[x][y].type;
+  assert(NULL != type);
+
+  assert((!(0 > pin_index))&&(pin_index < type->num_pins));
+  assert((!(0 > side))&&(!(side > 3)));
+
+  /* Output the pins on the side*/ 
+  height = get_grid_pin_height(x, y, pin_index);
+  fprintf(fp, " grid[%d][%d]_pin[%d][%d][%d] ", 
+              x, y, height, side, pin_index);
+ 
+  return;
+}
+
+/* Apply a CLB to CLB direct connection to a SPICE netlist */
+void fprint_spice_one_clb2clb_direct(FILE* fp, 
+                                     int from_grid_x, int from_grid_y,
+                                     int to_grid_x, int to_grid_y,
+                                     t_clb_to_clb_directs* cur_direct) {
+  int ipin, cur_from_clb_pin_index, cur_to_clb_pin_index;
+  int cur_from_clb_pin_side, cur_to_clb_pin_side;
+
+  /* Check the file handler*/ 
+  if (NULL == fp) {
+    vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid file handler.\n", 
+               __FILE__, __LINE__); 
+    exit(1);
+  }
+
+  /* Check bandwidth match between from_clb and to_clb pins */
+  if (0 != (cur_direct->from_clb_pin_end_index - cur_direct->from_clb_pin_start_index 
+     - cur_direct->to_clb_pin_end_index - cur_direct->to_clb_pin_start_index)) {
+    vpr_printf(TIO_MESSAGE_ERROR, "(%s, [LINE%d]) Unmatch pin bandwidth in direct connection (name=%s)!\n",
+               __FILE__, __LINE__, cur_direct->name);
+    exit(1);
+  }
+
+  for (ipin = 0; ipin < cur_direct->from_clb_pin_end_index - cur_direct->from_clb_pin_start_index; ipin++) {
+    /* Update pin index and get the side of the pins on grids */
+    cur_from_clb_pin_index = cur_direct->from_clb_pin_start_index + ipin;
+    cur_to_clb_pin_index = cur_direct->to_clb_pin_start_index + ipin;
+    cur_from_clb_pin_side = get_grid_pin_side(from_grid_x, from_grid_y, cur_from_clb_pin_index); 
+    cur_to_clb_pin_side = get_grid_pin_side(to_grid_x, to_grid_y, cur_to_clb_pin_index); 
+    /* Call the subckt that has already been defined before */
+    fprintf(fp, "X%s[%d] ", cur_direct->spice_model->prefix, cur_direct->spice_model->cnt); 
+    /* Input: Print the source grid pin */
+    fprint_spice_toplevel_one_grid_side_pin_with_given_index(fp, 
+                                                             cur_from_clb_pin_index,
+                                                             cur_from_clb_pin_side,
+                                                             from_grid_x, from_grid_y);
+    /* Output: Print the destination grid pin */
+    fprint_spice_toplevel_one_grid_side_pin_with_given_index(fp,
+                                                             cur_to_clb_pin_index,
+                                                             cur_to_clb_pin_side,
+                                                             to_grid_x, from_grid_y);
+    /* Print Global VDD and GND */
+    fprintf(fp, "%s %s ",
+            spice_tb_global_vdd_direct_port_name,
+            spice_tb_global_gnd_port_name);
+    /* End with spice_model name */
+    fprintf(fp, "%s\n", cur_direct->spice_model->name);
+  
+    /* Stats the number of spice_model used*/
+    cur_direct->spice_model->cnt++; 
+  }
+
+  return;
+}                 
+
+/* Apply CLB to CLB direct connections to a SPICE netlist */
+void fprint_spice_clb2clb_directs(FILE* fp, 
+                                  int num_directs, 
+                                  t_clb_to_clb_directs* direct) {
+  int ix, iy, idirect;   
+  int to_clb_x, to_clb_y;
+
+  /* Check the file handler*/ 
+  if (NULL == fp) {
+    vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid file handler.\n", 
+               __FILE__, __LINE__); 
+    exit(1);
+  }
+
+  fprintf(fp, "***** BEGIN CLB to CLB Direct Connections *****\n");   
+
+  /* Scan the grid, visit each grid and apply direct connections */
+  for (ix = 0; ix < (nx + 1); ix++) {
+    for (iy = 0; iy < (ny + 1); iy++) {
+      /* Bypass EMPTY_TYPE*/
+      if ((NULL == grid[ix][iy].type)
+         || (EMPTY_TYPE == grid[ix][iy].type)) {
+        continue;
+      }
+      /* Check each clb2clb directs, 
+       * see if a match to the type
+       */ 
+      for (idirect = 0; idirect < num_directs; idirect++) {
+        /* Bypass unmatch types */
+        if (grid[ix][iy].type != direct[idirect].from_clb_type) {
+          continue;
+        }
+        /* Apply x/y_offset */ 
+        to_clb_x = ix + direct[idirect].x_offset;
+        to_clb_y = iy + direct[idirect].y_offset;
+        /* see if the destination CLB is in the bound */
+        if ((FALSE == is_grid_coordinate_in_range(0, nx, to_clb_x))
+           ||(FALSE == is_grid_coordinate_in_range(0, ny, to_clb_y))) {
+          continue;
+        }
+        /* Check if capacity (z_offset) is in the range 
+        if (FALSE == is_grid_coordinate_in_range(0, grid[ix][iy].type->capacity, grid[ix][iy].type->z + direct[idirect].z_offset)) {
+          continue;
+        }
+        */
+        /* Check if the to_clb_type matches */
+        if (grid[to_clb_x][to_clb_y].type != direct[idirect].to_clb_type) {
+          continue;
+        }
+        /* Bypass x/y_offset =  1 
+         * since it may be addressed in Connection blocks 
+        if (1 == (x_offset + y_offset)) {
+          continue;
+        }
+         */
+        /* Now we can print a direct connection with the spice models */
+        fprint_spice_one_clb2clb_direct(fp, 
+                                        ix, iy, 
+                                        to_clb_x, to_clb_y, 
+                                        &direct[idirect]);
+      }
+    }
+  }
+
+  fprintf(fp, "***** END CLB to CLB Direct Connections *****\n");   
+
+  return;
+}
+
 /* Print stimulations for floating ports in Grid
  * Some ports of CLB or I/O Pads is floating.
  * There are two cases : 
@@ -3296,4 +3451,5 @@ t_llist* add_one_spice_tb_info_to_llist(t_llist* cur_head,
 
   return new_head;
 }
+
 

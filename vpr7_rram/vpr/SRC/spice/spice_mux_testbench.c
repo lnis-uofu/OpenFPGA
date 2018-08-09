@@ -1458,7 +1458,10 @@ int fprint_spice_mux_testbench_sb_one_mux(FILE* fp,
   */
 
   /* Determine if the interc lies inside a channel wire, that is interc between segments */
-  if (1 == is_rr_node_exist_opposite_side_in_sb_info(cur_sb_info, src_rr_node, chan_side)) {
+  /* Check each num_drive_rr_nodes, see if they appear in the cur_sb_info */
+  if (TRUE == check_drive_rr_node_imply_short(cur_sb_info, src_rr_node, chan_side)) {
+    /* Double check if the interc lies inside a channel wire, that is interc between segments */
+    assert(1 == is_rr_node_exist_opposite_side_in_sb_info(cur_sb_info, src_rr_node, chan_side));
     num_drive_rr_nodes = 0;
     drive_rr_nodes = NULL;
   } else {

@@ -596,7 +596,9 @@ void power_find_nmos_leakage(t_power_nmos_leakage_inf * nmos_leakage_info,
 			nmos_leakage_info->leakage_pairs,
 			nmos_leakage_info->num_leakage_pairs,
 			sizeof(t_power_nmos_leakage_pair), power_compare_leakage_pair);
+    if (!found) {
 	assert(found);
+    }
 
 	if (found
 			== &nmos_leakage_info->leakage_pairs[nmos_leakage_info->num_leakage_pairs

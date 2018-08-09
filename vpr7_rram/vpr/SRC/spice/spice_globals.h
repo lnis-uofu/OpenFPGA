@@ -89,6 +89,7 @@ extern char* spice_tb_global_config_done_port_name;
 extern char* spice_tb_global_set_port_name;
 extern char* spice_tb_global_reset_port_name;
 extern char* spice_tb_global_vdd_localrouting_port_name;
+extern char* spice_tb_global_vdd_direct_port_name;
 extern char* spice_tb_global_vdd_io_port_name;
 extern char* spice_tb_global_vdd_hardlogic_port_name;
 extern char* spice_tb_global_vdd_sram_port_name;

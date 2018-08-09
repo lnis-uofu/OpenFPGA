@@ -276,7 +276,7 @@ void dump_verilog_grid_side_pin_with_given_index(FILE* fp, t_rr_type pin_type,
     if (TRUE == dump_port_type) {
       fprintf(fp, "%s ", verilog_port_type);
     }
-    fprintf(fp, " grid_%d__%d__pin_%d__%d__%d_", x, y + height, height, side, pin_index);
+    fprintf(fp, " grid_%d__%d__pin_%d__%d__%d_", x, y, height, side, pin_index);
     if (TRUE == dump_port_type) {
       fprintf(fp, ",\n");
     }
@@ -331,9 +331,9 @@ void dump_verilog_grid_side_pins(FILE* fp,
   }
 
   /* Output the pins on the side*/ 
-  height = get_grid_pin_height(x, y, ipin);
   for (ipin = 0; ipin < type->num_pins; ipin++) {
     class_id = type->pin_class[ipin];
+    height = get_grid_pin_height(x, y, ipin);
     if ((1 == type->pinloc[height][side][ipin])&&(pin_class_type == type->class_inf[class_id].type)) {
       if (TRUE == dump_port_type) {
         fprintf(fp, "%s ", verilog_port_type);
@@ -592,7 +592,15 @@ void dump_verilog_switch_box_short_interc(FILE* fp,
   case CHANX:
   case CHANY:
     /* Should an input */
-    get_rr_node_side_and_index_in_sb_info(drive_rr_node, (*cur_sb_info), IN_PORT, &side, &index);
+    if (cur_rr_node == drive_rr_node) {
+      /* To be strict, the input should locate on the opposite side. 
+       * Use the else part if this may change in some architecture.
+       */
+      side = get_opposite_side(chan_side); 
+      index = get_rr_node_index_in_sb_info(drive_rr_node, (*cur_sb_info), side, IN_PORT);
+    } else {
+      get_rr_node_side_and_index_in_sb_info(drive_rr_node, (*cur_sb_info), IN_PORT, &side, &index);
+    }
     /* We need to be sure that drive_rr_node is part of the SB */
     assert((-1 != index)&&(-1 != side));
     dump_verilog_switch_box_chan_port(fp, cur_sb_info, side, drive_rr_node, IN_PORT);
@@ -926,13 +934,12 @@ void dump_verilog_switch_box_interc(FILE* fp,
   /* Check */
   assert((!(0 > sb_x))&&(!(sb_x > (nx + 1)))); 
   assert((!(0 > sb_y))&&(!(sb_y > (ny + 1)))); 
-  /*
-  find_drive_rr_nodes_switch_box(switch_box_x, switch_box_y, cur_rr_node, chan_side, 0, 
-                                 &num_drive_rr_nodes, &drive_rr_nodes, &switch_index);
-  */
 
   /* Determine if the interc lies inside a channel wire, that is interc between segments */
-  if (1 == is_rr_node_exist_opposite_side_in_sb_info(*cur_sb_info, cur_rr_node, chan_side)) {
+  /* Check each num_drive_rr_nodes, see if they appear in the cur_sb_info */
+  if (TRUE == check_drive_rr_node_imply_short(*cur_sb_info, cur_rr_node, chan_side)) {
+    /* Double check if the interc lies inside a channel wire, that is interc between segments */
+    assert(1 == is_rr_node_exist_opposite_side_in_sb_info(*cur_sb_info, cur_rr_node, chan_side));
     num_drive_rr_nodes = 0;
     drive_rr_nodes = NULL;
   } else {
