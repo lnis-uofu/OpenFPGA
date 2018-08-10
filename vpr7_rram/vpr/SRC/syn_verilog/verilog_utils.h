@@ -10,6 +10,16 @@ void dump_include_user_defined_verilog_netlists(FILE* fp,
 void dump_verilog_file_header(FILE* fp,
                               char* usage);
 
+FILE* verilog_create_one_subckt_file(char* subckt_dir,
+                                     char* subckt_name_prefix,
+                                     char* verilog_subckt_file_name_prefix,
+                                     int grid_x, int grid_y,
+                                     char** verilog_fname); 
+
+void dump_verilog_subckt_header_file(t_llist* subckt_llist_head,
+                                     char* subckt_dir,
+                                     char* header_file_name);
+
 char determine_verilog_generic_port_split_sign(enum e_dump_verilog_port_type dump_port_type);
 
 void dump_verilog_generic_port(FILE* fp, 

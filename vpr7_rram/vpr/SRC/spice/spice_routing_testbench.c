@@ -562,9 +562,11 @@ int fprint_spice_one_cb_testbench(char* formatted_spice_dir,
   switch (cb_type) {
   case CHANX:
     cb_tb_name = "Connection Box X-channel ";
+    temp_include_file_path = fpga_spice_create_one_subckt_filename(cbx_spice_file_name_prefix, grid_x, grid_y, spice_netlist_file_postfix);
     break;
   case CHANY:
     cb_tb_name = "Connection Box Y-channel ";
+    temp_include_file_path = fpga_spice_create_one_subckt_filename(cby_spice_file_name_prefix, grid_x, grid_y, spice_netlist_file_postfix);
     break;
   default:
     vpr_printf(TIO_MESSAGE_ERROR, "(File:%s, [LINE%d]) Invalid connection_box_type!\n", __FILE__, __LINE__);
@@ -611,15 +613,21 @@ int fprint_spice_one_cb_testbench(char* formatted_spice_dir,
   /* Quote defined Logic blocks subckts (Grids) */
   init_spice_routing_testbench_globals(*(arch.spice));
 
-  fprintf(fp, "****** Include subckt netlists: Routing structures (Switch Boxes, Channels, Connection Boxes) *****\n");
-  temp_include_file_path = my_strcat(formatted_subckt_dir_path, routing_spice_file_name);
-  fprintf(fp, ".include \'%s\'\n", temp_include_file_path);
-  my_free(temp_include_file_path);
-
   /* one cbx, one cby*/
   switch (cb_type) {
   case CHANX:
   case CHANY:
+    /* Generate filename */
+    fprintf(fp, "****** Include subckt netlists: %s [%d][%d] *****\n",
+            cb_tb_name, grid_x, grid_y);
+    /* Check if we include an existing file! */
+    if (FALSE == check_subckt_file_exist_in_llist(routing_spice_subckt_file_path_head, 
+                                                  my_strcat(formatted_subckt_dir_path, temp_include_file_path))) {
+      vpr_printf(TIO_MESSAGE_ERROR,"(FILE:%s,LINE[%d])Intend to include a non-existed SPICE netlist %s!",
+                 __FILE__, __LINE__, temp_include_file_path); 
+      exit(1);
+    }
+    spice_print_one_include_subckt_line(fp, formatted_subckt_dir_path, temp_include_file_path);
     used = fprint_spice_routing_testbench_call_one_cb_tb(fp, *(arch.spice), cb_type, grid_x, grid_y, LL_rr_node_indices);
     break;
   default:
@@ -641,6 +649,9 @@ int fprint_spice_one_cb_testbench(char* formatted_spice_dir,
   tb_head = add_one_spice_tb_info_to_llist(tb_head, cb_testbench_file_path, 
                                            max_sim_num_clock_cycles);
   used = 1;
+
+  /* Free */
+  my_free(temp_include_file_path);
 
   return used;
 }
@@ -704,11 +715,21 @@ int fprint_spice_one_sb_testbench(char* formatted_spice_dir,
   /* Quote defined Logic blocks subckts (Grids) */
   init_spice_routing_testbench_globals(*(arch.spice));
 
-  fprintf(fp, "****** Include subckt netlists: Routing structures (Switch Boxes, Channels, Connection Boxes) *****\n");
-  temp_include_file_path = my_strcat(formatted_subckt_dir_path, routing_spice_file_name);
-  fprintf(fp, ".include \'%s\'\n", temp_include_file_path);
-  my_free(temp_include_file_path);
+  /* Generate filename */
+  fprintf(fp, "****** Include subckt netlists: Switch Block[%d][%d] *****\n",
+          grid_x, grid_y);
+  temp_include_file_path = fpga_spice_create_one_subckt_filename(sb_spice_file_name_prefix, grid_x, grid_y, spice_netlist_file_postfix);
+  /* Check if we include an existing file! */
+  if (FALSE == check_subckt_file_exist_in_llist(routing_spice_subckt_file_path_head, 
+                                                my_strcat(formatted_subckt_dir_path, temp_include_file_path))) {
+    vpr_printf(TIO_MESSAGE_ERROR,"(FILE:%s,LINE[%d])Intend to include a non-existed SPICE netlist %s!",
+               __FILE__, __LINE__, temp_include_file_path); 
+    exit(1);
+  }
+  spice_print_one_include_subckt_line(fp, formatted_subckt_dir_path, temp_include_file_path);
+
   used = fprint_spice_routing_testbench_call_one_sb_tb(fp, *(arch.spice), grid_x, grid_y, LL_rr_node_indices);
+
 
   /* Generate SPICE routing testbench generic stimuli*/
   fprintf_spice_routing_testbench_generic_stimuli(fp, num_clocks);

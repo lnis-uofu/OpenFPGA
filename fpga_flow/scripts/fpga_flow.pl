@@ -1025,6 +1025,16 @@ sub run_odin2($ $ $) {
   chdir $cwd;
 }
 
+sub run_pro_blif($ $) {
+  my ($abc_blif_out_bak, $abc_blif_out) = @_;
+  `perl pro_blif.pl -i $abc_blif_out_bak -o $abc_blif_out`;
+
+  if (!(-e $abc_blif_out)) {
+    die "ERROR: Fail pro_blif.pl for benchmark $abc_blif_out.\n";
+  }
+  return;
+}
+
 # Run Acitivity Estimation
 sub run_ace($ $ $ $) {
   my ($mpack_vpr_blif,$act_file,$ace_new_blif,$log) = @_;
@@ -1394,8 +1404,8 @@ sub run_ace_in_flow($ $ $ $ $ $ $) {
       &run_ace($tmp_blif,$act_file,$ace_new_blif ,$ace_log);
     } else {
       &run_ace($abc_blif_out,$act_file,$ace_new_blif,$ace_log);
-      $abc_blif_out = $ace_new_blif;
     }
+    &run_pro_blif($ace_new_blif, $abc_blif_out);
   }
 
   if (("on" eq $opt_ptr->{power})&&(!(-e $act_file))) {
@@ -1548,35 +1558,11 @@ sub run_standard_flow($ $ $ $ $)
   $abc_blif_out = "$prefix"."abc.blif";
   $abc_blif_out_bak = "$prefix"."abc_bak.blif";
   $abc_log = "$prefix"."abc.log";
- 
-  if ("abc_black_box" eq $flow_enhance) {
-    my ($pre_abc_blif) = ("$prefix"."pre_abc.blif");
-    `perl pro_blif.pl -i $abc_bm -o $pre_abc_blif`;
-    &run_abc_bb_fpgamap($pre_abc_blif,$abc_blif_out_bak,$abc_log);
-  } elsif ("classic" eq $flow_enhance) {
-    &run_abc_fpgamap($abc_bm,$abc_blif_out_bak,$abc_log);
-  }
 
-  `perl pro_blif.pl -i $abc_blif_out_bak -o $abc_blif_out`;
-
-  if (!(-e $abc_blif_out)) {
-    die "ERROR: Fail pro_blif.pl for benchmark $abc_blif_out.\n";
-  }
 
   my ($act_file,$ace_new_blif,$ace_log) = ("$prefix"."ace.act","$prefix"."ace.blif","$prefix"."ace.log");
-  if ("on" eq $opt_ptr->{power}) {
-    if ("on" eq $opt_ptr->{black_box_ace}) {
-      &black_box_blif($abc_blif_out,$ace_new_blif); 
-      &run_ace($ace_new_blif,$act_file,$prefix."ace_new.blif",$ace_log);
-    } else {
-      &run_ace($abc_blif_out,$act_file,$ace_new_blif,$ace_log);
-      $abc_blif_out = $ace_new_blif;
-    }
 
-    if (!(-e $act_file)) {
-      die "ERROR: Fail ACE2 for benchmark $act_file.\n";
-    }
-  }
+  my ($vpr_net,$vpr_place,$vpr_route,$vpr_reroute_log,$vpr_log);
 
   $vpr_net = "$prefix"."vpr.net";
   $vpr_place = "$prefix"."vpr.place";
@@ -1584,81 +1570,20 @@ sub run_standard_flow($ $ $ $ $)
   $vpr_log = "$prefix"."vpr.log";
   $vpr_reroute_log = "$prefix"."vpr_reroute.log";
 
-  if ("on" eq $opt_ptr->{min_route_chan_width}) {
-    &run_std_vpr($abc_blif_out,$benchmark,$vpr_arch,$vpr_net,$vpr_place,$vpr_route,-1,$vpr_log.".min_chan_width",$act_file);
-    # Get the Minimum channel width
-    my ($min_chan_width) = (&extract_min_chan_width_vpr_stats($tag,$benchmark,$vpr_log.".min_chan_width",$opt_ptr->{K_val}, $opt_ptr->{min_route_chan_width}, $parse_results));
-    $min_chan_width = int($min_chan_width*$opt_ptr->{min_route_chan_width_val});
-    if (0 != $min_chan_width%2) {
-      $min_chan_width += 1;
-    }
-    # Remove previous route results
-    if (-e $vpr_route) {
-      `rm $vpr_route`;
-    }
-    # Keep increase min_chan_width until route success 
-    # Extract data from VPR stats
-    #&run_std_vpr($abc_blif_out,$benchmark,$vpr_arch,$vpr_net,$vpr_place,$vpr_route,$min_chan_width,$vpr_log,$act_file);
-    while (1) {
-      &run_vpr_route($abc_blif_out,$benchmark,$vpr_arch,$vpr_net,$vpr_place,$vpr_route,$min_chan_width,$vpr_reroute_log,$act_file);
-      # TODO: Only run the routing stage
-      if (-e $vpr_route) {
-        print "INFO: try route_chan_width($min_chan_width) success!\n";
-        last; #Jump out
-      } else {
-        print "INFO: try route_chan_width($min_chan_width) failed! Retry with +2...\n";
-        $min_chan_width += 2;
-      }
-    }
-    if (1 == $parse_results) {
-      &extract_min_chan_width_vpr_stats($tag,$benchmark,$vpr_reroute_log,$opt_ptr->{K_val}, "off", $parse_results);
-      &extract_vpr_stats($tag,$benchmark,$vpr_log.".min_chan_width",$opt_ptr->{K_val});
-      &extract_vpr_stats($tag,$benchmark,$vpr_reroute_log,$opt_ptr->{K_val});
-    }
-  } elsif ("on" eq $opt_ptr->{fix_route_chan_width}) {
-    my ($fix_chan_width) = ($benchmarks_ptr->{$benchmark_file}->{fix_route_chan_width});
-    # Remove previous route results
-    if (-e $vpr_route) {
-      `rm $vpr_route`;
-    }
-    # Keep increase min_chan_width until route success 
-    &run_std_vpr($abc_blif_out,$benchmark,$vpr_arch,$vpr_net,$vpr_place,$vpr_route,$fix_chan_width,$vpr_log,$act_file);
-    while (1) {
-      # TODO: Only run the routing stage
-      if (-e $vpr_route) {
-        print "INFO: try route_chan_width($fix_chan_width) success!\n";
-        last; #Jump out
-      } else {
-        print "INFO: try route_chan_width($fix_chan_width) failed! Retry with +2...\n";
-        $fix_chan_width += 2;
-        &run_vpr_route($abc_blif_out,$benchmark,$vpr_arch,$vpr_net,$vpr_place,$vpr_route,$fix_chan_width,$vpr_reroute_log,$act_file);
-      }
-    }
-    # Extract data from VPR stats
-    if (1 == $parse_results) {
-      &extract_min_chan_width_vpr_stats($tag,$benchmark,$vpr_log,$opt_ptr->{K_val}, "off", $parse_results);
-      &extract_vpr_stats($tag,$benchmark,$vpr_log,$opt_ptr->{K_val});
-      if (-e $vpr_reroute_log) {
-        &extract_vpr_stats($tag,$benchmark,$vpr_reroute_log,$opt_ptr->{K_val});
-      }
-    }
-  } else {
-    &run_std_vpr($abc_blif_out,$benchmark,$vpr_arch,$vpr_net,$vpr_place,$vpr_route,-1,$vpr_log,$act_file);
-    if (!(-e $vpr_route)) {
-      die "ERROR: Route Fail for $abc_blif_out!\n";
-    }
-    # Get the Minimum channel width
-    my ($min_chan_width) = (&extract_min_chan_width_vpr_stats($tag,$benchmark,$vpr_log,$opt_ptr->{K_val},"on",$parse_results));
-    if (1 == $parse_results) {
-      &extract_vpr_stats($tag,$benchmark,$vpr_log,$opt_ptr->{K_val});
-    }
+ 
+  if ("abc_black_box" eq $flow_enhance) {
+    my ($pre_abc_blif) = ("$prefix"."pre_abc.blif");
+    &run_pro_blif($abc_bm, $pre_abc_blif);
+    &run_abc_bb_fpgamap($pre_abc_blif,$abc_blif_out_bak,$abc_log);
+  } elsif ("classic" eq $flow_enhance) {
+    &run_abc_fpgamap($abc_bm,$abc_blif_out_bak,$abc_log);
   }
 
-  # Extract data from VPR Power stats
-  if (("on" eq $opt_ptr->{power})
-     &&(1 == $parse_results)) {
-    &extract_vpr_power_esti($tag,$abc_blif_out,$benchmark,$opt_ptr->{K_val});
-  }
+  &run_pro_blif($abc_blif_out_bak, $abc_blif_out);
+
+  &run_ace_in_flow($prefix, $abc_blif_out, $act_file, $ace_new_blif, $ace_log);
+
+  &run_vpr_in_flow($tag, $benchmark, $benchmark_file, $abc_blif_out, $vpr_arch, $act_file, $vpr_net, $vpr_place, $vpr_route, $vpr_log, $vpr_reroute_log, $parse_results);
 
   return;
 }
@@ -1687,12 +1612,6 @@ sub parse_standard_flow_results($ $ $ $)
   }
 
   my ($act_file,$ace_new_blif,$ace_log) = ("$prefix"."ace.act","$prefix"."ace.blif","$prefix"."ace.log");
-  if ("on" eq $opt_ptr->{power}) {
-    if ("on" eq $opt_ptr->{black_box_ace}) {
-    } else {
-      $abc_blif_out = $ace_new_blif;
-    }
-  }
 
   $vpr_net = "$prefix"."vpr.net";
   $vpr_place = "$prefix"."vpr.place";
@@ -2120,16 +2039,11 @@ sub run_vtr_flow($ $ $ $) {
   # RUN ABC 
   &run_abc_bb_fpgamap($abc_bm,$abc_blif_out_bak,$abc_log);
 
-  `perl pro_blif.pl -i $abc_blif_out_bak -o $abc_blif_out`;
-  if (!(-e $abc_blif_out_bak)) {
-    die "ERROR: Fail pro_blif for benchmark $benchmark.\n";
-  }
+  &run_pro_blif($abc_blif_out_bak, $abc_blif_out);
 
+  # Run ABC 
   my ($act_file,$ace_new_blif,$ace_log) = ("$prefix"."ace.act","$prefix"."ace.blif","$prefix"."ace.log");
-  if ("on" eq $opt_ptr->{power}) {
-    &run_ace($abc_blif_out,$act_file,$ace_new_blif,$ace_log);
-    $abc_blif_out = $ace_new_blif;
-  }
+  &run_ace_in_flow($prefix, $abc_blif_out,$act_file,$ace_new_blif,$ace_log);
 
   $vpr_net = "$prefix"."vpr.net";
   $vpr_place = "$prefix"."vpr.place";
@@ -2137,76 +2051,9 @@ sub run_vtr_flow($ $ $ $) {
   $vpr_log = "$prefix"."vpr.log";
   $vpr_reroute_log = "$prefix"."vpr_reroute.log";
 
-  if ("on" eq $opt_ptr->{min_route_chan_width}) {
-    &run_std_vpr($abc_blif_out,$benchmark,$vpr_arch,$vpr_net,$vpr_place,$vpr_route,-1,$vpr_log.".min_chan_width",$act_file);
-    # Get the Minimum channel width
-    my ($min_chan_width) = (&extract_min_chan_width_vpr_stats($tag,$benchmark,$vpr_log.".min_chan_width",$opt_ptr->{K_val}, $opt_ptr->{min_route_chan_width}, $parse_results));
-    $min_chan_width = int($min_chan_width*$opt_ptr->{min_route_chan_width_val});
-    if (0 != $min_chan_width%2) {
-      $min_chan_width += 1;
-    }
-    # Remove previous route results
-    `rm $vpr_route`;
-    # Keep increase min_chan_width until route success 
-    # Extract data from VPR stats
-    while (1) {
-      &run_vpr_route($abc_blif_out,$benchmark,$vpr_arch,$vpr_net,$vpr_place,$vpr_route,$min_chan_width,$vpr_reroute_log,$act_file);
-      if (-e $vpr_route) {
-        print "INFO: try route_chan_width($min_chan_width) Success!\n";
-        last; #Jump out
-      } else {
-        print "INFO: try route_chan_width($min_chan_width) failed! Retry with +2...\n";
-        $min_chan_width += 2;
-      }
-    }
-    # Extract data from VPR stats
-    if (1 == $parse_results) {
-      &extract_min_chan_width_vpr_stats($tag,$benchmark,$vpr_reroute_log,$opt_ptr->{K_val}, "off", $parse_results);
-      &extract_vpr_stats($tag,$benchmark,$vpr_log."min_chan_width",$opt_ptr->{K_val});
-      &extract_vpr_stats($tag,$benchmark,$vpr_reroute_log,$opt_ptr->{K_val});
-    }
-  } elsif ("on" eq $opt_ptr->{fix_route_chan_width}) {
-    my ($fix_chan_width) = ($benchmarks_ptr->{$benchmark_file}->{fix_route_chan_width});
-    # Remove previous route results
-    `rm $vpr_route`;
-    # Keep increase min_chan_width until route success 
-    &run_std_vpr($abc_blif_out,$benchmark,$vpr_arch,$vpr_net,$vpr_place,$vpr_route,$fix_chan_width,$vpr_log,$act_file);
-    # Extract data from VPR stats
-    while (1) {
-      if (-e $vpr_route) {
-        print "INFO: try route_chan_width($fix_chan_width) Success!\n";
-        last; #Jump out
-      } else {
-        print "INFO: try route_chan_width($fix_chan_width) failed! Retry with +2...\n";
-        $fix_chan_width += 2;
-        &run_vpr_route($abc_blif_out,$benchmark,$vpr_arch,$vpr_net,$vpr_place,$vpr_route,$fix_chan_width,$vpr_reroute_log,$act_file);
-      }
-    }
-    if (1 == $parse_results) {
-      &extract_min_chan_width_vpr_stats($tag,$benchmark,$vpr_log,$opt_ptr->{K_val}, "off", $parse_results);
-      &extract_vpr_stats($tag,$benchmark,$vpr_log,$opt_ptr->{K_val});
-      if (-e $vpr_reroute_log) {
-        &extract_min_chan_width_vpr_stats($tag,$benchmark,$vpr_reroute_log,$opt_ptr->{K_val}, "off", $parse_results);
-        &extract_vpr_stats($tag,$benchmark,$vpr_reroute_log,$opt_ptr->{K_val});
-      }
-    }
-  } else {
-    &run_std_vpr($abc_blif_out,$benchmark,$vpr_arch,$vpr_net,$vpr_place,$vpr_route,-1,$vpr_log,$act_file);
-    if (!(-e $vpr_route)) {
-      die "ERROR: Route Fail for $abc_blif_out!\n";
-    }
-    # Get the Minimum channel width
-    my ($min_chan_width) = (&extract_min_chan_width_vpr_stats($tag,$benchmark,$vpr_log,$opt_ptr->{K_val},$parse_results));
-    if (1 == $parse_results) {
-      &extract_vpr_stats($tag,$benchmark,$vpr_log,$opt_ptr->{K_val});
-    }
-  }
+  # Run VPR
+  &run_vpr_in_flow($tag, $benchmark, $benchmark_file, $abc_blif_out, $vpr_arch, $act_file, $vpr_net, $vpr_place, $vpr_route, $vpr_log, $vpr_reroute_log, $parse_results);
 
-  # Extract data from VPR Power stats
-  if (("on" eq $opt_ptr->{power})
-     &&(1 == $parse_results)) {
-    &extract_vpr_power_esti($tag,$abc_blif_out,$benchmark,$opt_ptr->{K_val});
-  }
   return;
 }
 
@@ -2237,12 +2084,6 @@ sub parse_vtr_flow_results($ $ $) {
   rename $abc_blif_out,"$abc_blif_out".".bak";
 
   my ($act_file,$ace_new_blif,$ace_log) = ("$prefix"."ace.act","$prefix"."ace.blif","$prefix"."ace.log");
-  if ("on" eq $opt_ptr->{power}) {
-    if ("on" eq $opt_ptr->{black_box_ace}) {
-    } else {
-      $abc_blif_out = $ace_new_blif;
-    }
-  }
 
   $vpr_net = "$prefix"."vpr.net";
   $vpr_place = "$prefix"."vpr.place";
@@ -2344,16 +2185,11 @@ sub run_vtr_mccl_flow($ $ $ $) {
   # RUN ABC 
   &run_abc_mccl_fpgamap($abc_bm,$abc_blif_out_bak,$abc_log);
 
-  `perl pro_blif.pl -i $abc_blif_out_bak -o $abc_blif_out`;
-  if (!(-e $abc_blif_out_bak)) {
-    die "ERROR: Fail pro_blif for benchmark $benchmark.\n";
-  }
+  &run_pro_blif($abc_blif_out_bak, $abc_blif_out);
 
+  # Run ACE
   my ($act_file,$ace_new_blif,$ace_log) = ("$prefix"."ace.act","$prefix"."ace.blif","$prefix"."ace.log");
-  if ("on" eq $opt_ptr->{power}) {
-    &run_ace($abc_blif_out,$act_file,$ace_new_blif,$ace_log);
-    $abc_blif_out = $ace_new_blif;
-  }
+  &run_ace_in_flow($prefix,i $abc_blif_out,$act_file,$ace_new_blif,$ace_log);
 
   $vpr_net = "$prefix"."vpr.net";
   $vpr_place = "$prefix"."vpr.place";
@@ -2361,76 +2197,9 @@ sub run_vtr_mccl_flow($ $ $ $) {
   $vpr_log = "$prefix"."vpr.log";
   $vpr_reroute_log = "$prefix"."vpr_reroute.log";
 
-  if ("on" eq $opt_ptr->{min_route_chan_width}) {
-    &run_std_vpr($abc_blif_out,$benchmark,$vpr_arch,$vpr_net,$vpr_place,$vpr_route,-1,$vpr_log.".min_chan_width",$act_file);
-    # Get the Minimum channel width
-    my ($min_chan_width) = (&extract_min_chan_width_vpr_stats($tag,$benchmark,$vpr_log.".min_chan_width",$opt_ptr->{K_val}, $opt_ptr->{min_route_chan_width}, $parse_results));
-    $min_chan_width = int($min_chan_width*$opt_ptr->{min_route_chan_width_val});
-    if (0 != $min_chan_width%2) {
-      $min_chan_width += 1;
-    }
-    # Remove previous route results
-    `rm $vpr_route`;
-    # Keep increase min_chan_width until route success 
-    # Extract data from VPR stats
-    while (1) {
-      &run_vpr_route($abc_blif_out,$benchmark,$vpr_arch,$vpr_net,$vpr_place,$vpr_route,$min_chan_width,$vpr_reroute_log,$act_file);
-      if (-e $vpr_route) {
-        print "INFO: try route_chan_width($min_chan_width) Success!\n";
-        last; #Jump out
-      } else {
-        print "INFO: try route_chan_width($min_chan_width) failed! Retry with +2...\n";
-        $min_chan_width += 2;
-      }
-    }
-    # Extract data from VPR stats
-    if (1 == $parse_results) {
-      &extract_min_chan_width_vpr_stats($tag,$benchmark,$vpr_reroute_log,$opt_ptr->{K_val}, "off", $parse_results);
-      &extract_vpr_stats($tag,$benchmark,$vpr_log."min_chan_width",$opt_ptr->{K_val});
-      &extract_vpr_stats($tag,$benchmark,$vpr_reroute_log,$opt_ptr->{K_val});
-    }
-  } elsif ("on" eq $opt_ptr->{fix_route_chan_width}) {
-    my ($fix_chan_width) = ($benchmarks_ptr->{$benchmark_file}->{fix_route_chan_width});
-    # Remove previous route results
-    `rm $vpr_route`;
-    # Keep increase min_chan_width until route success 
-    &run_std_vpr($abc_blif_out,$benchmark,$vpr_arch,$vpr_net,$vpr_place,$vpr_route,$fix_chan_width,$vpr_log,$act_file);
-    # Extract data from VPR stats
-    while (1) {
-      if (-e $vpr_route) {
-        print "INFO: try route_chan_width($fix_chan_width) Success!\n";
-        last; #Jump out
-      } else {
-        print "INFO: try route_chan_width($fix_chan_width) failed! Retry with +2...\n";
-        $fix_chan_width += 2;
-        &run_vpr_route($abc_blif_out,$benchmark,$vpr_arch,$vpr_net,$vpr_place,$vpr_route,$fix_chan_width,$vpr_reroute_log,$act_file);
-      }
-    }
-    if (1 == $parse_results) {
-      &extract_min_chan_width_vpr_stats($tag,$benchmark,$vpr_log,$opt_ptr->{K_val}, "off", $parse_results);
-      &extract_vpr_stats($tag,$benchmark,$vpr_log,$opt_ptr->{K_val});
-      if (-e $vpr_reroute_log) {
-        &extract_min_chan_width_vpr_stats($tag,$benchmark,$vpr_reroute_log,$opt_ptr->{K_val}, "off", $parse_results);
-        &extract_vpr_stats($tag,$benchmark,$vpr_reroute_log,$opt_ptr->{K_val});
-      }
-    }
-  } else {
-    &run_std_vpr($abc_blif_out,$benchmark,$vpr_arch,$vpr_net,$vpr_place,$vpr_route,-1,$vpr_log,$act_file);
-    if (!(-e $vpr_route)) {
-      die "ERROR: Route Fail for $abc_blif_out!\n";
-    }
-    # Get the Minimum channel width
-    my ($min_chan_width) = (&extract_min_chan_width_vpr_stats($tag,$benchmark,$vpr_log,$opt_ptr->{K_val},$parse_results));
-    if (1 == $parse_results) {
-      &extract_vpr_stats($tag,$benchmark,$vpr_log,$opt_ptr->{K_val});
-    }
-  }
-
-  # Extract data from VPR Power stats
-  if (("on" eq $opt_ptr->{power})
-     &&(1 == $parse_results)) {
-    &extract_vpr_power_esti($tag,$abc_blif_out,$benchmark,$opt_ptr->{K_val});
-  }
+  # Run VPR
+  &run_vpr_in_flow($tag, $benchmark, $benchmark_file, $abc_blif_out, $vpr_arch, $act_file, $vpr_net, $vpr_place, $vpr_route, $vpr_log, $vpr_reroute_log, $parse_results);
+ 
   return;
 }
 
@@ -2456,26 +2225,11 @@ sub run_mccl_flow($ $ $ $ $)
   # RUN ABC 
   &run_abc_mccl_fpgamap($abc_bm,$abc_blif_out_bak,$abc_log);
 
-  `perl pro_blif.pl -i $abc_blif_out_bak -o $abc_blif_out`;
+  &run_pro_blif($abc_blif_out_bak, $abc_blif_out);
 
-  if (!(-e $abc_blif_out)) {
-    die "ERROR: Fail pro_blif.pl for benchmark $abc_blif_out.\n";
-  }
-
+  # Run ACE
   my ($act_file,$ace_new_blif,$ace_log) = ("$prefix"."ace.act","$prefix"."ace.blif","$prefix"."ace.log");
-  if ("on" eq $opt_ptr->{power}) {
-    if ("on" eq $opt_ptr->{black_box_ace}) {
-      &black_box_blif($abc_blif_out,$ace_new_blif); 
-      &run_ace($ace_new_blif,$act_file,$prefix."ace_new.blif",$ace_log);
-    } else {
-      &run_ace($abc_blif_out,$act_file,$ace_new_blif,$ace_log);
-      $abc_blif_out = $ace_new_blif;
-    }
-  }
-
-  if (!(-e $act_file)) {
-    die "ERROR: Fail ACE2 for benchmark $act_file.\n";
-  }
+  &run_ace_in_flow($prefix,i $abc_blif_out,$act_file,$ace_new_blif,$ace_log);
 
   $vpr_net = "$prefix"."vpr.net";
   $vpr_place = "$prefix"."vpr.place";
@@ -2483,81 +2237,8 @@ sub run_mccl_flow($ $ $ $ $)
   $vpr_log = "$prefix"."vpr.log";
   $vpr_reroute_log = "$prefix"."vpr_reroute.log";
 
-  if ("on" eq $opt_ptr->{min_route_chan_width}) {
-    &run_std_vpr($abc_blif_out,$benchmark,$vpr_arch,$vpr_net,$vpr_place,$vpr_route,-1,$vpr_log.".min_chan_width",$act_file);
-    # Get the Minimum channel width
-    my ($min_chan_width) = (&extract_min_chan_width_vpr_stats($tag,$benchmark,$vpr_log.".min_chan_width",$opt_ptr->{K_val}, $opt_ptr->{min_route_chan_width}, $parse_results));
-    $min_chan_width = int($min_chan_width*$opt_ptr->{min_route_chan_width_val});
-    if (0 != $min_chan_width%2) {
-      $min_chan_width += 1;
-    }
-    # Remove previous route results
-    if (-e $vpr_route) {
-      `rm $vpr_route`;
-    }
-    # Keep increase min_chan_width until route success 
-    # Extract data from VPR stats
-    #&run_std_vpr($abc_blif_out,$benchmark,$vpr_arch,$vpr_net,$vpr_place,$vpr_route,$min_chan_width,$vpr_log,$act_file);
-    while (1) {
-      &run_vpr_route($abc_blif_out,$benchmark,$vpr_arch,$vpr_net,$vpr_place,$vpr_route,$min_chan_width,$vpr_reroute_log,$act_file);
-      # TODO: Only run the routing stage
-      if (-e $vpr_route) {
-        print "INFO: try route_chan_width($min_chan_width) success!\n";
-        last; #Jump out
-      } else {
-        print "INFO: try route_chan_width($min_chan_width) failed! Retry with +2...\n";
-        $min_chan_width += 2;
-      }
-    }
-    if (1 == $parse_results) {
-      &extract_min_chan_width_vpr_stats($tag,$benchmark,$vpr_reroute_log,$opt_ptr->{K_val}, "off", $parse_results);
-      &extract_vpr_stats($tag,$benchmark,$vpr_log.".min_chan_width",$opt_ptr->{K_val});
-      &extract_vpr_stats($tag,$benchmark,$vpr_reroute_log,$opt_ptr->{K_val});
-    }
-  } elsif ("on" eq $opt_ptr->{fix_route_chan_width}) {
-    my ($fix_chan_width) = ($benchmarks_ptr->{$benchmark_file}->{fix_route_chan_width});
-    # Remove previous route results
-    if (-e $vpr_route) {
-      `rm $vpr_route`;
-    }
-    # Keep increase min_chan_width until route success 
-    &run_std_vpr($abc_blif_out,$benchmark,$vpr_arch,$vpr_net,$vpr_place,$vpr_route,$fix_chan_width,$vpr_log,$act_file);
-    while (1) {
-      # TODO: Only run the routing stage
-      if (-e $vpr_route) {
-        print "INFO: try route_chan_width($fix_chan_width) success!\n";
-        last; #Jump out
-      } else {
-        print "INFO: try route_chan_width($fix_chan_width) failed! Retry with +2...\n";
-        $fix_chan_width += 2;
-        &run_vpr_route($abc_blif_out,$benchmark,$vpr_arch,$vpr_net,$vpr_place,$vpr_route,$fix_chan_width,$vpr_reroute_log,$act_file);
-      }
-    }
-    # Extract data from VPR stats
-    if (1 == $parse_results) {
-      &extract_min_chan_width_vpr_stats($tag,$benchmark,$vpr_log,$opt_ptr->{K_val}, "off", $parse_results);
-      &extract_vpr_stats($tag,$benchmark,$vpr_log,$opt_ptr->{K_val});
-      if (-e $vpr_reroute_log) {
-        &extract_vpr_stats($tag,$benchmark,$vpr_reroute_log,$opt_ptr->{K_val});
-      }
-    }
-  } else {
-    &run_std_vpr($abc_blif_out,$benchmark,$vpr_arch,$vpr_net,$vpr_place,$vpr_route,-1,$vpr_log,$act_file);
-    if (!(-e $vpr_route)) {
-      die "ERROR: Route Fail for $abc_blif_out!\n";
-    }
-    # Get the Minimum channel width
-    my ($min_chan_width) = (&extract_min_chan_width_vpr_stats($tag,$benchmark,$vpr_log,$opt_ptr->{K_val},"on",$parse_results));
-    if (1 == $parse_results) {
-      &extract_vpr_stats($tag,$benchmark,$vpr_log,$opt_ptr->{K_val});
-    }
-  }
-
-  # Extract data from VPR Power stats
-  if (("on" eq $opt_ptr->{power})
-     &&(1 == $parse_results)) {
-    &extract_vpr_power_esti($tag,$abc_blif_out,$benchmark,$opt_ptr->{K_val});
-  }
+  # Run VPR
+  &run_vpr_in_flow($tag, $benchmark, $benchmark_file, $abc_blif_out, $vpr_arch, $act_file, $vpr_net, $vpr_place, $vpr_route, $vpr_log, $vpr_reroute_log, $parse_results);
 
   return;
 }

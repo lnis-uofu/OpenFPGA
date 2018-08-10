@@ -2759,6 +2759,115 @@ void dump_verilog_top_netlist(char* circuit_name,
   return;
 }
 
+/***** Print Top-level SPICE netlist *****/
+void dump_verilog_top_netlist_tile_orgz(char* circuit_name,
+                                        char* top_netlist_name,
+                                        char* include_dir_path,
+                                        char* subckt_dir_path,
+                                        int LL_num_rr_nodes,
+                                        t_rr_node* LL_rr_node,
+                                        t_ivec*** LL_rr_node_indices,
+                                        int num_clock,
+                                        t_spice verilog) {
+  FILE* fp = NULL;
+  char* formatted_subckt_dir_path = format_dir_path(subckt_dir_path);
+  char* temp_include_file_path = NULL;
+  char* title = my_strcat("FPGA Verilog Netlist for Design: ", circuit_name);
+
+  /* Check if the path exists*/
+  fp = fopen(top_netlist_name,"w");
+  if (NULL == fp) {
+    vpr_printf(TIO_MESSAGE_ERROR,"(FILE:%s,LINE[%d])Failure in create top Verilog netlist %s!",__FILE__, __LINE__, top_netlist_name); 
+    exit(1);
+  } 
+  
+  vpr_printf(TIO_MESSAGE_INFO, "Writing FPGA Top-level Verilog Netlist for %s...\n", circuit_name);
+ 
+  /* Print the title */
+  dump_verilog_file_header(fp, title);
+  my_free(title);
+
+  /* Include user-defined sub-circuit netlist */
+  fprintf(fp, "//----- Include User-defined netlists -----\n");
+  init_include_user_defined_verilog_netlists(verilog);
+  dump_include_user_defined_verilog_netlists(fp, verilog);
+  
+  /* Special subckts for Top-level SPICE netlist */
+  fprintf(fp, "//----- Include subckt netlists: Multiplexers -----\n");
+  temp_include_file_path = my_strcat(formatted_subckt_dir_path, muxes_verilog_file_name);
+  fprintf(fp, "// `include \"%s\"\n", temp_include_file_path);
+  my_free(temp_include_file_path);
+
+  fprintf(fp, "//----- Include subckt netlists: Wires -----\n");
+  temp_include_file_path = my_strcat(formatted_subckt_dir_path, wires_verilog_file_name);
+  fprintf(fp, "// `include \"%s\"\n", temp_include_file_path);
+  my_free(temp_include_file_path);
+
+  fprintf(fp, "//----- Include subckt netlists: Look-Up Tables (LUTs) -----\n");
+  temp_include_file_path = my_strcat(formatted_subckt_dir_path, luts_verilog_file_name);
+  fprintf(fp, "// `include \"%s\"\n", temp_include_file_path);
+  my_free(temp_include_file_path);
+
+  fprintf(fp, "//------ Include subckt netlists: Logic Blocks -----\n");
+  temp_include_file_path = my_strcat(formatted_subckt_dir_path, logic_block_verilog_file_name);
+  fprintf(fp, "// `include \"%s\"\n", temp_include_file_path);
+  my_free(temp_include_file_path);
+
+  fprintf(fp, "//----- Include subckt netlists: Routing structures (Switch Boxes, Channels, Connection Boxes) -----\n");
+  temp_include_file_path = my_strcat(formatted_subckt_dir_path, routing_verilog_file_name);
+  fprintf(fp, "// `include \"%s\"\n", temp_include_file_path);
+  my_free(temp_include_file_path);
+ 
+  /* Include decoders if required */ 
+  switch(sram_verilog_orgz_type) {
+  case SPICE_SRAM_STANDALONE:
+  case SPICE_SRAM_SCAN_CHAIN:
+    break;
+  case SPICE_SRAM_MEMORY_BANK:
+    /* Include verilog decoder */
+    fprintf(fp, "//----- Include subckt netlists: Decoders (controller for memeory bank) -----\n");
+    temp_include_file_path = my_strcat(formatted_subckt_dir_path, decoders_verilog_file_name);
+    fprintf(fp, "// `include \"%s\"\n", temp_include_file_path);
+    my_free(temp_include_file_path);
+    break;
+  default:
+    vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid type of SRAM organization in Verilog Generator!\n",
+               __FILE__, __LINE__);
+    exit(1);
+  }
+ 
+  /* Print all global wires*/
+  dump_verilog_top_netlist_ports(fp, num_clock, circuit_name, verilog);
+
+  dump_verilog_top_netlist_internal_wires(fp);
+
+  /* Quote defined Logic blocks subckts (Grids) */
+  dump_verilog_defined_grids(fp);
+
+  /* Quote Routing structures: Channels */
+  dump_verilog_defined_channels(fp, LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices);
+
+  /* Quote Routing structures: Conneciton Boxes */
+  dump_verilog_defined_connection_boxes(fp); 
+  
+  /* Quote Routing structures: Switch Boxes */
+  dump_verilog_defined_switch_boxes(fp); 
+
+  /* Apply CLB to CLB direct connections */
+  dump_verilog_clb2clb_directs(fp, num_clb2clb_directs, clb2clb_direct);
+
+  /* Dump configuration circuits */
+  dump_verilog_configuration_circuits(fp);
+
+  /* verilog ends*/
+  fprintf(fp, "endmodule\n");
+
+  /* Close the file*/
+  fclose(fp);
+
+  return;
+}
+
 /** Top level function 2: Testbench for the top-level netlist
  * This testbench includes a top-level module of a mapped FPGA and voltage pulses
  */

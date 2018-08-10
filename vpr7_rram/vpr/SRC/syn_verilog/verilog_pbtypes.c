@@ -3135,10 +3135,9 @@ void dump_verilog_io_grid_block_subckt_pins(FILE* fp,
 }
 
 /* Print the SPICE netlist for a grid blocks */
-void dump_verilog_grid_blocks(FILE* fp,
-                        int ix,
-                        int iy,
-                        t_arch* arch) {
+void dump_verilog_grid_blocks(char* subckt_dir,
+                              int ix, int iy,
+                              t_arch* arch) {
   int subckt_name_str_len = 0;
   char* subckt_name = NULL;
   t_block* mapped_block = NULL;
@@ -3152,13 +3151,9 @@ void dump_verilog_grid_blocks(FILE* fp,
   int temp_inpad_lsb, temp_inpad_msb;
   int temp_outpad_lsb, temp_outpad_msb;
   int temp_iopad_lsb, temp_iopad_msb;
+  FILE* fp = NULL;
+  char* fname = NULL;
 
-  /* Check the file handler*/ 
-  if (NULL == fp) {
-    vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid file handler.\n", 
-               __FILE__, __LINE__); 
-    exit(1);
-  }
   /* Check */
   assert((!(0 > ix))&&(!(ix > (nx + 1)))); 
   assert((!(0 > iy))&&(!(iy > (ny + 1)))); 
@@ -3179,6 +3174,10 @@ void dump_verilog_grid_blocks(FILE* fp,
     update_spice_models_grid_index_high(ix, iy, arch->spice->num_spice_model, arch->spice->spice_models);
     return; 
   }
+
+  /* Create file handler */
+  fp = verilog_create_one_subckt_file(subckt_dir, "Logic Block ", grid_verilog_file_name_prefix, ix, iy, &fname);
+
   capacity= grid[ix][iy].type->capacity;
   assert(0 < capacity);
 
@@ -3336,16 +3335,22 @@ void dump_verilog_grid_blocks(FILE* fp,
 
   assert(temp_conf_bits_msb == get_sram_orgz_info_num_mem_bit(sram_verilog_orgz_info)); 
 
+  /* Close file*/
+  fclose(fp);
+
+  /* Add fname to the linked list */
+  grid_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(grid_verilog_subckt_file_path_head, fname);  
+
   /* Free */
   my_free(subckt_name);
+  my_free(fname);
 
   return;
 }
 
 /* Print the SPICE netlist for a I/O grid blocks */
-void dump_verilog_physical_grid_blocks(FILE* fp,
-                                       int ix,
-                                       int iy,
+void dump_verilog_physical_grid_blocks(char* subckt_dir,
+                                       int ix, int iy,
                                        t_arch* arch) {
   int subckt_name_str_len = 0;
   char* subckt_name = NULL;
@@ -3357,13 +3362,9 @@ void dump_verilog_physical_grid_blocks(FILE* fp,
   int temp_inpad_lsb, temp_inpad_msb;
   int temp_outpad_lsb, temp_outpad_msb;
   int temp_iopad_lsb, temp_iopad_msb;
+  FILE* fp = NULL;
+  char* fname = NULL;
 
-  /* Check the file handler*/ 
-  if (NULL == fp) {
-    vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid file handler.\n", 
-               __FILE__, __LINE__); 
-    exit(1);
-  }
   /* Check */
   assert((!(0 > ix))&&(!(ix > (nx + 1)))); 
   assert((!(0 > iy))&&(!(iy > (ny + 1)))); 
@@ -3384,6 +3385,10 @@ void dump_verilog_physical_grid_blocks(FILE* fp,
     update_spice_models_grid_index_high(ix, iy, arch->spice->num_spice_model, arch->spice->spice_models);
     return; 
   }
+
+  /* Create file handler */
+  fp = verilog_create_one_subckt_file(subckt_dir, "Physical Logic Block ", grid_verilog_file_name_prefix, ix, iy, &fname);
+
   capacity= grid[ix][iy].type->capacity;
   assert(0 < capacity);
 
@@ -3520,8 +3525,15 @@ void dump_verilog_physical_grid_blocks(FILE* fp,
   assert(temp_conf_bits_msb == get_sram_orgz_info_num_mem_bit(sram_verilog_orgz_info)); 
   assert(temp_iopad_msb == iopad_verilog_model->grid_index_high[ix][iy]);
 
+  /* Close the file */
+  fclose(fp);
+
+  /* Add fname to the linked list */
+  grid_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(grid_verilog_subckt_file_path_head, fname);  
+
   /* Free */
   my_free(subckt_name);
+  my_free(fname);
 
   return;
 }
@@ -3533,9 +3545,6 @@ void dump_verilog_physical_grid_blocks(FILE* fp,
  */
 void dump_verilog_logic_blocks(char* subckt_dir,
                                  t_arch* arch) {
-  /* Create file names */
-  char* sp_name = my_strcat(subckt_dir, logic_block_verilog_file_name);
-  FILE* fp = NULL;
   int ix, iy; 
   
   /* Check the grid*/
@@ -3543,17 +3552,9 @@ void dump_verilog_logic_blocks(char* subckt_dir,
     vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid grid size (nx=%d, ny=%d)!\n", __FILE__, __LINE__, nx, ny);
     return;    
   }
+
   vpr_printf(TIO_MESSAGE_INFO,"Grid size of FPGA: nx=%d ny=%d\n", nx + 1, ny + 1);
   assert(NULL != grid);
- 
-  /* Create a file*/
-  fp = fopen(sp_name, "w");
-  if (NULL == fp) {
-    vpr_printf(TIO_MESSAGE_ERROR,"(FILE:%s,LINE[%d])Failure in create verilog netlist %s",__FILE__, __LINE__, sp_name); 
-    exit(1);
-  } 
-  /* Generate the descriptions*/
-  dump_verilog_file_header(fp,"Logic Blocks in FPGA");
  
   /* Print the core logic block one by one
    * Note ix=0 and ix = nx + 1 are IO pads. They surround the core logic blocks
@@ -3565,7 +3566,7 @@ void dump_verilog_logic_blocks(char* subckt_dir,
       assert(IO_TYPE != grid[ix][iy].type);
       /* Ensure a valid usage */
       assert((0 == grid[ix][iy].usage)||(0 < grid[ix][iy].usage));
-      dump_verilog_grid_blocks(fp, ix, iy, arch); 
+      dump_verilog_grid_blocks(subckt_dir, ix, iy, arch); 
     }
   }
 
@@ -3576,36 +3577,37 @@ void dump_verilog_logic_blocks(char* subckt_dir,
   for (iy = 1; iy < (ny + 1); iy++) {
     /* Ensure this is a io */
     assert(IO_TYPE == grid[ix][iy].type);
-    dump_verilog_physical_grid_blocks(fp, ix, iy, arch); 
+    dump_verilog_physical_grid_blocks(subckt_dir, ix, iy, arch); 
   }
   /* Right side : x = nx + 1, y = 1 .. ny*/
   ix = nx + 1;
   for (iy = 1; iy < (ny + 1); iy++) {
     /* Ensure this is a io */
     assert(IO_TYPE == grid[ix][iy].type);
-    dump_verilog_physical_grid_blocks(fp, ix, iy, arch); 
+    dump_verilog_physical_grid_blocks(subckt_dir, ix, iy, arch); 
   }
   /* Bottom  side : x = 1 .. nx + 1, y = 0 */
   iy = 0;
   for (ix = 1; ix < (nx + 1); ix++) {
     /* Ensure this is a io */
     assert(IO_TYPE == grid[ix][iy].type);
-    dump_verilog_physical_grid_blocks(fp, ix, iy, arch); 
+    dump_verilog_physical_grid_blocks(subckt_dir, ix, iy, arch); 
   }
   /* Top side : x = 1 .. nx + 1, y = nx + 1  */
   iy = ny + 1;
   for (ix = 1; ix < (nx + 1); ix++) {
     /* Ensure this is a io */
     assert(IO_TYPE == grid[ix][iy].type);
-    dump_verilog_physical_grid_blocks(fp, ix, iy, arch); 
+    dump_verilog_physical_grid_blocks(subckt_dir, ix, iy, arch); 
   }
 
-
-  /* Close the file */
-  fclose(fp);
+  /* Output a header file for all the logic blocks */
+  vpr_printf(TIO_MESSAGE_INFO,"Generating header file for grid submodules...\n");
+  dump_verilog_subckt_header_file(grid_verilog_subckt_file_path_head,
+                                  subckt_dir,
+                                  logic_block_verilog_file_name);
 
   /* Free */
-  my_free(sp_name);
    
   return; 
 }

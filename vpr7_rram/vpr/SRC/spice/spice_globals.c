@@ -12,6 +12,8 @@
 /* Threshold of max transistor width for each transistor */
 float max_width_per_trans = 5.;
 
+char* spice_netlist_file_postfix = ".sp";
+
 char* nmos_subckt_name = "vpr_nmos";
 char* pmos_subckt_name = "vpr_pmos";
 char* io_nmos_subckt_name = "vpr_io_nmos";
@@ -24,12 +26,20 @@ char* basics_spice_file_name = "inv_buf_trans_gate.sp";
 char* muxes_spice_file_name = "muxes.sp";
 char* rram_veriloga_file_name = "rram_behavior.va";
 char* wires_spice_file_name = "wires.sp";
-char* logic_block_spice_file_name = "logic_blocks.sp";
+char* logic_block_spice_file_name = "grid_header.sp";
 char* luts_spice_file_name = "luts.sp";
-char* routing_spice_file_name = "routing.sp";
+char* routing_spice_file_name = "routing_header.sp";
 char* meas_header_file_name = "meas_params.sp";
 char* stimu_header_file_name = "stimulate_params.sp";
 char* design_param_header_file_name = "design_params.sp";
+
+/* Prefix for subckt SPICE netlists */
+char* grid_spice_file_name_prefix = "grid_";
+char* chanx_spice_file_name_prefix = "chanx_";
+char* chany_spice_file_name_prefix = "chany_";
+char* sb_spice_file_name_prefix = "sb_";
+char* cbx_spice_file_name_prefix = "cbx_";
+char* cby_spice_file_name_prefix = "cby_";
 
 /* Postfix for circuit design parameters */
 char* design_param_postfix_input_buf_size = "_input_buf_size"; 
@@ -82,6 +92,11 @@ int num_used_io_tb = 0;
 
 /* linked-list for all the testbenches */
 t_llist* tb_head = NULL;
+
+/* Linked-list that stores submodule Verilog file mames */
+t_llist* grid_spice_subckt_file_path_head  = NULL;
+t_llist* routing_spice_subckt_file_path_head = NULL;
+
 /* linked-list for heads of scan-chain */
 t_llist* scan_chain_heads = NULL;
 

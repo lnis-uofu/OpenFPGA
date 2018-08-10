@@ -219,6 +219,7 @@ char* chomp_file_name_postfix(char* file_name) {
   return ret;
 }
 
+
 /* Print SRAM bits, typically in a comment line */
 void fprint_commented_sram_bits(FILE* fp,
                                 int num_sram_bits, int* sram_bits) {
@@ -602,6 +603,25 @@ char* my_itoa(int input) {
 
   return ret;
 }
+
+/* Generate a filename (string) for a grid subckt SPICE netlist, 
+ * with given x and y coordinates
+ */
+char* fpga_spice_create_one_subckt_filename(char* file_name_prefix,
+                                            int subckt_x, int subckt_y,
+                                            char* file_name_postfix) {
+  char* fname = NULL;
+
+  fname = (char*) my_malloc(sizeof(char) * (strlen(file_name_prefix)
+                            + strlen(my_itoa(subckt_x)) + strlen(my_itoa(subckt_y))
+                            + strlen(file_name_postfix) + 1));
+
+  sprintf(fname, "%s%d_%d%s", 
+          file_name_prefix, subckt_x, subckt_y, file_name_postfix);
+
+  return fname;
+}
+
 
 /* With given spice_model_port, find the pb_type port with same name and type*/
 t_port* find_pb_type_port_match_spice_model_port(t_pb_type* pb_type,
@@ -1964,15 +1984,15 @@ int recommend_num_sim_clock_cycle(float sim_window_size) {
   /* It may be more reasonable to use median 
    * But, if median density is 0, we use average density
   */
-  if ((0 == median_density) && (0 == avg_density)) {
+  if ((0. == median_density) && (0. == avg_density)) {
     recmd_num_sim_clock_cycle = 1;
     vpr_printf(TIO_MESSAGE_WARNING, 
                "All the signal density is zero! No. of clock cycles in simulations are set to be %d!",
                recmd_num_sim_clock_cycle);
-  } else if (0 == avg_density) {
-      recmd_num_sim_clock_cycle = (int)(1/median_density); 
-  } else if (0 == median_density) {
-      recmd_num_sim_clock_cycle = (int)(1/avg_density);
+  } else if (0. == avg_density) {
+      recmd_num_sim_clock_cycle = (int)round(1/median_density); 
+  } else if (0. == median_density) {
+      recmd_num_sim_clock_cycle = (int)round(1/avg_density);
   } else {
     /* add a sim window size to balance the weight of average density and median density
      * In practice, we find that there could be huge difference between avereage and median values 
@@ -5730,6 +5750,14 @@ char** assign_lut_truth_table(t_logical_block* mapped_logical_block,
   return truth_table;
 }
 
+/* Get initial value of a Latch/FF output*/
+int get_ff_output_init_val(t_logical_block* ff_logical_block) {
+  assert((0 == ff_logical_block->init_val)||(1 == ff_logical_block->init_val));  
+
+  return ff_logical_block->init_val;
+}
+
+/* Get initial value of a mapped  LUT output*/
 int get_lut_output_init_val(t_logical_block* lut_logical_block) {
   int i;
   int* sram_bits = NULL; /* decoded SRAM bits */ 
@@ -5831,7 +5859,7 @@ int get_logical_block_output_init_val(t_logical_block* cur_logical_block) {
     /* We have no information, give a default 0 now... 
      * TODO: find a smarter way!
      */
-    output_init_val = 0;
+    output_init_val = get_ff_output_init_val(cur_logical_block);
     break;
   default:
     vpr_printf(TIO_MESSAGE_ERROR, "(File:%s,[LINE%d])Invalid type of SPICE MODEL (name=%s) in determining the initial output value of logical block(name=%s)!\n",
@@ -7212,5 +7240,41 @@ int count_cb_info_num_ipin_rr_nodes(t_cb cur_cb_info) {
 
   return cnt; 
 }
+
+/* Add a subckt file name to a linked list */
+t_llist* add_one_subckt_file_name_to_llist(t_llist* cur_head, 
+                                            char* subckt_file_path) {
+  t_llist* new_head = NULL;
+
+  if (NULL == cur_head) {
+    new_head = create_llist(1);
+    new_head->dptr = (void*) my_strdup(subckt_file_path);
+  } else {
+    new_head = insert_llist_node_before_head(cur_head);
+    new_head->dptr = (void*) my_strdup(subckt_file_path);
+  }
+
+  return new_head;
+}
+
+/* Check if SPICE subckt is already created
+ * (if they exist in a given linked-list
+ */
+boolean check_subckt_file_exist_in_llist(t_llist* subckt_llist_head,
+                                         char* subckt_file_name) {
+  t_llist* temp = NULL; 
+
+  temp = subckt_llist_head;
+  while (temp) {
+    if (0 == strcmp(subckt_file_name, (char*)(temp->dptr))) {
+      return TRUE;
+    }
+    temp = temp->next;
+  }
+
+  return FALSE;
+}
+
+
 
     

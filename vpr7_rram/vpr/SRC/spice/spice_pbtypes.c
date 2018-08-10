@@ -2092,9 +2092,8 @@ void fprint_io_grid_block_subckt_pins(FILE* fp,
 }
                                    
 /* Print the SPICE netlist for a physical grid blocks */
-void fprint_grid_physical_blocks(FILE* fp,
-                                 int ix,
-                                 int iy,
+void fprint_grid_physical_blocks(char* subckt_dir,
+                                 int ix, int iy,
                                  t_arch* arch) {
   int subckt_name_str_len = 0;
   char* subckt_name = NULL;
@@ -2102,13 +2101,9 @@ void fprint_grid_physical_blocks(FILE* fp,
   int iz;
   int cur_block_index = 0;
   int capacity; 
+  FILE* fp = NULL;
+  char* fname = NULL;
 
-  /* Check the file handler*/ 
-  if (NULL == fp) {
-    vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid file handler.\n", 
-               __FILE__, __LINE__); 
-    exit(1);
-  }
   /* Check */
   assert((!(0 > ix))&&(!(ix > (nx + 1)))); 
   assert((!(0 > iy))&&(!(iy > (ny + 1)))); 
@@ -2126,6 +2121,10 @@ void fprint_grid_physical_blocks(FILE* fp,
     update_spice_models_grid_index_high(ix, iy, arch->spice->num_spice_model, arch->spice->spice_models);
     return; 
   }
+
+  /* Create file handler */
+  fp = spice_create_one_subckt_file(subckt_dir, "Phyiscal Logic Block ", grid_spice_file_name_prefix, ix, iy, &fname); 
+
   capacity = grid[ix][iy].type->capacity;
   assert(0 < capacity);
 
@@ -2199,8 +2198,15 @@ void fprint_grid_physical_blocks(FILE* fp,
 
   fprintf(fp, ".eom\n");
 
+  /* Close the file */
+  fclose(fp);
+
+  /* Add fname to the linked list */
+  grid_spice_subckt_file_path_head = add_one_subckt_file_name_to_llist(grid_spice_subckt_file_path_head, fname);  
+
   /* Free */
   my_free(subckt_name);
+  my_free(fname);
 
   return;
 }
@@ -2208,9 +2214,8 @@ void fprint_grid_physical_blocks(FILE* fp,
 
 
 /* Print the SPICE netlist for a grid blocks */
-void fprint_grid_blocks(FILE* fp,
-                        int ix,
-                        int iy,
+void fprint_grid_blocks(char* subckt_dir,
+                        int ix, int iy,
                         t_arch* arch) {
   int subckt_name_str_len = 0;
   char* subckt_name = NULL;
@@ -2218,13 +2223,9 @@ void fprint_grid_blocks(FILE* fp,
   int iz;
   int cur_block_index = 0;
   int capacity; 
+  FILE* fp = NULL;
+  char* fname = NULL;
 
-  /* Check the file handler*/ 
-  if (NULL == fp) {
-    vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid file handler.\n", 
-               __FILE__, __LINE__); 
-    exit(1);
-  }
   /* Check */
   assert((!(0 > ix))&&(!(ix > (nx + 1)))); 
   assert((!(0 > iy))&&(!(iy > (ny + 1)))); 
@@ -2243,6 +2244,9 @@ void fprint_grid_blocks(FILE* fp,
     update_spice_models_grid_index_high(ix, iy, arch->spice->num_spice_model, arch->spice->spice_models);
     return; 
   }
+
+  /* Create file handler */
+  fp = spice_create_one_subckt_file(subckt_dir, "Logic Block", grid_spice_file_name_prefix, ix, iy, &fname); 
 
   capacity= grid[ix][iy].type->capacity;
   assert(0 < capacity);
@@ -2330,8 +2334,15 @@ void fprint_grid_blocks(FILE* fp,
 
   fprintf(fp, ".eom\n");
 
+  /* Close the file */
+  fclose(fp);
+
+  /* Add fname to the linked list */
+  grid_spice_subckt_file_path_head = add_one_subckt_file_name_to_llist(grid_spice_subckt_file_path_head, fname);  
+
   /* Free */
   my_free(subckt_name);
+  my_free(fname);
 
   return;
 }
@@ -2345,8 +2356,6 @@ void fprint_grid_blocks(FILE* fp,
 void generate_spice_logic_blocks(char* subckt_dir,
                                  t_arch* arch) {
   /* Create file names */
-  char* sp_name = my_strcat(subckt_dir, logic_block_spice_file_name);
-  FILE* fp = NULL;
   int ix, iy; 
   
   /* Check the grid*/
@@ -2356,15 +2365,6 @@ void generate_spice_logic_blocks(char* subckt_dir,
   }
   vpr_printf(TIO_MESSAGE_INFO,"Grid size of FPGA: nx=%d ny=%d\n", nx + 1, ny + 1);
   assert(NULL != grid);
- 
-  /* Create a file*/
-  fp = fopen(sp_name, "w");
-  if (NULL == fp) {
-    vpr_printf(TIO_MESSAGE_ERROR,"(FILE:%s,LINE[%d])Failure in create subckt SPICE netlist %s",__FILE__, __LINE__, sp_name); 
-    exit(1);
-  } 
-  /* Generate the descriptions*/
-  fprint_spice_head(fp,"Logic Blocks in FPGA");
  
   /* Print the core logic block one by one
    * Note ix=0 and ix = nx + 1 are IO pads. They surround the core logic blocks
@@ -2376,7 +2376,7 @@ void generate_spice_logic_blocks(char* subckt_dir,
       assert(IO_TYPE != grid[ix][iy].type);
       /* Ensure a valid usage */
       assert((0 == grid[ix][iy].usage)||(0 < grid[ix][iy].usage));
-      fprint_grid_blocks(fp, ix, iy, arch); 
+      fprint_grid_blocks(subckt_dir, ix, iy, arch); 
     }
   }
 
@@ -2388,7 +2388,7 @@ void generate_spice_logic_blocks(char* subckt_dir,
     /* Ensure this is a io */
     assert(IO_TYPE == grid[ix][iy].type);
     /* TODO: replace with physical block generator */
-    fprint_grid_physical_blocks(fp, ix, iy, arch); 
+    fprint_grid_physical_blocks(subckt_dir, ix, iy, arch); 
   }
   /* Right side : x = nx + 1, y = 1 .. ny*/
   ix = nx + 1;
@@ -2396,7 +2396,7 @@ void generate_spice_logic_blocks(char* subckt_dir,
     /* Ensure this is a io */
     assert(IO_TYPE == grid[ix][iy].type);
     /* TODO: replace with physical block generator */
-    fprint_grid_physical_blocks(fp, ix, iy, arch); 
+    fprint_grid_physical_blocks(subckt_dir, ix, iy, arch); 
   }
   /* Bottom  side : x = 1 .. nx + 1, y = 0 */
   iy = 0;
@@ -2404,7 +2404,7 @@ void generate_spice_logic_blocks(char* subckt_dir,
     /* Ensure this is a io */
     assert(IO_TYPE == grid[ix][iy].type);
     /* TODO: replace with physical block generator */
-    fprint_grid_physical_blocks(fp, ix, iy, arch); 
+    fprint_grid_physical_blocks(subckt_dir, ix, iy, arch); 
   }
   /* Top side : x = 1 .. nx + 1, y = nx + 1  */
   iy = ny + 1;
@@ -2412,15 +2412,14 @@ void generate_spice_logic_blocks(char* subckt_dir,
     /* Ensure this is a io */
     assert(IO_TYPE == grid[ix][iy].type);
     /* TODO: replace with physical block generator */
-    fprint_grid_physical_blocks(fp, ix, iy, arch); 
+    fprint_grid_physical_blocks(subckt_dir, ix, iy, arch); 
   }
 
+  /* Output a header file for all the logic blocks */
+  vpr_printf(TIO_MESSAGE_INFO,"Generating header file for grid submodules...\n");
+  spice_print_subckt_header_file(grid_spice_subckt_file_path_head,
+                                 subckt_dir,
+                                 logic_block_spice_file_name);
 
-  /* Close the file */
-  fclose(fp);
-
-  /* Free */
-  my_free(sp_name);
-   
   return; 
 }

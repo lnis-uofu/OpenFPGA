@@ -1,6 +1,8 @@
 /* global parameters for SPICE support*/
 extern float max_width_per_trans;
 
+extern char* spice_netlist_file_postfix;
+
 extern char* nmos_subckt_name;
 extern char* pmos_subckt_name;
 extern char* io_nmos_subckt_name;
@@ -19,6 +21,14 @@ extern char* routing_spice_file_name;
 extern char* meas_header_file_name;
 extern char* stimu_header_file_name;
 extern char* design_param_header_file_name;
+
+/* Prefix for subckt SPICE netlists */
+extern char* grid_spice_file_name_prefix;
+extern char* chanx_spice_file_name_prefix;
+extern char* chany_spice_file_name_prefix;
+extern char* sb_spice_file_name_prefix;
+extern char* cbx_spice_file_name_prefix;
+extern char* cby_spice_file_name_prefix;
 
 /* Postfix for circuit design parameters */
 extern char* design_param_postfix_input_buf_size; 
@@ -78,7 +88,14 @@ extern int num_used_lut_tb;
 extern int num_used_dff_tb;
 extern int num_used_hardlogic_tb;
 extern int num_used_io_tb;
+
+/* linked-list for all the testbenches */
 extern t_llist* tb_head;
+
+/* Linked-list that stores submodule Verilog file mames */
+extern t_llist* grid_spice_subckt_file_path_head;
+extern t_llist* routing_spice_subckt_file_path_head;
+
 /* Heads of scan-chain */
 extern t_llist* scan_chain_heads;
 

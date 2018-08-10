@@ -9,10 +9,23 @@ enum e_measure_type {
 void fprint_spice_head(FILE* fp,
                        char* usage);
 
+FILE* spice_create_one_subckt_file(char* subckt_dir,
+                                   char* subckt_name_prefix,
+                                   char* spice_subckt_file_name_prefix,
+                                   int grid_x, int grid_y,
+                                   char** sp_name);
+
+void spice_print_one_include_subckt_line(FILE* fp, 
+                                         char* subckt_dir,
+                                         char* subckt_file_name);
 
 int rec_fprint_spice_model_global_ports(FILE* fp, 
                                         t_spice_model* cur_spice_model,
                                         boolean recursive);
+
+void spice_print_subckt_header_file(t_llist* subckt_llist_head,
+                                    char* subckt_dir,
+                                    char* header_file_name);
 
 int fprint_spice_global_ports(FILE* fp, t_llist* head);
 

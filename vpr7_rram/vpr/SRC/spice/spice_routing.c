@@ -34,7 +34,7 @@
 #include "spice_routing.h"
 
 
-void fprint_routing_chan_subckt(FILE* fp,
+void fprint_routing_chan_subckt(char* subckt_dir,
                                 int x, int y, t_rr_type chan_type, 
                                 int LL_num_rr_nodes, t_rr_node* LL_rr_node,
                                 t_ivec*** LL_rr_node_indices,
@@ -43,13 +43,9 @@ void fprint_routing_chan_subckt(FILE* fp,
   char* chan_prefix = NULL;
   int chan_width = 0;
   t_rr_node** chan_rr_nodes = NULL;
-
-  /* Check the file handler*/ 
-  if (NULL == fp) {
-    vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid file handler.\n", 
-               __FILE__, __LINE__); 
-    exit(1);
-  }
+  FILE* fp = NULL;
+  char* fname = NULL;
+  
   /* Check */
   assert((!(0 > x))&&(!(x > (nx + 1)))); 
   assert((!(0 > y))&&(!(y > (ny + 1)))); 
@@ -58,10 +54,14 @@ void fprint_routing_chan_subckt(FILE* fp,
   /* Initial chan_prefix*/
   switch (chan_type) {
   case CHANX:
+    /* Create file handler */
+    fp = spice_create_one_subckt_file(subckt_dir, "Channel X-direction ", chanx_spice_file_name_prefix, x, y, &fname); 
     chan_prefix = "chanx";
     fprintf(fp, "***** Subckt for Channel X [%d][%d] *****\n", x, y);
     break;
   case CHANY:
+    /* Create file handler */
+    fp = spice_create_one_subckt_file(subckt_dir, "Channel Y-direction ", chany_spice_file_name_prefix, x, y, &fname); 
     chan_prefix = "chany";
     fprintf(fp, "***** Subckt for Channel Y [%d][%d] *****\n", x, y);
     break;
@@ -147,8 +147,15 @@ void fprint_routing_chan_subckt(FILE* fp,
 
   fprintf(fp, ".eom\n");
 
+  /* Close the file*/
+  fclose(fp);
+
+  /* Add fname to the linked list */
+  routing_spice_subckt_file_path_head = add_one_subckt_file_name_to_llist(routing_spice_subckt_file_path_head, fname);  
+
   /* Free */
   my_free(chan_rr_nodes);
+  my_free(fname);
   
   return;
 }
@@ -641,21 +648,20 @@ void fprint_switch_box_interc(FILE* fp,
  * For channels chanX with INC_DIRECTION on the right side, they should be marked as outputs
  * For channels chanX with DEC_DIRECTION on the right side, they should be marked as inputs
  */
-void fprint_routing_switch_box_subckt(FILE* fp, t_sb cur_sb_info,
+void fprint_routing_switch_box_subckt(char* subckt_dir, 
+                                      t_sb cur_sb_info,
                                       int LL_num_rr_nodes, t_rr_node* LL_rr_node,
                                       t_ivec*** LL_rr_node_indices) {
   int itrack, inode, side, ix, iy, x, y;
-
-  /* Check the file handler*/ 
-  if (NULL == fp) {
-    vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid file handler.\n", 
-               __FILE__, __LINE__); 
-    exit(1);
-  }
+  FILE* fp = NULL;
+  char* fname = NULL;
 
   /* Check */
   assert((!(0 > cur_sb_info.x))&&(!(cur_sb_info.x > (nx + 1)))); 
   assert((!(0 > cur_sb_info.y))&&(!(cur_sb_info.y > (ny + 1)))); 
+
+  /* Create file handler */
+  fp = spice_create_one_subckt_file(subckt_dir, "Switch Block ", sb_spice_file_name_prefix, cur_sb_info.x, cur_sb_info.y, &fname); 
 
   x = cur_sb_info.x;
   y = cur_sb_info.y;
@@ -734,7 +740,14 @@ void fprint_routing_switch_box_subckt(FILE* fp, t_sb cur_sb_info,
  
   fprintf(fp, ".eom\n");
 
+  /* Close the file*/
+  fclose(fp);
+
+  /* Add fname to the linked list */
+  routing_spice_subckt_file_path_head = add_one_subckt_file_name_to_llist(routing_spice_subckt_file_path_head, fname);  
+
   /* Free */
+  my_free(fname);
 
   return;
 }
@@ -1024,18 +1037,31 @@ void fprint_connection_box_interc(FILE* fp,
  *    |            | Connection  |            |
  *    --------------Box_Y[x][y-1]--------------
  */
-void fprint_routing_connection_box_subckt(FILE* fp, t_cb cur_cb_info,
+void fprint_routing_connection_box_subckt(char* subckt_dir,
+                                          t_cb cur_cb_info,
                                           int LL_num_rr_nodes, t_rr_node* LL_rr_node,
                                           t_ivec*** LL_rr_node_indices) {
   int itrack, inode, side, x, y;
   int side_cnt = 0;
+  FILE* fp = NULL; 
+  char* fname = NULL;
 
-  /* Check the file handler*/ 
-  if (NULL == fp) {
-    vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid file handler.\n", 
-               __FILE__, __LINE__); 
+  /* Identify the type of connection box 
+   * Create file handler 
+   */
+  switch(cur_cb_info.type) {
+  case CHANX:
+    fp = spice_create_one_subckt_file(subckt_dir, "Connection Block X-channel ", cbx_spice_file_name_prefix, cur_cb_info.x, cur_cb_info.y, &fname); 
+    break;
+  case CHANY:
+    fp = spice_create_one_subckt_file(subckt_dir, "Connection Block Y-channel ", cby_spice_file_name_prefix, cur_cb_info.x, cur_cb_info.y, &fname); 
+    break;
+  default: 
+    vpr_printf(TIO_MESSAGE_ERROR, "(File:%s, [LINE%d])Invalid type of connection box!\n", 
+               __FILE__, __LINE__);
     exit(1);
   }
+
   /* Check */
   assert((!(0 > cur_cb_info.x))&&(!(cur_cb_info.x > (nx + 1)))); 
   assert((!(0 > cur_cb_info.y))&&(!(cur_cb_info.y > (ny + 1)))); 
@@ -1167,6 +1193,15 @@ void fprint_routing_connection_box_subckt(FILE* fp, t_cb cur_cb_info,
 
   fprintf(fp, ".eom\n");
 
+  /* Close the file*/
+  fclose(fp);
+
+  /* Add fname to the linked list */
+  routing_spice_subckt_file_path_head = add_one_subckt_file_name_to_llist(routing_spice_subckt_file_path_head, fname);  
+
+  /* Free */
+  my_free(fname);
+
   return;
 }
 
@@ -1178,19 +1213,9 @@ void generate_spice_routing_resources(char* subckt_dir,
                                       t_det_routing_arch* routing_arch,
                                       int LL_num_rr_nodes, t_rr_node* LL_rr_node,
                                       t_ivec*** LL_rr_node_indices) {
-  FILE* fp = NULL;
-  char* sp_name = my_strcat(subckt_dir, routing_spice_file_name);
   int ix, iy; 
  
   assert(UNI_DIRECTIONAL == routing_arch->directionality);
-
-  /* Create FILE */
-  fp = fopen(sp_name, "w");
-  if (NULL == fp) {
-    vpr_printf(TIO_MESSAGE_ERROR,"(FILE:%s,LINE[%d])Failure in create SPICE netlist %s",__FILE__, __LINE__, wires_spice_file_name); 
-    exit(1);
-  } 
-  fprint_spice_head(fp,"Routing Resources");
   
   /* Two major tasks: 
    * 1. Generate sub-circuits for Routing Channels 
@@ -1214,7 +1239,7 @@ void generate_spice_routing_resources(char* subckt_dir,
   vpr_printf(TIO_MESSAGE_INFO, "Writing X-direction Channels...\n");
   for (iy = 0; iy < (ny + 1); iy++) {
     for (ix = 1; ix < (nx + 1); ix++) {
-      fprint_routing_chan_subckt(fp, ix, iy, CHANX, 
+      fprint_routing_chan_subckt(subckt_dir, ix, iy, CHANX, 
                                  LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices, 
                                  arch.num_segments, arch.Segments);
     }
@@ -1223,7 +1248,7 @@ void generate_spice_routing_resources(char* subckt_dir,
   vpr_printf(TIO_MESSAGE_INFO, "Writing Y-direction Channels...\n");
   for (ix = 0; ix < (nx + 1); ix++) {
     for (iy = 1; iy < (ny + 1); iy++) {
-      fprint_routing_chan_subckt(fp, ix, iy, CHANY, 
+      fprint_routing_chan_subckt(subckt_dir, ix, iy, CHANY, 
                                  LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices, 
                                  arch.num_segments, arch.Segments);
     }
@@ -1234,7 +1259,7 @@ void generate_spice_routing_resources(char* subckt_dir,
   for (ix = 0; ix < (nx + 1); ix++) {
     for (iy = 0; iy < (ny + 1); iy++) {
       update_spice_models_routing_index_low(ix, iy, SOURCE, arch.spice->num_spice_model, arch.spice->spice_models);
-      fprint_routing_switch_box_subckt(fp, sb_info[ix][iy],
+      fprint_routing_switch_box_subckt(subckt_dir, sb_info[ix][iy],
                                        LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices); 
       update_spice_models_routing_index_high(ix, iy, SOURCE, arch.spice->num_spice_model, arch.spice->spice_models);
     }
@@ -1249,7 +1274,7 @@ void generate_spice_routing_resources(char* subckt_dir,
       /* Check if this cby_info exists, it may be covered by a heterogenous block */
       if ((TRUE == is_cb_exist(CHANX, ix, iy)) 
          &&(0 < count_cb_info_num_ipin_rr_nodes(cbx_info[ix][iy]))) {
-        fprint_routing_connection_box_subckt(fp, cbx_info[ix][iy],
+        fprint_routing_connection_box_subckt(subckt_dir, cbx_info[ix][iy],
                                              LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices); 
       }
       update_spice_models_routing_index_high(ix, iy, CHANX, arch.spice->num_spice_model, arch.spice->spice_models);
@@ -1262,16 +1287,18 @@ void generate_spice_routing_resources(char* subckt_dir,
       /* Check if this cby_info exists, it may be covered by a heterogenous block */
       if ((TRUE == is_cb_exist(CHANY, ix, iy))
          &&(0 < count_cb_info_num_ipin_rr_nodes(cby_info[ix][iy]))) {
-        fprint_routing_connection_box_subckt(fp, cby_info[ix][iy],
+        fprint_routing_connection_box_subckt(subckt_dir, cby_info[ix][iy],
                                              LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices); 
       }
       update_spice_models_routing_index_high(ix, iy, CHANY, arch.spice->num_spice_model, arch.spice->spice_models);
     }
   }
   
-  /* Close the file*/
-  fclose(fp);
-  
+  /* Output a header file for all the routing blocks */
+  vpr_printf(TIO_MESSAGE_INFO,"Generating header file for routing submodules...\n");
+  spice_print_subckt_header_file(routing_spice_subckt_file_path_head,
+                                 subckt_dir,
+                                 routing_spice_file_name);
   return;
 }
 

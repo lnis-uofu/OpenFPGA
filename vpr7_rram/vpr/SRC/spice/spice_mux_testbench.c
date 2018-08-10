@@ -1813,14 +1813,6 @@ int fprint_spice_one_mux_testbench(char* formatted_spice_dir,
   init_include_user_defined_netlists(*(arch.spice));
   fprint_include_user_defined_netlists(fp, *(arch.spice));
   
-  /* Special subckts for Top-level SPICE netlist */
-  /*
-  fprintf(fp, "****** Include subckt netlists: Look-Up Tables (LUTs) *****\n");
-  temp_include_file_path = my_strcat(formatted_subckt_dir_path, luts_spice_file_name);
-  fprintf(fp, ".include %s\n", temp_include_file_path);
-  my_free(temp_include_file_path);
-  */
-
   /* Print simulation temperature and other options for SPICE */
   fprint_spice_options(fp, arch.spice->spice_params);
 

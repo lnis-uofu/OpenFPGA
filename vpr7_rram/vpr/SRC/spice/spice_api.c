@@ -330,7 +330,7 @@ void vpr_print_spice_netlists(t_vpr_setup vpr_setup,
     lut_testbench_dir_path = my_strcat(spice_dir_formatted, spice_lut_tb_dir_name); 
     create_dir_path(lut_testbench_dir_path);
     spice_print_lut_testbench(lut_testbench_dir_path, chomped_circuit_name, include_dir_path, subckt_dir_path,
-                               rr_node_indices, num_clocks, Arch, vpr_setup.FPGA_SPICE_Opts.SpiceOpts.fpga_spice_leakage_only);
+                              rr_node_indices, num_clocks, Arch, vpr_setup.FPGA_SPICE_Opts.SpiceOpts.fpga_spice_leakage_only);
   }
 
   /* Print hardlogic testbench file if needed */

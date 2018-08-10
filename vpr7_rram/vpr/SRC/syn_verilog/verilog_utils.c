@@ -161,6 +161,85 @@ void dump_verilog_file_header(FILE* fp,
   return;
 }
 
+/* Create a file handler for a subckt Verilog netlist */
+FILE* verilog_create_one_subckt_file(char* subckt_dir,
+                                     char* subckt_name_prefix,
+                                     char* verilog_subckt_file_name_prefix,
+                                     int grid_x, int grid_y,
+                                     char** verilog_fname) {
+  FILE* fp = NULL;
+  char* file_description = NULL;
+
+  (*verilog_fname) = my_strcat(subckt_dir, 
+                               fpga_spice_create_one_subckt_filename(verilog_subckt_file_name_prefix, grid_x, grid_y, verilog_netlist_file_postfix));
+
+  /* Create a file*/
+  fp = fopen((*verilog_fname), "w");
+
+  if (NULL == fp) {
+    vpr_printf(TIO_MESSAGE_ERROR,
+               "(FILE:%s,LINE[%d])Failure in create Verilog netlist %s",
+               __FILE__, __LINE__, (*verilog_fname)); 
+    exit(1);
+  } 
+
+  /* Generate the descriptions*/
+  file_description = (char*) my_malloc(sizeof(char) * (strlen(subckt_name_prefix) + 2
+                                       + strlen(my_itoa(grid_x)) + 2 + strlen(my_itoa(grid_y))
+                                       + 9));
+  sprintf(file_description, "%s [%d][%d] in FPGA", 
+                           subckt_name_prefix, grid_x, grid_y);
+  dump_verilog_file_header(fp, file_description);
+
+  /* Free */
+  my_free(file_description);
+
+  return fp;
+}
+
+/* Output all the created subckt file names in a header file,
+ * that can be easily imported in a top-level netlist
+ */
+void dump_verilog_subckt_header_file(t_llist* subckt_llist_head,
+                                     char* subckt_dir,
+                                     char* header_file_name) {
+  FILE* fp = NULL;
+  char* verilog_fname = NULL;
+  t_llist* temp = NULL; 
+
+  verilog_fname = my_strcat(subckt_dir, 
+                            header_file_name);
+
+  /* Create a file*/
+  fp = fopen(verilog_fname, "w");
+
+  if (NULL == fp) {
+    vpr_printf(TIO_MESSAGE_ERROR,
+               "(FILE:%s,LINE[%d])Failure in create Verilog netlist %s",
+               __FILE__, __LINE__, verilog_fname); 
+    exit(1);
+  } 
+
+  /* Generate the descriptions*/
+  dump_verilog_file_header(fp, "Header file");
+
+  /* Output file names */
+  temp = subckt_llist_head;
+  while (temp) {
+    fprintf(fp, "`include \"%s\"\n",
+            (char*)(temp->dptr));
+    temp = temp->next;
+  }
+  
+  /* Close fp */
+  fclose(fp);
+
+  /* Free */
+  my_free(verilog_fname);
+   
+  return;
+}
+
 /* Determine the split sign for generic port */
 char determine_verilog_generic_port_split_sign(enum e_dump_verilog_port_type dump_port_type) {
   char ret;

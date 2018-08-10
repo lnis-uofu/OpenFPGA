@@ -49,6 +49,104 @@ void fprint_spice_head(FILE* fp,
   return;
 }
 
+/* Create a file handler for a subckt SPICE netlist */
+FILE* spice_create_one_subckt_file(char* subckt_dir,
+                                   char* subckt_name_prefix,
+                                   char* spice_subckt_file_name_prefix,
+                                   int grid_x, int grid_y,
+                                   char** sp_name) {
+  FILE* fp = NULL;
+  char* file_description = NULL;
+  (*sp_name) = my_strcat(subckt_dir, 
+                         fpga_spice_create_one_subckt_filename(spice_subckt_file_name_prefix, grid_x, grid_y, spice_netlist_file_postfix));
+
+  /* Create a file*/
+  fp = fopen((*sp_name), "w");
+
+  if (NULL == fp) {
+    vpr_printf(TIO_MESSAGE_ERROR,
+               "(FILE:%s,LINE[%d])Failure in create subckt SPICE netlist %s",
+               __FILE__, __LINE__, (*sp_name)); 
+    exit(1);
+  } 
+
+  /* Generate the descriptions*/
+  file_description = (char*) my_malloc(sizeof(char) * (strlen(subckt_name_prefix) + 2
+                                       + strlen(my_itoa(grid_x)) + 2 + strlen(my_itoa(grid_y))
+                                       + 9));
+  sprintf(file_description, "%s [%d][%d] in FPGA", 
+                           subckt_name_prefix, grid_x, grid_y);
+  fprint_spice_head(fp, file_description); 
+
+  /* Free */
+  my_free(file_description);
+
+  return fp;
+}
+
+/* Include a subckt in SPICE netlist */
+void spice_print_one_include_subckt_line(FILE* fp, 
+                                         char* subckt_dir,
+                                         char* subckt_file_name) {
+  char* temp_include_file_path = NULL;
+
+  if (NULL == fp) {
+    vpr_printf(TIO_MESSAGE_ERROR,
+               "(FILE:%s,LINE[%d])Invalid File Handler of subckt SPICE netlist %s",
+               __FILE__, __LINE__); 
+    exit(1);
+  } 
+
+  temp_include_file_path = my_strcat(subckt_dir, subckt_file_name);
+  fprintf(fp, ".include \'%s\'\n", temp_include_file_path);
+  my_free(temp_include_file_path);
+
+  return;
+}
+
+/* Output all the created subckt file names in a header file,
+ * that can be easily imported in a top-level netlist
+ */
+void spice_print_subckt_header_file(t_llist* subckt_llist_head,
+                                    char* subckt_dir,
+                                    char* header_file_name) {
+  FILE* fp = NULL;
+  char* spice_fname = NULL;
+  t_llist* temp = NULL; 
+
+  spice_fname = my_strcat(subckt_dir, 
+                          header_file_name);
+
+  /* Create a file*/
+  fp = fopen(spice_fname, "w");
+
+  if (NULL == fp) {
+    vpr_printf(TIO_MESSAGE_ERROR,
+               "(FILE:%s,LINE[%d])Failure in create SPICE netlist %s",
+               __FILE__, __LINE__, spice_fname); 
+    exit(1);
+  } 
+
+  /* Generate the descriptions*/
+  fprint_spice_head(fp, "Header file");
+
+  /* Output file names */
+  temp = subckt_llist_head;
+  while (temp) {
+    fprintf(fp, ".include \'%s\'\n",
+            (char*)(temp->dptr));
+    temp = temp->next;
+  }
+  
+  /* Close fp */
+  fclose(fp);
+
+  /* Free */
+  my_free(spice_fname);
+   
+  return;
+}
+
 
 /* Print all the global ports that are stored in the linked list 
  * Return the number of ports that have been dumped 
