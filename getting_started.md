@@ -1,8 +1,8 @@
 # Getting Started with FPGA-SPICE
-Clone the [FPGA-SPICE git repository:](https://github.com/tangxifan/tangxifan-eda-tools)
+Clone the [OpenFPGA git repository:](https://github.com/LNIS-Projects/OpenFPGA)
 
 [//todo]: # (change to final repository location)
-`git clone https://github.com/tangxifan/tangxifan-eda-tools.git `
+`git clone https://github.com/LNIS-Projects/OpenFPGA.git `
 
 There is a submodule in the repository so move to the OpenFPGA directory and clone that too:
 
@@ -13,7 +13,7 @@ There is a submodule in the repository so move to the OpenFPGA directory and clo
 `git submodule update`
 
 Go to the `VPR` dirctory and build the tool:
-`cd tangxifan-eda-tools/branches/vpr7_rram/vpr/`
+`cd ./vpr7_rram/vpr/`
 `make `
 
 VPR requires a minimum of one XML file that specifies the architecture of the FPGA, and one BLIF file that specifies the logic circuit to be put on the FPGA. 
