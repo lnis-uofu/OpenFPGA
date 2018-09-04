@@ -26,7 +26,7 @@
 #include "fpga_spice_globals.h"
 #include "fpga_spice_utils.h"
 #include "fpga_spice_backannotate_utils.h"
-#include "syn_verilog_api.h"
+#include "verilog_api.h"
 #include "fpga_spice_setup.h"
 
 /***** Subroutines Declarations *****/

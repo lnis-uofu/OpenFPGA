@@ -173,6 +173,7 @@ void generate_spice_luts(char* subckt_dir,
 
 void fprint_pb_primitive_lut(FILE* fp,
                              char* subckt_prefix,
+                             t_pb* prim_pb,
                              t_logical_block* mapped_logical_block,
                              t_pb_graph_node* cur_pb_graph_node,
                              int index,
@@ -196,6 +197,9 @@ void fprint_pb_primitive_lut(FILE* fp,
   int cur_num_sram = 0;
   char* sram_vdd_port_name = NULL;
 
+  int num_lut_pin_nets;
+  int* lut_pin_net = NULL;
+
   /* Ensure a valid file handler*/ 
   if (NULL == fp) {
     vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid file handler!\n",
@@ -214,10 +218,18 @@ void fprint_pb_primitive_lut(FILE* fp,
 
   /* Check if this is an idle logical block mapped*/
   if (NULL != mapped_logical_block) {
-    truth_table = assign_lut_truth_table(mapped_logical_block, &truth_table_length); 
     /* Back-annotate to logical block */
     mapped_logical_block->mapped_spice_model = spice_model;
     mapped_logical_block->mapped_spice_model_index = spice_model->cnt;
+ 
+    assert (VPACK_COMB == mapped_logical_block->type);
+    /* Get the mapped vpack_net_num of this physical LUT pb */
+    get_mapped_lut_pb_input_pin_vpack_net_num(prim_pb, &num_lut_pin_nets, &lut_pin_net);
+    /* consider LUT pin remapping when assign lut truth tables */
+    /* Match truth table and post-routing results */
+    truth_table = assign_post_routing_lut_truth_table(mapped_logical_block, 
+                                                      num_lut_pin_nets, lut_pin_net, &truth_table_length); 
+
   }
   /* Determine size of LUT*/
   input_ports = find_spice_model_ports(spice_model, SPICE_MODEL_PORT_INPUT, &num_input_port, TRUE);

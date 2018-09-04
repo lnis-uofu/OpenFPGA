@@ -376,7 +376,7 @@ struct s_mode {
      */
     int define_idle_mode;   
     int define_physical_mode;   
-    int available_in_packing;
+    int disabled_in_packing;
  
 	/* Power releated members */
 	t_mode_power * mode_power;

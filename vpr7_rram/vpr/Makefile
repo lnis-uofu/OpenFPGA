@@ -24,9 +24,10 @@ OPTIMIZATION_LEVEL_FOR_RELEASE_BUILD = -O3
 CC = $(COMPILER)
 LIB_DIR = -L.
 LIB = -lm -lvpr
+FPGA_SPICE_SRC_DIR = SRC/fpga_spice
 SRC_DIR = SRC
 OBJ_DIR = OBJ
-OTHER_DIR = -ISRC/util -ISRC/timing -ISRC/pack -ISRC/place -ISRC/base -ISRC/route -ISRC/power -ISRC/mrfpga -ISRC/spice -ISRC/clb_pin_remap -ISRC/syn_verilog -ISRC/fpga_spice -I../libarchfpga -I../printhandler/SRC/TIO_InputOutputHandlers
+OTHER_DIR = -ISRC/util -ISRC/timing -ISRC/pack -ISRC/place -ISRC/base -ISRC/route -ISRC/power -ISRC/mrfpga -ISRC/fpga_spice/base -ISRC/fpga_spice/spice -ISRC/fpga_spice/verilog -ISRC/fpga_spice/clb_pin_remap -I../libarchfpga -I../printhandler/SRC/TIO_InputOutputHandlers
 
 WARN_FLAGS = -Wall -Wpointer-arith -Wcast-qual -D__USE_FIXED_PROTOTYPES__ -ansi -pedantic -Wshadow -Wcast-align -D_POSIX_SOURCE -Wno-write-strings
 
@@ -68,7 +69,7 @@ endif
 
 EXE = vpr
 
-OBJ = $(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%.o,$(wildcard $(SRC_DIR)/*.c $(SRC_DIR)/*/*.c))
+OBJ = $(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%.o,$(wildcard $(SRC_DIR)/*.c $(SRC_DIR)/*/*.c $(FPGA_SPICE_SRC_DIR)/*/*.c))
 OBJ_DIRS=$(sort $(dir $(OBJ)))
 DEP := $(OBJ:.o=.d)
 

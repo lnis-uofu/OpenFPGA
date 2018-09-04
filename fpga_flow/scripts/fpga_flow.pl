@@ -122,42 +122,54 @@ sub print_usage()
   print "      -rpt <file> : CSV file consists of data\n";
   print "      -N <int> : N-LUT/Matrix\n";
   print "      Other Options:\n";
-  print "      -I <int> : Number of inputs of a CLB, mandatory when mpack1 flow is chosen\n";
-  print "      -K <int> : K-LUT, mandatory when standard flow is chosen\n";
-  print "      -M <int> : M-Matrix, mandatory when mpack1 flow is chosen\n";
-  print "      -power : run power estimation oriented flow\n";
-  print "      -black_box_ace: run activity estimation with black box support. It increase the power.\n";
-  print "      -remove_designs: remove all the old results.\n";
-  print "      -abc_scl : run ABC optimization for sequential circuits, mandatory when VTR flow is selected.\n";
-  print "      -abc_verilog_rewrite : run ABC to convert a blif netlist to a Verilog netlist.\n";
-  print "      -ace_p <float> : specify the default signal probablity of PIs in ACE2.\n";
-  print "      -ace_d <float> : specify the default signal density of PIs in ACE2.\n";
-  print "      -vpr_timing_pack_off : turn off the timing-driven pack for vpr.\n";
-  print "      -vpr_place_clb_pin_remap: turn on place_clb_pin_remap in VPR.\n";
-  print "      -vpr_max_router_iteration <int> : specify the max router iteration in VPR.\n";
-  print "      -vpr_route_breadthfirst : use the breadth-first routing algorithm of VPR.\n";
-  print "      -min_route_chan_width <float> : turn on routing with <float>* min_route_chan_width.\n";
-  print "      -fix_route_chan_width : turn on routing with a fixed route_chan_width, defined in benchmark configuration file.\n";
-  print "      -multi_task <int>: turn on the mutli-task mode\n";
-  print "      -vpr_fpga_spice <task_file> : turn on SPICE netlists print-out in VPR, specify a task file\n";
-  print "      -vpr_fpga_spice_print_component_tb : print component-level testbenches in VPR FPGA SPICE\n";
-  print "      -vpr_fpga_spice_print_grid_tb : print Grid-level testbenches in VPR FPGA SPICE\n";
-  print "      -vpr_fpga_spice_print_top_tb : print full-chip testbench in VPR FPGA SPICE\n";
-  print "      -vpr_fpga_spice_leakage_only : turn on leakage_only mode in VPR FPGA SPICE\n";
-  print "      -vpr_fpga_spice_parasitic_net_estimation_off : turn off parasitic_net_estimation in VPR FPGA SPICE\n";
-  print "      -vpr_fpga_spice_testbench_load_extraction_off : turn off testbench_load_extraction in VPR FPGA SPICE\n";
-  print "      -vpr_fpga_spice_verilog_generator : turn on Verilog Generator of VPR FPGA SPICE\n";
-  print "      -vpr_fpga_spice_rename_illegal_port : turn on renaming illegal ports option of VPR FPGA SPICE\n";
-  print "      -vpr_fpga_spice_signal_density_weight <float>: specify the option signal_density_weight of VPR FPGA SPICE\n";
-  print "      -vpr_fpga_spice_sim_window_size <float>: specify the option sim_window_size of VPR FPGA SPICE\n";
-  print "      -vpr_fpga_spice_sim_mt_num <int>: specify the option sim_mt_num of VPR FPGA SPICE\n";
-  print "      -multi_thread <int>: turn on the mutli-thread mode, specify the number of threads\n";
-  print "      -parse_results_only : only parse the flow results and write CSV report.\n";
-  print "      -min_hard_adder_size: min. size of hard adder in carry chain defined in Arch XML.(Default:1)\n";
-  print "      -mem_size: size of memory, mandatory when VTR/VTR_MCCL/VTR_MIG_MCCL flow is chosen\n";
-  print "      -odin2_carry_chain_support: turn on the carry_chain support only valid for VTR_MCCL/VTR_MIG_MCCL flow \n";
-  print "      -debug : debug mode\n";
-  print "      -help : print usage\n";
+  print "      [ General ] \n";
+  print "      \t-I <int> : Number of inputs of a CLB, mandatory when mpack1 flow is chosen\n";
+  print "      \t-K <int> : K-LUT, mandatory when standard flow is chosen\n";
+  print "      \t-M <int> : M-Matrix, mandatory when mpack1 flow is chosen\n";
+  print "      \t-power : run power estimation oriented flow\n";
+  print "      \t-black_box_ace: run activity estimation with black box support. It increase the power.\n";
+  print "      \t-remove_designs: remove all the old results.\n";
+  print "      \t-multi_thread <int>: turn on the mutli-thread mode, specify the number of threads\n";
+  print "      \t-multi_task <int>: turn on the mutli-task mode\n";
+  print "      \t-parse_results_only : only parse the flow results and write CSV report.\n";
+  print "      \t-debug : debug mode\n";
+  print "      \t-help : print usage\n";
+  print "      [ ODIN II ] \n";
+  print "      \t-min_hard_adder_size: min. size of hard adder in carry chain defined in Arch XML.(Default:1)\n";
+  print "      \t-mem_size: size of memory, mandatory when VTR/VTR_MCCL/VTR_MIG_MCCL flow is chosen\n";
+  print "      \t-odin2_carry_chain_support: turn on the carry_chain support only valid for VTR_MCCL/VTR_MIG_MCCL flow \n";
+  print "      [ ABC ] \n";
+  print "      \t-abc_scl : run ABC optimization for sequential circuits, mandatory when VTR flow is selected.\n";
+  print "      \t-abc_verilog_rewrite : run ABC to convert a blif netlist to a Verilog netlist.\n";
+  print "      [ ACE ] \n";
+  print "      \t-ace_p <float> : specify the default signal probablity of PIs in ACE2.\n";
+  print "      \t-ace_d <float> : specify the default signal density of PIs in ACE2.\n";
+  print "      [ VPR - Original Version ] \n";
+  print "      \t-vpr_timing_pack_off : turn off the timing-driven pack for vpr.\n";
+  print "      \t-vpr_place_clb_pin_remap: turn on place_clb_pin_remap in VPR.\n";
+  print "      \t-vpr_max_router_iteration <int> : specify the max router iteration in VPR.\n";
+  print "      \t-vpr_route_breadthfirst : use the breadth-first routing algorithm of VPR.\n";
+  print "      \t-min_route_chan_width <float> : turn on routing with <float>* min_route_chan_width.\n";
+  print "      \t-fix_route_chan_width : turn on routing with a fixed route_chan_width, defined in benchmark configuration file.\n";
+  print "      [ VPR - FPGA-SPICE Extension ] \n";
+  print "      \t-vpr_fpga_spice <task_file> : turn on SPICE netlists print-out in VPR, specify a task file\n";
+  print "      \t-vpr_fpga_spice_rename_illegal_port : turn on renaming illegal ports option of VPR FPGA SPICE\n";
+  print "      \t-vpr_fpga_spice_signal_density_weight <float>: specify the option signal_density_weight of VPR FPGA SPICE\n";
+  print "      \t-vpr_fpga_spice_sim_window_size <float>: specify the option sim_window_size of VPR FPGA SPICE\n";
+  print "      \t-vpr_fpga_spice_sim_mt_num <int>: specify the option sim_mt_num of VPR FPGA SPICE\n";
+  print "      \t-vpr_fpga_spice_print_component_tb : print component-level testbenches in VPR FPGA SPICE\n";
+  print "      \t-vpr_fpga_spice_print_grid_tb : print Grid-level testbenches in VPR FPGA SPICE\n";
+  print "      \t-vpr_fpga_spice_print_top_tb : print full-chip testbench in VPR FPGA SPICE\n";
+  print "      \t-vpr_fpga_spice_leakage_only : turn on leakage_only mode in VPR FPGA SPICE\n";
+  print "      \t-vpr_fpga_spice_parasitic_net_estimation_off : turn off parasitic_net_estimation in VPR FPGA SPICE\n";
+  print "      \t-vpr_fpga_spice_testbench_load_extraction_off : turn off testbench_load_extraction in VPR FPGA SPICE\n";
+  print "      [ VPR - FPGA-Verilog Extension ] \n";
+  print "      \t-vpr_fpga_verilog : turn on Verilog Generator of VPR FPGA SPICE\n";
+  print "      \t-vpr_fpga_verilog_print_top_tb : turn on printing top-level testbench for Verilog Generator of VPR FPGA SPICE\n";
+  print "      \t-vpr_fpga_verilog_print_input_blif_tb : turn on printing testbench for input blif file in Verilog Generator of VPR FPGA SPICE\n";
+  print "      \t-vpr_fpga_verilog_print_compact_netlist: turn on printing compact Verilog netlists in Verilog Generator of VPR FPGA SPICE\n";
+  print "      [ VPR - FPGA-Bitstream Extension ] \n";
+  print "      \t-vpr_fpga_bitstream_generator: turn on FPGA-SPICE bitstream generator\n";
   exit(1);
   return 1;
 }
@@ -312,17 +324,21 @@ sub opts_read()
   # FPGA-SPICE options
   # Read Opt into Hash(opt_ptr) : "opt_name","with_val","mandatory"
   &read_opt_into_hash("vpr_fpga_spice","on","off");
+  &read_opt_into_hash("vpr_fpga_spice_rename_illegal_port","off","off");
+  &read_opt_into_hash("vpr_fpga_spice_signal_density_weight","on","off");
+  &read_opt_into_hash("vpr_fpga_spice_sim_window_size","on","off");
+  &read_opt_into_hash("vpr_fpga_spice_sim_mt_num","on","off");
   &read_opt_into_hash("vpr_fpga_spice_print_component_tb","off","off");
   &read_opt_into_hash("vpr_fpga_spice_print_grid_tb","off","off");
   &read_opt_into_hash("vpr_fpga_spice_print_top_tb","off","off");
   &read_opt_into_hash("vpr_fpga_spice_leakage_only","off","off");
   &read_opt_into_hash("vpr_fpga_spice_parasitic_net_estimation_off","off","off");
   &read_opt_into_hash("vpr_fpga_spice_testbench_load_extraction_off","off","off");
-  &read_opt_into_hash("vpr_fpga_spice_verilog_generator","off","off");
-  &read_opt_into_hash("vpr_fpga_spice_rename_illegal_port","off","off");
-  &read_opt_into_hash("vpr_fpga_spice_signal_density_weight","on","off");
-  &read_opt_into_hash("vpr_fpga_spice_sim_window_size","on","off");
-  &read_opt_into_hash("vpr_fpga_spice_sim_mt_num","on","off");
+  &read_opt_into_hash("vpr_fpga_verilog","off","off");
+  &read_opt_into_hash("vpr_fpga_verilog_print_top_tb","off","off");
+  &read_opt_into_hash("vpr_fpga_verilog_print_input_blif_tb","off","off");
+  &read_opt_into_hash("vpr_fpga_verilog_print_compact_netlist","off","off");
+  &read_opt_into_hash("vpr_fpga_bitstream_generator","off","off");
 
   &print_opts(); 
 
@@ -1084,6 +1100,7 @@ sub run_std_vpr($ $ $ $ $ $ $ $ $)
     $chan_width_opt = "-route_chan_width $fix_chan_width";
   }
 
+  # FPGA SPICE options
   my ($vpr_spice_opts) = ("");
   if (("on" eq $opt_ptr->{power})&&("on" eq $opt_ptr->{vpr_fpga_spice})) {
     $vpr_spice_opts = "--fpga_spice";
@@ -1098,35 +1115,54 @@ sub run_std_vpr($ $ $ $ $ $ $ $ $)
       $vpr_spice_opts = $vpr_spice_opts." --fpga_spice_sim_mt_num $opt_ptr->{vpr_fpga_spice_sim_mt_num_val}";
     }
     if ("on" eq $opt_ptr->{vpr_fpga_spice_print_component_tb}) {
-      $vpr_spice_opts = $vpr_spice_opts." --spice_print_lut_testbench";
-      $vpr_spice_opts = $vpr_spice_opts." --spice_print_hardlogic_testbench";
-      $vpr_spice_opts = $vpr_spice_opts." --spice_print_pb_mux_testbench";
-      $vpr_spice_opts = $vpr_spice_opts." --spice_print_cb_mux_testbench";
-      $vpr_spice_opts = $vpr_spice_opts." --spice_print_sb_mux_testbench";
+      $vpr_spice_opts = $vpr_spice_opts." --fpga_spice_print_lut_testbench";
+      $vpr_spice_opts = $vpr_spice_opts." --fpga_spice_print_hardlogic_testbench";
+      $vpr_spice_opts = $vpr_spice_opts." --fpga_spice_print_pb_mux_testbench";
+      $vpr_spice_opts = $vpr_spice_opts." --fpga_spice_print_cb_mux_testbench";
+      $vpr_spice_opts = $vpr_spice_opts." --fpga_spice_print_sb_mux_testbench";
     }
     if ("on" eq $opt_ptr->{vpr_fpga_spice_print_grid_tb}) {
-      $vpr_spice_opts = $vpr_spice_opts." --spice_print_grid_testbench";
-      $vpr_spice_opts = $vpr_spice_opts." --spice_print_cb_testbench";
-      $vpr_spice_opts = $vpr_spice_opts." --spice_print_sb_testbench";
+      $vpr_spice_opts = $vpr_spice_opts." --fpga_spice_print_grid_testbench";
+      $vpr_spice_opts = $vpr_spice_opts." --fpga_spice_print_cb_testbench";
+      $vpr_spice_opts = $vpr_spice_opts." --fpga_spice_print_sb_testbench";
     }
     if ("on" eq $opt_ptr->{vpr_fpga_spice_print_top_tb}) {
-      $vpr_spice_opts = $vpr_spice_opts." --spice_print_top_testbench";
+      $vpr_spice_opts = $vpr_spice_opts." --fpga_spice_print_top_testbench";
     }
     if ("on" eq $opt_ptr->{vpr_fpga_spice_leakage_only}) {
       $vpr_spice_opts = $vpr_spice_opts." --fpga_spice_leakage_only";
     }
     if ("on" eq $opt_ptr->{vpr_fpga_spice_parasitic_net_estimation_off}) {
-      $vpr_spice_opts = $vpr_spice_opts." --fpga_spice_parasitic_net_estimation_off";
+      $vpr_spice_opts = $vpr_spice_opts." --fpga_spice_parasitic_net_estimation off";
     }
     if ("on" eq $opt_ptr->{vpr_fpga_spice_testbench_load_extraction_off}) {
-      $vpr_spice_opts = $vpr_spice_opts." --fpga_spice_testbench_load_extraction_off";
+      $vpr_spice_opts = $vpr_spice_opts." --fpga_spice_testbench_load_extraction off";
     }
   }
-  if (("on" eq $opt_ptr->{power})&&("on" eq $opt_ptr->{vpr_fpga_spice_verilog_generator})) {
-    $vpr_spice_opts = $vpr_spice_opts." --fpga_syn_verilog";
+
+  # FPGA Verilog options
+  if (("on" eq $opt_ptr->{power})&&("on" eq $opt_ptr->{vpr_fpga_verilog})) {
+    $vpr_spice_opts = $vpr_spice_opts." --fpga_verilog";
+
+    if ("on" eq $opt_ptr->{vpr_fpga_verilog_print_top_tb}) {
+      $vpr_spice_opts = $vpr_spice_opts." --fpga_verilog_print_top_testbench";
+    }
+    if ("on" eq $opt_ptr->{vpr_fpga_verilog_print_input_blif_tb}) {
+      $vpr_spice_opts = $vpr_spice_opts." --fpga_verilog_print_input_blif_testbench";
+    }
+    if ("on" eq $opt_ptr->{vpr_fpga_verilog_print_compact_netlist}) {
+      $vpr_spice_opts = $vpr_spice_opts." --fpga_verilog_compact_netlist";
+    }
   }
 
-  if ("on" eq $opt_ptr->{vpr_fpga_spice_rename_illegal_port}) {
+  # FPGA Bitstream Generator Options 
+  if ("on" eq $opt_ptr->{vpr_fpga_bitstream_generator}) {
+     $vpr_spice_opts = $vpr_spice_opts." --fpga_bitstream_generator";
+  }
+
+  if (("on" eq $opt_ptr->{vpr_fpga_spice_rename_illegal_port})
+     || ("on" eq $opt_ptr->{vpr_fpga_spice}) 
+     || ("on" eq $opt_ptr->{vpr_fpga_verilog})) {
     $vpr_spice_opts = $vpr_spice_opts." --fpga_spice_rename_illegal_port";
   }
   
@@ -1313,7 +1349,7 @@ sub run_cirkit_mig_mccl_map($ $ $) {
   my ($fpga_synthesis_method) = ("if");
   #my ($fpga_synthesis_method) = ("fpga");
   
-    my ($ABC_CMD_FH) = (FileHandle->new);
+  my ($ABC_CMD_FH) = (FileHandle->new);
   if ($ABC_CMD_FH->open("> $abc_cmd_log")) {
     print "INFO: auto generating cmds for ABC ($abc_cmd_log) ...\n";
   } else {
@@ -1353,6 +1389,10 @@ sub run_cirkit_mig_mccl_map($ $ $) {
 
 sub init_fpga_spice_task($) {
   my ($task_file) = @_;
+  my ($task_dir_path, $task_filename) = &split_prog_path($task_file);
+
+  &generate_path($task_dir_path);
+
   # Open the task file handler
   my ($TASKFH) = (FileHandle->new);
   if ($TASKFH->open("> $task_file")) {

@@ -1621,7 +1621,7 @@ void dump_verilog_pb_primitive_verilog_model(FILE* fp,
   switch (verilog_model->type) {
   case SPICE_MODEL_LUT:
     /* If this is a idle block we should set sram_bits to zero*/
-    dump_verilog_pb_primitive_lut(fp, subckt_prefix, mapped_logical_block, prim_pb_graph_node,
+    dump_verilog_pb_primitive_lut(fp, subckt_prefix, prim_pb, mapped_logical_block, prim_pb_graph_node,
                             pb_index, verilog_model);
     break;
   case SPICE_MODEL_FF:
@@ -1673,8 +1673,6 @@ void dump_verilog_idle_pb_graph_node_rec(FILE* fp,
 
   int child_pb_num_reserved_conf_bits = 0;
   int child_pb_num_conf_bits = 0;
-  int child_pb_num_inpads = 0;
-  int child_pb_num_outpads = 0;
   int child_pb_num_iopads = 0;
   
   int num_reserved_conf_bits = 0;
@@ -1941,8 +1939,6 @@ void dump_verilog_pb_graph_node_rec(FILE* fp,
   int num_conf_bits = 0;
   int child_pb_num_reserved_conf_bits = 0;
   int child_pb_num_conf_bits = 0;
-  int child_pb_num_inpads = 0;
-  int child_pb_num_outpads = 0;
   int child_pb_num_iopads = 0;
 
   int stamped_sram_cnt = get_sram_orgz_info_num_mem_bit(sram_verilog_orgz_info); 
@@ -2125,8 +2121,6 @@ void dump_verilog_pb_graph_node_rec(FILE* fp,
         child_mode_index = cur_pb->child_pbs[ipb][jpb].mode; 
         child_pb_num_reserved_conf_bits = cur_pb->child_pbs[ipb][jpb].num_reserved_conf_bits;
         child_pb_num_conf_bits = cur_pb->child_pbs[ipb][jpb].num_conf_bits;
-        child_pb_num_inpads = cur_pb->child_pbs[ipb][jpb].num_inpads;
-        child_pb_num_outpads = cur_pb->child_pbs[ipb][jpb].num_outpads;
         child_pb_num_iopads = cur_pb->child_pbs[ipb][jpb].num_iopads;
       } else /*if (NULL == cur_pb_type->modes[mode_index].pb_type_children[ipb].spice_model)*/ { /* Find the idle_mode_index, if this is not a leaf node  */
         child_mode_index = find_pb_type_idle_mode_index(cur_pb_type->modes[mode_index].pb_type_children[ipb]);
@@ -2241,8 +2235,6 @@ void dump_verilog_phy_pb_graph_node_rec(FILE* fp,
 
   int child_pb_num_reserved_conf_bits = 0;
   int child_pb_num_conf_bits = 0;
-  int child_pb_num_inpads = 0;
-  int child_pb_num_outpads = 0;
   int child_pb_num_iopads = 0;
   
   int num_reserved_conf_bits = 0;
@@ -3148,8 +3140,6 @@ void dump_verilog_grid_blocks(char* subckt_dir,
   int num_reserved_conf_bits;
   int temp_reserved_conf_bits_msb;
   int temp_conf_bits_lsb, temp_conf_bits_msb;
-  int temp_inpad_lsb, temp_inpad_msb;
-  int temp_outpad_lsb, temp_outpad_msb;
   int temp_iopad_lsb, temp_iopad_msb;
   FILE* fp = NULL;
   char* fname = NULL;
@@ -3324,8 +3314,6 @@ void dump_verilog_grid_blocks(char* subckt_dir,
     }
     /* Update temp_sram_lsb */
     temp_conf_bits_lsb = temp_conf_bits_msb;
-    temp_inpad_lsb = temp_inpad_msb;
-    temp_outpad_lsb = temp_outpad_msb;
     fprintf(fp, ");\n");
   }
 
@@ -3359,8 +3347,6 @@ void dump_verilog_physical_grid_blocks(char* subckt_dir,
   int cur_num_mem_bit;
   int temp_reserved_conf_bits_msb;
   int temp_conf_bits_lsb, temp_conf_bits_msb;
-  int temp_inpad_lsb, temp_inpad_msb;
-  int temp_outpad_lsb, temp_outpad_msb;
   int temp_iopad_lsb, temp_iopad_msb;
   FILE* fp = NULL;
   char* fname = NULL;
@@ -3511,8 +3497,6 @@ void dump_verilog_physical_grid_blocks(char* subckt_dir,
     }
     /* Update temp_sram_lsb */
     temp_conf_bits_lsb = temp_conf_bits_msb;
-    temp_inpad_lsb = temp_inpad_msb;
-    temp_outpad_lsb = temp_outpad_msb;
     temp_iopad_lsb = temp_iopad_msb;
     fprintf(fp, ");\n");
   }

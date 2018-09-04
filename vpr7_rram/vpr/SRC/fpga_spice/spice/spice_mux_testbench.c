@@ -1531,7 +1531,7 @@ int fprint_spice_mux_testbench_sb_one_mux(FILE* fp,
   sprintf(outport_name, "%s_size%d[%d]->out", mux_spice_model->prefix, mux_size, testbench_mux_cnt);
   
   if (TRUE == run_testbench_load_extraction) { /* Additional switch, default on! */
-    fprintf(fp, "***** Load for rr_node[%d] *****\n", src_rr_node - rr_node);
+    fprintf(fp, "***** Load for rr_node[%ld] *****\n", src_rr_node - rr_node);
     rr_node_outport_name = fprint_spice_testbench_rr_node_load_version(fp, 
                                                                        &testbench_load_cnt,
                                                                        num_segments,
@@ -1559,7 +1559,7 @@ static
 int fprint_spice_mux_testbench_call_one_grid_sb_muxes(FILE* fp, 
                                                       t_sb cur_sb_info,
                                                       t_ivec*** LL_rr_node_indices) {
-  int itrack, inode, side;
+  int itrack, side;
   int used = 0;
 
   /* Check the file handler*/ 

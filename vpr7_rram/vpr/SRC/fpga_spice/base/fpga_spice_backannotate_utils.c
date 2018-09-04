@@ -887,12 +887,6 @@ void back_annotate_one_pb_rr_node_map_info_rec(t_pb* cur_pb) {
     return;
   }
 
-  /* Reach a leaf, return */
-  if ((0 == cur_pb->pb_graph_node->pb_type->num_modes)
-     ||(NULL == cur_pb->child_pbs)) {
-    return;
-  }
-
   select_mode_index = cur_pb->mode; 
   
   /* For all the input/output/clock pins of this pb,
@@ -920,6 +914,12 @@ void back_annotate_one_pb_rr_node_map_info_rec(t_pb* cur_pb) {
         pb_rr_nodes[node_index].vpack_net_num = pb_rr_nodes[node_index].net_num;
       }
     }
+  }
+
+  /* Reach a leaf, return */
+  if ((0 == cur_pb->pb_graph_node->pb_type->num_modes)
+     ||(NULL == cur_pb->child_pbs)) {
+    return;
   }
 
   /* We check input_pins of child_pb_graph_node and its the input_edges
@@ -1243,11 +1243,118 @@ void backup_one_pb_rr_node_pack_prev_node_edge(t_rr_node* pb_rr_node) {
   return;
 }
 
+void rec_sync_pb_post_routing_vpack_net_num(t_pb* cur_pb) {
+  int ipb, jpb, select_mode_index;
+  int iport, ipin, node_index;
+  t_rr_node* pb_rr_nodes = NULL;
+ 
+  /* Return when we meet a null pb */ 
+  if (NULL == cur_pb) {
+    return;
+  }
+  
+  /* For all the input/output/clock pins of this pb,
+   * check the net_num and assign default prev_node, prev_edge 
+   */
+
+  /* We check output_pins of cur_pb_graph_node and its the input_edges
+   * Built the interconnections between outputs of cur_pb_graph_node and outputs of child_pb_graph_node
+   *   child_pb_graph_node.output_pins -----------------> cur_pb_graph_node.outpins
+   *                                        /|\
+   *                                         |
+   *                         input_pins,   edges,       output_pins
+   */ 
+  select_mode_index = cur_pb->mode; 
+  for (iport = 0; iport < cur_pb->pb_graph_node->num_input_ports; iport++) {
+    for (ipin = 0; ipin < cur_pb->pb_graph_node->num_input_pins[iport]; ipin++) {
+      /* Get the selected edge of current pin*/
+      pb_rr_nodes = cur_pb->rr_graph;
+      node_index = cur_pb->pb_graph_node->input_pins[iport][ipin].pin_count_in_cluster;
+      pb_rr_nodes[node_index].vpack_net_num = pb_rr_nodes[node_index].net_num;
+    }
+  }
+
+  for (iport = 0; iport < cur_pb->pb_graph_node->num_output_ports; iport++) {
+    for (ipin = 0; ipin < cur_pb->pb_graph_node->num_output_pins[iport]; ipin++) {
+      /* Get the selected edge of current pin*/
+      pb_rr_nodes = cur_pb->rr_graph;
+      node_index = cur_pb->pb_graph_node->output_pins[iport][ipin].pin_count_in_cluster;
+      pb_rr_nodes[node_index].vpack_net_num = pb_rr_nodes[node_index].net_num;
+    }
+  }
+
+  for (iport = 0; iport < cur_pb->pb_graph_node->num_clock_ports; iport++) {
+    for (ipin = 0; ipin < cur_pb->pb_graph_node->num_clock_pins[iport]; ipin++) {
+      /* Get the selected edge of current pin*/
+      pb_rr_nodes = cur_pb->rr_graph;
+      node_index = cur_pb->pb_graph_node->clock_pins[iport][ipin].pin_count_in_cluster;
+      pb_rr_nodes[node_index].vpack_net_num = pb_rr_nodes[node_index].net_num;
+    }
+  }
+
+  /* Reach a leaf, return */
+  if ((0 == cur_pb->pb_graph_node->pb_type->num_modes)
+     ||(NULL == cur_pb->child_pbs)) {
+    return;
+  }
+
+  /* Go recursively */ 
+  for (ipb = 0; ipb < cur_pb->pb_graph_node->pb_type->modes[select_mode_index].num_pb_type_children; ipb++) {
+    for (jpb = 0; jpb < cur_pb->pb_graph_node->pb_type->modes[select_mode_index].pb_type_children[ipb].num_pb; jpb++) {
+      if ((NULL != cur_pb->child_pbs[ipb])&&(NULL != cur_pb->child_pbs[ipb][jpb].name)) {
+        rec_sync_pb_post_routing_vpack_net_num(&(cur_pb->child_pbs[ipb][jpb]));
+      }
+    }
+  }
+  return;
+}
+
+/* IO blocks are special:
+ * each pb only contain 1 pb_graph_node (1 io)
+ * while the top-level type_descriptor consider 8 io in counting the pins
+ * so we just update the vpack_net_num and net_num in all the hierachy level 
+ */
+void update_one_io_grid_pack_net_num(int x, int y) {
+  int iblk, blk_id;
+  t_type_ptr type = NULL;
+  t_pb* pb = NULL;
+
+  /* Assert */
+  assert((!(x < 0))&&(x < (nx + 2)));  
+  assert((!(y < 0))&&(y < (ny + 2)));  
+
+  type = grid[x][y].type;
+  /* check */
+  assert (IO_TYPE == type);
+ 
+  for (iblk = 0; iblk < grid[x][y].usage; iblk++) {
+    blk_id = grid[x][y].blocks[iblk];
+    if ((IO_TYPE != type)) {
+      assert(block[blk_id].x == x);
+      assert(block[blk_id].y == y);
+      assert(OPEN != blk_id);
+    }
+    /* Bypass invalide block id 
+     * block id could be invalid in IO blocks
+     * TODO: figure out why, now I just bypass  
+     */
+    if (OPEN == blk_id) {  
+      continue;
+    }
+    pb = block[blk_id].pb;
+    assert(NULL != pb);
+    rec_sync_pb_post_routing_vpack_net_num(pb);
+  }
+ 
+  return;
+}
+
+
 /* During routing stage, VPR swap logic equivalent pins
  * which potentially changes the packing results (prev_node, prev_edge) in local routing
  * The following functions are to update the local routing results to match them with routing results
  */
-void update_one_grid_pack_prev_node_edge(int x, int y) {
+void update_one_grid_pack_net_num(int x, int y) {
   int iblk, blk_id, ipin, iedge, jedge, inode;
   int pin_global_rr_node_id, vpack_net_id, class_id;
   t_type_ptr type = NULL;
@@ -1390,9 +1497,15 @@ void update_grid_pbs_post_route_rr_graph() {
   for (ix = 0; ix < (nx + 2); ix++) {
     for (iy = 0; iy < (ny + 2); iy++) {
       type = grid[ix][iy].type;
-      if (NULL != type) {
+      /* bypass EMPTY type */
+      if ((NULL == type) || (EMPTY_TYPE == type)) {
+        continue;
+      }
+      if (IO_TYPE == type) {
+        update_one_io_grid_pack_net_num(ix, iy);
+      } else {
         /* Backup the packing prev_node and prev_edge */
-        update_one_grid_pack_prev_node_edge(ix, iy);
+        update_one_grid_pack_net_num(ix, iy);
       }
     }
   }

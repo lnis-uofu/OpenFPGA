@@ -1343,6 +1343,12 @@ static enum e_block_pack_status try_place_logical_block_rec(
 	}
 	pb_type = pb_graph_node->pb_type;
 
+    /* Xifan Tang: bypass those modes that are specified as unavaible during packing */
+    if (TRUE == pb_type->parent_mode->disabled_in_packing) {
+	  return  BLK_FAILED_FEASIBLE;
+    } 
+    /* END */
+
 	is_primitive = (boolean) (pb_type->num_modes == 0);
 
 	if (is_primitive) {

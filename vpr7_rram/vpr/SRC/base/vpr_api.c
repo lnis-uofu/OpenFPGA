@@ -169,27 +169,26 @@ void vpr_print_usage(void) {
 	vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_spice_rename_illegal_port\n");
 	vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_spice_signal_density_weight <float>\n");
 	vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_spice_sim_window_size <float>\n");
-	vpr_printf(TIO_MESSAGE_INFO, "SPICE Support Options:\n");
-	vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_spice\n");
-	vpr_printf(TIO_MESSAGE_INFO, "\t--spice_dir <directory_path_output_spice_netlists>\n");
-	vpr_printf(TIO_MESSAGE_INFO, "\t--spice_print_top_testbench\n");
-	vpr_printf(TIO_MESSAGE_INFO, "\t--spice_print_lut_testbench\n");
-	vpr_printf(TIO_MESSAGE_INFO, "\t--spice_print_hardlogic_testbench\n");
-	vpr_printf(TIO_MESSAGE_INFO, "\t--spice_print_pb_mux_testbench\n");
-	vpr_printf(TIO_MESSAGE_INFO, "\t--spice_print_cb_mux_testbench\n");
-	vpr_printf(TIO_MESSAGE_INFO, "\t--spice_print_sb_mux_testbench\n");
-	vpr_printf(TIO_MESSAGE_INFO, "\t--spice_print_cb_testbench\n");
-	vpr_printf(TIO_MESSAGE_INFO, "\t--spice_print_sb_testbench\n");
-	vpr_printf(TIO_MESSAGE_INFO, "\t--spice_print_grid_testbench\n");
 	vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_spice_leakage_only\n");
 	vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_spice_parasitic_net_estimation_off\n");
 	vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_spice_testbench_load_extraction_off\n");
 	vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_spice_sim_mt_num\n");
+	vpr_printf(TIO_MESSAGE_INFO, "SPICE Support Options:\n");
+	vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_spice\n");
+	vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_spice_dir <directory_path_output_spice_netlists>\n");
+	vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_spice_print_top_testbench\n");
+	vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_spice_print_lut_testbench\n");
+	vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_spice_print_hardlogic_testbench\n");
+	vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_spice_print_pb_mux_testbench\n");
+	vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_spice_print_cb_mux_testbench\n");
+	vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_spice_print_sb_mux_testbench\n");
+	vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_spice_print_cb_testbench\n");
+	vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_spice_print_sb_testbench\n");
+	vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_spice_print_grid_testbench\n");
     /* Xifan TANG: Synthesizable Verilog Dump*/
 	vpr_printf(TIO_MESSAGE_INFO, "Synthesizable Verilog Generator Options:\n");
-	vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_syn_verilog\n");
-	vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_syn_verilog_dir <directory_path_of_dumped_verilog_files>\n");
-	vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_syn_verilog_tb_serial_config_mode\n");
+	vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_verilog\n");
+	vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_verilog_dir <directory_path_of_dumped_verilog_files>\n");
 }
 
 /* Initialize VPR 

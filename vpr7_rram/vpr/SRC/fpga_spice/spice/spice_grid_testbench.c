@@ -422,7 +422,6 @@ int fprint_spice_one_grid_testbench(char* formatted_spice_dir,
   char* temp_include_file_path = NULL;
   char* title = my_strcat("FPGA Grid Testbench for Design: ", circuit_name);
   char* grid_testbench_file_path = my_strcat(formatted_spice_dir, grid_test_bench_name);
-  t_llist* temp = NULL;
   int used = 0;
 
   /* Check if the path exists*/

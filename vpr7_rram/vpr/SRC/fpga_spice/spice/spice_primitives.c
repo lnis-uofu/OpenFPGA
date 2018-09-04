@@ -309,7 +309,6 @@ void fprint_pb_primitive_io(FILE* fp,
   int expected_num_sram = 0;
   int* sram_bits = NULL;
   int cur_num_sram = 0;
-  t_spice_model* mem_model = NULL;
 
   char* formatted_subckt_prefix = format_spice_node_prefix(subckt_prefix); /* Complete a "_" at the end if needed*/
   t_pb_type* prim_pb_type = NULL;

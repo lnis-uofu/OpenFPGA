@@ -469,7 +469,7 @@ void dump_verilog_cmos_mux_one_basis_module_structural(FILE* fp,
                                                        int num_input_basis_subckt, 
                                                        t_spice_model* cur_spice_model,
                                                        boolean special_basis) { 
-  int cur_mem, i;
+  int i;
   int num_mem = num_input_basis_subckt;
   /* Get the tgate module name */
   char* tgate_module_name = cur_spice_model->pass_gate_logic->spice_model_name;
@@ -546,9 +546,7 @@ void dump_verilog_rram_mux_one_basis_module_structural(FILE* fp,
                                                        t_spice_model* cur_spice_model) { 
   /* RRAM MUX needs 2*(input_size + 1) memory bits for configuration purpose */
   int num_mem = num_input_basis_subckt + 1;
-  int i, iport, ipin;
-  int find_prog_EN = 0;
-  int find_prog_ENb = 0;
+  int i;
   char* progTE_module_name = "PROG_TE";
   char* progBE_module_name = "PROG_BE";
 
@@ -1061,8 +1059,6 @@ void dump_verilog_cmos_mux_submodule(FILE* fp,
   t_spice_model_port** input_port = NULL;
   t_spice_model_port** output_port = NULL;
   t_spice_model_port** sram_port = NULL;
-  t_spice_model* input_invbuf_spice_model = NULL;
-  t_spice_model* output_invbuf_spice_model = NULL;
 
   /* Find the basis subckt*/
   char* mux_basis_subckt_name = NULL;
@@ -1803,7 +1799,6 @@ void dump_verilog_submodule_muxes(char* submodule_dir,
   int num_input_basis = 0;
   t_spice_mux_model* cur_spice_mux_model = NULL;
   
-  int cur_bl, cur_wl;
   int max_routing_mux_size = -1;
 
   /* Alloc the muxes*/

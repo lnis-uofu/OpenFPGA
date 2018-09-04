@@ -438,7 +438,6 @@ void fprintf_spice_pb_graph_pin_interc(FILE* fp,
 
   int num_sram_bits = 0;
   int* sram_bits = NULL;
-  int num_sram = 0;
   int cur_sram = 0;
   int mux_level = 0;
 
@@ -1014,7 +1013,7 @@ void fprint_pb_primitive_spice_model(FILE* fp,
   switch (spice_model->type) {
   case SPICE_MODEL_LUT:
     /* If this is a idle block we should set sram_bits to zero*/
-    fprint_pb_primitive_lut(fp, subckt_prefix, mapped_logical_block, prim_pb_graph_node,
+    fprint_pb_primitive_lut(fp, subckt_prefix, prim_pb, mapped_logical_block, prim_pb_graph_node,
                             pb_index, spice_model);
     break;
   case SPICE_MODEL_FF:

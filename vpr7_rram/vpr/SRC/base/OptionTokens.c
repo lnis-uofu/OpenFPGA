@@ -59,23 +59,23 @@ struct s_TokenPair OptionBaseTokenList[] = {
 		{ "tech_properties", OT_CMOS_TECH_BEHAVIOR_FILE }, /* Technology properties */
         /* Xifan TANG: FPGA SPICE Support */
         { "fpga_spice", OT_FPGA_SPICE },/* Xifan TANG: SPICE Model Support, turn on the functionality*/
-        { "spice_dir", OT_SPICE_DIR },/* Xifan TANG: SPICE Model Support, directory of spice netlists*/
-        { "spice_print_top_testbench", OT_SPICE_PRINT_TOP_TESTBENCH }, /* Print the SPICE TOP Testbench for MUXes */
-        { "spice_print_pb_mux_testbench", OT_SPICE_PRINT_PB_MUX_TESTBENCH }, /* Print the SPICE Testbench for MUXes */
-        { "spice_print_cb_mux_testbench", OT_SPICE_PRINT_CB_MUX_TESTBENCH }, /* Print the SPICE Testbench for MUXes */
-        { "spice_print_sb_mux_testbench", OT_SPICE_PRINT_SB_MUX_TESTBENCH }, /* Print the SPICE Testbench for MUXes */
-        { "spice_print_cb_testbench", OT_SPICE_PRINT_CB_TESTBENCH }, /* Print the SPICE Testbench for CBs */
-        { "spice_print_sb_testbench", OT_SPICE_PRINT_SB_TESTBENCH }, /* Print the SPICE Testbench for SBs */
-        { "spice_print_grid_testbench", OT_SPICE_PRINT_GRID_TESTBENCH }, /* Print the SPICE Testbench for Grids  */
-        { "spice_print_lut_testbench", OT_SPICE_PRINT_LUT_TESTBENCH }, /* Print the SPICE Testbench for Grids  */
-        { "spice_print_hardlogic_testbench", OT_SPICE_PRINT_HARDLOGIC_TESTBENCH }, /* Print the SPICE Testbench for Grids  */
+        { "fpga_spice_dir", OT_SPICE_DIR },/* Xifan TANG: SPICE Model Support, directory of spice netlists*/
+        { "fpga_spice_print_top_testbench", OT_SPICE_PRINT_TOP_TESTBENCH }, /* Print the SPICE TOP Testbench for MUXes */
+        { "fpga_spice_print_pb_mux_testbench", OT_SPICE_PRINT_PB_MUX_TESTBENCH }, /* Print the SPICE Testbench for MUXes */
+        { "fpga_spice_print_cb_mux_testbench", OT_SPICE_PRINT_CB_MUX_TESTBENCH }, /* Print the SPICE Testbench for MUXes */
+        { "fpga_spice_print_sb_mux_testbench", OT_SPICE_PRINT_SB_MUX_TESTBENCH }, /* Print the SPICE Testbench for MUXes */
+        { "fpga_spice_print_cb_testbench", OT_SPICE_PRINT_CB_TESTBENCH }, /* Print the SPICE Testbench for CBs */
+        { "fpga_spice_print_sb_testbench", OT_SPICE_PRINT_SB_TESTBENCH }, /* Print the SPICE Testbench for SBs */
+        { "fpga_spice_print_grid_testbench", OT_SPICE_PRINT_GRID_TESTBENCH }, /* Print the SPICE Testbench for Grids  */
+        { "fpga_spice_print_lut_testbench", OT_SPICE_PRINT_LUT_TESTBENCH }, /* Print the SPICE Testbench for Grids  */
+        { "fpga_spice_print_hardlogic_testbench", OT_SPICE_PRINT_HARDLOGIC_TESTBENCH }, /* Print the SPICE Testbench for Grids  */
         { "fpga_spice_leakage_only", OT_FPGA_SPICE_LEAKAGE_ONLY }, /* Only simulate leakage power in FPGA SPICE */
         { "fpga_spice_parasitic_net_estimation_off", OT_FPGA_SPICE_PARASITIC_NET_ESTIMATION_OFF }, /* Xifan TANG: turn off the parasitic net estimation*/
         { "fpga_spice_testbench_load_extraction_off", OT_FPGA_SPICE_TESTBENCH_LOAD_EXTRACTION_OFF }, /* Xifan TANG: turn off the parasitic net estimation*/
         /* Xifan TANG: Synthsizable Verilog */
-        { "fpga_syn_verilog", OT_FPGA_VERILOG_SYN },
-        { "fpga_syn_verilog_dir", OT_FPGA_VERILOG_SYN_DIR },
-        { "fpga_syn_verilog_tb_serial_config_mode", OT_FPGA_VERILOG_SYN_TB_SERIAL_CONFIG_MODE },
+        { "fpga_verilog", OT_FPGA_VERILOG_SYN },
+        { "fpga_verilog_dir", OT_FPGA_VERILOG_SYN_DIR },
+        { "fpga_verilog_tb_serial_config_mode", OT_FPGA_VERILOG_SYN_TB_SERIAL_CONFIG_MODE },
         { "fpga_spice_rename_illegal_port", OT_FPGA_SPICE_RENAME_ILLEGAL_PORT }, /* Xifan TANG: rename illegal port names */
         { "fpga_spice_signal_density_weight", OT_FPGA_SPICE_SIGNAL_DENSITY_WEIGHT }, /* The weight of signal density */
         { "fpga_spice_sim_window_size", OT_FPGA_SPICE_SIM_WINDOW_SIZE }, /* Window size in determining number of clock cycles in simulation */

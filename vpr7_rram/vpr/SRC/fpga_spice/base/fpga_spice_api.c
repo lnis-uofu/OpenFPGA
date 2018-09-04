@@ -27,7 +27,7 @@
 #include "fpga_spice_backannotate_utils.h"
 #include "fpga_spice_setup.h"
 #include "spice_api.h"
-#include "syn_verilog_api.h"
+#include "verilog_api.h"
 
 /* Top-level API of FPGA-SPICE */
 void vpr_fpga_spice_tool_suites(t_vpr_setup vpr_setup,

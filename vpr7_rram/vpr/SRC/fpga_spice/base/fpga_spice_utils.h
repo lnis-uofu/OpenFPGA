@@ -454,6 +454,13 @@ int* generate_lut_sram_bits(int truth_table_len,
 char** assign_lut_truth_table(t_logical_block* mapped_logical_block,
                               int* truth_table_length);
 
+void get_lut_logical_block_input_pin_vpack_net_num(t_logical_block* lut_logical_block,
+                                                   int* num_lut_pin, int** lut_pin_net); 
+
+char** assign_post_routing_lut_truth_table(t_logical_block* mapped_logical_block,
+                                           int lut_size, int* lut_pin_vpack_net_num,
+                                           int* truth_table_length);
+
 int get_ff_output_init_val(t_logical_block* ff_logical_block);
 
 int get_lut_output_init_val(t_logical_block* lut_logical_block);
@@ -628,3 +635,6 @@ t_llist* add_one_subckt_file_name_to_llist(t_llist* cur_head,
 
 boolean check_subckt_file_exist_in_llist(t_llist* subckt_llist_head,
                                          char* subckt_file_name);
+
+void get_mapped_lut_pb_input_pin_vpack_net_num(t_pb* lut_pb,
+                                               int* num_lut_pin, int** lut_pin_net);

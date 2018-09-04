@@ -1471,7 +1471,8 @@ static void ProcessMode(INOUTP ezxml_t Parent, t_mode * mode,
     /* Spice Model Support: Xifan TANG
      * More option: specify if this mode is available during packing 
      */
-    mode->available_in_packing = GetBooleanProperty(Parent, "available_in_packing", FALSE, TRUE);
+    mode->disabled_in_packing = GetBooleanProperty(Parent, "disabled_in_packing", FALSE, FALSE); 
+    ezxml_set_attr(Parent, "disabled_in_packing", NULL);
     /* END */
 
 	mode->num_pb_type_children = CountChildren(Parent, "pb_type", 0);

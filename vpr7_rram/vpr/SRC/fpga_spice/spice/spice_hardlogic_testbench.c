@@ -729,8 +729,6 @@ int fprint_spice_one_hardlogic_testbench(char* formatted_spice_dir,
                                          int grid_x, int grid_y,
                                          boolean leakage_only) {
   FILE* fp = NULL;
-  char* formatted_subckt_dir_path = format_dir_path(subckt_dir_path);
-  char* temp_include_file_path = NULL;
   char* title = my_strcat("FPGA Hard Logic Testbench for Design: ", circuit_name);
   char* hardlogic_testbench_file_path = my_strcat(formatted_spice_dir, hardlogic_testbench_name);
   int used;

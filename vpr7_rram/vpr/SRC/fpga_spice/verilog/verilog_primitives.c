@@ -31,10 +31,6 @@
 #include "verilog_pbtypes.h"
 #include "verilog_primitives.h"
 
-enum e_ff_trigger_type {
-  FF_RE, FF_FE
-};
-
 /* Subroutines */
 void dump_verilog_pb_primitive_ff(FILE* fp,
                             char* subckt_prefix,
@@ -43,9 +39,6 @@ void dump_verilog_pb_primitive_ff(FILE* fp,
                             int index,
                             t_spice_model* verilog_model) {
   int i;
-  /* Default FF settings, applied when this FF is idle*/
-  enum e_ff_trigger_type trigger_type = FF_RE;
-  int init_val = 0;
  
   int num_input_port = 0;
   t_spice_model_port** input_ports = NULL;
@@ -141,29 +134,9 @@ void dump_verilog_pb_primitive_ff(FILE* fp,
 
   /* Apply rising edge, and init value to the ff*/
   if (NULL != mapped_logical_block) {
-    /* Consider the rising edge|falling edge */
-    if (0 == strcmp("re", mapped_logical_block->trigger_type)) { 
-      trigger_type = FF_RE;
-    } else if (0 == strcmp("fe", mapped_logical_block->trigger_type)) { 
-      trigger_type = FF_FE;
-    } else {
-      vpr_printf(TIO_MESSAGE_ERROR, "(File:%s,[LINE%d])Invalid ff trigger type! Should be [re|fe].\n",
-                 __FILE__, __LINE__);
-      exit(1);
-    }
-    /* Assign initial value */
-    if (1 == mapped_logical_block->init_val) {
-      init_val = 1;
-    } else {
-      init_val = 0;
-    }
-
     /* Back-annotate to logical block */
     mapped_logical_block->mapped_spice_model = verilog_model;
     mapped_logical_block->mapped_spice_model_index = verilog_model->cnt;
-  } else {
-    trigger_type = FF_RE;
-    init_val = 0;
   }
   /* TODO: apply falling edge, initial value to FF!!!*/
   /*fprintf(fp, "\n");*/
@@ -191,13 +164,6 @@ void dump_verilog_pb_primitive_hardlogic(FILE* fp,
                                    t_pb_graph_node* prim_pb_graph_node,
                                    int index,
                                    t_spice_model* verilog_model) {
-  int num_input_port = 0;
-  t_spice_model_port** input_ports = NULL;
-  int num_output_port = 0;
-  t_spice_model_port** output_ports = NULL;
-  int num_clock_port = 0;
-  t_spice_model_port** clock_ports = NULL;
-
   char* formatted_subckt_prefix = format_verilog_node_prefix(subckt_prefix); /* Complete a "_" at the end if needed*/
   t_pb_type* prim_pb_type = NULL;
   char* port_prefix = NULL;
@@ -215,11 +181,6 @@ void dump_verilog_pb_primitive_hardlogic(FILE* fp,
                __FILE__, __LINE__);
     exit(1);
   }
-
-  /* Find ports*/
-  input_ports = find_spice_model_ports(verilog_model, SPICE_MODEL_PORT_INPUT, &num_input_port, TRUE);
-  output_ports = find_spice_model_ports(verilog_model, SPICE_MODEL_PORT_OUTPUT, &num_output_port, TRUE);
-  clock_ports = find_spice_model_ports(verilog_model, SPICE_MODEL_PORT_CLOCK, &num_clock_port, TRUE);
 
   /* Asserts */
   assert(SPICE_MODEL_HARDLOGIC == verilog_model->type);

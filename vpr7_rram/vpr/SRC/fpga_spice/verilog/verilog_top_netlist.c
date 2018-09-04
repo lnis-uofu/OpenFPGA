@@ -472,9 +472,6 @@ void dump_verilog_top_netlist_ports(FILE* fp,
                                     int num_clocks,
                                     char* circuit_name,
                                     t_spice verilog) {
-  int num_array_bl, num_array_wl;
-  int bl_decoder_size, wl_decoder_size;
-  char* port_name = NULL;
 
   /* A valid file handler */
   if (NULL == fp) {
@@ -1657,7 +1654,6 @@ void dump_verilog_top_testbench_ports(FILE* fp,
 static 
 void dump_verilog_top_testbench_call_top_module(FILE* fp,
                                                 char* circuit_name) {
-  int iblock, iopad_idx;
 
   /* Include defined top-level module */
   fprintf(fp, "//----- Device Under Test (DUT) ----\n");

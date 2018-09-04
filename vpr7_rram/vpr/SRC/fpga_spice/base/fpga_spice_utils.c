@@ -5443,8 +5443,6 @@ void find_bl_wl_ports_spice_model(t_spice_model* cur_spice_model,
 void find_blb_wlb_ports_spice_model(t_spice_model* cur_spice_model,
                                     int* num_blb_ports, t_spice_model_port*** blb_ports,
                                     int* num_wlb_ports, t_spice_model_port*** wlb_ports) {
-  int i;
-
   /* Check */
   assert(NULL != cur_spice_model); 
 
@@ -5749,6 +5747,111 @@ char** assign_lut_truth_table(t_logical_block* mapped_logical_block,
 
   return truth_table;
 }
+
+/* Get the vpack_net_num of all the input pins of a LUT physical pb */
+void get_lut_logical_block_input_pin_vpack_net_num(t_logical_block* lut_logical_block,
+                                                   int* num_lut_pin, int** lut_pin_net) {
+  int ipin;
+
+  /* Check */ 
+  assert (NULL == lut_logical_block->model->inputs[0].next);
+  (*num_lut_pin) = lut_logical_block->model->inputs[0].size;  
+ 
+  /* Allocate */
+  (*lut_pin_net) = (int*) my_malloc ((*num_lut_pin) * sizeof(int)); 
+  /* Fill the array */
+  for (ipin = 0; ipin < (*num_lut_pin); ipin++) {
+    (*lut_pin_net)[ipin] = lut_logical_block->input_nets[0][ipin];
+  }
+
+  return;
+}
+
+
+/* Provide the truth table of a mapped logical block 
+ * 1. Reorgainze the truth table to be consistent with the mapped nets of a LUT
+ * 2. Allocate the truth table in a clean char array and return
+ */
+char** assign_post_routing_lut_truth_table(t_logical_block* mapped_logical_block,
+                                           int lut_size, int* lut_pin_vpack_net_num,
+                                           int* truth_table_length) {
+  char** truth_table = NULL;
+  t_linked_vptr* head = NULL;
+  int cur = 0;
+  int inet, jnet;
+  int* lut_to_lb_net_mapping = NULL;
+  int num_lb_pin = 0;
+  int* lb_pin_vpack_net_num = NULL;
+  int lb_truth_table_size = 0;
+
+  if (NULL == mapped_logical_block) {
+    vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid mapped_logical_block!\n",
+               __FILE__, __LINE__);
+    exit(1);
+  }
+
+  /* Allocate */
+  lut_to_lb_net_mapping = (int*) my_malloc (sizeof(int) * lut_size);
+  /* Find nets mapped to a logical block */
+  get_lut_logical_block_input_pin_vpack_net_num(mapped_logical_block,
+                                                &num_lb_pin, &lb_pin_vpack_net_num);
+  /* Create a pin-to-pin net_num mapping */
+  for (inet = 0; inet < lut_size; inet++) {
+    lut_to_lb_net_mapping[inet] = OPEN;
+    /* Bypass open nets */
+    if (OPEN  == lut_pin_vpack_net_num[inet]) {
+      continue;
+    }
+    assert (OPEN  != lut_pin_vpack_net_num[inet]);
+    /* Find the position (offset) of each vpack_net_num in lb_pins */
+    for (jnet = 0; jnet < num_lb_pin; jnet++) {
+      if (lut_pin_vpack_net_num[inet] == lb_pin_vpack_net_num[jnet]) {
+        lut_to_lb_net_mapping[inet] = jnet; 
+        break;
+      }  
+    } 
+    /* Not neccesary to find a one, some luts just share part of their pins  */ 
+  } 
+
+  /* Initialization */
+  (*truth_table_length) = 0;
+  /* Count the lines of truth table*/
+  head = mapped_logical_block->truth_table;
+  while(head) {
+    (*truth_table_length)++;
+    head = head->next;
+  }
+  /* Allocate truth_tables */
+  truth_table = (char**)my_malloc(sizeof(char*)*(*truth_table_length));
+  /* Fill truth_tables*/
+  cur = 0;
+  head = mapped_logical_block->truth_table;
+  while(head) {
+    /* Handle the truth table pin remapping */
+    truth_table[cur] = (char*) my_malloc((lut_size + 3) * sizeof(char));
+    /* Initialize */
+    lb_truth_table_size = strlen((char*)(head->data_vptr));
+    memcpy(truth_table[cur] + lut_size, (char*)(head->data_vptr) + lb_truth_table_size - 2, 3);
+    /* Add */
+    for (inet = 0; inet < lut_size; inet++) {
+      /* Open net implies a don't care, or some nets are not in the list  */
+      if ((OPEN  == lut_pin_vpack_net_num[inet]) 
+        || (OPEN == lut_to_lb_net_mapping[inet])) {
+        truth_table[cur][inet] = '-';
+        continue;
+      }
+      /* Find the desired truth table bit */
+      truth_table[cur][inet] = ((char*)(head->data_vptr))[lut_to_lb_net_mapping[inet]];
+    }
+    
+    head = head->next;
+    cur++;
+  }
+  assert(cur == (*truth_table_length));
+
+  return truth_table;
+}
+
 
 /* Get initial value of a Latch/FF output*/
 int get_ff_output_init_val(t_logical_block* ff_logical_block) {
@@ -6818,7 +6921,6 @@ t_llist* stats_spice_muxes(int num_switches,
                            t_switch_inf* switches,
                            t_spice* spice,
                            t_det_routing_arch* routing_arch) {
-  int iedge;
   int itype;
   int imodel;
   /* Linked-list to store the information of Multiplexers*/
@@ -7275,6 +7377,24 @@ boolean check_subckt_file_exist_in_llist(t_llist* subckt_llist_head,
   return FALSE;
 }
 
+/* Get the vpack_net_num of all the input pins of a LUT physical pb */
+void get_mapped_lut_pb_input_pin_vpack_net_num(t_pb* lut_pb,
+                                               int* num_lut_pin, int** lut_pin_net) {
+ 
+  int ipin, inode;
 
+  /* Check */ 
+  assert (1 == lut_pb->pb_graph_node->num_input_ports);
+  (*num_lut_pin) = lut_pb->pb_graph_node->num_input_pins[0];  
+ 
+  /* Allocate */
+  (*lut_pin_net) = (int*) my_malloc ((*num_lut_pin) * sizeof(int)); 
+  /* Fill the array */
+  for (ipin = 0; ipin < (*num_lut_pin); ipin++) {
+    inode = lut_pb->pb_graph_node->input_pins[0][ipin].pin_count_in_cluster;
+    (*lut_pin_net)[ipin] = lut_pb->rr_graph[inode].vpack_net_num;
+  }
 
-    
+  return;
+}
+

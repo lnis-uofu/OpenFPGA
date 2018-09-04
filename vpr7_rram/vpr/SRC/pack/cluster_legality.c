@@ -258,6 +258,7 @@ void alloc_and_load_rr_graph_for_pb_graph_node(
 			rr_node[index].switches = (short *) my_calloc(rr_node[index].num_edges,
 					sizeof(short));
 			rr_node[index].net_num = OPEN;
+	        rr_node[index].vpack_net_num = OPEN; /* Xifan TANG: ensure a clear initialization */
 			rr_node[index].prev_node = OPEN;
 			rr_node[index].prev_edge = OPEN;
 			if (mode == 0) { /* default mode is the first mode */
@@ -291,6 +292,7 @@ void alloc_and_load_rr_graph_for_pb_graph_node(
 				rr_node[num_rr_nodes].edges = NULL;
 				rr_node[num_rr_nodes].switches = NULL;
 				rr_node[num_rr_nodes].net_num = OPEN;
+				rr_node[num_rr_nodes].vpack_net_num = OPEN; /* Xifan TANG: ensure a clear initialization */
 				rr_node[num_rr_nodes].prev_node = OPEN;
 				rr_node[num_rr_nodes].prev_edge = OPEN;
 				rr_node[num_rr_nodes].capacity = 1;
@@ -324,6 +326,7 @@ void alloc_and_load_rr_graph_for_pb_graph_node(
 			rr_node[index].switches = (short *) my_calloc(rr_node[index].num_edges,
 					sizeof(short));
 			rr_node[index].net_num = OPEN;
+	        rr_node[index].vpack_net_num = OPEN; /* Xifan TANG: ensure a clear initialization */
 			rr_node[index].prev_node = OPEN;
 			rr_node[index].prev_edge = OPEN;
 			if (mode == 0) { /* Default mode is the first mode */
@@ -362,6 +365,7 @@ void alloc_and_load_rr_graph_for_pb_graph_node(
 			rr_node[index].switches = (short *) my_calloc(rr_node[index].num_edges,
 					sizeof(short));
 			rr_node[index].net_num = OPEN;
+	        rr_node[index].vpack_net_num = OPEN; /* Xifan TANG: ensure a clear initialization */
 			rr_node[index].prev_node = OPEN;
 			rr_node[index].prev_edge = OPEN;
 			if (mode == 0) { /* default mode is the first mode (useful for routing */
@@ -395,6 +399,7 @@ void alloc_and_load_rr_graph_for_pb_graph_node(
 				rr_node[num_rr_nodes].edges = NULL;
 				rr_node[num_rr_nodes].switches = NULL;
 				rr_node[num_rr_nodes].net_num = OPEN;
+	            rr_node[num_rr_nodes].vpack_net_num = OPEN; /* Xifan TANG: ensure a clear initialization */
 				rr_node[num_rr_nodes].prev_node = OPEN;
 				rr_node[num_rr_nodes].prev_edge = OPEN;
 				rr_node[num_rr_nodes].capacity = 1;
@@ -1118,6 +1123,7 @@ void save_cluster_solution(void) {
 	int inode;
 	for (i = 0; i < max_ext_index; i++) {
 		rr_node[i].net_num = OPEN;
+	    rr_node[i].vpack_net_num = OPEN; /* Xifan TANG: ensure a clear initialization */
 		rr_node[i].prev_edge = OPEN;
 		rr_node[i].prev_node = OPEN;
 	}
