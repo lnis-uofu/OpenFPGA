@@ -58,7 +58,8 @@ my @sctgy;
           "csv_tags",
          );
 # refer to the keywords of dir_path
-@{$sctgy[0]} = ("benchmark_dir",
+@{$sctgy[0]} = ("script_base",
+                "benchmark_dir",
                 "odin2_path",
                 "cirkit_path",
                 "abc_mccl_path",
@@ -1034,7 +1035,12 @@ sub run_odin2($ $ $) {
 
 sub run_pro_blif($ $) {
   my ($abc_blif_out_bak, $abc_blif_out) = @_;
-  `perl pro_blif.pl -i $abc_blif_out_bak -o $abc_blif_out`;
+  my ($pro_blif_path) = ($conf_ptr->{dir_path}->{script_base}->{val});
+
+  $pro_blif_path =~ s/\/$//g;
+  $pro_blif_path = $pro_blif_path . "/pro_blif.pl";
+
+  `perl $pro_blif_path -i $abc_blif_out_bak -o $abc_blif_out`;
 
   if (!(-e $abc_blif_out)) {
     die "ERROR: Fail pro_blif.pl for benchmark $abc_blif_out.\n";

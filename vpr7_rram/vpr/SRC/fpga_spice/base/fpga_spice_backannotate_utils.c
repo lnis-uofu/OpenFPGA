@@ -639,7 +639,7 @@ void backannotate_clb_nets_act_info() {
   for (inet = 0; inet < num_logical_nets; inet++) {
     if (NULL == vpack_net[inet].spice_net_info) {
       /* Allocate */
-      vpack_net[inet].spice_net_info = (t_spice_net_info*)my_malloc(sizeof(t_spice_net_info));
+      vpack_net[inet].spice_net_info = (t_spice_net_info*)my_calloc(1, sizeof(t_spice_net_info));
     } 
     /* Initialize to zero */
     init_spice_net_info(vpack_net[inet].spice_net_info);
@@ -660,7 +660,7 @@ void backannotate_clb_nets_act_info() {
   for (inet = 0; inet < num_nets; inet++) {
     if (NULL == clb_net[inet].spice_net_info) {
       /* Allocate */
-      clb_net[inet].spice_net_info = (t_spice_net_info*)my_malloc(sizeof(t_spice_net_info));
+      clb_net[inet].spice_net_info = (t_spice_net_info*)my_calloc(1, sizeof(t_spice_net_info));
     } 
     /* Initialize to zero */
     init_spice_net_info(clb_net[inet].spice_net_info);

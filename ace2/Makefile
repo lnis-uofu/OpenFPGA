@@ -4,7 +4,7 @@ LFLAGS = -g -O0
 
 EXE = ace
 
-ABC_DIR = ../../../../research/vtr_release/abc_with_bb_support
+ABC_DIR = ../abc_with_bb_support
 ABC_LIB = libabc.a
 ABC_LIB_PATH = $(ABC_DIR)/$(ABC_LIB)
 
