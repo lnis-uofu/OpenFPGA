@@ -6,34 +6,47 @@
 Welcome to OpenFPGA's documentation!
 ====================================
 
-For more information on the ABC see :ref:`ABC`.
-For more information on the VPR see :ref:`VTR`
-For more information on the original FPGA architecture description language see :ref:`fpga_arch_description`
+For more information on the ABC see .
+For more information on the VPR see 
+For more information on the original FPGA architecture description language see
 
 .. toctree::
    :maxdepth: 2
    :caption: Extended Architecture Description Language
 
-  arch_lang/index
+   arch_lang/index
 
 .. toctree::
    :maxdepth: 2
    :caption: OpenFPGA VPR Usage
-  fpga_spice/index
-  fpga_verilog/index
-  fpga_bitstream/index
+
+.. toctree::
+   :caption: FPGA-SPICE: SPICE Auto-Generation
+
+   fpga_spice/index
+
+.. toctree::
+   :caption: FPGA-Verilog: Verilog Auto-Generation
+
+   fpga_verilog/index
+
+.. toctree::
+   :caption: FPGA-Bitstream: Bitstream Generator
+
+   fpga_bitstream/index
 
 .. toctree::
    :maxdepth: 2
    :caption: Tutorial
-  tutorials/index
+
+   tutorials/index
 
 .. toctree::
-   :maxdepths: 2
+   :maxdepth: 2
    :caption: Appendix
   
    contact
-   references
+   reference
    
 
 
