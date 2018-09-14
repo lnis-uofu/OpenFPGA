@@ -23,6 +23,12 @@ import sphinx_rtd_theme
 #html_theme = "sphinx_rtd_theme"
 #html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
+# Import sphinxcontrib.bibtex
+have_sphinxcontrib_bibtex = True
+try:
+    import sphinxcontrib.bibtex
+except ImportError:
+    have_sphinxcontrib_bibtex = False
 
 # -- Project information -----------------------------------------------------
 
@@ -46,11 +52,14 @@ release = u'1.0'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    'sphinx.ext.todo',
+    'sphinx.ext.mathjax',
+    'sphinx.ext.graphviz',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
 #templates_path = ['ytemplates']
-templates_path = []
+templates_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
@@ -89,6 +98,7 @@ numfig = True
 # a list of builtin themes.
 #
 #html_theme = 'alabaster'
+html_theme = 'sphinx_rtd_theme'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -96,7 +106,7 @@ numfig = True
 #
 # Comment when using local build
 # Uncomment when using readthedocs build
-html_theme_options = {sphinx_rtd_theme}
+#html_theme_options = {sphinx_rtd_theme}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

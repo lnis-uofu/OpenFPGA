@@ -1,6 +1,9 @@
 # editor backup files
 *~
 
+# temp files
+.DS_Store
+
 # log files
 **/logs
 *.log

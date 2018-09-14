@@ -1,9 +1,11 @@
 Run SPICE simulation
 ====================
 
-2.	Simulation results 
+* Simulation results 
+
 The HSPICE simulator creates a LIS file (\*.lis) to store the results. In each LIS file, you can find the leakage power and dynamic power of each module, as well the total leakage power and the total dynamic power of all the modules in a SPICE netlist.
-The following is an example of simulation results of a pb_mux testbench.
+
+The following is an example of simulation results of a pb_mux testbench.::
 
  total_leakage_srams= -16.4425u  
 
@@ -19,14 +21,19 @@ The following is an example of simulation results of a pb_mux testbench.
 
  total_energy_per_cycle_pb_mux= -37.5871p
 
-total_energy_per_cycle_srams represents the total energy per cycle of all the SRAMs of the multiplexers in this testbench, while total_energy_per_cycle_pb_mux is the total energy per cycle of all the multiplexer structures in this testbench.
+.. note:: total_energy_per_cycle_srams represents the total energy per cycle of all the SRAMs of the multiplexers in this testbench, while total_energy_per_cycle_pb_mux is the total energy per cycle of all the multiplexer structures in this testbench.
+  
+  Therefore, the total energy per cycle of all the multiplexers in this testbench should be the sum of total_energy_per_cycle_srams and total_energy_per_cycle_pb_mux.
 
-Therefore, the total energy per cycle of all the multiplexers in this testbench should be the sum of total_energy_per_cycle_srams and total_energy_per_cycle_pb_mux.
+  Similiarly, the total leakage power of all the multiplexers in this testbench should the sum of total_leakage_srams and  total_leakage_power_pb_mux.
 
-Similiarly, the total leakage power of all the multiplexers in this testbench should the sum of total_leakage_srams and  total_leakage_power_pb_mux.
+  The leakage power is measured for the first clock cycle, where FPGA-SPICE set all the voltage stimuli in constant voltage levels.
 
-The leakage power is measured for the first clock cycle, where FPGA-SPICE set all the voltage stimuli in constant voltage levels.
-The total energy per cycle is measured for the rest of clock cycles (the 1st clock cycle is not included). 
-The total power can be calculated by,
+  The total energy per cycle is measured for the rest of clock cycles (the 1st clock cycle is not included). 
+ 
+The total power can be calculated by, 
+
+:math:`total\_energy\_per\_cycle \cdot clock\_freq`
+
 where clock_freq is the clock frequency used in SPICE simulations.
 
