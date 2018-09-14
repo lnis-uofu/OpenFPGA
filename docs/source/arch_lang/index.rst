@@ -3,10 +3,16 @@
  
 .. toctree::
    :maxdepth: 2
+
+   generality
+   
+   spice_sim_setting
+
+   tech_lib
   
-   define_phy_modules
+   circuit_modules
   
-   link_phy_modules
+   link_circuit_modules
 
    multimode_support
 

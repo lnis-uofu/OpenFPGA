@@ -11,6 +11,16 @@ For more information on the VPR see
 For more information on the original FPGA architecture description language see
 
 .. toctree::
+   :caption: Motivation
+
+   motivation
+
+.. toctree::
+   :caption: Getting Started 
+
+   eda_flow
+
+.. toctree::
    :maxdepth: 2
    :caption: Extended Architecture Description Language
 

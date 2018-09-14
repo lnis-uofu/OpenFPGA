@@ -1,2 +1,2 @@
-Bistream Output File Format
+Verilog Output File Format
 ============================
