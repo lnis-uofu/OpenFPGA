@@ -1,5 +1,5 @@
 Define Circuit-level Modules
-========================================================================
+----------------------------
 
 To support FPGA SPICE, Verilog and Bitstream Generator, physical modules containing gate-level and transistor-level features are required for FPGA primitive blocks.
 The physical modules are defined in XML syntax, similar to the original VPR FPGA architecture description language.

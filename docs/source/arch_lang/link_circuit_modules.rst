@@ -1,5 +1,5 @@
 Link circuit modules
-====================
+--------------------
 Each defined SPICE model should be linked to a FPGA module defined in the original part of architecture descriptions. It helps FPGA-SPICE creating the SPICE netlists for logic/routing blocks. Since the original part lacks such support, we create a few XML properties to link to SPICE models.
 
 SRAM
