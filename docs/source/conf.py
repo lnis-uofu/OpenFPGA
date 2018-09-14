@@ -24,11 +24,11 @@ import sphinx_rtd_theme
 #html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 # Import sphinxcontrib.bibtex
-#have_sphinxcontrib_bibtex = True
-#try:
-#    import sphinxcontrib.bibtex
-#except ImportError:
-#    have_sphinxcontrib_bibtex = False
+have_sphinxcontrib_bibtex = True
+try:
+    import sphinxcontrib.bibtex
+except ImportError:
+    have_sphinxcontrib_bibtex = False
 
 # -- Project information -----------------------------------------------------
 
