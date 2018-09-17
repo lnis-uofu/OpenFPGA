@@ -7428,3 +7428,57 @@ void get_mapped_lut_pb_input_pin_vpack_net_num(t_pb* lut_pb,
   return;
 }
 
+/* Recursively find all the global ports in the spice_model / sub spice_model 
+ */
+void rec_stats_spice_model_global_ports(t_spice_model* cur_spice_model,
+                                        boolean recursive,
+                                        t_llist** spice_model_head) {
+  int iport;
+  t_llist* temp = NULL;
+
+  /* Check */
+  assert(NULL != cur_spice_model);
+  if (0 < cur_spice_model->num_port) {
+    assert(NULL != cur_spice_model->ports);
+  }
+
+  for (iport = 0; iport < cur_spice_model->num_port; iport++) {
+    /* if this spice model requires customized netlist to be included, we do not go recursively */
+    if (TRUE == recursive) { 
+      /* GO recursively first, and meanwhile count the number of global ports */
+      /* For the port that requires another spice_model, i.e., SRAM
+       * We need include any global port in that spice model
+       */
+      if (NULL != cur_spice_model->ports[iport].spice_model) {
+         rec_stats_spice_model_global_ports(cur_spice_model->ports[iport].spice_model, 
+                                            recursive, spice_model_head);
+      }
+    }
+    /* By pass non-global ports*/
+    if (FALSE == cur_spice_model->ports[iport].is_global) {
+      continue;
+    }
+    /* Now we have a global port, add it to linked list */
+    assert (TRUE == cur_spice_model->ports[iport].is_global);
+    if (NULL == (*spice_model_head)) {
+     (*spice_model_head) = create_llist(1);
+     /* Configure the data pointer of linked list */
+     (*spice_model_head)->dptr = (void*) (&cur_spice_model->ports[iport]);
+     /* Check if this ports exists in the linked list */
+    } else if (FALSE == check_dptr_exist_in_llist((*spice_model_head),
+                                                  (void*)(&cur_spice_model->ports[iport]))) {
+      /* Non-exist in the current linked-list, a new node is required 
+       * Go to the tail of the linked-list and add a new node  
+       */
+      temp = search_llist_tail(*spice_model_head);
+      temp = insert_llist_node(temp);
+      /* Configure the data pointer of linked list */
+      temp->dptr = (void*) (&cur_spice_model->ports[iport]);
+    }
+  }
+
+  return;
+}
+
+
+

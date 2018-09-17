@@ -804,11 +804,13 @@ void dump_verilog_mux_basis_module(FILE* fp,
   init_spice_mux_arch(spice_mux_model->spice_model, spice_mux_model->spice_mux_arch, spice_mux_model->size);
 
   /* Corner case: Error out  MUX_SIZE = 2, automatcially give a one-level structure */
+  /*
   if ((2 == spice_mux_model->size)&&(SPICE_MODEL_STRUCTURE_ONELEVEL != spice_mux_model->spice_model->design_tech_info.structure)) {
     vpr_printf(TIO_MESSAGE_ERROR, "(File:%s,[LINE%d])Structure of SPICE model (%s) should be one-level because it is linked to a 2:1 MUX!\n",
                __FILE__, __LINE__, spice_mux_model->spice_model->name);
     exit(1);
   }
+  */
 
   /* Prepare the basis subckt name:
    */
@@ -1740,11 +1742,13 @@ void dump_verilog_mux_module(FILE* fp,
   }
 
   /* Corner case: Error out  MUX_SIZE = 2, automatcially give a one-level structure */
+  /*
   if ((2 == spice_mux_model->size)&&(SPICE_MODEL_STRUCTURE_ONELEVEL != spice_mux_model->spice_model->design_tech_info.structure)) {
     vpr_printf(TIO_MESSAGE_ERROR, "(File:%s,[LINE%d])Structure of SPICE model (%s) should be one-level because it is linked to a 2:1 MUX!\n",
                __FILE__, __LINE__, spice_mux_model->spice_model->name);
     exit(1);
   }
+  */
 
   /* Print the definition of subckt*/
   /* Check the design technology*/

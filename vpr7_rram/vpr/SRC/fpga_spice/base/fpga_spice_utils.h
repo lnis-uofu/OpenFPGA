@@ -638,3 +638,7 @@ boolean check_subckt_file_exist_in_llist(t_llist* subckt_llist_head,
 
 void get_mapped_lut_pb_input_pin_vpack_net_num(t_pb* lut_pb,
                                                int* num_lut_pin, int** lut_pin_net);
+
+void rec_stats_spice_model_global_ports(t_spice_model* cur_spice_model,
+                                        boolean recursive,
+                                        t_llist** spice_model_head);

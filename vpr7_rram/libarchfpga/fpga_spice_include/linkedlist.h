@@ -25,6 +25,8 @@ t_llist* search_llist_tail(t_llist* head);
 
 int find_length_llist(t_llist* head);
 
+boolean check_dptr_exist_in_llist(t_llist* head, void* data_ptr);
+
 void free_llist(t_llist* head);
 
 t_llist* reverse_llist(t_llist* head);

@@ -135,6 +135,25 @@ int find_length_llist(t_llist* head) {
   return length;
 }
 
+/* Search the linked list and check if dptr has been stored in a node */
+boolean check_dptr_exist_in_llist(t_llist* head, void* data_ptr) {
+  t_llist* temp = head;
+
+  if (NULL == temp) {
+  /* A NULL head means zero length */
+    return FALSE;
+  }
+
+  while (temp != NULL) {
+    if (data_ptr == temp->dptr) {
+      return TRUE;
+    }
+    temp = temp->next;
+  }
+
+  return FALSE;
+}
+
 /* Free a linked list, Make sure before this function,
  * the dptr has been freed! I cannot free them here!!!
  */
