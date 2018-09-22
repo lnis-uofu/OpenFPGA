@@ -212,9 +212,19 @@ void dump_verilog_invbuf_module(FILE* fp,
                   output_port[0]->prefix,
                   output_port[0]->prefix);
 
-    } else {
+    } else if (FALSE == invbuf_spice_model->design_tech_info.buffer_info->tapered_buf) {
       fprintf(fp, "assign %s = %s;\n",
                   output_port[0]->prefix,
+                  input_port[0]->prefix);
+    } else {
+      assert (TRUE == invbuf_spice_model->design_tech_info.buffer_info->tapered_buf);
+      fprintf(fp, "assign %s = ",
+                  output_port[0]->prefix);
+      /* depend on the stage, we may invert the output */
+      if (1 == invbuf_spice_model->design_tech_info.buffer_info->tap_buf_level % 2) {
+        fprintf(fp, "~");
+      }
+      fprintf(fp, "%s;\n",
                   input_port[0]->prefix);
     }
     break;
