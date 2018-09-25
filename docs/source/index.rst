@@ -27,10 +27,6 @@ For more information on the original FPGA architecture description language see
    arch_lang/index
 
 .. toctree::
-   :maxdepth: 2
-   :caption: OpenFPGA VPR Usage
-
-.. toctree::
    :caption: FPGA-SPICE: SPICE Auto-Generation
 
    fpga_spice/index
