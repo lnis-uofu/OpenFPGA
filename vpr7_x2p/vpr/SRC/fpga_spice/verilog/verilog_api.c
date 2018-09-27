@@ -244,15 +244,18 @@ void vpr_dump_syn_verilog(t_vpr_setup vpr_setup,
   // dump_verilog_sdc_file();
   
   /* dump verilog testbench only for top-level */
-  dump_verilog_top_testbench(chomped_circuit_name, top_testbench_file_path, num_clocks, 
-                             vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts, *(Arch.spice));
+  if ( TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.print_top_tb) { 
+    dump_verilog_top_testbench(chomped_circuit_name, top_testbench_file_path, num_clocks, 
+                               vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts, *(Arch.spice));
+    /* Dump bitstream file */
+    dump_fpga_spice_bitstream(bitstream_file_path, chomped_circuit_name, sram_verilog_orgz_info);
+  }
 
   /* dump verilog testbench only for input blif */
-  dump_verilog_input_blif_testbench(chomped_circuit_name, blif_testbench_file_path, num_clocks, 
-                                    vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts, *(Arch.spice));
-  
-  /* Dump bitstream file */
-  dump_fpga_spice_bitstream(bitstream_file_path, chomped_circuit_name, sram_verilog_orgz_info);
+  if ( TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.print_input_blif_tb) { 
+    dump_verilog_input_blif_testbench(chomped_circuit_name, blif_testbench_file_path, num_clocks, 
+                                      vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts, *(Arch.spice));
+  }  
 
   /* End time count */
   t_end = clock();

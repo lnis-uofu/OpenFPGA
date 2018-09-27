@@ -76,6 +76,10 @@ enum e_OptionBaseToken {
 	OT_CMOS_TECH_BEHAVIOR_FILE,
     /* Xifan TANG: FPGA SPICE Support */
     OT_FPGA_SPICE, /* Xifan TANG: FPGA SPICE Model Support */
+    OT_FPGA_SPICE_RENAME_ILLEGAL_PORT, 
+    OT_FPGA_SPICE_SIGNAL_DENSITY_WEIGHT, /* The weight of signal density in determining number of clock cycles in simulation */
+    OT_FPGA_SPICE_SIM_WINDOW_SIZE, /* Window size in determining number of clock cycles in simulation */
+    OT_FPGA_SPICE_SIM_MT_NUM, /* number of multi-thread used in simulation */
     OT_SPICE_DIR, /* Xifan TANG: FPGA SPICE Model Support */
     OT_SPICE_PRINT_TOP_TESTBENCH, /* Xifan TANG: Print Top-level SPICE Testbench */
     OT_SPICE_PRINT_PB_MUX_TESTBENCH, /* Xifan TANG: Print SPICE Testbench for MUXes */
@@ -92,11 +96,9 @@ enum e_OptionBaseToken {
     /* Xifan TANG: Verilog Generation */
     OT_FPGA_VERILOG_SYN, /* Xifan TANG: Synthesizable Verilog Dump */
     OT_FPGA_VERILOG_SYN_DIR, /* Xifan TANG: Synthesizable Verilog Dump */
+    OT_FPGA_VERILOG_SYN_PRINT_TOP_TB, /* Xifan TANG: Synthesizable Verilog Dump */
+    OT_FPGA_VERILOG_SYN_PRINT_INPUT_BLIF_TB, /* Xifan TANG: Synthesizable Verilog Dump */
     OT_FPGA_VERILOG_SYN_TB_SERIAL_CONFIG_MODE, /* Xifan TANG: Synthesizable Verilog Dump */
-    OT_FPGA_SPICE_RENAME_ILLEGAL_PORT, 
-    OT_FPGA_SPICE_SIGNAL_DENSITY_WEIGHT, /* The weight of signal density in determining number of clock cycles in simulation */
-    OT_FPGA_SPICE_SIM_WINDOW_SIZE, /* Window size in determining number of clock cycles in simulation */
-    OT_FPGA_SPICE_SIM_MT_NUM, /* number of multi-thread used in simulation */
     /* mrFPGA: Xifan TANG */
     OT_SHOW_SRAM,
     OT_SHOW_PASS_TRANS,
