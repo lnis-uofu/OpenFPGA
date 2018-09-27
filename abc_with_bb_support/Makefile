@@ -1,7 +1,7 @@
 
-CC   := gcc-4.9
-CXX  := g++-4.9
-LD   := g++-4.9
+CC   := gcc
+CXX  := g++
+LD   := g++
 CP   := cp
 
 PROG := abc
