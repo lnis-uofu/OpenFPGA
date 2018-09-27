@@ -35,7 +35,7 @@ Now that we know that VPR is working, we can move on to FPGA-SPICE.
 
 The first example we want to run is go.sh in the same folder as we already are.
 
-'./go.sh'
+`./go.sh`
 
 By calling this script (if not modified), we call FPGA-SPICE on an architecture built on TSMC 40 nm node in typical conditions. By modifying the script, we can do different corners at the same time.
 
