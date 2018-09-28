@@ -11,7 +11,7 @@ Clone the [OpenFPGA git repository:](https://github.com/LNIS-Projects/OpenFPGA)
 
 [//]: # (`git submodule init`)
 
-[//todo]: #()`git submodule update`)
+[//todo]: # (`git submodule update`)
 
 Go to the `VPR` directory and build the tool:
 
