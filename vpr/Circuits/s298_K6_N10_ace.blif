@@ -1,0 +1,104 @@
+# Benchmark "s298" written by ABC on Mon Aug 17 12:00:52 2015
+.model s298
+.inputs G0 G1 G2 clk
+.outputs G117 G132 G66 G118 G133 G67
+
+.latch        n21        G10 re        clk  0
+.latch        n26        G11 re        clk  0
+.latch        n31        G12 re        clk  0
+.latch        n36        G13 re        clk  0
+.latch        n41        G14 re        clk  0
+.latch        n46        G15 re        clk  0
+.latch        n51        G16 re        clk  0
+.latch        n56        G17 re        clk  0
+.latch        n61        G18 re        clk  0
+.latch      n66_1        G19 re        clk  0
+.latch        n71        G20 re        clk  0
+.latch        n76        G21 re        clk  0
+.latch        n81        G22 re        clk  0
+.latch        n86        G23 re        clk  0
+
+.names G0 G10 n21
+00 1
+.names G0 G10 G11 G12 G13 n26
+001-- 1
+0101- 1
+010-0 1
+.names G0 G10 G11 G12 n31
+00-1 1
+0110 1
+0-01 1
+.names G0 G10 G11 G12 G13 n36
+00--1 1
+01110 1
+0-011 1
+0-101 1
+.names G0 G10 G13 G14 G23 n57 n41
+00-10- 1
+0110-1 1
+0-010- 1
+0--01- 1
+0--100 1
+.names G11 G12 n57
+00 1
+.names G0 n59 n46
+00 1
+.names G11 G12 G13 G14 G15 G22 n59
+1010-0 1
+1---0- 1
+-1--0- 1
+--0-0- 1
+---10- 1
+----00 1
+.names G12 G13 G14 G16 n59 n51
+1-111 1
+-10-1 1
+-1-11 1
+.names G11 G12 G13 G14 G17 n59 n56
+0-00-1 1
+100--1 1
+-1-111 1
+--1111 1
+.names G11 G12 G13 G14 G18 n59 n61
+100--1 1
+-1-111 1
+--00-1 1
+--1111 1
+.names G10 n59 n64 n66_1
+00- 1
+-11 1
+.names G11 G12 G13 G14 G19 n64
+0001- 1
+-1-11 1
+--10- 1
+--1-1 1
+.names G10 G12 G13 G20 n59 n66 n71
+0---0- 1
+-00-11 1
+---111 1
+.names G11 G12 G13 G14 n66
+100- 0
+---0 0
+.names G11 G12 G13 G14 G21 n59 n76
+1100-1 1
+-1-111 1
+--1111 1
+.names G0 G2 G22 n81
+001 1
+010 1
+.names G0 G1 G23 n86
+001 1
+010 1
+.names G18 G117
+1 1
+.names G20 G132
+1 1
+.names G16 G66
+1 1
+.names G19 G118
+1 1
+.names G21 G133
+1 1
+.names G17 G67
+1 1
+.end
