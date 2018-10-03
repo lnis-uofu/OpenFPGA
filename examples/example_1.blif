@@ -1,0 +1,13 @@
+# Baudouin Chauviere University of Utah 30 September 2018
+# Benchmark doing an inverter
+
+.model s298.bench
+.inputs I0 clk
+.outputs Q0
+
+.latch        n0        Q0 re        clk  0
+
+.names I0 n0
+0 1
+
+.end

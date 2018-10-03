@@ -1,0 +1,372 @@
+
+
+<architecture>
+	<!-- 
+	       ODIN II specific config begins 
+	       Describes the types of user-specified netlist blocks (in blif, this corresponds to 
+	       ".model [type_of_block]") that this architecture supports.
+
+	       Note: Basic LUTs, I/Os, and flip-flops are not included here as there are 
+	       already special structures in blif (.names, .input, .output, and .latch) 
+	       that describe them.
+	  -->
+  <models>
+    <model name="io">
+      <input_ports>
+        <port name="outpad"/>
+      </input_ports>
+      <output_ports>
+        <port name="inpad"/>
+      </output_ports>
+    </model>
+  </models>
+  <!-- ODIN II specific config ends -->
+  
+
+  <!-- Physical descriptions begin -->
+  <layout auto="1.0"/>
+
+  <spice_settings>
+    <parameters>
+      <options sim_temp="25" post="off" captab="off" fast="on"/>
+      <!-- Used only when doing monte_carlo simulations
+	  <monte_carlo mc_sim="off" num_mc_points="2" cmos_variation="off" rram_variation="off">
+        <cmos abs_variation="0.1" num_sigma="3"/>
+        <rram abs_variation="0.1" num_sigma="3"/>
+      </monte_carlo>
+      -->
+	  <measure sim_num_clock_cycle="auto" accuracy="1e-13" accuracy_type="abs">
+        <slew>
+          <rise upper_thres_pct="0.95" lower_thres_pct="0.05"/>
+          <fall upper_thres_pct="0.05" lower_thres_pct="0.95"/>
+        </slew>
+        <delay>
+          <rise input_thres_pct="0.5" output_thres_pct="0.5"/>
+          <fall input_thres_pct="0.5" output_thres_pct="0.5"/>
+        </delay>
+      </measure>
+      <stimulate>
+        <clock op_freq="auto" sim_slack="0.2" prog_freq="2.5e6">
+          <rise slew_time="20e-12" slew_type="abs"/>
+          <fall slew_time="20e-12" slew_type="abs"/>
+        </clock>
+        <input>
+          <rise slew_time="25e-12" slew_type="abs"/>
+          <fall slew_time="25e-12" slew_type="abs"/>
+        </input>
+      </stimulate>      
+    </parameters>
+    <tech_lib lib_type="industry" transistor_type="TOP_TT" lib_path="/research/ece/lnis/USERS/tang/tangxifan-eda-tools/branches/subvt_fpga/process/tsmc40nm/toplevel.l" nominal_vdd="0.9" io_vdd="2.5"/>
+    <transistors pn_ratio="2" model_ref="M">
+      <nmos model_name="nch" chan_length="40e-9" min_width="140e-9"/>
+      <pmos model_name="pch" chan_length="40e-9" min_width="140e-9"/>
+      <io_nmos model_name="nch_25" chan_length="270e-9" min_width="320e-9"/>
+      <io_pmos model_name="pch_25" chan_length="270e-9" min_width="320e-9"/>
+    </transistors> 
+    <module_spice_models>
+      <spice_model type="inv_buf" name="INVTX1" prefix="INVTX1" is_default="1">
+        <design_technology type="cmos" topology="inverter" size="1" tapered="off"/>
+        <port type="input" prefix="in" size="1"/>
+        <port type="output" prefix="out" size="1"/>
+      </spice_model>
+      <spice_model type="pass_gate" name="TGATE" prefix="TGATE" is_default="1">
+        <design_technology type="cmos" topology="transmission_gate" nmos_size="1" pmos_size="2"/>
+        <input_buffer exist="off"/>
+        <output_buffer exist="off"/>
+        <port type="input" prefix="in" size="1"/>
+        <port type="input" prefix="sel" size="1"/>
+        <port type="input" prefix="selb" size="1"/>
+        <port type="output" prefix="out" size="1"/>
+      </spice_model>
+      <spice_model type="chan_wire" name="chan_segment" prefix="track_seg" is_default="1">
+        <design_technology type="cmos"/>
+        <input_buffer exist="off"/>
+        <output_buffer exist="off"/>
+        <port type="input" prefix="in" size="1"/>
+        <port type="output" prefix="out" size="1"/>
+        <wire_param model_type="pie" res_val="101" cap_val="22.5e-15" level="1"/> <!-- model_type could be T, res_val and cap_val DON'T CARE -->
+      </spice_model>
+      <spice_model type="wire" name="direct_interc" prefix="direct_interc" is_default="1">
+        <design_technology type="cmos"/>
+        <input_buffer exist="off"/>
+        <output_buffer exist="off"/>
+        <port type="input" prefix="in" size="1"/>
+        <port type="output" prefix="out" size="1"/>
+        <wire_param model_type="pie" res_val="0" cap_val="0" level="1"/> <!-- model_type could be T, res_val cap_val should be defined -->
+      </spice_model>
+      <spice_model type="mux" name="mux_2level" prefix="mux_2level" is_default="1" dump_structural_verilog="true">
+        <design_technology type="cmos" structure="multi-level" num_level="2"/>
+        <input_buffer exist="on" spice_model_name="INVTX1"/>
+        <output_buffer exist="on" spice_model_name="INVTX1"/>
+        <!--mux2to1 subckt_name="mux2to1"/-->
+        <pass_gate_logic spice_model_name="TGATE"/>
+        <port type="input" prefix="in" size="1"/>
+        <port type="output" prefix="out" size="1"/>
+        <port type="sram" prefix="sram" size="1"/>
+      </spice_model>
+
+      <spice_model type="ff" name="static_dff" prefix="dff" spice_netlist="/research/ece/lnis/USERS/tang/tangxifan-eda-tools/branches/vpr7_rram/vpr/SpiceNetlists/ff.sp" verilog_netlist="/research/ece/lnis/USERS/tang/tangxifan-eda-tools/branches/vpr7_rram/vpr/VerilogNetlists/ff.v">
+         <design_technology type="cmos"/>
+         <input_buffer exist="on" spice_model_name="INVTX1"/>
+         <output_buffer exist="on" spice_model_name="INVTX1"/>
+         <pass_gate_logic spice_model_name="TGATE"/>
+         <port type="input" prefix="D" size="1"/>
+         <port type="input" prefix="Set" size="1" is_global="true" default_val="0" is_set="true"/>
+         <port type="input" prefix="Reset" size="1" is_global="true" default_val="0" is_reset="true"/>
+         <port type="output" prefix="Q" size="1"/>
+         <port type="clock" prefix="clk" size="1" is_global="true" default_val="0" />
+      </spice_model>
+      <spice_model type="lut" name="lut4" prefix="lut4" dump_structural_verilog="true">
+        <design_technology type="cmos"/>
+        <input_buffer exist="on" spice_model_name="INVTX1"/>
+        <output_buffer exist="on" spice_model_name="INVTX1"/>
+        <lut_input_buffer exist="on" spice_model_name="buf4"/>
+        <pass_gate_logic spice_model_name="TGATE"/>
+        <port type="input" prefix="in" size="4"/>
+        <port type="output" prefix="out" size="1"/>
+        <port type="sram" prefix="sram" size="16"/>
+      </spice_model>
+      <spice_model type="sram" name="sram6T" prefix="sram" spice_netlist="/research/ece/lnis/USERS/tang/tangxifan-eda-tools/branches/vpr7_rram/vpr/SpiceNetlists/sram.sp" verilog_netlist="/research/ece/lnis/USERS/tang/tangxifan-eda-tools/branches/vpr7_rram/vpr/VerilogNetlists/sram.v" >
+        <design_technology type="cmos"/>
+        <input_buffer exist="on" spice_model_name="INVTX1"/>
+        <output_buffer exist="on" spice_model_name="INVTX1"/>
+        <pass_gate_logic spice_model_name="TGATE"/>
+        <port type="input" prefix="in" size="1"/>
+        <port type="output" prefix="out" size="2"/>
+      </spice_model>
+      <spice_model type="sram" name="sram6T_blwl" prefix="sram_blwl" spice_netlist="/research/ece/lnis/USERS/tang/tangxifan-eda-tools/branches/vpr7_rram/vpr/SpiceNetlists/sram.sp" verilog_netlist="/research/ece/lnis/USERS/tang/tangxifan-eda-tools/branches/vpr7_rram/vpr/VerilogNetlists/sram.v">
+        <design_technology type="cmos"/>
+        <input_buffer exist="on" spice_model_name="INVTX1"/>
+        <output_buffer exist="on" spice_model_name="INVTX1"/>
+        <pass_gate_logic spice_model_name="TGATE"/>
+        <port type="input" prefix="in" size="1"/>
+        <port type="output" prefix="out" size="2"/>
+        <port type="bl" prefix="bl" size="1" default_val="0" inv_spice_model_name="INVTX1"/>
+        <port type="blb" prefix="blb" size="1" default_val="1" inv_spice_model_name="INVTX1"/>
+        <port type="wl" prefix="wl" size="1" default_val="0" inv_spice_model_name="INVTX1"/>
+      </spice_model>
+      <spice_model type="iopad" name="iopad" prefix="iopad" spice_netlist="/research/ece/lnis/USERS/tang/tangxifan-eda-tools/branches/vpr7_rram/vpr/SpiceNetlists/io.sp" verilog_netlist="/research/ece/lnis/USERS/tang/tangxifan-eda-tools/branches/vpr7_rram/vpr/VerilogNetlists/io.v">
+        <design_technology type="cmos"/>
+        <input_buffer exist="on" spice_model_name="INVTX1"/>
+        <output_buffer exist="on" spice_model_name="INVTX1"/>
+        <pass_gate_logic spice_model_name="TGATE"/>
+        <port type="inout" prefix="pad" size="1"/>
+        <port type="sram" prefix="en" size="1" mode_select="true" spice_model_name="sram6T_blwl" default_val="1"/>
+        <port type="input" prefix="outpad" size="1"/>
+        <port type="input" prefix="zin" size="1" is_global="true" default_val="0" />
+        <port type="output" prefix="inpad" size="1"/>
+      </spice_model>
+    </module_spice_models>
+  </spice_settings>
+  <device>
+    <sizing R_minW_nmos="8926" R_minW_pmos="16067" ipin_mux_trans_size="9"/>
+    <timing C_ipin_cblock="596e-18" T_ipin_cblock="77.93e-12"/>
+
+    <area grid_logic_tile_area="0"/> 
+    <sram area="6">
+      <verilog organization="memory_bank" spice_model_name="sram6T_blwl"/>
+      <spice organization="standalone" spice_model_name="sram6T" />
+    </sram>
+    <chan_width_distr>
+      <io width="1.000000"/>
+      <x distr="uniform" peak="1.000000"/>
+      <y distr="uniform" peak="1.000000"/>
+    </chan_width_distr>
+    <switch_block type="wilton" fs="3"/>
+  </device>
+
+  <cblocks>
+    <switch type="mux" name="cb_mux" R="0" Cin="596e-18" Cout="0" Tdel="77.93e-12" mux_trans_size="3" buf_size="63" spice_model_name="mux_2level_tapbuf" structure="multi-level" num_level="2">
+    </switch>
+  </cblocks>
+  <switchlist>
+	<switch type="mux" name="sb_mux_L4" R="128" Cin="596e-18" Cout="0e-15" Tdel="47.2e-12" mux_trans_size="3" buf_size="63" spice_model_name="mux_1level_tapbuf" structure="multi-level" num_level="1">
+    </switch>
+  </switchlist>
+  <segmentlist>
+    <segment freq="0.4" length="4" type="unidir" Rmetal="101" Cmetal="22.5e-15" spice_model_name="chan_segment">
+      <mux name="sb_mux_L4"/>
+      <sb type="pattern">1 1 1 1 1</sb>
+      <cb type="pattern">1 1 1 1</cb>
+    </segment>
+    <segment freq="0.3" length="2" type="unidir" Rmetal="101" Cmetal="22.5e-15" spice_model_name="chan_segment">
+      <mux name="sb_mux_L4"/>
+      <sb type="pattern">1 1 1</sb>
+      <cb type="pattern">1 1 </cb>
+    </segment>
+    <segment freq="0.3" length="1" type="unidir" Rmetal="101" Cmetal="22.5e-15" spice_model_name="chan_segment">
+      <mux name="sb_mux_L4"/>
+      <sb type="pattern">1 1</sb>
+      <cb type="pattern">1</cb>
+    </segment>
+  </segmentlist>
+  
+  <complexblocklist>
+    <pb_type name="io" capacity="8" area="0" idle_mode_name="inpad" physical_mode_name="io_phy">
+      <input name="outpad" num_pins="1"/>
+      <output name="inpad" num_pins="1"/>
+
+      <!-- physical design description -->
+      <mode name="io_phy" disabled_in_packing="false">
+        <pb_type name="iopad" blif_model=".subckt io" num_pb="1" spice_model_name="iopad">
+          <input name="outpad" num_pins="1"/>
+          <output name="inpad" num_pins="1"/>
+        </pb_type>
+        <interconnect>
+          <direct name="inpad" input="iopad.inpad" output="io.inpad">
+            <delay_constant max="0e-11" in_port="iopad.inpad" out_port="io.inpad"/>
+          </direct>
+          <direct name="outpad" input="io.outpad" output="iopad.outpad">
+            <delay_constant max="0e-11" in_port="io.outpad" out_port="iopad.outpad"/>
+          </direct>
+        </interconnect>
+      </mode>
+
+      <mode name="inpad">
+        <pb_type name="inpad" blif_model=".input" num_pb="1" spice_model_name="iopad" mode_bits="1">
+          <output name="inpad" num_pins="1"/>
+        </pb_type>
+        <interconnect>
+          <direct name="inpad" input="inpad.inpad" output="io.inpad">
+            <delay_constant max="0e-11" in_port="inpad.inpad" out_port="io.inpad"/>
+          </direct>
+        </interconnect>
+      </mode>
+      <mode name="outpad">
+        <pb_type name="outpad" blif_model=".output" num_pb="1" spice_model_name="iopad" mode_bits="0">
+          <input name="outpad" num_pins="1"/>
+        </pb_type>
+        <interconnect>
+          <direct name="outpad" input="io.outpad" output="outpad.outpad">
+            <delay_constant max="0e-11" in_port="io.outpad" out_port="outpad.outpad"/>
+          </direct>
+        </interconnect>
+      </mode>
+
+      <!-- Every input pin is driven by 15% of the tracks in a channel, every output pin is driven by 10% of the tracks in a channel -->
+      <fc default_in_type="frac" default_in_val="0.15" default_out_type="frac" default_out_val="0.10"/>
+
+      <!-- IOs go on the periphery of the FPGA, for consistency, 
+          make it physically equivalent on all sides so that only one definition of I/Os is needed.
+          If I do not make a physically equivalent definition, then I need to define 4 different I/Os, one for each side of the FPGA
+        -->
+      <pinlocations pattern="custom">
+        <loc side="left">io.outpad io.inpad</loc>
+        <loc side="top">io.outpad io.inpad</loc>
+        <loc side="right">io.outpad io.inpad</loc>
+        <loc side="bottom">io.outpad io.inpad</loc>
+      </pinlocations>
+
+      <!-- Place I/Os on the sides of the FPGA -->
+      <gridlocations>
+        <loc type="perimeter" priority="10"/>
+      </gridlocations>
+
+      <power method="ignore"/>			
+    </pb_type>
+    <!-- Define I/O pads ends -->
+
+	<!-- In this example, to keep the design as simple as possible, we
+	create a CLB with only a BLE and no feedback-->
+    <pb_type name="clb" area="53894" opin_to_cb="false">
+      <pin_equivalence_auto_detect input_ports ="off" output_ports="off"/>
+      <input name="I" num_pins="4" equivalent="true"/>
+      <output name="O" num_pins="1" equivalent="false"/>
+      <clock name="clk" num_pins="1"/>
+      
+	  <!-- fle basically refers to a slice. In this example, we just want one of them but we 
+	  leave it in so that we know this architecture can and should be used -->
+      <pb_type name="fle" num_pb="1" idle_mode_name="n1_lut4" physical_mode_name="n1_lut4">
+        <input name="in" num_pins="4"/>
+        <output name="out" num_pins="1"/>
+        <clock name="clk" num_pins="1"/>
+        <!-- 4-LUT mode definition begin -->
+        <mode name="n1_lut4">
+          <!-- Define 4-LUT mode -->
+          <pb_type name="ble4" num_pb="1">
+            <input name="in" num_pins="4"/>
+            <output name="out" num_pins="1"/>
+            <clock name="clk" num_pins="1"/> 
+
+            <!-- Define LUT -->
+            <pb_type name="lut4" blif_model=".names" num_pb="1" class="lut" spice_model_name="lut4">
+              <input name="in" num_pins="4" port_class="lut_in"/>
+              <output name="out" num_pins="1" port_class="lut_out"/>
+              <!-- LUT timing using delay matrix, one delay per input -->
+              <delay_matrix type="max" in_port="lut4.in" out_port="lut4.out">
+                127e-12
+                127e-12
+                127e-12
+                127e-12
+              </delay_matrix>
+            </pb_type>
+
+            <!-- Define flip-flop -->
+            <pb_type name="ff" blif_model=".latch" num_pb="1" class="flipflop" spice_model_name="static_dff">
+              <input name="D" num_pins="1" port_class="D"/>
+              <output name="Q" num_pins="1" port_class="Q"/>
+              <clock name="clk" num_pins="1" port_class="clock"/>
+              <T_setup value="29e-12" port="ff.D" clock="clk"/>
+              <T_clock_to_Q max="16e-12" port="ff.Q" clock="clk"/>
+            </pb_type>
+
+            <interconnect>
+              <direct name="direct1" input="ble4.in" output="lut4[0:0].in"/>
+              <direct name="direct2" input="lut4.out" output="ff.D">
+                <!-- Advanced user option that tells CAD tool to find LUT+FF pairs in netlist 
+                <pack_pattern name="ble6" in_port="lut6.out" out_port="ff.D"/> -->
+              </direct>
+              <direct name="direct3" input="ble4.clk" output="ff.clk"/>                    
+              <mux name="mux1" input="ff.Q lut4.out" output="ble4.out" spice_model_name="mux_1level_tapbuf">
+                <delay_constant max="42.06e-12" in_port="lut4.out" out_port="ble4.out" />
+                <delay_constant max="42.06e-12" in_port="ff.Q" out_port="ble4.out" />
+              </mux>
+            </interconnect>
+          </pb_type>
+          <interconnect>
+            <direct name="direct1" input="fle.in" output="ble4.in"/>
+            <direct name="direct2" input="ble4.out" output="fle.out[0:0]"/>
+            <direct name="direct3" input="fle.clk" output="ble4.clk"/>
+          </interconnect>
+        </mode>
+        <!-- 4-LUT mode definition end -->
+      </pb_type>
+      <interconnect>
+        <complete name="crossbar" input="clb.I fle[0:0].out" output="fle[0:0].in" spice_model_name="mux_2level">
+          <delay_constant max="53.44e-12" in_port="clb.I" out_port="fle[0:0].in" />
+          <delay_constant max="53.44e-12" in_port="fle[0:0].out" out_port="fle[0:0].in" />
+        </complete>
+        <complete name="clks" input="clb.clk" output="fle[0:0].clk">
+        </complete>
+
+        <direct name="clbouts1" input="fle[0:0].out[0:0]" output="clb.O[0:0]"/>
+        <!--direct name="clbouts2" input="fle[9:0].out[1:1]" output="clb.O[19:10]"/-->
+      </interconnect>
+
+      <!-- Every input pin is driven by 15% of the tracks in a channel, every output pin is driven by 10% of the tracks in a channel -->
+      <fc default_in_type="frac" default_in_val="0.15" default_out_type="frac" default_out_val="0.10"/>
+
+      <pinlocations pattern="spread"/>
+      
+
+      <!-- Place this general purpose logic block in any unspecified column -->
+      <gridlocations>
+        <loc type="fill" priority="1"/>
+      </gridlocations>
+    </pb_type>
+    <!-- Define general purpose logic block (CLB) ends -->
+
+    <!-- Define fracturable multiplier begin -->
+ 
+
+  </complexblocklist>
+  <power>
+    <local_interconnect C_wire="0"/>
+    <mux_transistor_size mux_transistor_size="5"/>
+    <FF_size FF_size="4"/>
+    <LUT_transistor_size LUT_transistor_size="5"/> 
+  </power>
+  <clocks>
+    <clock buffer_size="auto" C_wire="0"/>
+  </clocks>
+</architecture>
