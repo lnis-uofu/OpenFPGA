@@ -124,6 +124,8 @@ Inverters and Buffers
 
 **Inverter x1 example** ::
 
+.. _fig_Inverter_1:
+
 .. figure:: ./figures/Inverter_1.png
    :scale: 100%
    :alt: map to buried treasure
@@ -146,11 +148,13 @@ This example shows:
 
 **Buffer x2 example** ::
 
+.. _fig_Buffer:
+
 .. figure:: ./figures/Buffer.png
    :scale: 100%
    :alt: map to buried treasure
 
-The XML code to describe this inverter is:
+The XML code to describe this buffer is:
 
 .. code-block:: xml
 
@@ -167,6 +171,8 @@ This example shows:
 
 
 **Tapered inverter x16 example** ::
+
+.. _fig_invtap4:
 
 .. figure:: ./figures/Tapered_inverter.png
    :scale: 100%
