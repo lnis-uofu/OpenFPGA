@@ -132,7 +132,7 @@ Inverters and Buffers
    :scale: 100%
    :alt: classical inverter x1 symbol
 
-   classical inverter x1 symbol
+   Classical inverter x1 symbol
 
 The XML code to describe this inverter is:
 
