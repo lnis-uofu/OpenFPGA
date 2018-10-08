@@ -130,7 +130,9 @@ Inverters and Buffers
 
 .. figure:: ./figures/Inverter_1.png
    :scale: 100%
-   :alt: map to buried treasure
+   :alt: classical inverter x1 symbol
+
+   classical inverter x1 symbol
 
 The XML code to describe this inverter is:
 
@@ -156,7 +158,7 @@ This example shows:
 
 .. figure:: ./figures/Buffer.png
    :scale: 100%
-   :alt: map to buried treasure
+   :alt: buffer symbol composed by 2 inverter, its output strength equal 2
 
 The XML code to describe this buffer is:
 
@@ -182,7 +184,7 @@ This example shows:
 
 .. figure:: ./figures/Tapered_inverter.png
    :scale: 100%
-   :alt: map to buried treasure
+   :alt: tapered inverter composed by 3 inverter for an output strength = 16
 
 The XML code to describe this inverter is:
 
