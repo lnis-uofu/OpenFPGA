@@ -123,7 +123,6 @@ Inverters and Buffers
 		* **f_per_stage:** Define the ratio of driving strength between the levels of a tapered driver. This parameter is valid only when tapered is turned on. Default value is 4.
 
 **Inverter x1 example** ::
-.. _fig_invx1:
 
 .. figure:: ./figures/Inverter_1.png
    :scale: 100%
@@ -146,7 +145,6 @@ This example shows:
 
 
 **Buffer x2 example** ::
-.. _fig_buf2:
 
 .. figure:: ./figures/Buffer.png
    :scale: 100%
@@ -169,7 +167,6 @@ This example shows:
 
 
 **Tapered inverter x16 example** ::
-.. _fig_invtap4:
 
 .. figure:: ./figures/Tapered_inverter.png
    :scale: 100%
