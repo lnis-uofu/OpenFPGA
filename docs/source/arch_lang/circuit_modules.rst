@@ -124,7 +124,9 @@ Inverters and Buffers
 
 **Inverter x1 example** ::
 
-.. _fig_Inverter_1:
+:numref:`fig_inv1` is the inverter symbol depicted in this example.
+
+.. _fig_inv1:
 
 .. figure:: ./figures/Inverter_1.png
    :scale: 100%
@@ -148,7 +150,9 @@ This example shows:
 
 **Buffer x2 example** ::
 
-.. _fig_Buffer:
+:numref:`fig_buff` is the buffer symbol depicted in this example.
+
+.. _fig_buff:
 
 .. figure:: ./figures/Buffer.png
    :scale: 100%
@@ -171,6 +175,8 @@ This example shows:
 
 
 **Tapered inverter x16 example** ::
+
+:numref:`fig_invtap4` is the tapered inverter symbol depicted this example.
 
 .. _fig_invtap4:
 
