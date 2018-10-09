@@ -24,9 +24,9 @@ You can find in the folder **./examples**. This will help you get in touch with 
 
 In all the examples, the CLBs are composed of LUTs, FFs and MUXs as a base. 
 
-Example 1 shows a very basic design with only 4 inputs on the LUTs and 1 Basic Element in the CLBs. It implements an inverter and allows the user to see the very core of the .xml file.
+Example 1 shows a very basic design with only 4 inputs on the LUTs, a FF and a MUX in the CLB (only 1). It implements an inverter and allows the user to see the very core of the .xml file.
 
-
+Example 2 increases the complexity by having 3x3 CLBs and 4 slices per CLB. The slices provide a feedback to the input structure and input MUXs are added.
 
 
 
