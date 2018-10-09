@@ -6,8 +6,8 @@ The goal of this example is just to make a first step into the software. The .bl
 The .xml is currently on <layout auto="1.0"/> which means that the size depends on the .blif. Since the .blif is 
 almost empty, only 1 CLB will be generated. 
 
-![alt text](https://github.com/LNIS-Projects/OpenFPGA/blob/master/examples/figures/example_1.png "Example_1_FPGA")
-<img src="https://github.com/LNIS-Projects/OpenFPGA/blob/master/examples/figures/example_1.png" alt="Example_1_FPGA" width="80%">
+<img src="https://github.com/LNIS-Projects/OpenFPGA/blob/master/examples/figures/example_1.png" alt="Example_1_FPGA" width="60%">
+
 Schematic of the FPGA generated during example_1.
 The CLB integrates a 4-inputs LUT, a FF and a MUX. 
 
@@ -52,7 +52,7 @@ Example_2's goal is to introduce the slices, the interconnections which can be g
 In this case, we generate a 3x3 FPGA with 4 slices. The LUTs are 6-inputs ones similarly to the ones used in the industry.
 There is a feedback-loop from the output of the slices to the input MUXs
 
-![alt text](https://github.com/LNIS-Projects/OpenFPGA/blob/master/examples/figures/example_2_the_CLB.png "Example_2_CLB"){:height="80%" width="80%"}
+<img src="https://github.com/LNIS-Projects/OpenFPGA/blob/master/examples/figures/example_2_the_CLB.png" alt="Example_2_CLB" width="60%">
 
 Schematic showing the CLB generated in this example.
 
@@ -70,7 +70,7 @@ Schematic showing the CLB generated in this example.
 </complete>
 ```
 
-![alt text](https://github.com/LNIS-Projects/OpenFPGA/blob/master/examples/figures/example_2_3x3.png "Example_3_FPGA"){:height="80%" width="80%"}
+<img src="https://github.com/LNIS-Projects/OpenFPGA/blob/master/examples/figures/example_2_3x3.png" alt="Example_2_FPGA" width="60%">
  
 
 
