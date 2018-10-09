@@ -500,7 +500,7 @@ Instructions of defining design parameters:
 
 .. _fig_ff:
 
-.. figure:: ./figures/ff.png
+.. figure:: ./figures/FF.png
    :scale: 100%
    :alt: FF symbol
 
