@@ -56,18 +56,3 @@ FPGA-SPICE Supported Options::
    "--fpga_spice_sim_mt_num <int>", "Set the number of multi-thread used in simulation"
 
 .. note:: The parasitic net estimation technique is used to analyze the parasitic net activities which improves the accuracy of power analysis. When turned off, the errors between the full-chip-level and grid/component-level testbenches will increase."
-
-
-
-
-
-
-
-
-
-
-
-BB estimate of min-dist (placement) wirelength: 40
-bb_cost recomputed from scratch: 0.4
-timing_cost recomputed from scratch: 6.94244e-10
-delay_cost recomputed from scratch: 2.76553e-09
