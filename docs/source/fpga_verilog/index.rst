@@ -1,3 +1,6 @@
+FPGA-VERILOG: VERILOG AUTO-GENERATION
+=====================================
+
 .. _fpga_verilog:
    User Manual for FPGA Verilog Generator 
  
