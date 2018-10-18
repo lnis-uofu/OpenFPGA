@@ -7,6 +7,7 @@ FPGA-Verilog Supported Options::
 
 	--fpga_verilog
 	--fpga_verilog_dir <directory_path_of_dumped_verilog_files>
+	--fpga_verilog_print_top_testbench
 
 .. csv-table:: Commmand-line Options of FPGA-Verilog
    :header: "Command Options", "Description"
@@ -14,6 +15,7 @@ FPGA-Verilog Supported Options::
 
    "--fpga_verilog", "Turn on the FPGA-Verilog."
    "--fpga_verilog_dir <dir_path>", "Specify the directory that all the Verilog files will be outputted to. <dir_path> is the destination directory."
+   "--fpga_verilog_print_top_testbench", "Print the full-chip-level testbench for the FPGA."
 
 .. note:: The selected directory will contain the *Verilog top file* and three other folders. The folders are: 
 

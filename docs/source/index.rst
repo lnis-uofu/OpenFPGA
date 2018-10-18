@@ -22,28 +22,19 @@ For more information on the original FPGA architecture description language see
 
 .. toctree::
    :maxdepth: 2
-   :caption: Extended Architecture Description Language
+   :caption: Tools Guide
 
    arch_lang/index
 
-.. toctree::
-   :caption: FPGA-SPICE: SPICE Auto-Generation
-
    fpga_spice/index
 
-.. toctree::
-   :caption: FPGA-Verilog: Verilog Auto-Generation
-
    fpga_verilog/index
-
-.. toctree::
-   :caption: FPGA-Bitstream: Bitstream Generator
 
    fpga_bitstream/index
 
 .. toctree::
    :maxdepth: 2
-   :caption: Tutorial
+   :caption: User Guide
 
    tutorials/index
 

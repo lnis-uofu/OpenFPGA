@@ -1,3 +1,6 @@
+FPGA-SPICE: SPICE Auto-Generation
+====================================
+
 .. _fpga_spice:
    User Manual for FPGA-SPICE support
  

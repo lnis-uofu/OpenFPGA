@@ -34,7 +34,7 @@ FPGA-SPICE Supported Options::
 
 .. csv-table:: Commmand-line Options of FPGA-SPICE
    :header: "Command Options", "Description"
-   :widths: 15, 30
+   :widths: 15, 20
 
    "--fpga_spice", "Turn on the FPGA-SPICE."
    "--fpga_spice_dir <dir_path>", "Specify the directory that all the SPICE netlists will be outputted to. <dir_path> is the destination directory."

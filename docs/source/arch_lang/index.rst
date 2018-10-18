@@ -1,5 +1,5 @@
-Extended Architecture Description Language 
-====================================
+Extended Architecture Description Language
+==========================================
 
 .. _arch_lang:
    Extended FPGA Architecture Description Language
