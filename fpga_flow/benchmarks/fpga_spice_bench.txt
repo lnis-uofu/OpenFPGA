@@ -1,4 +1,4 @@
-# Circuit Names, fixed routint channel width, 
+# Circuit Names, fixed routing channel width, 
 s298.blif, 60
 elliptic.blif, 60
 simple_spi.blif, 60

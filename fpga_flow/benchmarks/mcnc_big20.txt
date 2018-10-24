@@ -1,4 +1,4 @@
-# Circuit Names, fixed routint channel width, 
+# Circuit Names, fixed routing channel width, 
 #alu4.blif, 120
 #apex2.blif, 120
 #apex4.blif, 120

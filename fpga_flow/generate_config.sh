@@ -1,7 +1,7 @@
 #! /bin/sh
 PATH=$PWD
-#DEST=configs/fpga_spice/k6_N10_sram_tsmc40nm_TT.conf
-DEST=configs/fpga_spice/test.conf
+DEST=configs/fpga_spice/k6_N10_sram_tsmc40nm_TT.conf
+#DEST=configs/fpga_spice/test.conf
 
 if [ -e "$DEST" ]; then
 echo "" > $DEST;
