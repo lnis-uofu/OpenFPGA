@@ -1,5 +1,5 @@
 
-CC   := gcc
+CC   := gcc-4.9 # only version of gcc working on abc
 CXX  := g++
 LD   := g++
 CP   := cp
