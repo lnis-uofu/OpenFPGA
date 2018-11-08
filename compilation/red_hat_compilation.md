@@ -5,7 +5,7 @@ Red Hat compilation
 
 Clone the [OpenFPGA git repository:](https://github.com/LNIS-Projects/OpenFPGA)
 
-`git clone https://github.com/LNIS-Projects/OpenFPGA.git `
+`git clone --recurse-submodules https://github.com/LNIS-Projects/OpenFPGA.git `
 
 [//todo]: # (There is a submodule in the repository so move to the OpenFPGA directory and clone that too:)
 
