@@ -1,13 +1,10 @@
-# Baudouin Chauviere University of Utah 30 September 2018
-# Benchmark doing an inverter
-
+# Benchmark "example_2.bench" written by ABC on Wed Nov 14 11:42:18 2018
 .model example_2.bench
 .inputs I0 clk
 .outputs Q0
 
-.latch        n0        Q0 re        clk  0
+.latch         n7         Q0 re        clk  0
 
-.names I0 n0
+.names I0 n7
 0 1
-
 .end
