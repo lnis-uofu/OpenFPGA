@@ -183,11 +183,11 @@ int split_path_prog_name(char* prog_path,
   /* Get the path and prog_name*/
   if (-1 == split_pos) {
     /* In this case, the prog_path actually contains only the program name*/
-    path = NULL;
-    prog_name = local_copy;
+    path = my_strdup("./");
+    prog_name = my_strdup(local_copy);
   } else if (len == split_pos) {
     /* In this case the progrom name is NULL... actually the prog_path is a directory*/
-    path = local_copy;
+    path = my_strdup(local_copy);
     prog_name = NULL;
   } else {
     /* We have to split it!*/
@@ -5014,7 +5014,7 @@ add_mux_scff_conf_bits_to_llist(int mux_size,
     exit(1); 
   }
 
-  /* Fill the linked list */
+  /*Â Fill the linked list */
   for (ibit = 0; ibit < num_mux_sram_bits; ibit++) {
     cur_sram_orgz_info->conf_bit_head =
         add_conf_bit_info_to_llist(cur_sram_orgz_info->conf_bit_head, cur_mem_bit + ibit, 
@@ -5167,7 +5167,7 @@ add_mux_membank_conf_bits_to_llist(int mux_size,
     exit(1); 
   }
 
-  /* Fill the linked list */
+  /*Â Fill the linked list */
   for (ibit = 0; ibit < num_conf_bits; ibit++) {
     cur_sram_orgz_info->conf_bit_head =
         add_conf_bit_info_to_llist(cur_sram_orgz_info->conf_bit_head, cur_mem_bit + ibit, 
@@ -5242,7 +5242,7 @@ add_sram_scff_conf_bits_to_llist(t_sram_orgz_info* cur_sram_orgz_info,
     sram_bit[ibit]->val = sram_bits[ibit]; 
   }
 
-  /* Fill the linked list */
+  /*Â Fill the linked list */
   for (ibit = 0; ibit < num_sram_bits; ibit++) {
     cur_sram_orgz_info->conf_bit_head =
         add_conf_bit_info_to_llist(cur_sram_orgz_info->conf_bit_head, cur_mem_bit + ibit, 
@@ -5343,7 +5343,7 @@ void add_sram_membank_conf_bits_to_llist(t_sram_orgz_info* cur_sram_orgz_info, i
     exit(1);
   }
 
-  /* Fill the linked list */
+  /*Â Fill the linked list */
   cur_sram_orgz_info->conf_bit_head =
       add_conf_bit_info_to_llist(cur_sram_orgz_info->conf_bit_head, mem_index, 
                                  NULL, bl_bit, wl_bit,
@@ -7479,6 +7479,5 @@ void rec_stats_spice_model_global_ports(t_spice_model* cur_spice_model,
 
   return;
 }
-
 
 
