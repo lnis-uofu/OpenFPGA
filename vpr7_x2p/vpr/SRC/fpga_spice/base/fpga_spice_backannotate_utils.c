@@ -876,14 +876,28 @@ void set_one_pb_rr_node_default_prev_node_edge(t_rr_node* pb_rr_graph,
 
 /* Mark the prev_edge and prev_node of all the rr_nodes in complex blocks */
 static
-void back_annotate_one_pb_rr_node_map_info_rec(t_pb* cur_pb) {
+void back_annotate_one_pb_rr_node_map_info_rec(t_pb* cur_pb,
+                                               t_pb_graph_node* cur_pb_graph_node, 
+                                               t_rr_node* pb_rr_nodes) {
   int ipb, jpb, select_mode_index;
   int iport, ipin, node_index;
-  t_rr_node* pb_rr_nodes = NULL;
   t_pb_graph_node* child_pb_graph_node;
  
   /* Return when we meet a null pb */ 
   if (NULL == cur_pb) {
+    /* Skip non-LUT pb*/
+    if (LUT_CLASS != cur_pb_graph_node->pb_type->class_type) {
+      return;
+    }
+    for (iport = 0; iport < cur_pb_graph_node->num_output_ports; iport++) {
+      for (ipin = 0; ipin < cur_pb_graph_node->num_output_pins[iport]; ipin++) {
+        node_index = cur_pb_graph_node->output_pins[iport][ipin].pin_count_in_cluster;
+        if (OPEN != pb_rr_nodes[node_index].net_num) {
+          pb_rr_nodes[node_index].vpack_net_num = pb_rr_nodes[node_index].net_num;
+        }
+      }
+    }
+
     return;
   }
 
@@ -971,7 +985,21 @@ void back_annotate_one_pb_rr_node_map_info_rec(t_pb* cur_pb) {
   for (ipb = 0; ipb < cur_pb->pb_graph_node->pb_type->modes[select_mode_index].num_pb_type_children; ipb++) {
     for (jpb = 0; jpb < cur_pb->pb_graph_node->pb_type->modes[select_mode_index].pb_type_children[ipb].num_pb; jpb++) {
       if ((NULL != cur_pb->child_pbs[ipb])&&(NULL != cur_pb->child_pbs[ipb][jpb].name)) {
-        back_annotate_one_pb_rr_node_map_info_rec(&(cur_pb->child_pbs[ipb][jpb]));
+        back_annotate_one_pb_rr_node_map_info_rec(&(cur_pb->child_pbs[ipb][jpb]),
+                                                  &(cur_pb->pb_graph_node->child_pb_graph_nodes[select_mode_index][ipb][jpb]),
+                                                  cur_pb->rr_graph);
+      } else {
+        /* For wired LUT */
+        if (TRUE == is_pb_wired_lut(&(cur_pb->pb_graph_node->child_pb_graph_nodes[select_mode_index][ipb][jpb]),  
+                                    &(cur_pb->pb_graph_node->pb_type->modes[select_mode_index].pb_type_children[ipb]),
+                                    cur_pb->rr_graph)) {        
+          /* Reach here means that this LUT is in wired mode (a buffer)  
+           * synchronize the net num 
+           */
+          back_annotate_one_pb_rr_node_map_info_rec(NULL,
+                                                    &(cur_pb->pb_graph_node->child_pb_graph_nodes[select_mode_index][ipb][jpb]),
+                                                    cur_pb->rr_graph);
+        }
       }
     }
   }
@@ -990,7 +1018,9 @@ void back_annotate_pb_rr_node_map_info() {
     if (IO_TYPE == block[iblk].type) {
       continue;
     }
-    back_annotate_one_pb_rr_node_map_info_rec(block[iblk].pb);
+    back_annotate_one_pb_rr_node_map_info_rec(block[iblk].pb,
+                                              block[iblk].pb->pb_graph_node, 
+                                              block[iblk].pb->rr_graph);
   }  
 
   return;

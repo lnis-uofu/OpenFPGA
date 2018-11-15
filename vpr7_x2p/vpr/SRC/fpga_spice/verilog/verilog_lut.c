@@ -39,7 +39,8 @@ void dump_verilog_pb_primitive_lut(FILE* fp,
                                    t_logical_block* mapped_logical_block,
                                    t_pb_graph_node* cur_pb_graph_node,
                                    int index,
-                                   t_spice_model* verilog_model) {
+                                   t_spice_model* verilog_model,
+                                   int lut_status) {
   int i;
   int* sram_bits = NULL; /* decoded SRAM bits */ 
   int truth_table_length = 0;
@@ -95,7 +96,21 @@ void dump_verilog_pb_primitive_lut(FILE* fp,
   assert(SPICE_MODEL_LUT == verilog_model->type);
 
   /* Check if this is an idle logical block mapped*/
-  if (NULL != mapped_logical_block) {
+  switch (lut_status) {
+  case PRIMITIVE_WIRED_LUT:
+    /* Give a special truth table */
+    assert (VPACK_COMB == mapped_logical_block->type);
+    /* Get the mapped vpack_net_num of this physical LUT pb */
+    get_mapped_lut_pb_input_pin_vpack_net_num(prim_pb, &num_lut_pin_nets, &lut_pin_net);
+    /* consider LUT pin remapping when assign lut truth tables */
+    /* Match truth table and post-routing results */
+    truth_table = assign_post_routing_wired_lut_truth_table(mapped_logical_block, 
+                                                            num_lut_pin_nets, lut_pin_net, &truth_table_length); 
+    break;
+  case PRIMITIVE_IDLE:
+    break;
+  case PRIMITIVE_NORMAL:
+    assert (NULL != mapped_logical_block);
     /* Back-annotate to logical block */
     mapped_logical_block->mapped_spice_model = verilog_model;
     mapped_logical_block->mapped_spice_model_index = verilog_model->cnt;
@@ -107,7 +122,14 @@ void dump_verilog_pb_primitive_lut(FILE* fp,
     /* Match truth table and post-routing results */
     truth_table = assign_post_routing_lut_truth_table(mapped_logical_block, 
                                                       num_lut_pin_nets, lut_pin_net, &truth_table_length); 
+    break;
+  default:
+    vpr_printf(TIO_MESSAGE_ERROR, 
+               "(FILE:%s, [LINE%d]) Invalid status(=%d) for LUT!\n",
+               __FILE__, __LINE__, lut_status);
+    exit(1);
   }
+
   /* Determine size of LUT*/
   input_ports = find_spice_model_ports(verilog_model, SPICE_MODEL_PORT_INPUT, &num_input_port, TRUE);
   output_ports = find_spice_model_ports(verilog_model, SPICE_MODEL_PORT_OUTPUT, &num_output_port, TRUE);

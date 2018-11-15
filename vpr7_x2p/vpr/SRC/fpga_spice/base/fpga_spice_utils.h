@@ -457,6 +457,14 @@ char** assign_lut_truth_table(t_logical_block* mapped_logical_block,
 void get_lut_logical_block_input_pin_vpack_net_num(t_logical_block* lut_logical_block,
                                                    int* num_lut_pin, int** lut_pin_net); 
 
+void get_logical_block_output_vpack_net_num(t_logical_block* cur_logical_block,
+                                            int* num_lb_output_ports, int** num_lb_output_pins, 
+                                            int*** lb_output_vpack_net_num);
+
+char** assign_post_routing_wired_lut_truth_table(t_logical_block* wired_lut_logical_block,
+                                                 int lut_size, int* lut_pin_vpack_net_num,
+                                                 int* truth_table_length);
+
 char** assign_post_routing_lut_truth_table(t_logical_block* mapped_logical_block,
                                            int lut_size, int* lut_pin_vpack_net_num,
                                            int* truth_table_length);
@@ -642,3 +650,11 @@ void get_mapped_lut_pb_input_pin_vpack_net_num(t_pb* lut_pb,
 void rec_stats_spice_model_global_ports(t_spice_model* cur_spice_model,
                                         boolean recursive,
                                         t_llist** spice_model_head);
+
+boolean is_pb_used_for_wiring(t_pb_graph_node* cur_pb_graph_node,
+                              t_pb_type* cur_pb_type,
+                              t_rr_node* pb_rr_graph);
+
+boolean is_pb_wired_lut(t_pb_graph_node* cur_pb_graph_node,
+                        t_pb_type* cur_pb_type,
+                        t_rr_node* pb_rr_graph);

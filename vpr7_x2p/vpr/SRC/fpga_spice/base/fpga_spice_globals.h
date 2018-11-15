@@ -37,3 +37,7 @@ enum e_pin2pin_interc_type {
 
 
 extern char* renaming_report_postfix;
+
+#define PRIMITIVE_WIRED_LUT -1
+#define PRIMITIVE_IDLE 1
+#define PRIMITIVE_NORMAL 0

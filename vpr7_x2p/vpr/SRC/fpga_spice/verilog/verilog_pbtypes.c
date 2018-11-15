@@ -1598,23 +1598,46 @@ void dump_verilog_pb_primitive_verilog_model(FILE* fp,
  
   /* Initialize */ 
   prim_pb_type = prim_pb_graph_node->pb_type;
-  if (is_idle) {
+  
+  switch (is_idle) {
+  case PRIMITIVE_WIRED_LUT:
     mapped_logical_block = NULL;
-  } else {
+    break;
+  case PRIMITIVE_IDLE:
+    mapped_logical_block = NULL;
+    break;
+  case PRIMITIVE_NORMAL:
     mapped_logical_block = &logical_block[prim_pb->logical_block];
+    break;
+  default:
+    vpr_printf(TIO_MESSAGE_ERROR, 
+               "(FILE:%s, [LINE%d]) Invalid ID(=%d) for primitive Verilog block!\n",
+               __FILE__, __LINE__, is_idle);
+    exit(1);
   }
 
   /* Asserts*/
   assert(pb_index == prim_pb_graph_node->placement_index);
   assert(0 == strcmp(verilog_model->name, prim_pb_type->spice_model->name));
-  if (is_idle) {
+  switch (is_idle) {
+  case PRIMITIVE_WIRED_LUT:
     assert(NULL == prim_pb); 
-  } else {
+    break;
+  case PRIMITIVE_IDLE:
+    assert(NULL == prim_pb); 
+    break;
+  case PRIMITIVE_NORMAL:
     if (NULL == prim_pb) {
       vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid prim_pb.\n", 
                  __FILE__, __LINE__); 
       exit(1);
     }
+    break;
+  default:
+    vpr_printf(TIO_MESSAGE_ERROR, 
+               "(FILE:%s, [LINE%d]) Invalid ID(=%d) for primitive Verilog block!\n",
+               __FILE__, __LINE__, is_idle);
+    exit(1);
   }
 
   /* According to different type, we print netlist*/
@@ -1622,7 +1645,7 @@ void dump_verilog_pb_primitive_verilog_model(FILE* fp,
   case SPICE_MODEL_LUT:
     /* If this is a idle block we should set sram_bits to zero*/
     dump_verilog_pb_primitive_lut(fp, subckt_prefix, prim_pb, mapped_logical_block, prim_pb_graph_node,
-                            pb_index, verilog_model);
+                                  pb_index, verilog_model, is_idle);
     break;
   case SPICE_MODEL_FF:
     assert(NULL != verilog_model->model_netlist);
@@ -1960,6 +1983,25 @@ void dump_verilog_pb_graph_node_rec(FILE* fp,
     exit(1);
   }
   cur_pb_type = cur_pb_graph_node->pb_type;
+
+  /* For wired LUTs only */
+  if (NULL == cur_pb) {
+    assert(NULL != cur_pb_type->spice_model);
+    assert (LUT_CLASS == cur_pb_type->class_type);
+    dump_verilog_pb_primitive_verilog_model(fp, formatted_subckt_prefix, 
+                                            NULL, cur_pb_graph_node, 
+                                            pb_type_index, cur_pb_type->spice_model, PRIMITIVE_WIRED_LUT);
+    /* update the number of SRAM, I/O pads */
+    /* update stamped iopad counter */
+    stamped_iopad_cnt += cur_pb->num_iopads;
+    /* update stamped sram counter */
+    stamped_sram_cnt += cur_pb->num_conf_bits;
+    /* Check */
+    assert(stamped_sram_cnt == get_sram_orgz_info_num_mem_bit(sram_verilog_orgz_info)); 
+    assert(stamped_iopad_cnt == iopad_verilog_model->cnt); 
+    return;
+  }
+
   mode_index = cur_pb->mode; 
 
   /* Recursively finish all the child pb_types*/
@@ -1980,10 +2022,20 @@ void dump_verilog_pb_graph_node_rec(FILE* fp,
         if ((NULL != cur_pb->child_pbs[ipb])&&(NULL != cur_pb->child_pbs[ipb][jpb].name)) {
           dump_verilog_pb_graph_node_rec(fp, pass_on_prefix, &(cur_pb->child_pbs[ipb][jpb]), 
                                          cur_pb->child_pbs[ipb][jpb].pb_graph_node, jpb);
+        /* For wired LUT */
+        } else if (TRUE == is_pb_wired_lut(&(cur_pb->pb_graph_node->child_pb_graph_nodes[mode_index][ipb][jpb]),  
+                                           &(cur_pb->pb_graph_node->pb_type->modes[mode_index].pb_type_children[ipb]),
+                                           cur_pb->rr_graph)) {        
+          /* Reach here means that this LUT is in wired mode (a buffer)  
+           * Print the Verilog of wired LUTs 
+           */
+          dump_verilog_pb_graph_node_rec(fp, pass_on_prefix, NULL, 
+                                         &(cur_pb->pb_graph_node->child_pb_graph_nodes[mode_index][ipb][jpb]),  
+                                         jpb);
         } else {
           /* Check if this pb has no children, no children mean idle*/
           dump_verilog_idle_pb_graph_node_rec(fp, pass_on_prefix,
-                                            cur_pb->child_pbs[ipb][jpb].pb_graph_node, jpb);
+                                              cur_pb->child_pbs[ipb][jpb].pb_graph_node, jpb);
         }
         /* Free */
         my_free(pass_on_prefix);

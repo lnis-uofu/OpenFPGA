@@ -5797,6 +5797,103 @@ void get_lut_logical_block_input_pin_vpack_net_num(t_logical_block* lut_logical_
   return;
 }
 
+/* Find the vpack_net_num of the outputs of the logical_block */
+void get_logical_block_output_vpack_net_num(t_logical_block* cur_logical_block,
+                                            int* num_lb_output_ports, int** num_lb_output_pins, 
+                                            int*** lb_output_vpack_net_num) {
+  int iport, ipin; 
+  int num_output_ports = 0;
+  int* num_output_pins = NULL;
+  t_model_ports* head = NULL;
+  int** output_vpack_net_num = NULL;
+
+  assert (NULL != cur_logical_block);
+
+  /* Count how many outputs we have */  
+  head = cur_logical_block->model->outputs; 
+  while (NULL != head) {
+    num_output_ports++; 
+    head = head->next;
+  }
+  /* Allocate */ 
+  num_output_pins = (int*) my_calloc(num_output_ports, sizeof(int));
+  output_vpack_net_num = (int**) my_calloc(num_output_ports, sizeof(int*));
+  /* Fill the array */
+  iport = 0;
+  head = cur_logical_block->model->outputs; 
+  while (NULL != head) {
+    num_output_pins[iport] = head->size; 
+    output_vpack_net_num[iport] = (int*) my_calloc(num_output_pins[iport], sizeof(int));
+    /* Fill the array */
+    for (ipin = 0; ipin < num_output_pins[iport]; ipin++) {
+      output_vpack_net_num[iport][ipin] = cur_logical_block->output_nets[iport][ipin];
+    }
+    /* Go to the next */
+    head = head->next;
+    /* Update counter */
+    iport++;
+  }
+ 
+  assert (iport == num_output_ports);
+
+  /* Assign return values */
+  (*num_lb_output_ports) = num_output_ports;
+  (*num_lb_output_pins) = num_output_pins;
+  (*lb_output_vpack_net_num) = output_vpack_net_num;
+    
+  return;
+}
+
+
+/* Adapt the truth from the actual connection from the input nets of a LUT,
+ */
+char** assign_post_routing_wired_lut_truth_table(t_logical_block* wired_lut_logical_block,
+                                                 int lut_size, int* lut_pin_vpack_net_num,
+                                                 int* truth_table_length) {
+  int inet, iport;
+  char** tt = (char**) my_malloc(sizeof(char*));
+  int num_lut_output_ports;
+  int* num_lut_output_pins;
+  int** lut_output_vpack_net_num;
+
+  /* The output of this mapped block is the wires routed through this LUT */
+  /* Find the vpack_net_num of the output of the lut_logical_block */
+  get_logical_block_output_vpack_net_num(wired_lut_logical_block, 
+                                         &num_lut_output_ports, 
+                                         &num_lut_output_pins, 
+                                         &lut_output_vpack_net_num);
+
+  /* Check */
+  assert ( 1 == num_lut_output_ports);
+  assert ( 1 == num_lut_output_pins[0]);
+  assert ( OPEN != lut_output_vpack_net_num[0][0]);
+
+  /* truth_table_length will be always 1*/
+  (*truth_table_length) = 1;
+
+  /* Malloc */
+  tt[0] = (char*)my_malloc((lut_size + 3) * sizeof(char));
+  /* Fill the truth table !!! */
+  for (inet = 0; inet < lut_size; inet++) {
+    /* Find the vpack_num in the lut_input_pin, we fix it to be 1 */
+    if (lut_output_vpack_net_num[0][0] == lut_pin_vpack_net_num[inet]) {
+      tt[0][inet] = '1'; 
+    } else {
+    /* Otherwise it should be don't care */
+      tt[0][inet] = '-'; 
+    }
+  }
+  memcpy(tt[0] + lut_size, " 1", 3);
+
+  /* Free */
+  my_free(num_lut_output_pins);
+  for (iport = 0; iport < num_lut_output_ports; iport++) {
+    my_free(lut_output_vpack_net_num);
+  }
+ 
+  return tt;
+}
+
 
 /* Provide the truth table of a mapped logical block 
  * 1. Reorgainze the truth table to be consistent with the mapped nets of a LUT
@@ -7480,5 +7577,47 @@ void rec_stats_spice_model_global_ports(t_spice_model* cur_spice_model,
   return;
 }
 
+/* Identify if this child_pb is actually used for wiring!!! */
+boolean is_pb_used_for_wiring(t_pb_graph_node* cur_pb_graph_node,
+                              t_pb_type* cur_pb_type,
+                              t_rr_node* pb_rr_graph) {
+  boolean is_used = FALSE;
+  int node_index;
+  int port_index = 0;
+  int iport, ipin;
 
+  for (iport = 0; iport < cur_pb_type->num_ports && !is_used; iport++) {
+    if (OUT_PORT == cur_pb_type->ports[iport].type) {
+      for (ipin = 0; ipin < cur_pb_type->ports[iport].num_pins; ipin++) {
+        node_index = cur_pb_graph_node->output_pins[port_index][ipin].pin_count_in_cluster;
+        if ((OPEN != pb_rr_graph[node_index].net_num) 
+          || (OPEN != pb_rr_graph[node_index].vpack_net_num)) {
+          return TRUE;
+        }
+      }
+      port_index++;
+    }
+  }
+
+  return is_used; 
+} 
+
+
+/* Identify if this is an unallocated pb that is used as a wired LUT */
+boolean is_pb_wired_lut(t_pb_graph_node* cur_pb_graph_node,
+                        t_pb_type* cur_pb_type,
+                        t_rr_node* pb_rr_graph) {
+  boolean is_used = FALSE;
+  
+  is_used = is_pb_used_for_wiring(cur_pb_graph_node,
+                                  cur_pb_type,
+                                  pb_rr_graph);
+  /* Return TRUE if this block is not used and it is a LUT ! */
+  if ((TRUE == is_used) 
+     && (LUT_CLASS == cur_pb_type->class_type)) {
+    return TRUE;
+  }
+
+  return FALSE;
+} 
 
