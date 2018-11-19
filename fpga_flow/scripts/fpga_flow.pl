@@ -1079,6 +1079,8 @@ sub run_std_vpr($ $ $ $ $ $ $ $ $)
 {
   my ($blif,$bm,$arch,$net,$place,$route,$fix_chan_width,$log,$act_file) = @_;
   my ($vpr_dir,$vpr_name) = &split_prog_path($conf_ptr->{dir_path}->{vpr_path}->{val});
+
+  print "Entering $vpr_dir\n";
   chdir $vpr_dir;
 
   my ($power_opts);
@@ -1162,6 +1164,7 @@ sub run_std_vpr($ $ $ $ $ $ $ $ $)
   system("/bin/csh -cx './$vpr_name $arch $blif --net_file $net --place_file $place --route_file $route --full_stats --nodisp $power_opts $packer_opts $chan_width_opt $vpr_spice_opts $other_opt > $log'");
 
   chdir $cwd;
+  print "Leaving $vpr_dir\n";
 }
 
 sub run_vpr_route($ $ $ $ $ $ $ $ $) 
@@ -2385,7 +2388,7 @@ sub multithread_run_flows($) {
     die "ERROR: cannot use threads package in Perl! Please check the installation of package...\n";
   }
 
-  # Lauch threads up to the limited number of threads number 
+  # Launch threads up to the limited number of threads number 
   if ($num_threads < 2) {
     $num_threads = 2;
   }   
@@ -2432,7 +2435,7 @@ sub multithread_run_flows($) {
           my $thr_new = threads->create(\&run_benchmark_selected_flow,$flow_to_run,$benchmark, 0);
           # We have a valid thread...
           if ($thr_new) {
-            print "INFO: a new thread is lauched!\n";
+            print "INFO: a new thread is launched!\n";
             print "FLOW RUNNING: $flow_to_run, Benchmark: $benchmark\n";
             # Check if it is running...
             if ($thr_new->is_running()) {

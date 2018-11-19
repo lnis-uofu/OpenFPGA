@@ -11,6 +11,7 @@ my ($fname,$frpt);
 
 sub print_usage()
 {
+  print "VPR accepts a certain format of blif so this script checks the latches and corrects them if needed\n"
   print "Usage:\n";
   print "      perl <script_name.pl> [-options]\n";
   print "      Options:(Mandatory!)\n";
@@ -32,10 +33,10 @@ sub opts_read()
   {
     for (my $iargv = 0; $iargv < $#ARGV+1; $iargv++)
     {
-      if ("-i" eq $ARGV[$iargv]) 
-      {$fname = $ARGV[$iargv+1];}
-      elsif ("-o" eq $ARGV[$iargv]) 
-      {$frpt = $ARGV[$iargv+1];}
+       if ("-i" eq $ARGV[$iargv]) 
+       {$fname = $ARGV[$iargv+1];}
+       elsif ("-o" eq $ARGV[$iargv]) 
+       {$frpt = $ARGV[$iargv+1];}
     }
   } 
   return 1;

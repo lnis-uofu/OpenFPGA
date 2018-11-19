@@ -174,10 +174,10 @@
         </input>
       </stimulate>      
     </parameters>
-    <tech_lib lib_type="industry" transistor_type="TOP_TT" lib_path="/research/ece/lnis/USERS/tang/tangxifan-eda-tools/branches/subvt_fpga/process/tsmc40nm/toplevel.l" nominal_vdd="0.9" io_vdd="2.5"/>
+    <tech_lib lib_type="academia" transistor_type="TOP_TT" lib_path="/home/u6017869/Documents/newer_OpenFPGA/OpenFPGA/vpr7_x2p/tech/PTM_45nm/45nm.pm" nominal_vdd="1.0" io_vdd="2.5"/>
     <transistors pn_ratio="2" model_ref="M">
-      <nmos model_name="nch" chan_length="40e-9" min_width="140e-9"/>
-      <pmos model_name="pch" chan_length="40e-9" min_width="140e-9"/>
+      <nmos model_name="nmos" chan_length="45e-9" min_width="140e-9"/>
+      <pmos model_name="pmos" chan_length="45e-9" min_width="140e-9"/>
       <io_nmos model_name="nch_25" chan_length="270e-9" min_width="320e-9"/>
       <io_pmos model_name="pch_25" chan_length="270e-9" min_width="320e-9"/>
     </transistors> 
@@ -254,7 +254,7 @@
         <port type="sram" prefix="sram" size="1"/>
       </circuit_model>
       <!--DFF subckt ports should be defined as <D> <Q> <CLK> <RESET> <SET>  -->
-      <circuit_model type="ff" name="static_dff" prefix="dff" spice_netlist="/research/ece/lnis/USERS/tang/tangxifan-eda-tools/branches/vpr7_rram/vpr/SpiceNetlists/ff.sp" verilog_netlist="/research/ece/lnis/USERS/tang/tangxifan-eda-tools/branches/vpr7_rram/vpr/VerilogNetlists/ff.v">
+      <circuit_model type="ff" name="static_dff" prefix="dff" spice_netlist="/home/u6017869/Documents/newer_OpenFPGA/OpenFPGA/vpr7_x2p/vpr/SpiceNetlists/ff.sp" verilog_netlist="/home/u6017869/Documents/newer_OpenFPGA/OpenFPGA/vpr7_x2p/vpr/VerilogNetlists/ff.v">
          <design_technology type="cmos"/>
          <input_buffer exist="on" circuit_model_name="INVTX1"/>
          <output_buffer exist="on" circuit_model_name="INVTX1"/>
@@ -275,7 +275,7 @@
         <port type="output" prefix="out" size="1"/>
         <port type="sram" prefix="sram" size="64"/>
       </circuit_model>
-      <circuit_model type="sram" name="sram6T" prefix="sram" spice_netlist="/research/ece/lnis/USERS/tang/tangxifan-eda-tools/branches/vpr7_rram/vpr/SpiceNetlists/sram.sp" verilog_netlist="/research/ece/lnis/USERS/tang/tangxifan-eda-tools/branches/vpr7_rram/vpr/VerilogNetlists/sram.v" >
+      <circuit_model type="sram" name="sram6T" prefix="sram" spice_netlist="/home/u6017869/Documents/newer_OpenFPGA/OpenFPGA/vpr7_x2p/vpr/SpiceNetlists/sram.sp" verilog_netlist="/home/u6017869/Documents/newer_OpenFPGA/OpenFPGA/vpr7_x2p/vpr/VerilogNetlists/sram.v" >
         <design_technology type="cmos"/>
         <input_buffer exist="on" circuit_model_name="INVTX1"/>
         <output_buffer exist="on" circuit_model_name="INVTX1"/>
@@ -283,7 +283,8 @@
         <port type="input" prefix="in" size="1"/>
         <port type="output" prefix="out" size="2"/>
       </circuit_model>
-      <circuit_model type="sram" name="sram6T_blwl" prefix="sram_blwl" spice_netlist="/research/ece/lnis/USERS/tang/tangxifan-eda-tools/branches/vpr7_rram/vpr/SpiceNetlists/sram.sp" verilog_netlist="/research/ece/lnis/USERS/tang/tangxifan-eda-tools/branches/vpr7_rram/vpr/VerilogNetlists/sram.v">
+      <circuit_model type="sram" name="sram6T_blwl" prefix="sram_blwl" spice_netlist="/home/u6017869/Documents/newer_OpenFPGA/OpenFPGA/vpr7_x2p/vpr/SpiceNetlists/sram.sp" verilog_netlist="/home/u6017869/Documents/newer_OpenFPGA/OpenFPGA/vpr7_x2p/vpr/VerilogNetlists/sram.v">
+
         <design_technology type="cmos"/>
         <input_buffer exist="on" circuit_model_name="INVTX1"/>
         <output_buffer exist="on" circuit_model_name="INVTX1"/>
@@ -295,7 +296,7 @@
         <port type="wl" prefix="wl" size="1" default_val="0" inv_circuit_model_name="INVTX1"/>
       </circuit_model>
       <!--Scan-chain DFF subckt ports should be defined as <D> <Q> <Qb> <CLK> <RESET> <SET>  -->
-      <circuit_model type="sff" name="sc_ff" prefix="scff" spice_netlist="/research/ece/lnis/USERS/tang/tangxifan-eda-tools/branches/vpr7_rram/vpr/SpiceNetlists/ff.sp" verilog_netlist="/research/ece/lnis/USERS/tang/tangxifan-eda-tools/branches/vpr7_rram/vpr/VerilogNetlists/ff.v">
+      <circuit_model type="sff" name="sc_ff" prefix="scff" spice_netlist="/home/u6017869/Documents/newer_OpenFPGA/OpenFPGA/vpr7_x2p/vpr/SpiceNetlists/ff.sp" verilog_netlist="/home/u6017869/Documents/newer_OpenFPGA/OpenFPGA/vpr7_x2p/vpr/VerilogNetlists/ff.v">
          <design_technology type="cmos"/>
          <input_buffer exist="on" circuit_model_name="INVTX1"/>
          <output_buffer exist="on" circuit_model_name="INVTX1"/>
@@ -306,7 +307,7 @@
          <port type="output" prefix="Q" size="2"/>
          <port type="clock" prefix="prog_clk" size="1" is_global="true" default_val="0" is_prog="true"/>
       </circuit_model>
-      <circuit_model type="iopad" name="iopad" prefix="iopad" spice_netlist="/research/ece/lnis/USERS/tang/tangxifan-eda-tools/branches/vpr7_rram/vpr/SpiceNetlists/io.sp" verilog_netlist="/research/ece/lnis/USERS/tang/tangxifan-eda-tools/branches/vpr7_rram/vpr/VerilogNetlists/io.v">
+      <circuit_model type="iopad" name="iopad" prefix="iopad" spice_netlist="/home/u6017869/Documents/newer_OpenFPGA/OpenFPGA/vpr7_x2p/vpr/SpiceNetlists/io.sp" verilog_netlist="/home/u6017869/Documents/newer_OpenFPGA/OpenFPGA/vpr7_x2p/vpr/VerilogNetlists/io.v">
         <design_technology type="cmos"/>
         <input_buffer exist="on" circuit_model_name="INVTX1"/>
         <output_buffer exist="on" circuit_model_name="INVTX1"/>
