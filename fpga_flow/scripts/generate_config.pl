@@ -23,6 +23,17 @@ sub print_usage()
 
 }
 
+# Create paths if it does not exist.
+sub generate_path($)
+{
+  my ($mypath) = @_; 
+  if (!(-e "$mypath"))
+  {
+    mkpath "$mypath";
+    print "Path($mypath) does not exist...Create it.\n";
+  }
+  return 1;
+}
 
 
 
