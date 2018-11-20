@@ -20,7 +20,7 @@ $CONFIG_PATH = "${FPGA_FLOW_PATH}/configs/fpga_spice/k6_N10_sram_tsmc40nm_TT.con
 
 sub print_usage()
 {
-	print "\n The configuration file is being generated. \nThe output is placed in ../configs/fpga_spice/k6_N10_sram_tsmc40nm_TT.conf\n"; 
+	print "\nThe configuration file is being generated. \nThe output is placed in ../configs/fpga_spice/k6_N10_sram_tsmc40nm_TT.conf\n"; 
 return 1;
 }
 
@@ -54,7 +54,7 @@ sub generate_file($)
 	print $CONF_HANDLE "benchmark_dir = ${FPGA_FLOW_PATH}/benchmarks/FPGA_SPICE_bench\n";
 	print $CONF_HANDLE "odin2_path = ${FPGA_FLOW_PATH}/not_used_atm/odin2.exe\n";
 	print $CONF_HANDLE "cirkit_path = ${FPGA_FLOW_PATH}/not_used_atm/cirkit\n";
-	print $CONF_HANDLE "abc_path = ${FPGA_FLOW_PATH}/../abc_with_bb_support/abc\n";
+	print $CONF_HANDLE "abc_path = ${FPGA_FLOW_PATH}/../abc/abc\n";
 	print $CONF_HANDLE "abc_mccl_path = ${FPGA_FLOW_PATH}/../abc_with_bb_support/abc\n";
 	print $CONF_HANDLE "abc_with_bb_support_path = ${FPGA_FLOW_PATH}/../abc_with_bb_support/abc\n";
 	print $CONF_HANDLE "mpack1_path = ${FPGA_FLOW_PATH}/not_used_atm/mpack1\n";
