@@ -13,13 +13,14 @@ use FileHandle;
 my $CONF_HANDLE;
 my ($SCRIPTS_PATH, $CONFIG_PATH, $FPGA_FLOW_PATH);
 
-$SCRIPTS_PATH = getcwd();
-$FPGA_FLOW_PATH = "${SCRIPTS_PATH}/..";
+# !!! this script is called in the parent folder: fpga_flow. If you use the script in the scripts folder it is not going to work! !!!
+$FPGA_FLOW_PATH = getcwd();
+$SCRIPTS_PATH = "${FPGA_FLOW_PATH}/scripts";
 $CONFIG_PATH = "${FPGA_FLOW_PATH}/configs/fpga_spice/k6_N10_sram_tsmc40nm_TT.conf";
 
 sub print_usage()
 {
-	print "\n The configuration file generates the configuration for the .run_fpga_spice_testbench_study.sh in the parent folder. \nThe output is placed in ../configs/fpga_spice/k6_N10_sram_tsmc40nm_TT.conf\n"; 
+	print "\n The configuration file is being generated. \nThe output is placed in ../configs/fpga_spice/k6_N10_sram_tsmc40nm_TT.conf\n"; 
 return 1;
 }
 
