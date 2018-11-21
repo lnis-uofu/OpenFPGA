@@ -70,7 +70,7 @@ sub generate_file($)
 	print $CONF_HANDLE "mpack1_abc_stdlib = DRLC7T_SiNWFET.genlib # Use relative path under ABC folder is OK\n";
 	print $CONF_HANDLE "m2net_conf = ${FPGA_FLOW_PATH}/m2net_conf/m2x2_SiNWFET.conf\n";
 	print $CONF_HANDLE "mpack2_arch = K6_pattern7_I24.arch\n";
-	print $CONF_HANDLE "power_tech_xml = ${FPGA_FLOW_PATH}/tech/tsmc40nm.xml # Use relative path under VPR folder is OK\n";
+	print $CONF_HANDLE "power_tech_xml = ${FPGA_FLOW_PATH}/tech/PTM_45nm/45nm.xml # Use relative path under VPR folder is OK\n";
 	print $CONF_HANDLE "\n";
 	print $CONF_HANDLE "[csv_tags]\n";
 	print $CONF_HANDLE "mpack1_tags = Global mapping efficiency:|efficiency:|occupancy wo buf:|efficiency wo buf:\n";
