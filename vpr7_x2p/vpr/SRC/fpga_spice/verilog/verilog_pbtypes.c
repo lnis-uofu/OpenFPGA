@@ -1993,12 +1993,14 @@ void dump_verilog_pb_graph_node_rec(FILE* fp,
                                             pb_type_index, cur_pb_type->spice_model, PRIMITIVE_WIRED_LUT);
     /* update the number of SRAM, I/O pads */
     /* update stamped iopad counter */
-    stamped_iopad_cnt += cur_pb->num_iopads;
+    /* stamped_iopad_cnt += cur_pb->num_iopads; */
     /* update stamped sram counter */
-    stamped_sram_cnt += cur_pb->num_conf_bits;
+    /* stamped_sram_cnt += cur_pb->num_conf_bits; */
     /* Check */
+    /*
     assert(stamped_sram_cnt == get_sram_orgz_info_num_mem_bit(sram_verilog_orgz_info)); 
     assert(stamped_iopad_cnt == iopad_verilog_model->cnt); 
+    */
     return;
   }
 

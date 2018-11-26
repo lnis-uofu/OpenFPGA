@@ -98,6 +98,9 @@ void dump_verilog_pb_primitive_lut(FILE* fp,
   /* Check if this is an idle logical block mapped*/
   switch (lut_status) {
   case PRIMITIVE_WIRED_LUT:
+    if (NULL == mapped_logical_block) {
+      break; /* Jump out if there is no mapped logical block */
+    }
     /* Give a special truth table */
     assert (VPACK_COMB == mapped_logical_block->type);
     /* Get the mapped vpack_net_num of this physical LUT pb */
