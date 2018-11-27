@@ -16,4 +16,5 @@ void fprint_pb_primitive_lut(FILE* fp,
                              t_pb_graph_node* cur_pb_graph_node,
                              int index,
                              t_spice_model* spice_model,
-                             int lut_status);
+                             int lut_status,
+                             t_rr_node* pb_rr_graph);

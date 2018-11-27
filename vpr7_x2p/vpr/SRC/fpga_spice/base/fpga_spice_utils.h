@@ -461,6 +461,9 @@ void get_logical_block_output_vpack_net_num(t_logical_block* cur_logical_block,
                                             int* num_lb_output_ports, int** num_lb_output_pins, 
                                             int*** lb_output_vpack_net_num);
 
+int get_pb_graph_node_wired_lut_logical_block_index(t_pb_graph_node* cur_pb_graph_node,
+                                                    t_rr_node* op_pb_rr_graph);
+
 char** assign_post_routing_wired_lut_truth_table(t_logical_block* wired_lut_logical_block,
                                                  int lut_size, int* lut_pin_vpack_net_num,
                                                  int* truth_table_length);
@@ -644,7 +647,8 @@ t_llist* add_one_subckt_file_name_to_llist(t_llist* cur_head,
 boolean check_subckt_file_exist_in_llist(t_llist* subckt_llist_head,
                                          char* subckt_file_name);
 
-void get_mapped_lut_pb_input_pin_vpack_net_num(t_pb* lut_pb,
+void get_mapped_lut_pb_input_pin_vpack_net_num(t_pb_graph_node* lut_pb_graph_node,
+                                               t_rr_node* pb_rr_graph,
                                                int* num_lut_pin, int** lut_pin_net);
 
 void rec_stats_spice_model_global_ports(t_spice_model* cur_spice_model,

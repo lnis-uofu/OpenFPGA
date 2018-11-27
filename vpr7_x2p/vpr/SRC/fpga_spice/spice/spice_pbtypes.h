@@ -48,7 +48,8 @@ void fprint_pb_primitive_spice_model(FILE* fp,
                                      t_pb_graph_node* prim_pb_graph_node,
                                      int pb_index,
                                      t_spice_model* spice_model,
-                                     int is_idle);
+                                     int is_idle,
+                                     t_rr_node* pb_rr_graph);
 
 void fprint_spice_idle_pb_graph_node_rec(FILE* fp,
                                          char* subckt_prefix,
@@ -59,7 +60,8 @@ void fprint_spice_pb_graph_node_rec(FILE* fp,
                                     char* subckt_prefix, 
                                     t_pb* cur_pb, 
                                     t_pb_graph_node* cur_pb_graph_node,
-                                    int pb_type_index);
+                                    int pb_type_index,
+                                    t_rr_node* pb_rr_graph);
 
 
 void fprint_spice_block(FILE* fp,

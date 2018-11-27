@@ -1574,12 +1574,13 @@ void dump_verilog_pb_graph_primitive_node(FILE* fp,
 
 /* Print the subckt of a primitive pb */
 void dump_verilog_pb_primitive_verilog_model(FILE* fp,
-                                     char* subckt_prefix,
-                                     t_pb* prim_pb,
-                                     t_pb_graph_node* prim_pb_graph_node,
-                                     int pb_index,
-                                     t_spice_model* verilog_model,
-                                     int is_idle) {
+                                             char* subckt_prefix,
+                                             t_pb* prim_pb,
+                                             t_pb_graph_node* prim_pb_graph_node,
+                                             int pb_index,
+                                             t_spice_model* verilog_model,
+                                             int is_idle,
+                                             t_rr_node* pb_rr_graph) {
   t_pb_type* prim_pb_type = NULL;
   t_logical_block* mapped_logical_block = NULL;
 
@@ -1645,7 +1646,7 @@ void dump_verilog_pb_primitive_verilog_model(FILE* fp,
   case SPICE_MODEL_LUT:
     /* If this is a idle block we should set sram_bits to zero*/
     dump_verilog_pb_primitive_lut(fp, subckt_prefix, prim_pb, mapped_logical_block, prim_pb_graph_node,
-                                  pb_index, verilog_model, is_idle);
+                                  pb_index, verilog_model, is_idle, pb_rr_graph);
     break;
   case SPICE_MODEL_FF:
     assert(NULL != verilog_model->model_netlist);
@@ -1749,7 +1750,7 @@ void dump_verilog_idle_pb_graph_node_rec(FILE* fp,
       /* Consider the num_pb, create all the subckts*/
       dump_verilog_pb_primitive_verilog_model(fp, formatted_subckt_prefix, 
                                               NULL, cur_pb_graph_node, pb_type_index, 
-                                              cur_pb_type->spice_model, 1);
+                                              cur_pb_type->spice_model, 1, NULL);
       /* update the number of SRAM, I/O pads */
       stamped_sram_cnt += cur_pb_type->default_mode_num_conf_bits;
       break;
@@ -1757,7 +1758,7 @@ void dump_verilog_idle_pb_graph_node_rec(FILE* fp,
       assert(0 == cur_pb_type->num_modes);
       /* Consider the num_pb, create all the subckts*/
       dump_verilog_pb_primitive_verilog_model(fp, formatted_subckt_prefix, 
-                                      NULL, cur_pb_graph_node, pb_type_index, cur_pb_type->spice_model, 1);
+                                      NULL, cur_pb_graph_node, pb_type_index, cur_pb_type->spice_model, 1, NULL);
       /* update the number of SRAM, I/O pads */
       /* update stamped sram counter */
       stamped_sram_cnt += cur_pb_type->default_mode_num_conf_bits;
@@ -1766,7 +1767,7 @@ void dump_verilog_idle_pb_graph_node_rec(FILE* fp,
     case MEMORY_CLASS:
       /* Consider the num_pb, create all the subckts*/
       dump_verilog_pb_primitive_verilog_model(fp, formatted_subckt_prefix, 
-                                      NULL, cur_pb_graph_node, pb_type_index, cur_pb_type->spice_model, 1);
+                                      NULL, cur_pb_graph_node, pb_type_index, cur_pb_type->spice_model, 1, NULL);
       /* update the number of SRAM, I/O pads */
       /* update stamped sram counter */
       stamped_sram_cnt += cur_pb_type->default_mode_num_conf_bits;
@@ -1948,7 +1949,8 @@ void dump_verilog_pb_graph_node_rec(FILE* fp,
                                     char* subckt_prefix, 
                                     t_pb* cur_pb, 
                                     t_pb_graph_node* cur_pb_graph_node,
-                                    int pb_type_index) {
+                                    int pb_type_index,
+                                    t_rr_node* pb_rr_graph) {
   int mode_index, ipb, jpb, child_mode_index;
   t_pb_type* cur_pb_type = NULL;
   char* subckt_name = NULL;
@@ -1990,7 +1992,7 @@ void dump_verilog_pb_graph_node_rec(FILE* fp,
     assert (LUT_CLASS == cur_pb_type->class_type);
     dump_verilog_pb_primitive_verilog_model(fp, formatted_subckt_prefix, 
                                             NULL, cur_pb_graph_node, 
-                                            pb_type_index, cur_pb_type->spice_model, PRIMITIVE_WIRED_LUT);
+                                            pb_type_index, cur_pb_type->spice_model, PRIMITIVE_WIRED_LUT, pb_rr_graph);
     /* update the number of SRAM, I/O pads */
     /* update stamped iopad counter */
     /* stamped_iopad_cnt += cur_pb->num_iopads; */
@@ -2023,7 +2025,7 @@ void dump_verilog_pb_graph_node_rec(FILE* fp,
         /* Refer to pack/output_clustering.c [LINE 392] */
         if ((NULL != cur_pb->child_pbs[ipb])&&(NULL != cur_pb->child_pbs[ipb][jpb].name)) {
           dump_verilog_pb_graph_node_rec(fp, pass_on_prefix, &(cur_pb->child_pbs[ipb][jpb]), 
-                                         cur_pb->child_pbs[ipb][jpb].pb_graph_node, jpb);
+                                         cur_pb->child_pbs[ipb][jpb].pb_graph_node, jpb , cur_pb->rr_graph);
         /* For wired LUT */
         } else if (TRUE == is_pb_wired_lut(&(cur_pb->pb_graph_node->child_pb_graph_nodes[mode_index][ipb][jpb]),  
                                            &(cur_pb->pb_graph_node->pb_type->modes[mode_index].pb_type_children[ipb]),
@@ -2033,7 +2035,7 @@ void dump_verilog_pb_graph_node_rec(FILE* fp,
            */
           dump_verilog_pb_graph_node_rec(fp, pass_on_prefix, NULL, 
                                          &(cur_pb->pb_graph_node->child_pb_graph_nodes[mode_index][ipb][jpb]),  
-                                         jpb);
+                                         jpb, cur_pb->rr_graph);
         } else {
           /* Check if this pb has no children, no children mean idle*/
           dump_verilog_idle_pb_graph_node_rec(fp, pass_on_prefix,
@@ -2052,7 +2054,7 @@ void dump_verilog_pb_graph_node_rec(FILE* fp,
       child_pb = get_lut_child_pb(cur_pb, mode_index);
       dump_verilog_pb_primitive_verilog_model(fp, formatted_subckt_prefix, 
                                               child_pb, cur_pb_graph_node, 
-                                              pb_type_index, cur_pb_type->spice_model, 0);
+                                              pb_type_index, cur_pb_type->spice_model, 0, child_pb->rr_graph);
       /* update the number of SRAM, I/O pads */
       /* update stamped iopad counter */
       stamped_iopad_cnt += cur_pb->num_iopads;
@@ -2064,7 +2066,7 @@ void dump_verilog_pb_graph_node_rec(FILE* fp,
       /* Consider the num_pb, create all the subckts*/
       dump_verilog_pb_primitive_verilog_model(fp, formatted_subckt_prefix, 
                                               cur_pb, cur_pb_graph_node,
-                                              pb_type_index, cur_pb_type->spice_model, 0);
+                                              pb_type_index, cur_pb_type->spice_model, 0, cur_pb->rr_graph);
       /* update the number of SRAM, I/O pads */
       /* update stamped iopad counter */
       stamped_iopad_cnt += cur_pb->num_iopads;
@@ -2076,7 +2078,7 @@ void dump_verilog_pb_graph_node_rec(FILE* fp,
       /* Consider the num_pb, create all the subckts*/
       dump_verilog_pb_primitive_verilog_model(fp, formatted_subckt_prefix, 
                                               child_pb, cur_pb_graph_node, 
-                                              pb_type_index, cur_pb_type->spice_model, 0);
+                                              pb_type_index, cur_pb_type->spice_model, 0, cur_pb->rr_graph);
       /* update the number of SRAM, I/O pads */
       /* update stamped iopad counter */
       stamped_iopad_cnt += cur_pb->num_iopads;
@@ -2086,7 +2088,7 @@ void dump_verilog_pb_graph_node_rec(FILE* fp,
     case UNKNOWN_CLASS:
       /* Consider the num_pb, create all the subckts*/
       dump_verilog_pb_primitive_verilog_model(fp, formatted_subckt_prefix, 
-                                              cur_pb, cur_pb_graph_node, pb_type_index, cur_pb_type->spice_model, 0);
+                                              cur_pb, cur_pb_graph_node, pb_type_index, cur_pb_type->spice_model, 0, cur_pb->rr_graph);
       /* update the number of SRAM, I/O pads */
       /* update stamped iopad counter */
       stamped_iopad_cnt += cur_pb->num_iopads;
@@ -2297,6 +2299,8 @@ void dump_verilog_phy_pb_graph_node_rec(FILE* fp,
   int stamped_sram_lsb = get_sram_orgz_info_num_mem_bit(sram_verilog_orgz_info); 
 
   int stamped_iopad_cnt = iopad_verilog_model->cnt;
+
+  t_rr_node* pb_rr_graph = NULL;
   
   /* Check the file handler*/ 
   if (NULL == fp) {
@@ -2316,6 +2320,9 @@ void dump_verilog_phy_pb_graph_node_rec(FILE* fp,
   is_idle = 1;
   if (NULL != cur_pb) {
     is_idle = 0;
+    pb_rr_graph = cur_pb->rr_graph;
+  } else {
+    pb_rr_graph = NULL;
   }
 
   /* Recursively finish all the child pb_types*/
@@ -2352,7 +2359,7 @@ void dump_verilog_phy_pb_graph_node_rec(FILE* fp,
       if (1 == is_idle) {
         dump_verilog_pb_primitive_verilog_model(fp, formatted_subckt_prefix, 
                                                 NULL, cur_pb_graph_node, pb_type_index, 
-                                                cur_pb_type->spice_model, is_idle); /* last param means idle */
+                                                cur_pb_type->spice_model, is_idle, NULL); /* last param means idle */
       } else {
         child_pb = get_lut_child_pb(cur_pb, mode_index); 
         /* Special care for LUT !!!
@@ -2360,21 +2367,21 @@ void dump_verilog_phy_pb_graph_node_rec(FILE* fp,
          */
         dump_verilog_pb_primitive_verilog_model(fp, formatted_subckt_prefix, 
                                                 child_pb, cur_pb_graph_node, pb_type_index, 
-                                                cur_pb_type->spice_model, is_idle); /* last param means idle */
+                                                cur_pb_type->spice_model, is_idle, child_pb->rr_graph); /* last param means idle */
       }
     case LATCH_CLASS:
       assert(0 == cur_pb_type->num_modes);
       /* Consider the num_pb, create all the subckts*/
       dump_verilog_pb_primitive_verilog_model(fp, formatted_subckt_prefix, 
                                               cur_pb, cur_pb_graph_node, pb_type_index, 
-                                              cur_pb_type->spice_model, is_idle); /* last param means idle */
+                                              cur_pb_type->spice_model, is_idle, pb_rr_graph); /* last param means idle */
       break;
     case UNKNOWN_CLASS:
     case MEMORY_CLASS:
       /* Consider the num_pb, create all the subckts*/
       dump_verilog_pb_primitive_verilog_model(fp, formatted_subckt_prefix, 
                                               cur_pb, cur_pb_graph_node, pb_type_index, 
-                                              cur_pb_type->spice_model, is_idle); /* last param means idle */
+                                              cur_pb_type->spice_model, is_idle, pb_rr_graph); /* last param means idle */
       break;  
     default:
       vpr_printf(TIO_MESSAGE_ERROR, "(File:%s,[LINE%d])Unknown class type of pb_type(%s)!\n",
@@ -2588,7 +2595,7 @@ void dump_verilog_block(FILE* fp,
    * Inside the type_descripor, there is a top_pb_graph_node(pb_graph_head), describe the top pb_type defined.
    * The index of such top pb_type is always 0. 
    */
-  dump_verilog_pb_graph_node_rec(fp, subckt_name, top_pb, top_pb_graph_node, z);
+  dump_verilog_pb_graph_node_rec(fp, subckt_name, top_pb, top_pb_graph_node, z, top_pb->rr_graph);
 
   return;
 }

@@ -70,13 +70,14 @@ void dump_verilog_pb_graph_primitive_node(FILE* fp,
                                           t_pb_graph_node* cur_pb_graph_node,
                                           int pb_type_index);
 
-void dump_pb_primitive_verilog_model(FILE* fp,
+void dump_verilog_pb_primitive_verilog_model(FILE* fp,
                                      char* subckt_prefix,
                                      t_pb* prim_pb,
                                      t_pb_graph_node* prim_pb_graph_node,
                                      int pb_index,
                                      t_spice_model* verilog_model,
-                                     int is_idle);
+                                     int is_idle,
+                                     t_rr_node* pb_rr_graph);
 
 void dump_verilog_idle_pb_graph_node_rec(FILE* fp,
                                          char* subckt_prefix,
@@ -87,7 +88,8 @@ void dump_verilog_pb_graph_node_rec(FILE* fp,
                                     char* subckt_prefix, 
                                     t_pb* cur_pb, 
                                     t_pb_graph_node* cur_pb_graph_node,
-                                    int pb_type_index);
+                                    int pb_type_index,
+                                    t_rr_node* pb_rr_graph);
 
 void dump_verilog_phy_pb_graph_node_rec(FILE* fp,
                                         char* subckt_prefix,

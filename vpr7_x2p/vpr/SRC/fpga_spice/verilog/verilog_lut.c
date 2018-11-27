@@ -40,7 +40,8 @@ void dump_verilog_pb_primitive_lut(FILE* fp,
                                    t_pb_graph_node* cur_pb_graph_node,
                                    int index,
                                    t_spice_model* verilog_model,
-                                   int lut_status) {
+                                   int lut_status,
+                                   t_rr_node* pb_rr_graph) {
   int i;
   int* sram_bits = NULL; /* decoded SRAM bits */ 
   int truth_table_length = 0;
@@ -98,17 +99,25 @@ void dump_verilog_pb_primitive_lut(FILE* fp,
   /* Check if this is an idle logical block mapped*/
   switch (lut_status) {
   case PRIMITIVE_WIRED_LUT:
+    assert(NULL != pb_rr_graph);
     if (NULL == mapped_logical_block) {
-      break; /* Jump out if there is no mapped logical block */
+      /* Get the mapped vpack_net_num of this physical LUT pb */
+      get_mapped_lut_pb_input_pin_vpack_net_num(cur_pb_graph_node, pb_rr_graph, &num_lut_pin_nets, &lut_pin_net);
+      /* consider LUT pin remapping when assign lut truth tables */
+      mapped_logical_block = &logical_block[get_pb_graph_node_wired_lut_logical_block_index(cur_pb_graph_node, pb_rr_graph)];
+      /* Match truth table and post-routing results */
+      truth_table = assign_post_routing_wired_lut_truth_table(mapped_logical_block, 
+                                                              num_lut_pin_nets, lut_pin_net, &truth_table_length); 
+    } else {
+      /* Give a special truth table */
+      assert (VPACK_COMB == mapped_logical_block->type);
+      /* Get the mapped vpack_net_num of this physical LUT pb */
+      get_mapped_lut_pb_input_pin_vpack_net_num(cur_pb_graph_node, pb_rr_graph, &num_lut_pin_nets, &lut_pin_net);
+      /* consider LUT pin remapping when assign lut truth tables */
+      /* Match truth table and post-routing results */
+      truth_table = assign_post_routing_wired_lut_truth_table(mapped_logical_block, 
+                                                              num_lut_pin_nets, lut_pin_net, &truth_table_length); 
     }
-    /* Give a special truth table */
-    assert (VPACK_COMB == mapped_logical_block->type);
-    /* Get the mapped vpack_net_num of this physical LUT pb */
-    get_mapped_lut_pb_input_pin_vpack_net_num(prim_pb, &num_lut_pin_nets, &lut_pin_net);
-    /* consider LUT pin remapping when assign lut truth tables */
-    /* Match truth table and post-routing results */
-    truth_table = assign_post_routing_wired_lut_truth_table(mapped_logical_block, 
-                                                            num_lut_pin_nets, lut_pin_net, &truth_table_length); 
     break;
   case PRIMITIVE_IDLE:
     break;
@@ -120,7 +129,7 @@ void dump_verilog_pb_primitive_lut(FILE* fp,
  
     assert (VPACK_COMB == mapped_logical_block->type);
     /* Get the mapped vpack_net_num of this physical LUT pb */
-    get_mapped_lut_pb_input_pin_vpack_net_num(prim_pb, &num_lut_pin_nets, &lut_pin_net);
+    get_mapped_lut_pb_input_pin_vpack_net_num(cur_pb_graph_node, pb_rr_graph, &num_lut_pin_nets, &lut_pin_net);
     /* consider LUT pin remapping when assign lut truth tables */
     /* Match truth table and post-routing results */
     truth_table = assign_post_routing_lut_truth_table(mapped_logical_block, 
