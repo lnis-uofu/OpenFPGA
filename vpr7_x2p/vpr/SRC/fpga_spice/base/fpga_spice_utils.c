@@ -5853,36 +5853,38 @@ int get_pb_graph_node_wired_lut_logical_block_index(t_pb_graph_node* cur_pb_grap
   int temp_rr_node_index;
   int lut_output_vpack_net_num = OPEN;
 
-  num_used_lut_input_pins = 0;
-  /* Find the used input pin of this LUT and rr_node in the graph */
-  for (iport = 0; iport < cur_pb_graph_node->num_input_ports; iport++) {
-    for (ipin = 0; ipin < cur_pb_graph_node->num_input_pins[iport]; ipin++) {
-      temp_rr_node_index = cur_pb_graph_node->input_pins[iport][ipin].pin_count_in_cluster;
-      if (OPEN != op_pb_rr_graph[temp_rr_node_index].vpack_net_num) {
-        num_used_lut_input_pins++;
-        lut_output_vpack_net_num = op_pb_rr_graph[temp_rr_node_index].vpack_net_num;
-      }
-    }
-  }
-  /* Make sure we only have 1 used input pin */
-  assert ((1 == num_used_lut_input_pins)
-         && (OPEN != lut_output_vpack_net_num)); 
-  /* vpr_printf(TIO_MESSAGE_INFO, "Wired LUT output vpack_net_num is %d\n", lut_output_vpack_net_num); */
- 
-  /* Find the used output*/ 
   num_used_lut_output_pins = 0;
   /* Find the used output pin of this LUT and rr_node in the graph */
   for (iport = 0; iport < cur_pb_graph_node->num_output_ports; iport++) {
     for (ipin = 0; ipin < cur_pb_graph_node->num_output_pins[iport]; ipin++) {
       temp_rr_node_index = cur_pb_graph_node->output_pins[iport][ipin].pin_count_in_cluster;
-      if (lut_output_vpack_net_num == op_pb_rr_graph[temp_rr_node_index].vpack_net_num) { /* TODO: Shit... I do not why the vpack_net_num is not synchronized to the net_num !!! */
+      if (OPEN != op_pb_rr_graph[temp_rr_node_index].vpack_net_num) { /* TODO: Shit... I do not why the vpack_net_num is not synchronized to the net_num !!! */
         num_used_lut_output_pins++;
+        lut_output_vpack_net_num = op_pb_rr_graph[temp_rr_node_index].vpack_net_num;
       }
     }
   }
   /* Make sure we only have 1 used output pin */
   /* vpr_printf(TIO_MESSAGE_INFO, "Wired LUT num_used_lut_output_pins is %d\n", num_used_lut_output_pins); */
-  assert (1 == num_used_lut_output_pins); 
+  assert ((1 == num_used_lut_output_pins)
+        && (OPEN != lut_output_vpack_net_num)); 
+
+  num_used_lut_input_pins = 0;
+  /* Find the used input pin of this LUT and rr_node in the graph */
+  for (iport = 0; iport < cur_pb_graph_node->num_input_ports; iport++) {
+    for (ipin = 0; ipin < cur_pb_graph_node->num_input_pins[iport]; ipin++) {
+      temp_rr_node_index = cur_pb_graph_node->input_pins[iport][ipin].pin_count_in_cluster;
+      if (lut_output_vpack_net_num == op_pb_rr_graph[temp_rr_node_index].vpack_net_num) {
+        num_used_lut_input_pins++;
+      }
+    }
+  }
+  /* Make sure we only have 1 used input pin */
+  assert (1 == num_used_lut_input_pins); 
+
+  /* vpr_printf(TIO_MESSAGE_INFO, "Wired LUT output vpack_net_num is %d\n", lut_output_vpack_net_num); */
+ 
+  /* Find the used output*/ 
 
   /* The logical block is the driver for this vpack_net( node_block[0] )*/
   wired_lut_lb_index = vpack_net[lut_output_vpack_net_num].node_block[0];
