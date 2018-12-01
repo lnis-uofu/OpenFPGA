@@ -43,7 +43,8 @@ my @supported_flows = ("standard",
                        "mpack2",
                        "mpack1",
                        "vtr",
-                       "vtr_standard");
+                       "vtr_standard",
+                       "yosys_vpr");
 my %selected_flows;
 
 # Configuration file keywords list
@@ -60,6 +61,7 @@ my @sctgy;
 # refer to the keywords of dir_path
 @{$sctgy[0]} = ("script_base",
                 "benchmark_dir",
+                "yosys_path",
                 "odin2_path",
                 "cirkit_path",
                 "abc_mccl_path",
@@ -170,21 +172,15 @@ sub print_usage()
   return 1;
 }
  
-sub spot_option($ $)
-{
+sub spot_option($ $) {
   my ($start,$target) = @_;
   my ($arg_no,$flag) = (-1,"unfound");
-  for (my $iarg = $start; $iarg < $#ARGV+1; $iarg++)
-  {
-    if ($ARGV[$iarg] eq $target)
-    {
-      if ("found" eq $flag)
-      {
+  for (my $iarg = $start; $iarg < $#ARGV+1; $iarg++) {
+    if ($ARGV[$iarg] eq $target) {
+      if ("found" eq $flag) {
         print "Error: Repeated Arguments!(IndexA: $arg_no,IndexB: $iarg)\n";
         &print_usage();        
-      }
-      else
-      {
+      } else {
         $flag = "found";
         $arg_no = $iarg;
       }
@@ -199,49 +195,35 @@ sub spot_option($ $)
 # 1. Option Name
 # 2. Whether Option with value. if yes, choose "on"
 # 3. Whether Option is mandatory. If yes, choose "on"
-sub read_opt_into_hash($ $ $)
-{
+sub read_opt_into_hash($ $ $) {
   my ($opt_name,$opt_with_val,$mandatory) = @_;
   # Check the -$opt_name
   my ($opt_fact) = ("-".$opt_name);
   my ($cur_arg) = (0);
   my ($argfd) = (&spot_option($cur_arg,"$opt_fact"));
-  if ($opt_with_val eq "on")
-  {
-    if (-1 != $argfd)
-    {
-      if ($ARGV[$argfd+1] =~ m/^-/)
-      {
+  if ($opt_with_val eq "on") {
+    if (-1 != $argfd) {
+      if ($ARGV[$argfd+1] =~ m/^-/) {
         print "The next argument cannot start with '-'!\n"; 
         print "it implies an option!\n";
-      }
-      else
-      {
+      } else {
         $opt_ptr->{"$opt_name\_val"} = $ARGV[$argfd+1];
         $opt_ptr->{"$opt_name"} = "on";
       }     
-    }
-    else
-    {
+    } else {
       $opt_ptr->{"$opt_name"} = "off";
-      if ($mandatory eq "on")
-      {
+      if ($mandatory eq "on") {
         print "Mandatory option: $opt_fact is missing!\n";
         &print_usage();
       }
     }
-  }
-  else
-  {
-    if (-1 != $argfd)
-    {
+  } else {
+    if (-1 != $argfd) {
       $opt_ptr->{"$opt_name"} = "on";
     }
-    else
-    {
+    else {
       $opt_ptr->{"$opt_name"} = "off";
-      if ($mandatory eq "on")
-      {
+      if ($mandatory eq "on") {
         print "Mandatory option: $opt_fact is missing!\n";
         &print_usage();
       }
@@ -251,11 +233,9 @@ sub read_opt_into_hash($ $ $)
 }
 
 # Read options
-sub opts_read()
-{
+sub opts_read() {
   # if no arguments detected, print the usage.
-  if (-1 == $#ARGV)
-  {
+  if (-1 == $#ARGV) {
     print "Error : No input arguments!\n";
     print "Help desk:\n";
     &print_usage();
@@ -269,19 +249,16 @@ sub opts_read()
   my $argfd;
   # Check help fist 
   $argfd = &spot_option($cur_arg,"-help");
-  if (-1 != $argfd)
-  {
+  if (-1 != $argfd) {
     print "Help desk:\n";
     &print_usage();
   }  
   # Then Check the debug with highest priority
   $argfd = &spot_option($cur_arg,"-debug");
-  if (-1 != $argfd)
-  {
+  if (-1 != $argfd) {
     $opt_ptr->{"debug"} = "on";
   }
-  else
-  {
+  else {
     $opt_ptr->{"debug"} = "off";
   }
   # Check mandatory options
@@ -338,12 +315,12 @@ sub opts_read()
 }
   
 # List the options
-sub print_opts()
-{
+sub print_opts() {
   print "List your options\n"; 
   
-  while(my ($key,$value) = each(%opt_h))
-  {print "$key : $value\n";}
+  while(my ($key,$value) = each(%opt_h)) {
+    print "$key : $value\n";
+  }
 
   return 1;
 }
@@ -552,6 +529,70 @@ sub run_abc_libmap($ $ $)
   system("/bin/csh -cx './$abc_name -c \"read_blif $bm; resyn2; read_library $mpack1_stdlib; $abc_seq_optimize map -v; write_blif $blif_out; quit;\" > $log'");
   chdir $cwd;
 }
+
+# Run yosys synthesis with ABC LUT mapping 
+sub run_yosys_fpgamap($ $ $ $) {
+  my ($bm, $bm_path, $blif_out, $log) = @_;
+  my ($cmd_log) = ($log);
+  $cmd_log =~ s/log$/ys/;
+
+  # Get Yosys path
+  my ($yosys_dir,$yosys_name) = &split_prog_path($conf_ptr->{dir_path}->{yosys_path}->{val});
+
+  print "Entering $yosys_dir\n";
+  chdir $yosys_dir;
+  my ($lut_num) = $opt_ptr->{K_val};
+
+  # Create yosys synthesize script
+  my ($YOSYS_CMD_FH) = (FileHandle->new);
+  if ($YOSYS_CMD_FH->open("> $cmd_log")) {
+    print "INFO: auto generating cmds for Yosys ($cmd_log) ...\n";
+  } else {
+    die "ERROR: fail to auto generating cmds for Yosys ($cmd_log) ...\n";
+  }
+  # Output the standard format (refer to VTR_flow script)
+  print $YOSYS_CMD_FH "# Yosys synthesis script for $bm\n";
+  print $YOSYS_CMD_FH "# read Verilog \n";
+  print $YOSYS_CMD_FH "read_verilog -nolatches $bm_path\n";
+  print $YOSYS_CMD_FH "\n";
+
+  print $YOSYS_CMD_FH "# Technology mapping\n";
+  print $YOSYS_CMD_FH "hierarchy -top $bm\n";
+  print $YOSYS_CMD_FH "proc\n";
+  print $YOSYS_CMD_FH "techmap -D NO_LUT -map +/adff2dff.v\n";
+  print $YOSYS_CMD_FH "\n";
+
+  print $YOSYS_CMD_FH "# Synthesis\n";
+  print $YOSYS_CMD_FH "synth -top $bm -flatten\n";
+  print $YOSYS_CMD_FH "clean\n";
+  print $YOSYS_CMD_FH "\n";
+
+  print $YOSYS_CMD_FH "# LUT mapping \n";
+  print $YOSYS_CMD_FH "abc -lut $lut_num\n";
+  print $YOSYS_CMD_FH "\n";
+
+  print $YOSYS_CMD_FH "# Check \n";
+  print $YOSYS_CMD_FH "synth -run check\n";
+  print $YOSYS_CMD_FH "\n";
+
+  print $YOSYS_CMD_FH "# C;ean and output blif \n";
+  print $YOSYS_CMD_FH "opt_clean -purge\n";
+  print $YOSYS_CMD_FH "write_blif $blif_out\n";
+
+  close($YOSYS_CMD_FH);
+  #
+  # Create a local copy for the commands 
+
+  system("/bin/tcsh -cx './$yosys_name $cmd_log > $log'");
+
+  if (!(-e $blif_out)) {
+    die "ERROR: Fail Yosys for benchmark $bm.\n";
+  }
+
+  print "Leaving $yosys_dir\n";
+  chdir $cwd;
+}
+
 
 # Run ABC by FPGA-oriented synthesis
 sub run_abc_fpgamap($ $ $) 
@@ -885,6 +926,7 @@ sub extract_vpr_power_esti($ $ $ $)
       if ($line =~ m/$tmp\s*([0-9E\-+.]+)/i) {
         $rpt_h{$tag}->{$bm}->{$opt_ptr->{N_val}}->{$type}->{power}->{$tmpkw} = $1;
         my @tempdata = split /\./,$rpt_ptr->{$tag}->{$bm}->{$opt_ptr->{N_val}}->{$type}->{power}->{$tmpkw};
+        #print "$tmpkw\n";
         $rpt_h{$tag}->{$bm}->{$opt_ptr->{N_val}}->{$type}->{power}->{$tmpkw} = join('.',$tempdata[0],$tempdata[1]);
         $rpt_h{$tag}->{$bm}->{$opt_ptr->{N_val}}->{$type}->{power}->{$tmpkw} =~ s/0$//;
       }
@@ -1378,6 +1420,8 @@ sub init_fpga_spice_task($) {
 
   &generate_path($task_dir_path);
 
+  print "INFO: writting FPGA SPICE task list $task_file\n";
+
   # Open the task file handler
   my ($TASKFH) = (FileHandle->new);
   if ($TASKFH->open("> $task_file")) {
@@ -1392,6 +1436,7 @@ sub init_fpga_spice_task($) {
 
   # Close the file handler 
   close($TASKFH); 
+
 }
 
 # Print a line into task file which contains task info of FPGA SPICE.
@@ -1564,6 +1609,113 @@ sub run_mig_mccl_flow($ $ $ $) {
   return;  
 }
 
+# Run Yosys-VPR flow
+sub run_yosys_vpr_flow($ $ $ $ $) 
+{
+  my ($tag,$benchmark_file,$vpr_arch,$flow_enhance, $parse_results) = @_;
+
+  my ($benchmark, $rpt_dir, $prefix);
+  my ($yosys_bm,$yosys_blif_out,$yosys_log,$yosys_blif_out_bak);
+
+  my @tokens = split('/', $benchmark_file);
+  $benchmark = $tokens[0];
+
+  # Prepare for the output folder 
+  $rpt_dir = "$conf_ptr->{dir_path}->{rpt_dir}->{val}"."/$benchmark/$tag";
+  &generate_path($rpt_dir);
+
+  # Run Yosys flow
+  $yosys_bm = "$conf_ptr->{dir_path}->{benchmark_dir}->{val}"."/$benchmark_file";
+  $prefix = "$rpt_dir/$benchmark\_"."K$opt_ptr->{K_val}\_"."N$opt_ptr->{N_val}\_";
+  $yosys_blif_out = "$prefix"."yosys.blif";
+  $yosys_log = "$prefix"."yosys.log";
+
+  &run_yosys_fpgamap($benchmark, $yosys_bm, $yosys_blif_out, $yosys_log);
+
+  # Files for ace 
+  my ($act_file,$ace_new_blif,$ace_log) = ("$prefix"."ace.act","$prefix"."ace.blif","$prefix"."ace.log");
+  &run_ace_in_flow($prefix, $yosys_blif_out, $act_file, $ace_new_blif, $ace_log);
+
+  # Files for VPR
+  my ($vpr_net,$vpr_place,$vpr_route,$vpr_reroute_log,$vpr_log);
+
+  $vpr_net = "$prefix"."vpr.net";
+  $vpr_place = "$prefix"."vpr.place";
+  $vpr_route = "$prefix"."vpr.route";
+  $vpr_log = "$prefix"."vpr.log";
+  $vpr_reroute_log = "$prefix"."vpr_reroute.log";
+
+  &run_vpr_in_flow($tag, $benchmark, $benchmark_file, $yosys_blif_out, $vpr_arch, $act_file, $vpr_net, $vpr_place, $vpr_route, $vpr_log, $vpr_reroute_log, $parse_results);
+
+  return;
+}
+
+# Parse Yosys-VPR flow
+sub parse_yosys_vpr_flow_results($ $ $ $) 
+{
+  my ($tag,$benchmark_file,$vpr_arch,$flow_enhance) = @_;
+
+  my ($benchmark, $rpt_dir, $prefix);
+  my ($yosys_bm,$yosys_blif_out,$yosys_log,$yosys_blif_out_bak);
+
+  my @tokens = split('/', $benchmark_file);
+  $benchmark = $tokens[0];
+
+  # Prepare for the output folder 
+  $rpt_dir = "$conf_ptr->{dir_path}->{rpt_dir}->{val}"."/$benchmark/$tag";
+  &generate_path($rpt_dir);
+
+  # Run Yosys flow
+  $yosys_bm = "$conf_ptr->{dir_path}->{benchmark_dir}->{val}"."/$benchmark_file";
+  $prefix = "$rpt_dir/$benchmark\_"."K$opt_ptr->{K_val}\_"."N$opt_ptr->{N_val}\_";
+  $yosys_blif_out = "$prefix"."yosys.blif";
+  $yosys_log = "$prefix"."yosys.log";
+
+  # Files for ace 
+  my ($act_file,$ace_new_blif,$ace_log) = ("$prefix"."ace.act","$prefix"."ace.blif","$prefix"."ace.log");
+
+  # Files for VPR
+  my ($vpr_net,$vpr_place,$vpr_route,$vpr_reroute_log,$vpr_log);
+
+  $vpr_net = "$prefix"."vpr.net";
+  $vpr_place = "$prefix"."vpr.place";
+  $vpr_route = "$prefix"."vpr.route";
+  $vpr_log = "$prefix"."vpr.log";
+  $vpr_reroute_log = "$prefix"."vpr_reroute.log";
+
+  if ("on" eq $opt_ptr->{min_route_chan_width}) {
+    &extract_min_chan_width_vpr_stats($tag,$benchmark,$vpr_log.".min_chan_width",$opt_ptr->{K_val},"on",1);
+    &extract_min_chan_width_vpr_stats($tag,$benchmark,$vpr_reroute_log,$opt_ptr->{K_val},"off",1);
+    &extract_vpr_stats($tag,$benchmark,$vpr_log.".min_chan_width",$opt_ptr->{K_val});
+    &extract_vpr_stats($tag,$benchmark,$vpr_reroute_log,$opt_ptr->{K_val});
+  } elsif ("on" eq $opt_ptr->{fix_route_chan_width}) {
+    &extract_min_chan_width_vpr_stats($tag,$benchmark,$vpr_log,$opt_ptr->{K_val},"off",1);
+    &extract_vpr_stats($tag,$benchmark,$vpr_log,$opt_ptr->{K_val});
+    if (-e $vpr_reroute_log) {
+      &extract_min_chan_width_vpr_stats($tag,$benchmark,$vpr_reroute_log,$opt_ptr->{K_val},"off",1);
+      &extract_vpr_stats($tag,$benchmark,$vpr_reroute_log,$opt_ptr->{K_val});
+    }
+  } else {
+    &extract_min_chan_width_vpr_stats($tag,$benchmark,$vpr_log,$opt_ptr->{K_val},"on",1);
+    &extract_vpr_stats($tag,$benchmark,$vpr_log,$opt_ptr->{K_val});
+  }
+ 
+  # Extract data from VPR Power stats
+  if ("on" eq $opt_ptr->{power}) {
+    &extract_vpr_power_esti($tag,$yosys_blif_out,$benchmark,$opt_ptr->{K_val});
+  }
+
+  # TODO: HOW TO DEAL WITH SPICE NETLISTS???
+  # Output a file contain information of SPICE Netlists
+  if ("on" eq $opt_ptr->{vpr_fpga_spice}) { 
+    &output_fpga_spice_task("$opt_ptr->{vpr_fpga_spice_val}"."_$tag.txt", $benchmark, $yosys_blif_out, $rpt_dir);
+  }
+
+
+  return;
+}
+
+
 
 sub run_standard_flow($ $ $ $ $) 
 {
@@ -1571,7 +1723,6 @@ sub run_standard_flow($ $ $ $ $)
   my ($benchmark, $rpt_dir,$prefix);
   my ($abc_bm,$abc_blif_out,$abc_log,$abc_blif_out_bak);
   my ($mpack_blif_out,$mpack_stats,$mpack_log);
-  my ($vpr_net,$vpr_place,$vpr_route,$vpr_reroute_log,$vpr_log);
 
   $benchmark = $benchmark_file; 
   $benchmark =~ s/\.blif$//g;     
@@ -2288,6 +2439,8 @@ sub run_benchmark_selected_flow($ $ $)
     &run_mccl_flow("mccl",$benchmark,$conf_ptr->{flow_conf}->{vpr_arch}->{val}, $parse_results);
   } elsif ($flow_type eq "mig_mccl") {
     &run_mig_mccl_flow("mig_mccl",$benchmark,$conf_ptr->{flow_conf}->{vpr_arch}->{val}, $parse_results);
+  } elsif ($flow_type eq "yosys_vpr") {
+    &run_yosys_vpr_flow("yosys_vpr",$benchmark,$conf_ptr->{flow_conf}->{vpr_arch}->{val}, "classic", $parse_results);
   } else {
     die "ERROR: unsupported flow type ($flow_type) is chosen!\n";
   } 
@@ -2314,6 +2467,8 @@ sub parse_benchmark_selected_flow($ $) {
     &parse_standard_flow_results("mccl", $benchmark, $conf_ptr->{flow_conf}->{vpr_arch}->{val}, "abc_black_box");
   } elsif ($flow_type eq "mig_mccl") {
     &parse_standard_flow_results("mig_mccl", $benchmark, $conf_ptr->{flow_conf}->{vpr_arch}->{val}, "abc_black_box");
+  } elsif ($flow_type eq "yosys_vpr") {
+    &parse_yosys_vpr_flow_results("yosys_vpr",$benchmark,$conf_ptr->{flow_conf}->{vpr_arch}->{val},"abc_black_box");
   } else {
     die "ERROR: unsupported flow type ($flow_type) is chosen!\n";
   } 
@@ -2594,6 +2749,74 @@ sub gen_csv_rpt_vtr_flow($ $)
   # Check log/stats one by one
   foreach $tmp(@benchmark_names) {
     $tmp =~ s/\.v$//g;     
+    print $CSVFH "$tmp";
+    print $CSVFH ",$rpt_h{$tag}->{$tmp}->{$N_val}->{$K_val}->{LUTs}";
+    if ("on" eq $opt_ptr->{min_route_chan_width}) {
+      print $CSVFH ",$rpt_h{$tag}->{$tmp}->{$N_val}->{$K_val}->{min_route_chan_width}";
+      print $CSVFH ",$rpt_h{$tag}->{$tmp}->{$N_val}->{$K_val}->{fix_route_chan_width}";
+    } elsif ("on" eq $opt_ptr->{fix_route_chan_width}) {
+      print $CSVFH ",$rpt_h{$tag}->{$tmp}->{$N_val}->{$K_val}->{fix_route_chan_width}";
+    } else {
+      print $CSVFH ",$rpt_h{$tag}->{$tmp}->{$N_val}->{$K_val}->{min_route_chan_width}";
+    }
+    #foreach $tmpkw(@keywords) {
+    @keywords = split /\|/,$conf_ptr->{csv_tags}->{vpr_tags}->{val};
+    for($ikw=0; $ikw < ($#keywords+1); $ikw++) {
+      $tmpkw = $keywords[$ikw];
+      $tmpkw =~ s/\s//g;  
+      print $CSVFH ",$rpt_ptr->{$tag}->{$tmp}->{$N_val}->{$K_val}->{$keywords[$ikw]}";
+    }
+    if ("on" eq $opt_ptr->{power}) {
+      @keywords = split /\|/,$conf_ptr->{csv_tags}->{vpr_power_tags}->{val};
+      for($ikw=0; $ikw < ($#keywords+1); $ikw++) {
+        $tmpkw = $keywords[$ikw];
+        $tmpkw =~ s/\s//g;  
+        print $CSVFH ",$rpt_ptr->{$tag}->{$tmp}->{$N_val}->{$K_val}->{power}->{$keywords[$ikw]}";
+      }
+      print $CSVFH ",$rpt_ptr->{$tag}->{$tmp}->{$N_val}->{$K_val}->{power}->{total}";
+      print $CSVFH ",$rpt_ptr->{$tag}->{$tmp}->{$N_val}->{$K_val}->{power}->{dynamic}";
+      print $CSVFH ",$rpt_ptr->{$tag}->{$tmp}->{$N_val}->{$K_val}->{power}->{leakage}";
+    }
+    print $CSVFH "\n";
+  }
+}
+
+sub gen_csv_rpt_yosys_vpr_flow($ $) 
+{
+  my ($tag,$CSVFH) = @_;
+  my ($tmp,$ikw,$tmpkw);
+  my @keywords;
+  my ($K_val,$N_val) = ($opt_ptr->{K_val},$opt_ptr->{N_val});
+
+  # Print out Standard Stats First
+  print $CSVFH "$tag"; 
+  print $CSVFH ",LUTs";
+  if ("on" eq $opt_ptr->{min_route_chan_width}) {
+    print $CSVFH ",min_route_chan_width";
+    print $CSVFH ",fix_route_chan_width";
+  } elsif ("on" eq $opt_ptr->{fix_route_chan_width}) {
+    print $CSVFH ",fix_route_chan_width";
+  } else {
+    print $CSVFH ",min_route_chan_width";
+  }
+  @keywords = split /\|/,$conf_ptr->{csv_tags}->{vpr_tags}->{val};
+  #foreach $tmpkw(@keywords) {
+  for($ikw=0; $ikw < ($#keywords+1); $ikw++) {
+    print $CSVFH ",$keywords[$ikw]";
+  }
+  if ("on" eq $opt_ptr->{power}) {
+    @keywords = split /\|/,$conf_ptr->{csv_tags}->{vpr_power_tags}->{val};
+    #foreach $tmpkw(@keywords) {
+    for($ikw=0; $ikw < ($#keywords+1); $ikw++) {
+      print $CSVFH ",$keywords[$ikw]";
+    }
+    print $CSVFH ",Total Power,Total Dynamic Power,Total Leakage Power";
+  }
+  print $CSVFH "\n";
+  # Check log/stats one by one
+  foreach $tmp(@benchmark_names) {
+    my @tokens = split('/', $tmp);
+    $tmp = $tokens[0];
     print $CSVFH "$tmp";
     print $CSVFH ",$rpt_h{$tag}->{$tmp}->{$N_val}->{$K_val}->{LUTs}";
     if ("on" eq $opt_ptr->{min_route_chan_width}) {
@@ -2927,6 +3150,11 @@ sub gen_csv_rpt($)
         if (1 == &check_flow_all_benchmarks_done("mig_mccl")) {
           print "INFO: writing mig_mccl flow results ...\n";
           &gen_csv_rpt_standard_flow("mig_mccl",$CSVFH);
+        }
+      } elsif ($flow_type eq "yosys_vpr") {
+        if (1 == &check_flow_all_benchmarks_done("yosys_vpr")) {
+          print "INFO: writing yosys_vpr flow results ...\n";
+          &gen_csv_rpt_yosys_vpr_flow("yosys_vpr",$CSVFH);
         }
       } else {
         die "ERROR: flow_type: $flow_type is not supported!\n";
