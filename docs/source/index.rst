@@ -6,9 +6,9 @@
 Welcome to OpenFPGA's documentation!
 ====================================
 
-For more information on the ABC see .
-For more information on the VPR see 
-For more information on the original FPGA architecture description language see
+For more information on the ABC see abc_doc_ // abc_github_
+For more information on the VTR see vtr_doc_ // vtr_github_
+For more information on the original FPGA architecture description language see xml_vtr_
 
 .. toctree::
    :caption: Motivation
@@ -55,3 +55,10 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+
+.. _abc_doc: https://people.eecs.berkeley.edu/~alanmi/abc/
+.. _abc_github: https://github.com/berkeley-abc/abc
+.. _vpr_doc: https://docs.verilogtorouting.org/en/latest/
+.. _vpr_github: https://github.com/verilog-to-routing/vtr-verilog-to-routing
+.. _xml_vtr: https://docs.verilogtorouting.org/en/latest/arch/reference/
