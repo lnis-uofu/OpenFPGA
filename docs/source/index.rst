@@ -7,7 +7,9 @@ Welcome to OpenFPGA's documentation!
 ====================================
 
 For more information on the ABC see abc_doc_ // abc_github_
+
 For more information on the VTR see vtr_doc_ // vtr_github_
+
 For more information on the original FPGA architecture description language see xml_vtr_
 
 .. toctree::
