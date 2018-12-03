@@ -15,6 +15,8 @@ Extended Architecture Description Language
   
    circuit_modules
   
+   circuit_model_examples
+  
    link_circuit_modules
 
    multimode_support
