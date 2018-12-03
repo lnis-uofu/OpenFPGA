@@ -41,7 +41,7 @@ Here is an example.
   <sram area=”4” circuit_model_name=”sram6T”>
 
 
-Switch Blocks
+Switch Boxes
 =============
 
 Original VPR architecture description contains a XML node called switchlist under which all the multiplexers of switch blocks are described.
@@ -58,11 +58,11 @@ Here is an example:
 * **circuit_model_name:** should match a circuit model whose type is mux defined under module_circuit_models.
 
 
-Connection Boxes
+Connection Blocks
 ================
 
-To link the defined SPICE model of multiplexer to the Connection Boxes, a circuit_model_name should be added to the definition of Connection Boxes switches.  However, the original architecture descriptions do not offer a switch description for connection boxes as they do for the switch blocks.
-Therefore, FPGA-SPICE requires a new XML node called cblock under the root XML node architecture, where a switch for connection boxes can be defined.
+To link the defined SPICE model of multiplexer to the Connection Blocks, a circuit_model_name should be added to the definition of Connection Blocks switches.  However, the original architecture descriptions do not offer a switch description for connection boxes as they do for the switch blocks.
+Therefore, FPGA-SPICE requires a new XML node called **cblock** under the root XML node architecture, where a switch for connection blocks can be defined.
 
 Here is the example:
 
@@ -77,7 +77,7 @@ Here is the example:
 Channel Wire Segments
 =====================
 
-Simliar to the SB and CB, the channel wire segments in the original architecture descriptions can be adapted to provide a link to the defined circuit model.
+Simliar to the Switch Boxes and Connection Blocks, the channel wire segments in the original architecture descriptions can be adapted to provide a link to the defined circuit model.
 
 .. code-block:: xml
 
@@ -90,7 +90,7 @@ Simliar to the SB and CB, the channel wire segments in the original architecture
 Primitive Blocks inside Configurable Logic Blocks
 =================================================
 
-The architecture description employs a hierarchy of pb_types to depicting the sub modules and complex interconnections inside logic blocks. Each leaf node and interconnection in pb_type hierarchy should be linked to a circuit model.
+The architecture description employs a hierarchy of pb_types to depict the sub modules and complex interconnections inside logic blocks. Each leaf node and interconnection in pb_type hierarchy should be linked to a circuit model.
 
 .. code-block:: xml
 
