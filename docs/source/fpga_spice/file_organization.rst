@@ -6,9 +6,10 @@ Under the <spice_dir>, FPGA-SPICE creates a number of folders:  include, subckt,
 The folders contain the sub-circuits and testbenches and their contents are shown as following.
 
 .. csv-table:: Folder hierarchy of FPGA-SPICE
-   :header: "Folder", "Content includes the header files which contain the parameters for stimulate and measurement, as defined in <tech_lib>"
+   :header: "Folder", "Content" 
    :widths: 10, 20
     	
+   "includes", "The header files which contain the parameters for stimulate and measurement, as defined in <tech_lib>"   
    "subckt", "Contain all the auto-generated sub-circuits, such as inverters, buffers, transmission gates, multiplexers, LUTs and even logic blocks, connection boxes and switch blocks."
    "lut_tb", "Contain all the testbenches for LUTs. This folder is created only when option print_spice_lut_testbench is enabled."
    "dff_tb", "Contain all the testbenches for FFs. This folder is created only when option print_spice_dff_testbench is enabled."
