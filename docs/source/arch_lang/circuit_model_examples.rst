@@ -1,6 +1,6 @@
 Circuit model examples
 ======================
-The nexts subsections are dedicated to detailed examples of each circuit model type. Through these examples any configuration of any type will be illustrated.
+The next subsections are dedicated to detailed examples of each circuit model type. Through these examples awe give a global overview of the different implementations which are available for the user.
 
 Inverters and Buffers
 ---------------------
@@ -50,7 +50,7 @@ The XML code describing this inverter is:
   </circuit_model>
 
 This example shows:
-	* The topology chose as inverter
+	* The topology chosen as inverter
 	* Size of 1 for the output strength
 	* The tapered parameter is not declared and is off by default
 
@@ -78,7 +78,7 @@ The XML code describing this buffer is:
   </circuit_model>
 
 This example shows:
-	* The topology chose as buffer
+	* The topology chosen as buffer
 	* Size of 2 for the output strength
 	* The tapered parameter is not declared and is off by default
 
@@ -108,7 +108,7 @@ The XML code describing this inverter is:
 
 
 This example shows:
-	* The topology chose as inverter
+	* The topology chosen as inverter
 	* Size of 1 for the first stage output strength
 	* The tapered parameter is on. Then the required sub parameters are declared
 		* The number of stage is set to 3 by tap_drive_level
@@ -372,7 +372,7 @@ The code describing this LUT is:
   </circuit_model>
 
 **This example shows:**
-	* The difference between *input_buffer* and *lut_input_buffer*.
+	* The difference between *input_buffer* and *lut_input_buffer* and that they are independent.
 	* How each blocks is defined
 
 Flip-Flops
