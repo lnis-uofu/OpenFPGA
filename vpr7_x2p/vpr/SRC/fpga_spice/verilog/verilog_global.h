@@ -12,6 +12,8 @@ extern char* blif_testbench_verilog_file_postfix;
 extern char* logic_block_verilog_file_name;
 extern char* luts_verilog_file_name;
 extern char* routing_verilog_file_name;
+extern char* sub_module_verilog_file_name;
+extern char* muxes_verilog_file_name;
 extern char* muxes_verilog_file_name;
 extern char* wires_verilog_file_name;
 extern char* essentials_verilog_file_name;
@@ -42,6 +44,8 @@ extern t_llist* conf_bits_head;
 /* Linked-list that stores submodule Verilog file mames */
 extern t_llist* grid_verilog_subckt_file_path_head;
 extern t_llist* routing_verilog_subckt_file_path_head;
+extern t_llist* submodule_verilog_subckt_file_path_head;
+
 
 extern int verilog_default_signal_init_value;
 
