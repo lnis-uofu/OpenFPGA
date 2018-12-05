@@ -102,7 +102,8 @@ void dump_verilog_modelsim_proc_script(char* modelsim_proc_filename,
                                        char* modelsim_ini_path, 
                                        char* circuit_name,
 									   boolean include_timing,
-									   boolean init_sim) {
+									   boolean init_sim,
+									   char* modelsim_project_name) {
   FILE* fp = NULL;
   char* circuit_top_tb_name = NULL;
 
@@ -183,7 +184,7 @@ void dump_verilog_modelsim_proc_script(char* modelsim_proc_filename,
   fprintf(fp, "$x\n  }\n");
 // End of compilation with Define
   fprintf(fp, "  #Start the simulation\n");  
-  fprintf(fp, "  vsim $projectname.%s -novopt\n", circuit_top_tb_name);
+  fprintf(fp, "  vsim $projectname.%s -voptargs=+acc\n", circuit_top_tb_name);
   fprintf(fp, "  #Add the waves  \n");
   fprintf(fp, "  add_waves\n");
   fprintf(fp, "  #run the simulation\n");
@@ -194,14 +195,30 @@ void dump_verilog_modelsim_proc_script(char* modelsim_proc_filename,
 
   fprintf(fp, "#Top proc to recompile files and re run the simulation\n");
   fprintf(fp, "proc top_rerun_sim {simtime unit} {\n");
+// Save format
+  fprintf(fp, "  #Save actual format\n");
+  fprintf(fp, "  set myLoc [pwd]\n");
+  fprintf(fp, "  write format wave -window .main_pane.wave.interior.cs.body.pw.wf $myLoc/relaunch.do\n");
+// Quit simulation
+  fprintf(fp, "  quit -sim\n");
+// Recompile file
   fprintf(fp, "  #Compile updated verilog files\n");
-  fprintf(fp, "  project compileoutofdate\n");
-  fprintf(fp, "  #restart the simulation\n");
-  fprintf(fp, "  restart -force\n");
+  fprintf(fp, "  set myFiles [project filenames]\n");
+  fprintf(fp, "  foreach x $myFiles {\n");
+  fprintf(fp, "    vlog ");
+  if(TRUE == include_timing){
+    fprintf(fp, "+define+%s ", verilog_timing_preproc_flag);
+  }
+  if(TRUE == init_sim){
+    fprintf(fp, "+define+%s ", verilog_init_sim_preproc_flag);
+  }
+  fprintf(fp, "$x\n  }\n");
+// Restart the Simulation
+  fprintf(fp, "  set projectname %s\n", modelsim_project_name);
+  fprintf(fp, "  vsim $projectname.%s -voptargs=+acc -do relaunch.do\n", circuit_top_tb_name);
+// Relaunch the Simulation
   fprintf(fp, "  #run the simulation\n");
-  fprintf(fp, "  runsim $simtime $unit\n");
-  fprintf(fp, "  #Fit the window view\n");
-  fprintf(fp, "  wave zoom full\n");
+  fprintf(fp, "  run $simtime $unit\n");
   fprintf(fp, "}\n");
 
   /* Close File handler */
@@ -315,7 +332,8 @@ void dump_verilog_modelsim_autodeck(t_sram_orgz_info* cur_sram_orgz_info,
   /* Dump the Modelsim process function file */
   dump_verilog_modelsim_proc_script(modelsim_proc_script_filename, 
                                     simulator_ini_path, chomped_circuit_name,
-									include_timing, init_sim);
+									include_timing, init_sim,
+									modelsim_project_name);
 
   /* Compute simulation time period */
   simulation_time_period = get_verilog_modelsim_simulation_time_period(convert_modelsim_time_unit_to_float(modelsim_simulation_time_unit),
