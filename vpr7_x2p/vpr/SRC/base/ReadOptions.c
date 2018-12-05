@@ -516,6 +516,10 @@ ProcessOption(INP char **Args, INOUTP t_options * Options) {
       return Args;
     case OT_FPGA_SPICE_RENAME_ILLEGAL_PORT:
       return Args;
+    case OT_FPGA_VERILOG_SYN_INCLUDE_TIMING:
+      return Args;
+    case OT_FPGA_VERILOG_INIT_SIM:
+      return Args;
     case OT_FPGA_SPICE_SIGNAL_DENSITY_WEIGHT:
 	  return ReadFloat(Args, &Options->signal_density_weight);
     case OT_FPGA_SPICE_SIM_WINDOW_SIZE:

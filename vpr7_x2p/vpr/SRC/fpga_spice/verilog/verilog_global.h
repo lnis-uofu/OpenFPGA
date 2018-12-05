@@ -1,6 +1,9 @@
 /* global parameters for dumping synthesizable verilog */
 
 extern char* verilog_netlist_file_postfix;
+extern float verilog_sim_timescale;
+extern char* verilog_timing_preproc_flag; // the flag to enable timing definition during compilation
+extern char* verilog_init_sim_preproc_flag; // the flag to enable initialization during simulation
 
 extern char* verilog_top_postfix;
 extern char* bitstream_verilog_file_postfix;

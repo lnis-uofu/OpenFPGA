@@ -599,6 +599,37 @@ static void ProcessSpiceModelPort(ezxml_t Node,
   return;
 }
 
+ static 
+ void ProcessSpiceModelDelayInfo(ezxml_t Node, 
+                                 t_spice_model_delay_info* cur_delay_info) {
+   char* delay_str = NULL;
+
+   /* Find the type */
+   if (0 == strcmp(FindProperty(Node, "type", TRUE), "rise")) {
+     cur_delay_info->type = SPICE_MODEL_DELAY_RISE;
+   } else if (0 == strcmp(FindProperty(Node, "type", TRUE), "fall")) {
+     cur_delay_info->type = SPICE_MODEL_DELAY_FALL;
+   } else {
+     vpr_printf(TIO_MESSAGE_ERROR,"[LINE %d] Invalid type of delay_info. Should be [rise|fall].\n",
+                Node->line);
+     exit(1);
+   } 
+   ezxml_set_attr(Node, "type", NULL);
+
+   /* Find the input and output ports */
+   cur_delay_info->in_port_name = my_strdup(FindProperty(Node, "in_port", TRUE));
+   ezxml_set_attr(Node, "in_port", NULL);
+
+   cur_delay_info->out_port_name = my_strdup(FindProperty(Node, "out_port", TRUE));
+   ezxml_set_attr(Node, "out_port", NULL);
+
+   /* Find delay matrix */
+   cur_delay_info->value = my_strdup(Node->txt);
+   ezxml_set_txt(Node, "");
+
+   return;
+ }
+
 static void ProcessSpiceModelWireParam(ezxml_t Parent,
                                        t_spice_model_wire_param* wire_param) {
   if (0 == strcmp("pie",FindProperty(Parent,"model_type",TRUE))) {
@@ -627,7 +658,7 @@ static void ProcessSpiceModelWireParam(ezxml_t Parent,
 static void ProcessSpiceModel(ezxml_t Parent,
                               t_spice_model* spice_model) {
   ezxml_t Node, Cur;
-  int iport;
+  int iport, i;
 
   /* Basic Information*/
   if (0 == strcmp(FindProperty(Parent,"type",TRUE),"mux")) {
@@ -865,6 +896,17 @@ static void ProcessSpiceModel(ezxml_t Parent,
     }
     FreeNode(Node);
   }
+
+   /* Find delay info */
+   spice_model->num_delay_info = CountChildren(Parent, "delay_matrix", 0);
+   /*Alloc*/
+   spice_model->delay_info = (t_spice_model_delay_info*) my_malloc(spice_model->num_delay_info * sizeof(t_spice_model_delay_info));
+   /* Assign each found spice model*/
+   for (i = 0; i < spice_model->num_delay_info; i++) {
+     Cur = FindFirstElement(Parent, "delay_matrix", TRUE);
+     ProcessSpiceModelDelayInfo(Cur, &(spice_model->delay_info[i]));
+     FreeNode(Cur); 
+   }
 
   /* Initialize the counter*/
   spice_model->cnt = 0;

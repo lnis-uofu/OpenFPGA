@@ -28,6 +28,13 @@ input blb // Inverted Bit line control signal
     end 
   end
 
+`ifdef INITIALIZATION
+  initial begin
+    $signal_force("a", "0", 0, 1, , 1);
+  end
+`endif
+
+
   // dout is short-wired to din 
   assign dout = a;
   //---- doutb is always opposite to dout 

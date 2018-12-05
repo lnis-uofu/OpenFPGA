@@ -189,6 +189,8 @@ void vpr_print_usage(void) {
 	vpr_printf(TIO_MESSAGE_INFO, "Synthesizable Verilog Generator Options:\n");
 	vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_verilog\n");
 	vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_verilog_dir <directory_path_of_dumped_verilog_files>\n");
+	vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_verilog_include_timing\n");
+	vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_verilog_init_sim\n");
 }
 
 /* Initialize VPR 

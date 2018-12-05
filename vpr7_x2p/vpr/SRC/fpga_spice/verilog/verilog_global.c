@@ -9,6 +9,9 @@
 #include "verilog_global.h"
 
 char* verilog_netlist_file_postfix = ".v";
+float verilog_sim_timescale = 1e-9; // Verilog Simulation time scale (minimum time unit) : 1ns
+char* verilog_timing_preproc_flag = "ENABLE_TIMING"; // the flag to enable timing definition during compilation
+char* verilog_init_sim_preproc_flag = "INITIALIZATION"; // the flag to enable initialization during simulation
 
 char* verilog_top_postfix = "_top.v";
 char* bitstream_verilog_file_postfix = ".bitstream";

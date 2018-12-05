@@ -7,6 +7,11 @@ enum e_spice_tech_lib_type {
   SPICE_LIB_INDUSTRY,SPICE_LIB_ACADEMIA
 };
 
+enum spice_model_delay_type {
+  SPICE_MODEL_DELAY_RISE, 
+  SPICE_MODEL_DELAY_FALL
+};
+
 /*Struct for a SPICE model of a module*/
 enum e_spice_model_type {
   SPICE_MODEL_CHAN_WIRE, 
@@ -93,8 +98,10 @@ typedef struct s_spice_model t_spice_model;
 typedef struct s_spice_meas_params t_spice_meas_params;
 typedef struct s_spice_stimulate_params t_spice_stimulate_params;
 typedef struct s_spice_mc_variation_params t_spice_mc_variation_params;
+typedef struct s_spice_model_delay_info t_spice_model_delay_info;
 typedef struct s_spice_mc_params t_spice_mc_params;
 typedef struct s_spice_params t_spice_params;
+typedef struct s_spice_model_tedge t_spice_model_tedge;
 typedef struct s_spice t_spice;
 typedef struct s_spice_mux_arch t_spice_mux_arch;
 typedef struct s_spice_mux_model t_spice_mux_model;
@@ -145,6 +152,16 @@ struct s_spice_model_pass_gate_logic {
   t_spice_model* spice_model;
 };
 
+/* Model the pin-to-pin timing edge */
+struct s_spice_model_tedge {
+  float trise; /* Rise condition: delay */
+  float tfall; /* Fall condition: delay */
+  t_spice_model_port* from_port;
+  int from_port_pin_number;
+  t_spice_model_port* to_port;
+  int to_port_pin_number;
+};
+
 struct s_spice_model_port {
   enum e_spice_model_port_type type;
   int size;
@@ -160,6 +177,9 @@ struct s_spice_model_port {
   t_spice_model* spice_model;
   char* inv_spice_model_name;
   t_spice_model* inv_spice_model;
+  /* Timing edeges linked to other t_model_ports */
+  int* num_tedges; /* 1-D Array, show number of tedges of each pin */
+  t_spice_model_tedge*** tedge; /* 3-D array, considering the each pin in this port, [pin_number][num_edges[iedge]] is an edge pointor */
 };
 
 struct s_spice_model_wire_param {
@@ -173,6 +193,13 @@ struct s_spice_model_netlist {
   char* path;
   int included;
 };
+
+struct s_spice_model_delay_info {
+   enum spice_model_delay_type type;
+   char* in_port_name;
+   char* out_port_name;
+   char* value; 
+ };
 
 /* Information about design technology */
 struct s_spice_model_design_tech_info {
@@ -218,6 +245,10 @@ struct s_spice_model {
   /* Ports*/
   int num_port;
   t_spice_model_port* ports;
+
+  /* Delay matrix */
+  int num_delay_info;
+  t_spice_model_delay_info* delay_info;
 
   /* Wire Model*/
   t_spice_model_wire_param* wire_param;

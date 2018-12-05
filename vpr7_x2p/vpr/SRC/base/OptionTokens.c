@@ -76,6 +76,8 @@ struct s_TokenPair OptionBaseTokenList[] = {
         { "fpga_spice_leakage_only", OT_FPGA_SPICE_LEAKAGE_ONLY }, /* Only simulate leakage power in FPGA SPICE */
         { "fpga_spice_parasitic_net_estimation_off", OT_FPGA_SPICE_PARASITIC_NET_ESTIMATION_OFF }, /* Xifan TANG: turn off the parasitic net estimation*/
         { "fpga_spice_testbench_load_extraction_off", OT_FPGA_SPICE_TESTBENCH_LOAD_EXTRACTION_OFF }, /* Xifan TANG: turn off the parasitic net estimation*/
+        { "fpga_verilog_include_timing", OT_FPGA_VERILOG_SYN_INCLUDE_TIMING }, /* Include timing constraints in Verilog netlists */
+        { "fpga_verilog_init_sim", OT_FPGA_VERILOG_INIT_SIM }, /* Allow simulation initialization */
         /* Xifan TANG: Synthsizable Verilog */
         { "fpga_verilog", OT_FPGA_VERILOG_SYN },
         { "fpga_verilog_dir", OT_FPGA_VERILOG_SYN_DIR },

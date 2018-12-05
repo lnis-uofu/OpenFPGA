@@ -99,6 +99,8 @@ enum e_OptionBaseToken {
     OT_FPGA_VERILOG_SYN_PRINT_TOP_TB, /* Xifan TANG: Synthesizable Verilog Dump */
     OT_FPGA_VERILOG_SYN_PRINT_INPUT_BLIF_TB, /* Xifan TANG: Synthesizable Verilog Dump */
     OT_FPGA_VERILOG_SYN_TB_SERIAL_CONFIG_MODE, /* Xifan TANG: Synthesizable Verilog Dump */
+	OT_FPGA_VERILOG_SYN_INCLUDE_TIMING,	/* Include timing constraint in Verilog*/
+	OT_FPGA_VERILOG_INIT_SIM,			/* AA: to allow initialization in simulation */
     /* mrFPGA: Xifan TANG */
     OT_SHOW_SRAM,
     OT_SHOW_PASS_TRANS,

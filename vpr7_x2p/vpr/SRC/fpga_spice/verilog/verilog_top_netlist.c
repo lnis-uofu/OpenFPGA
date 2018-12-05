@@ -54,7 +54,7 @@ static char* top_netlist_normal_blb_port_postfix = "_blb";
 static char* top_netlist_normal_wlb_port_postfix = "_wlb";
 static char* top_netlist_scan_chain_head_prefix = "sc_in";
 
-static float verilog_sim_timescale = 1e-9; // Verilog Simulation time scale (minimum time unit) : 1ns
+
 static char* top_tb_reset_port_name = "greset";
 static char* top_tb_set_port_name = "gset";
 static char* top_tb_prog_reset_port_name = "prog_reset";

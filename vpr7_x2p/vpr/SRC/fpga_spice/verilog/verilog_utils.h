@@ -10,6 +10,9 @@ void dump_include_user_defined_verilog_netlists(FILE* fp,
 void dump_verilog_file_header(FILE* fp,
                               char* usage);
 
+void dump_verilog_preproc(FILE* fp, 
+                          boolean include_timing);
+
 FILE* verilog_create_one_subckt_file(char* subckt_dir,
                                      char* subckt_name_prefix,
                                      char* verilog_subckt_file_name_prefix,

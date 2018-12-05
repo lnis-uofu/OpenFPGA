@@ -202,7 +202,7 @@ void vpr_dump_syn_verilog(t_vpr_setup vpr_setup,
   init_list_include_verilog_netlists(Arch.spice);
  
   /* Dump internal structures of submodules */
-  dump_verilog_submodules(submodule_dir_path, Arch, &vpr_setup.RoutingArch);
+  dump_verilog_submodules(submodule_dir_path, Arch, &vpr_setup.RoutingArch, vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.include_timing, vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.init_sim);
 
   /* Initial global variables about configuration bits */
   alloc_global_routing_conf_bits();

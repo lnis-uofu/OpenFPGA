@@ -141,6 +141,24 @@ void dump_include_user_defined_verilog_netlists(FILE* fp,
   return;
 }
 
+/* Dump preproc */
+void dump_verilog_preproc(FILE* fp, 
+                          boolean include_timing) {
+
+  if (NULL == fp) {
+    vpr_printf(TIO_MESSAGE_ERROR,"(FILE:%s, LINE[%d]) FileHandle is NULL!\n",__FILE__,__LINE__); 
+    exit(1);
+  } 
+
+  /* To enable timing */
+  if (TRUE == include_timing) {
+    fprintf(fp, "`define %s 1\n", verilog_timing_preproc_flag);
+    fprintf(fp, "\n");
+  } 
+
+  return;
+}
+
 void dump_verilog_file_header(FILE* fp,
                               char* usage) {
   if (NULL == fp) {
