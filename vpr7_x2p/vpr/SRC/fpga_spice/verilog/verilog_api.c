@@ -251,7 +251,9 @@ void vpr_dump_syn_verilog(t_vpr_setup vpr_setup,
   if (TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.print_modelsim_autodeck) {
     dump_verilog_modelsim_autodeck(sram_verilog_orgz_info, *(Arch.spice), num_clocks,
                                    verilog_dir_formatted, chomped_circuit_name,
-                                   vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.modelsim_ini_path);
+                                   vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.modelsim_ini_path,
+                                   vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.include_timing,
+                                   vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.init_sim);
   }
 
   /* dump verilog testbench only for input blif */
