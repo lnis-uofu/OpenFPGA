@@ -19,4 +19,5 @@ FPGA-Bitstream is the part of the flow in charge of the functional verification 
 How to compile
 ==============
 Running the Makefile in the root of the released package can compile all the source codes. 
+Guides can be found in the *compilation* directory. We tested it for MacOS High Sierra 10.13.4, Ubuntu 18.04 and Red Hat 7.5. This list is not exhaustive as other distributions could totally work as well, we just did not verify.
 The released package includes a version of VPR with FPGA-SPICE support, Yosys and ACE2.
