@@ -28,6 +28,7 @@
 #include "fpga_spice_backannotate_utils.h"
 #include "fpga_spice_globals.h"
 #include "fpga_spice_bitstream.h"
+#include "verilog_modelsim_autodeck.h"
 
 /* Include SynVerilog headers */
 #include "verilog_global.h"
@@ -38,11 +39,6 @@
 #include "verilog_routing.h"
 #include "verilog_top_netlist.h"
 
-/* Global Variants available only in this source file */
-static char* default_verilog_dir_name = "syn_verilogs/";
-static char* default_lb_dir_name = "lb/";
-static char* default_rr_dir_name = "routing/";
-static char* default_submodule_dir_name = "sub_module/";
 
 /***** Subroutines *****/
 /* Alloc array that records Configuration bits for :
@@ -249,6 +245,13 @@ void vpr_dump_syn_verilog(t_vpr_setup vpr_setup,
                                vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts, *(Arch.spice));
     /* Dump bitstream file */
     dump_fpga_spice_bitstream(bitstream_file_path, chomped_circuit_name, sram_verilog_orgz_info);
+  }
+
+  /* Output Modelsim Autodeck scripts */
+  if (TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.print_modelsim_autodeck) {
+    dump_verilog_modelsim_autodeck(sram_verilog_orgz_info, *(Arch.spice), num_clocks,
+                                   verilog_dir_formatted, chomped_circuit_name,
+                                   vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.modelsim_ini_path);
   }
 
   /* dump verilog testbench only for input blif */

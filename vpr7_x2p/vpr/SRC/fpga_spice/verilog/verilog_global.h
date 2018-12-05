@@ -5,10 +5,23 @@ extern float verilog_sim_timescale;
 extern char* verilog_timing_preproc_flag; // the flag to enable timing definition during compilation
 extern char* verilog_init_sim_preproc_flag; // the flag to enable initialization during simulation
 
+extern char* default_verilog_dir_name;
+extern char* default_lb_dir_name;
+extern char* default_rr_dir_name;
+extern char* default_submodule_dir_name;
+extern char* default_modelsim_dir_name;
+
+extern char* modelsim_project_name_postfix;
+extern char* modelsim_proc_script_name_postfix;
+extern char* modelsim_top_script_name_postfix;
+extern char* modelsim_testbench_module_postfix;
+extern char* modelsim_simulation_time_unit;
+
 extern char* verilog_top_postfix;
 extern char* bitstream_verilog_file_postfix;
 extern char* top_testbench_verilog_file_postfix;
 extern char* blif_testbench_verilog_file_postfix;
+extern char* submodule_verilog_file_name;
 extern char* logic_block_verilog_file_name;
 extern char* luts_verilog_file_name;
 extern char* routing_verilog_file_name;

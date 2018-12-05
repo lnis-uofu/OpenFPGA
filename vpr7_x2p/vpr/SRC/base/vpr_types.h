@@ -1211,6 +1211,8 @@ struct s_syn_verilog_opts {
   boolean tb_serial_config_mode;
   boolean include_timing;
   boolean init_sim;
+  boolean print_modelsim_autodeck;
+  char* modelsim_ini_path;
 };
 
 typedef struct s_fpga_spice_opts t_fpga_spice_opts;

@@ -520,6 +520,10 @@ ProcessOption(INP char **Args, INOUTP t_options * Options) {
       return Args;
     case OT_FPGA_VERILOG_INIT_SIM:
       return Args;
+    case OT_FPGA_VERILOG_SYN_PRINT_MODELSIM_AUTODECK:
+      return Args;
+    case OT_FPGA_VERILOG_SYN_MODELSIM_INI_PATH:
+      return ReadString(Args, &Options->fpga_verilog_modelsim_ini_path);
     case OT_FPGA_SPICE_SIGNAL_DENSITY_WEIGHT:
 	  return ReadFloat(Args, &Options->signal_density_weight);
     case OT_FPGA_SPICE_SIM_WINDOW_SIZE:

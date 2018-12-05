@@ -2396,7 +2396,7 @@ void dump_verilog_submodules(char* submodule_dir,
   vpr_printf(TIO_MESSAGE_INFO,"Generating header file for basic submodules...\n");
   dump_verilog_subckt_header_file(submodule_verilog_subckt_file_path_head,
                                   submodule_dir,
-                                  sub_module_verilog_file_name);
+                                  submodule_verilog_file_name);
 
   return;
 }
