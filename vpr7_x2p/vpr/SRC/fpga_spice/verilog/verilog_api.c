@@ -196,9 +196,6 @@ void vpr_dump_syn_verilog(t_vpr_setup vpr_setup,
 
   /* Initialize the user-defined verilog netlists to be included */
   init_list_include_verilog_netlists(Arch.spice);
- 
-  /* Dump internal structures of submodules */
-  dump_verilog_submodules(submodule_dir_path, Arch, &vpr_setup.RoutingArch, vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.include_timing, vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.init_sim);
 
   /* Initial global variables about configuration bits */
   alloc_global_routing_conf_bits();
@@ -231,6 +228,9 @@ void vpr_dump_syn_verilog(t_vpr_setup vpr_setup,
                __FILE__, __LINE__);
     exit(1);
   }
+ 
+  /* Dump internal structures of submodules */
+  dump_verilog_submodules(submodule_dir_path, Arch, &vpr_setup.RoutingArch, vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.include_timing, vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.init_sim);
 
   /* Dump top-level verilog */
   dump_verilog_top_netlist(chomped_circuit_name, top_netlist_path, lb_dir_path, rr_dir_path, 

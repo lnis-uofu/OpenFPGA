@@ -223,5 +223,8 @@ void dump_verilog_decoder(char* submodule_dir) {
   /* Close the file*/
   fclose(fp);
   
+  /* Add fname to the linked list */
+  submodule_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(submodule_verilog_subckt_file_path_head, verilog_name);
+
   return;
 }
