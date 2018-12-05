@@ -14,7 +14,7 @@ We currently implemented it for:
 2. Red Hat 7.5
 3. MacOS High Sierra 10.13.4
 
-Please note that those were the versions we tested the software for. It might work with earlier versions.
+Please note that those were the versions we tested the software for. It might work with earlier versions and other distributions.
 
 ## Examples
 
