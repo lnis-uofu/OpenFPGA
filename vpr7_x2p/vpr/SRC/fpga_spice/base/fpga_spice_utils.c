@@ -5894,14 +5894,15 @@ int get_pb_graph_node_wired_lut_logical_block_index(t_pb_graph_node* cur_pb_grap
   for (iport = 0; iport < cur_pb_graph_node->num_input_ports; iport++) {
     for (ipin = 0; ipin < cur_pb_graph_node->num_input_pins[iport]; ipin++) {
       temp_rr_node_index = cur_pb_graph_node->input_pins[iport][ipin].pin_count_in_cluster;
-      if (OPEN != op_pb_rr_graph[temp_rr_node_index].vpack_net_num) {
+      if (lut_output_vpack_net_num == op_pb_rr_graph[temp_rr_node_index].vpack_net_num) {
         num_used_lut_input_pins++;
-        lut_output_vpack_net_num = op_pb_rr_graph[temp_rr_node_index].vpack_net_num;
       }
     }
   }
   /* Make sure we only have 1 used input pin */
-  assert (1 == num_used_lut_input_pins);
+  if (1 != num_used_lut_input_pins) {
+    assert (1 == num_used_lut_input_pins);
+  }
  
   /* vpr_printf(TIO_MESSAGE_INFO, "Wired LUT output vpack_net_num is %d\n", lut_output_vpack_net_num); */
  
