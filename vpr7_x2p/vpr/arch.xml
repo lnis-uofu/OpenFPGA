@@ -194,8 +194,9 @@
 
     <area grid_logic_tile_area="0"/> 
     <sram area="6">
-      <verilog organization="memory_bank" circuit_model_name="sram6T_blwl"/>
-      <spice organization="standalone" circuit_model_name="sram6T" />
+      <!--<verilog organization="memory_bank" circuit_model_name="sram6T_blwl"/>-->
+      <verilog organization="scan-chain" circuit_model_name="static_dff" />
+	  <spice organization="standalone" circuit_model_name="sram6T" />
     </sram>
     <chan_width_distr>
       <io width="1.000000"/>

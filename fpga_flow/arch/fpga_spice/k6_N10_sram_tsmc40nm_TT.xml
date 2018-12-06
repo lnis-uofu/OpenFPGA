@@ -344,12 +344,17 @@
      	  area; set to 0 since we explicitly set the area of all blocks currently in this architecture file.
 	  -->
 	<area grid_logic_tile_area="0"/> 
-    <!--sram area="6" organization="standalone" circuit_model_name="sram6T"-->
-    <!--sram area="6" organization="scan-chain" circuit_model_name="sc_dff"-->
-    <sram area="6">
+    
+	<!-- Choose only one organization, either the scan chain or the memory decoder -->
+	<sram area="6">
+		<verilog organization="scan-chain" circuit_model_name="sc_ff" />
+        <spice organization="standalone" circuit_model_name="sram6T" />
+    </sram>
+	<!-- Uncomment to get the memory bank // Comment the scan-chain-->
+	<!-- <sram area="6">
       <verilog organization="memory_bank" circuit_model_name="sram6T_blwl"/>
       <spice organization="standalone" circuit_model_name="sram6T" />
-    </sram>
+    </sram> -->
     <chan_width_distr>
       <io width="1.000000"/>
       <x distr="uniform" peak="1.000000"/>
