@@ -193,6 +193,7 @@ void vpr_print_usage(void) {
 	vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_verilog_init_sim\n");
 	vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_verilog_print_modelsim_autodeck\n");
 	vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_verilog_modelsim_ini_path <string>\n");
+	vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_verilog_print_top_testbench \n");
 }
 
 /* Initialize VPR 
