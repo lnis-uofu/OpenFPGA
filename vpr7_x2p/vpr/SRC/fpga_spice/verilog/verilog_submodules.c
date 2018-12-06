@@ -101,8 +101,9 @@ void dump_verilog_submodule_init_sim(FILE* fp,
   fprintf(fp, "initial begin\n");
 
   for (iport = 0; iport < num_input_port; iport++) {
-     fprintf(fp, "  $signal_force(\"%s\", \"0\", 0, 1, , 1);\n",
-                input_port[iport]->prefix);
+     fprintf(fp, "  $signal_force(\"%s\", %d, 0, 1, , 1);\n",
+                input_port[iport]->prefix,
+				input_port[iport]->default_val);
   }
   fprintf(fp, "end\n");
 
