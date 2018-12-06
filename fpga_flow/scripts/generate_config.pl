@@ -179,7 +179,7 @@ sub generate_file($)
   print $CONF_HANDLE "yosys_path = ${FPGA_FLOW_PATH}/../yosys/yosys\n";
   print $CONF_HANDLE "odin2_path = ${FPGA_FLOW_PATH}/not_used_atm/odin2.exe\n";
   print $CONF_HANDLE "cirkit_path = ${FPGA_FLOW_PATH}/not_used_atm/cirkit\n";
-  print $CONF_HANDLE "abc_path = ${FPGA_FLOW_PATH}/../abc/abc\n";
+  print $CONF_HANDLE "abc_path = ${FPGA_FLOW_PATH}/../yosys/yosys-abc\n";
   print $CONF_HANDLE "abc_mccl_path = ${FPGA_FLOW_PATH}/../abc_with_bb_support/abc\n";
   print $CONF_HANDLE "abc_with_bb_support_path = ${FPGA_FLOW_PATH}/../abc_with_bb_support/abc\n";
   print $CONF_HANDLE "mpack1_path = ${FPGA_FLOW_PATH}/not_used_atm/mpack1\n";
