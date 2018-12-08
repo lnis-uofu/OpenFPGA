@@ -175,6 +175,19 @@
         <port type="blb" prefix="blb" size="1" default_val="1" inv_circuit_model_name="INVTX1"/>
         <port type="wl" prefix="wl" size="1" default_val="0" inv_circuit_model_name="INVTX1"/>
       </circuit_model>
+
+      <!--Scan-chain DFF subckt ports should be defined as <D> <Q> <Qb> <CLK> <RESET> <SET>  -->
+      <circuit_model type="sff" name="sc_ff" prefix="scff" spice_netlist="/home/u6017869/Documents/newer_OpenFPGA/OpenFPGA/vpr7_x2p/vpr/SpiceNetlists/ff.sp" verilog_netlist="/home/u6017869/Documents/newer_OpenFPGA/OpenFPGA/vpr7_x2p/vpr/VerilogNetlists/ff.v">
+         <design_technology type="cmos"/>
+         <input_buffer exist="on" circuit_model_name="INVTX1"/>
+         <output_buffer exist="on" circuit_model_name="INVTX1"/>
+         <pass_gate_logic circuit_model_name="TGATE"/>
+         <port type="input" prefix="D" size="1"/>
+         <port type="input" prefix="pset" size="1" is_global="true" default_val="0" is_set="true"/>
+         <port type="input" prefix="preset" size="1" is_global="true" default_val="0" is_reset="true"/>
+         <port type="output" prefix="Q" size="2"/>
+         <port type="clock" prefix="prog_clk" size="1" is_global="true" default_val="0" is_prog="true"/>
+      </circuit_model>
       <circuit_model type="iopad" name="iopad" prefix="iopad" spice_netlist="/research/ece/lnis/USERS/tang/tangxifan-eda-tools/branches/vpr7_rram/vpr/SpiceNetlists/io.sp" verilog_netlist="/research/ece/lnis/USERS/tang/tangxifan-eda-tools/branches/vpr7_rram/vpr/VerilogNetlists/io.v">
         <design_technology type="cmos"/>
         <input_buffer exist="on" circuit_model_name="INVTX1"/>
@@ -195,7 +208,7 @@
     <area grid_logic_tile_area="0"/> 
     <sram area="6">
       <!--<verilog organization="memory_bank" circuit_model_name="sram6T_blwl"/>-->
-      <verilog organization="scan-chain" circuit_model_name="static_dff" />
+      <verilog organization="scan-chain" circuit_model_name="sc_ff" />
 	  <spice organization="standalone" circuit_model_name="sram6T" />
     </sram>
     <chan_width_distr>
