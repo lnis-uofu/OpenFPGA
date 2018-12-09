@@ -556,17 +556,17 @@ void dump_verilog_top_auto_testbench_ports(FILE* fp,
 static
 void dump_verilog_top_auto_testbench_call_benchmark(FILE* fp, char* blif_circuit_name){
 	int iblock, iopad_idx;
-	fprintf(fp, "// Benchmark instanciation");
+	fprintf(fp, "// Benchmark instanciation\n");
 	fprintf(fp, "  %s Benchmark(\n", blif_circuit_name);
 	for (iblock = 0; iblock < num_logical_blocks; iblock++) {
-		if(iblock>0){
-			fprintf(fp, ",\n");
-		}
 	  /* General INOUT*/
       if (iopad_verilog_model == logical_block[iblock].mapped_spice_model) {
       	iopad_idx = logical_block[iblock].mapped_spice_model_index;
       	/* Make sure We find the correct logical block !*/
       	assert((VPACK_INPAD == logical_block[iblock].type)||(VPACK_OUTPAD == logical_block[iblock].type));
+		if(iblock>0){
+			fprintf(fp, ",\n");
+		}
 	  	if(VPACK_INPAD == logical_block[iblock].type){
 			fprintf(fp, "        %s_%s_%d_", logical_block[iblock].name, gio_inout_prefix, iopad_idx);
 	  	}
