@@ -1207,6 +1207,8 @@ struct s_syn_verilog_opts {
   boolean dump_syn_verilog;
   char* syn_verilog_dump_dir;
   boolean print_top_tb;
+  boolean print_top_auto_tb;
+  char* verilog_benchmark_file;
   boolean print_input_blif_tb;
   boolean tb_serial_config_mode;
   boolean include_timing;

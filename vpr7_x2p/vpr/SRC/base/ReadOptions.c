@@ -510,6 +510,8 @@ ProcessOption(INP char **Args, INOUTP t_options * Options) {
       return ReadString(Args, &Options->syn_verilog_dir);
     case OT_FPGA_VERILOG_SYN_PRINT_TOP_TB:
       return Args;
+    case OT_FPGA_VERILOG_SYN_PRINT_TOP_AUTO_TB:
+      return ReadString(Args, &Options->verilog_benchmark_path);
     case OT_FPGA_VERILOG_SYN_PRINT_INPUT_BLIF_TB:
       return Args;
     case OT_FPGA_VERILOG_SYN_TB_SERIAL_CONFIG_MODE:

@@ -28,6 +28,7 @@ char* modelsim_simulation_time_unit = "ms";
 char* verilog_top_postfix = "_top.v";
 char* bitstream_verilog_file_postfix = ".bitstream";
 char* top_testbench_verilog_file_postfix = "_top_tb.v";
+char* top_auto_testbench_verilog_file_postfix = "_top_auto_tb.v";
 char* blif_testbench_verilog_file_postfix = "_blif_tb.v";
 char* submodule_verilog_file_name = "sub_module.v";
 char* logic_block_verilog_file_name = "logic_blocks.v";

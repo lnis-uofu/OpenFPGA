@@ -1058,6 +1058,7 @@ static void SetupSynVerilogOpts(t_options Options,
   syn_verilog_opts->syn_verilog_dump_dir = NULL;
   syn_verilog_opts->tb_serial_config_mode = FALSE;
   syn_verilog_opts->print_top_tb = FALSE;
+  syn_verilog_opts->print_top_auto_tb = FALSE;
   syn_verilog_opts->print_input_blif_tb = FALSE;
   syn_verilog_opts->include_timing = FALSE;
   syn_verilog_opts->init_sim = FALSE;
@@ -1083,6 +1084,11 @@ static void SetupSynVerilogOpts(t_options Options,
 
   if (Options.Count[OT_FPGA_VERILOG_SYN_PRINT_TOP_TB]) {
     syn_verilog_opts->print_top_tb = TRUE;
+  }
+
+  if (Options.Count[OT_FPGA_VERILOG_SYN_PRINT_TOP_AUTO_TB]) {
+    syn_verilog_opts->print_top_auto_tb = TRUE;
+    syn_verilog_opts->verilog_benchmark_file = my_strdup(Options.verilog_benchmark_path);
   }
 
   if (Options.Count[OT_FPGA_VERILOG_SYN_PRINT_INPUT_BLIF_TB]) {  

@@ -95,6 +95,7 @@ struct s_options {
     char* spice_dir;
     /* Xifan TANG: Synthesizable Verilog */
     char* syn_verilog_dir;
+	char* verilog_benchmark_path;
     char* fpga_verilog_modelsim_ini_path;
     /* Xifan TANG: signal weight in FPGA_SPICE simulation */
     float signal_density_weight;

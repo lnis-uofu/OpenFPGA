@@ -38,6 +38,7 @@
 #include "verilog_pbtypes.h"
 #include "verilog_routing.h"
 #include "verilog_top_netlist.h"
+#include "verilog_autocheck_tb.h"
 
 
 /***** Subroutines *****/
@@ -116,7 +117,9 @@ void vpr_dump_syn_verilog(t_vpr_setup vpr_setup,
   char* bitstream_file_name = NULL;
   char* bitstream_file_path = NULL;
   char* top_testbench_file_name = NULL;
+  char* top_auto_testbench_file_name = NULL;
   char* top_testbench_file_path = NULL;
+  char* top_auto_testbench_file_path = NULL;
   char* blif_testbench_file_name = NULL;
   char* blif_testbench_file_path = NULL;
 
@@ -166,6 +169,8 @@ void vpr_dump_syn_verilog(t_vpr_setup vpr_setup,
   bitstream_file_path = my_strcat(verilog_dir_formatted, bitstream_file_name);
   top_testbench_file_name = my_strcat(chomped_circuit_name, top_testbench_verilog_file_postfix);
   top_testbench_file_path = my_strcat(verilog_dir_formatted, top_testbench_file_name);
+  top_auto_testbench_file_name = my_strcat(chomped_circuit_name, top_auto_testbench_verilog_file_postfix);
+  top_auto_testbench_file_path = my_strcat(verilog_dir_formatted, top_auto_testbench_file_name);
   blif_testbench_file_name = my_strcat(chomped_circuit_name, blif_testbench_verilog_file_postfix);
   blif_testbench_file_path = my_strcat(verilog_dir_formatted, blif_testbench_file_name);
   
@@ -240,12 +245,19 @@ void vpr_dump_syn_verilog(t_vpr_setup vpr_setup,
   // dump_verilog_sdc_file();
   
   /* dump verilog testbench only for top-level */
-  if ( TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.print_top_tb) { 
-    dump_verilog_top_testbench(chomped_circuit_name, top_testbench_file_path, num_clocks, 
+  if (( TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.print_top_tb) || ( TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.print_top_auto_tb)){ 
+    if ( TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.print_top_tb){
+		dump_verilog_top_testbench(chomped_circuit_name, top_testbench_file_path, num_clocks, 
                                vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts, *(Arch.spice));
+	}
+	if ( TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.print_top_auto_tb) { 				// AA: to generate autocheck testbench but only one bitstream
+	    dump_verilog_top_auto_testbench(chomped_circuit_name, top_auto_testbench_file_path, num_clocks, 
+                               vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts, *(Arch.spice));
+	}
     /* Dump bitstream file */
     dump_fpga_spice_bitstream(bitstream_file_path, chomped_circuit_name, sram_verilog_orgz_info);
   }
+
 
   /* Output Modelsim Autodeck scripts */
   if (TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.print_modelsim_autodeck) {
