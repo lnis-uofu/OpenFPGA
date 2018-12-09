@@ -568,10 +568,16 @@ void dump_verilog_top_auto_testbench_call_benchmark(FILE* fp, char* blif_circuit
 			fprintf(fp, ",\n");
 		}
 	  	if(VPACK_INPAD == logical_block[iblock].type){
-			fprintf(fp, "        %s_%s_%d_", logical_block[iblock].name, gio_inout_prefix, iopad_idx);
+			/*  See if this is a clock net */
+        	if (TRUE == vpack_net[logical_block[iblock].output_nets[0][0]].is_global) {  
+				fprintf(fp, "        %s", top_tb_op_clock_port_name);
+			}
+			else{
+				fprintf(fp, "        %s_%s_%d_", logical_block[iblock].name, gio_inout_prefix, iopad_idx);
+			}
 	  	}
 		else if(VPACK_OUTPAD == logical_block[iblock].type){
-			fprintf(fp, "    %s_benchmark", logical_block[iblock].name);
+			fprintf(fp, "        %s_benchmark", logical_block[iblock].name);
 		}
 	  }
 	}
