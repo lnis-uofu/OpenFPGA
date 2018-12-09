@@ -23,6 +23,7 @@ char* modelsim_project_name_postfix = "_fpga_msim";
 char* modelsim_proc_script_name_postfix = "_proc.tcl";
 char* modelsim_top_script_name_postfix = "_runsim.tcl";
 char* modelsim_testbench_module_postfix = "_top_tb";
+char* modelsim_auto_testbench_module_postfix = "_top_auto_tb";
 char* modelsim_simulation_time_unit = "ms";
 
 char* verilog_top_postfix = "_top.v";

@@ -15,6 +15,7 @@ extern char* modelsim_project_name_postfix;
 extern char* modelsim_proc_script_name_postfix;
 extern char* modelsim_top_script_name_postfix;
 extern char* modelsim_testbench_module_postfix;
+extern char* modelsim_auto_testbench_module_postfix;
 extern char* modelsim_simulation_time_unit;
 
 extern char* verilog_top_postfix;

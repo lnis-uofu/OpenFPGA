@@ -6,4 +6,6 @@ void dump_verilog_modelsim_autodeck(t_sram_orgz_info* cur_sram_orgz_info,
                                     char* chomped_circuit_name,
                                     char* simulator_ini_path,
                                     boolean include_timing,
-                                    boolean init_sim);
+                                    boolean init_sim,
+									boolean print_top_tb,
+									boolean print_top_auto_tb);
