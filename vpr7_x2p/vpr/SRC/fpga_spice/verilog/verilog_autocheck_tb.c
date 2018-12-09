@@ -543,8 +543,8 @@ void dump_verilog_top_auto_testbench_ports(FILE* fp,
               gio_inout_prefix, iopad_verilog_model->prefix, iopad_idx);
 	 // AA: Generate wire and reg to autocheck with benchmark
 	  if(VPACK_OUTPAD == logical_block[iblock].type) {    
-		fprintf(fp, "wire %s_benchmark\n", logical_block[iblock].name);
-		fprintf(fp, "reg %s_verification\n", logical_block[iblock].name);
+		fprintf(fp, "wire %s_benchmark;\n", logical_block[iblock].name);
+		fprintf(fp, "reg %s_verification;\n", logical_block[iblock].name);
 	  }	
 
     }
@@ -594,8 +594,8 @@ void dump_verilog_top_auto_testbench_check(FILE* fp){
 				fprintf(fp, "    %s_verification <= %s_benchmark ^ %s_%s_%d_ ;\n", logical_block[iblock].name, logical_block[iblock].name, logical_block[iblock].name, gio_inout_prefix, iopad_idx);
 			}
 		}
-	fprintf(fp, "  end\n\n");
 	}
+	fprintf(fp, "  end\n\n");
 	for (iblock = 0; iblock < num_logical_blocks; iblock++) {
 		if (iopad_verilog_model == logical_block[iblock].mapped_spice_model) {
       		iopad_idx = logical_block[iblock].mapped_spice_model_index;
