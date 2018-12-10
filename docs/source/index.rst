@@ -6,10 +6,8 @@
 Welcome to OpenFPGA's documentation!
 ====================================
 
-For more information on the ABC see abc_doc_ // abc_github_
-
 For more information on the VTR see vtr_doc_ // vtr_github_
-
+For more information on the Yosys see yosys_doc_ // yosys_github_
 For more information on the original FPGA architecture description language see xml_vtr_
 
 .. toctree::
@@ -58,9 +56,8 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
-
-.. _abc_doc: https://people.eecs.berkeley.edu/~alanmi/abc/
-.. _abc_github: https://github.com/berkeley-abc/abc
+.. _yosys_doc: http://www.clifford.at/yosys/
+.. _yosys_github: https://github.com/YosysHQ/yosys
 .. _vpr_doc: https://docs.verilogtorouting.org/en/latest/
 .. _vpr_github: https://github.com/verilog-to-routing/vtr-verilog-to-routing
 .. _xml_vtr: https://docs.verilogtorouting.org/en/latest/arch/reference/
