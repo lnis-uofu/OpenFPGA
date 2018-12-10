@@ -609,8 +609,10 @@ void dump_verilog_top_auto_testbench_check(FILE* fp){
       		assert((VPACK_INPAD == logical_block[iblock].type)||(VPACK_OUTPAD == logical_block[iblock].type));
 			if(VPACK_OUTPAD == logical_block[iblock].type){
 				fprintf(fp, "  always@(posedge %s_verification) begin\n", logical_block[iblock].name);
-				fprintf(fp, "    $display(\"Mismatch on %s_verification\");\n", logical_block[iblock].name);
-				fprintf(fp, "    $finish;\n");
+				fprintf(fp, "      if(%s_verification) begin\n", logical_block[iblock].name);
+				fprintf(fp, "        $display(\"Mismatch on %s_verification\");\n", logical_block[iblock].name);
+				fprintf(fp, "        $finish;\n");
+				fprintf(fp, "      end\n");
 				fprintf(fp, "  end\n\n");
 			}
 		}
