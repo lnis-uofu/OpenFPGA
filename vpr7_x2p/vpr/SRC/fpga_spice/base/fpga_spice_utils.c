@@ -6915,7 +6915,7 @@ void stats_spice_muxes_routing_arch(t_llist** muxes_head,
     case IPIN: 
       /* Have to consider the fan_in only, it is a connection box(multiplexer)*/
       assert((node->fan_in > 0)||(0 == node->fan_in));
-      if (0 == node->fan_in) {
+      if ((0 == node->fan_in)||(1 == node->fan_in)) {
         break; 
       }
       /* Find the spice_model for multiplexers in connection blocks */
@@ -6931,7 +6931,7 @@ void stats_spice_muxes_routing_arch(t_llist** muxes_head,
        * or it could be a connection box if previous rr_node is a IPIN or OPIN
        */
       assert((node->fan_in > 0)||(0 == node->fan_in));
-      if (0 == node->fan_in) {
+      if ((0 == node->fan_in)||(1 == node->fan_in)) {
         break; 
       }
       /* Find the spice_model for multiplexers in switch blocks*/
