@@ -2437,14 +2437,14 @@ void dump_verilog_top_testbench_stimuli_serial_version(FILE* fp,
         fprintf(fp, "end\n");
         fprintf(fp, "always wait (~%s)\n", top_tb_reset_port_name);
         fprintf(fp, "  begin \n");
-        fprintf(fp, "    %s%s%s[%d] = ~%s%s%s[%d];\n    #%2f\n", 
+        fprintf(fp, "    %s%s%s[%d] = ~%s%s%s[%d];\n    #%.2f\n", 
                 gio_inout_prefix, iopad_verilog_model->prefix, top_tb_inout_reg_postfix, iopad_idx,
                 gio_inout_prefix, iopad_verilog_model->prefix, top_tb_inout_reg_postfix, iopad_idx,
-                (op_clock_period * cur_spice_net_info->probability * 2. / cur_spice_net_info->density) / verilog_sim_timescale);
-        fprintf(fp, "    %s%s%s[%d] = ~%s%s%s[%d];\n    #%2f;\n", 
+                (op_clock_period * 2 * ((int)(cur_spice_net_info->probability / cur_spice_net_info->density)+ iblock) / verilog_sim_timescale));
+        fprintf(fp, "    %s%s%s[%d] = ~%s%s%s[%d];\n    #%.2f;\n", 
                 gio_inout_prefix, iopad_verilog_model->prefix, top_tb_inout_reg_postfix, iopad_idx,
                 gio_inout_prefix, iopad_verilog_model->prefix, top_tb_inout_reg_postfix, iopad_idx,
-                (op_clock_period * cur_spice_net_info->density * 6. / cur_spice_net_info->probability) / verilog_sim_timescale);
+                (op_clock_period * 2 * ((int)((cur_spice_net_info->density / cur_spice_net_info->probability) * 2.5 + iblock)) / verilog_sim_timescale));
         fprintf(fp, "  end \n");
         fprintf(fp, "\n");
         found_mapped_inpad++;
