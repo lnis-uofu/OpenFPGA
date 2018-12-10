@@ -248,6 +248,8 @@ typedef struct s_logical_block {
     /* for Register/flip-flop */
     char* trigger_type;
     int init_val;
+    /* To identify if this is a clock */
+    int is_clock;
 
 } t_logical_block;
 
