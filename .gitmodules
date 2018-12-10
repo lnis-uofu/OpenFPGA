@@ -1,6 +1,3 @@
-[submodule "tangxifan-eda-tools"]
-	path = tangxifan-eda-tools
-	url = https://github.com/tangxifan/tangxifan-eda-tools.git
 [submodule "OpenSTA"]
 	path = OpenSTA
 	url = https://github.com/abk-openroad/OpenSTA
