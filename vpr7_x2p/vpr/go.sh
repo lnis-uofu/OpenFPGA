@@ -1,5 +1,6 @@
 #!/bin/sh
 # Example of how to run vprset circuit_name = pip_add
+set circuit_name = pip_add
 set arch_file = ${PWD}/ARCH/k6_N10_scan_chain_tsmc40nm_TT.xml
 set circuit_blif = ${PWD}/Circuits/${circuit_name}.blif
 set circuit_act = ${PWD}/Circuits/${circuit_name}.act
