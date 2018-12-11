@@ -2,7 +2,7 @@
 # Makefile to build CAD tools in OpenFPGA inspired by Verilog-to-Routing (VTR) Framework #
 ##########################################################################################
 
-SUBDIRS =  ace2 vpr7_x2p yosys
+SUBDIRS =  abc_with_bb_support ace2 vpr7_x2p yosys
 
 all: notifications subdirs
 
