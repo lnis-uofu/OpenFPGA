@@ -116,15 +116,21 @@ void vpr_dump_syn_verilog(t_vpr_setup vpr_setup,
   char* top_netlist_path = NULL;
   char* bitstream_file_name = NULL;
   char* bitstream_file_path = NULL;
+  char* hex_file_name = NULL;
+  char* hex_file_path = NULL;
   char* top_testbench_file_name = NULL;
   char* top_auto_testbench_file_name = NULL;
+  char* top_auto_preconf_testbench_file_name = NULL;
   char* top_testbench_file_path = NULL;
   char* top_auto_testbench_file_path = NULL;
+  char* top_auto_preconf_testbench_file_path = NULL;
   char* blif_testbench_file_name = NULL;
   char* blif_testbench_file_path = NULL;
 
   char* chomped_parent_dir = NULL;
   char* chomped_circuit_name = NULL;
+
+  boolean tb_preconf = TRUE;
 
   /* Check if the routing architecture we support*/
   if (UNI_DIRECTIONAL != vpr_setup.RoutingArch.directionality) {
@@ -167,10 +173,14 @@ void vpr_dump_syn_verilog(t_vpr_setup vpr_setup,
   top_netlist_path = my_strcat(verilog_dir_formatted, top_netlist_file);
   bitstream_file_name = my_strcat(chomped_circuit_name, bitstream_verilog_file_postfix);
   bitstream_file_path = my_strcat(verilog_dir_formatted, bitstream_file_name);
+  hex_file_name = my_strcat(chomped_circuit_name, hex_verilog_file_postfix);
+  hex_file_path = my_strcat(verilog_dir_formatted, hex_file_name);
   top_testbench_file_name = my_strcat(chomped_circuit_name, top_testbench_verilog_file_postfix);
   top_testbench_file_path = my_strcat(verilog_dir_formatted, top_testbench_file_name);
   top_auto_testbench_file_name = my_strcat(chomped_circuit_name, top_auto_testbench_verilog_file_postfix);
   top_auto_testbench_file_path = my_strcat(verilog_dir_formatted, top_auto_testbench_file_name);
+  top_auto_preconf_testbench_file_name = my_strcat(chomped_circuit_name, top_auto_preconf_testbench_verilog_file_postfix);
+  top_auto_preconf_testbench_file_path = my_strcat(verilog_dir_formatted, top_auto_preconf_testbench_file_name);
   blif_testbench_file_name = my_strcat(chomped_circuit_name, blif_testbench_verilog_file_postfix);
   blif_testbench_file_path = my_strcat(verilog_dir_formatted, blif_testbench_file_name);
   
@@ -250,9 +260,22 @@ void vpr_dump_syn_verilog(t_vpr_setup vpr_setup,
 		dump_verilog_top_testbench(chomped_circuit_name, top_testbench_file_path, num_clocks, 
                                vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts, *(Arch.spice));
 	}
-	if ( TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.print_top_auto_tb) { 				// AA: to generate autocheck testbench but only one bitstream
+	// AA: to generate autocheck testbench but only one bitstream
+	if ( TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.print_top_auto_tb) { 				
 	    dump_verilog_top_auto_testbench(chomped_circuit_name, top_auto_testbench_file_path, num_clocks, 
-                               vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts, *(Arch.spice));
+                               			vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts, *(Arch.spice),
+										modelsim_auto_testbench_module_postfix);
+	}
+	// AA: to generate autocheck preconfigured testbench 
+	if (( TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.print_top_auto_tb) && (tb_preconf)) { 
+	    dump_verilog_top_auto_preconf_testbench(chomped_circuit_name, 
+												top_auto_preconf_testbench_file_path,
+												num_clocks, 
+                               					vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts, 
+												*(Arch.spice),
+												modelsim_auto_preconf_testbench_module_postfix,
+												hex_file_path);
+		dump_fpga_spice_hex(hex_file_path, chomped_circuit_name, sram_verilog_orgz_info);
 	}
     /* Dump bitstream file */
     dump_fpga_spice_bitstream(bitstream_file_path, chomped_circuit_name, sram_verilog_orgz_info);
@@ -267,7 +290,8 @@ void vpr_dump_syn_verilog(t_vpr_setup vpr_setup,
                                    	vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.include_timing,
                                    	vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.init_sim,
 									vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.print_top_tb,
-									vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.print_top_auto_tb);
+									vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.print_top_auto_tb,
+									tb_preconf);
   }
 
   /* dump verilog testbench only for input blif */

@@ -24,12 +24,15 @@ char* modelsim_proc_script_name_postfix = "_proc.tcl";
 char* modelsim_top_script_name_postfix = "_runsim.tcl";
 char* modelsim_testbench_module_postfix = "_top_tb";
 char* modelsim_auto_testbench_module_postfix = "_top_auto_tb";
+char* modelsim_auto_preconf_testbench_module_postfix = "_top_auto_preconf_tb";
 char* modelsim_simulation_time_unit = "ms";
 
 char* verilog_top_postfix = "_top.v";
 char* bitstream_verilog_file_postfix = ".bitstream";
+char* hex_verilog_file_postfix = ".hex";
 char* top_testbench_verilog_file_postfix = "_top_tb.v";
 char* top_auto_testbench_verilog_file_postfix = "_top_auto_tb.v";
+char* top_auto_preconf_testbench_verilog_file_postfix = "_top_auto_preconf_tb.v";
 char* blif_testbench_verilog_file_postfix = "_blif_tb.v";
 char* submodule_verilog_file_name = "sub_module.v";
 char* logic_block_verilog_file_name = "logic_blocks.v";

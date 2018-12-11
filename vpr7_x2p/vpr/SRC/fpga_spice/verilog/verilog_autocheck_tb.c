@@ -401,8 +401,9 @@ int dump_verilog_top_testbench_find_num_config_clock_cycles(t_llist* head) {
 
 static 
 void dump_verilog_top_auto_testbench_ports(FILE* fp,
-                                      char* circuit_name,
-									  t_syn_verilog_opts syn_verilog_opts){
+                                      		char* circuit_name,
+									  		t_syn_verilog_opts syn_verilog_opts,
+									  		char* postfix){
   int num_array_bl, num_array_wl;
   int bl_decoder_size, wl_decoder_size;
   int iblock, iopad_idx;
@@ -411,7 +412,7 @@ void dump_verilog_top_auto_testbench_ports(FILE* fp,
  
   get_sram_orgz_info_mem_model(sram_verilog_orgz_info, &mem_model);
   fprintf(fp, "`include \"%s\"\n", syn_verilog_opts.verilog_benchmark_file);
-  fprintf(fp, "module %s_top_auto_tb;\n", circuit_name);
+  fprintf(fp, "module %s;\n", my_strcat(circuit_name, postfix));
   /* Local wires */
   /* 1. reset, set, clock signals */
   /* 2. iopad signals */
@@ -567,16 +568,11 @@ void dump_verilog_top_auto_testbench_call_benchmark(FILE* fp, char* blif_circuit
 		if(iblock>0){
 			fprintf(fp, ",\n");
 		}
-	  	if(VPACK_INPAD == logical_block[iblock].type){
-			/*  See if this is a clock net */
-        	if (TRUE == vpack_net[logical_block[iblock].output_nets[0][0]].is_global) {  
-				fprintf(fp, "        %s", top_tb_op_clock_port_name);
-			}
-			else{
+		if(TRUE == logical_block[iblock].is_clock){
+			fprintf(fp, "        %s", top_tb_op_clock_port_name);
+	  	} else if(VPACK_INPAD == logical_block[iblock].type){
 				fprintf(fp, "        %s_%s_%d_", logical_block[iblock].name, gio_inout_prefix, iopad_idx);
-			}
-	  	}
-		else if(VPACK_OUTPAD == logical_block[iblock].type){
+	  	} else if(VPACK_OUTPAD == logical_block[iblock].type){
 			fprintf(fp, "        %s_benchmark", logical_block[iblock].name);
 		}
 	  }
@@ -624,7 +620,8 @@ void dump_verilog_top_auto_testbench(char* circuit_name,
                                 char* top_netlist_name,
                                 int num_clock,
                                 t_syn_verilog_opts syn_verilog_opts,
-                                t_spice verilog) {
+                                t_spice verilog,
+								char* postfix) {
   FILE* fp = NULL;
   char* title = my_strcat("FPGA Verilog Testbench for Top-level netlist of Design: ", circuit_name);
   
@@ -635,14 +632,13 @@ void dump_verilog_top_auto_testbench(char* circuit_name,
     exit(1);
   } 
   
-  vpr_printf(TIO_MESSAGE_INFO, "Writing Testbench for FPGA Top-level Verilog netlist for  %s...\n", circuit_name);
+  vpr_printf(TIO_MESSAGE_INFO, "Writing Autochecked Testbench for FPGA Top-level Verilog netlist for  %s...\n", circuit_name);
  
   /* Print the title */
   dump_verilog_file_header(fp, title);
   my_free(title);
-
   /* Start of testbench */
-  dump_verilog_top_auto_testbench_ports(fp, circuit_name, syn_verilog_opts);
+  dump_verilog_top_auto_testbench_ports(fp, circuit_name, syn_verilog_opts, postfix);
 
   /* Call defined top-level module */
   dump_verilog_top_testbench_call_top_module(fp, circuit_name);
@@ -665,3 +661,302 @@ void dump_verilog_top_auto_testbench(char* circuit_name,
   return;
 }
 
+static
+void dump_verilog_top_preconf_testbench_stimuli(FILE* fp, 
+												int num_clock, 
+												t_syn_verilog_opts syn_verilog_opts, 
+												t_spice verilog,
+												char* hex_file_path,
+												t_spice spice) {
+	int inet, iblock, iopad_idx;
+	int found_mapped_inpad = 0;
+  	t_spice_model* scff_mem_model = NULL;
+  /* Find Input Pad Spice model */
+	t_spice_net_info* cur_spice_net_info = NULL;
+  	int iscff, num_scffs;
+    float prog_clock_period = (1./spice.spice_params.stimulate_params.prog_clock_freq);
+    float op_clock_period = (1./spice.spice_params.stimulate_params.op_clock_freq);
+
+  	num_scffs = get_sram_orgz_info_num_mem_bit(sram_verilog_orgz_info);
+  	get_sram_orgz_info_mem_model(sram_verilog_orgz_info, &scff_mem_model);
+
+	fprintf(fp, "  // Loading configuration as initial state\n");
+	fprintf(fp, "integer count;\n");
+	fprintf(fp, "integer file;\n");
+	fprintf(fp, "reg[0:%d] tmp;\n\n", (num_scffs - 1));
+	fprintf(fp, "initial begin\n");
+	fprintf(fp, "    file = $fopen(\"%s\", \"r\");\n", hex_file_path);
+	fprintf(fp, "    for(count = %d; count > -1 ; count = count - 1) begin\n", (num_scffs - 1));
+	fprintf(fp, "        tmp[count] = $fgetc(file);\n");
+	fprintf(fp, "    end\n");
+	fprintf(fp, "    $signal_force(\"U0/%s_scff_in\", tmp, 0, 1, , 1);\n", scff_mem_model->prefix );
+	fprintf(fp, "    $fclose(file);\n");
+	fprintf(fp, "end\n");
+	fprintf(fp, "  // End loading configuration as initial state\n\n");
+	
+  /* config_done signal: indicate when configuration is finished */
+  fprintf(fp, "//----- %s ----\n", top_tb_config_done_port_name);
+  fprintf(fp, "initial\n");
+  fprintf(fp, "  begin //--- CONFIG_DONE GENERATOR\n");
+  fprintf(fp, "    %s = 1'b0;\n", top_tb_config_done_port_name);
+  fprintf(fp, "    //----- %s signal is enabled after 50ns delay ----\n", 
+              top_tb_config_done_port_name);
+  fprintf(fp, "    #50 %s = 1'b1;\n", top_tb_config_done_port_name);
+  fprintf(fp, "  end\n");
+  fprintf(fp, "//----- END of %s ----\n", 
+              top_tb_config_done_port_name);
+  fprintf(fp, "\n");
+
+  /* Generate stimilus of programming clock */
+  fprintf(fp, "//----- Raw Programming clock ----\n");
+  fprintf(fp, "initial\n");
+  fprintf(fp, "  begin //--- PROG_CLOCK INITIALIZATION\n");
+  fprintf(fp, "    %s%s = 1'b0;\n", top_tb_prog_clock_port_name, top_tb_clock_reg_postfix);
+  fprintf(fp, "  end\n");
+  fprintf(fp, "//----- END of  Programming clock ----\n");
+  fprintf(fp, "\n");
+  /* Programming is already done
+   */
+  fprintf(fp, "//---- Actual programming clock is triggered only when %s and %s are disabled\n", 
+              top_tb_config_done_port_name, 
+              top_tb_prog_reset_port_name); 
+  fprintf(fp, "  assign %s = %s%s & (~%s) & (~%s);\n",
+              top_tb_prog_clock_port_name,
+              top_tb_prog_clock_port_name, top_tb_clock_reg_postfix,
+              top_tb_config_done_port_name,
+              top_tb_prog_reset_port_name); 
+  /*
+  fprintf(fp, "  assign %s = %s%s & (~%s);\n",
+              top_tb_prog_clock_port_name,
+              top_tb_prog_clock_port_name, top_tb_clock_reg_postfix,
+              top_tb_config_done_port_name); 
+  */
+  fprintf(fp, "//----- END of Actual Programming clock ----\n");
+  fprintf(fp, "\n");
+
+  /* Generate stimilus of programming clock */
+  fprintf(fp, "//----- Raw Operation clock ----\n");
+  fprintf(fp, "initial\n");
+  fprintf(fp, "  begin //--- OP_CLOCK INITIALIZATION\n");
+  fprintf(fp, "    %s%s = 1'b0;\n", top_tb_op_clock_port_name, top_tb_clock_reg_postfix);
+  fprintf(fp, "  end\n");
+  fprintf(fp, "always wait(~%s)\n", top_tb_reset_port_name); 
+  fprintf(fp, "  begin //--- OP_CLOCK GENERATOR\n");
+  fprintf(fp, "    #%.2f %s%s = ~%s%s;\n", 
+              0.5*op_clock_period / verilog_sim_timescale,
+              top_tb_op_clock_port_name, top_tb_clock_reg_postfix,
+              top_tb_op_clock_port_name, top_tb_clock_reg_postfix);
+  fprintf(fp, "  end\n");
+  fprintf(fp, "//----- END of Operation clock ----\n");
+  /* Operation clock should be enabled after programming phase finishes.
+   * Before configuration is done (config_done is enabled), operation clock should be always zero.
+   */
+  fprintf(fp, "//---- Actual operation clock is triggered only when %s is enabled \n", 
+              top_tb_config_done_port_name); 
+  fprintf(fp, "  assign %s = %s%s & (%s);\n",
+              top_tb_op_clock_port_name,
+              top_tb_op_clock_port_name, top_tb_clock_reg_postfix,
+              top_tb_config_done_port_name);
+  fprintf(fp, "//----- END of Actual Operation clock ----\n");
+  fprintf(fp, "\n");
+
+  /* Reset signal for configuration circuit : only enable during the first clock cycle in programming phase */
+  fprintf(fp, "//----- Programming Reset Stimuli ----\n");
+  fprintf(fp, "initial\n");
+  fprintf(fp, "  begin //--- PROGRAMMING RESET GENERATOR\n");
+  fprintf(fp, " %s = 1'b0;\n", top_tb_prog_reset_port_name);
+  /* Reset is disenabled to avoid configuration reset */
+  fprintf(fp, "end\n");
+  fprintf(fp, "\n");
+
+  /* Set signal for configuration circuit : only enable during the first clock cycle in programming phase */
+  fprintf(fp, "//----- Programming set Stimuli ----\n");
+  fprintf(fp, "initial\n");
+  fprintf(fp, "  begin //--- PROGRAMMING SET GENERATOR\n");
+  fprintf(fp, "%s = 1'b0;\n", top_tb_prog_set_port_name);
+  fprintf(fp, "//----- Programming set signal is always disabled -----\n");
+  fprintf(fp, "end\n");
+  fprintf(fp, "\n");
+
+  /* reset signals: only enabled during the first clock cycle in operation phase */
+  fprintf(fp, "//----- Reset Stimuli ----\n");
+  fprintf(fp, "initial\n");
+  fprintf(fp, "  begin //--- RESET GENERATOR\n");
+  fprintf(fp, " %s = 1'b1;\n", top_tb_reset_port_name);
+  /* Reset is enabled until the first clock cycle in operation phase */
+  fprintf(fp, "//----- Reset signal is enabled until the first clock cycle in operation phase ----\n");
+  fprintf(fp, "wait(%s);\n", 
+               top_tb_config_done_port_name); 
+  fprintf(fp, "#%.2f %s = 1'b1;\n", 
+              (1 * op_clock_period)/ verilog_sim_timescale,
+              top_tb_reset_port_name);
+  fprintf(fp, "#%.2f %s = 1'b0;\n", 
+              (2 * op_clock_period) / verilog_sim_timescale,
+              top_tb_reset_port_name);
+  fprintf(fp, "end\n");
+  fprintf(fp, "\n");
+
+  /* set signals */
+  fprintf(fp, "//----- Set Stimuli ----\n");
+  fprintf(fp, "initial\n");
+  fprintf(fp, "  begin //--- SET GENERATOR\n");
+  fprintf(fp, "%s = 1'b0;\n", top_tb_set_port_name);
+  fprintf(fp, "//----- Set signal is always disabled -----\n");
+  fprintf(fp, "end\n");
+  fprintf(fp, "\n");
+
+  /* Inputs stimuli: BL/WL address lines */
+  //dump_verilog_top_testbench_conf_bits_serial(fp, sram_verilog_orgz_info->conf_bit_head); 
+  
+  /* For each input_signal
+   * TODO: this part is low-efficent for run-time concern... Need improve
+   */
+  assert(NULL != iopad_verilog_model);
+  for (iopad_idx = 0; iopad_idx < iopad_verilog_model->cnt; iopad_idx++) {
+    /* Find if this inpad is mapped to a logical block */
+    found_mapped_inpad = 0;
+    for (iblock = 0; iblock < num_logical_blocks; iblock++) {
+      /* Bypass OUTPAD: donot put any voltage stimuli */
+      /* Make sure We find the correct logical block !*/
+      if ((iopad_verilog_model == logical_block[iblock].mapped_spice_model)
+         &&(iopad_idx == logical_block[iblock].mapped_spice_model_index)) {
+        /* Output PAD only need a short connection */
+        if (VPACK_OUTPAD == logical_block[iblock].type) {
+          fprintf(fp, "//----- Output %s does not need a Stimuli ----\n", logical_block[iblock].name);
+          fprintf(fp, "initial\n");
+          fprintf(fp, "  begin //--- Input %s[%d] GENERATOR\n", gio_inout_prefix, iopad_idx);
+          fprintf(fp, "    %s%s%s[%d] = 1'b%d;\n", 
+                  gio_inout_prefix, iopad_verilog_model->prefix, top_tb_inout_reg_postfix, iopad_idx,
+                  verilog_default_signal_init_value);
+          fprintf(fp, "end\n");
+          found_mapped_inpad = 1;
+          break;
+        }
+      /* Input PAD only need a short connection */
+        assert(VPACK_INPAD == logical_block[iblock].type);
+        cur_spice_net_info = NULL;
+        for (inet = 0; inet < num_nets; inet++) { 
+          if (0 == strcmp(clb_net[inet].name, logical_block[iblock].name)) {
+            cur_spice_net_info = clb_net[inet].spice_net_info;
+            break;
+          }
+        }
+        assert(NULL != cur_spice_net_info);
+        assert(!(0 > cur_spice_net_info->density));
+        assert(!(1 < cur_spice_net_info->density));
+        assert(!(0 > cur_spice_net_info->probability));
+        assert(!(1 < cur_spice_net_info->probability));
+        /* Connect the reg to inouts */
+        fprintf(fp, "//----- Input %s Stimuli ----\n", logical_block[iblock].name);
+        fprintf(fp, "assign %s%s[%d] = %s%s%s[%d];\n",
+                gio_inout_prefix, iopad_verilog_model->prefix, iopad_idx,
+                gio_inout_prefix, iopad_verilog_model->prefix, top_tb_inout_reg_postfix, iopad_idx);
+        /* Get the net information */
+        /* TODO: Give the net name in the blif file !*/
+        fprintf(fp, "initial\n");
+        fprintf(fp, "  begin //--- Input %s GENERATOR\n", logical_block[iblock].name);
+        fprintf(fp, "    %s%s%s[%d] = 1'b%d;\n", 
+                gio_inout_prefix, iopad_verilog_model->prefix, top_tb_inout_reg_postfix, iopad_idx,
+                cur_spice_net_info->init_val);
+        fprintf(fp, "end\n");
+        fprintf(fp, "always wait (~%s)\n", top_tb_reset_port_name);
+        fprintf(fp, "  begin \n");
+        fprintf(fp, "    %s%s%s[%d] = ~%s%s%s[%d];\n    #%.2f\n", 
+                gio_inout_prefix, iopad_verilog_model->prefix, top_tb_inout_reg_postfix, iopad_idx,
+                gio_inout_prefix, iopad_verilog_model->prefix, top_tb_inout_reg_postfix, iopad_idx,
+                (op_clock_period * 2 * ((int)(cur_spice_net_info->probability / cur_spice_net_info->density)+ iblock) / verilog_sim_timescale));
+        fprintf(fp, "    %s%s%s[%d] = ~%s%s%s[%d];\n    #%.2f;\n", 
+                gio_inout_prefix, iopad_verilog_model->prefix, top_tb_inout_reg_postfix, iopad_idx,
+                gio_inout_prefix, iopad_verilog_model->prefix, top_tb_inout_reg_postfix, iopad_idx,
+                (op_clock_period * 2 * ((int)((cur_spice_net_info->density / cur_spice_net_info->probability) * 2.5 + iblock)) / verilog_sim_timescale));
+        fprintf(fp, "  end \n");
+        fprintf(fp, "\n");
+        found_mapped_inpad++;
+      }
+    } 
+    assert((0 == found_mapped_inpad)||(1 == found_mapped_inpad));
+    /* If we find one iopad already, we finished in this round here */
+    if (1 == found_mapped_inpad) {
+      continue;
+    }
+    /* if we cannot find any mapped inpad from tech.-mapped netlist, give a default */
+    /* Connect the reg to inouts */
+    fprintf(fp, "//----- Input %s[%d] Stimuli ----\n", gio_inout_prefix, iopad_idx);
+    fprintf(fp, "assign %s%s[%d] = %s%s%s[%d];\n",
+            gio_inout_prefix, iopad_verilog_model->prefix, iopad_idx,
+            gio_inout_prefix, iopad_verilog_model->prefix, top_tb_inout_reg_postfix, iopad_idx);
+    /* TODO: Give the net name in the blif file !*/
+    fprintf(fp, "initial\n");
+    fprintf(fp, "  begin //--- Input %s[%d] GENERATOR\n", gio_inout_prefix, iopad_idx);
+    fprintf(fp, "    %s%s%s[%d] = 1'b%d;\n", 
+            gio_inout_prefix, iopad_verilog_model->prefix, top_tb_inout_reg_postfix, iopad_idx,
+            verilog_default_signal_init_value);
+    fprintf(fp, "end\n");
+  }
+
+	return;
+}
+
+void dump_verilog_top_auto_preconf_testbench(char* circuit_name,
+                                			char* top_netlist_name,
+                                			int num_clock,
+                                			t_syn_verilog_opts syn_verilog_opts,
+                                			t_spice verilog,
+											char* postfix,
+											char* hex_file_path) {
+  FILE* fp = NULL;
+  char* title = my_strcat("FPGA Verilog Testbench for Top-level netlist of Design: ", circuit_name);
+  
+  /* Check if the path exists*/
+  fp = fopen(top_netlist_name,"w");
+  if (NULL == fp) {
+    vpr_printf(TIO_MESSAGE_ERROR,"(FILE:%s,LINE[%d])Failure in create top Verilog testbench %s!",__FILE__, __LINE__, top_netlist_name); 
+    exit(1);
+  } 
+  
+  vpr_printf(TIO_MESSAGE_INFO, "Writing Autocheked and Preconfigured Testbench for FPGA Top-level Verilog netlist for  %s...\n", circuit_name);
+ 
+  /* Print the title */
+  dump_verilog_file_header(fp, title);
+  my_free(title);
+
+  /* Start of testbench */
+  dump_verilog_top_auto_testbench_ports(fp, circuit_name, syn_verilog_opts, postfix);
+
+  /* Call defined top-level module */
+  dump_verilog_top_testbench_call_top_module(fp, circuit_name);
+
+  /* Call defined benchmark */
+  dump_verilog_top_auto_testbench_call_benchmark(fp, blif_circuit_name);
+
+  /* Add stimuli for reset, set, clock and iopad signals */
+  dump_verilog_top_preconf_testbench_stimuli(fp, num_clock, syn_verilog_opts, verilog, hex_file_path, verilog);
+
+  /* Add output autocheck */
+  dump_verilog_top_auto_testbench_check(fp);
+
+  /* Testbench ends*/
+  fprintf(fp, "endmodule\n");
+
+  /* Close the file*/
+  fclose(fp);
+
+  return;
+}
+
+void dump_fpga_spice_hex(char* hex_file_path, 
+						 char* chomped_circuit_name, 
+						 t_sram_orgz_info* sram_verilog_orgz_info) {
+	FILE* fp = NULL;
+	t_llist* temp = sram_verilog_orgz_info->conf_bit_head;
+    t_conf_bit_info* cur_conf_bit_info = NULL;
+
+	fp = fopen(hex_file_path, "w");
+	while (NULL != temp) {
+    	cur_conf_bit_info = (t_conf_bit_info*)(temp->dptr);
+		fprintf(fp, "%d", cur_conf_bit_info->sram_bit->val);
+		temp = temp->next;
+	}
+	fclose(fp);
+	return;
+}

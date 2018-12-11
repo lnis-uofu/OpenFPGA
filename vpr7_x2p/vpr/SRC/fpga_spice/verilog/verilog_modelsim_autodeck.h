@@ -8,4 +8,6 @@ void dump_verilog_modelsim_autodeck(t_sram_orgz_info* cur_sram_orgz_info,
                                     boolean include_timing,
                                     boolean init_sim,
 									boolean print_top_tb,
-									boolean print_top_auto_tb);
+									boolean print_top_auto_tb,
+									boolean	tb_preconf);
+
