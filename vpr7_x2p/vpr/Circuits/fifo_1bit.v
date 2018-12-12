@@ -15,17 +15,17 @@ module fifo_1bit(
 	input data_in;
 	output data_out;
 
-	reg[7:0] int_reg;
+	reg[31:0] int_reg;
 
-	assign data_out = int_reg[7];
+	assign data_out = int_reg[31];
 
 	always@(posedge clk or posedge rst) begin
 		if(rst) begin
-			int_reg <= 8'h00;
+			int_reg <= 32'h00;
 		end
 		else begin
 			int_reg[0] <= data_in;
-			int_reg[7:1] = int_reg[6:0];
+			int_reg[32:1] = int_reg[31:0];
 		end
 	end 
 

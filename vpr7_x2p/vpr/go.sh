@@ -1,5 +1,6 @@
 #!/bin/sh
 # Example of how to run vprset circuit_name = pip_add
+#set circuit_name = pip_add
 set circuit_name = fifo_1bit
 set arch_file = ${PWD}/ARCH/k6_N10_scan_chain_tsmc40nm_TT.xml
 set circuit_blif = ${PWD}/Circuits/${circuit_name}.blif
@@ -8,6 +9,10 @@ set circuit_verilog = ${PWD}/Circuits/${circuit_name}.v
 set spice_output = ${PWD}/spice_demo 
 set verilog_output = ${PWD}/verilog_demo 
 set modelsim_ini = /uusoc/facility/cad_tools/Mentor/modelsim10.7b/modeltech/modelsim.ini
+
+# Make sure a clean start
+rm -rf ${spice_output}
+rm -rf ${verilog_output}
 
 # Pack, place, and route a heterogeneous FPGA
 # Packing uses the AAPack algorithm
