@@ -1,0 +1,31 @@
+# Benchmark "fifo_1bit" written by ABC on Tue Dec 11 18:55:50 2018
+.model fifo_1bit
+.inputs rst clk data_in
+.outputs data_out
+
+.latch         n9 int_reg[0] re        clk  0
+.latch        n14 int_reg[1] re        clk  0
+.latch        n19 int_reg[2] re        clk  0
+.latch        n24 int_reg[3] re        clk  0
+.latch        n29 int_reg[4] re        clk  0
+.latch        n34 int_reg[5] re        clk  0
+.latch        n39 int_reg[6] re        clk  0
+.latch        n44   data_out re        clk  0
+
+.names data_in rst n9
+10 1
+.names int_reg[0] rst n14
+10 1
+.names int_reg[1] rst n19
+10 1
+.names int_reg[2] rst n24
+10 1
+.names int_reg[3] rst n29
+10 1
+.names int_reg[4] rst n34
+10 1
+.names int_reg[5] rst n39
+10 1
+.names int_reg[6] rst n44
+10 1
+.end

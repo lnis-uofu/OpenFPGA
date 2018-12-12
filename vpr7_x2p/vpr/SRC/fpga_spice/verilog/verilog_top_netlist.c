@@ -2440,11 +2440,11 @@ void dump_verilog_top_testbench_stimuli_serial_version(FILE* fp,
         fprintf(fp, "    %s%s%s[%d] = ~%s%s%s[%d];\n    #%.2f\n", 
                 gio_inout_prefix, iopad_verilog_model->prefix, top_tb_inout_reg_postfix, iopad_idx,
                 gio_inout_prefix, iopad_verilog_model->prefix, top_tb_inout_reg_postfix, iopad_idx,
-                (op_clock_period * 2 * ((int)(cur_spice_net_info->probability / cur_spice_net_info->density)+ iblock) / verilog_sim_timescale));
+                (((float)(int)((100 * op_clock_period) / verilog_sim_timescale) / 100) * ((int)(cur_spice_net_info->probability / cur_spice_net_info->density)+ iblock)));
         fprintf(fp, "    %s%s%s[%d] = ~%s%s%s[%d];\n    #%.2f;\n", 
                 gio_inout_prefix, iopad_verilog_model->prefix, top_tb_inout_reg_postfix, iopad_idx,
                 gio_inout_prefix, iopad_verilog_model->prefix, top_tb_inout_reg_postfix, iopad_idx,
-                (op_clock_period * 2 * ((int)((cur_spice_net_info->density / cur_spice_net_info->probability) * 2.5 + iblock)) / verilog_sim_timescale));
+                (((float)(int)((100 * op_clock_period) / verilog_sim_timescale) / 100) * ((int)(cur_spice_net_info->density / cur_spice_net_info->probability) * 2.5 + iblock)));
         fprintf(fp, "  end \n");
         fprintf(fp, "\n");
         found_mapped_inpad++;
