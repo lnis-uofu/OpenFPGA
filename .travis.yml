@@ -1,6 +1,6 @@
 language: cpp
 
-dist: trusty
+#dist: trusty
 sudo: required
 
 matrix:
