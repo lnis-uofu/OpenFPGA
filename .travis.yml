@@ -1,36 +1,47 @@
 language: cpp
 
 #dist: trusty
-sudo: required
-
-matrix:
-  include:
-    # works on Precise and Trusty
-    - os: linux
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - automake
-            - bash
-            - build-essential
-            - cmake
-            - curl
-            - doxygen
-            - gcc-4.9
-            - gcc-7
-            - g++-4.9
-            - gdb
-            - git
-            - gperf
-            - perl
-            - libx11-dev
-            - exuberant-ctags
+sudo: false
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test # For newer GCC
+    - george-edison55-precise-backports # For cmake
+    packages:
+    - autoconf
+    - automake
+    - bash
+    - bison
+    - build-essential
+    - cmake
+    - ctags
+    - curl
+    - doxygen
+    - flex
+    - fontconfig
+    - g++-4.9
+    - gcc-4.9
+    - gdb
+    - git
+    - gperf
+    - libcairo2-dev
+    - libevent-dev
+    - libfontconfig1-dev
+    - liblist-moreutils-perl
+    - libncurses5-dev
+    - libx11-dev
+    - libxft-dev
+    - libxml++2.6-dev
+    - perl
+    - python
+    - texinfo
+    - time
+    - valgrind
+    - zip
+    - qt5-default
 
 # Compiler
 compiler:
-  - clang
   - gcc
 
 before_install:
