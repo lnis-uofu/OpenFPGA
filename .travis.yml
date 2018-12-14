@@ -16,7 +16,6 @@ matrix:
             - bash
             - build-essential
             - cmake
-            - ctags
             - curl
             - doxygen
             - gcc-4.9
@@ -27,6 +26,7 @@ matrix:
             - gperf
             - perl
             - libx11-dev
+            - exuberant-ctags
 
       env:
          - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
