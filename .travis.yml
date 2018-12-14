@@ -28,16 +28,12 @@ matrix:
             - libx11-dev
             - exuberant-ctags
 
-      env:
-         - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
-
 # Compiler
 compiler:
   - clang
   - gcc
 
 before_install:
- - eval "${MATRIX_EVAL}"
 
 install:
  - make
