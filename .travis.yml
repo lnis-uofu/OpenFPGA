@@ -1,0 +1,51 @@
+language: cpp
+
+dist: trusty
+sudo: required
+
+matrix:
+  include:
+    # works on Precise and Trusty
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - automake
+            - bash
+            - build-essential
+            - cmake
+            - ctags
+            - curl
+            - doxygen
+            - gcc-4.9
+            - gcc-7
+            - g++-4.9
+            - gdb
+            - git
+            - gperf
+            - perl
+            - libx11-dev
+
+      env:
+         - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
+
+# Compiler
+compiler:
+  - clang
+  - gcc
+
+before_install:
+ - eval "${MATRIX_EVAL}"
+
+install:
+ - make
+
+script:
+
+after_failure:
+  - echo "success"
+
+after_success:
+  - echo "failure"
