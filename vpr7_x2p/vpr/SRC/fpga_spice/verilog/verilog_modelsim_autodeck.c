@@ -154,7 +154,13 @@ void dump_verilog_modelsim_proc_script(char* modelsim_proc_filename,
   fprintf(fp, "  \n");
 
   fprintf(fp, "proc add_waves {} {\n");
-  fprintf(fp, "  add wave -position insertpoint sim:/%s/*\n", circuit_top_tb_name);
+  fprintf(fp, "  add wave -position insertpoint sim:/%s/prog_clock \\\n\
+												sim:/%s/op_clock \\\n\
+												sim:/%s/in_* \\\n\
+												sim:/%s/out_*\n", circuit_top_tb_name,
+																  circuit_top_tb_name,
+																  circuit_top_tb_name,
+																  circuit_top_tb_name);
   fprintf(fp, "}\n");
 
 
@@ -286,7 +292,13 @@ void dump_verilog_modelsim_proc_auto_script(char* modelsim_proc_filename,
   fprintf(fp, "  \n");
 
   fprintf(fp, "proc add_waves {} {\n");
-  fprintf(fp, "  add wave -position insertpoint sim:/%s/*\n", circuit_top_tb_name);
+  fprintf(fp, "  add wave -position insertpoint sim:/%s/prog_clock \\\n\
+												sim:/%s/op_clock \\\n\
+												sim:/%s/in_* \\\n\
+												sim:/%s/out_* \n", circuit_top_tb_name,
+																  circuit_top_tb_name,
+																  circuit_top_tb_name,
+																  circuit_top_tb_name);
   fprintf(fp, "}\n");
 
 
@@ -418,7 +430,13 @@ void dump_verilog_modelsim_proc_auto_preconf_script(char* modelsim_proc_filename
   fprintf(fp, "  \n");
 
   fprintf(fp, "proc add_waves {} {\n");
-  fprintf(fp, "  add wave -position insertpoint sim:/%s/*\n", circuit_top_tb_name);
+  fprintf(fp, "  add wave -position insertpoint sim:/%s/prog_clock \\\n\
+												sim:/%s/op_clock \\\n\
+												sim:/%s/in_* \\\n\
+												sim:/%s/out_*\n", circuit_top_tb_name,
+																  circuit_top_tb_name,
+																  circuit_top_tb_name,
+																  circuit_top_tb_name);
   fprintf(fp, "}\n");
 
 
@@ -656,9 +674,8 @@ void dump_verilog_modelsim_top_auto_preconf_script(char* modelsim_top_auto_scrip
   fprintf(fp, "\n");
   
   fprintf(fp, "#in ms\n");
-  fprintf(fp, "set simtime %.4g\n", sim_time);
-  fprintf(fp, "set unit %s\n", 
-          sim_time_unit);
+  fprintf(fp, "set simtime 150\n");
+  fprintf(fp, "set unit us\n");
   fprintf(fp, "\n");
   
   fprintf(fp, "#Path were both tcl script are located\n");
