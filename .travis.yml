@@ -47,9 +47,8 @@ compiler:
 before_install:
 
 install:
- - make
 
-script:
+script: make
 
 after_failure:
   - echo "success"
