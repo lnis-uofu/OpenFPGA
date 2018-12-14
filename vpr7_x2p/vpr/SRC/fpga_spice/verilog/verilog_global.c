@@ -25,7 +25,7 @@ char* modelsim_top_script_name_postfix = "_runsim.tcl";
 char* modelsim_testbench_module_postfix = "_top_tb";
 char* modelsim_auto_testbench_module_postfix = "_top_auto_tb";
 char* modelsim_auto_preconf_testbench_module_postfix = "_top_auto_preconf_tb";
-char* modelsim_simulation_time_unit = "ms";
+char* modelsim_simulation_time_unit = "ns";
 
 char* verilog_top_postfix = "_top.v";
 char* bitstream_verilog_file_postfix = ".bitstream";

@@ -518,7 +518,7 @@ void dump_verilog_modelsim_top_script(char* modelsim_top_script_filename,
   fprintf(fp, "\n");
   
   fprintf(fp, "#in ms\n");
-  fprintf(fp, "set simtime %.4g\n", sim_time);
+  fprintf(fp, "set simtime %.18g\n", sim_time);
   fprintf(fp, "set unit %s\n", 
           sim_time_unit);
   fprintf(fp, "\n");
@@ -587,7 +587,7 @@ void dump_verilog_modelsim_top_auto_script(char* modelsim_top_auto_script_filena
   fprintf(fp, "\n");
   
   fprintf(fp, "#in ms\n");
-  fprintf(fp, "set simtime %.4g\n", sim_time);
+  fprintf(fp, "set simtime %.18g\n", sim_time);
   fprintf(fp, "set unit %s\n", 
           sim_time_unit);
   fprintf(fp, "\n");

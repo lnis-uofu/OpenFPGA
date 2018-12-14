@@ -164,7 +164,7 @@
         </delay>
       </measure>
       <stimulate>
-        <clock op_freq="auto" sim_slack="0.2" prog_freq="2.5e6">
+        <clock op_freq="200e6" sim_slack="0.2" prog_freq="10e6">
           <rise slew_time="20e-12" slew_type="abs"/>
           <fall slew_time="20e-12" slew_type="abs"/>
         </clock>
