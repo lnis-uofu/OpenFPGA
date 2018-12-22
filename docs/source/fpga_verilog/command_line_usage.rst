@@ -26,7 +26,8 @@ FPGA-Verilog Supported Options::
    "--fpga_verilog_print_modelsim_autodeck", "Generates the scripts necessary to the ModelSim simulation."
    "--fpga_verilog_modelsim_ini_path <string>", "Gives the path for the .ini necessary to ModelSim."
    "--fpga_verilog_print_top_testbench", "Print the full-chip-level testbench for the FPGA. Determines the type of autodeck."
-   "--fpga_verilog_print_top_auto_testbench <path_to_the_verilog_benchmark>", "Prints the testbench associated with the given benchmark. Determines the type of autodeck."
+   "--fpga_verilog_print_top_auto_testbench \
+   <path_to_the_verilog_benchmark>", "Prints the testbench associated with the given benchmark. Determines the type of autodeck."
 
 .. note:: The selected directory will contain the *Verilog top file* and three other folders. The folders are: 
 
