@@ -1,0 +1,91 @@
+# Benchmark "sync_4bits_add" written by ABC on Sat Dec 22 05:55:54 2018
+.model sync_4bits_add
+.inputs clk rst a0 a1 a2 a3 b0 b1 b2 b3 cin
+.outputs sumout0 sumout1 sumout2 sumout3 cout
+
+.latch        n33   reg_b[3] re        clk  0
+.latch        n38    reg_cin re        clk  0
+.latch        n43       cout re        clk  0
+.latch        n47    sumout0 re        clk  0
+.latch        n51    sumout1 re        clk  0
+.latch        n55    sumout2 re        clk  0
+.latch        n59    sumout3 re        clk  0
+.latch        n63   reg_a[0] re        clk  0
+.latch        n68   reg_a[1] re        clk  0
+.latch        n73   reg_a[2] re        clk  0
+.latch        n78   reg_a[3] re        clk  0
+.latch        n83   reg_b[0] re        clk  0
+.latch        n88   reg_b[1] re        clk  0
+.latch        n93   reg_b[2] re        clk  0
+
+.names b0 rst n83
+10 1
+.names b1 rst n88
+10 1
+.names b2 rst n93
+10 1
+.names b3 rst n33
+10 1
+.names cin rst n38
+10 1
+.names rst reg_b[2] reg_a[2] reg_b[3] reg_a[3] n67 n43
+0111-- 1
+011-1- 1
+01-1-0 1
+01--10 1
+0-11-0 1
+0-1-10 1
+0--11- 1
+.names reg_b[1] reg_cin reg_b[0] reg_a[0] reg_a[1] n67
+000-- 1
+00-0- 1
+0-00- 1
+0---0 1
+-00-0 1
+-0-00 1
+--000 1
+.names reg_cin reg_b[0] reg_a[0] rst n47
+0010 1
+0100 1
+1000 1
+1110 1
+.names reg_b[1] reg_a[1] rst reg_cin reg_b[0] reg_a[0] n51
+00011- 1
+0001-1 1
+000-11 1
+01000- 1
+0100-0 1
+010-00 1
+10000- 1
+1000-0 1
+100-00 1
+11011- 1
+1101-1 1
+110-11 1
+.names reg_b[2] reg_a[2] n67 rst n55
+0000 1
+0110 1
+1010 1
+1100 1
+.names reg_b[3] reg_a[3] rst reg_b[2] reg_a[2] n67 n59
+00011- 1
+0001-0 1
+000-10 1
+01000- 1
+0100-1 1
+010-01 1
+10000- 1
+1000-1 1
+100-01 1
+11011- 1
+1101-0 1
+110-10 1
+.names a0 rst n63
+10 1
+.names a1 rst n68
+10 1
+.names a2 rst n73
+10 1
+.names a3 rst n78
+10 1
+.end
