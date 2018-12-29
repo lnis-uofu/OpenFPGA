@@ -8,7 +8,7 @@ Contrary to ModelSim, we do not generate yet the scripts in order to directly im
 .. _Layout_Diagram:
 
 .. figure:: ./figures/Layout_Diagram.png
-   :scale: 50%
+   :scale: 30%
    :alt: Diagram of the Layouting process
 
 :numref:`Layout_Diagram` shows the different steps involved into realizing the layout for any design. CTS stands for Clock Tree Synthesys and PPA stands for Power-Performance-Area. First, we create the floorplan with the different tiles involved in the FPGA i.e. the CLBs and place them. Then the clock tree is generated. Finally the design is routed and the PPA signoff is realized. Coupled with FPGA-SPICE, we get silicon level analysis on the design.
@@ -18,7 +18,7 @@ In :numref:`Layout_Floorplan`, we show the result we get from the floorplanning 
 .. _Layout_Floorplan:
 
 .. figure:: ./figures/fpga_asap_10x10_floorplan.png
-   :scale: 50%
+   :scale: 30%
    :alt: Florplan of a 10x10 FPGA
 
 
