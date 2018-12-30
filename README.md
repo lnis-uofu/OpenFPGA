@@ -1,5 +1,8 @@
 # Getting Started with FPGA-SPICE
 
+[![Build Status](https://travis-ci.org/LNIS-Projects/OpenFPGA.svg?branch=master)](https://travis-ci.org/LNIS-Projects/OpenFPGA)
+[![Documentation Status](https://readthedocs.org/projects/openfpga/badge/?version=master)](https://openfpga.readthedocs.io/en/master/?badge=master)
+
 ## Introduction
 
 FPGA-SPICE is an extension to VPR. It is an IP Verilog Generator allowing reliable and fast testing of heterogeneous architectures.
