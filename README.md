@@ -19,6 +19,9 @@ We currently implemented it for:
 
 Please note that those were the versions we tested the software for. It might work with earlier versions and other distributions.
 
+## Documentation
+OpenFPGA's [full documentation](https://openfpga.readthedocs.io/en/master/) includes tutorials, descriptions of the design flow, and tool options.
+
 ## Examples
 
 You can find in the folder **./examples**. This will help you get in touch with the software and test different configurations to see how FPGA-SPICE reacts to them. 
