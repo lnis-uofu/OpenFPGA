@@ -56,8 +56,8 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
-.. _yosys_doc: http://www.clifford.at/yosys/
-.. _yosys_github: https://github.com/YosysHQ/yosys
 .. _vpr_doc: https://docs.verilogtorouting.org/en/latest/
 .. _vpr_github: https://github.com/verilog-to-routing/vtr-verilog-to-routing
+.. _yosys_doc: http://www.clifford.at/yosys/
+.. _yosys_github: https://github.com/YosysHQ/yosys
 .. _xml_vtr: https://docs.verilogtorouting.org/en/latest/arch/reference/
