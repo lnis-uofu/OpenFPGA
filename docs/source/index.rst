@@ -41,7 +41,7 @@ Welcome to OpenFPGA's documentation!
    contact
    reference
    
-For more information on the VTR see vtr_doc_ // vtr_github_ 
+For more information on the VTR see [vtr_doc](https://docs.verilogtorouting.org/en/latest/) // [vtr_github](https://github.com/verilog-to-routing/vtr-verilog-to-routing) 
 
 For more information on the Yosys see yosys_doc_ // yosys_github_
 
