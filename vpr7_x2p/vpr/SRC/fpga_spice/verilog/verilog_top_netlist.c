@@ -1640,11 +1640,19 @@ void dump_verilog_top_testbench_ports(FILE* fp,
       assert((VPACK_INPAD == logical_block[iblock].type)||(VPACK_OUTPAD == logical_block[iblock].type));
       fprintf(fp, "//----- Blif Benchmark inout %s is mapped to FPGA IOPAD %s[%d] -----\n", 
               logical_block[iblock].name, gio_inout_prefix, iopad_idx);
-      fprintf(fp, "wire in_%s_%s_%d_;\n",
-              logical_block[iblock].name, gio_inout_prefix, iopad_idx);
-      fprintf(fp, "assign in_%s_%s_%d_ = %s%s[%d];\n",
-              logical_block[iblock].name, gio_inout_prefix, iopad_idx,
-              gio_inout_prefix, iopad_verilog_model->prefix, iopad_idx);
+	  if(VPACK_INPAD == logical_block[iblock].type){
+        fprintf(fp, "wire in_%s_%s_%d_;\n",
+                logical_block[iblock].name, gio_inout_prefix, iopad_idx);
+        fprintf(fp, "assign in_%s_%s_%d_ = %s%s[%d];\n",
+                logical_block[iblock].name, gio_inout_prefix, iopad_idx,
+                gio_inout_prefix, iopad_verilog_model->prefix, iopad_idx);
+      } else{
+        fprintf(fp, "wire %s_%s_%d_;\n",
+                logical_block[iblock].name, gio_inout_prefix, iopad_idx);
+        fprintf(fp, "assign %s_%s_%d_ = %s%s[%d];\n",
+                logical_block[iblock].name, gio_inout_prefix, iopad_idx,
+                gio_inout_prefix, iopad_verilog_model->prefix, iopad_idx);
+		}
     }
   }
 
