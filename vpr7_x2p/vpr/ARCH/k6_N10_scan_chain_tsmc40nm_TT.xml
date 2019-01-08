@@ -278,7 +278,7 @@
         <port type="sram" prefix="sram" size="1"/>
       </circuit_model>
       <!--DFF subckt ports should be defined as <D> <Q> <CLK> <RESET> <SET>  -->
-      <circuit_model type="ff" name="static_dff" prefix="dff" spice_netlist="/research/ece/lnis/USERS/alacchi/Current_release/OpenFPGA/vpr7_x2p/vpr/SpiceNetlists/ff.sp" verilog_netlist="/research/ece/lnis/USERS/alacchi/Current_release/OpenFPGA/vpr7_x2p/vpr/VerilogNetlists/ff.v">
+      <circuit_model type="ff" name="static_dff" prefix="dff" spice_netlist="${verilog_path}/../SpiceNetlists/ff.sp" verilog_netlist="${verilog_path}/../VerilogNetlists/ff.v">
          <design_technology type="cmos"/>
          <input_buffer exist="on" circuit_model_name="INVTX1"/>
          <output_buffer exist="on" circuit_model_name="INVTX1"/>
@@ -299,7 +299,7 @@
         <port type="output" prefix="out" size="1"/>
         <port type="sram" prefix="sram" size="64"/>
       </circuit_model>
-      <circuit_model type="sram" name="sram6T" prefix="sram" spice_netlist="/research/ece/lnis/USERS/alacchi/Current_release/OpenFPGA/vpr7_x2p/vpr/SpiceNetlists/sram.sp" verilog_netlist="/research/ece/lnis/USERS/alacchi/Current_release/OpenFPGA/vpr7_x2p/vpr/VerilogNetlists/sram.v" >
+      <circuit_model type="sram" name="sram6T" prefix="sram" spice_netlist="${verilog_path}/../SpiceNetlists/sram.sp" verilog_netlist="${verilog_path}/../VerilogNetlists/sram.v" >
         <design_technology type="cmos"/>
         <input_buffer exist="on" circuit_model_name="INVTX1"/>
         <output_buffer exist="on" circuit_model_name="INVTX1"/>
@@ -307,7 +307,7 @@
         <port type="input" prefix="in" size="1"/>
         <port type="output" prefix="out" size="2"/>
       </circuit_model>
-      <circuit_model type="sram" name="sram6T_blwl" prefix="sram_blwl" spice_netlist="/research/ece/lnis/USERS/alacchi/Current_release/OpenFPGA/vpr7_x2p/vpr/SpiceNetlists/sram.sp" verilog_netlist="/research/ece/lnis/USERS/alacchi/Current_release/OpenFPGA/vpr7_x2p/vpr/VerilogNetlists/sram.v">
+      <circuit_model type="sram" name="sram6T_blwl" prefix="sram_blwl" spice_netlist="${verilog_path}/../SpiceNetlists/sram.sp" verilog_netlist="${verilog_path}/../VerilogNetlists/sram.v">
 
         <design_technology type="cmos"/>
         <input_buffer exist="on" circuit_model_name="INVTX1"/>
@@ -320,7 +320,7 @@
         <port type="wl" prefix="wl" size="1" default_val="0" inv_circuit_model_name="INVTX1"/>
       </circuit_model>
       <!--Scan-chain DFF subckt ports should be defined as <D> <Q> <Qb> <CLK> <RESET> <SET>  -->
-      <circuit_model type="sff" name="sc_dff" prefix="scff" spice_netlist="/research/ece/lnis/USERS/alacchi/Current_release/OpenFPGA/vpr7_x2p/vpr/SpiceNetlists/ff.sp" verilog_netlist="/research/ece/lnis/USERS/alacchi/Current_release/OpenFPGA/vpr7_x2p/vpr/VerilogNetlists/ff.v">
+      <circuit_model type="sff" name="sc_dff" prefix="scff" spice_netlist="${verilog_path}/../SpiceNetlists/ff.sp" verilog_netlist="${verilog_path}/../VerilogNetlists/ff.v">
          <design_technology type="cmos"/>
          <input_buffer exist="on" circuit_model_name="INVTX1"/>
          <output_buffer exist="on" circuit_model_name="INVTX1"/>
@@ -331,7 +331,7 @@
          <port type="output" prefix="Q" size="2"/>
          <port type="clock" prefix="prog_clk" size="1" is_global="true" default_val="0" is_prog="true" is_prog="true"/>
       </circuit_model>
-      <circuit_model type="iopad" name="iopad" prefix="iopad" spice_netlist="/research/ece/lnis/USERS/alacchi/Current_release/OpenFPGA/vpr7_x2p/vpr/SpiceNetlists/io.sp" verilog_netlist="/research/ece/lnis/USERS/alacchi/Current_release/OpenFPGA/vpr7_x2p/vpr/VerilogNetlists/io.v">
+      <circuit_model type="iopad" name="iopad" prefix="iopad" spice_netlist="${verilog_path}/../SpiceNetlists/io.sp" verilog_netlist="${verilog_path}/../VerilogNetlists/io.v">
         <design_technology type="cmos"/>
         <input_buffer exist="on" circuit_model_name="INVTX1"/>
         <output_buffer exist="on" circuit_model_name="INVTX1"/>
