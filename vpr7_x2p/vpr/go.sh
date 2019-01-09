@@ -2,17 +2,30 @@
 # Example of how to run vprset circuit_name = pip_add
 #set circuit_name = pip_add
 set circuit_name = sync_4bits_add
-set arch_file = ${PWD}/ARCH/k6_N10_scan_chain_tsmc40nm_TT.xml
 set circuit_blif = ${PWD}/Circuits/${circuit_name}.blif
+set arch_file = ${PWD}/ARCH/k6_N10_scan_chain_ptm45nm_TT.xml
+set arch_file_template = ${PWD}/ARCH/k6_N10_scan_chain_template.xml
 set circuit_act = ${PWD}/Circuits/${circuit_name}.act
 set circuit_verilog = ${PWD}/Circuits/${circuit_name}.v
 set spice_output = ${PWD}/spice_demo 
 set verilog_output = ${PWD}/verilog_demo 
 set modelsim_ini = /uusoc/facility/cad_tools/Mentor/modelsim10.7b/modeltech/modelsim.ini
+set openfpga_path = ${PWD}/../..
 
 # Make sure a clean start
 rm -rf ${spice_output}
 rm -rf ${verilog_output}
+
+# Recreate the paths to direct to the right place
+
+cp ${arch_file_template} ${arch_file}
+sed 's/OPENFPGAPATH/"${openfpga_path}"/' ${arch_file}
+
+echo "*******************************"
+echo "THIS SCRIPT NEEDS TO BE SOURCED\n"
+echo "source ./go.sh"
+echo "*******************************"
+
 
 # Pack, place, and route a heterogeneous FPGA
 # Packing uses the AAPack algorithm
