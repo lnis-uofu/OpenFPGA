@@ -16,16 +16,16 @@ set openfpga_path = ${PWD}/../..
 rm -rf ${spice_output}
 rm -rf ${verilog_output}
 
-# Recreate the paths to direct to the right place
-
-cp ${arch_file_template} ${arch_file}
-sed 's/OPENFPGAPATH/"${openfpga_path}"/' ${arch_file}
-
 echo "*******************************"
-echo "THIS SCRIPT NEEDS TO BE SOURCED\n"
+echo "THIS SCRIPT NEEDS TO BE SOURCED"
 echo "source ./go.sh"
 echo "*******************************"
 
+sed "s:OPENFPGAPATH:${openfpga_path}:g" ${arch_file_template} > ${arch_file} 
+
+#Changes the paths in the ARCH file used
+
+perl ARCH/use_template.pl
 
 # Pack, place, and route a heterogeneous FPGA
 # Packing uses the AAPack algorithm
