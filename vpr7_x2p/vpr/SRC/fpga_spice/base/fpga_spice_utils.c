@@ -5900,10 +5900,10 @@ int get_pb_graph_node_wired_lut_logical_block_index(t_pb_graph_node* cur_pb_grap
     }
   }
   /* Make sure we only have 1 used input pin */
-  //if (1 != num_used_lut_input_pins) {
-    assert (0 < num_used_lut_input_pins);
-  //}
- 
+  if (1 != num_used_lut_input_pins) {
+    assert (-1 < num_used_lut_input_pins);
+  }
+
   /* vpr_printf(TIO_MESSAGE_INFO, "Wired LUT output vpack_net_num is %d\n", lut_output_vpack_net_num); */
  
   /* Find the used output*/ 
@@ -6986,7 +6986,9 @@ void stats_mux_spice_model_pb_type_rec(t_llist** muxes_head,
         continue;
       }
       interc_spice_model = cur_pb_type->modes[imode].interconnect[jinterc].spice_model;
-      assert(NULL != interc_spice_model); 
+      if (NULL == interc_spice_model) {
+      assert(NULL != interc_spice_model);
+      } 
       check_and_add_mux_to_linked_list(muxes_head,
                                        cur_pb_type->modes[imode].interconnect[jinterc].fan_in,
                                        interc_spice_model);

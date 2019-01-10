@@ -168,7 +168,33 @@ void match_pb_types_spice_model_rec(t_pb_type* cur_pb_type,
     /* Map pb_type ports to SPICE model ports*/
     map_pb_type_port_to_spice_model_ports(cur_pb_type,cur_pb_type->spice_model);
     return;
+  } else {
+    /* Find default spice model if this is a primitive block */
+    if (LUT_CLASS == cur_pb_type->class_type) { 
+      cur_pb_type->spice_model = get_default_spice_model(SPICE_MODEL_LUT, num_spice_model, spice_models);
+      /* Complete the name */
+      cur_pb_type->spice_model_name = my_strdup(cur_pb_type->spice_model->name);
+      if (NULL == cur_pb_type->spice_model) {
+        vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,LINE[%d]) Fail to find a defined SPICE model called %s, in pb_type(%s)!\n",__FILE__, __LINE__, cur_pb_type->spice_model_name, cur_pb_type->name);
+        exit(1);
+      }
+      /* Map pb_type ports to SPICE model ports*/
+      map_pb_type_port_to_spice_model_ports(cur_pb_type,cur_pb_type->spice_model);
+      return;
+    } else if (LATCH_CLASS == cur_pb_type->class_type) { 
+      cur_pb_type->spice_model = get_default_spice_model(SPICE_MODEL_FF, num_spice_model, spice_models);
+      /* Complete the name */
+      cur_pb_type->spice_model_name = my_strdup(cur_pb_type->spice_model->name);
+      if (NULL == cur_pb_type->spice_model) {
+        vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,LINE[%d]) Fail to find a defined SPICE model called %s, in pb_type(%s)!\n",__FILE__, __LINE__, cur_pb_type->spice_model_name, cur_pb_type->name);
+        exit(1);
+      }
+      /* Map pb_type ports to SPICE model ports*/
+      map_pb_type_port_to_spice_model_ports(cur_pb_type,cur_pb_type->spice_model);
+      return;
+    }
   }
+
   /* Traversal the hierarchy*/
   for (imode = 0; imode < cur_pb_type->num_modes; imode++) {
     /* Task 1: Find the interconnections and match the spice_model */
