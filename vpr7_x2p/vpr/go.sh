@@ -23,10 +23,6 @@ echo "*******************************"
 
 sed "s:OPENFPGAPATH:${openfpga_path}:g" ${arch_file_template} > ${arch_file} 
 
-#Changes the paths in the ARCH file used
-
-perl ARCH/use_template.pl
-
 # Pack, place, and route a heterogeneous FPGA
 # Packing uses the AAPack algorithm
 ./vpr ${arch_file} ${circuit_blif} --full_stats --nodisp --activity_file ${circuit_act} --route_chan_width 30 --fpga_spice --fpga_spice_rename_illegal_port --fpga_spice_dir ${spice_output} --fpga_spice_print_top_testbench --fpga_spice_print_grid_testbench --fpga_spice_print_cb_testbench --fpga_spice_print_sb_testbench --fpga_spice_print_lut_testbench --fpga_spice_print_hardlogic_testbench --fpga_spice_print_pb_mux_testbench --fpga_spice_print_cb_mux_testbench --fpga_spice_print_sb_mux_testbench --fpga_verilog --fpga_verilog_dir ${verilog_output} --fpga_verilog_print_top_testbench --fpga_verilog_print_top_auto_testbench ${circuit_verilog} --fpga_verilog_print_modelsim_autodeck --fpga_verilog_modelsim_ini_path ${modelsim_ini} --fpga_verilog_include_timing --fpga_verilog_init_sim
