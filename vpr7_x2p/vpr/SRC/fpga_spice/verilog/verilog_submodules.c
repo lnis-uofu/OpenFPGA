@@ -1179,6 +1179,8 @@ void dump_verilog_cmos_mux_submodule(FILE* fp,
   t_spice_model_port** output_port = NULL;
   t_spice_model_port** sram_port = NULL;
 
+  enum e_spice_model_structure cur_mux_structure;
+
   /* Find the basis subckt*/
   char* mux_basis_subckt_name = NULL;
   char* mux_special_basis_subckt_name = NULL;
@@ -1261,9 +1263,15 @@ void dump_verilog_cmos_mux_submodule(FILE* fp,
   /* Print local vdd and gnd*/
   fprintf(fp, ");");
   fprintf(fp, "\n");
+
+  /* Handle the corner case: input size = 2  */
+  cur_mux_structure = spice_model.design_tech_info.structure;
+  if (2 == spice_mux_arch.num_input) {
+    cur_mux_structure = SPICE_MODEL_STRUCTURE_ONELEVEL;
+  }
   
   /* Print internal architecture*/ 
-  switch (spice_model.design_tech_info.structure) {
+  switch (cur_mux_structure) {
   case SPICE_MODEL_STRUCTURE_TREE:
     dump_verilog_cmos_mux_tree_structure(fp, mux_basis_subckt_name, 
                                          spice_model, spice_mux_arch, num_sram_port, sram_port);

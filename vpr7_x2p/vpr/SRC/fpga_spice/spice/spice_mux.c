@@ -796,10 +796,9 @@ void fprint_spice_mux_model_cmos_subckt(FILE* fp,
   fprintf(fp, "\n");
 
   /* Handle the corner case: input size = 2  */
-  if (2 == mux_size) {
+  cur_mux_structure = spice_model.design_tech_info.structure;
+  if (2 == spice_mux_arch.num_input) {
     cur_mux_structure = SPICE_MODEL_STRUCTURE_ONELEVEL;
-  } else {
-    cur_mux_structure = spice_model.design_tech_info.structure;
   }
   
   /* Print internal architecture*/ 
