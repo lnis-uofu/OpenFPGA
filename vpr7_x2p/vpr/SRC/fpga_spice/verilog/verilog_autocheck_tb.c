@@ -694,7 +694,7 @@ void dump_verilog_top_preconf_testbench_stimuli(FILE* fp,
 	fprintf(fp, "    for(count = %d; count > -1 ; count = count - 1) begin\n", (num_scffs - 1));
 	fprintf(fp, "        tmp[count] = $fgetc(file);\n");
 	fprintf(fp, "    end\n");
-	fprintf(fp, "    $signal_force(\"U0/%s_scff_in\", tmp, 0, 1, , 1);\n", scff_mem_model->prefix );
+	fprintf(fp, "    $signal_force(\"U0/%s_scff_out\", tmp, 0, 1, , 1);\n", scff_mem_model->prefix );
 	fprintf(fp, "    $fclose(file);\n");
 	fprintf(fp, "end\n");
 	fprintf(fp, "  // End loading configuration as initial state\n\n");
