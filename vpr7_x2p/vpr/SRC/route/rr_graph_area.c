@@ -426,9 +426,9 @@ void count_unidir_routing_transistors(t_segment_inf * segment_inf,
 
                     /* Xifan TANG: cb switches*/
                     if (OPEN == switches_to_cblock[to_node]) {
-                      switches_to_cblock[to_node] = switch_type;
+                      switches_to_cblock[to_node] = rr_node[from_node].switches[iedge];
                     } else {
-                      assert(switches_to_cblock[to_node] == switch_type);
+                      assert(switches_to_cblock[to_node] == rr_node[from_node].switches[iedge]);
                     }
                     /* END */
 
