@@ -1,4 +1,9 @@
 #!/bin/sh
+echo "#################################################"
+echo "The current shell environment is the following:"
+echo $0
+echo "#################################################"
+
 # Example of how to run vprset circuit_name = pip_add
 #set circuit_name = pip_add
 set circuit_name = sync_4bits_add

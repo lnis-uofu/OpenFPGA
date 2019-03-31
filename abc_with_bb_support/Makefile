@@ -26,6 +26,9 @@ MODULES := src/base/abc src/base/abci src/base/cmd \
 
 default: $(PROG)
 
+$(info ###################################)
+$(info gcc-4.9 is necessary to compile abc)
+$(info ###################################)
 #OPTFLAGS  := -DNDEBUG -O3
 OPTFLAGS  := -g -O
 
