@@ -24,11 +24,17 @@ MODULES := src/base/abc src/base/abci src/base/cmd \
 	src/sat/bsat src/sat/csat src/sat/msat src/sat/fraig \
 	src/phys/place 	
 
+CC_VERSION := $(shell echo $(CC) | sed 's/gcc-//g')
+#GCC_VERSION := $(shell gcc --version | grep ^gcc | sed 's/^.* //g')
+#GCC_MAJOR := $(shell echo $(GCC_VERSION) | cut -d'.' -f1)
+#GCC_MINOR := $(shell echo $(GCC_VERSION) | cut -d'.' -f2)
+#GCC_VERSION := $(GCC_MAJOR).$(GCC_MINOR)
+
+#ifeq ($(filter $(GCC_VERSION) $(CC_VERSION),4.9),)
+ifeq ($(CC_VERSION),4.9)
+  
 default: $(PROG)
 
-$(info ###################################)
-$(info gcc-4.9 is necessary to compile abc)
-$(info ###################################)
 #OPTFLAGS  := -DNDEBUG -O3
 OPTFLAGS  := -g -O
 
@@ -82,4 +88,9 @@ lib$(PROG).a: $(OBJ)
 
 docs:
 	doxygen doxygen.conf
+else
+
+$(error gcc-4.9 is necessary to compile abc)
+
+endif
 

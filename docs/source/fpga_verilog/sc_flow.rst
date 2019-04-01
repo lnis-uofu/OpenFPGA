@@ -3,7 +3,7 @@ From Verilog to Layout
 
 The generated Verilog code can be used through a semi-custom design flow to generate the layout.
 
-Contrary to ModelSim, we do not generate yet the scripts in order to directly implement the layout but results are already promising. We succeed in generating the layout for a 10x10 FPGA.
+Because of the commercial nature of the semi-custom design tools we are using,  we cannot share the different scripts that we are using. However, we can show the results to serve as a proof-of-concept and encourage research through it. 
  
 .. _Layout_Diagram:
 

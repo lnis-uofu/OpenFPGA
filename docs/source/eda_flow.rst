@@ -19,5 +19,37 @@ FPGA-Bitstream is the part of the flow in charge of the functional verification 
 How to compile
 ==============
 Running the Makefile in the root of the released package can compile all the source codes. 
-Guides can be found in the *compilation* directory. We tested it for MacOS High Sierra 10.13.4, Ubuntu 18.04 and Red Hat 7.5. This list is not exhaustive as other distributions could totally work as well, we just did not verify.
-The released package includes a version of VPR with FPGA-SPICE support, Yosys and ACE2.
+Guides can be found in the *compilation* directory in the main folder. We tested it for MacOS High Sierra 10.13.4, Ubuntu 18.04 and Red Hat 7.5. This list is not exhaustive as other distributions could totally work as well.
+
+As a general rule, the compilation follows these steps:
+
+1) You clone the repository with:
+git clone --recurse-submodules https://github.com/LNIS-Projects/OpenFPGA,git
+
+Two different approaches exist from then on: Either you need the full flow or you just need the extended version of VPR.
+If you need the full flow:
+
+2) Go into the folder you just cloned and make the different submodules through a global Makefile:
+cd OpenFPGA 
+make
+OR 
+make -j 
+(if you have multiple cores. This will make the compilation way faster.) 
+
+If you only need vpr:
+cd OpenFPGA/vpr7_x2p
+make / make -j
+
+3) Architectures, circuits and already written scripts exist to allow you to test the flow without having to provide any new inofrmation to the system. for this:
+cd vpr7_x2p (if not done already)
+cd vpr
+source ./go.sh
+
+go.sh is a script linking to a testing architecture and a simple circuit. The output will be in the folders spice_demo and verilog_demo.
+
+4) If youi only need to see the new options implemented in vpe, do:
+./vpr
+
+This step will show you all the different options which were added on top of VPR to enable deeper analysis of FPGA architectures.
+
+The released package includes a version of VPR with FPGA-SPICE,Verilog and Bitstream support, Yosys and ACE2.

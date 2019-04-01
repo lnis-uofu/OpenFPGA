@@ -32,7 +32,7 @@ FPGA-Verilog Supported Options::
 .. note:: The selected directory will contain the *Verilog top file* and three other folders. The folders are: 
 
 	* **sub_module:** contains each module verilog file and is more detailed in the next part *Verilog Output File Format*. 
-	* **routing:** contains the Verilog routing files. 
+	* **routing:** contains the Verilog for the connection blocks and the switch boxes. 
 	* **lb:** contains the grids Verilog files.
 
 
