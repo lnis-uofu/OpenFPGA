@@ -3,7 +3,7 @@ Run SPICE simulation
 
 * Simulation results 
 
-The HSPICE simulator creates a LIS file (\*.lis) to store the results. In each LIS file, you can find the leakage power and dynamic power of each module, as well the total leakage power and the total dynamic power of all the modules in a SPICE netlist.
+The HSPICE simulator creates an LIS file (\*.lis) to store the results. In each LIS file, you can find the leakage power and dynamic power of each module, as well the total leakage power and the total dynamic power of all the modules in a SPICE netlist.
 
 The following is an example of simulation results of a pb_mux testbench.::
 
@@ -25,7 +25,7 @@ The following is an example of simulation results of a pb_mux testbench.::
   
   Therefore, the total energy per cycle of all the multiplexers in this testbench should be the sum of total_energy_per_cycle_srams and total_energy_per_cycle_pb_mux.
 
-  Similarly, the total leakage power of all the multiplexers in this testbench should the sum of total_leakage_srams and  total_leakage_power_pb_mux.
+  Similarly, the total leakage power of all the multiplexers in this testbench should be the sum of total_leakage_srams and  total_leakage_power_pb_mux.
 
   The leakage power is measured for the first clock cycle, where FPGA-SPICE set all the voltage stimuli in constant voltage levels.
 
