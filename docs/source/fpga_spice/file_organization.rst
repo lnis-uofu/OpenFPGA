@@ -3,14 +3,14 @@ Hierarchy of SPICE Output Files
 
 All the generated SPICE netlists are located in the <spice_dir> as you specify in the command-line options.
 Under the <spice_dir>, FPGA-SPICE creates a number of folders:  include, subckt, lut_tb, dff_tb, grid_tb, pb_mux_tb, cb_mux_tb, sb_mux_tb, top_tb, results. Under the <spice_dir>, FPGA-SPICE also creates a shell script called run_hspice_sim.sh, which run all the simulations for all the testbenches.
-The folders contain the sub-circuits and testbenches and their contents are shown as following.
+The folders contain the sub-circuits and testbenches, and their contents are shown as follows.
 
 .. csv-table:: Folder hierarchy of FPGA-SPICE
    :header: "Folder", "Content" 
    :widths: 10, 20
-    	
-   "includes", "The header files which contain the parameters for stimulate and measurement, as defined in <tech_lib>"   
-   "subckt", "Contain all the auto-generated sub-circuits, such as inverters, buffers, transmission gates, multiplexers, LUTs and even logic blocks, connection boxes and switch blocks."
+        
+   "includes", "The header files which contain the parameters for stimuli and measurement, as defined in <tech_lib>."   
+   "subckt", "Contain all the auto-generated sub-circuits, such as inverters, buffers, transmission gates, multiplexers, LUTs, and even logic blocks, connection boxes, and switch blocks."
    "lut_tb", "Contain all the testbenches for LUTs. This folder is created only when option print_spice_lut_testbench is enabled."
    "dff_tb", "Contain all the testbenches for FFs. This folder is created only when option print_spice_dff_testbench is enabled."
    "grid_tb", "Contain all the testbenches for logic blocks (grid-level testbenches). This folder is created only when option print_spice_grid_testbench is enabled."
