@@ -1,11 +1,11 @@
 Link circuit modules
 --------------------
-Each defined SPICE model should be linked to a FPGA module defined in the original part of architecture descriptions. It helps FPGA-SPICE creating the SPICE netlists for logic/routing blocks. Since the original part lacks such support, we create a few XML properties to link to Circuit models.
+Each defined SPICE model should be linked to an FPGA module defined in the original part of architecture descriptions. It helps FPGA-SPICE creating the SPICE netlists for logic/routing blocks. Since the original part lacks such support, we create a few XML properties to link to Circuit models.
 
 SRAM
 ====
 
-To link the defined circuit model of SRAM into the FPGA architecture description, a new line in XML format should be added under the XML node device. The new XML node is named as sram, which defines the area of a SRAM and the name of circuit model to be linked. And example is shown as follows:
+To link the defined circuit model of SRAM into the FPGA architecture description, a new line in XML format should be added under the XML node device. The new XML node is named as sram, which defines the area of an SRAM and the name of the circuit model to be linked. An example is shown as follows:
 
 .. code-block:: xml
 
@@ -16,11 +16,11 @@ To link the defined circuit model of SRAM into the FPGA architecture description
     <verilog organization="string" circuit_model_name="scff"/>
   </sram>
 
-* **area:** is expressed in terms of the number of minimum width transistors. The SRAM area defined in this line is used in the area estimation of global routing multiplexers. circuit_model_name should match the name of circuit model that have been defined under XML node module_circuit_model. The type of the linked circuit model should be sram.
+* **area:** is expressed in terms of the number of minimum width transistors. The SRAM area defined in this line is used in the area estimation of global routing multiplexers. circuit_model_name should match the name of the circuit model that has been defined under XML node module_circuit_model. The type of the linked circuit model should be sram.
 
 * **organization:** [scan-chain|memory_bank|standalone], is the type of configuration circuits.
 
-:numref:`fig_sram` illustrates an example where a memory organisation using memory decoders and 6-transistor SRAMs.
+:numref:`fig_sram` illustrates an example where a memory organization using memory decoders and 6-transistor SRAMs.
 
 .. _fig_sram:
 
@@ -44,7 +44,7 @@ Here is an example.
 Switch Boxes
 =============
 
-Original VPR architecture description contains a XML node called switchlist under which all the multiplexers of switch blocks are described.
+Original VPR architecture description contains an XML node called switchlist under which all the multiplexers of switch blocks are described.
 To link a defined SPICE model to a multiplexer in the switch blocks, a new XML property circuit_model_name should be added to the descriptions.
 
 Here is an example:
@@ -61,7 +61,7 @@ Here is an example:
 Connection Blocks
 ================
 
-To link the defined SPICE model of multiplexer to the Connection Blocks, a circuit_model_name should be added to the definition of Connection Blocks switches.  However, the original architecture descriptions do not offer a switch description for connection boxes as they do for the switch blocks.
+To link the defined SPICE model of the multiplexer to the Connection Blocks, a circuit_model_name should be added to the definition of Connection Blocks switches.  However, the original architecture descriptions do not offer a switch description for connection boxes as they do for the switch blocks.
 Therefore, FPGA-SPICE requires a new XML node called **cblock** under the root XML node architecture, where a switch for connection blocks can be defined.
 
 Here is the example:
@@ -77,7 +77,7 @@ Here is the example:
 Channel Wire Segments
 =====================
 
-Simliar to the Switch Boxes and Connection Blocks, the channel wire segments in the original architecture descriptions can be adapted to provide a link to the defined circuit model.
+Similar to the Switch Boxes and Connection Blocks, the channel wire segments in the original architecture descriptions can be adapted to provide a link to the defined circuit model.
 
 .. code-block:: xml
 
@@ -90,7 +90,7 @@ Simliar to the Switch Boxes and Connection Blocks, the channel wire segments in 
 Primitive Blocks inside Configurable Logic Blocks
 =================================================
 
-The architecture description employs a hierarchy of pb_types to depict the sub modules and complex interconnections inside logic blocks. Each leaf node and interconnection in pb_type hierarchy should be linked to a circuit model.
+The architecture description employs a hierarchy of pb_types to depict the sub-modules and complex interconnections inside logic blocks. Each leaf node and interconnection in the pb_type hierarchy should be linked to a circuit model.
 
 .. code-block:: xml
 
@@ -107,10 +107,10 @@ The architecture description employs a hierarchy of pb_types to depict the sub m
     </interconnect>
   </pb_type>
 
-* **circuit_model_name:** should match a SPICE model defined under module_circuit_models. For the interconnection type direct, the type of the linked SPICE model should be wire. For mux, the type of the linked SPICE model should be mux. For complete, the type of the linked SPICE model can be either mux or wire, depending on the case.
+* **circuit_model_name:** should match a SPICE model defined under module_circuit_models. For the interconnection type direct, the type of the linked SPICE model should be wire. For mux, the type of linked SPICE model should be mux. For complete, the type of the linked SPICE model can be either mux or wire, depending on the case.
 
 * **idle_mode_name:** tell the name of the mode that the pb_type is configured to be by default. This is critical in building SPICE netlists for unused logic blocks.
 
-* **physical_mode_name:** tell the name of the mode that describes the physical implementation of the block. This is critical in modeling actual circuit designs and architecture of a FPGA.
+* **physical_mode_name:** tell the name of the mode that describes the physical implementation of the block. This is critical in modeling actual circuit designs and architecture of an FPGA.
 
 
