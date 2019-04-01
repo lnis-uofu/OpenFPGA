@@ -15,7 +15,7 @@ These properties define the options that will be printed in the top SPICE netlis
 
 * **post:** [on|off]. Specify if the simulation waveforms should be printed out after SPICE simulations. In all the SPICE netlists, it will show as .option POST when turned on.
 
-.. note:: when the SPICE netlists are large or a long simulation time period is defined, the post option is recommended to be off. If not, huge disk space will be occupied by the waveform files.
+.. note:: when the SPICE netlists are large or a long simulation duration is defined, the post option is recommended to be off. If not, huge disk space will be occupied by the waveform files.
 
 * **captab:** [on|off]. Specify if the capacitances of all the nodes in the SPICE netlists will be printed out. In the top SPICE netlists, it will show as .option CAPTAB when turned on. When turned on, the SPICE simulation runtime may increase.
 
@@ -32,16 +32,16 @@ These properties define the options that will be printed in the top SPICE netlis
 
 Define stimulates for the clock signal.
 
-* **op_freq:** either auto or a float number (unit:[Hz])  Specify the operation clock frequency that are used in SPICE simulations. This frequency is used in testbenches for operation phase simulation. Note that this is a mandatory option. Users have to specify either this frequency is automatically determined by assigning “auto”, or give an exact number. If this clock frequency is specified. The sim_slack option is disgarded.
+* **op_freq:** either auto or a float number (unit:[Hz])  Specify the operation clock frequency that is used in SPICE simulations. This frequency is used in testbenches for operation phase simulation. Note that this is a mandatory option. Users have to specify either this frequency is automatically determined by assigning “auto” or give an exact number. If this clock frequency is specified, the sim_slack option is disregarded.
 
-* **sim_slack:** add a slack to the critical path delay in the SPICE simulation. For example, sim_slack=0.2 implies that the clock period in SPICE simulations is 1.2 of the critical path delay reported by VPR. **Only valid when option op_freq is not specified.**
+* **sim_slack:** add slack to the critical path delay in the SPICE simulation. For example, sim_slack=0.2 implies that the clock period in SPICE simulations is 1.2 of the critical path delay reported by VPR. **Only valid when option op_freq is not specified.**
 
-* **prog_freq:** Specify the programming clock frequency that are used in SPICE simulations. This frequency is used in testbenches for programming phase simulation.
+* **prog_freq:** Specify the programming clock frequency that is used in SPICE simulations. This frequency is used in testbenches for programming phase simulation.
 
 * **slew_type & slew_time:** define the slew of clock signals at the rising/falling edge. Property slew_type can be either absolute or fractional [abs|frac]. 
 
-	* The type of **absolute** implies that the slew time is the absolute value. For example, slew_time=20e-12, slew_type=abs means that the slew of a clock signal is  20ps. 
-	* The type of **fractional** means that the slew time is related to the time period (frequency) of the clock signal. For example, slew_time=0.05, slew_type=frac means that the slew of a clock signal takes 5% of the time period of the clock.
+    * The type of **absolute** implies that the slew time is the absolute value. For example, slew_time=20e-12, slew_type=abs means that the slew of a clock signal is  20ps. 
+    * The type of **fractional** means that the slew time is related to the period (frequency) of the clock signal. For example, slew_time=0.05, slew_type=frac means that the slew of a clock signal takes 5% of the period of the clock.
 
 :numref:`fig_meas_edge` depicts the definition of the slew and delays of signals and the parameters that can be supported by FPGA-SPICE.
 
@@ -58,9 +58,9 @@ Define the slew of input signals at the rising/falling edge.
 
 * **slew_type & slew_time:** define the slew of all the input signals at the rising/falling edge. Property slew_type can be either absolute or fractional [abs|frac]. 
 
-	* The type of **absolute** implies that the slew time is the absolute value. For example, slew_time=20e-12, slew_type=abs means that the slew of a clock signal is  20ps. 
+    * The type of **absolute** implies that the slew time is the absolute value. For example, slew_time=20e-12, slew_type=abs means that the slew of a clock signal is  20ps. 
 
-	* The type of **fractional** means that the slew time is related to the time period (frequency) of the clock signal. For example, slew_time=0.05, slew_type=frac means that the slew of a clock signal takes 5% of the time period of the clock.
+    * The type of **fractional** means that the slew time is related to the period (frequency) of the clock signal. For example, slew_time=0.05, slew_type=frac means that the slew of a clock signal takes 5% of the period of the clock.
 
 .. note:: These slew settings are valid for all the input signals of the testbenches in different complexity levels.
 
@@ -70,7 +70,7 @@ Define the slew of input signals at the rising/falling edge.
    :scale: 100%
    :alt: map to buried traesure
   
-   Parameter in measuring the slew and delay of signals
+   Parameters in measuring the slew and delay of signals
 
 * The XML node <measure>
 
@@ -82,11 +82,11 @@ Define the slew of input signals at the rising/falling edge.
     
 * **accuracy_type:** [abs|frac]. Specify the type of transient step in SPICE simulation. 
 
-	* When **abs** is selected, the accuracy should be the absolute value, such as 1e-12. 
+    * When **abs** is selected, the accuracy should be the absolute value, such as 1e-12. 
 
-	* When **frac** is selected, the accuracy is the number of simulation points in a clock cycle time period, for example, 100.
+    * When **frac** is selected, the accuracy is the number of simulation points in a clock cycle period, for example, 100.
     
-* **accuracy:** specify the transient step in SPICE simulation. Typically, the smaller the step is, the higher accuracy can be reached while the long simulation runtime is. The recommended accuracy is between 0.1ps and 0.01ps, which generates good accuracy and runtime is not significantly long. 
+* **accuracy:** specify the transient step in SPICE simulation. Typically, the smaller the step is, the higher the accuracy that can be reached while the long simulation runtime is. The recommended accuracy is between 0.1ps and 0.01ps, which generates good accuracy and runtime is not significantly long. 
     
 .. note:: Users can define the parameters in measuring the slew of signals, under a child node <slew> of the node <measure>.
 
