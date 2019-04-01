@@ -5,7 +5,7 @@ Technology library Declaration
 
   <tech_lib lib_type=”string” transistor_type=”string” lib_path=”string” nominal_vdd=”float”/>
 
-* **lib_type:** can be either industry or academia [industry|academia]. For the industry library, a number of transistor types are available and the type of transistor should be declared in the property transistor_type. 
+* **lib_type:** can be either industry or academia [industry|academia]. For the industry library, some transistor types are available, and the type of transistor should be declared in the property transistor_type. 
 
 * **transistor_type:** This XML property specify the transistors to be used in the industry library. For example, the type of transistors can be “TT”, “FF” etc.
 
@@ -17,9 +17,9 @@ Technology library Declaration
 
    <transistors pn_ratio=”float” model_ref=”string”/>
 
-* **pn_ratio:** specify the ratio between p-type transistors and n-type transistors. The ratio will be used when building circuit structures such as inverters, buffers etc.
+* **pn_ratio:** specify the ratio between p-type transistors and n-type transistors. The ratio will be used when building circuit structures such as inverters, buffers, etc.
     
-* **model_ref:** specify the reference of in calling a transistor model. In SPICE netlist, define a transistor follows the convention: <model_ref><trans_name> <ports> <model_name>. The reference depends on the technology and the type of library. For example, PTM bulk model use “M” as the reference while PTM FinFET model use “X” as the reference.
+* **model_ref:** specify the reference of in calling a transistor model. In SPICE netlist, define a transistor follows the convention: <model_ref><trans_name> <ports> <model_name>. The reference depends on the technology and the type of library. For example, the PTM bulk model uses “M” as the reference while the PTM FinFET model uses “X” as the reference.
 
 .. code-block:: xml
 
@@ -30,5 +30,5 @@ Technology library Declaration
    
 * **chan_length:** specify the channel length of p/n type transistor.
   
-* **min_width:** specify the minimum width of p/n type transistor. This parameter will be used in building inverter, buffer and etc. as a base number for transistor sizing. 
+* **min_width:** specify the minimum width of p/n type transistor. This parameter will be used in building inverter, buffer, etc. as a base number for transistor sizing. 
   
