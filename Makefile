@@ -27,6 +27,7 @@ packages:
 	@ cd vpr && make packages
 
 clean:
+	@ cd abc_with_bb_support && make clean
 	@ cd ace2 && make clean
 	@ cd vpr7_x2p && make clean
 	@ cd yosys && make clean

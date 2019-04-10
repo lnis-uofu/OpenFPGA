@@ -55,7 +55,7 @@ matrix:
           - qt5-default
     - os: osx
       osx_image: xcode10.2 # we target latest MacOS Mojave
-      compiler: clang++ # Use clang instead of gcc in MacOS
+      compiler: gcc-4.9 # Use clang instead of gcc in MacOS
       addons:
         homebrew:
           packages:
@@ -71,10 +71,13 @@ matrix:
           - qt5
 
 before_install:
+  - source .travis/common.sh
 
 install:
+  - ./travis/install.sh
 
-script: make
+script:
+  - ./travis/script.sh
 
 after_failure:
   - echo "success"

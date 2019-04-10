@@ -2,7 +2,7 @@
 CC   := gcc-4.9
 CXX  := g++-4.9
 LD   := g++-4.9
-CP   := cp
+CP   := cpp-4.9
 
 PROG := abc
 
@@ -31,7 +31,7 @@ CC_VERSION := $(shell echo $(CC) | sed 's/gcc-//g')
 #GCC_VERSION := $(GCC_MAJOR).$(GCC_MINOR)
 
 #ifeq ($(filter $(GCC_VERSION) $(CC_VERSION),4.9),)
-ifeq ($(CC_VERSION),4.9)
+#ifeq ($(CC_VERSION),4.9)
   
 default: $(PROG)
 
@@ -43,7 +43,8 @@ CFLAGS   += -MD -MP
 CXXFLAGS += $(CFLAGS) 
 
 #LIBS := -ldl -rdynamic -ltermcap
-LIBS := -ldl -rdynamic
+#LIBS := -ldl -rdynamic
+LIBS := -ldl
 
 SRC  := 
 GARBAGE := core core.* *.stackdump ./tags $(PROG)
@@ -88,9 +89,9 @@ lib$(PROG).a: $(OBJ)
 
 docs:
 	doxygen doxygen.conf
-else
+#else
 
-$(error gcc-4.9 is necessary to compile abc)
+#$(error gcc-4.9 is necessary to compile abc)
 
-endif
+#endif
 

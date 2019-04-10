@@ -41,6 +41,8 @@ UNAME := $(shell uname)
 # determine build env
 ifeq ($(UNAME), Darwin)
 	MAC_OS = true
+    # Disable graphic in MacOS
+    ENABLE_GRAPHICS = false 
 else
 	MAC_OS = false
 endif
