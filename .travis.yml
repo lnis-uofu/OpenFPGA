@@ -81,7 +81,7 @@ script:
   - .travis/script.sh
 
 after_failure:
-  - echo "success"
+  - .travis/after_failure.sh
 
 after_success:
-  - echo "failure"
+  - .travis/after_success.sh

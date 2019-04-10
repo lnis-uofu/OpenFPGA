@@ -29,8 +29,8 @@ function end_section() {
 
 # For Mac OS, we use g++ and gcc as default compilers
 if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
-  export CC=gcc
-  export CXX=g++
+  export CC=gcc-4.9
+  export CXX=g++-4.9
   # export PATH="/usr/local/opt/bison/bin:/usr/local/bin:$PATH"
   # export PATH="/usr/local/opt/qt/bin:$PATH"
   # Install header files in Mojave, if not gcc-4.9 cannot spot stdio.h
