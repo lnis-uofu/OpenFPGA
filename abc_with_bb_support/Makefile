@@ -43,8 +43,18 @@ CFLAGS   += -MD -MP
 CXXFLAGS += $(CFLAGS) 
 
 #LIBS := -ldl -rdynamic -ltermcap
-#LIBS := -ldl -rdynamic
-LIBS := -ldl
+
+# Depend on Operating Systems, we use different libs in linking
+UNAME := $(shell uname)
+# determine build env
+ifeq ($(UNAME), Darwin)
+	MAC_OS = true
+    LIBS := -ldl
+else
+	MAC_OS = false
+    LIBS := -ldl -rdynamic
+endif
+
 
 SRC  := 
 GARBAGE := core core.* *.stackdump ./tags $(PROG)
