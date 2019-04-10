@@ -75,10 +75,10 @@ before_install:
   - source .travis/common.sh
 
 install:
-  - ./travis/install.sh
+  - .travis/install.sh
 
 script:
-  - ./travis/script.sh
+  - .travis/script.sh
 
 after_failure:
   - echo "success"
