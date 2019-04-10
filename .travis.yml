@@ -1,7 +1,6 @@
 language: cpp
 
 # Currently sudo is not required, NO ENV is used 
-sudo: false
 
 # Supported Operating systems
 #os:
@@ -15,6 +14,7 @@ matrix:
   include:
     - os: linux
     # Compiler is specified in ./travis/common.sh
+      sudo: false
       compiler: g++-4.9
       addons:
         apt:
@@ -55,6 +55,7 @@ matrix:
           - qt5-default
     - os: osx
       osx_image: xcode10.2 # we target latest MacOS Mojave
+      sudo: true
       compiler: gcc-4.9 # Use clang instead of gcc in MacOS
       addons:
         homebrew:
