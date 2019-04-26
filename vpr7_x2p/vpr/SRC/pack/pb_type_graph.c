@@ -19,6 +19,7 @@
 #include "pb_type_graph_annotations.h"
 #include "cluster_feasibility_filter.h"
 #include "power.h"
+#include "read_xml_spice_util.h"
 
 /* variable global to this section that indexes each pb graph pin within a cluster */
 static int pin_count_in_cluster;
@@ -1778,7 +1779,7 @@ static void map_loop_breaker_onto_edges(char* loop_breaker_string, int line_num,
   int i_tokens, cur_port_index, cur_pin_index;
   int i_index_mode;
   t_mode* cur_mode;
-  t_pb_graph_node** cur_node; /* can have a family of nodes */
+  t_pb_graph_node** cur_node;
   int index_cur_node, i_index_cur_node;
   t_pb_graph_node* tmp_node;
   char* cur_pb_name;
@@ -1798,12 +1799,12 @@ static void map_loop_breaker_onto_edges(char* loop_breaker_string, int line_num,
   tokens = GetTokensFromString(loop_breaker_string, &num_tokens);
  
   i_tokens = 0;
-  cur_node = (t_pb_graph_node**) my_malloc(sizeof(t_pb_graph_node*));
-  *cur_node = (t_pb_graph_node*) my_malloc(sizeof(t_pb_graph_node));
+  tmp_node = (t_pb_graph_node*) my_malloc(sizeof(t_pb_graph_node));
   while (i_tokens < num_tokens) {
-  pb_name_found = 0;
-  pin_name_found = 0;
-  msb_pin = lsb_pin = msb_pb = lsb_pb = 0;
+  //  *cur_node = (t_pb_graph_node*) my_malloc(sizeof(t_pb_graph_node));
+    pb_name_found = 0;
+    pin_name_found = 0;
+    msb_pin = lsb_pin = msb_pb = lsb_pb = 0;
     if (tokens[i_tokens].type != TOKEN_STRING) {
       vpr_printf(TIO_MESSAGE_ERROR,
                  "[LINE %d] loop_breaker: first element of a pair pb+pin should be a string\n",
@@ -1811,12 +1812,12 @@ static void map_loop_breaker_onto_edges(char* loop_breaker_string, int line_num,
       exit(1);
     }
     cur_pb_name = tokens[i_tokens].data; 
-    *cur_node = (t_pb_graph_node*) my_realloc(*cur_node, sizeof(t_pb_graph_node));
     /* no distinction is made between children and parent nodes */ 
     for (i_num_input_ports = 0 ; i_num_input_ports < num_input_ports ; i_num_input_ports ++) {
       if (0 == strcmp(cur_pb_name, input_pins[i_num_input_ports][0]->parent_node->pb_type->name)) {
         pb_name_found = 1;
-        cur_node[0] = input_pins[i_num_input_ports][0]->parent_node;
+       // cur_node[0] = input_pins[i_num_input_ports][0]->parent_node;
+        tmp_node = input_pins[i_num_input_ports][0]->parent_node;
         break;
       }
     }
@@ -1829,7 +1830,7 @@ static void map_loop_breaker_onto_edges(char* loop_breaker_string, int line_num,
     i_tokens++;
     /* We deal with three cases: nothing, a wire, a bus */
     /* First, the bus/wire */ 
-    tmp_node = cur_node[0];
+    //tmp_node = cur_node[0];
     if( tokens[i_tokens].type == TOKEN_OPEN_SQUARE_BRACKET) {
       i_tokens++;
       if( tokens[i_tokens].type != TOKEN_INT) {
@@ -1839,7 +1840,7 @@ static void map_loop_breaker_onto_edges(char* loop_breaker_string, int line_num,
         exit(1);
       }
       msb_pb = my_atoi(tokens[i_tokens].data);
-      if (msb_pb > cur_node[0]->pb_type->num_pb) {
+      if (msb_pb > tmp_node->pb_type->num_pb) {
         vpr_printf(TIO_MESSAGE_ERROR,
                    "[LINE %d] loop_breaker: MSB pb larger than the number of pb\n",
                    line_num);
@@ -1884,20 +1885,23 @@ static void map_loop_breaker_onto_edges(char* loop_breaker_string, int line_num,
     }
     /* If no bracket was used, we use need to apply the loop breaker to all the pbs with that name */
     else {
-      msb_pb = cur_node[0]->pb_type->num_pb - 1;
+      //msb_pb = cur_node[0]->pb_type->num_pb - 1;
+      msb_pb = tmp_node->pb_type->num_pb - 1;
       lsb_pb = 0;
     }
     index_cur_node = 0;
-    *cur_node = (t_pb_graph_node*) my_realloc(*cur_node, sizeof(t_pb_graph_node) * (msb_pb + 1));
     if (tmp_node->parent_pb_graph_node == NULL) {/* if pb_graph_head */ 
+      cur_node = (t_pb_graph_node**) my_malloc(sizeof(t_pb_graph_node*));
       cur_node[0] = tmp_node;
+      index_cur_node = 1;
     }
     else {
+      cur_node = (t_pb_graph_node**) my_malloc(sizeof(t_pb_graph_node*) * (msb_pb + 1));
       for (i_pb_type_in_mode = 0 ;
            i_pb_type_in_mode < tmp_node->parent_pb_graph_node->pb_type->modes[index_mode].num_pb_type_children ;
            i_pb_type_in_mode ++) {
-        if (cur_pb_name == 
-            tmp_node->parent_pb_graph_node->child_pb_graph_nodes[index_mode][i_pb_type_in_mode][0].pb_type->name) {
+        if (0 == strcmp(cur_pb_name, 
+            tmp_node->parent_pb_graph_node->child_pb_graph_nodes[index_mode][i_pb_type_in_mode][0].pb_type->name)) {
           index_pb_type = i_pb_type_in_mode;
           break;
         }
@@ -2088,5 +2092,6 @@ static void map_loop_breaker_onto_edges(char* loop_breaker_string, int line_num,
       }
     } 
   }
+  my_free(cur_node);
   return;
 }

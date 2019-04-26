@@ -545,6 +545,8 @@ struct s_pb_graph_edge {
     boolean is_disabled;
     int nb_mux;
     int nb_pin;
+    char* delay_first_segment;
+    char* delay_second_segment;
     /* END */
 };
 typedef struct s_pb_graph_edge t_pb_graph_edge;

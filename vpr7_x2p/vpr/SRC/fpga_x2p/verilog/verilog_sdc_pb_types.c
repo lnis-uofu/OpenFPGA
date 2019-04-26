@@ -92,7 +92,7 @@ void sdc_dump_annotation(char* from_path, // includes the cell
       fprintf (fp,"0\n");
     }*/
     if (max_value != NULL){
-      fprintf (fp, "set_max_delay -from %s -to %s ", from_path, to_path);
+      fprintf (fp, "set_max_delay -combinational_from_to -from %s -to %s ", from_path, to_path);
       fprintf (fp,"%f\n", max_value);
     }
 return;
@@ -219,6 +219,11 @@ void dump_sdc_pb_graph_pin_interc(t_sram_orgz_info* cur_sram_orgz_info,
       src_pb_type = src_pb_graph_node->pb_type;
       /* Des pin, node, pb_type */
       des_pb_graph_node  = des_pb_graph_pin->parent_node;
+  	  // Generation of the paths for the dumping of the annotations
+      from_path = (char *) my_malloc(sizeof(char)*(strlen(instance_name) + 1 + strlen(gen_verilog_one_pb_graph_pin_full_name_in_hierarchy (src_pb_graph_pin)) + 1));	
+      sprintf (from_path, "%s/%s", instance_name, gen_verilog_one_pb_graph_pin_full_name_in_hierarchy (src_pb_graph_pin));
+      to_path = (char *) my_malloc(sizeof(char)*(strlen(instance_name) + 1 + strlen(gen_verilog_one_pb_graph_pin_full_name_in_hierarchy (des_pb_graph_pin)) + 1));	
+      sprintf (to_path, "%s/%s", instance_name, gen_verilog_one_pb_graph_pin_full_name_in_hierarchy (des_pb_graph_pin));
 
     /* If the pin is disabled, the dumping is different. We need to use the 
      * input and output of the inverter of the mux */ 
@@ -237,39 +242,53 @@ void dump_sdc_pb_graph_pin_interc(t_sram_orgz_info* cur_sram_orgz_info,
         vpr_printf (TIO_MESSAGE_ERROR,
                     "The loop_breaker annotation can only be applied when there is an input buffer"); 
       }
-      input_buffer_path = (char *) my_malloc(sizeof(char)*(strlen(instance_name) + 1 +
-      strlen (gen_verilog_one_pb_graph_pin_full_name_in_hierarchy_parent_node(cur_pin_disable)) + 1 +
-      strlen (cur_interc->spice_model->name) + 5 + strlen(my_itoa(cur_interc->fan_in)) + 1 +
-      strlen (my_itoa(des_pb_graph_pin->input_edges[iedge]->nb_mux)) + 1 + 1)); 
       if (0 == strcmp("",gen_verilog_one_pb_graph_pin_full_name_in_hierarchy_parent_node(cur_pin_disable))) {
+        input_buffer_path = (char *) my_malloc(sizeof(char)*(strlen(instance_name) + 1 +
+        strlen (cur_interc->spice_model->name) + 5 + strlen(my_itoa(cur_interc->fan_in)) + 1 +
+        strlen (my_itoa(des_pb_graph_pin->input_edges[iedge]->nb_mux)) + 1 + 1)); 
+
         sprintf (input_buffer_path, "%s/%s_size%d_%d_",instance_name,
                cur_interc->spice_model->name, cur_interc->fan_in, 
                des_pb_graph_pin->input_edges[iedge]->nb_mux); 
       }
       else {
+        input_buffer_path = (char *) my_malloc(sizeof(char)*(strlen(instance_name) + 1 +
+        strlen (gen_verilog_one_pb_graph_pin_full_name_in_hierarchy_parent_node(cur_pin_disable)) +
+        strlen (cur_interc->spice_model->name) + 5 + strlen(my_itoa(cur_interc->fan_in)) + 1 +
+        strlen (my_itoa(des_pb_graph_pin->input_edges[iedge]->nb_mux)) + 1 + 1)); 
+
         sprintf (input_buffer_path, "%s/%s%s_size%d_%d_",instance_name,
                  gen_verilog_one_pb_graph_pin_full_name_in_hierarchy_parent_node(cur_pin_disable),
                  cur_interc->spice_model->name, cur_interc->fan_in ,
                  des_pb_graph_pin->input_edges[iedge]->nb_mux); 
       }
       input_buffer_name = cur_interc ->spice_model->input_buffer->spice_model_name;
+      /* BChauviere: might need to find the right port if something other than an inverter is used */
       input_buffer_in = cur_interc ->spice_model->input_buffer->spice_model->ports[0].lib_name;
       input_buffer_out = cur_interc ->spice_model->input_buffer->spice_model->ports[1].lib_name;
-      set_disable_path = (char*) my_malloc(sizeof(char)*(strlen(input_buffer_path) + 1 + strlen(input_buffer_name)
-                         + 1 + strlen(my_itoa(des_pb_graph_pin->input_edges[iedge]->nb_pin)))); 
+      set_disable_path = (char*) my_malloc(sizeof(char)*(
+                                            strlen(input_buffer_path) + 1 + 
+                                            strlen(input_buffer_name) + 1 + 
+                                            strlen(my_itoa(des_pb_graph_pin->input_edges[iedge]->nb_pin))
+                                            + 1 + 1) ); 
       sprintf(set_disable_path, "%s/%s_%d_", input_buffer_path, input_buffer_name,
               des_pb_graph_pin->input_edges[iedge]->nb_pin); 
       
+      if (NULL == des_pb_graph_pin->input_edges[iedge]->delay_first_segment) {
+        des_pb_graph_pin->input_edges[iedge]->delay_first_segment = "0";
+      }
+      if (NULL == des_pb_graph_pin->input_edges[iedge]->delay_second_segment) {
+        des_pb_graph_pin->input_edges[iedge]->delay_second_segment = "0";
+      }
+      fprintf (fp, "set_max_delay -from %s -to %s/%s %s \n", from_path, set_disable_path, input_buffer_in,
+               des_pb_graph_pin->input_edges[iedge]->delay_first_segment); 
       fprintf (fp, "set_disable_timing -from %s -to %s %s \n", input_buffer_in, input_buffer_out, set_disable_path);
-      free(input_buffer_path);
-      free(set_disable_path);
+      fprintf (fp, "set_max_delay -from %s/%s -to %s %s \n", set_disable_path, input_buffer_out,
+               to_path, des_pb_graph_pin->input_edges[iedge]->delay_second_segment); 
+      my_free(input_buffer_path);
+      my_free(set_disable_path);
     }
 	else { 
-  	  // Generation of the paths for the dumping of the annotations
-      from_path = (char *) my_malloc(sizeof(char)*(strlen(instance_name) + 1 + strlen(gen_verilog_one_pb_graph_pin_full_name_in_hierarchy (src_pb_graph_pin)) + 1));	
-      sprintf (from_path, "%s/%s", instance_name, gen_verilog_one_pb_graph_pin_full_name_in_hierarchy (src_pb_graph_pin));
-      to_path = (char *) my_malloc(sizeof(char)*(strlen(instance_name) + 1 + strlen(gen_verilog_one_pb_graph_pin_full_name_in_hierarchy (des_pb_graph_pin)) + 1));	
-      sprintf (to_path, "%s/%s", instance_name, gen_verilog_one_pb_graph_pin_full_name_in_hierarchy (des_pb_graph_pin));
   	  // Dumping of the annotations
   	  sdc_dump_annotation (from_path, to_path, fp, cur_interc[0]);	
       }

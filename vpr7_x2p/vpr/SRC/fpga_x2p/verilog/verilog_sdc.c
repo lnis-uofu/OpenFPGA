@@ -250,9 +250,16 @@ void verilog_generate_sdc_clock_period(t_sdc_opts sdc_opts,
   /* Create a clock */
   for (iport = 0; iport < num_clock_ports; iport++) {
     fprintf(fp, "create_clock ");
-    fprintf(fp, "%s -period %.4g -waveform {0 %.4g}\n",
-            clock_port[iport]->prefix, 
-            critical_path_delay, critical_path_delay/2);
+    if (NULL != strstr(clock_port[iport]->prefix,"prog")) {
+      fprintf(fp, "%s -period 100 -waveform {0 50}\n",
+              clock_port[iport]->prefix, 
+              critical_path_delay, critical_path_delay/2);
+    }
+    else {
+      fprintf(fp, "%s -period %.4g -waveform {0 %.4g}\n",
+              clock_port[iport]->prefix, 
+              critical_path_delay, critical_path_delay/2);
+    }
   }
 
 
@@ -1802,7 +1809,7 @@ void verilog_generate_sdc_pnr(t_sram_orgz_info* cur_sram_orgz_info,
   sdc_opts.break_loops_mux = FALSE; /* By default, we turn it off to avoid a overkill */
 
   /* Part 1. Constrain clock cycles */
-  verilog_generate_sdc_clock_period(sdc_opts, arch.spice->spice_params.stimulate_params.vpr_crit_path_delay);
+  verilog_generate_sdc_clock_period(sdc_opts, pow(10,9)*arch.spice->spice_params.stimulate_params.vpr_crit_path_delay);
 
   /* Part 2. Output Design Constraints for breaking loops */
   if (TRUE == sdc_opts.break_loops) {

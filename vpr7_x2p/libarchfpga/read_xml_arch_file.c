@@ -1423,7 +1423,7 @@ static void ProcessInterconnect(INOUTP ezxml_t Parent, t_mode * mode) {
             /* Xifan TANG: FPGA-SPICE, mode select description for multi-mode CLB */
 			num_annotations += CountChildren(Cur, "mode_select", 0);
             /* END FPGA-SPICE, mode select description */
-
+            
 			mode->interconnect[i].annotations =
 					(t_pin_to_pin_annotation*) my_calloc(num_annotations,
 							sizeof(t_pin_to_pin_annotation));
@@ -1433,8 +1433,10 @@ static void ProcessInterconnect(INOUTP ezxml_t Parent, t_mode * mode) {
 			Cur2 = NULL;
             /* Xifan TANG: FPGA-SPICE, mode select description */
 			/* for (j = 0; j < 5; j++) { */
-			for (j = 0; j < 6; j++) {
+			/* for (j = 0; j < 6; j++) { */
             /* END FPGA-SPICE, mode select description */
+            /* Baudouin Chauviere: loop_breaker for CLB */
+            for (j = 0; j < 7; j++) {
 				if (j == 0) {
 					Cur2 = FindFirstElement(Cur, "delay_constant", FALSE);
 				} else if (j == 1) {
