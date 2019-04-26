@@ -1,5 +1,6 @@
 /************ Defines and types shared by all route files ********************/
 
+typedef struct s_heap t_heap;
 struct s_heap {
 	int index;
 	float cost;

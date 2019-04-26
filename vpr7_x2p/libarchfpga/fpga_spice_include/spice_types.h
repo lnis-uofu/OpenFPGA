@@ -4,7 +4,8 @@
 
 /* Xifan TANG: Spice support*/
 enum e_spice_tech_lib_type {
-  SPICE_LIB_INDUSTRY,SPICE_LIB_ACADEMIA
+  SPICE_LIB_INDUSTRY,
+  SPICE_LIB_ACADEMIA
 };
 
 enum spice_model_delay_type {
@@ -23,10 +24,9 @@ enum e_spice_model_type {
   SPICE_MODEL_HARDLOGIC,
   SPICE_MODEL_SCFF,
   SPICE_MODEL_IOPAD, 
-  SPICE_MODEL_VDD, 
-  SPICE_MODEL_GND, 
   SPICE_MODEL_INVBUF, 
-  SPICE_MODEL_PASSGATE 
+  SPICE_MODEL_PASSGATE, 
+  SPICE_MODEL_GATE 
 };
 
 enum e_spice_model_design_tech {
@@ -47,13 +47,21 @@ enum e_spice_model_buffer_type {
 };
 
 enum e_spice_model_pass_gate_logic_type {
-  SPICE_MODEL_PASS_GATE_TRANSMISSION, SPICE_MODEL_PASS_GATE_TRANSISTOR
+  SPICE_MODEL_PASS_GATE_TRANSMISSION, 
+  SPICE_MODEL_PASS_GATE_TRANSISTOR
 };
 
+enum e_spice_model_gate_type {
+  SPICE_MODEL_GATE_AND, 
+  SPICE_MODEL_GATE_OR
+};
 
 /* Transistor-level basic informations*/
 enum e_spice_trans_type {
-  SPICE_TRANS_NMOS, SPICE_TRANS_PMOS, SPICE_TRANS_IO_NMOS, SPICE_TRANS_IO_PMOS
+  SPICE_TRANS_NMOS, 
+  SPICE_TRANS_PMOS, 
+  SPICE_TRANS_IO_NMOS, 
+  SPICE_TRANS_IO_PMOS
 };
 
 enum e_wire_model_type {
@@ -73,6 +81,13 @@ enum e_spice_model_port_type {
   SPICE_MODEL_PORT_WLB
 };
 
+/* For process corner */
+enum e_process_corner {
+ BEST_CORNER,
+ TYPICAL_CORNER,
+ WORST_CORNER
+};
+
 /* For SRAM */
 enum e_sram_orgz {
   SPICE_SRAM_STANDALONE,
@@ -84,24 +99,54 @@ enum e_spice_accuracy_type {
   SPICE_FRAC, SPICE_ABS
 };
 
+enum e_spice_pb_port_type {
+  SPICE_PB_PORT_INPUT,
+  SPICE_PB_PORT_OUTPUT,
+  SPICE_PB_PORT_CLOCK
+};
+
+enum e_spice_ff_trigger_type {
+  FF_RE, FF_FE
+};
+
+enum e_spice_tb_type {
+  SPICE_CB_MUX_TB, 
+  SPICE_SB_MUX_TB, 
+  SPICE_PB_MUX_TB, 
+  SPICE_GRID_TB,
+  SPICE_SB_TB,
+  SPICE_CB_TB,
+  SPICE_LUT_TB,
+  SPICE_IO_TB,
+  SPICE_HARDLOGIC_TB
+};
+
+enum e_spice_pin2pin_interc_type {
+  INPUT2INPUT_INTERC, 
+  OUTPUT2OUTPUT_INTERC
+};
 
 /* typedef of structs */
 typedef struct s_spice_transistor_type t_spice_transistor_type;
 typedef struct s_spice_tech_lib t_spice_tech_lib;
+typedef struct s_spice_model_gate t_spice_model_gate;
+typedef struct s_spice_model_rram t_spice_model_rram;
+typedef struct s_spice_model_mux t_spice_model_mux;
+typedef struct s_spice_model_lut t_spice_model_lut;
 typedef struct s_spice_model_buffer t_spice_model_buffer;
 typedef struct s_spice_model_pass_gate_logic t_spice_model_pass_gate_logic;
 typedef struct s_spice_model_port t_spice_model_port;
 typedef struct s_spice_model_wire_param t_spice_model_wire_param;
+typedef struct s_spice_model_tedge t_spice_model_tedge;
 typedef struct s_spice_model_netlist t_spice_model_netlist;
 typedef struct s_spice_model_design_tech_info t_spice_model_design_tech_info;
+typedef struct s_spice_model_delay_info t_spice_model_delay_info;
 typedef struct s_spice_model t_spice_model;
 typedef struct s_spice_meas_params t_spice_meas_params;
 typedef struct s_spice_stimulate_params t_spice_stimulate_params;
 typedef struct s_spice_mc_variation_params t_spice_mc_variation_params;
-typedef struct s_spice_model_delay_info t_spice_model_delay_info;
 typedef struct s_spice_mc_params t_spice_mc_params;
 typedef struct s_spice_params t_spice_params;
-typedef struct s_spice_model_tedge t_spice_model_tedge;
 typedef struct s_spice t_spice;
 typedef struct s_spice_mux_arch t_spice_mux_arch;
 typedef struct s_spice_mux_model t_spice_mux_model;
@@ -135,13 +180,15 @@ struct s_spice_tech_lib {
 
 struct s_spice_model_buffer {
   int exist;
+  char* spice_model_name;
+  char* location_map;
+
+  t_spice_model* spice_model;
   enum e_spice_model_buffer_type type;
   float size;
   int tapered_buf; /*Valid only when this is a buffer*/
   int tap_buf_level;
   int f_per_stage;
-  char* spice_model_name;
-  t_spice_model* spice_model;
 };
 
 struct s_spice_model_pass_gate_logic {
@@ -166,17 +213,27 @@ struct s_spice_model_port {
   enum e_spice_model_port_type type;
   int size;
   char* prefix; 
+  char* lib_name; 
+  char* inv_prefix; 
+  /* Mode select port properties */
   boolean mode_select;
   int default_val;
+  /* Global port properties */
   boolean is_global;
   boolean is_reset;
   boolean is_set;
   boolean is_config_enable;
   boolean is_prog;
+  /* The spice model that this port will be connected to */
   char* spice_model_name;
   t_spice_model* spice_model;
   char* inv_spice_model_name;
   t_spice_model* inv_spice_model;
+  /* Tri-state map */
+  char* tri_state_map;
+  /* For frac_lut only */
+  int lut_frac_level;
+  int* lut_output_mask;
   /* Timing edeges linked to other t_model_ports */
   int* num_tedges; /* 1-D Array, show number of tedges of each pin */
   t_spice_model_tedge*** tedge; /* 3-D array, considering the each pin in this port, [pin_number][num_edges[iedge]] is an edge pointor */
@@ -194,18 +251,7 @@ struct s_spice_model_netlist {
   int included;
 };
 
-struct s_spice_model_delay_info {
-   enum spice_model_delay_type type;
-   char* in_port_name;
-   char* out_port_name;
-   char* value; 
- };
-
-/* Information about design technology */
-struct s_spice_model_design_tech_info {
-  /* Valid for SRAM technology */
-  t_spice_model_buffer* buffer_info;
-  t_spice_model_pass_gate_logic* pass_gate_info;
+struct s_spice_model_rram {
   /* Vaild for RRAM technology only, and this is a mux*/
   float ron;
   float roff;
@@ -213,12 +259,45 @@ struct s_spice_model_design_tech_info {
   float wprog_set_pmos;
   float wprog_reset_nmos;
   float wprog_reset_pmos;
+};
+
+struct s_spice_model_mux {
   /* Mux information only */
   enum e_spice_model_structure structure;
   int mux_num_level;
+  boolean add_const_input;
+  int const_input_val;
+  boolean advanced_rram_design;
+};
+
+struct s_spice_model_lut {
+  /* LUT information */
+  boolean frac_lut;
+};
+
+struct s_spice_model_gate {
+  /* LUT information */
+  enum e_spice_model_gate_type type;
+};
+
+/* Information about design technology */
+struct s_spice_model_design_tech_info {
+  /* Valid for SRAM technology */
+  t_spice_model_buffer* buffer_info;
+  t_spice_model_pass_gate_logic* pass_gate_info;
+  t_spice_model_rram* rram_info;
+  t_spice_model_mux* mux_info;
+  t_spice_model_lut* lut_info;
+  t_spice_model_gate* gate_info;
   /* Power gate information */
   boolean power_gated;
-  boolean advanced_rram_design;
+};
+
+struct s_spice_model_delay_info {
+  enum spice_model_delay_type type;
+  char* in_port_name;
+  char* out_port_name;
+  char* value; 
 };
 
 struct s_spice_model {
@@ -230,6 +309,7 @@ struct s_spice_model {
   t_spice_model_netlist* include_netlist;
   int is_default;
   boolean dump_structural_verilog;
+  boolean dump_explicit_port_map;
 
   /* type */
   enum e_spice_model_design_tech design_tech;
@@ -238,6 +318,8 @@ struct s_spice_model {
 
   /* buffering information */
   t_spice_model_buffer* lut_input_buffer;
+  t_spice_model_buffer* lut_input_inverter;
+  t_spice_model_buffer* lut_intermediate_buffer;
   t_spice_model_buffer* input_buffer;
   t_spice_model_buffer* output_buffer;
   t_spice_model_pass_gate_logic* pass_gate_logic;
@@ -357,7 +439,8 @@ struct s_spice {
 /* Information needed to build a Multiplexer architecture*/
 struct s_spice_mux_arch {
   enum e_spice_model_structure structure;
-  int num_input;
+  int num_input; /* All Inputs including those connect to constant generator */
+  int num_data_input; /* Inputs for multiplexing datapath signals*/ 
   int num_level;
   int num_input_basis;
   int num_input_last_level;
@@ -483,6 +566,8 @@ struct s_sram_orgz_info {
   t_llist* conf_bit_head; 
 
   /* Conf bits information per grid */
+  int grid_nx; /* grid size */ 
+  int grid_ny;
   int** grid_reserved_conf_bits;
   int** grid_conf_bits_lsb;
   int** grid_conf_bits_msb;

@@ -74,36 +74,47 @@ enum e_OptionBaseToken {
 	OT_ACTIVITY_FILE,
 	OT_POWER_OUT_FILE,
 	OT_CMOS_TECH_BEHAVIOR_FILE,
+    /* General FPGA_X2P: FPGA-SPICE/Verilog/Bitstream Options */
+    OT_FPGA_X2P_RENAME_ILLEGAL_PORT, 
+    OT_FPGA_X2P_SIGNAL_DENSITY_WEIGHT, /* The weight of signal density in determining number of clock cycles in simulation */
+    OT_FPGA_X2P_SIM_WINDOW_SIZE, /* Window size in determining number of clock cycles in simulation */
     /* Xifan TANG: FPGA SPICE Support */
     OT_FPGA_SPICE, /* Xifan TANG: FPGA SPICE Model Support */
-    OT_FPGA_SPICE_RENAME_ILLEGAL_PORT, 
-    OT_FPGA_SPICE_SIGNAL_DENSITY_WEIGHT, /* The weight of signal density in determining number of clock cycles in simulation */
-    OT_FPGA_SPICE_SIM_WINDOW_SIZE, /* Window size in determining number of clock cycles in simulation */
-    OT_FPGA_SPICE_SIM_MT_NUM, /* number of multi-thread used in simulation */
-    OT_SPICE_DIR, /* Xifan TANG: FPGA SPICE Model Support */
-    OT_SPICE_PRINT_TOP_TESTBENCH, /* Xifan TANG: Print Top-level SPICE Testbench */
-    OT_SPICE_PRINT_PB_MUX_TESTBENCH, /* Xifan TANG: Print SPICE Testbench for MUXes */
-    OT_SPICE_PRINT_CB_MUX_TESTBENCH, /* Xifan TANG: Print SPICE Testbench for MUXes */
-    OT_SPICE_PRINT_SB_MUX_TESTBENCH, /* Xifan TANG: Print SPICE Testbench for MUXes */
-    OT_SPICE_PRINT_CB_TESTBENCH, /* Xifan TANG: Print SPICE Testbench for CBs */
-    OT_SPICE_PRINT_SB_TESTBENCH, /* Xifan TANG: Print SPICE Testbench for SBs */
-    OT_SPICE_PRINT_GRID_TESTBENCH, /* Xifan TANG: Print SPICE Testbench for Grids */
-    OT_SPICE_PRINT_LUT_TESTBENCH, /* Xifan TANG: Print SPICE Testbench for LUTs */
-    OT_SPICE_PRINT_HARDLOGIC_TESTBENCH, /* Xifan TANG: Print SPICE Testbench for hard logic s */
+    OT_FPGA_SPICE_DIR, /* Xifan TANG: FPGA SPICE Model Support */
+    OT_FPGA_SPICE_PRINT_TOP_TESTBENCH, /* Xifan TANG: Print Top-level SPICE Testbench */
+    OT_FPGA_SPICE_PRINT_PB_MUX_TESTBENCH, /* Xifan TANG: Print SPICE Testbench for MUXes */
+    OT_FPGA_SPICE_PRINT_CB_MUX_TESTBENCH, /* Xifan TANG: Print SPICE Testbench for MUXes */
+    OT_FPGA_SPICE_PRINT_SB_MUX_TESTBENCH, /* Xifan TANG: Print SPICE Testbench for MUXes */
+    OT_FPGA_SPICE_PRINT_CB_TESTBENCH, /* Xifan TANG: Print SPICE Testbench for CBs */
+    OT_FPGA_SPICE_PRINT_SB_TESTBENCH, /* Xifan TANG: Print SPICE Testbench for SBs */
+    OT_FPGA_SPICE_PRINT_GRID_TESTBENCH, /* Xifan TANG: Print SPICE Testbench for Grids */
+    OT_FPGA_SPICE_PRINT_LUT_TESTBENCH, /* Xifan TANG: Print SPICE Testbench for LUTs */
+    OT_FPGA_SPICE_PRINT_HARDLOGIC_TESTBENCH, /* Xifan TANG: Print SPICE Testbench for hard logic s */
+    OT_FPGA_SPICE_PRINT_IO_TESTBENCH, /* Xifan TANG: Print SPICE Testbench for hard logic s */
     OT_FPGA_SPICE_LEAKAGE_ONLY, /* Xifan TANG: Print SPICE Testbench for MUXes */
-    OT_FPGA_SPICE_PARASITIC_NET_ESTIMATION_OFF, /* Xifan TANG: turn off the parasitic net estimation*/
-    OT_FPGA_SPICE_TESTBENCH_LOAD_EXTRACTION_OFF, /* Xifan TANG: turn off the testbench load extraction */
+    OT_FPGA_SPICE_PARASITIC_NET_ESTIMATION, /* Xifan TANG: turn on/off the parasitic net estimation*/
+    OT_FPGA_SPICE_TESTBENCH_LOAD_EXTRACTION, /* Xifan TANG: turn on/off the testbench load extraction */
+    OT_FPGA_SPICE_SIMULATOR_PATH,
+    OT_FPGA_SPICE_SIM_MT_NUM, /* number of multi-thread used in simulation */
     /* Xifan TANG: Verilog Generation */
     OT_FPGA_VERILOG_SYN, /* Xifan TANG: Synthesizable Verilog Dump */
     OT_FPGA_VERILOG_SYN_DIR, /* Xifan TANG: Synthesizable Verilog Dump */
-    OT_FPGA_VERILOG_SYN_PRINT_TOP_TB, /* Xifan TANG: Synthesizable Verilog Dump */
-    OT_FPGA_VERILOG_SYN_PRINT_TOP_AUTO_TB, /* Xifan TANG: Synthesizable Verilog Dump */
-    OT_FPGA_VERILOG_SYN_PRINT_INPUT_BLIF_TB, /* Xifan TANG: Synthesizable Verilog Dump */
-    OT_FPGA_VERILOG_SYN_TB_SERIAL_CONFIG_MODE, /* Xifan TANG: Synthesizable Verilog Dump */
-	OT_FPGA_VERILOG_SYN_INCLUDE_TIMING,	/* Include timing constraint in Verilog*/
-	OT_FPGA_VERILOG_INIT_SIM,			/* AA: to allow initialization in simulation */
-    OT_FPGA_VERILOG_SYN_PRINT_MODELSIM_AUTODECK, // To allow modelsim script generation
-    OT_FPGA_VERILOG_SYN_MODELSIM_INI_PATH,       // To set modelsim script path
+    OT_FPGA_VERILOG_SYN_PRINT_TOP_TESTBENCH, /* Xifan Tang: Synthesizable Verilog, turn on option: output testbench for top-level netlist */
+    OT_FPGA_VERILOG_SYN_PRINT_AUTOCHECK_TOP_TESTBENCH, /* Xifan Tang: Synthesizable Verilog, turn on option: output testbench for top-level netlist */
+    OT_FPGA_VERILOG_SYN_PRINT_INPUT_BLIF_TESTBENCH, /* Xifan Tang: Synthesizable Verilog, turn on option: output testbench for the orignial input blif  */
+    OT_FPGA_VERILOG_SYN_PRINT_FORMAL_VERIFICATION_TOP_NETLIST, /* Xifan Tang: Synthesizable Verilog, turn on option: output netlists in a compact way */
+    OT_FPGA_VERILOG_SYN_INCLUDE_TIMING, /* Xifan TANG: Include timing constraints in Verilog */
+    OT_FPGA_VERILOG_SYN_INCLUDE_SIGNAL_INIT, /* Xifan TANG: Include timing constraints in Verilog */
+	OT_FPGA_VERILOG_SYN_INCLUDE_ICARUS_SIMULATOR,
+    OT_FPGA_VERILOG_SYN_PRINT_MODELSIM_AUTODECK,
+    OT_FPGA_VERILOG_SYN_PRINT_USER_DEFINED_TEMPLATE,
+    OT_FPGA_VERILOG_SYN_PRINT_REPORT_TIMING_TCL,
+    OT_FPGA_VERILOG_SYN_REPORT_TIMING_RPT_PATH,
+    OT_FPGA_VERILOG_SYN_PRINT_SDC_PNR,
+    OT_FPGA_VERILOG_SYN_PRINT_SDC_ANALYSIS,
+    /* Xifan Tang: Bitstream generator */
+    OT_FPGA_BITSTREAM_GENERATOR,
+    OT_FPGA_BITSTREAM_OUTPUT_FILE,
     /* mrFPGA: Xifan TANG */
     OT_SHOW_SRAM,
     OT_SHOW_PASS_TRANS,

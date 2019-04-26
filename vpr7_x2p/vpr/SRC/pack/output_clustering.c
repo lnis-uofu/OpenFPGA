@@ -117,6 +117,12 @@ static void print_interconnect(int inode, int *column, int num_tabs,
 						rr_node[prev_node].pb_graph_pin->parent_node->placement_index,
 						rr_node[prev_node].pb_graph_pin->port->name,
 						rr_node[prev_node].pb_graph_pin->pin_number, name);
+                /* For debug
+                if (0 == strcmp("fle_phy", 
+						        rr_node[prev_node].pb_graph_pin->parent_node->pb_type->name)) {
+                   printf("debugging point reached!\n");
+                }
+                */
 			} else {
 				len =
 						strlen(

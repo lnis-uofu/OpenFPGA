@@ -148,6 +148,14 @@ static void load_pack_pattern_annotations(INP int line_num, INOUTP t_pb_graph_no
 							break;
 						}
 					}
+                    /* Xifan Tang: bypass the edges that are disabled in packing */
+                    /*
+					if ((iedge != in_port[i][j]->num_output_edges) 
+                        && (TRUE == in_port[i][j]->output_edges[iedge]->interconnect->parent_mode->disabled_in_packing)) {
+                      continue;
+                    }
+                    */
+                    /* END */
 					/* jluu Todo: This is inefficient, I know the interconnect so I know what edges exist
 					 can use this info to only annotate existing edges */
 					if (iedge != in_port[i][j]->num_output_edges) {

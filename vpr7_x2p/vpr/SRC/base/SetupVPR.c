@@ -48,14 +48,18 @@ static void SetupSpiceOpts(t_options Options,
 static void SetupSynVerilogOpts(t_options Options, 
                                 t_syn_verilog_opts* syn_verilog_opts,
                                 t_arch* arch);
+
+/* Xifan TANG: Bitstream Generator */
+static void SetupBitstreamGenOpts(t_options Options, 
+                                  t_bitstream_gen_opts* bitstream_gen_opts,
+                                  t_arch* arch);
+
 /* Xifan TANG: FPGA-SPICE Tool suites Options Setup */
 static void SetupFpgaSpiceOpts(t_options Options, 
                                t_fpga_spice_opts* fpga_spice_opts,
                                t_arch* arch);
 /* end */
 /* Xifan Tang: Parse CLB to CLB direct connections */
-static void alloc_and_init_globals_clb_to_clb_directs(int num_directs, 
-                                                      t_direct_inf* directs);
 
 /* mrFPGA */
 static void SetupSwitches_mrFPGA(INP t_arch Arch,
@@ -66,6 +70,77 @@ static void add_wire_to_switch(struct s_det_routing_arch *det_routing_arch);
 static void set_max_pins_per_side();
 static void hack_switch_to_rram(struct s_det_routing_arch *det_routing_arch);
 /* end */
+
+void VPRSetupArch(t_arch* arch, 
+                  t_det_routing_arch* RoutingArch,
+		          t_segment_inf ** Segments,
+                  /*Xifan TANG: Switch Segment Pattern Support*/
+                  t_swseg_pattern_inf** swseg_patterns,
+                  t_model** user_models, 
+                  t_model** library_models) {
+  int i, j;
+
+  (*user_models) = arch->models;
+  (*library_models) = arch->model_library;
+
+  /* TODO: this is inelegant, I should be populating this information in XmlReadArch */
+  EMPTY_TYPE = NULL;
+  FILL_TYPE = NULL;
+  IO_TYPE = NULL;
+  for (i = 0; i < num_types; i++) {
+    if (strcmp(type_descriptors[i].name, "<EMPTY>") == 0) {
+      EMPTY_TYPE = &type_descriptors[i];
+    } else if (strcmp(type_descriptors[i].name, "io") == 0) {
+      IO_TYPE = &type_descriptors[i];
+    } else {
+      for (j = 0; j < type_descriptors[i].num_grid_loc_def; j++) {
+        if (type_descriptors[i].grid_loc_def[j].grid_loc_type == FILL) {
+          assert(FILL_TYPE == NULL);
+          FILL_TYPE = &type_descriptors[i];
+        }
+      }
+    }
+  }
+  assert(EMPTY_TYPE != NULL && FILL_TYPE != NULL && IO_TYPE != NULL);
+
+  *Segments = arch->Segments;
+  RoutingArch->num_segment = arch->num_segments;
+  /*Xifan TANG: Switch Segment Pattern Support*/
+  (*swseg_patterns) = arch->swseg_patterns;
+  RoutingArch->num_swseg_pattern = arch->num_swseg_pattern;
+  /* END */    
+
+  /* mrFPGA */
+  sync_arch_mrfpga_globals(arch->arch_mrfpga);
+  if (is_mrFPGA) {
+    SetupSwitches_mrFPGA(*arch, RoutingArch, 
+                         arch->Switches, arch->num_switches, arch->Segments);
+    /* Xifan TANG: added by bjxiao */
+    set_max_pins_per_side();
+    hack_switch_to_rram(RoutingArch);
+  } else {
+    /* Normal Setup VPR switches */
+    // Xifan TANG: Add Connection Blocks Switches
+    SetupSwitches(*arch, RoutingArch, 
+                  arch->Switches, arch->num_switches);
+  }
+  /* END */    
+
+  /* end */
+  if(!is_mrFPGA && is_stack) {
+    add_wire_to_switch(RoutingArch);
+  }
+  /* end */
+  /* Xifan TANG: mrFPGA */
+  if (is_junction) {
+    setup_junction_switch(RoutingArch);
+  }
+  /* end */
+
+  SetupRoutingArch(*arch, RoutingArch);
+
+  return;
+}
 
 /* Sets VPR parameters and defaults. Does not do any error checking
  * as this should have been done by the various input checkers */
@@ -84,7 +159,7 @@ void SetupVPR(INP t_options *Options, INP boolean TimingEnabled,
         /*Xifan TANG: Switch Segment Pattern Support*/
         t_swseg_pattern_inf** swseg_patterns,
         t_fpga_spice_opts* fpga_spice_opts) {
-	int i, j, len;
+	int len;
 
 	len = strlen(Options->CircuitName) + 6; /* circuit_name.blif/0*/
 	if (Options->out_file_prefix != NULL ) {
@@ -210,62 +285,8 @@ void SetupVPR(INP t_options *Options, INP boolean TimingEnabled,
 				&num_types);
 	}
 
-	*user_models = Arch->models;
-	*library_models = Arch->model_library;
+    VPRSetupArch(Arch, RoutingArch, Segments, swseg_patterns, user_models, library_models);
 
-	/* TODO: this is inelegant, I should be populating this information in XmlReadArch */
-	EMPTY_TYPE = NULL;
-	FILL_TYPE = NULL;
-	IO_TYPE = NULL;
-	for (i = 0; i < num_types; i++) {
-		if (strcmp(type_descriptors[i].name, "<EMPTY>") == 0) {
-			EMPTY_TYPE = &type_descriptors[i];
-		} else if (strcmp(type_descriptors[i].name, "io") == 0) {
-			IO_TYPE = &type_descriptors[i];
-		} else {
-			for (j = 0; j < type_descriptors[i].num_grid_loc_def; j++) {
-				if (type_descriptors[i].grid_loc_def[j].grid_loc_type == FILL) {
-					assert(FILL_TYPE == NULL);
-					FILL_TYPE = &type_descriptors[i];
-				}
-			}
-		}
-	}
-	assert(EMPTY_TYPE != NULL && FILL_TYPE != NULL && IO_TYPE != NULL);
-
-	*Segments = Arch->Segments;
-	RoutingArch->num_segment = Arch->num_segments;
-    /*Xifan TANG: Switch Segment Pattern Support*/
-    (*swseg_patterns) = Arch->swseg_patterns;
-    RoutingArch->num_swseg_pattern = Arch->num_swseg_pattern;
-    /* END */    
-
-    /* mrFPGA */
-    sync_arch_mrfpga_globals(Arch->arch_mrfpga);
-    if (is_mrFPGA) {
-      SetupSwitches_mrFPGA(*Arch, RoutingArch, Arch->Switches, Arch->num_switches, Arch->Segments);
-      /* Xifan TANG: added by bjxiao */
-      set_max_pins_per_side();
-      hack_switch_to_rram(RoutingArch);
-    } else {
-      /* Normal Setup VPR switches */
-      // Xifan TANG: Add Connection Blocks Switches
-	  SetupSwitches(*Arch, RoutingArch, Arch->Switches, Arch->num_switches);
-    }
-    /* END */    
-
-    /* end */
-    if(!is_mrFPGA && is_stack) {
-      add_wire_to_switch(RoutingArch);
-    }
-    /* end */
-    /* Xifan TANG: mrFPGA */
-    if (is_junction) {
-      setup_junction_switch(RoutingArch);
-    }
-    /* end */
-
-	SetupRoutingArch(*Arch, RoutingArch);
 	SetupTiming(*Options, *Arch, TimingEnabled, *Operation, *PlacerOpts,
 			*RouterOpts, Timing);
 	SetupPackerOpts(*Options, TimingEnabled, *Arch, Options->NetFile,
@@ -960,18 +981,19 @@ static void SetupSpiceOpts(t_options Options,
                            t_arch* arch) {
   /* Initialize */  
   spice_opts->do_spice = FALSE;
-  spice_opts->spice_print_top_testbench = FALSE;
-  spice_opts->spice_print_pb_mux_testbench = FALSE;
-  spice_opts->spice_print_cb_mux_testbench = FALSE;
-  spice_opts->spice_print_sb_mux_testbench = FALSE;
-  spice_opts->spice_print_cb_testbench = FALSE;
-  spice_opts->spice_print_sb_testbench = FALSE;
-  spice_opts->spice_print_lut_testbench = FALSE;
-  spice_opts->spice_print_hardlogic_testbench = FALSE;
-  spice_opts->spice_print_grid_testbench = FALSE;
+  spice_opts->fpga_spice_print_top_testbench = FALSE;
+  spice_opts->fpga_spice_print_pb_mux_testbench = FALSE;
+  spice_opts->fpga_spice_print_cb_mux_testbench = FALSE;
+  spice_opts->fpga_spice_print_sb_mux_testbench = FALSE;
+  spice_opts->fpga_spice_print_cb_testbench = FALSE;
+  spice_opts->fpga_spice_print_sb_testbench = FALSE;
+  spice_opts->fpga_spice_print_lut_testbench = FALSE;
+  spice_opts->fpga_spice_print_hardlogic_testbench = FALSE;
+  spice_opts->fpga_spice_print_io_testbench = FALSE;
+  spice_opts->fpga_spice_print_grid_testbench = FALSE;
   spice_opts->fpga_spice_leakage_only = FALSE;
-  spice_opts->fpga_spice_parasitic_net_estimation_off = FALSE;
-  spice_opts->fpga_spice_testbench_load_extraction_off = FALSE;
+  spice_opts->fpga_spice_parasitic_net_estimation = TRUE;
+  spice_opts->fpga_spice_testbench_load_extraction = TRUE;
 
   /* Turn on the spice option if it is selected*/
   if (Options.Count[OT_FPGA_SPICE]) {
@@ -980,65 +1002,74 @@ static void SetupSpiceOpts(t_options Options,
     /* TODO: this could be more flexible*/
     spice_opts->include_dir = "include/";
     spice_opts->subckt_dir = "subckt/";
-    if (Options.Count[OT_SPICE_PRINT_TOP_TESTBENCH]) {
-      spice_opts->spice_print_top_testbench = TRUE;
+    if (Options.Count[OT_FPGA_SPICE_PRINT_TOP_TESTBENCH]) {
+      spice_opts->fpga_spice_print_top_testbench = TRUE;
     }
-    if (Options.Count[OT_SPICE_PRINT_PB_MUX_TESTBENCH]) {
-      spice_opts->spice_print_pb_mux_testbench = TRUE;
+    if (Options.Count[OT_FPGA_SPICE_PRINT_PB_MUX_TESTBENCH]) {
+      spice_opts->fpga_spice_print_pb_mux_testbench = TRUE;
     }
-    if (Options.Count[OT_SPICE_PRINT_CB_MUX_TESTBENCH]) {
-      spice_opts->spice_print_cb_mux_testbench = TRUE;
+    if (Options.Count[OT_FPGA_SPICE_PRINT_CB_MUX_TESTBENCH]) {
+      spice_opts->fpga_spice_print_cb_mux_testbench = TRUE;
     }
-    if (Options.Count[OT_SPICE_PRINT_SB_MUX_TESTBENCH]) {
-      spice_opts->spice_print_sb_mux_testbench = TRUE;
+    if (Options.Count[OT_FPGA_SPICE_PRINT_SB_MUX_TESTBENCH]) {
+      spice_opts->fpga_spice_print_sb_mux_testbench = TRUE;
     }
-    if (Options.Count[OT_SPICE_PRINT_CB_TESTBENCH]) {
-      spice_opts->spice_print_cb_testbench = TRUE;
+    if (Options.Count[OT_FPGA_SPICE_PRINT_CB_TESTBENCH]) {
+      spice_opts->fpga_spice_print_cb_testbench = TRUE;
     }
-    if (Options.Count[OT_SPICE_PRINT_SB_TESTBENCH]) {
-      spice_opts->spice_print_sb_testbench = TRUE;
+    if (Options.Count[OT_FPGA_SPICE_PRINT_SB_TESTBENCH]) {
+      spice_opts->fpga_spice_print_sb_testbench = TRUE;
     }
-    if (Options.Count[OT_SPICE_PRINT_GRID_TESTBENCH]) {
-      spice_opts->spice_print_grid_testbench = TRUE;
+    if (Options.Count[OT_FPGA_SPICE_PRINT_GRID_TESTBENCH]) {
+      spice_opts->fpga_spice_print_grid_testbench = TRUE;
     }
-    if (Options.Count[OT_SPICE_PRINT_LUT_TESTBENCH]) {
-      spice_opts->spice_print_lut_testbench = TRUE;
+    if (Options.Count[OT_FPGA_SPICE_PRINT_LUT_TESTBENCH]) {
+      spice_opts->fpga_spice_print_lut_testbench = TRUE;
     }
-    if (Options.Count[OT_SPICE_PRINT_HARDLOGIC_TESTBENCH]) {
-      spice_opts->spice_print_hardlogic_testbench = TRUE;
+    if (Options.Count[OT_FPGA_SPICE_PRINT_HARDLOGIC_TESTBENCH]) {
+      spice_opts->fpga_spice_print_hardlogic_testbench = TRUE;
+    }
+    if (Options.Count[OT_FPGA_SPICE_PRINT_IO_TESTBENCH]) {
+      spice_opts->fpga_spice_print_io_testbench = TRUE;
     }
     if (Options.Count[OT_FPGA_SPICE_LEAKAGE_ONLY]) {
       spice_opts->fpga_spice_leakage_only = TRUE;
     }
-    if (Options.Count[OT_FPGA_SPICE_PARASITIC_NET_ESTIMATION_OFF]) {
-      spice_opts->fpga_spice_parasitic_net_estimation_off = TRUE;
+    if (Options.Count[OT_FPGA_SPICE_PARASITIC_NET_ESTIMATION]) {
+      spice_opts->fpga_spice_parasitic_net_estimation = Options.fpga_spice_parasitic_net_estimation;
     }
-    if (Options.Count[OT_FPGA_SPICE_TESTBENCH_LOAD_EXTRACTION_OFF]) {
-      spice_opts->fpga_spice_testbench_load_extraction_off = TRUE;
+    if (Options.Count[OT_FPGA_SPICE_TESTBENCH_LOAD_EXTRACTION]) {
+      spice_opts->fpga_spice_testbench_load_extraction = Options.fpga_spice_testbench_load_extraction;
     }
   }
   /* Set default options */
   if ((TRUE == spice_opts->do_spice)
-    &&(FALSE == spice_opts->spice_print_top_testbench)
-    &&(FALSE == spice_opts->spice_print_grid_testbench)
-    &&(FALSE == spice_opts->spice_print_pb_mux_testbench)
-    &&(FALSE == spice_opts->spice_print_cb_mux_testbench)
-    &&(FALSE == spice_opts->spice_print_sb_mux_testbench)
-    &&(FALSE == spice_opts->spice_print_cb_testbench)
-    &&(FALSE == spice_opts->spice_print_sb_testbench)
-    &&(FALSE == spice_opts->spice_print_lut_testbench)
-    &&(FALSE == spice_opts->spice_print_hardlogic_testbench)) {
-    spice_opts->spice_print_pb_mux_testbench = TRUE;
-    spice_opts->spice_print_cb_mux_testbench = TRUE;
-    spice_opts->spice_print_sb_mux_testbench = TRUE;
-    spice_opts->spice_print_lut_testbench = TRUE;
-    spice_opts->spice_print_hardlogic_testbench = TRUE;
+    &&(FALSE == spice_opts->fpga_spice_print_top_testbench)
+    &&(FALSE == spice_opts->fpga_spice_print_grid_testbench)
+    &&(FALSE == spice_opts->fpga_spice_print_pb_mux_testbench)
+    &&(FALSE == spice_opts->fpga_spice_print_cb_mux_testbench)
+    &&(FALSE == spice_opts->fpga_spice_print_sb_mux_testbench)
+    &&(FALSE == spice_opts->fpga_spice_print_cb_testbench)
+    &&(FALSE == spice_opts->fpga_spice_print_sb_testbench)
+    &&(FALSE == spice_opts->fpga_spice_print_lut_testbench)
+    &&(FALSE == spice_opts->fpga_spice_print_hardlogic_testbench)) {
+    spice_opts->fpga_spice_print_pb_mux_testbench = TRUE;
+    spice_opts->fpga_spice_print_cb_mux_testbench = TRUE;
+    spice_opts->fpga_spice_print_sb_mux_testbench = TRUE;
+    spice_opts->fpga_spice_print_lut_testbench = TRUE;
+    spice_opts->fpga_spice_print_hardlogic_testbench = TRUE;
   }
 
   /* Assign the number of mt in SPICE simulation */
-  spice_opts->spice_sim_multi_thread_num = 8;
+  spice_opts->fpga_spice_sim_multi_thread_num = 8;
   if (Options.Count[OT_FPGA_SPICE_SIM_MT_NUM]) { 
-    spice_opts->spice_sim_multi_thread_num = Options.spice_sim_mt_num;
+    spice_opts->fpga_spice_sim_multi_thread_num = Options.fpga_spice_sim_mt_num;
+  }
+
+  /* Assign path of SPICE simulator */
+  spice_opts->simulator_path = NULL;
+  if (Options.Count[OT_FPGA_SPICE_SIMULATOR_PATH]) {
+    spice_opts->simulator_path = my_strdup(Options.fpga_spice_simulator_path);
   }
 
   /* If spice option is selected*/
@@ -1056,16 +1087,20 @@ static void SetupSynVerilogOpts(t_options Options,
   /* Initialize */  
   syn_verilog_opts->dump_syn_verilog = FALSE;
   syn_verilog_opts->syn_verilog_dump_dir = NULL;
-  syn_verilog_opts->tb_serial_config_mode = FALSE;
-  syn_verilog_opts->print_top_tb = FALSE;
-  syn_verilog_opts->print_top_auto_tb = FALSE;
-  syn_verilog_opts->print_input_blif_tb = FALSE;
+  syn_verilog_opts->print_top_testbench = FALSE;
+  syn_verilog_opts->print_autocheck_top_testbench = FALSE;
+  syn_verilog_opts->reference_verilog_benchmark_file = NULL;
+  syn_verilog_opts->print_input_blif_testbench = FALSE;
   syn_verilog_opts->include_timing = FALSE;
-  syn_verilog_opts->init_sim = FALSE;
+  syn_verilog_opts->include_signal_init = FALSE;
   syn_verilog_opts->print_modelsim_autodeck = FALSE;
+  syn_verilog_opts->print_formal_verification_top_netlist= FALSE;
   syn_verilog_opts->modelsim_ini_path = NULL;
-
-
+  syn_verilog_opts->print_user_defined_template = FALSE;
+  syn_verilog_opts->print_report_timing_tcl = FALSE;
+  syn_verilog_opts->print_sdc_pnr = FALSE;
+  syn_verilog_opts->print_sdc_analysis = FALSE;
+  syn_verilog_opts->include_icarus_simulator = FALSE;
 
   /* Turn on Syn_verilog options */
   if (Options.Count[OT_FPGA_VERILOG_SYN]) {
@@ -1075,45 +1110,95 @@ static void SetupSynVerilogOpts(t_options Options,
   }
 
   if (Options.Count[OT_FPGA_VERILOG_SYN_DIR]) {
-    syn_verilog_opts->syn_verilog_dump_dir = my_strdup(Options.syn_verilog_dir);
+    syn_verilog_opts->syn_verilog_dump_dir = my_strdup(Options.fpga_syn_verilog_dir);
   }
 
-  if (Options.Count[OT_FPGA_VERILOG_SYN_TB_SERIAL_CONFIG_MODE]) {
-    syn_verilog_opts->tb_serial_config_mode = TRUE;
+  if (Options.Count[OT_FPGA_VERILOG_SYN_PRINT_TOP_TESTBENCH]) {
+    syn_verilog_opts->print_top_testbench = TRUE;
   }
 
-  if (Options.Count[OT_FPGA_VERILOG_SYN_PRINT_TOP_TB]) {
-    syn_verilog_opts->print_top_tb = TRUE;
+  if (Options.Count[OT_FPGA_VERILOG_SYN_PRINT_AUTOCHECK_TOP_TESTBENCH]) {
+    syn_verilog_opts->print_autocheck_top_testbench = TRUE;
+    syn_verilog_opts->reference_verilog_benchmark_file = my_strdup(Options.fpga_verilog_reference_benchmark_file);
   }
 
-  if (Options.Count[OT_FPGA_VERILOG_SYN_PRINT_TOP_AUTO_TB]) {
-    syn_verilog_opts->print_top_auto_tb = TRUE;
-    syn_verilog_opts->verilog_benchmark_file = my_strdup(Options.verilog_benchmark_path);
+  if (Options.Count[OT_FPGA_VERILOG_SYN_PRINT_INPUT_BLIF_TESTBENCH]) {
+    syn_verilog_opts->print_input_blif_testbench = TRUE;
   }
 
-  if (Options.Count[OT_FPGA_VERILOG_SYN_PRINT_INPUT_BLIF_TB]) {  
-     syn_verilog_opts->print_input_blif_tb = TRUE;
+  if (Options.Count[OT_FPGA_VERILOG_SYN_PRINT_FORMAL_VERIFICATION_TOP_NETLIST]) {
+    syn_verilog_opts->print_formal_verification_top_netlist = TRUE;
   }
 
   if (Options.Count[OT_FPGA_VERILOG_SYN_INCLUDE_TIMING]) {
     syn_verilog_opts->include_timing = TRUE;
   }
 
-  if (Options.Count[OT_FPGA_VERILOG_INIT_SIM]) {
-    syn_verilog_opts->init_sim = TRUE;
+  if (Options.Count[OT_FPGA_VERILOG_SYN_INCLUDE_SIGNAL_INIT]) {
+    syn_verilog_opts->include_signal_init = TRUE;
+  }
+
+  if (Options.Count[OT_FPGA_VERILOG_SYN_INCLUDE_ICARUS_SIMULATOR]) {
+    syn_verilog_opts->include_icarus_simulator = TRUE;
   }
 
   if (Options.Count[OT_FPGA_VERILOG_SYN_PRINT_MODELSIM_AUTODECK]) {
     syn_verilog_opts->print_modelsim_autodeck = TRUE;
+    syn_verilog_opts->modelsim_ini_path = my_strdup(Options.fpga_verilog_modelsim_ini_path);
   }
 
-  if (Options.Count[OT_FPGA_VERILOG_SYN_MODELSIM_INI_PATH]) {
-    syn_verilog_opts->modelsim_ini_path = my_strdup(Options.fpga_verilog_modelsim_ini_path);
+  if (Options.Count[OT_FPGA_VERILOG_SYN_PRINT_USER_DEFINED_TEMPLATE]) {
+    syn_verilog_opts->print_user_defined_template = TRUE;
+  }
+
+  if (Options.Count[OT_FPGA_VERILOG_SYN_PRINT_REPORT_TIMING_TCL]) {
+    syn_verilog_opts->print_report_timing_tcl = TRUE;
+  }
+
+  if (Options.Count[OT_FPGA_VERILOG_SYN_REPORT_TIMING_RPT_PATH]) {
+    syn_verilog_opts->report_timing_path = my_strdup(Options.fpga_verilog_report_timing_path);
+  }
+
+  if (Options.Count[OT_FPGA_VERILOG_SYN_PRINT_SDC_PNR]) {
+    syn_verilog_opts->print_sdc_pnr = TRUE;
+  }
+
+  if (Options.Count[OT_FPGA_VERILOG_SYN_PRINT_SDC_ANALYSIS]) {
+    syn_verilog_opts->print_sdc_analysis = TRUE;
   }
 
   /* SynVerilog needs the input from spice modeling */
   if (FALSE == arch->read_xml_spice) {
     arch->read_xml_spice = syn_verilog_opts->dump_syn_verilog;
+    arch->spice = (t_spice*)my_malloc(sizeof(t_spice));
+  }
+
+  return;
+}
+
+/*Xifan TANG: Bitstream Generator */
+static void SetupBitstreamGenOpts(t_options Options, 
+                                  t_bitstream_gen_opts* bitstream_gen_opts,
+                                  t_arch* arch) {
+
+  /* Initialize */  
+  bitstream_gen_opts->gen_bitstream = FALSE;
+  bitstream_gen_opts->bitstream_output_file = NULL;
+
+  /* Turn on Bitstream Generator options */
+  if (Options.Count[OT_FPGA_BITSTREAM_GENERATOR]) {
+    bitstream_gen_opts->gen_bitstream = TRUE;
+  } else {
+    return;
+  }
+
+  if (Options.Count[OT_FPGA_BITSTREAM_OUTPUT_FILE]) {
+    bitstream_gen_opts->bitstream_output_file = my_strdup(Options.fpga_bitstream_file);
+  }
+
+  /* SynVerilog needs the input from spice modeling */
+  if (FALSE == arch->read_xml_spice) {
+    arch->read_xml_spice = bitstream_gen_opts->gen_bitstream;
     arch->spice = (t_spice*)my_malloc(sizeof(t_spice));
   }
 
@@ -1129,40 +1214,46 @@ static void SetupFpgaSpiceOpts(t_options Options,
   /* Xifan TANG: Synthesizable Verilog Dumping*/
   SetupSynVerilogOpts(Options, &(fpga_spice_opts->SynVerilogOpts), Arch);   
 
-  /* Decide if we need to read activity file */
-  fpga_spice_opts->read_act_file = FALSE;
+  /* Xifan TANG: Bitstream generator */
+  SetupBitstreamGenOpts(Options, &(fpga_spice_opts->BitstreamGenOpts), Arch);
 
   /* Decide if we need to rename illegal port names */
   fpga_spice_opts->rename_illegal_port = FALSE;
-  if (Options.Count[OT_FPGA_SPICE_RENAME_ILLEGAL_PORT]) {
+  if (Options.Count[OT_FPGA_X2P_RENAME_ILLEGAL_PORT]) {
     fpga_spice_opts->rename_illegal_port = TRUE;
   }
 
   /* Assign the weight of signal density */
   fpga_spice_opts->signal_density_weight = 1.;
-  if (Options.Count[OT_FPGA_SPICE_SIGNAL_DENSITY_WEIGHT]) { 
-    fpga_spice_opts->signal_density_weight = Options.signal_density_weight;
+  if (Options.Count[OT_FPGA_X2P_SIGNAL_DENSITY_WEIGHT]) { 
+    fpga_spice_opts->signal_density_weight = Options.fpga_spice_signal_density_weight;
   }
 
   /* Assign the weight of signal density */
   fpga_spice_opts->sim_window_size = 0.5;
-  if (Options.Count[OT_FPGA_SPICE_SIM_WINDOW_SIZE]) { 
-    fpga_spice_opts->sim_window_size = Options.sim_window_size;
+  if (Options.Count[OT_FPGA_X2P_SIM_WINDOW_SIZE]) { 
+    fpga_spice_opts->sim_window_size = Options.fpga_spice_sim_window_size;
   }
 
   /* Decide if we need to do FPGA-SPICE */
   fpga_spice_opts->do_fpga_spice = FALSE;
   if (( TRUE == fpga_spice_opts->SpiceOpts.do_spice)
+     ||(TRUE == fpga_spice_opts->SynVerilogOpts.dump_syn_verilog)
+     ||(TRUE == fpga_spice_opts->BitstreamGenOpts.gen_bitstream)) {
+    fpga_spice_opts->do_fpga_spice = TRUE;
+  }
+
+  /* Decide if we need to read activity file */
+  fpga_spice_opts->read_act_file = FALSE;
+  if (( TRUE == fpga_spice_opts->SpiceOpts.do_spice)
      ||(TRUE == fpga_spice_opts->SynVerilogOpts.dump_syn_verilog)) {
     fpga_spice_opts->read_act_file = TRUE;
-    fpga_spice_opts->do_fpga_spice = TRUE;
   }
 
   return;
 }
 
 /* Initialize the global variables for clb to clb directs */
-static 
 void alloc_and_init_globals_clb_to_clb_directs(int num_directs, 
                                                t_direct_inf* directs) {
   num_clb2clb_directs = num_directs;

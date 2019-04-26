@@ -37,7 +37,7 @@ Second - instantiate_top_level() module is called. This function will will trave
 
 Third - instantiate_SDF_header() is a short function that will just write the top level declarations in the SDF file.
 
-Fourth - All the wires in the design are instantiated. This is done in the way demonstrated bellow:
+Fourth - All the wires in the design are instantiated. This is done in the way demonstrated below:
                                                       
                                                       Traverse through all primitives
 

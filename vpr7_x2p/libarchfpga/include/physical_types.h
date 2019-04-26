@@ -241,6 +241,7 @@ struct s_pb_type;
  * port_index_by_type index of port by type (index by input, output, or clock)
  * equivalence: 
  */
+typedef struct s_port t_port;
 struct s_port {
 	char* name;
 	t_model_ports *model_port;
@@ -262,8 +263,14 @@ struct s_port {
     /* FPGA_SPICE_model support:
      * mapped SPICE model port */
     t_spice_model_port* spice_model_port;
+    char* physical_mode_pin;
+    int physical_mode_pin_rotate_offset; /* The pin number will rotate by an offset unit when mapping to physical modes */
+    int phy_mode_pin_rotate_offset_acc; /* The pin number will rotate by an offset unit when mapping to physical modes */
+    t_port* phy_pb_type_port;
+    int phy_pb_type_port_lsb;
+    int phy_pb_type_port_msb;
+    /* END */
 };
-typedef struct s_port t_port;
 
 /** 
  * Info placed between pins that can be processed later for additional information
@@ -310,6 +317,9 @@ struct s_interconnect {
 
 	char *input_string;
 	char *output_string;
+    /* Baudouin Chauviere: SDC generation */
+    char *loop_breaker_string;
+    /* END */   
 
 	t_pin_to_pin_annotation *annotations; /* [0..num_annotations-1] */
 	int num_annotations;
@@ -328,6 +338,7 @@ struct s_interconnect {
     int fan_in;
     int fan_out;
     int num_mux;
+    int spice_model_sram_offset;
     /* END */
 
 	t_interconnect_power * interconnect_power;
@@ -376,7 +387,7 @@ struct s_mode {
      */
     int define_idle_mode;   
     int define_physical_mode;   
-    int disabled_in_packing;
+    boolean disabled_in_packing;
  
 	/* Power releated members */
 	t_mode_power * mode_power;
@@ -396,6 +407,8 @@ enum e_pb_graph_pin_type {
 	PB_PIN_INPAD,
 	PB_PIN_OUTPAD,
 	PB_PIN_TERMINAL,
+	PB_PIN_INPUT,
+	PB_PIN_OUTPUT,
 	PB_PIN_CLOCK
 };
 
@@ -409,6 +422,7 @@ enum e_pb_graph_pin_type {
  * parent_node: parent pb_graph_node
  * pin_count_in_cluster: Unique number for pin inside cluster
  */
+typedef struct s_pb_graph_pin t_pb_graph_pin;
 struct s_pb_graph_pin {
 	t_port *port;
 	int pin_number;
@@ -421,6 +435,10 @@ struct s_pb_graph_pin {
 	int pin_count_in_cluster;
     /* Xifan TANG: FPGA-SPICE */
     int temp_net_num;
+	int rr_node_index_physical_pb; /* rr_node in the physical pb rr_graph*/
+    t_pb_graph_pin* physical_pb_graph_pin;
+    char* name_mux;
+    /* END */
 
 	int scratch_pad; /* temporary data structure useful to store traversal info */
 
@@ -444,7 +462,6 @@ struct s_pb_graph_pin {
 
 	t_pb_graph_pin_power * pin_power;
 };
-typedef struct s_pb_graph_pin t_pb_graph_pin;
 
 struct s_pb_graph_pin_power {
 	/* Transistor-level Power Properties */
@@ -524,6 +541,11 @@ struct s_pb_graph_edge {
 	int num_pack_patterns;
 	boolean infer_pattern; /*If TRUE, infer pattern based on patterns connected to it*/
 
+    /* Baudouin Chauviere: SDC Generation */
+    boolean is_disabled;
+    int nb_mux;
+    int nb_pin;
+    /* END */
 };
 typedef struct s_pb_graph_edge t_pb_graph_edge;
 
@@ -573,6 +595,10 @@ struct s_pb_graph_node {
 	t_pb_graph_node_power * pb_node_power;
 	t_interconnect_pins ** interconnect_pins; /* [0..num_modes-1][0..num_interconnect_in_mode] */
 
+    /* Xifan Tang: FPGA-SPICE */
+    t_pb_graph_node* physical_pb_graph_node; /* physical pb_graph_node */
+	int placement_index_in_top_node; /* index at the top-level pb_graph node */
+    /* END */
 };
 
 struct s_pb_graph_node_power {
@@ -623,6 +649,13 @@ struct s_pb_type {
     char* spice_model_name;
     t_spice_model* spice_model;
     char* mode_bits; /* Mode bits to select */
+    int spice_model_sram_offset;
+    char* physical_pb_type_name;
+	struct s_pb_type* phy_pb_type;
+    float physical_pb_type_index_factor;
+    int physical_pb_type_index_offset;
+    int temp_placement_index;
+    /* END */
 
 	/* Power related members */
 	t_pb_type_power * pb_type_power;
@@ -636,6 +669,7 @@ struct s_pb_type {
     int default_mode_num_conf_bits;
     int default_mode_num_mode_bits;
     int default_mode_num_iopads;
+    /* END */
 };
 typedef struct s_pb_type t_pb_type;
 

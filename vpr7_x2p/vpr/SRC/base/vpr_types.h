@@ -201,6 +201,7 @@ typedef struct s_pb {
 
     /* Xifan TANG: SPICE model support*/
     char* spice_name_tag;
+    void* phy_pb;
 
     /* Xifan TANG: FPGA-SPICE and SynVerilog */
     int num_reserved_conf_bits;
@@ -248,8 +249,7 @@ typedef struct s_logical_block {
     /* for Register/flip-flop */
     char* trigger_type;
     int init_val;
-    /* To identify if this is a clock */
-    int is_clock;
+    boolean is_clock;
 
 } t_logical_block;
 
@@ -557,6 +557,7 @@ typedef struct s_grid_tile {
 /* Stores the bounding box of a net in terms of the minimum and  *
  * maximum coordinates of the blocks forming the net, clipped to *
  * the region (1..nx, 1..ny).                                    */
+typedef struct s_bb t_bb;
 struct s_bb {
 	int xmin;
 	int xmax;
@@ -598,6 +599,11 @@ struct s_block {
     int** pin_prefer_side; /* [0..num_pins-1][0..3] */
 
 	t_pb *pb;
+    
+    /* Xifan TANG: FPGA-SPICE 
+     * pb for physical model  
+     */
+    void* phy_pb;
 
 	boolean isFixed;
 
@@ -616,6 +622,8 @@ struct s_file_name_opts {
 	char *PowerFile;
 	char *CmosTechFile;
 	char *out_file_prefix;
+    /* For shell-like interface */
+	char *SDCFile;
 };
 
 /* Options for packing
@@ -881,7 +889,7 @@ typedef struct s_seg_details {
  * (UDSD by AY) drivers: How do signals driving a routing track connect to  *
  *                       the track?                                         *
  * index: index of the segment type used for this track.                    */
-
+typedef struct s_linked_f_pointer t_linked_f_pointer;
 struct s_linked_f_pointer {
 	struct s_linked_f_pointer *next;
 	float *fptr;
@@ -966,6 +974,7 @@ struct s_rr_node {
     int* drive_switches;
     /* Xifan TANG: for parasitic net estimation */
     boolean vpack_net_num_changed;
+    boolean is_parasitic_net;
     /* Xifan TANG: pb_pin_eq_auto_detect support */
     boolean is_in_heap;
     /* SPECIAL: For switch box muxes */
@@ -973,6 +982,9 @@ struct s_rr_node {
     t_rr_node** sb_drive_rr_nodes;
     int* sb_drive_switches;
     t_pb* pb;
+    /* BC: Supports SDC for SBs/CBs. PBs use the one inside of the pb_graph*/
+    char* name_mux;
+    int id_path;
     // int seg_index; /* Valid only for CHANX or CHANY*/
     /* END */
 
@@ -1182,25 +1194,27 @@ struct s_cb {
 typedef struct s_spice_opts t_spice_opts;
 struct s_spice_opts {
   boolean do_spice;
-  boolean spice_print_top_testbench; 
-  boolean spice_print_grid_testbench; 
-  boolean spice_print_cb_testbench; 
-  boolean spice_print_sb_testbench; 
-  boolean spice_print_pb_mux_testbench; 
-  boolean spice_print_cb_mux_testbench; 
-  boolean spice_print_sb_mux_testbench; 
-  boolean spice_print_lut_testbench; 
-  boolean spice_print_hardlogic_testbench; 
+  boolean fpga_spice_print_top_testbench; 
+  boolean fpga_spice_print_grid_testbench; 
+  boolean fpga_spice_print_cb_testbench; 
+  boolean fpga_spice_print_sb_testbench; 
+  boolean fpga_spice_print_pb_mux_testbench; 
+  boolean fpga_spice_print_cb_mux_testbench; 
+  boolean fpga_spice_print_sb_mux_testbench; 
+  boolean fpga_spice_print_lut_testbench; 
+  boolean fpga_spice_print_hardlogic_testbench; 
+  boolean fpga_spice_print_io_testbench; 
   boolean fpga_spice_leakage_only;
-  boolean fpga_spice_parasitic_net_estimation_off;
-  boolean fpga_spice_testbench_load_extraction_off;
+  boolean fpga_spice_parasitic_net_estimation;
+  boolean fpga_spice_testbench_load_extraction;
  
   /*Xifan TANG: FPGA SPICE Model Support*/
   char* spice_dir;
   char* include_dir;
   char* subckt_dir;
 
-  int spice_sim_multi_thread_num;
+  int fpga_spice_sim_multi_thread_num;
+  char* simulator_path;
 };
 
 /* Xifan TANG: synthesizable verilog dumping */
@@ -1208,15 +1222,28 @@ typedef struct s_syn_verilog_opts t_syn_verilog_opts;
 struct s_syn_verilog_opts {
   boolean dump_syn_verilog;
   char* syn_verilog_dump_dir;
-  boolean print_top_tb;
-  boolean print_top_auto_tb;
-  char* verilog_benchmark_file;
-  boolean print_input_blif_tb;
-  boolean tb_serial_config_mode;
+  boolean print_top_testbench;
+  boolean print_input_blif_testbench;
+  boolean print_formal_verification_top_netlist;
   boolean include_timing;
-  boolean init_sim;
+  boolean include_signal_init;
+  boolean include_icarus_simulator;
   boolean print_modelsim_autodeck;
   char* modelsim_ini_path;
+  char* report_timing_path;
+  boolean print_user_defined_template;
+  boolean print_autocheck_top_testbench;
+  char* reference_verilog_benchmark_file;
+  boolean print_report_timing_tcl;
+  boolean print_sdc_pnr;
+  boolean print_sdc_analysis;
+};
+
+/* Xifan TANG: bitstream generator */
+typedef struct s_bitstream_gen_opts t_bitstream_gen_opts;
+struct s_bitstream_gen_opts {
+  boolean gen_bitstream;
+  char* bitstream_output_file;
 };
 
 typedef struct s_fpga_spice_opts t_fpga_spice_opts;
@@ -1226,6 +1253,7 @@ struct s_fpga_spice_opts {
   boolean rename_illegal_port; /* Rename illegal port names that is not compatible with verilog/SPICE syntax */
   t_spice_opts SpiceOpts; /* Xifan TANG: SPICE Support*/
   t_syn_verilog_opts SynVerilogOpts; /* Xifan TANG: Synthesizable verilog dumping*/
+  t_bitstream_gen_opts BitstreamGenOpts; /* Xifan Bitsteam Generator */
 
   /* Signal Density */
   float signal_density_weight;

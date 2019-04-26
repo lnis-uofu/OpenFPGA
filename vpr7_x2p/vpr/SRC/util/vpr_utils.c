@@ -247,6 +247,12 @@ boolean primitive_type_feasible(int iblk, const t_pb_type *cur_pb_type) {
 		return FALSE;
 	}
 
+    /* Xifan Tang: return false if this primitive is disabled in the packing */
+    if (TRUE == cur_pb_type->parent_mode->disabled_in_packing) {
+      return FALSE;
+    }
+    /* END */
+
 	/* check if ports are big enough */
 	port = logical_block[iblk].model->inputs;
 	second_pass = FALSE;

@@ -523,7 +523,7 @@ static void add_latch(int doall, INP t_model *latch_model) {
     logical_block[num_logical_blocks - 1].trigger_type = my_strdup(saved_names[2]);
     /* Store the initial value */
     logical_block[num_logical_blocks - 1].init_val = my_atoi(saved_names[4]);
-    /* Identify clocks */
+    /* Add clock identification */
     logical_block[logical_block[num_logical_blocks - 1].clock_net].is_clock = TRUE;
     /*END*/
 

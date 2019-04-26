@@ -7,7 +7,7 @@
 
 # Please note that a Mac can run the graphics if the X11 library is installed. 
 
-ENABLE_GRAPHICS = true
+ENABLE_GRAPHICS = false
 # can be true or false
 
 export BUILD_TYPE = debug
@@ -23,11 +23,12 @@ OPTIMIZATION_LEVEL_FOR_RELEASE_BUILD = -O3
 
 CC = $(COMPILER)
 LIB_DIR = -L.
-LIB = -lm -lvpr
-FPGA_SPICE_SRC_DIR = SRC/fpga_spice
+LIB = -lm -lvpr -lreadline
+SHELL_LIB = -lm -lvpr_shell -lreadline
+FPGA_SPICE_SRC_DIR = SRC/fpga_x2p
 SRC_DIR = SRC
 OBJ_DIR = OBJ
-OTHER_DIR = -ISRC/util -ISRC/timing -ISRC/pack -ISRC/place -ISRC/base -ISRC/route -ISRC/power -ISRC/mrfpga -ISRC/fpga_spice/base -ISRC/fpga_spice/spice -ISRC/fpga_spice/verilog -ISRC/fpga_spice/clb_pin_remap -I../libarchfpga -I../printhandler/SRC/TIO_InputOutputHandlers
+OTHER_DIR = -ISRC/util -ISRC/timing -ISRC/pack -ISRC/place -ISRC/base -ISRC/route -ISRC/power -ISRC/mrfpga -ISRC/fpga_spice -I$(FPGA_SPICE_SRC_DIR)/base -I$(FPGA_SPICE_SRC_DIR)/bitstream -I$(FPGA_SPICE_SRC_DIR)/bitstream -I$(FPGA_SPICE_SRC_DIR)/clb_pin_remap -I$(FPGA_SPICE_SRC_DIR)/spice -I$(FPGA_SPICE_SRC_DIR)/verilog  -I$(FPGA_SPICE_SRC_DIR)/router -I../libarchfpga -I../printhandler/SRC/TIO_InputOutputHandlers -I$(FPGA_SPICE_SRC_DIR)/shell
 
 WARN_FLAGS = -Wall -Wpointer-arith -Wcast-qual -D__USE_FIXED_PROTOTYPES__ -ansi -pedantic -Wshadow -Wcast-align -D_POSIX_SOURCE -Wno-write-strings
 
@@ -41,8 +42,6 @@ UNAME := $(shell uname)
 # determine build env
 ifeq ($(UNAME), Darwin)
 	MAC_OS = true
-    # Disable graphic in MacOS
-    ENABLE_GRAPHICS = false 
 else
 	MAC_OS = false
 endif
@@ -79,6 +78,12 @@ DEP := $(OBJ:.o=.d)
 $(EXE): $(OBJ) Makefile libvpr.a | notify
 	$(CC) $(FLAGS) OBJ/main.o -o $(EXE) $(LIB_DIR) $(LIB)
 
+SHELL_EXE = vpr_shell
+
+# cmd-shell interface main
+$(SHELL_EXE): $(OBJ) Makefile libvpr_shell.a | notify
+	$(CC) $(FLAGS) OBJ/shell_main.o -o $(SHELL_EXE) $(LIB_DIR) $(SHELL_LIB)
+
 # if graphics enabled but libx11-dev is not installed, notify the user
 notify:
 	@ $(PACKAGENOTIFICATION) 
@@ -96,6 +101,11 @@ libvpr.a: $(OBJ) Makefile libarchfpga
 	@ ar rcs $@ $(OBJ)
 	@ ar d $@ main.o
 
+libvpr_shell.a: $(OBJ) Makefile libarchfpga
+	@ cp ../libarchfpga/libarchfpga.a $@
+	@ ar rcs $@ $(OBJ)
+	@ ar d $@ shell_main.o
+
 # Enable a second round of expansion so that we may include
 # the target directory as a prerequisite of the object file.
 .SECONDEXPANSION:
@@ -104,7 +114,7 @@ libvpr.a: $(OBJ) Makefile libarchfpga
 # timestamp check.  Every write to the directory updates the timestamp thus
 # without this, all but the last file written to a directory would appear
 # to be out of date.
-$(OBJ): OBJ/%.o:$(SRC_DIR)/%.c | $$(dir $$@D)
+$(OBJ): OBJ/%.o:$(SRC_DIR)/%.c | $$(dir $$@D) 
 	$(CC) $(FLAGS) -MD -MP -I$(OTHER_DIR) -ISRC/util -c $< -o $@
 
 # Silently create target directories as need
@@ -113,8 +123,16 @@ $(OBJ_DIRS):
 
 -include $(DEP)
 
+.PHONY: all vpr shell_vpr
+
+all: $(EXE) $(SHELL_EXE)
+
+vpr: $(EXE)
+
+shell_vpr: $(SHELL_EXE)
+
 clean:
-	rm -f $(EXE) $(OBJ) $(DEP) libvpr.a
+	rm -f $(SHELL_EXE) $(EXE) $(OBJ) $(DEP) libvpr.a libvpr_shell.a 
 	cd ../libarchfpga && make clean
 
 clean_coverage: clean

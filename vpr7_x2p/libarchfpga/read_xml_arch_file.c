@@ -927,6 +927,19 @@ static void ProcessPb_Type(INOUTP ezxml_t Parent, t_pb_type * pb_type,
 		pb_type->num_pb = GetIntProperty(Parent, "num_pb", TRUE, 0);
 	}
 
+    /* Xifan TANG: FPGA_SPICE, multi-mode support */
+	Prop = FindProperty(Parent, "physical_pb_type_name", FALSE);
+	pb_type->physical_pb_type_name = my_strdup(Prop);
+	ezxml_set_attr(Parent, "physical_pb_type_name", NULL);
+
+	pb_type->physical_pb_type_index_factor = GetFloatProperty(Parent, "physical_pb_type_index_factor", FALSE, 1.0);
+	ezxml_set_attr(Parent, "physical_pb_type_index_factor", NULL);
+
+	pb_type->physical_pb_type_index_offset = GetIntProperty(Parent, "physical_pb_type_index_offset", FALSE, 0);
+	ezxml_set_attr(Parent, "physical_pb_type_index_offset", NULL);
+
+    /* END */
+
 	assert(pb_type->num_pb > 0);
 	num_ports = 0;
 	num_ports += CountChildren(Parent, "input", 0);
@@ -1004,14 +1017,20 @@ static void ProcessPb_Type(INOUTP ezxml_t Parent, t_pb_type * pb_type,
      * We should have a spice_model_name if this mode defines the transistor-level circuit design
      * Since this is a leaf node
      */
-    pb_type->spice_model_name = my_strdup(FindProperty(Parent, "circuit_model_name", FALSE));
+    pb_type->spice_model_name = my_strdup(FindProperty(Parent, "spice_model_name", FALSE));
     pb_type->spice_model = NULL;
-    ezxml_set_attr(Parent,"circuit_model_name",NULL);
-    /* We can read the mode configuration bits if they are defined */
-    if (NULL != pb_type->spice_model_name) {
-      pb_type->mode_bits = my_strdup(FindProperty(Parent, "mode_bits", FALSE));
-      ezxml_set_attr(Parent,"mode_bits",NULL);
-    }
+    ezxml_set_attr(Parent, "spice_model_name", NULL);
+    /* Multi-mode CLB support:
+     * We can read the mode configuration bits if they are defined 
+     */
+    pb_type->mode_bits = my_strdup(FindProperty(Parent, "mode_bits", FALSE));
+    ezxml_set_attr(Parent, "mode_bits", NULL);
+    /* Multi-mode CLB support:
+     * Specify the offset in sram bits of a spice_model
+     * This will determine which SRAMs will be configured by this pb_type configuration bits 
+     */
+    pb_type->spice_model_sram_offset = GetIntProperty(Parent, "spice_model_sram_offset", FALSE, 0);
+    ezxml_set_attr(Parent, "spice_model_sram_offset", NULL);
     /* End Spice Model Support*/
 
 	/* Determine if this is a leaf or container pb_type */
@@ -1090,8 +1109,17 @@ static void ProcessPb_Type(INOUTP ezxml_t Parent, t_pb_type * pb_type,
             * We don't need to search the spice_model_mode_name at this level.
             * There is only one mode, so it should herit.
             */
-            if (do_spice) {
+            /* We need to identify the physical mode that refers to physical design interests */
+            pb_type->idle_mode_name = my_strdup(FindProperty(Parent,"idle_mode_name", FALSE)); 
+            ezxml_set_attr(Parent,"idle_mode_name",NULL);
+            if (NULL == pb_type->idle_mode_name) {
               pb_type->idle_mode_name = my_strdup(pb_type->name); 
+            }
+            /* Only when the parent mode is a physical mode, we can do this */
+            pb_type->physical_mode_name = my_strdup(FindProperty(Parent, "physical_mode_name", FALSE)); 
+            ezxml_set_attr(Parent,"physical_mode_name",NULL);
+            if (((NULL == pb_type->physical_mode_name) && (NULL == pb_type->parent_mode)) 
+               || ((NULL == pb_type->physical_mode_name) && (NULL != pb_type->parent_mode) && (1 == pb_type->parent_mode->define_physical_mode))) {
               pb_type->physical_mode_name = my_strdup(pb_type->name); 
             }
             /*END*/
@@ -1110,12 +1138,7 @@ static void ProcessPb_Type(INOUTP ezxml_t Parent, t_pb_type * pb_type,
             }
             ezxml_set_attr(Parent,"idle_mode_name",NULL);
             /* We need to identify the physical mode that refers to physical design interests */
-            if (FindProperty(Parent,"physical_mode_name", do_spice)) {
-              pb_type->physical_mode_name = my_strdup(FindProperty(Parent,"physical_mode_name",TRUE)); 
-            } else if (do_spice) {
-              vpr_printf(TIO_MESSAGE_ERROR,"[LINE %d]Pb_Type has more than 1 mode, should define a physical_mode_name.\n",Parent->line);
-              exit(1);
-            }
+            pb_type->physical_mode_name = my_strdup(FindProperty(Parent,"physical_mode_name", FALSE)); 
             ezxml_set_attr(Parent,"physical_mode_name",NULL);
             /*END*/
 			pb_type->modes = (t_mode*) my_calloc(pb_type->num_modes,
@@ -1268,10 +1291,20 @@ static void ProcessPb_TypePort(INOUTP ezxml_t Parent, t_port * port,
 	ezxml_set_attr(Parent, "chain", NULL);
 
 	port->equivalent = GetBooleanProperty(Parent, "equivalent", FALSE, FALSE);
+	ezxml_set_attr(Parent, "equivalent", NULL);
    
 	port->num_pins = GetIntProperty(Parent, "num_pins", TRUE, 0);
 	port->is_non_clock_global = GetBooleanProperty(Parent,
 			"is_non_clock_global", FALSE, FALSE);
+
+    /* FPGA-SPICE multi-mode CLB support */
+	Prop = FindProperty(Parent, "physical_mode_pin", FALSE);
+    port->physical_mode_pin = my_strdup(Prop);
+	ezxml_set_attr(Parent, "physical_mode_pin", NULL);
+
+    port->physical_mode_pin_rotate_offset = GetIntProperty(Parent, "physical_mode_pin_rotate_offset", FALSE, 0);
+	ezxml_set_attr(Parent, "physical_mode_pin_rotate_offset", NULL);
+    /* END */
 
 	if (0 == strcmp(Parent->name, "input")) {
 		port->type = IN_PORT;
@@ -1330,8 +1363,9 @@ static void ProcessInterconnect(INOUTP ezxml_t Parent, t_mode * mode) {
 				mode->interconnect[i].type = MUX_INTERC;
 			}
 
+
             /* Xifan TANG: SPICE Support */
-            Prop = FindProperty(Cur, "circuit_model_name", FALSE);
+            Prop = FindProperty(Cur, "spice_model_name", FALSE);
             /* Default spice_model will be define later*/
             mode->interconnect[i].spice_model_name = my_strdup(Prop);
             mode->interconnect[i].spice_model = NULL;
@@ -1339,7 +1373,10 @@ static void ProcessInterconnect(INOUTP ezxml_t Parent, t_mode * mode) {
             mode->interconnect[i].fan_in = 0;
             mode->interconnect[i].fan_out = 0;
             mode->interconnect[i].num_mux = 0;
-            ezxml_set_attr(Cur, "circuit_model_name", NULL);
+            ezxml_set_attr(Cur, "spice_model_name", NULL);
+            /* Get sram offset */
+            mode->interconnect[i].spice_model_sram_offset = GetIntProperty(Cur, "spice_model_sram_offset", FALSE, 0); 
+            ezxml_set_attr(Cur, "spice_model_sram_offset", NULL);
             /* END */
  
 			mode->interconnect[i].line_num = Cur->line;
@@ -1359,6 +1396,23 @@ static void ProcessInterconnect(INOUTP ezxml_t Parent, t_mode * mode) {
 			mode->interconnect[i].name = my_strdup(Prop);
 			ezxml_set_attr(Cur, "name", NULL);
 
+            /* Baudouin Chauviere: SDC generation */
+            /* Check if property exists */
+			if (Prop = FindProperty(Cur, "loop_breaker", FALSE)) { 
+            /* Check if property exists and is true */
+			/*if (0 == strcmp(Prop,"TRUE") || 0 == strcmp(Prop,"true")) {*/
+			  if (0 == strcmp(Cur->name, "direct")) {
+			    vpr_printf(TIO_MESSAGE_ERROR,
+			    "[Line %d] loop_breaker not supported for '%s'.\n",
+					Parent->line, Cur->name);
+			    exit(1);
+		      }
+              //if (
+			  mode->interconnect[i].loop_breaker_string= my_strdup(Prop);
+            }
+			ezxml_set_attr(Cur, "loop_breaker", NULL);
+            /* END */
+
 			/* Process delay and capacitance annotations */
 			num_annotations = 0;
 			num_annotations += CountChildren(Cur, "delay_constant", 0);
@@ -1366,7 +1420,7 @@ static void ProcessInterconnect(INOUTP ezxml_t Parent, t_mode * mode) {
 			num_annotations += CountChildren(Cur, "C_constant", 0);
 			num_annotations += CountChildren(Cur, "C_matrix", 0);
 			num_annotations += CountChildren(Cur, "pack_pattern", 0);
-            /* Xifan TANG: FPGA-SPICE, mode select description */
+            /* Xifan TANG: FPGA-SPICE, mode select description for multi-mode CLB */
 			num_annotations += CountChildren(Cur, "mode_select", 0);
             /* END FPGA-SPICE, mode select description */
 
@@ -1448,31 +1502,43 @@ static void ProcessMode(INOUTP ezxml_t Parent, t_mode * mode,
      * The mode should herit the define_spice_model from its parent
      */
     if (do_spice) {
-      if (0 == strcmp(mode->name, mode->parent_pb_type->idle_mode_name)) {
-        if (NULL == mode->parent_pb_type->parent_mode) {
-          mode->define_idle_mode = 1;
+        if (0 == strcmp(mode->name, mode->parent_pb_type->idle_mode_name)) {
+          if (NULL == mode->parent_pb_type->parent_mode) {
+            mode->define_idle_mode = 1;
+          } else {
+            mode->define_idle_mode = mode->parent_pb_type->parent_mode->define_idle_mode;
+          }
         } else {
-          mode->define_idle_mode = mode->parent_pb_type->parent_mode->define_idle_mode;
+          mode->define_idle_mode = 0;
         }
-      } else {
-        mode->define_idle_mode = 0;
-      }
-      /* For physical design mode */
-      if (0 == strcmp(mode->name, mode->parent_pb_type->physical_mode_name)) {
-        if (NULL == mode->parent_pb_type->parent_mode) {
-          mode->define_physical_mode = 1;
+        /* For physical design mode
+         * This is different from idle mode:
+         * If the parent is not a physical mode, then this is definitely not a physical mode     
+         */
+        if (NULL == mode->parent_pb_type->physical_mode_name) {
+          mode->define_physical_mode = 0;
         } else {
-          mode->define_physical_mode = mode->parent_pb_type->parent_mode->define_physical_mode;
+          if (0 == strcmp(mode->name, mode->parent_pb_type->physical_mode_name)) {
+            if (NULL == mode->parent_pb_type->parent_mode) {
+              mode->define_physical_mode = 1;
+            } else {
+              mode->define_physical_mode = mode->parent_pb_type->parent_mode->define_physical_mode;
+            }
+          } else {
+            mode->define_physical_mode = 0;
+          }
         }
-      } else {
-        mode->define_physical_mode = 0;
-      }
     }
     /* Spice Model Support: Xifan TANG
      * More option: specify if this mode is available during packing 
      */
-    mode->disabled_in_packing = GetBooleanProperty(Parent, "disabled_in_packing", FALSE, FALSE); 
-    ezxml_set_attr(Parent, "disabled_in_packing", NULL);
+    mode->disabled_in_packing = FALSE; /* Default should be FALSE */
+    if (NULL != mode->parent_pb_type->parent_mode) {
+      /* If the parent mode is disabled in packing, all the child mode should be disabled as well */
+      mode->disabled_in_packing = mode->parent_pb_type->parent_mode->disabled_in_packing;
+    }
+    /* Override if the user specify */
+    mode->disabled_in_packing = GetBooleanProperty(Parent, "disabled_in_packing", FALSE, mode->disabled_in_packing);
     /* END */
 
 	mode->num_pb_type_children = CountChildren(Parent, "pb_type", 0);
@@ -2220,7 +2286,10 @@ void ProcessLutClass(INOUTP t_pb_type *lut_pb_type) {
 	lut_pb_type->modes[0].mode_power = (t_mode_power*) my_calloc(1,
 			sizeof(t_mode_power));
     /* Xifan TANG: LUT default idle mode */
-    lut_pb_type->modes[0].define_idle_mode = 1;
+    lut_pb_type->modes[0].define_idle_mode = 0;
+    /* Xifan TANG: LUT default physical mode: special for LUT: mode 1 should never to be true */
+    lut_pb_type->modes[0].define_physical_mode = FALSE;
+    /* END */
 
 	/* Process interconnect */
 	/* TODO: add timing annotations to route-through */
@@ -2310,7 +2379,8 @@ void ProcessLutClass(INOUTP t_pb_type *lut_pb_type) {
 			lut_pb_type->modes[1].pb_type_children);
 
     /* Xifan TANG: LUT default idle mode */
-    lut_pb_type->modes[1].define_idle_mode = 0;
+    lut_pb_type->modes[1].define_idle_mode = 1;
+    lut_pb_type->modes[1].define_physical_mode = lut_pb_type->parent_mode->define_physical_mode;
 	/* moved annotations to child so delete old annotations */
 	for (i = 0; i < lut_pb_type->num_annotations; i++) {
 		for (j = 0; j < lut_pb_type->annotations[i].num_value_prop_pairs; j++) {
@@ -2452,6 +2522,7 @@ static void ProcessMemoryClass(INOUTP t_pb_type *mem_pb_type) {
 
     /* Xifan TANG: Memory default idle mode */
     mem_pb_type->modes[0].define_idle_mode = 1;
+    mem_pb_type->modes[0].define_physical_mode = mem_pb_type->parent_mode->define_physical_mode;
 
 	/* Process interconnect */
 	i_inter = 0;
@@ -2758,7 +2829,18 @@ void XmlReadArch(INP const char *ArchFile, INP boolean timing_enabled,
     /* Xifan TANG: HSPICE Support*/
     Next = FindElement(Cur,"spice_settings", arch->read_xml_spice); // Not mandatory options but we will check it later
     if (Next) {
-      ProcessSpiceSettings(Next,arch->spice);
+      /* This information still needs to be read, even if it is just
+	   * thrown away.
+	   */
+      /* Allocate */
+      if (TRUE == arch->read_xml_spice) {
+        vpr_printf(TIO_MESSAGE_INFO, "Parsing XML syntax for FPGA X2P...\n");
+        ProcessSpiceSettings(Next,arch->spice);
+      } else {
+        t_spice* spice_fake = (t_spice*) my_calloc(1, sizeof(t_spice)); 
+        ProcessSpiceSettings(Next, spice_fake);
+	    free(spice_fake);
+      }
       FreeNode(Next);
     }
     /* end */
@@ -3056,9 +3138,9 @@ static void ProcessSegments(INOUTP ezxml_t Parent,
 		(*Segs)[i].Rmetal = GetFloatProperty(Node, "Rmetal", timing_enabled, 0);
 		(*Segs)[i].Cmetal = GetFloatProperty(Node, "Cmetal", timing_enabled, 0);
         /* Xifan TANG: SPICE Model Support*/
-        (*Segs)[i].spice_model_name = my_strdup(FindProperty(Node, "circuit_model_name", FALSE));
+        (*Segs)[i].spice_model_name = my_strdup(FindProperty(Node, "spice_model_name", FALSE));
         (*Segs)[i].spice_model = NULL;
-	    ezxml_set_attr(Node, "circuit_model_name", NULL);
+	    ezxml_set_attr(Node, "spice_model_name", NULL);
 		/* Get Power info */
 		/*
 		(*Segs)[i].Cmetal_per_m = GetFloatProperty(Node, "Cmetal_per_m", FALSE,
@@ -3334,9 +3416,9 @@ static void ProcessSwitches(INOUTP ezxml_t Parent,
 				FALSE, 1);
 
         /* Xifan TANG: Spice Model Support */
-        (*Switches)[i].spice_model_name = my_strdup(FindProperty(Node, "circuit_model_name", FALSE));
+        (*Switches)[i].spice_model_name = my_strdup(FindProperty(Node, "spice_model_name", FALSE));
         (*Switches)[i].spice_model = NULL;
-	    ezxml_set_attr(Node, "circuit_model_name", NULL);
+	    ezxml_set_attr(Node, "spice_model_name", NULL);
         /* Xifan TANG : Read in MUX structure*/ 
         /* Default, we use tree */
         structure_type = FindProperty(Node, "structure", FALSE);
@@ -3449,9 +3531,9 @@ static void ProcessDirects(INOUTP ezxml_t Parent, OUTP t_direct_inf **Directs,
         /* Spice Model Support: Xifan TANG
          * We should have a spice_model_name for this direct connection 
          */
-        (*Directs)[i].spice_model_name = my_strdup(FindProperty(Node, "circuit_model_name", FALSE));
+        (*Directs)[i].spice_model_name = my_strdup(FindProperty(Node, "spice_model_name", FALSE));
         (*Directs)[i].spice_model = NULL;
-         ezxml_set_attr(Node,"circuit_model_name",NULL);
+         ezxml_set_attr(Node,"spice_model_name",NULL);
  
 
 		(*Directs)[i].line = Node->line;
