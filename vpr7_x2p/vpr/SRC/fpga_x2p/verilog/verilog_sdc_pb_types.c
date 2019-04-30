@@ -274,17 +274,15 @@ void dump_sdc_pb_graph_pin_interc(t_sram_orgz_info* cur_sram_orgz_info,
       sprintf(set_disable_path, "%s/%s_%d_", input_buffer_path, input_buffer_name,
               des_pb_graph_pin->input_edges[iedge]->nb_pin); 
       
-      if (NULL == des_pb_graph_pin->input_edges[iedge]->delay_first_segment) {
-        des_pb_graph_pin->input_edges[iedge]->delay_first_segment = "0";
+      if (NULL != des_pb_graph_pin->input_edges[iedge]->delay_first_segment) {
+        fprintf (fp, "set_max_delay -from %s -to %s/%s %s \n", from_path, set_disable_path, input_buffer_in,
+                 to_path, des_pb_graph_pin->input_edges[iedge]->delay_first_segment); 
       }
-      if (NULL == des_pb_graph_pin->input_edges[iedge]->delay_second_segment) {
-        des_pb_graph_pin->input_edges[iedge]->delay_second_segment = "0";
-      }
-      fprintf (fp, "set_max_delay -from %s -to %s/%s %s \n", from_path, set_disable_path, input_buffer_in,
-               des_pb_graph_pin->input_edges[iedge]->delay_first_segment); 
       fprintf (fp, "set_disable_timing -from %s -to %s %s \n", input_buffer_in, input_buffer_out, set_disable_path);
-      fprintf (fp, "set_max_delay -from %s/%s -to %s %s \n", set_disable_path, input_buffer_out,
-               to_path, des_pb_graph_pin->input_edges[iedge]->delay_second_segment); 
+      if (NULL != des_pb_graph_pin->input_edges[iedge]->delay_second_segment) {
+        fprintf (fp, "set_max_delay -from %s/%s -to %s %s \n", set_disable_path, input_buffer_out,
+                 to_path, des_pb_graph_pin->input_edges[iedge]->delay_second_segment); 
+      }
       my_free(input_buffer_path);
       my_free(set_disable_path);
     }
