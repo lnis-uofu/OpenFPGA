@@ -1321,9 +1321,6 @@ void alloc_and_load_rr_graph_for_phy_pb(INP t_pb* cur_op_pb,
   /* Build prev nodes list for rr_nodes */
   alloc_and_load_prev_node_list_rr_graph_rr_nodes(cur_phy_pb->rr_graph);
 
-  /* Allocate structs routing information */
-  alloc_and_load_rr_graph_route_structs(cur_phy_pb->rr_graph);
-
   /* Find the nets inside the pb and initialize the rr_graph */
   alloc_and_load_phy_pb_rr_graph_nets(cur_op_pb, cur_phy_pb->rr_graph,
                                       L_num_vpack_nets, L_vpack_net); 
@@ -1345,6 +1342,9 @@ void alloc_and_load_rr_graph_for_phy_pb(INP t_pb* cur_op_pb,
   alloc_and_load_phy_pb_rr_graph_net_rr_terminals(cur_op_pb, cur_phy_pb->rr_graph); 
 
   add_virtual_sources_to_rr_graph_multi_sources(cur_phy_pb->rr_graph);
+
+  /* Allocate structs routing information */
+  alloc_and_load_rr_graph_route_structs(cur_phy_pb->rr_graph);
 
   return;
 }

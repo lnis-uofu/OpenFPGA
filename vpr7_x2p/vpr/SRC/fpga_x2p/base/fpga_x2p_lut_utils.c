@@ -568,6 +568,13 @@ void adapt_truth_table_for_frac_lut(t_pb_graph_pin* lut_out_pb_graph_pin,
   assert(NULL != lut_out_pb_graph_pin);
   /* find the corresponding SPICE model output port and assoicated lut_output_mask */
   lut_frac_level = get_pb_graph_pin_lut_frac_level(lut_out_pb_graph_pin);
+
+  /* No adaption required for when the lut_frac_level is not set */
+  if (OPEN == lut_frac_level) {
+    return;
+  }
+
+  /* find the corresponding SPICE model output port and assoicated lut_output_mask */
   lut_output_mask = get_pb_graph_pin_lut_output_mask(lut_out_pb_graph_pin);
 
   /* Apply modification to the truth table */
