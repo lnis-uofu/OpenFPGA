@@ -280,3 +280,4 @@ char* gen_verilog_one_pb_graph_pin_full_name_in_hierarchy_grand_parent_node(t_pb
 char* gen_verilog_top_module_io_port_prefix(char* global_prefix, 
                                             char* io_port_prefix);
 
+char* gen_verilog_one_pb_graph_node_full_name_in_hierarchy(t_pb_graph_node* cur_pb_graph_node);
