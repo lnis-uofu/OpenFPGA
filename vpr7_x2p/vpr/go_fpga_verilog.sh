@@ -3,8 +3,8 @@
 
 # Set variables
 # For FPGA-Verilog ONLY 
-set verilog_output_dirname = sram_fpga_hetero
-set verilog_output_dirpath = /var/tmp/xtang/vpr7
+set verilog_output_dirname = OpenFPGA_Branch
+set verilog_output_dirpath = /var/tmp/AA_simu/
 set modelsim_ini_file = /uusoc/facility/cad_tools/Mentor/modelsim10.7b/modeltech/modelsim.ini
 # VPR critical inputs
 #set arch_xml_file = ARCH/k6_N10_MD_tsmc40nm_chain_TT.xml 
@@ -18,8 +18,8 @@ set arch_xml_file = ARCH/k8_N10_sram_chain_FC_tsmc40_stratix4_auto.xml
 #set verilog_reference = ${PWD}/Circuits/alu4_K6_N10_ace.v
 #set blif_file = Circuits/shiftReg.blif 
 #set act_file = Circuits/shiftReg.act 
-set blif_file = Circuits/simple_gates_prevpr.blif 
-set act_file = Circuits/simple_gates_prevpr.act 
+set blif_file = Circuits/s298_prevpr.blif 
+set act_file = Circuits/s298_prevpr.act 
 set verilog_reference = ${PWD}/Circuits/s298_prevpr.v
 #set blif_file = Circuits/frisc.blif 
 #set act_file = Circuits/frisc.act 

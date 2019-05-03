@@ -3436,3 +3436,27 @@ char* gen_verilog_one_pb_graph_pin_full_name_in_hierarchy_grand_parent_node(t_pb
   return full_name;
 }
 
+char* gen_verilog_one_pb_graph_node_full_name_in_hierarchy(t_pb_graph_node* cur_pb_graph_node) {
+  char* full_name = NULL;
+  char* cur_name = NULL;
+  t_pb_graph_node* temp = cur_pb_graph_node;
+
+  full_name = "";
+  /* The instance name of the top-level graph node is very special 
+   * we output it in another function  
+   */
+  while (NULL != temp->parent_pb_graph_node) {
+    /* Generate the instance name of current pb_graph_node
+     * and add a slash to separate the upper level 
+     */
+    cur_name = gen_verilog_one_pb_graph_node_instance_name(temp);
+    cur_name = my_strcat(cur_name, "/");
+    full_name = my_strcat(cur_name, full_name);
+    /* Go to upper level */
+    temp = temp->parent_pb_graph_node;
+    my_free(cur_name);
+  }
+ 
+  return full_name;
+}
+

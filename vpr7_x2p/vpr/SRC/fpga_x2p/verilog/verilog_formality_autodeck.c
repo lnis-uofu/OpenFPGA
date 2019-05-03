@@ -1,5 +1,7 @@
-// Formality runsim
-// Need to declare formality_script_name_postfix = "formality_script.tcl";
+/***********************************/
+/*      SPICE Modeling for VPR     */
+/*       Xifan TANG, EPFL/LSI      */
+/***********************************/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,19 +16,124 @@
 #include "physical_types.h"
 #include "vpr_types.h"
 #include "globals.h"
+#include "rr_graph_util.h"
 #include "rr_graph.h"
+#include "rr_graph2.h"
+#include "route_common.h"
 #include "vpr_utils.h"
-#include "path_delay.h"
-#include "stats.h"
 
-/* Include FPGA-SPICE utils */
+/* Include SPICE support headers*/
 #include "linkedlist.h"
+#include "fpga_x2p_types.h"
 #include "fpga_x2p_utils.h"
+#include "fpga_x2p_backannotate_utils.h"
+#include "fpga_x2p_mux_utils.h"
+#include "fpga_x2p_pbtypes_utils.h"
+#include "fpga_x2p_bitstream_utils.h"
+#include "fpga_x2p_rr_graph_utils.h"
 #include "fpga_x2p_globals.h"
 
-/* Include verilog utils */
+/* Include Verilog support headers*/
 #include "verilog_global.h"
 #include "verilog_utils.h"
+#include "verilog_routing.h"
+#include "verilog_tcl_utils.h"
+
+	
+static void searching_used_latch(FILE *fp, t_pb * pb, int pb_index, char* chomped_circuit_name, char* inst_name){
+	int i, j;
+//	char* tmp = NULL;
+	const t_pb_type *pb_type;
+	t_mode *mode;
+	t_pb_graph_node * node;
+//	char* index = NULL;
+
+	pb_type = pb->pb_graph_node->pb_type;
+	node = pb->pb_graph_node->physical_pb_graph_node;
+	mode = &pb_type->modes[pb->mode];
+
+//	tmp = (char*) my_malloc(sizeof(1 + (strlen(ff_hierarchy) + 1 + strlen(my_strcat(pb_type->name, index)))));
+//	tmp = ff_hierarchy;
+//	index = my_strcat("_", my_strcat(my_itoa(pb_index), "_"));
+
+	if (pb_type->num_modes > 0) {
+		for (i = 0; i < mode->num_pb_type_children; i++) {
+			for (j = 0; j < mode->pb_type_children[i].num_pb; j++) {
+//				if(strcmp(pb_type->name, mode->name) != 0)
+//					tmp = my_strcat(tmp, my_strcat("/", my_strcat(pb_type->name, index)));
+				if(pb->child_pbs[i][j].name != NULL)
+					searching_used_latch(fp, &pb->child_pbs[i][j], j, chomped_circuit_name, inst_name);
+			}
+		}
+	} else if((pb_type->class_type == LATCH_CLASS) && (pb->name)){
+//		tmp = my_strcat(tmp, my_strcat("/", my_strcat(pb_type->physical_pb_type_name, my_strcat(index, "/dff_0_"))));
+		fprintf(fp, "set_user_match r:/WORK/%s/%s_reg i:/WORK/%s/%sdff_0 -type cell -noninverted\n", chomped_circuit_name,
+																						pb->name, 
+																						inst_name,
+																						gen_verilog_one_pb_graph_node_full_name_in_hierarchy(node) ); 
+	}
+	//free(tmp); //Looks like is the cause of a double free, once free executated next iteration as no value in tmp
+	return;
+}
+
+static void clb_iteration(FILE *fp, char* chomped_circuit_name, int h){
+	t_phy_pb* cur_phy_pb;
+	t_pb* pb;
+	char* inst_name = NULL;
+	const t_pb_type *pb_type;
+	t_pb_graph_node *pb_graph_node;
+	t_mode *mode;
+	int i, j, x_pos, y_pos;
+	char* grid_x = NULL;
+	char* grid_y = NULL;
+
+	x_pos = block[h].x;
+	y_pos = block[h].y;
+
+	cur_phy_pb = (t_phy_pb*) block[h].phy_pb;
+	pb = (t_pb*) block[h].pb;
+
+	pb_type = pb->pb_graph_node->pb_type;
+	pb_graph_node = pb->pb_graph_node;
+	mode = &pb_type->modes[pb->mode];
+
+    grid_x = my_strcat("_", my_strcat(my_itoa(x_pos), "_"));
+	grid_y = my_strcat("_", my_strcat(my_itoa(y_pos), "_"));
+
+
+	if (strcmp(pb_type->name, FILL_TYPE->name) == 0) { 
+		inst_name = my_strcat(chomped_circuit_name, my_strcat(formal_verification_top_postfix, my_strcat("/", my_strcat(formal_verification_top_module_uut_name, my_strcat("/grid",my_strcat(grid_x, my_strcat(grid_y, "/" ))))))); 
+		if (pb_type->num_modes > 0) {
+			for (i = 0; i < mode->num_pb_type_children; i++) {
+				inst_name = my_strcat(inst_name, my_strcat("grid_", my_strcat(pb_type->name, my_strcat("_", my_strcat(my_itoa(i), "_")))));
+				for (j = 0; j < mode->pb_type_children[i].num_pb; j++) {
+					/* If child pb is not used but routing is used, I must print things differently */
+					if ((pb->child_pbs[i] != NULL)
+							&& (pb->child_pbs[i][j].name != NULL)) {
+						searching_used_latch(fp, &pb->child_pbs[i][j], j, chomped_circuit_name, inst_name);
+					} 
+				}
+			}
+		}
+	}
+	return;
+}
+
+static void match_registers(FILE *fp, char* chomped_circuit_name) {
+	int h;
+
+	for(h = 0; h < copy_nb_clusters; h++)
+		clb_iteration(fp, chomped_circuit_name, h);
+/*	for(h = 0; h < copy_nb_clusters; h++){
+		free_cb(copy_clb[h].pb);
+		free(copy_clb[h].name);
+		free(copy_clb[h].nets);
+		free(copy_clb[h].pb);
+	}*/
+//	free(copy_clb);
+//	free(block);
+	return;
+}
 
 static 
 void formality_include_user_defined_verilog_netlists(FILE* fp,
@@ -130,6 +237,7 @@ void write_formality_script (t_syn_verilog_opts fpga_verilog_opts,
       }
     }
   }
+  match_registers(fp, chomped_circuit_name);
   /* Run verification */
   fprintf(fp, "verify\n");
   /* Script END */
