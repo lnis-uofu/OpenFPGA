@@ -38,6 +38,8 @@ extern struct s_net *clb_net;
 extern int num_blocks;
 extern struct s_block *block;
 
+extern int copy_nb_clusters;
+
 /********************************************************************
  Physical FPGA architecture globals 
  *********************************************************************/
