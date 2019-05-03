@@ -55,51 +55,24 @@ void sdc_dump_annotation(char* from_path, // includes the cell
 						FILE* fp,
 						t_pb_graph_edge* cur_edge){
 
-  //char* min_value = NULL;
-  t_interconnect* cur_interconnect;
-  float max_value = NULL;
+  float min_value = 0;
+  float max_value = 0;
   int i,j;
  
   // Find in the annotations the min and max
-
-  cur_interconnect = cur_edge->interconnect;
-  for (i=0; i < cur_interconnect->num_annotations; i++) {
-    if (E_ANNOT_PIN_TO_PIN_DELAY == cur_interconnect->annotations[i].type) {
-      for (j=0; j < cur_interconnect->annotations[i].num_value_prop_pairs; j++) {
-	   /* if (E_ANNOT_PIN_TO_PIN_DELAY_MIN == interconnect->annotations[i].prop[j]) {
-			min_value = cur_edge->delay_min;
-            min_value = max_value*pow(10,9);
-		  }*/
-	    if(E_ANNOT_PIN_TO_PIN_DELAY_MAX == cur_interconnect->annotations[i].prop[j]) {
-			max_value = cur_edge->delay_max;
-            max_value = max_value*pow(10,9); /* converts sec in ns */
-        }
-      }
-    }
+  if (0 != cur_edge->delay_min) {
+    min_value = cur_edge->delay_min;
+    min_value = min_value*pow(10,9);
+    fprintf (fp, "set_min_delay -combinational_from_to -from %s -to %s ", from_path, to_path);
+    fprintf (fp,"%f\n", min_value);
   }
-
-
-  // Dump the annotation
-  // If no annotation was found, dump 0
-
- /* fprintf (fp, "set_min_delay -from %s -to %s ", from_path,to_path);
-    if (NULL != min_value) {
-      fprintf(fp, "%s\n", min_value);
-    } else {
-      fprintf(fp, "0\n");
-    } */
-
-  /*fprintf (fp, "set_max_delay -from %s -to %s ", from_path, to_path);
-    if (max_value != NULL){
-      fprintf (fp,"%s\n",max_value);
-    } else {
-      fprintf (fp,"0\n");
-    }*/
-    if (max_value != NULL){
-      fprintf (fp, "set_max_delay -combinational_from_to -from %s -to %s ", from_path, to_path);
-      fprintf (fp,"%f\n", max_value);
-    }
-return;
+  if (0 != cur_edge->delay_max) {
+    max_value = cur_edge->delay_max;
+    max_value = max_value*pow(10,9);
+    fprintf (fp, "set_max_delay -combinational_from_to -from %s -to %s ", from_path, to_path);
+    fprintf (fp,"%f\n", max_value);
+  }
+  return;
 }
 
 
@@ -278,14 +251,22 @@ void dump_sdc_pb_graph_pin_interc(t_sram_orgz_info* cur_sram_orgz_info,
       sprintf(set_disable_path, "%s/%s_%d_", input_buffer_path, input_buffer_name,
               des_pb_graph_pin->input_edges[iedge]->nb_pin); 
       
-      if (NULL != des_pb_graph_pin->input_edges[iedge]->delay_first_segment) {
+      if (NULL != des_pb_graph_pin->input_edges[iedge]->delay_first_segment_min) {
+        fprintf (fp, "set_min_delay -from %s -to %s/%s %s \n", from_path, set_disable_path, input_buffer_in,
+                 des_pb_graph_pin->input_edges[iedge]->delay_first_segment_min); 
+      }
+      if (NULL != des_pb_graph_pin->input_edges[iedge]->delay_first_segment_max) {
         fprintf (fp, "set_max_delay -from %s -to %s/%s %s \n", from_path, set_disable_path, input_buffer_in,
-                 to_path, des_pb_graph_pin->input_edges[iedge]->delay_first_segment); 
+                 des_pb_graph_pin->input_edges[iedge]->delay_first_segment_max); 
       }
       fprintf (fp, "set_disable_timing -from %s -to %s %s \n", input_buffer_in, input_buffer_out, set_disable_path);
-      if (NULL != des_pb_graph_pin->input_edges[iedge]->delay_second_segment) {
+      if (NULL != des_pb_graph_pin->input_edges[iedge]->delay_second_segment_min) {
+        fprintf (fp, "set_min_delay -from %s/%s -to %s %s \n", set_disable_path, input_buffer_out,
+                 to_path, des_pb_graph_pin->input_edges[iedge]->delay_second_segment_min); 
+      }
+      if (NULL != des_pb_graph_pin->input_edges[iedge]->delay_second_segment_max) {
         fprintf (fp, "set_max_delay -from %s/%s -to %s %s \n", set_disable_path, input_buffer_out,
-                 to_path, des_pb_graph_pin->input_edges[iedge]->delay_second_segment); 
+                 to_path, des_pb_graph_pin->input_edges[iedge]->delay_second_segment_max); 
       }
       my_free(input_buffer_path);
       my_free(set_disable_path);
