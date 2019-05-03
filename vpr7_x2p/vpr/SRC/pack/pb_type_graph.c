@@ -89,7 +89,8 @@ static void map_loop_breaker_onto_edges(char* loop_breaker_string, int line_num,
                                         int index_mode,
                                         t_pb_graph_pin*** input_pins,
                                         int num_input_ports,
-                                        int* num_input_pins);
+                                        int* num_input_pins,
+                                        t_interconnect* cur_interc);
 
 /**
  * Allocate memory into types and load the pb graph with interconnect edges 
@@ -787,7 +788,8 @@ static void alloc_and_load_mode_interconnect(
                                         index_mode,
                                         input_pb_graph_node_pins,
                                         num_input_pb_graph_node_sets,
-                                        num_input_pb_graph_node_pins); 
+                                        num_input_pb_graph_node_pins,
+                                        &(mode->interconnect[i])); 
         }
         /* END */
 
@@ -1773,7 +1775,8 @@ static void map_loop_breaker_onto_edges(char* loop_breaker_string, int line_num,
                                         int index_mode,
                                         t_pb_graph_pin*** input_pins,
                                         int num_input_ports,
-                                        int* num_input_pins) {
+                                        int* num_input_pins,
+                                        t_interconnect* cur_interc) {
   t_token * tokens;
   int num_tokens;
   int i_tokens, cur_port_index, cur_pin_index;
@@ -2065,21 +2068,27 @@ static void map_loop_breaker_onto_edges(char* loop_breaker_string, int line_num,
             for (i_num_output_edges = 0 ; 
                  i_num_output_edges < cur_node[i_index_cur_node]->input_pins[cur_port_index][cur_pin_index].num_output_edges ;
                  i_num_output_edges ++) {
-              cur_node[i_index_cur_node]->input_pins[cur_port_index][cur_pin_index].output_edges[i_num_output_edges]->is_disabled = TRUE;
+              if (cur_interc == cur_node[i_index_cur_node]->input_pins[cur_port_index][cur_pin_index].output_edges[i_num_output_edges]->interconnect) {
+                cur_node[i_index_cur_node]->input_pins[cur_port_index][cur_pin_index].output_edges[i_num_output_edges]->is_disabled = TRUE;
+              }
             }
             break;
           case PB_PIN_OUTPUT:
             for (i_num_output_edges = 0 ; 
                  i_num_output_edges < cur_node[i_index_cur_node]->output_pins[cur_port_index][cur_pin_index].num_output_edges ;
                  i_num_output_edges ++) {
-              cur_node[i_index_cur_node]->output_pins[cur_port_index][cur_pin_index].output_edges[i_num_output_edges]->is_disabled = TRUE;
+              if (cur_interc == cur_node[i_index_cur_node]->output_pins[cur_port_index][cur_pin_index].output_edges[i_num_output_edges]->interconnect) {
+                cur_node[i_index_cur_node]->output_pins[cur_port_index][cur_pin_index].output_edges[i_num_output_edges]->is_disabled = TRUE;
+              }
             }
             break;
           case PB_PIN_CLOCK:
             for (i_num_output_edges = 0 ; 
                  i_num_output_edges < cur_node[i_index_cur_node]->clock_pins[cur_port_index][cur_pin_index].num_output_edges ;
                  i_num_output_edges ++) {
-              cur_node[i_index_cur_node]->clock_pins[cur_port_index][cur_pin_index].output_edges[i_num_output_edges]->is_disabled = TRUE;
+              if (cur_interc == cur_node[i_index_cur_node]->clock_pins[cur_port_index][cur_pin_index].output_edges[i_num_output_edges]->interconnect) {
+                cur_node[i_index_cur_node]->clock_pins[cur_port_index][cur_pin_index].output_edges[i_num_output_edges]->is_disabled = TRUE;
+              }
             }
             break;
           default:

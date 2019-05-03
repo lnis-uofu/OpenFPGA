@@ -2,7 +2,7 @@
 void sdc_dump_annotation(char* from_path, // includes the cell
 						char* to_path,
 						FILE* fp,
-						t_interconnect interconnect);
+						t_pb_graph_edge* cur_edge);
 
 void dump_sdc_pb_graph_pin_interc(t_sram_orgz_info* cur_sram_orgz_info,
                                       FILE* fp,

@@ -53,21 +53,25 @@
 void sdc_dump_annotation(char* from_path, // includes the cell
 						char* to_path,
 						FILE* fp,
-						t_interconnect interconnect){
+						t_pb_graph_edge* cur_edge){
+
   //char* min_value = NULL;
+  t_interconnect* cur_interconnect;
   float max_value = NULL;
   int i,j;
  
   // Find in the annotations the min and max
 
-  for (i=0; i < interconnect.num_annotations; i++) {
-    if (E_ANNOT_PIN_TO_PIN_DELAY == interconnect.annotations[i].type) {
-      for (j=0; j < interconnect.annotations[i].num_value_prop_pairs; j++) {
-	   /* if (E_ANNOT_PIN_TO_PIN_DELAY_MIN == interconnect.annotations[i].prop[j]) {
-		    min_value = interconnect.annotations[i].value[j];
+  cur_interconnect = cur_edge->interconnect;
+  for (i=0; i < cur_interconnect->num_annotations; i++) {
+    if (E_ANNOT_PIN_TO_PIN_DELAY == cur_interconnect->annotations[i].type) {
+      for (j=0; j < cur_interconnect->annotations[i].num_value_prop_pairs; j++) {
+	   /* if (E_ANNOT_PIN_TO_PIN_DELAY_MIN == interconnect->annotations[i].prop[j]) {
+			min_value = cur_edge->delay_min;
+            min_value = max_value*pow(10,9);
 		  }*/
-	    if(E_ANNOT_PIN_TO_PIN_DELAY_MAX == interconnect.annotations[i].prop[j]) {
-			max_value = atof(interconnect.annotations[i].value[j]);
+	    if(E_ANNOT_PIN_TO_PIN_DELAY_MAX == cur_interconnect->annotations[i].prop[j]) {
+			max_value = cur_edge->delay_max;
             max_value = max_value*pow(10,9); /* converts sec in ns */
         }
       }
@@ -195,7 +199,7 @@ void dump_sdc_pb_graph_pin_interc(t_sram_orgz_info* cur_sram_orgz_info,
     sprintf (to_path, "%s/%s", instance_name, gen_verilog_one_pb_graph_pin_full_name_in_hierarchy (des_pb_graph_pin));
 
 	// Dumping of the annotations	
-	sdc_dump_annotation (from_path, to_path, fp, cur_interc[0]);	
+	sdc_dump_annotation (from_path, to_path, fp, des_pb_graph_pin->input_edges[iedge]);	
   break;
   case COMPLETE_INTERC:
   case MUX_INTERC:
@@ -288,7 +292,7 @@ void dump_sdc_pb_graph_pin_interc(t_sram_orgz_info* cur_sram_orgz_info,
     }
 	else { 
   	  // Dumping of the annotations
-  	  sdc_dump_annotation (from_path, to_path, fp, cur_interc[0]);	
+  	  sdc_dump_annotation (from_path, to_path, fp, des_pb_graph_pin->input_edges[iedge]);	
       }
     }	
     break;
