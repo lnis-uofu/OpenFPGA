@@ -44,12 +44,12 @@ $(EXE): $(OBJ) Makefile libprinthandler.a
 
 
 libprinthandler.a: $(OBJ) Makefile ../pcre/libpcre.a
-	@ cp ../pcre/libpcre.a $@
+	@ cp ../libpcre/libpcre.a $@
 	@ ar rcs $@ $(OBJ)
 	@ ar d $@ main.o
 
 ../pcre/libpcre.a:
-	cd ../pcre && make
+	cd ../libpcre && make
 
 # Enable a second round of expansion so that we may include
 # the target directory as a prerequisite of the object file.

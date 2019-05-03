@@ -28,13 +28,13 @@ SHELL_LIB = -lm -lvpr_shell -lreadline
 FPGA_SPICE_SRC_DIR = SRC/fpga_x2p
 SRC_DIR = SRC
 OBJ_DIR = OBJ
-OTHER_DIR = -ISRC/util -ISRC/timing -ISRC/pack -ISRC/place -ISRC/base -ISRC/route -ISRC/power -ISRC/mrfpga -ISRC/fpga_spice -I$(FPGA_SPICE_SRC_DIR)/base -I$(FPGA_SPICE_SRC_DIR)/bitstream -I$(FPGA_SPICE_SRC_DIR)/bitstream -I$(FPGA_SPICE_SRC_DIR)/clb_pin_remap -I$(FPGA_SPICE_SRC_DIR)/spice -I$(FPGA_SPICE_SRC_DIR)/verilog  -I$(FPGA_SPICE_SRC_DIR)/router -I../libarchfpga -I../printhandler/SRC/TIO_InputOutputHandlers -I$(FPGA_SPICE_SRC_DIR)/shell
+OTHER_DIR = -ISRC/util -ISRC/timing -ISRC/pack -ISRC/place -ISRC/base -ISRC/route -ISRC/power -ISRC/mrfpga -ISRC/fpga_spice -I$(FPGA_SPICE_SRC_DIR)/base -I$(FPGA_SPICE_SRC_DIR)/bitstream -I$(FPGA_SPICE_SRC_DIR)/bitstream -I$(FPGA_SPICE_SRC_DIR)/clb_pin_remap -I$(FPGA_SPICE_SRC_DIR)/spice -I$(FPGA_SPICE_SRC_DIR)/verilog  -I$(FPGA_SPICE_SRC_DIR)/router -I../libarchfpga/SRC -I../libprinthandler/SRC/TIO_InputOutputHandlers -I$(FPGA_SPICE_SRC_DIR)/shell
 
 WARN_FLAGS = -Wall -Wpointer-arith -Wcast-qual -D__USE_FIXED_PROTOTYPES__ -ansi -pedantic -Wshadow -Wcast-align -D_POSIX_SOURCE -Wno-write-strings
 
 DEBUG_FLAGS = -g 
 OPT_FLAGS = $(OPTIMIZATION_LEVEL_FOR_RELEASE_BUILD)
-INC_FLAGS = -I../libarchfpga/include -I../libarchfpga/fpga_spice_include
+INC_FLAGS = -I../libarchfpga/SRC/include -I../libarchfpga/SRC/fpga_spice_include
 
 FLAGS = $(INC_FLAGS) $(WARN_FLAGS) -D EZXML_NOMMAP -D_POSIX_C_SOURCE
 
