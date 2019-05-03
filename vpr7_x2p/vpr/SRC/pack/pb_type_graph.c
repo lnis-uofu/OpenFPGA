@@ -2070,6 +2070,23 @@ static void map_loop_breaker_onto_edges(char* loop_breaker_string, int line_num,
                  i_num_output_edges ++) {
               if (cur_interc == cur_node[i_index_cur_node]->input_pins[cur_port_index][cur_pin_index].output_edges[i_num_output_edges]->interconnect) {
                 cur_node[i_index_cur_node]->input_pins[cur_port_index][cur_pin_index].output_edges[i_num_output_edges]->is_disabled = TRUE;
+
+                if (NULL != cur_interc->loop_breaker_delay_first_segment_min) {
+                  cur_node[i_index_cur_node]->input_pins[cur_port_index][cur_pin_index].output_edges[i_num_output_edges]->delay_first_segment_min
+                  = cur_interc->loop_breaker_delay_first_segment_min;
+                }
+                if (NULL != cur_interc->loop_breaker_delay_first_segment_max) {
+                  cur_node[i_index_cur_node]->input_pins[cur_port_index][cur_pin_index].output_edges[i_num_output_edges]->delay_first_segment_max
+                  = cur_interc->loop_breaker_delay_first_segment_max;
+                }
+                if (NULL != cur_interc->loop_breaker_delay_second_segment_min) {
+                  cur_node[i_index_cur_node]->input_pins[cur_port_index][cur_pin_index].output_edges[i_num_output_edges]->delay_second_segment_min
+                  = cur_interc->loop_breaker_delay_second_segment_min;
+                }
+                if (NULL != cur_interc->loop_breaker_delay_second_segment_max) {
+                  cur_node[i_index_cur_node]->input_pins[cur_port_index][cur_pin_index].output_edges[i_num_output_edges]->delay_second_segment_max
+                  = cur_interc->loop_breaker_delay_second_segment_max;
+                }
               }
             }
             break;
@@ -2079,6 +2096,23 @@ static void map_loop_breaker_onto_edges(char* loop_breaker_string, int line_num,
                  i_num_output_edges ++) {
               if (cur_interc == cur_node[i_index_cur_node]->output_pins[cur_port_index][cur_pin_index].output_edges[i_num_output_edges]->interconnect) {
                 cur_node[i_index_cur_node]->output_pins[cur_port_index][cur_pin_index].output_edges[i_num_output_edges]->is_disabled = TRUE;
+
+                if (NULL != cur_interc->loop_breaker_delay_first_segment_min) {
+                  cur_node[i_index_cur_node]->output_pins[cur_port_index][cur_pin_index].output_edges[i_num_output_edges]->delay_first_segment_min
+                  = cur_interc->loop_breaker_delay_first_segment_min;
+                }
+                if (NULL != cur_interc->loop_breaker_delay_first_segment_max) {
+                  cur_node[i_index_cur_node]->output_pins[cur_port_index][cur_pin_index].output_edges[i_num_output_edges]->delay_first_segment_max
+                  = cur_interc->loop_breaker_delay_first_segment_max;
+                }
+                if (NULL != cur_interc->loop_breaker_delay_second_segment_min) {
+                  cur_node[i_index_cur_node]->output_pins[cur_port_index][cur_pin_index].output_edges[i_num_output_edges]->delay_second_segment_min
+                  = cur_interc->loop_breaker_delay_second_segment_min;
+                }
+                if (NULL != cur_interc->loop_breaker_delay_second_segment_max) {
+                  cur_node[i_index_cur_node]->output_pins[cur_port_index][cur_pin_index].output_edges[i_num_output_edges]->delay_second_segment_max
+                  = cur_interc->loop_breaker_delay_second_segment_max;
+                }
               }
             }
             break;
@@ -2088,6 +2122,23 @@ static void map_loop_breaker_onto_edges(char* loop_breaker_string, int line_num,
                  i_num_output_edges ++) {
               if (cur_interc == cur_node[i_index_cur_node]->clock_pins[cur_port_index][cur_pin_index].output_edges[i_num_output_edges]->interconnect) {
                 cur_node[i_index_cur_node]->clock_pins[cur_port_index][cur_pin_index].output_edges[i_num_output_edges]->is_disabled = TRUE;
+
+                if (NULL != cur_interc->loop_breaker_delay_first_segment_min) {
+                  cur_node[i_index_cur_node]->clock_pins[cur_port_index][cur_pin_index].output_edges[i_num_output_edges]->delay_first_segment_min
+                  = cur_interc->loop_breaker_delay_first_segment_min;
+                }
+                if (NULL != cur_interc->loop_breaker_delay_first_segment_max) {
+                  cur_node[i_index_cur_node]->clock_pins[cur_port_index][cur_pin_index].output_edges[i_num_output_edges]->delay_first_segment_max
+                  = cur_interc->loop_breaker_delay_first_segment_max;
+                }
+                if (NULL != cur_interc->loop_breaker_delay_second_segment_min) {
+                  cur_node[i_index_cur_node]->clock_pins[cur_port_index][cur_pin_index].output_edges[i_num_output_edges]->delay_second_segment_min
+                  = cur_interc->loop_breaker_delay_second_segment_min;
+                }
+                if (NULL != cur_interc->loop_breaker_delay_second_segment_max) {
+                  cur_node[i_index_cur_node]->clock_pins[cur_port_index][cur_pin_index].output_edges[i_num_output_edges]->delay_second_segment_max
+                  = cur_interc->loop_breaker_delay_second_segment_max;
+                }
               }
             }
             break;

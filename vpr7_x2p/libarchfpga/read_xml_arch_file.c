@@ -1411,6 +1411,35 @@ static void ProcessInterconnect(INOUTP ezxml_t Parent, t_mode * mode) {
 			  mode->interconnect[i].loop_breaker_string= my_strdup(Prop);
             }
 			ezxml_set_attr(Cur, "loop_breaker", NULL);
+
+            Cur2 = FindFirstElement(Cur, "delay_first_segment", FALSE);
+            if (NULL != Cur2) {
+              Prop = FindProperty(Cur2, "min", FALSE);
+              if (NULL != Prop) { 
+                mode->interconnect[i].loop_breaker_delay_first_segment_min = my_strdup(Prop); 
+			    ezxml_set_attr(Cur2, "min", NULL);
+              }
+              Prop = FindProperty(Cur2, "max", FALSE);
+              if (NULL != Prop) { 
+                mode->interconnect[i].loop_breaker_delay_first_segment_max = my_strdup(Prop); 
+			    ezxml_set_attr(Cur2, "max", NULL);
+              }
+            FreeNode(Cur2);
+            }
+            Cur2 = FindFirstElement(Cur, "delay_second_segment", FALSE);
+            if (NULL != Cur2) {
+              Prop = FindProperty(Cur2, "min", FALSE);
+              if (NULL != Prop) { 
+                mode->interconnect[i].loop_breaker_delay_second_segment_min = my_strdup(Prop); 
+			    ezxml_set_attr(Cur2, "min", NULL);
+              }
+              Prop = FindProperty(Cur2, "max", FALSE);
+              if (NULL != Prop) { 
+                mode->interconnect[i].loop_breaker_delay_second_segment_max = my_strdup(Prop); 
+			    ezxml_set_attr(Cur2, "max", NULL);
+              }
+            FreeNode(Cur2);
+            }
             /* END */
 
 			/* Process delay and capacitance annotations */

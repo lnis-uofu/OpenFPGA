@@ -319,6 +319,10 @@ struct s_interconnect {
 	char *output_string;
     /* Baudouin Chauviere: SDC generation */
     char *loop_breaker_string;
+    char *loop_breaker_delay_first_segment_min;
+    char *loop_breaker_delay_first_segment_max;
+    char *loop_breaker_delay_second_segment_min;
+    char *loop_breaker_delay_second_segment_max;
     /* END */   
 
 	t_pin_to_pin_annotation *annotations; /* [0..num_annotations-1] */
@@ -545,8 +549,10 @@ struct s_pb_graph_edge {
     boolean is_disabled;
     int nb_mux;
     int nb_pin;
-    char* delay_first_segment;
-    char* delay_second_segment;
+    char* delay_first_segment_max;
+    char* delay_second_segment_max;
+    char* delay_first_segment_min;
+    char* delay_second_segment_min;
     /* END */
 };
 typedef struct s_pb_graph_edge t_pb_graph_edge;
