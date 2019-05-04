@@ -7,10 +7,16 @@ $SPACER
 
 start_section "OpenFPGA.build" "${GREEN}Building..${NC}"
 if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
-  make
+  #make
+  mkdir build
+  cmake ..
+  make -j2
 else 
 # For linux, we enable full package compilation
-  make
+  #make
+  mkdir build
+  cmake ..
+  make -j2
 fi
 end_section "OpenFPGA.build"
 
