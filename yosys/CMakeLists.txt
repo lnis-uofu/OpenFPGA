@@ -9,7 +9,7 @@ project(yosys)
 # run makefile provided 
 add_custom_target(
   yosys ALL 
-  COMMAND make -j32 
+  COMMAND make #-j32 
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   COMMENT "Compile Yosys with given Makefile"
 )
