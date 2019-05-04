@@ -9,12 +9,14 @@ start_section "OpenFPGA.build" "${GREEN}Building..${NC}"
 if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
   #make
   mkdir build
+  cd build
   cmake ..
   make -j2
 else 
 # For linux, we enable full package compilation
   #make
   mkdir build
+  cd build
   cmake ..
   make -j2
 fi
