@@ -17,7 +17,7 @@ LIB_DIR = -L.
 LIB = -lm -lprinthandler
 SRC_DIR = SRC
 OBJ_DIR = OBJ
-OTHER_DIR = -ISRC/TC_Common -ISRC/TIO_InputOutputHandlers -ISRC/acl -I../pcre/SRC
+OTHER_DIR = -ISRC/TC_Common -ISRC/TIO_InputOutputHandlers -ISRC/acl -I../libpcre/SRC
 
 WARN_FLAGS = -Wall -Wpointer-arith -Wcast-qual -D__USE_FIXED_PROTOTYPES__ -ansi -pedantic -Wshadow -Wcast-align -D_POSIX_SOURCE -Wno-write-strings
 
@@ -43,7 +43,7 @@ $(EXE): $(OBJ) Makefile libprinthandler.a
 	$(CC) $(FLAGS) OBJ/main.o -o $(EXE) $(LIB_DIR) $(LIB)
 
 
-libprinthandler.a: $(OBJ) Makefile ../pcre/libpcre.a
+libprinthandler.a: $(OBJ) Makefile ../libpcre/libpcre.a
 	@ cp ../libpcre/libpcre.a $@
 	@ ar rcs $@ $(OBJ)
 	@ ar d $@ main.o

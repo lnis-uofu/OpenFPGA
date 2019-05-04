@@ -1177,7 +1177,7 @@ static void ProcessPb_TypePort_Power(ezxml_t Parent, t_port * port,
 		e_power_estimation_method power_method) {
 	ezxml_t cur;
 	const char * prop;
-	bool wire_defined = FALSE;
+	boolean wire_defined = FALSE;
 
 	port->port_power = (t_port_power*) my_calloc(1, sizeof(t_port_power));
 

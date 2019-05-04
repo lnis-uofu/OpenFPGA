@@ -30,7 +30,7 @@ vpr: libarchfpga
 
 libarchfpga: libprinthandler
 
-printhandler: libpcre
+libprinthandler: libpcre
 
 clean:
 	@ cd vpr && make clean 

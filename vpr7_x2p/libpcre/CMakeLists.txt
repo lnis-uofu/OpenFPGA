@@ -11,20 +11,30 @@ endif()
 
 set(CMAKE_BUILD_TYPE=Release)
 
-# set C compiler flag 
-#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}" -Wall -Wpointer-arith -Wcast-qual -ansi -pedantic -Wshadow -Wcast-allign -Wno-write-strings)
-
 project("libpcre")
 
 #Collect the source files
 file(GLOB_RECURSE EXEC_SOURCES SRC/main.c)
 file(GLOB_RECURSE LIB_SOURCES SRC/*.c)
 file(GLOB_RECURSE LIB_HEADERS SRC/*.h)
+files_to_dirs(LIB_HEADERS LIB_INCLUDE_DIRS)
+
+# Use c++ compiler for c source files
+set_source_files_properties(${LIB_SOURCES} PROPERTIES LANGUAGE CXX)
+set_source_files_properties(${EXEC_SOURCES} PROPERTIES LANGUAGE CXX)
+set_source_files_properties(${EXEC_SOURCES_SHELL} PROPERTIES LANGUAGE CXX)
+
+# Remove test executable from library
+list(REMOVE_ITEM LIB_SOURCES ${EXEC_SOURCES}) 
 
 #Create the library
 add_library(libpcre STATIC
             ${LIB_HEADERS}
             ${LIB_SOURCES})
+
+# add header files to be included
+target_include_directories(libpcre PUBLIC ${LIB_INCLUDE_DIRS})
+set_target_properties(libpcre PROPERTIES PREFIX "") #Avoid extra 'lib' prefix#Create the executable
 
 #Create the executable
 add_executable(pcredemo ${EXEC_SOURCES})

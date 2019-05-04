@@ -215,7 +215,7 @@ void shell_setup_graphics(t_shell_env* env,
 #ifdef NO_GRAPHICS
   env->vpr_setup.ShowGraphics = FALSE; /* DEFAULT */
 #else /* NO_GRAPHICS */
-  env->vpr_setup.ShowGraphics = !(is_opt_set(opts, "nodisp")); /* DEFAULT */
+  env->vpr_setup.ShowGraphics = (boolean)(!is_opt_set(opts, "nodisp", TRUE)); /* DEFAULT */
 #endif /* NO_GRAPHICS */
 
   return;
