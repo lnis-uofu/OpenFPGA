@@ -56,7 +56,7 @@ libpcre.a: $(OBJ) Makefile
 # timestamp check.  Every write to the directory updates the timestamp thus
 # without this, all but the last file written to a directory would appear
 # to be out of date.
-$(OBJ): OBJ/%.o:$(SRC_DIR)/%.c | $$(dir $$@D)
+$(OBJ): $(OBJ_DIR)/%.o:$(SRC_DIR)/%.c | $$(dir $$@D)
 	$(CC) $(FLAGS) -MD -MP -I$(OTHER_DIR) -ISRC -c $< -o $@
 
 # Silently create target directories as need
