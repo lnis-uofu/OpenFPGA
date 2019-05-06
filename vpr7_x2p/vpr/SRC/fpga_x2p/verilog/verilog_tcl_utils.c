@@ -64,6 +64,7 @@ void dump_verilog_one_sb_chan_pin(FILE* fp,
                                   enum PORTS port_type) {
   int track_idx, side;
   int x_start, y_start;
+  char* pin_name;
   t_rr_type chan_rr_type;
 
   /* Check the file handler */
@@ -86,11 +87,12 @@ void dump_verilog_one_sb_chan_pin(FILE* fp,
                                          &(chan_rr_type),
                                          &x_start, &y_start);
   assert (chan_rr_type == cur_rr_node->type); 
-  /* Print the pin of the cur_rr_node */  
-  fprintf(fp, "%s",
-          gen_verilog_routing_channel_one_pin_name(cur_rr_node,
+  /* Print the pin of the cur_rr_node */ 
+  pin_name = gen_verilog_routing_channel_one_pin_name(cur_rr_node,
                                                    x_start, y_start, track_idx, 
-                                                   port_type));
+                                                   port_type);
+  fprintf(fp, "%s", pin_name);
+  free(pin_name);
   return;
 }
 
