@@ -252,21 +252,23 @@ void dump_sdc_pb_graph_pin_interc(t_sram_orgz_info* cur_sram_orgz_info,
               des_pb_graph_pin->input_edges[iedge]->nb_pin); 
       
       if (NULL != des_pb_graph_pin->input_edges[iedge]->loop_breaker_delay_before_min) {
-        fprintf (fp, "set_min_delay -from %s -to %s/%s %s \n", from_path, set_disable_path, input_buffer_in,
-                 des_pb_graph_pin->input_edges[iedge]->loop_breaker_delay_before_min); 
+        fprintf (fp, "set_min_delay -from %s -to %s/%s %f \n", from_path, set_disable_path, input_buffer_in,
+                 pow(10,9)*atof(des_pb_graph_pin->input_edges[iedge]->loop_breaker_delay_before_min)); 
       }
       if (NULL != des_pb_graph_pin->input_edges[iedge]->loop_breaker_delay_before_max) {
-        fprintf (fp, "set_max_delay -from %s -to %s/%s %s \n", from_path, set_disable_path, input_buffer_in,
-                 des_pb_graph_pin->input_edges[iedge]->loop_breaker_delay_before_max); 
+        fprintf (fp, "set_max_delay -from %s -to %s/%s %f \n", from_path, set_disable_path, input_buffer_in,
+                 pow(10,9)*atof(des_pb_graph_pin->input_edges[iedge]->loop_breaker_delay_before_max)); 
       }
       fprintf (fp, "set_disable_timing -from %s -to %s %s \n", input_buffer_in, input_buffer_out, set_disable_path);
       if (NULL != des_pb_graph_pin->input_edges[iedge]->loop_breaker_delay_after_min) {
-        fprintf (fp, "set_min_delay -from %s/%s -to %s %s \n", set_disable_path, input_buffer_out,
-                 to_path, des_pb_graph_pin->input_edges[iedge]->loop_breaker_delay_after_min); 
+        fprintf (fp, "set_min_delay -from %s/%s -to %s %f \n", set_disable_path, input_buffer_out,
+                 to_path, 
+                 pow(10,9)*atof(des_pb_graph_pin->input_edges[iedge]->loop_breaker_delay_after_min)); 
       }
       if (NULL != des_pb_graph_pin->input_edges[iedge]->loop_breaker_delay_after_max) {
-        fprintf (fp, "set_max_delay -from %s/%s -to %s %s \n", set_disable_path, input_buffer_out,
-                 to_path, des_pb_graph_pin->input_edges[iedge]->loop_breaker_delay_after_max); 
+        fprintf (fp, "set_max_delay -from %s/%s -to %s %f \n", set_disable_path, input_buffer_out,
+                 to_path, 
+                 pow(10,9)*atof(des_pb_graph_pin->input_edges[iedge]->loop_breaker_delay_after_max)); 
       }
       my_free(input_buffer_path);
       my_free(set_disable_path);
