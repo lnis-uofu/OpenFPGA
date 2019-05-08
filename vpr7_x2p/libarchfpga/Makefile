@@ -47,10 +47,10 @@ libarchfpga.a: $(OBJ) ../libpcre/libpcre.a ../libprinthandler/libprinthandler.a
 	 cp ../libprinthandler/libprinthandler.a $@
 	 ar rcs $@ $(OBJ)
 
-../pcre/libpcre.a:
+../libpcre/libpcre.a:
 	@ cd ../libpcre && make
 
-../printhandler/libprinthandler.a:
+../libprinthandler/libprinthandler.a:
 	@ cd ../libprinthandler && make
 
 # Enable a second round of expansion so that we may include
