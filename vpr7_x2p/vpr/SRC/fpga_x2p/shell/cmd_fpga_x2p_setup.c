@@ -31,6 +31,7 @@ boolean shell_setup_fpga_x2p_setup(t_shell_env* env, t_opt_info* opts) {
   env->vpr_setup.FPGA_SPICE_Opts.rename_illegal_port = is_opt_set(opts, "rename_illegal_port", FALSE);
   env->vpr_setup.FPGA_SPICE_Opts.signal_density_weight = get_opt_float_val(opts, "signal_density_weight", 1.);
   env->vpr_setup.FPGA_SPICE_Opts.sim_window_size = get_opt_float_val(opts, "sim_window_size", 0.5);
+  env->vpr_setup.FPGA_SPICE_Opts.compact_routing_hierarchy = is_opt_set(opts, "compact_routing_hierarchy", FALSE);
 
   return TRUE;
 }

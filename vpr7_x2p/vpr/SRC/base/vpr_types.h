@@ -1153,6 +1153,18 @@ struct s_sb {
   int num_reserved_conf_bits; /* number of reserved configuration bits */
   int conf_bits_lsb; /* LSB of configuration bits */
   int conf_bits_msb; /* MSB of configuration bits */
+
+  /* For identical SBs */
+  t_sb* mirror; /* an exact mirror of this switch block, with same connection & switches */
+  /* an rotatable mirror of this switch block, 
+   * the two switch blocks will be same in terms of connection & switches 
+   * by applying an offset to the connection & switches 
+   */
+  t_sb* rotatable; 
+  /* Offset to be applied for each side of nodes */
+  int* offset_ipin; /* [0, ..., num_sides-1]*/
+  int* offset_opin; /* [0, ..., num_sides-1]*/
+  int* offset_chan; /* [0, ..., num_sides-1]*/
 };
 
 /* Information for each conneciton block */
@@ -1188,6 +1200,18 @@ struct s_cb {
   int num_reserved_conf_bits; /* number of reserved configuration bits */
   int conf_bits_lsb; /* LSB of configuration bits */
   int conf_bits_msb; /* MSB of configuration bits */
+
+  /* For identical SBs */
+  t_cb* mirror; /* an exact mirror of this connection block, with same connection & switches */
+  /* an rotatable mirror of this connection block, 
+   * the two connection blocks will be same in terms of connection & switches 
+   * by applying an offset to the connection & switches 
+   */
+  t_cb* rotatable; 
+  /* Offset to be applied for each side of nodes */
+  int* offset_ipin; /* [0, ..., num_sides-1]*/
+  int* offset_opin; /* [0, ..., num_sides-1]*/
+  int* offset_chan; /* [0, ..., num_sides-1]*/
 };
 
 /* Xifan TANG: SPICE Support*/
@@ -1254,6 +1278,8 @@ struct s_fpga_spice_opts {
   t_spice_opts SpiceOpts; /* Xifan TANG: SPICE Support*/
   t_syn_verilog_opts SynVerilogOpts; /* Xifan TANG: Synthesizable verilog dumping*/
   t_bitstream_gen_opts BitstreamGenOpts; /* Xifan Bitsteam Generator */
+
+  boolean compact_routing_hierarchy; /* use compact routing hierarchy */
 
   /* Signal Density */
   float signal_density_weight;

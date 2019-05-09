@@ -481,6 +481,9 @@ ProcessOption(INP char **Args, INOUTP t_options * Options) {
 	  return ReadFloat(Args, &Options->fpga_spice_signal_density_weight);
     case OT_FPGA_X2P_SIM_WINDOW_SIZE:
 	  return ReadFloat(Args, &Options->fpga_spice_sim_window_size);
+    case OT_FPGA_X2P_COMPACT_ROUTING_HIERARCHY: 
+      /* use a compact routing hierarchy in SPICE/Verilog generation */
+      return Args;
     /* Xifan TANG: FPGA SPICE Model Options*/
     case OT_FPGA_SPICE:
       return Args;
