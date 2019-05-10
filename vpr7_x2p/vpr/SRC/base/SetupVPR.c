@@ -1235,6 +1235,12 @@ static void SetupFpgaSpiceOpts(t_options Options,
     fpga_spice_opts->sim_window_size = Options.fpga_spice_sim_window_size;
   }
 
+  /* Check if user wants to use a compact routing hierarchy */
+  fpga_spice_opts->compact_routing_hierarchy = FALSE;
+  if (Options.Count[OT_FPGA_X2P_COMPACT_ROUTING_HIERARCHY]) { 
+    fpga_spice_opts->compact_routing_hierarchy = TRUE;
+  }
+
   /* Decide if we need to do FPGA-SPICE */
   fpga_spice_opts->do_fpga_spice = FALSE;
   if (( TRUE == fpga_spice_opts->SpiceOpts.do_spice)

@@ -35,6 +35,7 @@
 #include "verilog_utils.h"
 #include "verilog_primitives.h"
 #include "verilog_pbtypes.h"
+#include "verilog_routing.h"
 #include "verilog_top_netlist_utils.h"
 
 /* ONLY for compact Verilog netlists:
@@ -739,6 +740,311 @@ void dump_compact_verilog_defined_grids(t_sram_orgz_info* cur_sram_orgz_info,
   return;
 }
 
+/* Call the defined switch box sub-circuit
+ * TODO: This function is also copied from
+ * spice_routing.c : dump_verilog_routing_switch_box_subckt
+ */
+static 
+void dump_compact_verilog_defined_one_switch_box(t_sram_orgz_info* cur_sram_orgz_info, 
+                                                 FILE* fp,
+                                                 t_sb cur_sb_info) {
+  int ix, iy, side, itrack, x, y, inode;
+
+  /* Check the file handler*/ 
+  if (NULL == fp) {
+    vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid file handler.\n", 
+               __FILE__, __LINE__); 
+    exit(1);
+  }
+
+  /* Check */
+  assert((!(0 > cur_sb_info.x))&&(!(cur_sb_info.x > (nx + 1)))); 
+  assert((!(0 > cur_sb_info.y))&&(!(cur_sb_info.y > (ny + 1)))); 
+
+  x = cur_sb_info.x;
+  y = cur_sb_info.y;
+
+  /* Comment lines */                 
+  fprintf(fp, "//----- BEGIN call module Switch blocks [%d][%d] -----\n", 
+          cur_sb_info.x, cur_sb_info.y);
+  /* Print module*/
+
+  /* If we have an mirror SB, we should the module name of the mirror !!! */
+  if (NULL != cur_sb_info.mirror) {
+    fprintf(fp, "%s ", gen_verilog_one_sb_module_name(cur_sb_info.mirror));
+  } else {
+    fprintf(fp, "%s ", gen_verilog_one_sb_module_name(&cur_sb_info));
+  }
+
+  fprintf(fp, "%s ", gen_verilog_one_sb_instance_name(&cur_sb_info));
+  fprintf(fp, "(");
+
+  fprintf(fp, "\n");
+  /* dump global ports */
+  if (0 < dump_verilog_global_ports(fp, global_ports_head, FALSE)) {
+    fprintf(fp, ",\n");
+  }
+
+  for (side = 0; side < cur_sb_info.num_sides; side++) {
+    determine_sb_port_coordinator(cur_sb_info, side, &ix, &iy); 
+
+    fprintf(fp, "//----- %s side channel ports-----\n", convert_side_index_to_string(side));
+    for (itrack = 0; itrack < cur_sb_info.chan_width[side]; itrack++) {
+      fprintf(fp, "%s,\n",
+              gen_verilog_routing_channel_one_pin_name(cur_sb_info.chan_rr_node[side][itrack],
+                                                       ix, iy, itrack, 
+                                                       cur_sb_info.chan_rr_node_direction[side][itrack]));
+    }
+    fprintf(fp, "//----- %s side inputs: CLB output pins -----\n", convert_side_index_to_string(side));
+    /* Dump OPINs of adjacent CLBs */
+    for (inode = 0; inode < cur_sb_info.num_opin_rr_nodes[side]; inode++) {
+      dump_verilog_grid_side_pin_with_given_index(fp, IPIN,
+                                                  cur_sb_info.opin_rr_node[side][inode]->ptc_num,
+                                                  cur_sb_info.opin_rr_node_grid_side[side][inode],
+                                                  cur_sb_info.opin_rr_node[side][inode]->xlow,
+                                                  cur_sb_info.opin_rr_node[side][inode]->ylow,
+                                                  FALSE); /* Do not specify the direction of port */ 
+      fprintf(fp, ", ");
+    } 
+    fprintf(fp, "\n");
+  }
+
+  /* Configuration ports */
+  /* output of each configuration bit */
+  /* Reserved sram ports */
+  if (0 < (cur_sb_info.num_reserved_conf_bits)) {
+    dump_verilog_reserved_sram_ports(fp, cur_sram_orgz_info, 
+                                     0, cur_sb_info.num_reserved_conf_bits - 1,
+                                     VERILOG_PORT_CONKT);
+    fprintf(fp, ",\n");
+  }
+  /* Normal sram ports */
+  if (0 < (cur_sb_info.conf_bits_msb - cur_sb_info.conf_bits_lsb)) {
+    dump_verilog_sram_local_ports(fp, cur_sram_orgz_info, 
+                                  cur_sb_info.conf_bits_lsb, 
+                                  cur_sb_info.conf_bits_msb - 1,
+                                  VERILOG_PORT_CONKT);
+  }
+
+  /* Dump ports only visible during formal verification*/
+  if (0 < (cur_sb_info.conf_bits_msb - 1 - cur_sb_info.conf_bits_lsb)) {
+    fprintf(fp, "\n");
+    fprintf(fp, "`ifdef %s\n", verilog_formal_verification_preproc_flag);
+    fprintf(fp, ",\n");
+    dump_verilog_formal_verification_sram_ports(fp, cur_sram_orgz_info, 
+                                                cur_sb_info.conf_bits_lsb, 
+                                                cur_sb_info.conf_bits_msb - 1,
+                                                VERILOG_PORT_CONKT);
+    fprintf(fp, "\n");
+    fprintf(fp, "`endif\n");
+  }
+  fprintf(fp, ");\n");
+
+  /* Comment lines */                 
+  fprintf(fp, "//----- END call module Switch blocks [%d][%d] -----\n\n", x, y);
+
+  /* Free */
+
+  return;
+}
+
+
+void dump_compact_verilog_defined_switch_boxes(t_sram_orgz_info* cur_sram_orgz_info, 
+                                               FILE* fp) {
+  int ix, iy;
+
+  /* Check the file handler*/ 
+  if (NULL == fp) {
+    vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid file handler.\n", 
+               __FILE__, __LINE__); 
+    exit(1);
+  }
+
+  for (ix = 0; ix < (nx + 1); ix++) {
+    for (iy = 0; iy < (ny + 1); iy++) {
+      dump_compact_verilog_defined_one_switch_box(cur_sram_orgz_info, fp, sb_info[ix][iy]);
+    }
+  }
+
+  return;
+}
+
+/* Call the defined sub-circuit of connection box
+ * TODO: actually most of this function is copied from
+ * spice_routing.c : dump_verilog_conneciton_box_interc
+ * Should be more clever to use the original function
+ */
+static 
+void dump_compact_verilog_defined_one_connection_box(t_sram_orgz_info* cur_sram_orgz_info, 
+                                                     FILE* fp,
+                                                     t_cb cur_cb_info) {
+  int itrack, inode, side, x, y;
+  int side_cnt = 0;
+
+  /* Check the file handler*/ 
+  if (NULL == fp) {
+    vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid file handler.\n", 
+               __FILE__, __LINE__); 
+    exit(1);
+  }
+  /* Check */
+  assert((!(0 > cur_cb_info.x))&&(!(cur_cb_info.x > (nx + 1)))); 
+  assert((!(0 > cur_cb_info.y))&&(!(cur_cb_info.y > (ny + 1)))); 
+
+  x = cur_cb_info.x;
+  y = cur_cb_info.y;
+
+  /* Comment lines */
+  fprintf(fp, 
+          "//----- BEGIN Call Connection Box for %s direction [%d][%d] module -----\n", 
+          convert_chan_type_to_string(cur_cb_info.type),
+          x, y);
+
+  /* Print module */
+  /* If we have an mirror SB, we should the module name of the mirror !!! */
+  if (NULL != cur_cb_info.mirror) {
+    fprintf(fp, "%s ", gen_verilog_one_cb_module_name(cur_cb_info.mirror));
+  } else {
+    fprintf(fp, "%s ", gen_verilog_one_cb_module_name(&cur_cb_info));
+  }
+
+  fprintf(fp, "%s ", gen_verilog_one_cb_instance_name(&cur_cb_info));
+ 
+  fprintf(fp, "(");
+  fprintf(fp, "\n");
+  /* dump global ports */
+  if (0 < dump_verilog_global_ports(fp, global_ports_head, FALSE)) {
+    fprintf(fp, ",\n");
+  }
+
+  /* Print the ports of channels*/
+  /* connect to the mid point of a track*/
+  side_cnt = 0;
+  for (side = 0; side < cur_cb_info.num_sides; side++) {
+    /* Bypass side with zero channel width */
+    if (0 == cur_cb_info.chan_width[side]) {
+      continue;
+    }
+    assert (0 < cur_cb_info.chan_width[side]);
+    side_cnt++;
+    fprintf(fp, "//----- %s side inputs: channel track middle outputs -----\n", convert_side_index_to_string(side));
+    for (itrack = 0; itrack < cur_cb_info.chan_width[side]; itrack++) {
+      fprintf(fp, "%s, ",
+              gen_verilog_routing_channel_one_midout_name(&cur_cb_info, itrack));
+      fprintf(fp, "\n");
+    }
+  }
+  /*check side_cnt */
+  assert(1 == side_cnt);
+ 
+  side_cnt = 0;
+  /* Print the ports of grids*/
+  for (side = 0; side < cur_cb_info.num_sides; side++) {
+    /* Bypass side with zero IPINs*/
+    if (0 == cur_cb_info.num_ipin_rr_nodes[side]) {
+      continue;
+    }
+    side_cnt++;
+    assert(0 < cur_cb_info.num_ipin_rr_nodes[side]);
+    assert(NULL != cur_cb_info.ipin_rr_node[side]);
+    fprintf(fp, "//----- %s side outputs: CLB input pins -----\n", convert_side_index_to_string(side));
+    for (inode = 0; inode < cur_cb_info.num_ipin_rr_nodes[side]; inode++) {
+      /* Print each INPUT Pins of a grid */
+      dump_verilog_grid_side_pin_with_given_index(fp, OPIN,
+                                                 cur_cb_info.ipin_rr_node[side][inode]->ptc_num,
+                                                 cur_cb_info.ipin_rr_node_grid_side[side][inode],
+                                                 cur_cb_info.ipin_rr_node[side][inode]->xlow,
+                                                 cur_cb_info.ipin_rr_node[side][inode]->ylow, 
+                                                 FALSE); /* Do not specify direction of port */
+      fprintf(fp, ", \n");
+    }
+  }
+  /* Make sure only 2 sides of IPINs are printed */
+  assert((1 == side_cnt)||(2 == side_cnt));
+ 
+  /* Configuration ports */
+  /* Reserved sram ports */
+  if (0 < (cur_cb_info.num_reserved_conf_bits)) {
+    dump_verilog_reserved_sram_ports(fp, cur_sram_orgz_info, 
+                                     0, cur_cb_info.num_reserved_conf_bits - 1,
+                                     VERILOG_PORT_CONKT);
+    fprintf(fp, ",\n");
+  }
+  /* Normal sram ports */
+  if (0 < (cur_cb_info.conf_bits_msb - cur_cb_info.conf_bits_lsb)) {
+    dump_verilog_sram_local_ports(fp, cur_sram_orgz_info, 
+                                  cur_cb_info.conf_bits_lsb, cur_cb_info.conf_bits_msb - 1,
+                                  VERILOG_PORT_CONKT);
+  }
+  /* Dump ports only visible during formal verification*/
+  if (0 < (cur_cb_info.conf_bits_msb - 1 - cur_cb_info.conf_bits_lsb)) {
+    fprintf(fp, "\n");
+    fprintf(fp, "`ifdef %s\n", verilog_formal_verification_preproc_flag);
+    fprintf(fp, ",\n");
+    dump_verilog_formal_verification_sram_ports(fp, cur_sram_orgz_info, 
+                                                cur_cb_info.conf_bits_lsb, 
+                                                cur_cb_info.conf_bits_msb - 1,
+                                                VERILOG_PORT_CONKT);
+    fprintf(fp, "\n");
+    fprintf(fp, "`endif\n");
+  } 
+  fprintf(fp, ");\n");
+
+  /* Comment lines */
+  switch(cur_cb_info.type) {
+  case CHANX:
+    fprintf(fp, "//----- END call Connection Box-X direction [%d][%d] module -----\n\n", x, y);
+    break;
+  case CHANY:
+    fprintf(fp, "//----- END call Connection Box-Y direction [%d][%d] module -----\n\n", x, y);
+    break;
+  default: 
+    vpr_printf(TIO_MESSAGE_ERROR, "(File:%s, [LINE%d])Invalid type of channel!\n", __FILE__, __LINE__);
+    exit(1);
+  }
+
+  /* Check */
+  assert((1 == side_cnt)||(2 == side_cnt));
+ 
+  return;
+}
+
+/* Call the sub-circuits for connection boxes */
+void dump_compact_verilog_defined_connection_boxes(t_sram_orgz_info* cur_sram_orgz_info,
+                                                   FILE* fp) {
+  int ix, iy;
+
+  /* Check the file handler*/ 
+  if (NULL == fp) {
+    vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid file handler.\n", 
+               __FILE__, __LINE__); 
+    exit(1);
+  }
+
+  /* X - channels [1...nx][0..ny]*/
+  for (iy = 0; iy < (ny + 1); iy++) {
+    for (ix = 1; ix < (nx + 1); ix++) {
+      if ((TRUE == is_cb_exist(CHANX, ix, iy))
+         &&(0 < count_cb_info_num_ipin_rr_nodes(cbx_info[ix][iy]))) {
+        dump_compact_verilog_defined_one_connection_box(cur_sram_orgz_info, fp, cbx_info[ix][iy]);
+      }
+    }
+  }
+  /* Y - channels [1...ny][0..nx]*/
+  for (ix = 0; ix < (nx + 1); ix++) {
+    for (iy = 1; iy < (ny + 1); iy++) {
+      if ((TRUE == is_cb_exist(CHANY, ix, iy))
+         &&(0 < count_cb_info_num_ipin_rr_nodes(cby_info[ix][iy]))) {
+        dump_compact_verilog_defined_one_connection_box(cur_sram_orgz_info, fp, cby_info[ix][iy]);
+      }
+    }
+  }
+ 
+  return; 
+}
+
+
+
 /** Print Top-level SPICE netlist in a compact way
  * Instance unique submodules (I/O, CLB, Heterogeneous block) for the full grids
  */
@@ -754,6 +1060,7 @@ void dump_compact_verilog_top_netlist(t_sram_orgz_info* cur_sram_orgz_info,
                                       t_ivec*** LL_rr_node_indices,
                                       int num_clock,
                                       t_syn_verilog_opts fpga_verilog_opts,
+                                      boolean compact_routing_hierarchy,
                                       t_spice verilog) {
   FILE* fp = NULL;
   char* formatted_dir_path = NULL;
@@ -809,10 +1116,18 @@ void dump_compact_verilog_top_netlist(t_sram_orgz_info* cur_sram_orgz_info,
   dump_verilog_defined_channels(fp, LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices);
 
   /* Quote Routing structures: Switch Boxes */
-  dump_verilog_defined_switch_boxes(cur_sram_orgz_info, fp); 
+  if (TRUE == compact_routing_hierarchy ) {
+    dump_compact_verilog_defined_switch_boxes(cur_sram_orgz_info, fp); 
+  } else {
+    dump_verilog_defined_switch_boxes(cur_sram_orgz_info, fp); 
+  }
 
   /* Quote Routing structures: Connection Boxes */
-  dump_verilog_defined_connection_boxes(cur_sram_orgz_info, fp); 
+  if (TRUE == compact_routing_hierarchy ) {
+    dump_compact_verilog_defined_connection_boxes(cur_sram_orgz_info, fp); 
+  } else {
+    dump_verilog_defined_connection_boxes(cur_sram_orgz_info, fp); 
+  }
 
   /* Quote defined Logic blocks subckts (Grids) */
   dump_compact_verilog_defined_grids(cur_sram_orgz_info, fp);

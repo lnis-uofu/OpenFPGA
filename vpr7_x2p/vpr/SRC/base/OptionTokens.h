@@ -78,6 +78,7 @@ enum e_OptionBaseToken {
     OT_FPGA_X2P_RENAME_ILLEGAL_PORT, 
     OT_FPGA_X2P_SIGNAL_DENSITY_WEIGHT, /* The weight of signal density in determining number of clock cycles in simulation */
     OT_FPGA_X2P_SIM_WINDOW_SIZE, /* Window size in determining number of clock cycles in simulation */
+    OT_FPGA_X2P_COMPACT_ROUTING_HIERARCHY, /* use a compact routing hierarchy in SPICE/Verilog generation */
     /* Xifan TANG: FPGA SPICE Support */
     OT_FPGA_SPICE, /* Xifan TANG: FPGA SPICE Model Support */
     OT_FPGA_SPICE_DIR, /* Xifan TANG: FPGA SPICE Model Support */

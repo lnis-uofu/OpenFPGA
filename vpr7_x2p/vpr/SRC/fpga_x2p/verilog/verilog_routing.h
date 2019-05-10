@@ -67,7 +67,8 @@ void dump_verilog_routing_switch_box_subckt(t_sram_orgz_info* cur_sram_orgz_info
                                             t_sb* cur_sb_info, 
                                             int LL_num_rr_nodes, t_rr_node* LL_rr_node,
                                             t_ivec*** LL_rr_node_indices,
-                                            t_syn_verilog_opts fpga_verilog_opts);
+                                            t_syn_verilog_opts fpga_verilog_opts,
+                                            boolean compact_routing_hierarchy);
 
 
 void dump_verilog_connection_box_short_interc(t_sram_orgz_info* cur_sram_orgz_info,
@@ -111,7 +112,8 @@ void dump_verilog_routing_connection_box_subckt(t_sram_orgz_info* cur_sram_orgz_
                                                 t_cb* cur_cb_info,
                                                 int LL_num_rr_nodes, t_rr_node* LL_rr_node,
                                                 t_ivec*** LL_rr_node_indices,
-                                                t_syn_verilog_opts fpga_verilog_opts);
+                                                t_syn_verilog_opts fpga_verilog_opts,
+                                                boolean compact_routing_hierarchy);
 
 
 void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
@@ -122,5 +124,6 @@ void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
                                     int LL_num_rr_nodes, t_rr_node* LL_rr_node,
                                     t_ivec*** LL_rr_node_indices,
                                     t_rr_indexed_data* LL_rr_indexed_data,
-                                    t_syn_verilog_opts fpga_verilog_opts);
+                                    t_syn_verilog_opts fpga_verilog_opts,
+                                    boolean compact_routing_hierarchy);
 
