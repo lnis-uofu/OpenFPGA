@@ -113,8 +113,6 @@ t_pb* get_child_pb_for_phy_pb_graph_node(t_pb* cur_pb, int ipb, int jpb);
 
 t_phy_pb* get_phy_child_pb_for_phy_pb_graph_node(t_phy_pb* cur_phy_pb, int ipb, int jpb);
 
-enum e_interconnect find_pb_graph_pin_in_edges_interc_type(t_pb_graph_pin pb_graph_pin) ;
-
 t_spice_model* find_pb_graph_pin_in_edges_interc_model(t_pb_graph_pin pb_graph_pin) ;
 
 void find_interc_fan_in_des_pb_graph_pin(t_pb_graph_pin* des_pb_graph_pin,
@@ -209,8 +207,6 @@ t_phy_pb* rec_get_phy_pb_by_name(t_phy_pb* cur_phy_pb,
 
 int get_pb_graph_node_wired_lut_logical_block_index(t_pb_graph_node* cur_pb_graph_node,
                                                     t_rr_node* op_pb_rr_graph);
-
-void rec_reset_pb_graph_node_rr_node_index_physical_pb(t_pb_graph_node* cur_pb_graph_node);
 
 void sync_wired_lut_to_one_phy_pb(t_pb_graph_node* cur_pb_graph_node,
                                   t_phy_pb* cur_phy_pb,
