@@ -150,6 +150,11 @@ boolean is_two_sb_rr_nodes_mirror(t_sb* src_sb, t_sb* des_sb, int side,
         != des_rr_node->drive_rr_nodes[inode]->type) {
         return FALSE;
       }
+      /* switch type should be the same  */
+      if ( src_rr_node->drive_switches[inode]
+        != des_rr_node->drive_switches[inode]) {
+        return FALSE;
+      }
       int src_node_id, des_node_id;
       int src_node_side, des_node_side; 
       get_rr_node_side_and_index_in_sb_info(src_rr_node->drive_rr_nodes[inode], *src_sb, OUT_PORT, &src_node_side, &src_node_id);
@@ -183,6 +188,11 @@ boolean is_two_cb_rr_nodes_mirror(t_cb* src_cb, t_cb* des_cb,
     /* node type should be the same  */
     if ( src_rr_node->drive_rr_nodes[inode]->type
       != des_rr_node->drive_rr_nodes[inode]->type) {
+      return FALSE;
+    }
+    /* switch type should be the same  */
+    if ( src_rr_node->drive_switches[inode]
+      != des_rr_node->drive_switches[inode]) {
       return FALSE;
     }
     int src_node_id, des_node_id;
