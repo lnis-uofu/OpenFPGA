@@ -1,3 +1,6 @@
+#ifndef FPGA_X2P_UTILS_H
+#define FPGA_X2P_UTILS_H
+
 void my_free(void* ptr);
 
 char* my_gettime();
@@ -66,14 +69,7 @@ char* chomp_spice_node_prefix(char* spice_node_prefix);
 
 char* format_spice_node_prefix(char* spice_node_prefix);
 
-
-char* format_spice_node_prefix(char* spice_node_prefix);
-
-
-
 t_block* search_mapped_block(int x, int y, int z);
-
-
 
 char** fpga_spice_strtok(char* str, 
                          char* delims, 
@@ -409,3 +405,5 @@ void get_fpga_x2p_global_op_clock_ports(t_llist* head,
 void get_fpga_x2p_global_all_clock_ports(t_llist* head,
                                         int* num_clock_ports,
                                         t_spice_model_port*** clock_port);
+
+#endif
