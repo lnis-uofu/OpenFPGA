@@ -31,7 +31,7 @@ find_package(Readline REQUIRED)
 #Collect the source files
 file(GLOB_RECURSE EXEC_SOURCES SRC/main.c)
 file(GLOB_RECURSE EXEC_SOURCES_SHELL SRC/shell_main.c)
-file(GLOB_RECURSE LIB_SOURCES SRC/*/*.c SRC/*/*/*.c)
+file(GLOB_RECURSE LIB_SOURCES SRC/*/*.c SRC/*/*/*.c SRC/*/*.cpp SRC/*/*/*.cpp)
 file(GLOB_RECURSE LIB_HEADERS SRC/*/*.h SRC/*/*/*.h)
 files_to_dirs(LIB_HEADERS LIB_INCLUDE_DIRS)
 

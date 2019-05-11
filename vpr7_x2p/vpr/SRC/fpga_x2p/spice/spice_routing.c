@@ -632,7 +632,8 @@ void fprint_switch_box_interc(FILE* fp,
 void fprint_routing_switch_box_subckt(char* subckt_dir, 
                                       t_sb cur_sb_info,
                                       int LL_num_rr_nodes, t_rr_node* LL_rr_node,
-                                      t_ivec*** LL_rr_node_indices) {
+                                      t_ivec*** LL_rr_node_indices,
+                                      boolean compact_routing_hierarchy) {
   int itrack, inode, side, ix, iy, x, y;
   FILE* fp = NULL;
   char* fname = NULL;
@@ -998,7 +999,9 @@ void fprint_connection_box_interc(FILE* fp,
 void fprint_routing_connection_box_subckt(char* subckt_dir,
                                           t_cb cur_cb_info,
                                           int LL_num_rr_nodes, t_rr_node* LL_rr_node,
-                                          t_ivec*** LL_rr_node_indices) {
+                                          t_ivec*** LL_rr_node_indices,
+                                          boolean compact_routing_hierarchy) {
+
   int itrack, inode, side, x, y;
   int side_cnt = 0;
   FILE* fp = NULL; 
@@ -1170,7 +1173,8 @@ void generate_spice_routing_resources(char* subckt_dir,
                                       t_arch arch,
                                       t_det_routing_arch* routing_arch,
                                       int LL_num_rr_nodes, t_rr_node* LL_rr_node,
-                                      t_ivec*** LL_rr_node_indices) {
+                                      t_ivec*** LL_rr_node_indices,
+                                      boolean compact_routing_hierarchy) {
   int ix, iy; 
  
   assert(UNI_DIRECTIONAL == routing_arch->directionality);
@@ -1218,7 +1222,8 @@ void generate_spice_routing_resources(char* subckt_dir,
     for (iy = 0; iy < (ny + 1); iy++) {
       update_spice_models_routing_index_low(ix, iy, SOURCE, arch.spice->num_spice_model, arch.spice->spice_models);
       fprint_routing_switch_box_subckt(subckt_dir, sb_info[ix][iy],
-                                       LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices); 
+                                       LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices, 
+                                       compact_routing_hierarchy); 
       update_spice_models_routing_index_high(ix, iy, SOURCE, arch.spice->num_spice_model, arch.spice->spice_models);
     }
   }
@@ -1233,7 +1238,8 @@ void generate_spice_routing_resources(char* subckt_dir,
       if ((TRUE == is_cb_exist(CHANX, ix, iy)) 
          &&(0 < count_cb_info_num_ipin_rr_nodes(cbx_info[ix][iy]))) {
         fprint_routing_connection_box_subckt(subckt_dir, cbx_info[ix][iy],
-                                             LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices); 
+                                             LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices, 
+                                             compact_routing_hierarchy); 
       }
       update_spice_models_routing_index_high(ix, iy, CHANX, arch.spice->num_spice_model, arch.spice->spice_models);
     }
@@ -1246,7 +1252,8 @@ void generate_spice_routing_resources(char* subckt_dir,
       if ((TRUE == is_cb_exist(CHANY, ix, iy))
          &&(0 < count_cb_info_num_ipin_rr_nodes(cby_info[ix][iy]))) {
         fprint_routing_connection_box_subckt(subckt_dir, cby_info[ix][iy],
-                                             LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices); 
+                                             LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices,
+                                             compact_routing_hierarchy); 
       }
       update_spice_models_routing_index_high(ix, iy, CHANY, arch.spice->num_spice_model, arch.spice->spice_models);
     }

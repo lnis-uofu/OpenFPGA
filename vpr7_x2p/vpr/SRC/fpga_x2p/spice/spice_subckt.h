@@ -10,4 +10,5 @@ void generate_spice_subckt_tapbuf(FILE* fp,
 
 void generate_spice_subckts(char* subckt_dir,
                             t_arch* arch,
-                            t_det_routing_arch* routing_arch);
+                            t_det_routing_arch* routing_arch,
+                            boolean compact_routing_hierarchy);
