@@ -248,7 +248,7 @@ void configure_tedges_delay_matrix(enum spice_model_delay_type delay_type,
 
 /* allocate and parse delay_matix */
 float** fpga_spice_atof_2D(int num_in_port, int num_out_port, char* str) {
-  int i, j;
+  int i;
   float** delay_matrix = NULL;
 
   /* allocate */

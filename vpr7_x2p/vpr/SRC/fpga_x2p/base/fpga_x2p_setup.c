@@ -948,7 +948,12 @@ void check_keywords_conflict(t_arch Arch) {
     vpr_printf(TIO_MESSAGE_ERROR, "Found %d conflicted keywords!\n", conflict);
     exit(1);
   }
-  
+
+  /* Free the memory of the keywords after the checking */
+  for (i = 0 ; cur < num_keyword ; i++) {
+    my_free(keywords[cur]);
+  } 
+
   return; 
 }
 

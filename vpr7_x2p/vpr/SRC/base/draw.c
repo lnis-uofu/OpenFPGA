@@ -2039,8 +2039,8 @@ static void draw_pin_to_chan_edge(int pin_node, int chan_node) {
 static void draw_pin_to_pin(int opin_node, int ipin_node) {
 	
 	/* This routine draws an edge from the opin rr node to the ipin rr node */
-	int opin_grid_x, opin_grid_y, opin_pin_num, opin;
-	int ipin_grid_x, ipin_grid_y, ipin_pin_num, ipin;
+	int opin_grid_x, opin_grid_y, opin;
+	int ipin_grid_x, ipin_grid_y, ipin;
 	int ofs, pin_ofs;
 	boolean found;
 	float x1, x2, y1, y2;
@@ -2060,7 +2060,6 @@ static void draw_pin_to_pin(int opin_node, int ipin_node) {
 	opin_grid_y = rr_node[opin_node].ylow;
 	opin_grid_y = opin_grid_y - grid[opin_grid_x][opin_grid_y].offset;
 	opin = rr_node[opin_node].ptc_num;
-	opin_pin_num = rr_node[opin_node].ptc_num;
 	type = grid[opin_grid_x][opin_grid_y].type;
 	
 	found = FALSE;
@@ -2083,7 +2082,6 @@ static void draw_pin_to_pin(int opin_node, int ipin_node) {
 	ipin_grid_y = rr_node[ipin_node].ylow;
 	ipin_grid_y = ipin_grid_y - grid[ipin_grid_x][ipin_grid_y].offset;
 	ipin = rr_node[ipin_node].ptc_num;
-	ipin_pin_num = rr_node[ipin_node].ptc_num;
 	type = grid[ipin_grid_x][ipin_grid_y].type;
 	
 	found = FALSE;

@@ -292,7 +292,7 @@ void dump_verilog_standalone_sram_config_module(FILE* fp,
 static 
 void dump_verilog_scan_chain_config_module(FILE* fp,
                                     t_sram_orgz_info* cur_sram_orgz_info) {
-  int i, num_mem_bits;
+  int num_mem_bits;
 
   /* Check */
   assert(SPICE_SRAM_SCAN_CHAIN == cur_sram_orgz_info->type);

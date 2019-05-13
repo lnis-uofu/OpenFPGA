@@ -57,7 +57,6 @@ void sdc_dump_annotation(char* from_path, // includes the cell
 
   float min_value = 0;
   float max_value = 0;
-  int i,j;
  
   // Find in the annotations the min and max
   if (0 != cur_edge->delay_min) {
@@ -82,22 +81,18 @@ void dump_sdc_pb_graph_pin_interc(t_sram_orgz_info* cur_sram_orgz_info,
                                       t_pb_graph_pin* des_pb_graph_pin,
                                       t_mode* cur_mode,
                                       char* instance_name) {
-  int iedge, ipin;
+  int iedge;
   int fan_in = 0;
   t_interconnect* cur_interc = NULL; 
   enum e_interconnect verilog_interc_type = DIRECT_INTERC;
 
   t_pb_graph_pin* src_pb_graph_pin = NULL;
   t_pb_graph_node* src_pb_graph_node = NULL;
-  t_pb_type* src_pb_type = NULL;
 
   t_pb_graph_node* des_pb_graph_node = NULL;
 
-  char* from_path_int = NULL;
-  char* to_path_int = NULL;
   char* from_path = NULL;
   char* to_path = NULL;
-  boolean interc_is_disabled = FALSE;
 
   char* set_disable_path;
   t_pb_graph_pin* cur_pin_disable;
@@ -156,7 +151,6 @@ void dump_sdc_pb_graph_pin_interc(t_sram_orgz_info* cur_sram_orgz_info,
     /* Source pin, node, pb_type*/
     src_pb_graph_pin = des_pb_graph_pin->input_edges[iedge]->input_pins[0];
     src_pb_graph_node = src_pb_graph_pin->parent_node;
-    src_pb_type = src_pb_graph_node->pb_type;
     /* Des pin, node, pb_type */
     des_pb_graph_node  = des_pb_graph_pin->parent_node;
     
@@ -183,7 +177,6 @@ void dump_sdc_pb_graph_pin_interc(t_sram_orgz_info* cur_sram_orgz_info,
     /* 2. spice_model is a wire */ 
     assert (NULL != cur_interc->spice_model);
     assert (SPICE_MODEL_MUX == cur_interc->spice_model->type);
-    ipin = 0;
     for (iedge = 0; iedge < des_pb_graph_pin->num_input_edges; iedge++) {
       if (cur_mode != des_pb_graph_pin->input_edges[iedge]->interconnect->parent_mode) {
         continue;
@@ -193,7 +186,6 @@ void dump_sdc_pb_graph_pin_interc(t_sram_orgz_info* cur_sram_orgz_info,
       /* Source pin, node, pb_type*/
       src_pb_graph_pin = des_pb_graph_pin->input_edges[iedge]->input_pins[0];
       src_pb_graph_node = src_pb_graph_pin->parent_node;
-      src_pb_type = src_pb_graph_node->pb_type;
       /* Des pin, node, pb_type */
       des_pb_graph_node  = des_pb_graph_pin->parent_node;
   	  // Generation of the paths for the dumping of the annotations
@@ -427,7 +419,7 @@ void sdc_rec_dump_child_pb_graph_node(t_sram_orgz_info* cur_sram_orgz_info,
 									 t_pb_graph_node* cur_pb_graph_node,
                                      char* instance_name) {
 
-  int mode_index, ipb, jpb, child_mode_index;
+  int mode_index, ipb, jpb;
   t_pb_type* cur_pb_type = NULL;
 
   /* Check the file handler */
@@ -460,7 +452,7 @@ void sdc_rec_dump_child_pb_graph_node(t_sram_orgz_info* cur_sram_orgz_info,
     sdc_dump_cur_node_constraints(cur_sram_orgz_info, fp, cur_pb_graph_node, mode_index, instance_name); // graph_head only has one pb_type
   }
 
-return;
+  return;
 }
 
 void sdc_dump_all_pb_graph_nodes(FILE* fp,
@@ -479,7 +471,7 @@ void dump_sdc_physical_blocks(t_sram_orgz_info* cur_sram_orgz_info,
 							int type_descriptor_mode,
                             char* instance_name) {
 
-	FILE* fp;
+  FILE* fp;
 
   /* Check if the path exists*/
   fp = fopen (sdc_path,"w");
@@ -496,7 +488,7 @@ void dump_sdc_physical_blocks(t_sram_orgz_info* cur_sram_orgz_info,
   sdc_dump_all_pb_graph_nodes(fp, cur_sram_orgz_info, type_descriptor_mode, instance_name);
 
 
-/* close file */ 
+  /* close file */ 
   fclose(fp);
 
 return;
@@ -518,6 +510,7 @@ void verilog_generate_sdc_constrain_pb_types(t_sram_orgz_info* cur_sram_orgz_inf
 	  dump_sdc_physical_blocks(cur_sram_orgz_info, sdc_path, itype, instance_name);
     }
   }
-return;
+
+  return;
 }
 

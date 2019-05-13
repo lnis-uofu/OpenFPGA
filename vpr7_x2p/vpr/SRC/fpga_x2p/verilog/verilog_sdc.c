@@ -252,8 +252,7 @@ void verilog_generate_sdc_clock_period(t_sdc_opts sdc_opts,
     fprintf(fp, "create_clock ");
     if (NULL != strstr(clock_port[iport]->prefix,"prog")) {
       fprintf(fp, "%s -period 100 -waveform {0 50}\n",
-              clock_port[iport]->prefix, 
-              critical_path_delay, critical_path_delay/2);
+              clock_port[iport]->prefix);
     }
     else {
       fprintf(fp, "%s -period %.4g -waveform {0 %.4g}\n",
@@ -1467,12 +1466,11 @@ void verilog_generate_sdc_disable_unused_grids_muxs(FILE* fp,
                                                    t_grid_tile** LL_grid,
                                                    t_block* LL_block) {
 
-  int ix, iy, iblk, itype, i_num_rr_nodes, i_fan_in;
+  int ix, iy, iblk, itype;
   int blk_id;
   t_type_ptr type;
   t_phy_pb* cur_phy_pb;
   t_rr_graph* cur_rr_graph;
-  t_rr_node* cur_rr_node;
   char* grid_instance_name=NULL;
   char* grid_sub_instance_name=NULL;
   char* grid_prefix=NULL;
@@ -1539,7 +1537,7 @@ void dump_sdc_rec_one_pb_muxes(FILE* fp,
                       t_pb_graph_node* cur_pb_graph_node) {
 
   int mode_index;
-  int ipb, jpb, child_mode_index;
+  int ipb, jpb;
   t_pb_type* cur_pb_type = NULL;
 
   cur_pb_type = cur_pb_graph_node->pb_type;
@@ -1592,8 +1590,6 @@ void dump_sdc_pb_graph_pin_muxes (FILE* fp,
                                          t_pb_graph_pin pb_graph_pin) {
   int i_fan_in, datapath_id, fan_in;
   int level_changing = 0;
-  int mode_index;
-  int num_mux_input;
   t_spice_model* mux_spice_model;
   t_rr_node cur_node = rr_graph->rr_node[pb_graph_pin.rr_node_index_physical_pb]; 
   t_pb_type* cur_pb_type = pb_graph_pin.parent_node->pb_type; 

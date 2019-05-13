@@ -40,8 +40,6 @@ static t_buffer_plan combine_buffer_plan( t_buffer_plan slow_branch, t_buffer_pl
 static void copy_delay( float* base, float* source, t_linked_int* index );
 static void add_delay_to_array( float* sink_delay, t_linked_int* index, float delay_addition );
 static float* copy_from_float_array( float* source, int num );
-static t_buffer_plan add_delay_to_buffer_plan( t_buffer_plan plan, float Tdel );
-
 
 void try_buffer_for_net( int inet, t_rc_node** rc_node_free_list, t_linked_rc_edge** rc_edge_free_list, t_linked_rc_ptr* rr_node_to_rc_node, float* net_delay );
 /* memristor */
@@ -326,27 +324,6 @@ static t_buffer_plan_list try_buffer_rc_tree (t_rc_node *rc_node, int num_pins, 
      }
  }
  return result;
-}
-
-static void add_delay_to_buffer_list( t_buffer_plan_list list, float Tdel , boolean skip_first )
-{
-    t_buffer_plan_node* traverse = list.front;
-    if ( skip_first && traverse != NULL )
-    {
-        traverse = traverse->next;
-    }
-    while ( traverse != NULL )
-    {
-        traverse->value = add_delay_to_buffer_plan( traverse->value, Tdel );
-        traverse = traverse->next;
-    }
-}
-
-static t_buffer_plan add_delay_to_buffer_plan( t_buffer_plan plan, float Tdel )
-{
-    add_delay_to_array( plan.sink_delay, plan.sink_head, Tdel );
-    plan.Tdel += Tdel;
-    return plan;
 }
 
 static t_buffer_plan_list get_empty_buffer_plan_list( )

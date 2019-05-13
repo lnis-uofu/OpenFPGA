@@ -1254,7 +1254,7 @@ void rec_add_rr_graph_wired_lut_rr_edges(INP t_pb* cur_op_pb,
  * As so, edges have to be added to the decendents of sources
  */
 int add_virtual_sources_to_rr_graph_multi_sources(t_rr_graph* local_rr_graph) {
-  int inet, isrc, iedge, to_node;
+  int inet, isrc;
   int unique_src_node;
   int cnt = 0;
 
@@ -1282,8 +1282,6 @@ int add_virtual_sources_to_rr_graph_multi_sources(t_rr_graph* local_rr_graph) {
       /* Connect edges to sources */
       local_rr_graph->rr_node[unique_src_node].edges[isrc] = local_rr_graph->net_rr_sources[inet][isrc]; 
       local_rr_graph->rr_node[unique_src_node].switches[isrc] = DEFAULT_SWITCH_ID; 
-      /* Configure the original sources */
-      to_node = local_rr_graph->net_rr_sources[inet][isrc];
     }
     /* Replace the sources with the new source node */
     local_rr_graph->net_num_sources[inet] = 1;
