@@ -206,6 +206,12 @@ void init_one_sb_info(t_sb* cur_sb) {
   cur_sb->conf_bits_lsb = 0;
   cur_sb->conf_bits_msb = 0;
 
+  cur_sb->mirror = NULL;
+  cur_sb->rotatable = NULL;
+  cur_sb->offset_ipin = NULL;
+  cur_sb->offset_opin = NULL;
+  cur_sb->offset_chan = NULL;
+
   return;
 }
 
@@ -236,6 +242,10 @@ void free_one_sb_info(t_sb* cur_sb) {
   my_free(cur_sb->ipin_rr_node_grid_side);
   my_free(cur_sb->opin_rr_node);
   my_free(cur_sb->opin_rr_node_grid_side);
+
+  my_free(cur_sb->offset_ipin);  
+  my_free(cur_sb->offset_opin);  
+  my_free(cur_sb->offset_chan);  
 
   return;
 }
@@ -299,6 +309,12 @@ void init_one_cb_info(t_cb* cur_cb) {
   cur_cb->conf_bits_lsb = 0;
   cur_cb->conf_bits_msb = 0;
 
+  cur_cb->mirror = NULL;
+  cur_cb->rotatable = NULL;
+  cur_cb->offset_ipin = NULL;
+  cur_cb->offset_opin = NULL;
+  cur_cb->offset_chan = NULL;
+
   return;
 }
 
@@ -329,6 +345,10 @@ void free_one_cb_info(t_cb* cur_cb) {
   my_free(cur_cb->ipin_rr_node_grid_side);
   my_free(cur_cb->opin_rr_node);
   my_free(cur_cb->opin_rr_node_grid_side);
+
+  my_free(cur_cb->offset_ipin);
+  my_free(cur_cb->offset_opin);
+  my_free(cur_cb->offset_chan);
 
   return;
 }

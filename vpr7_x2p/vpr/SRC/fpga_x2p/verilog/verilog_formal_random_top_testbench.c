@@ -186,9 +186,9 @@ void dump_verilog_timeout_and_vcd(FILE * fp,
 	fprintf(fp, "  // Begin Icarus requirement\n");
 	fprintf(fp, "`ifdef %s\n", icarus_simulator_flag);
 	fprintf(fp, "  initial begin\n");
-	fprintf(fp, "    $dumpfile(%s_autochecked.vcd);\n", circuit_name);
+	fprintf(fp, "    $dumpfile(\"%s_formal.vcd\");\n", circuit_name);
 	fprintf(fp, "    $dumpvars(1, %s%s);\n", circuit_name,
-											modelsim_autocheck_testbench_module_postfix);
+											formal_random_top_tb_postfix);
 	fprintf(fp, "  end\n\n");
 	fprintf(fp, "  initial begin\n");
 	fprintf(fp, "    $display(\"Simulation start\");\n");
