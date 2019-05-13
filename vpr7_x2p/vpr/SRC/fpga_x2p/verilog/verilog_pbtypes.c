@@ -1021,7 +1021,7 @@ void dump_verilog_pb_graph_pin_interc(t_sram_orgz_info* cur_sram_orgz_info,
                                       enum e_spice_pin2pin_interc_type pin2pin_interc_type,
                                       t_pb_graph_pin* des_pb_graph_pin,
                                       t_mode* cur_mode) {
-  int i, iedge, ipin;
+  int iedge, ipin;
   int fan_in = 0;
   t_interconnect* cur_interc = NULL; 
   enum e_interconnect verilog_interc_type = DIRECT_INTERC;
@@ -1030,16 +1030,12 @@ void dump_verilog_pb_graph_pin_interc(t_sram_orgz_info* cur_sram_orgz_info,
   t_pb_graph_node* src_pb_graph_node = NULL;
   t_pb_type* src_pb_type = NULL;
 
-  t_pb_graph_node* des_pb_graph_node = NULL;
-
   char* formatted_parent_pin_prefix = chomp_verilog_prefix(parent_pin_prefix); /* Complete a "_" at the end if needed*/
   char* src_pin_prefix = NULL;
   char* des_pin_prefix = NULL;
 
-  int num_mux_sram_bits = 0;
   int* mux_sram_bits = NULL;
   int cur_num_sram = 0;
-  int mux_level = 0;
   int num_mux_conf_bits = 0;
   int num_mux_reserved_conf_bits = 0;
   int cur_bl, cur_wl;
@@ -1101,7 +1097,6 @@ void dump_verilog_pb_graph_pin_interc(t_sram_orgz_info* cur_sram_orgz_info,
     src_pb_graph_node = src_pb_graph_pin->parent_node;
     src_pb_type = src_pb_graph_node->pb_type;
     /* Des pin, node, pb_type */
-    des_pb_graph_node  = des_pb_graph_pin->parent_node;
     /* Generate the pin_prefix for src_pb_graph_node and des_pb_graph_node*/
     generate_verilog_src_des_pb_graph_pin_prefix(src_pb_graph_pin, des_pb_graph_pin, pin2pin_interc_type, 
                                                  cur_interc, formatted_parent_pin_prefix, &src_pin_prefix, &des_pin_prefix);
@@ -1159,7 +1154,7 @@ void dump_verilog_pb_graph_pin_interc(t_sram_orgz_info* cur_sram_orgz_info,
       hierarchical_name = "";
     
       mux_name = (char *) my_malloc(sizeof(char)*(strlen(cur_interc->spice_model->name)
-                     + 5 + strlen(my_itoa(fan_in)) + 1 + strlen(my_itoa(cur_interc->spice_model->cnt + 2))));
+                     + 5 + strlen(my_itoa(fan_in)) + 1 + strlen(my_itoa(cur_interc->spice_model->cnt)) + 2));
 	  sprintf(mux_name, "%s_size%d_%d_", 
               cur_interc->spice_model->name, fan_in, cur_interc->spice_model->cnt);
       
@@ -1178,8 +1173,6 @@ void dump_verilog_pb_graph_pin_interc(t_sram_orgz_info* cur_sram_orgz_info,
       src_pb_graph_node = src_pb_graph_pin->parent_node;
       src_pb_type = src_pb_graph_node->pb_type;
 
-      /* Des pin, node, pb_type */
-      des_pb_graph_node  = des_pb_graph_pin->parent_node;
       /* Generate the pin_prefix for src_pb_graph_node and des_pb_graph_node*/
       generate_verilog_src_des_pb_graph_pin_prefix(src_pb_graph_pin, des_pb_graph_pin, pin2pin_interc_type, 
                                                    cur_interc, formatted_parent_pin_prefix, &src_pin_prefix, &des_pin_prefix);
@@ -1215,10 +1208,6 @@ void dump_verilog_pb_graph_pin_interc(t_sram_orgz_info* cur_sram_orgz_info,
     /* Get the number of configuration bits required by this MUX */
     num_mux_conf_bits = count_num_conf_bits_one_spice_model(cur_interc->spice_model, 
                                                             cur_sram_orgz_info->type, 
-                                                            fan_in);
-
-    /* Get the number of SRAM bits required by this MUX */
-    num_mux_sram_bits = count_num_sram_bits_one_spice_model(cur_interc->spice_model, 
                                                             fan_in);
 
     /* Dump the configuration port bus */
@@ -1381,8 +1370,6 @@ void dump_verilog_pb_graph_interc(t_sram_orgz_info* cur_sram_orgz_info,
   t_mode* cur_mode = NULL;
   t_pb_type* cur_pb_type = cur_pb_graph_node->pb_type;
   t_pb_graph_node* child_pb_graph_node = NULL;
-  t_pb* child_pb = NULL;
-  int is_child_pb_idle = 0;
   
   char* formatted_pin_prefix = format_verilog_node_prefix(pin_prefix); /* Complete a "_" at the end if needed*/
 
@@ -1591,11 +1578,9 @@ void dump_verilog_phy_pb_graph_node_rec(t_sram_orgz_info* cur_sram_orgz_info,
   int child_pb_num_conf_bits = 0;
   int child_pb_num_iopads = 0;
 
-  t_spice_model* mem_model = NULL;  
   int num_reserved_conf_bits = 0;
   int num_conf_bits = 0;
   int stamped_sram_cnt = get_sram_orgz_info_num_mem_bit(cur_sram_orgz_info); 
-  int stamped_sram_lsb = get_sram_orgz_info_num_mem_bit(cur_sram_orgz_info); 
 
   int stamped_iopad_cnt = iopad_verilog_model->cnt;
 

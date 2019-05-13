@@ -67,8 +67,6 @@ void dump_verilog_pb_generic_primitive(t_sram_orgz_info* cur_sram_orgz_info,
   t_spice_model_port** bl_port = NULL;
   int num_wl_ports = 0;
   t_spice_model_port** wl_port = NULL;
-  int num_bl_per_sram = 0;
-  int num_wl_per_sram = 0;
 
   int cur_num_sram = 0;
   int num_conf_bits = 0;
@@ -199,8 +197,6 @@ void dump_verilog_pb_generic_primitive(t_sram_orgz_info* cur_sram_orgz_info,
                                    &num_bl_ports, &bl_port, &num_wl_ports, &wl_port); 
       assert(1 == num_bl_ports);
       assert(1 == num_wl_ports);
-      num_bl_per_sram = bl_port[0]->size; 
-      num_wl_per_sram = wl_port[0]->size; 
       break;
     case SPICE_SRAM_STANDALONE:
     case SPICE_SRAM_SCAN_CHAIN:
@@ -421,7 +417,6 @@ void dump_verilog_pb_primitive_lut(t_sram_orgz_info* cur_sram_orgz_info,
   int num_lut_sram = 0;
   int num_mode_sram = 0;
   t_spice_model_port* lut_sram_port = NULL;
-  t_spice_model_port* mode_bit_port = NULL;
 
   int num_pb_type_input_port = 0;
   t_port** pb_type_input_ports = NULL;
@@ -478,7 +473,6 @@ void dump_verilog_pb_primitive_lut(t_sram_orgz_info* cur_sram_orgz_info,
       assert (num_lut_sram == (int)pow(2.,(double)(lut_size)));
     } else {
       assert (TRUE == sram_ports[i]->mode_select);
-      mode_bit_port = sram_ports[i];
       num_mode_sram = sram_ports[i]->size;
     }
   }

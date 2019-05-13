@@ -87,7 +87,7 @@ void dump_verilog_submodule_timing(FILE* fp,
 
 void dump_verilog_submodule_signal_init(FILE* fp,
                                         t_spice_model* cur_spice_model) {
-  int iport, ipin;
+  int iport;
   int num_input_port;
   t_spice_model_port** input_port= NULL;
   input_port = find_spice_model_ports(cur_spice_model, SPICE_MODEL_PORT_INPUT, &num_input_port, TRUE);
@@ -1796,7 +1796,7 @@ void dump_verilog_rram_mux_multilevel_structure(FILE* fp,
                                                 t_spice_model spice_model,
                                                 t_spice_mux_arch spice_mux_arch,
                                                 int num_sram_port, t_spice_model_port** sram_port) {
-  int i, j, level, nextlevel, sram_idx;
+  int i, j, level, nextlevel;
   int out_idx;
   int mux_basis_cnt = 0;
   int special_basis_cnt = 0;
@@ -1816,7 +1816,6 @@ void dump_verilog_rram_mux_multilevel_structure(FILE* fp,
   for (i = 0; i < spice_mux_arch.num_level; i++) {
     level = spice_mux_arch.num_level - i;
     nextlevel = spice_mux_arch.num_level - i - 1; 
-    sram_idx = nextlevel * spice_mux_arch.num_input_basis;
     /* Check */
     assert(nextlevel > -1);
     fprintf(fp, "wire [%d:%d] mux2_l%d_in; \n", 
@@ -2561,7 +2560,7 @@ void dump_verilog_submodule_one_lut(FILE* fp,
   t_spice_model_port** input_port = NULL;
   t_spice_model_port** output_port = NULL;
   t_spice_model_port** sram_port = NULL;
-  int iport, ipin, iedge;
+  int iport, ipin;
   int sram_port_index = OPEN;
   int mode_port_index = OPEN;
   int mode_lsb = 0;

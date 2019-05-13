@@ -1252,14 +1252,13 @@ void force_post_place_route_cb_input_pins(int iblock) {
 	int i, j, k, ipin, net_index, ext_net;
 	int pin_offset;
 	boolean has_ext_source, success;
-	int curr_ext_output, curr_ext_input, curr_ext_clock;
+	int curr_ext_input, curr_ext_clock;
 	t_pb_graph_node *pb_graph_node;
 
 	pb_graph_node = block[iblock].pb->pb_graph_node;
 	pin_offset = block[iblock].z * (pb_graph_node->pb_type->num_input_pins + pb_graph_node->pb_type->num_output_pins + pb_graph_node->pb_type->num_clock_pins);
 
 	curr_ext_input = ext_input_rr_node_index;
-	curr_ext_output = ext_output_rr_node_index;
 	curr_ext_clock = ext_clock_rr_node_index;
 
 	for (i = 0; i < num_nets_in_cluster; i++) {

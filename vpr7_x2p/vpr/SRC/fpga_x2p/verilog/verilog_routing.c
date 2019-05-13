@@ -49,7 +49,6 @@ void dump_verilog_routing_chan_subckt(t_sram_orgz_info* cur_sram_orgz_info,
                                       int num_segment, t_segment_inf* segments,
                                       t_syn_verilog_opts fpga_verilog_opts) {
   int itrack, iseg, cost_index;
-  char* chan_prefix = NULL;
   int chan_width = 0;
   t_rr_node** chan_rr_nodes = NULL;
   FILE* fp = NULL;
@@ -681,7 +680,8 @@ void dump_verilog_switch_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
   fprintf(fp, "wire [0:%d] %s_size%d_%d_inbus;\n",
           mux_size - 1,
           verilog_model->prefix, mux_size, verilog_model->cnt);
-  char* name_mux = (char *) my_malloc(sizeof(char)*(strlen(verilog_model->prefix) + 5
+  char* name_mux = (char *) my_malloc(sizeof(char)*(1 
+                                                    + strlen(verilog_model->prefix) + 5
                                                     + strlen(my_itoa(mux_size)) + 1 
                                                     + strlen(my_itoa(verilog_model->cnt)) + 5));
   sprintf(name_mux, "/%s_size%d_%d_/in", verilog_model->prefix, mux_size, verilog_model->cnt);
@@ -1476,7 +1476,7 @@ void dump_verilog_connection_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
   verilog_model = switch_inf[switch_index].spice_model;
 
 
-  char* name_mux = (char *) my_malloc(sizeof(char)*(strlen(verilog_model->prefix) + 5
+  char* name_mux = (char *) my_malloc(sizeof(char)*(1 + strlen(verilog_model->prefix) + 5
                                                     + strlen(my_itoa(mux_size)) + 1 
                                                     + strlen(my_itoa(verilog_model->cnt)) + 5));
   sprintf(name_mux, "/%s_size%d_%d_/in", verilog_model->prefix, mux_size, verilog_model->cnt);

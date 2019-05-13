@@ -114,7 +114,6 @@ void fprint_spice_primitive_testbench_call_one_primitive(FILE* fp,
   t_spice_model_port** input_ports = NULL;
   int num_output_port = 0;
   t_spice_model_port** output_ports = NULL;
-  int num_inout_port = 0;
   t_spice_model_port** inout_ports = NULL;
   int num_clk_port = 0;
   t_spice_model_port** clk_ports = NULL;

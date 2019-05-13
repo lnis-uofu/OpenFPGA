@@ -389,8 +389,6 @@ void config_one_spice_model_buffer(int num_spice_models,
 void config_spice_model_input_output_buffers_pass_gate(int num_spice_models, 
                                                        t_spice_model* spice_model) {
   int i;
-  t_spice_model* inv_spice_model = NULL;
-  t_spice_model* buf_spice_model = NULL;
   t_spice_model* pgl_spice_model = NULL;
 
   for (i = 0; i < num_spice_models; i++) {
@@ -3511,4 +3509,17 @@ void get_fpga_x2p_global_all_clock_ports(t_llist* head,
  
   return;
 }
-                   
+                 
+/* Returns the number of char occupied by the int */  
+int my_strlen_int(int input_int) {
+ 
+  int length_input;
+  char* input_str;
+
+  input_str = my_itoa(input_int);
+  length_input = strlen(input_str);
+
+  free(input_str);
+
+  return length_input;
+}  

@@ -79,7 +79,7 @@ int alloc_and_add_fully_capacity_rr_edges_to_source_opin(t_type_ptr cur_type_des
                                                          t_rr_node** source_rr_node, 
                                                          t_rr_node** opin_rr_node) {
   int ret = 0;
-  int isrc, iopin, offset, iedge;
+  int isrc, iopin, offset;
 
   for (isrc = 0; isrc < num_source_rr_node; isrc++) {
     source_rr_node[isrc]->capacity = 1;

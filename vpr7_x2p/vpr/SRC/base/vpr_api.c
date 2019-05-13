@@ -564,9 +564,10 @@ void vpr_place_and_route(INP t_vpr_setup vpr_setup, INP t_arch arch) {
   fflush(stdout);
 
   /* Close down X Display */
+  /* TODO: DANGEROUS way of coding, clean up */
   if (vpr_setup.ShowGraphics)
     close_graphics();
-    free_draw_structs();
+  free_draw_structs();
 }
 
 /* Free architecture data structures */
