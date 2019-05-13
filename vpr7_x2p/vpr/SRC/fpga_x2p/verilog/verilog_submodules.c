@@ -102,8 +102,8 @@ void dump_verilog_submodule_signal_init(FILE* fp,
   fprintf(fp, "\n`ifdef %s\n", verilog_signal_init_preproc_flag);
   fprintf(fp, "  //------ BEGIN driver initialization -----\n");
   fprintf(fp, "initial begin\n");
-  fprintf(fp, "`ifdef %s\n  #0.001\n`endif\n",
-				icarus_simulator_flag);
+//  fprintf(fp, "`ifdef %s\n  #0.001\n`endif\n", 			// Commented, looks no longer needed
+//				icarus_simulator_flag);
   for (iport = 0; iport < num_input_port; iport++) {
      fprintf(fp, "  $deposit(%s, $random);\n",
                 input_port[iport]->lib_name);

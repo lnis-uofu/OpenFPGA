@@ -43,6 +43,7 @@
 /* Local variables */
 static char* autocheck_testbench_reference_output_postfix = "_benchmark";
 static char* autocheck_testbench_verification_output_postfix = "_verification";
+static char* error_counter = "nb_error";
 
 /* Local Subroutines declaration */
 
@@ -203,6 +204,10 @@ void dump_verilog_top_auto_testbench_ports(FILE* fp,
     }
   }
 
+// Instantiate an integer to count the number of error and determine if the simulation succeed or failed
+  fprintf(fp, "\n//----- Error counter \n");
+  fprintf(fp, "  integer %s = 0;\n\n", error_counter);
+
   return;
 }
 
@@ -277,9 +282,15 @@ void dump_verilog_timeout_and_vcd(FILE * fp,
 											modelsim_autocheck_testbench_module_postfix);
 	fprintf(fp, "  end\n\n");
 	fprintf(fp, "  initial begin\n");
+	fprintf(fp, "    $timeformat(-9, 2, \"ns\", 20);\n");
 	fprintf(fp, "    $display(\"Simulation start\");\n");
 	fprintf(fp, "    #%i // Can be changed by the user for his need\n", simulation_time);
-	fprintf(fp, "    $display(\"Simulation End: Time's up\");\n");
+	fprintf(fp, "    if(%s == 0) begin\n", error_counter);
+	fprintf(fp, "      $display(\"Simulation Succeed\");\n");
+	fprintf(fp, "    end else begin\n");
+	fprintf(fp, "      $display(\"Simulation Failed with %s error(s)\", %s);\n", "%d", error_counter);
+	fprintf(fp, "    end\n");
+	fprintf(fp, "    $finish;\n");
 	fprintf(fp, "  end\n");
 	fprintf(fp, "`endif\n\n");
 	return;
@@ -321,10 +332,10 @@ void dump_verilog_top_auto_testbench_check(FILE* fp){
         fprintf(fp, "      if(%s%s) begin\n",
                     logical_block[iblock].name,
                     autocheck_testbench_verification_output_postfix);
-        fprintf(fp, "        $display(\"Mismatch on %s%s\");\n",
+		fprintf(fp, "        %s = %s + 1;\n", error_counter, error_counter);
+        fprintf(fp, "        $display(\"Mismatch on %s%s at time = %s\", $realtime);\n",
                     logical_block[iblock].name,
-                    autocheck_testbench_verification_output_postfix);
-        fprintf(fp, "        $finish;\n");
+                    autocheck_testbench_verification_output_postfix, "%t");
         fprintf(fp, "      end\n");
         fprintf(fp, "  end\n\n");
       }
