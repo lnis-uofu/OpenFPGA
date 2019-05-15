@@ -50,6 +50,8 @@ matrix:
           - libxml++2.6-dev
           - perl
           - python
+          - readline	# added to fit Icarus installation requirement
+          - termcap		# added to fit Icarus installation requirement
           - texinfo
           - time
           - valgrind
@@ -73,7 +75,6 @@ matrix:
           - gawk
           - libxml++
           - qt5
-          - x11
 
 before_install:
   - source .travis/common.sh

@@ -22,7 +22,11 @@ project("OPENFPGA" C CXX)
 
 # Options
 # Option to enable/disable graphic in compilation
+if (APPLE)
+option(ENABLE_VPR_GRAPHICS "Disables VPR graphics" OFF)
+else ()
 option(ENABLE_VPR_GRAPHICS "Enables VPR graphics" ON)
+endif ()
 
 # Version number
 set(OPENFPGA_VERSION_MAJOR 1)
