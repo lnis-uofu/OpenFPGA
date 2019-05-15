@@ -40,6 +40,7 @@ matrix:
           - gdb
           - git
           - gperf
+          - iverilog
           - libcairo2-dev
           - libevent-dev
           - libfontconfig1-dev
