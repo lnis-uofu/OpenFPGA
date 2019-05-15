@@ -50,8 +50,6 @@ matrix:
           - libxml++2.6-dev
           - perl
           - python
-          - readline	# added to fit Icarus installation requirement
-          - termcap		# added to fit Icarus installation requirement
           - texinfo
           - time
           - valgrind

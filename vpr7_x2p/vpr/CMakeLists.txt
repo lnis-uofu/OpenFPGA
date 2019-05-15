@@ -12,7 +12,9 @@ endif()
 project("vpr7_x2p" C CXX)
 
 # idenify if we need graphics
-if (ENABLE_VPR_GRAPHICS)
+if (APPLE) 
+  set(ENABLE_VPR_GRAPHICS false)
+elseif (ENABLE_VPR_GRAPHICS)
   # check for dependencies
   message(STATUS "VPR graphics is turned on, searching for dependencies")
   find_package(X11 COMPONENTS X11 Xft)
