@@ -12,9 +12,7 @@ endif()
 project("vpr7_x2p" C CXX)
 
 # idenify if we need graphics
-if (APPLE) 
-  set(ENABLE_VPR_GRAPHICS false)
-elseif (ENABLE_VPR_GRAPHICS)
+if (ENABLE_VPR_GRAPHICS)
   # check for dependencies
   message(STATUS "VPR graphics is turned on, searching for dependencies")
   find_package(X11 COMPONENTS X11 Xft)
@@ -26,6 +24,7 @@ elseif (ENABLE_VPR_GRAPHICS)
     set(ENABLE_VPR_GRAPHICS false)
   endif()
 endif()
+set(ENABLE_VPR_GRAPHICS false)
 
 # We need readline to compile 
 find_package(Readline REQUIRED)
