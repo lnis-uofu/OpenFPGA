@@ -19,7 +19,6 @@ if (ENABLE_VPR_GRAPHICS)
 
   if (NOT X11_FOUND)
     message(WARNING "Failed to find required X11 library (on debian/ubuntu try 'sudo apt-get install libx11-dev' to install)")
-  else ()
     #Disable
     set(ENABLE_VPR_GRAPHICS false)
   endif()
