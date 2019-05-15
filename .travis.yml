@@ -73,6 +73,7 @@ matrix:
           - gawk
           - libxml++
           - qt5
+          - x11
 
 before_install:
   - source .travis/common.sh
