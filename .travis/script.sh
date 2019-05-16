@@ -24,4 +24,5 @@ end_section "OpenFPGA.build"
 
 $SPACER
 
+cd -
 source .travis/regression.sh
