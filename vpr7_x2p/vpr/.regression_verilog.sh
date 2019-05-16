@@ -10,7 +10,7 @@ modelsim_ini_file="/uusoc/facility/cad_tools/Mentor/modelsim10.7b/modeltech/mode
 # VPR critical inputs
 #set arch_xml_file=ARCH/k6_N10_MD_tsmc40nm_chain_TT.xml 
 #set arch_xml_file=ARCH/k8_N10_SC_tsmc40nm_chain_TT_stratixIV_lookalike.xml
-arch_xml_file="ARCH/.regression_k6_N10_sram_chain_HC.xml"
+arch_xml_file="ARCH/.travis_k6_N10_sram_chain_HC.xml"
 #set arch_xml_file=ARCH/ed_stdcell.xml
 #set arch_xml_file=ARCH/k6_N10_sram_chain_FC_tsmc40.xml
 #set arch_xml_file=ARCH/k6_N10_SC_tsmc40nm_chain_TT.xml 

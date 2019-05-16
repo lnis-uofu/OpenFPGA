@@ -5,7 +5,7 @@
 // Coder       : Xifan TANG
 //-----------------------------------------------------
 //------ Include defines: preproc flags -----
-`include "/research/ece/lnis/USERS/alacchi/Current_release/branch_multimode/OpenFPGA/vpr7_x2p/vpr/s298_prevpr_Verilog/SRC/fpga_defines.v"
+`include "/home/travis/build/LNIS-Projects/OpenFPGA/vpr7_x2p/vpr/test_modes_Verilog/SRC/fpga_defines.v"
 module static_dff (
 /* Global ports go first */
 input set,     // set input
