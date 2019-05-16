@@ -83,7 +83,7 @@ install:
 
 script:
   - .travis/script.sh
-  - .travis/regression.sh
+  #- .travis/regression.sh
 
 after_failure:
   - .travis/after_failure.sh
