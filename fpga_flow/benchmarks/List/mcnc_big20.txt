@@ -1,0 +1,22 @@
+# Circuit Names, fixed routing channel width, 
+alu4.blif, 120
+apex2.blif, 120
+apex4.blif, 120
+bigkey.blif, 120
+clma.blif, 120
+des.blif, 120
+diffeq.blif, 120
+dsip.blif, 120
+elliptic.blif, 120
+ex1010.blif, 120
+ex5p.blif, 120
+frisc.blif, 120
+mcnc_big20.txt
+misex3.blif, 120
+pdc.blif, 120
+s298.blif, 30
+s38417.blif, 120
+s38584.1.blif, 120
+seq.blif, 120
+spla.blif, 120
+tseng.blif, 120
