@@ -36,5 +36,4 @@ if ["$result" = ""]; then
 else
   echo "Verification succeed"
   cd -
-  exit 0
 fi
