@@ -585,7 +585,7 @@ sub run_abc_libmap($ $ $)
     ($abc_seq_optimize) = ("scl -l;");
   }
   # !!! For standard library, we cannot use sweep ???
-  system("/bin/csh -cx './$abc_name -c \"read_blif $bm; resyn2; read_library $mpack1_stdlib; $abc_seq_optimize map -v; write_blif $blif_out; quit;\" > $log'");
+  system("./$abc_name -c \"read_blif $bm; resyn2; read_library $mpack1_stdlib; $abc_seq_optimize map -v; write_blif $blif_out; quit;\" > $log");
   chdir $cwd;
 }
 
@@ -619,7 +619,7 @@ sub run_rewrite_verilog($ $ $ $ $) {
   #
   # Create a local copy for the commands 
 
-  system("/bin/csh -cx './$yosys_name $cmd_log > $log'");
+  system("./$yosys_name $cmd_log > $log");
 
   if (!(-e $new_verilog)) {
     die "ERROR: Yosys fail at rewriting benchmark $bm.\n";
@@ -684,7 +684,7 @@ sub run_yosys_fpgamap($ $ $ $) {
   #
   # Create a local copy for the commands 
 
-  system("/bin/csh -cx './$yosys_name $cmd_log > $log'");
+  system("./$yosys_name $cmd_log > $log");
 
   if (!(-e $blif_out)) {
     die "ERROR: Fail Yosys for benchmark $bm.\n";
@@ -732,7 +732,7 @@ sub run_abc_fpgamap($ $ $)
   #
   # Create a local copy for the commands 
 
-  system("/bin/csh -cx './$abc_name -F $cmd_log > $log'");
+  system("./$abc_name -F $cmd_log > $log");
 
   if (!(-e $blif_out)) {
     die "ERROR: Fail ABC for benchmark $bm.\n";
@@ -767,7 +767,7 @@ sub run_abc_bb_fpgamap($ $ $) {
 
   chdir $abc_dir;
   # Run FPGA ABC
-  system("/bin/csh -cx './$abc_name -c \"read $bm; resyn; resyn2; $fpga_synthesis_method -K $lut_num; $abc_seq_optimize sweep; write_hie $bm $blif_out; $dump_verilog; quit;\" > $log'");
+  system("./$abc_name -c \"read $bm; resyn; resyn2; $fpga_synthesis_method -K $lut_num; $abc_seq_optimize sweep; write_hie $bm $blif_out; $dump_verilog; quit;\" > $log");
 
   if (!(-e $blif_out)) {
     die "ERROR: Fail ABC_with_bb_support for benchmark $bm.\n";
@@ -809,19 +809,19 @@ sub run_abc_mccl_fpgamap($ $ $)
 
   # Run ABC three times:
   # 1st time: run abc_with_mccl: read the $bm and do carry-chain detection
-  system("/bin/csh -cx './$abc_mccl_name -c \"read $bm; strash; &get; &fadds -nv -N $min_chain_length; \&getspec; \&put; wfadds $fadds_blif; quit;\" > $log.ccdetect'");
+  system("./$abc_mccl_name -c \"read $bm; strash; &get; &fadds -nv -N $min_chain_length; \&getspec; \&put; wfadds $fadds_blif; quit;\" > $log.ccdetect");
 
   # Repeat chdir for multi-thread supporting!
   chdir $abc_mccl_dir;
   print "INFO: entering abc_mccl directory: $abc_mccl_dir \n";
 
   # 2nd time: run abc_with_mccl: read the $fadds_blif and do carry-chain LUT premapping
-  system("/bin/csh -cx './$abc_mccl_name -c \"read $fadds_blif; resyn; resyn2; mccl -A $mccl_opt_A -B $mccl_opt_B -S $mccl_opt_S -K $lut_num -O 1 -r -o $interm_blif; quit;\" > $log.mccl'");
+  system("./$abc_mccl_name -c \"read $fadds_blif; resyn; resyn2; mccl -A $mccl_opt_A -B $mccl_opt_B -S $mccl_opt_S -K $lut_num -O 1 -r -o $interm_blif; quit;\" > $log.mccl");
 
   chdir $abc_bb_dir;
   print "INFO: entering abc_with_bb_support directory: $abc_bb_dir \n";
   # 3rd time: run abc_with_bb_support: read the pre-processed blif and do cleanup and recover  
-  system("/bin/csh -cx './$abc_bb_name -c \"read $interm_blif; $abc_seq_optimize sweep; write_hie $interm_blif $blif_out; quit;\" > $log'");
+  system("./$abc_bb_name -c \"read $interm_blif; $abc_seq_optimize sweep; write_hie $interm_blif $blif_out; quit;\" > $log");
 
   if (!(-e $blif_out)) {
     die "ERROR: Fail ABC_mccl_FPGA_mapping for benchmark $bm.\n";
@@ -861,19 +861,19 @@ sub run_abc_mig_mccl_fpgamap($ $ $)
   # Run ABC three times:
   # 1st time: run abc_with_mig_mccl: read the $bm and do carry-chain detection
   # TODO: unfinished!!!!
-  system("/bin/csh -cx './$abc_mig_mccl_name -c \"readv $bm; chains -C ; quit;\" > $log.ccdetect'");
+  system("./$abc_mig_mccl_name -c \"readv $bm; chains -C ; quit;\" > $log.ccdetect");
 
   # Repeat chdir for multi-thread supporting!
   chdir $abc_mccl_dir;
   print "INFO: entering abc_mccl directory: $abc_mccl_dir \n";
 
   # 2nd time: run abc_with_mccl: read the $fadds_blif and do carry-chain LUT premapping
-  system("/bin/csh -cx './$abc_mccl_name -c \"read $fadds_blif; resyn; resyn2; mccl -A $mccl_opt_A -B $mccl_opt_B -S $mccl_opt_S -K $lut_num -O 1 -r -o $interm_blif; quit;\" > $log.mccl'");
+  system("./$abc_mccl_name -c \"read $fadds_blif; resyn; resyn2; mccl -A $mccl_opt_A -B $mccl_opt_B -S $mccl_opt_S -K $lut_num -O 1 -r -o $interm_blif; quit;\" > $log.mccl");
 
   chdir $abc_bb_dir;
   print "INFO: entering abc_with_bb_support directory: $abc_bb_dir \n";
   # 3rd time: run abc_with_bb_support: read the pre-processed blif and do cleanup and recover  
-  system("/bin/csh -cx './$abc_bb_name -c \"read $interm_blif; $abc_seq_optimize sweep; write_hie $interm_blif $blif_out; quit;\" > $log'");
+  system("./$abc_bb_name -c \"read $interm_blif; $abc_seq_optimize sweep; write_hie $interm_blif $blif_out; quit;\" > $log");
 
   if (!(-e $blif_out)) {
     die "ERROR: Fail ABC_mccl_FPGA_mapping for benchmark $bm.\n";
@@ -889,7 +889,7 @@ sub run_mpack1p5($ $ $ $ $)
   my ($mpack1_dir,$mpack1_name) = &split_prog_path($conf_ptr->{dir_path}->{mpack1_path}->{val});
   chdir $mpack1_dir;
   # Run MPACK
-  system("/bin/csh -cx './$mpack1_name $blif_in $blif_prefix -matrix_depth $matrix_size -matrix_width $matrix_size -cell_size $cell_size > $log'");
+  system("./$mpack1_name $blif_in $blif_prefix -matrix_depth $matrix_size -matrix_width $matrix_size -cell_size $cell_size > $log");
   chdir $cwd;
   
 }
@@ -902,7 +902,7 @@ sub run_mpack2($ $ $ $ $ $ $)
   chdir $mpack2_dir;
   #my ($ble_arch) = ($conf_ptr->{flow_conf}->{mpack_ble_arch}->{val});
   # Run MPACK
-  system("/bin/csh -cx './$mpack2_name -blif $blif_in -mpack_blif $blif_out -net $net -ble_arch $mpack2_arch -stats $stats -vpr_arch $vpr_arch > $log'");
+  system("./$mpack2_name -blif $blif_in -mpack_blif $blif_out -net $net -ble_arch $mpack2_arch -stats $stats -vpr_arch $vpr_arch > $log");
   chdir $cwd;
 }
 
@@ -1170,7 +1170,7 @@ sub run_odin2($ $ $) {
   }
 
   chdir $odin2_dir;
-  system("/bin/csh -cx './$odin2_name -c $config_xml $options > $log'");
+  system("./$odin2_name -c $config_xml $options > $log");
   chdir $cwd;
 }
 
@@ -1205,7 +1205,7 @@ sub run_ace($ $ $ $) {
   
   print "Entering $ace_dir\n";
   chdir $ace_dir;
-  system("/bin/csh -cx './$ace_name -b $mpack_vpr_blif -o $act_file -n $ace_new_blif $ace_customized_opts > $log'");
+  system("./$ace_name -b $mpack_vpr_blif -o $act_file -n $ace_new_blif $ace_customized_opts > $log");
 
   if (!(-e $ace_new_blif)) {
     die "ERROR: Fail ACE for benchmark $mpack_vpr_blif.\n";
@@ -1352,7 +1352,7 @@ sub run_std_vpr($ $ $ $ $ $ $ $ $)
     $other_opt .= "--max_router_iterations $opt_ptr->{vpr_max_router_iteration_val} ";
   }
 
-  system("/bin/csh -cx './$vpr_name $arch $blif --net_file $net --place_file $place --route_file $route --full_stats --nodisp $power_opts $packer_opts $chan_width_opt $vpr_spice_opts $other_opt > $log'");
+  system("./$vpr_name $arch $blif --net_file $net --place_file $place --route_file $route --full_stats --nodisp $power_opts $packer_opts $chan_width_opt $vpr_spice_opts $other_opt > $log");
 
   chdir $cwd;
 }
@@ -1415,7 +1415,7 @@ sub run_vpr_route($ $ $ $ $ $ $ $ $)
     $other_opt .= "--router_algorithm breadth_first ";
   }
 
-  system("/bin/csh -cx './$vpr_name $arch $blif --route --blif_file $blif --net_file $net --place_file $place --route_file $route --full_stats --nodisp $power_opts $chan_width_opt $vpr_spice_opts $other_opt > $log'");
+  system("./$vpr_name $arch $blif --route --blif_file $blif --net_file $net --place_file $place --route_file $route --full_stats --nodisp $power_opts $chan_width_opt $vpr_spice_opts $other_opt > $log");
 
   chdir $cwd;
 }
@@ -1429,7 +1429,7 @@ sub run_mpack1_vpr($ $ $ $ $ $ $)
     $power_opts = "--power --activity_file $act_file --tech_properties $conf_ptr->{flow_conf}->{power_tech_xml}->{val}";
   }
   chdir $vpr_dir;
-  system("/bin/csh -cx './$vpr_name $arch $blif --net_file $net --place_file $place --route_file $route --place --route --full_stats --nodisp $power_opts > $log'");
+  system("./$vpr_name $arch $blif --net_file $net --place_file $place --route_file $route --place --route --full_stats --nodisp $power_opts > $log");
   chdir $cwd;
 }
 
@@ -1452,7 +1452,7 @@ sub run_mpack2_vpr($ $ $ $ $ $ $)
   }
 
   chdir $vpr_dir;
-  system("/bin/csh -cx './$vpr_name $arch $blif --net_file $net --place_file $place --route_file $route --place --route --full_stats --nodisp $power_opts $chan_width_opt > $log'");
+  system("./$vpr_name $arch $blif --net_file $net --place_file $place --route_file $route --place --route --full_stats --nodisp $power_opts $chan_width_opt > $log");
   chdir $cwd;
 }
 
@@ -1464,7 +1464,7 @@ sub run_aapack($ $ $ $)
   
   chdir $vpr_dir;
 
-  system("/bin/csh -cx './$vpr_name $arch $blif --net_file $net --pack --timing_analysis off --nodisp > $aapack_log'");
+  system("./$vpr_name $arch $blif --net_file $net --pack --timing_analysis off --nodisp > $aapack_log");
 
   chdir $cwd; 
 }
@@ -1476,7 +1476,7 @@ sub run_m2net_pack_arch($ $ $ $ $ $)
 
   chdir $m2net_dir;
 
-  system("/bin/csh -cx 'perl $m2net_name -conf $m2net_conf -mpack1_rpt $mpack1_rpt -mode pack_arch -N $N -I $I -arch_file_pack $pack_arch > $m2net_pack_arch_log'");
+  system("perl $m2net_name -conf $m2net_conf -mpack1_rpt $mpack1_rpt -mode pack_arch -N $N -I $I -arch_file_pack $pack_arch > $m2net_pack_arch_log");
 
   chdir $cwd;
 } 
@@ -1494,7 +1494,7 @@ sub run_m2net_m2net($ $ $ $ $)
     $power_opt = "-power";
   }
  
-  system("/bin/csh -cx 'perl $m2net_name -conf $m2net_conf -mpack1_rpt $mpack1_rpt -mode m2net -N $N -I $I -net_file_in $aapack_net -net_file_out $vpr_net -arch_file_vpr $vpr_arch $power_opt > $m2net_m2net_log'");
+  system("perl $m2net_name -conf $m2net_conf -mpack1_rpt $mpack1_rpt -mode m2net -N $N -I $I -net_file_in $aapack_net -net_file_out $vpr_net -arch_file_vpr $vpr_arch $power_opt > $m2net_m2net_log");
 
   chdir $cwd;
 } 
@@ -1536,7 +1536,7 @@ sub run_cirkit_mig_mccl_map($ $ $) {
 
   # Run ABC to rewrite blif to AIG in verilog format
   chdir $abc_dir;
-  system("/bin/csh -cx './$abc_name -F $abc_cmd_log > $log'");
+  system("./$abc_name -F $abc_cmd_log > $log");
   if (!(-e $bm_aig)) {
     die "ERROR: Fail ABC for benchmark $bm.\n";
   }
@@ -1553,7 +1553,7 @@ sub run_cirkit_mig_mccl_map($ $ $) {
 
   chdir $cirkit_dir;
   # Run FPGA ABC
-  system("/bin/csh -cx './$cirkit_name -f $cirkit_cmd_log >> $log'");
+  system("./$cirkit_name -f $cirkit_cmd_log >> $log");
 
   if (!(-e $blif_out)) {
     die "ERROR: Fail Cirkit for benchmark $bm.\n";
