@@ -262,18 +262,10 @@ float esti_distance_num_seg_delay(int distance,
                                   int num_segment,
                                   t_segment_inf* segment_inf,
                                   int allow_long_segment) {
-  int actual_distance;
   float esti_delay = 0.;
   float min_out_range_esti_delay = 0.;
   float max_in_range_esti_delay = 0.;
   int iseg, min_out_range_seg, max_in_range_seg;
-
-  /* Min-distance should be 1 */
-  if (distance < 1) {
-    actual_distance = 1;
-  } else {
-    actual_distance = distance;
-  }
 
   /* Find the min-length segment whose length is larger than distance */
   min_out_range_seg = -1;

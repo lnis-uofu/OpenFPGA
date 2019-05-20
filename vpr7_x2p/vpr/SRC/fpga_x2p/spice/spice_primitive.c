@@ -39,23 +39,13 @@ void fprint_pb_primitive_generic(FILE* fp,
                                  t_pb_type* prim_pb_type,
                                  int index,
                                  t_spice_model* spice_model) {
-  int num_input_port = 0;
-  t_spice_model_port** input_ports = NULL;
-  int num_output_port = 0;
-  t_spice_model_port** output_ports = NULL;
-  int num_clock_port = 0;
-  t_spice_model_port** clock_ports = NULL;
   int num_sram_port = 0;
-  t_spice_model_port** sram_ports = NULL;
-  t_spice_model_port* regular_sram_port = NULL;
-  t_spice_model_port* mode_bit_port = NULL;
 
   int i;
   int num_sram = 0;
   int expected_num_sram = 0;
   int* sram_bits = NULL;
   int cur_num_sram = 0;
-  t_spice_model* mem_model = NULL;
   int mapped_logical_block_index = OPEN;
 
   char* formatted_subckt_prefix = format_spice_node_prefix(subckt_prefix); /* Complete a "_" at the end if needed*/
@@ -74,12 +64,6 @@ void fprint_pb_primitive_generic(FILE* fp,
         ||(SPICE_MODEL_HARDLOGIC == spice_model->type)
         ||(SPICE_MODEL_IOPAD == spice_model->type));
 
-  /* Find ports*/
-  input_ports = find_spice_model_ports(spice_model, SPICE_MODEL_PORT_INPUT, &num_input_port, TRUE);
-  output_ports = find_spice_model_ports(spice_model, SPICE_MODEL_PORT_OUTPUT, &num_output_port, TRUE);
-  clock_ports = find_spice_model_ports(spice_model, SPICE_MODEL_PORT_CLOCK, &num_clock_port, TRUE);
-  sram_ports = find_spice_model_ports(spice_model, SPICE_MODEL_PORT_SRAM, &num_sram_port, TRUE);
-  
   /* Find mapped logical block */
   if (NULL != prim_phy_pb) {
     for (i = 0; i < prim_phy_pb->num_logical_blocks; i++) {

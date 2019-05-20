@@ -92,7 +92,7 @@
         <port name="inpad"/>
       </output_ports>
     </model>
-    <!--model name="multiply">
+    <model name="multiply">
       <input_ports>
         <port name="a"/>
         <port name="b"/>
@@ -102,7 +102,7 @@
       </output_ports>
     </model>
 
-    <model name="single_port_ram">
+    <!--model name="single_port_ram">
       <input_ports>
         <port name="we"/-->     <!-- control -->
         <!--port name="addr"/-->  <!-- address lines -->
@@ -645,7 +645,7 @@
 		 area associated with our DSP block is four times that of a logic tile, where the routing area of a logic tile was calculated above (at W = 300)
 		 as 30481 MWTAs. Hence the (core, non-routing) area our DSP block is approximately 518,000 - 4 * 30,481 = 396,000 MWTUs.
       -->
-    <!--pb_type name="mult_36" height="4" area="396000">
+    <pb_type name="mult_36" height="4" area="396000">
 
       <input name="a" num_pins="36"/>
       <input name="b" num_pins="36"/>
@@ -655,18 +655,18 @@
         <pb_type name="divisible_mult_18x18" num_pb="2">
           <input name="a" num_pins="18"/>
           <input name="b" num_pins="18"/>
-          <output name="out" num_pins="36"/-->
+          <output name="out" num_pins="36"/>
 
           <!-- Model 9x9 delay and 18x18 delay as the same.  9x9 could be faster, but in Stratix IV
 	          isn't, presumably because the multiplier layout is really optimized for 18x18.
 		-->
-          <!--mode name="two_mult_9x9">
+          <mode name="two_mult_9x9">
             <pb_type name="mult_9x9_slice" num_pb="2">
               <input name="A_cfg" num_pins="9"/>
               <input name="B_cfg" num_pins="9"/>
               <output name="OUT_cfg" num_pins="18"/>
 
-              <pb_type name="mult_9x9" blif_model=".subckt multiply" num_pb="1">
+              <pb_type name="mult_9x9" blif_model=".subckt multiply9" num_pb="1">
                 <input name="a" num_pins="9"/>
                 <input name="b" num_pins="9"/>
                 <output name="out" num_pins="18"/>
@@ -705,7 +705,7 @@
               <input name="B_cfg" num_pins="18"/>
               <output name="OUT_cfg" num_pins="36"/>
 
-              <pb_type name="mult_18x18" blif_model=".subckt multiply" num_pb="1" >
+              <pb_type name="mult_18x18" blif_model=".subckt multiply18" num_pb="1" >
                 <input name="a" num_pins="18"/>
                 <input name="b" num_pins="18"/>
                 <output name="out" num_pins="36"/>
@@ -739,11 +739,11 @@
 
           <power method="sum-of-children"/>
         </pb_type>
-        <interconnect-->
+        <interconnect>
           <!-- Stratix IV input delay of 207ps is conservative for this architecture because this architecture does not have an input crossbar in the multiplier. 
 		   Subtract 72.5 ps delay, which is already in the connection block input mux, leading
               -->
-          <!--direct name="a2a" input="mult_36.a" output="divisible_mult_18x18[1:0].a">
+          <direct name="a2a" input="mult_36.a" output="divisible_mult_18x18[1:0].a">
             <delay_constant max="134e-12" in_port="mult_36.a" out_port="divisible_mult_18x18[1:0].a"/>
           </direct>
           <direct name="b2b" input="mult_36.b" output="divisible_mult_18x18[1:0].b">
@@ -761,7 +761,7 @@
           <input name="B_cfg" num_pins="36"/>
           <output name="OUT_cfg" num_pins="72"/>
 
-          <pb_type name="mult_36x36" blif_model=".subckt multiply" num_pb="1">
+          <pb_type name="mult_36x36" blif_model=".subckt multiply36" num_pb="1">
             <input name="a" num_pins="36"/>
             <input name="b" num_pins="36"/>
             <output name="out" num_pins="72"/>
@@ -784,12 +784,12 @@
             <static_power power_per_instance="0.0"/>
           </power>
         </pb_type>
-        <interconnect-->
+        <interconnect>
           <!-- Stratix IV input delay of 207ps is conservative for this architecture because this architecture does not have an input crossbar in the multiplier. 
 		   Subtract 72.5 ps delay, which is already in the connection block input mux, leading
 		   to a 134 ps delay.
               -->
-          <!--direct name="a2a" input="mult_36.a" output="mult_36x36_slice.A_cfg">
+          <direct name="a2a" input="mult_36.a" output="mult_36x36_slice.A_cfg">
             <delay_constant max="134e-12" in_port="mult_36.a" out_port="mult_36x36_slice.A_cfg"/>
           </direct>
           <direct name="b2b" input="mult_36.b" output="mult_36x36_slice.B_cfg">
@@ -803,14 +803,14 @@
       </mode>
 
       <fc default_in_type="frac" default_in_val="0.15" default_out_type="frac" default_out_val="0.10"/>
-      <pinlocations pattern="spread"/-->
+      <pinlocations pattern="spread"/>
 
       <!-- Place this multiplier block every 8 columns from (and including) the sixth column -->
-      <!--gridlocations>
+      <gridlocations>
         <loc type="col" start="6" repeat="8" priority="2"/>
       </gridlocations>		  
       <power method="sum-of-children"/>
-    </pb_type-->
+    </pb_type>
     <!-- Define fracturable multiplier end -->
 
     <!-- Define fracturable memory begin -->

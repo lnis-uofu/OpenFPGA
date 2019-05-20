@@ -281,7 +281,7 @@ void vpr_fpga_spice(t_vpr_setup vpr_setup,
   spice_print_headers(include_dir_path, vpr_crit_path_delay, num_clocks, *(Arch.spice));
 
   /* Generate sub circuits: Inverter, Buffer, Transmission Gate, LUT, DFF, SRAM, MUX*/
-  generate_spice_subckts(subckt_dir_path, &Arch ,&vpr_setup.RoutingArch);
+  generate_spice_subckts(subckt_dir_path, &Arch ,&vpr_setup.RoutingArch, vpr_setup.FPGA_SPICE_Opts.compact_routing_hierarchy);
 
   /* Print MUX testbench if needed */
   if (vpr_setup.FPGA_SPICE_Opts.SpiceOpts.fpga_spice_print_pb_mux_testbench) {

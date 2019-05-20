@@ -659,7 +659,6 @@ void rec_update_net_info_local_rr_node_tree(t_pb* src_pb,
                                             int src_node_index) {
   int ipb, jpb, iedge, to_node, mode_index;
   t_rr_node* local_rr_graph = NULL;
-  t_pb_graph_pin* src_pb_graph_pin = NULL;
   t_pb_graph_pin* des_pb_graph_pin = NULL;
   t_pb_type* src_pb_type = NULL;
 
@@ -675,7 +674,6 @@ void rec_update_net_info_local_rr_node_tree(t_pb* src_pb,
     if ((src_node_index == local_rr_graph[to_node].prev_node)&&(iedge == local_rr_graph[to_node].prev_edge)
        /* Make sure in the same mode */
       &&(mode_index == local_rr_graph[to_node].pb_graph_pin->parent_node->pb_type->parent_mode->index)) {
-      src_pb_graph_pin = local_rr_graph[src_node_index].pb_graph_pin;
       des_pb_graph_pin = local_rr_graph[to_node].pb_graph_pin; 
       local_rr_graph[to_node].net_num = local_rr_graph[src_node_index].net_num;
       /* Update recursively */

@@ -380,7 +380,7 @@ char** get_wired_lut_truth_table() {
 char** assign_post_routing_wired_lut_truth_table(int lut_output_vpack_net_num,
                                                  int lut_size, int* lut_pin_vpack_net_num,
                                                  int* truth_table_length) {
-  int inet, iport;
+  int inet;
   char** tt = (char**) my_malloc(sizeof(char*));
 
   /* truth_table_length will be always 1*/

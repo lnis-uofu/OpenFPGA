@@ -49,7 +49,6 @@ void dump_verilog_routing_chan_subckt(t_sram_orgz_info* cur_sram_orgz_info,
                                       int num_segment, t_segment_inf* segments,
                                       t_syn_verilog_opts fpga_verilog_opts) {
   int itrack, iseg, cost_index;
-  char* chan_prefix = NULL;
   int chan_width = 0;
   t_rr_node** chan_rr_nodes = NULL;
   FILE* fp = NULL;
@@ -681,7 +680,8 @@ void dump_verilog_switch_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
   fprintf(fp, "wire [0:%d] %s_size%d_%d_inbus;\n",
           mux_size - 1,
           verilog_model->prefix, mux_size, verilog_model->cnt);
-  char* name_mux = (char *) my_malloc(sizeof(char)*(strlen(verilog_model->prefix) + 5
+  char* name_mux = (char *) my_malloc(sizeof(char)*(1 
+                                                    + strlen(verilog_model->prefix) + 5
                                                     + strlen(my_itoa(mux_size)) + 1 
                                                     + strlen(my_itoa(verilog_model->cnt)) + 5));
   sprintf(name_mux, "/%s_size%d_%d_/in", verilog_model->prefix, mux_size, verilog_model->cnt);
@@ -1107,7 +1107,8 @@ void dump_verilog_routing_switch_box_subckt(t_sram_orgz_info* cur_sram_orgz_info
                                             t_sb* cur_sb_info, 
                                             int LL_num_rr_nodes, t_rr_node* LL_rr_node,
                                             t_ivec*** LL_rr_node_indices,
-                                            t_syn_verilog_opts fpga_verilog_opts) {
+                                            t_syn_verilog_opts fpga_verilog_opts,
+                                            boolean compact_routing_hierarchy) {
   int itrack, inode, side, ix, iy, x, y;
   int cur_num_sram, num_conf_bits, num_reserved_conf_bits, esti_sram_cnt;
   FILE* fp = NULL; 
@@ -1131,6 +1132,20 @@ void dump_verilog_routing_switch_box_subckt(t_sram_orgz_info* cur_sram_orgz_info
   cur_sb_info->num_reserved_conf_bits = num_reserved_conf_bits;
   cur_sb_info->conf_bits_lsb = cur_num_sram; 
   cur_sb_info->conf_bits_msb = cur_num_sram + num_conf_bits;
+ 
+  /* Handle mirror switch blocks:
+   * For mirrors, no need to output a file   
+   * Just update the counter 
+   */
+  if (  (TRUE == compact_routing_hierarchy)
+     && (NULL != cur_sb_info->mirror) ) {
+    /* Again ensure the conf_bits should match !!! */
+    /* Count the number  of configuration bits of the mirror */
+    int mirror_num_conf_bits = count_verilog_switch_box_conf_bits(cur_sram_orgz_info, cur_sb_info->mirror);
+    assert( mirror_num_conf_bits == num_conf_bits );
+    /* return directly */
+    return;
+  }
 
   /* Create file handler */
   fp = verilog_create_one_subckt_file(subckt_dir, "Switch Block ", sb_verilog_file_name_prefix, cur_sb_info->x, cur_sb_info->y, &fname);
@@ -1461,7 +1476,7 @@ void dump_verilog_connection_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
   verilog_model = switch_inf[switch_index].spice_model;
 
 
-  char* name_mux = (char *) my_malloc(sizeof(char)*(strlen(verilog_model->prefix) + 5
+  char* name_mux = (char *) my_malloc(sizeof(char)*(1 + strlen(verilog_model->prefix) + 5
                                                     + strlen(my_itoa(mux_size)) + 1 
                                                     + strlen(my_itoa(verilog_model->cnt)) + 5));
   sprintf(name_mux, "/%s_size%d_%d_/in", verilog_model->prefix, mux_size, verilog_model->cnt);
@@ -1755,7 +1770,8 @@ void dump_verilog_routing_connection_box_subckt(t_sram_orgz_info* cur_sram_orgz_
                                                 t_cb* cur_cb_info,
                                                 int LL_num_rr_nodes, t_rr_node* LL_rr_node,
                                                 t_ivec*** LL_rr_node_indices,
-                                                t_syn_verilog_opts fpga_verilog_opts) {
+                                                t_syn_verilog_opts fpga_verilog_opts,
+                                                boolean compact_routing_hierarchy) {
   int itrack, inode, side, x, y;
   int side_cnt = 0;
   FILE* fp = NULL;
@@ -1768,7 +1784,34 @@ void dump_verilog_routing_connection_box_subckt(t_sram_orgz_info* cur_sram_orgz_
 
   x= cur_cb_info->x;
   y= cur_cb_info->y;
-  
+
+  /* Count the number of configuration bits */
+  /* Count the number of configuration bits to be consumed by this Switch block */
+  num_conf_bits = count_verilog_connection_box_conf_bits(cur_sram_orgz_info, cur_cb_info);
+  /* Count the number of reserved configuration bits to be consumed by this Switch block */
+  num_reserved_conf_bits = count_verilog_connection_box_reserved_conf_bits(cur_sram_orgz_info, cur_cb_info);
+  /* Estimate the sram_verilog_model->cnt */
+  cur_num_sram = get_sram_orgz_info_num_mem_bit(cur_sram_orgz_info); 
+  esti_sram_cnt = cur_num_sram + num_conf_bits;
+  /* Record index */
+  cur_cb_info->num_reserved_conf_bits = num_reserved_conf_bits;
+  cur_cb_info->conf_bits_lsb = cur_num_sram;
+  cur_cb_info->conf_bits_msb = cur_num_sram + num_conf_bits;
+
+  /* Handle mirror switch blocks:
+   * For mirrors, no need to output a file   
+   * Just update the counter 
+   */
+  if (  (TRUE == compact_routing_hierarchy)
+     && (NULL != cur_cb_info->mirror) ) {
+    /* Again ensure the conf_bits should match !!! */
+    /* Count the number  of configuration bits of the mirror */
+    int mirror_num_conf_bits = count_verilog_connection_box_conf_bits(cur_sram_orgz_info, cur_cb_info->mirror);
+    assert( mirror_num_conf_bits == num_conf_bits );
+    /* return directly */
+    return;
+  }
+
   /* Print the definition of subckt*/
   /* Identify the type of connection box */
   switch(cur_cb_info->type) {
@@ -1850,18 +1893,6 @@ void dump_verilog_routing_connection_box_subckt(t_sram_orgz_info* cur_sram_orgz_
   /* Make sure only 2 sides of IPINs are printed */
   assert((1 == side_cnt)||(2 == side_cnt));
 
-  /* Count the number of configuration bits */
-  /* Count the number of configuration bits to be consumed by this Switch block */
-  num_conf_bits = count_verilog_connection_box_conf_bits(cur_sram_orgz_info, cur_cb_info);
-  /* Count the number of reserved configuration bits to be consumed by this Switch block */
-  num_reserved_conf_bits = count_verilog_connection_box_reserved_conf_bits(cur_sram_orgz_info, cur_cb_info);
-  /* Estimate the sram_verilog_model->cnt */
-  cur_num_sram = get_sram_orgz_info_num_mem_bit(cur_sram_orgz_info); 
-  esti_sram_cnt = cur_num_sram + num_conf_bits;
-  /* Record index */
-  cur_cb_info->num_reserved_conf_bits = num_reserved_conf_bits;
-  cur_cb_info->conf_bits_lsb = cur_num_sram;
-  cur_cb_info->conf_bits_msb = cur_num_sram + num_conf_bits;
 
   /* Put down configuration port */
   /* output of each configuration bit */
@@ -1956,7 +1987,8 @@ void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
                                     int LL_num_rr_nodes, t_rr_node* LL_rr_node,
                                     t_ivec*** LL_rr_node_indices,
                                     t_rr_indexed_data* LL_rr_indexed_data,
-                                    t_syn_verilog_opts fpga_verilog_opts) {
+                                    t_syn_verilog_opts fpga_verilog_opts,
+                                    boolean compact_routing_hierarchy) {
   int ix, iy; 
  
   assert(UNI_DIRECTIONAL == routing_arch->directionality);
@@ -2005,7 +2037,7 @@ void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
       update_spice_models_routing_index_low(ix, iy, SOURCE, arch.spice->num_spice_model, arch.spice->spice_models);
       dump_verilog_routing_switch_box_subckt(cur_sram_orgz_info, verilog_dir, subckt_dir, &(sb_info[ix][iy]),
                                              LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices,
-                                             fpga_verilog_opts);
+                                             fpga_verilog_opts, compact_routing_hierarchy);
       update_spice_models_routing_index_high(ix, iy, SOURCE, arch.spice->num_spice_model, arch.spice->spice_models);
     }
   }
@@ -2020,7 +2052,7 @@ void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
          &&(0 < count_cb_info_num_ipin_rr_nodes(cbx_info[ix][iy]))) {
         dump_verilog_routing_connection_box_subckt(cur_sram_orgz_info, verilog_dir, subckt_dir, &(cbx_info[ix][iy]),
                                                    LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices,
-                                                   fpga_verilog_opts); 
+                                                   fpga_verilog_opts, compact_routing_hierarchy); 
       }
       update_spice_models_routing_index_high(ix, iy, CHANX, arch.spice->num_spice_model, arch.spice->spice_models);
     }
@@ -2034,7 +2066,7 @@ void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
          &&(0 < count_cb_info_num_ipin_rr_nodes(cby_info[ix][iy]))) {
         dump_verilog_routing_connection_box_subckt(cur_sram_orgz_info, verilog_dir, subckt_dir, &(cby_info[ix][iy]),
                                                    LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices,
-                                                   fpga_verilog_opts); 
+                                                   fpga_verilog_opts, compact_routing_hierarchy); 
       }
       update_spice_models_routing_index_high(ix, iy, CHANY, arch.spice->num_spice_model, arch.spice->spice_models);
     }

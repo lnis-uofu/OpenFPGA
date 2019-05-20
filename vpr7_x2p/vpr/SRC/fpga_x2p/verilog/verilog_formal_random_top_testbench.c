@@ -46,6 +46,7 @@ static char* gfpga_postfix = "_gfpga";
 static char* bench_postfix = "_bench";
 static char* flag_postfix = "_flag";
 static char* def_clk_name = "clk";
+static char* error_counter = "nb_error";
 static char* clock_input_name = NULL;
 
 /* Local Subroutines declaration */
@@ -56,10 +57,9 @@ void dump_verilog_top_random_testbench_ports(FILE* fp,
                                            t_sram_orgz_info* cur_sram_orgz_info,
                                            char* circuit_name,
                                            t_syn_verilog_opts fpga_verilog_opts){
-  int iblock, iopad_idx;
+  int iblock;
   boolean bench_as_clk = FALSE;
   t_spice_model* mem_model = NULL;
-  char* port_name = NULL;
  
   get_sram_orgz_info_mem_model(cur_sram_orgz_info, &mem_model);
 
@@ -71,7 +71,6 @@ void dump_verilog_top_random_testbench_ports(FILE* fp,
   for (iblock = 0; iblock < num_logical_blocks; iblock++) {
     /* General INOUT*/
     if (iopad_verilog_model == logical_block[iblock].mapped_spice_model) {
-      iopad_idx = logical_block[iblock].mapped_spice_model_index;
       /* Make sure We find the correct logical block !*/
       assert((VPACK_INPAD == logical_block[iblock].type)
            ||(VPACK_OUTPAD == logical_block[iblock].type));
@@ -89,7 +88,6 @@ void dump_verilog_top_random_testbench_ports(FILE* fp,
   for (iblock = 0; iblock < num_logical_blocks; iblock++) {
     /* General INOUT*/
     if (iopad_verilog_model == logical_block[iblock].mapped_spice_model) {
-      iopad_idx = logical_block[iblock].mapped_spice_model_index;
       /* Make sure We find the correct logical block !*/
       assert((VPACK_INPAD == logical_block[iblock].type)
            ||(VPACK_OUTPAD == logical_block[iblock].type));
@@ -103,7 +101,6 @@ void dump_verilog_top_random_testbench_ports(FILE* fp,
   for (iblock = 0; iblock < num_logical_blocks; iblock++) {
     /* General INOUT*/
     if (iopad_verilog_model == logical_block[iblock].mapped_spice_model) {
-      iopad_idx = logical_block[iblock].mapped_spice_model_index;
       /* Make sure We find the correct logical block !*/
       assert((VPACK_INPAD == logical_block[iblock].type)
            ||(VPACK_OUTPAD == logical_block[iblock].type));
@@ -117,7 +114,6 @@ void dump_verilog_top_random_testbench_ports(FILE* fp,
   for (iblock = 0; iblock < num_logical_blocks; iblock++) {
     /* General INOUT*/
     if (iopad_verilog_model == logical_block[iblock].mapped_spice_model) {
-      iopad_idx = logical_block[iblock].mapped_spice_model_index;
       /* Make sure We find the correct logical block !*/
       assert((VPACK_INPAD == logical_block[iblock].type)
            ||(VPACK_OUTPAD == logical_block[iblock].type));
@@ -126,6 +122,9 @@ void dump_verilog_top_random_testbench_ports(FILE* fp,
       }
     }
   } fprintf(fp, "`endif\n");
+// Instantiate an integer to count the number of error and determine if the simulation succeed or failed
+  fprintf(fp, "\n//----- Error counter \n");
+  fprintf(fp, "  integer %s = 0;\n\n", error_counter);
 
   return;
 }
@@ -133,7 +132,7 @@ void dump_verilog_top_random_testbench_ports(FILE* fp,
 static
 void dump_verilog_top_random_testbench_call_benchmark(FILE* fp, 
                                                     char* reference_verilog_top_name){
-  int iblock, iopad_idx;
+  int iblock;
 
   fprintf(fp, "`ifdef %s\n", autochecked_simulation_flag);
   fprintf(fp, "// Reference Benchmark instanciation\n");
@@ -142,7 +141,6 @@ void dump_verilog_top_random_testbench_call_benchmark(FILE* fp,
   for (iblock = 0; iblock < num_logical_blocks; iblock++) {
     /* General INOUT*/
     if (iopad_verilog_model == logical_block[iblock].mapped_spice_model) {
-      iopad_idx = logical_block[iblock].mapped_spice_model_index;
       /* Make sure We find the correct logical block !*/
       assert((VPACK_INPAD == logical_block[iblock].type)
            ||(VPACK_OUTPAD == logical_block[iblock].type));
@@ -172,7 +170,7 @@ int get_simulation_time(int num_prog_clock_cycles,
   int total_time_period = 0;
 
   /* Take into account the prog_reset and reset cycles */
-  total_time_period = ((num_prog_clock_cycles + 2) * prog_clock_period + (2 * num_op_clock_cycles * op_clock_period)) * 1000000000; // * 1000000000 is to change the unit to ns rather than second
+  total_time_period = (100 * (2 * num_op_clock_cycles * op_clock_period)) * 1000000000; // * 1000000000 is to change the unit to ns rather than second
 
   return total_time_period; 
 }
@@ -192,14 +190,20 @@ void dump_verilog_timeout_and_vcd(FILE * fp,
 	fprintf(fp, "  // Begin Icarus requirement\n");
 	fprintf(fp, "`ifdef %s\n", icarus_simulator_flag);
 	fprintf(fp, "  initial begin\n");
-	fprintf(fp, "    $dumpfile(%s_autochecked.vcd);\n", circuit_name);
+	fprintf(fp, "    $dumpfile(\"%s_formal.vcd\");\n", circuit_name);
 	fprintf(fp, "    $dumpvars(1, %s%s);\n", circuit_name,
-											modelsim_autocheck_testbench_module_postfix);
+											formal_random_top_tb_postfix);
 	fprintf(fp, "  end\n\n");
 	fprintf(fp, "  initial begin\n");
+	fprintf(fp, "    $timeformat(-9, 2, \"ns\", 20);\n");
 	fprintf(fp, "    $display(\"Simulation start\");\n");
 	fprintf(fp, "    #%i // Can be changed by the user for his need\n", simulation_time);
-	fprintf(fp, "    $display(\"Simulation End: Time's up\");\n");
+	fprintf(fp, "    if(%s == 0) begin\n", error_counter);
+	fprintf(fp, "      $display(\"Simulation Succeed\");\n");
+	fprintf(fp, "    end else begin\n");
+	fprintf(fp, "      $display(\"Simulation Failed with %s error(s)\", %s);\n", "%d", error_counter);
+	fprintf(fp, "    end\n");
+	fprintf(fp, "    $finish;\n");
 	fprintf(fp, "  end\n");
 	fprintf(fp, "`endif\n\n");
 	return;
@@ -207,12 +211,11 @@ void dump_verilog_timeout_and_vcd(FILE * fp,
 
 static
 void dump_verilog_top_random_testbench_check(FILE* fp){
-  int iblock, iopad_idx;
+  int iblock;
   fprintf(fp, "  // Begin checking\n");
   fprintf(fp, "  always@(negedge %s) begin\n", clock_input_name);
   for (iblock = 0; iblock < num_logical_blocks; iblock++) {
     if (iopad_verilog_model == logical_block[iblock].mapped_spice_model) {
-      iopad_idx = logical_block[iblock].mapped_spice_model_index;
       /* Make sure We find the correct logical block !*/
       assert((VPACK_INPAD == logical_block[iblock].type)
            ||(VPACK_OUTPAD == logical_block[iblock].type));
@@ -229,7 +232,6 @@ void dump_verilog_top_random_testbench_check(FILE* fp){
   fprintf(fp, "  end\n\n");
   for (iblock = 0; iblock < num_logical_blocks; iblock++) {
     if (iopad_verilog_model == logical_block[iblock].mapped_spice_model) {
-      iopad_idx = logical_block[iblock].mapped_spice_model_index;
       /* Make sure We find the correct logical block !*/
       assert((VPACK_INPAD == logical_block[iblock].type)
            ||(VPACK_OUTPAD == logical_block[iblock].type));
@@ -238,9 +240,9 @@ void dump_verilog_top_random_testbench_check(FILE* fp){
                     									flag_postfix);
         fprintf(fp, "      if(%s%s) begin\n", logical_block[iblock].name,
                     							flag_postfix);
-        fprintf(fp, "        $display(\"Mismatch on %s%s\");\n", logical_block[iblock].name,
-                    											gfpga_postfix);
-        fprintf(fp, "        $finish;\n");
+		fprintf(fp, "        %s = %s + 1;\n", error_counter, error_counter);
+        fprintf(fp, "        $display(\"Mismatch on %s%s at time = %s\", $realtime);\n", logical_block[iblock].name,
+                    											gfpga_postfix, "%t");
         fprintf(fp, "      end\n");
         fprintf(fp, "  end\n");
       }
@@ -252,7 +254,7 @@ void dump_verilog_top_random_testbench_check(FILE* fp){
 static
 void dump_verilog_random_testbench_call_top_module(FILE* fp,
                                                 	char* circuit_name) {
-  int iblock, iopad_idx;
+  int iblock;
 
   fprintf(fp, "// GFPGA instanciation\n");
   fprintf(fp, "  %s%s DUT(\n", circuit_name, formal_verification_top_postfix);
@@ -260,7 +262,6 @@ void dump_verilog_random_testbench_call_top_module(FILE* fp,
   for (iblock = 0; iblock < num_logical_blocks; iblock++) {
     /* General INOUT*/
     if (iopad_verilog_model == logical_block[iblock].mapped_spice_model) {
-      iopad_idx = logical_block[iblock].mapped_spice_model_index;
       /* Make sure We find the correct logical block !*/
       assert((VPACK_INPAD == logical_block[iblock].type)
            ||(VPACK_OUTPAD == logical_block[iblock].type));
@@ -283,15 +284,13 @@ void dump_verilog_random_testbench_call_top_module(FILE* fp,
 static
 void dump_verilog_top_random_stimuli(FILE* fp,
                                      t_spice verilog){
-  int iblock, iopad_idx;
-  char* reset_input_name = NULL;
+  int iblock;
 
   fprintf(fp, "//----- Initialization\n");
   fprintf(fp, "  initial begin\n");
   for (iblock = 0; iblock < num_logical_blocks; iblock++) {
     /* General INOUT*/
     if (iopad_verilog_model == logical_block[iblock].mapped_spice_model) {
-      iopad_idx = logical_block[iblock].mapped_spice_model_index;
       /* Make sure We find the correct logical block !*/
       assert((VPACK_INPAD == logical_block[iblock].type)
            ||(VPACK_OUTPAD == logical_block[iblock].type));
@@ -331,7 +330,6 @@ void dump_verilog_top_random_stimuli(FILE* fp,
   for (iblock = 0; iblock < num_logical_blocks; iblock++) {
     /* General INOUT*/
     if (iopad_verilog_model == logical_block[iblock].mapped_spice_model) {
-      iopad_idx = logical_block[iblock].mapped_spice_model_index;
       /* Make sure We find the correct logical block !*/
       assert((VPACK_INPAD == logical_block[iblock].type)
            ||(VPACK_OUTPAD == logical_block[iblock].type));

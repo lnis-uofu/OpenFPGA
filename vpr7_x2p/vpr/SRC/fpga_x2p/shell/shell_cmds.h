@@ -10,7 +10,7 @@ t_shell_cmd shell_cmd[] = {
   {"fpga_bitstream", PRODUCTION_CMD, fpga_bitstream_opts, &shell_execute_fpga_bitstream }, 
   {"help", BASIC_CMD, help_opts, &shell_execute_help }, 
   {"exit", BASIC_CMD, exit_opts, &shell_execute_exit }, 
-  {"quit", BASIC_CMD, NULL, &shell_execute_exit }, 
+  {"quit", BASIC_CMD, exit_opts, &shell_execute_exit }, 
   {LAST_CMD_NAME, BASIC_CMD, NULL, NULL}
 };
 

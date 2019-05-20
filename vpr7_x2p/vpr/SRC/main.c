@@ -73,6 +73,11 @@ int main(int argc, char **argv) {
   
   /* free data structures */
   vpr_free_all(Arch, Options, vpr_setup);
+  
+  /* Close those file handlers for a clean valgrind */
+  fclose(stdin);
+  fclose(stdout);
+  fclose(stderr);
 
   /* Return 0 to single success to scripts */
   return 0;

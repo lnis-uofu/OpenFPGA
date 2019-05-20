@@ -706,7 +706,8 @@ void generate_spice_wires(char* subckt_dir,
  */
 void generate_spice_subckts(char* subckt_dir,
                             t_arch* arch,
-                            t_det_routing_arch* routing_arch) {
+                            t_det_routing_arch* routing_arch,
+                            boolean compact_routing_hierarchy) {
   /* 1.Generate NMOS, PMOS and transmission gate */
   vpr_printf(TIO_MESSAGE_INFO,"Writing SPICE NMOS and PMOS...\n");
   generate_spice_nmos_pmos(subckt_dir, arch->spice->tech_lib);
@@ -736,7 +737,8 @@ void generate_spice_subckts(char* subckt_dir,
   /* 6. Generate Routing architecture*/
   vpr_printf(TIO_MESSAGE_INFO, "Writing Routing Resources....\n");
   generate_spice_routing_resources(subckt_dir, (*arch), routing_arch, 
-                                   num_rr_nodes, rr_node, rr_node_indices);
+                                   num_rr_nodes, rr_node, rr_node_indices,
+                                   compact_routing_hierarchy);
  
   /* 7. Generate Logic Blocks */
   vpr_printf(TIO_MESSAGE_INFO,"Writing Logic Blocks...\n");

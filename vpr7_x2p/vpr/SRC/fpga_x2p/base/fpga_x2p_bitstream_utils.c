@@ -1147,7 +1147,7 @@ add_sram_scff_conf_bits_to_llist(t_sram_orgz_info* cur_sram_orgz_info,
 void add_sram_membank_conf_bits_to_llist(t_sram_orgz_info* cur_sram_orgz_info, int mem_index, 
                                          int num_bls, int num_wls, 
                                          int* bl_conf_bits, int* wl_conf_bits) {
-  int ibit, cur_bl, cur_wl, cur_mem_bit;
+  int ibit, cur_bl, cur_wl;
   t_spice_model* cur_sram_spice_model = NULL;
   t_conf_bit* bl_bit = NULL;
   t_conf_bit* wl_bit = NULL;
@@ -1157,7 +1157,6 @@ void add_sram_membank_conf_bits_to_llist(t_sram_orgz_info* cur_sram_orgz_info, i
   assert(NULL != cur_sram_orgz_info);
 
   /* Get current counter of sram_spice_model */
-  cur_mem_bit = get_sram_orgz_info_num_mem_bit(cur_sram_orgz_info); 
   get_sram_orgz_info_num_blwl(cur_sram_orgz_info, &cur_bl, &cur_wl);
 
   /* Get memory model */
@@ -1423,13 +1422,11 @@ void determine_blwl_decoder_size(INP t_sram_orgz_info* cur_sram_orgz_info,
                                  OUTP int* num_array_bl, OUTP int* num_array_wl,
                                  OUTP int* bl_decoder_size, OUTP int* wl_decoder_size) {
   t_spice_model* mem_model = NULL;
-  int num_mem_bit;
   int num_reserved_bl, num_reserved_wl;
 
   /* Check */
   assert(SPICE_SRAM_MEMORY_BANK == cur_sram_orgz_info->type);
 
-  num_mem_bit = get_sram_orgz_info_num_mem_bit(cur_sram_orgz_info);
   get_sram_orgz_info_num_blwl(cur_sram_orgz_info, num_array_bl, num_array_wl);
   get_sram_orgz_info_reserved_blwl(cur_sram_orgz_info, &num_reserved_bl, &num_reserved_wl);
 

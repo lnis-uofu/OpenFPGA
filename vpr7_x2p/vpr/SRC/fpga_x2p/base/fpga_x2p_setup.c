@@ -31,6 +31,7 @@
 #include "fpga_x2p_backannotate_utils.h"
 #include "fpga_x2p_pbtypes_utils.h"
 #include "verilog_api.h"
+#include "fpga_x2p_identify_routing.h"
 #include "fpga_x2p_setup.h"
 
 /***** Subroutines Declarations *****/
@@ -948,7 +949,12 @@ void check_keywords_conflict(t_arch Arch) {
     vpr_printf(TIO_MESSAGE_ERROR, "Found %d conflicted keywords!\n", conflict);
     exit(1);
   }
-  
+
+  /* Free the memory of the keywords after the checking */
+  for (i = 0 ; cur < num_keyword ; i++) {
+    my_free(keywords[cur]);
+  } 
+
   return; 
 }
 
@@ -1302,7 +1308,7 @@ void fpga_x2p_free(t_arch* Arch) {
 
 /* Top-level function of FPGA-SPICE setup */
 void fpga_x2p_setup(t_vpr_setup vpr_setup,
-                      t_arch* Arch) {
+                    t_arch* Arch) {
   int num_rename_violation = 0;
   int num_clocks = 0;
   float vpr_crit_path_delay = 0.; 
@@ -1385,6 +1391,17 @@ void fpga_x2p_setup(t_vpr_setup vpr_setup,
   spice_backannotate_vpr_post_route_info(vpr_setup.RoutingArch,
                                          vpr_setup.FPGA_SPICE_Opts.read_act_file,
                                          vpr_setup.FPGA_SPICE_Opts.SpiceOpts.fpga_spice_parasitic_net_estimation);
+
+  /* Try to use mirror SBs/CBs if enabled by user */
+  if (TRUE == vpr_setup.FPGA_SPICE_Opts.compact_routing_hierarchy) {
+    /* Idenify mirror and rotatable Switch blocks and Connection blocks */
+    identify_mirror_switch_blocks();
+    identify_mirror_connection_blocks();
+    /* Rotatable will be done in the next step 
+    identify_rotatable_switch_blocks(); 
+    identify_rotatable_connection_blocks(); 
+    */ 
+  }
 
   /* Not should be done when read_act_file is disabled */
   if (FALSE == vpr_setup.FPGA_SPICE_Opts.read_act_file) {

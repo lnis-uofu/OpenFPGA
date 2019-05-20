@@ -1780,8 +1780,6 @@ static void map_loop_breaker_onto_edges(char* loop_breaker_string, int line_num,
   t_token * tokens;
   int num_tokens;
   int i_tokens, cur_port_index, cur_pin_index;
-  int i_index_mode;
-  t_mode* cur_mode;
   t_pb_graph_node** cur_node;
   int index_cur_node, i_index_cur_node;
   t_pb_graph_node* tmp_node;

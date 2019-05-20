@@ -34,6 +34,7 @@ my $rpt_ptr = \%rpt_h;
 my @benchmark_names;
 my %benchmarks;
 my $benchmarks_ptr = \%benchmarks;
+my $verilog_benchmark;
 
 # Supported flows
 my @supported_flows = ("standard", 
@@ -154,11 +155,12 @@ sub print_usage()
   print "      \t-vpr_route_breadthfirst : use the breadth-first routing algorithm of VPR.\n";
   print "      \t-min_route_chan_width <float> : turn on routing with <float>* min_route_chan_width.\n";
   print "      \t-fix_route_chan_width : turn on routing with a fixed route_chan_width, defined in benchmark configuration file.\n";
+  print "      [ VPR - FPGA-X2P Extension ] \n";
+  print "      \t-vpr_fpga_x2p_rename_illegal_port : turn on renaming illegal ports option of VPR FPGA SPICE\n";
+  print "      \t-vpr_fpga_x2p_signal_density_weight <float>: specify the option signal_density_weight of VPR FPGA SPICE\n";
+  print "      \t-vpr_fpga_x2p_sim_window_size <float>: specify the option sim_window_size of VPR FPGA SPICE\n";
   print "      [ VPR - FPGA-SPICE Extension ] \n";
   print "      \t-vpr_fpga_spice <task_file> : turn on SPICE netlists print-out in VPR, specify a task file\n";
-  print "      \t-vpr_fpga_spice_rename_illegal_port : turn on renaming illegal ports option of VPR FPGA SPICE\n";
-  print "      \t-vpr_fpga_spice_signal_density_weight <float>: specify the option signal_density_weight of VPR FPGA SPICE\n";
-  print "      \t-vpr_fpga_spice_sim_window_size <float>: specify the option sim_window_size of VPR FPGA SPICE\n";
   print "      \t-vpr_fpga_spice_sim_mt_num <int>: specify the option sim_mt_num of VPR FPGA SPICE\n";
   print "      \t-vpr_fpga_spice_print_component_tb : print component-level testbenches in VPR FPGA SPICE\n";
   print "      \t-vpr_fpga_spice_print_grid_tb : print Grid-level testbenches in VPR FPGA SPICE\n";
@@ -168,19 +170,41 @@ sub print_usage()
   print "      \t-vpr_fpga_spice_testbench_load_extraction_off : turn off testbench_load_extraction in VPR FPGA SPICE\n";
   print "      [ VPR - FPGA-Verilog Extension ] \n";
   print "      \t-vpr_fpga_verilog : turn on Verilog Generator of VPR FPGA SPICE\n";
+  print "      \t-vpr_fpga_verilog_dir <verilog_path>: provide the path where generated verilog files will be written\n";
+  print "      \t-vpr_fpga_verilog_include_timing : turn on printing delay specification in Verilog files\n";
+  print "      \t-vpr_fpga_verilog_include_signal_init : turn on printing signal initialization in Verilog files\n";
+  print "      \t-vpr_fpga_verilog_print_autocheck_top_testbench: turn on printing autochecked top-level testbench for Verilog Generator of VPR FPGA SPICE\n";
+  print "      \t-vpr_fpga_verilog_formal_verification_top_netlist : turn on printing formal top Verilog files\n";
+  print "      \t-vpr_fpga_verilog_include_icarus_simulator : Add syntax and definition required to use Icarus Verilog simulator\n";
+  print "      \t-vpr_fpga_verilog_print_user_defined_template : \n";
+  print "      \t-vpr_fpga_verilog_print_report_timing_tcl : Generate tcl script useful for timing report generation\n";
+  print "      \t-vpr_fpga_verilog_report_timing_rpt_path <path_to_generate_reports> : Specify path for report timing\n";
+  print "      \t-vpr_fpga_verilog_print_sdc_pnr : Generate sdc file to constraint Hardware P&R\n";
+  print "      \t-vpr_fpga_verilog_print_sdc_analysis : Generate sdc file to do STA\n";
+  print "      \t-vpr_fpga_verilog_print_top_tb : turn on printing top-level testbench for Verilog Generator of VPR FPGA SPICE\n";
+  print "      \t-vpr_fpga_verilog_print_input_blif_tb : turn on printing testbench for input blif file in Verilog Generator of VPR FPGA SPICE\n";
+  print "      \t-vpr_fpga_verilog_print_modelsim_autodeck <modelsim.ini_path>: turn on printing modelsim simulation script\n";
+  print "      [ VPR - FPGA-Bitstream Extension ] \n";
+  print "      \t-vpr_fpga_bitstream_generator: turn on FPGA-SPICE bitstream generator\n";
   exit(1);
   return 1;
 }
  
-sub spot_option($ $) {
+sub spot_option($ $)
+{
   my ($start,$target) = @_;
   my ($arg_no,$flag) = (-1,"unfound");
-  for (my $iarg = $start; $iarg < $#ARGV+1; $iarg++) {
-    if ($ARGV[$iarg] eq $target) {
-      if ("found" eq $flag) {
+  for (my $iarg = $start; $iarg < $#ARGV+1; $iarg++)
+  {
+    if ($ARGV[$iarg] eq $target)
+    {
+      if ("found" eq $flag)
+      {
         print "Error: Repeated Arguments!(IndexA: $arg_no,IndexB: $iarg)\n";
         &print_usage();        
-      } else {
+      }
+      else
+      {
         $flag = "found";
         $arg_no = $iarg;
       }
@@ -195,35 +219,49 @@ sub spot_option($ $) {
 # 1. Option Name
 # 2. Whether Option with value. if yes, choose "on"
 # 3. Whether Option is mandatory. If yes, choose "on"
-sub read_opt_into_hash($ $ $) {
+sub read_opt_into_hash($ $ $)
+{
   my ($opt_name,$opt_with_val,$mandatory) = @_;
   # Check the -$opt_name
   my ($opt_fact) = ("-".$opt_name);
   my ($cur_arg) = (0);
   my ($argfd) = (&spot_option($cur_arg,"$opt_fact"));
-  if ($opt_with_val eq "on") {
-    if (-1 != $argfd) {
-      if ($ARGV[$argfd+1] =~ m/^-/) {
+  if ($opt_with_val eq "on")
+  {
+    if (-1 != $argfd)
+    {
+      if ($ARGV[$argfd+1] =~ m/^-/)
+      {
         print "The next argument cannot start with '-'!\n"; 
         print "it implies an option!\n";
-      } else {
+      }
+      else
+      {
         $opt_ptr->{"$opt_name\_val"} = $ARGV[$argfd+1];
         $opt_ptr->{"$opt_name"} = "on";
       }     
-    } else {
+    }
+    else
+    {
       $opt_ptr->{"$opt_name"} = "off";
-      if ($mandatory eq "on") {
+      if ($mandatory eq "on")
+      {
         print "Mandatory option: $opt_fact is missing!\n";
         &print_usage();
       }
     }
-  } else {
-    if (-1 != $argfd) {
+  }
+  else
+  {
+    if (-1 != $argfd)
+    {
       $opt_ptr->{"$opt_name"} = "on";
     }
-    else {
+    else
+    {
       $opt_ptr->{"$opt_name"} = "off";
-      if ($mandatory eq "on") {
+      if ($mandatory eq "on")
+      {
         print "Mandatory option: $opt_fact is missing!\n";
         &print_usage();
       }
@@ -233,9 +271,11 @@ sub read_opt_into_hash($ $ $) {
 }
 
 # Read options
-sub opts_read() {
+sub opts_read()
+{
   # if no arguments detected, print the usage.
-  if (-1 == $#ARGV) {
+  if (-1 == $#ARGV)
+  {
     print "Error : No input arguments!\n";
     print "Help desk:\n";
     &print_usage();
@@ -249,16 +289,19 @@ sub opts_read() {
   my $argfd;
   # Check help fist 
   $argfd = &spot_option($cur_arg,"-help");
-  if (-1 != $argfd) {
+  if (-1 != $argfd)
+  {
     print "Help desk:\n";
     &print_usage();
   }  
   # Then Check the debug with highest priority
   $argfd = &spot_option($cur_arg,"-debug");
-  if (-1 != $argfd) {
+  if (-1 != $argfd)
+  {
     $opt_ptr->{"debug"} = "on";
   }
-  else {
+  else
+  {
     $opt_ptr->{"debug"} = "off";
   }
   # Check mandatory options
@@ -297,9 +340,9 @@ sub opts_read() {
   # FPGA-SPICE options
   # Read Opt into Hash(opt_ptr) : "opt_name","with_val","mandatory"
   &read_opt_into_hash("vpr_fpga_spice","on","off");
-  &read_opt_into_hash("vpr_fpga_spice_rename_illegal_port","off","off");
-  &read_opt_into_hash("vpr_fpga_spice_signal_density_weight","on","off");
-  &read_opt_into_hash("vpr_fpga_spice_sim_window_size","on","off");
+  &read_opt_into_hash("vpr_fpga_x2p_rename_illegal_port","off","off");
+  &read_opt_into_hash("vpr_fpga_x2p_signal_density_weight","on","off");
+  &read_opt_into_hash("vpr_fpga_x2p_sim_window_size","on","off");
   &read_opt_into_hash("vpr_fpga_spice_sim_mt_num","on","off");
   &read_opt_into_hash("vpr_fpga_spice_print_component_tb","off","off");
   &read_opt_into_hash("vpr_fpga_spice_print_grid_tb","off","off");
@@ -308,6 +351,22 @@ sub opts_read() {
   &read_opt_into_hash("vpr_fpga_spice_parasitic_net_estimation_off","off","off");
   &read_opt_into_hash("vpr_fpga_spice_testbench_load_extraction_off","off","off");
   &read_opt_into_hash("vpr_fpga_verilog","off","off");
+  &read_opt_into_hash("vpr_fpga_verilog_print_top_tb","off","off");
+  &read_opt_into_hash("vpr_fpga_verilog_print_input_blif_tb","off","off");
+  &read_opt_into_hash("vpr_fpga_bitstream_generator","off","off");
+# AA add for update
+  &read_opt_into_hash("vpr_fpga_verilog_print_autocheck_top_testbench","off","off");
+  &read_opt_into_hash("vpr_fpga_verilog_dir","on","off");
+  &read_opt_into_hash("vpr_fpga_verilog_print_modelsim_autodeck","on","off");
+  &read_opt_into_hash("vpr_fpga_verilog_include_timing","off","off");
+  &read_opt_into_hash("vpr_fpga_verilog_include_signal_init","off","off");
+  &read_opt_into_hash("vpr_fpga_verilog_formal_verification_top_netlist","off","off");
+  &read_opt_into_hash("vpr_fpga_verilog_include_icarus_simulator","off","off");
+  &read_opt_into_hash("vpr_fpga_verilog_print_report_timing_tcl","off","off");
+  &read_opt_into_hash("vpr_fpga_verilog_report_timing_rpt_path","on","off");
+  &read_opt_into_hash("vpr_fpga_verilog_print_sdc_pnr","off","off");
+  &read_opt_into_hash("vpr_fpga_verilog_print_sdc_analysis","off","off");
+  &read_opt_into_hash("vpr_fpga_verilog_print_user_defined_template","off","off");
 
   &print_opts(); 
 
@@ -315,12 +374,12 @@ sub opts_read() {
 }
   
 # List the options
-sub print_opts() {
+sub print_opts()
+{
   print "List your options\n"; 
   
-  while(my ($key,$value) = each(%opt_h)) {
-    print "$key : $value\n";
-  }
+  while(my ($key,$value) = each(%opt_h))
+  {print "$key : $value\n";}
 
   return 1;
 }
@@ -526,8 +585,50 @@ sub run_abc_libmap($ $ $)
     ($abc_seq_optimize) = ("scl -l;");
   }
   # !!! For standard library, we cannot use sweep ???
-  system("/bin/csh -cx './$abc_name -c \"read_blif $bm; resyn2; read_library $mpack1_stdlib; $abc_seq_optimize map -v; write_blif $blif_out; quit;\" > $log'");
+  system("./$abc_name -c \"read_blif $bm; resyn2; read_library $mpack1_stdlib; $abc_seq_optimize map -v; write_blif $blif_out; quit;\" > $log");
   chdir $cwd;
+}
+
+# Rewrite the verilog after optimization
+sub run_rewrite_verilog($ $ $ $ $) {
+  my ($blif, $path, $benchmark, $bm, $log) = @_;
+  my ($new_verilog) = "$path/$benchmark".".v";
+  my ($cmd_log) = ($log);
+  $cmd_log =~ s/\.log$/rewrite_verilog\.ys/;
+
+  # Get Yosys path
+  my ($yosys_dir,$yosys_name) = &split_prog_path($conf_ptr->{dir_path}->{yosys_path}->{val});
+
+  print "Entering $yosys_dir\n";
+  chdir $yosys_dir;
+  my ($lut_num) = $opt_ptr->{K_val};
+
+  # Create yosys synthesize script
+  my ($YOSYS_CMD_FH) = (FileHandle->new);
+  if ($YOSYS_CMD_FH->open("> $cmd_log")) {
+    print "INFO: auto generating cmds for Yosys ($cmd_log) ...\n";
+  } else {
+    die "ERROR: fail to auto generating cmds for Yosys ($cmd_log) ...\n";
+  }
+  # Output the standard format (refer to VTR_flow script)
+  print $YOSYS_CMD_FH "# Yosys rewriting verilog script for $bm\n";
+  print $YOSYS_CMD_FH "read_blif $blif\n";
+  print $YOSYS_CMD_FH "write_verilog $new_verilog\n";
+
+  close($YOSYS_CMD_FH);
+  #
+  # Create a local copy for the commands 
+
+  system("./$yosys_name $cmd_log > $log");
+
+  if (!(-e $new_verilog)) {
+    die "ERROR: Yosys fail at rewriting benchmark $bm.\n";
+  }
+
+  print "Leaving $yosys_dir\n";
+  chdir $cwd;
+
+  return ($new_verilog);
 }
 
 # Run yosys synthesis with ABC LUT mapping 
@@ -583,7 +684,7 @@ sub run_yosys_fpgamap($ $ $ $) {
   #
   # Create a local copy for the commands 
 
-  system("/bin/tcsh -cx './$yosys_name $cmd_log > $log'");
+  system("./$yosys_name $cmd_log > $log");
 
   if (!(-e $blif_out)) {
     die "ERROR: Fail Yosys for benchmark $bm.\n";
@@ -592,7 +693,6 @@ sub run_yosys_fpgamap($ $ $ $) {
   print "Leaving $yosys_dir\n";
   chdir $cwd;
 }
-
 
 # Run ABC by FPGA-oriented synthesis
 sub run_abc_fpgamap($ $ $) 
@@ -632,7 +732,7 @@ sub run_abc_fpgamap($ $ $)
   #
   # Create a local copy for the commands 
 
-  system("/bin/tcsh -cx './$abc_name -F $cmd_log > $log'");
+  system("./$abc_name -F $cmd_log > $log");
 
   if (!(-e $blif_out)) {
     die "ERROR: Fail ABC for benchmark $bm.\n";
@@ -667,7 +767,7 @@ sub run_abc_bb_fpgamap($ $ $) {
 
   chdir $abc_dir;
   # Run FPGA ABC
-  system("/bin/csh -cx './$abc_name -c \"read $bm; resyn; resyn2; $fpga_synthesis_method -K $lut_num; $abc_seq_optimize sweep; write_hie $bm $blif_out; $dump_verilog; quit;\" > $log'");
+  system("./$abc_name -c \"read $bm; resyn; resyn2; $fpga_synthesis_method -K $lut_num; $abc_seq_optimize sweep; write_hie $bm $blif_out; $dump_verilog; quit;\" > $log");
 
   if (!(-e $blif_out)) {
     die "ERROR: Fail ABC_with_bb_support for benchmark $bm.\n";
@@ -709,19 +809,19 @@ sub run_abc_mccl_fpgamap($ $ $)
 
   # Run ABC three times:
   # 1st time: run abc_with_mccl: read the $bm and do carry-chain detection
-  system("/bin/csh -cx './$abc_mccl_name -c \"read $bm; strash; &get; &fadds -nv -N $min_chain_length; \&getspec; \&put; wfadds $fadds_blif; quit;\" > $log.ccdetect'");
+  system("./$abc_mccl_name -c \"read $bm; strash; &get; &fadds -nv -N $min_chain_length; \&getspec; \&put; wfadds $fadds_blif; quit;\" > $log.ccdetect");
 
   # Repeat chdir for multi-thread supporting!
   chdir $abc_mccl_dir;
   print "INFO: entering abc_mccl directory: $abc_mccl_dir \n";
 
   # 2nd time: run abc_with_mccl: read the $fadds_blif and do carry-chain LUT premapping
-  system("/bin/csh -cx './$abc_mccl_name -c \"read $fadds_blif; resyn; resyn2; mccl -A $mccl_opt_A -B $mccl_opt_B -S $mccl_opt_S -K $lut_num -O 1 -r -o $interm_blif; quit;\" > $log.mccl'");
+  system("./$abc_mccl_name -c \"read $fadds_blif; resyn; resyn2; mccl -A $mccl_opt_A -B $mccl_opt_B -S $mccl_opt_S -K $lut_num -O 1 -r -o $interm_blif; quit;\" > $log.mccl");
 
   chdir $abc_bb_dir;
   print "INFO: entering abc_with_bb_support directory: $abc_bb_dir \n";
   # 3rd time: run abc_with_bb_support: read the pre-processed blif and do cleanup and recover  
-  system("/bin/csh -cx './$abc_bb_name -c \"read $interm_blif; $abc_seq_optimize sweep; write_hie $interm_blif $blif_out; quit;\" > $log'");
+  system("./$abc_bb_name -c \"read $interm_blif; $abc_seq_optimize sweep; write_hie $interm_blif $blif_out; quit;\" > $log");
 
   if (!(-e $blif_out)) {
     die "ERROR: Fail ABC_mccl_FPGA_mapping for benchmark $bm.\n";
@@ -761,19 +861,19 @@ sub run_abc_mig_mccl_fpgamap($ $ $)
   # Run ABC three times:
   # 1st time: run abc_with_mig_mccl: read the $bm and do carry-chain detection
   # TODO: unfinished!!!!
-  system("/bin/csh -cx './$abc_mig_mccl_name -c \"readv $bm; chains -C ; quit;\" > $log.ccdetect'");
+  system("./$abc_mig_mccl_name -c \"readv $bm; chains -C ; quit;\" > $log.ccdetect");
 
   # Repeat chdir for multi-thread supporting!
   chdir $abc_mccl_dir;
   print "INFO: entering abc_mccl directory: $abc_mccl_dir \n";
 
   # 2nd time: run abc_with_mccl: read the $fadds_blif and do carry-chain LUT premapping
-  system("/bin/csh -cx './$abc_mccl_name -c \"read $fadds_blif; resyn; resyn2; mccl -A $mccl_opt_A -B $mccl_opt_B -S $mccl_opt_S -K $lut_num -O 1 -r -o $interm_blif; quit;\" > $log.mccl'");
+  system("./$abc_mccl_name -c \"read $fadds_blif; resyn; resyn2; mccl -A $mccl_opt_A -B $mccl_opt_B -S $mccl_opt_S -K $lut_num -O 1 -r -o $interm_blif; quit;\" > $log.mccl");
 
   chdir $abc_bb_dir;
   print "INFO: entering abc_with_bb_support directory: $abc_bb_dir \n";
   # 3rd time: run abc_with_bb_support: read the pre-processed blif and do cleanup and recover  
-  system("/bin/csh -cx './$abc_bb_name -c \"read $interm_blif; $abc_seq_optimize sweep; write_hie $interm_blif $blif_out; quit;\" > $log'");
+  system("./$abc_bb_name -c \"read $interm_blif; $abc_seq_optimize sweep; write_hie $interm_blif $blif_out; quit;\" > $log");
 
   if (!(-e $blif_out)) {
     die "ERROR: Fail ABC_mccl_FPGA_mapping for benchmark $bm.\n";
@@ -789,7 +889,7 @@ sub run_mpack1p5($ $ $ $ $)
   my ($mpack1_dir,$mpack1_name) = &split_prog_path($conf_ptr->{dir_path}->{mpack1_path}->{val});
   chdir $mpack1_dir;
   # Run MPACK
-  system("/bin/csh -cx './$mpack1_name $blif_in $blif_prefix -matrix_depth $matrix_size -matrix_width $matrix_size -cell_size $cell_size > $log'");
+  system("./$mpack1_name $blif_in $blif_prefix -matrix_depth $matrix_size -matrix_width $matrix_size -cell_size $cell_size > $log");
   chdir $cwd;
   
 }
@@ -802,7 +902,7 @@ sub run_mpack2($ $ $ $ $ $ $)
   chdir $mpack2_dir;
   #my ($ble_arch) = ($conf_ptr->{flow_conf}->{mpack_ble_arch}->{val});
   # Run MPACK
-  system("/bin/csh -cx './$mpack2_name -blif $blif_in -mpack_blif $blif_out -net $net -ble_arch $mpack2_arch -stats $stats -vpr_arch $vpr_arch > $log'");
+  system("./$mpack2_name -blif $blif_in -mpack_blif $blif_out -net $net -ble_arch $mpack2_arch -stats $stats -vpr_arch $vpr_arch > $log");
   chdir $cwd;
 }
 
@@ -926,7 +1026,6 @@ sub extract_vpr_power_esti($ $ $ $)
       if ($line =~ m/$tmp\s*([0-9E\-+.]+)/i) {
         $rpt_h{$tag}->{$bm}->{$opt_ptr->{N_val}}->{$type}->{power}->{$tmpkw} = $1;
         my @tempdata = split /\./,$rpt_ptr->{$tag}->{$bm}->{$opt_ptr->{N_val}}->{$type}->{power}->{$tmpkw};
-        #print "$tmpkw\n";
         $rpt_h{$tag}->{$bm}->{$opt_ptr->{N_val}}->{$type}->{power}->{$tmpkw} = join('.',$tempdata[0],$tempdata[1]);
         $rpt_h{$tag}->{$bm}->{$opt_ptr->{N_val}}->{$type}->{power}->{$tmpkw} =~ s/0$//;
       }
@@ -1071,7 +1170,7 @@ sub run_odin2($ $ $) {
   }
 
   chdir $odin2_dir;
-  system("/bin/csh -cx './$odin2_name -c $config_xml $options > $log'");
+  system("./$odin2_name -c $config_xml $options > $log");
   chdir $cwd;
 }
 
@@ -1106,7 +1205,8 @@ sub run_ace($ $ $ $) {
   
   print "Entering $ace_dir\n";
   chdir $ace_dir;
-  system("/bin/csh -cx './$ace_name -b $mpack_vpr_blif -o $act_file -n $ace_new_blif $ace_customized_opts > $log'");
+  print "./$ace_name -b $mpack_vpr_blif -o $act_file -n $ace_new_blif $ace_customized_opts >> $log";
+  system("./$ace_name -b $mpack_vpr_blif -o $act_file -n $ace_new_blif $ace_customized_opts >> $log");
 
   if (!(-e $ace_new_blif)) {
     die "ERROR: Fail ACE for benchmark $mpack_vpr_blif.\n";
@@ -1121,10 +1221,8 @@ sub run_std_vpr($ $ $ $ $ $ $ $ $)
 {
   my ($blif,$bm,$arch,$net,$place,$route,$fix_chan_width,$log,$act_file) = @_;
   my ($vpr_dir,$vpr_name) = &split_prog_path($conf_ptr->{dir_path}->{vpr_path}->{val});
-
-  print "Entering $vpr_dir\n";
   chdir $vpr_dir;
-
+  
   my ($power_opts);
   if ("on" eq $opt_ptr->{power}) {
     $power_opts = "--power --activity_file $act_file --tech_properties $conf_ptr->{flow_conf}->{power_tech_xml}->{val}";
@@ -1146,11 +1244,11 @@ sub run_std_vpr($ $ $ $ $ $ $ $ $)
   if (("on" eq $opt_ptr->{power})&&("on" eq $opt_ptr->{vpr_fpga_spice})) {
     $vpr_spice_opts = "--fpga_spice";
 
-    if ("on" eq $opt_ptr->{vpr_fpga_spice_signal_density_weight}) {
-      $vpr_spice_opts = $vpr_spice_opts." --fpga_spice_signal_density_weight $opt_ptr->{vpr_fpga_spice_signal_density_weight_val}";
+    if ("on" eq $opt_ptr->{vpr_fpga_x2p_signal_density_weight}) {
+      $vpr_spice_opts = $vpr_spice_opts." --fpga_x2p_signal_density_weight $opt_ptr->{vpr_fpga_x2p_signal_density_weight_val}";
     }
-    if ("on" eq $opt_ptr->{vpr_fpga_spice_sim_window_size}) {
-      $vpr_spice_opts = $vpr_spice_opts." --fpga_spice_sim_window_size $opt_ptr->{vpr_fpga_spice_sim_window_size_val}";
+    if ("on" eq $opt_ptr->{vpr_fpga_x2p_sim_window_size}) {
+      $vpr_spice_opts = $vpr_spice_opts." --fpga_x2p_sim_window_size $opt_ptr->{vpr_fpga_x2p_sim_window_size_val}";
     }
     if ("on" eq $opt_ptr->{vpr_fpga_spice_sim_mt_num}) {
       $vpr_spice_opts = $vpr_spice_opts." --fpga_spice_sim_mt_num $opt_ptr->{vpr_fpga_spice_sim_mt_num_val}";
@@ -1184,12 +1282,64 @@ sub run_std_vpr($ $ $ $ $ $ $ $ $)
   # FPGA Verilog options
   if (("on" eq $opt_ptr->{power})&&("on" eq $opt_ptr->{vpr_fpga_verilog})) {
     $vpr_spice_opts = $vpr_spice_opts." --fpga_verilog";
+
+    if ("on" eq $opt_ptr->{vpr_fpga_verilog_dir}) {
+      $vpr_spice_opts = $vpr_spice_opts." --fpga_verilog_dir $opt_ptr->{vpr_fpga_verilog_dir_val}";
+    }
+    if ("on" eq $opt_ptr->{vpr_fpga_verilog_print_top_tb}) {
+      $vpr_spice_opts = $vpr_spice_opts." --fpga_verilog_print_top_testbench";
+    }
+    if ("on" eq $opt_ptr->{vpr_fpga_verilog_print_input_blif_tb}) {
+      $vpr_spice_opts = $vpr_spice_opts." --fpga_verilog_print_input_blif_testbench";
+    }
+    if ("on" eq $opt_ptr->{vpr_fpga_verilog_print_autocheck_top_testbench}) {
+      if($verilog_benchmark eq undef){
+        $vpr_spice_opts = $vpr_spice_opts." --fpga_verilog_print_autocheck_top_testbench $conf_ptr->{dir_path}->{benchmark_dir}->{val}"."/$bm/$bm.v";
+      } else {
+        $vpr_spice_opts = $vpr_spice_opts." --fpga_verilog_print_autocheck_top_testbench $verilog_benchmark";
+      }
+    }
+    if ("on" eq $opt_ptr->{vpr_fpga_verilog_include_timing}) {
+      $vpr_spice_opts = $vpr_spice_opts." --fpga_verilog_include_timing";
+    }
+    if ("on" eq $opt_ptr->{vpr_fpga_verilog_include_signal_init}) {
+      $vpr_spice_opts = $vpr_spice_opts." --fpga_verilog_include_signal_init";
+    }
+    if ("on" eq $opt_ptr->{vpr_fpga_verilog_formal_verification_top_netlist}) {
+      $vpr_spice_opts = $vpr_spice_opts." --fpga_verilog_print_formal_verification_top_netlist";
+    }
+    if ("on" eq $opt_ptr->{vpr_fpga_verilog_print_modelsim_autodeck}) {
+      $vpr_spice_opts = $vpr_spice_opts." --fpga_verilog_print_modelsim_autodeck $opt_ptr->{vpr_fpga_verilog_print_modelsim_autodeck_val}";
+    }
+    if ("on" eq $opt_ptr->{vpr_fpga_verilog_include_icarus_simulator}) {
+      $vpr_spice_opts = $vpr_spice_opts." --fpga_verilog_include_icarus_simulator";
+    }
+    if ("on" eq $opt_ptr->{vpr_fpga_verilog_print_report_timing_tcl}) {
+      $vpr_spice_opts = $vpr_spice_opts." --fpga_verilog_print_report_timing_tcl";
+    }
+    if ("on" eq $opt_ptr->{vpr_fpga_verilog_report_timing_rpt_path}) {
+      $vpr_spice_opts = $vpr_spice_opts." --fpga_verilog_report_timing_rpt_path $opt_ptr->{vpr_fpga_verilog_report_timing_rpt_path_val}";
+    }
+    if ("on" eq $opt_ptr->{vpr_fpga_verilog_print_sdc_pnr}) {
+      $vpr_spice_opts = $vpr_spice_opts." --fpga_verilog_print_sdc_pnr";
+    }
+    if ("on" eq $opt_ptr->{vpr_fpga_verilog_print_user_defined_template}) {
+      $vpr_spice_opts = $vpr_spice_opts." --fpga_verilog_print_user_defined_template";
+    }
+    if ("on" eq $opt_ptr->{vpr_fpga_verilog_print_sdc_analysis}) {
+      $vpr_spice_opts = $vpr_spice_opts." --fpga_verilog_print_sdc_analysis";
+    }
   }
 
-  if (("on" eq $opt_ptr->{vpr_fpga_spice_rename_illegal_port})
+  # FPGA Bitstream Generator Options 
+  if ("on" eq $opt_ptr->{vpr_fpga_bitstream_generator}) {
+     $vpr_spice_opts = $vpr_spice_opts." --fpga_bitstream_generator";
+  }
+
+  if (("on" eq $opt_ptr->{vpr_fpga_x2p_rename_illegal_port})
      || ("on" eq $opt_ptr->{vpr_fpga_spice}) 
      || ("on" eq $opt_ptr->{vpr_fpga_verilog})) {
-    $vpr_spice_opts = $vpr_spice_opts." --fpga_spice_rename_illegal_port";
+    $vpr_spice_opts = $vpr_spice_opts." --fpga_x2p_rename_illegal_port";
   }
   
   my ($other_opt) = ("");
@@ -1203,10 +1353,9 @@ sub run_std_vpr($ $ $ $ $ $ $ $ $)
     $other_opt .= "--max_router_iterations $opt_ptr->{vpr_max_router_iteration_val} ";
   }
 
-  system("/bin/csh -cx './$vpr_name $arch $blif --net_file $net --place_file $place --route_file $route --full_stats --nodisp $power_opts $packer_opts $chan_width_opt $vpr_spice_opts $other_opt > $log'");
+  system("./$vpr_name $arch $blif --net_file $net --place_file $place --route_file $route --full_stats --nodisp $power_opts $packer_opts $chan_width_opt $vpr_spice_opts $other_opt > $log");
 
   chdir $cwd;
-  print "Leaving $vpr_dir\n";
 }
 
 sub run_vpr_route($ $ $ $ $ $ $ $ $) 
@@ -1252,10 +1401,10 @@ sub run_vpr_route($ $ $ $ $ $ $ $ $)
       $vpr_spice_opts = $vpr_spice_opts." --fpga_spice_parasitic_net_estimation_off";
     }
   }
-  if ("on" eq $opt_ptr->{vpr_fpga_spice_verilog_generator}) {
-    $vpr_spice_opts = $vpr_spice_opts." --fpga_syn_verilog";
-    if ("on" eq $opt_ptr->{vpr_fpga_spice_rename_illegal_port}) {
-      $vpr_spice_opts = $vpr_spice_opts." --fpga_spice_rename_illegal_port";
+  if ("on" eq $opt_ptr->{vpr_fpga_verilog}) {
+    $vpr_spice_opts = $vpr_spice_opts." --fpga_verilog";
+    if ("on" eq $opt_ptr->{vpr_fpga_x2p_rename_illegal_port}) {
+      $vpr_spice_opts = $vpr_spice_opts." --fpga_x2p_rename_illegal_port";
     }
   }
   
@@ -1267,7 +1416,7 @@ sub run_vpr_route($ $ $ $ $ $ $ $ $)
     $other_opt .= "--router_algorithm breadth_first ";
   }
 
-  system("/bin/csh -cx './$vpr_name $arch $blif --route --blif_file $blif --net_file $net --place_file $place --route_file $route --full_stats --nodisp $power_opts $chan_width_opt $vpr_spice_opts $other_opt > $log'");
+  system("./$vpr_name $arch $blif --route --blif_file $blif --net_file $net --place_file $place --route_file $route --full_stats --nodisp $power_opts $chan_width_opt $vpr_spice_opts $other_opt > $log");
 
   chdir $cwd;
 }
@@ -1281,7 +1430,7 @@ sub run_mpack1_vpr($ $ $ $ $ $ $)
     $power_opts = "--power --activity_file $act_file --tech_properties $conf_ptr->{flow_conf}->{power_tech_xml}->{val}";
   }
   chdir $vpr_dir;
-  system("/bin/csh -cx './$vpr_name $arch $blif --net_file $net --place_file $place --route_file $route --place --route --full_stats --nodisp $power_opts > $log'");
+  system("./$vpr_name $arch $blif --net_file $net --place_file $place --route_file $route --place --route --full_stats --nodisp $power_opts > $log");
   chdir $cwd;
 }
 
@@ -1304,7 +1453,7 @@ sub run_mpack2_vpr($ $ $ $ $ $ $)
   }
 
   chdir $vpr_dir;
-  system("/bin/csh -cx './$vpr_name $arch $blif --net_file $net --place_file $place --route_file $route --place --route --full_stats --nodisp $power_opts $chan_width_opt > $log'");
+  system("./$vpr_name $arch $blif --net_file $net --place_file $place --route_file $route --place --route --full_stats --nodisp $power_opts $chan_width_opt > $log");
   chdir $cwd;
 }
 
@@ -1316,7 +1465,7 @@ sub run_aapack($ $ $ $)
   
   chdir $vpr_dir;
 
-  system("/bin/csh -cx './$vpr_name $arch $blif --net_file $net --pack --timing_analysis off --nodisp > $aapack_log'");
+  system("./$vpr_name $arch $blif --net_file $net --pack --timing_analysis off --nodisp > $aapack_log");
 
   chdir $cwd; 
 }
@@ -1328,7 +1477,7 @@ sub run_m2net_pack_arch($ $ $ $ $ $)
 
   chdir $m2net_dir;
 
-  system("/bin/csh -cx 'perl $m2net_name -conf $m2net_conf -mpack1_rpt $mpack1_rpt -mode pack_arch -N $N -I $I -arch_file_pack $pack_arch > $m2net_pack_arch_log'");
+  system("perl $m2net_name -conf $m2net_conf -mpack1_rpt $mpack1_rpt -mode pack_arch -N $N -I $I -arch_file_pack $pack_arch > $m2net_pack_arch_log");
 
   chdir $cwd;
 } 
@@ -1346,7 +1495,7 @@ sub run_m2net_m2net($ $ $ $ $)
     $power_opt = "-power";
   }
  
-  system("/bin/csh -cx 'perl $m2net_name -conf $m2net_conf -mpack1_rpt $mpack1_rpt -mode m2net -N $N -I $I -net_file_in $aapack_net -net_file_out $vpr_net -arch_file_vpr $vpr_arch $power_opt > $m2net_m2net_log'");
+  system("perl $m2net_name -conf $m2net_conf -mpack1_rpt $mpack1_rpt -mode m2net -N $N -I $I -net_file_in $aapack_net -net_file_out $vpr_net -arch_file_vpr $vpr_arch $power_opt > $m2net_m2net_log");
 
   chdir $cwd;
 } 
@@ -1388,7 +1537,7 @@ sub run_cirkit_mig_mccl_map($ $ $) {
 
   # Run ABC to rewrite blif to AIG in verilog format
   chdir $abc_dir;
-  system("/bin/csh -cx './$abc_name -F $abc_cmd_log > $log'");
+  system("./$abc_name -F $abc_cmd_log > $log");
   if (!(-e $bm_aig)) {
     die "ERROR: Fail ABC for benchmark $bm.\n";
   }
@@ -1405,7 +1554,7 @@ sub run_cirkit_mig_mccl_map($ $ $) {
 
   chdir $cirkit_dir;
   # Run FPGA ABC
-  system("/bin/csh -cx './$cirkit_name -f $cirkit_cmd_log >> $log'");
+  system("./$cirkit_name -f $cirkit_cmd_log >> $log");
 
   if (!(-e $blif_out)) {
     die "ERROR: Fail Cirkit for benchmark $bm.\n";
@@ -1419,8 +1568,6 @@ sub init_fpga_spice_task($) {
   my ($task_dir_path, $task_filename) = &split_prog_path($task_file);
 
   &generate_path($task_dir_path);
-
-  print "INFO: writting FPGA SPICE task list $task_file\n";
 
   # Open the task file handler
   my ($TASKFH) = (FileHandle->new);
@@ -1436,7 +1583,6 @@ sub init_fpga_spice_task($) {
 
   # Close the file handler 
   close($TASKFH); 
-
 }
 
 # Print a line into task file which contains task info of FPGA SPICE.
@@ -1633,7 +1779,7 @@ sub run_yosys_vpr_flow($ $ $ $ $)
   &run_yosys_fpgamap($benchmark, $yosys_bm, $yosys_blif_out, $yosys_log);
 
   # Files for ace 
-  my ($act_file,$ace_new_blif,$ace_log) = ("$prefix"."ace.act","$prefix"."ace.blif","$prefix"."ace.log");
+  my ($act_file,$ace_new_blif,$ace_log) = ("$rpt_dir/$benchmark".".act","$rpt_dir/$benchmark".".blif","$prefix"."ace.log");
   &run_ace_in_flow($prefix, $yosys_blif_out, $act_file, $ace_new_blif, $ace_log);
 
   # Files for VPR
@@ -1645,7 +1791,10 @@ sub run_yosys_vpr_flow($ $ $ $ $)
   $vpr_log = "$prefix"."vpr.log";
   $vpr_reroute_log = "$prefix"."vpr_reroute.log";
 
-  &run_vpr_in_flow($tag, $benchmark, $benchmark_file, $yosys_blif_out, $vpr_arch, $act_file, $vpr_net, $vpr_place, $vpr_route, $vpr_log, $vpr_reroute_log, $parse_results);
+# Need to add a regenation of the verilog from the optimized blif -> write verilog from blif + correct the name of the verilog for the testbench
+  $verilog_benchmark = &run_rewrite_verilog($ace_new_blif, $rpt_dir, $benchmark, $benchmark, $yosys_log);
+
+  &run_vpr_in_flow($tag, $benchmark, $benchmark_file, $ace_new_blif, $vpr_arch, $act_file, $vpr_net, $vpr_place, $vpr_route, $vpr_log, $vpr_reroute_log, $parse_results);
 
   return;
 }
@@ -1668,7 +1817,7 @@ sub parse_yosys_vpr_flow_results($ $ $ $)
   # Run Yosys flow
   $yosys_bm = "$conf_ptr->{dir_path}->{benchmark_dir}->{val}"."/$benchmark_file";
   $prefix = "$rpt_dir/$benchmark\_"."K$opt_ptr->{K_val}\_"."N$opt_ptr->{N_val}\_";
-  $yosys_blif_out = "$prefix"."yosys.blif";
+  $yosys_blif_out = "$rpt_dir/$benchmark".".blif";
   $yosys_log = "$prefix"."yosys.log";
 
   # Files for ace 
@@ -1716,13 +1865,13 @@ sub parse_yosys_vpr_flow_results($ $ $ $)
 }
 
 
-
 sub run_standard_flow($ $ $ $ $) 
 {
   my ($tag,$benchmark_file,$vpr_arch,$flow_enhance, $parse_results) = @_;
   my ($benchmark, $rpt_dir,$prefix);
   my ($abc_bm,$abc_blif_out,$abc_log,$abc_blif_out_bak);
   my ($mpack_blif_out,$mpack_stats,$mpack_log);
+  my ($vpr_net,$vpr_place,$vpr_route,$vpr_reroute_log,$vpr_log);
 
   $benchmark = $benchmark_file; 
   $benchmark =~ s/\.blif$//g;     
@@ -1737,8 +1886,6 @@ sub run_standard_flow($ $ $ $ $)
 
 
   my ($act_file,$ace_new_blif,$ace_log) = ("$prefix"."ace.act","$prefix"."ace.blif","$prefix"."ace.log");
-
-  my ($vpr_net,$vpr_place,$vpr_route,$vpr_reroute_log,$vpr_log);
 
   $vpr_net = "$prefix"."vpr.net";
   $vpr_place = "$prefix"."vpr.place";
@@ -2543,7 +2690,7 @@ sub multithread_run_flows($) {
     die "ERROR: cannot use threads package in Perl! Please check the installation of package...\n";
   }
 
-  # Launch threads up to the limited number of threads number 
+  # Lauch threads up to the limited number of threads number 
   if ($num_threads < 2) {
     $num_threads = 2;
   }   
@@ -2590,7 +2737,7 @@ sub multithread_run_flows($) {
           my $thr_new = threads->create(\&run_benchmark_selected_flow,$flow_to_run,$benchmark, 0);
           # We have a valid thread...
           if ($thr_new) {
-            print "INFO: a new thread is launched!\n";
+            print "INFO: a new thread is lauched!\n";
             print "FLOW RUNNING: $flow_to_run, Benchmark: $benchmark\n";
             # Check if it is running...
             if ($thr_new->is_running()) {

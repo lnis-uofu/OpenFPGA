@@ -77,11 +77,9 @@ static void searching_used_latch(FILE *fp, t_pb * pb, int pb_index, char* chompe
 }
 
 static void clb_iteration(FILE *fp, char* chomped_circuit_name, int h){
-	t_phy_pb* cur_phy_pb;
 	t_pb* pb;
 	char* inst_name = NULL;
 	const t_pb_type *pb_type;
-	t_pb_graph_node *pb_graph_node;
 	t_mode *mode;
 	int i, j, x_pos, y_pos;
 	char* grid_x = NULL;
@@ -90,11 +88,9 @@ static void clb_iteration(FILE *fp, char* chomped_circuit_name, int h){
 	x_pos = block[h].x;
 	y_pos = block[h].y;
 
-	cur_phy_pb = (t_phy_pb*) block[h].phy_pb;
 	pb = (t_pb*) block[h].pb;
 
 	pb_type = pb->pb_graph_node->pb_type;
-	pb_graph_node = pb->pb_graph_node;
 	mode = &pb_type->modes[pb->mode];
 
     grid_x = my_strcat("_", my_strcat(my_itoa(x_pos), "_"));

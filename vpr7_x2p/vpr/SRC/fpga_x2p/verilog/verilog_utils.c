@@ -3237,7 +3237,7 @@ char* gen_verilog_one_routing_channel_instance_name(t_rr_type chan_type,
   ret = (char*)my_malloc(strlen(convert_chan_type_to_string(chan_type))
                          + 1 + strlen(my_itoa(x))
                          + 2 + strlen(my_itoa(y))
-                         + 1 + 1); 
+                         + 4 + 1); 
 
   sprintf(ret, "%s_%d__%d__0_", 
           convert_chan_type_to_string(chan_type), 
@@ -3366,8 +3366,7 @@ char* gen_verilog_one_pb_graph_pin_full_name_in_hierarchy(t_pb_graph_pin* cur_pb
     /* Go to upper level */
     temp = temp->parent_pb_graph_node;
     my_free(cur_name);
-  }
- 
+  } 
   return full_name;
 }
 

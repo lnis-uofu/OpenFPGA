@@ -170,6 +170,7 @@ void vpr_print_usage(void) {
   vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_x2p_rename_illegal_port\n");
   vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_x2p_signal_density_weight <float>\n");
   vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_x2p_sim_window_size <float>\n");
+  vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_x2p_compact_routing_hierarchy\n");
   vpr_printf(TIO_MESSAGE_INFO, "SPICE Support Options:\n");
   vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_spice\n");
   vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_spice_dir <directory_path_output_spice_netlists>\n");
@@ -563,9 +564,10 @@ void vpr_place_and_route(INP t_vpr_setup vpr_setup, INP t_arch arch) {
   fflush(stdout);
 
   /* Close down X Display */
+  /* TODO: DANGEROUS way of coding, clean up */
   if (vpr_setup.ShowGraphics)
     close_graphics();
-    free_draw_structs();
+  free_draw_structs();
 }
 
 /* Free architecture data structures */

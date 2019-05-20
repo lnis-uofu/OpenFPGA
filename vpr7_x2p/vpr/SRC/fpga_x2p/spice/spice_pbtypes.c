@@ -398,7 +398,6 @@ void fprintf_spice_pb_graph_pin_interc(FILE* fp,
   t_pb_type* src_pb_type = NULL;
   /* int src_pb_type_index = -1; */
 
-  t_pb_graph_node* des_pb_graph_node = NULL;
   /* t_pb_type* des_pb_type = NULL; */
   /* int des_pb_type_index = -1; */
 
@@ -465,7 +464,6 @@ void fprintf_spice_pb_graph_pin_interc(FILE* fp,
     src_pb_type = src_pb_graph_node->pb_type;
     /* src_pb_type_index = src_pb_graph_node->placement_index; */
     /* Des pin, node, pb_type */
-    des_pb_graph_node  = des_pb_graph_pin->parent_node;
     /* des_pb_type = des_pb_graph_node->pb_type; */
     /* des_pb_type_index = des_pb_graph_node->placement_index; */
     /* Generate the pin_prefix for src_pb_graph_node and des_pb_graph_node*/
@@ -527,7 +525,6 @@ void fprintf_spice_pb_graph_pin_interc(FILE* fp,
       src_pb_type = src_pb_graph_node->pb_type;
       /* src_pb_type_index = src_pb_graph_node->placement_index; */
       /* Des pin, node, pb_type */
-      des_pb_graph_node  = des_pb_graph_pin->parent_node;
       /* des_pb_type = des_pb_graph_node->pb_type; */
       /* des_pb_type_index = des_pb_graph_node->placement_index; */
       /* Generate the pin_prefix for src_pb_graph_node and des_pb_graph_node*/
@@ -1148,7 +1145,6 @@ void fprint_spice_pb_graph_node_rec(FILE* fp,
   char* child_pb_type_prefix = NULL;
 
   char* subckt_port_prefix = NULL;
-  t_pb* child_pb = NULL;
 
   /* Check the file handler*/ 
   if (NULL == fp) {
@@ -1201,7 +1197,6 @@ void fprint_spice_pb_graph_node_rec(FILE* fp,
       /* Special care for LUT !!!
        * Mapped logical block information is stored in child_pbs
        */
-      child_pb = get_lut_child_pb(cur_pb, mode_index); 
       /*
       fprint_pb_primitive_spice_model(fp, formatted_subckt_prefix, 
                                       child_pb, cur_pb_graph_node, 
@@ -1218,7 +1213,6 @@ void fprint_spice_pb_graph_node_rec(FILE* fp,
       */
       break;
     case MEMORY_CLASS:
-      child_pb = get_hardlogic_child_pb(cur_pb, mode_index); 
       /* Consider the num_pb, create all the subckts*/
       /*
       fprint_pb_primitive_spice_model(fp, formatted_subckt_prefix, 
@@ -2031,9 +2025,7 @@ void fprint_grid_physical_blocks(char* subckt_dir,
                                  t_arch* arch) {
   int subckt_name_str_len = 0;
   char* subckt_name = NULL;
-  t_block* mapped_block = NULL;
   int iz;
-  int cur_block_index = 0;
   int capacity; 
   FILE* fp = NULL;
   char* fname = NULL;
@@ -2078,7 +2070,6 @@ void fprint_grid_physical_blocks(char* subckt_dir,
             ix, iy);
   }
 
-  cur_block_index = 0;
   /* check capacity and if this has been mapped */
   for (iz = 0; iz < capacity; iz++) {
     /* Comments: Grid [x][y]*/
@@ -2124,8 +2115,6 @@ void fprint_grid_physical_blocks(char* subckt_dir,
     } else {
       fprint_grid_block_subckt_pins(fp, iz, grid[ix][iy].type);
     }
-    /* Check in all the blocks(clustered logic block), there is a match x,y,z*/
-    mapped_block = search_mapped_block(ix, iy, iz); 
     /* Local Vdd and Gnd, subckt name*/
     fprintf(fp, "+ svdd sgnd %s\n", get_grid_phy_block_subckt_name(ix, iy, iz, subckt_name, NULL));
   }

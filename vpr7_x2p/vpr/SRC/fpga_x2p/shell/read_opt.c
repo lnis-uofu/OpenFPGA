@@ -115,7 +115,6 @@ char* convert_option_mandatory_to_str(enum opt_manda cur) {
 
 void print_opt_info_help_desk(t_opt_info* cur_opt_info) {
   int max_str_len = -1;
-  int offset;
   t_opt_info* cur = cur_opt_info;
   char* str_fixed_len = NULL;
   char* name_tag = "Option Names"; 

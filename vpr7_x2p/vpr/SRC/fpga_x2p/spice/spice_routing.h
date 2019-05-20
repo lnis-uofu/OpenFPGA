@@ -43,7 +43,8 @@ void fprint_switch_box_interc(FILE* fp,
 
 void fprint_routing_switch_box_subckt(FILE* fp, t_sb cur_sb_info,
                                       int LL_num_rr_nodes, t_rr_node* LL_rr_node,
-                                      t_ivec*** LL_rr_node_indices);
+                                      t_ivec*** LL_rr_node_indices,
+                                      boolean compact_routing_hierarchy);
 
 void fprint_connection_box_short_interc(FILE* fp,
                                         t_cb cur_cb_info,
@@ -59,11 +60,13 @@ void fprint_connection_box_interc(FILE* fp,
 
 void fprint_routing_connection_box_subckt(FILE* fp, t_cb cur_cb_info,
                                           int LL_num_rr_nodes, t_rr_node* LL_rr_node,
-                                          t_ivec*** LL_rr_node_indices);
+                                          t_ivec*** LL_rr_node_indices,
+                                          boolean compact_routing_hierarchy);
 
 void generate_spice_routing_resources(char* subckt_dir,
                                       t_arch arch,
                                       t_det_routing_arch* routing_arch,
                                       int LL_num_rr_nodes, t_rr_node* LL_rr_node,
-                                      t_ivec*** LL_rr_node_indices);
+                                      t_ivec*** LL_rr_node_indices,
+                                      boolean compact_routing_hierarchy);
 
