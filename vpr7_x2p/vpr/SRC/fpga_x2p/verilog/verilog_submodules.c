@@ -873,12 +873,12 @@ void dump_verilog_rram_mux_one_basis_module_structural(FILE* fp,
    */
   /* LEFT part */
   for (i = 0; i < num_input_basis_subckt - 1; i++) {
-    fprintf(fp, "%s %s_%d (in[%d], wl[%d], bl[%d], out);\n",
+    fprintf(fp, "%s %s_%d (.A(in[%d]), .WL(wl[%d]), .BLB(bl[%d]), .Z(out));\n",
                  progTE_module_name, progTE_module_name, i,
                  i, i, i);
   }
   /* RIGHT part */
-  fprintf(fp, "%s %s_%d (out, wl[%d], bl[%d]);\n",
+  fprintf(fp, "%s %s_%d (.INOUT(out), .WL(wl[%d]), .BLB(bl[%d]));\n",
                progBE_module_name, progBE_module_name, i,
                i, i);
 
@@ -2058,7 +2058,7 @@ void dump_verilog_rram_mux_submodule(FILE* fp,
         fprintf(fp, ".%s(", 
                 buf_input_port[0]->lib_name); 
       }
-      fprintf(fp, "%s[%d], ", input_port[0]->prefix, i); /* input port */ 
+      fprintf(fp, "%s[%d]", input_port[0]->prefix, i); /* input port */ 
       if ( TRUE == spice_model.input_buffer->spice_model->dump_explicit_port_map) {
         fprintf(fp, ")");
       } 
@@ -2069,7 +2069,7 @@ void dump_verilog_rram_mux_submodule(FILE* fp,
         fprintf(fp, ".%s(", 
                 buf_output_port[0]->lib_name); 
       }
-      fprintf(fp, "mux2_l%d_in[%d]);", spice_mux_arch.input_level[i], spice_mux_arch.input_offset[i]); /* output port*/
+      fprintf(fp, "mux2_l%d_in[%d]", spice_mux_arch.input_level[i], spice_mux_arch.input_offset[i]); /* output port*/
       if ( TRUE == spice_model.input_buffer->spice_model->dump_explicit_port_map) {
         fprintf(fp, ")");
       } 
