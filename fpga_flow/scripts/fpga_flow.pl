@@ -619,7 +619,7 @@ sub run_rewrite_verilog($ $ $ $ $) {
   #
   # Create a local copy for the commands 
 
-  system("/bin/tcsh -cx './$yosys_name $cmd_log > $log'");
+  system("/bin/csh -cx './$yosys_name $cmd_log > $log'");
 
   if (!(-e $new_verilog)) {
     die "ERROR: Yosys fail at rewriting benchmark $bm.\n";
@@ -684,7 +684,7 @@ sub run_yosys_fpgamap($ $ $ $) {
   #
   # Create a local copy for the commands 
 
-  system("/bin/tcsh -cx './$yosys_name $cmd_log > $log'");
+  system("/bin/csh -cx './$yosys_name $cmd_log > $log'");
 
   if (!(-e $blif_out)) {
     die "ERROR: Fail Yosys for benchmark $bm.\n";
@@ -732,7 +732,7 @@ sub run_abc_fpgamap($ $ $)
   #
   # Create a local copy for the commands 
 
-  system("/bin/tcsh -cx './$abc_name -F $cmd_log > $log'");
+  system("/bin/csh -cx './$abc_name -F $cmd_log > $log'");
 
   if (!(-e $blif_out)) {
     die "ERROR: Fail ABC for benchmark $bm.\n";
