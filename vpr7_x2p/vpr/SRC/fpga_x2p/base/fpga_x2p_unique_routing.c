@@ -27,7 +27,7 @@
 /* Include spice support headers*/
 #include "read_xml_spice_util.h"
 #include "linkedlist.h"
-#include "rr_chan.h"
+#include "rr_blocks.h"
 #include "fpga_x2p_types.h"
 #include "fpga_x2p_globals.h"
 #include "fpga_x2p_utils.h"

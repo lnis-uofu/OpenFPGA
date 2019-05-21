@@ -1,6 +1,6 @@
 #include <cassert>
 
-#include "rr_chan.h"
+#include "rr_blocks.h"
 
 
 /* Member Functions of Class RRChan */

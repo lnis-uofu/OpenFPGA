@@ -4,6 +4,9 @@
 # temp files
 .DS_Store
 
+# ctags
+tags
+
 # log files
 **/logs
 *.log

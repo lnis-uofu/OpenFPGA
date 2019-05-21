@@ -1,7 +1,7 @@
 #ifndef FPGA_X2P_GLOBALS_H 
 #define FPGA_X2P_GLOBALS_H 
 
-#include "rr_chan.h"
+#include "rr_blocks.h"
 
 /* global parameters for FPGA-SPICE tool suites */
 
