@@ -2,7 +2,7 @@
 
 module frisc (  
     tin_pdata_8_8_, tin_pdata_0_0_, tin_pdata_7_7_, preset_0_0_,
-    tin_pdata_2_2_, tin_pdata_9_9_, tin_pdata_1_1_, tin_pdata_4_4_, pclk,
+    tin_pdata_2_2_, tin_pdata_9_9_, tin_pdata_1_1_, tin_pdata_4_4_, clk,
     pirq_0_0_, tin_pdata_10_10_, tin_pdata_3_3_, tin_pdata_6_6_,
     tin_pdata_15_15_, tin_pdata_11_11_, tin_pdata_14_14_, tin_pdata_12_12_,
     tin_pdata_5_5_, preset, tin_pdata_13_13_,
@@ -31,7 +31,7 @@ module frisc (
     pdata_14_14_, pdata_12_12_, pdata_5_5_, ppeakb_6_6_, ppeaka_6_6_,
     ppeaks_11_11_, ppeaki_12_12_, ppeaki_2_2_, paddress_0_0_, pdata_13_13_  );
   input  tin_pdata_8_8_, tin_pdata_0_0_, tin_pdata_7_7_, preset_0_0_,
-    tin_pdata_2_2_, tin_pdata_9_9_, tin_pdata_1_1_, tin_pdata_4_4_, pclk,
+    tin_pdata_2_2_, tin_pdata_9_9_, tin_pdata_1_1_, tin_pdata_4_4_, clk,
     pirq_0_0_, tin_pdata_10_10_, tin_pdata_3_3_, tin_pdata_6_6_,
     tin_pdata_15_15_, tin_pdata_11_11_, tin_pdata_14_14_, tin_pdata_12_12_,
     tin_pdata_5_5_, preset, tin_pdata_13_13_;
@@ -4101,7 +4101,7 @@ module frisc (
   assign n6330 = ~preset & n3798 & (\[17050]  | \[17102] );
   assign n6331 = n6330 | n3969 | n6325;
   assign n6332 = n6326 | n6327 | n6328 | n6329;
-  always @ (posedge pclk) begin
+  always @ (posedge clk) begin
     ndout <= n273;
     ppeakb_12_12_ <= n278;
     ppeakb_1_1_ <= n282;

@@ -1,6 +1,6 @@
 // Benchmark "TOP" written by ABC on Tue Mar  5 09:56:39 2019
 
-module diffeq ( clock, 
+module diffeq ( clk, 
     PRESET, Pdxport_0_0_, Pdxport_1_1_, Pdxport_2_2_, Pdxport_3_3_,
     Pdxport_4_4_, Pdxport_5_5_, Pdxport_6_6_, Pdxport_7_7_, Pdxport_8_8_,
     Pdxport_9_9_, Pdxport_10_10_, Pdxport_11_11_, Paport_0_0_, Paport_1_1_,
@@ -8,7 +8,7 @@ module diffeq ( clock,
     Paport_7_7_, Paport_8_8_, Paport_9_9_, Paport_10_10_, Paport_11_11_,
     Preset_0_0_, Pready_0_0_,
     PDN, Pnext_0_0_, Pover_0_0_  );
-  input  clock, PRESET, Pdxport_0_0_, Pdxport_1_1_, Pdxport_2_2_,
+  input  clk, PRESET, Pdxport_0_0_, Pdxport_1_1_, Pdxport_2_2_,
     Pdxport_3_3_, Pdxport_4_4_, Pdxport_5_5_, Pdxport_6_6_, Pdxport_7_7_,
     Pdxport_8_8_, Pdxport_9_9_, Pdxport_10_10_, Pdxport_11_11_,
     Paport_0_0_, Paport_1_1_, Paport_2_2_, Paport_3_3_, Paport_4_4_,
@@ -1211,7 +1211,7 @@ module diffeq ( clock,
   assign n1991 = n1858 ^ n1859;
   assign n1992 = n1975 & n1555_1 & n1552 & n1546 & ~N_N3999 & n1519 & n1543 & n1549;
   assign n1993 = ~Preset_0_0_ & n1833;
-  always @ (posedge clock) begin
+  always @ (posedge clk) begin
     N_N4054 <= n63_1;
     N_N3745 <= n68_1;
     N_N4119 <= n73_1;

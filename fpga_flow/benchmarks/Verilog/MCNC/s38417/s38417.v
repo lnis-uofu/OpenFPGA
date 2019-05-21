@@ -1,6 +1,6 @@
 // Benchmark "TOP" written by ABC on Tue Mar  5 10:04:28 2019
 
-module s38417 ( clock, 
+module s38417 ( clk, 
     Pg3234, Pg3233, Pg3232, Pg3231, Pg3230, Pg3229, Pg3228, Pg3227, Pg3226,
     Pg3225, Pg3224, Pg3223, Pg3222, Pg3221, Pg3220, Pg3219, Pg3218, Pg3217,
     Pg3216, Pg3215, Pg3214, Pg3213, Pg3212, Pg2637, Pg1943, Pg1249, Pg563,
@@ -20,7 +20,7 @@ module s38417 ( clock,
   input  Pg3234, Pg3233, Pg3232, Pg3231, Pg3230, Pg3229, Pg3228, Pg3227,
     Pg3226, Pg3225, Pg3224, Pg3223, Pg3222, Pg3221, Pg3220, Pg3219, Pg3218,
     Pg3217, Pg3216, Pg3215, Pg3214, Pg3213, Pg3212, Pg2637, Pg1943, Pg1249,
-    Pg563, Pg51, clock;
+    Pg563, Pg51, clk;
   output Pg27380, Pg26149, Pg26135, Pg26104, Pg25489, Pg25442, Pg25435,
     Pg25420, Pg24734, Pg16496, Pg16437, Pg16399, Pg16355, Pg16297, Pg8275,
     Pg8274, Pg8273, Pg8272, Pg8271, Pg8270, Pg8269, Pg8268, Pg8267, Pg8266,
@@ -5262,7 +5262,7 @@ module s38417 ( clock,
   assign n7160 = Pg3234;
   assign n7163 = Pg5388;
   assign n7167 = Pg16496;
-  always @ (posedge clock) begin
+  always @ (posedge clk) begin
     Pg8021 <= n270_1;
     Ng2817 <= n274_1;
     Ng2933 <= n279_1;

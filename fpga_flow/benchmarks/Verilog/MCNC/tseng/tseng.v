@@ -1,6 +1,6 @@
 // Benchmark "top" written by ABC on Tue Mar  5 10:05:48 2019
 
-module tseng ( clock, 
+module tseng ( clk, 
     tin_pv10_4_4_, tin_pv11_4_4_, tin_pv6_7_7_, tin_pv2_0_0_,
     tin_pv10_3_3_, tin_pv1_2_2_, tin_pv11_3_3_, tin_pv4_3_3_,
     tin_pv10_2_2_, tin_pv11_2_2_, tin_pv6_0_0_, tin_pv2_1_1_,
@@ -40,7 +40,7 @@ module tseng ( clock,
     tin_pready_0_0_, tin_pv10_0_0_, tin_pv11_0_0_, tin_pv6_1_1_,
     tin_pv2_2_2_, tin_pv1_4_4_, tin_pv4_5_5_, tin_pv6_2_2_, tin_pv2_3_3_,
     tin_pv1_5_5_, tin_pv4_6_6_, tin_pv6_3_3_, tin_pv2_4_4_, tin_pv1_6_6_,
-    clock, tin_pv4_7_7_, tin_pv6_4_4_, tin_pv2_5_5_, tin_pv1_7_7_,
+    clk, tin_pv4_7_7_, tin_pv6_4_4_, tin_pv2_5_5_, tin_pv1_7_7_,
     tin_pv4_0_0_, tin_pv6_5_5_, tin_pv2_6_6_, tin_pv10_7_7_, tin_pv1_0_0_,
     tin_pv11_7_7_, tin_pv4_1_1_, tin_pv10_6_6_, tin_pv11_6_6_,
     tin_pv6_6_6_, tin_pv2_7_7_, preset, tin_pv10_5_5_, tin_pv1_1_1_,
@@ -1256,7 +1256,7 @@ module tseng ( clock,
   assign n2372 = n2331 & ~n1937 & ~preset & n_n3709;
   assign n2373 = n1849 & ~n_n4067;
   assign n2374 = ~n2310 & n1903_1 & n_n4093 & ~n1897;
-  always @ (posedge clock) begin
+  always @ (posedge clk) begin
     n_n4142 <= n349;
     n_n3936 <= n354;
     n_n3574 <= n359;

@@ -1205,7 +1205,7 @@ sub run_ace($ $ $ $) {
   
   print "Entering $ace_dir\n";
   chdir $ace_dir;
-  system("./$ace_name -b $mpack_vpr_blif -o $act_file -n $ace_new_blif -c avoid_clk_option $ace_customized_opts >> $log");
+  system("./$ace_name -b $mpack_vpr_blif -o $act_file -n $ace_new_blif -c clk $ace_customized_opts >> $log");
 
   if (!(-e $ace_new_blif)) {
     die "ERROR: Fail ACE for benchmark $mpack_vpr_blif.\n";
@@ -1778,8 +1778,10 @@ sub run_yosys_vpr_flow($ $ $ $ $)
   &run_yosys_fpgamap($benchmark, $yosys_bm, $yosys_blif_out, $yosys_log);
 
   # Files for ace 
-  my ($act_file,$ace_new_blif,$ace_log) = ("$rpt_dir/$benchmark".".act","$rpt_dir/$benchmark".".blif","$prefix"."ace.log");
+  my ($act_file,$ace_new_blif,$ace_log, $corrected_ace_blif) = ("$rpt_dir/$benchmark".".act","$rpt_dir/$benchmark"."ace.blif","$prefix"."ace.log","$rpt_dir/$benchmark".".blif");
   &run_ace_in_flow($prefix, $yosys_blif_out, $act_file, $ace_new_blif, $ace_log);
+
+  &run_pro_blif($ace_new_blif, $corrected_ace_blif);
 
   # Files for VPR
   my ($vpr_net,$vpr_place,$vpr_route,$vpr_reroute_log,$vpr_log);
@@ -1793,7 +1795,7 @@ sub run_yosys_vpr_flow($ $ $ $ $)
 # Need to add a regenation of the verilog from the optimized blif -> write verilog from blif + correct the name of the verilog for the testbench
   $verilog_benchmark = &run_rewrite_verilog($ace_new_blif, $rpt_dir, $benchmark, $benchmark, $yosys_log);
 
-  &run_vpr_in_flow($tag, $benchmark, $benchmark_file, $ace_new_blif, $vpr_arch, $act_file, $vpr_net, $vpr_place, $vpr_route, $vpr_log, $vpr_reroute_log, $parse_results);
+  &run_vpr_in_flow($tag, $benchmark, $benchmark_file, $corrected_ace_blif, $vpr_arch, $act_file, $vpr_net, $vpr_place, $vpr_route, $vpr_log, $vpr_reroute_log, $parse_results);
 
   return;
 }

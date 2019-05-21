@@ -11,12 +11,11 @@ elliptic/*.v, 300
 ex1010/*.v, 300
 ex5p/*.v, 300
 frisc/*.v, 300
-mcnc_big20.txt
 misex3/*.v, 300
 pdc/*.v, 300
 s298/*.v, 30
 s38417/*.v, 300
-s38584.1/*.v, 300
+s38584/*.v, 300
 seq/*.v, 300
 spla/*.v, 300
 tseng/*.v, 300

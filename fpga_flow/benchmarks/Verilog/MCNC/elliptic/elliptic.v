@@ -1,6 +1,6 @@
 // Benchmark "top" written by ABC on Thu Feb 21 17:22:32 2019
 
-module elliptic ( clock, 
+module elliptic ( clk, 
     tin_psv39_8_8_, tin_psv39_0_0_, tin_psv13_5_5_, tin_psv2_13_13_,
     tin_psv2_8_8_, pinp_2_2_, tin_psv38_2_2_, tin_psv33_5_5_,
     tin_psv26_6_6_, tin_psv2_9_9_, pinp_3_3_, tin_psv18_2_2_,
@@ -55,7 +55,7 @@ module elliptic ( clock,
     psv18_8_8_, psv18_0_0_, psv39_7_7_, psv13_4_4_, psv2_2_2_, psv38_9_9_,
     psv38_1_1_, psv39_15_15_, psv33_4_4_, psv26_5_5_, psv2_3_3_,
     psv38_13_13_, psv18_14_14_, psv18_9_9_, psv18_1_1_  );
-  input clock, tin_psv39_8_8_, tin_psv39_0_0_, tin_psv13_5_5_, tin_psv2_13_13_,
+  input clk, tin_psv39_8_8_, tin_psv39_0_0_, tin_psv13_5_5_, tin_psv2_13_13_,
     tin_psv2_8_8_, pinp_2_2_, tin_psv38_2_2_, tin_psv33_5_5_,
     tin_psv26_6_6_, tin_psv2_9_9_, pinp_3_3_, tin_psv18_2_2_,
     tin_psv39_9_9_, tin_psv39_1_1_, tin_psv13_6_6_, tin_psv2_6_6_,
@@ -4214,7 +4214,7 @@ module elliptic ( clock,
   assign n7210 = pdn | preset | (nsr3_37 & ~nen3_34);
   assign n7211 = pdn | preset | (~nak3_13 & nsr3_20);
   assign n7212 = n_n8419 & n4856 & (n7118 | n7119);
-  always @ (posedge clock) begin
+  always @ (posedge clk) begin
     n_n9280 <= n491;
     n_n9172 <= n496;
     n_n9260 <= n501;

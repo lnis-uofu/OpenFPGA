@@ -1,6 +1,6 @@
 // Benchmark "TOP" written by ABC on Tue Mar  5 09:55:28 2019
 
-module bigkey ( clock, 
+module bigkey ( clk, 
     Pstart_0_, Pkey_255_, Pkey_254_, Pkey_253_, Pkey_252_, Pkey_251_,
     Pkey_250_, Pkey_249_, Pkey_248_, Pkey_247_, Pkey_246_, Pkey_245_,
     Pkey_244_, Pkey_243_, Pkey_242_, Pkey_241_, Pkey_240_, Pkey_239_,
@@ -115,7 +115,7 @@ module bigkey ( clock,
     Pkey_17_, Pkey_16_, Pkey_15_, Pkey_14_, Pkey_13_, Pkey_12_, Pkey_11_,
     Pkey_10_, Pkey_9_, Pkey_8_, Pkey_7_, Pkey_6_, Pkey_5_, Pkey_4_,
     Pkey_3_, Pkey_2_, Pkey_1_, Pkey_0_, Pencrypt_0_, Pcount_3_, Pcount_2_,
-    Pcount_1_, Pcount_0_, clock;
+    Pcount_1_, Pcount_0_, clk;
   output Pnew_count_3_, Pnew_count_2_, Pnew_count_1_, Pnew_count_0_,
     Pdata_ready_0_, PKSi_191_, PKSi_190_, PKSi_189_, PKSi_188_, PKSi_187_,
     PKSi_186_, PKSi_185_, PKSi_184_, PKSi_183_, PKSi_182_, PKSi_181_,
@@ -1966,7 +1966,7 @@ module bigkey ( clock,
   assign PKSi_139_ = \[282] ;
   assign PKSi_90_ = \[333] ;
   assign PKSi_88_ = \[333] ;
-  always @ (posedge clock) begin
+  always @ (posedge clk) begin
     PKSi_79_ <= n921;
     PKSi_92_ <= n925_1;
     \[333]  <= n929_1;
