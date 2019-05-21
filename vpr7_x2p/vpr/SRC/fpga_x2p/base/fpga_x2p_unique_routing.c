@@ -32,7 +32,7 @@
 #include "fpga_x2p_globals.h"
 #include "fpga_x2p_utils.h"
 #include "fpga_x2p_backannotate_utils.h"
-#include "fpga_x2p_identify_routing.h"
+#include "fpga_x2p_unique_routing.h"
 
 /***** subroutines declaration *****/
 void assign_switch_block_mirror(t_sb* src, t_sb* des);
@@ -745,15 +745,15 @@ RRChan build_one_rr_chan(t_rr_type chan_type, size_t chan_x, size_t chan_y,
   return rr_chan;
 }
 
-void print_device_rr_chan_stats(DeviceRRChan& device_rr_chan) {
+void print_device_rr_chan_stats(DeviceRRChan& LL_device_rr_chan) {
   /* Print stats */
   vpr_printf(TIO_MESSAGE_INFO, 
              "Detect %d independent routing channel from %d X-direction routing channels.\n",
-             device_rr_chan.get_num_modules(CHANX), (nx + 0) * (ny + 1) );
+             LL_device_rr_chan.get_num_modules(CHANX), (nx + 0) * (ny + 1) );
 
   vpr_printf(TIO_MESSAGE_INFO, 
              "Detect %d independent routing channel from %d Y-direction routing channels.\n",
-             device_rr_chan.get_num_modules(CHANY), (nx + 1) * (ny + 0) );
+             LL_device_rr_chan.get_num_modules(CHANY), (nx + 1) * (ny + 0) );
 
 }
 
@@ -762,38 +762,38 @@ DeviceRRChan build_device_rr_chan(int LL_num_rr_nodes, t_rr_node* LL_rr_node,
                                   t_ivec*** LL_rr_node_indices, int num_segments,
                                   t_rr_indexed_data* LL_rr_indexed_data) {
   /* Create an object of DeviceRRChan */
-  DeviceRRChan device_rr_chan;
+  DeviceRRChan LL_device_rr_chan;
 
   /* Initialize array of rr_chan inside the device */
-  device_rr_chan.init_module_ids(nx + 1, ny + 1);
+  LL_device_rr_chan.init_module_ids(nx + 1, ny + 1);
 
   /* For X-direction routing channel */
-  for (size_t iy = 0; iy < (ny + 1); iy++) {
-    for (size_t ix = 1; ix < (nx + 1); ix++) {
+  for (size_t iy = 0; iy < size_t(ny + 1); iy++) {
+    for (size_t ix = 1; ix < size_t(nx + 1); ix++) {
       /* Create a rr_chan object and check if it is unique in the graph */
       RRChan rr_chan = build_one_rr_chan(CHANX, ix, iy, 
                                          LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices, 
                                          num_segments, LL_rr_indexed_data);
       /* check and add this rr_chan to the mirror list */ 
-      device_rr_chan.add_one_chan_module(CHANX, ix, iy, rr_chan);
+      LL_device_rr_chan.add_one_chan_module(CHANX, ix, iy, rr_chan);
     }
   }
 
   /* For X-direction routing channel */
-  for (size_t ix = 0; ix < (nx + 1); ix++) {
-    for (size_t iy = 1; iy < (ny + 1); iy++) {
+  for (size_t ix = 0; ix < size_t(nx + 1); ix++) {
+    for (size_t iy = 1; iy < size_t(ny + 1); iy++) {
       /* Create a rr_chan object and check if it is unique in the graph */
       RRChan rr_chan = build_one_rr_chan(CHANY, ix, iy, 
                                          LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices, 
                                          num_segments, LL_rr_indexed_data);
       /* check and add this rr_chan to the mirror list */ 
-      device_rr_chan.add_one_chan_module(CHANY, ix, iy, rr_chan);
+      LL_device_rr_chan.add_one_chan_module(CHANY, ix, iy, rr_chan);
     }
   }
 
-  print_device_rr_chan_stats(device_rr_chan);
+  print_device_rr_chan_stats(LL_device_rr_chan);
 
-  return device_rr_chan; 
+  return LL_device_rr_chan; 
 }
 
 
