@@ -1205,8 +1205,7 @@ sub run_ace($ $ $ $) {
   
   print "Entering $ace_dir\n";
   chdir $ace_dir;
-  print "./$ace_name -b $mpack_vpr_blif -o $act_file -n $ace_new_blif $ace_customized_opts >> $log";
-  system("./$ace_name -b $mpack_vpr_blif -o $act_file -n $ace_new_blif $ace_customized_opts >> $log");
+  system("./$ace_name -b $mpack_vpr_blif -o $act_file -n $ace_new_blif -c avoid_clk_option $ace_customized_opts >> $log");
 
   if (!(-e $ace_new_blif)) {
     die "ERROR: Fail ACE for benchmark $mpack_vpr_blif.\n";
