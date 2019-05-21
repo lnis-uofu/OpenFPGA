@@ -37,6 +37,129 @@
 #include "verilog_utils.h"
 #include "verilog_routing.h"
 
+void dump_verilog_routing_chan_subckt(t_sram_orgz_info* cur_sram_orgz_info,
+                                      char* verilog_dir,
+                                      char* subckt_dir,
+                                      size_t rr_chan_subckt_id, const RRChan& rr_chan,
+                                      t_syn_verilog_opts fpga_verilog_opts) {
+  FILE* fp = NULL;
+  char* fname = NULL;
+
+  /* Initial chan_prefix*/
+  switch (rr_chan.get_type()) {
+  case CHANX:
+    /* Create file handler */
+    fp = verilog_create_one_subckt_file(subckt_dir, "Routing Channel - X direction ", chanx_verilog_file_name_prefix, rr_chan_subckt_id, 0, &fname);
+    /* Print preprocessing flags */
+    verilog_include_defines_preproc_file(fp, verilog_dir);
+    /* Comment lines */
+    fprintf(fp, "//----- Verilog Module of Channel X [%u] -----\n", rr_chan_subckt_id);
+    break;
+  case CHANY:
+    /* Create file handler */
+    fp = verilog_create_one_subckt_file(subckt_dir, "Routing Channel - Y direction ", chany_verilog_file_name_prefix, rr_chan_subckt_id, 0, &fname);
+    /* Print preprocessing flags */
+    verilog_include_defines_preproc_file(fp, verilog_dir);
+    /* Comment lines */
+    fprintf(fp, "//----- Verilog Module Channel Y [%u] -----\n", rr_chan_subckt_id);
+    break;
+  default:
+    vpr_printf(TIO_MESSAGE_ERROR, 
+               "(File:%s, [LINE%d])Invalid Channel type! Should be CHANX or CHANY.\n",
+               __FILE__, __LINE__);
+    exit(1);
+  }
+
+  /* Chan subckt definition */
+  fprintf(fp, "module %s ( \n", 
+          gen_verilog_one_routing_channel_module_name(rr_chan.get_type(), rr_chan_subckt_id, -1));
+  fprintf(fp, "\n");
+  /* dump global ports */
+  if (0 < dump_verilog_global_ports(fp, global_ports_head, TRUE)) {
+    fprintf(fp, ",\n");
+  }
+  /* Inputs and outputs,
+   * Rules for CHANX:
+   * print left-hand ports(in) first, then right-hand ports(out)
+   * Rules for CHANX:
+   * print bottom ports(in) first, then top ports(out)
+   */
+  for (size_t itrack = 0; itrack < rr_chan.get_chan_width(); ++itrack) {
+    switch (rr_chan.get_node(itrack)->direction) {
+    case INC_DIRECTION:
+      fprintf(fp, "  input in%u, //--- track %u input \n", itrack, itrack);
+      break;
+    case DEC_DIRECTION:
+      fprintf(fp, "  output out%u, //--- track %u output \n", itrack, itrack);
+      break;
+    case BI_DIRECTION:
+    default:
+      vpr_printf(TIO_MESSAGE_ERROR, 
+                 "(File: %s [LINE%d]) Invalid direction of rr_node %s[%u]_in/out[%u]!\n",
+                 __FILE__, __LINE__, 
+                 convert_chan_type_to_string(rr_chan.get_type()),
+                 rr_chan_subckt_id, itrack);
+      exit(1);
+    }
+  }
+  for (size_t itrack = 0; itrack < rr_chan.get_chan_width(); ++itrack) {
+    switch (rr_chan.get_node(itrack)->direction) {
+    case INC_DIRECTION:
+      fprintf(fp, "  output out%u, //--- track %u output\n", itrack, itrack);
+      break;
+    case DEC_DIRECTION:
+      fprintf(fp, "  input in%u, //--- track %u input \n", itrack, itrack);
+      break;
+    case BI_DIRECTION:
+    default:
+      vpr_printf(TIO_MESSAGE_ERROR, 
+                 "(File: %s [LINE%d]) Invalid direction of rr_node %s[%u]_in/out[%u]!\n",
+                 __FILE__, __LINE__, 
+                 convert_chan_type_to_string(rr_chan.get_type()),
+                 rr_chan_subckt_id, itrack);
+      exit(1);
+    }
+  }
+  /* Middle point output for connection box inputs */
+  for (size_t itrack = 0; itrack < rr_chan.get_chan_width(); ++itrack) {
+    fprintf(fp, "  output mid_out%u", itrack);
+    if (itrack < (rr_chan.get_chan_width() - 1)) {
+      fprintf(fp, ",");
+    }
+    fprintf(fp, " // Middle output %u to logic blocks \n", itrack);
+  }
+  fprintf(fp, "  );\n");
+
+  /* Print segments models*/
+  for (size_t itrack = 0; itrack < rr_chan.get_chan_width(); ++itrack) {
+    /* short connecting inputs and outputs: 
+     * length of metal wire and parasitics are handled by semi-custom flow
+     */
+    fprintf(fp, "assign out%u = in%u; \n", itrack, itrack); 
+    fprintf(fp, "assign mid_out%u = in%u; \n", itrack, itrack);
+  }
+
+  fprintf(fp, "endmodule\n");
+
+  /* Comment lines */
+  fprintf(fp, 
+          "//----- END Verilog Module of %s [%u] -----\n\n", 
+          convert_chan_type_to_string(rr_chan.get_type()),
+          rr_chan_subckt_id);
+
+  /* Close file handler */
+  fclose(fp);
+
+  /* Add fname to the linked list */
+  routing_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(routing_verilog_subckt_file_path_head, fname);  
+
+  /* Free */
+  my_free(fname);
+
+  return;
+}
+
+
 
 void dump_verilog_routing_chan_subckt(t_sram_orgz_info* cur_sram_orgz_info,
                                       char* verilog_dir,
@@ -2011,22 +2134,40 @@ void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
    * For INC_DIRECTION chany, the inputs are at the bottom of channels, the outputs are at the top of channels
    * For DEC_DIRECTION chany, the inputs are at the top of channels, the outputs are at the bottom of channels
    */
-  /* X - channels [1...nx][0..ny]*/
-  vpr_printf(TIO_MESSAGE_INFO, "Writing X-direction Channels...\n");
-  for (iy = 0; iy < (ny + 1); iy++) {
-    for (ix = 1; ix < (nx + 1); ix++) {
-      dump_verilog_routing_chan_subckt(cur_sram_orgz_info, verilog_dir, subckt_dir, ix, iy, CHANX, 
-                                       LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices, LL_rr_indexed_data, 
-                                       arch.num_segments, arch.Segments, fpga_verilog_opts);
+  if (TRUE == compact_routing_hierarchy) { 
+    /* Call all the unique mirrors in a DeviceRRChan */
+    vpr_printf(TIO_MESSAGE_INFO, "Writing X-direction Channels...\n");
+    /* X - channels [1...nx][0..ny]*/
+    for (size_t ichan = 0; ichan < device_rr_chan.get_num_modules(CHANX); ++ichan) {
+      dump_verilog_routing_chan_subckt(cur_sram_orgz_info, verilog_dir, subckt_dir, 
+                                       ichan, device_rr_chan.get_module(CHANX, ichan), 
+                                       fpga_verilog_opts);
     }
-  }
-  /* Y - channels [1...ny][0..nx]*/
-  vpr_printf(TIO_MESSAGE_INFO, "Writing Y-direction Channels...\n");
-  for (ix = 0; ix < (nx + 1); ix++) {
-    for (iy = 1; iy < (ny + 1); iy++) {
-      dump_verilog_routing_chan_subckt(cur_sram_orgz_info, verilog_dir, subckt_dir, ix, iy, CHANY,
-                                       LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices, LL_rr_indexed_data, 
-                                       arch.num_segments, arch.Segments, fpga_verilog_opts);
+    /* Y - channels [1...ny][0..nx]*/
+    vpr_printf(TIO_MESSAGE_INFO, "Writing Y-direction Channels...\n");
+    for (size_t ichan = 0; ichan < device_rr_chan.get_num_modules(CHANY); ++ichan) {
+      dump_verilog_routing_chan_subckt(cur_sram_orgz_info, verilog_dir, subckt_dir, 
+                                       ichan, device_rr_chan.get_module(CHANY, ichan), 
+                                       fpga_verilog_opts);
+    }
+  } else { 
+    /* Output the full array of routing channels */
+    vpr_printf(TIO_MESSAGE_INFO, "Writing X-direction Channels...\n");
+    for (iy = 0; iy < (ny + 1); iy++) {
+      for (ix = 1; ix < (nx + 1); ix++) {
+        dump_verilog_routing_chan_subckt(cur_sram_orgz_info, verilog_dir, subckt_dir, ix, iy, CHANX, 
+                                         LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices, LL_rr_indexed_data, 
+                                         arch.num_segments, arch.Segments, fpga_verilog_opts);
+      }
+    }
+    /* Y - channels [1...ny][0..nx]*/
+    vpr_printf(TIO_MESSAGE_INFO, "Writing Y-direction Channels...\n");
+    for (ix = 0; ix < (nx + 1); ix++) {
+      for (iy = 1; iy < (ny + 1); iy++) {
+        dump_verilog_routing_chan_subckt(cur_sram_orgz_info, verilog_dir, subckt_dir, ix, iy, CHANY,
+                                         LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices, LL_rr_indexed_data, 
+                                         arch.num_segments, arch.Segments, fpga_verilog_opts);
+      }
     }
   }
 

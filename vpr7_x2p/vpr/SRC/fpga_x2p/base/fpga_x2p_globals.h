@@ -1,3 +1,8 @@
+#ifndef FPGA_X2P_GLOBALS_H 
+#define FPGA_X2P_GLOBALS_H 
+
+#include "rr_chan.h"
+
 /* global parameters for FPGA-SPICE tool suites */
 
 extern t_spice_model* fpga_spice_sram_model;
@@ -34,3 +39,7 @@ extern char* renaming_report_postfix;
 extern char* fpga_spice_bitstream_output_file_postfix;
 extern char* fpga_spice_bitstream_logic_block_log_file_postfix;
 extern char* fpga_spice_bitstream_routing_log_file_postfix;
+
+extern DeviceRRChan device_rr_chan;
+
+#endif

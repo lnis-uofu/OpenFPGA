@@ -3218,14 +3218,22 @@ char* gen_verilog_one_routing_channel_module_name(t_rr_type chan_type,
                                                   int x, int y) {
   char* ret = NULL;
   
-  ret = (char*)my_malloc(strlen(convert_chan_type_to_string(chan_type))
-                         + 1 + strlen(my_itoa(x))
-                         + 2 + strlen(my_itoa(y))
-                         + 1 + 1); 
-
-  sprintf(ret, "%s_%d__%d_", 
-          convert_chan_type_to_string(chan_type), 
-          x, y);
+  if (-1 == y) {
+    ret = (char*)my_malloc(strlen(convert_chan_type_to_string(chan_type))
+                           + 1 + strlen(my_itoa(x))
+                           + 1 + 1); 
+    sprintf(ret, "%s_%d_", 
+            convert_chan_type_to_string(chan_type), 
+            x);
+  } else {
+    ret = (char*)my_malloc(strlen(convert_chan_type_to_string(chan_type))
+                           + 1 + strlen(my_itoa(x))
+                           + 2 + strlen(my_itoa(y))
+                           + 1 + 1); 
+    sprintf(ret, "%s_%d__%d_", 
+            convert_chan_type_to_string(chan_type), 
+            x, y);
+  }
 
   return ret;
 }

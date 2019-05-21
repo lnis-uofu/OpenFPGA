@@ -1,3 +1,5 @@
+#ifndef SPICE_TYPES_H
+#define SPICE_TYPES_H 
 
 #include "util.h"
 #include "linkedlist.h"
@@ -574,3 +576,5 @@ struct s_sram_orgz_info {
 };
 
 /* SPICE support end*/
+
+#endif

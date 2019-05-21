@@ -92,10 +92,16 @@ void RRChan::set_type(t_rr_type type) {
   return;
 } 
 
+/* Reserve node list */
+void RRChan::reserve_node(size_t node_size) {
+  nodes_.reserve(node_size); /* reserve to the maximum */
+  node_segments_.reserve(node_size); /* reserve to the maximum */
+}
+
 /* add a node to the array */
 void RRChan::add_node(t_rr_node* node, size_t node_segment) {
   /* resize the array if needed, node is placed in the sequence of node->ptc_num */
-  if (size_t(node->ptc_num) > (nodes_.size() + 1)) {
+  if (node->ptc_num + 1 > nodes_.size()) {
     nodes_.resize(node->ptc_num + 1); /* resize to the maximum */
     node_segments_.resize(node->ptc_num + 1); /* resize to the maximum */
   }
@@ -118,7 +124,7 @@ void RRChan::clear() {
 
 /* for type, only valid type is CHANX and CHANY */
 bool RRChan::valid_type(t_rr_type type) const {
-  if ((CHANX == type) && (CHANY == type)) {
+  if ((CHANX == type) || (CHANY == type)) {
     return true;
   }
   return false;
@@ -126,7 +132,7 @@ bool RRChan::valid_type(t_rr_type type) const {
 
 /* check if the node id is valid */
 bool RRChan::valid_node_id(size_t node_id) const {
-  if ( (size_t(-1) < node_id) && (node_id < nodes_.size()) ) {
+  if (node_id < nodes_.size()) {
     return true;
   }
 
@@ -142,6 +148,33 @@ RRChan DeviceRRChan::get_module(t_rr_type chan_type, size_t module_id) const {
     return chanx_modules_[module_id]; 
   } else if (CHANY == chan_type) {
     return chany_modules_[module_id]; 
+  }
+}
+
+RRChan DeviceRRChan::get_module_with_coordinator(t_rr_type chan_type, size_t x, size_t y) const {
+  assert(valid_coordinator(chan_type, x, y));
+  assert(valid_module_id(chan_type, get_module_id(chan_type, x, y)));
+  return get_module(chan_type, get_module_id(chan_type, x, y));
+}
+
+/* Get the number of RRChan modules in either X-channel or Y-channel */
+size_t DeviceRRChan::get_num_modules(t_rr_type chan_type) const {
+  assert(valid_chan_type(chan_type));
+
+  if (CHANX == chan_type) {
+    return chanx_modules_.size(); 
+  } else if (CHANY == chan_type) {
+    return chany_modules_.size(); 
+  }
+}
+
+size_t DeviceRRChan::get_module_id(t_rr_type chan_type, size_t x, size_t y) const {
+  assert(valid_coordinator(chan_type, x, y));
+
+  if (CHANX == chan_type) {
+    return chanx_module_ids_[x][y]; 
+  } else if (CHANY == chan_type) {
+    return chany_module_ids_[x][y]; 
   }
 }
 
@@ -169,7 +202,7 @@ void DeviceRRChan::init_chan_module_ids(t_rr_type chan_type, size_t device_width
   return;
 }
 
-void DeviceRRChan::add_one_chan_module(t_rr_type chan_type, size_t x, size_t y, RRChan rr_chan) {
+void DeviceRRChan::add_one_chan_module(t_rr_type chan_type, size_t x, size_t y, RRChan& rr_chan) {
   assert(valid_coordinator(chan_type, x, y));
 
   if (CHANX == chan_type) {
@@ -222,7 +255,7 @@ void DeviceRRChan::clear_chan(t_rr_type chan_type) {
 
 /* for type, only valid type is CHANX and CHANY */
 bool DeviceRRChan::valid_chan_type(t_rr_type chan_type) const {
-  if ((CHANX == chan_type) && (CHANY == chan_type)) {
+  if ((CHANX == chan_type) || (CHANY == chan_type)) {
     return true;
   }
   return false;
@@ -233,17 +266,17 @@ bool DeviceRRChan::valid_coordinator(t_rr_type chan_type, size_t x, size_t y) co
   assert(valid_chan_type(chan_type));
 
   if (CHANX == chan_type) {
-    if (!( (size_t(-1) < x) && (x < chanx_module_ids_.size()) )) {
+    if ( (0 > x) || (x > chanx_module_ids_.size() - 1 )) {
       return false;
     }
-    if (!( (size_t(-1) < y) && (y < chanx_module_ids_[x].size()) )) {
+    if ( (0 > y) || (y > chanx_module_ids_[x].size() - 1) ) {
       return false;
     }
   } else if (CHANY == chan_type) {
-    if (!( (size_t(-1) < x) && (x < chany_module_ids_.size()) )) {
+    if ( (0 > x) && (x > chany_module_ids_.size() - 1) ) {
       return false;
     }
-    if (!( (size_t(-1) < y) && (y < chany_module_ids_[x].size()) )) {
+    if ( (0 > y) && (y > chany_module_ids_[x].size() - 1) ) {
       return false;
     }
   }
@@ -256,11 +289,11 @@ bool DeviceRRChan::valid_module_id(t_rr_type chan_type, size_t module_id) const 
   assert(valid_chan_type(chan_type));
 
   if (CHANX == chan_type) {
-    if ( (size_t(-1) < module_id) && (module_id < chanx_modules_.size()) ) {
+    if (module_id < chanx_modules_.size()) {
       return true;
     }
   } else if (CHANY == chan_type) {
-    if ( (size_t(-1) < module_id) && (module_id < chany_modules_.size()) ) {
+    if (module_id < chany_modules_.size()) {
       return true;
     }
   }

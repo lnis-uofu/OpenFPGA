@@ -27,6 +27,7 @@
 /* Include spice support headers*/
 #include "read_xml_spice_util.h"
 #include "linkedlist.h"
+#include "rr_chan.h"
 #include "fpga_x2p_types.h"
 #include "fpga_x2p_globals.h"
 #include "fpga_x2p_utils.h"
@@ -72,6 +73,12 @@ void print_mirror_switch_block_stats();
 
 void print_mirror_connection_block_stats();
 
+RRChan build_one_rr_chan(t_rr_type chan_type, size_t chan_x, size_t chan_y,
+                         int LL_num_rr_nodes, t_rr_node* LL_rr_node, 
+                         t_ivec*** LL_rr_node_indices, int num_segments,
+                         t_rr_indexed_data* LL_rr_indexed_data);
+
+void print_device_rr_chan_stats(DeviceRRChan& device_rr_chan);
 
 /***** subroutines *****/
 void assign_switch_block_mirror(t_sb* src, t_sb* des) {
@@ -700,6 +707,93 @@ void identify_mirror_connection_blocks() {
   print_mirror_connection_block_stats();
 
   return;
+}
+
+/* Build a RRChan Object with the given channel type and coorindators */
+RRChan build_one_rr_chan(t_rr_type chan_type, size_t chan_x, size_t chan_y,
+                         int LL_num_rr_nodes, t_rr_node* LL_rr_node, 
+                         t_ivec*** LL_rr_node_indices, int num_segments,
+                         t_rr_indexed_data* LL_rr_indexed_data) {
+  int chan_width = 0;
+  t_rr_node** chan_rr_nodes = NULL;
+
+  /* Create a rr_chan object and check if it is unique in the graph */
+  RRChan rr_chan;
+  /* Fill the information */
+  rr_chan.set_type(chan_type); 
+
+  /* Collect rr_nodes for this channel */
+  chan_rr_nodes = get_chan_rr_nodes(&chan_width, chan_type, chan_x, chan_y,
+                                    LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices);
+
+  /* Reserve */
+  /* rr_chan.reserve_node(size_t(chan_width)); */
+
+  /* Fill the rr_chan */  
+  for (size_t itrack = 0; itrack < size_t(chan_width); ++itrack) {
+    int cost_index = chan_rr_nodes[itrack]->cost_index;
+    int iseg = LL_rr_indexed_data[cost_index].seg_index; 
+    /* Check */
+    assert((!(iseg < 0))&&(iseg < num_segments));
+
+    rr_chan.add_node(chan_rr_nodes[itrack], size_t(iseg));
+  }
+
+  /* Free rr_nodes */
+  my_free(chan_rr_nodes);
+
+  return rr_chan;
+}
+
+void print_device_rr_chan_stats(DeviceRRChan& device_rr_chan) {
+  /* Print stats */
+  vpr_printf(TIO_MESSAGE_INFO, 
+             "Detect %d independent routing channel from %d X-direction routing channels.\n",
+             device_rr_chan.get_num_modules(CHANX), (nx + 0) * (ny + 1) );
+
+  vpr_printf(TIO_MESSAGE_INFO, 
+             "Detect %d independent routing channel from %d Y-direction routing channels.\n",
+             device_rr_chan.get_num_modules(CHANY), (nx + 1) * (ny + 0) );
+
+}
+
+/* Build the list of unique routing channels */
+DeviceRRChan build_device_rr_chan(int LL_num_rr_nodes, t_rr_node* LL_rr_node, 
+                                  t_ivec*** LL_rr_node_indices, int num_segments,
+                                  t_rr_indexed_data* LL_rr_indexed_data) {
+  /* Create an object of DeviceRRChan */
+  DeviceRRChan device_rr_chan;
+
+  /* Initialize array of rr_chan inside the device */
+  device_rr_chan.init_module_ids(nx + 1, ny + 1);
+
+  /* For X-direction routing channel */
+  for (size_t iy = 0; iy < (ny + 1); iy++) {
+    for (size_t ix = 1; ix < (nx + 1); ix++) {
+      /* Create a rr_chan object and check if it is unique in the graph */
+      RRChan rr_chan = build_one_rr_chan(CHANX, ix, iy, 
+                                         LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices, 
+                                         num_segments, LL_rr_indexed_data);
+      /* check and add this rr_chan to the mirror list */ 
+      device_rr_chan.add_one_chan_module(CHANX, ix, iy, rr_chan);
+    }
+  }
+
+  /* For X-direction routing channel */
+  for (size_t ix = 0; ix < (nx + 1); ix++) {
+    for (size_t iy = 1; iy < (ny + 1); iy++) {
+      /* Create a rr_chan object and check if it is unique in the graph */
+      RRChan rr_chan = build_one_rr_chan(CHANY, ix, iy, 
+                                         LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices, 
+                                         num_segments, LL_rr_indexed_data);
+      /* check and add this rr_chan to the mirror list */ 
+      device_rr_chan.add_one_chan_module(CHANY, ix, iy, rr_chan);
+    }
+  }
+
+  print_device_rr_chan_stats(device_rr_chan);
+
+  return device_rr_chan; 
 }
 
 

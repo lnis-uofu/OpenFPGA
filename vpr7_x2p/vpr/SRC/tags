@@ -127,6 +127,7 @@ DRAW_NO_RR	./base/draw.c	/^	DRAW_NO_RR = 0,$/;"	e	enum:e_draw_rr_toggle	file:
 DRAW_RR_TOGGLE_MAX	./base/draw.c	/^	DRAW_RR_TOGGLE_MAX$/;"	e	enum:e_draw_rr_toggle	file:
 DRAW_XOR	./base/graphics.h	/^enum e_draw_mode {DRAW_NORMAL = 0, DRAW_XOR};$/;"	e	enum:e_draw_mode
 DUMPFILE	./place/timing_place_lookup.c	63;"	d	file:
+DeviceRRChan	./fpga_x2p/base/rr_chan.h	/^class DeviceRRChan {$/;"	c
 EASYGL_CONSTANTS_H	./base/easygl_constants.h	2;"	d
 EMPTY	./base/vpr_types.h	90;"	d
 EMPTY_TYPE	./base/globals.c	/^t_type_ptr EMPTY_TYPE = NULL;$/;"	v
@@ -198,6 +199,7 @@ FINAL_DISCOUNT_FUNCTION_BASE	./timing/path_delay.h	28;"	d
 FIRST_ITER_WIRELENTH_LIMIT	./base/vpr_types.h	88;"	d
 FONTMAG	./base/graphics.c	229;"	d	file:
 FPGA_SPICE_Opts	./base/vpr_types.h	/^    t_fpga_spice_opts FPGA_SPICE_Opts; \/* Xifan TANG: FPGA-SPICE support *\/$/;"	m	struct:s_vpr_setup
+FPGA_X2P_GLOBALS_H	./fpga_x2p/base/fpga_x2p_globals.h	2;"	d
 FPGA_X2P_IDENTIFY_ROUTING	./fpga_x2p/base/fpga_x2p_identify_routing.h	3;"	d
 FPGA_X2P_UTILS_H	./fpga_x2p/base/fpga_x2p_utils.h	2;"	d
 FREE	./base/vpr_types.h	/^	FREE, RANDOM, USER$/;"	e	enum:e_pad_loc_type
@@ -606,6 +608,8 @@ ROUTE_CMD	./fpga_x2p/shell/shell_types.h	/^  ROUTE_CMD,$/;"	e	enum:e_cmd_categor
 ROUTE_FILE_POSTFIX	./fpga_x2p/shell/shell_file_postfix.h	4;"	d
 ROUTE_PATH_WEIGHT	./timing/path_delay.h	37;"	d
 ROUTING	./base/vpr_types.h	/^	NO_PICTURE, PLACEMENT, ROUTING$/;"	e	enum:pic_type
+RRChan	./fpga_x2p/base/rr_chan.h	/^class RRChan {$/;"	c
+RR_CHAN_H	./fpga_x2p/base/rr_chan.h	6;"	d
 RR_GRAPH2_H	./route/rr_graph2.h	2;"	d
 RR_GRAPH_H	./route/rr_graph.h	2;"	d
 RR_GRAPH_NO_WARN	./route/rr_graph.h	/^	RR_GRAPH_NO_WARN = 0x00,$/;"	e	enum:__anon17
@@ -820,8 +824,6 @@ add_activity_to_net	./base/read_blif.c	/^bool add_activity_to_net(char * net_nam
 add_conf_bit_info_to_llist	./fpga_x2p/base/fpga_x2p_utils.c	/^add_conf_bit_info_to_llist(t_llist* head, int index, $/;"	f
 add_data_point	./power/PowerSpicedComponent.c	/^void PowerSpicedComponent::add_data_point(int num_inputs, float transistor_size,$/;"	f	class:PowerSpicedComponent
 add_delay_to_array	./mrfpga/buffer_insertion.c	/^static void add_delay_to_array( float* sink_delay, t_linked_int* index, float delay_addition )$/;"	f	file:
-add_delay_to_buffer_list	./mrfpga/buffer_insertion.c	/^static void add_delay_to_buffer_list( t_buffer_plan_list list, float Tdel , boolean skip_first )$/;"	f	file:
-add_delay_to_buffer_plan	./mrfpga/buffer_insertion.c	/^static t_buffer_plan add_delay_to_buffer_plan( t_buffer_plan plan, float Tdel )$/;"	f	file:
 add_entry	./power/PowerSpicedComponent.c	/^PowerCallibInputs * PowerSpicedComponent::add_entry(int num_inputs) {$/;"	f	class:PowerSpicedComponent
 add_heap_node_to_rr_graph_heap	./fpga_x2p/base/fpga_x2p_rr_graph_utils.c	/^void add_heap_node_to_rr_graph_heap(t_rr_graph* local_rr_graph,$/;"	f
 add_latch	./base/read_blif.c	/^static void add_latch(int doall, INP t_model *latch_model) {$/;"	f	file:
@@ -833,7 +835,9 @@ add_mux_membank_conf_bits_to_llist	./fpga_x2p/base/fpga_x2p_bitstream_utils.c	/^
 add_mux_scff_conf_bits_to_llist	./fpga_x2p/base/fpga_x2p_bitstream_utils.c	/^add_mux_scff_conf_bits_to_llist(int mux_size,$/;"	f
 add_net_rr_terminal_cluster	./pack/cluster_legality.c	/^static void add_net_rr_terminal_cluster(int iblk_net,$/;"	f	file:
 add_net_to_hash	./base/read_netlist.c	/^static int add_net_to_hash(INOUTP struct s_hash **nhash, INP char *net_name,$/;"	f	file:
+add_node	./fpga_x2p/base/rr_chan.cpp	/^void RRChan::add_node(t_rr_node* node, size_t node_segment) {$/;"	f	class:RRChan
 add_node_to_rr_graph_heap	./fpga_x2p/base/fpga_x2p_rr_graph_utils.c	/^void add_node_to_rr_graph_heap(t_rr_graph* local_rr_graph,$/;"	f
+add_one_chan_module	./fpga_x2p/base/rr_chan.cpp	/^void DeviceRRChan::add_one_chan_module(t_rr_type chan_type, size_t x, size_t y, RRChan& rr_chan) {$/;"	f	class:DeviceRRChan
 add_one_conf_bit_to_sram_orgz_info	./fpga_x2p/base/fpga_x2p_bitstream_utils.c	/^void add_one_conf_bit_to_sram_orgz_info(t_sram_orgz_info* cur_sram_orgz_info) {$/;"	f
 add_one_spice_tb_info_to_llist	./fpga_x2p/spice/spice_utils.c	/^t_llist* add_one_spice_tb_info_to_llist(t_llist* cur_head, $/;"	f
 add_one_subckt_file_name_to_llist	./fpga_x2p/base/fpga_x2p_utils.c	/^t_llist* add_one_subckt_file_name_to_llist(t_llist* cur_head, $/;"	f
@@ -1123,8 +1127,10 @@ buffer_size_inf	./power/power.h	/^	t_power_buffer_size_inf * buffer_size_inf;$/;
 buffered	./base/vpr_types.h	/^    int buffered;$/;"	m	struct:s_rr_node
 build_bidir_rr_opins	./route/rr_graph.c	/^static void build_bidir_rr_opins(INP int i, INP int j,$/;"	f	file:
 build_default_menu	./base/graphics.c	/^build_default_menu (void) $/;"	f	file:
+build_device_rr_chan	./fpga_x2p/base/fpga_x2p_identify_routing.c	/^DeviceRRChan build_device_rr_chan(int LL_num_rr_nodes, t_rr_node* LL_rr_node, $/;"	f
 build_ending_rr_node_for_one_sb_wire	./fpga_x2p/verilog/verilog_report_timing.c	/^void build_ending_rr_node_for_one_sb_wire(t_rr_node* wire_rr_node, $/;"	f
 build_one_connection_block_info	./fpga_x2p/base/fpga_x2p_backannotate_utils.c	/^void build_one_connection_block_info(t_cb* cur_cb, int cb_x, int cb_y, t_rr_type cb_type,$/;"	f
+build_one_rr_chan	./fpga_x2p/base/fpga_x2p_identify_routing.c	/^RRChan build_one_rr_chan(t_rr_type chan_type, size_t chan_x, size_t chan_y,$/;"	f
 build_one_switch_block_info	./fpga_x2p/base/fpga_x2p_backannotate_utils.c	/^void build_one_switch_block_info(t_sb* cur_sb, int sb_x, int sb_y, $/;"	f
 build_prev_node_list_rr_nodes	./fpga_x2p/base/fpga_x2p_rr_graph_utils.c	/^void build_prev_node_list_rr_nodes(int LL_num_rr_nodes,$/;"	f
 build_rr_graph	./route/rr_graph.c	/^void build_rr_graph(INP t_graph_type graph_type, INP int L_num_types,$/;"	f
@@ -1172,9 +1178,13 @@ change_button_text	./base/graphics.c	/^void change_button_text(const char *butto
 change_button_text	./base/graphics.c	/^void change_button_text(const char *button_text, const char *new_button_text) { }$/;"	f
 channel_width	./power/power.h	/^	int channel_width;$/;"	m	struct:s_solution_inf
 chanx_chany_adjacent	./route/check_route.c	/^static int chanx_chany_adjacent(int chanx_node, int chany_node) {$/;"	f	file:
+chanx_module_ids_	./fpga_x2p/base/rr_chan.h	/^    std::vector< std::vector<size_t> > chanx_module_ids_; \/* Module id in modules_ for each X-direction rr_channel *\/ $/;"	m	class:DeviceRRChan
+chanx_modules_	./fpga_x2p/base/rr_chan.h	/^    std::vector<RRChan> chanx_modules_; \/* Detailed internal structure of each unique module *\/$/;"	m	class:DeviceRRChan
 chanx_place_cost_fac	./place/place.c	/^static float **chanx_place_cost_fac, **chany_place_cost_fac;$/;"	v	file:
 chanx_spice_file_name_prefix	./fpga_x2p/spice/spice_globals.c	/^char* chanx_spice_file_name_prefix = "chanx_";$/;"	v
 chanx_verilog_file_name_prefix	./fpga_x2p/verilog/verilog_global.c	/^char* chanx_verilog_file_name_prefix = "chanx_";$/;"	v
+chany_module_ids_	./fpga_x2p/base/rr_chan.h	/^    std::vector< std::vector<size_t> > chany_module_ids_; \/* Module id in modules_ for each Y-direction rr_channel *\/ $/;"	m	class:DeviceRRChan
+chany_modules_	./fpga_x2p/base/rr_chan.h	/^    std::vector<RRChan> chany_modules_; \/* Detailed internal structure of each unique module *\/$/;"	m	class:DeviceRRChan
 chany_place_cost_fac	./place/place.c	/^static float **chanx_place_cost_fac, **chany_place_cost_fac;$/;"	v	file:
 chany_spice_file_name_prefix	./fpga_x2p/spice/spice_globals.c	/^char* chany_spice_file_name_prefix = "chany_";$/;"	v
 chany_verilog_file_name_prefix	./fpga_x2p/verilog/verilog_global.c	/^char* chany_verilog_file_name_prefix = "chany_";$/;"	v
@@ -1252,7 +1262,10 @@ clb_net_density	./power/power_util.c	/^float clb_net_density(int net_idx) {$/;"	
 clb_net_prob	./power/power_util.c	/^float clb_net_prob(int net_idx) {$/;"	f
 clb_opins_used_locally	./place/timing_place_lookup.c	/^static t_ivec **clb_opins_used_locally;$/;"	v	file:
 clb_to_vpack_net_mapping	./base/globals.c	/^int *clb_to_vpack_net_mapping = NULL; \/* [0..num_clb_nets - 1] *\/$/;"	v
+clear	./fpga_x2p/base/rr_chan.cpp	/^void DeviceRRChan::clear() {$/;"	f	class:DeviceRRChan
+clear	./fpga_x2p/base/rr_chan.cpp	/^void RRChan::clear() {$/;"	f	class:RRChan
 clear_buffer	./mrfpga/buffer_insertion.c	/^void clear_buffer( )$/;"	f
+clear_chan	./fpga_x2p/base/rr_chan.cpp	/^void DeviceRRChan::clear_chan(t_rr_type chan_type) {$/;"	f	class:DeviceRRChan
 clearscreen	./base/graphics.c	/^clearscreen (void) $/;"	f
 clearscreen	./base/graphics.c	/^void clearscreen (void) { }$/;"	f
 clock_delay	./base/vpr_types.h	/^	float clock_delay; \/* The time taken for a clock signal to get to the flip-flop or I\/O (assumed 0 for I\/Os). *\/$/;"	m	struct:s_tnode
@@ -1493,6 +1506,7 @@ determine_rr_node_default_prev_node	./fpga_x2p/base/fpga_x2p_backannotate_utils.
 determine_sb_port_coordinator	./fpga_x2p/base/fpga_x2p_utils.c	/^void determine_sb_port_coordinator(t_sb cur_sb_info, int side, $/;"	f
 determine_tree_mux_level	./fpga_x2p/base/fpga_x2p_mux_utils.c	/^int determine_tree_mux_level(int mux_size) {$/;"	f
 determine_verilog_generic_port_split_sign	./fpga_x2p/verilog/verilog_utils.c	/^char determine_verilog_generic_port_split_sign(enum e_dump_verilog_port_type dump_port_type) {$/;"	f
+device_rr_chan	./fpga_x2p/base/fpga_x2p_globals.c	/^DeviceRRChan device_rr_chan;$/;"	v
 diff_sram_orgz_info	./fpga_x2p/base/fpga_x2p_utils.c	/^t_sram_orgz_info* diff_sram_orgz_info(t_sram_orgz_info* des_sram_orgz_info, $/;"	f
 direction	./base/vpr_types.h	/^	enum e_direction direction; \/* UDSD by AY *\/$/;"	m	struct:s_rr_node	typeref:enum:s_rr_node::e_direction
 direction	./base/vpr_types.h	/^	enum e_direction direction; \/* UDSD by AY *\/$/;"	m	struct:s_seg_details	typeref:enum:s_seg_details::e_direction
@@ -1576,8 +1590,14 @@ drivers	./base/vpr_types.h	/^	enum e_drivers drivers; \/* UDSD by AY *\/$/;"	m	s
 drivers	./base/vpr_types.h	/^	enum e_drivers drivers; \/* UDSD by AY *\/$/;"	m	struct:s_seg_details	typeref:enum:s_seg_details::e_drivers
 dum_parse	./base/read_blif.c	/^void dum_parse(char *buf) {$/;"	f
 dummy_type_descriptors	./place/timing_place_lookup.c	/^static t_type_descriptor dummy_type_descriptors[NUM_TYPES_USED];$/;"	v	file:
+dump_compact_verilog_defined_channels	./fpga_x2p/verilog/verilog_compact_netlist.c	/^void dump_compact_verilog_defined_channels(FILE* fp) {$/;"	f
+dump_compact_verilog_defined_connection_boxes	./fpga_x2p/verilog/verilog_compact_netlist.c	/^void dump_compact_verilog_defined_connection_boxes(t_sram_orgz_info* cur_sram_orgz_info,$/;"	f
 dump_compact_verilog_defined_grids	./fpga_x2p/verilog/verilog_compact_netlist.c	/^void dump_compact_verilog_defined_grids(t_sram_orgz_info* cur_sram_orgz_info,$/;"	f
+dump_compact_verilog_defined_one_channel	./fpga_x2p/verilog/verilog_compact_netlist.c	/^void dump_compact_verilog_defined_one_channel(FILE* fp,$/;"	f	file:
+dump_compact_verilog_defined_one_connection_box	./fpga_x2p/verilog/verilog_compact_netlist.c	/^void dump_compact_verilog_defined_one_connection_box(t_sram_orgz_info* cur_sram_orgz_info, $/;"	f	file:
 dump_compact_verilog_defined_one_grid	./fpga_x2p/verilog/verilog_compact_netlist.c	/^void dump_compact_verilog_defined_one_grid(t_sram_orgz_info* cur_sram_orgz_info,$/;"	f	file:
+dump_compact_verilog_defined_one_switch_box	./fpga_x2p/verilog/verilog_compact_netlist.c	/^void dump_compact_verilog_defined_one_switch_box(t_sram_orgz_info* cur_sram_orgz_info, $/;"	f	file:
+dump_compact_verilog_defined_switch_boxes	./fpga_x2p/verilog/verilog_compact_netlist.c	/^void dump_compact_verilog_defined_switch_boxes(t_sram_orgz_info* cur_sram_orgz_info, $/;"	f
 dump_compact_verilog_grid_pins	./fpga_x2p/verilog/verilog_top_netlist_utils.c	/^void dump_compact_verilog_grid_pins(FILE* fp,$/;"	f
 dump_compact_verilog_io_grid_block_subckt_pins	./fpga_x2p/verilog/verilog_top_netlist_utils.c	/^void dump_compact_verilog_io_grid_block_subckt_pins(FILE* fp,$/;"	f
 dump_compact_verilog_io_grid_pins	./fpga_x2p/verilog/verilog_top_netlist_utils.c	/^void dump_compact_verilog_io_grid_pins(FILE* fp,$/;"	f
@@ -1840,6 +1860,8 @@ encode_decoder_addr	./fpga_x2p/bitstream/fpga_bitstream.c	/^void encode_decoder_
 endlines	./base/read_blif.c	/^static int ilines, olines, model_lines, endlines;$/;"	v	file:
 entries	./power/PowerSpicedComponent.h	/^	std::vector<PowerCallibInputs*> entries;$/;"	m	class:PowerSpicedComponent
 entries	./power/PowerSpicedComponent.h	/^	std::vector<PowerCallibSize*> entries;$/;"	m	class:PowerCallibInputs
+error_counter	./fpga_x2p/verilog/verilog_autocheck_top_testbench.c	/^static char* error_counter = "nb_error";$/;"	v	file:
+error_counter	./fpga_x2p/verilog/verilog_formal_random_top_testbench.c	/^static char* error_counter = "nb_error";$/;"	v	file:
 error_no_match	./timing/slre.c	/^static const char *error_no_match = "No match";$/;"	v	file:
 error_string	./timing/slre.c	/^  const char *error_string;   \/\/ Error string$/;"	m	struct:slre	file:
 essentials_verilog_file_name	./fpga_x2p/verilog/verilog_global.c	/^char* essentials_verilog_file_name = "inv_buf_passgate.v";$/;"	v
@@ -2412,6 +2434,7 @@ get_chan_rr_node_ending_cb	./fpga_x2p/verilog/verilog_tcl_utils.c	/^t_cb* get_ch
 get_chan_rr_node_ending_sb	./fpga_x2p/verilog/verilog_tcl_utils.c	/^t_sb* get_chan_rr_node_ending_sb(t_rr_node* src_rr_node, $/;"	f
 get_chan_rr_node_start_coordinate	./fpga_x2p/base/fpga_x2p_rr_graph_utils.c	/^void get_chan_rr_node_start_coordinate(t_rr_node* chan_rr_node,$/;"	f
 get_chan_rr_nodes	./fpga_x2p/base/fpga_x2p_backannotate_utils.c	/^t_rr_node** get_chan_rr_nodes(int* num_chan_rr_nodes,$/;"	f
+get_chan_width	./fpga_x2p/base/rr_chan.cpp	/^size_t RRChan::get_chan_width() const { $/;"	f	class:RRChan
 get_channel_occupancy_stats	./base/stats.c	/^static void get_channel_occupancy_stats(void) {$/;"	f	file:
 get_child_pb_for_phy_pb_graph_node	./fpga_x2p/base/fpga_x2p_pbtypes_utils.c	/^t_pb* get_child_pb_for_phy_pb_graph_node(t_pb* cur_pb, int ipb, int jpb) {$/;"	f
 get_class_range_for_block	./util/vpr_utils.c	/^void get_class_range_for_block(INP int iblk, OUTP int *class_low,$/;"	f
@@ -2468,6 +2491,9 @@ get_max_nets_in_pb_type	./util/vpr_utils.c	/^int get_max_nets_in_pb_type(const t
 get_max_pins_per_net	./route/route_timing.c	/^static int get_max_pins_per_net(void) {$/;"	f	file:
 get_max_primitives_in_pb_type	./util/vpr_utils.c	/^int get_max_primitives_in_pb_type(t_pb_type *pb_type) {$/;"	f
 get_mem_bank_info_reserved_blwl	./fpga_x2p/base/fpga_x2p_utils.c	/^void get_mem_bank_info_reserved_blwl(t_mem_bank_info* cur_mem_bank_info,$/;"	f
+get_module	./fpga_x2p/base/rr_chan.cpp	/^RRChan DeviceRRChan::get_module(t_rr_type chan_type, size_t module_id) const {$/;"	f	class:DeviceRRChan
+get_module_id	./fpga_x2p/base/rr_chan.cpp	/^size_t DeviceRRChan::get_module_id(t_rr_type chan_type, size_t x, size_t y) const {$/;"	f	class:DeviceRRChan
+get_module_with_coordinator	./fpga_x2p/base/rr_chan.cpp	/^RRChan DeviceRRChan::get_module_with_coordinator(t_rr_type chan_type, size_t x, size_t y) const {$/;"	f	class:DeviceRRChan
 get_molecule_by_num_ext_inputs	./pack/cluster.c	/^static t_pack_molecule *get_molecule_by_num_ext_inputs($/;"	f	file:
 get_molecule_for_cluster	./pack/cluster.c	/^static t_pack_molecule *get_molecule_for_cluster($/;"	f	file:
 get_molecule_gain	./pack/cluster.c	/^static float get_molecule_gain(t_pack_molecule *molecule, std::map<int, float> &blk_gain) {$/;"	f	file:
@@ -2481,9 +2507,14 @@ get_net_cost	./place/place.c	/^static float get_net_cost(int inet, struct s_bb *
 get_net_wirelength_estimate	./place/place.c	/^static double get_net_wirelength_estimate(int inet, struct s_bb *bbptr) {$/;"	f	file:
 get_next_hash	./util/hash.c	/^get_next_hash(struct s_hash **hash_table, struct s_hash_iterator *hash_iterator) {$/;"	f
 get_next_primitive_list	./pack/cluster_placement.c	/^boolean get_next_primitive_list($/;"	f
+get_node	./fpga_x2p/base/rr_chan.cpp	/^t_rr_node* RRChan::get_node(size_t track_num) const {$/;"	f	class:RRChan
+get_node_segment	./fpga_x2p/base/rr_chan.cpp	/^int RRChan::get_node_segment(size_t track_num) const {$/;"	f	class:RRChan
+get_node_segment	./fpga_x2p/base/rr_chan.cpp	/^int RRChan::get_node_segment(t_rr_node* node) const {$/;"	f	class:RRChan
+get_node_track_id	./fpga_x2p/base/rr_chan.cpp	/^int RRChan::get_node_track_id(t_rr_node* node) const {$/;"	f	class:RRChan
 get_non_updateable_bb	./place/place.c	/^static void get_non_updateable_bb(int inet, struct s_bb *bb_coord_new) {$/;"	f	file:
 get_num_bends_and_length	./base/stats.c	/^void get_num_bends_and_length(int inet, int *bends_ptr, int *len_ptr,$/;"	f
 get_num_conn	./base/check_netlist.c	/^static int get_num_conn(int bnum) {$/;"	f	file:
+get_num_modules	./fpga_x2p/base/rr_chan.cpp	/^size_t DeviceRRChan::get_num_modules(t_rr_type chan_type) const {$/;"	f	class:DeviceRRChan
 get_opin_direct_connecions	./route/rr_graph.c	/^static int get_opin_direct_connecions(int x, int y, int opin, INOUTP t_linked_edge ** edge_list_ptr, INP t_ivec *** L_rr_node_indices, $/;"	f	file:
 get_opposite_side	./fpga_x2p/base/fpga_x2p_utils.c	/^int get_opposite_side(int side){$/;"	f
 get_opt_float_val	./fpga_x2p/shell/read_opt.c	/^float get_opt_float_val(t_opt_info* opts, char* opt_name, float default_val) {$/;"	f
@@ -2546,6 +2577,7 @@ get_top_of_heap_index	./util/heapsort.c	/^static int get_top_of_heap_index(int *
 get_track_num	./base/draw.c	/^static int get_track_num(int inode, int **chanx_track, int **chany_track) {$/;"	f	file:
 get_track_to_ipins	./route/rr_graph2.c	/^int get_track_to_ipins(int seg, int chan, int track,$/;"	f
 get_track_to_tracks	./route/rr_graph2.c	/^int get_track_to_tracks(INP int from_chan, INP int from_seg, INP int from_track,$/;"	f
+get_type	./fpga_x2p/base/rr_chan.cpp	/^t_rr_type RRChan::get_type() const {$/;"	f	class:RRChan
 get_unidir_opin_connections	./route/rr_graph2.c	/^int get_unidir_opin_connections(INP int chan, INP int seg, INP int Fc,$/;"	f
 get_unidir_track_to_chan_seg	./route/rr_graph2.c	/^static int get_unidir_track_to_chan_seg(INP boolean is_end_sb,$/;"	f	file:
 get_unused_spice_model_port_tedge	./fpga_x2p/base/fpga_x2p_timing_utils.c	/^t_spice_model_tedge* get_unused_spice_model_port_tedge(t_spice_model_port* cur_port,$/;"	f
@@ -2640,6 +2672,7 @@ index	./util/hash.h	/^	int index;$/;"	m	struct:s_hash
 init_and_check_one_sram_inf_orgz	./fpga_x2p/base/fpga_x2p_setup.c	/^void init_and_check_one_sram_inf_orgz(t_sram_inf_orgz* cur_sram_inf_orgz,$/;"	f	file:
 init_and_check_sram_inf	./fpga_x2p/base/fpga_x2p_setup.c	/^void init_and_check_sram_inf(t_arch* arch,$/;"	f	file:
 init_chan	./base/place_and_route.c	/^void init_chan(int cfactor, t_chan_width_dist chan_width_dist) {$/;"	f
+init_chan_module_ids	./fpga_x2p/base/rr_chan.cpp	/^void DeviceRRChan::init_chan_module_ids(t_rr_type chan_type, size_t device_width, size_t device_height) {$/;"	f	class:DeviceRRChan
 init_chan_seg_detail_params	./route/rr_graph_swseg.c	/^static int init_chan_seg_detail_params(INP char* chan_type,$/;"	f	file:
 init_check_arch_pb_type_idle_and_phy_mode	./fpga_x2p/base/fpga_x2p_setup.c	/^void init_check_arch_pb_type_idle_and_phy_mode(t_arch* Arch) {$/;"	f	file:
 init_check_arch_spice_models	./fpga_x2p/base/fpga_x2p_setup.c	/^void init_check_arch_spice_models(t_arch* arch,$/;"	f
@@ -2658,6 +2691,7 @@ init_llist_verilog_and_spice_syntax_char	./fpga_x2p/base/fpga_x2p_setup.c	/^t_ll
 init_logical_block_spice_model_temp_used	./fpga_x2p/spice/spice_utils.c	/^void init_logical_block_spice_model_temp_used(t_spice_model* spice_model) {$/;"	f
 init_logical_block_spice_model_type_temp_used	./fpga_x2p/spice/spice_utils.c	/^void init_logical_block_spice_model_type_temp_used(int num_spice_models, t_spice_model* spice_model,$/;"	f
 init_mem_bank_info	./fpga_x2p/base/fpga_x2p_utils.c	/^void init_mem_bank_info(t_mem_bank_info* cur_mem_bank_info,$/;"	f
+init_module_ids	./fpga_x2p/base/rr_chan.cpp	/^void DeviceRRChan::init_module_ids(size_t device_width, size_t device_height) {$/;"	f	class:DeviceRRChan
 init_mux_arch_default	./power/power_util.c	/^static void init_mux_arch_default(t_mux_arch * mux_arch, int levels,$/;"	f	file:
 init_one_cb_info	./fpga_x2p/base/fpga_x2p_backannotate_utils.c	/^void init_one_cb_info(t_cb* cur_cb) { $/;"	f
 init_one_grid_num_conf_bits	./fpga_x2p/base/fpga_x2p_pbtypes_utils.c	/^void init_one_grid_num_conf_bits(int ix, int iy, $/;"	f
@@ -2769,6 +2803,7 @@ is_in_heap	./base/vpr_types.h	/^    boolean is_in_heap;$/;"	m	struct:s_rr_node
 is_isolation	./mrfpga/mrfpga_globals.c	/^boolean is_isolation = FALSE;$/;"	v
 is_junction	./mrfpga/mrfpga_globals.c	/^boolean is_junction = FALSE;$/;"	v
 is_logical_blk_in_pb	./pack/cluster.c	/^static boolean is_logical_blk_in_pb(int iblk, t_pb *pb) {$/;"	f	file:
+is_mirror	./fpga_x2p/base/rr_chan.cpp	/^bool RRChan::is_mirror(RRChan& cand) const {$/;"	f	class:RRChan
 is_mrFPGA	./mrfpga/mrfpga_globals.c	/^boolean is_mrFPGA = FALSE;$/;"	v
 is_net_in_cluster	./pack/cluster_legality.c	/^static boolean is_net_in_cluster(INP int inet) {$/;"	f	file:
 is_net_pi	./fpga_x2p/base/fpga_x2p_utils.c	/^boolean is_net_pi(t_net* cur_net) {$/;"	f
@@ -3021,6 +3056,7 @@ my_realloc	./base/graphics.c	/^static void *my_realloc(void *memblk, int ibytes)
 my_remove_file	./fpga_x2p/base/fpga_x2p_utils.c	/^void my_remove_file(char* file_path) {$/;"	f
 my_strcat	./fpga_x2p/base/fpga_x2p_utils.c	/^char* my_strcat(char* str1,$/;"	f
 my_strcmp	./fpga_x2p/shell/shell_utils.c	/^int my_strcmp(char* str1, char* str2) {$/;"	f
+my_strlen_int	./fpga_x2p/base/fpga_x2p_utils.c	/^int my_strlen_int(int input_int) {$/;"	f
 name	./base/vpr_types.h	/^	char * name; \/* I\/O port name with an SDC constraint *\/$/;"	m	struct:s_io
 name	./base/vpr_types.h	/^	char * name;$/;"	m	struct:s_clock
 name	./base/vpr_types.h	/^	char *name; \/* Name of this physical block *\/$/;"	m	struct:s_pb
@@ -3090,7 +3126,9 @@ nmos_subckt_name	./fpga_x2p/spice/spice_globals.c	/^char* nmos_subckt_name = "vp
 node_block	./base/vpr_types.h	/^	int *node_block;$/;"	m	struct:s_net
 node_block_pin	./base/vpr_types.h	/^	int *node_block_pin;$/;"	m	struct:s_net
 node_block_port	./base/vpr_types.h	/^	int *node_block_port;$/;"	m	struct:s_net
+node_segments_	./fpga_x2p/base/rr_chan.h	/^    std::vector<size_t> node_segments_; \/* segment of each track *\/$/;"	m	class:RRChan
 node_to_heap	./route/route_common.c	/^void node_to_heap(int inode, float cost, int prev_node, int prev_edge,$/;"	f
+nodes_	./fpga_x2p/base/rr_chan.h	/^    std::vector<t_rr_node*> nodes_; \/* rr nodes of each track in the channel *\/$/;"	m	class:RRChan
 normalized_T_arr	./base/vpr_types.h	/^	float normalized_T_arr; \/* arrival time (normalized with respect to max time) *\/$/;"	m	struct:s_prepacked_tnode_data
 normalized_slack	./base/vpr_types.h	/^	float normalized_slack; \/* slack (normalized with respect to max slack) *\/$/;"	m	struct:s_prepacked_tnode_data
 normalized_total_critical_paths	./base/vpr_types.h	/^	float normalized_total_critical_paths; \/* critical path count (normalized with respect to max count) *\/$/;"	m	struct:s_prepacked_tnode_data
@@ -3921,6 +3959,7 @@ set_src_bottom_side_net_one_sink_prefer_side	./fpga_x2p/clb_pin_remap/place_clb_
 set_src_left_side_net_one_sink_prefer_side	./fpga_x2p/clb_pin_remap/place_clb_pin_remap.c	/^void set_src_left_side_net_one_sink_prefer_side(int* prefer_side, $/;"	f
 set_src_right_side_net_one_sink_prefer_side	./fpga_x2p/clb_pin_remap/place_clb_pin_remap.c	/^void set_src_right_side_net_one_sink_prefer_side(int* prefer_side, $/;"	f
 set_src_top_side_net_one_sink_prefer_side	./fpga_x2p/clb_pin_remap/place_clb_pin_remap.c	/^void set_src_top_side_net_one_sink_prefer_side(int* prefer_side, $/;"	f
+set_type	./fpga_x2p/base/rr_chan.cpp	/^void RRChan::set_type(t_rr_type type) {$/;"	f	class:RRChan
 set_unroute_blk_pins_prefer_sides	./fpga_x2p/clb_pin_remap/place_clb_pin_remap.c	/^int set_unroute_blk_pins_prefer_sides(int n_blk, t_block* blk) {$/;"	f
 setcolor	./base/graphics.c	/^void setcolor (int cindex) $/;"	f
 setcolor	./base/graphics.c	/^void setcolor (int cindex) { }$/;"	f
@@ -4378,6 +4417,7 @@ type	./base/vpr_types.h	/^	t_type_ptr type;$/;"	m	struct:s_block
 type	./base/vpr_types.h	/^	t_type_ptr type;$/;"	m	struct:s_grid_tile
 type	./base/vpr_types.h	/^  t_rr_type type;$/;"	m	struct:s_cb
 type	./util/token.h	/^	enum e_token_type type;$/;"	m	struct:s_token	typeref:enum:s_token::e_token_type
+type_	./fpga_x2p/base/rr_chan.h	/^    t_rr_type type_; \/* channel type: CHANX or CHANY *\/$/;"	m	class:RRChan
 type_descriptors	./base/globals.c	/^struct s_type_descriptor *type_descriptors = NULL;$/;"	v	typeref:struct:s_type_descriptor
 type_descriptors_backup	./place/timing_place_lookup.c	/^static t_type_descriptor *type_descriptors_backup;$/;"	v	file:
 u	./route/route_common.h	/^	} u;$/;"	m	struct:s_heap	typeref:union:s_heap::__anon14
@@ -4460,7 +4500,12 @@ v_out_min	./power/power.h	/^	float v_out_min;$/;"	m	struct:s_power_mux_volt_pair
 val	./fpga_x2p/shell/read_opt_types.h	/^  char* val;  \/*The value*\/$/;"	m	struct:s_opt_info
 val_type	./fpga_x2p/shell/read_opt_types.h	/^  enum opt_val_type val_type; $/;"	m	struct:s_opt_info	typeref:enum:s_opt_info::opt_val_type
 valid	./base/vpr_types.h	/^	boolean valid; \/* Whether or not this molecule is still valid *\/$/;"	m	struct:s_pack_molecule
+valid_chan_type	./fpga_x2p/base/rr_chan.cpp	/^bool DeviceRRChan::valid_chan_type(t_rr_type chan_type) const {$/;"	f	class:DeviceRRChan
+valid_coordinator	./fpga_x2p/base/rr_chan.cpp	/^bool DeviceRRChan::valid_coordinator(t_rr_type chan_type, size_t x, size_t y) const {$/;"	f	class:DeviceRRChan
+valid_module_id	./fpga_x2p/base/rr_chan.cpp	/^bool DeviceRRChan::valid_module_id(t_rr_type chan_type, size_t module_id) const {$/;"	f	class:DeviceRRChan
+valid_node_id	./fpga_x2p/base/rr_chan.cpp	/^bool RRChan::valid_node_id(size_t node_id) const {$/;"	f	class:RRChan
 valid_primitives	./base/vpr_types.h	/^	t_cluster_placement_primitive **valid_primitives; \/* [0..num_pb_types-1] ptrs to linked list of valid primitives, for convenience, each linked list head is empty *\/$/;"	m	struct:s_cluster_placement_stats
+valid_type	./fpga_x2p/base/rr_chan.cpp	/^bool RRChan::valid_type(t_rr_type type) const {$/;"	f	class:RRChan
 validate_mirror_connection_blocks	./fpga_x2p/base/fpga_x2p_identify_routing.c	/^boolean validate_mirror_connection_blocks() {$/;"	f
 validate_mirror_switch_blocks	./fpga_x2p/base/fpga_x2p_identify_routing.c	/^boolean validate_mirror_switch_blocks() {$/;"	f
 validate_one_connection_block_mirror	./fpga_x2p/base/fpga_x2p_identify_routing.c	/^boolean validate_one_connection_block_mirror(t_cb* cur_cb) {$/;"	f

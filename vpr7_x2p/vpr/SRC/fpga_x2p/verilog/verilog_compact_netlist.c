@@ -1043,6 +1043,161 @@ void dump_compact_verilog_defined_connection_boxes(t_sram_orgz_info* cur_sram_or
   return; 
 }
 
+/* Call defined channels. 
+ * Ensure the port name here is co-herent to other sub-circuits(SB,CB,grid)!!!
+ */
+static 
+void dump_compact_verilog_defined_one_channel(FILE* fp,
+                                              int x, int y,
+                                              const RRChan& rr_chan, size_t subckt_id) {
+  if (NULL == fp) {
+    vpr_printf(TIO_MESSAGE_ERROR, "(File:%s, [LINE%d])Invalid File Handler!\n", __FILE__, __LINE__);
+    exit(1);
+  }
+
+  /* check x*/
+  assert((!(0 > x))&&(x < (nx + 1))); 
+  /* check y*/
+  assert((!(0 > y))&&(y < (ny + 1))); 
+
+  /* Comment lines */
+  switch (rr_chan.get_type()) {
+  case CHANX:
+    fprintf(fp, "//----- BEGIN Call Channel-X [%d][%d] module -----\n", x, y);
+    break;
+  case CHANY:
+    fprintf(fp, "//----- BEGIN call Channel-Y [%d][%d] module -----\n\n", x, y);
+    break;
+  default: 
+    vpr_printf(TIO_MESSAGE_ERROR, 
+               "(File:%s, [LINE%d])Invalid Channel Type!\n", 
+               __FILE__, __LINE__);
+    exit(1);
+  }
+
+  /* Call the define sub-circuit */
+  fprintf(fp, "%s ", 
+          gen_verilog_one_routing_channel_module_name(rr_chan.get_type(), subckt_id, -1));
+  fprintf(fp, "%s ", 
+          gen_verilog_one_routing_channel_instance_name(rr_chan.get_type(), x, y));
+  fprintf(fp, "(");
+  fprintf(fp, "\n");
+  /* dump global ports */
+  if (0 < dump_verilog_global_ports(fp, global_ports_head, FALSE)) {
+    fprintf(fp, ",\n");
+  }
+
+  /* LEFT/BOTTOM side port of CHANX/CHANY */
+  /* We apply an opposite port naming rule than function: fprint_routing_chan_subckt 
+   * In top-level netlists, we follow the same port name as switch blocks and connection blocks 
+   * When a track is in INC_DIRECTION, the LEFT/BOTTOM port would be an output of a switch block
+   * When a track is in DEC_DIRECTION, the LEFT/BOTTOM port would be an input of a switch block
+   */
+  for (size_t itrack = 0; itrack < rr_chan.get_chan_width(); ++itrack) {
+    switch (rr_chan.get_node(itrack)->direction) {
+    case INC_DIRECTION:
+      fprintf(fp, "%s, ",
+              gen_verilog_routing_channel_one_pin_name(rr_chan.get_node(itrack),
+                                                       x, y, itrack, OUT_PORT));
+      fprintf(fp, "\n");
+      break;
+    case DEC_DIRECTION:
+      fprintf(fp, "%s, ",
+              gen_verilog_routing_channel_one_pin_name(rr_chan.get_node(itrack),
+                                                       x, y, itrack, IN_PORT));
+      fprintf(fp, "\n");
+      break;
+    default:
+      vpr_printf(TIO_MESSAGE_ERROR, "(File: %s [LINE%d]) Invalid direction of %s[%d][%d]_track[%u]!\n",
+                 __FILE__, __LINE__,
+                 convert_chan_type_to_string(rr_chan.get_type()),
+                 x, y, itrack);
+      exit(1);
+    }
+  }
+  /* RIGHT/TOP side port of CHANX/CHANY */
+  /* We apply an opposite port naming rule than function: fprint_routing_chan_subckt 
+   * In top-level netlists, we follow the same port name as switch blocks and connection blocks 
+   * When a track is in INC_DIRECTION, the RIGHT/TOP port would be an input of a switch block
+   * When a track is in DEC_DIRECTION, the RIGHT/TOP port would be an output of a switch block
+   */
+  for (size_t itrack = 0; itrack < rr_chan.get_chan_width(); ++itrack) {
+    switch (rr_chan.get_node(itrack)->direction) {
+    case INC_DIRECTION:
+      fprintf(fp, "%s, ",
+              gen_verilog_routing_channel_one_pin_name(rr_chan.get_node(itrack),
+                                                       x, y, itrack, IN_PORT));
+      fprintf(fp, "\n");
+      break;
+    case DEC_DIRECTION:
+      fprintf(fp, "%s, ",
+              gen_verilog_routing_channel_one_pin_name(rr_chan.get_node(itrack),
+                                                       x, y, itrack, OUT_PORT));
+      fprintf(fp, "\n");
+      break;
+    default:
+      vpr_printf(TIO_MESSAGE_ERROR, "(File: %s [LINE%d]) Invalid direction of %s[%d][%d]_track[%u]!\n",
+                 __FILE__, __LINE__,
+                 convert_chan_type_to_string(rr_chan.get_type()),
+                 x, y, itrack);
+      exit(1);
+    }
+  }
+
+  /* output at middle point */
+  for (size_t itrack = 0; itrack < rr_chan.get_chan_width(); ++itrack) {
+    fprintf(fp, "%s_%d__%d__midout_%u_ ", 
+            convert_chan_type_to_string(rr_chan.get_type()),
+            x, y, itrack);
+    if (itrack < rr_chan.get_chan_width() - 1) {
+      fprintf(fp, ",");
+    }
+    fprintf(fp, "\n");
+  }
+  fprintf(fp, ");\n");
+
+  /* Comment lines */
+  fprintf(fp, 
+          "//----- END Call Verilog Module of %s [%u] -----\n\n", 
+          convert_chan_type_to_string(rr_chan.get_type()),
+          subckt_id);
+
+  /* Free */
+
+  return;
+}
+
+
+/* Call the sub-circuits for channels : Channel X and Channel Y*/
+void dump_compact_verilog_defined_channels(FILE* fp) {
+  int ix, iy;
+
+  if (NULL == fp) {
+    vpr_printf(TIO_MESSAGE_ERROR, "(File:%s, [LINE%d])Invalid File Handler!\n", __FILE__, __LINE__);
+    exit(1);
+  }
+
+  /* Channel X */
+  for (iy = 0; iy < (ny + 1); iy++) {
+    for (ix = 1; ix < (nx + 1); ix++) {
+      dump_compact_verilog_defined_one_channel(fp, ix, iy,
+                                               device_rr_chan.get_module_with_coordinator(CHANX, ix, iy),
+                                               device_rr_chan.get_module_id(CHANX, ix, iy));
+    }
+  }
+
+  /* Channel Y */
+  for (ix = 0; ix < (nx + 1); ix++) {
+    for (iy = 1; iy < (ny + 1); iy++) {
+      dump_compact_verilog_defined_one_channel(fp, ix, iy,
+                                               device_rr_chan.get_module_with_coordinator(CHANY, ix, iy),
+                                               device_rr_chan.get_module_id(CHANY, ix, iy));
+    }
+  }
+
+  return;
+}
+
 
 
 /** Print Top-level SPICE netlist in a compact way
@@ -1113,7 +1268,11 @@ void dump_compact_verilog_top_netlist(t_sram_orgz_info* cur_sram_orgz_info,
   dump_verilog_top_netlist_internal_wires(cur_sram_orgz_info, fp);
 
   /* Quote Routing structures: Channels */
-  dump_verilog_defined_channels(fp, LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices);
+  if (TRUE == compact_routing_hierarchy ) {
+    dump_compact_verilog_defined_channels(fp);
+  } else {
+    dump_verilog_defined_channels(fp, LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices);
+  }
 
   /* Quote Routing structures: Switch Boxes */
   if (TRUE == compact_routing_hierarchy ) {

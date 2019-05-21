@@ -30,6 +30,7 @@ class RRChan {
     bool is_mirror(RRChan& cand) const; /* evaluate if two RR_chan is mirror to each other */
   public: /* Mutators */
     void set_type(t_rr_type type); /* modify type */
+    void reserve_node(size_t node_size); /* reseve a number of nodes to the array */
     void add_node(t_rr_node* node, size_t node_segment); /* add a node to the array */
     void clear(); /* clear the content */
   private: /* internal functions */
@@ -51,11 +52,15 @@ class RRChan {
  *    and link each RR channel to
  */
 class DeviceRRChan {
+  public: /* contructor */
   public: /* Accessors */
     RRChan get_module(t_rr_type chan_type, size_t module_id) const;
+    RRChan get_module_with_coordinator(t_rr_type chan_type, size_t x, size_t y) const;
+    size_t get_num_modules(t_rr_type chan_type) const;
+    size_t get_module_id(t_rr_type chan_type, size_t x, size_t y) const;
   public: /* Mutators */
     void init_module_ids(size_t device_height, size_t device_width);
-    void add_one_chan_module(t_rr_type chan_type, size_t x, size_t y, RRChan rr_chan); /* Add a new unique module of RRChan*/
+    void add_one_chan_module(t_rr_type chan_type, size_t x, size_t y, RRChan& rr_chan); /* Add a new unique module of RRChan*/
     void clear();
   private: /* internal functions */
     void clear_chan(t_rr_type chan_type);

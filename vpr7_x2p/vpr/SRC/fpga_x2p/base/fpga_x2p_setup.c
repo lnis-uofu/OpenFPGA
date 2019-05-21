@@ -1397,6 +1397,10 @@ void fpga_x2p_setup(t_vpr_setup vpr_setup,
     /* Idenify mirror and rotatable Switch blocks and Connection blocks */
     identify_mirror_switch_blocks();
     identify_mirror_connection_blocks();
+
+    /* Assign Gobal variable: build the Routing Resource Channels */
+    device_rr_chan = build_device_rr_chan(num_rr_nodes, rr_node, rr_node_indices, Arch->num_segments, rr_indexed_data);
+
     /* Rotatable will be done in the next step 
     identify_rotatable_switch_blocks(); 
     identify_rotatable_connection_blocks(); 
