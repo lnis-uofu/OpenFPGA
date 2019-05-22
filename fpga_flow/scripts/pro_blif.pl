@@ -9,7 +9,8 @@ use Time::gmtime;
 my $mydate = gmctime();
 my ($char_per_line) = (80);
 
-my ($fname,$frpt);
+my ($fname,$frpt,$finitial);
+my $latch_token;
 my ($remove_buffers) = (0);
 my ($default_clk_name) = ("clk");
 my @buffers_to_remove;
@@ -24,6 +25,7 @@ sub print_usage()
   print "              -o <output_blif_path>\n";
   print "      Options: (Optional)\n";
   print "              -remove_buffers\n";
+  print "              -initial_blif <input_blif_path>\n";
   print "\n";
   return 1;
 }
@@ -44,6 +46,8 @@ sub opts_read()
       {$fname = $ARGV[$iargv+1];}
       elsif ("-o" eq $ARGV[$iargv]) 
       {$frpt = $ARGV[$iargv+1];}
+      elsif ("-initial_blif" eq $ARGV[$iargv]) 
+      {$finitial = $ARGV[$iargv+1];}
       elsif ("-remove_buffers" eq $ARGV[$iargv]) {
         $remove_buffers = 1;
       }
@@ -212,6 +216,34 @@ sub scan_blif()
   my $input_lines;
   my (@input_buffer);
   my ($line_no) = (0);
+
+  if(undef eq $finitial){
+    $latch_token = "re clk";
+  } else {
+    my $latch_token_found = 0;
+    my $count = 0;
+    my ($FIN0) = FileHandle->new;
+    if ($FIN0->open("< $finitial")) {
+      print "INFO: Parsing $finitial...\n";
+    } else {
+       die "ERROR: Fail to open $finitial!\n";
+    }
+    while((!$latch_token_found)&&(!eof($FIN0))){
+      # Get one line
+      $lines = &read_blifline($FIN0);
+      if (!defined($lines)) {
+        next;
+      }
+      @tokens = split('\s+',$lines);
+      if(".latch" eq $tokens[0]) {
+        if($#tokens == 5){
+          $latch_token = "$tokens[3] $tokens[4]";
+          $latch_token_found = 1;
+        }
+      }
+    }
+    close($FIN0);
+  }
   
   # Pre-process the netlist
   # Open src file first-scan to check if we have clock
@@ -244,11 +276,11 @@ sub scan_blif()
   close($FIN);
 
   # Add default clock
-  print "INFO: $clk_num clock ports need to be added.\n";
-  print "INFO: have_default_clk: $have_default_clk, need_default_clk: $need_default_clk\n";
-  if ((0 == $have_default_clk)&&(1 == $need_default_clk)) {
-    push @input_tokens,$default_clk_name;
-  }
+#  print "INFO: $clk_num clock ports need to be added.\n";
+#  print "INFO: have_default_clk: $have_default_clk, need_default_clk: $need_default_clk\n";
+#  if ((0 == $have_default_clk)&&(1 == $need_default_clk)) {
+#    push @input_tokens,$default_clk_name;
+#  }
   # Bypass some sensitive tokens
   for(my $itok = 0; $itok < $#input_tokens+1; $itok++) {
     if ("unconn" eq $input_tokens[$itok]) {
@@ -332,7 +364,7 @@ sub scan_blif()
         for (my $i=0; $i<3; $i++) {
           print $FOUT "$tokens[$i] ";
         }
-        print $FOUT "re clk $tokens[3]\n";
+        print $FOUT "$latch_token $tokens[3]\n";
       } elsif ($#tokens == 5) {
         # replace the clock name with clk
         for (my $i=0; $i < ($#tokens+1); $i++) {

@@ -1,9 +1,9 @@
 // Benchmark "s298.bench" written by ABC on Tue Mar  5 10:03:54 2019
 
-module s298 ( clk, 
+module s298 ( clock, 
     G0, G1, G2,
     G117, G132, G66, G118, G133, G67  );
-  input  G0, G1, G2, clk;
+  input  G0, G1, G2, clock;
   output G117, G132, G66, G118, G133, G67;
   reg G10, G11, G12, G13, G14, G15, G16, G17, G18, G19, G20, G21, G22, G23;
   wire n57, n59, n64, n66, n21_1, n26_1, n31_1, n36_1, n41_1, n46_1, n51_1,
@@ -32,7 +32,7 @@ module s298 ( clk,
   assign G118 = G19;
   assign G133 = G21;
   assign G67 = G17;
-  always @ (posedge clk) begin
+  always @ (posedge clock) begin
     G10 <= n21_1;
     G11 <= n26_1;
     G12 <= n31_1;

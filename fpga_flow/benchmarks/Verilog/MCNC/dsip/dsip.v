@@ -1,6 +1,6 @@
 // Benchmark "top" written by ABC on Tue Mar  5 10:01:57 2019
 
-module dsip ( clk, 
+module dsip ( clock, 
     pcount_3_, pkey_5_, pkey_131_, pkey_144_, pkey_157_, pkey_230_,
     pkey_243_, pcount_2_, pkey_4_, pkey_132_, pkey_158_, pkey_169_,
     pkey_242_, pcount_1_, pkey_146_, pkey_168_, pkey_245_, pcount_0_,
@@ -94,7 +94,7 @@ module dsip ( clk,
     pkey_133_, pkey_142_, pkey_218_, pkey_227_, pkey_232_, pkey_241_,
     pkey_2_, pkey_99_, pkey_134_, pkey_141_, pkey_219_, pkey_226_,
     pkey_233_, pkey_240_, pkey_70_, pkey_81_, pkey_92_, pkey_180_,
-    pkey_193_, pkey_80_, pkey_93_, pkey_107_, pkey_194_, pkey_206_, clk,
+    pkey_193_, pkey_80_, pkey_93_, pkey_107_, pkey_194_, pkey_206_, clock,
     pkey_50_, pkey_61_, pkey_94_, pkey_182_, pkey_195_, pkey_209_,
     pstart_0_, pkey_51_, pkey_60_, pkey_109_, pkey_181_, pkey_196_,
     pkey_208_, pkey_52_, pkey_74_, pkey_85_, pkey_104_, pkey_171_,
@@ -1686,7 +1686,7 @@ module dsip ( clk,
   assign n2465 = ~pencrypt_0_ & ~pstart_0_ & ~pcount_1_ & ~pcount_0_;
   assign n2466 = pcount_2_ ? ~pencrypt_0_ : (~pstart_0_ & pencrypt_0_);
   assign n2467 = n1341 | ~n1330 | (~pcount_2_ & n1329);
-  always @ (posedge clk) begin
+  always @ (posedge clock) begin
     pksi_17_ <= n853;
     pksi_185_ <= n857;
     n_n2410 <= n861;
