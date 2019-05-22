@@ -33,6 +33,7 @@
 /* END */
 /* SPICE model Support: Xifan TANG*/
 #include "spice_types.h"
+#include "sides.h"
 /* END */
 
 typedef struct s_clock_arch t_clock_arch;
@@ -63,10 +64,11 @@ enum e_interconnect {
 	COMPLETE_INTERC = 1, DIRECT_INTERC = 2, MUX_INTERC = 3
 };
 
-/* Orientations. */
+/* Orientations. 
 enum e_side {
 	TOP = 0, RIGHT = 1, BOTTOM = 2, LEFT = 3
 };
+*/
 
 /* pin location distributions */
 enum e_pin_location_distr {

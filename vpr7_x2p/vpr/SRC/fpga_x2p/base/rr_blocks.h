@@ -18,7 +18,22 @@
 
 /* RRChan coordinator class */
 
-/* Object of a channel in a routing resource graph */
+/* Object of a routing channel in a routing resource graph 
+ * This is a collection of rr_nodes, which may be replaced with RRNodeId in new RRGraph 
+ * Each routing channel is categorized in terms of directionality, 
+ * being either X-direction or Y-direction
+ *   -------------   ------
+ *  |             | |      |
+ *  |             | |  Y   |
+ *  |     CLB     | | Chan |
+ *  |             | |      |
+ *  |             | |      |
+ *   -------------   ------
+ *   -------------
+ *  |      X      |
+ *  |    Channel  |
+ *   -------------
+ */
 class RRChan {
   public: /* Accessors */
     t_rr_type get_type() const;
@@ -73,6 +88,66 @@ class DeviceRRChan {
     std::vector< std::vector<size_t> > chany_module_ids_; /* Module id in modules_ for each Y-direction rr_channel */ 
     std::vector<RRChan> chanx_modules_; /* Detailed internal structure of each unique module */
     std::vector<RRChan> chany_modules_; /* Detailed internal structure of each unique module */
+};
+
+/* Object Switch Block 
+ * This is a collection of rr_nodes, which may be replaced with RRNodeId in new RRGraph 
+ *                        TOP SIDE
+ *              ---------------------------------
+ *             | OPIN_NODE CHAN_NODES OPIN_NODES |
+ *             |                                 |
+ *             | OPIN_NODES           OPIN_NODES |
+ *             |                                 |
+ * LEFT SIDE   |        Switch Block             |  RIGHT SIDE
+ *             |                                 |
+ *             | CHAN_NODES           CHAN_NODES |
+ *             |                                 |
+ *             | OPIN_NODES           OPIN_NODES |
+ *             |                                 |
+ *             | OPIN_NODE CHAN_NODES OPIN_NODES |
+ *              ---------------------------------
+ *                       BOTTOM SIDE
+ * num_sides: number of sides of this switch block
+ * chan_rr_node: a collection of rr_nodes as routing tracks locating at each side of the Switch block <0..num_sides-1><0..chan_width-1>
+ * chan_rr_node_direction: Indicate if this rr_node is an input or an output of the Switch block <0..num_sides-1><0..chan_width-1>
+ * ipin_rr_node: a collection of rr_nodes as IPIN of a GRID locating at each side of the Switch block <0..num_sides-1><0..num_ipin_rr_nodes-1>
+ * ipin_rr_node_grid_side: specify the side of the input pins on which side of a GRID  <0..num_sides-1><0..num_ipin_rr_nodes-1>
+ * opin_rr_node: a collection of rr_nodes as OPIN of a GRID locating at each side of the Switch block <0..num_sides-1><0..num_opin_rr_nodes-1>
+ * opin_rr_node_grid_side: specify the side of the output pins on which side of a GRID  <0..num_sides-1><0..num_opin_rr_nodes-1>
+ * num_reserved_conf_bits: number of reserved configuration bits this switch block requires (mainly due to RRAM-based multiplexers)
+ * num_conf_bits: number of configuration bits this switch block requires
+ */
+class RRSwitchBlock {
+  public: /* Contructors */
+  public: /* Accessors */
+    size_t get_num_sides() const; /* Get the number of sides of this SB */
+    size_t get_chan_width(enum e_side side) const; /* Get the number of routing tracks on a side */
+    enum PORTS get_chan_node_direction(enum e_side side, size_t track_id) const; /* Get the direction of a rr_node at a given side and track_id */
+    t_rr_node* get_chan_node(enum e_side side, size_t track_id) const; /* get a rr_node at a given side and track_id */
+    size_t get_num_ipin_rr_nodes(enum e_side side) const; /* Get the number of IPIN rr_nodes on a side */
+    size_t get_num_opin_rr_nodes(enum e_side side) const; /* Get the number of OPIN rr_nodes on a side */
+    int get_node_index(t_rr_node* node, enum e_side node_side, enum PORTS node_direction) const; /* Get the node index in the array, return -1 if not found */
+    void get_node_side_and_index(t_rr_node* node,  enum PORTS node_direction, enum e_side* node_side, int* node_index) const; /* Given a rr_node, try to find its side and index in the Switch block */
+    bool is_node_exist_opposite_side(t_rr_node* node, enum e_side node_side) const; /* Check if the node exist in the opposite side of this Switch Block */
+    size_t get_num_reserved_conf_bits() const;
+    size_t get_num_conf_bits() const;
+    bool is_node_imply_short_connection(t_rr_node* src_node) const; /* Check if the node imply a short connection inside the SB, which happens to long wires across a FPGA fabric */
+    bool is_mirror(RRSwitchBlock& cand) const; /* check if the candidate SB is a mirror of the current one */
+  public: /* Mutators */
+  private: /* internal functions */
+    bool is_node_mirror (RRSwitchBlock& cand, enum e_side node_side, size_t track_id) const; 
+    bool validate_num_sides() const;
+    bool validate_side(enum e_side side) const;
+    bool validate_track_id(enum e_side side, size_t track_id) const;
+  private: /* Internal Data */
+    std::vector< std::vector<enum PORTS> >  chan_rr_node_direction_; 
+    std::vector< std::vector<t_rr_node*> >  chan_rr_node_;
+    std::vector< std::vector<t_rr_node*> >  ipin_rr_node_;
+    std::vector< std::vector<enum e_side> > ipin_rr_node_grid_side_;
+    std::vector< std::vector<t_rr_node*> >  opin_rr_node_;
+    std::vector< std::vector<enum e_side> > opin_rr_node_grid_side_;
+    size_t num_reserved_conf_bits_;
+    size_t num_conf_bits_;
 };
 
 #endif

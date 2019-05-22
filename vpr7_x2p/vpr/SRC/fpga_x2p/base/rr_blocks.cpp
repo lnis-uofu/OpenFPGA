@@ -101,7 +101,7 @@ void RRChan::reserve_node(size_t node_size) {
 /* add a node to the array */
 void RRChan::add_node(t_rr_node* node, size_t node_segment) {
   /* resize the array if needed, node is placed in the sequence of node->ptc_num */
-  if (node->ptc_num + 1 > nodes_.size()) {
+  if (size_t(node->ptc_num + 1) > nodes_.size()) {
     nodes_.resize(node->ptc_num + 1); /* resize to the maximum */
     node_segments_.resize(node->ptc_num + 1); /* resize to the maximum */
   }
@@ -146,9 +146,9 @@ RRChan DeviceRRChan::get_module(t_rr_type chan_type, size_t module_id) const {
 
   if (CHANX == chan_type) {
     return chanx_modules_[module_id]; 
-  } else if (CHANY == chan_type) {
-    return chany_modules_[module_id]; 
   }
+  assert (CHANY == chan_type);
+  return chany_modules_[module_id]; 
 }
 
 RRChan DeviceRRChan::get_module_with_coordinator(t_rr_type chan_type, size_t x, size_t y) const {
@@ -163,9 +163,9 @@ size_t DeviceRRChan::get_num_modules(t_rr_type chan_type) const {
 
   if (CHANX == chan_type) {
     return chanx_modules_.size(); 
-  } else if (CHANY == chan_type) {
-    return chany_modules_.size(); 
   }
+  assert (CHANY == chan_type);
+  return chany_modules_.size(); 
 }
 
 size_t DeviceRRChan::get_module_id(t_rr_type chan_type, size_t x, size_t y) const {
@@ -173,9 +173,9 @@ size_t DeviceRRChan::get_module_id(t_rr_type chan_type, size_t x, size_t y) cons
 
   if (CHANX == chan_type) {
     return chanx_module_ids_[x][y]; 
-  } else if (CHANY == chan_type) {
-    return chany_module_ids_[x][y]; 
   }
+  assert (CHANY == chan_type);
+  return chany_module_ids_[x][y]; 
 }
 
 void DeviceRRChan::init_module_ids(size_t device_width, size_t device_height) {
@@ -266,17 +266,17 @@ bool DeviceRRChan::valid_coordinator(t_rr_type chan_type, size_t x, size_t y) co
   assert(valid_chan_type(chan_type));
 
   if (CHANX == chan_type) {
-    if ( (0 > x) || (x > chanx_module_ids_.size() - 1 )) {
+    if (x > chanx_module_ids_.size() - 1 ) {
       return false;
     }
-    if ( (0 > y) || (y > chanx_module_ids_[x].size() - 1) ) {
+    if (y > chanx_module_ids_[x].size() - 1) {
       return false;
     }
   } else if (CHANY == chan_type) {
-    if ( (0 > x) && (x > chany_module_ids_.size() - 1) ) {
+    if (x > chany_module_ids_.size() - 1) {
       return false;
     }
-    if ( (0 > y) && (y > chany_module_ids_[x].size() - 1) ) {
+    if (y > chany_module_ids_[x].size() - 1) {
       return false;
     }
   }
@@ -301,3 +301,367 @@ bool DeviceRRChan::valid_module_id(t_rr_type chan_type, size_t module_id) const 
   return false;
 }
 
+/* Member Functions of Class RRSwitchBlock*/
+
+/* Accessors */
+
+/* Get the number of sides of this SB */
+size_t RRSwitchBlock::get_num_sides() const {
+  assert (validate_num_sides());
+  return chan_rr_node_direction_.size();
+}
+
+/* Get the number of routing tracks on a side */
+size_t RRSwitchBlock::get_chan_width(enum e_side side) const {
+  Side side_manager(side);
+  assert(side_manager.validate());
+  return chan_rr_node_[side_manager.to_size_t()].size(); 
+}
+
+/* Get the direction of a rr_node at a given side and track_id */
+enum PORTS RRSwitchBlock::get_chan_node_direction(enum e_side side, size_t track_id) const {
+  Side side_manager(side);
+  assert(side_manager.validate());
+ 
+  /* Ensure the side is valid in the context of this switch block */ 
+  assert( validate_side(side) );
+
+  /* Ensure the track is valid in the context of this switch block at a specific side */ 
+  assert( validate_track_id(side, track_id) );
+  
+  return chan_rr_node_direction_[side_manager.to_size_t()][track_id]; 
+}
+
+/* get a rr_node at a given side and track_id */
+t_rr_node* RRSwitchBlock::get_chan_node(enum e_side side, size_t track_id) const {
+  Side side_manager(side);
+  assert(side_manager.validate());
+ 
+  /* Ensure the side is valid in the context of this switch block */ 
+  assert( validate_side(side) );
+
+  /* Ensure the track is valid in the context of this switch block at a specific side */ 
+  assert( validate_track_id(side, track_id) );
+  
+  return chan_rr_node_[side_manager.to_size_t()][track_id]; 
+} 
+
+/* Get the number of IPIN rr_nodes on a side */
+size_t RRSwitchBlock::get_num_ipin_rr_nodes(enum e_side side) const {
+  Side side_manager(side);
+  assert(side_manager.validate());
+  return ipin_rr_node_[side_manager.to_size_t()].size(); 
+} 
+
+/* Get the number of OPIN rr_nodes on a side */
+size_t RRSwitchBlock::get_num_opin_rr_nodes(enum e_side side) const {
+  Side side_manager(side);
+  assert(side_manager.validate());
+  return opin_rr_node_[side_manager.to_size_t()].size(); 
+} 
+
+/* Get the node index in the array, return -1 if not found */
+int RRSwitchBlock::get_node_index(t_rr_node* node, 
+                                  enum e_side node_side, 
+                                  enum PORTS node_direction) const {
+  size_t cnt;
+  int ret; 
+  Side side_manager(node_side);
+
+  cnt = 0;
+  ret = -1;
+
+  /* Depending on the type of rr_node, we search different arrays */
+  switch (node->type) {
+  case CHANX:
+  case CHANY:
+    for (size_t inode = 0; inode < get_chan_width(node_side); ++inode) {
+      if ((node == chan_rr_node_[side_manager.to_size_t()][inode])
+        /* Check if direction meets specification */
+        &&(node_direction == chan_rr_node_direction_[side_manager.to_size_t()][inode])) {
+        cnt++;
+        ret = inode;
+      }
+    }
+    break;
+  case IPIN:
+    for (size_t inode = 0; inode < get_num_ipin_rr_nodes(node_side); ++inode) {
+      if (node == ipin_rr_node_[side_manager.to_size_t()][inode]) {
+        cnt++;
+        ret = inode;
+      }
+    }
+    break;
+  case OPIN:
+    for (size_t inode = 0; inode < get_num_opin_rr_nodes(node_side); ++inode) {
+      if (node == opin_rr_node_[side_manager.to_size_t()][inode]) {
+        cnt++;
+        ret = inode;
+      }
+    }
+    break;
+  default:
+    vpr_printf(TIO_MESSAGE_ERROR, "(File:%s, [LINE%d])Invalid cur_rr_node type! Should be [CHANX|CHANY|IPIN|OPIN]\n", __FILE__, __LINE__);
+    exit(1);
+  }
+
+  assert((0 == cnt)||(1 == cnt));
+
+  return ret; /* Return an invalid value: nonthing is found*/
+
+}
+
+/* Check if the node exist in the opposite side of this Switch Block */
+bool RRSwitchBlock::is_node_exist_opposite_side(t_rr_node* node, 
+                                                enum e_side node_side) const {
+  Side side_manager(node_side);
+  int index;
+
+  assert((CHANX == node->type) || (CHANY == node->type));
+
+  /* See if we can find the same src_rr_node in the opposite chan_side 
+   * if there is one, it means a shorted wire across the SB 
+   */
+  index = get_node_index(node, side_manager.get_opposite(), IN_PORT);
+
+  if (-1 != index) {
+    return true;
+  }
+
+  return false;
+}
+
+/* Get the side of a node in this SB */
+void RRSwitchBlock::get_node_side_and_index(t_rr_node* node, 
+                                            enum PORTS node_direction,
+                                            enum e_side* node_side, 
+                                            int* node_index) const {
+  size_t side;
+  Side side_manager;
+  
+  /* Count the number of existence of cur_rr_node in cur_sb_info
+   * It could happen that same cur_rr_node appears on different sides of a SB
+   * For example, a routing track go vertically across the SB.
+   * Then its corresponding rr_node appears on both TOP and BOTTOM sides of this SB. 
+   * We need to ensure that the found rr_node has the same direction as user want.
+   * By specifying the direction of rr_node, There should be only one rr_node can satisfy!
+   */
+  for (side = 0; side < get_num_sides(); ++side) {
+    side_manager.set_side(side);
+    (*node_index) = get_node_index(node, side_manager.get_side(), node_direction);
+    if (-1 != (*node_index)) {
+      break;
+    }
+  }
+
+  if (side == get_num_sides()) {
+    /* we find nothing, return NUM_SIDES, and a OPEN node (-1) */
+    (*node_side) = NUM_SIDES;
+    assert(-1 == (*node_index));
+    return;
+  }
+
+  (*node_side) = side_manager.get_side();
+  assert(-1 != (*node_index));
+
+  return;
+} 
+
+size_t RRSwitchBlock::get_num_reserved_conf_bits() const {
+  return num_reserved_conf_bits_;
+}
+    
+size_t RRSwitchBlock::get_num_conf_bits() const {
+  return num_conf_bits_;
+}
+
+/* Check if the node imply a short connection inside the SB, which happens to long wires across a FPGA fabric */
+bool RRSwitchBlock::is_node_imply_short_connection(t_rr_node* src_node) const {
+
+  assert((CHANX == src_node->type) || (CHANY == src_node->type));
+  
+  for (size_t inode = 0; inode < size_t(src_node->num_drive_rr_nodes); ++inode) {
+    enum e_side side;
+    int index; 
+    get_node_side_and_index(src_node->drive_rr_nodes[inode], IN_PORT, &side, &index);
+    /* We need to be sure that drive_rr_node is part of the SB */
+    if (((-1 == index) || (NUM_SIDES == side)) 
+       && ((CHANX == src_node->drive_rr_nodes[inode]->type) || (CHANY == src_node->drive_rr_nodes[inode]->type))) {
+      return true;
+    }
+  }
+
+  return false;
+
+
+}
+
+/* check if the candidate SB is a mirror of the current one */
+/* Idenify mirror Switch blocks 
+ * Check each two switch blocks: 
+ * 1. Number of channel/opin/ipin rr_nodes are same 
+ * For channel rr_nodes
+ * 2. check if their track_ids (ptc_num) are same
+ * 3. Check if the switches (ids) are same
+ * For opin/ipin rr_nodes, 
+ * 4. check if their parent type_descriptors same, 
+ * 5. check if pin class id and pin id are same 
+ * If all above are satisfied, the two switch blocks are mirrors!
+ */
+bool RRSwitchBlock::is_mirror(RRSwitchBlock& cand) const {
+  /* check the numbers of sides */
+  if (get_num_sides() != cand.get_num_sides()) {
+    return false;
+  }
+
+  /* check the numbers/directionality of channel rr_nodes */
+  for (size_t side = 0; side < get_num_sides(); ++side) {
+    Side side_manager(side);
+
+    /* Ensure we have the same channel width on this side */
+    if (get_chan_width(side_manager.get_side()) != cand.get_chan_width(side_manager.get_side())) {
+      return false;
+    }
+    for (size_t itrack = 0; itrack < get_chan_width(side_manager.get_side()); ++itrack) {
+      /* Check the directionality of each node */
+      if (get_chan_node_direction(side_manager.get_side(), itrack) != cand.get_chan_node_direction(side_manager.get_side(), itrack)) {
+        return false;
+      }
+      /* Check the track_id of each node */
+      if (get_chan_node(side_manager.get_side(), itrack)->ptc_num != cand.get_chan_node(side_manager.get_side(), itrack)->ptc_num) {
+        return false;
+      }
+      /* For OUT_PORT rr_node, we need to check fan-in */
+      if (OUT_PORT != get_chan_node_direction(side_manager.get_side(), itrack)) {
+        continue; /* skip IN_PORT */
+      }
+
+      if (false == is_node_mirror(cand, side_manager.get_side(), itrack)) {
+        return false;
+      } 
+    }
+  } 
+
+  /* check the numbers of opin_rr_nodes */
+  for (size_t side = 0; side < get_num_sides(); ++side) {
+    Side side_manager(side);
+
+    if (get_num_ipin_rr_nodes(side_manager.get_side()) != cand.get_num_ipin_rr_nodes(side_manager.get_side())) {
+      return false;
+    }
+  }
+
+  /* Make sure the number of conf bits are the same */
+  if ( ( get_num_conf_bits() != cand.get_num_conf_bits() ) 
+    || ( get_num_reserved_conf_bits() != cand.get_num_reserved_conf_bits() ) ) {
+    return false;
+  }
+
+  return true;
+}
+
+/* Internal functions */
+
+/* check if two rr_nodes have a similar set of drive_rr_nodes 
+ * for each drive_rr_node:
+ * 1. CHANX or CHANY: should have the same side and index
+ * 2. OPIN or IPIN: should have the same side and index
+ * 3. each drive_rr_switch should be the same 
+ */
+bool RRSwitchBlock::is_node_mirror(RRSwitchBlock& cand, 
+                                   enum e_side node_side, 
+                                   size_t track_id) const {
+  /* Ensure rr_nodes are either the output of short-connection or multiplexer  */
+  t_rr_node* node = this->get_chan_node(node_side, track_id);
+  t_rr_node* cand_node = cand.get_chan_node(node_side, track_id);
+  bool is_short_conkt = this->is_node_imply_short_connection(node);
+  if (is_short_conkt != cand.is_node_imply_short_connection(cand_node)) {
+    return false;
+  }
+  /* Find the driving rr_node in this sb */
+  if (true == is_short_conkt) {
+    /* Ensure we have the same track id for the driving nodes */
+    if ( this->is_node_exist_opposite_side(node, node_side)
+      != cand.is_node_exist_opposite_side(cand_node, node_side)) {
+      return false;
+    }
+  } else { /* check driving rr_nodes */
+    if ( node->num_drive_rr_nodes != cand_node->num_drive_rr_nodes ) {
+      return false;
+    }
+    for (size_t inode = 0; inode < size_t(node->num_drive_rr_nodes); ++inode) {
+      /* node type should be the same  */
+      if ( node->drive_rr_nodes[inode]->type
+        != cand_node->drive_rr_nodes[inode]->type) {
+        return false;
+      }
+      /* switch type should be the same  */
+      if ( node->drive_switches[inode]
+        != cand_node->drive_switches[inode]) {
+        return false;
+      }
+      int src_node_id, des_node_id;
+      enum e_side src_node_side, des_node_side; 
+      this->get_node_side_and_index(node->drive_rr_nodes[inode], OUT_PORT, &src_node_side, &src_node_id);
+       cand.get_node_side_and_index(cand_node->drive_rr_nodes[inode], OUT_PORT, &des_node_side, &des_node_id);
+      if (src_node_id != des_node_id) {
+        return false;
+      } 
+      if (src_node_side != des_node_side) {
+        return false;
+      } 
+    }
+  }
+
+  return true;
+} 
+
+/* Validate if the number of sides are consistent among internal data arrays ! */
+bool RRSwitchBlock::validate_num_sides() const {
+  size_t num_sides = chan_rr_node_direction_.size();
+
+  if ( num_sides != chan_rr_node_.size() ) {
+    return false;
+  }
+
+  if ( num_sides != ipin_rr_node_.size() ) {
+    return false;
+  }
+
+  if ( num_sides != ipin_rr_node_grid_side_.size() ) {
+    return false;
+  }
+
+  if ( num_sides != opin_rr_node_.size() ) {
+    return false;
+  }
+
+  if ( num_sides != opin_rr_node_grid_side_.size() ) {
+    return false;
+  }
+
+  return true; 
+}
+
+/* Check if the side valid in the context: does the switch block have the side? */
+bool RRSwitchBlock::validate_side(enum e_side side) const {
+  Side side_manager(side);
+  if ( side_manager.to_size_t() < get_num_sides() ) {
+    return true;
+  }
+  return false;
+}
+
+/* Check the track_id is valid for chan_rr_node_ and chan_rr_node_direction_ */
+bool RRSwitchBlock::validate_track_id(enum e_side side, size_t track_id) const {
+  Side side_manager(side);
+
+  if (false == validate_side(side)) {
+    return false;
+  } 
+  if ( track_id < chan_rr_node_[side_manager.to_size_t()].size() ) {
+    return true;
+  }
+
+  return false;
+}
