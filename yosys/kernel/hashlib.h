@@ -147,7 +147,7 @@ struct hash_ptr_ops {
 		return a == b;
 	}
 	static inline unsigned int hash(const void *a) {
-		return (unsigned long)a;
+		return (uintptr_t)a;
 	}
 };
 
@@ -866,6 +866,13 @@ public:
 
 	bool operator!=(const pool &other) const {
 		return !operator==(other);
+	}
+
+	bool hash() const {
+		unsigned int hashval = mkhash_init;
+		for (auto &it : entries)
+			hashval ^= ops.hash(it.udata);
+		return hashval;
 	}
 
 	void reserve(size_t n) { entries.reserve(n); }

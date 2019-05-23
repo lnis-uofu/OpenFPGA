@@ -1275,14 +1275,14 @@ module \$assert (A, EN);
 
 input A, EN;
 
-`ifndef SIMLIB_NOCHECKS
+/*`ifndef SIMLIB_NOCHECKS
 always @* begin
 	if (A !== 1'b1 && EN === 1'b1) begin
 		$display("Assertion %m failed!");
 		$stop;
 	end
 end
-`endif
+`endif */
 
 endmodule
 
@@ -1292,19 +1292,43 @@ module \$assume (A, EN);
 
 input A, EN;
 
-`ifndef SIMLIB_NOCHECKS
+/*`ifndef SIMLIB_NOCHECKS
 always @* begin
 	if (A !== 1'b1 && EN === 1'b1) begin
 		$display("Assumption %m failed!");
 		$stop;
 	end
 end
-`endif
+`endif */
 
 endmodule
 
 // --------------------------------------------------------
 
+module \$live (A, EN);
+
+input A, EN;
+
+endmodule
+
+// --------------------------------------------------------
+
+module \$fair (A, EN);
+
+input A, EN;
+
+endmodule
+
+// --------------------------------------------------------
+
+module \$cover (A, EN);
+
+input A, EN;
+
+endmodule
+
+// --------------------------------------------------------
+/*
 module \$initstate (Y);
 
 output reg Y = 1;
@@ -1319,7 +1343,7 @@ always @(cnt, trig) begin
 end
 
 endmodule
-
+*/
 // --------------------------------------------------------
 
 module \$anyconst (Y);
@@ -1346,6 +1370,30 @@ endmodule
 
 // --------------------------------------------------------
 
+module \$allconst (Y);
+
+parameter WIDTH = 0;
+
+output [WIDTH-1:0] Y;
+
+assign Y = 'bx;
+
+endmodule
+
+// --------------------------------------------------------
+
+module \$allseq (Y);
+
+parameter WIDTH = 0;
+
+output [WIDTH-1:0] Y;
+
+assign Y = 'bx;
+
+endmodule
+
+// --------------------------------------------------------
+
 module \$equiv (A, B, Y);
 
 input A, B;
@@ -1353,14 +1401,14 @@ output Y;
 
 assign Y = (A !== 1'bx && A !== B) ? 1'bx : A;
 
-`ifndef SIMLIB_NOCHECKS
+/*`ifndef SIMLIB_NOCHECKS
 always @* begin
 	if (A !== 1'bx && A !== B) begin
 		$display("Equivalence failed!");
 		$stop;
 	end
 end
-`endif
+`endif */
 
 endmodule
 

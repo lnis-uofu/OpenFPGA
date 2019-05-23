@@ -169,6 +169,7 @@ struct SubmodWorker
 		}
 
 		new_mod->fixup_ports();
+		ct.setup_module(new_mod);
 
 		for (RTLIL::Cell *cell : submod.cells) {
 			RTLIL::Cell *new_cell = new_mod->addCell(cell->name, cell);
@@ -268,7 +269,7 @@ struct SubmodWorker
 
 struct SubmodPass : public Pass {
 	SubmodPass() : Pass("submod", "moving part of a module to a new submodule") { }
-	virtual void help()
+	void help() YS_OVERRIDE
 	{
 		//   |---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|
 		log("\n");
@@ -296,7 +297,7 @@ struct SubmodPass : public Pass {
 		log("with -copy to not modify the source module.\n");
 		log("\n");
 	}
-	virtual void execute(std::vector<std::string> args, RTLIL::Design *design)
+	void execute(std::vector<std::string> args, RTLIL::Design *design) YS_OVERRIDE
 	{
 		log_header(design, "Executing SUBMOD pass (moving cells to submodules as requested).\n");
 		log_push();

@@ -1,4 +1,4 @@
-/*
+/* -*- c++ -*-
  *  yosys -- Yosys Open SYnthesis Suite
  *
  *  Copyright (C) 2012  Clifford Wolf <clifford@clifford.at>
@@ -74,6 +74,16 @@
 
 #ifdef YOSYS_ENABLE_TCL
 #  include <tcl.h>
+#  ifdef YOSYS_MXE_HACKS
+extern Tcl_Command Tcl_CreateCommand(Tcl_Interp *interp, const char *cmdName, Tcl_CmdProc *proc, ClientData clientData, Tcl_CmdDeleteProc *deleteProc);
+extern Tcl_Interp *Tcl_CreateInterp(void);
+extern void Tcl_DeleteInterp(Tcl_Interp *interp);
+extern int Tcl_Eval(Tcl_Interp *interp, const char *script);
+extern int Tcl_EvalFile(Tcl_Interp *interp, const char *fileName);
+extern void Tcl_Finalize(void);
+extern int Tcl_GetCommandInfo(Tcl_Interp *interp, const char *cmdName, Tcl_CmdInfo *infoPtr);
+extern const char *Tcl_GetStringResult(Tcl_Interp *interp);
+#  endif
 #endif
 
 #ifdef _WIN32
@@ -150,6 +160,7 @@ using std::pair;
 
 using std::make_tuple;
 using std::make_pair;
+using std::get;
 using std::min;
 using std::max;
 
@@ -293,6 +304,9 @@ void run_frontend(std::string filename, std::string command, std::string *backen
 void run_frontend(std::string filename, std::string command, RTLIL::Design *design = nullptr);
 void run_backend(std::string filename, std::string command, RTLIL::Design *design = nullptr);
 void shell(RTLIL::Design *design);
+
+// journal of all input and output files read (for "yosys -E")
+extern std::set<std::string> yosys_input_files, yosys_output_files;
 
 // from kernel/version_*.o (cc source generated from Makefile)
 extern const char *yosys_version_str;

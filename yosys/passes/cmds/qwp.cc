@@ -778,7 +778,7 @@ struct QwpWorker
 
 struct QwpPass : public Pass {
 	QwpPass() : Pass("qwp", "quadratic wirelength placer") { }
-	virtual void help()
+	void help() YS_OVERRIDE
 	{
 		//   |---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|
 		log("\n");
@@ -808,7 +808,7 @@ struct QwpPass : public Pass {
 		log("dense matrix operations. It is only a toy-placer for small circuits.\n");
 		log("\n");
 	}
-	virtual void execute(std::vector<std::string> args, RTLIL::Design *design)
+	void execute(std::vector<std::string> args, RTLIL::Design *design) YS_OVERRIDE
 	{
 		QwpConfig config;
 		xorshift32_state = 123456789;
@@ -835,6 +835,7 @@ struct QwpPass : public Pass {
 			}
 			if (args[argidx] == "-dump" && argidx+1 < args.size()) {
 				config.dump_file.open(args[++argidx], std::ofstream::trunc);
+				yosys_output_files.insert(args[argidx]);
 				continue;
 			}
 			break;

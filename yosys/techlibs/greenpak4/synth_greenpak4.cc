@@ -29,13 +29,15 @@ struct SynthGreenPAK4Pass : public ScriptPass
 {
 	SynthGreenPAK4Pass() : ScriptPass("synth_greenpak4", "synthesis for GreenPAK4 FPGAs") { }
 
-	virtual void help() YS_OVERRIDE
+	void help() YS_OVERRIDE
 	{
 		//   |---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|
 		log("\n");
 		log("    synth_greenpak4 [options]\n");
 		log("\n");
 		log("This command runs synthesis for GreenPAK4 FPGAs. This work is experimental.\n");
+		log("It is intended to be used with https://github.com/azonenberg/openfpga as the\n");
+		log("place-and-route.\n");
 		log("\n");
 		log("    -top <module>\n");
 		log("        use the specified module as top module (default='top')\n");
@@ -68,7 +70,7 @@ struct SynthGreenPAK4Pass : public ScriptPass
 	string top_opt, part, json_file;
 	bool flatten, retime;
 
-	virtual void clear_flags() YS_OVERRIDE
+	void clear_flags() YS_OVERRIDE
 	{
 		top_opt = "-auto-top";
 		part = "SLG46621V";
@@ -77,7 +79,7 @@ struct SynthGreenPAK4Pass : public ScriptPass
 		retime = false;
 	}
 
-	virtual void execute(std::vector<std::string> args, RTLIL::Design *design) YS_OVERRIDE
+	void execute(std::vector<std::string> args, RTLIL::Design *design) YS_OVERRIDE
 	{
 		string run_from, run_to;
 		clear_flags();
@@ -118,7 +120,7 @@ struct SynthGreenPAK4Pass : public ScriptPass
 		extra_args(args, argidx, design);
 
 		if (!design->full_selection())
-			log_cmd_error("This comannd only operates on fully selected designs!\n");
+			log_cmd_error("This command only operates on fully selected designs!\n");
 
 		if (part != "SLG46140V" && part != "SLG46620V" && part != "SLG46621V")
 			log_cmd_error("Invalid part name: '%s'\n", part.c_str());
@@ -131,7 +133,7 @@ struct SynthGreenPAK4Pass : public ScriptPass
 		log_pop();
 	}
 
-	virtual void script() YS_OVERRIDE
+	void script() YS_OVERRIDE
 	{
 		if (check_label("begin"))
 		{
@@ -153,12 +155,13 @@ struct SynthGreenPAK4Pass : public ScriptPass
 
 		if (check_label("fine"))
 		{
-			run("greenpak4_counters");
+			run("extract_counter -pout GP_DCMP,GP_DAC -maxwidth 14");
 			run("clean");
 			run("opt -fast -mux_undef -undriven -fine");
 			run("memory_map");
 			run("opt -undriven -fine");
 			run("techmap");
+			run("techmap -map +/greenpak4/cells_latch.v");
 			run("dfflibmap -prepare -liberty +/greenpak4/gp_dff.lib");
 			run("opt -fast");
 			if (retime || help_mode)
@@ -201,8 +204,6 @@ struct SynthGreenPAK4Pass : public ScriptPass
 			if (!json_file.empty() || help_mode)
 				run(stringf("write_json %s", help_mode ? "<file-name>" : json_file.c_str()));
 		}
-
-		log_pop();
 	}
 } SynthGreenPAK4Pass;
 

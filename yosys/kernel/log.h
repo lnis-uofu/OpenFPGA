@@ -23,6 +23,7 @@
 #define LOG_H
 
 #include <time.h>
+#include <regex>
 
 #ifndef _WIN32
 #  include <sys/time.h>
@@ -48,6 +49,9 @@ struct log_cmd_error_exception { };
 extern std::vector<FILE*> log_files;
 extern std::vector<std::ostream*> log_streams;
 extern std::map<std::string, std::set<std::string>> log_hdump;
+extern std::vector<std::regex> log_warn_regexes, log_nowarn_regexes, log_werror_regexes;
+extern std::set<std::string> log_warnings;
+extern int log_warnings_count;
 extern bool log_hdump_all;
 extern FILE *log_errfile;
 extern SHA1 *log_hasher;
@@ -58,16 +62,24 @@ extern bool log_cmd_error_throw;
 extern bool log_quiet_warnings;
 extern int log_verbose_level;
 extern string log_last_error;
+extern void (*log_error_atexit)();
 
 void logv(const char *format, va_list ap);
 void logv_header(RTLIL::Design *design, const char *format, va_list ap);
 void logv_warning(const char *format, va_list ap);
+void logv_warning_noprefix(const char *format, va_list ap);
 YS_NORETURN void logv_error(const char *format, va_list ap) YS_ATTRIBUTE(noreturn);
 
 void log(const char *format, ...)  YS_ATTRIBUTE(format(printf, 1, 2));
 void log_header(RTLIL::Design *design, const char *format, ...) YS_ATTRIBUTE(format(printf, 2, 3));
 void log_warning(const char *format, ...) YS_ATTRIBUTE(format(printf, 1, 2));
+
+// Log with filename to report a problem in a source file.
+void log_file_warning(const std::string &filename, int lineno, const char *format, ...) YS_ATTRIBUTE(format(printf, 3, 4));
+
+void log_warning_noprefix(const char *format, ...) YS_ATTRIBUTE(format(printf, 1, 2));
 YS_NORETURN void log_error(const char *format, ...) YS_ATTRIBUTE(format(printf, 1, 2), noreturn);
+void log_file_error(const string &filename, int lineno, const char *format, ...) YS_ATTRIBUTE(format(printf, 3, 4), noreturn);
 YS_NORETURN void log_cmd_error(const char *format, ...) YS_ATTRIBUTE(format(printf, 1, 2), noreturn);
 
 void log_spacer();
@@ -88,6 +100,7 @@ template<typename T> static inline const char *log_id(T *obj) {
 
 void log_module(RTLIL::Module *module, std::string indent = "");
 void log_cell(RTLIL::Cell *cell, std::string indent = "");
+void log_wire(RTLIL::Wire *wire, std::string indent = "");
 
 #ifndef NDEBUG
 static inline void log_assert_worker(bool cond, const char *expr, const char *file, int line) {
@@ -106,7 +119,7 @@ static inline void log_assert_worker(bool cond, const char *expr, const char *fi
 // This is the magic behind the code coverage counters
 // ---------------------------------------------------
 
-#if defined(YOSYS_ENABLE_COVER) && defined(__linux__)
+#if defined(YOSYS_ENABLE_COVER) && (defined(__linux__) || defined(__FreeBSD__))
 
 #define cover(_id) do { \
     static CoverData __d __attribute__((section("yosys_cover_list"), aligned(1), used)) = { __FILE__, __FUNCTION__, _id, __LINE__, 0 }; \
@@ -165,7 +178,7 @@ struct PerformanceTimer
 	}
 
 	static int64_t query() {
-#  if _WIN32
+#  ifdef _WIN32
 		return 0;
 #  elif defined(_POSIX_TIMERS) && (_POSIX_TIMERS > 0)
 		struct timespec ts;
@@ -182,7 +195,7 @@ struct PerformanceTimer
 		t += 1000000000ULL * (int64_t) rusage.ru_stime.tv_sec + (int64_t) rusage.ru_stime.tv_usec * 1000ULL;
 		return t;
 #  else
-#    error Dont know how to measure per-process CPU time. Need alternative method (times()/clocks()/gettimeofday()?).
+#    error "Don't know how to measure per-process CPU time. Need alternative method (times()/clocks()/gettimeofday()?)."
 #  endif
 	}
 

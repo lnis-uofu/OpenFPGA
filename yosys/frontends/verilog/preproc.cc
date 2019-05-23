@@ -182,15 +182,20 @@ static std::string next_token(bool pass_newline = false)
 	{
 		const char *ok = "abcdefghijklmnopqrstuvwxyz_ABCDEFGHIJKLMNOPQRSTUVWXYZ$0123456789";
 		if (ch == '`' || strchr(ok, ch) != NULL)
-			while ((ch = next_char()) != 0) {
-				if (strchr(ok, ch) == NULL) {
-					return_char(ch);
-					break;
-				}
+		{
+			char first = ch;
+			ch = next_char();
+			if (first == '`' && (ch == '"' || ch == '`')) {
 				token += ch;
-			}
+			} else do {
+					if (strchr(ok, ch) == NULL) {
+						return_char(ch);
+						break;
+					}
+					token += ch;
+				} while ((ch = next_char()) != 0);
+		}
 	}
-
 	return token;
 }
 
@@ -210,10 +215,69 @@ static void input_file(std::istream &f, std::string filename)
 	input_buffer.insert(it, "\n`file_pop\n");
 }
 
-std::string frontend_verilog_preproc(std::istream &f, std::string filename, const std::map<std::string, std::string> pre_defines_map, const std::list<std::string> include_dirs)
+
+static bool try_expand_macro(std::set<std::string> &defines_with_args,
+			     std::map<std::string, std::string> &defines_map,
+			     std::string &tok
+				    )
+{
+	if (tok == "`\"") {
+		std::string literal("\"");
+		// Expand string literal
+		while (!input_buffer.empty()) {
+			std::string ntok = next_token();
+			if (ntok == "`\"") {
+				insert_input(literal+"\"");
+				return true;
+			} else if (!try_expand_macro(defines_with_args, defines_map, ntok)) {
+					literal += ntok;
+			}
+		}
+		return false; // error - unmatched `"
+	} else if (tok.size() > 1 && tok[0] == '`' && defines_map.count(tok.substr(1)) > 0) {
+			std::string name = tok.substr(1);
+			// printf("expand: >>%s<< -> >>%s<<\n", name.c_str(), defines_map[name].c_str());
+			std::string skipped_spaces = skip_spaces();
+			tok = next_token(false);
+			if (tok == "(" && defines_with_args.count(name) > 0) {
+				int level = 1;
+				std::vector<std::string> args;
+				args.push_back(std::string());
+				while (1)
+				{
+					skip_spaces();
+					tok = next_token(true);
+					if (tok == ")" || tok == "}" || tok == "]")
+						level--;
+					if (level == 0)
+						break;
+					if (level == 1 && tok == ",")
+						args.push_back(std::string());
+					else
+						args.back() += tok;
+					if (tok == "(" || tok == "{" || tok == "[")
+						level++;
+				}
+				for (int i = 0; i < GetSize(args); i++)
+					defines_map[stringf("macro_%s_arg%d", name.c_str(), i+1)] = args[i];
+			} else {
+				insert_input(tok);
+				insert_input(skipped_spaces);
+			}
+			insert_input(defines_map[name]);
+			return true;
+	} else if (tok == "``") {
+		// Swallow `` in macro expansion
+		return true;
+	} else return false;
+}
+
+std::string frontend_verilog_preproc(std::istream &f, std::string filename, const std::map<std::string, std::string> &pre_defines_map,
+		dict<std::string, std::pair<std::string, bool>> &global_defines_cache, const std::list<std::string> &include_dirs)
 {
 	std::set<std::string> defines_with_args;
 	std::map<std::string, std::string> defines_map(pre_defines_map);
+	std::vector<std::string> filename_stack;
 	int ifdef_fail_level = 0;
 	bool in_elseif = false;
 
@@ -222,8 +286,18 @@ std::string frontend_verilog_preproc(std::istream &f, std::string filename, cons
 	input_buffer_charp = 0;
 
 	input_file(f, filename);
+
 	defines_map["YOSYS"] = "1";
 	defines_map[formal_mode ? "FORMAL" : "SYNTHESIS"] = "1";
+
+	for (auto &it : pre_defines_map)
+		defines_map[it.first] = it.second;
+
+	for (auto &it : global_defines_cache) {
+		if (it.second.second)
+			defines_with_args.insert(it.first);
+		defines_map[it.first] = it.second.first;
+	}
 
 	while (!input_buffer.empty())
 	{
@@ -281,6 +355,9 @@ std::string frontend_verilog_preproc(std::istream &f, std::string filename, cons
 		if (tok == "`include") {
 			skip_spaces();
 			std::string fn = next_token(true);
+			while (try_expand_macro(defines_with_args, defines_map, fn)) {
+				fn = next_token();
+			}
 			while (1) {
 				size_t pos = fn.find('"');
 				if (pos == std::string::npos)
@@ -292,26 +369,66 @@ std::string frontend_verilog_preproc(std::istream &f, std::string filename, cons
 			}
 			std::ifstream ff;
 			ff.clear();
-			ff.open(fn.c_str());
-			if (ff.fail() && fn.size() > 0 && fn[0] != '/' && filename.find('/') != std::string::npos) {
+			std::string fixed_fn = fn;
+			ff.open(fixed_fn.c_str());
+
+			bool filename_path_sep_found;
+			bool fn_relative;
+#ifdef _WIN32
+			// Both forward and backslash are acceptable separators on Windows.
+			filename_path_sep_found = (filename.find_first_of("/\\") != std::string::npos);
+			// Easier just to invert the check for an absolute path (e.g. C:\ or C:/)
+			fn_relative = !(fn[1] == ':' && (fn[2] == '/' || fn[2] == '\\'));
+#else
+			filename_path_sep_found = (filename.find('/') != std::string::npos);
+			fn_relative = (fn[0] != '/');
+#endif
+
+			if (ff.fail() && fn.size() > 0 && fn_relative && filename_path_sep_found) {
 				// if the include file was not found, it is not given with an absolute path, and the
 				// currently read file is given with a path, then try again relative to its directory
 				ff.clear();
-				ff.open(filename.substr(0, filename.rfind('/')+1) + fn);
+#ifdef _WIN32
+				fixed_fn = filename.substr(0, filename.find_last_of("/\\")+1) + fn;
+#else
+				fixed_fn = filename.substr(0, filename.rfind('/')+1) + fn;
+#endif
+				ff.open(fixed_fn);
 			}
-			if (ff.fail() && fn.size() > 0 && fn[0] != '/') {
+			if (ff.fail() && fn.size() > 0 && fn_relative) {
 				// if the include file was not found and it is not given with an absolute path, then
 				// search it in the include path
 				for (auto incdir : include_dirs) {
 					ff.clear();
-					ff.open(incdir + '/' + fn);
+					fixed_fn = incdir + '/' + fn;
+					ff.open(fixed_fn);
 					if (!ff.fail()) break;
 				}
 			}
-			if (ff.fail())
+			if (ff.fail()) {
 				output_code.push_back("`file_notfound " + fn);
-			else
-				input_file(ff, fn);
+			} else {
+				input_file(ff, fixed_fn);
+				yosys_input_files.insert(fixed_fn);
+			}
+			continue;
+		}
+
+		if (tok == "`file_push") {
+			skip_spaces();
+			std::string fn = next_token(true);
+			if (!fn.empty() && fn.front() == '"' && fn.back() == '"')
+				fn = fn.substr(1, fn.size()-2);
+			output_code.push_back(tok + " \"" + fn + "\"");
+			filename_stack.push_back(filename);
+			filename = fn;
+			continue;
+		}
+
+		if (tok == "`file_pop") {
+			output_code.push_back(tok);
+			filename = filename_stack.back();
+			filename_stack.pop_back();
 			continue;
 		}
 
@@ -379,6 +496,7 @@ std::string frontend_verilog_preproc(std::istream &f, std::string filename, cons
 				defines_with_args.insert(name);
 			else
 				defines_with_args.erase(name);
+			global_defines_cache[name] = std::pair<std::string, bool>(value, state == 2);
 			continue;
 		}
 
@@ -389,6 +507,7 @@ std::string frontend_verilog_preproc(std::istream &f, std::string filename, cons
 			// printf("undef: >>%s<<\n", name.c_str());
 			defines_map.erase(name);
 			defines_with_args.erase(name);
+			global_defines_cache.erase(name);
 			continue;
 		}
 
@@ -401,38 +520,15 @@ std::string frontend_verilog_preproc(std::istream &f, std::string filename, cons
 			continue;
 		}
 
-		if (tok.size() > 1 && tok[0] == '`' && defines_map.count(tok.substr(1)) > 0) {
-			std::string name = tok.substr(1);
-			// printf("expand: >>%s<< -> >>%s<<\n", name.c_str(), defines_map[name].c_str());
-			std::string skipped_spaces = skip_spaces();
-			tok = next_token(false);
-			if (tok == "(" && defines_with_args.count(name) > 0) {
-				int level = 1;
-				std::vector<std::string> args;
-				args.push_back(std::string());
-				while (1)
-				{
-					tok = next_token(true);
-					if (tok == ")" || tok == "}" || tok == "]")
-						level--;
-					if (level == 0)
-						break;
-					if (level == 1 && tok == ",")
-						args.push_back(std::string());
-					else
-						args.back() += tok;
-					if (tok == "(" || tok == "{" || tok == "[")
-						level++;
-				}
-				for (int i = 0; i < GetSize(args); i++)
-					defines_map[stringf("macro_%s_arg%d", name.c_str(), i+1)] = args[i];
-			} else {
-				insert_input(tok);
-				insert_input(skipped_spaces);
-			}
-			insert_input(defines_map[name]);
+		if (tok == "`resetall") {
+			defines_map.clear();
+			defines_with_args.clear();
+			global_defines_cache.clear();
 			continue;
 		}
+
+		if (try_expand_macro(defines_with_args, defines_map, tok))
+			continue;
 
 		output_code.push_back(tok);
 	}
@@ -449,4 +545,3 @@ std::string frontend_verilog_preproc(std::istream &f, std::string filename, cons
 }
 
 YOSYS_NAMESPACE_END
-

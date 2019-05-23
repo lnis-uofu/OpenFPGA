@@ -35,6 +35,7 @@
 
 %{
 #include <list>
+#include <stack>
 #include <string.h>
 #include "frontends/verilog/verilog_frontend.h"
 #include "kernel/log.h"
@@ -47,7 +48,8 @@ YOSYS_NAMESPACE_BEGIN
 namespace VERILOG_FRONTEND {
 	int port_counter;
 	std::map<std::string, int> port_stubs;
-	std::map<std::string, AstNode*> attr_list, default_attr_list;
+	std::map<std::string, AstNode*> *attr_list, default_attr_list;
+	std::stack<std::map<std::string, AstNode*> *> attr_list_stack;
 	std::map<std::string, AstNode*> *albuf;
 	std::vector<AstNode*> ast_stack;
 	struct AstNode *astbuf1, *astbuf2, *astbuf3;
@@ -58,7 +60,10 @@ namespace VERILOG_FRONTEND {
 	bool do_not_require_port_stubs;
 	bool default_nettype_wire;
 	bool sv_mode, formal_mode, lib_mode;
-	bool norestrict_mode, assume_asserts_mode;
+	bool noassert_mode, noassume_mode, norestrict_mode;
+	bool assume_asserts_mode, assert_assumes_mode;
+	bool current_wire_rand, current_wire_const;
+	bool current_modport_input, current_modport_output;
 	std::istream *lexin;
 }
 YOSYS_NAMESPACE_END
@@ -100,27 +105,30 @@ static void free_attr(std::map<std::string, AstNode*> *al)
 	bool boolean;
 }
 
-%token <string> TOK_STRING TOK_ID TOK_CONST TOK_REALVAL TOK_PRIMITIVE
+%token <string> TOK_STRING TOK_ID TOK_CONSTVAL TOK_REALVAL TOK_PRIMITIVE
 %token ATTR_BEGIN ATTR_END DEFATTR_BEGIN DEFATTR_END
 %token TOK_MODULE TOK_ENDMODULE TOK_PARAMETER TOK_LOCALPARAM TOK_DEFPARAM
 %token TOK_PACKAGE TOK_ENDPACKAGE TOK_PACKAGESEP
-%token TOK_INPUT TOK_OUTPUT TOK_INOUT TOK_WIRE TOK_REG
+%token TOK_INTERFACE TOK_ENDINTERFACE TOK_MODPORT
+%token TOK_INPUT TOK_OUTPUT TOK_INOUT TOK_WIRE TOK_REG TOK_LOGIC
 %token TOK_INTEGER TOK_SIGNED TOK_ASSIGN TOK_ALWAYS TOK_INITIAL
 %token TOK_BEGIN TOK_END TOK_IF TOK_ELSE TOK_FOR TOK_WHILE TOK_REPEAT
-%token TOK_DPI_FUNCTION TOK_POSEDGE TOK_NEGEDGE TOK_OR
+%token TOK_DPI_FUNCTION TOK_POSEDGE TOK_NEGEDGE TOK_OR TOK_AUTOMATIC
 %token TOK_CASE TOK_CASEX TOK_CASEZ TOK_ENDCASE TOK_DEFAULT
-%token TOK_FUNCTION TOK_ENDFUNCTION TOK_TASK TOK_ENDTASK
+%token TOK_FUNCTION TOK_ENDFUNCTION TOK_TASK TOK_ENDTASK TOK_SPECIFY TOK_ENDSPECIFY TOK_SPECPARAM
 %token TOK_GENERATE TOK_ENDGENERATE TOK_GENVAR TOK_REAL
 %token TOK_SYNOPSYS_FULL_CASE TOK_SYNOPSYS_PARALLEL_CASE
 %token TOK_SUPPLY0 TOK_SUPPLY1 TOK_TO_SIGNED TOK_TO_UNSIGNED
 %token TOK_POS_INDEXED TOK_NEG_INDEXED TOK_ASSERT TOK_ASSUME
-%token TOK_RESTRICT TOK_PROPERTY
+%token TOK_RESTRICT TOK_COVER TOK_PROPERTY TOK_ENUM TOK_TYPEDEF
+%token TOK_RAND TOK_CONST TOK_CHECKER TOK_ENDCHECKER TOK_EVENTUALLY
+%token TOK_INCREMENT TOK_DECREMENT TOK_UNIQUE TOK_PRIORITY
 
 %type <ast> range range_or_multirange  non_opt_range non_opt_multirange range_or_signed_int
 %type <ast> wire_type expr basic_expr concat_list rvalue lvalue lvalue_concat_list
 %type <string> opt_label tok_prim_wrapper hierarchical_id
-%type <boolean> opt_signed
-%type <al> attr
+%type <boolean> opt_signed opt_property unique_case_attr
+%type <al> attr case_attr
 
 // operator precedence from low to high
 %left OP_LOR
@@ -139,7 +147,9 @@ static void free_attr(std::map<std::string, AstNode*> *al)
 %define parse.error verbose
 %define parse.lac full
 
-%expect 2
+%nonassoc FAKE_THEN
+%nonassoc TOK_ELSE
+
 %debug
 
 %%
@@ -162,19 +172,23 @@ design:
 	param_decl design |
 	localparam_decl design |
 	package design |
+	interface design |
 	/* empty */;
 
 attr:
 	{
-		for (auto &it : attr_list)
-			delete it.second;
-		attr_list.clear();
+		if (attr_list != nullptr)
+			attr_list_stack.push(attr_list);
+		attr_list = new std::map<std::string, AstNode*>;
 		for (auto &it : default_attr_list)
-			attr_list[it.first] = it.second->clone();
+			(*attr_list)[it.first] = it.second->clone();
 	} attr_opt {
-		std::map<std::string, AstNode*> *al = new std::map<std::string, AstNode*>;
-		al->swap(attr_list);
-		$$ = al;
+		$$ = attr_list;
+		if (!attr_list_stack.empty()) {
+			attr_list = attr_list_stack.top();
+			attr_list_stack.pop();
+		} else
+			attr_list = nullptr;
 	};
 
 attr_opt:
@@ -183,15 +197,20 @@ attr_opt:
 
 defattr:
 	DEFATTR_BEGIN {
+		if (attr_list != nullptr)
+			attr_list_stack.push(attr_list);
+		attr_list = new std::map<std::string, AstNode*>;
 		for (auto &it : default_attr_list)
 			delete it.second;
 		default_attr_list.clear();
-		for (auto &it : attr_list)
-			delete it.second;
-		attr_list.clear();
 	} opt_attr_list {
-		default_attr_list = attr_list;
-		attr_list.clear();
+		attr_list->swap(default_attr_list);
+		delete attr_list;
+		if (!attr_list_stack.empty()) {
+			attr_list = attr_list_stack.top();
+			attr_list_stack.pop();
+		} else
+			attr_list = nullptr;
 	} DEFATTR_END;
 
 opt_attr_list:
@@ -203,15 +222,15 @@ attr_list:
 
 attr_assign:
 	hierarchical_id {
-		if (attr_list.count(*$1) != 0)
-			delete attr_list[*$1];
-		attr_list[*$1] = AstNode::mkconst_int(1, false);
+		if (attr_list->count(*$1) != 0)
+			delete (*attr_list)[*$1];
+		(*attr_list)[*$1] = AstNode::mkconst_int(1, false);
 		delete $1;
 	} |
 	hierarchical_id '=' expr {
-		if (attr_list.count(*$1) != 0)
-			delete attr_list[*$1];
-		attr_list[*$1] = $3;
+		if (attr_list->count(*$1) != 0)
+			delete (*attr_list)[*$1];
+		(*attr_list)[*$1] = $3;
 		delete $1;
 	};
 
@@ -269,7 +288,13 @@ single_module_para:
 		if (astbuf1) delete astbuf1;
 		astbuf1 = new AstNode(AST_PARAMETER);
 		astbuf1->children.push_back(AstNode::mkconst_int(0, true));
-	} param_signed param_integer param_range single_param_decl | single_param_decl;
+	} param_signed param_integer param_range single_param_decl |
+	TOK_LOCALPARAM {
+		if (astbuf1) delete astbuf1;
+		astbuf1 = new AstNode(AST_LOCALPARAM);
+		astbuf1->children.push_back(AstNode::mkconst_int(0, true));
+	} param_signed param_integer param_range single_param_decl |
+	single_param_decl;
 
 module_args_opt:
 	'(' ')' | /* empty */ | '(' module_args optional_comma ')';
@@ -290,7 +315,7 @@ module_arg_opt_assignment:
 			else
 				ast_stack.back()->children.push_back(new AstNode(AST_ASSIGN, wire, $2));
 		} else
-			frontend_verilog_yyerror("Syntax error.");
+			frontend_verilog_yyerror("SystemVerilog interface in module port list cannot have a default value.");
 	} |
 	/* empty */;
 
@@ -307,6 +332,21 @@ module_arg:
 			port_stubs[*$1] = ++port_counter;
 		}
 		delete $1;
+	} module_arg_opt_assignment |
+	TOK_ID {
+		astbuf1 = new AstNode(AST_INTERFACEPORT);
+		astbuf1->children.push_back(new AstNode(AST_INTERFACEPORTTYPE));
+		astbuf1->children[0]->str = *$1;
+		delete $1;
+	} TOK_ID {  /* SV interfaces */
+		if (!sv_mode)
+			frontend_verilog_yyerror("Interface found in port list (%s). This is not supported unless read_verilog is called with -sv!", $3->c_str());
+		astbuf2 = astbuf1->clone(); // really only needed if multiple instances of same type.
+		astbuf2->str = *$3;
+		delete $3;
+		astbuf2->port_id = ++port_counter;
+		ast_stack.back()->children.push_back(astbuf2);
+		delete astbuf1; // really only needed if multiple instances of same type.
 	} module_arg_opt_assignment |
 	attr wire_type range TOK_ID {
 		AstNode *node = $2;
@@ -345,7 +385,37 @@ package_body:
 package_body_stmt:
 	localparam_decl;
 
+interface:
+	TOK_INTERFACE TOK_ID {
+		do_not_require_port_stubs = false;
+		AstNode *intf = new AstNode(AST_INTERFACE);
+		ast_stack.back()->children.push_back(intf);
+		ast_stack.push_back(intf);
+		current_ast_mod = intf;
+		port_stubs.clear();
+		port_counter = 0;
+		intf->str = *$2;
+		delete $2;
+	} module_para_opt module_args_opt ';' interface_body TOK_ENDINTERFACE {
+		if (port_stubs.size() != 0)
+			frontend_verilog_yyerror("Missing details for module port `%s'.",
+				port_stubs.begin()->first.c_str());
+		ast_stack.pop_back();
+		log_assert(ast_stack.size() == 1);
+		current_ast_mod = NULL;
+	};
+
+interface_body:
+	interface_body interface_body_stmt |;
+
+interface_body_stmt:
+	param_decl | localparam_decl | defparam_decl | wire_decl | always_stmt | assign_stmt |
+	modport_stmt;
+
 non_opt_delay:
+	'#' TOK_ID { delete $2; } |
+	'#' TOK_CONSTVAL { delete $2; } |
+	'#' TOK_REALVAL { delete $2; } |
 	'#' '(' expr ')' { delete $3; } |
 	'#' '(' expr ':' expr ':' expr ')' { delete $3; delete $5; delete $7; };
 
@@ -355,14 +425,17 @@ delay:
 wire_type:
 	{
 		astbuf3 = new AstNode(AST_WIRE);
+		current_wire_rand = false;
+		current_wire_const = false;
 	} wire_type_token_list delay {
 		$$ = astbuf3;
 	};
 
 wire_type_token_list:
-	wire_type_token | wire_type_token_list wire_type_token;
+	wire_type_token | wire_type_token_list wire_type_token |
+	wire_type_token_io ;
 
-wire_type_token:
+wire_type_token_io:
 	TOK_INPUT {
 		astbuf3->is_input = true;
 	} |
@@ -372,11 +445,16 @@ wire_type_token:
 	TOK_INOUT {
 		astbuf3->is_input = true;
 		astbuf3->is_output = true;
-	} |
+	};
+
+wire_type_token:
 	TOK_WIRE {
 	} |
 	TOK_REG {
 		astbuf3->is_reg = true;
+	} |
+	TOK_LOGIC {
+		astbuf3->is_logic = true;
 	} |
 	TOK_INTEGER {
 		astbuf3->is_reg = true;
@@ -392,6 +470,12 @@ wire_type_token:
 	} |
 	TOK_SIGNED {
 		astbuf3->is_signed = true;
+	} |
+	TOK_RAND {
+		current_wire_rand = true;
+	} |
+	TOK_CONST {
+		current_wire_const = true;
 	};
 
 non_opt_range:
@@ -454,8 +538,19 @@ module_body:
 	/* empty */;
 
 module_body_stmt:
-	task_func_decl | param_decl | localparam_decl | defparam_decl | wire_decl | assign_stmt | cell_stmt |
-	always_stmt | TOK_GENERATE module_gen_body TOK_ENDGENERATE | defattr | assert_property;
+	task_func_decl | specify_block |param_decl | localparam_decl | defparam_decl | specparam_declaration | wire_decl | assign_stmt | cell_stmt |
+	always_stmt | TOK_GENERATE module_gen_body TOK_ENDGENERATE | defattr | assert_property | checker_decl;
+
+checker_decl:
+	TOK_CHECKER TOK_ID ';' {
+		AstNode *node = new AstNode(AST_GENBLOCK);
+		node->str = *$2;
+		ast_stack.back()->children.push_back(node);
+		ast_stack.push_back(node);
+	} module_body TOK_ENDCHECKER {
+		delete $2;
+		ast_stack.pop_back();
+	};
 
 task_func_decl:
 	attr TOK_DPI_FUNCTION TOK_ID TOK_ID {
@@ -491,35 +586,36 @@ task_func_decl:
 	} opt_dpi_function_args ';' {
 		current_function_or_task = NULL;
 	} |
-	attr TOK_TASK TOK_ID {
+	attr TOK_TASK opt_automatic TOK_ID {
 		current_function_or_task = new AstNode(AST_TASK);
-		current_function_or_task->str = *$3;
+		current_function_or_task->str = *$4;
 		append_attr(current_function_or_task, $1);
 		ast_stack.back()->children.push_back(current_function_or_task);
 		ast_stack.push_back(current_function_or_task);
 		current_function_or_task_port_id = 1;
-		delete $3;
+		delete $4;
 	} task_func_args_opt ';' task_func_body TOK_ENDTASK {
 		current_function_or_task = NULL;
 		ast_stack.pop_back();
 	} |
-	attr TOK_FUNCTION opt_signed range_or_signed_int TOK_ID {
+	attr TOK_FUNCTION opt_automatic opt_signed range_or_signed_int TOK_ID {
 		current_function_or_task = new AstNode(AST_FUNCTION);
-		current_function_or_task->str = *$5;
+		current_function_or_task->str = *$6;
 		append_attr(current_function_or_task, $1);
 		ast_stack.back()->children.push_back(current_function_or_task);
 		ast_stack.push_back(current_function_or_task);
 		AstNode *outreg = new AstNode(AST_WIRE);
-		outreg->str = *$5;
-		outreg->is_signed = $3;
-		if ($4 != NULL) {
-			outreg->children.push_back($4);
-			outreg->is_signed = $3 || $4->is_signed;
-			$4->is_signed = false;
+		outreg->str = *$6;
+		outreg->is_signed = $4;
+		outreg->is_reg = true;
+		if ($5 != NULL) {
+			outreg->children.push_back($5);
+			outreg->is_signed = $4 || $5->is_signed;
+			$5->is_signed = false;
 		}
 		current_function_or_task->children.push_back(outreg);
 		current_function_or_task_port_id = 1;
-		delete $5;
+		delete $6;
 	} task_func_args_opt ';' task_func_body TOK_ENDFUNCTION {
 		current_function_or_task = NULL;
 		ast_stack.pop_back();
@@ -544,6 +640,10 @@ dpi_function_args:
 	dpi_function_args ',' dpi_function_arg |
 	dpi_function_args ',' |
 	dpi_function_arg |
+	/* empty */;
+
+opt_automatic:
+	TOK_AUTOMATIC |
 	/* empty */;
 
 opt_signed:
@@ -582,7 +682,7 @@ task_func_port:
 		astbuf2 = $3;
 		if (astbuf1->range_left >= 0 && astbuf1->range_right >= 0) {
 			if (astbuf2) {
-				frontend_verilog_yyerror("Syntax error.");
+				frontend_verilog_yyerror("integer/genvar types cannot have packed dimensions (task/function arguments)");
 			} else {
 				astbuf2 = new AstNode(AST_RANGE);
 				astbuf2->children.push_back(AstNode::mkconst_int(astbuf1->range_left, true));
@@ -590,12 +690,200 @@ task_func_port:
 			}
 		}
 		if (astbuf2 && astbuf2->children.size() != 2)
-			frontend_verilog_yyerror("Syntax error.");
+			frontend_verilog_yyerror("task/function argument range must be of the form: [<expr>:<expr>], [<expr>+:<expr>], or [<expr>-:<expr>]");
 	} wire_name | wire_name;
 
 task_func_body:
 	task_func_body behavioral_stmt |
 	/* empty */;
+
+specify_block:
+	TOK_SPECIFY specify_item_opt TOK_ENDSPECIFY |
+	TOK_SPECIFY TOK_ENDSPECIFY ;
+
+specify_item_opt:
+	specify_item_opt specify_item |
+	specify_item ;
+
+specify_item:
+	specparam_declaration
+	// | pulsestyle_declaration
+	// | showcancelled_declaration
+	| path_declaration
+	| system_timing_declaration
+	;
+
+specparam_declaration:
+	TOK_SPECPARAM list_of_specparam_assignments ';' |
+	TOK_SPECPARAM specparam_range list_of_specparam_assignments ';' ;
+
+// IEEE 1364-2005 calls this sinmply 'range' but the current 'range' rule allows empty match
+// and the 'non_opt_range' rule allows index ranges not allowed by 1364-2005
+// exxxxtending this for SV specparam would change this anyhow
+specparam_range:
+	'[' constant_expression ':' constant_expression ']' ;
+
+list_of_specparam_assignments:
+	specparam_assignment | list_of_specparam_assignments ',' specparam_assignment;
+
+specparam_assignment:
+	TOK_ID '=' constant_mintypmax_expression ;
+
+/*
+pulsestyle_declaration :
+	;
+
+showcancelled_declaration :
+	;
+*/
+
+path_declaration :
+	simple_path_declaration ';'
+	// | edge_sensitive_path_declaration
+	// | state_dependent_path_declaration
+	;
+
+simple_path_declaration :
+	parallel_path_description '=' path_delay_value |
+	full_path_description '=' path_delay_value
+	;
+
+path_delay_value :
+	'(' path_delay_expression list_of_path_delay_extra_expressions ')'
+	|     path_delay_expression
+	|     path_delay_expression list_of_path_delay_extra_expressions
+	;
+
+list_of_path_delay_extra_expressions :
+/*
+	t_path_delay_expression
+	| trise_path_delay_expression ',' tfall_path_delay_expression
+	| trise_path_delay_expression ',' tfall_path_delay_expression ',' tz_path_delay_expression
+	| t01_path_delay_expression ',' t10_path_delay_expression ',' t0z_path_delay_expression ','
+	  tz1_path_delay_expression ',' t1z_path_delay_expression ',' tz0_path_delay_expression
+	| t01_path_delay_expression ',' t10_path_delay_expression ',' t0z_path_delay_expression ','
+	  tz1_path_delay_expression ',' t1z_path_delay_expression ',' tz0_path_delay_expression ','
+	  t0x_path_delay_expression ',' tx1_path_delay_expression ',' t1x_path_delay_expression ','
+	  tx0_path_delay_expression ',' txz_path_delay_expression ',' tzx_path_delay_expression
+*/
+	',' path_delay_expression
+	|  ',' path_delay_expression ',' path_delay_expression
+	|  ',' path_delay_expression ',' path_delay_expression ','
+	  path_delay_expression ',' path_delay_expression ',' path_delay_expression
+	|  ',' path_delay_expression ',' path_delay_expression ','
+	  path_delay_expression ',' path_delay_expression ',' path_delay_expression ','
+	  path_delay_expression ',' path_delay_expression ',' path_delay_expression ','
+	  path_delay_expression ',' path_delay_expression ',' path_delay_expression
+	;
+
+parallel_path_description :
+	'(' specify_input_terminal_descriptor opt_polarity_operator '=' '>' specify_output_terminal_descriptor ')' ;
+
+full_path_description :
+	'(' list_of_path_inputs '*' '>' list_of_path_outputs ')' ;
+
+// This was broken into 2 rules to solve shift/reduce conflicts
+list_of_path_inputs :
+	specify_input_terminal_descriptor                  opt_polarity_operator  |
+	specify_input_terminal_descriptor more_path_inputs opt_polarity_operator ;
+
+more_path_inputs :
+    ',' specify_input_terminal_descriptor |
+    more_path_inputs ',' specify_input_terminal_descriptor ;
+
+list_of_path_outputs :
+	specify_output_terminal_descriptor |
+	list_of_path_outputs ',' specify_output_terminal_descriptor ;
+
+opt_polarity_operator :
+	'+'
+	| '-'
+	| ;
+
+// Good enough for the time being
+specify_input_terminal_descriptor :
+	TOK_ID ;
+
+// Good enough for the time being
+specify_output_terminal_descriptor :
+	TOK_ID ;
+
+system_timing_declaration :
+	TOK_ID '(' system_timing_args ')' ';' ;
+
+system_timing_arg :
+	TOK_POSEDGE TOK_ID |
+	TOK_NEGEDGE TOK_ID |
+	expr ;
+
+system_timing_args :
+	system_timing_arg |
+	system_timing_args ',' system_timing_arg ;
+
+/*
+t_path_delay_expression :
+	path_delay_expression;
+
+trise_path_delay_expression :
+	path_delay_expression;
+
+tfall_path_delay_expression :
+	path_delay_expression;
+
+tz_path_delay_expression :
+	path_delay_expression;
+
+t01_path_delay_expression :
+	path_delay_expression;
+
+t10_path_delay_expression :
+	path_delay_expression;
+
+t0z_path_delay_expression :
+	path_delay_expression;
+
+tz1_path_delay_expression :
+	path_delay_expression;
+
+t1z_path_delay_expression :
+	path_delay_expression;
+
+tz0_path_delay_expression :
+	path_delay_expression;
+
+t0x_path_delay_expression :
+	path_delay_expression;
+
+tx1_path_delay_expression :
+	path_delay_expression;
+
+t1x_path_delay_expression :
+	path_delay_expression;
+
+tx0_path_delay_expression :
+	path_delay_expression;
+
+txz_path_delay_expression :
+	path_delay_expression;
+
+tzx_path_delay_expression :
+	path_delay_expression;
+*/
+
+path_delay_expression :
+	constant_expression;
+
+constant_mintypmax_expression :
+	constant_expression
+	| constant_expression ':' constant_expression ':' constant_expression
+	;
+
+// for the time being this is OK, but we may write our own expr here.
+// as I'm not sure it is legal to use a full expr here (probably not)
+// On the other hand, other rules requiring constant expressions also use 'expr'
+// (such as param assignment), so we may leave this as-is, perhaps adding runtime checks for constant-ness
+constant_expression:
+	expr ;
 
 param_signed:
 	TOK_SIGNED {
@@ -605,7 +893,7 @@ param_signed:
 param_integer:
 	TOK_INTEGER {
 		if (astbuf1->children.size() != 1)
-			frontend_verilog_yyerror("Syntax error.");
+			frontend_verilog_yyerror("Internal error in param_integer - should not happen?");
 		astbuf1->children.push_back(new AstNode(AST_RANGE));
 		astbuf1->children.back()->children.push_back(AstNode::mkconst_int(31, true));
 		astbuf1->children.back()->children.push_back(AstNode::mkconst_int(0, true));
@@ -615,7 +903,7 @@ param_integer:
 param_real:
 	TOK_REAL {
 		if (astbuf1->children.size() != 1)
-			frontend_verilog_yyerror("Syntax error.");
+			frontend_verilog_yyerror("Parameter already declared as integer, cannot set to real.");
 		astbuf1->children.push_back(new AstNode(AST_REALVALUE));
 	} | /* empty */;
 
@@ -623,7 +911,7 @@ param_range:
 	range {
 		if ($1 != NULL) {
 			if (astbuf1->children.size() != 1)
-				frontend_verilog_yyerror("Syntax error.");
+				frontend_verilog_yyerror("integer/real parameters should not have a range.");
 			astbuf1->children.push_back($1);
 		}
 	};
@@ -649,9 +937,15 @@ param_decl_list:
 
 single_param_decl:
 	TOK_ID '=' expr {
-		if (astbuf1 == nullptr)
-			frontend_verilog_yyerror("syntax error");
-		AstNode *node = astbuf1->clone();
+		AstNode *node;
+		if (astbuf1 == nullptr) {
+			if (!sv_mode)
+				frontend_verilog_yyerror("In pure Verilog (not SystemVerilog), parameter/localparam with an initializer must use the parameter/localparam keyword");
+			node = new AstNode(AST_PARAMETER);
+			node->children.push_back(AstNode::mkconst_int(0, true));
+		} else {
+			node = astbuf1->clone();
+		}
 		node->str = *$1;
 		delete node->children[0];
 		node->children[0] = $3;
@@ -666,14 +960,13 @@ defparam_decl_list:
 	single_defparam_decl | defparam_decl_list ',' single_defparam_decl;
 
 single_defparam_decl:
-	range hierarchical_id '=' expr {
+	range rvalue '=' expr {
 		AstNode *node = new AstNode(AST_DEFPARAM);
-		node->str = *$2;
+		node->children.push_back($2);
 		node->children.push_back($4);
 		if ($1 != NULL)
 			node->children.push_back($1);
 		ast_stack.back()->children.push_back(node);
-		delete $2;
 	};
 
 wire_decl:
@@ -683,7 +976,7 @@ wire_decl:
 		astbuf2 = $3;
 		if (astbuf1->range_left >= 0 && astbuf1->range_right >= 0) {
 			if (astbuf2) {
-				frontend_verilog_yyerror("Syntax error.");
+				frontend_verilog_yyerror("integer/genvar types cannot have packed dimensions.");
 			} else {
 				astbuf2 = new AstNode(AST_RANGE);
 				astbuf2->children.push_back(AstNode::mkconst_int(astbuf1->range_left, true));
@@ -691,7 +984,7 @@ wire_decl:
 			}
 		}
 		if (astbuf2 && astbuf2->children.size() != 2)
-			frontend_verilog_yyerror("Syntax error.");
+			frontend_verilog_yyerror("wire/reg/logic packed dimension must be of the form: [<expr>:<expr>], [<expr>+:<expr>], or [<expr>-:<expr>]");
 	} wire_name_list {
 		delete astbuf1;
 		if (astbuf2 != NULL)
@@ -731,7 +1024,48 @@ wire_name_list:
 	wire_name_and_opt_assign | wire_name_list ',' wire_name_and_opt_assign;
 
 wire_name_and_opt_assign:
-	wire_name |
+	wire_name {
+		bool attr_anyconst = false;
+		bool attr_anyseq = false;
+		bool attr_allconst = false;
+		bool attr_allseq = false;
+		if (ast_stack.back()->children.back()->get_bool_attribute("\\anyconst")) {
+			delete ast_stack.back()->children.back()->attributes.at("\\anyconst");
+			ast_stack.back()->children.back()->attributes.erase("\\anyconst");
+			attr_anyconst = true;
+		}
+		if (ast_stack.back()->children.back()->get_bool_attribute("\\anyseq")) {
+			delete ast_stack.back()->children.back()->attributes.at("\\anyseq");
+			ast_stack.back()->children.back()->attributes.erase("\\anyseq");
+			attr_anyseq = true;
+		}
+		if (ast_stack.back()->children.back()->get_bool_attribute("\\allconst")) {
+			delete ast_stack.back()->children.back()->attributes.at("\\allconst");
+			ast_stack.back()->children.back()->attributes.erase("\\allconst");
+			attr_allconst = true;
+		}
+		if (ast_stack.back()->children.back()->get_bool_attribute("\\allseq")) {
+			delete ast_stack.back()->children.back()->attributes.at("\\allseq");
+			ast_stack.back()->children.back()->attributes.erase("\\allseq");
+			attr_allseq = true;
+		}
+		if (current_wire_rand || attr_anyconst || attr_anyseq || attr_allconst || attr_allseq) {
+			AstNode *wire = new AstNode(AST_IDENTIFIER);
+			AstNode *fcall = new AstNode(AST_FCALL);
+			wire->str = ast_stack.back()->children.back()->str;
+			fcall->str = current_wire_const ? "\\$anyconst" : "\\$anyseq";
+			if (attr_anyconst)
+				fcall->str = "\\$anyconst";
+			if (attr_anyseq)
+				fcall->str = "\\$anyseq";
+			if (attr_allconst)
+				fcall->str = "\\$allconst";
+			if (attr_allseq)
+				fcall->str = "\\$allseq";
+			fcall->attributes["\\reg"] = AstNode::mkconst_str(RTLIL::unescape_id(wire->str));
+			ast_stack.back()->children.push_back(new AstNode(AST_ASSIGN, wire, fcall));
+		}
+	} |
 	wire_name '=' expr {
 		AstNode *wire = new AstNode(AST_IDENTIFIER);
 		wire->str = ast_stack.back()->children.back()->str;
@@ -744,7 +1078,7 @@ wire_name_and_opt_assign:
 wire_name:
 	TOK_ID range_or_multirange {
 		if (astbuf1 == nullptr)
-			frontend_verilog_yyerror("Syntax error.");
+			frontend_verilog_yyerror("Internal error - should not happen - no AST_WIRE node.");
 		AstNode *node = astbuf1->clone();
 		node->str = *$1;
 		append_attr_clone(node, albuf);
@@ -752,7 +1086,7 @@ wire_name:
 			node->children.push_back(astbuf2->clone());
 		if ($2 != NULL) {
 			if (node->is_input || node->is_output)
-				frontend_verilog_yyerror("Syntax error.");
+				frontend_verilog_yyerror("input/output/inout ports cannot have unpacked dimensions.");
 			if (!astbuf2) {
 				AstNode *rng = new AstNode(AST_RANGE);
 				rng->children.push_back(AstNode::mkconst_int(0, true));
@@ -782,6 +1116,7 @@ wire_name:
 				node->port_id = current_function_or_task_port_id++;
 		}
 		ast_stack.back()->children.push_back(node);
+
 		delete $1;
 	};
 
@@ -994,18 +1329,101 @@ opt_label:
 		$$ = NULL;
 	};
 
+opt_property:
+	TOK_PROPERTY {
+		$$ = true;
+	} |
+	/* empty */ {
+		$$ = false;
+	};
+
+opt_stmt_label:
+	TOK_ID ':' | /* empty */;
+
+modport_stmt:
+    TOK_MODPORT TOK_ID {
+        AstNode *modport = new AstNode(AST_MODPORT);
+        ast_stack.back()->children.push_back(modport);
+        ast_stack.push_back(modport);
+        modport->str = *$2;
+        delete $2;
+    }  modport_args_opt {
+        ast_stack.pop_back();
+        log_assert(ast_stack.size() == 2);
+    } ';'
+
+modport_args_opt:
+    '(' ')' | '(' modport_args optional_comma ')';
+
+modport_args:
+    modport_arg | modport_args ',' modport_arg;
+
+modport_arg:
+    modport_type_token modport_member |
+    modport_member
+
+modport_member:
+    TOK_ID {
+        AstNode *modport_member = new AstNode(AST_MODPORTMEMBER);
+        ast_stack.back()->children.push_back(modport_member);
+        modport_member->str = *$1;
+        modport_member->is_input = current_modport_input;
+        modport_member->is_output = current_modport_output;
+        delete $1;
+    }
+
+modport_type_token:
+    TOK_INPUT {current_modport_input = 1; current_modport_output = 0;} | TOK_OUTPUT {current_modport_input = 0; current_modport_output = 1;}
+
 assert:
-	TOK_ASSERT '(' expr ')' ';' {
-		ast_stack.back()->children.push_back(new AstNode(assume_asserts_mode ? AST_ASSUME : AST_ASSERT, $3));
-	} |
-	TOK_ASSUME '(' expr ')' ';' {
-		ast_stack.back()->children.push_back(new AstNode(AST_ASSUME, $3));
-	} |
-	TOK_RESTRICT '(' expr ')' ';' {
-		if (norestrict_mode)
-			delete $3;
+	opt_stmt_label TOK_ASSERT opt_property '(' expr ')' ';' {
+		if (noassert_mode)
+			delete $5;
 		else
-			ast_stack.back()->children.push_back(new AstNode(AST_ASSUME, $3));
+			ast_stack.back()->children.push_back(new AstNode(assume_asserts_mode ? AST_ASSUME : AST_ASSERT, $5));
+	} |
+	opt_stmt_label TOK_ASSUME opt_property '(' expr ')' ';' {
+		if (noassume_mode)
+			delete $5;
+		else
+			ast_stack.back()->children.push_back(new AstNode(assert_assumes_mode ? AST_ASSERT : AST_ASSUME, $5));
+	} |
+	opt_stmt_label TOK_ASSERT opt_property '(' TOK_EVENTUALLY expr ')' ';' {
+		if (noassert_mode)
+			delete $6;
+		else
+			ast_stack.back()->children.push_back(new AstNode(assume_asserts_mode ? AST_FAIR : AST_LIVE, $6));
+	} |
+	opt_stmt_label TOK_ASSUME opt_property '(' TOK_EVENTUALLY expr ')' ';' {
+		if (noassume_mode)
+			delete $6;
+		else
+			ast_stack.back()->children.push_back(new AstNode(assert_assumes_mode ? AST_LIVE : AST_FAIR, $6));
+	} |
+	opt_stmt_label TOK_COVER opt_property '(' expr ')' ';' {
+		ast_stack.back()->children.push_back(new AstNode(AST_COVER, $5));
+	} |
+	opt_stmt_label TOK_COVER opt_property '(' ')' ';' {
+		ast_stack.back()->children.push_back(new AstNode(AST_COVER, AstNode::mkconst_int(1, false)));
+	} |
+	opt_stmt_label TOK_COVER ';' {
+		ast_stack.back()->children.push_back(new AstNode(AST_COVER, AstNode::mkconst_int(1, false)));
+	} |
+	opt_stmt_label TOK_RESTRICT opt_property '(' expr ')' ';' {
+		if (norestrict_mode)
+			delete $5;
+		else
+			ast_stack.back()->children.push_back(new AstNode(AST_ASSUME, $5));
+		if (!$3)
+			log_file_warning(current_filename, get_line_num(), "SystemVerilog does not allow \"restrict\" without \"property\".\n");
+	} |
+	opt_stmt_label TOK_RESTRICT opt_property '(' TOK_EVENTUALLY expr ')' ';' {
+		if (norestrict_mode)
+			delete $6;
+		else
+			ast_stack.back()->children.push_back(new AstNode(AST_FAIR, $6));
+		if (!$3)
+			log_file_warning(current_filename, get_line_num(), "SystemVerilog does not allow \"restrict\" without \"property\".\n");
 	};
 
 assert_property:
@@ -1015,16 +1433,39 @@ assert_property:
 	TOK_ASSUME TOK_PROPERTY '(' expr ')' ';' {
 		ast_stack.back()->children.push_back(new AstNode(AST_ASSUME, $4));
 	} |
+	TOK_ASSERT TOK_PROPERTY '(' TOK_EVENTUALLY expr ')' ';' {
+		ast_stack.back()->children.push_back(new AstNode(assume_asserts_mode ? AST_FAIR : AST_LIVE, $5));
+	} |
+	TOK_ASSUME TOK_PROPERTY '(' TOK_EVENTUALLY expr ')' ';' {
+		ast_stack.back()->children.push_back(new AstNode(AST_FAIR, $5));
+	} |
+	TOK_COVER TOK_PROPERTY '(' expr ')' ';' {
+		ast_stack.back()->children.push_back(new AstNode(AST_COVER, $4));
+	} |
 	TOK_RESTRICT TOK_PROPERTY '(' expr ')' ';' {
 		if (norestrict_mode)
 			delete $4;
 		else
 			ast_stack.back()->children.push_back(new AstNode(AST_ASSUME, $4));
+	} |
+	TOK_RESTRICT TOK_PROPERTY '(' TOK_EVENTUALLY expr ')' ';' {
+		if (norestrict_mode)
+			delete $5;
+		else
+			ast_stack.back()->children.push_back(new AstNode(AST_FAIR, $5));
 	};
 
 simple_behavioral_stmt:
 	lvalue '=' delay expr {
 		AstNode *node = new AstNode(AST_ASSIGN_EQ, $1, $4);
+		ast_stack.back()->children.push_back(node);
+	} |
+	lvalue TOK_INCREMENT {
+		AstNode *node = new AstNode(AST_ASSIGN_EQ, $1, new AstNode(AST_ADD, $1->clone(), AstNode::mkconst_int(1, true)));
+		ast_stack.back()->children.push_back(node);
+	} |
+	lvalue TOK_DECREMENT {
+		AstNode *node = new AstNode(AST_ASSIGN_EQ, $1, new AstNode(AST_SUB, $1->clone(), AstNode::mkconst_int(1, true)));
 		ast_stack.back()->children.push_back(node);
 	} |
 	lvalue OP_LE delay expr {
@@ -1056,7 +1497,7 @@ behavioral_stmt:
 			node->str = *$3;
 	} behavioral_stmt_list TOK_END opt_label {
 		if ($3 != NULL && $7 != NULL && *$3 != *$7)
-			frontend_verilog_yyerror("Syntax error.");
+			frontend_verilog_yyerror("Begin label (%s) and end label (%s) don't match.", $3->c_str()+1, $7->c_str()+1);
 		if ($3 != NULL)
 			delete $3;
 		if ($7 != NULL)
@@ -1118,7 +1559,7 @@ behavioral_stmt:
 		ast_stack.pop_back();
 		ast_stack.pop_back();
 	} |
-	attr case_type '(' expr ')' {
+	case_attr case_type '(' expr ')' {
 		AstNode *node = new AstNode(AST_CASE, $4);
 		ast_stack.back()->children.push_back(node);
 		ast_stack.push_back(node);
@@ -1126,6 +1567,23 @@ behavioral_stmt:
 	} opt_synopsys_attr case_body TOK_ENDCASE {
 		case_type_stack.pop_back();
 		ast_stack.pop_back();
+	};
+
+unique_case_attr:
+	/* empty */ {
+		$$ = false;
+	} |
+	TOK_PRIORITY case_attr {
+		$$ = $2;
+	} |
+	TOK_UNIQUE case_attr {
+		$$ = true;
+	};
+
+case_attr:
+	attr unique_case_attr {
+		if ($2) (*$1)["\\parallel_case"] = AstNode::mkconst_int(1, false);
+		$$ = $1;
 	};
 
 case_type:
@@ -1162,7 +1620,7 @@ optional_else:
 		ast_stack.back()->children.push_back(cond);
 		ast_stack.push_back(block);
 	} behavioral_stmt |
-	/* empty */;
+	/* empty */ %prec FAKE_THEN;
 
 case_body:
 	case_body case_item |
@@ -1229,7 +1687,9 @@ rvalue:
 		$$ = new AstNode(AST_IDENTIFIER, $2);
 		$$->str = *$1;
 		delete $1;
-		if ($2 == nullptr && formal_mode && ($$->str == "\\$initstate" || $$->str == "\\$anyconst" || $$->str == "\\$anyseq"))
+		if ($2 == nullptr && ($$->str == "\\$initstate" ||
+				$$->str == "\\$anyconst" || $$->str == "\\$anyseq" ||
+				$$->str == "\\$allconst" || $$->str == "\\$allseq"))
 			$$->type = AST_FCALL;
 	} |
 	hierarchical_id non_opt_multirange {
@@ -1333,7 +1793,7 @@ gen_stmt_or_null:
 	gen_stmt_block | ';';
 
 opt_gen_else:
-	TOK_ELSE gen_stmt_or_null | /* empty */;
+	TOK_ELSE gen_stmt_or_null | /* empty */ %prec FAKE_THEN;
 
 expr:
 	basic_expr {
@@ -1351,9 +1811,9 @@ basic_expr:
 	rvalue {
 		$$ = $1;
 	} |
-	'(' expr ')' TOK_CONST {
+	'(' expr ')' TOK_CONSTVAL {
 		if ($4->substr(0, 1) != "'")
-			frontend_verilog_yyerror("Syntax error.");
+			frontend_verilog_yyerror("Cast operation must be applied on sized constants e.g. (<expr>)<constval> , while %s is not a sized constant.", $4->c_str());
 		AstNode *bits = $2;
 		AstNode *val = const2ast(*$4, case_type_stack.size() == 0 ? 0 : case_type_stack.back(), !lib_mode);
 		if (val == NULL)
@@ -1361,9 +1821,9 @@ basic_expr:
 		$$ = new AstNode(AST_TO_BITS, bits, val);
 		delete $4;
 	} |
-	hierarchical_id TOK_CONST {
+	hierarchical_id TOK_CONSTVAL {
 		if ($2->substr(0, 1) != "'")
-			frontend_verilog_yyerror("Syntax error.");
+			frontend_verilog_yyerror("Cast operation must be applied on sized constants, e.g. <ID>\'d0, while %s is not a sized constant.", $2->c_str());
 		AstNode *bits = new AstNode(AST_IDENTIFIER);
 		bits->str = *$1;
 		AstNode *val = const2ast(*$2, case_type_stack.size() == 0 ? 0 : case_type_stack.back(), !lib_mode);
@@ -1373,14 +1833,14 @@ basic_expr:
 		delete $1;
 		delete $2;
 	} |
-	TOK_CONST TOK_CONST {
+	TOK_CONSTVAL TOK_CONSTVAL {
 		$$ = const2ast(*$1 + *$2, case_type_stack.size() == 0 ? 0 : case_type_stack.back(), !lib_mode);
 		if ($$ == NULL || (*$2)[0] != '\'')
 			log_error("Value conversion failed: `%s%s'\n", $1->c_str(), $2->c_str());
 		delete $1;
 		delete $2;
 	} |
-	TOK_CONST {
+	TOK_CONSTVAL {
 		$$ = const2ast(*$1, case_type_stack.size() == 0 ? 0 : case_type_stack.back(), !lib_mode);
 		if ($$ == NULL)
 			log_error("Value conversion failed: `%s'\n", $1->c_str());
@@ -1441,8 +1901,16 @@ basic_expr:
 		$$ = new AstNode(AST_BIT_AND, $1, $4);
 		append_attr($$, $3);
 	} |
+	basic_expr OP_NAND attr basic_expr {
+		$$ = new AstNode(AST_BIT_NOT, new AstNode(AST_BIT_AND, $1, $4));
+		append_attr($$, $3);
+	} |
 	basic_expr '|' attr basic_expr {
 		$$ = new AstNode(AST_BIT_OR, $1, $4);
+		append_attr($$, $3);
+	} |
+	basic_expr OP_NOR attr basic_expr {
+		$$ = new AstNode(AST_BIT_NOT, new AstNode(AST_BIT_OR, $1, $4));
 		append_attr($$, $3);
 	} |
 	basic_expr '^' attr basic_expr {

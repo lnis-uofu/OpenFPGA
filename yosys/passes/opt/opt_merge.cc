@@ -275,13 +275,24 @@ struct OptMergeWorker
 			ct.cell_types.erase("$pmux");
 		}
 
+		ct.cell_types.erase("$tribuf");
+		ct.cell_types.erase("$_TBUF_");
+		ct.cell_types.erase("$anyseq");
+		ct.cell_types.erase("$anyconst");
+		ct.cell_types.erase("$allseq");
+		ct.cell_types.erase("$allconst");
+
 		log("Finding identical cells in module `%s'.\n", module->name.c_str());
 		assign_map.set(module);
 
 		dff_init_map.set(module);
 		for (auto &it : module->wires_)
-			if (it.second->attributes.count("\\init") != 0)
-				dff_init_map.add(it.second, it.second->attributes.at("\\init"));
+			if (it.second->attributes.count("\\init") != 0) {
+				Const initval = it.second->attributes.at("\\init");
+				for (int i = 0; i < GetSize(initval) && i < GetSize(it.second); i++)
+					if (initval[i] == State::S0 || initval[i] == State::S1)
+						dff_init_map.add(SigBit(it.second, i), initval[i]);
+			}
 
 		bool did_something = true;
 		while (did_something)
@@ -330,7 +341,7 @@ struct OptMergeWorker
 
 struct OptMergePass : public Pass {
 	OptMergePass() : Pass("opt_merge", "consolidate identical cells") { }
-	virtual void help()
+	void help() YS_OVERRIDE
 	{
 		//   |---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|
 		log("\n");
@@ -346,7 +357,7 @@ struct OptMergePass : public Pass {
 		log("        Operate on all cell types, not just built-in types.\n");
 		log("\n");
 	}
-	virtual void execute(std::vector<std::string> args, RTLIL::Design *design)
+	void execute(std::vector<std::string> args, RTLIL::Design *design) YS_OVERRIDE
 	{
 		log_header(design, "Executing OPT_MERGE pass (detect identical cells).\n");
 

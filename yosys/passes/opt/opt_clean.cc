@@ -64,7 +64,7 @@ struct keep_cache_t
 
 	bool query(Cell *cell)
 	{
-		if (cell->type.in("$memwr", "$meminit", "$assert", "$assume"))
+		if (cell->type.in("$memwr", "$meminit", "$assert", "$assume", "$live", "$fair", "$cover"))
 			return true;
 
 		if (cell->has_keep_attr())
@@ -91,9 +91,16 @@ void rmunused_module_cells(Module *module, bool verbose)
 		Cell *cell = it.second;
 		for (auto &it2 : cell->connections()) {
 			if (!ct_all.cell_known(cell->type) || ct_all.cell_output(cell->type, it2.first))
-				for (auto bit : sigmap(it2.second))
+				for (auto raw_bit : it2.second) {
+					if (raw_bit.wire == nullptr)
+						continue;
+					auto bit = sigmap(raw_bit);
+					if (bit.wire == nullptr)
+						log_warning("Driver-driver conflict for %s between cell %s.%s and constant %s in %s: Resolved using constant.\n",
+								log_signal(raw_bit), log_id(cell), log_id(it2.first), log_signal(bit), log_id(module));
 					if (bit.wire != nullptr)
 						wire2driver[bit].insert(cell);
+				}
 		}
 		if (keep_cache.query(cell))
 			queue.insert(cell);
@@ -320,19 +327,89 @@ void rmunused_module_signals(RTLIL::Module *module, bool purge_mode, bool verbos
 		if (!used_signals.check_any(RTLIL::SigSpec(wire))) {
 			if (check_public_name(wire->name) && verbose) {
 				log("  removing unused non-port wire %s.\n", wire->name.c_str());
-				del_wires_count++;
 			}
 			del_wires.insert(wire);
+			del_wires_count++;
 		}
 
 	module->remove(del_wires);
-	count_rm_wires += del_wires.size();;
+	count_rm_wires += del_wires.size();
 
-	if (del_wires_count > 0)
+	if (verbose && del_wires_count > 0)
 		log("  removed %d unused temporary wires.\n", del_wires_count);
 }
 
-void rmunused_module(RTLIL::Module *module, bool purge_mode, bool verbose)
+bool rmunused_module_init(RTLIL::Module *module, bool purge_mode, bool verbose)
+{
+	bool did_something = false;
+	CellTypes fftypes;
+	fftypes.setup_internals_mem();
+
+	SigMap sigmap(module);
+	dict<SigBit, State> qbits;
+
+	for (auto cell : module->cells())
+		if (fftypes.cell_known(cell->type) && cell->hasPort("\\Q"))
+		{
+			SigSpec sig = cell->getPort("\\Q");
+
+			for (int i = 0; i < GetSize(sig); i++)
+			{
+				SigBit bit = sig[i];
+
+				if (bit.wire == nullptr || bit.wire->attributes.count("\\init") == 0)
+					continue;
+
+				Const init = bit.wire->attributes.at("\\init");
+
+				if (i >= GetSize(init) || init[i] == State::Sx || init[i] == State::Sz)
+					continue;
+
+				sigmap.add(bit);
+				qbits[bit] = init[i];
+			}
+		}
+
+	for (auto wire : module->wires())
+	{
+		if (!purge_mode && wire->name[0] == '\\')
+			continue;
+
+		if (wire->attributes.count("\\init") == 0)
+			continue;
+
+		Const init = wire->attributes.at("\\init");
+
+		for (int i = 0; i < GetSize(wire) && i < GetSize(init); i++)
+		{
+			if (init[i] == State::Sx || init[i] == State::Sz)
+				continue;
+
+			SigBit wire_bit = SigBit(wire, i);
+			SigBit mapped_wire_bit = sigmap(wire_bit);
+
+			if (wire_bit == mapped_wire_bit)
+				goto next_wire;
+
+			if (qbits.count(sigmap(SigBit(wire, i))) == 0)
+				goto next_wire;
+
+			if (qbits.at(sigmap(SigBit(wire, i))) != init[i])
+				goto next_wire;
+		}
+
+		if (verbose)
+			log("  removing redundant init attribute on %s.\n", log_id(wire));
+
+		wire->attributes.erase("\\init");
+		did_something = true;
+	next_wire:;
+	}
+
+	return did_something;
+}
+
+void rmunused_module(RTLIL::Module *module, bool purge_mode, bool verbose, bool rminit)
 {
 	if (verbose)
 		log("Finding unused cells or wires in module %s..\n", module->name.c_str());
@@ -358,11 +435,14 @@ void rmunused_module(RTLIL::Module *module, bool purge_mode, bool verbose)
 
 	rmunused_module_cells(module, verbose);
 	rmunused_module_signals(module, purge_mode, verbose);
+
+	if (rminit && rmunused_module_init(module, purge_mode, verbose))
+		rmunused_module_signals(module, purge_mode, verbose);
 }
 
 struct OptCleanPass : public Pass {
 	OptCleanPass() : Pass("opt_clean", "remove unused cells and wires") { }
-	virtual void help()
+	void help() YS_OVERRIDE
 	{
 		//   |---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|
 		log("\n");
@@ -379,7 +459,7 @@ struct OptCleanPass : public Pass {
 		log("        also remove internal nets if they have a public name\n");
 		log("\n");
 	}
-	virtual void execute(std::vector<std::string> args, RTLIL::Design *design)
+	void execute(std::vector<std::string> args, RTLIL::Design *design) YS_OVERRIDE
 	{
 		bool purge_mode = false;
 
@@ -406,8 +486,11 @@ struct OptCleanPass : public Pass {
 		for (auto module : design->selected_whole_modules_warn()) {
 			if (module->has_processes_warn())
 				continue;
-			rmunused_module(module, purge_mode, true);
+			rmunused_module(module, purge_mode, true, true);
 		}
+
+		if (count_rm_cells > 0 || count_rm_wires > 0)
+			log("Removed %d unused cells and %d unused wires.\n", count_rm_cells, count_rm_wires);
 
 		design->optimize();
 		design->sort();
@@ -422,7 +505,7 @@ struct OptCleanPass : public Pass {
 
 struct CleanPass : public Pass {
 	CleanPass() : Pass("clean", "remove unused cells and wires") { }
-	virtual void help()
+	void help() YS_OVERRIDE
 	{
 		//   |---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|
 		log("\n");
@@ -437,7 +520,7 @@ struct CleanPass : public Pass {
 		log("in -purge mode between the commands.\n");
 		log("\n");
 	}
-	virtual void execute(std::vector<std::string> args, RTLIL::Design *design)
+	void execute(std::vector<std::string> args, RTLIL::Design *design) YS_OVERRIDE
 	{
 		bool purge_mode = false;
 
@@ -465,7 +548,7 @@ struct CleanPass : public Pass {
 		for (auto module : design->selected_whole_modules()) {
 			if (module->has_processes())
 				continue;
-			rmunused_module(module, purge_mode, false);
+			rmunused_module(module, purge_mode, false, false);
 		}
 
 		if (count_rm_cells > 0 || count_rm_wires > 0)
