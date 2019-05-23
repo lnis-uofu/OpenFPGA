@@ -90,8 +90,6 @@ my @sctgy;
                 "vpr_power_tags"
                );
 
-my $clock_name = "avoid_clk_option";
-
 # ----------Subrountines------------#
 # Print TABs and strings
 sub tab_print($ $ $)
@@ -352,11 +350,13 @@ sub opts_read()
   &read_opt_into_hash("vpr_fpga_spice_leakage_only","off","off");
   &read_opt_into_hash("vpr_fpga_spice_parasitic_net_estimation_off","off","off");
   &read_opt_into_hash("vpr_fpga_spice_testbench_load_extraction_off","off","off");
+
+  # FPGA-Verilog options
+  # Read Opt into Hash(opt_ptr) : "opt_name","with_val","mandatory"
   &read_opt_into_hash("vpr_fpga_verilog","off","off");
   &read_opt_into_hash("vpr_fpga_verilog_print_top_tb","off","off");
   &read_opt_into_hash("vpr_fpga_verilog_print_input_blif_tb","off","off");
   &read_opt_into_hash("vpr_fpga_bitstream_generator","off","off");
-# AA add for update
   &read_opt_into_hash("vpr_fpga_verilog_print_autocheck_top_testbench","off","off");
   &read_opt_into_hash("vpr_fpga_verilog_dir","on","off");
   &read_opt_into_hash("vpr_fpga_verilog_print_modelsim_autodeck","on","off");
@@ -369,6 +369,9 @@ sub opts_read()
   &read_opt_into_hash("vpr_fpga_verilog_print_sdc_pnr","off","off");
   &read_opt_into_hash("vpr_fpga_verilog_print_sdc_analysis","off","off");
   &read_opt_into_hash("vpr_fpga_verilog_print_user_defined_template","off","off");
+
+  # Regression test option
+  &read_opt_into_hash("end_flow_with_test","off","off");
 
   &print_opts(); 
 
@@ -685,7 +688,8 @@ sub run_yosys_fpgamap($ $ $ $) {
   close($YOSYS_CMD_FH);
   #
   # Create a local copy for the commands 
-  system("./$yosys_name -s $cmd_log > $log");
+
+  system("./$yosys_name $cmd_log > $log");
 
   if (!(-e $blif_out)) {
     die "ERROR: Fail Yosys for benchmark $bm.\n";
@@ -1221,7 +1225,7 @@ sub run_ace($ $ $ $) {
   
   print "Entering $ace_dir\n";
   chdir $ace_dir;
-  system("./$ace_name -b $mpack_vpr_blif -o $act_file -n $ace_new_blif -c $clock_name $ace_customized_opts >> $log");
+  system("./$ace_name -b $mpack_vpr_blif -o $act_file -n $ace_new_blif -c clk $ace_customized_opts >> $log");
 
   if (!(-e $ace_new_blif)) {
     die "ERROR: Fail ACE for benchmark $mpack_vpr_blif.\n";
@@ -1231,6 +1235,65 @@ sub run_ace($ $ $ $) {
 
   chdir $cwd;
 } 
+
+# Run Icarus Verilog Simulation
+sub run_icarus_verilog($ $ $ $ $)
+{
+  my ($log_file, $compiled_file, $tb_top, $netlists_path, $include_netlists) = @_;
+
+  # Compile and launch simulation
+  system("iverilog -o $compiled_file $netlists_path$include_netlists -s $tb_top");
+  system("vvp $compiled_file >> $log_file");  # no -j option but could be added to speed-up the process
+
+  # Checking simulation results
+  open(F, $log_file);
+  my @lines=<F>;
+  close F;
+  my $keyword = "Succeed";
+  my $results = grep($keyword, @lines);
+  if($results >= 1){
+    print "\nVerification succeed!\n\n";
+  } else {
+    my $keyword = "Failed";
+    my $results = grep($keyword, @lines);
+    if($results >= 1){
+      print "\nVerification failed\n\n";
+    } else {
+      die "\nERROR: Simulation didn't start\n\n";
+    }
+  }
+  return;
+}
+
+# Run netlists verification using Icarus Simulator
+sub run_netlists_verification($)
+{
+  my ($benchmark) = @_;
+  my $log_file = "$benchmark"."_sim.log";
+  my $compiled_file = "compiled_"."$benchmark";
+  my $include_netlists = "$benchmark"."_include_netlists.v";
+  my $tb_top_formal = "$benchmark"."_top_formal_verification_random_tb";
+  my $tb_top_autochecked = "$benchmark"."_autocheck_top_tb";
+  my $netlists_path = "$opt_ptr->{vpr_fpga_verilog_dir_val}"."/SRC/";
+
+  system("rm -f $log_file");
+  system("rm -f $compiled_file");
+
+  if("on" eq $opt_ptr->{vpr_fpga_verilog_include_icarus_simulator}){
+    if("on" eq $opt_ptr->{vpr_fpga_verilog_print_autocheck_top_testbench}){
+      if("on" eq $opt_ptr->{vpr_fpga_verilog_formal_verification_top_netlist}){ # Preprogramed FPGA netlist chosen if available to speed-up the process
+        &run_icarus_verilog($log_file, $compiled_file, $tb_top_formal, $netlists_path, $include_netlists);
+      } else {
+        &run_icarus_verilog($log_file, $compiled_file, $tb_top_autochecked, $netlists_path, $include_netlists);
+      }
+    } else {
+      die "ERROR: Cannot run netlist verification without \"-vpr_fpga_verilog_print_autocheck_top_testbench\" token.\n";
+    }
+  } else {
+    die "ERROR: Cannot run netlist verification without \"-vpr_fpga_verilog_include_icarus_simulator\" token.\n";
+  }
+  return;
+}
 
 sub run_std_vpr($ $ $ $ $ $ $ $ $) 
 {
@@ -1367,7 +1430,7 @@ sub run_std_vpr($ $ $ $ $ $ $ $ $)
   if ("on" eq $opt_ptr->{vpr_max_router_iteration}) {
     $other_opt .= "--max_router_iterations $opt_ptr->{vpr_max_router_iteration_val} ";
   }
-
+  print "\n\n./$vpr_name $arch $blif --net_file $net --place_file $place --route_file $route --full_stats --nodisp $power_opts $packer_opts $chan_width_opt $vpr_spice_opts $other_opt > $log\n\n";
   system("./$vpr_name $arch $blif --net_file $net --place_file $place --route_file $route --full_stats --nodisp $power_opts $packer_opts $chan_width_opt $vpr_spice_opts $other_opt > $log");
 
   chdir $cwd;
@@ -1812,6 +1875,10 @@ sub run_yosys_vpr_flow($ $ $ $ $)
   $verilog_benchmark = &run_rewrite_verilog($ace_new_blif, $rpt_dir, $benchmark, $benchmark, $yosys_log);
 
   &run_vpr_in_flow($tag, $benchmark, $benchmark_file, $corrected_ace_blif, $vpr_arch, $act_file, $vpr_net, $vpr_place, $vpr_route, $vpr_log, $vpr_reroute_log, $parse_results);
+
+  if("on" eq $opt_ptr->{end_flow_with_test}) {
+    &run_netlists_verification($benchmark);
+  }
 
   return;
 }

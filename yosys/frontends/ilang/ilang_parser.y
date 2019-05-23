@@ -37,7 +37,7 @@ namespace ILANG_FRONTEND {
 	std::vector<std::vector<RTLIL::SwitchRule*>*> switch_stack;
 	std::vector<RTLIL::CaseRule*> case_stack;
 	dict<RTLIL::IdString, RTLIL::Const> attrbuf;
-	bool flag_nooverwrite, flag_overwrite;
+	bool flag_nooverwrite, flag_overwrite, flag_lib;
 	bool delete_current_module;
 }
 using namespace ILANG_FRONTEND;
@@ -45,7 +45,16 @@ YOSYS_NAMESPACE_END
 USING_YOSYS_NAMESPACE
 %}
 
-%name-prefix "rtlil_frontend_ilang_yy"
+%define api.prefix {rtlil_frontend_ilang_yy}
+
+/* The union is defined in the header, so we need to provide all the
+ * includes it requires
+ */
+%code requires {
+#include <string>
+#include <vector>
+#include "frontends/ilang/ilang_frontend.h"
+}
 
 %union {
 	char *string;
@@ -61,7 +70,7 @@ USING_YOSYS_NAMESPACE
 %token TOK_CELL TOK_CONNECT TOK_SWITCH TOK_CASE TOK_ASSIGN TOK_SYNC
 %token TOK_LOW TOK_HIGH TOK_POSEDGE TOK_NEGEDGE TOK_EDGE TOK_ALWAYS TOK_GLOBAL TOK_INIT
 %token TOK_UPDATE TOK_PROCESS TOK_END TOK_INVALID TOK_EOL TOK_OFFSET
-%token TOK_PARAMETER TOK_ATTRIBUTE TOK_MEMORY TOK_SIZE TOK_SIGNED TOK_UPTO
+%token TOK_PARAMETER TOK_ATTRIBUTE TOK_MEMORY TOK_SIZE TOK_SIGNED TOK_REAL TOK_UPTO
 
 %type <rsigspec> sigspec_list_reversed
 %type <sigspec> sigspec sigspec_list
@@ -98,7 +107,7 @@ module:
 		delete_current_module = false;
 		if (current_design->has($2)) {
 			RTLIL::Module *existing_mod = current_design->module($2);
-			if (!flag_overwrite && attrbuf.count("\\blackbox") && attrbuf.at("\\blackbox").as_bool()) {
+			if (!flag_overwrite && (flag_lib || (attrbuf.count("\\blackbox") && attrbuf.at("\\blackbox").as_bool()))) {
 				log("Ignoring blackbox re-definition of module %s.\n", $2);
 				delete_current_module = true;
 			} else if (!flag_nooverwrite && !flag_overwrite && !existing_mod->get_bool_attribute("\\blackbox")) {
@@ -124,6 +133,8 @@ module:
 		current_module->fixup_ports();
 		if (delete_current_module)
 			delete current_module;
+		else if (flag_lib)
+			current_module->makeblackbox();
 		current_module = nullptr;
 	} EOL;
 
@@ -236,6 +247,12 @@ cell_body:
 	cell_body TOK_PARAMETER TOK_SIGNED TOK_ID constant EOL {
 		current_cell->parameters[$4] = *$5;
 		current_cell->parameters[$4].flags |= RTLIL::CONST_FLAG_SIGNED;
+		free($4);
+		delete $5;
+	} |
+	cell_body TOK_PARAMETER TOK_REAL TOK_ID constant EOL {
+		current_cell->parameters[$4] = *$5;
+		current_cell->parameters[$4].flags |= RTLIL::CONST_FLAG_REAL;
 		free($4);
 		delete $5;
 	} |
@@ -443,4 +460,3 @@ conn_stmt:
 		delete $2;
 		delete $3;
 	};
-
