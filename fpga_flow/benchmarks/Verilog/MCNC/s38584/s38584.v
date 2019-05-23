@@ -1,6 +1,6 @@
 // Benchmark "TOP" written by ABC on Tue Mar  5 10:05:28 2019
 
-module s38584 ( clk, 
+module s38584 ( clock, 
     Pg6753, Pg6752, Pg6751, Pg6750, Pg6749, Pg6748, Pg6747, Pg6746, Pg6745,
     Pg6744, Pg135, Pg134, Pg127, Pg126, Pg125, Pg124, Pg120, Pg116, Pg115,
     Pg114, Pg113, Pg100, Pg99, Pg92, Pg91, Pg90, Pg84, Pg73, Pg72, Pg64,
@@ -46,7 +46,7 @@ module s38584 ( clk,
   input  Pg6753, Pg6752, Pg6751, Pg6750, Pg6749, Pg6748, Pg6747, Pg6746,
     Pg6745, Pg6744, Pg135, Pg134, Pg127, Pg126, Pg125, Pg124, Pg120, Pg116,
     Pg115, Pg114, Pg113, Pg100, Pg99, Pg92, Pg91, Pg90, Pg84, Pg73, Pg72,
-    Pg64, Pg57, Pg56, Pg54, Pg53, Pg44, Pg36, Pg35, Pg5, clk;
+    Pg64, Pg57, Pg56, Pg54, Pg53, Pg44, Pg36, Pg35, Pg5, clock;
   output Pg34972, Pg34956, Pg34927, Pg34925, Pg34923, Pg34921, Pg34919,
     Pg34917, Pg34915, Pg34913, Pg34839, Pg34788, Pg34597, Pg34437, Pg34436,
     Pg34435, Pg34425, Pg34383, Pg34240, Pg34239, Pg34238, Pg34237, Pg34236,
@@ -6408,7 +6408,7 @@ module s38584 ( clk,
   assign n6526 = Pg8789;
   assign n6555 = Pg9555;
   assign n6642 = Pg8786;
-  always @ (posedge clk) begin
+  always @ (posedge clock) begin
     Ng5057 <= n687;
     Ng2771 <= n692_1;
     Ng1882 <= n697_1;

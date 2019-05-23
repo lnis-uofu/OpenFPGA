@@ -90,6 +90,8 @@ my @sctgy;
                 "vpr_power_tags"
                );
 
+my $clock_name = "avoid_clk_option";
+
 # ----------Subrountines------------#
 # Print TABs and strings
 sub tab_print($ $ $)
@@ -594,7 +596,7 @@ sub run_rewrite_verilog($ $ $ $ $) {
   my ($blif, $path, $benchmark, $bm, $log) = @_;
   my ($new_verilog) = "$path/$benchmark".".v";
   my ($cmd_log) = ($log);
-  $cmd_log =~ s/\.log$/rewrite_verilog\.ys/;
+  $cmd_log =~ s/\.log$/_rewrite_verilog\.ys/;
 
   # Get Yosys path
   my ($yosys_dir,$yosys_name) = &split_prog_path($conf_ptr->{dir_path}->{yosys_path}->{val});
@@ -676,15 +678,14 @@ sub run_yosys_fpgamap($ $ $ $) {
   print $YOSYS_CMD_FH "synth -run check\n";
   print $YOSYS_CMD_FH "\n";
 
-  print $YOSYS_CMD_FH "# C;ean and output blif \n";
+  print $YOSYS_CMD_FH "# Clean and output blif \n";
   print $YOSYS_CMD_FH "opt_clean -purge\n";
   print $YOSYS_CMD_FH "write_blif $blif_out\n";
 
   close($YOSYS_CMD_FH);
   #
   # Create a local copy for the commands 
-
-  system("./$yosys_name $cmd_log > $log");
+  system("./$yosys_name -s $cmd_log > $log");
 
   if (!(-e $blif_out)) {
     die "ERROR: Fail Yosys for benchmark $bm.\n";
@@ -1174,6 +1175,21 @@ sub run_odin2($ $ $) {
   chdir $cwd;
 }
 
+sub run_pro_blif_3arg($ $ $) {
+  my ($abc_blif_out_bak, $abc_blif_out, $initial_blif) = @_;
+  my ($pro_blif_path) = ($conf_ptr->{dir_path}->{script_base}->{val});
+
+  $pro_blif_path =~ s/\/$//g;
+  $pro_blif_path = $pro_blif_path . "/pro_blif.pl";
+
+  `perl $pro_blif_path -i $abc_blif_out_bak -o $abc_blif_out -initial_blif $initial_blif`;
+
+  if (!(-e $abc_blif_out)) {
+    die "ERROR: Fail pro_blif.pl for benchmark $abc_blif_out.\n";
+  }
+  return;
+}
+
 sub run_pro_blif($ $) {
   my ($abc_blif_out_bak, $abc_blif_out) = @_;
   my ($pro_blif_path) = ($conf_ptr->{dir_path}->{script_base}->{val});
@@ -1205,7 +1221,7 @@ sub run_ace($ $ $ $) {
   
   print "Entering $ace_dir\n";
   chdir $ace_dir;
-  system("./$ace_name -b $mpack_vpr_blif -o $act_file -n $ace_new_blif -c clk $ace_customized_opts >> $log");
+  system("./$ace_name -b $mpack_vpr_blif -o $act_file -n $ace_new_blif -c $clock_name $ace_customized_opts >> $log");
 
   if (!(-e $ace_new_blif)) {
     die "ERROR: Fail ACE for benchmark $mpack_vpr_blif.\n";
@@ -1614,13 +1630,13 @@ sub run_ace_in_flow($ $ $ $ $ $ $) {
 
   if ("on" eq $opt_ptr->{power}) {
     if ("on" eq $opt_ptr->{black_box_ace}) {
-      my ($tmp_blif) = ($prefix."ace_new.blif");
+      my ($tmp_blif) = ($prefix."_ace_new.blif");
       &black_box_blif($abc_blif_out,$tmp_blif); 
       &run_ace($tmp_blif,$act_file,$ace_new_blif ,$ace_log);
     } else {
       &run_ace($abc_blif_out,$act_file,$ace_new_blif,$ace_log);
     }
-    &run_pro_blif($ace_new_blif, $abc_blif_out);
+    #&run_pro_blif($ace_new_blif, $abc_blif_out);
   }
 
   if (("on" eq $opt_ptr->{power})&&(!(-e $act_file))) {
@@ -1781,7 +1797,7 @@ sub run_yosys_vpr_flow($ $ $ $ $)
   my ($act_file,$ace_new_blif,$ace_log, $corrected_ace_blif) = ("$rpt_dir/$benchmark".".act","$rpt_dir/$benchmark"."ace.blif","$prefix"."ace.log","$rpt_dir/$benchmark".".blif");
   &run_ace_in_flow($prefix, $yosys_blif_out, $act_file, $ace_new_blif, $ace_log);
 
-  &run_pro_blif($ace_new_blif, $corrected_ace_blif);
+  &run_pro_blif_3arg($ace_new_blif, $corrected_ace_blif, $yosys_blif_out);
 
   # Files for VPR
   my ($vpr_net,$vpr_place,$vpr_route,$vpr_reroute_log,$vpr_log);

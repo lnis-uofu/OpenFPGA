@@ -1,6 +1,6 @@
 // Benchmark "TOP" written by ABC on Tue Mar  5 09:55:52 2019
 
-module clma ( clk, 
+module clma ( clock, 
     Pi416, Pi415, Pi414, Pi413, Pi412, Pi411, Pi410, Pi409, Pi408, Pi407,
     Pi406, Pi405, Pi404, Pi403, Pi402, Pi401, Pi400, Pi399, Pi398, Pi397,
     Pi396, Pi395, Pi394, Pi393, Pi392, Pi391, Pi390, Pi389, Pi388, Pi387,
@@ -93,7 +93,7 @@ module clma ( clk,
     Pi73, Pi72, Pi71, Pi70, Pi69, Pi68, Pi67, Pi66, Pi65, Pi64, Pi63, Pi62,
     Pi61, Pi60, Pi59, Pi58, Pi57, Pi56, Pi55, Pi54, Pi53, Pi52, Pi51, Pi50,
     Pi49, Pi28, Pi27, Pi26, Pi25, Pi24, Pi23, Pi22, Pi21, Pi20, Pi19, Pi18,
-    Pi17, Pi16, Pi15, clk;
+    Pi17, Pi16, Pi15, clock;
   output P__cmxir_1, P__cmxir_0, P__cmxig_1, P__cmxig_0, P__cmxcl_1,
     P__cmxcl_0, P__cmx1ad_35, P__cmx1ad_34, P__cmx1ad_33, P__cmx1ad_32,
     P__cmx1ad_31, P__cmx1ad_30, P__cmx1ad_29, P__cmx1ad_28, P__cmx1ad_27,
@@ -4736,7 +4736,7 @@ module clma ( clk,
   assign n4774 = n3984 | n4726 | n4727;
   assign n4775 = n3669 & Pi27;
   assign n1085 = P__cmxcl_0;
-  always @ (posedge clk) begin
+  always @ (posedge clock) begin
     Ni48 <= n931_1;
     Ni47 <= n936;
     Ni46 <= n941_1;
