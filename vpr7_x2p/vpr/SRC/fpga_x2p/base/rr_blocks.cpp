@@ -1,10 +1,11 @@
 #include <cassert>
+#include <algorithm>
 
 #include "rr_blocks.h"
 
 
 /* Member Functions of Class RRChan */
-/* accessors */
+/* Accessors */
 t_rr_type RRChan::get_type() const {
   return type_;
 }
@@ -560,7 +561,133 @@ bool RRSwitchBlock::is_mirror(RRSwitchBlock& cand) const {
   return true;
 }
 
-/* Internal functions */
+/* Public mutators */
+/* Allocate the vectors with the given number of sides */
+void RRSwitchBlock::init_num_sides(size_t num_sides) {
+  /* Initialize the vectors */
+  chan_rr_node_direction_.resize(num_sides);
+  chan_rr_node_.resize(num_sides);
+  ipin_rr_node_.resize(num_sides);
+  ipin_rr_node_grid_side_.resize(num_sides);
+  opin_rr_node_.resize(num_sides);
+  opin_rr_node_grid_side_.resize(num_sides);
+  return;
+}
+
+/* Add a node to the chan_rr_node_ list and also assign its direction in chan_rr_node_direction_ */
+void RRSwitchBlock::add_chan_node(t_rr_node* node, enum e_side node_side, enum PORTS node_direction) {
+  Side side_manager(node_side);
+  assert(validate_side(node_side));
+  /* resize the array if needed, node is placed in the sequence of node->ptc_num */
+  if (size_t(node->ptc_num + 1) > chan_rr_node_[side_manager.to_size_t()].size()) {
+    chan_rr_node_[side_manager.to_size_t()].resize(node->ptc_num + 1); /* resize to the maximum */
+    chan_rr_node_direction_[side_manager.to_size_t()].resize(node->ptc_num + 1); /* resize to the maximum */
+  }
+  /* fill the dedicated element in the vector */
+  chan_rr_node_[side_manager.to_size_t()][node->ptc_num] = node;
+  chan_rr_node_direction_[side_manager.to_size_t()][node->ptc_num] = node_direction;
+
+  return;
+} 
+
+/* Add a node to the chan_rr_node_ list and also assign its direction in chan_rr_node_direction_ */
+void RRSwitchBlock::add_ipin_node(t_rr_node* node, enum e_side node_side, enum e_side grid_side) {
+  Side side_manager(node_side);
+  assert(validate_side(node_side));
+  /* push pack the dedicated element in the vector */
+  ipin_rr_node_[side_manager.to_size_t()].push_back(node);
+  ipin_rr_node_grid_side_[side_manager.to_size_t()].push_back(grid_side);
+
+  return;
+}
+
+/* Add a node to the chan_rr_node_ list and also assign its direction in chan_rr_node_direction_ */
+void RRSwitchBlock::add_opin_node(t_rr_node* node, enum e_side node_side, enum e_side grid_side) {
+  Side side_manager(node_side);
+  assert(validate_side(node_side));
+  /* push pack the dedicated element in the vector */
+  opin_rr_node_[side_manager.to_size_t()].push_back(node);
+  opin_rr_node_grid_side_[side_manager.to_size_t()].push_back(grid_side);
+
+  return;
+} 
+
+void RRSwitchBlock::set_num_reserved_conf_bits(size_t num_reserved_conf_bits) {
+  num_reserved_conf_bits_ = num_reserved_conf_bits;
+  return;
+}
+
+void RRSwitchBlock::set_num_conf_bits(size_t num_conf_bits) {
+  num_conf_bits_ = num_conf_bits;
+  return;
+}
+
+void RRSwitchBlock::clear() {
+  /* Clean all the vectors */
+  assert(validate_num_sides());
+  /* Clear the inner vector of each matrix */
+  for (size_t side = 0; side < get_num_sides(); ++side) {
+    chan_rr_node_direction_[side].clear();
+    chan_rr_node_[side].clear();
+    ipin_rr_node_[side].clear();
+    ipin_rr_node_grid_side_[side].clear();
+    opin_rr_node_[side].clear();
+    opin_rr_node_grid_side_[side].clear();
+  }  
+  chan_rr_node_direction_.clear();
+  chan_rr_node_.clear();
+  ipin_rr_node_.clear();
+  ipin_rr_node_grid_side_.clear();
+  opin_rr_node_.clear();
+  opin_rr_node_grid_side_.clear();
+
+  set_num_reserved_conf_bits(0);
+  set_num_conf_bits(0);
+
+  return;
+}
+
+/* Clean the chan_width of a side */
+void RRSwitchBlock::clear_chan_nodes(enum e_side node_side) {
+  Side side_manager(node_side);
+  assert(validate_side(node_side));
+  
+  chan_rr_node_[side_manager.to_size_t()].clear();
+  chan_rr_node_direction_[side_manager.to_size_t()].clear();
+  return;
+} 
+
+/* Clean the number of IPINs of a side */
+void RRSwitchBlock::clear_ipin_nodes(enum e_side node_side) {
+  Side side_manager(node_side);
+  assert(validate_side(node_side));
+  
+  ipin_rr_node_[side_manager.to_size_t()].clear();
+  ipin_rr_node_grid_side_[side_manager.to_size_t()].clear();
+  return;
+} 
+
+/* Clean the number of OPINs of a side */
+void RRSwitchBlock::clear_opin_nodes(enum e_side node_side) {
+  Side side_manager(node_side);
+  assert(validate_side(node_side));
+  
+  opin_rr_node_[side_manager.to_size_t()].clear();
+  opin_rr_node_grid_side_[side_manager.to_size_t()].clear();
+  return;
+}
+
+/* Clean chan/opin/ipin nodes at one side */
+void RRSwitchBlock::clear_one_side(enum e_side node_side) {
+  clear_chan_nodes(node_side);
+  clear_ipin_nodes(node_side);
+  clear_opin_nodes(node_side);
+
+  return;
+} 
+
+
+/* Internal functions for validation */
 
 /* check if two rr_nodes have a similar set of drive_rr_nodes 
  * for each drive_rr_node:
@@ -665,3 +792,151 @@ bool RRSwitchBlock::validate_track_id(enum e_side side, size_t track_id) const {
 
   return false;
 }
+
+/* Member Functions of Class RRChan */
+/* Accessors */
+
+/* get the max coordinator of the switch block array */
+DeviceCoordinator DeviceRRSwitchBlock::get_switch_block_range() const {
+  size_t max_y = 0;
+  /* Get the largest size of sub-arrays */
+  for (size_t x = 0; x < rr_switch_block_.size(); ++x) {
+    max_y = std::max(max_y, rr_switch_block_[x].size());
+  }
+  
+  DeviceCoordinator coordinator(rr_switch_block_.size(), max_y);
+  return coordinator;
+} 
+
+/* Get a rr switch block in the array with a coordinator */
+RRSwitchBlock DeviceRRSwitchBlock::get_switch_block(DeviceCoordinator coordinator) const {
+  assert(validate_coordinator(coordinator));
+  return rr_switch_block_[coordinator.get_x()][coordinator.get_y()];
+} 
+
+/* Get a rr switch block in the array with a coordinator */
+RRSwitchBlock DeviceRRSwitchBlock::get_switch_block(size_t x, size_t y) const { 
+  DeviceCoordinator coordinator(x, y);  
+  return get_switch_block(coordinator);
+}
+
+/* get the number of unique mirrors of switch blocks */
+size_t DeviceRRSwitchBlock::get_num_unique_mirror() const {
+  return unique_mirror_.size();
+} 
+
+/* get the number of rotatable mirrors of switch blocks */
+size_t DeviceRRSwitchBlock::get_num_rotatable_mirror() const {
+  return rotatable_mirror_.size();
+} 
+
+/* Get a rr switch block which a unique mirror */ 
+RRSwitchBlock DeviceRRSwitchBlock::get_unique_mirror(size_t index) const {
+  assert (validate_unique_mirror_index(index));
+  
+  return rr_switch_block_[unique_mirror_[index].get_x()][unique_mirror_[index].get_y()];
+}
+
+/* Get a rr switch block which a unique mirror */ 
+RRSwitchBlock DeviceRRSwitchBlock::get_rotatable_mirror(size_t index) const {
+  assert (validate_rotatable_mirror_index(index));
+  
+  return rr_switch_block_[rotatable_mirror_[index].get_x()][rotatable_mirror_[index].get_y()];
+} 
+
+/* Public Mutators */
+
+/* Pre-allocate the rr_switch_block array that the device requires */ 
+void DeviceRRSwitchBlock::reserve(DeviceCoordinator& coordinator) { 
+  rr_switch_block_.reserve(coordinator.get_x());
+  for (size_t x = 0; x < coordinator.get_x(); ++x) {
+    rr_switch_block_[x].reserve(coordinator.get_y()); 
+  }
+  return;
+}
+
+/* Resize rr_switch_block array is needed*/
+void DeviceRRSwitchBlock::resize_upon_need(DeviceCoordinator& coordinator) { 
+  if (coordinator.get_x() + 1 > rr_switch_block_.capacity()) {
+    rr_switch_block_.resize(coordinator.get_x());
+  }
+
+  if (coordinator.get_y() + 1 > rr_switch_block_[coordinator.get_x()].capacity()) {
+    rr_switch_block_[coordinator.get_x()].resize(coordinator.get_y());
+  }
+  
+  return;
+}
+
+/* Add a switch block to the array, which will automatically identify and update the lists of unique mirrors and rotatable mirrors */
+void DeviceRRSwitchBlock::add_rr_switch_block(DeviceCoordinator& coordinator, 
+                                              RRSwitchBlock& rr_switch_block) {
+  bool is_unique_mirror = true;
+
+  /* Resize upon needs*/
+  resize_upon_need(coordinator);
+
+  /* Add the switch block into array */
+  rr_switch_block_[coordinator.get_x()][coordinator.get_y()] = rr_switch_block; 
+
+  /* Traverse the unique_mirror list and check it is an mirror of another */
+  for (size_t mirror_id = 0; mirror_id < get_num_unique_mirror(); ++mirror_id) {
+    if (true == get_switch_block(unique_mirror_[mirror_id]).is_mirror(rr_switch_block)) {
+      /* This is a mirror, raise the flag and we finish */
+      is_unique_mirror = false;
+      break;
+    }
+  }
+  /* Add to list if this is a unique mirror*/
+  if (true == is_unique_mirror) {
+    unique_mirror_.push_back(coordinator);
+  }
+
+  /* TODO: add rotatable mirror support */
+
+  return;
+} 
+
+/* clean the content */
+void DeviceRRSwitchBlock::clear() { 
+  /* clean rr_switch_block array */
+  for (size_t x = 0; x < rr_switch_block_.size(); ++x) {
+    rr_switch_block_[x].clear(); 
+  }
+  rr_switch_block_.clear();
+
+  /* clean unique mirror */
+  unique_mirror_.clear();
+
+  /* clean unique mirror */
+  rotatable_mirror_.clear();
+
+  return;
+}
+
+/* Validate if the (x,y) is the range of this device */
+bool DeviceRRSwitchBlock::validate_coordinator(DeviceCoordinator& coordinator) const {
+  if (coordinator.get_x() >= rr_switch_block_.capacity()) {
+    return false;
+  }
+  if (coordinator.get_y() >= rr_switch_block_[coordinator.get_x()].capacity()) {
+    return false;
+  }
+  return true;
+} 
+
+/* Validate if the index in the range of unique_mirror vector*/
+bool DeviceRRSwitchBlock::validate_unique_mirror_index(size_t index) const { 
+  if (index >= unique_mirror_.size()) {
+    return false;
+  }
+  return true;
+}
+
+/* Validate if the index in the range of unique_mirror vector*/
+bool DeviceRRSwitchBlock::validate_rotatable_mirror_index(size_t index) const {
+  if (index >= rotatable_mirror_.size()) {
+    return false;
+  }
+  return true;
+} 

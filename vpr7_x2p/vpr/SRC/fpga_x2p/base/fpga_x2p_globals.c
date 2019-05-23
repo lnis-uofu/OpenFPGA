@@ -46,3 +46,4 @@ char* fpga_spice_bitstream_routing_log_file_postfix = "_routing_bitstream.log";
 char* default_sdc_folder = "SDC/";
 
 DeviceRRChan device_rr_chan;
+DeviceRRSwitchBlock device_rr_switch_block;

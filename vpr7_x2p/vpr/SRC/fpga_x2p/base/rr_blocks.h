@@ -14,6 +14,7 @@
 /* Standard header files required go first */
 #include <vector>
 
+#include "device_coordinator.h"
 #include "vpr_types.h"
 
 /* RRChan coordinator class */
@@ -134,6 +135,18 @@ class RRSwitchBlock {
     bool is_node_imply_short_connection(t_rr_node* src_node) const; /* Check if the node imply a short connection inside the SB, which happens to long wires across a FPGA fabric */
     bool is_mirror(RRSwitchBlock& cand) const; /* check if the candidate SB is a mirror of the current one */
   public: /* Mutators */
+    void init_num_sides(size_t num_sides); /* Allocate the vectors with the given number of sides */
+    void add_chan_node(t_rr_node* node, enum e_side node_side, enum PORTS node_direction); /* Add a node to the chan_rr_node_ list and also assign its direction in chan_rr_node_direction_ */
+    void add_ipin_node(t_rr_node* node, enum e_side node_side, enum e_side grid_side); /* Add a node to the chan_rr_node_ list and also assign its direction in chan_rr_node_direction_ */
+    void add_opin_node(t_rr_node* node, enum e_side node_side, enum e_side grid_side); /* Add a node to the chan_rr_node_ list and also assign its direction in chan_rr_node_direction_ */
+    void set_num_reserved_conf_bits(size_t num_reserved_conf_bits);
+    void set_num_conf_bits(size_t num_conf_bits);
+    void clear();
+    void clear_chan_nodes(enum e_side node_side); /* Clean the chan_width of a side */
+    void clear_ipin_nodes(enum e_side node_side); /* Clean the number of IPINs of a side */
+    void clear_opin_nodes(enum e_side node_side); /* Clean the number of OPINs of a side */
+    void clear_one_side(enum e_side node_side); /* Clean chan/opin/ipin nodes at one side */
+  private: /* Internal Mutators */
   private: /* internal functions */
     bool is_node_mirror (RRSwitchBlock& cand, enum e_side node_side, size_t track_id) const; 
     bool validate_num_sides() const;
@@ -148,6 +161,39 @@ class RRSwitchBlock {
     std::vector< std::vector<enum e_side> > opin_rr_node_grid_side_;
     size_t num_reserved_conf_bits_;
     size_t num_conf_bits_;
+};
+
+/* Object Device Routing Resource Switch Block 
+ * This includes:
+ * 1. a collection of RRSwitch blocks, each of which can be used to instance Switch blocks in the top-level netlists
+ * 2. a collection of unique mirrors of RRSwitchBlocks, which can be used to output Verilog / SPICE modules
+ * 3. a colleciton of unique rotatable of RRSwitchBlocks, which can be used to output Verilog / SPICE modules
+ *    The rotatable RRSwitchBlocks are more generic mirrors, which allow SwitchBlocks to be wired by rotating the pins, 
+ *    further reduce the number of Verilog/SPICE modules outputted. This will lead to rapid layout generation  
+ */
+class DeviceRRSwitchBlock {
+  public: /* Contructors */
+  public: /* Accessors */
+    DeviceCoordinator get_switch_block_range() const; /* get the max coordinator of the switch block array */
+    RRSwitchBlock get_switch_block(DeviceCoordinator coordinator) const; /* Get a rr switch block in the array with a coordinator */
+    RRSwitchBlock get_switch_block(size_t x, size_t y) const; /* Get a rr switch block in the array with a coordinator */
+    size_t get_num_unique_mirror() const; /* get the number of unique mirrors of switch blocks */
+    size_t get_num_rotatable_mirror() const; /* get the number of rotatable mirrors of switch blocks */
+    RRSwitchBlock get_unique_mirror(size_t index) const; /* Get a rr switch block which a unique mirror */ 
+    RRSwitchBlock get_rotatable_mirror(size_t index) const; /* Get a rr switch block which a unique mirror */ 
+  public: /* Mutators */
+    void reserve(DeviceCoordinator& coordinator); /* Pre-allocate the rr_switch_block array that the device requires */ 
+    void resize_upon_need(DeviceCoordinator& coordinator); /* Resize the rr_switch_block array if needed */ 
+    void add_rr_switch_block(DeviceCoordinator& coordinator, RRSwitchBlock& rr_switch_block); /* Add a switch block to the array, which will automatically identify and update the lists of unique mirrors and rotatable mirrors */
+    void clear(); /* clean the content */
+  private: /* Validators */
+    bool validate_coordinator(DeviceCoordinator& coordinator) const; /* Validate if the (x,y) is the range of this device */
+    bool validate_unique_mirror_index(size_t index) const; /* Validate if the index in the range of unique_mirror vector*/
+    bool validate_rotatable_mirror_index(size_t index) const; /* Validate if the index in the range of unique_mirror vector*/
+  private: /* Internal Data */
+    std::vector< std::vector<RRSwitchBlock> > rr_switch_block_;
+    std::vector<DeviceCoordinator> unique_mirror_; 
+    std::vector<DeviceCoordinator> rotatable_mirror_; 
 };
 
 #endif

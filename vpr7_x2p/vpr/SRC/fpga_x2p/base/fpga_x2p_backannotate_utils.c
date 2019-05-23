@@ -27,6 +27,7 @@
 /* Include spice support headers*/
 #include "read_xml_spice_util.h"
 #include "linkedlist.h"
+#include "rr_blocks.h"
 #include "fpga_x2p_types.h"
 #include "fpga_x2p_globals.h"
 #include "fpga_x2p_utils.h"
@@ -35,6 +36,7 @@
 #include "fpga_x2p_pbtypes_utils.h"
 #include "fpga_x2p_pb_rr_graph.h"
 #include "fpga_x2p_router.h"
+#include "fpga_x2p_unique_routing.h"
 
 /* Get initial value of a Latch/FF output*/
 int get_ff_output_init_val(t_logical_block* ff_logical_block) {
@@ -3127,6 +3129,7 @@ void spice_backannotate_vpr_post_route_info(t_det_routing_arch RoutingArch,
   /* Build Array for each Switch block and Connection block */ 
   vpr_printf(TIO_MESSAGE_INFO, "Collecting detailed information for each Switch block...\n");
   alloc_and_build_switch_blocks_info(RoutingArch, num_rr_nodes, rr_node, rr_node_indices);
+  device_rr_switch_block = build_device_rr_switch_blocks(RoutingArch, num_rr_nodes, rr_node, rr_node_indices);
 
   vpr_printf(TIO_MESSAGE_INFO, "Collecting detailed information for each to Connection block...\n");
   alloc_and_build_connection_blocks_info(RoutingArch, num_rr_nodes, rr_node, rr_node_indices);

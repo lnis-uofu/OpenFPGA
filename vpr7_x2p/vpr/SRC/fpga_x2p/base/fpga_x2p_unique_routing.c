@@ -80,6 +80,13 @@ RRChan build_one_rr_chan(t_rr_type chan_type, size_t chan_x, size_t chan_y,
 
 void print_device_rr_chan_stats(DeviceRRChan& device_rr_chan);
 
+static 
+RRSwitchBlock build_rr_switch_block(int sb_x, int sb_y, 
+                                    t_det_routing_arch RoutingArch,
+                                    int LL_num_rr_nodes,
+                                    t_rr_node* LL_rr_node,
+                                    t_ivec*** LL_rr_node_indices);
+
 /***** subroutines *****/
 void assign_switch_block_mirror(t_sb* src, t_sb* des) {
   assert ( (NULL != src) && (NULL != des) );
@@ -794,6 +801,288 @@ DeviceRRChan build_device_rr_chan(int LL_num_rr_nodes, t_rr_node* LL_rr_node,
   print_device_rr_chan_stats(LL_device_rr_chan);
 
   return LL_device_rr_chan; 
+}
+
+/* Build arrays for rr_nodes of each Switch Blocks 
+ * A Switch Box subckt consists of following ports:
+ * 1. Channel Y [x][y] inputs 
+ * 2. Channel X [x+1][y] inputs
+ * 3. Channel Y [x][y-1] outputs
+ * 4. Channel X [x][y] outputs
+ * 5. Grid[x][y+1] Right side outputs pins
+ * 6. Grid[x+1][y+1] Left side output pins
+ * 7. Grid[x+1][y+1] Bottom side output pins
+ * 8. Grid[x+1][y] Top side output pins
+ * 9. Grid[x+1][y] Left side output pins
+ * 10. Grid[x][y] Right side output pins
+ * 11. Grid[x][y] Top side output pins
+ * 12. Grid[x][y+1] Bottom side output pins
+ *
+ *    --------------          --------------
+ *    |            |          |            |
+ *    |    Grid    |  ChanY   |    Grid    |
+ *    |  [x][y+1]  | [x][y+1] | [x+1][y+1] |
+ *    |            |          |            |
+ *    --------------          --------------
+ *                  ----------
+ *       ChanX      | Switch |     ChanX 
+ *       [x][y]     |   Box  |    [x+1][y]
+ *                  | [x][y] |
+ *                  ----------
+ *    --------------          --------------
+ *    |            |          |            |
+ *    |    Grid    |  ChanY   |    Grid    |
+ *    |   [x][y]   |  [x][y]  |  [x+1][y]  |
+ *    |            |          |            |
+ *    --------------          --------------
+ * For channels chanY with INC_DIRECTION on the top side, they should be marked as outputs
+ * For channels chanY with DEC_DIRECTION on the top side, they should be marked as inputs
+ * For channels chanY with INC_DIRECTION on the bottom side, they should be marked as inputs
+ * For channels chanY with DEC_DIRECTION on the bottom side, they should be marked as outputs
+ * For channels chanX with INC_DIRECTION on the left side, they should be marked as inputs
+ * For channels chanX with DEC_DIRECTION on the left side, they should be marked as outputs
+ * For channels chanX with INC_DIRECTION on the right side, they should be marked as outputs
+ * For channels chanX with DEC_DIRECTION on the right side, they should be marked as inputs
+ */
+static 
+RRSwitchBlock build_rr_switch_block(int sb_x, int sb_y, 
+                                    t_det_routing_arch RoutingArch,
+                                    int LL_num_rr_nodes,
+                                    t_rr_node* LL_rr_node,
+                                    t_ivec*** LL_rr_node_indices) {
+  /* Create an object to return */
+  RRSwitchBlock rr_switch_block;
+
+  /* Check */
+  assert((!(0 > sb_x))&&(!(sb_x > (nx + 1)))); 
+  assert((!(0 > sb_y))&&(!(sb_y > (ny + 1)))); 
+
+  /* Basic information*/
+  rr_switch_block.init_num_sides(4); /* Fixed number of sides */
+
+  /* Find all rr_nodes of channels */
+  /* Side: TOP => 0, RIGHT => 1, BOTTOM => 2, LEFT => 3 */
+  for (size_t side = 0; side < rr_switch_block.get_num_sides(); ++side) {
+    /* Local variables inside this for loop */
+    Side side_manager(side);
+    int ix = 0; 
+    int iy = 0;
+    int chan_width = 0;
+    t_rr_node** chan_rr_node = NULL;
+    int temp_num_opin_rr_nodes[2] = {0,0};
+    t_rr_node** temp_opin_rr_node[2] = {NULL, NULL};
+    enum e_side opin_grid_side[2] = {NUM_SIDES, NUM_SIDES};
+    enum PORTS chan_dir_to_port_dir_mapping[2] = {OUT_PORT, IN_PORT}; /* 0: INC_DIRECTION => ?; 1: DEC_DIRECTION => ? */
+    switch (side) {
+    case 0: /* TOP */
+      /* For the bording, we should take special care */
+      if (sb_y == ny) {
+        rr_switch_block.clear_one_side(side_manager.get_side());
+        break;
+      }
+      /* Routing channels*/
+      ix = sb_x; 
+      iy = sb_y + 1;
+      /* Channel width */
+      chan_width = chan_width_y[ix];
+      /* Side: TOP => 0, RIGHT => 1, BOTTOM => 2, LEFT => 3 */
+      chan_rr_node = get_chan_rr_nodes(&chan_width, CHANY, ix, iy, 
+                                       LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices);
+      chan_dir_to_port_dir_mapping[0] = OUT_PORT;
+      chan_dir_to_port_dir_mapping[1] =  IN_PORT;
+
+      /* Include Grid[x][y+1] RIGHT side outputs pins */
+      temp_opin_rr_node[0] = get_grid_side_pin_rr_nodes(&temp_num_opin_rr_nodes[0], 
+                                                        OPIN, sb_x, sb_y + 1, 1,
+                                                        LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices);
+      /* Include Grid[x+1][y+1] Left side output pins */
+      temp_opin_rr_node[1] = get_grid_side_pin_rr_nodes(&temp_num_opin_rr_nodes[1], 
+                                                        OPIN, sb_x + 1, sb_y + 1, 3,
+                                                        LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices);
+
+      /* Assign grid side of OPIN */
+      /* Grid[x][y+1] RIGHT side outputs pins */
+      opin_grid_side[0] = RIGHT;
+      /* Grid[x+1][y+1] left side outputs pins */
+      opin_grid_side[1] = LEFT;
+      break;
+    case 1: /* RIGHT */
+      /* For the bording, we should take special care */
+      if (sb_x == nx) {
+        rr_switch_block.clear_one_side(side_manager.get_side());
+        break;
+      }
+      /* Routing channels*/
+      ix = sb_x + 1; 
+      iy = sb_y;
+      /* Channel width */
+      chan_width = chan_width_x[iy];
+      /* Side: TOP => 0, RIGHT => 1, BOTTOM => 2, LEFT => 3 */
+      /* Collect rr_nodes for Tracks for top: chany[x][y+1] */
+      chan_rr_node = get_chan_rr_nodes(&chan_width, CHANX, ix, iy, 
+                                       LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices);
+      chan_dir_to_port_dir_mapping[0] = OUT_PORT;
+      chan_dir_to_port_dir_mapping[1] =  IN_PORT;
+
+      /* include Grid[x+1][y+1] Bottom side output pins */
+      temp_opin_rr_node[0] = get_grid_side_pin_rr_nodes(&temp_num_opin_rr_nodes[0], 
+                                                        OPIN, sb_x + 1, sb_y + 1, 2,
+                                                        LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices);
+      /* include Grid[x+1][y] Top side output pins */
+      temp_opin_rr_node[1] = get_grid_side_pin_rr_nodes(&temp_num_opin_rr_nodes[1], 
+                                                        OPIN, sb_x + 1, sb_y, 0,
+                                                        LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices);
+      /* Assign grid side of OPIN */
+      /* Grid[x+1][y+1] BOTTOM side outputs pins */
+      opin_grid_side[0] = BOTTOM;
+      /* Grid[x+1][y] TOP side outputs pins */
+      opin_grid_side[1] = TOP;
+      break;
+    case 2:
+      /* For the bording, we should take special care */
+      if (sb_y == 0) {
+        rr_switch_block.clear_one_side(side_manager.get_side());
+        break;
+      }
+      /* Routing channels*/
+      ix = sb_x; 
+      iy = sb_y;
+      /* Channel width */
+      chan_width = chan_width_y[ix];
+      /* Side: TOP => 0, RIGHT => 1, BOTTOM => 2, LEFT => 3 */
+      /* Collect rr_nodes for Tracks for bottom: chany[x][y] */
+      chan_rr_node = get_chan_rr_nodes(&chan_width, CHANY, ix, iy, 
+                                       LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices);
+      chan_dir_to_port_dir_mapping[0] =  IN_PORT;
+      chan_dir_to_port_dir_mapping[1] = OUT_PORT;
+
+      /* TODO: include Grid[x+1][y] Left side output pins */
+      temp_opin_rr_node[0] = get_grid_side_pin_rr_nodes(&temp_num_opin_rr_nodes[0], 
+                                                        OPIN, sb_x + 1, sb_y, 3,
+                                                        LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices);
+      /* TODO: include Grid[x][y] Right side output pins */
+      temp_opin_rr_node[1] = get_grid_side_pin_rr_nodes(&temp_num_opin_rr_nodes[1], 
+                                                        OPIN, sb_x, sb_y, 1,
+                                                        LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices);
+      /* Assign grid side of OPIN */
+      /* Grid[x+1][y] LEFT side outputs pins */
+      opin_grid_side[0] = LEFT;
+      /* Grid[x][y] RIGHT side outputs pins */
+      opin_grid_side[1] = RIGHT;
+      break;
+    case 3:
+      /* For the bording, we should take special care */
+      if (sb_x == 0) {
+        rr_switch_block.clear_one_side(side_manager.get_side());
+        break;
+      }
+      /* Routing channels*/
+      ix = sb_x; 
+      iy = sb_y;
+      /* Channel width */
+      chan_width = chan_width_x[iy];
+      /* Side: TOP => 0, RIGHT => 1, BOTTOM => 2, LEFT => 3 */
+      /* Collect rr_nodes for Tracks for left: chanx[x][y] */
+      chan_rr_node = get_chan_rr_nodes(&chan_width, CHANX, ix, iy, 
+                                       LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices);
+      chan_dir_to_port_dir_mapping[0] =  IN_PORT;
+      chan_dir_to_port_dir_mapping[1] = OUT_PORT;
+
+      /* include Grid[x][y+1] Bottom side outputs pins */
+      temp_opin_rr_node[0] = get_grid_side_pin_rr_nodes(&temp_num_opin_rr_nodes[0], 
+                                                        OPIN, sb_x, sb_y + 1, 2,
+                                                        LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices);
+      /* include Grid[x][y] Top side output pins */
+      temp_opin_rr_node[1] = get_grid_side_pin_rr_nodes(&temp_num_opin_rr_nodes[1], 
+                                                        OPIN, sb_x, sb_y, 0,
+                                                        LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices);
+
+      /* Grid[x][y+1] BOTTOM side outputs pins */
+      opin_grid_side[0] = BOTTOM;
+      /* Grid[x][y] TOP side outputs pins */
+      opin_grid_side[0] = TOP;
+      break;
+    default:
+      vpr_printf(TIO_MESSAGE_ERROR, 
+                 "(File:%s, [LINE%d])Invalid side index!\n", 
+                 __FILE__, __LINE__);
+      exit(1);
+    }
+
+    /* Fill chan_rr_nodes */
+    for (int itrack = 0; itrack < chan_width; ++itrack) {
+      /* Identify the directionality, record it in rr_node_direction */
+      if (INC_DIRECTION == chan_rr_node[itrack]->direction) {
+        rr_switch_block.add_chan_node(chan_rr_node[itrack], side_manager.get_side(), chan_dir_to_port_dir_mapping[0]);
+      } else {
+        assert (DEC_DIRECTION == chan_rr_node[itrack]->direction);
+        rr_switch_block.add_chan_node(chan_rr_node[itrack], side_manager.get_side(),  chan_dir_to_port_dir_mapping[1]);
+      }
+    }
+
+    /* Fill opin_rr_nodes */
+    /* Copy from temp_opin_rr_node to opin_rr_node */
+    for (int inode = 0; inode < temp_num_opin_rr_nodes[0]; ++inode) {
+      /* Grid[x+1][y+1] Bottom side outputs pins */
+      rr_switch_block.add_opin_node(temp_opin_rr_node[0][inode], side_manager.get_side(), opin_grid_side[0]);
+    }
+    for (int inode = 0; inode < temp_num_opin_rr_nodes[1]; ++inode) {
+      /* Grid[x+1][y] TOP side outputs pins */
+      rr_switch_block.add_opin_node(temp_opin_rr_node[1][inode], side_manager.get_side(), opin_grid_side[1]);
+    }
+
+    /* Clean ipin_rr_nodes */
+    /* We do not have any IPIN for a Switch Block */
+    rr_switch_block.clear_ipin_nodes(side_manager.get_side());
+
+    /* Free */
+    temp_num_opin_rr_nodes[0] = 0;
+    my_free(temp_opin_rr_node[0]);
+    temp_num_opin_rr_nodes[1] = 0;
+    my_free(temp_opin_rr_node[1]);
+    /* Set them to NULL, avoid double free errors */
+    temp_opin_rr_node[0] = NULL;
+    temp_opin_rr_node[1] = NULL;
+    opin_grid_side[0] = NUM_SIDES;
+    opin_grid_side[1] = NUM_SIDES;
+  }
+
+  return rr_switch_block;
+}
+
+
+/* Build a list of Switch blocks, each of which contains a collection of rr_nodes
+ * We will maintain a list of unique switch blocks, which will be outputted as a Verilog module
+ * Each switch block in the FPGA fabric will be an instance of these modules.
+ * We maintain a map from each instance to each module
+ */
+DeviceRRSwitchBlock build_device_rr_switch_blocks(t_det_routing_arch RoutingArch,
+                                                  int LL_num_rr_nodes,
+                                                  t_rr_node* LL_rr_node,
+                                                  t_ivec*** LL_rr_node_indices) {
+  /* Create an object */
+  DeviceRRSwitchBlock LL_device_rr_switch_block;
+
+  /* Initialize */  
+  DeviceCoordinator device_coordinator(size_t(nx + 1), size_t(ny + 1));
+  LL_device_rr_switch_block.reserve(device_coordinator);
+
+  /* For each switch block, determine the size of array */
+  for (int ix = 0; ix < (nx + 1); ++ix) {
+    for (int iy = 0; iy < (ny + 1); ++iy) {
+      RRSwitchBlock rr_switch_block = build_rr_switch_block(ix, iy, RoutingArch, 
+                                                            LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices);
+      DeviceCoordinator sb_coordinator(ix, iy);
+      LL_device_rr_switch_block.add_rr_switch_block(sb_coordinator, rr_switch_block);
+    }
+  }
+
+  /* Report number of unique mirrors */
+  vpr_printf(TIO_MESSAGE_INFO, 
+             "Detect %d independent switch blocks from %d switch blocks.\n",
+             LL_device_rr_switch_block.get_num_unique_mirror(), (nx + 1) * (ny + 1) );
+
+  return LL_device_rr_switch_block;
 }
 
 
