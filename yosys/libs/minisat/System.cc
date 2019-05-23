@@ -1,5 +1,9 @@
+#ifndef __STDC_FORMAT_MACROS
 #define __STDC_FORMAT_MACROS
+#endif
+#ifndef __STDC_LIMIT_MACROS
 #define __STDC_LIMIT_MACROS
+#endif
 /***************************************************************************************[System.cc]
 Copyright (c) 2003-2006, Niklas Een, Niklas Sorensson
 Copyright (c) 2007-2010, Niklas Sorensson
@@ -95,17 +99,6 @@ double Minisat::memUsedPeak(bool) { return memUsed(); }
 double Minisat::memUsed()     { return 0; }
 double Minisat::memUsedPeak(bool) { return 0; }
 #endif
-
-
-void Minisat::setX86FPUPrecision()
-{
-#if defined(__linux__) && defined(_FPU_EXTENDED) && defined(_FPU_DOUBLE) && defined(_FPU_GETCW)
-    // Only correct FPU precision on Linux architectures that needs and supports it:
-    fpu_control_t oldcw, newcw;
-    _FPU_GETCW(oldcw); newcw = (oldcw & ~_FPU_EXTENDED) | _FPU_DOUBLE; _FPU_SETCW(newcw);
-    printf("WARNING: for repeatability, setting FPU to use double precision\n");
-#endif
-}
 
 
 #if !defined(_MSC_VER) && !defined(__MINGW32__)

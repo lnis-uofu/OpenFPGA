@@ -42,14 +42,14 @@ static std::list<std::vector<std::string>> verilog_defaults_stack;
 static void error_on_dpi_function(AST::AstNode *node)
 {
 	if (node->type == AST::AST_DPI_FUNCTION)
-		log_error("Found DPI function %s at %s:%d.\n", node->str.c_str(), node->filename.c_str(), node->linenum);
+		log_file_error(node->filename, node->linenum, "Found DPI function %s.\n", node->str.c_str());
 	for (auto child : node->children)
 		error_on_dpi_function(child);
 }
 
 struct VerilogFrontend : public Frontend {
 	VerilogFrontend() : Frontend("verilog", "read modules from Verilog file") { }
-	virtual void help()
+	void help() YS_OVERRIDE
 	{
 		//   |---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|
 		log("\n");
@@ -66,17 +66,29 @@ struct VerilogFrontend : public Frontend {
 		log("        enable support for SystemVerilog assertions and some Yosys extensions\n");
 		log("        replace the implicit -D SYNTHESIS with -D FORMAL\n");
 		log("\n");
+		log("    -noassert\n");
+		log("        ignore assert() statements\n");
+		log("\n");
+		log("    -noassume\n");
+		log("        ignore assume() statements\n");
+		log("\n");
 		log("    -norestrict\n");
-		log("        ignore restrict() assertions\n");
+		log("        ignore restrict() statements\n");
 		log("\n");
 		log("    -assume-asserts\n");
 		log("        treat all assert() statements like assume() statements\n");
+		log("\n");
+		log("    -assert-assumes\n");
+		log("        treat all assume() statements like assert() statements\n");
 		log("\n");
 		log("    -dump_ast1\n");
 		log("        dump abstract syntax tree (before simplification)\n");
 		log("\n");
 		log("    -dump_ast2\n");
 		log("        dump abstract syntax tree (after simplification)\n");
+		log("\n");
+		log("    -no_dump_ptr\n");
+		log("        do not include hex memory addresses in dump (easier to diff dumps)\n");
 		log("\n");
 		log("    -dump_vlog\n");
 		log("        dump ast as Verilog code (after simplification)\n");
@@ -137,9 +149,13 @@ struct VerilogFrontend : public Frontend {
 		log("    -icells\n");
 		log("        interpret cell types starting with '$' as internal cell types\n");
 		log("\n");
-		log("    -ignore_redef\n");
+		log("    -nooverwrite\n");
 		log("        ignore re-definitions of modules. (the default behavior is to\n");
-		log("        create an error message.)\n");
+		log("        create an error message if the existing module is not a black box\n");
+		log("        module, and overwrite the existing module otherwise.)\n");
+		log("\n");
+		log("    -overwrite\n");
+		log("        overwrite existing modules with the same name\n");
 		log("\n");
 		log("    -defer\n");
 		log("        only read the abstract syntax tree and defer actual compilation\n");
@@ -168,14 +184,19 @@ struct VerilogFrontend : public Frontend {
 		log("recommended to use a simulator (for example Icarus Verilog) for checking\n");
 		log("the syntax of the code, rather than to rely on read_verilog for that.\n");
 		log("\n");
+		log("Depending on if read_verilog is run in -formal mode, either the macro\n");
+		log("SYNTHESIS or FORMAL is defined automatically. In addition, read_verilog\n");
+		log("always defines the macro YOSYS.\n");
+		log("\n");
 		log("See the Yosys README file for a list of non-standard Verilog features\n");
 		log("supported by the Yosys Verilog front-end.\n");
 		log("\n");
 	}
-	virtual void execute(std::istream *&f, std::string filename, std::vector<std::string> args, RTLIL::Design *design)
+	void execute(std::istream *&f, std::string filename, std::vector<std::string> args, RTLIL::Design *design) YS_OVERRIDE
 	{
 		bool flag_dump_ast1 = false;
 		bool flag_dump_ast2 = false;
+		bool flag_no_dump_ptr = false;
 		bool flag_dump_vlog = false;
 		bool flag_dump_rtlil = false;
 		bool flag_nolatches = false;
@@ -187,7 +208,8 @@ struct VerilogFrontend : public Frontend {
 		bool flag_nodpi = false;
 		bool flag_noopt = false;
 		bool flag_icells = false;
-		bool flag_ignore_redef = false;
+		bool flag_nooverwrite = false;
+		bool flag_overwrite = false;
 		bool flag_defer = false;
 		std::map<std::string, std::string> defines_map;
 		std::list<std::string> include_dirs;
@@ -216,6 +238,14 @@ struct VerilogFrontend : public Frontend {
 				formal_mode = true;
 				continue;
 			}
+			if (arg == "-noassert") {
+				noassert_mode = true;
+				continue;
+			}
+			if (arg == "-noassume") {
+				noassume_mode = true;
+				continue;
+			}
 			if (arg == "-norestrict") {
 				norestrict_mode = true;
 				continue;
@@ -224,12 +254,20 @@ struct VerilogFrontend : public Frontend {
 				assume_asserts_mode = true;
 				continue;
 			}
+			if (arg == "-assert-assumes") {
+				assert_assumes_mode = true;
+				continue;
+			}
 			if (arg == "-dump_ast1") {
 				flag_dump_ast1 = true;
 				continue;
 			}
 			if (arg == "-dump_ast2") {
 				flag_dump_ast2 = true;
+				continue;
+			}
+			if (arg == "-no_dump_ptr") {
+				flag_no_dump_ptr = true;
 				continue;
 			}
 			if (arg == "-dump_vlog") {
@@ -285,8 +323,14 @@ struct VerilogFrontend : public Frontend {
 				flag_icells = true;
 				continue;
 			}
-			if (arg == "-ignore_redef") {
-				flag_ignore_redef = true;
+			if (arg == "-ignore_redef" || arg == "-nooverwrite") {
+				flag_nooverwrite = true;
+				flag_overwrite = false;
+				continue;
+			}
+			if (arg == "-overwrite") {
+				flag_nooverwrite = false;
+				flag_overwrite = true;
 				continue;
 			}
 			if (arg == "-defer") {
@@ -303,10 +347,10 @@ struct VerilogFrontend : public Frontend {
 			}
 			if (arg == "-D" && argidx+1 < args.size()) {
 				std::string name = args[++argidx], value;
-				size_t equal = name.find('=', 2);
+				size_t equal = name.find('=');
 				if (equal != std::string::npos) {
-					value = arg.substr(equal+1);
-					name = arg.substr(0, equal);
+					value = name.substr(equal+1);
+					name = name.substr(0, equal);
 				}
 				defines_map[name] = value;
 				continue;
@@ -345,7 +389,7 @@ struct VerilogFrontend : public Frontend {
 		std::string code_after_preproc;
 
 		if (!flag_nopp) {
-			code_after_preproc = frontend_verilog_preproc(*f, filename, defines_map, include_dirs);
+			code_after_preproc = frontend_verilog_preproc(*f, filename, defines_map, design->verilog_defines, include_dirs);
 			if (flag_ppdump)
 				log("-- Verilog code after preprocessor --\n%s-- END OF DUMP --\n", code_after_preproc.c_str());
 			lexin = new std::istringstream(code_after_preproc);
@@ -366,7 +410,7 @@ struct VerilogFrontend : public Frontend {
 		if (flag_nodpi)
 			error_on_dpi_function(current_ast);
 
-		AST::process(design, current_ast, flag_dump_ast1, flag_dump_ast2, flag_dump_vlog, flag_dump_rtlil, flag_nolatches, flag_nomeminit, flag_nomem2reg, flag_mem2reg, lib_mode, flag_noopt, flag_icells, flag_ignore_redef, flag_defer, default_nettype_wire);
+		AST::process(design, current_ast, flag_dump_ast1, flag_dump_ast2, flag_no_dump_ptr, flag_dump_vlog, flag_dump_rtlil, flag_nolatches, flag_nomeminit, flag_nomem2reg, flag_mem2reg, lib_mode, flag_noopt, flag_icells, flag_nooverwrite, flag_overwrite, flag_defer, default_nettype_wire);
 
 		if (!flag_nopp)
 			delete lexin;
@@ -380,7 +424,7 @@ struct VerilogFrontend : public Frontend {
 
 struct VerilogDefaults : public Pass {
 	VerilogDefaults() : Pass("verilog_defaults", "set default options for read_verilog") { }
-	virtual void help()
+	void help() YS_OVERRIDE
 	{
 		//   |---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|
 		log("\n");
@@ -401,9 +445,9 @@ struct VerilogDefaults : public Pass {
 		log("not imply -clear.\n");
 		log("\n");
 	}
-	virtual void execute(std::vector<std::string> args, RTLIL::Design*)
+	void execute(std::vector<std::string> args, RTLIL::Design*) YS_OVERRIDE
 	{
-		if (args.size() == 0)
+		if (args.size() < 2)
 			cmd_error(args, 1, "Missing argument.");
 
 		if (args[1] == "-add") {
@@ -436,6 +480,66 @@ struct VerilogDefaults : public Pass {
 	}
 } VerilogDefaults;
 
+struct VerilogDefines : public Pass {
+	VerilogDefines() : Pass("verilog_defines", "define and undefine verilog defines") { }
+	void help() YS_OVERRIDE
+	{
+		//   |---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|
+		log("\n");
+		log("    verilog_defines [options]\n");
+		log("\n");
+		log("Define and undefine verilog preprocessor macros.\n");
+		log("\n");
+		log("    -Dname[=definition]\n");
+		log("        define the preprocessor symbol 'name' and set its optional value\n");
+		log("        'definition'\n");
+		log("\n");
+		log("    -Uname[=definition]\n");
+		log("        undefine the preprocessor symbol 'name'\n");
+		log("\n");
+	}
+	void execute(std::vector<std::string> args, RTLIL::Design *design) YS_OVERRIDE
+	{
+		size_t argidx;
+		for (argidx = 1; argidx < args.size(); argidx++) {
+			std::string arg = args[argidx];
+			if (arg == "-D" && argidx+1 < args.size()) {
+				std::string name = args[++argidx], value;
+				size_t equal = name.find('=');
+				if (equal != std::string::npos) {
+					value = name.substr(equal+1);
+					name = name.substr(0, equal);
+				}
+				design->verilog_defines[name] = std::pair<std::string, bool>(value, false);
+				continue;
+			}
+			if (arg.compare(0, 2, "-D") == 0) {
+				size_t equal = arg.find('=', 2);
+				std::string name = arg.substr(2, equal-2);
+				std::string value;
+				if (equal != std::string::npos)
+					value = arg.substr(equal+1);
+				design->verilog_defines[name] = std::pair<std::string, bool>(value, false);
+				continue;
+			}
+			if (arg == "-U" && argidx+1 < args.size()) {
+				std::string name = args[++argidx];
+				design->verilog_defines.erase(name);
+				continue;
+			}
+			if (arg.compare(0, 2, "-U") == 0) {
+				std::string name = arg.substr(2);
+				design->verilog_defines.erase(name);
+				continue;
+			}
+			break;
+		}
+
+		if (args.size() != argidx)
+			cmd_error(args, argidx, "Extra argument.");
+	}
+} VerilogDefines;
+
 YOSYS_NAMESPACE_END
 
 // the yyerror function used by bison to report parser errors
@@ -444,13 +548,11 @@ void frontend_verilog_yyerror(char const *fmt, ...)
 	va_list ap;
 	char buffer[1024];
 	char *p = buffer;
-	p += snprintf(p, buffer + sizeof(buffer) - p, "Parser error in line %s:%d: ",
-			YOSYS_NAMESPACE_PREFIX AST::current_filename.c_str(), frontend_verilog_yyget_lineno());
 	va_start(ap, fmt);
 	p += vsnprintf(p, buffer + sizeof(buffer) - p, fmt, ap);
 	va_end(ap);
 	p += snprintf(p, buffer + sizeof(buffer) - p, "\n");
-	YOSYS_NAMESPACE_PREFIX log_error("%s", buffer);
+	YOSYS_NAMESPACE_PREFIX log_file_error(YOSYS_NAMESPACE_PREFIX AST::current_filename, frontend_verilog_yyget_lineno(),
+					      "%s", buffer);
 	exit(1);
 }
-

@@ -25,14 +25,24 @@
 #  include <readline/history.h>
 #endif
 
+#ifdef YOSYS_ENABLE_EDITLINE
+#  include <editline/readline.h>
+#endif
+
 #include <stdio.h>
 #include <string.h>
 #include <limits.h>
 #include <errno.h>
 
-#ifdef __linux__
+#if defined (__linux__) || defined(__FreeBSD__)
+#  include <sys/resource.h>
 #  include <sys/types.h>
 #  include <unistd.h>
+#endif
+
+#ifdef __FreeBSD__
+#  include <sys/sysctl.h>
+#  include <sys/user.h>
 #endif
 
 #if !defined(_WIN32) || defined(__MINGW32__)
@@ -75,20 +85,37 @@ USING_YOSYS_NAMESPACE
 #ifdef EMSCRIPTEN
 #  include <sys/stat.h>
 #  include <sys/types.h>
+#  include <emscripten.h>
 
 extern "C" int main(int, char**);
 extern "C" void run(const char*);
 extern "C" const char *errmsg();
 extern "C" const char *prompt();
 
-int main(int, char**)
+int main(int argc, char **argv)
 {
+	EM_ASM(
+		if (ENVIRONMENT_IS_NODE)
+		{
+			FS.mkdir('/hostcwd');
+			FS.mount(NODEFS, { root: '.' }, '/hostcwd');
+			FS.mkdir('/hostfs');
+			FS.mount(NODEFS, { root: '/' }, '/hostfs');
+		}
+	);
+
 	mkdir("/work", 0777);
 	chdir("/work");
 	log_files.push_back(stdout);
 	log_error_stderr = true;
 	yosys_banner();
 	yosys_setup();
+
+	if (argc == 2)
+	{
+		// Run the first argument as a script file
+		run_frontend(argv[1], "script", 0, 0, 0);
+	}
 }
 
 void run(const char *command)
@@ -119,6 +146,35 @@ const char *prompt()
 
 #else /* EMSCRIPTEN */
 
+#if defined(YOSYS_ENABLE_READLINE) || defined(YOSYS_ENABLE_EDITLINE)
+int yosys_history_offset = 0;
+std::string yosys_history_file;
+#endif
+
+void yosys_atexit()
+{
+#if defined(YOSYS_ENABLE_READLINE) || defined(YOSYS_ENABLE_EDITLINE)
+	if (!yosys_history_file.empty()) {
+#if defined(YOSYS_ENABLE_READLINE)
+		if (yosys_history_offset > 0) {
+			history_truncate_file(yosys_history_file.c_str(), 100);
+			append_history(where_history() - yosys_history_offset, yosys_history_file.c_str());
+		} else
+			write_history(yosys_history_file.c_str());
+#else
+		write_history(yosys_history_file.c_str());
+#endif
+	}
+
+	clear_history();
+#if defined(YOSYS_ENABLE_READLINE)
+	HIST_ENTRY **hist_list = history_list();
+	if (hist_list != NULL)
+		free(hist_list);
+#endif
+#endif
+}
+
 int main(int argc, char **argv)
 {
 	std::string frontend_command = "auto";
@@ -127,6 +183,7 @@ int main(int argc, char **argv)
 	std::vector<std::string> plugin_filenames;
 	std::string output_filename = "";
 	std::string scriptfile = "";
+	std::string depsfile = "";
 	bool scriptfile_tcl = false;
 	bool got_output_filename = false;
 	bool print_banner = true;
@@ -136,13 +193,11 @@ int main(int argc, char **argv)
 	bool mode_v = false;
 	bool mode_q = false;
 
-#ifdef YOSYS_ENABLE_READLINE
-	int history_offset = 0;
-	std::string history_file;
+#if defined(YOSYS_ENABLE_READLINE) || defined(YOSYS_ENABLE_EDITLINE)
 	if (getenv("HOME") != NULL) {
-		history_file = stringf("%s/.yosys_history", getenv("HOME"));
-		read_history(history_file.c_str());
-		history_offset = where_history();
+		yosys_history_file = stringf("%s/.yosys_history", getenv("HOME"));
+		read_history(yosys_history_file.c_str());
+		yosys_history_offset = where_history();
 	}
 #endif
 
@@ -218,6 +273,20 @@ int main(int argc, char **argv)
 		printf("        yosys_dump_<header_id>.il is used as filename if none is specified.\n");
 		printf("        Use 'ALL' as <header_id> to dump at every header.\n");
 		printf("\n");
+		printf("    -W regex\n");
+		printf("        print a warning for all log messages matching the regex.\n");
+		printf("\n");
+		printf("    -w regex\n");
+		printf("        if a warning message matches the regex, it is printed as regular\n");
+		printf("        message instead.\n");
+		printf("\n");
+		printf("    -e regex\n");
+		printf("        if a warning message matches the regex, it is printed as error\n");
+		printf("        message instead and the tool terminates with a nonzero return code.\n");
+		printf("\n");
+		printf("    -E <depsfile>\n");
+		printf("        write a Makefile dependencies file with in- and output file names\n");
+		printf("\n");
 		printf("    -V\n");
 		printf("        print version information and exit\n");
 		printf("\n");
@@ -238,7 +307,7 @@ int main(int argc, char **argv)
 	}
 
 	int opt;
-	while ((opt = getopt(argc, argv, "MXAQTVSm:f:Hh:b:o:p:l:L:qv:tds:c:D:")) != -1)
+	while ((opt = getopt(argc, argv, "MXAQTVSm:f:Hh:b:o:p:l:L:qv:tds:c:W:w:e:D:E:")) != -1)
 	{
 		switch (opt)
 		{
@@ -320,6 +389,24 @@ int main(int argc, char **argv)
 			scriptfile = optarg;
 			scriptfile_tcl = true;
 			break;
+		case 'W':
+			log_warn_regexes.push_back(std::regex(optarg,
+					std::regex_constants::nosubs |
+					std::regex_constants::optimize |
+					std::regex_constants::egrep));
+			break;
+		case 'w':
+			log_nowarn_regexes.push_back(std::regex(optarg,
+					std::regex_constants::nosubs |
+					std::regex_constants::optimize |
+					std::regex_constants::egrep));
+			break;
+		case 'e':
+			log_werror_regexes.push_back(std::regex(optarg,
+					std::regex_constants::nosubs |
+					std::regex_constants::optimize |
+					std::regex_constants::egrep));
+			break;
 		case 'D':
 			{
 				auto args = split_tokens(optarg, ":");
@@ -342,6 +429,9 @@ int main(int argc, char **argv)
 				}
 			}
 			break;
+		case 'E':
+			depsfile = optarg;
+			break;
 		default:
 			fprintf(stderr, "Run '%s -h' for help.\n", argv[0]);
 			exit(1);
@@ -359,7 +449,20 @@ int main(int argc, char **argv)
 	if (print_stats)
 		log_hasher = new SHA1;
 
+#if defined(__linux__)
+	// set stack size to >= 128 MB
+	{
+		struct rlimit rl;
+		const rlim_t stack_size = 128L * 1024L * 1024L;
+		if (getrlimit(RLIMIT_STACK, &rl) == 0 && rl.rlim_cur < stack_size) {
+			rl.rlim_cur = stack_size;
+			setrlimit(RLIMIT_STACK, &rl);
+		}
+	}
+#endif
+
 	yosys_setup();
+	log_error_atexit = yosys_atexit;
 
 	for (auto &fn : plugin_filenames)
 		load_plugin(fn, {});
@@ -391,6 +494,24 @@ int main(int argc, char **argv)
 	if (!backend_command.empty())
 		run_backend(output_filename, backend_command);
 
+	if (!depsfile.empty())
+	{
+		FILE *f = fopen(depsfile.c_str(), "wt");
+		if (f == nullptr)
+			log_error("Can't open dependencies file for writing: %s\n", strerror(errno));
+		bool first = true;
+		for (auto fn : yosys_output_files) {
+			fprintf(f, "%s%s", first ? "" : " ", fn.c_str());
+			first = false;
+		}
+		fprintf(f, ":");
+		for (auto fn : yosys_input_files) {
+			if (yosys_output_files.count(fn) == 0)
+				fprintf(f, " %s", fn.c_str());
+		}
+		fprintf(f, "\n");
+	}
+
 	if (print_stats)
 	{
 		std::string hash = log_hasher->final().substr(0, 10);
@@ -404,12 +525,14 @@ int main(int argc, char **argv)
 		if (mode_v && !mode_q)
 			log_files.push_back(stderr);
 
+		if (log_warnings_count)
+			log("Warnings: %d unique messages, %d total\n", GetSize(log_warnings), log_warnings_count);
 #ifdef _WIN32
 		log("End of script. Logfile hash: %s\n", hash.c_str());
 #else
 		std::string meminfo;
 		std::string stats_divider = ", ";
-#  ifdef __linux__
+#  if defined(__linux__)
 		std::ifstream statm;
 		statm.open(stringf("/proc/%lld/statm", (long long)getpid()));
 		if (statm.is_open()) {
@@ -418,6 +541,19 @@ int main(int argc, char **argv)
 			meminfo = stringf(", MEM: %.2f MB total, %.2f MB resident",
 					sz_total * (getpagesize() / 1024.0 / 1024.0),
 					sz_resident * (getpagesize() / 1024.0 / 1024.0));
+			stats_divider = "\n";
+		}
+#  elif defined(__FreeBSD__)
+		pid_t pid = getpid();
+		int mib[4] = {CTL_KERN, KERN_PROC, KERN_PROC_PID, (int)pid};
+		struct kinfo_proc kip;
+		size_t kip_len = sizeof(kip);
+		if (sysctl(mib, 4, &kip, &kip_len, NULL, 0) == 0) {
+			vm_size_t sz_total = kip.ki_size;
+			segsz_t sz_resident = kip.ki_rssize;
+			meminfo = stringf(", MEM: %.2f MB total, %.2f MB resident",
+				(int)sz_total / 1024.0 / 1024.0,
+				(int)sz_resident * (getpagesize() / 1024.0 / 1024.0));
 			stats_divider = "\n";
 		}
 #  endif
@@ -463,7 +599,7 @@ int main(int argc, char **argv)
 		}
 	}
 
-#if defined(YOSYS_ENABLE_COVER) && defined(__linux__)
+#if defined(YOSYS_ENABLE_COVER) && (defined(__linux__) || defined(__FreeBSD__))
 	if (getenv("YOSYS_COVER_DIR") || getenv("YOSYS_COVER_FILE"))
 	{
 		string filename;
@@ -490,24 +626,11 @@ int main(int argc, char **argv)
 	}
 #endif
 
+	yosys_atexit();
+
 	memhasher_off();
 	if (call_abort)
 		abort();
-
-#ifdef YOSYS_ENABLE_READLINE
-	if (!history_file.empty()) {
-		if (history_offset > 0) {
-			history_truncate_file(history_file.c_str(), 100);
-			append_history(where_history() - history_offset, history_file.c_str());
-		} else
-			write_history(history_file.c_str());
-	}
-
-	clear_history();
-	HIST_ENTRY **hist_list = history_list();
-	if (hist_list != NULL)
-		free(hist_list);
-#endif
 
 	log_flush();
 #if defined(_MSC_VER)

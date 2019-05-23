@@ -1,0 +1,33 @@
+
+
+This directory contains Verific bindings for Yosys.
+See http://www.verific.com/ for details.
+
+
+Verific Features that should be enabled in your Verific library
+===============================================================
+
+database/DBCompileFlags.h:
+	DB_PRESERVE_INITIAL_VALUE
+
+
+Testing Verific+Yosys+SymbiYosys for formal verification
+========================================================
+
+Install Yosys+Verific, SymbiYosys, and Yices2. Install instructions:
+http://symbiyosys.readthedocs.io/en/latest/quickstart.html#installing
+
+Then run in the following command in this directory:
+
+	sby -f example.sby
+
+This will generate approximately one page of text outpout. The last lines
+should be something like this:
+
+	SBY [example] summary: Elapsed clock time [H:MM:SS (secs)]: 0:00:00 (0)
+	SBY [example] summary: Elapsed process time [H:MM:SS (secs)]: 0:00:00 (0)
+	SBY [example] summary: engine_0 (smtbmc yices) returned PASS for basecase
+	SBY [example] summary: engine_0 (smtbmc yices) returned PASS for induction
+	SBY [example] summary: successful proof by k-induction.
+	SBY [example] DONE (PASS, rc=0)
+

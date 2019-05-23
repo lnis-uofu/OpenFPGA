@@ -760,6 +760,9 @@ static void select_stmt(RTLIL::Design *design, std::string arg)
 	if (!design->selected_active_module.empty()) {
 		arg_mod = design->selected_active_module;
 		arg_memb = arg;
+	} else
+	if (GetSize(arg) >= 2 && arg[0] >= 'a' && arg[0] <= 'z' && arg[1] == ':') {
+		arg_mod = "*", arg_memb = arg;
 	} else {
 		size_t pos = arg.find('/');
 		if (pos == std::string::npos) {
@@ -893,6 +896,29 @@ static void select_stmt(RTLIL::Design *design, std::string arg)
 	select_filter_active_mod(design, work_stack.back());
 }
 
+static std::string describe_selection_for_assert(RTLIL::Design *design, RTLIL::Selection *sel)
+{
+	std::string desc = "Selection contains:\n";
+	for (auto mod_it : design->modules_)
+	{
+		if (sel->selected_module(mod_it.first)) {
+			for (auto &it : mod_it.second->wires_)
+				if (sel->selected_member(mod_it.first, it.first))
+					desc += stringf("%s/%s\n", id2cstr(mod_it.first), id2cstr(it.first));
+			for (auto &it : mod_it.second->memories)
+				if (sel->selected_member(mod_it.first, it.first))
+					desc += stringf("%s/%s\n", id2cstr(mod_it.first), id2cstr(it.first));
+			for (auto &it : mod_it.second->cells_)
+				if (sel->selected_member(mod_it.first, it.first))
+					desc += stringf("%s/%s\n", id2cstr(mod_it.first), id2cstr(it.first));
+			for (auto &it : mod_it.second->processes)
+				if (sel->selected_member(mod_it.first, it.first))
+					desc += stringf("%s/%s\n", id2cstr(mod_it.first), id2cstr(it.first));
+		}
+	}
+	return desc;
+}
+
 PRIVATE_NAMESPACE_END
 YOSYS_NAMESPACE_BEGIN
 
@@ -947,7 +973,7 @@ PRIVATE_NAMESPACE_BEGIN
 
 struct SelectPass : public Pass {
 	SelectPass() : Pass("select", "modify and view the list of selected objects") { }
-	virtual void help()
+	void help() YS_OVERRIDE
 	{
 		//   |---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|
 		log("\n");
@@ -1164,7 +1190,7 @@ struct SelectPass : public Pass {
 		log("    select */t:SWITCH %%x:+[GATE] */t:SWITCH %%d\n");
 		log("\n");
 	}
-	virtual void execute(std::vector<std::string> args, RTLIL::Design *design)
+	void execute(std::vector<std::string> args, RTLIL::Design *design) YS_OVERRIDE
 	{
 		bool add_mode = false;
 		bool del_mode = false;
@@ -1263,6 +1289,7 @@ struct SelectPass : public Pass {
 				log_cmd_error("Option -read can not be combined with a selection expression.\n");
 
 			std::ifstream f(read_file);
+			yosys_input_files.insert(read_file);
 			if (f.fail())
 				log_error("Can't open '%s' for reading: %s\n", read_file.c_str(), strerror(errno));
 
@@ -1331,6 +1358,7 @@ struct SelectPass : public Pass {
 			FILE *f = NULL;
 			if (!write_file.empty()) {
 				f = fopen(write_file.c_str(), "w");
+				yosys_output_files.insert(write_file);
 				if (f == NULL)
 					log_error("Can't open '%s' for writing: %s\n", write_file.c_str(), strerror(errno));
 			}
@@ -1389,7 +1417,12 @@ struct SelectPass : public Pass {
 				log_cmd_error("No selection to check.\n");
 			work_stack.back().optimize(design);
 			if (!work_stack.back().empty())
-				log_error("Assertion failed: selection is not empty:%s\n", sel_str.c_str());
+			{
+				RTLIL::Selection *sel = &work_stack.back();
+				sel->optimize(design);
+				std::string desc = describe_selection_for_assert(design, sel);
+				log_error("Assertion failed: selection is not empty:%s\n%s", sel_str.c_str(), desc.c_str());
+			}
 			return;
 		}
 
@@ -1399,7 +1432,12 @@ struct SelectPass : public Pass {
 				log_cmd_error("No selection to check.\n");
 			work_stack.back().optimize(design);
 			if (work_stack.back().empty())
-				log_error("Assertion failed: selection is empty:%s\n", sel_str.c_str());
+			{
+				RTLIL::Selection *sel = &work_stack.back();
+				sel->optimize(design);
+				std::string desc = describe_selection_for_assert(design, sel);
+				log_error("Assertion failed: selection is empty:%s\n%s", sel_str.c_str(), desc.c_str());
+			}
 			return;
 		}
 
@@ -1426,14 +1464,23 @@ struct SelectPass : public Pass {
 							total_count++;
 				}
 			if (assert_count >= 0 && assert_count != total_count)
-				log_error("Assertion failed: selection contains %d elements instead of the asserted %d:%s\n",
-						total_count, assert_count, sel_str.c_str());
+			{
+				std::string desc = describe_selection_for_assert(design, sel);
+				log_error("Assertion failed: selection contains %d elements instead of the asserted %d:%s\n%s",
+						total_count, assert_count, sel_str.c_str(), desc.c_str());
+			}
 			if (assert_max >= 0 && assert_max < total_count)
-				log_error("Assertion failed: selection contains %d elements, more than the maximum number %d:%s\n",
-						total_count, assert_max, sel_str.c_str());
+			{
+				std::string desc = describe_selection_for_assert(design, sel);
+				log_error("Assertion failed: selection contains %d elements, more than the maximum number %d:%s\n%s",
+						total_count, assert_max, sel_str.c_str(), desc.c_str());
+			}
 			if (assert_min >= 0 && assert_min > total_count)
-				log_error("Assertion failed: selection contains %d elements, less than the minimum number %d:%s\n",
-						total_count, assert_min, sel_str.c_str());
+			{
+				std::string desc = describe_selection_for_assert(design, sel);
+				log_error("Assertion failed: selection contains %d elements, less than the minimum number %d:%s\n%s",
+						total_count, assert_min, sel_str.c_str(), desc.c_str());
+			}
 			return;
 		}
 
@@ -1465,7 +1512,7 @@ struct SelectPass : public Pass {
 
 struct CdPass : public Pass {
 	CdPass() : Pass("cd", "a shortcut for 'select -module <name>'") { }
-	virtual void help()
+	void help() YS_OVERRIDE
 	{
 		//   |---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|
 		log("\n");
@@ -1482,17 +1529,53 @@ struct CdPass : public Pass {
 		log("\n");
 		log("    cd ..\n");
 		log("\n");
+		log("Remove trailing substrings that start with '.' in current module name until\n");
+		log("the name of a module in the current design is generated, then switch to that\n");
+		log("module. Otherwise clear the current selection.\n");
+		log("\n");
+		log("    cd\n");
+		log("\n");
 		log("This is just a shortcut for 'select -clear'.\n");
 		log("\n");
 	}
-	virtual void execute(std::vector<std::string> args, RTLIL::Design *design)
+	void execute(std::vector<std::string> args, RTLIL::Design *design) YS_OVERRIDE
 	{
-		if (args.size() != 2)
+		if (args.size() != 1 && args.size() != 2)
 			log_cmd_error("Invalid number of arguments.\n");
 
-		if (args[1] == "..") {
+		if (args.size() == 1 || args[1] == "/") {
 			design->selection_stack.back() = RTLIL::Selection(true);
 			design->selected_active_module = std::string();
+			return;
+		}
+
+		if (args[1] == "..")
+		{
+			string modname = design->selected_active_module;
+
+			design->selection_stack.back() = RTLIL::Selection(true);
+			design->selected_active_module = std::string();
+
+			while (1)
+			{
+				size_t pos = modname.rfind('.');
+
+				if (pos == string::npos)
+					break;
+
+				modname = modname.substr(0, pos);
+				Module *mod = design->module(modname);
+
+				if (mod == nullptr)
+					continue;
+
+				design->selected_active_module = modname;
+				design->selection_stack.back() = RTLIL::Selection();
+				select_filter_active_mod(design, design->selection_stack.back());
+				design->selection_stack.back().optimize(design);
+				return;
+			}
+
 			return;
 		}
 
@@ -1537,7 +1620,7 @@ static void log_matches(const char *title, Module *module, T list)
 
 struct LsPass : public Pass {
 	LsPass() : Pass("ls", "list modules or objects in modules") { }
-	virtual void help()
+	void help() YS_OVERRIDE
 	{
 		//   |---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|
 		log("\n");
@@ -1548,7 +1631,7 @@ struct LsPass : public Pass {
 		log("When an active module is selected, this prints a list of objects in the module.\n");
 		log("\n");
 	}
-	virtual void execute(std::vector<std::string> args, RTLIL::Design *design)
+	void execute(std::vector<std::string> args, RTLIL::Design *design) YS_OVERRIDE
 	{
 		size_t argidx = 1;
 		extra_args(args, argidx, design);

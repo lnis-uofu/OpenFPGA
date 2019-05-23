@@ -173,7 +173,7 @@ void Pass::call(RTLIL::Design *design, std::string command)
 	}
 
 	while (!tok.empty()) {
-		if (tok == "#") {
+		if (tok[0] == '#') {
 			int stop;
 			for (stop = 0; stop < GetSize(cmd_buf); stop++)
 				if (cmd_buf[stop] == '\r' || cmd_buf[stop] == '\n')
@@ -428,6 +428,7 @@ void Frontend::extra_args(std::istream *&f, std::string &filename, std::vector<s
 			}
 			std::ifstream *ff = new std::ifstream;
 			ff->open(filename.c_str());
+			yosys_input_files.insert(filename);
 			if (ff->fail())
 				delete ff;
 			else
@@ -543,6 +544,7 @@ void Backend::extra_args(std::ostream *&f, std::string &filename, std::vector<st
 		filename = arg;
 		std::ofstream *ff = new std::ofstream;
 		ff->open(filename.c_str(), std::ofstream::trunc);
+		yosys_output_files.insert(filename);
 		if (ff->fail()) {
 			delete ff;
 			log_cmd_error("Can't open output file `%s' for writing: %s\n", filename.c_str(), strerror(errno));
@@ -613,7 +615,7 @@ static struct CellHelpMessages {
 
 struct HelpPass : public Pass {
 	HelpPass() : Pass("help", "display help messages") { }
-	virtual void help()
+	void help() YS_OVERRIDE
 	{
 		log("\n");
 		log("    help  ................  list all commands\n");
@@ -682,7 +684,7 @@ struct HelpPass : public Pass {
 
 		fclose(f);
 	}
-	virtual void execute(std::vector<std::string> args, RTLIL::Design*)
+	void execute(std::vector<std::string> args, RTLIL::Design*) YS_OVERRIDE
 	{
 		if (args.size() == 1) {
 			log("\n");
@@ -766,7 +768,7 @@ struct HelpPass : public Pass {
 
 struct EchoPass : public Pass {
 	EchoPass() : Pass("echo", "turning echoing back of commands on and off") { }
-	virtual void help()
+	void help() YS_OVERRIDE
 	{
 		log("\n");
 		log("    echo on\n");
@@ -779,7 +781,7 @@ struct EchoPass : public Pass {
 		log("Do not print all commands to log before executing them. (default)\n");
 		log("\n");
 	}
-	virtual void execute(std::vector<std::string> args, RTLIL::Design*)
+	void execute(std::vector<std::string> args, RTLIL::Design*) YS_OVERRIDE
 	{
 		if (args.size() > 2)
 			cmd_error(args, 2, "Unexpected argument.");
@@ -804,10 +806,9 @@ struct MinisatSatSolver : public SatSolver {
 	MinisatSatSolver() : SatSolver("minisat") {
 		yosys_satsolver = this;
 	}
-	virtual ezSAT *create() YS_OVERRIDE {
+	ezSAT *create() YS_OVERRIDE {
 		return new ezMiniSAT();
 	}
 } MinisatSatSolver;
 
 YOSYS_NAMESPACE_END
-

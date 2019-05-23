@@ -259,6 +259,45 @@ bool is_one_or_minus_one(const Const &value, bool is_signed, bool &is_negative)
 	return last_bit_one;
 }
 
+int get_highest_hot_index(RTLIL::SigSpec signal)
+{
+	for (int i = GetSize(signal) - 1; i >= 0; i--)
+	{
+		if (signal[i] == RTLIL::State::S0)
+			continue;
+
+		if (signal[i] == RTLIL::State::S1)
+			return i;
+
+		break;
+	}
+
+	return -1;
+}
+
+// if the signal has only one bit set, return the index of that bit.
+// otherwise return -1
+int get_onehot_bit_index(RTLIL::SigSpec signal)
+{
+	int bit_index = -1;
+
+	for (int i = 0; i < GetSize(signal); i++)
+	{
+		if (signal[i] == RTLIL::State::S0)
+			continue;
+
+		if (signal[i] != RTLIL::State::S1)
+			return -1;
+
+		if (bit_index != -1)
+			return -1;
+
+		bit_index = i;
+	}
+
+	return bit_index;
+}
+
 void replace_const_cells(RTLIL::Design *design, RTLIL::Module *module, bool consume_x, bool mux_undef, bool mux_bool, bool do_fine, bool keepdc, bool clkinv)
 {
 	if (!design->selected(module))
@@ -348,19 +387,20 @@ void replace_const_cells(RTLIL::Design *design, RTLIL::Module *module, bool cons
 		if (cell->type.in("$reduce_and", "$_AND_"))
 			detect_const_and = true;
 
-		if (cell->type.in("$and", "$logic_and") && GetSize(cell->getPort("\\A")) == 1 && GetSize(cell->getPort("\\B")) == 1)
+		if (cell->type.in("$and", "$logic_and") && GetSize(cell->getPort("\\A")) == 1 && GetSize(cell->getPort("\\B")) == 1 && !cell->getParam("\\A_SIGNED").as_bool())
 			detect_const_and = true;
 
 		if (cell->type.in("$reduce_or", "$reduce_bool", "$_OR_"))
 			detect_const_or = true;
 
-		if (cell->type.in("$or", "$logic_or") && GetSize(cell->getPort("\\A")) == 1 && GetSize(cell->getPort("\\B")) == 1)
+		if (cell->type.in("$or", "$logic_or") && GetSize(cell->getPort("\\A")) == 1 && GetSize(cell->getPort("\\B")) == 1 && !cell->getParam("\\A_SIGNED").as_bool())
 			detect_const_or = true;
 
 		if (detect_const_and || detect_const_or)
 		{
 			pool<SigBit> input_bits = assign_map(cell->getPort("\\A")).to_sigbit_pool();
-			bool found_zero = false, found_one = false, found_inv = false;
+			bool found_zero = false, found_one = false, found_undef = false, found_inv = false, many_conconst = false;
+			SigBit non_const_input = State::Sm;
 
 			if (cell->hasPort("\\B")) {
 				vector<SigBit> more_bits = assign_map(cell->getPort("\\B")).to_sigbit_vector();
@@ -368,12 +408,20 @@ void replace_const_cells(RTLIL::Design *design, RTLIL::Module *module, bool cons
 			}
 
 			for (auto bit : input_bits) {
-				if (bit == State::S0)
-					found_zero = true;
-				if (bit == State::S1)
-					found_one = true;
-				if (invert_map.count(bit) && input_bits.count(invert_map.at(bit)))
-					found_inv = true;
+				if (bit.wire) {
+					if (invert_map.count(bit) && input_bits.count(invert_map.at(bit)))
+						found_inv = true;
+					if (non_const_input != State::Sm)
+						many_conconst = true;
+					non_const_input = many_conconst ? State::Sm : bit;
+				} else {
+					if (bit == State::S0)
+						found_zero = true;
+					else if (bit == State::S1)
+						found_one = true;
+					else
+						found_undef = true;
+				}
 			}
 
 			if (detect_const_and && (found_zero || found_inv)) {
@@ -385,6 +433,12 @@ void replace_const_cells(RTLIL::Design *design, RTLIL::Module *module, bool cons
 			if (detect_const_or && (found_one || found_inv)) {
 				cover("opt.opt_expr.const_or");
 				replace_cell(assign_map, module, cell, "const_or", "\\Y", RTLIL::State::S1);
+				goto next_cell;
+			}
+
+			if (non_const_input != State::Sm && !found_undef) {
+				cover("opt.opt_expr.and_or_buffer");
+				replace_cell(assign_map, module, cell, "and_or_buffer", "\\Y", non_const_input);
 				goto next_cell;
 			}
 		}
@@ -410,6 +464,53 @@ void replace_const_cells(RTLIL::Design *design, RTLIL::Module *module, bool cons
 					cell->type == "$and" || cell->type == "$or" || cell->type == "$xor" || cell->type == "$xnor")
 				if (group_cell_inputs(module, cell, true, assign_map))
 					goto next_cell;
+
+			if (cell->type == "$logic_not" || cell->type == "$logic_and" || cell->type == "$logic_or" ||
+					cell->type == "$reduce_or" || cell->type == "$reduce_and" || cell->type == "$reduce_bool")
+			{
+				SigBit neutral_bit = cell->type == "$reduce_and" ? State::S1 : State::S0;
+
+				RTLIL::SigSpec sig_a = assign_map(cell->getPort("\\A"));
+				RTLIL::SigSpec new_sig_a;
+
+				for (auto bit : sig_a)
+					if (bit != neutral_bit) new_sig_a.append(bit);
+
+				if (GetSize(new_sig_a) == 0)
+					new_sig_a.append(neutral_bit);
+
+				if (GetSize(new_sig_a) < GetSize(sig_a)) {
+					cover_list("opt.opt_expr.fine.neutral_A", "$logic_not", "$logic_and", "$logic_or", "$reduce_or", "$reduce_and", "$reduce_bool", cell->type.str());
+					log("Replacing port A of %s cell `%s' in module `%s' with shorter expression: %s -> %s\n",
+							cell->type.c_str(), cell->name.c_str(), module->name.c_str(), log_signal(sig_a), log_signal(new_sig_a));
+					cell->setPort("\\A", new_sig_a);
+					cell->parameters.at("\\A_WIDTH") = GetSize(new_sig_a);
+					did_something = true;
+				}
+			}
+
+			if (cell->type == "$logic_and" || cell->type == "$logic_or")
+			{
+				SigBit neutral_bit = State::S0;
+
+				RTLIL::SigSpec sig_b = assign_map(cell->getPort("\\B"));
+				RTLIL::SigSpec new_sig_b;
+
+				for (auto bit : sig_b)
+					if (bit != neutral_bit) new_sig_b.append(bit);
+
+				if (GetSize(new_sig_b) == 0)
+					new_sig_b.append(neutral_bit);
+
+				if (GetSize(new_sig_b) < GetSize(sig_b)) {
+					cover_list("opt.opt_expr.fine.neutral_B", "$logic_and", "$logic_or", cell->type.str());
+					log("Replacing port B of %s cell `%s' in module `%s' with shorter expression: %s -> %s\n",
+							cell->type.c_str(), cell->name.c_str(), module->name.c_str(), log_signal(sig_b), log_signal(new_sig_b));
+					cell->setPort("\\B", new_sig_b);
+					cell->parameters.at("\\B_WIDTH") = GetSize(new_sig_b);
+					did_something = true;
+				}
+			}
 
 			if (cell->type == "$reduce_and")
 			{
@@ -630,6 +731,23 @@ void replace_const_cells(RTLIL::Design *design, RTLIL::Module *module, bool cons
 				if (input.match("*  ")) ACTION_DO("\\Y", input.extract(1, 1));
 				if (input.match(" * ")) ACTION_DO("\\Y", input.extract(2, 1));
 				if (input.match("  *")) ACTION_DO("\\Y", input.extract(2, 1));
+			}
+		}
+
+		if (cell->type == "$_TBUF_" || cell->type == "$tribuf") {
+			RTLIL::SigSpec input = cell->getPort(cell->type == "$_TBUF_" ? "\\E" : "\\EN");
+			RTLIL::SigSpec a = cell->getPort("\\A");
+			assign_map.apply(input);
+			assign_map.apply(a);
+			if (input == State::S1)
+				ACTION_DO("\\Y", cell->getPort("\\A"));
+			if (input == State::S0 && !a.is_fully_undef()) {
+				cover("opt.opt_expr.action_" S__LINE__);
+				log("Replacing data input of %s cell `%s' in module `%s' with constant undef.\n",
+					cell->type.c_str(), cell->name.c_str(), module->name.c_str());
+				cell->setPort("\\A", SigSpec(State::Sx, GetSize(a)));
+				did_something = true;
+				goto next_cell;
 			}
 		}
 
@@ -1167,6 +1285,218 @@ void replace_const_cells(RTLIL::Design *design, RTLIL::Module *module, bool cons
 			}
 		}
 
+		// remove redundant pairs of bits in ==, ===, !=, and !==
+		// replace cell with const driver if inputs can't be equal
+		if (do_fine && cell->type.in("$eq", "$ne", "$eqx", "$nex"))
+		{
+			pool<pair<SigBit, SigBit>> redundant_cache;
+			mfp<SigBit> contradiction_cache;
+
+			contradiction_cache.promote(State::S0);
+			contradiction_cache.promote(State::S1);
+
+			int a_width = cell->getParam("\\A_WIDTH").as_int();
+			int b_width = cell->getParam("\\B_WIDTH").as_int();
+
+			bool is_signed = cell->getParam("\\A_SIGNED").as_bool();
+			int width = is_signed ? std::min(a_width, b_width) : std::max(a_width, b_width);
+
+			SigSpec sig_a = cell->getPort("\\A");
+			SigSpec sig_b = cell->getPort("\\B");
+
+			int redundant_bits = 0;
+
+			for (int i = width-1; i >= 0; i--)
+			{
+				SigBit bit_a = i < a_width ? assign_map(sig_a[i]) : State::S0;
+				SigBit bit_b = i < b_width ? assign_map(sig_b[i]) : State::S0;
+
+				if (bit_a != State::Sx && bit_a != State::Sz &&
+						bit_b != State::Sx && bit_b != State::Sz)
+					contradiction_cache.merge(bit_a, bit_b);
+
+				if (bit_b < bit_a)
+					std::swap(bit_a, bit_b);
+
+				pair<SigBit, SigBit> key(bit_a, bit_b);
+
+				if (redundant_cache.count(key)) {
+					if (i < a_width) sig_a.remove(i);
+					if (i < b_width) sig_b.remove(i);
+					redundant_bits++;
+					continue;
+				}
+
+				redundant_cache.insert(key);
+			}
+
+			if (contradiction_cache.find(State::S0) == contradiction_cache.find(State::S1))
+			{
+				SigSpec y_sig = cell->getPort("\\Y");
+				Const y_value(cell->type.in("$eq", "$eqx") ? 0 : 1, GetSize(y_sig));
+
+				log("Replacing cell `%s' in module `%s' with constant driver %s.\n",
+					log_id(cell), log_id(module), log_signal(y_value));
+
+				module->connect(y_sig, y_value);
+				module->remove(cell);
+
+				did_something = true;
+				goto next_cell;
+			}
+
+			if (redundant_bits)
+			{
+				log("Removed %d redundant input bits from %s cell `%s' in module `%s'.\n",
+						redundant_bits, log_id(cell->type), log_id(cell), log_id(module));
+
+				cell->setPort("\\A", sig_a);
+				cell->setPort("\\B", sig_b);
+				cell->setParam("\\A_WIDTH", GetSize(sig_a));
+				cell->setParam("\\B_WIDTH", GetSize(sig_b));
+
+				did_something = true;
+				goto next_cell;
+			}
+		}
+
+		// simplify comparisons
+		if (do_fine && (cell->type == "$lt" || cell->type == "$ge" || cell->type == "$gt" || cell->type == "$le"))
+		{
+			IdString cmp_type = cell->type;
+			SigSpec var_sig = cell->getPort("\\A");
+			SigSpec const_sig = cell->getPort("\\B");
+			int var_width = cell->parameters["\\A_WIDTH"].as_int();
+			int const_width = cell->parameters["\\B_WIDTH"].as_int();
+			bool is_signed = cell->getParam("\\A_SIGNED").as_bool();
+
+			if (!const_sig.is_fully_const())
+			{
+				std::swap(var_sig, const_sig);
+				std::swap(var_width, const_width);
+				if (cmp_type == "$gt")
+					cmp_type = "$lt";
+				else if (cmp_type == "$lt")
+					cmp_type = "$gt";
+				else if (cmp_type == "$ge")
+					cmp_type = "$le";
+				else if (cmp_type == "$le")
+					cmp_type = "$ge";
+			}
+
+			if (const_sig.is_fully_def() && const_sig.is_fully_const())
+			{
+				std::string condition, replacement;
+				SigSpec replace_sig(State::S0, GetSize(cell->getPort("\\Y")));
+				bool replace = false;
+				bool remove = false;
+
+				if (!is_signed)
+				{ /* unsigned */
+					if (const_sig.is_fully_zero() && cmp_type == "$lt") {
+						condition   = "unsigned X<0";
+						replacement = "constant 0";
+						replace_sig[0] = State::S0;
+						replace = true;
+					}
+					if (const_sig.is_fully_zero() && cmp_type == "$ge") {
+						condition   = "unsigned X>=0";
+						replacement = "constant 1";
+						replace_sig[0] = State::S1;
+						replace = true;
+					}
+					if (const_width == var_width && const_sig.is_fully_ones() && cmp_type == "$gt") {
+						condition   = "unsigned X>~0";
+						replacement = "constant 0";
+						replace_sig[0] = State::S0;
+						replace = true;
+					}
+					if (const_width == var_width && const_sig.is_fully_ones() && cmp_type == "$le") {
+						condition   = "unsigned X<=~0";
+						replacement = "constant 1";
+						replace_sig[0] = State::S1;
+						replace = true;
+					}
+
+					int const_bit_hot = get_onehot_bit_index(const_sig);
+					if (const_bit_hot >= 0 && const_bit_hot < var_width)
+					{
+						RTLIL::SigSpec var_high_sig(RTLIL::State::S0, var_width - const_bit_hot);
+						for (int i = const_bit_hot; i < var_width; i++) {
+							var_high_sig[i - const_bit_hot] = var_sig[i];
+						}
+
+						if (cmp_type == "$lt")
+						{
+							condition   = stringf("unsigned X<%s", log_signal(const_sig));
+							replacement = stringf("!X[%d:%d]", var_width - 1, const_bit_hot);
+							module->addLogicNot(NEW_ID, var_high_sig, cell->getPort("\\Y"));
+							remove = true;
+						}
+						if (cmp_type == "$ge")
+						{
+							condition   = stringf("unsigned X>=%s", log_signal(const_sig));
+							replacement = stringf("|X[%d:%d]", var_width - 1, const_bit_hot);
+							module->addReduceOr(NEW_ID, var_high_sig, cell->getPort("\\Y"));
+							remove = true;
+						}
+					}
+
+					int const_bit_set = get_highest_hot_index(const_sig);
+					if(const_bit_set >= var_width)
+					{
+						string cmp_name;
+						if (cmp_type == "$lt" || cmp_type == "$le")
+						{
+							if (cmp_type == "$lt") cmp_name = "<";
+							if (cmp_type == "$le") cmp_name = "<=";
+							condition   = stringf("unsigned X[%d:0]%s%s", var_width - 1, cmp_name.c_str(), log_signal(const_sig));
+							replacement = "constant 1";
+							replace_sig[0] = State::S1;
+							replace = true;
+						}
+						if (cmp_type == "$gt" || cmp_type == "$ge")
+						{
+							if (cmp_type == "$gt") cmp_name = ">";
+							if (cmp_type == "$ge") cmp_name = ">=";
+							condition   = stringf("unsigned X[%d:0]%s%s", var_width - 1, cmp_name.c_str(), log_signal(const_sig));
+							replacement = "constant 0";
+							replace_sig[0] = State::S0;
+							replace = true;
+						}
+					}
+				}
+				else
+				{ /* signed */
+					if (const_sig.is_fully_zero() && cmp_type == "$lt")
+					{
+						condition   = "signed X<0";
+						replacement = stringf("X[%d]", var_width - 1);
+						replace_sig[0] = var_sig[var_width - 1];
+						replace = true;
+					}
+					if (const_sig.is_fully_zero() && cmp_type == "$ge")
+					{
+						condition   = "signed X>=0";
+						replacement = stringf("X[%d]", var_width - 1);
+						module->addNot(NEW_ID, var_sig[var_width - 1], cell->getPort("\\Y"));
+						remove = true;
+					}
+				}
+
+				if (replace || remove)
+				{
+					log("Replacing %s cell `%s' (implementing %s) with %s.\n",
+							log_id(cell->type), log_id(cell), condition.c_str(), replacement.c_str());
+					if (replace)
+						module->connect(cell->getPort("\\Y"), replace_sig);
+					module->remove(cell);
+					did_something = true;
+					goto next_cell;
+				}
+			}
+		}
+
 	next_cell:;
 #undef ACTION_DO
 #undef ACTION_DO_Y
@@ -1177,14 +1507,14 @@ void replace_const_cells(RTLIL::Design *design, RTLIL::Module *module, bool cons
 
 struct OptExprPass : public Pass {
 	OptExprPass() : Pass("opt_expr", "perform const folding and simple expression rewriting") { }
-	virtual void help()
+	void help() YS_OVERRIDE
 	{
 		//   |---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|
 		log("\n");
 		log("    opt_expr [options] [selection]\n");
 		log("\n");
 		log("This pass performs const folding on internal cell types with constant inputs.\n");
-		log("It also performs some simple expression rewritring.\n");
+		log("It also performs some simple expression rewriting.\n");
 		log("\n");
 		log("    -mux_undef\n");
 		log("        remove 'undef' inputs from $mux, $pmux and $_MUX_ cells\n");
@@ -1211,7 +1541,7 @@ struct OptExprPass : public Pass {
 		log("        replaced by 'a'. the -keepdc option disables all such optimizations.\n");
 		log("\n");
 	}
-	virtual void execute(std::vector<std::string> args, RTLIL::Design *design)
+	void execute(std::vector<std::string> args, RTLIL::Design *design) YS_OVERRIDE
 	{
 		bool mux_undef = false;
 		bool mux_bool = false;

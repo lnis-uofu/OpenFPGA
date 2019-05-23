@@ -90,18 +90,25 @@ int LibertyParser::lexer(std::string &str)
 		c = f.get();
 	} while (c == ' ' || c == '\t' || c == '\r');
 
-	if (('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') || ('0' <= c && c <= '9') || c == '_' || c == '-' || c == '+' || c == '.') {
+	if (('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') || ('0' <= c && c <= '9') || c == '_' || c == '-' || c == '+' || c == '.' || c == '[' || c == ']') {
 		str = c;
 		while (1) {
 			c = f.get();
-			if (('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') || ('0' <= c && c <= '9') || c == '_' || c == '-' || c == '+' || c == '.')
+			if (('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') || ('0' <= c && c <= '9') || c == '_' || c == '-' || c == '+' || c == '.' || c == '[' || c == ']')
 				str += c;
 			else
 				break;
 		}
 		f.unget();
-		// fprintf(stderr, "LEX: identifier >>%s<<\n", str.c_str());
-		return 'v';
+		if (str == "+" || str == "-") {
+			/* Single operator is not an identifier */
+			// fprintf(stderr, "LEX: char >>%s<<\n", str.c_str());
+			return str[0];
+		}
+		else {
+			// fprintf(stderr, "LEX: identifier >>%s<<\n", str.c_str());
+			return 'v';
+		}
 	}
 
 	if (c == '"') {
@@ -152,7 +159,7 @@ int LibertyParser::lexer(std::string &str)
 
 	if (c == '\n') {
 		line++;
-		return ';';
+		return 'n';
 	}
 
 	// if (c >= 32 && c < 255)
@@ -168,7 +175,7 @@ LibertyAst *LibertyParser::parse()
 
 	int tok = lexer(str);
 
-	while (tok == ';')
+	while (tok == 'n')
 		tok = lexer(str);
 
 	if (tok == '}' || tok < 0)
@@ -187,9 +194,25 @@ LibertyAst *LibertyParser::parse()
 		if (tok == ';')
 			break;
 
+		if (tok == 'n')
+			continue;
+
 		if (tok == ':' && ast->value.empty()) {
 			tok = lexer(ast->value);
 			if (tok != 'v')
+				error();
+			tok = lexer(str);
+			while (tok == '+' || tok == '-' || tok == '*' || tok == '/') {
+				ast->value += tok;
+				tok = lexer(str);
+				if (tok != 'v')
+					error();
+				ast->value += str;
+				tok = lexer(str);
+			}
+			if (tok == ';')
+				break;
+			else
 				error();
 			continue;
 		}
@@ -229,14 +252,14 @@ LibertyAst *LibertyParser::parse()
 
 void LibertyParser::error()
 {
-	log_error("Syntax error in line %d.\n", line);
+	log_error("Syntax error in liberty file on line %d.\n", line);
 }
 
 #else
 
 void LibertyParser::error()
 {
-	fprintf(stderr, "Syntax error in line %d.\n", line);
+	fprintf(stderr, "Syntax error in liberty file on line %d.\n", line);
 	exit(1);
 }
 

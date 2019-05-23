@@ -34,9 +34,11 @@ bool check_label(bool &active, std::string run_from, std::string run_to, std::st
 	return active;
 }
 
-struct SynthXilinxPass : public Pass {
+struct SynthXilinxPass : public Pass
+{
 	SynthXilinxPass() : Pass("synth_xilinx", "synthesis for Xilinx FPGAs") { }
-	virtual void help()
+
+	void help() YS_OVERRIDE
 	{
 		//   |---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|
 		log("\n");
@@ -52,6 +54,14 @@ struct SynthXilinxPass : public Pass {
 		log("    -edif <file>\n");
 		log("        write the design to the specified edif file. writing of an output file\n");
 		log("        is omitted if this parameter is not specified.\n");
+		log("\n");
+		log("    -blif <file>\n");
+		log("        write the design to the specified BLIF file. writing of an output file\n");
+		log("        is omitted if this parameter is not specified.\n");
+		log("\n");
+		log("    -vpr\n");
+		log("        generate an output netlist (and BLIF file) suitable for VPR\n");
+		log("        (this feature is experimental and incomplete)\n");
 		log("\n");
 		log("    -run <from_label>:<to_label>\n");
 		log("        only run the commands between the labels (see below). an empty\n");
@@ -71,7 +81,6 @@ struct SynthXilinxPass : public Pass {
 		log("        read_verilog -lib +/xilinx/cells_sim.v\n");
 		log("        read_verilog -lib +/xilinx/cells_xtra.v\n");
 		log("        read_verilog -lib +/xilinx/brams_bb.v\n");
-		log("        read_verilog -lib +/xilinx/drams_bb.v\n");
 		log("        hierarchy -check -top <top>\n");
 		log("\n");
 		log("    flatten:     (only if -flatten)\n");
@@ -103,7 +112,7 @@ struct SynthXilinxPass : public Pass {
 		log("        clean\n");
 		log("\n");
 		log("    map_cells:\n");
-		log("        techmap -map +/xilinx/cells_map.v\n");
+		log("        techmap -map +/xilinx/cells_map.v (with -D NO_LUT in vpr mode)\n");
 		log("        dffinit -ff FDRE Q INIT -ff FDCE Q INIT -ff FDPE Q INIT\n");
 		log("        clean\n");
 		log("\n");
@@ -115,14 +124,19 @@ struct SynthXilinxPass : public Pass {
 		log("    edif:     (only if -edif)\n");
 		log("        write_edif <file-name>\n");
 		log("\n");
+		log("    blif:     (only if -blif)\n");
+		log("        write_blif <file-name>\n");
+		log("\n");
 	}
-	virtual void execute(std::vector<std::string> args, RTLIL::Design *design)
+	void execute(std::vector<std::string> args, RTLIL::Design *design) YS_OVERRIDE
 	{
 		std::string top_opt = "-auto-top";
 		std::string edif_file;
+		std::string blif_file;
 		std::string run_from, run_to;
 		bool flatten = false;
 		bool retime = false;
+		bool vpr = false;
 
 		size_t argidx;
 		for (argidx = 1; argidx < args.size(); argidx++)
@@ -133,6 +147,10 @@ struct SynthXilinxPass : public Pass {
 			}
 			if (args[argidx] == "-edif" && argidx+1 < args.size()) {
 				edif_file = args[++argidx];
+				continue;
+			}
+			if (args[argidx] == "-blif" && argidx+1 < args.size()) {
+				blif_file = args[++argidx];
 				continue;
 			}
 			if (args[argidx] == "-run" && argidx+1 < args.size()) {
@@ -151,12 +169,16 @@ struct SynthXilinxPass : public Pass {
 				retime = true;
 				continue;
 			}
+			if (args[argidx] == "-vpr") {
+				vpr = true;
+				continue;
+			}
 			break;
 		}
 		extra_args(args, argidx, design);
 
 		if (!design->full_selection())
-			log_cmd_error("This comannd only operates on fully selected designs!\n");
+			log_cmd_error("This command only operates on fully selected designs!\n");
 
 		bool active = run_from.empty();
 
@@ -168,7 +190,6 @@ struct SynthXilinxPass : public Pass {
 			Pass::call(design, "read_verilog -lib +/xilinx/cells_sim.v");
 			Pass::call(design, "read_verilog -lib +/xilinx/cells_xtra.v");
 			Pass::call(design, "read_verilog -lib +/xilinx/brams_bb.v");
-			Pass::call(design, "read_verilog -lib +/xilinx/drams_bb.v");
 			Pass::call(design, stringf("hierarchy -check %s", top_opt.c_str()));
 		}
 
@@ -215,6 +236,8 @@ struct SynthXilinxPass : public Pass {
 		if (check_label(active, run_from, run_to, "map_cells"))
 		{
 			Pass::call(design, "techmap -map +/xilinx/cells_map.v");
+			if (vpr)
+			    Pass::call(design, "techmap -map +/xilinx/lut2lut.v");
 			Pass::call(design, "dffinit -ff FDRE Q INIT -ff FDCE Q INIT -ff FDPE Q INIT");
 			Pass::call(design, "clean");
 		}
@@ -230,6 +253,11 @@ struct SynthXilinxPass : public Pass {
 		{
 			if (!edif_file.empty())
 				Pass::call(design, stringf("write_edif %s", edif_file.c_str()));
+		}
+		if (check_label(active, run_from, run_to, "blif"))
+		{
+			if (!blif_file.empty())
+				Pass::call(design, stringf("write_blif %s", edif_file.c_str()));
 		}
 
 		log_pop();

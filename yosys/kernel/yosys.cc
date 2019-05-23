@@ -25,6 +25,10 @@
 #  include <readline/history.h>
 #endif
 
+#ifdef YOSYS_ENABLE_EDITLINE
+#  include <editline/readline.h>
+#endif
+
 #ifdef YOSYS_ENABLE_PLUGINS
 #  include <dlfcn.h>
 #endif
@@ -42,8 +46,13 @@
 #  include <unistd.h>
 #  include <dirent.h>
 #  include <sys/types.h>
+#  include <sys/wait.h>
 #  include <sys/stat.h>
 #  include <glob.h>
+#endif
+
+#ifdef __FreeBSD__
+#  include <sys/sysctl.h>
 #endif
 
 #include <limits.h>
@@ -60,13 +69,15 @@ CellTypes yosys_celltypes;
 Tcl_Interp *yosys_tcl_interp = NULL;
 #endif
 
+std::set<std::string> yosys_input_files, yosys_output_files;
+
 bool memhasher_active = false;
 uint32_t memhasher_rng = 123456;
 std::vector<void*> memhasher_store;
 
 void memhasher_on()
 {
-#ifdef __linux__
+#if defined(__linux__) || defined(__FreeBSD__)
 	memhasher_rng += time(NULL) << 16 ^ getpid();
 #endif
 	memhasher_store.resize(0x10000);
@@ -106,7 +117,7 @@ void yosys_banner()
 	log(" |                                                                            |\n");
 	log(" |  yosys -- Yosys Open SYnthesis Suite                                       |\n");
 	log(" |                                                                            |\n");
-	log(" |  Copyright (C) 2012 - 2016  Clifford Wolf <clifford@clifford.at>           |\n");
+	log(" |  Copyright (C) 2012 - 2018  Clifford Wolf <clifford@clifford.at>           |\n");
 	log(" |                                                                            |\n");
 	log(" |  Permission to use, copy, modify, and/or distribute this software for any  |\n");
 	log(" |  purpose with or without fee is hereby granted, provided that the above    |\n");
@@ -155,7 +166,7 @@ std::string vstringf(const char *fmt, va_list ap)
 	std::string string;
 	char *str = NULL;
 
-#ifdef _WIN32
+#if defined(_WIN32 )|| defined(__CYGWIN__)
 	int sz = 64, rc;
 	while (1) {
 		va_list apc;
@@ -592,6 +603,8 @@ static int tcl_yosys_cmd(ClientData, Tcl_Interp *interp, int argc, const char *a
 			std::string tcl_command_name = it.first;
 			if (tcl_command_name == "proc")
 				tcl_command_name = "procs";
+			else if (tcl_command_name == "rename")
+				tcl_command_name = "renames";
 			Tcl_CmdInfo info;
 			if (Tcl_GetCommandInfo(interp, tcl_command_name.c_str(), &info) != 0) {
 				log("[TCL: yosys -import] Command name collision: found pre-existing command `%s' -> skip.\n", it.first.c_str());
@@ -623,26 +636,37 @@ extern Tcl_Interp *yosys_get_tcl_interp()
 
 struct TclPass : public Pass {
 	TclPass() : Pass("tcl", "execute a TCL script file") { }
-	virtual void help() {
+	void help() YS_OVERRIDE {
+		//   |---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|
 		log("\n");
-		log("    tcl <filename>\n");
+		log("    tcl <filename> [args]\n");
 		log("\n");
 		log("This command executes the tcl commands in the specified file.\n");
 		log("Use 'yosys cmd' to run the yosys command 'cmd' from tcl.\n");
 		log("\n");
 		log("The tcl command 'yosys -import' can be used to import all yosys\n");
-		log("commands directly as tcl commands to the tcl shell. The yosys\n");
-		log("command 'proc' is wrapped using the tcl command 'procs' in order\n");
-		log("to avoid a name collision with the tcl builtin command 'proc'.\n");
+		log("commands directly as tcl commands to the tcl shell. Yosys commands\n");
+		log("'proc' and 'rename' are wrapped to tcl commands 'procs' and 'renames'\n");
+		log("in order to avoid a name collision with the built in commands.\n");
+		log("\n");
+		log("If any arguments are specified, these arguments are provided to the script via\n");
+		log("the standard $argc and $argv variables.\n");
 		log("\n");
 	}
-	virtual void execute(std::vector<std::string> args, RTLIL::Design *design) {
+	void execute(std::vector<std::string> args, RTLIL::Design *) YS_OVERRIDE {
 		if (args.size() < 2)
 			log_cmd_error("Missing script file.\n");
-		if (args.size() > 2)
-			extra_args(args, 1, design, false);
-		if (Tcl_EvalFile(yosys_get_tcl_interp(), args[1].c_str()) != TCL_OK)
-			log_cmd_error("TCL interpreter returned an error: %s\n", Tcl_GetStringResult(yosys_get_tcl_interp()));
+
+		std::vector<Tcl_Obj*> script_args;
+		for (auto it = args.begin() + 2; it != args.end(); ++it)
+			script_args.push_back(Tcl_NewStringObj((*it).c_str(), (*it).size()));
+
+		Tcl_Interp *interp = yosys_get_tcl_interp();
+		Tcl_ObjSetVar2(interp, Tcl_NewStringObj("argc", 4), NULL, Tcl_NewIntObj(script_args.size()), 0);
+		Tcl_ObjSetVar2(interp, Tcl_NewStringObj("argv", 4), NULL, Tcl_NewListObj(script_args.size(), script_args.data()), 0);
+		Tcl_ObjSetVar2(interp, Tcl_NewStringObj("argv0", 5), NULL, Tcl_NewStringObj(args[1].c_str(), args[1].size()), 0);
+		if (Tcl_EvalFile(interp, args[1].c_str()) != TCL_OK)
+			log_cmd_error("TCL interpreter returned an error: %s\n", Tcl_GetStringResult(interp));
 	}
 } TclPass;
 #endif
@@ -658,6 +682,26 @@ std::string proc_self_dirname()
 	while (buflen > 0 && path[buflen-1] != '/')
 		buflen--;
 	return std::string(path, buflen);
+}
+#elif defined(__FreeBSD__)
+std::string proc_self_dirname()
+{
+	int mib[4] = {CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1};
+	size_t buflen;
+	char *buffer;
+	std::string path;
+	if (sysctl(mib, 4, NULL, &buflen, NULL, 0) != 0)
+		log_error("sysctl failed: %s\n", strerror(errno));
+	buffer = (char*)malloc(buflen);
+	if (buffer == NULL)
+		log_error("malloc failed: %s\n", strerror(errno));
+	if (sysctl(mib, 4, buffer, &buflen, NULL, 0) != 0)
+		log_error("sysctl failed: %s\n", strerror(errno));
+	while (buflen > 0 && buffer[buflen-1] != '/')
+		buflen--;
+	path.assign(buffer, buflen);
+	free(buffer);
+	return path;
 }
 #elif defined(__APPLE__)
 std::string proc_self_dirname()
@@ -700,13 +744,13 @@ std::string proc_self_dirname()
 	return "/";
 }
 #else
-	#error Dont know how to determine process executable base path!
+	#error "Don't know how to determine process executable base path!"
 #endif
 
 #ifdef EMSCRIPTEN
 std::string proc_share_dirname()
 {
-	return "/share";
+	return "/share/";
 }
 #else
 std::string proc_share_dirname()
@@ -766,7 +810,7 @@ static void handle_label(std::string &command, bool &from_to_active, const std::
 	while (pos < GetSize(command) && command[pos] != ' ' && command[pos] != '\t' && command[pos] != '\r' && command[pos] != '\n')
 		label += command[pos++];
 
-	if (label.back() == ':' && GetSize(label) > 1)
+	if (GetSize(label) > 1 && label.back() == ':')
 	{
 		label = label.substr(0, GetSize(label)-1);
 		command = command.substr(pos);
@@ -788,14 +832,20 @@ void run_frontend(std::string filename, std::string command, std::string *backen
 			command = "verilog";
 		else if (filename.size() > 2 && filename.substr(filename.size()-3) == ".sv")
 			command = "verilog -sv";
-		else if (filename.size() > 2 && filename.substr(filename.size()-4) == ".vhd")
+		else if (filename.size() > 3 && filename.substr(filename.size()-4) == ".vhd")
 			command = "vhdl";
 		else if (filename.size() > 4 && filename.substr(filename.size()-5) == ".blif")
 			command = "blif";
+		else if (filename.size() > 5 && filename.substr(filename.size()-6) == ".eblif")
+			command = "blif";
+		else if (filename.size() > 4 && filename.substr(filename.size()-5) == ".json")
+			command = "json";
 		else if (filename.size() > 3 && filename.substr(filename.size()-3) == ".il")
 			command = "ilang";
 		else if (filename.size() > 3 && filename.substr(filename.size()-3) == ".ys")
 			command = "script";
+		else if (filename.size() > 3 && filename.substr(filename.size()-4) == ".tcl")
+			command = "tcl";
 		else if (filename == "-")
 			command = "script";
 		else
@@ -823,8 +873,10 @@ void run_frontend(std::string filename, std::string command, std::string *backen
 
 		FILE *f = stdin;
 
-		if (filename != "-")
+		if (filename != "-") {
 			f = fopen(filename.c_str(), "r");
+			yosys_input_files.insert(filename);
+		}
 
 		if (f == NULL)
 			log_error("Can't open script file `%s' for reading: %s\n", filename.c_str(), strerror(errno));
@@ -875,7 +927,10 @@ void run_frontend(std::string filename, std::string command, std::string *backen
 		log("\n-- Parsing `%s' using frontend `%s' --\n", filename.c_str(), command.c_str());
 	}
 
-	Frontend::frontend_call(design, NULL, filename, command);
+	if (command == "tcl")
+		Pass::call(design, vector<string>({command, filename}));
+	else
+		Frontend::frontend_call(design, NULL, filename, command);
 }
 
 void run_frontend(std::string filename, std::string command, RTLIL::Design *design)
@@ -903,6 +958,8 @@ void run_backend(std::string filename, std::string command, RTLIL::Design *desig
 			command = "verilog";
 		else if (filename.size() > 3 && filename.substr(filename.size()-3) == ".il")
 			command = "ilang";
+		else if (filename.size() > 4 && filename.substr(filename.size()-4) == ".aig")
+			command = "aiger";
 		else if (filename.size() > 5 && filename.substr(filename.size()-5) == ".blif")
 			command = "blif";
 		else if (filename.size() > 5 && filename.substr(filename.size()-5) == ".edif")
@@ -929,7 +986,7 @@ void run_backend(std::string filename, std::string command, RTLIL::Design *desig
 	Backend::backend_call(design, NULL, filename, command);
 }
 
-#ifdef YOSYS_ENABLE_READLINE
+#if defined(YOSYS_ENABLE_READLINE) || defined(YOSYS_ENABLE_EDITLINE)
 static char *readline_cmd_generator(const char *text, int state)
 {
 	static std::map<std::string, Pass*>::iterator it;
@@ -1016,14 +1073,14 @@ void shell(RTLIL::Design *design)
 	recursion_counter++;
 	log_cmd_error_throw = true;
 
-#ifdef YOSYS_ENABLE_READLINE
-	rl_readline_name = "yosys";
+#if defined(YOSYS_ENABLE_READLINE) || defined(YOSYS_ENABLE_EDITLINE)
+	rl_readline_name = (char*)"yosys";
 	rl_attempted_completion_function = readline_completion;
-	rl_basic_word_break_characters = " \t\n";
+	rl_basic_word_break_characters = (char*)" \t\n";
 #endif
 
 	char *command = NULL;
-#ifdef YOSYS_ENABLE_READLINE
+#if defined(YOSYS_ENABLE_READLINE) || defined(YOSYS_ENABLE_EDITLINE)
 	while ((command = readline(create_prompt(design, recursion_counter))) != NULL)
 	{
 #else
@@ -1037,7 +1094,7 @@ void shell(RTLIL::Design *design)
 #endif
 		if (command[strspn(command, " \t\r\n")] == 0)
 			continue;
-#ifdef YOSYS_ENABLE_READLINE
+#if defined(YOSYS_ENABLE_READLINE) || defined(YOSYS_ENABLE_EDITLINE)
 		add_history(command);
 #endif
 
@@ -1067,7 +1124,7 @@ void shell(RTLIL::Design *design)
 
 struct ShellPass : public Pass {
 	ShellPass() : Pass("shell", "enter interactive command mode") { }
-	virtual void help() {
+	void help() YS_OVERRIDE {
 		log("\n");
 		log("    shell\n");
 		log("\n");
@@ -1099,16 +1156,16 @@ struct ShellPass : public Pass {
 		log("Press Ctrl-D or type 'exit' to leave the interactive shell.\n");
 		log("\n");
 	}
-	virtual void execute(std::vector<std::string> args, RTLIL::Design *design) {
+	void execute(std::vector<std::string> args, RTLIL::Design *design) YS_OVERRIDE {
 		extra_args(args, 1, design, false);
 		shell(design);
 	}
 } ShellPass;
 
-#ifdef YOSYS_ENABLE_READLINE
+#if defined(YOSYS_ENABLE_READLINE) || defined(YOSYS_ENABLE_EDITLINE)
 struct HistoryPass : public Pass {
 	HistoryPass() : Pass("history", "show last interactive commands") { }
-	virtual void help() {
+	void help() YS_OVERRIDE {
 		log("\n");
 		log("    history\n");
 		log("\n");
@@ -1117,17 +1174,22 @@ struct HistoryPass : public Pass {
 		log("from executed scripts.\n");
 		log("\n");
 	}
-	virtual void execute(std::vector<std::string> args, RTLIL::Design *design) {
+	void execute(std::vector<std::string> args, RTLIL::Design *design) YS_OVERRIDE {
 		extra_args(args, 1, design, false);
+#ifdef YOSYS_ENABLE_READLINE
 		for(HIST_ENTRY **list = history_list(); *list != NULL; list++)
 			log("%s\n", (*list)->line);
+#else
+		for (int i = where_history(); history_get(i); i++)
+			log("%s\n", history_get(i)->line);
+#endif
 	}
 } HistoryPass;
 #endif
 
 struct ScriptCmdPass : public Pass {
 	ScriptCmdPass() : Pass("script", "execute commands from script file") { }
-	virtual void help() {
+	void help() YS_OVERRIDE {
 		log("\n");
 		log("    script <filename> [<from_label>:<to_label>]\n");
 		log("\n");
@@ -1142,7 +1204,7 @@ struct ScriptCmdPass : public Pass {
 		log("marked with that label (until the next label) is executed.\n");
 		log("\n");
 	}
-	virtual void execute(std::vector<std::string> args, RTLIL::Design *design) {
+	void execute(std::vector<std::string> args, RTLIL::Design *design) YS_OVERRIDE {
 		if (args.size() < 2)
 			log_cmd_error("Missing script file.\n");
 		else if (args.size() == 2)

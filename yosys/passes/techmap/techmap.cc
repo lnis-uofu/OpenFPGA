@@ -171,18 +171,15 @@ struct TechmapWorker
 		}
 
 		std::string orig_cell_name;
-		pool<string> extra_src_attrs;
+		pool<string> extra_src_attrs = cell->get_strpool_attribute("\\src");
 
-		if (!flatten_mode)
-		{
+		if (!flatten_mode) {
 			for (auto &it : tpl->cells_)
 				if (it.first == "\\_TECHMAP_REPLACE_") {
 					orig_cell_name = cell->name.str();
 					module->rename(cell, stringf("$techmap%d", autoidx++) + cell->name.str());
 					break;
 				}
-
-			extra_src_attrs = cell->get_strpool_attribute("\\src");
 		}
 
 		dict<IdString, IdString> memory_renames;
@@ -247,6 +244,9 @@ struct TechmapWorker
 				continue;
 			}
 
+			if (GetSize(it.second) == 0)
+				continue;
+
 			RTLIL::Wire *w = tpl->wires_.at(portname);
 			RTLIL::SigSig c, extra_connect;
 
@@ -305,10 +305,15 @@ struct TechmapWorker
 				// approach that yields nicer outputs:
 				// replace internal wires that are connected to external wires
 
-				if (w->port_output)
+				if (w->port_output && !w->port_input) {
 					port_signal_map.add(c.second, c.first);
-				else
+				} else
+				if (!w->port_output && w->port_input) {
 					port_signal_map.add(c.first, c.second);
+				} else {
+					module->connect(c);
+					extra_connect = SigSig();
+				}
 
 				for (auto &attr : w->attributes) {
 					if (attr.first == "\\src")
@@ -322,8 +327,9 @@ struct TechmapWorker
 		for (auto &it : tpl->cells_)
 		{
 			std::string c_name = it.second->name.str();
+			bool techmap_replace_cell = (!flatten_mode) && (c_name == "\\_TECHMAP_REPLACE_");
 
-			if (!flatten_mode && c_name == "\\_TECHMAP_REPLACE_")
+			if (techmap_replace_cell)
 				c_name = orig_cell_name;
 			else
 				apply_prefix(cell->name.str(), c_name);
@@ -353,6 +359,11 @@ struct TechmapWorker
 
 			if (c->attributes.count("\\src"))
 				c->add_strpool_attribute("\\src", extra_src_attrs);
+
+			if (techmap_replace_cell)
+				for (auto attr : cell->attributes)
+					if (!c->attributes.count(attr.first))
+						c->attributes[attr.first] = attr.second;
 		}
 
 		for (auto &it : tpl->connections()) {
@@ -451,6 +462,7 @@ struct TechmapWorker
 			bool mapped_cell = false;
 
 			std::string cell_type = cell->type.str();
+
 			if (in_recursion && cell_type.substr(0, 2) == "\\$")
 				cell_type = cell_type.substr(1);
 
@@ -497,6 +509,8 @@ struct TechmapWorker
 							{
 								extmapper_module = extmapper_design->addModule(m_name);
 								RTLIL::Cell *extmapper_cell = extmapper_module->addCell(cell->type, cell);
+
+								extmapper_cell->set_src_attribute(cell->get_src_attribute());
 
 								int port_counter = 1;
 								for (auto &c : extmapper_cell->connections_) {
@@ -877,7 +891,7 @@ struct TechmapWorker
 
 struct TechmapPass : public Pass {
 	TechmapPass() : Pass("techmap", "generic technology mapper") { }
-	virtual void help()
+	void help() YS_OVERRIDE
 	{
 		//   |---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|
 		log("\n");
@@ -919,7 +933,7 @@ struct TechmapPass : public Pass {
 		log("    -D <define>, -I <incdir>\n");
 		log("        this options are passed as-is to the Verilog frontend for loading the\n");
 		log("        map file. Note that the Verilog frontend is also called with the\n");
-		log("        '-ignore_redef' option set.\n");
+		log("        '-nooverwrite' option set.\n");
 		log("\n");
 		log("When a module in the map file has the 'techmap_celltype' attribute set, it will\n");
 		log("match cells with a type that match the text value of this attribute. Otherwise\n");
@@ -1000,7 +1014,7 @@ struct TechmapPass : public Pass {
 		log("constant value.\n");
 		log("\n");
 		log("A cell with the name _TECHMAP_REPLACE_ in the map file will inherit the name\n");
-		log("of the cell that is being replaced.\n");
+		log("and attributes of the cell that is being replaced.\n");
 		log("\n");
 		log("See 'help extract' for a pass that does the opposite thing.\n");
 		log("\n");
@@ -1008,7 +1022,7 @@ struct TechmapPass : public Pass {
 		log("essentially techmap but using the design itself as map library).\n");
 		log("\n");
 	}
-	virtual void execute(std::vector<std::string> args, RTLIL::Design *design)
+	void execute(std::vector<std::string> args, RTLIL::Design *design) YS_OVERRIDE
 	{
 		log_header(design, "Executing TECHMAP pass (map to technology primitives).\n");
 		log_push();
@@ -1017,7 +1031,7 @@ struct TechmapPass : public Pass {
 		simplemap_get_mappers(worker.simplemap_mappers);
 
 		std::vector<std::string> map_files;
-		std::string verilog_frontend = "verilog -ignore_redef";
+		std::string verilog_frontend = "verilog -nooverwrite";
 		int max_iter = -1;
 
 		size_t argidx;
@@ -1076,6 +1090,7 @@ struct TechmapPass : public Pass {
 					std::ifstream f;
 					rewrite_filename(fn);
 					f.open(fn.c_str());
+					yosys_input_files.insert(fn);
 					if (f.fail())
 						log_cmd_error("Can't open map file `%s'\n", fn.c_str());
 					Frontend::frontend_call(map, &f, fn, (fn.size() > 3 && fn.substr(fn.size()-3) == ".il") ? "ilang" : verilog_frontend);
@@ -1126,7 +1141,7 @@ struct TechmapPass : public Pass {
 
 struct FlattenPass : public Pass {
 	FlattenPass() : Pass("flatten", "flatten design") { }
-	virtual void help()
+	void help() YS_OVERRIDE
 	{
 		//   |---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|
 		log("\n");
@@ -1140,7 +1155,7 @@ struct FlattenPass : public Pass {
 		log("flattened by this command.\n");
 		log("\n");
 	}
-	virtual void execute(std::vector<std::string> args, RTLIL::Design *design)
+	void execute(std::vector<std::string> args, RTLIL::Design *design) YS_OVERRIDE
 	{
 		log_header(design, "Executing FLATTEN pass (flatten design).\n");
 		log_push();
