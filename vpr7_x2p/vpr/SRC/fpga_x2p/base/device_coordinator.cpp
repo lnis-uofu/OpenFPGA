@@ -21,6 +21,7 @@ DeviceCoordinator::DeviceCoordinator() {
 }
 
 /* Public accessors  */
+
 size_t DeviceCoordinator::get_x() const {
   return x_;
 }

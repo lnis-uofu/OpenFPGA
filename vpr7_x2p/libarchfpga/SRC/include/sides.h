@@ -29,6 +29,7 @@ class Side {
     enum e_side get_rotate_counterclockwise() const;
     bool validate() const;
     size_t to_size_t() const;
+    char* to_string() const;
   public: /* Mutators */
     void set_side(size_t side);
     void set_side(enum e_side side);

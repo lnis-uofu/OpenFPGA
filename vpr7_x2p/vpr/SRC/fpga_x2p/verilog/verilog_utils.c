@@ -368,11 +368,22 @@ FILE* verilog_create_one_subckt_file(char* subckt_dir,
   } 
 
   /* Generate the descriptions*/
-  file_description = (char*) my_malloc(sizeof(char) * (strlen(subckt_name_prefix) + 2
-                                       + strlen(my_itoa(grid_x)) + 2 + strlen(my_itoa(grid_y))
-                                       + 10));
-  sprintf(file_description, "%s [%d][%d] in FPGA", 
-                           subckt_name_prefix, grid_x, grid_y);
+  if (-1 == grid_y) {
+    file_description = (char*) my_malloc(sizeof(char) * (strlen(subckt_name_prefix) + 2
+                                         + strlen(my_itoa(grid_x)) + 2 
+                                         + 10));
+    sprintf(file_description, 
+            "%s [%d] in FPGA", 
+            subckt_name_prefix, grid_x);
+  } else {
+    file_description = (char*) my_malloc(sizeof(char) * (strlen(subckt_name_prefix) + 2
+                                         + strlen(my_itoa(grid_x)) + 2 + strlen(my_itoa(grid_y))
+                                         + 10));
+    sprintf(file_description, 
+            "%s [%d][%d] in FPGA", 
+            subckt_name_prefix, grid_x, grid_y);
+  }
+ 
   dump_verilog_file_header(fp, file_description);
 
   /* Free */

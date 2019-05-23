@@ -38,6 +38,14 @@ include(FilesToDirs)
 # compiler flag configuration checks
 include(CheckCXXCompilerFlag)
 
+#
+# We require c++14 support
+#
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF) #No compiler specific extensions
+
+
 # Set WARN FLAGS
 set(WARN_FLAGS "")
 

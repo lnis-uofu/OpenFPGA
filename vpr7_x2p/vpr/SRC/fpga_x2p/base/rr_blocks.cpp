@@ -1,4 +1,5 @@
 #include <cassert>
+#include <string>
 #include <algorithm>
 
 #include "rr_blocks.h"
@@ -84,6 +85,7 @@ bool RRChan::is_mirror(RRChan& cand) const {
  
   return true;
 }
+
 
 /* Mutators */
 /* modify type */
@@ -306,17 +308,32 @@ bool DeviceRRChan::valid_module_id(t_rr_type chan_type, size_t module_id) const 
 
 /* Accessors */
 
+/* get the x coordinator of this switch block */
+size_t RRSwitchBlock::get_x() const {
+  return coordinator_.get_x();
+} 
+
+/* get the y coordinator of this switch block */
+size_t RRSwitchBlock::get_y() const { 
+  return coordinator_.get_y();
+}
+
+/* Get the number of sides of this SB */
+DeviceCoordinator RRSwitchBlock::get_coordinator() const {
+  return coordinator_;
+} 
+
 /* Get the number of sides of this SB */
 size_t RRSwitchBlock::get_num_sides() const {
   assert (validate_num_sides());
-  return chan_rr_node_direction_.size();
+  return chan_node_direction_.size();
 }
 
 /* Get the number of routing tracks on a side */
 size_t RRSwitchBlock::get_chan_width(enum e_side side) const {
   Side side_manager(side);
   assert(side_manager.validate());
-  return chan_rr_node_[side_manager.to_size_t()].size(); 
+  return chan_node_[side_manager.to_size_t()].size(); 
 }
 
 /* Get the direction of a rr_node at a given side and track_id */
@@ -330,7 +347,7 @@ enum PORTS RRSwitchBlock::get_chan_node_direction(enum e_side side, size_t track
   /* Ensure the track is valid in the context of this switch block at a specific side */ 
   assert( validate_track_id(side, track_id) );
   
-  return chan_rr_node_direction_[side_manager.to_size_t()][track_id]; 
+  return chan_node_direction_[side_manager.to_size_t()][track_id]; 
 }
 
 /* get a rr_node at a given side and track_id */
@@ -344,21 +361,61 @@ t_rr_node* RRSwitchBlock::get_chan_node(enum e_side side, size_t track_id) const
   /* Ensure the track is valid in the context of this switch block at a specific side */ 
   assert( validate_track_id(side, track_id) );
   
-  return chan_rr_node_[side_manager.to_size_t()][track_id]; 
+  return chan_node_[side_manager.to_size_t()][track_id]; 
 } 
 
 /* Get the number of IPIN rr_nodes on a side */
-size_t RRSwitchBlock::get_num_ipin_rr_nodes(enum e_side side) const {
+size_t RRSwitchBlock::get_num_ipin_nodes(enum e_side side) const {
   Side side_manager(side);
   assert(side_manager.validate());
-  return ipin_rr_node_[side_manager.to_size_t()].size(); 
+  return ipin_node_[side_manager.to_size_t()].size(); 
 } 
 
 /* Get the number of OPIN rr_nodes on a side */
-size_t RRSwitchBlock::get_num_opin_rr_nodes(enum e_side side) const {
+size_t RRSwitchBlock::get_num_opin_nodes(enum e_side side) const {
   Side side_manager(side);
   assert(side_manager.validate());
-  return opin_rr_node_[side_manager.to_size_t()].size(); 
+  return opin_node_[side_manager.to_size_t()].size(); 
+} 
+
+/* get a opin_node at a given side and track_id */
+t_rr_node* RRSwitchBlock::get_opin_node(enum e_side side, size_t node_id) const {
+  Side side_manager(side);
+  assert(side_manager.validate());
+ 
+  /* Ensure the side is valid in the context of this switch block */ 
+  assert( validate_side(side) );
+
+  /* Ensure the track is valid in the context of this switch block at a specific side */ 
+  assert( validate_opin_node_id(side, node_id) );
+  
+  return opin_node_[side_manager.to_size_t()][node_id]; 
+} 
+
+/* get the grid_side of a opin_node at a given side and track_id */
+enum e_side RRSwitchBlock::get_opin_node_grid_side(enum e_side side, size_t node_id) const {
+  Side side_manager(side);
+  assert(side_manager.validate());
+ 
+  /* Ensure the side is valid in the context of this switch block */ 
+  assert( validate_side(side) );
+
+  /* Ensure the track is valid in the context of this switch block at a specific side */ 
+  assert( validate_opin_node_id(side, node_id) );
+  
+  return opin_node_grid_side_[side_manager.to_size_t()][node_id]; 
+}
+
+/* get the grid side of a opin_rr_node */
+enum e_side RRSwitchBlock::get_opin_node_grid_side(t_rr_node* opin_node) const {
+  enum e_side side;
+  int index;
+
+  /* Find the side and index */
+  get_node_side_and_index(opin_node, IN_PORT, &side, &index);
+  assert(-1 != index);
+  assert(validate_side(side));
+  return get_opin_node_grid_side(side, index);
 } 
 
 /* Get the node index in the array, return -1 if not found */
@@ -377,25 +434,25 @@ int RRSwitchBlock::get_node_index(t_rr_node* node,
   case CHANX:
   case CHANY:
     for (size_t inode = 0; inode < get_chan_width(node_side); ++inode) {
-      if ((node == chan_rr_node_[side_manager.to_size_t()][inode])
+      if ((node == chan_node_[side_manager.to_size_t()][inode])
         /* Check if direction meets specification */
-        &&(node_direction == chan_rr_node_direction_[side_manager.to_size_t()][inode])) {
+        &&(node_direction == chan_node_direction_[side_manager.to_size_t()][inode])) {
         cnt++;
         ret = inode;
       }
     }
     break;
   case IPIN:
-    for (size_t inode = 0; inode < get_num_ipin_rr_nodes(node_side); ++inode) {
-      if (node == ipin_rr_node_[side_manager.to_size_t()][inode]) {
+    for (size_t inode = 0; inode < get_num_ipin_nodes(node_side); ++inode) {
+      if (node == ipin_node_[side_manager.to_size_t()][inode]) {
         cnt++;
         ret = inode;
       }
     }
     break;
   case OPIN:
-    for (size_t inode = 0; inode < get_num_opin_rr_nodes(node_side); ++inode) {
-      if (node == opin_rr_node_[side_manager.to_size_t()][inode]) {
+    for (size_t inode = 0; inode < get_num_opin_nodes(node_side); ++inode) {
+      if (node == opin_node_[side_manager.to_size_t()][inode]) {
         cnt++;
         ret = inode;
       }
@@ -469,11 +526,29 @@ void RRSwitchBlock::get_node_side_and_index(t_rr_node* node,
 } 
 
 size_t RRSwitchBlock::get_num_reserved_conf_bits() const {
-  return num_reserved_conf_bits_;
+  assert (validate_num_reserved_conf_bits());
+  return reserved_conf_bits_msb_ - reserved_conf_bits_lsb_ + 1;
+}
+
+size_t RRSwitchBlock::get_reserved_conf_bits_lsb() const {
+  return reserved_conf_bits_lsb_;
+}
+
+size_t RRSwitchBlock::get_reserved_conf_bits_msb() const {
+  return reserved_conf_bits_msb_;
 }
     
 size_t RRSwitchBlock::get_num_conf_bits() const {
-  return num_conf_bits_;
+  assert (validate_num_conf_bits());
+  return conf_bits_msb_ - conf_bits_lsb_ + 1;
+}
+
+size_t RRSwitchBlock::get_conf_bits_lsb() const {
+  return conf_bits_lsb_;
+}
+
+size_t RRSwitchBlock::get_conf_bits_msb() const {
+  return conf_bits_msb_;
 }
 
 /* Check if the node imply a short connection inside the SB, which happens to long wires across a FPGA fabric */
@@ -493,8 +568,6 @@ bool RRSwitchBlock::is_node_imply_short_connection(t_rr_node* src_node) const {
   }
 
   return false;
-
-
 }
 
 /* check if the candidate SB is a mirror of the current one */
@@ -547,7 +620,7 @@ bool RRSwitchBlock::is_mirror(RRSwitchBlock& cand) const {
   for (size_t side = 0; side < get_num_sides(); ++side) {
     Side side_manager(side);
 
-    if (get_num_ipin_rr_nodes(side_manager.get_side()) != cand.get_num_ipin_rr_nodes(side_manager.get_side())) {
+    if (get_num_ipin_nodes(side_manager.get_side()) != cand.get_num_ipin_nodes(side_manager.get_side())) {
       return false;
     }
   }
@@ -561,64 +634,144 @@ bool RRSwitchBlock::is_mirror(RRSwitchBlock& cand) const {
   return true;
 }
 
+/* Public Accessors: Cooridinator conversion */
+DeviceCoordinator RRSwitchBlock::get_side_block_coordinator(enum e_side side) const {
+  Side side_manager(side); 
+  assert(side_manager.validate());
+  DeviceCoordinator ret(get_x(), get_y());
+
+  switch (side_manager.get_side()) {
+  case TOP:
+    /* (0 == side) */
+    /* 1. Channel Y [x][y+1] inputs */
+    ret.set_y(ret.get_y() + 1);
+    break;
+  case RIGHT:
+    /* 1 == side */
+    /* 2. Channel X [x+1][y] inputs */
+    ret.set_x(ret.get_x() + 1);
+    break;
+  case BOTTOM:
+    /* 2 == side */
+    /* 3. Channel Y [x][y] inputs */
+    break;
+  case LEFT:
+    /* 3 == side */
+    /* 4. Channel X [x][y] inputs */
+    break;
+  default:
+    vpr_printf(TIO_MESSAGE_ERROR, 
+               "(File: %s [LINE%d]) Invalid side!\n",
+               __FILE__, __LINE__);
+    exit(1);
+  }
+
+  return ret;
+}
+
+/* Public Accessors Verilog writer */
+char* RRSwitchBlock::gen_verilog_module_name() const {
+  char* ret = NULL;
+  std::string x_str = std::to_string(get_x());
+  std::string y_str = std::to_string(get_y());
+  
+  ret = (char*)my_malloc(2 + 1 + x_str.length()
+                         + 2 + y_str.length()
+                         + 1 + 1); 
+
+  sprintf(ret, "sb_%lu__%lu_", 
+          get_x(), get_y());
+
+  return ret;
+}
+
+char* RRSwitchBlock::gen_verilog_instance_name() const {
+  char* ret = NULL;
+  std::string x_str = std::to_string(get_x());
+  std::string y_str = std::to_string(get_y());
+  
+  ret = (char*)my_malloc(2 + 1 + x_str.length()
+                         + 2 + y_str.length()
+                         + 4 + 1); 
+
+  sprintf(ret, "sb_%lu__%lu__0_", 
+          get_x(), get_y());
+
+  return ret;
+}
+
+
 /* Public mutators */
-/* Allocate the vectors with the given number of sides */
-void RRSwitchBlock::init_num_sides(size_t num_sides) {
-  /* Initialize the vectors */
-  chan_rr_node_direction_.resize(num_sides);
-  chan_rr_node_.resize(num_sides);
-  ipin_rr_node_.resize(num_sides);
-  ipin_rr_node_grid_side_.resize(num_sides);
-  opin_rr_node_.resize(num_sides);
-  opin_rr_node_grid_side_.resize(num_sides);
+
+/* Set the coordinator (x,y) for the switch block */
+void RRSwitchBlock::set_coordinator(size_t x, size_t y) {
+  coordinator_.set(x, y);
   return;
 }
 
-/* Add a node to the chan_rr_node_ list and also assign its direction in chan_rr_node_direction_ */
+/* Allocate the vectors with the given number of sides */
+void RRSwitchBlock::init_num_sides(size_t num_sides) {
+  /* Initialize the vectors */
+  chan_node_direction_.resize(num_sides);
+  chan_node_.resize(num_sides);
+  ipin_node_.resize(num_sides);
+  ipin_node_grid_side_.resize(num_sides);
+  opin_node_.resize(num_sides);
+  opin_node_grid_side_.resize(num_sides);
+  return;
+}
+
+/* Add a node to the chan_node_ list and also assign its direction in chan_node_direction_ */
 void RRSwitchBlock::add_chan_node(t_rr_node* node, enum e_side node_side, enum PORTS node_direction) {
   Side side_manager(node_side);
   assert(validate_side(node_side));
   /* resize the array if needed, node is placed in the sequence of node->ptc_num */
-  if (size_t(node->ptc_num + 1) > chan_rr_node_[side_manager.to_size_t()].size()) {
-    chan_rr_node_[side_manager.to_size_t()].resize(node->ptc_num + 1); /* resize to the maximum */
-    chan_rr_node_direction_[side_manager.to_size_t()].resize(node->ptc_num + 1); /* resize to the maximum */
+  if (size_t(node->ptc_num + 1) > chan_node_[side_manager.to_size_t()].size()) {
+    chan_node_[side_manager.to_size_t()].resize(node->ptc_num + 1); /* resize to the maximum */
+    chan_node_direction_[side_manager.to_size_t()].resize(node->ptc_num + 1); /* resize to the maximum */
   }
   /* fill the dedicated element in the vector */
-  chan_rr_node_[side_manager.to_size_t()][node->ptc_num] = node;
-  chan_rr_node_direction_[side_manager.to_size_t()][node->ptc_num] = node_direction;
+  chan_node_[side_manager.to_size_t()][node->ptc_num] = node;
+  chan_node_direction_[side_manager.to_size_t()][node->ptc_num] = node_direction;
 
   return;
 } 
 
-/* Add a node to the chan_rr_node_ list and also assign its direction in chan_rr_node_direction_ */
+/* Add a node to the chan_node_ list and also assign its direction in chan_node_direction_ */
 void RRSwitchBlock::add_ipin_node(t_rr_node* node, enum e_side node_side, enum e_side grid_side) {
   Side side_manager(node_side);
   assert(validate_side(node_side));
   /* push pack the dedicated element in the vector */
-  ipin_rr_node_[side_manager.to_size_t()].push_back(node);
-  ipin_rr_node_grid_side_[side_manager.to_size_t()].push_back(grid_side);
+  ipin_node_[side_manager.to_size_t()].push_back(node);
+  ipin_node_grid_side_[side_manager.to_size_t()].push_back(grid_side);
 
   return;
 }
 
-/* Add a node to the chan_rr_node_ list and also assign its direction in chan_rr_node_direction_ */
+/* Add a node to the chan_node_ list and also assign its direction in chan_node_direction_ */
 void RRSwitchBlock::add_opin_node(t_rr_node* node, enum e_side node_side, enum e_side grid_side) {
   Side side_manager(node_side);
   assert(validate_side(node_side));
   /* push pack the dedicated element in the vector */
-  opin_rr_node_[side_manager.to_size_t()].push_back(node);
-  opin_rr_node_grid_side_[side_manager.to_size_t()].push_back(grid_side);
+  opin_node_[side_manager.to_size_t()].push_back(node);
+  opin_node_grid_side_[side_manager.to_size_t()].push_back(grid_side);
 
   return;
 } 
 
 void RRSwitchBlock::set_num_reserved_conf_bits(size_t num_reserved_conf_bits) {
-  num_reserved_conf_bits_ = num_reserved_conf_bits;
+  reserved_conf_bits_lsb_ = 0;
+  reserved_conf_bits_msb_ = num_reserved_conf_bits - 1;
   return;
 }
 
-void RRSwitchBlock::set_num_conf_bits(size_t num_conf_bits) {
-  num_conf_bits_ = num_conf_bits;
+void RRSwitchBlock::set_conf_bits_lsb(size_t conf_bits_lsb) {
+  conf_bits_lsb_ = conf_bits_lsb;
+  return;
+}
+
+void RRSwitchBlock::set_conf_bits_msb(size_t conf_bits_msb) {
+  conf_bits_msb_ = conf_bits_msb;
   return;
 }
 
@@ -627,22 +780,26 @@ void RRSwitchBlock::clear() {
   assert(validate_num_sides());
   /* Clear the inner vector of each matrix */
   for (size_t side = 0; side < get_num_sides(); ++side) {
-    chan_rr_node_direction_[side].clear();
-    chan_rr_node_[side].clear();
-    ipin_rr_node_[side].clear();
-    ipin_rr_node_grid_side_[side].clear();
-    opin_rr_node_[side].clear();
-    opin_rr_node_grid_side_[side].clear();
+    chan_node_direction_[side].clear();
+    chan_node_[side].clear();
+    ipin_node_[side].clear();
+    ipin_node_grid_side_[side].clear();
+    opin_node_[side].clear();
+    opin_node_grid_side_[side].clear();
   }  
-  chan_rr_node_direction_.clear();
-  chan_rr_node_.clear();
-  ipin_rr_node_.clear();
-  ipin_rr_node_grid_side_.clear();
-  opin_rr_node_.clear();
-  opin_rr_node_grid_side_.clear();
+  chan_node_direction_.clear();
+  chan_node_.clear();
+  ipin_node_.clear();
+  ipin_node_grid_side_.clear();
+  opin_node_.clear();
+  opin_node_grid_side_.clear();
 
-  set_num_reserved_conf_bits(0);
-  set_num_conf_bits(0);
+  /* Just to make the lsb and msb invalidate */
+  reserved_conf_bits_lsb_ = 1;
+  reserved_conf_bits_msb_ = 0;
+  /* Just to make the lsb and msb invalidate */
+  set_conf_bits_lsb(1);
+  set_conf_bits_msb(0);
 
   return;
 }
@@ -652,8 +809,8 @@ void RRSwitchBlock::clear_chan_nodes(enum e_side node_side) {
   Side side_manager(node_side);
   assert(validate_side(node_side));
   
-  chan_rr_node_[side_manager.to_size_t()].clear();
-  chan_rr_node_direction_[side_manager.to_size_t()].clear();
+  chan_node_[side_manager.to_size_t()].clear();
+  chan_node_direction_[side_manager.to_size_t()].clear();
   return;
 } 
 
@@ -662,8 +819,8 @@ void RRSwitchBlock::clear_ipin_nodes(enum e_side node_side) {
   Side side_manager(node_side);
   assert(validate_side(node_side));
   
-  ipin_rr_node_[side_manager.to_size_t()].clear();
-  ipin_rr_node_grid_side_[side_manager.to_size_t()].clear();
+  ipin_node_[side_manager.to_size_t()].clear();
+  ipin_node_grid_side_[side_manager.to_size_t()].clear();
   return;
 } 
 
@@ -672,8 +829,8 @@ void RRSwitchBlock::clear_opin_nodes(enum e_side node_side) {
   Side side_manager(node_side);
   assert(validate_side(node_side));
   
-  opin_rr_node_[side_manager.to_size_t()].clear();
-  opin_rr_node_grid_side_[side_manager.to_size_t()].clear();
+  opin_node_[side_manager.to_size_t()].clear();
+  opin_node_grid_side_[side_manager.to_size_t()].clear();
   return;
 }
 
@@ -745,25 +902,25 @@ bool RRSwitchBlock::is_node_mirror(RRSwitchBlock& cand,
 
 /* Validate if the number of sides are consistent among internal data arrays ! */
 bool RRSwitchBlock::validate_num_sides() const {
-  size_t num_sides = chan_rr_node_direction_.size();
+  size_t num_sides = chan_node_direction_.size();
 
-  if ( num_sides != chan_rr_node_.size() ) {
+  if ( num_sides != chan_node_.size() ) {
     return false;
   }
 
-  if ( num_sides != ipin_rr_node_.size() ) {
+  if ( num_sides != ipin_node_.size() ) {
     return false;
   }
 
-  if ( num_sides != ipin_rr_node_grid_side_.size() ) {
+  if ( num_sides != ipin_node_grid_side_.size() ) {
     return false;
   }
 
-  if ( num_sides != opin_rr_node_.size() ) {
+  if ( num_sides != opin_node_.size() ) {
     return false;
   }
 
-  if ( num_sides != opin_rr_node_grid_side_.size() ) {
+  if ( num_sides != opin_node_grid_side_.size() ) {
     return false;
   }
 
@@ -779,17 +936,49 @@ bool RRSwitchBlock::validate_side(enum e_side side) const {
   return false;
 }
 
-/* Check the track_id is valid for chan_rr_node_ and chan_rr_node_direction_ */
+/* Check the track_id is valid for chan_node_ and chan_node_direction_ */
 bool RRSwitchBlock::validate_track_id(enum e_side side, size_t track_id) const {
   Side side_manager(side);
 
   if (false == validate_side(side)) {
     return false;
   } 
-  if ( track_id < chan_rr_node_[side_manager.to_size_t()].size() ) {
+  if ( ( track_id < chan_node_[side_manager.to_size_t()].size()) 
+    && ( track_id < chan_node_direction_[side_manager.to_size_t()].size()) ) {
     return true;
   }
 
+  return false;
+}
+
+/* Check the opin_node_id is valid for opin_node_ and opin_node_grid_side_ */
+bool RRSwitchBlock::validate_opin_node_id(enum e_side side, size_t node_id) const {
+  Side side_manager(side);
+
+  if (false == validate_side(side)) {
+    return false;
+  } 
+  if ( ( node_id < opin_node_[side_manager.to_size_t()].size())
+     &&( node_id < opin_node_grid_side_[side_manager.to_size_t()].size()) ) {
+    return true;
+  }
+
+  return false;
+}
+
+/* Validate the number of configuration bits, MSB should be no less than the LSB !!! */
+bool RRSwitchBlock::validate_num_conf_bits() const {
+  if (conf_bits_msb_ >= conf_bits_lsb_) {
+    return true;
+  }
+  return false;
+}
+
+/* Validate the number of configuration bits, MSB should be no less than the LSB !!! */
+bool RRSwitchBlock::validate_num_reserved_conf_bits() const {
+  if (reserved_conf_bits_msb_ >= reserved_conf_bits_lsb_) {
+    return true;
+  }
   return false;
 }
 

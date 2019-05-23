@@ -121,26 +121,43 @@ class DeviceRRChan {
 class RRSwitchBlock {
   public: /* Contructors */
   public: /* Accessors */
+    size_t get_x() const; /* get the x coordinator of this switch block */
+    size_t get_y() const; /* get the y coordinator of this switch block */
+    DeviceCoordinator get_coordinator() const; /* Get the number of sides of this SB */
     size_t get_num_sides() const; /* Get the number of sides of this SB */
     size_t get_chan_width(enum e_side side) const; /* Get the number of routing tracks on a side */
     enum PORTS get_chan_node_direction(enum e_side side, size_t track_id) const; /* Get the direction of a rr_node at a given side and track_id */
     t_rr_node* get_chan_node(enum e_side side, size_t track_id) const; /* get a rr_node at a given side and track_id */
-    size_t get_num_ipin_rr_nodes(enum e_side side) const; /* Get the number of IPIN rr_nodes on a side */
-    size_t get_num_opin_rr_nodes(enum e_side side) const; /* Get the number of OPIN rr_nodes on a side */
+    size_t get_num_ipin_nodes(enum e_side side) const; /* Get the number of IPIN rr_nodes on a side */
+    size_t get_num_opin_nodes(enum e_side side) const; /* Get the number of OPIN rr_nodes on a side */
+    t_rr_node* get_opin_node(enum e_side side, size_t node_id) const; /* get a rr_node at a given side and track_id */
+    enum e_side get_opin_node_grid_side(enum e_side side, size_t node_id) const; /* get a rr_node at a given side and track_id */
+    enum e_side get_opin_node_grid_side(t_rr_node* opin_node) const; /* get a rr_node at a given side and track_id */
     int get_node_index(t_rr_node* node, enum e_side node_side, enum PORTS node_direction) const; /* Get the node index in the array, return -1 if not found */
     void get_node_side_and_index(t_rr_node* node,  enum PORTS node_direction, enum e_side* node_side, int* node_index) const; /* Given a rr_node, try to find its side and index in the Switch block */
     bool is_node_exist_opposite_side(t_rr_node* node, enum e_side node_side) const; /* Check if the node exist in the opposite side of this Switch Block */
     size_t get_num_reserved_conf_bits() const;
+    size_t get_reserved_conf_bits_lsb() const;
+    size_t get_reserved_conf_bits_msb() const;
     size_t get_num_conf_bits() const;
+    size_t get_conf_bits_lsb() const;
+    size_t get_conf_bits_msb() const;
     bool is_node_imply_short_connection(t_rr_node* src_node) const; /* Check if the node imply a short connection inside the SB, which happens to long wires across a FPGA fabric */
     bool is_mirror(RRSwitchBlock& cand) const; /* check if the candidate SB is a mirror of the current one */
+  public: /* Cooridinator conversion */
+    DeviceCoordinator get_side_block_coordinator(enum e_side side) const;
+  public: /* Verilog writer */
+    char* gen_verilog_module_name() const;
+    char* gen_verilog_instance_name() const;
   public: /* Mutators */
+    void set_coordinator(size_t x, size_t y);
     void init_num_sides(size_t num_sides); /* Allocate the vectors with the given number of sides */
     void add_chan_node(t_rr_node* node, enum e_side node_side, enum PORTS node_direction); /* Add a node to the chan_rr_node_ list and also assign its direction in chan_rr_node_direction_ */
     void add_ipin_node(t_rr_node* node, enum e_side node_side, enum e_side grid_side); /* Add a node to the chan_rr_node_ list and also assign its direction in chan_rr_node_direction_ */
     void add_opin_node(t_rr_node* node, enum e_side node_side, enum e_side grid_side); /* Add a node to the chan_rr_node_ list and also assign its direction in chan_rr_node_direction_ */
     void set_num_reserved_conf_bits(size_t num_reserved_conf_bits);
-    void set_num_conf_bits(size_t num_conf_bits);
+    void set_conf_bits_lsb(size_t conf_bits_lsb);
+    void set_conf_bits_msb(size_t conf_bits_msb);
     void clear();
     void clear_chan_nodes(enum e_side node_side); /* Clean the chan_width of a side */
     void clear_ipin_nodes(enum e_side node_side); /* Clean the number of IPINs of a side */
@@ -152,15 +169,21 @@ class RRSwitchBlock {
     bool validate_num_sides() const;
     bool validate_side(enum e_side side) const;
     bool validate_track_id(enum e_side side, size_t track_id) const;
+    bool validate_opin_node_id(enum e_side side, size_t node_id) const;
+    bool validate_num_reserved_conf_bits() const;
+    bool validate_num_conf_bits() const;
   private: /* Internal Data */
-    std::vector< std::vector<enum PORTS> >  chan_rr_node_direction_; 
-    std::vector< std::vector<t_rr_node*> >  chan_rr_node_;
-    std::vector< std::vector<t_rr_node*> >  ipin_rr_node_;
-    std::vector< std::vector<enum e_side> > ipin_rr_node_grid_side_;
-    std::vector< std::vector<t_rr_node*> >  opin_rr_node_;
-    std::vector< std::vector<enum e_side> > opin_rr_node_grid_side_;
-    size_t num_reserved_conf_bits_;
-    size_t num_conf_bits_;
+    DeviceCoordinator coordinator_;
+    std::vector< std::vector<enum PORTS> >  chan_node_direction_; 
+    std::vector< std::vector<t_rr_node*> >  chan_node_;
+    std::vector< std::vector<t_rr_node*> >  ipin_node_;
+    std::vector< std::vector<enum e_side> > ipin_node_grid_side_;
+    std::vector< std::vector<t_rr_node*> >  opin_node_;
+    std::vector< std::vector<enum e_side> > opin_node_grid_side_;
+    size_t reserved_conf_bits_lsb_;
+    size_t reserved_conf_bits_msb_;
+    size_t conf_bits_lsb_; /* Least Significant Bit (LSB) of configuration port*/
+    size_t conf_bits_msb_; /* Most  Significant Bit (MSB) of configuration port*/
 };
 
 /* Object Device Routing Resource Switch Block 

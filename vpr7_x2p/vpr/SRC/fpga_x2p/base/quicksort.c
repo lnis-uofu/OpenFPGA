@@ -13,6 +13,8 @@
 
 #include <util.h>
 
+#include "quicksort.h"
+
 void my_free(void* ptr);
 
 /* Subroutines */

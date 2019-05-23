@@ -1,6 +1,8 @@
 #ifndef DEVICE_COORDINATOR_H
 #define DEVICE_COORDINATOR_H
 
+#include "sides.h"
+
 /* Coordinator System for FPGA Device
  * It is based on a 3-D (x,y,z) coordinator system
  * (x,y) is used for all the routing resources,
@@ -8,9 +10,6 @@
  */
 class DeviceCoordinator {
   public: /* Contructors */
-    /*
-    DeviceCoordinator(DeviceCoordinator& coordinator);
-    */
     DeviceCoordinator(size_t x, size_t y);
     DeviceCoordinator();
   public: /* Accessors */

@@ -71,6 +71,9 @@ char* format_spice_node_prefix(char* spice_node_prefix);
 
 t_block* search_mapped_block(int x, int y, int z);
 
+int* my_decimal2binary(int decimal,
+                       int* binary_len);
+
 char** fpga_spice_strtok(char* str, 
                          char* delims, 
                          int* len);
@@ -128,7 +131,7 @@ float get_rr_node_net_probability(t_rr_node node);
 
 int get_rr_node_net_init_value(t_rr_node node);
 
-int recommend_num_sim_clock_cycle();
+int recommend_num_sim_clock_cycle(float sim_window_size);
 
 void auto_select_num_sim_clock_cycle(t_spice* spice,
                                      float signal_density_weight);
@@ -405,5 +408,7 @@ void get_fpga_x2p_global_op_clock_ports(t_llist* head,
 void get_fpga_x2p_global_all_clock_ports(t_llist* head,
                                         int* num_clock_ports,
                                         t_spice_model_port*** clock_port);
+
+int my_strlen_int(int input_int);
 
 #endif

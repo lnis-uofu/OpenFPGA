@@ -87,6 +87,22 @@ size_t Side::to_size_t() const {
   }
 }
 
+/* Convert to char* */
+char* Side::to_string() const { 
+  switch (side_) {
+  case TOP:
+    return "top"; 
+  case RIGHT:
+    return "right";
+  case BOTTOM:
+    return "bottom";
+  case LEFT:
+    return "left";
+  default:
+    return "invalid_side";
+  }
+} 
+
 /* Public Mutators */
 void Side::set_side(size_t side) { 
   switch (side) {

@@ -35,6 +35,11 @@ enum e_dir_err {
  E_DIR_EXIST
 };
 
+
+/***** Local Subroutines *****/
+static 
+enum e_dir_err try_access_dir(char* dir_path);
+
 /***** Subroutines *****/
 char* my_gettime() {
   time_t current_time;
@@ -98,6 +103,7 @@ void my_remove_file(char* file_path) {
   return;
 }
 
+static 
 enum e_dir_err try_access_dir(char* dir_path) {
   struct stat s;
   int err = stat(dir_path, &s);
@@ -141,6 +147,7 @@ int create_dir_path(char* dir_path) {
                   dir_path);
        return 1;
      }
+     break;
    default:
      vpr_printf(TIO_MESSAGE_ERROR,"Create directory(%s)...Failed!\n",dir_path);
      exit(1);
@@ -651,13 +658,23 @@ char* fpga_spice_create_one_subckt_filename(char* file_name_prefix,
                                             int subckt_x, int subckt_y,
                                             char* file_name_postfix) {
   char* fname = NULL;
+  
+  if ( -1 == subckt_y ) {
+    fname = (char*) my_malloc(sizeof(char) * (strlen(file_name_prefix)
+                              + strlen(my_itoa(subckt_x)) + 1
+                              + strlen(file_name_postfix) + 1));
 
-  fname = (char*) my_malloc(sizeof(char) * (strlen(file_name_prefix)
-                            + strlen(my_itoa(subckt_x)) + 1 + strlen(my_itoa(subckt_y))
-                            + strlen(file_name_postfix) + 1));
+    sprintf(fname, "%s%d_%s", 
+            file_name_prefix, subckt_x, file_name_postfix);
 
-  sprintf(fname, "%s%d_%d%s", 
-          file_name_prefix, subckt_x, subckt_y, file_name_postfix);
+  } else {
+    fname = (char*) my_malloc(sizeof(char) * (strlen(file_name_prefix)
+                              + strlen(my_itoa(subckt_x)) + 1 + strlen(my_itoa(subckt_y))
+                              + strlen(file_name_postfix) + 1));
+
+    sprintf(fname, "%s%d_%d%s", 
+            file_name_prefix, subckt_x, subckt_y, file_name_postfix);
+  }
 
   return fname;
 }
@@ -1225,7 +1242,6 @@ int get_rr_node_net_init_value(t_rr_node node) {
     return vpack_net[node.vpack_net_num].spice_net_info->init_val;
   }
 }
-
 
 int recommend_num_sim_clock_cycle(float sim_window_size) {
   float avg_density = 0.;

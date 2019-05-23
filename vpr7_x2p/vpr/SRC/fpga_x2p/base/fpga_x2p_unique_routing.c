@@ -82,7 +82,6 @@ void print_device_rr_chan_stats(DeviceRRChan& device_rr_chan);
 
 static 
 RRSwitchBlock build_rr_switch_block(int sb_x, int sb_y, 
-                                    t_det_routing_arch RoutingArch,
                                     int LL_num_rr_nodes,
                                     t_rr_node* LL_rr_node,
                                     t_ivec*** LL_rr_node_indices);
@@ -846,7 +845,6 @@ DeviceRRChan build_device_rr_chan(int LL_num_rr_nodes, t_rr_node* LL_rr_node,
  */
 static 
 RRSwitchBlock build_rr_switch_block(int sb_x, int sb_y, 
-                                    t_det_routing_arch RoutingArch,
                                     int LL_num_rr_nodes,
                                     t_rr_node* LL_rr_node,
                                     t_ivec*** LL_rr_node_indices) {
@@ -856,6 +854,9 @@ RRSwitchBlock build_rr_switch_block(int sb_x, int sb_y,
   /* Check */
   assert((!(0 > sb_x))&&(!(sb_x > (nx + 1)))); 
   assert((!(0 > sb_y))&&(!(sb_y > (ny + 1)))); 
+
+  /* Coordinator initialization */
+  rr_switch_block.set_coordinator(size_t(sb_x), size_t(sb_y));
 
   /* Basic information*/
   rr_switch_block.init_num_sides(4); /* Fixed number of sides */
@@ -1000,7 +1001,7 @@ RRSwitchBlock build_rr_switch_block(int sb_x, int sb_y,
       /* Grid[x][y+1] BOTTOM side outputs pins */
       opin_grid_side[0] = BOTTOM;
       /* Grid[x][y] TOP side outputs pins */
-      opin_grid_side[0] = TOP;
+      opin_grid_side[1] = TOP;
       break;
     default:
       vpr_printf(TIO_MESSAGE_ERROR, 
@@ -1056,8 +1057,7 @@ RRSwitchBlock build_rr_switch_block(int sb_x, int sb_y,
  * Each switch block in the FPGA fabric will be an instance of these modules.
  * We maintain a map from each instance to each module
  */
-DeviceRRSwitchBlock build_device_rr_switch_blocks(t_det_routing_arch RoutingArch,
-                                                  int LL_num_rr_nodes,
+DeviceRRSwitchBlock build_device_rr_switch_blocks(int LL_num_rr_nodes,
                                                   t_rr_node* LL_rr_node,
                                                   t_ivec*** LL_rr_node_indices) {
   /* Create an object */
@@ -1070,7 +1070,7 @@ DeviceRRSwitchBlock build_device_rr_switch_blocks(t_det_routing_arch RoutingArch
   /* For each switch block, determine the size of array */
   for (int ix = 0; ix < (nx + 1); ++ix) {
     for (int iy = 0; iy < (ny + 1); ++iy) {
-      RRSwitchBlock rr_switch_block = build_rr_switch_block(ix, iy, RoutingArch, 
+      RRSwitchBlock rr_switch_block = build_rr_switch_block(ix, iy, 
                                                             LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices);
       DeviceCoordinator sb_coordinator(ix, iy);
       LL_device_rr_switch_block.add_rr_switch_block(sb_coordinator, rr_switch_block);
