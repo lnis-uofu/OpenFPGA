@@ -1738,6 +1738,34 @@ size_t count_verilog_switch_box_conf_bits(t_sram_orgz_info* cur_sram_orgz_info,
   return num_conf_bits;
 }
 
+static 
+void update_routing_switch_box_conf_bits(t_sram_orgz_info* cur_sram_orgz_info, 
+                                         RRSwitchBlock& rr_sb) {
+  int cur_num_bl, cur_num_wl;
+
+  get_sram_orgz_info_num_blwl(cur_sram_orgz_info, &cur_num_bl, &cur_num_wl); 
+
+  /* Record the index: TODO: clean this mess, move to FPGA_X2P_SETUP !!!*/
+  DeviceCoordinator sb_coordinator(rr_sb.get_x(), rr_sb.get_y());
+
+  /* Count the number of configuration bits to be consumed by this Switch block */
+  int num_conf_bits = count_verilog_switch_box_conf_bits(cur_sram_orgz_info, rr_sb);
+  /* Count the number of reserved configuration bits to be consumed by this Switch block */
+  int num_reserved_conf_bits = count_verilog_switch_box_reserved_conf_bits(cur_sram_orgz_info, rr_sb);
+  /* Estimate the sram_verilog_model->cnt */
+  int cur_num_sram = get_sram_orgz_info_num_mem_bit(cur_sram_orgz_info); 
+
+  device_rr_switch_block.set_rr_switch_block_num_reserved_conf_bits(sb_coordinator, num_reserved_conf_bits);
+  device_rr_switch_block.set_rr_switch_block_conf_bits_lsb(sb_coordinator, cur_num_sram);
+  device_rr_switch_block.set_rr_switch_block_conf_bits_msb(sb_coordinator, cur_num_sram + num_conf_bits - 1);
+
+  /* Update the counter */
+  update_sram_orgz_info_num_mem_bit(cur_sram_orgz_info, cur_num_sram + num_conf_bits);
+  update_sram_orgz_info_num_blwl(cur_sram_orgz_info, cur_num_bl + num_conf_bits, cur_num_wl + num_conf_bits);
+
+  return;
+}
+
 /* Task: Print the subckt of a Switch Box.
  * A Switch Box subckt consists of following ports:
  * 1. Channel Y [x][y] inputs 
@@ -1787,11 +1815,6 @@ void dump_verilog_routing_switch_box_unique_subckt(t_sram_orgz_info* cur_sram_or
   /* Estimate the sram_verilog_model->cnt */
   int cur_num_sram = get_sram_orgz_info_num_mem_bit(cur_sram_orgz_info); 
   int esti_sram_cnt = cur_num_sram + num_conf_bits;
-  /* Record the index: TODO: clean this mess, move to FPGA_X2P_SETUP !!!*/
-  DeviceCoordinator sb_coordinator(rr_sb.get_x(), rr_sb.get_y());
-  device_rr_switch_block.set_rr_switch_block_num_reserved_conf_bits(sb_coordinator, num_reserved_conf_bits);
-  device_rr_switch_block.set_rr_switch_block_conf_bits_lsb(sb_coordinator, cur_num_sram);
-  device_rr_switch_block.set_rr_switch_block_conf_bits_msb(sb_coordinator, cur_num_sram + num_conf_bits - 1);
   rr_sb.set_num_reserved_conf_bits(num_reserved_conf_bits);
   rr_sb.set_conf_bits_lsb(cur_num_sram);
   rr_sb.set_conf_bits_msb(cur_num_sram + num_conf_bits - 1);
@@ -1998,7 +2021,8 @@ void dump_verilog_routing_switch_box_subckt(t_sram_orgz_info* cur_sram_orgz_info
     /* Count the number  of configuration bits of the mirror */
     int mirror_num_conf_bits = count_verilog_switch_box_conf_bits(cur_sram_orgz_info, cur_sb_info->mirror);
     assert( mirror_num_conf_bits == num_conf_bits );
-    /* return directly */
+    /* update memory bits return directly */
+    update_sram_orgz_info_num_mem_bit(cur_sram_orgz_info, cur_sb_info->conf_bits_msb);
     return;
   }
 
@@ -2663,7 +2687,8 @@ void dump_verilog_routing_connection_box_subckt(t_sram_orgz_info* cur_sram_orgz_
     /* Count the number  of configuration bits of the mirror */
     int mirror_num_conf_bits = count_verilog_connection_box_conf_bits(cur_sram_orgz_info, cur_cb_info->mirror);
     assert( mirror_num_conf_bits == num_conf_bits );
-    /* return directly */
+    /* update memory bits return directly */
+    update_sram_orgz_info_num_mem_bit(cur_sram_orgz_info, cur_cb_info->conf_bits_msb);
     return;
   }
 
@@ -2844,8 +2869,6 @@ void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
                                     t_rr_indexed_data* LL_rr_indexed_data,
                                     t_syn_verilog_opts fpga_verilog_opts,
                                     boolean compact_routing_hierarchy) {
-  int ix, iy; 
- 
   assert(UNI_DIRECTIONAL == routing_arch->directionality);
   
   /* Two major tasks: 
@@ -2885,8 +2908,8 @@ void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
   } else { 
     /* Output the full array of routing channels */
     vpr_printf(TIO_MESSAGE_INFO, "Writing X-direction Channels...\n");
-    for (iy = 0; iy < (ny + 1); iy++) {
-      for (ix = 1; ix < (nx + 1); ix++) {
+    for (int iy = 0; iy < (ny + 1); iy++) {
+      for (int ix = 1; ix < (nx + 1); ix++) {
         dump_verilog_routing_chan_subckt(cur_sram_orgz_info, verilog_dir, subckt_dir, ix, iy, CHANX, 
                                          LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices, LL_rr_indexed_data, 
                                          arch.num_segments, arch.Segments, fpga_verilog_opts);
@@ -2894,8 +2917,8 @@ void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
     }
     /* Y - channels [1...ny][0..nx]*/
     vpr_printf(TIO_MESSAGE_INFO, "Writing Y-direction Channels...\n");
-    for (ix = 0; ix < (nx + 1); ix++) {
-      for (iy = 1; iy < (ny + 1); iy++) {
+    for (int ix = 0; ix < (nx + 1); ix++) {
+      for (int iy = 1; iy < (ny + 1); iy++) {
         dump_verilog_routing_chan_subckt(cur_sram_orgz_info, verilog_dir, subckt_dir, ix, iy, CHANY,
                                          LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices, LL_rr_indexed_data, 
                                          arch.num_segments, arch.Segments, fpga_verilog_opts);
@@ -2905,6 +2928,9 @@ void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
 
   /* Switch Boxes*/
   if (TRUE == compact_routing_hierarchy) { 
+    /* Create a snapshot on sram_orgz_info */
+    t_sram_orgz_info* stamped_sram_orgz_info = snapshot_sram_orgz_info(cur_sram_orgz_info);
+
     for (size_t isb = 0; isb < device_rr_switch_block.get_num_unique_mirror(); ++isb) {
       /* Output unique mirrors */
       RRSwitchBlock unique_mirror = device_rr_switch_block.get_unique_mirror(isb);
@@ -2912,9 +2938,22 @@ void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
                                                     LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices,
                                                     fpga_verilog_opts);
     }
+
+    /* Restore sram_orgz_info to the base */ 
+    copy_sram_orgz_info (cur_sram_orgz_info, stamped_sram_orgz_info);
+
+    DeviceCoordinator sb_range = device_rr_switch_block.get_switch_block_range();
+    for (size_t ix = 0; ix < sb_range.get_x(); ++ix) {
+      for (size_t iy = 0; iy < sb_range.get_y(); ++iy) {
+        RRSwitchBlock rr_sb = device_rr_switch_block.get_switch_block(ix, iy);
+        update_routing_switch_box_conf_bits(cur_sram_orgz_info, rr_sb);
+      }
+    }
+    /* Free */
+    free_sram_orgz_info(stamped_sram_orgz_info, stamped_sram_orgz_info->type);
   } else {
-    for (ix = 0; ix < (nx + 1); ix++) {
-      for (iy = 0; iy < (ny + 1); iy++) {
+    for (int ix = 0; ix < (nx + 1); ix++) {
+      for (int iy = 0; iy < (ny + 1); iy++) {
         /* vpr_printf(TIO_MESSAGE_INFO, "Writing Switch Boxes[%d][%d]...\n", ix, iy); */
         update_spice_models_routing_index_low(ix, iy, SOURCE, arch.spice->num_spice_model, arch.spice->spice_models);
         dump_verilog_routing_switch_box_subckt(cur_sram_orgz_info, verilog_dir, subckt_dir, &(sb_info[ix][iy]),
@@ -2927,8 +2966,8 @@ void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
 
   /* Connection Boxes */
   /* X - channels [1...nx][0..ny]*/
-  for (iy = 0; iy < (ny + 1); iy++) {
-    for (ix = 1; ix < (nx + 1); ix++) {
+  for (int iy = 0; iy < (ny + 1); iy++) {
+    for (int ix = 1; ix < (nx + 1); ix++) {
       /* vpr_printf(TIO_MESSAGE_INFO, "Writing X-direction Connection Boxes[%d][%d]...\n", ix, iy); */
       update_spice_models_routing_index_low(ix, iy, CHANX, arch.spice->num_spice_model, arch.spice->spice_models);
       if ((TRUE == is_cb_exist(CHANX, ix, iy))
@@ -2941,8 +2980,8 @@ void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
     }
   }
   /* Y - channels [1...ny][0..nx]*/
-  for (ix = 0; ix < (nx + 1); ix++) {
-    for (iy = 1; iy < (ny + 1); iy++) {
+  for (int ix = 0; ix < (nx + 1); ix++) {
+    for (int iy = 1; iy < (ny + 1); iy++) {
       /* vpr_printf(TIO_MESSAGE_INFO, "Writing Y-direction Connection Boxes[%d][%d]...\n", ix, iy); */
       update_spice_models_routing_index_low(ix, iy, CHANY, arch.spice->num_spice_model, arch.spice->spice_models);
       if ((TRUE == is_cb_exist(CHANY, ix, iy)) 
