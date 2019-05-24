@@ -1001,6 +1001,53 @@ void verilog_generate_sdc_disable_sram_orgz(FILE* fp,
   return;
 }
 
+static 
+void verilog_generate_sdc_disable_unused_sbs_muxs(FILE* fp) {
+
+  /* Check the file handler*/ 
+  if (NULL == fp) {
+    vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid file handler.\n", 
+               __FILE__, __LINE__); 
+    exit(1);
+  }
+
+  DeviceCoordinator sb_range = device_rr_switch_block.get_switch_block_range();
+
+  for (size_t ix = 0; ix < sb_range.get_x(); ++ix) {
+    for (size_t iy = 0; iy < sb_range.get_y(); ++iy) {
+      RRSwitchBlock rr_sb = device_rr_switch_block.get_switch_block(ix, iy);
+      /* Print comments */
+      fprintf(fp,
+              "########################################################\n"); 
+      fprintf(fp, 
+              "### Disable Timing for MUXES in Switch block[%lu][%lu] ###\n",
+              ix, iy);
+      fprintf(fp,
+              "########################################################\n"); 
+      for (size_t side = 0; side < rr_sb.get_num_sides(); ++side) {
+        Side side_manager(side);
+        for (size_t itrack = 0; itrack < rr_sb.get_chan_width(side_manager.get_side()); ++itrack) {
+          /* bypass non-mux pins */
+          if (OUT_PORT != rr_sb.get_chan_node_direction(side_manager.get_side(), itrack)) {
+            continue;
+          }
+          t_rr_node* cur_rr_node = rr_sb.get_chan_node(side_manager.get_side(), itrack);
+          for (int imux = 0 ; imux < cur_rr_node->fan_in; ++imux) {
+            if (imux == cur_rr_node->id_path) {
+              fprintf(fp, "#"); // comments out if the node is active
+            }
+//if(cur_rr_node->name_mux == NULL) assert (NULL != cur_rr_node->name_mux);
+            fprintf(fp, "set_disable_timing  %s[%d]\n", 
+                    cur_rr_node->name_mux, imux);
+          }
+        }
+      } 
+    }
+  }
+
+  return;
+}
+
 void verilog_generate_sdc_disable_unused_sbs_muxs(FILE* fp, int LL_nx, int LL_ny) {
 
   int ix, iy, side, itrack, imux;
@@ -2059,11 +2106,11 @@ void verilog_generate_sdc_analysis(t_sram_orgz_info* cur_sram_orgz_info,
   /* Apply to Switch blocks */
   if (TRUE == compact_routing_hierarchy) {
     verilog_generate_sdc_disable_unused_sbs(fp); 
+    verilog_generate_sdc_disable_unused_sbs_muxs(fp);
   } else {
     verilog_generate_sdc_disable_unused_sbs(fp, LL_nx, LL_ny); 
+    verilog_generate_sdc_disable_unused_sbs_muxs(fp, LL_nx, LL_ny);
   }
-
-  verilog_generate_sdc_disable_unused_sbs_muxs(fp, LL_nx, LL_ny);
 
   /* Apply to Grids */
   verilog_generate_sdc_disable_unused_grids(fp, LL_nx, LL_ny, LL_grid, LL_block);
