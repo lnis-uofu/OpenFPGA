@@ -754,6 +754,63 @@ void verilog_generate_sdc_constrain_one_chan(FILE* fp,
   return;
 }
 
+/** Disable timing analysis for a unused routing channel
+ */
+static 
+void verilog_generate_sdc_disable_one_unused_chan(FILE* fp, 
+                                                  int x, int y,
+                                                  const RRChan& rr_chan) {
+  /* Check the file handler */
+  if (NULL == fp) {
+    vpr_printf(TIO_MESSAGE_ERROR,
+               "(FILE:%s,LINE[%d])Invalid file handler for SDC generation",
+               __FILE__, __LINE__); 
+    exit(1);
+  } 
+
+  /* Print comments */
+  fprintf(fp,
+          "##################################################\n"); 
+  fprintf(fp, 
+          "### Disable Timing for an %s[%d][%d] ###\n",
+          convert_chan_type_to_string(rr_chan.get_type()),
+          x, y);
+  fprintf(fp,
+          "##################################################\n"); 
+
+  /* Collect rr_nodes for Tracks for chanx[ix][iy] */
+  for (size_t itrack = 0; itrack < rr_chan.get_chan_width(); ++itrack) {
+    /* We disable the timing of the input and output of a routing track,
+     * when it is not mapped to a net or it is a parasitic net
+     */
+    if (FALSE == is_rr_node_to_be_disable_for_analysis(rr_chan.get_node(itrack))) {
+      continue;
+    }
+    fprintf(fp, "set_disable_timing ");
+    fprintf(fp, "%s/in%lu", 
+            gen_verilog_one_routing_channel_instance_name(rr_chan.get_type(), x, y),
+            itrack);
+    fprintf(fp, "\n");
+
+    fprintf(fp, "set_disable_timing ");
+    fprintf(fp, "%s/out%lu", 
+            gen_verilog_one_routing_channel_instance_name(rr_chan.get_type(), x, y), 
+            itrack);
+    fprintf(fp, "\n");
+
+    fprintf(fp, "set_disable_timing ");
+    fprintf(fp, "%s/mid_out%lu", 
+            gen_verilog_one_routing_channel_instance_name(rr_chan.get_type(), x, y), 
+            itrack);
+    fprintf(fp, "\n");
+  }
+
+  /* Free */
+
+  return;
+}
+
+
 static 
 void verilog_generate_sdc_disable_one_unused_chan(FILE* fp, 
                                                   t_rr_type chan_type,
@@ -1261,6 +1318,40 @@ void verilog_generate_sdc_disable_unused_cbs(FILE* fp,
 
   return;
 }
+
+/* Constrain the inputs and outputs of Connection Blocks, with the Switch delays */
+static 
+void verilog_generate_sdc_disable_unused_routing_channels(FILE* fp, 
+                                                          int LL_nx, int LL_ny) {
+  int ix, iy;
+
+  /* Check the file handler */
+  if (NULL == fp) {
+    vpr_printf(TIO_MESSAGE_ERROR,
+               "(FILE:%s,LINE[%d])Invalid file handler for SDC generation",
+               __FILE__, __LINE__); 
+    exit(1);
+  } 
+
+  /* Routing channels */
+  /* X - channels [1...nx][0..ny]*/
+  for (iy = 0; iy < (LL_ny + 1); iy++) {
+    for (ix = 1; ix < (LL_nx + 1); ix++) {
+      verilog_generate_sdc_disable_one_unused_chan(fp, ix, iy,
+                                                   device_rr_chan.get_module_with_coordinator(CHANX, ix, iy));
+    }
+  }
+  /* Y - channels [1...ny][0..nx]*/
+  for (ix = 0; ix < (LL_nx + 1); ix++) {
+    for (iy = 1; iy < (LL_ny + 1); iy++) {
+      verilog_generate_sdc_disable_one_unused_chan(fp, ix, iy, 
+                                                   device_rr_chan.get_module_with_coordinator(CHANY, ix, iy));
+    }
+  }
+
+  return;
+}
+
 
 /* Constrain the inputs and outputs of Connection Blocks, with the Switch delays */
 static 
@@ -1953,9 +2044,13 @@ void verilog_generate_sdc_analysis(t_sram_orgz_info* cur_sram_orgz_info,
 
   /* Disable timing for un-used resources */
   /* Apply to Routing Channels */
-  verilog_generate_sdc_disable_unused_routing_channels(fp, LL_nx, LL_ny, 
-                                                       LL_num_rr_nodes, LL_rr_node, 
-                                                       LL_rr_node_indices);
+  if (TRUE == compact_routing_hierarchy) {
+    verilog_generate_sdc_disable_unused_routing_channels(fp, LL_nx, LL_ny);
+  } else {
+    verilog_generate_sdc_disable_unused_routing_channels(fp, LL_nx, LL_ny, 
+                                                         LL_num_rr_nodes, LL_rr_node, 
+                                                         LL_rr_node_indices);
+  }
 
   /* Apply to Connection blocks */
   verilog_generate_sdc_disable_unused_cbs(fp, LL_nx, LL_ny); 
