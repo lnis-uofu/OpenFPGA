@@ -198,13 +198,17 @@ class DeviceRRSwitchBlock {
   public: /* Contructors */
   public: /* Accessors */
     DeviceCoordinator get_switch_block_range() const; /* get the max coordinator of the switch block array */
-    RRSwitchBlock get_switch_block(DeviceCoordinator coordinator) const; /* Get a rr switch block in the array with a coordinator */
+    RRSwitchBlock get_switch_block(DeviceCoordinator& coordinator) const; /* Get a rr switch block in the array with a coordinator */
     RRSwitchBlock get_switch_block(size_t x, size_t y) const; /* Get a rr switch block in the array with a coordinator */
     size_t get_num_unique_mirror() const; /* get the number of unique mirrors of switch blocks */
     size_t get_num_rotatable_mirror() const; /* get the number of rotatable mirrors of switch blocks */
     RRSwitchBlock get_unique_mirror(size_t index) const; /* Get a rr switch block which a unique mirror */ 
+    RRSwitchBlock get_unique_mirror(DeviceCoordinator& coordinator) const; /* Get a rr switch block which a unique mirror */ 
     RRSwitchBlock get_rotatable_mirror(size_t index) const; /* Get a rr switch block which a unique mirror */ 
   public: /* Mutators */
+    void set_rr_switch_block_num_reserved_conf_bits(DeviceCoordinator& coordinator, size_t num_reserved_conf_bits); /* TODO: TOBE DEPRECATED!!! conf_bits should be initialized when creating a switch block!!! */
+    void set_rr_switch_block_conf_bits_lsb(DeviceCoordinator& coordinator, size_t conf_bits_lsb); /* TODO: TOBE DEPRECATED!!! conf_bits should be initialized when creating a switch block!!! */
+    void set_rr_switch_block_conf_bits_msb(DeviceCoordinator& coordinator, size_t conf_bits_msb); /* TODO: TOBE DEPRECATED!!! conf_bits should be initialized when creating a switch block!!! */
     void reserve(DeviceCoordinator& coordinator); /* Pre-allocate the rr_switch_block array that the device requires */ 
     void resize_upon_need(DeviceCoordinator& coordinator); /* Resize the rr_switch_block array if needed */ 
     void add_rr_switch_block(DeviceCoordinator& coordinator, RRSwitchBlock& rr_switch_block); /* Add a switch block to the array, which will automatically identify and update the lists of unique mirrors and rotatable mirrors */
@@ -215,6 +219,7 @@ class DeviceRRSwitchBlock {
     bool validate_rotatable_mirror_index(size_t index) const; /* Validate if the index in the range of unique_mirror vector*/
   private: /* Internal Data */
     std::vector< std::vector<RRSwitchBlock> > rr_switch_block_;
+    std::vector< std::vector<size_t> > rr_switch_block_mirror_id_; /* A map from rr_switch_block to its unique mirror */
     std::vector<DeviceCoordinator> unique_mirror_; 
     std::vector<DeviceCoordinator> rotatable_mirror_; 
 };

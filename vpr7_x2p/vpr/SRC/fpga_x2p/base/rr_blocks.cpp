@@ -998,7 +998,7 @@ DeviceCoordinator DeviceRRSwitchBlock::get_switch_block_range() const {
 } 
 
 /* Get a rr switch block in the array with a coordinator */
-RRSwitchBlock DeviceRRSwitchBlock::get_switch_block(DeviceCoordinator coordinator) const {
+RRSwitchBlock DeviceRRSwitchBlock::get_switch_block(DeviceCoordinator& coordinator) const {
   assert(validate_coordinator(coordinator));
   return rr_switch_block_[coordinator.get_x()][coordinator.get_y()];
 } 
@@ -1026,6 +1026,13 @@ RRSwitchBlock DeviceRRSwitchBlock::get_unique_mirror(size_t index) const {
   return rr_switch_block_[unique_mirror_[index].get_x()][unique_mirror_[index].get_y()];
 }
 
+/* Give a coordinator of a rr switch block, and return its unique mirror */ 
+RRSwitchBlock DeviceRRSwitchBlock::get_unique_mirror(DeviceCoordinator& coordinator) const {
+  assert(validate_coordinator(coordinator));
+  size_t unique_mirror_id = rr_switch_block_mirror_id_[coordinator.get_x()][coordinator.get_y()];  
+  return get_unique_mirror(unique_mirror_id);
+} 
+
 /* Get a rr switch block which a unique mirror */ 
 RRSwitchBlock DeviceRRSwitchBlock::get_rotatable_mirror(size_t index) const {
   assert (validate_rotatable_mirror_index(index));
@@ -1035,11 +1042,34 @@ RRSwitchBlock DeviceRRSwitchBlock::get_rotatable_mirror(size_t index) const {
 
 /* Public Mutators */
 
+/* TODO: TOBE DEPRECATED!!! conf_bits should be initialized when creating a switch block!!! */
+void DeviceRRSwitchBlock::set_rr_switch_block_num_reserved_conf_bits(DeviceCoordinator& coordinator, size_t num_reserved_conf_bits) {
+  assert(validate_coordinator(coordinator));
+  rr_switch_block_[coordinator.get_x()][coordinator.get_y()].set_num_reserved_conf_bits(num_reserved_conf_bits);
+  return;
+} 
+
+/* TODO: TOBE DEPRECATED!!! conf_bits should be initialized when creating a switch block!!! */
+void DeviceRRSwitchBlock::set_rr_switch_block_conf_bits_lsb(DeviceCoordinator& coordinator, size_t conf_bits_lsb) { 
+  assert(validate_coordinator(coordinator));
+  rr_switch_block_[coordinator.get_x()][coordinator.get_y()].set_conf_bits_lsb(conf_bits_lsb);
+  return;
+}
+
+/* TODO: TOBE DEPRECATED!!! conf_bits should be initialized when creating a switch block!!! */
+void DeviceRRSwitchBlock::set_rr_switch_block_conf_bits_msb(DeviceCoordinator& coordinator, size_t conf_bits_msb) { 
+  assert(validate_coordinator(coordinator));
+  rr_switch_block_[coordinator.get_x()][coordinator.get_y()].set_conf_bits_msb(conf_bits_msb);
+  return;
+}
+
 /* Pre-allocate the rr_switch_block array that the device requires */ 
 void DeviceRRSwitchBlock::reserve(DeviceCoordinator& coordinator) { 
-  rr_switch_block_.reserve(coordinator.get_x());
+  rr_switch_block_.resize(coordinator.get_x());
+  rr_switch_block_mirror_id_.resize(coordinator.get_x());
   for (size_t x = 0; x < coordinator.get_x(); ++x) {
-    rr_switch_block_[x].reserve(coordinator.get_y()); 
+    rr_switch_block_[x].resize(coordinator.get_y()); 
+    rr_switch_block_mirror_id_[x].resize(coordinator.get_y()); 
   }
   return;
 }
@@ -1048,10 +1078,12 @@ void DeviceRRSwitchBlock::reserve(DeviceCoordinator& coordinator) {
 void DeviceRRSwitchBlock::resize_upon_need(DeviceCoordinator& coordinator) { 
   if (coordinator.get_x() + 1 > rr_switch_block_.capacity()) {
     rr_switch_block_.resize(coordinator.get_x());
+    rr_switch_block_mirror_id_.resize(coordinator.get_x());
   }
 
   if (coordinator.get_y() + 1 > rr_switch_block_[coordinator.get_x()].capacity()) {
     rr_switch_block_[coordinator.get_x()].resize(coordinator.get_y());
+    rr_switch_block_mirror_id_[coordinator.get_x()].resize(coordinator.get_y());
   }
   
   return;
@@ -1073,12 +1105,16 @@ void DeviceRRSwitchBlock::add_rr_switch_block(DeviceCoordinator& coordinator,
     if (true == get_switch_block(unique_mirror_[mirror_id]).is_mirror(rr_switch_block)) {
       /* This is a mirror, raise the flag and we finish */
       is_unique_mirror = false;
+      /* Record the id of unique mirror */
+      rr_switch_block_mirror_id_[coordinator.get_x()][coordinator.get_y()] = mirror_id; 
       break;
     }
   }
   /* Add to list if this is a unique mirror*/
   if (true == is_unique_mirror) {
     unique_mirror_.push_back(coordinator);
+    /* Record the id of unique mirror */
+    rr_switch_block_mirror_id_[coordinator.get_x()][coordinator.get_y()] = unique_mirror_.size() - 1; 
   }
 
   /* TODO: add rotatable mirror support */

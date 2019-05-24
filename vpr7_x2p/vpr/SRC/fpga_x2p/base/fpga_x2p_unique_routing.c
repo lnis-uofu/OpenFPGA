@@ -1068,11 +1068,11 @@ DeviceRRSwitchBlock build_device_rr_switch_blocks(int LL_num_rr_nodes,
   LL_device_rr_switch_block.reserve(device_coordinator);
 
   /* For each switch block, determine the size of array */
-  for (int ix = 0; ix < (nx + 1); ++ix) {
-    for (int iy = 0; iy < (ny + 1); ++iy) {
+  for (int ix = 0; ix < nx + 1; ++ix) {
+    for (int iy = 0; iy < ny + 1; ++iy) {
       RRSwitchBlock rr_switch_block = build_rr_switch_block(ix, iy, 
                                                             LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices);
-      DeviceCoordinator sb_coordinator(ix, iy);
+      DeviceCoordinator sb_coordinator((size_t)ix, (size_t)iy);
       LL_device_rr_switch_block.add_rr_switch_block(sb_coordinator, rr_switch_block);
     }
   }

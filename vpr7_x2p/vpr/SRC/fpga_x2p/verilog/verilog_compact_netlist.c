@@ -747,9 +747,7 @@ void dump_compact_verilog_defined_grids(t_sram_orgz_info* cur_sram_orgz_info,
 static 
 void dump_compact_verilog_defined_one_switch_box(t_sram_orgz_info* cur_sram_orgz_info, 
                                                  FILE* fp,
-                                                 t_sb cur_sb_info) {
-  int ix, iy, side, itrack, x, y, inode;
-
+                                                 RRSwitchBlock& rr_sb) {
   /* Check the file handler*/ 
   if (NULL == fp) {
     vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid file handler.\n", 
@@ -758,25 +756,17 @@ void dump_compact_verilog_defined_one_switch_box(t_sram_orgz_info* cur_sram_orgz
   }
 
   /* Check */
-  assert((!(0 > cur_sb_info.x))&&(!(cur_sb_info.x > (nx + 1)))); 
-  assert((!(0 > cur_sb_info.y))&&(!(cur_sb_info.y > (ny + 1)))); 
-
-  x = cur_sb_info.x;
-  y = cur_sb_info.y;
 
   /* Comment lines */                 
-  fprintf(fp, "//----- BEGIN call module Switch blocks [%d][%d] -----\n", 
-          cur_sb_info.x, cur_sb_info.y);
+  fprintf(fp, "//----- BEGIN call module Switch blocks [%lu][%lu] -----\n", 
+          rr_sb.get_x(), rr_sb.get_y());
   /* Print module*/
 
   /* If we have an mirror SB, we should the module name of the mirror !!! */
-  if (NULL != cur_sb_info.mirror) {
-    fprintf(fp, "%s ", gen_verilog_one_sb_module_name(cur_sb_info.mirror));
-  } else {
-    fprintf(fp, "%s ", gen_verilog_one_sb_module_name(&cur_sb_info));
-  }
-
-  fprintf(fp, "%s ", gen_verilog_one_sb_instance_name(&cur_sb_info));
+  DeviceCoordinator coordinator = rr_sb.get_coordinator();
+  RRSwitchBlock unique_mirror = device_rr_switch_block.get_unique_mirror(coordinator);
+  fprintf(fp, "%s ", unique_mirror.gen_verilog_module_name());
+  fprintf(fp, "%s ", rr_sb.gen_verilog_instance_name());
   fprintf(fp, "(");
 
   fprintf(fp, "\n");
@@ -785,24 +775,25 @@ void dump_compact_verilog_defined_one_switch_box(t_sram_orgz_info* cur_sram_orgz
     fprintf(fp, ",\n");
   }
 
-  for (side = 0; side < cur_sb_info.num_sides; side++) {
-    determine_sb_port_coordinator(cur_sb_info, side, &ix, &iy); 
+  for (size_t side = 0; side < rr_sb.get_num_sides(); ++side) {
+    Side side_manager(side);
+    DeviceCoordinator chan_coordinator = rr_sb.get_side_block_coordinator(side_manager.get_side()); 
 
     fprintf(fp, "//----- %s side channel ports-----\n", convert_side_index_to_string(side));
-    for (itrack = 0; itrack < cur_sb_info.chan_width[side]; itrack++) {
+    for (size_t itrack = 0; itrack < rr_sb.get_chan_width(side_manager.get_side()); ++itrack) {
       fprintf(fp, "%s,\n",
-              gen_verilog_routing_channel_one_pin_name(cur_sb_info.chan_rr_node[side][itrack],
-                                                       ix, iy, itrack, 
-                                                       cur_sb_info.chan_rr_node_direction[side][itrack]));
+              gen_verilog_routing_channel_one_pin_name(rr_sb.get_chan_node(side_manager.get_side(), itrack),
+                                                       chan_coordinator.get_x(), chan_coordinator.get_y(), itrack, 
+                                                       rr_sb.get_chan_node_direction(side_manager.get_side(), itrack)));
     }
     fprintf(fp, "//----- %s side inputs: CLB output pins -----\n", convert_side_index_to_string(side));
     /* Dump OPINs of adjacent CLBs */
-    for (inode = 0; inode < cur_sb_info.num_opin_rr_nodes[side]; inode++) {
+    for (size_t inode = 0; inode < rr_sb.get_num_opin_nodes(side_manager.get_side()); ++inode) {
       dump_verilog_grid_side_pin_with_given_index(fp, IPIN,
-                                                  cur_sb_info.opin_rr_node[side][inode]->ptc_num,
-                                                  cur_sb_info.opin_rr_node_grid_side[side][inode],
-                                                  cur_sb_info.opin_rr_node[side][inode]->xlow,
-                                                  cur_sb_info.opin_rr_node[side][inode]->ylow,
+                                                  rr_sb.get_opin_node(side_manager.get_side(), inode)->ptc_num,
+                                                  rr_sb.get_opin_node_grid_side(side_manager.get_side(), inode),
+                                                  rr_sb.get_opin_node(side_manager.get_side(), inode)->xlow,
+                                                  rr_sb.get_opin_node(side_manager.get_side(), inode)->ylow,
                                                   FALSE); /* Do not specify the direction of port */ 
       fprintf(fp, ", ");
     } 
@@ -812,28 +803,29 @@ void dump_compact_verilog_defined_one_switch_box(t_sram_orgz_info* cur_sram_orgz
   /* Configuration ports */
   /* output of each configuration bit */
   /* Reserved sram ports */
-  if (0 < (cur_sb_info.num_reserved_conf_bits)) {
+  if (0 < (rr_sb.get_num_reserved_conf_bits())) {
     dump_verilog_reserved_sram_ports(fp, cur_sram_orgz_info, 
-                                     0, cur_sb_info.num_reserved_conf_bits - 1,
+                                     rr_sb.get_reserved_conf_bits_lsb(), 
+                                     rr_sb.get_reserved_conf_bits_msb(),
                                      VERILOG_PORT_CONKT);
     fprintf(fp, ",\n");
   }
   /* Normal sram ports */
-  if (0 < (cur_sb_info.conf_bits_msb - cur_sb_info.conf_bits_lsb)) {
+  if (0 < rr_sb.get_num_conf_bits()) {
     dump_verilog_sram_local_ports(fp, cur_sram_orgz_info, 
-                                  cur_sb_info.conf_bits_lsb, 
-                                  cur_sb_info.conf_bits_msb - 1,
+                                  rr_sb.get_conf_bits_lsb(), 
+                                  rr_sb.get_conf_bits_msb(),
                                   VERILOG_PORT_CONKT);
   }
 
   /* Dump ports only visible during formal verification*/
-  if (0 < (cur_sb_info.conf_bits_msb - 1 - cur_sb_info.conf_bits_lsb)) {
+  if (0 < rr_sb.get_num_conf_bits()) {
     fprintf(fp, "\n");
     fprintf(fp, "`ifdef %s\n", verilog_formal_verification_preproc_flag);
     fprintf(fp, ",\n");
     dump_verilog_formal_verification_sram_ports(fp, cur_sram_orgz_info, 
-                                                cur_sb_info.conf_bits_lsb, 
-                                                cur_sb_info.conf_bits_msb - 1,
+                                                rr_sb.get_conf_bits_lsb(), 
+                                                rr_sb.get_conf_bits_msb(),
                                                 VERILOG_PORT_CONKT);
     fprintf(fp, "\n");
     fprintf(fp, "`endif\n");
@@ -841,7 +833,9 @@ void dump_compact_verilog_defined_one_switch_box(t_sram_orgz_info* cur_sram_orgz
   fprintf(fp, ");\n");
 
   /* Comment lines */                 
-  fprintf(fp, "//----- END call module Switch blocks [%d][%d] -----\n\n", x, y);
+  fprintf(fp, 
+          "//----- END call module Switch blocks [%lu][%lu] -----\n\n", 
+          rr_sb.get_x(), rr_sb.get_y());
 
   /* Free */
 
@@ -851,8 +845,7 @@ void dump_compact_verilog_defined_one_switch_box(t_sram_orgz_info* cur_sram_orgz
 
 void dump_compact_verilog_defined_switch_boxes(t_sram_orgz_info* cur_sram_orgz_info, 
                                                FILE* fp) {
-  int ix, iy;
-
+  DeviceCoordinator sb_range = device_rr_switch_block.get_switch_block_range();
   /* Check the file handler*/ 
   if (NULL == fp) {
     vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid file handler.\n", 
@@ -860,9 +853,10 @@ void dump_compact_verilog_defined_switch_boxes(t_sram_orgz_info* cur_sram_orgz_i
     exit(1);
   }
 
-  for (ix = 0; ix < (nx + 1); ix++) {
-    for (iy = 0; iy < (ny + 1); iy++) {
-      dump_compact_verilog_defined_one_switch_box(cur_sram_orgz_info, fp, sb_info[ix][iy]);
+  for (size_t ix = 0; ix < sb_range.get_x(); ++ix) {
+    for (size_t iy = 0; iy < sb_range.get_y(); ++iy) {
+      RRSwitchBlock rr_sb = device_rr_switch_block.get_switch_block(ix, iy);
+      dump_compact_verilog_defined_one_switch_box(cur_sram_orgz_info, fp, rr_sb);
     }
   }
 

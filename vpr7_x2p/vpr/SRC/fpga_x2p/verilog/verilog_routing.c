@@ -1738,7 +1738,6 @@ size_t count_verilog_switch_box_conf_bits(t_sram_orgz_info* cur_sram_orgz_info,
   return num_conf_bits;
 }
 
-
 /* Task: Print the subckt of a Switch Box.
  * A Switch Box subckt consists of following ports:
  * 1. Channel Y [x][y] inputs 
@@ -1788,10 +1787,14 @@ void dump_verilog_routing_switch_box_unique_subckt(t_sram_orgz_info* cur_sram_or
   /* Estimate the sram_verilog_model->cnt */
   int cur_num_sram = get_sram_orgz_info_num_mem_bit(cur_sram_orgz_info); 
   int esti_sram_cnt = cur_num_sram + num_conf_bits;
-  /* Record the index */
+  /* Record the index: TODO: clean this mess, move to FPGA_X2P_SETUP !!!*/
+  DeviceCoordinator sb_coordinator(rr_sb.get_x(), rr_sb.get_y());
+  device_rr_switch_block.set_rr_switch_block_num_reserved_conf_bits(sb_coordinator, num_reserved_conf_bits);
+  device_rr_switch_block.set_rr_switch_block_conf_bits_lsb(sb_coordinator, cur_num_sram);
+  device_rr_switch_block.set_rr_switch_block_conf_bits_msb(sb_coordinator, cur_num_sram + num_conf_bits - 1);
   rr_sb.set_num_reserved_conf_bits(num_reserved_conf_bits);
   rr_sb.set_conf_bits_lsb(cur_num_sram);
-  rr_sb.set_conf_bits_msb(cur_num_sram + num_conf_bits);
+  rr_sb.set_conf_bits_msb(cur_num_sram + num_conf_bits - 1);
  
   /* Create file handler */
   fp = verilog_create_one_subckt_file(subckt_dir, "Unique Switch Block ", 
@@ -1881,7 +1884,7 @@ void dump_verilog_routing_switch_box_unique_subckt(t_sram_orgz_info* cur_sram_or
   /* Local wires for memory configurations */
   dump_verilog_sram_config_bus_internal_wires(fp, cur_sram_orgz_info, 
                                               rr_sb.get_conf_bits_lsb(),
-                                              rr_sb.get_conf_bits_msb() - 1);
+                                              rr_sb.get_conf_bits_msb());
 
   /* Put down all the multiplexers */
   for (size_t side = 0; side < rr_sb.get_num_sides(); ++side) {
