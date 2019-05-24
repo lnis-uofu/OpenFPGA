@@ -65,7 +65,6 @@ void dump_verilog_one_sb_chan_pin(FILE* fp,
                                   enum PORTS port_type) {
   int track_idx;
   enum e_side side;
-  int x_start, y_start;
   char* pin_name;
 
   /* Check the file handler */
@@ -82,9 +81,12 @@ void dump_verilog_one_sb_chan_pin(FILE* fp,
   /* Get the coordinate of chanx or chany*/
   /* Find the coordinate of the cur_rr_node */  
   rr_sb.get_node_side_and_index(cur_rr_node, port_type, &side, &track_idx);
+  DeviceCoordinator chan_coordinator = rr_sb.get_side_block_coordinator(side);
   /* Print the pin of the cur_rr_node */ 
   pin_name = gen_verilog_routing_channel_one_pin_name(cur_rr_node,
-                                                      x_start, y_start, track_idx, 
+                                                      chan_coordinator.get_x(), 
+                                                      chan_coordinator.get_y(), 
+                                                      track_idx, 
                                                       port_type);
   fprintf(fp, "%s", pin_name);
   my_free(pin_name);

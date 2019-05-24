@@ -245,6 +245,48 @@ void free_wire_L_llist(t_llist* rr_path_cnt) {
  */
 static 
 void verilog_generate_one_report_timing_within_sb(FILE* fp,
+                                                  RRSwitchBlock& rr_sb,
+                                                  t_rr_node* src_rr_node,
+                                                  t_rr_node* des_rr_node) {
+  /* Check the file handler */
+  if (NULL == fp) {
+    vpr_printf(TIO_MESSAGE_ERROR,
+               "(FILE:%s,LINE[%d])Invalid file handler for SDC generation",
+               __FILE__, __LINE__); 
+    exit(1);
+  } 
+
+  /* Check */
+  assert ( (CHANX == src_rr_node->type) || (CHANY == src_rr_node->type) || (OPIN == src_rr_node->type) );
+  assert ( (CHANX == des_rr_node->type) || (CHANY == des_rr_node->type) );
+
+  fprintf(fp, "report_timing -from "); 
+
+  /* output instance name */
+  fprintf(fp, "%s/", 
+          rr_sb.gen_verilog_instance_name()); 
+  /* Find which side the ending pin locates, and determine the coordinate */
+  dump_verilog_one_sb_routing_pin(fp, rr_sb, src_rr_node);
+
+  fprintf(fp, " -to "); 
+
+  /* output instance name */
+  fprintf(fp, "%s/",
+          rr_sb.gen_verilog_instance_name()); 
+  /* Find which side the ending pin locates, and determine the coordinate */
+  dump_verilog_one_sb_chan_pin(fp, rr_sb, des_rr_node, OUT_PORT); 
+
+  fprintf(fp, " -point_to_point"); 
+  fprintf(fp, " -unconstrained"); 
+
+  return;
+}
+
+
+/* Reporting timing from a SB input to an output
+ */
+static 
+void verilog_generate_one_report_timing_within_sb(FILE* fp,
                                                  t_sb* cur_sb_info,
                                                  t_rr_node* src_rr_node,
                                                  t_rr_node* des_rr_node) {
@@ -324,6 +366,91 @@ void verilog_generate_one_report_timing_sb_to_cb(FILE* fp,
 
   return;
 }
+
+/* Reporting timing from a SB output to another CB input
+ */
+static 
+void verilog_generate_one_report_timing_sb_to_cb(FILE* fp,
+                                                 RRSwitchBlock& src_sb,
+                                                 t_rr_node* src_rr_node,
+                                                 t_cb* des_cb_info,
+                                                 t_rr_node* des_rr_node) {
+  /* Check the file handler */
+  if (NULL == fp) {
+    vpr_printf(TIO_MESSAGE_ERROR,
+               "(FILE:%s,LINE[%d])Invalid file handler for SDC generation",
+               __FILE__, __LINE__); 
+    exit(1);
+  } 
+
+  /* Check */
+  assert ( (CHANX == src_rr_node->type) || (CHANY == src_rr_node->type) );
+  assert ( (IPIN == des_rr_node->type) );
+
+  fprintf(fp, "report_timing -from "); 
+  /* output instance name */
+  fprintf(fp, "%s/", 
+              src_sb.gen_verilog_instance_name()); 
+  /* output pin name */
+  dump_verilog_one_sb_chan_pin(fp, src_sb, 
+                               src_rr_node, OUT_PORT); 
+  fprintf(fp, " -to "); 
+  /* output instance name */
+  fprintf(fp, "%s/",
+          gen_verilog_one_cb_instance_name(des_cb_info));
+  /* output pin name */
+  fprintf(fp, "%s",
+          gen_verilog_routing_channel_one_midout_name( des_cb_info,
+                                                       src_rr_node->ptc_num));
+
+  fprintf(fp, " -point_to_point"); 
+  fprintf(fp, " -unconstrained"); 
+
+  return;
+}
+
+/* Reporting timing from a SB output to another SB input
+ */
+static 
+void verilog_generate_one_report_timing_sb_to_sb(FILE* fp,
+                                                 RRSwitchBlock& src_sb,
+                                                 t_rr_node* src_rr_node,
+                                                 RRSwitchBlock& des_sb,
+                                                 t_rr_node* des_rr_node) {
+  /* Check the file handler */
+  if (NULL == fp) {
+    vpr_printf(TIO_MESSAGE_ERROR,
+               "(FILE:%s,LINE[%d])Invalid file handler for SDC generation",
+               __FILE__, __LINE__); 
+    exit(1);
+  } 
+
+  /* Check */
+  assert ( (CHANX == src_rr_node->type) || (CHANY == src_rr_node->type) );
+  assert ( (CHANX == des_rr_node->type) || (CHANY == des_rr_node->type) );
+
+  fprintf(fp, "report_timing -from "); 
+
+  /* output instance name */
+  fprintf(fp, "%s/", 
+          src_sb.gen_verilog_instance_name()); 
+  /* Find which side the ending pin locates, and determine the coordinate */
+  dump_verilog_one_sb_chan_pin(fp, src_sb, src_rr_node, OUT_PORT); 
+
+  fprintf(fp, " -to "); 
+
+  /* output instance name */
+  fprintf(fp, "%s/",
+          des_sb.gen_verilog_instance_name());
+  /* Find which side the ending pin locates, and determine the coordinate */
+  dump_verilog_one_sb_chan_pin(fp, des_sb, des_rr_node, IN_PORT); 
+
+  fprintf(fp, " -point_to_point"); 
+  fprintf(fp, " -unconstrained"); 
+
+  return;
+}
+
 
 /* Reporting timing from a SB output to another SB input
  */
@@ -470,6 +597,54 @@ void build_ending_rr_node_for_one_sb_wire(t_rr_node* wire_rr_node,
  */
 static 
 void verilog_generate_report_timing_one_sb_thru_segments(FILE* fp, 
+                                                         RRSwitchBlock src_sb,
+                                                         t_rr_node* src_rr_node, 
+                                                         RRSwitchBlock des_sb,
+                                                         t_rr_node* des_rr_node,
+                                                         char* rpt_name) {
+  /* Check the file handler */
+  if (NULL == fp) {
+    vpr_printf(TIO_MESSAGE_ERROR,
+               "(FILE:%s,LINE[%d])Invalid file handler for SDC generation",
+               __FILE__, __LINE__); 
+    exit(1);
+  } 
+
+
+  /* Report timing for the downstream segements, from a SB output to an adjacent SB input */
+  verilog_generate_one_report_timing_sb_to_sb(fp, src_sb, src_rr_node, 
+                                              des_sb, des_rr_node);
+
+  if (NULL != rpt_name) {
+    fprintf(fp, " >> %s\n", rpt_name); 
+  } else {
+    fprintf(fp, "\n"); 
+  }
+
+  /* Report timing for the downstream segements, within a SB */
+  verilog_generate_one_report_timing_within_sb(fp, des_sb,
+                                               des_rr_node, des_rr_node);
+
+  if (NULL != rpt_name) {
+    fprintf(fp, " >> %s\n", rpt_name); 
+  } else {
+    fprintf(fp, "\n"); 
+  }
+
+  return;
+}
+
+
+/* Generate the report timing commands for a through wire across two SBs
+ * This includes a sb-to-sb wire and a within-sb wire
+ *  --------       -------- 
+ * | src_sb |      |des_sb |
+ * |        |----->|------>|
+ * |[x-1][y]|      | [x][y]|
+ *  --------       -------- 
+ */
+static 
+void verilog_generate_report_timing_one_sb_thru_segments(FILE* fp, 
                                                          t_sb* src_sb_info,
                                                          t_rr_node* src_rr_node, 
                                                          t_sb* des_sb_info,
@@ -506,6 +681,64 @@ void verilog_generate_report_timing_one_sb_thru_segments(FILE* fp,
 
   return;
 }
+
+/* Generate the report timing commands for a through wire across two SBs
+ * This includes either a sb-to-sb wire or a sb-to-cb wire
+ *  --------       ------- 
+ * | src_sb |      |des_cb |
+ * |        |----->|------>|
+ * |[x-1][y]|      | [x][y]|
+ *  --------       ------- 
+ */
+static 
+void verilog_generate_report_timing_one_sb_ending_segments(FILE* fp, 
+                                                           RRSwitchBlock& src_sb,
+                                                           t_rr_node* src_rr_node, 
+                                                           t_rr_node* des_rr_node,
+                                                           char* rpt_name) {
+  t_cb* next_cb = NULL;
+  DeviceCoordinator next_sb_coordinator;
+  RRSwitchBlock next_sb;
+
+  /* Check the file handler */
+  if (NULL == fp) {
+    vpr_printf(TIO_MESSAGE_ERROR,
+               "(FILE:%s,LINE[%d])Invalid file handler for SDC generation",
+               __FILE__, __LINE__); 
+    exit(1);
+  } 
+
+  switch (des_rr_node->type) {
+  case IPIN:
+    /* Get the coordinate of ending CB */
+    next_cb = get_chan_rr_node_ending_cb(src_rr_node, des_rr_node);
+    verilog_generate_one_report_timing_sb_to_cb(fp, src_sb, src_rr_node, 
+                                                next_cb, des_rr_node);
+    break;
+  case CHANX:
+  case CHANY:
+    /* Get the coordinate of ending SB */
+    next_sb_coordinator = get_chan_node_ending_sb_coordinator(src_rr_node, des_rr_node);
+    next_sb = device_rr_switch_block.get_switch_block(next_sb_coordinator); 
+    verilog_generate_one_report_timing_sb_to_sb(fp, src_sb, src_rr_node, 
+                                                next_sb, src_rr_node);
+    break;
+  default:
+    vpr_printf(TIO_MESSAGE_ERROR, "(File: %s [LINE%d]) Invalid type of ending point rr_node!\n",
+               __FILE__, __LINE__);
+ 
+    exit(1);
+  }
+
+  if (NULL != rpt_name) {
+    fprintf(fp, " >> %s\n", rpt_name); 
+  } else {
+    fprintf(fp, "\n"); 
+  }
+
+  return;
+}
+
 
 /* Generate the report timing commands for a through wire across two SBs
  * This includes either a sb-to-sb wire or a sb-to-cb wire
@@ -561,6 +794,270 @@ void verilog_generate_report_timing_one_sb_ending_segments(FILE* fp,
 
   return;
 }
+
+/* Print the pins of SBs that a routing wire will go through 
+ * from the src_rr_node to the des_rr_node 
+ */
+static 
+void dump_verilog_one_sb_wire_segemental_report_timing(FILE* fp,
+                                                       t_syn_verilog_opts fpga_verilog_opts,
+                                                       RRSwitchBlock& src_sb,
+                                                       t_rr_node* drive_rr_node, 
+                                                       t_rr_node* src_rr_node, 
+                                                       t_rr_node* des_rr_node,
+                                                       int path_cnt) {
+  int L_wire;
+  int cur_sb_x, cur_sb_y;
+  int end_sb_x, end_sb_y;
+  t_cb* next_cb = NULL;
+  char* rpt_name = NULL;
+  DeviceCoordinator next_sb_coordinator;
+  RRSwitchBlock next_sb;
+
+  /* Check the file handler */
+  if (NULL == fp) {
+    vpr_printf(TIO_MESSAGE_ERROR,
+               "(FILE:%s,LINE[%d])Invalid file handler for SDC generation",
+               __FILE__, __LINE__); 
+    exit(1);
+  } 
+
+  /* Check */
+  assert ((INC_DIRECTION == src_rr_node->direction)
+        ||(DEC_DIRECTION == src_rr_node->direction));
+  assert ((CHANX == src_rr_node->type)
+        ||(CHANY == src_rr_node->type));
+
+  L_wire = get_rr_node_wire_length(src_rr_node);
+
+  /* Get report name */
+  rpt_name = gen_verilog_one_routing_report_timing_rpt_name(fpga_verilog_opts.report_timing_path,
+                                                            L_wire, path_cnt);
+
+  /* Start printing report timing info  */
+  fprintf(fp, "# L%d wire, Path ID: %d\n", 
+          L_wire,
+          path_cnt); 
+  /* Report timing for the SB MUX delay, from the drive_rr_node to the wire_rr_node */
+  verilog_generate_one_report_timing_within_sb(fp, src_sb, 
+                                               drive_rr_node, 
+                                               src_rr_node); 
+  if (NULL != rpt_name) {
+    fprintf(fp, " > %s\n", rpt_name); 
+  } else {
+    fprintf(fp, "\n"); 
+  }
+
+  /* Switch depends on the type of des_rr_node  */
+  switch(des_rr_node->type) {
+  /* Range of SBs that on the path                        
+   *                             ---------
+   *                            |         |        
+   *                            |  des_sb |
+   *                            | [x][y]  |        
+   *                             ---------
+   *                                /|\ 
+   *                                 |  
+   *                             ---------
+   *                            |         |        
+   *                            | thru_cb |
+   *                            |         |        
+   *                             ---------
+   *                                /|\ 
+   *                                 |  
+   *  --------      -------      ---------      -------      --------
+   * |        |    |       |    |         |    |       |    |        |
+   * | des_sb |<---|thru_cb|<---| src_sb  |--->|thru_cb|--->| des_sb |
+   * |[x-1][y]|    | [x][y]|    |         |    | [x][y]|    |[x][y]  |
+   *  --------      -------      ---------      -------      --------
+   *                                 |
+   *                                \|/
+   *                             ---------
+   *                            |         |        
+   *                            | thru_cb |
+   *                            |         |        
+   *                             ---------
+   *                                 |
+   *                                \|/
+   *                             ---------
+   *                            |         |        
+   *                            |  des_sb |
+   *                            | [x][y-1]|        
+   *                             ---------
+   */
+  case IPIN: 
+    /* Get the coordinate of ending CB */
+    next_cb = get_chan_rr_node_ending_cb(src_rr_node, des_rr_node);
+    assert(next_cb->type == src_rr_node->type);
+    /* 4 cases: */
+    if ((INC_DIRECTION == src_rr_node->direction) 
+       &&(CHANX == src_rr_node->type)) {
+      end_sb_x = next_cb->x; 
+      end_sb_y = next_cb->y;
+    } else if ((INC_DIRECTION == src_rr_node->direction) 
+       &&(CHANY == src_rr_node->type)) {
+      end_sb_x = next_cb->x; 
+      end_sb_y = next_cb->y;
+    } else if ((DEC_DIRECTION == src_rr_node->direction) 
+       &&(CHANX == src_rr_node->type)) {
+      end_sb_x = next_cb->x - 1; 
+      end_sb_y = next_cb->y;
+    } else if ((DEC_DIRECTION == src_rr_node->direction) 
+       &&(CHANY == src_rr_node->type)) {
+      end_sb_x = next_cb->x; 
+      end_sb_y = next_cb->y - 1;
+    }
+    break;
+  /* Range of SBs that on the path                        
+   *                             ---------
+   *                            |         |        
+   *                            |  des_sb |
+   *                            | [x][y+1]|        
+   *                             ---------
+   *                                /|\ 
+   *                                 |  
+   *                             ---------
+   *                            |         |        
+   *                            | thru_sb |
+   *                            |         |        
+   *                             ---------
+   *                                /|\ 
+   *                                 |  
+   *  --------      -------      ---------      -------      --------
+   * |        |    |       |    |         |    |       |    |        |
+   * | des_sb |<---|thru_sb|<---| src_sb  |--->|thru_sb|--->| des_sb |
+   * |[x-1][y]|    | [x][y]|    |         |    | [x][y]|    |[x+1][y]|
+   *  --------      -------      ---------      -------      --------
+   *                                 |
+   *                                \|/
+   *                             ---------
+   *                            |         |        
+   *                            | thru_sb |
+   *                            |         |        
+   *                             ---------
+   *                                 |
+   *                                \|/
+   *                             ---------
+   *                            |         |        
+   *                            |  des_sb |
+   *                            | [x][y-1]|        
+   *                             ---------
+   */
+  case CHANX:
+  case CHANY:
+    /* Get the coordinate of ending CB */
+    next_sb_coordinator = get_chan_node_ending_sb_coordinator(src_rr_node, des_rr_node);
+    next_sb = device_rr_switch_block.get_switch_block(next_sb_coordinator);
+    end_sb_x = next_sb.get_x(); 
+    end_sb_y = next_sb.get_y();
+    break;
+  default:
+    vpr_printf(TIO_MESSAGE_ERROR, "(File: %s [LINE%d]) Invalid type of rr_node!\n",
+               __FILE__, __LINE__);
+    exit(1);
+  }
+
+  /* Get the base coordinate of src_sb */
+  cur_sb_x = src_sb.get_x();
+  cur_sb_y = src_sb.get_y();
+  /* 4 cases: */
+  if ((INC_DIRECTION == src_rr_node->direction) 
+     &&(CHANX == src_rr_node->type)) {
+    /* Follow the graph above, go through X channel */
+    for (int ix = src_sb.get_x(); ix < end_sb_x; ix++) {
+      DeviceCoordinator begin_sb_coordinator(ix, cur_sb_y);
+      RRSwitchBlock begin_sb = device_rr_switch_block.get_switch_block(begin_sb_coordinator);
+      /* If this is the ending point, we add a ending segment */
+      if (ix == end_sb_x - 1) {
+        verilog_generate_report_timing_one_sb_ending_segments(fp,
+                                                              begin_sb, src_rr_node, 
+                                                              des_rr_node, 
+                                                              rpt_name); 
+
+        continue;
+      }
+      /* Report timing for the downstream segements, from a SB output to an adjacent CB input */
+      DeviceCoordinator end_sb_coordinator(ix + 1, cur_sb_y);
+      RRSwitchBlock end_sb = device_rr_switch_block.get_switch_block(end_sb_coordinator);
+      verilog_generate_report_timing_one_sb_thru_segments(fp,
+                                                          begin_sb, src_rr_node, 
+                                                          end_sb, src_rr_node,
+                                                          rpt_name); 
+    }
+  } else if ((INC_DIRECTION == src_rr_node->direction) 
+     &&(CHANY == src_rr_node->type)) {
+    /* Follow the graph above, go through Y channel */
+    for (int iy = src_sb.get_y(); iy < end_sb_y; iy++) {
+      DeviceCoordinator begin_sb_coordinator(cur_sb_x, iy);
+      RRSwitchBlock begin_sb = device_rr_switch_block.get_switch_block(begin_sb_coordinator);
+     /* If this is the ending point, we add a ending segment */
+      if (iy == end_sb_y - 1) {
+        verilog_generate_report_timing_one_sb_ending_segments(fp,
+                                                              begin_sb, src_rr_node, 
+                                                              des_rr_node, 
+                                                              rpt_name); 
+        continue;
+      }
+      /* Report timing for the downstream segements, from a SB output to an adjacent CB input */
+      DeviceCoordinator end_sb_coordinator(cur_sb_x, iy + 1);
+      RRSwitchBlock end_sb = device_rr_switch_block.get_switch_block(end_sb_coordinator);
+      verilog_generate_report_timing_one_sb_thru_segments(fp,
+                                                          begin_sb, src_rr_node, 
+                                                          end_sb, src_rr_node,
+                                                          rpt_name); 
+    }
+  } else if ((DEC_DIRECTION == src_rr_node->direction) 
+     &&(CHANX == src_rr_node->type)) {
+    /* Follow the graph above, go through X channel */
+    for (int ix = src_sb.get_x() - 1; ix > end_sb_x; ix--) {
+      DeviceCoordinator begin_sb_coordinator(ix, cur_sb_y);
+      RRSwitchBlock begin_sb = device_rr_switch_block.get_switch_block(begin_sb_coordinator);
+      /* If this is the ending point, we add a ending segment */
+      if (ix == end_sb_x + 1) {
+        verilog_generate_report_timing_one_sb_ending_segments(fp,
+                                                              begin_sb, src_rr_node, 
+                                                              des_rr_node, 
+                                                              rpt_name); 
+        continue;
+      }
+      /* Report timing for the downstream segements, from a SB output to an adjacent CB input */
+      DeviceCoordinator end_sb_coordinator(ix - 1, cur_sb_y);
+      RRSwitchBlock end_sb = device_rr_switch_block.get_switch_block(end_sb_coordinator);
+      verilog_generate_report_timing_one_sb_thru_segments(fp,
+                                                          begin_sb, src_rr_node, 
+                                                          end_sb, src_rr_node,
+                                                          rpt_name); 
+    }
+  } else if ((DEC_DIRECTION == src_rr_node->direction) 
+     &&(CHANY == src_rr_node->type)) {
+    /* Follow the graph above, go through Y channel */
+    for (int iy = src_sb.get_y() - 1; iy > end_sb_y; iy--) {
+      DeviceCoordinator begin_sb_coordinator(cur_sb_x, iy);
+      RRSwitchBlock begin_sb = device_rr_switch_block.get_switch_block(begin_sb_coordinator);
+     /* If this is the ending point, we add a ending segment */
+      if (iy == end_sb_y + 1) {
+        verilog_generate_report_timing_one_sb_ending_segments(fp,
+                                                              begin_sb, src_rr_node, 
+                                                              des_rr_node, 
+                                                              rpt_name); 
+        continue;
+      }
+      /* Report timing for the downstream segements, from a SB output to an adjacent CB input */
+      DeviceCoordinator end_sb_coordinator(cur_sb_x, iy - 1);
+      RRSwitchBlock end_sb = device_rr_switch_block.get_switch_block(end_sb_coordinator);
+      verilog_generate_report_timing_one_sb_thru_segments(fp,
+                                                          begin_sb, src_rr_node, 
+                                                          end_sb, src_rr_node,
+                                                          rpt_name); 
+    }
+  }
+
+  /* Free */
+  my_free(rpt_name);
+
+  return;
+}
+
 
 /* Print the pins of SBs that a routing wire will go through 
  * from the src_rr_node to the des_rr_node 
@@ -1698,6 +2195,62 @@ void verilog_generate_sb_report_timing(t_trpt_opts sdc_opts,
 static 
 void verilog_generate_one_routing_segmental_report_timing(FILE* fp, 
                                                           t_syn_verilog_opts fpga_verilog_opts,
+                                                          RRSwitchBlock& rr_sb,
+                                                          t_rr_node* wire_rr_node,
+                                                          t_rr_node* LL_rr_node,
+                                                          int* path_cnt) {
+  int num_end_rr_nodes = 0;
+  t_rr_node** end_rr_node = NULL;
+  
+  /* Check the file handler */
+  if (NULL == fp) {
+    vpr_printf(TIO_MESSAGE_ERROR,
+               "(FILE:%s,LINE[%d])Invalid file handler for SDC generation",
+               __FILE__, __LINE__); 
+    exit(1);
+  } 
+
+  assert(  ( CHANX == wire_rr_node->type )
+        || ( CHANY == wire_rr_node->type ));
+ 
+  /* Find the farest ending points!*/
+  build_ending_rr_node_for_one_sb_wire(wire_rr_node, LL_rr_node, 
+                                       &num_end_rr_nodes, &end_rr_node);
+
+  /* Find the starting points */
+  for (int iedge = 0; iedge < wire_rr_node->num_drive_rr_nodes; iedge++) {
+    /* Find the ending points*/
+    for (int jedge = 0; jedge < num_end_rr_nodes; jedge++) {
+      /* Report timing */
+      dump_verilog_one_sb_wire_segemental_report_timing(fp, fpga_verilog_opts, 
+                                                        rr_sb, 
+                                                        wire_rr_node->drive_rr_nodes[iedge],
+                                                        wire_rr_node,
+                                                        end_rr_node[jedge],
+                                                        *path_cnt);
+      /* Update counter */
+      (*path_cnt)++;
+    }
+  }
+
+  /* Free */
+  my_free(end_rr_node);
+
+  return;
+}
+
+
+/* Report timing for a routing wire divided in segements,
+ * Support uni-directional routing architecture
+ * Each routing wire start from an OPIN 
+ * We check each fan-out to find all possible ending point:
+ * An ending point is supposed to be an OPIN or CHANX or CHANY
+ * We consider the farest ending point and report timing for each segements on the path
+ * We output TCL commands to sum up the segmental delay 
+ */
+static 
+void verilog_generate_one_routing_segmental_report_timing(FILE* fp, 
+                                                          t_syn_verilog_opts fpga_verilog_opts,
                                                           t_sb* cur_sb_info,
                                                           t_rr_node* wire_rr_node,
                                                           t_rr_node* LL_rr_node,
@@ -1819,6 +2372,82 @@ void verilog_generate_routing_report_timing(t_trpt_opts trpt_opts,
   return;
 }
 
+static 
+void verilog_generate_routing_wire_report_timing(t_trpt_opts trpt_opts,
+                                                 t_rr_node* LL_rr_node,
+                                                 t_syn_verilog_opts fpga_verilog_opts) {
+  FILE* fp = NULL;
+  int L_wire;
+  t_llist* rr_path_cnt = NULL;
+  t_wireL_cnt* wireL_cnt = NULL;
+  int path_cnt = 0;
+
+  vpr_printf(TIO_MESSAGE_INFO,
+             "Generating TCL script to report timing for routing wires\n");
+
+  /* We start from a SB[x][y] */
+  DeviceCoordinator sb_range = device_rr_switch_block.get_switch_block_range();
+  for (size_t ix = 0; ix < sb_range.get_x(); ++ix) {
+    for (size_t iy = 0; iy < sb_range.get_y(); ++iy) {
+      RRSwitchBlock rr_sb = device_rr_switch_block.get_switch_block(ix, iy);
+      for (size_t side = 0; side < rr_sb.get_num_sides(); ++side) {
+        Side side_manager(side);
+        for (size_t itrack = 0; itrack < rr_sb.get_chan_width(side_manager.get_side()); ++itrack) {
+          assert((CHANX == rr_sb.get_chan_node(side_manager.get_side(), itrack)->type)
+               ||(CHANY == rr_sb.get_chan_node(side_manager.get_side(), itrack)->type));
+          /* We only care the output port and it should indicate a SB mux */
+          if ( (OUT_PORT != rr_sb.get_chan_node_direction(side_manager.get_side(), itrack)) 
+             || (false != rr_sb.is_node_imply_short_connection(rr_sb.get_chan_node(side_manager.get_side(), itrack)))) {
+            continue; 
+          }
+          /* Bypass if we have only 1 driving node */
+          if (1 == rr_sb.get_chan_node(side_manager.get_side(), itrack)->num_drive_rr_nodes) {
+            continue; 
+          }
+          /* Check if L_wire exists in the linked list */
+          L_wire = get_rr_node_wire_length(rr_sb.get_chan_node(side_manager.get_side(), itrack));
+          /* Get counter */
+          rr_path_cnt = get_wire_L_counter_in_llist(rr_path_cnt, trpt_opts, L_wire, &wireL_cnt);
+          path_cnt = wireL_cnt->cnt;
+          fp = wireL_cnt->file_handler;
+          /* This is a new L-wire, create the file handler and the mkdir command to the TCL script */
+          if (0 == path_cnt) {
+            fprintf(fp, "exec mkdir -p %s\n",
+                    gen_verilog_one_routing_report_timing_Lwire_dir_path(fpga_verilog_opts.report_timing_path, L_wire)); 
+          }
+          /* Restore the disable_timing for the SB outputs on the path */
+          fprintf(fp, "# Restore disable timing for the following Switch Block output:\n");
+          restore_disable_timing_one_sb_output(fp, 
+                                               rr_sb,
+                                               rr_sb.get_chan_node(side_manager.get_side(), itrack));
+          fprintf(fp, "# Report timing for all the paths using this output:\n");
+          /* Dump report_timing command */
+          verilog_generate_one_routing_segmental_report_timing(fp, fpga_verilog_opts,
+                                                               rr_sb, 
+                                                               rr_sb.get_chan_node(side_manager.get_side(), itrack), 
+                                                               LL_rr_node, &path_cnt);
+          /* Disable the timing again */
+          fprintf(fp, "# Set disable timing for the following Switch Block output:\n");
+          set_disable_timing_one_sb_output(fp, 
+                                           rr_sb,
+                                           rr_sb.get_chan_node(side_manager.get_side(), itrack));
+          /* Update the wire L*/
+          update_wire_L_counter_in_llist(rr_path_cnt, L_wire, path_cnt);
+        }
+      }
+    }
+  }
+
+  /* close file*/
+  fclose_wire_L_file_handler_in_llist(rr_path_cnt);
+
+  /* Free */
+  free_wire_L_llist(rr_path_cnt);
+
+  return;
+}
+
+
 /* Output a log file to guide routing report_timing */
 void verilog_generate_report_timing(t_sram_orgz_info* cur_sram_orgz_info,
                                     char* sdc_dir,
@@ -1851,9 +2480,15 @@ void verilog_generate_report_timing(t_sram_orgz_info* cur_sram_orgz_info,
 
   /* Part 3. Report timing for routing segments of SB wires */
   if (TRUE == trpt_opts.report_routing_timing) {
-    verilog_generate_routing_report_timing(trpt_opts,
-                                           LL_rr_node,
-                                           fpga_verilog_opts);
+    if (TRUE == trpt_opts.compact_routing_hierarchy) {
+      verilog_generate_routing_wire_report_timing(trpt_opts,
+                                                  LL_rr_node,
+                                                  fpga_verilog_opts);
+    } else {
+      verilog_generate_routing_report_timing(trpt_opts,
+                                             LL_rr_node,
+                                             fpga_verilog_opts);
+    }
   }
 
   return;
