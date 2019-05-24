@@ -39,6 +39,8 @@
 #include "verilog_decoder.h"
 #include "verilog_top_netlist_utils.h"
 
+#include "verilog_top_testbench.h"
+
 /* Dump all the global ports that are stored in the linked list */
 void dump_verilog_top_testbench_global_ports(FILE* fp, t_llist* head,
                                              enum e_dump_verilog_port_type dump_port_type) {
@@ -899,7 +901,6 @@ void dump_verilog_top_testbench_stimuli_serial_version_tasks(t_sram_orgz_info* c
 static 
 void dump_verilog_top_testbench_stimuli_serial_version(t_sram_orgz_info* cur_sram_orgz_info, 
                                                        FILE* fp,
-                                                       int num_clock,
                                                        t_spice spice) {
   int inet, iblock, iopad_idx;
   int found_mapped_inpad = 0;
@@ -1160,12 +1161,10 @@ void dump_verilog_top_testbench_stimuli_serial_version(t_sram_orgz_info* cur_sra
  */
 void dump_verilog_top_testbench_stimuli(t_sram_orgz_info* cur_sram_orgz_info, 
                                         FILE* fp,
-                                        int num_clock,
-                                        t_syn_verilog_opts syn_verilog_opts,
                                         t_spice verilog) {
 
   /* Only serial version is avaiable now */
-  dump_verilog_top_testbench_stimuli_serial_version(cur_sram_orgz_info, fp, num_clock, verilog);
+  dump_verilog_top_testbench_stimuli_serial_version(cur_sram_orgz_info, fp, verilog);
   /*
   if (TRUE == syn_verilog_opts.tb_serial_config_mode) {
   } else {
@@ -1254,8 +1253,6 @@ void dump_verilog_input_blif_testbench_call_top_module(FILE* fp,
 /* Dump voltage stimuli for input blif nestlist */
 static 
 void dump_verilog_input_blif_testbench_stimuli(FILE* fp,
-                                               int num_clock,
-                                               t_syn_verilog_opts syn_verilog_opts,
                                                t_spice spice) {
   int iblock, inet;
   t_spice_net_info* cur_spice_net_info = NULL;
@@ -1333,8 +1330,6 @@ void dump_verilog_top_testbench(t_sram_orgz_info* cur_sram_orgz_info,
                                 char* circuit_name,
                                 char* top_netlist_name,
                                 char* verilog_dir_path,
-                                int num_clock,
-                                t_syn_verilog_opts fpga_verilog_opts,
                                 t_spice verilog) {
   FILE* fp = NULL;
   char* title = my_strcat("FPGA Verilog Testbench for Top-level netlist of Design: ", circuit_name);
@@ -1362,7 +1357,7 @@ void dump_verilog_top_testbench(t_sram_orgz_info* cur_sram_orgz_info,
   dump_verilog_top_testbench_call_top_module(cur_sram_orgz_info, fp, circuit_name);
 
   /* Add stimuli for reset, set, clock and iopad signals */
-  dump_verilog_top_testbench_stimuli(cur_sram_orgz_info, fp, num_clock, fpga_verilog_opts, verilog);
+  dump_verilog_top_testbench_stimuli(cur_sram_orgz_info, fp, verilog);
 
   /* Testbench ends*/
   fprintf(fp, "endmodule\n");
@@ -1379,8 +1374,6 @@ void dump_verilog_top_testbench(t_sram_orgz_info* cur_sram_orgz_info,
 void dump_verilog_input_blif_testbench(char* circuit_name,
                                        char* top_netlist_name,
                                        char* verilog_dir_path,
-                                       int num_clock,
-                                       t_syn_verilog_opts syn_verilog_opts,
                                        t_spice verilog) {
   FILE* fp = NULL;
   char* title = my_strcat("FPGA Verilog Testbench for input blif netlist of Design: ", circuit_name);
@@ -1407,7 +1400,7 @@ void dump_verilog_input_blif_testbench(char* circuit_name,
   dump_verilog_input_blif_testbench_call_top_module(fp, circuit_name);
 
   /* Add stimuli for reset, set, clock and iopad signals */
-  dump_verilog_input_blif_testbench_stimuli(fp, num_clock, syn_verilog_opts, verilog);
+  dump_verilog_input_blif_testbench_stimuli(fp, verilog);
 
   /* Testbench ends*/
   fprintf(fp, "endmodule\n");

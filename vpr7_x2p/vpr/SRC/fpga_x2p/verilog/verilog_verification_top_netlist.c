@@ -38,9 +38,10 @@
 #include "verilog_top_netlist_utils.h"
 #include "verilog_top_testbench.h"
 
+#include "verilog_verification_top_netlist.h"
+
 static 
-void dump_verilog_formal_verification_top_netlist_ports(t_sram_orgz_info* cur_sram_orgz_info, 
-                                                        FILE* fp, 
+void dump_verilog_formal_verification_top_netlist_ports(FILE* fp, 
                                                         char* circuit_name) {
   int iblock, cnt;
   char* port_name = NULL;
@@ -95,8 +96,7 @@ void dump_verilog_formal_verification_top_netlist_ports(t_sram_orgz_info* cur_sr
 
 static 
 void dump_verilog_formal_verification_top_netlist_internal_wires(t_sram_orgz_info* cur_sram_orgz_info, 
-                                                                 FILE* fp, 
-                                                                 char* circuit_name) {
+                                                                 FILE* fp) {
   char* port_name = NULL;
   int num_array_bl, num_array_wl;
   int bl_decoder_size, wl_decoder_size;
@@ -197,8 +197,7 @@ void dump_verilog_formal_verfication_top_netlist_call_top_module(t_sram_orgz_inf
  * 1. operating clock
  */
 static 
-void dump_verilog_formal_verification_top_netlist_connect_global_ports(t_sram_orgz_info* cur_sram_orgz_info, 
-                                                                       FILE* fp,
+void dump_verilog_formal_verification_top_netlist_connect_global_ports(FILE* fp,
                                                                        t_llist* head) {
   t_llist* temp = head;
   t_spice_model_port* cur_global_port = NULL;
@@ -254,8 +253,7 @@ void dump_verilog_formal_verification_top_netlist_connect_global_ports(t_sram_or
 
 /* Add stimuli for unused iopads and configuration memories */
 static 
-void dump_verilog_formal_verification_top_netlist_connect_ios(t_sram_orgz_info* cur_sram_orgz_info, 
-                                                              FILE* fp) {
+void dump_verilog_formal_verification_top_netlist_connect_ios(FILE* fp) {
   int iblock, jiopad, iopad_idx;
   boolean* used_iopad = (boolean*) my_calloc (iopad_verilog_model->cnt, sizeof(boolean));
 
@@ -370,16 +368,12 @@ void dump_verilog_formal_verification_top_netlist_config_bitstream(t_sram_orgz_i
 /* Add stimuli for unused iopads and configuration memories */
 static 
 void dump_verilog_formal_verification_top_netlist_initialization(t_sram_orgz_info* cur_sram_orgz_info, 
-                                                                 FILE* fp, 
-                                                                 t_syn_verilog_opts syn_verilog_opts,
-                                                                 t_spice verilog) {
+                                                                 FILE* fp) {
   /* Connect FPGA top module global ports to constant or benchmark global signals! */
-  dump_verilog_formal_verification_top_netlist_connect_global_ports(cur_sram_orgz_info, 
-                                                                    fp, global_ports_head);
+  dump_verilog_formal_verification_top_netlist_connect_global_ports(fp, global_ports_head);
 
   /* Connect I/Os to benchmark I/Os or constant driver */
-  dump_verilog_formal_verification_top_netlist_connect_ios(cur_sram_orgz_info, 
-                                                           fp); 
+  dump_verilog_formal_verification_top_netlist_connect_ios(fp); 
 
   /* Assign FPGA internal SRAM/Memory ports to bitstream values */
   dump_verilog_formal_verification_top_netlist_config_bitstream(cur_sram_orgz_info, 
@@ -394,10 +388,7 @@ void dump_verilog_formal_verification_top_netlist_initialization(t_sram_orgz_inf
 void dump_verilog_formal_verification_top_netlist(t_sram_orgz_info* cur_sram_orgz_info,
                                                   char* circuit_name,
                                                   char* top_netlist_name,
-                                                  char* verilog_dir_path,
-                                                  int num_clock,
-                                                  t_syn_verilog_opts fpga_verilog_opts,
-                                                  t_spice verilog) {
+                                                  char* verilog_dir_path) {
   FILE* fp = NULL;
   char* title = my_strcat("FPGA Verilog Top-level netlist in formal verification purpose of Design: ", circuit_name);
 
@@ -418,16 +409,16 @@ void dump_verilog_formal_verification_top_netlist(t_sram_orgz_info* cur_sram_org
   verilog_include_defines_preproc_file(fp, verilog_dir_path);
 
   /* Start with module declaration */
-  dump_verilog_formal_verification_top_netlist_ports(cur_sram_orgz_info, fp, circuit_name);
+  dump_verilog_formal_verification_top_netlist_ports(fp, circuit_name);
 
   /* Define internal wires */
-  dump_verilog_formal_verification_top_netlist_internal_wires(cur_sram_orgz_info, fp, circuit_name);
+  dump_verilog_formal_verification_top_netlist_internal_wires(cur_sram_orgz_info, fp);
 
   /* Call defined top-level module */
   dump_verilog_formal_verfication_top_netlist_call_top_module(cur_sram_orgz_info, fp, circuit_name);
 
   /* Add stimuli for reset, set, clock and iopad signals */
-  dump_verilog_formal_verification_top_netlist_initialization(cur_sram_orgz_info, fp, fpga_verilog_opts, verilog);
+  dump_verilog_formal_verification_top_netlist_initialization(cur_sram_orgz_info, fp);
 
   /* Testbench ends*/
   fprintf(fp, "endmodule\n");

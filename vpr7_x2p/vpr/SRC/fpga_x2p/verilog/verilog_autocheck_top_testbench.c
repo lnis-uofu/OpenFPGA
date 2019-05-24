@@ -40,6 +40,8 @@
 #include "verilog_top_netlist_utils.h"
 #include "verilog_top_testbench.h"
 
+#include "verilog_autocheck_top_testbench.h"
+
 /* Local variables */
 static char* autocheck_testbench_reference_output_postfix = "_benchmark";
 static char* autocheck_testbench_verification_output_postfix = "_verification";
@@ -348,7 +350,6 @@ void dump_verilog_autocheck_top_testbench(t_sram_orgz_info* cur_sram_orgz_info,
                                           char* circuit_name,
                                           char* top_netlist_name,
                                           char* verilog_dir_path,
-                                          int num_clock,
                                           t_syn_verilog_opts fpga_verilog_opts,
                                           t_spice verilog) {
   FILE* fp = NULL;
@@ -384,7 +385,7 @@ void dump_verilog_autocheck_top_testbench(t_sram_orgz_info* cur_sram_orgz_info,
   dump_verilog_top_auto_testbench_call_benchmark(fp, circuit_name);
 
   /* Add stimuli for reset, set, clock and iopad signals */
-  dump_verilog_top_testbench_stimuli(cur_sram_orgz_info, fp, num_clock, fpga_verilog_opts, verilog);
+  dump_verilog_top_testbench_stimuli(cur_sram_orgz_info, fp, verilog);
 
   /* Add output autocheck */
   dump_verilog_top_auto_testbench_check(fp);

@@ -296,8 +296,7 @@ void vpr_fpga_verilog(t_vpr_setup vpr_setup,
     blif_testbench_file_name = my_strcat(chomped_circuit_name, blif_testbench_verilog_file_postfix);
     blif_testbench_file_path = my_strcat(src_dir_path, blif_testbench_file_name);
     dump_verilog_input_blif_testbench(chomped_circuit_name, blif_testbench_file_path, src_dir_path,
-                                      num_clocks, 
-                                      vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts, *(Arch.spice));
+                                      *(Arch.spice));
     /* Free */
     my_free(blif_testbench_file_name);
     my_free(blif_testbench_file_path);
@@ -329,8 +328,7 @@ void vpr_fpga_verilog(t_vpr_setup vpr_setup,
     top_testbench_file_name = my_strcat(chomped_circuit_name, top_testbench_verilog_file_postfix);
     top_testbench_file_path = my_strcat(src_dir_path, top_testbench_file_name);
     dump_verilog_top_testbench(sram_verilog_orgz_info, chomped_circuit_name, top_testbench_file_path,
-                               src_dir_path, num_clocks, 
-                               vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts, *(Arch.spice));
+                               src_dir_path, *(Arch.spice));
     /* Free */
     my_free(top_testbench_file_name);
     my_free(top_testbench_file_path);
@@ -340,9 +338,7 @@ void vpr_fpga_verilog(t_vpr_setup vpr_setup,
     formal_verification_top_netlist_file_name = my_strcat(chomped_circuit_name, formal_verification_verilog_file_postfix);
     formal_verification_top_netlist_file_path = my_strcat(src_dir_path, formal_verification_top_netlist_file_name);
     dump_verilog_formal_verification_top_netlist(sram_verilog_orgz_info, chomped_circuit_name, 
-                                                 formal_verification_top_netlist_file_path, src_dir_path,
-                                                 num_clocks, 
-                                                 vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts, *(Arch.spice));
+                                                 formal_verification_top_netlist_file_path, src_dir_path);
     /* Output script for formality */
     write_formality_script(vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts,
                            fm_dir_path,
@@ -352,7 +348,7 @@ void vpr_fpga_verilog(t_vpr_setup vpr_setup,
     random_top_testbench_file_name = my_strcat(chomped_circuit_name, random_top_testbench_verilog_file_postfix);
     random_top_testbench_file_path = my_strcat(src_dir_path, random_top_testbench_file_name);
 	dump_verilog_random_top_testbench(sram_verilog_orgz_info, chomped_circuit_name, 
-                                      random_top_testbench_file_path, src_dir_path, num_clocks, 
+                                      random_top_testbench_file_path, src_dir_path,
                                       vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts, *(Arch.spice));
     /* Free */
     my_free(formal_verification_top_netlist_file_name);
@@ -363,7 +359,7 @@ void vpr_fpga_verilog(t_vpr_setup vpr_setup,
     autocheck_top_testbench_file_name = my_strcat(chomped_circuit_name, autocheck_top_testbench_verilog_file_postfix);
     autocheck_top_testbench_file_path = my_strcat(src_dir_path, autocheck_top_testbench_file_name);
     dump_verilog_autocheck_top_testbench(sram_verilog_orgz_info, chomped_circuit_name, 
-                                         autocheck_top_testbench_file_path, src_dir_path, num_clocks, 
+                                         autocheck_top_testbench_file_path, src_dir_path, 
                                          vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts, *(Arch.spice));
     /* Free */
     my_free(autocheck_top_testbench_file_name);

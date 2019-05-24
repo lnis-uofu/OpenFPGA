@@ -40,6 +40,8 @@
 #include "verilog_top_netlist_utils.h"
 #include "verilog_top_testbench.h"
 
+#include "verilog_formal_random_top_testbench.h"
+
 /* Local variables */
 static char* formal_random_top_tb_postfix = "_top_formal_verification_random_tb";
 static char* gfpga_postfix = "_gfpga";
@@ -163,10 +165,10 @@ void dump_verilog_top_random_testbench_call_benchmark(FILE* fp,
 }
 
 static 
-int get_simulation_time(int num_prog_clock_cycles,
-                          float prog_clock_period,
-                          int num_op_clock_cycles,
-                          float op_clock_period) {
+int get_simulation_time(//int num_prog_clock_cycles,
+                        //float prog_clock_period,
+                        int num_op_clock_cycles,
+                        float op_clock_period) {
   int total_time_period = 0;
 
   /* Take into account the prog_reset and reset cycles */
@@ -177,13 +179,13 @@ int get_simulation_time(int num_prog_clock_cycles,
 
 static
 void dump_verilog_timeout_and_vcd(FILE * fp,
-									char* circuit_name,
-									t_spice verilog,
-									t_sram_orgz_info* cur_sram_orgz_info){
+								  char* circuit_name,
+								  t_spice verilog) {
+								  //t_sram_orgz_info* cur_sram_orgz_info){
 	int simulation_time;
 
-	simulation_time = get_simulation_time(get_sram_orgz_info_num_mem_bit(cur_sram_orgz_info),
-										  1./verilog.spice_params.stimulate_params.prog_clock_freq,
+	simulation_time = get_simulation_time(//get_sram_orgz_info_num_mem_bit(cur_sram_orgz_info),
+										  //1./verilog.spice_params.stimulate_params.prog_clock_freq,
                                           verilog.spice_params.meas_params.sim_num_clock_cycle,
                                           1./verilog.spice_params.stimulate_params.op_clock_freq);
 										  
@@ -348,7 +350,6 @@ void dump_verilog_random_top_testbench(t_sram_orgz_info* cur_sram_orgz_info,
                                           char* circuit_name,
                                           char* top_netlist_name,
                                           char* verilog_dir_path,
-                                          int num_clock,
                                           t_syn_verilog_opts fpga_verilog_opts,
                                           t_spice verilog) {
   FILE* fp = NULL;
@@ -393,7 +394,7 @@ void dump_verilog_random_top_testbench(t_sram_orgz_info* cur_sram_orgz_info,
   fprintf(fp, "`endif\n\n");
 
   /* Add Icarus requirement */
-  dump_verilog_timeout_and_vcd(fp, circuit_name , verilog, cur_sram_orgz_info);
+  dump_verilog_timeout_and_vcd(fp, circuit_name , verilog/*, cur_sram_orgz_info*/);
 
   /* Testbench ends*/
   fprintf(fp, "endmodule\n");
