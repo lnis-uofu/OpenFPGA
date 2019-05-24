@@ -74,13 +74,10 @@ void sdc_dump_annotation(char* from_path, // includes the cell
   return;
 }
 
-
-void dump_sdc_pb_graph_pin_interc(t_sram_orgz_info* cur_sram_orgz_info,
-                                      FILE* fp,
-                                      enum e_spice_pin2pin_interc_type pin2pin_interc_type,
-                                      t_pb_graph_pin* des_pb_graph_pin,
-                                      t_mode* cur_mode,
-                                      char* instance_name) {
+void dump_sdc_pb_graph_pin_interc(FILE* fp,
+                                  t_pb_graph_pin* des_pb_graph_pin,
+                                  t_mode* cur_mode,
+                                  char* instance_name) {
   int iedge;
   int fan_in = 0;
   t_interconnect* cur_interc = NULL; 
@@ -284,12 +281,11 @@ void dump_sdc_pb_graph_pin_interc(t_sram_orgz_info* cur_sram_orgz_info,
 
 
 /* Print the SPICE interconnections of a port defined in pb_graph */
-void dump_sdc_pb_graph_port_interc(t_sram_orgz_info* cur_sram_orgz_info,
-                                       FILE* fp,
-                                       t_pb_graph_node* cur_pb_graph_node,
-                                       enum e_spice_pb_port_type pb_port_type,
-                                       t_mode* cur_mode,
-                                       char* instance_name) {
+void dump_sdc_pb_graph_port_interc(FILE* fp,
+                                   t_pb_graph_node* cur_pb_graph_node,
+                                   enum e_spice_pb_port_type pb_port_type,
+                                   t_mode* cur_mode,
+                                   char* instance_name) {
   int iport, ipin;
 
   /* Check the file handler*/ 
@@ -305,36 +301,30 @@ void dump_sdc_pb_graph_port_interc(t_sram_orgz_info* cur_sram_orgz_info,
       for (ipin = 0; ipin < cur_pb_graph_node->num_input_pins[iport]; ipin++) {
         /* If this is a idle block, we set 0 to the selected edge*/
         /* Get the selected edge of current pin*/
-        dump_sdc_pb_graph_pin_interc (cur_sram_orgz_info,
-                                         fp, 
-                                         INPUT2INPUT_INTERC,
-                                         &(cur_pb_graph_node->input_pins[iport][ipin]),
-                                         cur_mode,
-                                         instance_name);
+        dump_sdc_pb_graph_pin_interc (fp, 
+                                      &(cur_pb_graph_node->input_pins[iport][ipin]),
+                                      cur_mode,
+                                      instance_name);
       }
     }
     break;
   case SPICE_PB_PORT_OUTPUT:
     for (iport = 0; iport < cur_pb_graph_node->num_output_ports; iport++) {
       for (ipin = 0; ipin < cur_pb_graph_node->num_output_pins[iport]; ipin++) {
-        dump_sdc_pb_graph_pin_interc(cur_sram_orgz_info,
-                                         fp, 
-                                         OUTPUT2OUTPUT_INTERC,
-                                         &(cur_pb_graph_node->output_pins[iport][ipin]),
-                                         cur_mode,
-                                         instance_name);
+        dump_sdc_pb_graph_pin_interc(fp, 
+                                     &(cur_pb_graph_node->output_pins[iport][ipin]),
+                                     cur_mode,
+                                     instance_name);
       }
     }
     break;
   case SPICE_PB_PORT_CLOCK:
     for (iport = 0; iport < cur_pb_graph_node->num_clock_ports; iport++) {
       for (ipin = 0; ipin < cur_pb_graph_node->num_clock_pins[iport]; ipin++) {
-        dump_sdc_pb_graph_pin_interc(cur_sram_orgz_info,
-                                         fp, 
-                                         INPUT2INPUT_INTERC,
-                                         &(cur_pb_graph_node->clock_pins[iport][ipin]),
-                                         cur_mode,
-                                         instance_name);
+        dump_sdc_pb_graph_pin_interc(fp, 
+                                     &(cur_pb_graph_node->clock_pins[iport][ipin]),
+                                     cur_mode,
+                                     instance_name);
       }
     }
     break;
@@ -347,11 +337,10 @@ void dump_sdc_pb_graph_port_interc(t_sram_orgz_info* cur_sram_orgz_info,
   return;
 }
 
-void sdc_dump_cur_node_constraints(t_sram_orgz_info* cur_sram_orgz_info,
-							  FILE*  fp,
-							  t_pb_graph_node* cur_pb_graph_node,
-							  int select_mode_index,
-                              char* instance_name) {
+void sdc_dump_cur_node_constraints(FILE*  fp,
+							       t_pb_graph_node* cur_pb_graph_node,
+							       int select_mode_index,
+                                   char* instance_name) {
   int ipb, jpb;
   t_mode* cur_mode = NULL;
   t_pb_type* cur_pb_type = cur_pb_graph_node->pb_type;
@@ -381,11 +370,11 @@ void sdc_dump_cur_node_constraints(t_sram_orgz_info* cur_sram_orgz_info,
    *                                         |
    *                         input_pins,   edges,       output_pins
    */ 
-  dump_sdc_pb_graph_port_interc(cur_sram_orgz_info, fp,
-                                    cur_pb_graph_node, 
-                                    SPICE_PB_PORT_OUTPUT,
-                                    cur_mode,
-                                    instance_name);
+  dump_sdc_pb_graph_port_interc(fp,
+                                cur_pb_graph_node, 
+                                SPICE_PB_PORT_OUTPUT,
+                                cur_mode,
+                                instance_name);
   
   /* We check input_pins of child_pb_graph_node and its the input_edges
    * Built the interconnections between inputs of cur_pb_graph_node and inputs of child_pb_graph_node
@@ -398,17 +387,17 @@ void sdc_dump_cur_node_constraints(t_sram_orgz_info* cur_sram_orgz_info,
     for (jpb = 0; jpb < cur_pb_type->modes[select_mode_index].pb_type_children[ipb].num_pb; jpb++) {
       child_pb_graph_node = &(cur_pb_graph_node->child_pb_graph_nodes[select_mode_index][ipb][jpb]);
       /* For each child_pb_graph_node input pins*/
-      dump_sdc_pb_graph_port_interc(cur_sram_orgz_info, fp,
-                                         child_pb_graph_node, 
-                                         SPICE_PB_PORT_INPUT,
-                                         cur_mode,
-                                         instance_name);
+      dump_sdc_pb_graph_port_interc(fp,
+                                    child_pb_graph_node, 
+                                    SPICE_PB_PORT_INPUT,
+                                    cur_mode,
+                                    instance_name);
       /* TODO: for clock pins, we should do the same work */
-      dump_sdc_pb_graph_port_interc(cur_sram_orgz_info, fp,
-                                        child_pb_graph_node, 
-                                        SPICE_PB_PORT_CLOCK,
-                                        cur_mode,
-                                        instance_name);
+      dump_sdc_pb_graph_port_interc(fp,
+                                    child_pb_graph_node, 
+                                    SPICE_PB_PORT_CLOCK,
+                                    cur_mode,
+                                    instance_name);
     }
   }
   return; 
@@ -449,7 +438,7 @@ void sdc_rec_dump_child_pb_graph_node(t_sram_orgz_info* cur_sram_orgz_info,
 		  sdc_rec_dump_child_pb_graph_node(cur_sram_orgz_info, fp, &(cur_pb_graph_node->child_pb_graph_nodes[mode_index][ipb][jpb]), instance_name);
 	  }
 	}
-    sdc_dump_cur_node_constraints(cur_sram_orgz_info, fp, cur_pb_graph_node, mode_index, instance_name); // graph_head only has one pb_type
+    sdc_dump_cur_node_constraints(fp, cur_pb_graph_node, mode_index, instance_name); // graph_head only has one pb_type
   }
 
   return;
