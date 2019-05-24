@@ -846,6 +846,7 @@ void dump_compact_verilog_defined_one_switch_box(t_sram_orgz_info* cur_sram_orgz
 void dump_compact_verilog_defined_switch_boxes(t_sram_orgz_info* cur_sram_orgz_info, 
                                                FILE* fp) {
   DeviceCoordinator sb_range = device_rr_switch_block.get_switch_block_range();
+
   /* Check the file handler*/ 
   if (NULL == fp) {
     vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid file handler.\n", 
@@ -1140,7 +1141,7 @@ void dump_compact_verilog_defined_one_channel(FILE* fp,
 
   /* output at middle point */
   for (size_t itrack = 0; itrack < rr_chan.get_chan_width(); ++itrack) {
-    fprintf(fp, "%s_%d__%d__midout_%u_ ", 
+    fprintf(fp, "%s_%d__%d__midout_%lu_ ", 
             convert_chan_type_to_string(rr_chan.get_type()),
             x, y, itrack);
     if (itrack < rr_chan.get_chan_width() - 1) {
@@ -1152,7 +1153,7 @@ void dump_compact_verilog_defined_one_channel(FILE* fp,
 
   /* Comment lines */
   fprintf(fp, 
-          "//----- END Call Verilog Module of %s [%u] -----\n\n", 
+          "//----- END Call Verilog Module of %s [%lu] -----\n\n", 
           convert_chan_type_to_string(rr_chan.get_type()),
           subckt_id);
 

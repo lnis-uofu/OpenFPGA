@@ -30,6 +30,7 @@
 #include "fpga_x2p_globals.h"
 #include "fpga_bitstream_pbtypes.h"
 #include "fpga_bitstream_routing.h"
+#include "fpga_bitstream.h"
 
 /* Global variables only in file */
 static int dumped_num_conf_bits = 0;
@@ -351,7 +352,7 @@ void vpr_fpga_generate_bitstream(t_vpr_setup vpr_setup,
   routing_bitstream_log_file_path = my_strcat(circuit_name, fpga_spice_bitstream_routing_log_file_postfix);
   fpga_spice_generate_bitstream_routing_resources(routing_bitstream_log_file_path,
                                                   Arch, &vpr_setup.RoutingArch, *cur_sram_orgz_info,
-                                                  num_rr_nodes, rr_node, rr_node_indices);
+                                                  vpr_setup.FPGA_SPICE_Opts.compact_routing_hierarchy);
 
 
   /* Logic blocks */

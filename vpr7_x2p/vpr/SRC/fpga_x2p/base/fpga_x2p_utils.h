@@ -1,7 +1,7 @@
 #ifndef FPGA_X2P_UTILS_H
 #define FPGA_X2P_UTILS_H
 
-void my_free(void* ptr);
+#include "my_free_fwd.h"
 
 char* my_gettime();
 

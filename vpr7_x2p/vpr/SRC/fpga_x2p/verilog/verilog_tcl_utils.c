@@ -37,6 +37,8 @@
 #include "verilog_utils.h"
 #include "verilog_routing.h"
 
+#include "verilog_tcl_utils.h"
+
 /***** Subroutine Functions *****/
 void dump_verilog_sdc_file_header(FILE* fp,
                                   char* usage) {
@@ -53,6 +55,39 @@ void dump_verilog_sdc_file_header(FILE* fp,
   fprintf(fp,"#    Date: %s \n", my_gettime());
   fprintf(fp,"#############################################\n");
   fprintf(fp,"\n");
+
+  return;
+}
+
+void dump_verilog_one_sb_chan_pin(FILE* fp, 
+                                  RRSwitchBlock& rr_sb,
+                                  t_rr_node* cur_rr_node,
+                                  enum PORTS port_type) {
+  int track_idx;
+  enum e_side side;
+  int x_start, y_start;
+  char* pin_name;
+
+  /* Check the file handler */
+  if (NULL == fp) {
+    vpr_printf(TIO_MESSAGE_ERROR,
+               "(FILE:%s,LINE[%d])Invalid file handler for SDC generation",
+               __FILE__, __LINE__); 
+    exit(1);
+  } 
+
+  /* Check */
+  assert ((CHANX == cur_rr_node->type)
+        ||(CHANY == cur_rr_node->type));
+  /* Get the coordinate of chanx or chany*/
+  /* Find the coordinate of the cur_rr_node */  
+  rr_sb.get_node_side_and_index(cur_rr_node, port_type, &side, &track_idx);
+  /* Print the pin of the cur_rr_node */ 
+  pin_name = gen_verilog_routing_channel_one_pin_name(cur_rr_node,
+                                                      x_start, y_start, track_idx, 
+                                                      port_type);
+  fprintf(fp, "%s", pin_name);
+  my_free(pin_name);
 
   return;
 }
@@ -93,6 +128,48 @@ void dump_verilog_one_sb_chan_pin(FILE* fp,
                                                    port_type);
   fprintf(fp, "%s", pin_name);
   free(pin_name);
+  return;
+}
+
+/* Output the pin name of a routing wire in a SB */
+void dump_verilog_one_sb_routing_pin(FILE* fp,
+                                     RRSwitchBlock& rr_sb,
+                                     t_rr_node* cur_rr_node) {
+  int side;
+
+  /* Check the file handler */
+  if (NULL == fp) {
+    vpr_printf(TIO_MESSAGE_ERROR,
+               "(FILE:%s,LINE[%d])Invalid file handler for SDC generation",
+               __FILE__, __LINE__); 
+    exit(1);
+  } 
+
+  /* Get the top-level pin name and print it out */
+  /* Depends on the type of node */
+  switch (cur_rr_node->type) {
+  case OPIN:
+    /* Identify the side of OPIN on a grid */
+    side = get_grid_pin_side(cur_rr_node->xlow, cur_rr_node->ylow, cur_rr_node->ptc_num);
+    assert (OPEN != side);
+    dump_verilog_grid_side_pin_with_given_index(fp, OPIN,
+                                                cur_rr_node->ptc_num,
+                                                side,
+                                                cur_rr_node->xlow,
+                                                cur_rr_node->ylow, 
+                                                FALSE); /* Do not specify direction of port */
+    break; 
+  case CHANX:
+  case CHANY:
+    dump_verilog_one_sb_chan_pin(fp, rr_sb, cur_rr_node, IN_PORT); 
+    break;
+  default:
+    vpr_printf(TIO_MESSAGE_ERROR, "(File: %s [LINE%d]) Invalid type of ending point rr_node!\n",
+               __FILE__, __LINE__);
+ 
+    exit(1);
+  }
+
   return;
 }
 
@@ -216,6 +293,126 @@ t_cb* get_chan_rr_node_ending_cb(t_rr_node* src_rr_node,
 
   return next_cb;
 }
+
+/** Given a starting rr_node (CHANX or CHANY) 
+ *  and a ending rr_node (IPIN) 
+ *  return the sb contains both (the ending CB of the routing wire)
+ */
+DeviceCoordinator get_chan_node_ending_sb_coordinator(t_rr_node* src_rr_node, 
+                                                      t_rr_node* end_rr_node) {
+  int x_start, y_start;
+  int x_end, y_end;
+  int next_sb_x, next_sb_y;
+
+  get_chan_rr_node_start_coordinate(src_rr_node, &x_start, &y_start);
+  get_chan_rr_node_start_coordinate(end_rr_node, &x_end, &y_end);
+
+  /* Case 1:                       
+   *                     end_rr_node(chany[x][y+1]) 
+   *                        /|\ 
+   *                         |  
+   *                     ---------
+   *                    |         | 
+   * src_rr_node ------>| next_sb |-------> end_rr_node
+   * (chanx[x][y])      |  [x][y] |        (chanx[x+1][y]
+   *                     ---------
+   *                         |
+   *                        \|/
+   *                     end_rr_node(chany[x][y])
+   */
+  /* Case 2                            
+   *                     end_rr_node(chany[x][y+1]) 
+   *                        /|\ 
+   *                         |  
+   *                     ---------
+   *                    |         | 
+   * end_rr_node <------| next_sb |<-------- src_rr_node
+   * (chanx[x][y])      |  [x][y] |        (chanx[x+1][y]
+   *                     ---------
+   *                         |
+   *                        \|/
+   *                     end_rr_node(chany[x][y])
+   */
+  /* Case 3                            
+   *                     end_rr_node(chany[x][y+1]) 
+   *                        /|\ 
+   *                         |  
+   *                     ---------
+   *                    |         | 
+   * end_rr_node <------| next_sb |-------> src_rr_node
+   * (chanx[x][y])      |  [x][y] |        (chanx[x+1][y]
+   *                     ---------
+   *                        /|\
+   *                         |
+   *                     src_rr_node(chany[x][y])
+   */
+  /* Case 4                            
+   *                     src_rr_node(chany[x][y+1]) 
+   *                         | 
+   *                        \|/  
+   *                     ---------
+   *                    |         | 
+   * end_rr_node <------| next_sb |--------> end_rr_node
+   * (chanx[x][y])      |  [x][y] |        (chanx[x+1][y]
+   *                     ---------
+   *                         |
+   *                        \|/
+   *                     end_rr_node(chany[x][y])
+   */
+
+ 
+  /* Try the xlow, ylow of ending rr_node */
+  switch (src_rr_node->type) {
+  case CHANX:
+    next_sb_x = x_end;
+    next_sb_y = y_start;
+    break;
+  case CHANY:
+    next_sb_x = x_start;
+    next_sb_y = y_end;
+    break;
+  default:
+    vpr_printf(TIO_MESSAGE_ERROR, "(File: %s [LINE%d]) Invalid type of rr_node!\n",
+               __FILE__, __LINE__);
+    exit(1);
+  }
+
+  switch (src_rr_node->direction) {
+  case INC_DIRECTION:
+    get_chan_rr_node_end_coordinate(src_rr_node, &x_end, &y_end);
+    if (next_sb_x > x_end) {
+      next_sb_x = x_end;
+    }
+    if (next_sb_y > y_end) {
+      next_sb_y = y_end;
+    }
+    break;
+  case DEC_DIRECTION:
+    break;
+  default:
+    vpr_printf(TIO_MESSAGE_ERROR, "(File: %s [LINE%d]) Invalid type of rr_node!\n",
+               __FILE__, __LINE__);
+    exit(1);
+  }
+
+  DeviceCoordinator sb_coordinator(next_sb_x, next_sb_y);
+  RRSwitchBlock rr_sb = device_rr_switch_block.get_switch_block(sb_coordinator);
+  /* Double check if src_rr_node is in the list */
+  enum e_side side;
+  int index;
+  rr_sb.get_node_side_and_index(src_rr_node, IN_PORT, &side, &index);
+  assert ( (OPEN != index) && (side != NUM_SIDES) );
+
+  /* Double check if end_rr_node is in the list */
+  rr_sb.get_node_side_and_index(end_rr_node, OUT_PORT, &side, &index);
+  assert ( (OPEN != index) && (side != NUM_SIDES) );
+
+  /* Passing the check, assign coordinator of next_sb  */
+
+  return sb_coordinator;
+
+}
+
 
 /** Given a starting rr_node (CHANX or CHANY) 
  *  and a ending rr_node (IPIN) 
@@ -353,6 +550,32 @@ t_sb* get_chan_rr_node_ending_sb(t_rr_node* src_rr_node,
 
 /* Restore the disabled timing for the sb wire */
 void restore_disable_timing_one_sb_output(FILE* fp, 
+                                          RRSwitchBlock& rr_sb,
+                                          t_rr_node* wire_rr_node) {
+  /* Check the file handler */
+  if (NULL == fp) {
+    vpr_printf(TIO_MESSAGE_ERROR,
+               "(FILE:%s,LINE[%d])Invalid file handler for SDC generation",
+               __FILE__, __LINE__); 
+    exit(1);
+  } 
+
+  assert(  ( CHANX == wire_rr_node->type )
+        || ( CHANY == wire_rr_node->type ));
+
+  /* Restore disabled timing for wire_rr_node as an SB output */
+  fprintf(fp, "reset_disable_timing "); 
+  /* output instance name */
+  fprintf(fp, "%s/", 
+          rr_sb.gen_verilog_instance_name()); 
+  dump_verilog_one_sb_chan_pin(fp, rr_sb, wire_rr_node, OUT_PORT); 
+  fprintf(fp, "\n"); 
+
+  return;
+}
+
+/* Restore the disabled timing for the sb wire */
+void restore_disable_timing_one_sb_output(FILE* fp, 
                                           t_sb* cur_sb_info,
                                           t_rr_node* wire_rr_node) {
   /* Check the file handler */
@@ -372,6 +595,32 @@ void restore_disable_timing_one_sb_output(FILE* fp,
   fprintf(fp, "%s/", 
           gen_verilog_one_sb_instance_name(cur_sb_info)); 
   dump_verilog_one_sb_chan_pin(fp, cur_sb_info, wire_rr_node, OUT_PORT); 
+  fprintf(fp, "\n"); 
+
+  return;
+}
+
+/* Restore the disabled timing for the sb wire */
+void set_disable_timing_one_sb_output(FILE* fp, 
+                                      RRSwitchBlock& rr_sb,
+                                      t_rr_node* wire_rr_node) {
+  /* Check the file handler */
+  if (NULL == fp) {
+    vpr_printf(TIO_MESSAGE_ERROR,
+               "(FILE:%s,LINE[%d])Invalid file handler for SDC generation",
+               __FILE__, __LINE__); 
+    exit(1);
+  } 
+
+  assert(  ( CHANX == wire_rr_node->type )
+        || ( CHANY == wire_rr_node->type ));
+
+  /* Restore disabled timing for wire_rr_node as an SB output */
+  fprintf(fp, "set_disable_timing "); 
+  /* output instance name */
+  fprintf(fp, "%s/", 
+          rr_sb.gen_verilog_instance_name()); 
+  dump_verilog_one_sb_chan_pin(fp, rr_sb, wire_rr_node, OUT_PORT); 
   fprintf(fp, "\n"); 
 
   return;

@@ -395,7 +395,8 @@ void vpr_fpga_verilog(t_vpr_setup vpr_setup,
     verilog_generate_report_timing(sram_verilog_orgz_info, tcl_dir_path,
                                    Arch, &vpr_setup.RoutingArch,
                                    num_rr_nodes, rr_node, rr_node_indices,
-                                   vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts);
+                                   vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts,
+                                   vpr_setup.FPGA_SPICE_Opts.compact_routing_hierarchy);
   }
 
   if ((TRUE == vpr_setup.FPGA_SPICE_Opts.BitstreamGenOpts.gen_bitstream)

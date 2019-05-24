@@ -1,6 +1,9 @@
+#ifndef READ_XML_SPICE_UTIL_H 
+#define READ_XML_SPICE_UTIL_H 
 
 /* Declaration of Subroutines */
-void my_free(void* ptr);
+#include "my_free_fwd.h"
+
 void InitSpiceMeasParams(t_spice_meas_params* meas_params);
 void FreeSpiceMeasParams(t_spice_meas_params* meas_params);
 void InitSpiceStimulateParams(t_spice_stimulate_params* stimulate_params);
@@ -18,3 +21,4 @@ void FreeSpice(t_spice* spice);
 void FreeSpiceMuxArch(t_spice_mux_arch* spice_mux_arch);
 void FreeSramInf(t_sram_inf* sram_inf);
 
+#endif
