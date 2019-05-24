@@ -50,6 +50,8 @@
 #include "verilog_sdc_pb_types.h"
 #include "verilog_include_netlists.h"
 
+#include "verilog_api.h"
+
 /***** Subroutines *****/
 /* Alloc array that records Configuration bits for :
  * (1) Switch blocks
@@ -284,8 +286,7 @@ void vpr_fpga_verilog(t_vpr_setup vpr_setup,
     verilog_generate_sdc_pnr(sram_verilog_orgz_info, sdc_dir_path,
                              Arch, &vpr_setup.RoutingArch,
                              num_rr_nodes, rr_node, rr_node_indices, rr_indexed_data,
-                             nx, ny, grid,
-                             vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts);
+                             nx, ny);
   }
 
   /* dump_verilog_sdc_file(); */
@@ -384,10 +385,10 @@ void vpr_fpga_verilog(t_vpr_setup vpr_setup,
    */
   if (TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.print_sdc_analysis) {
     verilog_generate_sdc_analysis(sram_verilog_orgz_info, sdc_dir_path,
-                                  chomped_circuit_name, Arch, &vpr_setup.RoutingArch,
-                                  num_rr_nodes, rr_node, rr_node_indices, rr_indexed_data,
+                                  Arch, 
+                                  num_rr_nodes, rr_node, rr_node_indices, 
                                   nx, ny, grid, block,
-                                  vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts);
+                                  vpr_setup.FPGA_SPICE_Opts.compact_routing_hierarchy);
   }
   /* Output routing report_timing script :
    */

@@ -53,14 +53,17 @@ struct s_sdc_opts {
   boolean break_loops_mux;
 };
 
+static 
 float get_switch_sdc_tmax (t_switch_inf* cur_switch_inf) {
   return cur_switch_inf->R * cur_switch_inf->Cout + cur_switch_inf->Tdel;
 }
 
+static 
 float get_routing_seg_sdc_tmax (t_segment_inf* cur_seg) {
   return cur_seg->Rmetal * cur_seg->Cmetal;
 }
 
+static 
 boolean is_rr_node_to_be_disable_for_analysis(t_rr_node* cur_rr_node) {
   /* Conditions to enable timing analysis for a node 
    * 1st condition: it have a valid vpack_net_number 
@@ -79,6 +82,7 @@ boolean is_rr_node_to_be_disable_for_analysis(t_rr_node* cur_rr_node) {
 /* TO avoid combinational loops caused by memories
  * We disable all the timing paths starting from an output of memory cell
  */
+static 
 void verilog_generate_sdc_break_loop_sram(FILE* fp, 
                                           t_sram_orgz_info* cur_sram_orgz_info) {
   t_spice_model* mem_model = NULL;
@@ -133,6 +137,7 @@ void verilog_generate_sdc_break_loop_sram(FILE* fp,
  * used in FPGA architecture
  * Disable timing starting from any MUX outputs 
  */
+static 
 void verilog_generate_sdc_break_loop_mux(FILE* fp,
                                          int num_switch,
                                          t_switch_inf* switches,
@@ -208,6 +213,7 @@ void verilog_generate_sdc_break_loop_mux(FILE* fp,
   return;
 }
 
+static 
 void verilog_generate_sdc_clock_period(t_sdc_opts sdc_opts,
                                        float critical_path_delay) {
   FILE* fp = NULL;
@@ -294,6 +300,7 @@ void verilog_generate_sdc_clock_period(t_sdc_opts sdc_opts,
   return;
 }
  
+static 
 void verilog_generate_sdc_break_loop_sb(FILE* fp,
                                         int LL_nx, int LL_ny) {
   int ix, iy;
@@ -336,6 +343,7 @@ void verilog_generate_sdc_break_loop_sb(FILE* fp,
   return;
 }
 
+static 
 void verilog_generate_sdc_break_loops(t_sram_orgz_info* cur_sram_orgz_info,
                                       t_sdc_opts sdc_opts,
                                       int LL_nx, int LL_ny,
@@ -384,6 +392,7 @@ void verilog_generate_sdc_break_loops(t_sram_orgz_info* cur_sram_orgz_info,
 /* Constrain a path within a Switch block,
  * If this indicates a metal wire, we constraint to be 0 delay 
  */
+static 
 void verilog_generate_sdc_constrain_one_sb_path(FILE* fp,
                                                 t_sb* cur_sb_info,
                                                 t_rr_node* src_rr_node,
@@ -425,6 +434,7 @@ void verilog_generate_sdc_constrain_one_sb_path(FILE* fp,
   return; 
 }
 
+static 
 void verilog_generate_sdc_constrain_one_sb_mux(FILE* fp,
                                                t_sb* cur_sb_info,
                                                t_rr_node* wire_rr_node) {
@@ -460,6 +470,7 @@ void verilog_generate_sdc_constrain_one_sb_mux(FILE* fp,
 /* Constrain a path within a Switch block,
  * If this indicates a metal wire, we constraint to be 0 delay 
  */
+static 
 void verilog_generate_sdc_constrain_one_cb_path(FILE* fp,
                                                 t_cb* cur_cb_info,
                                                 t_rr_node* src_rr_node,
@@ -512,12 +523,9 @@ void verilog_generate_sdc_constrain_one_cb_path(FILE* fp,
 
 
 /* Constrain the inputs and outputs of SBs, with the Switch delays */
-void verilog_generate_sdc_constrain_sbs(t_sram_orgz_info* cur_sram_orgz_info,
-                                        t_sdc_opts sdc_opts,
-                                        int LL_nx, int LL_ny,
-                                        int num_switch,
-                                        t_switch_inf* switches,
-                                        t_spice* spice) {
+static 
+void verilog_generate_sdc_constrain_sbs(t_sdc_opts sdc_opts,
+                                        int LL_nx, int LL_ny) {
   FILE* fp = NULL;
   int ix, iy;
   int side, itrack;
@@ -578,6 +586,7 @@ void verilog_generate_sdc_constrain_sbs(t_sram_orgz_info* cur_sram_orgz_info,
   return;
 }
 
+static 
 void verilog_generate_sdc_constrain_one_cb(FILE* fp,
                                            t_cb* cur_cb_info) {
   int side, side_cnt;
@@ -625,12 +634,9 @@ void verilog_generate_sdc_constrain_one_cb(FILE* fp,
 }
 
 /* Constrain the inputs and outputs of Connection Blocks, with the Switch delays */
-void verilog_generate_sdc_constrain_cbs(t_sram_orgz_info* cur_sram_orgz_info,
-                                        t_sdc_opts sdc_opts,
-                                        int LL_nx, int LL_ny,
-                                        int num_switch,
-                                        t_switch_inf* switches,
-                                        t_spice* spice) {
+static 
+void verilog_generate_sdc_constrain_cbs(t_sdc_opts sdc_opts,
+                                        int LL_nx, int LL_ny) {
   FILE* fp = NULL;
   int ix, iy;
   char* fname = my_strcat(sdc_opts.sdc_dir, sdc_constrain_cb_file_name);
@@ -679,6 +685,7 @@ void verilog_generate_sdc_constrain_cbs(t_sram_orgz_info* cur_sram_orgz_info,
   return;
 }
 
+static 
 void verilog_generate_sdc_constrain_one_chan(FILE* fp, 
                                              t_rr_type chan_type,
                                              int x, int y,
@@ -747,12 +754,12 @@ void verilog_generate_sdc_constrain_one_chan(FILE* fp,
   return;
 }
 
+static 
 void verilog_generate_sdc_disable_one_unused_chan(FILE* fp, 
                                                   t_rr_type chan_type,
                                                   int x, int y,
                                                   int LL_num_rr_nodes, t_rr_node* LL_rr_node,
-                                                  t_ivec*** LL_rr_node_indices,
-                                                  t_rr_indexed_data* LL_rr_indexed_data) {
+                                                  t_ivec*** LL_rr_node_indices) {
   int chan_width = 0;
   t_rr_node** chan_rr_nodes = NULL;
   int itrack;
@@ -813,14 +820,13 @@ void verilog_generate_sdc_disable_one_unused_chan(FILE* fp,
 
 
 /* Constrain the inputs and outputs of Connection Blocks, with the Switch delays */
-void verilog_generate_sdc_constrain_routing_channels(t_sram_orgz_info* cur_sram_orgz_info,
-                                                     t_sdc_opts sdc_opts,
+static 
+void verilog_generate_sdc_constrain_routing_channels(t_sdc_opts sdc_opts,
                                                      t_arch arch,
                                                      int LL_nx, int LL_ny,
                                                      int LL_num_rr_nodes, t_rr_node* LL_rr_node,
                                                      t_ivec*** LL_rr_node_indices,
-                                                     t_rr_indexed_data* LL_rr_indexed_data,
-                                                     t_spice* spice) {
+                                                     t_rr_indexed_data* LL_rr_indexed_data) {
   FILE* fp = NULL;
   int ix, iy;
   char* fname = my_strcat(sdc_opts.sdc_dir, sdc_constrain_routing_chan_file_name);
@@ -870,6 +876,7 @@ void verilog_generate_sdc_constrain_routing_channels(t_sram_orgz_info* cur_sram_
 /* Disable the timing for all the global port
  * Except the clock ports
  */
+static 
 void verilog_generate_sdc_disable_global_ports(FILE* fp) {
   t_llist* temp = global_ports_head;
   t_spice_model_port* cur_port = NULL;
@@ -912,6 +919,7 @@ void verilog_generate_sdc_disable_global_ports(FILE* fp) {
 }
 
 /* Disable the timing for SRAM outputs */
+static 
 void verilog_generate_sdc_disable_sram_orgz(FILE* fp, 
                                             t_sram_orgz_info* cur_sram_orgz_info) {
   
@@ -938,9 +946,10 @@ void verilog_generate_sdc_disable_sram_orgz(FILE* fp,
 
 void verilog_generate_sdc_disable_unused_sbs_muxs(FILE* fp, int LL_nx, int LL_ny) {
 
-int ix, iy, side, itrack, imux;
-t_rr_node* cur_rr_node;
-t_sb* cur_sb_info;
+  int ix, iy, side, itrack, imux;
+  t_rr_node* cur_rr_node;
+  t_sb* cur_sb_info;
+
   for (ix = 0; ix < (LL_nx + 1); ix++) {
     for (iy = 0; iy < (LL_ny + 1); iy++) {
       cur_sb_info = &(sb_info[ix][iy]);
@@ -969,7 +978,8 @@ t_sb* cur_sb_info;
       } 
     }
   }
-return;
+
+  return;
 }
 
 void verilog_generate_sdc_disable_unused_cbs_muxs(FILE* fp) {
@@ -1037,11 +1047,69 @@ void verilog_generate_sdc_disable_unused_cbs_muxs(FILE* fp) {
   return;
 }
 
+static 
+void verilog_generate_sdc_disable_unused_sbs(FILE* fp) {
+  /* Check the file handler */
+  if (NULL == fp) {
+    vpr_printf(TIO_MESSAGE_ERROR,
+               "(FILE:%s,LINE[%d])Invalid file handler for SDC generation",
+               __FILE__, __LINE__); 
+    exit(1);
+  } 
+
+  DeviceCoordinator sb_range = device_rr_switch_block.get_switch_block_range();
+  /* We start from a SB[x][y] */
+  for (size_t ix = 0; ix < sb_range.get_x(); ++ix) {
+    for (size_t iy = 0; iy < sb_range.get_y(); ++iy) {
+      RRSwitchBlock rr_sb = device_rr_switch_block.get_switch_block(ix, iy);
+      /* Print comments */
+      fprintf(fp,
+              "##################################################\n"); 
+      fprintf(fp, 
+              "### Disable Timing for an Switch block[%lu][%lu] ###\n",
+              ix, iy);
+      fprintf(fp,
+              "##################################################\n"); 
+      for (size_t side = 0; side < rr_sb.get_num_sides(); ++side) {
+        Side side_manager(side);
+        /* Disable Channel inputs and outputs*/
+        for (size_t itrack = 0; itrack < rr_sb.get_chan_width(side_manager.get_side()); ++itrack) {
+          assert((CHANX == rr_sb.get_chan_node(side_manager.get_side(), itrack)->type)
+               ||(CHANY == rr_sb.get_chan_node(side_manager.get_side(), itrack)->type));
+          if (FALSE == is_rr_node_to_be_disable_for_analysis(rr_sb.get_chan_node(side_manager.get_side(), itrack))) {
+            continue;
+          }
+          fprintf(fp, "set_disable_timing ");
+          fprintf(fp, "%s/", 
+                  rr_sb.gen_verilog_instance_name());
+          dump_verilog_one_sb_chan_pin(fp, rr_sb, 
+                                       rr_sb.get_chan_node(side_manager.get_side(), itrack), 
+                                       rr_sb.get_chan_node_direction(side_manager.get_side(), itrack)); 
+          fprintf(fp, "\n");
+        }
+        /* Disable OPINs*/
+        for (size_t inode = 0; inode < rr_sb.get_num_opin_nodes(side_manager.get_side()); ++inode) {
+          assert (OPIN == rr_sb.get_opin_node(side_manager.get_side(), inode)->type);
+          if (FALSE == is_rr_node_to_be_disable_for_analysis(rr_sb.get_opin_node(side_manager.get_side(), inode))) {
+            continue;
+          }
+          fprintf(fp, "set_disable_timing ");
+          fprintf(fp, "%s/", 
+                  rr_sb.gen_verilog_instance_name());
+          dump_verilog_one_sb_routing_pin(fp, rr_sb,
+                                          rr_sb.get_opin_node(side_manager.get_side(), inode)); 
+          fprintf(fp, "\n");
+        }
+      }
+    }
+  }
+
+  return;
+}
+
+static 
 void verilog_generate_sdc_disable_unused_sbs(FILE* fp,
-                                             int LL_nx, int LL_ny, 
-                                             int num_switch,
-                                             t_switch_inf* switches,
-                                             t_spice* spice) {
+                                             int LL_nx, int LL_ny) {
   int ix, iy;
   int side, itrack, inode;
   t_sb* cur_sb_info = NULL;
@@ -1103,6 +1171,7 @@ void verilog_generate_sdc_disable_unused_sbs(FILE* fp,
 }
 
 
+static 
 void verilog_generate_sdc_disable_one_unused_cb(FILE* fp, 
                                                 t_cb* cur_cb_info) {
   int side, side_cnt;
@@ -1157,11 +1226,9 @@ void verilog_generate_sdc_disable_one_unused_cb(FILE* fp,
   return;
 }
 
+static 
 void verilog_generate_sdc_disable_unused_cbs(FILE* fp,
-                                             int LL_nx, int LL_ny, 
-                                             int num_switch,
-                                             t_switch_inf* switches,
-                                             t_spice* spice) {
+                                             int LL_nx, int LL_ny) {
   int ix, iy;
 
   /* Check the file handler */
@@ -1196,12 +1263,11 @@ void verilog_generate_sdc_disable_unused_cbs(FILE* fp,
 }
 
 /* Constrain the inputs and outputs of Connection Blocks, with the Switch delays */
+static 
 void verilog_generate_sdc_disable_unused_routing_channels(FILE* fp, 
-                                                          t_arch arch,
                                                           int LL_nx, int LL_ny, 
                                                           int LL_num_rr_nodes, t_rr_node* LL_rr_node,
-                                                          t_ivec*** LL_rr_node_indices,
-                                                          t_rr_indexed_data* LL_rr_indexed_data) {
+                                                          t_ivec*** LL_rr_node_indices) {
   int ix, iy;
 
   /* Check the file handler */
@@ -1218,7 +1284,7 @@ void verilog_generate_sdc_disable_unused_routing_channels(FILE* fp,
     for (ix = 1; ix < (LL_nx + 1); ix++) {
       verilog_generate_sdc_disable_one_unused_chan(fp, CHANX, ix, iy,
                                                    LL_num_rr_nodes, LL_rr_node, 
-                                                   LL_rr_node_indices, LL_rr_indexed_data);
+                                                   LL_rr_node_indices);
     }
   }
   /* Y - channels [1...ny][0..nx]*/
@@ -1226,7 +1292,7 @@ void verilog_generate_sdc_disable_unused_routing_channels(FILE* fp,
     for (iy = 1; iy < (LL_ny + 1); iy++) {
       verilog_generate_sdc_disable_one_unused_chan(fp, CHANY, ix, iy, 
                                                    LL_num_rr_nodes, LL_rr_node, 
-                                                   LL_rr_node_indices, LL_rr_indexed_data);
+                                                   LL_rr_node_indices);
     }
   }
 
@@ -1236,6 +1302,7 @@ void verilog_generate_sdc_disable_unused_routing_channels(FILE* fp,
 /* Go recursively in the hierarchy 
  * and disable all the pb_types 
  */
+static 
 void rec_verilog_generate_sdc_disable_unused_pb_types(FILE* fp, 
                                                       char* prefix,
                                                       t_pb_type* cur_pb_type) {
@@ -1288,6 +1355,7 @@ void rec_verilog_generate_sdc_disable_unused_pb_types(FILE* fp,
 /* This block is totally unused.
  * We just go through each pb_type and disable all the ports using wildcards
  */
+static 
 void verilog_generate_sdc_disable_one_unused_grid(FILE* fp,
                                                   t_type_ptr cur_grid_type,
                                                   int block_x, int block_y,
@@ -1341,6 +1409,7 @@ void verilog_generate_sdc_disable_one_unused_grid(FILE* fp,
  * This function will search the local_rr_graph of a phy_pb of the block
  * And disable the unused resources in a SDC format
  */
+static 
 void verilog_generate_sdc_disable_one_unused_block(FILE* fp,
                                                    t_block* cur_block) {
   int inode;
@@ -1394,6 +1463,7 @@ void verilog_generate_sdc_disable_one_unused_block(FILE* fp,
   return;
 }
 
+static 
 void verilog_generate_sdc_disable_unused_grids(FILE* fp, 
                                                int LL_nx, int LL_ny, 
                                                t_grid_tile** LL_grid,
@@ -1661,8 +1731,8 @@ void dump_sdc_pb_graph_pin_muxes (FILE* fp,
  * We consider the top module in formal verification purpose here
  * which is easier 
  */
+static 
 void verilog_generate_sdc_input_output_delays(FILE* fp,
-                                              char* circuit_name,
                                               float critical_path_delay) {
   int iopad_idx, iblock, iport;
   int found_mapped_inpad;
@@ -1791,8 +1861,7 @@ void verilog_generate_sdc_pnr(t_sram_orgz_info* cur_sram_orgz_info,
                               int LL_num_rr_nodes, t_rr_node* LL_rr_node,
                               t_ivec*** LL_rr_node_indices,
                               t_rr_indexed_data* LL_rr_indexed_data,
-                              int LL_nx, int LL_ny, t_grid_tile** LL_grid,
-                              t_syn_verilog_opts fpga_verilog_opts) {
+                              int LL_nx, int LL_ny) {
   t_sdc_opts sdc_opts;
 
   /* Initialize */
@@ -1818,27 +1887,22 @@ void verilog_generate_sdc_pnr(t_sram_orgz_info* cur_sram_orgz_info,
 
   /* Part 3. Output routing constraints for Switch Blocks */
   if (TRUE == sdc_opts.constrain_sbs) {
-    verilog_generate_sdc_constrain_sbs(cur_sram_orgz_info, sdc_opts, 
-                                       LL_nx, LL_ny, 
-                                       routing_arch->num_switch, switch_inf,
-                                       arch.spice); 
+    verilog_generate_sdc_constrain_sbs(sdc_opts, 
+                                       LL_nx, LL_ny); 
   }
 
   /* Part 4. Output routing constraints for Connection Blocks */
   if (TRUE == sdc_opts.constrain_cbs) {
-    verilog_generate_sdc_constrain_cbs(cur_sram_orgz_info, sdc_opts, 
-                                       LL_nx, LL_ny, 
-                                       routing_arch->num_switch, switch_inf,
-                                       arch.spice); 
+    verilog_generate_sdc_constrain_cbs(sdc_opts, 
+                                       LL_nx, LL_ny); 
   }
 
   /* Part 5. Output routing constraints for Connection Blocks */
   if (TRUE == sdc_opts.constrain_routing_channels) {
-    verilog_generate_sdc_constrain_routing_channels(cur_sram_orgz_info, sdc_opts, arch, 
+    verilog_generate_sdc_constrain_routing_channels(sdc_opts, arch, 
                                                     LL_nx, LL_ny, 
                                                     LL_num_rr_nodes, LL_rr_node, 
-                                                    LL_rr_node_indices, LL_rr_indexed_data,
-                                                    arch.spice); 
+                                                    LL_rr_node_indices, LL_rr_indexed_data); 
   }
 
   /* Part 6. Output routing constraints for Programmable blocks */
@@ -1853,15 +1917,12 @@ void verilog_generate_sdc_pnr(t_sram_orgz_info* cur_sram_orgz_info,
 /* Output a SDC file to constrain a FPGA mapped with a benchmark */
 void verilog_generate_sdc_analysis(t_sram_orgz_info* cur_sram_orgz_info,
                                    char* sdc_dir,
-                                   char* circuit_name,
                                    t_arch arch,
-                                   t_det_routing_arch* routing_arch,
                                    int LL_num_rr_nodes, t_rr_node* LL_rr_node,
                                    t_ivec*** LL_rr_node_indices,
-                                   t_rr_indexed_data* LL_rr_indexed_data,
                                    int LL_nx, int LL_ny, t_grid_tile** LL_grid,
                                    t_block* LL_block, 
-                                   t_syn_verilog_opts fpga_verilog_opts) {
+                                   boolean compact_routing_hierarchy) {
   FILE* fp = NULL;
   char* fname = my_strcat(sdc_dir, sdc_analysis_file_name);
 
@@ -1881,7 +1942,7 @@ void verilog_generate_sdc_analysis(t_sram_orgz_info* cur_sram_orgz_info,
   dump_verilog_sdc_file_header(fp, "Constrain for Timing/Power analysis on the mapped FPGA");
  
   /* Create clock and set input/output delays */
-  verilog_generate_sdc_input_output_delays(fp, circuit_name, 
+  verilog_generate_sdc_input_output_delays(fp, 
                                            arch.spice->spice_params.stimulate_params.vpr_crit_path_delay);
 
   /* Disable the timing for global ports */
@@ -1892,20 +1953,20 @@ void verilog_generate_sdc_analysis(t_sram_orgz_info* cur_sram_orgz_info,
 
   /* Disable timing for un-used resources */
   /* Apply to Routing Channels */
-  verilog_generate_sdc_disable_unused_routing_channels(fp, arch, LL_nx, LL_ny, 
+  verilog_generate_sdc_disable_unused_routing_channels(fp, LL_nx, LL_ny, 
                                                        LL_num_rr_nodes, LL_rr_node, 
-                                                       LL_rr_node_indices, LL_rr_indexed_data);
+                                                       LL_rr_node_indices);
 
   /* Apply to Connection blocks */
-  verilog_generate_sdc_disable_unused_cbs(fp, LL_nx, LL_ny,
-                                          routing_arch->num_switch, switch_inf,
-                                          arch.spice); 
+  verilog_generate_sdc_disable_unused_cbs(fp, LL_nx, LL_ny); 
   verilog_generate_sdc_disable_unused_cbs_muxs(fp);
 
   /* Apply to Switch blocks */
-  verilog_generate_sdc_disable_unused_sbs(fp, LL_nx, LL_ny,
-                                          routing_arch->num_switch, switch_inf,
-                                          arch.spice); 
+  if (TRUE == compact_routing_hierarchy) {
+    verilog_generate_sdc_disable_unused_sbs(fp); 
+  } else {
+    verilog_generate_sdc_disable_unused_sbs(fp, LL_nx, LL_ny); 
+  }
 
   verilog_generate_sdc_disable_unused_sbs_muxs(fp, LL_nx, LL_ny);
 
