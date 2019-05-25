@@ -3129,7 +3129,6 @@ void spice_backannotate_vpr_post_route_info(t_det_routing_arch RoutingArch,
   /* Build Array for each Switch block and Connection block */ 
   vpr_printf(TIO_MESSAGE_INFO, "Collecting detailed information for each Switch block...\n");
   alloc_and_build_switch_blocks_info(RoutingArch, num_rr_nodes, rr_node, rr_node_indices);
-  device_rr_switch_block = build_device_rr_switch_blocks(num_rr_nodes, rr_node, rr_node_indices);
 
   vpr_printf(TIO_MESSAGE_INFO, "Collecting detailed information for each to Connection block...\n");
   alloc_and_build_connection_blocks_info(RoutingArch, num_rr_nodes, rr_node, rr_node_indices);

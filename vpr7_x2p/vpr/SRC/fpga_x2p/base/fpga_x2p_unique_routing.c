@@ -1037,6 +1037,7 @@ RRSwitchBlock build_rr_switch_block(int sb_x, int sb_y,
     rr_switch_block.clear_ipin_nodes(side_manager.get_side());
 
     /* Free */
+    my_free(chan_rr_node);
     temp_num_opin_rr_nodes[0] = 0;
     my_free(temp_opin_rr_node[0]);
     temp_num_opin_rr_nodes[1] = 0;
@@ -1081,6 +1082,10 @@ DeviceRRSwitchBlock build_device_rr_switch_blocks(int LL_num_rr_nodes,
   vpr_printf(TIO_MESSAGE_INFO, 
              "Detect %d independent switch blocks from %d switch blocks.\n",
              LL_device_rr_switch_block.get_num_unique_mirror(), (nx + 1) * (ny + 1) );
+
+  vpr_printf(TIO_MESSAGE_INFO, 
+             "Detect %d rotatable unique switch blocks from %d switch blocks.\n",
+             LL_device_rr_switch_block.get_num_rotatable_mirror(), (nx + 1) * (ny + 1) );
 
   return LL_device_rr_switch_block;
 }

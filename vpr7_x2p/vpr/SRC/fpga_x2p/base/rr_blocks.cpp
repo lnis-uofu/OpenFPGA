@@ -336,6 +336,16 @@ size_t RRSwitchBlock::get_chan_width(enum e_side side) const {
   return chan_node_[side_manager.to_size_t()].size(); 
 }
 
+/* Get the maximum number of routing tracks on all sides */
+size_t RRSwitchBlock::get_max_chan_width() const {
+  size_t max_chan_width = 0;
+  for (size_t side = 0; side < get_num_sides(); ++side) {
+    Side side_manager(side);
+    max_chan_width = std::max(max_chan_width, get_chan_width(side_manager.get_side()));
+  }
+  return max_chan_width;
+} 
+
 /* Get the direction of a rr_node at a given side and track_id */
 enum PORTS RRSwitchBlock::get_chan_node_direction(enum e_side side, size_t track_id) const {
   Side side_manager(side);
@@ -783,12 +793,12 @@ void RRSwitchBlock::rotate_chan_node(size_t offset) {
     size_t rotate_begin = 0;
     size_t rotate_end = 0;
     /* Partition the chan nodes on this side, depending on its length */
+    /* skip this side if there is no nodes */
+    if (0 == get_chan_width(side_manager.get_side())) {
+      continue;
+    }
     for (size_t inode = 0; inode < get_chan_width(side_manager.get_side()) - 1; ++inode) {
-      if ( ( (chan_node_[side][inode]->xlow  != chan_node_[side][inode + 1]->xlow) 
-          || (chan_node_[side][inode]->ylow  != chan_node_[side][inode + 1]->ylow) 
-          || (chan_node_[side][inode]->xhigh != chan_node_[side][inode + 1]->xhigh) 
-          || (chan_node_[side][inode]->yhigh != chan_node_[side][inode + 1]->yhigh)
-          || (chan_node_direction_[side][inode] != chan_node_direction_[side][inode + 1]))
+      if ( ( abs(chan_node_[side][inode]->yhigh - chan_node_[side][inode]->ylow + chan_node_[side][inode]->xhigh - chan_node_[side][inode]->xlow) != abs(chan_node_[side][inode + 1]->yhigh - chan_node_[side][inode + 1]->ylow + chan_node_[side][inode + 1]->xhigh - chan_node_[side][inode + 1]->xlow)) 
         || ( inode == get_chan_width(side_manager.get_side()) - 2) ) {
         /* Record the upper bound  */
         if ( inode == get_chan_width(side_manager.get_side()) - 2)  {
@@ -797,7 +807,13 @@ void RRSwitchBlock::rotate_chan_node(size_t offset) {
           rotate_end = inode;
         }
         /* Make sure offset is in range */
-        assert (offset < rotate_end - rotate_begin);
+        /* skip this side if there is no nodes */
+        if (0 >= rotate_end - rotate_begin) {
+          /* Update the lower bound  */
+          rotate_begin = inode + 1;
+          continue;
+        }
+        assert(offset < rotate_end - rotate_begin + 1);
         /* Find a group split, rotate */
         std::rotate(chan_node_.begin() + rotate_begin, 
                     chan_node_.begin() + rotate_begin + offset, 
@@ -822,6 +838,10 @@ void RRSwitchBlock::rotate_opin_node(size_t offset) {
     Side side_manager(side);
     size_t rotate_begin = 0;
     size_t rotate_end = 0;
+    /* skip this side if there is no nodes */
+    if (0 == get_num_opin_nodes(side_manager.get_side())) {
+      continue;
+    }
     /* Partition the opin nodes on this side, depending on grids */
     for (size_t inode = 0; inode < get_num_opin_nodes(side_manager.get_side()) - 1; ++inode) {
       if ( ( (opin_node_[side][inode]->xlow  != opin_node_[side][inode + 1]->xlow) 
@@ -836,8 +856,14 @@ void RRSwitchBlock::rotate_opin_node(size_t offset) {
         } else {
           rotate_end = inode;
         }
+        /* skip this side if there is no nodes */
+        if (0 >= rotate_end - rotate_begin) {
+          /* Update the lower bound  */
+          rotate_begin = inode + 1;
+          continue;
+        }
         /* Make sure offset is in range */
-        assert (offset < rotate_end - rotate_begin);
+        assert (offset < rotate_end - rotate_begin + 1);
         /* Find a group split, rotate */
         std::rotate(opin_node_.begin() + rotate_begin, 
                     opin_node_.begin() + rotate_begin + offset, 
@@ -1153,9 +1179,12 @@ void DeviceRRSwitchBlock::set_rr_switch_block_conf_bits_msb(DeviceCoordinator& c
 void DeviceRRSwitchBlock::reserve(DeviceCoordinator& coordinator) { 
   rr_switch_block_.resize(coordinator.get_x());
   rr_switch_block_mirror_id_.resize(coordinator.get_x());
+  rr_switch_block_rotatable_mirror_id_.resize(coordinator.get_x());
+
   for (size_t x = 0; x < coordinator.get_x(); ++x) {
     rr_switch_block_[x].resize(coordinator.get_y()); 
     rr_switch_block_mirror_id_[x].resize(coordinator.get_y()); 
+    rr_switch_block_rotatable_mirror_id_[x].resize(coordinator.get_y()); 
   }
   return;
 }
@@ -1165,11 +1194,13 @@ void DeviceRRSwitchBlock::resize_upon_need(DeviceCoordinator& coordinator) {
   if (coordinator.get_x() + 1 > rr_switch_block_.capacity()) {
     rr_switch_block_.resize(coordinator.get_x());
     rr_switch_block_mirror_id_.resize(coordinator.get_x());
+    rr_switch_block_rotatable_mirror_id_.resize(coordinator.get_x());
   }
 
   if (coordinator.get_y() + 1 > rr_switch_block_[coordinator.get_x()].capacity()) {
     rr_switch_block_[coordinator.get_x()].resize(coordinator.get_y());
     rr_switch_block_mirror_id_[coordinator.get_x()].resize(coordinator.get_y());
+    rr_switch_block_rotatable_mirror_id_[coordinator.get_x()].resize(coordinator.get_y());
   }
   
   return;
@@ -1179,6 +1210,7 @@ void DeviceRRSwitchBlock::resize_upon_need(DeviceCoordinator& coordinator) {
 void DeviceRRSwitchBlock::add_rr_switch_block(DeviceCoordinator& coordinator, 
                                               RRSwitchBlock& rr_switch_block) {
   bool is_unique_mirror = true;
+  bool is_rotatable_mirror = true;
 
   /* Resize upon needs*/
   resize_upon_need(coordinator);
@@ -1203,7 +1235,33 @@ void DeviceRRSwitchBlock::add_rr_switch_block(DeviceCoordinator& coordinator,
     rr_switch_block_mirror_id_[coordinator.get_x()][coordinator.get_y()] = unique_mirror_.size() - 1; 
   }
 
-  /* TODO: add rotatable mirror support */
+  /* add rotatable mirror support */
+  for (size_t mirror_id = 0; mirror_id < get_num_rotatable_mirror(); ++mirror_id) {
+    RRSwitchBlock rotate_mirror = rr_switch_block;
+    /* Try to rotate as many times as the maximum channel width in this switch block
+     * This may not fully cover all the rotation possibility but may be enough now  
+     */
+    for (size_t offset = 0; offset < rr_switch_block.get_max_chan_width(); ++offset) {
+      rotate_mirror.rotate(1);
+      if (true == get_switch_block(unique_mirror_[mirror_id]).is_mirror(rotate_mirror)) {
+        /* This is a mirror, raise the flag and we finish */
+        is_rotatable_mirror = false;
+        /* Record the id of unique mirror */
+        rr_switch_block_rotatable_mirror_id_[coordinator.get_x()][coordinator.get_y()] = mirror_id; 
+        break;
+      }
+    }
+    if (false == is_rotatable_mirror) {
+      break;
+    }
+  }
+  /* Add to list if this is a unique mirror*/
+  if (true == is_rotatable_mirror) {
+    rotatable_mirror_.push_back(coordinator);
+    /* Record the id of unique mirror */
+    rr_switch_block_rotatable_mirror_id_[coordinator.get_x()][coordinator.get_y()] = rotatable_mirror_.size() - 1; 
+  }
+
 
   return;
 } 

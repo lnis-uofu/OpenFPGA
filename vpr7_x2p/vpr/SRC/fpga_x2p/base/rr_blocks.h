@@ -126,6 +126,7 @@ class RRSwitchBlock {
     DeviceCoordinator get_coordinator() const; /* Get the number of sides of this SB */
     size_t get_num_sides() const; /* Get the number of sides of this SB */
     size_t get_chan_width(enum e_side side) const; /* Get the number of routing tracks on a side */
+    size_t get_max_chan_width() const; /* Get the maximum number of routing tracks on all sides */
     enum PORTS get_chan_node_direction(enum e_side side, size_t track_id) const; /* Get the direction of a rr_node at a given side and track_id */
     t_rr_node* get_chan_node(enum e_side side, size_t track_id) const; /* get a rr_node at a given side and track_id */
     size_t get_num_ipin_nodes(enum e_side side) const; /* Get the number of IPIN rr_nodes on a side */
@@ -223,6 +224,7 @@ class DeviceRRSwitchBlock {
   private: /* Internal Data */
     std::vector< std::vector<RRSwitchBlock> > rr_switch_block_;
     std::vector< std::vector<size_t> > rr_switch_block_mirror_id_; /* A map from rr_switch_block to its unique mirror */
+    std::vector< std::vector<size_t> > rr_switch_block_rotatable_mirror_id_; /* A map from rr_switch_block to its unique mirror */
     std::vector<DeviceCoordinator> unique_mirror_; 
     std::vector<DeviceCoordinator> rotatable_mirror_; 
 };
