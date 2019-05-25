@@ -775,6 +775,92 @@ void RRSwitchBlock::set_conf_bits_msb(size_t conf_bits_msb) {
   return;
 }
 
+/* rotate all the channel nodes by a given offset */
+void RRSwitchBlock::rotate_chan_node(size_t offset) {
+  /* Rotate chan nodes on each side */
+  for (size_t side = 0; side < get_num_sides(); ++side) {
+    Side side_manager(side);
+    size_t rotate_begin = 0;
+    size_t rotate_end = 0;
+    /* Partition the chan nodes on this side, depending on its length */
+    for (size_t inode = 0; inode < get_chan_width(side_manager.get_side()) - 1; ++inode) {
+      if ( ( (chan_node_[side][inode]->xlow  != chan_node_[side][inode + 1]->xlow) 
+          || (chan_node_[side][inode]->ylow  != chan_node_[side][inode + 1]->ylow) 
+          || (chan_node_[side][inode]->xhigh != chan_node_[side][inode + 1]->xhigh) 
+          || (chan_node_[side][inode]->yhigh != chan_node_[side][inode + 1]->yhigh)
+          || (chan_node_direction_[side][inode] != chan_node_direction_[side][inode + 1]))
+        || ( inode == get_chan_width(side_manager.get_side()) - 2) ) {
+        /* Record the upper bound  */
+        if ( inode == get_chan_width(side_manager.get_side()) - 2)  {
+          rotate_end = get_chan_width(side_manager.get_side()) - 1;
+        } else {
+          rotate_end = inode;
+        }
+        /* Make sure offset is in range */
+        assert (offset < rotate_end - rotate_begin);
+        /* Find a group split, rotate */
+        std::rotate(chan_node_.begin() + rotate_begin, 
+                    chan_node_.begin() + rotate_begin + offset, 
+                    chan_node_.begin() + rotate_end);
+        std::rotate(chan_node_direction_.begin() + rotate_begin, 
+                    chan_node_direction_.begin() + rotate_begin + offset, 
+                    chan_node_direction_.begin() + rotate_end);
+        /* Update the lower bound  */
+        rotate_begin = inode + 1;
+      }
+    }
+
+  }
+
+  return;
+} 
+
+/* rotate all the opin nodes by a given offset */
+void RRSwitchBlock::rotate_opin_node(size_t offset) {
+  /* Rotate opin nodes on each side */
+  for (size_t side = 0; side < get_num_sides(); ++side) {
+    Side side_manager(side);
+    size_t rotate_begin = 0;
+    size_t rotate_end = 0;
+    /* Partition the opin nodes on this side, depending on grids */
+    for (size_t inode = 0; inode < get_num_opin_nodes(side_manager.get_side()) - 1; ++inode) {
+      if ( ( (opin_node_[side][inode]->xlow  != opin_node_[side][inode + 1]->xlow) 
+          || (opin_node_[side][inode]->ylow  != opin_node_[side][inode + 1]->ylow) 
+          || (opin_node_[side][inode]->xhigh != opin_node_[side][inode + 1]->xhigh) 
+          || (opin_node_[side][inode]->yhigh != opin_node_[side][inode + 1]->yhigh)
+          || (opin_node_grid_side_[side][inode] != opin_node_grid_side_[side][inode + 1]))
+        || ( inode == get_num_opin_nodes(side_manager.get_side()) - 2) ) {
+        /* Record the upper bound  */
+        if ( inode == get_num_opin_nodes(side_manager.get_side()) - 2)  {
+          rotate_end = get_num_opin_nodes(side_manager.get_side()) - 1;
+        } else {
+          rotate_end = inode;
+        }
+        /* Make sure offset is in range */
+        assert (offset < rotate_end - rotate_begin);
+        /* Find a group split, rotate */
+        std::rotate(opin_node_.begin() + rotate_begin, 
+                    opin_node_.begin() + rotate_begin + offset, 
+                    opin_node_.begin() + rotate_end);
+        std::rotate(opin_node_grid_side_.begin() + rotate_begin, 
+                    opin_node_grid_side_.begin() + rotate_begin + offset, 
+                    opin_node_grid_side_.begin() + rotate_end);
+        /* Update the lower bound  */
+        rotate_begin = inode + 1;
+      }
+    }
+  }
+
+  return;
+} 
+
+/* rotate all the channel and opin nodes by a given offset */
+void RRSwitchBlock::rotate(size_t offset) {
+  rotate_chan_node(offset);
+  rotate_opin_node(offset);
+  return;
+} 
+
 void RRSwitchBlock::clear() {
   /* Clean all the vectors */
   assert(validate_num_sides());
