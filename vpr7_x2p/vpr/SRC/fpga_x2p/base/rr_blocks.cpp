@@ -1434,6 +1434,8 @@ void DeviceRRSwitchBlock::add_rr_switch_block(DeviceCoordinator& coordinator,
     rr_switch_block_mirror_id_[coordinator.get_x()][coordinator.get_y()] = unique_mirror_.size() - 1; 
   }
 
+  return; /* skip rotable mirror searching...*/
+
   /* add rotatable mirror support */
   for (size_t mirror_id = 0; mirror_id < get_num_rotatable_mirror(); ++mirror_id) {
     RRSwitchBlock rotate_mirror = rr_switch_block;
@@ -1476,8 +1478,8 @@ void DeviceRRSwitchBlock::add_rr_switch_block(DeviceCoordinator& coordinator,
 
       /* Rotate TOP and BOTTOM only */
       RRSwitchBlock rotate_y_mirror = rotate_mirror;
-      rotate_y_mirror.rotate_side(TOP, 1);
-      rotate_y_mirror.rotate_side(BOTTOM, 1);
+      rotate_y_mirror.rotate_side(TOP, 2);
+      rotate_y_mirror.rotate_side(BOTTOM, 2);
 
       if (true == get_switch_block(rotatable_mirror_[mirror_id]).is_mirror(rotate_y_mirror)) {
         /* This is a mirror, raise the flag and we finish */
@@ -1488,7 +1490,7 @@ void DeviceRRSwitchBlock::add_rr_switch_block(DeviceCoordinator& coordinator,
       }
 
       /* Rotate all sides */
-      rotate_mirror.rotate(1);
+      rotate_mirror.rotate(2);
     }
     if (false == is_rotatable_mirror) {
       break;

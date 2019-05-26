@@ -1074,10 +1074,11 @@ DeviceRRSwitchBlock build_device_rr_switch_blocks(int LL_num_rr_nodes, t_rr_node
   vpr_printf(TIO_MESSAGE_INFO, 
              "Detect %d independent switch blocks from %d switch blocks.\n",
              LL_device_rr_switch_block.get_num_unique_mirror(), (nx + 1) * (ny + 1) );
-
+  /* Skip rotating mirror searching 
   vpr_printf(TIO_MESSAGE_INFO, 
              "Detect %d rotatable unique switch blocks from %d switch blocks.\n",
              LL_device_rr_switch_block.get_num_rotatable_mirror(), (nx + 1) * (ny + 1) );
+   */
 
   return LL_device_rr_switch_block;
 }

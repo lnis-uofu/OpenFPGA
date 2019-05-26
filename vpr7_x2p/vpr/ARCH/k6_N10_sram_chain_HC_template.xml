@@ -150,8 +150,8 @@
   <!-- ODIN II specific config ends -->
  
   <!-- Physical descriptions begin -->
-  <!--layout auto="1.0"/-->
-  <layout height="20" width="20"/>
+  <layout auto="1.0"/>
+  <!--layout height="20" width="20"/-->
   <spice_settings>
     <parameters>
       <options sim_temp="25" post="off" captab="off" fast="on"/>
