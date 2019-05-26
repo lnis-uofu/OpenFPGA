@@ -294,42 +294,26 @@ boolean is_two_switch_blocks_mirror(t_sb* src, t_sb* des) {
  * If the 1st SB is already a mirror to another, we will trace back to the upstream base and update the 2nd SB
  */
 void assign_mirror_switch_blocks() {
+  /* A vector of coordinators of  mirrors */
+  std::vector<t_sb*> mirror;
 
   /* Walkthrough each column, and find mirrors */
   for (int ix = 0; ix < (nx + 1); ++ix) {
     for (int iy = 0; iy < (ny + 1); ++iy) {
-      for (int jy = iy; jy < (ny + 1); ++jy) {
-        /* bypass the same one */
-        if (iy == jy) {
-          continue;
-        }
+      bool is_unique_mirror = true;
+      for (size_t imirror = 0; imirror < mirror.size(); ++imirror) {
         /* Do one-to-one comparison */
-        if (FALSE == is_two_switch_blocks_mirror(&(sb_info[ix][iy]), &(sb_info[ix][jy]))) {
-          /* Nothing to do if the two switch blocks are not equivalent */
-          continue;
+        if (TRUE == is_two_switch_blocks_mirror(mirror[imirror], &(sb_info[ix][iy]))) {
+          /* Find two equivalent switch blocks */
+          is_unique_mirror = false;
+          /* configure the mirror of the second switch block */
+          assign_switch_block_mirror(mirror[imirror], &(sb_info[ix][iy]));
+          break;
         }
-        /* configure the mirror of the second switch block */
-        assign_switch_block_mirror(&(sb_info[ix][iy]), &(sb_info[ix][jy]));
       }
-    }
-  }
-  /* Now mirror switch blocks in each column has been annotated */
-
-  /* Walkthrough each row, and find mirrors */
-  for (int iy = 0; iy < (ny + 1); ++iy) {
-    for (int ix = 0; ix < (nx + 1); ++ix) {
-      for (int jx = ix; jx < (nx + 1); ++jx) {
-        /* bypass the same one */
-        if (ix == jx) {
-          continue;
-        }
-        /* Do one-to-one comparison */
-        if (FALSE == is_two_switch_blocks_mirror(&(sb_info[ix][iy]), &(sb_info[jx][iy]))) {
-          /* Nothing to do if the two switch blocks are not equivalent */
-          continue;
-        }
-        /* configure the mirror of the second switch block */
-        assign_switch_block_mirror(&(sb_info[ix][iy]), &(sb_info[jx][iy]));
+      if (true == is_unique_mirror) {
+        /* add to unique mirror list */
+        mirror.push_back(&(sb_info[ix][iy]));
       }
     }
   }
