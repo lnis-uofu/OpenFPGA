@@ -1400,7 +1400,7 @@ void fpga_x2p_setup(t_vpr_setup vpr_setup,
 
     /* Assign Gobal variable: build the Routing Resource Channels */
     device_rr_chan = build_device_rr_chan(num_rr_nodes, rr_node, rr_node_indices, Arch->num_segments, rr_indexed_data);
-    device_rr_switch_block = build_device_rr_switch_blocks(num_rr_nodes, rr_node, rr_node_indices);
+    device_rr_switch_block = build_device_rr_switch_blocks(num_rr_nodes, rr_node, rr_node_indices, Arch->num_segments, rr_indexed_data);
 
     /* Rotatable will be done in the next step 
     identify_rotatable_switch_blocks(); 

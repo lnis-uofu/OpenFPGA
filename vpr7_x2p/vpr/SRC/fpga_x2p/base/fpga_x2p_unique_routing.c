@@ -82,9 +82,9 @@ void print_device_rr_chan_stats(DeviceRRChan& device_rr_chan);
 
 static 
 RRSwitchBlock build_rr_switch_block(int sb_x, int sb_y, 
-                                    int LL_num_rr_nodes,
-                                    t_rr_node* LL_rr_node,
-                                    t_ivec*** LL_rr_node_indices);
+                                    int LL_num_rr_nodes, t_rr_node* LL_rr_node, 
+                                    t_ivec*** LL_rr_node_indices, int num_segments,
+                                    t_rr_indexed_data* LL_rr_indexed_data);
 
 /***** subroutines *****/
 void assign_switch_block_mirror(t_sb* src, t_sb* des) {
@@ -272,16 +272,18 @@ boolean is_two_switch_blocks_mirror(t_sb* src, t_sb* des) {
 
   /* check the numbers of opin_rr_nodes */
   for (int side = 0; side < src->num_sides; ++side) {
-    if (src->num_ipin_rr_nodes[side] != des->num_ipin_rr_nodes[side]) {
+    if (src->num_opin_rr_nodes[side] != des->num_opin_rr_nodes[side]) {
       return FALSE;
     }
   }
 
-  /* Make sure the number of conf bits are the same */
+  /* Make sure the number of conf bits are the same 
+   * TODO: the check should be done when conf_bits are initialized when creating SBs
   if ( (src->conf_bits_msb - src->conf_bits_lsb) 
      != (des->conf_bits_msb - des->conf_bits_lsb)) {
     return FALSE;
   }
+  */
 
   return TRUE;
 }
@@ -845,9 +847,9 @@ DeviceRRChan build_device_rr_chan(int LL_num_rr_nodes, t_rr_node* LL_rr_node,
  */
 static 
 RRSwitchBlock build_rr_switch_block(int sb_x, int sb_y, 
-                                    int LL_num_rr_nodes,
-                                    t_rr_node* LL_rr_node,
-                                    t_ivec*** LL_rr_node_indices) {
+                                    int LL_num_rr_nodes, t_rr_node* LL_rr_node, 
+                                    t_ivec*** LL_rr_node_indices, int num_segments,
+                                    t_rr_indexed_data* LL_rr_indexed_data) {
   /* Create an object to return */
   RRSwitchBlock rr_switch_block;
 
@@ -868,8 +870,7 @@ RRSwitchBlock build_rr_switch_block(int sb_x, int sb_y,
     Side side_manager(side);
     int ix = 0; 
     int iy = 0;
-    int chan_width = 0;
-    t_rr_node** chan_rr_node = NULL;
+    RRChan rr_chan;
     int temp_num_opin_rr_nodes[2] = {0,0};
     t_rr_node** temp_opin_rr_node[2] = {NULL, NULL};
     enum e_side opin_grid_side[2] = {NUM_SIDES, NUM_SIDES};
@@ -884,11 +885,11 @@ RRSwitchBlock build_rr_switch_block(int sb_x, int sb_y,
       /* Routing channels*/
       ix = sb_x; 
       iy = sb_y + 1;
-      /* Channel width */
-      chan_width = chan_width_y[ix];
       /* Side: TOP => 0, RIGHT => 1, BOTTOM => 2, LEFT => 3 */
-      chan_rr_node = get_chan_rr_nodes(&chan_width, CHANY, ix, iy, 
-                                       LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices);
+      /* Create a rr_chan object and check if it is unique in the graph */
+      rr_chan = build_one_rr_chan(CHANY, ix, iy, 
+                                  LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices, 
+                                  num_segments, LL_rr_indexed_data);
       chan_dir_to_port_dir_mapping[0] = OUT_PORT;
       chan_dir_to_port_dir_mapping[1] =  IN_PORT;
 
@@ -916,12 +917,12 @@ RRSwitchBlock build_rr_switch_block(int sb_x, int sb_y,
       /* Routing channels*/
       ix = sb_x + 1; 
       iy = sb_y;
-      /* Channel width */
-      chan_width = chan_width_x[iy];
       /* Side: TOP => 0, RIGHT => 1, BOTTOM => 2, LEFT => 3 */
       /* Collect rr_nodes for Tracks for top: chany[x][y+1] */
-      chan_rr_node = get_chan_rr_nodes(&chan_width, CHANX, ix, iy, 
-                                       LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices);
+      /* Create a rr_chan object and check if it is unique in the graph */
+      rr_chan = build_one_rr_chan(CHANX, ix, iy, 
+                                  LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices, 
+                                  num_segments, LL_rr_indexed_data);
       chan_dir_to_port_dir_mapping[0] = OUT_PORT;
       chan_dir_to_port_dir_mapping[1] =  IN_PORT;
 
@@ -948,12 +949,12 @@ RRSwitchBlock build_rr_switch_block(int sb_x, int sb_y,
       /* Routing channels*/
       ix = sb_x; 
       iy = sb_y;
-      /* Channel width */
-      chan_width = chan_width_y[ix];
       /* Side: TOP => 0, RIGHT => 1, BOTTOM => 2, LEFT => 3 */
       /* Collect rr_nodes for Tracks for bottom: chany[x][y] */
-      chan_rr_node = get_chan_rr_nodes(&chan_width, CHANY, ix, iy, 
-                                       LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices);
+      /* Create a rr_chan object and check if it is unique in the graph */
+      rr_chan = build_one_rr_chan(CHANY, ix, iy, 
+                                  LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices, 
+                                  num_segments, LL_rr_indexed_data);
       chan_dir_to_port_dir_mapping[0] =  IN_PORT;
       chan_dir_to_port_dir_mapping[1] = OUT_PORT;
 
@@ -980,12 +981,12 @@ RRSwitchBlock build_rr_switch_block(int sb_x, int sb_y,
       /* Routing channels*/
       ix = sb_x; 
       iy = sb_y;
-      /* Channel width */
-      chan_width = chan_width_x[iy];
       /* Side: TOP => 0, RIGHT => 1, BOTTOM => 2, LEFT => 3 */
       /* Collect rr_nodes for Tracks for left: chanx[x][y] */
-      chan_rr_node = get_chan_rr_nodes(&chan_width, CHANX, ix, iy, 
-                                       LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices);
+      /* Create a rr_chan object and check if it is unique in the graph */
+      rr_chan = build_one_rr_chan(CHANX, ix, iy, 
+                                  LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices, 
+                                  num_segments, LL_rr_indexed_data);
       chan_dir_to_port_dir_mapping[0] =  IN_PORT;
       chan_dir_to_port_dir_mapping[1] = OUT_PORT;
 
@@ -1010,15 +1011,21 @@ RRSwitchBlock build_rr_switch_block(int sb_x, int sb_y,
       exit(1);
     }
 
-    /* Fill chan_rr_nodes */
-    for (int itrack = 0; itrack < chan_width; ++itrack) {
-      /* Identify the directionality, record it in rr_node_direction */
-      if (INC_DIRECTION == chan_rr_node[itrack]->direction) {
-        rr_switch_block.add_chan_node(chan_rr_node[itrack], side_manager.get_side(), chan_dir_to_port_dir_mapping[0]);
-      } else {
-        assert (DEC_DIRECTION == chan_rr_node[itrack]->direction);
-        rr_switch_block.add_chan_node(chan_rr_node[itrack], side_manager.get_side(),  chan_dir_to_port_dir_mapping[1]);
+    /* Organize a vector of port direction */
+    if (0 < rr_chan.get_chan_width()) {
+      std::vector<enum PORTS> rr_chan_dir;
+      rr_chan_dir.resize(rr_chan.get_chan_width());
+      for (size_t itrack = 0; itrack < rr_chan.get_chan_width(); ++itrack) {
+        /* Identify the directionality, record it in rr_node_direction */
+        if (INC_DIRECTION == rr_chan.get_node(itrack)->direction) {
+          rr_chan_dir[itrack] = chan_dir_to_port_dir_mapping[0];
+        } else {
+          assert (DEC_DIRECTION == rr_chan.get_node(itrack)->direction);
+          rr_chan_dir[itrack] = chan_dir_to_port_dir_mapping[1];
+        }
       }
+      /* Fill chan_rr_nodes */
+      rr_switch_block.add_chan_node(side_manager.get_side(), rr_chan, rr_chan_dir);
     }
 
     /* Fill opin_rr_nodes */
@@ -1037,7 +1044,6 @@ RRSwitchBlock build_rr_switch_block(int sb_x, int sb_y,
     rr_switch_block.clear_ipin_nodes(side_manager.get_side());
 
     /* Free */
-    my_free(chan_rr_node);
     temp_num_opin_rr_nodes[0] = 0;
     my_free(temp_opin_rr_node[0]);
     temp_num_opin_rr_nodes[1] = 0;
@@ -1058,9 +1064,9 @@ RRSwitchBlock build_rr_switch_block(int sb_x, int sb_y,
  * Each switch block in the FPGA fabric will be an instance of these modules.
  * We maintain a map from each instance to each module
  */
-DeviceRRSwitchBlock build_device_rr_switch_blocks(int LL_num_rr_nodes,
-                                                  t_rr_node* LL_rr_node,
-                                                  t_ivec*** LL_rr_node_indices) {
+DeviceRRSwitchBlock build_device_rr_switch_blocks(int LL_num_rr_nodes, t_rr_node* LL_rr_node, 
+                                                  t_ivec*** LL_rr_node_indices, int num_segments,
+                                                  t_rr_indexed_data* LL_rr_indexed_data) {
   /* Create an object */
   DeviceRRSwitchBlock LL_device_rr_switch_block;
 
@@ -1072,7 +1078,9 @@ DeviceRRSwitchBlock build_device_rr_switch_blocks(int LL_num_rr_nodes,
   for (int ix = 0; ix < nx + 1; ++ix) {
     for (int iy = 0; iy < ny + 1; ++iy) {
       RRSwitchBlock rr_switch_block = build_rr_switch_block(ix, iy, 
-                                                            LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices);
+                                                            LL_num_rr_nodes, LL_rr_node, 
+                                                            LL_rr_node_indices, 
+                                                            num_segments, LL_rr_indexed_data);
       DeviceCoordinator sb_coordinator((size_t)ix, (size_t)iy);
       LL_device_rr_switch_block.add_rr_switch_block(sb_coordinator, rr_switch_block);
     }

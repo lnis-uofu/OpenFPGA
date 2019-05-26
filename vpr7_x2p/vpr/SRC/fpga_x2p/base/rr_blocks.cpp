@@ -6,6 +6,13 @@
 
 
 /* Member Functions of Class RRChan */
+/* Constructors */
+RRChan::RRChan() {
+  type_ = NUM_RR_TYPES;
+  nodes_.resize(0);
+  node_segments_.resize(0);
+}
+
 /* Accessors */
 t_rr_type RRChan::get_type() const {
   return type_;
@@ -112,8 +119,17 @@ void RRChan::add_node(t_rr_node* node, size_t node_segment) {
   nodes_[node->ptc_num] = node;
   node_segments_[node->ptc_num] = node_segment;
 
+  assert(valid_node_type(node));
+
   return;
 }
+
+/* rotate the nodes and node_segments with a given offset */
+void RRChan::rotate(size_t rotate_begin, size_t rotate_end, size_t offset) {
+  std::rotate(nodes_.begin() + rotate_begin, nodes_.begin() + rotate_begin + offset, nodes_.begin() + rotate_end);
+  std::rotate(node_segments_.begin() + rotate_begin, node_segments_.begin() + rotate_begin + offset, node_segments_.begin() + rotate_end);
+  return;
+} 
 
 /* Clear content */
 void RRChan::clear() {
@@ -132,6 +148,19 @@ bool RRChan::valid_type(t_rr_type type) const {
   }
   return false;
 }  
+
+/* Check each node, see if the node type is consistent with the type */
+bool RRChan::valid_node_type(t_rr_node* node) const {
+  valid_type(node->type);
+  if (NUM_RR_TYPES == type_) {
+    return true;
+  }
+  valid_type(type_);
+  if (type_ != node->type) {
+    return false;
+  }
+  return true;
+}
 
 /* check if the node id is valid */
 bool RRChan::valid_node_id(size_t node_id) const {
@@ -333,7 +362,7 @@ size_t RRSwitchBlock::get_num_sides() const {
 size_t RRSwitchBlock::get_chan_width(enum e_side side) const {
   Side side_manager(side);
   assert(side_manager.validate());
-  return chan_node_[side_manager.to_size_t()].size(); 
+  return chan_node_[side_manager.to_size_t()].get_chan_width(); 
 }
 
 /* Get the maximum number of routing tracks on all sides */
@@ -371,8 +400,23 @@ t_rr_node* RRSwitchBlock::get_chan_node(enum e_side side, size_t track_id) const
   /* Ensure the track is valid in the context of this switch block at a specific side */ 
   assert( validate_track_id(side, track_id) );
   
-  return chan_node_[side_manager.to_size_t()][track_id]; 
+  return chan_node_[side_manager.to_size_t()].get_node(track_id); 
 } 
+
+/* get the segment id of a channel rr_node */
+size_t RRSwitchBlock::get_chan_node_segment(enum e_side side, size_t track_id) const {
+  Side side_manager(side);
+  assert(side_manager.validate());
+ 
+  /* Ensure the side is valid in the context of this switch block */ 
+  assert( validate_side(side) );
+
+  /* Ensure the track is valid in the context of this switch block at a specific side */ 
+  assert( validate_track_id(side, track_id) );
+  
+  return chan_node_[side_manager.to_size_t()].get_node_segment(track_id); 
+} 
+
 
 /* Get the number of IPIN rr_nodes on a side */
 size_t RRSwitchBlock::get_num_ipin_nodes(enum e_side side) const {
@@ -443,8 +487,8 @@ int RRSwitchBlock::get_node_index(t_rr_node* node,
   switch (node->type) {
   case CHANX:
   case CHANY:
-    for (size_t inode = 0; inode < get_chan_width(node_side); ++inode) {
-      if ((node == chan_node_[side_manager.to_size_t()][inode])
+    for (size_t inode = 0; inode < get_chan_width(node_side); ++inode){
+      if ((node == chan_node_[side_manager.to_size_t()].get_node(inode))
         /* Check if direction meets specification */
         &&(node_direction == chan_node_direction_[side_manager.to_size_t()][inode])) {
         cnt++;
@@ -580,6 +624,83 @@ bool RRSwitchBlock::is_node_imply_short_connection(t_rr_node* src_node) const {
   return false;
 }
 
+/* check if the candidate SB satisfy the basic requirements on being a mirror of the current one */
+/* Idenify mirror Switch blocks 
+ * Check each two switch blocks: 
+ * Number of channel/opin/ipin rr_nodes are same 
+ * If all above are satisfied, the two switch blocks may be mirrors !
+ */
+bool RRSwitchBlock::is_mirrorable(RRSwitchBlock& cand) const {
+  /* check the numbers of sides */
+  if (get_num_sides() != cand.get_num_sides()) {
+    return false;
+  }
+
+  /* check the numbers/directionality of channel rr_nodes */
+  for (size_t side = 0; side < get_num_sides(); ++side) {
+    Side side_manager(side);
+
+    /* Ensure we have the same channel width on this side */
+    if (get_chan_width(side_manager.get_side()) != cand.get_chan_width(side_manager.get_side())) {
+      return false;
+    }
+
+    if ( ((size_t(-1) == get_track_id_first_short_connection(side_manager.get_side())) 
+       && (size_t(-1) != cand.get_track_id_first_short_connection(side_manager.get_side())))
+    || ((size_t(-1) != get_track_id_first_short_connection(side_manager.get_side()) )
+       && ( size_t(-1) == cand.get_track_id_first_short_connection(side_manager.get_side()))) ) {
+      return false;
+    }
+  } 
+
+  /* check the numbers of opin_rr_nodes */
+  for (size_t side = 0; side < get_num_sides(); ++side) {
+    Side side_manager(side);
+
+    if (get_num_opin_nodes(side_manager.get_side()) != cand.get_num_opin_nodes(side_manager.get_side())) {
+      return false;
+    }
+  }
+
+  /* Make sure the number of conf bits are the same */
+  /* TODO: recover this check when the SB conf bits are allocated during setup stage!!! 
+  if ( ( get_num_conf_bits() != cand.get_num_conf_bits() ) 
+    || ( get_num_reserved_conf_bits() != cand.get_num_reserved_conf_bits() ) ) {
+    return false;
+  }
+  */
+
+  return true;
+}
+
+/* Determine an initial offset in rotating the candidate Switch Block to find a mirror matching 
+ * We try to find the offset in track_id where the two Switch Blocks have their first short connections 
+ */
+size_t RRSwitchBlock::get_hint_rotate_offset(RRSwitchBlock& cand) const {
+  size_t offset_hint = size_t(-1);
+
+  assert (get_num_sides() == cand.get_num_sides());
+
+  /* check the numbers/directionality of channel rr_nodes */
+  for (size_t side = 0; side < get_num_sides(); ++side) {
+    Side side_manager(side);
+
+    /* Ensure we have the same channel width on this side */
+    assert (get_chan_width(side_manager.get_side()) == cand.get_chan_width(side_manager.get_side()));
+
+    /* Find the track id of the first short connection */
+    size_t src_offset = get_track_id_first_short_connection(side_manager.get_side()); 
+    size_t des_offset = cand.get_track_id_first_short_connection(side_manager.get_side()); 
+    if ( size_t(-1) == src_offset || size_t(-1) == des_offset ) { 
+      return 0; /* default we give zero */
+    }
+    size_t temp_hint = abs( (int)(src_offset - des_offset));
+    offset_hint = std::min(temp_hint, offset_hint);
+  }
+  return offset_hint;
+} 
+
+
 /* check if the candidate SB is a mirror of the current one */
 /* Idenify mirror Switch blocks 
  * Check each two switch blocks: 
@@ -630,16 +751,18 @@ bool RRSwitchBlock::is_mirror(RRSwitchBlock& cand) const {
   for (size_t side = 0; side < get_num_sides(); ++side) {
     Side side_manager(side);
 
-    if (get_num_ipin_nodes(side_manager.get_side()) != cand.get_num_ipin_nodes(side_manager.get_side())) {
+    if (get_num_opin_nodes(side_manager.get_side()) != cand.get_num_opin_nodes(side_manager.get_side())) {
       return false;
     }
   }
 
   /* Make sure the number of conf bits are the same */
+  /* TODO: the num conf bits will be fixed when allocate the SBs 
   if ( ( get_num_conf_bits() != cand.get_num_conf_bits() ) 
     || ( get_num_reserved_conf_bits() != cand.get_num_reserved_conf_bits() ) ) {
     return false;
   }
+  */
 
   return true;
 }
@@ -732,17 +855,14 @@ void RRSwitchBlock::init_num_sides(size_t num_sides) {
 }
 
 /* Add a node to the chan_node_ list and also assign its direction in chan_node_direction_ */
-void RRSwitchBlock::add_chan_node(t_rr_node* node, enum e_side node_side, enum PORTS node_direction) {
+void RRSwitchBlock::add_chan_node(enum e_side node_side, RRChan rr_chan, std::vector<enum PORTS> rr_chan_dir) {
   Side side_manager(node_side);
+  /* Validate: 1. side is valid, the type of node is valid */
   assert(validate_side(node_side));
-  /* resize the array if needed, node is placed in the sequence of node->ptc_num */
-  if (size_t(node->ptc_num + 1) > chan_node_[side_manager.to_size_t()].size()) {
-    chan_node_[side_manager.to_size_t()].resize(node->ptc_num + 1); /* resize to the maximum */
-    chan_node_direction_[side_manager.to_size_t()].resize(node->ptc_num + 1); /* resize to the maximum */
-  }
+
   /* fill the dedicated element in the vector */
-  chan_node_[side_manager.to_size_t()][node->ptc_num] = node;
-  chan_node_direction_[side_manager.to_size_t()][node->ptc_num] = node_direction;
+  chan_node_[side_manager.to_size_t()] = rr_chan;
+  chan_node_direction_[side_manager.to_size_t()] = rr_chan_dir;
 
   return;
 } 
@@ -798,7 +918,7 @@ void RRSwitchBlock::rotate_chan_node(size_t offset) {
       continue;
     }
     for (size_t inode = 0; inode < get_chan_width(side_manager.get_side()) - 1; ++inode) {
-      if ( ( abs(chan_node_[side][inode]->yhigh - chan_node_[side][inode]->ylow + chan_node_[side][inode]->xhigh - chan_node_[side][inode]->xlow) != abs(chan_node_[side][inode + 1]->yhigh - chan_node_[side][inode + 1]->ylow + chan_node_[side][inode + 1]->xhigh - chan_node_[side][inode + 1]->xlow)) 
+      if ( (get_chan_node_segment(side_manager.get_side(), inode) != get_chan_node_segment(side_manager.get_side(), inode + 1)) 
         || ( inode == get_chan_width(side_manager.get_side()) - 2) ) {
         /* Record the upper bound  */
         if ( inode == get_chan_width(side_manager.get_side()) - 2)  {
@@ -815,12 +935,10 @@ void RRSwitchBlock::rotate_chan_node(size_t offset) {
         }
         assert(offset < rotate_end - rotate_begin + 1);
         /* Find a group split, rotate */
-        std::rotate(chan_node_.begin() + rotate_begin, 
-                    chan_node_.begin() + rotate_begin + offset, 
-                    chan_node_.begin() + rotate_end);
-        std::rotate(chan_node_direction_.begin() + rotate_begin, 
-                    chan_node_direction_.begin() + rotate_begin + offset, 
-                    chan_node_direction_.begin() + rotate_end);
+        chan_node_[side].rotate(rotate_begin, rotate_end, offset);
+        std::rotate(chan_node_direction_[side].begin() + rotate_begin, 
+                    chan_node_direction_[side].begin() + rotate_begin + offset, 
+                    chan_node_direction_[side].begin() + rotate_end);
         /* Update the lower bound  */
         rotate_begin = inode + 1;
       }
@@ -865,12 +983,12 @@ void RRSwitchBlock::rotate_opin_node(size_t offset) {
         /* Make sure offset is in range */
         assert (offset < rotate_end - rotate_begin + 1);
         /* Find a group split, rotate */
-        std::rotate(opin_node_.begin() + rotate_begin, 
-                    opin_node_.begin() + rotate_begin + offset, 
-                    opin_node_.begin() + rotate_end);
-        std::rotate(opin_node_grid_side_.begin() + rotate_begin, 
-                    opin_node_grid_side_.begin() + rotate_begin + offset, 
-                    opin_node_grid_side_.begin() + rotate_end);
+        std::rotate(opin_node_[side].begin() + rotate_begin, 
+                    opin_node_[side].begin() + rotate_begin + offset, 
+                    opin_node_[side].begin() + rotate_end);
+        std::rotate(opin_node_grid_side_[side].begin() + rotate_begin, 
+                    opin_node_grid_side_[side].begin() + rotate_begin + offset, 
+                    opin_node_grid_side_[side].begin() + rotate_end);
         /* Update the lower bound  */
         rotate_begin = inode + 1;
       }
@@ -971,6 +1089,7 @@ bool RRSwitchBlock::is_node_mirror(RRSwitchBlock& cand,
   t_rr_node* node = this->get_chan_node(node_side, track_id);
   t_rr_node* cand_node = cand.get_chan_node(node_side, track_id);
   bool is_short_conkt = this->is_node_imply_short_connection(node);
+
   if (is_short_conkt != cand.is_node_imply_short_connection(cand_node)) {
     return false;
   }
@@ -1011,6 +1130,19 @@ bool RRSwitchBlock::is_node_mirror(RRSwitchBlock& cand,
 
   return true;
 } 
+
+size_t RRSwitchBlock::get_track_id_first_short_connection(enum e_side node_side) const {
+  assert(validate_side(node_side));
+
+  /* Walk through chan_nodes and find the first short connection */
+  for (size_t inode = 0; inode < get_chan_width(node_side); ++inode) {
+    if (true == is_node_imply_short_connection(get_chan_node(node_side, inode))) {
+      return inode; 
+    }
+  }
+
+  return size_t(-1);
+}
 
 /* Validate if the number of sides are consistent among internal data arrays ! */
 bool RRSwitchBlock::validate_num_sides() const {
@@ -1055,7 +1187,7 @@ bool RRSwitchBlock::validate_track_id(enum e_side side, size_t track_id) const {
   if (false == validate_side(side)) {
     return false;
   } 
-  if ( ( track_id < chan_node_[side_manager.to_size_t()].size()) 
+  if ( ( track_id < chan_node_[side_manager.to_size_t()].get_chan_width()) 
     && ( track_id < chan_node_direction_[side_manager.to_size_t()].size()) ) {
     return true;
   }
@@ -1238,18 +1370,26 @@ void DeviceRRSwitchBlock::add_rr_switch_block(DeviceCoordinator& coordinator,
   /* add rotatable mirror support */
   for (size_t mirror_id = 0; mirror_id < get_num_rotatable_mirror(); ++mirror_id) {
     RRSwitchBlock rotate_mirror = rr_switch_block;
+    is_rotatable_mirror = true;
     /* Try to rotate as many times as the maximum channel width in this switch block
      * This may not fully cover all the rotation possibility but may be enough now  
      */
+    /* Skip if these may never match as a mirror (violation in basic requirements */
+    if (false == get_switch_block(rotatable_mirror_[mirror_id]).is_mirrorable(rotate_mirror)) {
+      continue;
+    }
+    /* Give an initial rotation to accelerate the prediction */
+    size_t hint_offset = get_switch_block(rotatable_mirror_[mirror_id]).get_hint_rotate_offset(rotate_mirror);
+    rotate_mirror.rotate_chan_node(hint_offset);
     for (size_t offset = 0; offset < rr_switch_block.get_max_chan_width(); ++offset) {
-      rotate_mirror.rotate(1);
-      if (true == get_switch_block(unique_mirror_[mirror_id]).is_mirror(rotate_mirror)) {
+      if (true == get_switch_block(rotatable_mirror_[mirror_id]).is_mirror(rotate_mirror)) {
         /* This is a mirror, raise the flag and we finish */
         is_rotatable_mirror = false;
         /* Record the id of unique mirror */
         rr_switch_block_rotatable_mirror_id_[coordinator.get_x()][coordinator.get_y()] = mirror_id; 
         break;
       }
+      rotate_mirror.rotate_chan_node(1);
     }
     if (false == is_rotatable_mirror) {
       break;

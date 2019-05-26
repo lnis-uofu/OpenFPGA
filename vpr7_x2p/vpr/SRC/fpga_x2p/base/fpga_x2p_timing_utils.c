@@ -31,6 +31,8 @@
 #include "fpga_x2p_globals.h"
 #include "fpga_x2p_utils.h"
 
+#include "fpga_x2p_timing_utils.h"
+
 /* Build the list of spice_model_ports provided in the cur_spice_model delay_info */
 t_spice_model_port** get_spice_model_delay_info_ports(t_spice_model* cur_spice_model, 
                                                       char* port_list,
