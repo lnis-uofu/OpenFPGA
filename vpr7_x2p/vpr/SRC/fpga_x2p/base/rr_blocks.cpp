@@ -916,33 +916,40 @@ void RRSwitchBlock::set_conf_bits_msb(size_t conf_bits_msb) {
 }
 
 /* rotate all the channel nodes by a given offset */
-void RRSwitchBlock::rotate_full_chan_node(size_t offset) {
+void RRSwitchBlock::rotate_side_chan_node(enum e_side side, size_t offset) {
+  Side side_manager(side);
+  /* Partition the chan nodes on this side, depending on its length */
+  /* skip this side if there is no nodes */
+  if (0 == get_chan_width(side)) {
+    return;
+  }
+  size_t adapt_offset = offset % get_chan_width(side);
+  assert(adapt_offset < get_chan_width(side));
+  /* Find a group split, rotate */
+  chan_node_[side_manager.to_size_t()].rotate(adapt_offset);
+  std::rotate(chan_node_direction_[side_manager.to_size_t()].begin(), 
+              chan_node_direction_[side_manager.to_size_t()].begin() + adapt_offset, 
+              chan_node_direction_[side_manager.to_size_t()].end());
+  return;
+} 
+
+
+/* rotate all the channel nodes by a given offset */
+void RRSwitchBlock::rotate_chan_node(size_t offset) {
   /* Rotate chan nodes on each side */
   for (size_t side = 0; side < get_num_sides(); ++side) {
     Side side_manager(side);
-    /* Partition the chan nodes on this side, depending on its length */
-    /* skip this side if there is no nodes */
-    if (0 == get_chan_width(side_manager.get_side())) {
-      continue;
-    }
-    size_t adapt_offset = offset % get_chan_width(side_manager.get_side());
-    assert(adapt_offset < get_chan_width(side_manager.get_side()));
-    /* Find a group split, rotate */
-    chan_node_[side].rotate(adapt_offset);
-    std::rotate(chan_node_direction_[side].begin(), 
-                chan_node_direction_[side].begin() + adapt_offset, 
-                chan_node_direction_[side].end());
+    rotate_side_chan_node(side_manager.get_side(), offset);
   }
 
   return;
 } 
 
-
 /* rotate all the channel nodes by a given offset:
  * Routing Channel nodes are divided into different groups using segment ids
  * each group is rotated separatedly
  */
-void RRSwitchBlock::rotate_chan_node(size_t offset) {
+void RRSwitchBlock::rotate_chan_node_in_group(size_t offset) {
   /* Rotate chan nodes on each side */
   for (size_t side = 0; side < get_num_sides(); ++side) {
     Side side_manager(side);
@@ -985,51 +992,67 @@ void RRSwitchBlock::rotate_chan_node(size_t offset) {
   return;
 } 
 
-/* rotate all the opin nodes by a given offset */
-void RRSwitchBlock::rotate_opin_node(size_t offset) {
+/* rotate one side of the opin nodes by a given offset 
+ * OPIN nodes are divided into different groups depending on their grid 
+ * each group is rotated separatedly
+ */
+void RRSwitchBlock::rotate_side_opin_node_in_group(enum e_side side, size_t offset) {
+  /* Rotate opin nodes on each side */
+  Side side_manager(side);
+  size_t rotate_begin = 0;
+  size_t rotate_end = 0;
+  /* skip this side if there is no nodes */
+  if (0 == get_num_opin_nodes(side)) {
+    return;
+  }
+  /* Partition the opin nodes on this side, depending on grids */
+  for (size_t inode = 0; inode < get_num_opin_nodes(side) - 1; ++inode) {
+    if ( ( (opin_node_[side_manager.to_size_t()][inode]->xlow  != opin_node_[side_manager.to_size_t()][inode + 1]->xlow) 
+        || (opin_node_[side_manager.to_size_t()][inode]->ylow  != opin_node_[side_manager.to_size_t()][inode + 1]->ylow) 
+        || (opin_node_[side_manager.to_size_t()][inode]->xhigh != opin_node_[side_manager.to_size_t()][inode + 1]->xhigh) 
+        || (opin_node_[side_manager.to_size_t()][inode]->yhigh != opin_node_[side_manager.to_size_t()][inode + 1]->yhigh)
+        || (opin_node_grid_side_[side_manager.to_size_t()][inode] != opin_node_grid_side_[side_manager.to_size_t()][inode + 1]))
+        || ( inode == get_num_opin_nodes(side) - 2) ) {
+      /* Record the upper bound  */
+      if ( inode == get_num_opin_nodes(side) - 2)  {
+        rotate_end = get_num_opin_nodes(side) - 1;
+      } else {
+        rotate_end = inode;
+      }
+      /* skip this side if there is no nodes */
+      if (0 >= rotate_end - rotate_begin) {
+        /* Update the lower bound  */
+        rotate_begin = inode + 1;
+        continue;
+      }
+      size_t adapt_offset = offset % (rotate_end - rotate_begin + 1);
+      /* Make sure offset is in range */
+      assert (adapt_offset < rotate_end - rotate_begin + 1);
+      /* Find a group split, rotate */
+      std::rotate(opin_node_[side_manager.to_size_t()].begin() + rotate_begin, 
+                  opin_node_[side_manager.to_size_t()].begin() + rotate_begin + adapt_offset, 
+                  opin_node_[side_manager.to_size_t()].begin() + rotate_end);
+      std::rotate(opin_node_grid_side_[side_manager.to_size_t()].begin() + rotate_begin, 
+                  opin_node_grid_side_[side_manager.to_size_t()].begin() + rotate_begin + adapt_offset, 
+                  opin_node_grid_side_[side_manager.to_size_t()].begin() + rotate_end);
+      /* Update the lower bound  */
+      rotate_begin = inode + 1;
+    }
+  }
+
+  return;
+} 
+
+
+/* rotate all the opin nodes by a given offset 
+ * OPIN nodes are divided into different groups depending on their grid 
+ * each group is rotated separatedly
+ */
+void RRSwitchBlock::rotate_opin_node_in_group(size_t offset) {
   /* Rotate opin nodes on each side */
   for (size_t side = 0; side < get_num_sides(); ++side) {
     Side side_manager(side);
-    size_t rotate_begin = 0;
-    size_t rotate_end = 0;
-    /* skip this side if there is no nodes */
-    if (0 == get_num_opin_nodes(side_manager.get_side())) {
-      continue;
-    }
-    /* Partition the opin nodes on this side, depending on grids */
-    for (size_t inode = 0; inode < get_num_opin_nodes(side_manager.get_side()) - 1; ++inode) {
-      if ( ( (opin_node_[side][inode]->xlow  != opin_node_[side][inode + 1]->xlow) 
-          || (opin_node_[side][inode]->ylow  != opin_node_[side][inode + 1]->ylow) 
-          || (opin_node_[side][inode]->xhigh != opin_node_[side][inode + 1]->xhigh) 
-          || (opin_node_[side][inode]->yhigh != opin_node_[side][inode + 1]->yhigh)
-          || (opin_node_grid_side_[side][inode] != opin_node_grid_side_[side][inode + 1]))
-        || ( inode == get_num_opin_nodes(side_manager.get_side()) - 2) ) {
-        /* Record the upper bound  */
-        if ( inode == get_num_opin_nodes(side_manager.get_side()) - 2)  {
-          rotate_end = get_num_opin_nodes(side_manager.get_side()) - 1;
-        } else {
-          rotate_end = inode;
-        }
-        /* skip this side if there is no nodes */
-        if (0 >= rotate_end - rotate_begin) {
-          /* Update the lower bound  */
-          rotate_begin = inode + 1;
-          continue;
-        }
-        size_t adapt_offset = offset % (rotate_end - rotate_begin + 1);
-        /* Make sure offset is in range */
-        assert (adapt_offset < rotate_end - rotate_begin + 1);
-        /* Find a group split, rotate */
-        std::rotate(opin_node_[side].begin() + rotate_begin, 
-                    opin_node_[side].begin() + rotate_begin + adapt_offset, 
-                    opin_node_[side].begin() + rotate_end);
-        std::rotate(opin_node_grid_side_[side].begin() + rotate_begin, 
-                    opin_node_grid_side_[side].begin() + rotate_begin + adapt_offset, 
-                    opin_node_grid_side_[side].begin() + rotate_end);
-        /* Update the lower bound  */
-        rotate_begin = inode + 1;
-      }
-    }
+    rotate_side_opin_node_in_group(side_manager.get_side(), offset);
   }
 
   return;
@@ -1037,8 +1060,15 @@ void RRSwitchBlock::rotate_opin_node(size_t offset) {
 
 /* rotate all the channel and opin nodes by a given offset */
 void RRSwitchBlock::rotate(size_t offset) {
-  rotate_full_chan_node(offset);
-  rotate_opin_node(offset);
+  rotate_chan_node(offset);
+  rotate_opin_node_in_group(offset);
+  return;
+} 
+
+/* rotate one side of the channel and opin nodes by a given offset */
+void RRSwitchBlock::rotate_side(enum e_side side, size_t offset) {
+  rotate_side_chan_node(side, offset);
+  rotate_side_opin_node_in_group(side, offset);
   return;
 } 
 
@@ -1426,6 +1456,38 @@ void DeviceRRSwitchBlock::add_rr_switch_block(DeviceCoordinator& coordinator,
         rr_switch_block_rotatable_mirror_id_[coordinator.get_x()][coordinator.get_y()] = mirror_id; 
         break;
       }
+      /* For the copy, try 3 types of rotation and examine is_mirror 
+       * Rotate only the X-direction nodes: LEFT and RIGHT   
+       * Rotate only the Y-direction nodes: TOP and BOTTOM  
+       * Rotate both X- and Y-direction nodes 
+       */
+
+      /* Rotate LEFT and RIGHT only */
+      RRSwitchBlock rotate_x_mirror = rotate_mirror;
+      rotate_x_mirror.rotate_side(LEFT, 1);
+      rotate_x_mirror.rotate_side(RIGHT, 1);
+      if (true == get_switch_block(rotatable_mirror_[mirror_id]).is_mirror(rotate_x_mirror)) {
+        /* This is a mirror, raise the flag and we finish */
+        is_rotatable_mirror = false;
+        /* Record the id of unique mirror */
+        rr_switch_block_rotatable_mirror_id_[coordinator.get_x()][coordinator.get_y()] = mirror_id; 
+        break;
+      }
+
+      /* Rotate TOP and BOTTOM only */
+      RRSwitchBlock rotate_y_mirror = rotate_mirror;
+      rotate_y_mirror.rotate_side(TOP, 1);
+      rotate_y_mirror.rotate_side(BOTTOM, 1);
+
+      if (true == get_switch_block(rotatable_mirror_[mirror_id]).is_mirror(rotate_y_mirror)) {
+        /* This is a mirror, raise the flag and we finish */
+        is_rotatable_mirror = false;
+        /* Record the id of unique mirror */
+        rr_switch_block_rotatable_mirror_id_[coordinator.get_x()][coordinator.get_y()] = mirror_id; 
+        break;
+      }
+
+      /* Rotate all sides */
       rotate_mirror.rotate(1);
     }
     if (false == is_rotatable_mirror) {

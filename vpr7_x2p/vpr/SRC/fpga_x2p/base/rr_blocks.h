@@ -167,9 +167,12 @@ class RRSwitchBlock {
     void set_num_reserved_conf_bits(size_t num_reserved_conf_bits);
     void set_conf_bits_lsb(size_t conf_bits_lsb);
     void set_conf_bits_msb(size_t conf_bits_msb);
-    void rotate_full_chan_node(size_t offset); /* rotate all the channel nodes by a given offset */
+    void rotate_side_chan_node(enum e_side side, size_t offset); /* rotate all the channel nodes by a given offset */
     void rotate_chan_node(size_t offset); /* rotate all the channel nodes by a given offset */
-    void rotate_opin_node(size_t offset); /* rotate all the opin nodes by a given offset */
+    void rotate_chan_node_in_group(size_t offset); /* rotate all the channel nodes by a given offset */
+    void rotate_side_opin_node_in_group(enum e_side side, size_t offset); /* rotate all the opin nodes by a given offset */
+    void rotate_opin_node_in_group(size_t offset); /* rotate all the opin nodes by a given offset */
+    void rotate_side(enum e_side side, size_t offset); /* rotate all the channel and opin nodes by a given offset */
     void rotate(size_t offset); /* rotate all the channel and opin nodes by a given offset */
     void clear();
     void clear_chan_nodes(enum e_side node_side); /* Clean the chan_width of a side */
