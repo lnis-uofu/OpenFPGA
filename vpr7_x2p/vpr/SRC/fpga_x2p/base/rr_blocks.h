@@ -2,8 +2,8 @@
  * The following preprocessing flags are added to 
  * avoid compilation error when this headers are included in more than 1 times 
  */
-#ifndef RR_CHAN_H
-#define RR_CHAN_H
+#ifndef RR_BLOCKS_H
+#define RR_BLOCKS_H
 
 /*
  * Notes in include header files in a head file 
@@ -51,6 +51,7 @@ class RRChan {
     void reserve_node(size_t node_size); /* reseve a number of nodes to the array */
     void add_node(t_rr_node* node, size_t node_segment); /* add a node to the array */
     void rotate(size_t rotate_begin, size_t rotate_end, size_t offset); /* rotate the nodes and node_segments with a given offset */
+    void rotate(size_t offset); /* rotate the nodes and node_segments with a given offset */
     void clear(); /* clear the content */
   private: /* internal functions */
     bool valid_type(t_rr_type type) const;  
@@ -166,6 +167,7 @@ class RRSwitchBlock {
     void set_num_reserved_conf_bits(size_t num_reserved_conf_bits);
     void set_conf_bits_lsb(size_t conf_bits_lsb);
     void set_conf_bits_msb(size_t conf_bits_msb);
+    void rotate_full_chan_node(size_t offset); /* rotate all the channel nodes by a given offset */
     void rotate_chan_node(size_t offset); /* rotate all the channel nodes by a given offset */
     void rotate_opin_node(size_t offset); /* rotate all the opin nodes by a given offset */
     void rotate(size_t offset); /* rotate all the channel and opin nodes by a given offset */

@@ -125,6 +125,16 @@ void RRChan::add_node(t_rr_node* node, size_t node_segment) {
 }
 
 /* rotate the nodes and node_segments with a given offset */
+void RRChan::rotate(size_t offset) {
+  std::rotate(nodes_.begin(), nodes_.begin() + offset, nodes_.end());
+  std::rotate(node_segments_.begin(), node_segments_.begin() + offset, node_segments_.end());
+  return;
+} 
+
+/* rotate all the channel nodes by a given offset:
+ * Routing Channel nodes are divided into different groups using segment ids
+ * each group is rotated separatedly
+ */
 void RRChan::rotate(size_t rotate_begin, size_t rotate_end, size_t offset) {
   std::rotate(nodes_.begin() + rotate_begin, nodes_.begin() + rotate_begin + offset, nodes_.begin() + rotate_end);
   std::rotate(node_segments_.begin() + rotate_begin, node_segments_.begin() + rotate_begin + offset, node_segments_.begin() + rotate_end);
@@ -906,6 +916,32 @@ void RRSwitchBlock::set_conf_bits_msb(size_t conf_bits_msb) {
 }
 
 /* rotate all the channel nodes by a given offset */
+void RRSwitchBlock::rotate_full_chan_node(size_t offset) {
+  /* Rotate chan nodes on each side */
+  for (size_t side = 0; side < get_num_sides(); ++side) {
+    Side side_manager(side);
+    /* Partition the chan nodes on this side, depending on its length */
+    /* skip this side if there is no nodes */
+    if (0 == get_chan_width(side_manager.get_side())) {
+      continue;
+    }
+    size_t adapt_offset = offset % get_chan_width(side_manager.get_side());
+    assert(adapt_offset < get_chan_width(side_manager.get_side()));
+    /* Find a group split, rotate */
+    chan_node_[side].rotate(adapt_offset);
+    std::rotate(chan_node_direction_[side].begin(), 
+                chan_node_direction_[side].begin() + adapt_offset, 
+                chan_node_direction_[side].end());
+  }
+
+  return;
+} 
+
+
+/* rotate all the channel nodes by a given offset:
+ * Routing Channel nodes are divided into different groups using segment ids
+ * each group is rotated separatedly
+ */
 void RRSwitchBlock::rotate_chan_node(size_t offset) {
   /* Rotate chan nodes on each side */
   for (size_t side = 0; side < get_num_sides(); ++side) {
@@ -980,14 +1016,15 @@ void RRSwitchBlock::rotate_opin_node(size_t offset) {
           rotate_begin = inode + 1;
           continue;
         }
+        size_t adapt_offset = offset % (rotate_end - rotate_begin + 1);
         /* Make sure offset is in range */
-        assert (offset < rotate_end - rotate_begin + 1);
+        assert (adapt_offset < rotate_end - rotate_begin + 1);
         /* Find a group split, rotate */
         std::rotate(opin_node_[side].begin() + rotate_begin, 
-                    opin_node_[side].begin() + rotate_begin + offset, 
+                    opin_node_[side].begin() + rotate_begin + adapt_offset, 
                     opin_node_[side].begin() + rotate_end);
         std::rotate(opin_node_grid_side_[side].begin() + rotate_begin, 
-                    opin_node_grid_side_[side].begin() + rotate_begin + offset, 
+                    opin_node_grid_side_[side].begin() + rotate_begin + adapt_offset, 
                     opin_node_grid_side_[side].begin() + rotate_end);
         /* Update the lower bound  */
         rotate_begin = inode + 1;
@@ -1000,7 +1037,7 @@ void RRSwitchBlock::rotate_opin_node(size_t offset) {
 
 /* rotate all the channel and opin nodes by a given offset */
 void RRSwitchBlock::rotate(size_t offset) {
-  rotate_chan_node(offset);
+  rotate_full_chan_node(offset);
   rotate_opin_node(offset);
   return;
 } 
@@ -1379,8 +1416,8 @@ void DeviceRRSwitchBlock::add_rr_switch_block(DeviceCoordinator& coordinator,
       continue;
     }
     /* Give an initial rotation to accelerate the prediction */
-    size_t hint_offset = get_switch_block(rotatable_mirror_[mirror_id]).get_hint_rotate_offset(rotate_mirror);
-    rotate_mirror.rotate_chan_node(hint_offset);
+    //size_t hint_offset = get_switch_block(rotatable_mirror_[mirror_id]).get_hint_rotate_offset(rotate_mirror);
+    //rotate_mirror.rotate(hint_offset - 1);
     for (size_t offset = 0; offset < rr_switch_block.get_max_chan_width(); ++offset) {
       if (true == get_switch_block(rotatable_mirror_[mirror_id]).is_mirror(rotate_mirror)) {
         /* This is a mirror, raise the flag and we finish */
@@ -1389,7 +1426,7 @@ void DeviceRRSwitchBlock::add_rr_switch_block(DeviceCoordinator& coordinator,
         rr_switch_block_rotatable_mirror_id_[coordinator.get_x()][coordinator.get_y()] = mirror_id; 
         break;
       }
-      rotate_mirror.rotate_chan_node(1);
+      rotate_mirror.rotate(1);
     }
     if (false == is_rotatable_mirror) {
       break;
