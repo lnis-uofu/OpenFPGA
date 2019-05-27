@@ -141,6 +141,111 @@ void RRChan::rotate(size_t rotate_begin, size_t rotate_end, size_t offset) {
   return;
 } 
 
+/* rotate all the channel nodes by a given offset:
+ * Routing Channel nodes are divided into different groups using segment ids
+ * each group is rotated separatedly
+ */
+void RRChan::rotate_by_node_direction(enum e_direction node_direction, size_t offset) {
+  /* skip if there are no nodes */
+  if (0 == get_chan_width()) {
+    return;
+  }
+  
+  /* Get the channel nodes of a given direction */
+  std::vector<t_rr_node*> nodes;
+  std::vector<size_t> node_segments;
+  for (size_t inode = 0; inode < get_chan_width(); ++inode) {
+    if (node_direction == get_node(inode)->direction) {
+      nodes.push_back(get_node(inode));
+      node_segments.push_back(get_node_segment(inode));
+    }
+  }
+
+  size_t adapt_offset = offset % nodes.size();
+  assert(adapt_offset < nodes.size());
+
+  /* Rotate the chan_nodes */
+  std::rotate(nodes.begin(), nodes.begin() + adapt_offset, nodes.end());
+  std::rotate(node_segments.begin(), node_segments.begin() + adapt_offset, node_segments.end());
+
+  /* back-annotate to to the original chan nodes*/
+  for (size_t inode = 0; inode < get_chan_width(); ++inode) {
+    if (node_direction == get_node(inode)->direction) {
+      nodes_[inode] = nodes.front();
+      node_segments_[inode] = node_segments.front();
+      /* pop up temp vectors */
+      nodes.erase(nodes.begin()); 
+      node_segments.erase(node_segments.begin()); 
+    }
+  }
+
+  /* Make sure temp vectors are all poped out */
+  assert ( 0 == nodes.size());
+  assert ( 0 == node_segments.size());
+
+  return;
+} 
+
+/* rotate all the channel nodes by a given offset:
+ * Routing Channel nodes are divided into different groups using segment ids
+ * each group is rotated separatedly
+ */
+void RRChan::counter_rotate_by_node_direction(enum e_direction node_direction, size_t offset) {
+  /* skip if there are no nodes */
+  if (0 == get_chan_width()) {
+    return;
+  }
+  
+  /* Get the channel nodes of a given direction */
+  std::vector<t_rr_node*> nodes;
+  std::vector<size_t> node_segments;
+  for (size_t inode = 0; inode < get_chan_width(); ++inode) {
+    if (node_direction == get_node(inode)->direction) {
+      nodes.push_back(get_node(inode));
+      node_segments.push_back(get_node_segment(inode));
+    }
+  }
+
+  size_t adapt_offset = offset % nodes.size();
+  assert(adapt_offset < nodes.size());
+
+  /* Rotate the chan_nodes */
+  std::rotate(nodes.begin(), nodes.begin() + nodes.size() - adapt_offset, nodes.end());
+  std::rotate(node_segments.begin(), node_segments.begin() + node_segments.size() - adapt_offset, node_segments.end());
+
+  /* back-annotate to to the original chan nodes*/
+  for (size_t inode = 0; inode < get_chan_width(); ++inode) {
+    if (node_direction == get_node(inode)->direction) {
+      nodes_[inode] = nodes.front();
+      node_segments_[inode] = node_segments.front();
+      /* pop up temp vectors */
+      nodes.erase(nodes.begin()); 
+      node_segments.erase(node_segments.begin()); 
+    }
+  }
+
+  /* Make sure temp vectors are all poped out */
+  assert ( 0 == nodes.size());
+  assert ( 0 == node_segments.size());
+
+  return;
+} 
+
+
+/* Mirror the node direction of routing track nodes on a side */
+void RRChan::mirror_node_direction() {
+  for (size_t inode = 0; inode < get_chan_width(); ++inode) {
+    if (INC_DIRECTION == get_node(inode)->direction) {
+      nodes_[inode]->direction = DEC_DIRECTION;
+    } else {
+      assert (DEC_DIRECTION == get_node(inode)->direction);
+      nodes_[inode]->direction = INC_DIRECTION;
+    }
+  }
+  return;
+} 
+
+
 /* Clear content */
 void RRChan::clear() {
   nodes_.clear();
@@ -915,6 +1020,42 @@ void RRSwitchBlock::set_conf_bits_msb(size_t conf_bits_msb) {
   return;
 }
 
+/* rotate the channel nodes with the same direction on one side by a given offset */
+void RRSwitchBlock::rotate_side_chan_node_by_direction(enum e_side side, enum e_direction chan_dir, size_t offset) {
+  Side side_manager(side);
+  assert(validate_side(side));
+
+  /* Partition the chan nodes on this side, depending on its length */
+  /* skip this side if there is no nodes */
+  if (0 == get_chan_width(side)) {
+    return;
+  }
+  
+  /* Rotate the chan_nodes */
+  chan_node_[side_manager.to_size_t()].rotate_by_node_direction(chan_dir, offset);
+
+  return;
+} 
+
+/* rotate the channel nodes with the same direction on one side by a given offset */
+void RRSwitchBlock::counter_rotate_side_chan_node_by_direction(enum e_side side, enum e_direction chan_dir, size_t offset) {
+  Side side_manager(side);
+  assert(validate_side(side));
+
+  /* Partition the chan nodes on this side, depending on its length */
+  /* skip this side if there is no nodes */
+  if (0 == get_chan_width(side)) {
+    return;
+  }
+  
+  /* Rotate the chan_nodes */
+  chan_node_[side_manager.to_size_t()].counter_rotate_by_node_direction(chan_dir, offset);
+
+  return;
+
+} 
+
+
 /* rotate all the channel nodes by a given offset */
 void RRSwitchBlock::rotate_side_chan_node(enum e_side side, size_t offset) {
   Side side_manager(side);
@@ -1069,6 +1210,33 @@ void RRSwitchBlock::rotate(size_t offset) {
 void RRSwitchBlock::rotate_side(enum e_side side, size_t offset) {
   rotate_side_chan_node(side, offset);
   rotate_side_opin_node_in_group(side, offset);
+  return;
+} 
+
+/* Mirror the node direction and port direction of routing track nodes on a side */
+void RRSwitchBlock::mirror_side_chan_node_direction(enum e_side side) {
+  assert(validate_side(side));
+  Side side_manager(side);
+
+  chan_node_[side_manager.to_size_t()].mirror_node_direction();
+  return;
+} 
+
+/* swap the chan rr_nodes on two sides */
+void RRSwitchBlock::swap_chan_node(enum e_side src_side, enum e_side des_side) {
+  Side src_side_manager(src_side);
+  Side des_side_manager(des_side);
+  std::swap(chan_node_[src_side_manager.to_size_t()], chan_node_[des_side_manager.to_size_t()]);
+  std::swap(chan_node_direction_[src_side_manager.to_size_t()], chan_node_direction_[des_side_manager.to_size_t()]);
+  return;
+} 
+
+/* swap the OPIN rr_nodes on two sides */
+void RRSwitchBlock::swap_opin_node(enum e_side src_side, enum e_side des_side) {
+  Side src_side_manager(src_side);
+  Side des_side_manager(des_side);
+  std::swap(opin_node_[src_side_manager.to_size_t()], opin_node_[des_side_manager.to_size_t()]);
+  std::swap(opin_node_grid_side_[src_side_manager.to_size_t()], opin_node_grid_side_[des_side_manager.to_size_t()]);
   return;
 } 
 
@@ -1390,13 +1558,13 @@ void DeviceRRSwitchBlock::reserve(DeviceCoordinator& coordinator) {
 
 /* Resize rr_switch_block array is needed*/
 void DeviceRRSwitchBlock::resize_upon_need(DeviceCoordinator& coordinator) { 
-  if (coordinator.get_x() + 1 > rr_switch_block_.capacity()) {
+  if (coordinator.get_x() + 1 > rr_switch_block_.size()) {
     rr_switch_block_.resize(coordinator.get_x());
     rr_switch_block_mirror_id_.resize(coordinator.get_x());
     rr_switch_block_rotatable_mirror_id_.resize(coordinator.get_x());
   }
 
-  if (coordinator.get_y() + 1 > rr_switch_block_[coordinator.get_x()].capacity()) {
+  if (coordinator.get_y() + 1 > rr_switch_block_[coordinator.get_x()].size()) {
     rr_switch_block_[coordinator.get_x()].resize(coordinator.get_y());
     rr_switch_block_mirror_id_[coordinator.get_x()].resize(coordinator.get_y());
     rr_switch_block_rotatable_mirror_id_[coordinator.get_x()].resize(coordinator.get_y());
@@ -1407,15 +1575,16 @@ void DeviceRRSwitchBlock::resize_upon_need(DeviceCoordinator& coordinator) {
 
 /* Add a switch block to the array, which will automatically identify and update the lists of unique mirrors and rotatable mirrors */
 void DeviceRRSwitchBlock::add_rr_switch_block(DeviceCoordinator& coordinator, 
-                                              RRSwitchBlock& rr_switch_block) {
-  bool is_unique_mirror = true;
-  bool is_rotatable_mirror = true;
+                                              RRSwitchBlock& rr_switch_block,
+                                              RRSwitchBlock& rotated_rr_switch_block) {
 
   /* Resize upon needs*/
   resize_upon_need(coordinator);
 
   /* Add the switch block into array */
   rr_switch_block_[coordinator.get_x()][coordinator.get_y()] = rr_switch_block; 
+
+  bool is_unique_mirror = true;
 
   /* Traverse the unique_mirror list and check it is an mirror of another */
   for (size_t mirror_id = 0; mirror_id < get_num_unique_mirror(); ++mirror_id) {
@@ -1434,75 +1603,32 @@ void DeviceRRSwitchBlock::add_rr_switch_block(DeviceCoordinator& coordinator,
     rr_switch_block_mirror_id_[coordinator.get_x()][coordinator.get_y()] = unique_mirror_.size() - 1; 
   }
 
-  return; /* skip rotable mirror searching...*/
+  bool is_rotatable_mirror = true;
 
   /* add rotatable mirror support */
   for (size_t mirror_id = 0; mirror_id < get_num_rotatable_mirror(); ++mirror_id) {
-    RRSwitchBlock rotate_mirror = rr_switch_block;
-    is_rotatable_mirror = true;
     /* Try to rotate as many times as the maximum channel width in this switch block
      * This may not fully cover all the rotation possibility but may be enough now  
      */
     /* Skip if these may never match as a mirror (violation in basic requirements */
-    if (false == get_switch_block(rotatable_mirror_[mirror_id]).is_mirrorable(rotate_mirror)) {
+    if (false == get_switch_block(rotatable_mirror_[mirror_id]).is_mirrorable(rotated_rr_switch_block)) {
       continue;
     }
-    /* Give an initial rotation to accelerate the prediction */
-    //size_t hint_offset = get_switch_block(rotatable_mirror_[mirror_id]).get_hint_rotate_offset(rotate_mirror);
-    //rotate_mirror.rotate(hint_offset - 1);
-    for (size_t offset = 0; offset < rr_switch_block.get_max_chan_width(); ++offset) {
-      if (true == get_switch_block(rotatable_mirror_[mirror_id]).is_mirror(rotate_mirror)) {
-        /* This is a mirror, raise the flag and we finish */
-        is_rotatable_mirror = false;
-        /* Record the id of unique mirror */
-        rr_switch_block_rotatable_mirror_id_[coordinator.get_x()][coordinator.get_y()] = mirror_id; 
-        break;
-      }
-      /* For the copy, try 3 types of rotation and examine is_mirror 
-       * Rotate only the X-direction nodes: LEFT and RIGHT   
-       * Rotate only the Y-direction nodes: TOP and BOTTOM  
-       * Rotate both X- and Y-direction nodes 
-       */
-
-      /* Rotate LEFT and RIGHT only */
-      RRSwitchBlock rotate_x_mirror = rotate_mirror;
-      rotate_x_mirror.rotate_side(LEFT, 1);
-      rotate_x_mirror.rotate_side(RIGHT, 1);
-      if (true == get_switch_block(rotatable_mirror_[mirror_id]).is_mirror(rotate_x_mirror)) {
-        /* This is a mirror, raise the flag and we finish */
-        is_rotatable_mirror = false;
-        /* Record the id of unique mirror */
-        rr_switch_block_rotatable_mirror_id_[coordinator.get_x()][coordinator.get_y()] = mirror_id; 
-        break;
-      }
-
-      /* Rotate TOP and BOTTOM only */
-      RRSwitchBlock rotate_y_mirror = rotate_mirror;
-      rotate_y_mirror.rotate_side(TOP, 2);
-      rotate_y_mirror.rotate_side(BOTTOM, 2);
-
-      if (true == get_switch_block(rotatable_mirror_[mirror_id]).is_mirror(rotate_y_mirror)) {
-        /* This is a mirror, raise the flag and we finish */
-        is_rotatable_mirror = false;
-        /* Record the id of unique mirror */
-        rr_switch_block_rotatable_mirror_id_[coordinator.get_x()][coordinator.get_y()] = mirror_id; 
-        break;
-      }
-
-      /* Rotate all sides */
-      rotate_mirror.rotate(2);
-    }
-    if (false == is_rotatable_mirror) {
+    if (true == get_switch_block(rotatable_mirror_[mirror_id]).is_mirror(rotated_rr_switch_block)) {
+      /* This is a mirror, raise the flag and we finish */
+      is_rotatable_mirror = false;
+      /* Record the id of unique mirror */
+      rr_switch_block_rotatable_mirror_id_[coordinator.get_x()][coordinator.get_y()] = mirror_id; 
       break;
     }
   }
+
   /* Add to list if this is a unique mirror*/
   if (true == is_rotatable_mirror) {
     rotatable_mirror_.push_back(coordinator);
     /* Record the id of unique mirror */
     rr_switch_block_rotatable_mirror_id_[coordinator.get_x()][coordinator.get_y()] = rotatable_mirror_.size() - 1; 
   }
-
 
   return;
 } 

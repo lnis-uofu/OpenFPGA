@@ -51,7 +51,10 @@ class RRChan {
     void reserve_node(size_t node_size); /* reseve a number of nodes to the array */
     void add_node(t_rr_node* node, size_t node_segment); /* add a node to the array */
     void rotate(size_t rotate_begin, size_t rotate_end, size_t offset); /* rotate the nodes and node_segments with a given offset */
+    void rotate_by_node_direction(enum e_direction node_direction, size_t offset);
+    void counter_rotate_by_node_direction(enum e_direction node_direction, size_t offset);
     void rotate(size_t offset); /* rotate the nodes and node_segments with a given offset */
+    void mirror_node_direction(); /* mirror node direction */
     void clear(); /* clear the content */
   private: /* internal functions */
     bool valid_type(t_rr_type type) const;  
@@ -167,6 +170,8 @@ class RRSwitchBlock {
     void set_num_reserved_conf_bits(size_t num_reserved_conf_bits);
     void set_conf_bits_lsb(size_t conf_bits_lsb);
     void set_conf_bits_msb(size_t conf_bits_msb);
+    void rotate_side_chan_node_by_direction(enum e_side side, enum e_direction chan_dir, size_t offset); /* rotate all the channel nodes by a given offset */
+    void counter_rotate_side_chan_node_by_direction(enum e_side side, enum e_direction chan_dir, size_t offset); /* rotate all the channel nodes by a given offset */
     void rotate_side_chan_node(enum e_side side, size_t offset); /* rotate all the channel nodes by a given offset */
     void rotate_chan_node(size_t offset); /* rotate all the channel nodes by a given offset */
     void rotate_chan_node_in_group(size_t offset); /* rotate all the channel nodes by a given offset */
@@ -174,6 +179,9 @@ class RRSwitchBlock {
     void rotate_opin_node_in_group(size_t offset); /* rotate all the opin nodes by a given offset */
     void rotate_side(enum e_side side, size_t offset); /* rotate all the channel and opin nodes by a given offset */
     void rotate(size_t offset); /* rotate all the channel and opin nodes by a given offset */
+    void mirror_side_chan_node_direction(enum e_side side); /* Mirror the node direction and port direction of routing track nodes on a side */
+    void swap_chan_node(enum e_side src_side, enum e_side des_side); /* swap the chan rr_nodes on two sides */
+    void swap_opin_node(enum e_side src_side, enum e_side des_side); /* swap the OPIN rr_nodes on two sides */
     void clear();
     void clear_chan_nodes(enum e_side node_side); /* Clean the chan_width of a side */
     void clear_ipin_nodes(enum e_side node_side); /* Clean the number of IPINs of a side */
@@ -228,7 +236,7 @@ class DeviceRRSwitchBlock {
     void set_rr_switch_block_conf_bits_msb(DeviceCoordinator& coordinator, size_t conf_bits_msb); /* TODO: TOBE DEPRECATED!!! conf_bits should be initialized when creating a switch block!!! */
     void reserve(DeviceCoordinator& coordinator); /* Pre-allocate the rr_switch_block array that the device requires */ 
     void resize_upon_need(DeviceCoordinator& coordinator); /* Resize the rr_switch_block array if needed */ 
-    void add_rr_switch_block(DeviceCoordinator& coordinator, RRSwitchBlock& rr_switch_block); /* Add a switch block to the array, which will automatically identify and update the lists of unique mirrors and rotatable mirrors */
+    void add_rr_switch_block(DeviceCoordinator& coordinator, RRSwitchBlock& rr_switch_block, RRSwitchBlock& rotated_rr_switch_block); /* Add a switch block to the array, which will automatically identify and update the lists of unique mirrors and rotatable mirrors */
     void clear(); /* clean the content */
   private: /* Validators */
     bool validate_coordinator(DeviceCoordinator& coordinator) const; /* Validate if the (x,y) is the range of this device */

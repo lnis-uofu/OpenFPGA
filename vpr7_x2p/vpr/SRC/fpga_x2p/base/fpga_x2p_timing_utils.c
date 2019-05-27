@@ -81,6 +81,7 @@ int get_spice_model_num_tedges_per_pin(t_spice_model* cur_spice_model,
         continue; /* ALL output ports requires a tedge */ 
       } 
       num_tedges += cur_spice_model->ports[iport].size;
+      break;
     case OUT_PORT:
       if (SPICE_MODEL_PORT_OUTPUT == cur_spice_model->ports[iport].type) {
         continue; /* ALL non-output ports requires a tedge */ 

@@ -633,10 +633,8 @@ int get_unidir_opin_connections(INP int chan, INP int seg, INP int Fc,
 
 	/* get_rr_node_indices needs x and y coords. */
     /* Original VPR */
-	/* 
-    x = ((CHANX == chan_type) ? seg : chan);
-	y = ((CHANX == chan_type) ? chan : seg); 
-    */
+    //x = ((CHANX == chan_type) ? seg : chan);
+	//y = ((CHANX == chan_type) ? chan : seg); 
     /* end */
     /* mrFPGA : Xifan TANG */
 	x = (((is_stack ? CHANY : CHANX) == chan_type) ? seg : chan);
@@ -1156,15 +1154,14 @@ int get_track_to_tracks(INP int from_chan, INP int from_seg, INP int from_track,
     /* mrFPGA: Xifan TANG */
     //int true_from_start, true_from_end;
 
-      /* Original VPR */
-	  assert(
+    /* Original VPR */
+	assert(
 			from_seg == get_seg_start(seg_details, from_track, from_chan, from_seg));
 
-	  from_end = get_seg_end(seg_details, from_track, from_seg, from_chan,
-			chan_len);
-      /* end */
-
 	from_switch = seg_details[from_track].wire_switch;
+	from_end = get_seg_end(seg_details, from_track, from_seg, from_chan,
+			chan_len);
+    /* end */
      
     /* mrFPGA : Xifan TANG*/
     if (is_stack) {
