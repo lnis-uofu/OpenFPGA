@@ -7,6 +7,20 @@
 
 /* Member Functions of Class RRChan */
 /* Constructors */
+
+/* Copy Constructor */
+RRChan::RRChan(const RRChan& rr_chan) {
+  this->type_ = rr_chan.get_type();
+  /* Copy node and node_segments */
+  this->reserve_node(rr_chan.get_chan_width());
+  for (size_t inode = 0; inode < rr_chan.get_chan_width(); ++inode) { 
+    this->nodes_.push_back(rr_chan.get_node(inode));
+    this->node_segments_.push_back(rr_chan.get_node_segment(inode));
+  }
+  return;
+}
+
+/* default constructor */
 RRChan::RRChan() {
   type_ = NUM_RR_TYPES;
   nodes_.resize(0);
@@ -449,6 +463,51 @@ bool DeviceRRChan::valid_module_id(t_rr_type chan_type, size_t module_id) const 
 }
 
 /* Member Functions of Class RRSwitchBlock*/
+/* Constructor for an empty object */
+RRSwitchBlock::RRSwitchBlock() {
+  return;
+}
+
+/* Copy constructor */
+RRSwitchBlock::RRSwitchBlock(const RRSwitchBlock& src) {
+  /* Copy coordinator */
+  this->set_coordinator(src.get_coordinator().get_x(), src.get_coordinator().get_y());
+
+  /* Initialize sides */ 
+  this->init_num_sides(src.get_num_sides());
+
+  /* Copy vectors */
+  for (size_t side = 0; side < src.get_num_sides(); ++side) {
+    Side side_manager(side);
+    /* Copy chan_nodes */
+    this->chan_node_[side_manager.get_side()] = src.get_chan(side_manager.get_side());
+    /* Copy chan_node_direction_*/
+    for (size_t inode = 0; inode < src.get_chan_width(side_manager.get_side()); ++inode) {
+      this->chan_node_direction_[side_manager.get_side()].push_back(src.get_chan_node_direction(side_manager.get_side(), inode));
+    }
+
+    /* Copy opin_node and opin_node_grid_side_ */
+    for (size_t inode = 0; inode < src.get_num_opin_nodes(side_manager.get_side()); ++inode) {
+      this->opin_node_[side_manager.get_side()].push_back(src.get_opin_node(side_manager.get_side(), inode));
+      this->opin_node_grid_side_[side_manager.get_side()].push_back(src.get_opin_node_grid_side(side_manager.get_side(), inode));
+    }
+
+    /* Copy ipin_node and ipin_node_grid_side_ */
+    for (size_t inode = 0; inode < src.get_num_ipin_nodes(side_manager.get_side()); ++inode) {
+      this->ipin_node_[side_manager.get_side()].push_back(src.get_ipin_node(side_manager.get_side(), inode));
+      this->ipin_node_grid_side_[side_manager.get_side()].push_back(src.get_ipin_node_grid_side(side_manager.get_side(), inode));
+    }
+  }
+
+  /* Copy conf_bits 
+   * TODO: this will be recovered when num_conf_bits etc will be initialized during FPGA-X2P setup 
+  this->set_num_reserved_conf_bits(src.get_num_reserved_conf_bits());
+  this->set_conf_bits_lsb(src.get_conf_bits_lsb());
+  this->set_conf_bits_msb(src.get_conf_bits_msb());
+   */
+  
+  return;
+}
 
 /* Accessors */
 
@@ -504,6 +563,17 @@ enum PORTS RRSwitchBlock::get_chan_node_direction(enum e_side side, size_t track
   return chan_node_direction_[side_manager.to_size_t()][track_id]; 
 }
 
+/* get a RRChan at a given side and track_id */
+RRChan RRSwitchBlock::get_chan(enum e_side side) const {
+  Side side_manager(side);
+  assert(side_manager.validate());
+ 
+  /* Ensure the side is valid in the context of this switch block */ 
+  assert( validate_side(side) );
+
+  return chan_node_[side_manager.to_size_t()]; 
+} 
+
 /* get a rr_node at a given side and track_id */
 t_rr_node* RRSwitchBlock::get_chan_node(enum e_side side, size_t track_id) const {
   Side side_manager(side);
@@ -539,6 +609,47 @@ size_t RRSwitchBlock::get_num_ipin_nodes(enum e_side side) const {
   assert(side_manager.validate());
   return ipin_node_[side_manager.to_size_t()].size(); 
 } 
+
+/* get a opin_node at a given side and track_id */
+t_rr_node* RRSwitchBlock::get_ipin_node(enum e_side side, size_t node_id) const {
+  Side side_manager(side);
+  assert(side_manager.validate());
+ 
+  /* Ensure the side is valid in the context of this switch block */ 
+  assert( validate_side(side) );
+
+  /* Ensure the track is valid in the context of this switch block at a specific side */ 
+  assert( validate_ipin_node_id(side, node_id) );
+  
+  return ipin_node_[side_manager.to_size_t()][node_id]; 
+} 
+
+/* get the grid_side of a opin_node at a given side and track_id */
+enum e_side RRSwitchBlock::get_ipin_node_grid_side(enum e_side side, size_t node_id) const {
+  Side side_manager(side);
+  assert(side_manager.validate());
+ 
+  /* Ensure the side is valid in the context of this switch block */ 
+  assert( validate_side(side) );
+
+  /* Ensure the track is valid in the context of this switch block at a specific side */ 
+  assert( validate_ipin_node_id(side, node_id) );
+  
+  return ipin_node_grid_side_[side_manager.to_size_t()][node_id]; 
+}
+
+/* get the grid side of a opin_rr_node */
+enum e_side RRSwitchBlock::get_ipin_node_grid_side(t_rr_node* ipin_node) const {
+  enum e_side side;
+  int index;
+
+  /* Find the side and index */
+  get_node_side_and_index(ipin_node, OUT_PORT, &side, &index);
+  assert(-1 != index);
+  assert(validate_side(side));
+  return get_ipin_node_grid_side(side, index);
+} 
+
 
 /* Get the number of OPIN rr_nodes on a side */
 size_t RRSwitchBlock::get_num_opin_nodes(enum e_side side) const {
@@ -847,10 +958,12 @@ bool RRSwitchBlock::is_mirror(RRSwitchBlock& cand) const {
       if (get_chan_node_direction(side_manager.get_side(), itrack) != cand.get_chan_node_direction(side_manager.get_side(), itrack)) {
         return false;
       }
-      /* Check the track_id of each node */
+      /* Check the track_id of each node
+       * ptc is not necessary, we care the connectivity!
       if (get_chan_node(side_manager.get_side(), itrack)->ptc_num != cand.get_chan_node(side_manager.get_side(), itrack)->ptc_num) {
         return false;
       }
+      */
       /* For OUT_PORT rr_node, we need to check fan-in */
       if (OUT_PORT != get_chan_node_direction(side_manager.get_side(), itrack)) {
         continue; /* skip IN_PORT */
@@ -1445,6 +1558,21 @@ bool RRSwitchBlock::validate_opin_node_id(enum e_side side, size_t node_id) cons
   return false;
 }
 
+/* Check the ipin_node_id is valid for opin_node_ and opin_node_grid_side_ */
+bool RRSwitchBlock::validate_ipin_node_id(enum e_side side, size_t node_id) const {
+  Side side_manager(side);
+
+  if (false == validate_side(side)) {
+    return false;
+  } 
+  if ( ( node_id < ipin_node_[side_manager.to_size_t()].size())
+     &&( node_id < ipin_node_grid_side_[side_manager.to_size_t()].size()) ) {
+    return true;
+  }
+
+  return false;
+}
+
 /* Validate the number of configuration bits, MSB should be no less than the LSB !!! */
 bool RRSwitchBlock::validate_num_conf_bits() const {
   if (conf_bits_msb_ >= conf_bits_lsb_) {
@@ -1559,15 +1687,15 @@ void DeviceRRSwitchBlock::reserve(DeviceCoordinator& coordinator) {
 /* Resize rr_switch_block array is needed*/
 void DeviceRRSwitchBlock::resize_upon_need(DeviceCoordinator& coordinator) { 
   if (coordinator.get_x() + 1 > rr_switch_block_.size()) {
-    rr_switch_block_.resize(coordinator.get_x());
-    rr_switch_block_mirror_id_.resize(coordinator.get_x());
-    rr_switch_block_rotatable_mirror_id_.resize(coordinator.get_x());
+    rr_switch_block_.resize(coordinator.get_x() + 1);
+    rr_switch_block_mirror_id_.resize(coordinator.get_x() + 1);
+    rr_switch_block_rotatable_mirror_id_.resize(coordinator.get_x() + 1);
   }
 
   if (coordinator.get_y() + 1 > rr_switch_block_[coordinator.get_x()].size()) {
-    rr_switch_block_[coordinator.get_x()].resize(coordinator.get_y());
-    rr_switch_block_mirror_id_[coordinator.get_x()].resize(coordinator.get_y());
-    rr_switch_block_rotatable_mirror_id_[coordinator.get_x()].resize(coordinator.get_y());
+    rr_switch_block_[coordinator.get_x()].resize(coordinator.get_y() + 1);
+    rr_switch_block_mirror_id_[coordinator.get_x()].resize(coordinator.get_y() + 1);
+    rr_switch_block_rotatable_mirror_id_[coordinator.get_x()].resize(coordinator.get_y() + 1);
   }
   
   return;
@@ -1607,9 +1735,6 @@ void DeviceRRSwitchBlock::add_rr_switch_block(DeviceCoordinator& coordinator,
 
   /* add rotatable mirror support */
   for (size_t mirror_id = 0; mirror_id < get_num_rotatable_mirror(); ++mirror_id) {
-    /* Try to rotate as many times as the maximum channel width in this switch block
-     * This may not fully cover all the rotation possibility but may be enough now  
-     */
     /* Skip if these may never match as a mirror (violation in basic requirements */
     if (false == get_switch_block(rotatable_mirror_[mirror_id]).is_mirrorable(rotated_rr_switch_block)) {
       continue;

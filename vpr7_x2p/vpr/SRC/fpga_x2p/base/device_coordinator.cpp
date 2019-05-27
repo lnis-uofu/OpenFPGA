@@ -3,12 +3,10 @@
 
 /* Member functions for DeviceCoordinator */
 /* Public constructors */
-/*
-DeviceCoordinator::DeviceCoordinator(DeviceCoordinator& coordinator) {
+DeviceCoordinator::DeviceCoordinator(const DeviceCoordinator& coordinator) {
   set(coordinator.get_x(), coordinator.get_y());
   return;
 }
-*/
 
 DeviceCoordinator::DeviceCoordinator(size_t x, size_t y) {
   set(x, y);

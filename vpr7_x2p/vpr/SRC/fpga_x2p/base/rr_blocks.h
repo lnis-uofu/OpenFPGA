@@ -37,6 +37,7 @@
  */
 class RRChan {
   public: /* Constructors */
+    RRChan(const RRChan&); /* Copy Constructor */
     RRChan();
   public: /* Accessors */
     t_rr_type get_type() const;
@@ -128,6 +129,8 @@ class DeviceRRChan {
  */
 class RRSwitchBlock {
   public: /* Contructors */
+    RRSwitchBlock(const RRSwitchBlock&);/* Copy constructor */
+    RRSwitchBlock();/* Default constructor */
   public: /* Accessors */
     size_t get_x() const; /* get the x coordinator of this switch block */
     size_t get_y() const; /* get the y coordinator of this switch block */
@@ -136,9 +139,13 @@ class RRSwitchBlock {
     size_t get_chan_width(enum e_side side) const; /* Get the number of routing tracks on a side */
     size_t get_max_chan_width() const; /* Get the maximum number of routing tracks on all sides */
     enum PORTS get_chan_node_direction(enum e_side side, size_t track_id) const; /* Get the direction of a rr_node at a given side and track_id */
+    RRChan get_chan(enum e_side side) const; /* get a rr_node at a given side and track_id */
     t_rr_node* get_chan_node(enum e_side side, size_t track_id) const; /* get a rr_node at a given side and track_id */
     size_t get_chan_node_segment(enum e_side side, size_t track_id) const; /* get the segment id of a channel rr_node */
     size_t get_num_ipin_nodes(enum e_side side) const; /* Get the number of IPIN rr_nodes on a side */
+    t_rr_node* get_ipin_node(enum e_side side, size_t node_id) const; /* get a rr_node at a given side and track_id */
+    enum e_side get_ipin_node_grid_side(enum e_side side, size_t node_id) const; /* get a rr_node at a given side and track_id */
+    enum e_side get_ipin_node_grid_side(t_rr_node* ipin_node) const; /* get a rr_node at a given side and track_id */
     size_t get_num_opin_nodes(enum e_side side) const; /* Get the number of OPIN rr_nodes on a side */
     t_rr_node* get_opin_node(enum e_side side, size_t node_id) const; /* get a rr_node at a given side and track_id */
     enum e_side get_opin_node_grid_side(enum e_side side, size_t node_id) const; /* get a rr_node at a given side and track_id */
@@ -195,6 +202,7 @@ class RRSwitchBlock {
     bool validate_side(enum e_side side) const;
     bool validate_track_id(enum e_side side, size_t track_id) const;
     bool validate_opin_node_id(enum e_side side, size_t node_id) const;
+    bool validate_ipin_node_id(enum e_side side, size_t node_id) const;
     bool validate_num_reserved_conf_bits() const;
     bool validate_num_conf_bits() const;
   private: /* Internal Data */

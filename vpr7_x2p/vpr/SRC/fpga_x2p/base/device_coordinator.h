@@ -11,6 +11,7 @@
 class DeviceCoordinator {
   public: /* Contructors */
     DeviceCoordinator(size_t x, size_t y);
+    DeviceCoordinator(const DeviceCoordinator&); /* copy constructor*/
     DeviceCoordinator();
   public: /* Accessors */
     size_t get_x() const;
