@@ -32,6 +32,7 @@
 #include "fpga_x2p_globals.h"
 #include "fpga_x2p_utils.h"
 #include "fpga_x2p_backannotate_utils.h"
+#include "write_rr_blocks.h"
 #include "fpga_x2p_unique_routing.h"
 
 /***** subroutines declaration *****/
@@ -820,7 +821,7 @@ DeviceRRChan build_device_rr_chan(int LL_num_rr_nodes, t_rr_node* LL_rr_node,
  * For channels chanX with DEC_DIRECTION on the right side, they should be marked as inputs
  */
 static 
-RRSwitchBlock build_rr_switch_block(DeviceCoordinator device_range, 
+RRSwitchBlock build_rr_switch_block(DeviceCoordinator& device_range, 
                                     size_t sb_x, size_t sb_y, 
                                     int LL_num_rr_nodes, t_rr_node* LL_rr_node, 
                                     t_ivec*** LL_rr_node_indices, int num_segments,
@@ -1044,6 +1045,7 @@ RRSwitchBlock rotate_rr_switch_block_for_mirror(DeviceCoordinator& device_range,
                                                 const RRSwitchBlock& rr_switch_block) {
   RRSwitchBlock rotated_rr_switch_block;
   rotated_rr_switch_block.set(rr_switch_block);
+  size_t Fco_offset = 1;
 
   /* For the 4 Switch Blocks at the four corners */
   /* 1. BOTTOM-LEFT corner: 
@@ -1103,10 +1105,22 @@ RRSwitchBlock rotate_rr_switch_block_for_mirror(DeviceCoordinator& device_range,
    * swap the chan_node between TOP and BOTTOM, 
    */
   if (device_range.get_y() == rotated_rr_switch_block.get_y() ) {
-    rotated_rr_switch_block.swap_opin_node(TOP, BOTTOM);
-    rotated_rr_switch_block.swap_chan_node(TOP, BOTTOM);
-    rotated_rr_switch_block.reverse_opin_node(TOP);
-    rotated_rr_switch_block.reverse_opin_node(BOTTOM);
+
+    /* For RIGHT SIDE: X-channel in INC_DIRECTION, rotate by an offset of its x-coordinator */
+    rotated_rr_switch_block.rotate_side_chan_node_by_direction(RIGHT, INC_DIRECTION, Fco_offset * (rotated_rr_switch_block.get_x() - 1));
+    /* Rotate the same nodes on the opposite side */
+    rotated_rr_switch_block.rotate_side_chan_node_by_direction(LEFT, INC_DIRECTION, Fco_offset * (rotated_rr_switch_block.get_x() - 1));
+
+    /* For LEFT SIDE: X-channel in DEC_DIRECTION, rotate by an offset of its x-coordinator */
+    rotated_rr_switch_block.counter_rotate_side_chan_node_by_direction(LEFT, DEC_DIRECTION, Fco_offset * (rotated_rr_switch_block.get_x() - 1));
+    /* Rotate the same nodes on the opposite side */
+    rotated_rr_switch_block.counter_rotate_side_chan_node_by_direction(RIGHT, DEC_DIRECTION, Fco_offset * (rotated_rr_switch_block.get_x() - 1));
+
+    //rotated_rr_switch_block.swap_opin_node(TOP, BOTTOM);
+    //rotated_rr_switch_block.swap_chan_node(TOP, BOTTOM);
+    //rotated_rr_switch_block.reverse_opin_node(TOP);
+    //rotated_rr_switch_block.reverse_opin_node(BOTTOM);
+
     return rotated_rr_switch_block;
   }
   /* 3. RIGHT side: 
@@ -1114,10 +1128,22 @@ RRSwitchBlock rotate_rr_switch_block_for_mirror(DeviceCoordinator& device_range,
    * swap the chan_node between LEFT and RIGHT, 
    */
   if (device_range.get_x() == rotated_rr_switch_block.get_x() ) {
-    rotated_rr_switch_block.swap_opin_node(LEFT, RIGHT);
-    rotated_rr_switch_block.swap_chan_node(LEFT, RIGHT);
-    rotated_rr_switch_block.reverse_opin_node(LEFT);
-    rotated_rr_switch_block.reverse_opin_node(RIGHT);
+
+    /* For TOP SIDE: Y-channel in INC_DIRECTION, rotate by an offset of its y-coordinator */
+    rotated_rr_switch_block.rotate_side_chan_node_by_direction(TOP, INC_DIRECTION, Fco_offset * (rotated_rr_switch_block.get_y() - 1));
+    /* Rotate the same nodes on the opposite side */
+    rotated_rr_switch_block.rotate_side_chan_node_by_direction(BOTTOM, INC_DIRECTION, Fco_offset * (rotated_rr_switch_block.get_y() - 1));
+
+    /* For BOTTOM SIDE: Y-channel in DEC_DIRECTION, rotate by an offset of its y-coordinator */
+    rotated_rr_switch_block.counter_rotate_side_chan_node_by_direction(BOTTOM, DEC_DIRECTION, Fco_offset * (rotated_rr_switch_block.get_y() - 1));
+    /* Rotate the same nodes on the opposite side */
+    rotated_rr_switch_block.counter_rotate_side_chan_node_by_direction(TOP, DEC_DIRECTION, Fco_offset * (rotated_rr_switch_block.get_y() - 1));
+
+    //rotated_rr_switch_block.swap_opin_node(LEFT, RIGHT);
+    //rotated_rr_switch_block.swap_chan_node(LEFT, RIGHT);
+    //rotated_rr_switch_block.reverse_opin_node(LEFT);
+    //rotated_rr_switch_block.reverse_opin_node(RIGHT);
+
     return rotated_rr_switch_block;
   }
   /* 4. LEFT side: 
@@ -1136,34 +1162,35 @@ RRSwitchBlock rotate_rr_switch_block_for_mirror(DeviceCoordinator& device_range,
   /* Reach here, it means we have a SB at the center region */
   /* For TOP SIDE: Y-channel in INC_DIRECTION, rotate by an offset of its y-coordinator */
   if (1 < rotated_rr_switch_block.get_y()) {
-    rotated_rr_switch_block.rotate_side_chan_node_by_direction(TOP, INC_DIRECTION, rotated_rr_switch_block.get_y() - 1);
+    rotated_rr_switch_block.rotate_side_chan_node_by_direction(TOP, INC_DIRECTION, Fco_offset * (rotated_rr_switch_block.get_y() - 1));
     /* Rotate the same nodes on the opposite side */
-    rotated_rr_switch_block.rotate_side_chan_node_by_direction(BOTTOM, INC_DIRECTION, rotated_rr_switch_block.get_y() - 1);
+    rotated_rr_switch_block.rotate_side_chan_node_by_direction(BOTTOM, INC_DIRECTION, Fco_offset * (rotated_rr_switch_block.get_y() - 1));
   }
 
   /* For RIGHT SIDE: X-channel in INC_DIRECTION, rotate by an offset of its x-coordinator */
   if (1 < rotated_rr_switch_block.get_x()) {
-    rotated_rr_switch_block.rotate_side_chan_node_by_direction(RIGHT, INC_DIRECTION, rotated_rr_switch_block.get_x() - 1);
+    rotated_rr_switch_block.rotate_side_chan_node_by_direction(RIGHT, INC_DIRECTION, Fco_offset * (rotated_rr_switch_block.get_x() - 1));
     /* Rotate the same nodes on the opposite side */
-    rotated_rr_switch_block.rotate_side_chan_node_by_direction(LEFT, INC_DIRECTION, rotated_rr_switch_block.get_x() - 1);
+    rotated_rr_switch_block.rotate_side_chan_node_by_direction(LEFT, INC_DIRECTION, Fco_offset * (rotated_rr_switch_block.get_x() - 1));
   }
 
   /* For BOTTOM SIDE: Y-channel in DEC_DIRECTION, rotate by an offset of its y-coordinator */
-  if (device_range.get_y() - 1 > rotated_rr_switch_block.get_y()) {
-    rotated_rr_switch_block.counter_rotate_side_chan_node_by_direction(BOTTOM, DEC_DIRECTION, rotated_rr_switch_block.get_y() - 1);
+  if ( 1 <  rotated_rr_switch_block.get_y()) {
+    rotated_rr_switch_block.counter_rotate_side_chan_node_by_direction(BOTTOM, DEC_DIRECTION, Fco_offset * (rotated_rr_switch_block.get_y() - 1));
     /* Rotate the same nodes on the opposite side */
-    rotated_rr_switch_block.counter_rotate_side_chan_node_by_direction(TOP, DEC_DIRECTION, rotated_rr_switch_block.get_y() - 1);
+    rotated_rr_switch_block.counter_rotate_side_chan_node_by_direction(TOP, DEC_DIRECTION, Fco_offset * (rotated_rr_switch_block.get_y() - 1));
   }
 
   /* For LEFT SIDE: X-channel in DEC_DIRECTION, rotate by an offset of its x-coordinator */
-  if (device_range.get_x() - 1 > rotated_rr_switch_block.get_x()) {
-    rotated_rr_switch_block.counter_rotate_side_chan_node_by_direction(LEFT, DEC_DIRECTION, rotated_rr_switch_block.get_x() - 1);
+  if ( 1 <  rotated_rr_switch_block.get_x()) {
+    rotated_rr_switch_block.counter_rotate_side_chan_node_by_direction(LEFT, DEC_DIRECTION, Fco_offset * (rotated_rr_switch_block.get_x() - 1));
     /* Rotate the same nodes on the opposite side */
-    rotated_rr_switch_block.counter_rotate_side_chan_node_by_direction(RIGHT, DEC_DIRECTION, rotated_rr_switch_block.get_x() - 1);
+    rotated_rr_switch_block.counter_rotate_side_chan_node_by_direction(RIGHT, DEC_DIRECTION, Fco_offset * (rotated_rr_switch_block.get_x() - 1));
   }
 
   return rotated_rr_switch_block;
 }
+
 
 /* Build a list of Switch blocks, each of which contains a collection of rr_nodes
  * We will maintain a list of unique switch blocks, which will be outputted as a Verilog module
@@ -1184,7 +1211,7 @@ DeviceRRSwitchBlock build_device_rr_switch_blocks(int LL_num_rr_nodes, t_rr_node
   /* For each switch block, determine the size of array */
   for (size_t ix = 0; ix <= sb_range.get_x(); ++ix) {
     for (size_t iy = 0; iy <= sb_range.get_y(); ++iy) {
-      RRSwitchBlock rr_sb = build_rr_switch_block(sb_range, ix, iy, 
+      RRSwitchBlock rr_sb = build_rr_switch_block(sb_range, ix, iy,
                                                   LL_num_rr_nodes, LL_rr_node, 
                                                   LL_rr_node_indices, 
                                                   num_segments, LL_rr_indexed_data);
@@ -1206,11 +1233,7 @@ DeviceRRSwitchBlock build_device_rr_switch_blocks(int LL_num_rr_nodes, t_rr_node
 
   for (size_t ix = 0; ix <= sb_range.get_x(); ++ix) {
     for (size_t iy = 0; iy <= sb_range.get_y(); ++iy) {
-      //RRSwitchBlock rr_sb = LL_device_rr_switch_block.get_switch_block(ix, iy);
-      RRSwitchBlock rr_sb = build_rr_switch_block(sb_range, ix, iy, 
-                                                  LL_num_rr_nodes, LL_rr_node, 
-                                                  LL_rr_node_indices, 
-                                                  num_segments, LL_rr_indexed_data);
+      RRSwitchBlock rr_sb = LL_device_rr_switch_block.get_switch_block(ix, iy);
       RRSwitchBlock rotated_rr_sb = rotate_rr_switch_block_for_mirror(sb_range, rr_sb); 
       DeviceCoordinator sb_coordinator = rr_sb.get_coordinator();
       LL_device_rr_switch_block.add_rotatable_mirror(sb_coordinator, rotated_rr_sb);
@@ -1222,6 +1245,8 @@ DeviceRRSwitchBlock build_device_rr_switch_blocks(int LL_num_rr_nodes, t_rr_node
   vpr_printf(TIO_MESSAGE_INFO, 
              "Detect %d rotatable unique switch blocks from %d switch blocks.\n",
              LL_device_rr_switch_block.get_num_rotatable_mirror(), (nx + 1) * (ny + 1) );
+
+  write_device_rr_switch_block_to_xml(LL_device_rr_switch_block);
 
   return LL_device_rr_switch_block;
 }

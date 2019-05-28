@@ -203,7 +203,7 @@ void RRChan::rotate_by_node_direction(enum e_direction node_direction, size_t of
     std::vector<size_t> node_segments;
     for (size_t inode = 0; inode < get_chan_width(); ++inode) {
       if ( (node_direction == get_node(inode)->direction) 
-        && (seg_ids[iseg] == get_node_segment(inode)) ) {
+        && (seg_ids[iseg] == (size_t)get_node_segment(inode)) ) {
         nodes.push_back(get_node(inode));
         node_segments.push_back(get_node_segment(inode));
       }
@@ -219,7 +219,7 @@ void RRChan::rotate_by_node_direction(enum e_direction node_direction, size_t of
     /* back-annotate to to the original chan nodes*/
     for (size_t inode = 0; inode < get_chan_width(); ++inode) {
       if ( (node_direction == get_node(inode)->direction) 
-        && (seg_ids[iseg] == get_node_segment(inode)) ) {
+        && (seg_ids[iseg] == (size_t)get_node_segment(inode)) ) {
         nodes_[inode] = nodes.front();
         node_segments_[inode] = node_segments.front();
         /* pop up temp vectors */
@@ -255,7 +255,7 @@ void RRChan::counter_rotate_by_node_direction(enum e_direction node_direction, s
     std::vector<size_t> node_segments;
     for (size_t inode = 0; inode < get_chan_width(); ++inode) {
       if ( (node_direction == get_node(inode)->direction) 
-        && (seg_ids[iseg] == get_node_segment(inode)) ) {
+        && (seg_ids[iseg] == (size_t)get_node_segment(inode)) ) {
         nodes.push_back(get_node(inode));
         node_segments.push_back(get_node_segment(inode));
       }
@@ -271,7 +271,7 @@ void RRChan::counter_rotate_by_node_direction(enum e_direction node_direction, s
     /* back-annotate to to the original chan nodes*/
     for (size_t inode = 0; inode < get_chan_width(); ++inode) {
       if ( (node_direction == get_node(inode)->direction) 
-        && (seg_ids[iseg] == get_node_segment(inode)) ) {
+        && (seg_ids[iseg] == (size_t)get_node_segment(inode)) ) {
         nodes_[inode] = nodes.front();
         node_segments_[inode] = node_segments.front();
         /* pop up temp vectors */
@@ -1118,6 +1118,7 @@ void RRSwitchBlock::set(const RRSwitchBlock& src) {
   return;
 }
 
+
 /* Set the coordinator (x,y) for the switch block */
 void RRSwitchBlock::set_coordinator(size_t x, size_t y) {
   coordinator_.set(x, y);
@@ -1857,6 +1858,9 @@ void DeviceRRSwitchBlock::add_rotatable_mirror(DeviceCoordinator& coordinator,
     rotatable_mirror_.push_back(coordinator);
     /* Record the id of unique mirror */
     rr_switch_block_rotatable_mirror_id_[coordinator.get_x()][coordinator.get_y()] = rotatable_mirror_.size() - 1; 
+    /* 
+    printf("Detect a rotatable mirror: SB[%lu][%lu]\n", coordinator.get_x(), coordinator.get_y());
+     */
   }
 
   return;
