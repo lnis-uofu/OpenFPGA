@@ -47,6 +47,7 @@ class RRChan {
     int get_node_segment(t_rr_node* node) const;
     int get_node_segment(size_t track_num) const;
     bool is_mirror(RRChan& cand) const; /* evaluate if two RR_chan is mirror to each other */
+    std::vector<size_t> get_segment_ids() const; /* Get a list of segments used in this routing channel */
   public: /* Mutators */
     void set(const RRChan&); /* copy */
     void set_type(t_rr_type type); /* modify type */
@@ -253,6 +254,8 @@ class DeviceRRSwitchBlock {
     void build_unique_mirror(); /* Add a switch block to the array, which will automatically identify and update the lists of unique mirrors and rotatable mirrors */
     void add_rotatable_mirror(DeviceCoordinator& coordinator, RRSwitchBlock& rr_sb); /* Add a switch block to the array, which will automatically identify and update the lists of unique mirrors and rotatable mirrors */
     void clear(); /* clean the content */
+    void clear_mirror(); /* clean the content */
+    void clear_rotatable_mirror(); /* clean the content */
   private: /* Validators */
     bool validate_coordinator(DeviceCoordinator& coordinator) const; /* Validate if the (x,y) is the range of this device */
     bool validate_unique_mirror_index(size_t index) const; /* Validate if the index in the range of unique_mirror vector*/
