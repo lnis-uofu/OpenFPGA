@@ -1060,10 +1060,8 @@ RRSwitchBlock rotate_rr_switch_block_for_mirror(DeviceCoordinator& device_range,
    */
   if (   ( 0 == rotated_rr_switch_block.get_x())
       && (device_range.get_y() == rotated_rr_switch_block.get_y()) ) {
-    //rotated_rr_switch_block.swap_opin_node(TOP, BOTTOM);
-    //rotated_rr_switch_block.swap_chan_node(TOP, BOTTOM);
-    //rotated_rr_switch_block.mirror_side_chan_node_direction(TOP);
-    //rotated_rr_switch_block.mirror_side_chan_node_direction(BOTTOM);
+    rotated_rr_switch_block.swap_opin_node(TOP, BOTTOM);
+    rotated_rr_switch_block.swap_chan_node(TOP, BOTTOM);
     return rotated_rr_switch_block;
   }
 
@@ -1076,14 +1074,10 @@ RRSwitchBlock rotate_rr_switch_block_for_mirror(DeviceCoordinator& device_range,
    */
   if (   (device_range.get_x() == rotated_rr_switch_block.get_x())
       && (device_range.get_y() == rotated_rr_switch_block.get_y()) ) {
-    //rotated_rr_switch_block.swap_opin_node(TOP, BOTTOM);
-    //rotated_rr_switch_block.swap_chan_node(TOP, BOTTOM);
-    //rotated_rr_switch_block.mirror_side_chan_node_direction(TOP);
-    //rotated_rr_switch_block.mirror_side_chan_node_direction(BOTTOM);
-    //rotated_rr_switch_block.swap_opin_node(LEFT, RIGHT);
-    //rotated_rr_switch_block.swap_chan_node(LEFT, RIGHT);
-    //rotated_rr_switch_block.mirror_side_chan_node_direction(LEFT);
-    //rotated_rr_switch_block.mirror_side_chan_node_direction(RIGHT);
+    rotated_rr_switch_block.swap_opin_node(TOP, BOTTOM);
+    rotated_rr_switch_block.swap_chan_node(TOP, BOTTOM);
+    rotated_rr_switch_block.swap_opin_node(LEFT, RIGHT);
+    rotated_rr_switch_block.swap_chan_node(LEFT, RIGHT);
     return rotated_rr_switch_block;
   }
   /* 4. BOTTOM-RIGHT corner: 
@@ -1092,10 +1086,8 @@ RRSwitchBlock rotate_rr_switch_block_for_mirror(DeviceCoordinator& device_range,
    */
   if (   (device_range.get_x() == rotated_rr_switch_block.get_x())
       && (0 == rotated_rr_switch_block.get_y()) ) {
-    //rotated_rr_switch_block.swap_opin_node(LEFT, RIGHT);
-    //rotated_rr_switch_block.swap_chan_node(LEFT, RIGHT);
-    //rotated_rr_switch_block.mirror_side_chan_node_direction(LEFT);
-    //rotated_rr_switch_block.mirror_side_chan_node_direction(RIGHT);
+    rotated_rr_switch_block.swap_opin_node(LEFT, RIGHT);
+    rotated_rr_switch_block.swap_chan_node(LEFT, RIGHT);
     return rotated_rr_switch_block;
   }
 
@@ -1115,8 +1107,6 @@ RRSwitchBlock rotate_rr_switch_block_for_mirror(DeviceCoordinator& device_range,
     rotated_rr_switch_block.swap_chan_node(TOP, BOTTOM);
     rotated_rr_switch_block.reverse_opin_node(TOP);
     rotated_rr_switch_block.reverse_opin_node(BOTTOM);
-    rotated_rr_switch_block.mirror_side_chan_node_direction(TOP);
-    rotated_rr_switch_block.mirror_side_chan_node_direction(BOTTOM);
     return rotated_rr_switch_block;
   }
   /* 3. RIGHT side: 
@@ -1128,8 +1118,6 @@ RRSwitchBlock rotate_rr_switch_block_for_mirror(DeviceCoordinator& device_range,
     rotated_rr_switch_block.swap_chan_node(LEFT, RIGHT);
     rotated_rr_switch_block.reverse_opin_node(LEFT);
     rotated_rr_switch_block.reverse_opin_node(RIGHT);
-    rotated_rr_switch_block.mirror_side_chan_node_direction(LEFT);
-    rotated_rr_switch_block.mirror_side_chan_node_direction(RIGHT);
     return rotated_rr_switch_block;
   }
   /* 4. LEFT side: 
@@ -1218,7 +1206,11 @@ DeviceRRSwitchBlock build_device_rr_switch_blocks(int LL_num_rr_nodes, t_rr_node
 
   for (size_t ix = 0; ix <= sb_range.get_x(); ++ix) {
     for (size_t iy = 0; iy <= sb_range.get_y(); ++iy) {
-      RRSwitchBlock rr_sb = LL_device_rr_switch_block.get_switch_block(ix, iy);
+      //RRSwitchBlock rr_sb = LL_device_rr_switch_block.get_switch_block(ix, iy);
+      RRSwitchBlock rr_sb = build_rr_switch_block(sb_range, ix, iy, 
+                                                  LL_num_rr_nodes, LL_rr_node, 
+                                                  LL_rr_node_indices, 
+                                                  num_segments, LL_rr_indexed_data);
       RRSwitchBlock rotated_rr_sb = rotate_rr_switch_block_for_mirror(sb_range, rr_sb); 
       DeviceCoordinator sb_coordinator = rr_sb.get_coordinator();
       LL_device_rr_switch_block.add_rotatable_mirror(sb_coordinator, rotated_rr_sb);

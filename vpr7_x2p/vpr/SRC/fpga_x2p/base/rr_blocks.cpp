@@ -104,12 +104,16 @@ bool RRChan::is_mirror(RRChan& cand) const {
 
 /* Mutators */
 void RRChan::set(const RRChan& rr_chan) {
+  /* Ensure a clean start */
+  this->clear();
+  /* Assign type of this routing channel */
   this->type_ = rr_chan.get_type();
   /* Copy node and node_segments */
-  this->reserve_node(rr_chan.get_chan_width());
+  this->nodes_.resize(rr_chan.get_chan_width());
+  this->node_segments_.resize(rr_chan.get_chan_width());
   for (size_t inode = 0; inode < rr_chan.get_chan_width(); ++inode) { 
-    this->nodes_.push_back(rr_chan.get_node(inode));
-    this->node_segments_.push_back(rr_chan.get_node_segment(inode));
+    this->nodes_[inode] = rr_chan.get_node(inode);
+    this->node_segments_[inode] = rr_chan.get_node_segment(inode);
   }
   return;
 }
@@ -1106,7 +1110,10 @@ void RRSwitchBlock::add_chan_node(enum e_side node_side, RRChan& rr_chan, std::v
 
   /* fill the dedicated element in the vector */
   chan_node_[side_manager.to_size_t()].set(rr_chan);
-  chan_node_direction_[side_manager.to_size_t()] = rr_chan_dir;
+  chan_node_direction_[side_manager.to_size_t()].resize(rr_chan_dir.size());
+  for (size_t inode = 0; inode < rr_chan_dir.size(); ++inode) {
+    chan_node_direction_[side_manager.to_size_t()][inode] = rr_chan_dir[inode];
+  }
 
   return;
 } 

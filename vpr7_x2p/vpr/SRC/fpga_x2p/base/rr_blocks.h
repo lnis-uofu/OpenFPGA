@@ -188,7 +188,6 @@ class RRSwitchBlock {
     void rotate_opin_node_in_group(size_t offset); /* rotate all the opin nodes by a given offset */
     void rotate_side(enum e_side side, size_t offset); /* rotate all the channel and opin nodes by a given offset */
     void rotate(size_t offset); /* rotate all the channel and opin nodes by a given offset */
-    void mirror_side_chan_node_direction(enum e_side side); /* Mirror the node direction and port direction of routing track nodes on a side */
     void swap_chan_node(enum e_side src_side, enum e_side des_side); /* swap the chan rr_nodes on two sides */
     void swap_opin_node(enum e_side src_side, enum e_side des_side); /* swap the OPIN rr_nodes on two sides */
     void swap_ipin_node(enum e_side src_side, enum e_side des_side); /* swap the IPIN rr_nodes on two sides */
@@ -200,6 +199,7 @@ class RRSwitchBlock {
     void clear_opin_nodes(enum e_side node_side); /* Clean the number of OPINs of a side */
     void clear_one_side(enum e_side node_side); /* Clean chan/opin/ipin nodes at one side */
   private: /* Internal Mutators */
+    void mirror_side_chan_node_direction(enum e_side side); /* Mirror the node direction and port direction of routing track nodes on a side */
   private: /* internal functions */
     bool is_node_mirror (RRSwitchBlock& cand, enum e_side node_side, size_t track_id) const; 
     size_t get_track_id_first_short_connection(enum e_side node_side) const; 
