@@ -42,9 +42,11 @@ void write_rr_switch_block_to_xml(std::string fname_prefix, RRSwitchBlock& rr_sb
       t_rr_node* cur_rr_node = rr_sb.get_chan_node(side_manager.get_side(), inode);
 
       /* Output node information: location, index, side */
+      size_t src_segment_id = rr_sb.get_chan_node_segment(side_manager.get_side(), inode);
       fp << "\t<" << convert_chan_type_to_string(cur_rr_node->type) 
          << " side=\"" << side_manager.to_string() 
          << "\" index=\"" << inode 
+         << "\" segment_id=\"" << src_segment_id 
          << "\">" 
          << std::endl; 
 
@@ -64,6 +66,7 @@ void write_rr_switch_block_to_xml(std::string fname_prefix, RRSwitchBlock& rr_sb
         fp << "\t\t<driver_node type=\"" << convert_chan_type_to_string(cur_rr_node->type) 
            << "\" side=\"" << oppo_side.to_string() 
            << "\" index=\"" << rr_sb.get_node_index(cur_rr_node, oppo_side.get_side(), IN_PORT) 
+           << "\" segment_id=\"" << src_segment_id 
            << "\"/>" 
            << std::endl; 
       } else {
@@ -84,11 +87,11 @@ void write_rr_switch_block_to_xml(std::string fname_prefix, RRSwitchBlock& rr_sb
                << std::endl; 
           } else {
             node_type_str = convert_chan_type_to_string(drive_rr_nodes[jnode]->type);
-            size_t segment_id = rr_sb.get_chan_node_segment(drive_node_side, drive_node_index);
+            size_t des_segment_id = rr_sb.get_chan_node_segment(drive_node_side, drive_node_index);
             fp << "\t\t<driver_node type=\"" << node_type_str 
                << "\" side=\"" << drive_side.to_string() 
                << "\" index=\"" << drive_node_index 
-               << "\" segment_id=\"" <<  segment_id 
+               << "\" segment_id=\"" << des_segment_id 
                << "\"/>" 
                << std::endl; 
           }
