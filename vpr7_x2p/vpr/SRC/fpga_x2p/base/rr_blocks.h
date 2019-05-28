@@ -48,6 +48,7 @@ class RRChan {
     int get_node_segment(size_t track_num) const;
     bool is_mirror(RRChan& cand) const; /* evaluate if two RR_chan is mirror to each other */
   public: /* Mutators */
+    void set(const RRChan&); /* copy */
     void set_type(t_rr_type type); /* modify type */
     void reserve_node(size_t node_size); /* reseve a number of nodes to the array */
     void add_node(t_rr_node* node, size_t node_segment); /* add a node to the array */
@@ -169,9 +170,10 @@ class RRSwitchBlock {
     char* gen_verilog_module_name() const;
     char* gen_verilog_instance_name() const;
   public: /* Mutators */
+    void set(const RRSwitchBlock& src); /* get a copy from a source */
     void set_coordinator(size_t x, size_t y);
     void init_num_sides(size_t num_sides); /* Allocate the vectors with the given number of sides */
-    void add_chan_node(enum e_side node_side, RRChan rr_chan, std::vector<enum PORTS> rr_chan_dir); /* Add a node to the chan_rr_node_ list and also assign its direction in chan_rr_node_direction_ */
+    void add_chan_node(enum e_side node_side, RRChan& rr_chan, std::vector<enum PORTS> rr_chan_dir); /* Add a node to the chan_rr_node_ list and also assign its direction in chan_rr_node_direction_ */
     void add_ipin_node(t_rr_node* node, enum e_side node_side, enum e_side grid_side); /* Add a node to the chan_rr_node_ list and also assign its direction in chan_rr_node_direction_ */
     void add_opin_node(t_rr_node* node, enum e_side node_side, enum e_side grid_side); /* Add a node to the chan_rr_node_ list and also assign its direction in chan_rr_node_direction_ */
     void set_num_reserved_conf_bits(size_t num_reserved_conf_bits);
@@ -189,6 +191,9 @@ class RRSwitchBlock {
     void mirror_side_chan_node_direction(enum e_side side); /* Mirror the node direction and port direction of routing track nodes on a side */
     void swap_chan_node(enum e_side src_side, enum e_side des_side); /* swap the chan rr_nodes on two sides */
     void swap_opin_node(enum e_side src_side, enum e_side des_side); /* swap the OPIN rr_nodes on two sides */
+    void swap_ipin_node(enum e_side src_side, enum e_side des_side); /* swap the IPIN rr_nodes on two sides */
+    void reverse_opin_node(enum e_side side); /* reverse the OPIN rr_nodes on two sides */
+    void reverse_ipin_node(enum e_side side); /* reverse the IPIN rr_nodes on two sides */
     void clear();
     void clear_chan_nodes(enum e_side node_side); /* Clean the chan_width of a side */
     void clear_ipin_nodes(enum e_side node_side); /* Clean the number of IPINs of a side */
@@ -244,7 +249,9 @@ class DeviceRRSwitchBlock {
     void set_rr_switch_block_conf_bits_msb(DeviceCoordinator& coordinator, size_t conf_bits_msb); /* TODO: TOBE DEPRECATED!!! conf_bits should be initialized when creating a switch block!!! */
     void reserve(DeviceCoordinator& coordinator); /* Pre-allocate the rr_switch_block array that the device requires */ 
     void resize_upon_need(DeviceCoordinator& coordinator); /* Resize the rr_switch_block array if needed */ 
-    void add_rr_switch_block(DeviceCoordinator& coordinator, RRSwitchBlock& rr_switch_block, RRSwitchBlock& rotated_rr_switch_block); /* Add a switch block to the array, which will automatically identify and update the lists of unique mirrors and rotatable mirrors */
+    void add_rr_switch_block(DeviceCoordinator& coordinator, RRSwitchBlock& rr_sb); /* Add a switch block to the array, which will automatically identify and update the lists of unique mirrors and rotatable mirrors */
+    void build_unique_mirror(); /* Add a switch block to the array, which will automatically identify and update the lists of unique mirrors and rotatable mirrors */
+    void add_rotatable_mirror(DeviceCoordinator& coordinator, RRSwitchBlock& rr_sb); /* Add a switch block to the array, which will automatically identify and update the lists of unique mirrors and rotatable mirrors */
     void clear(); /* clean the content */
   private: /* Validators */
     bool validate_coordinator(DeviceCoordinator& coordinator) const; /* Validate if the (x,y) is the range of this device */

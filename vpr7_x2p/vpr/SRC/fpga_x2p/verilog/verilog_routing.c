@@ -736,8 +736,9 @@ void dump_verilog_unique_switch_box_short_interc(FILE* fp,
   if (0 == actual_fan_in) {
     assert(drive_rr_node == cur_rr_node);
   } else {
+    Side side_manager(chan_side);
     /* drive_rr_node = &(rr_node[cur_rr_node->prev_node]); */
-    assert(1 == rr_node_drive_switch_box(drive_rr_node, cur_rr_node, rr_sb.get_coordinator().get_x(), rr_sb.get_coordinator().get_y(), chan_side));
+    assert(1 == rr_node_drive_switch_box(drive_rr_node, cur_rr_node, rr_sb.get_coordinator().get_x(), rr_sb.get_coordinator().get_y(), side_manager.get_side()));
   }
 
   int grid_x = drive_rr_node->xlow; 

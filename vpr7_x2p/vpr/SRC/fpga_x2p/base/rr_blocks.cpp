@@ -10,13 +10,7 @@
 
 /* Copy Constructor */
 RRChan::RRChan(const RRChan& rr_chan) {
-  this->type_ = rr_chan.get_type();
-  /* Copy node and node_segments */
-  this->reserve_node(rr_chan.get_chan_width());
-  for (size_t inode = 0; inode < rr_chan.get_chan_width(); ++inode) { 
-    this->nodes_.push_back(rr_chan.get_node(inode));
-    this->node_segments_.push_back(rr_chan.get_node_segment(inode));
-  }
+  this->set(rr_chan);
   return;
 }
 
@@ -109,6 +103,17 @@ bool RRChan::is_mirror(RRChan& cand) const {
 
 
 /* Mutators */
+void RRChan::set(const RRChan& rr_chan) {
+  this->type_ = rr_chan.get_type();
+  /* Copy node and node_segments */
+  this->reserve_node(rr_chan.get_chan_width());
+  for (size_t inode = 0; inode < rr_chan.get_chan_width(); ++inode) { 
+    this->nodes_.push_back(rr_chan.get_node(inode));
+    this->node_segments_.push_back(rr_chan.get_node_segment(inode));
+  }
+  return;
+}
+
 /* modify type */
 void RRChan::set_type(t_rr_type type) {
   assert(valid_type(type));
@@ -471,41 +476,7 @@ RRSwitchBlock::RRSwitchBlock() {
 /* Copy constructor */
 RRSwitchBlock::RRSwitchBlock(const RRSwitchBlock& src) {
   /* Copy coordinator */
-  this->set_coordinator(src.get_coordinator().get_x(), src.get_coordinator().get_y());
-
-  /* Initialize sides */ 
-  this->init_num_sides(src.get_num_sides());
-
-  /* Copy vectors */
-  for (size_t side = 0; side < src.get_num_sides(); ++side) {
-    Side side_manager(side);
-    /* Copy chan_nodes */
-    this->chan_node_[side_manager.get_side()] = src.get_chan(side_manager.get_side());
-    /* Copy chan_node_direction_*/
-    for (size_t inode = 0; inode < src.get_chan_width(side_manager.get_side()); ++inode) {
-      this->chan_node_direction_[side_manager.get_side()].push_back(src.get_chan_node_direction(side_manager.get_side(), inode));
-    }
-
-    /* Copy opin_node and opin_node_grid_side_ */
-    for (size_t inode = 0; inode < src.get_num_opin_nodes(side_manager.get_side()); ++inode) {
-      this->opin_node_[side_manager.get_side()].push_back(src.get_opin_node(side_manager.get_side(), inode));
-      this->opin_node_grid_side_[side_manager.get_side()].push_back(src.get_opin_node_grid_side(side_manager.get_side(), inode));
-    }
-
-    /* Copy ipin_node and ipin_node_grid_side_ */
-    for (size_t inode = 0; inode < src.get_num_ipin_nodes(side_manager.get_side()); ++inode) {
-      this->ipin_node_[side_manager.get_side()].push_back(src.get_ipin_node(side_manager.get_side(), inode));
-      this->ipin_node_grid_side_[side_manager.get_side()].push_back(src.get_ipin_node_grid_side(side_manager.get_side(), inode));
-    }
-  }
-
-  /* Copy conf_bits 
-   * TODO: this will be recovered when num_conf_bits etc will be initialized during FPGA-X2P setup 
-  this->set_num_reserved_conf_bits(src.get_num_reserved_conf_bits());
-  this->set_conf_bits_lsb(src.get_conf_bits_lsb());
-  this->set_conf_bits_msb(src.get_conf_bits_msb());
-   */
-  
+  this->set(src);
   return;
 }
 
@@ -746,7 +717,6 @@ int RRSwitchBlock::get_node_index(t_rr_node* node,
   assert((0 == cnt)||(1 == cnt));
 
   return ret; /* Return an invalid value: nonthing is found*/
-
 }
 
 /* Check if the node exist in the opposite side of this Switch Block */
@@ -1064,6 +1034,52 @@ char* RRSwitchBlock::gen_verilog_instance_name() const {
 
 /* Public mutators */
 
+/* get a copy from a source */
+void RRSwitchBlock::set(const RRSwitchBlock& src) { 
+  /* Copy coordinator */
+  this->set_coordinator(src.get_coordinator().get_x(), src.get_coordinator().get_y());
+
+  /* Initialize sides */ 
+  this->init_num_sides(src.get_num_sides());
+
+  /* Copy vectors */
+  for (size_t side = 0; side < src.get_num_sides(); ++side) {
+    Side side_manager(side);
+    /* Copy chan_nodes */
+    this->chan_node_[side_manager.get_side()].set(src.get_chan(side_manager.get_side()));
+    /* Copy chan_node_direction_*/
+    this->chan_node_direction_[side_manager.get_side()].clear();
+    for (size_t inode = 0; inode < src.get_chan_width(side_manager.get_side()); ++inode) {
+      this->chan_node_direction_[side_manager.get_side()].push_back(src.get_chan_node_direction(side_manager.get_side(), inode));
+    }
+
+    /* Copy opin_node and opin_node_grid_side_ */
+    this->opin_node_[side_manager.get_side()].clear();
+    this->opin_node_grid_side_[side_manager.get_side()].clear();
+    for (size_t inode = 0; inode < src.get_num_opin_nodes(side_manager.get_side()); ++inode) {
+      this->opin_node_[side_manager.get_side()].push_back(src.get_opin_node(side_manager.get_side(), inode));
+      this->opin_node_grid_side_[side_manager.get_side()].push_back(src.get_opin_node_grid_side(side_manager.get_side(), inode));
+    }
+
+    /* Copy ipin_node and ipin_node_grid_side_ */
+    this->ipin_node_[side_manager.get_side()].clear();
+    this->ipin_node_grid_side_[side_manager.get_side()].clear();
+    for (size_t inode = 0; inode < src.get_num_ipin_nodes(side_manager.get_side()); ++inode) {
+      this->ipin_node_[side_manager.get_side()].push_back(src.get_ipin_node(side_manager.get_side(), inode));
+      this->ipin_node_grid_side_[side_manager.get_side()].push_back(src.get_ipin_node_grid_side(side_manager.get_side(), inode));
+    }
+  }
+
+  /* Copy conf_bits 
+   * TODO: this will be recovered when num_conf_bits etc will be initialized during FPGA-X2P setup 
+  this->set_num_reserved_conf_bits(src.get_num_reserved_conf_bits());
+  this->set_conf_bits_lsb(src.get_conf_bits_lsb());
+  this->set_conf_bits_msb(src.get_conf_bits_msb());
+   */
+  
+  return;
+}
+
 /* Set the coordinator (x,y) for the switch block */
 void RRSwitchBlock::set_coordinator(size_t x, size_t y) {
   coordinator_.set(x, y);
@@ -1073,8 +1089,8 @@ void RRSwitchBlock::set_coordinator(size_t x, size_t y) {
 /* Allocate the vectors with the given number of sides */
 void RRSwitchBlock::init_num_sides(size_t num_sides) {
   /* Initialize the vectors */
-  chan_node_direction_.resize(num_sides);
   chan_node_.resize(num_sides);
+  chan_node_direction_.resize(num_sides);
   ipin_node_.resize(num_sides);
   ipin_node_grid_side_.resize(num_sides);
   opin_node_.resize(num_sides);
@@ -1083,13 +1099,13 @@ void RRSwitchBlock::init_num_sides(size_t num_sides) {
 }
 
 /* Add a node to the chan_node_ list and also assign its direction in chan_node_direction_ */
-void RRSwitchBlock::add_chan_node(enum e_side node_side, RRChan rr_chan, std::vector<enum PORTS> rr_chan_dir) {
+void RRSwitchBlock::add_chan_node(enum e_side node_side, RRChan& rr_chan, std::vector<enum PORTS> rr_chan_dir) {
   Side side_manager(node_side);
   /* Validate: 1. side is valid, the type of node is valid */
   assert(validate_side(node_side));
 
   /* fill the dedicated element in the vector */
-  chan_node_[side_manager.to_size_t()] = rr_chan;
+  chan_node_[side_manager.to_size_t()].set(rr_chan);
   chan_node_direction_[side_manager.to_size_t()] = rr_chan_dir;
 
   return;
@@ -1350,6 +1366,31 @@ void RRSwitchBlock::swap_opin_node(enum e_side src_side, enum e_side des_side) {
   Side des_side_manager(des_side);
   std::swap(opin_node_[src_side_manager.to_size_t()], opin_node_[des_side_manager.to_size_t()]);
   std::swap(opin_node_grid_side_[src_side_manager.to_size_t()], opin_node_grid_side_[des_side_manager.to_size_t()]);
+  return;
+} 
+
+/* swap the IPIN rr_nodes on two sides */
+void RRSwitchBlock::swap_ipin_node(enum e_side src_side, enum e_side des_side) {
+  Side src_side_manager(src_side);
+  Side des_side_manager(des_side);
+  std::swap(ipin_node_[src_side_manager.to_size_t()], ipin_node_[des_side_manager.to_size_t()]);
+  std::swap(ipin_node_grid_side_[src_side_manager.to_size_t()], ipin_node_grid_side_[des_side_manager.to_size_t()]);
+  return;
+} 
+
+/* Reverse the vector of the OPIN rr_nodes on a side */
+void RRSwitchBlock::reverse_opin_node(enum e_side side) {
+  Side side_manager(side);
+  std::reverse(opin_node_[side_manager.to_size_t()].begin(), opin_node_[side_manager.to_size_t()].end());
+  std::reverse(opin_node_grid_side_[side_manager.to_size_t()].begin(), opin_node_grid_side_[side_manager.to_size_t()].end());
+  return;
+} 
+
+/* Reverse the vector of the OPIN rr_nodes on a side */
+void RRSwitchBlock::reverse_ipin_node(enum e_side side) {
+  Side side_manager(side);
+  std::reverse(ipin_node_[side_manager.to_size_t()].begin(), ipin_node_[side_manager.to_size_t()].end());
+  std::reverse(ipin_node_grid_side_[side_manager.to_size_t()].begin(), ipin_node_grid_side_[side_manager.to_size_t()].end());
   return;
 } 
 
@@ -1703,43 +1744,62 @@ void DeviceRRSwitchBlock::resize_upon_need(DeviceCoordinator& coordinator) {
 
 /* Add a switch block to the array, which will automatically identify and update the lists of unique mirrors and rotatable mirrors */
 void DeviceRRSwitchBlock::add_rr_switch_block(DeviceCoordinator& coordinator, 
-                                              RRSwitchBlock& rr_switch_block,
-                                              RRSwitchBlock& rotated_rr_switch_block) {
-
+                                              RRSwitchBlock& rr_sb) {
   /* Resize upon needs*/
   resize_upon_need(coordinator);
 
   /* Add the switch block into array */
-  rr_switch_block_[coordinator.get_x()][coordinator.get_y()] = rr_switch_block; 
+  rr_switch_block_[coordinator.get_x()][coordinator.get_y()] = rr_sb; 
 
-  bool is_unique_mirror = true;
+  return;
+}
 
-  /* Traverse the unique_mirror list and check it is an mirror of another */
-  for (size_t mirror_id = 0; mirror_id < get_num_unique_mirror(); ++mirror_id) {
-    if (true == get_switch_block(unique_mirror_[mirror_id]).is_mirror(rr_switch_block)) {
-      /* This is a mirror, raise the flag and we finish */
-      is_unique_mirror = false;
-      /* Record the id of unique mirror */
-      rr_switch_block_mirror_id_[coordinator.get_x()][coordinator.get_y()] = mirror_id; 
-      break;
+/* Add a switch block to the array, which will automatically identify and update the lists of unique mirrors and rotatable mirrors */
+void DeviceRRSwitchBlock::build_unique_mirror() {
+  for (size_t ix = 0; ix < rr_switch_block_.size(); ++ix) {
+    for (size_t iy = 0; iy < rr_switch_block_[ix].size(); ++iy) {
+      bool is_unique_mirror = true;
+      RRSwitchBlock* rr_sb = &(rr_switch_block_[ix][iy]); 
+
+      /* Traverse the unique_mirror list and check it is an mirror of another */
+      for (size_t mirror_id = 0; mirror_id < get_num_unique_mirror(); ++mirror_id) {
+        /* If we have the same coordinator, this is already not unique_mirror */
+        if ( (ix == unique_mirror_[mirror_id].get_x())
+          && (iy == unique_mirror_[mirror_id].get_y()) ) {
+          is_unique_mirror = false;
+          break;
+        }
+        if (true == get_switch_block(unique_mirror_[mirror_id]).is_mirror(*rr_sb)) {
+          /* This is a mirror, raise the flag and we finish */
+          is_unique_mirror = false;
+          /* Record the id of unique mirror */
+          rr_switch_block_mirror_id_[ix][iy] = mirror_id; 
+          break;
+        }
+      }
+      /* Add to list if this is a unique mirror*/
+      if (true == is_unique_mirror) {
+        DeviceCoordinator coordinator(ix, iy);
+        unique_mirror_.push_back(coordinator);
+        /* Record the id of unique mirror */
+        rr_switch_block_mirror_id_[ix][iy] = unique_mirror_.size() - 1; 
+      }
     }
-  }
-  /* Add to list if this is a unique mirror*/
-  if (true == is_unique_mirror) {
-    unique_mirror_.push_back(coordinator);
-    /* Record the id of unique mirror */
-    rr_switch_block_mirror_id_[coordinator.get_x()][coordinator.get_y()] = unique_mirror_.size() - 1; 
-  }
+  } 
+  return;
+}
 
+void DeviceRRSwitchBlock::add_rotatable_mirror(DeviceCoordinator& coordinator, 
+                                               RRSwitchBlock& rotated_rr_sb) {
   bool is_rotatable_mirror = true;
 
   /* add rotatable mirror support */
   for (size_t mirror_id = 0; mirror_id < get_num_rotatable_mirror(); ++mirror_id) {
     /* Skip if these may never match as a mirror (violation in basic requirements */
-    if (false == get_switch_block(rotatable_mirror_[mirror_id]).is_mirrorable(rotated_rr_switch_block)) {
+    if (false == get_switch_block(rotatable_mirror_[mirror_id]).is_mirrorable(rotated_rr_sb)) {
       continue;
     }
-    if (true == get_switch_block(rotatable_mirror_[mirror_id]).is_mirror(rotated_rr_switch_block)) {
+    if (true == get_switch_block(rotatable_mirror_[mirror_id]).is_mirror(rotated_rr_sb)) {
       /* This is a mirror, raise the flag and we finish */
       is_rotatable_mirror = false;
       /* Record the id of unique mirror */

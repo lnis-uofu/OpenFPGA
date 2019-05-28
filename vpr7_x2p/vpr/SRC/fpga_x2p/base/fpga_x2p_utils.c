@@ -1738,6 +1738,7 @@ int rr_node_drive_switch_box(t_rr_node* src_rr_node,
      *           \
      */
     /* The destination rr_node only have one condition!!! */
+    if (!((DEC_DIRECTION == des_rr_node->direction)&&(CHANX == des_rr_node->type)))
     assert((DEC_DIRECTION == des_rr_node->direction)&&(CHANX == des_rr_node->type));
     /* depend on the type of src_rr_node */
     switch (src_rr_node->type) {
