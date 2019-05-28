@@ -13,7 +13,7 @@
 void write_rr_switch_block_to_xml(std::string fname_prefix, RRSwitchBlock& rr_sb) {
   /* Prepare file name */
   std::string fname(fname_prefix);
-  fname += rr_sb.gen_verilog_instance_name();
+  fname += rr_sb.gen_verilog_module_name();
   fname += ".xml";
 
   vpr_printf(TIO_MESSAGE_INFO, "Output SB XML: %s\n", fname.c_str());
@@ -44,7 +44,8 @@ void write_rr_switch_block_to_xml(std::string fname_prefix, RRSwitchBlock& rr_sb
       /* Output node information: location, index, side */
       fp << "\t<" << convert_chan_type_to_string(cur_rr_node->type) 
          << " side=\"" << side_manager.to_string() 
-         << "\" index=\"" << inode << "\">" 
+         << "\" index=\"" << inode 
+         << "\">" 
          << std::endl; 
 
       /* Check if this node is directly connected to the node on the opposite side */
@@ -60,9 +61,10 @@ void write_rr_switch_block_to_xml(std::string fname_prefix, RRSwitchBlock& rr_sb
       /* Direct connection: output the node on the opposite side */
       if (0 == num_drive_rr_nodes) {
         Side oppo_side =  side_manager.get_opposite();
-        fp << "\t\t<drive_node type=\"" << convert_chan_type_to_string(cur_rr_node->type) 
+        fp << "\t\t<driver_node type=\"" << convert_chan_type_to_string(cur_rr_node->type) 
            << "\" side=\"" << oppo_side.to_string() 
-           << "\" index=\"" << rr_sb.get_node_index(cur_rr_node, oppo_side.get_side(), IN_PORT) << "\"/>" 
+           << "\" index=\"" << rr_sb.get_node_index(cur_rr_node, oppo_side.get_side(), IN_PORT) 
+           << "\"/>" 
            << std::endl; 
       } else {
         for (size_t jnode = 0; jnode < num_drive_rr_nodes; ++jnode) {
@@ -73,20 +75,33 @@ void write_rr_switch_block_to_xml(std::string fname_prefix, RRSwitchBlock& rr_sb
           std::string node_type_str;
           if (OPIN == drive_rr_nodes[jnode]->type) {
             node_type_str = "opin";
+            Side grid_side(rr_sb.get_opin_node_grid_side(drive_node_side, drive_node_index));
+            fp << "\t\t<driver_node type=\"" << node_type_str 
+               << "\" side=\"" << drive_side.to_string() 
+               << "\" index=\"" << drive_node_index  
+               << "\" grid_side=\"" <<  grid_side.to_string() 
+               <<"\"/>" 
+               << std::endl; 
           } else {
             node_type_str = convert_chan_type_to_string(drive_rr_nodes[jnode]->type);
+            size_t segment_id = rr_sb.get_chan_node_segment(drive_node_side, drive_node_index);
+            fp << "\t\t<driver_node type=\"" << node_type_str 
+               << "\" side=\"" << drive_side.to_string() 
+               << "\" index=\"" << drive_node_index 
+               << "\" segment_id=\"" <<  segment_id 
+               << "\"/>" 
+               << std::endl; 
           }
-          fp << "\t\t<drive_node type=\"" << node_type_str 
-             << "\" side=\"" << drive_side.to_string() 
-             << "\" index=\"" << drive_node_index << "\"/>" 
-             << std::endl; 
         }  
       }
-      fp << "\t</" << convert_chan_type_to_string(cur_rr_node->type) << ">" << std::endl; 
+      fp << "\t</" << convert_chan_type_to_string(cur_rr_node->type) 
+         << ">" 
+         << std::endl; 
     }
   }
 
-  fp << "</rr_sb>" << std::endl;
+  fp << "</rr_sb>" 
+     << std::endl;
 
   /* close a file */
   fp.close();

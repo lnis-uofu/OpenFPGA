@@ -1067,7 +1067,6 @@ RRSwitchBlock rotate_rr_switch_block_for_mirror(DeviceCoordinator& device_range,
     return rotated_rr_switch_block;
   }
 
-
   /* 3. TOP-RIGHT corner: 
    * swap the opin_node between TOP and BOTTOM, 
    * swap the chan_node between TOP and BOTTOM, 
@@ -1225,6 +1224,16 @@ DeviceRRSwitchBlock build_device_rr_switch_blocks(boolean output_sb_xml, char* s
              "Backannotated %d switch blocks.\n",
              (nx + 1) * (ny + 1) );
 
+  if (TRUE == output_sb_xml) {
+    write_device_rr_switch_block_to_xml(sb_xml_dir, LL_device_rr_switch_block);
+
+    /* Skip rotating mirror searching */ 
+    vpr_printf(TIO_MESSAGE_INFO, 
+               "Output XML description of Switch Blocks to %s.\n",
+               sb_xml_dir);
+
+  }
+
   LL_device_rr_switch_block.build_unique_mirror();
 
   /* Report number of unique mirrors */
@@ -1260,17 +1269,6 @@ DeviceRRSwitchBlock build_device_rr_switch_blocks(boolean output_sb_xml, char* s
   vpr_printf(TIO_MESSAGE_INFO, 
              "Detect %d rotatable unique switch blocks from %d switch blocks.\n",
              LL_device_rr_switch_block.get_num_rotatable_mirror(), (nx + 1) * (ny + 1) );
-
-  if (TRUE == output_sb_xml) {
-    write_device_rr_switch_block_to_xml(sb_xml_dir, LL_device_rr_switch_block);
-
-    /* Skip rotating mirror searching */ 
-    vpr_printf(TIO_MESSAGE_INFO, 
-               "Output XML description of Switch Blocks to %s.\n",
-               sb_xml_dir);
-
-  }
-
 
   return LL_device_rr_switch_block;
 }
