@@ -113,7 +113,7 @@ std::vector<size_t> RRChan::get_segment_ids() const {
     std::vector<size_t>::iterator it;
     /* Try to find the node_segment id in the list */
     it = find(seg_list.begin(), seg_list.end(), node_segments_[inode]);
-    if ( it != seg_list.end() ) {
+    if ( it == seg_list.end() ) {
       /* Not found, add it to the list */
       seg_list.push_back(node_segments_[inode]);
     }
