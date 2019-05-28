@@ -171,6 +171,7 @@ void vpr_print_usage(void) {
   vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_x2p_signal_density_weight <float>\n");
   vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_x2p_sim_window_size <float>\n");
   vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_x2p_compact_routing_hierarchy\n");
+  vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_x2p_output_sb_xml <directory_path_output_switch_block_XML>\n");
   vpr_printf(TIO_MESSAGE_INFO, "SPICE Support Options:\n");
   vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_spice\n");
   vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_spice_dir <directory_path_output_spice_netlists>\n");

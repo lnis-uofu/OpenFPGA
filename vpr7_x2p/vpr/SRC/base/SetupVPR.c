@@ -1241,6 +1241,14 @@ static void SetupFpgaSpiceOpts(t_options Options,
     fpga_spice_opts->compact_routing_hierarchy = TRUE;
   }
 
+  /* Check if user wants to use a compact routing hierarchy */
+  fpga_spice_opts->output_sb_xml = FALSE;
+  fpga_spice_opts->sb_xml_dir = NULL;
+  if (Options.Count[OT_FPGA_X2P_OUTPUT_SB_XML]) { 
+    fpga_spice_opts->output_sb_xml = TRUE;
+    fpga_spice_opts->sb_xml_dir = Options.sb_xml_dir;
+  }
+
   /* Decide if we need to do FPGA-SPICE */
   fpga_spice_opts->do_fpga_spice = FALSE;
   if (( TRUE == fpga_spice_opts->SpiceOpts.do_spice)

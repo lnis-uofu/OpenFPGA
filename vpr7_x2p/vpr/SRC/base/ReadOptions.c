@@ -484,6 +484,9 @@ ProcessOption(INP char **Args, INOUTP t_options * Options) {
     case OT_FPGA_X2P_COMPACT_ROUTING_HIERARCHY: 
       /* use a compact routing hierarchy in SPICE/Verilog generation */
       return Args;
+    case OT_FPGA_X2P_OUTPUT_SB_XML: 
+      /* Read the file prefix to output SB XML files */
+      return ReadString(Args, &Options->sb_xml_dir);
     /* Xifan TANG: FPGA SPICE Model Options*/
     case OT_FPGA_SPICE:
       return Args;

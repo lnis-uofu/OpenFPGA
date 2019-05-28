@@ -11,14 +11,15 @@
 #include "fpga_x2p_utils.h"
 
 void write_rr_switch_block_to_xml(std::string fname_prefix, RRSwitchBlock& rr_sb) {
-  /* Create a file handler*/
-  std::fstream fp;
-  std::string fname = fname_prefix;
+  /* Prepare file name */
+  std::string fname(fname_prefix);
   fname += rr_sb.gen_verilog_instance_name();
   fname += ".xml";
 
-  printf("Output SB XML: %s\n", fname.c_str());
+  vpr_printf(TIO_MESSAGE_INFO, "Output SB XML: %s\n", fname.c_str());
 
+  /* Create a file handler*/
+  std::fstream fp;
   /* Open a file */
   fp.open(fname, std::fstream::out | std::fstream::trunc);
 
@@ -94,8 +95,14 @@ void write_rr_switch_block_to_xml(std::string fname_prefix, RRSwitchBlock& rr_sb
 }
 
 /* Output each rr_switch_block to a XML file */
-void write_device_rr_switch_block_to_xml(DeviceRRSwitchBlock& LL_device_rr_switch_block) {
-  std::string fname_prefix("/var/tmp/xtang/sb_xml/");
+void write_device_rr_switch_block_to_xml(char* sb_xml_dir, 
+                                         DeviceRRSwitchBlock& LL_device_rr_switch_block) {
+  std::string fname_prefix(sb_xml_dir);
+  /* Add slash if needed */
+  if ('/' != fname_prefix.back()) {
+    fname_prefix += '/';
+  }
+
   DeviceCoordinator sb_range = LL_device_rr_switch_block.get_switch_block_range();
 
   /* For each switch block, an XML file will be outputted */

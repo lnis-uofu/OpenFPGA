@@ -1284,6 +1284,9 @@ struct s_fpga_spice_opts {
   /* Signal Density */
   float signal_density_weight;
   float sim_window_size;
+  /* SB XML file prefix */
+  boolean output_sb_xml;
+  char* sb_xml_dir;
 };
 
 /* Power estimation options */

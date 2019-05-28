@@ -62,6 +62,7 @@ struct s_TokenPair OptionBaseTokenList[] = {
         { "fpga_x2p_signal_density_weight", OT_FPGA_X2P_SIGNAL_DENSITY_WEIGHT }, /* The weight of signal density */
         { "fpga_x2p_sim_window_size", OT_FPGA_X2P_SIM_WINDOW_SIZE }, /* Window size in determining number of clock cycles in simulation */
         { "fpga_x2p_compact_routing_hierarchy", OT_FPGA_X2P_COMPACT_ROUTING_HIERARCHY }, /* use a compact routing hierarchy in SPICE/Verilog generation */
+        { "fpga_x2p_output_sb_xml", OT_FPGA_X2P_OUTPUT_SB_XML }, /* use a compact routing hierarchy in SPICE/Verilog generation */
         /* Xifan TANG: FPGA SPICE Support */
         { "fpga_spice", OT_FPGA_SPICE },/* Xifan TANG: SPICE Model Support, turn on the functionality*/
         { "fpga_spice_dir", OT_FPGA_SPICE_DIR },/* Xifan TANG: SPICE Model Support, directory of spice netlists*/

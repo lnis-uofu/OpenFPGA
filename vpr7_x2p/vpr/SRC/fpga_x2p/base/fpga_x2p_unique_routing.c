@@ -1197,7 +1197,8 @@ RRSwitchBlock rotate_rr_switch_block_for_mirror(DeviceCoordinator& device_range,
  * Each switch block in the FPGA fabric will be an instance of these modules.
  * We maintain a map from each instance to each module
  */
-DeviceRRSwitchBlock build_device_rr_switch_blocks(int LL_num_rr_nodes, t_rr_node* LL_rr_node, 
+DeviceRRSwitchBlock build_device_rr_switch_blocks(boolean output_sb_xml, char* sb_xml_dir,
+                                                  int LL_num_rr_nodes, t_rr_node* LL_rr_node, 
                                                   t_ivec*** LL_rr_node_indices, int num_segments,
                                                   t_rr_indexed_data* LL_rr_indexed_data) {
   /* Create an object */
@@ -1231,22 +1232,45 @@ DeviceRRSwitchBlock build_device_rr_switch_blocks(int LL_num_rr_nodes, t_rr_node
              "Detect %d independent switch blocks from %d switch blocks.\n",
              LL_device_rr_switch_block.get_num_unique_mirror(), (nx + 1) * (ny + 1) );
 
+  /* Create directory if needed */
+  if (TRUE == output_sb_xml) {
+    create_dir_path(sb_xml_dir);
+  }
+
   for (size_t ix = 0; ix <= sb_range.get_x(); ++ix) {
     for (size_t iy = 0; iy <= sb_range.get_y(); ++iy) {
       RRSwitchBlock rr_sb = LL_device_rr_switch_block.get_switch_block(ix, iy);
       RRSwitchBlock rotated_rr_sb = rotate_rr_switch_block_for_mirror(sb_range, rr_sb); 
       DeviceCoordinator sb_coordinator = rr_sb.get_coordinator();
       LL_device_rr_switch_block.add_rotatable_mirror(sb_coordinator, rotated_rr_sb);
+
+      if (TRUE == output_sb_xml) {
+        std::string fname_prefix(sb_xml_dir);
+        /* Add slash if needed */
+        if ('/' != fname_prefix.back()) {
+          fname_prefix += "/";
+        }
+        fname_prefix += "rotated_";
+        write_rr_switch_block_to_xml(fname_prefix, rotated_rr_sb);
+      }
     }
   }
-
 
   /* Skip rotating mirror searching */ 
   vpr_printf(TIO_MESSAGE_INFO, 
              "Detect %d rotatable unique switch blocks from %d switch blocks.\n",
              LL_device_rr_switch_block.get_num_rotatable_mirror(), (nx + 1) * (ny + 1) );
 
-  write_device_rr_switch_block_to_xml(LL_device_rr_switch_block);
+  if (TRUE == output_sb_xml) {
+    write_device_rr_switch_block_to_xml(sb_xml_dir, LL_device_rr_switch_block);
+
+    /* Skip rotating mirror searching */ 
+    vpr_printf(TIO_MESSAGE_INFO, 
+               "Output XML description of Switch Blocks to %s.\n",
+               sb_xml_dir);
+
+  }
+
 
   return LL_device_rr_switch_block;
 }

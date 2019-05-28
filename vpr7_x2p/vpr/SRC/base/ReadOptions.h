@@ -94,6 +94,7 @@ struct s_options {
     /* Xifan TANG: signal weight in FPGA_SPICE simulation */
     float fpga_spice_signal_density_weight;
     float fpga_spice_sim_window_size;
+    char* sb_xml_dir;
 
     /* Xifan TANG: SPICE Support*/
     char* spice_dir;
