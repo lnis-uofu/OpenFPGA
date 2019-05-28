@@ -1430,9 +1430,27 @@ sub run_std_vpr($ $ $ $ $ $ $ $ $)
   if ("on" eq $opt_ptr->{vpr_max_router_iteration}) {
     $other_opt .= "--max_router_iterations $opt_ptr->{vpr_max_router_iteration_val} ";
   }
-  print "\n\n./$vpr_name $arch $blif --net_file $net --place_file $place --route_file $route --full_stats --nodisp $power_opts $packer_opts $chan_width_opt $vpr_spice_opts $other_opt > $log\n\n";
+  print "./$vpr_name $arch $blif --net_file $net --place_file $place --route_file $route --full_stats --nodisp $power_opts $packer_opts $chan_width_opt $vpr_spice_opts $other_opt > $log\n";
   system("./$vpr_name $arch $blif --net_file $net --place_file $place --route_file $route --full_stats --nodisp $power_opts $packer_opts $chan_width_opt $vpr_spice_opts $other_opt > $log");
 
+  open(F, $log);
+  my @lines=<F>;
+  close F;
+  my @results = grep(" ", @lines);
+  if($#results >= 1){
+    foreach my $line (0..$#results){
+      print "$results[$line]\n";
+    }
+  }
+  if ("on" eq $opt_ptr->{vpr_fpga_verilog_dir}) {
+    opendir my($dh), $opt_ptr->{vpr_fpga_verilog_dir_val} or die "\nFolder not created!!\n\n";
+    my @files = readdir $dh;
+    closedir $dh;
+    foreach my $file (0..$#files){
+      print "$files[$file]\t";
+    }
+    print "\n";
+  }
   chdir $cwd;
 }
 
