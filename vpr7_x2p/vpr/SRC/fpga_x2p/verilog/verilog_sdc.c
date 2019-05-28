@@ -1033,10 +1033,13 @@ void verilog_generate_sdc_disable_unused_sbs_muxs(FILE* fp) {
           }
           t_rr_node* cur_rr_node = rr_sb.get_chan_node(side_manager.get_side(), itrack);
           for (int imux = 0 ; imux < cur_rr_node->fan_in; ++imux) {
+            if (1 == cur_rr_node->fan_in) {
+              continue;
+            }
             if (imux == cur_rr_node->id_path) {
               fprintf(fp, "#"); // comments out if the node is active
             }
-//if(cur_rr_node->name_mux == NULL) assert (NULL != cur_rr_node->name_mux);
+            //if(cur_rr_node->name_mux == NULL) assert (NULL != cur_rr_node->name_mux);
             fprintf(fp, "set_disable_timing  %s[%d]\n", 
                     cur_rr_node->name_mux, imux);
           }
@@ -1070,10 +1073,13 @@ void verilog_generate_sdc_disable_unused_sbs_muxs(FILE* fp, int LL_nx, int LL_ny
           if (OUT_PORT == cur_sb_info->chan_rr_node_direction[side][itrack]) {
             cur_rr_node = cur_sb_info->chan_rr_node[side][itrack];
             for (imux = 0 ; imux < cur_rr_node-> fan_in; imux++) {
+              if (1 == cur_rr_node->fan_in) {
+                continue;
+              }
               if (imux == cur_rr_node->id_path) {
                 fprintf(fp, "#"); // comments out if the node is active
               }
-//if(cur_rr_node->name_mux == NULL) assert (NULL != cur_rr_node->name_mux);
+              //if(cur_rr_node->name_mux == NULL) assert (NULL != cur_rr_node->name_mux);
               fprintf(fp, "set_disable_timing  %s[%d]\n", 
                       cur_rr_node->name_mux, imux);
             }

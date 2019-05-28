@@ -34,6 +34,7 @@ set vpr_route_chan_width = 200
 #make -j32
 # Remove previous designs
 rm -rf $verilog_output_dirpath/$verilog_output_dirname
+rm -rf $verilog_output_dirpath/$verilog_output_dirname\_compact
 
 # Run VPR  
 #valgrind 
