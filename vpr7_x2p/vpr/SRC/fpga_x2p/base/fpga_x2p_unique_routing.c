@@ -1150,16 +1150,16 @@ RRSwitchBlock rotate_rr_switch_block_for_mirror(DeviceCoordinator& device_range,
 
   /* For BOTTOM SIDE: Y-channel in DEC_DIRECTION, rotate by an offset of its y-coordinator */
   if (device_range.get_y() - 1 > rotated_rr_switch_block.get_y()) {
-    rotated_rr_switch_block.counter_rotate_side_chan_node_by_direction(BOTTOM, DEC_DIRECTION, device_range.get_y() - 1 - rotated_rr_switch_block.get_y());
+    rotated_rr_switch_block.counter_rotate_side_chan_node_by_direction(BOTTOM, DEC_DIRECTION, rotated_rr_switch_block.get_y() - 1);
     /* Rotate the same nodes on the opposite side */
-    rotated_rr_switch_block.counter_rotate_side_chan_node_by_direction(TOP, DEC_DIRECTION, device_range.get_y() - 1 - rotated_rr_switch_block.get_y());
+    rotated_rr_switch_block.counter_rotate_side_chan_node_by_direction(TOP, DEC_DIRECTION, rotated_rr_switch_block.get_y() - 1);
   }
 
   /* For LEFT SIDE: X-channel in DEC_DIRECTION, rotate by an offset of its x-coordinator */
   if (device_range.get_x() - 1 > rotated_rr_switch_block.get_x()) {
-    rotated_rr_switch_block.counter_rotate_side_chan_node_by_direction(LEFT, DEC_DIRECTION, device_range.get_x() - 1 - rotated_rr_switch_block.get_x());
+    rotated_rr_switch_block.counter_rotate_side_chan_node_by_direction(LEFT, DEC_DIRECTION, rotated_rr_switch_block.get_x() - 1);
     /* Rotate the same nodes on the opposite side */
-    rotated_rr_switch_block.counter_rotate_side_chan_node_by_direction(RIGHT, DEC_DIRECTION, device_range.get_x() - 1 - rotated_rr_switch_block.get_x());
+    rotated_rr_switch_block.counter_rotate_side_chan_node_by_direction(RIGHT, DEC_DIRECTION, rotated_rr_switch_block.get_x() - 1);
   }
 
   return rotated_rr_switch_block;

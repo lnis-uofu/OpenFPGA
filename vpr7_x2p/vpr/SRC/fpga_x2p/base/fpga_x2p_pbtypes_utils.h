@@ -1,3 +1,6 @@
+#ifndef FPGA_X2P_PBTYPES_UTILS_H
+#define FPGA_X2P_PBTYPES_UTILS_H
+
 void check_pb_graph_edge(t_pb_graph_edge pb_graph_edge);
 
 void check_pb_graph_pin_edges(t_pb_graph_pin pb_graph_pin);
@@ -236,3 +239,5 @@ boolean is_pb_used_for_wiring(t_pb_graph_node* cur_pb_graph_node,
                               t_rr_node* pb_rr_graph);
 
 char* get_pb_graph_full_name_in_hierarchy(t_pb_graph_node* cur_pb_graph_node);
+
+#endif

@@ -101,6 +101,26 @@ bool RRChan::is_mirror(RRChan& cand) const {
   return true;
 }
 
+/* Get a list of segments used in this routing channel */
+std::vector<size_t> RRChan::get_segment_ids() const { 
+  std::vector<size_t> seg_list;
+
+  /* make sure a clean start */
+  seg_list.clear();
+
+  /* Traverse node_segments */
+  for (size_t inode = 0; inode < get_chan_width(); ++inode) {
+    std::vector<size_t>::iterator it;
+    /* Try to find the node_segment id in the list */
+    it = find(seg_list.begin(), seg_list.end(), node_segments_[inode]);
+    if ( it != seg_list.end() ) {
+      /* Not found, add it to the list */
+      seg_list.push_back(node_segments_[inode]);
+    }
+  }
+
+  return seg_list;
+}
 
 /* Mutators */
 void RRChan::set(const RRChan& rr_chan) {
@@ -166,45 +186,52 @@ void RRChan::rotate(size_t rotate_begin, size_t rotate_end, size_t offset) {
 
 /* rotate all the channel nodes by a given offset:
  * Routing Channel nodes are divided into different groups using segment ids
- * each group is rotated separatedly
+ * each group should be rotated separatedly
  */
 void RRChan::rotate_by_node_direction(enum e_direction node_direction, size_t offset) {
   /* skip if there are no nodes */
   if (0 == get_chan_width()) {
     return;
   }
+
+  /* get a list of segment_ids existing in the routing channel */
+  std::vector<size_t> seg_ids = get_segment_ids();
+
+  for (size_t iseg = 0; iseg < seg_ids.size(); ++iseg) {
+    /* Get the channel nodes of a given direction */
+    std::vector<t_rr_node*> nodes;
+    std::vector<size_t> node_segments;
+    for (size_t inode = 0; inode < get_chan_width(); ++inode) {
+      if ( (node_direction == get_node(inode)->direction) 
+        && (seg_ids[iseg] == get_node_segment(inode)) ) {
+        nodes.push_back(get_node(inode));
+        node_segments.push_back(get_node_segment(inode));
+      }
+    }
   
-  /* Get the channel nodes of a given direction */
-  std::vector<t_rr_node*> nodes;
-  std::vector<size_t> node_segments;
-  for (size_t inode = 0; inode < get_chan_width(); ++inode) {
-    if (node_direction == get_node(inode)->direction) {
-      nodes.push_back(get_node(inode));
-      node_segments.push_back(get_node_segment(inode));
+    size_t adapt_offset = offset % nodes.size();
+    assert(adapt_offset < nodes.size());
+  
+    /* Rotate the chan_nodes */
+    std::rotate(nodes.begin(), nodes.begin() + adapt_offset, nodes.end());
+    std::rotate(node_segments.begin(), node_segments.begin() + adapt_offset, node_segments.end());
+  
+    /* back-annotate to to the original chan nodes*/
+    for (size_t inode = 0; inode < get_chan_width(); ++inode) {
+      if ( (node_direction == get_node(inode)->direction) 
+        && (seg_ids[iseg] == get_node_segment(inode)) ) {
+        nodes_[inode] = nodes.front();
+        node_segments_[inode] = node_segments.front();
+        /* pop up temp vectors */
+        nodes.erase(nodes.begin()); 
+        node_segments.erase(node_segments.begin()); 
+      }
     }
+  
+    /* Make sure temp vectors are all poped out */
+    assert ( 0 == nodes.size());
+    assert ( 0 == node_segments.size());
   }
-
-  size_t adapt_offset = offset % nodes.size();
-  assert(adapt_offset < nodes.size());
-
-  /* Rotate the chan_nodes */
-  std::rotate(nodes.begin(), nodes.begin() + adapt_offset, nodes.end());
-  std::rotate(node_segments.begin(), node_segments.begin() + adapt_offset, node_segments.end());
-
-  /* back-annotate to to the original chan nodes*/
-  for (size_t inode = 0; inode < get_chan_width(); ++inode) {
-    if (node_direction == get_node(inode)->direction) {
-      nodes_[inode] = nodes.front();
-      node_segments_[inode] = node_segments.front();
-      /* pop up temp vectors */
-      nodes.erase(nodes.begin()); 
-      node_segments.erase(node_segments.begin()); 
-    }
-  }
-
-  /* Make sure temp vectors are all poped out */
-  assert ( 0 == nodes.size());
-  assert ( 0 == node_segments.size());
 
   return;
 } 
@@ -218,38 +245,45 @@ void RRChan::counter_rotate_by_node_direction(enum e_direction node_direction, s
   if (0 == get_chan_width()) {
     return;
   }
-  
-  /* Get the channel nodes of a given direction */
-  std::vector<t_rr_node*> nodes;
-  std::vector<size_t> node_segments;
-  for (size_t inode = 0; inode < get_chan_width(); ++inode) {
-    if (node_direction == get_node(inode)->direction) {
-      nodes.push_back(get_node(inode));
-      node_segments.push_back(get_node_segment(inode));
+
+  /* get a list of segment_ids existing in the routing channel */
+  std::vector<size_t> seg_ids = get_segment_ids();
+
+  for (size_t iseg = 0; iseg < seg_ids.size(); ++iseg) {
+    /* Get the channel nodes of a given direction */
+    std::vector<t_rr_node*> nodes;
+    std::vector<size_t> node_segments;
+    for (size_t inode = 0; inode < get_chan_width(); ++inode) {
+      if ( (node_direction == get_node(inode)->direction) 
+        && (seg_ids[iseg] == get_node_segment(inode)) ) {
+        nodes.push_back(get_node(inode));
+        node_segments.push_back(get_node_segment(inode));
+      }
     }
-  }
 
-  size_t adapt_offset = offset % nodes.size();
-  assert(adapt_offset < nodes.size());
+    size_t adapt_offset = offset % nodes.size();
+    assert(adapt_offset < nodes.size());
 
-  /* Rotate the chan_nodes */
-  std::rotate(nodes.begin(), nodes.begin() + nodes.size() - adapt_offset, nodes.end());
-  std::rotate(node_segments.begin(), node_segments.begin() + node_segments.size() - adapt_offset, node_segments.end());
+    /* Rotate the chan_nodes */
+    std::rotate(nodes.begin(), nodes.begin() + nodes.size() - adapt_offset, nodes.end());
+    std::rotate(node_segments.begin(), node_segments.begin() + node_segments.size() - adapt_offset, node_segments.end());
 
-  /* back-annotate to to the original chan nodes*/
-  for (size_t inode = 0; inode < get_chan_width(); ++inode) {
-    if (node_direction == get_node(inode)->direction) {
-      nodes_[inode] = nodes.front();
-      node_segments_[inode] = node_segments.front();
-      /* pop up temp vectors */
-      nodes.erase(nodes.begin()); 
-      node_segments.erase(node_segments.begin()); 
+    /* back-annotate to to the original chan nodes*/
+    for (size_t inode = 0; inode < get_chan_width(); ++inode) {
+      if ( (node_direction == get_node(inode)->direction) 
+        && (seg_ids[iseg] == get_node_segment(inode)) ) {
+        nodes_[inode] = nodes.front();
+        node_segments_[inode] = node_segments.front();
+        /* pop up temp vectors */
+        nodes.erase(nodes.begin()); 
+        node_segments.erase(node_segments.begin()); 
+      }
     }
-  }
 
-  /* Make sure temp vectors are all poped out */
-  assert ( 0 == nodes.size());
-  assert ( 0 == node_segments.size());
+    /* Make sure temp vectors are all poped out */
+    assert ( 0 == nodes.size());
+    assert ( 0 == node_segments.size());
+  }
 
   return;
 } 
@@ -1763,6 +1797,9 @@ void DeviceRRSwitchBlock::add_rr_switch_block(DeviceCoordinator& coordinator,
 
 /* Add a switch block to the array, which will automatically identify and update the lists of unique mirrors and rotatable mirrors */
 void DeviceRRSwitchBlock::build_unique_mirror() {
+  /* Make sure a clean start */
+  clear_mirror();
+
   for (size_t ix = 0; ix < rr_switch_block_.size(); ++ix) {
     for (size_t iy = 0; iy < rr_switch_block_[ix].size(); ++iy) {
       bool is_unique_mirror = true;
@@ -1830,17 +1867,36 @@ void DeviceRRSwitchBlock::clear() {
   /* clean rr_switch_block array */
   for (size_t x = 0; x < rr_switch_block_.size(); ++x) {
     rr_switch_block_[x].clear(); 
+    rr_switch_block_mirror_id_[x].clear(); 
+    rr_switch_block_rotatable_mirror_id_[x].clear(); 
   }
   rr_switch_block_.clear();
+  rr_switch_block_mirror_id_.clear();
+  rr_switch_block_rotatable_mirror_id_.clear();
 
   /* clean unique mirror */
-  unique_mirror_.clear();
+  clear_mirror();
 
   /* clean unique mirror */
-  rotatable_mirror_.clear();
+  clear_rotatable_mirror();
 
   return;
 }
+
+/* clean the content related to unique_mirrors */
+void DeviceRRSwitchBlock::clear_mirror() {
+  /* clean unique mirror */
+  unique_mirror_.clear();
+
+  return;
+} 
+
+/* clean the content related to rotatable_mirrors */
+void DeviceRRSwitchBlock::clear_rotatable_mirror() {
+  /* clean unique mirror */
+  rotatable_mirror_.clear();
+  return;
+} 
 
 /* Validate if the (x,y) is the range of this device */
 bool DeviceRRSwitchBlock::validate_coordinator(DeviceCoordinator& coordinator) const {
