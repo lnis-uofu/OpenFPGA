@@ -18,7 +18,7 @@ else
   mkdir build
   cd build
   cmake ..
-  make -j2
+  make -j16
 fi
 end_section "OpenFPGA.build"
 
