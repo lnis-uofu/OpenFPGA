@@ -43,12 +43,6 @@ void write_rr_switch_block_to_xml(std::string fname_prefix, RRSwitchBlock& rr_sb
 
       /* Output node information: location, index, side */
       size_t src_segment_id = rr_sb.get_chan_node_segment(side_manager.get_side(), inode);
-      fp << "\t<" << convert_chan_type_to_string(cur_rr_node->type) 
-         << " side=\"" << side_manager.to_string() 
-         << "\" index=\"" << inode 
-         << "\" segment_id=\"" << src_segment_id 
-         << "\">" 
-         << std::endl; 
 
       /* Check if this node is directly connected to the node on the opposite side */
       if (true == rr_sb.is_node_imply_short_connection(cur_rr_node)) {
@@ -60,6 +54,15 @@ void write_rr_switch_block_to_xml(std::string fname_prefix, RRSwitchBlock& rr_sb
         num_drive_rr_nodes = cur_rr_node->num_drive_rr_nodes;
         drive_rr_nodes = cur_rr_node->drive_rr_nodes;
       }
+
+      fp << "\t<" << convert_chan_type_to_string(cur_rr_node->type) 
+         << " side=\"" << side_manager.to_string() 
+         << "\" index=\"" << inode 
+         << "\" segment_id=\"" << src_segment_id 
+         << "\" mux_size=\"" << num_drive_rr_nodes
+         << "\">" 
+         << std::endl; 
+
       /* Direct connection: output the node on the opposite side */
       if (0 == num_drive_rr_nodes) {
         Side oppo_side =  side_manager.get_opposite();
