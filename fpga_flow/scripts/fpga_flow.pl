@@ -1890,7 +1890,7 @@ sub run_yosys_vpr_flow($ $ $ $ $)
   $vpr_reroute_log = "$prefix"."vpr_reroute.log";
 
 # Need to add a regenation of the verilog from the optimized blif -> write verilog from blif + correct the name of the verilog for the testbench
-  $verilog_benchmark = &run_rewrite_verilog($ace_new_blif, $rpt_dir, $benchmark, $benchmark, $yosys_log);
+  $verilog_benchmark = &run_rewrite_verilog($corrected_ace_blif, $rpt_dir, $benchmark, $benchmark, $yosys_log);
 
   &run_vpr_in_flow($tag, $benchmark, $benchmark_file, $corrected_ace_blif, $vpr_arch, $act_file, $vpr_net, $vpr_place, $vpr_route, $vpr_log, $vpr_reroute_log, $parse_results);
 
