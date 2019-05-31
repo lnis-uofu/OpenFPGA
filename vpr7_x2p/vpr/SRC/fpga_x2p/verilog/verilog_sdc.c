@@ -1590,6 +1590,11 @@ void verilog_generate_sdc_disable_one_unused_block(FILE* fp,
     if (FALSE == is_rr_node_to_be_disable_for_analysis(&(cur_phy_pb->rr_graph->rr_node[inode]))) {
       continue;
     }
+    /* If pin is global port, don't dump */
+    if (PB_PIN_CLOCK == cur_phy_pb->rr_graph->rr_node[inode].pb_graph_pin->type) {
+      continue;
+    }
+
     /* Get the pb_graph_pin */
     assert (NULL != cur_phy_pb->rr_graph->rr_node[inode].pb_graph_pin);
     /* Disable the timing of this node */
