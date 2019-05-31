@@ -27,6 +27,6 @@ $SPACER
 cd -
 source .travis/regression.sh
 
-cd fpga_flow
-./regression_fpga_flow.sh
-cd -
+#cd fpga_flow
+#./regression_fpga_flow.sh
+#cd -
