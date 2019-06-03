@@ -18,7 +18,7 @@ else
   mkdir build
   cd build
   cmake --version
-  cmake .. -DCMAKE_BUILD_TYPE=debug
+  cmake .. #-DCMAKE_BUILD_TYPE=debug
   make -j16
 fi
 end_section "OpenFPGA.build"
