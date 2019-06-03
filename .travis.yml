@@ -91,6 +91,7 @@ install:
       brew install cmake || brew upgrade cmake
     fi
   - cmake --version
+  - cd -
   - .travis/install.sh
 
 script:
