@@ -36,8 +36,8 @@ if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
   # Install header files in Mojave, if not gcc-4.9 cannot spot stdio.h
   sudo installer -pkg /Library/Developer/CommandLineTools/Packages/macOS_SDK_headers_for_macOS_10.14.pkg -target /
 else 
-  # For linux, we use g++-8 and gcc-8 as default compilers
-  export CC=gcc-8
-  export CXX=g++-8
+  # For linux, we use g++-6 and gcc-6 as default compilers
+  export CC=gcc-6
+  export CXX=g++-6
 fi
 
