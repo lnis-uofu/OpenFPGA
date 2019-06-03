@@ -17,6 +17,7 @@ else
   #make
   mkdir build
   cd build
+  cmake --version
   cmake ..
   make -j16
 fi
