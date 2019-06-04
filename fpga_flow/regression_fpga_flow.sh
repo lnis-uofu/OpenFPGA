@@ -3,17 +3,19 @@
 set -e
 # Make sure a clear start
 pwd_path="$PWD"
-task_name="k6_N10_regression_TT"
+task_name="k6_N10_regression_0"
 config_file="$PWD/configs/regression/${task_name}.conf" 
-bench_txt="$PWD/benchmarks/List/mcnc_benchmark.txt"
+bench_txt="$PWD/benchmarks/List/test_modes.txt"
 rpt_file="$PWD/csv_rpts/fpga_spice/${task_name}.csv"
 task_file="$PWD/vpr_fpga_spice_task_lists/${task_name}"
 
 verilog_path="${PWD}/regression_MCNC"
 
 # FPGA-SPICE
-rm -rf ${pwd_path}/results
+rm -rf ${pwd_path}/results_regression
 cd ${pwd_path}/scripts
+
+perl rewrite_path_in_file.pl -i $config_file
 
 # SRAM FPGA
 # TT case 

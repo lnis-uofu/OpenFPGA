@@ -9,6 +9,13 @@ tb_formal_postfix="_top_formal_verification_random_tb"
 verilog_output_dirname="${benchmark}_Verilog"
 log_file="${benchmark}_sim.log"
 
+cd fpga_flow/scripts
+
+perl rewrite_path_in_file.pl -i ../arch/template/k6_N10_sram_chain_HC_template.xml
+perl rewrite_path_in_file.pl -i ../../vpr7_x2p/vpr/regression_verilog.sh
+
+cd -
+
 # Move to vpr folder
 cd vpr7_x2p/vpr
 
@@ -17,7 +24,7 @@ rm -f $log_file
 rm -f $compiled_file
 
 # Start the script -> run the fpga generation -> run the simulation -> check the log file
-source .regression_verilog.sh
+source regression_verilog.sh
 iverilog -o $compiled_file $verilog_output_dirname/SRC/$benchmark$include_netlists -s $benchmark$tb_formal_postfix
 vvp $compiled_file -j 16 >> $log_file
 

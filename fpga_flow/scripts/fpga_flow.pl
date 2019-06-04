@@ -1433,24 +1433,24 @@ sub run_std_vpr($ $ $ $ $ $ $ $ $)
   print "./$vpr_name $arch $blif --net_file $net --place_file $place --route_file $route --full_stats --nodisp $power_opts $packer_opts $chan_width_opt $vpr_spice_opts $other_opt > $log\n";
   system("./$vpr_name $arch $blif --net_file $net --place_file $place --route_file $route --full_stats --nodisp $power_opts $packer_opts $chan_width_opt $vpr_spice_opts $other_opt > $log");
 
-  open(F, $log);
-  my @lines=<F>;
-  close F;
-  my @results = grep(" ", @lines);
-  if($#results >= 1){
-    foreach my $line (0..$#results){
-      print "$results[$line]\n";
-    }
-  }
-  if ("on" eq $opt_ptr->{vpr_fpga_verilog_dir}) {
-    opendir my($dh), $opt_ptr->{vpr_fpga_verilog_dir_val} or die "\nFolder not created!!\n\n";
-    my @files = readdir $dh;
-    closedir $dh;
-    foreach my $file (0..$#files){
-      print "$files[$file]\t";
-    }
-    print "\n";
-  }
+  #open(F, $log);
+  #my @lines=<F>;
+  #close F;
+  #my @results = grep(" ", @lines);
+  #if($#results >= 1){
+  #  foreach my $line (0..$#results){
+  #    print "$results[$line]\n";
+  #  }
+  #}
+  #if ("on" eq $opt_ptr->{vpr_fpga_verilog_dir}) {
+  #  opendir my($dh), $opt_ptr->{vpr_fpga_verilog_dir_val} or die "\nFolder not created!!\n\n";
+  #  my @files = readdir $dh;
+  #  closedir $dh;
+  #  foreach my $file (0..$#files){
+  #    print "$files[$file]\t";
+  #  }
+  3  print "\n";
+  #}
   chdir $cwd;
 }
 
@@ -1865,6 +1865,9 @@ sub run_yosys_vpr_flow($ $ $ $ $)
   # Prepare for the output folder 
   $rpt_dir = "$conf_ptr->{dir_path}->{rpt_dir}->{val}"."/$benchmark/$tag";
   &generate_path($rpt_dir);
+
+  # Adapt paths on architecture file
+  `perl rewrite_path_in_file.pl -i $vpr_arch`;
 
   # Run Yosys flow
   $yosys_bm = "$conf_ptr->{dir_path}->{benchmark_dir}->{val}"."/$benchmark_file";
