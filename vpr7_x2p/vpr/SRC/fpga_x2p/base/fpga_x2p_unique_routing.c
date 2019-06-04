@@ -1234,12 +1234,24 @@ DeviceRRSwitchBlock build_device_rr_switch_blocks(boolean output_sb_xml, char* s
 
   }
 
+  /* Build a list of unique modules for each Switch Block */
   LL_device_rr_switch_block.build_unique_mirror();
 
   /* Report number of unique mirrors */
   vpr_printf(TIO_MESSAGE_INFO, 
              "Detect %d independent switch blocks from %d switch blocks.\n",
              LL_device_rr_switch_block.get_num_unique_mirror(), (nx + 1) * (ny + 1) );
+
+  /* Build a list of unique modules for each side of each Switch Block */
+  LL_device_rr_switch_block.build_unique_module();
+  /* Report number of unique mirrors */
+  for (size_t side = 0; side < LL_device_rr_switch_block.get_max_num_sides(); ++side) {
+    Side side_manager(side); 
+    vpr_printf(TIO_MESSAGE_INFO, 
+               "For side %s: Detect %d independent switch blocks from %d switch blocks.\n",
+               side_manager.to_string(), LL_device_rr_switch_block.get_num_unique_module(side_manager.get_side()), 
+               (nx + 1) * (ny + 1) );
+  }
 
   /* Create directory if needed */
   if (TRUE == output_sb_xml) {

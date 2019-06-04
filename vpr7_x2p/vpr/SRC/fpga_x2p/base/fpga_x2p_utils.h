@@ -61,7 +61,7 @@ char* my_itobin(int in_int, int bin_len);
 
 char* my_itoa(int input);
 
-char* fpga_spice_create_one_subckt_filename(char* file_name_prefix,
+char* fpga_spice_create_one_subckt_filename(const char* file_name_prefix,
                                             int subckt_x, int subckt_y,
                                             char* file_name_postfix);
 

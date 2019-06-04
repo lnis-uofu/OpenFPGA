@@ -31,8 +31,8 @@ void verilog_include_defines_preproc_file(FILE* fp,
                                           char* formatted_verilog_dir);
 
 FILE* verilog_create_one_subckt_file(char* subckt_dir,
-                                     char* subckt_name_prefix,
-                                     char* verilog_subckt_file_name_prefix,
+                                     const char* subckt_name_prefix,
+                                     const char* verilog_subckt_file_name_prefix,
                                      int grid_x, int grid_y,
                                      char** verilog_fname); 
 

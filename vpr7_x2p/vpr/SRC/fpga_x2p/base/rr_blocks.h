@@ -171,6 +171,8 @@ class RRSwitchBlock {
   public: /* Verilog writer */
     char* gen_verilog_module_name() const;
     char* gen_verilog_instance_name() const;
+    char* gen_verilog_side_module_name(enum e_side side) const;
+    char* gen_verilog_side_instance_name(enum e_side side) const;
   public: /* Mutators */
     void set(const RRSwitchBlock& src); /* get a copy from a source */
     void set_coordinator(size_t x, size_t y);
@@ -243,6 +245,7 @@ class DeviceRRSwitchBlock {
     size_t get_num_unique_module(enum e_side side) const; /* get the number of unique mirrors of switch blocks */
     size_t get_num_unique_mirror() const; /* get the number of unique mirrors of switch blocks */
     size_t get_num_rotatable_mirror() const; /* get the number of rotatable mirrors of switch blocks */
+    RRSwitchBlock get_unique_side_module(size_t index, enum e_side side) const; /* Get a rr switch block which a unique mirror */ 
     RRSwitchBlock get_unique_mirror(size_t index) const; /* Get a rr switch block which a unique mirror */ 
     RRSwitchBlock get_unique_mirror(DeviceCoordinator& coordinator) const; /* Get a rr switch block which a unique mirror */ 
     RRSwitchBlock get_rotatable_mirror(size_t index) const; /* Get a rr switch block which a unique mirror */ 
@@ -268,7 +271,7 @@ class DeviceRRSwitchBlock {
     bool validate_side(enum e_side side) const; /* validate if side is in the range of unique_side_module_ */
     bool validate_unique_mirror_index(size_t index) const; /* Validate if the index in the range of unique_mirror vector*/
     bool validate_rotatable_mirror_index(size_t index) const; /* Validate if the index in the range of unique_mirror vector*/
-    bool validate_unique_side_module_index(enum e_side side, size_t index);
+    bool validate_unique_module_index(size_t index, enum e_side side) const; /* Validate if the index in the range of unique_module vector */
   private: /* Internal Data */
     std::vector< std::vector<RRSwitchBlock> > rr_switch_block_;
 

@@ -1097,6 +1097,44 @@ char* RRSwitchBlock::gen_verilog_instance_name() const {
   return ret;
 }
 
+/* Public Accessors Verilog writer */
+char* RRSwitchBlock::gen_verilog_side_module_name(enum e_side side) const {
+  char* ret = NULL;
+  Side side_manager(side);
+  
+  std::string x_str = std::to_string(get_x());
+  std::string y_str = std::to_string(get_y());
+  std::string side_str(side_manager.to_string());
+
+  ret = (char*)my_malloc(2 + 1 + x_str.length()
+                         + 2 + y_str.length() 
+                         + 2 + side_str.length()
+                         + 1 + 1); 
+
+  sprintf(ret, "sb_%lu__%lu__%s_", 
+          get_x(), get_y(), side_manager.to_string());
+
+  return ret;
+}
+
+char* RRSwitchBlock::gen_verilog_side_instance_name(enum e_side side) const {
+  char* ret = NULL;
+  Side side_manager(side);
+
+  std::string x_str = std::to_string(get_x());
+  std::string y_str = std::to_string(get_y());
+  std::string side_str(side_manager.to_string());
+  
+  ret = (char*)my_malloc(2 + 1 + x_str.length()
+                         + 2 + y_str.length()
+                         + 2 + side_str.length()
+                         + 4 + 1); 
+
+  sprintf(ret, "sb_%lu__%lu__%s__0_", 
+          get_x(), get_y(), side_manager.to_string());
+
+  return ret;
+}
 
 /* Public mutators */
 
@@ -1744,6 +1782,16 @@ size_t DeviceRRSwitchBlock::get_num_rotatable_mirror() const {
   return rotatable_mirror_.size();
 } 
 
+/* Get a rr switch block which is a unique module of a side of SB */ 
+RRSwitchBlock DeviceRRSwitchBlock::get_unique_side_module(size_t index, enum e_side side) const {
+  assert (validate_unique_module_index(index, side));
+
+  Side side_manager(side);
+  assert (validate_side(side));
+  
+  return rr_switch_block_[unique_module_[side_manager.to_size_t()][index].get_x()][unique_module_[side_manager.to_size_t()][index].get_y()];
+}
+
 /* Get a rr switch block which a unique mirror */ 
 RRSwitchBlock DeviceRRSwitchBlock::get_unique_mirror(size_t index) const {
   assert (validate_unique_mirror_index(index));
@@ -2082,6 +2130,17 @@ bool DeviceRRSwitchBlock::validate_unique_mirror_index(size_t index) const {
 /* Validate if the index in the range of unique_mirror vector*/
 bool DeviceRRSwitchBlock::validate_rotatable_mirror_index(size_t index) const {
   if (index >= rotatable_mirror_.size()) {
+    return false;
+  }
+  return true;
+} 
+
+/* Validate if the index in the range of unique_mirror vector*/
+bool DeviceRRSwitchBlock::validate_unique_module_index(size_t index, enum e_side side) const {
+  assert( validate_side(side));
+  Side side_manager(side);
+
+  if (index >= unique_module_[side_manager.get_side()].size()) {
     return false;
   }
   return true;

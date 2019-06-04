@@ -347,8 +347,8 @@ void verilog_include_simulation_defines_file(FILE* fp,
 
 /* Create a file handler for a subckt Verilog netlist */
 FILE* verilog_create_one_subckt_file(char* subckt_dir,
-                                     char* subckt_name_prefix,
-                                     char* verilog_subckt_file_name_prefix,
+                                     const char* subckt_name_prefix,
+                                     const char* verilog_subckt_file_name_prefix,
                                      int grid_x, int grid_y,
                                      char** verilog_fname) {
   FILE* fp = NULL;

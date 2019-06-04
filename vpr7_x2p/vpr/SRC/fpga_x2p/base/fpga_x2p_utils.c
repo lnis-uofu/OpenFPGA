@@ -654,7 +654,7 @@ char* my_itoa(int input) {
 /* Generate a filename (string) for a grid subckt SPICE netlist, 
  * with given x and y coordinates
  */
-char* fpga_spice_create_one_subckt_filename(char* file_name_prefix,
+char* fpga_spice_create_one_subckt_filename(const char* file_name_prefix,
                                             int subckt_x, int subckt_y,
                                             char* file_name_postfix) {
   char* fname = NULL;
