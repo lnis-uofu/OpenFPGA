@@ -2000,6 +2000,20 @@ void DeviceRRSwitchBlock::clear() {
   }
   rr_switch_block_.clear();
 
+  rr_switch_block_mirror_id_.clear();
+
+  rr_switch_block_rotatable_mirror_id_.clear();
+
+  /* clean rr_sb_unique_side_module_id */
+  for (size_t x = 0; x < rr_sb_unique_module_id_.size(); ++x) {
+    for (size_t y = 0; y < rr_sb_unique_module_id_[x].size(); ++y) {
+      rr_sb_unique_module_id_[x][y].clear();
+    }
+    rr_sb_unique_module_id_[x].clear();
+  }
+  rr_sb_unique_module_id_.clear();
+
+
   /* clean unique side module */
   clear_unique_module();
 
@@ -2019,15 +2033,6 @@ void DeviceRRSwitchBlock::clear_unique_module() {
     unique_module_[side].clear();
   }
 
-  /* clean rr_sb_unique_side_module_id */
-  for (size_t x = 0; x < rr_sb_unique_module_id_.size(); ++x) {
-    for (size_t y = 0; y < rr_sb_unique_module_id_[x].size(); ++y) {
-      rr_sb_unique_module_id_[x][y].clear();
-    }
-    rr_sb_unique_module_id_[x].clear();
-  }
-  rr_sb_unique_module_id_.clear();
-
   return;
 } 
 
@@ -2036,8 +2041,6 @@ void DeviceRRSwitchBlock::clear_mirror() {
   /* clean unique mirror */
   unique_mirror_.clear();
 
-  rr_switch_block_mirror_id_.clear();
-
   return;
 } 
 
@@ -2045,8 +2048,6 @@ void DeviceRRSwitchBlock::clear_mirror() {
 void DeviceRRSwitchBlock::clear_rotatable_mirror() {
   /* clean unique mirror */
   rotatable_mirror_.clear();
-
-  rr_switch_block_rotatable_mirror_id_.clear();
   return;
 } 
 
