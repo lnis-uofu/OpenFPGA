@@ -2223,7 +2223,7 @@ void dump_verilog_routing_switch_box_unique_module(t_sram_orgz_info* cur_sram_or
       int side_num_reserved_conf_bits = count_verilog_switch_box_side_reserved_conf_bits(cur_sram_orgz_info, rr_sb, side_manager.get_side(), seg_ids[iseg]);
 
       /* Cache the sram counter */
-      cur_sram_msb += side_num_conf_bits - 1; 
+      cur_sram_msb = cur_sram_lsb +  side_num_conf_bits - 1; 
 
       /* Instanciate the subckt*/
       fprintf(fp, 
@@ -2248,13 +2248,13 @@ void dump_verilog_routing_switch_box_unique_module(t_sram_orgz_info* cur_sram_or
         fprintf(fp, ",\n");
       }
       /* Normal sram ports */
-      dump_verilog_sram_ports(fp, cur_sram_orgz_info, 
-                              cur_sram_lsb,
-                              cur_sram_msb,
-                              VERILOG_PORT_CONKT);
+      dump_verilog_sram_local_ports(fp, cur_sram_orgz_info, 
+                                    cur_sram_lsb,
+                                    cur_sram_msb,
+                                    VERILOG_PORT_CONKT);
 
       /* Dump ports only visible during formal verification*/
-      if (0 < num_conf_bits) {
+      if (0 < side_num_conf_bits) {
         fprintf(fp, "\n");
         fprintf(fp, "`ifdef %s\n", verilog_formal_verification_preproc_flag);
         fprintf(fp, ",\n");
@@ -2271,6 +2271,8 @@ void dump_verilog_routing_switch_box_unique_module(t_sram_orgz_info* cur_sram_or
       cur_sram_lsb = cur_sram_msb + 1;
     }
   }
+  /* checker */
+  assert(cur_sram_msb == cur_num_sram + num_conf_bits - 1);
  
   fprintf(fp, "endmodule\n");
 
