@@ -1252,6 +1252,9 @@ void verilog_generate_sdc_disable_unused_sbs(FILE* fp,
           if (FALSE == is_rr_node_to_be_disable_for_analysis(cur_sb_info->chan_rr_node[side][itrack])) {
             continue;
           }
+          if (0 == cur_sb_info->chan_rr_node[side][itrack]->fan_in) {
+            continue;
+          }
           fprintf(fp, "set_disable_timing ");
           fprintf(fp, "%s/", 
                   gen_verilog_one_sb_instance_name(cur_sb_info));
@@ -1264,6 +1267,9 @@ void verilog_generate_sdc_disable_unused_sbs(FILE* fp,
         for (inode = 0; inode < cur_sb_info->num_opin_rr_nodes[side]; inode++) {
           assert (OPIN == cur_sb_info->opin_rr_node[side][inode]->type);
           if (FALSE == is_rr_node_to_be_disable_for_analysis(cur_sb_info->opin_rr_node[side][inode])) {
+            continue;
+          }
+          if (0 == cur_sb_info->opin_rr_node[side][inode]->fan_in) {
             continue;
           }
           fprintf(fp, "set_disable_timing ");
@@ -1299,7 +1305,7 @@ void verilog_generate_sdc_disable_one_unused_cb(FILE* fp,
   fprintf(fp,
           "##################################################\n"); 
   fprintf(fp, 
-          "### Disable Timing for an %s[%d][%d] ###\n",
+          "### Disable Timing for an unused %s[%d][%d] ###\n",
           convert_cb_type_to_string(cur_cb_info->type),
           cur_cb_info->x, cur_cb_info->y);
   fprintf(fp,
@@ -1318,6 +1324,9 @@ void verilog_generate_sdc_disable_one_unused_cb(FILE* fp,
     assert(NULL != cur_cb_info->ipin_rr_node[side]);
     for (inode = 0; inode < cur_cb_info->num_ipin_rr_nodes[side]; inode++) {
       if (FALSE == is_rr_node_to_be_disable_for_analysis(cur_cb_info->ipin_rr_node[side][inode])) {
+        continue;
+      }
+      if (0 == cur_cb_info->ipin_rr_node[side][inode]->fan_in) {
         continue;
       }
       fprintf(fp, "set_disable_timing ");
@@ -1585,6 +1594,10 @@ void verilog_generate_sdc_disable_one_unused_block(FILE* fp,
     if  ((SOURCE != cur_phy_pb->rr_graph->rr_node[inode].type)
       && (SINK   != cur_phy_pb->rr_graph->rr_node[inode].type)) {
        continue; 
+    }
+    /* Check if pin is virtual */
+    if (NULL == cur_phy_pb->rr_graph->rr_node[inode].pb_graph_pin) {
+      continue;
     }
     /* Identify if the rr_node is usused */
     if (FALSE == is_rr_node_to_be_disable_for_analysis(&(cur_phy_pb->rr_graph->rr_node[inode]))) {

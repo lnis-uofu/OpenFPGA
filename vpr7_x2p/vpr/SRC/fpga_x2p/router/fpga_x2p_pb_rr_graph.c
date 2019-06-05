@@ -1274,6 +1274,7 @@ int add_virtual_sources_to_rr_graph_multi_sources(t_rr_graph* local_rr_graph) {
     local_rr_graph->rr_node[unique_src_node].fan_in = 0;
     local_rr_graph->rr_node[unique_src_node].num_drive_rr_nodes = 0;
     local_rr_graph->rr_node[unique_src_node].drive_rr_nodes = NULL;
+    local_rr_graph->rr_node[unique_src_node].pb_graph_pin = NULL;
     local_rr_graph->rr_node[unique_src_node].num_edges = local_rr_graph->net_num_sources[inet];
     local_rr_graph->rr_node[unique_src_node].edges = (int*) my_calloc(local_rr_graph->rr_node[unique_src_node].num_edges, sizeof(int));
     local_rr_graph->rr_node[unique_src_node].switches = (short*) my_calloc(local_rr_graph->rr_node[unique_src_node].num_edges, sizeof(short));

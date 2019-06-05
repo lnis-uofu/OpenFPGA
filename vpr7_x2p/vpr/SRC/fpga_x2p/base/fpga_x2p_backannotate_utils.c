@@ -585,7 +585,7 @@ int get_rr_node_index_in_cb_info(t_rr_node* cur_rr_node,
 /* Determine the coordinate of a chan_rr_node in a SB_info 
  * Return chan_type & chan_rr_node_x & chan_rr_node_y
  */
-void get_chan_rr_node_coorindate_in_sb_info(t_sb cur_sb_info,
+void get_chan_rr_node_coordinate_in_sb_info(t_sb cur_sb_info,
                                             int chan_rr_node_side,
                                             t_rr_type* chan_type,
                                             int* chan_rr_node_x, int* chan_rr_node_y) {
