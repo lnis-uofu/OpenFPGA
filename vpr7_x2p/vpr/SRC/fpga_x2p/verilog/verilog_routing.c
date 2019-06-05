@@ -1896,7 +1896,9 @@ void dump_verilog_routing_switch_box_unique_side_subckt_portmap(FILE* fp,
                                                   rr_sb.get_opin_node(side_manager.get_side(), inode)->xlow,
                                                   rr_sb.get_opin_node(side_manager.get_side(), inode)->ylow,
                                                   dump_port_type); /* Dump the direction of the port ! */ 
-      fprintf(fp, ",\n");
+      if (FALSE == dump_port_type) {
+        fprintf(fp, ",\n");
+      }
     } 
   }
  
@@ -2241,7 +2243,7 @@ void dump_verilog_routing_switch_box_unique_module(t_sram_orgz_info* cur_sram_or
       dump_verilog_reserved_sram_ports(fp, cur_sram_orgz_info, 
                                        0,
                                        side_num_reserved_conf_bits - 1,
-                                       VERILOG_PORT_INPUT);
+                                       VERILOG_PORT_CONKT);
       if (0 < side_num_reserved_conf_bits) {
         fprintf(fp, ",\n");
       }
@@ -2249,7 +2251,7 @@ void dump_verilog_routing_switch_box_unique_module(t_sram_orgz_info* cur_sram_or
       dump_verilog_sram_ports(fp, cur_sram_orgz_info, 
                               cur_sram_lsb,
                               cur_sram_msb,
-                              VERILOG_PORT_INPUT);
+                              VERILOG_PORT_CONKT);
 
       /* Dump ports only visible during formal verification*/
       if (0 < num_conf_bits) {
@@ -2259,7 +2261,7 @@ void dump_verilog_routing_switch_box_unique_module(t_sram_orgz_info* cur_sram_or
         dump_verilog_formal_verification_sram_ports(fp, cur_sram_orgz_info, 
                                                     cur_sram_lsb,
                                                     cur_sram_msb,
-                                                    VERILOG_PORT_OUTPUT);
+                                                    VERILOG_PORT_CONKT);
         fprintf(fp, "\n");
         fprintf(fp, "`endif\n");
       }
