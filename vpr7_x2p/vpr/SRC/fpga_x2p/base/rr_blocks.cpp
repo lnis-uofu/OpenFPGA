@@ -508,6 +508,20 @@ bool DeviceRRChan::valid_module_id(t_rr_type chan_type, size_t module_id) const 
 /* Member Functions of Class RRSwitchBlock*/
 /* Constructor for an empty object */
 RRSwitchBlock::RRSwitchBlock() {
+  /* Set a clean start! */
+  coordinator_.set(0, 0);
+  chan_node_direction_.clear();
+  ipin_node_.clear();
+  ipin_node_grid_side_.clear();
+  opin_node_.clear();
+  opin_node_grid_side_.clear();
+
+  reserved_conf_bits_lsb_ = 1;
+  reserved_conf_bits_msb_ = 0;
+   
+  conf_bits_lsb_ = 1;
+  conf_bits_msb_ = 0;
+  
   return;
 }
 
@@ -814,28 +828,44 @@ void RRSwitchBlock::get_node_side_and_index(t_rr_node* node,
 } 
 
 size_t RRSwitchBlock::get_num_reserved_conf_bits() const {
-  assert (validate_num_reserved_conf_bits());
+  if (false == validate_num_reserved_conf_bits()) {
+    return 0;
+  }
   return reserved_conf_bits_msb_ - reserved_conf_bits_lsb_ + 1;
 }
 
 size_t RRSwitchBlock::get_reserved_conf_bits_lsb() const {
+  if (false == validate_num_reserved_conf_bits()) {
+    return 0;
+  }
   return reserved_conf_bits_lsb_;
 }
 
 size_t RRSwitchBlock::get_reserved_conf_bits_msb() const {
+  if (false == validate_num_reserved_conf_bits()) {
+    return 0;
+  }
   return reserved_conf_bits_msb_;
 }
     
 size_t RRSwitchBlock::get_num_conf_bits() const {
-  assert (validate_num_conf_bits());
+  if (false == validate_num_conf_bits()) {
+    return 0;
+  }
   return conf_bits_msb_ - conf_bits_lsb_ + 1;
 }
 
 size_t RRSwitchBlock::get_conf_bits_lsb() const {
+  if (false == validate_num_conf_bits()) {
+    return 0;
+  }
   return conf_bits_lsb_;
 }
 
 size_t RRSwitchBlock::get_conf_bits_msb() const {
+  if (false == validate_num_conf_bits()) {
+    return 0;
+  }
   return conf_bits_msb_;
 }
 
@@ -1199,10 +1229,10 @@ void RRSwitchBlock::set(const RRSwitchBlock& src) {
 
   /* Copy conf_bits 
    * TODO: this will be recovered when num_conf_bits etc will be initialized during FPGA-X2P setup 
+   */
   this->set_num_reserved_conf_bits(src.get_num_reserved_conf_bits());
   this->set_conf_bits_lsb(src.get_conf_bits_lsb());
   this->set_conf_bits_msb(src.get_conf_bits_msb());
-   */
   
   return;
 }
@@ -1265,6 +1295,13 @@ void RRSwitchBlock::add_opin_node(t_rr_node* node, enum e_side node_side, enum e
 } 
 
 void RRSwitchBlock::set_num_reserved_conf_bits(size_t num_reserved_conf_bits) {
+  /* For zero bits: make it invalid  */
+  if ( 0 == num_reserved_conf_bits ) {
+    reserved_conf_bits_lsb_ = 1;
+    reserved_conf_bits_msb_ = 0; 
+    return;
+  }
+
   reserved_conf_bits_lsb_ = 0;
   reserved_conf_bits_msb_ = num_reserved_conf_bits - 1;
   return;

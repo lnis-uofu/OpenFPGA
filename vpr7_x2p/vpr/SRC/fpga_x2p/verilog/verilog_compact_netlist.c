@@ -38,6 +38,8 @@
 #include "verilog_routing.h"
 #include "verilog_top_netlist_utils.h"
 
+#include "verilog_compact_netlist.h"
+
 /* ONLY for compact Verilog netlists:
  * Generate uniformly the prefix of the module name for each grid  
  */
@@ -275,7 +277,6 @@ void compact_verilog_update_grid_spice_model_and_sram_orgz_info(t_sram_orgz_info
 /* Create a Verilog file and dump a module consisting of a I/O block,
  * The pins appear in the port list will depend on the selected border side
  */
-static 
 void dump_compact_verilog_one_physical_block(t_sram_orgz_info* cur_sram_orgz_info, 
                                              char* verilog_dir_path,
                                              char* subckt_dir_path,
@@ -672,6 +673,7 @@ void dump_compact_verilog_defined_one_grid(t_sram_orgz_info* cur_sram_orgz_info,
 /* Call defined grid 
  * Instance unique submodules (I/O, CLB, Heterogeneous block) for the full grids
  */
+static 
 void dump_compact_verilog_defined_grids(t_sram_orgz_info* cur_sram_orgz_info,
                                         FILE* fp) {
   int ix, iy;
@@ -795,7 +797,7 @@ void dump_compact_verilog_defined_one_switch_box(t_sram_orgz_info* cur_sram_orgz
                                                   rr_sb.get_opin_node(side_manager.get_side(), inode)->xlow,
                                                   rr_sb.get_opin_node(side_manager.get_side(), inode)->ylow,
                                                   FALSE); /* Do not specify the direction of port */ 
-      fprintf(fp, ", ");
+      fprintf(fp, ",\n");
     } 
     fprintf(fp, "\n");
   }
@@ -803,6 +805,7 @@ void dump_compact_verilog_defined_one_switch_box(t_sram_orgz_info* cur_sram_orgz
   /* Configuration ports */
   /* output of each configuration bit */
   /* Reserved sram ports */
+  fprintf(fp, "//----- Reserved SRAM ports-----\n");
   if (0 < (rr_sb.get_num_reserved_conf_bits())) {
     dump_verilog_reserved_sram_ports(fp, cur_sram_orgz_info, 
                                      rr_sb.get_reserved_conf_bits_lsb(), 
@@ -812,6 +815,7 @@ void dump_compact_verilog_defined_one_switch_box(t_sram_orgz_info* cur_sram_orgz
   }
   /* Normal sram ports */
   if (0 < rr_sb.get_num_conf_bits()) {
+    fprintf(fp, "//----- Regular SRAM ports-----\n");
     dump_verilog_sram_local_ports(fp, cur_sram_orgz_info, 
                                   rr_sb.get_conf_bits_lsb(), 
                                   rr_sb.get_conf_bits_msb(),
@@ -821,6 +825,7 @@ void dump_compact_verilog_defined_one_switch_box(t_sram_orgz_info* cur_sram_orgz
   /* Dump ports only visible during formal verification*/
   if (0 < rr_sb.get_num_conf_bits()) {
     fprintf(fp, "\n");
+    fprintf(fp, "//----- SRAM ports for formal verification -----\n");
     fprintf(fp, "`ifdef %s\n", verilog_formal_verification_preproc_flag);
     fprintf(fp, ",\n");
     dump_verilog_formal_verification_sram_ports(fp, cur_sram_orgz_info, 
@@ -842,7 +847,7 @@ void dump_compact_verilog_defined_one_switch_box(t_sram_orgz_info* cur_sram_orgz
   return;
 }
 
-
+static 
 void dump_compact_verilog_defined_switch_boxes(t_sram_orgz_info* cur_sram_orgz_info, 
                                                FILE* fp) {
   DeviceCoordinator sb_range = device_rr_switch_block.get_switch_block_range();
@@ -1005,6 +1010,7 @@ void dump_compact_verilog_defined_one_connection_box(t_sram_orgz_info* cur_sram_
 }
 
 /* Call the sub-circuits for connection boxes */
+static 
 void dump_compact_verilog_defined_connection_boxes(t_sram_orgz_info* cur_sram_orgz_info,
                                                    FILE* fp) {
   int ix, iy;
@@ -1164,6 +1170,7 @@ void dump_compact_verilog_defined_one_channel(FILE* fp,
 
 
 /* Call the sub-circuits for channels : Channel X and Channel Y*/
+static 
 void dump_compact_verilog_defined_channels(FILE* fp) {
   int ix, iy;
 

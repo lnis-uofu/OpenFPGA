@@ -1,3 +1,6 @@
+#ifndef VERILOG_COMPACT_NETLIST_H 
+#define VERILOG_COMPACT_NETLIST_H 
+
 void dump_compact_verilog_one_physical_block(t_sram_orgz_info* cur_sram_orgz_info, 
                                              char* verilog_dir_path,
                                              char* subckt_dir_path,
@@ -26,4 +29,4 @@ void dump_compact_verilog_top_netlist(t_sram_orgz_info* cur_sram_orgz_info,
                                       t_syn_verilog_opts fpga_verilog_opts,
                                       boolean compact_routing_hierarchy,
                                       t_spice verilog);
-
+#endif
