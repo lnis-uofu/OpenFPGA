@@ -1224,6 +1224,11 @@ DeviceRRSwitchBlock build_device_rr_switch_blocks(boolean output_sb_xml, char* s
              "Backannotated %d switch blocks.\n",
              (nx + 1) * (ny + 1) );
 
+  LL_device_rr_switch_block.build_segment_ids();
+  vpr_printf(TIO_MESSAGE_INFO, 
+             "Detect %lu routing segments used by switch blocks.\n",
+             LL_device_rr_switch_block.get_num_segments());
+
   if (TRUE == output_sb_xml) {
     write_device_rr_switch_block_to_xml(sb_xml_dir, LL_device_rr_switch_block);
 
@@ -1247,10 +1252,14 @@ DeviceRRSwitchBlock build_device_rr_switch_blocks(boolean output_sb_xml, char* s
   /* Report number of unique mirrors */
   for (size_t side = 0; side < LL_device_rr_switch_block.get_max_num_sides(); ++side) {
     Side side_manager(side); 
-    vpr_printf(TIO_MESSAGE_INFO, 
-               "For side %s: Detect %d independent switch blocks from %d switch blocks.\n",
-               side_manager.to_string(), LL_device_rr_switch_block.get_num_unique_module(side_manager.get_side()), 
-               (nx + 1) * (ny + 1) );
+    /* get segment ids */
+    for (size_t iseg = 0; iseg < LL_device_rr_switch_block.get_num_segments(); ++iseg) { 
+      vpr_printf(TIO_MESSAGE_INFO, 
+                 "For side %s, segment id %lu: Detect %d independent switch blocks from %d switch blocks.\n",
+                 side_manager.to_string(), LL_device_rr_switch_block.get_segment_id(iseg), 
+                 LL_device_rr_switch_block.get_num_unique_module(side_manager.get_side(), iseg), 
+                 (nx + 1) * (ny + 1) );
+    }
   }
 
   /* Create directory if needed */

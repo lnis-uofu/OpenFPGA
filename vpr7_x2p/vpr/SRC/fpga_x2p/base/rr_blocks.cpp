@@ -934,19 +934,8 @@ size_t RRSwitchBlock::get_hint_rotate_offset(RRSwitchBlock& cand) const {
   return offset_hint;
 } 
 
-
-/* check if a side of candidate SB is a mirror of the current one 
- * Check the specified side of two switch blocks: 
- * 1. Number of channel/opin/ipin rr_nodes are same 
- * For channel rr_nodes
- * 2. check if their track_ids (ptc_num) are same
- * 3. Check if the switches (ids) are same
- * For opin/ipin rr_nodes, 
- * 4. check if their parent type_descriptors same, 
- * 5. check if pin class id and pin id are same 
- * If all above are satisfied, the side of the two switch blocks are mirrors!
- */
-bool RRSwitchBlock::is_side_mirror(RRSwitchBlock& cand, enum e_side side) const {
+/* check if all the routing segments of a side of candidate SB is a mirror of the current one */
+bool RRSwitchBlock::is_side_segment_mirror(RRSwitchBlock& cand, enum e_side side, size_t seg_id) const {
   /* Create a side manager */
   Side side_manager(side);
 
@@ -954,12 +943,17 @@ bool RRSwitchBlock::is_side_mirror(RRSwitchBlock& cand, enum e_side side) const 
   assert ( side_manager.to_size_t() < get_num_sides() ); 
   assert ( side_manager.to_size_t() < cand.get_num_sides() ); 
 
+
   /* check the numbers/directionality of channel rr_nodes */
   /* Ensure we have the same channel width on this side */
   if (get_chan_width(side) != cand.get_chan_width(side)) {
     return false;
   }
   for (size_t itrack = 0; itrack < get_chan_width(side); ++itrack) {
+    /* Bypass unrelated segments */
+    if (seg_id != get_chan_node_segment(side, itrack)) {
+      continue;
+    }
     /* Check the directionality of each node */
     if (get_chan_node_direction(side, itrack) != cand.get_chan_node_direction(side, itrack)) {
       return false;
@@ -967,7 +961,7 @@ bool RRSwitchBlock::is_side_mirror(RRSwitchBlock& cand, enum e_side side) const 
     /* Check the track_id of each node
      * ptc is not necessary, we care the connectivity!
     if (get_chan_node(side_manager.get_side(), itrack)->ptc_num != cand.get_chan_node(side_manager.get_side(), itrack)->ptc_num) {
-      return false;
+      eturn false;
     }
     */
     /* For OUT_PORT rr_node, we need to check fan-in */
@@ -988,6 +982,31 @@ bool RRSwitchBlock::is_side_mirror(RRSwitchBlock& cand, enum e_side side) const 
   /* check the numbers of ipin_rr_nodes */
   if (get_num_ipin_nodes(side) != cand.get_num_ipin_nodes(side)) {
     return false;
+  }
+
+  return true;
+} 
+
+/* check if a side of candidate SB is a mirror of the current one 
+ * Check the specified side of two switch blocks: 
+ * 1. Number of channel/opin/ipin rr_nodes are same 
+ * For channel rr_nodes
+ * 2. check if their track_ids (ptc_num) are same
+ * 3. Check if the switches (ids) are same
+ * For opin/ipin rr_nodes, 
+ * 4. check if their parent type_descriptors same, 
+ * 5. check if pin class id and pin id are same 
+ * If all above are satisfied, the side of the two switch blocks are mirrors!
+ */
+bool RRSwitchBlock::is_side_mirror(RRSwitchBlock& cand, enum e_side side) const {
+
+  /* get a list of segments */
+  std::vector<size_t> seg_ids = get_chan(side).get_segment_ids();
+
+  for (size_t iseg = 0; iseg < seg_ids.size(); ++iseg) {
+    if (false == is_side_segment_mirror(cand, side, seg_ids[iseg])) {
+      return false;
+    }
   }
 
   return true;
@@ -1098,40 +1117,44 @@ char* RRSwitchBlock::gen_verilog_instance_name() const {
 }
 
 /* Public Accessors Verilog writer */
-char* RRSwitchBlock::gen_verilog_side_module_name(enum e_side side) const {
+char* RRSwitchBlock::gen_verilog_side_module_name(enum e_side side, size_t seg_id) const {
   char* ret = NULL;
   Side side_manager(side);
   
   std::string x_str = std::to_string(get_x());
   std::string y_str = std::to_string(get_y());
+  std::string seg_id_str = std::to_string(seg_id);
   std::string side_str(side_manager.to_string());
 
   ret = (char*)my_malloc(2 + 1 + x_str.length()
                          + 2 + y_str.length() 
                          + 2 + side_str.length()
+                         + 2 + 3 + seg_id_str.length()
                          + 1 + 1); 
 
-  sprintf(ret, "sb_%lu__%lu__%s_", 
-          get_x(), get_y(), side_manager.to_string());
+  sprintf(ret, "sb_%lu__%lu__%s_seg%lu_", 
+          get_x(), get_y(), side_manager.to_string(), seg_id);
 
   return ret;
 }
 
-char* RRSwitchBlock::gen_verilog_side_instance_name(enum e_side side) const {
+char* RRSwitchBlock::gen_verilog_side_instance_name(enum e_side side, size_t seg_id) const {
   char* ret = NULL;
   Side side_manager(side);
 
   std::string x_str = std::to_string(get_x());
   std::string y_str = std::to_string(get_y());
+  std::string seg_id_str = std::to_string(seg_id);
   std::string side_str(side_manager.to_string());
   
   ret = (char*)my_malloc(2 + 1 + x_str.length()
                          + 2 + y_str.length()
                          + 2 + side_str.length()
+                         + 2 + 3 + seg_id_str.length()
                          + 4 + 1); 
 
-  sprintf(ret, "sb_%lu__%lu__%s__0_", 
-          get_x(), get_y(), side_manager.to_string());
+  sprintf(ret, "sb_%lu__%lu__%s_seg%lu_0_", 
+          get_x(), get_y(), side_manager.to_string(), seg_id);
 
   return ret;
 }
@@ -1760,10 +1783,11 @@ RRSwitchBlock DeviceRRSwitchBlock::get_switch_block(DeviceCoordinator& coordinat
 } 
 
 /* get the number of unique side modules of switch blocks */
-size_t DeviceRRSwitchBlock::get_num_unique_module(enum e_side side) const {
+size_t DeviceRRSwitchBlock::get_num_unique_module(enum e_side side, size_t seg_index) const {
   Side side_manager(side);
   assert(validate_side(side));
-  return unique_module_[side_manager.to_size_t()].size();
+  assert(validate_segment_index(seg_index));
+  return unique_module_[side_manager.to_size_t()][seg_index].size();
 } 
 
 /* Get a rr switch block in the array with a coordinator */
@@ -1783,13 +1807,13 @@ size_t DeviceRRSwitchBlock::get_num_rotatable_mirror() const {
 } 
 
 /* Get a rr switch block which is a unique module of a side of SB */ 
-RRSwitchBlock DeviceRRSwitchBlock::get_unique_side_module(size_t index, enum e_side side) const {
-  assert (validate_unique_module_index(index, side));
+RRSwitchBlock DeviceRRSwitchBlock::get_unique_side_module(size_t index, enum e_side side, size_t seg_id) const {
+  assert (validate_unique_module_index(index, side, seg_id));
 
   Side side_manager(side);
   assert (validate_side(side));
   
-  return rr_switch_block_[unique_module_[side_manager.to_size_t()][index].get_x()][unique_module_[side_manager.to_size_t()][index].get_y()];
+  return rr_switch_block_[unique_module_[side_manager.to_size_t()][seg_id][index].get_x()][unique_module_[side_manager.to_size_t()][seg_id][index].get_y()];
 }
 
 /* Get a rr switch block which a unique mirror */ 
@@ -1822,6 +1846,17 @@ size_t DeviceRRSwitchBlock::get_max_num_sides() const {
     }
   }
   return max_num_sides;
+}
+
+/* Get the size of segment_ids */
+size_t DeviceRRSwitchBlock::get_num_segments() const { 
+  return segment_ids_.size();
+}
+
+/* Get a segment id */
+size_t DeviceRRSwitchBlock::get_segment_id(size_t index) const {
+  assert(validate_segment_index(index));
+  return segment_ids_[index];
 }
 
 /* Public Mutators */
@@ -1870,6 +1905,11 @@ void DeviceRRSwitchBlock::reserve(DeviceCoordinator& coordinator) {
 void DeviceRRSwitchBlock::reserve_unique_module_id(DeviceCoordinator& coordinator) { 
   RRSwitchBlock rr_sb = get_switch_block(coordinator);
   rr_sb_unique_module_id_[coordinator.get_x()][coordinator.get_y()].resize(rr_sb.get_num_sides());
+
+  for (size_t side = 0; side < rr_sb.get_num_sides(); ++side) {
+    Side side_manager(side);
+    rr_sb_unique_module_id_[coordinator.get_x()][coordinator.get_y()][side_manager.to_size_t()].resize(segment_ids_.size());
+  }
 
   return;
 }
@@ -1952,19 +1992,22 @@ void DeviceRRSwitchBlock::build_unique_module() {
 
   /* Allocate the unique_side_module_ */
   unique_module_.resize(get_max_num_sides());
+  for (size_t side = 0; side < unique_module_.size(); ++side) {
+    unique_module_[side].resize(segment_ids_.size());
+  }
 
   for (size_t ix = 0; ix < rr_switch_block_.size(); ++ix) {
     for (size_t iy = 0; iy < rr_switch_block_[ix].size(); ++iy) {
       DeviceCoordinator coordinator(ix, iy);
-      RRSwitchBlock* rr_sb = &(rr_switch_block_[ix][iy]); 
+      RRSwitchBlock rr_sb = rr_switch_block_[ix][iy]; 
 
       /* reserve the rr_sb_unique_module_id */
       reserve_unique_module_id(coordinator);
 
-      for (size_t side = 0; side < rr_sb->get_num_sides(); ++side) {
+      for (size_t side = 0; side < rr_sb.get_num_sides(); ++side) {
         Side side_manager(side);
         /* Try to add it to the list */
-        add_unique_side_module(coordinator, *rr_sb, side_manager.get_side());
+        add_unique_side_module(coordinator, rr_sb, side_manager.get_side());
       }
     }
   } 
@@ -2004,32 +2047,30 @@ void DeviceRRSwitchBlock::add_rotatable_mirror(DeviceCoordinator& coordinator,
   return;
 } 
 
-/* Add a unique side module to the list:
- * Check if the connections and nodes on the specified side of the rr_sb 
- * If it is similar to any module[side][i] in the list, we build a link from the rr_sb to the unique_module
- * Otherwise, we add the module to the unique_module list 
- */
-void DeviceRRSwitchBlock::add_unique_side_module(DeviceCoordinator& coordinator, RRSwitchBlock& rr_sb, enum e_side side) {
+void DeviceRRSwitchBlock::add_unique_side_segment_module(DeviceCoordinator& coordinator, 
+                                                         RRSwitchBlock& rr_sb, 
+                                                         enum e_side side, 
+                                                         size_t seg_id) {
   bool is_unique_side_module = true;
   Side side_manager(side);
 
   /* add rotatable mirror support */
-  for (size_t id = 0; id < get_num_unique_module(side); ++id) {
+  for (size_t id = 0; id < get_num_unique_module(side, seg_id); ++id) {
     /* Skip if these may never match as a mirror (violation in basic requirements */
-    if (true == get_switch_block(unique_module_[side_manager.to_size_t()][id]).is_side_mirror(rr_sb, side)) {
+    if (true == get_switch_block(unique_module_[side_manager.to_size_t()][seg_id][id]).is_side_segment_mirror(rr_sb, side, segment_ids_[seg_id])) {
       /* This is a mirror, raise the flag and we finish */
       is_unique_side_module = false;
       /* Record the id of unique mirror */
-      rr_sb_unique_module_id_[coordinator.get_x()][coordinator.get_y()][side_manager.to_size_t()] = id; 
+      rr_sb_unique_module_id_[coordinator.get_x()][coordinator.get_y()][side_manager.to_size_t()][seg_id] = id; 
       break;
     }
   }
 
   /* Add to list if this is a unique mirror*/
   if (true == is_unique_side_module) {
-    unique_module_[side_manager.to_size_t()].push_back(coordinator);
+    unique_module_[side_manager.to_size_t()][seg_id].push_back(coordinator);
     /* Record the id of unique mirror */
-    rr_sb_unique_module_id_[coordinator.get_x()][coordinator.get_y()][side_manager.to_size_t()] = unique_module_[side_manager.to_size_t()].size() - 1; 
+    rr_sb_unique_module_id_[coordinator.get_x()][coordinator.get_y()][side_manager.to_size_t()][seg_id] = unique_module_[side_manager.to_size_t()][seg_id].size() - 1; 
     /* 
     printf("Detect a rotatable mirror: SB[%lu][%lu]\n", coordinator.get_x(), coordinator.get_y());
      */
@@ -2037,6 +2078,50 @@ void DeviceRRSwitchBlock::add_unique_side_module(DeviceCoordinator& coordinator,
 
   return;
 }
+
+/* Add a unique side module to the list:
+ * Check if the connections and nodes on the specified side of the rr_sb 
+ * If it is similar to any module[side][i] in the list, we build a link from the rr_sb to the unique_module
+ * Otherwise, we add the module to the unique_module list 
+ */
+void DeviceRRSwitchBlock::add_unique_side_module(DeviceCoordinator& coordinator, 
+                                                 RRSwitchBlock& rr_sb, 
+                                                 enum e_side side) {
+  Side side_manager(side);
+
+  for (size_t iseg = 0; iseg < segment_ids_.size(); ++iseg) {
+    add_unique_side_segment_module(coordinator, rr_sb, side, iseg);
+  }
+
+  return;
+}
+
+/* build a map of segment_ids */
+void DeviceRRSwitchBlock::build_segment_ids() {
+  /* go through each rr_sb, each side and find the segment_ids */
+  for (size_t ix = 0; ix < rr_switch_block_.size(); ++ix) {
+    for (size_t iy = 0; iy < rr_switch_block_[ix].size(); ++iy) {
+      RRSwitchBlock* rr_sb = &(rr_switch_block_[ix][iy]);
+      for (size_t side = 0 ; side < rr_sb->get_num_sides(); ++side) {
+        Side side_manager(side);
+        /* get a list of segment_ids in this side */
+        std::vector<size_t> cur_seg_ids = rr_sb->get_chan(side_manager.get_side()).get_segment_ids();
+        /* add to the segment_id_ if exist */
+        for (size_t iseg = 0; iseg < cur_seg_ids.size(); ++iseg) {
+          std::vector<size_t>::iterator it = std::find(segment_ids_.begin(), segment_ids_.end(), cur_seg_ids[iseg]);
+          /* find if it exists in the list  */
+          if (it != segment_ids_.end()) {
+            /* exist: continue */
+            continue;
+          }
+          /* does not exist, push into the vector */
+          segment_ids_.push_back(cur_seg_ids[iseg]);
+        }
+      }
+    }
+  }
+  return;
+}  
 
 /* clean the content */
 void DeviceRRSwitchBlock::clear() { 
@@ -2099,6 +2184,15 @@ void DeviceRRSwitchBlock::clear_rotatable_mirror() {
   return;
 } 
 
+/* clean the content related to segment_ids */
+void DeviceRRSwitchBlock::clear_segment_ids() {
+  /* clean segment_ids_ */
+  segment_ids_.clear();
+
+  return;
+} 
+
+
 /* Validate if the (x,y) is the range of this device */
 bool DeviceRRSwitchBlock::validate_coordinator(DeviceCoordinator& coordinator) const {
   if (coordinator.get_x() >= rr_switch_block_.capacity()) {
@@ -2136,12 +2230,20 @@ bool DeviceRRSwitchBlock::validate_rotatable_mirror_index(size_t index) const {
 } 
 
 /* Validate if the index in the range of unique_mirror vector*/
-bool DeviceRRSwitchBlock::validate_unique_module_index(size_t index, enum e_side side) const {
+bool DeviceRRSwitchBlock::validate_unique_module_index(size_t index, enum e_side side, size_t seg_index) const {
   assert( validate_side(side));
+  assert( validate_segment_index(seg_index));
   Side side_manager(side);
 
-  if (index >= unique_module_[side_manager.get_side()].size()) {
+  if (index >= unique_module_[side_manager.get_side()][seg_index].size()) {
     return false;
   }
   return true;
 } 
+
+bool DeviceRRSwitchBlock::validate_segment_index(size_t index) const {
+  if (index >= segment_ids_.size()) {
+    return false;
+  }
+  return true;
+}
