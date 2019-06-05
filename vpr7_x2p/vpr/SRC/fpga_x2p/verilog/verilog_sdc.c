@@ -772,7 +772,7 @@ void verilog_generate_sdc_disable_one_unused_chan(FILE* fp,
   fprintf(fp,
           "##################################################\n"); 
   fprintf(fp, 
-          "### Disable Timing for an flag 1 %s[%d][%d] ###\n",
+          "### Disable Timing for an %s[%d][%d] ###\n",
           convert_chan_type_to_string(rr_chan.get_type()),
           x, y);
   fprintf(fp,
@@ -833,7 +833,7 @@ void verilog_generate_sdc_disable_one_unused_chan(FILE* fp,
   fprintf(fp,
           "##################################################\n"); 
   fprintf(fp, 
-          "### Disable Timing for an flag 2 %s[%d][%d] ###\n",
+          "### Disable Timing for an %s[%d][%d] ###\n",
           convert_chan_type_to_string(chan_type),
           x, y);
   fprintf(fp,
@@ -1592,9 +1592,12 @@ void verilog_generate_sdc_disable_one_unused_block(FILE* fp,
   for (inode = 0; inode < cur_phy_pb->rr_graph->num_rr_nodes; inode++) {
     /* Focus on the SOURCE and SINK rr_nodes */
     if  ((SOURCE != cur_phy_pb->rr_graph->rr_node[inode].type)
-      && (SINK   != cur_phy_pb->rr_graph->rr_node[inode].type)
-      && (NULL   == cur_phy_pb->rr_graph->rr_node[inode].pb_graph_pin)) {
+      && (SINK   != cur_phy_pb->rr_graph->rr_node[inode].type)) {
        continue; 
+    }
+    /* Check if pin is virtual */
+    if (NULL == cur_phy_pb->rr_graph->rr_node[inode].pb_graph_pin) {
+      continue;
     }
     /* Identify if the rr_node is usused */
     if (FALSE == is_rr_node_to_be_disable_for_analysis(&(cur_phy_pb->rr_graph->rr_node[inode]))) {
