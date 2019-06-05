@@ -1846,15 +1846,15 @@ void dump_verilog_routing_switch_box_unique_side_subckt_portmap(FILE* fp,
     DeviceCoordinator port_coordinator = rr_sb.get_side_block_coordinator(side_manager.get_side()); 
 
     for (size_t itrack = 0; itrack < rr_sb.get_chan_width(side_manager.get_side()); ++itrack) {
-      /* Bypass unwanted segments */
-      if (seg_id != rr_sb.get_chan_node_segment(side_manager.get_side(), itrack)) {
-        continue;
-      }
       switch (rr_sb.get_chan_node_direction(side_manager.get_side(), itrack)) {
       case OUT_PORT:
         /* if this is the specified side, we only consider output ports */
         if (sb_side_manager.get_side() != side_manager.get_side()) {
           break;
+        }
+        /* Bypass unwanted segments */
+        if (seg_id != rr_sb.get_chan_node_segment(side_manager.get_side(), itrack)) {
+          continue;
         }
         fprintf(fp, "  ");
         if (TRUE == dump_port_type)  {
@@ -2030,14 +2030,14 @@ void dump_verilog_routing_switch_box_unique_side_module(t_sram_orgz_info* cur_sr
   fprintf(fp, "//----- %s side Multiplexers -----\n", 
           side_manager.to_string());
   for (size_t itrack = 0; itrack < rr_sb.get_chan_width(side_manager.get_side()); ++itrack) {
-    /* Bypass unwanted segments */
-    if (seg_id != rr_sb.get_chan_node_segment(side_manager.get_side(), itrack)) {
-      continue;
-    }
     assert((CHANX == rr_sb.get_chan_node(side_manager.get_side(), itrack)->type)
          ||(CHANY == rr_sb.get_chan_node(side_manager.get_side(), itrack)->type));
     /* We care INC_DIRECTION tracks at this side*/
     if (OUT_PORT == rr_sb.get_chan_node_direction(side_manager.get_side(), itrack)) {
+      /* Bypass unwanted segments */
+      if (seg_id != rr_sb.get_chan_node_segment(side_manager.get_side(), itrack)) {
+        continue;
+      }
       dump_verilog_unique_switch_box_interc(cur_sram_orgz_info, fp, rr_sb, 
                                             side_manager.get_side(), 
                                             rr_sb.get_chan_node(side_manager.get_side(), itrack));
