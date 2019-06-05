@@ -41,7 +41,7 @@ void get_rr_node_side_and_index_in_sb_info(t_rr_node* cur_rr_node,
                                           OUTP int* cur_rr_node_side, 
                                           OUTP int* cur_rr_node_index);
 
-void get_chan_rr_node_coorindate_in_sb_info(t_sb cur_sb_info,
+void get_chan_rr_node_coordinate_in_sb_info(t_sb cur_sb_info,
                                             int chan_rr_node_side,
                                             t_rr_type* chan_type,
                                             int* chan_rr_node_x, int* chan_rr_node_y);

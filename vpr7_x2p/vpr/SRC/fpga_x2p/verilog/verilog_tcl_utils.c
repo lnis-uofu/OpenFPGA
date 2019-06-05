@@ -120,7 +120,7 @@ void dump_verilog_one_sb_chan_pin(FILE* fp,
   get_rr_node_side_and_index_in_sb_info(cur_rr_node, 
                                         *cur_sb_info,
                                         port_type, &side, &track_idx); 
-  get_chan_rr_node_coorindate_in_sb_info(*cur_sb_info, side, 
+  get_chan_rr_node_coordinate_in_sb_info(*cur_sb_info, side, 
                                          &(chan_rr_type),
                                          &x_start, &y_start);
   assert (chan_rr_type == cur_rr_node->type); 

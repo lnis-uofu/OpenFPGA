@@ -645,7 +645,7 @@ void dump_verilog_switch_box_chan_port(FILE* fp,
   /* Make sure this node is included in this sb_info */
   assert((-1 != index)&&(-1 != chan_side));
 
-  get_chan_rr_node_coorindate_in_sb_info((*cur_sb_info), chan_side, 
+  get_chan_rr_node_coordinate_in_sb_info((*cur_sb_info), chan_side, 
                                          &chan_rr_node_type, &chan_rr_node_x, &chan_rr_node_y);
 
   assert(cur_rr_node->type == chan_rr_node_type);
