@@ -19,14 +19,14 @@ else
   cd build
   cmake --version
   cmake .. -DCMAKE_BUILD_TYPE=debug
-  make -j16
+  make -j
 fi
 end_section "OpenFPGA.build"
 
 $SPACER
 
 cd -
-source .travis/regression.sh
+./.travis/regression.sh
 
 #cd fpga_flow
 #./regression_fpga_flow.sh

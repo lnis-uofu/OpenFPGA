@@ -13,6 +13,8 @@ cd fpga_flow/scripts
 
 perl rewrite_path_in_file.pl -i ../arch/template/k6_N10_sram_chain_HC_template.xml
 perl rewrite_path_in_file.pl -i ../../vpr7_x2p/vpr/regression_verilog.sh
+perl rewrite_path_in_file.pl -i ../../vpr7_x2p/vpr/
+perl rewrite_path_in_file.pl -i ../../vpr7_x2p/vpr/VerilogNetlists/ff.v
 
 cd -
 
