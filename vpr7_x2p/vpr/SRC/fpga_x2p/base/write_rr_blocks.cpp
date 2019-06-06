@@ -16,7 +16,7 @@ void write_rr_switch_block_to_xml(std::string fname_prefix, RRSwitchBlock& rr_sb
   fname += rr_sb.gen_verilog_module_name();
   fname += ".xml";
 
-  vpr_printf(TIO_MESSAGE_INFO, "Output SB XML: %s\n", fname.c_str());
+  vpr_printf(TIO_MESSAGE_INFO, "Output SB XML: %s\r", fname.c_str());
 
   /* Create a file handler*/
   std::fstream fp;

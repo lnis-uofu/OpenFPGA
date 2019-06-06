@@ -1223,7 +1223,6 @@ void RRSwitchBlock::set(const RRSwitchBlock& src) {
   }
 
   /* Copy conf_bits 
-   * TODO: this will be recovered when num_conf_bits etc will be initialized during FPGA-X2P setup 
    */
   this->set_num_reserved_conf_bits(src.get_num_reserved_conf_bits());
   this->set_conf_bits_lsb(src.get_conf_bits_lsb());

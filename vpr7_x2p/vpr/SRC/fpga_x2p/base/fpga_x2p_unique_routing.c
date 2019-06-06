@@ -200,8 +200,8 @@ boolean is_two_cb_rr_nodes_mirror(t_cb* src_cb, t_cb* des_cb,
     }
     int src_node_id, des_node_id;
     int src_node_side, des_node_side; 
-    get_rr_node_side_and_index_in_cb_info(src_rr_node->drive_rr_nodes[inode], *src_cb, OUT_PORT, &src_node_side, &src_node_id);
-    get_rr_node_side_and_index_in_cb_info(des_rr_node->drive_rr_nodes[inode], *des_cb, OUT_PORT, &des_node_side, &des_node_id);
+    get_rr_node_side_and_index_in_cb_info(src_rr_node->drive_rr_nodes[inode], *src_cb, IN_PORT, &src_node_side, &src_node_id);
+    get_rr_node_side_and_index_in_cb_info(des_rr_node->drive_rr_nodes[inode], *des_cb, IN_PORT, &des_node_side, &des_node_id);
     if (src_node_id != des_node_id) {
       return FALSE;
     } 
@@ -523,7 +523,7 @@ void identify_mirror_switch_blocks() {
   assign_mirror_switch_blocks();
 
   /* Ensure all the mirror are the upstream */
-  update_mirror_switch_blocks();
+  /* update_mirror_switch_blocks(); */
 
   /* Validate the mirror of switch blocks, everyone should be the upstream */
   assert(TRUE == validate_mirror_switch_blocks());
@@ -595,77 +595,53 @@ boolean is_two_connection_blocks_mirror(t_cb* src, t_cb* des) {
 }
 
 void assign_mirror_connection_blocks() {
+  std::vector<t_cb*> cbx_mirror;
+  std::vector<t_cb*> cby_mirror;
+
+  /* Make sure a clean start */
+  cbx_mirror.clear();
 
   /* X - channels [1...nx][0..ny]*/
-  for (int iy = 0; iy < (ny + 1); iy++) {
-    for (int ix = 1; ix < (nx + 1); ix++) {
-      for (int jx = ix; jx < (nx + 1); jx++) {
-        /* bypass the same one */
-        if (ix == jx) {
-          continue;
-        }
+  for (int iy = 0; iy < (ny + 1); ++iy) {
+    for (int ix = 1; ix < (nx + 1); ++ix) {
+      bool is_unique_mirror = true;
+      for (size_t id = 0; id < cbx_mirror.size(); ++id) {
         /* Do one-to-one comparison */
-        if (FALSE == is_two_connection_blocks_mirror(&(cbx_info[ix][iy]), &(cbx_info[jx][iy]))) {
-          /* Nothing to do if the two switch blocks are not equivalent */
-          continue;
+        if (TRUE == is_two_connection_blocks_mirror(cbx_mirror[id], &(cbx_info[ix][iy]))) {
+          /* configure the mirror of the second switch block */
+          assign_connection_block_mirror(cbx_mirror[id], &(cbx_info[ix][iy]));
+          /* Raise a flag and later add it to the unique mirror list if the two switch blocks are not equivalent */
+          is_unique_mirror = false;
+          break;
         }
-        /* configure the mirror of the second switch block */
-        assign_connection_block_mirror(&(cbx_info[ix][iy]), &(cbx_info[jx][iy]));
+      }
+      /* Update the mirror list if necessary */
+      if (true == is_unique_mirror) {
+        cbx_mirror.push_back(&(cbx_info[ix][iy]));
       }
     }
   }
 
-  for (int ix = 1; ix < (nx + 1); ix++) {
-    for (int iy = 0; iy < (ny + 1); iy++) {
-      for (int jy = iy; jy < (ny + 1); jy++) {
-        /* bypass the same one */
-        if (iy == jy) {
-          continue;
-        }
-        /* Do one-to-one comparison */
-        if (FALSE == is_two_connection_blocks_mirror(&(cbx_info[ix][iy]), &(cbx_info[ix][jy]))) {
-          /* Nothing to do if the two switch blocks are not equivalent */
-          continue;
-        }
-        /* configure the mirror of the second switch block */
-        assign_connection_block_mirror(&(cbx_info[ix][iy]), &(cbx_info[ix][jy]));
-      }
-    }
-  }
+  /* Make sure a clean start */
+  cby_mirror.clear();
 
   /* Y - channels [1...ny][0..nx]*/
-  for (int ix = 0; ix < (nx + 1); ix++) {
-    for (int iy = 1; iy < (ny + 1); iy++) {
-      for (int jy = iy; jy < (ny + 1); jy++) {
-        /* bypass the same one */
-        if (iy == jy) {
-          continue;
-        }
+  for (int ix = 0; ix < (nx + 1); ++ix) {
+    for (int iy = 1; iy < (ny + 1); ++iy) {
+      bool is_unique_mirror = true;
+      for (size_t id = 0; id < cby_mirror.size(); ++id) {
         /* Do one-to-one comparison */
-        if (FALSE == is_two_connection_blocks_mirror(&(cby_info[ix][iy]), &(cby_info[ix][jy]))) {
-          /* Nothing to do if the two switch blocks are not equivalent */
-          continue;
+        if (TRUE == is_two_connection_blocks_mirror(cby_mirror[id], &(cby_info[ix][iy]))) {
+          /* configure the mirror of the second switch block */
+          assign_connection_block_mirror(cby_mirror[id], &(cby_info[ix][iy]));
+          /* Raise a flag and later add it to the unique mirror list if the two switch blocks are not equivalent */
+          is_unique_mirror = false;
+          break;
         }
-        /* configure the mirror of the second switch block */
-        assign_connection_block_mirror(&(cby_info[ix][iy]), &(cby_info[ix][jy]));
       }
-    }
-  }
-
-  for (int iy = 1; iy < (ny + 1); iy++) {
-    for (int ix = 0; ix < (nx + 1); ix++) {
-      for (int jx = ix; jx < (nx + 1); jx++) {
-        /* bypass the same one */
-        if (ix == jx) {
-          continue;
-        }
-        /* Do one-to-one comparison */
-        if (FALSE == is_two_connection_blocks_mirror(&(cby_info[ix][iy]), &(cby_info[jx][iy]))) {
-          /* Nothing to do if the two switch blocks are not equivalent */
-          continue;
-        }
-        /* configure the mirror of the second switch block */
-        assign_connection_block_mirror(&(cby_info[ix][iy]), &(cby_info[jx][iy]));
+      /* Update the mirror list if necessary */
+      if (true == is_unique_mirror) {
+        cby_mirror.push_back(&(cby_info[ix][iy]));
       }
     }
   }
@@ -680,7 +656,9 @@ void identify_mirror_connection_blocks() {
   assign_mirror_connection_blocks();
 
   /* Ensure all the mirror are the upstream */
+  /*
   update_mirror_connection_blocks();
+  */
 
   /* Validate the mirror of switch blocks, everyone should be the upstream */
   assert(TRUE == validate_mirror_connection_blocks());
