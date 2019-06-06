@@ -2125,7 +2125,7 @@ void dump_verilog_routing_switch_box_unique_module(t_sram_orgz_info* cur_sram_or
   for (size_t side = 0; side < rr_sb.get_num_sides(); ++side) {
     Side side_manager(side);
     /* Print ports  */
-    fprintf(fp, "//----- Inputs/outputs of %s side -----\n", side_manager.to_string());
+    fprintf(fp, "//----- Channel Inputs/outputs of %s side -----\n", side_manager.to_string());
     DeviceCoordinator port_coordinator = rr_sb.get_side_block_coordinator(side_manager.get_side()); 
 
     for (size_t itrack = 0; itrack < rr_sb.get_chan_width(side_manager.get_side()); ++itrack) {
@@ -2150,6 +2150,7 @@ void dump_verilog_routing_switch_box_unique_module(t_sram_orgz_info* cur_sram_or
       }
     }
     /* Dump OPINs of adjacent CLBs */
+    fprintf(fp, "//----- Grid Inputs/outputs of %s side -----\n", side_manager.to_string());
     for (size_t inode = 0; inode < rr_sb.get_num_opin_nodes(side_manager.get_side()); ++inode) {
       fprintf(fp, "  ");
       dump_verilog_grid_side_pin_with_given_index(fp, OPIN, /* This is an input of a SB */
@@ -2164,14 +2165,16 @@ void dump_verilog_routing_switch_box_unique_module(t_sram_orgz_info* cur_sram_or
   /* Put down configuration port */
   /* output of each configuration bit */
   /* Reserved sram ports */
-  dump_verilog_reserved_sram_ports(fp, cur_sram_orgz_info, 
-                                   rr_sb.get_reserved_conf_bits_lsb(),
-                                   rr_sb.get_reserved_conf_bits_msb(),
-                                   VERILOG_PORT_INPUT);
+  fprintf(fp, "//----- Reserved SRAM Ports -----\n");
   if (0 < rr_sb.get_num_reserved_conf_bits()) {
+    dump_verilog_reserved_sram_ports(fp, cur_sram_orgz_info, 
+                                     rr_sb.get_reserved_conf_bits_lsb(),
+                                     rr_sb.get_reserved_conf_bits_msb(),
+                                     VERILOG_PORT_INPUT);
     fprintf(fp, ",\n");
   }
   /* Normal sram ports */
+  fprintf(fp, "//----- Regular SRAM Ports -----\n");
   dump_verilog_sram_ports(fp, cur_sram_orgz_info, 
                           rr_sb.get_conf_bits_lsb(),
                           rr_sb.get_conf_bits_msb(),
@@ -2180,6 +2183,7 @@ void dump_verilog_routing_switch_box_unique_module(t_sram_orgz_info* cur_sram_or
   /* Dump ports only visible during formal verification*/
   if (0 < rr_sb.get_num_conf_bits()) {
     fprintf(fp, "\n");
+    fprintf(fp, "//----- SRAM Ports for formal verification -----\n");
     fprintf(fp, "`ifdef %s\n", verilog_formal_verification_preproc_flag);
     fprintf(fp, ",\n");
     dump_verilog_formal_verification_sram_ports(fp, cur_sram_orgz_info, 
