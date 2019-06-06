@@ -1,3 +1,5 @@
+#ifndef FPGA_X2P_BACKANNOTATE_UTILS_H 
+#define FPGA_X2P_BACKANNOTATE_UTILS_H 
 
 int get_ff_output_init_val(t_logical_block* ff_logical_block);
 
@@ -103,3 +105,4 @@ void spice_backannotate_vpr_post_route_info(t_det_routing_arch RoutingArch,
                                             boolean read_activity_file,
                                             boolean parasitic_net_estimation);
 
+#endif

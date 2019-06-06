@@ -10,7 +10,7 @@
 
 #include "fpga_x2p_utils.h"
 
-void write_rr_switch_block_to_xml(std::string fname_prefix, RRSwitchBlock& rr_sb) {
+void write_rr_switch_block_to_xml(std::string fname_prefix, RRGSB& rr_sb) {
   /* Prepare file name */
   std::string fname(fname_prefix);
   fname += rr_sb.gen_verilog_module_name();
@@ -116,20 +116,20 @@ void write_rr_switch_block_to_xml(std::string fname_prefix, RRSwitchBlock& rr_sb
 }
 
 /* Output each rr_switch_block to a XML file */
-void write_device_rr_switch_block_to_xml(char* sb_xml_dir, 
-                                         DeviceRRSwitchBlock& LL_device_rr_switch_block) {
+void write_device_rr_gsb_to_xml(char* sb_xml_dir, 
+                                         DeviceRRGSB& LL_device_rr_gsb) {
   std::string fname_prefix(sb_xml_dir);
   /* Add slash if needed */
   if ('/' != fname_prefix.back()) {
     fname_prefix += '/';
   }
 
-  DeviceCoordinator sb_range = LL_device_rr_switch_block.get_switch_block_range();
+  DeviceCoordinator sb_range = LL_device_rr_gsb.get_switch_block_range();
 
   /* For each switch block, an XML file will be outputted */
   for (size_t ix = 0; ix < sb_range.get_x(); ++ix) {
     for (size_t iy = 0; iy < sb_range.get_y(); ++iy) {
-      RRSwitchBlock rr_sb = LL_device_rr_switch_block.get_switch_block(ix, iy);
+      RRGSB rr_sb = LL_device_rr_gsb.get_switch_block(ix, iy);
       write_rr_switch_block_to_xml(fname_prefix, rr_sb);
     }
   }

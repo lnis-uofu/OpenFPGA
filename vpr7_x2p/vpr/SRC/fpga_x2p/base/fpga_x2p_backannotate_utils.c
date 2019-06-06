@@ -38,6 +38,8 @@
 #include "fpga_x2p_router.h"
 #include "fpga_x2p_unique_routing.h"
 
+#include "fpga_x2p_backannotate_utils.h"
+
 /* Get initial value of a Latch/FF output*/
 int get_ff_output_init_val(t_logical_block* ff_logical_block) {
   assert((0 == ff_logical_block->init_val)||(1 == ff_logical_block->init_val));  
@@ -45,6 +47,7 @@ int get_ff_output_init_val(t_logical_block* ff_logical_block) {
   return ff_logical_block->init_val;
 }
 
+static 
 int determine_rr_node_default_prev_node(t_rr_node* cur_rr_node) {
   int default_prev_node = DEFAULT_PREV_NODE;
 
@@ -653,6 +656,7 @@ void get_rr_node_side_and_index_in_cb_info(t_rr_node* cur_rr_node,
 
 
 /***** Recursively Backannotate parasitic_net_num for a rr_node*****/
+static 
 void rec_backannotate_rr_node_net_num(int LL_num_rr_nodes,
                                       t_rr_node* LL_rr_node,
                                       int src_node_index) {
@@ -1352,6 +1356,7 @@ void back_annotate_rr_node_map_info() {
   return;
 }
 
+static 
 void rec_sync_pb_post_routing_vpack_net_num(t_pb* cur_pb) {
   int ipb, jpb, select_mode_index;
   int iport, ipin, node_index;
@@ -1423,6 +1428,7 @@ void rec_sync_pb_post_routing_vpack_net_num(t_pb* cur_pb) {
  * while the top-level type_descriptor consider 8 io in counting the pins
  * so we just update the vpack_net_num and net_num in all the hierachy level 
  */
+static 
 void update_one_io_grid_pack_net_num(int x, int y) {
   int iblk, blk_id;
   t_type_ptr type = NULL;
@@ -1456,6 +1462,7 @@ void update_one_io_grid_pack_net_num(int x, int y) {
  * which potentially changes the packing results (net_num and vpack_net_num) in local routing
  * The following functions are to update the local routing results to match them with routing results
  */
+static 
 void update_one_grid_pack_net_num(int x, int y) {
   int iblk, blk_id, ipin, iedge, jedge, inode;
   int pin_global_rr_node_id, vpack_net_id, class_id;
@@ -1601,6 +1608,7 @@ void update_grid_pbs_post_route_rr_graph() {
 /* In this function, we update the vpack_net_num in global rr_graph
  * from the temp_net_num stored in the top_pb_graph_head
  */
+static 
 void update_one_unused_grid_output_pins_parasitic_nets(int ix, int iy) {
   int iport, ipin; 
   int pin_global_rr_node_id, class_id, type_pin_index;
@@ -1651,6 +1659,7 @@ void update_one_unused_grid_output_pins_parasitic_nets(int ix, int iy) {
  * are absorbed into CLBs during packing, therefore they are invisible in 
  * clb_nets. But indeed, they exist in global routing as parasitic nets.
  */
+static 
 void update_one_used_grid_pb_pins_parasitic_nets(t_phy_pb* cur_pb,
                                                  int ix, int iy) {
   int ipin, cur_pin; 
@@ -1715,6 +1724,7 @@ void update_one_used_grid_pb_pins_parasitic_nets(t_phy_pb* cur_pb,
 }
 
 
+static 
 void update_one_grid_pb_pins_parasitic_nets(int ix, int iy) {
   int iblk;
 
@@ -1745,7 +1755,7 @@ void update_one_grid_pb_pins_parasitic_nets(int ix, int iy) {
   return;
 }
 
-
+static 
 void update_grid_pb_pins_parasitic_nets() {
   int ix, iy;
   t_type_ptr type = NULL;
@@ -2684,6 +2694,7 @@ void rec_annotate_pb_type_primitive_node_physical_mode_pin(t_pb_type* top_pb_typ
 /* Annotate the physical_mode_pin in pb_type ports,
  * Go recursively until we reach a primtiive node 
  */
+static 
 void rec_annotate_phy_pb_type_primitive_node_physical_mode_pin(t_pb_type* top_pb_type,
                                                                t_pb_type* cur_pb_type) {
   int phy_mode_idx, ipb, iport;
@@ -2740,6 +2751,7 @@ void rec_annotate_phy_pb_type_primitive_node_physical_mode_pin(t_pb_type* top_pb
 /* Go recursively visiting each primitive node in the pb_graph_node 
  * Label the primitive node with a placement index which is unique at the top-level node 
  */
+static 
 void rec_mark_pb_graph_node_primitive_placement_index_in_top_node(t_pb_graph_node* cur_pb_graph_node) {
   int imode, ipb, jpb;
   t_pb_type* cur_pb_type = NULL;
@@ -2928,6 +2940,7 @@ void alloc_and_load_phy_pb_for_mapped_block(int num_mapped_blocks, t_block* mapp
  * 4. Create the wired LUTs in logical block array
  * 5. Create new vpack nets to rewire the logical blocks
  */
+static 
 void rec_backannotate_one_pb_wired_luts_and_adapt_graph(t_pb* cur_pb,
                                                         int* L_num_logical_blocks, t_net** L_logical_block,
                                                         int* L_num_vpack_nets, t_net** L_vpack_net) {
@@ -3024,6 +3037,7 @@ void backannotate_pb_wired_luts(int num_mapped_blocks, t_block* mapped_block,
   return;
 }
 
+static 
 int find_matched_block_id_for_one_grid(int x, int y) {
   int iblk, jblk, blk_id;
   boolean already_exist = FALSE;
@@ -3058,6 +3072,7 @@ int find_matched_block_id_for_one_grid(int x, int y) {
 /* Some IO blocks has an invalid BLOCK ID but with a >0 usage 
  * We go through the block list and find the missing block ID
  */
+static 
 void annotate_grid_block_info() {
   int ix, iy;
   t_type_ptr type = NULL;

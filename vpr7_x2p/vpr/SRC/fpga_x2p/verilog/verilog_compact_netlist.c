@@ -749,7 +749,7 @@ void dump_compact_verilog_defined_grids(t_sram_orgz_info* cur_sram_orgz_info,
 static 
 void dump_compact_verilog_defined_one_switch_box(t_sram_orgz_info* cur_sram_orgz_info, 
                                                  FILE* fp,
-                                                 RRSwitchBlock& rr_sb) {
+                                                 RRGSB& rr_sb) {
   /* Check the file handler*/ 
   if (NULL == fp) {
     vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid file handler.\n", 
@@ -766,7 +766,7 @@ void dump_compact_verilog_defined_one_switch_box(t_sram_orgz_info* cur_sram_orgz
 
   /* If we have an mirror SB, we should the module name of the mirror !!! */
   DeviceCoordinator coordinator = rr_sb.get_coordinator();
-  RRSwitchBlock unique_mirror = device_rr_switch_block.get_unique_mirror(coordinator);
+  RRGSB unique_mirror = device_rr_gsb.get_unique_mirror(coordinator);
   fprintf(fp, "%s ", unique_mirror.gen_verilog_module_name());
   fprintf(fp, "%s ", rr_sb.gen_verilog_instance_name());
   fprintf(fp, "(");
@@ -850,7 +850,7 @@ void dump_compact_verilog_defined_one_switch_box(t_sram_orgz_info* cur_sram_orgz
 static 
 void dump_compact_verilog_defined_switch_boxes(t_sram_orgz_info* cur_sram_orgz_info, 
                                                FILE* fp) {
-  DeviceCoordinator sb_range = device_rr_switch_block.get_switch_block_range();
+  DeviceCoordinator sb_range = device_rr_gsb.get_switch_block_range();
 
   /* Check the file handler*/ 
   if (NULL == fp) {
@@ -861,7 +861,7 @@ void dump_compact_verilog_defined_switch_boxes(t_sram_orgz_info* cur_sram_orgz_i
 
   for (size_t ix = 0; ix < sb_range.get_x(); ++ix) {
     for (size_t iy = 0; iy < sb_range.get_y(); ++iy) {
-      RRSwitchBlock rr_sb = device_rr_switch_block.get_switch_block(ix, iy);
+      RRGSB rr_sb = device_rr_gsb.get_switch_block(ix, iy);
       dump_compact_verilog_defined_one_switch_box(cur_sram_orgz_info, fp, rr_sb);
     }
   }

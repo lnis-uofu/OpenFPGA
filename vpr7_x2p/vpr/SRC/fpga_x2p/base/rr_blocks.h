@@ -129,10 +129,10 @@ class DeviceRRChan {
  * num_reserved_conf_bits: number of reserved configuration bits this switch block requires (mainly due to RRAM-based multiplexers)
  * num_conf_bits: number of configuration bits this switch block requires
  */
-class RRSwitchBlock {
+class RRGSB {
   public: /* Contructors */
-    RRSwitchBlock(const RRSwitchBlock&);/* Copy constructor */
-    RRSwitchBlock();/* Default constructor */
+    RRGSB(const RRGSB&);/* Copy constructor */
+    RRGSB();/* Default constructor */
   public: /* Accessors */
     size_t get_x() const; /* get the x coordinator of this switch block */
     size_t get_y() const; /* get the y coordinator of this switch block */
@@ -162,11 +162,11 @@ class RRSwitchBlock {
     size_t get_conf_bits_lsb() const;
     size_t get_conf_bits_msb() const;
     bool is_node_imply_short_connection(t_rr_node* src_node) const; /* Check if the node imply a short connection inside the SB, which happens to long wires across a FPGA fabric */
-    bool is_side_mirror(RRSwitchBlock& cand, enum e_side side) const; /* check if a side of candidate SB is a mirror of the current one */
-    bool is_side_segment_mirror(RRSwitchBlock& cand, enum e_side side, size_t seg_id) const; /* check if all the routing segments of a side of candidate SB is a mirror of the current one */
-    bool is_mirror(RRSwitchBlock& cand) const; /* check if the candidate SB is a mirror of the current one */
-    bool is_mirrorable(RRSwitchBlock& cand) const; /* check if the candidate SB satisfy the basic requirements on being a mirror of the current one */
-    size_t get_hint_rotate_offset(RRSwitchBlock& cand) const; /* Determine an initial offset in rotating the candidate Switch Block to find a mirror matching*/
+    bool is_side_mirror(RRGSB& cand, enum e_side side) const; /* check if a side of candidate SB is a mirror of the current one */
+    bool is_side_segment_mirror(RRGSB& cand, enum e_side side, size_t seg_id) const; /* check if all the routing segments of a side of candidate SB is a mirror of the current one */
+    bool is_mirror(RRGSB& cand) const; /* check if the candidate SB is a mirror of the current one */
+    bool is_mirrorable(RRGSB& cand) const; /* check if the candidate SB satisfy the basic requirements on being a mirror of the current one */
+    size_t get_hint_rotate_offset(RRGSB& cand) const; /* Determine an initial offset in rotating the candidate Switch Block to find a mirror matching*/
   public: /* Cooridinator conversion */
     DeviceCoordinator get_side_block_coordinator(enum e_side side) const;
   public: /* Verilog writer */
@@ -175,7 +175,7 @@ class RRSwitchBlock {
     char* gen_verilog_side_module_name(enum e_side side, size_t seg_id) const;
     char* gen_verilog_side_instance_name(enum e_side side, size_t seg_id) const;
   public: /* Mutators */
-    void set(const RRSwitchBlock& src); /* get a copy from a source */
+    void set(const RRGSB& src); /* get a copy from a source */
     void set_coordinator(size_t x, size_t y);
     void init_num_sides(size_t num_sides); /* Allocate the vectors with the given number of sides */
     void add_chan_node(enum e_side node_side, RRChan& rr_chan, std::vector<enum PORTS> rr_chan_dir); /* Add a node to the chan_rr_node_ list and also assign its direction in chan_rr_node_direction_ */
@@ -206,7 +206,7 @@ class RRSwitchBlock {
   private: /* Internal Mutators */
     void mirror_side_chan_node_direction(enum e_side side); /* Mirror the node direction and port direction of routing track nodes on a side */
   private: /* internal functions */
-    bool is_node_mirror (RRSwitchBlock& cand, enum e_side node_side, size_t track_id) const; 
+    bool is_node_mirror (RRGSB& cand, enum e_side node_side, size_t track_id) const; 
     size_t get_track_id_first_short_connection(enum e_side node_side) const; 
     bool validate_num_sides() const;
     bool validate_side(enum e_side side) const;
@@ -232,40 +232,40 @@ class RRSwitchBlock {
 /* Object Device Routing Resource Switch Block 
  * This includes:
  * 1. a collection of RRSwitch blocks, each of which can be used to instance Switch blocks in the top-level netlists
- * 2. a collection of unique mirrors of RRSwitchBlocks, which can be used to output Verilog / SPICE modules
- * 3. a colleciton of unique rotatable of RRSwitchBlocks, which can be used to output Verilog / SPICE modules
- *    The rotatable RRSwitchBlocks are more generic mirrors, which allow SwitchBlocks to be wired by rotating the pins, 
+ * 2. a collection of unique mirrors of RRGSBs, which can be used to output Verilog / SPICE modules
+ * 3. a colleciton of unique rotatable of RRGSBs, which can be used to output Verilog / SPICE modules
+ *    The rotatable RRGSBs are more generic mirrors, which allow SwitchBlocks to be wired by rotating the pins, 
  *    further reduce the number of Verilog/SPICE modules outputted. This will lead to rapid layout generation  
  */
-class DeviceRRSwitchBlock {
+class DeviceRRGSB {
   public: /* Contructors */
   public: /* Accessors */
     DeviceCoordinator get_switch_block_range() const; /* get the max coordinator of the switch block array */
-    RRSwitchBlock get_switch_block(DeviceCoordinator& coordinator) const; /* Get a rr switch block in the array with a coordinator */
-    RRSwitchBlock get_switch_block(size_t x, size_t y) const; /* Get a rr switch block in the array with a coordinator */
+    RRGSB get_switch_block(DeviceCoordinator& coordinator) const; /* Get a rr switch block in the array with a coordinator */
+    RRGSB get_switch_block(size_t x, size_t y) const; /* Get a rr switch block in the array with a coordinator */
     size_t get_num_unique_module(enum e_side side, size_t seg_index) const; /* get the number of unique mirrors of switch blocks */
     size_t get_num_unique_mirror() const; /* get the number of unique mirrors of switch blocks */
     size_t get_num_rotatable_mirror() const; /* get the number of rotatable mirrors of switch blocks */
-    RRSwitchBlock get_unique_side_module(size_t index, enum e_side side, size_t seg_id) const; /* Get a rr switch block which a unique mirror */ 
-    RRSwitchBlock get_unique_mirror(size_t index) const; /* Get a rr switch block which a unique mirror */ 
-    RRSwitchBlock get_unique_mirror(DeviceCoordinator& coordinator) const; /* Get a rr switch block which a unique mirror */ 
-    RRSwitchBlock get_rotatable_mirror(size_t index) const; /* Get a rr switch block which a unique mirror */ 
+    RRGSB get_unique_side_module(size_t index, enum e_side side, size_t seg_id) const; /* Get a rr switch block which a unique mirror */ 
+    RRGSB get_unique_mirror(size_t index) const; /* Get a rr switch block which a unique mirror */ 
+    RRGSB get_unique_mirror(DeviceCoordinator& coordinator) const; /* Get a rr switch block which a unique mirror */ 
+    RRGSB get_rotatable_mirror(size_t index) const; /* Get a rr switch block which a unique mirror */ 
     size_t get_max_num_sides() const; /* Get the maximum number of sides across the switch blocks */
     size_t get_num_segments() const; /* Get the size of segment_ids */
     size_t get_segment_id(size_t index) const; /* Get a segment id */
   public: /* Mutators */ 
-    void set_rr_switch_block_num_reserved_conf_bits(DeviceCoordinator& coordinator, size_t num_reserved_conf_bits); /* TODO: TOBE DEPRECATED!!! conf_bits should be initialized when creating a switch block!!! */
-    void set_rr_switch_block_conf_bits_lsb(DeviceCoordinator& coordinator, size_t conf_bits_lsb); /* TODO: TOBE DEPRECATED!!! conf_bits should be initialized when creating a switch block!!! */
-    void set_rr_switch_block_conf_bits_msb(DeviceCoordinator& coordinator, size_t conf_bits_msb); /* TODO: TOBE DEPRECATED!!! conf_bits should be initialized when creating a switch block!!! */
+    void set_sb_num_reserved_conf_bits(DeviceCoordinator& coordinator, size_t num_reserved_conf_bits); /* TODO: TOBE DEPRECATED!!! conf_bits should be initialized when creating a switch block!!! */
+    void set_sb_conf_bits_lsb(DeviceCoordinator& coordinator, size_t conf_bits_lsb); /* TODO: TOBE DEPRECATED!!! conf_bits should be initialized when creating a switch block!!! */
+    void set_sb_conf_bits_msb(DeviceCoordinator& coordinator, size_t conf_bits_msb); /* TODO: TOBE DEPRECATED!!! conf_bits should be initialized when creating a switch block!!! */
     void reserve(DeviceCoordinator& coordinator); /* Pre-allocate the rr_switch_block array that the device requires */ 
     void reserve_unique_module_id(DeviceCoordinator& coordinator); /* Pre-allocate the rr_sb_unique_module_id matrix that the device requires */ 
     void resize_upon_need(DeviceCoordinator& coordinator); /* Resize the rr_switch_block array if needed */ 
-    void add_rr_switch_block(DeviceCoordinator& coordinator, RRSwitchBlock& rr_sb); /* Add a switch block to the array, which will automatically identify and update the lists of unique mirrors and rotatable mirrors */
+    void add_rr_switch_block(DeviceCoordinator& coordinator, RRGSB& rr_sb); /* Add a switch block to the array, which will automatically identify and update the lists of unique mirrors and rotatable mirrors */
     void build_unique_mirror(); /* Add a switch block to the array, which will automatically identify and update the lists of unique mirrors and rotatable mirrors */
     void build_unique_module(); /* Add a switch block to the array, which will automatically identify and update the lists of unique side module */
-    void add_rotatable_mirror(DeviceCoordinator& coordinator, RRSwitchBlock& rr_sb); /* Add a switch block to the array, which will automatically identify and update the lists of unique mirrors and rotatable mirrors */
-    void add_unique_side_segment_module(DeviceCoordinator& coordinator, RRSwitchBlock& rr_sb, enum e_side side, size_t seg_id);
-    void add_unique_side_module(DeviceCoordinator& coordinator, RRSwitchBlock& rr_sb, enum e_side side);
+    void add_rotatable_mirror(DeviceCoordinator& coordinator, RRGSB& rr_sb); /* Add a switch block to the array, which will automatically identify and update the lists of unique mirrors and rotatable mirrors */
+    void add_unique_side_segment_module(DeviceCoordinator& coordinator, RRGSB& rr_sb, enum e_side side, size_t seg_id);
+    void add_unique_side_module(DeviceCoordinator& coordinator, RRGSB& rr_sb, enum e_side side);
     void build_segment_ids(); /* build a map of segment_ids */
     void clear(); /* clean the content */
     void clear_unique_module(); /* clean the content */
@@ -280,14 +280,14 @@ class DeviceRRSwitchBlock {
     bool validate_unique_module_index(size_t index, enum e_side side, size_t seg_index) const; /* Validate if the index in the range of unique_module vector */
     bool validate_segment_index(size_t index) const;
   private: /* Internal Data */
-    std::vector< std::vector<RRSwitchBlock> > rr_switch_block_;
+    std::vector< std::vector<RRGSB> > rr_gsb;
 
     std::vector< std::vector< std::vector< std::vector<size_t> > > > rr_sb_unique_module_id_; /* A map from rr_switch_block to its unique_side_module [0..x][0..y][0..num_sides][num_seg-1]*/
     std::vector< std::vector <std::vector<DeviceCoordinator> > > unique_module_; /* For each side of switch block, we identify a list of unique modules based on its connection. This is a matrix [0..num_sides-1][0..num_seg-1][0..num_module], num_sides will the max number of sides of all the rr_switch_blocks */
 
-    std::vector< std::vector<size_t> > rr_switch_block_mirror_id_; /* A map from rr_switch_block to its unique mirror */
+    std::vector< std::vector<size_t> > rr_gsbmirror_id_; /* A map from rr_switch_block to its unique mirror */
     std::vector<DeviceCoordinator> unique_mirror_; 
-    std::vector< std::vector<size_t> > rr_switch_block_rotatable_mirror_id_; /* A map from rr_switch_block to its unique mirror */
+    std::vector< std::vector<size_t> > rr_gsbrotatable_mirror_id_; /* A map from rr_switch_block to its unique mirror */
     std::vector<DeviceCoordinator> rotatable_mirror_; 
 
     std::vector<size_t> segment_ids_;

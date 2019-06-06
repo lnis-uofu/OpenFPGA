@@ -661,7 +661,7 @@ void dump_verilog_switch_box_chan_port(FILE* fp,
 
 static 
 void dump_verilog_unique_switch_box_chan_port(FILE* fp,
-                                              RRSwitchBlock& rr_sb, 
+                                              RRGSB& rr_sb, 
                                               enum e_side chan_side,
                                               t_rr_node* cur_rr_node,
                                               enum PORTS cur_rr_node_direction) {
@@ -703,7 +703,7 @@ void dump_verilog_unique_switch_box_chan_port(FILE* fp,
  */
 static 
 void dump_verilog_unique_switch_box_short_interc(FILE* fp, 
-                                                 RRSwitchBlock& rr_sb,
+                                                 RRGSB& rr_sb,
                                                  enum e_side chan_side,
                                                  t_rr_node* cur_rr_node,
                                                  int actual_fan_in,
@@ -1134,7 +1134,7 @@ void dump_verilog_switch_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
 static  
 void dump_verilog_unique_switch_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
                                         FILE* fp, 
-                                        RRSwitchBlock& rr_sb, 
+                                        RRGSB& rr_sb, 
                                         enum e_side chan_side,
                                         t_rr_node* cur_rr_node,
                                         int mux_size,
@@ -1410,7 +1410,7 @@ int count_verilog_switch_box_interc_conf_bits(t_sram_orgz_info* cur_sram_orgz_in
 /* Count the number of configuration bits of a rr_node*/
 static  
 size_t count_verilog_switch_box_interc_conf_bits(t_sram_orgz_info* cur_sram_orgz_info,
-                                                 RRSwitchBlock& rr_sb, enum e_side chan_side, 
+                                                 RRGSB& rr_sb, enum e_side chan_side, 
                                                  t_rr_node* cur_rr_node) {
   size_t num_conf_bits = 0;
   int switch_idx = 0;
@@ -1485,7 +1485,7 @@ int count_verilog_switch_box_interc_reserved_conf_bits(t_sram_orgz_info* cur_sra
 /* Count the number of reserved configuration bits of a rr_node*/
 static  
 size_t count_verilog_switch_box_interc_reserved_conf_bits(t_sram_orgz_info* cur_sram_orgz_info,
-                                                          RRSwitchBlock& rr_sb, enum e_side chan_side, 
+                                                          RRGSB& rr_sb, enum e_side chan_side, 
                                                           t_rr_node* cur_rr_node) {
   size_t num_reserved_conf_bits = 0;
   int switch_idx = 0;
@@ -1578,7 +1578,7 @@ void dump_verilog_switch_box_interc(t_sram_orgz_info* cur_sram_orgz_info,
 static  
 void dump_verilog_unique_switch_box_interc(t_sram_orgz_info* cur_sram_orgz_info,
                                            FILE* fp, 
-                                           RRSwitchBlock& rr_sb,
+                                           RRGSB& rr_sb,
                                            enum e_side chan_side,
                                            t_rr_node* cur_rr_node) {
   int num_drive_rr_nodes = 0;  
@@ -1660,7 +1660,7 @@ int count_verilog_switch_box_reserved_conf_bits(t_sram_orgz_info* cur_sram_orgz_
 /* Count the number of configuration bits of a Switch Box */
 static 
 size_t count_verilog_switch_box_side_reserved_conf_bits(t_sram_orgz_info* cur_sram_orgz_info,
-                                                        RRSwitchBlock& rr_sb, enum e_side side, size_t seg_id) {
+                                                        RRGSB& rr_sb, enum e_side side, size_t seg_id) {
   size_t num_reserved_conf_bits = 0;
   size_t temp_num_reserved_conf_bits = 0;
   Side side_manager(side);
@@ -1695,7 +1695,7 @@ size_t count_verilog_switch_box_side_reserved_conf_bits(t_sram_orgz_info* cur_sr
 /* Count the number of configuration bits of a Switch Box */
 static 
 size_t count_verilog_switch_box_reserved_conf_bits(t_sram_orgz_info* cur_sram_orgz_info,
-                                                   RRSwitchBlock& rr_sb) {
+                                                   RRGSB& rr_sb) {
   size_t num_reserved_conf_bits = 0;
   size_t temp_num_reserved_conf_bits = 0;
 
@@ -1744,7 +1744,7 @@ int count_verilog_switch_box_conf_bits(t_sram_orgz_info* cur_sram_orgz_info,
 /* Count the number of configuration bits of a Switch Box */
 static 
 size_t count_verilog_switch_box_side_conf_bits(t_sram_orgz_info* cur_sram_orgz_info,
-                                               RRSwitchBlock& rr_sb, 
+                                               RRGSB& rr_sb, 
                                                enum e_side side, size_t seg_id) {
   size_t num_conf_bits = 0;
   Side side_manager(side);
@@ -1775,7 +1775,7 @@ size_t count_verilog_switch_box_side_conf_bits(t_sram_orgz_info* cur_sram_orgz_i
 /* Count the number of configuration bits of a Switch Box */
 static 
 size_t count_verilog_switch_box_conf_bits(t_sram_orgz_info* cur_sram_orgz_info,
-                                          RRSwitchBlock& rr_sb) {
+                                          RRGSB& rr_sb) {
   size_t num_conf_bits = 0;
 
   for (size_t side = 0; side < rr_sb.get_num_sides(); ++side) {
@@ -1792,7 +1792,7 @@ size_t count_verilog_switch_box_conf_bits(t_sram_orgz_info* cur_sram_orgz_info,
 
 static 
 void update_routing_switch_box_conf_bits(t_sram_orgz_info* cur_sram_orgz_info, 
-                                         RRSwitchBlock& rr_sb) {
+                                         RRGSB& rr_sb) {
   int cur_num_bl, cur_num_wl;
 
   get_sram_orgz_info_num_blwl(cur_sram_orgz_info, &cur_num_bl, &cur_num_wl); 
@@ -1807,9 +1807,9 @@ void update_routing_switch_box_conf_bits(t_sram_orgz_info* cur_sram_orgz_info,
   /* Estimate the sram_verilog_model->cnt */
   int cur_num_sram = get_sram_orgz_info_num_mem_bit(cur_sram_orgz_info); 
 
-  device_rr_switch_block.set_rr_switch_block_num_reserved_conf_bits(sb_coordinator, num_reserved_conf_bits);
-  device_rr_switch_block.set_rr_switch_block_conf_bits_lsb(sb_coordinator, cur_num_sram);
-  device_rr_switch_block.set_rr_switch_block_conf_bits_msb(sb_coordinator, cur_num_sram + num_conf_bits - 1);
+  device_rr_gsb.set_sb_num_reserved_conf_bits(sb_coordinator, num_reserved_conf_bits);
+  device_rr_gsb.set_sb_conf_bits_lsb(sb_coordinator, cur_num_sram);
+  device_rr_gsb.set_sb_conf_bits_msb(sb_coordinator, cur_num_sram + num_conf_bits - 1);
 
   /* Update the counter */
   update_sram_orgz_info_num_mem_bit(cur_sram_orgz_info, cur_num_sram + num_conf_bits);
@@ -1824,7 +1824,7 @@ void update_routing_switch_box_conf_bits(t_sram_orgz_info* cur_sram_orgz_info,
  */
 static 
 void dump_verilog_routing_switch_box_unique_side_subckt_portmap(FILE* fp, 
-                                                                RRSwitchBlock& rr_sb, 
+                                                                RRGSB& rr_sb, 
                                                                 enum e_side sb_side,
                                                                 size_t seg_id,
                                                                 boolean dump_port_type) {
@@ -1946,7 +1946,7 @@ static
 void dump_verilog_routing_switch_box_unique_side_module(t_sram_orgz_info* cur_sram_orgz_info,
                                                         char* verilog_dir, char* subckt_dir, 
                                                         size_t module_id, size_t seg_id,
-                                                        RRSwitchBlock& rr_sb, enum e_side side) {
+                                                        RRGSB& rr_sb, enum e_side side) {
   FILE* fp = NULL; 
   char* fname = NULL;
   Side side_manager(side);
@@ -2092,7 +2092,7 @@ void dump_verilog_routing_switch_box_unique_side_module(t_sram_orgz_info* cur_sr
 static 
 void dump_verilog_routing_switch_box_unique_module(t_sram_orgz_info* cur_sram_orgz_info,
                                                    char* verilog_dir, char* subckt_dir, 
-                                                   RRSwitchBlock& rr_sb) {
+                                                   RRGSB& rr_sb) {
   FILE* fp = NULL; 
   char* fname = NULL;
 
@@ -2333,7 +2333,7 @@ void dump_verilog_routing_switch_box_unique_module(t_sram_orgz_info* cur_sram_or
 static 
 void dump_verilog_routing_switch_box_unique_subckt(t_sram_orgz_info* cur_sram_orgz_info,
                                                    char* verilog_dir, char* subckt_dir, 
-                                                   RRSwitchBlock& rr_sb) {
+                                                   RRGSB& rr_sb) {
   FILE* fp = NULL; 
   char* fname = NULL;
 
@@ -3453,30 +3453,30 @@ void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
     t_sram_orgz_info* stamped_sram_orgz_info = snapshot_sram_orgz_info(cur_sram_orgz_info);
 
     /* Output unique side modules */
-    for (size_t side = 0; side < device_rr_switch_block.get_max_num_sides(); ++side) {
+    for (size_t side = 0; side < device_rr_gsb.get_max_num_sides(); ++side) {
       Side side_manager(side);
-      for (size_t iseg = 0; iseg < device_rr_switch_block.get_num_segments(); ++iseg) {
-        for (size_t isb = 0; isb < device_rr_switch_block.get_num_unique_module(side_manager.get_side(), iseg); ++isb) {
-          RRSwitchBlock unique_mirror = device_rr_switch_block.get_unique_side_module(isb, side_manager.get_side(), iseg);
-          size_t seg_id = device_rr_switch_block.get_segment_id(iseg);
+      for (size_t iseg = 0; iseg < device_rr_gsb.get_num_segments(); ++iseg) {
+        for (size_t isb = 0; isb < device_rr_gsb.get_num_unique_module(side_manager.get_side(), iseg); ++isb) {
+          RRGSB unique_mirror = device_rr_gsb.get_unique_side_module(isb, side_manager.get_side(), iseg);
+          size_t seg_id = device_rr_gsb.get_segment_id(iseg);
           dump_verilog_routing_switch_box_unique_side_module(cur_sram_orgz_info, verilog_dir, subckt_dir, isb, seg_id, unique_mirror, side_manager.get_side());
         }
       }
     }
 
     /* Output unique modules */
-    for (size_t isb = 0; isb < device_rr_switch_block.get_num_unique_mirror(); ++isb) {
-      RRSwitchBlock unique_mirror = device_rr_switch_block.get_unique_mirror(isb);
+    for (size_t isb = 0; isb < device_rr_gsb.get_num_unique_mirror(); ++isb) {
+      RRGSB unique_mirror = device_rr_gsb.get_unique_mirror(isb);
       dump_verilog_routing_switch_box_unique_module(cur_sram_orgz_info, verilog_dir, subckt_dir, unique_mirror);
     }
 
     /* Restore sram_orgz_info to the base */ 
     copy_sram_orgz_info (cur_sram_orgz_info, stamped_sram_orgz_info);
 
-    DeviceCoordinator sb_range = device_rr_switch_block.get_switch_block_range();
+    DeviceCoordinator sb_range = device_rr_gsb.get_switch_block_range();
     for (size_t ix = 0; ix < sb_range.get_x(); ++ix) {
       for (size_t iy = 0; iy < sb_range.get_y(); ++iy) {
-        RRSwitchBlock rr_sb = device_rr_switch_block.get_switch_block(ix, iy);
+        RRGSB rr_sb = device_rr_gsb.get_switch_block(ix, iy);
         update_routing_switch_box_conf_bits(cur_sram_orgz_info, rr_sb);
       }
     }

@@ -36,7 +36,7 @@
 /* Generate bitstream for a multiplexer of a switch block */
 static 
 void fpga_spice_generate_bitstream_switch_box_mux(FILE* fp,
-                                                  RRSwitchBlock& rr_sb, 
+                                                  RRGSB& rr_sb, 
                                                   t_sram_orgz_info* cur_sram_orgz_info,
                                                   t_rr_node* cur_rr_node,
                                                   int mux_size,
@@ -211,7 +211,7 @@ void fpga_spice_generate_bitstream_switch_box_mux(FILE* fp,
 
 static 
 void fpga_spice_generate_bitstream_switch_box_interc(FILE* fp,
-                                                     RRSwitchBlock& rr_sb,
+                                                     RRGSB& rr_sb,
                                                      t_sram_orgz_info* cur_sram_orgz_info,
                                                      enum e_side chan_side,
                                                      t_rr_node* cur_rr_node) {
@@ -342,7 +342,7 @@ void fpga_spice_generate_bitstream_switch_box_interc(FILE* fp,
  */
 static 
 void fpga_spice_generate_bitstream_routing_switch_box_subckt(FILE* fp, 
-                                                             RRSwitchBlock& rr_sb, 
+                                                             RRGSB& rr_sb, 
                                                              t_sram_orgz_info* cur_sram_orgz_info) {
   /* Check */
   /* Check the file handler*/ 
@@ -675,10 +675,10 @@ void fpga_spice_generate_bitstream_routing_resources(char* routing_bitstream_log
   /* Switch Boxes*/
   vpr_printf(TIO_MESSAGE_INFO,"Generating bitstream for Switch blocks...\n");
   if (TRUE == compact_routing_hierarchy) {
-    DeviceCoordinator sb_range = device_rr_switch_block.get_switch_block_range();
+    DeviceCoordinator sb_range = device_rr_gsb.get_switch_block_range();
     for (size_t ix = 0; ix < sb_range.get_x(); ++ix) {
       for (size_t iy = 0; iy < sb_range.get_y(); ++iy) {
-        RRSwitchBlock rr_sb = device_rr_switch_block.get_switch_block(ix, iy);
+        RRGSB rr_sb = device_rr_gsb.get_switch_block(ix, iy);
         fpga_spice_generate_bitstream_routing_switch_box_subckt(fp, 
                                                                 rr_sb, cur_sram_orgz_info);
       }

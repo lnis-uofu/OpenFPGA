@@ -32,6 +32,7 @@
 #include "fpga_x2p_pbtypes_utils.h"
 #include "verilog_api.h"
 #include "fpga_x2p_unique_routing.h"
+
 #include "fpga_x2p_setup.h"
 
 /***** Subroutines Declarations *****/
@@ -1400,10 +1401,10 @@ void fpga_x2p_setup(t_vpr_setup vpr_setup,
 
     /* Assign Gobal variable: build the Routing Resource Channels */
     device_rr_chan = build_device_rr_chan(num_rr_nodes, rr_node, rr_node_indices, Arch->num_segments, rr_indexed_data);
-    device_rr_switch_block = build_device_rr_switch_blocks(vpr_setup.FPGA_SPICE_Opts.output_sb_xml,
-                                                           vpr_setup.FPGA_SPICE_Opts.sb_xml_dir, 
-                                                           num_rr_nodes, rr_node, rr_node_indices, 
-                                                           Arch->num_segments, rr_indexed_data);
+    device_rr_gsb = build_device_rr_gsb(vpr_setup.FPGA_SPICE_Opts.output_sb_xml,
+                                        vpr_setup.FPGA_SPICE_Opts.sb_xml_dir, 
+                                        num_rr_nodes, rr_node, rr_node_indices, 
+                                        Arch->num_segments, rr_indexed_data);
 
     /* Rotatable will be done in the next step 
     identify_rotatable_switch_blocks(); 

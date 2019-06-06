@@ -41,6 +41,6 @@ extern char* fpga_spice_bitstream_logic_block_log_file_postfix;
 extern char* fpga_spice_bitstream_routing_log_file_postfix;
 
 extern DeviceRRChan device_rr_chan;
-extern DeviceRRSwitchBlock device_rr_switch_block;
+extern DeviceRRGSB device_rr_gsb;
 
 #endif
