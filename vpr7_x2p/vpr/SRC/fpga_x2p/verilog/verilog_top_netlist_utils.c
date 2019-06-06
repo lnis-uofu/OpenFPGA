@@ -828,7 +828,7 @@ void dump_verilog_defined_one_switch_box(t_sram_orgz_info* cur_sram_orgz_info,
                                                   cur_sb_info.opin_rr_node[side][inode]->xlow,
                                                   cur_sb_info.opin_rr_node[side][inode]->ylow,
                                                   FALSE); /* Do not specify the direction of port */ 
-      fprintf(fp, ", ");
+      fprintf(fp, ",\n");
     } 
     fprintf(fp, "\n");
   }

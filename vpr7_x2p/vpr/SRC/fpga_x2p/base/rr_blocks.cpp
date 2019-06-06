@@ -153,14 +153,9 @@ void RRChan::reserve_node(size_t node_size) {
 
 /* add a node to the array */
 void RRChan::add_node(t_rr_node* node, size_t node_segment) {
-  /* resize the array if needed, node is placed in the sequence of node->ptc_num */
-  if (size_t(node->ptc_num + 1) > nodes_.size()) {
-    nodes_.resize(node->ptc_num + 1); /* resize to the maximum */
-    node_segments_.resize(node->ptc_num + 1); /* resize to the maximum */
-  }
   /* fill the dedicated element in the vector */
-  nodes_[node->ptc_num] = node;
-  node_segments_[node->ptc_num] = node_segment;
+  nodes_.push_back(node);
+  node_segments_.push_back(node_segment);
 
   assert(valid_node_type(node));
 
