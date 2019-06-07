@@ -766,7 +766,7 @@ void dump_compact_verilog_defined_one_switch_box(t_sram_orgz_info* cur_sram_orgz
 
   /* If we have an mirror SB, we should the module name of the mirror !!! */
   DeviceCoordinator coordinator = rr_sb.get_sb_coordinator();
-  RRGSB unique_mirror = device_rr_gsb.get_unique_mirror(coordinator);
+  RRGSB unique_mirror = device_rr_gsb.get_sb_unique_module(coordinator);
   fprintf(fp, "%s ", unique_mirror.gen_sb_verilog_module_name());
   fprintf(fp, "%s ", rr_sb.gen_sb_verilog_instance_name());
   fprintf(fp, "(");

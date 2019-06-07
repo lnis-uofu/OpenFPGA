@@ -364,10 +364,6 @@ void dump_verilog_top_netlist_internal_wires(t_sram_orgz_info* cur_sram_orgz_inf
   return; 
 }
 
-
- 
-
-
 static 
 void dump_verilog_defined_one_grid(t_sram_orgz_info* cur_sram_orgz_info, 
                                    FILE* fp,
@@ -1285,11 +1281,7 @@ void dump_compact_verilog_grid_pins(FILE* fp,
             if (1 == first_dump) {
               first_dump = 0;
             } else { 
-              if (TRUE == dump_port_type) {
-                fprintf(fp, ",\n");
-              } else {
-                fprintf(fp, ",\n");
-             }
+              fprintf(fp, ",\n");
             }
             if (TRUE == dump_port_type) {
               /* Determine this pin is an input or output */
@@ -1320,11 +1312,7 @@ void dump_compact_verilog_grid_pins(FILE* fp,
   }
 
   if ((0 < num_dumped_port)&&(TRUE == dump_last_comma)) {
-    if (TRUE == dump_port_type) {
-      fprintf(fp, ",\n");
-    } else {
-      fprintf(fp, ",\n");
-    }
+    fprintf(fp, ",\n");
   }
 
   return;
@@ -1370,11 +1358,7 @@ void dump_compact_verilog_io_grid_pins(FILE* fp,
           if (1 == first_dump) {
             first_dump = 0;
           } else { 
-            if (TRUE == dump_port_type) {
-              fprintf(fp, ",\n");
-            } else {
-              fprintf(fp, ",\n");
-            }
+            fprintf(fp, ",\n");
           }
           /* Determine this pin is an input or output */
           if (TRUE == dump_port_type) {
@@ -1404,11 +1388,7 @@ void dump_compact_verilog_io_grid_pins(FILE* fp,
   //}
   
   if ((0 < num_dumped_port)&&(TRUE == dump_last_comma)) {
-    if (TRUE == dump_port_type) {
-      fprintf(fp, ",\n");
-    } else {
-      fprintf(fp, ",\n");
-    }
+    fprintf(fp, ",\n");
   }
 
   return;

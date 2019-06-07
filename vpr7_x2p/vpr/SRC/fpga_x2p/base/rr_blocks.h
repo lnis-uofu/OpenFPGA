@@ -276,52 +276,53 @@ class DeviceRRGSB {
     DeviceCoordinator get_gsb_range() const; /* get the max coordinator of the switch block array */
     RRGSB get_gsb(DeviceCoordinator& coordinator) const; /* Get a rr switch block in the array with a coordinator */
     RRGSB get_gsb(size_t x, size_t y) const; /* Get a rr switch block in the array with a coordinator */
-    size_t get_num_unique_module(enum e_side side, size_t seg_index) const; /* get the number of unique mirrors of switch blocks */
-    size_t get_num_unique_mirror() const; /* get the number of unique mirrors of switch blocks */
-    size_t get_num_rotatable_mirror() const; /* get the number of rotatable mirrors of switch blocks */
-    RRGSB get_unique_side_module(size_t index, enum e_side side, size_t seg_id) const; /* Get a rr switch block which a unique mirror */ 
-    RRGSB get_unique_mirror(size_t index) const; /* Get a rr switch block which a unique mirror */ 
-    RRGSB get_unique_mirror(DeviceCoordinator& coordinator) const; /* Get a rr switch block which a unique mirror */ 
-    RRGSB get_rotatable_mirror(size_t index) const; /* Get a rr switch block which a unique mirror */ 
+    size_t get_num_sb_unique_submodule(enum e_side side, size_t seg_index) const; /* get the number of unique mirrors of switch blocks */
+    size_t get_num_sb_unique_module() const; /* get the number of unique mirrors of switch blocks */
+    size_t get_sb_unique_submodule_id(DeviceCoordinator& coordinator, enum e_side side, size_t seg_id) const;
+    RRGSB get_sb_unique_submodule(size_t index, enum e_side side, size_t seg_id) const; /* Get a rr switch block which a unique mirror */ 
+    RRGSB get_sb_unique_submodule(DeviceCoordinator& coordinator, enum e_side side, size_t seg_id) const; /* Get a rr switch block which a unique mirror */ 
+    RRGSB get_sb_unique_module(size_t index) const; /* Get a rr switch block which a unique mirror */ 
+    RRGSB get_sb_unique_module(DeviceCoordinator& coordinator) const; /* Get a rr switch block which a unique mirror */ 
     size_t get_max_num_sides() const; /* Get the maximum number of sides across the switch blocks */
     size_t get_num_segments() const; /* Get the size of segment_ids */
     size_t get_segment_id(size_t index) const; /* Get a segment id */
+    bool is_two_sb_share_same_submodules(DeviceCoordinator& src, DeviceCoordinator& des) const;
   public: /* Mutators */ 
     void set_sb_num_reserved_conf_bits(DeviceCoordinator& coordinator, size_t num_reserved_conf_bits); /* TODO: TOBE DEPRECATED!!! conf_bits should be initialized when creating a switch block!!! */
     void set_sb_conf_bits_lsb(DeviceCoordinator& coordinator, size_t conf_bits_lsb); /* TODO: TOBE DEPRECATED!!! conf_bits should be initialized when creating a switch block!!! */
     void set_sb_conf_bits_msb(DeviceCoordinator& coordinator, size_t conf_bits_msb); /* TODO: TOBE DEPRECATED!!! conf_bits should be initialized when creating a switch block!!! */
     void reserve(DeviceCoordinator& coordinator); /* Pre-allocate the rr_switch_block array that the device requires */ 
-    void reserve_unique_module_id(DeviceCoordinator& coordinator); /* Pre-allocate the rr_sb_unique_module_id matrix that the device requires */ 
+    void reserve_sb_unique_submodule_id(DeviceCoordinator& coordinator); /* Pre-allocate the rr_sb_unique_module_id matrix that the device requires */ 
     void resize_upon_need(DeviceCoordinator& coordinator); /* Resize the rr_switch_block array if needed */ 
-    void add_rr_switch_block(DeviceCoordinator& coordinator, RRGSB& rr_sb); /* Add a switch block to the array, which will automatically identify and update the lists of unique mirrors and rotatable mirrors */
-    void build_unique_mirror(); /* Add a switch block to the array, which will automatically identify and update the lists of unique mirrors and rotatable mirrors */
-    void build_unique_module(); /* Add a switch block to the array, which will automatically identify and update the lists of unique side module */
-    void add_rotatable_mirror(DeviceCoordinator& coordinator, RRGSB& rr_sb); /* Add a switch block to the array, which will automatically identify and update the lists of unique mirrors and rotatable mirrors */
-    void add_unique_side_segment_module(DeviceCoordinator& coordinator, RRGSB& rr_sb, enum e_side side, size_t seg_id);
-    void add_unique_side_module(DeviceCoordinator& coordinator, RRGSB& rr_sb, enum e_side side);
-    void build_segment_ids(); /* build a map of segment_ids */
+    void add_rr_gsb(DeviceCoordinator& coordinator, RRGSB& rr_gsb); /* Add a switch block to the array, which will automatically identify and update the lists of unique mirrors and rotatable mirrors */
+    void build_sb_unique_module(); /* Add a switch block to the array, which will automatically identify and update the lists of unique mirrors and rotatable mirrors */
     void clear(); /* clean the content */
-    void clear_unique_module(); /* clean the content */
-    void clear_mirror(); /* clean the content */
-    void clear_rotatable_mirror(); /* clean the content */
+  private: /* Internal cleaners */
+    void clear_gsb(); /* clean the content */
+    void clear_sb_unique_module(); /* clean the content */
+    void clear_sb_unique_module_id(); /* clean the content */
+    void clear_sb_unique_submodule(); /* clean the content */
+    void clear_sb_unique_submodule_id(); /* clean the content */
     void clear_segment_ids();
   private: /* Validators */
     bool validate_coordinator(DeviceCoordinator& coordinator) const; /* Validate if the (x,y) is the range of this device */
     bool validate_side(enum e_side side) const; /* validate if side is in the range of unique_side_module_ */
-    bool validate_unique_mirror_index(size_t index) const; /* Validate if the index in the range of unique_mirror vector*/
-    bool validate_rotatable_mirror_index(size_t index) const; /* Validate if the index in the range of unique_mirror vector*/
-    bool validate_unique_module_index(size_t index, enum e_side side, size_t seg_index) const; /* Validate if the index in the range of unique_module vector */
+    bool validate_sb_unique_module_index(size_t index) const; /* Validate if the index in the range of unique_mirror vector*/
+    bool validate_sb_unique_submodule_index(size_t index, enum e_side side, size_t seg_index) const; /* Validate if the index in the range of unique_module vector */
     bool validate_segment_index(size_t index) const;
+  private: /* Internal builders */
+    void build_segment_ids(); /* build a map of segment_ids */
+    void add_sb_unique_side_submodule(DeviceCoordinator& coordinator, RRGSB& rr_sb, enum e_side side);
+    void add_sb_unique_side_segment_submodule(DeviceCoordinator& coordinator, RRGSB& rr_sb, enum e_side side, size_t seg_id);
+    void build_sb_unique_submodule(); /* Add a switch block to the array, which will automatically identify and update the lists of unique side module */
   private: /* Internal Data */
-    std::vector< std::vector<RRGSB> > rr_gsb;
+    std::vector< std::vector<RRGSB> > rr_gsb_;
 
-    std::vector< std::vector< std::vector< std::vector<size_t> > > > rr_sb_unique_module_id_; /* A map from rr_switch_block to its unique_side_module [0..x][0..y][0..num_sides][num_seg-1]*/
-    std::vector< std::vector <std::vector<DeviceCoordinator> > > unique_module_; /* For each side of switch block, we identify a list of unique modules based on its connection. This is a matrix [0..num_sides-1][0..num_seg-1][0..num_module], num_sides will the max number of sides of all the rr_switch_blocks */
+    std::vector< std::vector<size_t> > sb_unique_module_id_; /* A map from rr_gsb to its unique mirror */
+    std::vector<DeviceCoordinator> sb_unique_module_; 
 
-    std::vector< std::vector<size_t> > rr_gsbmirror_id_; /* A map from rr_switch_block to its unique mirror */
-    std::vector<DeviceCoordinator> unique_mirror_; 
-    std::vector< std::vector<size_t> > rr_gsbrotatable_mirror_id_; /* A map from rr_switch_block to its unique mirror */
-    std::vector<DeviceCoordinator> rotatable_mirror_; 
+    std::vector< std::vector< std::vector< std::vector<size_t> > > > sb_unique_submodule_id_; /* A map from rr_switch_block to its unique_side_module [0..x][0..y][0..num_sides][num_seg-1]*/
+    std::vector< std::vector <std::vector<DeviceCoordinator> > > sb_unique_submodule_; /* For each side of switch block, we identify a list of unique modules based on its connection. This is a matrix [0..num_sides-1][0..num_seg-1][0..num_module], num_sides will the max number of sides of all the rr_switch_blocks */
 
     std::vector<size_t> segment_ids_;
 };

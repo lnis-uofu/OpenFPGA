@@ -3146,7 +3146,6 @@ int count_verilog_connection_box_reserved_conf_bits(t_sram_orgz_info* cur_sram_o
   return num_reserved_conf_bits;
 }
 
-
 /* Print connection boxes
  * Print the sub-circuit of a connection Box (Type: [CHANX|CHANY])
  * Actually it is very similiar to switch box but
@@ -3456,8 +3455,8 @@ void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
     for (size_t side = 0; side < device_rr_gsb.get_max_num_sides(); ++side) {
       Side side_manager(side);
       for (size_t iseg = 0; iseg < device_rr_gsb.get_num_segments(); ++iseg) {
-        for (size_t isb = 0; isb < device_rr_gsb.get_num_unique_module(side_manager.get_side(), iseg); ++isb) {
-          RRGSB unique_mirror = device_rr_gsb.get_unique_side_module(isb, side_manager.get_side(), iseg);
+        for (size_t isb = 0; isb < device_rr_gsb.get_num_sb_unique_submodule(side_manager.get_side(), iseg); ++isb) {
+          RRGSB unique_mirror = device_rr_gsb.get_sb_unique_submodule(isb, side_manager.get_side(), iseg);
           size_t seg_id = device_rr_gsb.get_segment_id(iseg);
           dump_verilog_routing_switch_box_unique_side_module(cur_sram_orgz_info, verilog_dir, subckt_dir, isb, seg_id, unique_mirror, side_manager.get_side());
         }
@@ -3465,8 +3464,8 @@ void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
     }
 
     /* Output unique modules */
-    for (size_t isb = 0; isb < device_rr_gsb.get_num_unique_mirror(); ++isb) {
-      RRGSB unique_mirror = device_rr_gsb.get_unique_mirror(isb);
+    for (size_t isb = 0; isb < device_rr_gsb.get_num_sb_unique_module(); ++isb) {
+      RRGSB unique_mirror = device_rr_gsb.get_sb_unique_module(isb);
       dump_verilog_routing_switch_box_unique_module(cur_sram_orgz_info, verilog_dir, subckt_dir, unique_mirror);
     }
 

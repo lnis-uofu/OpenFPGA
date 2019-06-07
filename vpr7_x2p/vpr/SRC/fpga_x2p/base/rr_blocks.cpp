@@ -1949,26 +1949,18 @@ bool RRGSB::validate_cb_type(t_rr_type cb_type) const {
 DeviceCoordinator DeviceRRGSB::get_gsb_range() const {
   size_t max_y = 0;
   /* Get the largest size of sub-arrays */
-  for (size_t x = 0; x < rr_gsb.size(); ++x) {
-    max_y = std::max(max_y, rr_gsb[x].size());
+  for (size_t x = 0; x < rr_gsb_.size(); ++x) {
+    max_y = std::max(max_y, rr_gsb_[x].size());
   }
   
-  DeviceCoordinator coordinator(rr_gsb.size(), max_y);
+  DeviceCoordinator coordinator(rr_gsb_.size(), max_y);
   return coordinator;
 } 
 
 /* Get a rr switch block in the array with a coordinator */
 RRGSB DeviceRRGSB::get_gsb(DeviceCoordinator& coordinator) const {
   assert(validate_coordinator(coordinator));
-  return rr_gsb[coordinator.get_x()][coordinator.get_y()];
-} 
-
-/* get the number of unique side modules of switch blocks */
-size_t DeviceRRGSB::get_num_unique_module(enum e_side side, size_t seg_index) const {
-  Side side_manager(side);
-  assert(validate_side(side));
-  assert(validate_segment_index(seg_index));
-  return unique_module_[side_manager.to_size_t()][seg_index].size();
+  return rr_gsb_[coordinator.get_x()][coordinator.get_y()];
 } 
 
 /* Get a rr switch block in the array with a coordinator */
@@ -1977,53 +1969,78 @@ RRGSB DeviceRRGSB::get_gsb(size_t x, size_t y) const {
   return get_gsb(coordinator);
 }
 
-/* get the number of unique mirrors of switch blocks */
-size_t DeviceRRGSB::get_num_unique_mirror() const {
-  return unique_mirror_.size();
+/* get the number of unique side modules of switch blocks */
+size_t DeviceRRGSB::get_num_sb_unique_submodule(enum e_side side, size_t seg_index) const {
+  Side side_manager(side);
+  assert(validate_side(side));
+  assert(validate_segment_index(seg_index));
+  return sb_unique_submodule_[side_manager.to_size_t()][seg_index].size();
 } 
 
-/* get the number of rotatable mirrors of switch blocks */
-size_t DeviceRRGSB::get_num_rotatable_mirror() const {
-  return rotatable_mirror_.size();
+/* get the number of unique mirrors of switch blocks */
+size_t DeviceRRGSB::get_num_sb_unique_module() const {
+  return sb_unique_module_.size();
 } 
+
+/* Get the submodule id of a SB */ 
+size_t DeviceRRGSB::get_sb_unique_submodule_id(DeviceCoordinator& coordinator, enum e_side side, size_t seg_id) const {
+  assert (validate_coordinator(coordinator));
+
+  Side side_manager(side);
+  assert (validate_side(side));
+  assert (validate_segment_index(seg_id));
+  
+  size_t x = coordinator.get_x();
+  size_t y = coordinator.get_y();
+  return sb_unique_submodule_id_[x][y][side][seg_id];
+}
 
 /* Get a rr switch block which is a unique module of a side of SB */ 
-RRGSB DeviceRRGSB::get_unique_side_module(size_t index, enum e_side side, size_t seg_id) const {
-  assert (validate_unique_module_index(index, side, seg_id));
+RRGSB DeviceRRGSB::get_sb_unique_submodule(size_t index, enum e_side side, size_t seg_id) const {
+  assert (validate_sb_unique_submodule_index(index, side, seg_id));
+
+  Side side_manager(side);
+  assert (validate_side(side));
+   
+  size_t x = sb_unique_submodule_[side_manager.to_size_t()][seg_id][index].get_x();
+  size_t y = sb_unique_submodule_[side_manager.to_size_t()][seg_id][index].get_y();
+  
+  return rr_gsb_[x][y];
+}
+
+/* Get a rr switch block which is a unique module of a side of SB */ 
+RRGSB DeviceRRGSB::get_sb_unique_submodule(DeviceCoordinator& coordinator, enum e_side side, size_t seg_id) const {
+  assert (validate_coordinator(coordinator));
 
   Side side_manager(side);
   assert (validate_side(side));
   
-  return rr_gsb[unique_module_[side_manager.to_size_t()][seg_id][index].get_x()][unique_module_[side_manager.to_size_t()][seg_id][index].get_y()];
+  size_t module_id = get_sb_unique_submodule_id(coordinator, side, seg_id);
+  
+  return get_sb_unique_submodule(module_id, side, seg_id);
 }
 
+
 /* Get a rr switch block which a unique mirror */ 
-RRGSB DeviceRRGSB::get_unique_mirror(size_t index) const {
-  assert (validate_unique_mirror_index(index));
+RRGSB DeviceRRGSB::get_sb_unique_module(size_t index) const {
+  assert (validate_sb_unique_module_index(index));
   
-  return rr_gsb[unique_mirror_[index].get_x()][unique_mirror_[index].get_y()];
+  return rr_gsb_[sb_unique_module_[index].get_x()][sb_unique_module_[index].get_y()];
 }
 
 /* Give a coordinator of a rr switch block, and return its unique mirror */ 
-RRGSB DeviceRRGSB::get_unique_mirror(DeviceCoordinator& coordinator) const {
+RRGSB DeviceRRGSB::get_sb_unique_module(DeviceCoordinator& coordinator) const {
   assert(validate_coordinator(coordinator));
-  size_t unique_mirror_id = rr_gsbmirror_id_[coordinator.get_x()][coordinator.get_y()];  
-  return get_unique_mirror(unique_mirror_id);
-} 
-
-/* Get a rr switch block which a unique mirror */ 
-RRGSB DeviceRRGSB::get_rotatable_mirror(size_t index) const {
-  assert (validate_rotatable_mirror_index(index));
-  
-  return rr_gsb[rotatable_mirror_[index].get_x()][rotatable_mirror_[index].get_y()];
+  size_t sb_unique_module_id = sb_unique_module_id_[coordinator.get_x()][coordinator.get_y()];  
+  return get_sb_unique_module(sb_unique_module_id);
 } 
 
 /* Get the maximum number of sides across the switch blocks */
 size_t DeviceRRGSB::get_max_num_sides() const {
   size_t max_num_sides = 0;
-  for (size_t ix = 0; ix < rr_gsb.size(); ++ix) {
-    for (size_t iy = 0; iy < rr_gsb[ix].size(); ++iy) {
-      max_num_sides = std::max(max_num_sides, rr_gsb[ix][iy].get_num_sides());
+  for (size_t ix = 0; ix < rr_gsb_.size(); ++ix) {
+    for (size_t iy = 0; iy < rr_gsb_[ix].size(); ++iy) {
+      max_num_sides = std::max(max_num_sides, rr_gsb_[ix][iy].get_num_sides());
     }
   }
   return max_num_sides;
@@ -2040,56 +2057,73 @@ size_t DeviceRRGSB::get_segment_id(size_t index) const {
   return segment_ids_[index];
 }
 
+/* Evaluate if the Switch Blocks of two GSBs share exactly the same submodule */
+bool DeviceRRGSB::is_two_sb_share_same_submodules(DeviceCoordinator& src, DeviceCoordinator& des) const {
+
+  /* check the numbers of sides */
+  if (get_gsb(src).get_num_sides() != get_gsb(des).get_num_sides()) {
+    return false;
+  }
+
+  /* check the numbers/directionality of channel rr_nodes */
+  for (size_t side = 0; side < get_gsb(src).get_num_sides(); ++side) {
+    Side side_manager(side);
+    for (size_t iseg = 0; iseg < get_num_segments(); ++iseg) {
+      if ( get_sb_unique_submodule_id(src, side_manager.get_side(), iseg) 
+        != get_sb_unique_submodule_id(des, side_manager.get_side(), iseg)) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
 /* Public Mutators */
 
 /* TODO: TOBE DEPRECATED!!! conf_bits should be initialized when creating a switch block!!! */
 void DeviceRRGSB::set_sb_num_reserved_conf_bits(DeviceCoordinator& coordinator, size_t num_reserved_conf_bits) {
   assert(validate_coordinator(coordinator));
-  rr_gsb[coordinator.get_x()][coordinator.get_y()].set_sb_num_reserved_conf_bits(num_reserved_conf_bits);
+  rr_gsb_[coordinator.get_x()][coordinator.get_y()].set_sb_num_reserved_conf_bits(num_reserved_conf_bits);
   return;
 } 
 
 /* TODO: TOBE DEPRECATED!!! conf_bits should be initialized when creating a switch block!!! */
 void DeviceRRGSB::set_sb_conf_bits_lsb(DeviceCoordinator& coordinator, size_t conf_bits_lsb) { 
   assert(validate_coordinator(coordinator));
-  rr_gsb[coordinator.get_x()][coordinator.get_y()].set_sb_conf_bits_lsb(conf_bits_lsb);
+  rr_gsb_[coordinator.get_x()][coordinator.get_y()].set_sb_conf_bits_lsb(conf_bits_lsb);
   return;
 }
 
 /* TODO: TOBE DEPRECATED!!! conf_bits should be initialized when creating a switch block!!! */
 void DeviceRRGSB::set_sb_conf_bits_msb(DeviceCoordinator& coordinator, size_t conf_bits_msb) { 
   assert(validate_coordinator(coordinator));
-  rr_gsb[coordinator.get_x()][coordinator.get_y()].set_sb_conf_bits_msb(conf_bits_msb);
+  rr_gsb_[coordinator.get_x()][coordinator.get_y()].set_sb_conf_bits_msb(conf_bits_msb);
   return;
 }
 
 /* Pre-allocate the rr_switch_block array that the device requires */ 
 void DeviceRRGSB::reserve(DeviceCoordinator& coordinator) { 
-  rr_gsb.resize(coordinator.get_x());
-  rr_sb_unique_module_id_.resize(coordinator.get_x());
-
-  rr_gsbmirror_id_.resize(coordinator.get_x());
-  rr_gsbrotatable_mirror_id_.resize(coordinator.get_x());
+  rr_gsb_.resize(coordinator.get_x());
+  sb_unique_submodule_id_.resize(coordinator.get_x());
+  sb_unique_module_id_.resize(coordinator.get_x());
 
   for (size_t x = 0; x < coordinator.get_x(); ++x) {
-    rr_gsb[x].resize(coordinator.get_y()); 
-    rr_sb_unique_module_id_[x].resize(coordinator.get_y());
-
-    rr_gsbmirror_id_[x].resize(coordinator.get_y()); 
-    rr_gsbrotatable_mirror_id_[x].resize(coordinator.get_y()); 
+    rr_gsb_[x].resize(coordinator.get_y()); 
+    sb_unique_submodule_id_[x].resize(coordinator.get_y());
+    sb_unique_module_id_[x].resize(coordinator.get_y()); 
   }
 
   return;
 }
 
 /* Pre-allocate the rr_sb_unique_module_id matrix that the device requires */ 
-void DeviceRRGSB::reserve_unique_module_id(DeviceCoordinator& coordinator) { 
+void DeviceRRGSB::reserve_sb_unique_submodule_id(DeviceCoordinator& coordinator) { 
   RRGSB rr_sb = get_gsb(coordinator);
-  rr_sb_unique_module_id_[coordinator.get_x()][coordinator.get_y()].resize(rr_sb.get_num_sides());
+  sb_unique_submodule_id_[coordinator.get_x()][coordinator.get_y()].resize(rr_sb.get_num_sides());
 
   for (size_t side = 0; side < rr_sb.get_num_sides(); ++side) {
     Side side_manager(side);
-    rr_sb_unique_module_id_[coordinator.get_x()][coordinator.get_y()][side_manager.to_size_t()].resize(segment_ids_.size());
+    sb_unique_submodule_id_[coordinator.get_x()][coordinator.get_y()][side_manager.to_size_t()].resize(segment_ids_.size());
   }
 
   return;
@@ -2097,69 +2131,75 @@ void DeviceRRGSB::reserve_unique_module_id(DeviceCoordinator& coordinator) {
 
 /* Resize rr_switch_block array is needed*/
 void DeviceRRGSB::resize_upon_need(DeviceCoordinator& coordinator) { 
-  if (coordinator.get_x() + 1 > rr_gsb.size()) {
-    rr_gsb.resize(coordinator.get_x() + 1);
-    rr_sb_unique_module_id_.resize(coordinator.get_x() + 1);
-
-    rr_gsbmirror_id_.resize(coordinator.get_x() + 1);
-    rr_gsbrotatable_mirror_id_.resize(coordinator.get_x() + 1);
+  if (coordinator.get_x() + 1 > rr_gsb_.size()) {
+    rr_gsb_.resize(coordinator.get_x() + 1);
+    sb_unique_submodule_id_.resize(coordinator.get_x() + 1);
+    sb_unique_module_id_.resize(coordinator.get_x() + 1);
   }
 
-  if (coordinator.get_y() + 1 > rr_gsb[coordinator.get_x()].size()) {
-    rr_gsb[coordinator.get_x()].resize(coordinator.get_y() + 1);
-    rr_sb_unique_module_id_[coordinator.get_x()].resize(coordinator.get_y() + 1);
-
-    rr_gsbmirror_id_[coordinator.get_x()].resize(coordinator.get_y() + 1);
-    rr_gsbrotatable_mirror_id_[coordinator.get_x()].resize(coordinator.get_y() + 1);
+  if (coordinator.get_y() + 1 > rr_gsb_[coordinator.get_x()].size()) {
+    rr_gsb_[coordinator.get_x()].resize(coordinator.get_y() + 1);
+    sb_unique_submodule_id_[coordinator.get_x()].resize(coordinator.get_y() + 1);
+    sb_unique_module_id_[coordinator.get_x()].resize(coordinator.get_y() + 1);
   }
 
   return;
 }
 
 /* Add a switch block to the array, which will automatically identify and update the lists of unique mirrors and rotatable mirrors */
-void DeviceRRGSB::add_rr_switch_block(DeviceCoordinator& coordinator, 
-                                              RRGSB& rr_sb) {
+void DeviceRRGSB::add_rr_gsb(DeviceCoordinator& coordinator, 
+                             RRGSB& rr_gsb) {
   /* Resize upon needs*/
   resize_upon_need(coordinator);
 
   /* Add the switch block into array */
-  rr_gsb[coordinator.get_x()][coordinator.get_y()] = rr_sb; 
+  rr_gsb_[coordinator.get_x()][coordinator.get_y()] = rr_gsb; 
 
   return;
 }
 
 /* Add a switch block to the array, which will automatically identify and update the lists of unique mirrors and rotatable mirrors */
-void DeviceRRGSB::build_unique_mirror() {
+void DeviceRRGSB::build_sb_unique_module() {
   /* Make sure a clean start */
-  clear_mirror();
+  clear_sb_unique_module();
 
-  for (size_t ix = 0; ix < rr_gsb.size(); ++ix) {
-    for (size_t iy = 0; iy < rr_gsb[ix].size(); ++iy) {
-      bool is_unique_mirror = true;
-      RRGSB* rr_sb = &(rr_gsb[ix][iy]); 
+  /* build segment id look-up*/
+  build_segment_ids();
+
+  /* Build the unique submodule */
+  build_sb_unique_submodule();
+
+  for (size_t ix = 0; ix < rr_gsb_.size(); ++ix) {
+    for (size_t iy = 0; iy < rr_gsb_[ix].size(); ++iy) {
+      bool is_unique_module = true;
+      DeviceCoordinator sb_coordinator(ix, iy);
 
       /* Traverse the unique_mirror list and check it is an mirror of another */
-      for (size_t mirror_id = 0; mirror_id < get_num_unique_mirror(); ++mirror_id) {
+      for (size_t id = 0; id < get_num_sb_unique_module(); ++id) {
         /* If we have the same coordinator, this is already not unique_mirror */
-        if ( (ix == unique_mirror_[mirror_id].get_x())
-          && (iy == unique_mirror_[mirror_id].get_y()) ) {
-          is_unique_mirror = false;
+        if ( (ix == sb_unique_module_[id].get_x())
+          && (iy == sb_unique_module_[id].get_y()) ) {
+          is_unique_module = false;
           break;
         }
-        if (true == get_gsb(unique_mirror_[mirror_id]).is_sb_mirror(*rr_sb)) {
+        /* Check if the two modules have the same submodules,
+         * if so, these two modules are the same, indicating the sb is not unique.
+         * else the sb is unique 
+         */
+        if (true == is_two_sb_share_same_submodules(sb_unique_module_[id], sb_coordinator)) {
           /* This is a mirror, raise the flag and we finish */
-          is_unique_mirror = false;
+          is_unique_module = false;
           /* Record the id of unique mirror */
-          rr_gsbmirror_id_[ix][iy] = mirror_id; 
+          sb_unique_module_id_[ix][iy] = id; 
           break;
         }
       }
       /* Add to list if this is a unique mirror*/
-      if (true == is_unique_mirror) {
+      if (true == is_unique_module) {
         DeviceCoordinator coordinator(ix, iy);
-        unique_mirror_.push_back(coordinator);
+        sb_unique_module_.push_back(coordinator);
         /* Record the id of unique mirror */
-        rr_gsbmirror_id_[ix][iy] = unique_mirror_.size() - 1; 
+        sb_unique_module_id_[ix][iy] = sb_unique_module_.size() - 1; 
       }
     }
   } 
@@ -2167,91 +2207,58 @@ void DeviceRRGSB::build_unique_mirror() {
 }
 
 /* Add a switch block to the array, which will automatically identify and update the lists of unique mirrors and rotatable mirrors */
-void DeviceRRGSB::build_unique_module() {
+void DeviceRRGSB::build_sb_unique_submodule() {
   /* Make sure a clean start */
-  clear_unique_module();
+  clear_sb_unique_submodule();
 
   /* Allocate the unique_side_module_ */
-  unique_module_.resize(get_max_num_sides());
-  for (size_t side = 0; side < unique_module_.size(); ++side) {
-    unique_module_[side].resize(segment_ids_.size());
+  sb_unique_submodule_.resize(get_max_num_sides());
+  for (size_t side = 0; side < sb_unique_submodule_.size(); ++side) {
+    sb_unique_submodule_[side].resize(segment_ids_.size());
   }
 
-  for (size_t ix = 0; ix < rr_gsb.size(); ++ix) {
-    for (size_t iy = 0; iy < rr_gsb[ix].size(); ++iy) {
+  for (size_t ix = 0; ix < rr_gsb_.size(); ++ix) {
+    for (size_t iy = 0; iy < rr_gsb_[ix].size(); ++iy) {
       DeviceCoordinator coordinator(ix, iy);
-      RRGSB rr_sb = rr_gsb[ix][iy]; 
+      RRGSB rr_sb = rr_gsb_[ix][iy]; 
 
       /* reserve the rr_sb_unique_module_id */
-      reserve_unique_module_id(coordinator);
+      reserve_sb_unique_submodule_id(coordinator);
 
       for (size_t side = 0; side < rr_sb.get_num_sides(); ++side) {
         Side side_manager(side);
         /* Try to add it to the list */
-        add_unique_side_module(coordinator, rr_sb, side_manager.get_side());
+        add_sb_unique_side_submodule(coordinator, rr_sb, side_manager.get_side());
       }
     }
   } 
   return;
 }
 
-
-void DeviceRRGSB::add_rotatable_mirror(DeviceCoordinator& coordinator, 
-                                               RRGSB& rotated_rr_sb) {
-  bool is_rotatable_mirror = true;
-
-  /* add rotatable mirror support */
-  for (size_t mirror_id = 0; mirror_id < get_num_rotatable_mirror(); ++mirror_id) {
-    /* Skip if these may never match as a mirror (violation in basic requirements */
-    if (false == get_gsb(rotatable_mirror_[mirror_id]).is_sb_mirrorable(rotated_rr_sb)) {
-      continue;
-    }
-    if (true == get_gsb(rotatable_mirror_[mirror_id]).is_sb_mirror(rotated_rr_sb)) {
-      /* This is a mirror, raise the flag and we finish */
-      is_rotatable_mirror = false;
-      /* Record the id of unique mirror */
-      rr_gsbrotatable_mirror_id_[coordinator.get_x()][coordinator.get_y()] = mirror_id; 
-      break;
-    }
-  }
-
-  /* Add to list if this is a unique mirror*/
-  if (true == is_rotatable_mirror) {
-    rotatable_mirror_.push_back(coordinator);
-    /* Record the id of unique mirror */
-    rr_gsbrotatable_mirror_id_[coordinator.get_x()][coordinator.get_y()] = rotatable_mirror_.size() - 1; 
-    /* 
-    printf("Detect a rotatable mirror: SB[%lu][%lu]\n", coordinator.get_x(), coordinator.get_y());
-     */
-  }
-
-  return;
-} 
-
-void DeviceRRGSB::add_unique_side_segment_module(DeviceCoordinator& coordinator, 
-                                                         RRGSB& rr_sb, 
-                                                         enum e_side side, 
-                                                         size_t seg_id) {
+void DeviceRRGSB::add_sb_unique_side_segment_submodule(DeviceCoordinator& coordinator, 
+                                                       RRGSB& rr_sb, 
+                                                       enum e_side side, 
+                                                       size_t seg_id) {
   bool is_unique_side_module = true;
   Side side_manager(side);
 
   /* add rotatable mirror support */
-  for (size_t id = 0; id < get_num_unique_module(side, seg_id); ++id) {
+  for (size_t id = 0; id < get_num_sb_unique_submodule(side, seg_id); ++id) {
     /* Skip if these may never match as a mirror (violation in basic requirements */
-    if (true == get_gsb(unique_module_[side_manager.to_size_t()][seg_id][id]).is_sb_side_segment_mirror(rr_sb, side, segment_ids_[seg_id])) {
+    if (true == get_gsb(sb_unique_submodule_[side_manager.to_size_t()][seg_id][id]).is_sb_side_segment_mirror(rr_sb, side, segment_ids_[seg_id])) {
       /* This is a mirror, raise the flag and we finish */
       is_unique_side_module = false;
       /* Record the id of unique mirror */
-      rr_sb_unique_module_id_[coordinator.get_x()][coordinator.get_y()][side_manager.to_size_t()][seg_id] = id; 
+      sb_unique_submodule_id_[coordinator.get_x()][coordinator.get_y()][side_manager.to_size_t()][seg_id] = id; 
       break;
     }
   }
 
   /* Add to list if this is a unique mirror*/
   if (true == is_unique_side_module) {
-    unique_module_[side_manager.to_size_t()][seg_id].push_back(coordinator);
+    sb_unique_submodule_[side_manager.to_size_t()][seg_id].push_back(coordinator);
     /* Record the id of unique mirror */
-    rr_sb_unique_module_id_[coordinator.get_x()][coordinator.get_y()][side_manager.to_size_t()][seg_id] = unique_module_[side_manager.to_size_t()][seg_id].size() - 1; 
+    sb_unique_submodule_id_[coordinator.get_x()][coordinator.get_y()][side_manager.to_size_t()][seg_id] = sb_unique_submodule_[side_manager.to_size_t()][seg_id].size() - 1; 
     /* 
     printf("Detect a rotatable mirror: SB[%lu][%lu]\n", coordinator.get_x(), coordinator.get_y());
      */
@@ -2265,13 +2272,13 @@ void DeviceRRGSB::add_unique_side_segment_module(DeviceCoordinator& coordinator,
  * If it is similar to any module[side][i] in the list, we build a link from the rr_sb to the unique_module
  * Otherwise, we add the module to the unique_module list 
  */
-void DeviceRRGSB::add_unique_side_module(DeviceCoordinator& coordinator, 
-                                                 RRGSB& rr_sb, 
-                                                 enum e_side side) {
+void DeviceRRGSB::add_sb_unique_side_submodule(DeviceCoordinator& coordinator, 
+                                               RRGSB& rr_sb, 
+                                               enum e_side side) {
   Side side_manager(side);
 
   for (size_t iseg = 0; iseg < segment_ids_.size(); ++iseg) {
-    add_unique_side_segment_module(coordinator, rr_sb, side, iseg);
+    add_sb_unique_side_segment_submodule(coordinator, rr_sb, side, iseg);
   }
 
   return;
@@ -2279,10 +2286,14 @@ void DeviceRRGSB::add_unique_side_module(DeviceCoordinator& coordinator,
 
 /* build a map of segment_ids */
 void DeviceRRGSB::build_segment_ids() {
+
+  /* Make sure a clean start */
+  clear_segment_ids();
+
   /* go through each rr_sb, each side and find the segment_ids */
-  for (size_t ix = 0; ix < rr_gsb.size(); ++ix) {
-    for (size_t iy = 0; iy < rr_gsb[ix].size(); ++iy) {
-      RRGSB* rr_sb = &(rr_gsb[ix][iy]);
+  for (size_t ix = 0; ix < rr_gsb_.size(); ++ix) {
+    for (size_t iy = 0; iy < rr_gsb_[ix].size(); ++iy) {
+      RRGSB* rr_sb = &(rr_gsb_[ix][iy]);
       for (size_t side = 0 ; side < rr_sb->get_num_sides(); ++side) {
         Side side_manager(side);
         /* get a list of segment_ids in this side */
@@ -2306,62 +2317,68 @@ void DeviceRRGSB::build_segment_ids() {
 
 /* clean the content */
 void DeviceRRGSB::clear() { 
-  /* clean rr_switch_block array */
-  for (size_t x = 0; x < rr_gsb.size(); ++x) {
-    rr_gsb[x].clear(); 
-    rr_gsbmirror_id_[x].clear(); 
-    rr_gsbrotatable_mirror_id_[x].clear(); 
-  }
-  rr_gsb.clear();
+  clear_gsb();
 
-  rr_gsbmirror_id_.clear();
+  /* clean unique module lists */
+  clear_sb_unique_module();
+  clear_sb_unique_module_id();
 
-  rr_gsbrotatable_mirror_id_.clear();
-
-  /* clean rr_sb_unique_side_module_id */
-  for (size_t x = 0; x < rr_sb_unique_module_id_.size(); ++x) {
-    for (size_t y = 0; y < rr_sb_unique_module_id_[x].size(); ++y) {
-      rr_sb_unique_module_id_[x][y].clear();
-    }
-    rr_sb_unique_module_id_[x].clear();
-  }
-  rr_sb_unique_module_id_.clear();
-
-
-  /* clean unique side module */
-  clear_unique_module();
-
-  /* clean unique mirror */
-  clear_mirror();
-
-  /* clean unique mirror */
-  clear_rotatable_mirror();
+  clear_sb_unique_submodule();
+  clear_sb_unique_submodule_id();
 
   return;
 }
 
+void DeviceRRGSB::clear_gsb() {
+  /* clean gsb array */
+  for (size_t x = 0; x < rr_gsb_.size(); ++x) {
+    rr_gsb_[x].clear(); 
+  }
+  rr_gsb_.clear();
+  return;
+}
+
+void DeviceRRGSB::clear_sb_unique_module_id() {
+  /* clean rr_switch_block array */
+  for (size_t x = 0; x < rr_gsb_.size(); ++x) {
+    sb_unique_module_id_[x].clear(); 
+  }
+  return;
+}
+
+void DeviceRRGSB::clear_sb_unique_submodule_id() {
+  /* clean rr_sb_unique_side_module_id */
+  for (size_t x = 0; x < sb_unique_submodule_id_.size(); ++x) {
+    for (size_t y = 0; y < sb_unique_submodule_id_[x].size(); ++y) {
+      for (size_t side = 0; side < sb_unique_submodule_.size(); ++side) {
+        sb_unique_submodule_id_[x][y][side].clear();
+      }
+      sb_unique_submodule_id_[x][y].clear();
+    }
+    sb_unique_submodule_id_[x].clear();
+  }
+  sb_unique_submodule_id_.clear();
+  return;
+}
+
 /* clean the content related to unique_mirrors */
-void DeviceRRGSB::clear_unique_module() {
+void DeviceRRGSB::clear_sb_unique_submodule() {
   /* clean unique_side_module_ */
-  for (size_t side = 0; side < unique_module_.size(); ++side) {
-    unique_module_[side].clear();
+  for (size_t side = 0; side < sb_unique_submodule_.size(); ++side) {
+    for (size_t iseg = 0; iseg < segment_ids_.size(); ++iseg) {
+      sb_unique_submodule_[side][iseg].clear();
+    }
+    sb_unique_submodule_[side].clear();
   }
 
   return;
 } 
 
 /* clean the content related to unique_mirrors */
-void DeviceRRGSB::clear_mirror() {
+void DeviceRRGSB::clear_sb_unique_module() {
   /* clean unique mirror */
-  unique_mirror_.clear();
+  sb_unique_module_.clear();
 
-  return;
-} 
-
-/* clean the content related to rotatable_mirrors */
-void DeviceRRGSB::clear_rotatable_mirror() {
-  /* clean unique mirror */
-  rotatable_mirror_.clear();
   return;
 } 
 
@@ -2376,10 +2393,10 @@ void DeviceRRGSB::clear_segment_ids() {
 
 /* Validate if the (x,y) is the range of this device */
 bool DeviceRRGSB::validate_coordinator(DeviceCoordinator& coordinator) const {
-  if (coordinator.get_x() >= rr_gsb.capacity()) {
+  if (coordinator.get_x() >= rr_gsb_.capacity()) {
     return false;
   }
-  if (coordinator.get_y() >= rr_gsb[coordinator.get_x()].capacity()) {
+  if (coordinator.get_y() >= rr_gsb_[coordinator.get_x()].capacity()) {
     return false;
   }
   return true;
@@ -2388,35 +2405,27 @@ bool DeviceRRGSB::validate_coordinator(DeviceCoordinator& coordinator) const {
 /* Validate if the index in the range of unique_mirror vector*/
 bool DeviceRRGSB::validate_side(enum e_side side) const {
   Side side_manager(side);
-  if (side_manager.to_size_t() >= unique_module_.size()) {
+  if (side_manager.to_size_t() >= sb_unique_submodule_.size()) {
     return false;
   }
   return true;
 } 
 
 /* Validate if the index in the range of unique_mirror vector*/
-bool DeviceRRGSB::validate_unique_mirror_index(size_t index) const { 
-  if (index >= unique_mirror_.size()) {
+bool DeviceRRGSB::validate_sb_unique_module_index(size_t index) const { 
+  if (index >= sb_unique_module_.size()) {
     return false;
   }
   return true;
 }
 
 /* Validate if the index in the range of unique_mirror vector*/
-bool DeviceRRGSB::validate_rotatable_mirror_index(size_t index) const {
-  if (index >= rotatable_mirror_.size()) {
-    return false;
-  }
-  return true;
-} 
-
-/* Validate if the index in the range of unique_mirror vector*/
-bool DeviceRRGSB::validate_unique_module_index(size_t index, enum e_side side, size_t seg_index) const {
+bool DeviceRRGSB::validate_sb_unique_submodule_index(size_t index, enum e_side side, size_t seg_index) const {
   assert( validate_side(side));
   assert( validate_segment_index(seg_index));
   Side side_manager(side);
 
-  if (index >= unique_module_[side_manager.get_side()][seg_index].size()) {
+  if (index >= sb_unique_submodule_[side_manager.get_side()][seg_index].size()) {
     return false;
   }
   return true;
