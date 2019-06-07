@@ -47,7 +47,7 @@ class RRChan {
     t_rr_node* get_node(size_t track_num) const; /* get the rr_node with the track_id */
     int get_node_segment(t_rr_node* node) const;
     int get_node_segment(size_t track_num) const;
-    bool is_mirror(RRChan& cand) const; /* evaluate if two RR_chan is mirror to each other */
+    bool is_mirror(const RRChan& cand) const; /* evaluate if two RR_chan is mirror to each other */
     std::vector<size_t> get_segment_ids() const; /* Get a list of segments used in this routing channel */
   public: /* Mutators */
     void set(const RRChan&); /* copy */
@@ -148,6 +148,8 @@ class RRGSB {
   public: /* Accessors */
     size_t get_num_sides() const; /* Get the number of sides of this SB */
     size_t get_chan_width(enum e_side side) const; /* Get the number of routing tracks on a side */
+    size_t get_cb_chan_width(t_rr_type cb_type) const; /* Get the number of routing tracks of a X/Y-direction CB */
+    std::vector<enum e_side> get_cb_ipin_sides(t_rr_type cb_type) const; /* Get the sides of CB ipins in the array */
     size_t get_max_chan_width() const; /* Get the maximum number of routing tracks on all sides */
     enum PORTS get_chan_node_direction(enum e_side side, size_t track_id) const; /* Get the direction of a rr_node at a given side and track_id */
     RRChan get_chan(enum e_side side) const; /* get a rr_node at a given side and track_id */
@@ -161,6 +163,7 @@ class RRGSB {
     t_rr_node* get_opin_node(enum e_side side, size_t node_id) const; /* get a rr_node at a given side and track_id */
     enum e_side get_opin_node_grid_side(enum e_side side, size_t node_id) const; /* get a rr_node at a given side and track_id */
     enum e_side get_opin_node_grid_side(t_rr_node* opin_node) const; /* get a rr_node at a given side and track_id */
+    int get_chan_node_index(enum e_side node_side, t_rr_node* node) const;
     int get_node_index(t_rr_node* node, enum e_side node_side, enum PORTS node_direction) const; /* Get the node index in the array, return -1 if not found */
     void get_node_side_and_index(t_rr_node* node,  enum PORTS node_direction, enum e_side* node_side, int* node_index) const; /* Given a rr_node, try to find its side and index in the Switch block */
     bool is_sb_node_exist_opposite_side(t_rr_node* node, enum e_side node_side) const; /* Check if the node exist in the opposite side of this Switch Block */
@@ -178,11 +181,13 @@ class RRGSB {
     size_t get_cb_conf_bits_lsb(t_rr_type cb_type) const;
     size_t get_cb_conf_bits_msb(t_rr_type cb_type) const;
     bool is_sb_node_imply_short_connection(t_rr_node* src_node) const; /* Check if the node imply a short connection inside the SB, which happens to long wires across a FPGA fabric */
-    bool is_sb_side_mirror(RRGSB& cand, enum e_side side) const; /* check if a side of candidate SB is a mirror of the current one */
-    bool is_sb_side_segment_mirror(RRGSB& cand, enum e_side side, size_t seg_id) const; /* check if all the routing segments of a side of candidate SB is a mirror of the current one */
-    bool is_sb_mirror(RRGSB& cand) const; /* check if the candidate SB is a mirror of the current one */
-    bool is_sb_mirrorable(RRGSB& cand) const; /* check if the candidate SB satisfy the basic requirements on being a mirror of the current one */
-    size_t get_hint_rotate_offset(RRGSB& cand) const; /* Determine an initial offset in rotating the candidate Switch Block to find a mirror matching*/
+    bool is_sb_side_mirror(const RRGSB& cand, enum e_side side) const; /* check if a side of candidate SB is a mirror of the current one */
+    bool is_sb_side_segment_mirror(const RRGSB& cand, enum e_side side, size_t seg_id) const; /* check if all the routing segments of a side of candidate SB is a mirror of the current one */
+    bool is_sb_mirror(const RRGSB& cand) const; /* check if the candidate SB is a mirror of the current one */
+    bool is_sb_mirrorable(const RRGSB& cand) const; /* check if the candidate SB satisfy the basic requirements on being a mirror of the current one */
+    bool is_cb_mirror(const RRGSB& cand, t_rr_type cb_type) const; /* check if the candidate SB is a mirror of the current one */
+    bool is_cb_exist(t_rr_type cb_type) const; /* check if the candidate SB is a mirror of the current one */
+    size_t get_hint_rotate_offset(const RRGSB& cand) const; /* Determine an initial offset in rotating the candidate Switch Block to find a mirror matching*/
   public: /* Cooridinator conversion and output  */
     size_t get_sb_x() const; /* get the x coordinator of this switch block */
     size_t get_sb_y() const; /* get the y coordinator of this switch block */
@@ -190,6 +195,7 @@ class RRGSB {
     size_t get_cb_x(t_rr_type cb_type) const; /* get the x coordinator of this X/Y-direction block */
     size_t get_cb_y(t_rr_type cb_type) const; /* get the y coordinator of this X/Y-direction block */
     DeviceCoordinator get_cb_coordinator(t_rr_type cb_type) const; /* Get the coordinator of the X/Y-direction CB */
+    enum e_side get_cb_chan_side(t_rr_type cb_type) const; /* get the side of a Connection block */
     DeviceCoordinator get_side_block_coordinator(enum e_side side) const;
   public: /* Verilog writer */
     const char* gen_sb_verilog_module_name() const;
@@ -225,6 +231,7 @@ class RRGSB {
     void swap_ipin_node(enum e_side src_side, enum e_side des_side); /* swap the IPIN rr_nodes on two sides */
     void reverse_opin_node(enum e_side side); /* reverse the OPIN rr_nodes on two sides */
     void reverse_ipin_node(enum e_side side); /* reverse the IPIN rr_nodes on two sides */
+  public: /* Mutators: cleaners */
     void clear();
     void clear_chan_nodes(enum e_side node_side); /* Clean the chan_width of a side */
     void clear_ipin_nodes(enum e_side node_side); /* Clean the number of IPINs of a side */
@@ -233,7 +240,8 @@ class RRGSB {
   private: /* Internal Mutators */
     void mirror_side_chan_node_direction(enum e_side side); /* Mirror the node direction and port direction of routing track nodes on a side */
   private: /* internal functions */
-    bool is_sb_node_mirror (RRGSB& cand, enum e_side node_side, size_t track_id) const; 
+    bool is_sb_node_mirror (const RRGSB& cand, enum e_side node_side, size_t track_id) const; 
+    bool is_cb_node_mirror (const RRGSB& cand, t_rr_type cb_type, enum e_side node_side, size_t node_id) const; 
     size_t get_track_id_first_short_connection(enum e_side node_side) const; 
     bool validate_num_sides() const;
     bool validate_side(enum e_side side) const;
@@ -278,11 +286,13 @@ class DeviceRRGSB {
     RRGSB get_gsb(size_t x, size_t y) const; /* Get a rr switch block in the array with a coordinator */
     size_t get_num_sb_unique_submodule(enum e_side side, size_t seg_index) const; /* get the number of unique mirrors of switch blocks */
     size_t get_num_sb_unique_module() const; /* get the number of unique mirrors of switch blocks */
+    size_t get_num_cb_unique_module(t_rr_type cb_type) const; /* get the number of unique mirrors of CBs */
     size_t get_sb_unique_submodule_id(DeviceCoordinator& coordinator, enum e_side side, size_t seg_id) const;
     RRGSB get_sb_unique_submodule(size_t index, enum e_side side, size_t seg_id) const; /* Get a rr switch block which a unique mirror */ 
     RRGSB get_sb_unique_submodule(DeviceCoordinator& coordinator, enum e_side side, size_t seg_id) const; /* Get a rr switch block which a unique mirror */ 
     RRGSB get_sb_unique_module(size_t index) const; /* Get a rr switch block which a unique mirror */ 
     RRGSB get_sb_unique_module(DeviceCoordinator& coordinator) const; /* Get a rr switch block which a unique mirror */ 
+    RRGSB get_cb_unique_module(t_rr_type cb_type, size_t index) const; /* Get a rr switch block which a unique mirror */ 
     size_t get_max_num_sides() const; /* Get the maximum number of sides across the switch blocks */
     size_t get_num_segments() const; /* Get the size of segment_ids */
     size_t get_segment_id(size_t index) const; /* Get a segment id */
@@ -295,10 +305,12 @@ class DeviceRRGSB {
     void reserve_sb_unique_submodule_id(DeviceCoordinator& coordinator); /* Pre-allocate the rr_sb_unique_module_id matrix that the device requires */ 
     void resize_upon_need(DeviceCoordinator& coordinator); /* Resize the rr_switch_block array if needed */ 
     void add_rr_gsb(DeviceCoordinator& coordinator, RRGSB& rr_gsb); /* Add a switch block to the array, which will automatically identify and update the lists of unique mirrors and rotatable mirrors */
-    void build_sb_unique_module(); /* Add a switch block to the array, which will automatically identify and update the lists of unique mirrors and rotatable mirrors */
+    void build_unique_module(); /* Add a switch block to the array, which will automatically identify and update the lists of unique mirrors and rotatable mirrors */
     void clear(); /* clean the content */
   private: /* Internal cleaners */
     void clear_gsb(); /* clean the content */
+    void clear_cb_unique_module(t_rr_type cb_type); /* clean the content */
+    void clear_cb_unique_module_id(t_rr_type cb_type); /* clean the content */
     void clear_sb_unique_module(); /* clean the content */
     void clear_sb_unique_module_id(); /* clean the content */
     void clear_sb_unique_submodule(); /* clean the content */
@@ -308,13 +320,19 @@ class DeviceRRGSB {
     bool validate_coordinator(DeviceCoordinator& coordinator) const; /* Validate if the (x,y) is the range of this device */
     bool validate_side(enum e_side side) const; /* validate if side is in the range of unique_side_module_ */
     bool validate_sb_unique_module_index(size_t index) const; /* Validate if the index in the range of unique_mirror vector*/
+    bool validate_cb_unique_module_index(t_rr_type cb_type, size_t index) const; /* Validate if the index in the range of unique_mirror vector*/
     bool validate_sb_unique_submodule_index(size_t index, enum e_side side, size_t seg_index) const; /* Validate if the index in the range of unique_module vector */
     bool validate_segment_index(size_t index) const;
+    bool validate_cb_type(t_rr_type cb_type) const;
   private: /* Internal builders */
     void build_segment_ids(); /* build a map of segment_ids */
     void add_sb_unique_side_submodule(DeviceCoordinator& coordinator, RRGSB& rr_sb, enum e_side side);
     void add_sb_unique_side_segment_submodule(DeviceCoordinator& coordinator, RRGSB& rr_sb, enum e_side side, size_t seg_id);
+    void add_cb_unique_module(t_rr_type cb_type, const DeviceCoordinator& coordinator);
+    void set_cb_unique_module_id(t_rr_type, const DeviceCoordinator& coordinator, size_t id);
     void build_sb_unique_submodule(); /* Add a switch block to the array, which will automatically identify and update the lists of unique side module */
+    void build_sb_unique_module(); /* Add a switch block to the array, which will automatically identify and update the lists of unique mirrors and rotatable mirrors */
+    void build_cb_unique_module(t_rr_type cb_type); /* Add a switch block to the array, which will automatically identify and update the lists of unique side module */
   private: /* Internal Data */
     std::vector< std::vector<RRGSB> > rr_gsb_;
 
@@ -323,6 +341,12 @@ class DeviceRRGSB {
 
     std::vector< std::vector< std::vector< std::vector<size_t> > > > sb_unique_submodule_id_; /* A map from rr_switch_block to its unique_side_module [0..x][0..y][0..num_sides][num_seg-1]*/
     std::vector< std::vector <std::vector<DeviceCoordinator> > > sb_unique_submodule_; /* For each side of switch block, we identify a list of unique modules based on its connection. This is a matrix [0..num_sides-1][0..num_seg-1][0..num_module], num_sides will the max number of sides of all the rr_switch_blocks */
+
+    std::vector< std::vector<size_t> > cbx_unique_module_id_; /* A map from rr_gsb to its unique mirror */
+    std::vector<DeviceCoordinator> cbx_unique_module_; /* For each side of connection block, we identify a list of unique modules based on its connection. This is a matrix [0..num_module] */
+
+    std::vector< std::vector<size_t> > cby_unique_module_id_; /* A map from rr_gsb to its unique mirror */
+    std::vector<DeviceCoordinator> cby_unique_module_; /* For each side of connection block, we identify a list of unique modules based on its connection. This is a matrix [0..num_module] */
 
     std::vector<size_t> segment_ids_;
 };

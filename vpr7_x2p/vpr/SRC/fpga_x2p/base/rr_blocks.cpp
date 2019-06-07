@@ -74,7 +74,7 @@ int RRChan::get_node_segment(size_t track_num) const {
 }
 
 /* evaluate if two RRChan is mirror to each other */
-bool RRChan::is_mirror(RRChan& cand) const {
+bool RRChan::is_mirror(const RRChan& cand) const {
   /* If any following element does not match, it is not mirror */
   /* 1. type  */
   if (this->get_type() != cand.get_type()) {
@@ -552,6 +552,39 @@ size_t RRGSB::get_max_chan_width() const {
   return max_chan_width;
 } 
 
+/* Get the number of routing tracks of a X/Y-direction CB */
+size_t RRGSB::get_cb_chan_width(t_rr_type cb_type) const {
+  return get_chan_width(get_cb_chan_side(cb_type)); 
+}
+
+/* Get the sides of ipin_nodes belong to the cb */
+std::vector<enum e_side> RRGSB::get_cb_ipin_sides(t_rr_type cb_type) const {
+  assert (validate_cb_type(cb_type));
+  
+  std::vector<enum e_side> ipin_sides;
+
+  /* Make sure a clean start */
+  ipin_sides.clear();
+
+  switch(cb_type) {
+  case CHANX:
+    ipin_sides.push_back(TOP);
+    ipin_sides.push_back(BOTTOM);
+    break;
+  case CHANY:
+    ipin_sides.push_back(RIGHT);
+    ipin_sides.push_back(LEFT);
+    break;
+  default: 
+    vpr_printf(TIO_MESSAGE_ERROR, 
+              "(File:%s, [LINE%d])Invalid type of connection block!\n", 
+              __FILE__, __LINE__);
+    exit(1);
+  }
+
+  return ipin_sides;
+}
+
 /* Get the direction of a rr_node at a given side and track_id */
 enum PORTS RRGSB::get_chan_node_direction(enum e_side side, size_t track_id) const {
   Side side_manager(side);
@@ -700,6 +733,12 @@ enum e_side RRGSB::get_opin_node_grid_side(t_rr_node* opin_node) const {
   assert(validate_side(side));
   return get_opin_node_grid_side(side, index);
 } 
+
+/* Get the node index in the array, return -1 if not found */
+int RRGSB::get_chan_node_index(enum e_side node_side, t_rr_node* node) const {
+  assert (validate_side(node_side));
+  return get_chan(node_side).get_node_track_id(node); 
+}
 
 /* Get the node index in the array, return -1 if not found */
 int RRGSB::get_node_index(t_rr_node* node, 
@@ -948,7 +987,7 @@ bool RRGSB::is_sb_node_imply_short_connection(t_rr_node* src_node) const {
  * Number of channel/opin/ipin rr_nodes are same 
  * If all above are satisfied, the two switch blocks may be mirrors !
  */
-bool RRGSB::is_sb_mirrorable(RRGSB& cand) const {
+bool RRGSB::is_sb_mirrorable(const RRGSB& cand) const {
   /* check the numbers of sides */
   if (get_num_sides() != cand.get_num_sides()) {
     return false;
@@ -981,20 +1020,64 @@ bool RRGSB::is_sb_mirrorable(RRGSB& cand) const {
   }
 
   /* Make sure the number of conf bits are the same */
-  /* TODO: recover this check when the SB conf bits are allocated during setup stage!!! 
-  if ( ( get_num_conf_bits() != cand.get_num_conf_bits() ) 
-    || ( get_num_reserved_conf_bits() != cand.get_num_reserved_conf_bits() ) ) {
+  if ( ( get_sb_num_conf_bits() != cand.get_sb_num_conf_bits() ) 
+    || ( get_sb_num_reserved_conf_bits() != cand.get_sb_num_reserved_conf_bits() ) ) { 
     return false;
   }
-  */
 
   return true;
 }
 
+/* check if the candidate CB is a mirror of the current one */
+bool RRGSB::is_cb_mirror(const RRGSB& cand, t_rr_type cb_type) const { 
+  /* Check if channel width is the same */
+  if ( get_cb_chan_width(cb_type) != cand.get_cb_chan_width(cb_type) ) {
+    return false;
+  }
+
+  enum e_side chan_side = get_cb_chan_side(cb_type);
+
+  /* check the numbers/directionality of channel rr_nodes */
+  if ( false == get_chan(chan_side).is_mirror(cand.get_chan(chan_side)) ) {
+     return false;
+  }
+
+  /* check the equivalence of ipins */
+  std::vector<enum e_side> ipin_side = get_cb_ipin_sides(cb_type);
+  for (size_t side = 0; side < ipin_side.size(); ++side) {
+    /* Ensure we have the same number of IPINs on this side */
+    if ( get_num_ipin_nodes(ipin_side[side]) != cand.get_num_ipin_nodes(ipin_side[side]) ) {
+      return false;
+    }
+    for (size_t inode = 0; inode < get_num_ipin_nodes(ipin_side[side]); ++inode) {
+      if (false == is_cb_node_mirror(cand, cb_type, ipin_side[side], inode)) {
+        return false;
+      }
+    }
+  }
+
+  /* Make sure the number of conf bits are the same */
+  if ( ( get_cb_num_conf_bits(cb_type) != cand.get_cb_num_conf_bits(cb_type) ) 
+    || ( get_cb_num_reserved_conf_bits(cb_type) != cand.get_cb_num_reserved_conf_bits(cb_type) ) ) { 
+    return false;
+  }
+
+  return true;
+}
+
+/* check if the CB exist in this GSB */
+bool RRGSB::is_cb_exist(t_rr_type cb_type) const {
+  /* if channel width is zero, there is no CB */
+  if ( 0 == get_cb_chan_width(cb_type)) {
+    return false;
+  }
+  return true;
+} 
+
 /* Determine an initial offset in rotating the candidate Switch Block to find a mirror matching 
  * We try to find the offset in track_id where the two Switch Blocks have their first short connections 
  */
-size_t RRGSB::get_hint_rotate_offset(RRGSB& cand) const {
+size_t RRGSB::get_hint_rotate_offset(const RRGSB& cand) const {
   size_t offset_hint = size_t(-1);
 
   assert (get_num_sides() == cand.get_num_sides());
@@ -1019,7 +1102,7 @@ size_t RRGSB::get_hint_rotate_offset(RRGSB& cand) const {
 } 
 
 /* check if all the routing segments of a side of candidate SB is a mirror of the current one */
-bool RRGSB::is_sb_side_segment_mirror(RRGSB& cand, enum e_side side, size_t seg_id) const {
+bool RRGSB::is_sb_side_segment_mirror(const RRGSB& cand, enum e_side side, size_t seg_id) const {
   /* Create a side manager */
   Side side_manager(side);
 
@@ -1082,7 +1165,7 @@ bool RRGSB::is_sb_side_segment_mirror(RRGSB& cand, enum e_side side, size_t seg_
  * 5. check if pin class id and pin id are same 
  * If all above are satisfied, the side of the two switch blocks are mirrors!
  */
-bool RRGSB::is_sb_side_mirror(RRGSB& cand, enum e_side side) const {
+bool RRGSB::is_sb_side_mirror(const RRGSB& cand, enum e_side side) const {
 
   /* get a list of segments */
   std::vector<size_t> seg_ids = get_chan(side).get_segment_ids();
@@ -1109,7 +1192,7 @@ bool RRGSB::is_sb_side_mirror(RRGSB& cand, enum e_side side) const {
  * 5. check if pin class id and pin id are same 
  * If all above are satisfied, the two switch blocks are mirrors!
  */
-bool RRGSB::is_sb_mirror(RRGSB& cand) const {
+bool RRGSB::is_sb_mirror(const RRGSB& cand) const {
   /* check the numbers of sides */
   if (get_num_sides() != cand.get_num_sides()) {
     return false;
@@ -1196,6 +1279,22 @@ DeviceCoordinator RRGSB::get_cb_coordinator(t_rr_type cb_type) const {
     exit(1);
   }
 } 
+
+enum e_side RRGSB::get_cb_chan_side(t_rr_type cb_type) const {
+  assert (validate_cb_type(cb_type));
+  switch(cb_type) {
+  case CHANX:
+    return LEFT;
+  case CHANY:
+    return TOP;
+  default: 
+    vpr_printf(TIO_MESSAGE_ERROR, 
+              "(File:%s, [LINE%d])Invalid type of connection block!\n", 
+              __FILE__, __LINE__);
+    exit(1);
+  }
+}
+
 
 DeviceCoordinator RRGSB::get_side_block_coordinator(enum e_side side) const {
   Side side_manager(side); 
@@ -1318,11 +1417,14 @@ void RRGSB::set(const RRGSB& src) {
   for (size_t side = 0; side < src.get_num_sides(); ++side) {
     Side side_manager(side);
     /* Copy chan_nodes */
-    this->chan_node_[side_manager.get_side()].set(src.get_chan(side_manager.get_side()));
-    /* Copy chan_node_direction_*/
-    this->chan_node_direction_[side_manager.get_side()].clear();
-    for (size_t inode = 0; inode < src.get_chan_width(side_manager.get_side()); ++inode) {
-      this->chan_node_direction_[side_manager.get_side()].push_back(src.get_chan_node_direction(side_manager.get_side(), inode));
+    /* skip if there is no channel width */
+    if ( 0 < src.get_chan_width(side_manager.get_side()) ) {
+      this->chan_node_[side_manager.get_side()].set(src.get_chan(side_manager.get_side()));
+      /* Copy chan_node_direction_*/
+      this->chan_node_direction_[side_manager.get_side()].clear();
+      for (size_t inode = 0; inode < src.get_chan_width(side_manager.get_side()); ++inode) {
+        this->chan_node_direction_[side_manager.get_side()].push_back(src.get_chan_node_direction(side_manager.get_side(), inode));
+      }
     }
 
     /* Copy opin_node and opin_node_grid_side_ */
@@ -1792,7 +1894,7 @@ void RRGSB::clear_one_side(enum e_side node_side) {
  * 2. OPIN or IPIN: should have the same side and index
  * 3. each drive_rr_switch should be the same 
  */
-bool RRGSB::is_sb_node_mirror(RRGSB& cand, 
+bool RRGSB::is_sb_node_mirror(const RRGSB& cand, 
                               enum e_side node_side, 
                               size_t track_id) const {
   /* Ensure rr_nodes are either the output of short-connection or multiplexer  */
@@ -1836,6 +1938,64 @@ bool RRGSB::is_sb_node_mirror(RRGSB& cand,
         return false;
       } 
     }
+  }
+
+  return true;
+} 
+
+/* check if two ipin_nodes have a similar set of drive_rr_nodes 
+ * for each drive_rr_node:
+ * 1. CHANX or CHANY: should have the same side and index
+ * 2. each drive_rr_switch should be the same 
+ */
+bool RRGSB::is_cb_node_mirror(const RRGSB& cand, t_rr_type cb_type,
+                              enum e_side node_side, 
+                              size_t node_id) const {
+  /* Ensure rr_nodes are either the output of short-connection or multiplexer  */
+  t_rr_node* node = this->get_ipin_node(node_side, node_id);
+  t_rr_node* cand_node = cand.get_ipin_node(node_side, node_id);
+
+  if ( node->num_drive_rr_nodes != cand_node->num_drive_rr_nodes ) {
+    return false;
+  }
+  for (size_t inode = 0; inode < size_t(node->num_drive_rr_nodes); ++inode) {
+    /* node type should be the same  */
+    if ( node->drive_rr_nodes[inode]->type
+      != cand_node->drive_rr_nodes[inode]->type) {
+      return false;
+    }
+    /* switch type should be the same  */
+    if ( node->drive_switches[inode]
+      != cand_node->drive_switches[inode]) {
+      return false;
+    }
+
+    int src_node_id, des_node_id;
+    enum e_side src_node_side, des_node_side; 
+    enum e_side chan_side = get_cb_chan_side(cb_type);
+    switch (node->drive_rr_nodes[inode]->type) {
+    case CHANX:
+    case CHANY:
+      /* if the drive rr_nodes are routing tracks, find index  */
+      src_node_id = this->get_chan_node_index(chan_side, node->drive_rr_nodes[inode]);
+      des_node_id =  cand.get_chan_node_index(chan_side, cand_node->drive_rr_nodes[inode]);
+      break;
+    case OPIN:
+      this->get_node_side_and_index(node->drive_rr_nodes[inode], OUT_PORT, &src_node_side, &src_node_id);
+       cand.get_node_side_and_index(cand_node->drive_rr_nodes[inode], OUT_PORT, &des_node_side, &des_node_id);
+      if (src_node_side != des_node_side) {
+        return false;
+      } 
+      break;
+    default:
+      vpr_printf(TIO_MESSAGE_ERROR, 
+                "(File:%s, [LINE%d])Invalid type of drive_rr_nodes for ipin_node!\n", 
+                __FILE__, __LINE__);
+      exit(1);
+    }
+    if (src_node_id != des_node_id) {
+      return false;
+    } 
   }
 
   return true;
@@ -1978,9 +2138,26 @@ size_t DeviceRRGSB::get_num_sb_unique_submodule(enum e_side side, size_t seg_ind
 } 
 
 /* get the number of unique mirrors of switch blocks */
+size_t DeviceRRGSB::get_num_cb_unique_module(t_rr_type cb_type) const {
+  assert (validate_cb_type(cb_type));
+  switch(cb_type) {
+  case CHANX:
+    return cbx_unique_module_.size();
+  case CHANY:
+    return cby_unique_module_.size();
+  default: 
+    vpr_printf(TIO_MESSAGE_ERROR, 
+              "(File:%s, [LINE%d])Invalid type of connection block!\n", 
+              __FILE__, __LINE__);
+    exit(1);
+  }
+} 
+
+/* get the number of unique mirrors of switch blocks */
 size_t DeviceRRGSB::get_num_sb_unique_module() const {
   return sb_unique_module_.size();
 } 
+
 
 /* Get the submodule id of a SB */ 
 size_t DeviceRRGSB::get_sb_unique_submodule_id(DeviceCoordinator& coordinator, enum e_side side, size_t seg_id) const {
@@ -2026,6 +2203,23 @@ RRGSB DeviceRRGSB::get_sb_unique_module(size_t index) const {
   assert (validate_sb_unique_module_index(index));
   
   return rr_gsb_[sb_unique_module_[index].get_x()][sb_unique_module_[index].get_y()];
+}
+
+/* Get a rr switch block which a unique mirror */ 
+RRGSB DeviceRRGSB::get_cb_unique_module(t_rr_type cb_type, size_t index) const {
+  assert (validate_cb_unique_module_index(cb_type, index));
+  assert (validate_cb_type(cb_type));
+  switch(cb_type) {
+  case CHANX:
+    return rr_gsb_[cbx_unique_module_[index].get_x()][cbx_unique_module_[index].get_y()];
+  case CHANY:
+    return rr_gsb_[cby_unique_module_[index].get_x()][cby_unique_module_[index].get_y()];
+  default: 
+    vpr_printf(TIO_MESSAGE_ERROR, 
+              "(File:%s, [LINE%d])Invalid type of connection block!\n", 
+              __FILE__, __LINE__);
+    exit(1);
+  }  
 }
 
 /* Give a coordinator of a rr switch block, and return its unique mirror */ 
@@ -2104,13 +2298,21 @@ void DeviceRRGSB::set_sb_conf_bits_msb(DeviceCoordinator& coordinator, size_t co
 /* Pre-allocate the rr_switch_block array that the device requires */ 
 void DeviceRRGSB::reserve(DeviceCoordinator& coordinator) { 
   rr_gsb_.resize(coordinator.get_x());
+
   sb_unique_submodule_id_.resize(coordinator.get_x());
   sb_unique_module_id_.resize(coordinator.get_x());
 
+  cbx_unique_module_id_.resize(coordinator.get_x());
+  cby_unique_module_id_.resize(coordinator.get_x());
+
   for (size_t x = 0; x < coordinator.get_x(); ++x) {
     rr_gsb_[x].resize(coordinator.get_y()); 
+
     sb_unique_submodule_id_[x].resize(coordinator.get_y());
     sb_unique_module_id_[x].resize(coordinator.get_y()); 
+
+    cbx_unique_module_id_[x].resize(coordinator.get_y());
+    cby_unique_module_id_[x].resize(coordinator.get_y()); 
   }
 
   return;
@@ -2133,14 +2335,21 @@ void DeviceRRGSB::reserve_sb_unique_submodule_id(DeviceCoordinator& coordinator)
 void DeviceRRGSB::resize_upon_need(DeviceCoordinator& coordinator) { 
   if (coordinator.get_x() + 1 > rr_gsb_.size()) {
     rr_gsb_.resize(coordinator.get_x() + 1);
+
     sb_unique_submodule_id_.resize(coordinator.get_x() + 1);
     sb_unique_module_id_.resize(coordinator.get_x() + 1);
+
+    cbx_unique_module_id_.resize(coordinator.get_x() + 1);
+    cby_unique_module_id_.resize(coordinator.get_x() + 1);
   }
 
   if (coordinator.get_y() + 1 > rr_gsb_[coordinator.get_x()].size()) {
     rr_gsb_[coordinator.get_x()].resize(coordinator.get_y() + 1);
     sb_unique_submodule_id_[coordinator.get_x()].resize(coordinator.get_y() + 1);
     sb_unique_module_id_[coordinator.get_x()].resize(coordinator.get_y() + 1);
+
+    cbx_unique_module_id_[coordinator.get_x()].resize(coordinator.get_y() + 1);
+    cby_unique_module_id_[coordinator.get_x()].resize(coordinator.get_y() + 1);
   }
 
   return;
@@ -2159,12 +2368,46 @@ void DeviceRRGSB::add_rr_gsb(DeviceCoordinator& coordinator,
 }
 
 /* Add a switch block to the array, which will automatically identify and update the lists of unique mirrors and rotatable mirrors */
+void DeviceRRGSB::build_cb_unique_module(t_rr_type cb_type) {
+  /* Make sure a clean start */
+  clear_cb_unique_module(cb_type);
+
+  for (size_t ix = 0; ix < rr_gsb_.size(); ++ix) {
+    for (size_t iy = 0; iy < rr_gsb_[ix].size(); ++iy) {
+      bool is_unique_module = true;
+      DeviceCoordinator gsb_coordinator(ix, iy);
+
+      /* Bypass non-exist CB */
+      if ( false == rr_gsb_[ix][iy].is_cb_exist(cb_type) ) {
+        continue;
+      }
+
+      /* Traverse the unique_mirror list and check it is an mirror of another */
+      for (size_t id = 0; id < get_num_cb_unique_module(cb_type); ++id) {
+        if (true == rr_gsb_[ix][iy].is_cb_mirror(get_cb_unique_module(cb_type, id), cb_type)) {
+          /* This is a mirror, raise the flag and we finish */
+          is_unique_module = false;
+          /* Record the id of unique mirror */
+          set_cb_unique_module_id(cb_type, gsb_coordinator, id); 
+          break;
+        }
+      }
+      /* Add to list if this is a unique mirror*/
+      if (true == is_unique_module) {
+        add_cb_unique_module(cb_type, gsb_coordinator);
+        /* Record the id of unique mirror */
+        set_cb_unique_module_id(cb_type, gsb_coordinator, get_num_cb_unique_module(cb_type)); 
+      }
+    }
+  } 
+  return;
+}
+
+
+/* Add a switch block to the array, which will automatically identify and update the lists of unique mirrors and rotatable mirrors */
 void DeviceRRGSB::build_sb_unique_module() {
   /* Make sure a clean start */
   clear_sb_unique_module();
-
-  /* build segment id look-up*/
-  build_segment_ids();
 
   /* Build the unique submodule */
   build_sb_unique_submodule();
@@ -2176,12 +2419,6 @@ void DeviceRRGSB::build_sb_unique_module() {
 
       /* Traverse the unique_mirror list and check it is an mirror of another */
       for (size_t id = 0; id < get_num_sb_unique_module(); ++id) {
-        /* If we have the same coordinator, this is already not unique_mirror */
-        if ( (ix == sb_unique_module_[id].get_x())
-          && (iy == sb_unique_module_[id].get_y()) ) {
-          is_unique_module = false;
-          break;
-        }
         /* Check if the two modules have the same submodules,
          * if so, these two modules are the same, indicating the sb is not unique.
          * else the sb is unique 
@@ -2196,8 +2433,7 @@ void DeviceRRGSB::build_sb_unique_module() {
       }
       /* Add to list if this is a unique mirror*/
       if (true == is_unique_module) {
-        DeviceCoordinator coordinator(ix, iy);
-        sb_unique_module_.push_back(coordinator);
+        sb_unique_module_.push_back(sb_coordinator);
         /* Record the id of unique mirror */
         sb_unique_module_id_[ix][iy] = sb_unique_module_.size() - 1; 
       }
@@ -2267,6 +2503,17 @@ void DeviceRRGSB::add_sb_unique_side_segment_submodule(DeviceCoordinator& coordi
   return;
 }
 
+void DeviceRRGSB::build_unique_module() {
+  build_segment_ids();
+
+  build_sb_unique_module();
+
+  build_cb_unique_module(CHANX);
+  build_cb_unique_module(CHANY);
+
+  return;
+}
+
 /* Add a unique side module to the list:
  * Check if the connections and nodes on the specified side of the rr_sb 
  * If it is similar to any module[side][i] in the list, we build a link from the rr_sb to the unique_module
@@ -2282,6 +2529,42 @@ void DeviceRRGSB::add_sb_unique_side_submodule(DeviceCoordinator& coordinator,
   }
 
   return;
+}
+
+void DeviceRRGSB::add_cb_unique_module(t_rr_type cb_type, const DeviceCoordinator& coordinator) {
+  assert (validate_cb_type(cb_type));
+  switch(cb_type) {
+  case CHANX:
+    cbx_unique_module_.push_back(coordinator); 
+    return;
+  case CHANY:
+    cby_unique_module_.push_back(coordinator); 
+    return;
+  default: 
+    vpr_printf(TIO_MESSAGE_ERROR, 
+              "(File:%s, [LINE%d])Invalid type of connection block!\n", 
+              __FILE__, __LINE__);
+    exit(1);
+  }
+}
+
+void DeviceRRGSB::set_cb_unique_module_id(t_rr_type cb_type, const DeviceCoordinator& coordinator, size_t id) {
+  assert (validate_cb_type(cb_type));
+  size_t x = coordinator.get_x();
+  size_t y = coordinator.get_y();
+  switch(cb_type) {
+  case CHANX:
+    cbx_unique_module_id_[x][y] = id; 
+    return;
+  case CHANY:
+    cby_unique_module_id_[x][y] = id; 
+    return;
+  default: 
+    vpr_printf(TIO_MESSAGE_ERROR, 
+              "(File:%s, [LINE%d])Invalid type of connection block!\n", 
+              __FILE__, __LINE__);
+    exit(1);
+  }
 }
 
 /* build a map of segment_ids */
@@ -2320,6 +2603,12 @@ void DeviceRRGSB::clear() {
   clear_gsb();
 
   /* clean unique module lists */
+  clear_cb_unique_module(CHANX);
+  clear_cb_unique_module_id(CHANX);
+
+  clear_cb_unique_module(CHANY);
+  clear_cb_unique_module_id(CHANY);
+
   clear_sb_unique_module();
   clear_sb_unique_module_id();
 
@@ -2344,6 +2633,27 @@ void DeviceRRGSB::clear_sb_unique_module_id() {
     sb_unique_module_id_[x].clear(); 
   }
   return;
+}
+
+void DeviceRRGSB::clear_cb_unique_module_id(t_rr_type cb_type) {
+  assert (validate_cb_type(cb_type));
+  switch(cb_type) {
+  case CHANX:
+    for (size_t x = 0; x < rr_gsb_.size(); ++x) {
+      cbx_unique_module_id_[x].clear(); 
+    }
+    return;
+  case CHANY:
+    for (size_t x = 0; x < rr_gsb_.size(); ++x) {
+      cby_unique_module_id_[x].clear(); 
+    }
+    return;
+  default: 
+    vpr_printf(TIO_MESSAGE_ERROR, 
+              "(File:%s, [LINE%d])Invalid type of connection block!\n", 
+              __FILE__, __LINE__);
+    exit(1);
+  }
 }
 
 void DeviceRRGSB::clear_sb_unique_submodule_id() {
@@ -2381,6 +2691,24 @@ void DeviceRRGSB::clear_sb_unique_module() {
 
   return;
 } 
+
+void DeviceRRGSB::clear_cb_unique_module(t_rr_type cb_type) {
+  assert (validate_cb_type(cb_type));
+  switch(cb_type) {
+  case CHANX:
+    cbx_unique_module_.clear(); 
+    return;
+  case CHANY:
+    cby_unique_module_.clear(); 
+    return;
+  default: 
+    vpr_printf(TIO_MESSAGE_ERROR, 
+              "(File:%s, [LINE%d])Invalid type of connection block!\n", 
+              __FILE__, __LINE__);
+    exit(1);
+  }
+}
+
 
 /* clean the content related to segment_ids */
 void DeviceRRGSB::clear_segment_ids() {
@@ -2431,9 +2759,38 @@ bool DeviceRRGSB::validate_sb_unique_submodule_index(size_t index, enum e_side s
   return true;
 } 
 
+bool DeviceRRGSB::validate_cb_unique_module_index(t_rr_type cb_type, size_t index) const {
+  assert (validate_cb_type(cb_type));
+  switch(cb_type) {
+  case CHANX:
+    if (index >= cbx_unique_module_.size()) {
+      return false;
+    }
+    return true;
+  case CHANY:
+    if (index >= cbx_unique_module_.size()) {
+      return false;
+    }
+    return true;
+  default: 
+    vpr_printf(TIO_MESSAGE_ERROR, 
+              "(File:%s, [LINE%d])Invalid type of connection block!\n", 
+              __FILE__, __LINE__);
+    exit(1);
+  } 
+}
+
 bool DeviceRRGSB::validate_segment_index(size_t index) const {
   if (index >= segment_ids_.size()) {
     return false;
   }
   return true;
 }
+
+bool DeviceRRGSB::validate_cb_type(t_rr_type cb_type) const {
+  if ( (CHANX == cb_type) || (CHANY == cb_type) ) {
+    return true;
+  }
+  return false;
+}
+

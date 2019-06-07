@@ -2017,7 +2017,7 @@ void dump_verilog_routing_switch_box_unique_side_module(t_sram_orgz_info* cur_sr
     dump_verilog_formal_verification_sram_ports(fp, cur_sram_orgz_info, 
                                                 cur_num_sram,
                                                 esti_sram_cnt - 1,
-                                                VERILOG_PORT_OUTPUT);
+                                                VERILOG_PORT_INPUT);
     fprintf(fp, "\n");
     fprintf(fp, "`endif\n");
   }
@@ -2189,7 +2189,7 @@ void dump_verilog_routing_switch_box_unique_module(t_sram_orgz_info* cur_sram_or
     dump_verilog_formal_verification_sram_ports(fp, cur_sram_orgz_info, 
                                                 rr_sb.get_sb_conf_bits_lsb(),
                                                 rr_sb.get_sb_conf_bits_msb(),
-                                                VERILOG_PORT_OUTPUT);
+                                                VERILOG_PORT_INPUT);
     fprintf(fp, "\n");
     fprintf(fp, "`endif\n");
   }
@@ -3319,7 +3319,7 @@ void dump_verilog_routing_connection_box_subckt(t_sram_orgz_info* cur_sram_orgz_
     dump_verilog_formal_verification_sram_ports(fp, cur_sram_orgz_info, 
                                                 cur_cb_info->conf_bits_lsb, 
                                                 cur_cb_info->conf_bits_msb - 1,
-                                                VERILOG_PORT_OUTPUT);
+                                                VERILOG_PORT_INPUT);
     fprintf(fp, "\n");
     fprintf(fp, "`endif\n");
   }

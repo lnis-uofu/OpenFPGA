@@ -1294,13 +1294,23 @@ DeviceRRGSB build_device_rr_gsb(boolean output_sb_xml, char* sb_xml_dir,
 
   /* Build a list of unique modules for each Switch Block */
   /* Build a list of unique modules for each side of each Switch Block */
-  LL_drive_rr_gsb.build_sb_unique_module();
+  LL_drive_rr_gsb.build_unique_module();
 
-  /* Report number of unique mirrors */
   vpr_printf(TIO_MESSAGE_INFO, 
              "Detect %lu routing segments used by switch blocks.\n",
              LL_drive_rr_gsb.get_num_segments());
 
+  /* Report number of unique CB Modules */
+  vpr_printf(TIO_MESSAGE_INFO, 
+             "Detect %d independent connection blocks from %d X-channel connection blocks.\n",
+             LL_drive_rr_gsb.get_num_cb_unique_module(CHANX), (nx + 0) * (ny + 1) );
+
+  vpr_printf(TIO_MESSAGE_INFO, 
+             "Detect %d independent connection blocks from %d Y-channel connection blocks.\n",
+             LL_drive_rr_gsb.get_num_cb_unique_module(CHANY), (nx + 1) * (ny + 0) );
+
+
+  /* Report number of unique SB modules */
   vpr_printf(TIO_MESSAGE_INFO, 
              "Detect %d independent switch blocks from %d switch blocks.\n",
              LL_drive_rr_gsb.get_num_sb_unique_module(), (nx + 1) * (ny + 1) );
