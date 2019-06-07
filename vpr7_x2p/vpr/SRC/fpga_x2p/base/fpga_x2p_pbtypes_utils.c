@@ -908,6 +908,7 @@ int count_num_conf_bits_pb_type_mode_interc(t_mode* cur_pb_type_mode,
 } 
 
 /* Count the number of configuration bits of interconnection inside a pb_type in its default mode */
+static 
 int count_num_reserved_conf_bits_pb_type_mode_interc(t_mode* cur_pb_type_mode,
                                                      enum e_sram_orgz cur_sram_orgz_type) {
   int num_reserved_conf_bits = 0;
@@ -2765,6 +2766,7 @@ int get_pb_graph_node_wired_lut_logical_block_index(t_pb_graph_node* cur_pb_grap
   return wired_lut_lb_index;
 }
 
+static 
 void rec_sync_wired_lut_to_one_phy_pb(t_pb_graph_node* cur_pb_graph_node,
                                       t_phy_pb* cur_phy_pb,
                                       t_rr_node* op_pb_rr_graph) {

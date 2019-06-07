@@ -33,6 +33,8 @@
 #include "fpga_x2p_pbtypes_utils.h"
 #include "fpga_x2p_bitstream_utils.h"
 
+#include "fpga_x2p_mux_utils.h"
+
 /* Determine the number of SRAM bit for a basis subckt of a multiplexer
  * In general, the number of SRAM bits should be same as the number of inputs per level
  * with one exception: 

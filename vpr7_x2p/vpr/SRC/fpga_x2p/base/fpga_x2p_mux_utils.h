@@ -1,3 +1,5 @@
+#ifndef FPGA_X2P_MUX_UTILS_H
+#define FPGA_X2P_MUX_UTILS_H
 
 int determine_num_sram_bits_mux_basis_subckt(t_spice_model* mux_spice_model,
                                              int mux_size,
@@ -82,4 +84,4 @@ t_llist* stats_spice_muxes(int num_switch,
                            t_det_routing_arch* routing_arch);
 
 
-
+#endif

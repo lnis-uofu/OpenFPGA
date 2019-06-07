@@ -178,6 +178,7 @@ void alloc_and_load_rr_graph_rr_node(INOUTP t_rr_graph* local_rr_graph,
 
 /* Returns the segment number at which the segment this track lies on        *
  * started.                                                                  */
+static 
 int get_rr_graph_seg_start(INP t_seg_details * seg_details, INP int itrack,
 		                   INP int chan_num, INP int seg_num) {
 
@@ -895,6 +896,7 @@ void free_rr_graph_route_structs(t_rr_graph* local_rr_graph) { /* [0..num_rr_nod
   return;
 }
 
+static 
 void free_rr_graph_trace_data(t_rr_graph* local_rr_graph,
                               t_trace *tptr) {
 
