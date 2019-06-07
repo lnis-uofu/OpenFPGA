@@ -398,7 +398,7 @@ DeviceCoordinator get_chan_node_ending_sb_coordinator(t_rr_node* src_rr_node,
   }
 
   DeviceCoordinator sb_coordinator(next_sb_x, next_sb_y);
-  RRGSB rr_sb = device_rr_gsb.get_switch_block(sb_coordinator);
+  RRGSB rr_sb = device_rr_gsb.get_gsb(sb_coordinator);
   /* Double check if src_rr_node is in the list */
   enum e_side side;
   int index;
@@ -569,7 +569,7 @@ void restore_disable_timing_one_sb_output(FILE* fp,
   fprintf(fp, "reset_disable_timing "); 
   /* output instance name */
   fprintf(fp, "%s/", 
-          rr_sb.gen_verilog_instance_name()); 
+          rr_sb.gen_sb_verilog_instance_name()); 
   dump_verilog_one_sb_chan_pin(fp, rr_sb, wire_rr_node, OUT_PORT); 
   fprintf(fp, "\n"); 
 
@@ -621,7 +621,7 @@ void set_disable_timing_one_sb_output(FILE* fp,
   fprintf(fp, "set_disable_timing "); 
   /* output instance name */
   fprintf(fp, "%s/", 
-          rr_sb.gen_verilog_instance_name()); 
+          rr_sb.gen_sb_verilog_instance_name()); 
   dump_verilog_one_sb_chan_pin(fp, rr_sb, wire_rr_node, OUT_PORT); 
   fprintf(fp, "\n"); 
 

@@ -93,7 +93,7 @@ void fpga_spice_generate_bitstream_switch_box_mux(FILE* fp,
 
   /* Print the encoding in SPICE netlist for debugging */
   fprintf(fp, "***** Switch Block [%lu][%lu] *****\n", 
-          rr_sb.get_x(), rr_sb.get_y());
+          rr_sb.get_sb_x(), rr_sb.get_sb_y());
   fprintf(fp, "***** SRAM bits for MUX[%d], level=%d, select_path_id=%d. *****\n", 
           verilog_model->cnt, mux_level, path_id);
   fprintf(fp, "*****");
@@ -228,9 +228,9 @@ void fpga_spice_generate_bitstream_switch_box_interc(FILE* fp,
 
   /* Determine if the interc lies inside a channel wire, that is interc between segments */
   /* Check each num_drive_rr_nodes, see if they appear in the cur_sb_info */
-  if (true == rr_sb.is_node_imply_short_connection(cur_rr_node)) {
+  if (true == rr_sb.is_sb_node_imply_short_connection(cur_rr_node)) {
     /* Double check if the interc lies inside a channel wire, that is interc between segments */
-    assert(true == rr_sb.is_node_exist_opposite_side(cur_rr_node, chan_side));
+    assert(true == rr_sb.is_sb_node_exist_opposite_side(cur_rr_node, chan_side));
     num_drive_rr_nodes = 0;
     drive_rr_nodes = NULL;
   } else {
@@ -675,10 +675,10 @@ void fpga_spice_generate_bitstream_routing_resources(char* routing_bitstream_log
   /* Switch Boxes*/
   vpr_printf(TIO_MESSAGE_INFO,"Generating bitstream for Switch blocks...\n");
   if (TRUE == compact_routing_hierarchy) {
-    DeviceCoordinator sb_range = device_rr_gsb.get_switch_block_range();
+    DeviceCoordinator sb_range = device_rr_gsb.get_gsb_range();
     for (size_t ix = 0; ix < sb_range.get_x(); ++ix) {
       for (size_t iy = 0; iy < sb_range.get_y(); ++iy) {
-        RRGSB rr_sb = device_rr_gsb.get_switch_block(ix, iy);
+        RRGSB rr_sb = device_rr_gsb.get_gsb(ix, iy);
         fpga_spice_generate_bitstream_routing_switch_box_subckt(fp, 
                                                                 rr_sb, cur_sram_orgz_info);
       }

@@ -264,7 +264,7 @@ void verilog_generate_one_report_timing_within_sb(FILE* fp,
 
   /* output instance name */
   fprintf(fp, "%s/", 
-          rr_sb.gen_verilog_instance_name()); 
+          rr_sb.gen_sb_verilog_instance_name()); 
   /* Find which side the ending pin locates, and determine the coordinate */
   dump_verilog_one_sb_routing_pin(fp, rr_sb, src_rr_node);
 
@@ -272,7 +272,7 @@ void verilog_generate_one_report_timing_within_sb(FILE* fp,
 
   /* output instance name */
   fprintf(fp, "%s/",
-          rr_sb.gen_verilog_instance_name()); 
+          rr_sb.gen_sb_verilog_instance_name()); 
   /* Find which side the ending pin locates, and determine the coordinate */
   dump_verilog_one_sb_chan_pin(fp, rr_sb, des_rr_node, OUT_PORT); 
 
@@ -390,7 +390,7 @@ void verilog_generate_one_report_timing_sb_to_cb(FILE* fp,
   fprintf(fp, "report_timing -from "); 
   /* output instance name */
   fprintf(fp, "%s/", 
-              src_sb.gen_verilog_instance_name()); 
+              src_sb.gen_sb_verilog_instance_name()); 
   /* output pin name */
   dump_verilog_one_sb_chan_pin(fp, src_sb, 
                                src_rr_node, OUT_PORT); 
@@ -433,7 +433,7 @@ void verilog_generate_one_report_timing_sb_to_sb(FILE* fp,
 
   /* output instance name */
   fprintf(fp, "%s/", 
-          src_sb.gen_verilog_instance_name()); 
+          src_sb.gen_sb_verilog_instance_name()); 
   /* Find which side the ending pin locates, and determine the coordinate */
   dump_verilog_one_sb_chan_pin(fp, src_sb, src_rr_node, OUT_PORT); 
 
@@ -441,7 +441,7 @@ void verilog_generate_one_report_timing_sb_to_sb(FILE* fp,
 
   /* output instance name */
   fprintf(fp, "%s/",
-          des_sb.gen_verilog_instance_name());
+          des_sb.gen_sb_verilog_instance_name());
   /* Find which side the ending pin locates, and determine the coordinate */
   dump_verilog_one_sb_chan_pin(fp, des_sb, des_rr_node, IN_PORT); 
 
@@ -719,7 +719,7 @@ void verilog_generate_report_timing_one_sb_ending_segments(FILE* fp,
   case CHANY:
     /* Get the coordinate of ending SB */
     next_sb_coordinator = get_chan_node_ending_sb_coordinator(src_rr_node, des_rr_node);
-    next_sb = device_rr_gsb.get_switch_block(next_sb_coordinator); 
+    next_sb = device_rr_gsb.get_gsb(next_sb_coordinator); 
     verilog_generate_one_report_timing_sb_to_sb(fp, src_sb, src_rr_node, 
                                                 next_sb, src_rr_node);
     break;
@@ -947,9 +947,9 @@ void dump_verilog_one_sb_wire_segemental_report_timing(FILE* fp,
   case CHANY:
     /* Get the coordinate of ending CB */
     next_sb_coordinator = get_chan_node_ending_sb_coordinator(src_rr_node, des_rr_node);
-    next_sb = device_rr_gsb.get_switch_block(next_sb_coordinator);
-    end_sb_x = next_sb.get_x(); 
-    end_sb_y = next_sb.get_y();
+    next_sb = device_rr_gsb.get_gsb(next_sb_coordinator);
+    end_sb_x = next_sb.get_sb_x(); 
+    end_sb_y = next_sb.get_sb_y();
     break;
   default:
     vpr_printf(TIO_MESSAGE_ERROR, "(File: %s [LINE%d]) Invalid type of rr_node!\n",
@@ -958,15 +958,15 @@ void dump_verilog_one_sb_wire_segemental_report_timing(FILE* fp,
   }
 
   /* Get the base coordinate of src_sb */
-  cur_sb_x = src_sb.get_x();
-  cur_sb_y = src_sb.get_y();
+  cur_sb_x = src_sb.get_sb_x();
+  cur_sb_y = src_sb.get_sb_y();
   /* 4 cases: */
   if ((INC_DIRECTION == src_rr_node->direction) 
      &&(CHANX == src_rr_node->type)) {
     /* Follow the graph above, go through X channel */
-    for (int ix = src_sb.get_x(); ix < end_sb_x; ix++) {
+    for (int ix = src_sb.get_sb_x(); ix < end_sb_x; ix++) {
       DeviceCoordinator begin_sb_coordinator(ix, cur_sb_y);
-      RRGSB begin_sb = device_rr_gsb.get_switch_block(begin_sb_coordinator);
+      RRGSB begin_sb = device_rr_gsb.get_gsb(begin_sb_coordinator);
       /* If this is the ending point, we add a ending segment */
       if (ix == end_sb_x - 1) {
         verilog_generate_report_timing_one_sb_ending_segments(fp,
@@ -978,7 +978,7 @@ void dump_verilog_one_sb_wire_segemental_report_timing(FILE* fp,
       }
       /* Report timing for the downstream segements, from a SB output to an adjacent CB input */
       DeviceCoordinator end_sb_coordinator(ix + 1, cur_sb_y);
-      RRGSB end_sb = device_rr_gsb.get_switch_block(end_sb_coordinator);
+      RRGSB end_sb = device_rr_gsb.get_gsb(end_sb_coordinator);
       verilog_generate_report_timing_one_sb_thru_segments(fp,
                                                           begin_sb, src_rr_node, 
                                                           end_sb, src_rr_node,
@@ -987,9 +987,9 @@ void dump_verilog_one_sb_wire_segemental_report_timing(FILE* fp,
   } else if ((INC_DIRECTION == src_rr_node->direction) 
      &&(CHANY == src_rr_node->type)) {
     /* Follow the graph above, go through Y channel */
-    for (int iy = src_sb.get_y(); iy < end_sb_y; iy++) {
+    for (int iy = src_sb.get_sb_y(); iy < end_sb_y; iy++) {
       DeviceCoordinator begin_sb_coordinator(cur_sb_x, iy);
-      RRGSB begin_sb = device_rr_gsb.get_switch_block(begin_sb_coordinator);
+      RRGSB begin_sb = device_rr_gsb.get_gsb(begin_sb_coordinator);
      /* If this is the ending point, we add a ending segment */
       if (iy == end_sb_y - 1) {
         verilog_generate_report_timing_one_sb_ending_segments(fp,
@@ -1000,7 +1000,7 @@ void dump_verilog_one_sb_wire_segemental_report_timing(FILE* fp,
       }
       /* Report timing for the downstream segements, from a SB output to an adjacent CB input */
       DeviceCoordinator end_sb_coordinator(cur_sb_x, iy + 1);
-      RRGSB end_sb = device_rr_gsb.get_switch_block(end_sb_coordinator);
+      RRGSB end_sb = device_rr_gsb.get_gsb(end_sb_coordinator);
       verilog_generate_report_timing_one_sb_thru_segments(fp,
                                                           begin_sb, src_rr_node, 
                                                           end_sb, src_rr_node,
@@ -1009,9 +1009,9 @@ void dump_verilog_one_sb_wire_segemental_report_timing(FILE* fp,
   } else if ((DEC_DIRECTION == src_rr_node->direction) 
      &&(CHANX == src_rr_node->type)) {
     /* Follow the graph above, go through X channel */
-    for (int ix = src_sb.get_x() - 1; ix > end_sb_x; ix--) {
+    for (int ix = src_sb.get_sb_x() - 1; ix > end_sb_x; ix--) {
       DeviceCoordinator begin_sb_coordinator(ix, cur_sb_y);
-      RRGSB begin_sb = device_rr_gsb.get_switch_block(begin_sb_coordinator);
+      RRGSB begin_sb = device_rr_gsb.get_gsb(begin_sb_coordinator);
       /* If this is the ending point, we add a ending segment */
       if (ix == end_sb_x + 1) {
         verilog_generate_report_timing_one_sb_ending_segments(fp,
@@ -1022,7 +1022,7 @@ void dump_verilog_one_sb_wire_segemental_report_timing(FILE* fp,
       }
       /* Report timing for the downstream segements, from a SB output to an adjacent CB input */
       DeviceCoordinator end_sb_coordinator(ix - 1, cur_sb_y);
-      RRGSB end_sb = device_rr_gsb.get_switch_block(end_sb_coordinator);
+      RRGSB end_sb = device_rr_gsb.get_gsb(end_sb_coordinator);
       verilog_generate_report_timing_one_sb_thru_segments(fp,
                                                           begin_sb, src_rr_node, 
                                                           end_sb, src_rr_node,
@@ -1031,9 +1031,9 @@ void dump_verilog_one_sb_wire_segemental_report_timing(FILE* fp,
   } else if ((DEC_DIRECTION == src_rr_node->direction) 
      &&(CHANY == src_rr_node->type)) {
     /* Follow the graph above, go through Y channel */
-    for (int iy = src_sb.get_y() - 1; iy > end_sb_y; iy--) {
+    for (int iy = src_sb.get_sb_y() - 1; iy > end_sb_y; iy--) {
       DeviceCoordinator begin_sb_coordinator(cur_sb_x, iy);
-      RRGSB begin_sb = device_rr_gsb.get_switch_block(begin_sb_coordinator);
+      RRGSB begin_sb = device_rr_gsb.get_gsb(begin_sb_coordinator);
      /* If this is the ending point, we add a ending segment */
       if (iy == end_sb_y + 1) {
         verilog_generate_report_timing_one_sb_ending_segments(fp,
@@ -1044,7 +1044,7 @@ void dump_verilog_one_sb_wire_segemental_report_timing(FILE* fp,
       }
       /* Report timing for the downstream segements, from a SB output to an adjacent CB input */
       DeviceCoordinator end_sb_coordinator(cur_sb_x, iy - 1);
-      RRGSB end_sb = device_rr_gsb.get_switch_block(end_sb_coordinator);
+      RRGSB end_sb = device_rr_gsb.get_gsb(end_sb_coordinator);
       verilog_generate_report_timing_one_sb_thru_segments(fp,
                                                           begin_sb, src_rr_node, 
                                                           end_sb, src_rr_node,
@@ -1432,9 +1432,9 @@ void dump_verilog_sb_through_routing_pins(FILE* fp,
   case CHANY:
     /* Get the coordinate of ending CB */
     next_sb_coordinator = get_chan_node_ending_sb_coordinator(src_rr_node, des_rr_node);
-    next_sb = device_rr_gsb.get_switch_block(next_sb_coordinator);
-    end_sb_x = next_sb.get_x(); 
-    end_sb_y = next_sb.get_y();
+    next_sb = device_rr_gsb.get_gsb(next_sb_coordinator);
+    end_sb_x = next_sb.get_sb_x(); 
+    end_sb_y = next_sb.get_sb_y();
     break;
   default:
     vpr_printf(TIO_MESSAGE_ERROR, "(File: %s [LINE%d]) Invalid type of rr_node!\n",
@@ -1443,83 +1443,83 @@ void dump_verilog_sb_through_routing_pins(FILE* fp,
   }
 
   /* Get the base coordinate of src_sb */
-  cur_sb_x = src_rr_sb.get_x();
-  cur_sb_y = src_rr_sb.get_y();
+  cur_sb_x = src_rr_sb.get_sb_x();
+  cur_sb_y = src_rr_sb.get_sb_y();
   /* 4 cases: */
   if ((INC_DIRECTION == src_rr_node->direction) 
      &&(CHANX == src_rr_node->type)) {
     /* Follow the graph above, go through X channel */
-    for (size_t ix = src_rr_sb.get_x() + 1; ix < end_sb_x; ++ix) {
+    for (size_t ix = src_rr_sb.get_sb_x() + 1; ix < end_sb_x; ++ix) {
       /* Print an IN_PORT*/ 
       fprintf(fp, " ");
       /* output instance name */
       DeviceCoordinator inter_sb_coordinator(ix, cur_sb_y);
-      RRGSB inter_sb = device_rr_gsb.get_switch_block(inter_sb_coordinator);
+      RRGSB inter_sb = device_rr_gsb.get_gsb(inter_sb_coordinator);
       fprintf(fp, "%s/", 
-              inter_sb.gen_verilog_instance_name());
+              inter_sb.gen_sb_verilog_instance_name());
       dump_verilog_one_sb_chan_pin(fp, inter_sb, src_rr_node, IN_PORT); 
       /* Print an OUT_PORT*/ 
       fprintf(fp, " ");
       /* output instance name */
       fprintf(fp, "%s/", 
-              inter_sb.gen_verilog_instance_name()); 
+              inter_sb.gen_sb_verilog_instance_name()); 
       dump_verilog_one_sb_chan_pin(fp, inter_sb, src_rr_node, OUT_PORT); 
     }
   } else if ((INC_DIRECTION == src_rr_node->direction) 
      &&(CHANY == src_rr_node->type)) {
     /* Follow the graph above, go through Y channel */
-    for (size_t iy = src_rr_sb.get_y() + 1; iy < end_sb_y; ++iy) {
+    for (size_t iy = src_rr_sb.get_sb_y() + 1; iy < end_sb_y; ++iy) {
       /* Print an IN_PORT*/ 
       fprintf(fp, " ");
       /* output instance name */
       DeviceCoordinator inter_sb_coordinator(cur_sb_x, iy);
-      RRGSB inter_sb = device_rr_gsb.get_switch_block(inter_sb_coordinator);
+      RRGSB inter_sb = device_rr_gsb.get_gsb(inter_sb_coordinator);
       fprintf(fp, "%s/", 
-              inter_sb.gen_verilog_instance_name());
+              inter_sb.gen_sb_verilog_instance_name());
       dump_verilog_one_sb_chan_pin(fp, inter_sb, src_rr_node, IN_PORT); 
       /* Print an OUT_PORT*/ 
       fprintf(fp, " ");
       /* output instance name */
       fprintf(fp, "%s/", 
-              inter_sb.gen_verilog_instance_name()); 
+              inter_sb.gen_sb_verilog_instance_name()); 
       dump_verilog_one_sb_chan_pin(fp, inter_sb, src_rr_node, OUT_PORT); 
     }
   } else if ((DEC_DIRECTION == src_rr_node->direction) 
      &&(CHANX == src_rr_node->type)) {
     /* Follow the graph above, go through X channel */
-    for (size_t ix = src_rr_sb.get_x() - 1; ix > end_sb_x; --ix) {
+    for (size_t ix = src_rr_sb.get_sb_x() - 1; ix > end_sb_x; --ix) {
       /* Print an IN_PORT*/ 
       fprintf(fp, " ");
       /* output instance name */
       DeviceCoordinator inter_sb_coordinator(ix, cur_sb_y);
-      RRGSB inter_sb = device_rr_gsb.get_switch_block(inter_sb_coordinator);
+      RRGSB inter_sb = device_rr_gsb.get_gsb(inter_sb_coordinator);
       fprintf(fp, "%s/", 
-              inter_sb.gen_verilog_instance_name());
+              inter_sb.gen_sb_verilog_instance_name());
       dump_verilog_one_sb_chan_pin(fp, inter_sb, src_rr_node, IN_PORT); 
       /* Print an OUT_PORT*/ 
       fprintf(fp, " ");
       /* output instance name */
       fprintf(fp, "%s/", 
-              inter_sb.gen_verilog_instance_name());
+              inter_sb.gen_sb_verilog_instance_name());
       dump_verilog_one_sb_chan_pin(fp, inter_sb, src_rr_node, OUT_PORT); 
     }
   } else if ((DEC_DIRECTION == src_rr_node->direction) 
      &&(CHANY == src_rr_node->type)) {
     /* Follow the graph above, go through Y channel */
-    for (size_t iy = src_rr_sb.get_y() - 1; iy > end_sb_y; --iy) {
+    for (size_t iy = src_rr_sb.get_sb_y() - 1; iy > end_sb_y; --iy) {
       /* Print an IN_PORT*/ 
       fprintf(fp, " ");
       /* output instance name */
       DeviceCoordinator inter_sb_coordinator(cur_sb_x, iy);
-      RRGSB inter_sb = device_rr_gsb.get_switch_block(inter_sb_coordinator);
+      RRGSB inter_sb = device_rr_gsb.get_gsb(inter_sb_coordinator);
       fprintf(fp, "%s/", 
-              inter_sb.gen_verilog_instance_name());
+              inter_sb.gen_sb_verilog_instance_name());
       dump_verilog_one_sb_chan_pin(fp, inter_sb, src_rr_node, IN_PORT); 
       /* Print an OUT_PORT*/ 
       fprintf(fp, " ");
       /* output instance name */
       fprintf(fp, "%s/", 
-              inter_sb.gen_verilog_instance_name());
+              inter_sb.gen_sb_verilog_instance_name());
       dump_verilog_one_sb_chan_pin(fp, inter_sb, src_rr_node, OUT_PORT); 
     }
   }
@@ -1805,7 +1805,7 @@ void verilog_generate_one_routing_wire_report_timing(FILE* fp,
                 path_cnt); 
         fprintf(fp, "report_timing -from "); 
         /* output instance name */
-        fprintf(fp, "%s/", rr_sb.gen_verilog_instance_name()); 
+        fprintf(fp, "%s/", rr_sb.gen_sb_verilog_instance_name()); 
         /* output pin name */
         dump_verilog_one_sb_routing_pin(fp, rr_sb, 
                                         wire_rr_node->drive_rr_nodes[iedge]);
@@ -1831,10 +1831,10 @@ void verilog_generate_one_routing_wire_report_timing(FILE* fp,
       case CHANY:
         /* Get the coordinate of ending SB */
         next_sb_coordinator = get_chan_node_ending_sb_coordinator(wire_rr_node, &(LL_rr_node[inode]));
-        next_sb = device_rr_gsb.get_switch_block(next_sb_coordinator);
+        next_sb = device_rr_gsb.get_gsb(next_sb_coordinator);
         /* This will not be the longest path unless the cb is close to the ending SB */
         if ((TRUE == sdc_opts.longest_path_only)
-           && ((next_sb.get_x() != (size_t)x_end) || (next_sb.get_y() != (size_t)y_end))) {
+           && ((next_sb.get_sb_x() != (size_t)x_end) || (next_sb.get_sb_y() != (size_t)y_end))) {
           continue;
         }
         if (TRUE == sb_dumped) {
@@ -1850,14 +1850,14 @@ void verilog_generate_one_routing_wire_report_timing(FILE* fp,
         fprintf(fp, "report_timing -from "); 
         /* output instance name */
         fprintf(fp, "%s/", 
-                rr_sb.gen_verilog_instance_name()); 
+                rr_sb.gen_sb_verilog_instance_name()); 
         /* output pin name */
         dump_verilog_one_sb_routing_pin(fp, rr_sb, 
                                         wire_rr_node->drive_rr_nodes[iedge]);
         fprintf(fp, " -to "); 
         /* output instance name */
         fprintf(fp, "%s/",
-                next_sb.gen_verilog_instance_name());
+                next_sb.gen_sb_verilog_instance_name());
         /* Find which side the ending pin locates, and determine the coordinate */
         dump_verilog_one_sb_routing_pin(fp, next_sb, 
                                         wire_rr_node);
@@ -2055,10 +2055,10 @@ void verilog_generate_routing_wires_report_timing(FILE* fp,
   } 
 
   if (TRUE == sdc_opts.compact_routing_hierarchy) {
-    DeviceCoordinator sb_range = device_rr_gsb.get_switch_block_range();
+    DeviceCoordinator sb_range = device_rr_gsb.get_gsb_range();
     for (size_t ix = 0; ix < sb_range.get_x(); ++ix) {
       for (size_t iy = 0; iy < sb_range.get_y(); ++iy) {
-        RRGSB rr_sb = device_rr_gsb.get_switch_block(ix, iy);
+        RRGSB rr_sb = device_rr_gsb.get_gsb(ix, iy);
         for (size_t side = 0; side < rr_sb.get_num_sides(); side++) {
           Side side_manager(side);
           for (size_t itrack = 0; itrack < rr_sb.get_chan_width(side_manager.get_side()); ++itrack) {
@@ -2066,7 +2066,7 @@ void verilog_generate_routing_wires_report_timing(FILE* fp,
                  ||(CHANY == rr_sb.get_chan_node(side_manager.get_side(), itrack)->type));
             /* We only care the output port and it should indicate a SB mux */
             if ( (OUT_PORT != rr_sb.get_chan_node_direction(side_manager.get_side(), itrack)) 
-               || (true == rr_sb.is_node_imply_short_connection(rr_sb.get_chan_node(side_manager.get_side(), itrack)))) {
+               || (true == rr_sb.is_sb_node_imply_short_connection(rr_sb.get_chan_node(side_manager.get_side(), itrack)))) {
               continue; 
             }
             /* Bypass if we have only 1 driving node */
@@ -2386,10 +2386,10 @@ void verilog_generate_routing_wire_report_timing(t_trpt_opts trpt_opts,
              "Generating TCL script to report timing for routing wires\n");
 
   /* We start from a SB[x][y] */
-  DeviceCoordinator sb_range = device_rr_gsb.get_switch_block_range();
+  DeviceCoordinator sb_range = device_rr_gsb.get_gsb_range();
   for (size_t ix = 0; ix < sb_range.get_x(); ++ix) {
     for (size_t iy = 0; iy < sb_range.get_y(); ++iy) {
-      RRGSB rr_sb = device_rr_gsb.get_switch_block(ix, iy);
+      RRGSB rr_sb = device_rr_gsb.get_gsb(ix, iy);
       for (size_t side = 0; side < rr_sb.get_num_sides(); ++side) {
         Side side_manager(side);
         for (size_t itrack = 0; itrack < rr_sb.get_chan_width(side_manager.get_side()); ++itrack) {
@@ -2397,7 +2397,7 @@ void verilog_generate_routing_wire_report_timing(t_trpt_opts trpt_opts,
                ||(CHANY == rr_sb.get_chan_node(side_manager.get_side(), itrack)->type));
           /* We only care the output port and it should indicate a SB mux */
           if ( (OUT_PORT != rr_sb.get_chan_node_direction(side_manager.get_side(), itrack)) 
-             || (false != rr_sb.is_node_imply_short_connection(rr_sb.get_chan_node(side_manager.get_side(), itrack)))) {
+             || (false != rr_sb.is_sb_node_imply_short_connection(rr_sb.get_chan_node(side_manager.get_side(), itrack)))) {
             continue; 
           }
           /* Bypass if we have only 1 driving node */

@@ -6,14 +6,14 @@
 #include <assert.h>
 
 #include "rr_blocks.h"
-#include "write_rr_blocks.h"
+#include "rr_blocks_naming.h"
 
-#include "fpga_x2p_utils.h"
+#include "write_rr_blocks.h"
 
 void write_rr_switch_block_to_xml(std::string fname_prefix, RRGSB& rr_sb) {
   /* Prepare file name */
   std::string fname(fname_prefix);
-  fname += rr_sb.gen_verilog_module_name();
+  fname += rr_sb.gen_sb_verilog_module_name();
   fname += ".xml";
 
   vpr_printf(TIO_MESSAGE_INFO, "Output SB XML: %s\r", fname.c_str());
@@ -24,7 +24,7 @@ void write_rr_switch_block_to_xml(std::string fname_prefix, RRGSB& rr_sb) {
   fp.open(fname, std::fstream::out | std::fstream::trunc);
 
   /* Output location of the Switch Block */
-  fp << "<rr_sb x=\"" << rr_sb.get_x() << "\" y=\"" << rr_sb.get_y() << "\""
+  fp << "<rr_sb x=\"" << rr_sb.get_sb_x() << "\" y=\"" << rr_sb.get_sb_y() << "\""
      << " num_sides=\"" << rr_sb.get_num_sides() << "\">" << std::endl;
 
   /* Output each side */ 
@@ -45,9 +45,9 @@ void write_rr_switch_block_to_xml(std::string fname_prefix, RRGSB& rr_sb) {
       size_t src_segment_id = rr_sb.get_chan_node_segment(side_manager.get_side(), inode);
 
       /* Check if this node is directly connected to the node on the opposite side */
-      if (true == rr_sb.is_node_imply_short_connection(cur_rr_node)) {
+      if (true == rr_sb.is_sb_node_imply_short_connection(cur_rr_node)) {
         /* Double check if the interc lies inside a channel wire, that is interc between segments */
-        assert(true == rr_sb.is_node_exist_opposite_side(cur_rr_node, side_manager.get_side()));
+        assert(true == rr_sb.is_sb_node_exist_opposite_side(cur_rr_node, side_manager.get_side()));
         num_drive_rr_nodes = 0;
         drive_rr_nodes = NULL;
       } else {
@@ -124,12 +124,12 @@ void write_device_rr_gsb_to_xml(char* sb_xml_dir,
     fname_prefix += '/';
   }
 
-  DeviceCoordinator sb_range = LL_device_rr_gsb.get_switch_block_range();
+  DeviceCoordinator sb_range = LL_device_rr_gsb.get_gsb_range();
 
   /* For each switch block, an XML file will be outputted */
   for (size_t ix = 0; ix < sb_range.get_x(); ++ix) {
     for (size_t iy = 0; iy < sb_range.get_y(); ++iy) {
-      RRGSB rr_sb = LL_device_rr_gsb.get_switch_block(ix, iy);
+      RRGSB rr_sb = LL_device_rr_gsb.get_gsb(ix, iy);
       write_rr_switch_block_to_xml(fname_prefix, rr_sb);
     }
   }

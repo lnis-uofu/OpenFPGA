@@ -2,6 +2,7 @@
 #define FPGA_X2P_UTILS_H
 
 #include "my_free_fwd.h"
+#include "rr_blocks_naming.h"
 
 char* my_gettime();
 
@@ -13,8 +14,8 @@ void my_remove_file(char* file_path);
 
 int create_dir_path(char* dir_path);
 
-char* my_strcat(char* str1,
-                char* str2);
+char* my_strcat(const char* str1,
+                const char* str2);
 
 int split_path_prog_name(char* prog_path,
                          char  split_token,
@@ -83,12 +84,6 @@ int get_opposite_side(int side);
 char* convert_side_index_to_string(int side);
 
 char* convert_process_corner_to_string(enum e_process_corner process_corner);
-
-char* convert_chan_type_to_string(t_rr_type chan_type);
-
-char* convert_cb_type_to_string(t_rr_type chan_type);
-
-char* convert_chan_rr_node_direction_to_string(enum PORTS chan_rr_node_direction);
 
 void init_spice_net_info(t_spice_net_info* spice_net_info);
 

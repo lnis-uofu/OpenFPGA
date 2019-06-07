@@ -156,8 +156,8 @@ int create_dir_path(char* dir_path) {
 }
 
 /* Cat string2 to the end of string1 */
-char* my_strcat(char* str1,
-                char* str2) {
+char* my_strcat(const char* str1,
+                const char* str2) {
   int len1 = strlen(str1);
   int len2 = strlen(str2);
   char* ret = (char*)my_malloc(sizeof(char) * (len1 + len2 + 1));
@@ -893,49 +893,6 @@ char* convert_process_corner_to_string(enum e_process_corner process_corner) {
     vpr_printf(TIO_MESSAGE_ERROR, 
                "(File:%s, [LINE%d])Invalid process_corner !\n",
                 __FILE__, __LINE__);
-    exit(1);
-  }
-}
-
-char* convert_cb_type_to_string(t_rr_type chan_type) {
-  switch(chan_type) {
-  case CHANX:
-    return "cbx";
-    break;
-  case CHANY:
-    return "cby";
-    break;
-  default: 
-    vpr_printf(TIO_MESSAGE_ERROR, "(File:%s, [LINE%d])Invalid type of channel!\n", __FILE__, __LINE__);
-    exit(1);
-  }
-}
-
-
-char* convert_chan_type_to_string(t_rr_type chan_type) {
-  switch(chan_type) {
-  case CHANX:
-    return "chanx";
-    break;
-  case CHANY:
-    return "chany";
-    break;
-  default: 
-    vpr_printf(TIO_MESSAGE_ERROR, "(File:%s, [LINE%d])Invalid type of channel!\n", __FILE__, __LINE__);
-    exit(1);
-  }
-}
-
-char* convert_chan_rr_node_direction_to_string(enum PORTS chan_rr_node_direction) {
-  switch(chan_rr_node_direction) {
-  case IN_PORT:
-    return "in";
-    break;
-  case OUT_PORT:
-    return "out";
-    break;
-  default: 
-    vpr_printf(TIO_MESSAGE_ERROR, "(File:%s, [LINE%d])Invalid type of port!\n", __FILE__, __LINE__);
     exit(1);
   }
 }

@@ -2,6 +2,8 @@
 #include <string>
 #include <algorithm>
 
+#include "rr_blocks_naming.h"
+
 #include "rr_blocks.h"
 
 
@@ -511,11 +513,9 @@ RRGSB::RRGSB() {
   opin_node_.clear();
   opin_node_grid_side_.clear();
 
-  reserved_conf_bits_lsb_ = 1;
-  reserved_conf_bits_msb_ = 0;
-   
-  conf_bits_lsb_ = 1;
-  conf_bits_msb_ = 0;
+  sb_conf_port_.reset();
+  cbx_conf_port_.reset();
+  cby_conf_port_.reset();
   
   return;
 }
@@ -528,21 +528,6 @@ RRGSB::RRGSB(const RRGSB& src) {
 }
 
 /* Accessors */
-
-/* get the x coordinator of this switch block */
-size_t RRGSB::get_x() const {
-  return coordinator_.get_x();
-} 
-
-/* get the y coordinator of this switch block */
-size_t RRGSB::get_y() const { 
-  return coordinator_.get_y();
-}
-
-/* Get the number of sides of this SB */
-DeviceCoordinator RRGSB::get_coordinator() const {
-  return coordinator_;
-} 
 
 /* Get the number of sides of this SB */
 size_t RRGSB::get_num_sides() const {
@@ -718,8 +703,8 @@ enum e_side RRGSB::get_opin_node_grid_side(t_rr_node* opin_node) const {
 
 /* Get the node index in the array, return -1 if not found */
 int RRGSB::get_node_index(t_rr_node* node, 
-                                  enum e_side node_side, 
-                                  enum PORTS node_direction) const {
+                          enum e_side node_side, 
+                          enum PORTS node_direction) const {
   size_t cnt;
   int ret; 
   Side side_manager(node_side);
@@ -767,8 +752,8 @@ int RRGSB::get_node_index(t_rr_node* node,
 }
 
 /* Check if the node exist in the opposite side of this Switch Block */
-bool RRGSB::is_node_exist_opposite_side(t_rr_node* node, 
-                                                enum e_side node_side) const {
+bool RRGSB::is_sb_node_exist_opposite_side(t_rr_node* node, 
+                                           enum e_side node_side) const {
   Side side_manager(node_side);
   int index;
 
@@ -788,9 +773,9 @@ bool RRGSB::is_node_exist_opposite_side(t_rr_node* node,
 
 /* Get the side of a node in this SB */
 void RRGSB::get_node_side_and_index(t_rr_node* node, 
-                                            enum PORTS node_direction,
-                                            enum e_side* node_side, 
-                                            int* node_index) const {
+                                    enum PORTS node_direction,
+                                    enum e_side* node_side, 
+                                    int* node_index) const {
   size_t side;
   Side side_manager;
   
@@ -822,50 +807,124 @@ void RRGSB::get_node_side_and_index(t_rr_node* node,
   return;
 } 
 
-size_t RRGSB::get_num_reserved_conf_bits() const {
-  if (false == validate_num_reserved_conf_bits()) {
-    return 0;
-  }
-  return reserved_conf_bits_msb_ - reserved_conf_bits_lsb_ + 1;
+/* Get Switch Block configuration port information */
+size_t RRGSB::get_sb_num_reserved_conf_bits() const {
+  return sb_conf_port_.get_reserved_port_width();
 }
 
-size_t RRGSB::get_reserved_conf_bits_lsb() const {
-  if (false == validate_num_reserved_conf_bits()) {
-    return 0;
-  }
-  return reserved_conf_bits_lsb_;
+size_t RRGSB::get_sb_reserved_conf_bits_lsb() const {
+  return sb_conf_port_.get_reserved_port_lsb();
 }
 
-size_t RRGSB::get_reserved_conf_bits_msb() const {
-  if (false == validate_num_reserved_conf_bits()) {
-    return 0;
-  }
-  return reserved_conf_bits_msb_;
+size_t RRGSB::get_sb_reserved_conf_bits_msb() const {
+  return sb_conf_port_.get_reserved_port_msb();
 }
     
-size_t RRGSB::get_num_conf_bits() const {
-  if (false == validate_num_conf_bits()) {
-    return 0;
-  }
-  return conf_bits_msb_ - conf_bits_lsb_ + 1;
+size_t RRGSB::get_sb_num_conf_bits() const {
+  return sb_conf_port_.get_regular_port_width();
 }
 
-size_t RRGSB::get_conf_bits_lsb() const {
-  if (false == validate_num_conf_bits()) {
-    return 0;
-  }
-  return conf_bits_lsb_;
+size_t RRGSB::get_sb_conf_bits_lsb() const {
+  return sb_conf_port_.get_regular_port_lsb();
 }
 
-size_t RRGSB::get_conf_bits_msb() const {
-  if (false == validate_num_conf_bits()) {
-    return 0;
+size_t RRGSB::get_sb_conf_bits_msb() const {
+  return sb_conf_port_.get_regular_port_msb();
+}
+
+/* Get X-direction Connection Block configuration port information */
+size_t RRGSB::get_cb_num_reserved_conf_bits(t_rr_type cb_type) const {
+  assert (validate_cb_type(cb_type));
+  switch(cb_type) {
+  case CHANX:
+    return cbx_conf_port_.get_reserved_port_width();
+  case CHANY:
+    return cby_conf_port_.get_reserved_port_width();
+  default: 
+    vpr_printf(TIO_MESSAGE_ERROR, 
+              "(File:%s, [LINE%d])Invalid type of connection block!\n", 
+              __FILE__, __LINE__);
+    exit(1);
   }
-  return conf_bits_msb_;
+}
+
+size_t RRGSB::get_cb_reserved_conf_bits_lsb(t_rr_type cb_type) const {
+  assert (validate_cb_type(cb_type));
+  switch(cb_type) {
+  case CHANX:
+    return cbx_conf_port_.get_reserved_port_lsb();
+  case CHANY:
+    return cby_conf_port_.get_reserved_port_lsb();
+  default: 
+    vpr_printf(TIO_MESSAGE_ERROR, 
+              "(File:%s, [LINE%d])Invalid type of connection block!\n", 
+              __FILE__, __LINE__);
+    exit(1);
+  }
+}
+
+size_t RRGSB::get_cb_reserved_conf_bits_msb(t_rr_type cb_type) const {
+  assert (validate_cb_type(cb_type));
+  switch(cb_type) {
+  case CHANX:
+    return cbx_conf_port_.get_reserved_port_msb();
+  case CHANY:
+    return cby_conf_port_.get_reserved_port_msb();
+  default: 
+    vpr_printf(TIO_MESSAGE_ERROR, 
+              "(File:%s, [LINE%d])Invalid type of connection block!\n", 
+              __FILE__, __LINE__);
+    exit(1);
+  }
+}
+    
+size_t RRGSB::get_cb_num_conf_bits(t_rr_type cb_type) const {
+  assert (validate_cb_type(cb_type));
+  switch(cb_type) {
+  case CHANX:
+    return cbx_conf_port_.get_regular_port_width();
+  case CHANY:
+    return cby_conf_port_.get_regular_port_width();
+  default: 
+    vpr_printf(TIO_MESSAGE_ERROR, 
+              "(File:%s, [LINE%d])Invalid type of connection block!\n", 
+              __FILE__, __LINE__);
+    exit(1);
+  }
+}
+
+size_t RRGSB::get_cb_conf_bits_lsb(t_rr_type cb_type) const {
+  assert (validate_cb_type(cb_type));
+  switch(cb_type) {
+  case CHANX:
+    return cbx_conf_port_.get_regular_port_lsb();
+  case CHANY:
+    return cby_conf_port_.get_regular_port_lsb();
+  default: 
+    vpr_printf(TIO_MESSAGE_ERROR, 
+              "(File:%s, [LINE%d])Invalid type of connection block!\n", 
+              __FILE__, __LINE__);
+    exit(1);
+  }
+}
+
+size_t RRGSB::get_cb_conf_bits_msb(t_rr_type cb_type) const {
+  assert (validate_cb_type(cb_type));
+  switch(cb_type) {
+  case CHANX:
+    return cbx_conf_port_.get_regular_port_msb();
+  case CHANY:
+    return cby_conf_port_.get_regular_port_msb();
+  default: 
+    vpr_printf(TIO_MESSAGE_ERROR, 
+              "(File:%s, [LINE%d])Invalid type of connection block!\n", 
+              __FILE__, __LINE__);
+    exit(1);
+  }
 }
 
 /* Check if the node imply a short connection inside the SB, which happens to long wires across a FPGA fabric */
-bool RRGSB::is_node_imply_short_connection(t_rr_node* src_node) const {
+bool RRGSB::is_sb_node_imply_short_connection(t_rr_node* src_node) const {
 
   assert((CHANX == src_node->type) || (CHANY == src_node->type));
   
@@ -889,7 +948,7 @@ bool RRGSB::is_node_imply_short_connection(t_rr_node* src_node) const {
  * Number of channel/opin/ipin rr_nodes are same 
  * If all above are satisfied, the two switch blocks may be mirrors !
  */
-bool RRGSB::is_mirrorable(RRGSB& cand) const {
+bool RRGSB::is_sb_mirrorable(RRGSB& cand) const {
   /* check the numbers of sides */
   if (get_num_sides() != cand.get_num_sides()) {
     return false;
@@ -960,7 +1019,7 @@ size_t RRGSB::get_hint_rotate_offset(RRGSB& cand) const {
 } 
 
 /* check if all the routing segments of a side of candidate SB is a mirror of the current one */
-bool RRGSB::is_side_segment_mirror(RRGSB& cand, enum e_side side, size_t seg_id) const {
+bool RRGSB::is_sb_side_segment_mirror(RRGSB& cand, enum e_side side, size_t seg_id) const {
   /* Create a side manager */
   Side side_manager(side);
 
@@ -994,7 +1053,7 @@ bool RRGSB::is_side_segment_mirror(RRGSB& cand, enum e_side side, size_t seg_id)
       continue; /* skip IN_PORT */
     }
 
-    if (false == is_node_mirror(cand, side, itrack)) {
+    if (false == is_sb_node_mirror(cand, side, itrack)) {
       return false;
     } 
   }
@@ -1023,13 +1082,13 @@ bool RRGSB::is_side_segment_mirror(RRGSB& cand, enum e_side side, size_t seg_id)
  * 5. check if pin class id and pin id are same 
  * If all above are satisfied, the side of the two switch blocks are mirrors!
  */
-bool RRGSB::is_side_mirror(RRGSB& cand, enum e_side side) const {
+bool RRGSB::is_sb_side_mirror(RRGSB& cand, enum e_side side) const {
 
   /* get a list of segments */
   std::vector<size_t> seg_ids = get_chan(side).get_segment_ids();
 
   for (size_t iseg = 0; iseg < seg_ids.size(); ++iseg) {
-    if (false == is_side_segment_mirror(cand, side, seg_ids[iseg])) {
+    if (false == is_sb_side_segment_mirror(cand, side, seg_ids[iseg])) {
       return false;
     }
   }
@@ -1050,7 +1109,7 @@ bool RRGSB::is_side_mirror(RRGSB& cand, enum e_side side) const {
  * 5. check if pin class id and pin id are same 
  * If all above are satisfied, the two switch blocks are mirrors!
  */
-bool RRGSB::is_mirror(RRGSB& cand) const {
+bool RRGSB::is_sb_mirror(RRGSB& cand) const {
   /* check the numbers of sides */
   if (get_num_sides() != cand.get_num_sides()) {
     return false;
@@ -1059,27 +1118,89 @@ bool RRGSB::is_mirror(RRGSB& cand) const {
   /* check the numbers/directionality of channel rr_nodes */
   for (size_t side = 0; side < get_num_sides(); ++side) {
     Side side_manager(side);
-    if (false == is_side_mirror(cand, side_manager.get_side())) {
+    if (false == is_sb_side_mirror(cand, side_manager.get_side())) {
       return false;
     } 
   }
 
   /* Make sure the number of conf bits are the same */
-  /* TODO: the num conf bits will be fixed when allocate the SBs 
-  if ( ( get_num_conf_bits() != cand.get_num_conf_bits() ) 
-    || ( get_num_reserved_conf_bits() != cand.get_num_reserved_conf_bits() ) ) {
+  if ( ( get_sb_num_conf_bits() != cand.get_sb_num_conf_bits() ) 
+    || ( get_sb_num_reserved_conf_bits() != cand.get_sb_num_reserved_conf_bits() ) ) { 
     return false;
   }
-  */
 
   return true;
 }
 
 /* Public Accessors: Cooridinator conversion */
+
+/* get the x coordinator of this switch block */
+size_t RRGSB::get_sb_x() const {
+  return coordinator_.get_x();
+} 
+
+/* get the y coordinator of this switch block */
+size_t RRGSB::get_sb_y() const { 
+  return coordinator_.get_y();
+}
+
+/* Get the number of sides of this SB */
+DeviceCoordinator RRGSB::get_sb_coordinator() const {
+  return coordinator_;
+} 
+
+/* get the x coordinator of this X/Y-direction block */
+size_t RRGSB::get_cb_x(t_rr_type cb_type) const {
+  assert (validate_cb_type(cb_type));
+  switch(cb_type) {
+  case CHANX:
+    return get_side_block_coordinator(LEFT).get_x();
+  case CHANY:
+    return get_side_block_coordinator(TOP).get_x();
+  default: 
+    vpr_printf(TIO_MESSAGE_ERROR, 
+              "(File:%s, [LINE%d])Invalid type of connection block!\n", 
+              __FILE__, __LINE__);
+    exit(1);
+  }
+} 
+
+/* get the y coordinator of this X/Y-direction block */
+size_t RRGSB::get_cb_y(t_rr_type cb_type) const { 
+  assert (validate_cb_type(cb_type));
+  switch(cb_type) {
+  case CHANX:
+    return get_side_block_coordinator(LEFT).get_y();
+  case CHANY:
+    return get_side_block_coordinator(TOP).get_y();
+  default: 
+    vpr_printf(TIO_MESSAGE_ERROR, 
+              "(File:%s, [LINE%d])Invalid type of connection block!\n", 
+              __FILE__, __LINE__);
+    exit(1);
+  }
+}
+
+/* Get the coordinator of the X/Y-direction CB */
+DeviceCoordinator RRGSB::get_cb_coordinator(t_rr_type cb_type) const {
+  assert (validate_cb_type(cb_type));
+  switch(cb_type) {
+  case CHANX:
+    return get_side_block_coordinator(LEFT);
+  case CHANY:
+    return get_side_block_coordinator(TOP);
+  default: 
+    vpr_printf(TIO_MESSAGE_ERROR, 
+              "(File:%s, [LINE%d])Invalid type of connection block!\n", 
+              __FILE__, __LINE__);
+    exit(1);
+  }
+} 
+
 DeviceCoordinator RRGSB::get_side_block_coordinator(enum e_side side) const {
   Side side_manager(side); 
   assert(side_manager.validate());
-  DeviceCoordinator ret(get_x(), get_y());
+  DeviceCoordinator ret(get_sb_x(), get_sb_y());
 
   switch (side_manager.get_side()) {
   case TOP:
@@ -1111,77 +1232,76 @@ DeviceCoordinator RRGSB::get_side_block_coordinator(enum e_side side) const {
 }
 
 /* Public Accessors Verilog writer */
-char* RRGSB::gen_verilog_module_name() const {
-  char* ret = NULL;
-  std::string x_str = std::to_string(get_x());
-  std::string y_str = std::to_string(get_y());
-  
-  ret = (char*)my_malloc(2 + 1 + x_str.length()
-                         + 2 + y_str.length()
-                         + 1 + 1); 
+const char* RRGSB::gen_sb_verilog_module_name() const {
+  std::string x_str = std::to_string(get_sb_x());
+  std::string y_str = std::to_string(get_sb_y());
 
-  sprintf(ret, "sb_%lu__%lu_", 
-          get_x(), get_y());
+  std::string ret = "sb_" + x_str + "__" + y_str + "_"; 
 
-  return ret;
+  return ret.c_str();
 }
 
-char* RRGSB::gen_verilog_instance_name() const {
-  char* ret = NULL;
-  std::string x_str = std::to_string(get_x());
-  std::string y_str = std::to_string(get_y());
+const char* RRGSB::gen_sb_verilog_instance_name() const {
+  std::string x_str = std::to_string(get_sb_x());
+  std::string y_str = std::to_string(get_sb_y());
   
-  ret = (char*)my_malloc(2 + 1 + x_str.length()
-                         + 2 + y_str.length()
-                         + 4 + 1); 
+  std::string ret = "sb_" + x_str + "__" + y_str + "__0_"; 
 
-  sprintf(ret, "sb_%lu__%lu__0_", 
-          get_x(), get_y());
-
-  return ret;
+  return ret.c_str();
 }
 
 /* Public Accessors Verilog writer */
-char* RRGSB::gen_verilog_side_module_name(enum e_side side, size_t seg_id) const {
-  char* ret = NULL;
+const char* RRGSB::gen_sb_verilog_side_module_name(enum e_side side, size_t seg_id) const {
   Side side_manager(side);
   
-  std::string x_str = std::to_string(get_x());
-  std::string y_str = std::to_string(get_y());
+  std::string x_str = std::to_string(get_sb_x());
+  std::string y_str = std::to_string(get_sb_y());
   std::string seg_id_str = std::to_string(seg_id);
   std::string side_str(side_manager.to_string());
 
-  ret = (char*)my_malloc(2 + 1 + x_str.length()
-                         + 2 + y_str.length() 
-                         + 2 + side_str.length()
-                         + 2 + 3 + seg_id_str.length()
-                         + 1 + 1); 
+  std::string ret = "sb_" + x_str + "__" + y_str + "__" + side_str + "_seg_" + seg_id_str + "_"; 
 
-  sprintf(ret, "sb_%lu__%lu__%s_seg%lu_", 
-          get_x(), get_y(), side_manager.to_string(), seg_id);
-
-  return ret;
+  return ret.c_str();
 }
 
-char* RRGSB::gen_verilog_side_instance_name(enum e_side side, size_t seg_id) const {
-  char* ret = NULL;
+const char* RRGSB::gen_sb_verilog_side_instance_name(enum e_side side, size_t seg_id) const {
   Side side_manager(side);
 
-  std::string x_str = std::to_string(get_x());
-  std::string y_str = std::to_string(get_y());
+  std::string x_str = std::to_string(get_sb_x());
+  std::string y_str = std::to_string(get_sb_y());
   std::string seg_id_str = std::to_string(seg_id);
   std::string side_str(side_manager.to_string());
+
+  std::string ret = "sb_" + x_str + "__" + y_str + "__" + side_str + "_seg_" + seg_id_str + "__0_"; 
   
-  ret = (char*)my_malloc(2 + 1 + x_str.length()
-                         + 2 + y_str.length()
-                         + 2 + side_str.length()
-                         + 2 + 3 + seg_id_str.length()
-                         + 4 + 1); 
+  return ret.c_str();
+}
 
-  sprintf(ret, "sb_%lu__%lu__%s_seg%lu_0_", 
-          get_x(), get_y(), side_manager.to_string(), seg_id);
+/* Public Accessors Verilog writer */
+const char* RRGSB::gen_cb_verilog_module_name(t_rr_type cb_type) const {
+  /* check */
+  assert (validate_cb_type(cb_type));
 
-  return ret;
+  std::string x_str = std::to_string(get_cb_x(cb_type));
+  std::string y_str = std::to_string(get_cb_y(cb_type));
+
+  std::string ret = convert_cb_type_to_string(cb_type);
+  ret = "_" + x_str + "__" + y_str + "_";
+
+  return ret.c_str();
+}
+
+const char* RRGSB::gen_cb_verilog_instance_name(t_rr_type cb_type) const {
+  /* check */
+  assert (validate_cb_type(cb_type));
+
+  std::string x_str = std::to_string(get_cb_x(cb_type));
+  std::string y_str = std::to_string(get_cb_y(cb_type));
+
+  std::string ret = convert_cb_type_to_string(cb_type);
+  ret = "_" + x_str + "__" + y_str + "__0_";
+
+  return ret.c_str();
 }
 
 /* Public mutators */
@@ -1189,7 +1309,7 @@ char* RRGSB::gen_verilog_side_instance_name(enum e_side side, size_t seg_id) con
 /* get a copy from a source */
 void RRGSB::set(const RRGSB& src) { 
   /* Copy coordinator */
-  this->set_coordinator(src.get_coordinator().get_x(), src.get_coordinator().get_y());
+  this->set_coordinator(src.get_sb_coordinator().get_x(), src.get_sb_coordinator().get_y());
 
   /* Initialize sides */ 
   this->init_num_sides(src.get_num_sides());
@@ -1224,13 +1344,20 @@ void RRGSB::set(const RRGSB& src) {
 
   /* Copy conf_bits 
    */
-  this->set_num_reserved_conf_bits(src.get_num_reserved_conf_bits());
-  this->set_conf_bits_lsb(src.get_conf_bits_lsb());
-  this->set_conf_bits_msb(src.get_conf_bits_msb());
+  this->set_sb_num_reserved_conf_bits(src.get_sb_num_reserved_conf_bits());
+  this->set_sb_conf_bits_lsb(src.get_sb_conf_bits_lsb());
+  this->set_sb_conf_bits_msb(src.get_sb_conf_bits_msb());
+
+  this->set_cb_num_reserved_conf_bits(CHANX, src.get_cb_num_reserved_conf_bits(CHANX));
+  this->set_cb_conf_bits_lsb(CHANX, src.get_cb_conf_bits_lsb(CHANX));
+  this->set_cb_conf_bits_msb(CHANX, src.get_cb_conf_bits_msb(CHANX));
+
+  this->set_cb_num_reserved_conf_bits(CHANY, src.get_cb_num_reserved_conf_bits(CHANY));
+  this->set_cb_conf_bits_lsb(CHANY, src.get_cb_conf_bits_lsb(CHANY));
+  this->set_cb_conf_bits_msb(CHANY, src.get_cb_conf_bits_msb(CHANY));
   
   return;
 }
-
 
 /* Set the coordinator (x,y) for the switch block */
 void RRGSB::set_coordinator(size_t x, size_t y) {
@@ -1288,27 +1415,61 @@ void RRGSB::add_opin_node(t_rr_node* node, enum e_side node_side, enum e_side gr
   return;
 } 
 
-void RRGSB::set_num_reserved_conf_bits(size_t num_reserved_conf_bits) {
-  /* For zero bits: make it invalid  */
-  if ( 0 == num_reserved_conf_bits ) {
-    reserved_conf_bits_lsb_ = 1;
-    reserved_conf_bits_msb_ = 0; 
-    return;
+void RRGSB::set_sb_num_reserved_conf_bits(size_t num_reserved_conf_bits) {
+  return sb_conf_port_.set_reserved_port(num_reserved_conf_bits);
+}
+
+void RRGSB::set_sb_conf_bits_lsb(size_t conf_bits_lsb) {
+  return sb_conf_port_.set_regular_port_lsb(conf_bits_lsb);
+}
+
+void RRGSB::set_sb_conf_bits_msb(size_t conf_bits_msb) {
+  return sb_conf_port_.set_regular_port_msb(conf_bits_msb);
+}
+
+void RRGSB::set_cb_num_reserved_conf_bits(t_rr_type cb_type, size_t num_reserved_conf_bits) {
+  assert (validate_cb_type(cb_type));
+  switch(cb_type) {
+  case CHANX:
+    return cbx_conf_port_.set_reserved_port(num_reserved_conf_bits);
+  case CHANY:
+    return cby_conf_port_.set_reserved_port(num_reserved_conf_bits);
+  default: 
+    vpr_printf(TIO_MESSAGE_ERROR, 
+              "(File:%s, [LINE%d])Invalid type of connection block!\n", 
+              __FILE__, __LINE__);
+    exit(1);
   }
-
-  reserved_conf_bits_lsb_ = 0;
-  reserved_conf_bits_msb_ = num_reserved_conf_bits - 1;
-  return;
 }
 
-void RRGSB::set_conf_bits_lsb(size_t conf_bits_lsb) {
-  conf_bits_lsb_ = conf_bits_lsb;
-  return;
+void RRGSB::set_cb_conf_bits_lsb(t_rr_type cb_type, size_t conf_bits_lsb) {
+  assert (validate_cb_type(cb_type));
+  switch(cb_type) {
+  case CHANX:
+    return cbx_conf_port_.set_regular_port_lsb(conf_bits_lsb);
+  case CHANY:
+    return cby_conf_port_.set_regular_port_lsb(conf_bits_lsb);
+  default: 
+    vpr_printf(TIO_MESSAGE_ERROR, 
+              "(File:%s, [LINE%d])Invalid type of connection block!\n", 
+              __FILE__, __LINE__);
+    exit(1);
+  }
 }
 
-void RRGSB::set_conf_bits_msb(size_t conf_bits_msb) {
-  conf_bits_msb_ = conf_bits_msb;
-  return;
+void RRGSB::set_cb_conf_bits_msb(t_rr_type cb_type, size_t conf_bits_msb) {
+  assert (validate_cb_type(cb_type));
+  switch(cb_type) {
+  case CHANX:
+    return cbx_conf_port_.set_regular_port_msb(conf_bits_msb);
+  case CHANY:
+    return cby_conf_port_.set_regular_port_msb(conf_bits_msb);
+  default: 
+    vpr_printf(TIO_MESSAGE_ERROR, 
+              "(File:%s, [LINE%d])Invalid type of connection block!\n", 
+              __FILE__, __LINE__);
+    exit(1);
+  }
 }
 
 /* rotate the channel nodes with the same direction on one side by a given offset */
@@ -1576,11 +1737,9 @@ void RRGSB::clear() {
   opin_node_grid_side_.clear();
 
   /* Just to make the lsb and msb invalidate */
-  reserved_conf_bits_lsb_ = 1;
-  reserved_conf_bits_msb_ = 0;
-  /* Just to make the lsb and msb invalidate */
-  set_conf_bits_lsb(1);
-  set_conf_bits_msb(0);
+  sb_conf_port_.reset();
+  cbx_conf_port_.reset();
+  cby_conf_port_.reset();
 
   return;
 }
@@ -1633,22 +1792,22 @@ void RRGSB::clear_one_side(enum e_side node_side) {
  * 2. OPIN or IPIN: should have the same side and index
  * 3. each drive_rr_switch should be the same 
  */
-bool RRGSB::is_node_mirror(RRGSB& cand, 
-                                   enum e_side node_side, 
-                                   size_t track_id) const {
+bool RRGSB::is_sb_node_mirror(RRGSB& cand, 
+                              enum e_side node_side, 
+                              size_t track_id) const {
   /* Ensure rr_nodes are either the output of short-connection or multiplexer  */
   t_rr_node* node = this->get_chan_node(node_side, track_id);
   t_rr_node* cand_node = cand.get_chan_node(node_side, track_id);
-  bool is_short_conkt = this->is_node_imply_short_connection(node);
+  bool is_short_conkt = this->is_sb_node_imply_short_connection(node);
 
-  if (is_short_conkt != cand.is_node_imply_short_connection(cand_node)) {
+  if (is_short_conkt != cand.is_sb_node_imply_short_connection(cand_node)) {
     return false;
   }
   /* Find the driving rr_node in this sb */
   if (true == is_short_conkt) {
     /* Ensure we have the same track id for the driving nodes */
-    if ( this->is_node_exist_opposite_side(node, node_side)
-      != cand.is_node_exist_opposite_side(cand_node, node_side)) {
+    if ( this->is_sb_node_exist_opposite_side(node, node_side)
+      != cand.is_sb_node_exist_opposite_side(cand_node, node_side)) {
       return false;
     }
   } else { /* check driving rr_nodes */
@@ -1687,7 +1846,7 @@ size_t RRGSB::get_track_id_first_short_connection(enum e_side node_side) const {
 
   /* Walk through chan_nodes and find the first short connection */
   for (size_t inode = 0; inode < get_chan_width(node_side); ++inode) {
-    if (true == is_node_imply_short_connection(get_chan_node(node_side, inode))) {
+    if (true == is_sb_node_imply_short_connection(get_chan_node(node_side, inode))) {
       return inode; 
     }
   }
@@ -1776,17 +1935,8 @@ bool RRGSB::validate_ipin_node_id(enum e_side side, size_t node_id) const {
   return false;
 }
 
-/* Validate the number of configuration bits, MSB should be no less than the LSB !!! */
-bool RRGSB::validate_num_conf_bits() const {
-  if (conf_bits_msb_ >= conf_bits_lsb_) {
-    return true;
-  }
-  return false;
-}
-
-/* Validate the number of configuration bits, MSB should be no less than the LSB !!! */
-bool RRGSB::validate_num_reserved_conf_bits() const {
-  if (reserved_conf_bits_msb_ >= reserved_conf_bits_lsb_) {
+bool RRGSB::validate_cb_type(t_rr_type cb_type) const {
+  if ( (CHANX == cb_type) || (CHANY == cb_type) ) {
     return true;
   }
   return false;
@@ -1796,7 +1946,7 @@ bool RRGSB::validate_num_reserved_conf_bits() const {
 /* Accessors */
 
 /* get the max coordinator of the switch block array */
-DeviceCoordinator DeviceRRGSB::get_switch_block_range() const {
+DeviceCoordinator DeviceRRGSB::get_gsb_range() const {
   size_t max_y = 0;
   /* Get the largest size of sub-arrays */
   for (size_t x = 0; x < rr_gsb.size(); ++x) {
@@ -1808,7 +1958,7 @@ DeviceCoordinator DeviceRRGSB::get_switch_block_range() const {
 } 
 
 /* Get a rr switch block in the array with a coordinator */
-RRGSB DeviceRRGSB::get_switch_block(DeviceCoordinator& coordinator) const {
+RRGSB DeviceRRGSB::get_gsb(DeviceCoordinator& coordinator) const {
   assert(validate_coordinator(coordinator));
   return rr_gsb[coordinator.get_x()][coordinator.get_y()];
 } 
@@ -1822,9 +1972,9 @@ size_t DeviceRRGSB::get_num_unique_module(enum e_side side, size_t seg_index) co
 } 
 
 /* Get a rr switch block in the array with a coordinator */
-RRGSB DeviceRRGSB::get_switch_block(size_t x, size_t y) const { 
+RRGSB DeviceRRGSB::get_gsb(size_t x, size_t y) const { 
   DeviceCoordinator coordinator(x, y);  
-  return get_switch_block(coordinator);
+  return get_gsb(coordinator);
 }
 
 /* get the number of unique mirrors of switch blocks */
@@ -1895,21 +2045,21 @@ size_t DeviceRRGSB::get_segment_id(size_t index) const {
 /* TODO: TOBE DEPRECATED!!! conf_bits should be initialized when creating a switch block!!! */
 void DeviceRRGSB::set_sb_num_reserved_conf_bits(DeviceCoordinator& coordinator, size_t num_reserved_conf_bits) {
   assert(validate_coordinator(coordinator));
-  rr_gsb[coordinator.get_x()][coordinator.get_y()].set_num_reserved_conf_bits(num_reserved_conf_bits);
+  rr_gsb[coordinator.get_x()][coordinator.get_y()].set_sb_num_reserved_conf_bits(num_reserved_conf_bits);
   return;
 } 
 
 /* TODO: TOBE DEPRECATED!!! conf_bits should be initialized when creating a switch block!!! */
 void DeviceRRGSB::set_sb_conf_bits_lsb(DeviceCoordinator& coordinator, size_t conf_bits_lsb) { 
   assert(validate_coordinator(coordinator));
-  rr_gsb[coordinator.get_x()][coordinator.get_y()].set_conf_bits_lsb(conf_bits_lsb);
+  rr_gsb[coordinator.get_x()][coordinator.get_y()].set_sb_conf_bits_lsb(conf_bits_lsb);
   return;
 }
 
 /* TODO: TOBE DEPRECATED!!! conf_bits should be initialized when creating a switch block!!! */
 void DeviceRRGSB::set_sb_conf_bits_msb(DeviceCoordinator& coordinator, size_t conf_bits_msb) { 
   assert(validate_coordinator(coordinator));
-  rr_gsb[coordinator.get_x()][coordinator.get_y()].set_conf_bits_msb(conf_bits_msb);
+  rr_gsb[coordinator.get_x()][coordinator.get_y()].set_sb_conf_bits_msb(conf_bits_msb);
   return;
 }
 
@@ -1934,7 +2084,7 @@ void DeviceRRGSB::reserve(DeviceCoordinator& coordinator) {
 
 /* Pre-allocate the rr_sb_unique_module_id matrix that the device requires */ 
 void DeviceRRGSB::reserve_unique_module_id(DeviceCoordinator& coordinator) { 
-  RRGSB rr_sb = get_switch_block(coordinator);
+  RRGSB rr_sb = get_gsb(coordinator);
   rr_sb_unique_module_id_[coordinator.get_x()][coordinator.get_y()].resize(rr_sb.get_num_sides());
 
   for (size_t side = 0; side < rr_sb.get_num_sides(); ++side) {
@@ -1996,7 +2146,7 @@ void DeviceRRGSB::build_unique_mirror() {
           is_unique_mirror = false;
           break;
         }
-        if (true == get_switch_block(unique_mirror_[mirror_id]).is_mirror(*rr_sb)) {
+        if (true == get_gsb(unique_mirror_[mirror_id]).is_sb_mirror(*rr_sb)) {
           /* This is a mirror, raise the flag and we finish */
           is_unique_mirror = false;
           /* Record the id of unique mirror */
@@ -2053,10 +2203,10 @@ void DeviceRRGSB::add_rotatable_mirror(DeviceCoordinator& coordinator,
   /* add rotatable mirror support */
   for (size_t mirror_id = 0; mirror_id < get_num_rotatable_mirror(); ++mirror_id) {
     /* Skip if these may never match as a mirror (violation in basic requirements */
-    if (false == get_switch_block(rotatable_mirror_[mirror_id]).is_mirrorable(rotated_rr_sb)) {
+    if (false == get_gsb(rotatable_mirror_[mirror_id]).is_sb_mirrorable(rotated_rr_sb)) {
       continue;
     }
-    if (true == get_switch_block(rotatable_mirror_[mirror_id]).is_mirror(rotated_rr_sb)) {
+    if (true == get_gsb(rotatable_mirror_[mirror_id]).is_sb_mirror(rotated_rr_sb)) {
       /* This is a mirror, raise the flag and we finish */
       is_rotatable_mirror = false;
       /* Record the id of unique mirror */
@@ -2088,7 +2238,7 @@ void DeviceRRGSB::add_unique_side_segment_module(DeviceCoordinator& coordinator,
   /* add rotatable mirror support */
   for (size_t id = 0; id < get_num_unique_module(side, seg_id); ++id) {
     /* Skip if these may never match as a mirror (violation in basic requirements */
-    if (true == get_switch_block(unique_module_[side_manager.to_size_t()][seg_id][id]).is_side_segment_mirror(rr_sb, side, segment_ids_[seg_id])) {
+    if (true == get_gsb(unique_module_[side_manager.to_size_t()][seg_id][id]).is_sb_side_segment_mirror(rr_sb, side, segment_ids_[seg_id])) {
       /* This is a mirror, raise the flag and we finish */
       is_unique_side_module = false;
       /* Record the id of unique mirror */

@@ -1011,11 +1011,11 @@ void verilog_generate_sdc_disable_unused_sbs_muxs(FILE* fp) {
     exit(1);
   }
 
-  DeviceCoordinator sb_range = device_rr_gsb.get_switch_block_range();
+  DeviceCoordinator sb_range = device_rr_gsb.get_gsb_range();
 
   for (size_t ix = 0; ix < sb_range.get_x(); ++ix) {
     for (size_t iy = 0; iy < sb_range.get_y(); ++iy) {
-      RRGSB rr_sb = device_rr_gsb.get_switch_block(ix, iy);
+      RRGSB rr_sb = device_rr_gsb.get_gsb(ix, iy);
       /* Print comments */
       fprintf(fp,
               "########################################################\n"); 
@@ -1167,11 +1167,11 @@ void verilog_generate_sdc_disable_unused_sbs(FILE* fp) {
     exit(1);
   } 
 
-  DeviceCoordinator sb_range = device_rr_gsb.get_switch_block_range();
+  DeviceCoordinator sb_range = device_rr_gsb.get_gsb_range();
   /* We start from a SB[x][y] */
   for (size_t ix = 0; ix < sb_range.get_x(); ++ix) {
     for (size_t iy = 0; iy < sb_range.get_y(); ++iy) {
-      RRGSB rr_sb = device_rr_gsb.get_switch_block(ix, iy);
+      RRGSB rr_sb = device_rr_gsb.get_gsb(ix, iy);
       /* Print comments */
       fprintf(fp,
               "##################################################\n"); 
@@ -1191,7 +1191,7 @@ void verilog_generate_sdc_disable_unused_sbs(FILE* fp) {
           }
           fprintf(fp, "set_disable_timing ");
           fprintf(fp, "%s/", 
-                  rr_sb.gen_verilog_instance_name());
+                  rr_sb.gen_sb_verilog_instance_name());
           dump_verilog_one_sb_chan_pin(fp, rr_sb, 
                                        rr_sb.get_chan_node(side_manager.get_side(), itrack), 
                                        rr_sb.get_chan_node_direction(side_manager.get_side(), itrack)); 
@@ -1205,7 +1205,7 @@ void verilog_generate_sdc_disable_unused_sbs(FILE* fp) {
           }
           fprintf(fp, "set_disable_timing ");
           fprintf(fp, "%s/", 
-                  rr_sb.gen_verilog_instance_name());
+                  rr_sb.gen_sb_verilog_instance_name());
           dump_verilog_one_sb_routing_pin(fp, rr_sb,
                                           rr_sb.get_opin_node(side_manager.get_side(), inode)); 
           fprintf(fp, "\n");
