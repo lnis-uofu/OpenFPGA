@@ -1366,17 +1366,32 @@ const char* RRGSB::gen_sb_verilog_side_module_name(enum e_side side, size_t seg_
   sprintf(ret, "%s_%s_seg_%s_", prefix.c_str(), side_str.c_str(), seg_id_str.c_str());
 
   return ret;
+  /* FIXME Have no clue why the following c++ code is not working
+  std::string ret(prefix);
+  ret.append("_");
+  ret.append(side_str);
+  ret.append("_seg_");
+  ret.append(seg_id_str);
+  ret.append("_");
+
+  return ret.c_str();
+  */
 }
 
 const char* RRGSB::gen_sb_verilog_side_instance_name(enum e_side side, size_t seg_id) const {
 
   std::string prefix(gen_sb_verilog_side_module_name(side, seg_id));
-
   char* ret = NULL;
   ret = (char*) my_malloc (prefix.length() + 3 + 1);
   sprintf(ret, "%s_0_", prefix.c_str());
-  
+
   return ret;
+  /* FIXME Have no clue why the following c++ code is not working
+  std::string ret(prefix);
+  ret.append("_0_");
+  
+  return ret.c_str();
+  */
 }
 
 /* Public Accessors Verilog writer */
@@ -1387,8 +1402,13 @@ const char* RRGSB::gen_cb_verilog_module_name(t_rr_type cb_type) const {
   std::string x_str = std::to_string(get_cb_x(cb_type));
   std::string y_str = std::to_string(get_cb_y(cb_type));
 
-  std::string ret = convert_cb_type_to_string(cb_type);
-  ret = "_" + x_str + "__" + y_str + "_";
+  std::string ret;
+  ret.append(convert_cb_type_to_string(cb_type));
+  ret.append("_");
+  ret.append(x_str);
+  ret.append("__");
+  ret.append(y_str);
+  ret.append("_");
 
   return ret.c_str();
 }
@@ -1397,13 +1417,11 @@ const char* RRGSB::gen_cb_verilog_instance_name(t_rr_type cb_type) const {
   /* check */
   assert (validate_cb_type(cb_type));
 
-  std::string x_str = std::to_string(get_cb_x(cb_type));
-  std::string y_str = std::to_string(get_cb_y(cb_type));
-
-  std::string ret = convert_cb_type_to_string(cb_type);
-  ret = "_" + x_str + "__" + y_str + "__0_";
+  std::string ret(gen_cb_verilog_module_name(cb_type));
+  ret.append("_0_");
 
   return ret.c_str();
+
 }
 
 /* Public mutators */

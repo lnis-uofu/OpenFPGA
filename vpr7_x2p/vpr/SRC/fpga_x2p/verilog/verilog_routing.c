@@ -1683,7 +1683,7 @@ size_t count_verilog_switch_box_side_reserved_conf_bits(t_sram_orgz_info* cur_sr
     default:
       vpr_printf(TIO_MESSAGE_ERROR, 
                  "(File: %s [LINE%d]) Invalid direction of port Channel node[%s] track[%d]!\n",
-                 __FILE__, __LINE__, side_manager.to_string(), itrack);
+                 __FILE__, __LINE__, side_manager.c_str(), itrack);
       exit(1);
     }
   }
@@ -1764,7 +1764,7 @@ size_t count_verilog_switch_box_side_conf_bits(t_sram_orgz_info* cur_sram_orgz_i
     default:
       vpr_printf(TIO_MESSAGE_ERROR, 
                  "(File: %s [LINE%d]) Invalid direction of port Channel node[%s] track[%d]!\n",
-                 __FILE__, __LINE__, side_manager.to_string(), itrack);
+                 __FILE__, __LINE__, side_manager.c_str(), itrack);
       exit(1);
     }
   }
@@ -1842,7 +1842,7 @@ void dump_verilog_routing_switch_box_unique_side_subckt_portmap(FILE* fp,
   for (size_t side = 0; side < rr_sb.get_num_sides(); ++side) {
     Side side_manager(side);
     /* Print ports  */
-    fprintf(fp, "//----- Inputs/outputs of %s side -----\n", side_manager.to_string());
+    fprintf(fp, "//----- Inputs/outputs of %s side -----\n", side_manager.c_str());
     DeviceCoordinator port_coordinator = rr_sb.get_side_block_coordinator(side_manager.get_side()); 
 
     for (size_t itrack = 0; itrack < rr_sb.get_chan_width(side_manager.get_side()); ++itrack) {
@@ -1966,10 +1966,10 @@ void dump_verilog_routing_switch_box_unique_side_module(t_sram_orgz_info* cur_sr
 
   /* Create file name */
   std::string fname_prefix(sb_verilog_file_name_prefix);
-  fname_prefix += side_manager.to_string();
+  fname_prefix += side_manager.c_str();
 
   std::string file_description("Unique module for Switch Block side: ");
-  file_description += side_manager.to_string();
+  file_description += side_manager.c_str();
   file_description += "seg";
   file_description += std::to_string(seg_id);
 
@@ -1983,7 +1983,7 @@ void dump_verilog_routing_switch_box_unique_side_module(t_sram_orgz_info* cur_sr
   /* Comment lines */
   fprintf(fp, 
           "//----- Verilog Module of Unique Switch Box[%lu][%lu] at Side %s, Segment id: %lu -----\n", 
-          rr_sb.get_sb_x(), rr_sb.get_sb_y(), side_manager.to_string(), seg_id);
+          rr_sb.get_sb_x(), rr_sb.get_sb_y(), side_manager.c_str(), seg_id);
   /* Print the definition of subckt*/
   fprintf(fp, "module %s ( \n", rr_sb.gen_sb_verilog_side_module_name(side, seg_id));
   /* dump global ports */
@@ -2030,7 +2030,7 @@ void dump_verilog_routing_switch_box_unique_side_module(t_sram_orgz_info* cur_sr
 
   /* Put down all the multiplexers */
   fprintf(fp, "//----- %s side Multiplexers -----\n", 
-          side_manager.to_string());
+          side_manager.c_str());
   for (size_t itrack = 0; itrack < rr_sb.get_chan_width(side_manager.get_side()); ++itrack) {
     assert((CHANX == rr_sb.get_chan_node(side_manager.get_side(), itrack)->type)
          ||(CHANY == rr_sb.get_chan_node(side_manager.get_side(), itrack)->type));
@@ -2051,7 +2051,7 @@ void dump_verilog_routing_switch_box_unique_side_module(t_sram_orgz_info* cur_sr
   /* Comment lines */
   fprintf(fp, 
           "//----- END Verilog Module of Switch Box[%lu][%lu] Side %s -----\n\n",
-          rr_sb.get_sb_x(), rr_sb.get_sb_y(), side_manager.to_string());
+          rr_sb.get_sb_x(), rr_sb.get_sb_y(), side_manager.c_str());
 
   /* Check */
   assert(esti_sram_cnt == get_sram_orgz_info_num_mem_bit(cur_sram_orgz_info));
@@ -2125,7 +2125,7 @@ void dump_verilog_routing_switch_box_unique_module(t_sram_orgz_info* cur_sram_or
   for (size_t side = 0; side < rr_sb.get_num_sides(); ++side) {
     Side side_manager(side);
     /* Print ports  */
-    fprintf(fp, "//----- Channel Inputs/outputs of %s side -----\n", side_manager.to_string());
+    fprintf(fp, "//----- Channel Inputs/outputs of %s side -----\n", side_manager.c_str());
     DeviceCoordinator port_coordinator = rr_sb.get_side_block_coordinator(side_manager.get_side()); 
 
     for (size_t itrack = 0; itrack < rr_sb.get_chan_width(side_manager.get_side()); ++itrack) {
@@ -2150,7 +2150,7 @@ void dump_verilog_routing_switch_box_unique_module(t_sram_orgz_info* cur_sram_or
       }
     }
     /* Dump OPINs of adjacent CLBs */
-    fprintf(fp, "//----- Grid Inputs/outputs of %s side -----\n", side_manager.to_string());
+    fprintf(fp, "//----- Grid Inputs/outputs of %s side -----\n", side_manager.c_str());
     for (size_t inode = 0; inode < rr_sb.get_num_opin_nodes(side_manager.get_side()); ++inode) {
       fprintf(fp, "  ");
       dump_verilog_grid_side_pin_with_given_index(fp, OPIN, /* This is an input of a SB */
@@ -2206,12 +2206,12 @@ void dump_verilog_routing_switch_box_unique_module(t_sram_orgz_info* cur_sram_or
   for (size_t side = 0; side < rr_sb.get_num_sides(); ++side) {
     Side side_manager(side);
     fprintf(fp, "//----- %s side Submodule -----\n", 
-            side_manager.to_string());
+            side_manager.c_str());
 
     /* Get the channel width on this side, if it is zero, we return */
     if (0 == rr_sb.get_chan_width(side_manager.get_side())) {
       fprintf(fp, "//----- %s side has zero channel width, module dump skipped -----\n", 
-              side_manager.to_string());
+              side_manager.c_str());
       continue;
     }
 
@@ -2219,7 +2219,7 @@ void dump_verilog_routing_switch_box_unique_module(t_sram_orgz_info* cur_sram_or
     std::vector<size_t> seg_ids = rr_sb.get_chan(side_manager.get_side()).get_segment_ids();
     for (size_t iseg = 0; iseg < seg_ids.size(); ++iseg) { 
       fprintf(fp, "//----- %s side Submodule with Segment id: %lu -----\n", 
-              side_manager.to_string(), seg_ids[iseg]);
+              side_manager.c_str(), seg_ids[iseg]);
 
       /* Count the number of configuration bits to be consumed by this Switch block */
       int side_num_conf_bits = count_verilog_switch_box_side_conf_bits(cur_sram_orgz_info, rr_sb, side_manager.get_side(), seg_ids[iseg]);
@@ -2367,7 +2367,7 @@ void dump_verilog_routing_switch_box_unique_subckt(t_sram_orgz_info* cur_sram_or
   for (size_t side = 0; side < rr_sb.get_num_sides(); ++side) {
     Side side_manager(side);
     /* Print ports  */
-    fprintf(fp, "//----- Inputs/outputs of %s side -----\n", side_manager.to_string());
+    fprintf(fp, "//----- Inputs/outputs of %s side -----\n", side_manager.c_str());
     DeviceCoordinator port_coordinator = rr_sb.get_side_block_coordinator(side_manager.get_side()); 
 
     for (size_t itrack = 0; itrack < rr_sb.get_chan_width(side_manager.get_side()); ++itrack) {
@@ -2442,7 +2442,7 @@ void dump_verilog_routing_switch_box_unique_subckt(t_sram_orgz_info* cur_sram_or
   for (size_t side = 0; side < rr_sb.get_num_sides(); ++side) {
     Side side_manager(side);
     fprintf(fp, "//----- %s side Multiplexers -----\n", 
-            side_manager.to_string());
+            side_manager.c_str());
     for (size_t itrack = 0; itrack < rr_sb.get_chan_width(side_manager.get_side()); ++itrack) {
       assert((CHANX == rr_sb.get_chan_node(side_manager.get_side(), itrack)->type)
            ||(CHANY == rr_sb.get_chan_node(side_manager.get_side(), itrack)->type));

@@ -88,7 +88,7 @@ size_t Side::to_size_t() const {
 }
 
 /* Convert to char* */
-char* Side::to_string() const { 
+const char* Side::c_str() const { 
   switch (side_) {
   case TOP:
     return "top"; 
@@ -101,6 +101,30 @@ char* Side::to_string() const {
   default:
     return "invalid_side";
   }
+} 
+
+/* Convert to char* */
+std::string Side::to_string() const { 
+  std::string ret;
+  switch (side_) {
+  case TOP:
+    ret.assign("top"); 
+    break;
+  case RIGHT:
+    ret.assign("right");
+    break;
+  case BOTTOM:
+    ret.assign("bottom");
+    break;
+  case LEFT:
+    ret.assign("left");
+    break;
+  default:
+    ret.assign("invalid_side");
+    break;
+  }
+
+  return ret;
 } 
 
 /* Public Mutators */
