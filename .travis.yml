@@ -15,7 +15,7 @@ matrix:
     - os: linux
     # Compiler is specified in ./travis/common.sh
       sudo: false
-      compiler: g++-6
+      compiler: g++-8
       addons:
         apt:
           sources:
@@ -33,8 +33,8 @@ matrix:
           - doxygen
           - flex
           - fontconfig
-          - g++-6
-          - gcc-6
+          - g++-8
+          - gcc-8
           - g++-4.9
           - gcc-4.9
           - gdb
