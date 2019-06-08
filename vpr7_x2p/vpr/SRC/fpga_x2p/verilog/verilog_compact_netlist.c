@@ -781,7 +781,7 @@ void dump_compact_verilog_defined_one_switch_box(t_sram_orgz_info* cur_sram_orgz
     Side side_manager(side);
     DeviceCoordinator chan_coordinator = rr_sb.get_side_block_coordinator(side_manager.get_side()); 
 
-    fprintf(fp, "//----- %s side channel ports-----\n", side_manager.to_string());
+    fprintf(fp, "//----- %s side channel ports-----\n", side_manager.c_str());
     for (size_t itrack = 0; itrack < rr_sb.get_chan_width(side_manager.get_side()); ++itrack) {
       fprintf(fp, "%s,\n",
               gen_verilog_routing_channel_one_pin_name(rr_sb.get_chan_node(side_manager.get_side(), itrack),
