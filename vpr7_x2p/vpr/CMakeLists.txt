@@ -20,11 +20,16 @@ if (ENABLE_VPR_GRAPHICS)
   if (NOT X11_FOUND)
     message(WARNING "Failed to find required X11 library (on debian/ubuntu try 'sudo apt-get install libx11-dev' to install)")
     #Disable
-  else ()
     set(ENABLE_VPR_GRAPHICS false)
   endif()
 endif()
-set(ENABLE_VPR_GRAPHICS false)
+
+if (NOT ENABLE_VPR_GRAPHICS)
+  # Add a flag to notify compiler not to consider graphic-related source codes   
+  set (DISABLE_GRAPHIC_FLAGS "-DNO_GRAPHICS")
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${DISABLE_GRAPHIC_FLAGS}")
+  message(STATUS "Add flags to disable graphics in VPR compilation: ${DISABLE_GRAPHIC_FLAGS}")
+endif()
 
 # We need readline to compile 
 find_package(Readline REQUIRED)
@@ -51,10 +56,16 @@ target_include_directories(libvpr PUBLIC ${LIB_INCLUDE_DIRS})
 set_target_properties(libvpr PROPERTIES PREFIX "") #Avoid extra 'lib' prefix#Create the executable
 
 #Specify link-time dependancies
-target_link_libraries(libvpr
-                      libarchfpga
-                      X11
-                      readline)
+if (ENABLE_VPR_GRAPHICS)
+  target_link_libraries(libvpr
+                        libarchfpga
+                        X11
+                        readline)
+else () 
+  target_link_libraries(libvpr
+                        libarchfpga
+                        readline)
+endif()
 
 #Create the executables
 # regular vpr interface

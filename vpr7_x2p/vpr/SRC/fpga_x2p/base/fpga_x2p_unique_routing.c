@@ -1322,7 +1322,7 @@ DeviceRRGSB build_device_rr_gsb(boolean output_sb_xml, char* sb_xml_dir,
     for (size_t iseg = 0; iseg < LL_drive_rr_gsb.get_num_segments(); ++iseg) { 
       vpr_printf(TIO_MESSAGE_INFO, 
                  "For side %s, segment id %lu: Detect %d independent switch blocks from %d switch blocks.\n",
-                 side_manager.to_string(), LL_drive_rr_gsb.get_segment_id(iseg), 
+                 side_manager.c_str(), LL_drive_rr_gsb.get_segment_id(iseg), 
                  LL_drive_rr_gsb.get_num_sb_unique_submodule(side_manager.get_side(), iseg), 
                  (nx + 1) * (ny + 1) );
     }
