@@ -10,7 +10,7 @@ if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
   #make
   mkdir build
   cd build
-  cmake ..
+  cmake .. -DCMAKE_BUILD_TYPE=debug -DENABLE_VPR_GRAPHICS=off 
   make -j2
 else 
 # For linux, we enable full package compilation
@@ -19,7 +19,7 @@ else
   cd build
   cmake --version
   cmake .. -DCMAKE_BUILD_TYPE=debug
-  make -j
+  make -j16
 fi
 end_section "OpenFPGA.build"
 

@@ -4,7 +4,7 @@
 # Set variables
 # For FPGA-Verilog ONLY 
 benchmark="test_modes"
-OpenFPGA_path="/research/ece/lnis/USERS/tang/github/OpenFPGA"
+OpenFPGA_path="OPENFPGAPATHKEYWORD"
 verilog_output_dirname="${benchmark}_Verilog"
 verilog_output_dirpath="$PWD"
 tech_file="${OpenFPGA_path}/fpga_flow/tech/PTM_45nm/45nm.xml"

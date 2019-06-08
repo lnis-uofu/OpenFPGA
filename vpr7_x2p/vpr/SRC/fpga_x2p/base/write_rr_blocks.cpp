@@ -1,9 +1,10 @@
 /* 
  * Output internal structure of classes defined in rr_blocks.h to XML format 
  */
+#include <cstdio>
+#include <cstring>
+#include <cassert>
 #include <fstream>
-#include <string.h>
-#include <assert.h>
 
 #include "rr_blocks.h"
 #include "rr_blocks_naming.h"
