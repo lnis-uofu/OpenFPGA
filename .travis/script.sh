@@ -10,7 +10,7 @@ if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
   #make
   mkdir build
   cd build
-  cmake ..
+  cmake .. -DCMAKE_BUILD_TYPE=debug -ENABLE_VPR_GRAPHICS=off 
   make -j2
 else 
 # For linux, we enable full package compilation
