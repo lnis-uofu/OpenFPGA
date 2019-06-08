@@ -1335,16 +1335,20 @@ const char* RRGSB::gen_sb_verilog_module_name() const {
   std::string x_str = std::to_string(get_sb_x());
   std::string y_str = std::to_string(get_sb_y());
 
-  std::string ret = "sb_" + x_str + "__" + y_str + "_"; 
+  std::string ret;
+  ret.append("sb_"); 
+  ret.append(x_str); 
+  ret.append("__"); 
+  ret.append(y_str); 
+  ret.append("_"); 
 
   return ret.c_str();
 }
 
 const char* RRGSB::gen_sb_verilog_instance_name() const {
-  std::string x_str = std::to_string(get_sb_x());
-  std::string y_str = std::to_string(get_sb_y());
   
-  std::string ret = "sb_" + x_str + "__" + y_str + "__0_"; 
+  std::string ret(gen_sb_verilog_module_name());
+  ret.append("_0_");
 
   return ret.c_str();
 }
@@ -1353,27 +1357,26 @@ const char* RRGSB::gen_sb_verilog_instance_name() const {
 const char* RRGSB::gen_sb_verilog_side_module_name(enum e_side side, size_t seg_id) const {
   Side side_manager(side);
   
-  std::string x_str = std::to_string(get_sb_x());
-  std::string y_str = std::to_string(get_sb_y());
-  std::string seg_id_str = std::to_string(seg_id);
+  std::string seg_id_str(std::to_string(seg_id));
   std::string side_str(side_manager.to_string());
+  std::string prefix(gen_sb_verilog_module_name());
+  char* ret = NULL;
 
-  std::string ret = "sb_" + x_str + "__" + y_str + "__" + side_str + "_seg_" + seg_id_str + "_"; 
+  ret = (char*) my_malloc (prefix.length() + 1 + side_str.length() + 5 + seg_id_str.length() + 1 + 1);
+  sprintf(ret, "%s_%s_seg_%s_", prefix.c_str(), side_str.c_str(), seg_id_str.c_str());
 
-  return ret.c_str();
+  return ret;
 }
 
 const char* RRGSB::gen_sb_verilog_side_instance_name(enum e_side side, size_t seg_id) const {
-  Side side_manager(side);
 
-  std::string x_str = std::to_string(get_sb_x());
-  std::string y_str = std::to_string(get_sb_y());
-  std::string seg_id_str = std::to_string(seg_id);
-  std::string side_str(side_manager.to_string());
+  std::string prefix(gen_sb_verilog_side_module_name(side, seg_id));
 
-  std::string ret = "sb_" + x_str + "__" + y_str + "__" + side_str + "_seg_" + seg_id_str + "__0_"; 
+  char* ret = NULL;
+  ret = (char*) my_malloc (prefix.length() + 3 + 1);
+  sprintf(ret, "%s_0_", prefix.c_str());
   
-  return ret.c_str();
+  return ret;
 }
 
 /* Public Accessors Verilog writer */

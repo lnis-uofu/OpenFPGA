@@ -2627,7 +2627,7 @@ void dump_verilog_routing_switch_box_subckt(t_sram_orgz_info* cur_sram_orgz_info
     dump_verilog_formal_verification_sram_ports(fp, cur_sram_orgz_info, 
                                                 cur_sb_info->conf_bits_lsb, 
                                                 cur_sb_info->conf_bits_msb - 1,
-                                                VERILOG_PORT_OUTPUT);
+                                                VERILOG_PORT_INPUT);
     fprintf(fp, "\n");
     fprintf(fp, "`endif\n");
   }

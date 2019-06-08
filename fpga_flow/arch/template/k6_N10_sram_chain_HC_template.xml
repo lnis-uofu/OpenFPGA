@@ -180,7 +180,7 @@
         </input>
       </stimulate>      
     </parameters>
-    <tech_lib lib_type="academia" transistor_type="TOP_TT" lib_path="OPENFPGAPATHKEYWORD/fpga_flow/tech/PTM_45nm/45nm.pm" nominal_vdd="1.0" io_vdd="2.5"/>
+    <tech_lib lib_type="academia" transistor_type="TOP_TT" lib_path="/research/ece/lnis/USERS/tang/github/OpenFPGA/fpga_flow/tech/PTM_45nm/45nm.pm" nominal_vdd="1.0" io_vdd="2.5"/>
     <transistors pn_ratio="2" model_ref="M">
       <nmos model_name="nch" chan_length="40e-9" min_width="140e-9"/>
       <pmos model_name="pch" chan_length="40e-9" min_width="140e-9"/>
@@ -330,7 +330,7 @@
         <port type="output" prefix="out" size="1"/>
       </spice_model>
       <!--DFF subckt ports should be defined as <D> <Q> <CLK> <RESET> <SET>  -->
-      <spice_model type="ff" name="static_dff" prefix="dff" spice_netlist="OPENFPGAPATHKEYWORD/vpr7_x2p/vpr/SpiceNetlists/ff.sp" verilog_netlist="OPENFPGAPATHKEYWORD/vpr7_x2p/vpr/VerilogNetlists/ff.v">
+      <spice_model type="ff" name="static_dff" prefix="dff" spice_netlist="/research/ece/lnis/USERS/tang/github/OpenFPGA/vpr7_x2p/vpr/SpiceNetlists/ff.sp" verilog_netlist="/research/ece/lnis/USERS/tang/github/OpenFPGA/vpr7_x2p/vpr/VerilogNetlists/ff.v">
          <design_technology type="cmos"/>
          <input_buffer exist="on" spice_model_name="INV1X"/>
          <output_buffer exist="on" spice_model_name="INV1X"/>
@@ -372,7 +372,7 @@
         <port type="sram" prefix="mode" size="2" mode_select="true" spice_model_name="sc_dff_compact" default_val="1"/>
       </spice_model>
       <!--Scan-chain DFF subckt ports should be defined as <D> <Q> <Qb> <CLK> <RESET> <SET>  -->
-      <spice_model type="sff" name="sc_dff_compact" prefix="scff" spice_netlist="OPENFPGAPATHKEYWORD/vpr7_x2p/vpr/SpiceNetlists/ff.sp" verilog_netlist="OPENFPGAPATHKEYWORD/vpr7_x2p/vpr/VerilogNetlists/ff.v">
+      <spice_model type="sff" name="sc_dff_compact" prefix="scff" spice_netlist="/research/ece/lnis/USERS/tang/github/OpenFPGA/vpr7_x2p/vpr/SpiceNetlists/ff.sp" verilog_netlist="/research/ece/lnis/USERS/tang/github/OpenFPGA/vpr7_x2p/vpr/VerilogNetlists/ff.v">
          <design_technology type="cmos"/>
          <input_buffer exist="on" spice_model_name="INV1X"/>
          <output_buffer exist="on" spice_model_name="INV1X"/>
@@ -384,7 +384,7 @@
          <port type="output" prefix="Qb" size="1"/>
          <port type="clock" prefix="prog_clk" size="1" is_global="true" default_val="0" is_prog="true"/>
       </spice_model>
-      <spice_model type="iopad" name="iopad" prefix="iopad" spice_netlist="OPENFPGAPATHKEYWORD/vpr7_x2p/vpr/SpiceNetlists/io.sp" verilog_netlist="OPENFPGAPATHKEYWORD/vpr7_x2p/vpr/VerilogNetlists/io.v">
+      <spice_model type="iopad" name="iopad" prefix="iopad" spice_netlist="/research/ece/lnis/USERS/tang/github/OpenFPGA/vpr7_x2p/vpr/SpiceNetlists/io.sp" verilog_netlist="/research/ece/lnis/USERS/tang/github/OpenFPGA/vpr7_x2p/vpr/VerilogNetlists/io.v">
         <design_technology type="cmos"/>
         <input_buffer exist="on" spice_model_name="INV1X"/>
         <output_buffer exist="on" spice_model_name="INV1X"/>
@@ -397,7 +397,7 @@
         <port type="output" prefix="inpad" size="1"/>
       </spice_model>
       <!-- Hard logic definition for heterogenous blocks -->
-      <spice_model type="hard_logic" name="adder" prefix="adder" dump_explicit_port_map="true" spice_netlist="OPENFPGAPATHKEYWORD/vpr7_x2p/vpr/SpiceNetlists/adder.sp" verilog_netlist="OPENFPGAPATHKEYWORD/vpr7_x2p/vpr/VerilogNetlists/adder.v">
+      <spice_model type="hard_logic" name="adder" prefix="adder" dump_explicit_port_map="true" spice_netlist="/research/ece/lnis/USERS/tang/github/OpenFPGA/vpr7_x2p/vpr/SpiceNetlists/adder.sp" verilog_netlist="/research/ece/lnis/USERS/tang/github/OpenFPGA/vpr7_x2p/vpr/VerilogNetlists/adder.v">
          <design_technology type="cmos"/>
          <input_buffer exist="on" spice_model_name="INV1X"/>
          <output_buffer exist="on" spice_model_name="INV1X"/>
@@ -407,7 +407,7 @@
          <port type="output" prefix="sumout" size="1"/>
          <port type="output" prefix="cout" size="1"/>
       </spice_model>
-      <spice_model type="sram" name="sram6T" prefix="sram" spice_netlist="OPENFPGAPATHKEYWORD/vpr7_x2p/vpr/SpiceNetlists/sram.sp" verilog_netlist="OPENFPGAPATHKEYWORD/vpr7_x2p/vpr/VerilogNetlists/sram.v">
+      <spice_model type="sram" name="sram6T" prefix="sram" spice_netlist="/research/ece/lnis/USERS/tang/github/OpenFPGA/vpr7_x2p/vpr/SpiceNetlists/sram.sp" verilog_netlist="/research/ece/lnis/USERS/tang/github/OpenFPGA/vpr7_x2p/vpr/VerilogNetlists/sram.v">
         <design_technology type="cmos"/>
         <input_buffer exist="on" spice_model_name="INV1X"/>
         <output_buffer exist="on" spice_model_name="INV1X"/>

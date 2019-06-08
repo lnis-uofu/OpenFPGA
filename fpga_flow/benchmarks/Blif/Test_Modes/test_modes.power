@@ -1,5 +1,5 @@
 ----------------------------------- Summary ------------------------------------
-Circuit: /research/ece/lnis/USERS/alacchi/Current_release/branch_multimode/OpenFPGA/fpga_flow/benchmarks/Blif/Test_Modes/test_modes
+Circuit: /research/ece/lnis/USERS/tang/github/OpenFPGA/fpga_flow/benchmarks/Blif/Test_Modes/test_modes
 Architecture: k6_N10_sram_chain_HC_template.xml
 Technology (nm): 45
 Voltage: 0.90
