@@ -19,7 +19,7 @@ else
   cd build
   cmake --version
   cmake .. -DCMAKE_BUILD_TYPE=debug
-  make -j
+  make -j16
 fi
 end_section "OpenFPGA.build"
 
