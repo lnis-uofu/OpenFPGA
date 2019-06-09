@@ -1,4 +1,5 @@
-
+#ifndef VERILOG_UTILS_H
+#define VERILOG_UTILS_H
 
 void init_list_include_verilog_netlists(t_spice* spice);
 
@@ -29,6 +30,11 @@ void verilog_include_simulation_defines_file(FILE* fp,
 
 void verilog_include_defines_preproc_file(FILE* fp, 
                                           char* formatted_verilog_dir);
+
+FILE* verilog_create_one_subckt_file(char* subckt_dir,
+                                     const char* subckt_name_prefix,
+                                     const char* verilog_subckt_file_name_prefix,
+                                     char** verilog_fname);
 
 FILE* verilog_create_one_subckt_file(char* subckt_dir,
                                      const char* subckt_name_prefix,
@@ -282,3 +288,5 @@ char* gen_verilog_top_module_io_port_prefix(char* global_prefix,
                                             char* io_port_prefix);
 
 char* gen_verilog_one_pb_graph_node_full_name_in_hierarchy(t_pb_graph_node* cur_pb_graph_node);
+
+#endif

@@ -734,6 +734,12 @@ enum e_side RRGSB::get_opin_node_grid_side(t_rr_node* opin_node) const {
   return get_opin_node_grid_side(side, index);
 } 
 
+/* Get the node index of a routing track of a connection block, return -1 if not found */
+int RRGSB::get_cb_chan_node_index(t_rr_type cb_type, t_rr_node* node) const {
+  enum e_side chan_side = get_cb_chan_side(cb_type);
+  return get_chan_node_index(chan_side, node);
+}
+
 /* Get the node index in the array, return -1 if not found */
 int RRGSB::get_chan_node_index(enum e_side node_side, t_rr_node* node) const {
   assert (validate_side(node_side));
@@ -1331,6 +1337,27 @@ DeviceCoordinator RRGSB::get_side_block_coordinator(enum e_side side) const {
 }
 
 /* Public Accessors Verilog writer */
+const char* RRGSB::gen_cb_verilog_routing_track_name(t_rr_type cb_type,
+                                                     size_t track_id) const {
+  char* ret = NULL;
+
+  std::string cb_name(convert_chan_type_to_string(cb_type));
+  std::string x_str = std::to_string(get_cb_x(cb_type));
+  std::string y_str = std::to_string(get_cb_y(cb_type));
+  std::string track_id_str = std::to_string(track_id);
+  
+  ret = (char*)my_malloc(cb_name.length()
+                         + 1 + x_str.length()
+                         + 2 + y_str.length()
+                         + 9 + track_id_str.length()
+                         + 1 + 1);
+
+  sprintf(ret, "%s_%s__%s__midout_%s_",
+          cb_name.c_str(), x_str.c_str(), y_str.c_str(), track_id_str.c_str());
+
+  return ret;
+}
+
 const char* RRGSB::gen_sb_verilog_module_name() const {
   std::string x_str = std::to_string(get_sb_x());
   std::string y_str = std::to_string(get_sb_y());
@@ -2244,6 +2271,29 @@ RRGSB DeviceRRGSB::get_cb_unique_module(t_rr_type cb_type, size_t index) const {
 }
 
 /* Give a coordinator of a rr switch block, and return its unique mirror */ 
+RRGSB DeviceRRGSB::get_cb_unique_module(t_rr_type cb_type, DeviceCoordinator& coordinator) const {
+  assert (validate_cb_type(cb_type));
+  assert(validate_coordinator(coordinator));
+  size_t cb_unique_module_id;
+
+  switch(cb_type) {
+  case CHANX:
+    cb_unique_module_id = cbx_unique_module_id_[coordinator.get_x()][coordinator.get_y()];  
+    break;
+  case CHANY:
+    cb_unique_module_id = cby_unique_module_id_[coordinator.get_x()][coordinator.get_y()];  
+    break;
+  default: 
+    vpr_printf(TIO_MESSAGE_ERROR, 
+              "(File:%s, [LINE%d])Invalid type of connection block!\n", 
+              __FILE__, __LINE__);
+    exit(1);
+  }  
+
+  return get_cb_unique_module(cb_type, cb_unique_module_id);
+} 
+
+/* Give a coordinator of a rr switch block, and return its unique mirror */ 
 RRGSB DeviceRRGSB::get_sb_unique_module(DeviceCoordinator& coordinator) const {
   assert(validate_coordinator(coordinator));
   size_t sb_unique_module_id = sb_unique_module_id_[coordinator.get_x()][coordinator.get_y()];  
@@ -2294,6 +2344,28 @@ bool DeviceRRGSB::is_two_sb_share_same_submodules(DeviceCoordinator& src, Device
 }
 
 /* Public Mutators */
+
+/* TODO: TOBE DEPRECATED!!! conf_bits should be initialized when creating a switch block!!! */
+void DeviceRRGSB::set_cb_num_reserved_conf_bits(DeviceCoordinator& coordinator, t_rr_type cb_type, size_t num_reserved_conf_bits) {
+  assert(validate_coordinator(coordinator));
+  rr_gsb_[coordinator.get_x()][coordinator.get_y()].set_cb_num_reserved_conf_bits(cb_type, num_reserved_conf_bits);
+  return;
+} 
+
+/* TODO: TOBE DEPRECATED!!! conf_bits should be initialized when creating a switch block!!! */
+void DeviceRRGSB::set_cb_conf_bits_lsb(DeviceCoordinator& coordinator, t_rr_type cb_type, size_t conf_bits_lsb) { 
+  assert(validate_coordinator(coordinator));
+  rr_gsb_[coordinator.get_x()][coordinator.get_y()].set_cb_conf_bits_lsb(cb_type, conf_bits_lsb);
+  return;
+}
+
+/* TODO: TOBE DEPRECATED!!! conf_bits should be initialized when creating a switch block!!! */
+void DeviceRRGSB::set_cb_conf_bits_msb(DeviceCoordinator& coordinator, t_rr_type cb_type, size_t conf_bits_msb) { 
+  assert(validate_coordinator(coordinator));
+  rr_gsb_[coordinator.get_x()][coordinator.get_y()].set_cb_conf_bits_msb(cb_type, conf_bits_msb);
+  return;
+}
+
 
 /* TODO: TOBE DEPRECATED!!! conf_bits should be initialized when creating a switch block!!! */
 void DeviceRRGSB::set_sb_num_reserved_conf_bits(DeviceCoordinator& coordinator, size_t num_reserved_conf_bits) {
@@ -2417,7 +2489,7 @@ void DeviceRRGSB::build_cb_unique_module(t_rr_type cb_type) {
       if (true == is_unique_module) {
         add_cb_unique_module(cb_type, gsb_coordinator);
         /* Record the id of unique mirror */
-        set_cb_unique_module_id(cb_type, gsb_coordinator, get_num_cb_unique_module(cb_type)); 
+        set_cb_unique_module_id(cb_type, gsb_coordinator, get_num_cb_unique_module(cb_type) - 1); 
       }
     }
   } 

@@ -1,3 +1,5 @@
+#ifndef VERILOG_SDC_H 
+#define VERILOG_SDC_H 
 
 void verilog_generate_sdc_pnr(t_sram_orgz_info* cur_sram_orgz_info,
                               char* sdc_dir,
@@ -19,7 +21,7 @@ void verilog_generate_sdc_analysis(t_sram_orgz_info* cur_sram_orgz_info,
 
 void verilog_generate_sdc_disable_unused_sbs_muxs(FILE* fp, int LL_nx, int LL_ny);
 
-void verilog_generate_sdc_disable_unused_cbs_muxs(FILE* fp); 
+void verilog_generate_sdc_disable_unused_cbs_muxs(FILE* fp, int LL_nx, int LL_ny); 
 
 void verilog_generate_sdc_disable_unused_grids_muxs(FILE* fp,
                                                     int LL_nx, int LL_ny,
@@ -47,3 +49,4 @@ void dump_sdc_pb_graph_pin_muxes(FILE* fp,
                                  t_rr_graph* rr_graph, 
                                  t_pb_graph_pin pb_graph_pin); 
 
+#endif

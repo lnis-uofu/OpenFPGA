@@ -163,6 +163,7 @@ class RRGSB {
     t_rr_node* get_opin_node(enum e_side side, size_t node_id) const; /* get a rr_node at a given side and track_id */
     enum e_side get_opin_node_grid_side(enum e_side side, size_t node_id) const; /* get a rr_node at a given side and track_id */
     enum e_side get_opin_node_grid_side(t_rr_node* opin_node) const; /* get a rr_node at a given side and track_id */
+    int get_cb_chan_node_index(t_rr_type cb_type, t_rr_node* node) const;
     int get_chan_node_index(enum e_side node_side, t_rr_node* node) const;
     int get_node_index(t_rr_node* node, enum e_side node_side, enum PORTS node_direction) const; /* Get the node index in the array, return -1 if not found */
     void get_node_side_and_index(t_rr_node* node,  enum PORTS node_direction, enum e_side* node_side, int* node_index) const; /* Given a rr_node, try to find its side and index in the Switch block */
@@ -204,6 +205,7 @@ class RRGSB {
     const char* gen_sb_verilog_side_instance_name(enum e_side side, size_t seg_id) const;
     const char* gen_cb_verilog_module_name(t_rr_type cb_type) const;
     const char* gen_cb_verilog_instance_name(t_rr_type cb_type) const;
+    const char* gen_cb_verilog_routing_track_name(t_rr_type cb_type, size_t track_id) const;
   public: /* Mutators */
     void set(const RRGSB& src); /* get a copy from a source */
     void set_coordinator(size_t x, size_t y);
@@ -293,6 +295,7 @@ class DeviceRRGSB {
     RRGSB get_sb_unique_module(size_t index) const; /* Get a rr switch block which a unique mirror */ 
     RRGSB get_sb_unique_module(DeviceCoordinator& coordinator) const; /* Get a rr switch block which a unique mirror */ 
     RRGSB get_cb_unique_module(t_rr_type cb_type, size_t index) const; /* Get a rr switch block which a unique mirror */ 
+    RRGSB get_cb_unique_module(t_rr_type cb_type, DeviceCoordinator& coordinator) const;
     size_t get_max_num_sides() const; /* Get the maximum number of sides across the switch blocks */
     size_t get_num_segments() const; /* Get the size of segment_ids */
     size_t get_segment_id(size_t index) const; /* Get a segment id */
@@ -301,6 +304,9 @@ class DeviceRRGSB {
     void set_sb_num_reserved_conf_bits(DeviceCoordinator& coordinator, size_t num_reserved_conf_bits); /* TODO: TOBE DEPRECATED!!! conf_bits should be initialized when creating a switch block!!! */
     void set_sb_conf_bits_lsb(DeviceCoordinator& coordinator, size_t conf_bits_lsb); /* TODO: TOBE DEPRECATED!!! conf_bits should be initialized when creating a switch block!!! */
     void set_sb_conf_bits_msb(DeviceCoordinator& coordinator, size_t conf_bits_msb); /* TODO: TOBE DEPRECATED!!! conf_bits should be initialized when creating a switch block!!! */
+    void set_cb_num_reserved_conf_bits(DeviceCoordinator& coordinator, t_rr_type cb_type, size_t num_reserved_conf_bits); /* TODO: TOBE DEPRECATED!!! conf_bits should be initialized when creating a switch block!!! */
+    void set_cb_conf_bits_lsb(DeviceCoordinator& coordinator, t_rr_type cb_type, size_t conf_bits_lsb); /* TODO: TOBE DEPRECATED!!! conf_bits should be initialized when creating a switch block!!! */
+    void set_cb_conf_bits_msb(DeviceCoordinator& coordinator, t_rr_type cb_type, size_t conf_bits_msb); /* TODO: TOBE DEPRECATED!!! conf_bits should be initialized when creating a switch block!!! */
     void reserve(DeviceCoordinator& coordinator); /* Pre-allocate the rr_switch_block array that the device requires */ 
     void reserve_sb_unique_submodule_id(DeviceCoordinator& coordinator); /* Pre-allocate the rr_sb_unique_module_id matrix that the device requires */ 
     void resize_upon_need(DeviceCoordinator& coordinator); /* Resize the rr_switch_block array if needed */ 

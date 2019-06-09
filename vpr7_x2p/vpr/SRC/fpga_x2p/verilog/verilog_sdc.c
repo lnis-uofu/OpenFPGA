@@ -10,6 +10,7 @@
 #include <assert.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <vector>
 
 /* Include vpr structs*/
 #include "util.h"
@@ -1092,14 +1093,80 @@ void verilog_generate_sdc_disable_unused_sbs_muxs(FILE* fp, int LL_nx, int LL_ny
   return;
 }
 
-void verilog_generate_sdc_disable_unused_cbs_muxs(FILE* fp) {
+static 
+void verilog_generate_sdc_disable_one_unused_cb_mux(FILE* fp, RRGSB& rr_gsb, t_rr_type cb_type) {
+  std::vector<enum e_side> cb_sides = rr_gsb.get_cb_ipin_sides(cb_type);
+
+  for (size_t side = 0; side < cb_sides.size(); ++side) {
+    enum e_side cb_ipin_side = cb_sides[side];
+    for (size_t inode = 0; inode < rr_gsb.get_num_ipin_nodes(cb_ipin_side); ++inode) {
+      t_rr_node* ipin_node = rr_gsb.get_ipin_node(cb_ipin_side, inode);
+      for (int imux = 0 ; imux < ipin_node->fan_in; ++imux) {
+        if (imux == ipin_node->id_path) {
+          fprintf(fp, "#"); // comments out if the node is active
+        }
+        fprintf(fp, "set_disable_timing %s[%d]\n", 
+                ipin_node->name_mux, imux);
+      }
+    }
+  }
+  return;
+}
+
+static 
+void verilog_generate_sdc_disable_unused_cbs_muxs(FILE* fp, int LL_nx, int LL_ny, DeviceRRGSB& LL_device_rr_gsb) {
+
+  for (int iy = 0; iy < (LL_ny + 1); ++iy) {
+    for (int ix = 1; ix < (LL_nx + 1); ++ix) {
+      RRGSB rr_gsb = LL_device_rr_gsb.get_gsb(ix, iy);
+      if ((TRUE == is_cb_exist(CHANX, ix, iy))
+        &&(true == rr_gsb.is_cb_exist(CHANX))) {
+        /* Print comments */
+        fprintf(fp,
+              "##############################################################\n"); 
+        fprintf(fp, 
+              "### Disable Timing for MUXES in Connection block X[%d][%d] ###\n",
+              ix, iy);
+        fprintf(fp,
+              "##############################################################\n"); 
+      
+        verilog_generate_sdc_disable_one_unused_cb_mux(fp, rr_gsb, CHANX);
+      }
+    }
+  }
+
+  for (int iy = 1; iy < (LL_ny + 1); iy++) {
+    for (int ix = 0; ix < (LL_nx + 1); ix++) {
+      RRGSB rr_gsb = LL_device_rr_gsb.get_gsb(ix, iy);
+      if ((TRUE == is_cb_exist(CHANY, ix, iy))
+        &&(true == rr_gsb.is_cb_exist(CHANY))) {
+        /* Print comments */
+        fprintf(fp,
+              "##############################################################\n"); 
+        fprintf(fp, 
+              "### Disable Timing for MUXES in Connection block Y[%d][%d] ###\n",
+              ix, iy);
+        fprintf(fp,
+              "##############################################################\n"); 
+        verilog_generate_sdc_disable_one_unused_cb_mux(fp, rr_gsb, CHANY);
+      }
+    }
+  }
+
+  return;
+}
+
+
+
+void verilog_generate_sdc_disable_unused_cbs_muxs(FILE* fp,
+                                                  int LL_nx, int LL_ny) {
 
   int ix, iy, iside, inode, imux;
   t_cb* cur_cb_info;
   t_rr_node* cur_rr_node;
 
-  for (iy = 0; iy < (ny + 1); iy++) {
-    for (ix = 1; ix < (nx + 1); ix++) {
+  for (iy = 0; iy < (LL_ny + 1); iy++) {
+    for (ix = 1; ix < (LL_nx + 1); ix++) {
       if (0 < count_cb_info_num_ipin_rr_nodes(cbx_info[ix][iy])) {
         cur_cb_info = &(cbx_info[ix][iy]);
         /* Print comments */
@@ -1126,8 +1193,8 @@ void verilog_generate_sdc_disable_unused_cbs_muxs(FILE* fp) {
       }
     }
   }
-  for (iy = 1; iy < (ny + 1); iy++) {
-    for (ix = 0; ix < (nx + 1); ix++) {
+  for (iy = 1; iy < (LL_ny + 1); iy++) {
+    for (ix = 0; ix < (LL_nx + 1); ix++) {
       if (0 < count_cb_info_num_ipin_rr_nodes(cby_info[ix][iy])) {
         cur_cb_info = &(cby_info[ix][iy]);
         /* Print comments */
@@ -1286,6 +1353,53 @@ void verilog_generate_sdc_disable_unused_sbs(FILE* fp,
   return;
 }
 
+static 
+void verilog_generate_sdc_disable_one_unused_cb(FILE* fp, 
+                                                RRGSB& rr_gsb, t_rr_type cb_type) {
+  /* Check the file handler */
+  if (NULL == fp) {
+    vpr_printf(TIO_MESSAGE_ERROR,
+               "(FILE:%s,LINE[%d])Invalid file handler for SDC generation",
+               __FILE__, __LINE__); 
+    exit(1);
+  } 
+
+  /* Print comments */
+  fprintf(fp,
+          "##################################################\n"); 
+  fprintf(fp, 
+          "### Disable Timing for an unused %s ###\n",
+          rr_gsb.gen_cb_verilog_module_name(cb_type));
+  fprintf(fp,
+          "##################################################\n"); 
+
+  std::vector<enum e_side> cb_sides = rr_gsb.get_cb_ipin_sides(cb_type);
+
+  for (size_t side = 0; side < cb_sides.size(); ++side) {
+    enum e_side cb_ipin_side = cb_sides[side];
+    for (size_t inode = 0; inode < rr_gsb.get_num_ipin_nodes(cb_ipin_side); ++inode) {
+      t_rr_node* ipin_node = rr_gsb.get_ipin_node(cb_ipin_side, inode);
+      if (FALSE == is_rr_node_to_be_disable_for_analysis(ipin_node)) {
+        continue;
+      }
+      if (0 == ipin_node->fan_in) {
+        continue;
+      }
+      fprintf(fp, "set_disable_timing ");
+      fprintf(fp, "%s/", 
+              rr_gsb.gen_cb_verilog_instance_name(cb_type));
+      dump_verilog_grid_side_pin_with_given_index(fp, IPIN,
+                                                  ipin_node->ptc_num,
+                                                  rr_gsb.get_ipin_node_grid_side(cb_ipin_side, inode),
+                                                  ipin_node->xlow,
+                                                  ipin_node->ylow,
+                                                  FALSE); /* Do not specify direction of port */
+      fprintf(fp, "\n");
+    }
+  }
+
+  return;
+}
 
 static 
 void verilog_generate_sdc_disable_one_unused_cb(FILE* fp, 
@@ -1339,6 +1453,43 @@ void verilog_generate_sdc_disable_one_unused_cb(FILE* fp,
                                                   cur_cb_info->ipin_rr_node[side][inode]->ylow,
                                                   FALSE); /* Do not specify direction of port */
       fprintf(fp, "\n");
+    }
+  }
+
+  return;
+}
+
+static 
+void verilog_generate_sdc_disable_unused_cbs(FILE* fp,
+                                             int LL_nx, int LL_ny,
+                                             DeviceRRGSB& LL_device_rr_gsb) {
+  /* Check the file handler */
+  if (NULL == fp) {
+    vpr_printf(TIO_MESSAGE_ERROR,
+               "(FILE:%s,LINE[%d])Invalid file handler for SDC generation",
+               __FILE__, __LINE__); 
+    exit(1);
+  } 
+
+  /* Connection Boxes */
+  /* X - channels [1...nx][0..ny]*/
+  for (int iy = 0; iy < (LL_ny + 1); iy++) {
+    for (int ix = 1; ix < (LL_nx + 1); ix++) {
+      RRGSB rr_gsb = LL_device_rr_gsb.get_gsb(ix, iy);
+      if ((TRUE == is_cb_exist(CHANX, ix, iy))
+        &&(true == rr_gsb.is_cb_exist(CHANX))) {
+        verilog_generate_sdc_disable_one_unused_cb(fp, rr_gsb, CHANX);
+      }
+    }
+  }
+  /* Y - channels [1...ny][0..nx]*/
+  for (int ix = 0; ix < (LL_nx + 1); ix++) {
+    for (int iy = 1; iy < (LL_ny + 1); iy++) {
+      RRGSB rr_gsb = LL_device_rr_gsb.get_gsb(ix, iy);
+      if ((TRUE == is_cb_exist(CHANY, ix, iy))
+        &&(true == rr_gsb.is_cb_exist(CHANY))) {
+        verilog_generate_sdc_disable_one_unused_cb(fp, rr_gsb, CHANY);
+      }
     }
   }
 
@@ -2124,8 +2275,13 @@ void verilog_generate_sdc_analysis(t_sram_orgz_info* cur_sram_orgz_info,
   }
 
   /* Apply to Connection blocks */
-  verilog_generate_sdc_disable_unused_cbs(fp, LL_nx, LL_ny); 
-  verilog_generate_sdc_disable_unused_cbs_muxs(fp);
+  if (TRUE == compact_routing_hierarchy) {
+    verilog_generate_sdc_disable_unused_cbs(fp, LL_nx, LL_ny, device_rr_gsb); 
+    verilog_generate_sdc_disable_unused_cbs_muxs(fp, LL_nx, LL_ny, device_rr_gsb);
+  } else {
+    verilog_generate_sdc_disable_unused_cbs(fp, LL_nx, LL_ny); 
+    verilog_generate_sdc_disable_unused_cbs_muxs(fp, LL_nx, LL_ny);
+  }
 
   /* Apply to Switch blocks */
   if (TRUE == compact_routing_hierarchy) {

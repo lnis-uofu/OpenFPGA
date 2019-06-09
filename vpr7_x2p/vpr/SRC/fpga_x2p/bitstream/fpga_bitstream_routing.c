@@ -31,6 +31,8 @@
 #include "fpga_x2p_mux_utils.h"
 #include "fpga_x2p_bitstream_utils.h"
 
+#include "fpga_bitstream_routing.h"
+
 /* Include Verilog support headers*/
 
 /* Generate bitstream for a multiplexer of a switch block */
@@ -448,6 +450,87 @@ void fpga_spice_generate_bitstream_routing_switch_box_subckt(FILE* fp,
 /* SRC rr_node is the IPIN of a grid.*/
 static 
 void fpga_spice_generate_bitstream_connection_box_mux(FILE* fp,
+                                                      RRGSB& rr_gsb, t_rr_type cb_type,
+                                                      t_sram_orgz_info* cur_sram_orgz_info,
+                                                      t_rr_node* src_rr_node) {
+  int mux_size = 0;
+  t_rr_node** drive_rr_nodes = NULL;
+  int inode, mux_level, path_id, switch_index;
+  t_spice_model* verilog_model = NULL;
+  int num_mux_sram_bits = 0;
+  int* mux_sram_bits = NULL;
+  int ilevel;
+
+  /* Check the file handler*/ 
+  if (NULL == fp) {
+    vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid file handler.\n", 
+               __FILE__, __LINE__); 
+    exit(1);
+  }
+
+  /* Find drive_rr_nodes*/
+  mux_size = src_rr_node->num_drive_rr_nodes;
+  drive_rr_nodes = src_rr_node->drive_rr_nodes; 
+
+  /* Configuration bits for MUX*/
+  path_id = DEFAULT_PATH_ID;
+  for (inode = 0; inode < mux_size; inode++) {
+    if (drive_rr_nodes[inode] == &(rr_node[src_rr_node->prev_node])) {
+      path_id = inode;
+      break;
+    }
+  }
+  assert((DEFAULT_PATH_ID ==  path_id) || 
+        ((DEFAULT_PATH_ID < path_id) &&(path_id < mux_size)));
+
+  switch_index = src_rr_node->drive_switches[DEFAULT_SWITCH_ID];
+
+  verilog_model = switch_inf[switch_index].spice_model;
+
+  switch (verilog_model->design_tech) {
+  case SPICE_MODEL_DESIGN_CMOS:
+    decode_cmos_mux_sram_bits(verilog_model, mux_size, path_id, &num_mux_sram_bits, &mux_sram_bits, &mux_level);
+    break;
+  case SPICE_MODEL_DESIGN_RRAM:
+    decode_rram_mux(verilog_model, mux_size, path_id, &num_mux_sram_bits, &mux_sram_bits, &mux_level);
+    break;
+  default:
+    vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid design technology for verilog model (%s)!\n",
+               __FILE__, __LINE__, verilog_model->name);
+  }
+
+  /* Print the encoding in SPICE netlist for debugging */
+  fprintf(fp, "***** Connection Block %s *****\n", 
+          rr_gsb.gen_cb_verilog_instance_name(cb_type));
+ 
+  fprintf(fp, "***** SRAM bits for MUX[%d], level=%d, select_path_id=%d. *****\n", 
+          verilog_model->cnt, mux_level, path_id);
+  fprintf(fp, "*****");
+  for (ilevel = 0; ilevel < num_mux_sram_bits; ilevel++) {
+    fprintf(fp, "%d", mux_sram_bits[ilevel]);
+  }
+  fprintf(fp, "*****\n\n");
+
+  /* Store the configuraion bit to linked-list */
+  add_mux_conf_bits_to_llist(mux_size, cur_sram_orgz_info, 
+                             num_mux_sram_bits, mux_sram_bits,
+                             verilog_model);
+  /* Synchronize the sram_orgz_info with mem_bits */
+  add_mux_conf_bits_to_sram_orgz_info(cur_sram_orgz_info, verilog_model, mux_size); 
+
+  /* update sram counter */
+  verilog_model->cnt++;
+
+  /* Free */
+  my_free(mux_sram_bits);
+
+  return;
+}
+
+
+/* SRC rr_node is the IPIN of a grid.*/
+static 
+void fpga_spice_generate_bitstream_connection_box_mux(FILE* fp,
                                                       t_cb* cur_cb_info,
                                                       t_sram_orgz_info* cur_sram_orgz_info,
                                                       t_rr_node* src_rr_node) {
@@ -564,6 +647,85 @@ void fpga_spice_generate_bitstream_connection_box_interc(FILE* fp,
                                                      src_rr_node);
   } /*Nothing should be done else*/ 
    
+  return;
+}
+
+static 
+void fpga_spice_generate_bitstream_connection_box_interc(FILE* fp,
+                                                         RRGSB& rr_gsb, t_rr_type cb_type,
+                                                         t_sram_orgz_info* cur_sram_orgz_info,
+                                                         t_rr_node* src_rr_node) {
+
+  /* Check the file handler*/ 
+  if (NULL == fp) {
+    vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid file handler.\n", 
+               __FILE__, __LINE__); 
+    exit(1);
+  }
+
+  if (1 == src_rr_node->fan_in) {
+    /* No bitstream generation required by a special direct connection*/
+  } else if (1 < src_rr_node->fan_in) {
+    /* Print the multiplexer, fan_in >= 2 */
+    fpga_spice_generate_bitstream_connection_box_mux(fp, rr_gsb, cb_type, cur_sram_orgz_info, 
+                                                     src_rr_node);
+  } /*Nothing should be done else*/ 
+   
+  return;
+}
+
+
+/* Print connection boxes
+ * Print the sub-circuit of a connection Box (Type: [CHANX|CHANY])
+ * Actually it is very similiar to switch box but
+ * the difference is connection boxes connect Grid INPUT Pins to channels
+ * TODO: merge direct connections into CB 
+ *    --------------             --------------
+ *    |            |             |            |
+ *    |    Grid    |   ChanY     |    Grid    |
+ *    |  [x][y+1]  |   [x][y]    | [x+1][y+1] |
+ *    |            | Connection  |            |
+ *    -------------- Box_Y[x][y] --------------
+ *                   ----------
+ *       ChanX       | Switch |        ChanX 
+ *       [x][y]      |   Box  |       [x+1][y]
+ *     Connection    | [x][y] |      Connection 
+ *    Box_X[x][y]    ----------     Box_X[x+1][y]
+ *    --------------             --------------
+ *    |            |             |            |
+ *    |    Grid    |  ChanY      |    Grid    |
+ *    |   [x][y]   | [x][y-1]    |  [x+1][y]  |
+ *    |            | Connection  |            |
+ *    --------------Box_Y[x][y-1]--------------
+ */
+static 
+void fpga_spice_generate_bitstream_routing_connection_box_subckt(FILE* fp,
+                                                                 RRGSB& rr_gsb, t_rr_type cb_type,
+                                                                 t_sram_orgz_info* cur_sram_orgz_info) {
+   
+  /* Check the file handler*/ 
+  if (NULL == fp) {
+    vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid file handler.\n", 
+               __FILE__, __LINE__); 
+    exit(1);
+  }
+
+  /* Print multiplexers or direct interconnect*/
+  std::vector<enum e_side> cb_sides = rr_gsb.get_cb_ipin_sides(cb_type);
+
+  for (size_t side = 0; side < cb_sides.size(); ++side) {
+    enum e_side cb_ipin_side = cb_sides[side];
+    Side side_manager(cb_ipin_side);
+    for (size_t inode = 0; inode < rr_gsb.get_num_ipin_nodes(cb_ipin_side); ++inode) { 
+      fpga_spice_generate_bitstream_connection_box_interc(fp, rr_gsb, cb_type, cur_sram_orgz_info,
+                                                          rr_gsb.get_ipin_node(cb_ipin_side, inode));
+    }
+  }
+
+  /* Check */
+
+  /* Free */
+ 
   return;
 }
 
@@ -696,32 +858,61 @@ void fpga_spice_generate_bitstream_routing_resources(char* routing_bitstream_log
   }
 
   /* Connection Boxes */
-  vpr_printf(TIO_MESSAGE_INFO,"Generating bitstream for Connection blocks - X direction ...\n");
-  /* X - channels [1...nx][0..ny]*/
-  for (int iy = 0; iy < (ny + 1); ++iy) {
-    for (int  ix = 1; ix < (nx + 1); ++ix) {
-      /* vpr_printf(TIO_MESSAGE_INFO, "Writing X-direction Connection Boxes[%d][%d]...\n", ix, iy); */
-      update_spice_models_routing_index_low(ix, iy, CHANX, arch.spice->num_spice_model, arch.spice->spice_models);
-      if ((TRUE == is_cb_exist(CHANX, ix, iy))
-         &&(0 < count_cb_info_num_ipin_rr_nodes(cbx_info[ix][iy]))) {
-        fpga_spice_generate_bitstream_routing_connection_box_subckt(fp, 
-                                                                    &(cbx_info[ix][iy]), cur_sram_orgz_info); 
+  if (TRUE == compact_routing_hierarchy) {
+    vpr_printf(TIO_MESSAGE_INFO,"Generating bitstream for Connection blocks - X direction ...\n");
+    /* X - channels [1...nx][0..ny]*/
+    for (int iy = 0; iy < (ny + 1); ++iy) {
+      for (int  ix = 1; ix < (nx + 1); ++ix) {
+        RRGSB rr_gsb = device_rr_gsb.get_gsb(ix, iy);
+        if ((TRUE == is_cb_exist(CHANX, ix, iy))
+           &&(true == rr_gsb.is_cb_exist(CHANX))) {
+          fpga_spice_generate_bitstream_routing_connection_box_subckt(fp, 
+                                                                      rr_gsb, CHANX, 
+                                                                      cur_sram_orgz_info);
+        }
       }
-      update_spice_models_routing_index_high(ix, iy, CHANX, arch.spice->num_spice_model, arch.spice->spice_models);
     }
-  }
-  /* Y - channels [1...ny][0..nx]*/
-  vpr_printf(TIO_MESSAGE_INFO,"Generating bitstream for Connection blocks - Y direction ...\n");
-  for (int ix = 0; ix < (nx + 1); ++ix) {
-    for (int iy = 1; iy < (ny + 1); ++iy) {
-      /* vpr_printf(TIO_MESSAGE_INFO, "Writing Y-direction Connection Boxes[%d][%d]...\n", ix, iy); */
-      update_spice_models_routing_index_low(ix, iy, CHANY, arch.spice->num_spice_model, arch.spice->spice_models);
-      if ((TRUE == is_cb_exist(CHANY, ix, iy)) 
-         &&(0 < count_cb_info_num_ipin_rr_nodes(cby_info[ix][iy]))) {
-        fpga_spice_generate_bitstream_routing_connection_box_subckt(fp,
-                                                                    &(cby_info[ix][iy]), cur_sram_orgz_info); 
+    /* Y - channels [1...ny][0..nx]*/
+    vpr_printf(TIO_MESSAGE_INFO,"Generating bitstream for Connection blocks - Y direction ...\n");
+    for (int ix = 0; ix < (nx + 1); ++ix) {
+      for (int iy = 1; iy < (ny + 1); ++iy) {
+        RRGSB rr_gsb = device_rr_gsb.get_gsb(ix, iy);
+        if ((TRUE == is_cb_exist(CHANY, ix, iy)) 
+           &&(true == rr_gsb.is_cb_exist(CHANY))) {
+          fpga_spice_generate_bitstream_routing_connection_box_subckt(fp, 
+                                                                      rr_gsb, CHANY, 
+                                                                      cur_sram_orgz_info);
+        }
       }
-      update_spice_models_routing_index_high(ix, iy, CHANY, arch.spice->num_spice_model, arch.spice->spice_models);
+    }
+  } else {
+    vpr_printf(TIO_MESSAGE_INFO,"Generating bitstream for Connection blocks - X direction ...\n");
+    /* X - channels [1...nx][0..ny]*/
+    for (int iy = 0; iy < (ny + 1); ++iy) {
+      for (int  ix = 1; ix < (nx + 1); ++ix) {
+        /* vpr_printf(TIO_MESSAGE_INFO, "Writing X-direction Connection Boxes[%d][%d]...\n", ix, iy); */
+        update_spice_models_routing_index_low(ix, iy, CHANX, arch.spice->num_spice_model, arch.spice->spice_models);
+        if ((TRUE == is_cb_exist(CHANX, ix, iy))
+           &&(0 < count_cb_info_num_ipin_rr_nodes(cbx_info[ix][iy]))) {
+          fpga_spice_generate_bitstream_routing_connection_box_subckt(fp, 
+                                                                      &(cbx_info[ix][iy]), cur_sram_orgz_info); 
+        }
+        update_spice_models_routing_index_high(ix, iy, CHANX, arch.spice->num_spice_model, arch.spice->spice_models);
+      }
+    }
+    /* Y - channels [1...ny][0..nx]*/
+    vpr_printf(TIO_MESSAGE_INFO,"Generating bitstream for Connection blocks - Y direction ...\n");
+    for (int ix = 0; ix < (nx + 1); ++ix) {
+      for (int iy = 1; iy < (ny + 1); ++iy) {
+        /* vpr_printf(TIO_MESSAGE_INFO, "Writing Y-direction Connection Boxes[%d][%d]...\n", ix, iy); */
+        update_spice_models_routing_index_low(ix, iy, CHANY, arch.spice->num_spice_model, arch.spice->spice_models);
+        if ((TRUE == is_cb_exist(CHANY, ix, iy)) 
+           &&(0 < count_cb_info_num_ipin_rr_nodes(cby_info[ix][iy]))) {
+          fpga_spice_generate_bitstream_routing_connection_box_subckt(fp,
+                                                                      &(cby_info[ix][iy]), cur_sram_orgz_info); 
+        }
+        update_spice_models_routing_index_high(ix, iy, CHANY, arch.spice->num_spice_model, arch.spice->spice_models);
+      }
     }
   }
 

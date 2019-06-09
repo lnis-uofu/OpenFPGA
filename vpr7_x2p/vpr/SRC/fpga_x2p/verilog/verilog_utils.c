@@ -349,6 +349,43 @@ void verilog_include_simulation_defines_file(FILE* fp,
 FILE* verilog_create_one_subckt_file(char* subckt_dir,
                                      const char* subckt_name_prefix,
                                      const char* verilog_subckt_file_name_prefix,
+                                     char** verilog_fname) {
+  FILE* fp = NULL;
+  char* file_description = NULL;
+
+  char* temp = my_strcat(subckt_dir, verilog_subckt_file_name_prefix);
+  (*verilog_fname) = my_strcat(temp, verilog_netlist_file_postfix);
+
+  /* Create a file*/
+  fp = fopen((*verilog_fname), "w");
+
+  if (NULL == fp) {
+    vpr_printf(TIO_MESSAGE_ERROR,
+               "(FILE:%s,LINE[%d])Failure in create Verilog netlist %s",
+               __FILE__, __LINE__, (*verilog_fname)); 
+    exit(1);
+  } 
+
+  /* Generate the descriptions*/
+  file_description = (char*) my_malloc(sizeof(char) * (strlen(subckt_name_prefix) + 9));
+  sprintf(file_description, 
+          "%s in FPGA", 
+          subckt_name_prefix);
+ 
+  dump_verilog_file_header(fp, file_description);
+
+  /* Free */
+  my_free(temp);
+  my_free(file_description);
+
+  return fp;
+}
+
+
+/* Create a file handler for a subckt Verilog netlist */
+FILE* verilog_create_one_subckt_file(char* subckt_dir,
+                                     const char* subckt_name_prefix,
+                                     const char* verilog_subckt_file_name_prefix,
                                      int grid_x, int grid_y,
                                      char** verilog_fname) {
   FILE* fp = NULL;
