@@ -9,6 +9,7 @@
 #include <assert.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <vector>
 
 /* Include vpr structs*/
 #include "util.h"
@@ -216,6 +217,72 @@ void dump_verilog_one_sb_routing_pin(FILE* fp,
 
   return;
 }
+
+/** Given a starting rr_node (CHANX or CHANY) 
+ *  and a ending rr_node (IPIN) 
+ *  return the cb contains both (the ending CB of the routing wire)
+ */
+DeviceCoordinator get_chan_node_ending_cb(t_rr_node* src_rr_node, 
+                                          t_rr_node* end_rr_node) {
+  int next_cb_x, next_cb_y;
+  std::vector<enum e_side> ipin_side;
+  enum e_side chan_side;
+  t_rr_type cb_type;
+ 
+  /* Type of connection block depends on the src_rr_node */
+  switch (src_rr_node->type) {
+  case CHANX:
+    /* the x of CB is same as end_rr_node,
+     * the y of CB should be same as src_rr_node
+     */
+    assert (end_rr_node->xlow == end_rr_node->xhigh);
+    next_cb_x = end_rr_node->xlow;
+    assert (src_rr_node->ylow == src_rr_node->yhigh);
+    next_cb_y = src_rr_node->ylow;
+    cb_type = CHANX;
+    break;
+  case CHANY:
+    /* the x of CB is same as src_rr_node,
+     * the y of CB should be same as end_rr_node
+     */
+    assert (src_rr_node->xlow == src_rr_node->xhigh);
+    next_cb_x = src_rr_node->xlow;
+    assert (end_rr_node->ylow == end_rr_node->yhigh);
+    next_cb_y = end_rr_node->ylow;
+    cb_type = CHANY;
+    break;
+  default:
+   vpr_printf(TIO_MESSAGE_ERROR, 
+              "(File: %s [LINE%d]) Invalid type of src_rr_node!\n",
+               __FILE__, __LINE__);
+ 
+    exit(1);
+  }
+
+  DeviceCoordinator next_cb_coordinator(next_cb_x, next_cb_y);
+  /* IMPORTANT: the use of global variables should be removed!!! */
+  const RRGSB& next_cb = device_rr_gsb.get_gsb(next_cb_coordinator);
+  /* Side will be either on TOP or BOTTOM */
+  ipin_side = next_cb.get_cb_ipin_sides(cb_type);
+  chan_side = next_cb.get_cb_chan_side(cb_type);
+  
+  /* Double check if src_rr_node is in the IN_PORT list */
+  assert ( (OPEN != next_cb.get_node_index( src_rr_node, chan_side, IN_PORT)) 
+        || (OPEN != next_cb.get_node_index( src_rr_node, chan_side, OUT_PORT)) );  
+
+  /* Double check if end_rr_node is in the OUT_PORT list */
+  bool node_exist = false;
+  for (size_t iside = 0; iside < ipin_side.size(); ++iside) {
+    if (OPEN != next_cb.get_node_index(end_rr_node, ipin_side[iside], OUT_PORT)) {
+      node_exist = true;
+      break;
+    }
+  }
+  assert (true == node_exist);
+
+  return next_cb_coordinator;
+}
+
 
 /** Given a starting rr_node (CHANX or CHANY) 
  *  and a ending rr_node (IPIN) 

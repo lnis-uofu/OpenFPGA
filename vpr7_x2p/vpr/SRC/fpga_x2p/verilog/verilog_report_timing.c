@@ -1767,6 +1767,7 @@ void verilog_generate_one_routing_wire_report_timing(FILE* fp,
   assert(  ( CHANX == wire_rr_node->type )
         || ( CHANY == wire_rr_node->type ));
   int track_idx = wire_rr_node->ptc_num;
+  t_rr_type cb_type = wire_rr_node->type;
 
   /* We only care a specific length of wires */
   if (L_wire != (abs(wire_rr_node->xlow - wire_rr_node->xhigh + wire_rr_node->ylow - wire_rr_node->yhigh) + 1)) {
@@ -1781,19 +1782,18 @@ void verilog_generate_one_routing_wire_report_timing(FILE* fp,
       int x_end, y_end;
       /* Find where the destination pin belongs to */
       get_chan_rr_node_end_coordinate(wire_rr_node, &x_end, &y_end);
-      DeviceCoordinator next_sb_coordinator;
       /* Reciever could be IPIN or CHANX or CHANY */
       int inode = wire_rr_node->edges[jedge];
-      RRGSB next_sb; 
-      t_cb* next_cb = NULL; 
       /* Find the SB/CB block that it belongs to */
       switch (LL_rr_node[inode].type) {
       case IPIN:
+        {
+        DeviceCoordinator next_cb_coordinator = get_chan_node_ending_cb(wire_rr_node, &(LL_rr_node[inode]));
         /* Get the coordinate of ending CB */
-        next_cb = get_chan_rr_node_ending_cb(wire_rr_node, &(LL_rr_node[inode]));
+        const RRGSB& next_cb = device_rr_gsb.get_gsb(next_cb_coordinator);
         /* This will not be the longest path unless the cb is close to the ending SB */
         if ((TRUE == sdc_opts.longest_path_only)
-           && ((next_cb->x != x_end) || (next_cb->y != y_end))) {
+           && ( ((int)next_cb.get_cb_x(cb_type) != x_end) || ((int)next_cb.get_cb_y(cb_type) != y_end))) {
           continue;
         }
         /* Driver could be OPIN or CHANX or CHANY,
@@ -1812,11 +1812,10 @@ void verilog_generate_one_routing_wire_report_timing(FILE* fp,
         fprintf(fp, " -to "); 
         /* output instance name */
         fprintf(fp, "%s/",
-                gen_verilog_one_cb_instance_name(next_cb));
+                next_cb.gen_cb_verilog_instance_name(cb_type));
         /* output pin name */
         fprintf(fp, "%s",
-                gen_verilog_routing_channel_one_midout_name( next_cb,
-                                                             track_idx));
+                next_cb.gen_cb_verilog_routing_track_name(cb_type, track_idx));
         /* Print through pins */
         if (TRUE == sdc_opts.print_thru_pins) { 
           fprintf(fp, " -through_pins "); 
@@ -1826,12 +1825,15 @@ void verilog_generate_one_routing_wire_report_timing(FILE* fp,
         }
         fprintf(fp, " -unconstrained\n"); 
         path_cnt++;
+        }
         break;
       case CHANX:
       case CHANY:
+        {
+        DeviceCoordinator next_sb_coordinator;
         /* Get the coordinate of ending SB */
         next_sb_coordinator = get_chan_node_ending_sb_coordinator(wire_rr_node, &(LL_rr_node[inode]));
-        next_sb = device_rr_gsb.get_gsb(next_sb_coordinator);
+        const RRGSB& next_sb = device_rr_gsb.get_gsb(next_sb_coordinator);
         /* This will not be the longest path unless the cb is close to the ending SB */
         if ((TRUE == sdc_opts.longest_path_only)
            && ((next_sb.get_sb_x() != (size_t)x_end) || (next_sb.get_sb_y() != (size_t)y_end))) {
@@ -1873,6 +1875,7 @@ void verilog_generate_one_routing_wire_report_timing(FILE* fp,
         path_cnt++;
         /* Set the flag */
         sb_dumped = TRUE;
+        }
         break;
       default:
        vpr_printf(TIO_MESSAGE_ERROR, "(File: %s [LINE%d]) Invalid type of ending point rr_node!\n",
@@ -2058,7 +2061,7 @@ void verilog_generate_routing_wires_report_timing(FILE* fp,
     DeviceCoordinator sb_range = device_rr_gsb.get_gsb_range();
     for (size_t ix = 0; ix < sb_range.get_x(); ++ix) {
       for (size_t iy = 0; iy < sb_range.get_y(); ++iy) {
-        RRGSB rr_sb = device_rr_gsb.get_gsb(ix, iy);
+        const RRGSB& rr_sb = device_rr_gsb.get_gsb(ix, iy);
         for (size_t side = 0; side < rr_sb.get_num_sides(); side++) {
           Side side_manager(side);
           for (size_t itrack = 0; itrack < rr_sb.get_chan_width(side_manager.get_side()); ++itrack) {
