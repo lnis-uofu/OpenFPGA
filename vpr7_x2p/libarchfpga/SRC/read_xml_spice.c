@@ -1300,18 +1300,15 @@ static void check_spice_models(int num_spice_model,
     /* Check sram has been defined and has input and output ports*/
     if (SPICE_MODEL_SRAM == spice_models[i].type) {
       has_sram = 1;
-      has_in_port = 0;
       has_out_port = 0;
       for (j = 0; j < spice_models[i].num_port; j++) {
-        if (SPICE_MODEL_PORT_INPUT == spice_models[i].ports[j].type) {
-          has_in_port = 1;
-        } else if (SPICE_MODEL_PORT_OUTPUT == spice_models[i].ports[j].type) {
+        if (SPICE_MODEL_PORT_OUTPUT == spice_models[i].ports[j].type) {
           has_out_port = 1;
         }
       }
       /* Check if we have two ports*/
-      if ((0 == has_in_port)||(0 == has_out_port)) {
-        vpr_printf(TIO_MESSAGE_ERROR,"SRAM Spice model(%s) does not have input|output port\n",spice_models[i].name);
+      if (0 == has_out_port) {
+        vpr_printf(TIO_MESSAGE_ERROR, "SRAM Spice model(%s) does not have output port\n", spice_models[i].name);
         exit(1);
       }
     }

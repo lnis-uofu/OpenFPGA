@@ -2020,8 +2020,6 @@ void update_spice_models_routing_index_low(int x, int y, t_rr_type chan_type,
  */
 void check_sram_spice_model_ports(t_spice_model* cur_spice_model,
                                   boolean include_bl_wl) {
-  int num_input_ports;
-  t_spice_model_port** input_ports = NULL;
   int num_output_ports;
   t_spice_model_port** output_ports = NULL;
   int num_bl_ports;
@@ -2036,24 +2034,6 @@ void check_sram_spice_model_ports(t_spice_model* cur_spice_model,
   /* Check the type of SPICE model */
   assert(SPICE_MODEL_SRAM == cur_spice_model->type);
 
-  /* Check if we has 1 input other than global ports */
-  input_ports = find_spice_model_ports(cur_spice_model, SPICE_MODEL_PORT_INPUT, &num_input_ports, TRUE);
-  num_global_ports = 0;
-  for (iport = 0; iport < num_input_ports; iport++) {
-    if (TRUE == input_ports[iport]->is_global) {
-      num_global_ports++;
-    }
-  }
-  if (1 != (num_input_ports - num_global_ports)) {
-    vpr_printf(TIO_MESSAGE_ERROR, "(File:%s,[LINE%d]) SRAM SPICE MODEL should have only 1 non-global input port!\n",
-               __FILE__, __LINE__);
-    num_err++;
-    if (1 != input_ports[0]->size) {
-      vpr_printf(TIO_MESSAGE_ERROR, "(File:%s,[LINE%d]) SRAM SPICE MODEL should have an input port with size 1!\n",
-                 __FILE__, __LINE__);
-      num_err++;
-    }
-  }
   /* Check if we has 1 output with size 2 */
   output_ports = find_spice_model_ports(cur_spice_model, SPICE_MODEL_PORT_OUTPUT, &num_output_ports, TRUE);
   num_global_ports = 0;
@@ -2112,7 +2092,6 @@ void check_sram_spice_model_ports(t_spice_model* cur_spice_model,
   }
 
   /* Free */
-  my_free(input_ports);
   my_free(output_ports);
   my_free(bl_ports);
   my_free(wl_ports);

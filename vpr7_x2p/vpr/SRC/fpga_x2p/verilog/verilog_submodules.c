@@ -2986,7 +2986,6 @@ void dump_verilog_submodule_one_mem(FILE* fp,
     return;
   }
 
-
   /* Currently, Only support one mem_model for each SPICE MODEL  */
   for (iport = 0; iport < num_sram_port; iport++) {
     if (NULL == mem_model) {

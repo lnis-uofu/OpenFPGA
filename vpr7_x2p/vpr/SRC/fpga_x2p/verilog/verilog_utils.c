@@ -3033,14 +3033,6 @@ void dump_verilog_mem_sram_submodule(FILE* fp,
     }
     dump_verilog_sram_one_outport(fp, cur_sram_orgz_info, 
                                       lsb, msb,
-                                      0, VERILOG_PORT_CONKT);
-    fprintf(fp, ",");
-    if (SPICE_MODEL_MUX == cur_verilog_model->type) {
-      fprintf(fp, "%s_size%d_%d_", 
-              cur_verilog_model->name, mux_size, cur_verilog_model->cnt);
-    }
-    dump_verilog_sram_one_outport(fp, cur_sram_orgz_info, 
-                                      lsb, msb,
                                       1, VERILOG_PORT_CONKT);
     fprintf(fp, ",");
     get_sram_orgz_info_num_blwl(cur_sram_orgz_info, &cur_bl, &cur_wl); 
