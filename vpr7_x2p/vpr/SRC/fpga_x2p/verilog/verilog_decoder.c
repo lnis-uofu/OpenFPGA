@@ -31,8 +31,9 @@
 #include "verilog_global.h"
 #include "verilog_utils.h"
 
-/***** Subroutines *****/
+#include "verilog_decoder.h"
 
+/***** Subroutines *****/
 void dump_verilog_decoder_memory_bank_ports(t_sram_orgz_info* cur_sram_orgz_info, 
                                             FILE* fp, 
                                             enum e_dump_verilog_port_type dump_port_type) {
@@ -343,6 +344,66 @@ void dump_verilog_scan_chain_config_module(FILE* fp,
   return;
 }
 
+/** Output a inverter module for inverting a BL/WL line 
+ */
+static 
+void dump_verilog_membank_one_inv_module(FILE* fp,
+                                         const t_spice_model* inv_spice_model,
+                                         const char* instance_tag, 
+                                         const char* in_port_name, 
+                                         const char* out_port_name, 
+                                         int inv_index) {
+  /* A valid file handler */
+  if (NULL == fp) {
+    vpr_printf(TIO_MESSAGE_ERROR, "(File:%s, [LINE%d])Invalid File Handler!\n", __FILE__, __LINE__);
+    exit(1);
+  }
+  assert(NULL != instance_tag);
+  assert(NULL != in_port_name);
+  assert(NULL != out_port_name);
+
+  /* Find the input port, output port, and sram port*/
+  int num_buf_input_port;
+  int num_buf_output_port;
+  t_spice_model_port** buf_input_port = find_spice_model_ports(inv_spice_model, SPICE_MODEL_PORT_INPUT, &num_buf_input_port, TRUE);
+  t_spice_model_port** buf_output_port = find_spice_model_ports(inv_spice_model, SPICE_MODEL_PORT_OUTPUT, &num_buf_output_port, TRUE);
+  /* Instanciate an inverter module */
+  fprintf(fp, " %s %s_%s_%d (",
+          inv_spice_model->name, inv_spice_model->prefix, 
+          instance_tag, inv_index);
+  /* Dump global ports */
+  if  (0 < rec_dump_verilog_spice_model_global_ports(fp, inv_spice_model, FALSE, FALSE, inv_spice_model->dump_explicit_port_map)) {
+    fprintf(fp, ",\n");
+  }
+  /* Dump explicit port map if required */
+  if ( TRUE == inv_spice_model->dump_explicit_port_map) {
+    fprintf(fp, ".%s(", 
+            buf_input_port[0]->lib_name); 
+  }
+  fprintf(fp, "%s[%d]",
+          in_port_name, inv_index);
+  if ( TRUE == inv_spice_model->dump_explicit_port_map) {
+    fprintf(fp, ")"); 
+  }
+  fprintf(fp, ", "); 
+  if ( TRUE == inv_spice_model->dump_explicit_port_map) {
+    fprintf(fp, ".%s(", 
+            buf_output_port[0]->lib_name); 
+  }
+  fprintf(fp, "%s[%d]",
+          out_port_name, inv_index);
+  if ( TRUE == inv_spice_model->dump_explicit_port_map) {
+    fprintf(fp, ")"); 
+  }
+  fprintf(fp, ");\n"); 
+
+  /* Free */
+  my_free(buf_input_port);
+  my_free(buf_output_port);
+
+  return;
+}
+
 /* For Memory-bank configuration organization:
  * Dump the module of configuration module which connect configuration ports to SRAMs/SCFFs 
  */ 
@@ -487,11 +548,10 @@ void dump_verilog_membank_config_module(FILE* fp,
       blb_inv_spice_model = blb_port[0]->inv_spice_model;
       /* Make an inversion of the BL */
       for (iinv = 0; iinv < num_array_bl; iinv++) {
-        fprintf(fp, " %s %s_blb_%d (%s[%d], %s[%d]);\n",
-                blb_inv_spice_model->name, blb_inv_spice_model->prefix, 
-                iinv, 
-                top_netlist_array_bl_port_name, iinv,
-                top_netlist_array_blb_port_name, iinv);
+        dump_verilog_membank_one_inv_module(fp, blb_inv_spice_model, "blb", 
+                                            top_netlist_array_bl_port_name, 
+                                            top_netlist_array_blb_port_name,
+                                            iinv); 
       }
     }
     if (1 == num_wlb_ports) {
@@ -499,11 +559,10 @@ void dump_verilog_membank_config_module(FILE* fp,
       wlb_inv_spice_model = wlb_port[0]->inv_spice_model;
       /* Make an inversion of the WL */
       for (iinv = 0; iinv < num_array_wl; iinv++) {
-        fprintf(fp, " %s %s_wlb_%d (%s[%d], %s[%d]);\n",
-                wlb_inv_spice_model->name, wlb_inv_spice_model->prefix, 
-                iinv, 
-                top_netlist_array_wl_port_name, iinv,
-                top_netlist_array_wlb_port_name, iinv);
+        dump_verilog_membank_one_inv_module(fp, wlb_inv_spice_model, "wlb", 
+                                            top_netlist_array_wl_port_name, 
+                                            top_netlist_array_wlb_port_name,
+                                            iinv); 
       }
     }
 

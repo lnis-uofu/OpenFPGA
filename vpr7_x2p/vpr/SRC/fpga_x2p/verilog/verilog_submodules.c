@@ -1244,7 +1244,7 @@ void dump_verilog_cmos_mux_tree_structure(FILE* fp,
                 spice_model.lut_intermediate_buffer->spice_model_name, 
                 nextlevel, out_idx); /* Given name*/
         /* Dump global ports */
-        if  (0 < rec_dump_verilog_spice_model_global_ports(fp, spice_model.lut_intermediate_buffer->spice_model, FALSE, FALSE, TRUE)) {
+        if  (0 < rec_dump_verilog_spice_model_global_ports(fp, spice_model.lut_intermediate_buffer->spice_model, FALSE, FALSE, spice_model.lut_intermediate_buffer->spice_model->dump_explicit_port_map)) {
           fprintf(fp, ",\n");
         }
         /* Dump explicit port map if required */

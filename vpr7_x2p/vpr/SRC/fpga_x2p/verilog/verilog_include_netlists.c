@@ -28,6 +28,8 @@
 #include "verilog_global.h"
 #include "verilog_utils.h"
 
+#include "verilog_include_netlists.h"
+
 static 
 void include_netlists_include_user_defined_verilog_netlists(FILE* fp,
                                                     		t_spice spice) {

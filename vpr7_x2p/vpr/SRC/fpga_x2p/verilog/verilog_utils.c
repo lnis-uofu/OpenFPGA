@@ -758,7 +758,7 @@ char* verilog_convert_port_type_to_string(enum e_spice_model_port_type port_type
  * Return the number of ports that have been dumped 
  */
 int rec_dump_verilog_spice_model_lib_global_ports(FILE* fp, 
-                                                  t_spice_model* cur_spice_model,
+                                                  const t_spice_model* cur_spice_model,
                                                   boolean dump_port_type, 
                                                   boolean recursive,
                                                   boolean require_explicit_port_map) {
@@ -851,7 +851,7 @@ int rec_dump_verilog_spice_model_lib_global_ports(FILE* fp,
  * Return the number of ports that have been dumped 
  */
 int rec_dump_verilog_spice_model_global_ports(FILE* fp, 
-                                              t_spice_model* cur_spice_model,
+                                              const t_spice_model* cur_spice_model,
                                               boolean dump_port_type, 
                                               boolean recursive,
                                               boolean require_explicit_port_map) {

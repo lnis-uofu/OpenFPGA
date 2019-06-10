@@ -46,7 +46,7 @@ void config_one_spice_model_buffer(int num_spice_models,
 void config_spice_model_input_output_buffers_pass_gate(int num_spice_models, 
                                                        t_spice_model* spice_model);
 
-t_spice_model_port** find_spice_model_ports(t_spice_model* spice_model,
+t_spice_model_port** find_spice_model_ports(const t_spice_model* spice_model,
                                             enum e_spice_model_port_type port_type,
                                             int* port_num, boolean ignore_global_port);
 
@@ -379,7 +379,7 @@ boolean check_subckt_file_exist_in_llist(t_llist* subckt_llist_head,
 
 boolean is_primitive_pb_type(t_pb_type* cur_pb_type);
 
-void rec_stats_spice_model_global_ports(t_spice_model* cur_spice_model,
+void rec_stats_spice_model_global_ports(const t_spice_model* cur_spice_model,
                                         boolean recursive,
                                         t_llist** spice_model_head);
 
