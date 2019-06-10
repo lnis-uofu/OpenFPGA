@@ -286,7 +286,7 @@ void vpr_fpga_verilog(t_vpr_setup vpr_setup,
     verilog_generate_sdc_pnr(sram_verilog_orgz_info, sdc_dir_path,
                              Arch, &vpr_setup.RoutingArch,
                              num_rr_nodes, rr_node, rr_node_indices, rr_indexed_data,
-                             nx, ny,
+                             nx, ny, device_rr_gsb,
                              vpr_setup.FPGA_SPICE_Opts.compact_routing_hierarchy);
   }
 
@@ -384,7 +384,7 @@ void vpr_fpga_verilog(t_vpr_setup vpr_setup,
     verilog_generate_sdc_analysis(sram_verilog_orgz_info, sdc_dir_path,
                                   Arch, 
                                   num_rr_nodes, rr_node, rr_node_indices, 
-                                  nx, ny, grid, block,
+                                  nx, ny, grid, block, device_rr_gsb,
                                   vpr_setup.FPGA_SPICE_Opts.compact_routing_hierarchy);
   }
   /* Output routing report_timing script :

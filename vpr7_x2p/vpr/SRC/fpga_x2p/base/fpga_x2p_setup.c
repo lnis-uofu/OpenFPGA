@@ -1395,6 +1395,7 @@ void fpga_x2p_setup(t_vpr_setup vpr_setup,
 
   /* Try to use mirror SBs/CBs if enabled by user */
   if (TRUE == vpr_setup.FPGA_SPICE_Opts.compact_routing_hierarchy) {
+
     /* Idenify mirror and rotatable Switch blocks and Connection blocks */
     identify_mirror_switch_blocks();
     identify_mirror_connection_blocks();

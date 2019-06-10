@@ -2166,13 +2166,13 @@ DeviceCoordinator DeviceRRGSB::get_gsb_range() const {
 } 
 
 /* Get a rr switch block in the array with a coordinator */
-RRGSB DeviceRRGSB::get_gsb(DeviceCoordinator& coordinator) const {
+const RRGSB DeviceRRGSB::get_gsb(DeviceCoordinator& coordinator) const {
   assert(validate_coordinator(coordinator));
   return rr_gsb_[coordinator.get_x()][coordinator.get_y()];
 } 
 
 /* Get a rr switch block in the array with a coordinator */
-RRGSB DeviceRRGSB::get_gsb(size_t x, size_t y) const { 
+const RRGSB DeviceRRGSB::get_gsb(size_t x, size_t y) const { 
   DeviceCoordinator coordinator(x, y);  
   return get_gsb(coordinator);
 }
@@ -2221,7 +2221,7 @@ size_t DeviceRRGSB::get_sb_unique_submodule_id(DeviceCoordinator& coordinator, e
 }
 
 /* Get a rr switch block which is a unique module of a side of SB */ 
-RRGSB DeviceRRGSB::get_sb_unique_submodule(size_t index, enum e_side side, size_t seg_id) const {
+const RRGSB DeviceRRGSB::get_sb_unique_submodule(size_t index, enum e_side side, size_t seg_id) const {
   assert (validate_sb_unique_submodule_index(index, side, seg_id));
 
   Side side_manager(side);
@@ -2234,7 +2234,7 @@ RRGSB DeviceRRGSB::get_sb_unique_submodule(size_t index, enum e_side side, size_
 }
 
 /* Get a rr switch block which is a unique module of a side of SB */ 
-RRGSB DeviceRRGSB::get_sb_unique_submodule(DeviceCoordinator& coordinator, enum e_side side, size_t seg_id) const {
+const RRGSB DeviceRRGSB::get_sb_unique_submodule(DeviceCoordinator& coordinator, enum e_side side, size_t seg_id) const {
   assert (validate_coordinator(coordinator));
 
   Side side_manager(side);
@@ -2247,21 +2247,21 @@ RRGSB DeviceRRGSB::get_sb_unique_submodule(DeviceCoordinator& coordinator, enum 
 
 
 /* Get a rr switch block which a unique mirror */ 
-RRGSB DeviceRRGSB::get_sb_unique_module(size_t index) const {
+const RRGSB DeviceRRGSB::get_sb_unique_module(size_t index) const {
   assert (validate_sb_unique_module_index(index));
   
   return rr_gsb_[sb_unique_module_[index].get_x()][sb_unique_module_[index].get_y()];
 }
 
 /* Get a rr switch block which a unique mirror */ 
-RRGSB DeviceRRGSB::get_cb_unique_module(t_rr_type cb_type, size_t index) const {
+const RRGSB DeviceRRGSB::get_cb_unique_module(t_rr_type cb_type, size_t index) const {
   assert (validate_cb_unique_module_index(cb_type, index));
   assert (validate_cb_type(cb_type));
   switch(cb_type) {
-  case CHANX:
-    return rr_gsb_[cbx_unique_module_[index].get_x()][cbx_unique_module_[index].get_y()];
+  case CHANX: 
+   return rr_gsb_[cbx_unique_module_[index].get_x()][cbx_unique_module_[index].get_y()];
   case CHANY:
-    return rr_gsb_[cby_unique_module_[index].get_x()][cby_unique_module_[index].get_y()];
+   return rr_gsb_[cby_unique_module_[index].get_x()][cby_unique_module_[index].get_y()];
   default: 
     vpr_printf(TIO_MESSAGE_ERROR, 
               "(File:%s, [LINE%d])Invalid type of connection block!\n", 
@@ -2271,7 +2271,7 @@ RRGSB DeviceRRGSB::get_cb_unique_module(t_rr_type cb_type, size_t index) const {
 }
 
 /* Give a coordinator of a rr switch block, and return its unique mirror */ 
-RRGSB DeviceRRGSB::get_cb_unique_module(t_rr_type cb_type, DeviceCoordinator& coordinator) const {
+const RRGSB DeviceRRGSB::get_cb_unique_module(t_rr_type cb_type, DeviceCoordinator& coordinator) const {
   assert (validate_cb_type(cb_type));
   assert(validate_coordinator(coordinator));
   size_t cb_unique_module_id;
@@ -2294,7 +2294,7 @@ RRGSB DeviceRRGSB::get_cb_unique_module(t_rr_type cb_type, DeviceCoordinator& co
 } 
 
 /* Give a coordinator of a rr switch block, and return its unique mirror */ 
-RRGSB DeviceRRGSB::get_sb_unique_module(DeviceCoordinator& coordinator) const {
+const RRGSB DeviceRRGSB::get_sb_unique_module(DeviceCoordinator& coordinator) const {
   assert(validate_coordinator(coordinator));
   size_t sb_unique_module_id = sb_unique_module_id_[coordinator.get_x()][coordinator.get_y()];  
   return get_sb_unique_module(sb_unique_module_id);
@@ -2413,7 +2413,7 @@ void DeviceRRGSB::reserve(DeviceCoordinator& coordinator) {
 
 /* Pre-allocate the rr_sb_unique_module_id matrix that the device requires */ 
 void DeviceRRGSB::reserve_sb_unique_submodule_id(DeviceCoordinator& coordinator) { 
-  RRGSB rr_sb = get_gsb(coordinator);
+  const RRGSB& rr_sb = get_gsb(coordinator);
   sb_unique_submodule_id_[coordinator.get_x()][coordinator.get_y()].resize(rr_sb.get_num_sides());
 
   for (size_t side = 0; side < rr_sb.get_num_sides(); ++side) {
@@ -2450,7 +2450,7 @@ void DeviceRRGSB::resize_upon_need(DeviceCoordinator& coordinator) {
 
 /* Add a switch block to the array, which will automatically identify and update the lists of unique mirrors and rotatable mirrors */
 void DeviceRRGSB::add_rr_gsb(DeviceCoordinator& coordinator, 
-                             RRGSB& rr_gsb) {
+                             const RRGSB& rr_gsb) {
   /* Resize upon needs*/
   resize_upon_need(coordinator);
 
@@ -2549,7 +2549,7 @@ void DeviceRRGSB::build_sb_unique_submodule() {
   for (size_t ix = 0; ix < rr_gsb_.size(); ++ix) {
     for (size_t iy = 0; iy < rr_gsb_[ix].size(); ++iy) {
       DeviceCoordinator coordinator(ix, iy);
-      RRGSB rr_sb = rr_gsb_[ix][iy]; 
+      const RRGSB& rr_sb = rr_gsb_[ix][iy]; 
 
       /* reserve the rr_sb_unique_module_id */
       reserve_sb_unique_submodule_id(coordinator);
@@ -2565,7 +2565,7 @@ void DeviceRRGSB::build_sb_unique_submodule() {
 }
 
 void DeviceRRGSB::add_sb_unique_side_segment_submodule(DeviceCoordinator& coordinator, 
-                                                       RRGSB& rr_sb, 
+                                                       const RRGSB& rr_sb, 
                                                        enum e_side side, 
                                                        size_t seg_id) {
   bool is_unique_side_module = true;
@@ -2613,7 +2613,7 @@ void DeviceRRGSB::build_unique_module() {
  * Otherwise, we add the module to the unique_module list 
  */
 void DeviceRRGSB::add_sb_unique_side_submodule(DeviceCoordinator& coordinator, 
-                                               RRGSB& rr_sb, 
+                                               const RRGSB& rr_sb, 
                                                enum e_side side) {
   Side side_manager(side);
 

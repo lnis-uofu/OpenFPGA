@@ -38,7 +38,7 @@
 /* Generate bitstream for a multiplexer of a switch block */
 static 
 void fpga_spice_generate_bitstream_switch_box_mux(FILE* fp,
-                                                  RRGSB& rr_sb, 
+                                                  const RRGSB& rr_sb, 
                                                   t_sram_orgz_info* cur_sram_orgz_info,
                                                   t_rr_node* cur_rr_node,
                                                   int mux_size,
@@ -213,7 +213,7 @@ void fpga_spice_generate_bitstream_switch_box_mux(FILE* fp,
 
 static 
 void fpga_spice_generate_bitstream_switch_box_interc(FILE* fp,
-                                                     RRGSB& rr_sb,
+                                                     const RRGSB& rr_sb,
                                                      t_sram_orgz_info* cur_sram_orgz_info,
                                                      enum e_side chan_side,
                                                      t_rr_node* cur_rr_node) {
@@ -344,7 +344,7 @@ void fpga_spice_generate_bitstream_switch_box_interc(FILE* fp,
  */
 static 
 void fpga_spice_generate_bitstream_routing_switch_box_subckt(FILE* fp, 
-                                                             RRGSB& rr_sb, 
+                                                             const RRGSB& rr_sb, 
                                                              t_sram_orgz_info* cur_sram_orgz_info) {
   /* Check */
   /* Check the file handler*/ 
@@ -450,7 +450,7 @@ void fpga_spice_generate_bitstream_routing_switch_box_subckt(FILE* fp,
 /* SRC rr_node is the IPIN of a grid.*/
 static 
 void fpga_spice_generate_bitstream_connection_box_mux(FILE* fp,
-                                                      RRGSB& rr_gsb, t_rr_type cb_type,
+                                                      const RRGSB& rr_gsb, t_rr_type cb_type,
                                                       t_sram_orgz_info* cur_sram_orgz_info,
                                                       t_rr_node* src_rr_node) {
   int mux_size = 0;
@@ -652,7 +652,7 @@ void fpga_spice_generate_bitstream_connection_box_interc(FILE* fp,
 
 static 
 void fpga_spice_generate_bitstream_connection_box_interc(FILE* fp,
-                                                         RRGSB& rr_gsb, t_rr_type cb_type,
+                                                         const RRGSB& rr_gsb, t_rr_type cb_type,
                                                          t_sram_orgz_info* cur_sram_orgz_info,
                                                          t_rr_node* src_rr_node) {
 
@@ -700,7 +700,7 @@ void fpga_spice_generate_bitstream_connection_box_interc(FILE* fp,
  */
 static 
 void fpga_spice_generate_bitstream_routing_connection_box_subckt(FILE* fp,
-                                                                 RRGSB& rr_gsb, t_rr_type cb_type,
+                                                                 const RRGSB& rr_gsb, t_rr_type cb_type,
                                                                  t_sram_orgz_info* cur_sram_orgz_info) {
    
   /* Check the file handler*/ 
@@ -840,7 +840,7 @@ void fpga_spice_generate_bitstream_routing_resources(char* routing_bitstream_log
     DeviceCoordinator sb_range = device_rr_gsb.get_gsb_range();
     for (size_t ix = 0; ix < sb_range.get_x(); ++ix) {
       for (size_t iy = 0; iy < sb_range.get_y(); ++iy) {
-        RRGSB rr_sb = device_rr_gsb.get_gsb(ix, iy);
+        const RRGSB& rr_sb = device_rr_gsb.get_gsb(ix, iy);
         fpga_spice_generate_bitstream_routing_switch_box_subckt(fp, 
                                                                 rr_sb, cur_sram_orgz_info);
       }
@@ -863,7 +863,7 @@ void fpga_spice_generate_bitstream_routing_resources(char* routing_bitstream_log
     /* X - channels [1...nx][0..ny]*/
     for (int iy = 0; iy < (ny + 1); ++iy) {
       for (int  ix = 1; ix < (nx + 1); ++ix) {
-        RRGSB rr_gsb = device_rr_gsb.get_gsb(ix, iy);
+        const RRGSB& rr_gsb = device_rr_gsb.get_gsb(ix, iy);
         if ((TRUE == is_cb_exist(CHANX, ix, iy))
            &&(true == rr_gsb.is_cb_exist(CHANX))) {
           fpga_spice_generate_bitstream_routing_connection_box_subckt(fp, 
@@ -876,7 +876,7 @@ void fpga_spice_generate_bitstream_routing_resources(char* routing_bitstream_log
     vpr_printf(TIO_MESSAGE_INFO,"Generating bitstream for Connection blocks - Y direction ...\n");
     for (int ix = 0; ix < (nx + 1); ++ix) {
       for (int iy = 1; iy < (ny + 1); ++iy) {
-        RRGSB rr_gsb = device_rr_gsb.get_gsb(ix, iy);
+        const RRGSB& rr_gsb = device_rr_gsb.get_gsb(ix, iy);
         if ((TRUE == is_cb_exist(CHANY, ix, iy)) 
            &&(true == rr_gsb.is_cb_exist(CHANY))) {
           fpga_spice_generate_bitstream_routing_connection_box_subckt(fp, 

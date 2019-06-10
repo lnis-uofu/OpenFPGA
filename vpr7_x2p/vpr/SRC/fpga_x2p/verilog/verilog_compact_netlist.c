@@ -749,7 +749,7 @@ void dump_compact_verilog_defined_grids(t_sram_orgz_info* cur_sram_orgz_info,
 static 
 void dump_compact_verilog_defined_one_switch_box(t_sram_orgz_info* cur_sram_orgz_info, 
                                                  FILE* fp,
-                                                 RRGSB& rr_sb) {
+                                                 const RRGSB& rr_sb) {
   /* Check the file handler*/ 
   if (NULL == fp) {
     vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid file handler.\n", 
@@ -766,7 +766,7 @@ void dump_compact_verilog_defined_one_switch_box(t_sram_orgz_info* cur_sram_orgz
 
   /* If we have an mirror SB, we should the module name of the mirror !!! */
   DeviceCoordinator coordinator = rr_sb.get_sb_coordinator();
-  RRGSB unique_mirror = device_rr_gsb.get_sb_unique_module(coordinator);
+  const RRGSB& unique_mirror = device_rr_gsb.get_sb_unique_module(coordinator);
   fprintf(fp, "%s ", unique_mirror.gen_sb_verilog_module_name());
   fprintf(fp, "%s ", rr_sb.gen_sb_verilog_instance_name());
   fprintf(fp, "(");
@@ -861,7 +861,7 @@ void dump_compact_verilog_defined_switch_boxes(t_sram_orgz_info* cur_sram_orgz_i
 
   for (size_t ix = 0; ix < sb_range.get_x(); ++ix) {
     for (size_t iy = 0; iy < sb_range.get_y(); ++iy) {
-      RRGSB rr_sb = device_rr_gsb.get_gsb(ix, iy);
+      const RRGSB& rr_sb = device_rr_gsb.get_gsb(ix, iy);
       dump_compact_verilog_defined_one_switch_box(cur_sram_orgz_info, fp, rr_sb);
     }
   }
@@ -877,7 +877,7 @@ void dump_compact_verilog_defined_switch_boxes(t_sram_orgz_info* cur_sram_orgz_i
 static 
 void dump_compact_verilog_defined_one_connection_box(t_sram_orgz_info* cur_sram_orgz_info, 
                                                      FILE* fp,
-                                                     RRGSB& rr_gsb, t_rr_type cb_type) {
+                                                     const RRGSB& rr_gsb, t_rr_type cb_type) {
   /* Check the file handler*/ 
   if (NULL == fp) {
     vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid file handler.\n", 
@@ -892,7 +892,7 @@ void dump_compact_verilog_defined_one_connection_box(t_sram_orgz_info* cur_sram_
 
   /* If we have an mirror SB, we should the module name of the mirror !!! */
   DeviceCoordinator coordinator = rr_gsb.get_sb_coordinator();
-  RRGSB unique_mirror = device_rr_gsb.get_cb_unique_module(cb_type, coordinator);
+  const RRGSB& unique_mirror = device_rr_gsb.get_cb_unique_module(cb_type, coordinator);
   fprintf(fp, "%s ", unique_mirror.gen_cb_verilog_module_name(cb_type));
   fprintf(fp, "%s ", rr_gsb.gen_cb_verilog_instance_name(cb_type));
   fprintf(fp, "(");
@@ -920,12 +920,13 @@ void dump_compact_verilog_defined_one_connection_box(t_sram_orgz_info* cur_sram_
     fprintf(fp, "//----- %s side outputs: CLB input pins -----\n", 
             side_manager.c_str());
     for (size_t inode = 0; inode < rr_gsb.get_num_ipin_nodes(cb_ipin_side); ++inode) {
+      t_rr_node* cur_ipin_node = rr_gsb.get_ipin_node(cb_ipin_side, inode);
       /* Print each INPUT Pins of a grid */
       dump_verilog_grid_side_pin_with_given_index(fp, OPIN,
-                                                  rr_gsb.get_ipin_node(cb_ipin_side, inode)->ptc_num,
+                                                  cur_ipin_node->ptc_num,
                                                   rr_gsb.get_ipin_node_grid_side(cb_ipin_side, inode),
-                                                  rr_gsb.get_ipin_node(cb_ipin_side, inode)->xlow,
-                                                  rr_gsb.get_ipin_node(cb_ipin_side, inode)->ylow, 
+                                                  cur_ipin_node->xlow,
+                                                  cur_ipin_node->ylow, 
                                                   FALSE); /* Do not specify direction of port */
       fprintf(fp, ", \n");
     }
@@ -985,7 +986,7 @@ void dump_compact_verilog_defined_connection_boxes(t_sram_orgz_info* cur_sram_or
   /* X - channels [1...nx][0..ny]*/
   for (iy = 0; iy < (ny + 1); iy++) {
     for (ix = 1; ix < (nx + 1); ix++) {
-      RRGSB rr_gsb = device_rr_gsb.get_gsb(ix, iy);
+      const RRGSB& rr_gsb = device_rr_gsb.get_gsb(ix, iy);
       if ((TRUE == is_cb_exist(CHANX, ix, iy))
         &&(true == rr_gsb.is_cb_exist(CHANX))) {
         dump_compact_verilog_defined_one_connection_box(cur_sram_orgz_info, fp, rr_gsb, CHANX);
@@ -995,7 +996,7 @@ void dump_compact_verilog_defined_connection_boxes(t_sram_orgz_info* cur_sram_or
   /* Y - channels [1...ny][0..nx]*/
   for (ix = 0; ix < (nx + 1); ix++) {
     for (iy = 1; iy < (ny + 1); iy++) {
-      RRGSB rr_gsb = device_rr_gsb.get_gsb(ix, iy);
+      const RRGSB& rr_gsb = device_rr_gsb.get_gsb(ix, iy);
       if ((TRUE == is_cb_exist(CHANY, ix, iy))
         &&(true == rr_gsb.is_cb_exist(CHANY))) {
         dump_compact_verilog_defined_one_connection_box(cur_sram_orgz_info, fp, rr_gsb, CHANY);

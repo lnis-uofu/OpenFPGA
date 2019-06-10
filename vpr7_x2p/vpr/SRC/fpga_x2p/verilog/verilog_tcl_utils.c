@@ -60,7 +60,7 @@ void dump_verilog_sdc_file_header(FILE* fp,
 }
 
 void dump_verilog_one_sb_chan_pin(FILE* fp, 
-                                  RRGSB& rr_sb,
+                                  const RRGSB& rr_sb,
                                   t_rr_node* cur_rr_node,
                                   enum PORTS port_type) {
   int track_idx;
@@ -135,7 +135,7 @@ void dump_verilog_one_sb_chan_pin(FILE* fp,
 
 /* Output the pin name of a routing wire in a SB */
 void dump_verilog_one_sb_routing_pin(FILE* fp,
-                                     RRGSB& rr_sb,
+                                     const RRGSB& rr_sb,
                                      t_rr_node* cur_rr_node) {
   int side;
 
@@ -398,7 +398,7 @@ DeviceCoordinator get_chan_node_ending_sb_coordinator(t_rr_node* src_rr_node,
   }
 
   DeviceCoordinator sb_coordinator(next_sb_x, next_sb_y);
-  RRGSB rr_sb = device_rr_gsb.get_gsb(sb_coordinator);
+  const RRGSB& rr_sb = device_rr_gsb.get_gsb(sb_coordinator);
   /* Double check if src_rr_node is in the list */
   enum e_side side;
   int index;
@@ -552,7 +552,7 @@ t_sb* get_chan_rr_node_ending_sb(t_rr_node* src_rr_node,
 
 /* Restore the disabled timing for the sb wire */
 void restore_disable_timing_one_sb_output(FILE* fp, 
-                                          RRGSB& rr_sb,
+                                          const RRGSB& rr_sb,
                                           t_rr_node* wire_rr_node) {
   /* Check the file handler */
   if (NULL == fp) {
@@ -604,7 +604,7 @@ void restore_disable_timing_one_sb_output(FILE* fp,
 
 /* Restore the disabled timing for the sb wire */
 void set_disable_timing_one_sb_output(FILE* fp, 
-                                      RRGSB& rr_sb,
+                                      const RRGSB& rr_sb,
                                       t_rr_node* wire_rr_node) {
   /* Check the file handler */
   if (NULL == fp) {

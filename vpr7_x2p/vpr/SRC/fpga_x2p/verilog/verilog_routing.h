@@ -90,27 +90,27 @@ int count_verilog_connection_box_interc_conf_bits(t_sram_orgz_info* cur_sram_org
                                                   t_rr_node* cur_rr_node);
 
 int count_verilog_connection_box_one_side_reserved_conf_bits(t_sram_orgz_info* cur_sram_orgz_info,
-                                                             RRGSB& rr_gsb, enum e_side cb_side);
+                                                             const RRGSB& rr_gsb, enum e_side cb_side);
 
 int count_verilog_connection_box_interc_reserved_conf_bits(t_sram_orgz_info* cur_sram_orgz_info,
                                                            t_rr_node* cur_rr_node);
 
 int count_verilog_connection_box_one_side_conf_bits(t_sram_orgz_info* cur_sram_orgz_info,
-                                                    RRGSB& rr_gsb, enum e_side cb_side);
+                                                    const RRGSB& rr_gsb, enum e_side cb_side);
 
 int count_verilog_connection_box_one_side_conf_bits(t_sram_orgz_info* cur_sram_orgz_info,
                                                     int num_ipin_rr_nodes,
                                                     t_rr_node** ipin_rr_node);
 
 int count_verilog_connection_box_reserved_conf_bits(t_sram_orgz_info* cur_sram_orgz_info,
-                                                    RRGSB& rr_gsb, t_rr_type cb_type);
+                                                    const RRGSB& rr_gsb, t_rr_type cb_type);
 
 int count_verilog_connection_box_one_side_reserved_conf_bits(t_sram_orgz_info* cur_sram_orgz_info,
                                                              int num_ipin_rr_nodes,
                                                              t_rr_node** ipin_rr_node);
 
 int count_verilog_connection_box_conf_bits(t_sram_orgz_info* cur_sram_orgz_info,
-                                           RRGSB& rr_gsb, t_rr_type cb_type);
+                                           const RRGSB& rr_gsb, t_rr_type cb_type);
 
 int count_verilog_connection_box_conf_bits(t_sram_orgz_info* cur_sram_orgz_info,
                                            t_cb* cur_cb_info);

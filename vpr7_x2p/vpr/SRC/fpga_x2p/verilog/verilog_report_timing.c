@@ -245,7 +245,7 @@ void free_wire_L_llist(t_llist* rr_path_cnt) {
  */
 static 
 void verilog_generate_one_report_timing_within_sb(FILE* fp,
-                                                  RRGSB& rr_sb,
+                                                  const RRGSB& rr_sb,
                                                   t_rr_node* src_rr_node,
                                                   t_rr_node* des_rr_node) {
   /* Check the file handler */
@@ -371,7 +371,7 @@ void verilog_generate_one_report_timing_sb_to_cb(FILE* fp,
  */
 static 
 void verilog_generate_one_report_timing_sb_to_cb(FILE* fp,
-                                                 RRGSB& src_sb,
+                                                 const RRGSB& src_sb,
                                                  t_rr_node* src_rr_node,
                                                  t_cb* des_cb_info,
                                                  t_rr_node* des_rr_node) {
@@ -413,9 +413,9 @@ void verilog_generate_one_report_timing_sb_to_cb(FILE* fp,
  */
 static 
 void verilog_generate_one_report_timing_sb_to_sb(FILE* fp,
-                                                 RRGSB& src_sb,
+                                                 const RRGSB& src_sb,
                                                  t_rr_node* src_rr_node,
-                                                 RRGSB& des_sb,
+                                                 const RRGSB& des_sb,
                                                  t_rr_node* des_rr_node) {
   /* Check the file handler */
   if (NULL == fp) {
@@ -692,7 +692,7 @@ void verilog_generate_report_timing_one_sb_thru_segments(FILE* fp,
  */
 static 
 void verilog_generate_report_timing_one_sb_ending_segments(FILE* fp, 
-                                                           RRGSB& src_sb,
+                                                           const RRGSB& src_sb,
                                                            t_rr_node* src_rr_node, 
                                                            t_rr_node* des_rr_node,
                                                            char* rpt_name) {
@@ -801,7 +801,7 @@ void verilog_generate_report_timing_one_sb_ending_segments(FILE* fp,
 static 
 void dump_verilog_one_sb_wire_segemental_report_timing(FILE* fp,
                                                        t_syn_verilog_opts fpga_verilog_opts,
-                                                       RRGSB& src_sb,
+                                                       const RRGSB& src_sb,
                                                        t_rr_node* drive_rr_node, 
                                                        t_rr_node* src_rr_node, 
                                                        t_rr_node* des_rr_node,
@@ -1310,7 +1310,7 @@ void dump_verilog_one_sb_wire_segemental_report_timing(FILE* fp,
  */
 static 
 void dump_verilog_sb_through_routing_pins(FILE* fp,
-                                          RRGSB& src_rr_sb,
+                                          const RRGSB& src_rr_sb,
                                           t_rr_node* src_rr_node, 
                                           t_rr_node* des_rr_node) {
   size_t cur_sb_x, cur_sb_y;
@@ -1751,7 +1751,7 @@ static
 void verilog_generate_one_routing_wire_report_timing(FILE* fp, 
                                                      t_trpt_opts sdc_opts,
                                                      int L_wire,
-                                                     RRGSB& rr_sb,
+                                                     const RRGSB& rr_sb,
                                                      t_rr_node* wire_rr_node,
                                                      t_rr_node* LL_rr_node) {
   int path_cnt = 0;
@@ -2195,7 +2195,7 @@ void verilog_generate_sb_report_timing(t_trpt_opts sdc_opts,
 static 
 void verilog_generate_one_routing_segmental_report_timing(FILE* fp, 
                                                           t_syn_verilog_opts fpga_verilog_opts,
-                                                          RRGSB& rr_sb,
+                                                          const RRGSB& rr_sb,
                                                           t_rr_node* wire_rr_node,
                                                           t_rr_node* LL_rr_node,
                                                           int* path_cnt) {
