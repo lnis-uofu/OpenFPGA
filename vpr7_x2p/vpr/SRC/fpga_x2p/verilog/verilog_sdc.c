@@ -1052,6 +1052,7 @@ void verilog_generate_sdc_disable_unused_sbs_muxs(FILE* fp) {
   return;
 }
 
+static 
 void verilog_generate_sdc_disable_unused_sbs_muxs(FILE* fp, int LL_nx, int LL_ny) {
 
   int ix, iy, side, itrack, imux;
@@ -1156,8 +1157,7 @@ void verilog_generate_sdc_disable_unused_cbs_muxs(FILE* fp, int LL_nx, int LL_ny
   return;
 }
 
-
-
+static 
 void verilog_generate_sdc_disable_unused_cbs_muxs(FILE* fp,
                                                   int LL_nx, int LL_ny) {
 
@@ -1844,6 +1844,7 @@ void verilog_generate_sdc_disable_unused_grids(FILE* fp,
   return;
 }
 
+static 
 void verilog_generate_sdc_disable_unused_grids_muxs(FILE* fp,
                                                    int LL_nx, int LL_ny,
                                                    t_grid_tile** LL_grid,
@@ -1915,9 +1916,9 @@ void dump_sdc_one_clb_muxes(FILE* fp,
  * of the rr_graph to comment the active path and the fan_in and name 
  * inside of the pb_graph to dump the name of the port we need to disable*/
 void dump_sdc_rec_one_pb_muxes(FILE* fp,
-                      char* grid_instance_name,
-                      t_rr_graph* rr_graph,
-                      t_pb_graph_node* cur_pb_graph_node) {
+                               char* grid_instance_name,
+                               t_rr_graph* rr_graph,
+                               t_pb_graph_node* cur_pb_graph_node) {
 
   int mode_index;
   int ipb, jpb;
@@ -1941,10 +1942,10 @@ void dump_sdc_rec_one_pb_muxes(FILE* fp,
   return;
 }
 
-void dump_sdc_pb_graph_node_muxes (FILE* fp,
-                                         char* grid_instance_name, 
-                                         t_rr_graph* rr_graph, 
-                                         t_pb_graph_node* pb_graph_node) {
+void dump_sdc_pb_graph_node_muxes(FILE* fp,
+                                  char* grid_instance_name, 
+                                  t_rr_graph* rr_graph, 
+                                  t_pb_graph_node* pb_graph_node) {
   int i_pin, i_port;
   // Input pins
   for (i_port = 0; i_port< pb_graph_node->num_input_ports; i_port++) {
@@ -1967,10 +1968,10 @@ void dump_sdc_pb_graph_node_muxes (FILE* fp,
   return;
 }
 
-void dump_sdc_pb_graph_pin_muxes (FILE* fp,
-                                         char* grid_instance_name, 
-                                         t_rr_graph* rr_graph, 
-                                         t_pb_graph_pin pb_graph_pin) {
+void dump_sdc_pb_graph_pin_muxes(FILE* fp,
+                                 char* grid_instance_name, 
+                                 t_rr_graph* rr_graph, 
+                                 t_pb_graph_pin pb_graph_pin) {
   int i_fan_in, datapath_id, fan_in;
   int level_changing = 0;
   t_spice_model* mux_spice_model;
@@ -1983,7 +1984,7 @@ void dump_sdc_pb_graph_pin_muxes (FILE* fp,
   /* There are three types of interconnection: same level, going down a level, going up a level
    * Since we check the fan_in, we need to get the right input edge mode */
   if (0 == pb_graph_pin.num_input_edges || 0 == pb_graph_pin.num_output_edges) {
-  return;
+    return;
   }
   if (pb_graph_pin.input_edges[cur_mode_index]->interconnect->parent_mode != pb_graph_pin.output_edges[cur_mode_index]->interconnect->parent_mode) {
     if (pb_graph_pin.input_edges[cur_mode_index]->interconnect->parent_mode != cur_mode) {
@@ -2174,7 +2175,8 @@ void verilog_generate_sdc_pnr(t_sram_orgz_info* cur_sram_orgz_info,
                               int LL_num_rr_nodes, t_rr_node* LL_rr_node,
                               t_ivec*** LL_rr_node_indices,
                               t_rr_indexed_data* LL_rr_indexed_data,
-                              int LL_nx, int LL_ny) {
+                              int LL_nx, int LL_ny, 
+                              boolean compact_routing_hierarchy) {
   t_sdc_opts sdc_opts;
 
   /* Initialize */

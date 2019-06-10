@@ -8,7 +8,8 @@ void verilog_generate_sdc_pnr(t_sram_orgz_info* cur_sram_orgz_info,
                               int LL_num_rr_nodes, t_rr_node* LL_rr_node,
                               t_ivec*** LL_rr_node_indices,
                               t_rr_indexed_data* LL_rr_indexed_data,
-                              int LL_nx, int LL_ny);
+                              int LL_nx, int LL_ny,
+                              boolean compact_routing_hierarchy);
 
 void verilog_generate_sdc_analysis(t_sram_orgz_info* cur_sram_orgz_info,
                                    char* sdc_dir,
@@ -18,15 +19,6 @@ void verilog_generate_sdc_analysis(t_sram_orgz_info* cur_sram_orgz_info,
                                    int LL_nx, int LL_ny, t_grid_tile** LL_grid,
                                    t_block* LL_block, 
                                    boolean compact_routing_hierarchy);
-
-void verilog_generate_sdc_disable_unused_sbs_muxs(FILE* fp, int LL_nx, int LL_ny);
-
-void verilog_generate_sdc_disable_unused_cbs_muxs(FILE* fp, int LL_nx, int LL_ny); 
-
-void verilog_generate_sdc_disable_unused_grids_muxs(FILE* fp,
-                                                    int LL_nx, int LL_ny,
-                                                    t_grid_tile** LL_grid,
-                                                    t_block* LL_block);
 
 void dump_sdc_one_clb_muxes(FILE* fp, 
                             char* grid_instance_name,
