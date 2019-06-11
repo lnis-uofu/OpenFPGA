@@ -40,7 +40,7 @@ void fprint_pb_primitive_generic(FILE* fp,
                                  int index,
                                  t_spice_model* spice_model) {
   int num_sram_port = 0;
-
+  t_spice_model_port** sram_port = NULL;
   int i;
   int num_sram = 0;
   int expected_num_sram = 0;
@@ -91,6 +91,7 @@ void fprint_pb_primitive_generic(FILE* fp,
 
   /* Decode SRAM bits */
   num_sram = count_num_sram_bits_one_spice_model(spice_model, -1);
+  sram_port = find_spice_model_ports(spice_model, SPICE_MODEL_PORT_SRAM, &num_sram_port, TRUE);
   /* what is the SRAM bit of a mode? */
   /* If logical block is not NULL, we need to decode the sram bit */
   if ( 0 < num_sram_port) {
@@ -184,6 +185,7 @@ void fprint_pb_primitive_generic(FILE* fp,
   my_free(formatted_subckt_prefix);
   my_free(port_prefix);
   my_free(sram_vdd_port_name);
+  my_free(sram_port);
 
   return;
 }

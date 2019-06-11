@@ -1,3 +1,5 @@
+#ifndef SPICE_PBTYPES_H
+#define SPICE_PBTYPES_H
 
 void fprint_pb_type_ports(FILE* fp,
                           char* port_prefix,
@@ -17,11 +19,6 @@ void generate_spice_src_des_pb_graph_pin_prefix(t_pb_graph_pin* src_pb_graph_pin
                                                 char* parent_pin_prefix,
                                                 char** src_pin_prefix,
                                                 char** des_pin_prefix);
-
-void find_interc_fan_in_des_pb_graph_pin(t_pb_graph_pin* des_pb_graph_pin,
-                                         t_mode* cur_mode,
-                                         t_interconnect** cur_interc,
-                                         int* fan_in); 
 
 void fprintf_spice_pb_graph_pin_interc(FILE* fp,
                                        char* parent_pin_prefix,
@@ -109,3 +106,5 @@ void fprint_spice_idle_block(FILE* fp,
                              t_type_ptr type_descriptor);
 
 void generate_spice_logic_blocks(char* subckt_dir, t_arch* arch);
+
+#endif
