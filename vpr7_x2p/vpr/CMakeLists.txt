@@ -12,6 +12,7 @@ endif()
 project("vpr7_x2p" C CXX)
 
 # idenify if we need graphics
+set(ENABLE_VPR_GRAPHIC_CXX_FLAG true)
 if (ENABLE_VPR_GRAPHICS)
   # check for dependencies
   message(STATUS "VPR graphics is turned on, searching for dependencies")
@@ -20,11 +21,11 @@ if (ENABLE_VPR_GRAPHICS)
   if (NOT X11_FOUND)
     message(WARNING "Failed to find required X11 library (on debian/ubuntu try 'sudo apt-get install libx11-dev' to install)")
     #Disable
-    set(ENABLE_VPR_GRAPHICS false)
+    set(ENABLE_VPR_GRAPHIC_CXX_FLAG false)
   endif()
 endif()
 
-if (NOT ENABLE_VPR_GRAPHICS)
+if (NOT ENABLE_VPR_GRAPHIC_CXX_FLAG)
   # Add a flag to notify compiler not to consider graphic-related source codes   
   set (DISABLE_GRAPHIC_FLAGS "-DNO_GRAPHICS")
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${DISABLE_GRAPHIC_FLAGS}")
@@ -56,7 +57,7 @@ target_include_directories(libvpr PUBLIC ${LIB_INCLUDE_DIRS})
 set_target_properties(libvpr PROPERTIES PREFIX "") #Avoid extra 'lib' prefix#Create the executable
 
 #Specify link-time dependancies
-if (ENABLE_VPR_GRAPHICS)
+if (ENABLE_VPR_GRAPHIC_CXX_FLAG)
   target_link_libraries(libvpr
                         libarchfpga
                         X11

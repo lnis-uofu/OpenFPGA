@@ -44,6 +44,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
+#include <vector>
 #include "vpr_types.h"
 #include "globals.h"
 #include "vpr_utils.h"
@@ -53,6 +54,24 @@
 #include "route_common.h"
 #include "fpga_x2p_types.h"
 #include "rr_graph_tileable_builder.h"
+
+
+/************************************************************************
+ * Local function in the file 
+ ***********************************************************************/
+
+/************************************************************************
+ * Estimate the number of rr_nodes per category:
+ * CHANX, CHANY, IPIN, OPIN, SOURCE, SINK 
+ ***********************************************************************/
+static 
+std::vector<size_t> estimate_num_rr_nodes_per_type() {
+  std::vector<size_t> num_rr_nodes_per_type;
+
+
+  return num_rr_nodes_per_type;
+}
+
 
 /************************************************************************
  * Main function of this file
@@ -122,6 +141,9 @@ t_rr_graph build_tileable_unidir_rr_graph(INP int L_num_types,
    *    a. length of each type of segment
    *    b. frequency of each type of segment.
    *    c. routing channel width
+   *    IMPORTANT: we should be aware that channel width maybe different 
+   *    in X-direction and Y-direction channels!!!
+   *    So we will load segment details for different channels 
    ***********************************************************************/
    /* Check the channel width */
    int nodes_per_chan = chan_width;
@@ -131,6 +153,24 @@ t_rr_graph build_tileable_unidir_rr_graph(INP int L_num_types,
                                             std::max(L_nx, L_ny),
                                             num_seg_types, segment_inf,
                                             TRUE, FALSE, UNI_DIRECTIONAL);
+
+   /* Predict the track index of each channel,
+    * The track index, also called ptc_num of each CHANX and CHANY rr_node
+    * Will rotate by 2 in a uni-directional tileable routing architecture
+    * Vectors are built here to record the ptc_num sequence in each channel 
+    */
+
+  /************************************************************************
+   * 2. Estimate the number of nodes in the rr_graph
+   *    This will estimate the number of 
+   *    a. IPINs, input pins of each grid
+   *    b. OPINs, output pins of each grid
+   *    c. SOURCE, virtual node which drives OPINs
+   *    d. SINK, virtual node which is connected to IPINs
+   *    e. CHANX and CHANY, routing segments of each channel
+   ***********************************************************************/
+  std::vector<size_t> num_rr_nodes_per_type = estimate_num_rr_nodes_per_type();
+
 
   /************************************************************************
    * 3. Create the connectivity of OPINs
