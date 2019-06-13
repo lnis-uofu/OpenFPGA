@@ -418,9 +418,10 @@ void dump_compact_verilog_one_physical_block(t_sram_orgz_info* cur_sram_orgz_inf
   temp_iopad_lsb = 0;
 
   /* Local wires for memory configurations */
-  dump_verilog_sram_config_bus_internal_wires(fp, cur_sram_orgz_info, 
-                                              0, temp_conf_bits_msb - 1); 
-
+  if (0 < temp_conf_bits_msb) { 
+    dump_verilog_sram_config_bus_internal_wires(fp, cur_sram_orgz_info, 
+                                                0, temp_conf_bits_msb - 1); 
+  }
 
   /* Quote all the sub blocks*/
   for (iz = 0; iz < phy_block_type->capacity; iz++) {
