@@ -81,8 +81,17 @@
 /* Standard header files required go first */
 #include <vector>
 
+/* External library header files */
+#include "vtr_vector.h"
+#include "vtr_range.h"
+
 #include "device_coordinator.h"
 #include "vpr_types.h"
+#include "rr_graph_fwd.h"
+
+/* Define open nodes */
+#define OPEN_NODE_ID RRNodeId(-1)
+#define OPEN_EDGE_ID RREdgeId(-1)
 
 /***********************************************************************
  *  This data structure focuses on modeling the internal pin-to-pin connections.
@@ -90,48 +99,67 @@
  *  To make the data structure general, the nodes and edges are not linked to any another data 
  *  structures.
  *
- *  num_sides_: number of sides of this switch block
+ *  node_ids_: a collection of nodes (basically ids) modelling routing tracks 
+ *             which locate at each side of the GSB <0..num_nodes_per_side-1>
  *
- *  node_id_: a collection of nodes (basically ids) modelling routing tracks 
- *             which locate at each side of the GSB <0..num_sides-1><0..num_nodes_per_side-1>
+ *  node_directions_: Indicate if this node is an input or an output of the GSB 
+ *                  <0..num_nodes_per_side-1>
  *
- *  node_direction_: Indicate if this node is an input or an output of the GSB 
- *                  <0..num_sides-1><0..num_nodes_per_side-1>
+ *  node_types_: specify the types of the node, CHANX|CHANY|IPIN|OPIN  
  *
- *  node_type_: specify the type of the node, CHANX|CHANY|IPIN|OPIN  
+ *  node_sides_: specify the sides of the node on a GSB, TOP|RIGHT|BOTTOM|LEFT 
  *
- *  node_grid_side_: specify the side of the node on which side of a GRID  
+ *  node_grid_sides_: specify the side of the node on which side of a GRID  
  *                  for CHANX and CHANY, it is an invalid value 
- *                  <0..num_sides-1><0..num_nodes_per_side-1>
+ *                  <0..num_nodes_per_side-1>
  *
- *  edge_id_: a collection of indices of edges, <0..num_edges-1>, which connects the nodes
+ *  node_in_edges_: indcies of input edges of a node 
+ *                  <0..num_nodes><0..num_input_edgess-1>
+ *
+ *  node_out_edges_: indcies of output edges of a node
+ *                   <0..num_nodes><0..num_output_edges-1>
+ *
+ *  edge_ids_: a collection of indices of edges, <0..num_edges-1>, which connects the nodes
  *  
- *  in_edge_: indcies of input nodes of an edge (driving nodes for each edge) 
- *            <0..num_edges-1><0..num_input_nodes-1>
+ *  edge_src_nodes_: indcies of input nodes of an edge (driving nodes for each edge) 
+ *            <0..num_input_nodes-1>
  *
- *  out_edge_: indices of output nodes of an edge (fan-out nodes for each edge) 
- *            <0..num_edges-1><0..num_output_nodes-1>
+ *  edge_sink_nodes_: indices of output nodes of an edge (fan-out nodes for each edge) 
+ *            <0..num_output_nodes-1>
  *
  ***********************************************************************/
 
 class GSBGraph {
+  public: /* Types */
+    typedef vtr::vector<RRNodeId, RRNodeId>::const_iterator node_iterator;
+    typedef vtr::vector<RREdgeId, RREdgeId>::const_iterator edge_iterator;
+    typedef vtr::Range<node_iterator> node_range;
+    typedef vtr::Range<edge_iterator> edge_range;
   public: /* Constructors */
     GSBGraph(const GSBGraph&);  /* A constructor to duplicate */ 
     GSBGraph();
+  public: /* Accessors */
+    /* Aggregates */
+    node_range nodes() const;
+    edge_range edges() const;
   private: /* Internal Data */
     /* Coordinator of this GSB */
     DeviceCoordinator coordinator_;
 
     /* nodes on each side  */
-    std::vector< std::vector<size_t> >  node_id_;
-    std::vector< std::vector<t_rr_type> >  node_type_;
-    std::vector< std::vector<enum PORTS> >  node_direction_; 
-    std::vector< std::vector<enum e_side> > node_grid_side_;
-
+    vtr::vector<RRNodeId, RRNodeId> node_ids_;
+    vtr::vector<RRNodeId, t_rr_type> node_types_;
+    vtr::vector<RRNodeId, enum e_side> node_sides_;
+    vtr::vector<RRNodeId, enum e_direction> node_directions_; 
+    vtr::vector<RRNodeId, enum e_side> node_grid_sides_;
+   
+    vtr::vector<RRNodeId, std::vector<RREdgeId>> node_in_edges;
+    vtr::vector<RRNodeId, std::vector<RREdgeId>> node_out_edges;
+ 
     /* edges  */
-    std::vector<size_t> edge_id_;
-    std::vector< std::vector<size_t> > in_edge_; /* each element is a node_id */
-    std::vector< std::vector<size_t> > out_edge_; /* each element is a node_id */
+    vtr::vector<RREdgeId, RREdgeId> edge_ids_;
+    vtr::vector<RREdgeId, RREdgeId> edge_src_nodes_; /* each element is a node_id */
+    vtr::vector<RREdgeId, RREdgeId> edge_sink_nodes_; /* each element is a node_id */
 };
 
 #endif

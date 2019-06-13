@@ -37,11 +37,12 @@
  ************************************************************************/
 
 #include "gsb_graph.h"
+#include "vtr_vector_map.h"
 
 /************************************************************************
- *  Constructors for class GSBConn 
+ *  Constructors for class GSBGraph
  ************************************************************************/
-/**/
+/* Duplicate a object */
 GSBGraph::GSBGraph(const GSBGraph& gsb_graph) {
 
 }
@@ -49,4 +50,17 @@ GSBGraph::GSBGraph(const GSBGraph& gsb_graph) {
 GSBGraph::GSBGraph() {
   coordinator_.clear();
   
+}
+
+
+/************************************************************************
+ *  Aggregators for class GSBGraph 
+ ************************************************************************/
+/* Accessors: Aggregators */
+GSBGraph::node_range GSBGraph::nodes() const {
+  return vtr::make_range(node_ids_.begin(), node_ids_.end());
+}
+
+GSBGraph::edge_range GSBGraph::edges() const {
+  return vtr::make_range(edge_ids_.begin(), edge_ids_.end());
 }

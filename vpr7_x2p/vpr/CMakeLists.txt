@@ -61,10 +61,12 @@ if (ENABLE_VPR_GRAPHIC_CXX_FLAG)
   target_link_libraries(libvpr
                         libarchfpga
                         X11
+                        libvtrutil
                         readline)
 else () 
   target_link_libraries(libvpr
                         libarchfpga
+                        libvtrutil
                         readline)
 endif()
 

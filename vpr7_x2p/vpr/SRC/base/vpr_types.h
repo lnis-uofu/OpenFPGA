@@ -35,6 +35,7 @@
 
 #include "arch_types.h"
 #include <map>
+#include <vector>
 
 /*******************************************************************************
  * Global data types and constants
@@ -946,6 +947,7 @@ struct s_rr_node {
 	short yhigh;
 
 	short ptc_num;
+    std::vector<short> track_ids; /* Tileable arch support: Track indices in each GSB */
 
 	short cost_index;
 	short occ;

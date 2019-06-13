@@ -464,16 +464,19 @@ void dump_verilog_membank_config_module(FILE* fp,
   case SPICE_MODEL_DESIGN_CMOS:
     assert( 0 == num_reserved_bl );
     assert( 0 == num_reserved_wl );
+
     /* Declare normal BL / WL inputs */
-    fprintf(fp, "  output wire [%d:%d] %s%s, //---- Normal Bit lines \n",
+    fprintf(fp, "  output wire [%d:%d] %s%s",
             0, num_bl - 1, mem_model->prefix, top_netlist_normal_bl_port_postfix);
+    fprintf(fp, ",  //---- Normal Bit lines \n");
+
     fprintf(fp, "  output wire [%d:%d] %s%s",
             0, num_wl - 1, mem_model->prefix, top_netlist_normal_wl_port_postfix);
     /* Declare inverted wires if needed */
     if (1 == num_blb_ports) {
       fprintf(fp, ",  //---- Normal Word lines \n");
     } else {
-      fprintf(fp, "  //---- Normal Word lines\n);\n");
+      fprintf(fp, "  //---- Normal Word lines\n");
     }
     if (1 == num_blb_ports) {
       fprintf(fp, " output wire [%d:%d] %s%s",
@@ -481,14 +484,14 @@ void dump_verilog_membank_config_module(FILE* fp,
     }
     if (1 == num_wlb_ports) {
       fprintf(fp, ", //---- Inverted Normal Bit lines \n");
-    } else {
-      fprintf(fp, " //---- Inverted Normal Bit lines \n);\n");
+    } else { 
+      fprintf(fp, " //---- Inverted Normal Bit lines \n");
     }
     if (1 == num_wlb_ports) {
       fprintf(fp, " output wire [%d:%d] %s%s //---- Inverted Normal Word lines \n",
               0, num_wl - 1, mem_model->prefix, top_netlist_normal_wlb_port_postfix);
-      fprintf(fp, ");\n");
     }
+    fprintf(fp, ");\n");
     break; 
   case SPICE_MODEL_DESIGN_RRAM: 
     /* Check: there should be reserved BLs and WLs */
