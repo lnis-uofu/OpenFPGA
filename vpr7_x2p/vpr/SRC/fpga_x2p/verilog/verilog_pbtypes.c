@@ -350,6 +350,51 @@ void stats_mux_verilog_model_pb_node_rec(t_llist** muxes_head,
   return;  
 }
 
+/* Print a port of pb_types,
+ * SRAM ports are not printed here!!! 
+ * Important feature: manage the comma between ports
+ * Make sure there is no redundant comma and there is no comma after the last element if specified
+ */
+static 
+void dump_verilog_pb_type_one_bus_port(FILE* fp,
+                                       t_pb_type* cur_pb_type,
+                                       char* port_prefix,
+                                       char* port_type_str,
+                                       t_port* pb_type_port,
+                                       boolean dump_port_type,
+                                       boolean dump_explicit_port_map) {
+  if (TRUE == dump_port_type) {
+    fprintf(fp, "%s ", port_type_str);
+    fprintf(fp, "[0:%d] %s__%s ", 
+                pb_type_port->num_pins - 1,
+                port_prefix, pb_type_port->name);
+  } else {
+    if ((NULL != cur_pb_type->spice_model) 
+        && (TRUE == dump_explicit_port_map)
+        && (TRUE == cur_pb_type->spice_model->dump_explicit_port_map)) {
+      fprintf(fp, ".%s(", 
+              pb_type_port->spice_model_port->lib_name);
+    }
+    fprintf(fp, "{"); 
+    for (int ipin = 0; ipin < pb_type_port->num_pins; ++ipin) {
+      if (0 < ipin) {
+        fprintf(fp, ", "); 
+      }
+      fprintf(fp, "%s", 
+              gen_verilog_one_pb_type_pin_name(port_prefix, pb_type_port, ipin));
+    }
+    fprintf(fp, "}"); 
+    if ((NULL != cur_pb_type->spice_model) 
+        && (TRUE == dump_explicit_port_map)
+        && (TRUE == cur_pb_type->spice_model->dump_explicit_port_map)) {
+      fprintf(fp, ")");
+    }
+  }
+
+  return;
+}
+
+
 /* Print ports of pb_types,
  * SRAM ports are not printed here!!! 
  * Important feature: manage the comma between ports
@@ -360,7 +405,8 @@ void dump_verilog_pb_type_bus_ports(FILE* fp,
                                     int use_global_clock,
                                     t_pb_type* cur_pb_type,
                                     boolean dump_port_type,
-                                    boolean dump_last_comma) {
+                                    boolean dump_last_comma,
+                                    boolean dump_explicit_port_map) {
   int iport;
   int num_pb_type_input_port = 0;
   t_port** pb_type_input_ports = NULL;
@@ -398,16 +444,9 @@ void dump_verilog_pb_type_bus_ports(FILE* fp,
         fprintf(fp, ", ");
       }
     }
-    if (TRUE == dump_port_type) {
-      fprintf(fp, "inout ");
-      fprintf(fp, "[0:%d] %s__%s ", 
-                  pb_type_inout_ports[iport]->num_pins - 1,
-                  formatted_port_prefix, pb_type_inout_ports[iport]->name);
-    } else {
-      fprintf(fp, "%s__%s[0:%d] ", 
-                  formatted_port_prefix, pb_type_inout_ports[iport]->name, 
-                  pb_type_inout_ports[iport]->num_pins - 1);
-    }
+    dump_verilog_pb_type_one_bus_port(fp, cur_pb_type, formatted_port_prefix, "inout", 
+                                      pb_type_inout_ports[iport], dump_port_type, dump_explicit_port_map);
+
     /* Update the counter */
     num_dumped_port++;
   }
@@ -424,16 +463,8 @@ void dump_verilog_pb_type_bus_ports(FILE* fp,
         fprintf(fp, ", ");
       }
     }
-    if (TRUE == dump_port_type) {
-      fprintf(fp, "input ");
-      fprintf(fp, " [0:%d] %s__%s ", 
-                    pb_type_input_ports[iport]->num_pins - 1,
-                    formatted_port_prefix, pb_type_input_ports[iport]->name);
-    } else {
-      fprintf(fp, " %s__%s[0:%d] ", 
-                    formatted_port_prefix, pb_type_input_ports[iport]->name,
-                    pb_type_input_ports[iport]->num_pins - 1);
-    } 
+    dump_verilog_pb_type_one_bus_port(fp, cur_pb_type, formatted_port_prefix, "input", 
+                                      pb_type_input_ports[iport], dump_port_type, dump_explicit_port_map);
     /* Update the counter */
     num_dumped_port++;
   }
@@ -450,44 +481,30 @@ void dump_verilog_pb_type_bus_ports(FILE* fp,
         fprintf(fp, ", ");
       }
     }
-    if (TRUE == dump_port_type) {
-      fprintf(fp, "output ");
-      fprintf(fp, " %s__%s[0:%d]", 
-                  formatted_port_prefix, pb_type_output_ports[iport]->name,
-                  pb_type_output_ports[iport]->num_pins - 1);
-    } else {
-       fprintf(fp, " %s__%s[0:%d]", 
-                  formatted_port_prefix, pb_type_output_ports[iport]->name, 
-                  pb_type_output_ports[iport]->num_pins - 1);
-    }
+    dump_verilog_pb_type_one_bus_port(fp, cur_pb_type, formatted_port_prefix, "output", 
+                                      pb_type_output_ports[iport], dump_port_type, dump_explicit_port_map);
     /* Update the counter */
     num_dumped_port++;
   }
   
   /* Clocks */
   /* Find pb_type clock ports */
-  pb_type_clk_ports = find_pb_type_ports_match_spice_model_port_type(cur_pb_type, SPICE_MODEL_PORT_CLOCK, &num_pb_type_clk_port); 
-  /* Print all the clk ports  */
-  for (iport = 0; iport < num_pb_type_clk_port; iport++) {
-    if (0 < num_dumped_port) { 
-      if (TRUE == dump_port_type) {
-        fprintf(fp, ",\n");
-      } else {
-        fprintf(fp, ", ");
+  if (0 == use_global_clock) {
+    pb_type_clk_ports = find_pb_type_ports_match_spice_model_port_type(cur_pb_type, SPICE_MODEL_PORT_CLOCK, &num_pb_type_clk_port); 
+    /* Print all the clk ports  */
+    for (iport = 0; iport < num_pb_type_clk_port; iport++) {
+      if (0 < num_dumped_port) { 
+        if (TRUE == dump_port_type) {
+          fprintf(fp, ",\n");
+        } else {
+          fprintf(fp, ", ");
+        }
       }
+      dump_verilog_pb_type_one_bus_port(fp, cur_pb_type, formatted_port_prefix, "input", 
+                                        pb_type_clk_ports[iport], dump_port_type, dump_explicit_port_map);
+      /* Update the counter */
+      num_dumped_port++;
     }
-    if (TRUE == dump_port_type) {
-      fprintf(fp, "input");
-      fprintf(fp, " %s__%s[0:%d]",
-                  formatted_port_prefix, pb_type_clk_ports[iport]->name,
-                  pb_type_output_ports[iport]->num_pins - 1);
-    } else {
-      fprintf(fp, " %s__%s[0:%d]",
-                  formatted_port_prefix, pb_type_clk_ports[iport]->name,
-                  pb_type_output_ports[iport]->num_pins - 1);
-    }
-    /* Update the counter */
-    num_dumped_port++;
   }
 
   /* Dump the last comma, when the option is enabled and there is something dumped */
