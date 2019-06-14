@@ -235,7 +235,7 @@ void dump_verilog_pb_generic_primitive(t_sram_orgz_info* cur_sram_orgz_info,
   /* assert */
   num_sram = count_num_sram_bits_one_spice_model(verilog_model, -1);
   /* print ports --> input ports */
-  dump_verilog_pb_type_ports(fp, port_prefix, 0, prim_pb_type, FALSE, FALSE, verilog_model->dump_explicit_port_map); 
+  dump_verilog_pb_type_bus_ports(fp, port_prefix, 1, prim_pb_type, FALSE, FALSE, verilog_model->dump_explicit_port_map); 
 
   /* IOPADs requires a specical port to output */
   if (SPICE_MODEL_IOPAD == verilog_model->type) {
@@ -573,32 +573,6 @@ void dump_verilog_pb_primitive_lut(t_sram_orgz_info* cur_sram_orgz_info,
   fprintf(fp, ");\n");
   /* Definition ends*/
 
-  /* Specify inputs are wires */
-  pb_type_input_ports = find_pb_type_ports_match_spice_model_port_type(cur_pb_type, SPICE_MODEL_PORT_INPUT, &num_pb_type_input_port); 
-  assert(1 == num_pb_type_input_port);
-  fprintf(fp, "wire [0:%d] %s__%s;\n",
-          input_ports[0]->size - 1, port_prefix, pb_type_input_ports[0]->name);
-  for (i = 0; i < input_ports[0]->size; i++) {
-    fprintf(fp, "assign %s__%s[%d] = %s__%s_%d_;\n",
-                port_prefix, pb_type_input_ports[0]->name, i,
-                port_prefix, pb_type_input_ports[0]->name, i);
-  }
-  /* Specify outputs are wires */
-  pb_type_output_ports = find_pb_type_ports_match_spice_model_port_type(cur_pb_type, SPICE_MODEL_PORT_OUTPUT, &num_pb_type_output_port); 
-  for (i = 0; i < num_pb_type_output_port; i++) {
-    fprintf(fp, "wire [0:%d] %s__%s;\n",
-            output_ports[i]->size - 1, port_prefix, pb_type_output_ports[i]->name);
-  }
-  /* Make sure we have the same number outputs */
-  assert (num_pb_type_output_port == num_output_port);
-  for (i = 0; i < num_output_port; i++) {
-    for (ipin = 0; ipin < output_ports[i]->size; ipin++) {
-      fprintf(fp, "assign %s__%s_%d_ = %s__%s[%d];\n",
-                  port_prefix, pb_type_output_ports[i]->name, ipin,
-                  port_prefix, pb_type_output_ports[i]->name, ipin);
-    }
-  }
-
   /* Specify SRAM output are wires */
   cur_num_sram = get_sram_orgz_info_num_mem_bit(cur_sram_orgz_info);
   dump_verilog_sram_config_bus_internal_wires(fp, cur_sram_orgz_info, cur_num_sram, cur_num_sram + num_sram - 1);
@@ -640,7 +614,7 @@ void dump_verilog_pb_primitive_lut(t_sram_orgz_info* cur_sram_orgz_info,
   /* Connect inputs*/ 
   /* Connect outputs*/
   fprintf(fp, "//----- Input and output ports -----\n");
-  dump_verilog_pb_type_bus_ports(fp, port_prefix, 0, cur_pb_type, FALSE, TRUE); 
+  dump_verilog_pb_type_bus_ports(fp, port_prefix, 1, cur_pb_type, FALSE, TRUE, verilog_model->dump_explicit_port_map); 
   fprintf(fp, "\n//----- SRAM ports -----\n");
 
   /* check */
