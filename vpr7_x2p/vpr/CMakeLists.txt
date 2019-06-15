@@ -13,6 +13,7 @@ project("vpr7_x2p" C CXX)
 
 # idenify if we need graphics
 set(ENABLE_VPR_GRAPHIC_CXX_FLAG true)
+message(STATUS "Checking VPR graphics option ${ENABLE_VPR_GRAPHICS}")
 if (ENABLE_VPR_GRAPHICS)
   # check for dependencies
   message(STATUS "VPR graphics is turned on, searching for dependencies")
@@ -23,6 +24,8 @@ if (ENABLE_VPR_GRAPHICS)
     #Disable
     set(ENABLE_VPR_GRAPHIC_CXX_FLAG false)
   endif()
+else ()
+  set(ENABLE_VPR_GRAPHIC_CXX_FLAG false)
 endif()
 
 if (NOT ENABLE_VPR_GRAPHIC_CXX_FLAG)
