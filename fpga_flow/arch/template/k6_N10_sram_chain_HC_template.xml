@@ -330,7 +330,7 @@
         <port type="output" prefix="out" size="1"/>
       </spice_model>
       <!--DFF subckt ports should be defined as <D> <Q> <CLK> <RESET> <SET>  -->
-      <spice_model type="ff" name="static_dff" prefix="dff" spice_netlist="OPENFPGAPATHKEYWORD/vpr7_x2p/vpr/SpiceNetlists/ff.sp" verilog_netlist="OPENFPGAPATHKEYWORD/vpr7_x2p/vpr/VerilogNetlists/ff.v">
+      <spice_model type="ff" name="static_dff" prefix="dff" spice_netlist="OPENFPGAPATHKEYWORD/vpr7_x2p/vpr/SpiceNetlists/ff.sp" verilog_netlist="FFPATHKEYWORD">
          <design_technology type="cmos"/>
          <input_buffer exist="on" spice_model_name="INV1X"/>
          <output_buffer exist="on" spice_model_name="INV1X"/>
@@ -372,7 +372,7 @@
         <port type="sram" prefix="mode" size="2" mode_select="true" spice_model_name="sc_dff_compact" default_val="1"/>
       </spice_model>
       <!--Scan-chain DFF subckt ports should be defined as <D> <Q> <Qb> <CLK> <RESET> <SET>  -->
-      <spice_model type="sff" name="sc_dff_compact" prefix="scff" spice_netlist="OPENFPGAPATHKEYWORD/vpr7_x2p/vpr/SpiceNetlists/ff.sp" verilog_netlist="OPENFPGAPATHKEYWORD/vpr7_x2p/vpr/VerilogNetlists/ff.v">
+      <spice_model type="sff" name="sc_dff_compact" prefix="scff" spice_netlist="OPENFPGAPATHKEYWORD/vpr7_x2p/vpr/SpiceNetlists/ff.sp" verilog_netlist="FFPATHKEYWORD">
          <design_technology type="cmos"/>
          <input_buffer exist="on" spice_model_name="INV1X"/>
          <output_buffer exist="on" spice_model_name="INV1X"/>

@@ -11,12 +11,12 @@ compiled_file="compiled_$benchmark"
 tb_formal_postfix="_top_formal_verification_random_tb"
 verilog_output_dirname="${benchmark}_Verilog"
 log_file="${benchmark}_sim.log"
+new_reg_sh="my_regression.sh"
 
 
 cd $fpga_flow_scripts
 
-perl rewrite_path_in_file.pl -i $vpr_path/regression_verilog.sh
-perl rewrite_path_in_file.pl -i $vpr_path/VerilogNetlists/ff.v
+perl rewrite_path_in_file.pl -i $vpr_path/regression_verilog.sh -o $vpr_path/$new_reg_sh
 
 cd $my_pwd
 
@@ -28,7 +28,7 @@ rm -f $log_file
 rm -f $compiled_file
 
 # Start the script -> run the fpga generation -> run the simulation -> check the log file
-source regression_verilog.sh
+source $new_reg_sh
 iverilog -o $compiled_file $verilog_output_dirname/SRC/$benchmark$include_netlists -s $benchmark$tb_formal_postfix
 vvp $compiled_file -j 16 >> $log_file
 
