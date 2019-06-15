@@ -403,7 +403,7 @@ void alloc_and_load_rr_graph_route_structs(t_rr_graph* local_rr_graph) {
 
   int inode;
 
-  local_rr_graph->rr_node_route_inf = (t_rr_node_route_inf *) my_malloc(local_rr_graph->num_rr_nodes * sizeof(t_rr_node_route_inf));
+  local_rr_graph->rr_node_route_inf = (t_rr_node_route_inf *) my_calloc(local_rr_graph->num_rr_nodes, sizeof(t_rr_node_route_inf));
 
   for (inode = 0; inode < local_rr_graph->num_rr_nodes; inode++) {
    local_rr_graph->rr_node_route_inf[inode].prev_node = NO_PREVIOUS;

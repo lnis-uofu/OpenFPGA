@@ -201,6 +201,7 @@ static void power_usage_primitive(t_power_usage * power_usage, t_pb * pb,
 	}
 }
 
+static 
 void power_usage_local_pin_toggle(t_power_usage * power_usage, t_pb * pb,
 		t_pb_graph_pin * pin) {
 	float scale_factor;
@@ -222,6 +223,7 @@ void power_usage_local_pin_toggle(t_power_usage * power_usage, t_pb * pb,
 			/ g_solution_inf.T_crit;
 }
 
+static 
 void power_usage_local_pin_buffer_and_wire(t_power_usage * power_usage,
 		t_pb * pb, t_pb_graph_pin * pin) {
 	t_power_usage sub_power_usage;
@@ -1027,6 +1029,7 @@ static void power_usage_routing(t_power_usage * power_usage,
 	}
 }
 
+static 
 void power_alloc_and_init_pb_pin(t_pb_graph_pin * pin) {
 	int port_idx;
 	t_port * port_to_find;
@@ -1085,6 +1088,7 @@ void power_alloc_and_init_pb_pin(t_pb_graph_pin * pin) {
 	}
 }
 
+static 
 void power_init_pb_pins_rec(t_pb_graph_node * pb_node) {
 	int mode;
 	int type;
@@ -1131,6 +1135,7 @@ void power_init_pb_pins_rec(t_pb_graph_node * pb_node) {
 	}
 }
 
+static 
 void power_pb_pins_init() {
 	int type_idx;
 
@@ -1141,6 +1146,7 @@ void power_pb_pins_init() {
 	}
 }
 
+static 
 void power_routing_init(t_det_routing_arch * routing_arch) {
 	int net_idx;
 	int rr_node_idx;
@@ -1367,7 +1373,7 @@ boolean power_uninit(void) {
 		}
 		delete mux_info;
 	}
-	free(g_power_commonly_used);
+	delete g_power_commonly_used;
 
 	if (g_power_output->out) {
 		fclose(g_power_output->out);
