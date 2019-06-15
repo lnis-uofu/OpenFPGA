@@ -56,6 +56,7 @@
 #include "rr_graph_tileable_builder.h"
 
 #include "chan_node_details.h"
+#include "device_coordinator.h"
 
 /************************************************************************
  * Local function in the file 
@@ -262,14 +263,178 @@ ChanNodeDetails build_unidir_chan_node_details(size_t chan_width, size_t max_seg
   return chan_node_details; 
 }
 
+/* Deteremine the side of a io grid */
+static 
+enum e_side determine_io_grid_pin_side(const DeviceCoordinator& device_size, 
+                                       const DeviceCoordinator& grid_coordinator) {
+  /* TOP side IO of FPGA */
+  if (device_size.get_y() == grid_coordinator.get_y()) {
+    return BOTTOM; /* Such I/O has only Bottom side pins */
+  } else if (device_size.get_x() == grid_coordinator.get_x()) { /* RIGHT side IO of FPGA */
+    return LEFT; /* Such I/O has only Left side pins */
+  } else if (0 == grid_coordinator.get_y()) { /* BOTTOM side IO of FPGA */
+    return TOP; /* Such I/O has only Top side pins */
+  } else if (0 == grid_coordinator.get_x()) { /* LEFT side IO of FPGA */
+    return RIGHT; /* Such I/O has only Right side pins */
+  } else {
+    vpr_printf(TIO_MESSAGE_ERROR, "(File:%s, [LINE%d])I/O Grid is in the center part of FPGA! Currently unsupported!\n",
+               __FILE__, __LINE__);
+    exit(1);
+  }
+}
+
+/************************************************************************
+ * Get a list of pin_index for a grid (either OPIN or IPIN)
+ * For IO_TYPE, only one side will be used, we consider one side of pins 
+ * For others, we consider all the sides  
+ ***********************************************************************/
+static 
+std::vector<int> get_grid_side_pins(const t_grid_tile& cur_grid, enum e_pin_type pin_type, enum e_side pin_side, int pin_height) {
+  std::vector<int> pin_list; 
+  /* Make sure a clear start */
+  pin_list.clear();
+
+  for (int ipin = 0; ipin < cur_grid.type->num_pins; ++ipin) {
+    if ( (1 == cur_grid.type->pinloc[pin_height][pin_side][ipin]) 
+      && (pin_type == cur_grid.type->pin_class[ipin]) ) {
+      pin_list.push_back(ipin);
+    }
+  }
+  return pin_list;
+}
+
+/************************************************************************
+ * Get the number of pins for a grid (either OPIN or IPIN)
+ * For IO_TYPE, only one side will be used, we consider one side of pins 
+ * For others, we consider all the sides  
+ ***********************************************************************/
+static 
+size_t get_grid_num_pins(const t_grid_tile& cur_grid, enum e_pin_type pin_type, enum e_side io_side) {
+  size_t num_pins = 0;
+  Side io_side_manager(io_side);
+  /* For IO_TYPE sides */
+  for (size_t side = 0; side < NUM_SIDES; ++side) {
+    Side side_manager(side);
+    /* skip unwanted sides */
+    if ( (IO_TYPE == cur_grid.type)
+      && (side != io_side_manager.to_size_t()) ) { 
+      continue;
+    }
+    /* Get pin list */
+    for (int height = 0; height < cur_grid.type->height; ++height) {
+      std::vector<int> pin_list = get_grid_side_pins(cur_grid, pin_type, side_manager.get_side(), height);
+      num_pins += pin_list.size();
+    } 
+  }
+
+  return num_pins;
+}
+
 /************************************************************************
  * Estimate the number of rr_nodes per category:
  * CHANX, CHANY, IPIN, OPIN, SOURCE, SINK 
  ***********************************************************************/
 static 
-std::vector<size_t> estimate_num_rr_nodes_per_type() {
+std::vector<size_t> estimate_num_rr_nodes_per_type(const DeviceCoordinator& device_size,
+                                                   std::vector<std::vector<t_grid_tile>> grids,
+                                                   std::vector<size_t> chan_width,
+                                                   std::vector<t_segment_inf> segment_infs) {
   std::vector<size_t> num_rr_nodes_per_type;
+  /* reserve the vector: 
+   * we have the follow type:
+   * SOURCE = 0, SINK, IPIN, OPIN, CHANX, CHANY, INTRA_CLUSTER_EDGE, NUM_RR_TYPES
+   * NUM_RR_TYPES and INTRA_CLUSTER_EDGE will be 0
+   */
+  num_rr_nodes_per_type.resize(NUM_RR_TYPES);
+  /* Make sure a clean start */
+  for (size_t i = 0; i < NUM_RR_TYPES; ++i) {
+    num_rr_nodes_per_type[i] = 0;
+  }
 
+  /************************************************************************
+   * 1. Search the grid and find the number OPINs and IPINs per grid
+   *    Note that the number of SOURCE nodes are the same as OPINs
+   *    and the number of SINK nodes are the same as IPINs
+   ***********************************************************************/
+  for (size_t ix = 0; ix < grids.size(); ++ix) {
+    for (size_t iy = 0; iy < grids[ix].size(); ++iy) { 
+      /* Skip EMPTY tiles */
+      if (EMPTY_TYPE == grids[ix][iy].type) {
+        continue;
+      }
+      /* Skip height>1 tiles (mostly heterogeneous blocks) */
+      if (0 < grids[ix][iy].offset) {
+        continue;
+      }
+      enum e_side io_side = NUM_SIDES;
+      /* If this is the block on borders, we consider IO side */
+      if (IO_TYPE == grid[ix][iy].type) {
+        DeviceCoordinator io_device_size(device_size.get_x() - 1, device_size.get_y() - 1);
+        DeviceCoordinator grid_coordinator(ix, iy);
+        io_side = determine_io_grid_pin_side(device_size, grid_coordinator);
+      }
+      /* get the number of OPINs */
+      num_rr_nodes_per_type[OPIN] += get_grid_num_pins(grids[ix][iy], DRIVER, io_side);
+      /* get the number of IPINs */
+      num_rr_nodes_per_type[IPIN] += get_grid_num_pins(grids[ix][iy], RECEIVER, io_side);
+    }
+  }
+  /* SOURCE and SINK */
+  num_rr_nodes_per_type[SOURCE] = num_rr_nodes_per_type[OPIN];
+  num_rr_nodes_per_type[SINK]   = num_rr_nodes_per_type[IPIN];
+
+  /************************************************************************
+   * 2. Assign the segments for each routing channel,
+   *    To be specific, for each routing track, we assign a routing segment.
+   *    The assignment is subject to users' specifications, such as 
+   *    a. length of each type of segment
+   *    b. frequency of each type of segment.
+   *    c. routing channel width
+   *
+   *    SPECIAL for fringes:
+   *    All segments will start and ends with no exception
+   *
+   *    IMPORTANT: we should be aware that channel width maybe different 
+   *    in X-direction and Y-direction channels!!!
+   *    So we will load segment details for different channels 
+   ***********************************************************************/
+  /* For X-direction Channel */
+  /* For LEFT side of FPGA */
+  ChanNodeDetails left_chanx_details = build_unidir_chan_node_details(chan_width[0], device_size.get_x() - 2, LEFT, segment_infs); 
+  for (size_t iy = 0; iy < device_size.get_y() - 1; ++iy) { 
+    num_rr_nodes_per_type[CHANX] += left_chanx_details.get_num_starting_tracks();
+  }
+  /* For RIGHT side of FPGA */
+  ChanNodeDetails right_chanx_details = build_unidir_chan_node_details(chan_width[0], device_size.get_x() - 2, RIGHT, segment_infs); 
+  for (size_t iy = 0; iy < device_size.get_y() - 1; ++iy) { 
+    num_rr_nodes_per_type[CHANX] += right_chanx_details.get_num_starting_tracks();
+  }
+  /* For core of FPGA */
+   ChanNodeDetails core_chanx_details = build_unidir_chan_node_details(chan_width[1], device_size.get_x() - 2, NUM_SIDES, segment_infs); 
+  for (size_t ix = 1; ix < grids.size() - 2; ++ix) {
+    for (size_t iy = 1; iy < grids[ix].size() - 2; ++iy) { 
+      num_rr_nodes_per_type[CHANX] += core_chanx_details.get_num_starting_tracks();
+    }
+  }
+
+  /* For Y-direction Channel */
+  /* For TOP side of FPGA */
+  ChanNodeDetails top_chany_details = build_unidir_chan_node_details(chan_width[1], device_size.get_y() - 2, TOP, segment_infs); 
+  for (size_t ix = 0; ix < device_size.get_x() - 1; ++ix) { 
+    num_rr_nodes_per_type[CHANY] += top_chany_details.get_num_starting_tracks();
+  }
+  /* For BOTTOM side of FPGA */
+  ChanNodeDetails bottom_chany_details = build_unidir_chan_node_details(chan_width[1], device_size.get_y() - 2, BOTTOM, segment_infs); 
+  for (size_t ix = 0; ix < device_size.get_x() - 1; ++ix) { 
+    num_rr_nodes_per_type[CHANY] += bottom_chany_details.get_num_starting_tracks();
+  }
+  /* For core of FPGA */
+   ChanNodeDetails core_chany_details = build_unidir_chan_node_details(chan_width[1], device_size.get_y() - 2, NUM_SIDES, segment_infs); 
+  for (size_t ix = 1; ix < grids.size() - 2; ++ix) {
+    for (size_t iy = 1; iy < grids[ix].size() - 2; ++iy) { 
+      num_rr_nodes_per_type[CHANY] += core_chany_details.get_num_starting_tracks();
+    }
+  }
 
   return num_rr_nodes_per_type;
 }
@@ -336,75 +501,27 @@ t_rr_graph build_tileable_unidir_rr_graph(INP int L_num_types,
   /* Reset warning flag */
   *Warnings = RR_GRAPH_NO_WARN;
 
-  /************************************************************************
-   * 1. Assign the segments for each routing channel,
-   *    To be specific, for each routing track, we assign a routing segment.
-   *    The assignment is subject to users' specifications, such as 
-   *    a. length of each type of segment
-   *    b. frequency of each type of segment.
-   *    c. routing channel width
-   *
-   *    The starting point of each segment in the channel will be assigned
-   *    For each segment group with same directionality (tracks have the same length),
-   *    every L track will be a starting point (where L denotes the length of segments)
-   *    In this case, if the number of tracks is not a multiple of L,
-   *    indeed we may have some <L segments. This can be considered as a side effect.
-   *    But still the rr_graph is tileable, which is the first concern!
-   *
-   *    Here is a quick example of Length-4 wires in a W=12 routing channel
-   *    +---------------------------------+
-   *    | Index | Direction | Start Point |
-   *    +---------------------------------+
-   *    |   0   | --------> |   Yes       |
-   *    +---------------------------------+
-   *    |   1   | <-------- |   Yes       |
-   *    +---------------------------------+
-   *    |   2   | --------> |   No        |
-   *    +---------------------------------+
-   *    |   3   | <-------- |   No        |
-   *    +---------------------------------+
-   *    |   4   | --------> |   No        |
-   *    +---------------------------------+
-   *    |   5   | <-------- |   No        |
-   *    +---------------------------------+
-   *    |   7   | --------> |   No        |
-   *    +---------------------------------+
-   *    |   8   | <-------- |   No        |
-   *    +---------------------------------+
-   *    |   9   | --------> |   Yes       |
-   *    +---------------------------------+
-   *    |   10  | <-------- |   Yes       |
-   *    +---------------------------------+
-   *    |   11  | --------> |   No        |
-   *    +---------------------------------+
-   *    |   12  | <-------- |   No        |
-   *    +---------------------------------+
-   *
-   *    SPECIAL for fringes:
-   *    All segments will start and ends with no exception
-   *
-   *    IMPORTANT: we should be aware that channel width maybe different 
-   *    in X-direction and Y-direction channels!!!
-   *    So we will load segment details for different channels 
-   ***********************************************************************/
-   /* Check the channel width */
-   int nodes_per_chan = chan_width;
-   assert(chan_width > 0);
+  /* Create a matrix of grid */
+  DeviceCoordinator device_size(L_nx + 2, L_ny + 2);
+  std::vector< std::vector<t_grid_tile> > grids;
+  /* reserve vector capacity to be memory efficient */
+  grids.resize(L_nx + 2);
+  for (int ix = 0; ix < (L_nx + 2); ++ix) {
+    grids[ix].resize(L_ny + 2);
+    for (int iy = 0; ix < (L_ny + 2); ++iy) {
+      grid[ix][iy] = L_grid[ix][iy];
+    }
+  }
+  /* Create a vector of channel width, we support X-direction and Y-direction has different W */
+  std::vector<size_t> device_chan_width;
+  device_chan_width.push_back(chan_width);
+  device_chan_width.push_back(chan_width);
 
-   /* Create a vector of segment_inf */
-   std::vector<t_segment_inf> segment_infs;
-   for (int iseg = 0; iseg < num_seg_types; ++iseg) {
-     segment_infs.push_back(segment_inf[iseg]);
-   }
-
-   ChanNodeDetails chanx_details = build_unidir_chan_node_details(nodes_per_chan, L_nx, NUM_SIDES, segment_infs); 
-   ChanNodeDetails chany_details = build_unidir_chan_node_details(nodes_per_chan, L_ny, NUM_SIDES, segment_infs); 
-
-   /* Predict the track index of each channel,
-    * The track index, also called ptc_num of each CHANX and CHANY rr_node
-    * Will rotate by 2 in a uni-directional tileable routing architecture
-    * Vectors are built here to record the ptc_num sequence in each channel 
-    */
+  /* Create a vector of segment_inf */
+  std::vector<t_segment_inf> segment_infs;
+  for (int iseg = 0; iseg < num_seg_types; ++iseg) {
+    segment_infs.push_back(segment_inf[iseg]);
+  }
 
   /************************************************************************
    * 2. Estimate the number of nodes in the rr_graph
@@ -415,8 +532,24 @@ t_rr_graph build_tileable_unidir_rr_graph(INP int L_num_types,
    *    d. SINK, virtual node which is connected to IPINs
    *    e. CHANX and CHANY, routing segments of each channel
    ***********************************************************************/
-  std::vector<size_t> num_rr_nodes_per_type = estimate_num_rr_nodes_per_type();
+  std::vector<size_t> num_rr_nodes_per_type = estimate_num_rr_nodes_per_type(device_size, grids, device_chan_width, segment_infs); 
 
+  /************************************************************************
+   * 3. Allocate the rr_nodes 
+   ***********************************************************************/
+  rr_graph.num_rr_nodes = 0;
+  for (size_t i = 0; i < num_rr_nodes_per_type.size(); ++i) {
+    rr_graph.num_rr_nodes += num_rr_nodes_per_type[i];
+  }
+  /* use calloc to initialize everything to be zero */
+  rr_graph.rr_node = (t_rr_node*)my_calloc(rr_graph.num_rr_nodes, sizeof(t_rr_node));
+
+  /************************************************************************
+   * 4. Initialize the basic information of rr_nodes:
+   *    coordinators: xlow, ylow, xhigh, yhigh, 
+   *    features: capacity, track_ids, ptc_num, direction 
+   *    grid_info : pb_graph_pin
+   ***********************************************************************/
 
   /************************************************************************
    * 3. Create the connectivity of OPINs
@@ -426,7 +559,7 @@ t_rr_graph build_tileable_unidir_rr_graph(INP int L_num_types,
   int **Fc_in = NULL; /* [0..num_types-1][0..num_pins-1] */
   boolean Fc_clipped;
   Fc_clipped = FALSE;
-  Fc_in = alloc_and_load_actual_fc(L_num_types, types, nodes_per_chan,
+  Fc_in = alloc_and_load_actual_fc(L_num_types, types, chan_width,
                                    FALSE, UNI_DIRECTIONAL, &Fc_clipped, ignore_Fc_0);
   if (Fc_clipped) {
     *Warnings |= RR_GRAPH_WARN_FC_CLIPPED;
@@ -439,7 +572,7 @@ t_rr_graph build_tileable_unidir_rr_graph(INP int L_num_types,
    ***********************************************************************/
   int **Fc_out = NULL; /* [0..num_types-1][0..num_pins-1] */
   Fc_clipped = FALSE;
-  Fc_out = alloc_and_load_actual_fc(L_num_types, types, nodes_per_chan,
+  Fc_out = alloc_and_load_actual_fc(L_num_types, types, chan_width,
                                    TRUE, UNI_DIRECTIONAL, &Fc_clipped, ignore_Fc_0);
 
   /************************************************************************
@@ -471,7 +604,7 @@ t_rr_graph build_tileable_unidir_rr_graph(INP int L_num_types,
    *    a. cost_index
    *    b. RC tree
    ***********************************************************************/
-  rr_graph_externals(timing_inf, segment_inf, num_seg_types, nodes_per_chan,
+  rr_graph_externals(timing_inf, segment_inf, num_seg_types, chan_width,
                      wire_to_ipin_switch, base_cost_type);
 
   return rr_graph;
