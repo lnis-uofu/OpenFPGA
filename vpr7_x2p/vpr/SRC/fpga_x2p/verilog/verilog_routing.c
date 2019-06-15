@@ -3029,7 +3029,7 @@ void dump_verilog_connection_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
                 verilog_model->prefix, mux_size, verilog_model->cnt, input_cnt);
     int drive_node_index = rr_gsb.get_cb_chan_node_index(cb_type, drive_rr_nodes[inode]);
     assert (-1 != drive_node_index);
-    fprintf(fp, "%s;", rr_gsb.gen_cb_verilog_routing_track_name(cb_type, drive_node_index));
+    fprintf(fp, "%s;\n", rr_gsb.gen_cb_verilog_routing_track_name(cb_type, drive_node_index));
     input_cnt++;
   }
   assert(input_cnt == mux_size);
@@ -4076,13 +4076,9 @@ void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
     DeviceCoordinator cb_range = device_rr_gsb.get_gsb_range();
 
     /* X - channels [1...nx][0..ny]*/
-    for (int iy = 0; iy < (ny + 1); iy++) {
-      for (int ix = 1; ix < (nx + 1); ix++) {
-        for (size_t icb = 0; icb < device_rr_gsb.get_num_cb_unique_module(CHANX); ++icb) {
-          const RRGSB& unique_mirror = device_rr_gsb.get_cb_unique_module(CHANX, icb);
-          dump_verilog_routing_connection_box_unique_module(cur_sram_orgz_info, verilog_dir, subckt_dir, unique_mirror, CHANX); 
-        }
-      }
+    for (size_t icb = 0; icb < device_rr_gsb.get_num_cb_unique_module(CHANX); ++icb) {
+      const RRGSB& unique_mirror = device_rr_gsb.get_cb_unique_module(CHANX, icb);
+      dump_verilog_routing_connection_box_unique_module(cur_sram_orgz_info, verilog_dir, subckt_dir, unique_mirror, CHANX); 
     }
     /* TODO: when we follow a tile organization, 
      * updating the conf bits should follow a tile organization: CLB, SB and CBX, CBY */
@@ -4094,13 +4090,9 @@ void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
     }
 
     /* Y - channels [1...ny][0..nx]*/
-    for (int ix = 0; ix < (nx + 1); ix++) {
-      for (int iy = 1; iy < (ny + 1); iy++) {
-        for (size_t icb = 0; icb < device_rr_gsb.get_num_cb_unique_module(CHANY); ++icb) {
-          const RRGSB& unique_mirror = device_rr_gsb.get_cb_unique_module(CHANY, icb);
-          dump_verilog_routing_connection_box_unique_module(cur_sram_orgz_info, verilog_dir, subckt_dir, unique_mirror, CHANY); 
-        }
-      }
+    for (size_t icb = 0; icb < device_rr_gsb.get_num_cb_unique_module(CHANY); ++icb) {
+      const RRGSB& unique_mirror = device_rr_gsb.get_cb_unique_module(CHANY, icb);
+      dump_verilog_routing_connection_box_unique_module(cur_sram_orgz_info, verilog_dir, subckt_dir, unique_mirror, CHANY); 
     }
 
     for (size_t ix = 0; ix < cb_range.get_x(); ++ix) {

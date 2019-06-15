@@ -5,7 +5,7 @@
 // Coder       : Xifan TANG
 //-----------------------------------------------------
 //------ Include defines: preproc flags -----
-`include "OPENFPGAPATHKEYWORD/vpr7_x2p/vpr/test_modes_Verilog/SRC/fpga_defines.v"
+`include "GENERATED_DIR_KEYWORD/SRC/fpga_defines.v"
 module static_dff (
 /* Global ports go first */
 input set,     // set input

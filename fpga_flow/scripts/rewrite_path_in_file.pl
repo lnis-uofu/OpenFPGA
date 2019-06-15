@@ -6,8 +6,12 @@ use FileHandle;
 #Use the time
 use Time::gmtime;
 
-my $my_file;
+my $arch_file;
+my $new_arch_file;
+my $overwrite = "TRUE";
 my $keyword = "OPENFPGAPATHKEYWORD";
+my $default_keyword = "TRUE";
+my $change_to;
 my $folder_top = "OpenFPGA";
 
 sub print_usage()
@@ -15,7 +19,10 @@ sub print_usage()
 	print "Usage:\n";
 	print "      perl <script_name.pl> [-options]\n";
 	print "      Options:(Mandatory!)\n";
-	print "              -i <input_file_path>\n";
+	print "              -i <input_architecture_file_path>\n";
+	print "      Options:(Optional)\n";
+	print "              -o <output_architecture_file_path>\n";
+	print "              -k <keyword> <new_value>\n";
 	print "\n";
 	return;
 }
@@ -29,7 +36,17 @@ sub opts_read()
 	} else {
 		for (my $iargv = 0; $iargv < $#ARGV+1; $iargv++){
 			if ("-i" eq $ARGV[$iargv]){ 
-				$my_file = $ARGV[$iargv+1];
+				$arch_file = $ARGV[$iargv+1];
+				$iargv++;
+			} elsif ("-o" eq $ARGV[$iargv]){ 
+				$new_arch_file = $ARGV[$iargv+1];
+				$overwrite = "FALSE";
+				$iargv++;
+			} elsif ("-k" eq $ARGV[$iargv]){ 
+				$keyword = $ARGV[$iargv+1];
+				$change_to = $ARGV[$iargv+2];
+				$default_keyword = "FALSE";
+				$iargv++;
 				$iargv++;
 			} else {
 				die "WRONG ARGUMENT";
@@ -41,8 +58,8 @@ sub opts_read()
 
 sub rewriting_required_check($)
 {
-	my ($file) = @_;
-	open(F, $file);
+	my ($arch) = @_;
+	open(F, $arch);
 	my @lines=<F>;
 	close F;
 	my $grep_result = grep ($keyword, @lines);
@@ -68,7 +85,7 @@ sub findPath(){
 	my $path;
 	my $dir = cwd;
 	my @folders = split("/", $dir);
-	for(my $count = 0; $count < $#folders; $count++){
+	for(my $count = 0; $count < ($#folders -1); $count++){
 		if($folders[$count] eq ""){
 		} else {
 			$path = "$path"."/"."$folders[$count]";
@@ -81,15 +98,23 @@ sub findPath(){
 	die "ERROR: Script launched from the outside of the $folder_top folder!\n";
 }
 
-sub create_new($ $)
+sub rewrite_file($ $)
 {
-	my ($file, $template) = @_;
-	my $myPath = &findPath();
+	my ($arch, $template) = @_;
 	open(IN, '<'.$template);
-	open(OUT, '>'.$file);
-	while(<IN>){
-		$_ =~ s/$keyword/$myPath/g;
-		print OUT $_;
+	open(OUT, '>'.$arch);
+	
+	if($default_keyword eq "TRUE"){
+		my $myPath = &findPath();
+		while(<IN>){
+			$_ =~ s/$keyword/$myPath/g;
+			print OUT $_;
+		}
+	} else {
+		while(<IN>){
+			$_ =~ s/$keyword/$change_to/g;
+			print OUT $_;
+		}
 	}
 	return;
 }
@@ -97,12 +122,17 @@ sub create_new($ $)
 sub main()
 {
 	&opts_read();
-	my $rewrite_needed = &rewriting_required_check($my_file);
+	my $rewrite_needed = &rewriting_required_check($arch_file);
 	if($rewrite_needed == 1){
-		my $template_file = &save_original($my_file); 
-		&create_new($my_file, $template_file);
+		if($overwrite eq "TRUE"){
+			my $template_file = &save_original($arch_file); 
+			&rewrite_file($arch_file, $template_file);
+		} else {
+			&rewrite_file($new_arch_file, $arch_file);
+		}
 	}
 	return;
 }
  
 &main();
+exit(1);

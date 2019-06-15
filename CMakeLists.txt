@@ -137,6 +137,7 @@ enable_testing()
 add_subdirectory(yosys)
 add_subdirectory(abc)
 add_subdirectory(ace2)
+add_subdirectory(libs)
 add_subdirectory(vpr7_x2p)
 
 # run make to extract compiler options, linker options and list of source files
@@ -175,8 +176,13 @@ set_target_properties(libace ace
   LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/ace2"
   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/ace2")
 
-
 # Set output locations to be in the main source tree under the relevant folder
+set_target_properties(libvtrutil
+  PROPERTIES
+  ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/libs/libvtrutil"
+  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/libs/libvtrutil"
+  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/libs/libvtrutil")
+
 set_target_properties(libarchfpga read_arch
   PROPERTIES
   ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr7_x2p/libarchfpga"
