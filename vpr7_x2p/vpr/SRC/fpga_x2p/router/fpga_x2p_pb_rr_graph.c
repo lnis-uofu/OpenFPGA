@@ -33,6 +33,8 @@
 #include "fpga_x2p_pbtypes_utils.h"
 #include "fpga_x2p_globals.h"
 
+#include "fpga_x2p_pb_rr_graph.h"
+
 /* Count the number of rr_graph nodes that should be allocated
  *   (a) INPUT pins at the top-level pb_graph_node should be a local_rr_node and plus a SOURCE
  *   (b) CLOCK pins at the top-level pb_graph_node should be a local_rr_node and plus a SOURCE
@@ -104,6 +106,7 @@ void init_one_rr_node_pack_cost_for_phy_graph_node(INP t_pb_graph_pin* cur_pb_gr
 
 
 /* Override the fan-in and fan-out for a top/primitive pb_graph_node */
+static
 void override_one_rr_node_for_top_primitive_phy_pb_graph_node(INP t_pb_graph_pin* cur_pb_graph_pin,
                                                               INOUTP t_rr_graph* local_rr_graph,
                                                               int cur_rr_node_index,
@@ -151,6 +154,7 @@ void override_one_rr_node_for_top_primitive_phy_pb_graph_node(INP t_pb_graph_pin
 }
 
 /* initialize a rr_node in a rr_graph of phyical pb_graph_node */
+static
 void init_one_rr_node_for_phy_pb_graph_node(INP t_pb_graph_pin* cur_pb_graph_pin,
                                             INOUTP t_rr_graph* local_rr_graph,
                                             int cur_rr_node_index,
@@ -206,7 +210,9 @@ void init_one_rr_node_for_phy_pb_graph_node(INP t_pb_graph_pin* cur_pb_graph_pin
   local_rr_graph->rr_node[cur_rr_node_index].prev_edge = OPEN;
 
   local_rr_graph->rr_node[cur_rr_node_index].capacity = 1;
+  local_rr_graph->rr_node[cur_rr_node_index].occ = 0;
   local_rr_graph->rr_node[cur_rr_node_index].type = rr_node_type;
+  local_rr_graph->rr_node[cur_rr_node_index].cost_index = 0;
   
   return;
 } 
@@ -270,6 +276,7 @@ void connect_one_rr_node_for_phy_pb_graph_node(INP t_pb_graph_pin* cur_pb_graph_
 /* Recursively configure all the rr_nodes in the rr_graph
  * Initialize the routing cost, fan-in rr_nodes and fan-out rr_nodes, and switches  
  */
+static
 void rec_init_rr_graph_for_phy_pb_graph_node(INP t_pb_graph_node* cur_pb_graph_node, 
                                             INOUTP t_rr_graph* local_rr_graph,
                                             int* cur_rr_node_index) {
@@ -418,6 +425,7 @@ void rec_init_rr_graph_for_phy_pb_graph_node(INP t_pb_graph_node* cur_pb_graph_n
 /* Recursively connect all the rr_nodes in the rr_graph
  * output_edges, output_switches 
  */
+static
 void rec_connect_rr_graph_for_phy_pb_graph_node(INP t_pb_graph_node* cur_pb_graph_node, 
                                                 INOUTP t_rr_graph* local_rr_graph,
                                                 int* cur_rr_node_index) {
@@ -598,6 +606,7 @@ void alloc_and_load_rr_graph_for_phy_pb_graph_node(INP t_pb_graph_node* top_pb_g
 /* Check the vpack_net_num of a rr_node mapped to a pb_graph_pin and 
  * mark the used vpack_net_num in the list
  */
+static
 void mark_vpack_net_used_in_pb_pin(t_pb* cur_op_pb, t_pb_graph_pin* cur_pb_graph_pin,
                                    int L_num_vpack_nets, boolean* vpack_net_used_in_pb) {
   int inode;
@@ -621,6 +630,7 @@ void mark_vpack_net_used_in_pb_pin(t_pb* cur_op_pb, t_pb_graph_pin* cur_pb_graph
 /* Recursively visit all the child pbs and 
  * mark the used vpack_net_num in the list
  */
+static
 void mark_vpack_net_used_in_pb(t_pb* cur_op_pb,
                                int L_num_vpack_nets, boolean* vpack_net_used_in_pb) {
   int mode_index, ipb, jpb; 
@@ -718,6 +728,7 @@ void alloc_and_load_phy_pb_rr_graph_nets(INP t_pb* cur_op_pb,
 }
 
 /* Find the rr_node in the primitive node of a pb_rr_graph*/ 
+static
 void sync_pb_graph_pin_vpack_net_num_to_phy_pb(t_rr_node* cur_op_pb_rr_graph, 
                                                t_pb_graph_pin* cur_pb_graph_pin,
                                                t_rr_graph* local_rr_graph) {
@@ -787,6 +798,7 @@ void sync_pb_graph_pin_vpack_net_num_to_phy_pb(t_rr_node* cur_op_pb_rr_graph,
   return;
 } 
 
+static
 void rec_sync_wired_pb_vpack_net_num_to_phy_pb_rr_graph(t_pb_graph_node* cur_pb_graph_node,
                                                         t_rr_node* op_pb_rr_graph,
                                                         t_rr_graph* local_rr_graph) {
@@ -851,6 +863,7 @@ void rec_sync_wired_pb_vpack_net_num_to_phy_pb_rr_graph(t_pb_graph_node* cur_pb_
  * synchronize the vpack_net_num of the top-level/primitive pb_graph_pin
  * to the physical pb rr_node nodes 
  */
+static
 void rec_sync_pb_vpack_net_num_to_phy_pb_rr_graph(t_pb* cur_op_pb,
                                                   t_rr_graph* local_rr_graph) {
   int mode_index, ipb, jpb; 
@@ -921,6 +934,7 @@ void rec_sync_pb_vpack_net_num_to_phy_pb_rr_graph(t_pb* cur_op_pb,
  * 3. Find the SOURCE and SINK rr_nodes related to the pb_graph_pin 
  * 4. Configure the net_rr_terminals with the SINK/SOURCE rr_nodes  
  */
+static
 void alloc_and_load_phy_pb_rr_graph_net_rr_terminals(INP t_pb* cur_op_pb,
                                                      t_rr_graph* local_rr_graph) {
   int inet, inode, rr_node_net_name;
@@ -1013,10 +1027,11 @@ void alloc_and_load_phy_pb_rr_graph_net_rr_terminals(INP t_pb* cur_op_pb,
   return;
 }
 
+static
 void alloc_pb_rr_graph_rr_indexed_data(t_rr_graph* local_rr_graph) {
   /* inside a cluster, I do not consider rr_indexed_data cost, set to 1 since other costs are multiplied by it */
   alloc_rr_graph_rr_indexed_data(local_rr_graph, 1);
-  local_rr_graph->rr_indexed_data[0].base_cost = 1;
+  local_rr_graph->rr_indexed_data[0].base_cost = 1.;
 
   return;
 }
@@ -1025,8 +1040,8 @@ void alloc_pb_rr_graph_rr_indexed_data(t_rr_graph* local_rr_graph) {
  * Add an output edge to the rr_node of the used input
  * connect it to the rr_node of the used LUT output   
  */
+static
 void add_rr_node_edge_to_one_wired_lut(t_pb_graph_node* cur_pb_graph_node,
-                                       t_pb_type* cur_pb_type,
                                        t_rr_node* op_pb_rr_graph,
                                        t_rr_graph* local_rr_graph) {
   int iport, ipin;
@@ -1140,6 +1155,7 @@ void add_rr_node_edge_to_one_wired_lut(t_pb_graph_node* cur_pb_graph_node,
 /* Add rr edges connecting from an input of a LUT to its output 
  * IMPORTANT: this is only applied to LUT which operates in wire mode (a buffer) 
  */
+static 
 void rec_add_unused_rr_graph_wired_lut_rr_edges(INP t_pb_graph_node* cur_op_pb_graph_node,
                                                 INP t_rr_node* cur_op_pb_rr_graph,
                                                 INOUTP t_rr_graph* local_rr_graph) {
@@ -1162,7 +1178,6 @@ void rec_add_unused_rr_graph_wired_lut_rr_edges(INP t_pb_graph_node* cur_op_pb_g
        * connect it to the rr_node of the used LUT output   
        */
       add_rr_node_edge_to_one_wired_lut(cur_op_pb_graph_node,
-                                        cur_pb_type, 
                                         cur_op_pb_rr_graph,
                                         local_rr_graph);
     }
@@ -1194,6 +1209,7 @@ void rec_add_unused_rr_graph_wired_lut_rr_edges(INP t_pb_graph_node* cur_op_pb_g
 /* Add rr edges connecting from an input of a LUT to its output 
  * IMPORTANT: this is only applied to LUT which operates in wire mode (a buffer) 
  */
+static 
 void rec_add_rr_graph_wired_lut_rr_edges(INP t_pb* cur_op_pb,
                                          INOUTP t_rr_graph* local_rr_graph) {
   int mode_index, ipb, jpb, imode; 
@@ -1214,7 +1230,6 @@ void rec_add_rr_graph_wired_lut_rr_edges(INP t_pb* cur_op_pb,
        * connect it to the rr_node of the used LUT output   
        */
       add_rr_node_edge_to_one_wired_lut(cur_op_pb->pb_graph_node,
-                                        cur_pb_type, 
                                         cur_op_pb->rr_graph,
                                         local_rr_graph);
     }
@@ -1253,6 +1268,7 @@ void rec_add_rr_graph_wired_lut_rr_edges(INP t_pb* cur_op_pb,
  * For each multiple-source net, I add a new source as the unique source in routing purpose 
  * As so, edges have to be added to the decendents of sources
  */
+static 
 int add_virtual_sources_to_rr_graph_multi_sources(t_rr_graph* local_rr_graph) {
   int inet, isrc;
   int unique_src_node;
@@ -1271,6 +1287,8 @@ int add_virtual_sources_to_rr_graph_multi_sources(t_rr_graph* local_rr_graph) {
     unique_src_node = local_rr_graph->num_rr_nodes - 1;
     local_rr_graph->rr_node[unique_src_node].type = SOURCE;
     local_rr_graph->rr_node[unique_src_node].capacity = 1;
+    local_rr_graph->rr_node[unique_src_node].occ = 0;
+    local_rr_graph->rr_node[unique_src_node].cost_index = 0;
     local_rr_graph->rr_node[unique_src_node].fan_in = 0;
     local_rr_graph->rr_node[unique_src_node].num_drive_rr_nodes = 0;
     local_rr_graph->rr_node[unique_src_node].drive_rr_nodes = NULL;
@@ -1314,6 +1332,9 @@ void alloc_and_load_rr_graph_for_phy_pb(INP t_pb* cur_op_pb,
   /* Allocate rr_graph*/
   cur_phy_pb->rr_graph = (t_rr_graph*) my_calloc(1, sizeof(t_rr_graph));
 
+  /* Allocate and initialize cost index */
+  alloc_pb_rr_graph_rr_indexed_data(cur_phy_pb->rr_graph);
+
   /* Create rr_graph */
   alloc_and_load_rr_graph_for_phy_pb_graph_node(cur_phy_pb->pb_graph_node, cur_phy_pb->rr_graph);
 
@@ -1331,8 +1352,6 @@ void alloc_and_load_rr_graph_for_phy_pb(INP t_pb* cur_op_pb,
 
   /* Allocate trace in rr_graph */
   alloc_rr_graph_route_static_structs(cur_phy_pb->rr_graph, nx * ny); /* TODO: nx * ny should be reduced for pb-only routing */
-
-  alloc_pb_rr_graph_rr_indexed_data(cur_phy_pb->rr_graph);
 
   /* Fill the net_rr_terminals with 
    * 1. pin-to-pin mapping in pb_graph_node in cur_op_pb
