@@ -61,6 +61,72 @@
 /************************************************************************
  * Local function in the file 
  ***********************************************************************/
+/************************************************************************
+ * Initialize a rr_node 
+ ************************************************************************/
+static 
+void tileable_rr_graph_init_rr_node(t_rr_node* cur_rr_node) {
+  cur_rr_node->xlow = 0;
+  cur_rr_node->xhigh = 0;
+  cur_rr_node->ylow = 0;
+  cur_rr_node->xhigh = 0;
+
+  cur_rr_node->ptc_num = 0; 
+  cur_rr_node->track_ids.clear();
+
+  cur_rr_node->cost_index = 0; 
+  cur_rr_node->occ = 0; 
+  cur_rr_node->fan_in = 0; 
+  cur_rr_node->num_edges = 0; 
+  cur_rr_node->type = NUM_RR_TYPES; 
+  cur_rr_node->edges = NULL; 
+  cur_rr_node->switches = NULL; 
+
+  cur_rr_node->driver_switch = 0; 
+  cur_rr_node->unbuf_switched = 0; 
+  cur_rr_node->buffered = 0; 
+  cur_rr_node->R = 0.; 
+  cur_rr_node->C = 0.; 
+
+  cur_rr_node->direction = BI_DIRECTION; /* Give an invalid value, easy to check errors */ 
+  cur_rr_node->drivers = SINGLE; 
+  cur_rr_node->num_wire_drivers = 0; 
+  cur_rr_node->num_opin_drivers = 0; 
+
+  cur_rr_node->num_drive_rr_nodes = 0; 
+  cur_rr_node->drive_rr_nodes = NULL; 
+  cur_rr_node->drive_switches = NULL; 
+
+  cur_rr_node->vpack_net_num_changed = FALSE; 
+  cur_rr_node->is_parasitic_net = FALSE; 
+  cur_rr_node->is_in_heap = FALSE; 
+
+  cur_rr_node->sb_num_drive_rr_nodes = 0; 
+  cur_rr_node->sb_drive_rr_nodes = NULL; 
+  cur_rr_node->sb_drive_switches = NULL; 
+
+  cur_rr_node->pb = NULL; 
+
+  cur_rr_node->name_mux = NULL; 
+  cur_rr_node->id_path = -1; 
+
+  cur_rr_node->prev_node = -1; 
+  cur_rr_node->prev_edge = -1; 
+  cur_rr_node->net_num = -1; 
+  cur_rr_node->vpack_net_num = -1; 
+
+  cur_rr_node->prev_node_in_pack = -1; 
+  cur_rr_node->prev_edge_in_pack = -1; 
+  cur_rr_node->net_num_in_pack = -1; 
+
+  cur_rr_node->pb_graph_pin = NULL; 
+  cur_rr_node->tnode = NULL; 
+  
+  cur_rr_node->pack_intrinsic_cost = 0.; 
+  cur_rr_node->z = 0; 
+
+  return;
+}
 
 /************************************************************************
  * Generate the number of tracks for each types of routing segments
@@ -398,47 +464,222 @@ std::vector<size_t> estimate_num_rr_nodes_per_type(const DeviceCoordinator& devi
    *    in X-direction and Y-direction channels!!!
    *    So we will load segment details for different channels 
    ***********************************************************************/
-  /* For X-direction Channel */
-  /* For LEFT side of FPGA */
-  ChanNodeDetails left_chanx_details = build_unidir_chan_node_details(chan_width[0], device_size.get_x() - 2, LEFT, segment_infs); 
-  for (size_t iy = 0; iy < device_size.get_y() - 1; ++iy) { 
-    num_rr_nodes_per_type[CHANX] += left_chanx_details.get_num_starting_tracks();
-  }
-  /* For RIGHT side of FPGA */
-  ChanNodeDetails right_chanx_details = build_unidir_chan_node_details(chan_width[0], device_size.get_x() - 2, RIGHT, segment_infs); 
-  for (size_t iy = 0; iy < device_size.get_y() - 1; ++iy) { 
-    num_rr_nodes_per_type[CHANX] += right_chanx_details.get_num_starting_tracks();
-  }
-  /* For core of FPGA */
-   ChanNodeDetails core_chanx_details = build_unidir_chan_node_details(chan_width[1], device_size.get_x() - 2, NUM_SIDES, segment_infs); 
-  for (size_t ix = 1; ix < grids.size() - 2; ++ix) {
-    for (size_t iy = 1; iy < grids[ix].size() - 2; ++iy) { 
-      num_rr_nodes_per_type[CHANX] += core_chanx_details.get_num_starting_tracks();
+  /* For X-direction Channel: CHANX */
+  for (size_t ix = 0; ix < grids.size() - 1; ++ix) {
+    for (size_t iy = 0; iy < grids[ix].size() - 1; ++iy) { 
+      enum e_side chan_side = NUM_SIDES;
+      /* For LEFT side of FPGA */
+      if (0 == ix) {
+        chan_side = LEFT;
+      }
+      /* For RIGHT side of FPGA */
+      if (grids.size() - 2 == ix) {
+        chan_side = RIGHT;
+      }
+      ChanNodeDetails chanx_details = build_unidir_chan_node_details(chan_width[0], device_size.get_x() - 2, chan_side, segment_infs); 
+      num_rr_nodes_per_type[CHANX] += chanx_details.get_num_starting_tracks();
     }
   }
 
-  /* For Y-direction Channel */
-  /* For TOP side of FPGA */
-  ChanNodeDetails top_chany_details = build_unidir_chan_node_details(chan_width[1], device_size.get_y() - 2, TOP, segment_infs); 
-  for (size_t ix = 0; ix < device_size.get_x() - 1; ++ix) { 
-    num_rr_nodes_per_type[CHANY] += top_chany_details.get_num_starting_tracks();
-  }
-  /* For BOTTOM side of FPGA */
-  ChanNodeDetails bottom_chany_details = build_unidir_chan_node_details(chan_width[1], device_size.get_y() - 2, BOTTOM, segment_infs); 
-  for (size_t ix = 0; ix < device_size.get_x() - 1; ++ix) { 
-    num_rr_nodes_per_type[CHANY] += bottom_chany_details.get_num_starting_tracks();
-  }
-  /* For core of FPGA */
-   ChanNodeDetails core_chany_details = build_unidir_chan_node_details(chan_width[1], device_size.get_y() - 2, NUM_SIDES, segment_infs); 
-  for (size_t ix = 1; ix < grids.size() - 2; ++ix) {
-    for (size_t iy = 1; iy < grids[ix].size() - 2; ++iy) { 
-      num_rr_nodes_per_type[CHANY] += core_chany_details.get_num_starting_tracks();
+  /* For Y-direction Channel: CHANX */
+  for (size_t ix = 0; ix < grids.size() - 1; ++ix) {
+    for (size_t iy = 0; iy < grids[ix].size() - 1; ++iy) { 
+      enum e_side chan_side = NUM_SIDES;
+      /* For LEFT side of FPGA */
+      if (0 == iy) {
+        chan_side = BOTTOM;
+      }
+      /* For RIGHT side of FPGA */
+      if (grids[ix].size() - 2 == iy) {
+        chan_side = TOP;
+      }
+      ChanNodeDetails chany_details = build_unidir_chan_node_details(chan_width[1], device_size.get_y() - 2, chan_side, segment_infs); 
+      num_rr_nodes_per_type[CHANY] += chany_details.get_num_starting_tracks();
     }
   }
 
   return num_rr_nodes_per_type;
 }
 
+/************************************************************************
+ * Configure rr_nodes for this grid 
+ * coordinators: xlow, ylow, xhigh, yhigh, 
+ * features: capacity, ptc_num (pin_num),
+ ***********************************************************************/
+static 
+void load_one_grid_rr_nodes_basic_info(const DeviceCoordinator& grid_coordinator, 
+                                       const t_grid_tile& cur_grid, enum e_side io_side, 
+                                       t_rr_graph* rr_graph, size_t* cur_node_id) {
+   Side io_side_manager(io_side);
+  /* Walk through the height of each grid,
+   * get pins and configure the rr_nodes */
+  for (int height = 0; height < cur_grid.type->height; ++height) {
+    /* Walk through sides */
+    for (size_t side = 0; side < NUM_SIDES; ++side) {
+      Side side_manager(side);
+      /* skip unwanted sides */
+      if ( (IO_TYPE == cur_grid.type)
+        && (side != io_side_manager.to_size_t()) ) { 
+        continue;
+      }
+      /* Find OPINs */
+      /* Configure pins by pins */
+      std::vector<int> opin_list = get_grid_side_pins(cur_grid, DRIVER, side_manager.get_side(), height);
+      for (size_t pin = 0; pin < opin_list.size(); ++pin) {
+        /* Configure the rr_node for the OPIN */
+        rr_graph->rr_node[*cur_node_id].type  = OPIN; 
+        rr_graph->rr_node[*cur_node_id].xlow  = grid_coordinator.get_x(); 
+        rr_graph->rr_node[*cur_node_id].xhigh = grid_coordinator.get_x(); 
+        rr_graph->rr_node[*cur_node_id].ylow  = grid_coordinator.get_y(); 
+        rr_graph->rr_node[*cur_node_id].yhigh = grid_coordinator.get_y(); 
+        rr_graph->rr_node[*cur_node_id].ptc_num  = opin_list[pin]; 
+        rr_graph->rr_node[*cur_node_id].capacity = 1; 
+        rr_graph->rr_node[*cur_node_id].occ = 0; 
+        (*cur_node_id)++;
+        /* Set a SOURCE rr_node for the OPIN */
+        rr_graph->rr_node[*cur_node_id].type  = SOURCE; 
+        rr_graph->rr_node[*cur_node_id].xlow  = grid_coordinator.get_x(); 
+        rr_graph->rr_node[*cur_node_id].xhigh = grid_coordinator.get_x(); 
+        rr_graph->rr_node[*cur_node_id].ylow  = grid_coordinator.get_y(); 
+        rr_graph->rr_node[*cur_node_id].yhigh = grid_coordinator.get_y(); 
+        rr_graph->rr_node[*cur_node_id].ptc_num  = opin_list[pin]; 
+        rr_graph->rr_node[*cur_node_id].capacity = 1; 
+        rr_graph->rr_node[*cur_node_id].occ = 0; 
+        /* TODO: should we set pb_graph_pin here? */
+        (*cur_node_id)++;
+      }
+      /* Find IPINs */
+      /* Configure pins by pins */
+      std::vector<int> ipin_list = get_grid_side_pins(cur_grid, RECEIVER, side_manager.get_side(), height);
+      for (size_t pin = 0; pin < ipin_list.size(); ++pin) {
+        rr_graph->rr_node[*cur_node_id].type  = IPIN; 
+        rr_graph->rr_node[*cur_node_id].xlow  = grid_coordinator.get_x(); 
+        rr_graph->rr_node[*cur_node_id].xhigh = grid_coordinator.get_x(); 
+        rr_graph->rr_node[*cur_node_id].ylow  = grid_coordinator.get_y(); 
+        rr_graph->rr_node[*cur_node_id].yhigh = grid_coordinator.get_y(); 
+        rr_graph->rr_node[*cur_node_id].ptc_num  = opin_list[pin]; 
+        rr_graph->rr_node[*cur_node_id].capacity = 1; 
+        rr_graph->rr_node[*cur_node_id].occ = 0; 
+        (*cur_node_id)++;
+        /* Set a SINK rr_node for the OPIN */
+        rr_graph->rr_node[*cur_node_id].type  = SINK; 
+        rr_graph->rr_node[*cur_node_id].xlow  = grid_coordinator.get_x(); 
+        rr_graph->rr_node[*cur_node_id].xhigh = grid_coordinator.get_x(); 
+        rr_graph->rr_node[*cur_node_id].ylow  = grid_coordinator.get_y(); 
+        rr_graph->rr_node[*cur_node_id].yhigh = grid_coordinator.get_y(); 
+        rr_graph->rr_node[*cur_node_id].ptc_num  = opin_list[pin]; 
+        rr_graph->rr_node[*cur_node_id].capacity = 1; 
+        rr_graph->rr_node[*cur_node_id].occ = 0; 
+        /* TODO: should we set pb_graph_pin here? */
+        (*cur_node_id)++;
+      }
+    }
+  }
+
+  return;
+}
+
+/************************************************************************
+ * Initialize the basic information of routing track rr_nodes
+ * coordinators: xlow, ylow, xhigh, yhigh, 
+ * features: capacity, track_ids, ptc_num, direction 
+ ***********************************************************************/
+static 
+void load_one_chan_rr_nodes_basic_info(const DeviceCoordinator& chan_coordinator, 
+                                       t_rr_type chan_type,
+                                       const ChanNodeDetails& chan_details,
+                                       t_rr_graph* rr_graph,
+                                       size_t* cur_node_id) {
+
+  return;
+} 
+
+/************************************************************************
+ * Initialize the basic information of rr_nodes:
+ * coordinators: xlow, ylow, xhigh, yhigh, 
+ * features: capacity, track_ids, ptc_num, direction 
+ * grid_info : pb_graph_pin
+ ***********************************************************************/
+static 
+void load_rr_nodes_basic_info(t_rr_graph* rr_graph, 
+                              std::vector<size_t> num_rr_nodes_per_type,
+                              const DeviceCoordinator& device_size,
+                              std::vector<std::vector<t_grid_tile>> grids,
+                              std::vector<size_t> chan_width,
+                              std::vector<t_segment_inf> segment_infs) {
+  /* counter */
+  size_t cur_node_id = 0;
+  /* configure by node type */ 
+  /* SOURCE, SINK, OPIN and IPIN */
+  /************************************************************************
+   * Search the grid and find the number OPINs and IPINs per grid
+   * Note that the number of SOURCE nodes are the same as OPINs
+   * and the number of SINK nodes are the same as IPINs
+   ***********************************************************************/
+  for (size_t ix = 0; ix < grids.size(); ++ix) {
+    for (size_t iy = 0; iy < grids[ix].size(); ++iy) { 
+      /* Skip EMPTY tiles */
+      if (EMPTY_TYPE == grids[ix][iy].type) {
+        continue;
+      }
+      DeviceCoordinator grid_coordinator(ix, iy);
+      enum e_side io_side = NUM_SIDES;
+      /* If this is the block on borders, we consider IO side */
+      if (IO_TYPE == grid[ix][iy].type) {
+        DeviceCoordinator io_device_size(device_size.get_x() - 1, device_size.get_y() - 1);
+        io_side = determine_io_grid_pin_side(device_size, grid_coordinator);
+      }
+      /* Configure rr_nodes for this grid */
+      load_one_grid_rr_nodes_basic_info(grid_coordinator, grid[ix][iy], io_side, 
+                                        rr_graph, &cur_node_id);
+    }
+  }
+
+  /* For X-direction Channel: CHANX */
+  for (size_t ix = 0; ix < grids.size() - 1; ++ix) {
+    for (size_t iy = 0; iy < grids[ix].size() - 1; ++iy) { 
+      DeviceCoordinator chan_coordinator(ix, iy);
+      enum e_side chan_side = NUM_SIDES;
+      /* For LEFT side of FPGA */
+      if (0 == ix) {
+        chan_side = LEFT;
+      }
+      /* For RIGHT side of FPGA */
+      if (grids.size() - 2 == ix) {
+        chan_side = RIGHT;
+      }
+      ChanNodeDetails chanx_details = build_unidir_chan_node_details(chan_width[0], device_size.get_x() - 2, chan_side, segment_infs); 
+      /* Configure CHANX in this channel */
+      load_one_chan_rr_nodes_basic_info(chan_coordinator, CHANX, chanx_details, 
+                                        rr_graph, &cur_node_id);
+    }
+  }
+
+  /* For Y-direction Channel: CHANX */
+  for (size_t ix = 0; ix < grids.size() - 1; ++ix) {
+    for (size_t iy = 0; iy < grids[ix].size() - 1; ++iy) { 
+      DeviceCoordinator chan_coordinator(ix, iy);
+      enum e_side chan_side = NUM_SIDES;
+      /* For LEFT side of FPGA */
+      if (0 == iy) {
+        chan_side = BOTTOM;
+      }
+      /* For RIGHT side of FPGA */
+      if (grids[ix].size() - 2 == iy) {
+        chan_side = TOP;
+      }
+      ChanNodeDetails chany_details = build_unidir_chan_node_details(chan_width[1], device_size.get_y() - 2, chan_side, segment_infs); 
+      /* Configure CHANX in this channel */
+      load_one_chan_rr_nodes_basic_info(chan_coordinator, CHANY, chany_details, 
+                                        rr_graph, &cur_node_id);
+    }
+  }
+
+  /* Check */
+  assert ((int)cur_node_id == rr_graph->num_rr_nodes);
+
+  return;
+}
 
 /************************************************************************
  * Main function of this file
@@ -541,8 +782,11 @@ t_rr_graph build_tileable_unidir_rr_graph(INP int L_num_types,
   for (size_t i = 0; i < num_rr_nodes_per_type.size(); ++i) {
     rr_graph.num_rr_nodes += num_rr_nodes_per_type[i];
   }
-  /* use calloc to initialize everything to be zero */
+  /* use calloc and memset to initialize everything to be zero */
   rr_graph.rr_node = (t_rr_node*)my_calloc(rr_graph.num_rr_nodes, sizeof(t_rr_node));
+  for (int i = 0; i < rr_graph.num_rr_nodes; ++i) {
+    tileable_rr_graph_init_rr_node(&(rr_graph.rr_node[i]));
+  }
 
   /************************************************************************
    * 4. Initialize the basic information of rr_nodes:
@@ -550,6 +794,10 @@ t_rr_graph build_tileable_unidir_rr_graph(INP int L_num_types,
    *    features: capacity, track_ids, ptc_num, direction 
    *    grid_info : pb_graph_pin
    ***********************************************************************/
+   load_rr_nodes_basic_info(&rr_graph, num_rr_nodes_per_type,
+                            device_size, grids, device_chan_width, segment_infs); 
+
+   /* build_rr_graph_fast_lookup(&rr_graph); */
 
   /************************************************************************
    * 3. Create the connectivity of OPINs
