@@ -184,6 +184,12 @@ void ChanNodeDetails::add_track(size_t track_node_id, e_direction track_directio
   track_end_.push_back(is_end);
 }
 
+/* Update the node_id of a given track */
+void ChanNodeDetails::set_track_node_id(size_t track_index, size_t track_node_id) {
+  assert(validate_track_id(track_index));
+  track_node_ids_[track_index] = track_node_id; 
+}
+
 /* Set tracks with a given direction to start */
 void ChanNodeDetails::set_tracks_start(e_direction track_direction) {
   for (size_t inode = 0; inode < get_chan_width(); ++inode) {
@@ -205,7 +211,7 @@ void ChanNodeDetails::set_tracks_end(e_direction track_direction) {
 }
 
 /* rotate the track_node_id by an offset */
-void ChanNodeDetails::rotate_track_node_id(size_t offset, bool counter_rotate) {
+void ChanNodeDetails::rotate_track_node_id(size_t offset, e_direction track_direction, bool counter_rotate) {
   /* Rotate the node_ids by groups
    * A group begins from a track_start and ends before another track_start  
    */
@@ -213,6 +219,10 @@ void ChanNodeDetails::rotate_track_node_id(size_t offset, bool counter_rotate) {
   for (size_t itrack = 0; itrack < get_chan_width(); ++itrack) { 
     /* Bypass non-start segment */
     if (false == is_track_start(itrack) ) {
+      continue;
+    }
+    /* Bypass segments do not match track_direction */
+    if (track_direction != get_track_direction(itrack) ) {
       continue;
     }
     /* Find the group nodes */

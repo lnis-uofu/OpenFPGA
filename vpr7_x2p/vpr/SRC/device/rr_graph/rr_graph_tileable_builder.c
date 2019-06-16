@@ -218,29 +218,29 @@ std::vector<size_t> get_num_tracks_per_seg_type(size_t chan_width,
  *    But still the rr_graph is tileable, which is the first concern!
  *
  *    Here is a quick example of Length-4 wires in a W=12 routing channel
- *    +---------------------------------+
- *    | Index | Direction | Start Point |
- *    +---------------------------------+
- *    |   0   | --------> |   Yes       |
- *    +---------------------------------+
- *    |   1   | <-------- |   Yes       |
- *    +---------------------------------+
- *    |   2   | --------> |   No        |
- *    +---------------------------------+
- *    |   3   | <-------- |   No        |
- *    +---------------------------------+
- *    |   4   | --------> |   No        |
- *    +---------------------------------+
- *    |   5   | <-------- |   No        |
- *    +---------------------------------+
- *    |   7   | --------> |   No        |
- *    +---------------------------------+
- *    |   8   | <-------- |   No        |
- *    +---------------------------------+
- *    |   9   | --------> |   Yes       |
- *    +---------------------------------+
- *    |   10  | <-------- |   Yes       |
- *    +---------------------------------+
+ *    +---------------------------------------+--------------+
+ *    | Index |   Direction  | Starting Point | Ending Point |
+ *    +---------------------------------------+--------------+
+ *    |   0   | MUX--------> |   Yes          |  No          |
+ *    +---------------------------------------+--------------+
+ *    |   1   | <--------MUX |   Yes          |  No          |
+ *    +---------------------------------------+--------------+
+ *    |   2   |   -------->  |   No           |  No          |
+ *    +---------------------------------------+--------------+
+ *    |   3   | <--------    |   No           |  No          |
+ *    +---------------------------------------+--------------+
+ *    |   4   |    --------> |   No           |  No          |
+ *    +---------------------------------------+--------------+
+ *    |   5   | <--------    |   No           |  No          |
+ *    +---------------------------------------+--------------+
+ *    |   7   | -------->MUX |   No           |  Yes         |
+ *    +---------------------------------------+--------------+
+ *    |   8   | MUX<-------- |   No           |  Yes         |
+ *    +---------------------------------------+--------------+
+ *    |   9   | MUX--------> |   Yes          |  No          |
+ *    +---------------------------------------+--------------+
+ *    |   10  | <--------MUX |   Yes          |  No          |
+ *    +---------------------------------------+--------------+
  *    |   11  | --------> |   No        |
  *    +---------------------------------+
  *    |   12  | <-------- |   No        |
@@ -285,16 +285,21 @@ ChanNodeDetails build_unidir_chan_node_details(size_t chan_width, size_t max_seg
     } 
     for (size_t itrack = 0; itrack < num_tracks[iseg]; ++itrack) {
       bool seg_start = false;
-      /* Every length of wire, we set a starting point */
+      bool seg_end = false;
+      /* Every first track of a group of Length-N wires, we set a starting point */
       if (0 == itrack % seg_len) {
         seg_start = true;
+      }
+      /* Every last track of a group of Length-N wires, we set an ending point */
+      if (seg_len - 1 == itrack % seg_len) {
+        seg_end = true;
       }
       /* Since this is a unidirectional routing architecture,
        * Add a pair of tracks, 1 INC_DIRECTION track and 1 DEC_DIRECTION track 
        */
-      chan_node_details.add_track(cur_track, INC_DIRECTION, seg_len, seg_start, false);
+      chan_node_details.add_track(cur_track, INC_DIRECTION, seg_len, seg_start, seg_end);
       cur_track++;
-      chan_node_details.add_track(cur_track, DEC_DIRECTION, seg_len, seg_start, false);
+      chan_node_details.add_track(cur_track, DEC_DIRECTION, seg_len, seg_start, seg_end);
       cur_track++;
     }    
   }
@@ -535,6 +540,7 @@ void load_one_grid_rr_nodes_basic_info(const DeviceCoordinator& grid_coordinator
         rr_graph->rr_node[*cur_node_id].ptc_num  = opin_list[pin]; 
         rr_graph->rr_node[*cur_node_id].capacity = 1; 
         rr_graph->rr_node[*cur_node_id].occ = 0; 
+        /* Update node counter */
         (*cur_node_id)++;
         /* Set a SOURCE rr_node for the OPIN */
         rr_graph->rr_node[*cur_node_id].type  = SOURCE; 
@@ -546,6 +552,7 @@ void load_one_grid_rr_nodes_basic_info(const DeviceCoordinator& grid_coordinator
         rr_graph->rr_node[*cur_node_id].capacity = 1; 
         rr_graph->rr_node[*cur_node_id].occ = 0; 
         /* TODO: should we set pb_graph_pin here? */
+        /* Update node counter */
         (*cur_node_id)++;
       }
       /* Find IPINs */
@@ -560,6 +567,7 @@ void load_one_grid_rr_nodes_basic_info(const DeviceCoordinator& grid_coordinator
         rr_graph->rr_node[*cur_node_id].ptc_num  = opin_list[pin]; 
         rr_graph->rr_node[*cur_node_id].capacity = 1; 
         rr_graph->rr_node[*cur_node_id].occ = 0; 
+        /* Update node counter */
         (*cur_node_id)++;
         /* Set a SINK rr_node for the OPIN */
         rr_graph->rr_node[*cur_node_id].type  = SINK; 
@@ -571,6 +579,7 @@ void load_one_grid_rr_nodes_basic_info(const DeviceCoordinator& grid_coordinator
         rr_graph->rr_node[*cur_node_id].capacity = 1; 
         rr_graph->rr_node[*cur_node_id].occ = 0; 
         /* TODO: should we set pb_graph_pin here? */
+        /* Update node counter */
         (*cur_node_id)++;
       }
     }
@@ -587,9 +596,54 @@ void load_one_grid_rr_nodes_basic_info(const DeviceCoordinator& grid_coordinator
 static 
 void load_one_chan_rr_nodes_basic_info(const DeviceCoordinator& chan_coordinator, 
                                        t_rr_type chan_type,
-                                       const ChanNodeDetails& chan_details,
+                                       ChanNodeDetails* chan_details,
                                        t_rr_graph* rr_graph,
                                        size_t* cur_node_id) {
+  /* Check each node_id(potential ptc_num) in the channel :
+   * If this is a starting point, we set a new rr_node with xlow/ylow, ptc_num
+   * If this is a ending point, we set xhigh/yhigh and track_ids
+   * For other nodes, we set changes in track_ids
+   */
+  for (size_t itrack = 0; itrack < chan_details->get_chan_width(); ++itrack) {
+    if (true == chan_details->is_track_start(itrack)) {
+      /* Use a new chan rr_node  */
+      rr_graph->rr_node[*cur_node_id].type  = chan_type; 
+      rr_graph->rr_node[*cur_node_id].xlow  = chan_coordinator.get_x(); 
+      rr_graph->rr_node[*cur_node_id].ylow  = chan_coordinator.get_y(); 
+      rr_graph->rr_node[*cur_node_id].direction = chan_details->get_track_direction(itrack); 
+      rr_graph->rr_node[*cur_node_id].ptc_num  = itrack; 
+      rr_graph->rr_node[*cur_node_id].track_ids.push_back(itrack); 
+      rr_graph->rr_node[*cur_node_id].capacity = 1; 
+      rr_graph->rr_node[*cur_node_id].occ = 0; 
+      /* Update chan_details with node_id */
+      chan_details->set_track_node_id(itrack, *cur_node_id);
+      /* Update node counter */
+      (*cur_node_id)++;
+      /* Finish here, go to next */
+      continue;
+    }
+    if (true == chan_details->is_track_end(itrack)) {
+      /* Get the node_id */
+      size_t rr_node_id = chan_details->get_track_node_id(itrack);
+      /* Do a quick check, make sure we do not mistakenly modify other nodes */
+      assert(chan_type == rr_graph->rr_node[rr_node_id].type);
+      assert(chan_details->get_track_direction(itrack) == rr_graph->rr_node[rr_node_id].type);
+      /* set xhigh/yhigh and push changes to track_ids */
+      rr_graph->rr_node[rr_node_id].xhigh = chan_coordinator.get_x();
+      rr_graph->rr_node[rr_node_id].yhigh = chan_coordinator.get_y();
+      rr_graph->rr_node[rr_node_id].track_ids.push_back(itrack); 
+      /* Finish here, go to next */
+      continue;
+    }
+    /* For other nodes, we get the node_id and just update track_ids */
+    /* Get the node_id */
+    size_t rr_node_id = chan_details->get_track_node_id(itrack);
+    /* Do a quick check, make sure we do not mistakenly modify other nodes */
+    assert(chan_type == rr_graph->rr_node[rr_node_id].type);
+    assert(chan_details->get_track_direction(itrack) == rr_graph->rr_node[rr_node_id].type);
+    rr_graph->rr_node[rr_node_id].track_ids.push_back(itrack); 
+    /* Finish here, go to next */
+  }
 
   return;
 } 
@@ -616,8 +670,8 @@ void load_rr_nodes_basic_info(t_rr_graph* rr_graph,
    * Note that the number of SOURCE nodes are the same as OPINs
    * and the number of SINK nodes are the same as IPINs
    ***********************************************************************/
-  for (size_t ix = 0; ix < grids.size(); ++ix) {
-    for (size_t iy = 0; iy < grids[ix].size(); ++iy) { 
+  for (size_t ix = 0; ix < device_size.get_x(); ++ix) {
+    for (size_t iy = 0; iy < device_size.get_y(); ++iy) { 
       /* Skip EMPTY tiles */
       if (EMPTY_TYPE == grids[ix][iy].type) {
         continue;
@@ -636,8 +690,8 @@ void load_rr_nodes_basic_info(t_rr_graph* rr_graph,
   }
 
   /* For X-direction Channel: CHANX */
-  for (size_t ix = 0; ix < grids.size() - 1; ++ix) {
-    for (size_t iy = 0; iy < grids[ix].size() - 1; ++iy) { 
+  for (size_t iy = 0; iy < device_size.get_y() - 1; ++iy) { 
+    for (size_t ix = 0; ix < device_size.get_x() - 1; ++ix) {
       DeviceCoordinator chan_coordinator(ix, iy);
       enum e_side chan_side = NUM_SIDES;
       /* For LEFT side of FPGA */
@@ -645,19 +699,34 @@ void load_rr_nodes_basic_info(t_rr_graph* rr_graph,
         chan_side = LEFT;
       }
       /* For RIGHT side of FPGA */
-      if (grids.size() - 2 == ix) {
+      if (device_size.get_x() - 2 == ix) {
         chan_side = RIGHT;
       }
       ChanNodeDetails chanx_details = build_unidir_chan_node_details(chan_width[0], device_size.get_x() - 2, chan_side, segment_infs); 
       /* Configure CHANX in this channel */
-      load_one_chan_rr_nodes_basic_info(chan_coordinator, CHANX, chanx_details, 
+      load_one_chan_rr_nodes_basic_info(chan_coordinator, CHANX, &chanx_details, 
                                         rr_graph, &cur_node_id);
+      /* Rotate the chanx_details by an offset of 1*/
+      /* For INC_DIRECTION, we use clockwise rotation 
+       * node_id A ---->   -----> node_id D
+       * node_id B ---->  / ----> node_id A
+       * node_id C ----> /  ----> node_id B
+       * node_id D ---->    ----> node_id C 
+       */
+      chanx_details.rotate_track_node_id(1, INC_DIRECTION, false);
+      /* For DEC_DIRECTION, we use clockwise rotation 
+       * node_id A <-----    <----- node_id B
+       * node_id B <----- \  <----- node_id C
+       * node_id C <-----  \ <----- node_id D
+       * node_id D <-----    <----- node_id A 
+       */
+      chanx_details.rotate_track_node_id(1, DEC_DIRECTION, true);
     }
   }
 
   /* For Y-direction Channel: CHANX */
-  for (size_t ix = 0; ix < grids.size() - 1; ++ix) {
-    for (size_t iy = 0; iy < grids[ix].size() - 1; ++iy) { 
+  for (size_t ix = 0; ix < device_size.get_x() - 1; ++ix) {
+    for (size_t iy = 0; iy < device_size.get_y() - 1; ++iy) { 
       DeviceCoordinator chan_coordinator(ix, iy);
       enum e_side chan_side = NUM_SIDES;
       /* For LEFT side of FPGA */
@@ -665,13 +734,28 @@ void load_rr_nodes_basic_info(t_rr_graph* rr_graph,
         chan_side = BOTTOM;
       }
       /* For RIGHT side of FPGA */
-      if (grids[ix].size() - 2 == iy) {
+      if (device_size.get_y() - 2 == iy) {
         chan_side = TOP;
       }
       ChanNodeDetails chany_details = build_unidir_chan_node_details(chan_width[1], device_size.get_y() - 2, chan_side, segment_infs); 
       /* Configure CHANX in this channel */
-      load_one_chan_rr_nodes_basic_info(chan_coordinator, CHANY, chany_details, 
+      load_one_chan_rr_nodes_basic_info(chan_coordinator, CHANY, &chany_details, 
                                         rr_graph, &cur_node_id);
+      /* Rotate the chany_details by an offset of 1*/
+      /* For INC_DIRECTION, we use clockwise rotation 
+       * node_id A ---->   -----> node_id D
+       * node_id B ---->  / ----> node_id A
+       * node_id C ----> /  ----> node_id B
+       * node_id D ---->    ----> node_id C 
+       */
+      chany_details.rotate_track_node_id(1, INC_DIRECTION, false);
+      /* For DEC_DIRECTION, we use clockwise rotation 
+       * node_id A <-----    <----- node_id B
+       * node_id B <----- \  <----- node_id C
+       * node_id C <-----  \ <----- node_id D
+       * node_id D <-----    <----- node_id A 
+       */
+      chany_details.rotate_track_node_id(1, DEC_DIRECTION, true);
     }
   }
 

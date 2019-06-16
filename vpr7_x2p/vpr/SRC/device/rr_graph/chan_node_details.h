@@ -86,9 +86,10 @@ class ChanNodeDetails {
   public: /* Mutators */
     void reserve(size_t chan_width); /* Reserve the capacitcy of vectors */
     void add_track(size_t track_node_id, e_direction track_direction, size_t seg_length, size_t is_start, size_t is_end);
+    void set_track_node_id(size_t track_index, size_t track_node_id);
     void set_tracks_start(e_direction track_direction);
     void set_tracks_end(e_direction track_direction);
-    void rotate_track_node_id(size_t offset, bool counter_rotate); /* rotate the track_node_id by an offset */
+    void rotate_track_node_id(size_t offset, e_direction track_direction, bool counter_rotate); /* rotate the track_node_id by an offset */
     void clear();
   private: /* validators */
     bool validate_chan_width() const;
