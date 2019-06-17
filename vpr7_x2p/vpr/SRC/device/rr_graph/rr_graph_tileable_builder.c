@@ -624,7 +624,6 @@ void load_one_chan_rr_nodes_basic_info(const DeviceCoordinator& chan_coordinator
       /* Update node counter */
       (*cur_node_id)++;
       /* Finish here, go to next */
-      continue;
     }
     /* For DEC direction, an ending point requires a new chan rr_node  */
     if ( (true == chan_details->is_track_end(itrack))
@@ -643,7 +642,6 @@ void load_one_chan_rr_nodes_basic_info(const DeviceCoordinator& chan_coordinator
       /* Update node counter */
       (*cur_node_id)++;
       /* Finish here, go to next */
-      continue;
     }
     /* For INC direction, an ending point requires an update on xhigh and yhigh  */
     if ( (true == chan_details->is_track_end(itrack))
@@ -658,7 +656,6 @@ void load_one_chan_rr_nodes_basic_info(const DeviceCoordinator& chan_coordinator
       rr_graph->rr_node[rr_node_id].yhigh = chan_coordinator.get_y();
       rr_graph->rr_node[rr_node_id].track_ids.push_back(itrack); 
       /* Finish here, go to next */
-      continue;
     }
     /* For DEC direction, an starting point requires an update on xlow and ylow  */
     if ( (true == chan_details->is_track_start(itrack))
@@ -673,16 +670,18 @@ void load_one_chan_rr_nodes_basic_info(const DeviceCoordinator& chan_coordinator
       rr_graph->rr_node[rr_node_id].ylow = chan_coordinator.get_y();
       rr_graph->rr_node[rr_node_id].track_ids.push_back(itrack); 
       /* Finish here, go to next */
-      continue;
     }
     /* For other nodes, we get the node_id and just update track_ids */
-    /* Get the node_id */
-    size_t rr_node_id = chan_details->get_track_node_id(itrack);
-    /* Do a quick check, make sure we do not mistakenly modify other nodes */
-    assert(chan_type == rr_graph->rr_node[rr_node_id].type);
-    assert(chan_details->get_track_direction(itrack) == rr_graph->rr_node[rr_node_id].direction);
-    rr_graph->rr_node[rr_node_id].track_ids.push_back(itrack); 
-    /* Finish here, go to next */
+    if ( (false == chan_details->is_track_start(itrack))
+      && (false == chan_details->is_track_end(itrack)) ) {
+      /* Get the node_id */
+      size_t rr_node_id = chan_details->get_track_node_id(itrack);
+      /* Do a quick check, make sure we do not mistakenly modify other nodes */
+      assert(chan_type == rr_graph->rr_node[rr_node_id].type);
+      assert(chan_details->get_track_direction(itrack) == rr_graph->rr_node[rr_node_id].direction);
+      rr_graph->rr_node[rr_node_id].track_ids.push_back(itrack); 
+      /* Finish here, go to next */
+    }
   }
 
   /* Reverse the track_ids of CHANX and CHANY nodes in DEC_DIRECTION*/
@@ -711,7 +710,6 @@ void load_one_chan_rr_nodes_basic_info(const DeviceCoordinator& chan_coordinator
  ***********************************************************************/
 static 
 void load_rr_nodes_basic_info(t_rr_graph* rr_graph, 
-                              std::vector<size_t> num_rr_nodes_per_type,
                               const DeviceCoordinator& device_size,
                               std::vector<std::vector<t_grid_tile>> grids,
                               std::vector<size_t> chan_width,
@@ -933,8 +931,7 @@ t_rr_graph build_tileable_unidir_rr_graph(INP int L_num_types,
    *    features: capacity, track_ids, ptc_num, direction 
    *    grid_info : pb_graph_pin
    ***********************************************************************/
-   load_rr_nodes_basic_info(&rr_graph, num_rr_nodes_per_type,
-                            device_size, grids, device_chan_width, segment_infs); 
+   load_rr_nodes_basic_info(&rr_graph, device_size, grids, device_chan_width, segment_infs); 
 
    /* build_rr_graph_fast_lookup(&rr_graph); */
 
