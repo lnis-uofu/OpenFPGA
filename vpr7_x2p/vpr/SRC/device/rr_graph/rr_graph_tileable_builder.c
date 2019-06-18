@@ -1288,6 +1288,95 @@ RRGSB build_one_tileable_rr_gsb(const DeviceCoordinator& device_range,
 }
 
 /************************************************************************
+ * Add a edge connecting two rr_nodes
+ * For src rr_node, update the edge list and update switch_id,
+ * For des rr_node, update the fan_in
+ ***********************************************************************/
+static 
+void add_one_edge_for_two_rr_nodes(t_rr_graph* rr_graph,
+                                   int src_rr_node_id, 
+                                   int des_rr_node_id,
+                                   short switch_id) {
+  /* Check */
+  assert ( (-1 < src_rr_node_id) && (src_rr_node_id < rr_graph->num_rr_nodes) );
+  assert ( (-1 < des_rr_node_id) && (des_rr_node_id < rr_graph->num_rr_nodes) );
+  
+  t_rr_node* src_rr_node = &(rr_graph->rr_node[src_rr_node_id]);
+  t_rr_node* des_rr_node = &(rr_graph->rr_node[des_rr_node_id]);
+
+  /* Allocate edge and switch to src_rr_node */
+  src_rr_node->num_edges++;
+  if (NULL == src_rr_node->edges) {
+    /* calloc */
+    src_rr_node->edges = (int*) my_calloc( src_rr_node->num_edges, sizeof(int) ); 
+    src_rr_node->switches = (short*) my_calloc( src_rr_node->num_edges, sizeof(short) ); 
+  } else {
+    /* realloc */
+    src_rr_node->edges = (int*) my_realloc(src_rr_node->edges, 
+                                           src_rr_node->num_edges * sizeof(int)); 
+    src_rr_node->switches = (short*) my_realloc(src_rr_node->switches, 
+                                                src_rr_node->num_edges * sizeof(short)); 
+  }
+  /* Fill edge and switch info */
+  src_rr_node->edges[src_rr_node->num_edges - 1] = des_rr_node_id;
+  src_rr_node->switches[src_rr_node->num_edges - 1] = switch_id;
+
+  /* Update the des_rr_node */ 
+  des_rr_node->fan_in++;
+
+  return;
+}
+
+/************************************************************************
+ * Create edges for each rr_node of a General Switch Blocks (GSB):
+ * 1. create edges between SOURCE and OPINs 
+ * 2. create edges between IPINs and SINKs 
+ * 3. create edges between CHANX | CHANY and IPINs (connections inside connection blocks) 
+ * 4. create edges between OPINs, CHANX and CHANY (connections inside switch blocks) 
+ * 5. create edges between OPINs and IPINs (direct-connections) 
+ ***********************************************************************/
+static 
+void build_edges_for_one_tileable_rr_gsb(t_rr_graph* rr_graph, RRGSB* rr_gsb,
+                                         int** Fc_in, int** Fc_out,  
+                                         enum e_switch_block_type sb_type, int Fs,
+                                         int num_directs, t_clb_to_clb_directs* clb_to_clb_directs, 
+                                         int num_switches, int delayless_switch) {
+  /* Check rr_gsb */
+  assert (NULL != rr_gsb);
+  
+  /* Walk through each sides */ 
+  for (size_t side = 0; side < rr_gsb->get_num_sides(); ++side) {
+    Side side_manager(side);
+    enum e_side gsb_side = side_manager.get_side();
+    /* Find OPINs */  
+    for (size_t inode = 0; inode < rr_gsb->get_num_opin_nodes(gsb_side); ++inode) {
+      t_rr_node* opin_node = rr_gsb->get_opin_node(gsb_side, inode); 
+      /* 1. create edges between SOURCE and OPINs */
+      int src_node_id = get_rr_node_index(opin_node->xlow, opin_node->ylow, 
+                                          SOURCE, opin_node->ptc_num,
+                                          rr_graph->rr_node_indices);
+      /* add edges to the src_node */
+      add_one_edge_for_two_rr_nodes(rr_graph, src_node_id, opin_node - rr_graph->rr_node,
+                                    delayless_switch);
+    }
+    /* Find IPINs */  
+    for (size_t inode = 0; inode < rr_gsb->get_num_ipin_nodes(gsb_side); ++inode) {
+      t_rr_node* ipin_node = rr_gsb->get_ipin_node(gsb_side, inode); 
+      /* 1. create edges between SOURCE and OPINs */
+      int sink_node_id = get_rr_node_index(ipin_node->xlow, ipin_node->ylow, 
+                                           SINK, ipin_node->ptc_num,
+                                           rr_graph->rr_node_indices);
+      /* add edges to the src_node */
+      add_one_edge_for_two_rr_nodes(rr_graph, ipin_node - rr_graph->rr_node, sink_node_id,
+                                    delayless_switch);
+    }
+  }
+  
+
+  return;
+}
+
+/************************************************************************
  * Build the edges of each rr_node tile by tile:
  * We classify rr_nodes into a general switch block (GSB) data structure
  * where we create edges to each rr_nodes in the GSB with respect to
@@ -1315,12 +1404,11 @@ void build_rr_graph_edges(t_rr_graph* rr_graph,
       DeviceCoordinator gsb_coordinator(ix, iy);
       /* Create a GSB object */
       RRGSB rr_gsb = build_one_tileable_rr_gsb(device_range, device_chan_width, segment_inf, gsb_coordinator, rr_graph);
-      /* 1. create edges between SOURCE and OPINs */
-      /* 2. create edges between IPINs and SINKs */
-      /* 3. create edges between CHANX | CHANY and IPINs (connections inside connection blocks) */
-      /* 4. create edges between OPINs, CHANX and CHANY (connections inside switch blocks) */
-      /* 5. create edges between OPINs and IPINs (direct-connections) */
-
+      /* Build edges for a GSB */
+      build_edges_for_one_tileable_rr_gsb(rr_graph, &rr_gsb, Fc_in, Fc_out, 
+                                          sb_type, Fs, 
+                                          num_directs, clb_to_clb_directs,
+                                          num_switches, delayless_switch);
       /* Finish this GSB, go to the next*/
     }
   }
@@ -1367,15 +1455,18 @@ void build_rr_graph_edges(t_rr_graph* rr_graph,
  *    a. cost_index
  *    b. RC tree
  ***********************************************************************/
-t_rr_graph build_tileable_unidir_rr_graph(INP int L_num_types,
-                                          INP t_type_ptr types, INP int L_nx, INP int L_ny,
-                                          INP struct s_grid_tile **L_grid, INP int chan_width,
-                                          INP enum e_switch_block_type sb_type, INP int Fs, INP int num_seg_types,
-                                          INP int num_switches, INP t_segment_inf * segment_inf,
-                                          INP int delayless_switch,
-                                          INP t_timing_inf timing_inf, INP int wire_to_ipin_switch,
-                                          INP enum e_base_cost_type base_cost_type, INP t_direct_inf *directs, 
-                                          INP int num_directs, INP boolean ignore_Fc_0, OUTP int *Warnings) { 
+void build_tileable_unidir_rr_graph(INP int L_num_types,
+                                    INP t_type_ptr types, INP int L_nx, INP int L_ny,
+                                    INP struct s_grid_tile **L_grid, INP int chan_width,
+                                    INP enum e_switch_block_type sb_type, INP int Fs, 
+                                    INP int num_seg_types,
+                                    INP int num_switches, INP t_segment_inf * segment_inf,
+                                    INP int delayless_switch,
+                                    INP t_timing_inf timing_inf, INP int wire_to_ipin_switch,
+                                    INP enum e_base_cost_type base_cost_type, 
+                                    INP t_direct_inf *directs, 
+                                    INP int num_directs, INP boolean ignore_Fc_0, 
+                                    OUTP int *Warnings) { 
   /* Create an empty graph */
   t_rr_graph rr_graph; 
   rr_graph.rr_node_indices = NULL;
@@ -1478,6 +1569,7 @@ t_rr_graph build_tileable_unidir_rr_graph(INP int L_num_types,
     clb_to_clb_directs = alloc_and_load_clb_to_clb_directs(directs, num_directs);
   }
 
+  /* Create edges for a tileable rr_graph */
   build_rr_graph_edges(&rr_graph, device_size, device_chan_width, segment_infs, 
                        Fc_in, Fc_out, sb_type, Fs,  
                        num_directs, clb_to_clb_directs, num_switches, delayless_switch);
@@ -1494,9 +1586,14 @@ t_rr_graph build_tileable_unidir_rr_graph(INP int L_num_types,
    * 8. Sanitizer for the rr_graph, check connectivities of rr_nodes
    ***********************************************************************/
 
-  return rr_graph;
-}
+  /* We set global variables for rr_nodes here, 
+   */
+  num_rr_nodes = rr_graph.num_rr_nodes;
+  rr_node = rr_graph.rr_node;
+  rr_node_indices = rr_graph.rr_node_indices;
 
+  return;
+}
 
 /************************************************************************
  * End of file : rr_graph_tileable_builder.c 
