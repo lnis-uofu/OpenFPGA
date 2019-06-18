@@ -69,14 +69,6 @@ static t_chunk rr_mem_ch = {NULL, 0, NULL};
 /* Status of current chunk being dished out by calls to my_chunk_malloc.   */
 
 /********************* Subroutines local to this module. *******************/
-static int ****alloc_and_load_pin_to_track_map(INP enum e_pin_type pin_type,
-		INP int nodes_per_chan, INP int *Fc, INP t_type_ptr Type,
-		INP boolean perturb_switch_pattern,
-		INP enum e_directionality directionality);
-
-static struct s_ivec ***alloc_and_load_track_to_pin_lookup(
-		INP int ****pin_to_track_map, INP int *Fc, INP int height,
-		INP int num_pins, INP int nodes_per_chan);
 
 static void build_bidir_rr_opins(INP int i, INP int j,
 		INOUTP t_rr_node * L_rr_node, INP t_ivec *** L_rr_node_indices,
@@ -123,10 +115,6 @@ static void load_perturbed_switch_pattern(INP t_type_ptr type,
 static void check_all_tracks_reach_pins(t_type_ptr type,
 		int ****tracks_connected_to_pin, int nodes_per_chan, int Fc,
 		enum e_pin_type ipin_or_opin);
-
-static boolean *alloc_and_load_perturb_ipins(INP int nodes_per_chan,
-		INP int L_num_types, INP int **Fc_in, INP int **Fc_out,
-		INP enum e_directionality directionality);
 
 static void build_rr_sinks_sources(INP int i, INP int j,
 		INP t_rr_node * L_rr_node, INP t_ivec *** L_rr_node_indices,
@@ -188,11 +176,6 @@ static void print_distribution(FILE * fptr,
 		t_mux_size_distribution * distr_struct);
 #endif
 
-static void free_type_pin_to_track_map(int***** ipin_to_track_map,
-		t_type_ptr types);
-
-static void free_type_track_to_ipin_map(struct s_ivec**** track_to_pin_map,
-		t_type_ptr types, int nodes_per_chan);
 
 static t_seg_details *alloc_and_load_global_route_seg_details(
 		INP int nodes_per_chan, INP int global_route_switch);
@@ -543,7 +526,7 @@ void rr_graph_externals(t_timing_inf timing_inf,
 	alloc_and_load_rr_clb_source(rr_node_indices);
 }
 
-static boolean *
+boolean *
 alloc_and_load_perturb_ipins(INP int nodes_per_chan, INP int L_num_types,
 		INP int **Fc_in, INP int **Fc_out, INP enum e_directionality directionality) {
 	int i;
@@ -675,7 +658,7 @@ alloc_and_load_actual_fc(INP int L_num_types, INP t_type_ptr types,
 }
 
 /* frees the track to ipin mapping for each physical grid type */
-static void free_type_track_to_ipin_map(struct s_ivec**** track_to_pin_map,
+void free_type_track_to_ipin_map(struct s_ivec**** track_to_pin_map,
 		t_type_ptr types, int nodes_per_chan) {
 	int i, itrack, ioff, iside;
 	for (i = 0; i < num_types; i++) {
@@ -698,7 +681,7 @@ static void free_type_track_to_ipin_map(struct s_ivec**** track_to_pin_map,
 }
 
 /* frees the ipin to track mapping for each physical grid type */
-static void free_type_pin_to_track_map(int***** ipin_to_track_map,
+void free_type_pin_to_track_map(int***** ipin_to_track_map,
 		t_type_ptr types) {
 	int i;
 	for (i = 0; i < num_types; i++) {
@@ -1532,7 +1515,7 @@ void alloc_and_load_edges_and_switches(INP t_rr_node * L_rr_node, INP int inode,
 	assert(i == num_edges);
 }
 
-static int ****
+int ****
 alloc_and_load_pin_to_track_map(INP enum e_pin_type pin_type,
 		INP int nodes_per_chan, INP int *Fc, INP t_type_ptr Type,
 		INP boolean perturb_switch_pattern,
@@ -1873,7 +1856,7 @@ static void check_all_tracks_reach_pins(t_type_ptr type,
 /* Allocates and loads the track to ipin lookup for each physical grid type. This
  * is the same information as the ipin_to_track map but accessed in a different way. */
 
-static struct s_ivec ***
+struct s_ivec ***
 alloc_and_load_track_to_pin_lookup(INP int ****pin_to_track_map, INP int *Fc,
 		INP int height, INP int num_pins, INP int nodes_per_chan) {
 	int ipin, iside, itrack, iconn, ioff, pin_counter;

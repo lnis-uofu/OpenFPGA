@@ -63,5 +63,27 @@ void rr_graph_externals(t_timing_inf timing_inf,
 		t_segment_inf * segment_inf, int num_seg_types, int nodes_per_chan,
 		int wire_to_ipin_switch, enum e_base_cost_type base_cost_type);
 
+/* Xifan Tang: Functions shared by tileable rr_graph generator */
+
+int ****alloc_and_load_pin_to_track_map(INP enum e_pin_type pin_type,
+		INP int nodes_per_chan, INP int *Fc, INP t_type_ptr Type,
+		INP boolean perturb_switch_pattern,
+		INP enum e_directionality directionality);
+
+struct s_ivec ***alloc_and_load_track_to_pin_lookup(
+		INP int ****pin_to_track_map, INP int *Fc, INP int height,
+		INP int num_pins, INP int nodes_per_chan);
+
+boolean *
+alloc_and_load_perturb_ipins(INP int nodes_per_chan, INP int L_num_types,
+		INP int **Fc_in, INP int **Fc_out, INP enum e_directionality directionality);
+
+void free_type_pin_to_track_map(int***** ipin_to_track_map,
+		t_type_ptr types);
+
+void free_type_track_to_ipin_map(struct s_ivec**** track_to_pin_map,
+		t_type_ptr types, int nodes_per_chan);
+
+
 #endif
 
