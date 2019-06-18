@@ -49,6 +49,7 @@ ChanNodeDetails::ChanNodeDetails(const ChanNodeDetails& src) {
   for (size_t itrack = 0; itrack < chan_width; ++itrack) {
     track_node_ids_.push_back(src.get_track_node_id(itrack));
     track_direction_.push_back(src.get_track_direction(itrack));
+    seg_ids_.push_back(src.get_track_segment_id(itrack));
     seg_length_.push_back(src.get_track_segment_length(itrack));
     track_start_.push_back(src.is_track_start(itrack));
     track_end_.push_back(src.is_track_end(itrack));
@@ -80,6 +81,11 @@ e_direction ChanNodeDetails::get_track_direction(size_t track_id) const {
 size_t ChanNodeDetails::get_track_segment_length(size_t track_id) const {
   assert(validate_track_id(track_id));
   return seg_length_[track_id];
+}
+
+size_t ChanNodeDetails::get_track_segment_id(size_t track_id) const {
+  assert(validate_track_id(track_id));
+  return seg_ids_[track_id];
 }
 
 bool   ChanNodeDetails::is_track_start(size_t track_id) const {
@@ -171,14 +177,16 @@ void ChanNodeDetails::reserve(size_t chan_width) {
   track_node_ids_.reserve(chan_width);
   track_direction_.reserve(chan_width);
   seg_length_.reserve(chan_width);
+  seg_ids_.reserve(chan_width);
   track_start_.reserve(chan_width);
   track_end_.reserve(chan_width);
 }
 
 /* Add a track to the channel */
-void ChanNodeDetails::add_track(size_t track_node_id, e_direction track_direction, size_t seg_length, size_t is_start, size_t is_end) {
+void ChanNodeDetails::add_track(size_t track_node_id, e_direction track_direction, size_t seg_id, size_t seg_length, size_t is_start, size_t is_end) {
   track_node_ids_.push_back(track_node_id);
   track_direction_.push_back(track_direction);
+  seg_ids_.push_back(seg_id);
   seg_length_.push_back(seg_length);
   track_start_.push_back(is_start);
   track_end_.push_back(is_end);
@@ -246,6 +254,7 @@ void ChanNodeDetails::rotate_track_node_id(size_t offset, e_direction track_dire
 void ChanNodeDetails::clear() {
   track_node_ids_.clear();
   track_direction_.clear();
+  seg_ids_.clear();
   seg_length_.clear();
   track_start_.clear();
   track_end_.clear();
@@ -257,6 +266,7 @@ void ChanNodeDetails::clear() {
 bool ChanNodeDetails::validate_chan_width() const {
   size_t chan_width = track_node_ids_.size();
   if ( (chan_width == track_direction_.size())
+     &&(chan_width == seg_ids_.size())
      &&(chan_width == seg_length_.size())
      &&(chan_width == track_start_.size())
      &&(chan_width == track_end_.size()) ) {
@@ -268,6 +278,7 @@ bool ChanNodeDetails::validate_chan_width() const {
 bool ChanNodeDetails::validate_track_id(size_t track_id) const {
   if ( (track_id < track_node_ids_.size()) 
     && (track_id < track_direction_.size()) 
+    && (track_id < seg_ids_.size()) 
     && (track_id < seg_length_.size()) 
     && (track_id < track_start_.size()) 
     && (track_id < track_end_.size()) ) {

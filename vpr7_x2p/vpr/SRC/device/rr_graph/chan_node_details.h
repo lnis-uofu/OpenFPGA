@@ -77,6 +77,7 @@ class ChanNodeDetails {
     size_t get_track_node_id(size_t track_id) const;
     e_direction get_track_direction(size_t track_id) const;
     size_t get_track_segment_length(size_t track_id) const;
+    size_t get_track_segment_id(size_t track_id) const;
     bool is_track_start(size_t track_id) const;
     bool is_track_end(size_t track_id) const;
     std::vector<size_t> get_seg_group(size_t track_id) const;
@@ -85,7 +86,7 @@ class ChanNodeDetails {
     size_t get_num_ending_tracks() const;
   public: /* Mutators */
     void reserve(size_t chan_width); /* Reserve the capacitcy of vectors */
-    void add_track(size_t track_node_id, e_direction track_direction, size_t seg_length, size_t is_start, size_t is_end);
+    void add_track(size_t track_node_id, e_direction track_direction, size_t seg_id, size_t seg_length, size_t is_start, size_t is_end);
     void set_track_node_id(size_t track_index, size_t track_node_id);
     void set_tracks_start(e_direction track_direction);
     void set_tracks_end(e_direction track_direction);
@@ -97,6 +98,7 @@ class ChanNodeDetails {
   private: /* Internal data */ 
     std::vector<size_t> track_node_ids_; /* indices of each track */
     std::vector<e_direction> track_direction_; /* direction of each track */
+    std::vector<size_t> seg_ids_; /* id of segment of each track */
     std::vector<size_t> seg_length_; /* Length of each segment */
     std::vector<bool>   track_start_; /* flag to identify if this is the starting point of the track */
     std::vector<bool>   track_end_; /* flag to identify if this is the ending point of the track */
