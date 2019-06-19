@@ -185,7 +185,8 @@ void read_netlist(INP const char *net_file, INP const t_arch *arch,
 	 */
 
 	FreeTokens(&circuit_inputs);
-	FreeTokens(&circuit_outputs);
+	if (circuit_outputs)
+		FreeTokens(&circuit_outputs);
 	if (circuit_clocks)
 		FreeTokens(&circuit_clocks);
 	FreeNode(Top);
