@@ -56,7 +56,7 @@
 #include "ReadOptions.h"
 #include "rr_graph.h"
 #include "rr_graph2.h"
-#include "rr_graph_sbox.h"
+#include "rr_graph_tileable_sbox.h"
 #include "route_common.h"
 #include "fpga_x2p_types.h"
 #include "rr_graph_tileable_builder.h"
@@ -1385,6 +1385,52 @@ void build_edges_for_one_tileable_rr_gsb(t_rr_graph* rr_graph, RRGSB* rr_gsb,
 }
 
 /************************************************************************
+ * Convert the track_to_ipin_look[0..nodes_per_chan-1][0..height][0..3][pin_numbers]
+ * to the existing routing resources in the General Switch Block (GSB)
+ * The resulting matrix will be oragnized in 
+ * track2ipin_lookup[gsb_side][0..chan_width-1][ipin_indices] 
+ ***********************************************************************/
+static 
+std::vector < std::vector< std::vector<int> > > build_gsb_track_to_ipin_lookup(const RRGSB& rr_gsb,
+                                                                               std::vector< std::vector<t_grid_tile> > grids,
+                                                                               int** Fc_in, 
+                                                                               int***** ipin_to_track_map) {
+  std::vector < std::vector< std::vector<int> > > track2ipin_lookup; /* [0..gsb_side][0..num_tracks][0..Fc-1] */
+  /* Resize the matrix */ 
+  track2ipin_lookup.resize(rr_gsb.get_num_sides());
+
+  /* Walk through each side */
+  for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
+    Side side_manager(side);
+    enum e_side gsb_side = side_manager.get_side();
+    /* Get channel width and resize the matrix */
+    size_t chan_width = rr_gsb.get_chan_width(gsb_side);
+    track2ipin_lookup[side].resize(chan_width); 
+    /* Find the ipin nodes */
+    for (size_t inode = 0; inode < rr_gsb.get_num_ipin_nodes(gsb_side); ++inode) {
+      t_rr_node* ipin_node = rr_gsb.get_ipin_node(gsb_side, inode);
+      /* For each IPIN, we find the type_descriptor, offset and pin_side on the grid */
+      int grid_type_id = grids[ipin_node->xlow][ipin_node->ylow].type->index; 
+      int offset = grid[ipin_node->xlow][ipin_node->ylow].offset;
+      enum e_side pin_side = rr_gsb.get_ipin_node_grid_side(gsb_side, inode);
+      /* Now, we fill the return matrix */
+      /* Bypass empty array */
+      if (NULL == ipin_to_track_map[grid_type_id][ipin_node->ptc_num][offset][0]) {
+        continue;
+      }
+      /* Get each track_id  */
+      for (int iconn = 0; iconn < Fc_in[grid_type_id][ipin_node->ptc_num]; ++iconn) {
+        int track_id = ipin_to_track_map[grid_type_id][ipin_node->ptc_num][offset][pin_side][iconn];
+        track2ipin_lookup[gsb_side][track_id].push_back(inode);
+      }
+    }
+  }
+
+  return track2ipin_lookup;
+}
+
+
+/************************************************************************
  * Build the edges of each rr_node tile by tile:
  * We classify rr_nodes into a general switch block (GSB) data structure
  * where we create edges to each rr_nodes in the GSB with respect to
@@ -1399,10 +1445,12 @@ void build_edges_for_one_tileable_rr_gsb(t_rr_graph* rr_graph, RRGSB* rr_gsb,
 static 
 void build_rr_graph_edges(t_rr_graph* rr_graph, 
                           const DeviceCoordinator& device_size, 
+                          std::vector< std::vector<t_grid_tile> > grids,
                           std::vector<size_t> device_chan_width, 
                           std::vector<t_segment_inf> segment_inf,
                           int L_num_types, t_type_ptr types,
-                          struct s_ivec**** track_to_ipin_lookup, int***** opin_to_track_map,  
+                          int** Fc_in, int** Fc_out,
+                          int***** ipin_to_track_map, int***** opin_to_track_map,  
                           vtr::NdMatrix<std::vector<int>,3> switch_block_conn,
                           int num_directs, t_clb_to_clb_directs* clb_to_clb_directs, 
                           int num_switches, int delayless_switch) {
@@ -1414,11 +1462,12 @@ void build_rr_graph_edges(t_rr_graph* rr_graph,
       /* Create a GSB object */
       RRGSB rr_gsb = build_one_tileable_rr_gsb(device_range, device_chan_width, segment_inf, gsb_coordinator, rr_graph);
       /* adapt the track_to_ipin_lookup for the GSB nodes */      
-      std::vector < std::vector< std::vector<int> > > track2ipin_lookup; /* [0..gsb_side][0..num_tracks][0..Fc] */
+      std::vector < std::vector< std::vector<int> > > track2ipin_lookup; /* [0..gsb_side][0..num_tracks][0..Fc-1] */
+      track2ipin_lookup = build_gsb_track_to_ipin_lookup(rr_gsb, grids, Fc_in, ipin_to_track_map);
       /* adapt the opin_to_track_map for the GSB nodes */      
-      std::vector < std::vector< std::vector<int> > > opin2track_map; /* [0..gsb_side][0..num_opin_node][0..Fc] */
+      std::vector < std::vector< std::vector<int> > > opin2track_map; /* [0..gsb_side][0..num_opin_node][0..Fc-1] */
       /* adapt the switch_block_conn for the GSB nodes */      
-      std::vector < std::vector< std::vector<int> > > sb_conn; /* [0..gsb_side][0..chan_width][0..Fc] */
+      std::vector < std::vector< std::vector<int> > > sb_conn; /* [0..from_gsb_side][0..to_gsb_side][0..chan_width-1] */
       /* Build edges for a GSB */
       build_edges_for_one_tileable_rr_gsb(rr_graph, &rr_gsb, 
                                           track2ipin_lookup, opin2track_map, sb_conn, 
@@ -1429,76 +1478,6 @@ void build_rr_graph_edges(t_rr_graph* rr_graph,
   }
 
   return;
-}
-
-/************************************************************************
- * Build internal connection pattern for a switch block
- * This function is adapt to fit the tileable routing context from
- * rr_graph_sbox.c : alloc_and_load_switch_block_conn
- * Switch box:                                                             *
- *                    TOP (CHANY)                                          *
- *                    | | | | | |                                          *
- *                   +-----------+                                         *
- *                 --|           |--                                       *
- *                 --|           |--                                       *
- *           LEFT  --|           |-- RIGHT                                 *
- *          (CHANX)--|           |--(CHANX)                                *
- *                 --|           |--                                       *
- *                 --|           |--                                       *
- *                   +-----------+                                         *
- *                    | | | | | |                                          *
- *                   BOTTOM (CHANY)                                        
- *
- * [0..3][0..3][0..nodes_per_chan-1].  Structure below is indexed as:       *
- * [from_side][to_side][from_track].  That yields an integer vector (ivec)  *
- * of the tracks to which from_track connects in the proper to_location.    *
- * For simple switch boxes this is overkill, but it will allow complicated  *
- * switch boxes with Fs > 3, etc. without trouble.                          
- ***********************************************************************/
-static 
-vtr::NdMatrix<std::vector<int>,3> alloc_and_load_tileable_switch_block_conn(size_t chan_width, 
-                                                                            enum e_switch_block_type switch_block_type, 
-                                                                            int Fs) {
-
-  /* Currently Fs must be 3 since each track maps once to each other side */
-  VTR_ASSERT(3 == Fs);
-
-  vtr::NdMatrix<std::vector<int>,3> switch_block_conn({4, 4, chan_width});
-
-  for (e_side from_side : {TOP, RIGHT, BOTTOM, LEFT}) {
-    for (e_side to_side : {TOP, RIGHT, BOTTOM, LEFT}) {
-      for (size_t from_track = 0; from_track < chan_width; from_track++) {
-        if (from_side != to_side) {
-          switch_block_conn[from_side][to_side][from_track].resize(1);
-
-          switch_block_conn[from_side][to_side][from_track][0] = get_simple_switch_block_track(from_side, to_side,
-                                                                                               from_track, switch_block_type, 
-                                                                                               chan_width);
-        } else { /* from_side == to_side -> no connection. */
-          switch_block_conn[from_side][to_side][from_track].clear();
-        }
-      }
-    }
-  }
-
-  if (getEchoEnabled()) {
-    FILE *out = fopen("switch_block_conn.echo", "w");
-    for (int l = 0; l < 4; ++l) {
-      for (int k = 0; k < 4; ++k) {
-        fprintf(out, "Side %d to %d\n", l, k);
-        for (size_t j = 0; j < chan_width; ++j) {
-          fprintf(out, "%zu: ", j);
-          for (unsigned i = 0; i < switch_block_conn[l][k][j].size(); ++i) {
-            fprintf(out, "%d ", switch_block_conn[l][k][j][i]);
-          }
-          fprintf(out, "\n");
-        }
-        fprintf(out, "\n");
-      }
-    }
-    fclose(out);
-  }
-  return switch_block_conn;
 }
 
 /************************************************************************
@@ -1646,13 +1625,10 @@ void build_tileable_unidir_rr_graph(INP int L_num_types,
   /* START IPINP MAP */
   /* Create ipin map lookups */
   int***** ipin_to_track_map = (int*****) my_calloc(L_num_types, sizeof(int****));
-  struct s_ivec**** track_to_ipin_lookup = (struct s_ivec****) my_calloc(L_num_types, sizeof(struct s_ivec***));
   boolean* perturb_ipins = alloc_and_load_perturb_ipins(chan_width, L_num_types, Fc_in, Fc_out, UNI_DIRECTIONAL);
   for (int i = 0; i < L_num_types; ++i) {
     ipin_to_track_map[i] = alloc_and_load_pin_to_track_map(RECEIVER, chan_width, Fc_in[i], &types[i], 
                                                            perturb_ipins[i], UNI_DIRECTIONAL);
-    track_to_ipin_lookup[i] = alloc_and_load_track_to_pin_lookup(ipin_to_track_map[i], Fc_in[i],
-                                                                 types[i].height, types[i].num_pins, chan_width);
   }
   /* END IPINP MAP */
 
@@ -1683,8 +1659,8 @@ void build_tileable_unidir_rr_graph(INP int L_num_types,
   }
 
   /* Create edges for a tileable rr_graph */
-  build_rr_graph_edges(&rr_graph, device_size, device_chan_width, segment_infs, 
-                       L_num_types, types, track_to_ipin_lookup, opin_to_track_map, switch_block_conn,  
+  build_rr_graph_edges(&rr_graph, device_size, grids, device_chan_width, segment_infs, 
+                       L_num_types, types, Fc_in, Fc_out, ipin_to_track_map, opin_to_track_map, switch_block_conn,  
                        num_directs, clb_to_clb_directs, num_switches, delayless_switch);
 
   /************************************************************************
@@ -1731,7 +1707,6 @@ void build_tileable_unidir_rr_graph(INP int L_num_types,
   }
 
   free_type_pin_to_track_map(ipin_to_track_map, types);
-  free_type_track_to_ipin_map(track_to_ipin_lookup, types, chan_width);
   if(clb_to_clb_directs != NULL) {
     free(clb_to_clb_directs);
   }
