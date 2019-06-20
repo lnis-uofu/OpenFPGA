@@ -5,8 +5,16 @@
 
 #include "vtr_ndmatrix.h"
 
-vtr::NdMatrix<std::vector<int>,3> alloc_and_load_tileable_switch_block_conn(size_t nodes_per_chan,
-		enum e_switch_block_type switch_block_type, int Fs);
+#include "rr_blocks.h"
+#include "fpga_x2p_types.h"
+
+typedef std::vector<std::vector<std::vector<int>>> t_track2track_map;
+
+t_track2track_map build_gsb_track_to_track_map(const t_rr_graph* rr_graph,
+                                               const RRGSB& rr_gsb,
+                                               const enum e_switch_block_type sb_type, 
+                                               const int Fs,
+                                               const std::vector<t_segment_inf> segment_inf);
 
 #endif
 

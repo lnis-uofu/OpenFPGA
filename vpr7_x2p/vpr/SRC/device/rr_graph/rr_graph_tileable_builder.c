@@ -56,7 +56,6 @@
 #include "ReadOptions.h"
 #include "rr_graph.h"
 #include "rr_graph2.h"
-#include "rr_graph_tileable_sbox.h"
 #include "route_common.h"
 #include "fpga_x2p_types.h"
 #include "rr_graph_tileable_builder.h"
@@ -66,6 +65,13 @@
 #include "rr_blocks.h"
 #include "chan_node_details.h"
 #include "device_coordinator.h"
+#include "rr_graph_tileable_sbox.h"
+
+/************************************************************************
+ * Local data stuctures in the file 
+ ***********************************************************************/
+typedef std::vector<std::vector<std::vector<int>>> t_track2pin_map;
+typedef std::vector<std::vector<std::vector<int>>> t_pin2track_map;
 
 /************************************************************************
  * Local function in the file 
@@ -538,8 +544,11 @@ void load_one_node_to_rr_graph_fast_lookup(t_rr_graph* rr_graph, int node_index,
  ***********************************************************************/
 static 
 void load_one_grid_rr_nodes_basic_info(const DeviceCoordinator& grid_coordinator, 
-                                       const t_grid_tile& cur_grid, enum e_side io_side, 
-                                       t_rr_graph* rr_graph, size_t* cur_node_id) {
+                                       const t_grid_tile& cur_grid, 
+                                       enum e_side io_side, 
+                                       t_rr_graph* rr_graph, 
+                                       size_t* cur_node_id,
+                                       int wire_to_ipin_switch, int delayless_switch) {
    Side io_side_manager(io_side);
   /* Walk through the height of each grid,
    * get pins and configure the rr_nodes */
@@ -565,6 +574,10 @@ void load_one_grid_rr_nodes_basic_info(const DeviceCoordinator& grid_coordinator
         rr_graph->rr_node[*cur_node_id].ptc_num  = opin_list[pin]; 
         rr_graph->rr_node[*cur_node_id].capacity = 1; 
         rr_graph->rr_node[*cur_node_id].occ = 0; 
+        /* cost index is a FIXED value for OPIN */
+        rr_graph->rr_node[*cur_node_id].cost_index = OPIN_COST_INDEX; 
+        /* Switch info */
+        rr_graph->rr_node[*cur_node_id].driver_switch = delayless_switch; 
         /* fill fast look-up table */
         load_one_node_to_rr_graph_fast_lookup(rr_graph, *cur_node_id, 
                                               rr_graph->rr_node[*cur_node_id].type, 
@@ -586,6 +599,10 @@ void load_one_grid_rr_nodes_basic_info(const DeviceCoordinator& grid_coordinator
         rr_graph->rr_node[*cur_node_id].ptc_num  = opin_list[pin]; 
         rr_graph->rr_node[*cur_node_id].capacity = 1; 
         rr_graph->rr_node[*cur_node_id].occ = 0; 
+        /* cost index is a FIXED value for IPIN */
+        rr_graph->rr_node[*cur_node_id].cost_index = IPIN_COST_INDEX; 
+        /* Switch info */
+        rr_graph->rr_node[*cur_node_id].driver_switch = wire_to_ipin_switch; 
         /* fill fast look-up table */
         load_one_node_to_rr_graph_fast_lookup(rr_graph, *cur_node_id, 
                                               rr_graph->rr_node[*cur_node_id].type, 
@@ -612,6 +629,15 @@ void load_one_grid_rr_nodes_basic_info(const DeviceCoordinator& grid_coordinator
         /* FIXME: need to confirm if the capacity should be the number of pins in this class*/ 
         rr_graph->rr_node[*cur_node_id].capacity = cur_grid.type->class_inf[iclass].num_pins; 
         rr_graph->rr_node[*cur_node_id].occ = 0; 
+        /* cost index is a FIXED value for SOURCE and SINK */
+        if (SOURCE == rr_graph->rr_node[*cur_node_id].type) {
+          rr_graph->rr_node[*cur_node_id].cost_index = SOURCE_COST_INDEX; 
+        }
+        if (SINK == rr_graph->rr_node[*cur_node_id].type) {
+          rr_graph->rr_node[*cur_node_id].cost_index = SINK_COST_INDEX; 
+        }
+        /* Switch info */
+        rr_graph->rr_node[*cur_node_id].driver_switch = delayless_switch; 
         /* TODO: should we set pb_graph_pin here? */
         /* fill fast look-up table */
         load_one_node_to_rr_graph_fast_lookup(rr_graph, *cur_node_id, 
@@ -635,8 +661,10 @@ void load_one_grid_rr_nodes_basic_info(const DeviceCoordinator& grid_coordinator
  ***********************************************************************/
 static 
 void load_one_chan_rr_nodes_basic_info(const DeviceCoordinator& chan_coordinator, 
-                                       t_rr_type chan_type,
+                                       const t_rr_type chan_type,
                                        ChanNodeDetails* chan_details,
+                                       const std::vector<t_segment_inf> segment_infs,
+                                       const int cost_index_offset,
                                        t_rr_graph* rr_graph,
                                        size_t* cur_node_id) {
   /* Check each node_id(potential ptc_num) in the channel :
@@ -657,8 +685,13 @@ void load_one_chan_rr_nodes_basic_info(const DeviceCoordinator& chan_coordinator
       rr_graph->rr_node[*cur_node_id].track_ids.push_back(itrack); 
       rr_graph->rr_node[*cur_node_id].capacity = 1; 
       rr_graph->rr_node[*cur_node_id].occ = 0; 
+      /* assign switch id */
+      size_t seg_id = chan_details->get_track_segment_id(itrack);
+      rr_graph->rr_node[*cur_node_id].driver_switch = segment_infs[seg_id].opin_switch; 
       /* Update chan_details with node_id */
       chan_details->set_track_node_id(itrack, *cur_node_id);
+      /* cost index depends on the segment index */
+      rr_graph->rr_node[*cur_node_id].cost_index = cost_index_offset + seg_id; 
       /* Update node counter */
       (*cur_node_id)++;
       /* Finish here, go to next */
@@ -677,6 +710,11 @@ void load_one_chan_rr_nodes_basic_info(const DeviceCoordinator& chan_coordinator
       rr_graph->rr_node[*cur_node_id].occ = 0; 
       /* Update chan_details with node_id */
       chan_details->set_track_node_id(itrack, *cur_node_id);
+      /* assign switch id */
+      size_t seg_id = chan_details->get_track_segment_id(itrack);
+      rr_graph->rr_node[*cur_node_id].driver_switch = segment_infs[seg_id].opin_switch; 
+      /* cost index depends on the segment index */
+      rr_graph->rr_node[*cur_node_id].cost_index = cost_index_offset + seg_id; 
       /* Update node counter */
       (*cur_node_id)++;
       /* Finish here, go to next */
@@ -755,7 +793,8 @@ void load_rr_nodes_basic_info(t_rr_graph* rr_graph,
                               const DeviceCoordinator& device_size,
                               std::vector<std::vector<t_grid_tile>> grids,
                               std::vector<size_t> chan_width,
-                              std::vector<t_segment_inf> segment_infs) {
+                              std::vector<t_segment_inf> segment_infs,
+                              int wire_to_ipin_switch, int delayless_switch) {
   /* counter */
   size_t cur_node_id = 0;
   /* configure by node type */ 
@@ -780,7 +819,8 @@ void load_rr_nodes_basic_info(t_rr_graph* rr_graph,
       }
       /* Configure rr_nodes for this grid */
       load_one_grid_rr_nodes_basic_info(grid_coordinator, grid[ix][iy], io_side, 
-                                        rr_graph, &cur_node_id);
+                                        rr_graph, &cur_node_id, 
+                                        wire_to_ipin_switch, delayless_switch);
     }
   }
 
@@ -799,7 +839,10 @@ void load_rr_nodes_basic_info(t_rr_graph* rr_graph,
       }
       ChanNodeDetails chanx_details = build_unidir_chan_node_details(chan_width[0], device_size.get_x() - 2, chan_side, segment_infs); 
       /* Configure CHANX in this channel */
-      load_one_chan_rr_nodes_basic_info(chan_coordinator, CHANX, &chanx_details, 
+      load_one_chan_rr_nodes_basic_info(chan_coordinator, CHANX, 
+                                        &chanx_details, 
+                                        segment_infs, 
+                                        CHANX_COST_INDEX_START, 
                                         rr_graph, &cur_node_id);
       /* Rotate the chanx_details by an offset of 1*/
       /* For INC_DIRECTION, we use clockwise rotation 
@@ -834,7 +877,10 @@ void load_rr_nodes_basic_info(t_rr_graph* rr_graph,
       }
       ChanNodeDetails chany_details = build_unidir_chan_node_details(chan_width[1], device_size.get_y() - 2, chan_side, segment_infs); 
       /* Configure CHANX in this channel */
-      load_one_chan_rr_nodes_basic_info(chan_coordinator, CHANY, &chany_details, 
+      load_one_chan_rr_nodes_basic_info(chan_coordinator, CHANY, 
+                                        &chany_details, 
+                                        segment_infs, 
+                                        CHANX_COST_INDEX_START + segment_infs.size(), 
                                         rr_graph, &cur_node_id);
       /* Rotate the chany_details by an offset of 1*/
       /* For INC_DIRECTION, we use clockwise rotation 
@@ -1341,11 +1387,9 @@ void add_one_edge_for_two_rr_nodes(t_rr_graph* rr_graph,
  ***********************************************************************/
 static 
 void build_edges_for_one_tileable_rr_gsb(t_rr_graph* rr_graph, RRGSB* rr_gsb,
-                                         std::vector < std::vector< std::vector<int> > > track2ipin_lookup,
-                                         std::vector < std::vector< std::vector<int> > > opin2track_map,
-                                         std::vector < std::vector< std::vector<int> > > sb_conn,
-                                         int num_directs, t_clb_to_clb_directs* clb_to_clb_directs, 
-                                         int num_switches, int delayless_switch) {
+                                         t_track2pin_map track2ipin_map,
+                                         t_pin2track_map opin2track_map,
+                                         t_track2track_map track2track_map) {
   /* Check rr_gsb */
   assert (NULL != rr_gsb);
   
@@ -1353,6 +1397,7 @@ void build_edges_for_one_tileable_rr_gsb(t_rr_graph* rr_graph, RRGSB* rr_gsb,
   for (size_t side = 0; side < rr_gsb->get_num_sides(); ++side) {
     Side side_manager(side);
     enum e_side gsb_side = side_manager.get_side();
+
     /* Find OPINs */  
     for (size_t inode = 0; inode < rr_gsb->get_num_opin_nodes(gsb_side); ++inode) {
       t_rr_node* opin_node = rr_gsb->get_opin_node(gsb_side, inode); 
@@ -1362,42 +1407,69 @@ void build_edges_for_one_tileable_rr_gsb(t_rr_graph* rr_graph, RRGSB* rr_gsb,
                                           rr_graph->rr_node_indices);
       /* add edges to the src_node */
       add_one_edge_for_two_rr_nodes(rr_graph, src_node_id, opin_node - rr_graph->rr_node,
-                                    delayless_switch);
+                                    opin_node->driver_switch);
+      /* 2. create edges between OPINs and CHANX|CHANY, using opin2track_map */
+      int num_edges = opin2track_map[side_manager.to_size_t()][inode].size();
+      for (int iedge = 0; iedge < num_edges; ++iedge) {
+        int track_node_id = opin2track_map[side_manager.to_size_t()][inode][iedge];
+        /* add edges to the chan_node */
+        add_one_edge_for_two_rr_nodes(rr_graph, opin_node - rr_graph->rr_node, track_node_id,
+                                      rr_graph->rr_node[track_node_id].driver_switch);
+      }
     }
+
     /* Find IPINs */  
     for (size_t inode = 0; inode < rr_gsb->get_num_ipin_nodes(gsb_side); ++inode) {
       t_rr_node* ipin_node = rr_gsb->get_ipin_node(gsb_side, inode); 
-      /* 2. create edges between IPINs and SINKs */
+      /* 3. create edges between IPINs and SINKs */
       int sink_node_id = get_rr_node_index(ipin_node->xlow, ipin_node->ylow, 
                                            SINK, ipin_node->ptc_num,
                                            rr_graph->rr_node_indices);
       /* add edges to connect the IPIN node to SINK nodes */
       add_one_edge_for_two_rr_nodes(rr_graph, ipin_node - rr_graph->rr_node, sink_node_id,
-                                    delayless_switch);
+                                    rr_graph->rr_node[sink_node_id].driver_switch);
+    }
+    /* Find  CHANX or CHANY */
+    for (size_t inode = 0; inode < rr_gsb->get_chan_width(gsb_side); ++inode) {
+      t_rr_node* chan_node = rr_gsb->get_chan_node(gsb_side, inode); 
+      /* 4. create edges between CHANX|CHANY and IPINs, using ipin2track_map */
+      int num_edges = track2ipin_map[side_manager.to_size_t()][inode].size();
+      for (int iedge = 0; iedge < num_edges; ++iedge) {
+        int ipin_node_id = track2ipin_map[side_manager.to_size_t()][inode][iedge];
+        /* add edges to the chan_node */
+        add_one_edge_for_two_rr_nodes(rr_graph, chan_node - rr_graph->rr_node, ipin_node_id,
+                                      rr_graph->rr_node[ipin_node_id].driver_switch);
+      }
+      /* 5. create edges between CHANX|CHANY and CHANX|CHANY, using track2track_map */
+      num_edges = track2track_map[side_manager.to_size_t()][inode].size();
+      for (int iedge = 0; iedge < num_edges; ++iedge) {
+        int track_node_id = track2track_map[side_manager.to_size_t()][inode][iedge];
+        /* add edges to the chan_node */
+        add_one_edge_for_two_rr_nodes(rr_graph, chan_node - rr_graph->rr_node, track_node_id,
+                                      rr_graph->rr_node[track_node_id].driver_switch);
+      }
     }
   }
-
-  /* 3. create edges between CHANX | CHANY and IPINs (connections inside connection blocks) */
-  /* For TOP and BOTTOM  */
-  
 
   return;
 }
 
 /************************************************************************
- * Convert the track_to_ipin_look[0..nodes_per_chan-1][0..height][0..3][pin_numbers]
+ * Convert the pin_to_track_map[0..nodes_per_chan-1][0..height][0..3][pin_numbers]
  * to the existing routing resources in the General Switch Block (GSB)
  * The resulting matrix will be oragnized in 
- * track2ipin_lookup[gsb_side][0..chan_width-1][ipin_indices] 
+ * pin2track_map[gsb_side][0..chan_width-1][ipin_indices] 
  ***********************************************************************/
 static 
-std::vector < std::vector< std::vector<int> > > build_gsb_track_to_ipin_lookup(const RRGSB& rr_gsb,
-                                                                               std::vector< std::vector<t_grid_tile> > grids,
-                                                                               int** Fc_in, 
-                                                                               int***** ipin_to_track_map) {
-  std::vector < std::vector< std::vector<int> > > track2ipin_lookup; /* [0..gsb_side][0..num_tracks][0..Fc-1] */
+t_pin2track_map build_gsb_pin_to_track_map(const RRGSB& rr_gsb,
+                                           std::vector< std::vector<t_grid_tile> > grids,
+                                           int** Fc, 
+                                           bool is_Fc_out,
+                                           int***** pin_to_track_map) {
+  /* [0..gsb_side][0..num_tracks][0..Fc-1] */
+  t_pin2track_map pin2track_map; 
   /* Resize the matrix */ 
-  track2ipin_lookup.resize(rr_gsb.get_num_sides());
+  pin2track_map.resize(rr_gsb.get_num_sides());
 
   /* Walk through each side */
   for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
@@ -1405,28 +1477,151 @@ std::vector < std::vector< std::vector<int> > > build_gsb_track_to_ipin_lookup(c
     enum e_side gsb_side = side_manager.get_side();
     /* Get channel width and resize the matrix */
     size_t chan_width = rr_gsb.get_chan_width(gsb_side);
-    track2ipin_lookup[side].resize(chan_width); 
-    /* Find the ipin nodes */
-    for (size_t inode = 0; inode < rr_gsb.get_num_ipin_nodes(gsb_side); ++inode) {
-      t_rr_node* ipin_node = rr_gsb.get_ipin_node(gsb_side, inode);
+    pin2track_map[side].resize(chan_width); 
+    /* Find the ipin/opin nodes */
+    size_t num_pin_nodes;
+    if (true == is_Fc_out) { /* Fc_out, we consider OPINs */
+      num_pin_nodes = rr_gsb.get_num_opin_nodes(gsb_side); 
+    } else { /* Fc_in, we consider IPINs */
+      num_pin_nodes = rr_gsb.get_num_ipin_nodes(gsb_side); 
+    }
+    for (size_t inode = 0; inode < num_pin_nodes; ++inode) {
+      t_rr_node* pin_node;
+      if (true == is_Fc_out) { /* Fc_out, we consider OPINs */
+        pin_node = rr_gsb.get_opin_node(gsb_side, inode);
+      } else { /* Fc_in, we consider IPINs */
+        pin_node = rr_gsb.get_ipin_node(gsb_side, inode);
+      }
       /* For each IPIN, we find the type_descriptor, offset and pin_side on the grid */
-      int grid_type_id = grids[ipin_node->xlow][ipin_node->ylow].type->index; 
-      int offset = grid[ipin_node->xlow][ipin_node->ylow].offset;
-      enum e_side pin_side = rr_gsb.get_ipin_node_grid_side(gsb_side, inode);
+      int grid_type_id = grids[pin_node->xlow][pin_node->ylow].type->index; 
+      int offset = grid[pin_node->xlow][pin_node->ylow].offset;
+      enum e_side pin_side;
+      if (true == is_Fc_out) { /* Fc_out, we consider OPINs */
+        pin_side = rr_gsb.get_opin_node_grid_side(gsb_side, inode);
+      } else { /* Fc_in, we consider IPINs */
+        pin_side = rr_gsb.get_ipin_node_grid_side(gsb_side, inode);
+      }
       /* Now, we fill the return matrix */
       /* Bypass empty array */
-      if (NULL == ipin_to_track_map[grid_type_id][ipin_node->ptc_num][offset][0]) {
+      if (NULL == pin_to_track_map[grid_type_id][pin_node->ptc_num][offset][0]) {
         continue;
       }
       /* Get each track_id  */
-      for (int iconn = 0; iconn < Fc_in[grid_type_id][ipin_node->ptc_num]; ++iconn) {
-        int track_id = ipin_to_track_map[grid_type_id][ipin_node->ptc_num][offset][pin_side][iconn];
-        track2ipin_lookup[gsb_side][track_id].push_back(inode);
+      for (int iconn = 0; iconn < Fc[grid_type_id][pin_node->ptc_num]; ++iconn) {
+        int track_id = pin_to_track_map[grid_type_id][pin_node->ptc_num][offset][pin_side][iconn];
+        pin2track_map[gsb_side][track_id].push_back(inode);
       }
     }
   }
 
-  return track2ipin_lookup;
+  return pin2track_map;
+}
+
+/************************************************************************
+ * Build the track_to_ipin_map[gsb_side][0..chan_width-1][ipin_indices] 
+ * based on the existing routing resources in the General Switch Block (GSB)
+ * This function supports both X-directional and Y-directional tracks 
+ * The mapping is done in the following steps:
+ * 1. build a list of routing tracks which are allowed for connections
+ *    We will check the Connection Block (CB) population of each routing track. 
+ *    By comparing current chan_y - ylow, we can determine if a CB connection
+ *    is required for each routing track
+ * 2. Divide the routing tracks by segment types, so that we can balance
+ *    the connections between IPINs and different types of routing tracks.
+ * 3. Scale the Fc of each pin to the actual number of routing tracks
+ *    actual_Fc = (int) Fc * num_tracks / chan_width
+ * 4. Build ipin_to_track_map[gsb_side][0..num_ipin_nodes-1][track_indices]
+ *    For each IPIN, we ensure at least one connection to the tracks.
+ *    Then, we assign IPINs to tracks evenly while satisfying the actual_Fc 
+ * 5. Convert the ipin_to_track_map to track_to_ipin_map
+ ***********************************************************************/
+
+/************************************************************************
+ * Build the opin_to_track_map[gsb_side][0..num_opin_nodes-1][track_indices] 
+ * based on the existing routing resources in the General Switch Block (GSB)
+ * This function supports both X-directional and Y-directional tracks 
+ * The mapping is done in the following steps:
+ * 1. Build a list of routing tracks whose starting points locate at this GSB
+ *    (xlow - gsb_x == 0)
+ * 2. Divide the routing tracks by segment types, so that we can balance
+ *    the connections between OPINs and different types of routing tracks.
+ * 3. Scale the Fc of each pin to the actual number of routing tracks
+ *    actual_Fc = (int) Fc * num_tracks / chan_width
+ ***********************************************************************/
+
+/************************************************************************
+ * Add all direct clb-pin-to-clb-pin edges to given opin  
+ ***********************************************************************/
+static 
+void build_direct_connections_for_one_gsb(t_rr_graph* rr_graph,
+                                          const DeviceCoordinator& device_size,
+                                          const DeviceCoordinator& from_grid_coordinator,
+                                          const t_grid_tile& from_grid,
+                                          const int delayless_switch, 
+                                          const int num_directs, 
+                                          const t_direct_inf *directs, 
+                                          const t_clb_to_clb_directs *clb_to_clb_directs) {
+  t_type_ptr grid_type = from_grid.type;
+
+  /* Iterate through all direct connections */
+  for (int i = 0; i < num_directs; ++i) {
+    /* Bypass unmatched direct clb-to-clb connections */
+    if (grid_type != clb_to_clb_directs[i].from_clb_type) {
+      continue;
+    }
+    bool swap;
+    int max_index, min_index;
+    /* Compute index of opin with regards to given pins */ 
+    if ( clb_to_clb_directs[i].from_clb_pin_start_index 
+        > clb_to_clb_directs[i].from_clb_pin_end_index) {
+      swap = true;
+      max_index = clb_to_clb_directs[i].from_clb_pin_start_index;
+      min_index = clb_to_clb_directs[i].from_clb_pin_end_index;
+    } else {
+      swap = false;
+      min_index = clb_to_clb_directs[i].from_clb_pin_start_index;
+      max_index = clb_to_clb_directs[i].from_clb_pin_end_index;
+    }
+    /* get every opin in the range */
+    for (int opin = min_index; opin <= max_index; ++opin) {
+      int offset = opin - min_index;
+      /* This opin is specified to connect directly to an ipin, now compute which ipin to connect to */
+      DeviceCoordinator to_grid_coordinator(from_grid_coordinator.get_x() + directs[i].x_offset, 
+                                            from_grid_coordinator.get_y() + directs[i].y_offset);
+      if (  (to_grid_coordinator.get_x() < device_size.get_x() - 1) 
+         && (to_grid_coordinator.get_y() < device_size.get_y() - 1) ) { 
+        int ipin = OPEN;
+        if ( clb_to_clb_directs[i].to_clb_pin_start_index 
+          > clb_to_clb_directs[i].to_clb_pin_end_index) {
+          if (true == swap) {
+            ipin = clb_to_clb_directs[i].to_clb_pin_end_index + offset;
+          } else {
+            ipin = clb_to_clb_directs[i].to_clb_pin_start_index - offset;
+          }
+        } else {
+          if(true == swap) {
+            ipin = clb_to_clb_directs[i].to_clb_pin_end_index - offset;
+          } else {
+            ipin = clb_to_clb_directs[i].to_clb_pin_start_index + offset;
+          }
+        }
+        /* Get the pin index in the rr_graph */
+        int from_grid_ofs = from_grid.offset;
+        int to_grid_ofs = grid[to_grid_coordinator.get_x()][to_grid_coordinator.get_y()].offset;
+        int opin_node_id = get_rr_node_index(from_grid_coordinator.get_x(), 
+                                             from_grid_coordinator.get_y() - from_grid_ofs, 
+                                             OPIN, opin, rr_graph->rr_node_indices);
+        int ipin_node_id = get_rr_node_index(to_grid_coordinator.get_x(), 
+                                             to_grid_coordinator.get_y() - to_grid_ofs, 
+                                             IPIN, ipin, rr_graph->rr_node_indices);
+        /* add edges to the opin_node */
+        add_one_edge_for_two_rr_nodes(rr_graph, opin_node_id, ipin_node_id,
+                                      delayless_switch);
+      }
+    }
+  }
+
+  return;
 }
 
 
@@ -1448,32 +1643,70 @@ void build_rr_graph_edges(t_rr_graph* rr_graph,
                           std::vector< std::vector<t_grid_tile> > grids,
                           std::vector<size_t> device_chan_width, 
                           std::vector<t_segment_inf> segment_inf,
-                          int L_num_types, t_type_ptr types,
                           int** Fc_in, int** Fc_out,
                           int***** ipin_to_track_map, int***** opin_to_track_map,  
-                          vtr::NdMatrix<std::vector<int>,3> switch_block_conn,
-                          int num_directs, t_clb_to_clb_directs* clb_to_clb_directs, 
-                          int num_switches, int delayless_switch) {
+                          enum e_switch_block_type sb_type, int Fs) {
+
   DeviceCoordinator device_range(device_size.get_x() - 1, device_size.get_y() - 1);
+
   /* Go Switch Block by Switch Block */
   for (size_t ix = 0; ix < device_size.get_x(); ++ix) {
     for (size_t iy = 0; iy < device_size.get_y(); ++iy) { 
+
       DeviceCoordinator gsb_coordinator(ix, iy);
       /* Create a GSB object */
       RRGSB rr_gsb = build_one_tileable_rr_gsb(device_range, device_chan_width, segment_inf, gsb_coordinator, rr_graph);
+
       /* adapt the track_to_ipin_lookup for the GSB nodes */      
-      std::vector < std::vector< std::vector<int> > > track2ipin_lookup; /* [0..gsb_side][0..num_tracks][0..Fc-1] */
-      track2ipin_lookup = build_gsb_track_to_ipin_lookup(rr_gsb, grids, Fc_in, ipin_to_track_map);
+      t_pin2track_map ipin2track_map; /* [0..track_gsb_side][0..num_tracks][ipin_indices] */
+      ipin2track_map = build_gsb_pin_to_track_map(rr_gsb, grids, Fc_in, false, ipin_to_track_map);
+
       /* adapt the opin_to_track_map for the GSB nodes */      
-      std::vector < std::vector< std::vector<int> > > opin2track_map; /* [0..gsb_side][0..num_opin_node][0..Fc-1] */
+      t_pin2track_map opin2track_map; /* [0..gsb_side][0..num_opin_node][track_indices] */
+      opin2track_map = build_gsb_pin_to_track_map(rr_gsb, grids, Fc_out, true, opin_to_track_map);
+
       /* adapt the switch_block_conn for the GSB nodes */      
-      std::vector < std::vector< std::vector<int> > > sb_conn; /* [0..from_gsb_side][0..to_gsb_side][0..chan_width-1] */
+      t_track2track_map sb_conn; /* [0..from_gsb_side][0..chan_width-1][track_indices] */
+      sb_conn = build_gsb_track_to_track_map(rr_graph, rr_gsb, sb_type, Fs, segment_inf);
+
       /* Build edges for a GSB */
       build_edges_for_one_tileable_rr_gsb(rr_graph, &rr_gsb, 
-                                          track2ipin_lookup, opin2track_map, sb_conn, 
-                                          num_directs, clb_to_clb_directs,
-                                          num_switches, delayless_switch);
+                                          ipin2track_map, opin2track_map, 
+                                          sb_conn);
       /* Finish this GSB, go to the next*/
+    }
+  }
+
+  return;
+}
+
+/************************************************************************
+ * Build direct edges for Grids *
+ ***********************************************************************/
+static 
+void build_rr_graph_direct_connections(t_rr_graph* rr_graph, 
+                                       const DeviceCoordinator& device_size,
+                                       std::vector< std::vector<t_grid_tile> > grids, 
+                                       const int delayless_switch, 
+                                       const int num_directs, 
+                                       const t_direct_inf *directs, 
+                                       const t_clb_to_clb_directs *clb_to_clb_directs) {
+  for (size_t ix = 0; ix < device_size.get_x(); ++ix) {
+    for (size_t iy = 0; iy < device_size.get_y(); ++iy) { 
+      /* Skip EMPTY tiles */
+      if (EMPTY_TYPE == grids[ix][iy].type) {
+        continue;
+      }
+      /* Skip height>1 tiles (mostly heterogeneous blocks) */
+      if (0 < grids[ix][iy].offset) {
+        continue;
+      }
+      DeviceCoordinator from_grid_coordinator(ix, iy);
+      build_direct_connections_for_one_gsb(rr_graph, device_size,
+                                           from_grid_coordinator,
+                                           grids[ix][iy],
+                                           delayless_switch, 
+                                           num_directs, directs, clb_to_clb_directs);
     }
   }
 
@@ -1524,7 +1757,7 @@ void build_tileable_unidir_rr_graph(INP int L_num_types,
                                     INP struct s_grid_tile **L_grid, INP int chan_width,
                                     INP enum e_switch_block_type sb_type, INP int Fs, 
                                     INP int num_seg_types,
-                                    INP int num_switches, INP t_segment_inf * segment_inf,
+                                    INP t_segment_inf * segment_inf,
                                     INP int delayless_switch,
                                     INP t_timing_inf timing_inf, INP int wire_to_ipin_switch,
                                     INP enum e_base_cost_type base_cost_type, 
@@ -1593,14 +1826,15 @@ void build_tileable_unidir_rr_graph(INP int L_num_types,
    *    grid_info : pb_graph_pin
    ***********************************************************************/
   alloc_rr_graph_fast_lookup(device_size, &rr_graph);
-  load_rr_nodes_basic_info(&rr_graph, device_size, grids, device_chan_width, segment_infs); 
+  load_rr_nodes_basic_info(&rr_graph, device_size, grids, device_chan_width, segment_infs,
+                           wire_to_ipin_switch, delayless_switch); 
 
   /************************************************************************
-   * 3.1 Create the connectivity of OPINs
+   * 5.1 Create the connectivity of OPINs
    *     a. Evenly assign connections to OPINs to routing tracks
    *     b. the connection pattern should be same across the fabric
    *
-   * 3.2 Create the connectivity of IPINs 
+   * 5.2 Create the connectivity of IPINs 
    *     a. Evenly assign connections from routing tracks to IPINs
    *     b. the connection pattern should be same across the fabric
    ***********************************************************************/
@@ -1640,11 +1874,6 @@ void build_tileable_unidir_rr_graph(INP int L_num_types,
   }
 
   /************************************************************************
-   * 4. Build switch block connection matrix 
-   ***********************************************************************/
-  vtr::NdMatrix<std::vector<int>,3> switch_block_conn = alloc_and_load_tileable_switch_block_conn(chan_width, sb_type, Fs);
-
-  /************************************************************************
    * 6. Build the connections tile by tile:
    *    We classify rr_nodes into a general switch block (GSB) data structure
    *    where we create edges to each rr_nodes in the GSB with respect to
@@ -1652,19 +1881,25 @@ void build_tileable_unidir_rr_graph(INP int L_num_types,
    *    In addition, we will also handle direct-connections:
    *    Add edges that bridge OPINs and IPINs to the rr_graph
    ***********************************************************************/
+
+  /* Create edges for a tileable rr_graph */
+  build_rr_graph_edges(&rr_graph, device_size, grids, device_chan_width, segment_infs, 
+                       Fc_in, Fc_out, ipin_to_track_map, opin_to_track_map, 
+                       sb_type, Fs);
+
+  /************************************************************************
+   * 7. Build direction connection lists
+   ***********************************************************************/
   /* Create data structure of direct-connections */
   t_clb_to_clb_directs* clb_to_clb_directs = NULL;
   if (num_directs > 0) {
     clb_to_clb_directs = alloc_and_load_clb_to_clb_directs(directs, num_directs);
   }
-
-  /* Create edges for a tileable rr_graph */
-  build_rr_graph_edges(&rr_graph, device_size, grids, device_chan_width, segment_infs, 
-                       L_num_types, types, Fc_in, Fc_out, ipin_to_track_map, opin_to_track_map, switch_block_conn,  
-                       num_directs, clb_to_clb_directs, num_switches, delayless_switch);
+  build_rr_graph_direct_connections(&rr_graph, device_size, grids, delayless_switch, 
+                                    num_directs, directs, clb_to_clb_directs);
 
   /************************************************************************
-   * 7. Allocate external data structures
+   * 8. Allocate external data structures
    *    a. cost_index
    *    b. RC tree
    ***********************************************************************/
@@ -1672,7 +1907,7 @@ void build_tileable_unidir_rr_graph(INP int L_num_types,
                      wire_to_ipin_switch, base_cost_type);
 
   /************************************************************************
-   * 8. Sanitizer for the rr_graph, check connectivities of rr_nodes
+   * 9. Sanitizer for the rr_graph, check connectivities of rr_nodes
    ***********************************************************************/
 
   /* We set global variables for rr_nodes here, 
@@ -1682,7 +1917,7 @@ void build_tileable_unidir_rr_graph(INP int L_num_types,
   rr_node_indices = rr_graph.rr_node_indices;
 
   /************************************************************************
-   * 9. Free all temp stucts 
+   * 10. Free all temp stucts 
    ***********************************************************************/
 
   /* Free all temp structs */
