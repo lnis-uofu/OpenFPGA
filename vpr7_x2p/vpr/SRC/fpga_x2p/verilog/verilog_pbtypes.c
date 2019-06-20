@@ -1767,9 +1767,11 @@ void dump_verilog_phy_pb_graph_node_rec(t_sram_orgz_info* cur_sram_orgz_info,
   /* Definition ends*/
 
   /* Local wires for memory configurations */
-  dump_verilog_sram_config_bus_internal_wires(fp, cur_sram_orgz_info, 
+  if (0 < num_conf_bits) { 
+    dump_verilog_sram_config_bus_internal_wires(fp, cur_sram_orgz_info, 
                                               stamped_sram_cnt, 
                                               stamped_sram_cnt + num_conf_bits - 1); 
+  }
 
   /* Quote all child pb_types */
   for (ipb = 0; ipb < cur_pb_type->modes[mode_index].num_pb_type_children; ipb++) {
