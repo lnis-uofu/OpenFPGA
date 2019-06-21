@@ -125,6 +125,24 @@ std::vector<size_t> RRChan::get_segment_ids() const {
   return seg_list;
 }
 
+/* Get a list of nodes whose segment_id is specified  */
+std::vector<size_t> RRChan::get_node_ids_by_segment_ids(size_t seg_id) const {
+  std::vector<size_t> node_list;
+
+  /* make sure a clean start */
+  node_list.clear();
+
+  /* Traverse node_segments */
+  for (size_t inode = 0; inode < get_chan_width(); ++inode) {
+    /* Try to find the node_segment id in the list */
+    if ( seg_id == node_segments_[inode] ) {
+      node_list.push_back(inode);
+    }
+  }
+
+  return node_list;
+} 
+
 /* Mutators */
 void RRChan::set(const RRChan& rr_chan) {
   /* Ensure a clean start */
@@ -609,6 +627,22 @@ RRChan RRGSB::get_chan(enum e_side side) const {
   assert( validate_side(side) );
 
   return chan_node_[side_manager.to_size_t()]; 
+} 
+
+/* Get a list of segments used in this routing channel */
+std::vector<size_t> RRGSB::get_chan_segment_ids(enum e_side side) const {
+  Side side_manager(side);
+  assert(side_manager.validate());
+ 
+  /* Ensure the side is valid in the context of this switch block */ 
+  assert( validate_side(side) );
+
+  return get_chan(side).get_segment_ids(); 
+}
+
+/* Get a list of rr_nodes whose sed_id is specified */
+std::vector<size_t> RRGSB::get_chan_node_ids_by_segment_ids(enum e_side side, size_t seg_id) const {
+  return get_chan(side).get_node_ids_by_segment_ids(seg_id);
 } 
 
 /* get a rr_node at a given side and track_id */
@@ -1302,6 +1336,24 @@ enum e_side RRGSB::get_cb_chan_side(t_rr_type cb_type) const {
   }
 }
 
+/* Get the side of routing channel in the GSB according to the side of IPIN */
+enum e_side RRGSB::get_cb_chan_side(enum e_side ipin_side) const {
+  switch(ipin_side) {
+  case TOP:
+    return LEFT;
+  case RIGHT:
+    return TOP;
+  case BOTTOM:
+    return LEFT;
+  case LEFT:
+    return TOP;
+  default: 
+    vpr_printf(TIO_MESSAGE_ERROR, 
+              "(File:%s, [LINE%d])Invalid type of ipin_side!\n", 
+              __FILE__, __LINE__);
+    exit(1);
+  }
+}
 
 DeviceCoordinator RRGSB::get_side_block_coordinator(enum e_side side) const {
   Side side_manager(side); 
@@ -1333,6 +1385,13 @@ DeviceCoordinator RRGSB::get_side_block_coordinator(enum e_side side) const {
                __FILE__, __LINE__);
     exit(1);
   }
+
+  return ret;
+}
+
+DeviceCoordinator RRGSB::get_grid_coordinator() const {
+  DeviceCoordinator ret(get_sb_x(), get_sb_y());
+  ret.set_y(ret.get_y() + 1);
 
   return ret;
 }

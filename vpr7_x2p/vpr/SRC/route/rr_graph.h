@@ -59,9 +59,9 @@ alloc_and_load_actual_fc(INP int L_num_types, INP t_type_ptr types,
 		INP int nodes_per_chan, INP boolean is_Fc_out,
 		INP enum e_directionality directionality, OUTP boolean * Fc_clipped, INP boolean ignore_Fc_0);
 
-void rr_graph_externals(t_timing_inf timing_inf,
-		t_segment_inf * segment_inf, int num_seg_types, int nodes_per_chan,
-		int wire_to_ipin_switch, enum e_base_cost_type base_cost_type);
+void rr_graph_externals(const t_timing_inf timing_inf,
+		const t_segment_inf * segment_inf, const int num_seg_types, const int nodes_per_chan,
+		const int wire_to_ipin_switch, const enum e_base_cost_type base_cost_type);
 
 /* Xifan Tang: Functions shared by tileable rr_graph generator */
 

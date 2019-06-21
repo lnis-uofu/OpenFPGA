@@ -458,9 +458,7 @@ void build_rr_graph(INP t_graph_type graph_type, INP int L_num_types,
 
 	check_rr_graph(graph_type, types, L_nx, L_ny, nodes_per_chan, Fs,
 			num_seg_types, num_switches, segment_inf, global_route_switch,
-			delayless_switch, wire_to_ipin_switch, seg_details, Fc_in, Fc_out,
-			opin_to_track_map, ipin_to_track_map, track_to_ipin_lookup,
-			switch_block_conn, perturb_ipins);
+			delayless_switch, wire_to_ipin_switch, Fc_in, Fc_out);
 
 	/* Free all temp structs */
 	if (seg_details) {
@@ -514,9 +512,9 @@ void build_rr_graph(INP t_graph_type graph_type, INP int L_num_types,
 	}
 }
 
-void rr_graph_externals(t_timing_inf timing_inf,
-		t_segment_inf * segment_inf, int num_seg_types, int nodes_per_chan,
-		int wire_to_ipin_switch, enum e_base_cost_type base_cost_type) {
+void rr_graph_externals(const t_timing_inf timing_inf,
+		                const t_segment_inf * segment_inf, const int num_seg_types, const int nodes_per_chan,
+                 		const int wire_to_ipin_switch, const enum e_base_cost_type base_cost_type) {
 	add_rr_graph_C_from_switches(timing_inf.C_ipin_cblock);
 	alloc_and_load_rr_indexed_data(segment_inf, num_seg_types, rr_node_indices,
 			nodes_per_chan, wire_to_ipin_switch, base_cost_type);

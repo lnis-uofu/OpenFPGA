@@ -84,6 +84,7 @@ class RRChan {
     int get_node_segment(size_t track_num) const;
     bool is_mirror(const RRChan& cand) const; /* evaluate if two RR_chan is mirror to each other */
     std::vector<size_t> get_segment_ids() const; /* Get a list of segments used in this routing channel */
+    std::vector<size_t> get_node_ids_by_segment_ids(size_t seg_id) const; /* Get a list of segments used in this routing channel */
   public: /* Mutators */
     void set(const RRChan&); /* copy */
     void set_type(t_rr_type type); /* modify type */
@@ -188,6 +189,8 @@ class RRGSB {
     size_t get_max_chan_width() const; /* Get the maximum number of routing tracks on all sides */
     enum PORTS get_chan_node_direction(enum e_side side, size_t track_id) const; /* Get the direction of a rr_node at a given side and track_id */
     RRChan get_chan(enum e_side side) const; /* get a rr_node at a given side and track_id */
+    std::vector<size_t> get_chan_segment_ids(enum e_side side) const; /* Get a list of segments used in this routing channel */
+    std::vector<size_t> get_chan_node_ids_by_segment_ids(enum e_side side, size_t seg_id) const; /* Get a list of segments used in this routing channel */
     t_rr_node* get_chan_node(enum e_side side, size_t track_id) const; /* get a rr_node at a given side and track_id */
     size_t get_chan_node_segment(enum e_side side, size_t track_id) const; /* get the segment id of a channel rr_node */
     size_t get_num_ipin_nodes(enum e_side side) const; /* Get the number of IPIN rr_nodes on a side */
@@ -232,7 +235,9 @@ class RRGSB {
     size_t get_cb_y(t_rr_type cb_type) const; /* get the y coordinator of this X/Y-direction block */
     DeviceCoordinator get_cb_coordinator(t_rr_type cb_type) const; /* Get the coordinator of the X/Y-direction CB */
     enum e_side get_cb_chan_side(t_rr_type cb_type) const; /* get the side of a Connection block */
+    enum e_side get_cb_chan_side(enum e_side ipin_side) const; /* get the side of a Connection block */
     DeviceCoordinator get_side_block_coordinator(enum e_side side) const;
+    DeviceCoordinator get_grid_coordinator() const;
   public: /* Verilog writer */
     const char* gen_sb_verilog_module_name() const;
     const char* gen_sb_verilog_instance_name() const;
