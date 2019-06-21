@@ -13,7 +13,7 @@ ChanNodeDetails build_unidir_chan_node_details(const size_t chan_width, const si
 
 void build_tileable_unidir_rr_graph(INP const int L_num_types,
                                     INP t_type_ptr types, INP const int L_nx, INP const int L_ny,
-                                    INP const struct s_grid_tile **L_grid, INP const int chan_width,
+                                    INP struct s_grid_tile **L_grid, INP const int chan_width,
                                     INP const enum e_switch_block_type sb_type, INP const int Fs, 
                                     INP const int num_seg_types,
                                     INP const t_segment_inf * segment_inf,

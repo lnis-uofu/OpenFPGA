@@ -16,6 +16,8 @@
 #include "read_xml_arch_file.h"
 #include "ReadOptions.h"
 
+#include "rr_graph_tileable_builder.h"
+
 /* Xifan TANG: SWSEG SUPPORT */
 #include "rr_graph_swseg.h" 
 /* end */
@@ -180,10 +182,31 @@ static void print_distribution(FILE * fptr,
 static t_seg_details *alloc_and_load_global_route_seg_details(
 		INP int nodes_per_chan, INP int global_route_switch);
 
+static 
+void build_classic_rr_graph(INP t_graph_type graph_type, INP int L_num_types,
+							INP t_type_ptr types, INP int L_nx, INP int L_ny,
+							INP struct s_grid_tile **L_grid, INP int chan_width,
+							INP struct s_chan_width_dist *chan_capacity_inf,
+							INP enum e_switch_block_type sb_type, INP int Fs, INP int num_seg_types,
+							INP int num_switches, INP t_segment_inf * segment_inf,
+							INP int global_route_switch, INP int delayless_switch,
+							INP t_timing_inf timing_inf, INP int wire_to_ipin_switch,
+							INP enum e_base_cost_type base_cost_type, INP t_direct_inf *directs, 
+							INP int num_directs, INP boolean ignore_Fc_0, OUTP int *Warnings,
+    					    /*Xifan TANG: Switch Segment Pattern Support*/
+    					    INP int num_swseg_pattern, INP t_swseg_pattern_inf* swseg_patterns,
+    					    INP boolean opin_to_cb_fast_edges, INP boolean opin_logic_eq_edges);
+
+
 /* UDSD Modifications by WMF End */
 
 /******************* Subroutine definitions *******************************/
 
+/*************************************************************************
+ * Top-level function of rr_graph builder
+ * Xifan TANG: this top function can branch between tileable rr_graph generator
+ * and the classical rr_graph generator
+ ************************************************************************/
 void build_rr_graph(INP t_graph_type graph_type, INP int L_num_types,
 		INP t_type_ptr types, INP int L_nx, INP int L_ny,
 		INP struct s_grid_tile **L_grid, INP int chan_width,
@@ -197,6 +220,50 @@ void build_rr_graph(INP t_graph_type graph_type, INP int L_num_types,
         /*Xifan TANG: Switch Segment Pattern Support*/
         INP int num_swseg_pattern, INP t_swseg_pattern_inf* swseg_patterns,
         INP boolean opin_to_cb_fast_edges, INP boolean opin_logic_eq_edges) {
+  /* Branch here */
+  if (GRAPH_UNIDIR_TILEABLE == graph_type) {
+    build_tileable_unidir_rr_graph(L_num_types, types,
+                                   L_nx, L_ny, L_grid, 
+                                   chan_width,
+                                   sb_type, Fs, num_seg_types, segment_inf,
+                                   num_switches, global_route_switch, delayless_switch,
+                                   timing_inf, wire_to_ipin_switch,
+                                   base_cost_type, directs, num_directs, ignore_Fc_0, Warnings); 
+  } else {
+    build_classic_rr_graph(graph_type, L_num_types, types,
+                           L_nx, L_ny, L_grid, 
+                           chan_width, chan_capacity_inf,
+                           sb_type, Fs, num_seg_types, num_switches, segment_inf,
+                           global_route_switch, delayless_switch,
+                           timing_inf, wire_to_ipin_switch,
+                           base_cost_type, directs, num_directs, ignore_Fc_0, Warnings,
+                           num_swseg_pattern, swseg_patterns, 
+                           opin_to_cb_fast_edges, opin_logic_eq_edges); 
+   
+  }
+
+  return;
+}
+
+
+/* Xifan TANG: I rename the classical rr_graph builder here. 
+ * We can have a clean build_rr_graph top function, 
+ * where we branch for tileable routing and classical */
+static 
+void build_classic_rr_graph(INP t_graph_type graph_type, INP int L_num_types,
+							INP t_type_ptr types, INP int L_nx, INP int L_ny,
+							INP struct s_grid_tile **L_grid, INP int chan_width,
+							INP struct s_chan_width_dist *chan_capacity_inf,
+							INP enum e_switch_block_type sb_type, INP int Fs, INP int num_seg_types,
+							INP int num_switches, INP t_segment_inf * segment_inf,
+							INP int global_route_switch, INP int delayless_switch,
+							INP t_timing_inf timing_inf, INP int wire_to_ipin_switch,
+							INP enum e_base_cost_type base_cost_type, INP t_direct_inf *directs, 
+							INP int num_directs, INP boolean ignore_Fc_0, OUTP int *Warnings,
+    					    /*Xifan TANG: Switch Segment Pattern Support*/
+    					    INP int num_swseg_pattern, INP t_swseg_pattern_inf* swseg_patterns,
+    					    INP boolean opin_to_cb_fast_edges, INP boolean opin_logic_eq_edges) {
+
 	/* Temp structures used to build graph */
 	int nodes_per_chan, i, j;
 	t_seg_details *seg_details = NULL;

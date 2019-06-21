@@ -2062,6 +2062,25 @@ static void ProcessLayout(INOUTP ezxml_t Node, OUTP struct s_arch *arch) {
 					arch->clb_grid.Aspect);
 		}
 	}
+	/* Xifan TANG: Tileable Routing Support 
+     * Load tileable_routing if applicable 
+     */
+    arch->tileable = false;
+	Prop = FindProperty(Node, "tileable_routing", FALSE);
+	if (Prop != NULL) {
+        if ( 0 == strcmp("on", Prop)) {
+          arch->tileable = true;
+        }
+		ezxml_set_attr(Node, "tileable_routing", NULL);
+	}
+    if (true == arch->tileable) {
+       vpr_printf(TIO_MESSAGE_INFO,
+			      "Tileable routing architecture generation is enabled.\n");
+    } else {
+       vpr_printf(TIO_MESSAGE_INFO,
+			      "Tileable routing architecture generation is disable. FPGA may not be tileable! \n");
+    }
+    
 }
 
 /* Takes in node pointing to <device> and loads all the

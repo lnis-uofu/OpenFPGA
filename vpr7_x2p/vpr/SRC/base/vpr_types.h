@@ -815,6 +815,7 @@ struct s_det_routing_arch {
 	float R_minW_pmos;
     int num_swseg_pattern; /*Xifan TANG: Switch Segment Pattern Support*/
     short opin_to_wire_switch; /* mrFPGA: Xifan TANG*/
+    bool tileable; /* Xifan Tang: tileable rr_graph support */
 };
 
 /* Defines the detailed routing architecture of the FPGA.  Only important   *
