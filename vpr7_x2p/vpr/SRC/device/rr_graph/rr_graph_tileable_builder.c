@@ -361,7 +361,8 @@ enum e_side determine_io_grid_pin_side(const DeviceCoordinator& device_size,
   } else if (0 == grid_coordinator.get_x()) { /* LEFT side IO of FPGA */
     return RIGHT; /* Such I/O has only Right side pins */
   } else {
-    vpr_printf(TIO_MESSAGE_ERROR, "(File:%s, [LINE%d])I/O Grid is in the center part of FPGA! Currently unsupported!\n",
+    vpr_printf(TIO_MESSAGE_ERROR, 
+               "(File:%s, [LINE%d]) I/O Grid is in the center part of FPGA! Currently unsupported!\n",
                __FILE__, __LINE__);
     exit(1);
   }
@@ -458,7 +459,7 @@ std::vector<size_t> estimate_num_rr_nodes_per_type(const DeviceCoordinator& devi
       if (IO_TYPE == grid[ix][iy].type) {
         DeviceCoordinator io_device_size(device_size.get_x() - 1, device_size.get_y() - 1);
         DeviceCoordinator grid_coordinator(ix, iy);
-        io_side = determine_io_grid_pin_side(device_size, grid_coordinator);
+        io_side = determine_io_grid_pin_side(io_device_size, grid_coordinator);
       }
       /* get the number of OPINs */
       num_rr_nodes_per_type[OPIN] += get_grid_num_pins(grids[ix][iy], DRIVER, io_side);
@@ -532,8 +533,9 @@ void load_one_node_to_rr_graph_fast_lookup(t_rr_graph* rr_graph, const int node_
                                            const int ptc_num) {
   /* check the size of ivec (nelem), 
    * if the ptc_num exceeds the size limit, we realloc the ivec */
-  if (ptc_num > rr_graph->rr_node_indices[node_type][x][y].nelem - 1) {
-    rr_graph->rr_node_indices[node_type][x][y].list = (int*) my_realloc(rr_graph->rr_node_indices[node_type][x][y].list, sizeof(int) * ptc_num); 
+  if (ptc_num + 1 > rr_graph->rr_node_indices[node_type][x][y].nelem) {
+    rr_graph->rr_node_indices[node_type][x][y].nelem = ptc_num + 1;
+    rr_graph->rr_node_indices[node_type][x][y].list = (int*) my_realloc(rr_graph->rr_node_indices[node_type][x][y].list, sizeof(int) * (ptc_num + 1)); 
   }
   /* fill the lookup table */
   rr_graph->rr_node_indices[node_type][x][y].list[ptc_num] = node_index;
@@ -818,7 +820,7 @@ void load_rr_nodes_basic_info(t_rr_graph* rr_graph,
       /* If this is the block on borders, we consider IO side */
       if (IO_TYPE == grid[ix][iy].type) {
         DeviceCoordinator io_device_size(device_size.get_x() - 1, device_size.get_y() - 1);
-        io_side = determine_io_grid_pin_side(device_size, grid_coordinator);
+        io_side = determine_io_grid_pin_side(io_device_size, grid_coordinator);
       }
       /* Configure rr_nodes for this grid */
       load_one_grid_rr_nodes_basic_info(grid_coordinator, grid[ix][iy], io_side, 
@@ -920,8 +922,6 @@ void load_rr_nodes_basic_info(t_rr_graph* rr_graph,
     std::reverse(rr_graph->rr_node[inode].track_ids.begin(),
                  rr_graph->rr_node[inode].track_ids.end() );
   }
-
-
 
   return;
 }
@@ -1107,8 +1107,10 @@ void build_tileable_unidir_rr_graph(INP const int L_num_types,
                                     INP const enum e_switch_block_type sb_type, INP const int Fs, 
                                     INP const int num_seg_types,
                                     INP const t_segment_inf * segment_inf,
-                                    INP const int num_switches, INP int const delayless_switch, const int global_route_switch,
-                                    INP const t_timing_inf timing_inf, INP int const wire_to_ipin_switch,
+                                    INP const int num_switches, INP const int delayless_switch, 
+                                    INP const int global_route_switch,
+                                    INP const t_timing_inf timing_inf, 
+                                    INP const int wire_to_ipin_switch,
                                     INP const enum e_base_cost_type base_cost_type, 
                                     INP const t_direct_inf *directs, 
                                     INP const int num_directs, INP const boolean ignore_Fc_0, 
@@ -1122,6 +1124,10 @@ void build_tileable_unidir_rr_graph(INP const int L_num_types,
   /* Reset warning flag */
   *Warnings = RR_GRAPH_NO_WARN;
 
+  /* Print useful information on screen */
+  vpr_printf(TIO_MESSAGE_INFO, 
+             "Creating tileable Routing Resource(RR) graph...\n");
+
   /* Create a matrix of grid */
   DeviceCoordinator device_size(L_nx + 2, L_ny + 2);
   std::vector< std::vector<t_grid_tile> > grids;
@@ -1129,7 +1135,7 @@ void build_tileable_unidir_rr_graph(INP const int L_num_types,
   grids.resize(L_nx + 2);
   for (int ix = 0; ix < (L_nx + 2); ++ix) {
     grids[ix].resize(L_ny + 2);
-    for (int iy = 0; ix < (L_ny + 2); ++iy) {
+    for (int iy = 0; iy < (L_ny + 2); ++iy) {
       grids[ix][iy] = L_grid[ix][iy];
     }
   }
@@ -1168,6 +1174,9 @@ void build_tileable_unidir_rr_graph(INP const int L_num_types,
     tileable_rr_graph_init_rr_node(&(rr_graph.rr_node[i]));
   }
 
+  vpr_printf(TIO_MESSAGE_INFO, 
+             "%d RR graph nodes allocated.\n", rr_graph.num_rr_nodes);
+
   /************************************************************************
    * 4. Initialize the basic information of rr_nodes:
    *    coordinators: xlow, ylow, xhigh, yhigh, 
@@ -1175,8 +1184,12 @@ void build_tileable_unidir_rr_graph(INP const int L_num_types,
    *    grid_info : pb_graph_pin
    ***********************************************************************/
   alloc_rr_graph_fast_lookup(device_size, &rr_graph);
+
   load_rr_nodes_basic_info(&rr_graph, device_size, grids, device_chan_width, segment_infs,
                            wire_to_ipin_switch, delayless_switch); 
+
+  vpr_printf(TIO_MESSAGE_INFO, 
+             "Built node basic information and fast-look.\n");
 
   /************************************************************************
    * 5.1 Create the connectivity of OPINs
@@ -1205,6 +1218,9 @@ void build_tileable_unidir_rr_graph(INP const int L_num_types,
     *Warnings |= RR_GRAPH_WARN_FC_CLIPPED;
   }
 
+  vpr_printf(TIO_MESSAGE_INFO, 
+             "Actual Fc numbers loaded.\n");
+
   /************************************************************************
    * 6. Build the connections tile by tile:
    *    We classify rr_nodes into a general switch block (GSB) data structure
@@ -1219,6 +1235,9 @@ void build_tileable_unidir_rr_graph(INP const int L_num_types,
                        Fc_in, Fc_out,
                        sb_type, Fs);
 
+  vpr_printf(TIO_MESSAGE_INFO, 
+             "Regular edges of RR graph built.\n");
+
   /************************************************************************
    * 7. Build direction connection lists
    ***********************************************************************/
@@ -1229,6 +1248,9 @@ void build_tileable_unidir_rr_graph(INP const int L_num_types,
   }
   build_rr_graph_direct_connections(&rr_graph, device_size, grids, delayless_switch, 
                                     num_directs, directs, clb_to_clb_directs);
+
+  vpr_printf(TIO_MESSAGE_INFO, 
+             "Direct-connection edges of RR graph built.\n");
 
   /************************************************************************
    * 8. Allocate external data structures
@@ -1246,9 +1268,19 @@ void build_tileable_unidir_rr_graph(INP const int L_num_types,
   /************************************************************************
    * 9. Sanitizer for the rr_graph, check connectivities of rr_nodes
    ***********************************************************************/
+
+  /* Print useful information on screen */
+  vpr_printf(TIO_MESSAGE_INFO, 
+             "Create a tileable RR graph with %d nodes\n", 
+             num_rr_nodes);
+
   check_rr_graph(GRAPH_UNIDIR_TILEABLE, types, L_nx, L_ny, chan_width, Fs,
                  num_seg_types, num_switches, segment_inf, global_route_switch,
                  delayless_switch, wire_to_ipin_switch, Fc_in, Fc_out);
+
+  /* Print useful information on screen */
+  vpr_printf(TIO_MESSAGE_INFO, 
+             "Tileable Routing Resource(RR) graph pass checking.\n");
 
 
   /************************************************************************
