@@ -31,7 +31,9 @@ RRGSB build_one_tileable_rr_gsb(const DeviceCoordinator& device_range,
                                 const DeviceCoordinator& gsb_coordinator, 
                                 t_rr_graph* rr_graph);
 
-void build_edges_for_one_tileable_rr_gsb(const t_rr_graph* rr_graph, const RRGSB* rr_gsb,
+void build_edges_for_one_tileable_rr_gsb(const t_rr_graph* rr_graph, 
+                                         const std::vector< std::vector<t_grid_tile> > grids,
+                                         const RRGSB* rr_gsb,
                                          const t_track2pin_map track2ipin_map,
                                          const t_pin2track_map opin2track_map,
                                          const t_track2track_map track2track_map);

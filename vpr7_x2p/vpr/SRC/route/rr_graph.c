@@ -692,6 +692,9 @@ alloc_and_load_actual_fc(INP int L_num_types, INP t_type_ptr types,
 		float *Fc = (float *) my_malloc(sizeof(float) * types[i].num_pins); /* [0..num_pins-1] */ 
 		for (j = 0; j < types[i].num_pins; ++j) {
 			Fc[j] = types[i].Fc[j];
+
+            /* Xifan Tang: give an initial value! */
+	        /* Result[i][j] = 0; */
 		
 			if(Fc[j] == 0 && ignore_Fc_0 == FALSE) {
 				/* Special case indicating that this pin does not connect to general-purpose routing */

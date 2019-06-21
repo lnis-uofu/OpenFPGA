@@ -254,10 +254,10 @@ std::vector<size_t> get_num_tracks_per_seg_type(const size_t chan_width,
  *    +---------------------------------------+--------------+
  *    |   10  | <--------MUX |   Yes          |  No          |
  *    +---------------------------------------+--------------+
- *    |   11  | --------> |   No        |
- *    +---------------------------------+
- *    |   12  | <-------- |   No        |
- *    +---------------------------------+
+ *    |   11  | -------->MUX |   No           |  Yes         |
+ *    +------------------------------------------------------+
+ *    |   12  | <--------    |   No           |  No          |
+ *    +------------------------------------------------------+
  *
  * 3. SPECIAL for fringes: TOP|RIGHT|BOTTOM|RIGHT
  *    if device_side is NUM_SIDES, we assume this channel does not locate on borders
@@ -383,8 +383,9 @@ std::vector<int> get_grid_side_pins(const t_grid_tile& cur_grid,
   pin_list.clear();
 
   for (int ipin = 0; ipin < cur_grid.type->num_pins; ++ipin) {
+    int class_id = cur_grid.type->pin_class[ipin];
     if ( (1 == cur_grid.type->pinloc[pin_height][pin_side][ipin]) 
-      && (pin_type == cur_grid.type->pin_class[ipin]) ) {
+      && (pin_type == cur_grid.type->class_inf[class_id].type) ) {
       pin_list.push_back(ipin);
     }
   }
@@ -400,23 +401,51 @@ static
 size_t get_grid_num_pins(const t_grid_tile& cur_grid, const enum e_pin_type pin_type, const enum e_side io_side) {
   size_t num_pins = 0;
   Side io_side_manager(io_side);
-  /* For IO_TYPE sides */
-  for (size_t side = 0; side < NUM_SIDES; ++side) {
-    Side side_manager(side);
-    /* skip unwanted sides */
-    if ( (IO_TYPE == cur_grid.type)
-      && (side != io_side_manager.to_size_t()) ) { 
-      continue;
+
+  /* Consider capacity of the grid */
+  for (int iblk = 0; iblk < cur_grid.type->capacity; ++iblk) {
+    /* For IO_TYPE sides */
+    for (size_t side = 0; side < NUM_SIDES; ++side) {
+      Side side_manager(side);
+      /* skip unwanted sides */
+      if ( (IO_TYPE == cur_grid.type)
+        && (side != io_side_manager.to_size_t()) ) { 
+        continue;
+      }
+      /* Get pin list */
+      for (int height = 0; height < cur_grid.type->height; ++height) {
+        std::vector<int> pin_list = get_grid_side_pins(cur_grid, pin_type, side_manager.get_side(), height);
+        num_pins += pin_list.size();
+      } 
     }
-    /* Get pin list */
-    for (int height = 0; height < cur_grid.type->height; ++height) {
-      std::vector<int> pin_list = get_grid_side_pins(cur_grid, pin_type, side_manager.get_side(), height);
-      num_pins += pin_list.size();
-    } 
   }
 
   return num_pins;
 }
+
+/************************************************************************
+ * Get the number of pins for a grid (either OPIN or IPIN)
+ * For IO_TYPE, only one side will be used, we consider one side of pins 
+ * For others, we consider all the sides  
+ ***********************************************************************/
+static 
+size_t get_grid_num_classes(const t_grid_tile& cur_grid, const enum e_pin_type pin_type) {
+  size_t num_classes = 0;
+
+  /* Consider capacity of the grid */
+  for (int iblk = 0; iblk < cur_grid.type->capacity; ++iblk) {
+    for (int iclass = 0; iclass < cur_grid.type->num_class; ++iclass) {
+      /* Bypass unmatched pin_type */
+      if (pin_type != cur_grid.type->class_inf[iclass].type) {
+        continue;
+      }
+      num_classes++;
+    }
+  }
+
+  return num_classes;
+}
+
 
 /************************************************************************
  * Estimate the number of rr_nodes per category:
@@ -444,8 +473,8 @@ std::vector<size_t> estimate_num_rr_nodes_per_type(const DeviceCoordinator& devi
    *    Note that the number of SOURCE nodes are the same as OPINs
    *    and the number of SINK nodes are the same as IPINs
    ***********************************************************************/
-  for (size_t ix = 0; ix < grids.size(); ++ix) {
-    for (size_t iy = 0; iy < grids[ix].size(); ++iy) { 
+  for (size_t ix = 0; ix < device_size.get_x(); ++ix) {
+    for (size_t iy = 0; iy < device_size.get_y(); ++iy) { 
       /* Skip EMPTY tiles */
       if (EMPTY_TYPE == grids[ix][iy].type) {
         continue;
@@ -465,11 +494,12 @@ std::vector<size_t> estimate_num_rr_nodes_per_type(const DeviceCoordinator& devi
       num_rr_nodes_per_type[OPIN] += get_grid_num_pins(grids[ix][iy], DRIVER, io_side);
       /* get the number of IPINs */
       num_rr_nodes_per_type[IPIN] += get_grid_num_pins(grids[ix][iy], RECEIVER, io_side);
+      /* SOURCE: number of classes whose type is DRIVER */
+      num_rr_nodes_per_type[SOURCE] += get_grid_num_classes(grid[ix][iy], DRIVER);
+      /* SINK: number of classes whose type is RECEIVER */
+      num_rr_nodes_per_type[SINK]   += get_grid_num_classes(grid[ix][iy], RECEIVER);
     }
   }
-  /* SOURCE and SINK */
-  num_rr_nodes_per_type[SOURCE] = num_rr_nodes_per_type[OPIN];
-  num_rr_nodes_per_type[SINK]   = num_rr_nodes_per_type[IPIN];
 
   /************************************************************************
    * 2. Assign the segments for each routing channel,
@@ -491,15 +521,18 @@ std::vector<size_t> estimate_num_rr_nodes_per_type(const DeviceCoordinator& devi
     for (size_t ix = 1; ix < device_size.get_x() - 1; ++ix) {
       enum e_side chan_side = NUM_SIDES;
       /* For LEFT side of FPGA */
-      if (0 == ix) {
+      if (1 == ix) {
         chan_side = LEFT;
       }
       /* For RIGHT side of FPGA */
-      if (grids.size() - 2 == ix) {
+      if (device_size.get_x() - 2 == ix) {
         chan_side = RIGHT;
       }
       ChanNodeDetails chanx_details = build_unidir_chan_node_details(chan_width[0], device_size.get_x() - 2, chan_side, segment_infs); 
-      num_rr_nodes_per_type[CHANX] += chanx_details.get_num_starting_tracks();
+      /* When an INC_DIRECTION CHANX starts, we need a new rr_node */
+      num_rr_nodes_per_type[CHANX] += chanx_details.get_num_starting_tracks(INC_DIRECTION);
+      /* When an DEC_DIRECTION CHANX ends, we need a new rr_node */
+      num_rr_nodes_per_type[CHANX] += chanx_details.get_num_ending_tracks(DEC_DIRECTION);
     }
   }
 
@@ -508,17 +541,28 @@ std::vector<size_t> estimate_num_rr_nodes_per_type(const DeviceCoordinator& devi
     for (size_t iy = 1; iy < device_size.get_y() - 1; ++iy) { 
       enum e_side chan_side = NUM_SIDES;
       /* For LEFT side of FPGA */
-      if (0 == iy) {
+      if (1 == iy) {
         chan_side = BOTTOM;
       }
       /* For RIGHT side of FPGA */
-      if (grids[ix].size() - 2 == iy) {
+      if (device_size.get_y() - 2 == iy) {
         chan_side = TOP;
       }
       ChanNodeDetails chany_details = build_unidir_chan_node_details(chan_width[1], device_size.get_y() - 2, chan_side, segment_infs); 
-      num_rr_nodes_per_type[CHANY] += chany_details.get_num_starting_tracks();
+      /* When an INC_DIRECTION CHANX starts, we need a new rr_node */
+      num_rr_nodes_per_type[CHANY] += chany_details.get_num_starting_tracks(INC_DIRECTION);
+      /* When an DEC_DIRECTION CHANX ends, we need a new rr_node */
+      num_rr_nodes_per_type[CHANY] += chany_details.get_num_ending_tracks(DEC_DIRECTION);
     }
   }
+
+  vpr_printf(TIO_MESSAGE_INFO, "Estimate %lu SOURCE nodes.\n", num_rr_nodes_per_type[SOURCE]);
+  vpr_printf(TIO_MESSAGE_INFO, "Estimate %lu SINK   nodes.\n", num_rr_nodes_per_type[SINK]  );
+  vpr_printf(TIO_MESSAGE_INFO, "Estimate %lu OPIN   nodes.\n", num_rr_nodes_per_type[OPIN]  );
+  vpr_printf(TIO_MESSAGE_INFO, "Estimate %lu IPIN   nodes.\n", num_rr_nodes_per_type[IPIN]  );
+  vpr_printf(TIO_MESSAGE_INFO, "Estimate %lu CHANX  nodes.\n", num_rr_nodes_per_type[CHANY] );
+  vpr_printf(TIO_MESSAGE_INFO, "Estimate %lu CHANY  nodes.\n", num_rr_nodes_per_type[CHANY] );
+
 
   return num_rr_nodes_per_type;
 }
@@ -554,69 +598,81 @@ void load_one_grid_rr_nodes_basic_info(const DeviceCoordinator& grid_coordinator
                                        t_rr_graph* rr_graph, 
                                        size_t* cur_node_id,
                                        const int wire_to_ipin_switch, const int delayless_switch) {
-   Side io_side_manager(io_side);
-  /* Walk through the height of each grid,
-   * get pins and configure the rr_nodes */
-  for (int height = 0; height < cur_grid.type->height; ++height) {
-    /* Walk through sides */
-    for (size_t side = 0; side < NUM_SIDES; ++side) {
-      Side side_manager(side);
-      /* skip unwanted sides */
-      if ( (IO_TYPE == cur_grid.type)
-        && (side != io_side_manager.to_size_t()) ) { 
-        continue;
-      }
-      /* Find OPINs */
-      /* Configure pins by pins */
-      std::vector<int> opin_list = get_grid_side_pins(cur_grid, DRIVER, side_manager.get_side(), height);
-      for (size_t pin = 0; pin < opin_list.size(); ++pin) {
-        /* Configure the rr_node for the OPIN */
-        rr_graph->rr_node[*cur_node_id].type  = OPIN; 
-        rr_graph->rr_node[*cur_node_id].xlow  = grid_coordinator.get_x(); 
-        rr_graph->rr_node[*cur_node_id].xhigh = grid_coordinator.get_x(); 
-        rr_graph->rr_node[*cur_node_id].ylow  = grid_coordinator.get_y(); 
-        rr_graph->rr_node[*cur_node_id].yhigh = grid_coordinator.get_y(); 
-        rr_graph->rr_node[*cur_node_id].ptc_num  = opin_list[pin]; 
-        rr_graph->rr_node[*cur_node_id].capacity = 1; 
-        rr_graph->rr_node[*cur_node_id].occ = 0; 
-        /* cost index is a FIXED value for OPIN */
-        rr_graph->rr_node[*cur_node_id].cost_index = OPIN_COST_INDEX; 
-        /* Switch info */
-        rr_graph->rr_node[*cur_node_id].driver_switch = delayless_switch; 
-        /* fill fast look-up table */
-        load_one_node_to_rr_graph_fast_lookup(rr_graph, *cur_node_id, 
-                                              rr_graph->rr_node[*cur_node_id].type, 
-                                              rr_graph->rr_node[*cur_node_id].xlow, 
-                                              rr_graph->rr_node[*cur_node_id].ylow,
-                                              rr_graph->rr_node[*cur_node_id].ptc_num);
-        /* Update node counter */
-        (*cur_node_id)++;
-      }
-      /* Find IPINs */
-      /* Configure pins by pins */
-      std::vector<int> ipin_list = get_grid_side_pins(cur_grid, RECEIVER, side_manager.get_side(), height);
-      for (size_t pin = 0; pin < ipin_list.size(); ++pin) {
-        rr_graph->rr_node[*cur_node_id].type  = IPIN; 
-        rr_graph->rr_node[*cur_node_id].xlow  = grid_coordinator.get_x(); 
-        rr_graph->rr_node[*cur_node_id].xhigh = grid_coordinator.get_x(); 
-        rr_graph->rr_node[*cur_node_id].ylow  = grid_coordinator.get_y(); 
-        rr_graph->rr_node[*cur_node_id].yhigh = grid_coordinator.get_y(); 
-        rr_graph->rr_node[*cur_node_id].ptc_num  = opin_list[pin]; 
-        rr_graph->rr_node[*cur_node_id].capacity = 1; 
-        rr_graph->rr_node[*cur_node_id].occ = 0; 
-        /* cost index is a FIXED value for IPIN */
-        rr_graph->rr_node[*cur_node_id].cost_index = IPIN_COST_INDEX; 
-        /* Switch info */
-        rr_graph->rr_node[*cur_node_id].driver_switch = wire_to_ipin_switch; 
-        /* fill fast look-up table */
-        load_one_node_to_rr_graph_fast_lookup(rr_graph, *cur_node_id, 
-                                              rr_graph->rr_node[*cur_node_id].type, 
-                                              rr_graph->rr_node[*cur_node_id].xlow, 
-                                              rr_graph->rr_node[*cur_node_id].ylow,
-                                              rr_graph->rr_node[*cur_node_id].ptc_num);
-        /* Update node counter */
-        (*cur_node_id)++;
-      }
+  Side io_side_manager(io_side);
+
+  /* Consider capacity of the grid */
+  for (int iblk = 0; iblk < cur_grid.type->capacity; ++iblk) {
+    /* Walk through the height of each grid,
+     * get pins and configure the rr_nodes */
+    for (int height = 0; height < cur_grid.type->height; ++height) {
+      /* Walk through sides */
+      for (size_t side = 0; side < NUM_SIDES; ++side) {
+        Side side_manager(side);
+        /* skip unwanted sides */
+        if ( (IO_TYPE == cur_grid.type)
+          && (side != io_side_manager.to_size_t()) ) { 
+          continue;
+        }
+        /* Find OPINs */
+        /* Configure pins by pins */
+        std::vector<int> opin_list = get_grid_side_pins(cur_grid, DRIVER, side_manager.get_side(), height);
+        for (size_t pin = 0; pin < opin_list.size(); ++pin) {
+          /* Configure the rr_node for the OPIN */
+          rr_graph->rr_node[*cur_node_id].type  = OPIN; 
+          rr_graph->rr_node[*cur_node_id].xlow  = grid_coordinator.get_x(); 
+          rr_graph->rr_node[*cur_node_id].xhigh = grid_coordinator.get_x(); 
+          rr_graph->rr_node[*cur_node_id].ylow  = grid_coordinator.get_y(); 
+          rr_graph->rr_node[*cur_node_id].yhigh = grid_coordinator.get_y(); 
+          rr_graph->rr_node[*cur_node_id].ptc_num  = opin_list[pin]; 
+          rr_graph->rr_node[*cur_node_id].capacity = 1; 
+          rr_graph->rr_node[*cur_node_id].occ = 0; 
+          /* cost index is a FIXED value for OPIN */
+          rr_graph->rr_node[*cur_node_id].cost_index = OPIN_COST_INDEX; 
+          /* Switch info */
+          rr_graph->rr_node[*cur_node_id].driver_switch = delayless_switch; 
+          /* fill fast look-up table */
+          load_one_node_to_rr_graph_fast_lookup(rr_graph, *cur_node_id, 
+                                                rr_graph->rr_node[*cur_node_id].type, 
+                                                rr_graph->rr_node[*cur_node_id].xlow, 
+                                                rr_graph->rr_node[*cur_node_id].ylow,
+                                                rr_graph->rr_node[*cur_node_id].ptc_num);
+          /* Update node counter */
+          (*cur_node_id)++;
+        } /* End of loading OPIN rr_nodes */
+        /* Find IPINs */
+        /* Configure pins by pins */
+        std::vector<int> ipin_list = get_grid_side_pins(cur_grid, RECEIVER, side_manager.get_side(), height);
+        for (size_t pin = 0; pin < ipin_list.size(); ++pin) {
+          rr_graph->rr_node[*cur_node_id].type  = IPIN; 
+          rr_graph->rr_node[*cur_node_id].xlow  = grid_coordinator.get_x(); 
+          rr_graph->rr_node[*cur_node_id].xhigh = grid_coordinator.get_x(); 
+          rr_graph->rr_node[*cur_node_id].ylow  = grid_coordinator.get_y(); 
+          rr_graph->rr_node[*cur_node_id].yhigh = grid_coordinator.get_y(); 
+          rr_graph->rr_node[*cur_node_id].ptc_num  = ipin_list[pin]; 
+          rr_graph->rr_node[*cur_node_id].capacity = 1; 
+          rr_graph->rr_node[*cur_node_id].occ = 0; 
+          /* cost index is a FIXED value for IPIN */
+          rr_graph->rr_node[*cur_node_id].cost_index = IPIN_COST_INDEX; 
+          /* Switch info */
+          rr_graph->rr_node[*cur_node_id].driver_switch = wire_to_ipin_switch; 
+          /* fill fast look-up table */
+          load_one_node_to_rr_graph_fast_lookup(rr_graph, *cur_node_id, 
+                                                rr_graph->rr_node[*cur_node_id].type, 
+                                                rr_graph->rr_node[*cur_node_id].xlow, 
+                                                rr_graph->rr_node[*cur_node_id].ylow,
+                                                rr_graph->rr_node[*cur_node_id].ptc_num);
+          /* Update node counter */
+          (*cur_node_id)++;
+        } /* End of loading IPIN rr_nodes */
+      } /* End of side enumeration */
+    } /* End of height enumeration */
+  } /* End of capacity enumeration */
+
+  /* Consider capacity of the grid */
+  for (int iblk = 0; iblk < cur_grid.type->capacity; ++iblk) {
+    /* Walk through the height of each grid,
+     * get pins and configure the rr_nodes */
+    for (int height = 0; height < cur_grid.type->height; ++height) {
       /* Set a SOURCE or a SINK rr_node for each class */
       for (int iclass = 0; iclass < cur_grid.type->num_class; ++iclass) {
         /* Set a SINK rr_node for the OPIN */
@@ -815,6 +871,10 @@ void load_rr_nodes_basic_info(t_rr_graph* rr_graph,
       if (EMPTY_TYPE == grids[ix][iy].type) {
         continue;
       }
+      /* We only build rr_nodes for grids with offset=0 */
+      if (0 < grids[ix][iy].offset) {
+        continue;
+      }
       DeviceCoordinator grid_coordinator(ix, iy);
       enum e_side io_side = NUM_SIDES;
       /* If this is the block on borders, we consider IO side */
@@ -829,13 +889,29 @@ void load_rr_nodes_basic_info(t_rr_graph* rr_graph,
     }
   }
 
+  /* FIXME: DEBUG CODES TO BE REMOVED
+  std::vector<size_t> node_cnt;
+  node_cnt.resize(NUM_RR_TYPES);
+  for (int inode = 0; inode < rr_graph->num_rr_nodes; ++inode) {
+    node_cnt[rr_graph->rr_node[inode].type]++;
+  }
+  vpr_printf(TIO_MESSAGE_INFO, "Load basic information to %lu SOURCE NODE.\n", node_cnt[SOURCE]);
+  vpr_printf(TIO_MESSAGE_INFO, "Load basic information to %lu SINK   NODE.\n", node_cnt[SINK]);
+  vpr_printf(TIO_MESSAGE_INFO, "Load basic information to %lu OPIN   NODE.\n", node_cnt[OPIN]);
+  vpr_printf(TIO_MESSAGE_INFO, "Load basic information to %lu IPIN   NODE.\n", node_cnt[IPIN]);
+  */
+
   /* For X-direction Channel: CHANX */
   for (size_t iy = 0; iy < device_size.get_y() - 1; ++iy) { 
+    /* Keep a vector of node_ids for the channels, because we will rotate them when walking through ix */
+    std::vector<size_t> track_node_ids;
+    /* Make sure a clean start */
+    track_node_ids.clear();
     for (size_t ix = 1; ix < device_size.get_x() - 1; ++ix) {
       DeviceCoordinator chan_coordinator(ix, iy);
       enum e_side chan_side = NUM_SIDES;
       /* For LEFT side of FPGA */
-      if (0 == ix) {
+      if (1 == ix) {
         chan_side = LEFT;
       }
       /* For RIGHT side of FPGA */
@@ -843,37 +919,47 @@ void load_rr_nodes_basic_info(t_rr_graph* rr_graph,
         chan_side = RIGHT;
       }
       ChanNodeDetails chanx_details = build_unidir_chan_node_details(chan_width[0], device_size.get_x() - 2, chan_side, segment_infs); 
-      /* Configure CHANX in this channel */
-      load_one_chan_rr_nodes_basic_info(chan_coordinator, CHANX, 
-                                        &chanx_details, 
-                                        segment_infs, 
-                                        CHANX_COST_INDEX_START, 
-                                        rr_graph, &cur_node_id);
-      /* Rotate the chanx_details by an offset of 1*/
+      /* Force node_ids from the previous chanx */
+      if (0 < track_node_ids.size()) {
+        chanx_details.set_track_node_ids(track_node_ids);
+      }
+      /* Rotate the chanx_details by an offset of ix - 1, the distance to the most left channel */
       /* For INC_DIRECTION, we use clockwise rotation 
        * node_id A ---->   -----> node_id D
        * node_id B ---->  / ----> node_id A
        * node_id C ----> /  ----> node_id B
        * node_id D ---->    ----> node_id C 
        */
-      chanx_details.rotate_track_node_id(1, INC_DIRECTION, false);
+      chanx_details.rotate_track_node_id(ix - 1, INC_DIRECTION, false);
       /* For DEC_DIRECTION, we use clockwise rotation 
        * node_id A <-----    <----- node_id B
        * node_id B <----- \  <----- node_id C
        * node_id C <-----  \ <----- node_id D
        * node_id D <-----    <----- node_id A 
        */
-      chanx_details.rotate_track_node_id(1, DEC_DIRECTION, true);
+      chanx_details.rotate_track_node_id(ix - 1, DEC_DIRECTION, true);
+      /* Configure CHANX in this channel */
+      load_one_chan_rr_nodes_basic_info(chan_coordinator, CHANX, 
+                                        &chanx_details, 
+                                        segment_infs, 
+                                        CHANX_COST_INDEX_START, 
+                                        rr_graph, &cur_node_id);
+      /* Get a copy of node_ids */
+      track_node_ids = chanx_details.get_track_node_ids();
     }
   }
 
   /* For Y-direction Channel: CHANX */
   for (size_t ix = 0; ix < device_size.get_x() - 1; ++ix) {
+    /* Keep a vector of node_ids for the channels, because we will rotate them when walking through ix */
+    std::vector<size_t> track_node_ids;
+    /* Make sure a clean start */
+    track_node_ids.clear();
     for (size_t iy = 1; iy < device_size.get_y() - 1; ++iy) { 
       DeviceCoordinator chan_coordinator(ix, iy);
       enum e_side chan_side = NUM_SIDES;
       /* For LEFT side of FPGA */
-      if (0 == iy) {
+      if (1 == iy) {
         chan_side = BOTTOM;
       }
       /* For RIGHT side of FPGA */
@@ -881,12 +967,10 @@ void load_rr_nodes_basic_info(t_rr_graph* rr_graph,
         chan_side = TOP;
       }
       ChanNodeDetails chany_details = build_unidir_chan_node_details(chan_width[1], device_size.get_y() - 2, chan_side, segment_infs); 
-      /* Configure CHANX in this channel */
-      load_one_chan_rr_nodes_basic_info(chan_coordinator, CHANY, 
-                                        &chany_details, 
-                                        segment_infs, 
-                                        CHANX_COST_INDEX_START + segment_infs.size(), 
-                                        rr_graph, &cur_node_id);
+      /* Force node_ids from the previous chanx */
+      if (0 < track_node_ids.size()) {
+        chany_details.set_track_node_ids(track_node_ids);
+      }
       /* Rotate the chany_details by an offset of 1*/
       /* For INC_DIRECTION, we use clockwise rotation 
        * node_id A ---->   -----> node_id D
@@ -894,14 +978,22 @@ void load_rr_nodes_basic_info(t_rr_graph* rr_graph,
        * node_id C ----> /  ----> node_id B
        * node_id D ---->    ----> node_id C 
        */
-      chany_details.rotate_track_node_id(1, INC_DIRECTION, false);
+      chany_details.rotate_track_node_id(iy - 1, INC_DIRECTION, false);
       /* For DEC_DIRECTION, we use clockwise rotation 
        * node_id A <-----    <----- node_id B
        * node_id B <----- \  <----- node_id C
        * node_id C <-----  \ <----- node_id D
        * node_id D <-----    <----- node_id A 
        */
-      chany_details.rotate_track_node_id(1, DEC_DIRECTION, true);
+      chany_details.rotate_track_node_id(iy - 1, DEC_DIRECTION, true);
+      /* Configure CHANX in this channel */
+      load_one_chan_rr_nodes_basic_info(chan_coordinator, CHANY, 
+                                        &chany_details, 
+                                        segment_infs, 
+                                        CHANX_COST_INDEX_START + segment_infs.size(), 
+                                        rr_graph, &cur_node_id);
+      /* Get a copy of node_ids */
+      track_node_ids = chany_details.get_track_node_ids();
     }
   }
 
@@ -1005,13 +1097,13 @@ void build_rr_graph_edges(t_rr_graph* rr_graph,
       /* adapt the track_to_ipin_lookup for the GSB nodes */      
       t_track2pin_map track2ipin_map; /* [0..track_gsb_side][0..num_tracks][ipin_indices] */
       /* Get the Fc index of the grid */
-      int grid_Fc_in_index = grids[grid_coordinator.get_x()][grid_coordinator.get_x()].type->index;
+      int grid_Fc_in_index = grids[grid_coordinator.get_x()][grid_coordinator.get_y()].type->index;
       track2ipin_map = build_gsb_track_to_ipin_map(rr_graph, rr_gsb, segment_inf, Fc_in[grid_Fc_in_index]);
 
       /* adapt the opin_to_track_map for the GSB nodes */      
       t_pin2track_map opin2track_map; /* [0..gsb_side][0..num_opin_node][track_indices] */
       /* Get the Fc index of the grid */
-      int grid_Fc_out_index = grids[grid_coordinator.get_x()][grid_coordinator.get_x()].type->index;
+      int grid_Fc_out_index = grids[grid_coordinator.get_x()][grid_coordinator.get_y()].type->index;
       opin2track_map = build_gsb_opin_to_track_map(rr_graph, rr_gsb, segment_inf, Fc_out[grid_Fc_out_index]);
 
       /* adapt the switch_block_conn for the GSB nodes */      
@@ -1019,7 +1111,7 @@ void build_rr_graph_edges(t_rr_graph* rr_graph,
       sb_conn = build_gsb_track_to_track_map(rr_graph, rr_gsb, sb_type, Fs, segment_inf);
 
       /* Build edges for a GSB */
-      build_edges_for_one_tileable_rr_gsb(rr_graph, &rr_gsb, 
+      build_edges_for_one_tileable_rr_gsb(rr_graph, grids, &rr_gsb,
                                           track2ipin_map, opin2track_map, 
                                           sb_conn);
       /* Finish this GSB, go to the next*/
@@ -1218,9 +1310,6 @@ void build_tileable_unidir_rr_graph(INP const int L_num_types,
     *Warnings |= RR_GRAPH_WARN_FC_CLIPPED;
   }
 
-  vpr_printf(TIO_MESSAGE_INFO, 
-             "Actual Fc numbers loaded.\n");
-
   /************************************************************************
    * 6. Build the connections tile by tile:
    *    We classify rr_nodes into a general switch block (GSB) data structure
@@ -1235,9 +1324,6 @@ void build_tileable_unidir_rr_graph(INP const int L_num_types,
                        Fc_in, Fc_out,
                        sb_type, Fs);
 
-  vpr_printf(TIO_MESSAGE_INFO, 
-             "Regular edges of RR graph built.\n");
-
   /************************************************************************
    * 7. Build direction connection lists
    ***********************************************************************/
@@ -1249,8 +1335,12 @@ void build_tileable_unidir_rr_graph(INP const int L_num_types,
   build_rr_graph_direct_connections(&rr_graph, device_size, grids, delayless_switch, 
                                     num_directs, directs, clb_to_clb_directs);
 
+  size_t num_edges = 0;
+  for (int inode = 0; inode < rr_graph.num_rr_nodes; ++inode) {
+    num_edges += rr_graph.rr_node[inode].num_edges;
+  }
   vpr_printf(TIO_MESSAGE_INFO, 
-             "Direct-connection edges of RR graph built.\n");
+             "%lu edges of RR graph built.\n", num_edges);
 
   /************************************************************************
    * 8. Allocate external data structures

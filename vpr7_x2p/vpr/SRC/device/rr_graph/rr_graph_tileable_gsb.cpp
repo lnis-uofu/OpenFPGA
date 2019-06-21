@@ -131,8 +131,8 @@ bool is_gsb_in_track_cb_population(const RRGSB& rr_gsb,
   DeviceCoordinator side_coordinator = rr_gsb.get_side_block_coordinator(gsb_side); 
 
   /* Get the offset */
-  size_t offset = (side_coordinator.get_x() - track_node->xlow) 
-                + (side_coordinator.get_y() - track_node->ylow); 
+  size_t offset = std::abs((int)side_coordinator.get_x() - track_node->xlow) 
+                + std::abs((int)side_coordinator.get_y() - track_node->ylow); 
   
   /* Get segment id */
   size_t seg_id = rr_gsb.get_chan_node_segment(gsb_side, track_id);
@@ -170,8 +170,8 @@ bool is_gsb_in_track_sb_population(const RRGSB& rr_gsb,
   DeviceCoordinator side_coordinator = rr_gsb.get_side_block_coordinator(gsb_side); 
 
   /* Get the offset */
-  size_t offset = (side_coordinator.get_x() - track_node->xlow) 
-                + (side_coordinator.get_y() - track_node->ylow); 
+  size_t offset = std::abs((int)side_coordinator.get_x() - track_node->xlow) 
+                + std::abs((int)side_coordinator.get_y() - track_node->ylow); 
   
   /* Get segment id */
   size_t seg_id = rr_gsb.get_chan_node_segment(gsb_side, track_id);
@@ -198,9 +198,9 @@ std::vector<size_t> get_to_track_list(const int Fs, const int to_track, const in
     /* TODO: currently, for Fs > 3, I always search the next from_track until Fs is satisfied 
      * The optimal track selection should be done in a more scientific way!!! 
      */
-    size_t to_track_i = to_track + i;
+    int to_track_i = to_track + i;
     /* make sure the track id is still in range */
-    if ( to_track_i > (size_t)num_to_tracks) {
+    if ( to_track_i > num_to_tracks) {
       to_track_i = to_track_i % num_to_tracks; 
     }
     /* from track must be connected */
@@ -368,6 +368,9 @@ void build_gsb_one_group_track_to_track_map(const t_rr_graph* rr_graph,
           size_t from_side_index = side_manager.to_size_t();
           size_t from_track_index = from_tracks[side][inode];
           size_t to_track_index = to_tracks[to_side_index][to_track_ids[to_track_id]];
+          printf("from_track(size=%lu): %lu , to_track_ids[%lu]:%lu, to_track_index: %lu in a group of %lu tracks\n", 
+                 from_tracks[side].size(), inode, to_track_id, to_track_ids[to_track_id], 
+                 to_track_index, to_tracks[to_side_index].size());
           t_rr_node* to_track_node = rr_gsb.get_chan_node(to_side, to_track_index);
           (*track2track_map)[from_side_index][from_track_index].push_back(to_track_node - rr_graph->rr_node);
         }
@@ -453,11 +456,11 @@ t_track2track_map build_gsb_track_to_track_map(const t_rr_graph* rr_graph,
       switch (track_status) {
       case TRACK_START:
         /* update starting track list */
-        start_tracks[gsb_side].push_back(inode);
+        start_tracks[side].push_back(inode);
         break;
       case TRACK_END:
         /* Update end track list */
-        end_tracks[gsb_side].push_back(inode);
+        end_tracks[side].push_back(inode);
         break;
       case TRACK_PASS:
         /* We need to check Switch block population of this track 
@@ -465,7 +468,7 @@ t_track2track_map build_gsb_track_to_track_map(const t_rr_graph* rr_graph,
          */
         if (true == is_gsb_in_track_sb_population(rr_gsb, gsb_side, inode, segment_inf)) {
           /* Update passing track list */
-          pass_tracks[gsb_side].push_back(inode);
+          pass_tracks[side].push_back(inode);
         }
         break;
       default:
@@ -918,6 +921,17 @@ void add_one_edge_for_two_rr_nodes(const t_rr_graph* rr_graph,
 }
 
 /************************************************************************
+ * Get the class index of a grid pin 
+ ***********************************************************************/
+static 
+int get_grid_pin_class_index(const t_grid_tile& cur_grid,
+                             const int pin_index) {
+  /* check */
+  assert ( pin_index < cur_grid.type->num_pins);
+  return cur_grid.type->pin_class[pin_index];
+}
+
+/************************************************************************
  * Create edges for each rr_node of a General Switch Blocks (GSB):
  * 1. create edges between SOURCE and OPINs 
  * 2. create edges between IPINs and SINKs 
@@ -925,7 +939,9 @@ void add_one_edge_for_two_rr_nodes(const t_rr_graph* rr_graph,
  * 4. create edges between OPINs, CHANX and CHANY (connections inside switch blocks) 
  * 5. create edges between OPINs and IPINs (direct-connections) 
  ***********************************************************************/
-void build_edges_for_one_tileable_rr_gsb(const t_rr_graph* rr_graph, const RRGSB* rr_gsb,
+void build_edges_for_one_tileable_rr_gsb(const t_rr_graph* rr_graph, 
+                                         const std::vector< std::vector<t_grid_tile> > grids,
+                                         const RRGSB* rr_gsb,
                                          const t_track2pin_map track2ipin_map,
                                          const t_pin2track_map opin2track_map,
                                          const t_track2track_map track2track_map) {
@@ -940,9 +956,10 @@ void build_edges_for_one_tileable_rr_gsb(const t_rr_graph* rr_graph, const RRGSB
     /* Find OPINs */  
     for (size_t inode = 0; inode < rr_gsb->get_num_opin_nodes(gsb_side); ++inode) {
       t_rr_node* opin_node = rr_gsb->get_opin_node(gsb_side, inode); 
+      int src_node_ptc_num = get_grid_pin_class_index(grids[opin_node->xlow][opin_node->ylow], opin_node->ptc_num);
       /* 1. create edges between SOURCE and OPINs */
       int src_node_id = get_rr_node_index(opin_node->xlow, opin_node->ylow, 
-                                          SOURCE, opin_node->ptc_num,
+                                          SOURCE, src_node_ptc_num,
                                           rr_graph->rr_node_indices);
       /* add edges to the src_node */
       add_one_edge_for_two_rr_nodes(rr_graph, src_node_id, opin_node - rr_graph->rr_node,
@@ -960,27 +977,38 @@ void build_edges_for_one_tileable_rr_gsb(const t_rr_graph* rr_graph, const RRGSB
     /* Find IPINs */  
     for (size_t inode = 0; inode < rr_gsb->get_num_ipin_nodes(gsb_side); ++inode) {
       t_rr_node* ipin_node = rr_gsb->get_ipin_node(gsb_side, inode); 
+      int sink_node_ptc_num = get_grid_pin_class_index(grids[ipin_node->xlow][ipin_node->ylow], ipin_node->ptc_num);
       /* 3. create edges between IPINs and SINKs */
       int sink_node_id = get_rr_node_index(ipin_node->xlow, ipin_node->ylow, 
-                                           SINK, ipin_node->ptc_num,
+                                           SINK, sink_node_ptc_num,
                                            rr_graph->rr_node_indices);
       /* add edges to connect the IPIN node to SINK nodes */
       add_one_edge_for_two_rr_nodes(rr_graph, ipin_node - rr_graph->rr_node, sink_node_id,
                                     rr_graph->rr_node[sink_node_id].driver_switch);
     }
     /* Find  CHANX or CHANY */
+    /* For TRACKs to IPINs, we only care LEFT and TOP sides 
+     * Skip RIGHT and BOTTOM for the ipin2track_map since they should be handled in other GSBs 
+     */
+    if ( (side_manager.get_side() == rr_gsb->get_cb_chan_side(CHANX))
+      || (side_manager.get_side() == rr_gsb->get_cb_chan_side(CHANY)) ) {
+      /* 4. create edges between CHANX|CHANY and IPINs, using ipin2track_map */
+      for (size_t inode = 0; inode < rr_gsb->get_chan_width(gsb_side); ++inode) {
+        t_rr_node* chan_node = rr_gsb->get_chan_node(gsb_side, inode); 
+        int num_edges = track2ipin_map[side_manager.to_size_t()][inode].size();
+        for (int iedge = 0; iedge < num_edges; ++iedge) {
+          int ipin_node_id = track2ipin_map[side_manager.to_size_t()][inode][iedge];
+          /* add edges to the chan_node */
+          add_one_edge_for_two_rr_nodes(rr_graph, chan_node - rr_graph->rr_node, ipin_node_id,
+                                        rr_graph->rr_node[ipin_node_id].driver_switch);
+        }
+      }
+    }
+
+    /* 5. create edges between CHANX|CHANY and CHANX|CHANY, using track2track_map */
     for (size_t inode = 0; inode < rr_gsb->get_chan_width(gsb_side); ++inode) {
       t_rr_node* chan_node = rr_gsb->get_chan_node(gsb_side, inode); 
-      /* 4. create edges between CHANX|CHANY and IPINs, using ipin2track_map */
-      int num_edges = track2ipin_map[side_manager.to_size_t()][inode].size();
-      for (int iedge = 0; iedge < num_edges; ++iedge) {
-        int ipin_node_id = track2ipin_map[side_manager.to_size_t()][inode][iedge];
-        /* add edges to the chan_node */
-        add_one_edge_for_two_rr_nodes(rr_graph, chan_node - rr_graph->rr_node, ipin_node_id,
-                                      rr_graph->rr_node[ipin_node_id].driver_switch);
-      }
-      /* 5. create edges between CHANX|CHANY and CHANX|CHANY, using track2track_map */
-      num_edges = track2track_map[side_manager.to_size_t()][inode].size();
+      int num_edges = track2track_map[side_manager.to_size_t()][inode].size();
       for (int iedge = 0; iedge < num_edges; ++iedge) {
         int track_node_id = track2track_map[side_manager.to_size_t()][inode][iedge];
         /* add edges to the chan_node */
@@ -1015,6 +1043,7 @@ void build_gsb_one_ipin_track2pin_map(const t_rr_graph* rr_graph,
                                       t_track2pin_map* track2ipin_map) {
   /* Get a list of segment_ids*/
   enum e_side chan_side = rr_gsb.get_cb_chan_side(ipin_side);
+  Side chan_side_manager(chan_side);
   std::vector<size_t> seg_list = rr_gsb.get_chan_segment_ids(chan_side);
   size_t chan_width = rr_gsb.get_chan_width(chan_side);
   Side ipin_side_manager(ipin_side);
@@ -1058,11 +1087,11 @@ void build_gsb_one_ipin_track2pin_map(const t_rr_graph* rr_graph,
     /* Assign tracks: since we assign 2 track per round, we increment itrack by 2* step  */
     for (size_t itrack = 0; itrack < actual_track_list.size(); itrack = itrack + 2 * track_step) {
       /* Update pin2track map */ 
-      size_t ipin_side_index = ipin_side_manager.to_size_t();
+      size_t chan_side_index = chan_side_manager.to_size_t();
       size_t track_index = actual_track_list[itrack];
       size_t ipin_index = ipin_node - rr_graph->rr_node;
-      (*track2ipin_map)[ipin_side_index][track_index].push_back(ipin_index);
-      (*track2ipin_map)[ipin_side_index][track_index + 1].push_back(ipin_index);
+      (*track2ipin_map)[chan_side_index][track_index].push_back(ipin_index);
+      (*track2ipin_map)[chan_side_index][track_index + 1].push_back(ipin_index);
     }
   }
   
@@ -1181,14 +1210,15 @@ t_track2pin_map build_gsb_track_to_ipin_map(t_rr_graph* rr_graph,
     /* This track2pin mapping is for Connection Blocks, so we only care two sides! */
     /* Get channel width and resize the matrix */
     size_t chan_width = rr_gsb.get_chan_width(chan_side);
-    track2ipin_map[side].resize(chan_width); 
+    track2ipin_map[chan_side_manager.to_size_t()].resize(chan_width); 
     /* Find the ipin/opin nodes */
     for (size_t inode = 0; inode < rr_gsb.get_num_ipin_nodes(ipin_side); ++inode) {
       t_rr_node* ipin_node = rr_gsb.get_ipin_node(ipin_side, inode);
       /* Get Fc of the ipin */
       int ipin_Fc = Fc_in[ipin_node->ptc_num];
       /* skip Fc = 0 */
-      if (0 == ipin_Fc) { 
+      if ( (-1 == ipin_Fc)
+        || (0 == ipin_Fc) ) { 
         continue;
       }
       /* Build track2ipin_map for this IPIN */
@@ -1249,7 +1279,9 @@ t_pin2track_map build_gsb_opin_to_track_map(t_rr_graph* rr_graph,
       /* Get Fc of the ipin */
       int opin_Fc = Fc_out[opin_node->ptc_num];
       /* skip Fc = 0 */
-      if (0 == opin_Fc) { 
+      printf("opin_Fc[%d]=%d\n", opin_node->ptc_num, opin_Fc);
+      if ( (-1 == opin_Fc)
+        || (0 == opin_Fc) ) { 
         continue;
       }
       /* Build track2ipin_map for this IPIN */

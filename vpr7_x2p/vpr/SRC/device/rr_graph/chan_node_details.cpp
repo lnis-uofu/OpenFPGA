@@ -73,6 +73,15 @@ size_t ChanNodeDetails::get_track_node_id(size_t track_id) const {
   return track_node_ids_[track_id];
 }
 
+/* Return a copy of vector */
+std::vector<size_t> ChanNodeDetails::get_track_node_ids() const {
+  std::vector<size_t> copy;
+  for (size_t inode = 0; inode < get_chan_width(); ++inode) {
+    copy.push_back(track_node_ids_[inode]);
+  } 
+  return copy;
+}
+
 e_direction ChanNodeDetails::get_track_direction(size_t track_id) const {
   assert(validate_track_id(track_id));
   return track_direction_[track_id];
@@ -111,9 +120,6 @@ std::vector<size_t> ChanNodeDetails::get_seg_group(size_t track_id) const {
   /* Make sure a clean start */
   group.clear();
 
-  /* track_id is the first element */
-  group.push_back(track_id);
-
   for (size_t itrack = track_id; itrack < get_chan_width(); ++itrack) {
     if ( (get_track_direction(itrack) == get_track_direction(track_id) )
       && (get_track_segment_length(itrack) == get_track_segment_length(track_id)) ) {
@@ -146,9 +152,13 @@ std::vector<size_t> ChanNodeDetails::get_seg_group_node_id(std::vector<size_t> s
 }
 
 /* Get the number of tracks that starts in this routing channel */
-size_t ChanNodeDetails::get_num_starting_tracks() const {
+size_t ChanNodeDetails::get_num_starting_tracks(enum e_direction track_direction) const {
   size_t counter = 0;
   for (size_t itrack = 0; itrack < get_chan_width(); ++itrack) {
+    /* Bypass unmatched track_direction */
+    if (track_direction != get_track_direction(itrack)) {
+      continue;
+    }
     if (false == is_track_start(itrack)) {
       continue;
     } 
@@ -158,9 +168,13 @@ size_t ChanNodeDetails::get_num_starting_tracks() const {
 }
 
 /* Get the number of tracks that ends in this routing channel */
-size_t ChanNodeDetails::get_num_ending_tracks() const {
+size_t ChanNodeDetails::get_num_ending_tracks(enum e_direction track_direction) const {
   size_t counter = 0;
   for (size_t itrack = 0; itrack < get_chan_width(); ++itrack) {
+    /* Bypass unmatched track_direction */
+    if (track_direction != get_track_direction(itrack)) {
+      continue;
+    }
     if (false == is_track_end(itrack)) {
       continue;
     } 
@@ -168,6 +182,7 @@ size_t ChanNodeDetails::get_num_ending_tracks() const {
   }  
   return counter;
 }
+
 
 /************************************************************************
  *  Mutators
@@ -198,6 +213,15 @@ void ChanNodeDetails::set_track_node_id(size_t track_index, size_t track_node_id
   track_node_ids_[track_index] = track_node_id; 
 }
 
+/* Update the node_ids from a vector */
+void ChanNodeDetails::set_track_node_ids(std::vector<size_t> track_node_ids) {
+  /* the size of vector should match chan_width */
+  assert ( get_chan_width() == track_node_ids.size() );
+  for (size_t inode = 0; inode < track_node_ids.size(); ++inode) {
+    track_node_ids_[inode] = track_node_ids[inode]; 
+  }
+}
+
 /* Set tracks with a given direction to start */
 void ChanNodeDetails::set_tracks_start(e_direction track_direction) {
   for (size_t inode = 0; inode < get_chan_width(); ++inode) {
@@ -220,6 +244,11 @@ void ChanNodeDetails::set_tracks_end(e_direction track_direction) {
 
 /* rotate the track_node_id by an offset */
 void ChanNodeDetails::rotate_track_node_id(size_t offset, e_direction track_direction, bool counter_rotate) {
+  /* Direct return if offset = 0*/
+  if (0 == offset) {
+    return;
+  }
+ 
   /* Rotate the node_ids by groups
    * A group begins from a track_start and ends before another track_start  
    */
@@ -237,11 +266,13 @@ void ChanNodeDetails::rotate_track_node_id(size_t offset, e_direction track_dire
     std::vector<size_t> track_group = get_seg_group(itrack);
     /* Build a vector of the node ids of the tracks */
     std::vector<size_t> track_group_node_id = get_seg_group_node_id(track_group);
+    /* adapt offset to the range of track_group_node_id */
+    size_t actual_offset = offset % track_group_node_id.size();
     /* Rotate or Counter rotate */
     if (true == counter_rotate) {
-      std::rotate(track_group_node_id.begin(), track_group_node_id.end() - offset, track_group_node_id.end());
+      std::rotate(track_group_node_id.rbegin(), track_group_node_id.rbegin() + actual_offset, track_group_node_id.rend());
     } else {
-      std::rotate(track_group_node_id.begin(), track_group_node_id.begin() + offset, track_group_node_id.end());
+      std::rotate(track_group_node_id.begin(), track_group_node_id.begin() + actual_offset, track_group_node_id.end());
     }
     /* Update the node_ids */
     for (size_t inode = 0; inode < track_group.size(); ++inode) {
