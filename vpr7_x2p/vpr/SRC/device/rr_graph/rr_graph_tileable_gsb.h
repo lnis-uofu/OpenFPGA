@@ -40,13 +40,15 @@ void build_edges_for_one_tileable_rr_gsb(const t_rr_graph* rr_graph,
 
 t_track2pin_map build_gsb_track_to_ipin_map(t_rr_graph* rr_graph,
                                             const RRGSB& rr_gsb, 
+                                            const std::vector<std::vector<t_grid_tile>> grids, 
                                             const std::vector<t_segment_inf> segment_inf, 
-                                            const int* Fc_in);
+                                            int** Fc_in);
 
 t_pin2track_map build_gsb_opin_to_track_map(t_rr_graph* rr_graph,
                                             const RRGSB& rr_gsb, 
+                                            const std::vector<std::vector<t_grid_tile>> grids, 
                                             const std::vector<t_segment_inf> segment_inf, 
-                                            const int* Fc_out);
+                                            int** Fc_out);
 
 void build_direct_connections_for_one_gsb(t_rr_graph* rr_graph,
                                           const DeviceCoordinator& device_size,

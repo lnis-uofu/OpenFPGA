@@ -694,7 +694,7 @@ alloc_and_load_actual_fc(INP int L_num_types, INP t_type_ptr types,
 			Fc[j] = types[i].Fc[j];
 
             /* Xifan Tang: give an initial value! */
-	        /* Result[i][j] = 0; */
+	         Result[i][j] = -1;
 		
 			if(Fc[j] == 0 && ignore_Fc_0 == FALSE) {
 				/* Special case indicating that this pin does not connect to general-purpose routing */

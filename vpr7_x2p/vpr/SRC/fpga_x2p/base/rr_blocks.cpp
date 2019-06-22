@@ -1598,7 +1598,7 @@ void RRGSB::add_chan_node(enum e_side node_side, RRChan& rr_chan, std::vector<en
 } 
 
 /* Add a node to the chan_node_ list and also assign its direction in chan_node_direction_ */
-void RRGSB::add_ipin_node(t_rr_node* node, enum e_side node_side, enum e_side grid_side) {
+void RRGSB::add_ipin_node(t_rr_node* node, const enum e_side node_side, const enum e_side grid_side) {
   Side side_manager(node_side);
   assert(validate_side(node_side));
   /* push pack the dedicated element in the vector */
@@ -1609,7 +1609,7 @@ void RRGSB::add_ipin_node(t_rr_node* node, enum e_side node_side, enum e_side gr
 }
 
 /* Add a node to the chan_node_ list and also assign its direction in chan_node_direction_ */
-void RRGSB::add_opin_node(t_rr_node* node, enum e_side node_side, enum e_side grid_side) {
+void RRGSB::add_opin_node(t_rr_node* node, const enum e_side node_side, const enum e_side grid_side) {
   Side side_manager(node_side);
   assert(validate_side(node_side));
   /* push pack the dedicated element in the vector */

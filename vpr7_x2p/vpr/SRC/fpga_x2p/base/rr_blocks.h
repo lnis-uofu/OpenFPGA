@@ -251,8 +251,8 @@ class RRGSB {
     void set_coordinator(size_t x, size_t y);
     void init_num_sides(size_t num_sides); /* Allocate the vectors with the given number of sides */
     void add_chan_node(enum e_side node_side, RRChan& rr_chan, std::vector<enum PORTS> rr_chan_dir); /* Add a node to the chan_rr_node_ list and also assign its direction in chan_rr_node_direction_ */
-    void add_ipin_node(t_rr_node* node, enum e_side node_side, enum e_side grid_side); /* Add a node to the chan_rr_node_ list and also assign its direction in chan_rr_node_direction_ */
-    void add_opin_node(t_rr_node* node, enum e_side node_side, enum e_side grid_side); /* Add a node to the chan_rr_node_ list and also assign its direction in chan_rr_node_direction_ */
+    void add_ipin_node(t_rr_node* node, const enum e_side node_side, const enum e_side grid_side); /* Add a node to the chan_rr_node_ list and also assign its direction in chan_rr_node_direction_ */
+    void add_opin_node(t_rr_node* node, const enum e_side node_side, const enum e_side grid_side); /* Add a node to the chan_rr_node_ list and also assign its direction in chan_rr_node_direction_ */
     void set_sb_num_reserved_conf_bits(size_t num_reserved_conf_bits);
     void set_sb_conf_bits_lsb(size_t conf_bits_lsb);
     void set_sb_conf_bits_msb(size_t conf_bits_msb);

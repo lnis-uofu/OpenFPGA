@@ -1082,29 +1082,24 @@ void build_rr_graph_edges(t_rr_graph* rr_graph,
                           int** Fc_in, int** Fc_out,
                           const enum e_switch_block_type sb_type, const int Fs) {
 
-  DeviceCoordinator device_range(device_size.get_x() - 1, device_size.get_y() - 1);
+  DeviceCoordinator gsb_range(device_size.get_x() - 2, device_size.get_y() - 2);
 
   /* Go Switch Block by Switch Block */
-  for (size_t ix = 0; ix < device_size.get_x(); ++ix) {
-    for (size_t iy = 0; iy < device_size.get_y(); ++iy) { 
+  for (size_t ix = 0; ix <= gsb_range.get_x(); ++ix) {
+    for (size_t iy = 0; iy <= gsb_range.get_y(); ++iy) { 
+      vpr_printf(TIO_MESSAGE_INFO, "Building edges for GSB[%lu][%lu]\n", ix, iy);
 
       DeviceCoordinator gsb_coordinator(ix, iy);
       /* Create a GSB object */
-      RRGSB rr_gsb = build_one_tileable_rr_gsb(device_range, device_chan_width, segment_inf, gsb_coordinator, rr_graph);
-
-      DeviceCoordinator grid_coordinator = rr_gsb.get_grid_coordinator();
+      RRGSB rr_gsb = build_one_tileable_rr_gsb(gsb_range, device_chan_width, segment_inf, gsb_coordinator, rr_graph);
 
       /* adapt the track_to_ipin_lookup for the GSB nodes */      
       t_track2pin_map track2ipin_map; /* [0..track_gsb_side][0..num_tracks][ipin_indices] */
-      /* Get the Fc index of the grid */
-      int grid_Fc_in_index = grids[grid_coordinator.get_x()][grid_coordinator.get_y()].type->index;
-      track2ipin_map = build_gsb_track_to_ipin_map(rr_graph, rr_gsb, segment_inf, Fc_in[grid_Fc_in_index]);
+      track2ipin_map = build_gsb_track_to_ipin_map(rr_graph, rr_gsb, grids, segment_inf, Fc_in);
 
       /* adapt the opin_to_track_map for the GSB nodes */      
       t_pin2track_map opin2track_map; /* [0..gsb_side][0..num_opin_node][track_indices] */
-      /* Get the Fc index of the grid */
-      int grid_Fc_out_index = grids[grid_coordinator.get_x()][grid_coordinator.get_y()].type->index;
-      opin2track_map = build_gsb_opin_to_track_map(rr_graph, rr_gsb, segment_inf, Fc_out[grid_Fc_out_index]);
+      opin2track_map = build_gsb_opin_to_track_map(rr_graph, rr_gsb, grids, segment_inf, Fc_out);
 
       /* adapt the switch_block_conn for the GSB nodes */      
       t_track2track_map sb_conn; /* [0..from_gsb_side][0..chan_width-1][track_indices] */
