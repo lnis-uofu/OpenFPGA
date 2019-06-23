@@ -1273,7 +1273,7 @@ t_track2pin_map build_gsb_track_to_ipin_map(t_rr_graph* rr_graph,
                                        segment_inf, &track2ipin_map);
       /* update offset */
       offset[chan_side_manager.to_size_t()] += 2;
-      printf("offset[%lu]=%lu\n", chan_side_manager.to_size_t(), offset[chan_side_manager.to_size_t()]);
+      //printf("offset[%lu]=%lu\n", chan_side_manager.to_size_t(), offset[chan_side_manager.to_size_t()]);
     }
   }
 

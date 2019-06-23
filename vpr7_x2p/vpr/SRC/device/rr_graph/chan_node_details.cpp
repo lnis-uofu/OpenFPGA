@@ -121,17 +121,19 @@ std::vector<size_t> ChanNodeDetails::get_seg_group(size_t track_id) const {
   group.clear();
 
   for (size_t itrack = track_id; itrack < get_chan_width(); ++itrack) {
-    if ( (get_track_direction(itrack) == get_track_direction(track_id) )
-      && (get_track_segment_length(itrack) == get_track_segment_length(track_id)) ) {
-      if ( (false == is_track_start(itrack)) 
-        || ( (true == is_track_start(itrack)) && (itrack == track_id)) ) {
-        group.push_back(itrack);
-        continue;
-      }
-      /* Stop if this another starting point */
-      if (true == is_track_start(itrack)) {
-        break;
-      }
+    if ( (get_track_direction(itrack) != get_track_direction(track_id) )
+      || (get_track_segment_id(itrack) != get_track_segment_id(track_id)) ) {
+      /* Bypass any nodes in different direction and segment information*/
+      continue;
+    }
+    if ( (false == is_track_start(itrack)) 
+      || ( (true == is_track_start(itrack)) && (itrack == track_id)) ) {
+      group.push_back(itrack);
+      continue;
+    }
+    /* Stop if this another starting point */
+    if (true == is_track_start(itrack)) {
+      break;
     }
   }  
   return group;
@@ -227,6 +229,7 @@ void ChanNodeDetails::set_tracks_start(e_direction track_direction) {
   for (size_t inode = 0; inode < get_chan_width(); ++inode) {
     /* Bypass non-match tracks */
     if (track_direction != get_track_direction(inode)) {
+      continue; /* Pass condition*/
     }
     track_start_[inode] = true;
   }
@@ -237,6 +240,7 @@ void ChanNodeDetails::set_tracks_end(e_direction track_direction) {
   for (size_t inode = 0; inode < get_chan_width(); ++inode) {
     /* Bypass non-match tracks */
     if (track_direction != get_track_direction(inode)) {
+      continue; /* Pass condition*/
     }
     track_end_[inode] = true;
   }

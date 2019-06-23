@@ -753,6 +753,7 @@ void load_one_chan_rr_nodes_basic_info(const DeviceCoordinator& chan_coordinator
       chan_details->set_track_node_id(itrack, *cur_node_id);
       /* cost index depends on the segment index */
       rr_graph->rr_node[*cur_node_id].cost_index = cost_index_offset + seg_id; 
+
       /* Update node counter */
       (*cur_node_id)++;
       /* Finish here, go to next */
@@ -776,6 +777,7 @@ void load_one_chan_rr_nodes_basic_info(const DeviceCoordinator& chan_coordinator
       rr_graph->rr_node[*cur_node_id].driver_switch = segment_infs[seg_id].opin_switch; 
       /* cost index depends on the segment index */
       rr_graph->rr_node[*cur_node_id].cost_index = cost_index_offset + seg_id; 
+
       /* Update node counter */
       (*cur_node_id)++;
       /* Finish here, go to next */
@@ -791,7 +793,11 @@ void load_one_chan_rr_nodes_basic_info(const DeviceCoordinator& chan_coordinator
       /* set xhigh/yhigh and push changes to track_ids */
       rr_graph->rr_node[rr_node_id].xhigh = chan_coordinator.get_x();
       rr_graph->rr_node[rr_node_id].yhigh = chan_coordinator.get_y();
-      rr_graph->rr_node[rr_node_id].track_ids.push_back(itrack); 
+      /* Do not update track_ids for length-1 wires, they should have only 1 track_id */
+      if ( (rr_graph->rr_node[rr_node_id].xhigh > rr_graph->rr_node[rr_node_id].xlow)
+        || (rr_graph->rr_node[rr_node_id].yhigh > rr_graph->rr_node[rr_node_id].ylow) ) {
+        rr_graph->rr_node[rr_node_id].track_ids.push_back(itrack); 
+      }
       /* Finish here, go to next */
     }
     /* For DEC direction, an starting point requires an update on xlow and ylow  */
@@ -802,23 +808,37 @@ void load_one_chan_rr_nodes_basic_info(const DeviceCoordinator& chan_coordinator
       /* Do a quick check, make sure we do not mistakenly modify other nodes */
       assert(chan_type == rr_graph->rr_node[rr_node_id].type);
       assert(chan_details->get_track_direction(itrack) == rr_graph->rr_node[rr_node_id].direction);
-      /* set xhigh/yhigh and push changes to track_ids */
+      /* set xlow/ylow and push changes to track_ids */
       rr_graph->rr_node[rr_node_id].xlow = chan_coordinator.get_x();
       rr_graph->rr_node[rr_node_id].ylow = chan_coordinator.get_y();
-      rr_graph->rr_node[rr_node_id].track_ids.push_back(itrack); 
+      /* Do not update track_ids for length-1 wires, they should have only 1 track_id */
+      if ( (rr_graph->rr_node[rr_node_id].xhigh > rr_graph->rr_node[rr_node_id].xlow)
+        || (rr_graph->rr_node[rr_node_id].yhigh > rr_graph->rr_node[rr_node_id].ylow) ) {
+        rr_graph->rr_node[rr_node_id].track_ids.push_back(itrack); 
+      }
       /* Finish here, go to next */
+    }
+    /* Finish processing starting and ending tracks */
+    if ( (true== chan_details->is_track_start(itrack))
+      || (true == chan_details->is_track_end(itrack)) ) {
+      /* Finish here, go to next */
+      continue;
     }
     /* For other nodes, we get the node_id and just update track_ids */
-    if ( (false == chan_details->is_track_start(itrack))
-      && (false == chan_details->is_track_end(itrack)) ) {
-      /* Get the node_id */
-      size_t rr_node_id = chan_details->get_track_node_id(itrack);
-      /* Do a quick check, make sure we do not mistakenly modify other nodes */
-      assert(chan_type == rr_graph->rr_node[rr_node_id].type);
-      assert(chan_details->get_track_direction(itrack) == rr_graph->rr_node[rr_node_id].direction);
-      rr_graph->rr_node[rr_node_id].track_ids.push_back(itrack); 
-      /* Finish here, go to next */
-    }
+    /* Ensure those nodes are neither starting nor ending points */
+    assert( (false == chan_details->is_track_start(itrack))
+         && (false == chan_details->is_track_end(itrack)) );
+    /* Get the node_id */
+    size_t rr_node_id = chan_details->get_track_node_id(itrack);
+    /* Do a quick check, make sure we do not mistakenly modify other nodes */
+    assert(chan_type == rr_graph->rr_node[rr_node_id].type);
+    assert(chan_details->get_track_direction(itrack) == rr_graph->rr_node[rr_node_id].direction);
+    /* Update track_ids */
+    rr_graph->rr_node[rr_node_id].track_ids.push_back(itrack); 
+    /* Finish here, go to next */
+  }
+
+  for (size_t itrack = 0; itrack < chan_details->get_chan_width(); ++itrack) {
     /* fill fast look-up table */
     /* Get node_id */
     int track_node_id = chan_details->get_track_node_id(itrack);
@@ -921,23 +941,33 @@ void load_rr_nodes_basic_info(t_rr_graph* rr_graph,
       ChanNodeDetails chanx_details = build_unidir_chan_node_details(chan_width[0], device_size.get_x() - 2, chan_side, segment_infs); 
       /* Force node_ids from the previous chanx */
       if (0 < track_node_ids.size()) {
+        /* Rotate should be done based on a typical case of routing tracks.
+         * Tracks on the borders are not regularly started and ended, 
+         * which causes the node_rotation malfunction  
+         */
+        ChanNodeDetails chanx_details_tt = build_unidir_chan_node_details(chan_width[0], device_size.get_x() - 2, NUM_SIDES, segment_infs); 
+        chanx_details_tt.set_track_node_ids(track_node_ids);
+
+        /* Rotate the chanx_details by an offset of ix - 1, the distance to the most left channel */
+        /* For INC_DIRECTION, we use clockwise rotation 
+         * node_id A ---->   -----> node_id D
+         * node_id B ---->  / ----> node_id A
+         * node_id C ----> /  ----> node_id B
+         * node_id D ---->    ----> node_id C 
+         */
+        chanx_details_tt.rotate_track_node_id(1, INC_DIRECTION, true);
+        /* For DEC_DIRECTION, we use clockwise rotation 
+         * node_id A <-----    <----- node_id B
+         * node_id B <----- \  <----- node_id C
+         * node_id C <-----  \ <----- node_id D
+         * node_id D <-----    <----- node_id A 
+         */
+        chanx_details_tt.rotate_track_node_id(1, DEC_DIRECTION, false);
+
+        track_node_ids = chanx_details_tt.get_track_node_ids();
         chanx_details.set_track_node_ids(track_node_ids);
       }
-      /* Rotate the chanx_details by an offset of ix - 1, the distance to the most left channel */
-      /* For INC_DIRECTION, we use clockwise rotation 
-       * node_id A ---->   -----> node_id D
-       * node_id B ---->  / ----> node_id A
-       * node_id C ----> /  ----> node_id B
-       * node_id D ---->    ----> node_id C 
-       */
-      chanx_details.rotate_track_node_id(ix - 1, INC_DIRECTION, false);
-      /* For DEC_DIRECTION, we use clockwise rotation 
-       * node_id A <-----    <----- node_id B
-       * node_id B <----- \  <----- node_id C
-       * node_id C <-----  \ <----- node_id D
-       * node_id D <-----    <----- node_id A 
-       */
-      chanx_details.rotate_track_node_id(ix - 1, DEC_DIRECTION, true);
+
       /* Configure CHANX in this channel */
       load_one_chan_rr_nodes_basic_info(chan_coordinator, CHANX, 
                                         &chanx_details, 
@@ -958,7 +988,7 @@ void load_rr_nodes_basic_info(t_rr_graph* rr_graph,
     for (size_t iy = 1; iy < device_size.get_y() - 1; ++iy) { 
       DeviceCoordinator chan_coordinator(ix, iy);
       enum e_side chan_side = NUM_SIDES;
-      /* For LEFT side of FPGA */
+      /* For BOTTOM side of FPGA */
       if (1 == iy) {
         chan_side = BOTTOM;
       }
@@ -969,23 +999,32 @@ void load_rr_nodes_basic_info(t_rr_graph* rr_graph,
       ChanNodeDetails chany_details = build_unidir_chan_node_details(chan_width[1], device_size.get_y() - 2, chan_side, segment_infs); 
       /* Force node_ids from the previous chanx */
       if (0 < track_node_ids.size()) {
+        /* Rotate should be done based on a typical case of routing tracks.
+         * Tracks on the borders are not regularly started and ended, 
+         * which causes the node_rotation malfunction  
+         */
+        ChanNodeDetails chany_details_tt = build_unidir_chan_node_details(chan_width[1], device_size.get_y() - 2, NUM_SIDES, segment_infs); 
+
+        chany_details_tt.set_track_node_ids(track_node_ids);
+        /* Rotate the chany_details by an offset of 1*/
+        /* For INC_DIRECTION, we use clockwise rotation 
+         * node_id A ---->   -----> node_id D
+         * node_id B ---->  / ----> node_id A
+         * node_id C ----> /  ----> node_id B
+         * node_id D ---->    ----> node_id C 
+         */
+        chany_details_tt.rotate_track_node_id(1, INC_DIRECTION, true);
+        /* For DEC_DIRECTION, we use clockwise rotation 
+         * node_id A <-----    <----- node_id B
+         * node_id B <----- \  <----- node_id C
+         * node_id C <-----  \ <----- node_id D
+         * node_id D <-----    <----- node_id A 
+         */
+        chany_details_tt.rotate_track_node_id(1, DEC_DIRECTION, false);
+
+        track_node_ids = chany_details_tt.get_track_node_ids();
         chany_details.set_track_node_ids(track_node_ids);
       }
-      /* Rotate the chany_details by an offset of 1*/
-      /* For INC_DIRECTION, we use clockwise rotation 
-       * node_id A ---->   -----> node_id D
-       * node_id B ---->  / ----> node_id A
-       * node_id C ----> /  ----> node_id B
-       * node_id D ---->    ----> node_id C 
-       */
-      chany_details.rotate_track_node_id(iy - 1, INC_DIRECTION, false);
-      /* For DEC_DIRECTION, we use clockwise rotation 
-       * node_id A <-----    <----- node_id B
-       * node_id B <----- \  <----- node_id C
-       * node_id C <-----  \ <----- node_id D
-       * node_id D <-----    <----- node_id A 
-       */
-      chany_details.rotate_track_node_id(iy - 1, DEC_DIRECTION, true);
       /* Configure CHANX in this channel */
       load_one_chan_rr_nodes_basic_info(chan_coordinator, CHANY, 
                                         &chany_details, 
@@ -999,6 +1038,23 @@ void load_rr_nodes_basic_info(t_rr_graph* rr_graph,
 
   /* Check */
   assert ((int)cur_node_id == rr_graph->num_rr_nodes);
+  for (int inode = 0; inode < rr_graph->num_rr_nodes; ++inode) {
+    /* Check: we only support straight wires now.
+     * CHANY: xlow=xhigh CHANY:ylow=yhigh  
+     */
+    if (CHANX == rr_graph->rr_node[inode].type) {
+      assert (rr_graph->rr_node[inode].ylow == rr_graph->rr_node[inode].yhigh);
+    } else if (CHANY == rr_graph->rr_node[inode].type) {
+      assert (rr_graph->rr_node[inode].xlow == rr_graph->rr_node[inode].xhigh);
+    } else {
+      assert ( (SOURCE == rr_graph->rr_node[inode].type)
+            || (SINK == rr_graph->rr_node[inode].type)
+            || (OPIN == rr_graph->rr_node[inode].type)
+            || (IPIN == rr_graph->rr_node[inode].type));
+      assert (rr_graph->rr_node[inode].xlow == rr_graph->rr_node[inode].xhigh);
+      assert (rr_graph->rr_node[inode].ylow == rr_graph->rr_node[inode].yhigh);
+    }
+  }
 
   /* Reverse the track_ids of CHANX and CHANY nodes in DEC_DIRECTION*/
   for (int inode = 0; inode < rr_graph->num_rr_nodes; ++inode) {
@@ -1087,7 +1143,7 @@ void build_rr_graph_edges(t_rr_graph* rr_graph,
   /* Go Switch Block by Switch Block */
   for (size_t ix = 0; ix <= gsb_range.get_x(); ++ix) {
     for (size_t iy = 0; iy <= gsb_range.get_y(); ++iy) { 
-      vpr_printf(TIO_MESSAGE_INFO, "Building edges for GSB[%lu][%lu]\n", ix, iy);
+      //vpr_printf(TIO_MESSAGE_INFO, "Building edges for GSB[%lu][%lu]\n", ix, iy);
 
       DeviceCoordinator gsb_coordinator(ix, iy);
       /* Create a GSB object */
