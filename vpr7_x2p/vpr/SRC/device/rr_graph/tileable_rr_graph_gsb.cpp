@@ -23,7 +23,7 @@
  ***********************************************************************/
 
 /************************************************************************
- * Filename:    rr_graph_tileable_gsb.cpp
+ * Filename:    tileable_rr_graph_gsb.cpp
  * Created by:   Xifan Tang
  * Change history:
  * +-------------------------------------+
@@ -48,8 +48,9 @@
 #include "rr_graph_util.h"
 #include "rr_graph2.h"
 
-#include "rr_graph_tileable_gsb.h"
-#include "rr_graph_tileable_builder.h"
+#include "rr_graph_builder_utils.h"
+#include "tileable_chan_details_builder.h"
+#include "tileable_rr_graph_gsb.h"
 
 #include "fpga_x2p_backannotate_utils.h"
 
@@ -886,66 +887,12 @@ RRGSB build_one_tileable_rr_gsb(const DeviceCoordinator& device_range,
 }
 
 /************************************************************************
- * Add a edge connecting two rr_nodes
- * For src rr_node, update the edge list and update switch_id,
- * For des rr_node, update the fan_in
- ***********************************************************************/
-static 
-void add_one_edge_for_two_rr_nodes(const t_rr_graph* rr_graph,
-                                   const int src_rr_node_id, 
-                                   const int des_rr_node_id,
-                                   const short switch_id) {
-  /* Check */
-  assert ( (-1 < src_rr_node_id) && (src_rr_node_id < rr_graph->num_rr_nodes) );
-  assert ( (-1 < des_rr_node_id) && (des_rr_node_id < rr_graph->num_rr_nodes) );
-  
-  t_rr_node* src_rr_node = &(rr_graph->rr_node[src_rr_node_id]);
-  t_rr_node* des_rr_node = &(rr_graph->rr_node[des_rr_node_id]);
-
-  /* Allocate edge and switch to src_rr_node */
-  src_rr_node->num_edges++;
-  if (NULL == src_rr_node->edges) {
-    /* calloc */
-    src_rr_node->edges = (int*) my_calloc( src_rr_node->num_edges, sizeof(int) ); 
-    src_rr_node->switches = (short*) my_calloc( src_rr_node->num_edges, sizeof(short) ); 
-  } else {
-    /* realloc */
-    src_rr_node->edges = (int*) my_realloc(src_rr_node->edges, 
-                                           src_rr_node->num_edges * sizeof(int)); 
-    src_rr_node->switches = (short*) my_realloc(src_rr_node->switches, 
-                                                src_rr_node->num_edges * sizeof(short)); 
-  }
-  /* Fill edge and switch info */
-  src_rr_node->edges[src_rr_node->num_edges - 1] = des_rr_node_id;
-  src_rr_node->switches[src_rr_node->num_edges - 1] = switch_id;
-
-  /* Update the des_rr_node */ 
-  des_rr_node->fan_in++;
-
-  return;
-}
-
-/************************************************************************
- * Get the class index of a grid pin 
- ***********************************************************************/
-static 
-int get_grid_pin_class_index(const t_grid_tile& cur_grid,
-                             const int pin_index) {
-  /* check */
-  assert ( pin_index < cur_grid.type->num_pins);
-  return cur_grid.type->pin_class[pin_index];
-}
-
-/************************************************************************
  * Create edges for each rr_node of a General Switch Blocks (GSB):
- * 1. create edges between SOURCE and OPINs 
- * 2. create edges between IPINs and SINKs 
- * 3. create edges between CHANX | CHANY and IPINs (connections inside connection blocks) 
- * 4. create edges between OPINs, CHANX and CHANY (connections inside switch blocks) 
- * 5. create edges between OPINs and IPINs (direct-connections) 
+ * 1. create edges between CHANX | CHANY and IPINs (connections inside connection blocks) 
+ * 2. create edges between OPINs, CHANX and CHANY (connections inside switch blocks) 
+ * 3. create edges between OPINs and IPINs (direct-connections) 
  ***********************************************************************/
 void build_edges_for_one_tileable_rr_gsb(const t_rr_graph* rr_graph, 
-                                         const std::vector< std::vector<t_grid_tile> > grids,
                                          const RRGSB* rr_gsb,
                                          const t_track2pin_map track2ipin_map,
                                          const t_pin2track_map opin2track_map,
@@ -961,15 +908,8 @@ void build_edges_for_one_tileable_rr_gsb(const t_rr_graph* rr_graph,
     /* Find OPINs */  
     for (size_t inode = 0; inode < rr_gsb->get_num_opin_nodes(gsb_side); ++inode) {
       t_rr_node* opin_node = rr_gsb->get_opin_node(gsb_side, inode); 
-      int src_node_ptc_num = get_grid_pin_class_index(grids[opin_node->xlow][opin_node->ylow], opin_node->ptc_num);
-      /* 1. create edges between SOURCE and OPINs */
-      int src_node_id = get_rr_node_index(opin_node->xlow, opin_node->ylow, 
-                                          SOURCE, src_node_ptc_num,
-                                          rr_graph->rr_node_indices);
-      /* add edges to the src_node */
-      add_one_edge_for_two_rr_nodes(rr_graph, src_node_id, opin_node - rr_graph->rr_node,
-                                    opin_node->driver_switch);
-      /* 2. create edges between OPINs and CHANX|CHANY, using opin2track_map */
+
+      /* 1. create edges between OPINs and CHANX|CHANY, using opin2track_map */
       int num_edges = opin2track_map[side_manager.to_size_t()][inode].size();
       for (int iedge = 0; iedge < num_edges; ++iedge) {
         int track_node_id = opin2track_map[side_manager.to_size_t()][inode][iedge];
@@ -979,25 +919,13 @@ void build_edges_for_one_tileable_rr_gsb(const t_rr_graph* rr_graph,
       }
     }
 
-    /* Find IPINs */  
-    for (size_t inode = 0; inode < rr_gsb->get_num_ipin_nodes(gsb_side); ++inode) {
-      t_rr_node* ipin_node = rr_gsb->get_ipin_node(gsb_side, inode); 
-      int sink_node_ptc_num = get_grid_pin_class_index(grids[ipin_node->xlow][ipin_node->ylow], ipin_node->ptc_num);
-      /* 3. create edges between IPINs and SINKs */
-      int sink_node_id = get_rr_node_index(ipin_node->xlow, ipin_node->ylow, 
-                                           SINK, sink_node_ptc_num,
-                                           rr_graph->rr_node_indices);
-      /* add edges to connect the IPIN node to SINK nodes */
-      add_one_edge_for_two_rr_nodes(rr_graph, ipin_node - rr_graph->rr_node, sink_node_id,
-                                    rr_graph->rr_node[sink_node_id].driver_switch);
-    }
     /* Find  CHANX or CHANY */
     /* For TRACKs to IPINs, we only care LEFT and TOP sides 
      * Skip RIGHT and BOTTOM for the ipin2track_map since they should be handled in other GSBs 
      */
     if ( (side_manager.get_side() == rr_gsb->get_cb_chan_side(CHANX))
       || (side_manager.get_side() == rr_gsb->get_cb_chan_side(CHANY)) ) {
-      /* 4. create edges between CHANX|CHANY and IPINs, using ipin2track_map */
+      /* 2. create edges between CHANX|CHANY and IPINs, using ipin2track_map */
       for (size_t inode = 0; inode < rr_gsb->get_chan_width(gsb_side); ++inode) {
         t_rr_node* chan_node = rr_gsb->get_chan_node(gsb_side, inode); 
         int num_edges = track2ipin_map[side_manager.to_size_t()][inode].size();
@@ -1010,7 +938,7 @@ void build_edges_for_one_tileable_rr_gsb(const t_rr_graph* rr_graph,
       }
     }
 
-    /* 5. create edges between CHANX|CHANY and CHANX|CHANY, using track2track_map */
+    /* 3. create edges between CHANX|CHANY and CHANX|CHANY, using track2track_map */
     for (size_t inode = 0; inode < rr_gsb->get_chan_width(gsb_side); ++inode) {
       t_rr_node* chan_node = rr_gsb->get_chan_node(gsb_side, inode); 
       int num_edges = track2track_map[side_manager.to_size_t()][inode].size();

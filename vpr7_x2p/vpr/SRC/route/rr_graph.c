@@ -16,7 +16,7 @@
 #include "read_xml_arch_file.h"
 #include "ReadOptions.h"
 
-#include "rr_graph_tileable_builder.h"
+#include "tileable_rr_graph_builder.h"
 
 /* Xifan TANG: SWSEG SUPPORT */
 #include "rr_graph_swseg.h" 
@@ -226,7 +226,7 @@ void build_rr_graph(INP t_graph_type graph_type, INP int L_num_types,
                                    L_nx, L_ny, L_grid, 
                                    chan_width,
                                    sb_type, Fs, num_seg_types, segment_inf,
-                                   num_switches, global_route_switch, delayless_switch,
+                                   num_switches, delayless_switch,
                                    timing_inf, wire_to_ipin_switch,
                                    base_cost_type, directs, num_directs, ignore_Fc_0, Warnings); 
   } else {
@@ -523,9 +523,8 @@ void build_classic_rr_graph(INP t_graph_type graph_type, INP int L_num_types,
 	} else
 		;
 
-	check_rr_graph(graph_type, types, L_nx, L_ny, nodes_per_chan, Fs,
-			num_seg_types, num_switches, segment_inf, global_route_switch,
-			delayless_switch, wire_to_ipin_switch, Fc_in, Fc_out);
+	check_rr_graph(graph_type, L_nx, L_ny, 
+		           num_switches, Fc_in);
 
 	/* Free all temp structs */
 	if (seg_details) {

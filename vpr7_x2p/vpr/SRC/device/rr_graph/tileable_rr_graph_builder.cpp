@@ -23,7 +23,7 @@
  ***********************************************************************/
 
 /************************************************************************
- * Filename:    rr_graph_tileable_builder.c
+ * Filename:    rr_graph_tileable_builder.cpp
  * Created by:   Xifan Tang
  * Change history:
  * +-------------------------------------+
@@ -59,12 +59,15 @@
 #include "check_rr_graph.h"
 #include "route_common.h"
 #include "fpga_x2p_types.h"
-#include "rr_graph_tileable_builder.h"
 
 #include "rr_blocks.h"
 #include "chan_node_details.h"
 #include "device_coordinator.h"
-#include "rr_graph_tileable_gsb.h"
+
+#include "rr_graph_builder_utils.h"
+#include "tileable_chan_details_builder.h"
+#include "tileable_rr_graph_gsb.h"
+#include "tileable_rr_graph_builder.h"
 
 /************************************************************************
  * Local data stuctures in the file 
@@ -73,379 +76,6 @@
 /************************************************************************
  * Local function in the file 
  ***********************************************************************/
-
-/************************************************************************
- * Initialize a rr_node 
- ************************************************************************/
-static 
-void tileable_rr_graph_init_rr_node(t_rr_node* cur_rr_node) {
-  cur_rr_node->xlow = 0;
-  cur_rr_node->xhigh = 0;
-  cur_rr_node->ylow = 0;
-  cur_rr_node->xhigh = 0;
-
-  cur_rr_node->ptc_num = 0; 
-  cur_rr_node->track_ids.clear();
-
-  cur_rr_node->cost_index = 0; 
-  cur_rr_node->occ = 0; 
-  cur_rr_node->fan_in = 0; 
-  cur_rr_node->num_edges = 0; 
-  cur_rr_node->type = NUM_RR_TYPES; 
-  cur_rr_node->edges = NULL; 
-  cur_rr_node->switches = NULL; 
-
-  cur_rr_node->driver_switch = 0; 
-  cur_rr_node->unbuf_switched = 0; 
-  cur_rr_node->buffered = 0; 
-  cur_rr_node->R = 0.; 
-  cur_rr_node->C = 0.; 
-
-  cur_rr_node->direction = BI_DIRECTION; /* Give an invalid value, easy to check errors */ 
-  cur_rr_node->drivers = SINGLE; 
-  cur_rr_node->num_wire_drivers = 0; 
-  cur_rr_node->num_opin_drivers = 0; 
-
-  cur_rr_node->num_drive_rr_nodes = 0; 
-  cur_rr_node->drive_rr_nodes = NULL; 
-  cur_rr_node->drive_switches = NULL; 
-
-  cur_rr_node->vpack_net_num_changed = FALSE; 
-  cur_rr_node->is_parasitic_net = FALSE; 
-  cur_rr_node->is_in_heap = FALSE; 
-
-  cur_rr_node->sb_num_drive_rr_nodes = 0; 
-  cur_rr_node->sb_drive_rr_nodes = NULL; 
-  cur_rr_node->sb_drive_switches = NULL; 
-
-  cur_rr_node->pb = NULL; 
-
-  cur_rr_node->name_mux = NULL; 
-  cur_rr_node->id_path = -1; 
-
-  cur_rr_node->prev_node = -1; 
-  cur_rr_node->prev_edge = -1; 
-  cur_rr_node->net_num = -1; 
-  cur_rr_node->vpack_net_num = -1; 
-
-  cur_rr_node->prev_node_in_pack = -1; 
-  cur_rr_node->prev_edge_in_pack = -1; 
-  cur_rr_node->net_num_in_pack = -1; 
-
-  cur_rr_node->pb_graph_pin = NULL; 
-  cur_rr_node->tnode = NULL; 
-  
-  cur_rr_node->pack_intrinsic_cost = 0.; 
-  cur_rr_node->z = 0; 
-
-  return;
-}
-
-/************************************************************************
- * Generate the number of tracks for each types of routing segments
- * w.r.t. the frequency of each of segments and channel width
- * Note that if we dertermine the number of tracks per type using
- *     chan_width * segment_frequency / total_freq may cause 
- * The total track num may not match the chan_width, 
- * therefore, we assign tracks one by one until we meet the frequency requirement
- * In this way, we can assign the number of tracks with repect to frequency 
- ***********************************************************************/
-static 
-std::vector<size_t> get_num_tracks_per_seg_type(const size_t chan_width, 
-                                                const std::vector<t_segment_inf> segment_inf, 
-                                                const bool use_full_seg_groups) {
-  std::vector<size_t> result;
-  std::vector<double> demand;
-  /* Make sure a clean start */
-  result.resize(segment_inf.size());
-  demand.resize(segment_inf.size());
-
-  /* Scale factor so we can divide by any length
-   * and still use integers */
-  /* Get the sum of frequency */
-  size_t scale = 1;
-  size_t freq_sum = 0;
-  for (size_t iseg = 0; iseg < segment_inf.size(); ++iseg) {
-    scale *= segment_inf[iseg].length;
-    freq_sum += segment_inf[iseg].frequency;
-  }
-  size_t reduce = scale * freq_sum;
-
-  /* Init assignments to 0 and set the demand values */
-  /* Get the fraction of each segment type considering the frequency:
-   * num_track_per_seg = chan_width * (freq_of_seg / sum_freq)
-   */
-  for (size_t iseg = 0; iseg < segment_inf.size(); ++iseg) {
-    result[iseg] = 0;
-    demand[iseg] = scale * chan_width * segment_inf[iseg].frequency;
-    if (true == use_full_seg_groups) {
-      demand[iseg] /= segment_inf[iseg].length;
-    }
-  }
-
-  /* check if the sum of num_tracks, matches the chan_width */
-  /* Keep assigning tracks until we use them up */
-  size_t assigned = 0;
-  size_t size = 0;
-  size_t imax = 0;
-  while (assigned < chan_width) {
-    /* Find current maximum demand */
-    double max = 0;
-    for (size_t iseg = 0; iseg < segment_inf.size(); ++iseg) {
-      if (demand[iseg] > max) {
-        imax = iseg;
-      }
-      max = std::max(demand[iseg], max); 
-    }
-
-    /* Assign tracks to the type and reduce the types demand */
-    size = (use_full_seg_groups ? segment_inf[imax].length : 1);
-    demand[imax] -= reduce;
-    result[imax] += size;
-    assigned += size;
-  }
-
-  /* Undo last assignment if we were closer to goal without it */
-  if ((assigned - chan_width) > (size / 2)) {
-    result[imax] -= size;
-  }
-
-  return result;
-} 
-
-/************************************************************************
- * Build details of routing tracks in a channel 
- * The function will 
- * 1. Assign the segments for each routing channel,
- *    To be specific, for each routing track, we assign a routing segment.
- *    The assignment is subject to users' specifications, such as 
- *    a. length of each type of segment
- *    b. frequency of each type of segment.
- *    c. routing channel width
- *
- * 2. The starting point of each segment in the channel will be assigned
- *    For each segment group with same directionality (tracks have the same length),
- *    every L track will be a starting point (where L denotes the length of segments)
- *    In this case, if the number of tracks is not a multiple of L,
- *    indeed we may have some <L segments. This can be considered as a side effect.
- *    But still the rr_graph is tileable, which is the first concern!
- *
- *    Here is a quick example of Length-4 wires in a W=12 routing channel
- *    +---------------------------------------+--------------+
- *    | Index |   Direction  | Starting Point | Ending Point |
- *    +---------------------------------------+--------------+
- *    |   0   | MUX--------> |   Yes          |  No          |
- *    +---------------------------------------+--------------+
- *    |   1   | <--------MUX |   Yes          |  No          |
- *    +---------------------------------------+--------------+
- *    |   2   |   -------->  |   No           |  No          |
- *    +---------------------------------------+--------------+
- *    |   3   | <--------    |   No           |  No          |
- *    +---------------------------------------+--------------+
- *    |   4   |    --------> |   No           |  No          |
- *    +---------------------------------------+--------------+
- *    |   5   | <--------    |   No           |  No          |
- *    +---------------------------------------+--------------+
- *    |   7   | -------->MUX |   No           |  Yes         |
- *    +---------------------------------------+--------------+
- *    |   8   | MUX<-------- |   No           |  Yes         |
- *    +---------------------------------------+--------------+
- *    |   9   | MUX--------> |   Yes          |  No          |
- *    +---------------------------------------+--------------+
- *    |   10  | <--------MUX |   Yes          |  No          |
- *    +---------------------------------------+--------------+
- *    |   11  | -------->MUX |   No           |  Yes         |
- *    +------------------------------------------------------+
- *    |   12  | <--------    |   No           |  No          |
- *    +------------------------------------------------------+
- *
- * 3. SPECIAL for fringes: TOP|RIGHT|BOTTOM|RIGHT
- *    if device_side is NUM_SIDES, we assume this channel does not locate on borders
- *    All segments will start and ends with no exception
- *
- * 4. IMPORTANT: we should be aware that channel width maybe different 
- *    in X-direction and Y-direction channels!!!
- *    So we will load segment details for different channels 
- ***********************************************************************/
-ChanNodeDetails build_unidir_chan_node_details(const size_t chan_width, const size_t max_seg_length,
-                                               const enum e_side device_side, 
-                                               const std::vector<t_segment_inf> segment_inf) {
-  ChanNodeDetails chan_node_details;
-  size_t actual_chan_width = chan_width;
-  /* Correct the chan_width: it should be an even number */
-  if (0 != actual_chan_width % 2) {
-    actual_chan_width++; /* increment it to be even */
-  }
-  assert (0 == actual_chan_width % 2);
-  
-  /* Reserve channel width */
-  chan_node_details.reserve(chan_width);
-  /* Return if zero width is forced */
-  if (0 == actual_chan_width) {
-    return chan_node_details; 
-  }
-
-  /* Find the number of segments required by each group */
-  std::vector<size_t> num_tracks = get_num_tracks_per_seg_type(actual_chan_width/2, segment_inf, TRUE);  
-
-  /* Add node to ChanNodeDetails */
-  size_t cur_track = 0;
-  for (size_t iseg = 0; iseg < segment_inf.size(); ++iseg) {
-    /* segment length will be set to maxium segment length if this is a longwire */
-    size_t seg_len = segment_inf[iseg].length;
-    if (TRUE == segment_inf[iseg].longline) {
-       seg_len = max_seg_length;
-    } 
-    for (size_t itrack = 0; itrack < num_tracks[iseg]; ++itrack) {
-      bool seg_start = false;
-      bool seg_end = false;
-      /* Every first track of a group of Length-N wires, we set a starting point */
-      if (0 == itrack % seg_len) {
-        seg_start = true;
-      }
-      /* Every last track of a group of Length-N wires, we set an ending point */
-      if (seg_len - 1 == itrack % seg_len) {
-        seg_end = true;
-      }
-      /* Since this is a unidirectional routing architecture,
-       * Add a pair of tracks, 1 INC_DIRECTION track and 1 DEC_DIRECTION track 
-       */
-      chan_node_details.add_track(cur_track, INC_DIRECTION, iseg, seg_len, seg_start, seg_end);
-      cur_track++;
-      chan_node_details.add_track(cur_track, DEC_DIRECTION, iseg, seg_len, seg_start, seg_end);
-      cur_track++;
-    }    
-  }
-  /* Check if all the tracks have been satisified */ 
-  assert (cur_track == actual_chan_width);
-
-  /* If this is on the border of a device, segments should start */
-  switch (device_side) {
-  case TOP:
-  case RIGHT:
-    /* INC_DIRECTION should all end */
-    chan_node_details.set_tracks_end(INC_DIRECTION);
-    /* DEC_DIRECTION should all start */
-    chan_node_details.set_tracks_start(DEC_DIRECTION);
-    break;
-  case BOTTOM:
-  case LEFT:
-    /* INC_DIRECTION should all start */
-    chan_node_details.set_tracks_start(INC_DIRECTION);
-    /* DEC_DIRECTION should all end */
-    chan_node_details.set_tracks_end(DEC_DIRECTION);
-    break;
-  case NUM_SIDES:
-    break;
-  default:
-    vpr_printf(TIO_MESSAGE_ERROR, 
-               "(File:%s, [LINE%d]) Invalid device_side!\n", 
-               __FILE__, __LINE__);
-    exit(1);
-  }
-
-  return chan_node_details; 
-}
-
-/* Deteremine the side of a io grid */
-static 
-enum e_side determine_io_grid_pin_side(const DeviceCoordinator& device_size, 
-                                       const DeviceCoordinator& grid_coordinator) {
-  /* TOP side IO of FPGA */
-  if (device_size.get_y() == grid_coordinator.get_y()) {
-    return BOTTOM; /* Such I/O has only Bottom side pins */
-  } else if (device_size.get_x() == grid_coordinator.get_x()) { /* RIGHT side IO of FPGA */
-    return LEFT; /* Such I/O has only Left side pins */
-  } else if (0 == grid_coordinator.get_y()) { /* BOTTOM side IO of FPGA */
-    return TOP; /* Such I/O has only Top side pins */
-  } else if (0 == grid_coordinator.get_x()) { /* LEFT side IO of FPGA */
-    return RIGHT; /* Such I/O has only Right side pins */
-  } else {
-    vpr_printf(TIO_MESSAGE_ERROR, 
-               "(File:%s, [LINE%d]) I/O Grid is in the center part of FPGA! Currently unsupported!\n",
-               __FILE__, __LINE__);
-    exit(1);
-  }
-}
-
-/************************************************************************
- * Get a list of pin_index for a grid (either OPIN or IPIN)
- * For IO_TYPE, only one side will be used, we consider one side of pins 
- * For others, we consider all the sides  
- ***********************************************************************/
-static 
-std::vector<int> get_grid_side_pins(const t_grid_tile& cur_grid, 
-                                    const enum e_pin_type pin_type, 
-                                    const enum e_side pin_side, 
-                                    const int pin_height) {
-  std::vector<int> pin_list; 
-  /* Make sure a clear start */
-  pin_list.clear();
-
-  for (int ipin = 0; ipin < cur_grid.type->num_pins; ++ipin) {
-    int class_id = cur_grid.type->pin_class[ipin];
-    if ( (1 == cur_grid.type->pinloc[pin_height][pin_side][ipin]) 
-      && (pin_type == cur_grid.type->class_inf[class_id].type) ) {
-      pin_list.push_back(ipin);
-    }
-  }
-  return pin_list;
-}
-
-/************************************************************************
- * Get the number of pins for a grid (either OPIN or IPIN)
- * For IO_TYPE, only one side will be used, we consider one side of pins 
- * For others, we consider all the sides  
- ***********************************************************************/
-static 
-size_t get_grid_num_pins(const t_grid_tile& cur_grid, const enum e_pin_type pin_type, const enum e_side io_side) {
-  size_t num_pins = 0;
-  Side io_side_manager(io_side);
-
-  /* Consider capacity of the grid */
-  for (int iblk = 0; iblk < cur_grid.type->capacity; ++iblk) {
-    /* For IO_TYPE sides */
-    for (size_t side = 0; side < NUM_SIDES; ++side) {
-      Side side_manager(side);
-      /* skip unwanted sides */
-      if ( (IO_TYPE == cur_grid.type)
-        && (side != io_side_manager.to_size_t()) ) { 
-        continue;
-      }
-      /* Get pin list */
-      for (int height = 0; height < cur_grid.type->height; ++height) {
-        std::vector<int> pin_list = get_grid_side_pins(cur_grid, pin_type, side_manager.get_side(), height);
-        num_pins += pin_list.size();
-      } 
-    }
-  }
-
-  return num_pins;
-}
-
-/************************************************************************
- * Get the number of pins for a grid (either OPIN or IPIN)
- * For IO_TYPE, only one side will be used, we consider one side of pins 
- * For others, we consider all the sides  
- ***********************************************************************/
-static 
-size_t get_grid_num_classes(const t_grid_tile& cur_grid, const enum e_pin_type pin_type) {
-  size_t num_classes = 0;
-
-  /* Consider capacity of the grid */
-  for (int iblk = 0; iblk < cur_grid.type->capacity; ++iblk) {
-    for (int iclass = 0; iclass < cur_grid.type->num_class; ++iclass) {
-      /* Bypass unmatched pin_type */
-      if (pin_type != cur_grid.type->class_inf[iclass].type) {
-        continue;
-      }
-      num_classes++;
-    }
-  }
-
-  return num_classes;
-}
-
 
 /************************************************************************
  * Estimate the number of rr_nodes per category:
@@ -600,106 +230,34 @@ void load_one_grid_rr_nodes_basic_info(const DeviceCoordinator& grid_coordinator
                                        const int wire_to_ipin_switch, const int delayless_switch) {
   Side io_side_manager(io_side);
 
-  /* Consider capacity of the grid */
-  for (int iblk = 0; iblk < cur_grid.type->capacity; ++iblk) {
-    /* Walk through the height of each grid,
-     * get pins and configure the rr_nodes */
-    for (int height = 0; height < cur_grid.type->height; ++height) {
-      /* Walk through sides */
-      for (size_t side = 0; side < NUM_SIDES; ++side) {
-        Side side_manager(side);
-        /* skip unwanted sides */
-        if ( (IO_TYPE == cur_grid.type)
-          && (side != io_side_manager.to_size_t()) ) { 
-          continue;
-        }
-        /* Find OPINs */
-        /* Configure pins by pins */
-        std::vector<int> opin_list = get_grid_side_pins(cur_grid, DRIVER, side_manager.get_side(), height);
-        for (size_t pin = 0; pin < opin_list.size(); ++pin) {
-          /* Configure the rr_node for the OPIN */
-          rr_graph->rr_node[*cur_node_id].type  = OPIN; 
-          rr_graph->rr_node[*cur_node_id].xlow  = grid_coordinator.get_x(); 
-          rr_graph->rr_node[*cur_node_id].xhigh = grid_coordinator.get_x(); 
-          rr_graph->rr_node[*cur_node_id].ylow  = grid_coordinator.get_y(); 
-          rr_graph->rr_node[*cur_node_id].yhigh = grid_coordinator.get_y(); 
-          rr_graph->rr_node[*cur_node_id].ptc_num  = opin_list[pin]; 
-          rr_graph->rr_node[*cur_node_id].capacity = 1; 
-          rr_graph->rr_node[*cur_node_id].occ = 0; 
-          /* cost index is a FIXED value for OPIN */
-          rr_graph->rr_node[*cur_node_id].cost_index = OPIN_COST_INDEX; 
-          /* Switch info */
-          rr_graph->rr_node[*cur_node_id].driver_switch = delayless_switch; 
-          /* fill fast look-up table */
-          load_one_node_to_rr_graph_fast_lookup(rr_graph, *cur_node_id, 
-                                                rr_graph->rr_node[*cur_node_id].type, 
-                                                rr_graph->rr_node[*cur_node_id].xlow, 
-                                                rr_graph->rr_node[*cur_node_id].ylow,
-                                                rr_graph->rr_node[*cur_node_id].ptc_num);
-          /* Update node counter */
-          (*cur_node_id)++;
-        } /* End of loading OPIN rr_nodes */
-        /* Find IPINs */
-        /* Configure pins by pins */
-        std::vector<int> ipin_list = get_grid_side_pins(cur_grid, RECEIVER, side_manager.get_side(), height);
-        for (size_t pin = 0; pin < ipin_list.size(); ++pin) {
-          rr_graph->rr_node[*cur_node_id].type  = IPIN; 
-          rr_graph->rr_node[*cur_node_id].xlow  = grid_coordinator.get_x(); 
-          rr_graph->rr_node[*cur_node_id].xhigh = grid_coordinator.get_x(); 
-          rr_graph->rr_node[*cur_node_id].ylow  = grid_coordinator.get_y(); 
-          rr_graph->rr_node[*cur_node_id].yhigh = grid_coordinator.get_y(); 
-          rr_graph->rr_node[*cur_node_id].ptc_num  = ipin_list[pin]; 
-          rr_graph->rr_node[*cur_node_id].capacity = 1; 
-          rr_graph->rr_node[*cur_node_id].occ = 0; 
-          /* cost index is a FIXED value for IPIN */
-          rr_graph->rr_node[*cur_node_id].cost_index = IPIN_COST_INDEX; 
-          /* Switch info */
-          rr_graph->rr_node[*cur_node_id].driver_switch = wire_to_ipin_switch; 
-          /* fill fast look-up table */
-          load_one_node_to_rr_graph_fast_lookup(rr_graph, *cur_node_id, 
-                                                rr_graph->rr_node[*cur_node_id].type, 
-                                                rr_graph->rr_node[*cur_node_id].xlow, 
-                                                rr_graph->rr_node[*cur_node_id].ylow,
-                                                rr_graph->rr_node[*cur_node_id].ptc_num);
-          /* Update node counter */
-          (*cur_node_id)++;
-        } /* End of loading IPIN rr_nodes */
-      } /* End of side enumeration */
-    } /* End of height enumeration */
-  } /* End of capacity enumeration */
-
-  /* Consider capacity of the grid */
-  for (int iblk = 0; iblk < cur_grid.type->capacity; ++iblk) {
-    /* Walk through the height of each grid,
-     * get pins and configure the rr_nodes */
-    for (int height = 0; height < cur_grid.type->height; ++height) {
-      /* Set a SOURCE or a SINK rr_node for each class */
-      for (int iclass = 0; iclass < cur_grid.type->num_class; ++iclass) {
-        /* Set a SINK rr_node for the OPIN */
-        if ( DRIVER == cur_grid.type->class_inf[iclass].type) {
-          rr_graph->rr_node[*cur_node_id].type  = SOURCE; 
-        } 
-        if ( RECEIVER == cur_grid.type->class_inf[iclass].type) {
-          rr_graph->rr_node[*cur_node_id].type  = SINK; 
-        }
+  /* Walk through the height of each grid,
+   * get pins and configure the rr_nodes */
+  for (int height = 0; height < cur_grid.type->height; ++height) {
+    /* Walk through sides */
+    for (size_t side = 0; side < NUM_SIDES; ++side) {
+      Side side_manager(side);
+      /* skip unwanted sides */
+      if ( (IO_TYPE == cur_grid.type)
+        && (side != io_side_manager.to_size_t()) ) { 
+        continue;
+      }
+      /* Find OPINs */
+      /* Configure pins by pins */
+      std::vector<int> opin_list = get_grid_side_pins(cur_grid, DRIVER, side_manager.get_side(), height);
+      for (size_t pin = 0; pin < opin_list.size(); ++pin) {
+        /* Configure the rr_node for the OPIN */
+        rr_graph->rr_node[*cur_node_id].type  = OPIN; 
         rr_graph->rr_node[*cur_node_id].xlow  = grid_coordinator.get_x(); 
         rr_graph->rr_node[*cur_node_id].xhigh = grid_coordinator.get_x(); 
         rr_graph->rr_node[*cur_node_id].ylow  = grid_coordinator.get_y(); 
         rr_graph->rr_node[*cur_node_id].yhigh = grid_coordinator.get_y(); 
-        rr_graph->rr_node[*cur_node_id].ptc_num  = iclass; 
-        /* FIXME: need to confirm if the capacity should be the number of pins in this class*/ 
-        rr_graph->rr_node[*cur_node_id].capacity = cur_grid.type->class_inf[iclass].num_pins; 
+        rr_graph->rr_node[*cur_node_id].ptc_num  = opin_list[pin]; 
+        rr_graph->rr_node[*cur_node_id].capacity = 1; 
         rr_graph->rr_node[*cur_node_id].occ = 0; 
-        /* cost index is a FIXED value for SOURCE and SINK */
-        if (SOURCE == rr_graph->rr_node[*cur_node_id].type) {
-          rr_graph->rr_node[*cur_node_id].cost_index = SOURCE_COST_INDEX; 
-        }
-        if (SINK == rr_graph->rr_node[*cur_node_id].type) {
-          rr_graph->rr_node[*cur_node_id].cost_index = SINK_COST_INDEX; 
-        }
+        /* cost index is a FIXED value for OPIN */
+        rr_graph->rr_node[*cur_node_id].cost_index = OPIN_COST_INDEX; 
         /* Switch info */
         rr_graph->rr_node[*cur_node_id].driver_switch = delayless_switch; 
-        /* TODO: should we set pb_graph_pin here? */
         /* fill fast look-up table */
         load_one_node_to_rr_graph_fast_lookup(rr_graph, *cur_node_id, 
                                               rr_graph->rr_node[*cur_node_id].type, 
@@ -708,9 +266,75 @@ void load_one_grid_rr_nodes_basic_info(const DeviceCoordinator& grid_coordinator
                                               rr_graph->rr_node[*cur_node_id].ptc_num);
         /* Update node counter */
         (*cur_node_id)++;
+      } /* End of loading OPIN rr_nodes */
+      /* Find IPINs */
+      /* Configure pins by pins */
+      std::vector<int> ipin_list = get_grid_side_pins(cur_grid, RECEIVER, side_manager.get_side(), height);
+      for (size_t pin = 0; pin < ipin_list.size(); ++pin) {
+        rr_graph->rr_node[*cur_node_id].type  = IPIN; 
+        rr_graph->rr_node[*cur_node_id].xlow  = grid_coordinator.get_x(); 
+        rr_graph->rr_node[*cur_node_id].xhigh = grid_coordinator.get_x(); 
+        rr_graph->rr_node[*cur_node_id].ylow  = grid_coordinator.get_y(); 
+        rr_graph->rr_node[*cur_node_id].yhigh = grid_coordinator.get_y(); 
+        rr_graph->rr_node[*cur_node_id].ptc_num  = ipin_list[pin]; 
+        rr_graph->rr_node[*cur_node_id].capacity = 1; 
+        rr_graph->rr_node[*cur_node_id].occ = 0; 
+        /* cost index is a FIXED value for IPIN */
+        rr_graph->rr_node[*cur_node_id].cost_index = IPIN_COST_INDEX; 
+        /* Switch info */
+        rr_graph->rr_node[*cur_node_id].driver_switch = wire_to_ipin_switch; 
+        /* fill fast look-up table */
+        load_one_node_to_rr_graph_fast_lookup(rr_graph, *cur_node_id, 
+                                              rr_graph->rr_node[*cur_node_id].type, 
+                                              rr_graph->rr_node[*cur_node_id].xlow, 
+                                              rr_graph->rr_node[*cur_node_id].ylow,
+                                              rr_graph->rr_node[*cur_node_id].ptc_num);
+        /* Update node counter */
+        (*cur_node_id)++;
+      } /* End of loading IPIN rr_nodes */
+    } /* End of side enumeration */
+  } /* End of height enumeration */
+
+  /* Walk through the height of each grid,
+   * get pins and configure the rr_nodes */
+  for (int height = 0; height < cur_grid.type->height; ++height) {
+    /* Set a SOURCE or a SINK rr_node for each class */
+    for (int iclass = 0; iclass < cur_grid.type->num_class; ++iclass) {
+      /* Set a SINK rr_node for the OPIN */
+      if ( DRIVER == cur_grid.type->class_inf[iclass].type) {
+        rr_graph->rr_node[*cur_node_id].type  = SOURCE; 
+      } 
+      if ( RECEIVER == cur_grid.type->class_inf[iclass].type) {
+        rr_graph->rr_node[*cur_node_id].type  = SINK; 
       }
-    }
-  }
+      rr_graph->rr_node[*cur_node_id].xlow  = grid_coordinator.get_x(); 
+      rr_graph->rr_node[*cur_node_id].xhigh = grid_coordinator.get_x(); 
+      rr_graph->rr_node[*cur_node_id].ylow  = grid_coordinator.get_y(); 
+      rr_graph->rr_node[*cur_node_id].yhigh = grid_coordinator.get_y(); 
+      rr_graph->rr_node[*cur_node_id].ptc_num  = iclass; 
+      /* FIXME: need to confirm if the capacity should be the number of pins in this class*/ 
+      rr_graph->rr_node[*cur_node_id].capacity = cur_grid.type->class_inf[iclass].num_pins; 
+      rr_graph->rr_node[*cur_node_id].occ = 0; 
+      /* cost index is a FIXED value for SOURCE and SINK */
+      if (SOURCE == rr_graph->rr_node[*cur_node_id].type) {
+        rr_graph->rr_node[*cur_node_id].cost_index = SOURCE_COST_INDEX; 
+      }
+      if (SINK == rr_graph->rr_node[*cur_node_id].type) {
+        rr_graph->rr_node[*cur_node_id].cost_index = SINK_COST_INDEX; 
+      }
+      /* Switch info */
+      rr_graph->rr_node[*cur_node_id].driver_switch = delayless_switch; 
+      /* TODO: should we set pb_graph_pin here? */
+      /* fill fast look-up table */
+      load_one_node_to_rr_graph_fast_lookup(rr_graph, *cur_node_id, 
+                                            rr_graph->rr_node[*cur_node_id].type, 
+                                            rr_graph->rr_node[*cur_node_id].xlow, 
+                                            rr_graph->rr_node[*cur_node_id].ylow,
+                                            rr_graph->rr_node[*cur_node_id].ptc_num);
+      /* Update node counter */
+      (*cur_node_id)++;
+    } /* End of height enumeration */
+  } /* End of pin_class enumeration */
 
   return;
 }
@@ -1118,16 +742,71 @@ void alloc_rr_graph_fast_lookup(const DeviceCoordinator& device_size,
 }
 
 /************************************************************************
+ * Build the edges for all the SOURCE and SINKs nodes:
+ * 1. create edges between SOURCE and OPINs
+ ***********************************************************************/
+static 
+void build_rr_graph_edges_for_source_nodes(t_rr_graph* rr_graph,
+                                           const std::vector< std::vector<t_grid_tile> > grids) {
+  for (int inode = 0; inode < rr_graph->num_rr_nodes; ++inode) {
+    /* Bypass all the non OPIN nodes */
+    if (OPIN != rr_graph->rr_node[inode].type) {
+      continue;
+    }
+    /* Now, we have an OPIN node, we get the source node index */
+    int xlow = rr_graph->rr_node[inode].xlow; 
+    int ylow = rr_graph->rr_node[inode].ylow; 
+    int src_node_ptc_num = get_grid_pin_class_index(grids[xlow][ylow], 
+                                                    rr_graph->rr_node[inode].ptc_num);
+    /* 1. create edges between SOURCE and OPINs */
+    int src_node_id = get_rr_node_index(xlow, ylow, 
+                                        SOURCE, src_node_ptc_num,
+                                        rr_graph->rr_node_indices);
+    /* add edges to the src_node */
+    add_one_edge_for_two_rr_nodes(rr_graph, src_node_id, inode,
+                                  rr_graph->rr_node[inode].driver_switch);
+  }
+  return;
+}
+
+/************************************************************************
+ * Build the edges for all the SINKs nodes:
+ * 1. create edges between IPINs and SINKs
+ ***********************************************************************/
+static 
+void build_rr_graph_edges_for_sink_nodes(t_rr_graph* rr_graph,
+                                         const std::vector< std::vector<t_grid_tile> > grids) {
+  for (int inode = 0; inode < rr_graph->num_rr_nodes; ++inode) {
+    /* Bypass all the non IPIN nodes */
+    if (IPIN != rr_graph->rr_node[inode].type) {
+      continue;
+    }
+    /* Now, we have an OPIN node, we get the source node index */
+    int xlow = rr_graph->rr_node[inode].xlow; 
+    int ylow = rr_graph->rr_node[inode].ylow; 
+    int sink_node_ptc_num = get_grid_pin_class_index(grids[xlow][ylow], 
+                                                     rr_graph->rr_node[inode].ptc_num);
+    /* 1. create edges between IPINs and SINKs */
+    int sink_node_id = get_rr_node_index(xlow, ylow, 
+                                         SINK, sink_node_ptc_num,
+                                         rr_graph->rr_node_indices);
+    /* add edges to connect the IPIN node to SINK nodes */
+    add_one_edge_for_two_rr_nodes(rr_graph, inode, sink_node_id,
+                                  rr_graph->rr_node[inode].driver_switch);
+  }
+
+  return;
+}
+
+/************************************************************************
  * Build the edges of each rr_node tile by tile:
  * We classify rr_nodes into a general switch block (GSB) data structure
  * where we create edges to each rr_nodes in the GSB with respect to
  * Fc_in and Fc_out, switch block patterns 
  * For each GSB: 
- * 1. create edges between SOURCE and OPINs
- * 2. create edges between IPINs and SINKs
- * 3. create edges between CHANX | CHANY and IPINs (connections inside connection blocks)
- * 4. create edges between OPINs, CHANX and CHANY (connections inside switch blocks)
- * 5. create edges between OPINs and IPINs (direct-connections)
+ * 1. create edges between CHANX | CHANY and IPINs (connections inside connection blocks)
+ * 2. create edges between OPINs, CHANX and CHANY (connections inside switch blocks)
+ * 3. create edges between OPINs and IPINs (direct-connections)
  ***********************************************************************/
 static 
 void build_rr_graph_edges(t_rr_graph* rr_graph, 
@@ -1137,6 +816,10 @@ void build_rr_graph_edges(t_rr_graph* rr_graph,
                           const std::vector<t_segment_inf> segment_inf,
                           int** Fc_in, int** Fc_out,
                           const enum e_switch_block_type sb_type, const int Fs) {
+
+  /* Create edges for SOURCE and SINK nodes for a tileable rr_graph */
+  build_rr_graph_edges_for_source_nodes(rr_graph, grids);
+  build_rr_graph_edges_for_sink_nodes(rr_graph, grids);
 
   DeviceCoordinator gsb_range(device_size.get_x() - 2, device_size.get_y() - 2);
 
@@ -1162,7 +845,7 @@ void build_rr_graph_edges(t_rr_graph* rr_graph,
       sb_conn = build_gsb_track_to_track_map(rr_graph, rr_gsb, sb_type, Fs, segment_inf);
 
       /* Build edges for a GSB */
-      build_edges_for_one_tileable_rr_gsb(rr_graph, grids, &rr_gsb,
+      build_edges_for_one_tileable_rr_gsb(rr_graph, &rr_gsb,
                                           track2ipin_map, opin2track_map, 
                                           sb_conn);
       /* Finish this GSB, go to the next*/
@@ -1251,7 +934,6 @@ void build_tileable_unidir_rr_graph(INP const int L_num_types,
                                     INP const int num_seg_types,
                                     INP const t_segment_inf * segment_inf,
                                     INP const int num_switches, INP const int delayless_switch, 
-                                    INP const int global_route_switch,
                                     INP const t_timing_inf timing_inf, 
                                     INP const int wire_to_ipin_switch,
                                     INP const enum e_base_cost_type base_cost_type, 
@@ -1317,9 +999,6 @@ void build_tileable_unidir_rr_graph(INP const int L_num_types,
     tileable_rr_graph_init_rr_node(&(rr_graph.rr_node[i]));
   }
 
-  vpr_printf(TIO_MESSAGE_INFO, 
-             "%d RR graph nodes allocated.\n", rr_graph.num_rr_nodes);
-
   /************************************************************************
    * 4. Initialize the basic information of rr_nodes:
    *    coordinators: xlow, ylow, xhigh, yhigh, 
@@ -1330,9 +1009,6 @@ void build_tileable_unidir_rr_graph(INP const int L_num_types,
 
   load_rr_nodes_basic_info(&rr_graph, device_size, grids, device_chan_width, segment_infs,
                            wire_to_ipin_switch, delayless_switch); 
-
-  vpr_printf(TIO_MESSAGE_INFO, 
-             "Built node basic information and fast-look.\n");
 
   /************************************************************************
    * 5.1 Create the connectivity of OPINs
@@ -1369,7 +1045,6 @@ void build_tileable_unidir_rr_graph(INP const int L_num_types,
    *    In addition, we will also handle direct-connections:
    *    Add edges that bridge OPINs and IPINs to the rr_graph
    ***********************************************************************/
-
   /* Create edges for a tileable rr_graph */
   build_rr_graph_edges(&rr_graph, device_size, grids, device_chan_width, segment_infs, 
                        Fc_in, Fc_out,
@@ -1415,9 +1090,8 @@ void build_tileable_unidir_rr_graph(INP const int L_num_types,
              "Create a tileable RR graph with %d nodes\n", 
              num_rr_nodes);
 
-  check_rr_graph(GRAPH_UNIDIR_TILEABLE, types, L_nx, L_ny, chan_width, Fs,
-                 num_seg_types, num_switches, segment_inf, global_route_switch,
-                 delayless_switch, wire_to_ipin_switch, Fc_in, Fc_out);
+  check_rr_graph(GRAPH_UNIDIR_TILEABLE, L_nx, L_ny,
+                 num_switches, Fc_in);
 
   /* Print useful information on screen */
   vpr_printf(TIO_MESSAGE_INFO, 

@@ -1,5 +1,5 @@
-#ifndef RR_GRAPH_TILEABLE_GSB_H
-#define RR_GRAPH_TILEABLE_GSB_H
+#ifndef TILEABLE_RR_GRAPH_GSB_H
+#define TILEABLE_RR_GRAPH_GSB_H
 
 #include <vector>
 
@@ -32,7 +32,6 @@ RRGSB build_one_tileable_rr_gsb(const DeviceCoordinator& device_range,
                                 t_rr_graph* rr_graph);
 
 void build_edges_for_one_tileable_rr_gsb(const t_rr_graph* rr_graph, 
-                                         const std::vector< std::vector<t_grid_tile> > grids,
                                          const RRGSB* rr_gsb,
                                          const t_track2pin_map track2ipin_map,
                                          const t_pin2track_map opin2track_map,
