@@ -354,7 +354,7 @@ void build_gsb_one_group_track_to_track_map(const t_rr_graph* rr_graph,
                                             t_track2track_map* track2track_map) {
   for (size_t side = 0; side < from_tracks.size(); ++side) {
     Side side_manager(side);
-    enum e_side gsb_side = side_manager.get_side();
+    enum e_side from_side = side_manager.get_side();
     /* Find the other sides where the start tracks will locate */
     std::vector<enum e_side> to_track_sides;
     /* 0. opposite side */
@@ -375,9 +375,13 @@ void build_gsb_one_group_track_to_track_map(const t_rr_graph* rr_graph,
         if (0 == to_tracks[to_side_index].size()) {
           continue;
         }
+        /* Bypass those from_side is same as to_side */
+        if (from_side == to_side) {
+          continue;
+        }
         /* Get other track_ids depending on the switch block pattern */
         /* Find the track ids that will start at the other sides */
-        std::vector<size_t> to_track_ids = get_switch_block_to_track_id(sb_type, Fs, gsb_side, inode, 
+        std::vector<size_t> to_track_ids = get_switch_block_to_track_id(sb_type, Fs, from_side, inode, 
                                                                         to_side, 
                                                                         to_tracks[to_side_index].size()); 
         /* Update the track2track_map: */

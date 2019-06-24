@@ -858,6 +858,17 @@ void build_rr_graph_direct_connections(t_rr_graph* rr_graph,
   return;
 }
 
+/************************************************************************ 
+ * Reset driver switch of a rr_graph  
+ ***********************************************************************/
+static 
+void clear_rr_graph_driver_switch(const t_rr_graph* rr_graph) {
+  for (int inode = 0; inode < rr_graph->num_rr_nodes; ++inode) {
+    rr_graph->rr_node[inode].driver_switch = 0;
+  }
+  return;
+}
+
 /************************************************************************
  * Main function of this file
  * Builder for a detailed uni-directional tileable rr_graph
@@ -1038,6 +1049,9 @@ void build_tileable_unidir_rr_graph(INP const int L_num_types,
   vpr_printf(TIO_MESSAGE_INFO, 
              "%lu edges of RR graph built.\n", num_edges);
 
+  /* Clear driver switches of the rr_graph */
+  clear_rr_graph_driver_switch(&rr_graph);
+
   /************************************************************************
    * 8. Allocate external data structures
    *    a. cost_index
@@ -1046,7 +1060,7 @@ void build_tileable_unidir_rr_graph(INP const int L_num_types,
   /* We set global variables for rr_nodes here, they will be updated by rr_graph_external */
   num_rr_nodes = rr_graph.num_rr_nodes;
   rr_node = rr_graph.rr_node;
-  rr_node_indices = rr_graph.rr_node_indices;
+  rr_node_indices = rr_graph.rr_node_indices;  
 
   rr_graph_externals(timing_inf, segment_inf, num_seg_types, chan_width,
                      wire_to_ipin_switch, base_cost_type);

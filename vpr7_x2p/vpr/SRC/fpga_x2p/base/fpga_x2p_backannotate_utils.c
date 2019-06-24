@@ -1800,6 +1800,7 @@ void identify_rr_node_driver_switch(t_det_routing_arch RoutingArch,
     }
     LL_rr_node[inode].driver_switch = LL_rr_node[inode].drive_switches[0];
     for (iedge = 0; iedge < LL_rr_node[inode].num_drive_rr_nodes; iedge++) {
+      if (LL_rr_node[inode].driver_switch != LL_rr_node[inode].drive_switches[iedge])
       assert (LL_rr_node[inode].driver_switch == LL_rr_node[inode].drive_switches[iedge]);
     }
   }

@@ -1340,11 +1340,12 @@ DeviceRRGSB build_device_rr_gsb(boolean output_sb_xml, char* sb_xml_dir,
       if (TRUE == output_sb_xml) {
         std::string fname_prefix(sb_xml_dir);
         /* Add slash if needed */
-        if ('/' != fname_prefix.back()) {
-          fname_prefix += "/";
-        }
-        fname_prefix += "rotated_";
-        write_rr_switch_block_to_xml(fname_prefix, rotated_rr_sb);
+        //if ('/' != fname_prefix.back()) {
+        //  fname_prefix += "/";
+        //}
+        //fname_prefix += "rotated_";
+        //write_rr_switch_block_to_xml(fname_prefix, rotated_rr_sb);
+        write_rr_switch_block_to_xml(fname_prefix, rr_sb);
       }
     }
   }
