@@ -1247,7 +1247,6 @@ RRGSB rotate_rr_switch_block_for_mirror(DeviceCoordinator& device_range,
   return rotated_rr_switch_block;
 }
 
-
 /* Build a list of Switch blocks, each of which contains a collection of rr_nodes
  * We will maintain a list of unique switch blocks, which will be outputted as a Verilog module
  * Each switch block in the FPGA fabric will be an instance of these modules.
@@ -1258,22 +1257,23 @@ DeviceRRGSB build_device_rr_gsb(boolean output_sb_xml, char* sb_xml_dir,
                                 t_ivec*** LL_rr_node_indices, int num_segments,
                                 t_rr_indexed_data* LL_rr_indexed_data) {
   /* Create an object */
-  DeviceRRGSB LL_drive_rr_gsb;
+  DeviceRRGSB LL_device_rr_gsb;
 
   /* Initialize */  
   DeviceCoordinator sb_range((size_t)nx, (size_t)ny);
   DeviceCoordinator reserve_range((size_t)nx + 1, (size_t)ny + 1);
-  LL_drive_rr_gsb.reserve(reserve_range);
+  LL_device_rr_gsb.reserve(reserve_range);
 
   /* For each switch block, determine the size of array */
   for (size_t ix = 0; ix <= sb_range.get_x(); ++ix) {
     for (size_t iy = 0; iy <= sb_range.get_y(); ++iy) {
-      RRGSB rr_sb = build_rr_gsb(sb_range, ix, iy,
-                                 LL_num_rr_nodes, LL_rr_node, 
-                                 LL_rr_node_indices, 
-                                 num_segments, LL_rr_indexed_data);
-      DeviceCoordinator sb_coordinator = rr_sb.get_sb_coordinator();
-      LL_drive_rr_gsb.add_rr_gsb(sb_coordinator, rr_sb);
+      RRGSB rr_gsb = build_rr_gsb(sb_range, ix, iy,
+                                  LL_num_rr_nodes, LL_rr_node, 
+                                  LL_rr_node_indices, 
+                                  num_segments, LL_rr_indexed_data);
+      /* Add to device_rr_gsb */
+      DeviceCoordinator sb_coordinator = rr_gsb.get_sb_coordinator();
+      LL_device_rr_gsb.add_rr_gsb(sb_coordinator, rr_gsb);
     }
   }
   /* Report number of unique mirrors */
@@ -1283,7 +1283,7 @@ DeviceRRGSB build_device_rr_gsb(boolean output_sb_xml, char* sb_xml_dir,
 
 
   if (TRUE == output_sb_xml) {
-    write_device_rr_gsb_to_xml(sb_xml_dir, LL_drive_rr_gsb);
+    write_device_rr_gsb_to_xml(sb_xml_dir, LL_device_rr_gsb);
 
     /* Skip rotating mirror searching */ 
     vpr_printf(TIO_MESSAGE_INFO, 
@@ -1294,36 +1294,36 @@ DeviceRRGSB build_device_rr_gsb(boolean output_sb_xml, char* sb_xml_dir,
 
   /* Build a list of unique modules for each Switch Block */
   /* Build a list of unique modules for each side of each Switch Block */
-  LL_drive_rr_gsb.build_unique_module();
+  LL_device_rr_gsb.build_unique_module();
 
   vpr_printf(TIO_MESSAGE_INFO, 
              "Detect %lu routing segments used by switch blocks.\n",
-             LL_drive_rr_gsb.get_num_segments());
+             LL_device_rr_gsb.get_num_segments());
 
   /* Report number of unique CB Modules */
   vpr_printf(TIO_MESSAGE_INFO, 
              "Detect %d independent connection blocks from %d X-channel connection blocks.\n",
-             LL_drive_rr_gsb.get_num_cb_unique_module(CHANX), (nx + 0) * (ny + 1) );
+             LL_device_rr_gsb.get_num_cb_unique_module(CHANX), (nx + 0) * (ny + 1) );
 
   vpr_printf(TIO_MESSAGE_INFO, 
              "Detect %d independent connection blocks from %d Y-channel connection blocks.\n",
-             LL_drive_rr_gsb.get_num_cb_unique_module(CHANY), (nx + 1) * (ny + 0) );
+             LL_device_rr_gsb.get_num_cb_unique_module(CHANY), (nx + 1) * (ny + 0) );
 
 
   /* Report number of unique SB modules */
   vpr_printf(TIO_MESSAGE_INFO, 
              "Detect %d independent switch blocks from %d switch blocks.\n",
-             LL_drive_rr_gsb.get_num_sb_unique_module(), (nx + 1) * (ny + 1) );
+             LL_device_rr_gsb.get_num_sb_unique_module(), (nx + 1) * (ny + 1) );
 
   /* Report number of unique mirrors */
-  for (size_t side = 0; side < LL_drive_rr_gsb.get_max_num_sides(); ++side) {
+  for (size_t side = 0; side < LL_device_rr_gsb.get_max_num_sides(); ++side) {
     Side side_manager(side); 
     /* get segment ids */
-    for (size_t iseg = 0; iseg < LL_drive_rr_gsb.get_num_segments(); ++iseg) { 
+    for (size_t iseg = 0; iseg < LL_device_rr_gsb.get_num_segments(); ++iseg) { 
       vpr_printf(TIO_MESSAGE_INFO, 
                  "For side %s, segment id %lu: Detect %d independent switch blocks from %d switch blocks.\n",
-                 side_manager.c_str(), LL_drive_rr_gsb.get_segment_id(iseg), 
-                 LL_drive_rr_gsb.get_num_sb_unique_submodule(side_manager.get_side(), iseg), 
+                 side_manager.c_str(), LL_device_rr_gsb.get_segment_id(iseg), 
+                 LL_device_rr_gsb.get_num_sb_unique_submodule(side_manager.get_side(), iseg), 
                  (nx + 1) * (ny + 1) );
     }
   }
@@ -1335,8 +1335,8 @@ DeviceRRGSB build_device_rr_gsb(boolean output_sb_xml, char* sb_xml_dir,
 
   for (size_t ix = 0; ix <= sb_range.get_x(); ++ix) {
     for (size_t iy = 0; iy <= sb_range.get_y(); ++iy) {
-      RRGSB rr_sb = LL_drive_rr_gsb.get_gsb(ix, iy);
-      RRGSB rotated_rr_sb = rotate_rr_switch_block_for_mirror(sb_range, rr_sb); 
+      RRGSB rr_gsb = LL_device_rr_gsb.get_gsb(ix, iy);
+      RRGSB rotated_rr_sb = rotate_rr_switch_block_for_mirror(sb_range, rr_gsb); 
       if (TRUE == output_sb_xml) {
         std::string fname_prefix(sb_xml_dir);
         /* Add slash if needed */
@@ -1345,12 +1345,12 @@ DeviceRRGSB build_device_rr_gsb(boolean output_sb_xml, char* sb_xml_dir,
         //}
         //fname_prefix += "rotated_";
         //write_rr_switch_block_to_xml(fname_prefix, rotated_rr_sb);
-        write_rr_switch_block_to_xml(fname_prefix, rr_sb);
+        write_rr_switch_block_to_xml(fname_prefix, rr_gsb);
       }
     }
   }
 
-  return LL_drive_rr_gsb;
+  return LL_device_rr_gsb;
 }
 
 

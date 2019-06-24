@@ -3137,6 +3137,7 @@ void spice_backannotate_vpr_post_route_info(t_det_routing_arch RoutingArch,
   /* Build previous node lists for each rr_node */
   vpr_printf(TIO_MESSAGE_INFO, "Building previous node list for all Routing Resource Nodes...\n");
   build_prev_node_list_rr_nodes(num_rr_nodes, rr_node);
+  //sort_rr_graph_drive_rr_nodes(num_rr_nodes, rr_node);
 
   /* Build driver switches for each rr_node*/
   vpr_printf(TIO_MESSAGE_INFO, "Identifying driver switches for all Routing Resource Nodes...\n");

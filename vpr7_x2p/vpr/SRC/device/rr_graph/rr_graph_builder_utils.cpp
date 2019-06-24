@@ -302,3 +302,23 @@ DeviceCoordinator get_track_rr_node_end_coordinator(const t_rr_node* track_rr_no
 
   return start_coordinator;
 }
+
+/************************************************************************
+ * Get the ptc of a routing track in the channel where it ends
+ * For routing tracks in INC_DIRECTION
+ * the ptc is the last of track_ids
+ *
+ * For routing tracks in DEC_DIRECTION
+ * the ptc is the first of track_ids
+ ***********************************************************************/
+short get_track_rr_node_end_track_id(const t_rr_node* track_rr_node) {
+  /* Make sure we have CHANX or CHANY */
+  assert ( (CHANX == track_rr_node->type) ||(CHANY == track_rr_node->type) );
+ 
+  if (INC_DIRECTION == track_rr_node->direction) {
+    return track_rr_node->track_ids.back(); 
+  }
+  assert (DEC_DIRECTION == track_rr_node->direction);
+  return track_rr_node->track_ids.front(); 
+}
+

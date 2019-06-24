@@ -10,6 +10,7 @@
 #include <assert.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <vector>
 
 /* Include vpr structs*/
 #include "util.h"
@@ -24,6 +25,8 @@
 #include "fpga_x2p_utils.h"
 #include "fpga_x2p_pbtypes_utils.h"
 #include "fpga_x2p_rr_graph_utils.h"
+
+#include "rr_graph_builder_utils.h"
 
 /* Initial rr_graph */
 void init_rr_graph(INOUTP t_rr_graph* local_rr_graph) {
@@ -954,8 +957,8 @@ void build_prev_node_list_rr_nodes(int LL_num_rr_nodes,
     if (0 == LL_rr_node[inode].fan_in) {
      continue;
     }
-    LL_rr_node[inode].drive_rr_nodes = (t_rr_node**)my_malloc(sizeof(t_rr_node*)*LL_rr_node[inode].num_drive_rr_nodes);
-    LL_rr_node[inode].drive_switches = (int*)my_malloc(sizeof(int)*LL_rr_node[inode].num_drive_rr_nodes);
+    LL_rr_node[inode].drive_rr_nodes = (t_rr_node**)my_malloc(sizeof(t_rr_node*) * LL_rr_node[inode].num_drive_rr_nodes);
+    LL_rr_node[inode].drive_switches = (int*)my_malloc(sizeof(int) * LL_rr_node[inode].num_drive_rr_nodes);
   }
   /* Initialize */
   for (inode = 0; inode < LL_num_rr_nodes; inode++) {
@@ -980,6 +983,73 @@ void build_prev_node_list_rr_nodes(int LL_num_rr_nodes,
   /* Check */
   for (inode = 0; inode < LL_num_rr_nodes; inode++) {
     assert(cur_index[inode] == LL_rr_node[inode].num_drive_rr_nodes);
+  }
+
+  return;
+}
+
+/************************************************************************
+ * Sort the drive_rr_nodes by node type and ptc_num
+ * 1. node type priority: (follow the index of t_rr_type
+ *    SOURCE, SINK, IPIN, OPIN, CHANX, CHANY, INTRA_CLUSTER_EDGE, NUM_RR_TYPES
+ * 2. node ptc_num (feature number): from low to high
+ *    The ptc_num only matters when two nodes have the same type
+ ***********************************************************************/
+void sort_rr_graph_drive_rr_nodes(int LL_num_rr_nodes,
+                                  t_rr_node* LL_rr_node) {
+  for (int inode = 0; inode < LL_num_rr_nodes; ++inode) {
+    /* Create a copy of the edges and switches of this node */
+    std::vector<t_rr_node*> sorted_drive_nodes;
+    std::vector<int> sorted_drive_switches;
+
+    /* Ensure a clean start */
+    sorted_drive_nodes.clear();
+    sorted_drive_switches.clear();
+
+    /* Build the vectors w.r.t. to the order of node_type and ptc_num */
+    for (int i_from_node = 0; i_from_node < LL_rr_node[inode].num_drive_rr_nodes; ++i_from_node) {
+      /* For blank edges: directly push_back */
+      if (0 == sorted_drive_nodes.size()) {
+        sorted_drive_nodes.push_back(LL_rr_node[inode].drive_rr_nodes[i_from_node]);
+        sorted_drive_switches.push_back(LL_rr_node[inode].drive_switches[i_from_node]);
+        continue;
+      }
+
+      /* Start sorting since the edges are not empty */
+      size_t insert_pos = sorted_drive_nodes.size(); /* the pos to insert. By default, it is the last element */
+      for (size_t j_from_node = 0; j_from_node < sorted_drive_nodes.size(); ++j_from_node) {
+        /* Sort by node_type and ptc_num */
+        if (LL_rr_node[inode].drive_rr_nodes[i_from_node]->type < sorted_drive_nodes[j_from_node]->type) {
+          /* iedge should be ahead of jedge */
+          insert_pos = j_from_node;
+          break; /* least type should stay in the front of the vector */
+        } else if (LL_rr_node[inode].drive_rr_nodes[i_from_node]->type == sorted_drive_nodes[j_from_node]->type) {
+          /* Special as track_ids vary, we consider the last track_ids for those node has the same type as inode */
+          if (LL_rr_node[i_from_node].type == LL_rr_node[inode].type) {
+            if (get_track_rr_node_end_track_id(&(LL_rr_node[i_from_node])) 
+              < get_track_rr_node_end_track_id(&(LL_rr_node[j_from_node])) ) {
+              insert_pos = j_from_node;
+              break; /* least type should stay in the front of the vector */
+            }
+          /* Now a lower ptc_num will win */ 
+          } else if (LL_rr_node[inode].drive_rr_nodes[i_from_node]->ptc_num < sorted_drive_nodes[j_from_node]->ptc_num) {
+            insert_pos = j_from_node;
+            break; /* least type should stay in the front of the vector */
+          }
+        }
+      }
+      /* We find the position, inserted to the vector */
+      sorted_drive_nodes.insert(sorted_drive_nodes.begin() + insert_pos, LL_rr_node[inode].drive_rr_nodes[i_from_node]); 
+      sorted_drive_switches.insert(sorted_drive_switches.begin() + insert_pos, LL_rr_node[inode].drive_switches[i_from_node]); 
+    }
+
+    /* Overwrite the edges and switches with sorted numbers */
+    for (size_t iedge = 0; iedge < sorted_drive_nodes.size(); ++iedge) {
+      LL_rr_node[inode].drive_rr_nodes[iedge] = sorted_drive_nodes[iedge];
+    }
+    for (size_t iedge = 0; iedge < sorted_drive_switches.size(); ++iedge) {
+      LL_rr_node[inode].drive_switches[iedge] = sorted_drive_switches[iedge];
+    }
   }
 
   return;

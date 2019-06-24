@@ -34,5 +34,7 @@ DeviceCoordinator get_track_rr_node_start_coordinator(const t_rr_node* track_rr_
 
 DeviceCoordinator get_track_rr_node_end_coordinator(const t_rr_node* track_rr_node);
 
+short get_track_rr_node_end_track_id(const t_rr_node* track_rr_node);
+
 #endif
 

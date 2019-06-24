@@ -868,6 +868,75 @@ void clear_rr_graph_driver_switch(const t_rr_graph* rr_graph) {
   }
   return;
 }
+  
+/************************************************************************
+ * Sort the edges of rr_nodes by node type and ptc_num
+ * 1. node type priority: (follow the index of t_rr_type
+ *    SOURCE, SINK, IPIN, OPIN, CHANX, CHANY, INTRA_CLUSTER_EDGE, NUM_RR_TYPES
+ * 2. node ptc_num (feature number): from low to high
+ *    The ptc_num only matters when two nodes have the same type
+ ***********************************************************************/
+static 
+void sort_rr_graph_edges(t_rr_graph* rr_graph) {
+  for (int inode = 0; inode < rr_graph->num_rr_nodes; ++inode) {
+    /* Create a copy of the edges and switches of this node */
+    std::vector<int> sorted_edges;
+    std::vector<short> sorted_switches;
+
+    /* Ensure a clean start */
+    sorted_edges.clear();
+    sorted_switches.clear();
+
+    /* Build the vectors w.r.t. to the order of node_type and ptc_num */
+    for (int iedge = 0; iedge < rr_graph->rr_node[inode].num_edges; ++iedge) {
+      /* For blank edges: directly push_back */
+      if (0 == sorted_edges.size()) {
+        sorted_edges.push_back(rr_graph->rr_node[inode].edges[iedge]);
+        sorted_switches.push_back(rr_graph->rr_node[inode].switches[iedge]);
+        continue;
+      }
+
+      /* Start sorting since the edges are not empty */
+      size_t insert_pos = sorted_edges.size(); /* the pos to insert. By default, it is the last element */
+      size_t i_to_node = rr_graph->rr_node[inode].edges[iedge]; /* node_id of the edge connects to */
+      for (size_t jedge = 0; jedge < sorted_edges.size(); ++jedge) {
+        size_t j_to_node = sorted_edges[jedge];
+        /* Sort by node_type and ptc_num */
+        if (rr_graph->rr_node[i_to_node].type < rr_graph->rr_node[j_to_node].type) {
+          /* iedge should be ahead of jedge */
+          insert_pos = jedge;
+          break; /* least type should stay in the front of the vector */
+        } else if (rr_graph->rr_node[i_to_node].type == rr_graph->rr_node[j_to_node].type) {
+          /* Special as track_ids vary, we consider the last track_ids for those node has the same type as inode */
+          if (rr_graph->rr_node[i_to_node].type == rr_graph->rr_node[inode].type) {
+            if (get_track_rr_node_end_track_id(&(rr_graph->rr_node[i_to_node])) 
+              < get_track_rr_node_end_track_id(&(rr_graph->rr_node[j_to_node])) ) {
+              insert_pos = jedge;
+              break; /* least type should stay in the front of the vector */
+            }
+          } else if (rr_graph->rr_node[i_to_node].ptc_num < rr_graph->rr_node[j_to_node].ptc_num) {
+          /* Now a lower ptc_num will win */ 
+            insert_pos = jedge;
+            break; /* least type should stay in the front of the vector */
+          }
+        }
+      }
+      /* We find the position, inserted to the vector */
+      sorted_edges.insert(sorted_edges.begin() + insert_pos, i_to_node); 
+      sorted_switches.insert(sorted_switches.begin() + insert_pos, rr_graph->rr_node[inode].switches[iedge]); 
+    }
+
+    /* Overwrite the edges and switches with sorted numbers */
+    for (size_t iedge = 0; iedge < sorted_edges.size(); ++iedge) {
+      rr_graph->rr_node[inode].edges[iedge] = sorted_edges[iedge];
+    }
+    for (size_t iedge = 0; iedge < sorted_switches.size(); ++iedge) {
+      rr_graph->rr_node[inode].switches[iedge] = sorted_switches[iedge];
+    }
+  }
+
+  return;
+}
 
 /************************************************************************
  * Main function of this file
@@ -1019,12 +1088,12 @@ void build_tileable_unidir_rr_graph(INP const int L_num_types,
   }
 
   /************************************************************************
-   * 6. Build the connections tile by tile:
-   *    We classify rr_nodes into a general switch block (GSB) data structure
-   *    where we create edges to each rr_nodes in the GSB with respect to
-   *    Fc_in and Fc_out, switch block patterns 
-   *    In addition, we will also handle direct-connections:
-   *    Add edges that bridge OPINs and IPINs to the rr_graph
+   * 6.1 Build the connections tile by tile:
+   *     We classify rr_nodes into a general switch block (GSB) data structure
+   *     where we create edges to each rr_nodes in the GSB with respect to
+   *     Fc_in and Fc_out, switch block patterns 
+   *     In addition, we will also handle direct-connections:
+   *     Add edges that bridge OPINs and IPINs to the rr_graph
    ***********************************************************************/
   /* Create edges for a tileable rr_graph */
   build_rr_graph_edges(&rr_graph, device_size, grids, device_chan_width, segment_infs, 
@@ -1032,7 +1101,7 @@ void build_tileable_unidir_rr_graph(INP const int L_num_types,
                        sb_type, Fs);
 
   /************************************************************************
-   * 7. Build direction connection lists
+   * 6.2 Build direction connection lists
    ***********************************************************************/
   /* Create data structure of direct-connections */
   t_clb_to_clb_directs* clb_to_clb_directs = NULL;
@@ -1041,6 +1110,14 @@ void build_tileable_unidir_rr_graph(INP const int L_num_types,
   }
   build_rr_graph_direct_connections(&rr_graph, device_size, grids, delayless_switch, 
                                     num_directs, directs, clb_to_clb_directs);
+
+  /************************************************************************
+   * 6.3 Sort the edges of rr_nodes by node type and ptc_num
+   *     During the edge construction, edges are out of orders, 
+   *     which are not easy to build tileable routing architecture
+   *     This step can be skipped when you do not use FPGA X2P
+   ***********************************************************************/
+  sort_rr_graph_edges(&rr_graph);
 
   size_t num_edges = 0;
   for (int inode = 0; inode < rr_graph.num_rr_nodes; ++inode) {
@@ -1053,7 +1130,7 @@ void build_tileable_unidir_rr_graph(INP const int L_num_types,
   clear_rr_graph_driver_switch(&rr_graph);
 
   /************************************************************************
-   * 8. Allocate external data structures
+   * 7. Allocate external data structures
    *    a. cost_index
    *    b. RC tree
    ***********************************************************************/
@@ -1066,7 +1143,7 @@ void build_tileable_unidir_rr_graph(INP const int L_num_types,
                      wire_to_ipin_switch, base_cost_type);
 
   /************************************************************************
-   * 9. Sanitizer for the rr_graph, check connectivities of rr_nodes
+   * 8. Sanitizer for the rr_graph, check connectivities of rr_nodes
    ***********************************************************************/
 
   /* Print useful information on screen */
@@ -1083,7 +1160,7 @@ void build_tileable_unidir_rr_graph(INP const int L_num_types,
 
 
   /************************************************************************
-   * 10. Free all temp stucts 
+   * 9. Free all temp stucts 
    ***********************************************************************/
 
   /* Free all temp structs */

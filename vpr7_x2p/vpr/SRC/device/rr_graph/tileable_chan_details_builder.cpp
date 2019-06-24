@@ -191,7 +191,7 @@ ChanNodeDetails build_unidir_chan_node_details(const size_t chan_width, const si
   }
 
   /* Find the number of segments required by each group */
-  std::vector<size_t> num_tracks = get_num_tracks_per_seg_type(actual_chan_width/2, segment_inf, TRUE);  
+  std::vector<size_t> num_tracks = get_num_tracks_per_seg_type(actual_chan_width/2, segment_inf, FALSE);  
 
   /* Add node to ChanNodeDetails */
   size_t cur_track = 0;
@@ -208,8 +208,9 @@ ChanNodeDetails build_unidir_chan_node_details(const size_t chan_width, const si
       if (0 == itrack % seg_len) {
         seg_start = true;
       }
-      /* Every last track of a group of Length-N wires, we set an ending point */
-      if (seg_len - 1 == itrack % seg_len) {
+      /* Every last track of a group of Length-N wires or this is the last track in this group, we set an ending point */
+      if ( (seg_len - 1 == itrack % seg_len) 
+        || (itrack == num_tracks[iseg] - 1) ) {
         seg_end = true;
       }
       /* Since this is a unidirectional routing architecture,

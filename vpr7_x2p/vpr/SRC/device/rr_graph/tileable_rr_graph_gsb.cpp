@@ -1108,6 +1108,11 @@ void build_gsb_one_opin_pin2track_map(const t_rr_graph* rr_graph,
       /* Push the node to actual_track_list  */
       actual_track_list.push_back(track_list[inode]);
     }
+
+    /* Go the next segment if offset is zero or actual_track_list is empty */    
+    if (0 == actual_track_list.size()) {
+      continue;
+    }
    
     /* Scale Fc  */
     int actual_Fc = Fc * actual_track_list.size() / chan_width; 
@@ -1122,8 +1127,12 @@ void build_gsb_one_opin_pin2track_map(const t_rr_graph* rr_graph,
     track_step = std::max(1, (int)track_step);
     /* Adapt offset to the range of actual_track_list */
     size_t actual_offset = offset % actual_track_list.size();
-    /* rotate the track list by an offset */
-    std::rotate(actual_track_list.begin(), actual_track_list.begin() + actual_offset, actual_track_list.end());   
+
+    /* No need to rotate if offset is zero */    
+    if (0 < actual_offset) {
+      /* rotate the track list by an offset */
+      std::rotate(actual_track_list.begin(), actual_track_list.begin() + actual_offset, actual_track_list.end());   
+    }
 
     /* Assign tracks  */
     int track_cnt = 0;
@@ -1248,11 +1257,8 @@ t_pin2track_map build_gsb_opin_to_track_map(t_rr_graph* rr_graph,
   
   /* offset counter: it aims to balance the OPIN-to-track for each switch block */
   std::vector<size_t> offset;
-  for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
-    /* Get the chan_side: which is the same as the opin side  */
-    Side side_manager(side);
-    offset.resize(side_manager.to_size_t());
-  }
+  /* Get the chan_side: which is the same as the opin side  */
+  offset.resize(rr_gsb.get_num_sides());
   /* Initial offset */
   offset.assign(offset.size(), 0);
      
@@ -1275,8 +1281,7 @@ t_pin2track_map build_gsb_opin_to_track_map(t_rr_graph* rr_graph,
       int grid_type_index = grids[opin_node->xlow][opin_node->ylow].type->index; 
       /* Get Fc of the ipin */
       int opin_Fc = Fc_out[grid_type_index][opin_node->ptc_num];
-      /* skip Fc = 0 */
-      //printf("opin_Fc[%d]=%d\n", opin_node->ptc_num, opin_Fc);
+      /* skip Fc = 0 or unintialized, those pins are in the <directlist> */
       if ( (-1 == opin_Fc)
         || (0 == opin_Fc) ) { 
         continue;
@@ -1286,8 +1291,8 @@ t_pin2track_map build_gsb_opin_to_track_map(t_rr_graph* rr_graph,
                                        /* Give an offset for the first track that this ipin will connect to */
                                        offset[side_manager.to_size_t()], 
                                        segment_inf, &opin2track_map);
-      /* update offset */
-      offset[side_manager.to_size_t()] += 2;
+      /* update offset: aim to rotate starting tracks by 1*/
+      offset[side_manager.to_size_t()] += 1;
     }
   }
 
