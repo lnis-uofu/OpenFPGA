@@ -359,8 +359,12 @@ void load_one_chan_rr_nodes_basic_info(const DeviceCoordinator& chan_coordinator
    */
   for (size_t itrack = 0; itrack < chan_details->get_chan_width(); ++itrack) {
     /* For INC direction, a starting point requires a new chan rr_node  */
-    if ( (true == chan_details->is_track_start(itrack))
-        && (INC_DIRECTION == chan_details->get_track_direction(itrack)) ) {
+    if ( ( (true == chan_details->is_track_start(itrack))
+        && (INC_DIRECTION == chan_details->get_track_direction(itrack)) ) 
+    /* For DEC direction, an ending point requires a new chan rr_node  */
+      ||
+       ( (true == chan_details->is_track_end(itrack))
+      && (DEC_DIRECTION == chan_details->get_track_direction(itrack)) ) ) {
       /* Use a new chan rr_node  */
       rr_graph->rr_node[*cur_node_id].type  = chan_type; 
       rr_graph->rr_node[*cur_node_id].xlow  = chan_coordinator.get_x(); 
@@ -382,33 +386,14 @@ void load_one_chan_rr_nodes_basic_info(const DeviceCoordinator& chan_coordinator
       (*cur_node_id)++;
       /* Finish here, go to next */
     }
-    /* For DEC direction, an ending point requires a new chan rr_node  */
-    if ( (true == chan_details->is_track_end(itrack))
-      && (DEC_DIRECTION == chan_details->get_track_direction(itrack)) ) {
-      /* Use a new chan rr_node  */
-      rr_graph->rr_node[*cur_node_id].type  = chan_type; 
-      rr_graph->rr_node[*cur_node_id].xhigh  = chan_coordinator.get_x(); 
-      rr_graph->rr_node[*cur_node_id].yhigh  = chan_coordinator.get_y(); 
-      rr_graph->rr_node[*cur_node_id].direction = chan_details->get_track_direction(itrack); 
-      rr_graph->rr_node[*cur_node_id].ptc_num  = itrack; 
-      rr_graph->rr_node[*cur_node_id].track_ids.push_back(itrack); 
-      rr_graph->rr_node[*cur_node_id].capacity = 1; 
-      rr_graph->rr_node[*cur_node_id].occ = 0; 
-      /* Update chan_details with node_id */
-      chan_details->set_track_node_id(itrack, *cur_node_id);
-      /* assign switch id */
-      size_t seg_id = chan_details->get_track_segment_id(itrack);
-      rr_graph->rr_node[*cur_node_id].driver_switch = segment_infs[seg_id].opin_switch; 
-      /* cost index depends on the segment index */
-      rr_graph->rr_node[*cur_node_id].cost_index = cost_index_offset + seg_id; 
 
-      /* Update node counter */
-      (*cur_node_id)++;
-      /* Finish here, go to next */
-    }
     /* For INC direction, an ending point requires an update on xhigh and yhigh  */
-    if ( (true == chan_details->is_track_end(itrack))
-      && (INC_DIRECTION == chan_details->get_track_direction(itrack)) ) {
+    if (   ( (true == chan_details->is_track_end(itrack))
+          && (INC_DIRECTION == chan_details->get_track_direction(itrack)) ) 
+       ||
+       /* For DEC direction, an starting point requires an update on xlow and ylow  */
+           ( (true == chan_details->is_track_start(itrack))
+          && (DEC_DIRECTION == chan_details->get_track_direction(itrack)) ) ) {
       /* Get the node_id */
       size_t rr_node_id = chan_details->get_track_node_id(itrack);
       /* Do a quick check, make sure we do not mistakenly modify other nodes */
@@ -424,24 +409,7 @@ void load_one_chan_rr_nodes_basic_info(const DeviceCoordinator& chan_coordinator
       }
       /* Finish here, go to next */
     }
-    /* For DEC direction, an starting point requires an update on xlow and ylow  */
-    if ( (true == chan_details->is_track_start(itrack))
-      && (DEC_DIRECTION == chan_details->get_track_direction(itrack)) ) {
-      /* Get the node_id */
-      size_t rr_node_id = chan_details->get_track_node_id(itrack);
-      /* Do a quick check, make sure we do not mistakenly modify other nodes */
-      assert(chan_type == rr_graph->rr_node[rr_node_id].type);
-      assert(chan_details->get_track_direction(itrack) == rr_graph->rr_node[rr_node_id].direction);
-      /* set xlow/ylow and push changes to track_ids */
-      rr_graph->rr_node[rr_node_id].xlow = chan_coordinator.get_x();
-      rr_graph->rr_node[rr_node_id].ylow = chan_coordinator.get_y();
-      /* Do not update track_ids for length-1 wires, they should have only 1 track_id */
-      if ( (rr_graph->rr_node[rr_node_id].xhigh > rr_graph->rr_node[rr_node_id].xlow)
-        || (rr_graph->rr_node[rr_node_id].yhigh > rr_graph->rr_node[rr_node_id].ylow) ) {
-        rr_graph->rr_node[rr_node_id].track_ids.push_back(itrack); 
-      }
-      /* Finish here, go to next */
-    }
+
     /* Finish processing starting and ending tracks */
     if ( (true== chan_details->is_track_start(itrack))
       || (true == chan_details->is_track_end(itrack)) ) {
@@ -660,7 +628,7 @@ void load_rr_nodes_basic_info(t_rr_graph* rr_graph,
     }
   }
 
-  /* Check */
+  /* A quick check */
   assert ((int)cur_node_id == rr_graph->num_rr_nodes);
   for (int inode = 0; inode < rr_graph->num_rr_nodes; ++inode) {
     /* Check: we only support straight wires now.
@@ -668,8 +636,10 @@ void load_rr_nodes_basic_info(t_rr_graph* rr_graph,
      */
     if (CHANX == rr_graph->rr_node[inode].type) {
       assert (rr_graph->rr_node[inode].ylow == rr_graph->rr_node[inode].yhigh);
+      assert (rr_graph->rr_node[inode].xlow <= rr_graph->rr_node[inode].xhigh);
     } else if (CHANY == rr_graph->rr_node[inode].type) {
       assert (rr_graph->rr_node[inode].xlow == rr_graph->rr_node[inode].xhigh);
+      assert (rr_graph->rr_node[inode].ylow <= rr_graph->rr_node[inode].yhigh);
     } else {
       assert ( (SOURCE == rr_graph->rr_node[inode].type)
             || (SINK == rr_graph->rr_node[inode].type)

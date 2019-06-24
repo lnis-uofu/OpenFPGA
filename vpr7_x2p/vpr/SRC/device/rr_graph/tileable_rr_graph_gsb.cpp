@@ -91,16 +91,25 @@ enum e_track_status determine_track_status_of_gsb(const RRGSB& rr_gsb,
   /* Get the coordinators */
   DeviceCoordinator side_coordinator = rr_gsb.get_side_block_coordinator(gsb_side); 
 
+  /* Get the coordinator of where the track starts */
+  DeviceCoordinator track_start = get_track_rr_node_start_coordinator(track_node);
+
   /* INC_DIRECTION start_track: (xlow, ylow) should be same as the GSB side coordinator */
-  if (  ((size_t)track_node->xlow == side_coordinator.get_x())
-     && ((size_t)track_node->ylow == side_coordinator.get_y()) 
+  /* DEC_DIRECTION start_track: (xhigh, yhigh) should be same as the GSB side coordinator */
+  if (  (track_start.get_x() == side_coordinator.get_x())
+     && (track_start.get_y() == side_coordinator.get_y()) 
      && (OUT_PORT == rr_gsb.get_chan_node_direction(gsb_side, track_id)) ) {
     /* Double check: start track should be an OUTPUT PORT of the GSB */
     track_status = TRACK_START;
   }
+
+  /* Get the coordinator of where the track ends */
+  DeviceCoordinator track_end = get_track_rr_node_end_coordinator(track_node);
+
   /* INC_DIRECTION end_track: (xhigh, yhigh) should be same as the GSB side coordinator */ 
-  if (  ((size_t)track_node->xhigh == side_coordinator.get_x()) 
-     && ((size_t)track_node->yhigh == side_coordinator.get_y()) 
+  /* DEC_DIRECTION end_track: (xlow, ylow) should be same as the GSB side coordinator */ 
+  if (  (track_end.get_x() == side_coordinator.get_x())
+     && (track_end.get_y() == side_coordinator.get_y()) 
      && (IN_PORT == rr_gsb.get_chan_node_direction(gsb_side, track_id)) ) {
     /* Double check: end track should be an INPUT PORT of the GSB */
     track_status = TRACK_END;
@@ -132,9 +141,11 @@ bool is_gsb_in_track_cb_population(const RRGSB& rr_gsb,
   /* Get the coordinators */
   DeviceCoordinator side_coordinator = rr_gsb.get_side_block_coordinator(gsb_side); 
 
+  DeviceCoordinator track_start = get_track_rr_node_start_coordinator(track_node);
+
   /* Get the offset */
-  size_t offset = std::abs((int)side_coordinator.get_x() - track_node->xlow) 
-                + std::abs((int)side_coordinator.get_y() - track_node->ylow); 
+  size_t offset = std::abs((int)side_coordinator.get_x() - (int)track_start.get_x()) 
+                + std::abs((int)side_coordinator.get_y() - (int)track_start.get_y()); 
   
   /* Get segment id */
   size_t seg_id = rr_gsb.get_chan_node_segment(gsb_side, track_id);
@@ -171,9 +182,11 @@ bool is_gsb_in_track_sb_population(const RRGSB& rr_gsb,
   /* Get the coordinators */
   DeviceCoordinator side_coordinator = rr_gsb.get_side_block_coordinator(gsb_side); 
 
+  DeviceCoordinator track_start = get_track_rr_node_start_coordinator(track_node);
+
   /* Get the offset */
-  size_t offset = std::abs((int)side_coordinator.get_x() - track_node->xlow) 
-                + std::abs((int)side_coordinator.get_y() - track_node->ylow); 
+  size_t offset = std::abs((int)side_coordinator.get_x() - (int)track_start.get_x()) 
+                + std::abs((int)side_coordinator.get_y() - (int)track_start.get_y()); 
   
   /* Get segment id */
   size_t seg_id = rr_gsb.get_chan_node_segment(gsb_side, track_id);
@@ -1298,6 +1311,20 @@ void build_direct_connections_for_one_gsb(t_rr_graph* rr_graph,
     if (grid_type != clb_to_clb_directs[i].from_clb_type) {
       continue;
     }
+
+    /* This opin is specified to connect directly to an ipin, 
+     * now compute which ipin to connect to 
+     */
+    DeviceCoordinator to_grid_coordinator(from_grid_coordinator.get_x() + directs[i].x_offset, 
+                                          from_grid_coordinator.get_y() + directs[i].y_offset);
+
+    /* Bypass unmatched direct clb-to-clb connections */
+    t_type_ptr to_grid_type = grids[to_grid_coordinator.get_x()][to_grid_coordinator.get_y()].type;
+    /* Check if to_grid if the same grid */
+    if (to_grid_type != clb_to_clb_directs[i].to_clb_type) {
+      continue;
+    }
+
     bool swap;
     int max_index, min_index;
     /* Compute index of opin with regards to given pins */ 
@@ -1311,12 +1338,11 @@ void build_direct_connections_for_one_gsb(t_rr_graph* rr_graph,
       min_index = clb_to_clb_directs[i].from_clb_pin_start_index;
       max_index = clb_to_clb_directs[i].from_clb_pin_end_index;
     }
+
     /* get every opin in the range */
     for (int opin = min_index; opin <= max_index; ++opin) {
       int offset = opin - min_index;
-      /* This opin is specified to connect directly to an ipin, now compute which ipin to connect to */
-      DeviceCoordinator to_grid_coordinator(from_grid_coordinator.get_x() + directs[i].x_offset, 
-                                            from_grid_coordinator.get_y() + directs[i].y_offset);
+
       if (  (to_grid_coordinator.get_x() < device_size.get_x() - 1) 
          && (to_grid_coordinator.get_y() < device_size.get_y() - 1) ) { 
         int ipin = OPEN;
@@ -1334,6 +1360,7 @@ void build_direct_connections_for_one_gsb(t_rr_graph* rr_graph,
             ipin = clb_to_clb_directs[i].to_clb_pin_start_index + offset;
           }
         }
+
         /* Get the pin index in the rr_graph */
         int from_grid_ofs = from_grid.offset;
         int to_grid_ofs = grids[to_grid_coordinator.get_x()][to_grid_coordinator.get_y()].offset;

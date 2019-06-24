@@ -255,3 +255,50 @@ void add_one_edge_for_two_rr_nodes(const t_rr_graph* rr_graph,
   return;
 }
 
+/************************************************************************
+ * Get the coordinator of a starting point of a routing track 
+ * For routing tracks in INC_DIRECTION
+ * (xlow, ylow) should be the starting point 
+ *
+ * For routing tracks in DEC_DIRECTION
+ * (xhigh, yhigh) should be the starting point 
+ ***********************************************************************/
+DeviceCoordinator get_track_rr_node_start_coordinator(const t_rr_node* track_rr_node) {
+  /* Make sure we have CHANX or CHANY */
+  assert ( (CHANX == track_rr_node->type) ||(CHANY == track_rr_node->type) );
+ 
+  DeviceCoordinator start_coordinator;
+
+  if (INC_DIRECTION == track_rr_node->direction) {
+    start_coordinator.set(track_rr_node->xlow, track_rr_node->ylow);
+  } else {
+    assert (DEC_DIRECTION == track_rr_node->direction);
+    start_coordinator.set(track_rr_node->xhigh, track_rr_node->yhigh);
+  }
+
+  return start_coordinator;
+}
+
+/************************************************************************
+ * Get the coordinator of a end point of a routing track 
+ * For routing tracks in INC_DIRECTION
+ * (xhigh, yhigh) should be the starting point 
+ *
+ * For routing tracks in DEC_DIRECTION
+ * (xlow, ylow) should be the starting point 
+ ***********************************************************************/
+DeviceCoordinator get_track_rr_node_end_coordinator(const t_rr_node* track_rr_node) {
+  /* Make sure we have CHANX or CHANY */
+  assert ( (CHANX == track_rr_node->type) ||(CHANY == track_rr_node->type) );
+ 
+  DeviceCoordinator start_coordinator;
+
+  if (INC_DIRECTION == track_rr_node->direction) {
+    start_coordinator.set(track_rr_node->xhigh, track_rr_node->yhigh);
+  } else {
+    assert (DEC_DIRECTION == track_rr_node->direction);
+    start_coordinator.set(track_rr_node->xlow, track_rr_node->ylow);
+  }
+
+  return start_coordinator;
+}
