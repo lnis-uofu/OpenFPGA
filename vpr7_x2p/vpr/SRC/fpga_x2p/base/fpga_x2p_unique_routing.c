@@ -1279,25 +1279,12 @@ void sort_rr_gsb_one_ipin_node_drive_rr_nodes(const RRGSB& rr_gsb,
         break; /* least type should stay in the front of the vector */
       } else if (ipin_node->drive_rr_nodes[i_from_node]->type 
               == sorted_drive_nodes[j_from_node]->type) {
-        /* For channel node, we do not know the node direction
-         * But we are pretty sure it is either IN_PORT or OUT_PORT
-         * So we just try and find what is valid
-         */
-        enum PORTS i_from_node_direction = IN_PORT; 
-        if (-1 == rr_gsb.get_node_index(ipin_node->drive_rr_nodes[i_from_node], 
-                                        ipin_chan_side, 
-                                        IN_PORT)) {
-          i_from_node_direction = OUT_PORT;
-        } 
-        enum PORTS j_from_node_direction = IN_PORT; 
-        if (-1 != rr_gsb.get_node_index(sorted_drive_nodes[j_from_node], 
-                                        ipin_chan_side, 
-                                        IN_PORT)) {
-          j_from_node_direction = OUT_PORT;
-        }
+        int i_from_node_track_index = rr_gsb.get_chan_node_index(ipin_chan_side, ipin_node->drive_rr_nodes[i_from_node]); 
+        int j_from_node_track_index = rr_gsb.get_chan_node_index(ipin_chan_side, sorted_drive_nodes[j_from_node]); 
+        /* We must have a valide node index */
+        assert ( (-1 != i_from_node_track_index) && (-1 != j_from_node_track_index) );
         /* Now a lower ptc_num will win */ 
-        if ( rr_gsb.get_node_index(ipin_node->drive_rr_nodes[i_from_node], ipin_chan_side, i_from_node_direction) 
-           < rr_gsb.get_node_index(sorted_drive_nodes[j_from_node], ipin_chan_side, j_from_node_direction) ) {
+        if ( i_from_node_track_index < j_from_node_track_index ) { 
           insert_pos = j_from_node;
           break; /* least type should stay in the front of the vector */
         }

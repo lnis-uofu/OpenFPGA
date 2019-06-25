@@ -228,6 +228,8 @@ class RRGSB {
     bool is_cb_exist(t_rr_type cb_type) const; /* check if the candidate SB is a mirror of the current one */
     size_t get_hint_rotate_offset(const RRGSB& cand) const; /* Determine an initial offset in rotating the candidate Switch Block to find a mirror matching*/
   public: /* Cooridinator conversion and output  */
+    size_t get_x() const; /* get the x coordinator of this switch block */
+    size_t get_y() const; /* get the y coordinator of this switch block */
     size_t get_sb_x() const; /* get the x coordinator of this switch block */
     size_t get_sb_y() const; /* get the y coordinator of this switch block */
     DeviceCoordinator get_sb_coordinator() const; /* Get the coordinator of the SB */
@@ -239,6 +241,8 @@ class RRGSB {
     DeviceCoordinator get_side_block_coordinator(enum e_side side) const;
     DeviceCoordinator get_grid_coordinator() const;
   public: /* Verilog writer */
+    const char* gen_gsb_verilog_module_name() const;
+    const char* gen_gsb_verilog_instance_name() const;
     const char* gen_sb_verilog_module_name() const;
     const char* gen_sb_verilog_instance_name() const;
     const char* gen_sb_verilog_side_module_name(enum e_side side, size_t seg_id) const;

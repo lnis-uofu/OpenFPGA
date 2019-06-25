@@ -1258,6 +1258,17 @@ bool RRGSB::is_sb_mirror(const RRGSB& cand) const {
 
 /* Public Accessors: Cooridinator conversion */
 
+/* get the x coordinator of this GSB */
+size_t RRGSB::get_x() const {
+  return coordinator_.get_x();
+} 
+
+/* get the y coordinator of this GSB */
+size_t RRGSB::get_y() const { 
+  return coordinator_.get_y();
+}
+
+
 /* get the x coordinator of this switch block */
 size_t RRGSB::get_sb_x() const {
   return coordinator_.get_x();
@@ -1431,12 +1442,37 @@ const char* RRGSB::gen_sb_verilog_module_name() const {
   return ret;
 }
 
+const char* RRGSB::gen_gsb_verilog_module_name() const {
+  std::string x_str = std::to_string(get_sb_x());
+  std::string y_str = std::to_string(get_sb_y());
+
+  char* ret = (char*)my_malloc(sizeof(char)* 
+                               ( 2 + 1 
+                               + x_str.length() + 2
+                               + y_str.length() + 1 
+                               + 1));
+  sprintf (ret, "gsb_%s__%s_",
+           x_str.c_str(), y_str.c_str());
+
+  return ret;
+}
+
 const char* RRGSB::gen_sb_verilog_instance_name() const {
   char* ret = (char*)my_malloc(sizeof(char)* 
                                ( strlen(gen_sb_verilog_module_name()) + 3 
                                + 1));
   sprintf (ret, "%s_0_",
            gen_sb_verilog_module_name());
+
+  return ret;
+}
+
+const char* RRGSB::gen_gsb_verilog_instance_name() const {
+  char* ret = (char*)my_malloc(sizeof(char)* 
+                               ( strlen(gen_gsb_verilog_module_name()) + 3 
+                               + 1));
+  sprintf (ret, "%s_0_",
+           gen_gsb_verilog_module_name());
 
   return ret;
 }
