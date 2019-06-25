@@ -852,14 +852,13 @@ void dump_verilog_one_sb_wire_segemental_report_timing(FILE* fp,
   fprintf(fp, "# L%d wire, Path ID: %d\n", 
           L_wire,
           path_cnt); 
-
   fprintf(fp, "report_timing -from "); 
 
   /* output instance name */
   fprintf(fp, "%s/", 
           src_sb.gen_sb_verilog_instance_name()); 
   /* Find which side the ending pin locates, and determine the coordinate */
-  dump_verilog_one_sb_routing_pin(fp, src_sb, src_rr_node);
+  dump_verilog_one_sb_routing_pin(fp, src_sb, drive_rr_node);
 
   /* Switch depends on the type of des_rr_node  */
   switch(des_rr_node->type) {
@@ -1000,6 +999,7 @@ void dump_verilog_one_sb_wire_segemental_report_timing(FILE* fp,
           break;
         case CHANX:
         case CHANY:
+verilog_generate_report_timing_one_sb_ending_segments
           /* Get the coordinate of ending SB */
           next_sb_coordinator = get_chan_node_ending_sb_coordinator(src_rr_node, des_rr_node);
           next_sb = device_rr_gsb.get_gsb(next_sb_coordinator); 
@@ -1015,6 +1015,8 @@ void dump_verilog_one_sb_wire_segemental_report_timing(FILE* fp,
           fprintf(fp, " -point_to_point"); 
           fprintf(fp, " -unconstrained"); 
         
+          break;
+        default:
           break;
         }
       }
@@ -3044,11 +3046,8 @@ void verilog_generate_routing_report_timing(t_trpt_opts trpt_opts,
           fp = wireL_cnt->file_handler;
           /* This is a new L-wire, create the file handler and the mkdir command to the TCL script */
           if (0 == path_cnt) {
-            fprintf(fp, "if {![file exists $%s]} {\n",
-                    gen_verilog_one_routing_report_timing_Lwire_dir_path(fpga_verilog_opts.report_timing_path, L_wire)); 
             fprintf(fp, "exec mkdir -p %s\n",
                     gen_verilog_one_routing_report_timing_Lwire_dir_path(fpga_verilog_opts.report_timing_path, L_wire)); 
-            fprintf(fp, "}\n");
           }
           /* Restore the disable_timing for the SB outputs on the path */
           /*fprintf(fp, "# Restore disable timing for the following Switch Block output:\n");
@@ -3112,11 +3111,8 @@ void verilog_generate_routing_report_timing(t_trpt_opts trpt_opts,
           fp = wireL_cnt->file_handler;
           /* This is a new L-wire, create the file handler and the mkdir command to the TCL script */
           if (0 == path_cnt) {
-            fprintf(fp, "if {![file exists $%s]} {\n",
-                    gen_verilog_one_routing_report_timing_Lwire_dir_path(fpga_verilog_opts.report_timing_path, L_wire)); 
             fprintf(fp, "exec mkdir -p %s\n",
                     gen_verilog_one_routing_report_timing_Lwire_dir_path(fpga_verilog_opts.report_timing_path, L_wire)); 
-            fprintf(fp, "}\n");
           }
           /* Restore the disable_timing for the SB outputs on the path */
           /*fprintf(fp, "# Restore disable timing for the following Switch Block output:\n");
