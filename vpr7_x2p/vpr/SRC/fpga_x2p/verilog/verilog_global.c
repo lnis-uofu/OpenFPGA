@@ -81,6 +81,10 @@ char* sdc_constrain_cb_file_name = "cb.sdc";
 char* sdc_constrain_sb_file_name = "sb.sdc";
 char* sdc_clock_period_file_name = "clb_clock.sdc";
 char* sdc_constrain_pb_type_file_name = "clb_constraints.sdc";
+char* sdc_break_vertical_sbs_file_name = "break_horizontal_sbs.sdc"; /* We break the vertical to read the horizontal */
+char* sdc_break_horizontal_sbs_file_name = "break_vertical_sbs.sdc"; /* We break the horizontal to read the vertical */ 
+char* sdc_restore_vertical_sbs_file_name = "restore_horizontal_sbs.sdc"; /* We break the vertical to read the horizontal */
+char* sdc_restore_horizontal_sbs_file_name = "restore_vertical_sbs.sdc"; /* We break the horizontal to read the vertical */ 
 
 char* verilog_mux_basis_posfix = "_basis";
 char* verilog_mux_special_basis_posfix = "_special_basis";
