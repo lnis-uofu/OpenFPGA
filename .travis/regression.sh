@@ -2,31 +2,33 @@
 # Regression test version 1.0
 
 # Set variables
+my_pwd=$PWD
+fpga_flow_scripts=${my_pwd}/fpga_flow/scripts
+vpr_path=${my_pwd}/vpr7_x2p/vpr
 benchmark="test_modes"
 include_netlists="_include_netlists.v"
 compiled_file="compiled_$benchmark"
 tb_formal_postfix="_top_formal_verification_random_tb"
 verilog_output_dirname="${benchmark}_Verilog"
 log_file="${benchmark}_sim.log"
+new_reg_sh="my_regression.sh"
 
-cd fpga_flow/scripts
 
-perl rewrite_path_in_file.pl -i ../arch/template/k6_N10_sram_chain_HC_template.xml
-perl rewrite_path_in_file.pl -i ../../vpr7_x2p/vpr/regression_verilog.sh
-perl rewrite_path_in_file.pl -i ../../vpr7_x2p/vpr/
-perl rewrite_path_in_file.pl -i ../../vpr7_x2p/vpr/VerilogNetlists/ff.v
+cd $fpga_flow_scripts
 
-cd -
+perl rewrite_path_in_file.pl -i $vpr_path/regression_verilog.sh -o $vpr_path/$new_reg_sh
+
+cd $my_pwd
 
 # Move to vpr folder
-cd vpr7_x2p/vpr
+cd $vpr_path
 
 # Remove former log file
 rm -f $log_file
 rm -f $compiled_file
 
 # Start the script -> run the fpga generation -> run the simulation -> check the log file
-source regression_verilog.sh
+source $new_reg_sh
 iverilog -o $compiled_file $verilog_output_dirname/SRC/$benchmark$include_netlists -s $benchmark$tb_formal_postfix
 vvp $compiled_file -j 16 >> $log_file
 
@@ -35,14 +37,14 @@ if ["$result" = ""]; then
   result=`grep "Failed" $log_file`
   if ["$result" = ""]; then
     echo "Unexpected error, Verification didn't run"
-    cd -
+    cd $my_pwd
     exit 1
   else
     echo "Verification failed"
-    cd -
+    cd $my_pwd
     exit 2
   fi
 else
   echo "Verification succeed"
-  cd -
+  cd $my_pwd
 fi

@@ -1439,10 +1439,24 @@ void dump_verilog_formal_verification_sram_ports_wiring(FILE* fp,
                                                         t_sram_orgz_info* cur_sram_orgz_info,
                                                         int sram_lsb, int sram_msb) {
   fprintf(fp, "assign ");
-
-  dump_verilog_sram_one_local_outport(fp, cur_sram_orgz_info,
-                                      sram_lsb, sram_msb,
-                                      0, VERILOG_PORT_CONKT);
+  switch (cur_sram_orgz_info->type) {
+  case SPICE_SRAM_STANDALONE: 
+    break;
+  case SPICE_SRAM_SCAN_CHAIN:
+    dump_verilog_sram_one_local_outport(fp, cur_sram_orgz_info,
+                                        sram_lsb, sram_msb,
+                                        0, VERILOG_PORT_CONKT);
+    break;
+  case SPICE_SRAM_MEMORY_BANK:
+    dump_verilog_sram_one_outport(fp, cur_sram_orgz_info,
+                                  sram_lsb, sram_msb,
+                                  0, VERILOG_PORT_CONKT);
+    break;
+  default:
+    vpr_printf(TIO_MESSAGE_ERROR, "(File:%s,[LINE%d])Invalid SRAM organization type!\n",
+               __FILE__, __LINE__);
+    exit(1);
+  }
 
   fprintf(fp, " = ");
 

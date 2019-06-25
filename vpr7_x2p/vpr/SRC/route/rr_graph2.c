@@ -307,7 +307,7 @@ alloc_and_load_seg_details(INOUTP int *nodes_per_chan, INP int max_len,
 					length * sizeof(boolean));
 			seg_details[cur_track].sb = (boolean *) my_malloc(
 					(length + 1) * sizeof(boolean));
-			for (j = 0; j < length; ++j) {
+			for (j = 0; j < length; ++j) { /* apply connection block existence */
 				if (is_global_graph) {
 					seg_details[cur_track].cb[j] = TRUE;
 				} else {
@@ -328,7 +328,7 @@ alloc_and_load_seg_details(INOUTP int *nodes_per_chan, INP int max_len,
 					seg_details[cur_track].cb[j] = segment_inf[i].cb[index];
 				}
 			}
-			for (j = 0; j < (length + 1); ++j) {
+			for (j = 0; j < (length + 1); ++j) { /* apply switch block existence */
 				if (is_global_graph) {
 					seg_details[cur_track].sb[j] = TRUE;
 				} else {

@@ -1,5 +1,5 @@
 #include <cassert>
-#include <string>
+#include <string.h>
 #include <algorithm>
 #include <sstream>
 
@@ -1345,55 +1345,71 @@ const char* RRGSB::gen_cb_verilog_routing_track_name(t_rr_type cb_type,
   std::string y_str = std::to_string(get_cb_y(cb_type));
   std::string track_id_str = std::to_string(track_id);
 
-  std::ostringstream oss;
-  oss << cb_name << "_" << x_str << "__" << y_str << "__midout_" << track_id_str << "_";
-  std::string ret = oss.str();
+  char* ret = (char*)my_malloc(sizeof(char)* 
+                               ( cb_name.length() + 1 
+                               + x_str.length() + 2
+                               + y_str.length() + 9 
+                               + track_id_str.length() + 1
+                               + 1));
+  sprintf (ret, "%s_%s__%s__midout_%s_",
+           cb_name.c_str(), x_str.c_str(), y_str.c_str(), track_id_str.c_str());
 
-  return ret.c_str();
-
+  return ret;
 }
 
 const char* RRGSB::gen_sb_verilog_module_name() const {
   std::string x_str = std::to_string(get_sb_x());
   std::string y_str = std::to_string(get_sb_y());
 
-  std::ostringstream oss;
-  oss << "sb_" << x_str << "__" << y_str << "_" ;
-  std::string ret = oss.str();
+  char* ret = (char*)my_malloc(sizeof(char)* 
+                               ( 2 + 1 
+                               + x_str.length() + 2
+                               + y_str.length() + 1 
+                               + 1));
+  sprintf (ret, "sb_%s__%s_",
+           x_str.c_str(), y_str.c_str());
 
-  return ret.c_str();
+  return ret;
 }
 
 const char* RRGSB::gen_sb_verilog_instance_name() const {
-  
-  std::ostringstream oss;
-  oss << gen_sb_verilog_module_name() << "_0_" ;
-  std::string ret = oss.str();
+  char* ret = (char*)my_malloc(sizeof(char)* 
+                               ( strlen(gen_sb_verilog_module_name()) + 3 
+                               + 1));
+  sprintf (ret, "%s_0_",
+           gen_sb_verilog_module_name());
 
-  return ret.c_str();
+  return ret;
 }
 
 /* Public Accessors Verilog writer */
 const char* RRGSB::gen_sb_verilog_side_module_name(enum e_side side, size_t seg_id) const {
   Side side_manager(side);
   
+  std::string prefix_str(gen_sb_verilog_module_name());
   std::string seg_id_str(std::to_string(seg_id));
   std::string side_str(side_manager.to_string());
 
-  std::ostringstream oss;
-  oss << gen_sb_verilog_module_name() << "_" << side_str << "_seg_" << "_" << seg_id_str << "_" ;
-  std::string ret = oss.str();
+  char* ret = (char*)my_malloc(sizeof(char)* 
+                               ( prefix_str.length() + 1 
+                               + side_str.length() + 5
+                               + seg_id_str.length() + 1
+                               + 1));
+  sprintf (ret, "%s_%s_seg_%s_",
+           prefix_str.c_str(), side_str.c_str(), seg_id_str.c_str());
 
-  return ret.c_str();
+  return ret;
 }
 
 const char* RRGSB::gen_sb_verilog_side_instance_name(enum e_side side, size_t seg_id) const {
+  std::string prefix_str = gen_sb_verilog_side_module_name(side, seg_id);
+  char* ret = (char*)my_malloc(sizeof(char)* 
+                               ( prefix_str.length() + 3 
+                               + 1));
+  sprintf (ret, "%s_0_",
+           prefix_str.c_str());
 
-  std::ostringstream oss;
-  oss << gen_sb_verilog_side_module_name(side, seg_id) << "_0_" ;
-  std::string ret = oss.str();
-
-  return ret.c_str();
+  return ret;
 }
 
 /* Public Accessors Verilog writer */
@@ -1405,23 +1421,29 @@ const char* RRGSB::gen_cb_verilog_module_name(t_rr_type cb_type) const {
   std::string x_str = std::to_string(get_cb_x(cb_type));
   std::string y_str = std::to_string(get_cb_y(cb_type));
 
-  std::ostringstream oss;
-  oss << prefix_str << "_" << x_str << "__" << y_str << "_" ;
-  std::string ret = oss.str();
+  char* ret = (char*)my_malloc(sizeof(char)* 
+                               ( prefix_str.length() + 1 
+                               + x_str.length() + 2 
+                               + y_str.length() + 1 
+                               + 1));
+  sprintf (ret, "%s_%s__%s_",
+           prefix_str.c_str(), x_str.c_str(), y_str.c_str());
 
-  return ret.c_str();
+  return ret;
 }
 
 const char* RRGSB::gen_cb_verilog_instance_name(t_rr_type cb_type) const {
   /* check */
   assert (validate_cb_type(cb_type));
 
-  std::ostringstream oss;
-  oss << gen_cb_verilog_module_name(cb_type) << "_0_" ;
-  std::string ret = oss.str();
+  std::string prefix_str = gen_cb_verilog_module_name(cb_type);
+  char* ret = (char*)my_malloc(sizeof(char)* 
+                               (prefix_str.length() + 3 
+                               + 1));
+  sprintf (ret, "%s_0_",
+           prefix_str.c_str());
 
-  return ret.c_str();
-
+  return ret;
 }
 
 /* Public mutators */

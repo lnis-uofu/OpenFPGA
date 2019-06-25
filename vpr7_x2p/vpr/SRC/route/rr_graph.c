@@ -150,9 +150,6 @@ static void build_rr_ychan(INP int i, INP int j,
 		INP boolean * L_rr_edge_done, INOUTP t_rr_node * L_rr_node,
 		INP int wire_to_ipin_switch, INP enum e_directionality directionality);
 
-static void rr_graph_externals(t_timing_inf timing_inf,
-		t_segment_inf * segment_inf, int num_seg_types, int nodes_per_chan,
-		int wire_to_ipin_switch, enum e_base_cost_type base_cost_type);
 
 void alloc_and_load_edges_and_switches(INP t_rr_node * L_rr_node, INP int inode,
 		INP int num_edges, INP boolean * L_rr_edge_done,
@@ -201,10 +198,6 @@ static t_seg_details *alloc_and_load_global_route_seg_details(
 		INP int nodes_per_chan, INP int global_route_switch);
 
 /* UDSD Modifications by WMF End */
-
-static int **alloc_and_load_actual_fc(INP int L_num_types, INP t_type_ptr types,
-		INP int nodes_per_chan, INP boolean is_Fc_out,
-		INP enum e_directionality directionality, OUTP boolean * Fc_clipped, INP boolean ignore_Fc_0);
 
 /******************* Subroutine definitions *******************************/
 
@@ -295,8 +288,7 @@ void build_rr_graph(INP t_graph_type graph_type, INP int L_num_types,
 		if (getEchoEnabled() && isEchoFileEnabled(E_ECHO_SEG_DETAILS)) {
 			dump_seg_details(seg_details, nodes_per_chan, 
 				getEchoFileName(E_ECHO_SEG_DETAILS));
-		} else
-			;
+		}
 	}
 	/* END SEG_DETAILS */
 
@@ -539,7 +531,7 @@ void build_rr_graph(INP t_graph_type graph_type, INP int L_num_types,
 	}
 }
 
-static void rr_graph_externals(t_timing_inf timing_inf,
+void rr_graph_externals(t_timing_inf timing_inf,
 		t_segment_inf * segment_inf, int num_seg_types, int nodes_per_chan,
 		int wire_to_ipin_switch, enum e_base_cost_type base_cost_type) {
 	add_rr_graph_C_from_switches(timing_inf.C_ipin_cblock);
@@ -619,7 +611,7 @@ alloc_and_load_global_route_seg_details(INP int nodes_per_chan,
 }
 
 /* Calculates the actual Fc values for the given nodes_per_chan value */
-static int **
+int **
 alloc_and_load_actual_fc(INP int L_num_types, INP t_type_ptr types,
 		INP int nodes_per_chan, INP boolean is_Fc_out,
 		INP enum e_directionality directionality, OUTP boolean * Fc_clipped, INP boolean ignore_Fc_0) {
