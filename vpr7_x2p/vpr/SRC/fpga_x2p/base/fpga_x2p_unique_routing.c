@@ -1247,6 +1247,193 @@ RRGSB rotate_rr_switch_block_for_mirror(DeviceCoordinator& device_range,
   return rotated_rr_switch_block;
 }
 
+/* sort drive_rr_nodes of a rr_node inside rr_gsb subject to the index of rr_gsb array */
+static  
+void sort_rr_gsb_one_ipin_node_drive_rr_nodes(const RRGSB& rr_gsb, 
+                                              t_rr_node* ipin_node, 
+                                              enum e_side ipin_chan_side) {
+  /* Create a copy of the edges and switches of this node */
+  std::vector<t_rr_node*> sorted_drive_nodes;
+  std::vector<int> sorted_drive_switches;
+
+  /* Ensure a clean start */
+  sorted_drive_nodes.clear();
+  sorted_drive_switches.clear();
+
+  /* Build the vectors w.r.t. to the order of node_type and ptc_num */
+  for (int i_from_node = 0; i_from_node < ipin_node->num_drive_rr_nodes; ++i_from_node) {
+    /* For blank edges: directly push_back */
+    if (0 == sorted_drive_nodes.size()) {
+      sorted_drive_nodes.push_back(ipin_node->drive_rr_nodes[i_from_node]);
+      sorted_drive_switches.push_back(ipin_node->drive_switches[i_from_node]);
+      continue;
+    }
+
+    /* Start sorting since the edges are not empty */
+    size_t insert_pos = sorted_drive_nodes.size(); /* the pos to insert. By default, it is the last element */
+    for (size_t j_from_node = 0; j_from_node < sorted_drive_nodes.size(); ++j_from_node) {
+      /* Sort by node_type and ptc_num */
+      if (ipin_node->drive_rr_nodes[i_from_node]->type < sorted_drive_nodes[j_from_node]->type) {
+        /* iedge should be ahead of jedge */
+        insert_pos = j_from_node;
+        break; /* least type should stay in the front of the vector */
+      } else if (ipin_node->drive_rr_nodes[i_from_node]->type 
+              == sorted_drive_nodes[j_from_node]->type) {
+        /* For channel node, we do not know the node direction
+         * But we are pretty sure it is either IN_PORT or OUT_PORT
+         * So we just try and find what is valid
+         */
+        enum PORTS i_from_node_direction = IN_PORT; 
+        if (-1 == rr_gsb.get_node_index(ipin_node->drive_rr_nodes[i_from_node], 
+                                        ipin_chan_side, 
+                                        IN_PORT)) {
+          i_from_node_direction = OUT_PORT;
+        } 
+        enum PORTS j_from_node_direction = IN_PORT; 
+        if (-1 != rr_gsb.get_node_index(sorted_drive_nodes[j_from_node], 
+                                        ipin_chan_side, 
+                                        IN_PORT)) {
+          j_from_node_direction = OUT_PORT;
+        }
+        /* Now a lower ptc_num will win */ 
+        if ( rr_gsb.get_node_index(ipin_node->drive_rr_nodes[i_from_node], ipin_chan_side, i_from_node_direction) 
+           < rr_gsb.get_node_index(sorted_drive_nodes[j_from_node], ipin_chan_side, j_from_node_direction) ) {
+          insert_pos = j_from_node;
+          break; /* least type should stay in the front of the vector */
+        }
+      }
+    }
+    /* We find the position, inserted to the vector */
+    sorted_drive_nodes.insert(sorted_drive_nodes.begin() + insert_pos, ipin_node->drive_rr_nodes[i_from_node]); 
+    sorted_drive_switches.insert(sorted_drive_switches.begin() + insert_pos, ipin_node->drive_switches[i_from_node]); 
+  }
+
+  /* Overwrite the edges and switches with sorted numbers */
+  for (size_t iedge = 0; iedge < sorted_drive_nodes.size(); ++iedge) {
+    ipin_node->drive_rr_nodes[iedge] = sorted_drive_nodes[iedge];
+  }
+  for (size_t iedge = 0; iedge < sorted_drive_switches.size(); ++iedge) {
+    ipin_node->drive_switches[iedge] = sorted_drive_switches[iedge];
+  }
+
+  return;
+}
+
+/* sort drive_rr_nodes of a rr_node inside rr_gsb subject to the index of rr_gsb array */
+static  
+void sort_rr_gsb_one_chan_node_drive_rr_nodes(const RRGSB& rr_gsb, 
+                                              t_rr_node* chan_node,
+                                              enum e_side chan_side) {
+
+  /* If this is a passing wire, we return directly.
+   * The passing wire will be handled in other GSBs
+   */
+  if (true == rr_gsb.is_sb_node_imply_short_connection(chan_node)) {
+     /* Double check if the interc lies inside a channel wire, that is interc between segments */
+     assert(true == rr_gsb.is_sb_node_exist_opposite_side(chan_node, chan_side));
+     return;
+  }
+
+  /* Create a copy of the edges and switches of this node */
+  std::vector<t_rr_node*> sorted_drive_nodes;
+  std::vector<int> sorted_drive_switches;
+
+  /* Ensure a clean start */
+  sorted_drive_nodes.clear();
+  sorted_drive_switches.clear();
+
+  /* Build the vectors w.r.t. to the order of node_type and ptc_num */
+  for (int i_from_node = 0; i_from_node < chan_node->num_drive_rr_nodes; ++i_from_node) {
+    /* For blank edges: directly push_back */
+    if (0 == sorted_drive_nodes.size()) {
+      sorted_drive_nodes.push_back(chan_node->drive_rr_nodes[i_from_node]);
+      sorted_drive_switches.push_back(chan_node->drive_switches[i_from_node]);
+      continue;
+    }
+
+    /* Start sorting since the edges are not empty */
+    size_t insert_pos = sorted_drive_nodes.size(); /* the pos to insert. By default, it is the last element */
+    for (size_t j_from_node = 0; j_from_node < sorted_drive_nodes.size(); ++j_from_node) {
+      /* Sort by node_type and ptc_num */
+      if (chan_node->drive_rr_nodes[i_from_node]->type < sorted_drive_nodes[j_from_node]->type) {
+        /* iedge should be ahead of jedge */
+        insert_pos = j_from_node;
+        break; /* least type should stay in the front of the vector */
+      } else if (chan_node->drive_rr_nodes[i_from_node]->type 
+              == sorted_drive_nodes[j_from_node]->type) {
+        /* For channel node, we do not know the node direction
+         * But we are pretty sure it is either IN_PORT or OUT_PORT
+         * So we just try and find what is valid
+         */
+        enum e_side i_from_node_side = NUM_SIDES;
+        int i_from_node_index = -1;
+        rr_gsb.get_node_side_and_index(chan_node->drive_rr_nodes[i_from_node], 
+                                       IN_PORT, &i_from_node_side, &i_from_node_index);
+        /* check */
+        if (! ( (NUM_SIDES != i_from_node_side) && (-1 != i_from_node_index) ) )
+        assert ( (NUM_SIDES != i_from_node_side) && (-1 != i_from_node_index) );
+
+        enum e_side j_from_node_side = NUM_SIDES;
+        int j_from_node_index = -1;
+        rr_gsb.get_node_side_and_index(sorted_drive_nodes[j_from_node], 
+                                       IN_PORT, &j_from_node_side, &j_from_node_index);
+        /* check */
+        assert ( (NUM_SIDES != j_from_node_side) && (-1 != j_from_node_index) );
+        /* Now a lower ptc_num will win */ 
+        if ( i_from_node_index < j_from_node_index) { 
+          insert_pos = j_from_node;
+          break; /* least type should stay in the front of the vector */
+        }
+      }
+    }
+    /* We find the position, inserted to the vector */
+    sorted_drive_nodes.insert(sorted_drive_nodes.begin() + insert_pos, chan_node->drive_rr_nodes[i_from_node]); 
+    sorted_drive_switches.insert(sorted_drive_switches.begin() + insert_pos, chan_node->drive_switches[i_from_node]); 
+  }
+
+  /* Overwrite the edges and switches with sorted numbers */
+  for (size_t iedge = 0; iedge < sorted_drive_nodes.size(); ++iedge) {
+    chan_node->drive_rr_nodes[iedge] = sorted_drive_nodes[iedge];
+  }
+  for (size_t iedge = 0; iedge < sorted_drive_switches.size(); ++iedge) {
+    chan_node->drive_switches[iedge] = sorted_drive_switches[iedge];
+  }
+
+  return;
+
+}
+
+/* sort drive_rr_nodes of each rr_node subject to the index of rr_gsb array */
+static  
+void sort_rr_gsb_drive_rr_nodes(const RRGSB& rr_gsb) {
+  /* Sort the drive_rr_nodes for each rr_node */ 
+  for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
+    Side gsb_side_manager(side);
+    enum e_side gsb_side = gsb_side_manager.get_side();
+    /* For IPIN node: sort drive_rr_nodes according to the index in the routing channels */
+    for (size_t inode = 0; inode < rr_gsb.get_num_ipin_nodes(gsb_side); ++inode) {
+      /* Get the chan side, so we have the routing tracks */
+      enum e_side ipin_chan_side = rr_gsb.get_cb_chan_side(gsb_side);
+      sort_rr_gsb_one_ipin_node_drive_rr_nodes(rr_gsb, 
+                                               rr_gsb.get_ipin_node(gsb_side, inode),
+                                               ipin_chan_side);
+    } 
+    /* For CHANX | CHANY node: sort drive_rr_nodes according to the index in the routing channels */
+    for (size_t inode = 0; inode < rr_gsb.get_chan_width(gsb_side); ++inode) {
+      /* Bypass IN_PORT */
+      if (IN_PORT == rr_gsb.get_chan_node_direction(gsb_side, inode)) {
+        continue;
+      }
+      /* Get the chan side, so we have the routing tracks */
+      sort_rr_gsb_one_chan_node_drive_rr_nodes(rr_gsb, 
+                                               rr_gsb.get_chan_node(gsb_side, inode),
+                                               gsb_side);
+    } 
+  }
+
+  return;
+} 
+
 /* Build a list of Switch blocks, each of which contains a collection of rr_nodes
  * We will maintain a list of unique switch blocks, which will be outputted as a Verilog module
  * Each switch block in the FPGA fabric will be an instance of these modules.
@@ -1271,6 +1458,8 @@ DeviceRRGSB build_device_rr_gsb(boolean output_sb_xml, char* sb_xml_dir,
                                   LL_num_rr_nodes, LL_rr_node, 
                                   LL_rr_node_indices, 
                                   num_segments, LL_rr_indexed_data);
+      /* sort drive_rr_nodes */
+      sort_rr_gsb_drive_rr_nodes(rr_gsb);
       /* Add to device_rr_gsb */
       DeviceCoordinator sb_coordinator = rr_gsb.get_sb_coordinator();
       LL_device_rr_gsb.add_rr_gsb(sb_coordinator, rr_gsb);

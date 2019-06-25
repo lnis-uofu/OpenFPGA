@@ -1882,8 +1882,10 @@ void RRGSB::mirror_side_chan_node_direction(enum e_side side) {
 void RRGSB::swap_chan_node(enum e_side src_side, enum e_side des_side) {
   Side src_side_manager(src_side);
   Side des_side_manager(des_side);
-  std::swap(chan_node_[src_side_manager.to_size_t()], chan_node_[des_side_manager.to_size_t()]);
-  std::swap(chan_node_direction_[src_side_manager.to_size_t()], chan_node_direction_[des_side_manager.to_size_t()]);
+  std::swap(chan_node_[src_side_manager.to_size_t()], 
+            chan_node_[des_side_manager.to_size_t()]);
+  std::swap(chan_node_direction_[src_side_manager.to_size_t()], 
+            chan_node_direction_[des_side_manager.to_size_t()]);
   return;
 } 
 
@@ -1891,8 +1893,10 @@ void RRGSB::swap_chan_node(enum e_side src_side, enum e_side des_side) {
 void RRGSB::swap_opin_node(enum e_side src_side, enum e_side des_side) {
   Side src_side_manager(src_side);
   Side des_side_manager(des_side);
-  std::swap(opin_node_[src_side_manager.to_size_t()], opin_node_[des_side_manager.to_size_t()]);
-  std::swap(opin_node_grid_side_[src_side_manager.to_size_t()], opin_node_grid_side_[des_side_manager.to_size_t()]);
+  std::swap(opin_node_[src_side_manager.to_size_t()], 
+            opin_node_[des_side_manager.to_size_t()]);
+  std::swap(opin_node_grid_side_[src_side_manager.to_size_t()], 
+            opin_node_grid_side_[des_side_manager.to_size_t()]);
   return;
 } 
 
@@ -1900,27 +1904,34 @@ void RRGSB::swap_opin_node(enum e_side src_side, enum e_side des_side) {
 void RRGSB::swap_ipin_node(enum e_side src_side, enum e_side des_side) {
   Side src_side_manager(src_side);
   Side des_side_manager(des_side);
-  std::swap(ipin_node_[src_side_manager.to_size_t()], ipin_node_[des_side_manager.to_size_t()]);
-  std::swap(ipin_node_grid_side_[src_side_manager.to_size_t()], ipin_node_grid_side_[des_side_manager.to_size_t()]);
+  std::swap(ipin_node_[src_side_manager.to_size_t()], 
+            ipin_node_[des_side_manager.to_size_t()]);
+  std::swap(ipin_node_grid_side_[src_side_manager.to_size_t()], 
+            ipin_node_grid_side_[des_side_manager.to_size_t()]);
   return;
 } 
 
 /* Reverse the vector of the OPIN rr_nodes on a side */
 void RRGSB::reverse_opin_node(enum e_side side) {
   Side side_manager(side);
-  std::reverse(opin_node_[side_manager.to_size_t()].begin(), opin_node_[side_manager.to_size_t()].end());
-  std::reverse(opin_node_grid_side_[side_manager.to_size_t()].begin(), opin_node_grid_side_[side_manager.to_size_t()].end());
+  std::reverse(opin_node_[side_manager.to_size_t()].begin(), 
+               opin_node_[side_manager.to_size_t()].end());
+  std::reverse(opin_node_grid_side_[side_manager.to_size_t()].begin(), 
+               opin_node_grid_side_[side_manager.to_size_t()].end());
   return;
 } 
 
 /* Reverse the vector of the OPIN rr_nodes on a side */
 void RRGSB::reverse_ipin_node(enum e_side side) {
   Side side_manager(side);
-  std::reverse(ipin_node_[side_manager.to_size_t()].begin(), ipin_node_[side_manager.to_size_t()].end());
-  std::reverse(ipin_node_grid_side_[side_manager.to_size_t()].begin(), ipin_node_grid_side_[side_manager.to_size_t()].end());
+  std::reverse(ipin_node_[side_manager.to_size_t()].begin(), 
+               ipin_node_[side_manager.to_size_t()].end());
+  std::reverse(ipin_node_grid_side_[side_manager.to_size_t()].begin(), 
+               ipin_node_grid_side_[side_manager.to_size_t()].end());
   return;
 } 
 
+/* Reset the RRGSB to pristine state */
 void RRGSB::clear() {
   /* Clean all the vectors */
   assert(validate_num_sides());
