@@ -30,6 +30,11 @@ void add_one_edge_for_two_rr_nodes(const t_rr_graph* rr_graph,
                                    const int des_rr_node_id,
                                    const short switch_id);
 
+void add_edges_for_two_rr_nodes(const t_rr_graph* rr_graph,  
+                                const int src_rr_node_id, 
+                                const std::vector<int> des_rr_node, 
+                                const std::vector<short> driver_switches);
+
 DeviceCoordinator get_track_rr_node_start_coordinator(const t_rr_node* track_rr_node);
 
 DeviceCoordinator get_track_rr_node_end_coordinator(const t_rr_node* track_rr_node);

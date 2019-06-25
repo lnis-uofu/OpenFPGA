@@ -255,6 +255,91 @@ void add_one_edge_for_two_rr_nodes(const t_rr_graph* rr_graph,
   return;
 }
 
+
+/************************************************************************
+ * Add a set of edges for a source rr_node 
+ * For src rr_node, update the edge list and update switch_id,
+ * For des rr_node, update the fan_in
+ ***********************************************************************/
+void add_edges_for_two_rr_nodes(const t_rr_graph* rr_graph,  
+                                const int src_rr_node_id, 
+                                const std::vector<int> des_rr_node_ids, 
+                                const std::vector<short> driver_switches) {
+  /* Check src_rr_node id is in range */
+  assert ( (-1 < src_rr_node_id) && (src_rr_node_id < rr_graph->num_rr_nodes) );
+
+  t_rr_node* src_rr_node = &(rr_graph->rr_node[src_rr_node_id]);
+
+  /* Check des_rr_node and driver_switches should match in size  */
+  assert ( des_rr_node_ids.size() == driver_switches.size() );
+
+  /* Get a stamp of the current num_edges of src_rr_node */
+  int start_edge_id = src_rr_node->num_edges;
+
+  /* To avoid adding redundant edges, 
+   * we will search the edge list and 
+   * check if each des_rr_node_id already exists 
+   * We rebuild a vector des_rr_node_ids_to_add where redundancy is removed 
+   */
+  std::vector<int> des_rr_node_ids_to_add; 
+  std::vector<short> driver_switches_to_add; 
+  for (size_t inode = 0; inode < des_rr_node_ids.size(); ++inode) {
+    /* search */
+    bool is_redundant = false;
+    for (int iedge = 0; iedge < src_rr_node->num_edges; ++iedge) {
+      if (des_rr_node_ids[inode] == src_rr_node->edges[iedge]) {
+        is_redundant = true;
+        break;
+      } 
+    } 
+    /* add or skip */
+    if (true == is_redundant) {
+      continue; /* go to the next  */
+    }
+    assert (false == is_redundant);
+    /* add to the list */
+    des_rr_node_ids_to_add.push_back(des_rr_node_ids[inode]);
+    driver_switches_to_add.push_back(driver_switches[inode]);
+  }
+
+  /* Allocate edge and switch to src_rr_node */
+  src_rr_node->num_edges += des_rr_node_ids_to_add.size();
+  if (NULL == src_rr_node->edges) {
+    /* calloc */
+    src_rr_node->edges = (int*) my_calloc( src_rr_node->num_edges, sizeof(int) ); 
+    src_rr_node->switches = (short*) my_calloc( src_rr_node->num_edges, sizeof(short) ); 
+  } else {
+    /* realloc */
+    src_rr_node->edges = (int*) my_realloc(src_rr_node->edges, 
+                                           src_rr_node->num_edges * sizeof(int)); 
+    src_rr_node->switches = (short*) my_realloc(src_rr_node->switches, 
+                                                src_rr_node->num_edges * sizeof(short)); 
+  }
+
+  for (size_t inode = 0; inode < des_rr_node_ids_to_add.size(); ++inode) {
+    /* Check des_rr_node id is in range */
+    int des_rr_node_id = des_rr_node_ids_to_add[inode];
+    assert ( (-1 < des_rr_node_id) && (des_rr_node_id < rr_graph->num_rr_nodes) );
+    
+    t_rr_node* des_rr_node = &(rr_graph->rr_node[des_rr_node_id]);
+  
+    /* Fill edge and switch info */
+    src_rr_node->edges[start_edge_id] = des_rr_node_id;
+    src_rr_node->switches[start_edge_id] = driver_switches_to_add[inode];
+  
+    /* Update the des_rr_node */ 
+    des_rr_node->fan_in++;
+    /* Increment the start_edge_id */
+    start_edge_id++;
+  }
+
+  /* Check */
+  assert( start_edge_id == src_rr_node->num_edges );
+
+  return;
+
+}
+
 /************************************************************************
  * Get the coordinator of a starting point of a routing track 
  * For routing tracks in INC_DIRECTION

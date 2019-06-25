@@ -1447,7 +1447,7 @@ const char* RRGSB::gen_gsb_verilog_module_name() const {
   std::string y_str = std::to_string(get_sb_y());
 
   char* ret = (char*)my_malloc(sizeof(char)* 
-                               ( 2 + 1 
+                               ( 3 + 1 
                                + x_str.length() + 2
                                + y_str.length() + 1 
                                + 1));

@@ -1,7 +1,46 @@
-/***********************************/
-/*      SPICE Modeling for VPR     */
-/*       Xifan TANG, EPFL/LSI      */
-/***********************************/
+/**********************************************************
+ * MIT License
+ *
+ * Copyright (c) 2018 LNIS - The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ ***********************************************************************/
+
+/************************************************************************
+ * Filename:    fpga_x2p_unique_routing.c
+ * Created by:   Xifan Tang
+ * Change history:
+ * +-------------------------------------+
+ * |  Date       |    Author   | Notes
+ * +-------------------------------------+
+ * | 2019/06/25  |  Xifan Tang | Created 
+ * +-------------------------------------+
+ ***********************************************************************/
+/************************************************************************
+ *  This file contains builders for the data structures
+ *  1. RRGSB: General Switch Block (GSB).
+ *  2. RRChan: Generic routing channels
+ *  We also include functions to identify unique modules of
+ *  Switch Blocks and Connection Blocks based on the data structures
+ *  t_sb and t_cb
+ ***********************************************************************/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -1096,157 +1135,6 @@ RRGSB build_rr_gsb(DeviceCoordinator& device_range,
   return rr_gsb;
 }
 
-/* Rotate the Switch block and try to add to rotatable mirrors */
-static 
-RRGSB rotate_rr_switch_block_for_mirror(DeviceCoordinator& device_range, 
-                                                const RRGSB& rr_switch_block) {
-  RRGSB rotated_rr_switch_block;
-  rotated_rr_switch_block.set(rr_switch_block);
-  size_t Fco_offset = 1;
-
-  /* For the 4 Switch Blocks at the four corners */
-  /* 1. BOTTOM-LEFT corner: 
-   *    nothing to do. This is the base we like 
-   */
-  if (   ( 0 == rotated_rr_switch_block.get_sb_x())
-      && ( 0 == rotated_rr_switch_block.get_sb_y()) ) {
-    return rotated_rr_switch_block;
-  }
-
-  /* 2. TOP-LEFT corner: 
-   * swap the opin_node between TOP and BOTTOM, 
-   * swap the chan_node between TOP and BOTTOM, 
-   */
-  if (   ( 0 == rotated_rr_switch_block.get_sb_x())
-      && (device_range.get_y() == rotated_rr_switch_block.get_sb_y()) ) {
-    rotated_rr_switch_block.swap_opin_node(TOP, BOTTOM);
-    rotated_rr_switch_block.swap_chan_node(TOP, BOTTOM);
-    return rotated_rr_switch_block;
-  }
-
-  /* 3. TOP-RIGHT corner: 
-   * swap the opin_node between TOP and BOTTOM, 
-   * swap the chan_node between TOP and BOTTOM, 
-   * swap the opin_node between LEFT and RIGHT, 
-   * swap the chan_node between LEFT and RIGHT, 
-   */
-  if (   (device_range.get_x() == rotated_rr_switch_block.get_sb_x())
-      && (device_range.get_y() == rotated_rr_switch_block.get_sb_y()) ) {
-    rotated_rr_switch_block.swap_opin_node(TOP, BOTTOM);
-    rotated_rr_switch_block.swap_chan_node(TOP, BOTTOM);
-    rotated_rr_switch_block.swap_opin_node(LEFT, RIGHT);
-    rotated_rr_switch_block.swap_chan_node(LEFT, RIGHT);
-    return rotated_rr_switch_block;
-  }
-  /* 4. BOTTOM-RIGHT corner: 
-   * swap the opin_node between LEFT and RIGHT, 
-   * swap the chan_node between LEFT and RIGHT, 
-   */
-  if (   (device_range.get_x() == rotated_rr_switch_block.get_sb_x())
-      && (0 == rotated_rr_switch_block.get_sb_y()) ) {
-    rotated_rr_switch_block.swap_opin_node(LEFT, RIGHT);
-    rotated_rr_switch_block.swap_chan_node(LEFT, RIGHT);
-    return rotated_rr_switch_block;
-  }
-
-  /* For Switch blocks on the borders */
-  /* 1. BOTTOM side: 
-   *    nothing to do. This is the base we like 
-   */
-  if ( 0 == rotated_rr_switch_block.get_sb_y()) {
-    return rotated_rr_switch_block;
-  }
-  /* 2. TOP side: 
-   * swap the opin_node between TOP and BOTTOM, 
-   * swap the chan_node between TOP and BOTTOM, 
-   */
-  if (device_range.get_y() == rotated_rr_switch_block.get_sb_y() ) {
-
-    /* For RIGHT SIDE: X-channel in INC_DIRECTION, rotate by an offset of its x-coordinator */
-    rotated_rr_switch_block.rotate_side_chan_node_by_direction(RIGHT, INC_DIRECTION, Fco_offset * (rotated_rr_switch_block.get_sb_x() - 1));
-    /* Rotate the same nodes on the opposite side */
-    rotated_rr_switch_block.rotate_side_chan_node_by_direction(LEFT, INC_DIRECTION, Fco_offset * (rotated_rr_switch_block.get_sb_x() - 1));
-
-    /* For LEFT SIDE: X-channel in DEC_DIRECTION, rotate by an offset of its x-coordinator */
-    rotated_rr_switch_block.counter_rotate_side_chan_node_by_direction(LEFT, DEC_DIRECTION, Fco_offset * (rotated_rr_switch_block.get_sb_x() - 1));
-    /* Rotate the same nodes on the opposite side */
-    rotated_rr_switch_block.counter_rotate_side_chan_node_by_direction(RIGHT, DEC_DIRECTION, Fco_offset * (rotated_rr_switch_block.get_sb_x() - 1));
-
-    //rotated_rr_switch_block.swap_opin_node(TOP, BOTTOM);
-    //rotated_rr_switch_block.swap_chan_node(TOP, BOTTOM);
-    //rotated_rr_switch_block.reverse_opin_node(TOP);
-    //rotated_rr_switch_block.reverse_opin_node(BOTTOM);
-
-    return rotated_rr_switch_block;
-  }
-  /* 3. RIGHT side: 
-   * swap the opin_node between LEFT and RIGHT, 
-   * swap the chan_node between LEFT and RIGHT, 
-   */
-  if (device_range.get_x() == rotated_rr_switch_block.get_sb_x() ) {
-
-    /* For TOP SIDE: Y-channel in INC_DIRECTION, rotate by an offset of its y-coordinator */
-    rotated_rr_switch_block.rotate_side_chan_node_by_direction(TOP, INC_DIRECTION, Fco_offset * (rotated_rr_switch_block.get_sb_y() - 1));
-    /* Rotate the same nodes on the opposite side */
-    rotated_rr_switch_block.rotate_side_chan_node_by_direction(BOTTOM, INC_DIRECTION, Fco_offset * (rotated_rr_switch_block.get_sb_y() - 1));
-
-    /* For BOTTOM SIDE: Y-channel in DEC_DIRECTION, rotate by an offset of its y-coordinator */
-    rotated_rr_switch_block.counter_rotate_side_chan_node_by_direction(BOTTOM, DEC_DIRECTION, Fco_offset * (rotated_rr_switch_block.get_sb_y() - 1));
-    /* Rotate the same nodes on the opposite side */
-    rotated_rr_switch_block.counter_rotate_side_chan_node_by_direction(TOP, DEC_DIRECTION, Fco_offset * (rotated_rr_switch_block.get_sb_y() - 1));
-
-    //rotated_rr_switch_block.swap_opin_node(LEFT, RIGHT);
-    //rotated_rr_switch_block.swap_chan_node(LEFT, RIGHT);
-    //rotated_rr_switch_block.reverse_opin_node(LEFT);
-    //rotated_rr_switch_block.reverse_opin_node(RIGHT);
-
-    return rotated_rr_switch_block;
-  }
-  /* 4. LEFT side: 
-   *    nothing to do. This is the base we like 
-   */
-  if (0 == rotated_rr_switch_block.get_sb_x() ) {
-    return rotated_rr_switch_block;
-  }
-
-  /* SB[1][1] is the baseline, we do not modify */
-  if (  (1 == rotated_rr_switch_block.get_sb_x()) 
-     && (1 == rotated_rr_switch_block.get_sb_y()) ) {
-    return rotated_rr_switch_block;
-  }
-
-  /* Reach here, it means we have a SB at the center region */
-  /* For TOP SIDE: Y-channel in INC_DIRECTION, rotate by an offset of its y-coordinator */
-  if (1 < rotated_rr_switch_block.get_sb_y()) {
-    rotated_rr_switch_block.rotate_side_chan_node_by_direction(TOP, INC_DIRECTION, Fco_offset * (rotated_rr_switch_block.get_sb_y() - 1));
-    /* Rotate the same nodes on the opposite side */
-    rotated_rr_switch_block.rotate_side_chan_node_by_direction(BOTTOM, INC_DIRECTION, Fco_offset * (rotated_rr_switch_block.get_sb_y() - 1));
-  }
-
-  /* For RIGHT SIDE: X-channel in INC_DIRECTION, rotate by an offset of its x-coordinator */
-  if (1 < rotated_rr_switch_block.get_sb_x()) {
-    rotated_rr_switch_block.rotate_side_chan_node_by_direction(RIGHT, INC_DIRECTION, Fco_offset * (rotated_rr_switch_block.get_sb_x() - 1));
-    /* Rotate the same nodes on the opposite side */
-    rotated_rr_switch_block.rotate_side_chan_node_by_direction(LEFT, INC_DIRECTION, Fco_offset * (rotated_rr_switch_block.get_sb_x() - 1));
-  }
-
-  /* For BOTTOM SIDE: Y-channel in DEC_DIRECTION, rotate by an offset of its y-coordinator */
-  if ( 1 <  rotated_rr_switch_block.get_sb_y()) {
-    rotated_rr_switch_block.counter_rotate_side_chan_node_by_direction(BOTTOM, DEC_DIRECTION, Fco_offset * (rotated_rr_switch_block.get_sb_y() - 1));
-    /* Rotate the same nodes on the opposite side */
-    rotated_rr_switch_block.counter_rotate_side_chan_node_by_direction(TOP, DEC_DIRECTION, Fco_offset * (rotated_rr_switch_block.get_sb_y() - 1));
-  }
-
-  /* For LEFT SIDE: X-channel in DEC_DIRECTION, rotate by an offset of its x-coordinator */
-  if ( 1 <  rotated_rr_switch_block.get_sb_x()) {
-    rotated_rr_switch_block.counter_rotate_side_chan_node_by_direction(LEFT, DEC_DIRECTION, Fco_offset * (rotated_rr_switch_block.get_sb_x() - 1));
-    /* Rotate the same nodes on the opposite side */
-    rotated_rr_switch_block.counter_rotate_side_chan_node_by_direction(RIGHT, DEC_DIRECTION, Fco_offset * (rotated_rr_switch_block.get_sb_x() - 1));
-  }
-
-  return rotated_rr_switch_block;
-}
-
 /* sort drive_rr_nodes of a rr_node inside rr_gsb subject to the index of rr_gsb array */
 static  
 void sort_rr_gsb_one_ipin_node_drive_rr_nodes(const RRGSB& rr_gsb, 
@@ -1504,33 +1392,9 @@ DeviceRRGSB build_device_rr_gsb(boolean output_sb_xml, char* sb_xml_dir,
     }
   }
 
-  /* Create directory if needed */
-  if (TRUE == output_sb_xml) {
-    create_dir_path(sb_xml_dir);
-  }
-
-  for (size_t ix = 0; ix <= sb_range.get_x(); ++ix) {
-    for (size_t iy = 0; iy <= sb_range.get_y(); ++iy) {
-      RRGSB rr_gsb = LL_device_rr_gsb.get_gsb(ix, iy);
-      RRGSB rotated_rr_sb = rotate_rr_switch_block_for_mirror(sb_range, rr_gsb); 
-      if (TRUE == output_sb_xml) {
-        std::string fname_prefix(sb_xml_dir);
-        /* Add slash if needed */
-        //if ('/' != fname_prefix.back()) {
-        //  fname_prefix += "/";
-        //}
-        //fname_prefix += "rotated_";
-        //write_rr_switch_block_to_xml(fname_prefix, rotated_rr_sb);
-        write_rr_switch_block_to_xml(fname_prefix, rr_gsb);
-      }
-    }
-  }
-
   return LL_device_rr_gsb;
 }
 
-
-/* Rotatable will be done in the next step 
-void identify_rotatable_switch_blocks(); 
-void identify_rotatable_connection_blocks(); 
-*/
+/************************************************************************
+ * End of file : fpga_x2p_unique_routing.c 
+ ***********************************************************************/

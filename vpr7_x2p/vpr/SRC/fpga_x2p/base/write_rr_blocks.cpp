@@ -31,7 +31,7 @@ void write_rr_switch_block_to_xml(std::string fname_prefix, RRGSB& rr_gsb) {
   /* Output each side */ 
   for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
     Side gsb_side_manager(side);
-    enum e_side gsb_side = gsb_side;
+    enum e_side gsb_side = gsb_side_manager.get_side();
    
     /* Output IPIN nodes */ 
     for (size_t inode = 0; inode < rr_gsb.get_num_ipin_nodes(gsb_side); ++inode) {
@@ -117,7 +117,9 @@ void write_rr_switch_block_to_xml(std::string fname_prefix, RRGSB& rr_gsb) {
           enum e_side drive_node_side = NUM_SIDES;
           int drive_node_index = -1;
           rr_gsb.get_node_side_and_index(drive_rr_nodes[jnode], IN_PORT, &drive_node_side, &drive_node_index);
+          assert(-1 != drive_node_index);
           Side drive_side(drive_node_side);
+
           if (OPIN == drive_rr_nodes[jnode]->type) {
             Side grid_side(rr_gsb.get_opin_node_grid_side(drive_node_side, drive_node_index));
             fp << "\t\t<driver_node type=\"" << rr_node_typename[OPIN]

@@ -209,6 +209,9 @@ bool is_gsb_in_track_sb_population(const RRGSB& rr_gsb,
 static 
 std::vector<size_t> get_to_track_list(const int Fs, const int to_track, const int num_to_tracks) {
   std::vector<size_t> to_tracks;
+  /* Ensure a clear start */
+  to_tracks.clear();
+
   for (int i = 0; i < Fs; i = i + 3) {  
     /* TODO: currently, for Fs > 3, I always search the next from_track until Fs is satisfied 
      * The optimal track selection should be done in a more scientific way!!! 
@@ -244,6 +247,8 @@ std::vector<size_t> get_switch_block_to_track_id(const enum e_switch_block_type 
    * connect.  It supports any Fs % 3 == 0, switch blocks.
    */
   std::vector<size_t> to_tracks;
+  /* Ensure a clear start */
+  to_tracks.clear();
 
   /* TODO: currently, for Fs > 3, I always search the next from_track until Fs is satisfied 
    * The optimal track selection should be done in a more scientific way!!! 
@@ -251,9 +256,12 @@ std::vector<size_t> get_switch_block_to_track_id(const enum e_switch_block_type 
 
   assert (0 == Fs % 3);
 
+  /* Adapt from_track to fit in the range of num_to_tracks */
+  size_t actual_from_track = from_track % num_to_tracks; 
+
   switch (switch_block_type) {
   case SUBSET: /* NB:  Global routing uses SUBSET too */
-    to_tracks = get_to_track_list(Fs, from_track, num_to_tracks);
+    to_tracks = get_to_track_list(Fs, actual_from_track, num_to_tracks);
     /* Finish, we return */
     return to_tracks;
   case UNIVERSAL:
@@ -266,9 +274,9 @@ std::vector<size_t> get_switch_block_to_track_id(const enum e_switch_block_type 
       Side side_manager(from_side);
       if ( (to_side == side_manager.get_opposite()) 
         || (to_side == side_manager.get_rotate_counterclockwise()) ) {
-        to_tracks = get_to_track_list(Fs, from_track, num_to_tracks);
+        to_tracks = get_to_track_list(Fs, actual_from_track, num_to_tracks);
       } else if (to_side == side_manager.get_rotate_clockwise()) {
-        to_tracks = get_to_track_list(Fs, num_to_tracks - 1 - from_track, num_to_tracks);
+        to_tracks = get_to_track_list(Fs, num_to_tracks - 1 - actual_from_track, num_to_tracks);
       }
     }
 
@@ -281,9 +289,9 @@ std::vector<size_t> get_switch_block_to_track_id(const enum e_switch_block_type 
       Side side_manager(from_side);
       if ( (to_side == side_manager.get_opposite()) 
         || (to_side == side_manager.get_rotate_clockwise()) ) {
-        to_tracks = get_to_track_list(Fs, from_track, num_to_tracks);
+        to_tracks = get_to_track_list(Fs, actual_from_track, num_to_tracks);
       } else if (to_side == side_manager.get_rotate_counterclockwise()) {
-        to_tracks = get_to_track_list(Fs, num_to_tracks - 1 - from_track, num_to_tracks);
+        to_tracks = get_to_track_list(Fs, num_to_tracks - 1 - actual_from_track, num_to_tracks);
       }
     }
     /* Finish, we return */
@@ -293,35 +301,35 @@ std::vector<size_t> get_switch_block_to_track_id(const enum e_switch_block_type 
     /* See S. Wilton Phd thesis, U of T, 1996 p. 103 for details on following. */
     if (from_side == LEFT) {
       if (to_side == RIGHT) { /* CHANX to CHANX */
-        to_tracks = get_to_track_list(Fs, from_track, num_to_tracks);
+        to_tracks = get_to_track_list(Fs, actual_from_track, num_to_tracks);
       } else if (to_side == TOP) { /* from CHANX to CHANY */
-        to_tracks = get_to_track_list(Fs, (num_to_tracks - (from_track % num_to_tracks)) % num_to_tracks, num_to_tracks);
+        to_tracks = get_to_track_list(Fs, (num_to_tracks - actual_from_track ) % num_to_tracks, num_to_tracks);
       } else if (to_side == BOTTOM) {
-        to_tracks = get_to_track_list(Fs, (num_to_tracks + from_track - 1) % num_to_tracks, num_to_tracks);
+        to_tracks = get_to_track_list(Fs, (num_to_tracks + actual_from_track - 1) % num_to_tracks, num_to_tracks);
       }
     } else if (from_side == RIGHT) {
       if (to_side == LEFT) { /* CHANX to CHANX */
-        to_tracks = get_to_track_list(Fs, from_track, num_to_tracks);
+        to_tracks = get_to_track_list(Fs, actual_from_track, num_to_tracks);
       } else if (to_side == TOP) { /* from CHANX to CHANY */
-        to_tracks = get_to_track_list(Fs, (num_to_tracks + from_track - 1) % num_to_tracks, num_to_tracks);
+        to_tracks = get_to_track_list(Fs, (num_to_tracks + actual_from_track - 1) % num_to_tracks, num_to_tracks);
       } else if (to_side == BOTTOM) {
-        to_tracks = get_to_track_list(Fs, (num_to_tracks - 2 - from_track) % num_to_tracks, num_to_tracks);
+        to_tracks = get_to_track_list(Fs, (2 * num_to_tracks - 2 - actual_from_track) % num_to_tracks, num_to_tracks);
       }
     } else if (from_side == BOTTOM) {
       if (to_side == TOP) { /* CHANY to CHANY */
-        to_tracks = get_to_track_list(Fs, from_track, num_to_tracks);
+        to_tracks = get_to_track_list(Fs, actual_from_track, num_to_tracks);
       } else if (to_side == LEFT) { /* from CHANY to CHANX */
-        to_tracks = get_to_track_list(Fs, (from_track + 1) % num_to_tracks, num_to_tracks);
+        to_tracks = get_to_track_list(Fs, (actual_from_track + 1) % num_to_tracks, num_to_tracks);
       } else if (to_side == RIGHT) {
-        to_tracks = get_to_track_list(Fs, (2 * num_to_tracks - 2 - from_track) % num_to_tracks, num_to_tracks);
+        to_tracks = get_to_track_list(Fs, (2 * num_to_tracks - 2 - actual_from_track) % num_to_tracks, num_to_tracks);
       }
     } else if (from_side == TOP) {
       if (to_side == BOTTOM) { /* CHANY to CHANY */
         to_tracks = get_to_track_list(Fs, from_track, num_to_tracks);
       } else if (to_side == LEFT) { /* from CHANY to CHANX */
-        to_tracks = get_to_track_list(Fs, (num_to_tracks - (from_track % num_to_tracks)) % num_to_tracks, num_to_tracks);
+        to_tracks = get_to_track_list(Fs, (num_to_tracks - actual_from_track) % num_to_tracks, num_to_tracks);
       } else if (to_side == RIGHT) {
-        to_tracks = get_to_track_list(Fs, (from_track + 1) % num_to_tracks, num_to_tracks);
+        to_tracks = get_to_track_list(Fs, (actual_from_track + 1) % num_to_tracks, num_to_tracks);
       }
     }
     /* Finish, we return */
@@ -388,11 +396,22 @@ void build_gsb_one_group_track_to_track_map(const t_rr_graph* rr_graph,
         for (size_t to_track_id = 0; to_track_id < to_track_ids.size(); ++to_track_id) {
           size_t from_side_index = side_manager.to_size_t();
           size_t from_track_index = from_tracks[side][inode];
+          /* Check the id is still in the range !*/
+          assert ( to_track_ids[to_track_id] < to_tracks[to_side_index].size() );
           size_t to_track_index = to_tracks[to_side_index][to_track_ids[to_track_id]];
           //printf("from_track(size=%lu): %lu , to_track_ids[%lu]:%lu, to_track_index: %lu in a group of %lu tracks\n", 
           //       from_tracks[side].size(), inode, to_track_id, to_track_ids[to_track_id], 
           //       to_track_index, to_tracks[to_side_index].size());
           t_rr_node* to_track_node = rr_gsb.get_chan_node(to_side, to_track_index);
+
+          /* Check if the to_track_node is already in the list ! */
+          std::vector<int>::iterator it = std::find((*track2track_map)[from_side_index][from_track_index].begin(),
+                                                    (*track2track_map)[from_side_index][from_track_index].end(),
+                                                    to_track_node - rr_graph->rr_node);
+          if (it != (*track2track_map)[from_side_index][from_track_index].end()) {
+             continue; /* the node_id is already in the list, go for the next */
+          }
+          /* Clear, we should add to the list */
           (*track2track_map)[from_side_index][from_track_index].push_back(to_track_node - rr_graph->rr_node);
         }
       }
@@ -927,13 +946,15 @@ void build_edges_for_one_tileable_rr_gsb(const t_rr_graph* rr_graph,
       t_rr_node* opin_node = rr_gsb->get_opin_node(gsb_side, inode); 
 
       /* 1. create edges between OPINs and CHANX|CHANY, using opin2track_map */
-      int num_edges = opin2track_map[side_manager.to_size_t()][inode].size();
+      std::vector<short> driver_switches;
+      int num_edges = opin2track_map[gsb_side][inode].size();
       for (int iedge = 0; iedge < num_edges; ++iedge) {
         int track_node_id = opin2track_map[side_manager.to_size_t()][inode][iedge];
-        /* add edges to the chan_node */
-        add_one_edge_for_two_rr_nodes(rr_graph, opin_node - rr_graph->rr_node, track_node_id,
-                                      rr_graph->rr_node[track_node_id].driver_switch);
+        driver_switches.push_back(rr_graph->rr_node[track_node_id].driver_switch); 
       }
+      /* add edges to the opin_node */
+      add_edges_for_two_rr_nodes(rr_graph, opin_node - rr_graph->rr_node, 
+                                 opin2track_map[gsb_side][inode], driver_switches);
     }
 
     /* Find  CHANX or CHANY */
@@ -945,26 +966,30 @@ void build_edges_for_one_tileable_rr_gsb(const t_rr_graph* rr_graph,
       /* 2. create edges between CHANX|CHANY and IPINs, using ipin2track_map */
       for (size_t inode = 0; inode < rr_gsb->get_chan_width(gsb_side); ++inode) {
         t_rr_node* chan_node = rr_gsb->get_chan_node(gsb_side, inode); 
-        int num_edges = track2ipin_map[side_manager.to_size_t()][inode].size();
+        std::vector<short> driver_switches;
+        int num_edges = track2ipin_map[gsb_side][inode].size();
         for (int iedge = 0; iedge < num_edges; ++iedge) {
-          int ipin_node_id = track2ipin_map[side_manager.to_size_t()][inode][iedge];
-          /* add edges to the chan_node */
-          add_one_edge_for_two_rr_nodes(rr_graph, chan_node - rr_graph->rr_node, ipin_node_id,
-                                        rr_graph->rr_node[ipin_node_id].driver_switch);
+          int ipin_node_id = track2ipin_map[gsb_side][inode][iedge];
+          driver_switches.push_back(rr_graph->rr_node[ipin_node_id].driver_switch); 
         }
+        /* add edges to the chan_node */
+        add_edges_for_two_rr_nodes(rr_graph, chan_node - rr_graph->rr_node, 
+                                   track2ipin_map[gsb_side][inode], driver_switches);
       }
     }
 
     /* 3. create edges between CHANX|CHANY and CHANX|CHANY, using track2track_map */
     for (size_t inode = 0; inode < rr_gsb->get_chan_width(gsb_side); ++inode) {
       t_rr_node* chan_node = rr_gsb->get_chan_node(gsb_side, inode); 
-      int num_edges = track2track_map[side_manager.to_size_t()][inode].size();
+      std::vector<short> driver_switches;
+      int num_edges = track2track_map[gsb_side][inode].size();
       for (int iedge = 0; iedge < num_edges; ++iedge) {
-        int track_node_id = track2track_map[side_manager.to_size_t()][inode][iedge];
-        /* add edges to the chan_node */
-        add_one_edge_for_two_rr_nodes(rr_graph, chan_node - rr_graph->rr_node, track_node_id,
-                                      rr_graph->rr_node[track_node_id].driver_switch);
+        int track_node_id = track2track_map[gsb_side][inode][iedge];
+        driver_switches.push_back(rr_graph->rr_node[track_node_id].driver_switch); 
       }
+      /* add edges to the chan_node */
+      add_edges_for_two_rr_nodes(rr_graph, chan_node - rr_graph->rr_node, 
+                                 track2track_map[gsb_side][inode], driver_switches);
     }
   }
 
