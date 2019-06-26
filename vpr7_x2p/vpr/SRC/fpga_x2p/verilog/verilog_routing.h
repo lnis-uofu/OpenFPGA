@@ -132,7 +132,6 @@ void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
                                     int LL_num_rr_nodes, t_rr_node* LL_rr_node,
                                     t_ivec*** LL_rr_node_indices,
                                     t_rr_indexed_data* LL_rr_indexed_data,
-                                    t_syn_verilog_opts fpga_verilog_opts,
                                     boolean compact_routing_hierarchy);
 
 #endif

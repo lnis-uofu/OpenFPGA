@@ -255,15 +255,14 @@ void vpr_fpga_verilog(t_vpr_setup vpr_setup,
   /* Dump routing resources: switch blocks, connection blocks and channel tracks */
   dump_verilog_routing_resources(sram_verilog_orgz_info, src_dir_path, rr_dir_path, Arch, &vpr_setup.RoutingArch,
                                  num_rr_nodes, rr_node, rr_node_indices, rr_indexed_data,
-                                 vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts, vpr_setup.FPGA_SPICE_Opts.compact_routing_hierarchy);
+                                 vpr_setup.FPGA_SPICE_Opts.compact_routing_hierarchy);
 
   /* Dump logic blocks 
    * Branches to go: 
    * 1. a compact output
    * 2. a full-size output
    */
-  dump_compact_verilog_logic_blocks(sram_verilog_orgz_info, src_dir_path, lb_dir_path, &Arch,
-                                    vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts);
+  dump_compact_verilog_logic_blocks(sram_verilog_orgz_info, src_dir_path, lb_dir_path, &Arch);
 
   /* Dump internal structures of submodules */
   dump_verilog_submodules(sram_verilog_orgz_info, src_dir_path, submodule_dir_path, 
@@ -275,7 +274,6 @@ void vpr_fpga_verilog(t_vpr_setup vpr_setup,
                                    top_netlist_path, src_dir_path, submodule_dir_path, lb_dir_path, rr_dir_path, 
                                    num_rr_nodes, rr_node, rr_node_indices, 
                                    num_clocks,
-                                   vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts, 
                                    vpr_setup.FPGA_SPICE_Opts.compact_routing_hierarchy,
 								   *(Arch.spice));
    

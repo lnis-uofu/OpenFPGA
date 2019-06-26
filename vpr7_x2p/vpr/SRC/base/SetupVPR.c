@@ -542,6 +542,7 @@ static void SetupRoutingArch(INP t_arch Arch,
 	RoutingArch->directionality = BI_DIRECTIONAL;
 	if (Arch.Segments)
 		RoutingArch->directionality = Arch.Segments[0].directionality;
+    RoutingArch->tileable = Arch.tileable;
 }
 
 static void SetupRouterOpts(INP t_options Options, INP boolean TimingEnabled,

@@ -84,6 +84,7 @@ class RRChan {
     int get_node_segment(size_t track_num) const;
     bool is_mirror(const RRChan& cand) const; /* evaluate if two RR_chan is mirror to each other */
     std::vector<size_t> get_segment_ids() const; /* Get a list of segments used in this routing channel */
+    std::vector<size_t> get_node_ids_by_segment_ids(size_t seg_id) const; /* Get a list of segments used in this routing channel */
   public: /* Mutators */
     void set(const RRChan&); /* copy */
     void set_type(t_rr_type type); /* modify type */
@@ -188,6 +189,8 @@ class RRGSB {
     size_t get_max_chan_width() const; /* Get the maximum number of routing tracks on all sides */
     enum PORTS get_chan_node_direction(enum e_side side, size_t track_id) const; /* Get the direction of a rr_node at a given side and track_id */
     RRChan get_chan(enum e_side side) const; /* get a rr_node at a given side and track_id */
+    std::vector<size_t> get_chan_segment_ids(enum e_side side) const; /* Get a list of segments used in this routing channel */
+    std::vector<size_t> get_chan_node_ids_by_segment_ids(enum e_side side, size_t seg_id) const; /* Get a list of segments used in this routing channel */
     t_rr_node* get_chan_node(enum e_side side, size_t track_id) const; /* get a rr_node at a given side and track_id */
     size_t get_chan_node_segment(enum e_side side, size_t track_id) const; /* get the segment id of a channel rr_node */
     size_t get_num_ipin_nodes(enum e_side side) const; /* Get the number of IPIN rr_nodes on a side */
@@ -216,7 +219,7 @@ class RRGSB {
     size_t get_cb_num_conf_bits(t_rr_type cb_type) const;
     size_t get_cb_conf_bits_lsb(t_rr_type cb_type) const;
     size_t get_cb_conf_bits_msb(t_rr_type cb_type) const;
-    bool is_sb_node_imply_short_connection(t_rr_node* src_node) const; /* Check if the node imply a short connection inside the SB, which happens to long wires across a FPGA fabric */
+    bool is_sb_node_passing_wire(const enum e_side node_side, const size_t track_id) const; /* Check if the node imply a short connection inside the SB, which happens to long wires across a FPGA fabric */
     bool is_sb_side_mirror(const RRGSB& cand, enum e_side side) const; /* check if a side of candidate SB is a mirror of the current one */
     bool is_sb_side_segment_mirror(const RRGSB& cand, enum e_side side, size_t seg_id) const; /* check if all the routing segments of a side of candidate SB is a mirror of the current one */
     bool is_sb_mirror(const RRGSB& cand) const; /* check if the candidate SB is a mirror of the current one */
@@ -225,6 +228,8 @@ class RRGSB {
     bool is_cb_exist(t_rr_type cb_type) const; /* check if the candidate SB is a mirror of the current one */
     size_t get_hint_rotate_offset(const RRGSB& cand) const; /* Determine an initial offset in rotating the candidate Switch Block to find a mirror matching*/
   public: /* Cooridinator conversion and output  */
+    size_t get_x() const; /* get the x coordinator of this switch block */
+    size_t get_y() const; /* get the y coordinator of this switch block */
     size_t get_sb_x() const; /* get the x coordinator of this switch block */
     size_t get_sb_y() const; /* get the y coordinator of this switch block */
     DeviceCoordinator get_sb_coordinator() const; /* Get the coordinator of the SB */
@@ -232,8 +237,12 @@ class RRGSB {
     size_t get_cb_y(t_rr_type cb_type) const; /* get the y coordinator of this X/Y-direction block */
     DeviceCoordinator get_cb_coordinator(t_rr_type cb_type) const; /* Get the coordinator of the X/Y-direction CB */
     enum e_side get_cb_chan_side(t_rr_type cb_type) const; /* get the side of a Connection block */
+    enum e_side get_cb_chan_side(enum e_side ipin_side) const; /* get the side of a Connection block */
     DeviceCoordinator get_side_block_coordinator(enum e_side side) const;
+    DeviceCoordinator get_grid_coordinator() const;
   public: /* Verilog writer */
+    const char* gen_gsb_verilog_module_name() const;
+    const char* gen_gsb_verilog_instance_name() const;
     const char* gen_sb_verilog_module_name() const;
     const char* gen_sb_verilog_instance_name() const;
     const char* gen_sb_verilog_side_module_name(enum e_side side, size_t seg_id) const;
@@ -246,8 +255,8 @@ class RRGSB {
     void set_coordinator(size_t x, size_t y);
     void init_num_sides(size_t num_sides); /* Allocate the vectors with the given number of sides */
     void add_chan_node(enum e_side node_side, RRChan& rr_chan, std::vector<enum PORTS> rr_chan_dir); /* Add a node to the chan_rr_node_ list and also assign its direction in chan_rr_node_direction_ */
-    void add_ipin_node(t_rr_node* node, enum e_side node_side, enum e_side grid_side); /* Add a node to the chan_rr_node_ list and also assign its direction in chan_rr_node_direction_ */
-    void add_opin_node(t_rr_node* node, enum e_side node_side, enum e_side grid_side); /* Add a node to the chan_rr_node_ list and also assign its direction in chan_rr_node_direction_ */
+    void add_ipin_node(t_rr_node* node, const enum e_side node_side, const enum e_side grid_side); /* Add a node to the chan_rr_node_ list and also assign its direction in chan_rr_node_direction_ */
+    void add_opin_node(t_rr_node* node, const enum e_side node_side, const enum e_side grid_side); /* Add a node to the chan_rr_node_ list and also assign its direction in chan_rr_node_direction_ */
     void set_sb_num_reserved_conf_bits(size_t num_reserved_conf_bits);
     void set_sb_conf_bits_lsb(size_t conf_bits_lsb);
     void set_sb_conf_bits_msb(size_t conf_bits_msb);

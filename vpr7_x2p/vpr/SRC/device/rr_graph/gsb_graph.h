@@ -42,11 +42,11 @@
  *  2. A Y-direction Connection block locates at the top side of the switch block   
  *  
  *                                +---------------------------------+
- *                                |          Y-direction CB         |
+ *                     IPIN_NODES |          Y-direction CB         | IPIN_NODES
  *                                |              [x][y + 1]         |
  *                                +---------------------------------+
  *                   
- *                                           TOP SIDE
+ *      IPIN_NODES                              TOP SIDE
  *   +-------------+              +---------------------------------+
  *   |             |              | OPIN_NODE CHAN_NODES OPIN_NODES |
  *   |             |              |                                 |
@@ -61,7 +61,7 @@
  *   |             |              |                                 |
  *   |             |              | OPIN_NODE CHAN_NODES OPIN_NODES |
  *   +-------------+              +---------------------------------+
- *                                              BOTTOM SIDE
+ *      IPIN_NODES                            BOTTOM SIDE
  *
  ***********************************************************************/
 
@@ -92,6 +92,7 @@
 /* Define open nodes */
 #define OPEN_NODE_ID RRNodeId(-1)
 #define OPEN_EDGE_ID RREdgeId(-1)
+#define OPEN_SEGMENT_ID RRSegmentId(-1)
 
 /***********************************************************************
  *  This data structure focuses on modeling the internal pin-to-pin connections.
@@ -142,6 +143,9 @@ class GSBGraph {
     /* Aggregates */
     node_range nodes() const;
     edge_range edges() const;
+  public: /* Coordinator generation */
+  public: /* Accessors */
+  public: /* Mutators */
   private: /* Internal Data */
     /* Coordinator of this GSB */
     DeviceCoordinator coordinator_;
@@ -152,6 +156,7 @@ class GSBGraph {
     vtr::vector<RRNodeId, enum e_side> node_sides_;
     vtr::vector<RRNodeId, enum e_direction> node_directions_; 
     vtr::vector<RRNodeId, enum e_side> node_grid_sides_;
+    vtr::vector<RRNodeId, RRSegmentId> node_segment_ids_;
    
     vtr::vector<RRNodeId, std::vector<RREdgeId>> node_in_edges;
     vtr::vector<RRNodeId, std::vector<RREdgeId>> node_out_edges;
@@ -160,6 +165,10 @@ class GSBGraph {
     vtr::vector<RREdgeId, RREdgeId> edge_ids_;
     vtr::vector<RREdgeId, RREdgeId> edge_src_nodes_; /* each element is a node_id */
     vtr::vector<RREdgeId, RREdgeId> edge_sink_nodes_; /* each element is a node_id */
+
+    /* fast look-up [node_side][node_type][node_id] */
+    typedef std::vector< std::vector< std::vector<RRNodeId> > > NodeLookup;
+    mutable NodeLookup node_lookup_;
 };
 
 #endif

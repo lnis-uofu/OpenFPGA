@@ -36,6 +36,7 @@
 #include "arch_types.h"
 #include <map>
 #include <vector>
+#include <array>
 
 /*******************************************************************************
  * Global data types and constants
@@ -815,6 +816,7 @@ struct s_det_routing_arch {
 	float R_minW_pmos;
     int num_swseg_pattern; /*Xifan TANG: Switch Segment Pattern Support*/
     short opin_to_wire_switch; /* mrFPGA: Xifan TANG*/
+    bool tileable; /* Xifan Tang: tileable rr_graph support */
 };
 
 /* Defines the detailed routing architecture of the FPGA.  Only important   *
@@ -906,6 +908,10 @@ struct s_linked_f_pointer {
 typedef enum e_rr_type {
 	SOURCE = 0, SINK, IPIN, OPIN, CHANX, CHANY, INTRA_CLUSTER_EDGE, NUM_RR_TYPES
 } t_rr_type;
+
+constexpr std::array<const char*, NUM_RR_TYPES + 1> rr_node_typename { {
+  "SOURCE", "SINK", "IPIN", "OPIN", "CHANX", "CHANY", "INTRA_CLUSTER_EDGE", "NUM_RR_TYPES"
+} };
 
 /* Type of a routing resource node.  x-directed channel segment,   *
  * y-directed channel segment, input pin to a clb to pad, output   *

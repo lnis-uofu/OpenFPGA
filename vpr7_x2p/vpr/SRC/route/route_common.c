@@ -273,10 +273,15 @@ boolean try_route(int width_fac, struct s_router_opts router_opts,
 
 	if (router_opts.route_type == GLOBAL) {
 		graph_type = GRAPH_GLOBAL;
-	} else {
-		graph_type = (
-				det_routing_arch.directionality == BI_DIRECTIONAL ?
-						GRAPH_BIDIR : GRAPH_UNIDIR);
+    /* Xifan Tang: tileable undirectional rr_graph support */
+	} else if (BI_DIRECTIONAL == det_routing_arch.directionality) {
+        graph_type = GRAPH_BIDIR;
+	} else if (UNI_DIRECTIONAL == det_routing_arch.directionality) {
+         if (true == det_routing_arch.tileable) {
+			graph_type = GRAPH_UNIDIR_TILEABLE;
+         } else {
+		    graph_type = GRAPH_UNIDIR;
+         }
 	}
 
 	/* Set the channel widths */

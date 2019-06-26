@@ -1,3 +1,42 @@
+/**********************************************************
+ * MIT License
+ *
+ * Copyright (c) 2018 LNIS - The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ ***********************************************************************/
+
+/************************************************************************
+ * Filename:    rr_blocks.cpp
+ * Created by:   Xifan Tang
+ * Change history:
+ * +-------------------------------------+
+ * |  Date       |    Author   | Notes
+ * +-------------------------------------+
+ * | 2019/06/26  |  Xifan Tang | Created 
+ * +-------------------------------------+
+ ***********************************************************************/
+/************************************************************************
+ *  This file contains member function for the data structures defined
+ *  in rr_block.h
+ ***********************************************************************/
+
 #include <cassert>
 #include <string.h>
 #include <algorithm>
@@ -6,6 +45,8 @@
 #include "rr_blocks_naming.h"
 
 #include "rr_blocks.h"
+
+#include "rr_graph_builder_utils.h"
 
 
 /* Member Functions of Class RRChan */
@@ -124,6 +165,24 @@ std::vector<size_t> RRChan::get_segment_ids() const {
 
   return seg_list;
 }
+
+/* Get a list of nodes whose segment_id is specified  */
+std::vector<size_t> RRChan::get_node_ids_by_segment_ids(size_t seg_id) const {
+  std::vector<size_t> node_list;
+
+  /* make sure a clean start */
+  node_list.clear();
+
+  /* Traverse node_segments */
+  for (size_t inode = 0; inode < get_chan_width(); ++inode) {
+    /* Try to find the node_segment id in the list */
+    if ( seg_id == node_segments_[inode] ) {
+      node_list.push_back(inode);
+    }
+  }
+
+  return node_list;
+} 
 
 /* Mutators */
 void RRChan::set(const RRChan& rr_chan) {
@@ -611,6 +670,22 @@ RRChan RRGSB::get_chan(enum e_side side) const {
   return chan_node_[side_manager.to_size_t()]; 
 } 
 
+/* Get a list of segments used in this routing channel */
+std::vector<size_t> RRGSB::get_chan_segment_ids(enum e_side side) const {
+  Side side_manager(side);
+  assert(side_manager.validate());
+ 
+  /* Ensure the side is valid in the context of this switch block */ 
+  assert( validate_side(side) );
+
+  return get_chan(side).get_segment_ids(); 
+}
+
+/* Get a list of rr_nodes whose sed_id is specified */
+std::vector<size_t> RRGSB::get_chan_node_ids_by_segment_ids(enum e_side side, size_t seg_id) const {
+  return get_chan(side).get_node_ids_by_segment_ids(seg_id);
+} 
+
 /* get a rr_node at a given side and track_id */
 t_rr_node* RRGSB::get_chan_node(enum e_side side, size_t track_id) const {
   Side side_manager(side);
@@ -969,23 +1044,53 @@ size_t RRGSB::get_cb_conf_bits_msb(t_rr_type cb_type) const {
   }
 }
 
-/* Check if the node imply a short connection inside the SB, which happens to long wires across a FPGA fabric */
-bool RRGSB::is_sb_node_imply_short_connection(t_rr_node* src_node) const {
+/************************************************************************
+ * Check if the node indicates a passing wire across the Switch Block part of the GSB 
+ * Therefore, we actually do the following check 
+ * Check if a track starts from this GSB or not 
+ * For INC_DIRECTION
+ * (xlow, ylow) should be same as the GSB side coordinator 
+ * For DEC_DIRECTION
+ * (xhigh, yhigh) should be same as the GSB side coordinator 
+ ***********************************************************************/
+bool RRGSB::is_sb_node_passing_wire(const enum e_side node_side, 
+                                    const size_t track_id) const { 
 
-  assert((CHANX == src_node->type) || (CHANY == src_node->type));
-  
-  for (size_t inode = 0; inode < size_t(src_node->num_drive_rr_nodes); ++inode) {
-    enum e_side side;
-    int index; 
-    get_node_side_and_index(src_node->drive_rr_nodes[inode], IN_PORT, &side, &index);
-    /* We need to be sure that drive_rr_node is part of the SB */
-    if (((-1 == index) || (NUM_SIDES == side)) 
-       && ((CHANX == src_node->drive_rr_nodes[inode]->type) || (CHANY == src_node->drive_rr_nodes[inode]->type))) {
-      return true;
-    }
+  /* Get the rr_node */
+  t_rr_node* track_node = get_chan_node(node_side, track_id);
+  /* Get the coordinators */
+  DeviceCoordinator side_coordinator = get_side_block_coordinator(node_side); 
+
+  /* Get the coordinator of where the track starts */
+  DeviceCoordinator track_start = get_track_rr_node_start_coordinator(track_node);
+
+  /* INC_DIRECTION start_track: (xlow, ylow) should be same as the GSB side coordinator */
+  /* DEC_DIRECTION start_track: (xhigh, yhigh) should be same as the GSB side coordinator */
+  if (  (track_start.get_x() == side_coordinator.get_x())
+     && (track_start.get_y() == side_coordinator.get_y()) 
+     && (OUT_PORT == get_chan_node_direction(node_side, track_id)) ) {
+    /* Double check: start track should be an OUTPUT PORT of the GSB */
+    return false; /* This is a starting point */
   }
 
-  return false;
+  /* Get the coordinator of where the track ends */
+  DeviceCoordinator track_end = get_track_rr_node_end_coordinator(track_node);
+
+  /* INC_DIRECTION end_track: (xhigh, yhigh) should be same as the GSB side coordinator */ 
+  /* DEC_DIRECTION end_track: (xlow, ylow) should be same as the GSB side coordinator */ 
+  if (  (track_end.get_x() == side_coordinator.get_x())
+     && (track_end.get_y() == side_coordinator.get_y()) 
+     && (IN_PORT == get_chan_node_direction(node_side, track_id)) ) {
+    /* Double check: end track should be an INPUT PORT of the GSB */
+    return false; /* This is an ending point */
+  }
+
+  /* Reach here it means that this will be a passing wire, 
+   * we should be able to find the node on the opposite side of the GSB!
+   */
+  assert (true == is_sb_node_exist_opposite_side(track_node, node_side));
+
+  return true;
 }
 
 /* check if the candidate SB satisfy the basic requirements on being a mirror of the current one */
@@ -1224,6 +1329,17 @@ bool RRGSB::is_sb_mirror(const RRGSB& cand) const {
 
 /* Public Accessors: Cooridinator conversion */
 
+/* get the x coordinator of this GSB */
+size_t RRGSB::get_x() const {
+  return coordinator_.get_x();
+} 
+
+/* get the y coordinator of this GSB */
+size_t RRGSB::get_y() const { 
+  return coordinator_.get_y();
+}
+
+
 /* get the x coordinator of this switch block */
 size_t RRGSB::get_sb_x() const {
   return coordinator_.get_x();
@@ -1302,6 +1418,24 @@ enum e_side RRGSB::get_cb_chan_side(t_rr_type cb_type) const {
   }
 }
 
+/* Get the side of routing channel in the GSB according to the side of IPIN */
+enum e_side RRGSB::get_cb_chan_side(enum e_side ipin_side) const {
+  switch(ipin_side) {
+  case TOP:
+    return LEFT;
+  case RIGHT:
+    return TOP;
+  case BOTTOM:
+    return LEFT;
+  case LEFT:
+    return TOP;
+  default: 
+    vpr_printf(TIO_MESSAGE_ERROR, 
+              "(File:%s, [LINE%d])Invalid type of ipin_side!\n", 
+              __FILE__, __LINE__);
+    exit(1);
+  }
+}
 
 DeviceCoordinator RRGSB::get_side_block_coordinator(enum e_side side) const {
   Side side_manager(side); 
@@ -1333,6 +1467,13 @@ DeviceCoordinator RRGSB::get_side_block_coordinator(enum e_side side) const {
                __FILE__, __LINE__);
     exit(1);
   }
+
+  return ret;
+}
+
+DeviceCoordinator RRGSB::get_grid_coordinator() const {
+  DeviceCoordinator ret(get_sb_x(), get_sb_y());
+  ret.set_y(ret.get_y() + 1);
 
   return ret;
 }
@@ -1372,12 +1513,37 @@ const char* RRGSB::gen_sb_verilog_module_name() const {
   return ret;
 }
 
+const char* RRGSB::gen_gsb_verilog_module_name() const {
+  std::string x_str = std::to_string(get_sb_x());
+  std::string y_str = std::to_string(get_sb_y());
+
+  char* ret = (char*)my_malloc(sizeof(char)* 
+                               ( 3 + 1 
+                               + x_str.length() + 2
+                               + y_str.length() + 1 
+                               + 1));
+  sprintf (ret, "gsb_%s__%s_",
+           x_str.c_str(), y_str.c_str());
+
+  return ret;
+}
+
 const char* RRGSB::gen_sb_verilog_instance_name() const {
   char* ret = (char*)my_malloc(sizeof(char)* 
                                ( strlen(gen_sb_verilog_module_name()) + 3 
                                + 1));
   sprintf (ret, "%s_0_",
            gen_sb_verilog_module_name());
+
+  return ret;
+}
+
+const char* RRGSB::gen_gsb_verilog_instance_name() const {
+  char* ret = (char*)my_malloc(sizeof(char)* 
+                               ( strlen(gen_gsb_verilog_module_name()) + 3 
+                               + 1));
+  sprintf (ret, "%s_0_",
+           gen_gsb_verilog_module_name());
 
   return ret;
 }
@@ -1539,7 +1705,7 @@ void RRGSB::add_chan_node(enum e_side node_side, RRChan& rr_chan, std::vector<en
 } 
 
 /* Add a node to the chan_node_ list and also assign its direction in chan_node_direction_ */
-void RRGSB::add_ipin_node(t_rr_node* node, enum e_side node_side, enum e_side grid_side) {
+void RRGSB::add_ipin_node(t_rr_node* node, const enum e_side node_side, const enum e_side grid_side) {
   Side side_manager(node_side);
   assert(validate_side(node_side));
   /* push pack the dedicated element in the vector */
@@ -1550,7 +1716,7 @@ void RRGSB::add_ipin_node(t_rr_node* node, enum e_side node_side, enum e_side gr
 }
 
 /* Add a node to the chan_node_ list and also assign its direction in chan_node_direction_ */
-void RRGSB::add_opin_node(t_rr_node* node, enum e_side node_side, enum e_side grid_side) {
+void RRGSB::add_opin_node(t_rr_node* node, const enum e_side node_side, const enum e_side grid_side) {
   Side side_manager(node_side);
   assert(validate_side(node_side));
   /* push pack the dedicated element in the vector */
@@ -1823,8 +1989,10 @@ void RRGSB::mirror_side_chan_node_direction(enum e_side side) {
 void RRGSB::swap_chan_node(enum e_side src_side, enum e_side des_side) {
   Side src_side_manager(src_side);
   Side des_side_manager(des_side);
-  std::swap(chan_node_[src_side_manager.to_size_t()], chan_node_[des_side_manager.to_size_t()]);
-  std::swap(chan_node_direction_[src_side_manager.to_size_t()], chan_node_direction_[des_side_manager.to_size_t()]);
+  std::swap(chan_node_[src_side_manager.to_size_t()], 
+            chan_node_[des_side_manager.to_size_t()]);
+  std::swap(chan_node_direction_[src_side_manager.to_size_t()], 
+            chan_node_direction_[des_side_manager.to_size_t()]);
   return;
 } 
 
@@ -1832,8 +2000,10 @@ void RRGSB::swap_chan_node(enum e_side src_side, enum e_side des_side) {
 void RRGSB::swap_opin_node(enum e_side src_side, enum e_side des_side) {
   Side src_side_manager(src_side);
   Side des_side_manager(des_side);
-  std::swap(opin_node_[src_side_manager.to_size_t()], opin_node_[des_side_manager.to_size_t()]);
-  std::swap(opin_node_grid_side_[src_side_manager.to_size_t()], opin_node_grid_side_[des_side_manager.to_size_t()]);
+  std::swap(opin_node_[src_side_manager.to_size_t()], 
+            opin_node_[des_side_manager.to_size_t()]);
+  std::swap(opin_node_grid_side_[src_side_manager.to_size_t()], 
+            opin_node_grid_side_[des_side_manager.to_size_t()]);
   return;
 } 
 
@@ -1841,27 +2011,34 @@ void RRGSB::swap_opin_node(enum e_side src_side, enum e_side des_side) {
 void RRGSB::swap_ipin_node(enum e_side src_side, enum e_side des_side) {
   Side src_side_manager(src_side);
   Side des_side_manager(des_side);
-  std::swap(ipin_node_[src_side_manager.to_size_t()], ipin_node_[des_side_manager.to_size_t()]);
-  std::swap(ipin_node_grid_side_[src_side_manager.to_size_t()], ipin_node_grid_side_[des_side_manager.to_size_t()]);
+  std::swap(ipin_node_[src_side_manager.to_size_t()], 
+            ipin_node_[des_side_manager.to_size_t()]);
+  std::swap(ipin_node_grid_side_[src_side_manager.to_size_t()], 
+            ipin_node_grid_side_[des_side_manager.to_size_t()]);
   return;
 } 
 
 /* Reverse the vector of the OPIN rr_nodes on a side */
 void RRGSB::reverse_opin_node(enum e_side side) {
   Side side_manager(side);
-  std::reverse(opin_node_[side_manager.to_size_t()].begin(), opin_node_[side_manager.to_size_t()].end());
-  std::reverse(opin_node_grid_side_[side_manager.to_size_t()].begin(), opin_node_grid_side_[side_manager.to_size_t()].end());
+  std::reverse(opin_node_[side_manager.to_size_t()].begin(), 
+               opin_node_[side_manager.to_size_t()].end());
+  std::reverse(opin_node_grid_side_[side_manager.to_size_t()].begin(), 
+               opin_node_grid_side_[side_manager.to_size_t()].end());
   return;
 } 
 
 /* Reverse the vector of the OPIN rr_nodes on a side */
 void RRGSB::reverse_ipin_node(enum e_side side) {
   Side side_manager(side);
-  std::reverse(ipin_node_[side_manager.to_size_t()].begin(), ipin_node_[side_manager.to_size_t()].end());
-  std::reverse(ipin_node_grid_side_[side_manager.to_size_t()].begin(), ipin_node_grid_side_[side_manager.to_size_t()].end());
+  std::reverse(ipin_node_[side_manager.to_size_t()].begin(), 
+               ipin_node_[side_manager.to_size_t()].end());
+  std::reverse(ipin_node_grid_side_[side_manager.to_size_t()].begin(), 
+               ipin_node_grid_side_[side_manager.to_size_t()].end());
   return;
 } 
 
+/* Reset the RRGSB to pristine state */
 void RRGSB::clear() {
   /* Clean all the vectors */
   assert(validate_num_sides());
@@ -1943,18 +2120,10 @@ bool RRGSB::is_sb_node_mirror(const RRGSB& cand,
   /* Ensure rr_nodes are either the output of short-connection or multiplexer  */
   t_rr_node* node = this->get_chan_node(node_side, track_id);
   t_rr_node* cand_node = cand.get_chan_node(node_side, track_id);
-  bool is_short_conkt = this->is_sb_node_imply_short_connection(node);
+  bool is_short_conkt = this->is_sb_node_passing_wire(node_side, track_id);
 
-  if (is_short_conkt != cand.is_sb_node_imply_short_connection(cand_node)) {
+  if (is_short_conkt != cand.is_sb_node_passing_wire(node_side, track_id)) {
     return false;
-  }
-  /* Find the driving rr_node in this sb */
-  if (true == is_short_conkt) {
-    /* Ensure we have the same track id for the driving nodes */
-    if ( this->is_sb_node_exist_opposite_side(node, node_side)
-      != cand.is_sb_node_exist_opposite_side(cand_node, node_side)) {
-      return false;
-    }
   } else { /* check driving rr_nodes */
     if ( node->num_drive_rr_nodes != cand_node->num_drive_rr_nodes ) {
       return false;
@@ -2049,7 +2218,7 @@ size_t RRGSB::get_track_id_first_short_connection(enum e_side node_side) const {
 
   /* Walk through chan_nodes and find the first short connection */
   for (size_t inode = 0; inode < get_chan_width(node_side); ++inode) {
-    if (true == is_sb_node_imply_short_connection(get_chan_node(node_side, inode))) {
+    if (true == is_sb_node_passing_wire(node_side, inode)) {
       return inode; 
     }
   }
@@ -2882,3 +3051,6 @@ bool DeviceRRGSB::validate_cb_type(t_rr_type cb_type) const {
   return false;
 }
 
+/************************************************************************
+ * End of file : rr_blocks.cpp 
+ ***********************************************************************/

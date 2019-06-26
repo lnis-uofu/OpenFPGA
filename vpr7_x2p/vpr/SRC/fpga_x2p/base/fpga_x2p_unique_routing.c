@@ -1,7 +1,46 @@
-/***********************************/
-/*      SPICE Modeling for VPR     */
-/*       Xifan TANG, EPFL/LSI      */
-/***********************************/
+/**********************************************************
+ * MIT License
+ *
+ * Copyright (c) 2018 LNIS - The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ ***********************************************************************/
+
+/************************************************************************
+ * Filename:    fpga_x2p_unique_routing.c
+ * Created by:   Xifan Tang
+ * Change history:
+ * +-------------------------------------+
+ * |  Date       |    Author   | Notes
+ * +-------------------------------------+
+ * | 2019/06/25  |  Xifan Tang | Created 
+ * +-------------------------------------+
+ ***********************************************************************/
+/************************************************************************
+ *  This file contains builders for the data structures
+ *  1. RRGSB: General Switch Block (GSB).
+ *  2. RRChan: Generic routing channels
+ *  We also include functions to identify unique modules of
+ *  Switch Blocks and Connection Blocks based on the data structures
+ *  t_sb and t_cb
+ ***********************************************************************/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -1096,157 +1135,180 @@ RRGSB build_rr_gsb(DeviceCoordinator& device_range,
   return rr_gsb;
 }
 
-/* Rotate the Switch block and try to add to rotatable mirrors */
-static 
-RRGSB rotate_rr_switch_block_for_mirror(DeviceCoordinator& device_range, 
-                                                const RRGSB& rr_switch_block) {
-  RRGSB rotated_rr_switch_block;
-  rotated_rr_switch_block.set(rr_switch_block);
-  size_t Fco_offset = 1;
+/* sort drive_rr_nodes of a rr_node inside rr_gsb subject to the index of rr_gsb array */
+static  
+void sort_rr_gsb_one_ipin_node_drive_rr_nodes(const RRGSB& rr_gsb, 
+                                              t_rr_node* ipin_node, 
+                                              enum e_side ipin_chan_side) {
+  /* Create a copy of the edges and switches of this node */
+  std::vector<t_rr_node*> sorted_drive_nodes;
+  std::vector<int> sorted_drive_switches;
 
-  /* For the 4 Switch Blocks at the four corners */
-  /* 1. BOTTOM-LEFT corner: 
-   *    nothing to do. This is the base we like 
-   */
-  if (   ( 0 == rotated_rr_switch_block.get_sb_x())
-      && ( 0 == rotated_rr_switch_block.get_sb_y()) ) {
-    return rotated_rr_switch_block;
+  /* Ensure a clean start */
+  sorted_drive_nodes.clear();
+  sorted_drive_switches.clear();
+
+  /* Build the vectors w.r.t. to the order of node_type and ptc_num */
+  for (int i_from_node = 0; i_from_node < ipin_node->num_drive_rr_nodes; ++i_from_node) {
+    /* For blank edges: directly push_back */
+    if (0 == sorted_drive_nodes.size()) {
+      sorted_drive_nodes.push_back(ipin_node->drive_rr_nodes[i_from_node]);
+      sorted_drive_switches.push_back(ipin_node->drive_switches[i_from_node]);
+      continue;
+    }
+
+    /* Start sorting since the edges are not empty */
+    size_t insert_pos = sorted_drive_nodes.size(); /* the pos to insert. By default, it is the last element */
+    for (size_t j_from_node = 0; j_from_node < sorted_drive_nodes.size(); ++j_from_node) {
+      /* Sort by node_type and ptc_num */
+      if (ipin_node->drive_rr_nodes[i_from_node]->type < sorted_drive_nodes[j_from_node]->type) {
+        /* iedge should be ahead of jedge */
+        insert_pos = j_from_node;
+        break; /* least type should stay in the front of the vector */
+      } else if (ipin_node->drive_rr_nodes[i_from_node]->type 
+              == sorted_drive_nodes[j_from_node]->type) {
+        int i_from_node_track_index = rr_gsb.get_chan_node_index(ipin_chan_side, ipin_node->drive_rr_nodes[i_from_node]); 
+        int j_from_node_track_index = rr_gsb.get_chan_node_index(ipin_chan_side, sorted_drive_nodes[j_from_node]); 
+        /* We must have a valide node index */
+        assert ( (-1 != i_from_node_track_index) && (-1 != j_from_node_track_index) );
+        /* Now a lower ptc_num will win */ 
+        if ( i_from_node_track_index < j_from_node_track_index ) { 
+          insert_pos = j_from_node;
+          break; /* least type should stay in the front of the vector */
+        }
+      }
+    }
+    /* We find the position, inserted to the vector */
+    sorted_drive_nodes.insert(sorted_drive_nodes.begin() + insert_pos, ipin_node->drive_rr_nodes[i_from_node]); 
+    sorted_drive_switches.insert(sorted_drive_switches.begin() + insert_pos, ipin_node->drive_switches[i_from_node]); 
   }
 
-  /* 2. TOP-LEFT corner: 
-   * swap the opin_node between TOP and BOTTOM, 
-   * swap the chan_node between TOP and BOTTOM, 
-   */
-  if (   ( 0 == rotated_rr_switch_block.get_sb_x())
-      && (device_range.get_y() == rotated_rr_switch_block.get_sb_y()) ) {
-    rotated_rr_switch_block.swap_opin_node(TOP, BOTTOM);
-    rotated_rr_switch_block.swap_chan_node(TOP, BOTTOM);
-    return rotated_rr_switch_block;
+  /* Overwrite the edges and switches with sorted numbers */
+  for (size_t iedge = 0; iedge < sorted_drive_nodes.size(); ++iedge) {
+    ipin_node->drive_rr_nodes[iedge] = sorted_drive_nodes[iedge];
+  }
+  for (size_t iedge = 0; iedge < sorted_drive_switches.size(); ++iedge) {
+    ipin_node->drive_switches[iedge] = sorted_drive_switches[iedge];
   }
 
-  /* 3. TOP-RIGHT corner: 
-   * swap the opin_node between TOP and BOTTOM, 
-   * swap the chan_node between TOP and BOTTOM, 
-   * swap the opin_node between LEFT and RIGHT, 
-   * swap the chan_node between LEFT and RIGHT, 
-   */
-  if (   (device_range.get_x() == rotated_rr_switch_block.get_sb_x())
-      && (device_range.get_y() == rotated_rr_switch_block.get_sb_y()) ) {
-    rotated_rr_switch_block.swap_opin_node(TOP, BOTTOM);
-    rotated_rr_switch_block.swap_chan_node(TOP, BOTTOM);
-    rotated_rr_switch_block.swap_opin_node(LEFT, RIGHT);
-    rotated_rr_switch_block.swap_chan_node(LEFT, RIGHT);
-    return rotated_rr_switch_block;
-  }
-  /* 4. BOTTOM-RIGHT corner: 
-   * swap the opin_node between LEFT and RIGHT, 
-   * swap the chan_node between LEFT and RIGHT, 
-   */
-  if (   (device_range.get_x() == rotated_rr_switch_block.get_sb_x())
-      && (0 == rotated_rr_switch_block.get_sb_y()) ) {
-    rotated_rr_switch_block.swap_opin_node(LEFT, RIGHT);
-    rotated_rr_switch_block.swap_chan_node(LEFT, RIGHT);
-    return rotated_rr_switch_block;
-  }
-
-  /* For Switch blocks on the borders */
-  /* 1. BOTTOM side: 
-   *    nothing to do. This is the base we like 
-   */
-  if ( 0 == rotated_rr_switch_block.get_sb_y()) {
-    return rotated_rr_switch_block;
-  }
-  /* 2. TOP side: 
-   * swap the opin_node between TOP and BOTTOM, 
-   * swap the chan_node between TOP and BOTTOM, 
-   */
-  if (device_range.get_y() == rotated_rr_switch_block.get_sb_y() ) {
-
-    /* For RIGHT SIDE: X-channel in INC_DIRECTION, rotate by an offset of its x-coordinator */
-    rotated_rr_switch_block.rotate_side_chan_node_by_direction(RIGHT, INC_DIRECTION, Fco_offset * (rotated_rr_switch_block.get_sb_x() - 1));
-    /* Rotate the same nodes on the opposite side */
-    rotated_rr_switch_block.rotate_side_chan_node_by_direction(LEFT, INC_DIRECTION, Fco_offset * (rotated_rr_switch_block.get_sb_x() - 1));
-
-    /* For LEFT SIDE: X-channel in DEC_DIRECTION, rotate by an offset of its x-coordinator */
-    rotated_rr_switch_block.counter_rotate_side_chan_node_by_direction(LEFT, DEC_DIRECTION, Fco_offset * (rotated_rr_switch_block.get_sb_x() - 1));
-    /* Rotate the same nodes on the opposite side */
-    rotated_rr_switch_block.counter_rotate_side_chan_node_by_direction(RIGHT, DEC_DIRECTION, Fco_offset * (rotated_rr_switch_block.get_sb_x() - 1));
-
-    //rotated_rr_switch_block.swap_opin_node(TOP, BOTTOM);
-    //rotated_rr_switch_block.swap_chan_node(TOP, BOTTOM);
-    //rotated_rr_switch_block.reverse_opin_node(TOP);
-    //rotated_rr_switch_block.reverse_opin_node(BOTTOM);
-
-    return rotated_rr_switch_block;
-  }
-  /* 3. RIGHT side: 
-   * swap the opin_node between LEFT and RIGHT, 
-   * swap the chan_node between LEFT and RIGHT, 
-   */
-  if (device_range.get_x() == rotated_rr_switch_block.get_sb_x() ) {
-
-    /* For TOP SIDE: Y-channel in INC_DIRECTION, rotate by an offset of its y-coordinator */
-    rotated_rr_switch_block.rotate_side_chan_node_by_direction(TOP, INC_DIRECTION, Fco_offset * (rotated_rr_switch_block.get_sb_y() - 1));
-    /* Rotate the same nodes on the opposite side */
-    rotated_rr_switch_block.rotate_side_chan_node_by_direction(BOTTOM, INC_DIRECTION, Fco_offset * (rotated_rr_switch_block.get_sb_y() - 1));
-
-    /* For BOTTOM SIDE: Y-channel in DEC_DIRECTION, rotate by an offset of its y-coordinator */
-    rotated_rr_switch_block.counter_rotate_side_chan_node_by_direction(BOTTOM, DEC_DIRECTION, Fco_offset * (rotated_rr_switch_block.get_sb_y() - 1));
-    /* Rotate the same nodes on the opposite side */
-    rotated_rr_switch_block.counter_rotate_side_chan_node_by_direction(TOP, DEC_DIRECTION, Fco_offset * (rotated_rr_switch_block.get_sb_y() - 1));
-
-    //rotated_rr_switch_block.swap_opin_node(LEFT, RIGHT);
-    //rotated_rr_switch_block.swap_chan_node(LEFT, RIGHT);
-    //rotated_rr_switch_block.reverse_opin_node(LEFT);
-    //rotated_rr_switch_block.reverse_opin_node(RIGHT);
-
-    return rotated_rr_switch_block;
-  }
-  /* 4. LEFT side: 
-   *    nothing to do. This is the base we like 
-   */
-  if (0 == rotated_rr_switch_block.get_sb_x() ) {
-    return rotated_rr_switch_block;
-  }
-
-  /* SB[1][1] is the baseline, we do not modify */
-  if (  (1 == rotated_rr_switch_block.get_sb_x()) 
-     && (1 == rotated_rr_switch_block.get_sb_y()) ) {
-    return rotated_rr_switch_block;
-  }
-
-  /* Reach here, it means we have a SB at the center region */
-  /* For TOP SIDE: Y-channel in INC_DIRECTION, rotate by an offset of its y-coordinator */
-  if (1 < rotated_rr_switch_block.get_sb_y()) {
-    rotated_rr_switch_block.rotate_side_chan_node_by_direction(TOP, INC_DIRECTION, Fco_offset * (rotated_rr_switch_block.get_sb_y() - 1));
-    /* Rotate the same nodes on the opposite side */
-    rotated_rr_switch_block.rotate_side_chan_node_by_direction(BOTTOM, INC_DIRECTION, Fco_offset * (rotated_rr_switch_block.get_sb_y() - 1));
-  }
-
-  /* For RIGHT SIDE: X-channel in INC_DIRECTION, rotate by an offset of its x-coordinator */
-  if (1 < rotated_rr_switch_block.get_sb_x()) {
-    rotated_rr_switch_block.rotate_side_chan_node_by_direction(RIGHT, INC_DIRECTION, Fco_offset * (rotated_rr_switch_block.get_sb_x() - 1));
-    /* Rotate the same nodes on the opposite side */
-    rotated_rr_switch_block.rotate_side_chan_node_by_direction(LEFT, INC_DIRECTION, Fco_offset * (rotated_rr_switch_block.get_sb_x() - 1));
-  }
-
-  /* For BOTTOM SIDE: Y-channel in DEC_DIRECTION, rotate by an offset of its y-coordinator */
-  if ( 1 <  rotated_rr_switch_block.get_sb_y()) {
-    rotated_rr_switch_block.counter_rotate_side_chan_node_by_direction(BOTTOM, DEC_DIRECTION, Fco_offset * (rotated_rr_switch_block.get_sb_y() - 1));
-    /* Rotate the same nodes on the opposite side */
-    rotated_rr_switch_block.counter_rotate_side_chan_node_by_direction(TOP, DEC_DIRECTION, Fco_offset * (rotated_rr_switch_block.get_sb_y() - 1));
-  }
-
-  /* For LEFT SIDE: X-channel in DEC_DIRECTION, rotate by an offset of its x-coordinator */
-  if ( 1 <  rotated_rr_switch_block.get_sb_x()) {
-    rotated_rr_switch_block.counter_rotate_side_chan_node_by_direction(LEFT, DEC_DIRECTION, Fco_offset * (rotated_rr_switch_block.get_sb_x() - 1));
-    /* Rotate the same nodes on the opposite side */
-    rotated_rr_switch_block.counter_rotate_side_chan_node_by_direction(RIGHT, DEC_DIRECTION, Fco_offset * (rotated_rr_switch_block.get_sb_x() - 1));
-  }
-
-  return rotated_rr_switch_block;
+  return;
 }
 
+/* sort drive_rr_nodes of a rr_node inside rr_gsb subject to the index of rr_gsb array */
+static  
+void sort_rr_gsb_one_chan_node_drive_rr_nodes(const RRGSB& rr_gsb, 
+                                              enum e_side chan_side, 
+                                              size_t track_id) {
+
+  /* If this is a passing wire, we return directly.
+   * The passing wire will be handled in other GSBs
+   */
+  if (true == rr_gsb.is_sb_node_passing_wire(chan_side, track_id)) {
+     return;
+  }
+
+  /* Get the chan_node */
+  t_rr_node* chan_node = rr_gsb.get_chan_node(chan_side, track_id);
+
+  /* Create a copy of the edges and switches of this node */
+  std::vector<t_rr_node*> sorted_drive_nodes;
+  std::vector<int> sorted_drive_switches;
+
+  /* Ensure a clean start */
+  sorted_drive_nodes.clear();
+  sorted_drive_switches.clear();
+
+  /* Build the vectors w.r.t. to the order of node_type and ptc_num */
+  for (int i_from_node = 0; i_from_node < chan_node->num_drive_rr_nodes; ++i_from_node) {
+    /* For blank edges: directly push_back */
+    if (0 == sorted_drive_nodes.size()) {
+      sorted_drive_nodes.push_back(chan_node->drive_rr_nodes[i_from_node]);
+      sorted_drive_switches.push_back(chan_node->drive_switches[i_from_node]);
+      continue;
+    }
+
+    /* Start sorting since the edges are not empty */
+    size_t insert_pos = sorted_drive_nodes.size(); /* the pos to insert. By default, it is the last element */
+    for (size_t j_from_node = 0; j_from_node < sorted_drive_nodes.size(); ++j_from_node) {
+      /* Sort by node_type and ptc_num */
+      if (chan_node->drive_rr_nodes[i_from_node]->type < sorted_drive_nodes[j_from_node]->type) {
+        /* iedge should be ahead of jedge */
+        insert_pos = j_from_node;
+        break; /* least type should stay in the front of the vector */
+      } else if (chan_node->drive_rr_nodes[i_from_node]->type 
+              == sorted_drive_nodes[j_from_node]->type) {
+        /* For channel node, we do not know the node direction
+         * But we are pretty sure it is either IN_PORT or OUT_PORT
+         * So we just try and find what is valid
+         */
+        enum e_side i_from_node_side = NUM_SIDES;
+        int i_from_node_index = -1;
+        rr_gsb.get_node_side_and_index(chan_node->drive_rr_nodes[i_from_node], 
+                                       IN_PORT, &i_from_node_side, &i_from_node_index);
+        /* check */
+        if (! ( (NUM_SIDES != i_from_node_side) && (-1 != i_from_node_index) ) )
+        assert ( (NUM_SIDES != i_from_node_side) && (-1 != i_from_node_index) );
+
+        enum e_side j_from_node_side = NUM_SIDES;
+        int j_from_node_index = -1;
+        rr_gsb.get_node_side_and_index(sorted_drive_nodes[j_from_node], 
+                                       IN_PORT, &j_from_node_side, &j_from_node_index);
+        /* check */
+        assert ( (NUM_SIDES != j_from_node_side) && (-1 != j_from_node_index) );
+        /* Now a lower ptc_num will win */ 
+        if ( i_from_node_index < j_from_node_index) { 
+          insert_pos = j_from_node;
+          break; /* least type should stay in the front of the vector */
+        }
+      }
+    }
+    /* We find the position, inserted to the vector */
+    sorted_drive_nodes.insert(sorted_drive_nodes.begin() + insert_pos, chan_node->drive_rr_nodes[i_from_node]); 
+    sorted_drive_switches.insert(sorted_drive_switches.begin() + insert_pos, chan_node->drive_switches[i_from_node]); 
+  }
+
+  /* Overwrite the edges and switches with sorted numbers */
+  for (size_t iedge = 0; iedge < sorted_drive_nodes.size(); ++iedge) {
+    chan_node->drive_rr_nodes[iedge] = sorted_drive_nodes[iedge];
+  }
+  for (size_t iedge = 0; iedge < sorted_drive_switches.size(); ++iedge) {
+    chan_node->drive_switches[iedge] = sorted_drive_switches[iedge];
+  }
+
+  return;
+
+}
+
+/* sort drive_rr_nodes of each rr_node subject to the index of rr_gsb array */
+static  
+void sort_rr_gsb_drive_rr_nodes(const RRGSB& rr_gsb) {
+  /* Sort the drive_rr_nodes for each rr_node */ 
+  for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
+    Side gsb_side_manager(side);
+    enum e_side gsb_side = gsb_side_manager.get_side();
+    /* For IPIN node: sort drive_rr_nodes according to the index in the routing channels */
+    for (size_t inode = 0; inode < rr_gsb.get_num_ipin_nodes(gsb_side); ++inode) {
+      /* Get the chan side, so we have the routing tracks */
+      enum e_side ipin_chan_side = rr_gsb.get_cb_chan_side(gsb_side);
+      sort_rr_gsb_one_ipin_node_drive_rr_nodes(rr_gsb, 
+                                               rr_gsb.get_ipin_node(gsb_side, inode),
+                                               ipin_chan_side);
+    } 
+    /* For CHANX | CHANY node: sort drive_rr_nodes according to the index in the routing channels */
+    for (size_t inode = 0; inode < rr_gsb.get_chan_width(gsb_side); ++inode) {
+      /* Bypass IN_PORT */
+      if (IN_PORT == rr_gsb.get_chan_node_direction(gsb_side, inode)) {
+        continue;
+      }
+      /* Get the chan side, so we have the routing tracks */
+      sort_rr_gsb_one_chan_node_drive_rr_nodes(rr_gsb, 
+                                               gsb_side,
+                                               inode);
+    } 
+  }
+
+  return;
+} 
 
 /* Build a list of Switch blocks, each of which contains a collection of rr_nodes
  * We will maintain a list of unique switch blocks, which will be outputted as a Verilog module
@@ -1258,22 +1320,25 @@ DeviceRRGSB build_device_rr_gsb(boolean output_sb_xml, char* sb_xml_dir,
                                 t_ivec*** LL_rr_node_indices, int num_segments,
                                 t_rr_indexed_data* LL_rr_indexed_data) {
   /* Create an object */
-  DeviceRRGSB LL_drive_rr_gsb;
+  DeviceRRGSB LL_device_rr_gsb;
 
   /* Initialize */  
   DeviceCoordinator sb_range((size_t)nx, (size_t)ny);
   DeviceCoordinator reserve_range((size_t)nx + 1, (size_t)ny + 1);
-  LL_drive_rr_gsb.reserve(reserve_range);
+  LL_device_rr_gsb.reserve(reserve_range);
 
   /* For each switch block, determine the size of array */
   for (size_t ix = 0; ix <= sb_range.get_x(); ++ix) {
     for (size_t iy = 0; iy <= sb_range.get_y(); ++iy) {
-      RRGSB rr_sb = build_rr_gsb(sb_range, ix, iy,
-                                 LL_num_rr_nodes, LL_rr_node, 
-                                 LL_rr_node_indices, 
-                                 num_segments, LL_rr_indexed_data);
-      DeviceCoordinator sb_coordinator = rr_sb.get_sb_coordinator();
-      LL_drive_rr_gsb.add_rr_gsb(sb_coordinator, rr_sb);
+      RRGSB rr_gsb = build_rr_gsb(sb_range, ix, iy,
+                                  LL_num_rr_nodes, LL_rr_node, 
+                                  LL_rr_node_indices, 
+                                  num_segments, LL_rr_indexed_data);
+      /* sort drive_rr_nodes */
+      sort_rr_gsb_drive_rr_nodes(rr_gsb);
+      /* Add to device_rr_gsb */
+      DeviceCoordinator sb_coordinator = rr_gsb.get_sb_coordinator();
+      LL_device_rr_gsb.add_rr_gsb(sb_coordinator, rr_gsb);
     }
   }
   /* Report number of unique mirrors */
@@ -1283,7 +1348,8 @@ DeviceRRGSB build_device_rr_gsb(boolean output_sb_xml, char* sb_xml_dir,
 
 
   if (TRUE == output_sb_xml) {
-    write_device_rr_gsb_to_xml(sb_xml_dir, LL_drive_rr_gsb);
+    create_dir_path(sb_xml_dir);
+    write_device_rr_gsb_to_xml(sb_xml_dir, LL_device_rr_gsb);
 
     /* Skip rotating mirror searching */ 
     vpr_printf(TIO_MESSAGE_INFO, 
@@ -1294,66 +1360,43 @@ DeviceRRGSB build_device_rr_gsb(boolean output_sb_xml, char* sb_xml_dir,
 
   /* Build a list of unique modules for each Switch Block */
   /* Build a list of unique modules for each side of each Switch Block */
-  LL_drive_rr_gsb.build_unique_module();
+  LL_device_rr_gsb.build_unique_module();
 
   vpr_printf(TIO_MESSAGE_INFO, 
              "Detect %lu routing segments used by switch blocks.\n",
-             LL_drive_rr_gsb.get_num_segments());
+             LL_device_rr_gsb.get_num_segments());
 
   /* Report number of unique CB Modules */
   vpr_printf(TIO_MESSAGE_INFO, 
              "Detect %d independent connection blocks from %d X-channel connection blocks.\n",
-             LL_drive_rr_gsb.get_num_cb_unique_module(CHANX), (nx + 0) * (ny + 1) );
+             LL_device_rr_gsb.get_num_cb_unique_module(CHANX), (nx + 0) * (ny + 1) );
 
   vpr_printf(TIO_MESSAGE_INFO, 
              "Detect %d independent connection blocks from %d Y-channel connection blocks.\n",
-             LL_drive_rr_gsb.get_num_cb_unique_module(CHANY), (nx + 1) * (ny + 0) );
+             LL_device_rr_gsb.get_num_cb_unique_module(CHANY), (nx + 1) * (ny + 0) );
 
 
   /* Report number of unique SB modules */
   vpr_printf(TIO_MESSAGE_INFO, 
              "Detect %d independent switch blocks from %d switch blocks.\n",
-             LL_drive_rr_gsb.get_num_sb_unique_module(), (nx + 1) * (ny + 1) );
+             LL_device_rr_gsb.get_num_sb_unique_module(), (nx + 1) * (ny + 1) );
 
   /* Report number of unique mirrors */
-  for (size_t side = 0; side < LL_drive_rr_gsb.get_max_num_sides(); ++side) {
+  for (size_t side = 0; side < LL_device_rr_gsb.get_max_num_sides(); ++side) {
     Side side_manager(side); 
     /* get segment ids */
-    for (size_t iseg = 0; iseg < LL_drive_rr_gsb.get_num_segments(); ++iseg) { 
+    for (size_t iseg = 0; iseg < LL_device_rr_gsb.get_num_segments(); ++iseg) { 
       vpr_printf(TIO_MESSAGE_INFO, 
                  "For side %s, segment id %lu: Detect %d independent switch blocks from %d switch blocks.\n",
-                 side_manager.c_str(), LL_drive_rr_gsb.get_segment_id(iseg), 
-                 LL_drive_rr_gsb.get_num_sb_unique_submodule(side_manager.get_side(), iseg), 
+                 side_manager.c_str(), LL_device_rr_gsb.get_segment_id(iseg), 
+                 LL_device_rr_gsb.get_num_sb_unique_submodule(side_manager.get_side(), iseg), 
                  (nx + 1) * (ny + 1) );
     }
   }
 
-  /* Create directory if needed */
-  if (TRUE == output_sb_xml) {
-    create_dir_path(sb_xml_dir);
-  }
-
-  for (size_t ix = 0; ix <= sb_range.get_x(); ++ix) {
-    for (size_t iy = 0; iy <= sb_range.get_y(); ++iy) {
-      RRGSB rr_sb = LL_drive_rr_gsb.get_gsb(ix, iy);
-      RRGSB rotated_rr_sb = rotate_rr_switch_block_for_mirror(sb_range, rr_sb); 
-      if (TRUE == output_sb_xml) {
-        std::string fname_prefix(sb_xml_dir);
-        /* Add slash if needed */
-        if ('/' != fname_prefix.back()) {
-          fname_prefix += "/";
-        }
-        fname_prefix += "rotated_";
-        write_rr_switch_block_to_xml(fname_prefix, rotated_rr_sb);
-      }
-    }
-  }
-
-  return LL_drive_rr_gsb;
+  return LL_device_rr_gsb;
 }
 
-
-/* Rotatable will be done in the next step 
-void identify_rotatable_switch_blocks(); 
-void identify_rotatable_connection_blocks(); 
-*/
+/************************************************************************
+ * End of file : fpga_x2p_unique_routing.c 
+ ***********************************************************************/

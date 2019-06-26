@@ -1,3 +1,5 @@
+#ifndef FPGA_X2P_RR_GRAPH_UTILS_H
+#define FPGA_X2P_RR_GRAPH_UTILS_H
 
 void init_rr_graph(INOUTP t_rr_graph* local_rr_graph);
 
@@ -89,6 +91,9 @@ void free_rr_graph_traceback(t_rr_graph* local_rr_graph,
 void build_prev_node_list_rr_nodes(int LL_num_rr_nodes,
                                    t_rr_node* LL_rr_node);
 
+void sort_rr_graph_drive_rr_nodes(int LL_num_rr_nodes,
+                                  t_rr_node* LL_rr_node);
+
 void alloc_and_load_prev_node_list_rr_graph_rr_nodes(t_rr_graph* local_rr_graph);
 
 void backannotate_rr_graph_routing_results_to_net_name(t_rr_graph* local_rr_graph);
@@ -106,3 +111,5 @@ void get_chan_rr_node_end_coordinate(t_rr_node* chan_rr_node,
                                      int* x_end, int* y_end);
 
 int get_rr_node_wire_length(t_rr_node* src_rr_node);
+
+#endif
