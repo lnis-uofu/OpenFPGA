@@ -2124,32 +2124,41 @@ bool RRGSB::is_sb_node_mirror(const RRGSB& cand,
 
   if (is_short_conkt != cand.is_sb_node_passing_wire(node_side, track_id)) {
     return false;
-  } else { /* check driving rr_nodes */
-    if ( node->num_drive_rr_nodes != cand_node->num_drive_rr_nodes ) {
+  }
+
+  if (true == is_short_conkt) {
+    /* Since, both are pass wires, 
+     * The two node should be equivalent    
+     * we can return here
+     */
+    return true;
+  }
+
+  /* For non-passing wires, check driving rr_nodes */
+  if ( node->num_drive_rr_nodes != cand_node->num_drive_rr_nodes ) {
+    return false;
+  }
+  for (size_t inode = 0; inode < size_t(node->num_drive_rr_nodes); ++inode) {
+    /* node type should be the same  */
+    if ( node->drive_rr_nodes[inode]->type
+      != cand_node->drive_rr_nodes[inode]->type) {
       return false;
     }
-    for (size_t inode = 0; inode < size_t(node->num_drive_rr_nodes); ++inode) {
-      /* node type should be the same  */
-      if ( node->drive_rr_nodes[inode]->type
-        != cand_node->drive_rr_nodes[inode]->type) {
-        return false;
-      }
-      /* switch type should be the same  */
-      if ( node->drive_switches[inode]
-        != cand_node->drive_switches[inode]) {
-        return false;
-      }
-      int src_node_id, des_node_id;
-      enum e_side src_node_side, des_node_side; 
-      this->get_node_side_and_index(node->drive_rr_nodes[inode], OUT_PORT, &src_node_side, &src_node_id);
-       cand.get_node_side_and_index(cand_node->drive_rr_nodes[inode], OUT_PORT, &des_node_side, &des_node_id);
-      if (src_node_id != des_node_id) {
-        return false;
-      } 
-      if (src_node_side != des_node_side) {
-        return false;
-      } 
+    /* switch type should be the same  */
+    if ( node->drive_switches[inode]
+      != cand_node->drive_switches[inode]) {
+      return false;
     }
+    int src_node_id, des_node_id;
+    enum e_side src_node_side, des_node_side; 
+    this->get_node_side_and_index(node->drive_rr_nodes[inode], OUT_PORT, &src_node_side, &src_node_id);
+     cand.get_node_side_and_index(cand_node->drive_rr_nodes[inode], OUT_PORT, &des_node_side, &des_node_id);
+    if (src_node_id != des_node_id) {
+      return false;
+    } 
+    if (src_node_side != des_node_side) {
+      return false;
+    } 
   }
 
   return true;

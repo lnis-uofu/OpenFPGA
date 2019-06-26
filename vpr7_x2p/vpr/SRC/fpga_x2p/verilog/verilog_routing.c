@@ -3895,15 +3895,10 @@ void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
       for (size_t iy = 0; iy < cb_range.get_y(); ++iy) {
         const RRGSB& rr_gsb = device_rr_gsb.get_gsb(ix, iy);
         update_routing_connection_box_conf_bits(cur_sram_orgz_info, rr_gsb, CHANX);
-      }
-    }
-
-    for (size_t ix = 0; ix < cb_range.get_x(); ++ix) {
-      for (size_t iy = 0; iy < cb_range.get_y(); ++iy) {
-        const RRGSB& rr_gsb = device_rr_gsb.get_gsb(ix, iy);
         update_routing_connection_box_conf_bits(cur_sram_orgz_info, rr_gsb, CHANY);
       }
     }
+
     /* Free */
     free_sram_orgz_info(stamped_sram_orgz_info, stamped_sram_orgz_info->type);
   } else {

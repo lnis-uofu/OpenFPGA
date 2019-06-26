@@ -519,8 +519,6 @@ std::vector<t_rr_node*> build_ending_rr_node_for_one_sb_wire(t_rr_node* wire_rr_
   std::vector<t_rr_node*> end_rr_nodes;
   end_rr_nodes.clear();
 
-  /* Find where the destination pin belongs to */
-  DeviceCoordinator wire_end_coordinator = get_track_rr_node_end_coordinator(wire_rr_node); 
   /* Get the cooridinator of the destination SB */
   DeviceCoordinator end_sb_coordinator = get_chan_node_ending_sb_coordinator(wire_rr_node);
   /* Get the sb */
@@ -1246,7 +1244,6 @@ void dump_verilog_one_sb_wire_segemental_report_timing(FILE* fp,
                                                        int path_cnt) {
   int L_wire;
   int ix, iy;
-  int cur_sb_x, cur_sb_y;
   int end_sb_x, end_sb_y;
   t_cb* next_cb = NULL;
   t_sb* next_sb = NULL;
@@ -1394,8 +1391,6 @@ void dump_verilog_one_sb_wire_segemental_report_timing(FILE* fp,
   }
 
   /* Get the base coordinate of src_sb */
-  cur_sb_x = src_sb_info->x;
-  cur_sb_y = src_sb_info->y;
   /* 4 cases: */
   if ((INC_DIRECTION == src_rr_node->direction) 
      &&(CHANX == src_rr_node->type)) {
