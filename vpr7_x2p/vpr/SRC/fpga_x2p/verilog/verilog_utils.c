@@ -958,6 +958,8 @@ int dump_verilog_global_ports(FILE* fp, t_llist* head,
   /* fprintf(fp, "//----- BEGIN Global ports -----\n"); */
   while(NULL != temp) {
     cur_global_port = (t_spice_model_port*)(temp->dptr); 
+    fprintf(fp, ".%s(", 
+              cur_global_port->prefix);
     if (TRUE == dump_port_type) {
       fprintf(fp, "%s [0:%d] %s", 
               verilog_convert_port_type_to_string(cur_global_port->type),
@@ -968,6 +970,8 @@ int dump_verilog_global_ports(FILE* fp, t_llist* head,
               cur_global_port->prefix,
               cur_global_port->size - 1); 
     }
+    fprintf(fp, ")");
+
     /* if this is the tail, we do not dump a comma */
     if (NULL != temp->next) {
      fprintf(fp, ", //---- global port \n");

@@ -288,8 +288,6 @@ void vpr_fpga_verilog(t_vpr_setup vpr_setup,
                              vpr_setup.FPGA_SPICE_Opts.compact_routing_hierarchy);
   }
 
-  /* dump_verilog_sdc_file(); */
-  
   /* dump verilog testbench only for input blif */
   if (TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.print_input_blif_testbench) {
     blif_testbench_file_name = my_strcat(chomped_circuit_name, blif_testbench_verilog_file_postfix);
