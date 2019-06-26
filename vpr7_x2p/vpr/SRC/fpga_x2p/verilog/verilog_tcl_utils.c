@@ -159,17 +159,36 @@ void dump_verilog_one_sb_routing_pin(FILE* fp,
   /* Get the top-level pin name and print it out */
   /* Depends on the type of node */
   switch (cur_rr_node->type) {
-  case OPIN:
+  case OPIN: { 
     /* Identify the side of OPIN on a grid */
     side = get_grid_pin_side(cur_rr_node->xlow, cur_rr_node->ylow, cur_rr_node->ptc_num);
     assert (OPEN != side);
+
+    /* FIXME: we should avoid using global variables !!!! */
+    /* If we have an mirror SB, we should the module name of the mirror !!! */
+    DeviceCoordinator coordinator = rr_sb.get_sb_coordinator();
+    const RRGSB& unique_mirror = device_rr_gsb.get_sb_unique_module(coordinator);
+    enum e_side pin_gsb_side = NUM_SIDES;
+    int pin_node_id = -1;
+    /* We get the index and side for the cur_rr_node in the mother rr_sb context */
+    rr_sb.get_node_side_and_index(cur_rr_node, IN_PORT, &pin_gsb_side, &pin_node_id);
+    /* Make sure we have valid numbers */
+    assert ( (NUM_SIDES != pin_gsb_side) && (-1 != pin_node_id) );
+    /* We get rr_node with the same index and side in the unique mirror context */
+    t_rr_node* mirror_node = unique_mirror.get_opin_node(pin_gsb_side, pin_node_id);
+
+    /* Identify the side of OPIN on a grid */
+    side = get_grid_pin_side(mirror_node->xlow, mirror_node->ylow, mirror_node->ptc_num);
+    assert (OPEN != side);
+
     dump_verilog_grid_side_pin_with_given_index(fp, OPIN,
-                                                cur_rr_node->ptc_num,
+                                                mirror_node->ptc_num,
                                                 side,
-                                                cur_rr_node->xlow,
-                                                cur_rr_node->ylow, 
+                                                mirror_node->xlow,
+                                                mirror_node->ylow, 
                                                 FALSE); /* Do not specify direction of port */
     break; 
+  }
   case CHANX:
   case CHANY:
     dump_verilog_one_sb_chan_pin(fp, rr_sb, cur_rr_node, IN_PORT); 
