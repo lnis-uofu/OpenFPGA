@@ -84,7 +84,13 @@ void dump_verilog_one_sb_chan_pin(FILE* fp,
   /* Get the coordinate of chanx or chany*/
   /* Find the coordinate of the cur_rr_node */  
   rr_sb.get_node_side_and_index(cur_rr_node, port_type, &side, &track_idx);
-  DeviceCoordinator chan_coordinator = rr_sb.get_side_block_coordinator(side);
+
+  /* FIXME: we should avoid using global variables !!!! */
+  /* If we have an mirror SB, we should the module name of the mirror !!! */
+  DeviceCoordinator coordinator = rr_sb.get_sb_coordinator();
+  const RRGSB& unique_mirror = device_rr_gsb.get_sb_unique_module(coordinator);
+  DeviceCoordinator chan_coordinator = unique_mirror.get_side_block_coordinator(side);
+
   /* Print the pin of the cur_rr_node */ 
   pin_name = gen_verilog_routing_channel_one_pin_name(cur_rr_node,
                                                       chan_coordinator.get_x(), 
@@ -785,6 +791,7 @@ void set_disable_timing_one_sb_output(FILE* fp,
   /* output instance name */
   fprintf(fp, "%s/", 
           rr_sb.gen_sb_verilog_instance_name()); 
+
   dump_verilog_one_sb_chan_pin(fp, rr_sb, wire_rr_node, OUT_PORT); 
   fprintf(fp, "\n"); 
 
