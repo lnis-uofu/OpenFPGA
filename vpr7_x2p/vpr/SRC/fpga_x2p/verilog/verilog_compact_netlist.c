@@ -281,9 +281,7 @@ void dump_compact_verilog_one_physical_block(t_sram_orgz_info* cur_sram_orgz_inf
                                              char* verilog_dir_path,
                                              char* subckt_dir_path,
                                              t_type_ptr phy_block_type,
-                                             int border_side,
-                                             t_arch* arch,
-                                             t_syn_verilog_opts fpga_verilog_opts) {
+                                             int border_side) {
   int iz;
   int temp_reserved_conf_bits_msb;
   int temp_iopad_lsb, temp_iopad_msb;
@@ -514,8 +512,7 @@ void dump_compact_verilog_one_physical_block(t_sram_orgz_info* cur_sram_orgz_inf
 void dump_compact_verilog_logic_blocks(t_sram_orgz_info* cur_sram_orgz_info,
                                        char* verilog_dir,
                                        char* subckt_dir,
-                                       t_arch* arch,
-                                       t_syn_verilog_opts fpga_verilog_opts) {
+                                       t_arch* arch) {
   int itype, iside, num_sides;
   int* stamped_spice_model_cnt = NULL;
   t_sram_orgz_info* stamped_sram_orgz_info = NULL;
@@ -537,23 +534,20 @@ void dump_compact_verilog_logic_blocks(t_sram_orgz_info* cur_sram_orgz_info,
       for (iside = 0; iside < num_sides; iside++) {
         dump_compact_verilog_one_physical_block(cur_sram_orgz_info, 
                                                 verilog_dir, subckt_dir, 
-                                                &type_descriptors[itype], iside, 
-                                                arch, fpga_verilog_opts);
+                                                &type_descriptors[itype], iside);
       } 
       continue;
     } else if (FILL_TYPE == &type_descriptors[itype]) {
     /* For CLB */
       dump_compact_verilog_one_physical_block(cur_sram_orgz_info,  
                                               verilog_dir, subckt_dir, 
-                                              &type_descriptors[itype], -1,
-                                              arch, fpga_verilog_opts);
+                                              &type_descriptors[itype], -1);
       continue;
     } else {
     /* For heterogenenous blocks */
       dump_compact_verilog_one_physical_block(cur_sram_orgz_info,  
                                               verilog_dir, subckt_dir, 
-                                              &type_descriptors[itype], -1,
-                                              arch, fpga_verilog_opts);
+                                              &type_descriptors[itype], -1);
 
     }
   }
@@ -975,7 +969,7 @@ void dump_compact_verilog_defined_one_connection_box(t_sram_orgz_info* cur_sram_
 static 
 void dump_compact_verilog_defined_connection_boxes(t_sram_orgz_info* cur_sram_orgz_info,
                                                    FILE* fp) {
-  int ix, iy;
+  DeviceCoordinator sb_range = device_rr_gsb.get_gsb_range();
 
   /* Check the file handler*/ 
   if (NULL == fp) {
@@ -984,21 +978,23 @@ void dump_compact_verilog_defined_connection_boxes(t_sram_orgz_info* cur_sram_or
     exit(1);
   }
 
-  /* X - channels [1...nx][0..ny]*/
-  for (iy = 0; iy < (ny + 1); iy++) {
-    for (ix = 1; ix < (nx + 1); ix++) {
+  /* Walk through GSBs */
+  for (size_t ix = 0; ix < sb_range.get_x(); ++ix) {
+    for (size_t iy = 0; iy < sb_range.get_y(); ++iy) {
       const RRGSB& rr_gsb = device_rr_gsb.get_gsb(ix, iy);
-      if ((TRUE == is_cb_exist(CHANX, ix, iy))
+  
+      /* Get X-channel CB coordinator */
+      const DeviceCoordinator cbx_coordinator = rr_gsb.get_cb_coordinator(CHANX);
+      /* X - channels [1...nx][0..ny]*/
+      if ((TRUE == is_cb_exist(CHANX, cbx_coordinator.get_x(), cbx_coordinator.get_x()))
         &&(true == rr_gsb.is_cb_exist(CHANX))) {
         dump_compact_verilog_defined_one_connection_box(cur_sram_orgz_info, fp, rr_gsb, CHANX);
       }
-    }
-  }
-  /* Y - channels [1...ny][0..nx]*/
-  for (ix = 0; ix < (nx + 1); ix++) {
-    for (iy = 1; iy < (ny + 1); iy++) {
-      const RRGSB& rr_gsb = device_rr_gsb.get_gsb(ix, iy);
-      if ((TRUE == is_cb_exist(CHANY, ix, iy))
+  
+      /* Get X-channel CB coordinator */
+      const DeviceCoordinator cby_coordinator = rr_gsb.get_cb_coordinator(CHANY);
+      /* Y - channels [1...ny][0..nx]*/
+      if ((TRUE == is_cb_exist(CHANY, cby_coordinator.get_x(), cby_coordinator.get_x()))
         &&(true == rr_gsb.is_cb_exist(CHANY))) {
         dump_compact_verilog_defined_one_connection_box(cur_sram_orgz_info, fp, rr_gsb, CHANY);
       }
@@ -1180,7 +1176,6 @@ void dump_compact_verilog_top_netlist(t_sram_orgz_info* cur_sram_orgz_info,
                                       t_rr_node* LL_rr_node,
                                       t_ivec*** LL_rr_node_indices,
                                       int num_clock,
-                                      t_syn_verilog_opts fpga_verilog_opts,
                                       boolean compact_routing_hierarchy,
                                       t_spice verilog) {
   FILE* fp = NULL;

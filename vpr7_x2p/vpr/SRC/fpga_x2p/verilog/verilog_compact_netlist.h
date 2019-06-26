@@ -5,15 +5,12 @@ void dump_compact_verilog_one_physical_block(t_sram_orgz_info* cur_sram_orgz_inf
                                              char* verilog_dir_path,
                                              char* subckt_dir_path,
                                              t_type_ptr phy_block_type,
-                                             int border_side,
-                                             t_arch* arch,
-                                             t_syn_verilog_opts fpga_verilog_opts);
+                                             int border_side);
 
 void dump_compact_verilog_logic_blocks(t_sram_orgz_info* cur_sram_orgz_info,
                                        char* verilog_dir,
                                        char* subckt_dir,
-                                       t_arch* arch,
-                                       t_syn_verilog_opts fpga_verilog_opts);
+                                       t_arch* arch);
 
 void dump_compact_verilog_top_netlist(t_sram_orgz_info* cur_sram_orgz_info,
                                       char* circuit_name,
@@ -26,7 +23,6 @@ void dump_compact_verilog_top_netlist(t_sram_orgz_info* cur_sram_orgz_info,
                                       t_rr_node* LL_rr_node,
                                       t_ivec*** LL_rr_node_indices,
                                       int num_clock,
-                                      t_syn_verilog_opts fpga_verilog_opts,
                                       boolean compact_routing_hierarchy,
                                       t_spice verilog);
 #endif
