@@ -219,7 +219,7 @@ class RRGSB {
     size_t get_cb_num_conf_bits(t_rr_type cb_type) const;
     size_t get_cb_conf_bits_lsb(t_rr_type cb_type) const;
     size_t get_cb_conf_bits_msb(t_rr_type cb_type) const;
-    bool is_sb_node_imply_short_connection(t_rr_node* src_node) const; /* Check if the node imply a short connection inside the SB, which happens to long wires across a FPGA fabric */
+    bool is_sb_node_passing_wire(const enum e_side node_side, const size_t track_id) const; /* Check if the node imply a short connection inside the SB, which happens to long wires across a FPGA fabric */
     bool is_sb_side_mirror(const RRGSB& cand, enum e_side side) const; /* check if a side of candidate SB is a mirror of the current one */
     bool is_sb_side_segment_mirror(const RRGSB& cand, enum e_side side, size_t seg_id) const; /* check if all the routing segments of a side of candidate SB is a mirror of the current one */
     bool is_sb_mirror(const RRGSB& cand) const; /* check if the candidate SB is a mirror of the current one */

@@ -216,7 +216,7 @@ void fpga_spice_generate_bitstream_switch_box_interc(FILE* fp,
                                                      const RRGSB& rr_sb,
                                                      t_sram_orgz_info* cur_sram_orgz_info,
                                                      enum e_side chan_side,
-                                                     t_rr_node* cur_rr_node) {
+                                                     size_t chan_node_id) {
   int num_drive_rr_nodes = 0;  
   t_rr_node** drive_rr_nodes = NULL;
 
@@ -227,12 +227,12 @@ void fpga_spice_generate_bitstream_switch_box_interc(FILE* fp,
                __FILE__, __LINE__); 
     exit(1);
   }
+  /* Get the rr_node */
+  t_rr_node* cur_rr_node = rr_sb.get_chan_node(chan_side, chan_node_id);
 
   /* Determine if the interc lies inside a channel wire, that is interc between segments */
   /* Check each num_drive_rr_nodes, see if they appear in the cur_sb_info */
-  if (true == rr_sb.is_sb_node_imply_short_connection(cur_rr_node)) {
-    /* Double check if the interc lies inside a channel wire, that is interc between segments */
-    assert(true == rr_sb.is_sb_node_exist_opposite_side(cur_rr_node, chan_side));
+  if (true == rr_sb.is_sb_node_passing_wire(chan_side, chan_node_id)) {
     num_drive_rr_nodes = 0;
     drive_rr_nodes = NULL;
   } else {
@@ -364,7 +364,7 @@ void fpga_spice_generate_bitstream_routing_switch_box_subckt(FILE* fp,
       if (OUT_PORT == rr_sb.get_chan_node_direction(side_manager.get_side(), itrack)) {
         fpga_spice_generate_bitstream_switch_box_interc(fp, rr_sb, cur_sram_orgz_info, 
                                                         side_manager.get_side(), 
-                                                        rr_sb.get_chan_node(side_manager.get_side(), itrack));
+                                                        itrack);
       } 
     }
   }

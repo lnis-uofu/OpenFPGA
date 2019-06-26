@@ -370,7 +370,7 @@ void verilog_generate_sdc_break_loop_sb(FILE* fp,
                ||(CHANY == chan_rr_node->type));
           /* We only care the output port and it should indicate a SB mux */
           if ( (OUT_PORT != rr_gsb.get_chan_node_direction(side_manager.get_side(), itrack)) 
-             || (false != rr_gsb.is_sb_node_imply_short_connection(chan_rr_node))) {
+             || (false != rr_gsb.is_sb_node_passing_wire(side_manager.get_side(), itrack))) {
             continue; 
           }
           /* Bypass if we have only 1 driving node */
@@ -741,7 +741,7 @@ void verilog_generate_sdc_constrain_sbs(t_sdc_opts sdc_opts,
             continue; 
           }
           /* Constrain thru wires */
-          if (false != rr_gsb.is_sb_node_imply_short_connection(chan_rr_node)) {
+          if (false != rr_gsb.is_sb_node_passing_wire(side_manager.get_side(), itrack)) {
             /* Set the max, min delay to 0? */ 
             verilog_generate_sdc_constrain_one_sb_path(fp, rr_gsb,
                                                        chan_rr_node,
@@ -2510,7 +2510,7 @@ void verilog_generate_wire_report_timing_blockage_direction(FILE* fp,
                                                             int LL_nx, int LL_ny) {
  
   int ix, iy;
-  int side, itrack, inode;
+  int side, itrack;
   t_sb* cur_sb_info = NULL;
   
   

@@ -308,68 +308,6 @@ void dump_verilog_routing_chan_subckt(char* verilog_dir,
   return;
 }
 
-static 
-t_rr_node** verilog_get_grid_side_pin_rr_nodes(int* num_pin_rr_nodes,
-                                               t_rr_type pin_type,
-                                               int x,
-                                               int y,
-                                               int side,
-                                               t_ivec*** LL_rr_node_indices) {
-  int height, ipin, class_id, inode;
-  t_type_ptr type = NULL;
-  t_rr_node** ret = NULL;
-  enum e_pin_type pin_class_type;
-  int cur;
-  
-  /* Check */
-  assert((!(0 > x))&&(!(x > (nx + 1)))); 
-  assert((!(0 > y))&&(!(y > (ny + 1)))); 
-  type = grid[x][y].type;
-  assert(NULL != type);
-  /* Assign the type of PIN*/ 
-  switch (pin_type) {
-  case IPIN:
-  /* case SINK: */
-    pin_class_type = RECEIVER; /* This is the end of a route path*/ 
-    break;
-  /*case SOURCE:*/
-  case OPIN:
-    pin_class_type = DRIVER; /* This is the start of a route path */ 
-    break;
-  /* SINK and SOURCE are hypothesis nodes */
-  default:
-    vpr_printf(TIO_MESSAGE_ERROR, "(File:%s, [LINE%d])Invalid pin_type!\n", __FILE__, __LINE__);
-    exit(1); 
-  }
-
-  /* Output the pins on the side*/
-  (*num_pin_rr_nodes) = 0;
-  height = grid[x][y].offset;
-  for (ipin = 0; ipin < type->num_pins; ipin++) {
-    class_id = type->pin_class[ipin];
-    if ((1 == type->pinloc[height][side][ipin])&&(pin_class_type == type->class_inf[class_id].type)) {
-      (*num_pin_rr_nodes)++;
-    }
-  } 
-  /* Malloc */
-  ret = (t_rr_node**)my_malloc(sizeof(t_rr_node*)*(*num_pin_rr_nodes)); 
-
-  /* Fill the return array*/
-  cur = 0;
-  height = grid[x][y].offset;
-  for (ipin = 0; ipin < type->num_pins; ipin++) {
-    class_id = type->pin_class[ipin];
-    if ((1 == type->pinloc[height][side][ipin])&&(pin_class_type == type->class_inf[class_id].type)) {
-      inode = get_rr_node_index(x, y, pin_type, ipin, LL_rr_node_indices);
-      ret[cur] = &(rr_node[inode]); 
-      cur++;
-    }
-  } 
-  assert(cur == (*num_pin_rr_nodes));
-  
-  return ret;
-}
-
 void dump_verilog_grid_side_pin_with_given_index(FILE* fp, t_rr_type pin_type, 
                                                  int pin_index, int side,
                                                  int x, int y,
@@ -489,142 +427,6 @@ void dump_verilog_grid_side_pins(FILE* fp,
   return;
 }
 
-/* Determine the channel coordinates in switch box subckt */
-static 
-void verilog_determine_src_chan_coordinate_switch_box(t_rr_node* src_rr_node,
-                                              t_rr_node* des_rr_node,
-                                              int side,
-                                              int switch_box_x,
-                                              int switch_box_y,
-                                              int* src_chan_x,
-                                              int* src_chan_y,
-                                              char** src_chan_port_name) {
-  /* Check */ 
-  assert((!(0 > side))&&(side < 4));
-  assert((CHANX == src_rr_node->type)||(CHANY == src_rr_node->type));
-  assert((CHANX == des_rr_node->type)||(CHANY == des_rr_node->type));
-  assert((!(0 > switch_box_x))&&(!(switch_box_x > (nx + 1)))); 
-  assert((!(0 > switch_box_y))&&(!(switch_box_y > (ny + 1)))); 
- 
-  /* Initialize*/
-  (*src_chan_x) = 0;
-  (*src_chan_y) = 0;
-  (*src_chan_port_name) = NULL;
-
-  switch (side) {
-  case 0: /*TOP*/
-    /* The destination rr_node only have one condition!!! */
-    assert((INC_DIRECTION == des_rr_node->direction)&&(CHANY == des_rr_node->type));
-    /* Following cases:
-     *               |
-     *             / | \
-     */
-    if ((INC_DIRECTION == src_rr_node->direction)&&(CHANY == src_rr_node->type)) {
-      (*src_chan_x) = switch_box_x;
-      (*src_chan_y) = switch_box_y;
-      (*src_chan_port_name) = "in";
-    } else if ((INC_DIRECTION == src_rr_node->direction)&&(CHANX == src_rr_node->type)) {
-      (*src_chan_x) = switch_box_x;
-      (*src_chan_y) = switch_box_y;
-      (*src_chan_port_name) = "in";
-    } else if ((DEC_DIRECTION == src_rr_node->direction)&&(CHANX == src_rr_node->type)) {
-      (*src_chan_x) = switch_box_x + 1;
-      (*src_chan_y) = switch_box_y;
-      (*src_chan_port_name) = "in";
-    } else {
-      vpr_printf(TIO_MESSAGE_ERROR, "(File:%s, [LINE%d])Invalid source channel!\n", __FILE__, __LINE__);
-      exit(1);
-    }
-    break; 
-  case 1: /*RIGHT*/
-    /* The destination rr_node only have one condition!!! */
-    assert((INC_DIRECTION == des_rr_node->direction)&&(CHANX == des_rr_node->type));
-    /* Following cases:
-     *          \               
-     *       ---  ----  
-     *          /
-     */
-    if ((DEC_DIRECTION == src_rr_node->direction)&&(CHANY == src_rr_node->type)) {
-      (*src_chan_x) = switch_box_x;
-      (*src_chan_y) = switch_box_y + 1;
-      (*src_chan_port_name) = "in";
-    } else if ((INC_DIRECTION == src_rr_node->direction)&&(CHANX == src_rr_node->type)) {
-      (*src_chan_x) = switch_box_x;
-      (*src_chan_y) = switch_box_y;
-      (*src_chan_port_name) = "in";
-    } else if ((INC_DIRECTION == src_rr_node->direction)&&(CHANY == src_rr_node->type)) {
-      (*src_chan_x) = switch_box_x;
-      (*src_chan_y) = switch_box_y;
-      (*src_chan_port_name) = "in";
-    } else {
-      vpr_printf(TIO_MESSAGE_ERROR, "(File:%s, [LINE%d])Invalid source channel!\n", __FILE__, __LINE__);
-      exit(1);
-    }
-    break; 
-  case 2: /*BOTTOM*/
-    /* The destination rr_node only have one condition!!! */
-    assert((DEC_DIRECTION == des_rr_node->direction)&&(CHANY == des_rr_node->type));
-    /* Following cases:
-     *          |               
-     *        \   /  
-     *          |
-     */
-    if ((DEC_DIRECTION == src_rr_node->direction)&&(CHANY == src_rr_node->type)) {
-      (*src_chan_x) = switch_box_x;
-      (*src_chan_y) = switch_box_y + 1;
-      (*src_chan_port_name) = "in";
-    } else if ((INC_DIRECTION == src_rr_node->direction)&&(CHANX == src_rr_node->type)) {
-      (*src_chan_x) = switch_box_x;
-      (*src_chan_y) = switch_box_y;
-      (*src_chan_port_name) = "in";
-    } else if ((DEC_DIRECTION == src_rr_node->direction)&&(CHANX == src_rr_node->type)) {
-      (*src_chan_x) = switch_box_x + 1;
-      (*src_chan_y) = switch_box_y;
-      (*src_chan_port_name) = "in";
-    } else {
-      vpr_printf(TIO_MESSAGE_ERROR, "(File:%s, [LINE%d])Invalid source channel!\n", __FILE__, __LINE__);
-      exit(1);
-    }
-    break; 
-  case 3: /*LEFT*/
-    /* The destination rr_node only have one condition!!! */
-    assert((DEC_DIRECTION == des_rr_node->direction)&&(CHANX == des_rr_node->type));
-    /* Following cases:
-     *           /               
-     *       ---  ----  
-     *           \
-     */
-    if ((DEC_DIRECTION == src_rr_node->direction)&&(CHANX == src_rr_node->type)) {
-      (*src_chan_x) = switch_box_x + 1;
-      (*src_chan_y) = switch_box_y;
-      (*src_chan_port_name) = "in";
-    } else if ((INC_DIRECTION == src_rr_node->direction)&&(CHANY == src_rr_node->type)) {
-      (*src_chan_x) = switch_box_x;
-      (*src_chan_y) = switch_box_y;
-      (*src_chan_port_name) = "in";
-    } else if ((DEC_DIRECTION == src_rr_node->direction)&&(CHANY == src_rr_node->type)) {
-      (*src_chan_x) = switch_box_x;
-      (*src_chan_y) = switch_box_y + 1;
-      (*src_chan_port_name) = "in";
-    } else {
-      vpr_printf(TIO_MESSAGE_ERROR, "(File:%s, [LINE%d])Invalid source channel!\n", __FILE__, __LINE__);
-      exit(1);
-    }
-    break; 
-  default: 
-    vpr_printf(TIO_MESSAGE_ERROR,"(File:%s, [LINE%d])Invalid side!\n", __FILE__, __LINE__);
-    exit(1);
-  }
-
-  /* Make sure the source rr_node (channel) is in the range*/
-  assert((!((*src_chan_x) < src_rr_node->xlow))&&(!((*src_chan_x) > src_rr_node->xhigh)));
-  if (!((!((*src_chan_y) < src_rr_node->ylow))&&(!((*src_chan_y) > src_rr_node->yhigh)))) {
-  assert((!((*src_chan_y) < src_rr_node->ylow))&&(!((*src_chan_y) > src_rr_node->yhigh)));
-  }
-
-  return; 
-}
-
 void dump_verilog_switch_box_chan_port(FILE* fp,
                                        t_sb* cur_sb_info, 
                                        int chan_side,
@@ -680,6 +482,7 @@ void dump_verilog_unique_switch_box_chan_port(FILE* fp,
   /* Get the index in sb_info of cur_rr_node */
   index = rr_sb.get_node_index(cur_rr_node, chan_side, cur_rr_node_direction);
   /* Make sure this node is included in this sb_info */
+  if (!((-1 != index)&&(NUM_SIDES != chan_side)))
   assert((-1 != index)&&(NUM_SIDES != chan_side));
 
   chan_rr_node_type = cur_rr_node->type;
@@ -737,9 +540,7 @@ void dump_verilog_unique_switch_box_short_interc(FILE* fp,
   if (0 == actual_fan_in) {
     assert(drive_rr_node == cur_rr_node);
   } else {
-    Side side_manager(chan_side);
-    /* drive_rr_node = &(rr_node[cur_rr_node->prev_node]); */
-    assert(1 == rr_node_drive_switch_box(drive_rr_node, cur_rr_node, rr_sb.get_sb_coordinator().get_x(), rr_sb.get_sb_coordinator().get_y(), side_manager.get_side()));
+    assert (1 == actual_fan_in);
   }
 
   int grid_x = drive_rr_node->xlow; 
@@ -1581,7 +1382,7 @@ void dump_verilog_unique_switch_box_interc(t_sram_orgz_info* cur_sram_orgz_info,
                                            FILE* fp, 
                                            const RRGSB& rr_sb,
                                            enum e_side chan_side,
-                                           t_rr_node* cur_rr_node) {
+                                           size_t chan_node_id) {
   int num_drive_rr_nodes = 0;  
   t_rr_node** drive_rr_nodes = NULL;
 
@@ -1592,11 +1393,12 @@ void dump_verilog_unique_switch_box_interc(t_sram_orgz_info* cur_sram_orgz_info,
     exit(1);
   }
 
+  /* Get the node */
+  t_rr_node* cur_rr_node = rr_sb.get_chan_node(chan_side, chan_node_id);
+
   /* Determine if the interc lies inside a channel wire, that is interc between segments */
   /* Check each num_drive_rr_nodes, see if they appear in the cur_sb_info */
-  if (true == rr_sb.is_sb_node_imply_short_connection(cur_rr_node)) {
-    /* Double check if the interc lies inside a channel wire, that is interc between segments */
-    assert(true == rr_sb.is_sb_node_exist_opposite_side(cur_rr_node, chan_side));
+  if (true == rr_sb.is_sb_node_passing_wire(chan_side, chan_node_id)) {
     num_drive_rr_nodes = 0;
     drive_rr_nodes = NULL;
   } else {
@@ -2072,7 +1874,7 @@ void dump_verilog_routing_switch_box_unique_side_module(t_sram_orgz_info* cur_sr
       }
       dump_verilog_unique_switch_box_interc(cur_sram_orgz_info, fp, rr_sb, 
                                             side_manager.get_side(), 
-                                            rr_sb.get_chan_node(side_manager.get_side(), itrack));
+                                            itrack);
     }
   }
  
@@ -2482,7 +2284,7 @@ void dump_verilog_routing_switch_box_unique_subckt(t_sram_orgz_info* cur_sram_or
       if (OUT_PORT == rr_gsb.get_chan_node_direction(side_manager.get_side(), itrack)) {
         dump_verilog_unique_switch_box_interc(cur_sram_orgz_info, fp, rr_sb, 
                                               side_manager.get_side(), 
-                                              rr_gsb.get_chan_node(side_manager.get_side(), itrack));
+                                              itrack);
       } 
     }
   }
@@ -3962,7 +3764,6 @@ void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
                                     int LL_num_rr_nodes, t_rr_node* LL_rr_node,
                                     t_ivec*** LL_rr_node_indices,
                                     t_rr_indexed_data* LL_rr_indexed_data,
-                                    t_syn_verilog_opts fpga_verilog_opts,
                                     boolean compact_routing_hierarchy) {
   assert(UNI_DIRECTIONAL == routing_arch->directionality);
   

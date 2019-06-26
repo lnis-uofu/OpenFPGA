@@ -85,9 +85,7 @@ void write_rr_switch_block_to_xml(std::string fname_prefix, RRGSB& rr_gsb) {
       size_t src_segment_id = rr_gsb.get_chan_node_segment(gsb_side, inode);
 
       /* Check if this node is directly connected to the node on the opposite side */
-      if (true == rr_gsb.is_sb_node_imply_short_connection(cur_rr_node)) {
-        /* Double check if the interc lies inside a channel wire, that is interc between segments */
-        assert(true == rr_gsb.is_sb_node_exist_opposite_side(cur_rr_node, gsb_side));
+      if (true == rr_gsb.is_sb_node_passing_wire(gsb_side, inode)) {
         num_drive_rr_nodes = 0;
         drive_rr_nodes = NULL;
       } else {

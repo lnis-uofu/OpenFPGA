@@ -1,3 +1,42 @@
+/**********************************************************
+ * MIT License
+ *
+ * Copyright (c) 2018 LNIS - The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ ***********************************************************************/
+
+/************************************************************************
+ * Filename:    rr_blocks.cpp
+ * Created by:   Xifan Tang
+ * Change history:
+ * +-------------------------------------+
+ * |  Date       |    Author   | Notes
+ * +-------------------------------------+
+ * | 2019/06/26  |  Xifan Tang | Created 
+ * +-------------------------------------+
+ ***********************************************************************/
+/************************************************************************
+ *  This file contains member function for the data structures defined
+ *  in rr_block.h
+ ***********************************************************************/
+
 #include <cassert>
 #include <string.h>
 #include <algorithm>
@@ -6,6 +45,8 @@
 #include "rr_blocks_naming.h"
 
 #include "rr_blocks.h"
+
+#include "rr_graph_builder_utils.h"
 
 
 /* Member Functions of Class RRChan */
@@ -1003,24 +1044,53 @@ size_t RRGSB::get_cb_conf_bits_msb(t_rr_type cb_type) const {
   }
 }
 
-/* Check if the node imply a short connection inside the SB, which happens to long wires across a FPGA fabric */
-bool RRGSB::is_sb_node_imply_short_connection(t_rr_node* src_node) const {
+/************************************************************************
+ * Check if the node indicates a passing wire across the Switch Block part of the GSB 
+ * Therefore, we actually do the following check 
+ * Check if a track starts from this GSB or not 
+ * For INC_DIRECTION
+ * (xlow, ylow) should be same as the GSB side coordinator 
+ * For DEC_DIRECTION
+ * (xhigh, yhigh) should be same as the GSB side coordinator 
+ ***********************************************************************/
+bool RRGSB::is_sb_node_passing_wire(const enum e_side node_side, 
+                                    const size_t track_id) const { 
 
-  assert((CHANX == src_node->type) || (CHANY == src_node->type));
-  
-  for (size_t inode = 0; inode < size_t(src_node->num_drive_rr_nodes); ++inode) {
-    enum e_side side;
-    int index; 
-    get_node_side_and_index(src_node->drive_rr_nodes[inode], IN_PORT, &side, &index);
-    /* We need to be sure that drive_rr_node is part of the SB */
-    if ( ((-1 == index) || (NUM_SIDES == side)) 
-      && ( (CHANX == src_node->drive_rr_nodes[inode]->type)
-        || (CHANY == src_node->drive_rr_nodes[inode]->type) ) ) { 
-      return true;
-    }
+  /* Get the rr_node */
+  t_rr_node* track_node = get_chan_node(node_side, track_id);
+  /* Get the coordinators */
+  DeviceCoordinator side_coordinator = get_side_block_coordinator(node_side); 
+
+  /* Get the coordinator of where the track starts */
+  DeviceCoordinator track_start = get_track_rr_node_start_coordinator(track_node);
+
+  /* INC_DIRECTION start_track: (xlow, ylow) should be same as the GSB side coordinator */
+  /* DEC_DIRECTION start_track: (xhigh, yhigh) should be same as the GSB side coordinator */
+  if (  (track_start.get_x() == side_coordinator.get_x())
+     && (track_start.get_y() == side_coordinator.get_y()) 
+     && (OUT_PORT == get_chan_node_direction(node_side, track_id)) ) {
+    /* Double check: start track should be an OUTPUT PORT of the GSB */
+    return false; /* This is a starting point */
   }
 
-  return false;
+  /* Get the coordinator of where the track ends */
+  DeviceCoordinator track_end = get_track_rr_node_end_coordinator(track_node);
+
+  /* INC_DIRECTION end_track: (xhigh, yhigh) should be same as the GSB side coordinator */ 
+  /* DEC_DIRECTION end_track: (xlow, ylow) should be same as the GSB side coordinator */ 
+  if (  (track_end.get_x() == side_coordinator.get_x())
+     && (track_end.get_y() == side_coordinator.get_y()) 
+     && (IN_PORT == get_chan_node_direction(node_side, track_id)) ) {
+    /* Double check: end track should be an INPUT PORT of the GSB */
+    return false; /* This is an ending point */
+  }
+
+  /* Reach here it means that this will be a passing wire, 
+   * we should be able to find the node on the opposite side of the GSB!
+   */
+  assert (true == is_sb_node_exist_opposite_side(track_node, node_side));
+
+  return true;
 }
 
 /* check if the candidate SB satisfy the basic requirements on being a mirror of the current one */
@@ -2050,18 +2120,10 @@ bool RRGSB::is_sb_node_mirror(const RRGSB& cand,
   /* Ensure rr_nodes are either the output of short-connection or multiplexer  */
   t_rr_node* node = this->get_chan_node(node_side, track_id);
   t_rr_node* cand_node = cand.get_chan_node(node_side, track_id);
-  bool is_short_conkt = this->is_sb_node_imply_short_connection(node);
+  bool is_short_conkt = this->is_sb_node_passing_wire(node_side, track_id);
 
-  if (is_short_conkt != cand.is_sb_node_imply_short_connection(cand_node)) {
+  if (is_short_conkt != cand.is_sb_node_passing_wire(node_side, track_id)) {
     return false;
-  }
-  /* Find the driving rr_node in this sb */
-  if (true == is_short_conkt) {
-    /* Ensure we have the same track id for the driving nodes */
-    if ( this->is_sb_node_exist_opposite_side(node, node_side)
-      != cand.is_sb_node_exist_opposite_side(cand_node, node_side)) {
-      return false;
-    }
   } else { /* check driving rr_nodes */
     if ( node->num_drive_rr_nodes != cand_node->num_drive_rr_nodes ) {
       return false;
@@ -2156,7 +2218,7 @@ size_t RRGSB::get_track_id_first_short_connection(enum e_side node_side) const {
 
   /* Walk through chan_nodes and find the first short connection */
   for (size_t inode = 0; inode < get_chan_width(node_side); ++inode) {
-    if (true == is_sb_node_imply_short_connection(get_chan_node(node_side, inode))) {
+    if (true == is_sb_node_passing_wire(node_side, inode)) {
       return inode; 
     }
   }
@@ -2989,3 +3051,6 @@ bool DeviceRRGSB::validate_cb_type(t_rr_type cb_type) const {
   return false;
 }
 
+/************************************************************************
+ * End of file : rr_blocks.cpp 
+ ***********************************************************************/

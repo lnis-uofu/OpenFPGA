@@ -2764,7 +2764,7 @@ void verilog_generate_routing_wires_report_timing(FILE* fp,
                  ||(CHANY == rr_sb.get_chan_node(side_manager.get_side(), itrack)->type));
             /* We only care the output port and it should indicate a SB mux */
             if ( (OUT_PORT != rr_sb.get_chan_node_direction(side_manager.get_side(), itrack)) 
-               || (true == rr_sb.is_sb_node_imply_short_connection(rr_sb.get_chan_node(side_manager.get_side(), itrack)))) {
+               || (true == rr_sb.is_sb_node_passing_wire(side_manager.get_side(), itrack))) {
               continue; 
             }
             /* Bypass if we have only 1 driving node */
@@ -3169,7 +3169,7 @@ void verilog_generate_routing_wire_report_timing(t_trpt_opts trpt_opts,
                ||(CHANY == rr_sb.get_chan_node(side_manager.get_side(), itrack)->type));
           /* We only care the output port and it should indicate a SB mux */
           if ( (OUT_PORT != rr_sb.get_chan_node_direction(side_manager.get_side(), itrack)) 
-             || (false != rr_sb.is_sb_node_imply_short_connection(rr_sb.get_chan_node(side_manager.get_side(), itrack)))) {
+             || (false != rr_sb.is_sb_node_passing_wire(side_manager.get_side(), itrack))) {
             continue; 
           }
           /* Bypass if we have only 1 driving node */

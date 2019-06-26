@@ -1197,17 +1197,18 @@ void sort_rr_gsb_one_ipin_node_drive_rr_nodes(const RRGSB& rr_gsb,
 /* sort drive_rr_nodes of a rr_node inside rr_gsb subject to the index of rr_gsb array */
 static  
 void sort_rr_gsb_one_chan_node_drive_rr_nodes(const RRGSB& rr_gsb, 
-                                              t_rr_node* chan_node,
-                                              enum e_side chan_side) {
+                                              enum e_side chan_side, 
+                                              size_t track_id) {
 
   /* If this is a passing wire, we return directly.
    * The passing wire will be handled in other GSBs
    */
-  if (true == rr_gsb.is_sb_node_imply_short_connection(chan_node)) {
-     /* Double check if the interc lies inside a channel wire, that is interc between segments */
-     assert(true == rr_gsb.is_sb_node_exist_opposite_side(chan_node, chan_side));
+  if (true == rr_gsb.is_sb_node_passing_wire(chan_side, track_id)) {
      return;
   }
+
+  /* Get the chan_node */
+  t_rr_node* chan_node = rr_gsb.get_chan_node(chan_side, track_id);
 
   /* Create a copy of the edges and switches of this node */
   std::vector<t_rr_node*> sorted_drive_nodes;
@@ -1301,8 +1302,8 @@ void sort_rr_gsb_drive_rr_nodes(const RRGSB& rr_gsb) {
       }
       /* Get the chan side, so we have the routing tracks */
       sort_rr_gsb_one_chan_node_drive_rr_nodes(rr_gsb, 
-                                               rr_gsb.get_chan_node(gsb_side, inode),
-                                               gsb_side);
+                                               gsb_side,
+                                               inode);
     } 
   }
 
