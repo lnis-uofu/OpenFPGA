@@ -958,8 +958,49 @@ int dump_verilog_global_ports(FILE* fp, t_llist* head,
   /* fprintf(fp, "//----- BEGIN Global ports -----\n"); */
   while(NULL != temp) {
     cur_global_port = (t_spice_model_port*)(temp->dptr); 
-    fprintf(fp, ".%s(", 
+    if (TRUE == dump_port_type) {
+      fprintf(fp, "%s [0:%d] %s", 
+              verilog_convert_port_type_to_string(cur_global_port->type),
+              cur_global_port->size - 1, 
               cur_global_port->prefix);
+    } else {
+      fprintf(fp, "%s[0:%d]", 
+              cur_global_port->prefix,
+              cur_global_port->size - 1); 
+    }
+
+    /* if this is the tail, we do not dump a comma */
+    if (NULL != temp->next) {
+     fprintf(fp, ", //---- global port \n");
+    }
+    /* Update counter */
+    dumped_port_cnt++;
+    /* Go to the next */
+    temp = temp->next;
+  }
+  /* fprintf(fp, "//----- END Global ports -----\n"); */
+
+  return dumped_port_cnt;
+}
+
+/* Dump all the global ports that are stored in the linked list */
+int dump_verilog_global_ports_explicit(FILE* fp, t_llist* head,
+                                       boolean dump_port_type) {
+  t_llist* temp = head;
+  t_spice_model_port* cur_global_port = NULL;
+  int dumped_port_cnt = 0;
+
+  /* Check the file handler*/ 
+  if (NULL == fp) {
+    vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid file handler.\n", 
+               __FILE__, __LINE__); 
+  }
+
+  /* fprintf(fp, "//----- BEGIN Global ports -----\n"); */
+  while(NULL != temp) {
+    cur_global_port = (t_spice_model_port*)(temp->dptr); 
+    fprintf(fp, ".%s(", 
+            cur_global_port->prefix);
     if (TRUE == dump_port_type) {
       fprintf(fp, "%s [0:%d] %s", 
               verilog_convert_port_type_to_string(cur_global_port->type),

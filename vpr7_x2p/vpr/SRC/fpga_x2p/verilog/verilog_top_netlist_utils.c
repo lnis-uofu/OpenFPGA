@@ -477,7 +477,7 @@ void dump_verilog_defined_one_channel(FILE* fp,
   fprintf(fp, "(");
   fprintf(fp, "\n");
   /* dump global ports */
-  if (0 < dump_verilog_global_ports(fp, global_ports_head, FALSE)) {
+  if (0 < dump_verilog_global_ports_explicit(fp, global_ports_head, FALSE)) {
     fprintf(fp, ",\n");
   }
 

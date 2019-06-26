@@ -941,7 +941,8 @@ void dump_verilog_unique_switch_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
                                         t_rr_node* cur_rr_node,
                                         int mux_size,
                                         t_rr_node** drive_rr_nodes,
-                                        int switch_index) {
+                                        int switch_index,
+                                        boolean is_explicit_mapping) {
   int input_cnt = 0;
   t_spice_model* verilog_model = NULL;
   int mux_level, path_id, cur_num_sram;
@@ -1063,7 +1064,7 @@ void dump_verilog_unique_switch_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
           verilog_model->prefix, mux_size, verilog_model->cnt);
 
   /* Dump global ports */
-  if  (0 < rec_dump_verilog_spice_model_global_ports(fp, verilog_model, FALSE, FALSE, FALSE)) {
+  if  (0 < rec_dump_verilog_spice_model_global_ports(fp, verilog_model, FALSE, FALSE, is_explicit_mapping)) {
     fprintf(fp, ",\n");
   }
 
@@ -1382,7 +1383,8 @@ void dump_verilog_unique_switch_box_interc(t_sram_orgz_info* cur_sram_orgz_info,
                                            FILE* fp, 
                                            const RRGSB& rr_sb,
                                            enum e_side chan_side,
-                                           size_t chan_node_id) {
+                                           size_t chan_node_id,
+                                           boolean is_explicit_mapping) {
   int num_drive_rr_nodes = 0;  
   t_rr_node** drive_rr_nodes = NULL;
 
@@ -1418,7 +1420,8 @@ void dump_verilog_unique_switch_box_interc(t_sram_orgz_info* cur_sram_orgz_info,
     /* Print the multiplexer, fan_in >= 2 */
     dump_verilog_unique_switch_box_mux(cur_sram_orgz_info, fp, rr_sb, chan_side, cur_rr_node, 
                                        num_drive_rr_nodes, drive_rr_nodes, 
-                                       cur_rr_node->drive_switches[DEFAULT_SWITCH_ID]);
+                                       cur_rr_node->drive_switches[DEFAULT_SWITCH_ID],
+                                       is_explicit_mapping);
   } /*Nothing should be done else*/ 
 
   /* Free */
@@ -1778,7 +1781,8 @@ static
 void dump_verilog_routing_switch_box_unique_side_module(t_sram_orgz_info* cur_sram_orgz_info,
                                                         char* verilog_dir, char* subckt_dir, 
                                                         size_t module_id, size_t seg_id,
-                                                        const RRGSB& rr_sb, enum e_side side) {
+                                                        const RRGSB& rr_sb, enum e_side side,
+                                                        boolean is_explicit_mapping) {
   FILE* fp = NULL; 
   char* fname = NULL;
   Side side_manager(side);
@@ -1874,7 +1878,7 @@ void dump_verilog_routing_switch_box_unique_side_module(t_sram_orgz_info* cur_sr
       }
       dump_verilog_unique_switch_box_interc(cur_sram_orgz_info, fp, rr_sb, 
                                             side_manager.get_side(), 
-                                            itrack);
+                                            itrack, is_explicit_mapping);
     }
   }
  
@@ -2166,7 +2170,8 @@ void dump_verilog_routing_switch_box_unique_module(t_sram_orgz_info* cur_sram_or
 static 
 void dump_verilog_routing_switch_box_unique_subckt(t_sram_orgz_info* cur_sram_orgz_info,
                                                    char* verilog_dir, char* subckt_dir, 
-                                                   const RRGSB& rr_sb) {
+                                                   const RRGSB& rr_sb,
+                                                   boolean is_explicit_mapping) {
   FILE* fp = NULL; 
   char* fname = NULL;
 
@@ -2284,7 +2289,7 @@ void dump_verilog_routing_switch_box_unique_subckt(t_sram_orgz_info* cur_sram_or
       if (OUT_PORT == rr_gsb.get_chan_node_direction(side_manager.get_side(), itrack)) {
         dump_verilog_unique_switch_box_interc(cur_sram_orgz_info, fp, rr_sb, 
                                               side_manager.get_side(), 
-                                              itrack);
+                                              itrack, is_explicit_mapping);
       } 
     }
   }
@@ -3764,9 +3769,11 @@ void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
                                     int LL_num_rr_nodes, t_rr_node* LL_rr_node,
                                     t_ivec*** LL_rr_node_indices,
                                     t_rr_indexed_data* LL_rr_indexed_data,
-                                    boolean compact_routing_hierarchy) {
+                                    t_fpga_spice_opts FPGA_SPICE_Opts) {
   assert(UNI_DIRECTIONAL == routing_arch->directionality);
   
+  boolean compact_routing_hierarchy = FPGA_SPICE_Opts.compact_routing_hierarchy;
+  boolean explicit_port_mapping = FPGA_SPICE_Opts.SynVerilogOpts.dump_explicit_verilog;
   /* Two major tasks: 
    * 1. Generate sub-circuits for Routing Channels 
    * 2. Generate sub-circuits for Switch Boxes
@@ -3832,7 +3839,7 @@ void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
         for (size_t isb = 0; isb < device_rr_gsb.get_num_sb_unique_submodule(side_manager.get_side(), iseg); ++isb) {
           const RRGSB& unique_mirror = device_rr_gsb.get_sb_unique_submodule(isb, side_manager.get_side(), iseg);
           size_t seg_id = device_rr_gsb.get_segment_id(iseg);
-          dump_verilog_routing_switch_box_unique_side_module(cur_sram_orgz_info, verilog_dir, subckt_dir, isb, seg_id, unique_mirror, side_manager.get_side());
+          dump_verilog_routing_switch_box_unique_side_module(cur_sram_orgz_info, verilog_dir, subckt_dir, isb, seg_id, unique_mirror, side_manager.get_side(), explicit_port_mapping);
         }
       }
     }

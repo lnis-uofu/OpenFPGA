@@ -78,6 +78,9 @@ int rec_dump_verilog_spice_model_global_ports(FILE* fp,
 int dump_verilog_global_ports(FILE* fp, t_llist* head,
                               boolean dump_port_type);
 
+int dump_verilog_global_ports_explicit(FILE* fp, t_llist* head,
+                                       boolean dump_port_type);
+
 void dump_verilog_mux_sram_one_outport(FILE* fp, 
                                        t_sram_orgz_info* cur_sram_orgz_info,
                                        t_spice_model* cur_mux_spice_model, int mux_size,

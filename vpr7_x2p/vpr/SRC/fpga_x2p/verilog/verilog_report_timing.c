@@ -1195,6 +1195,7 @@ void dump_verilog_one_sb_wire_segemental_report_timing(FILE* fp,
                                                        int path_cnt) {
   int L_wire;
   int ix, iy;
+  int cur_sb_x, cur_sb_y;
   int end_sb_x, end_sb_y;
   t_cb* next_cb = NULL;
   t_sb* next_sb = NULL;
