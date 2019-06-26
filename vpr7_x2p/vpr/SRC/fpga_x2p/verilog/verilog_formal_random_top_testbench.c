@@ -222,12 +222,17 @@ void dump_verilog_top_random_testbench_check(FILE* fp){
       assert((VPACK_INPAD == logical_block[iblock].type)
            ||(VPACK_OUTPAD == logical_block[iblock].type));
       if(VPACK_OUTPAD == logical_block[iblock].type){
-        fprintf(fp, "    %s%s <= %s%s ^ %s%s ;\n", logical_block[iblock].name, 
-                									flag_postfix,
-                									logical_block[iblock].name,  
-               										gfpga_postfix,
-                									logical_block[iblock].name, 
-                									bench_postfix);
+        fprintf(fp, "    if(!(%s%s === %s%s) && !(%s%s === 1'bx)) begin\n",
+                                                        logical_block[iblock].name,  
+               									 	    gfpga_postfix,
+                									    logical_block[iblock].name, 
+                									    bench_postfix,
+                									    logical_block[iblock].name, 
+                									    bench_postfix);
+        fprintf(fp, "      %s%s <= 1'b1;\n", logical_block[iblock].name, 
+                									flag_postfix);
+        fprintf(fp, "    end else begin\n      %s%s <= 1'b0;\n    end\n", logical_block[iblock].name, 
+                									                      flag_postfix);
       }
     }
   } 
