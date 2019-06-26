@@ -10,6 +10,7 @@
 #include <assert.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <vector>
 
 /* Include vpr structs*/
 #include "util.h"
@@ -21,6 +22,8 @@
 #include "rr_graph2.h"
 #include "route_common.h"
 #include "vpr_utils.h"
+
+#include "rr_graph_builder_utils.h"
 
 /* Include SPICE support headers*/
 #include "linkedlist.h"
@@ -508,6 +511,54 @@ void verilog_generate_one_report_timing_sb_to_sb(FILE* fp,
 
   return;
 }
+
+static 
+std::vector<t_rr_node*> build_ending_rr_node_for_one_sb_wire(t_rr_node* wire_rr_node, 
+                                                             t_rr_node* LL_rr_node) {
+  /* Initialization */
+  std::vector<t_rr_node*> end_rr_nodes;
+  end_rr_nodes.clear();
+
+  /* Find where the destination pin belongs to */
+  DeviceCoordinator wire_end_coordinator = get_track_rr_node_end_coordinator(wire_rr_node); 
+  /* Get the cooridinator of the destination SB */
+  DeviceCoordinator end_sb_coordinator = get_chan_node_ending_sb_coordinator(wire_rr_node);
+  /* Get the sb */
+  const RRGSB& rr_sb = device_rr_gsb.get_gsb(end_sb_coordinator);
+
+  for (int iedge = 0; iedge < wire_rr_node->num_edges; iedge++) {
+    int inode = wire_rr_node->edges[iedge];
+    /* Double check if end_rr_node is in the GSB, we add it to the vector */
+    enum e_side side;
+    int index;
+
+    /* Build a list of ending rr_node we care */
+    /* Find the SB/CB block that it belongs to */
+    switch (LL_rr_node[inode].type) {
+    case IPIN:
+      rr_sb.get_node_side_and_index(&LL_rr_node[inode], IN_PORT, &side, &index);
+      if  ( (OPEN != index) && (side != NUM_SIDES) ) {
+        end_rr_nodes.push_back(&LL_rr_node[inode]);
+      }
+      break;
+    case CHANX:
+    case CHANY:
+      rr_sb.get_node_side_and_index(&LL_rr_node[inode], OUT_PORT, &side, &index);
+      if  ( (OPEN != index) && (side != NUM_SIDES) ) {
+        end_rr_nodes.push_back(&LL_rr_node[inode]);
+      }
+      break;
+    default:
+      vpr_printf(TIO_MESSAGE_ERROR, "(File: %s [LINE%d]) Invalid type of ending point rr_node!\n",
+                 __FILE__, __LINE__);
+ 
+      exit(1);
+    }
+  }
+
+  return end_rr_nodes;
+}
+
 
 static 
 void build_ending_rr_node_for_one_sb_wire(t_rr_node* wire_rr_node, 
@@ -2895,13 +2946,11 @@ static
 void verilog_generate_one_routing_segmental_report_timing(FILE* fp, 
                                                           t_syn_verilog_opts fpga_verilog_opts,
                                                           const RRGSB& rr_sb,
-                                                          t_rr_node* wire_rr_node,
+                                                          enum e_side gsb_side, 
+                                                          int wire_rr_node_id,
                                                           t_rr_node* LL_rr_node,
                                                           char* direction,
                                                           int* path_cnt) {
-  int num_end_rr_nodes = 0;
-  t_rr_node** end_rr_node = NULL;
-  
   /* Check the file handler */
   if (NULL == fp) {
     vpr_printf(TIO_MESSAGE_ERROR,
@@ -2909,33 +2958,30 @@ void verilog_generate_one_routing_segmental_report_timing(FILE* fp,
                __FILE__, __LINE__); 
     exit(1);
   } 
-
+ 
+  t_rr_node* wire_rr_node = rr_sb.get_chan_node(gsb_side, wire_rr_node_id);
   assert(  ( CHANX == wire_rr_node->type )
         || ( CHANY == wire_rr_node->type ));
  
   /* Find the farest ending points!*/
-  build_ending_rr_node_for_one_sb_wire(wire_rr_node, LL_rr_node, 
-                                       &num_end_rr_nodes, &end_rr_node);
+  std::vector<t_rr_node*> end_rr_nodes = build_ending_rr_node_for_one_sb_wire(wire_rr_node, LL_rr_node);
 
   /* Find the starting points */
   for (int iedge = 0; iedge < wire_rr_node->num_drive_rr_nodes; iedge++) {
     /* Find the ending points*/
-    for (int jedge = 0; jedge < num_end_rr_nodes; jedge++) {
+    for (size_t jedge = 0; jedge < end_rr_nodes.size(); jedge++) {
       /* Report timing */
       dump_verilog_one_sb_wire_segemental_report_timing(fp, fpga_verilog_opts, 
                                                         rr_sb, 
                                                         wire_rr_node->drive_rr_nodes[iedge],
                                                         wire_rr_node,
-                                                        end_rr_node[jedge],
+                                                        end_rr_nodes[jedge],
                                                         direction,
                                                         *path_cnt);
       /* Update counter */
       (*path_cnt)++;
     }
   }
-
-  /* Free */
-  my_free(end_rr_node);
 
   return;
 }
@@ -3197,7 +3243,7 @@ void verilog_generate_routing_wire_report_timing(t_trpt_opts trpt_opts,
           /* Dump report_timing command */
           verilog_generate_one_routing_segmental_report_timing(fp, fpga_verilog_opts,
                                                                rr_sb, 
-                                                               rr_sb.get_chan_node(side_manager.get_side(), itrack), 
+                                                               side_manager.get_side(), itrack, 
                                                                LL_rr_node, "horizontal", &path_cnt);
           /* Disable the timing again */
           /*fprintf(fp, "# Set disable timing for the following Switch Block output:\n");

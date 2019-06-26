@@ -505,6 +505,7 @@ t_track2track_map build_gsb_track_to_track_map(const t_rr_graph* rr_graph,
       }
       /* check if this track will start from here */
       enum e_track_status track_status = determine_track_status_of_gsb(rr_gsb, gsb_side, inode);
+
       switch (track_status) {
       case TRACK_START:
         /* update starting track list */

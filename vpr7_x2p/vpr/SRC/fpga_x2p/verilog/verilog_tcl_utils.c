@@ -22,6 +22,8 @@
 #include "route_common.h"
 #include "vpr_utils.h"
 
+#include "rr_graph_builder_utils.h"
+
 /* Include SPICE support headers*/
 #include "linkedlist.h"
 #include "fpga_x2p_types.h"
@@ -361,6 +363,100 @@ t_cb* get_chan_rr_node_ending_cb(t_rr_node* src_rr_node,
   assert (0 < node_exist);
 
   return next_cb;
+}
+
+/** Given a starting rr_node (CHANX or CHANY) 
+ *  return the sb contains both (the ending CB of the routing wire)
+ */
+DeviceCoordinator get_chan_node_ending_sb_coordinator(t_rr_node* src_rr_node) {
+  /* Get the coordinator where the node ends */
+  DeviceCoordinator end_coordinator = get_track_rr_node_end_coordinator(src_rr_node); 
+  /* Initilizae the SB coordinator where the node ends */
+  DeviceCoordinator sb_coordinator; 
+
+  /* Case 1:                       
+   *                     end_rr_node(chany[x][y+1]) 
+   *                        /|\ 
+   *                         |  
+   *                     ---------
+   *                    |         | 
+   * src_rr_node ------>| next_sb |-------> end_rr_node
+   * (chanx[x][y])      |  [x][y] |        (chanx[x+1][y]
+   *                     ---------
+   *                         |
+   *                        \|/
+   *                     end_rr_node(chany[x][y])
+   */
+  if (   (CHANX == src_rr_node->type)   
+      && (INC_DIRECTION == src_rr_node->direction) ) {
+    /* SB coordinator is the same as src rr_node */ 
+    sb_coordinator.set(end_coordinator.get_x(), end_coordinator.get_y());
+  }
+  /* Case 2                            
+   *                     end_rr_node(chany[x][y+1]) 
+   *                        /|\ 
+   *                         |  
+   *                     ---------
+   *                    |         | 
+   * end_rr_node <------| next_sb |<-------- src_rr_node
+   * (chanx[x][y])      |  [x][y] |        (chanx[x+1][y]
+   *                     ---------
+   *                         |
+   *                        \|/
+   *                     end_rr_node(chany[x][y])
+   */
+  if (   (CHANX == src_rr_node->type)   
+      && (DEC_DIRECTION == src_rr_node->direction) ) {
+    /* SB coordinator is the [x-1][y]  */ 
+    sb_coordinator.set(end_coordinator.get_x() - 1, end_coordinator.get_y());
+  }
+  /* Case 3                            
+   *                     end_rr_node(chany[x][y+1]) 
+   *                        /|\ 
+   *                         |  
+   *                     ---------
+   *                    |         | 
+   * end_rr_node <------| next_sb |-------> src_rr_node
+   * (chanx[x][y])      |  [x][y] |        (chanx[x+1][y]
+   *                     ---------
+   *                        /|\
+   *                         |
+   *                     src_rr_node(chany[x][y])
+   */
+  if (   (CHANY == src_rr_node->type)   
+      && (INC_DIRECTION == src_rr_node->direction) ) {
+    /* SB coordinator is the same  */ 
+    sb_coordinator.set(end_coordinator.get_x(), end_coordinator.get_y());
+  }
+  /* Case 4                            
+   *                     src_rr_node(chany[x][y+1]) 
+   *                         | 
+   *                        \|/  
+   *                     ---------
+   *                    |         | 
+   * end_rr_node <------| next_sb |--------> end_rr_node
+   * (chanx[x][y])      |  [x][y] |        (chanx[x+1][y]
+   *                     ---------
+   *                         |
+   *                        \|/
+   *                     end_rr_node(chany[x][y])
+   */
+  if (   (CHANY == src_rr_node->type)   
+      && (DEC_DIRECTION == src_rr_node->direction) ) {
+    /* SB coordinator is the [x][y-1]  */ 
+    sb_coordinator.set(end_coordinator.get_x(), end_coordinator.get_y() - 1);
+  }
+ 
+  const RRGSB& rr_sb = device_rr_gsb.get_gsb(sb_coordinator);
+  /* Double check if src_rr_node is in the list */
+  enum e_side side;
+  int index;
+  rr_sb.get_node_side_and_index(src_rr_node, IN_PORT, &side, &index);
+  assert ( (OPEN != index) && (side != NUM_SIDES) );
+
+  /* Passing the check, assign coordinator of next_sb  */
+
+  return sb_coordinator;
 }
 
 /** Given a starting rr_node (CHANX or CHANY) 
