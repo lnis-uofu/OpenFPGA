@@ -373,7 +373,7 @@ void build_gsb_one_group_track_to_track_map(const t_rr_graph* rr_graph,
     /* 2. next side */
     /* Next side definition: TOP => RIGHT; RIGHT=>BOTTOM; BOTTOM=>LEFT; LEFT=>TOP */
     to_track_sides.push_back(side_manager.get_rotate_clockwise()); 
-
+    
     for (size_t inode = 0; inode < from_tracks[side].size(); ++inode) {
       for (size_t to_side_id = 0; to_side_id < to_track_sides.size(); ++to_side_id) {
         enum e_side to_side = to_track_sides[to_side_id];
@@ -387,6 +387,7 @@ void build_gsb_one_group_track_to_track_map(const t_rr_graph* rr_graph,
         if (from_side == to_side) {
           continue;
         }
+
         /* Get other track_ids depending on the switch block pattern */
         /* Find the track ids that will start at the other sides */
         std::vector<size_t> to_track_ids = get_switch_block_to_track_id(sb_type, Fs, from_side, inode, 
@@ -403,6 +404,11 @@ void build_gsb_one_group_track_to_track_map(const t_rr_graph* rr_graph,
           //       from_tracks[side].size(), inode, to_track_id, to_track_ids[to_track_id], 
           //       to_track_index, to_tracks[to_side_index].size());
           t_rr_node* to_track_node = rr_gsb.get_chan_node(to_side, to_track_index);
+
+          /* from_track should be IN_PORT */
+          assert( IN_PORT == rr_gsb.get_chan_node_direction(from_side, from_track_index) ); 
+          /* to_track should be OUT_PORT */
+          assert( OUT_PORT == rr_gsb.get_chan_node_direction(to_side, to_track_index) ); 
 
           /* Check if the to_track_node is already in the list ! */
           std::vector<int>::iterator it = std::find((*track2track_map)[from_side_index][from_track_index].begin(),
@@ -491,6 +497,12 @@ t_track2track_map build_gsb_track_to_track_map(const t_rr_graph* rr_graph,
     enum e_side gsb_side = side_manager.get_side();
     /* Build a list of tracks that will start from this side */
     for (size_t inode = 0; inode < rr_gsb.get_chan_width(gsb_side); ++inode) {
+      /* We need to check Switch block population of this track 
+       * The track node will not be considered if there supposed to be no SB at this position 
+       */
+      if (false == is_gsb_in_track_sb_population(rr_gsb, gsb_side, inode, segment_inf)) {
+        continue; /* skip this node and go to the next */
+      }
       /* check if this track will start from here */
       enum e_track_status track_status = determine_track_status_of_gsb(rr_gsb, gsb_side, inode);
       switch (track_status) {
@@ -503,11 +515,9 @@ t_track2track_map build_gsb_track_to_track_map(const t_rr_graph* rr_graph,
         end_tracks[side].push_back(inode);
         break;
       case TRACK_PASS:
-        /* We need to check Switch block population of this track 
-         * The track node will not be considered if there supposed to be no SB at this position 
-         */
-        if (true == is_gsb_in_track_sb_population(rr_gsb, gsb_side, inode, segment_inf)) {
-          /* Update passing track list */
+        /* Update passing track list */
+        /* Note that the pass_track should be IN_PORT only !!! */
+        if (IN_PORT == rr_gsb.get_chan_node_direction(gsb_side, inode)) {
           pass_tracks[side].push_back(inode);
         }
         break;

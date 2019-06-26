@@ -1347,6 +1347,7 @@ DeviceRRGSB build_device_rr_gsb(boolean output_sb_xml, char* sb_xml_dir,
 
 
   if (TRUE == output_sb_xml) {
+    create_dir_path(sb_xml_dir);
     write_device_rr_gsb_to_xml(sb_xml_dir, LL_device_rr_gsb);
 
     /* Skip rotating mirror searching */ 

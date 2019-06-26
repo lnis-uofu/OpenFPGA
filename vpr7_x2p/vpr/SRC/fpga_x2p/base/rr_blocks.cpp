@@ -1013,8 +1013,9 @@ bool RRGSB::is_sb_node_imply_short_connection(t_rr_node* src_node) const {
     int index; 
     get_node_side_and_index(src_node->drive_rr_nodes[inode], IN_PORT, &side, &index);
     /* We need to be sure that drive_rr_node is part of the SB */
-    if (((-1 == index) || (NUM_SIDES == side)) 
-       && ((CHANX == src_node->drive_rr_nodes[inode]->type) || (CHANY == src_node->drive_rr_nodes[inode]->type))) {
+    if ( ((-1 == index) || (NUM_SIDES == side)) 
+      && ( (CHANX == src_node->drive_rr_nodes[inode]->type)
+        || (CHANY == src_node->drive_rr_nodes[inode]->type) ) ) { 
       return true;
     }
   }

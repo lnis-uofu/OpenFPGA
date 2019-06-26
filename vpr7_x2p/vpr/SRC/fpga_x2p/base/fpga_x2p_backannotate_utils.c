@@ -1831,6 +1831,7 @@ t_rr_node** get_chan_rr_nodes(int* num_chan_rr_nodes,
     chan_rr_nodes = (t_rr_node**)my_malloc((*num_chan_rr_nodes)*sizeof(t_rr_node*));
     /* Fill the array */
     for (itrack = 0; itrack < (*num_chan_rr_nodes); itrack++) {
+      /* CHANX follows a weird way in searching rr_nodes */
       inode = get_rr_node_index(x, y, CHANX, itrack, LL_rr_node_indices);
       chan_rr_nodes[itrack] = &(LL_rr_node[inode]);
     }

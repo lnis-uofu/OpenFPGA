@@ -376,16 +376,16 @@ DeviceCoordinator get_track_rr_node_end_coordinator(const t_rr_node* track_rr_no
   /* Make sure we have CHANX or CHANY */
   assert ( (CHANX == track_rr_node->type) ||(CHANY == track_rr_node->type) );
  
-  DeviceCoordinator start_coordinator;
+  DeviceCoordinator end_coordinator;
 
   if (INC_DIRECTION == track_rr_node->direction) {
-    start_coordinator.set(track_rr_node->xhigh, track_rr_node->yhigh);
+    end_coordinator.set(track_rr_node->xhigh, track_rr_node->yhigh);
   } else {
     assert (DEC_DIRECTION == track_rr_node->direction);
-    start_coordinator.set(track_rr_node->xlow, track_rr_node->ylow);
+    end_coordinator.set(track_rr_node->xlow, track_rr_node->ylow);
   }
 
-  return start_coordinator;
+  return end_coordinator;
 }
 
 /************************************************************************

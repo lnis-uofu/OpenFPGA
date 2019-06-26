@@ -434,7 +434,7 @@ void load_one_chan_rr_nodes_basic_info(const DeviceCoordinator& chan_coordinator
     /* fill fast look-up table */
     /* Get node_id */
     int track_node_id = chan_details->get_track_node_id(itrack);
-    /* CHANX requires a reverted (x,y) in the fast look-up table */
+    /* CHANY requires a reverted (x,y) in the fast look-up table */
     if (CHANX == chan_type) {
       load_one_node_to_rr_graph_fast_lookup(rr_graph, track_node_id, 
                                             chan_type, 
@@ -442,7 +442,7 @@ void load_one_chan_rr_nodes_basic_info(const DeviceCoordinator& chan_coordinator
                                             chan_coordinator.get_x(), 
                                             itrack);
     }
-    /* CHANY follows a regular (x,y) in the fast look-up table */
+    /* CHANX follows a regular (x,y) in the fast look-up table */
     if (CHANY == chan_type) {
       load_one_node_to_rr_graph_fast_lookup(rr_graph, track_node_id, 
                                             chan_type, 

@@ -117,6 +117,7 @@ void write_rr_switch_block_to_xml(std::string fname_prefix, RRGSB& rr_gsb) {
           enum e_side drive_node_side = NUM_SIDES;
           int drive_node_index = -1;
           rr_gsb.get_node_side_and_index(drive_rr_nodes[jnode], IN_PORT, &drive_node_side, &drive_node_index);
+          if (-1 == drive_node_index) 
           assert(-1 != drive_node_index);
           Side drive_side(drive_node_side);
 
@@ -156,7 +157,7 @@ void write_rr_switch_block_to_xml(std::string fname_prefix, RRGSB& rr_gsb) {
 
 /* Output each rr_switch_block to a XML file */
 void write_device_rr_gsb_to_xml(char* sb_xml_dir, 
-                                         DeviceRRGSB& LL_device_rr_gsb) {
+                                DeviceRRGSB& LL_device_rr_gsb) {
   std::string fname_prefix(sb_xml_dir);
   /* Add slash if needed */
   if ('/' != fname_prefix.back()) {
