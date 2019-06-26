@@ -492,7 +492,7 @@ void dump_verilog_unique_switch_box_chan_port(FILE* fp,
           convert_chan_type_to_string(chan_rr_node_type),
           chan_rr_node_coordinator.get_x(), chan_rr_node_coordinator.get_y(), 
           convert_chan_rr_node_direction_to_string(cur_rr_node_direction),
-          cur_rr_node->ptc_num);
+          index); /* use node index since ptc_num is no longer unique */
 
   return;
 }
@@ -529,7 +529,7 @@ void dump_verilog_unique_switch_box_short_interc(FILE* fp,
   char* des_chan_port_name = "out"; 
   
   fprintf(fp, "//----- Short connection %s[%lu][%lu]_%s[%d] -----\n", 
-          chan_name, rr_sb.get_sb_coordinator().get_x(), rr_sb.get_sb_coordinator().get_y(), des_chan_port_name, cur_rr_node->ptc_num);
+          chan_name, rr_sb.get_sb_coordinator().get_x(), rr_sb.get_sb_coordinator().get_y(), des_chan_port_name, index);
   fprintf(fp, "assign "); 
 
   /* Output port */
