@@ -999,7 +999,6 @@ void dump_verilog_one_sb_wire_segemental_report_timing(FILE* fp,
           break;
         case CHANX:
         case CHANY:
-verilog_generate_report_timing_one_sb_ending_segments
           /* Get the coordinate of ending SB */
           next_sb_coordinator = get_chan_node_ending_sb_coordinator(src_rr_node, des_rr_node);
           next_sb = device_rr_gsb.get_gsb(next_sb_coordinator); 
