@@ -3871,8 +3871,6 @@ void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
   if (TRUE == compact_routing_hierarchy) { 
     /* Create a snapshot on sram_orgz_info */
     t_sram_orgz_info* stamped_sram_orgz_info = snapshot_sram_orgz_info(cur_sram_orgz_info);
-    /* Restore sram_orgz_info to the base */ 
-    copy_sram_orgz_info (cur_sram_orgz_info, stamped_sram_orgz_info);
 
     DeviceCoordinator cb_range = device_rr_gsb.get_gsb_range();
 
@@ -3881,6 +3879,16 @@ void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
       const RRGSB& unique_mirror = device_rr_gsb.get_cb_unique_module(CHANX, icb);
       dump_verilog_routing_connection_box_unique_module(cur_sram_orgz_info, verilog_dir, subckt_dir, unique_mirror, CHANX); 
     }
+
+    /* Y - channels [1...ny][0..nx]*/
+    for (size_t icb = 0; icb < device_rr_gsb.get_num_cb_unique_module(CHANY); ++icb) {
+      const RRGSB& unique_mirror = device_rr_gsb.get_cb_unique_module(CHANY, icb);
+      dump_verilog_routing_connection_box_unique_module(cur_sram_orgz_info, verilog_dir, subckt_dir, unique_mirror, CHANY); 
+    }
+
+    /* Restore sram_orgz_info to the base */ 
+    copy_sram_orgz_info (cur_sram_orgz_info, stamped_sram_orgz_info);
+
     /* TODO: when we follow a tile organization, 
      * updating the conf bits should follow a tile organization: CLB, SB and CBX, CBY */
     for (size_t ix = 0; ix < cb_range.get_x(); ++ix) {
@@ -3888,12 +3896,6 @@ void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
         const RRGSB& rr_gsb = device_rr_gsb.get_gsb(ix, iy);
         update_routing_connection_box_conf_bits(cur_sram_orgz_info, rr_gsb, CHANX);
       }
-    }
-
-    /* Y - channels [1...ny][0..nx]*/
-    for (size_t icb = 0; icb < device_rr_gsb.get_num_cb_unique_module(CHANY); ++icb) {
-      const RRGSB& unique_mirror = device_rr_gsb.get_cb_unique_module(CHANY, icb);
-      dump_verilog_routing_connection_box_unique_module(cur_sram_orgz_info, verilog_dir, subckt_dir, unique_mirror, CHANY); 
     }
 
     for (size_t ix = 0; ix < cb_range.get_x(); ++ix) {
