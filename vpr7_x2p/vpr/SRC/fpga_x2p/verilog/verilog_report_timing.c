@@ -144,7 +144,8 @@ FILE* create_wireL_report_timing_tcl_file_handler(t_trpt_opts trpt_opts,
   } 
 
   descr = (char*)my_malloc(sizeof(char) * (strlen("Report Timing for L-")
-                                         + strlen(my_itoa(L_wire))
+                                         + strlen(my_itoa(L_wire)) + 1
+                                         + strlen(direction) + 1
                                          + strlen(" wires") + 1));
   sprintf(descr, "Report Timing for L-%d %s wires", L_wire, direction); 
 
