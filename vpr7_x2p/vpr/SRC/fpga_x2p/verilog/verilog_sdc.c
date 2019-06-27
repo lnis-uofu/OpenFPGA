@@ -681,27 +681,46 @@ void verilog_generate_sdc_constrain_one_cb_path(FILE* fp,
 
   /* FIXME: we should avoid using global variables !!!! */
   /* If we have an mirror SB, we should the module name of the mirror !!! */
-  DeviceCoordinator coordinator = rr_gsb.get_cb_coordinator(cb_type);
+  DeviceCoordinator coordinator = rr_gsb.get_sb_coordinator();
   const RRGSB& unique_mirror = device_rr_gsb.get_cb_unique_module(cb_type, coordinator);
-  enum e_side pin_gsb_side = rr_gsb.get_cb_chan_side(cb_type);
+  enum e_side chan_gsb_side = rr_gsb.get_cb_chan_side(cb_type);
   /* We get the index and side for the cur_rr_node in the mother rr_sb context */
-  int pin_node_id = rr_gsb.get_chan_node_index(pin_gsb_side, src_rr_node);
+  int chan_node_id = rr_gsb.get_chan_node_index(chan_gsb_side, src_rr_node);
   /* Make sure we have valid numbers */
-  assert ( -1 != pin_node_id );
+  assert ( -1 != chan_node_id );
 
   fprintf(fp, "%s",
-          unique_mirror.gen_cb_verilog_routing_track_name(cb_type, pin_node_id));
+          unique_mirror.gen_cb_verilog_routing_track_name(cb_type, chan_node_id));
 
   fprintf(fp, " -to ");
  
   fprintf(fp, "%s/", 
           rr_gsb.gen_cb_verilog_instance_name(cb_type)); 
 
+  std::vector<enum e_side> ipin_gsb_sides = rr_gsb.get_cb_ipin_sides(cb_type);
+  enum e_side ipin_gsb_side = NUM_SIDES;
+  int ipin_node_id = -1;
+  for (size_t side_id = 0; side_id < ipin_gsb_sides.size(); ++side_id) {
+    /* Try to get a node_index, port direction does not matter for IPINs node */
+    ipin_node_id = rr_gsb.get_node_index(des_rr_node, ipin_gsb_sides[side_id], OUT_PORT);
+    if (-1 != ipin_node_id) {
+      /* We find a valid side ! Exit the for loop then */
+      ipin_gsb_side = ipin_gsb_sides[side_id];
+      break;
+    } 
+  }
+  /* Make sure we have valid numbers */
+  assert ( ( NUM_SIDES != ipin_gsb_side ) && ( -1 != ipin_node_id ) ); 
+  /* Get the mirror node in unique_module */
+  t_rr_node* mirror_ipin_node = unique_mirror.get_ipin_node(ipin_gsb_side, ipin_node_id);
+  /* Make sure grid_side matches between mirror_node and des_rr_node */
+  assert ( des_rr_node_grid_side == unique_mirror.get_ipin_node_grid_side(ipin_gsb_side, ipin_node_id));
+
   dump_verilog_grid_side_pin_with_given_index(fp, IPIN, /* This is an output of a connection box */
-                                              des_rr_node->ptc_num,
+                                              mirror_ipin_node->ptc_num,
                                               des_rr_node_grid_side,
-                                              des_rr_node->xlow,
-                                              des_rr_node->ylow,
+                                              mirror_ipin_node->xlow,
+                                              mirror_ipin_node->ylow,
                                               FALSE); 
 
   /* If src_node == des_node, this is a metal wire */

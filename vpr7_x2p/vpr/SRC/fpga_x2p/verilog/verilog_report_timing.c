@@ -2071,7 +2071,7 @@ void verilog_generate_one_routing_wire_report_timing(FILE* fp,
 
         /* FIXME: we should avoid using global variables !!!! */
         /* If we have an mirror SB, we should the module name of the mirror !!! */
-        DeviceCoordinator coordinator = next_cb.get_cb_coordinator(cb_type);
+        DeviceCoordinator coordinator = next_cb.get_sb_coordinator();
         const RRGSB& unique_mirror = device_rr_gsb.get_cb_unique_module(cb_type, coordinator);
         enum e_side pin_gsb_side = next_cb.get_cb_chan_side(cb_type);
         /* We get the index and side for the cur_rr_node in the mother rr_sb context */
