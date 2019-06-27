@@ -262,7 +262,9 @@ void vpr_fpga_verilog(t_vpr_setup vpr_setup,
    * 1. a compact output
    * 2. a full-size output
    */
-  dump_compact_verilog_logic_blocks(sram_verilog_orgz_info, src_dir_path, lb_dir_path, &Arch);
+  dump_compact_verilog_logic_blocks(sram_verilog_orgz_info, src_dir_path, 
+                                    lb_dir_path, &Arch,
+                                    vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.dump_explicit_verilog);
 
   /* Dump internal structures of submodules */
   dump_verilog_submodules(sram_verilog_orgz_info, src_dir_path, submodule_dir_path, 

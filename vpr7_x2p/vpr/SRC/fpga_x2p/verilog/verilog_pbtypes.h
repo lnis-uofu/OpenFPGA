@@ -58,13 +58,15 @@ void dump_verilog_pb_graph_pin_interc(t_sram_orgz_info* cur_sram_orgz_info,
                                       char* parent_pin_prefix,
                                       enum e_spice_pin2pin_interc_type pin2pin_interc_type,
                                       t_pb_graph_pin* des_pb_graph_pin,
-                                      t_mode* cur_mode);
+                                      t_mode* cur_mode,
+                                      boolean is_explicit_mapping);
 
 void dump_verilog_pb_graph_interc(t_sram_orgz_info* cur_sram_orgz_info,
                                   FILE* fp, 
                                   char* pin_prefix,
                                   t_pb_graph_node* cur_pb_graph_node,
-                                  int select_mode_index);
+                                  int select_mode_index,
+                                  boolean is_explicit_mapping);
 
 void dump_verilog_pb_graph_primitive_node(FILE* fp,
                                           char* subckt_prefix,
@@ -84,7 +86,8 @@ void dump_verilog_phy_pb_graph_node_rec(t_sram_orgz_info* cur_sram_orgz_info,
                                         FILE* fp,
                                         char* subckt_prefix,
                                         t_pb_graph_node* cur_pb_graph_node,
-                                        int pb_type_index);
+                                        int pb_type_index,
+                                        boolean is_explicit_mapping);
 
 void dump_verilog_block(t_sram_orgz_info* cur_sram_orgz_info,
                         FILE* fp,
@@ -101,7 +104,8 @@ void dump_verilog_physical_block(t_sram_orgz_info* cur_sram_orgz_info,
                                  int x,
                                  int y,
                                  int z,
-                                 t_type_ptr type_descriptor);
+                                 t_type_ptr type_descriptor,
+                                 boolean is_explicit_mapping);
 
 void dump_verilog_grid_pins(FILE* fp,
                             int x, int y,
@@ -138,7 +142,8 @@ void dump_verilog_grid_blocks(t_sram_orgz_info* cur_sram_orgz_info,
 void dump_verilog_physical_grid_blocks(t_sram_orgz_info* cur_sram_orgz_info,
                                         FILE* fp,
                                         int ix, int iy,
-                                        t_arch* arch);
+                                        t_arch* arch,
+                                        boolean is_explicit_mapping);
 
 void dump_verilog_idle_block(t_sram_orgz_info* cur_sram_orgz_info,
                              FILE* fp,
@@ -147,7 +152,8 @@ void dump_verilog_idle_block(t_sram_orgz_info* cur_sram_orgz_info,
                              t_type_ptr type_descriptor);
 
 void dump_verilog_logic_blocks(t_sram_orgz_info* cur_sram_orgz_info,
-                               char* subckt_dir, t_arch* arch);
+                               char* subckt_dir, t_arch* arch,
+                               boolean is_explicit_mapping);
 
 void rec_copy_name_mux_in_node(t_pb_graph_node* master_node, 
                            t_pb_graph_node* target_node);

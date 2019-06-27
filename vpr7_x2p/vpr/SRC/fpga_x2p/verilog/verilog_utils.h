@@ -187,13 +187,15 @@ void dump_verilog_cmos_mux_config_bus_ports(FILE* fp, t_spice_model* mux_spice_m
                                             t_sram_orgz_info* cur_sram_orgz_info,
                                             int mux_size, int cur_num_sram,
                                             int num_mux_reserved_conf_bits,
-                                            int num_mux_conf_bits); 
+                                            int num_mux_conf_bits,
+                                            boolean is_explicit_mapping); 
 
 void dump_verilog_mux_config_bus_ports(FILE* fp, t_spice_model* mux_spice_model, 
                                        t_sram_orgz_info* cur_sram_orgz_info,
                                        int mux_size, int cur_num_sram,
                                        int num_mux_reserved_conf_bits,
-                                       int num_mux_conf_bits); 
+                                       int num_mux_conf_bits,
+                                       boolean is_explicit_mapping); 
 
 void dump_verilog_grid_common_port(FILE* fp, t_spice_model* cur_verilog_model,
                                    char* general_port_prefix, int lsb, int msb,

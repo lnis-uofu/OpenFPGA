@@ -2549,7 +2549,8 @@ void dump_verilog_cmos_mux_config_bus_ports(FILE* fp, t_spice_model* mux_spice_m
                                             t_sram_orgz_info* cur_sram_orgz_info,
                                             int mux_size, int cur_num_sram,
                                             int num_mux_reserved_conf_bits,
-                                            int num_mux_conf_bits) { 
+                                            int num_mux_conf_bits,
+                                            boolean is_explicit_mapping) { 
   /* Check the file handler*/ 
   if (NULL == fp) {
     vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid file handler.\n", 
@@ -2569,30 +2570,58 @@ void dump_verilog_cmos_mux_config_bus_ports(FILE* fp, t_spice_model* mux_spice_m
     /* FOR Scan-chain, we need regular output of a scan-chain FF
      * We do not need a prefix implying MUX name, size and index 
      */
+    if (TRUE == is_explicit_mapping) {
+      fprintf(fp, ".sram(");
+    }
     dump_verilog_mux_sram_one_outport(fp, cur_sram_orgz_info, 
                                       mux_spice_model, mux_size,
-                                      cur_num_sram, cur_num_sram + num_mux_conf_bits - 1,
+                                      cur_num_sram, 
+                                      cur_num_sram + num_mux_conf_bits - 1,
                                       0, VERILOG_PORT_CONKT);
+    if (TRUE == is_explicit_mapping) {
+      fprintf(fp, ")");
+    }
     fprintf(fp, ",\n");
+    if (TRUE == is_explicit_mapping) {
+      fprintf(fp, ".sram_inv(");
+    }
     dump_verilog_mux_sram_one_outport(fp, cur_sram_orgz_info, 
                                       mux_spice_model, mux_size,
-                                      cur_num_sram, cur_num_sram + num_mux_conf_bits - 1,
+                                      cur_num_sram, 
+                                      cur_num_sram + num_mux_conf_bits - 1,
                                       1, VERILOG_PORT_CONKT);
+    if (TRUE == is_explicit_mapping) {
+      fprintf(fp, ")");
+    }
     break;
   case SPICE_SRAM_MEMORY_BANK:
     /* configuration wire bus */
     /* First bus is for sram_out in CMOS MUX 
      * We need a prefix implying MUX name, size and index 
      */
+    if (TRUE == is_explicit_mapping) {
+      fprintf(fp, ".sram(");
+    }
     dump_verilog_mux_sram_one_outport(fp, cur_sram_orgz_info, 
                                       mux_spice_model, mux_size,
-                                      cur_num_sram, cur_num_sram + num_mux_conf_bits - 1,
+                                      cur_num_sram, 
+                                      cur_num_sram + num_mux_conf_bits - 1,
                                       0, VERILOG_PORT_CONKT);
+    if (TRUE == is_explicit_mapping) {
+      fprintf(fp, ")");
+    }
     fprintf(fp, ",\n");
+    if (TRUE == is_explicit_mapping) {
+      fprintf(fp, ".sram_inv(");
+    }
     dump_verilog_mux_sram_one_outport(fp, cur_sram_orgz_info, 
                                       mux_spice_model, mux_size,
-                                      cur_num_sram, cur_num_sram + num_mux_conf_bits - 1,
+                                      cur_num_sram, 
+                                      cur_num_sram + num_mux_conf_bits - 1,
                                       1, VERILOG_PORT_CONKT);
+    if (TRUE == is_explicit_mapping) {
+      fprintf(fp, ")");
+    }
     break;
   default:
     vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid SRAM organization!\n", 
@@ -2608,7 +2637,8 @@ void dump_verilog_mux_config_bus_ports(FILE* fp, t_spice_model* mux_spice_model,
                                        t_sram_orgz_info* cur_sram_orgz_info,
                                        int mux_size, int cur_num_sram,
                                        int num_mux_reserved_conf_bits,
-                                       int num_mux_conf_bits) { 
+                                       int num_mux_conf_bits,
+                                       boolean is_explicit_mapping) { 
   /* Check the file handler*/ 
   if (NULL == fp) {
     vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid file handler.\n", 
@@ -2628,9 +2658,11 @@ void dump_verilog_mux_config_bus_ports(FILE* fp, t_spice_model* mux_spice_model,
   case SPICE_MODEL_DESIGN_CMOS:
     dump_verilog_cmos_mux_config_bus_ports(fp, mux_spice_model, cur_sram_orgz_info,
                                            mux_size, cur_num_sram,
-                                           num_mux_reserved_conf_bits, num_mux_conf_bits); 
+                                           num_mux_reserved_conf_bits,
+                                           num_mux_conf_bits, is_explicit_mapping); 
     break;
   case SPICE_MODEL_DESIGN_RRAM:
+    /*TODO: Do explicit mapping for the RRAM*/
     /* configuration wire bus */
     fprintf(fp, "%s_size%d_%d_configbus0, ",
             mux_spice_model->prefix, mux_size, mux_spice_model->cnt);

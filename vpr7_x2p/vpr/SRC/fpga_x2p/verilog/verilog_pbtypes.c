@@ -1037,7 +1037,8 @@ void dump_verilog_pb_graph_pin_interc(t_sram_orgz_info* cur_sram_orgz_info,
                                       char* parent_pin_prefix,
                                       enum e_spice_pin2pin_interc_type pin2pin_interc_type,
                                       t_pb_graph_pin* des_pb_graph_pin,
-                                      t_mode* cur_mode) {
+                                      t_mode* cur_mode,
+                                      boolean is_explicit_mapping) {
   int iedge, ipin;
   int fan_in = 0;
   t_interconnect* cur_interc = NULL; 
@@ -1261,7 +1262,8 @@ void dump_verilog_pb_graph_pin_interc(t_sram_orgz_info* cur_sram_orgz_info,
 
     /* Different design technology requires different configuration bus! */
     dump_verilog_mux_config_bus_ports(fp, cur_interc->spice_model, cur_sram_orgz_info,
-                                      fan_in, cur_num_sram, num_mux_reserved_conf_bits, num_mux_conf_bits);
+                                      fan_in, cur_num_sram, num_mux_reserved_conf_bits, num_mux_conf_bits,
+                                      is_explicit_mapping);
   
     fprintf(fp, ");\n");
 
@@ -1318,7 +1320,8 @@ void dump_verilog_pb_graph_port_interc(t_sram_orgz_info* cur_sram_orgz_info,
                                        char* formatted_pin_prefix,
                                        t_pb_graph_node* cur_pb_graph_node,
                                        enum e_spice_pb_port_type pb_port_type,
-                                       t_mode* cur_mode) {
+                                       t_mode* cur_mode,
+                                       boolean is_explicit_mapping) {
   int iport, ipin;
 
   /* Check the file handler*/ 
@@ -1339,7 +1342,7 @@ void dump_verilog_pb_graph_port_interc(t_sram_orgz_info* cur_sram_orgz_info,
                                          formatted_pin_prefix, /* parent_pin_prefix */
                                          INPUT2INPUT_INTERC,
                                          &(cur_pb_graph_node->input_pins[iport][ipin]),
-                                         cur_mode);
+                                         cur_mode, is_explicit_mapping);
       }
     }
     break;
@@ -1351,7 +1354,7 @@ void dump_verilog_pb_graph_port_interc(t_sram_orgz_info* cur_sram_orgz_info,
                                          formatted_pin_prefix, /* parent_pin_prefix */
                                          OUTPUT2OUTPUT_INTERC,
                                          &(cur_pb_graph_node->output_pins[iport][ipin]),
-                                         cur_mode);
+                                         cur_mode, is_explicit_mapping);
       }
     }
     break;
@@ -1363,7 +1366,7 @@ void dump_verilog_pb_graph_port_interc(t_sram_orgz_info* cur_sram_orgz_info,
                                          formatted_pin_prefix, /* parent_pin_prefix */
                                          INPUT2INPUT_INTERC,
                                          &(cur_pb_graph_node->clock_pins[iport][ipin]),
-                                         cur_mode);
+                                         cur_mode, is_explicit_mapping);
       }
     }
     break;
@@ -1382,7 +1385,8 @@ void dump_verilog_pb_graph_interc(t_sram_orgz_info* cur_sram_orgz_info,
                                   FILE* fp, 
                                   char* pin_prefix,
                                   t_pb_graph_node* cur_pb_graph_node,
-                                  int select_mode_index) {
+                                  int select_mode_index,
+                                  boolean is_explicit_mapping) {
   int ipb, jpb;
   t_mode* cur_mode = NULL;
   t_pb_type* cur_pb_type = cur_pb_graph_node->pb_type;
@@ -1416,7 +1420,7 @@ void dump_verilog_pb_graph_interc(t_sram_orgz_info* cur_sram_orgz_info,
   dump_verilog_pb_graph_port_interc(cur_sram_orgz_info, fp, formatted_pin_prefix,
                                     cur_pb_graph_node, 
                                     SPICE_PB_PORT_OUTPUT,
-                                    cur_mode);
+                                    cur_mode, is_explicit_mapping);
   
   /* We check input_pins of child_pb_graph_node and its the input_edges
    * Built the interconnections between inputs of cur_pb_graph_node and inputs of child_pb_graph_node
@@ -1432,12 +1436,12 @@ void dump_verilog_pb_graph_interc(t_sram_orgz_info* cur_sram_orgz_info,
       dump_verilog_pb_graph_port_interc(cur_sram_orgz_info, fp, formatted_pin_prefix,
                                          child_pb_graph_node, 
                                          SPICE_PB_PORT_INPUT,
-                                         cur_mode);
+                                         cur_mode, is_explicit_mapping);
       /* TODO: for clock pins, we should do the same work */
       dump_verilog_pb_graph_port_interc(cur_sram_orgz_info, fp, formatted_pin_prefix,
                                         child_pb_graph_node, 
                                         SPICE_PB_PORT_CLOCK,
-                                        cur_mode);
+                                        cur_mode, is_explicit_mapping);
  
     }
   }
@@ -1582,7 +1586,8 @@ void dump_verilog_phy_pb_graph_node_rec(t_sram_orgz_info* cur_sram_orgz_info,
                                         FILE* fp,
                                         char* subckt_prefix,
                                         t_pb_graph_node* cur_pb_graph_node,
-                                        int pb_type_index) {
+                                        int pb_type_index,
+                                        boolean is_explicit_mapping) {
   int mode_index, ipb, jpb, child_mode_index;
   t_pb_type* cur_pb_type = NULL;
   char* subckt_name = NULL;
@@ -1645,8 +1650,10 @@ void dump_verilog_phy_pb_graph_node_rec(t_sram_orgz_info* cur_sram_orgz_info,
         /* Recursive*/
         /* Refer to pack/output_clustering.c [LINE 392] */
         /* Find the child pb that is mapped, and the mapping info is not stored in the physical mode ! */
-        dump_verilog_phy_pb_graph_node_rec(cur_sram_orgz_info, fp, pass_on_prefix, 
-                                           &(cur_pb_graph_node->child_pb_graph_nodes[mode_index][ipb][jpb]), jpb);
+        dump_verilog_phy_pb_graph_node_rec(
+               cur_sram_orgz_info, fp, pass_on_prefix, 
+               &(cur_pb_graph_node->child_pb_graph_nodes[mode_index][ipb][jpb]),
+               jpb, is_explicit_mapping);
         /* Free */
         my_free(pass_on_prefix);
         /* Make the current module has been dumped */
@@ -1872,7 +1879,9 @@ void dump_verilog_phy_pb_graph_node_rec(t_sram_orgz_info* cur_sram_orgz_info,
     }
   }
   /* Print interconnections, set is_idle as TRUE*/
-  dump_verilog_pb_graph_interc(cur_sram_orgz_info, fp, subckt_name, cur_pb_graph_node, mode_index);
+  dump_verilog_pb_graph_interc(cur_sram_orgz_info, fp, subckt_name, 
+                               cur_pb_graph_node, mode_index,
+                               is_explicit_mapping);
   /* Check each pins of pb_graph_node */ 
   /* Check and update stamped_sram_cnt */
   /* Now we only dump one Verilog for each pb_type, and instance them when num_pb > 1
@@ -1951,7 +1960,8 @@ void dump_verilog_physical_block(t_sram_orgz_info* cur_sram_orgz_info,
                                  int x,
                                  int y,
                                  int z,
-                                 t_type_ptr type_descriptor) {
+                                 t_type_ptr type_descriptor,
+                                 boolean is_explicit_mapping) {
   t_pb_graph_node* top_pb_graph_node = NULL;
   t_block* mapped_block = NULL;
   t_pb* top_pb = NULL;
@@ -1978,7 +1988,8 @@ void dump_verilog_physical_block(t_sram_orgz_info* cur_sram_orgz_info,
   }
 
   /* Recursively find all idle mode and print netlist*/
-  dump_verilog_phy_pb_graph_node_rec(cur_sram_orgz_info, fp, subckt_name, top_pb_graph_node, z);
+  dump_verilog_phy_pb_graph_node_rec(cur_sram_orgz_info, fp, subckt_name,
+                                     top_pb_graph_node, z, is_explicit_mapping);
 
   return;
 }
@@ -2464,7 +2475,8 @@ void dump_verilog_io_grid_block_subckt_pins(FILE* fp,
 void dump_verilog_physical_grid_blocks(t_sram_orgz_info* cur_sram_orgz_info,
                                        char* subckt_dir,
                                        int ix, int iy,
-                                       t_arch* arch) {
+                                       t_arch* arch,
+                                       boolean is_explicit_mapping) {
   int subckt_name_str_len = 0;
   char* subckt_name = NULL;
   int iz;
@@ -2517,7 +2529,8 @@ void dump_verilog_physical_grid_blocks(t_sram_orgz_info* cur_sram_orgz_info,
     /* Comments: Grid [x][y]*/
     fprintf(fp, "//----- Grid[%d][%d] type_descriptor: %s[%d] -----\n", ix, iy, grid[ix][iy].type->name, iz);
     /* Print a NULL logic block...*/
-    dump_verilog_physical_block(cur_sram_orgz_info, fp, subckt_name, ix, iy, iz, grid[ix][iy].type);
+    dump_verilog_physical_block(cur_sram_orgz_info, fp, subckt_name, ix, iy, iz,
+                                grid[ix][iy].type, is_explicit_mapping);
     fprintf(fp, "//----- END -----\n\n");
   } 
 
@@ -2687,7 +2700,8 @@ void dump_verilog_physical_grid_blocks(t_sram_orgz_info* cur_sram_orgz_info,
  */
 void dump_verilog_logic_blocks(t_sram_orgz_info* cur_sram_orgz_info,
                                char* subckt_dir,
-                               t_arch* arch) {
+                               t_arch* arch,
+                               boolean is_explicit_mapping) {
   int ix, iy; 
   
   /* Check the grid*/
@@ -2709,7 +2723,8 @@ void dump_verilog_logic_blocks(t_sram_orgz_info* cur_sram_orgz_info,
       assert(IO_TYPE != grid[ix][iy].type);
       /* Ensure a valid usage */
       assert((0 == grid[ix][iy].usage)||(0 < grid[ix][iy].usage));
-      dump_verilog_physical_grid_blocks(cur_sram_orgz_info, subckt_dir, ix, iy, arch); 
+      dump_verilog_physical_grid_blocks(cur_sram_orgz_info, subckt_dir, ix, iy,
+                                        arch, is_explicit_mapping); 
     }
   }
 
@@ -2720,7 +2735,8 @@ void dump_verilog_logic_blocks(t_sram_orgz_info* cur_sram_orgz_info,
   for (ix = 1; ix < (nx + 1); ix++) {
     /* Ensure this is a io */
     assert(IO_TYPE == grid[ix][iy].type);
-    dump_verilog_physical_grid_blocks(cur_sram_orgz_info, subckt_dir, ix, iy, arch); 
+    dump_verilog_physical_grid_blocks(cur_sram_orgz_info, subckt_dir, ix, iy,
+                                      arch, is_explicit_mapping); 
   }
 
   /* Right side : x = nx + 1, y = 1 .. ny*/
@@ -2728,7 +2744,8 @@ void dump_verilog_logic_blocks(t_sram_orgz_info* cur_sram_orgz_info,
   for (iy = 1; iy < (ny + 1); iy++) {
     /* Ensure this is a io */
     assert(IO_TYPE == grid[ix][iy].type);
-    dump_verilog_physical_grid_blocks(cur_sram_orgz_info, subckt_dir, ix, iy, arch); 
+    dump_verilog_physical_grid_blocks(cur_sram_orgz_info, subckt_dir, ix, iy,
+                                      arch, is_explicit_mapping); 
   }
 
   /* Bottom  side : x = 1 .. nx + 1, y = 0 */
@@ -2736,14 +2753,16 @@ void dump_verilog_logic_blocks(t_sram_orgz_info* cur_sram_orgz_info,
   for (ix = 1; ix < (nx + 1); ix++) {
     /* Ensure this is a io */
     assert(IO_TYPE == grid[ix][iy].type);
-    dump_verilog_physical_grid_blocks(cur_sram_orgz_info, subckt_dir, ix, iy, arch); 
+    dump_verilog_physical_grid_blocks(cur_sram_orgz_info, subckt_dir, ix, iy,
+                                      arch, is_explicit_mapping); 
   }
   /* Left side: x = 0, y = 1 .. ny*/
   ix = 0;
   for (iy = 1; iy < (ny + 1); iy++) {
     /* Ensure this is a io */
     assert(IO_TYPE == grid[ix][iy].type);
-    dump_verilog_physical_grid_blocks(cur_sram_orgz_info, subckt_dir, ix, iy, arch); 
+    dump_verilog_physical_grid_blocks(cur_sram_orgz_info, subckt_dir, ix, iy,
+                                      arch, is_explicit_mapping); 
   }
 
   /* Output a header file for all the logic blocks */

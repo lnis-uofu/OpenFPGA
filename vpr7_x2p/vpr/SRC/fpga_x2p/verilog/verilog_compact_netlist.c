@@ -281,7 +281,8 @@ void dump_compact_verilog_one_physical_block(t_sram_orgz_info* cur_sram_orgz_inf
                                              char* verilog_dir_path,
                                              char* subckt_dir_path,
                                              t_type_ptr phy_block_type,
-                                             int border_side) {
+                                             int border_side,
+                                             boolean is_explicit_mapping) {
   int iz;
   int temp_reserved_conf_bits_msb;
   int temp_iopad_lsb, temp_iopad_msb;
@@ -343,7 +344,8 @@ void dump_compact_verilog_one_physical_block(t_sram_orgz_info* cur_sram_orgz_inf
     fprintf(fp, "//----- Submodule of type_descriptor: %s -----\n", phy_block_type->name);
     /* Print a NULL logic block...*/
     dump_verilog_phy_pb_graph_node_rec(cur_sram_orgz_info, fp, subckt_name_prefix, 
-                                       phy_block_type->pb_graph_head, iz);
+                                       phy_block_type->pb_graph_head, iz,
+                                       is_explicit_mapping);
     fprintf(fp, "//----- END -----\n\n");
     /* Switch Flag on dumping verilog module */
     verilog_module_dumped = TRUE;
@@ -512,7 +514,8 @@ void dump_compact_verilog_one_physical_block(t_sram_orgz_info* cur_sram_orgz_inf
 void dump_compact_verilog_logic_blocks(t_sram_orgz_info* cur_sram_orgz_info,
                                        char* verilog_dir,
                                        char* subckt_dir,
-                                       t_arch* arch) {
+                                       t_arch* arch,
+                                       boolean is_explicit_mapping) {
   int itype, iside, num_sides;
   int* stamped_spice_model_cnt = NULL;
   t_sram_orgz_info* stamped_sram_orgz_info = NULL;
@@ -534,20 +537,23 @@ void dump_compact_verilog_logic_blocks(t_sram_orgz_info* cur_sram_orgz_info,
       for (iside = 0; iside < num_sides; iside++) {
         dump_compact_verilog_one_physical_block(cur_sram_orgz_info, 
                                                 verilog_dir, subckt_dir, 
-                                                &type_descriptors[itype], iside);
+                                                &type_descriptors[itype], iside,
+                                                is_explicit_mapping);
       } 
       continue;
     } else if (FILL_TYPE == &type_descriptors[itype]) {
     /* For CLB */
       dump_compact_verilog_one_physical_block(cur_sram_orgz_info,  
                                               verilog_dir, subckt_dir, 
-                                              &type_descriptors[itype], -1);
+                                              &type_descriptors[itype], -1,
+                                              is_explicit_mapping);
       continue;
     } else {
     /* For heterogenenous blocks */
       dump_compact_verilog_one_physical_block(cur_sram_orgz_info,  
                                               verilog_dir, subckt_dir, 
-                                              &type_descriptors[itype], -1);
+                                              &type_descriptors[itype], -1,
+                                              is_explicit_mapping);
 
     }
   }

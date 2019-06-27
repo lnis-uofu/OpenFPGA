@@ -694,7 +694,8 @@ void dump_verilog_switch_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
                                  t_rr_node* cur_rr_node,
                                  int mux_size,
                                  t_rr_node** drive_rr_nodes,
-                                 int switch_index) {
+                                 int switch_index,
+                                 boolean is_explicit_mapping) {
   int inode, side, index, input_cnt = 0;
   int grid_x, grid_y;
   t_spice_model* verilog_model = NULL;
@@ -837,7 +838,9 @@ void dump_verilog_switch_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
   
   /* Different design technology requires different configuration bus! */
   dump_verilog_mux_config_bus_ports(fp, verilog_model, cur_sram_orgz_info,
-                                    mux_size, cur_num_sram, num_mux_reserved_conf_bits, num_mux_conf_bits);
+                                    mux_size, cur_num_sram,
+                                    num_mux_reserved_conf_bits, num_mux_conf_bits,
+                                    is_explicit_mapping);
 
   fprintf(fp, ");\n");
 
@@ -1068,17 +1071,31 @@ void dump_verilog_unique_switch_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
     fprintf(fp, ",\n");
   }
 
+  if (TRUE == is_explicit_mapping) {
+    fprintf(fp, ".in(");
+    fprintf(fp, "%s_size%d_%d_inbus), ",
+            verilog_model->prefix, mux_size, verilog_model->cnt);
+  }  
+  else {
   fprintf(fp, "%s_size%d_%d_inbus, ",
           verilog_model->prefix, mux_size, verilog_model->cnt);
-
+  }
   /* Output port */
-  dump_verilog_unique_switch_box_chan_port(fp, rr_sb, chan_side, cur_rr_node, OUT_PORT);
+  if (TRUE == is_explicit_mapping) {
+    fprintf(fp, ".out(");
+    dump_verilog_unique_switch_box_chan_port(fp, rr_sb, chan_side, cur_rr_node, OUT_PORT);
+    fprintf(fp, ")");
+  }
+  else {
+    dump_verilog_unique_switch_box_chan_port(fp, rr_sb, chan_side, cur_rr_node, OUT_PORT);
+  }
   /* Add a comma because dump_verilog_switch_box_chan_port does not add so  */
   fprintf(fp, ", ");
   
   /* Different design technology requires different configuration bus! */
   dump_verilog_mux_config_bus_ports(fp, verilog_model, cur_sram_orgz_info,
-                                    mux_size, cur_num_sram, num_mux_reserved_conf_bits, num_mux_conf_bits);
+                                    mux_size, cur_num_sram, num_mux_reserved_conf_bits, 
+                                    num_mux_conf_bits, is_explicit_mapping);
 
   fprintf(fp, ");\n");
 
@@ -1327,7 +1344,8 @@ void dump_verilog_switch_box_interc(t_sram_orgz_info* cur_sram_orgz_info,
                                     FILE* fp, 
                                     t_sb* cur_sb_info,
                                     int chan_side,
-                                    t_rr_node* cur_rr_node) {
+                                    t_rr_node* cur_rr_node,
+                                    boolean is_explicit_mapping) {
   int sb_x, sb_y;
   int num_drive_rr_nodes = 0;  
   t_rr_node** drive_rr_nodes = NULL;
@@ -1370,7 +1388,8 @@ void dump_verilog_switch_box_interc(t_sram_orgz_info* cur_sram_orgz_info,
     /* Print the multiplexer, fan_in >= 2 */
     dump_verilog_switch_box_mux(cur_sram_orgz_info, fp, cur_sb_info, chan_side, cur_rr_node, 
                                 num_drive_rr_nodes, drive_rr_nodes, 
-                                cur_rr_node->drive_switches[DEFAULT_SWITCH_ID]);
+                                cur_rr_node->drive_switches[DEFAULT_SWITCH_ID],
+                                is_explicit_mapping);
   } /*Nothing should be done else*/ 
 
   /* Free */
@@ -2352,7 +2371,8 @@ static
 void dump_verilog_routing_switch_box_subckt(t_sram_orgz_info* cur_sram_orgz_info,
                                             char* verilog_dir, char* subckt_dir, 
                                             t_sb* cur_sb_info,
-                                            boolean compact_routing_hierarchy) {
+                                            boolean compact_routing_hierarchy,
+                                            boolean is_explicit_mapping) {
   int itrack, inode, side, ix, iy, x, y;
   int cur_num_sram, num_conf_bits, num_reserved_conf_bits, esti_sram_cnt;
   FILE* fp = NULL; 
@@ -2485,7 +2505,9 @@ void dump_verilog_routing_switch_box_subckt(t_sram_orgz_info* cur_sram_orgz_info
            ||(CHANY == cur_sb_info->chan_rr_node[side][itrack]->type));
       /* We care INC_DIRECTION tracks at this side*/
       if (OUT_PORT == cur_sb_info->chan_rr_node_direction[side][itrack]) {
-        dump_verilog_switch_box_interc(cur_sram_orgz_info, fp, cur_sb_info, side, cur_sb_info->chan_rr_node[side][itrack]);
+        dump_verilog_switch_box_interc(cur_sram_orgz_info, fp, cur_sb_info, side, 
+                                       cur_sb_info->chan_rr_node[side][itrack], 
+                                       is_explicit_mapping);
       } 
     }
   }
@@ -2768,7 +2790,8 @@ static
 void dump_verilog_connection_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
                                      FILE* fp,
                                      const RRGSB& rr_gsb, t_rr_type cb_type,
-                                     t_rr_node* src_rr_node) {
+                                     t_rr_node* src_rr_node,
+                                     boolean is_explicit_mapping) {
   int mux_size, cur_num_sram, input_cnt = 0;
   t_rr_node** drive_rr_nodes = NULL;
   int mux_level, path_id, switch_index;
@@ -2907,7 +2930,9 @@ void dump_verilog_connection_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
 
   /* Different design technology requires different configuration bus! */
   dump_verilog_mux_config_bus_ports(fp, verilog_model, cur_sram_orgz_info,
-                                    mux_size, cur_num_sram, num_mux_reserved_conf_bits, num_mux_conf_bits);
+                                    mux_size, cur_num_sram,
+                                    num_mux_reserved_conf_bits, 
+                                    num_mux_conf_bits, is_explicit_mapping);
 
 
   fprintf(fp, ");\n");
@@ -2995,7 +3020,8 @@ void dump_verilog_connection_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
 void dump_verilog_connection_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
                                      FILE* fp,
                                      t_cb* cur_cb_info,
-                                     t_rr_node* src_rr_node) {
+                                     t_rr_node* src_rr_node,
+                                     boolean is_explicit_mapping) {
   int mux_size, cur_num_sram, input_cnt = 0;
   t_rr_node** drive_rr_nodes = NULL;
   int inode, mux_level, path_id, switch_index;
@@ -3137,7 +3163,9 @@ void dump_verilog_connection_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
 
   /* Different design technology requires different configuration bus! */
   dump_verilog_mux_config_bus_ports(fp, verilog_model, cur_sram_orgz_info,
-                                    mux_size, cur_num_sram, num_mux_reserved_conf_bits, num_mux_conf_bits);
+                                    mux_size, cur_num_sram, 
+                                    num_mux_reserved_conf_bits, 
+                                    num_mux_conf_bits, is_explicit_mapping);
 
 
   fprintf(fp, ");\n");
@@ -3224,7 +3252,8 @@ static
 void dump_verilog_connection_box_interc(t_sram_orgz_info* cur_sram_orgz_info,
                                         FILE* fp,
                                         const RRGSB& rr_gsb, t_rr_type cb_type,
-                                        t_rr_node* src_rr_node) {
+                                        t_rr_node* src_rr_node,
+                                        boolean is_explicit_mapping) {
   /* Check the file handler*/ 
   if (NULL == fp) {
     vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid file handler.\n", 
@@ -3237,7 +3266,8 @@ void dump_verilog_connection_box_interc(t_sram_orgz_info* cur_sram_orgz_info,
     dump_verilog_connection_box_short_interc(fp, rr_gsb, cb_type, src_rr_node);
   } else if (1 < src_rr_node->fan_in) {
     /* Print the multiplexer, fan_in >= 2 */
-    dump_verilog_connection_box_mux(cur_sram_orgz_info, fp, rr_gsb, cb_type, src_rr_node);
+    dump_verilog_connection_box_mux(cur_sram_orgz_info, fp, rr_gsb, cb_type,
+                                    src_rr_node, is_explicit_mapping);
   } /*Nothing should be done else*/ 
    
   return;
@@ -3247,7 +3277,8 @@ void dump_verilog_connection_box_interc(t_sram_orgz_info* cur_sram_orgz_info,
 void dump_verilog_connection_box_interc(t_sram_orgz_info* cur_sram_orgz_info,
                                         FILE* fp,
                                         t_cb* cur_cb_info,
-                                        t_rr_node* src_rr_node) {
+                                        t_rr_node* src_rr_node,
+                                        boolean is_explicit_mapping) {
   /* Check the file handler*/ 
   if (NULL == fp) {
     vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid file handler.\n", 
@@ -3264,7 +3295,8 @@ void dump_verilog_connection_box_interc(t_sram_orgz_info* cur_sram_orgz_info,
     dump_verilog_connection_box_short_interc(fp, cur_cb_info, src_rr_node);
   } else if (1 < src_rr_node->fan_in) {
     /* Print the multiplexer, fan_in >= 2 */
-    dump_verilog_connection_box_mux(cur_sram_orgz_info, fp, cur_cb_info, src_rr_node);
+    dump_verilog_connection_box_mux(cur_sram_orgz_info, fp, cur_cb_info, 
+                                    src_rr_node, is_explicit_mapping);
   } /*Nothing should be done else*/ 
    
   return;
@@ -3389,7 +3421,8 @@ int count_verilog_connection_box_reserved_conf_bits(t_sram_orgz_info* cur_sram_o
 static 
 void dump_verilog_routing_connection_box_unique_module(t_sram_orgz_info* cur_sram_orgz_info,
                                                        char* verilog_dir, char* subckt_dir, 
-                                                       const RRGSB& rr_cb, t_rr_type cb_type) {
+                                                       const RRGSB& rr_cb, t_rr_type cb_type,
+                                                       boolean is_explicit_mapping) {
   FILE* fp = NULL;
   char* fname = NULL;
   int cur_num_sram, num_conf_bits, num_reserved_conf_bits, esti_sram_cnt;
@@ -3499,7 +3532,8 @@ void dump_verilog_routing_connection_box_unique_module(t_sram_orgz_info* cur_sra
     enum e_side cb_ipin_side = cb_ipin_sides[iside];
     for (size_t inode = 0; inode < rr_gsb.get_num_ipin_nodes(cb_ipin_side); ++inode) {
       dump_verilog_connection_box_interc(cur_sram_orgz_info, fp, rr_gsb, cb_type, 
-                                         rr_gsb.get_ipin_node(cb_ipin_side, inode));
+                                         rr_gsb.get_ipin_node(cb_ipin_side, inode),
+                                         is_explicit_mapping);
     }
   }
 
@@ -3552,7 +3586,8 @@ void dump_verilog_routing_connection_box_unique_module(t_sram_orgz_info* cur_sra
 void dump_verilog_routing_connection_box_subckt(t_sram_orgz_info* cur_sram_orgz_info,
                                                 char* verilog_dir, char* subckt_dir, 
                                                 t_cb* cur_cb_info,
-                                                boolean compact_routing_hierarchy) {
+                                                boolean compact_routing_hierarchy,
+                                                boolean is_explicit_mapping) {
   int itrack, inode, side, x, y;
   int side_cnt = 0;
   FILE* fp = NULL;
@@ -3725,7 +3760,8 @@ void dump_verilog_routing_connection_box_subckt(t_sram_orgz_info* cur_sram_orgz_
     assert(NULL != cur_cb_info->ipin_rr_node[side]);
     for (inode = 0; inode < cur_cb_info->num_ipin_rr_nodes[side]; inode++) { 
       dump_verilog_connection_box_interc(cur_sram_orgz_info, fp, cur_cb_info, 
-                                         cur_cb_info->ipin_rr_node[side][inode]);
+                                         cur_cb_info->ipin_rr_node[side][inode],
+                                         is_explicit_mapping);
     }
   }
 
@@ -3867,8 +3903,10 @@ void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
       for (int iy = 0; iy < (ny + 1); iy++) {
         /* vpr_printf(TIO_MESSAGE_INFO, "Writing Switch Boxes[%d][%d]...\n", ix, iy); */
         update_spice_models_routing_index_low(ix, iy, SOURCE, arch.spice->num_spice_model, arch.spice->spice_models);
-        dump_verilog_routing_switch_box_subckt(cur_sram_orgz_info, verilog_dir, subckt_dir, &(sb_info[ix][iy]),
-                                               compact_routing_hierarchy);
+        dump_verilog_routing_switch_box_subckt(cur_sram_orgz_info, verilog_dir, 
+                                               subckt_dir, &(sb_info[ix][iy]),
+                                               compact_routing_hierarchy,
+                                               FPGA_SPICE_Opts.SynVerilogOpts.dump_explicit_verilog);
         update_spice_models_routing_index_high(ix, iy, SOURCE, arch.spice->num_spice_model, arch.spice->spice_models);
       }
     }
@@ -3886,7 +3924,9 @@ void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
     /* X - channels [1...nx][0..ny]*/
     for (size_t icb = 0; icb < device_rr_gsb.get_num_cb_unique_module(CHANX); ++icb) {
       const RRGSB& unique_mirror = device_rr_gsb.get_cb_unique_module(CHANX, icb);
-      dump_verilog_routing_connection_box_unique_module(cur_sram_orgz_info, verilog_dir, subckt_dir, unique_mirror, CHANX); 
+      dump_verilog_routing_connection_box_unique_module(cur_sram_orgz_info, 
+                             verilog_dir, subckt_dir, unique_mirror, CHANX,
+                             FPGA_SPICE_Opts.SynVerilogOpts.dump_explicit_verilog);
     }
     /* TODO: when we follow a tile organization, 
      * updating the conf bits should follow a tile organization: CLB, SB and CBX, CBY */
@@ -3900,7 +3940,9 @@ void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
     /* Y - channels [1...ny][0..nx]*/
     for (size_t icb = 0; icb < device_rr_gsb.get_num_cb_unique_module(CHANY); ++icb) {
       const RRGSB& unique_mirror = device_rr_gsb.get_cb_unique_module(CHANY, icb);
-      dump_verilog_routing_connection_box_unique_module(cur_sram_orgz_info, verilog_dir, subckt_dir, unique_mirror, CHANY); 
+      dump_verilog_routing_connection_box_unique_module(cur_sram_orgz_info, 
+                             verilog_dir, subckt_dir, unique_mirror, CHANY,
+                             FPGA_SPICE_Opts.SynVerilogOpts.dump_explicit_verilog);
     }
 
     for (size_t ix = 0; ix < cb_range.get_x(); ++ix) {
@@ -3919,8 +3961,11 @@ void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
         update_spice_models_routing_index_low(ix, iy, CHANX, arch.spice->num_spice_model, arch.spice->spice_models);
         if ((TRUE == is_cb_exist(CHANX, ix, iy))
            &&(0 < count_cb_info_num_ipin_rr_nodes(cbx_info[ix][iy]))) {
-          dump_verilog_routing_connection_box_subckt(cur_sram_orgz_info, verilog_dir, subckt_dir, &(cbx_info[ix][iy]),
-                                                     compact_routing_hierarchy); 
+          dump_verilog_routing_connection_box_subckt(cur_sram_orgz_info, 
+                                                     verilog_dir, subckt_dir, 
+                                                     &(cbx_info[ix][iy]),
+                                                     compact_routing_hierarchy,
+                                                     FPGA_SPICE_Opts.SynVerilogOpts.dump_explicit_verilog);
         }
         update_spice_models_routing_index_high(ix, iy, CHANX, arch.spice->num_spice_model, arch.spice->spice_models);
       }
@@ -3932,8 +3977,11 @@ void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
         update_spice_models_routing_index_low(ix, iy, CHANY, arch.spice->num_spice_model, arch.spice->spice_models);
         if ((TRUE == is_cb_exist(CHANY, ix, iy)) 
            &&(0 < count_cb_info_num_ipin_rr_nodes(cby_info[ix][iy]))) {
-          dump_verilog_routing_connection_box_subckt(cur_sram_orgz_info, verilog_dir, subckt_dir, &(cby_info[ix][iy]),
-                                                     compact_routing_hierarchy); 
+          dump_verilog_routing_connection_box_subckt(cur_sram_orgz_info, 
+                                                     verilog_dir, subckt_dir, 
+                                                     &(cby_info[ix][iy]),
+                                                     compact_routing_hierarchy,
+                                                     FPGA_SPICE_Opts.SynVerilogOpts.dump_explicit_verilog);
         }
         update_spice_models_routing_index_high(ix, iy, CHANY, arch.spice->num_spice_model, arch.spice->spice_models);
       }
