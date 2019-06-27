@@ -150,7 +150,7 @@
   <!-- ODIN II specific config ends -->
  
   <!-- Physical descriptions begin -->
-  <layout auto="1.0" tileable_routing="off"/>
+  <layout auto="1.0" tileable_routing="on"/>
   <spice_settings>
     <parameters>
       <options sim_temp="25" post="off" captab="off" fast="on"/>

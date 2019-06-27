@@ -1087,15 +1087,17 @@ void build_gsb_one_ipin_track2pin_map(const t_rr_graph* rr_graph,
       (*track2ipin_map)[chan_side_index][track_index].push_back(ipin_index);
 
       track_cnt += 2;
-      /* Stop when we have enough Fc */
+      /* Stop when we have enough Fc: this may lead to some tracks have zero drivers. 
+       * So I comment it. And we just make sure its track_cnt >= actual_Fc
       if (actual_Fc == track_cnt) {
         break;
       }
+       */
     }
 
     /* Ensure the number of tracks is similar to Fc */
     //printf("Fc_in=%d, track_cnt=%d\n", actual_Fc, track_cnt);
-    assert (actual_Fc == track_cnt);
+    assert (actual_Fc <= track_cnt);
   }
   
   return;
@@ -1180,15 +1182,17 @@ void build_gsb_one_opin_pin2track_map(const t_rr_graph* rr_graph,
       (*opin2track_map)[opin_side_index][opin_node_id].push_back(track_rr_node_index);
       /* update track counter */
       track_cnt++;
-      /* Stop when we have enough Fc */
+      /* Stop when we have enough Fc: this may lead to some tracks have zero drivers. 
+       * So I comment it. And we just make sure its track_cnt >= actual_Fc
       if (actual_Fc == track_cnt) {
         break;
       }
+      */
     }
 
     /* Ensure the number of tracks is similar to Fc */
     //printf("Fc_out=%lu, scaled_Fc_out=%d, track_cnt=%d, actual_track_cnt=%lu/%lu\n", Fc, actual_Fc, track_cnt, actual_track_list.size(), chan_width);
-    assert (actual_Fc == track_cnt);
+    assert (actual_Fc <= track_cnt);
   }
   
   return;
@@ -1330,6 +1334,10 @@ t_pin2track_map build_gsb_opin_to_track_map(t_rr_graph* rr_graph,
       /* update offset: aim to rotate starting tracks by 1*/
       offset[side_manager.to_size_t()] += 1;
     }
+
+    /* Check:
+     * 1. We want to ensure that each OPIN will drive at least one track
+     * 2. We want to ensure that each track will be driven by at least 1 OPIN */
   }
 
   return opin2track_map;
