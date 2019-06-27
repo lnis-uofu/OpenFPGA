@@ -38,6 +38,7 @@
 
 #include <cstdlib>
 #include <cassert>
+#include <cstring>
 
 #include <vector>
 #include <algorithm>
@@ -407,3 +408,101 @@ short get_track_rr_node_end_track_id(const t_rr_node* track_rr_node) {
   return track_rr_node->track_ids.front(); 
 }
 
+/************************************************************************
+ * Print statistics of a rr_graph  
+ * 1. We print number of nodes by types 
+ * 2. Print the number of edges 
+ ************************************************************************/
+void print_rr_graph_stats(const t_rr_graph& rr_graph) {
+
+  /* Print number of nodes */
+  vpr_printf(TIO_MESSAGE_INFO, "Statistics on number of RR nodes (by node type): \n");
+   
+  /* Count the number of nodes */
+  std::vector<size_t> num_nodes_per_type;
+  num_nodes_per_type.resize(NUM_RR_TYPES);
+  num_nodes_per_type.assign(NUM_RR_TYPES, 0);
+   
+  for (int inode = 0; inode < rr_graph.num_rr_nodes; ++inode) {
+    num_nodes_per_type[rr_graph.rr_node[inode].type]++;
+  }
+  
+  /* Get the largest string size of rr_node_typename */ 
+  size_t max_str_typename = 0;
+  for (int type = 0; type < NUM_RR_TYPES; ++type) {
+    max_str_typename = std::max(max_str_typename, strlen(rr_node_typename[type]));
+  }
+
+  /* Constant strings */
+  char* type_str  = "     Type      "; 
+  char* total_str = "     Total     "; 
+  char* node_str  = " No. of nodes  "; 
+  char* edge_str  = " No. of edges  "; 
+ 
+  /* Count the number of characters per line: 
+   * we check the string length of each node type 
+   * Then we plus two reserved strings "type" and "total"
+   */
+  size_t num_char_per_line = 0; 
+  for (int type = 0; type < NUM_RR_TYPES; ++type) {
+    num_char_per_line += 6 + max_str_typename;
+  }
+  num_char_per_line += strlen(type_str);
+  num_char_per_line += strlen(total_str); 
+
+  /* Print splitter */ 
+  for (size_t ichar = 0; ichar  < num_char_per_line; ++ichar) {
+    vpr_printf(TIO_MESSAGE_INFO, "-");
+  }
+  vpr_printf(TIO_MESSAGE_INFO, "\n");
+
+  /* Print node type */
+  vpr_printf(TIO_MESSAGE_INFO, "%s", type_str);
+  for (int type = 0; type < NUM_RR_TYPES; ++type) {
+    vpr_printf(TIO_MESSAGE_INFO, "   %s  ", rr_node_typename[type]);
+  }
+  vpr_printf(TIO_MESSAGE_INFO, "%s", total_str);
+  vpr_printf(TIO_MESSAGE_INFO, "\n");
+
+  /* Print node numbers */
+  int total_num_nodes = 0;
+  vpr_printf(TIO_MESSAGE_INFO, "%s", node_str);
+  for (int type = 0; type < NUM_RR_TYPES; ++type) {
+    vpr_printf(TIO_MESSAGE_INFO, " %10lu ", num_nodes_per_type[type]);
+    total_num_nodes += num_nodes_per_type[type];
+  }
+  vpr_printf(TIO_MESSAGE_INFO, " %10lu ", rr_graph.num_rr_nodes);
+  vpr_printf(TIO_MESSAGE_INFO, "\n");
+
+  /* Check we have the same number as stated in rr_graph */
+  assert (total_num_nodes == rr_graph.num_rr_nodes);
+
+  /* Count the number of edges */
+  size_t num_edges = 0;
+  std::vector<size_t> num_edges_per_type;
+  num_edges_per_type.resize(NUM_RR_TYPES);
+  num_edges_per_type.assign(NUM_RR_TYPES, 0);
+   
+  for (int inode = 0; inode < rr_graph.num_rr_nodes; ++inode) {
+    num_edges_per_type[rr_graph.rr_node[inode].type] += rr_graph.rr_node[inode].num_edges;
+  }
+  for (int inode = 0; inode < rr_graph.num_rr_nodes; ++inode) {
+    num_edges += rr_graph.rr_node[inode].num_edges;
+  }
+
+  /* Print number of edges */
+  vpr_printf(TIO_MESSAGE_INFO, "%s", edge_str);
+  for (int type = 0; type < NUM_RR_TYPES; ++type) {
+    vpr_printf(TIO_MESSAGE_INFO, " %10lu ", num_edges_per_type[type]);
+  }
+  vpr_printf(TIO_MESSAGE_INFO, " %10lu ", num_edges);
+  vpr_printf(TIO_MESSAGE_INFO, "\n");
+
+  /* Print splitter */ 
+  for (size_t ichar = 0; ichar  < num_char_per_line; ++ichar) {
+    vpr_printf(TIO_MESSAGE_INFO, "-");
+  }
+  vpr_printf(TIO_MESSAGE_INFO, "\n");
+
+  return;
+}

@@ -41,5 +41,7 @@ DeviceCoordinator get_track_rr_node_end_coordinator(const t_rr_node* track_rr_no
 
 short get_track_rr_node_end_track_id(const t_rr_node* track_rr_node);
 
+void print_rr_graph_stats(const t_rr_graph& rr_graph);
+
 #endif
 
