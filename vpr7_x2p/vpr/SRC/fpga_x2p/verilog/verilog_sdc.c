@@ -678,8 +678,19 @@ void verilog_generate_sdc_constrain_one_cb_path(FILE* fp,
   fprintf(fp, " -from ");
   fprintf(fp, "%s/", 
           rr_gsb.gen_cb_verilog_instance_name(cb_type)); 
+
+  /* FIXME: we should avoid using global variables !!!! */
+  /* If we have an mirror SB, we should the module name of the mirror !!! */
+  DeviceCoordinator coordinator = rr_gsb.get_cb_coordinator(cb_type);
+  const RRGSB& unique_mirror = device_rr_gsb.get_cb_unique_module(cb_type, coordinator);
+  enum e_side pin_gsb_side = rr_gsb.get_cb_chan_side(cb_type);
+  /* We get the index and side for the cur_rr_node in the mother rr_sb context */
+  int pin_node_id = rr_gsb.get_chan_node_index(pin_gsb_side, src_rr_node);
+  /* Make sure we have valid numbers */
+  assert ( -1 != pin_node_id );
+
   fprintf(fp, "%s",
-          rr_gsb.gen_cb_verilog_routing_track_name(cb_type, src_rr_node->ptc_num));
+          unique_mirror.gen_cb_verilog_routing_track_name(cb_type, pin_node_id));
 
   fprintf(fp, " -to ");
  
