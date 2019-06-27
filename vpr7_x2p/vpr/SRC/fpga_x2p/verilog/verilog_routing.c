@@ -492,7 +492,7 @@ void dump_verilog_unique_switch_box_chan_port(FILE* fp,
           convert_chan_type_to_string(chan_rr_node_type),
           chan_rr_node_coordinator.get_x(), chan_rr_node_coordinator.get_y(), 
           convert_chan_rr_node_direction_to_string(cur_rr_node_direction),
-          cur_rr_node->ptc_num);
+          index); /* use node index since ptc_num is no longer unique */
 
   return;
 }
@@ -529,7 +529,7 @@ void dump_verilog_unique_switch_box_short_interc(FILE* fp,
   char* des_chan_port_name = "out"; 
   
   fprintf(fp, "//----- Short connection %s[%lu][%lu]_%s[%d] -----\n", 
-          chan_name, rr_sb.get_sb_coordinator().get_x(), rr_sb.get_sb_coordinator().get_y(), des_chan_port_name, cur_rr_node->ptc_num);
+          chan_name, rr_sb.get_sb_coordinator().get_x(), rr_sb.get_sb_coordinator().get_y(), des_chan_port_name, index);
   fprintf(fp, "assign "); 
 
   /* Output port */
@@ -3916,8 +3916,6 @@ void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
   if (TRUE == compact_routing_hierarchy) { 
     /* Create a snapshot on sram_orgz_info */
     t_sram_orgz_info* stamped_sram_orgz_info = snapshot_sram_orgz_info(cur_sram_orgz_info);
-    /* Restore sram_orgz_info to the base */ 
-    copy_sram_orgz_info (cur_sram_orgz_info, stamped_sram_orgz_info);
 
     DeviceCoordinator cb_range = device_rr_gsb.get_gsb_range();
 
@@ -3928,14 +3926,6 @@ void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
                              verilog_dir, subckt_dir, unique_mirror, CHANX,
                              FPGA_SPICE_Opts.SynVerilogOpts.dump_explicit_verilog);
     }
-    /* TODO: when we follow a tile organization, 
-     * updating the conf bits should follow a tile organization: CLB, SB and CBX, CBY */
-    for (size_t ix = 0; ix < cb_range.get_x(); ++ix) {
-      for (size_t iy = 0; iy < cb_range.get_y(); ++iy) {
-        const RRGSB& rr_gsb = device_rr_gsb.get_gsb(ix, iy);
-        update_routing_connection_box_conf_bits(cur_sram_orgz_info, rr_gsb, CHANX);
-      }
-    }
 
     /* Y - channels [1...ny][0..nx]*/
     for (size_t icb = 0; icb < device_rr_gsb.get_num_cb_unique_module(CHANY); ++icb) {
@@ -3945,12 +3935,19 @@ void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
                              FPGA_SPICE_Opts.SynVerilogOpts.dump_explicit_verilog);
     }
 
+    /* Restore sram_orgz_info to the base */ 
+    copy_sram_orgz_info (cur_sram_orgz_info, stamped_sram_orgz_info);
+
+    /* TODO: when we follow a tile organization, 
+     * updating the conf bits should follow a tile organization: CLB, SB and CBX, CBY */
     for (size_t ix = 0; ix < cb_range.get_x(); ++ix) {
       for (size_t iy = 0; iy < cb_range.get_y(); ++iy) {
         const RRGSB& rr_gsb = device_rr_gsb.get_gsb(ix, iy);
+        update_routing_connection_box_conf_bits(cur_sram_orgz_info, rr_gsb, CHANX);
         update_routing_connection_box_conf_bits(cur_sram_orgz_info, rr_gsb, CHANY);
       }
     }
+
     /* Free */
     free_sram_orgz_info(stamped_sram_orgz_info, stamped_sram_orgz_info->type);
   } else {

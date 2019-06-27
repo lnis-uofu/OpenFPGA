@@ -22,6 +22,8 @@
 #include "route_common.h"
 #include "vpr_utils.h"
 
+#include "rr_graph_builder_utils.h"
+
 /* Include SPICE support headers*/
 #include "linkedlist.h"
 #include "fpga_x2p_types.h"
@@ -82,7 +84,13 @@ void dump_verilog_one_sb_chan_pin(FILE* fp,
   /* Get the coordinate of chanx or chany*/
   /* Find the coordinate of the cur_rr_node */  
   rr_sb.get_node_side_and_index(cur_rr_node, port_type, &side, &track_idx);
-  DeviceCoordinator chan_coordinator = rr_sb.get_side_block_coordinator(side);
+
+  /* FIXME: we should avoid using global variables !!!! */
+  /* If we have an mirror SB, we should the module name of the mirror !!! */
+  DeviceCoordinator coordinator = rr_sb.get_sb_coordinator();
+  const RRGSB& unique_mirror = device_rr_gsb.get_sb_unique_module(coordinator);
+  DeviceCoordinator chan_coordinator = unique_mirror.get_side_block_coordinator(side);
+
   /* Print the pin of the cur_rr_node */ 
   pin_name = gen_verilog_routing_channel_one_pin_name(cur_rr_node,
                                                       chan_coordinator.get_x(), 
@@ -151,17 +159,36 @@ void dump_verilog_one_sb_routing_pin(FILE* fp,
   /* Get the top-level pin name and print it out */
   /* Depends on the type of node */
   switch (cur_rr_node->type) {
-  case OPIN:
+  case OPIN: { 
     /* Identify the side of OPIN on a grid */
     side = get_grid_pin_side(cur_rr_node->xlow, cur_rr_node->ylow, cur_rr_node->ptc_num);
     assert (OPEN != side);
+
+    /* FIXME: we should avoid using global variables !!!! */
+    /* If we have an mirror SB, we should the module name of the mirror !!! */
+    DeviceCoordinator coordinator = rr_sb.get_sb_coordinator();
+    const RRGSB& unique_mirror = device_rr_gsb.get_sb_unique_module(coordinator);
+    enum e_side pin_gsb_side = NUM_SIDES;
+    int pin_node_id = -1;
+    /* We get the index and side for the cur_rr_node in the mother rr_sb context */
+    rr_sb.get_node_side_and_index(cur_rr_node, IN_PORT, &pin_gsb_side, &pin_node_id);
+    /* Make sure we have valid numbers */
+    assert ( (NUM_SIDES != pin_gsb_side) && (-1 != pin_node_id) );
+    /* We get rr_node with the same index and side in the unique mirror context */
+    t_rr_node* mirror_node = unique_mirror.get_opin_node(pin_gsb_side, pin_node_id);
+
+    /* Identify the side of OPIN on a grid */
+    side = get_grid_pin_side(mirror_node->xlow, mirror_node->ylow, mirror_node->ptc_num);
+    assert (OPEN != side);
+
     dump_verilog_grid_side_pin_with_given_index(fp, OPIN,
-                                                cur_rr_node->ptc_num,
+                                                mirror_node->ptc_num,
                                                 side,
-                                                cur_rr_node->xlow,
-                                                cur_rr_node->ylow, 
+                                                mirror_node->xlow,
+                                                mirror_node->ylow, 
                                                 FALSE); /* Do not specify direction of port */
     break; 
+  }
   case CHANX:
   case CHANY:
     dump_verilog_one_sb_chan_pin(fp, rr_sb, cur_rr_node, IN_PORT); 
@@ -361,6 +388,100 @@ t_cb* get_chan_rr_node_ending_cb(t_rr_node* src_rr_node,
   assert (0 < node_exist);
 
   return next_cb;
+}
+
+/** Given a starting rr_node (CHANX or CHANY) 
+ *  return the sb contains both (the ending CB of the routing wire)
+ */
+DeviceCoordinator get_chan_node_ending_sb_coordinator(t_rr_node* src_rr_node) {
+  /* Get the coordinator where the node ends */
+  DeviceCoordinator end_coordinator = get_track_rr_node_end_coordinator(src_rr_node); 
+  /* Initilizae the SB coordinator where the node ends */
+  DeviceCoordinator sb_coordinator; 
+
+  /* Case 1:                       
+   *                     end_rr_node(chany[x][y+1]) 
+   *                        /|\ 
+   *                         |  
+   *                     ---------
+   *                    |         | 
+   * src_rr_node ------>| next_sb |-------> end_rr_node
+   * (chanx[x][y])      |  [x][y] |        (chanx[x+1][y]
+   *                     ---------
+   *                         |
+   *                        \|/
+   *                     end_rr_node(chany[x][y])
+   */
+  if (   (CHANX == src_rr_node->type)   
+      && (INC_DIRECTION == src_rr_node->direction) ) {
+    /* SB coordinator is the same as src rr_node */ 
+    sb_coordinator.set(end_coordinator.get_x(), end_coordinator.get_y());
+  }
+  /* Case 2                            
+   *                     end_rr_node(chany[x][y+1]) 
+   *                        /|\ 
+   *                         |  
+   *                     ---------
+   *                    |         | 
+   * end_rr_node <------| next_sb |<-------- src_rr_node
+   * (chanx[x][y])      |  [x][y] |        (chanx[x+1][y]
+   *                     ---------
+   *                         |
+   *                        \|/
+   *                     end_rr_node(chany[x][y])
+   */
+  if (   (CHANX == src_rr_node->type)   
+      && (DEC_DIRECTION == src_rr_node->direction) ) {
+    /* SB coordinator is the [x-1][y]  */ 
+    sb_coordinator.set(end_coordinator.get_x() - 1, end_coordinator.get_y());
+  }
+  /* Case 3                            
+   *                     end_rr_node(chany[x][y+1]) 
+   *                        /|\ 
+   *                         |  
+   *                     ---------
+   *                    |         | 
+   * end_rr_node <------| next_sb |-------> src_rr_node
+   * (chanx[x][y])      |  [x][y] |        (chanx[x+1][y]
+   *                     ---------
+   *                        /|\
+   *                         |
+   *                     src_rr_node(chany[x][y])
+   */
+  if (   (CHANY == src_rr_node->type)   
+      && (INC_DIRECTION == src_rr_node->direction) ) {
+    /* SB coordinator is the same  */ 
+    sb_coordinator.set(end_coordinator.get_x(), end_coordinator.get_y());
+  }
+  /* Case 4                            
+   *                     src_rr_node(chany[x][y+1]) 
+   *                         | 
+   *                        \|/  
+   *                     ---------
+   *                    |         | 
+   * end_rr_node <------| next_sb |--------> end_rr_node
+   * (chanx[x][y])      |  [x][y] |        (chanx[x+1][y]
+   *                     ---------
+   *                         |
+   *                        \|/
+   *                     end_rr_node(chany[x][y])
+   */
+  if (   (CHANY == src_rr_node->type)   
+      && (DEC_DIRECTION == src_rr_node->direction) ) {
+    /* SB coordinator is the [x][y-1]  */ 
+    sb_coordinator.set(end_coordinator.get_x(), end_coordinator.get_y() - 1);
+  }
+ 
+  const RRGSB& rr_sb = device_rr_gsb.get_gsb(sb_coordinator);
+  /* Double check if src_rr_node is in the list */
+  enum e_side side;
+  int index;
+  rr_sb.get_node_side_and_index(src_rr_node, IN_PORT, &side, &index);
+  assert ( (OPEN != index) && (side != NUM_SIDES) );
+
+  /* Passing the check, assign coordinator of next_sb  */
+
+  return sb_coordinator;
 }
 
 /** Given a starting rr_node (CHANX or CHANY) 
@@ -689,6 +810,7 @@ void set_disable_timing_one_sb_output(FILE* fp,
   /* output instance name */
   fprintf(fp, "%s/", 
           rr_sb.gen_sb_verilog_instance_name()); 
+
   dump_verilog_one_sb_chan_pin(fp, rr_sb, wire_rr_node, OUT_PORT); 
   fprintf(fp, "\n"); 
 

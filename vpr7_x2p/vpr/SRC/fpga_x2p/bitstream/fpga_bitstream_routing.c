@@ -859,24 +859,21 @@ void fpga_spice_generate_bitstream_routing_resources(char* routing_bitstream_log
 
   /* Connection Boxes */
   if (TRUE == compact_routing_hierarchy) {
-    vpr_printf(TIO_MESSAGE_INFO,"Generating bitstream for Connection blocks - X direction ...\n");
-    /* X - channels [1...nx][0..ny]*/
-    for (int iy = 0; iy < (ny + 1); ++iy) {
-      for (int  ix = 1; ix < (nx + 1); ++ix) {
+    DeviceCoordinator gsb_range = device_rr_gsb.get_gsb_range();
+
+    vpr_printf(TIO_MESSAGE_INFO,"Generating bitstream for Connection blocks ...\n");
+
+    for (size_t ix = 0; ix < gsb_range.get_x(); ++ix) {
+      for (size_t iy = 0; iy < gsb_range.get_y(); ++iy) {
         const RRGSB& rr_gsb = device_rr_gsb.get_gsb(ix, iy);
+        /* X - channels [1...nx][0..ny]*/
         if ((TRUE == is_cb_exist(CHANX, ix, iy))
            &&(true == rr_gsb.is_cb_exist(CHANX))) {
           fpga_spice_generate_bitstream_routing_connection_box_subckt(fp, 
                                                                       rr_gsb, CHANX, 
                                                                       cur_sram_orgz_info);
         }
-      }
-    }
-    /* Y - channels [1...ny][0..nx]*/
-    vpr_printf(TIO_MESSAGE_INFO,"Generating bitstream for Connection blocks - Y direction ...\n");
-    for (int ix = 0; ix < (nx + 1); ++ix) {
-      for (int iy = 1; iy < (ny + 1); ++iy) {
-        const RRGSB& rr_gsb = device_rr_gsb.get_gsb(ix, iy);
+        /* Y - channels [1...ny][0..nx]*/
         if ((TRUE == is_cb_exist(CHANY, ix, iy)) 
            &&(true == rr_gsb.is_cb_exist(CHANY))) {
           fpga_spice_generate_bitstream_routing_connection_box_subckt(fp, 

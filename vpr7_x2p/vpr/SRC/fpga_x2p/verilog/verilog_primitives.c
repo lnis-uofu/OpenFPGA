@@ -405,7 +405,7 @@ void dump_verilog_pb_primitive_lut(t_sram_orgz_info* cur_sram_orgz_info,
                                    t_pb_graph_node* prim_pb_graph_node,
                                    int index,
                                    t_spice_model* verilog_model) {
-  int i, ipin;
+  int i;
   int lut_size = 0;
   int num_input_port = 0;
   t_spice_model_port** input_ports = NULL;
@@ -417,12 +417,6 @@ void dump_verilog_pb_primitive_lut(t_sram_orgz_info* cur_sram_orgz_info,
   int num_lut_sram = 0;
   int num_mode_sram = 0;
   t_spice_model_port* lut_sram_port = NULL;
-
-  int num_pb_type_input_port = 0;
-  t_port** pb_type_input_ports = NULL;
-
-  int num_pb_type_output_port = 0;
-  t_port** pb_type_output_ports = NULL;
 
   char* formatted_subckt_prefix = format_verilog_node_prefix(subckt_prefix); /* Complete a "_" at the end if needed*/
   t_pb_type* cur_pb_type = NULL;
