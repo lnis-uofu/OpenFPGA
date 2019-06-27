@@ -216,7 +216,7 @@ void fpga_spice_generate_bitstream_switch_box_interc(FILE* fp,
                                                      const RRGSB& rr_sb,
                                                      t_sram_orgz_info* cur_sram_orgz_info,
                                                      enum e_side chan_side,
-                                                     t_rr_node* cur_rr_node) {
+                                                     size_t chan_node_id) {
   int num_drive_rr_nodes = 0;  
   t_rr_node** drive_rr_nodes = NULL;
 
@@ -227,12 +227,12 @@ void fpga_spice_generate_bitstream_switch_box_interc(FILE* fp,
                __FILE__, __LINE__); 
     exit(1);
   }
+  /* Get the rr_node */
+  t_rr_node* cur_rr_node = rr_sb.get_chan_node(chan_side, chan_node_id);
 
   /* Determine if the interc lies inside a channel wire, that is interc between segments */
   /* Check each num_drive_rr_nodes, see if they appear in the cur_sb_info */
-  if (true == rr_sb.is_sb_node_imply_short_connection(cur_rr_node)) {
-    /* Double check if the interc lies inside a channel wire, that is interc between segments */
-    assert(true == rr_sb.is_sb_node_exist_opposite_side(cur_rr_node, chan_side));
+  if (true == rr_sb.is_sb_node_passing_wire(chan_side, chan_node_id)) {
     num_drive_rr_nodes = 0;
     drive_rr_nodes = NULL;
   } else {
@@ -364,7 +364,7 @@ void fpga_spice_generate_bitstream_routing_switch_box_subckt(FILE* fp,
       if (OUT_PORT == rr_sb.get_chan_node_direction(side_manager.get_side(), itrack)) {
         fpga_spice_generate_bitstream_switch_box_interc(fp, rr_sb, cur_sram_orgz_info, 
                                                         side_manager.get_side(), 
-                                                        rr_sb.get_chan_node(side_manager.get_side(), itrack));
+                                                        itrack);
       } 
     }
   }
@@ -859,24 +859,21 @@ void fpga_spice_generate_bitstream_routing_resources(char* routing_bitstream_log
 
   /* Connection Boxes */
   if (TRUE == compact_routing_hierarchy) {
-    vpr_printf(TIO_MESSAGE_INFO,"Generating bitstream for Connection blocks - X direction ...\n");
-    /* X - channels [1...nx][0..ny]*/
-    for (int iy = 0; iy < (ny + 1); ++iy) {
-      for (int  ix = 1; ix < (nx + 1); ++ix) {
+    DeviceCoordinator gsb_range = device_rr_gsb.get_gsb_range();
+
+    vpr_printf(TIO_MESSAGE_INFO,"Generating bitstream for Connection blocks ...\n");
+
+    for (size_t ix = 0; ix < gsb_range.get_x(); ++ix) {
+      for (size_t iy = 0; iy < gsb_range.get_y(); ++iy) {
         const RRGSB& rr_gsb = device_rr_gsb.get_gsb(ix, iy);
+        /* X - channels [1...nx][0..ny]*/
         if ((TRUE == is_cb_exist(CHANX, ix, iy))
            &&(true == rr_gsb.is_cb_exist(CHANX))) {
           fpga_spice_generate_bitstream_routing_connection_box_subckt(fp, 
                                                                       rr_gsb, CHANX, 
                                                                       cur_sram_orgz_info);
         }
-      }
-    }
-    /* Y - channels [1...ny][0..nx]*/
-    vpr_printf(TIO_MESSAGE_INFO,"Generating bitstream for Connection blocks - Y direction ...\n");
-    for (int ix = 0; ix < (nx + 1); ++ix) {
-      for (int iy = 1; iy < (ny + 1); ++iy) {
-        const RRGSB& rr_gsb = device_rr_gsb.get_gsb(ix, iy);
+        /* Y - channels [1...ny][0..nx]*/
         if ((TRUE == is_cb_exist(CHANY, ix, iy)) 
            &&(true == rr_gsb.is_cb_exist(CHANY))) {
           fpga_spice_generate_bitstream_routing_connection_box_subckt(fp, 

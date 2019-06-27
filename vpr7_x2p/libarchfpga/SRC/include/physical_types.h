@@ -928,6 +928,7 @@ typedef struct s_direct_inf {
 /*   Detailed routing architecture */
 typedef struct s_arch t_arch;
 struct s_arch {
+    bool tileable; /* Xifan TANG: tileable rr_graph support */
 	t_chan_width_dist Chans;
 	enum e_switch_block_type SBType;
 	float R_minW_nmos;

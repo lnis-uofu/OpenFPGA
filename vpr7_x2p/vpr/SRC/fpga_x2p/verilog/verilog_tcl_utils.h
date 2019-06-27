@@ -32,6 +32,8 @@ DeviceCoordinator get_chan_node_ending_cb(t_rr_node* src_rr_node,
 t_cb* get_chan_rr_node_ending_cb(t_rr_node* src_rr_node, 
                                 t_rr_node* end_rr_node);
 
+DeviceCoordinator get_chan_node_ending_sb_coordinator(t_rr_node* src_rr_node);
+
 DeviceCoordinator get_chan_node_ending_sb_coordinator(t_rr_node* src_rr_node, 
                                                       t_rr_node* end_rr_node);
 

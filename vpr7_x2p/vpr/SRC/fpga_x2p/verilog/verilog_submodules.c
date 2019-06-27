@@ -104,10 +104,17 @@ void dump_verilog_submodule_signal_init(FILE* fp,
   fprintf(fp, "initial begin\n");
 //  fprintf(fp, "`ifdef %s\n  #0.001\n`endif\n", 			// Commented, looks no longer needed
 //				icarus_simulator_flag);
+  fprintf(fp, "  `ifdef %s\n", verilog_formal_verification_preproc_flag);
+  for (iport = 0; iport < num_input_port; iport++) {
+     fprintf(fp, "  $deposit(%s, 1'b0);\n",
+                input_port[iport]->lib_name);
+  }
+  fprintf(fp, "  `else\n");
   for (iport = 0; iport < num_input_port; iport++) {
      fprintf(fp, "  $deposit(%s, $random);\n",
                 input_port[iport]->lib_name);
   }
+  fprintf(fp, "  `endif\n");
   fprintf(fp, "end\n");
   fprintf(fp, "  //------ END driver initialization -----\n");
   fprintf(fp, "`endif\n");
@@ -233,8 +240,9 @@ void dump_verilog_invbuf_module(FILE* fp,
                   output_port[0]->lib_name,
                   output_port[0]->lib_name);
     } else {
-      fprintf(fp, "assign %s = ~%s;\n",
+      fprintf(fp, "assign %s = (%s === 1'bz)? $random : ~%s;\n",
                   output_port[0]->lib_name,
+                  input_port[0]->lib_name,
                   input_port[0]->lib_name);
     }
     break;
@@ -296,13 +304,15 @@ void dump_verilog_invbuf_module(FILE* fp,
                   output_port[0]->lib_name);
 
     } else if (FALSE == invbuf_spice_model->design_tech_info.buffer_info->tapered_buf) {
-      fprintf(fp, "assign %s = %s;\n",
+      fprintf(fp, "assign %s = (%s === 1'bz)? $random : %s;\n",
                   output_port[0]->lib_name,
+                  input_port[0]->lib_name,
                   input_port[0]->lib_name);
     } else {
       assert (TRUE == invbuf_spice_model->design_tech_info.buffer_info->tapered_buf);
-      fprintf(fp, "assign %s = ",
-                  output_port[0]->lib_name);
+      fprintf(fp, "assign %s = (%s === 1'bz)? $random : ",
+                  output_port[0]->lib_name,
+                  input_port[0]->lib_name);
       /* depend on the stage, we may invert the output */
       if (1 == invbuf_spice_model->design_tech_info.buffer_info->tap_buf_level % 2) {
         fprintf(fp, "~");

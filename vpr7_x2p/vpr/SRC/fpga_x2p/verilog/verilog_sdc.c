@@ -370,7 +370,7 @@ void verilog_generate_sdc_break_loop_sb(FILE* fp,
                ||(CHANY == chan_rr_node->type));
           /* We only care the output port and it should indicate a SB mux */
           if ( (OUT_PORT != rr_gsb.get_chan_node_direction(side_manager.get_side(), itrack)) 
-             || (false != rr_gsb.is_sb_node_imply_short_connection(chan_rr_node))) {
+             || (false != rr_gsb.is_sb_node_passing_wire(side_manager.get_side(), itrack))) {
             continue; 
           }
           /* Bypass if we have only 1 driving node */
@@ -741,7 +741,7 @@ void verilog_generate_sdc_constrain_sbs(t_sdc_opts sdc_opts,
             continue; 
           }
           /* Constrain thru wires */
-          if (false != rr_gsb.is_sb_node_imply_short_connection(chan_rr_node)) {
+          if (false != rr_gsb.is_sb_node_passing_wire(side_manager.get_side(), itrack)) {
             /* Set the max, min delay to 0? */ 
             verilog_generate_sdc_constrain_one_sb_path(fp, rr_gsb,
                                                        chan_rr_node,
@@ -2502,6 +2502,137 @@ void verilog_generate_sdc_input_output_delays(FILE* fp,
 
   return;
 }
+ 
+static
+void verilog_generate_wire_report_timing_blockage_direction(FILE* fp, 
+                                                            char* direction,
+                                                            char* enable,
+                                                            int LL_nx, int LL_ny) {
+ 
+  int ix, iy;
+  int side, itrack;
+  t_sb* cur_sb_info = NULL;
+  
+  
+  /* Check the file handler */
+  if (NULL == fp) {
+    vpr_printf(TIO_MESSAGE_ERROR,
+               "(FILE:%s,LINE[%d])Invalid file handler for SDC generation",
+               __FILE__, __LINE__); 
+    exit(1);
+  } 
+
+  /* Print comments */
+  fprintf(fp,
+          "####################################\n"); 
+  fprintf(fp, 
+          "### Disable for %s Switch blocks ###\n", 
+          direction);
+  fprintf(fp,
+          "####################################\n"); 
+  /* We start from a SB[x][y] */
+  for (ix = 0; ix < (LL_nx + 1); ix++) {
+    for (iy = 0; iy < (LL_ny + 1); iy++) {
+      cur_sb_info = &(sb_info[ix][iy]);
+      for (side = 0; side < cur_sb_info->num_sides; side++) {
+        switch (side) {
+          case TOP:
+          case BOTTOM:
+          if( 0 != strcmp("VERTICAL",direction)) {
+            continue;
+          }
+          for (itrack = 0; itrack < cur_sb_info->chan_width[side]; itrack++) {
+            assert((CHANX == cur_sb_info->chan_rr_node[side][itrack]->type)
+                 ||(CHANY == cur_sb_info->chan_rr_node[side][itrack]->type));
+            if (0 == cur_sb_info->chan_rr_node[side][itrack]->fan_in) {
+              continue;
+            }
+            if (OUT_PORT != cur_sb_info->chan_rr_node_direction[side][itrack]) {
+              continue;
+            }
+            if (0 == strcmp("DISABLE",enable) ) {
+              fprintf(fp, "set_disable_timing ");
+            }
+            if (0 == strcmp("RESTORE",enable) ) {
+              fprintf(fp, "reset_disable_timing ");
+            }
+            fprintf(fp, "%s/", 
+                    gen_verilog_one_sb_instance_name(cur_sb_info));
+            dump_verilog_one_sb_chan_pin(fp, cur_sb_info,
+                                         cur_sb_info->chan_rr_node[side][itrack],
+                                         OUT_PORT); 
+            fprintf(fp, "\n");
+          }
+          break;
+          case LEFT:
+          case RIGHT:
+          if( 0 != strcmp("HORIZONTAL",direction)) {
+            continue;
+          }
+          for (itrack = 0; itrack < cur_sb_info->chan_width[side]; itrack++) {
+            assert((CHANX == cur_sb_info->chan_rr_node[side][itrack]->type)
+                 ||(CHANY == cur_sb_info->chan_rr_node[side][itrack]->type));
+            if (0 == cur_sb_info->chan_rr_node[side][itrack]->fan_in) {
+              continue;
+            }
+            if (OUT_PORT != cur_sb_info->chan_rr_node_direction[side][itrack]) {
+              continue;
+            }
+            if (0 == strcmp("DISABLE",enable) ) {
+              fprintf(fp, "set_disable_timing ");
+            }
+            if (0 == strcmp("RESTORE",enable) ) {
+              fprintf(fp, "reset_disable_timing ");
+            }
+            fprintf(fp, "%s/", 
+                    gen_verilog_one_sb_instance_name(cur_sb_info));
+            dump_verilog_one_sb_chan_pin(fp, cur_sb_info,
+                                         cur_sb_info->chan_rr_node[side][itrack],
+                                         OUT_PORT); 
+            fprintf(fp, "\n");
+          }
+          break;
+          default:
+          break;
+          } 
+        }
+      }
+    }
+  return;
+}
+
+static
+void verilog_generate_sdc_wire_report_timing_blockage(t_sdc_opts sdc_opts,
+                                                      int LL_nx, int LL_ny) {
+
+  FILE* fp = NULL;
+  char* sdc_fname = NULL;
+
+  /* Create the vertical file */
+  /* Break */
+  sdc_fname = my_strcat(sdc_opts.sdc_dir, sdc_break_vertical_sbs_file_name);
+  fp = fopen(sdc_fname, "w");
+  verilog_generate_wire_report_timing_blockage_direction(fp, "VERTICAL", "DISABLE", LL_nx, LL_ny);
+  fclose(fp);
+  /* Restore */
+  sdc_fname = my_strcat(sdc_opts.sdc_dir, sdc_restore_vertical_sbs_file_name);
+  fp = fopen(sdc_fname, "w");
+  verilog_generate_wire_report_timing_blockage_direction(fp, "VERTICAL", "RESTORE", LL_nx, LL_ny);
+  fclose(fp);
+
+  /* Create the horizontal file */
+  
+  sdc_fname = my_strcat(sdc_opts.sdc_dir, sdc_break_horizontal_sbs_file_name);
+  fp = fopen(sdc_fname, "w");
+  verilog_generate_wire_report_timing_blockage_direction(fp, "HORIZONTAL", "DISABLE", LL_nx, LL_ny);
+  fclose(fp);
+  sdc_fname = my_strcat(sdc_opts.sdc_dir, sdc_restore_horizontal_sbs_file_name);
+  fp = fopen(sdc_fname, "w");
+  verilog_generate_wire_report_timing_blockage_direction(fp, "HORIZONTAL", "RESTORE", LL_nx, LL_ny);
+  fclose(fp);
+
+  return;
+}
 
 void verilog_generate_sdc_pnr(t_sram_orgz_info* cur_sram_orgz_info,
                               char* sdc_dir,
@@ -2544,6 +2675,9 @@ void verilog_generate_sdc_pnr(t_sram_orgz_info* cur_sram_orgz_info,
       verilog_generate_sdc_constrain_sbs(sdc_opts, 
                                          LL_nx, LL_ny); 
     }
+    /* Generate sdc files to help get the timing report on Lwires */
+    verilog_generate_sdc_wire_report_timing_blockage(sdc_opts, 
+                                                     LL_nx, LL_ny);
   }
 
   /* Part 4. Output routing constraints for Connection Blocks */
@@ -2641,7 +2775,7 @@ void verilog_generate_sdc_analysis(t_sram_orgz_info* cur_sram_orgz_info,
   /* Apply to Grids */
   verilog_generate_sdc_disable_unused_grids(fp, LL_nx, LL_ny, LL_grid, LL_block);
   verilog_generate_sdc_disable_unused_grids_muxs(fp, LL_nx, LL_ny, LL_grid, LL_block);
-         
+
   /* Close the file*/
   fclose(fp);
 
@@ -2650,5 +2784,3 @@ void verilog_generate_sdc_analysis(t_sram_orgz_info* cur_sram_orgz_info,
 
   return;
 }
-
-

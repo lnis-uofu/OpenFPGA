@@ -449,6 +449,54 @@ void sdc_dump_all_pb_graph_nodes(FILE* fp,
 							int type_descriptors_mode,
                             char* instance_name){
 
+  t_spice_model* mem_model = NULL;
+  int iport, ipin; 
+  char* port_name = NULL;
+
+  int num_output_ports = 0;
+  t_spice_model_port** output_ports = NULL;
+  
+  // Break all the programming cells 
+  get_sram_orgz_info_mem_model(cur_sram_orgz_info, &mem_model);
+  assert (NULL != mem_model);
+
+  /* Check */
+  if (NULL == fp) {
+    vpr_printf(TIO_MESSAGE_ERROR,
+              "(FILE:%s,LINE[%d])Invalid file handler!\n",
+              __FILE__, __LINE__); 
+    exit(1);
+  }
+
+  get_sram_orgz_info_mem_model(cur_sram_orgz_info, &mem_model);
+  assert (NULL != mem_model);
+  
+  /* Find the output ports of mem_model */
+  output_ports = find_spice_model_ports(mem_model, SPICE_MODEL_PORT_OUTPUT, &num_output_ports, TRUE);
+
+  for (iport = 0; iport < num_output_ports; iport++) {
+    for (ipin = 0; ipin < output_ports[iport]->size; ipin++) { 
+      if (TRUE == mem_model->dump_explicit_port_map) {
+        port_name = output_ports[iport]->lib_name;
+      } else {
+        port_name = output_ports[iport]->prefix;
+      }
+      /* Disable the timing for all the memory cells */
+      fprintf(fp, 
+              "set_disable_timing [get_pins -filter \"name == %s",
+               port_name);
+      if (1 < output_ports[iport]->size) {
+        fprintf(fp, "[%d]", ipin);
+      }
+      fprintf(fp, "\" ");
+      fprintf(fp, 
+              "-of [get_cells -hier -filter \"ref_lib_cell_name == %s\"]]\n",
+              mem_model->name);
+    }
+  }
+
+  /* Free */
+
   // Give head of the pb_graph to the recursive function
   sdc_rec_dump_child_pb_graph_node (cur_sram_orgz_info, fp, type_descriptors[type_descriptors_mode].pb_graph_head, instance_name);
 

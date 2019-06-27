@@ -1800,6 +1800,7 @@ void identify_rr_node_driver_switch(t_det_routing_arch RoutingArch,
     }
     LL_rr_node[inode].driver_switch = LL_rr_node[inode].drive_switches[0];
     for (iedge = 0; iedge < LL_rr_node[inode].num_drive_rr_nodes; iedge++) {
+      if (LL_rr_node[inode].driver_switch != LL_rr_node[inode].drive_switches[iedge])
       assert (LL_rr_node[inode].driver_switch == LL_rr_node[inode].drive_switches[iedge]);
     }
   }
@@ -1830,6 +1831,7 @@ t_rr_node** get_chan_rr_nodes(int* num_chan_rr_nodes,
     chan_rr_nodes = (t_rr_node**)my_malloc((*num_chan_rr_nodes)*sizeof(t_rr_node*));
     /* Fill the array */
     for (itrack = 0; itrack < (*num_chan_rr_nodes); itrack++) {
+      /* CHANX follows a weird way in searching rr_nodes */
       inode = get_rr_node_index(x, y, CHANX, itrack, LL_rr_node_indices);
       chan_rr_nodes[itrack] = &(LL_rr_node[inode]);
     }
@@ -3136,6 +3138,7 @@ void spice_backannotate_vpr_post_route_info(t_det_routing_arch RoutingArch,
   /* Build previous node lists for each rr_node */
   vpr_printf(TIO_MESSAGE_INFO, "Building previous node list for all Routing Resource Nodes...\n");
   build_prev_node_list_rr_nodes(num_rr_nodes, rr_node);
+  //sort_rr_graph_drive_rr_nodes(num_rr_nodes, rr_node);
 
   /* Build driver switches for each rr_node*/
   vpr_printf(TIO_MESSAGE_INFO, "Identifying driver switches for all Routing Resource Nodes...\n");

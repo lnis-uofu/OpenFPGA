@@ -2528,6 +2528,7 @@ void link_one_pb_graph_node_pin_to_phy_pb_graph_pin(t_pb_graph_pin* cur_pb_graph
   }
   /* Create the link */
   cur_pb_graph_pin->physical_pb_graph_pin = phy_pb_graph_pin;
+  /*
   vpr_printf (TIO_MESSAGE_INFO, " match pin (%s[%d]->%s[%d]) to (%s[%d]->%s[%d]) rotate_offset_acc=%d\n",
           cur_pb_graph_pin->parent_node->pb_type->name,
           cur_pb_graph_pin->parent_node->placement_index,
@@ -2537,6 +2538,7 @@ void link_one_pb_graph_node_pin_to_phy_pb_graph_pin(t_pb_graph_pin* cur_pb_graph
           phy_pb_graph_pin->port->name, phy_pb_graph_pin->pin_number,
           cur_pb_graph_pin->port->phy_mode_pin_rotate_offset_acc
          );
+  */
   /* Accumulate the phy_mode_pin offset when we have a matched */
   if (0 != cur_pb_graph_pin->port->physical_mode_pin_rotate_offset) {
     cur_pb_graph_pin->port->phy_mode_pin_rotate_offset_acc += cur_pb_graph_pin->port->physical_mode_pin_rotate_offset;

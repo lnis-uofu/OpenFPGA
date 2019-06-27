@@ -3136,7 +3136,7 @@ boolean is_cb_exist(t_rr_type cb_type,
     /* Check the grid under this CB */
     if ((NULL == grid[cb_x][cb_y].type) 
        ||(EMPTY_TYPE == grid[cb_x][cb_y].type) 
-       ||(1 <  grid[cb_x][cb_y].type->height)) {
+       ||!(grid[cb_x][cb_y].offset + 1 ==  grid[cb_x][cb_y].type->height)) {
       cb_exist = FALSE;
     }
     break;

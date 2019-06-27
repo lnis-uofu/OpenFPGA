@@ -1,3 +1,8 @@
+#ifndef FPGA_X2P_TYPES_H
+#define FPGA_X2P_TYPES_H
+
+#include "route_common.h"
+
 /* Define the basic data structures used for FPGA-SPICE */
 
 /* Default ID of switch used in rr_node */
@@ -135,3 +140,4 @@ struct fpga_spice_phy_pb {
   int num_iopads;
 };
 
+#endif

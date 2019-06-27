@@ -1165,8 +1165,8 @@ void alloc_and_load_idirect_from_blk_pin(t_direct_inf* directs, int num_directs,
  * This data structure supplements the the info in the "directs" data structure
  * TODO: The function that does this parsing in placement is poorly done because it lacks generality on heterogeniety, should replace with this one
  */
-t_clb_to_clb_directs * alloc_and_load_clb_to_clb_directs(INP t_direct_inf *directs, 
-                                                         INP int num_directs) {
+t_clb_to_clb_directs * alloc_and_load_clb_to_clb_directs(INP const t_direct_inf *directs, 
+                                                         INP const int num_directs) {
 	int i, j;
 	t_clb_to_clb_directs *clb_to_clb_directs;
 	char *pb_type_name, *port_name;

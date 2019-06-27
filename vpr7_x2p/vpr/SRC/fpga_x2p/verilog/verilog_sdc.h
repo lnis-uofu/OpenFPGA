@@ -41,4 +41,10 @@ void dump_sdc_pb_graph_pin_muxes(FILE* fp,
                                  t_rr_graph* rr_graph, 
                                  t_pb_graph_pin pb_graph_pin); 
 
+/*void verilog_generate_wire_report_timing_blockage_direction(FILE* fp, 
+                                                            char* direction,
+                                                            int LL_nx, int LL_ny);
+
+void verilog_generate_sdc_wire_report_timing_blockage(t_sdc_opts sdc_opts,
+                                                      int LL_nx, int LL_ny);*/
 #endif
