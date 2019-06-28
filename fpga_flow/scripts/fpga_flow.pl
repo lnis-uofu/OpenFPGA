@@ -274,8 +274,7 @@ sub read_opt_into_hash($ $ $)
 sub opts_read()
 {
   # if no arguments detected, print the usage.
-  if (-1 == $#ARGV)
-  {
+  if (-1 == $#ARGV) {
     print "Error : No input arguments!\n";
     print "Help desk:\n";
     &print_usage();
@@ -289,19 +288,15 @@ sub opts_read()
   my $argfd;
   # Check help fist 
   $argfd = &spot_option($cur_arg,"-help");
-  if (-1 != $argfd)
-  {
+  if (-1 != $argfd) {
     print "Help desk:\n";
     &print_usage();
   }  
   # Then Check the debug with highest priority
   $argfd = &spot_option($cur_arg,"-debug");
-  if (-1 != $argfd)
-  {
+  if (-1 != $argfd) {
     $opt_ptr->{"debug"} = "on";
-  }
-  else
-  {
+  } else {
     $opt_ptr->{"debug"} = "off";
   }
   # Check mandatory options
@@ -731,7 +726,7 @@ sub run_abc_fpgamap($ $ $)
     die "ERROR: fail to auto generating cmds for ABC ($cmd_log) ...\n";
   }
   # Output the standard format (refer to VTR_flow script)
-  print $ABC_CMD_FH "read $bm; resyn; resyn2; $fpga_synthesis_method -K $lut_num; $abc_seq_optimize write_blif $blif_out; $dump_verilog; quit\n";
+  print $ABC_CMD_FH "read $bm; resyn; resyn2; scleanup; $fpga_synthesis_method -K $lut_num; sweep; $abc_seq_optimize write_blif $blif_out; $dump_verilog; quit\n";
 
   close($ABC_CMD_FH);
   #
@@ -1201,7 +1196,7 @@ sub run_pro_blif($ $) {
   $pro_blif_path =~ s/\/$//g;
   $pro_blif_path = $pro_blif_path . "/pro_blif.pl";
 
-  `perl $pro_blif_path -i $abc_blif_out_bak -o $abc_blif_out`;
+  `perl $pro_blif_path -i $abc_blif_out_bak -o $abc_blif_out -add_default_clk`;
 
   if (!(-e $abc_blif_out)) {
     die "ERROR: Fail pro_blif.pl for benchmark $abc_blif_out.\n";
@@ -1449,7 +1444,7 @@ sub run_std_vpr($ $ $ $ $ $ $ $ $)
   #  foreach my $file (0..$#files){
   #    print "$files[$file]\t";
   #  }
-  3  print "\n";
+  print "\n";
   #}
   chdir $cwd;
 }
@@ -3151,7 +3146,11 @@ sub gen_csv_rpt_standard_flow($ $)
     for($ikw=0; $ikw < ($#keywords+1); $ikw++) {
       $tmpkw = $keywords[$ikw];
       $tmpkw =~ s/\s//g;  
-      print $CSVFH ",$rpt_ptr->{$tag}->{$tmp}->{$N_val}->{$K_val}->{$keywords[$ikw]}";
+      if (defined($rpt_ptr->{$tag}->{$tmp}->{$N_val}->{$K_val}->{$keywords[$ikw]})) {
+        print $CSVFH ",$rpt_ptr->{$tag}->{$tmp}->{$N_val}->{$K_val}->{$keywords[$ikw]}";
+      } else {
+        print $CSVFH ", ";
+      }
     }
     if ("on" eq $opt_ptr->{power}) {
       @keywords = split /\|/,$conf_ptr->{csv_tags}->{vpr_power_tags}->{val};

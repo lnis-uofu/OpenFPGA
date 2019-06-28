@@ -11,7 +11,6 @@ elliptic.blif, 120
 ex1010.blif, 120
 ex5p.blif, 120
 frisc.blif, 120
-mcnc_big20.txt
 misex3.blif, 120
 pdc.blif, 120
 s298.blif, 30

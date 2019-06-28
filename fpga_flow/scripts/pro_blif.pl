@@ -10,6 +10,7 @@ my $mydate = gmctime();
 my ($char_per_line) = (80);
 
 my ($fname,$frpt,$finitial);
+my $add_default_clk = "off";
 my $latch_token;
 my ($remove_buffers) = (0);
 my ($default_clk_name) = ("clk");
@@ -25,6 +26,7 @@ sub print_usage()
   print "              -o <output_blif_path>\n";
   print "      Options: (Optional)\n";
   print "              -remove_buffers\n";
+  print "              -add_default_clk\n";
   print "              -initial_blif <input_blif_path>\n";
   print "\n";
   return 1;
@@ -32,23 +34,21 @@ sub print_usage()
 
 sub opts_read()
 {
-  if (-1 == $#ARGV)
-  {
+  if (-1 == $#ARGV) {
     print "Error: No input argument!\n";
     &print_usage();
     exit(1); 
-  }
-  else
-  {
-    for (my $iargv = 0; $iargv < $#ARGV+1; $iargv++)
-    {
-      if ("-i" eq $ARGV[$iargv]) 
-      {$fname = $ARGV[$iargv+1];}
-      elsif ("-o" eq $ARGV[$iargv]) 
-      {$frpt = $ARGV[$iargv+1];}
-      elsif ("-initial_blif" eq $ARGV[$iargv]) 
-      {$finitial = $ARGV[$iargv+1];}
-      elsif ("-remove_buffers" eq $ARGV[$iargv]) {
+  } else {
+    for (my $iargv = 0; $iargv < $#ARGV+1; $iargv++) {
+      if ("-i" eq $ARGV[$iargv]) {
+        $fname = $ARGV[$iargv+1];
+      } elsif ("-o" eq $ARGV[$iargv]) {
+        $frpt = $ARGV[$iargv+1];
+      } elsif ("-add_default_clk" eq $ARGV[$iargv]) {
+        $add_default_clk = "on";
+      } elsif ("-initial_blif" eq $ARGV[$iargv]) {
+        $finitial = $ARGV[$iargv+1];
+      } elsif ("-remove_buffers" eq $ARGV[$iargv]) {
         $remove_buffers = 1;
       }
     }
@@ -217,7 +217,7 @@ sub scan_blif()
   my (@input_buffer);
   my ($line_no) = (0);
 
-  if(undef eq $finitial){
+  if (!defined($finitial)) {
     $latch_token = "re clk";
   } else {
     my $latch_token_found = 0;
@@ -276,11 +276,13 @@ sub scan_blif()
   close($FIN);
 
   # Add default clock
-#  print "INFO: $clk_num clock ports need to be added.\n";
-#  print "INFO: have_default_clk: $have_default_clk, need_default_clk: $need_default_clk\n";
-#  if ((0 == $have_default_clk)&&(1 == $need_default_clk)) {
-#    push @input_tokens,$default_clk_name;
-#  }
+  if ("on" eq $add_default_clk) {
+    print "INFO: $clk_num clock ports need to be added.\n";
+    print "INFO: have_default_clk: $have_default_clk, need_default_clk: $need_default_clk\n";
+    if ((0 == $have_default_clk)&&(1 == $need_default_clk)) {
+      push @input_tokens,$default_clk_name;
+    }
+  }
   # Bypass some sensitive tokens
   for(my $itok = 0; $itok < $#input_tokens+1; $itok++) {
     if ("unconn" eq $input_tokens[$itok]) {
