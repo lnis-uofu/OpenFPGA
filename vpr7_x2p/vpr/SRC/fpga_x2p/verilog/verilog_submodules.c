@@ -2683,7 +2683,8 @@ void dump_verilog_wire_module(FILE* fp,
 
 /* Dump one module of a LUT */
 void dump_verilog_submodule_one_lut(FILE* fp, 
-                                    t_spice_model* verilog_model) {
+                                    t_spice_model* verilog_model,
+                                    bool is_explicit_mapping) {
   int num_input_port = 0;
   int num_output_port = 0;
   int num_sram_port = 0;
@@ -3055,19 +3056,47 @@ void dump_verilog_submodule_one_lut(FILE* fp,
           verilog_model->name, verilog_model->name);
   /* Connect MUX inputs to LUT configuration port */
   assert(FALSE == sram_port[sram_port_index]->mode_select); 
-  fprintf(fp, " %s_out,", 
+  if (true == is_explicit_mapping) {
+    fprintf(fp, ".in(");
+  }
+  fprintf(fp, "%s_out",
           sram_port[sram_port_index]->prefix);
+  if (true == is_explicit_mapping) {
+    fprintf(fp, "), ");
+  } else {
+    fprintf(fp, ", ");
+  }
   /* Connect MUX output to LUT output */
   for (iport = 0; iport < num_output_port; iport++) {
-    fprintf(fp, " %s,", 
+    if (true == is_explicit_mapping) {
+      fprintf(fp, ".%s(",
+              output_port[iport]->prefix);
+    }
+    fprintf(fp, "%s", 
             output_port[iport]->prefix);
+    if (true == is_explicit_mapping) {
+      fprintf(fp, "), ");
+    } else {
+      fprintf(fp, ", ");
+    }
   }
   /* Connect MUX configuration port to LUT inputs */
-  fprintf(fp, " %s_buf,", 
+  if (true == is_explicit_mapping) {
+    fprintf(fp, ".sram(");
+  }
+  fprintf(fp, "%s_buf", 
           input_port[0]->prefix);
   /* Connect MUX inverted configuration port to inverted LUT inputs */
-  fprintf(fp, " %s_b", 
+  if (true == is_explicit_mapping) {
+    fprintf(fp, "), sram_inv(");
+  } else {
+    fprintf(fp, ", ");
+  }
+  fprintf(fp, "%s_b", 
           input_port[0]->prefix);
+  if (true == is_explicit_mapping) {
+    fprintf(fp, ")");
+  }
   /* End of call LUT MUX */
   fprintf(fp, ");\n");
 
@@ -3168,7 +3197,8 @@ void dump_verilog_submodule_luts(char* verilog_dir,
                                  int num_spice_model,
                                  t_spice_model* spice_models,
                                  boolean include_timing,
-                                 boolean include_signal_init) {
+                                 boolean include_signal_init,
+                                 bool is_explicit_mapping) {
   FILE* fp = NULL;
   char* verilog_name = my_strcat(submodule_dir, luts_verilog_file_name);
   int imodel; 
@@ -3190,7 +3220,7 @@ void dump_verilog_submodule_luts(char* verilog_dir,
       continue;
     }
     if (SPICE_MODEL_LUT == spice_models[imodel].type) {
-      dump_verilog_submodule_one_lut(fp, &(spice_models[imodel]));
+      dump_verilog_submodule_one_lut(fp, &(spice_models[imodel]), is_explicit_mapping);
     }
   }
 
@@ -3614,7 +3644,8 @@ void dump_verilog_submodules(t_sram_orgz_info* cur_sram_orgz_info,
   dump_verilog_submodule_luts(verilog_dir, submodule_dir,
                               Arch.spice->num_spice_model, Arch.spice->spice_models,
                               fpga_verilog_opts.include_timing, 
-                              fpga_verilog_opts.include_signal_init);
+                              fpga_verilog_opts.include_signal_init,
+                              fpga_verilog_opts.dump_explicit_verilog);
 
   /* 3. Hardwires */
   vpr_printf(TIO_MESSAGE_INFO, "Generating modules of hardwires...\n");
