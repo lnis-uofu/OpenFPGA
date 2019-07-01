@@ -2622,11 +2622,6 @@ static
 void dump_verilog_connection_box_short_interc(FILE* fp,
                                               const RRGSB& rr_gsb, t_rr_type cb_type,
                                               t_rr_node* src_rr_node) {
-  t_rr_node* drive_rr_node = NULL;
-  int iedge, check_flag;
-  int xlow, ylow, height, index;
-  enum e_side side;
-
   /* Check the file handler*/ 
   if (NULL == fp) {
     vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid file handler.\n", 
@@ -2638,19 +2633,27 @@ void dump_verilog_connection_box_short_interc(FILE* fp,
   assert(1 == src_rr_node->fan_in);
 
   /* Check the driver*/
-  drive_rr_node = &(rr_node[src_rr_node->prev_node]); 
-  assert((CHANX == drive_rr_node->type)||(CHANY == drive_rr_node->type));
-  check_flag = 0;
-  for (iedge = 0; iedge < drive_rr_node->num_edges; iedge++) {
+  t_rr_node* drive_rr_node = src_rr_node->drive_rr_nodes[0]; 
+  /* We have OPINs since we may have direct connections:
+   * These connections should be handled by other functions in the compact_netlist.c 
+   * So we just return here for OPINs 
+   */
+  if (OPIN == drive_rr_node->type) {
+    return;
+  }
+
+  assert((CHANX == drive_rr_node->type) || (CHANY == drive_rr_node->type));
+  int check_flag = 0;
+  for (int iedge = 0; iedge < drive_rr_node->num_edges; iedge++) {
     if (src_rr_node == &(rr_node[drive_rr_node->edges[iedge]])) {
       check_flag++;
     }
   }
   assert(1 == check_flag);
 
-  xlow = src_rr_node->xlow;
-  ylow = src_rr_node->ylow;
-  height = grid[xlow][ylow].offset;
+  int xlow = src_rr_node->xlow;
+  int ylow = src_rr_node->ylow;
+  int height = grid[xlow][ylow].offset;
 
   /* Call the zero-resistance model */
   fprintf(fp, "//----- short connection %s[%lu][%lu]_grid[%d][%d]_pin[%d] -----\n", 
@@ -2668,6 +2671,8 @@ void dump_verilog_connection_box_short_interc(FILE* fp,
   /* Input port*/
   assert(IPIN == src_rr_node->type);
   /* Search all the sides of a SB, see this drive_rr_node is an INPUT of this SB */
+  enum e_side side = NUM_SIDES;
+  int index = -1;
   rr_gsb.get_node_side_and_index(src_rr_node, OUT_PORT, &side, &index);
   /* We need to be sure that drive_rr_node is part of the SB */
   assert((-1 != index)&&(NUM_SIDES != side));
@@ -2705,8 +2710,17 @@ void dump_verilog_connection_box_short_interc(FILE* fp,
   assert(1 == src_rr_node->fan_in);
 
   /* Check the driver*/
-  drive_rr_node = &(rr_node[src_rr_node->prev_node]); 
-  assert((CHANX == drive_rr_node->type)||(CHANY == drive_rr_node->type));
+  drive_rr_node = src_rr_node->drive_rr_nodes[0]; 
+  /* We have OPINs since we may have direct connections:
+   * These connections should be handled by other functions in the compact_netlist.c 
+   * So we just return here for OPINs 
+   */
+  if (OPIN == drive_rr_node->type) {
+    return;
+  }
+
+  assert( (CHANX == drive_rr_node->type) 
+       || (CHANY == drive_rr_node->type) ); 
   check_flag = 0;
   for (iedge = 0; iedge < drive_rr_node->num_edges; iedge++) {
     if (src_rr_node == &(rr_node[drive_rr_node->edges[iedge]])) {
@@ -2720,25 +2734,16 @@ void dump_verilog_connection_box_short_interc(FILE* fp,
   height = grid[xlow][ylow].offset;
 
   /* Call the zero-resistance model */
-  switch(cur_cb_info->type) {
-  case CHANX:
-    fprintf(fp, "//----- short connection cbx[%d][%d]_grid[%d][%d]_pin[%d] -----\n", 
-            cur_cb_info->x, cur_cb_info->y, xlow, ylow + height, src_rr_node->ptc_num);
-    break;
-  case CHANY:
-    fprintf(fp, "//----- short connection cby[%d][%d]_grid[%d][%d]_pin[%d] ------\n",
-            cur_cb_info->x, cur_cb_info->y, xlow, ylow + height, src_rr_node->ptc_num);
-    break;
-  default: 
-    vpr_printf(TIO_MESSAGE_ERROR, "(File:%s, [LINE%d])Invalid type of channel!\n", __FILE__, __LINE__);
-    exit(1);
-  }
+  fprintf(fp, "//----- short connection %s[%d][%d]_grid[%d][%d]_pin[%d] -----\n", 
+          convert_cb_type_to_string(cur_cb_info->type), cur_cb_info->x, cur_cb_info->y, xlow, ylow + height, src_rr_node->ptc_num);
 
   fprintf(fp, "assign ");
+
   /* output port -- > connect to the output at middle point of a channel */
   fprintf(fp, "%s_%d__%d__midout_%d_ ", 
           convert_chan_type_to_string(drive_rr_node->type),
           cur_cb_info->x, cur_cb_info->y, drive_rr_node->ptc_num);
+
   fprintf(fp, "= ");
 
   /* Input port*/

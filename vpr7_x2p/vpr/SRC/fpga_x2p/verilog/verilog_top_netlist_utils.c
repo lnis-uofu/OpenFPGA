@@ -907,7 +907,7 @@ void dump_verilog_one_clb2clb_direct(FILE* fp,
 
   /* Check bandwidth match between from_clb and to_clb pins */
   if (0 != (cur_direct->from_clb_pin_end_index - cur_direct->from_clb_pin_start_index 
-     - cur_direct->to_clb_pin_end_index - cur_direct->to_clb_pin_start_index)) {
+     - (cur_direct->to_clb_pin_end_index - cur_direct->to_clb_pin_start_index))) {
     vpr_printf(TIO_MESSAGE_ERROR, "(%s, [LINE%d]) Unmatch pin bandwidth in direct connection (name=%s)!\n",
                __FILE__, __LINE__, cur_direct->name);
     exit(1);
