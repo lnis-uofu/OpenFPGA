@@ -188,14 +188,14 @@ void dump_verilog_cmos_mux_config_bus_ports(FILE* fp, t_spice_model* mux_spice_m
                                             int mux_size, int cur_num_sram,
                                             int num_mux_reserved_conf_bits,
                                             int num_mux_conf_bits,
-                                            boolean is_explicit_mapping); 
+                                            bool is_explicit_mapping); 
 
 void dump_verilog_mux_config_bus_ports(FILE* fp, t_spice_model* mux_spice_model, 
                                        t_sram_orgz_info* cur_sram_orgz_info,
                                        int mux_size, int cur_num_sram,
                                        int num_mux_reserved_conf_bits,
                                        int num_mux_conf_bits,
-                                       boolean is_explicit_mapping); 
+                                       bool is_explicit_mapping); 
 
 void dump_verilog_grid_common_port(FILE* fp, t_spice_model* cur_verilog_model,
                                    char* general_port_prefix, int lsb, int msb,
@@ -239,7 +239,8 @@ void dump_verilog_mem_sram_submodule(FILE* fp,
                                      t_sram_orgz_info* cur_sram_orgz_info,
                                      t_spice_model* cur_verilog_model, int mux_size,
                                      t_spice_model* cur_sram_verilog_model,
-                                     int lsb, int msb);
+                                     int lsb, int msb,
+                                     bool is_explicit_mapping);
 
 char* gen_verilog_grid_one_pin_name(int x, int y,
                                    int height, int side, int pin_index,

@@ -43,7 +43,8 @@ void dump_verilog_pb_generic_primitive(t_sram_orgz_info* cur_sram_orgz_info,
                                        char* subckt_prefix,
                                        t_pb_graph_node* prim_pb_graph_node,
                                        int index,
-                                       t_spice_model* verilog_model) {
+                                       t_spice_model* verilog_model,
+                                       bool is_explicit_mapping) {
   int num_pad_port = 0; /* INOUT port */
   t_spice_model_port** pad_ports = NULL;
   int num_input_port = 0;
@@ -122,7 +123,7 @@ void dump_verilog_pb_generic_primitive(t_sram_orgz_info* cur_sram_orgz_info,
   fprintf(fp, "\n");
   /* Only dump the global ports belonging to a spice_model 
    */
-  if (0 < rec_dump_verilog_spice_model_global_ports(fp, verilog_model, TRUE, TRUE, FALSE)) {
+  if (0 < rec_dump_verilog_spice_model_global_ports(fp, verilog_model, TRUE, TRUE, my_bool_to_boolean(is_explicit_mapping))) {
     fprintf(fp, ",\n");
   }
 
@@ -228,7 +229,7 @@ void dump_verilog_pb_generic_primitive(t_sram_orgz_info* cur_sram_orgz_info,
   /* Only dump the global ports belonging to a spice_model 
    * Disable recursive here !
    */
-  if (0 < rec_dump_verilog_spice_model_global_ports(fp, verilog_model, FALSE, FALSE, TRUE)) {
+  if (0 < rec_dump_verilog_spice_model_global_ports(fp, verilog_model, FALSE, FALSE, my_bool_to_boolean(is_explicit_mapping))) {
     fprintf(fp, ",\n");
   }
   
@@ -370,7 +371,7 @@ void dump_verilog_pb_generic_primitive(t_sram_orgz_info* cur_sram_orgz_info,
     fprintf(fp, "%s %s_%d_ ( ", 
             mem_subckt_name, mem_subckt_name, verilog_model->cnt);
     dump_verilog_mem_sram_submodule(fp, cur_sram_orgz_info, verilog_model, -1, 
-                                    mem_model, cur_num_sram, cur_num_sram + num_sram - 1); 
+                                    mem_model, cur_num_sram, cur_num_sram + num_sram - 1, my_bool_to_boolean(is_explicit_mapping)); 
     fprintf(fp, ");\n");
     /* update the number of memory bits */
     update_sram_orgz_info_num_mem_bit(cur_sram_orgz_info, cur_num_sram + num_sram);
@@ -404,7 +405,8 @@ void dump_verilog_pb_primitive_lut(t_sram_orgz_info* cur_sram_orgz_info,
                                    char* subckt_prefix,
                                    t_pb_graph_node* prim_pb_graph_node,
                                    int index,
-                                   t_spice_model* verilog_model) {
+                                   t_spice_model* verilog_model,
+                                   bool is_explicit_mapping) {
   int i;
   int lut_size = 0;
   int num_input_port = 0;
@@ -525,7 +527,7 @@ void dump_verilog_pb_primitive_lut(t_sram_orgz_info* cur_sram_orgz_info,
           formatted_subckt_prefix, cur_pb_type->name);
   fprintf(fp, "\n");
   /* Only dump the global ports belonging to a spice_model */
-  if (0 < rec_dump_verilog_spice_model_global_ports(fp, verilog_model, TRUE, TRUE, FALSE)) {
+  if (0 < rec_dump_verilog_spice_model_global_ports(fp, verilog_model, TRUE, TRUE, my_bool_to_boolean(is_explicit_mapping))) {
     fprintf(fp, ",\n");
   }
   /* Print inputs, outputs, inouts, clocks, NO SRAMs*/
@@ -602,7 +604,7 @@ void dump_verilog_pb_primitive_lut(t_sram_orgz_info* cur_sram_orgz_info,
    * Only dump the global ports belonging to a spice_model 
    * DISABLE recursive here !
    */
-  if (0 < rec_dump_verilog_spice_model_global_ports(fp, verilog_model, FALSE, FALSE, FALSE)) {
+  if (0 < rec_dump_verilog_spice_model_global_ports(fp, verilog_model, FALSE, FALSE, my_bool_to_boolean(is_explicit_mapping))) {
     fprintf(fp, ",\n");
   }
   /* Connect inputs*/ 
@@ -680,7 +682,7 @@ void dump_verilog_pb_primitive_lut(t_sram_orgz_info* cur_sram_orgz_info,
   fprintf(fp, "%s %s_%d_ ( ", 
           mem_subckt_name, mem_subckt_name, verilog_model->cnt);
   dump_verilog_mem_sram_submodule(fp, cur_sram_orgz_info, verilog_model, -1, 
-                                  mem_model, cur_num_sram, cur_num_sram + num_sram - 1); 
+                                  mem_model, cur_num_sram, cur_num_sram + num_sram - 1, is_explicit_mapping); 
   fprintf(fp, ");\n");
   /* update the number of memory bits */
   update_sram_orgz_info_num_mem_bit(cur_sram_orgz_info, cur_num_sram + num_sram);

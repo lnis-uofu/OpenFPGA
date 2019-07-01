@@ -282,7 +282,7 @@ void dump_compact_verilog_one_physical_block(t_sram_orgz_info* cur_sram_orgz_inf
                                              char* subckt_dir_path,
                                              t_type_ptr phy_block_type,
                                              int border_side,
-                                             boolean is_explicit_mapping) {
+                                             bool is_explicit_mapping) {
   int iz;
   int temp_reserved_conf_bits_msb;
   int temp_iopad_lsb, temp_iopad_msb;
@@ -515,7 +515,7 @@ void dump_compact_verilog_logic_blocks(t_sram_orgz_info* cur_sram_orgz_info,
                                        char* verilog_dir,
                                        char* subckt_dir,
                                        t_arch* arch,
-                                       boolean is_explicit_mapping) {
+                                       bool is_explicit_mapping) {
   int itype, iside, num_sides;
   int* stamped_spice_model_cnt = NULL;
   t_sram_orgz_info* stamped_sram_orgz_info = NULL;

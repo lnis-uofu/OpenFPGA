@@ -6,13 +6,13 @@ void dump_compact_verilog_one_physical_block(t_sram_orgz_info* cur_sram_orgz_inf
                                              char* subckt_dir_path,
                                              t_type_ptr phy_block_type,
                                              int border_side,
-                                             boolean is_explicit_mapping);
+                                             bool is_explicit_mapping);
 
 void dump_compact_verilog_logic_blocks(t_sram_orgz_info* cur_sram_orgz_info,
                                        char* verilog_dir,
                                        char* subckt_dir,
                                        t_arch* arch,
-                                       boolean is_explicit_mapping);
+                                       bool is_explicit_mapping);
 
 void dump_compact_verilog_top_netlist(t_sram_orgz_info* cur_sram_orgz_info,
                                       char* circuit_name,

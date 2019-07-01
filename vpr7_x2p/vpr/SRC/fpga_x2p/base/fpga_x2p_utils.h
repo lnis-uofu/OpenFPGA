@@ -406,4 +406,5 @@ void get_fpga_x2p_global_all_clock_ports(t_llist* head,
 
 int my_strlen_int(int input_int);
 
+boolean my_bool_to_boolean(bool my_bool);
 #endif

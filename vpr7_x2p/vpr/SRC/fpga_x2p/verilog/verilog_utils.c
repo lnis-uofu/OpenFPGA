@@ -2550,7 +2550,7 @@ void dump_verilog_cmos_mux_config_bus_ports(FILE* fp, t_spice_model* mux_spice_m
                                             int mux_size, int cur_num_sram,
                                             int num_mux_reserved_conf_bits,
                                             int num_mux_conf_bits,
-                                            boolean is_explicit_mapping) { 
+                                            bool is_explicit_mapping) { 
   /* Check the file handler*/ 
   if (NULL == fp) {
     vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid file handler.\n", 
@@ -2570,7 +2570,7 @@ void dump_verilog_cmos_mux_config_bus_ports(FILE* fp, t_spice_model* mux_spice_m
     /* FOR Scan-chain, we need regular output of a scan-chain FF
      * We do not need a prefix implying MUX name, size and index 
      */
-    if (TRUE == is_explicit_mapping) {
+    if (true == is_explicit_mapping) {
       fprintf(fp, ".sram(");
     }
     dump_verilog_mux_sram_one_outport(fp, cur_sram_orgz_info, 
@@ -2638,7 +2638,7 @@ void dump_verilog_mux_config_bus_ports(FILE* fp, t_spice_model* mux_spice_model,
                                        int mux_size, int cur_num_sram,
                                        int num_mux_reserved_conf_bits,
                                        int num_mux_conf_bits,
-                                       boolean is_explicit_mapping) { 
+                                       bool is_explicit_mapping) { 
   /* Check the file handler*/ 
   if (NULL == fp) {
     vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid file handler.\n", 
@@ -3058,7 +3058,8 @@ void dump_verilog_mem_sram_submodule(FILE* fp,
                                      t_sram_orgz_info* cur_sram_orgz_info,
                                      t_spice_model* cur_verilog_model, int mux_size,
                                      t_spice_model* cur_sram_verilog_model,
-                                     int lsb, int msb) {
+                                     int lsb, int msb,
+                                     bool is_explicit_mapping) {
   int cur_bl, cur_wl;
   int num_bl_ports, num_wl_ports;
   t_spice_model_port** bl_port = NULL;
@@ -3106,7 +3107,7 @@ void dump_verilog_mem_sram_submodule(FILE* fp,
     }
 
     /* Only dump the global ports belonging to a spice_model */
-    if (0 < rec_dump_verilog_spice_model_global_ports(fp, cur_sram_verilog_model, FALSE, TRUE, FALSE)) {
+    if (0 < rec_dump_verilog_spice_model_global_ports(fp, cur_sram_verilog_model, FALSE, TRUE, my_bool_to_boolean(is_explicit_mapping))) {
       fprintf(fp, ",\n");
     }
 

@@ -695,7 +695,7 @@ void dump_verilog_switch_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
                                  int mux_size,
                                  t_rr_node** drive_rr_nodes,
                                  int switch_index,
-                                 boolean is_explicit_mapping) {
+                                 bool is_explicit_mapping) {
   int inode, side, index, input_cnt = 0;
   int grid_x, grid_y;
   t_spice_model* verilog_model = NULL;
@@ -824,15 +824,27 @@ void dump_verilog_switch_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
           verilog_model->prefix, mux_size, verilog_model->cnt);
 
   /* Dump global ports */
-  if  (0 < rec_dump_verilog_spice_model_global_ports(fp, verilog_model, FALSE, FALSE, FALSE)) {
+  if  (0 < rec_dump_verilog_spice_model_global_ports(fp, verilog_model, FALSE, FALSE, my_bool_to_boolean(is_explicit_mapping))) {
     fprintf(fp, ",\n");
   }
-
-  fprintf(fp, "%s_size%d_%d_inbus, ",
+  if (true == is_explicit_mapping) {
+    fprintf(fp, ".in(");
+  }
+  fprintf(fp, "%s_size%d_%d_inbus",
           verilog_model->prefix, mux_size, verilog_model->cnt);
+  if (true == is_explicit_mapping) {
+    fprintf(fp, ")");
+  }
+    fprintf(fp, " ,");
 
   /* Output port */
+  if (true == is_explicit_mapping) {
+    fprintf(fp, ".out(");
+  }
   dump_verilog_switch_box_chan_port(fp, cur_sb_info, chan_side, cur_rr_node, OUT_PORT);
+  if (true == is_explicit_mapping) {
+    fprintf(fp, ")");
+  }
   /* Add a comma because dump_verilog_switch_box_chan_port does not add so  */
   fprintf(fp, ", ");
   
@@ -904,7 +916,8 @@ void dump_verilog_switch_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
     fprintf(fp, "%s %s_%d_ ( ", 
             mem_subckt_name, mem_subckt_name, verilog_model->cnt);
     dump_verilog_mem_sram_submodule(fp, cur_sram_orgz_info, verilog_model, mux_size, mem_model, 
-                                    cur_num_sram, cur_num_sram + num_mux_conf_bits - 1); 
+                                    cur_num_sram, cur_num_sram + num_mux_conf_bits - 1,
+                                    my_bool_to_boolean(is_explicit_mapping)); 
     fprintf(fp, ");\n");
     /* update the number of memory bits */
     update_sram_orgz_info_num_mem_bit(cur_sram_orgz_info, cur_num_sram + num_mux_conf_bits);
@@ -945,7 +958,7 @@ void dump_verilog_unique_switch_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
                                         int mux_size,
                                         t_rr_node** drive_rr_nodes,
                                         int switch_index,
-                                        boolean is_explicit_mapping) {
+                                        bool is_explicit_mapping) {
   int input_cnt = 0;
   t_spice_model* verilog_model = NULL;
   int mux_level, path_id, cur_num_sram;
@@ -1067,7 +1080,7 @@ void dump_verilog_unique_switch_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
           verilog_model->prefix, mux_size, verilog_model->cnt);
 
   /* Dump global ports */
-  if  (0 < rec_dump_verilog_spice_model_global_ports(fp, verilog_model, FALSE, FALSE, is_explicit_mapping)) {
+  if  (0 < rec_dump_verilog_spice_model_global_ports(fp, verilog_model, FALSE, FALSE, my_bool_to_boolean(is_explicit_mapping))) {
     fprintf(fp, ",\n");
   }
 
@@ -1158,8 +1171,10 @@ void dump_verilog_unique_switch_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
     mem_subckt_name = generate_verilog_mux_subckt_name(verilog_model, mux_size, verilog_mem_posfix);
     fprintf(fp, "%s %s_%d_ ( ", 
             mem_subckt_name, mem_subckt_name, verilog_model->cnt);
-    dump_verilog_mem_sram_submodule(fp, cur_sram_orgz_info, verilog_model, mux_size, mem_model, 
-                                    cur_num_sram, cur_num_sram + num_mux_conf_bits - 1); 
+    dump_verilog_mem_sram_submodule(fp, cur_sram_orgz_info, 
+                                    verilog_model, mux_size, mem_model, 
+                                    cur_num_sram, cur_num_sram + num_mux_conf_bits - 1,
+                                    is_explicit_mapping); 
     fprintf(fp, ");\n");
     /* update the number of memory bits */
     update_sram_orgz_info_num_mem_bit(cur_sram_orgz_info, cur_num_sram + num_mux_conf_bits);
@@ -1345,7 +1360,7 @@ void dump_verilog_switch_box_interc(t_sram_orgz_info* cur_sram_orgz_info,
                                     t_sb* cur_sb_info,
                                     int chan_side,
                                     t_rr_node* cur_rr_node,
-                                    boolean is_explicit_mapping) {
+                                    bool is_explicit_mapping) {
   int sb_x, sb_y;
   int num_drive_rr_nodes = 0;  
   t_rr_node** drive_rr_nodes = NULL;
@@ -1403,7 +1418,7 @@ void dump_verilog_unique_switch_box_interc(t_sram_orgz_info* cur_sram_orgz_info,
                                            const RRGSB& rr_sb,
                                            enum e_side chan_side,
                                            size_t chan_node_id,
-                                           boolean is_explicit_mapping) {
+                                           bool is_explicit_mapping) {
   int num_drive_rr_nodes = 0;  
   t_rr_node** drive_rr_nodes = NULL;
 
@@ -1801,7 +1816,7 @@ void dump_verilog_routing_switch_box_unique_side_module(t_sram_orgz_info* cur_sr
                                                         char* verilog_dir, char* subckt_dir, 
                                                         size_t module_id, size_t seg_id,
                                                         const RRGSB& rr_sb, enum e_side side,
-                                                        boolean is_explicit_mapping) {
+                                                        bool is_explicit_mapping) {
   FILE* fp = NULL; 
   char* fname = NULL;
   Side side_manager(side);
@@ -2190,7 +2205,7 @@ static
 void dump_verilog_routing_switch_box_unique_subckt(t_sram_orgz_info* cur_sram_orgz_info,
                                                    char* verilog_dir, char* subckt_dir, 
                                                    const RRGSB& rr_sb,
-                                                   boolean is_explicit_mapping) {
+                                                   bool is_explicit_mapping) {
   FILE* fp = NULL; 
   char* fname = NULL;
 
@@ -2372,7 +2387,7 @@ void dump_verilog_routing_switch_box_subckt(t_sram_orgz_info* cur_sram_orgz_info
                                             char* verilog_dir, char* subckt_dir, 
                                             t_sb* cur_sb_info,
                                             boolean compact_routing_hierarchy,
-                                            boolean is_explicit_mapping) {
+                                            bool is_explicit_mapping) {
   int itrack, inode, side, ix, iy, x, y;
   int cur_num_sram, num_conf_bits, num_reserved_conf_bits, esti_sram_cnt;
   FILE* fp = NULL; 
@@ -2791,7 +2806,7 @@ void dump_verilog_connection_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
                                      FILE* fp,
                                      const RRGSB& rr_gsb, t_rr_type cb_type,
                                      t_rr_node* src_rr_node,
-                                     boolean is_explicit_mapping) {
+                                     bool is_explicit_mapping) {
   int mux_size, cur_num_sram, input_cnt = 0;
   t_rr_node** drive_rr_nodes = NULL;
   int mux_level, path_id, switch_index;
@@ -2904,7 +2919,7 @@ void dump_verilog_connection_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
           verilog_model->prefix, mux_size, verilog_model->cnt);
 
   /* Dump global ports */
-  if  (0 < rec_dump_verilog_spice_model_global_ports(fp, verilog_model, FALSE, FALSE, FALSE)) {
+  if  (0 < rec_dump_verilog_spice_model_global_ports(fp, verilog_model, FALSE, FALSE, my_bool_to_boolean(is_explicit_mapping))) {
     fprintf(fp, ",\n");
   }
 
@@ -2985,7 +3000,8 @@ void dump_verilog_connection_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
     fprintf(fp, "%s %s_%d_ ( ", 
             mem_subckt_name, mem_subckt_name, verilog_model->cnt);
     dump_verilog_mem_sram_submodule(fp, cur_sram_orgz_info, verilog_model, mux_size, mem_model, 
-                                    cur_num_sram, cur_num_sram + num_mux_conf_bits - 1); 
+                                    cur_num_sram, cur_num_sram + num_mux_conf_bits - 1,
+                                    my_bool_to_boolean(is_explicit_mapping)); 
     fprintf(fp, ");\n");
     /* update the number of memory bits */
     update_sram_orgz_info_num_mem_bit(cur_sram_orgz_info, cur_num_sram + num_mux_conf_bits);
@@ -3021,7 +3037,7 @@ void dump_verilog_connection_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
                                      FILE* fp,
                                      t_cb* cur_cb_info,
                                      t_rr_node* src_rr_node,
-                                     boolean is_explicit_mapping) {
+                                     bool is_explicit_mapping) {
   int mux_size, cur_num_sram, input_cnt = 0;
   t_rr_node** drive_rr_nodes = NULL;
   int inode, mux_level, path_id, switch_index;
@@ -3137,7 +3153,7 @@ void dump_verilog_connection_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
           verilog_model->prefix, mux_size, verilog_model->cnt);
 
   /* Dump global ports */
-  if  (0 < rec_dump_verilog_spice_model_global_ports(fp, verilog_model, FALSE, FALSE, FALSE)) {
+  if  (0 < rec_dump_verilog_spice_model_global_ports(fp, verilog_model, FALSE, FALSE, my_bool_to_boolean(is_explicit_mapping))) {
     fprintf(fp, ",\n");
   }
 
@@ -3218,7 +3234,8 @@ void dump_verilog_connection_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
     fprintf(fp, "%s %s_%d_ ( ", 
             mem_subckt_name, mem_subckt_name, verilog_model->cnt);
     dump_verilog_mem_sram_submodule(fp, cur_sram_orgz_info, verilog_model, mux_size, mem_model, 
-                                    cur_num_sram, cur_num_sram + num_mux_conf_bits - 1); 
+                                    cur_num_sram, cur_num_sram + num_mux_conf_bits - 1, 
+                                    my_bool_to_boolean(is_explicit_mapping)); 
     fprintf(fp, ");\n");
     /* update the number of memory bits */
     update_sram_orgz_info_num_mem_bit(cur_sram_orgz_info, cur_num_sram + num_mux_conf_bits);
@@ -3253,7 +3270,7 @@ void dump_verilog_connection_box_interc(t_sram_orgz_info* cur_sram_orgz_info,
                                         FILE* fp,
                                         const RRGSB& rr_gsb, t_rr_type cb_type,
                                         t_rr_node* src_rr_node,
-                                        boolean is_explicit_mapping) {
+                                        bool is_explicit_mapping) {
   /* Check the file handler*/ 
   if (NULL == fp) {
     vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid file handler.\n", 
@@ -3278,7 +3295,7 @@ void dump_verilog_connection_box_interc(t_sram_orgz_info* cur_sram_orgz_info,
                                         FILE* fp,
                                         t_cb* cur_cb_info,
                                         t_rr_node* src_rr_node,
-                                        boolean is_explicit_mapping) {
+                                        bool is_explicit_mapping) {
   /* Check the file handler*/ 
   if (NULL == fp) {
     vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid file handler.\n", 
@@ -3422,7 +3439,7 @@ static
 void dump_verilog_routing_connection_box_unique_module(t_sram_orgz_info* cur_sram_orgz_info,
                                                        char* verilog_dir, char* subckt_dir, 
                                                        const RRGSB& rr_cb, t_rr_type cb_type,
-                                                       boolean is_explicit_mapping) {
+                                                       bool is_explicit_mapping) {
   FILE* fp = NULL;
   char* fname = NULL;
   int cur_num_sram, num_conf_bits, num_reserved_conf_bits, esti_sram_cnt;
@@ -3587,7 +3604,7 @@ void dump_verilog_routing_connection_box_subckt(t_sram_orgz_info* cur_sram_orgz_
                                                 char* verilog_dir, char* subckt_dir, 
                                                 t_cb* cur_cb_info,
                                                 boolean compact_routing_hierarchy,
-                                                boolean is_explicit_mapping) {
+                                                bool is_explicit_mapping) {
   int itrack, inode, side, x, y;
   int side_cnt = 0;
   FILE* fp = NULL;

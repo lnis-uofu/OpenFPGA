@@ -1038,7 +1038,7 @@ void dump_verilog_pb_graph_pin_interc(t_sram_orgz_info* cur_sram_orgz_info,
                                       enum e_spice_pin2pin_interc_type pin2pin_interc_type,
                                       t_pb_graph_pin* des_pb_graph_pin,
                                       t_mode* cur_mode,
-                                      boolean is_explicit_mapping) {
+                                      bool is_explicit_mapping) {
   int iedge, ipin;
   int fan_in = 0;
   t_interconnect* cur_interc = NULL; 
@@ -1276,7 +1276,7 @@ void dump_verilog_pb_graph_pin_interc(t_sram_orgz_info* cur_sram_orgz_info,
       fprintf(fp, "%s %s_%d_ ( ", 
               mem_subckt_name, mem_subckt_name, cur_interc->spice_model->cnt);
       dump_verilog_mem_sram_submodule(fp, cur_sram_orgz_info, cur_interc->spice_model, fan_in,
-                                      mem_model, cur_num_sram, cur_num_sram + num_mux_conf_bits - 1); 
+                                      mem_model, cur_num_sram, cur_num_sram + num_mux_conf_bits - 1, is_explicit_mapping); 
       fprintf(fp, ");\n");
       /* update the number of memory bits */
       update_sram_orgz_info_num_mem_bit(cur_sram_orgz_info, cur_num_sram + num_mux_conf_bits);
@@ -1321,7 +1321,7 @@ void dump_verilog_pb_graph_port_interc(t_sram_orgz_info* cur_sram_orgz_info,
                                        t_pb_graph_node* cur_pb_graph_node,
                                        enum e_spice_pb_port_type pb_port_type,
                                        t_mode* cur_mode,
-                                       boolean is_explicit_mapping) {
+                                       bool is_explicit_mapping) {
   int iport, ipin;
 
   /* Check the file handler*/ 
@@ -1386,7 +1386,7 @@ void dump_verilog_pb_graph_interc(t_sram_orgz_info* cur_sram_orgz_info,
                                   char* pin_prefix,
                                   t_pb_graph_node* cur_pb_graph_node,
                                   int select_mode_index,
-                                  boolean is_explicit_mapping) {
+                                  bool is_explicit_mapping) {
   int ipb, jpb;
   t_mode* cur_mode = NULL;
   t_pb_type* cur_pb_type = cur_pb_graph_node->pb_type;
@@ -1527,7 +1527,8 @@ void dump_verilog_pb_primitive_verilog_model(t_sram_orgz_info* cur_sram_orgz_inf
                                              char* subckt_prefix,
                                              t_pb_graph_node* prim_pb_graph_node,
                                              int pb_index,
-                                             t_spice_model* verilog_model) {
+                                             t_spice_model* verilog_model,
+                                             bool is_explicit_mapping) {
   /* Check the file handler*/ 
   if (NULL == fp) {
     vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid file handler.\n", 
@@ -1551,23 +1552,27 @@ void dump_verilog_pb_primitive_verilog_model(t_sram_orgz_info* cur_sram_orgz_inf
   case SPICE_MODEL_LUT:
     /* If this is a idle block we should set sram_bits to zero*/
     dump_verilog_pb_primitive_lut(cur_sram_orgz_info, fp, subckt_prefix, prim_pb_graph_node,
-                                  pb_index, verilog_model);
+                                  pb_index, verilog_model,
+                                  my_bool_to_boolean(is_explicit_mapping));
     break;
   case SPICE_MODEL_FF:
     assert(NULL != verilog_model->model_netlist);
     /* TODO : We should learn trigger type and initial value!!! and how to apply them!!! */
     dump_verilog_pb_generic_primitive(cur_sram_orgz_info, fp, subckt_prefix, prim_pb_graph_node, 
-                                      pb_index, verilog_model);
+                                      pb_index, verilog_model,
+                                      my_bool_to_boolean(is_explicit_mapping));
     break;
   case SPICE_MODEL_IOPAD:
     assert(NULL != verilog_model->model_netlist);
     dump_verilog_pb_generic_primitive (cur_sram_orgz_info, fp, subckt_prefix, prim_pb_graph_node,
-                                       pb_index, verilog_model);
+                                       pb_index, verilog_model,
+                                       my_bool_to_boolean(is_explicit_mapping));
     break;
   case SPICE_MODEL_HARDLOGIC:
     assert(NULL != verilog_model->model_netlist);
     dump_verilog_pb_generic_primitive(cur_sram_orgz_info, fp, subckt_prefix, prim_pb_graph_node,
-                                      pb_index, verilog_model);
+                                      pb_index, verilog_model,
+                                      my_bool_to_boolean(is_explicit_mapping));
     break;
   default:
     vpr_printf(TIO_MESSAGE_ERROR, "(File:%s,[LINE%d])Invalid type of verilog_model(%s), should be [LUT|FF|HARD_LOGIC|IO]!\n",
@@ -1587,7 +1592,7 @@ void dump_verilog_phy_pb_graph_node_rec(t_sram_orgz_info* cur_sram_orgz_info,
                                         char* subckt_prefix,
                                         t_pb_graph_node* cur_pb_graph_node,
                                         int pb_type_index,
-                                        boolean is_explicit_mapping) {
+                                        bool is_explicit_mapping) {
   int mode_index, ipb, jpb, child_mode_index;
   t_pb_type* cur_pb_type = NULL;
   char* subckt_name = NULL;
@@ -1668,21 +1673,24 @@ void dump_verilog_phy_pb_graph_node_rec(t_sram_orgz_info* cur_sram_orgz_info,
     case LUT_CLASS: 
       dump_verilog_pb_primitive_verilog_model(cur_sram_orgz_info, fp, formatted_subckt_prefix, 
                                               cur_pb_graph_node, pb_type_index, 
-                                              cur_pb_type->spice_model); /* last param means idle */
+                                              cur_pb_type->spice_model, 
+                                              my_bool_to_boolean(is_explicit_mapping)); /* last param means idle */
       break;
     case LATCH_CLASS:
       assert(0 == cur_pb_type->num_modes);
       /* Consider the num_pb, create all the subckts*/
       dump_verilog_pb_primitive_verilog_model(cur_sram_orgz_info, fp, formatted_subckt_prefix, 
                                               cur_pb_graph_node,  pb_type_index, 
-                                              cur_pb_type->spice_model); /* last param means idle */
+                                              cur_pb_type->spice_model,
+                                              my_bool_to_boolean(is_explicit_mapping)); /* last param means idle */
       break;
     case UNKNOWN_CLASS:
     case MEMORY_CLASS:
       /* Consider the num_pb, create all the subckts*/
       dump_verilog_pb_primitive_verilog_model(cur_sram_orgz_info, fp, formatted_subckt_prefix, 
                                               cur_pb_graph_node , pb_type_index, 
-                                              cur_pb_type->spice_model); /* last param means idle */
+                                              cur_pb_type->spice_model,
+                                              my_bool_to_boolean(is_explicit_mapping)); /* last param means idle */
       break;  
     default:
       vpr_printf(TIO_MESSAGE_ERROR, "(File:%s,[LINE%d])Unknown class type of pb_type(%s)!\n",
@@ -1961,7 +1969,7 @@ void dump_verilog_physical_block(t_sram_orgz_info* cur_sram_orgz_info,
                                  int y,
                                  int z,
                                  t_type_ptr type_descriptor,
-                                 boolean is_explicit_mapping) {
+                                 bool is_explicit_mapping) {
   t_pb_graph_node* top_pb_graph_node = NULL;
   t_block* mapped_block = NULL;
   t_pb* top_pb = NULL;
@@ -2476,7 +2484,7 @@ void dump_verilog_physical_grid_blocks(t_sram_orgz_info* cur_sram_orgz_info,
                                        char* subckt_dir,
                                        int ix, int iy,
                                        t_arch* arch,
-                                       boolean is_explicit_mapping) {
+                                       bool is_explicit_mapping) {
   int subckt_name_str_len = 0;
   char* subckt_name = NULL;
   int iz;
@@ -2701,7 +2709,7 @@ void dump_verilog_physical_grid_blocks(t_sram_orgz_info* cur_sram_orgz_info,
 void dump_verilog_logic_blocks(t_sram_orgz_info* cur_sram_orgz_info,
                                char* subckt_dir,
                                t_arch* arch,
-                               boolean is_explicit_mapping) {
+                               bool is_explicit_mapping) {
   int ix, iy; 
   
   /* Check the grid*/
