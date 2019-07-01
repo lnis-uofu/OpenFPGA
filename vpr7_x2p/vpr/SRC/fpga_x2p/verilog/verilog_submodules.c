@@ -1434,7 +1434,8 @@ void dump_verilog_cmos_mux_onelevel_structure(FILE* fp,
 void dump_verilog_cmos_mux_submodule(FILE* fp,
                                      int mux_size,
                                      t_spice_model spice_model,
-                                     t_spice_mux_arch spice_mux_arch) {
+                                     t_spice_mux_arch spice_mux_arch,
+                                     bool is_explicit_mapping) {
   int i, num_conf_bits, iport, ipin, num_mode_bits;
   int num_input_port = 0;
   int num_output_port = 0;
@@ -1941,7 +1942,8 @@ void dump_verilog_rram_mux_onelevel_structure(FILE* fp,
 void dump_verilog_rram_mux_submodule(FILE* fp,
                                      int mux_size,
                                      t_spice_model spice_model,
-                                     t_spice_mux_arch spice_mux_arch) {
+                                     t_spice_mux_arch spice_mux_arch,
+                                     bool is_explicit_mapping) {
   int i, num_conf_bits;
   int num_input_port = 0;
   int num_output_port = 0;
@@ -2173,7 +2175,8 @@ void dump_verilog_rram_mux_submodule(FILE* fp,
 void dump_verilog_cmos_mux_mem_submodule(FILE* fp,
                                          int mux_size,
                                          t_spice_model spice_model,
-                                         t_spice_mux_arch spice_mux_arch) {
+                                         t_spice_mux_arch spice_mux_arch,
+                                         bool is_explicit_mapping) {
   int i, num_conf_bits;
 
   int num_sram_port = 0;
@@ -2257,7 +2260,8 @@ void dump_verilog_cmos_mux_mem_submodule(FILE* fp,
  * whatever structure it is: one-level, two-level or multi-level
  */
 void dump_verilog_mux_mem_module(FILE* fp, 
-                                 t_spice_mux_model* spice_mux_model) {
+                                 t_spice_mux_model* spice_mux_model,
+                                 bool is_explicit_mapping) {
   /* Make sure we have a valid file handler*/
   if (NULL == fp) {
     vpr_printf(TIO_MESSAGE_ERROR,"(FILE:%s,LINE[%d])Invalid file handler!\n",__FILE__, __LINE__); 
@@ -2287,7 +2291,8 @@ void dump_verilog_mux_mem_module(FILE* fp,
   case SPICE_MODEL_DESIGN_CMOS:
     dump_verilog_cmos_mux_mem_submodule(fp, spice_mux_model->size,
                                         *(spice_mux_model->spice_model), 
-                                        *(spice_mux_model->spice_mux_arch));
+                                        *(spice_mux_model->spice_mux_arch),
+                                        is_explicit_mapping);
     break;
   case SPICE_MODEL_DESIGN_RRAM:
     /* We do not need a memory submodule for RRAM MUX,
@@ -2308,7 +2313,8 @@ void dump_verilog_mux_mem_module(FILE* fp,
  * whatever structure it is: one-level, two-level or multi-level
  */
 void dump_verilog_mux_module(FILE* fp, 
-                             t_spice_mux_model* spice_mux_model) {
+                             t_spice_mux_model* spice_mux_model,
+                             bool is_explicit_mapping) {
   /* Make sure we have a valid file handler*/
   if (NULL == fp) {
     vpr_printf(TIO_MESSAGE_ERROR,"(FILE:%s,LINE[%d])Invalid file handler!\n",__FILE__, __LINE__); 
@@ -2347,12 +2353,14 @@ void dump_verilog_mux_module(FILE* fp,
   case SPICE_MODEL_DESIGN_CMOS:
     dump_verilog_cmos_mux_submodule(fp, spice_mux_model->size,
                                     *(spice_mux_model->spice_model), 
-                                    *(spice_mux_model->spice_mux_arch));
+                                    *(spice_mux_model->spice_mux_arch),
+                                    is_explicit_mapping);
     break;
   case SPICE_MODEL_DESIGN_RRAM:
     dump_verilog_rram_mux_submodule(fp, spice_mux_model->size,
                                     *(spice_mux_model->spice_model), 
-                                    *(spice_mux_model->spice_mux_arch));
+                                    *(spice_mux_model->spice_mux_arch),
+                                    is_explicit_mapping);
     break;
   default:
     vpr_printf(TIO_MESSAGE_ERROR,"(FILE:%s,LINE[%d])Invalid design_technology of MUX(name: %s)\n",
@@ -2373,7 +2381,8 @@ void dump_verilog_submodule_muxes(t_sram_orgz_info* cur_sram_orgz_info,
                                   int num_switch,
                                   t_switch_inf* switches,
                                   t_spice* spice,
-                                  t_det_routing_arch* routing_arch) {
+                                  t_det_routing_arch* routing_arch,
+                                  bool is_explicit_mapping) {
   
   /* Statisitcs for input sizes and structures of MUXes 
    * used in FPGA architecture 
@@ -2444,7 +2453,7 @@ void dump_verilog_submodule_muxes(t_sram_orgz_info* cur_sram_orgz_info,
     /* Let's have a N:1 MUX as basis*/
     dump_verilog_mux_basis_module(fp, cur_spice_mux_model);
     /* Print the mux subckt */
-    dump_verilog_mux_module(fp, cur_spice_mux_model);
+    dump_verilog_mux_module(fp, cur_spice_mux_model, is_explicit_mapping);
     /* Update the statistics*/
     mux_cnt++;
     if ((-1 == max_mux_size)||(max_mux_size < cur_spice_mux_model->size)) {
@@ -3234,7 +3243,8 @@ void dump_verilog_submodule_memories(t_sram_orgz_info* cur_sram_orgz_info,
                                      int num_switch,
                                      t_switch_inf* switches,
                                      t_spice* spice,
-                                     t_det_routing_arch* routing_arch) {
+                                     t_det_routing_arch* routing_arch,
+                                     bool is_explicit_mapping) {
   
   /* Statisitcs for input sizes and structures of MUXes 
    * used in FPGA architecture 
@@ -3308,7 +3318,8 @@ void dump_verilog_submodule_memories(t_sram_orgz_info* cur_sram_orgz_info,
     cur_spice_mux_model->spice_mux_arch = (t_spice_mux_arch*)my_malloc(sizeof(t_spice_mux_arch));
     init_spice_mux_arch(cur_spice_mux_model->spice_model, cur_spice_mux_model->spice_mux_arch, cur_spice_mux_model->size);
     /* Print the mux mem subckt */
-    dump_verilog_mux_mem_module(fp, cur_spice_mux_model);
+    dump_verilog_mux_mem_module(fp, cur_spice_mux_model,
+                                is_explicit_mapping);
     /* Update the statistics*/
     /* Move on to the next*/
     temp = temp->next;
@@ -3485,7 +3496,7 @@ void dump_verilog_submodules(t_sram_orgz_info* cur_sram_orgz_info,
   /* 1. MUXes */
   vpr_printf(TIO_MESSAGE_INFO, "Generating modules of multiplexers...\n");
   dump_verilog_submodule_muxes(cur_sram_orgz_info, verilog_dir, submodule_dir, routing_arch->num_switch, 
-                               switch_inf, Arch.spice, routing_arch);
+                               switch_inf, Arch.spice, routing_arch, fpga_verilog_opts.dump_explicit_verilog);
  
   /* 2. LUTes */
   vpr_printf(TIO_MESSAGE_INFO, "Generating modules of LUTs...\n");
@@ -3502,7 +3513,7 @@ void dump_verilog_submodules(t_sram_orgz_info* cur_sram_orgz_info,
   /* 4. Memories */
   vpr_printf(TIO_MESSAGE_INFO, "Generating modules of memories...\n");
   dump_verilog_submodule_memories(cur_sram_orgz_info, verilog_dir, submodule_dir, routing_arch->num_switch, 
-                                  switch_inf, Arch.spice, routing_arch);
+                                  switch_inf, Arch.spice, routing_arch, fpga_verilog_opts.dump_explicit_verilog);
 
   /* 5. Dump decoder modules only when memory bank is required */
   dump_verilog_config_peripherals(cur_sram_orgz_info, verilog_dir, submodule_dir);

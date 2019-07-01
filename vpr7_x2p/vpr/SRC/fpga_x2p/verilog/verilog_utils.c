@@ -3166,7 +3166,7 @@ void dump_verilog_mem_sram_submodule(FILE* fp,
     break;
   case SPICE_SRAM_SCAN_CHAIN:
     /* Only dump the global ports belonging to a spice_model */
-    if (0 < rec_dump_verilog_spice_model_global_ports(fp, cur_sram_verilog_model, FALSE, TRUE, FALSE)) {
+    if (0 < rec_dump_verilog_spice_model_global_ports(fp, cur_sram_verilog_model, FALSE, TRUE, my_bool_to_boolean(is_explicit_mapping))) {
       fprintf(fp, ",\n");
     }
     if (SPICE_MODEL_MUX == cur_verilog_model->type) {
