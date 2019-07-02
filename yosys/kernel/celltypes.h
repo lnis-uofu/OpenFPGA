@@ -20,7 +20,7 @@
 #ifndef CELLTYPES_H
 #define CELLTYPES_H
 
-#include <kernel/yosys.h>
+#include "kernel/yosys.h"
 
 YOSYS_NAMESPACE_BEGIN
 
@@ -82,6 +82,32 @@ struct CellTypes
 
 	void setup_internals()
 	{
+		setup_internals_eval();
+
+		IdString A = "\\A", B = "\\B", EN = "\\EN", Y = "\\Y";
+		IdString SRC = "\\SRC", DST = "\\DST", DAT = "\\DAT";
+		IdString EN_SRC = "\\EN_SRC", EN_DST = "\\EN_DST";
+
+		setup_type("$tribuf", {A, EN}, {Y}, true);
+
+		setup_type("$assert", {A, EN}, pool<RTLIL::IdString>(), true);
+		setup_type("$assume", {A, EN}, pool<RTLIL::IdString>(), true);
+		setup_type("$live", {A, EN}, pool<RTLIL::IdString>(), true);
+		setup_type("$fair", {A, EN}, pool<RTLIL::IdString>(), true);
+		setup_type("$cover", {A, EN}, pool<RTLIL::IdString>(), true);
+		setup_type("$initstate", pool<RTLIL::IdString>(), {Y}, true);
+		setup_type("$anyconst", pool<RTLIL::IdString>(), {Y}, true);
+		setup_type("$anyseq", pool<RTLIL::IdString>(), {Y}, true);
+		setup_type("$allconst", pool<RTLIL::IdString>(), {Y}, true);
+		setup_type("$allseq", pool<RTLIL::IdString>(), {Y}, true);
+		setup_type("$equiv", {A, B}, {Y}, true);
+		setup_type("$specify2", {EN, SRC, DST}, pool<RTLIL::IdString>(), true);
+		setup_type("$specify3", {EN, SRC, DST, DAT}, pool<RTLIL::IdString>(), true);
+		setup_type("$specrule", {EN_SRC, EN_DST, SRC, DST}, pool<RTLIL::IdString>(), true);
+	}
+
+	void setup_internals_eval()
+	{
 		std::vector<RTLIL::IdString> unary_ops = {
 			"$not", "$pos", "$neg",
 			"$reduce_and", "$reduce_or", "$reduce_xor", "$reduce_xnor", "$reduce_bool",
@@ -111,15 +137,6 @@ struct CellTypes
 		setup_type("$lcu", {P, G, CI}, {CO}, true);
 		setup_type("$alu", {A, B, CI, BI}, {X, Y, CO}, true);
 		setup_type("$fa", {A, B, C}, {X, Y}, true);
-
-		setup_type("$tribuf", {A, EN}, {Y}, true);
-
-		setup_type("$assert", {A, EN}, pool<RTLIL::IdString>(), true);
-		setup_type("$assume", {A, EN}, pool<RTLIL::IdString>(), true);
-		setup_type("$initstate", pool<RTLIL::IdString>(), {Y}, true);
-		setup_type("$anyconst", pool<RTLIL::IdString>(), {Y}, true);
-		setup_type("$anyseq", pool<RTLIL::IdString>(), {Y}, true);
-		setup_type("$equiv", {A, B}, {Y}, true);
 	}
 
 	void setup_internals_mem()
@@ -149,10 +166,19 @@ struct CellTypes
 
 	void setup_stdcells()
 	{
+		setup_stdcells_eval();
+
+		IdString A = "\\A", E = "\\E", Y = "\\Y";
+
+		setup_type("$_TBUF_", {A, E}, {Y}, true);
+	}
+
+	void setup_stdcells_eval()
+	{
 		IdString A = "\\A", B = "\\B", C = "\\C", D = "\\D";
 		IdString E = "\\E", F = "\\F", G = "\\G", H = "\\H";
 		IdString I = "\\I", J = "\\J", K = "\\K", L = "\\L";
-		IdString M = "\\I", N = "\\N", O = "\\O", P = "\\P";
+		IdString M = "\\M", N = "\\N", O = "\\O", P = "\\P";
 		IdString S = "\\S", T = "\\T", U = "\\U", V = "\\V";
 		IdString Y = "\\Y";
 
@@ -164,6 +190,8 @@ struct CellTypes
 		setup_type("$_NOR_",  {A, B}, {Y}, true);
 		setup_type("$_XOR_", {A, B}, {Y}, true);
 		setup_type("$_XNOR_", {A, B}, {Y}, true);
+		setup_type("$_ANDNOT_", {A, B}, {Y}, true);
+		setup_type("$_ORNOT_", {A, B}, {Y}, true);
 		setup_type("$_MUX_", {A, B, S}, {Y}, true);
 		setup_type("$_MUX4_", {A, B, C, D, S, T}, {Y}, true);
 		setup_type("$_MUX8_", {A, B, C, D, E, F, G, H, S, T, U}, {Y}, true);
@@ -172,7 +200,6 @@ struct CellTypes
 		setup_type("$_OAI3_", {A, B, C}, {Y}, true);
 		setup_type("$_AOI4_", {A, B, C, D}, {Y}, true);
 		setup_type("$_OAI4_", {A, B, C, D}, {Y}, true);
-		setup_type("$_TBUF_", {A, E}, {Y}, true);
 	}
 
 	void setup_stdcells_mem()
@@ -250,7 +277,7 @@ struct CellTypes
 		return v;
 	}
 
-	static RTLIL::Const eval(RTLIL::IdString type, const RTLIL::Const &arg1, const RTLIL::Const &arg2, bool signed1, bool signed2, int result_len)
+	static RTLIL::Const eval(RTLIL::IdString type, const RTLIL::Const &arg1, const RTLIL::Const &arg2, bool signed1, bool signed2, int result_len, bool *errp = nullptr)
 	{
 		if (type == "$sshr" && !signed1)
 			type = "$shr";
@@ -312,16 +339,25 @@ struct CellTypes
 		if (type == "$_OR_")
 			return const_or(arg1, arg2, false, false, 1);
 		if (type == "$_NOR_")
-			return eval_not(const_and(arg1, arg2, false, false, 1));
+			return eval_not(const_or(arg1, arg2, false, false, 1));
 		if (type == "$_XOR_")
 			return const_xor(arg1, arg2, false, false, 1);
 		if (type == "$_XNOR_")
 			return const_xnor(arg1, arg2, false, false, 1);
+		if (type == "$_ANDNOT_")
+			return const_and(arg1, eval_not(arg2), false, false, 1);
+		if (type == "$_ORNOT_")
+			return const_or(arg1, eval_not(arg2), false, false, 1);
+
+		if (errp != nullptr) {
+			*errp = true;
+			return State::Sm;
+		}
 
 		log_abort();
 	}
 
-	static RTLIL::Const eval(RTLIL::Cell *cell, const RTLIL::Const &arg1, const RTLIL::Const &arg2)
+	static RTLIL::Const eval(RTLIL::Cell *cell, const RTLIL::Const &arg1, const RTLIL::Const &arg2, bool *errp = nullptr)
 	{
 		if (cell->type == "$slice") {
 			RTLIL::Const ret;
@@ -404,10 +440,10 @@ struct CellTypes
 		bool signed_a = cell->parameters.count("\\A_SIGNED") > 0 && cell->parameters["\\A_SIGNED"].as_bool();
 		bool signed_b = cell->parameters.count("\\B_SIGNED") > 0 && cell->parameters["\\B_SIGNED"].as_bool();
 		int result_len = cell->parameters.count("\\Y_WIDTH") > 0 ? cell->parameters["\\Y_WIDTH"].as_int() : -1;
-		return eval(cell->type, arg1, arg2, signed_a, signed_b, result_len);
+		return eval(cell->type, arg1, arg2, signed_a, signed_b, result_len, errp);
 	}
 
-	static RTLIL::Const eval(RTLIL::Cell *cell, const RTLIL::Const &arg1, const RTLIL::Const &arg2, const RTLIL::Const &arg3)
+	static RTLIL::Const eval(RTLIL::Cell *cell, const RTLIL::Const &arg1, const RTLIL::Const &arg2, const RTLIL::Const &arg3, bool *errp = nullptr)
 	{
 		if (cell->type.in("$mux", "$pmux", "$_MUX_")) {
 			RTLIL::Const ret = arg1;
@@ -425,18 +461,18 @@ struct CellTypes
 			return eval_not(const_and(const_or(arg1, arg2, false, false, 1), arg3, false, false, 1));
 
 		log_assert(arg3.bits.size() == 0);
-		return eval(cell, arg1, arg2);
+		return eval(cell, arg1, arg2, errp);
 	}
 
-	static RTLIL::Const eval(RTLIL::Cell *cell, const RTLIL::Const &arg1, const RTLIL::Const &arg2, const RTLIL::Const &arg3, const RTLIL::Const &arg4)
+	static RTLIL::Const eval(RTLIL::Cell *cell, const RTLIL::Const &arg1, const RTLIL::Const &arg2, const RTLIL::Const &arg3, const RTLIL::Const &arg4, bool *errp = nullptr)
 	{
 		if (cell->type == "$_AOI4_")
 			return eval_not(const_or(const_and(arg1, arg2, false, false, 1), const_and(arg3, arg4, false, false, 1), false, false, 1));
 		if (cell->type == "$_OAI4_")
-			return eval_not(const_and(const_or(arg1, arg2, false, false, 1), const_and(arg3, arg4, false, false, 1), false, false, 1));
+			return eval_not(const_and(const_or(arg1, arg2, false, false, 1), const_or(arg3, arg4, false, false, 1), false, false, 1));
 
 		log_assert(arg4.bits.size() == 0);
-		return eval(cell, arg1, arg2, arg3);
+		return eval(cell, arg1, arg2, arg3, errp);
 	}
 };
 

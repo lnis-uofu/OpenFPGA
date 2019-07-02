@@ -185,7 +185,8 @@ void read_netlist(INP const char *net_file, INP const t_arch *arch,
 	 */
 
 	FreeTokens(&circuit_inputs);
-	FreeTokens(&circuit_outputs);
+	if (circuit_outputs)
+		FreeTokens(&circuit_outputs);
 	if (circuit_clocks)
 		FreeTokens(&circuit_clocks);
 	FreeNode(Top);
@@ -962,8 +963,10 @@ static int count_sinks_internal_cb_rr_graph_net_nums(
 	for (i = 0; i < cur_rr_node->num_edges; i++) {
 		if (&rr_graph[rr_graph[cur_rr_node->edges[i]].prev_node]
 				== cur_rr_node) {
+	        if (!(rr_graph[cur_rr_node->edges[i]].net_num == OPEN || rr_graph[cur_rr_node->edges[i]].net_num == cur_rr_node->net_num))  {
 			assert(
 					rr_graph[cur_rr_node->edges[i]].net_num == OPEN || rr_graph[cur_rr_node->edges[i]].net_num == cur_rr_node->net_num);
+            }
 			count += count_sinks_internal_cb_rr_graph_net_nums(
 					&rr_graph[cur_rr_node->edges[i]], rr_graph);
 		}

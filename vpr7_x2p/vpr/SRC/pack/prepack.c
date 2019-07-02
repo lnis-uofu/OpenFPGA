@@ -161,6 +161,13 @@ static void discover_pattern_names_in_pb_graph_node(
 		for (j = 0; j < pb_graph_node->num_input_pins[i]; j++) {
 			hasPattern = FALSE;
 			for (k = 0; k < pb_graph_node->input_pins[i][j].num_output_edges; k++) {
+                /* Xifan Tang: bypass pack_patterns whose parent mode is disabled_in_packing*/
+                /*
+                if (TRUE == pb_graph_node->input_pins[i][j].output_edges[k]->interconnect->parent_mode->disabled_in_packing) {
+                  continue;
+                }
+                */
+                /* END */
 				for (m = 0; m < pb_graph_node->input_pins[i][j].output_edges[k]->num_pack_patterns;	m++) {
 					hasPattern = TRUE;
 					index =	add_pattern_name_to_hash(nhash,	
@@ -183,6 +190,13 @@ static void discover_pattern_names_in_pb_graph_node(
 		for (j = 0; j < pb_graph_node->num_output_pins[i]; j++) {
 			hasPattern = FALSE;
 			for (k = 0; k < pb_graph_node->output_pins[i][j].num_output_edges; k++) {
+                /* Xifan Tang: bypass pack_patterns whose parent mode is disabled_in_packing*/
+                /*
+                if (TRUE == pb_graph_node->output_pins[i][j].output_edges[k]->interconnect->parent_mode->disabled_in_packing) {
+                  continue;
+                }
+                */
+                /* END */
 				for (m = 0;	m < pb_graph_node->output_pins[i][j].output_edges[k]->num_pack_patterns; m++) {
 					hasPattern = TRUE;
 					index =	add_pattern_name_to_hash(nhash,
@@ -205,6 +219,13 @@ static void discover_pattern_names_in_pb_graph_node(
 		for (j = 0; j < pb_graph_node->num_clock_pins[i]; j++) {
 			hasPattern = FALSE;
 			for (k = 0; k < pb_graph_node->clock_pins[i][j].num_output_edges; k++) {
+                /* Xifan Tang: bypass pack_patterns whose parent mode is disabled_in_packing*/
+                /*
+                if (TRUE == pb_graph_node->clock_pins[i][j].output_edges[k]->interconnect->parent_mode->disabled_in_packing) {
+                  continue;
+                }
+                */
+                /* END */
 				for (m = 0;	m < pb_graph_node->clock_pins[i][j].output_edges[k]->num_pack_patterns;	m++) {
 					hasPattern = TRUE;
 					index =	add_pattern_name_to_hash(nhash,
@@ -637,6 +658,14 @@ t_pack_molecule *alloc_and_load_pack_molecules(
 
 	is_used = (boolean*)my_calloc(num_packing_patterns, sizeof(boolean));
 
+    /* Xifan Tang: initialize the pattern usage ! Mark used for patterns that belongs to modes disabled_in_packing*/
+	for (i = 0; i < num_packing_patterns; i++) {
+      if (TRUE == list_of_pack_patterns[i].root_block->pb_type->parent_mode->disabled_in_packing) {
+        is_used[i] = TRUE;
+      }
+    }
+    /* END */
+
 	cur_molecule = list_of_molecules_head = NULL;
 
 	/* Find forced pack patterns */
@@ -651,6 +680,11 @@ t_pack_molecule *alloc_and_load_pack_molecules(
 				best_pattern = j;
 			}
 		}
+        /* Xifan Tang: we may not found an usused pattern */
+        if (TRUE == is_used[best_pattern]) {
+          continue;
+        }
+        /* END */
 		assert(is_used[best_pattern] == FALSE);
 		is_used[best_pattern] = TRUE;
 		for (j = 0; j < num_logical_blocks; j++) {

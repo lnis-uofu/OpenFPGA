@@ -16,6 +16,8 @@
 #include "read_xml_arch_file.h"
 #include "ReadOptions.h"
 
+#include "tileable_rr_graph_builder.h"
+
 /* Xifan TANG: SWSEG SUPPORT */
 #include "rr_graph_swseg.h" 
 /* end */
@@ -69,14 +71,6 @@ static t_chunk rr_mem_ch = {NULL, 0, NULL};
 /* Status of current chunk being dished out by calls to my_chunk_malloc.   */
 
 /********************* Subroutines local to this module. *******************/
-static int ****alloc_and_load_pin_to_track_map(INP enum e_pin_type pin_type,
-		INP int nodes_per_chan, INP int *Fc, INP t_type_ptr Type,
-		INP boolean perturb_switch_pattern,
-		INP enum e_directionality directionality);
-
-static struct s_ivec ***alloc_and_load_track_to_pin_lookup(
-		INP int ****pin_to_track_map, INP int *Fc, INP int height,
-		INP int num_pins, INP int nodes_per_chan);
 
 static void build_bidir_rr_opins(INP int i, INP int j,
 		INOUTP t_rr_node * L_rr_node, INP t_ivec *** L_rr_node_indices,
@@ -124,10 +118,6 @@ static void check_all_tracks_reach_pins(t_type_ptr type,
 		int ****tracks_connected_to_pin, int nodes_per_chan, int Fc,
 		enum e_pin_type ipin_or_opin);
 
-static boolean *alloc_and_load_perturb_ipins(INP int nodes_per_chan,
-		INP int L_num_types, INP int **Fc_in, INP int **Fc_out,
-		INP enum e_directionality directionality);
-
 static void build_rr_sinks_sources(INP int i, INP int j,
 		INP t_rr_node * L_rr_node, INP t_ivec *** L_rr_node_indices,
 		INP int delayless_switch, INP struct s_grid_tile **L_grid);
@@ -150,9 +140,6 @@ static void build_rr_ychan(INP int i, INP int j,
 		INP boolean * L_rr_edge_done, INOUTP t_rr_node * L_rr_node,
 		INP int wire_to_ipin_switch, INP enum e_directionality directionality);
 
-static void rr_graph_externals(t_timing_inf timing_inf,
-		t_segment_inf * segment_inf, int num_seg_types, int nodes_per_chan,
-		int wire_to_ipin_switch, enum e_base_cost_type base_cost_type);
 
 void alloc_and_load_edges_and_switches(INP t_rr_node * L_rr_node, INP int inode,
 		INP int num_edges, INP boolean * L_rr_edge_done,
@@ -191,23 +178,35 @@ static void print_distribution(FILE * fptr,
 		t_mux_size_distribution * distr_struct);
 #endif
 
-static void free_type_pin_to_track_map(int***** ipin_to_track_map,
-		t_type_ptr types);
-
-static void free_type_track_to_ipin_map(struct s_ivec**** track_to_pin_map,
-		t_type_ptr types, int nodes_per_chan);
 
 static t_seg_details *alloc_and_load_global_route_seg_details(
 		INP int nodes_per_chan, INP int global_route_switch);
 
-/* UDSD Modifications by WMF End */
+static 
+void build_classic_rr_graph(INP t_graph_type graph_type, INP int L_num_types,
+							INP t_type_ptr types, INP int L_nx, INP int L_ny,
+							INP struct s_grid_tile **L_grid, INP int chan_width,
+							INP struct s_chan_width_dist *chan_capacity_inf,
+							INP enum e_switch_block_type sb_type, INP int Fs, INP int num_seg_types,
+							INP int num_switches, INP t_segment_inf * segment_inf,
+							INP int global_route_switch, INP int delayless_switch,
+							INP t_timing_inf timing_inf, INP int wire_to_ipin_switch,
+							INP enum e_base_cost_type base_cost_type, INP t_direct_inf *directs, 
+							INP int num_directs, INP boolean ignore_Fc_0, OUTP int *Warnings,
+    					    /*Xifan TANG: Switch Segment Pattern Support*/
+    					    INP int num_swseg_pattern, INP t_swseg_pattern_inf* swseg_patterns,
+    					    INP boolean opin_to_cb_fast_edges, INP boolean opin_logic_eq_edges);
 
-static int **alloc_and_load_actual_fc(INP int L_num_types, INP t_type_ptr types,
-		INP int nodes_per_chan, INP boolean is_Fc_out,
-		INP enum e_directionality directionality, OUTP boolean * Fc_clipped, INP boolean ignore_Fc_0);
+
+/* UDSD Modifications by WMF End */
 
 /******************* Subroutine definitions *******************************/
 
+/*************************************************************************
+ * Top-level function of rr_graph builder
+ * Xifan TANG: this top function can branch between tileable rr_graph generator
+ * and the classical rr_graph generator
+ ************************************************************************/
 void build_rr_graph(INP t_graph_type graph_type, INP int L_num_types,
 		INP t_type_ptr types, INP int L_nx, INP int L_ny,
 		INP struct s_grid_tile **L_grid, INP int chan_width,
@@ -221,6 +220,50 @@ void build_rr_graph(INP t_graph_type graph_type, INP int L_num_types,
         /*Xifan TANG: Switch Segment Pattern Support*/
         INP int num_swseg_pattern, INP t_swseg_pattern_inf* swseg_patterns,
         INP boolean opin_to_cb_fast_edges, INP boolean opin_logic_eq_edges) {
+  /* Branch here */
+  if (GRAPH_UNIDIR_TILEABLE == graph_type) {
+    build_tileable_unidir_rr_graph(L_num_types, types,
+                                   L_nx, L_ny, L_grid, 
+                                   chan_width,
+                                   sb_type, Fs, num_seg_types, segment_inf,
+                                   num_switches, delayless_switch,
+                                   timing_inf, wire_to_ipin_switch,
+                                   base_cost_type, directs, num_directs, ignore_Fc_0, Warnings); 
+  } else {
+    build_classic_rr_graph(graph_type, L_num_types, types,
+                           L_nx, L_ny, L_grid, 
+                           chan_width, chan_capacity_inf,
+                           sb_type, Fs, num_seg_types, num_switches, segment_inf,
+                           global_route_switch, delayless_switch,
+                           timing_inf, wire_to_ipin_switch,
+                           base_cost_type, directs, num_directs, ignore_Fc_0, Warnings,
+                           num_swseg_pattern, swseg_patterns, 
+                           opin_to_cb_fast_edges, opin_logic_eq_edges); 
+   
+  }
+
+  return;
+}
+
+
+/* Xifan TANG: I rename the classical rr_graph builder here. 
+ * We can have a clean build_rr_graph top function, 
+ * where we branch for tileable routing and classical */
+static 
+void build_classic_rr_graph(INP t_graph_type graph_type, INP int L_num_types,
+							INP t_type_ptr types, INP int L_nx, INP int L_ny,
+							INP struct s_grid_tile **L_grid, INP int chan_width,
+							INP struct s_chan_width_dist *chan_capacity_inf,
+							INP enum e_switch_block_type sb_type, INP int Fs, INP int num_seg_types,
+							INP int num_switches, INP t_segment_inf * segment_inf,
+							INP int global_route_switch, INP int delayless_switch,
+							INP t_timing_inf timing_inf, INP int wire_to_ipin_switch,
+							INP enum e_base_cost_type base_cost_type, INP t_direct_inf *directs, 
+							INP int num_directs, INP boolean ignore_Fc_0, OUTP int *Warnings,
+    					    /*Xifan TANG: Switch Segment Pattern Support*/
+    					    INP int num_swseg_pattern, INP t_swseg_pattern_inf* swseg_patterns,
+    					    INP boolean opin_to_cb_fast_edges, INP boolean opin_logic_eq_edges) {
+
 	/* Temp structures used to build graph */
 	int nodes_per_chan, i, j;
 	t_seg_details *seg_details = NULL;
@@ -295,8 +338,7 @@ void build_rr_graph(INP t_graph_type graph_type, INP int L_num_types,
 		if (getEchoEnabled() && isEchoFileEnabled(E_ECHO_SEG_DETAILS)) {
 			dump_seg_details(seg_details, nodes_per_chan, 
 				getEchoFileName(E_ECHO_SEG_DETAILS));
-		} else
-			;
+		}
 	}
 	/* END SEG_DETAILS */
 
@@ -481,11 +523,8 @@ void build_rr_graph(INP t_graph_type graph_type, INP int L_num_types,
 	} else
 		;
 
-	check_rr_graph(graph_type, types, L_nx, L_ny, nodes_per_chan, Fs,
-			num_seg_types, num_switches, segment_inf, global_route_switch,
-			delayless_switch, wire_to_ipin_switch, seg_details, Fc_in, Fc_out,
-			opin_to_track_map, ipin_to_track_map, track_to_ipin_lookup,
-			switch_block_conn, perturb_ipins);
+	check_rr_graph(graph_type, L_nx, L_ny, 
+		           num_switches, Fc_in);
 
 	/* Free all temp structs */
 	if (seg_details) {
@@ -539,9 +578,9 @@ void build_rr_graph(INP t_graph_type graph_type, INP int L_num_types,
 	}
 }
 
-static void rr_graph_externals(t_timing_inf timing_inf,
-		t_segment_inf * segment_inf, int num_seg_types, int nodes_per_chan,
-		int wire_to_ipin_switch, enum e_base_cost_type base_cost_type) {
+void rr_graph_externals(const t_timing_inf timing_inf,
+		                const t_segment_inf * segment_inf, const int num_seg_types, const int nodes_per_chan,
+                 		const int wire_to_ipin_switch, const enum e_base_cost_type base_cost_type) {
 	add_rr_graph_C_from_switches(timing_inf.C_ipin_cblock);
 	alloc_and_load_rr_indexed_data(segment_inf, num_seg_types, rr_node_indices,
 			nodes_per_chan, wire_to_ipin_switch, base_cost_type);
@@ -551,7 +590,7 @@ static void rr_graph_externals(t_timing_inf timing_inf,
 	alloc_and_load_rr_clb_source(rr_node_indices);
 }
 
-static boolean *
+boolean *
 alloc_and_load_perturb_ipins(INP int nodes_per_chan, INP int L_num_types,
 		INP int **Fc_in, INP int **Fc_out, INP enum e_directionality directionality) {
 	int i;
@@ -619,7 +658,7 @@ alloc_and_load_global_route_seg_details(INP int nodes_per_chan,
 }
 
 /* Calculates the actual Fc values for the given nodes_per_chan value */
-static int **
+int **
 alloc_and_load_actual_fc(INP int L_num_types, INP t_type_ptr types,
 		INP int nodes_per_chan, INP boolean is_Fc_out,
 		INP enum e_directionality directionality, OUTP boolean * Fc_clipped, INP boolean ignore_Fc_0) {
@@ -652,6 +691,9 @@ alloc_and_load_actual_fc(INP int L_num_types, INP t_type_ptr types,
 		float *Fc = (float *) my_malloc(sizeof(float) * types[i].num_pins); /* [0..num_pins-1] */ 
 		for (j = 0; j < types[i].num_pins; ++j) {
 			Fc[j] = types[i].Fc[j];
+
+            /* Xifan Tang: give an initial value! */
+	         Result[i][j] = -1;
 		
 			if(Fc[j] == 0 && ignore_Fc_0 == FALSE) {
 				/* Special case indicating that this pin does not connect to general-purpose routing */
@@ -683,7 +725,7 @@ alloc_and_load_actual_fc(INP int L_num_types, INP t_type_ptr types,
 }
 
 /* frees the track to ipin mapping for each physical grid type */
-static void free_type_track_to_ipin_map(struct s_ivec**** track_to_pin_map,
+void free_type_track_to_ipin_map(struct s_ivec**** track_to_pin_map,
 		t_type_ptr types, int nodes_per_chan) {
 	int i, itrack, ioff, iside;
 	for (i = 0; i < num_types; i++) {
@@ -706,7 +748,7 @@ static void free_type_track_to_ipin_map(struct s_ivec**** track_to_pin_map,
 }
 
 /* frees the ipin to track mapping for each physical grid type */
-static void free_type_pin_to_track_map(int***** ipin_to_track_map,
+void free_type_pin_to_track_map(int***** ipin_to_track_map,
 		t_type_ptr types) {
 	int i;
 	for (i = 0; i < num_types; i++) {
@@ -1540,7 +1582,7 @@ void alloc_and_load_edges_and_switches(INP t_rr_node * L_rr_node, INP int inode,
 	assert(i == num_edges);
 }
 
-static int ****
+int ****
 alloc_and_load_pin_to_track_map(INP enum e_pin_type pin_type,
 		INP int nodes_per_chan, INP int *Fc, INP t_type_ptr Type,
 		INP boolean perturb_switch_pattern,
@@ -1881,7 +1923,7 @@ static void check_all_tracks_reach_pins(t_type_ptr type,
 /* Allocates and loads the track to ipin lookup for each physical grid type. This
  * is the same information as the ipin_to_track map but accessed in a different way. */
 
-static struct s_ivec ***
+struct s_ivec ***
 alloc_and_load_track_to_pin_lookup(INP int ****pin_to_track_map, INP int *Fc,
 		INP int height, INP int num_pins, INP int nodes_per_chan) {
 	int ipin, iside, itrack, iconn, ioff, pin_counter;

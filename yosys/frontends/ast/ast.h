@@ -1,4 +1,4 @@
-/*
+/* -*- c++ -*-
  *  yosys -- Yosys Open SYnthesis Suite
  *
  *  Copyright (C) 2012  Clifford Wolf <clifford@clifford.at>
@@ -65,6 +65,9 @@ namespace AST
 		AST_PREFIX,
 		AST_ASSERT,
 		AST_ASSUME,
+		AST_LIVE,
+		AST_FAIR,
+		AST_COVER,
 
 		AST_FCALL,
 		AST_TO_BITS,
@@ -139,6 +142,11 @@ namespace AST
 		AST_NEGEDGE,
 		AST_EDGE,
 
+		AST_INTERFACE,
+		AST_INTERFACEPORT,
+		AST_INTERFACEPORTTYPE,
+		AST_MODPORT,
+		AST_MODPORTMEMBER,
 		AST_PACKAGE
 	};
 
@@ -165,7 +173,7 @@ namespace AST
 		// node content - most of it is unused in most node types
 		std::string str;
 		std::vector<RTLIL::State> bits;
-		bool is_input, is_output, is_reg, is_signed, is_string, range_valid, range_swapped;
+		bool is_input, is_output, is_reg, is_logic, is_signed, is_string, range_valid, range_swapped, was_checked;
 		int port_id, range_left, range_right;
 		uint32_t integer;
 		double realvalue;
@@ -187,8 +195,8 @@ namespace AST
 
 		// creating and deleting nodes
 		AstNode(AstNodeType type = AST_NONE, AstNode *child1 = NULL, AstNode *child2 = NULL, AstNode *child3 = NULL);
-		AstNode *clone();
-		void cloneInto(AstNode *other);
+		AstNode *clone() const;
+		void cloneInto(AstNode *other) const;
 		void delete_children();
 		~AstNode();
 
@@ -206,6 +214,8 @@ namespace AST
 			MEM2REG_FL_SET_ASYNC = 0x00000800,
 			MEM2REG_FL_EQ2       = 0x00001000,
 			MEM2REG_FL_CMPLX_LHS = 0x00002000,
+			MEM2REG_FL_CONST_LHS = 0x00004000,
+			MEM2REG_FL_VAR_LHS   = 0x00008000,
 
 			/* proc flags */
 			MEM2REG_FL_EQ1       = 0x01000000,
@@ -229,10 +239,11 @@ namespace AST
 		bool has_const_only_constructs(bool &recommend_const_eval);
 		void replace_variables(std::map<std::string, varinfo_t> &variables, AstNode *fcall);
 		AstNode *eval_const_function(AstNode *fcall);
+		bool is_simple_const_expr();
 
 		// create a human-readable text representation of the AST (for debugging)
-		void dumpAst(FILE *f, std::string indent);
-		void dumpVlog(FILE *f, std::string indent);
+		void dumpAst(FILE *f, std::string indent) const;
+		void dumpVlog(FILE *f, std::string indent) const;
 
 		// used by genRTLIL() for detecting expression width and sign
 		void detectSignWidthWorker(int &width_hint, bool &sign_hint, bool *found_real = NULL);
@@ -261,27 +272,30 @@ namespace AST
 		RTLIL::Const asAttrConst();
 		RTLIL::Const asParaConst();
 		uint64_t asInt(bool is_signed);
-		bool bits_only_01();
-		bool asBool();
+		bool bits_only_01() const;
+		bool asBool() const;
 
 		// helper functions for real valued const eval
-		int isConst(); // return '1' for AST_CONSTANT and '2' for AST_REALVALUE
+		int isConst() const; // return '1' for AST_CONSTANT and '2' for AST_REALVALUE
 		double asReal(bool is_signed);
 		RTLIL::Const realAsConst(int width);
 	};
 
 	// process an AST tree (ast must point to an AST_DESIGN node) and generate RTLIL code
-	void process(RTLIL::Design *design, AstNode *ast, bool dump_ast1, bool dump_ast2, bool dump_vlog, bool dump_rtlil, bool nolatches, bool nomeminit,
-			bool nomem2reg, bool mem2reg, bool lib, bool noopt, bool icells, bool ignore_redef, bool defer, bool autowire);
+	void process(RTLIL::Design *design, AstNode *ast, bool dump_ast1, bool dump_ast2, bool no_dump_ptr, bool dump_vlog1, bool dump_vlog2, bool dump_rtlil, bool nolatches, bool nomeminit,
+			bool nomem2reg, bool mem2reg, bool noblackbox, bool lib, bool nowb, bool noopt, bool icells, bool nooverwrite, bool overwrite, bool defer, bool autowire);
 
 	// parametric modules are supported directly by the AST library
 	// therefore we need our own derivate of RTLIL::Module with overloaded virtual functions
 	struct AstModule : RTLIL::Module {
 		AstNode *ast;
-		bool nolatches, nomeminit, nomem2reg, mem2reg, lib, noopt, icells, autowire;
-		virtual ~AstModule();
-		virtual RTLIL::IdString derive(RTLIL::Design *design, dict<RTLIL::IdString, RTLIL::Const> parameters);
-		virtual RTLIL::Module *clone() const;
+		bool nolatches, nomeminit, nomem2reg, mem2reg, noblackbox, lib, nowb, noopt, icells, autowire;
+		~AstModule() YS_OVERRIDE;
+		RTLIL::IdString derive(RTLIL::Design *design, dict<RTLIL::IdString, RTLIL::Const> parameters, bool mayfail) YS_OVERRIDE;
+		RTLIL::IdString derive(RTLIL::Design *design, dict<RTLIL::IdString, RTLIL::Const> parameters, dict<RTLIL::IdString, RTLIL::Module*> interfaces, dict<RTLIL::IdString, RTLIL::IdString> modports, bool mayfail) YS_OVERRIDE;
+		std::string derive_common(RTLIL::Design *design, dict<RTLIL::IdString, RTLIL::Const> parameters, AstNode **new_ast_out, bool mayfail);
+		void reprocess_module(RTLIL::Design *design, dict<RTLIL::IdString, RTLIL::Module *> local_interfaces) YS_OVERRIDE;
+		RTLIL::Module *clone() const YS_OVERRIDE;
 	};
 
 	// this must be set by the language frontend before parsing the sources
@@ -297,12 +311,17 @@ namespace AST
 
 	// call a DPI function
 	AstNode *dpi_call(const std::string &rtype, const std::string &fname, const std::vector<std::string> &argtypes, const std::vector<AstNode*> &args);
+
+	// Helper functions related to handling SystemVerilog interfaces
+	std::pair<std::string,std::string> split_modport_from_type(std::string name_type);
+	AstNode * find_modport(AstNode *intf, std::string name);
+	void explode_interface_port(AstNode *module_ast, RTLIL::Module * intfmodule, std::string intfname, AstNode *modport);
 }
 
 namespace AST_INTERNAL
 {
 	// internal state variables
-	extern bool flag_dump_ast1, flag_dump_ast2, flag_dump_rtlil, flag_nolatches, flag_nomeminit;
+	extern bool flag_dump_ast1, flag_dump_ast2, flag_no_dump_ptr, flag_dump_rtlil, flag_nolatches, flag_nomeminit;
 	extern bool flag_nomem2reg, flag_mem2reg, flag_lib, flag_noopt, flag_icells, flag_autowire;
 	extern AST::AstNode *current_ast, *current_ast_mod;
 	extern std::map<std::string, AST::AstNode*> current_scope;

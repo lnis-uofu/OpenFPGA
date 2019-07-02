@@ -470,7 +470,6 @@ int add_opin_list_ipin_list_fast_edge(int num_opins, t_rr_node** opin_list,
   int ipin, iedge, to_node, jpin;
   int num_ipin_sink = 0;
   t_linked_int* ipin_sink_head = NULL;
-  t_linked_int* ipin_sink_list_node;
   int* ipin_sink_index = (int*)my_malloc(sizeof(int)*num_ipins);
   int add_edge_counter = 0;
 

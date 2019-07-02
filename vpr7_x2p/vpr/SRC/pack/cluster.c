@@ -575,6 +575,9 @@ void do_clustering(const t_arch *arch, t_pack_molecule *molecule_head,
 	check_clustering(num_clb, clb, is_clock);
 
 	output_clustering(clb, num_clb, global_clocks, is_clock, out_fname, FALSE);
+
+	copy_nb_clusters = num_clb;
+
 	if (getEchoEnabled() && isEchoFileEnabled(E_ECHO_POST_PACK_NETLIST)) {
 		output_blif (clb, num_clb, global_clocks, is_clock,
 			getEchoFileName(E_ECHO_POST_PACK_NETLIST), FALSE);
@@ -1314,8 +1317,8 @@ static enum e_block_pack_status try_place_logical_block_rec(
 		parent_pb->logical_block = OPEN;
 		parent_pb->name = my_strdup(logical_block[ilogical_block].name);
 		parent_pb->mode = pb_graph_node->pb_type->parent_mode->index;
-		set_pb_graph_mode(parent_pb->pb_graph_node, 0, 0); /* TODO: default mode is to use mode 0, document this! */
-		set_pb_graph_mode(parent_pb->pb_graph_node, parent_pb->mode, 1);
+		/* set_pb_graph_mode(parent_pb->pb_graph_node, 0, 0); */ /* TODO: default mode is to use mode 0, document this! */
+		set_pb_graph_mode(parent_pb->pb_graph_node, parent_pb->mode, 1);  
 		parent_pb->child_pbs = (t_pb **) my_calloc(parent_pb->pb_graph_node->pb_type->modes[parent_pb->mode].num_pb_type_children,	sizeof(t_pb *));
 		for (i = 0;	i < parent_pb->pb_graph_node->pb_type->modes[parent_pb->mode].num_pb_type_children;	i++) {
 			parent_pb->child_pbs[i] = (t_pb *) my_calloc(parent_pb->pb_graph_node->pb_type->modes[parent_pb->mode].pb_type_children[i].num_pb, sizeof(t_pb));

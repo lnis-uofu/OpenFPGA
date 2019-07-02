@@ -19,6 +19,7 @@
 #include "pb_type_graph_annotations.h"
 #include "cluster_feasibility_filter.h"
 #include "power.h"
+#include "read_xml_spice_util.h"
 
 /* variable global to this section that indexes each pb graph pin within a cluster */
 static int pin_count_in_cluster;
@@ -37,7 +38,8 @@ static void alloc_and_load_pb_graph(INOUTP t_pb_graph_node *pb_graph_node,
 static void alloc_and_load_mode_interconnect(
 		INOUTP t_pb_graph_node *pb_graph_parent_node,
 		INOUTP t_pb_graph_node **pb_graph_children_nodes,
-		INP const t_mode * mode, boolean load_power_structures);
+		INP const t_mode * mode, boolean load_power_structures,
+        INP int index_mode);
 
 static boolean realloc_and_load_pb_graph_pin_ptrs_at_var(INP int line_num,
 		INP const t_pb_graph_node *pb_graph_parent_node,
@@ -82,6 +84,13 @@ static void alloc_and_load_interconnect_pins(t_interconnect_pins * interc_pins,
 		int num_input_sets, int * num_input_pins,
 		t_pb_graph_pin *** output_pins, int num_output_sets,
 		int * num_output_pins);
+
+static void map_loop_breaker_onto_edges(char* loop_breaker_string, int line_num,
+                                        int index_mode,
+                                        t_pb_graph_pin*** input_pins,
+                                        int num_input_ports,
+                                        int* num_input_pins,
+                                        t_interconnect* cur_interc);
 
 /**
  * Allocate memory into types and load the pb graph with interconnect edges 
@@ -239,7 +248,7 @@ static void alloc_and_load_pb_graph(INOUTP t_pb_graph_node *pb_graph_node,
 				pb_graph_node->input_pins[i_input][j].pin_count_in_cluster =
 						pin_count_in_cluster;
 				pb_graph_node->input_pins[i_input][j].type = PB_PIN_NORMAL;
-				if (pb_graph_node->pb_type->blif_model != NULL ) {
+				if (pb_graph_node->pb_type->blif_model != NULL) {
 					if (strcmp(pb_graph_node->pb_type->blif_model, ".output")
 							== 0) {
 						pb_graph_node->input_pins[i_input][j].type =
@@ -273,7 +282,7 @@ static void alloc_and_load_pb_graph(INOUTP t_pb_graph_node *pb_graph_node,
 				pb_graph_node->output_pins[i_output][j].pin_count_in_cluster =
 						pin_count_in_cluster;
 				pb_graph_node->output_pins[i_output][j].type = PB_PIN_NORMAL;
-				if (pb_graph_node->pb_type->blif_model != NULL ) {
+				if (pb_graph_node->pb_type->blif_model != NULL) {
 					if (strcmp(pb_graph_node->pb_type->blif_model, ".input")
 							== 0) {
 						pb_graph_node->output_pins[i_output][j].type =
@@ -310,7 +319,7 @@ static void alloc_and_load_pb_graph(INOUTP t_pb_graph_node *pb_graph_node,
 				pb_graph_node->clock_pins[i_clockport][j].pin_count_in_cluster =
 						pin_count_in_cluster;
 				pb_graph_node->clock_pins[i_clockport][j].type = PB_PIN_NORMAL;
-				if (pb_graph_node->pb_type->blif_model != NULL ) {
+				if (pb_graph_node->pb_type->blif_model != NULL) {
 					pb_graph_node->clock_pins[i_clockport][j].type =
 							PB_PIN_CLOCK;
 				}
@@ -356,7 +365,7 @@ static void alloc_and_load_pb_graph(INOUTP t_pb_graph_node *pb_graph_node,
 		/* Create interconnect for mode */
 		alloc_and_load_mode_interconnect(pb_graph_node,
 				pb_graph_node->child_pb_graph_nodes[i], &pb_type->modes[i],
-				load_power_structures);
+				load_power_structures, i);
 	}
 }
 
@@ -461,7 +470,7 @@ static void free_pb_graph(INOUTP t_pb_graph_node *pb_graph_node) {
 	}
 	free(pb_graph_node->child_pb_graph_nodes);
 
-	while (edges_head != NULL ) {
+	while (edges_head != NULL) {
 		cur = edges_head;
 		cur_num = num_edges_head;
 		edges = (t_pb_graph_edge*) cur->data_vptr;
@@ -621,7 +630,7 @@ static void alloc_and_load_interconnect_pins(t_interconnect_pins * interc_pins,
 		num_ports = 0;
 		for (set_idx = 0; set_idx < num_output_sets; set_idx++) {
 			for (pin_idx = 0; pin_idx < num_output_pins[set_idx]; pin_idx++) {
-				interc_pins->output_pins[num_ports++][0] =
+				interc_pins->output_pins[num_ports++][0]=
 						output_pins[set_idx][pin_idx];
 			}
 		}
@@ -640,7 +649,8 @@ static void alloc_and_load_interconnect_pins(t_interconnect_pins * interc_pins,
 static void alloc_and_load_mode_interconnect(
 		INOUTP t_pb_graph_node *pb_graph_parent_node,
 		INOUTP t_pb_graph_node **pb_graph_children_nodes,
-		INP const t_mode * mode, boolean load_power_structures) {
+		INP const t_mode * mode, boolean load_power_structures,
+        INP int index_mode) {
 	int i, j;
 	int *num_input_pb_graph_node_pins, *num_output_pb_graph_node_pins; /* number of pins in a set [0..num_sets-1] */
 	int num_input_pb_graph_node_sets, num_output_pb_graph_node_sets;
@@ -679,7 +689,7 @@ static void alloc_and_load_mode_interconnect(
 					output_pb_graph_node_pins, num_output_pb_graph_node_sets,
 					num_output_pb_graph_node_pins);
 		}
-
+        
 		/* process the interconnect based on its type */
 		switch (mode->interconnect[i].type) {
 
@@ -770,6 +780,18 @@ static void alloc_and_load_mode_interconnect(
         } 
         mode->interconnect[i].num_mux = num_mux;
         /* END */   
+
+        /* Baudouin Chauviere SDC generation: loop breaker */
+        if (mode->interconnect[i].loop_breaker_string) {
+            map_loop_breaker_onto_edges(mode->interconnect[i].loop_breaker_string,
+                                        mode->interconnect[i].line_num,
+                                        index_mode,
+                                        input_pb_graph_node_pins,
+                                        num_input_pb_graph_node_sets,
+                                        num_input_pb_graph_node_pins,
+                                        &(mode->interconnect[i])); 
+        }
+        /* END */
 
 		for (j = 0; j < num_input_pb_graph_node_sets; j++) {
 			free(input_pb_graph_node_pins[j]);
@@ -1233,7 +1255,7 @@ static boolean realloc_and_load_pb_graph_pin_ptrs_at_var(INP int line_num,
 			pb_lsb = pb_msb = 0; /* Internal representation of parent is always 0 */
 		}
 	} else {
-		if (mode == NULL ) {
+		if (mode == NULL) {
 			vpr_printf(TIO_MESSAGE_ERROR,
 					"[LINE %d] pb_graph_parent_node %s failed\n", line_num,
 					pb_graph_parent_node->pb_type->name);
@@ -1386,7 +1408,7 @@ static boolean realloc_and_load_pb_graph_pin_ptrs_at_var(INP int line_num,
 			(*pb_graph_pins)[i * (abs(pin_msb - pin_lsb) + 1) + j] =
 					get_pb_graph_pin_from_name(port_name, &pb_node_array[ipb],
 							ipin);
-			if ((*pb_graph_pins)[i * (abs(pin_msb - pin_lsb) + 1) + j] == NULL ) {
+			if ((*pb_graph_pins)[i * (abs(pin_msb - pin_lsb) + 1) + j] == NULL) {
 				vpr_printf(TIO_MESSAGE_ERROR,
 						"[LINE %d] Pin %s.%s[%d] cannot be found\n", line_num,
 						pb_node_array[ipb].pb_type->name, port_name, ipin);
@@ -1749,3 +1771,385 @@ static void echo_pb_pins(INP t_pb_graph_pin **pb_graph_pins, INP int num_ports,
 	}
 }
 
+static void map_loop_breaker_onto_edges(char* loop_breaker_string, int line_num,
+                                        int index_mode,
+                                        t_pb_graph_pin*** input_pins,
+                                        int num_input_ports,
+                                        int* num_input_pins,
+                                        t_interconnect* cur_interc) {
+  t_token * tokens;
+  int num_tokens;
+  int i_tokens, cur_port_index, cur_pin_index;
+  t_pb_graph_node** cur_node;
+  int index_cur_node, i_index_cur_node;
+  t_pb_graph_node* tmp_node;
+  char* cur_pb_name;
+  char* cur_pin_name;
+  e_pb_graph_pin_type pin_type;
+  int lsb_pb, msb_pb;
+  int i_lsb_pb;
+  int lsb_pin, msb_pin, msb_pin_max;
+  int pb_name_found, pin_name_found;
+  int full_bus = 0;
+  int i_num_input_ports;
+  int i_num_output_edges;
+  int i_pb_type_in_mode, index_pb_type;
+
+  // Get the tokens from the loop_breaker_string
+  num_tokens = 0;
+  tokens = GetTokensFromString(loop_breaker_string, &num_tokens);
+ 
+  i_tokens = 0;
+  tmp_node = (t_pb_graph_node*) my_malloc(sizeof(t_pb_graph_node));
+  while (i_tokens < num_tokens) {
+  //  *cur_node = (t_pb_graph_node*) my_malloc(sizeof(t_pb_graph_node));
+    pb_name_found = 0;
+    pin_name_found = 0;
+    msb_pin = lsb_pin = msb_pb = lsb_pb = 0;
+    if (tokens[i_tokens].type != TOKEN_STRING) {
+      vpr_printf(TIO_MESSAGE_ERROR,
+                 "[LINE %d] loop_breaker: first element of a pair pb+pin should be a string\n",
+                 line_num);
+      exit(1);
+    }
+    cur_pb_name = tokens[i_tokens].data; 
+    /* no distinction is made between children and parent nodes */ 
+    for (i_num_input_ports = 0 ; i_num_input_ports < num_input_ports ; i_num_input_ports ++) {
+      if (0 == strcmp(cur_pb_name, input_pins[i_num_input_ports][0]->parent_node->pb_type->name)) {
+        pb_name_found = 1;
+       // cur_node[0] = input_pins[i_num_input_ports][0]->parent_node;
+        tmp_node = input_pins[i_num_input_ports][0]->parent_node;
+        break;
+      }
+    }
+    if (0 == pb_name_found) {
+      vpr_printf(TIO_MESSAGE_ERROR,
+                 "[LINE %d] loop_breaker: Pb name not found in current interconnection\n",
+                 line_num);
+      exit(1);
+    }
+    i_tokens++;
+    /* We deal with three cases: nothing, a wire, a bus */
+    /* First, the bus/wire */ 
+    //tmp_node = cur_node[0];
+    if( tokens[i_tokens].type == TOKEN_OPEN_SQUARE_BRACKET) {
+      i_tokens++;
+      if( tokens[i_tokens].type != TOKEN_INT) {
+        vpr_printf(TIO_MESSAGE_ERROR,
+                   "[LINE %d] loop_breaker: Int expected inside of the pb bracket\n",
+                   line_num);
+        exit(1);
+      }
+      msb_pb = my_atoi(tokens[i_tokens].data);
+      if (msb_pb > tmp_node->pb_type->num_pb) {
+        vpr_printf(TIO_MESSAGE_ERROR,
+                   "[LINE %d] loop_breaker: MSB pb larger than the number of pb\n",
+                   line_num);
+        exit(1);
+      }
+      i_tokens++;
+      /* bus */
+      if( tokens[i_tokens].type == TOKEN_COLON) {
+        i_tokens++;
+        if (tokens[i_tokens].type != TOKEN_INT) {
+          vpr_printf(TIO_MESSAGE_ERROR,
+                     "[LINE %d] loop_breaker: Int expected inside of the pb bracket for LSB\n",
+                     line_num);
+          exit(1);
+        }
+        lsb_pb = my_atoi(tokens[i_tokens].data);
+        if (lsb_pb > msb_pb) {
+          vpr_printf(TIO_MESSAGE_ERROR,
+                     "[LINE %d] loop_breaker: MSB supposed to be superior to LSB\n",
+                     line_num);
+          exit(1);
+        }
+        i_tokens++;
+        if (tokens[i_tokens].type != TOKEN_CLOSE_SQUARE_BRACKET) {
+          vpr_printf(TIO_MESSAGE_ERROR,
+                     "[LINE %d] loop_breaker: Expect closing bracket after the bus\n",
+                     line_num);
+          exit(1);
+        }
+        i_tokens++;
+      }
+      /* wire */
+      else if (tokens[i_tokens].type == TOKEN_CLOSE_SQUARE_BRACKET) {
+        lsb_pb = msb_pb;
+      }
+      else {
+          vpr_printf(TIO_MESSAGE_ERROR,
+                     "[LINE %d] loop_breaker: Expect closing bracket or colon after pin number\n",
+                     line_num);
+          exit(1);
+      }
+    }
+    /* If no bracket was used, we use need to apply the loop breaker to all the pbs with that name */
+    else {
+      //msb_pb = cur_node[0]->pb_type->num_pb - 1;
+      msb_pb = tmp_node->pb_type->num_pb - 1;
+      lsb_pb = 0;
+    }
+    index_cur_node = 0;
+    if (tmp_node->parent_pb_graph_node == NULL) {/* if pb_graph_head */ 
+      cur_node = (t_pb_graph_node**) my_malloc(sizeof(t_pb_graph_node*));
+      cur_node[0] = tmp_node;
+      index_cur_node = 1;
+    }
+    else {
+      cur_node = (t_pb_graph_node**) my_malloc(sizeof(t_pb_graph_node*) * (msb_pb + 1));
+      for (i_pb_type_in_mode = 0 ;
+           i_pb_type_in_mode < tmp_node->parent_pb_graph_node->pb_type->modes[index_mode].num_pb_type_children ;
+           i_pb_type_in_mode ++) {
+        if (0 == strcmp(cur_pb_name, 
+            tmp_node->parent_pb_graph_node->child_pb_graph_nodes[index_mode][i_pb_type_in_mode][0].pb_type->name)) {
+          index_pb_type = i_pb_type_in_mode;
+          break;
+        }
+      }    
+      /* if previous conditions are respected, we should always find the index of the pb type */
+      assert (index_pb_type != tmp_node->parent_pb_graph_node->pb_type->modes[index_mode].num_pb_type_children);
+      for ( i_lsb_pb = lsb_pb ; i_lsb_pb < msb_pb + 1 ; i_lsb_pb ++) {
+        cur_node[index_cur_node] = 
+           &(tmp_node->parent_pb_graph_node->child_pb_graph_nodes[index_mode][index_pb_type][i_lsb_pb]);
+        index_cur_node++;
+      } 
+    }
+    if (tokens[i_tokens].type != TOKEN_DOT) {
+      vpr_printf(TIO_MESSAGE_ERROR,
+                 "[LINE %d] loop_breaker: Pb name should be followed by a dot\n",
+                 line_num);
+      exit(1);
+    }
+    i_tokens++;
+
+    /* Pin definition */
+    if (tokens[i_tokens].type != TOKEN_STRING) {
+      vpr_printf(TIO_MESSAGE_ERROR,
+                 "[LINE %d] loop_breaker: Pin name expected after dot\n",
+                 line_num);
+      exit(1);
+    }
+    cur_pin_name = tokens[i_tokens].data; 
+    i_tokens++;
+    /* We deal with three cases: nothing, a wire, a bus */
+    /* First, the bus/wire */ 
+    if( tokens[i_tokens].type == TOKEN_OPEN_SQUARE_BRACKET) {
+      i_tokens++;
+      if( tokens[i_tokens].type != TOKEN_INT) {
+        vpr_printf(TIO_MESSAGE_ERROR,
+                   "[LINE %d] loop_breaker: Int expected inside of the pin bracket\n",
+                   line_num);
+        exit(1);
+      }
+      msb_pin = my_atoi(tokens[i_tokens].data);
+      i_tokens++;
+      /* bus */
+      if( tokens[i_tokens].type == TOKEN_COLON) {
+        i_tokens++;
+        if (tokens[i_tokens].type != TOKEN_INT) {
+          vpr_printf(TIO_MESSAGE_ERROR,
+                     "[LINE %d] loop_breaker: Int expected inside of the bracket for LSB\n",
+                     line_num);
+          exit(1);
+        }
+        lsb_pin = my_atoi(tokens[i_tokens].data);
+        if (lsb_pin > msb_pin) {
+          vpr_printf(TIO_MESSAGE_ERROR,
+                     "[LINE %d] loop_breaker: MSB supposed to be superior to LSB\n",
+                     line_num);
+          exit(1);
+        }
+        i_tokens++;
+        if (tokens[i_tokens].type != TOKEN_CLOSE_SQUARE_BRACKET) {
+          vpr_printf(TIO_MESSAGE_ERROR,
+                     "[LINE %d] loop_breaker: Expect closing bracket after the bus\n",
+                     line_num);
+          exit(1);
+        }
+        i_tokens++;
+      }
+      /* wire */
+      else if (tokens[i_tokens].type == TOKEN_CLOSE_SQUARE_BRACKET) {
+        lsb_pin = msb_pin;
+      }
+      else {
+          vpr_printf(TIO_MESSAGE_ERROR,
+                     "[LINE %d] loop_breaker: Expect closing bracket or colon after pin number\n",
+                     line_num);
+          exit(1);
+      }
+    }
+    else {
+    /* With no bus/wire given, we take the full bus of the pin given*/
+      full_bus =1;
+    }
+    /* Since we have the pin name, we find the right position of the pin
+     * in the associated node and check that msb is not superior to the 
+     * number of pins we have. */
+    /* Check inputs */
+    for (cur_port_index = 0 ; cur_port_index < cur_node[0]->num_input_ports ; cur_port_index ++) {
+      if (0 == strcmp(cur_pin_name,cur_node[0]->input_pins[cur_port_index][0].port->name)) {
+        pin_name_found = 1;
+        pin_type = PB_PIN_INPUT;
+        msb_pin_max = cur_node[0]->num_input_pins[cur_port_index] - 1;
+        break;
+      }
+    }
+    /* Check outputs if not input */
+    if (0 == pin_name_found) {
+      for (cur_port_index = 0 ; cur_port_index < cur_node[0]->num_output_ports ; cur_port_index ++) {
+        if (0 == strcmp(cur_pin_name,cur_node[0]->output_pins[cur_port_index][0].port->name)) {
+          pin_name_found = 1;
+          pin_type = PB_PIN_OUTPUT;
+          msb_pin_max = cur_node[0]->num_output_pins[cur_port_index] - 1;
+          break;
+        }
+      }
+    }
+    /* Check clocks */
+    if (0 == pin_name_found) {
+      for (cur_port_index = 0 ; cur_port_index < cur_node[0]->num_clock_ports ; cur_port_index ++) {
+        if (0 == strcmp(cur_pin_name,cur_node[0]->clock_pins[cur_port_index][0].port->name)) {
+          pin_name_found = 1;
+          pin_type = PB_PIN_CLOCK;
+          msb_pin_max = cur_node[0]->num_clock_pins[cur_port_index] - 1;
+          break;
+        }
+      }
+    }
+    if (0 == pin_name_found) {
+      vpr_printf(TIO_MESSAGE_ERROR,
+                 "[LINE %d] loop_breaker: Pin name not found in given pb\n",
+                 line_num);
+      exit(1);
+    }
+
+    if (1 == full_bus) {
+      switch(pin_type) {
+        case PB_PIN_INPUT: 
+          msb_pin = cur_node[0]->num_input_pins[cur_port_index] - 1;
+          break;
+        case PB_PIN_OUTPUT: 
+          msb_pin = cur_node[0]->num_output_pins[cur_port_index] - 1;
+          break;
+        case PB_PIN_CLOCK: 
+          msb_pin = cur_node[0]->num_clock_pins[cur_port_index] - 1;
+          break;
+        default:
+        vpr_printf(TIO_MESSAGE_ERROR,
+                   "[LINE %d] I) Pin was not found and this message should never be accessed in theory."
+                   " Report it for a fix if it happens\n",
+                   line_num);
+        exit(1);
+      }
+      msb_pin_max = msb_pin;
+      lsb_pin = 0;
+    }
+    /* Check that the pin number found in the string is valid */
+    if (msb_pin < 0 || msb_pin > msb_pin_max) {
+      vpr_printf(TIO_MESSAGE_ERROR,
+                 "[LINE %d] loop_breaker: Issue with MSB\n",
+                 line_num);
+      exit(1);
+    }
+    if (lsb_pin < 0 || lsb_pin > msb_pin) {
+      vpr_printf(TIO_MESSAGE_ERROR,
+                 "[LINE %d] loop_breaker: Issue with LSB\n",
+                 line_num);
+      exit(1);
+    }
+    for (i_index_cur_node = 0 ; i_index_cur_node < index_cur_node ; i_index_cur_node ++) {
+      for (cur_pin_index = lsb_pin ; cur_pin_index < (msb_pin + 1) ; cur_pin_index++) {
+        switch(pin_type) {
+          case PB_PIN_INPUT: 
+            for (i_num_output_edges = 0 ; 
+                 i_num_output_edges < cur_node[i_index_cur_node]->input_pins[cur_port_index][cur_pin_index].num_output_edges ;
+                 i_num_output_edges ++) {
+              if (cur_interc == cur_node[i_index_cur_node]->input_pins[cur_port_index][cur_pin_index].output_edges[i_num_output_edges]->interconnect) {
+                cur_node[i_index_cur_node]->input_pins[cur_port_index][cur_pin_index].output_edges[i_num_output_edges]->is_disabled = TRUE;
+
+                if (NULL != cur_interc->loop_breaker_delay_before_min) {
+                  cur_node[i_index_cur_node]->input_pins[cur_port_index][cur_pin_index].output_edges[i_num_output_edges]->loop_breaker_delay_before_min
+                  = cur_interc->loop_breaker_delay_before_min;
+                }
+                if (NULL != cur_interc->loop_breaker_delay_before_max) {
+                  cur_node[i_index_cur_node]->input_pins[cur_port_index][cur_pin_index].output_edges[i_num_output_edges]->loop_breaker_delay_before_max
+                  = cur_interc->loop_breaker_delay_before_max;
+                }
+                if (NULL != cur_interc->loop_breaker_delay_after_min) {
+                  cur_node[i_index_cur_node]->input_pins[cur_port_index][cur_pin_index].output_edges[i_num_output_edges]->loop_breaker_delay_after_min
+                  = cur_interc->loop_breaker_delay_after_min;
+                }
+                if (NULL != cur_interc->loop_breaker_delay_after_max) {
+                  cur_node[i_index_cur_node]->input_pins[cur_port_index][cur_pin_index].output_edges[i_num_output_edges]->loop_breaker_delay_after_max
+                  = cur_interc->loop_breaker_delay_after_max;
+                }
+              }
+            }
+            break;
+          case PB_PIN_OUTPUT:
+            for (i_num_output_edges = 0 ; 
+                 i_num_output_edges < cur_node[i_index_cur_node]->output_pins[cur_port_index][cur_pin_index].num_output_edges ;
+                 i_num_output_edges ++) {
+              if (cur_interc == cur_node[i_index_cur_node]->output_pins[cur_port_index][cur_pin_index].output_edges[i_num_output_edges]->interconnect) {
+                cur_node[i_index_cur_node]->output_pins[cur_port_index][cur_pin_index].output_edges[i_num_output_edges]->is_disabled = TRUE;
+
+                if (NULL != cur_interc->loop_breaker_delay_before_min) {
+                  cur_node[i_index_cur_node]->output_pins[cur_port_index][cur_pin_index].output_edges[i_num_output_edges]->loop_breaker_delay_before_min
+                  = cur_interc->loop_breaker_delay_before_min;
+                }
+                if (NULL != cur_interc->loop_breaker_delay_before_max) {
+                  cur_node[i_index_cur_node]->output_pins[cur_port_index][cur_pin_index].output_edges[i_num_output_edges]->loop_breaker_delay_before_max
+                  = cur_interc->loop_breaker_delay_before_max;
+                }
+                if (NULL != cur_interc->loop_breaker_delay_after_min) {
+                  cur_node[i_index_cur_node]->output_pins[cur_port_index][cur_pin_index].output_edges[i_num_output_edges]->loop_breaker_delay_after_min
+                  = cur_interc->loop_breaker_delay_after_min;
+                }
+                if (NULL != cur_interc->loop_breaker_delay_after_max) {
+                  cur_node[i_index_cur_node]->output_pins[cur_port_index][cur_pin_index].output_edges[i_num_output_edges]->loop_breaker_delay_after_max
+                  = cur_interc->loop_breaker_delay_after_max;
+                }
+              }
+            }
+            break;
+          case PB_PIN_CLOCK:
+            for (i_num_output_edges = 0 ; 
+                 i_num_output_edges < cur_node[i_index_cur_node]->clock_pins[cur_port_index][cur_pin_index].num_output_edges ;
+                 i_num_output_edges ++) {
+              if (cur_interc == cur_node[i_index_cur_node]->clock_pins[cur_port_index][cur_pin_index].output_edges[i_num_output_edges]->interconnect) {
+                cur_node[i_index_cur_node]->clock_pins[cur_port_index][cur_pin_index].output_edges[i_num_output_edges]->is_disabled = TRUE;
+
+                if (NULL != cur_interc->loop_breaker_delay_before_min) {
+                  cur_node[i_index_cur_node]->clock_pins[cur_port_index][cur_pin_index].output_edges[i_num_output_edges]->loop_breaker_delay_before_min
+                  = cur_interc->loop_breaker_delay_before_min;
+                }
+                if (NULL != cur_interc->loop_breaker_delay_before_max) {
+                  cur_node[i_index_cur_node]->clock_pins[cur_port_index][cur_pin_index].output_edges[i_num_output_edges]->loop_breaker_delay_before_max
+                  = cur_interc->loop_breaker_delay_before_max;
+                }
+                if (NULL != cur_interc->loop_breaker_delay_after_min) {
+                  cur_node[i_index_cur_node]->clock_pins[cur_port_index][cur_pin_index].output_edges[i_num_output_edges]->loop_breaker_delay_after_min
+                  = cur_interc->loop_breaker_delay_after_min;
+                }
+                if (NULL != cur_interc->loop_breaker_delay_after_max) {
+                  cur_node[i_index_cur_node]->clock_pins[cur_port_index][cur_pin_index].output_edges[i_num_output_edges]->loop_breaker_delay_after_max
+                  = cur_interc->loop_breaker_delay_after_max;
+                }
+              }
+            }
+            break;
+          default:
+            vpr_printf(TIO_MESSAGE_ERROR,
+                       "[LINE %d] II) Pin was not found and this message should never be accessed in theory."
+                       " Report it for a fix if it happens\n",
+                       line_num);
+            exit(1);
+        }
+      }
+    } 
+  }
+  my_free(cur_node);
+  return;
+}

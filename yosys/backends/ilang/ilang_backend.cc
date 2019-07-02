@@ -160,7 +160,10 @@ void ILANG_BACKEND::dump_cell(std::ostream &f, std::string indent, const RTLIL::
 	}
 	f << stringf("%s" "cell %s %s\n", indent.c_str(), cell->type.c_str(), cell->name.c_str());
 	for (auto &it : cell->parameters) {
-		f << stringf("%s  parameter%s %s ", indent.c_str(), (it.second.flags & RTLIL::CONST_FLAG_SIGNED) != 0 ? " signed" : "", it.first.c_str());
+		f << stringf("%s  parameter%s%s %s ", indent.c_str(),
+				(it.second.flags & RTLIL::CONST_FLAG_SIGNED) != 0 ? " signed" : "",
+				(it.second.flags & RTLIL::CONST_FLAG_REAL) != 0 ? " real" : "",
+				it.first.c_str());
 		dump_const(f, it.second);
 		f << stringf("\n");
 	}
@@ -204,7 +207,7 @@ void ILANG_BACKEND::dump_proc_switch(std::ostream &f, std::string indent, const 
 		f << stringf("%s  case ", indent.c_str());
 		for (size_t i = 0; i < (*it)->compare.size(); i++) {
 			if (i > 0)
-				f << stringf(", ");
+				f << stringf(" , ");
 			dump_sigspec(f, (*it)->compare[i]);
 		}
 		f << stringf("\n");
@@ -219,7 +222,7 @@ void ILANG_BACKEND::dump_proc_sync(std::ostream &f, std::string indent, const RT
 {
 	f << stringf("%s" "sync ", indent.c_str());
 	switch (sy->type) {
-	if (0) case RTLIL::ST0: f << stringf("low ");
+	case RTLIL::ST0: f << stringf("low ");
 	if (0) case RTLIL::ST1: f << stringf("high ");
 	if (0) case RTLIL::STp: f << stringf("posedge ");
 	if (0) case RTLIL::STn: f << stringf("negedge ");
@@ -382,7 +385,7 @@ PRIVATE_NAMESPACE_BEGIN
 
 struct IlangBackend : public Backend {
 	IlangBackend() : Backend("ilang", "write design to ilang file") { }
-	virtual void help()
+	void help() YS_OVERRIDE
 	{
 		//   |---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|
 		log("\n");
@@ -395,7 +398,7 @@ struct IlangBackend : public Backend {
 		log("        only write selected parts of the design.\n");
 		log("\n");
 	}
-	virtual void execute(std::ostream *&f, std::string filename, std::vector<std::string> args, RTLIL::Design *design)
+	void execute(std::ostream *&f, std::string filename, std::vector<std::string> args, RTLIL::Design *design) YS_OVERRIDE
 	{
 		bool selected = false;
 
@@ -422,7 +425,7 @@ struct IlangBackend : public Backend {
 
 struct DumpPass : public Pass {
 	DumpPass() : Pass("dump", "print parts of the design in ilang format") { }
-	virtual void help()
+	void help() YS_OVERRIDE
 	{
 		//   |---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|
 		log("\n");
@@ -445,7 +448,7 @@ struct DumpPass : public Pass {
 		log("        like -outfile but append instead of overwrite\n");
 		log("\n");
 	}
-	virtual void execute(std::vector<std::string> args, RTLIL::Design *design)
+	void execute(std::vector<std::string> args, RTLIL::Design *design) YS_OVERRIDE
 	{
 		std::string filename;
 		bool flag_m = false, flag_n = false, append = false;

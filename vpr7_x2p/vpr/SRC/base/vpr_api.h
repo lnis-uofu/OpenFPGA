@@ -102,6 +102,13 @@ t_trace* vpr_resync_post_route_netlist_to_TI_CLAY_v1_architecture(
 		INP const t_arch *arch);
 
 /* FPGA-SPICE */
-#include "fpga_spice_api.h"
+#include "fpga_x2p_api.h"
+
+/* mrFPGA : Xifan TANG */
+#include "mrfpga_api.h"
+/* END */
+
+/* APIs to be call by the interactive shell*/
+void vpr_init_file_handler() ;
 
 #endif

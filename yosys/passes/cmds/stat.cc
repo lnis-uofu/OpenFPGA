@@ -37,7 +37,9 @@ struct statdata_t
 	STAT_INT_MEMBERS
 	#undef X
 	double area;
+	string tech;
 
+	std::map<RTLIL::IdString, int> techinfo;
 	std::map<RTLIL::IdString, int, RTLIL::sort_by_id_str> num_cells_by_type;
 	std::set<RTLIL::IdString> unknown_cell_area;
 
@@ -70,8 +72,10 @@ struct statdata_t
 	#undef X
 	}
 
-	statdata_t(RTLIL::Design *design, RTLIL::Module *mod, bool width_mode, const dict<IdString, double> &cell_area)
+	statdata_t(RTLIL::Design *design, RTLIL::Module *mod, bool width_mode, const dict<IdString, double> &cell_area, string techname)
 	{
+		tech = techname;
+
 	#define X(_name) _name = 0;
 		STAT_NUMERIC_MEMBERS
 	#undef X
@@ -112,7 +116,7 @@ struct statdata_t
 						"$lut", "$and", "$or", "$xor", "$xnor",
 						"$shl", "$shr", "$sshl", "$sshr", "$shift", "$shiftx",
 						"$lt", "$le", "$eq", "$ne", "$eqx", "$nex", "$ge", "$gt",
-						"$add", "$sub", "$mul", "$div", "$mod", "$pow")) {
+						"$add", "$sub", "$mul", "$div", "$mod", "$pow", "$alu")) {
 					int width_a = it.second->hasPort("\\A") ? GetSize(it.second->getPort("\\A")) : 0;
 					int width_b = it.second->hasPort("\\B") ? GetSize(it.second->getPort("\\B")) : 0;
 					int width_y = it.second->hasPort("\\Y") ? GetSize(it.second->getPort("\\Y")) : 0;
@@ -142,7 +146,7 @@ struct statdata_t
 		}
 	}
 
-	void log_data()
+	void log_data(RTLIL::IdString mod_name, bool top_mod)
 	{
 		log("   Number of wires:             %6d\n", num_wires);
 		log("   Number of wire bits:         %6d\n", num_wire_bits);
@@ -153,7 +157,8 @@ struct statdata_t
 		log("   Number of processes:         %6d\n", num_processes);
 		log("   Number of cells:             %6d\n", num_cells);
 		for (auto &it : num_cells_by_type)
-			log("     %-26s %6d\n", RTLIL::id2cstr(it.first), it.second);
+			if (it.second)
+				log("     %-26s %6d\n", RTLIL::id2cstr(it.first), it.second);
 
 		if (!unknown_cell_area.empty()) {
 			log("\n");
@@ -163,7 +168,60 @@ struct statdata_t
 
 		if (area != 0) {
 			log("\n");
-			log("   Chip area for this module: %f\n", area);
+			log("   Chip area for %smodule '%s': %f\n", (top_mod) ? "top " : "", mod_name.c_str(), area);
+		}
+
+		if (tech == "xilinx")
+		{
+			int lut6_cnt = num_cells_by_type["\\LUT6"];
+			int lut5_cnt = num_cells_by_type["\\LUT5"];
+			int lut4_cnt = num_cells_by_type["\\LUT4"];
+			int lut3_cnt = num_cells_by_type["\\LUT3"];
+			int lut2_cnt = num_cells_by_type["\\LUT2"];
+			int lut1_cnt = num_cells_by_type["\\LUT1"];
+			int lc_cnt = 0;
+
+			lc_cnt += lut6_cnt;
+
+			lc_cnt += lut5_cnt;
+			if (lut1_cnt) {
+				int cnt = std::min(lut5_cnt, lut1_cnt);
+				lut5_cnt -= cnt;
+				lut1_cnt -= cnt;
+			}
+
+			lc_cnt += lut4_cnt;
+			if (lut1_cnt) {
+				int cnt = std::min(lut4_cnt, lut1_cnt);
+				lut4_cnt -= cnt;
+				lut1_cnt -= cnt;
+			}
+			if (lut2_cnt) {
+				int cnt = std::min(lut4_cnt, lut2_cnt);
+				lut4_cnt -= cnt;
+				lut2_cnt -= cnt;
+			}
+
+			lc_cnt += lut3_cnt;
+			if (lut1_cnt) {
+				int cnt = std::min(lut3_cnt, lut1_cnt);
+				lut3_cnt -= cnt;
+				lut1_cnt -= cnt;
+			}
+			if (lut2_cnt) {
+				int cnt = std::min(lut3_cnt, lut2_cnt);
+				lut3_cnt -= cnt;
+				lut2_cnt -= cnt;
+			}
+			if (lut3_cnt) {
+				int cnt = (lut3_cnt + 1) / 2;
+				lut3_cnt -= cnt;
+			}
+
+			lc_cnt += (lut2_cnt + lut1_cnt + 1) / 2;
+
+			log("\n");
+			log("   Estimated number of LCs: %10d\n", lc_cnt);
 		}
 	}
 };
@@ -190,6 +248,7 @@ void read_liberty_cellarea(dict<IdString, double> &cell_area, string liberty_fil
 {
 	std::ifstream f;
 	f.open(liberty_file.c_str());
+	yosys_input_files.insert(liberty_file);
 	if (f.fail())
 		log_cmd_error("Can't open liberty file `%s': %s\n", liberty_file.c_str(), strerror(errno));
 	LibertyParser libparser(f);
@@ -208,7 +267,7 @@ void read_liberty_cellarea(dict<IdString, double> &cell_area, string liberty_fil
 
 struct StatPass : public Pass {
 	StatPass() : Pass("stat", "print some statistics") { }
-	virtual void help()
+	void help() YS_OVERRIDE
 	{
 		//   |---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|
 		log("\n");
@@ -225,12 +284,16 @@ struct StatPass : public Pass {
 		log("    -liberty <liberty_file>\n");
 		log("        use cell area information from the provided liberty file\n");
 		log("\n");
+		log("    -tech <technology>\n");
+		log("        print area estemate for the specified technology. Corrently supported\n");
+		log("        calues for <technology>: xilinx\n");
+		log("\n");
 		log("    -width\n");
 		log("        annotate internal cell types with their word width.\n");
 		log("        e.g. $add_8 for an 8 bit wide $add cell.\n");
 		log("\n");
 	}
-	virtual void execute(std::vector<std::string> args, RTLIL::Design *design)
+	void execute(std::vector<std::string> args, RTLIL::Design *design) YS_OVERRIDE
 	{
 		log_header(design, "Printing statistics.\n");
 
@@ -238,6 +301,7 @@ struct StatPass : public Pass {
 		RTLIL::Module *top_mod = NULL;
 		std::map<RTLIL::IdString, statdata_t> mod_stat;
 		dict<IdString, double> cell_area;
+		string techname;
 
 		size_t argidx;
 		for (argidx = 1; argidx < args.size(); argidx++)
@@ -252,6 +316,10 @@ struct StatPass : public Pass {
 				read_liberty_cellarea(cell_area, liberty_file);
 				continue;
 			}
+			if (args[argidx] == "-tech" && argidx+1 < args.size()) {
+				techname = args[++argidx];
+				continue;
+			}
 			if (args[argidx] == "-top" && argidx+1 < args.size()) {
 				if (design->modules_.count(RTLIL::escape_id(args[argidx+1])) == 0)
 					log_cmd_error("Can't find module %s.\n", args[argidx+1].c_str());
@@ -262,19 +330,22 @@ struct StatPass : public Pass {
 		}
 		extra_args(args, argidx, design);
 
+		if (techname != "" && techname != "xilinx")
+			log_cmd_error("Unsupported technology: '%s'\n", techname.c_str());
+
 		for (auto mod : design->selected_modules())
 		{
 			if (!top_mod && design->full_selection())
 				if (mod->get_bool_attribute("\\top"))
 					top_mod = mod;
 
-			statdata_t data(design, mod, width_mode, cell_area);
+			statdata_t data(design, mod, width_mode, cell_area, techname);
 			mod_stat[mod->name] = data;
 
 			log("\n");
 			log("=== %s%s ===\n", RTLIL::id2cstr(mod->name), design->selected_whole_module(mod->name) ? "" : " (partially selected)");
 			log("\n");
-			data.log_data();
+			data.log_data(mod->name, false);
 		}
 
 		if (top_mod != NULL && GetSize(mod_stat) > 1)
@@ -287,7 +358,7 @@ struct StatPass : public Pass {
 			statdata_t data = hierarchy_worker(mod_stat, top_mod->name, 0);
 
 			log("\n");
-			data.log_data();
+			data.log_data(top_mod->name, true);
 		}
 
 		log("\n");

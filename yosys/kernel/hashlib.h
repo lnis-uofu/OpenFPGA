@@ -147,7 +147,7 @@ struct hash_ptr_ops {
 		return a == b;
 	}
 	static inline unsigned int hash(const void *a) {
-		return (unsigned long)a;
+		return (uintptr_t)a;
 	}
 };
 
@@ -557,9 +557,11 @@ public:
 	void clear() { hashtable.clear(); entries.clear(); }
 
 	iterator begin() { return iterator(this, int(entries.size())-1); }
+	iterator element(int n) { return iterator(this, int(entries.size())-1-n); }
 	iterator end() { return iterator(nullptr, -1); }
 
 	const_iterator begin() const { return const_iterator(this, int(entries.size())-1); }
+	const_iterator element(int n) const { return const_iterator(this, int(entries.size())-1-n); }
 	const_iterator end() const { return const_iterator(nullptr, -1); }
 };
 
@@ -868,15 +870,24 @@ public:
 		return !operator==(other);
 	}
 
+	bool hash() const {
+		unsigned int hashval = mkhash_init;
+		for (auto &it : entries)
+			hashval ^= ops.hash(it.udata);
+		return hashval;
+	}
+
 	void reserve(size_t n) { entries.reserve(n); }
 	size_t size() const { return entries.size(); }
 	bool empty() const { return entries.empty(); }
 	void clear() { hashtable.clear(); entries.clear(); }
 
 	iterator begin() { return iterator(this, int(entries.size())-1); }
+	iterator element(int n) { return iterator(this, int(entries.size())-1-n); }
 	iterator end() { return iterator(nullptr, -1); }
 
 	const_iterator begin() const { return const_iterator(this, int(entries.size())-1); }
+	const_iterator element(int n) const { return const_iterator(this, int(entries.size())-1-n); }
 	const_iterator end() const { return const_iterator(nullptr, -1); }
 };
 
@@ -945,6 +956,7 @@ public:
 	void clear() { database.clear(); }
 
 	const_iterator begin() const { return database.begin(); }
+	const_iterator element(int n) const { return database.element(n); }
 	const_iterator end() const { return database.end(); }
 };
 
@@ -1044,6 +1056,7 @@ public:
 	void clear() { database.clear(); parents.clear(); }
 
 	const_iterator begin() const { return database.begin(); }
+	const_iterator element(int n) const { return database.element(n); }
 	const_iterator end() const { return database.end(); }
 };
 

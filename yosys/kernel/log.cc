@@ -25,7 +25,7 @@
 #  include <sys/time.h>
 #endif
 
-#ifdef __linux__
+#if defined(__linux__) || defined(__FreeBSD__)
 #  include <dlfcn.h>
 #endif
 
@@ -41,6 +41,9 @@ YOSYS_NAMESPACE_BEGIN
 std::vector<FILE*> log_files;
 std::vector<std::ostream*> log_streams;
 std::map<std::string, std::set<std::string>> log_hdump;
+std::vector<std::regex> log_warn_regexes, log_nowarn_regexes, log_werror_regexes;
+std::set<std::string> log_warnings;
+int log_warnings_count = 0;
 bool log_hdump_all = false;
 FILE *log_errfile = NULL;
 SHA1 *log_hasher = NULL;
@@ -51,6 +54,11 @@ bool log_cmd_error_throw = false;
 bool log_quiet_warnings = false;
 int log_verbose_level;
 string log_last_error;
+void (*log_error_atexit)() = NULL;
+
+int log_make_debug = 0;
+int log_force_debug = 0;
+int log_debug_suppressed = 0;
 
 vector<int> header_count;
 pool<RTLIL::IdString> log_id_cache;
@@ -87,6 +95,9 @@ void logv(const char *format, va_list ap)
 		log("\n");
 		format++;
 	}
+
+	if (log_make_debug && !ys_debug(1))
+		return;
 
 	std::string str = vstringf(format, ap);
 
@@ -136,6 +147,32 @@ void logv(const char *format, va_list ap)
 
 	for (auto f : log_streams)
 		*f << str;
+
+	static std::string linebuffer;
+	static bool log_warn_regex_recusion_guard = false;
+
+	if (!log_warn_regex_recusion_guard)
+	{
+		log_warn_regex_recusion_guard = true;
+
+		if (log_warn_regexes.empty())
+		{
+			linebuffer.clear();
+		}
+		else
+		{
+			linebuffer += str;
+
+			if (!linebuffer.empty() && linebuffer.back() == '\n') {
+				for (auto &re : log_warn_regexes)
+					if (std::regex_search(linebuffer, re))
+						log_warning("Found log message matching -W regex:\n%s", str.c_str());
+				linebuffer.clear();
+			}
+		}
+
+		log_warn_regex_recusion_guard = false;
+	}
 }
 
 void logv_header(RTLIL::Design *design, const char *format, va_list ap)
@@ -166,27 +203,84 @@ void logv_header(RTLIL::Design *design, const char *format, va_list ap)
 	if (log_hdump.count(header_id) && design != nullptr)
 		for (auto &filename : log_hdump.at(header_id)) {
 			log("Dumping current design to '%s'.\n", filename.c_str());
+			if (yosys_xtrace)
+				IdString::xtrace_db_dump();
 			Pass::call(design, {"dump", "-o", filename});
+			if (yosys_xtrace)
+				log("#X# -- end of dump --\n");
 		}
 
 	if (pop_errfile)
 		log_files.pop_back();
 }
 
-void logv_warning(const char *format, va_list ap)
+static void logv_warning_with_prefix(const char *prefix,
+                                     const char *format, va_list ap)
 {
-	if (log_errfile != NULL && !log_quiet_warnings)
-		log_files.push_back(log_errfile);
+	std::string message = vstringf(format, ap);
+	bool suppressed = false;
 
-	log("Warning: ");
-	logv(format, ap);
-	log_flush();
+	for (auto &re : log_nowarn_regexes)
+		if (std::regex_search(message, re))
+			suppressed = true;
 
-	if (log_errfile != NULL && !log_quiet_warnings)
-		log_files.pop_back();
+	if (suppressed)
+	{
+		log("Suppressed %s%s", prefix, message.c_str());
+	}
+	else
+	{
+		for (auto &re : log_werror_regexes)
+			if (std::regex_search(message, re))
+				log_error("%s",  message.c_str());
+
+		if (log_warnings.count(message))
+		{
+			log("%s%s", prefix, message.c_str());
+			log_flush();
+		}
+		else
+		{
+			if (log_errfile != NULL && !log_quiet_warnings)
+				log_files.push_back(log_errfile);
+
+			log("%s%s", prefix, message.c_str());
+			log_flush();
+
+			if (log_errfile != NULL && !log_quiet_warnings)
+				log_files.pop_back();
+
+			log_warnings.insert(message);
+		}
+
+		log_warnings_count++;
+	}
 }
 
-void logv_error(const char *format, va_list ap)
+void logv_warning(const char *format, va_list ap)
+{
+	logv_warning_with_prefix("Warning: ", format, ap);
+}
+
+void logv_warning_noprefix(const char *format, va_list ap)
+{
+	logv_warning_with_prefix("", format, ap);
+}
+
+void log_file_warning(const std::string &filename, int lineno,
+                      const char *format, ...)
+{
+	va_list ap;
+	va_start(ap, format);
+	std::string prefix = stringf("%s:%d: Warning: ",
+				     filename.c_str(), lineno);
+	logv_warning_with_prefix(prefix.c_str(), format, ap);
+	va_end(ap);
+}
+
+YS_ATTRIBUTE(noreturn)
+static void logv_error_with_prefix(const char *prefix,
+                                   const char *format, va_list ap)
 {
 #ifdef EMSCRIPTEN
 	auto backup_log_files = log_files;
@@ -201,8 +295,11 @@ void logv_error(const char *format, va_list ap)
 				f = stderr;
 
 	log_last_error = vstringf(format, ap);
-	log("ERROR: %s", log_last_error.c_str());
+	log("%s%s", prefix, log_last_error.c_str());
 	log_flush();
+
+	if (log_error_atexit)
+		log_error_atexit();
 
 #ifdef EMSCRIPTEN
 	log_files = backup_log_files;
@@ -212,6 +309,21 @@ void logv_error(const char *format, va_list ap)
 #else
 	_Exit(1);
 #endif
+}
+
+void logv_error(const char *format, va_list ap)
+{
+	logv_error_with_prefix("ERROR: ", format, ap);
+}
+
+void log_file_error(const string &filename, int lineno,
+                    const char *format, ...)
+{
+	va_list ap;
+	va_start(ap, format);
+	std::string prefix = stringf("%s:%d: ERROR: ",
+				     filename.c_str(), lineno);
+	logv_error_with_prefix(prefix.c_str(), format, ap);
 }
 
 void log(const char *format, ...)
@@ -235,6 +347,14 @@ void log_warning(const char *format, ...)
 	va_list ap;
 	va_start(ap, format);
 	logv_warning(format, ap);
+	va_end(ap);
+}
+
+void log_warning_noprefix(const char *format, ...)
+{
+	va_list ap;
+	va_start(ap, format);
+	logv_warning_noprefix(format, ap);
 	va_end(ap);
 }
 
@@ -262,8 +382,8 @@ void log_cmd_error(const char *format, ...)
 
 void log_spacer()
 {
-	while (log_newline_count < 2)
-		log("\n");
+	if (log_newline_count < 2) log("\n");
+	if (log_newline_count < 2) log("\n");
 }
 
 void log_push()
@@ -280,7 +400,7 @@ void log_pop()
 	log_flush();
 }
 
-#if defined(__linux__) && defined(YOSYS_ENABLE_PLUGINS)
+#if (defined(__linux__) || defined(__FreeBSD__)) && defined(YOSYS_ENABLE_PLUGINS)
 void log_backtrace(const char *prefix, int levels)
 {
 	if (levels <= 0) return;
@@ -297,6 +417,9 @@ void log_backtrace(const char *prefix, int levels)
 
 	if (levels <= 1) return;
 
+#ifndef DEBUG
+	log("%sframe #2: [build Yosys with ENABLE_DEBUG for deeper backtraces]\n", prefix);
+#else
 	if ((p = __builtin_extract_return_addr(__builtin_return_address(1))) && dladdr(p, &dli)) {
 		log("%sframe #2: %p %s(%p) %s(%p)\n", prefix, p, dli.dli_fname, dli.dli_fbase, dli.dli_sname, dli.dli_saddr);
 	} else {
@@ -368,6 +491,7 @@ void log_backtrace(const char *prefix, int levels)
 	}
 
 	if (levels <= 9) return;
+#endif
 }
 #else
 void log_backtrace(const char*, int) { }
@@ -461,10 +585,17 @@ void log_cell(RTLIL::Cell *cell, std::string indent)
 	log("%s", buf.str().c_str());
 }
 
+void log_wire(RTLIL::Wire *wire, std::string indent)
+{
+	std::stringstream buf;
+	ILANG_BACKEND::dump_wire(buf, indent, wire);
+	log("%s", buf.str().c_str());
+}
+
 // ---------------------------------------------------
 // This is the magic behind the code coverage counters
 // ---------------------------------------------------
-#if defined(YOSYS_ENABLE_COVER) && defined(__linux__)
+#if defined(YOSYS_ENABLE_COVER) && (defined(__linux__) || defined(__FreeBSD__))
 
 dict<std::string, std::pair<std::string, int>> extra_coverage_data;
 
@@ -513,4 +644,3 @@ dict<std::string, std::pair<std::string, int>> get_coverage_data()
 #endif
 
 YOSYS_NAMESPACE_END
-

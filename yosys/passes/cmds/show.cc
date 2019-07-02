@@ -30,6 +30,10 @@
 #  include <readline/readline.h>
 #endif
 
+#ifdef YOSYS_ENABLE_EDITLINE
+#  include <editline/readline.h>
+#endif
+
 USING_YOSYS_NAMESPACE
 PRIVATE_NAMESPACE_BEGIN
 
@@ -233,15 +237,34 @@ struct ShowWorker
 			int idx = single_idx_count++;
 			for (int rep, i = int(sig.chunks().size())-1; i >= 0; i -= rep) {
 				const RTLIL::SigChunk &c = sig.chunks().at(i);
-				net = gen_signode_simple(c, false);
-				log_assert(!net.empty());
+				if (!driver && c.wire == nullptr) {
+					RTLIL::State s1 = c.data.front();
+					for (auto s2 : c.data)
+						if (s1 != s2)
+							goto not_const_stream;
+					net.clear();
+				} else {
+			not_const_stream:
+					net = gen_signode_simple(c, false);
+					log_assert(!net.empty());
+				}
 				for (rep = 1; i-rep >= 0 && c == sig.chunks().at(i-rep); rep++) {}
 				std::string repinfo = rep > 1 ? stringf("%dx ", rep) : "";
 				if (driver) {
+					log_assert(!net.empty());
 					label_string += stringf("<s%d> %d:%d - %s%d:%d |", i, pos, pos-c.width+1, repinfo.c_str(), c.offset+c.width-1, c.offset);
 					net_conn_map[net].in.insert(stringf("x%d:s%d", idx, i));
 					net_conn_map[net].bits = rep*c.width;
 					net_conn_map[net].color = nextColor(c, net_conn_map[net].color);
+				} else
+				if (net.empty()) {
+					log_assert(rep == 1);
+					label_string += stringf("%c -&gt; %d:%d |",
+							c.data.front() == State::S0 ? '0' :
+							c.data.front() == State::S1 ? '1' :
+							c.data.front() == State::Sx ? 'X' :
+							c.data.front() == State::Sz ? 'Z' : '?',
+							pos, pos-rep*c.width+1);
 				} else {
 					label_string += stringf("<s%d> %s%d:%d - %d:%d |", i, repinfo.c_str(), c.offset+c.width-1, c.offset, pos, pos-rep*c.width+1);
 					net_conn_map[net].out.insert(stringf("x%d:s%d", idx, i));
@@ -551,7 +574,7 @@ struct ShowWorker
 			if (!design->selected_module(module->name))
 				continue;
 			if (design->selected_whole_module(module->name)) {
-				if (module->get_bool_attribute("\\blackbox")) {
+				if (module->get_blackbox_attribute()) {
 					// log("Skipping blackbox module %s.\n", id2cstr(module->name));
 					continue;
 				} else
@@ -569,7 +592,7 @@ struct ShowWorker
 
 struct ShowPass : public Pass {
 	ShowPass() : Pass("show", "generate schematics using graphviz") { }
-	virtual void help()
+	void help() YS_OVERRIDE
 	{
 		//   |---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|
 		log("\n");
@@ -580,6 +603,7 @@ struct ShowPass : public Pass {
 		log("\n");
 		log("    -viewer <viewer>\n");
 		log("        Run the specified command with the graphics file as parameter.\n");
+		log("        On Windows, this pauses yosys until the viewer exits.\n");
 		log("\n");
 		log("    -format <format>\n");
 		log("        Generate a graphics file in the specified format. Use 'dot' to just\n");
@@ -618,7 +642,7 @@ struct ShowPass : public Pass {
 		log("        assigned to each unique value of this attribute.\n");
 		log("\n");
 		log("    -width\n");
-		log("        annotate busses with a label indicating the width of the bus.\n");
+		log("        annotate buses with a label indicating the width of the bus.\n");
 		log("\n");
 		log("    -signed\n");
 		log("        mark ports (A, B) that are declared as signed (using the [AB]_SIGNED\n");
@@ -641,7 +665,7 @@ struct ShowPass : public Pass {
 		log("        do not add the module name as graph title to the dot file\n");
 		log("\n");
 		log("When no <format> is specified, 'dot' is used. When no <format> and <viewer> is\n");
-		log("specified, 'xdot' is used to display the schematic.\n");
+		log("specified, 'xdot' is used to display the schematic (POSIX systems only).\n");
 		log("\n");
 		log("The generated output files are '~/.yosys_show.dot' and '~/.yosys_show.<format>',\n");
 		log("unless another prefix is specified using -prefix <prefix>.\n");
@@ -651,7 +675,7 @@ struct ShowPass : public Pass {
 		log("the 'show' command is executed.\n");
 		log("\n");
 	}
-	virtual void execute(std::vector<std::string> args, RTLIL::Design *design)
+	void execute(std::vector<std::string> args, RTLIL::Design *design) YS_OVERRIDE
 	{
 		log_header(design, "Generating Graphviz representation of design.\n");
 		log_push();
@@ -677,6 +701,7 @@ struct ShowPass : public Pass {
 		bool flag_enum = false;
 		bool flag_abbreviate = true;
 		bool flag_notitle = false;
+		bool custom_prefix = false;
 		RTLIL::IdString colorattr;
 
 		size_t argidx;
@@ -693,6 +718,7 @@ struct ShowPass : public Pass {
 			}
 			if (arg == "-prefix" && argidx+1 < args.size()) {
 				prefix = args[++argidx];
+				custom_prefix = true;
 				continue;
 			}
 			if (arg == "-color" && argidx+2 < args.size()) {
@@ -764,7 +790,7 @@ struct ShowPass : public Pass {
 		if (format != "ps" && format != "dot") {
 			int modcount = 0;
 			for (auto &mod_it : design->modules_) {
-				if (mod_it.second->get_bool_attribute("\\blackbox"))
+				if (mod_it.second->get_blackbox_attribute())
 					continue;
 				if (mod_it.second->cells_.empty() && mod_it.second->connections().empty())
 					continue;
@@ -778,6 +804,7 @@ struct ShowPass : public Pass {
 		for (auto filename : libfiles) {
 			std::ifstream f;
 			f.open(filename.c_str());
+			yosys_input_files.insert(filename);
 			if (f.fail())
 				log_error("Can't open lib file `%s'.\n", filename.c_str());
 			RTLIL::Design *lib = new RTLIL::Design;
@@ -793,6 +820,8 @@ struct ShowPass : public Pass {
 
 		log("Writing dot description to `%s'.\n", dot_file.c_str());
 		FILE *f = fopen(dot_file.c_str(), "w");
+		if (custom_prefix)
+			yosys_output_files.insert(dot_file);
 		if (f == NULL) {
 			for (auto lib : libs)
 				delete lib;
@@ -808,14 +837,30 @@ struct ShowPass : public Pass {
 			log_cmd_error("Nothing there to show.\n");
 
 		if (format != "dot" && !format.empty()) {
-			std::string cmd = stringf("dot -T%s '%s' > '%s.new' && mv '%s.new' '%s'", format.c_str(), dot_file.c_str(), out_file.c_str(), out_file.c_str(), out_file.c_str());
+			#ifdef _WIN32
+				// system()/cmd.exe does not understand single quotes on Windows.
+				#define DOT_CMD "dot -T%s \"%s\" > \"%s.new\" && move \"%s.new\" \"%s\""
+			#else
+				#define DOT_CMD "dot -T%s '%s' > '%s.new' && mv '%s.new' '%s'"
+			#endif
+			std::string cmd = stringf(DOT_CMD, format.c_str(), dot_file.c_str(), out_file.c_str(), out_file.c_str(), out_file.c_str());
+			#undef DOT_CMD
 			log("Exec: %s\n", cmd.c_str());
 			if (run_command(cmd) != 0)
 				log_cmd_error("Shell command failed!\n");
 		}
 
 		if (!viewer_exe.empty()) {
-			std::string cmd = stringf("%s '%s' &", viewer_exe.c_str(), out_file.c_str());
+			#ifdef _WIN32
+				// system()/cmd.exe does not understand single quotes nor
+				// background tasks on Windows. So we have to pause yosys
+				// until the viewer exits.
+				#define VIEW_CMD "%s \"%s\""
+			#else
+				#define VIEW_CMD "%s '%s' &"
+			#endif
+			std::string cmd = stringf(VIEW_CMD, viewer_exe.c_str(), out_file.c_str());
+			#undef VIEW_CMD
 			log("Exec: %s\n", cmd.c_str());
 			if (run_command(cmd) != 0)
 				log_cmd_error("Shell command failed!\n");

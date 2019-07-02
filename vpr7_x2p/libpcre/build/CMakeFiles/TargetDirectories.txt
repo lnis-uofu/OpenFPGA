@@ -1,0 +1,4 @@
+/research/ece/lnis/USERS/tang/github/OpenFPGA/vpr7_x2p/pcre/build/CMakeFiles/rebuild_cache.dir
+/research/ece/lnis/USERS/tang/github/OpenFPGA/vpr7_x2p/pcre/build/CMakeFiles/edit_cache.dir
+/research/ece/lnis/USERS/tang/github/OpenFPGA/vpr7_x2p/pcre/build/CMakeFiles/pcredemo.dir
+/research/ece/lnis/USERS/tang/github/OpenFPGA/vpr7_x2p/pcre/build/CMakeFiles/libpcre.dir

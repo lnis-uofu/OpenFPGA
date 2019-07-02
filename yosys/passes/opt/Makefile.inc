@@ -10,5 +10,9 @@ OBJS += passes/opt/opt_expr.o
 ifneq ($(SMALL),1)
 OBJS += passes/opt/share.o
 OBJS += passes/opt/wreduce.o
+OBJS += passes/opt/opt_demorgan.o
+OBJS += passes/opt/rmports.o
+OBJS += passes/opt/opt_lut.o
+OBJS += passes/opt/pmux2shiftx.o
 endif
 

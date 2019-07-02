@@ -1,4 +1,4 @@
-/*
+/* -*- c++ -*-
  *  yosys -- Yosys Open SYnthesis Suite
  *
  *  Copyright (C) 2012  Clifford Wolf <clifford@clifford.at>
@@ -66,6 +66,10 @@
 #include <stdio.h>
 #include <limits.h>
 
+#ifdef WITH_PYTHON
+#include <Python.h>
+#endif
+
 #ifndef _YOSYS_
 #  error It looks like you are trying to build Yosys without the config defines set. \
          When building Yosys with a custom make system, make sure you set all the \
@@ -74,6 +78,16 @@
 
 #ifdef YOSYS_ENABLE_TCL
 #  include <tcl.h>
+#  ifdef YOSYS_MXE_HACKS
+extern Tcl_Command Tcl_CreateCommand(Tcl_Interp *interp, const char *cmdName, Tcl_CmdProc *proc, ClientData clientData, Tcl_CmdDeleteProc *deleteProc);
+extern Tcl_Interp *Tcl_CreateInterp(void);
+extern void Tcl_DeleteInterp(Tcl_Interp *interp);
+extern int Tcl_Eval(Tcl_Interp *interp, const char *script);
+extern int Tcl_EvalFile(Tcl_Interp *interp, const char *fileName);
+extern void Tcl_Finalize(void);
+extern int Tcl_GetCommandInfo(Tcl_Interp *interp, const char *cmdName, Tcl_CmdInfo *infoPtr);
+extern const char *Tcl_GetStringResult(Tcl_Interp *interp);
+#  endif
 #endif
 
 #ifdef _WIN32
@@ -105,6 +119,7 @@
 #  define PATH_MAX 4096
 #endif
 
+#define YOSYS_NAMESPACE          Yosys
 #define PRIVATE_NAMESPACE_BEGIN  namespace {
 #define PRIVATE_NAMESPACE_END    }
 #define YOSYS_NAMESPACE_BEGIN    namespace Yosys {
@@ -150,6 +165,7 @@ using std::pair;
 
 using std::make_tuple;
 using std::make_pair;
+using std::get;
 using std::min;
 using std::max;
 
@@ -228,7 +244,7 @@ extern bool memhasher_active;
 inline void memhasher() { if (memhasher_active) memhasher_do(); }
 
 void yosys_banner();
-int ceil_log2(int x);
+int ceil_log2(int x) YS_ATTRIBUTE(const);
 std::string stringf(const char *fmt, ...) YS_ATTRIBUTE(format(printf, 1, 2));
 std::string vstringf(const char *fmt, va_list ap);
 int readsome(std::istream &f, char *s, int n);
@@ -241,6 +257,7 @@ std::string make_temp_dir(std::string template_str = "/tmp/yosys_XXXXXX");
 bool check_file_exists(std::string filename, bool is_exec = false);
 bool is_absolute_path(std::string filename);
 void remove_directory(std::string dirname);
+std::string escape_filename_spaces(const std::string& filename);
 
 template<typename T> int GetSize(const T &obj) { return obj.size(); }
 int GetSize(RTLIL::Wire *wire);
@@ -265,6 +282,11 @@ namespace hashlib {
 }
 
 void yosys_setup();
+
+#ifdef WITH_PYTHON
+bool yosys_already_setup();
+#endif
+
 void yosys_shutdown();
 
 #ifdef YOSYS_ENABLE_TCL
@@ -294,6 +316,9 @@ void run_frontend(std::string filename, std::string command, RTLIL::Design *desi
 void run_backend(std::string filename, std::string command, RTLIL::Design *design = nullptr);
 void shell(RTLIL::Design *design);
 
+// journal of all input and output files read (for "yosys -E")
+extern std::set<std::string> yosys_input_files, yosys_output_files;
+
 // from kernel/version_*.o (cc source generated from Makefile)
 extern const char *yosys_version_str;
 
@@ -303,6 +328,9 @@ extern std::vector<RTLIL::Design*> pushed_designs;
 
 // from passes/cmds/pluginc.cc
 extern std::map<std::string, void*> loaded_plugins;
+#ifdef WITH_PYTHON
+extern std::map<std::string, void*> loaded_python_plugins;
+#endif
 extern std::map<std::string, std::string> loaded_plugin_aliases;
 void load_plugin(std::string filename, std::vector<std::string> aliases);
 

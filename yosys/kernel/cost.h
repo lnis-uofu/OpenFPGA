@@ -20,29 +20,31 @@
 #ifndef COST_H
 #define COST_H
 
-#include <kernel/yosys.h>
+#include "kernel/yosys.h"
 
 YOSYS_NAMESPACE_BEGIN
 
 int get_cell_cost(RTLIL::Cell *cell, dict<RTLIL::IdString, int> *mod_cost_cache = nullptr);
 
-int get_cell_cost(RTLIL::IdString type, const dict<RTLIL::IdString, RTLIL::Const> &parameters = dict<RTLIL::IdString, RTLIL::Const>(),
+inline int get_cell_cost(RTLIL::IdString type, const dict<RTLIL::IdString, RTLIL::Const> &parameters = dict<RTLIL::IdString, RTLIL::Const>(),
 		RTLIL::Design *design = nullptr, dict<RTLIL::IdString, int> *mod_cost_cache = nullptr)
 {
 	static dict<RTLIL::IdString, int> gate_cost = {
-		{ "$_BUF_",   1 },
-		{ "$_NOT_",   2 },
-		{ "$_AND_",   4 },
-		{ "$_NAND_",  4 },
-		{ "$_OR_",    4 },
-		{ "$_NOR_",   4 },
-		{ "$_XOR_",   8 },
-		{ "$_XNOR_",  8 },
-		{ "$_AOI3_",  6 },
-		{ "$_OAI3_",  6 },
-		{ "$_AOI4_",  8 },
-		{ "$_OAI4_",  8 },
-		{ "$_MUX_",   4 }
+		{ "$_BUF_",    1 },
+		{ "$_NOT_",    2 },
+		{ "$_AND_",    4 },
+		{ "$_NAND_",   4 },
+		{ "$_OR_",     4 },
+		{ "$_NOR_",    4 },
+		{ "$_ANDNOT_", 4 },
+		{ "$_ORNOT_",  4 },
+		{ "$_XOR_",    8 },
+		{ "$_XNOR_",   8 },
+		{ "$_AOI3_",   6 },
+		{ "$_OAI3_",   6 },
+		{ "$_AOI4_",   8 },
+		{ "$_OAI4_",   8 },
+		{ "$_MUX_",    4 }
 	};
 
 	if (gate_cost.count(type))
@@ -74,7 +76,7 @@ int get_cell_cost(RTLIL::IdString type, const dict<RTLIL::IdString, RTLIL::Const
 	return 1;
 }
 
-int get_cell_cost(RTLIL::Cell *cell, dict<RTLIL::IdString, int> *mod_cost_cache)
+inline int get_cell_cost(RTLIL::Cell *cell, dict<RTLIL::IdString, int> *mod_cost_cache)
 {
 	return get_cell_cost(cell->type, cell->parameters, cell->module->design, mod_cost_cache);
 }

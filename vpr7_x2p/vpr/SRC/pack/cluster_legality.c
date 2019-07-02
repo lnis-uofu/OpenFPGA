@@ -410,6 +410,12 @@ void alloc_and_load_rr_graph_for_pb_graph_node(
 	}
 
 	for (i = 0; i < pb_graph_node->pb_type->num_modes; i++) {
+        /* Xifan Tang: we DO NOT build the rr_graph for those modes are disabled in packing */
+        /*
+        if (TRUE == pb_graph_node->pb_type->modes[i].disabled_in_packing) {
+          continue;
+        }
+        */
 		for (j = 0; j < pb_graph_node->pb_type->modes[i].num_pb_type_children;
 				j++) {
 			for (k = 0;
@@ -580,7 +586,7 @@ void alloc_and_load_legalizer_for_cluster(INP t_block* clb, INP int clb_index,
 			ipin++;
 		}
 	}
-
+ 
 	alloc_and_load_rr_node_route_structs();
 	num_nets_in_cluster = 0;
 
@@ -894,6 +900,14 @@ static void breadth_first_expand_neighbours_cluster(int inode, float pcost,
 	num_edges = rr_node[inode].num_edges;
 	for (iconn = 0; iconn < num_edges; iconn++) {
 		to_node = rr_node[inode].edges[iconn];
+        /* Xifan Tang: SHOULD BE FIXED THOROUGHLY!!!
+         * Here, I just bypass all the edges that belongs a mode that is disabled in packing     
+         */
+        if ( (NULL != rr_node[to_node].pb_graph_pin) 
+          && (NULL != rr_node[to_node].pb_graph_pin->parent_node->pb_type->parent_mode) 
+          && (TRUE == rr_node[to_node].pb_graph_pin->parent_node->pb_type->parent_mode->disabled_in_packing)) {
+          continue;
+        }
 		/*if (first_time) { */
 		tot_cost = pcost
 				+ get_rr_cong_cost(to_node) * rr_node_intrinsic_cost(to_node);
@@ -1238,14 +1252,13 @@ void force_post_place_route_cb_input_pins(int iblock) {
 	int i, j, k, ipin, net_index, ext_net;
 	int pin_offset;
 	boolean has_ext_source, success;
-	int curr_ext_output, curr_ext_input, curr_ext_clock;
+	int curr_ext_input, curr_ext_clock;
 	t_pb_graph_node *pb_graph_node;
 
 	pb_graph_node = block[iblock].pb->pb_graph_node;
 	pin_offset = block[iblock].z * (pb_graph_node->pb_type->num_input_pins + pb_graph_node->pb_type->num_output_pins + pb_graph_node->pb_type->num_clock_pins);
 
 	curr_ext_input = ext_input_rr_node_index;
-	curr_ext_output = ext_output_rr_node_index;
 	curr_ext_clock = ext_clock_rr_node_index;
 
 	for (i = 0; i < num_nets_in_cluster; i++) {

@@ -1,5 +1,9 @@
+#ifndef ROUTE_COMMON_H
+#define ROUTE_COMMON_H
+
 /************ Defines and types shared by all route files ********************/
 
+typedef struct s_heap t_heap;
 struct s_heap {
 	int index;
 	float cost;
@@ -117,4 +121,4 @@ void auto_detect_and_reserve_locally_used_opins(float pres_fac, boolean rip_up_l
 
 void free_chunk_memory_trace(void);
 
-
+#endif

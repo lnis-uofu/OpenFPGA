@@ -28,17 +28,15 @@ input blb // Inverted Bit line control signal
     end 
   end
 
-`ifdef INITIALIZATION
-  initial begin
-    $signal_force("a", "0", 0, 1, , 1);
-  end
-`endif
-
-
   // dout is short-wired to din 
   assign dout = a;
   //---- doutb is always opposite to dout 
   assign doutb = ~dout;
+`ifdef ENABLE_SIGNAL_INITIALIZATION
+   initial begin
+     $deposit(a, $random);
+   end
+`endif
 endmodule
 
 module sram6T_rram(

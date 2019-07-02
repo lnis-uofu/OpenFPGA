@@ -57,40 +57,49 @@ struct s_TokenPair OptionBaseTokenList[] = {
 		{ "power_output_file", OT_POWER_OUT_FILE }, /* Output file for power results */
 		{ "power", OT_POWER }, /* Run power estimation? */
 		{ "tech_properties", OT_CMOS_TECH_BEHAVIOR_FILE }, /* Technology properties */
+        /* General FPGA_X2P: FPGA-SPICE/Verilog/Bitstream Options */
+        { "fpga_x2p_rename_illegal_port", OT_FPGA_X2P_RENAME_ILLEGAL_PORT }, /* Xifan TANG: rename illegal port names */
+        { "fpga_x2p_signal_density_weight", OT_FPGA_X2P_SIGNAL_DENSITY_WEIGHT }, /* The weight of signal density */
+        { "fpga_x2p_sim_window_size", OT_FPGA_X2P_SIM_WINDOW_SIZE }, /* Window size in determining number of clock cycles in simulation */
+        { "fpga_x2p_compact_routing_hierarchy", OT_FPGA_X2P_COMPACT_ROUTING_HIERARCHY }, /* use a compact routing hierarchy in SPICE/Verilog generation */
+        { "fpga_x2p_output_sb_xml", OT_FPGA_X2P_OUTPUT_SB_XML }, /* use a compact routing hierarchy in SPICE/Verilog generation */
         /* Xifan TANG: FPGA SPICE Support */
         { "fpga_spice", OT_FPGA_SPICE },/* Xifan TANG: SPICE Model Support, turn on the functionality*/
-        { "fpga_spice_rename_illegal_port", OT_FPGA_SPICE_RENAME_ILLEGAL_PORT }, /* Xifan TANG: rename illegal port names */
-        { "fpga_spice_signal_density_weight", OT_FPGA_SPICE_SIGNAL_DENSITY_WEIGHT }, /* The weight of signal density */
-        { "fpga_spice_sim_window_size", OT_FPGA_SPICE_SIM_WINDOW_SIZE }, /* Window size in determining number of clock cycles in simulation */
-        { "fpga_spice_sim_mt_num", OT_FPGA_SPICE_SIM_MT_NUM }, /* number of multi-thread used in simulation */
-        { "fpga_spice_dir", OT_SPICE_DIR },/* Xifan TANG: SPICE Model Support, directory of spice netlists*/
-        { "fpga_spice_print_top_testbench", OT_SPICE_PRINT_TOP_TESTBENCH }, /* Print the SPICE TOP Testbench for MUXes */
-        { "fpga_spice_print_pb_mux_testbench", OT_SPICE_PRINT_PB_MUX_TESTBENCH }, /* Print the SPICE Testbench for MUXes */
-        { "fpga_spice_print_cb_mux_testbench", OT_SPICE_PRINT_CB_MUX_TESTBENCH }, /* Print the SPICE Testbench for MUXes */
-        { "fpga_spice_print_sb_mux_testbench", OT_SPICE_PRINT_SB_MUX_TESTBENCH }, /* Print the SPICE Testbench for MUXes */
-        { "fpga_spice_print_cb_testbench", OT_SPICE_PRINT_CB_TESTBENCH }, /* Print the SPICE Testbench for CBs */
-        { "fpga_spice_print_sb_testbench", OT_SPICE_PRINT_SB_TESTBENCH }, /* Print the SPICE Testbench for SBs */
-        { "fpga_spice_print_grid_testbench", OT_SPICE_PRINT_GRID_TESTBENCH }, /* Print the SPICE Testbench for Grids  */
-        { "fpga_spice_print_lut_testbench", OT_SPICE_PRINT_LUT_TESTBENCH }, /* Print the SPICE Testbench for Grids  */
-        { "fpga_spice_print_hardlogic_testbench", OT_SPICE_PRINT_HARDLOGIC_TESTBENCH }, /* Print the SPICE Testbench for Grids  */
+        { "fpga_spice_dir", OT_FPGA_SPICE_DIR },/* Xifan TANG: SPICE Model Support, directory of spice netlists*/
+        { "fpga_spice_print_top_testbench", OT_FPGA_SPICE_PRINT_TOP_TESTBENCH }, /* Print the SPICE TOP Testbench for MUXes */
+        { "fpga_spice_print_pb_mux_testbench", OT_FPGA_SPICE_PRINT_PB_MUX_TESTBENCH }, /* Print the SPICE Testbench for MUXes */
+        { "fpga_spice_print_cb_mux_testbench", OT_FPGA_SPICE_PRINT_CB_MUX_TESTBENCH }, /* Print the SPICE Testbench for MUXes */
+        { "fpga_spice_print_sb_mux_testbench", OT_FPGA_SPICE_PRINT_SB_MUX_TESTBENCH }, /* Print the SPICE Testbench for MUXes */
+        { "fpga_spice_print_cb_testbench", OT_FPGA_SPICE_PRINT_CB_TESTBENCH }, /* Print the SPICE Testbench for CBs */
+        { "fpga_spice_print_sb_testbench", OT_FPGA_SPICE_PRINT_SB_TESTBENCH }, /* Print the SPICE Testbench for SBs */
+        { "fpga_spice_print_grid_testbench", OT_FPGA_SPICE_PRINT_GRID_TESTBENCH }, /* Print the SPICE Testbench for Grids  */
+        { "fpga_spice_print_lut_testbench", OT_FPGA_SPICE_PRINT_LUT_TESTBENCH }, /* Print the SPICE Testbench for Grids  */
+        { "fpga_spice_print_hardlogic_testbench", OT_FPGA_SPICE_PRINT_HARDLOGIC_TESTBENCH }, /* Print the SPICE Testbench for Grids  */
+        { "fpga_spice_print_io_testbench", OT_FPGA_SPICE_PRINT_IO_TESTBENCH }, /* Print the SPICE Testbench for Grids  */
         { "fpga_spice_leakage_only", OT_FPGA_SPICE_LEAKAGE_ONLY }, /* Only simulate leakage power in FPGA SPICE */
-        { "fpga_spice_parasitic_net_estimation_off", OT_FPGA_SPICE_PARASITIC_NET_ESTIMATION_OFF }, /* Xifan TANG: turn off the parasitic net estimation*/
-        { "fpga_spice_testbench_load_extraction_off", OT_FPGA_SPICE_TESTBENCH_LOAD_EXTRACTION_OFF }, /* Xifan TANG: turn off the parasitic net estimation*/
-    
-     
+        { "fpga_spice_parasitic_net_estimation", OT_FPGA_SPICE_PARASITIC_NET_ESTIMATION}, /* Xifan TANG: turn on/off the parasitic net estimation*/
+        { "fpga_spice_testbench_load_extraction", OT_FPGA_SPICE_TESTBENCH_LOAD_EXTRACTION}, /* Xifan TANG: turn on/off the parasitic net estimation*/
+        { "fpga_spice_simulator_path", OT_FPGA_SPICE_SIMULATOR_PATH}, /* Specify simulator path for SPICE netlists */
+        { "fpga_spice_sim_mt_num", OT_FPGA_SPICE_SIM_MT_NUM }, /* number of multi-thread used in simulation */
         /* Xifan TANG: Synthsizable Verilog */
         { "fpga_verilog", OT_FPGA_VERILOG_SYN },
         { "fpga_verilog_dir", OT_FPGA_VERILOG_SYN_DIR },
-        { "fpga_verilog_print_top_testbench", OT_FPGA_VERILOG_SYN_PRINT_TOP_TB },
-        { "fpga_verilog_print_top_auto_testbench", OT_FPGA_VERILOG_SYN_PRINT_TOP_AUTO_TB },
-        { "fpga_verilog_print_input_blif_testbench", OT_FPGA_VERILOG_SYN_PRINT_INPUT_BLIF_TB },
-        { "fpga_verilog_print_input_blif_testbench", OT_FPGA_VERILOG_SYN_PRINT_INPUT_BLIF_TB },
-        { "fpga_verilog_tb_serial_config_mode", OT_FPGA_VERILOG_SYN_TB_SERIAL_CONFIG_MODE },
+        { "fpga_verilog_print_top_testbench", OT_FPGA_VERILOG_SYN_PRINT_TOP_TESTBENCH },
+        { "fpga_verilog_print_autocheck_top_testbench", OT_FPGA_VERILOG_SYN_PRINT_AUTOCHECK_TOP_TESTBENCH },
+        { "fpga_verilog_print_input_blif_testbench", OT_FPGA_VERILOG_SYN_PRINT_INPUT_BLIF_TESTBENCH },
+        { "fpga_verilog_print_formal_verification_top_netlist", OT_FPGA_VERILOG_SYN_PRINT_FORMAL_VERIFICATION_TOP_NETLIST },
         { "fpga_verilog_include_timing", OT_FPGA_VERILOG_SYN_INCLUDE_TIMING }, /* Include timing constraints in Verilog netlists */
-        { "fpga_verilog_init_sim", OT_FPGA_VERILOG_INIT_SIM }, /* Allow simulation initialization */
-        { "fpga_verilog_print_modelsim_autodeck", OT_FPGA_VERILOG_SYN_PRINT_MODELSIM_AUTODECK }, /* Allow simulation script generation */
-        { "fpga_verilog_modelsim_ini_path", OT_FPGA_VERILOG_SYN_MODELSIM_INI_PATH }, /* Specify the simulator path for Verilog netlists */
-        /* mrFPGA: Xifan TANG */
+        { "fpga_verilog_include_signal_init", OT_FPGA_VERILOG_SYN_INCLUDE_SIGNAL_INIT }, /* Include signal initialization in Verilog netlists */
+        { "fpga_verilog_include_icarus_simulator", OT_FPGA_VERILOG_SYN_INCLUDE_ICARUS_SIMULATOR }, /* Include/activate Icarus required functions in Verilog netlists */
+        { "fpga_verilog_print_modelsim_autodeck", OT_FPGA_VERILOG_SYN_PRINT_MODELSIM_AUTODECK }, /* Generate autodeck scripts for modelsim */
+        { "fpga_verilog_print_user_defined_template", OT_FPGA_VERILOG_SYN_PRINT_USER_DEFINED_TEMPLATE }, /* Specify the simulator path for Verilog netlists */
+        { "fpga_verilog_print_report_timing_tcl", OT_FPGA_VERILOG_SYN_PRINT_REPORT_TIMING_TCL }, /* Specify the simulator path for Verilog netlists */
+        { "fpga_verilog_report_timing_rpt_path", OT_FPGA_VERILOG_SYN_REPORT_TIMING_RPT_PATH }, /* Specify the simulator path for Verilog netlists */
+        { "fpga_verilog_print_sdc_pnr", OT_FPGA_VERILOG_SYN_PRINT_SDC_PNR }, /* Specify the simulator path for Verilog netlists */
+        { "fpga_verilog_print_sdc_analysis", OT_FPGA_VERILOG_SYN_PRINT_SDC_ANALYSIS }, /* Specify the simulator path for Verilog netlists */
+        /* Xifan Tang: Bitstream generator */
+        { "fpga_bitstream_generator", OT_FPGA_BITSTREAM_GENERATOR }, /* turn on bitstream generator, and specify the output file */
+        { "fpga_bitstream_output_file", OT_FPGA_BITSTREAM_OUTPUT_FILE }, /* turn on bitstream generator, and specify the output file */
         /* mrFPGA: Xifan TANG */
         {"show_sram", OT_SHOW_SRAM},
         {"show_pass_trans", OT_SHOW_PASS_TRANS},

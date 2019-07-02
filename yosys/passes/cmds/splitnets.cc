@@ -37,14 +37,20 @@ struct SplitnetsWorker
 			new_wire_name += format.substr(0, 1);
 
 		if (width > 1) {
-			new_wire_name += stringf("%d", offset+width-1);
+			if (wire->upto)
+				new_wire_name += stringf("%d", wire->start_offset+wire->width-(offset+width)-1);
+			else
+				new_wire_name += stringf("%d", wire->start_offset+offset+width-1);
 			if (format.size() > 2)
 				new_wire_name += format.substr(2, 1);
 			else
 				new_wire_name += ":";
 		}
 
-		new_wire_name += stringf("%d", offset);
+		if (wire->upto)
+			new_wire_name += stringf("%d", wire->start_offset+wire->width-offset-1);
+		else
+			new_wire_name += stringf("%d", wire->start_offset+offset);
 
 		if (format.size() > 1)
 			new_wire_name += format.substr(1, 1);
@@ -81,7 +87,7 @@ struct SplitnetsWorker
 
 struct SplitnetsPass : public Pass {
 	SplitnetsPass() : Pass("splitnets", "split up multi-bit nets") { }
-	virtual void help()
+	void help() YS_OVERRIDE
 	{
 		//   |---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|
 		log("\n");
@@ -103,7 +109,7 @@ struct SplitnetsPass : public Pass {
 		log("        and split nets so that no driver drives only part of a net.\n");
 		log("\n");
 	}
-	virtual void execute(std::vector<std::string> args, RTLIL::Design *design)
+	void execute(std::vector<std::string> args, RTLIL::Design *design) YS_OVERRIDE
 	{
 		bool flag_ports = false;
 		bool flag_driver = false;

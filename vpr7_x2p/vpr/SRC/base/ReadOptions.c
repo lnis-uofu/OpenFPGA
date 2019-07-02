@@ -474,64 +474,90 @@ ProcessOption(INP char **Args, INOUTP t_options * Options) {
 	case OT_CMOS_TECH_BEHAVIOR_FILE:
 		return ReadString(Args, &Options->CmosTechFile);
 
+    /* Xifan Tang: FPGA X2P Options*/
+    case OT_FPGA_X2P_RENAME_ILLEGAL_PORT:
+      return Args;
+    case OT_FPGA_X2P_SIGNAL_DENSITY_WEIGHT:
+	  return ReadFloat(Args, &Options->fpga_spice_signal_density_weight);
+    case OT_FPGA_X2P_SIM_WINDOW_SIZE:
+	  return ReadFloat(Args, &Options->fpga_spice_sim_window_size);
+    case OT_FPGA_X2P_COMPACT_ROUTING_HIERARCHY: 
+      /* use a compact routing hierarchy in SPICE/Verilog generation */
+      return Args;
+    case OT_FPGA_X2P_OUTPUT_SB_XML: 
+      /* Read the file prefix to output SB XML files */
+      return ReadString(Args, &Options->sb_xml_dir);
     /* Xifan TANG: FPGA SPICE Model Options*/
     case OT_FPGA_SPICE:
       return Args;
-    case OT_SPICE_DIR:
+    case OT_FPGA_SPICE_DIR:
       return ReadString(Args, &Options->spice_dir);
-    case OT_SPICE_PRINT_TOP_TESTBENCH:
+    case OT_FPGA_SPICE_PRINT_TOP_TESTBENCH:
       return Args;
-    case OT_SPICE_PRINT_PB_MUX_TESTBENCH:
+    case OT_FPGA_SPICE_PRINT_PB_MUX_TESTBENCH:
       return Args;
-    case OT_SPICE_PRINT_CB_MUX_TESTBENCH:
+    case OT_FPGA_SPICE_PRINT_CB_MUX_TESTBENCH:
       return Args;
-    case OT_SPICE_PRINT_SB_MUX_TESTBENCH:
+    case OT_FPGA_SPICE_PRINT_SB_MUX_TESTBENCH:
       return Args;
-    case OT_SPICE_PRINT_CB_TESTBENCH:
+    case OT_FPGA_SPICE_PRINT_CB_TESTBENCH:
       return Args;
-    case OT_SPICE_PRINT_SB_TESTBENCH:
+    case OT_FPGA_SPICE_PRINT_SB_TESTBENCH:
       return Args;
-    case OT_SPICE_PRINT_GRID_TESTBENCH:
+    case OT_FPGA_SPICE_PRINT_GRID_TESTBENCH:
       return Args;
-    case OT_SPICE_PRINT_LUT_TESTBENCH:
+    case OT_FPGA_SPICE_PRINT_LUT_TESTBENCH:
       return Args;
-    case OT_SPICE_PRINT_HARDLOGIC_TESTBENCH:
+    case OT_FPGA_SPICE_PRINT_HARDLOGIC_TESTBENCH:
+      return Args;
+    case OT_FPGA_SPICE_PRINT_IO_TESTBENCH:
       return Args;
     case OT_FPGA_SPICE_LEAKAGE_ONLY:
       return Args;
-    case OT_FPGA_SPICE_PARASITIC_NET_ESTIMATION_OFF:
-      return Args;
-    case OT_FPGA_SPICE_TESTBENCH_LOAD_EXTRACTION_OFF:
-      return Args;
+    case OT_FPGA_SPICE_PARASITIC_NET_ESTIMATION:
+      return ReadOnOff(Args, &Options->fpga_spice_parasitic_net_estimation);
+    case OT_FPGA_SPICE_TESTBENCH_LOAD_EXTRACTION:
+      return ReadOnOff(Args, &Options->fpga_spice_testbench_load_extraction);
+    case OT_FPGA_SPICE_SIM_MT_NUM:
+	  return ReadInt(Args, &Options->fpga_spice_sim_mt_num);
+    case OT_FPGA_SPICE_SIMULATOR_PATH:
+      return ReadString(Args, &Options->fpga_spice_simulator_path);
     /* Xifan TANG: Synthesizable Verilog */
     case OT_FPGA_VERILOG_SYN:
       return Args;
     case OT_FPGA_VERILOG_SYN_DIR:
-      return ReadString(Args, &Options->syn_verilog_dir);
-    case OT_FPGA_VERILOG_SYN_PRINT_TOP_TB:
+      return ReadString(Args, &Options->fpga_syn_verilog_dir);
+    case OT_FPGA_VERILOG_SYN_PRINT_TOP_TESTBENCH:
       return Args;
-    case OT_FPGA_VERILOG_SYN_PRINT_TOP_AUTO_TB:
-      return ReadString(Args, &Options->verilog_benchmark_path);
-    case OT_FPGA_VERILOG_SYN_PRINT_INPUT_BLIF_TB:
+    case OT_FPGA_VERILOG_SYN_PRINT_AUTOCHECK_TOP_TESTBENCH:
+      return ReadString(Args, &Options->fpga_verilog_reference_benchmark_file);
+    case OT_FPGA_VERILOG_SYN_PRINT_INPUT_BLIF_TESTBENCH:
       return Args;
-    case OT_FPGA_VERILOG_SYN_TB_SERIAL_CONFIG_MODE:
-      return Args;
-    case OT_FPGA_SPICE_RENAME_ILLEGAL_PORT:
+    case OT_FPGA_VERILOG_SYN_PRINT_FORMAL_VERIFICATION_TOP_NETLIST:
       return Args;
     case OT_FPGA_VERILOG_SYN_INCLUDE_TIMING:
       return Args;
-    case OT_FPGA_VERILOG_INIT_SIM:
+    case OT_FPGA_VERILOG_SYN_INCLUDE_SIGNAL_INIT:
+      return Args;
+    case OT_FPGA_VERILOG_SYN_INCLUDE_ICARUS_SIMULATOR:
       return Args;
     case OT_FPGA_VERILOG_SYN_PRINT_MODELSIM_AUTODECK:
-      return Args;
-    case OT_FPGA_VERILOG_SYN_MODELSIM_INI_PATH:
       return ReadString(Args, &Options->fpga_verilog_modelsim_ini_path);
-    case OT_FPGA_SPICE_SIGNAL_DENSITY_WEIGHT:
-	  return ReadFloat(Args, &Options->signal_density_weight);
-    case OT_FPGA_SPICE_SIM_WINDOW_SIZE:
-	  return ReadFloat(Args, &Options->sim_window_size);
-    case OT_FPGA_SPICE_SIM_MT_NUM:
-	  return ReadInt(Args, &Options->spice_sim_mt_num);
+    case OT_FPGA_VERILOG_SYN_PRINT_USER_DEFINED_TEMPLATE:
+      return Args;
+    case OT_FPGA_VERILOG_SYN_PRINT_REPORT_TIMING_TCL:
+      return Args;
+    case OT_FPGA_VERILOG_SYN_REPORT_TIMING_RPT_PATH:
+      return ReadString(Args, &Options->fpga_verilog_report_timing_path);
+    case OT_FPGA_VERILOG_SYN_PRINT_SDC_PNR:
+      return Args;
+    case OT_FPGA_VERILOG_SYN_PRINT_SDC_ANALYSIS:
+      return Args;
+    /* Xifan TANG: Bitstream generator */
+    case OT_FPGA_BITSTREAM_GENERATOR:
+      return Args;
+    case OT_FPGA_BITSTREAM_OUTPUT_FILE:
+      return ReadString(Args, &Options->fpga_bitstream_file);
     /* mrFPGA: Xifan TANG */
     case OT_SHOW_SRAM:
     case OT_SHOW_PASS_TRANS:

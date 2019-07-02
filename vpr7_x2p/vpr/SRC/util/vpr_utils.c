@@ -247,6 +247,12 @@ boolean primitive_type_feasible(int iblk, const t_pb_type *cur_pb_type) {
 		return FALSE;
 	}
 
+    /* Xifan Tang: return false if this primitive is disabled in the packing */
+    if (TRUE == cur_pb_type->parent_mode->disabled_in_packing) {
+      return FALSE;
+    }
+    /* END */
+
 	/* check if ports are big enough */
 	port = logical_block[iblk].model->inputs;
 	second_pass = FALSE;
@@ -390,10 +396,8 @@ t_pb_graph_pin* get_pb_graph_node_pin_from_vpack_net(int inet, int ipin) {
 
 t_pb_graph_pin* get_pb_graph_node_pin_from_clb_net(int inet, int ipin) {
 	int iblock, target_pin;
-	t_pb_graph_node *pb_graph_node;
 
 	iblock = clb_net[inet].node_block[ipin];
-	pb_graph_node = block[iblock].pb->pb_graph_node;
 
 	target_pin = clb_net[inet].node_block_pin[ipin];
 	
@@ -1161,8 +1165,8 @@ void alloc_and_load_idirect_from_blk_pin(t_direct_inf* directs, int num_directs,
  * This data structure supplements the the info in the "directs" data structure
  * TODO: The function that does this parsing in placement is poorly done because it lacks generality on heterogeniety, should replace with this one
  */
-t_clb_to_clb_directs * alloc_and_load_clb_to_clb_directs(INP t_direct_inf *directs, 
-                                                         INP int num_directs) {
+t_clb_to_clb_directs * alloc_and_load_clb_to_clb_directs(INP const t_direct_inf *directs, 
+                                                         INP const int num_directs) {
 	int i, j;
 	t_clb_to_clb_directs *clb_to_clb_directs;
 	char *pb_type_name, *port_name;

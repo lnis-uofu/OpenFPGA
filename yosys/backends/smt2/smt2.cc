@@ -32,13 +32,17 @@ struct Smt2Worker
 	CellTypes ct;
 	SigMap sigmap;
 	RTLIL::Module *module;
-	bool bvmode, memmode, wiresmode, verbose;
-	int idcounter;
+	bool bvmode, memmode, wiresmode, verbose, statebv, statedt, forallmode;
+	dict<IdString, int> &mod_stbv_width;
+	int idcounter = 0, statebv_width = 0;
 
-	std::vector<std::string> decls, trans, hier;
+	std::vector<std::string> decls, trans, hier, dtmembers;
 	std::map<RTLIL::SigBit, RTLIL::Cell*> bit_driver;
 	std::set<RTLIL::Cell*> exported_cells, hiercells, hiercells_queue;
 	pool<Cell*> recursive_cells, registers;
+
+	pool<SigBit> clock_posedge, clock_negedge;
+	vector<string> ex_state_eq, ex_input_eq;
 
 	std::map<RTLIL::SigBit, std::pair<int, int>> fcache;
 	std::map<Cell*, int> memarrays;
@@ -63,17 +67,64 @@ struct Smt2Worker
 		return get_id(obj->name);
 	}
 
-	Smt2Worker(RTLIL::Module *module, bool bvmode, bool memmode, bool wiresmode, bool verbose) :
-			ct(module->design), sigmap(module), module(module), bvmode(bvmode), memmode(memmode),
-			wiresmode(wiresmode), verbose(verbose), idcounter(0)
+	void makebits(std::string name, int width = 0, std::string comment = std::string())
 	{
-		decls.push_back(stringf("(declare-sort |%s_s| 0)\n", get_id(module)));
-		decls.push_back(stringf("(declare-fun |%s_is| (|%s_s|) Bool)\n", get_id(module), get_id(module)));
+		std::string decl_str;
+
+		if (statebv)
+		{
+			if (width == 0) {
+				decl_str = stringf("(define-fun |%s| ((state |%s_s|)) Bool (= ((_ extract %d %d) state) #b1))", name.c_str(), get_id(module), statebv_width, statebv_width);
+				statebv_width += 1;
+			} else {
+				decl_str = stringf("(define-fun |%s| ((state |%s_s|)) (_ BitVec %d) ((_ extract %d %d) state))", name.c_str(), get_id(module), width, statebv_width+width-1, statebv_width);
+				statebv_width += width;
+			}
+		}
+		else if (statedt)
+		{
+			if (width == 0) {
+				decl_str = stringf("  (|%s| Bool)", name.c_str());
+			} else {
+				decl_str = stringf("  (|%s| (_ BitVec %d))", name.c_str(), width);
+			}
+		}
+		else
+		{
+			if (width == 0) {
+				decl_str = stringf("(declare-fun |%s| (|%s_s|) Bool)", name.c_str(), get_id(module));
+			} else {
+				decl_str = stringf("(declare-fun |%s| (|%s_s|) (_ BitVec %d))", name.c_str(), get_id(module), width);
+			}
+		}
+
+		if (!comment.empty())
+			decl_str += " ; " + comment;
+
+		if (statedt)
+			dtmembers.push_back(decl_str + "\n");
+		else
+			decls.push_back(decl_str + "\n");
+	}
+
+	Smt2Worker(RTLIL::Module *module, bool bvmode, bool memmode, bool wiresmode, bool verbose, bool statebv, bool statedt, bool forallmode,
+			dict<IdString, int> &mod_stbv_width, dict<IdString, dict<IdString, pair<bool, bool>>> &mod_clk_cache) :
+			ct(module->design), sigmap(module), module(module), bvmode(bvmode), memmode(memmode), wiresmode(wiresmode),
+			verbose(verbose), statebv(statebv), statedt(statedt), forallmode(forallmode), mod_stbv_width(mod_stbv_width)
+	{
+		pool<SigBit> noclock;
+
+		makebits(stringf("%s_is", get_id(module)));
 
 		for (auto cell : module->cells())
-		for (auto &conn : cell->connections()) {
+		for (auto &conn : cell->connections())
+		{
+			if (GetSize(conn.second) == 0)
+				continue;
+
 			bool is_input = ct.cell_input(cell->type, conn.first);
 			bool is_output = ct.cell_output(cell->type, conn.first);
+
 			if (is_output && !is_input)
 				for (auto bit : sigmap(conn.second)) {
 					if (bit_driver.count(bit))
@@ -83,6 +134,66 @@ struct Smt2Worker
 			else if (is_output || !is_input)
 				log_error("Unsupported or unknown directionality on port %s of cell %s.%s (%s).\n",
 						log_id(conn.first), log_id(module), log_id(cell), log_id(cell->type));
+
+			if (cell->type.in("$mem") && conn.first.in("\\RD_CLK", "\\WR_CLK"))
+			{
+				SigSpec clk = sigmap(conn.second);
+				for (int i = 0; i < GetSize(clk); i++)
+				{
+					if (clk[i].wire == nullptr)
+						continue;
+
+					if (cell->getParam(conn.first == "\\RD_CLK" ? "\\RD_CLK_ENABLE" : "\\WR_CLK_ENABLE")[i] != State::S1)
+						continue;
+
+					if (cell->getParam(conn.first == "\\RD_CLK" ? "\\RD_CLK_POLARITY" : "\\WR_CLK_POLARITY")[i] == State::S1)
+						clock_posedge.insert(clk[i]);
+					else
+						clock_negedge.insert(clk[i]);
+				}
+			}
+			else
+			if (cell->type.in("$dff", "$_DFF_P_", "$_DFF_N_") && conn.first.in("\\CLK", "\\C"))
+			{
+				bool posedge = (cell->type == "$_DFF_N_") || (cell->type == "$dff" && cell->getParam("\\CLK_POLARITY").as_bool());
+				for (auto bit : sigmap(conn.second)) {
+					if (posedge)
+						clock_posedge.insert(bit);
+					else
+						clock_negedge.insert(bit);
+				}
+			}
+			else
+			if (mod_clk_cache.count(cell->type) && mod_clk_cache.at(cell->type).count(conn.first))
+			{
+				for (auto bit : sigmap(conn.second)) {
+					if (mod_clk_cache.at(cell->type).at(conn.first).first)
+						clock_posedge.insert(bit);
+					if (mod_clk_cache.at(cell->type).at(conn.first).second)
+						clock_negedge.insert(bit);
+				}
+			}
+			else
+			{
+				for (auto bit : sigmap(conn.second))
+					noclock.insert(bit);
+			}
+		}
+
+		for (auto bit : noclock) {
+			clock_posedge.erase(bit);
+			clock_negedge.erase(bit);
+		}
+
+		for (auto wire : module->wires())
+		{
+			if (!wire->port_input || GetSize(wire) != 1)
+				continue;
+			SigBit bit = sigmap(wire);
+			if (clock_posedge.count(bit))
+				mod_clk_cache[module->name][wire->name].first = true;
+			if (clock_negedge.count(bit))
+				mod_clk_cache[module->name][wire->name].second = true;
 		}
 	}
 
@@ -162,8 +273,7 @@ struct Smt2Worker
 		if (fcache.count(bit) == 0) {
 			if (verbose) log("%*s-> external bool: %s\n", 2+2*GetSize(recursive_cells), "",
 					log_signal(bit));
-			decls.push_back(stringf("(declare-fun |%s#%d| (|%s_s|) Bool) ; %s\n",
-					get_id(module), idcounter, get_id(module), log_signal(bit)));
+			makebits(stringf("%s#%d", get_id(module), idcounter), 0, log_signal(bit));
 			register_bool(bit, idcounter++);
 		}
 
@@ -237,8 +347,7 @@ struct Smt2Worker
 					log_signal(sig.extract(i, j)));
 			for (auto bit : sig.extract(i, j))
 				log_assert(bit_driver.count(bit) == 0);
-			decls.push_back(stringf("(declare-fun |%s#%d| (|%s_s|) (_ BitVec %d)) ; %s\n",
-					get_id(module), idcounter, get_id(module), j, log_signal(sig.extract(i, j))));
+			makebits(stringf("%s#%d", get_id(module), idcounter), j, log_signal(sig.extract(i, j)));
 			subexpr.push_back(stringf("(|%s#%d| %s)", get_id(module), idcounter, state_name));
 			register_bv(sig.extract(i, j), idcounter++);
 		}
@@ -288,7 +397,8 @@ struct Smt2Worker
 
 		if (type == 's' || type == 'd' || type == 'b') {
 			width = max(width, GetSize(cell->getPort("\\A")));
-			width = max(width, GetSize(cell->getPort("\\B")));
+			if (cell->hasPort("\\B"))
+				width = max(width, GetSize(cell->getPort("\\B")));
 		}
 
 		if (cell->hasPort("\\A")) {
@@ -306,6 +416,7 @@ struct Smt2Worker
 		for (char ch : expr) {
 			if (ch == 'A') processed_expr += get_bv(sig_a);
 			else if (ch == 'B') processed_expr += get_bv(sig_b);
+			else if (ch == 'P') processed_expr += get_bv(cell->getPort("\\B"));
 			else if (ch == 'L') processed_expr += is_signed ? "a" : "l";
 			else if (ch == 'U') processed_expr += is_signed ? "s" : "u";
 			else processed_expr += ch;
@@ -382,8 +493,7 @@ struct Smt2Worker
 		if (cell->type.in("$_FF_", "$_DFF_P_", "$_DFF_N_"))
 		{
 			registers.insert(cell);
-			decls.push_back(stringf("(declare-fun |%s#%d| (|%s_s|) Bool) ; %s\n",
-					get_id(module), idcounter, get_id(module), log_signal(cell->getPort("\\Q"))));
+			makebits(stringf("%s#%d", get_id(module), idcounter), 0, log_signal(cell->getPort("\\Q")));
 			register_bool(cell->getPort("\\Q"), idcounter++);
 			recursive_cells.erase(cell);
 			return;
@@ -397,6 +507,8 @@ struct Smt2Worker
 		if (cell->type == "$_NOR_") return export_gate(cell, "(not (or A B))");
 		if (cell->type == "$_XOR_") return export_gate(cell, "(xor A B)");
 		if (cell->type == "$_XNOR_") return export_gate(cell, "(not (xor A B))");
+		if (cell->type == "$_ANDNOT_") return export_gate(cell, "(and A (not B))");
+		if (cell->type == "$_ORNOT_") return export_gate(cell, "(or A (not B))");
 		if (cell->type == "$_MUX_") return export_gate(cell, "(ite S B A)");
 		if (cell->type == "$_AOI3_") return export_gate(cell, "(not (or (and A B) C))");
 		if (cell->type == "$_OAI3_") return export_gate(cell, "(not (and (or A B) C))");
@@ -410,20 +522,22 @@ struct Smt2Worker
 			if (cell->type.in("$ff", "$dff"))
 			{
 				registers.insert(cell);
-				decls.push_back(stringf("(declare-fun |%s#%d| (|%s_s|) (_ BitVec %d)) ; %s\n",
-						get_id(module), idcounter, get_id(module), GetSize(cell->getPort("\\Q")), log_signal(cell->getPort("\\Q"))));
+				makebits(stringf("%s#%d", get_id(module), idcounter), GetSize(cell->getPort("\\Q")), log_signal(cell->getPort("\\Q")));
 				register_bv(cell->getPort("\\Q"), idcounter++);
 				recursive_cells.erase(cell);
 				return;
 			}
 
-			if (cell->type.in("$anyconst", "$anyseq"))
+			if (cell->type.in("$anyconst", "$anyseq", "$allconst", "$allseq"))
 			{
 				registers.insert(cell);
-				decls.push_back(stringf("; yosys-smt2-%s %s#%d %s\n", cell->type.c_str() + 1, get_id(module), idcounter,
-						cell->attributes.count("\\src") ? cell->attributes.at("\\src").decode_string().c_str() : get_id(cell)));
-				decls.push_back(stringf("(declare-fun |%s#%d| (|%s_s|) (_ BitVec %d)) ; %s\n",
-						get_id(module), idcounter, get_id(module), GetSize(cell->getPort("\\Y")), log_signal(cell->getPort("\\Y"))));
+				string infostr = cell->attributes.count("\\src") ? cell->attributes.at("\\src").decode_string().c_str() : get_id(cell);
+				if (cell->attributes.count("\\reg"))
+					infostr += " " + cell->attributes.at("\\reg").decode_string();
+				decls.push_back(stringf("; yosys-smt2-%s %s#%d %d %s\n", cell->type.c_str() + 1, get_id(module), idcounter, GetSize(cell->getPort("\\Y")), infostr.c_str()));
+				makebits(stringf("%s#%d", get_id(module), idcounter), GetSize(cell->getPort("\\Y")), log_signal(cell->getPort("\\Y")));
+				if (cell->type == "$anyseq")
+					ex_input_eq.push_back(stringf("  (= (|%s#%d| state) (|%s#%d| other_state))", get_id(module), idcounter, get_id(module), idcounter));
 				register_bv(cell->getPort("\\Y"), idcounter++);
 				recursive_cells.erase(cell);
 				return;
@@ -441,7 +555,9 @@ struct Smt2Worker
 
 			if (cell->type.in("$shift", "$shiftx")) {
 				if (cell->getParam("\\B_SIGNED").as_bool()) {
-					/* FIXME */
+					return export_bvop(cell, stringf("(ite (bvsge P #b%0*d) "
+							"(bvlshr A B) (bvlshr A (bvneg B)))",
+							GetSize(cell->getPort("\\B")), 0), 's');
 				} else {
 					return export_bvop(cell, "(bvlshr A B)", 's');
 				}
@@ -466,6 +582,13 @@ struct Smt2Worker
 			if (cell->type == "$mul") return export_bvop(cell, "(bvmul A B)");
 			if (cell->type == "$div") return export_bvop(cell, "(bvUdiv A B)", 'd');
 			if (cell->type == "$mod") return export_bvop(cell, "(bvUrem A B)", 'd');
+
+			if (cell->type.in("$reduce_and", "$reduce_or", "$reduce_bool") &&
+					2*GetSize(cell->getPort("\\A").chunks()) < GetSize(cell->getPort("\\A"))) {
+				bool is_and = cell->type == "$reduce_and";
+				string bits(GetSize(cell->getPort("\\A")), is_and ? '1' : '0');
+				return export_bvop(cell, stringf("(%s A #b%s)", is_and ? "=" : "distinct", bits.c_str()), 'b');
+			}
 
 			if (cell->type == "$reduce_and") return export_reduce(cell, "(and A)", true);
 			if (cell->type == "$reduce_or") return export_reduce(cell, "(or A)", false);
@@ -513,30 +636,97 @@ struct Smt2Worker
 			int abits = cell->getParam("\\ABITS").as_int();
 			int width = cell->getParam("\\WIDTH").as_int();
 			int rd_ports = cell->getParam("\\RD_PORTS").as_int();
+			int wr_ports = cell->getParam("\\WR_PORTS").as_int();
 
-			decls.push_back(stringf("(declare-fun |%s#%d#0| (|%s_s|) (Array (_ BitVec %d) (_ BitVec %d))) ; %s\n",
-					get_id(module), arrayid, get_id(module), abits, width, get_id(cell)));
+			bool async_read = false;
+			if (!cell->getParam("\\WR_CLK_ENABLE").is_fully_ones()) {
+				if (!cell->getParam("\\WR_CLK_ENABLE").is_fully_zero())
+					log_error("Memory %s.%s has mixed clocked/nonclocked write ports. This is not supported by \"write_smt2\".\n", log_id(cell), log_id(module));
+				async_read = true;
+			}
 
-			decls.push_back(stringf("; yosys-smt2-memory %s %d %d %d\n", get_id(cell), abits, width, rd_ports));
-			decls.push_back(stringf("(define-fun |%s_m %s| ((state |%s_s|)) (Array (_ BitVec %d) (_ BitVec %d)) (|%s#%d#0| state))\n",
-					get_id(module), get_id(cell), get_id(module), abits, width, get_id(module), arrayid));
+			decls.push_back(stringf("; yosys-smt2-memory %s %d %d %d %d %s\n", get_id(cell), abits, width, rd_ports, wr_ports, async_read ? "async" : "sync"));
 
-			for (int i = 0; i < rd_ports; i++)
+			string memstate;
+			if (async_read) {
+				memstate = stringf("%s#%d#final", get_id(module), arrayid);
+			} else {
+				memstate = stringf("%s#%d#0", get_id(module), arrayid);
+			}
+
+			if (statebv)
 			{
-				SigSpec addr_sig = cell->getPort("\\RD_ADDR").extract(abits*i, abits);
-				SigSpec data_sig = cell->getPort("\\RD_DATA").extract(width*i, width);
-				std::string addr = get_bv(addr_sig);
+				int mem_size = cell->getParam("\\SIZE").as_int();
+				int mem_offset = cell->getParam("\\OFFSET").as_int();
 
-				if (cell->getParam("\\RD_CLK_ENABLE").extract(i).as_bool())
-					log_error("Read port %d (%s) of memory %s.%s is clocked. This is not supported by \"write_smt2\"! "
-							"Call \"memory\" with -nordff to avoid this error.\n", i, log_signal(data_sig), log_id(cell), log_id(module));
+				makebits(memstate, width*mem_size, get_id(cell));
+				decls.push_back(stringf("(define-fun |%s_m %s| ((state |%s_s|)) (_ BitVec %d) (|%s| state))\n",
+						get_id(module), get_id(cell), get_id(module), width*mem_size, memstate.c_str()));
 
-				decls.push_back(stringf("(define-fun |%s_m:%d %s| ((state |%s_s|)) (_ BitVec %d) %s) ; %s\n",
-						get_id(module), i, get_id(cell), get_id(module), abits, addr.c_str(), log_signal(addr_sig)));
+				for (int i = 0; i < rd_ports; i++)
+				{
+					SigSpec addr_sig = cell->getPort("\\RD_ADDR").extract(abits*i, abits);
+					SigSpec data_sig = cell->getPort("\\RD_DATA").extract(width*i, width);
+					std::string addr = get_bv(addr_sig);
 
-				decls.push_back(stringf("(define-fun |%s#%d| ((state |%s_s|)) (_ BitVec %d) (select (|%s#%d#0| state) %s)) ; %s\n",
-						get_id(module), idcounter, get_id(module), width, get_id(module), arrayid, addr.c_str(), log_signal(data_sig)));
-				register_bv(data_sig, idcounter++);
+					if (cell->getParam("\\RD_CLK_ENABLE").extract(i).as_bool())
+						log_error("Read port %d (%s) of memory %s.%s is clocked. This is not supported by \"write_smt2\"! "
+								"Call \"memory\" with -nordff to avoid this error.\n", i, log_signal(data_sig), log_id(cell), log_id(module));
+
+					decls.push_back(stringf("(define-fun |%s_m:R%dA %s| ((state |%s_s|)) (_ BitVec %d) %s) ; %s\n",
+							get_id(module), i, get_id(cell), get_id(module), abits, addr.c_str(), log_signal(addr_sig)));
+
+					std::string read_expr = "#b";
+					for (int k = 0; k < width; k++)
+						read_expr += "0";
+
+					for (int k = 0; k < mem_size; k++)
+						read_expr = stringf("(ite (= (|%s_m:R%dA %s| state) #b%s) ((_ extract %d %d) (|%s| state))\n  %s)",
+								get_id(module), i, get_id(cell), Const(k+mem_offset, abits).as_string().c_str(),
+								width*(k+1)-1, width*k, memstate.c_str(), read_expr.c_str());
+
+					decls.push_back(stringf("(define-fun |%s#%d| ((state |%s_s|)) (_ BitVec %d)\n  %s) ; %s\n",
+							get_id(module), idcounter, get_id(module), width, read_expr.c_str(), log_signal(data_sig)));
+
+					decls.push_back(stringf("(define-fun |%s_m:R%dD %s| ((state |%s_s|)) (_ BitVec %d) (|%s#%d| state))\n",
+							get_id(module), i, get_id(cell), get_id(module), width, get_id(module), idcounter));
+
+					register_bv(data_sig, idcounter++);
+				}
+			}
+			else
+			{
+				if (statedt)
+					dtmembers.push_back(stringf("  (|%s| (Array (_ BitVec %d) (_ BitVec %d))) ; %s\n",
+							memstate.c_str(), abits, width, get_id(cell)));
+				else
+					decls.push_back(stringf("(declare-fun |%s| (|%s_s|) (Array (_ BitVec %d) (_ BitVec %d))) ; %s\n",
+							memstate.c_str(), get_id(module), abits, width, get_id(cell)));
+
+				decls.push_back(stringf("(define-fun |%s_m %s| ((state |%s_s|)) (Array (_ BitVec %d) (_ BitVec %d)) (|%s| state))\n",
+						get_id(module), get_id(cell), get_id(module), abits, width, memstate.c_str()));
+
+				for (int i = 0; i < rd_ports; i++)
+				{
+					SigSpec addr_sig = cell->getPort("\\RD_ADDR").extract(abits*i, abits);
+					SigSpec data_sig = cell->getPort("\\RD_DATA").extract(width*i, width);
+					std::string addr = get_bv(addr_sig);
+
+					if (cell->getParam("\\RD_CLK_ENABLE").extract(i).as_bool())
+						log_error("Read port %d (%s) of memory %s.%s is clocked. This is not supported by \"write_smt2\"! "
+								"Call \"memory\" with -nordff to avoid this error.\n", i, log_signal(data_sig), log_id(cell), log_id(module));
+
+					decls.push_back(stringf("(define-fun |%s_m:R%dA %s| ((state |%s_s|)) (_ BitVec %d) %s) ; %s\n",
+							get_id(module), i, get_id(cell), get_id(module), abits, addr.c_str(), log_signal(addr_sig)));
+
+					decls.push_back(stringf("(define-fun |%s#%d| ((state |%s_s|)) (_ BitVec %d) (select (|%s| state) (|%s_m:R%dA %s| state))) ; %s\n",
+							get_id(module), idcounter, get_id(module), width, memstate.c_str(), get_id(module), i, get_id(cell), log_signal(data_sig)));
+
+					decls.push_back(stringf("(define-fun |%s_m:R%dD %s| ((state |%s_s|)) (_ BitVec %d) (|%s#%d| state))\n",
+							get_id(module), i, get_id(cell), get_id(module), width, get_id(module), idcounter));
+
+					register_bv(data_sig, idcounter++);
+				}
 			}
 
 			registers.insert(cell);
@@ -553,32 +743,38 @@ struct Smt2Worker
 
 			for (auto &conn : cell->connections())
 			{
+				if (GetSize(conn.second) == 0)
+					continue;
+
 				Wire *w = m->wire(conn.first);
 				SigSpec sig = sigmap(conn.second);
 
 				if (w->port_output && !w->port_input) {
 					if (GetSize(w) > 1) {
 						if (bvmode) {
-							decls.push_back(stringf("(declare-fun |%s#%d| (|%s_s|) (_ BitVec %d)) ; %s\n",
-									get_id(module), idcounter, get_id(module), GetSize(w), log_signal(sig)));
+							makebits(stringf("%s#%d", get_id(module), idcounter), GetSize(w), log_signal(sig));
 							register_bv(sig, idcounter++);
 						} else {
 							for (int i = 0; i < GetSize(w); i++) {
-								decls.push_back(stringf("(declare-fun |%s#%d| (|%s_s|) Bool) ; %s\n",
-										get_id(module), idcounter, get_id(module), log_signal(sig[i])));
+								makebits(stringf("%s#%d", get_id(module), idcounter), 0, log_signal(sig[i]));
 								register_bool(sig[i], idcounter++);
 							}
 						}
 					} else {
-						decls.push_back(stringf("(declare-fun |%s#%d| (|%s_s|) Bool) ; %s\n",
-								get_id(module), idcounter, get_id(module), log_signal(sig)));
+						makebits(stringf("%s#%d", get_id(module), idcounter), 0, log_signal(sig));
 						register_bool(sig, idcounter++);
 					}
 				}
 			}
 
-			decls.push_back(stringf("(declare-fun |%s_h %s| (|%s_s|) |%s_s|)\n",
-					get_id(module), get_id(cell->name), get_id(module), get_id(cell->type)));
+			if (statebv)
+				makebits(stringf("%s_h %s", get_id(module), get_id(cell->name)), mod_stbv_width.at(cell->type));
+			else if (statedt)
+				dtmembers.push_back(stringf("  (|%s_h %s| |%s_s|)\n",
+						get_id(module), get_id(cell->name), get_id(cell->type)));
+			else
+				decls.push_back(stringf("(declare-fun |%s_h %s| (|%s_s|) |%s_s|)\n",
+						get_id(module), get_id(cell->name), get_id(module), get_id(cell->type)));
 
 			hiercells.insert(cell);
 			hiercells_queue.insert(cell);
@@ -617,17 +813,30 @@ struct Smt2Worker
 					decls.push_back(stringf("; yosys-smt2-register %s %d\n", get_id(wire), wire->width));
 				if (wire->get_bool_attribute("\\keep") || (wiresmode && wire->name[0] == '\\'))
 					decls.push_back(stringf("; yosys-smt2-wire %s %d\n", get_id(wire), wire->width));
+				if (GetSize(wire) == 1 && (clock_posedge.count(sig) || clock_negedge.count(sig)))
+					decls.push_back(stringf("; yosys-smt2-clock %s%s%s\n", get_id(wire),
+							clock_posedge.count(sig) ? " posedge" : "", clock_negedge.count(sig) ? " negedge" : ""));
 				if (bvmode && GetSize(sig) > 1) {
 					decls.push_back(stringf("(define-fun |%s_n %s| ((state |%s_s|)) (_ BitVec %d) %s)\n",
 							get_id(module), get_id(wire), get_id(module), GetSize(sig), get_bv(sig).c_str()));
+					if (wire->port_input)
+						ex_input_eq.push_back(stringf("  (= (|%s_n %s| state) (|%s_n %s| other_state))",
+								get_id(module), get_id(wire), get_id(module), get_id(wire)));
 				} else {
 					for (int i = 0; i < GetSize(sig); i++)
-						if (GetSize(sig) > 1)
+						if (GetSize(sig) > 1) {
 							decls.push_back(stringf("(define-fun |%s_n %s %d| ((state |%s_s|)) Bool %s)\n",
 									get_id(module), get_id(wire), i, get_id(module), get_bool(sig[i]).c_str()));
-						else
+							if (wire->port_input)
+								ex_input_eq.push_back(stringf("  (= (|%s_n %s %d| state) (|%s_n %s %d| other_state))",
+										get_id(module), get_id(wire), i, get_id(module), get_id(wire), i));
+						} else {
 							decls.push_back(stringf("(define-fun |%s_n %s| ((state |%s_s|)) Bool %s)\n",
 									get_id(module), get_id(wire), get_id(module), get_bool(sig[i]).c_str()));
+							if (wire->port_input)
+								ex_input_eq.push_back(stringf("  (= (|%s_n %s| state) (|%s_n %s| other_state))",
+										get_id(module), get_id(wire), get_id(module), get_id(wire)));
+						}
 				}
 			}
 		}
@@ -639,115 +848,70 @@ struct Smt2Worker
 			if (wire->attributes.count("\\init")) {
 				RTLIL::SigSpec sig = sigmap(wire);
 				Const val = wire->attributes.at("\\init");
-				val.bits.resize(GetSize(sig));
+				val.bits.resize(GetSize(sig), State::Sx);
 				if (bvmode && GetSize(sig) > 1) {
-					init_list.push_back(stringf("(= %s #b%s) ; %s", get_bv(sig).c_str(), val.as_string().c_str(), get_id(wire)));
+					Const mask(State::S1, GetSize(sig));
+					bool use_mask = false;
+					for (int i = 0; i < GetSize(sig); i++)
+						if (val[i] != State::S0 && val[i] != State::S1) {
+							val[i] = State::S0;
+							mask[i] = State::S0;
+							use_mask = true;
+						}
+					if (use_mask)
+						init_list.push_back(stringf("(= (bvand %s #b%s) #b%s) ; %s", get_bv(sig).c_str(), mask.as_string().c_str(), val.as_string().c_str(), get_id(wire)));
+					else
+						init_list.push_back(stringf("(= %s #b%s) ; %s", get_bv(sig).c_str(), val.as_string().c_str(), get_id(wire)));
 				} else {
 					for (int i = 0; i < GetSize(sig); i++)
-						init_list.push_back(stringf("(= %s %s) ; %s", get_bool(sig[i]).c_str(), val.bits[i] == State::S1 ? "true" : "false", get_id(wire)));
+						if (val[i] == State::S0 || val[i] == State::S1)
+							init_list.push_back(stringf("(= %s %s) ; %s", get_bool(sig[i]).c_str(), val[i] == State::S1 ? "true" : "false", get_id(wire)));
 				}
 			}
 
 		if (verbose) log("=> export logic driving asserts\n");
 
-		vector<string> assert_list, assume_list;
+		int assert_id = 0, assume_id = 0, cover_id = 0;
+		vector<string> assert_list, assume_list, cover_list;
+
 		for (auto cell : module->cells())
-			if (cell->type.in("$assert", "$assume")) {
+		{
+			if (cell->type.in("$assert", "$assume", "$cover"))
+			{
+				int &id = cell->type == "$assert" ? assert_id :
+						cell->type == "$assume" ? assume_id :
+						cell->type == "$cover" ? cover_id : *(int*)nullptr;
+
+				char postfix = cell->type == "$assert" ? 'a' :
+						cell->type == "$assume" ? 'u' :
+						cell->type == "$cover" ? 'c' : 0;
+
 				string name_a = get_bool(cell->getPort("\\A"));
 				string name_en = get_bool(cell->getPort("\\EN"));
-				decls.push_back(stringf("; yosys-smt2-%s %s#%d %s\n", cell->type.c_str() + 1, get_id(module), idcounter,
-						cell->attributes.count("\\src") ? cell->attributes.at("\\src").decode_string().c_str() : get_id(cell)));
-				decls.push_back(stringf("(define-fun |%s#%d| ((state |%s_s|)) Bool (or %s (not %s))) ; %s\n",
-						get_id(module), idcounter, get_id(module), name_a.c_str(), name_en.c_str(), get_id(cell)));
-				if (cell->type == "$assert")
-					assert_list.push_back(stringf("(|%s#%d| state)", get_id(module), idcounter++));
+				string infostr = (cell->name[0] == '$' && cell->attributes.count("\\src")) ? cell->attributes.at("\\src").decode_string() : get_id(cell);
+				decls.push_back(stringf("; yosys-smt2-%s %d %s\n", cell->type.c_str() + 1, id, infostr.c_str()));
+
+				if (cell->type == "$cover")
+					decls.push_back(stringf("(define-fun |%s_%c %d| ((state |%s_s|)) Bool (and %s %s)) ; %s\n",
+							get_id(module), postfix, id, get_id(module), name_a.c_str(), name_en.c_str(), get_id(cell)));
 				else
-					assume_list.push_back(stringf("(|%s#%d| state)", get_id(module), idcounter++));
-			}
+					decls.push_back(stringf("(define-fun |%s_%c %d| ((state |%s_s|)) Bool (or %s (not %s))) ; %s\n",
+							get_id(module), postfix, id, get_id(module), name_a.c_str(), name_en.c_str(), get_id(cell)));
 
-		for (int iter = 1; !registers.empty(); iter++)
-		{
-			pool<Cell*> this_regs;
-			this_regs.swap(registers);
+				if (cell->type == "$assert")
+					assert_list.push_back(stringf("(|%s_a %d| state)", get_id(module), id));
+				else if (cell->type == "$assume")
+					assume_list.push_back(stringf("(|%s_u %d| state)", get_id(module), id));
 
-			if (verbose) log("=> export logic driving registers [iteration %d]\n", iter);
-
-			for (auto cell : this_regs)
-			{
-				if (cell->type.in("$_FF_", "$_DFF_P_", "$_DFF_N_"))
-				{
-					std::string expr_d = get_bool(cell->getPort("\\D"));
-					std::string expr_q = get_bool(cell->getPort("\\Q"), "next_state");
-					trans.push_back(stringf("  (= %s %s) ; %s %s\n", expr_d.c_str(), expr_q.c_str(), get_id(cell), log_signal(cell->getPort("\\Q"))));
-				}
-
-				if (cell->type.in("$ff", "$dff"))
-				{
-					std::string expr_d = get_bv(cell->getPort("\\D"));
-					std::string expr_q = get_bv(cell->getPort("\\Q"), "next_state");
-					trans.push_back(stringf("  (= %s %s) ; %s %s\n", expr_d.c_str(), expr_q.c_str(), get_id(cell), log_signal(cell->getPort("\\Q"))));
-				}
-
-				if (cell->type == "$anyconst")
-				{
-					std::string expr_d = get_bv(cell->getPort("\\Y"));
-					std::string expr_q = get_bv(cell->getPort("\\Y"), "next_state");
-					trans.push_back(stringf("  (= %s %s) ; %s %s\n", expr_d.c_str(), expr_q.c_str(), get_id(cell), log_signal(cell->getPort("\\Y"))));
-				}
-
-				if (cell->type == "$mem")
-				{
-					int arrayid = memarrays.at(cell);
-
-					int abits = cell->getParam("\\ABITS").as_int();
-					int width = cell->getParam("\\WIDTH").as_int();
-					int wr_ports = cell->getParam("\\WR_PORTS").as_int();
-
-					for (int i = 0; i < wr_ports; i++)
-					{
-						std::string addr = get_bv(cell->getPort("\\WR_ADDR").extract(abits*i, abits));
-						std::string data = get_bv(cell->getPort("\\WR_DATA").extract(width*i, width));
-						std::string mask = get_bv(cell->getPort("\\WR_EN").extract(width*i, width));
-
-						data = stringf("(bvor (bvand %s %s) (bvand (select (|%s#%d#%d| state) %s) (bvnot %s)))",
-								data.c_str(), mask.c_str(), get_id(module), arrayid, i, addr.c_str(), mask.c_str());
-
-						decls.push_back(stringf("(define-fun |%s#%d#%d| ((state |%s_s|)) (Array (_ BitVec %d) (_ BitVec %d)) "
-								"(store (|%s#%d#%d| state) %s %s)) ; %s\n",
-								get_id(module), arrayid, i+1, get_id(module), abits, width,
-								get_id(module), arrayid, i, addr.c_str(), data.c_str(), get_id(cell)));
-					}
-
-					std::string expr_d = stringf("(|%s#%d#%d| state)", get_id(module), arrayid, wr_ports);
-					std::string expr_q = stringf("(|%s#%d#0| next_state)", get_id(module), arrayid);
-					trans.push_back(stringf("  (= %s %s) ; %s\n", expr_d.c_str(), expr_q.c_str(), get_id(cell)));
-
-					Const init_data = cell->getParam("\\INIT");
-					int memsize = cell->getParam("\\SIZE").as_int();
-
-					for (int i = 0; i < memsize; i++)
-					{
-						if (i*width >= GetSize(init_data))
-							break;
-
-						Const initword = init_data.extract(i*width, width, State::Sx);
-						bool gen_init_constr = false;
-
-						for (auto bit : initword.bits)
-							if (bit == State::S0 || bit == State::S1)
-								gen_init_constr = true;
-
-						if (gen_init_constr) {
-							init_list.push_back(stringf("(= (select (|%s#%d#0| state) #b%s) #b%s) ; %s[%d]",
-									get_id(module), arrayid, Const(i, abits).as_string().c_str(),
-									initword.as_string().c_str(), get_id(cell), i));
-						}
-					}
-				}
+				id++;
 			}
 		}
 
 		if (verbose) log("=> export logic driving hierarchical cells\n");
+
+		for (auto cell : module->cells())
+			if (module->design->module(cell->type) != nullptr)
+				export_cell(cell);
 
 		while (!hiercells_queue.empty())
 		{
@@ -760,8 +924,14 @@ struct Smt2Worker
 				Module *m = module->design->module(cell->type);
 				log_assert(m != nullptr);
 
+				hier.push_back(stringf("  (= (|%s_is| state) (|%s_is| %s))\n",
+						get_id(module), get_id(cell->type), cell_state.c_str()));
+
 				for (auto &conn : cell->connections())
 				{
+					if (GetSize(conn.second) == 0)
+						continue;
+
 					Wire *w = m->wire(conn.first);
 					SigSpec sig = sigmap(conn.second);
 
@@ -777,6 +947,190 @@ struct Smt2Worker
 			}
 		}
 
+		for (int iter = 1; !registers.empty(); iter++)
+		{
+			pool<Cell*> this_regs;
+			this_regs.swap(registers);
+
+			if (verbose) log("=> export logic driving registers [iteration %d]\n", iter);
+
+			for (auto cell : this_regs)
+			{
+				if (cell->type.in("$_FF_", "$_DFF_P_", "$_DFF_N_"))
+				{
+					std::string expr_d = get_bool(cell->getPort("\\D"));
+					std::string expr_q = get_bool(cell->getPort("\\Q"), "next_state");
+					trans.push_back(stringf("  (= %s %s) ; %s %s\n", expr_d.c_str(), expr_q.c_str(), get_id(cell), log_signal(cell->getPort("\\Q"))));
+					ex_state_eq.push_back(stringf("(= %s %s)", get_bool(cell->getPort("\\Q")).c_str(), get_bool(cell->getPort("\\Q"), "other_state").c_str()));
+				}
+
+				if (cell->type.in("$ff", "$dff"))
+				{
+					std::string expr_d = get_bv(cell->getPort("\\D"));
+					std::string expr_q = get_bv(cell->getPort("\\Q"), "next_state");
+					trans.push_back(stringf("  (= %s %s) ; %s %s\n", expr_d.c_str(), expr_q.c_str(), get_id(cell), log_signal(cell->getPort("\\Q"))));
+					ex_state_eq.push_back(stringf("(= %s %s)", get_bv(cell->getPort("\\Q")).c_str(), get_bv(cell->getPort("\\Q"), "other_state").c_str()));
+				}
+
+				if (cell->type.in("$anyconst", "$allconst"))
+				{
+					std::string expr_d = get_bv(cell->getPort("\\Y"));
+					std::string expr_q = get_bv(cell->getPort("\\Y"), "next_state");
+					trans.push_back(stringf("  (= %s %s) ; %s %s\n", expr_d.c_str(), expr_q.c_str(), get_id(cell), log_signal(cell->getPort("\\Y"))));
+					if (cell->type == "$anyconst")
+						ex_state_eq.push_back(stringf("(= %s %s)", get_bv(cell->getPort("\\Y")).c_str(), get_bv(cell->getPort("\\Y"), "other_state").c_str()));
+				}
+
+				if (cell->type == "$mem")
+				{
+					int arrayid = memarrays.at(cell);
+
+					int abits = cell->getParam("\\ABITS").as_int();
+					int width = cell->getParam("\\WIDTH").as_int();
+					int wr_ports = cell->getParam("\\WR_PORTS").as_int();
+
+					bool async_read = false;
+					string initial_memstate, final_memstate;
+
+					if (!cell->getParam("\\WR_CLK_ENABLE").is_fully_ones()) {
+						log_assert(cell->getParam("\\WR_CLK_ENABLE").is_fully_zero());
+						async_read = true;
+						initial_memstate = stringf("%s#%d#0", get_id(module), arrayid);
+						final_memstate = stringf("%s#%d#final", get_id(module), arrayid);
+					}
+
+					if (statebv)
+					{
+						int mem_size = cell->getParam("\\SIZE").as_int();
+						int mem_offset = cell->getParam("\\OFFSET").as_int();
+
+						if (async_read) {
+							makebits(final_memstate, width*mem_size, get_id(cell));
+						}
+
+						for (int i = 0; i < wr_ports; i++)
+						{
+							SigSpec addr_sig = cell->getPort("\\WR_ADDR").extract(abits*i, abits);
+							SigSpec data_sig = cell->getPort("\\WR_DATA").extract(width*i, width);
+							SigSpec mask_sig = cell->getPort("\\WR_EN").extract(width*i, width);
+
+							std::string addr = get_bv(addr_sig);
+							std::string data = get_bv(data_sig);
+							std::string mask = get_bv(mask_sig);
+
+							decls.push_back(stringf("(define-fun |%s_m:W%dA %s| ((state |%s_s|)) (_ BitVec %d) %s) ; %s\n",
+									get_id(module), i, get_id(cell), get_id(module), abits, addr.c_str(), log_signal(addr_sig)));
+							addr = stringf("(|%s_m:W%dA %s| state)", get_id(module), i, get_id(cell));
+
+							decls.push_back(stringf("(define-fun |%s_m:W%dD %s| ((state |%s_s|)) (_ BitVec %d) %s) ; %s\n",
+									get_id(module), i, get_id(cell), get_id(module), width, data.c_str(), log_signal(data_sig)));
+							data = stringf("(|%s_m:W%dD %s| state)", get_id(module), i, get_id(cell));
+
+							decls.push_back(stringf("(define-fun |%s_m:W%dM %s| ((state |%s_s|)) (_ BitVec %d) %s) ; %s\n",
+									get_id(module), i, get_id(cell), get_id(module), width, mask.c_str(), log_signal(mask_sig)));
+							mask = stringf("(|%s_m:W%dM %s| state)", get_id(module), i, get_id(cell));
+
+							std::string data_expr;
+
+							for (int k = mem_size-1; k >= 0; k--) {
+								std::string new_data = stringf("(bvor (bvand %s %s) (bvand ((_ extract %d %d) (|%s#%d#%d| state)) (bvnot %s)))",
+										data.c_str(), mask.c_str(), width*(k+1)-1, width*k, get_id(module), arrayid, i, mask.c_str());
+								data_expr += stringf("\n  (ite (= %s #b%s) %s ((_ extract %d %d) (|%s#%d#%d| state)))",
+										addr.c_str(), Const(k+mem_offset, abits).as_string().c_str(), new_data.c_str(),
+										width*(k+1)-1, width*k, get_id(module), arrayid, i);
+							}
+
+							decls.push_back(stringf("(define-fun |%s#%d#%d| ((state |%s_s|)) (_ BitVec %d) (concat%s)) ; %s\n",
+									get_id(module), arrayid, i+1, get_id(module), width*mem_size, data_expr.c_str(), get_id(cell)));
+						}
+					}
+					else
+					{
+						if (async_read) {
+							if (statedt)
+								dtmembers.push_back(stringf("  (|%s| (Array (_ BitVec %d) (_ BitVec %d))) ; %s\n",
+										initial_memstate.c_str(), abits, width, get_id(cell)));
+							else
+								decls.push_back(stringf("(declare-fun |%s| (|%s_s|) (Array (_ BitVec %d) (_ BitVec %d))) ; %s\n",
+										initial_memstate.c_str(), get_id(module), abits, width, get_id(cell)));
+						}
+
+						for (int i = 0; i < wr_ports; i++)
+						{
+							SigSpec addr_sig = cell->getPort("\\WR_ADDR").extract(abits*i, abits);
+							SigSpec data_sig = cell->getPort("\\WR_DATA").extract(width*i, width);
+							SigSpec mask_sig = cell->getPort("\\WR_EN").extract(width*i, width);
+
+							std::string addr = get_bv(addr_sig);
+							std::string data = get_bv(data_sig);
+							std::string mask = get_bv(mask_sig);
+
+							decls.push_back(stringf("(define-fun |%s_m:W%dA %s| ((state |%s_s|)) (_ BitVec %d) %s) ; %s\n",
+									get_id(module), i, get_id(cell), get_id(module), abits, addr.c_str(), log_signal(addr_sig)));
+							addr = stringf("(|%s_m:W%dA %s| state)", get_id(module), i, get_id(cell));
+
+							decls.push_back(stringf("(define-fun |%s_m:W%dD %s| ((state |%s_s|)) (_ BitVec %d) %s) ; %s\n",
+									get_id(module), i, get_id(cell), get_id(module), width, data.c_str(), log_signal(data_sig)));
+							data = stringf("(|%s_m:W%dD %s| state)", get_id(module), i, get_id(cell));
+
+							decls.push_back(stringf("(define-fun |%s_m:W%dM %s| ((state |%s_s|)) (_ BitVec %d) %s) ; %s\n",
+									get_id(module), i, get_id(cell), get_id(module), width, mask.c_str(), log_signal(mask_sig)));
+							mask = stringf("(|%s_m:W%dM %s| state)", get_id(module), i, get_id(cell));
+
+							data = stringf("(bvor (bvand %s %s) (bvand (select (|%s#%d#%d| state) %s) (bvnot %s)))",
+									data.c_str(), mask.c_str(), get_id(module), arrayid, i, addr.c_str(), mask.c_str());
+
+							decls.push_back(stringf("(define-fun |%s#%d#%d| ((state |%s_s|)) (Array (_ BitVec %d) (_ BitVec %d)) "
+									"(store (|%s#%d#%d| state) %s %s)) ; %s\n",
+									get_id(module), arrayid, i+1, get_id(module), abits, width,
+									get_id(module), arrayid, i, addr.c_str(), data.c_str(), get_id(cell)));
+						}
+					}
+
+					std::string expr_d = stringf("(|%s#%d#%d| state)", get_id(module), arrayid, wr_ports);
+					std::string expr_q = stringf("(|%s#%d#0| next_state)", get_id(module), arrayid);
+					trans.push_back(stringf("  (= %s %s) ; %s\n", expr_d.c_str(), expr_q.c_str(), get_id(cell)));
+					ex_state_eq.push_back(stringf("(= (|%s#%d#0| state) (|%s#%d#0| other_state))", get_id(module), arrayid, get_id(module), arrayid));
+
+					if (async_read)
+						hier.push_back(stringf("  (= %s (|%s| state)) ; %s\n", expr_d.c_str(), final_memstate.c_str(), get_id(cell)));
+
+					Const init_data = cell->getParam("\\INIT");
+					int memsize = cell->getParam("\\SIZE").as_int();
+
+					for (int i = 0; i < memsize; i++)
+					{
+						if (i*width >= GetSize(init_data))
+							break;
+
+						Const initword = init_data.extract(i*width, width, State::Sx);
+						Const initmask = initword;
+						bool gen_init_constr = false;
+
+						for (int k = 0; k < GetSize(initword); k++) {
+							if (initword[k] == State::S0 || initword[k] == State::S1) {
+								gen_init_constr = true;
+								initmask[k] = State::S1;
+							} else {
+								initmask[k] = State::S0;
+								initword[k] = State::S0;
+							}
+						}
+
+						if (gen_init_constr)
+						{
+							if (statebv)
+								/* FIXME */;
+							else
+								init_list.push_back(stringf("(= (bvand (select (|%s#%d#0| state) #b%s) #b%s) #b%s) ; %s[%d]",
+										get_id(module), arrayid, Const(i, abits).as_string().c_str(),
+										initmask.as_string().c_str(), initword.as_string().c_str(), get_id(cell), i));
+						}
+					}
+				}
+			}
+		}
+
 		if (verbose) log("=> finalizing SMT2 representation of %s.\n", log_id(module));
 
 		for (auto c : hiercells) {
@@ -786,6 +1140,37 @@ struct Smt2Worker
 			hier.push_back(stringf("  (|%s_h| (|%s_h %s| state))\n", get_id(c->type), get_id(module), get_id(c->name)));
 			trans.push_back(stringf("  (|%s_t| (|%s_h %s| state) (|%s_h %s| next_state))\n",
 					get_id(c->type), get_id(module), get_id(c->name), get_id(module), get_id(c->name)));
+			ex_state_eq.push_back(stringf("(|%s_ex_state_eq| (|%s_h %s| state) (|%s_h %s| other_state))\n",
+					get_id(c->type), get_id(module), get_id(c->name), get_id(module), get_id(c->name)));
+		}
+
+		if (forallmode)
+		{
+			string expr = ex_state_eq.empty() ? "true" : "(and";
+			if (!ex_state_eq.empty()) {
+				if (GetSize(ex_state_eq) == 1) {
+					expr = "\n  " + ex_state_eq.front() + "\n";
+				} else {
+					for (auto &str : ex_state_eq)
+						expr += stringf("\n  %s", str.c_str());
+					expr += "\n)";
+				}
+			}
+			decls.push_back(stringf("(define-fun |%s_ex_state_eq| ((state |%s_s|) (other_state |%s_s|)) Bool %s)\n",
+				get_id(module), get_id(module), get_id(module), expr.c_str()));
+
+			expr = ex_input_eq.empty() ? "true" : "(and";
+			if (!ex_input_eq.empty()) {
+				if (GetSize(ex_input_eq) == 1) {
+					expr = "\n  " + ex_input_eq.front() + "\n";
+				} else {
+					for (auto &str : ex_input_eq)
+						expr += stringf("\n  %s", str.c_str());
+					expr += "\n)";
+				}
+			}
+			decls.push_back(stringf("(define-fun |%s_ex_input_eq| ((state |%s_s|) (other_state |%s_s|)) Bool %s)\n",
+				get_id(module), get_id(module), get_id(module), expr.c_str()));
 		}
 
 		string assert_expr = assert_list.empty() ? "true" : "(and";
@@ -832,6 +1217,18 @@ struct Smt2Worker
 	{
 		f << stringf("; yosys-smt2-module %s\n", get_id(module));
 
+		if (statebv) {
+			f << stringf("(define-sort |%s_s| () (_ BitVec %d))\n", get_id(module), statebv_width);
+			mod_stbv_width[module->name] = statebv_width;
+		} else
+		if (statedt) {
+			f << stringf("(declare-datatype |%s_s| ((|%s_mk|\n", get_id(module), get_id(module));
+			for (auto it : dtmembers)
+				f << it;
+			f << stringf(")))\n");
+		} else
+			f << stringf("(declare-sort |%s_s| 0)\n", get_id(module));
+
 		for (auto it : decls)
 			f << it;
 
@@ -864,43 +1261,91 @@ struct Smt2Worker
 
 struct Smt2Backend : public Backend {
 	Smt2Backend() : Backend("smt2", "write design to SMT-LIBv2 file") { }
-	virtual void help()
+	void help() YS_OVERRIDE
 	{
 		//   |---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|
 		log("\n");
 		log("    write_smt2 [options] [filename]\n");
 		log("\n");
 		log("Write a SMT-LIBv2 [1] description of the current design. For a module with name\n");
-		log("'<mod>' this will declare the sort '<mod>_s' (state of the module) and the\n");
-		log("functions operating on that state.\n");
+		log("'<mod>' this will declare the sort '<mod>_s' (state of the module) and will\n");
+		log("define and declare functions operating on that state.\n");
 		log("\n");
-		log("The '<mod>_s' sort represents a module state. Additional '<mod>_n' functions\n");
-		log("are provided that can be used to access the values of the signals in the module.\n");
-		log("By default only ports, registers, and wires with the 'keep' attribute set are\n");
-		log("made available via such functions. With the -nobv option, multi-bit wires are\n");
-		log("exported as separate functions of type Bool for the individual bits. Without\n");
-		log("-nobv multi-bit wires are exported as single functions of type BitVec.\n");
+		log("The following SMT2 functions are generated for a module with name '<mod>'.\n");
+		log("Some declarations/definitions are printed with a special comment. A prover\n");
+		log("using the SMT2 files can use those comments to collect all relevant metadata\n");
+		log("about the design.\n");
 		log("\n");
-		log("The '<mod>_t' function evaluates to 'true' when the given pair of states\n");
-		log("describes a valid state transition.\n");
+		log("    ; yosys-smt2-module <mod>\n");
+		log("    (declare-sort |<mod>_s| 0)\n");
+		log("        The sort representing a state of module <mod>.\n");
 		log("\n");
-		log("The '<mod>_a' function evaluates to 'true' when the given state satisfies\n");
-		log("the asserts in the module.\n");
+		log("    (define-fun |<mod>_h| ((state |<mod>_s|)) Bool (...))\n");
+		log("        This function must be asserted for each state to establish the\n");
+		log("        design hierarchy.\n");
 		log("\n");
-		log("The '<mod>_u' function evaluates to 'true' when the given state satisfies\n");
-		log("the assumptions in the module.\n");
+		log("    ; yosys-smt2-input <wirename> <width>\n");
+		log("    ; yosys-smt2-output <wirename> <width>\n");
+		log("    ; yosys-smt2-register <wirename> <width>\n");
+		log("    ; yosys-smt2-wire <wirename> <width>\n");
+		log("    (define-fun |<mod>_n <wirename>| (|<mod>_s|) (_ BitVec <width>))\n");
+		log("    (define-fun |<mod>_n <wirename>| (|<mod>_s|) Bool)\n");
+		log("        For each port, register, and wire with the 'keep' attribute set an\n");
+		log("        accessor function is generated. Single-bit wires are returned as Bool,\n");
+		log("        multi-bit wires as BitVec.\n");
 		log("\n");
-		log("The '<mod>_i' function evaluates to 'true' when the given state conforms\n");
-		log("to the initial state. Furthermore the '<mod>_is' function should be asserted\n");
-		log("to be true for initial states in addition to '<mod>_i', and should be\n");
-		log("asserted to be false for non-initial states.\n");
+		log("    ; yosys-smt2-cell <submod> <instancename>\n");
+		log("    (declare-fun |<mod>_h <instancename>| (|<mod>_s|) |<submod>_s|)\n");
+		log("        There is a function like that for each hierarchical instance. It\n");
+		log("        returns the sort that represents the state of the sub-module that\n");
+		log("        implements the instance.\n");
 		log("\n");
-		log("For hierarchical designs, the '<mod>_h' function must be asserted for each\n");
-		log("state to establish the design hierarchy. The '<mod>_h <cellname>' function\n");
-		log("evaluates to the state corresponding to the given cell within <mod>.\n");
+		log("    (declare-fun |<mod>_is| (|<mod>_s|) Bool)\n");
+		log("        This function must be asserted 'true' for initial states, and 'false'\n");
+		log("        otherwise.\n");
+		log("\n");
+		log("    (define-fun |<mod>_i| ((state |<mod>_s|)) Bool (...))\n");
+		log("        This function must be asserted 'true' for initial states. For\n");
+		log("        non-initial states it must be left unconstrained.\n");
+		log("\n");
+		log("    (define-fun |<mod>_t| ((state |<mod>_s|) (next_state |<mod>_s|)) Bool (...))\n");
+		log("        This function evaluates to 'true' if the states 'state' and\n");
+		log("        'next_state' form a valid state transition.\n");
+		log("\n");
+		log("    (define-fun |<mod>_a| ((state |<mod>_s|)) Bool (...))\n");
+		log("        This function evaluates to 'true' if all assertions hold in the state.\n");
+		log("\n");
+		log("    (define-fun |<mod>_u| ((state |<mod>_s|)) Bool (...))\n");
+		log("        This function evaluates to 'true' if all assumptions hold in the state.\n");
+		log("\n");
+		log("    ; yosys-smt2-assert <id> <filename:linenum>\n");
+		log("    (define-fun |<mod>_a <id>| ((state |<mod>_s|)) Bool (...))\n");
+		log("        Each $assert cell is converted into one of this functions. The function\n");
+		log("        evaluates to 'true' if the assert statement holds in the state.\n");
+		log("\n");
+		log("    ; yosys-smt2-assume <id> <filename:linenum>\n");
+		log("    (define-fun |<mod>_u <id>| ((state |<mod>_s|)) Bool (...))\n");
+		log("        Each $assume cell is converted into one of this functions. The function\n");
+		log("        evaluates to 'true' if the assume statement holds in the state.\n");
+		log("\n");
+		log("    ; yosys-smt2-cover <id> <filename:linenum>\n");
+		log("    (define-fun |<mod>_c <id>| ((state |<mod>_s|)) Bool (...))\n");
+		log("        Each $cover cell is converted into one of this functions. The function\n");
+		log("        evaluates to 'true' if the cover statement is activated in the state.\n");
+		log("\n");
+		log("Options:\n");
 		log("\n");
 		log("    -verbose\n");
 		log("        this will print the recursive walk used to export the modules.\n");
+		log("\n");
+		log("    -stbv\n");
+		log("        Use a BitVec sort to represent a state instead of an uninterpreted\n");
+		log("        sort. As a side-effect this will prevent use of arrays to model\n");
+		log("        memories.\n");
+		log("\n");
+		log("    -stdt\n");
+		log("        Use SMT-LIB 2.6 style datatypes to represent a state instead of an\n");
+		log("        uninterpreted sort.\n");
 		log("\n");
 		log("    -nobv\n");
 		log("        disable support for BitVec (FixedSizeBitVectors theory). without this\n");
@@ -972,10 +1417,11 @@ struct Smt2Backend : public Backend {
 		log("from non-zero to zero in the test design.\n");
 		log("\n");
 	}
-	virtual void execute(std::ostream *&f, std::string filename, std::vector<std::string> args, RTLIL::Design *design)
+	void execute(std::ostream *&f, std::string filename, std::vector<std::string> args, RTLIL::Design *design) YS_OVERRIDE
 	{
 		std::ifstream template_f;
-		bool bvmode = true, memmode = true, wiresmode = false, verbose = false;
+		bool bvmode = true, memmode = true, wiresmode = false, verbose = false, statebv = false, statedt = false;
+		bool forallmode = false;
 
 		log_header(design, "Executing SMT2 backend.\n");
 
@@ -990,6 +1436,16 @@ struct Smt2Backend : public Backend {
 			}
 			if (args[argidx] == "-bv" || args[argidx] == "-mem") {
 				log_warning("Options -bv and -mem are now the default. Support for -bv and -mem will be removed in the future.\n");
+				continue;
+			}
+			if (args[argidx] == "-stbv") {
+				statebv = true;
+				statedt = false;
+				continue;
+			}
+			if (args[argidx] == "-stdt") {
+				statebv = false;
+				statedt = true;
 				continue;
 			}
 			if (args[argidx] == "-nobv") {
@@ -1033,6 +1489,12 @@ struct Smt2Backend : public Backend {
 		if (!memmode)
 			*f << stringf("; yosys-smt2-nomem\n");
 
+		if (statebv)
+			*f << stringf("; yosys-smt2-stbv\n");
+
+		if (statedt)
+			*f << stringf("; yosys-smt2-stdt\n");
+
 		std::vector<RTLIL::Module*> sorted_modules;
 
 		// extract module dependencies
@@ -1062,17 +1524,31 @@ struct Smt2Backend : public Backend {
 				module_deps.erase(sorted_modules.at(sorted_modules_idx++));
 		}
 
+		dict<IdString, int> mod_stbv_width;
+		dict<IdString, dict<IdString, pair<bool, bool>>> mod_clk_cache;
 		Module *topmod = design->top_module();
 		std::string topmod_id;
 
 		for (auto module : sorted_modules)
+			for (auto cell : module->cells())
+				if (cell->type.in("$allconst", "$allseq"))
+					goto found_forall;
+		if (0) {
+	found_forall:
+			forallmode = true;
+			*f << stringf("; yosys-smt2-forall\n");
+			if (!statebv && !statedt)
+				log_error("Forall-exists problems are only supported in -stbv or -stdt mode.\n");
+		}
+
+		for (auto module : sorted_modules)
 		{
-			if (module->get_bool_attribute("\\blackbox") || module->has_memories_warn() || module->has_processes_warn())
+			if (module->get_blackbox_attribute() || module->has_memories_warn() || module->has_processes_warn())
 				continue;
 
 			log("Creating SMT-LIBv2 representation of module %s.\n", log_id(module));
 
-			Smt2Worker worker(module, bvmode, memmode, wiresmode, verbose);
+			Smt2Worker worker(module, bvmode, memmode, wiresmode, verbose, statebv, statedt, forallmode, mod_stbv_width, mod_clk_cache);
 			worker.run();
 			worker.write(*f);
 

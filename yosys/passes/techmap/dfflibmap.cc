@@ -100,6 +100,18 @@ static bool parse_pin(LibertyAst *cell, LibertyAst *attr, std::string &pin_name,
 	for (auto child : cell->children)
 		if (child->id == "pin" && child->args.size() == 1 && child->args[0] == pin_name)
 			return true;
+
+	/* If we end up here, the pin specified in the attribute does not exist, which is an error,
+	   or, the attribute contains an expression which we do not yet support.
+       For now, we'll simply produce a warning to let the user know something is up.
+	*/
+	if (pin_name.find_first_of("^*|&") == std::string::npos) {
+		log_warning("Malformed liberty file - cannot find pin '%s' in cell '%s' - skipping.\n", pin_name.c_str(), cell->args[0].c_str());
+	}
+	else {
+		log_warning("Found unsupported expression '%s' in pin attribute of cell '%s' - skipping.\n", pin_name.c_str(), cell->args[0].c_str());
+	}
+
 	return false;
 }
 
@@ -238,6 +250,10 @@ static void find_cell_sr(LibertyAst *ast, std::string cell_type, bool clkpol, bo
 	for (auto cell : ast->children)
 	{
 		if (cell->id != "cell" || cell->args.size() != 1)
+			continue;
+
+		LibertyAst *dn = cell->find("dont_use");
+		if (dn != NULL && dn->value == "true")
 			continue;
 
 		LibertyAst *ff = cell->find("ff");
@@ -478,10 +494,14 @@ static void dfflibmap(RTLIL::Design *design, RTLIL::Module *module, bool prepare
 		auto cell_type = cell->type;
 		auto cell_name = cell->name;
 		auto cell_connections = cell->connections();
+		std::string src = cell->get_src_attribute();
+
 		module->remove(cell);
 
 		cell_mapping &cm = cell_mappings[cell_type];
 		RTLIL::Cell *new_cell = module->addCell(cell_name, prepare_mode ? cm.cell_name : "\\" + cm.cell_name);
+
+		new_cell->set_src_attribute(src);
 
 		bool has_q = false, has_qn = false;
 		for (auto &port : cm.ports) {
@@ -529,7 +549,7 @@ static void dfflibmap(RTLIL::Design *design, RTLIL::Module *module, bool prepare
 
 struct DfflibmapPass : public Pass {
 	DfflibmapPass() : Pass("dfflibmap", "technology mapping of flip-flops") { }
-	virtual void help()
+	void help() YS_OVERRIDE
 	{
 		log("\n");
 		log("    dfflibmap [-prepare] -liberty <file> [selection]\n");
@@ -545,7 +565,7 @@ struct DfflibmapPass : public Pass {
 		log("liberty file.\n");
 		log("\n");
 	}
-	virtual void execute(std::vector<std::string> args, RTLIL::Design *design)
+	void execute(std::vector<std::string> args, RTLIL::Design *design) YS_OVERRIDE
 	{
 		log_header(design, "Executing DFFLIBMAP pass (mapping DFF cells to sequential cells from liberty file).\n");
 
@@ -640,11 +660,11 @@ struct DfflibmapPass : public Pass {
 		map_adff_to_dff("$_DFF_PP0_", "$_DFF_P_");
 		map_adff_to_dff("$_DFF_PP1_", "$_DFF_P_");
 
- 		log("  final dff cell mappings:\n");
- 		logmap_all();
+		log("  final dff cell mappings:\n");
+		logmap_all();
 
 		for (auto &it : design->modules_)
-			if (design->selected(it.second) && !it.second->get_bool_attribute("\\blackbox"))
+			if (design->selected(it.second) && !it.second->get_blackbox_attribute())
 				dfflibmap(design, it.second, prepare_mode);
 
 		cell_mappings.clear();

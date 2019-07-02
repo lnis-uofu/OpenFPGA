@@ -46,7 +46,7 @@ static std::string netname(std::set<std::string> &conntypes_code, std::set<std::
 
 struct IntersynthBackend : public Backend {
 	IntersynthBackend() : Backend("intersynth", "write design to InterSynth netlist file") { }
-	virtual void help()
+	void help() YS_OVERRIDE
 	{
 		//   |---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|
 		log("\n");
@@ -71,7 +71,7 @@ struct IntersynthBackend : public Backend {
 		log("http://www.clifford.at/intersynth/\n");
 		log("\n");
 	}
-	virtual void execute(std::ostream *&f, std::string filename, std::vector<std::string> args, RTLIL::Design *design)
+	void execute(std::ostream *&f, std::string filename, std::vector<std::string> args, RTLIL::Design *design) YS_OVERRIDE
 	{
 		log_header(design, "Executing INTERSYNTH backend.\n");
 		log_push();
@@ -127,7 +127,7 @@ struct IntersynthBackend : public Backend {
 			RTLIL::Module *module = module_it.second;
 			SigMap sigmap(module);
 
-			if (module->get_bool_attribute("\\blackbox"))
+			if (module->get_blackbox_attribute())
 				continue;
 			if (module->memories.size() == 0 && module->processes.size() == 0 && module->cells_.size() == 0)
 				continue;

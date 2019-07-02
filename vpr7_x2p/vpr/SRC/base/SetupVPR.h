@@ -2,6 +2,15 @@
 #define SETUPVPR_H
 
 
+void VPRSetupArch(t_arch* arch, 
+                  t_det_routing_arch* RoutingArch,
+		          t_segment_inf ** Segments,
+                  t_swseg_pattern_inf** swseg_patterns,
+                  t_model** user_models, 
+                  t_model** library_models);
+
+void alloc_and_init_globals_clb_to_clb_directs(int num_directs, 
+                                               t_direct_inf* directs);
 
 void SetupVPR(INP t_options *Options,
 		INP boolean TimingEnabled,
