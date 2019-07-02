@@ -17,6 +17,7 @@
 #include "ReadOptions.h"
 
 #include "tileable_rr_graph_builder.h"
+#include "rr_graph_builder_utils.h"
 
 /* Xifan TANG: SWSEG SUPPORT */
 #include "rr_graph_swseg.h" 
@@ -244,6 +245,9 @@ void build_rr_graph(INP t_graph_type graph_type, INP int L_num_types,
                            opin_to_cb_fast_edges, opin_logic_eq_edges); 
    
   }
+
+  /* Print statistics of RR graph */
+  print_rr_graph_stats();
 
   return;
 }
