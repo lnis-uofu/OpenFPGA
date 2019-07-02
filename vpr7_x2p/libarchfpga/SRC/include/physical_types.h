@@ -931,9 +931,11 @@ struct s_arch {
     bool tileable; /* Xifan TANG: tileable rr_graph support */
 	t_chan_width_dist Chans;
 	enum e_switch_block_type SBType;
+	enum e_switch_block_type SBSubType;
 	float R_minW_nmos;
 	float R_minW_pmos;
 	int Fs;
+	int SubFs;
 	float C_ipin_cblock;
 	float T_ipin_cblock;
     /* mrFPGA: Xifan TANG */

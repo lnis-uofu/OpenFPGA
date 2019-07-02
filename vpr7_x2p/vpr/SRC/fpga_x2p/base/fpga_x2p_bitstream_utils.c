@@ -1,3 +1,41 @@
+/**********************************************************
+ * MIT License
+ *
+ * Copyright (c) 2018 LNIS - The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ ***********************************************************************/
+
+/************************************************************************
+ * Filename:    fpga_x2p_bitstream_utils.c
+ * Created by:   Xifan Tang
+ * Change history:
+ * +-------------------------------------+
+ * |  Date       |    Author   | Notes
+ * +-------------------------------------+
+ * | 2019/07/02  |  Xifan Tang | Created 
+ * +-------------------------------------+
+ ***********************************************************************/
+/************************************************************************
+ *  This file contains most utilized functions for the bitstream generator 
+ ***********************************************************************/
+
 /***********************************/
 /* Synthesizable Verilog Dumping   */
 /*       Xifan TANG, EPFL/LSI      */
@@ -30,11 +68,14 @@
 #include "fpga_x2p_mux_utils.h"
 #include "fpga_x2p_globals.h"
 
+#include "fpga_x2p_bitstream_utils.h"
+
 /* Determine the size of input address of a decoder */
 int determine_decoder_size(int num_addr_out) {
   return ceil(log(num_addr_out)/log(2.));
 }
 
+static 
 int count_num_sram_bits_one_lut_spice_model(t_spice_model* cur_spice_model) {
   int num_sram_bits = 0;
   int iport;
@@ -98,6 +139,7 @@ int count_num_sram_bits_one_lut_spice_model(t_spice_model* cur_spice_model) {
   return num_sram_bits;
 }
 
+static 
 int count_num_sram_bits_one_mux_spice_model(t_spice_model* cur_spice_model,
                                             int mux_size) {
   int num_sram_bits = 0;
@@ -162,7 +204,7 @@ int count_num_sram_bits_one_mux_spice_model(t_spice_model* cur_spice_model,
   return num_sram_bits;
 }
 
-
+static 
 int count_num_sram_bits_one_generic_spice_model(t_spice_model* cur_spice_model) {
   int iport;
   int num_sram_bits = 0;
@@ -227,6 +269,7 @@ int count_num_sram_bits_one_spice_model(t_spice_model* cur_spice_model,
   return -1;
 }
 
+static 
 int count_num_mode_bits_one_generic_spice_model(t_spice_model* cur_spice_model) {
   int iport;
   int num_mode_bits = 0;
@@ -424,20 +467,7 @@ int count_num_reserved_conf_bits_one_mux_spice_model(t_spice_model* cur_spice_mo
       break;
     case SPICE_SRAM_SCAN_CHAIN:
     case SPICE_SRAM_STANDALONE:
-      /* 4T1R MUX requires more configuration bits */
-      if (SPICE_MODEL_STRUCTURE_TREE == cur_spice_model->design_tech_info.mux_info->structure) {
-      /* For tree-structure: we need 3 times more config. bits */
-        num_reserved_conf_bits = 0;
-      } else if (SPICE_MODEL_STRUCTURE_MULTILEVEL == cur_spice_model->design_tech_info.mux_info->structure) {
-      /* For multi-level structure: we need 1 more config. bits for each level */
-        num_reserved_conf_bits = 0;
-      } else {
-        num_reserved_conf_bits = 0;
-      }
-      /* For 2:1 MUX, whatever structure, there is only one level */
-      if (2 == num_input_size) {
-        num_reserved_conf_bits = 0;
-      } 
+      num_reserved_conf_bits = 0;
       break;
     default:
       vpr_printf(TIO_MESSAGE_ERROR,"(FILE:%s,LINE[%d])Invalid type of SRAM organization!\n",
@@ -533,7 +563,7 @@ int count_num_reserved_conf_bits_one_spice_model(t_spice_model* cur_spice_model,
   return num_reserved_conf_bits;
 }
 
-
+static 
 int count_num_conf_bits_one_lut_spice_model(t_spice_model* cur_spice_model,
                                             enum e_sram_orgz cur_sram_orgz_type) {
   int num_conf_bits = 0;
@@ -611,7 +641,7 @@ int count_num_conf_bits_one_lut_spice_model(t_spice_model* cur_spice_model,
   return num_conf_bits;
 }
 
-
+static 
 int count_num_conf_bits_one_mux_spice_model(t_spice_model* cur_spice_model,
                                             enum e_sram_orgz cur_sram_orgz_type,
                                             int mux_size) {
@@ -684,6 +714,7 @@ int count_num_conf_bits_one_mux_spice_model(t_spice_model* cur_spice_model,
   return num_conf_bits;
 }
 
+static 
 int count_num_conf_bits_one_generic_spice_model(t_spice_model* cur_spice_model,
                                                 enum e_sram_orgz cur_sram_orgz_type) {
   int num_conf_bits = 0;
@@ -1098,9 +1129,9 @@ add_mux_conf_bits_to_llist(int mux_size,
 }
 
 /* Add SCFF configutration bits to a linked list*/
-void  
-add_sram_scff_conf_bits_to_llist(t_sram_orgz_info* cur_sram_orgz_info, 
-                                 int num_sram_bits, int* sram_bits) {
+static 
+void add_sram_scff_conf_bits_to_llist(t_sram_orgz_info* cur_sram_orgz_info, 
+                                      int num_sram_bits, int* sram_bits) {
   int ibit, cur_mem_bit;
   t_conf_bit** sram_bit = NULL;
   t_spice_model* cur_sram_spice_model = NULL;
@@ -1592,3 +1623,7 @@ void add_mux_conf_bits_to_sram_orgz_info(t_sram_orgz_info* cur_sram_orgz_info,
 
   return;
 }
+
+/************************************************************************
+ * End of file : fpga_x2p_bitstream_utils.c
+ ***********************************************************************/

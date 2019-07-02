@@ -475,6 +475,8 @@ t_track2track_map build_gsb_track_to_track_map(const t_rr_graph* rr_graph,
                                                const RRGSB& rr_gsb,
                                                const enum e_switch_block_type sb_type, 
                                                const int Fs,
+                                               const enum e_switch_block_type sb_subtype, 
+                                               const int subFs,
                                                const std::vector<t_segment_inf> segment_inf) {
   t_track2track_map track2track_map; /* [0..gsb_side][0..chan_width][track_indices] */
 
@@ -555,7 +557,7 @@ t_track2track_map build_gsb_track_to_track_map(const t_rr_graph* rr_graph,
    * TODO: This can be improved with different patterns! 
    */
   build_gsb_one_group_track_to_track_map(rr_graph, rr_gsb, 
-                                         sb_type, Fs,
+                                         sb_subtype, subFs,
                                          pass_tracks, start_tracks, 
                                          &track2track_map);
 

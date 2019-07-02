@@ -807,6 +807,8 @@ struct s_det_routing_arch {
 	enum e_directionality directionality; /* UDSD by AY */
 	int Fs;
 	enum e_switch_block_type switch_block_type;
+	int sub_Fs;
+	enum e_switch_block_type switch_block_sub_type;
 	int num_segment;
 	short num_switch;
 	short global_route_switch;
