@@ -20,6 +20,7 @@ my $mydate = gmctime();
 my $cwd = getcwd();
 
 # Global Variants
+my ($max_route_width_retry) = (1000);
 # input Option Hash
 my %opt_h; 
 my $opt_ptr = \%opt_h;
@@ -112,7 +113,7 @@ sub generate_path($)
     mkpath "$mypath";
     print "Path($mypath) does not exist...Create it.\n";
   }
-  return 1;
+  return 0;
 }
 
 # Print the usage
@@ -267,7 +268,7 @@ sub read_opt_into_hash($ $ $)
       }
     }  
   }
-  return 1;
+  return 0;
 }
 
 # Read options
@@ -370,7 +371,7 @@ sub opts_read()
 
   &print_opts(); 
 
-  return 1;
+  return 0;
 }
   
 # List the options
@@ -381,7 +382,7 @@ sub print_opts()
   while(my ($key,$value) = each(%opt_h))
   {print "$key : $value\n";}
 
-  return 1;
+  return 0;
 }
 
 
@@ -429,7 +430,7 @@ sub check_keywords_conf()
       {die "Error: Keyword($mctgy[$imcg],$sctgy[$imcg]->[$iscg]) is missing!\n";}
     }
   }
-  return 1;
+  return 0;
 }
 
 # Read the configuration file
@@ -467,7 +468,7 @@ sub read_conf()
   print "Checking these keywords...";
   print "Successfully\n";
   close(CONF);
-  return 1;
+  return 0;
 }
 
 sub read_benchmarks()
@@ -499,7 +500,7 @@ sub read_benchmarks()
   foreach my $temp(@benchmark_names)
   {print "$temp\n";}
   close(FCONF);
-  return 1;
+  return 0;
 }
 
 # Input program path is like "~/program_dir/program_name"
@@ -1744,6 +1745,9 @@ sub run_vpr_in_flow($ $ $ $ $ $ $ $ $ $ $ $) {
       if (-e $vpr_route) {
         print "INFO: try route_chan_width($min_chan_width) success!\n";
         last; #Jump out
+      } elsif ($max_route_width_retry < $min_chan_width) {
+      # I set a threshold of 1000 as it is the limit of VPR 
+        die "ERROR: Route Fail for $abc_blif_out with a min_chan_width of $min_chan_width!\n";
       } else {
         print "INFO: try route_chan_width($min_chan_width) failed! Retry with +2...\n";
         $min_chan_width += 2;
@@ -1767,6 +1771,9 @@ sub run_vpr_in_flow($ $ $ $ $ $ $ $ $ $ $ $) {
       if (-e $vpr_route) {
         print "INFO: try route_chan_width($fix_chan_width) success!\n";
         last; #Jump out
+      } elsif ($max_route_width_retry < $fix_chan_width) {
+      # I set a threshold of 1000 as it is the limit of VPR 
+        die "ERROR: Route Fail for $abc_blif_out with a min_chan_width of $fix_chan_width!\n";
       } else {
         print "INFO: try route_chan_width($fix_chan_width) failed! Retry with +2...\n";
         $fix_chan_width += 2;

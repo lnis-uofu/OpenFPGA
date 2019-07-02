@@ -1038,7 +1038,7 @@ void build_tileable_unidir_rr_graph(INP const int L_num_types,
   build_rr_graph_direct_connections(&rr_graph, device_size, grids, delayless_switch, 
                                     num_directs, directs, clb_to_clb_directs);
 
-  print_rr_graph_stats(rr_graph);
+  //print_rr_graph_stats(rr_graph);
 
   /* Clear driver switches of the rr_graph */
   clear_rr_graph_driver_switch(&rr_graph);
