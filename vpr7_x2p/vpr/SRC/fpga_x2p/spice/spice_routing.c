@@ -1,3 +1,45 @@
+/**********************************************************
+ * MIT License
+ *
+ * Copyright (c) 2018 LNIS - The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ ***********************************************************************/
+
+/************************************************************************
+ * Filename:    rr_blocks.cpp
+ * Created by:   Xifan Tang
+ * Change history:
+ * +-------------------------------------+
+ * |  Date       |    Author   | Notes
+ * +-------------------------------------+
+ * | 2019/07/02  |  Xifan Tang | Created 
+ * +-------------------------------------+
+ ***********************************************************************/
+/************************************************************************
+ *  This file contains functions to output SPICE netlists of routing resources
+ *  i.e., Switch Block(SB), Connection Block (CB) and routing channels.
+ *  Each module will be placed in an individual subckt, which be called
+ *  through SPICE testbenches 
+ *  Note that each subckt is a configured module (SB, CB or Routing channals)
+ ***********************************************************************/
+
 /***********************************/
 /*      SPICE Modeling for VPR     */
 /*       Xifan TANG, EPFL/LSI      */
@@ -39,7 +81,7 @@
 #include "fpga_x2p_backannotate_utils.h"
 #include "spice_routing.h"
 
-
+static 
 void fprint_routing_chan_subckt(char* subckt_dir,
                                 int x, int y, t_rr_type chan_type, 
                                 int LL_num_rr_nodes, t_rr_node* LL_rr_node,
@@ -629,11 +671,9 @@ void fprint_switch_box_interc(FILE* fp,
  * For channels chanX with INC_DIRECTION on the right side, they should be marked as outputs
  * For channels chanX with DEC_DIRECTION on the right side, they should be marked as inputs
  */
+static 
 void fprint_routing_switch_box_subckt(char* subckt_dir, 
-                                      t_sb cur_sb_info,
-                                      int LL_num_rr_nodes, t_rr_node* LL_rr_node,
-                                      t_ivec*** LL_rr_node_indices,
-                                      boolean compact_routing_hierarchy) {
+                                      t_sb cur_sb_info) {
   int itrack, inode, side, ix, iy, x, y;
   FILE* fp = NULL;
   char* fname = NULL;
@@ -755,7 +795,15 @@ void fprint_connection_box_short_interc(FILE* fp,
   assert(1 == src_rr_node->fan_in);
 
   /* Check the driver*/
-  drive_rr_node = &(rr_node[src_rr_node->prev_node]); 
+  drive_rr_node = src_rr_node->drive_rr_nodes[0]; 
+  /* We have OPINs since we may have direct connections:
+   * These connections should be handled by other functions in the compact_netlist.c 
+   * So we just return here for OPINs 
+   */
+  if (OPIN == drive_rr_node->type) {
+    return;
+  }
+
   assert((CHANX == drive_rr_node->type)||(CHANY == drive_rr_node->type));
   check_flag = 0;
   for (iedge = 0; iedge < drive_rr_node->num_edges; iedge++) {
@@ -996,11 +1044,9 @@ void fprint_connection_box_interc(FILE* fp,
  *    |            | Connection  |            |
  *    --------------Box_Y[x][y-1]--------------
  */
+static 
 void fprint_routing_connection_box_subckt(char* subckt_dir,
-                                          t_cb cur_cb_info,
-                                          int LL_num_rr_nodes, t_rr_node* LL_rr_node,
-                                          t_ivec*** LL_rr_node_indices,
-                                          boolean compact_routing_hierarchy) {
+                                          t_cb cur_cb_info) {
 
   int itrack, inode, side, x, y;
   int side_cnt = 0;
@@ -1104,6 +1150,7 @@ void fprint_routing_connection_box_subckt(char* subckt_dir,
       fprintf(fp, "***** Head of scan-chain *****\n");
       fprintf(fp, "Rcbx[%d][%d]_sc_head cbx[%d][%d]_sc_head %s[%d]->in 0\n",
               x, y, x, y, sram_spice_model->prefix, sram_spice_model->cnt);
+      break;
     case CHANY:
       fprintf(fp, "***** Head of scan-chain *****\n");
       fprintf(fp, "Rcby[%d][%d]_sc_head cby[%d][%d]_sc_head %s[%d]->in 0\n",
@@ -1141,6 +1188,7 @@ void fprint_routing_connection_box_subckt(char* subckt_dir,
       fprintf(fp, "***** Tail of scan-chain *****\n");
       fprintf(fp, "Rcbx[%d][%d]_sc_tail cbx[%d][%d]_sc_tail %s[%d]->in 0\n",
               x, y, x, y, sram_spice_model->prefix, sram_spice_model->cnt);
+      break;
     case CHANY:
       fprintf(fp, "***** Tail of scan-chain *****\n");
       fprintf(fp, "Rcby[%d][%d]_sc_tail cby[%d][%d]_sc_tail %s[%d]->in 0\n",
@@ -1173,8 +1221,7 @@ void generate_spice_routing_resources(char* subckt_dir,
                                       t_arch arch,
                                       t_det_routing_arch* routing_arch,
                                       int LL_num_rr_nodes, t_rr_node* LL_rr_node,
-                                      t_ivec*** LL_rr_node_indices,
-                                      boolean compact_routing_hierarchy) {
+                                      t_ivec*** LL_rr_node_indices) {
   int ix, iy; 
  
   assert(UNI_DIRECTIONAL == routing_arch->directionality);
@@ -1221,9 +1268,7 @@ void generate_spice_routing_resources(char* subckt_dir,
   for (ix = 0; ix < (nx + 1); ix++) {
     for (iy = 0; iy < (ny + 1); iy++) {
       update_spice_models_routing_index_low(ix, iy, SOURCE, arch.spice->num_spice_model, arch.spice->spice_models);
-      fprint_routing_switch_box_subckt(subckt_dir, sb_info[ix][iy],
-                                       LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices, 
-                                       compact_routing_hierarchy); 
+      fprint_routing_switch_box_subckt(subckt_dir, sb_info[ix][iy]); 
       update_spice_models_routing_index_high(ix, iy, SOURCE, arch.spice->num_spice_model, arch.spice->spice_models);
     }
   }
@@ -1237,9 +1282,7 @@ void generate_spice_routing_resources(char* subckt_dir,
       /* Check if this cby_info exists, it may be covered by a heterogenous block */
       if ((TRUE == is_cb_exist(CHANX, ix, iy)) 
          &&(0 < count_cb_info_num_ipin_rr_nodes(cbx_info[ix][iy]))) {
-        fprint_routing_connection_box_subckt(subckt_dir, cbx_info[ix][iy],
-                                             LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices, 
-                                             compact_routing_hierarchy); 
+        fprint_routing_connection_box_subckt(subckt_dir, cbx_info[ix][iy]); 
       }
       update_spice_models_routing_index_high(ix, iy, CHANX, arch.spice->num_spice_model, arch.spice->spice_models);
     }
@@ -1251,9 +1294,7 @@ void generate_spice_routing_resources(char* subckt_dir,
       /* Check if this cby_info exists, it may be covered by a heterogenous block */
       if ((TRUE == is_cb_exist(CHANY, ix, iy))
          &&(0 < count_cb_info_num_ipin_rr_nodes(cby_info[ix][iy]))) {
-        fprint_routing_connection_box_subckt(subckt_dir, cby_info[ix][iy],
-                                             LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices,
-                                             compact_routing_hierarchy); 
+        fprint_routing_connection_box_subckt(subckt_dir, cby_info[ix][iy]); 
       }
       update_spice_models_routing_index_high(ix, iy, CHANY, arch.spice->num_spice_model, arch.spice->spice_models);
     }
@@ -1267,3 +1308,6 @@ void generate_spice_routing_resources(char* subckt_dir,
   return;
 }
 
+/************************************************************************
+ * End of file : rr_blocks.cpp 
+ ***********************************************************************/

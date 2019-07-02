@@ -80,8 +80,7 @@ static void init_spice_mux_testbench_globals(t_spice spice) {
 }
 
 static 
-void fprint_spice_mux_testbench_global_ports(FILE* fp,
-                                             t_spice spice) {
+void fprint_spice_mux_testbench_global_ports(FILE* fp) {
   /* A valid file handler*/
   if (NULL == fp) {
     vpr_printf(TIO_MESSAGE_ERROR,"(FILE:%s,LINE[%d])Invalid File Handler!\n",__FILE__, __LINE__); 
@@ -641,7 +640,6 @@ void fprint_spice_mux_testbench_pb_pin_mux(FILE* fp,
 
 static 
 void fprint_spice_mux_testbench_pb_graph_node_pin_interc(FILE* fp,
-                                                         enum e_spice_pin2pin_interc_type pin2pin_interc_type,
                                                          t_pb_graph_pin* des_pb_graph_pin,
                                                          t_mode* cur_mode,
                                                          int select_path_id,
@@ -734,7 +732,6 @@ static
 void fprint_spice_mux_testbench_pb_pin_interc(FILE* fp,
                                               t_rr_node* pb_rr_graph,
                                               t_phy_pb* des_pb,
-                                              enum e_spice_pin2pin_interc_type pin2pin_interc_type,
                                               t_pb_graph_pin* des_pb_graph_pin,
                                               t_mode* cur_mode,
                                               int select_path_id,
@@ -856,7 +853,6 @@ void fprintf_spice_mux_testbench_pb_graph_port_interc(FILE* fp,
           assert(NULL == cur_pb);
           path_id = DEFAULT_PATH_ID;
           fprint_spice_mux_testbench_pb_graph_node_pin_interc(fp, 
-                                                              INPUT2INPUT_INTERC,
                                                               &(cur_pb_graph_node->input_pins[iport][ipin]),
                                                               cur_mode,
                                                               path_id,
@@ -878,7 +874,6 @@ void fprintf_spice_mux_testbench_pb_graph_port_interc(FILE* fp,
             assert(DEFAULT_PATH_ID != path_id);
           }
           fprint_spice_mux_testbench_pb_pin_interc(fp, pb_rr_nodes, cur_pb, /* TODO: find out the child_pb*/
-                                                   INPUT2INPUT_INTERC,
                                                    &(cur_pb_graph_node->input_pins[iport][ipin]),
                                                    cur_mode,
                                                    path_id, 
@@ -896,7 +891,6 @@ void fprintf_spice_mux_testbench_pb_graph_port_interc(FILE* fp,
           assert(NULL == cur_pb);
           path_id = DEFAULT_PATH_ID;
           fprint_spice_mux_testbench_pb_graph_node_pin_interc(fp, 
-                                                              OUTPUT2OUTPUT_INTERC,
                                                               &(cur_pb_graph_node->output_pins[iport][ipin]),
                                                               cur_mode,
                                                               path_id,
@@ -918,7 +912,6 @@ void fprintf_spice_mux_testbench_pb_graph_port_interc(FILE* fp,
             assert(DEFAULT_PATH_ID != path_id);
           }
           fprint_spice_mux_testbench_pb_pin_interc(fp, pb_rr_nodes, cur_pb, /* TODO: find out the child_pb*/
-                                                   OUTPUT2OUTPUT_INTERC,
                                                    &(cur_pb_graph_node->output_pins[iport][ipin]),
                                                    cur_mode,
                                                    path_id, 
@@ -936,7 +929,6 @@ void fprintf_spice_mux_testbench_pb_graph_port_interc(FILE* fp,
           assert(NULL == cur_pb);
           path_id = DEFAULT_PATH_ID;
           fprint_spice_mux_testbench_pb_graph_node_pin_interc(fp, 
-                                                              INPUT2INPUT_INTERC,
                                                               &(cur_pb_graph_node->clock_pins[iport][ipin]),
                                                               cur_mode,
                                                               path_id,
@@ -958,7 +950,6 @@ void fprintf_spice_mux_testbench_pb_graph_port_interc(FILE* fp,
             assert(DEFAULT_PATH_ID != path_id);
           }
           fprint_spice_mux_testbench_pb_pin_interc(fp, pb_rr_nodes, cur_pb, /* TODO: find out the child_pb*/
-                                                   INPUT2INPUT_INTERC,
                                                    &(cur_pb_graph_node->clock_pins[iport][ipin]),
                                                    cur_mode,
                                                    path_id, 
@@ -1254,6 +1245,7 @@ void fprint_spice_mux_testbench_cb_one_mux(FILE* fp,
   return;
 }
 
+static 
 void fprint_spice_mux_testbench_cb_interc(FILE* fp, 
                                           t_cb cur_cb_info,
                                           t_rr_node* src_rr_node,
@@ -1481,8 +1473,7 @@ int fprint_spice_mux_testbench_sb_one_mux(FILE* fp,
 
 static 
 int fprint_spice_mux_testbench_call_one_grid_sb_muxes(FILE* fp, 
-                                                      t_sb cur_sb_info,
-                                                      t_ivec*** LL_rr_node_indices) {
+                                                      t_sb cur_sb_info) {
   int itrack, side;
   int used = 0;
 
@@ -1672,6 +1663,7 @@ void fprint_spice_mux_testbench_measurements(FILE* fp,
 }
 
 /* Top-level function in this source file */
+static 
 int fprint_spice_one_mux_testbench(char* formatted_spice_dir,
                                    char* circuit_name,
                                    char* mux_testbench_name, 
@@ -1743,7 +1735,7 @@ int fprint_spice_one_mux_testbench(char* formatted_spice_dir,
   fprint_spice_options(fp, arch.spice->spice_params);
 
   /* Global nodes: Vdd for SRAMs, Logic Blocks(Include IO), Switch Boxes, Connection Boxes */
-  fprint_spice_mux_testbench_global_ports(fp, *(arch.spice));
+  fprint_spice_mux_testbench_global_ports(fp);
  
   /* Quote defined Logic blocks subckts (Grids) */
   init_spice_mux_testbench_globals(*(arch.spice));
@@ -1798,7 +1790,7 @@ int fprint_spice_one_mux_testbench(char* formatted_spice_dir,
   case SPICE_SB_MUX_TB:
     total_sb_mux_input_density = 0.;
     /* Output a sb_mux testbench */
-    used = fprint_spice_mux_testbench_call_one_grid_sb_muxes(fp, sb_info[grid_x][grid_y], LL_rr_node_indices);
+    used = fprint_spice_mux_testbench_call_one_grid_sb_muxes(fp, sb_info[grid_x][grid_y]);
     /* Check and output info. */
     assert((0 == testbench_sb_mux_cnt)||(0 < testbench_sb_mux_cnt));
     if (0 < testbench_sb_mux_cnt) {

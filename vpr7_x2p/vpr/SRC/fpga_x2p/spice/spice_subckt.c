@@ -737,8 +737,7 @@ void generate_spice_subckts(char* subckt_dir,
   /* 6. Generate Routing architecture*/
   vpr_printf(TIO_MESSAGE_INFO, "Writing Routing Resources....\n");
   generate_spice_routing_resources(subckt_dir, (*arch), routing_arch, 
-                                   num_rr_nodes, rr_node, rr_node_indices,
-                                   compact_routing_hierarchy);
+                                   num_rr_nodes, rr_node, rr_node_indices);
  
   /* 7. Generate Logic Blocks */
   vpr_printf(TIO_MESSAGE_INFO,"Writing Logic Blocks...\n");
