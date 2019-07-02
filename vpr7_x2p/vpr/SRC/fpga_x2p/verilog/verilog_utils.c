@@ -905,7 +905,8 @@ int rec_dump_verilog_spice_model_global_ports(FILE* fp,
       if ((TRUE == require_explicit_port_map) 
          && (TRUE == cur_spice_model->dump_explicit_port_map)) {
         fprintf(fp, ".%s(",
-                cur_spice_model_port->lib_name);
+                /* cur_spice_model_port->lib_name); /* Old version*/
+                cur_spice_model_port->prefix);
       }
       fprintf(fp, "%s[0:%d]", 
             cur_spice_model_port->prefix,
@@ -3155,10 +3156,10 @@ void dump_verilog_mem_sram_submodule(FILE* fp,
   case SPICE_SRAM_STANDALONE:
     /* SRAM subckts*/
     /* Only dump the global ports belonging to a spice_model */
-    if (0 < rec_dump_verilog_spice_model_global_ports(fp, cur_sram_verilog_model, FALSE, TRUE, FALSE)) {
+    if (0 < rec_dump_verilog_spice_model_global_ports(fp, cur_sram_verilog_model, FALSE, TRUE, my_bool_to_boolean(is_explicit_mapping))) {
       fprintf(fp, ",\n");
     }
-    fprintf(fp, "%s_out[%d:%d], ", 
+    fprintf(fp, "%s_in[%d:%d], ", 
             cur_sram_verilog_model->prefix, lsb, msb); /* Input*/
     fprintf(fp, "%s_out[%d:%d], %s_outb[%d:%d] ", 
             cur_sram_verilog_model->prefix, lsb, msb, 
@@ -3171,21 +3172,42 @@ void dump_verilog_mem_sram_submodule(FILE* fp,
     }
     if (SPICE_MODEL_MUX == cur_verilog_model->type) {
       /* Input of Scan-chain DFF, should be connected to the output of its precedent */
+    if (true == is_explicit_mapping) {
+      fprintf(fp, ".%s(",
+              cur_sram_verilog_model->ports[0].prefix);
+    }
       dump_verilog_mux_sram_one_outport(fp, cur_sram_orgz_info,
                                         cur_verilog_model, mux_size,
                                         lsb, msb,
                                         -1, VERILOG_PORT_CONKT);
+    if (true == is_explicit_mapping) {
+      fprintf(fp, ")");
+    }
       fprintf(fp, ", \n");  //
       /* Output of Scan-chain DFF, should be connected to the output of its successor */
+    if (true == is_explicit_mapping) {
+      fprintf(fp, ".%s(",
+              cur_sram_verilog_model->ports[1].prefix);
+    }
       dump_verilog_mux_sram_one_outport(fp, cur_sram_orgz_info,
                                         cur_verilog_model, mux_size,
                                         lsb, msb,
                                         0, VERILOG_PORT_CONKT);
+    if (true == is_explicit_mapping) {
+      fprintf(fp, ")");
+    }
       fprintf(fp, ", \n");  //
+    if (true == is_explicit_mapping) {
+      fprintf(fp, ".%s(",
+              cur_sram_verilog_model->ports[2].prefix);
+    }
       dump_verilog_mux_sram_one_outport(fp, cur_sram_orgz_info, 
                                         cur_verilog_model, mux_size,
                                         lsb, msb,
                                         1, VERILOG_PORT_CONKT);
+    if (true == is_explicit_mapping) {
+      fprintf(fp, ")");
+    }
       break;
     } 
     /* Input of Scan-chain DFF, should be connected to the output of its precedent */

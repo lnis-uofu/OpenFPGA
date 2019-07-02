@@ -13,10 +13,10 @@ void dump_verilog_defined_channels(FILE* fp,
                                    t_ivec*** LL_rr_node_indices);
 
 void dump_verilog_defined_connection_boxes(t_sram_orgz_info* cur_sram_orgz_info,
-                                           FILE* fp);
+                                           FILE* fp, bool is_explicit_mapping);
 
 void dump_verilog_defined_switch_boxes(t_sram_orgz_info* cur_sram_orgz_info,
-                                       FILE* fp);
+                                       FILE* fp, bool is_explicit_mapping);
 
 void dump_verilog_clb2clb_directs(FILE* fp, 
                                   int num_directs, t_clb_to_clb_directs* direct);

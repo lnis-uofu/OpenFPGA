@@ -26,5 +26,6 @@ void dump_compact_verilog_top_netlist(t_sram_orgz_info* cur_sram_orgz_info,
                                       t_ivec*** LL_rr_node_indices,
                                       int num_clock,
                                       boolean compact_routing_hierarchy,
-                                      t_spice verilog);
+                                      t_spice verilog,
+                                      bool is_explicit_verilog);
 #endif

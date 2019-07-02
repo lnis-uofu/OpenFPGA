@@ -607,7 +607,8 @@ void dump_verilog_defined_channels(FILE* fp,
 static 
 void dump_verilog_defined_one_connection_box(t_sram_orgz_info* cur_sram_orgz_info, 
                                              FILE* fp,
-                                             t_cb cur_cb_info) {
+                                             t_cb cur_cb_info,
+                                             bool is_explicit_mapping) {
   int itrack, inode, side, x, y;
   int side_cnt = 0;
 
@@ -679,7 +680,7 @@ void dump_verilog_defined_one_connection_box(t_sram_orgz_info* cur_sram_orgz_inf
                                                  cur_cb_info.ipin_rr_node_grid_side[side][inode],
                                                  cur_cb_info.ipin_rr_node[side][inode]->xlow,
                                                  cur_cb_info.ipin_rr_node[side][inode]->ylow, 
-                                                 FALSE); /* Do not specify direction of port */
+                                                 FALSE, is_explicit_mapping); /* Do not specify direction of port */
       fprintf(fp, ", \n");
     }
   }
@@ -735,7 +736,7 @@ void dump_verilog_defined_one_connection_box(t_sram_orgz_info* cur_sram_orgz_inf
 
 /* Call the sub-circuits for connection boxes */
 void dump_verilog_defined_connection_boxes(t_sram_orgz_info* cur_sram_orgz_info,
-                                           FILE* fp) {
+                                           FILE* fp, bool is_explicit_mapping) {
   int ix, iy;
 
   /* Check the file handler*/ 
@@ -750,7 +751,8 @@ void dump_verilog_defined_connection_boxes(t_sram_orgz_info* cur_sram_orgz_info,
     for (ix = 1; ix < (nx + 1); ix++) {
       if ((TRUE == is_cb_exist(CHANX, ix, iy))
          &&(0 < count_cb_info_num_ipin_rr_nodes(cbx_info[ix][iy]))) {
-        dump_verilog_defined_one_connection_box(cur_sram_orgz_info, fp, cbx_info[ix][iy]);
+        dump_verilog_defined_one_connection_box(cur_sram_orgz_info, fp, cbx_info[ix][iy],
+                                                is_explicit_mapping);
       }
     }
   }
@@ -759,7 +761,8 @@ void dump_verilog_defined_connection_boxes(t_sram_orgz_info* cur_sram_orgz_info,
     for (iy = 1; iy < (ny + 1); iy++) {
       if ((TRUE == is_cb_exist(CHANY, ix, iy))
          &&(0 < count_cb_info_num_ipin_rr_nodes(cby_info[ix][iy]))) {
-        dump_verilog_defined_one_connection_box(cur_sram_orgz_info, fp, cby_info[ix][iy]);
+        dump_verilog_defined_one_connection_box(cur_sram_orgz_info, fp, cby_info[ix][iy],
+                                                is_explicit_mapping);
       }
     }
   }
@@ -774,7 +777,8 @@ void dump_verilog_defined_connection_boxes(t_sram_orgz_info* cur_sram_orgz_info,
 static 
 void dump_verilog_defined_one_switch_box(t_sram_orgz_info* cur_sram_orgz_info, 
                                          FILE* fp,
-                                         t_sb cur_sb_info) {
+                                         t_sb cur_sb_info,
+                                         bool is_explicit_mapping) {
   int ix, iy, side, itrack, x, y, inode;
 
   /* Check the file handler*/ 
@@ -823,7 +827,7 @@ void dump_verilog_defined_one_switch_box(t_sram_orgz_info* cur_sram_orgz_info,
                                                   cur_sb_info.opin_rr_node_grid_side[side][inode],
                                                   cur_sb_info.opin_rr_node[side][inode]->xlow,
                                                   cur_sb_info.opin_rr_node[side][inode]->ylow,
-                                                  FALSE); /* Do not specify the direction of port */ 
+                                                  FALSE, is_explicit_mapping); /* Do not specify the direction of port */ 
       fprintf(fp, ",\n");
     } 
     fprintf(fp, "\n");
@@ -869,7 +873,7 @@ void dump_verilog_defined_one_switch_box(t_sram_orgz_info* cur_sram_orgz_info,
 }
 
 void dump_verilog_defined_switch_boxes(t_sram_orgz_info* cur_sram_orgz_info, 
-                                       FILE* fp) {
+                                       FILE* fp, bool is_explicit_mapping) {
   int ix, iy;
 
   /* Check the file handler*/ 
@@ -881,7 +885,8 @@ void dump_verilog_defined_switch_boxes(t_sram_orgz_info* cur_sram_orgz_info,
 
   for (ix = 0; ix < (nx + 1); ix++) {
     for (iy = 0; iy < (ny + 1); iy++) {
-      dump_verilog_defined_one_switch_box(cur_sram_orgz_info, fp, sb_info[ix][iy]);
+      dump_verilog_defined_one_switch_box(cur_sram_orgz_info, fp, sb_info[ix][iy],
+                                          is_explicit_mapping);
     }
   }
 

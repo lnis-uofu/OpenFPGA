@@ -2345,7 +2345,7 @@ void dump_verilog_cmos_mux_mem_submodule(FILE* fp,
    * 3. output ports 
    * 4. bl/wl ports 
    */
-  dump_verilog_mem_module_port_map(fp, mem_model, TRUE, 0, num_conf_bits, FALSE); 
+  dump_verilog_mem_module_port_map(fp, mem_model, TRUE, 0, num_conf_bits, my_bool_to_boolean(is_explicit_mapping)); 
   fprintf(fp, ");\n");
 
   /* Dump all the submodules */

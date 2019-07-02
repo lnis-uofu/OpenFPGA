@@ -284,7 +284,7 @@ void verilog_generate_one_report_timing_within_sb(FILE* fp,
   fprintf(fp, "%s/", 
           rr_sb.gen_sb_verilog_instance_name()); 
   /* Find which side the ending pin locates, and determine the coordinate */
-  dump_verilog_one_sb_routing_pin(fp, rr_sb, src_rr_node);
+  dump_verilog_one_sb_routing_pin(fp, rr_sb, src_rr_node, false);
 
   fprintf(fp, " -to "); 
 
@@ -326,7 +326,7 @@ void verilog_generate_one_report_timing_within_sb(FILE* fp,
   fprintf(fp, "%s/", 
               gen_verilog_one_sb_instance_name(cur_sb_info)); 
   /* Find which side the ending pin locates, and determine the coordinate */
-  dump_verilog_one_sb_routing_pin(fp, cur_sb_info, src_rr_node);
+  dump_verilog_one_sb_routing_pin(fp, cur_sb_info, src_rr_node, false);
 
   fprintf(fp, " -to "); 
 
@@ -906,7 +906,7 @@ void dump_verilog_one_sb_wire_segemental_report_timing(FILE* fp,
   fprintf(fp, "%s/", 
           src_sb.gen_sb_verilog_instance_name()); 
   /* Find which side the ending pin locates, and determine the coordinate */
-  dump_verilog_one_sb_routing_pin(fp, src_sb, drive_rr_node);
+  dump_verilog_one_sb_routing_pin(fp, src_sb, drive_rr_node, false);
 
   /* Switch depends on the type of des_rr_node  */
   switch(des_rr_node->type) {
@@ -1287,7 +1287,7 @@ void dump_verilog_one_sb_wire_segemental_report_timing(FILE* fp,
   fprintf(fp, "%s/", 
               gen_verilog_one_sb_instance_name(src_sb_info)); 
   /* Find which side the ending pin locates, and determine the coordinate */
-  dump_verilog_one_sb_routing_pin(fp, src_sb_info, drive_rr_node);
+  dump_verilog_one_sb_routing_pin(fp, src_sb_info, drive_rr_node, false);
 
   /* Switch depends on the type of des_rr_node  */
   switch(des_rr_node->type) {
@@ -2079,7 +2079,7 @@ void verilog_generate_one_routing_wire_report_timing(FILE* fp,
         fprintf(fp, "%s/", rr_sb.gen_sb_verilog_instance_name()); 
         /* output pin name */
         dump_verilog_one_sb_routing_pin(fp, rr_sb, 
-                                        wire_rr_node->drive_rr_nodes[iedge]);
+                                        wire_rr_node->drive_rr_nodes[iedge], false);
         fprintf(fp, " -to "); 
         /* output instance name */
         fprintf(fp, "%s/",
@@ -2137,14 +2137,14 @@ void verilog_generate_one_routing_wire_report_timing(FILE* fp,
                 rr_sb.gen_sb_verilog_instance_name()); 
         /* output pin name */
         dump_verilog_one_sb_routing_pin(fp, rr_sb, 
-                                        wire_rr_node->drive_rr_nodes[iedge]);
+                                        wire_rr_node->drive_rr_nodes[iedge], false);
         fprintf(fp, " -to "); 
         /* output instance name */
         fprintf(fp, "%s/",
                 next_sb.gen_sb_verilog_instance_name());
         /* Find which side the ending pin locates, and determine the coordinate */
         dump_verilog_one_sb_routing_pin(fp, next_sb, 
-                                        wire_rr_node);
+                                        wire_rr_node, false);
         /* Print through pins */
         if (TRUE == sdc_opts.print_thru_pins) { 
           fprintf(fp, " -through_pins "); 
@@ -2245,7 +2245,8 @@ void verilog_generate_one_routing_wire_report_timing(FILE* fp,
                     gen_verilog_one_sb_instance_name(cur_sb_info)); 
         /* output pin name */
         dump_verilog_one_sb_routing_pin(fp, cur_sb_info, 
-                                        wire_rr_node->drive_rr_nodes[iedge]);
+                                        wire_rr_node->drive_rr_nodes[iedge],
+                                        false);
         fprintf(fp, " -to "); 
         /* output instance name */
         fprintf(fp, "%s/",
@@ -2289,14 +2290,14 @@ void verilog_generate_one_routing_wire_report_timing(FILE* fp,
                     gen_verilog_one_sb_instance_name(cur_sb_info)); 
         /* output pin name */
         dump_verilog_one_sb_routing_pin(fp, cur_sb_info, 
-                                        wire_rr_node->drive_rr_nodes[iedge]);
+                                        wire_rr_node->drive_rr_nodes[iedge], false);
         fprintf(fp, " -to "); 
         /* output instance name */
         fprintf(fp, "%s/",
                 gen_verilog_one_sb_instance_name(next_sb));
         /* Find which side the ending pin locates, and determine the coordinate */
         dump_verilog_one_sb_routing_pin(fp, next_sb, 
-                                        wire_rr_node);
+                                        wire_rr_node, false);
         /* Print through pins */
         if (TRUE == sdc_opts.print_thru_pins) { 
           fprintf(fp, " -through_pins "); 

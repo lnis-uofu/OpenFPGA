@@ -311,7 +311,8 @@ void dump_verilog_routing_chan_subckt(char* verilog_dir,
 void dump_verilog_grid_side_pin_with_given_index(FILE* fp, t_rr_type pin_type, 
                                                  int pin_index, int side,
                                                  int x, int y,
-                                                 boolean dump_port_type) {
+                                                 boolean dump_port_type,
+                                                 bool is_explicit_mapping) {
   int height;  
   t_type_ptr type = NULL;
   char* verilog_port_type = NULL;
@@ -355,7 +356,13 @@ void dump_verilog_grid_side_pin_with_given_index(FILE* fp, t_rr_type pin_type,
     if (TRUE == dump_port_type) {
       fprintf(fp, "%s ", verilog_port_type);
     }
+    if (true == is_explicit_mapping) {
+      fprintf(fp, ".out(");
+    }
     fprintf(fp, "%s", gen_verilog_grid_one_pin_name(x, y, height, side, pin_index, TRUE));
+    if (true == is_explicit_mapping) {
+      fprintf(fp, ")");
+    }
     if (TRUE == dump_port_type) {
       fprintf(fp, ",\n");
     }
@@ -511,7 +518,8 @@ void dump_verilog_unique_switch_box_short_interc(FILE* fp,
                                                  enum e_side chan_side,
                                                  t_rr_node* cur_rr_node,
                                                  int actual_fan_in,
-                                                 t_rr_node* drive_rr_node) {
+                                                 t_rr_node* drive_rr_node,
+                                                 bool is_explicit_mapping) {
   /* Check the file handler*/ 
   if (NULL == fp) {
     vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid file handler.\n", 
@@ -554,7 +562,7 @@ void dump_verilog_unique_switch_box_short_interc(FILE* fp,
                                                 drive_rr_node->ptc_num, 
                                                 rr_sb.get_opin_node_grid_side(drive_rr_node),
                                                 grid_x, grid_y, 
-                                                FALSE); /* Do not dump the direction of the port! */
+                                                FALSE, is_explicit_mapping); /* Do not dump the direction of the port! */
     break;
   case CHANX:
   case CHANY:
@@ -600,7 +608,8 @@ void dump_verilog_switch_box_short_interc(FILE* fp,
                                           int chan_side,
                                           t_rr_node* cur_rr_node,
                                           int actual_fan_in,
-                                          t_rr_node* drive_rr_node) {
+                                          t_rr_node* drive_rr_node,
+                                          bool is_explicit_mapping) {
   int side, index; 
   int grid_x, grid_y;
   char* chan_name = NULL;
@@ -655,7 +664,7 @@ void dump_verilog_switch_box_short_interc(FILE* fp,
                                                 drive_rr_node->ptc_num, 
                                                 cur_sb_info->opin_rr_node_grid_side[side][index],
                                                 grid_x, grid_y, 
-                                                FALSE); /* Do not dump the direction of the port! */
+                                                FALSE, is_explicit_mapping); /* Do not dump the direction of the port! */
     break;
   case CHANX:
   case CHANY:
@@ -760,7 +769,7 @@ void dump_verilog_switch_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
               verilog_model->prefix, mux_size, verilog_model->cnt, input_cnt);
       dump_verilog_grid_side_pin_with_given_index(fp, IPIN, drive_rr_nodes[inode]->ptc_num, 
                                                   cur_sb_info->opin_rr_node_grid_side[side][index],
-                                                  grid_x, grid_y, FALSE);
+                                                  grid_x, grid_y, FALSE, is_explicit_mapping);
       fprintf(fp, ";\n");
       input_cnt++;
       break;
@@ -1016,7 +1025,7 @@ void dump_verilog_unique_switch_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
               verilog_model->prefix, mux_size, verilog_model->cnt, input_cnt);
       dump_verilog_grid_side_pin_with_given_index(fp, IPIN, drive_rr_nodes[inode]->ptc_num, 
                                                   rr_sb.get_opin_node_grid_side(drive_rr_nodes[inode]),
-                                                  grid_x, grid_y, FALSE);
+                                                  grid_x, grid_y, FALSE, is_explicit_mapping);
       fprintf(fp, ";\n");
       input_cnt++;
       break;
@@ -1394,11 +1403,12 @@ void dump_verilog_switch_box_interc(t_sram_orgz_info* cur_sram_orgz_info,
   if (0 == num_drive_rr_nodes) {
     /* Print a special direct connection*/
     dump_verilog_switch_box_short_interc(fp, cur_sb_info, chan_side, cur_rr_node, 
-                                         num_drive_rr_nodes, cur_rr_node);
+                                         num_drive_rr_nodes, cur_rr_node, is_explicit_mapping);
   } else if (1 == num_drive_rr_nodes) {
     /* Print a direct connection*/
     dump_verilog_switch_box_short_interc(fp, cur_sb_info, chan_side, cur_rr_node, 
-                                         num_drive_rr_nodes, drive_rr_nodes[DEFAULT_SWITCH_ID]);
+                                         num_drive_rr_nodes, drive_rr_nodes[DEFAULT_SWITCH_ID],
+                                         is_explicit_mapping);
   } else if (1 < num_drive_rr_nodes) {
     /* Print the multiplexer, fan_in >= 2 */
     dump_verilog_switch_box_mux(cur_sram_orgz_info, fp, cur_sb_info, chan_side, cur_rr_node, 
@@ -1445,11 +1455,13 @@ void dump_verilog_unique_switch_box_interc(t_sram_orgz_info* cur_sram_orgz_info,
   if (0 == num_drive_rr_nodes) {
     /* Print a special direct connection*/
     dump_verilog_unique_switch_box_short_interc(fp, rr_sb, chan_side, cur_rr_node, 
-                                                num_drive_rr_nodes, cur_rr_node);
+                                                num_drive_rr_nodes, cur_rr_node, 
+                                                is_explicit_mapping);
   } else if (1 == num_drive_rr_nodes) {
     /* Print a direct connection*/
     dump_verilog_unique_switch_box_short_interc(fp, rr_sb, chan_side, cur_rr_node, 
-                                                num_drive_rr_nodes, drive_rr_nodes[DEFAULT_SWITCH_ID]);
+                                                num_drive_rr_nodes, drive_rr_nodes[DEFAULT_SWITCH_ID], 
+                                                is_explicit_mapping);
   } else if (1 < num_drive_rr_nodes) {
     /* Print the multiplexer, fan_in >= 2 */
     dump_verilog_unique_switch_box_mux(cur_sram_orgz_info, fp, rr_sb, chan_side, cur_rr_node, 
@@ -1696,7 +1708,8 @@ void dump_verilog_routing_switch_box_unique_side_subckt_portmap(FILE* fp,
                                                                 const RRGSB& rr_sb, 
                                                                 enum e_side sb_side,
                                                                 size_t seg_id,
-                                                                boolean dump_port_type) {
+                                                                boolean dump_port_type,
+                                                                bool is_explicit_mapping) {
   /* Check file handler*/
   if (NULL == fp) {
     vpr_printf(TIO_MESSAGE_ERROR,
@@ -1764,7 +1777,7 @@ void dump_verilog_routing_switch_box_unique_side_subckt_portmap(FILE* fp,
                                                   rr_sb.get_opin_node_grid_side(side_manager.get_side(), inode),
                                                   rr_sb.get_opin_node(side_manager.get_side(), inode)->xlow,
                                                   rr_sb.get_opin_node(side_manager.get_side(), inode)->ylow,
-                                                  dump_port_type); /* Dump the direction of the port ! */ 
+                                                  dump_port_type, is_explicit_mapping); /* Dump the direction of the port ! */ 
       if (FALSE == dump_port_type) {
         fprintf(fp, ",\n");
       }
@@ -1861,7 +1874,9 @@ void dump_verilog_routing_switch_box_unique_side_module(t_sram_orgz_info* cur_sr
     fprintf(fp, ",\n");
   }
 
-  dump_verilog_routing_switch_box_unique_side_subckt_portmap(fp, rr_sb, side, seg_id, TRUE); 
+  dump_verilog_routing_switch_box_unique_side_subckt_portmap(fp, rr_sb, side, 
+                                                             seg_id, TRUE, 
+                                                             is_explicit_mapping); 
 
   /* Put down configuration port */
   /* output of each configuration bit */
@@ -1962,7 +1977,8 @@ void dump_verilog_routing_switch_box_unique_side_module(t_sram_orgz_info* cur_sr
 static 
 void dump_verilog_routing_switch_box_unique_module(t_sram_orgz_info* cur_sram_orgz_info,
                                                    char* verilog_dir, char* subckt_dir, 
-                                                   const RRGSB& rr_sb) {
+                                                   const RRGSB& rr_sb,
+                                                   bool is_explicit_mapping) {
   FILE* fp = NULL; 
   char* fname = NULL;
 
@@ -2029,7 +2045,7 @@ void dump_verilog_routing_switch_box_unique_module(t_sram_orgz_info* cur_sram_or
                                                   rr_gsb.get_opin_node_grid_side(side_manager.get_side(), inode),
                                                   rr_gsb.get_opin_node(side_manager.get_side(), inode)->xlow,
                                                   rr_gsb.get_opin_node(side_manager.get_side(), inode)->ylow,
-                                                  TRUE); /* Dump the direction of the port ! */ 
+                                                  TRUE, is_explicit_mapping); /* Dump the direction of the port ! */ 
     } 
   }
   
@@ -2110,7 +2126,7 @@ void dump_verilog_routing_switch_box_unique_module(t_sram_orgz_info* cur_sram_or
         fprintf(fp, ",\n");
       }
 
-      dump_verilog_routing_switch_box_unique_side_subckt_portmap(fp, rr_gsb, side_manager.get_side(), seg_ids[iseg], FALSE); 
+      dump_verilog_routing_switch_box_unique_side_subckt_portmap(fp, rr_gsb, side_manager.get_side(), seg_ids[iseg], FALSE, is_explicit_mapping); 
 
       /* Put down configuration port */
       /* output of each configuration bit */
@@ -2272,7 +2288,7 @@ void dump_verilog_routing_switch_box_unique_subckt(t_sram_orgz_info* cur_sram_or
                                                   rr_gsb.get_opin_node_grid_side(side_manager.get_side(), inode),
                                                   rr_gsb.get_opin_node(side_manager.get_side(), inode)->xlow,
                                                   rr_gsb.get_opin_node(side_manager.get_side(), inode)->ylow,
-                                                  TRUE); /* Dump the direction of the port ! */ 
+                                                  TRUE, is_explicit_mapping); /* Dump the direction of the port ! */ 
     } 
   }
   
@@ -2474,7 +2490,7 @@ void dump_verilog_routing_switch_box_subckt(t_sram_orgz_info* cur_sram_orgz_info
                                                   cur_sb_info->opin_rr_node_grid_side[side][inode],
                                                   cur_sb_info->opin_rr_node[side][inode]->xlow,
                                                   cur_sb_info->opin_rr_node[side][inode]->ylow, 
-                                                  TRUE); /* Dump the direction of the port ! */ 
+                                                  TRUE, is_explicit_mapping); /* Dump the direction of the port ! */ 
     } 
   }
   
@@ -2663,7 +2679,8 @@ int count_verilog_connection_box_one_side_reserved_conf_bits(t_sram_orgz_info* c
 static 
 void dump_verilog_connection_box_short_interc(FILE* fp,
                                               const RRGSB& rr_gsb, t_rr_type cb_type,
-                                              t_rr_node* src_rr_node) {
+                                              t_rr_node* src_rr_node,
+                                              bool is_explicit_mapping) {
   t_rr_node* drive_rr_node = NULL;
   int iedge, check_flag;
   int xlow, ylow, height, index;
@@ -2717,7 +2734,7 @@ void dump_verilog_connection_box_short_interc(FILE* fp,
                                               rr_gsb.get_ipin_node(side, index)->ptc_num, 
                                               rr_gsb.get_ipin_node_grid_side(side, index), 
                                               xlow, ylow, /* Coordinator of Grid */ 
-                                              FALSE); /* Do not specify the direction of this pin */
+                                              FALSE, is_explicit_mapping); /* Do not specify the direction of this pin */
 
   /* End */
   fprintf(fp, ";\n");
@@ -2729,7 +2746,8 @@ void dump_verilog_connection_box_short_interc(FILE* fp,
 /* SRC rr_node is the IPIN of a grid.*/
 void dump_verilog_connection_box_short_interc(FILE* fp,
                                               t_cb* cur_cb_info,
-                                              t_rr_node* src_rr_node) {
+                                              t_rr_node* src_rr_node,
+                                              bool is_explicit_mapping) {
   t_rr_node* drive_rr_node = NULL;
   int iedge, check_flag;
   int xlow, ylow, height, side, index;
@@ -2793,7 +2811,7 @@ void dump_verilog_connection_box_short_interc(FILE* fp,
                                               cur_cb_info->ipin_rr_node[side][index]->ptc_num, 
                                               cur_cb_info->ipin_rr_node_grid_side[side][index], 
                                               xlow, ylow, /* Coordinator of Grid */ 
-                                              FALSE); /* Do not specify the direction of this pin */
+                                              FALSE, is_explicit_mapping); /* Do not specify the direction of this pin */
 
   /* End */
   fprintf(fp, ";\n");
@@ -2940,7 +2958,7 @@ void dump_verilog_connection_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
                                               rr_gsb.get_ipin_node(side, index)->ptc_num, 
                                               rr_gsb.get_ipin_node_grid_side(side, index), 
                                               xlow, ylow, /* Coordinator of Grid */ 
-                                              FALSE); /* Do not specify the direction of port */
+                                              FALSE, is_explicit_mapping); /* Do not specify the direction of port */
   fprintf(fp, ", "); 
 
   /* Different design technology requires different configuration bus! */
@@ -3158,8 +3176,15 @@ void dump_verilog_connection_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
   }
 
   /* connect to input bus*/
-  fprintf(fp, "%s_size%d_%d_inbus,",
+  if (true == is_explicit_mapping) {
+    fprintf(fp, ".in(");
+  }
+  fprintf(fp, "%s_size%d_%d_inbus",
                verilog_model->prefix, mux_size, verilog_model->cnt);
+  if (true == is_explicit_mapping) {
+    fprintf(fp, ")");
+  }
+  fprintf(fp, ", ");
 
   /* output port*/
   xlow = src_rr_node->xlow;
@@ -3174,7 +3199,7 @@ void dump_verilog_connection_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
                                               cur_cb_info->ipin_rr_node[side][index]->ptc_num, 
                                               cur_cb_info->ipin_rr_node_grid_side[side][index], 
                                               xlow, ylow, /* Coordinator of Grid */ 
-                                              FALSE); /* Do not specify the direction of port */
+                                              FALSE, is_explicit_mapping); /* Do not specify the direction of port */
   fprintf(fp, ", "); 
 
   /* Different design technology requires different configuration bus! */
@@ -3280,7 +3305,7 @@ void dump_verilog_connection_box_interc(t_sram_orgz_info* cur_sram_orgz_info,
 
   if (1 == src_rr_node->fan_in) {
     /* Print a direct connection*/
-    dump_verilog_connection_box_short_interc(fp, rr_gsb, cb_type, src_rr_node);
+    dump_verilog_connection_box_short_interc(fp, rr_gsb, cb_type, src_rr_node, is_explicit_mapping);
   } else if (1 < src_rr_node->fan_in) {
     /* Print the multiplexer, fan_in >= 2 */
     dump_verilog_connection_box_mux(cur_sram_orgz_info, fp, rr_gsb, cb_type,
@@ -3309,7 +3334,7 @@ void dump_verilog_connection_box_interc(t_sram_orgz_info* cur_sram_orgz_info,
 
   if (1 == src_rr_node->fan_in) {
     /* Print a direct connection*/
-    dump_verilog_connection_box_short_interc(fp, cur_cb_info, src_rr_node);
+    dump_verilog_connection_box_short_interc(fp, cur_cb_info, src_rr_node, is_explicit_mapping);
   } else if (1 < src_rr_node->fan_in) {
     /* Print the multiplexer, fan_in >= 2 */
     dump_verilog_connection_box_mux(cur_sram_orgz_info, fp, cur_cb_info, 
@@ -3500,7 +3525,7 @@ void dump_verilog_routing_connection_box_unique_module(t_sram_orgz_info* cur_sra
                                                   rr_gsb.get_ipin_node_grid_side(cb_ipin_side, inode),
                                                   rr_gsb.get_ipin_node(cb_ipin_side, inode)->xlow,
                                                   rr_gsb.get_ipin_node(cb_ipin_side, inode)->ylow,
-                                                  TRUE); 
+                                                  TRUE, is_explicit_mapping); 
 
     }
   }
@@ -3720,7 +3745,7 @@ void dump_verilog_routing_connection_box_subckt(t_sram_orgz_info* cur_sram_orgz_
                                                   cur_cb_info->ipin_rr_node_grid_side[side][inode],
                                                   cur_cb_info->ipin_rr_node[side][inode]->xlow,
                                                   cur_cb_info->ipin_rr_node[side][inode]->ylow,
-                                                  TRUE); 
+                                                  TRUE, is_explicit_mapping); 
 
     }
   }
@@ -3900,7 +3925,8 @@ void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
     /* Output unique modules */
     for (size_t isb = 0; isb < device_rr_gsb.get_num_sb_unique_module(); ++isb) {
       const RRGSB& unique_mirror = device_rr_gsb.get_sb_unique_module(isb);
-      dump_verilog_routing_switch_box_unique_module(cur_sram_orgz_info, verilog_dir, subckt_dir, unique_mirror);
+      dump_verilog_routing_switch_box_unique_module(cur_sram_orgz_info, verilog_dir,
+                                                    subckt_dir, unique_mirror, explicit_port_mapping);
     }
 
     /* Restore sram_orgz_info to the base */ 
@@ -3923,7 +3949,7 @@ void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
         dump_verilog_routing_switch_box_subckt(cur_sram_orgz_info, verilog_dir, 
                                                subckt_dir, &(sb_info[ix][iy]),
                                                compact_routing_hierarchy,
-                                               FPGA_SPICE_Opts.SynVerilogOpts.dump_explicit_verilog);
+                                               explicit_port_mapping);
         update_spice_models_routing_index_high(ix, iy, SOURCE, arch.spice->num_spice_model, arch.spice->spice_models);
       }
     }
@@ -3941,7 +3967,7 @@ void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
       const RRGSB& unique_mirror = device_rr_gsb.get_cb_unique_module(CHANX, icb);
       dump_verilog_routing_connection_box_unique_module(cur_sram_orgz_info, 
                              verilog_dir, subckt_dir, unique_mirror, CHANX,
-                             FPGA_SPICE_Opts.SynVerilogOpts.dump_explicit_verilog);
+                             explicit_port_mapping);
     }
 
     /* Y - channels [1...ny][0..nx]*/
@@ -3949,7 +3975,7 @@ void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
       const RRGSB& unique_mirror = device_rr_gsb.get_cb_unique_module(CHANY, icb);
       dump_verilog_routing_connection_box_unique_module(cur_sram_orgz_info, 
                              verilog_dir, subckt_dir, unique_mirror, CHANY,
-                             FPGA_SPICE_Opts.SynVerilogOpts.dump_explicit_verilog);
+                             explicit_port_mapping);
     }
 
     /* Restore sram_orgz_info to the base */ 
@@ -3979,7 +4005,7 @@ void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
                                                      verilog_dir, subckt_dir, 
                                                      &(cbx_info[ix][iy]),
                                                      compact_routing_hierarchy,
-                                                     FPGA_SPICE_Opts.SynVerilogOpts.dump_explicit_verilog);
+                                                     explicit_port_mapping);
         }
         update_spice_models_routing_index_high(ix, iy, CHANX, arch.spice->num_spice_model, arch.spice->spice_models);
       }
@@ -3995,7 +4021,7 @@ void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
                                                      verilog_dir, subckt_dir, 
                                                      &(cby_info[ix][iy]),
                                                      compact_routing_hierarchy,
-                                                     FPGA_SPICE_Opts.SynVerilogOpts.dump_explicit_verilog);
+                                                     explicit_port_mapping);
         }
         update_spice_models_routing_index_high(ix, iy, CHANY, arch.spice->num_spice_model, arch.spice->spice_models);
       }

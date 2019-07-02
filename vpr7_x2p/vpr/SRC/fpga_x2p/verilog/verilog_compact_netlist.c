@@ -750,7 +750,8 @@ void dump_compact_verilog_defined_grids(t_sram_orgz_info* cur_sram_orgz_info,
 static 
 void dump_compact_verilog_defined_one_switch_box(t_sram_orgz_info* cur_sram_orgz_info, 
                                                  FILE* fp,
-                                                 const RRGSB& rr_sb) {
+                                                 const RRGSB& rr_sb,
+                                                 bool is_explicit_mapping) {
   /* Check the file handler*/ 
   if (NULL == fp) {
     vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid file handler.\n", 
@@ -797,7 +798,7 @@ void dump_compact_verilog_defined_one_switch_box(t_sram_orgz_info* cur_sram_orgz
                                                   rr_sb.get_opin_node_grid_side(side_manager.get_side(), inode),
                                                   rr_sb.get_opin_node(side_manager.get_side(), inode)->xlow,
                                                   rr_sb.get_opin_node(side_manager.get_side(), inode)->ylow,
-                                                  FALSE); /* Do not specify the direction of port */ 
+                                                  FALSE, is_explicit_mapping); /* Do not specify the direction of port */ 
       fprintf(fp, ",\n");
     } 
     fprintf(fp, "\n");
@@ -850,7 +851,7 @@ void dump_compact_verilog_defined_one_switch_box(t_sram_orgz_info* cur_sram_orgz
 
 static 
 void dump_compact_verilog_defined_switch_boxes(t_sram_orgz_info* cur_sram_orgz_info, 
-                                               FILE* fp) {
+                                               FILE* fp, bool is_explicit_mapping) {
   DeviceCoordinator sb_range = device_rr_gsb.get_gsb_range();
 
   /* Check the file handler*/ 
@@ -863,7 +864,7 @@ void dump_compact_verilog_defined_switch_boxes(t_sram_orgz_info* cur_sram_orgz_i
   for (size_t ix = 0; ix < sb_range.get_x(); ++ix) {
     for (size_t iy = 0; iy < sb_range.get_y(); ++iy) {
       const RRGSB& rr_sb = device_rr_gsb.get_gsb(ix, iy);
-      dump_compact_verilog_defined_one_switch_box(cur_sram_orgz_info, fp, rr_sb);
+      dump_compact_verilog_defined_one_switch_box(cur_sram_orgz_info, fp, rr_sb, is_explicit_mapping);
     }
   }
 
@@ -878,7 +879,8 @@ void dump_compact_verilog_defined_switch_boxes(t_sram_orgz_info* cur_sram_orgz_i
 static 
 void dump_compact_verilog_defined_one_connection_box(t_sram_orgz_info* cur_sram_orgz_info, 
                                                      FILE* fp,
-                                                     const RRGSB& rr_gsb, t_rr_type cb_type) {
+                                                     const RRGSB& rr_gsb, t_rr_type cb_type,
+                                                     bool is_explicit_mapping) {
   /* Check the file handler*/ 
   if (NULL == fp) {
     vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid file handler.\n", 
@@ -928,7 +930,7 @@ void dump_compact_verilog_defined_one_connection_box(t_sram_orgz_info* cur_sram_
                                                   rr_gsb.get_ipin_node_grid_side(cb_ipin_side, inode),
                                                   cur_ipin_node->xlow,
                                                   cur_ipin_node->ylow, 
-                                                  FALSE); /* Do not specify direction of port */
+                                                  FALSE, is_explicit_mapping); /* Do not specify direction of port */
       fprintf(fp, ", \n");
     }
   }
@@ -974,7 +976,8 @@ void dump_compact_verilog_defined_one_connection_box(t_sram_orgz_info* cur_sram_
 /* Call the sub-circuits for connection boxes */
 static 
 void dump_compact_verilog_defined_connection_boxes(t_sram_orgz_info* cur_sram_orgz_info,
-                                                   FILE* fp) {
+                                                   FILE* fp,
+                                                   bool is_explicit_mapping) {
   DeviceCoordinator sb_range = device_rr_gsb.get_gsb_range();
 
   /* Check the file handler*/ 
@@ -994,7 +997,7 @@ void dump_compact_verilog_defined_connection_boxes(t_sram_orgz_info* cur_sram_or
       /* X - channels [1...nx][0..ny]*/
       if ((TRUE == is_cb_exist(CHANX, cbx_coordinator.get_x(), cbx_coordinator.get_x()))
         &&(true == rr_gsb.is_cb_exist(CHANX))) {
-        dump_compact_verilog_defined_one_connection_box(cur_sram_orgz_info, fp, rr_gsb, CHANX);
+        dump_compact_verilog_defined_one_connection_box(cur_sram_orgz_info, fp, rr_gsb, CHANX, is_explicit_mapping);
       }
   
       /* Get X-channel CB coordinator */
@@ -1002,7 +1005,7 @@ void dump_compact_verilog_defined_connection_boxes(t_sram_orgz_info* cur_sram_or
       /* Y - channels [1...ny][0..nx]*/
       if ((TRUE == is_cb_exist(CHANY, cby_coordinator.get_x(), cby_coordinator.get_x()))
         &&(true == rr_gsb.is_cb_exist(CHANY))) {
-        dump_compact_verilog_defined_one_connection_box(cur_sram_orgz_info, fp, rr_gsb, CHANY);
+        dump_compact_verilog_defined_one_connection_box(cur_sram_orgz_info, fp, rr_gsb, CHANY, is_explicit_mapping);
       }
     }
   }
@@ -1183,7 +1186,8 @@ void dump_compact_verilog_top_netlist(t_sram_orgz_info* cur_sram_orgz_info,
                                       t_ivec*** LL_rr_node_indices,
                                       int num_clock,
                                       boolean compact_routing_hierarchy,
-                                      t_spice verilog) {
+                                      t_spice verilog,
+                                      bool is_explicit_mapping) {
   FILE* fp = NULL;
   char* formatted_dir_path = NULL;
   char* temp_include_file_path = NULL;
@@ -1243,16 +1247,16 @@ void dump_compact_verilog_top_netlist(t_sram_orgz_info* cur_sram_orgz_info,
 
   /* Quote Routing structures: Switch Boxes */
   if (TRUE == compact_routing_hierarchy ) {
-    dump_compact_verilog_defined_switch_boxes(cur_sram_orgz_info, fp); 
+    dump_compact_verilog_defined_switch_boxes(cur_sram_orgz_info, fp, is_explicit_mapping); 
   } else {
-    dump_verilog_defined_switch_boxes(cur_sram_orgz_info, fp); 
+    dump_verilog_defined_switch_boxes(cur_sram_orgz_info, fp, is_explicit_mapping); /* BC: Explicit mapping not done because we will erase this in the future*/
   }
 
   /* Quote Routing structures: Connection Boxes */
   if (TRUE == compact_routing_hierarchy ) {
-    dump_compact_verilog_defined_connection_boxes(cur_sram_orgz_info, fp); 
+    dump_compact_verilog_defined_connection_boxes(cur_sram_orgz_info, fp, is_explicit_mapping); 
   } else {
-    dump_verilog_defined_connection_boxes(cur_sram_orgz_info, fp); 
+    dump_verilog_defined_connection_boxes(cur_sram_orgz_info, fp, is_explicit_mapping); 
   }
 
   /* Quote defined Logic blocks subckts (Grids) */

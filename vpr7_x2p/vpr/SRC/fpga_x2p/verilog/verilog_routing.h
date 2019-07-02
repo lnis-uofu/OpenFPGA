@@ -14,7 +14,8 @@ void dump_verilog_routing_chan_subckt(t_sram_orgz_info* cur_sram_orgz_info,
 void dump_verilog_grid_side_pin_with_given_index(FILE* fp, t_rr_type pin_type,
                                                  int pin_index, int side,
                                                  int x, int y,
-                                                 boolean dump_port_type);
+                                                 boolean dump_port_type,
+                                                 bool is_explicit_mapping);
 
 void dump_verilog_grid_side_pins(FILE* fp,
                                  t_rr_type pin_type, int x, int y, int side,
@@ -31,7 +32,8 @@ void dump_verilog_switch_box_short_interc(FILE* fp,
                                           int chan_side,
                                           t_rr_node* cur_rr_node,
                                           int actual_fan_in,
-                                          t_rr_node* drive_rr_node);
+                                          t_rr_node* drive_rr_node,
+                                          bool is_explicit_mapping);
 
 void dump_verilog_switch_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
                                  FILE* fp, 
@@ -76,7 +78,8 @@ void dump_verilog_routing_switch_box_subckt(t_sram_orgz_info* cur_sram_orgz_info
 
 void dump_verilog_connection_box_short_interc(FILE* fp,
                                               t_cb* cur_cb_info,
-                                              t_rr_node* src_rr_node);
+                                              t_rr_node* src_rr_node,
+                                              bool is_explicit_mapping);
 
 void dump_verilog_connection_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
                                      FILE* fp,

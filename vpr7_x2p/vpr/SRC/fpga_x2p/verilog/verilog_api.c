@@ -277,7 +277,7 @@ void vpr_fpga_verilog(t_vpr_setup vpr_setup,
                                    num_rr_nodes, rr_node, rr_node_indices, 
                                    num_clocks,
                                    vpr_setup.FPGA_SPICE_Opts.compact_routing_hierarchy,
-								   *(Arch.spice));
+								   *(Arch.spice), vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.dump_explicit_verilog);
    
   /* Dump SDC constraints */
   /* Output SDC to contrain the P&R flow
