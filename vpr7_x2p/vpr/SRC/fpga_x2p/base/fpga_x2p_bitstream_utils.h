@@ -24,6 +24,9 @@ int count_num_reserved_conf_bits_one_spice_model(t_spice_model* cur_spice_model,
                                                  enum e_sram_orgz cur_sram_orgz_type,
                                                  int mux_size);
 
+int count_num_reserved_conf_bit_one_interc(t_interconnect* cur_interc,
+                                           enum e_sram_orgz cur_sram_orgz_type);
+
 void  
 add_mux_scff_conf_bits_to_llist(int mux_size,
                            t_sram_orgz_info* cur_sram_orgz_info, 
