@@ -945,7 +945,8 @@ int rec_dump_verilog_spice_model_global_ports(FILE* fp,
 
 /* Dump all the global ports that are stored in the linked list */
 int dump_verilog_global_ports(FILE* fp, t_llist* head,
-                               boolean dump_port_type) {
+                               boolean dump_port_type,
+                               bool is_explicit_mapping) {
   t_llist* temp = head;
   t_spice_model_port* cur_global_port = NULL;
   int dumped_port_cnt = 0;
@@ -959,6 +960,10 @@ int dump_verilog_global_ports(FILE* fp, t_llist* head,
   /* fprintf(fp, "//----- BEGIN Global ports -----\n"); */
   while(NULL != temp) {
     cur_global_port = (t_spice_model_port*)(temp->dptr); 
+    if (true == is_explicit_mapping) {
+      fprintf(fp, ".%s(", 
+              cur_global_port->prefix);
+    }
     if (TRUE == dump_port_type) {
       fprintf(fp, "%s [0:%d] %s", 
               verilog_convert_port_type_to_string(cur_global_port->type),
@@ -969,7 +974,9 @@ int dump_verilog_global_ports(FILE* fp, t_llist* head,
               cur_global_port->prefix,
               cur_global_port->size - 1); 
     }
-
+    if (true == is_explicit_mapping) {
+      fprintf(fp, ")"); 
+    }
     /* if this is the tail, we do not dump a comma */
     if (NULL != temp->next) {
      fprintf(fp, ", //---- global port \n");
@@ -1357,7 +1364,8 @@ void dump_verilog_sram_outports(FILE* fp,
 void dump_verilog_formal_verification_sram_ports(FILE* fp, 
                                                  t_sram_orgz_info* cur_sram_orgz_info,
                                                  int sram_lsb, int sram_msb,
-                                                 enum e_dump_verilog_port_type dump_port_type) {
+                                                 enum e_dump_verilog_port_type dump_port_type,
+                                                 bool is_explicit_mapping) {
   t_spice_model* mem_model = NULL;
   char* port_name = NULL;
   char* port_full_name = NULL;
@@ -1394,8 +1402,14 @@ void dump_verilog_formal_verification_sram_ports(FILE* fp,
   /*Malloc and generate the full name of port */
   port_full_name = (char*)my_malloc(sizeof(char)*(strlen(mem_model->prefix) + strlen(port_name) + 1 + 1));
   sprintf(port_full_name, "%s_%s", mem_model->prefix, port_name);
-
+  if (true == is_explicit_mapping) {
+    fprintf(fp, ".%s(", 
+            port_full_name);
+  }
   dump_verilog_generic_port(fp, dump_port_type, port_full_name, sram_lsb, sram_msb); 
+  if (true == is_explicit_mapping) {
+    fprintf(fp, ")");
+  }
 
   /* Free */
   /* Local variables such as port1_name and port2 name are automatically freed  */
@@ -1508,7 +1522,7 @@ void dump_verilog_formal_verification_sram_ports_wiring(FILE* fp,
 
   dump_verilog_formal_verification_sram_ports(fp, cur_sram_orgz_info,
                                               sram_lsb, sram_msb,
-                                              VERILOG_PORT_CONKT);
+                                              VERILOG_PORT_CONKT, false);
   fprintf(fp, ";\n");
 
   return;
@@ -1530,7 +1544,7 @@ void dump_verilog_formal_verification_mux_sram_ports_wiring(FILE* fp,
 
   dump_verilog_formal_verification_sram_ports(fp, cur_sram_orgz_info,
                                               sram_lsb, sram_msb,
-                                              VERILOG_PORT_CONKT);
+                                              VERILOG_PORT_CONKT, false);
   fprintf(fp, ";\n");
 
   return;
@@ -1540,7 +1554,8 @@ void dump_verilog_formal_verification_mux_sram_ports_wiring(FILE* fp,
 void dump_verilog_sram_local_ports(FILE* fp, 
                                    t_sram_orgz_info* cur_sram_orgz_info,
                                    int sram_lsb, int sram_msb,
-                                   enum e_dump_verilog_port_type dump_port_type) {
+                                   enum e_dump_verilog_port_type dump_port_type,
+                                   bool is_explicit_mapping) {
   /* Need to dump inverted BL/WL if needed */
   int num_blb_ports, num_wlb_ports;
   t_spice_model_port** blb_port = NULL;
@@ -1578,14 +1593,26 @@ void dump_verilog_sram_local_ports(FILE* fp,
     break;
   case SPICE_SRAM_SCAN_CHAIN:
     /* Dump the first port: SRAM_out of CMOS MUX or BL of RRAM MUX */ 
+    if (true == is_explicit_mapping) {
+      fprintf(fp, ".scff_scff_head(");
+    }
     dump_verilog_sram_one_local_outport(fp, cur_sram_orgz_info, 
                                         sram_lsb, sram_lsb, 
                                         -1, dump_port_type);
+    if (true == is_explicit_mapping) {
+      fprintf(fp, ")");
+    }
     fprintf(fp, ",\n");
     /* Dump the first port: SRAM_outb of CMOS MUX or WL of RRAM MUX */ 
+    if (true == is_explicit_mapping) {
+      fprintf(fp, ".scff_scff_tail(");
+    }
     dump_verilog_sram_one_local_outport(fp, cur_sram_orgz_info, 
                                         sram_msb, sram_msb, 
                                         0, dump_port_type);
+    if (true == is_explicit_mapping) {
+      fprintf(fp, ")");
+    }
     break;
   default:
     vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid type of SRAM organization !\n",
@@ -2582,7 +2609,7 @@ void dump_verilog_cmos_mux_config_bus_ports(FILE* fp, t_spice_model* mux_spice_m
     if (TRUE == is_explicit_mapping) {
       fprintf(fp, ")");
     }
-    fprintf(fp, ",\n");
+    fprintf(fp, ", ");
     if (TRUE == is_explicit_mapping) {
       fprintf(fp, ".sram_inv(");
     }

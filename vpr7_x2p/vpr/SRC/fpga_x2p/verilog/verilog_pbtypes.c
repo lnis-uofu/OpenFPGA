@@ -1733,7 +1733,7 @@ void dump_verilog_phy_pb_graph_node_rec(t_sram_orgz_info* cur_sram_orgz_info,
   */
   fprintf(fp, "\n");
   /* dump global ports */
-  if(0 < dump_verilog_global_ports(fp, global_ports_head, TRUE)) {
+  if(0 < dump_verilog_global_ports(fp, global_ports_head, TRUE, is_explicit_mapping)) {
     fprintf(fp, ",\n");
   }
   /* Simplify the port prefix, make SPICE netlist readable */
@@ -1772,7 +1772,7 @@ void dump_verilog_phy_pb_graph_node_rec(t_sram_orgz_info* cur_sram_orgz_info,
     dump_verilog_formal_verification_sram_ports(fp, cur_sram_orgz_info, 
                                                 stamped_sram_cnt, 
                                                 stamped_sram_cnt + num_conf_bits - 1,
-                                                VERILOG_PORT_INPUT);
+                                                VERILOG_PORT_INPUT, false);
     fprintf(fp, "\n");
     fprintf(fp, "`endif\n");
   }
@@ -1819,7 +1819,7 @@ void dump_verilog_phy_pb_graph_node_rec(t_sram_orgz_info* cur_sram_orgz_info,
       /* dump global ports */
       /* If the child node is a primitive, we only dump global ports belonging to this primitive */
       if (NULL == cur_pb_type->modes[mode_index].pb_type_children[ipb].spice_model) {
-        if (0 < dump_verilog_global_ports(fp, global_ports_head, FALSE)) {
+        if (0 < dump_verilog_global_ports(fp, global_ports_head, FALSE, is_explicit_mapping)) {
           fprintf(fp, ",\n");
         }
       } else {
@@ -1863,7 +1863,7 @@ void dump_verilog_phy_pb_graph_node_rec(t_sram_orgz_info* cur_sram_orgz_info,
         dump_verilog_sram_local_ports(fp, cur_sram_orgz_info,
                                       stamped_sram_cnt,
                                       stamped_sram_cnt + child_pb_num_conf_bits - 1,
-                                      VERILOG_PORT_CONKT);
+                                      VERILOG_PORT_CONKT, is_explicit_mapping);
       }
       /* Dump ports only visible during formal verification*/
       if (0 < child_pb_num_conf_bits) {
@@ -1873,7 +1873,7 @@ void dump_verilog_phy_pb_graph_node_rec(t_sram_orgz_info* cur_sram_orgz_info,
         dump_verilog_formal_verification_sram_ports(fp, cur_sram_orgz_info, 
                                                     stamped_sram_cnt,
                                                     stamped_sram_cnt + child_pb_num_conf_bits - 1,
-                                                    VERILOG_PORT_CONKT);
+                                                    VERILOG_PORT_CONKT, false);
         fprintf(fp, "\n");
         fprintf(fp, "`endif\n");
       }
@@ -2552,7 +2552,7 @@ void dump_verilog_physical_grid_blocks(t_sram_orgz_info* cur_sram_orgz_info,
   fprintf(fp, "module %s ( \n", gen_verilog_one_grid_module_name(ix, iy));
   fprintf(fp, "\n");
   /* dump global ports */
-  if (0 < dump_verilog_global_ports(fp, global_ports_head, TRUE)) {
+  if (0 < dump_verilog_global_ports(fp, global_ports_head, TRUE, is_explicit_mapping)) {
     fprintf(fp, ",\n");
   }
 
@@ -2596,7 +2596,8 @@ void dump_verilog_physical_grid_blocks(t_sram_orgz_info* cur_sram_orgz_info,
     dump_verilog_formal_verification_sram_ports(fp, cur_sram_orgz_info, 
                                                 cur_num_mem_bit, 
                                                 get_sram_orgz_info_num_mem_bit(cur_sram_orgz_info) - 1, 
-                                                VERILOG_PORT_INPUT);
+                                                VERILOG_PORT_INPUT,
+                                                false);
     fprintf(fp, "\n");
     fprintf(fp, "`endif\n");
   }
@@ -2624,7 +2625,7 @@ void dump_verilog_physical_grid_blocks(t_sram_orgz_info* cur_sram_orgz_info,
     fprintf(fp, " %s (", gen_verilog_one_block_instance_name(ix, iy, iz));
     fprintf(fp, "\n");
     /* dump global ports */
-    if (0 < dump_verilog_global_ports(fp, global_ports_head, FALSE)) {
+    if (0 < dump_verilog_global_ports(fp, global_ports_head, FALSE, is_explicit_mapping)) {
       fprintf(fp, ",\n");
     }
     /* Print all the pins */
@@ -2659,7 +2660,7 @@ void dump_verilog_physical_grid_blocks(t_sram_orgz_info* cur_sram_orgz_info,
       fprintf(fp, "//---- SRAM ----\n");
       dump_verilog_sram_local_ports(fp, cur_sram_orgz_info,
                                     temp_conf_bits_lsb, temp_conf_bits_msb - 1, 
-                                    VERILOG_PORT_CONKT); 
+                                    VERILOG_PORT_CONKT, is_explicit_mapping); 
     }
     /* Dump ports only visible during formal verification*/
     if (0 < (temp_conf_bits_msb - 1 - temp_conf_bits_lsb)) { 
@@ -2669,7 +2670,8 @@ void dump_verilog_physical_grid_blocks(t_sram_orgz_info* cur_sram_orgz_info,
       dump_verilog_formal_verification_sram_ports(fp, cur_sram_orgz_info, 
                                                   temp_conf_bits_lsb, 
                                                   temp_conf_bits_msb - 1, 
-                                                  VERILOG_PORT_INPUT);
+                                                  VERILOG_PORT_INPUT,
+                                                  is_explicit_mapping);
       fprintf(fp, "\n");
       fprintf(fp, "`endif\n");
     }

@@ -76,7 +76,8 @@ int rec_dump_verilog_spice_model_global_ports(FILE* fp,
                                               boolean require_explicit_port_map);
 
 int dump_verilog_global_ports(FILE* fp, t_llist* head,
-                              boolean dump_port_type);
+                              boolean dump_port_type,
+                              bool is_explicit_mapping);
 
 int dump_verilog_global_ports_explicit(FILE* fp, t_llist* head,
                                        boolean dump_port_type);
@@ -115,7 +116,8 @@ void dump_verilog_sram_outports(FILE* fp,
 void dump_verilog_formal_verification_sram_ports(FILE* fp, 
                                                  t_sram_orgz_info* cur_sram_orgz_info,
                                                  int sram_lsb, int sram_msb,
-                                                 enum e_dump_verilog_port_type dump_port_type);
+                                                 enum e_dump_verilog_port_type dump_port_type,
+                                                 bool is_explicit_mapping);
 
 void dump_verilog_sram_one_port(FILE* fp, 
                                 t_sram_orgz_info* cur_sram_orgz_info,
@@ -126,7 +128,8 @@ void dump_verilog_sram_one_port(FILE* fp,
 void dump_verilog_sram_local_ports(FILE* fp, 
                                    t_sram_orgz_info* cur_sram_orgz_info,
                                    int sram_lsb, int sram_msb,
-                                   enum e_dump_verilog_port_type dump_port_type);
+                                   enum e_dump_verilog_port_type dump_port_type,
+                                   bool is_explicit_mapping);
 
 void dump_verilog_sram_ports(FILE* fp, t_sram_orgz_info* cur_sram_orgz_info,
                              int sram_lsb, int sram_msb,

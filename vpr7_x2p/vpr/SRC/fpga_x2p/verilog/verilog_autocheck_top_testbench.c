@@ -354,6 +354,7 @@ void dump_verilog_autocheck_top_testbench(t_sram_orgz_info* cur_sram_orgz_info,
                                           t_spice verilog) {
   FILE* fp = NULL;
   char* title = my_strcat("FPGA Verilog Testbench for Top-level netlist of Design: ", circuit_name);
+  bool is_explicit_mapping = fpga_verilog_opts.dump_explicit_verilog;
   
   /* Check if the path exists*/
   fp = fopen(top_netlist_name,"w");
@@ -379,7 +380,8 @@ void dump_verilog_autocheck_top_testbench(t_sram_orgz_info* cur_sram_orgz_info,
   dump_verilog_top_auto_testbench_ports(fp, cur_sram_orgz_info, circuit_name, fpga_verilog_opts);
 
   /* Call defined top-level module */
-  dump_verilog_top_testbench_call_top_module(cur_sram_orgz_info, fp, circuit_name);
+  dump_verilog_top_testbench_call_top_module(cur_sram_orgz_info, fp, 
+                                             circuit_name, is_explicit_mapping);
 
   /* Call defined benchmark */
   dump_verilog_top_auto_testbench_call_benchmark(fp, circuit_name);
