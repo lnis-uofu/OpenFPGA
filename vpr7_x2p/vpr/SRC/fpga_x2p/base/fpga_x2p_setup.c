@@ -1310,12 +1310,19 @@ void fpga_x2p_free(t_arch* Arch) {
 /* Top-level function of FPGA-SPICE setup */
 void fpga_x2p_setup(t_vpr_setup vpr_setup,
                     t_arch* Arch) {
+  /* Timer */
+  clock_t t_start;
+  clock_t t_end;
+  float run_time_sec;
+
   int num_rename_violation = 0;
   int num_clocks = 0;
   float vpr_crit_path_delay = 0.; 
   float vpr_clock_freq = 0.; 
   float vpr_clock_period = 0.; 
 
+  /* Start time count */
+  t_start = clock();
 
   vpr_printf(TIO_MESSAGE_INFO, "\nFPGA-SPICE Tool suites Initilization begins...\n"); 
   
@@ -1464,6 +1471,13 @@ void fpga_x2p_setup(t_vpr_setup vpr_setup,
                vpr_setup.FPGA_SPICE_Opts.signal_density_weight); 
     spice_net_info_add_density_weight(vpr_setup.FPGA_SPICE_Opts.signal_density_weight);
   }
+
+  /* End time count */
+  t_end = clock();
+ 
+  run_time_sec = (float)(t_end - t_start) / CLOCKS_PER_SEC;
+  vpr_printf(TIO_MESSAGE_INFO, "FPGA X2P setup took %g seconds\n", run_time_sec);  
+
 
   return;
 }
