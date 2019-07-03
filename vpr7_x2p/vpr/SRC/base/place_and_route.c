@@ -153,6 +153,21 @@ void place_and_route(enum e_operation operation,
 		}
 		/* Other constraints can be left to rr_graph to check since this is one pass routing */
 
+        /* Xifan Tang: W estimation for tileable routing architecture */
+        /* Build the segment inf vector */
+        std::vector<t_segment_inf> segment_vec;
+        for (int iseg = 0; iseg < det_routing_arch.num_segment; ++iseg) {
+          segment_vec.push_back(segment_inf[iseg]);
+        }
+    
+        if (TRUE == router_opts.use_tileable_route_chan_width) {
+          int adapted_W = adapt_to_tileable_route_chan_width(width_fac, segment_vec); 
+          vpr_printf(TIO_MESSAGE_INFO, 
+                     "Adapt routing channel width (%d) to be tileable: %d\n", 
+                     width_fac, adapted_W);
+          width_fac = adapted_W;
+        }
+
 		/* Allocate the major routing structures. */
 
 		clb_opins_used_locally = alloc_route_structs();
