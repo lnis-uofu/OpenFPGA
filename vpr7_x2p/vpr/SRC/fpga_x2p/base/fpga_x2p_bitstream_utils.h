@@ -1,3 +1,5 @@
+#ifndef FPGA_X2P_BITSTREAM_UTILS_H
+#define FPGA_X2P_BITSTREAM_UTILS_H
 
 int determine_decoder_size(int num_addr_out);
 
@@ -81,3 +83,5 @@ void add_sram_conf_bits_to_sram_orgz_info(t_sram_orgz_info* cur_sram_orgz_info,
 
 void add_mux_conf_bits_to_sram_orgz_info(t_sram_orgz_info* cur_sram_orgz_info,
                                          t_spice_model* mux_spice_model, int mux_size) ;
+
+#endif

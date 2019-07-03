@@ -128,6 +128,7 @@ sub print_usage()
   print "      -N <int> : N-LUT/Matrix\n";
   print "      Other Options:\n";
   print "      [ General ] \n";
+  print "      \t-matlab_rpt <data_name> : .m file consists of data compatible to matlab scripts. Specify the data name to be appeared in the script\n";
   print "      \t-I <int> : Number of inputs of a CLB, mandatory when mpack1 flow is chosen\n";
   print "      \t-K <int> : K-LUT, mandatory when standard flow is chosen\n";
   print "      \t-M <int> : M-Matrix, mandatory when mpack1 flow is chosen\n";
@@ -306,6 +307,7 @@ sub opts_read()
   &read_opt_into_hash("conf","on","on");
   &read_opt_into_hash("benchmark","on","on");
   &read_opt_into_hash("rpt","on","on");
+  &read_opt_into_hash("matlab_rpt","on","off"); # Add an option to output report file compatible to matlab scripts
   &read_opt_into_hash("N","on","on");
   &read_opt_into_hash("K","on","off");
   &read_opt_into_hash("I","on","off");
@@ -1295,7 +1297,6 @@ sub run_std_vpr($ $ $ $ $ $ $ $ $)
 {
   my ($blif,$bm,$arch,$net,$place,$route,$fix_chan_width,$log,$act_file) = @_;
   my ($vpr_dir,$vpr_name) = &split_prog_path($conf_ptr->{dir_path}->{vpr_path}->{val});
-  chdir $vpr_dir;
   
   my ($power_opts);
   if ("on" eq $opt_ptr->{power}) {
@@ -1426,6 +1427,10 @@ sub run_std_vpr($ $ $ $ $ $ $ $ $)
   if ("on" eq $opt_ptr->{vpr_max_router_iteration}) {
     $other_opt .= "--max_router_iterations $opt_ptr->{vpr_max_router_iteration_val} ";
   }
+
+  chdir $vpr_dir;
+  print "Entering $vpr_dir\n";
+
   print "./$vpr_name $arch $blif --net_file $net --place_file $place --route_file $route --full_stats --nodisp $power_opts $packer_opts $chan_width_opt $vpr_spice_opts $other_opt > $log\n";
   system("./$vpr_name $arch $blif --net_file $net --place_file $place --route_file $route --full_stats --nodisp $power_opts $packer_opts $chan_width_opt $vpr_spice_opts $other_opt > $log");
 
@@ -1454,7 +1459,6 @@ sub run_vpr_route($ $ $ $ $ $ $ $ $)
 {
   my ($blif,$bm,$arch,$net,$place,$route,$fix_chan_width,$log,$act_file) = @_;
   my ($vpr_dir,$vpr_name) = &split_prog_path($conf_ptr->{dir_path}->{vpr_path}->{val});
-  chdir $vpr_dir;
 
   my ($power_opts);
   if ("on" eq $opt_ptr->{power}) {
@@ -1508,7 +1512,12 @@ sub run_vpr_route($ $ $ $ $ $ $ $ $)
     $other_opt .= "--router_algorithm breadth_first ";
   }
 
+  chdir $vpr_dir;
+  print "Entering $vpr_dir\n";
+
+  print "./$vpr_name $arch $blif --route --blif_file $blif --net_file $net --place_file $place --route_file $route --full_stats --nodisp $power_opts $chan_width_opt $vpr_spice_opts $other_opt > $log\n";
   system("./$vpr_name $arch $blif --route --blif_file $blif --net_file $net --place_file $place --route_file $route --full_stats --nodisp $power_opts $chan_width_opt $vpr_spice_opts $other_opt > $log");
+  print "\n";
 
   chdir $cwd;
 }
@@ -2975,6 +2984,14 @@ sub gen_csv_rpt_vtr_flow($ $)
   my @keywords;
   my ($K_val,$N_val) = ($opt_ptr->{K_val},$opt_ptr->{N_val});
 
+  # adapt to matlab format if the option is enabled 
+  if ("on" eq $opt_ptr->{matlab_rpt}) {
+    # Print the data name 
+    print $CSVFH "$opt_ptr->{matlab_rpt_val} = [\n";
+    # We will set the stats line to be commented 
+    print $CSVFH "%";
+  }
+
   # Print out Standard Stats First
   print $CSVFH "$tag"; 
   print $CSVFH ",LUTs";
@@ -3003,7 +3020,14 @@ sub gen_csv_rpt_vtr_flow($ $)
   # Check log/stats one by one
   foreach $tmp(@benchmark_names) {
     $tmp =~ s/\.v$//g;     
-    print $CSVFH "$tmp";
+
+    # For matlab script, we use {} for string 
+    if ("on" eq $opt_ptr->{matlab_rpt}) {
+      print $CSVFH "{'$tmp'}"; 
+    } else {
+      print $CSVFH "$tmp";
+    }
+
     print $CSVFH ",$rpt_h{$tag}->{$tmp}->{$N_val}->{$K_val}->{LUTs}";
     if ("on" eq $opt_ptr->{min_route_chan_width}) {
       print $CSVFH ",$rpt_h{$tag}->{$tmp}->{$N_val}->{$K_val}->{min_route_chan_width}";
@@ -3031,7 +3055,17 @@ sub gen_csv_rpt_vtr_flow($ $)
       print $CSVFH ",$rpt_ptr->{$tag}->{$tmp}->{$N_val}->{$K_val}->{power}->{dynamic}";
       print $CSVFH ",$rpt_ptr->{$tag}->{$tmp}->{$N_val}->{$K_val}->{power}->{leakage}";
     }
-    print $CSVFH "\n";
+    # For matlab script, we end with a semicolumn to be compatiable to matlab
+    if ("on" eq $opt_ptr->{matlab_rpt}) {
+      print $CSVFH ";\n";
+    } else {
+      print $CSVFH "\n";
+    }
+  }
+
+  # For matlab script, we end with ];
+  if ("on" eq $opt_ptr->{matlab_rpt}) {
+    print $CSVFH "];\n";
   }
 }
 
@@ -3041,6 +3075,14 @@ sub gen_csv_rpt_yosys_vpr_flow($ $)
   my ($tmp,$ikw,$tmpkw);
   my @keywords;
   my ($K_val,$N_val) = ($opt_ptr->{K_val},$opt_ptr->{N_val});
+ 
+  # adapt to matlab format if the option is enabled 
+  if ("on" eq $opt_ptr->{matlab_rpt}) {
+    # Print the data name 
+    print $CSVFH "$opt_ptr->{matlab_rpt_val} = [\n";
+    # We will set the stats line to be commented 
+    print $CSVFH "%";
+  }
 
   # Print out Standard Stats First
   print $CSVFH "$tag"; 
@@ -3071,7 +3113,14 @@ sub gen_csv_rpt_yosys_vpr_flow($ $)
   foreach $tmp(@benchmark_names) {
     my @tokens = split('/', $tmp);
     $tmp = $tokens[0];
-    print $CSVFH "$tmp";
+
+    # For matlab script, we use {} for string 
+    if ("on" eq $opt_ptr->{matlab_rpt}) {
+      print $CSVFH "{'$tmp'}"; 
+    } else {
+      print $CSVFH "$tmp";
+    }
+
     print $CSVFH ",$rpt_h{$tag}->{$tmp}->{$N_val}->{$K_val}->{LUTs}";
     if ("on" eq $opt_ptr->{min_route_chan_width}) {
       print $CSVFH ",$rpt_h{$tag}->{$tmp}->{$N_val}->{$K_val}->{min_route_chan_width}";
@@ -3099,7 +3148,17 @@ sub gen_csv_rpt_yosys_vpr_flow($ $)
       print $CSVFH ",$rpt_ptr->{$tag}->{$tmp}->{$N_val}->{$K_val}->{power}->{dynamic}";
       print $CSVFH ",$rpt_ptr->{$tag}->{$tmp}->{$N_val}->{$K_val}->{power}->{leakage}";
     }
-    print $CSVFH "\n";
+    # For matlab script, we end with a semicolumn to be compatiable to matlab
+    if ("on" eq $opt_ptr->{matlab_rpt}) {
+      print $CSVFH ";\n";
+    } else {
+      print $CSVFH "\n";
+    }
+  }
+
+  # For matlab script, we end with ];
+  if ("on" eq $opt_ptr->{matlab_rpt}) {
+    print $CSVFH "];\n";
   }
 }
 
@@ -3109,6 +3168,14 @@ sub gen_csv_rpt_standard_flow($ $)
   my ($tmp,$ikw,$tmpkw);
   my @keywords;
   my ($K_val,$N_val) = ($opt_ptr->{K_val},$opt_ptr->{N_val});
+ 
+  # adapt to matlab format if the option is enabled 
+  if ("on" eq $opt_ptr->{matlab_rpt}) {
+    # Print the data name 
+    print $CSVFH "$opt_ptr->{matlab_rpt_val} = [\n";
+    # We will set the stats line to be commented 
+    print $CSVFH "%";
+  }
 
   # Print out Standard Stats First
   print $CSVFH "$tag"; 
@@ -3138,7 +3205,13 @@ sub gen_csv_rpt_standard_flow($ $)
   # Check log/stats one by one
   foreach $tmp(@benchmark_names) {
     $tmp =~ s/\.blif$//g;     
-    print $CSVFH "$tmp";
+    # For matlab script, we use {} for string 
+    if ("on" eq $opt_ptr->{matlab_rpt}) {
+      print $CSVFH "{'$tmp'}"; 
+    } else {
+      print $CSVFH "$tmp";
+    }
+
     print $CSVFH ",$rpt_h{$tag}->{$tmp}->{$N_val}->{$K_val}->{LUTs}";
     if ("on" eq $opt_ptr->{min_route_chan_width}) {
       print $CSVFH ",$rpt_h{$tag}->{$tmp}->{$N_val}->{$K_val}->{min_route_chan_width}";
@@ -3170,7 +3243,18 @@ sub gen_csv_rpt_standard_flow($ $)
       print $CSVFH ",$rpt_ptr->{$tag}->{$tmp}->{$N_val}->{$K_val}->{power}->{dynamic}";
       print $CSVFH ",$rpt_ptr->{$tag}->{$tmp}->{$N_val}->{$K_val}->{power}->{leakage}";
     }
-    print $CSVFH "\n";
+
+    # For matlab script, we end with a semicolumn to be compatiable to matlab
+    if ("on" eq $opt_ptr->{matlab_rpt}) {
+      print $CSVFH ";\n";
+    } else {
+      print $CSVFH "\n";
+    }
+  }
+
+  # For matlab script, we end with ];
+  if ("on" eq $opt_ptr->{matlab_rpt}) {
+    print $CSVFH "];\n";
   }
 }
 
@@ -3180,6 +3264,14 @@ sub gen_csv_rpt_mpack2_flow($ $)
   my ($tmp,$ikw,$tmpkw);
   my @keywords;
   my ($K_val,$N_val) = ($opt_ptr->{K_val},$opt_ptr->{N_val});
+
+  # adapt to matlab format if the option is enabled 
+  if ("on" eq $opt_ptr->{matlab_rpt}) {
+    # Print the data name 
+    print $CSVFH "$opt_ptr->{matlab_rpt_val} = [\n";
+    # We will set the stats line to be commented 
+    print $CSVFH "%";
+  }
 
   # Print out Mpack stats Second
   print $CSVFH "$tag"; 
@@ -3214,7 +3306,13 @@ sub gen_csv_rpt_mpack2_flow($ $)
   # Check log/stats one by one
   foreach $tmp(@benchmark_names) {
     $tmp =~ s/\.blif$//g;     
-    print $CSVFH "$tmp";
+    # For matlab script, we use {} for string 
+    if ("on" eq $opt_ptr->{matlab_rpt}) {
+      print $CSVFH "{'$tmp'}"; 
+    } else {
+      print $CSVFH "$tmp";
+    }
+
     if ("on" eq $opt_ptr->{min_route_chan_width}) {
       print $CSVFH ",$rpt_h{$tag}->{$tmp}->{$N_val}->{$K_val}->{min_route_chan_width}";
       print $CSVFH ",$rpt_h{$tag}->{$tmp}->{$N_val}->{$K_val}->{fix_route_chan_width}";
@@ -3247,7 +3345,17 @@ sub gen_csv_rpt_mpack2_flow($ $)
       print $CSVFH ",$rpt_ptr->{$tag}->{$tmp}->{$N_val}->{$K_val}->{power}->{dynamic}";
       print $CSVFH ",$rpt_ptr->{$tag}->{$tmp}->{$N_val}->{$K_val}->{power}->{leakage}";
     }
-    print $CSVFH "\n";
+    # For matlab script, we end with a semicolumn to be compatiable to matlab
+    if ("on" eq $opt_ptr->{matlab_rpt}) {
+      print $CSVFH ";\n";
+    } else {
+      print $CSVFH "\n";
+    }
+  }
+
+  # For matlab script, we end with ];
+  if ("on" eq $opt_ptr->{matlab_rpt}) {
+    print $CSVFH "];\n";
   }
 }
 
@@ -3257,6 +3365,14 @@ sub gen_csv_rpt_mpack1_flow($ $)
   my ($tmp,$ikw,$tmpkw);
   my @keywords;
   my ($N_val,$M_val) = ($opt_ptr->{N_val},$opt_ptr->{M_val});
+
+  # adapt to matlab format if the option is enabled 
+  if ("on" eq $opt_ptr->{matlab_rpt}) {
+    # Print the data name 
+    print $CSVFH "$opt_ptr->{matlab_rpt_val} = [\n";
+    # We will set the stats line to be commented 
+    print $CSVFH "%";
+  }
 
   # Print out Mpack stats Second
   print $CSVFH "$tag"; 
@@ -3281,7 +3397,13 @@ sub gen_csv_rpt_mpack1_flow($ $)
   # Check log/stats one by one
   foreach $tmp(@benchmark_names) {
     $tmp =~ s/\.blif$//g;     
-    print $CSVFH "$tmp";
+    # For matlab script, we use {} for string 
+    if ("on" eq $opt_ptr->{matlab_rpt}) {
+      print $CSVFH "{'$tmp'}"; 
+    } else {
+      print $CSVFH "$tmp";
+    }
+
     #foreach $tmpkw(@keywords) {
     print $CSVFH ",$rpt_ptr->{$tag}->{$tmp}->{$N_val}->{$M_val}->{MATRIX}";
     @keywords = split /\|/,$conf_ptr->{csv_tags}->{mpack_tags}->{val};
@@ -3306,7 +3428,17 @@ sub gen_csv_rpt_mpack1_flow($ $)
     print $CSVFH ",$rpt_ptr->{$tag}->{$tmp}->{$N_val}->{$M_val}->{power}->{total}";
     print $CSVFH ",$rpt_ptr->{$tag}->{$tmp}->{$N_val}->{$M_val}->{power}->{dynamic}";
     print $CSVFH ",$rpt_ptr->{$tag}->{$tmp}->{$N_val}->{$M_val}->{power}->{leakage}";
-    print $CSVFH "\n";
+    # For matlab script, we end with a semicolumn to be compatiable to matlab
+    if ("on" eq $opt_ptr->{matlab_rpt}) {
+      print $CSVFH ";\n";
+    } else {
+      print $CSVFH "\n";
+    }
+  }
+
+  # For matlab script, we end with ];
+  if ("on" eq $opt_ptr->{matlab_rpt}) {
+    print $CSVFH "];\n";
   }
 }
 

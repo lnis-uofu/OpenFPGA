@@ -1,6 +1,8 @@
 #ifndef FPGA_X2P_PBTYPES_UTILS_H
 #define FPGA_X2P_PBTYPES_UTILS_H
 
+#include "fpga_x2p_bitstream_utils.h"
+
 void check_pb_graph_edge(t_pb_graph_edge pb_graph_edge);
 
 void check_pb_graph_pin_edges(t_pb_graph_pin pb_graph_pin);
@@ -73,9 +75,6 @@ void mark_one_pb_parasitic_nets(t_phy_pb* cur_pb);
 
 int count_num_conf_bit_one_interc(t_interconnect* cur_interc,
                                   enum e_sram_orgz cur_sram_orgz_type);
-
-int count_num_reserved_conf_bit_one_interc(t_interconnect* cur_interc,
-                                           enum e_sram_orgz cur_sram_orgz_type);
 
 int count_num_conf_bits_pb_type_mode_interc(t_mode* cur_pb_type_mode,
                                             enum e_sram_orgz cur_sram_orgz_type);
