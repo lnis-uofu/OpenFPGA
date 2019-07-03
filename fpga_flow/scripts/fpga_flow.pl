@@ -155,6 +155,7 @@ sub print_usage()
   print "      \t-vpr_place_clb_pin_remap: turn on place_clb_pin_remap in VPR.\n";
   print "      \t-vpr_max_router_iteration <int> : specify the max router iteration in VPR.\n";
   print "      \t-vpr_route_breadthfirst : use the breadth-first routing algorithm of VPR.\n";
+  print "      \t-vpr_use_tileable_route_chan_width: turn on the conversion to tileable_route_chan_width in VPR.\n";
   print "      \t-min_route_chan_width <float> : turn on routing with <float>* min_route_chan_width.\n";
   print "      \t-fix_route_chan_width : turn on routing with a fixed route_chan_width, defined in benchmark configuration file.\n";
   print "      [ VPR - FPGA-X2P Extension ] \n";
@@ -322,6 +323,7 @@ sub opts_read()
   &read_opt_into_hash("ace_d","on","off");
   &read_opt_into_hash("vpr_timing_pack_off","off","off");
   &read_opt_into_hash("vpr_route_breadthfirst","off","off");
+  &read_opt_into_hash("vpr_use_tileable_route_chan_width","off","off");
   &read_opt_into_hash("min_route_chan_width","on","off");
   &read_opt_into_hash("fix_route_chan_width","off","off");
   &read_opt_into_hash("vpr_max_router_iteration","on","off");
@@ -1312,6 +1314,9 @@ sub run_std_vpr($ $ $ $ $ $ $ $ $)
   my ($chan_width_opt) = ("");
   if (($fix_chan_width > 0)||($fix_chan_width == 0)) {
     $chan_width_opt = "-route_chan_width $fix_chan_width";
+  }
+  if ("on" eq $opt_ptr->{vpr_use_tileable_route_chan_width}) {
+    $chan_width_opt = $chan_width_opt." --use_tileable_route_chan_width";
   }
 
   # FPGA SPICE options

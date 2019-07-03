@@ -628,6 +628,13 @@ static void SetupRouterOpts(INP t_options Options, INP boolean TimingEnabled,
     } 
     /* END */
 
+    /* Xifan Tang: Tileable routing support !!! */
+    RouterOpts->use_tileable_route_chan_width = FALSE;
+    if (Options.Count[OT_USE_TILEABLE_ROUTE_CHAN_WIDTH]) {
+      RouterOpts->use_tileable_route_chan_width = TRUE;
+    }
+    /* END */
+
 	/* Depends on RouterOpts->router_algorithm */
 	RouterOpts->initial_pres_fac = 0.5; /* DEFAULT */
 	if (NO_TIMING == RouterOpts->router_algorithm || Options.Count[OT_FAST]) {

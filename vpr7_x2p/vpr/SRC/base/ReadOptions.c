@@ -474,6 +474,10 @@ ProcessOption(INP char **Args, INOUTP t_options * Options) {
 	case OT_CMOS_TECH_BEHAVIOR_FILE:
 		return ReadString(Args, &Options->CmosTechFile);
 
+    /* Xifan Tang: Tileable routing support !!! */
+	case OT_USE_TILEABLE_ROUTE_CHAN_WIDTH:
+		return Args;
+
     /* Xifan Tang: FPGA X2P Options*/
     case OT_FPGA_X2P_RENAME_ILLEGAL_PORT:
       return Args;
