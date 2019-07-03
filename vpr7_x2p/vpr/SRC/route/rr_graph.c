@@ -17,6 +17,7 @@
 #include "ReadOptions.h"
 
 #include "tileable_rr_graph_builder.h"
+#include "rr_graph_builder_utils.h"
 
 /* Xifan TANG: SWSEG SUPPORT */
 #include "rr_graph_swseg.h" 
@@ -211,7 +212,8 @@ void build_rr_graph(INP t_graph_type graph_type, INP int L_num_types,
 		INP t_type_ptr types, INP int L_nx, INP int L_ny,
 		INP struct s_grid_tile **L_grid, INP int chan_width,
 		INP struct s_chan_width_dist *chan_capacity_inf,
-		INP enum e_switch_block_type sb_type, INP int Fs, INP int num_seg_types,
+		INP enum e_switch_block_type sb_type, INP int Fs,
+		INP enum e_switch_block_type sb_sub_type, INP int sub_Fs, INP int num_seg_types,
 		INP int num_switches, INP t_segment_inf * segment_inf,
 		INP int global_route_switch, INP int delayless_switch,
 		INP t_timing_inf timing_inf, INP int wire_to_ipin_switch,
@@ -225,7 +227,9 @@ void build_rr_graph(INP t_graph_type graph_type, INP int L_num_types,
     build_tileable_unidir_rr_graph(L_num_types, types,
                                    L_nx, L_ny, L_grid, 
                                    chan_width,
-                                   sb_type, Fs, num_seg_types, segment_inf,
+                                   sb_type, Fs, 
+                                   sb_sub_type, sub_Fs, 
+                                   num_seg_types, segment_inf,
                                    num_switches, delayless_switch,
                                    timing_inf, wire_to_ipin_switch,
                                    base_cost_type, directs, num_directs, ignore_Fc_0, Warnings); 
@@ -241,6 +245,9 @@ void build_rr_graph(INP t_graph_type graph_type, INP int L_num_types,
                            opin_to_cb_fast_edges, opin_logic_eq_edges); 
    
   }
+
+  /* Print statistics of RR graph */
+  print_rr_graph_stats();
 
   return;
 }

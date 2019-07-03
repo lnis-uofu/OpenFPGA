@@ -90,7 +90,7 @@ sub findPath(){
 		} else {
 			$path = "$path"."/"."$folders[$count]";
 			if($folders[$count] eq $folder_top){
-				print "$path\n";
+				#print "$path\n";
 				return $path;
 			}
 		}
@@ -135,4 +135,4 @@ sub main()
 }
  
 &main();
-exit(1);
+exit(0);
