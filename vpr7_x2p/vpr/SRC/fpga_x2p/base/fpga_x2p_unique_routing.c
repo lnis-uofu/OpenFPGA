@@ -1319,6 +1319,14 @@ DeviceRRGSB build_device_rr_gsb(boolean output_sb_xml, char* sb_xml_dir,
                                 int LL_num_rr_nodes, t_rr_node* LL_rr_node, 
                                 t_ivec*** LL_rr_node_indices, int num_segments,
                                 t_rr_indexed_data* LL_rr_indexed_data) {
+  /* Timer */
+  clock_t t_start;
+  clock_t t_end;
+  float run_time_sec;
+
+  /* Start time count */
+  t_start = clock();
+
   /* Create an object */
   DeviceRRGSB LL_device_rr_gsb;
 
@@ -1393,6 +1401,12 @@ DeviceRRGSB build_device_rr_gsb(boolean output_sb_xml, char* sb_xml_dir,
                  (nx + 1) * (ny + 1) );
     }
   }
+
+  /* End time count */
+  t_end = clock();
+ 
+  run_time_sec = (float)(t_end - t_start) / CLOCKS_PER_SEC;
+  vpr_printf(TIO_MESSAGE_INFO, "Routing architecture uniqifying took %g seconds\n", run_time_sec);  
 
   return LL_device_rr_gsb;
 }
