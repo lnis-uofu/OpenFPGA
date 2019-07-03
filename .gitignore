@@ -32,3 +32,7 @@ vpr7_x2p/vpr/vpr
 vpr7_x2p/printhandler/printhandlerdemo
 vpr7_x2p/libarchfpga/read_arch
 vpr7_x2p/pcre/pcredemo
+
+# Some local temporary files
+.vscode
+*_local.bat
