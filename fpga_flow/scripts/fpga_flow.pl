@@ -15,21 +15,21 @@ use threads;
 use threads::shared;
 
 # Date
-my $mydate = gmctime(); 
+my $mydate = gmctime();
 # Current Path
 my $cwd = getcwd();
 
 # Global Variants
 my ($max_route_width_retry) = (1000);
 # input Option Hash
-my %opt_h; 
+my %opt_h;
 my $opt_ptr = \%opt_h;
 # configurate file hash
 my %conf_h;
 my $conf_ptr = \%conf_h;
 # reports has
 my %rpt_h;
-my $rpt_ptr = \%rpt_h; 
+my $rpt_ptr = \%rpt_h;
 
 # Benchmarks
 my @benchmark_names;
@@ -38,7 +38,7 @@ my $benchmarks_ptr = \%benchmarks;
 my $verilog_benchmark;
 
 # Supported flows
-my @supported_flows = ("standard", 
+my @supported_flows = ("standard",
                        "vtr_mccl",
                        "mccl",
                        "mig_mccl",
@@ -97,17 +97,17 @@ sub tab_print($ $ $)
 {
   my ($FILE,$str,$num_tab) = @_;
   my ($my_tab) = ("    ");
-  
+
   for (my $i = 0; $i < $num_tab; $i++) {
     print $FILE "$my_tab";
   }
-  print $FILE "$str"; 
+  print $FILE "$str";
 }
 
 # Create paths if it does not exist.
 sub generate_path($)
 {
-  my ($mypath) = @_; 
+  my ($mypath) = @_;
   if (!(-e "$mypath"))
   {
     mkpath "$mypath";
@@ -123,7 +123,7 @@ sub print_usage()
   print "      fpga_flow [-options <value>]\n";
   print "      Mandatory options: \n";
   print "      -conf <file> : specify the basic configuration files for fpga_flow\n";
-  print "      -benchmark <file> : the configuration file contains benchmark file names\n"; 
+  print "      -benchmark <file> : the configuration file contains benchmark file names\n";
   print "      -rpt <file> : CSV file consists of data\n";
   print "      -N <int> : N-LUT/Matrix\n";
   print "      Other Options:\n";
@@ -171,6 +171,7 @@ sub print_usage()
   print "      \t-vpr_fpga_spice_leakage_only : turn on leakage_only mode in VPR FPGA SPICE\n";
   print "      \t-vpr_fpga_spice_parasitic_net_estimation_off : turn off parasitic_net_estimation in VPR FPGA SPICE\n";
   print "      \t-vpr_fpga_spice_testbench_load_extraction_off : turn off testbench_load_extraction in VPR FPGA SPICE\n";
+  print "      \t-vpr_fpga_spice_simulator_path <string> : Specify simulator path\n";
   print "      [ VPR - FPGA-Verilog Extension ] \n";
   print "      \t-vpr_fpga_verilog : turn on Verilog Generator of VPR FPGA SPICE\n";
   print "      \t-vpr_fpga_verilog_dir <verilog_path>: provide the path where generated verilog files will be written\n";
@@ -192,7 +193,7 @@ sub print_usage()
   exit(1);
   return 1;
 }
- 
+
 sub spot_option($ $)
 {
   my ($start,$target) = @_;
@@ -204,7 +205,7 @@ sub spot_option($ $)
       if ("found" eq $flag)
       {
         print "Error: Repeated Arguments!(IndexA: $arg_no,IndexB: $iarg)\n";
-        &print_usage();        
+        &print_usage();
       }
       else
       {
@@ -215,7 +216,7 @@ sub spot_option($ $)
   }
   # return the arg_no if target is found
   # or return -1 when target is missing
-  return $arg_no; 
+  return $arg_no;
 }
 
 # Specify in the input list,
@@ -235,14 +236,14 @@ sub read_opt_into_hash($ $ $)
     {
       if ($ARGV[$argfd+1] =~ m/^-/)
       {
-        print "The next argument cannot start with '-'!\n"; 
+        print "The next argument cannot start with '-'!\n";
         print "it implies an option!\n";
       }
       else
       {
         $opt_ptr->{"$opt_name\_val"} = $ARGV[$argfd+1];
         $opt_ptr->{"$opt_name"} = "on";
-      }     
+      }
     }
     else
     {
@@ -268,7 +269,7 @@ sub read_opt_into_hash($ $ $)
         print "Mandatory option: $opt_fact is missing!\n";
         &print_usage();
       }
-    }  
+    }
   }
   return 0;
 }
@@ -289,12 +290,12 @@ sub opts_read()
   print "Analyzing your options...\n";
   # Read the options with internal options
   my $argfd;
-  # Check help fist 
+  # Check help fist
   $argfd = &spot_option($cur_arg,"-help");
   if (-1 != $argfd) {
     print "Help desk:\n";
     &print_usage();
-  }  
+  }
   # Then Check the debug with highest priority
   $argfd = &spot_option($cur_arg,"-debug");
   if (-1 != $argfd) {
@@ -330,8 +331,8 @@ sub opts_read()
   &read_opt_into_hash("multi_task","on","off");
   &read_opt_into_hash("multi_thread","on","off");
   &read_opt_into_hash("parse_results_only","off","off");
- 
-  # VTR/VTR_MCCL/VTR_MIG_MCCL flow options 
+
+  # VTR/VTR_MCCL/VTR_MIG_MCCL flow options
   # Read Opt into Hash(opt_ptr) : "opt_name","with_val","mandatory"
   &read_opt_into_hash("min_hard_adder_size","on","off");
   &read_opt_into_hash("mem_size","on","off");
@@ -350,6 +351,7 @@ sub opts_read()
   &read_opt_into_hash("vpr_fpga_spice_leakage_only","off","off");
   &read_opt_into_hash("vpr_fpga_spice_parasitic_net_estimation_off","off","off");
   &read_opt_into_hash("vpr_fpga_spice_testbench_load_extraction_off","off","off");
+  &read_opt_into_hash("vpr_fpga_spice_simulator_path","on","off");
 
   # FPGA-Verilog options
   # Read Opt into Hash(opt_ptr) : "opt_name","with_val","mandatory"
@@ -373,16 +375,16 @@ sub opts_read()
   # Regression test option
   &read_opt_into_hash("end_flow_with_test","off","off");
 
-  &print_opts(); 
+  &print_opts();
 
   return 0;
 }
-  
+
 # List the options
 sub print_opts()
 {
-  print "List your options\n"; 
-  
+  print "List your options\n";
+
   while(my ($key,$value) = each(%opt_h))
   {print "$key : $value\n";}
 
@@ -410,8 +412,8 @@ sub read_line($ $)
   {
     $chars[0] =~ s/^(\s+)//g;
     $chars[0] =~ s/(\s+)$//g;
-  }  
-  return $chars[0];    
+  }
+  return $chars[0];
 }
 
 # Check each keywords has been defined in configuration file
@@ -449,10 +451,10 @@ sub read_conf()
   while(defined($line = <CONF>))
   {
     chomp $line;
-    $post_line = &read_line($line,"#"); 
+    $post_line = &read_line($line,"#");
     if (defined($post_line))
     {
-       if ($post_line =~ m/\[(\w+)\]/) 
+       if ($post_line =~ m/\[(\w+)\]/)
        {$cur = $1;}
        elsif ("unknown" eq $cur)
        {
@@ -462,13 +464,13 @@ sub read_conf()
        {
          $post_line =~ s/\s//g;
          @equation = split /=/,$post_line;
-         $conf_ptr->{$cur}->{$equation[0]}->{val} = $equation[1];   
+         $conf_ptr->{$cur}->{$equation[0]}->{val} = $equation[1];
        }
     }
   }
   # Check these key words
   print "Read complete!\n";
-  &check_keywords_conf(); 
+  &check_keywords_conf();
   print "Checking these keywords...";
   print "Successfully\n";
   close(CONF);
@@ -489,17 +491,17 @@ sub read_benchmarks()
     if (defined($post_line)) {
       $post_line =~ s/\s+//g;
       my @tokens = split(",",$post_line);
-      # first is the benchmark name, 
+      # first is the benchmark name,
       #the second is the channel width, if applicable
       if ($tokens[0]) {
-        $benchmark_names[$cur] = $tokens[0];       
+        $benchmark_names[$cur] = $tokens[0];
       } else {
         die "ERROR: invalid definition for benchmarks!\n";
-      }    
+      }
       $benchmarks_ptr->{"$benchmark_names[$cur]"}->{fix_route_chan_width} = $tokens[1];
       $cur++;
-    } 
-  }  
+    }
+  }
   print "Benchmarks(total $cur):\n";
   foreach my $temp(@benchmark_names)
   {print "$temp\n";}
@@ -510,19 +512,19 @@ sub read_benchmarks()
 # Input program path is like "~/program_dir/program_name"
 # We split it from the scalar
 sub split_prog_path($)
-{ 
+{
   my ($prog_path) = @_;
   my @path_elements = split /\//,$prog_path;
   my ($prog_dir,$prog_name);
- 
-  $prog_name = $path_elements[$#path_elements]; 
+
+  $prog_name = $path_elements[$#path_elements];
   $prog_dir = $prog_path;
   $prog_dir =~ s/$prog_name$//g;
-    
+
   return ($prog_dir,$prog_name);
 }
 
-sub check_blif_type($) 
+sub check_blif_type($)
 {
   my ($blif) = @_;
   my ($line);
@@ -541,7 +543,7 @@ sub check_blif_type($)
 # Check Options
 sub check_opts() {
   # Task 1: min_chan_width <float> > 1
-  if (("on" eq $opt_ptr->{min_route_chan_width}) 
+  if (("on" eq $opt_ptr->{min_route_chan_width})
      &&(1. > $opt_ptr->{min_route_chan_width_val})) {
     die "ERROR: Invalid -min_chan_width, should be at least 1.0!\n";
   }
@@ -581,7 +583,7 @@ sub run_abc_libmap($ $ $)
   my ($bm,$blif_out,$log) = @_;
   # Get ABC path
   my ($abc_dir,$abc_name) = &split_prog_path($conf_ptr->{dir_path}->{abc_path}->{val});
-  
+
   chdir $abc_dir;
   my ($mpack1_stdlib) = ($conf_ptr->{flow_conf}->{mpack1_abc_stdlib}->{val});
   # Run MPACK ABC
@@ -622,7 +624,7 @@ sub run_rewrite_verilog($ $ $ $ $) {
 
   close($YOSYS_CMD_FH);
   #
-  # Create a local copy for the commands 
+  # Create a local copy for the commands
 
   system("./$yosys_name $cmd_log > $log");
 
@@ -636,7 +638,7 @@ sub run_rewrite_verilog($ $ $ $ $) {
   return ($new_verilog);
 }
 
-# Run yosys synthesis with ABC LUT mapping 
+# Run yosys synthesis with ABC LUT mapping
 sub run_yosys_fpgamap($ $ $ $) {
   my ($bm, $bm_path, $blif_out, $log) = @_;
   my ($cmd_log) = ($log);
@@ -687,7 +689,7 @@ sub run_yosys_fpgamap($ $ $ $) {
 
   close($YOSYS_CMD_FH);
   #
-  # Create a local copy for the commands 
+  # Create a local copy for the commands
 
   system("./$yosys_name $cmd_log > $log");
 
@@ -700,7 +702,7 @@ sub run_yosys_fpgamap($ $ $ $) {
 }
 
 # Run ABC by FPGA-oriented synthesis
-sub run_abc_fpgamap($ $ $) 
+sub run_abc_fpgamap($ $ $)
 {
   my ($bm,$blif_out,$log) = @_;
   my ($cmd_log) = ($log."cmd");
@@ -735,7 +737,7 @@ sub run_abc_fpgamap($ $ $)
 
   close($ABC_CMD_FH);
   #
-  # Create a local copy for the commands 
+  # Create a local copy for the commands
 
   system("./$abc_name -F $cmd_log > $log");
 
@@ -786,7 +788,7 @@ sub run_abc_bb_fpgamap($ $ $) {
 }
 
 # Run ABC Carry-chain premapping by FPGA-oriented synthesis
-sub run_abc_mccl_fpgamap($ $ $) 
+sub run_abc_mccl_fpgamap($ $ $)
 {
   my ($bm,$blif_out,$log) = @_;
   # Get ABC path
@@ -802,7 +804,7 @@ sub run_abc_mccl_fpgamap($ $ $)
   #my ($fpga_synthesis_method) = ("fpga");
 
   # Name the intermediate file
-  my ($fadds_blif, $interm_blif) = ($blif_out, $blif_out); 
+  my ($fadds_blif, $interm_blif) = ($blif_out, $blif_out);
   $fadds_blif =~ s/\.blif$/_fadds.blif/;
   $interm_blif =~ s/\.blif$/_interm.blif/;
 
@@ -825,7 +827,7 @@ sub run_abc_mccl_fpgamap($ $ $)
 
   chdir $abc_bb_dir;
   print "INFO: entering abc_with_bb_support directory: $abc_bb_dir \n";
-  # 3rd time: run abc_with_bb_support: read the pre-processed blif and do cleanup and recover  
+  # 3rd time: run abc_with_bb_support: read the pre-processed blif and do cleanup and recover
   system("./$abc_bb_name -c \"read $interm_blif; $abc_seq_optimize sweep; write_hie $interm_blif $blif_out; quit;\" > $log");
 
   if (!(-e $blif_out)) {
@@ -836,7 +838,7 @@ sub run_abc_mccl_fpgamap($ $ $)
 }
 
 # Run ABC MIG Carry-chain premapping by FPGA-oriented synthesis
-sub run_abc_mig_mccl_fpgamap($ $ $) 
+sub run_abc_mig_mccl_fpgamap($ $ $)
 {
   my ($bm,$blif_out,$log) = @_;
   # Get ABC path
@@ -853,7 +855,7 @@ sub run_abc_mig_mccl_fpgamap($ $ $)
   #my ($fpga_synthesis_method) = ("fpga");
 
   # Name the intermediate file
-  my ($fadds_blif, $interm_blif) = ($bm, $bm); 
+  my ($fadds_blif, $interm_blif) = ($bm, $bm);
   $fadds_blif =~ s/\.blif$/_fadds.blif/;
   $interm_blif =~ s/\.blif$/_interm.blif/;
 
@@ -877,7 +879,7 @@ sub run_abc_mig_mccl_fpgamap($ $ $)
 
   chdir $abc_bb_dir;
   print "INFO: entering abc_with_bb_support directory: $abc_bb_dir \n";
-  # 3rd time: run abc_with_bb_support: read the pre-processed blif and do cleanup and recover  
+  # 3rd time: run abc_with_bb_support: read the pre-processed blif and do cleanup and recover
   system("./$abc_bb_name -c \"read $interm_blif; $abc_seq_optimize sweep; write_hie $interm_blif $blif_out; quit;\" > $log");
 
   if (!(-e $blif_out)) {
@@ -887,7 +889,7 @@ sub run_abc_mig_mccl_fpgamap($ $ $)
   chdir $cwd;
 }
 
-sub run_mpack1p5($ $ $ $ $) 
+sub run_mpack1p5($ $ $ $ $)
 {
   my ($blif_in,$blif_prefix,$matrix_size,$cell_size,$log) = @_;
   # Get MPACK path
@@ -896,10 +898,10 @@ sub run_mpack1p5($ $ $ $ $)
   # Run MPACK
   system("./$mpack1_name $blif_in $blif_prefix -matrix_depth $matrix_size -matrix_width $matrix_size -cell_size $cell_size > $log");
   chdir $cwd;
-  
+
 }
 
-sub run_mpack2($ $ $ $ $ $ $) 
+sub run_mpack2($ $ $ $ $ $ $)
 {
   my ($blif_in,$blif_out,$mpack2_arch,$net,$stats,$vpr_arch,$log) = @_;
   # Get MPACK path
@@ -912,14 +914,14 @@ sub run_mpack2($ $ $ $ $ $ $)
 }
 
 # Extract Mpack2 stats
-sub extract_mpack2_stats($ $ $) 
+sub extract_mpack2_stats($ $ $)
 {
   my ($tag,$bm,$mstats) = @_;
   my ($line);
   my @keywords = split /\|/,$conf_ptr->{csv_tags}->{mpack2_tags}->{val};
   open (MSTATS, "< $mstats") or die "ERROR: Fail to open $mstats!\n";
   while(defined($line = <MSTATS>)) {
-    chomp $line; 
+    chomp $line;
     $line =~ s/\s//g;
     foreach my $tmp(@keywords) {
       $tmp =~ s/\s//g;
@@ -932,14 +934,14 @@ sub extract_mpack2_stats($ $ $)
 }
 
 # Extract Mpack1 stats
-sub extract_mpack1_stats($ $ $) 
+sub extract_mpack1_stats($ $ $)
 {
   my ($tag,$bm,$mstats) = @_;
   my ($line);
   my @keywords = split /\|/,$conf_ptr->{csv_tags}->{mpack1_tags}->{val};
   open (MSTATS, "< $mstats") or die "ERROR: Fail to open $mstats!\n";
   while(defined($line = <MSTATS>)) {
-    chomp $line; 
+    chomp $line;
     $line =~ s/\s//g;
     foreach my $tmp(@keywords) {
       $tmp =~ s/\s//g;
@@ -952,7 +954,7 @@ sub extract_mpack1_stats($ $ $)
 }
 
 # Black Box blif for ACE
-sub black_box_blif($ $) 
+sub black_box_blif($ $)
 {
   my ($blif_in,$blif_out) = @_;
   my ($line);
@@ -969,10 +971,10 @@ sub black_box_blif($ $)
         my $i1 = $i - 1;
         if ($i < $#components) {
           $line = $line."I[$i1]=$components[$i] ";
-        } 
+        }
         else {
           $line = $line."I[$i1]=unconn ";
-        } 
+        }
       }
       $line = $line."O[0]=$components[$#components] ";
     }
@@ -994,18 +996,18 @@ sub black_box_blif($ $)
 }
 
 # Extract VPR Power Esti
-sub extract_vpr_power_esti($ $ $ $) 
+sub extract_vpr_power_esti($ $ $ $)
 {
   my ($tag,$ace_vpr_blif,$bm,$type) = @_;
   my ($line,$tmp,$line_num);
   my @keywords = split /\|/,$conf_ptr->{csv_tags}->{vpr_power_tags}->{val};
   my ($vpr_power_stats) = $ace_vpr_blif;
-   
-  $line_num = 0; 
+
+  $line_num = 0;
   $vpr_power_stats =~ s/blif$/power/;
   open (VSTATS, "< $vpr_power_stats") or die "Fail to open $vpr_power_stats!\n";
   while(defined($line = <VSTATS>)) {
-    chomp $line; 
+    chomp $line;
     $line_num++;
     if ($line =~ m/^Total/i) {
       my @power_info = split  /\s+/,$line;
@@ -1040,13 +1042,13 @@ sub extract_vpr_power_esti($ $ $ $)
 }
 
 # Extract AAPack stats
-sub extract_aapack_stats($ $ $ $ $) 
+sub extract_aapack_stats($ $ $ $ $)
 {
   my ($tag,$bm,$vstats,$type,$keywords) = @_;
   my ($line,$tmp);
   open (VSTATS, "< $vstats") or die "Fail to open $vstats!\n";
   while(defined($line = <VSTATS>)) {
-    chomp $line; 
+    chomp $line;
     #$line =~ s/\s//g;
     foreach my $tmpkw(@{$keywords}) {
       $tmp = $tmpkw;
@@ -1062,13 +1064,13 @@ sub extract_aapack_stats($ $ $ $ $)
 }
 
 # Extract min_channel_width VPR stats
-sub extract_min_chan_width_vpr_stats($ $ $ $ $ $) 
+sub extract_min_chan_width_vpr_stats($ $ $ $ $ $)
 {
   my ($tag,$bm,$vstats,$type,$min_route_chan_width,$parse_results) = @_;
   my ($line,$tmp, $min_chan_width, $chan_width_tag);
   my @keywords = split /\|/,$conf_ptr->{csv_tags}->{vpr_tags}->{val};
 
-  if ("on" eq $min_route_chan_width) { 
+  if ("on" eq $min_route_chan_width) {
     $tmp = "Best routing used a channel width factor of";
     $chan_width_tag = "min_route_chan_width";
   } else {
@@ -1079,7 +1081,7 @@ sub extract_min_chan_width_vpr_stats($ $ $ $ $ $)
 
   open (VSTATS, "< $vstats") or die "ERROR: Fail to open $vstats!\n";
   while(defined($line = <VSTATS>)) {
-    chomp $line; 
+    chomp $line;
     if (($line =~ m/\s+([0-9]+)\s+of\s+type\s+names/i)
       &&(1 == $parse_results)) {
       $rpt_h{$tag}->{$bm}->{$opt_ptr->{N_val}}->{$type}->{LUTs} = $1;
@@ -1087,7 +1089,7 @@ sub extract_min_chan_width_vpr_stats($ $ $ $ $ $)
     }
     $line =~ s/\s//g;
     if ($line =~ m/$tmp\s*([0-9E\-+.]+)/i) {
-      $min_chan_width = $1; 
+      $min_chan_width = $1;
       $min_chan_width =~ s/\.$//;
       if (1 == $parse_results) {
         $rpt_h{$tag}->{$bm}->{$opt_ptr->{N_val}}->{$type}->{$chan_width_tag} = $min_chan_width;
@@ -1100,14 +1102,14 @@ sub extract_min_chan_width_vpr_stats($ $ $ $ $ $)
 
 
 # Extract VPR stats
-sub extract_vpr_stats($ $ $ $) 
+sub extract_vpr_stats($ $ $ $)
 {
   my ($tag,$bm,$vstats,$type) = @_;
   my ($line,$tmp);
   my @keywords = split /\|/,$conf_ptr->{csv_tags}->{vpr_tags}->{val};
   open (VSTATS, "< $vstats") or die "Fail to open $vstats!\n";
   while(defined($line = <VSTATS>)) {
-    chomp $line; 
+    chomp $line;
     if ($line =~ m/\s+([0-9]+)\s+of\s+type\s+names/i) {
       $rpt_h{$tag}->{$bm}->{$opt_ptr->{N_val}}->{$type}->{LUTs} = $1;
       $rpt_h{$tag}->{$bm}->{$opt_ptr->{N_val}}->{$type}->{LUTs} =~ s/\.$//;
@@ -1213,7 +1215,7 @@ sub run_pro_blif($ $) {
 sub run_ace($ $ $ $) {
   my ($mpack_vpr_blif,$act_file,$ace_new_blif,$log) = @_;
   my ($ace_dir,$ace_name) = &split_prog_path($conf_ptr->{dir_path}->{ace_path}->{val});
-  my ($ace_customized_opts) = (""); 
+  my ($ace_customized_opts) = ("");
 
   if ("on" eq $opt_ptr->{ace_d}) {
     $ace_customized_opts .= " -d $opt_ptr->{ace_d_val}";
@@ -1222,7 +1224,7 @@ sub run_ace($ $ $ $) {
   if ("on" eq $opt_ptr->{ace_p}) {
     $ace_customized_opts .= " -p $opt_ptr->{ace_p_val}";
   }
-  
+
   print "Entering $ace_dir\n";
   chdir $ace_dir;
   system("./$ace_name -b $mpack_vpr_blif -o $act_file -n $ace_new_blif -c clk $ace_customized_opts >> $log");
@@ -1234,7 +1236,7 @@ sub run_ace($ $ $ $) {
   print "Leaving $ace_dir\n";
 
   chdir $cwd;
-} 
+}
 
 # Run Icarus Verilog Simulation
 sub run_icarus_verilog($ $ $ $ $)
@@ -1295,7 +1297,7 @@ sub run_netlists_verification($)
   return;
 }
 
-sub run_std_vpr($ $ $ $ $ $ $ $ $) 
+sub run_std_vpr($ $ $ $ $ $ $ $ $)
 {
   my ($blif,$bm,$arch,$net,$place,$route,$fix_chan_width,$log,$act_file) = @_;
   my ($vpr_dir,$vpr_name) = &split_prog_path($conf_ptr->{dir_path}->{vpr_path}->{val});
@@ -1332,6 +1334,9 @@ sub run_std_vpr($ $ $ $ $ $ $ $ $)
     }
     if ("on" eq $opt_ptr->{vpr_fpga_spice_sim_mt_num}) {
       $vpr_spice_opts = $vpr_spice_opts." --fpga_spice_sim_mt_num $opt_ptr->{vpr_fpga_spice_sim_mt_num_val}";
+    }
+    if ("on" eq $opt_ptr->{vpr_fpga_spice_simulator_path}) {
+      $vpr_spice_opts = $vpr_spice_opts." --fpga_spice_simulator_path $opt_ptr->{vpr_fpga_spice_simulator_path_val}";
     }
     if ("on" eq $opt_ptr->{vpr_fpga_spice_print_component_tb}) {
       $vpr_spice_opts = $vpr_spice_opts." --fpga_spice_print_lut_testbench";
@@ -1411,17 +1416,17 @@ sub run_std_vpr($ $ $ $ $ $ $ $ $)
     }
   }
 
-  # FPGA Bitstream Generator Options 
+  # FPGA Bitstream Generator Options
   if ("on" eq $opt_ptr->{vpr_fpga_bitstream_generator}) {
      $vpr_spice_opts = $vpr_spice_opts." --fpga_bitstream_generator";
   }
 
   if (("on" eq $opt_ptr->{vpr_fpga_x2p_rename_illegal_port})
-     || ("on" eq $opt_ptr->{vpr_fpga_spice}) 
+     || ("on" eq $opt_ptr->{vpr_fpga_spice})
      || ("on" eq $opt_ptr->{vpr_fpga_verilog})) {
     $vpr_spice_opts = $vpr_spice_opts." --fpga_x2p_rename_illegal_port";
   }
-  
+
   my ($other_opt) = ("");
   if ("on" eq $opt_ptr->{vpr_place_clb_pin_remap}) {
     $other_opt = "--place_clb_pin_remap ";
@@ -1455,12 +1460,12 @@ sub run_std_vpr($ $ $ $ $ $ $ $ $)
   #  foreach my $file (0..$#files){
   #    print "$files[$file]\t";
   #  }
-  print "\n";
+  3  print "\n";
   #}
   chdir $cwd;
 }
 
-sub run_vpr_route($ $ $ $ $ $ $ $ $) 
+sub run_vpr_route($ $ $ $ $ $ $ $ $)
 {
   my ($blif,$bm,$arch,$net,$place,$route,$fix_chan_width,$log,$act_file) = @_;
   my ($vpr_dir,$vpr_name) = &split_prog_path($conf_ptr->{dir_path}->{vpr_path}->{val});
@@ -1511,7 +1516,7 @@ sub run_vpr_route($ $ $ $ $ $ $ $ $)
       $vpr_spice_opts = $vpr_spice_opts." --fpga_x2p_rename_illegal_port";
     }
   }
-  
+
   my ($other_opt) = ("");
   if ("on" eq $opt_ptr->{vpr_max_router_iteration}) {
     $other_opt .= "--max_router_iterations $opt_ptr->{vpr_max_router_iteration_val} ";
@@ -1530,7 +1535,7 @@ sub run_vpr_route($ $ $ $ $ $ $ $ $)
   chdir $cwd;
 }
 
-sub run_mpack1_vpr($ $ $ $ $ $ $) 
+sub run_mpack1_vpr($ $ $ $ $ $ $)
 {
   my ($blif,$arch,$net,$place,$route,$log,$act_file) = @_;
   my ($vpr_dir,$vpr_name) = &split_prog_path($conf_ptr->{dir_path}->{vpr_path}->{val});
@@ -1543,7 +1548,7 @@ sub run_mpack1_vpr($ $ $ $ $ $ $)
   chdir $cwd;
 }
 
-sub run_mpack2_vpr($ $ $ $ $ $ $) 
+sub run_mpack2_vpr($ $ $ $ $ $ $)
 {
   my ($blif,$arch,$net,$place,$route,$min_chan_width,$log) = @_;
   my ($vpr_dir,$vpr_name) = &split_prog_path($conf_ptr->{dir_path}->{vpr_path}->{val});
@@ -1567,19 +1572,19 @@ sub run_mpack2_vpr($ $ $ $ $ $ $)
 }
 
 
-sub run_aapack($ $ $ $) 
+sub run_aapack($ $ $ $)
 {
-  my ($blif,$arch,$net,$aapack_log) = @_; 
+  my ($blif,$arch,$net,$aapack_log) = @_;
   my ($vpr_dir,$vpr_name) = &split_prog_path($conf_ptr->{dir_path}->{vpr_path}->{val});
-  
+
   chdir $vpr_dir;
 
   system("./$vpr_name $arch $blif --net_file $net --pack --timing_analysis off --nodisp > $aapack_log");
 
-  chdir $cwd; 
+  chdir $cwd;
 }
 
-sub run_m2net_pack_arch($ $ $ $ $ $) 
+sub run_m2net_pack_arch($ $ $ $ $ $)
 {
   my ($m2net_conf,$mpack1_rpt,$pack_arch,$N,$I,$m2net_pack_arch_log) = @_;
   my ($m2net_dir,$m2net_name) = &split_prog_path($conf_ptr->{dir_path}->{m2net_path}->{val});
@@ -1589,9 +1594,9 @@ sub run_m2net_pack_arch($ $ $ $ $ $)
   system("perl $m2net_name -conf $m2net_conf -mpack1_rpt $mpack1_rpt -mode pack_arch -N $N -I $I -arch_file_pack $pack_arch > $m2net_pack_arch_log");
 
   chdir $cwd;
-} 
+}
 
-sub run_m2net_m2net($ $ $ $ $) 
+sub run_m2net_m2net($ $ $ $ $)
 {
   my ($m2net_conf,$mpack1_rpt,$aapack_net,$vpr_net,$vpr_arch,$N,$I,$m2net_m2net_log) = @_;
   my ($m2net_dir,$m2net_name) = &split_prog_path($conf_ptr->{dir_path}->{m2net_path}->{val});
@@ -1603,11 +1608,11 @@ sub run_m2net_m2net($ $ $ $ $)
   if ("on" eq $opt_ptr->{power}) {
     $power_opt = "-power";
   }
- 
+
   system("perl $m2net_name -conf $m2net_conf -mpack1_rpt $mpack1_rpt -mode m2net -N $N -I $I -net_file_in $aapack_net -net_file_out $vpr_net -arch_file_vpr $vpr_arch $power_opt > $m2net_m2net_log");
 
   chdir $cwd;
-} 
+}
 
 sub run_cirkit_mig_mccl_map($ $ $) {
   my ($bm,$blif_out,$log) = @_;
@@ -1616,8 +1621,8 @@ sub run_cirkit_mig_mccl_map($ $ $) {
 
   $bm_aig =~ s/blif$/aig/;
   $bm_v =~ s/blif$/v/;
-  $abc_cmd_log =~ s/\.blif$/_abc.cmd/g; 
-  $cirkit_cmd_log =~ s/\.blif$/_cirkit.cmd/g; 
+  $abc_cmd_log =~ s/\.blif$/_abc.cmd/g;
+  $cirkit_cmd_log =~ s/\.blif$/_cirkit.cmd/g;
 
   # Get ABC path
   my ($abc_dir,$abc_name) = &split_prog_path($conf_ptr->{dir_path}->{abc_path}->{val});
@@ -1633,7 +1638,7 @@ sub run_cirkit_mig_mccl_map($ $ $) {
   }
   my ($fpga_synthesis_method) = ("if");
   #my ($fpga_synthesis_method) = ("fpga");
-  
+
   my ($ABC_CMD_FH) = (FileHandle->new);
   if ($ABC_CMD_FH->open("> $abc_cmd_log")) {
     print "INFO: auto generating cmds for ABC ($abc_cmd_log) ...\n";
@@ -1685,13 +1690,13 @@ sub init_fpga_spice_task($) {
   } else {
     die "ERROR: fail to create task file ($task_file)!\n";
   }
- 
+
   print $TASKFH "# FPGA SPICE TASKs to run\n";
   print $TASKFH "# Task line format:\n";
   print $TASKFH "# <benchmark_name>,<blif_prefix>,<spice_dir>\n";
 
-  # Close the file handler 
-  close($TASKFH); 
+  # Close the file handler
+  close($TASKFH);
 }
 
 # Print a line into task file which contains task info of FPGA SPICE.
@@ -1705,7 +1710,7 @@ sub output_fpga_spice_task($ $ $ $) {
   } else {
     die "ERROR: fail to generate a line for task($benchmark) in task file ($task_file) ...\n";
   }
-  
+
   ($blif_path,$blif_prefix) = &split_prog_path($blif_name);
   $blif_prefix =~ s/\.blif$//;
   $spice_dir = $rpt_dir;
@@ -1714,9 +1719,9 @@ sub output_fpga_spice_task($ $ $ $) {
   # Output a line
   print $TASKFH "# TaskInfo: $benchmark\n";
   print $TASKFH "$benchmark,$blif_prefix,$spice_dir\n";
- 
-  # Close the file handler 
-  close($TASKFH); 
+
+  # Close the file handler
+  close($TASKFH);
 }
 
 sub run_ace_in_flow($ $ $ $ $ $ $) {
@@ -1725,7 +1730,7 @@ sub run_ace_in_flow($ $ $ $ $ $ $) {
   if ("on" eq $opt_ptr->{power}) {
     if ("on" eq $opt_ptr->{black_box_ace}) {
       my ($tmp_blif) = ($prefix."_ace_new.blif");
-      &black_box_blif($abc_blif_out,$tmp_blif); 
+      &black_box_blif($abc_blif_out,$tmp_blif);
       &run_ace($tmp_blif,$act_file,$ace_new_blif ,$ace_log);
     } else {
       &run_ace($abc_blif_out,$act_file,$ace_new_blif,$ace_log);
@@ -1753,7 +1758,7 @@ sub run_vpr_in_flow($ $ $ $ $ $ $ $ $ $ $ $) {
     if (-e $vpr_route) {
       `rm $vpr_route`;
     }
-    # Keep increase min_chan_width until route success 
+    # Keep increase min_chan_width until route success
     # Extract data from VPR stats
     #&run_std_vpr($abc_blif_out,$benchmark,$vpr_arch,$vpr_net,$vpr_place,$vpr_route,$min_chan_width,$vpr_log,$act_file);
     while (1) {
@@ -1781,7 +1786,7 @@ sub run_vpr_in_flow($ $ $ $ $ $ $ $ $ $ $ $) {
     if (-e $vpr_route) {
       `rm $vpr_route`;
     }
-    # Keep increase min_chan_width until route success 
+    # Keep increase min_chan_width until route success
     &run_std_vpr($abc_blif_out,$benchmark,$vpr_arch,$vpr_net,$vpr_place,$vpr_route,$fix_chan_width,$vpr_log,$act_file);
     while (1) {
       # TODO: Only run the routing stage
@@ -1832,8 +1837,8 @@ sub run_mig_mccl_flow($ $ $ $) {
   my ($benchmark, $rpt_dir,$prefix);
   my ($cirkit_bm,$cirkit_blif_out,$cirkit_log,$cirkit_blif_out_bak);
 
-  $benchmark = $benchmark_file; 
-  $benchmark =~ s/\.blif$//g;     
+  $benchmark = $benchmark_file;
+  $benchmark =~ s/\.blif$//g;
   # Run Standard flow
   $rpt_dir = "$conf_ptr->{dir_path}->{rpt_dir}->{val}"."/$benchmark/$tag";
   &generate_path($rpt_dir);
@@ -1852,26 +1857,26 @@ sub run_mig_mccl_flow($ $ $ $) {
   $vpr_route = "$prefix"."vpr.route";
   $vpr_log = "$prefix"."vpr.log";
   $vpr_reroute_log = "$prefix"."vpr_reroute.log";
- 
+
   &run_cirkit_mig_mccl_map($cirkit_bm,$cirkit_blif_out,$cirkit_log);
   if (!(-e $cirkit_blif_out)) {
     die "ERROR: Fail Cirkit for benchmark $cirkit_blif_out.\n";
   }
- 
+
   #`perl pro_blif.pl -i $abc_blif_out_bak -o $abc_blif_out`;
   #if (!(-e $abc_blif_out)) {
   #  die "ERROR: Fail pro_blif.pl for benchmark $abc_blif_out.\n";
   #}
-  
+
   &run_ace_in_flow($prefix, $cirkit_blif_out, $act_file, $ace_new_blif, $ace_log);
 
   &run_vpr_in_flow($tag, $benchmark, $benchmark_file, $cirkit_blif_out, $vpr_arch, $act_file, $vpr_net, $vpr_place, $vpr_route, $vpr_log, $vpr_reroute_log, $parse_results);
 
-  return;  
+  return;
 }
 
 # Run Yosys-VPR flow
-sub run_yosys_vpr_flow($ $ $ $ $) 
+sub run_yosys_vpr_flow($ $ $ $ $)
 {
   my ($tag,$benchmark_file,$vpr_arch,$flow_enhance, $parse_results) = @_;
 
@@ -1881,7 +1886,7 @@ sub run_yosys_vpr_flow($ $ $ $ $)
   my @tokens = split('/', $benchmark_file);
   $benchmark = $tokens[0];
 
-  # Prepare for the output folder 
+  # Prepare for the output folder
   $rpt_dir = "$conf_ptr->{dir_path}->{rpt_dir}->{val}"."/$benchmark/$tag";
   &generate_path($rpt_dir);
 
@@ -1896,7 +1901,7 @@ sub run_yosys_vpr_flow($ $ $ $ $)
 
   &run_yosys_fpgamap($benchmark, $yosys_bm, $yosys_blif_out, $yosys_log);
 
-  # Files for ace 
+  # Files for ace
   my ($act_file,$ace_new_blif,$ace_log, $corrected_ace_blif) = ("$rpt_dir/$benchmark".".act","$rpt_dir/$benchmark"."ace.blif","$prefix"."ace.log","$rpt_dir/$benchmark".".blif");
   &run_ace_in_flow($prefix, $yosys_blif_out, $act_file, $ace_new_blif, $ace_log);
 
@@ -1924,7 +1929,7 @@ sub run_yosys_vpr_flow($ $ $ $ $)
 }
 
 # Parse Yosys-VPR flow
-sub parse_yosys_vpr_flow_results($ $ $ $) 
+sub parse_yosys_vpr_flow_results($ $ $ $)
 {
   my ($tag,$benchmark_file,$vpr_arch,$flow_enhance) = @_;
 
@@ -1934,7 +1939,7 @@ sub parse_yosys_vpr_flow_results($ $ $ $)
   my @tokens = split('/', $benchmark_file);
   $benchmark = $tokens[0];
 
-  # Prepare for the output folder 
+  # Prepare for the output folder
   $rpt_dir = "$conf_ptr->{dir_path}->{rpt_dir}->{val}"."/$benchmark/$tag";
   &generate_path($rpt_dir);
 
@@ -1944,7 +1949,7 @@ sub parse_yosys_vpr_flow_results($ $ $ $)
   $yosys_blif_out = "$rpt_dir/$benchmark".".blif";
   $yosys_log = "$prefix"."yosys.log";
 
-  # Files for ace 
+  # Files for ace
   my ($act_file,$ace_new_blif,$ace_log) = ("$prefix"."ace.act","$prefix"."ace.blif","$prefix"."ace.log");
 
   # Files for VPR
@@ -1972,7 +1977,7 @@ sub parse_yosys_vpr_flow_results($ $ $ $)
     &extract_min_chan_width_vpr_stats($tag,$benchmark,$vpr_log,$opt_ptr->{K_val},"on",1);
     &extract_vpr_stats($tag,$benchmark,$vpr_log,$opt_ptr->{K_val});
   }
- 
+
   # Extract data from VPR Power stats
   if ("on" eq $opt_ptr->{power}) {
     &extract_vpr_power_esti($tag,$yosys_blif_out,$benchmark,$opt_ptr->{K_val});
@@ -1980,7 +1985,7 @@ sub parse_yosys_vpr_flow_results($ $ $ $)
 
   # TODO: HOW TO DEAL WITH SPICE NETLISTS???
   # Output a file contain information of SPICE Netlists
-  if ("on" eq $opt_ptr->{vpr_fpga_spice}) { 
+  if ("on" eq $opt_ptr->{vpr_fpga_spice}) {
     &output_fpga_spice_task("$opt_ptr->{vpr_fpga_spice_val}"."_$tag.txt", $benchmark, $yosys_blif_out, $rpt_dir);
   }
 
@@ -1989,7 +1994,7 @@ sub parse_yosys_vpr_flow_results($ $ $ $)
 }
 
 
-sub run_standard_flow($ $ $ $ $) 
+sub run_standard_flow($ $ $ $ $)
 {
   my ($tag,$benchmark_file,$vpr_arch,$flow_enhance, $parse_results) = @_;
   my ($benchmark, $rpt_dir,$prefix);
@@ -1997,8 +2002,8 @@ sub run_standard_flow($ $ $ $ $)
   my ($mpack_blif_out,$mpack_stats,$mpack_log);
   my ($vpr_net,$vpr_place,$vpr_route,$vpr_reroute_log,$vpr_log);
 
-  $benchmark = $benchmark_file; 
-  $benchmark =~ s/\.blif$//g;     
+  $benchmark = $benchmark_file;
+  $benchmark =~ s/\.blif$//g;
   # Run Standard flow
   $rpt_dir = "$conf_ptr->{dir_path}->{rpt_dir}->{val}"."/$benchmark/$tag";
   &generate_path($rpt_dir);
@@ -2017,7 +2022,7 @@ sub run_standard_flow($ $ $ $ $)
   $vpr_log = "$prefix"."vpr.log";
   $vpr_reroute_log = "$prefix"."vpr_reroute.log";
 
- 
+
   if ("abc_black_box" eq $flow_enhance) {
     my ($pre_abc_blif) = ("$prefix"."pre_abc.blif");
     &run_pro_blif($abc_bm, $pre_abc_blif);
@@ -2035,7 +2040,7 @@ sub run_standard_flow($ $ $ $ $)
   return;
 }
 
-sub parse_standard_flow_results($ $ $ $) 
+sub parse_standard_flow_results($ $ $ $)
 {
   my ($tag,$benchmark_file,$vpr_arch,$flow_enhance) = @_;
   my ($rpt_dir,$prefix);
@@ -2044,7 +2049,7 @@ sub parse_standard_flow_results($ $ $ $)
   my ($vpr_net,$vpr_place,$vpr_route,$vpr_reroute_log,$vpr_log);
 
   my ($benchmark) = ($benchmark_file);
-  $benchmark =~ s/\.blif$//g;     
+  $benchmark =~ s/\.blif$//g;
   # Run Standard flow
   $rpt_dir = "$conf_ptr->{dir_path}->{rpt_dir}->{val}"."/$benchmark/$tag";
   &generate_path($rpt_dir);
@@ -2052,7 +2057,7 @@ sub parse_standard_flow_results($ $ $ $)
   $prefix = "$rpt_dir/$benchmark\_"."K$opt_ptr->{K_val}\_"."N$opt_ptr->{N_val}\_";
   $abc_blif_out = "$prefix"."abc.blif";
   $abc_log = "$prefix"."abc.log";
- 
+
   if ("abc_black_box" eq $flow_enhance) {
     rename $abc_blif_out,"$abc_blif_out".".bak";
   } elsif ("classic" eq $flow_enhance) {
@@ -2082,7 +2087,7 @@ sub parse_standard_flow_results($ $ $ $)
     &extract_min_chan_width_vpr_stats($tag,$benchmark,$vpr_log,$opt_ptr->{K_val},"on",1);
     &extract_vpr_stats($tag,$benchmark,$vpr_log,$opt_ptr->{K_val});
   }
- 
+
   # Extract data from VPR Power stats
   if ("on" eq $opt_ptr->{power}) {
     &extract_vpr_power_esti($tag,$abc_blif_out,$benchmark,$opt_ptr->{K_val});
@@ -2090,22 +2095,22 @@ sub parse_standard_flow_results($ $ $ $)
 
   # TODO: HOW TO DEAL WITH SPICE NETLISTS???
   # Output a file contain information of SPICE Netlists
-  if ("on" eq $opt_ptr->{vpr_fpga_spice}) { 
+  if ("on" eq $opt_ptr->{vpr_fpga_spice}) {
     &output_fpga_spice_task("$opt_ptr->{vpr_fpga_spice_val}"."_standard.txt", $benchmark, $abc_blif_out, $rpt_dir);
   }
 
   return;
 }
 
-sub run_mpack2_flow($ $ $ $) 
+sub run_mpack2_flow($ $ $ $)
 {
   my ($tag,$benchmark_file,$mpack2_arch,$parse_results) = @_;
   my ($rpt_dir,$prefix);
   my ($abc_bm,$abc_blif_out,$abc_log,$abc_blif_out_bak);
   my ($mpack2_blif_out,$mpack2_vpr_net,$mpack2_stats,$mpack2_log,$mpack2_vpr_arch);
   my ($vpr_place,$vpr_route,$vpr_reroute_log,$vpr_log,$act_file);
-  
-  # Check necessary options 
+
+  # Check necessary options
   if (!($opt_ptr->{N_val})) {
     die "ERROR: (mpack2_flow) -N should be specified!\n";
   }
@@ -2114,7 +2119,7 @@ sub run_mpack2_flow($ $ $ $)
   }
 
   my ($benchmark) = ($benchmark_file);
-  $benchmark =~ s/\.blif$//g;     
+  $benchmark =~ s/\.blif$//g;
   # Run MPACK2-oriented flow
   $rpt_dir = "$conf_ptr->{dir_path}->{rpt_dir}->{val}"."/$benchmark/$tag";
   &generate_path($rpt_dir);
@@ -2143,7 +2148,7 @@ sub run_mpack2_flow($ $ $ $)
   if (1 == $parse_results) {
     &extract_mpack2_stats($tag,$benchmark,$mpack2_stats);
   }
-    
+
   # RUN VPR
   $vpr_place = "$prefix"."vpr.place";
   $vpr_route = "$prefix"."vpr.route";
@@ -2158,10 +2163,10 @@ sub run_mpack2_flow($ $ $ $)
     if (0 != $min_chan_width%2) {
       $min_chan_width += 1;
     }
-      
+
     # Remove previous route results
     `rm $vpr_route`;
-    # Keep increase min_chan_width until route success 
+    # Keep increase min_chan_width until route success
     # Extract data from VPR stats
     while (1) {
       &run_vpr_route($mpack2_blif_out,$benchmark,$mpack2_vpr_arch,$mpack2_vpr_net,$vpr_place,$vpr_route,$min_chan_width,$vpr_reroute_log,$act_file);
@@ -2185,7 +2190,7 @@ sub run_mpack2_flow($ $ $ $)
     if (-e $vpr_route) {
       `rm $vpr_route`;
     }
-    # Keep increase min_chan_width until route success 
+    # Keep increase min_chan_width until route success
     # Extract data from VPR stats
     &run_mpack2_vpr($mpack2_blif_out,$mpack2_vpr_arch,$mpack2_vpr_net,$vpr_place,$vpr_route,$fix_chan_width,$vpr_log);
     while (1) {
@@ -2220,15 +2225,15 @@ sub run_mpack2_flow($ $ $ $)
   return;
 }
 
-sub parse_mpack2_flow_results($ $ $) 
+sub parse_mpack2_flow_results($ $ $)
 {
   my ($tag,$benchmark_file,$mpack2_arch) = @_;
   my ($rpt_dir,$prefix);
   my ($abc_bm,$abc_blif_out,$abc_log);
   my ($mpack2_blif_out,$mpack2_vpr_net,$mpack2_stats,$mpack2_log,$mpack2_vpr_arch);
   my ($vpr_place,$vpr_route,$vpr_reroute_log,$vpr_log);
-  
-  # Check necessary options 
+
+  # Check necessary options
   if (!($opt_ptr->{N_val})) {
     die "ERROR: (mpack2_flow) -N should be specified!\n";
   }
@@ -2237,7 +2242,7 @@ sub parse_mpack2_flow_results($ $ $)
   }
 
   my ($benchmark) = ($benchmark_file);
-  $benchmark =~ s/\.blif$//g;     
+  $benchmark =~ s/\.blif$//g;
   # Run MPACK2-oriented flow
   $rpt_dir = "$conf_ptr->{dir_path}->{rpt_dir}->{val}"."/$benchmark/$tag";
   &generate_path($rpt_dir);
@@ -2256,7 +2261,7 @@ sub parse_mpack2_flow_results($ $ $)
   $mpack2_vpr_arch = "$prefix"."mpack2_vpr_arch.xml";
   # Extract data from MPACK stats
   &extract_mpack2_stats($tag,$benchmark,$mpack2_stats);
-    
+
   # RUN VPR
   $vpr_place = "$prefix"."vpr.place";
   $vpr_route = "$prefix"."vpr.route";
@@ -2281,11 +2286,11 @@ sub parse_mpack2_flow_results($ $ $)
     &extract_min_chan_width_vpr_stats($tag,$benchmark,$vpr_log,$opt_ptr->{K_val}, "on", 1);
     &extract_vpr_stats($tag,$benchmark,$vpr_log,$opt_ptr->{K_val});
   }
-  
+
   return;
 }
 
-sub run_mpack1_flow($ $ $) 
+sub run_mpack1_flow($ $ $)
 {
   my ($tag,$benchmark_file, $parse_results) = @_;
   my ($rpt_dir,$prefix);
@@ -2302,7 +2307,7 @@ sub run_mpack1_flow($ $ $)
   }
 
   my ($benchmark) = ($benchmark_file);
-  $benchmark =~ s/\.blif$//g;     
+  $benchmark =~ s/\.blif$//g;
   # Run MPACK1-oriented flow
   $rpt_dir = "$conf_ptr->{dir_path}->{rpt_dir}->{val}"."/$benchmark/$tag";
   &generate_path($rpt_dir);
@@ -2319,12 +2324,12 @@ sub run_mpack1_flow($ $ $)
   my ($mpack1_rpt) = ("$prefix"."_mapped.net");
   my ($mpack1_log) = ("$prefix"."mpack1p5.log");
   &run_mpack1p5("$abc_blif_out","$prefix",$M_val,$cell_size,$mpack1_log);
-  
+
   # Extract data from MPACK stats
   if (1 == $parse_results) {
     &extract_mpack1_stats($tag,$benchmark,$mpack1_log);
   }
-  
+
   # Generate Architecture XML
   my ($aapack_arch) = ("$prefix"."aapack_arch.xml");
   my ($m2net_pack_arch_log) = ("$prefix"."m2net_pack_arch.log");
@@ -2338,13 +2343,13 @@ sub run_mpack1_flow($ $ $)
   if (1 == $parse_results) {
     &extract_aapack_stats($tag,$benchmark,$aapack_log,$M_val,\@aapack_stats);
   }
-  
+
   $vpr_net = "$prefix"."mpack.net";
   $vpr_place = "$prefix"."vpr.place";
   $vpr_route = "$prefix"."vpr.route";
   $vpr_log = "$prefix"."vpr.log";
 
-  # Run m2net.pl 
+  # Run m2net.pl
   my ($vpr_arch) = ("$prefix"."vpr_arch.xml");
   my ($m2net_m2net_log) = ("$prefix"."m2net_m2net.log");
   &run_m2net_m2net($m2net_conf,$mpack1_rpt,$aapack_net,$vpr_net,$vpr_arch,$N_val,$I_val,$m2net_m2net_log);
@@ -2359,7 +2364,7 @@ sub run_mpack1_flow($ $ $)
   if (!(-e $vpr_route)) {
     die "ERROR: Route Fail for $mpack1_vpr_blif_out!\n";
   }
-    
+
   # Extract data from VPR stats
   if (1 == $parse_results) {
     &extract_vpr_stats($tag,$benchmark,$vpr_log,$M_val);
@@ -2387,7 +2392,7 @@ sub parse_mpack1_flow_results($ $) {
   }
 
   my ($benchmark) = ($benchmark_file);
-  $benchmark =~ s/\.blif$//g;     
+  $benchmark =~ s/\.blif$//g;
   # Run MPACK1-oriented flow
   $rpt_dir = "$conf_ptr->{dir_path}->{rpt_dir}->{val}"."/$benchmark/$tag";
   &generate_path($rpt_dir);
@@ -2400,10 +2405,10 @@ sub parse_mpack1_flow_results($ $) {
   my ($mpack1_vpr_blif_out) = ("$prefix"."_formatted.blif");
   my ($mpack1_rpt) = ("$prefix"."_mapped.net");
   my ($mpack1_log) = ("$prefix"."mpack1p5.log");
-  
+
   # Extract data from MPACK stats
   &extract_mpack1_stats($tag,$benchmark,$mpack1_log);
-  
+
   # Generate Architecture XML
   my ($aapack_arch) = ("$prefix"."aapack_arch.xml");
   my ($m2net_pack_arch_log) = ("$prefix"."m2net_pack_arch.log");
@@ -2413,13 +2418,13 @@ sub parse_mpack1_flow_results($ $) {
   my ($aapack_net) = ("$prefix"."aapack.net");
   my @aapack_stats = ("MATRIX");
   &extract_aapack_stats($tag,$benchmark,$aapack_log,$M_val,\@aapack_stats);
-  
+
   $vpr_net = "$prefix"."mpack.net";
   $vpr_place = "$prefix"."vpr.place";
   $vpr_route = "$prefix"."vpr.route";
   $vpr_log = "$prefix"."vpr.log";
 
-  # Run m2net.pl 
+  # Run m2net.pl
   my ($vpr_arch) = ("$prefix"."vpr_arch.xml");
   my ($m2net_m2net_log) = ("$prefix"."m2net_m2net.log");
   my ($act_file,$ace_new_blif,$ace_log) = ("$prefix"."ace.act","$prefix"."ace_new.blif","$prefix"."ace.log");
@@ -2442,24 +2447,24 @@ sub run_vtr_flow($ $ $ $) {
 
   # The input of VTR flow is verilog file
   my ($benchmark) = ($benchmark_file);
-  $benchmark =~ s/\.v$//g;     
-  # Run Verilog To Routiing flow 
+  $benchmark =~ s/\.v$//g;
+  # Run Verilog To Routiing flow
   $rpt_dir = "$conf_ptr->{dir_path}->{rpt_dir}->{val}"."/$benchmark/$tag";
   &generate_path($rpt_dir);
-  # ODIN II output blif 
+  # ODIN II output blif
   $odin2_verilog = "$conf_ptr->{dir_path}->{benchmark_dir}->{val}"."/$benchmark".".v";
   $prefix = "$rpt_dir/$benchmark\_"."K$opt_ptr->{K_val}\_"."N$opt_ptr->{N_val}\_";
   # ODIN II config XML
   $odin2_config = "$prefix"."odin2_config.xml";
-  $odin2_log = "$prefix"."odin2.log"; 
-  # ODIN II output blif 
+  $odin2_log = "$prefix"."odin2.log";
+  # ODIN II output blif
   $abc_bm = "$prefix"."odin2.blif";
-  # ABC II output blif 
+  # ABC II output blif
   $abc_blif_out = "$prefix"."abc.blif";
   $abc_blif_out_bak = "$prefix"."abc_bak.blif";
   $abc_log = "$prefix"."abc.log";
 
-  # Initialize min_hard_adder_size 
+  # Initialize min_hard_adder_size
   $min_hard_adder_size = 1; # Default value
   if ("on" eq $opt_ptr->{min_hard_adder_size}) {
     if (1 > $opt_ptr->{min_hard_adder_size_val}) {
@@ -2470,12 +2475,12 @@ sub run_vtr_flow($ $ $ $) {
   }
   # TODO: Initialize the mem_size by parsing the ARCH XML?
   if ("on" eq $opt_ptr->{mem_size}) {
-    $mem_size = $opt_ptr->{mem_size_val}; 
+    $mem_size = $opt_ptr->{mem_size_val};
   } else {
     die "ERROR: -mem_size is mandatory when vtr flow is chosen!\n";
   }
   # Auto-generate a configuration XML for ODIN2
-  &gen_odin2_config_xml($odin2_config, $odin2_verilog, $abc_bm, $vpr_arch, $mem_size, $min_hard_adder_size); 
+  &gen_odin2_config_xml($odin2_config, $odin2_verilog, $abc_bm, $vpr_arch, $mem_size, $min_hard_adder_size);
   # RUN ODIN II
   &run_odin2($odin2_config, "off", $odin2_log);
 
@@ -2483,12 +2488,12 @@ sub run_vtr_flow($ $ $ $) {
     die "ERROR: Fail ODIN II for benchmark $benchmark.\n";
   }
 
-  # RUN ABC 
+  # RUN ABC
   &run_abc_bb_fpgamap($abc_bm,$abc_blif_out_bak,$abc_log);
 
   &run_pro_blif($abc_blif_out_bak, $abc_blif_out);
 
-  # Run ABC 
+  # Run ABC
   my ($act_file,$ace_new_blif,$ace_log) = ("$prefix"."ace.act","$prefix"."ace.blif","$prefix"."ace.log");
   &run_ace_in_flow($prefix, $abc_blif_out,$act_file,$ace_new_blif,$ace_log);
 
@@ -2512,22 +2517,22 @@ sub parse_vtr_flow_results($ $ $) {
   my ($mpack_blif_out,$mpack_stats,$mpack_log);
   my ($vpr_net,$vpr_place,$vpr_route,$vpr_reroute_log,$vpr_log);
 
-  $benchmark =~ s/\.v$//g;     
+  $benchmark =~ s/\.v$//g;
   # Run Standard flow
   $rpt_dir = "$conf_ptr->{dir_path}->{rpt_dir}->{val}"."/$benchmark/$tag";
   &generate_path($rpt_dir);
-  # ODIN II output blif 
+  # ODIN II output blif
   $odin2_verilog = "$conf_ptr->{dir_path}->{benchmark_dir}->{val}"."/$benchmark".".v";
   $prefix = "$rpt_dir/$benchmark\_"."K$opt_ptr->{K_val}\_"."N$opt_ptr->{N_val}\_";
   # ODIN II config XML
   $odin2_config = "$prefix"."odin2_config.xml";
-  $odin2_log = "$prefix"."odin2.log"; 
-  # ODIN II output blif 
+  $odin2_log = "$prefix"."odin2.log";
+  # ODIN II output blif
   $abc_bm = "$prefix"."odin2.blif";
-  # ABC output blif 
+  # ABC output blif
   $abc_blif_out = "$prefix"."abc.blif";
   $abc_log = "$prefix"."abc.log";
- 
+
   rename $abc_blif_out,"$abc_blif_out".".bak";
 
   my ($act_file,$ace_new_blif,$ace_log) = ("$prefix"."ace.act","$prefix"."ace.blif","$prefix"."ace.log");
@@ -2555,7 +2560,7 @@ sub parse_vtr_flow_results($ $ $) {
     &extract_min_chan_width_vpr_stats($tag,$benchmark,$vpr_log,$opt_ptr->{K_val}, "on", 1);
     &extract_vpr_stats($tag,$benchmark,$vpr_log,$opt_ptr->{K_val});
   }
- 
+
   # Extract data from VPR Power stats
   if ("on" eq $opt_ptr->{power}) {
     &extract_vpr_power_esti($tag,$abc_blif_out,$benchmark,$opt_ptr->{K_val});
@@ -2563,17 +2568,17 @@ sub parse_vtr_flow_results($ $ $) {
 
   # TODO: HOW TO DEAL WITH SPICE NETLISTS???
   # Output a file contain information of SPICE Netlists
-  if ("on" eq $opt_ptr->{vpr_fpga_spice}) { 
+  if ("on" eq $opt_ptr->{vpr_fpga_spice}) {
     &output_fpga_spice_task("$opt_ptr->{vpr_fpga_spice_val}"."_vtr.txt", $benchmark, $abc_blif_out, $rpt_dir);
   }
 
   return;
 }
 
-# VTR_MCCL_flow: 
-# Differences from vtr_flow: 
+# VTR_MCCL_flow:
+# Differences from vtr_flow:
 # 1. Need to turn off the carry-chain support for ODIN II
-# 2. Use Carry-chain detection and Carry-chain LUTs pre-mapping in ABC scripts 
+# 2. Use Carry-chain detection and Carry-chain LUTs pre-mapping in ABC scripts
 sub run_vtr_mccl_flow($ $ $ $) {
   my ($tag,$benchmark_file,$vpr_arch,$parse_results) = @_;
   my ($rpt_dir,$prefix);
@@ -2584,24 +2589,24 @@ sub run_vtr_mccl_flow($ $ $ $) {
 
   # The input of VTR flow is verilog file
   my ($benchmark) = ($benchmark_file);
-  $benchmark =~ s/\.v$//g;     
-  # Run Verilog To Routiing flow 
+  $benchmark =~ s/\.v$//g;
+  # Run Verilog To Routiing flow
   $rpt_dir = "$conf_ptr->{dir_path}->{rpt_dir}->{val}"."/$benchmark/$tag";
   &generate_path($rpt_dir);
-  # ODIN II output blif 
+  # ODIN II output blif
   $odin2_verilog = "$conf_ptr->{dir_path}->{benchmark_dir}->{val}"."/$benchmark".".v";
   $prefix = "$rpt_dir/$benchmark\_"."K$opt_ptr->{K_val}\_"."N$opt_ptr->{N_val}\_";
   # ODIN II config XML
   $odin2_config = "$prefix"."odin2_config.xml";
-  $odin2_log = "$prefix"."odin2.log"; 
-  # ODIN II output blif 
+  $odin2_log = "$prefix"."odin2.log";
+  # ODIN II output blif
   $abc_bm = "$prefix"."odin2.blif";
-  # ABC II output blif 
+  # ABC II output blif
   $abc_blif_out = "$prefix"."abc.blif";
   $abc_blif_out_bak = "$prefix"."abc_bak.blif";
   $abc_log = "$prefix"."abc.log";
 
-  # Initialize min_hard_adder_size 
+  # Initialize min_hard_adder_size
   $min_hard_adder_size = 1; # Default value
   if ("on" eq $opt_ptr->{min_hard_adder_size}) {
     if (1 > $opt_ptr->{min_hard_adder_size_val}) {
@@ -2612,12 +2617,12 @@ sub run_vtr_mccl_flow($ $ $ $) {
   }
   # TODO: Initialize the mem_size by parsing the ARCH XML?
   if ("on" eq $opt_ptr->{mem_size}) {
-    $mem_size = $opt_ptr->{mem_size_val}; 
+    $mem_size = $opt_ptr->{mem_size_val};
   } else {
     die "ERROR: -mem_size is mandatory when vtr flow is chosen!\n";
   }
   # Auto-generate a configuration XML for ODIN2
-  &gen_odin2_config_xml($odin2_config, $odin2_verilog, $abc_bm, $vpr_arch, $mem_size, $min_hard_adder_size); 
+  &gen_odin2_config_xml($odin2_config, $odin2_verilog, $abc_bm, $vpr_arch, $mem_size, $min_hard_adder_size);
 
   if ("on" eq $opt_ptr->{odin2_carry_chain_support}) {
     $odin2_carry_chain_support = ("on");
@@ -2629,7 +2634,7 @@ sub run_vtr_mccl_flow($ $ $ $) {
     die "ERROR: Fail ODIN II for benchmark $benchmark.\n";
   }
 
-  # RUN ABC 
+  # RUN ABC
   &run_abc_mccl_fpgamap($abc_bm,$abc_blif_out_bak,$abc_log);
 
   &run_pro_blif($abc_blif_out_bak, $abc_blif_out);
@@ -2646,11 +2651,11 @@ sub run_vtr_mccl_flow($ $ $ $) {
 
   # Run VPR
   &run_vpr_in_flow($tag, $benchmark, $benchmark_file, $abc_blif_out, $vpr_arch, $act_file, $vpr_net, $vpr_place, $vpr_route, $vpr_log, $vpr_reroute_log, $parse_results);
- 
+
   return;
 }
 
-sub run_mccl_flow($ $ $ $ $) 
+sub run_mccl_flow($ $ $ $ $)
 {
   my ($tag,$benchmark_file,$vpr_arch,$flow_enhance, $parse_results) = @_;
   my ($benchmark, $rpt_dir,$prefix);
@@ -2658,7 +2663,7 @@ sub run_mccl_flow($ $ $ $ $)
   my ($mpack_blif_out,$mpack_stats,$mpack_log);
   my ($vpr_net,$vpr_place,$vpr_route,$vpr_reroute_log,$vpr_log);
 
-  $benchmark = $benchmark_file; 
+  $benchmark = $benchmark_file;
   $benchmark =~ s/\.v$//g; # We use verilog format in mccl
   # Run Standard flow
   $rpt_dir = "$conf_ptr->{dir_path}->{rpt_dir}->{val}"."/$benchmark/$tag";
@@ -2668,8 +2673,8 @@ sub run_mccl_flow($ $ $ $ $)
   $abc_blif_out = "$prefix"."abc.blif";
   $abc_blif_out_bak = "$prefix"."abc_bak.blif";
   $abc_log = "$prefix"."abc.log";
- 
-  # RUN ABC 
+
+  # RUN ABC
   &run_abc_mccl_fpgamap($abc_bm,$abc_blif_out_bak,$abc_log);
 
   &run_pro_blif($abc_blif_out_bak, $abc_blif_out);
@@ -2690,10 +2695,10 @@ sub run_mccl_flow($ $ $ $ $)
   return;
 }
 
-sub run_benchmark_selected_flow($ $ $) 
+sub run_benchmark_selected_flow($ $ $)
 {
   my ($flow_type,$benchmark, $parse_results) = @_;
-  
+
   if ($flow_type eq "standard") {
     &run_standard_flow("standard",$benchmark,$conf_ptr->{flow_conf}->{vpr_arch}->{val},"classic", $parse_results);
   } elsif ($flow_type eq "mpack2") {
@@ -2714,14 +2719,14 @@ sub run_benchmark_selected_flow($ $ $)
     &run_yosys_vpr_flow("yosys_vpr",$benchmark,$conf_ptr->{flow_conf}->{vpr_arch}->{val}, "classic", $parse_results);
   } else {
     die "ERROR: unsupported flow type ($flow_type) is chosen!\n";
-  } 
+  }
 
   return;
 }
 
 sub parse_benchmark_selected_flow($ $) {
   my ($flow_type,$benchmark) = @_;
-  
+
   if ($flow_type eq "standard") {
     &parse_standard_flow_results("standard",$benchmark,$conf_ptr->{flow_conf}->{vpr_arch}->{val},"classic");
   } elsif ($flow_type eq "mpack2") {
@@ -2742,7 +2747,7 @@ sub parse_benchmark_selected_flow($ $) {
     &parse_yosys_vpr_flow_results("yosys_vpr",$benchmark,$conf_ptr->{flow_conf}->{vpr_arch}->{val},"abc_black_box");
   } else {
     die "ERROR: unsupported flow type ($flow_type) is chosen!\n";
-  } 
+  }
 }
 
 # Run EDA flow
@@ -2776,7 +2781,7 @@ sub multitask_run_flows() {
         next;
       }
       print "FLOW TO RUN: $flow_to_run, Benchmark: $benchmark\n";
-      # Mutli thread push 
+      # Mutli thread push
       if ("on" eq $opt_ptr->{multi_task}) {
         my $pid = fork();
         if (defined $pid) {
@@ -2814,10 +2819,10 @@ sub multithread_run_flows($) {
     die "ERROR: cannot use threads package in Perl! Please check the installation of package...\n";
   }
 
-  # Lauch threads up to the limited number of threads number 
+  # Lauch threads up to the limited number of threads number
   if ($num_threads < 2) {
     $num_threads = 2;
-  }   
+  }
   my ($num_thread_running) = (0);
 
   # Iterate until all the tasks has been assigned, finished
@@ -2838,26 +2843,26 @@ sub multithread_run_flows($) {
           }
           # We have a thread id, check running or finished
           if ($thr_id->is_running()) {
-            # Update status 
+            # Update status
             $selected_flows{$flow_to_run}->{benchmarks}->{$benchmark}->{status} = "running";
-          } 
+          }
           if ($thr_id->is_joinable()) {
             $num_thread_running--;
             $thr_id->join(); # Join the thread results
-            # Update status 
+            # Update status
             $selected_flows{$flow_to_run}->{benchmarks}->{$benchmark}->{status} = "done";
             print "FLOW: $flow_to_run, Benchmark: $benchmark, Finished!\n";
-            print "INFO: current running thread number = $num_thread_running.\n"; 
+            print "INFO: current running thread number = $num_thread_running.\n";
             &print_jobs_status();
-          } 
-        } else { 
+          }
+        } else {
           # Not start a thread for this task,
           if (($num_thread_running == $num_threads)
              ||($num_thread_running > $num_threads)) {
             next;
           }
           #if there are still threads available, we try to start one
-          # Mutli thread push 
+          # Mutli thread push
           my $thr_new = threads->create(\&run_benchmark_selected_flow,$flow_to_run,$benchmark, 0);
           # We have a valid thread...
           if ($thr_new) {
@@ -2868,7 +2873,7 @@ sub multithread_run_flows($) {
               $selected_flows{$flow_to_run}->{benchmarks}->{$benchmark}->{status} = "running";
               $selected_flows{$flow_to_run}->{benchmarks}->{$benchmark}->{thread_id} = $thr_new;
               $num_thread_running++;
-              print "INFO: current running thread number = $num_thread_running.\n"; 
+              print "INFO: current running thread number = $num_thread_running.\n";
               &print_jobs_status();
             }
             # Check if it is detached...
@@ -2878,14 +2883,14 @@ sub multithread_run_flows($) {
               $thr_new->join(); # Join the thread results
               $selected_flows{$flow_to_run}->{benchmarks}->{$benchmark}->{status} = "done";
               print "FLOW: $flow_to_run, Benchmark: $benchmark, Finished!\n";
-              print "INFO: current running thread number = $num_thread_running.\n"; 
+              print "INFO: current running thread number = $num_thread_running.\n";
               &print_jobs_status();
             }
           } else {
-            # Fail to create a new thread, wait... 
+            # Fail to create a new thread, wait...
             print "INFO: Fail to alloc a new thread, wait...!";
           }
-        } 
+        }
       }
     }
   }
@@ -2893,7 +2898,7 @@ sub multithread_run_flows($) {
 
   &parse_flows_benchmarks_results();
 
-  return; 
+  return;
 }
 
 sub parse_flows_benchmarks_results() {
@@ -2907,18 +2912,18 @@ sub parse_flows_benchmarks_results() {
       }
     }
   }
- 
-  return; 
+
+  return;
 }
 
 sub print_jobs_status() {
-  my ($num_jobs_running, $num_jobs_to_run, $num_jobs_finish, $num_jobs) = (0, 0, 0, 0); 
- 
+  my ($num_jobs_running, $num_jobs_to_run, $num_jobs_finish, $num_jobs) = (0, 0, 0, 0);
+
   foreach my $benchmark(@benchmark_names) {
     foreach my $flow_to_run(@supported_flows) {
       if ("on" eq $selected_flows{$flow_to_run}->{flow_status}) {
         # Count the number of jobs
-        $num_jobs++; 
+        $num_jobs++;
         # Count to do jobs
         if ("off" eq $selected_flows{$flow_to_run}->{benchmarks}->{$benchmark}->{status}) {
           $num_jobs_to_run++;
@@ -2948,7 +2953,7 @@ sub print_jobs_status() {
     print "                                        +num_jobs_finish($num_jobs_finish)\n";
       die "                                        +num_jobs_to_run($num_jobs_to_run)\n";
   }
-  return; 
+  return;
 }
 
 sub check_all_flows_all_benchmarks_done() {
@@ -2979,13 +2984,13 @@ sub check_flow_all_benchmarks_done($) {
     if ("done" ne $selected_flows{$flow_name}->{benchmarks}->{$bm}->{status}) {
       $all_done = 0;
       last;
-    } 
+    }
   }
-  
+
   return $all_done;
 }
 
-sub gen_csv_rpt_vtr_flow($ $) 
+sub gen_csv_rpt_vtr_flow($ $)
 {
   my ($tag,$CSVFH) = @_;
   my ($tmp,$ikw,$tmpkw);
@@ -3001,7 +3006,7 @@ sub gen_csv_rpt_vtr_flow($ $)
   }
 
   # Print out Standard Stats First
-  print $CSVFH "$tag"; 
+  print $CSVFH "$tag";
   print $CSVFH ",LUTs";
   if ("on" eq $opt_ptr->{min_route_chan_width}) {
     print $CSVFH ",min_route_chan_width";
@@ -3028,14 +3033,7 @@ sub gen_csv_rpt_vtr_flow($ $)
   # Check log/stats one by one
   foreach $tmp(@benchmark_names) {
     $tmp =~ s/\.v$//g;     
-
-    # For matlab script, we use {} for string 
-    if ("on" eq $opt_ptr->{matlab_rpt}) {
-      print $CSVFH "{'$tmp'}"; 
-    } else {
-      print $CSVFH "$tmp";
-    }
-
+    print $CSVFH "$tmp";
     print $CSVFH ",$rpt_h{$tag}->{$tmp}->{$N_val}->{$K_val}->{LUTs}";
     if ("on" eq $opt_ptr->{min_route_chan_width}) {
       print $CSVFH ",$rpt_h{$tag}->{$tmp}->{$N_val}->{$K_val}->{min_route_chan_width}";
@@ -3049,14 +3047,14 @@ sub gen_csv_rpt_vtr_flow($ $)
     @keywords = split /\|/,$conf_ptr->{csv_tags}->{vpr_tags}->{val};
     for($ikw=0; $ikw < ($#keywords+1); $ikw++) {
       $tmpkw = $keywords[$ikw];
-      $tmpkw =~ s/\s//g;  
+      $tmpkw =~ s/\s//g;
       print $CSVFH ",$rpt_ptr->{$tag}->{$tmp}->{$N_val}->{$K_val}->{$keywords[$ikw]}";
     }
     if ("on" eq $opt_ptr->{power}) {
       @keywords = split /\|/,$conf_ptr->{csv_tags}->{vpr_power_tags}->{val};
       for($ikw=0; $ikw < ($#keywords+1); $ikw++) {
         $tmpkw = $keywords[$ikw];
-        $tmpkw =~ s/\s//g;  
+        $tmpkw =~ s/\s//g;
         print $CSVFH ",$rpt_ptr->{$tag}->{$tmp}->{$N_val}->{$K_val}->{power}->{$keywords[$ikw]}";
       }
       print $CSVFH ",$rpt_ptr->{$tag}->{$tmp}->{$N_val}->{$K_val}->{power}->{total}";
@@ -3077,7 +3075,7 @@ sub gen_csv_rpt_vtr_flow($ $)
   }
 }
 
-sub gen_csv_rpt_yosys_vpr_flow($ $) 
+sub gen_csv_rpt_yosys_vpr_flow($ $)
 {
   my ($tag,$CSVFH) = @_;
   my ($tmp,$ikw,$tmpkw);
@@ -3093,7 +3091,7 @@ sub gen_csv_rpt_yosys_vpr_flow($ $)
   }
 
   # Print out Standard Stats First
-  print $CSVFH "$tag"; 
+  print $CSVFH "$tag";
   print $CSVFH ",LUTs";
   if ("on" eq $opt_ptr->{min_route_chan_width}) {
     print $CSVFH ",min_route_chan_width";
@@ -3142,14 +3140,14 @@ sub gen_csv_rpt_yosys_vpr_flow($ $)
     @keywords = split /\|/,$conf_ptr->{csv_tags}->{vpr_tags}->{val};
     for($ikw=0; $ikw < ($#keywords+1); $ikw++) {
       $tmpkw = $keywords[$ikw];
-      $tmpkw =~ s/\s//g;  
+      $tmpkw =~ s/\s//g;
       print $CSVFH ",$rpt_ptr->{$tag}->{$tmp}->{$N_val}->{$K_val}->{$keywords[$ikw]}";
     }
     if ("on" eq $opt_ptr->{power}) {
       @keywords = split /\|/,$conf_ptr->{csv_tags}->{vpr_power_tags}->{val};
       for($ikw=0; $ikw < ($#keywords+1); $ikw++) {
         $tmpkw = $keywords[$ikw];
-        $tmpkw =~ s/\s//g;  
+        $tmpkw =~ s/\s//g;
         print $CSVFH ",$rpt_ptr->{$tag}->{$tmp}->{$N_val}->{$K_val}->{power}->{$keywords[$ikw]}";
       }
       print $CSVFH ",$rpt_ptr->{$tag}->{$tmp}->{$N_val}->{$K_val}->{power}->{total}";
@@ -3170,7 +3168,7 @@ sub gen_csv_rpt_yosys_vpr_flow($ $)
   }
 }
 
-sub gen_csv_rpt_standard_flow($ $) 
+sub gen_csv_rpt_standard_flow($ $)
 {
   my ($tag,$CSVFH) = @_;
   my ($tmp,$ikw,$tmpkw);
@@ -3186,7 +3184,7 @@ sub gen_csv_rpt_standard_flow($ $)
   }
 
   # Print out Standard Stats First
-  print $CSVFH "$tag"; 
+  print $CSVFH "$tag";
   print $CSVFH ",LUTs";
   if ("on" eq $opt_ptr->{min_route_chan_width}) {
     print $CSVFH ",min_route_chan_width";
@@ -3213,13 +3211,7 @@ sub gen_csv_rpt_standard_flow($ $)
   # Check log/stats one by one
   foreach $tmp(@benchmark_names) {
     $tmp =~ s/\.blif$//g;     
-    # For matlab script, we use {} for string 
-    if ("on" eq $opt_ptr->{matlab_rpt}) {
-      print $CSVFH "{'$tmp'}"; 
-    } else {
-      print $CSVFH "$tmp";
-    }
-
+    print $CSVFH "$tmp";
     print $CSVFH ",$rpt_h{$tag}->{$tmp}->{$N_val}->{$K_val}->{LUTs}";
     if ("on" eq $opt_ptr->{min_route_chan_width}) {
       print $CSVFH ",$rpt_h{$tag}->{$tmp}->{$N_val}->{$K_val}->{min_route_chan_width}";
@@ -3234,17 +3226,13 @@ sub gen_csv_rpt_standard_flow($ $)
     for($ikw=0; $ikw < ($#keywords+1); $ikw++) {
       $tmpkw = $keywords[$ikw];
       $tmpkw =~ s/\s//g;  
-      if (defined($rpt_ptr->{$tag}->{$tmp}->{$N_val}->{$K_val}->{$keywords[$ikw]})) {
-        print $CSVFH ",$rpt_ptr->{$tag}->{$tmp}->{$N_val}->{$K_val}->{$keywords[$ikw]}";
-      } else {
-        print $CSVFH ", ";
-      }
+      print $CSVFH ",$rpt_ptr->{$tag}->{$tmp}->{$N_val}->{$K_val}->{$keywords[$ikw]}";
     }
     if ("on" eq $opt_ptr->{power}) {
       @keywords = split /\|/,$conf_ptr->{csv_tags}->{vpr_power_tags}->{val};
       for($ikw=0; $ikw < ($#keywords+1); $ikw++) {
         $tmpkw = $keywords[$ikw];
-        $tmpkw =~ s/\s//g;  
+        $tmpkw =~ s/\s//g;
         print $CSVFH ",$rpt_ptr->{$tag}->{$tmp}->{$N_val}->{$K_val}->{power}->{$keywords[$ikw]}";
       }
       print $CSVFH ",$rpt_ptr->{$tag}->{$tmp}->{$N_val}->{$K_val}->{power}->{total}";
@@ -3266,7 +3254,7 @@ sub gen_csv_rpt_standard_flow($ $)
   }
 }
 
-sub gen_csv_rpt_mpack2_flow($ $) 
+sub gen_csv_rpt_mpack2_flow($ $)
 {
   my ($tag,$CSVFH) = @_;
   my ($tmp,$ikw,$tmpkw);
@@ -3282,7 +3270,7 @@ sub gen_csv_rpt_mpack2_flow($ $)
   }
 
   # Print out Mpack stats Second
-  print $CSVFH "$tag"; 
+  print $CSVFH "$tag";
   if ("on" eq $opt_ptr->{min_route_chan_width}) {
     print $CSVFH ",min_route_chan_width";
     print $CSVFH ",fix_route_chan_width";
@@ -3291,7 +3279,7 @@ sub gen_csv_rpt_mpack2_flow($ $)
   } else {
     print $CSVFH ",min_route_chan_width";
   }
-  
+
   @keywords = split /\|/,$conf_ptr->{csv_tags}->{mpack2_tags}->{val};
   #foreach $tmpkw(@keywords) {
   for($ikw=0; $ikw < ($#keywords+1); $ikw++) {
@@ -3314,13 +3302,7 @@ sub gen_csv_rpt_mpack2_flow($ $)
   # Check log/stats one by one
   foreach $tmp(@benchmark_names) {
     $tmp =~ s/\.blif$//g;     
-    # For matlab script, we use {} for string 
-    if ("on" eq $opt_ptr->{matlab_rpt}) {
-      print $CSVFH "{'$tmp'}"; 
-    } else {
-      print $CSVFH "$tmp";
-    }
-
+    print $CSVFH "$tmp";
     if ("on" eq $opt_ptr->{min_route_chan_width}) {
       print $CSVFH ",$rpt_h{$tag}->{$tmp}->{$N_val}->{$K_val}->{min_route_chan_width}";
       print $CSVFH ",$rpt_h{$tag}->{$tmp}->{$N_val}->{$K_val}->{fix_route_chan_width}";
@@ -3333,20 +3315,20 @@ sub gen_csv_rpt_mpack2_flow($ $)
     @keywords = split /\|/,$conf_ptr->{csv_tags}->{mpack2_tags}->{val};
     for($ikw=0; $ikw < ($#keywords+1); $ikw++) {
       $tmpkw = $keywords[$ikw];
-      $tmpkw =~ s/\s//g;  
+      $tmpkw =~ s/\s//g;
       print $CSVFH ",$rpt_ptr->{$tag}->{$tmp}->{$N_val}->{$K_val}->{$keywords[$ikw]}";
     }
     @keywords = split /\|/,$conf_ptr->{csv_tags}->{vpr_tags}->{val};
     for($ikw=0; $ikw < ($#keywords+1); $ikw++) {
       $tmpkw = $keywords[$ikw];
-      $tmpkw =~ s/\s//g;  
+      $tmpkw =~ s/\s//g;
       print $CSVFH ",$rpt_ptr->{$tag}->{$tmp}->{$N_val}->{$K_val}->{$keywords[$ikw]}";
     }
     if ("on" eq $opt_ptr->{power}) {
       @keywords = split /\|/,$conf_ptr->{csv_tags}->{vpr_power_tags}->{val};
       for($ikw=0; $ikw < ($#keywords+1); $ikw++) {
         $tmpkw = $keywords[$ikw];
-        $tmpkw =~ s/\s//g;  
+        $tmpkw =~ s/\s//g;
         print $CSVFH ",$rpt_ptr->{$tag}->{$tmp}->{$N_val}->{$K_val}->{power}->{$keywords[$ikw]}";
       }
       print $CSVFH ",$rpt_ptr->{$tag}->{$tmp}->{$N_val}->{$K_val}->{power}->{total}";
@@ -3367,7 +3349,7 @@ sub gen_csv_rpt_mpack2_flow($ $)
   }
 }
 
-sub gen_csv_rpt_mpack1_flow($ $) 
+sub gen_csv_rpt_mpack1_flow($ $)
 {
   my ($tag,$CSVFH) = @_;
   my ($tmp,$ikw,$tmpkw);
@@ -3383,7 +3365,7 @@ sub gen_csv_rpt_mpack1_flow($ $)
   }
 
   # Print out Mpack stats Second
-  print $CSVFH "$tag"; 
+  print $CSVFH "$tag";
   print $CSVFH ",MATRIX";
   @keywords = split /\|/,$conf_ptr->{csv_tags}->{mpack_tags}->{val};
   for($ikw=0; $ikw < ($#keywords+1); $ikw++) {
@@ -3405,32 +3387,26 @@ sub gen_csv_rpt_mpack1_flow($ $)
   # Check log/stats one by one
   foreach $tmp(@benchmark_names) {
     $tmp =~ s/\.blif$//g;     
-    # For matlab script, we use {} for string 
-    if ("on" eq $opt_ptr->{matlab_rpt}) {
-      print $CSVFH "{'$tmp'}"; 
-    } else {
-      print $CSVFH "$tmp";
-    }
-
+    print $CSVFH "$tmp";
     #foreach $tmpkw(@keywords) {
     print $CSVFH ",$rpt_ptr->{$tag}->{$tmp}->{$N_val}->{$M_val}->{MATRIX}";
     @keywords = split /\|/,$conf_ptr->{csv_tags}->{mpack_tags}->{val};
     for($ikw=0; $ikw < ($#keywords+1); $ikw++) {
       $tmpkw = $keywords[$ikw];
-      $tmpkw =~ s/\s//g;  
+      $tmpkw =~ s/\s//g;
       print $CSVFH ",$rpt_ptr->{$tag}->{$tmp}->{$N_val}->{$M_val}->{$keywords[$ikw]}";
     }
     @keywords = split /\|/,$conf_ptr->{csv_tags}->{vpr_tags}->{val};
     for($ikw=0; $ikw < ($#keywords+1); $ikw++) {
       $tmpkw = $keywords[$ikw];
-      $tmpkw =~ s/\s//g;  
+      $tmpkw =~ s/\s//g;
       print $CSVFH ",$rpt_ptr->{$tag}->{$tmp}->{$N_val}->{$M_val}->{$keywords[$ikw]}";
     }
     # Print Power Results
     @keywords = split /\|/,$conf_ptr->{csv_tags}->{vpr_power_tags}->{val};
     for($ikw=0; $ikw < ($#keywords+1); $ikw++) {
       $tmpkw = $keywords[$ikw];
-      $tmpkw =~ s/\s//g;  
+      $tmpkw =~ s/\s//g;
       print $CSVFH ",$rpt_ptr->{$tag}->{$tmp}->{$N_val}->{$M_val}->{power}->{$keywords[$ikw]}";
     }
     print $CSVFH ",$rpt_ptr->{$tag}->{$tmp}->{$N_val}->{$M_val}->{power}->{total}";
@@ -3451,7 +3427,7 @@ sub gen_csv_rpt_mpack1_flow($ $)
 }
 
 sub init_selected_flows() {
-  # For each flow type, mark the status to off 
+  # For each flow type, mark the status to off
   foreach my $flow_type(@supported_flows) {
     $selected_flows{$flow_type}->{flow_status} = "off";
     # For each benchmark, init the status to "off"
@@ -3491,7 +3467,7 @@ sub mark_flows_benchmarks() {
   }
 }
 
-sub gen_csv_rpt($) 
+sub gen_csv_rpt($)
 {
   my ($csv_file) = @_;
 
@@ -3600,7 +3576,7 @@ sub main()
     &mark_flows_benchmarks();
     &parse_flows_benchmarks_results();
   } else {
-    &remove_designs(); 
+    &remove_designs();
     &plan_run_flows();
   }
   &gen_csv_rpt($opt_ptr->{rpt_val});
