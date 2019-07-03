@@ -1,0 +1,8 @@
+# Ignore everything
+*
+# But descend into directories
+!*/
+!.gitignore
+# Recursively allow files under subtree
+!/UG73-iCE40_Ultra_Barcode_Emulation/hardware/source/top_module/**
+!/PID_Controller/**

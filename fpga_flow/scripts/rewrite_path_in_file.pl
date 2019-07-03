@@ -32,17 +32,17 @@ sub opts_read()
 	if ($#ARGV == -1){
 		print "Error: Not enough input argument!\n";
 		&print_usage();
-		exit(1); 
+		exit(1);
 	} else {
 		for (my $iargv = 0; $iargv < $#ARGV+1; $iargv++){
-			if ("-i" eq $ARGV[$iargv]){ 
+			if ("-i" eq $ARGV[$iargv]){
 				$arch_file = $ARGV[$iargv+1];
 				$iargv++;
-			} elsif ("-o" eq $ARGV[$iargv]){ 
+			} elsif ("-o" eq $ARGV[$iargv]){
 				$new_arch_file = $ARGV[$iargv+1];
 				$overwrite = "FALSE";
 				$iargv++;
-			} elsif ("-k" eq $ARGV[$iargv]){ 
+			} elsif ("-k" eq $ARGV[$iargv]){
 				$keyword = $ARGV[$iargv+1];
 				$change_to = $ARGV[$iargv+2];
 				$default_keyword = "FALSE";
@@ -77,8 +77,8 @@ sub save_original($)
 	my ($template) = @_;
 	my $renamed_template = "$template".".bak";
 	rename($template, $renamed_template);
-	
-	return $renamed_template;	
+
+	return $renamed_template;
 }
 
 sub findPath(){
@@ -103,7 +103,7 @@ sub rewrite_file($ $)
 	my ($arch, $template) = @_;
 	open(IN, '<'.$template);
 	open(OUT, '>'.$arch);
-	
+
 	if($default_keyword eq "TRUE"){
 		my $myPath = &findPath();
 		while(<IN>){
@@ -125,7 +125,7 @@ sub main()
 	my $rewrite_needed = &rewriting_required_check($arch_file);
 	if($rewrite_needed == 1){
 		if($overwrite eq "TRUE"){
-			my $template_file = &save_original($arch_file); 
+			my $template_file = &save_original($arch_file);
 			&rewrite_file($arch_file, $template_file);
 		} else {
 			&rewrite_file($new_arch_file, $arch_file);
@@ -133,6 +133,6 @@ sub main()
 	}
 	return;
 }
- 
+
 &main();
 exit(0);
