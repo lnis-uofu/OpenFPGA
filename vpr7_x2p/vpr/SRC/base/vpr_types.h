@@ -759,6 +759,8 @@ struct s_router_opts {
 	boolean verify_binary_search;
 	boolean full_stats;
 	boolean doRouting;
+    /* Xifan Tang: option to enable adaption to tileable route channel width */
+    boolean use_tileable_route_chan_width;
 };
 
 /* All the parameters controlling the router's operation are in this        *
