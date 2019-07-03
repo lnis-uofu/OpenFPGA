@@ -51,8 +51,7 @@ void init_and_check_one_sram_inf_orgz(t_sram_inf_orgz* cur_sram_inf_orgz,
                                       t_spice_model* spice_models);
 
 static
-void init_and_check_sram_inf(t_arch* arch,
-                             t_det_routing_arch* routing_arch);
+void init_and_check_sram_inf(t_arch* arch);
 
 static 
 t_llist* check_and_add_one_global_port_to_llist(t_llist* old_head, 
@@ -378,8 +377,7 @@ void init_and_check_one_sram_inf_orgz(t_sram_inf_orgz* cur_sram_inf_orgz,
 }                         
 
 static
-void init_and_check_sram_inf(t_arch* arch,
-                             t_det_routing_arch* routing_arch) {
+void init_and_check_sram_inf(t_arch* arch) {
   /* We have two branches: 
    * 1. SPICE SRAM organization information 
    * 2. Verilog SRAM organization information 
@@ -511,7 +509,7 @@ void init_check_arch_spice_models(t_arch* arch,
   }
 
   /* Step C: Find SRAM Model*/
-  init_and_check_sram_inf(arch, routing_arch);
+  init_and_check_sram_inf(arch);
 
   /* Step D: Find the segment spice_model*/
   for (i = 0; i < arch->num_segments; i++) {
@@ -689,7 +687,7 @@ void rec_identify_pb_type_phy_mode(t_pb_type* cur_pb_type) {
 
 /* Identify physical mode of pb_types in each defined complex block */
 static 
-void init_check_arch_pb_type_idle_and_phy_mode(t_arch* Arch) {
+void init_check_arch_pb_type_idle_and_phy_mode() {
   int itype;
 
   for (itype = 0; itype < num_types; itype++) {
@@ -1330,7 +1328,7 @@ void fpga_x2p_setup(t_vpr_setup vpr_setup,
   init_check_arch_spice_models(Arch, &(vpr_setup.RoutingArch));
 
   /* Initialize idle mode and physical mode of each pb_type and pb_graph_node */
-  init_check_arch_pb_type_idle_and_phy_mode(Arch);
+  init_check_arch_pb_type_idle_and_phy_mode();
 
   /* Create and initialize a linked list for global ports */
   global_ports_head = init_llist_global_ports(Arch->spice);
