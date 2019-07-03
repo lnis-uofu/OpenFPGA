@@ -1,14 +1,14 @@
 /////////////////////////////////////
 //                                 //
 //    ERI summit demo-benchmark    //
-//      pipelined_32b_adder.v      //
+//      pipelined_8b_adder.v       //
 //          by Aurelien            // 
 //                                 //
 /////////////////////////////////////
 
 `timescale 1 ns/ 1 ps
 
-module pipelined_32b_adder(
+module pipelined_8b_adder(
 	clk,
 	raddr,
 	waddr,
@@ -19,26 +19,26 @@ module pipelined_32b_adder(
 	q );
 
 	input clk;
-	input[10:0] raddr;
-	input[10:0] waddr;
+	input[5:0] raddr;
+	input[5:0] waddr;
 	input ren;
 	input wen;
-	input[30:0] a;
-	input[30:0] b;
-	output[31:0] q;
+	input[6:0] a;
+	input[6:0] b;
+	output[7:0] q;
 
-	reg[2047:0] ram[31:0];
-	reg[30:0] a_st0;
-	reg[30:0] a_st1;
-	reg[30:0] b_st0;
-	reg[30:0] b_st1;
-	reg[10:0] waddr_st0;
-	reg[10:0] waddr_st1;
+	reg[63:0] ram[7:0];
+	reg[6:0] a_st0;
+	reg[6:0] a_st1;
+	reg[6:0] b_st0;
+	reg[6:0] b_st1;
+	reg[8:0] waddr_st0;
+	reg[8:0] waddr_st1;
 	reg wen_st0;
 	reg wen_st1;
-	reg[31:0] q_int;
+	reg[7:0] q_int;
 
-	wire[31:0] AplusB;
+	wire[7:0] AplusB;
 
 	assign AplusB = a_st1 + b_st1;
 	assign q = q_int;
@@ -60,4 +60,4 @@ module pipelined_32b_adder(
 		end
 	end
 
-endmodule : pipelined_32b_adder
+endmodule

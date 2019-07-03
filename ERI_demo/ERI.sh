@@ -5,11 +5,11 @@
 my_pwd=$PWD
 fpga_flow_scripts=${my_pwd}/fpga_flow/scripts
 vpr_path=${my_pwd}/vpr7_x2p/vpr
-benchmark="pipelined_32b_adder"
+benchmark="pipelined_8b_adder"
 include_netlists="_include_netlists.v"
 compiled_file="compiled_$benchmark"
 tb_formal_postfix="_top_formal_verification_random_tb"
-verilog_output_dirname="${benchmark}_Verilog"
+verilog_output_dirname="${vpr_path}${benchmark}_Verilog"
 log_file="${benchmark}_sim.log"
 new_reg_sh="${PWD}/ERI_demo/my_eri_demo.sh"
 template_sh="${PWD}/ERI_demo/eri_demo.sh"
@@ -29,7 +29,7 @@ cd $my_pwd
 # Start the script -> run the fpga generation -> run the simulation -> check the log file
 source $new_reg_sh	# Leave us in vpr folder
 iverilog -o $compiled_file $verilog_output_dirname/SRC/$benchmark$include_netlists -s $benchmark$tb_formal_postfix
-vvp $compiled_file -j 16 >> $log_file
+vvp $compiled_file -j 64 >> $log_file
 
 result=`grep "Succeed" $log_file`
 if ["$result" = ""]; then
