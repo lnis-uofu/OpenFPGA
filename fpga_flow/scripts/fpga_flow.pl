@@ -1476,6 +1476,9 @@ sub run_vpr_route($ $ $ $ $ $ $ $ $)
   if (($fix_chan_width > 0)||($fix_chan_width == 0)) {
     $chan_width_opt = "-route_chan_width $fix_chan_width";
   }
+  if ("on" eq $opt_ptr->{vpr_use_tileable_route_chan_width}) {
+    $chan_width_opt = $chan_width_opt." --use_tileable_route_chan_width";
+  }
 
   my ($vpr_spice_opts) = ("");
   if (("on" eq $opt_ptr->{power})&&("on" eq $opt_ptr->{vpr_fpga_spice})) {
