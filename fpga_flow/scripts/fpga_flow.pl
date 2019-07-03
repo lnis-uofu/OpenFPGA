@@ -1460,7 +1460,7 @@ sub run_std_vpr($ $ $ $ $ $ $ $ $)
   #  foreach my $file (0..$#files){
   #    print "$files[$file]\t";
   #  }
-  3  print "\n";
+  #  print "\n";
   #}
   chdir $cwd;
 }
