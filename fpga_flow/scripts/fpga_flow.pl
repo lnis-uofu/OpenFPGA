@@ -168,6 +168,7 @@ sub print_usage()
   print "      \t-vpr_fpga_spice_leakage_only : turn on leakage_only mode in VPR FPGA SPICE\n";
   print "      \t-vpr_fpga_spice_parasitic_net_estimation_off : turn off parasitic_net_estimation in VPR FPGA SPICE\n";
   print "      \t-vpr_fpga_spice_testbench_load_extraction_off : turn off testbench_load_extraction in VPR FPGA SPICE\n";
+  print "      \t-vpr_fpga_spice_simulator_path <string> : Specify simulator path\n";
   print "      [ VPR - FPGA-Verilog Extension ] \n";
   print "      \t-vpr_fpga_verilog : turn on Verilog Generator of VPR FPGA SPICE\n";
   print "      \t-vpr_fpga_verilog_dir <verilog_path>: provide the path where generated verilog files will be written\n";
@@ -274,8 +275,7 @@ sub read_opt_into_hash($ $ $)
 sub opts_read()
 {
   # if no arguments detected, print the usage.
-  if (-1 == $#ARGV)
-  {
+  if (-1 == $#ARGV) {
     print "Error : No input arguments!\n";
     print "Help desk:\n";
     &print_usage();
@@ -289,19 +289,15 @@ sub opts_read()
   my $argfd;
   # Check help fist
   $argfd = &spot_option($cur_arg,"-help");
-  if (-1 != $argfd)
-  {
+  if (-1 != $argfd) {
     print "Help desk:\n";
     &print_usage();
   }
   # Then Check the debug with highest priority
   $argfd = &spot_option($cur_arg,"-debug");
-  if (-1 != $argfd)
-  {
+  if (-1 != $argfd) {
     $opt_ptr->{"debug"} = "on";
-  }
-  else
-  {
+  } else {
     $opt_ptr->{"debug"} = "off";
   }
   # Check mandatory options
@@ -350,6 +346,7 @@ sub opts_read()
   &read_opt_into_hash("vpr_fpga_spice_leakage_only","off","off");
   &read_opt_into_hash("vpr_fpga_spice_parasitic_net_estimation_off","off","off");
   &read_opt_into_hash("vpr_fpga_spice_testbench_load_extraction_off","off","off");
+  &read_opt_into_hash("vpr_fpga_spice_simulator_path","on","off");
 
   # FPGA-Verilog options
   # Read Opt into Hash(opt_ptr) : "opt_name","with_val","mandatory"
@@ -1330,6 +1327,9 @@ sub run_std_vpr($ $ $ $ $ $ $ $ $)
     }
     if ("on" eq $opt_ptr->{vpr_fpga_spice_sim_mt_num}) {
       $vpr_spice_opts = $vpr_spice_opts." --fpga_spice_sim_mt_num $opt_ptr->{vpr_fpga_spice_sim_mt_num_val}";
+    }
+    if ("on" eq $opt_ptr->{vpr_fpga_spice_simulator_path}) {
+      $vpr_spice_opts = $vpr_spice_opts." --fpga_spice_simulator_path $opt_ptr->{vpr_fpga_spice_simulator_path_val}";
     }
     if ("on" eq $opt_ptr->{vpr_fpga_spice_print_component_tb}) {
       $vpr_spice_opts = $vpr_spice_opts." --fpga_spice_print_lut_testbench";
