@@ -12,7 +12,7 @@ use Cwd;
 use FileHandle;
 # Multi-thread support
 use threads;
-use threads::shared;
+#use threads::shared;
 
 # Date
 my $mydate = gmctime();
@@ -709,8 +709,6 @@ sub run_abc_fpgamap($ $ $)
   # Get ABC path
   my ($abc_dir,$abc_name) = &split_prog_path($conf_ptr->{dir_path}->{abc_path}->{val});
 
-  print "Entering $abc_dir\n";
-  chdir $abc_dir;
   my ($lut_num) = $opt_ptr->{K_val};
   # Before we run this blif, identify it is a combinational or sequential
   my ($abc_seq_optimize) = ("");
@@ -738,6 +736,9 @@ sub run_abc_fpgamap($ $ $)
   close($ABC_CMD_FH);
   #
   # Create a local copy for the commands
+  #
+  print "Entering $abc_dir\n";
+  chdir $abc_dir;
 
   system("./$abc_name -F $cmd_log > $log");
 
@@ -3211,7 +3212,13 @@ sub gen_csv_rpt_standard_flow($ $)
   # Check log/stats one by one
   foreach $tmp(@benchmark_names) {
     $tmp =~ s/\.blif$//g;     
-    print $CSVFH "$tmp";
+
+    if ("on" eq $opt_ptr->{matlab_rpt}) {
+      print $CSVFH "{'$tmp'}";
+    } else {
+      print $CSVFH "$tmp";
+    }
+
     print $CSVFH ",$rpt_h{$tag}->{$tmp}->{$N_val}->{$K_val}->{LUTs}";
     if ("on" eq $opt_ptr->{min_route_chan_width}) {
       print $CSVFH ",$rpt_h{$tag}->{$tmp}->{$N_val}->{$K_val}->{min_route_chan_width}";
