@@ -810,6 +810,7 @@ struct s_det_routing_arch {
 	int Fs;
 	enum e_switch_block_type switch_block_type;
 	int sub_Fs;
+    boolean wire_opposite_side;
 	enum e_switch_block_type switch_block_sub_type;
 	int num_segment;
 	short num_switch;

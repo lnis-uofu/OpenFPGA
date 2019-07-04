@@ -936,6 +936,7 @@ struct s_arch {
 	float R_minW_pmos;
 	int Fs;
 	int SubFs;
+	boolean wire_opposite_side;
 	float C_ipin_cblock;
 	float T_ipin_cblock;
     /* mrFPGA: Xifan TANG */

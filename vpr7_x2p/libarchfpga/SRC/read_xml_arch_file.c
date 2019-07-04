@@ -23,8 +23,8 @@
  ***********************************************************************/
 
 /************************************************************************
- * Filename:    rr_blocks.cpp
- * Created by:   Xifan Tang
+ * Filename:    read_xml_arch_file.c
+ * Created by:   Jason Luu
  * Change history:
  * +-------------------------------------+
  * |  Date       |    Author   | Notes
@@ -2199,6 +2199,10 @@ static void ProcessDevice(INOUTP ezxml_t Node, OUTP struct s_arch *arch,
     /* SubFs is Fs for the switch block type of passing tracks */
     /* By default, the subFs is the same as the main Fs */ 
 	arch->SubFs = GetIntProperty(Cur, "sub_fs", FALSE, arch->Fs);
+
+    /* A switch to allow passing tracks wired to the same routing channels */
+	arch->wire_opposite_side = GetBooleanProperty(Cur, "wire_opposite_side", FALSE, FALSE);
+	ezxml_set_attr(Cur, "wire_opposite_side", NULL);
 
 	FreeNode(Cur);
 }

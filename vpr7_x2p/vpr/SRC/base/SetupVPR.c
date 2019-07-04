@@ -541,6 +541,7 @@ static void SetupRoutingArch(INP t_arch Arch,
 	RoutingArch->R_minW_pmos = Arch.R_minW_pmos;
 	RoutingArch->Fs = Arch.Fs;
 	RoutingArch->sub_Fs = Arch.SubFs;
+	RoutingArch->wire_opposite_side = Arch.wire_opposite_side;
 	RoutingArch->directionality = BI_DIRECTIONAL;
 	if (Arch.Segments)
 		RoutingArch->directionality = Arch.Segments[0].directionality;

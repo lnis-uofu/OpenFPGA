@@ -357,6 +357,7 @@ void build_gsb_one_group_track_to_track_map(const t_rr_graph* rr_graph,
                                             const RRGSB& rr_gsb, 
                                             const enum e_switch_block_type sb_type, 
                                             const int Fs,
+                                            const bool wire_opposite_side,
                                             const t_track_group from_tracks, /* [0..gsb_side][track_indices] */
                                             const t_track_group to_tracks, /* [0..gsb_side][track_indices] */
                                             t_track2track_map* track2track_map) {
@@ -387,7 +388,11 @@ void build_gsb_one_group_track_to_track_map(const t_rr_graph* rr_graph,
         if (from_side == to_side) {
           continue;
         }
-
+        /* Bypass those from_side is opposite to to_side if required */
+        if ( (true == wire_opposite_side) 
+          && (to_side_manager.get_opposite() == from_side) ) {
+          continue;
+        }
         /* Get other track_ids depending on the switch block pattern */
         /* Find the track ids that will start at the other sides */
         std::vector<size_t> to_track_ids = get_switch_block_to_track_id(sb_type, Fs, from_side, inode, 
@@ -477,6 +482,7 @@ t_track2track_map build_gsb_track_to_track_map(const t_rr_graph* rr_graph,
                                                const int Fs,
                                                const enum e_switch_block_type sb_subtype, 
                                                const int subFs,
+                                               const bool wire_opposite_side,
                                                const std::vector<t_segment_inf> segment_inf) {
   t_track2track_map track2track_map; /* [0..gsb_side][0..chan_width][track_indices] */
 
@@ -549,7 +555,8 @@ t_track2track_map build_gsb_track_to_track_map(const t_rr_graph* rr_graph,
   /* For Group 1: we build connections between end_tracks and start_tracks*/
   build_gsb_one_group_track_to_track_map(rr_graph, rr_gsb, 
                                          sb_type, Fs,
-                                         end_tracks, start_tracks, 
+                                         true, /* End tracks should always to wired to start tracks */ 
+                                         end_tracks, start_tracks,
                                          &track2track_map);
 
   /* For Group 2: we build connections between end_tracks and start_tracks*/
@@ -558,6 +565,7 @@ t_track2track_map build_gsb_track_to_track_map(const t_rr_graph* rr_graph,
    */
   build_gsb_one_group_track_to_track_map(rr_graph, rr_gsb, 
                                          sb_subtype, subFs,
+                                         wire_opposite_side, /* Pass tracks may not be wired to start tracks */ 
                                          pass_tracks, start_tracks, 
                                          &track2track_map);
 
