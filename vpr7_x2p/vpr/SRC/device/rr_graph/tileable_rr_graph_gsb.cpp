@@ -1062,13 +1062,13 @@ void build_gsb_one_ipin_track2pin_map(const t_rr_graph* rr_graph,
     assert (0 == actual_track_list.size() % 2);
    
     /* Scale Fc  */
-    int actual_Fc = Fc * actual_track_list.size() / chan_width; 
+    int actual_Fc = std::ceil((float)Fc * (float)actual_track_list.size() / (float)chan_width); 
     /* Minimum Fc should be 2 : ensure we will connect to a pair of routing tracks */
     actual_Fc = std::max(2, actual_Fc);
     /* Compute the step between two connection from this IPIN to tracks: 
      * step = W' / Fc', W' and Fc' are the adapted W and Fc from actual_track_list and Fc_in 
     */
-    size_t track_step = actual_track_list.size() / actual_Fc;
+    size_t track_step = std::ceil((float)actual_track_list.size() / (float)actual_Fc);
     /* Track step mush be a multiple of 2!!!*/
     if (0 != track_step % 2) {
       track_step--; /* minus 1 to increase connectivity */
@@ -1078,7 +1078,9 @@ void build_gsb_one_ipin_track2pin_map(const t_rr_graph* rr_graph,
     /* Adapt offset to the range of actual_track_list */
     size_t actual_offset = offset % actual_track_list.size();
     /* rotate the track list by an offset */
-    std::rotate(actual_track_list.begin(), actual_track_list.begin() + actual_offset, actual_track_list.end());   
+    if (0 < actual_offset) {
+      std::rotate(actual_track_list.begin(), actual_track_list.begin() + actual_offset, actual_track_list.end());   
+    }
 
     /* Assign tracks: since we assign 2 track per round, we increment itrack by 2* step  */
     int track_cnt = 0;
@@ -1108,6 +1110,12 @@ void build_gsb_one_ipin_track2pin_map(const t_rr_graph* rr_graph,
     /* Ensure the number of tracks is similar to Fc */
     //printf("Fc_in=%d, track_cnt=%d\n", actual_Fc, track_cnt);
     assert (actual_Fc <= track_cnt);
+    /* Give a warning if Fc is < track_cnt */
+    if (actual_Fc < track_cnt) {
+      vpr_printf(TIO_MESSAGE_INFO, 
+                 "Node(%lu) will have a higher Fc(=%lu) than specified(=%lu)!\nThis is due to that the number of tracks is much larger than IPINs!\n",
+                 ipin_node - rr_graph->rr_node, track_cnt, actual_Fc);
+    }
   }
   
   return;
@@ -1163,13 +1171,13 @@ void build_gsb_one_opin_pin2track_map(const t_rr_graph* rr_graph,
     }
    
     /* Scale Fc  */
-    int actual_Fc = Fc * actual_track_list.size() / chan_width; 
+    int actual_Fc = std::ceil((float)Fc * (float)actual_track_list.size() / (float)chan_width); 
     /* Minimum Fc should be 1 : ensure we will drive 1 routing track */
     actual_Fc = std::max(1, actual_Fc);
     /* Compute the step between two connection from this IPIN to tracks: 
      * step = W' / Fc', W' and Fc' are the adapted W and Fc from actual_track_list and Fc_in 
     */
-    size_t track_step = actual_track_list.size() / actual_Fc;
+    size_t track_step = std::ceil((float)actual_track_list.size() / (float)actual_Fc);
     /* Track step mush be a multiple of 2!!!*/
     /* Make sure step should be at least 1 */
     track_step = std::max(1, (int)track_step);
@@ -1203,6 +1211,12 @@ void build_gsb_one_opin_pin2track_map(const t_rr_graph* rr_graph,
     /* Ensure the number of tracks is similar to Fc */
     //printf("Fc_out=%lu, scaled_Fc_out=%d, track_cnt=%d, actual_track_cnt=%lu/%lu\n", Fc, actual_Fc, track_cnt, actual_track_list.size(), chan_width);
     assert (actual_Fc <= track_cnt);
+    /* Give a warning if Fc is < track_cnt */
+    if (actual_Fc < track_cnt) {
+      vpr_printf(TIO_MESSAGE_INFO, 
+                 "Node(%lu) will have a higher Fc(=%lu) than specified(=%lu)!\nThis is due to that the number of tracks is much larger than OPINs!\n",
+                 opin_node_id, track_cnt, actual_Fc);
+    }
   }
   
   return;
