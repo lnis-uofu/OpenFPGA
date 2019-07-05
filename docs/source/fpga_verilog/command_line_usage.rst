@@ -20,7 +20,7 @@ FPGA-Verilog Supported Options::
    :widths: 15, 30
 
    "--fpga_verilog", "Turn on the FPGA-Verilog."
-   "--fpga_verilog_dir <dir_path>", "Specify the directory that all the Verilog files will be outputted to. <dir_path> is the destination directory."
+   "--fpga_verilog_dir <dir_path>", "Specify the directory that all the Verilog files will be outputted to <dir_path> is the destination directory."
    "--fpga_verilog_include_timing", "Includes the timings found in the XML file."
    "--fpga_verilog_init_sim", "Initializes the simulation for ModelSim."
    "--fpga_verilog_print_modelsim_autodeck", "Generates the scripts necessary to the ModelSim simulation."
