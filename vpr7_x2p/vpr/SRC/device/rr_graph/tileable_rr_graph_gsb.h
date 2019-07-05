@@ -23,6 +23,8 @@ t_track2track_map build_gsb_track_to_track_map(const t_rr_graph* rr_graph,
                                                const RRGSB& rr_gsb,
                                                const enum e_switch_block_type sb_type, 
                                                const int Fs,
+                                               const enum e_switch_block_type sb_subtype, 
+                                               const int subFs,
                                                const std::vector<t_segment_inf> segment_inf);
 
 RRGSB build_one_tileable_rr_gsb(const DeviceCoordinator& device_range, 

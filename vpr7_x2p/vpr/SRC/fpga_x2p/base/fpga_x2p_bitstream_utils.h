@@ -1,3 +1,5 @@
+#ifndef FPGA_X2P_BITSTREAM_UTILS_H
+#define FPGA_X2P_BITSTREAM_UTILS_H
 
 int determine_decoder_size(int num_addr_out);
 
@@ -23,6 +25,9 @@ int count_num_reserved_conf_bits_one_rram_sram_spice_model(t_spice_model* cur_sp
 int count_num_reserved_conf_bits_one_spice_model(t_spice_model* cur_spice_model,
                                                  enum e_sram_orgz cur_sram_orgz_type,
                                                  int mux_size);
+
+int count_num_reserved_conf_bit_one_interc(t_interconnect* cur_interc,
+                                           enum e_sram_orgz cur_sram_orgz_type);
 
 void  
 add_mux_scff_conf_bits_to_llist(int mux_size,
@@ -78,3 +83,5 @@ void add_sram_conf_bits_to_sram_orgz_info(t_sram_orgz_info* cur_sram_orgz_info,
 
 void add_mux_conf_bits_to_sram_orgz_info(t_sram_orgz_info* cur_sram_orgz_info,
                                          t_spice_model* mux_spice_model, int mux_size) ;
+
+#endif

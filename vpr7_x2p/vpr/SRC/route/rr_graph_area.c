@@ -692,8 +692,8 @@ static float trans_per_mux(int num_inputs, float trans_sram_bit,
       break;
     case SPICE_MODEL_STRUCTURE_MULTILEVEL:
       assert(1 < target_switch.switch_num_level);
-      sram_trans = trans_sram_bit * target_switch.switch_num_level;
       mux_basis = determine_num_input_basis_multilevel_mux(num_inputs, target_switch.switch_num_level);
+      sram_trans = trans_sram_bit * target_switch.switch_num_level * mux_basis;
 	  num_second_stage_trans = (int)pow((double)mux_basis, (double)(target_switch.switch_num_level - 1));
       pass_trans = ((num_second_stage_trans - 1) * mux_basis/(mux_basis-1)) * pass_trans_area
                  + num_inputs * pass_trans_area;

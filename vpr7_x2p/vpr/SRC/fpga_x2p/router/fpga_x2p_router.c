@@ -1,3 +1,41 @@
+/**********************************************************
+ * MIT License
+ *
+ * Copyright (c) 2018 LNIS - The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ ***********************************************************************/
+
+/************************************************************************
+ * Filename:    fpga_x2p_router.c
+ * Created by:   Xifan Tang
+ * Change history:
+ * +-------------------------------------+
+ * |  Date       |    Author   | Notes
+ * +-------------------------------------+
+ * | 2019/07/02  |  Xifan Tang | Created 
+ * +-------------------------------------+
+ ***********************************************************************/
+/************************************************************************
+ *  This file contains a breadth-first router which is tailored for packer
+ ***********************************************************************/
+
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
@@ -13,6 +51,8 @@
 #include "fpga_x2p_pbtypes_utils.h"
 #include "fpga_x2p_rr_graph_utils.h"
 #include "fpga_x2p_pb_rr_graph.h"
+
+#include "fpga_x2p_router.h"
 
 void breadth_first_expand_rr_graph_trace_segment(t_rr_graph* local_rr_graph,
                                                  t_trace *start_ptr, 
@@ -145,6 +185,7 @@ void breadth_first_add_source_to_rr_graph_heap(t_rr_graph* local_rr_graph,
 /* A copy of breath_first_add_source_to_heap_cluster
  * I remove all the use of global variables
  */
+static 
 void breadth_first_add_one_source_to_rr_graph_heap(t_rr_graph* local_rr_graph,
                                                    int src_net_index,
                                                    int src_idx) {
@@ -249,6 +290,7 @@ boolean breadth_first_route_one_net_pb_rr_graph(t_rr_graph* local_rr_graph,
 
 /* Adapt for the multi-source rr_graph routing
  */
+static 
 boolean breadth_first_route_one_single_source_net_pb_rr_graph(t_rr_graph* local_rr_graph, 
                                                               int inet, int isrc, 
                                                               int start_isink,
@@ -434,6 +476,7 @@ boolean breadth_first_route_one_single_source_net_pb_rr_graph(t_rr_graph* local_
 
 /* Adapt for the multi-source rr_graph routing
  */
+static 
 boolean breadth_first_route_one_multi_source_net_pb_rr_graph(t_rr_graph* local_rr_graph, 
                                                              int inet) {
 
@@ -550,7 +593,7 @@ boolean breadth_first_route_one_multi_source_net_pb_rr_graph(t_rr_graph* local_r
   return route_success;
 }
 
-
+static 
 boolean feasible_routing_rr_graph(t_rr_graph* local_rr_graph,  
                                   boolean verbose) {
 
@@ -845,5 +888,7 @@ boolean try_breadth_first_route_pb_rr_graph(t_rr_graph* local_rr_graph) {
   return (FALSE);
 }
 
-
+/************************************************************************
+ * End of file : fpga_x2p_router.c
+ ***********************************************************************/
 

@@ -1489,6 +1489,7 @@ void fprint_spice_toplevel_one_grid_side_pin_with_given_index(FILE* fp,
 }
 
 /* Apply a CLB to CLB direct connection to a SPICE netlist */
+static 
 void fprint_spice_one_clb2clb_direct(FILE* fp, 
                                      int from_grid_x, int from_grid_y,
                                      int to_grid_x, int to_grid_y,
@@ -1505,7 +1506,7 @@ void fprint_spice_one_clb2clb_direct(FILE* fp,
 
   /* Check bandwidth match between from_clb and to_clb pins */
   if (0 != (cur_direct->from_clb_pin_end_index - cur_direct->from_clb_pin_start_index 
-     - cur_direct->to_clb_pin_end_index - cur_direct->to_clb_pin_start_index)) {
+     - (cur_direct->to_clb_pin_end_index - cur_direct->to_clb_pin_start_index))) {
     vpr_printf(TIO_MESSAGE_ERROR, "(%s, [LINE%d]) Unmatch pin bandwidth in direct connection (name=%s)!\n",
                __FILE__, __LINE__, cur_direct->name);
     exit(1);
@@ -1619,6 +1620,7 @@ void fprint_spice_clb2clb_directs(FILE* fp,
  * 2. Their corresponding rr_node (SINK or IPIN) has 0 fan-in.
  * In these cases, we short connect them to global GND.
  */
+static 
 void fprint_grid_float_port_stimulation(FILE* fp) {
   int inode;
   int num_float_port = 0;

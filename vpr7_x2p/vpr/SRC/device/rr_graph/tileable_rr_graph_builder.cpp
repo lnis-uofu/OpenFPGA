@@ -31,6 +31,8 @@
  * +-------------------------------------+
  * | 2019/06/11  |  Xifan Tang | Created 
  * +-------------------------------------+
+ * | 2019/07/02  |  Xifan Tang | Modified to support SB subtype and SubFs
+ * +-------------------------------------+
  ***********************************************************************/
 /************************************************************************
  *  This file contains a builder for the complex rr_graph data structure 
@@ -777,7 +779,8 @@ void build_rr_graph_edges(t_rr_graph* rr_graph,
                           const std::vector<size_t> device_chan_width, 
                           const std::vector<t_segment_inf> segment_inf,
                           int** Fc_in, int** Fc_out,
-                          const enum e_switch_block_type sb_type, const int Fs) {
+                          const enum e_switch_block_type sb_type, const int Fs,
+                          const enum e_switch_block_type sb_subtype, const int subFs) {
 
   /* Create edges for SOURCE and SINK nodes for a tileable rr_graph */
   build_rr_graph_edges_for_source_nodes(rr_graph, grids);
@@ -804,7 +807,7 @@ void build_rr_graph_edges(t_rr_graph* rr_graph,
 
       /* adapt the switch_block_conn for the GSB nodes */      
       t_track2track_map sb_conn; /* [0..from_gsb_side][0..chan_width-1][track_indices] */
-      sb_conn = build_gsb_track_to_track_map(rr_graph, rr_gsb, sb_type, Fs, segment_inf);
+      sb_conn = build_gsb_track_to_track_map(rr_graph, rr_gsb, sb_type, Fs, sb_subtype, subFs, segment_inf);
 
       /* Build edges for a GSB */
       build_edges_for_one_tileable_rr_gsb(rr_graph, &rr_gsb,
@@ -904,6 +907,7 @@ void build_tileable_unidir_rr_graph(INP const int L_num_types,
                                     INP t_type_ptr types, INP const int L_nx, INP const int L_ny,
                                     INP struct s_grid_tile **L_grid, INP const int chan_width,
                                     INP const enum e_switch_block_type sb_type, INP const int Fs, 
+                                    INP const enum e_switch_block_type sb_subtype, INP const int subFs, 
                                     INP const int num_seg_types,
                                     INP const t_segment_inf * segment_inf,
                                     INP const int num_switches, INP const int delayless_switch, 
@@ -1021,7 +1025,7 @@ void build_tileable_unidir_rr_graph(INP const int L_num_types,
   /* Create edges for a tileable rr_graph */
   build_rr_graph_edges(&rr_graph, device_size, grids, device_chan_width, segment_infs, 
                        Fc_in, Fc_out,
-                       sb_type, Fs);
+                       sb_type, Fs, sb_subtype, subFs);
 
   /************************************************************************
    * 6.2 Build direction connection lists
@@ -1034,7 +1038,7 @@ void build_tileable_unidir_rr_graph(INP const int L_num_types,
   build_rr_graph_direct_connections(&rr_graph, device_size, grids, delayless_switch, 
                                     num_directs, directs, clb_to_clb_directs);
 
-  print_rr_graph_stats(rr_graph);
+  //print_rr_graph_stats(rr_graph);
 
   /* Clear driver switches of the rr_graph */
   clear_rr_graph_driver_switch(&rr_graph);

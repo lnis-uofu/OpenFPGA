@@ -29,7 +29,7 @@ sub print_usage()
   print "              -add_default_clk\n";
   print "              -initial_blif <input_blif_path>\n";
   print "\n";
-  return 1;
+  return 0;
 }
 
 sub opts_read()
@@ -53,7 +53,7 @@ sub opts_read()
       }
     }
   } 
-  return 1;
+  return 0;
 }
 
 # Print a line of blif netlist
@@ -432,15 +432,15 @@ sub scan_blif()
   }
   close($FIN2);
   close($FOUT);
-  return 1;
+  return 0;
 }
 
 sub main()
 {
   &opts_read(); 
   &scan_blif();
-  return 1;
+  return 0;
 }
  
 &main();
-exit(1);
+exit(0);
