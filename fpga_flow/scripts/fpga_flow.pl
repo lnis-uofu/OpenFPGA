@@ -162,6 +162,7 @@ sub print_usage()
   print "      \t-vpr_fpga_x2p_rename_illegal_port : turn on renaming illegal ports option of VPR FPGA SPICE\n";
   print "      \t-vpr_fpga_x2p_signal_density_weight <float>: specify the option signal_density_weight of VPR FPGA SPICE\n";
   print "      \t-vpr_fpga_x2p_sim_window_size <float>: specify the option sim_window_size of VPR FPGA SPICE\n";
+  print "      \t-vpr_fpga_x2p_compact_routing_hierarchy : allow routing block modularization\n";
   print "      [ VPR - FPGA-SPICE Extension ] \n";
   print "      \t-vpr_fpga_spice <task_file> : turn on SPICE netlists print-out in VPR, specify a task file\n";
   print "      \t-vpr_fpga_spice_sim_mt_num <int>: specify the option sim_mt_num of VPR FPGA SPICE\n";
@@ -344,6 +345,7 @@ sub opts_read()
   &read_opt_into_hash("vpr_fpga_x2p_rename_illegal_port","off","off");
   &read_opt_into_hash("vpr_fpga_x2p_signal_density_weight","on","off");
   &read_opt_into_hash("vpr_fpga_x2p_sim_window_size","on","off");
+  &read_opt_into_hash("vpr_fpga_x2p_compact_routing_hierarchy","off","off");
   &read_opt_into_hash("vpr_fpga_spice_sim_mt_num","on","off");
   &read_opt_into_hash("vpr_fpga_spice_print_component_tb","off","off");
   &read_opt_into_hash("vpr_fpga_spice_print_grid_tb","off","off");
@@ -1332,6 +1334,9 @@ sub run_std_vpr($ $ $ $ $ $ $ $ $)
     }
     if ("on" eq $opt_ptr->{vpr_fpga_x2p_sim_window_size}) {
       $vpr_spice_opts = $vpr_spice_opts." --fpga_x2p_sim_window_size $opt_ptr->{vpr_fpga_x2p_sim_window_size_val}";
+    }
+    if ("on" eq $opt_ptr->{vpr_fpga_x2p_compact_routing_hierarchy}) {
+      $vpr_spice_opts = $vpr_spice_opts." --fpga_x2p_compact_routing_hierarchy";
     }
     if ("on" eq $opt_ptr->{vpr_fpga_spice_sim_mt_num}) {
       $vpr_spice_opts = $vpr_spice_opts." --fpga_spice_sim_mt_num $opt_ptr->{vpr_fpga_spice_sim_mt_num_val}";

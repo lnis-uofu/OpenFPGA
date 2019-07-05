@@ -18,7 +18,6 @@ FPGA-Bitstream is the part of the flow in charge of the functional verification 
 
 How to compile
 ==============
-Running the Makefile in the root of the released package can compile all the source codes. 
 Guides can be found in the *compilation* directory in the main folder. We tested it for MacOS High Sierra 10.13.4, Ubuntu 18.04 and Red Hat 7.5. This list is not exhaustive as other distributions could work as well.
 
 As a general rule, the compilation follows these steps:
@@ -31,21 +30,24 @@ If you need the full flow:
 
 2) Go into the folder you just cloned and make the different submodules through a global Makefile:
 cd OpenFPGA 
-make
-OR 
-make -j 
-(if you have multiple cores, this will make the compilation way faster.) 
+mkdir build (*if folder doesn't already exist*)
+cd build
+cmake ..
+make OR make -j (*if you have multiple cores, this will make the compilation way faster*) 
 
 If you only need vpr:
-cd OpenFPGA/vpr7_x2p
-make/make -j
+cd OpenFPGA 
+mkdir build (if folder doesn't already exist)
+cd build
+cmake ..
+make vpr/make vpr -j
 
 3) Architectures, circuits and already written scripts exist to allow you to test the flow without having to provide any new information to the system. For this:
-cd vpr7_x2p (if not done already)
+cd vpr7_x2p
 cd vpr
-source ./go.sh
+source ./go_fpga_verilog/spice.sh
 
-go.sh is a script linking to a testing architecture and a simple circuit. The output will be in the folders spice_demo and verilog_demo.
+They are scripts linking to a testing architecture and a simple circuit.
 
 4) If you only need to see the new options implemented in vpr, do:
 ./vpr
