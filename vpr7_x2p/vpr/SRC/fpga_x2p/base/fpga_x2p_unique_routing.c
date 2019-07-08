@@ -1338,10 +1338,10 @@ DeviceRRGSB build_device_rr_gsb(boolean output_sb_xml, char* sb_xml_dir,
   /* For each switch block, determine the size of array */
   for (size_t ix = 0; ix <= sb_range.get_x(); ++ix) {
     for (size_t iy = 0; iy <= sb_range.get_y(); ++iy) {
-      RRGSB rr_gsb = build_rr_gsb(sb_range, ix, iy,
-                                  LL_num_rr_nodes, LL_rr_node, 
-                                  LL_rr_node_indices, 
-                                  num_segments, LL_rr_indexed_data);
+      const RRGSB& rr_gsb = build_rr_gsb(sb_range, ix, iy,
+                                         LL_num_rr_nodes, LL_rr_node, 
+                                         LL_rr_node_indices, 
+                                         num_segments, LL_rr_indexed_data);
       /* sort drive_rr_nodes */
       sort_rr_gsb_drive_rr_nodes(rr_gsb);
       /* Add to device_rr_gsb */
