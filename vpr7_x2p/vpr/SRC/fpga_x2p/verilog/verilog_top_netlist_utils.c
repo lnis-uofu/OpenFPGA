@@ -337,7 +337,7 @@ void dump_verilog_top_netlist_ports(t_sram_orgz_info* cur_sram_orgz_info,
   fprintf(fp, "\n");
 
   dump_verilog_top_module_ports(cur_sram_orgz_info, fp, VERILOG_PORT_INPUT,
-                                is_explicit_mapping);
+                                false);
 
   fprintf(fp, ");\n");
 

@@ -1075,16 +1075,28 @@ void dump_compact_verilog_defined_one_channel(FILE* fp,
   for (size_t itrack = 0; itrack < rr_chan.get_chan_width(); ++itrack) {
     switch (rr_chan.get_node(itrack)->direction) {
     case INC_DIRECTION:
-      fprintf(fp, "%s, ",
+    if (true == is_explicit_mapping) {
+      fprintf(fp, ".in%d (",itrack);
+    }
+      fprintf(fp, "%s",
               gen_verilog_routing_channel_one_pin_name(rr_chan.get_node(itrack),
                                                        x, y, itrack, OUT_PORT));
-      fprintf(fp, "\n");
+    if (true == is_explicit_mapping) {
+      fprintf(fp, ")");
+    }
+      fprintf(fp, ",\n");
       break;
     case DEC_DIRECTION:
-      fprintf(fp, "%s, ",
+    if (true == is_explicit_mapping) {
+      fprintf(fp, ".out%d (",itrack);
+    }
+      fprintf(fp, "%s",
               gen_verilog_routing_channel_one_pin_name(rr_chan.get_node(itrack),
                                                        x, y, itrack, IN_PORT));
-      fprintf(fp, "\n");
+    if (true == is_explicit_mapping) {
+      fprintf(fp, ")");
+    }
+      fprintf(fp, ",\n");
       break;
     default:
       vpr_printf(TIO_MESSAGE_ERROR, "(File: %s [LINE%d]) Invalid direction of %s[%d][%d]_track[%u]!\n",
@@ -1103,16 +1115,28 @@ void dump_compact_verilog_defined_one_channel(FILE* fp,
   for (size_t itrack = 0; itrack < rr_chan.get_chan_width(); ++itrack) {
     switch (rr_chan.get_node(itrack)->direction) {
     case INC_DIRECTION:
-      fprintf(fp, "%s, ",
+    if (true == is_explicit_mapping) {
+      fprintf(fp, ".out%d (",itrack);
+    }
+      fprintf(fp, "%s",
               gen_verilog_routing_channel_one_pin_name(rr_chan.get_node(itrack),
                                                        x, y, itrack, IN_PORT));
-      fprintf(fp, "\n");
+    if (true == is_explicit_mapping) {
+      fprintf(fp, ")");
+    }
+      fprintf(fp, ",\n");
       break;
     case DEC_DIRECTION:
-      fprintf(fp, "%s, ",
+    if (true == is_explicit_mapping) {
+      fprintf(fp, ".in%d (",itrack);
+    }
+      fprintf(fp, "%s",
               gen_verilog_routing_channel_one_pin_name(rr_chan.get_node(itrack),
                                                        x, y, itrack, OUT_PORT));
-      fprintf(fp, "\n");
+    if (true == is_explicit_mapping) {
+      fprintf(fp, ")");
+    }
+      fprintf(fp, ",\n");
       break;
     default:
       vpr_printf(TIO_MESSAGE_ERROR, "(File: %s [LINE%d]) Invalid direction of %s[%d][%d]_track[%u]!\n",
@@ -1125,9 +1149,16 @@ void dump_compact_verilog_defined_one_channel(FILE* fp,
 
   /* output at middle point */
   for (size_t itrack = 0; itrack < rr_chan.get_chan_width(); ++itrack) {
+    if (true == is_explicit_mapping) {
+      fprintf(fp, ".mid_out%d (", 
+              itrack);
+    }
     fprintf(fp, "%s_%d__%d__midout_%lu_ ", 
             convert_chan_type_to_string(rr_chan.get_type()),
             x, y, itrack);
+    if (true == is_explicit_mapping) {
+      fprintf(fp, ")");
+    }
     if (itrack < rr_chan.get_chan_width() - 1) {
       fprintf(fp, ",");
     }
