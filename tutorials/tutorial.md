@@ -94,12 +94,12 @@ top_module/*.v,<int_value>; where <int_value> is the number ofchannel/wire betwe
 
 Once the configuration is done, we can select which option we want to enable in fpga_flow. fpga_flow options don't exactly have the name of those listed in the [documentation](https://openfpga.readthedocs.io/en/master/fpga_verilog/command_line_usage.html "documentation"), which are used on the modifed version of vpr. Indeed, where vpr will take an option as "**--fpga_XXX**" fpgs_flow will call it "**-vpr_fpga_XXX**".<br />
 Few options are only in fpga_flow:
-* -N: number of LUT per CLB
-* -K: LUT size/ number of input
-* -rpt <path>: wherever fpga_flow will write its report
-* -ace_d <int_value>: specifies inputs average probability of switching
-* -multi_thread <int_value>: specifies number of core to use
-* -end_flow_with_test: uses Icarus Verilog to verify generated netlist
+* **-N**: number of LUT per CLB
+* **-K**: LUT size/ number of input
+* **-rpt <path>**: specifies wherever fpga_flow will write its report
+* **-ace_d <int_value>**: specifies inputs average probability of switching
+* **-multi_thread <int_value>**: specifies number of core to use
+* **-end_flow_with_test**: uses Icarus Verilog to verify generated netlist
 
 *An example of script can be found at OPENFPGAPATHKEYWORD/fpga_flow/tuto_fpga_flow.sh*
 
