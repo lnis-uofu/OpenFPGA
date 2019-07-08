@@ -16,7 +16,7 @@ OpenFPGA repository is organized as follow:
 * **yosys**: opensource synthesys tool
 * **fpga_flow**: scripts and dependencies to run the complete flow
 
-## 1. FPGA flow
+##   1. FPGA flow
 
 The folder is organized as follow:
 * **arch**: contains architectures description files
@@ -35,13 +35,13 @@ fpga_flow.pl has dependencies which need to be configured. They are:
 * configuration file, which provides dependencies path and flow type
 * benchmark list file
 
-### Configuration file
+### a. Configuration file
 
 In this file paths have to be full path. Relative path could lead to errors.<br />
 The file is organized in 3 parts: 
-* dir_path: provides all the tools and repository path
-* flow_conf: provides information on how the flow run
-* csv_tags: *to complete*
+* **dir_path**: provides all the tools and repository path
+* **flow_conf**: provides information on how the flow run
+* **csv_tags**: *to complete*
 
 While empty the file is as follow:
 
@@ -77,15 +77,32 @@ vpr_power_tags = PB Types|Routing|Switch Box|Connection Box|Primitives|Interc St
 
 *An example of this file can be found at OPENFPGAPATHKEYWORD/fpga_flow/configs/tutorial/tuto.conf*
 
-### Benchmark list
+###   b. Benchmark list
 
 The benchmark folder contains 3 sub-folders:
-* Blif: contains .blif and .act of benchmarks
-* List: contains all benchmark list files
-* Verilog: contains Verilog designs
+* **Blif**: contains .blif and .act of benchmarks
+* **List**: contains all benchmark list files
+* **Verilog**: contains Verilog designs
 
 Blif and Verilog folders are organized by folders with name of projects. **Folder, top module and top module file must share the same name.**<br />
 The benchmark list file can contain as many benchmark as available in a same folder targetted by "benchmark_dir" variable from the configuration file. It's written as:<br />
 top_module/*.v,<int_value>; where <int_value> is the number ofchannel/wire between each blocks.
 
 *An example of this file can be found at OPENFPGAPATHKEYWORD/fpga_flow/benchmarks/List/tuto_benchmark.txt*
+
+###   c. Running fpga_flow.pl
+
+Once the configuration is done, we can select which option we want to enable in fpga_flow. fpga_flow options don't exactly have the name of those listed in the [documentation](https://openfpga.readthedocs.io/en/master/fpga_verilog/command_line_usage.html "documentation"), which are used on the modifed version of vpr. Indeed, where vpr will take an option as "**--fpga_XXX**" fpgs_flow will call it "**-vpr_fpga_XXX**".<br />
+Few options are only in fpga_flow:
+* -N: number of LUT per CLB
+* -K: LUT size/ number of input
+* -rpt <path>: wherever fpga_flow will write its report
+* -ace_d <int_value>: specifies inputs average probability of switching
+* -multi_thread <int_value>: specifies number of core to use
+* -end_flow_with_test: uses Icarus Verilog to verify generated netlist
+
+*An example of script can be found at OPENFPGAPATHKEYWORD/fpga_flow/tuto_fpga_flow.sh*
+
+
+
+
