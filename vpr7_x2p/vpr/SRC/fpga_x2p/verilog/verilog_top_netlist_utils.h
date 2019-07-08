@@ -52,6 +52,7 @@ char* compact_verilog_get_grid_phy_block_subckt_name(t_type_ptr grid_type_descri
 void dump_compact_verilog_io_grid_block_subckt_pins(FILE* fp,
                                                     t_type_ptr grid_type_descriptor,
                                                     int border_side,
-                                                    int z) ;
+                                                    int z,
+                                                    bool is_explicit_mapping) ;
 
 

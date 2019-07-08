@@ -405,7 +405,7 @@ void dump_verilog_defined_one_grid(t_sram_orgz_info* cur_sram_orgz_info,
   dump_verilog_grid_common_port(fp, iopad_verilog_model, gio_inout_prefix, 
                                 iopad_verilog_model->grid_index_low[ix][iy],
                                 iopad_verilog_model->grid_index_high[ix][iy] - 1,
-                                VERILOG_PORT_CONKT); 
+                                VERILOG_PORT_CONKT, is_explicit_mapping); 
 
   /* Print configuration ports */
   /* Reserved configuration ports */
@@ -1433,7 +1433,8 @@ char* compact_verilog_get_grid_phy_block_subckt_name(t_type_ptr grid_type_descri
 void dump_compact_verilog_io_grid_block_subckt_pins(FILE* fp,
                                                     t_type_ptr grid_type_descriptor,
                                                     int border_side,
-                                                    int z) {
+                                                    int z,
+                                                    bool is_explicit_mapping) {
   int iport, ipin, dump_pin_cnt;
   int grid_pin_index, pin_height, side_pin_index;
   t_pb_graph_node* top_pb_graph_node = NULL;

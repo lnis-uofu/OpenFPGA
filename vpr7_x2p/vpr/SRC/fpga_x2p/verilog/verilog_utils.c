@@ -2717,7 +2717,8 @@ void dump_verilog_mux_config_bus_ports(FILE* fp, t_spice_model* mux_spice_model,
  */
 void dump_verilog_grid_common_port(FILE* fp, t_spice_model* cur_verilog_model,
                                    char* general_port_prefix, int lsb, int msb,
-                                   enum e_dump_verilog_port_type dump_port_type) {
+                                   enum e_dump_verilog_port_type dump_port_type,
+                                   bool is_explicit_mapping) {
   char* port_full_name = NULL;
 
   /* Check the file handler*/ 
@@ -3238,18 +3239,39 @@ void dump_verilog_mem_sram_submodule(FILE* fp,
       break;
     } 
     /* Input of Scan-chain DFF, should be connected to the output of its precedent */
+    if (true == is_explicit_mapping) {
+      fprintf(fp, ".%s(",
+              cur_sram_verilog_model->ports[0].prefix);
+    }
     dump_verilog_sram_one_local_outport(fp, cur_sram_orgz_info,
                                         lsb, msb,
                                          -1, VERILOG_PORT_CONKT);
+    if (true == is_explicit_mapping) {
+      fprintf(fp, ")");
+    }
     fprintf(fp, ", \n");  //
     /* Output of Scan-chain DFF, should be connected to the output of its successor */
+    if (true == is_explicit_mapping) {
+      fprintf(fp, ".%s(",
+              cur_sram_verilog_model->ports[1].prefix);
+    }
     dump_verilog_sram_one_local_outport(fp, cur_sram_orgz_info,
                                         lsb, msb,
                                          0, VERILOG_PORT_CONKT);
+    if (true == is_explicit_mapping) {
+      fprintf(fp, ")");
+    }
     fprintf(fp, ", \n");  //
+    if (true == is_explicit_mapping) {
+      fprintf(fp, ".%s(",
+              cur_sram_verilog_model->ports[2].prefix);
+    }
     dump_verilog_sram_one_local_outport(fp, cur_sram_orgz_info,
                                         lsb, msb,
                                         1, VERILOG_PORT_CONKT);
+    if (true == is_explicit_mapping) {
+      fprintf(fp, ")");
+    }
     break;
   default:
     vpr_printf(TIO_MESSAGE_ERROR, "(File:%s,[LINE%d])Invalid SRAM organization type!\n",

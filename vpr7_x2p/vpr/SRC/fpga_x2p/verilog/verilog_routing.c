@@ -1900,7 +1900,7 @@ void dump_verilog_routing_switch_box_unique_side_module(t_sram_orgz_info* cur_sr
 
   dump_verilog_routing_switch_box_unique_side_subckt_portmap(fp, rr_sb, side, 
                                                              seg_id, TRUE, 
-                                                             is_explicit_mapping); 
+                                                             false); 
 
   /* Put down configuration port */
   /* output of each configuration bit */
@@ -1926,7 +1926,7 @@ void dump_verilog_routing_switch_box_unique_side_module(t_sram_orgz_info* cur_sr
     dump_verilog_formal_verification_sram_ports(fp, cur_sram_orgz_info, 
                                                 cur_num_sram,
                                                 esti_sram_cnt - 1,
-                                                VERILOG_PORT_INPUT, is_explicit_mapping);
+                                                VERILOG_PORT_INPUT, false);
     fprintf(fp, "\n");
     fprintf(fp, "`endif\n");
   }

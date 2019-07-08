@@ -610,7 +610,7 @@ void dump_verilog_pb_primitive_lut(t_sram_orgz_info* cur_sram_orgz_info,
   /* Connect inputs*/ 
   /* Connect outputs*/
   fprintf(fp, "//----- Input and output ports -----\n");
-  dump_verilog_pb_type_bus_ports(fp, port_prefix, 1, cur_pb_type, FALSE, TRUE, verilog_model->dump_explicit_port_map); 
+  dump_verilog_pb_type_bus_ports(fp, port_prefix, 1, cur_pb_type, FALSE, TRUE, my_bool_to_boolean(is_explicit_mapping)); 
   fprintf(fp, "\n//----- SRAM ports -----\n");
 
   /* check */
@@ -622,41 +622,89 @@ void dump_verilog_pb_primitive_lut(t_sram_orgz_info* cur_sram_orgz_info,
   case SPICE_SRAM_STANDALONE: 
     break;
   case SPICE_SRAM_SCAN_CHAIN:
+    if (true == is_explicit_mapping) {
+      fprintf(fp, ".sram_out( ");
+    }
     dump_verilog_sram_one_local_outport(fp, cur_sram_orgz_info, 
                                         cur_num_sram, cur_num_sram + num_lut_sram - 1, 
                                         0, VERILOG_PORT_CONKT);
+    if (true == is_explicit_mapping) {
+      fprintf(fp, ")");
+    }
     fprintf(fp, ", ");
+    if (true == is_explicit_mapping) {
+      fprintf(fp, ".sram_outb( ");
+    }
     dump_verilog_sram_one_local_outport(fp, cur_sram_orgz_info, 
                                         cur_num_sram, cur_num_sram + num_lut_sram - 1, 
                                         1, VERILOG_PORT_CONKT);
+    if (true == is_explicit_mapping) {
+      fprintf(fp, ")");
+    }
     if (0 < num_mode_sram) {
       fprintf(fp, ", ");
+    if (true == is_explicit_mapping) {
+      fprintf(fp, ".mode_out( ");
+    }
       dump_verilog_sram_one_local_outport(fp, cur_sram_orgz_info, 
                                           cur_num_sram + num_lut_sram, cur_num_sram + num_lut_sram + num_mode_sram - 1, 
                                           0, VERILOG_PORT_CONKT);
+    if (true == is_explicit_mapping) {
+      fprintf(fp, ")");
+    }
       fprintf(fp, ", ");
+    if (true == is_explicit_mapping) {
+      fprintf(fp, ".mode_outb( ");
+    }
       dump_verilog_sram_one_local_outport(fp, cur_sram_orgz_info, 
                                           cur_num_sram + num_lut_sram, cur_num_sram + num_lut_sram + num_mode_sram - 1, 
                                           1, VERILOG_PORT_CONKT);
+    if (true == is_explicit_mapping) {
+      fprintf(fp, ")");
+    }
     }
     break;
   case SPICE_SRAM_MEMORY_BANK:
+    if (true == is_explicit_mapping) {
+      fprintf(fp, ".sram_out( ");
+    }
     dump_verilog_sram_one_outport(fp, cur_sram_orgz_info, 
                                   cur_num_sram, cur_num_sram + num_lut_sram - 1, 
                                   0, VERILOG_PORT_CONKT);
+    if (true == is_explicit_mapping) {
+      fprintf(fp, ")");
+    }
     fprintf(fp, ", ");
+    if (true == is_explicit_mapping) {
+      fprintf(fp, ".sram_outb( ");
+    }
     dump_verilog_sram_one_outport(fp, cur_sram_orgz_info, 
                                   cur_num_sram, cur_num_sram + num_lut_sram - 1, 
                                   1, VERILOG_PORT_CONKT);
+    if (true == is_explicit_mapping) {
+      fprintf(fp, ")");
+    }
     if (0 < num_mode_sram) {
       fprintf(fp, ", ");
+    if (true == is_explicit_mapping) {
+      fprintf(fp, ".mode_out( ");
+    }
       dump_verilog_sram_one_outport(fp, cur_sram_orgz_info, 
                                  cur_num_sram + num_lut_sram, cur_num_sram + num_lut_sram + num_mode_sram - 1, 
-                                 0, VERILOG_PORT_CONKT);
+                                  0, VERILOG_PORT_CONKT);
+    if (true == is_explicit_mapping) {
+      fprintf(fp, ")");
+    }
       fprintf(fp, ", ");
+    if (true == is_explicit_mapping) {
+      fprintf(fp, ".mode_outb( ");
+    }
       dump_verilog_sram_one_outport(fp, cur_sram_orgz_info, 
                                     cur_num_sram + num_lut_sram, cur_num_sram + num_lut_sram + num_mode_sram - 1, 
-                                    1, VERILOG_PORT_CONKT);
+                                  1, VERILOG_PORT_CONKT);
+    }
+    if (true == is_explicit_mapping) {
+      fprintf(fp, ")");
     }
     break;
   default:

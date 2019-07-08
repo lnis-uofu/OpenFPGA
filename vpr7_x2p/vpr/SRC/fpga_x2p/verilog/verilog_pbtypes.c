@@ -370,8 +370,7 @@ void dump_verilog_pb_type_one_bus_port(FILE* fp,
                 port_prefix, pb_type_port->name);
   } else {
     if ((NULL != cur_pb_type->spice_model) 
-        && (TRUE == dump_explicit_port_map)
-        && (TRUE == cur_pb_type->spice_model->dump_explicit_port_map)) {
+        && (TRUE == dump_explicit_port_map)) {
       fprintf(fp, ".%s(", 
               pb_type_port->spice_model_port->lib_name);
     }
@@ -385,8 +384,7 @@ void dump_verilog_pb_type_one_bus_port(FILE* fp,
     }
     fprintf(fp, "}"); 
     if ((NULL != cur_pb_type->spice_model) 
-        && (TRUE == dump_explicit_port_map)
-        && (TRUE == cur_pb_type->spice_model->dump_explicit_port_map)) {
+        && (TRUE == dump_explicit_port_map)) {
       fprintf(fp, ")");
     }
   }
@@ -1733,7 +1731,7 @@ void dump_verilog_phy_pb_graph_node_rec(t_sram_orgz_info* cur_sram_orgz_info,
   */
   fprintf(fp, "\n");
   /* dump global ports */
-  if(0 < dump_verilog_global_ports(fp, global_ports_head, TRUE, is_explicit_mapping)) {
+  if(0 < dump_verilog_global_ports(fp, global_ports_head, TRUE, false)) {
     fprintf(fp, ",\n");
   }
   /* Simplify the port prefix, make SPICE netlist readable */
@@ -1742,7 +1740,7 @@ void dump_verilog_phy_pb_graph_node_rec(t_sram_orgz_info* cur_sram_orgz_info,
   dump_verilog_grid_common_port(fp, iopad_verilog_model,
                                 gio_inout_prefix, 
                                 stamped_iopad_cnt, iopad_verilog_model->cnt - 1,
-                                VERILOG_PORT_INOUT);
+                                VERILOG_PORT_INOUT, is_explicit_mapping);
   /* Print Configuration ports */
   /* sram_verilog_model->cnt should be updated because all the child pbs have been dumped
    * stamped_sram_cnt remains the old sram_verilog_model->cnt before all the child pbs are dumped
@@ -1848,7 +1846,7 @@ void dump_verilog_phy_pb_graph_node_rec(t_sram_orgz_info* cur_sram_orgz_info,
                                     gio_inout_prefix, 
                                     stamped_iopad_cnt,
                                     stamped_iopad_cnt + child_pb_num_iopads - 1,
-                                    VERILOG_PORT_CONKT);
+                                    VERILOG_PORT_CONKT, is_explicit_mapping);
       /* update stamped outpad counter */
       stamped_iopad_cnt += child_pb_num_iopads;
       /* Print configuration ports */
@@ -1889,7 +1887,7 @@ void dump_verilog_phy_pb_graph_node_rec(t_sram_orgz_info* cur_sram_orgz_info,
   /* Print interconnections, set is_idle as TRUE*/
   dump_verilog_pb_graph_interc(cur_sram_orgz_info, fp, subckt_name, 
                                cur_pb_graph_node, mode_index,
-                               is_explicit_mapping);
+                               false);
   /* Check each pins of pb_graph_node */ 
   /* Check and update stamped_sram_cnt */
   /* Now we only dump one Verilog for each pb_type, and instance them when num_pb > 1
@@ -2279,9 +2277,11 @@ char* verilog_get_grid_phy_block_subckt_name(int x, int y, int z,
 /* Print the pins of grid subblocks */
 void dump_verilog_grid_block_subckt_pins(FILE* fp,
                                          int z,
-                                         t_type_ptr type_descriptor) {
+                                         t_type_ptr type_descriptor,
+                                         bool is_explicit_mapping) {
   int iport, ipin, side, dump_pin_cnt;
   int grid_pin_index, pin_height, side_pin_index;
+  t_port* cur_port; 
   t_pb_graph_node* top_pb_graph_node = NULL;
 
   /* Check the file handler*/ 
@@ -2313,8 +2313,15 @@ void dump_verilog_grid_block_subckt_pins(FILE* fp,
           if (0 < dump_pin_cnt) {
             fprintf(fp, ",\n");
           }
+          if (true == is_explicit_mapping) {
+          fprintf(fp, ".%s (",
+                  gen_verilog_one_pb_type_pin_name(chomp_verilog_prefix(top_pb_graph_node->pb_type->name), top_pb_graph_node->input_pins[iport]->port, ipin));
+          }
           fprintf(fp, "%s_height_%d__pin_%d_ ", 
                   convert_side_index_to_string(side), pin_height, grid_pin_index);
+          if (true == is_explicit_mapping) {
+            fprintf(fp, ")");
+          } 
           dump_pin_cnt++;
           side_pin_index++;
         }
@@ -2338,8 +2345,15 @@ void dump_verilog_grid_block_subckt_pins(FILE* fp,
           if (0 < dump_pin_cnt) {
             fprintf(fp, ",\n");
           }
+          if (true == is_explicit_mapping) {
+          fprintf(fp, ".%s (",
+                  gen_verilog_one_pb_type_pin_name(chomp_verilog_prefix(top_pb_graph_node->pb_type->name), top_pb_graph_node->output_pins[iport]->port, ipin));
+          }
           fprintf(fp, "%s_height_%d__pin_%d_ ", 
                   convert_side_index_to_string(side), pin_height, grid_pin_index);
+          if (true == is_explicit_mapping) {
+            fprintf(fp, ")");
+          } 
           dump_pin_cnt++;
           side_pin_index++;
         }
@@ -2363,8 +2377,15 @@ void dump_verilog_grid_block_subckt_pins(FILE* fp,
           if (0 < dump_pin_cnt) {
             fprintf(fp, ",\n");
           }
+          if (true == is_explicit_mapping) {
+          fprintf(fp, ".%s (",
+                  gen_verilog_one_pb_type_pin_name(chomp_verilog_prefix(top_pb_graph_node->pb_type->name), top_pb_graph_node->clock_pins[iport]->port, ipin));
+          }
           fprintf(fp, "%s_height_%d__pin_%d_ ", 
                   convert_side_index_to_string(side), pin_height, grid_pin_index);
+          if (true == is_explicit_mapping) {
+            fprintf(fp, ")");
+          } 
           dump_pin_cnt++;
           side_pin_index++;
         }
@@ -2381,7 +2402,8 @@ void dump_verilog_io_grid_block_subckt_pins(FILE* fp,
                                       int x,
                                       int y,
                                       int z,
-                                      t_type_ptr type_descriptor) {
+                                      t_type_ptr type_descriptor,
+                                      bool is_explicit_mapping) {
   int iport, ipin, side, dump_pin_cnt;
   int grid_pin_index, pin_height, side_pin_index;
   t_pb_graph_node* top_pb_graph_node = NULL;
@@ -2552,7 +2574,7 @@ void dump_verilog_physical_grid_blocks(t_sram_orgz_info* cur_sram_orgz_info,
   fprintf(fp, "module %s ( \n", gen_verilog_one_grid_module_name(ix, iy));
   fprintf(fp, "\n");
   /* dump global ports */
-  if (0 < dump_verilog_global_ports(fp, global_ports_head, TRUE, is_explicit_mapping)) {
+  if (0 < dump_verilog_global_ports(fp, global_ports_head, TRUE, false)) {
     fprintf(fp, ",\n");
   }
 
@@ -2568,7 +2590,7 @@ void dump_verilog_physical_grid_blocks(t_sram_orgz_info* cur_sram_orgz_info,
   dump_verilog_grid_common_port(fp, iopad_verilog_model, gio_inout_prefix, 
                                 iopad_verilog_model->grid_index_low[ix][iy],
                                 iopad_verilog_model->grid_index_high[ix][iy] - 1,
-                                VERILOG_PORT_INPUT); 
+                                VERILOG_PORT_INPUT, is_explicit_mapping); 
 
   /* Print configuration ports */
   /* Reserved configuration ports */
@@ -2631,9 +2653,9 @@ void dump_verilog_physical_grid_blocks(t_sram_orgz_info* cur_sram_orgz_info,
     /* Print all the pins */
     /* Special Care for I/O grid */
     if (IO_TYPE == grid[ix][iy].type) {
-      dump_verilog_io_grid_block_subckt_pins(fp, ix, iy, iz, grid[ix][iy].type);
+      dump_verilog_io_grid_block_subckt_pins(fp, ix, iy, iz, grid[ix][iy].type, is_explicit_mapping);
     } else {
-      dump_verilog_grid_block_subckt_pins(fp, iz, grid[ix][iy].type);
+      dump_verilog_grid_block_subckt_pins(fp, iz, grid[ix][iy].type, is_explicit_mapping);
     }
     /* Print configuration ports */
     temp_reserved_conf_bits_msb = grid[ix][iy].type->pb_type->physical_mode_num_reserved_conf_bits; 
@@ -2645,7 +2667,7 @@ void dump_verilog_physical_grid_blocks(t_sram_orgz_info* cur_sram_orgz_info,
     dump_verilog_grid_common_port(fp, iopad_verilog_model, gio_inout_prefix,
                                   temp_iopad_lsb,
                                   temp_iopad_msb - 1,
-                                  VERILOG_PORT_CONKT); 
+                                  VERILOG_PORT_CONKT, is_explicit_mapping); 
     assert(!(0 > temp_conf_bits_msb - temp_conf_bits_lsb));
     /* Reserved configuration ports */
     if (0 < temp_reserved_conf_bits_msb) { 

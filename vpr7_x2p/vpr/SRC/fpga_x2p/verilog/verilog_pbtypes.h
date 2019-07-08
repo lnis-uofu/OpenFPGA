@@ -127,7 +127,8 @@ char* get_grid_block_subckt_name(int x,
 
 void dump_verilog_grid_block_subckt_pins(FILE* fp,
                                    int z,
-                                   t_type_ptr type_descriptor);
+                                   t_type_ptr type_descriptor,
+                                   bool is_explicit_mapping);
 
 void dump_verilog_io_grid_block_subckt_pins(FILE* fp,
                                       int x,

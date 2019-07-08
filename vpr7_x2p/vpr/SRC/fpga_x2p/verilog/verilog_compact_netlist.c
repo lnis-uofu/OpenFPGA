@@ -361,7 +361,7 @@ void dump_compact_verilog_one_physical_block(t_sram_orgz_info* cur_sram_orgz_inf
   fprintf(fp, "module %s ( \n", subckt_name);
   fprintf(fp, "\n");
   /* dump global ports */
-  if (0 < dump_verilog_global_ports(fp, global_ports_head, TRUE, is_explicit_mapping)) {
+  if (0 < dump_verilog_global_ports(fp, global_ports_head, TRUE, false)) {
     fprintf(fp, ",\n");
   }
 
@@ -378,7 +378,7 @@ void dump_compact_verilog_one_physical_block(t_sram_orgz_info* cur_sram_orgz_inf
   /* I/O PAD */
   dump_verilog_grid_common_port(fp, iopad_verilog_model, gio_inout_prefix, 
                                 0, phy_block_type->capacity * phy_block_type->pb_type->physical_mode_num_iopads - 1,
-                                VERILOG_PORT_INOUT); 
+                                VERILOG_PORT_INOUT, is_explicit_mapping); 
 
   /* Print configuration ports */
   /* Reserved configuration ports */
@@ -406,7 +406,7 @@ void dump_compact_verilog_one_physical_block(t_sram_orgz_info* cur_sram_orgz_inf
     dump_verilog_formal_verification_sram_ports(fp, cur_sram_orgz_info, 
                                                 0, 
                                                 temp_conf_bits_msb - 1,
-                                                VERILOG_PORT_INPUT, is_explicit_mapping);	// Should be modified to be VERILOG_PORT_INPUT
+                                                VERILOG_PORT_INPUT, false);	// Should be modified to be VERILOG_PORT_INPUT
     fprintf(fp, "\n");
     fprintf(fp, "`endif\n");
   }
@@ -436,9 +436,9 @@ void dump_compact_verilog_one_physical_block(t_sram_orgz_info* cur_sram_orgz_inf
     /* Print all the pins */
     /* Special Care for I/O grid */
     if (IO_TYPE == phy_block_type) { 
-      dump_compact_verilog_io_grid_block_subckt_pins(fp, phy_block_type, border_side, iz);
+      dump_compact_verilog_io_grid_block_subckt_pins(fp, phy_block_type, border_side, iz, is_explicit_mapping);
     } else {
-      dump_verilog_grid_block_subckt_pins(fp, iz, phy_block_type);
+      dump_verilog_grid_block_subckt_pins(fp, iz, phy_block_type, is_explicit_mapping);
     }
 
     /* Print configuration ports */
@@ -450,7 +450,7 @@ void dump_compact_verilog_one_physical_block(t_sram_orgz_info* cur_sram_orgz_inf
     fprintf(fp, "\n//---- IOPAD ----\n");
     dump_verilog_grid_common_port(fp, iopad_verilog_model, gio_inout_prefix,
                                   temp_iopad_lsb,  temp_iopad_msb - 1,
-                                  VERILOG_PORT_CONKT); 
+                                  VERILOG_PORT_CONKT, is_explicit_mapping); 
     /* Reserved configuration ports */
     if (0 < temp_reserved_conf_bits_msb) { 
       fprintf(fp, ",\n");
@@ -631,7 +631,7 @@ void dump_compact_verilog_defined_one_grid(t_sram_orgz_info* cur_sram_orgz_info,
   dump_verilog_grid_common_port(fp, iopad_verilog_model, gio_inout_prefix, 
                                 iopad_verilog_model->grid_index_low[ix][iy],
                                 iopad_verilog_model->grid_index_high[ix][iy] - 1,
-                                VERILOG_PORT_CONKT); 
+                                VERILOG_PORT_CONKT, is_explicit_mapping); 
 
   /* Print configuration ports */
   /* Reserved configuration ports */
