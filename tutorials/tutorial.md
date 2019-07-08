@@ -1,4 +1,4 @@
-#Tutorial
+# Tutorial
 
 This tutorial purpose it to clarify how to use:
 1. The full flow using fpga_flow.pl script
@@ -7,7 +7,7 @@ This tutorial purpose it to clarify how to use:
 Some keywords will be used during this tutorial:
 - OPENFPGAPATHKEYWORD: it refer to OpenFPGA full path
 
-##1. FPGA flow
+## 1. FPGA flow
 
 OpenFPGA repository is organized as follow:
   - abc: open source synthesys tool
@@ -25,7 +25,7 @@ fpga_flow.pl has dependencies which need to be configured. They are:
   - configuration file, which provides dependencies path and flow type
   - benchmark list file
 
-###Configuration file
+### Configuration file
 
 In this file paths have to be full path. Relative path could lead to errors.
 The file is organized in 3 parts: 
