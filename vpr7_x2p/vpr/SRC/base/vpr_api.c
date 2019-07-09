@@ -194,6 +194,7 @@ void vpr_print_usage(void) {
   vpr_printf(TIO_MESSAGE_INFO, "Synthesizable Verilog Generator Options:\n");
   vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_verilog\n");
   vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_verilog_dir <string>\n");
+  vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_verilog_explicit_mapping\n");
   vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_verilog_print_top_testbench\n");
   vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_verilog_print_autocheck_top_testbench <reference_verilog_file_path>\n");
   vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_verilog_print_input_blif_testbench\n");

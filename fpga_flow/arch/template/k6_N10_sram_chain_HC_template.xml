@@ -336,8 +336,8 @@
          <output_buffer exist="on" spice_model_name="INV1X"/>
          <pass_gate_logic spice_model_name="TGATEX1"/>
          <port type="input" prefix="D" size="1"/>
-         <port type="input" prefix="Set" size="1" is_global="true" default_val="0" is_set="true"/>
-         <port type="input" prefix="Reset" size="1" is_global="true" default_val="0" is_reset="true"/>
+         <port type="input" prefix="set" size="1" is_global="true" default_val="0" is_set="true"/>
+         <port type="input" prefix="reset" size="1" is_global="true" default_val="0" is_reset="true"/>
          <port type="output" prefix="Q" size="1"/>
          <port type="clock" prefix="clk" size="1" is_global="true" default_val="0" />
       </spice_model>

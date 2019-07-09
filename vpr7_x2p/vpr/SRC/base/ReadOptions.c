@@ -527,6 +527,8 @@ ProcessOption(INP char **Args, INOUTP t_options * Options) {
       return Args;
     case OT_FPGA_VERILOG_SYN_DIR:
       return ReadString(Args, &Options->fpga_syn_verilog_dir);
+    case OT_FPGA_VERILOG_SYN_EXPLICIT_MAPPING:
+      return Args;
     case OT_FPGA_VERILOG_SYN_PRINT_TOP_TESTBENCH:
       return Args;
     case OT_FPGA_VERILOG_SYN_PRINT_AUTOCHECK_TOP_TESTBENCH:

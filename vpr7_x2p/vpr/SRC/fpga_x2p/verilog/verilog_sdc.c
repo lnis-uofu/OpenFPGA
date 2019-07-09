@@ -468,7 +468,7 @@ void verilog_generate_sdc_constrain_one_sb_path(FILE* fp,
   fprintf(fp, " -from ");
   fprintf(fp, "%s/", 
           gen_verilog_one_sb_instance_name(cur_sb_info)); 
-  dump_verilog_one_sb_routing_pin(fp, cur_sb_info, src_rr_node); 
+  dump_verilog_one_sb_routing_pin(fp, cur_sb_info, src_rr_node, false); 
 
   fprintf(fp, " -to ");
  
@@ -513,7 +513,7 @@ void verilog_generate_sdc_constrain_one_sb_path(FILE* fp,
   fprintf(fp, " -from ");
   fprintf(fp, "%s/", 
           rr_gsb.gen_sb_verilog_instance_name()); 
-  dump_verilog_one_sb_routing_pin(fp, rr_gsb, src_rr_node); 
+  dump_verilog_one_sb_routing_pin(fp, rr_gsb, src_rr_node, false); 
 
   fprintf(fp, " -to ");
  
@@ -638,7 +638,7 @@ void verilog_generate_sdc_constrain_one_cb_path(FILE* fp,
                                               des_rr_node_grid_side,
                                               des_rr_node->xlow,
                                               des_rr_node->ylow,
-                                              FALSE); 
+                                              FALSE, false); 
 
   /* If src_node == des_node, this is a metal wire */
   fprintf(fp, " %.2g", tmax);
@@ -721,7 +721,7 @@ void verilog_generate_sdc_constrain_one_cb_path(FILE* fp,
                                               des_rr_node_grid_side,
                                               mirror_ipin_node->xlow,
                                               mirror_ipin_node->ylow,
-                                              FALSE); 
+                                              FALSE, false); 
 
   /* If src_node == des_node, this is a metal wire */
   fprintf(fp, " %.2g", tmax);
@@ -1639,7 +1639,8 @@ void verilog_generate_sdc_disable_unused_sbs(FILE* fp) {
           fprintf(fp, "%s/", 
                   rr_sb.gen_sb_verilog_instance_name());
           dump_verilog_one_sb_routing_pin(fp, rr_sb,
-                                          rr_sb.get_opin_node(side_manager.get_side(), inode)); 
+                                          rr_sb.get_opin_node(side_manager.get_side(), 
+                                          inode), false); 
           fprintf(fp, "\n");
         }
       }
@@ -1708,7 +1709,8 @@ void verilog_generate_sdc_disable_unused_sbs(FILE* fp,
           fprintf(fp, "%s/", 
                   gen_verilog_one_sb_instance_name(cur_sb_info));
           dump_verilog_one_sb_routing_pin(fp, cur_sb_info,
-                                          cur_sb_info->opin_rr_node[side][inode]); 
+                                          cur_sb_info->opin_rr_node[side][inode],
+                                          false); 
           fprintf(fp, "\n");
         }
       }
@@ -1758,7 +1760,7 @@ void verilog_generate_sdc_disable_one_unused_cb(FILE* fp,
                                                   rr_gsb.get_ipin_node_grid_side(cb_ipin_side, inode),
                                                   ipin_node->xlow,
                                                   ipin_node->ylow,
-                                                  FALSE); /* Do not specify direction of port */
+                                                  FALSE, false); /* Do not specify direction of port */
       fprintf(fp, "\n");
     }
   }
@@ -1816,7 +1818,7 @@ void verilog_generate_sdc_disable_one_unused_cb(FILE* fp,
                                                   cur_cb_info->ipin_rr_node_grid_side[side][inode],
                                                   cur_cb_info->ipin_rr_node[side][inode]->xlow,
                                                   cur_cb_info->ipin_rr_node[side][inode]->ylow,
-                                                  FALSE); /* Do not specify direction of port */
+                                                  FALSE, false); /* Do not specify direction of port */
       fprintf(fp, "\n");
     }
   }

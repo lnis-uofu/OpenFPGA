@@ -1088,6 +1088,7 @@ static void SetupSynVerilogOpts(t_options Options,
   /* Initialize */  
   syn_verilog_opts->dump_syn_verilog = FALSE;
   syn_verilog_opts->syn_verilog_dump_dir = NULL;
+  syn_verilog_opts->dump_explicit_verilog = FALSE;
   syn_verilog_opts->print_top_testbench = FALSE;
   syn_verilog_opts->print_autocheck_top_testbench = FALSE;
   syn_verilog_opts->reference_verilog_benchmark_file = NULL;
@@ -1112,6 +1113,10 @@ static void SetupSynVerilogOpts(t_options Options,
 
   if (Options.Count[OT_FPGA_VERILOG_SYN_DIR]) {
     syn_verilog_opts->syn_verilog_dump_dir = my_strdup(Options.fpga_syn_verilog_dir);
+  }
+
+  if (Options.Count[OT_FPGA_VERILOG_SYN_EXPLICIT_MAPPING]) {
+    syn_verilog_opts->dump_explicit_verilog = TRUE;
   }
 
   if (Options.Count[OT_FPGA_VERILOG_SYN_PRINT_TOP_TESTBENCH]) {
