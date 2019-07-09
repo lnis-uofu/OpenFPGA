@@ -1851,9 +1851,9 @@ void dump_verilog_phy_pb_graph_node_rec(t_sram_orgz_info* cur_sram_orgz_info,
        */
       bool is_explicit_full_name = true;
       if (NULL != cur_pb_type->modes[mode_index].pb_type_children[ipb].spice_model){
-      if (SPICE_MODEL_HARDLOGIC == cur_pb_type->modes[mode_index].pb_type_children[ipb].spice_model->type){
+      /*if (SPICE_MODEL_HARDLOGIC == cur_pb_type->modes[mode_index].pb_type_children[ipb].spice_model->type){
         is_explicit_full_name = false;
-      }
+      }TEST*/
       }
       dump_verilog_pb_type_ports(fp, child_pb_type_prefix, 0, &(cur_pb_type->modes[mode_index].pb_type_children[ipb]), FALSE, FALSE, my_bool_to_boolean(is_explicit_mapping), is_explicit_full_name);
       /* Print I/O pads */
