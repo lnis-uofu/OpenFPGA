@@ -29,7 +29,7 @@ fpga_flow.pl is saved in OPENFPGAPATHKEYWORD/fpga_flow/scripts. If we look in th
 * pro_blif.pl: rewrite a blif which has only 3 members in a .latch module
 * rewrite_path_in_file.pl: target a keyword in a file and replace it
 
-*Any script provides a help if launch without argument*
+*Any script provides help if launch without argument*
 
 fpga_flow.pl has dependencies which need to be configured. They are:
 * configuration file, which provides dependencies path and flow type
@@ -84,9 +84,9 @@ The benchmark folder contains 3 sub-folders:
 * **List**: contains all benchmark list files
 * **Verilog**: contains Verilog designs
 
-Blif and Verilog folders are organized by folders with name of projects. **Folder, top module and top module file must share the same name.**<br />
-The benchmark list file can contain as many benchmark as available in a same folder targetted by "benchmark_dir" variable from the configuration file. It's written as:<br />
-top_module/*.v,<int_value>; where <int_value> is the number ofchannel/wire between each blocks.
+Blif and Verilog folders are organized by folders with the name of projects. **Folder, top module and top module file must share the same name.**<br />
+The benchmark list file can contain as many benchmarks as available in the same folder targetted by "benchmark_dir" variable from the configuration file. It's written as:<br />
+top_module/*.v,<int_value>; where <int_value> is the number of channel/wire between each block.
 
 *An example of this file can be found at OPENFPGAPATHKEYWORD/fpga_flow/benchmarks/List/tuto_benchmark.txt*
 
@@ -101,8 +101,6 @@ Few options are only in fpga_flow:
 * **-multi_thread <int_value>**: specifies number of core to use
 * **-end_flow_with_test**: uses Icarus Verilog to verify generated netlist
 
-*An example of script can be found at OPENFPGAPATHKEYWORD/fpga_flow/tuto_fpga_flow.sh*
-
-
+*An script example can be found at OPENFPGAPATHKEYWORD/fpga_flow/tuto_fpga_flow.sh*
 
 
