@@ -30,6 +30,8 @@
 #include "fpga_x2p_bitstream_utils.h"
 #include "fpga_bitstream_primitives.h"
 
+#include "fpga_bitstream_pbtypes.h"
+
 
 /***** Subroutines *****/
 

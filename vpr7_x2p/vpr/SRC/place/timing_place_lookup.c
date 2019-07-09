@@ -459,8 +459,11 @@ static void alloc_routing_structs(struct s_router_opts router_opts,
 	}
 
 	build_rr_graph(graph_type, num_types, dummy_type_descriptors, nx, ny, grid,
-			chan_width_x[0], NULL, det_routing_arch.switch_block_type,
-			det_routing_arch.Fs, det_routing_arch.num_segment,
+			chan_width_x[0], NULL, 
+            det_routing_arch.switch_block_type, det_routing_arch.Fs, 
+            det_routing_arch.switch_block_sub_type, det_routing_arch.sub_Fs, 
+            det_routing_arch.wire_opposite_side,
+            det_routing_arch.num_segment,
 			det_routing_arch.num_switch, segment_inf,
 			det_routing_arch.global_route_switch,
 			det_routing_arch.delayless_switch, timing_inf,

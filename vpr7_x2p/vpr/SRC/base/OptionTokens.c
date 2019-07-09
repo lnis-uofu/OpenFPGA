@@ -57,6 +57,8 @@ struct s_TokenPair OptionBaseTokenList[] = {
 		{ "power_output_file", OT_POWER_OUT_FILE }, /* Output file for power results */
 		{ "power", OT_POWER }, /* Run power estimation? */
 		{ "tech_properties", OT_CMOS_TECH_BEHAVIOR_FILE }, /* Technology properties */
+        /* Xifan Tang: Tileable routing support !!! */
+		{ "use_tileable_route_chan_width", OT_USE_TILEABLE_ROUTE_CHAN_WIDTH}, /* Enable adaption to tileable route chan_width  */
         /* General FPGA_X2P: FPGA-SPICE/Verilog/Bitstream Options */
         { "fpga_x2p_rename_illegal_port", OT_FPGA_X2P_RENAME_ILLEGAL_PORT }, /* Xifan TANG: rename illegal port names */
         { "fpga_x2p_signal_density_weight", OT_FPGA_X2P_SIGNAL_DENSITY_WEIGHT }, /* The weight of signal density */

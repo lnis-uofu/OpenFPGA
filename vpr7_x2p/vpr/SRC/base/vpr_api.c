@@ -146,6 +146,9 @@ void vpr_print_usage(void) {
       "\t[--acc_fac <float>] [--first_iter_pres_fac <float>]\n");
   vpr_printf(TIO_MESSAGE_INFO,
       "\t[--bend_cost <float>] [--route_type global | detailed]\n");
+  /* Xifan Tang: Tileable routing support !!! */
+  vpr_printf(TIO_MESSAGE_INFO,
+      "\t[--use_tileable_route_chan_width ]\n");
   vpr_printf(TIO_MESSAGE_INFO,
       "\t[--verify_binary_search] [--route_chan_width <int>]\n");
   vpr_printf(TIO_MESSAGE_INFO,

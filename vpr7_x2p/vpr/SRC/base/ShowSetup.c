@@ -207,6 +207,7 @@ static void ShowRouterOpts(INP struct s_router_opts RouterOpts) {
 		} else {
 			vpr_printf(TIO_MESSAGE_INFO, "%d\n", RouterOpts.fixed_channel_width);
 		}
+		vpr_printf(TIO_MESSAGE_INFO, "RouterOpts.use_tileable_route_chan_width: %s\n", RouterOpts.use_tileable_route_chan_width ? "TRUE\n" : "FALSE\n");
 
 		vpr_printf(TIO_MESSAGE_INFO, "RouterOpts.acc_fac: %f\n", RouterOpts.acc_fac);
 		vpr_printf(TIO_MESSAGE_INFO, "RouterOpts.bb_factor: %d\n", RouterOpts.bb_factor);
@@ -260,6 +261,7 @@ static void ShowRouterOpts(INP struct s_router_opts RouterOpts) {
 		} else {
 			vpr_printf(TIO_MESSAGE_INFO, "%d\n", RouterOpts.fixed_channel_width);
 		}
+		vpr_printf(TIO_MESSAGE_INFO, "RouterOpts.use_tileable_route_chan_width: ", RouterOpts.use_tileable_route_chan_width ? "TRUE\n" : "FALSE\n");
 
 		vpr_printf(TIO_MESSAGE_INFO, "RouterOpts.acc_fac: %f\n", RouterOpts.acc_fac);
 		vpr_printf(TIO_MESSAGE_INFO, "RouterOpts.bb_factor: %d\n", RouterOpts.bb_factor);

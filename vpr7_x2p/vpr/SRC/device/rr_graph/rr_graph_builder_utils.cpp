@@ -506,3 +506,182 @@ void print_rr_graph_stats(const t_rr_graph& rr_graph) {
 
   return;
 }
+
+/************************************************************************
+ * Print statistics of a rr_graph  
+ * 1. We print number of nodes by types 
+ * 2. Print the number of edges 
+ ************************************************************************/
+void print_rr_graph_stats() {
+
+  /* Print number of nodes */
+  vpr_printf(TIO_MESSAGE_INFO, "Statistics on number of RR nodes (by node type): \n");
+   
+  /* Count the number of nodes */
+  std::vector<size_t> num_nodes_per_type;
+  num_nodes_per_type.resize(NUM_RR_TYPES);
+  num_nodes_per_type.assign(NUM_RR_TYPES, 0);
+   
+  for (int inode = 0; inode < num_rr_nodes; ++inode) {
+    num_nodes_per_type[rr_node[inode].type]++;
+  }
+  
+  /* Get the largest string size of rr_node_typename */ 
+  size_t max_str_typename = 0;
+  for (int type = 0; type < NUM_RR_TYPES; ++type) {
+    max_str_typename = std::max(max_str_typename, strlen(rr_node_typename[type]));
+  }
+
+  /* Constant strings */
+  char* type_str  = "     Type      "; 
+  char* total_str = "     Total     "; 
+  char* node_str  = " No. of nodes  "; 
+  char* edge_str  = " No. of edges  "; 
+ 
+  /* Count the number of characters per line: 
+   * we check the string length of each node type 
+   * Then we plus two reserved strings "type" and "total"
+   */
+  size_t num_char_per_line = 0; 
+  for (int type = 0; type < NUM_RR_TYPES; ++type) {
+    num_char_per_line += 6 + max_str_typename;
+  }
+  num_char_per_line += strlen(type_str);
+  num_char_per_line += strlen(total_str); 
+
+  /* Print splitter */ 
+  for (size_t ichar = 0; ichar  < num_char_per_line; ++ichar) {
+    vpr_printf(TIO_MESSAGE_INFO, "-");
+  }
+  vpr_printf(TIO_MESSAGE_INFO, "\n");
+
+  /* Print node type */
+  vpr_printf(TIO_MESSAGE_INFO, "%s", type_str);
+  for (int type = 0; type < NUM_RR_TYPES; ++type) {
+    vpr_printf(TIO_MESSAGE_INFO, "   %s  ", rr_node_typename[type]);
+  }
+  vpr_printf(TIO_MESSAGE_INFO, "%s", total_str);
+  vpr_printf(TIO_MESSAGE_INFO, "\n");
+
+  /* Print node numbers */
+  int total_num_nodes = 0;
+  vpr_printf(TIO_MESSAGE_INFO, "%s", node_str);
+  for (int type = 0; type < NUM_RR_TYPES; ++type) {
+    vpr_printf(TIO_MESSAGE_INFO, " %10lu ", num_nodes_per_type[type]);
+    total_num_nodes += num_nodes_per_type[type];
+  }
+  vpr_printf(TIO_MESSAGE_INFO, " %10lu ", num_rr_nodes);
+  vpr_printf(TIO_MESSAGE_INFO, "\n");
+
+  /* Check we have the same number as stated in rr_graph */
+  assert (total_num_nodes == num_rr_nodes);
+
+  /* Count the number of edges */
+  size_t num_edges = 0;
+  std::vector<size_t> num_edges_per_type;
+  num_edges_per_type.resize(NUM_RR_TYPES);
+  num_edges_per_type.assign(NUM_RR_TYPES, 0);
+   
+  for (int inode = 0; inode < num_rr_nodes; ++inode) {
+    num_edges_per_type[rr_node[inode].type] += rr_node[inode].num_edges;
+  }
+  for (int inode = 0; inode < num_rr_nodes; ++inode) {
+    num_edges += rr_node[inode].num_edges;
+  }
+
+  /* Print number of edges */
+  vpr_printf(TIO_MESSAGE_INFO, "%s", edge_str);
+  for (int type = 0; type < NUM_RR_TYPES; ++type) {
+    vpr_printf(TIO_MESSAGE_INFO, " %10lu ", num_edges_per_type[type]);
+  }
+  vpr_printf(TIO_MESSAGE_INFO, " %10lu ", num_edges);
+  vpr_printf(TIO_MESSAGE_INFO, "\n");
+
+  /* Print splitter */ 
+  for (size_t ichar = 0; ichar  < num_char_per_line; ++ichar) {
+    vpr_printf(TIO_MESSAGE_INFO, "-");
+  }
+  vpr_printf(TIO_MESSAGE_INFO, "\n");
+
+  /* Print MUX size distribution */
+  /* Get the maximum SB mux size */
+  short max_sb_mux_size = 0;
+  for (int inode = 0; inode < num_rr_nodes; ++inode) {
+    /* MUX multiplexers for SBs */
+    if ( (CHANX == rr_node[inode].type) 
+      || (CHANY == rr_node[inode].type) ) {
+      max_sb_mux_size = std::max(rr_node[inode].fan_in, max_sb_mux_size); 
+    }
+  } 
+  /* Get the minimum SB mux size */
+  short min_sb_mux_size = max_sb_mux_size;
+  for (int inode = 0; inode < num_rr_nodes; ++inode) {
+    /* MUX multiplexers for SBs */
+    if ( (CHANX == rr_node[inode].type) 
+      || (CHANY == rr_node[inode].type) ) {
+      min_sb_mux_size = std::min(rr_node[inode].fan_in, min_sb_mux_size); 
+    }
+  } 
+
+  /* Get the minimum SB mux size */
+  int num_sb_mux = 0;
+  size_t avg_sb_mux_size = 0;
+  for (int inode = 0; inode < num_rr_nodes; ++inode) {
+    /* MUX multiplexers for SBs */
+    if ( (CHANX == rr_node[inode].type) 
+      || (CHANY == rr_node[inode].type) ) {
+      avg_sb_mux_size += rr_node[inode].fan_in; 
+      num_sb_mux++;
+    }
+  } 
+  avg_sb_mux_size /= num_sb_mux;
+  /* Print statistics */
+  vpr_printf(TIO_MESSAGE_INFO, "------------------------------------------------\n");
+  vpr_printf(TIO_MESSAGE_INFO, "Total No. of Switch Block Multiplexer size:%d\n", num_sb_mux);
+  vpr_printf(TIO_MESSAGE_INFO, "Maximum Switch Block Multiplexer size:%d\n", max_sb_mux_size);
+  vpr_printf(TIO_MESSAGE_INFO, "Minimum Switch Block Multiplexer size:%d\n", min_sb_mux_size);
+  vpr_printf(TIO_MESSAGE_INFO, "Average Switch Block Multiplexer size:%lu\n", avg_sb_mux_size);
+  vpr_printf(TIO_MESSAGE_INFO, "------------------------------------------------\n");
+
+  /* Get the maximum SB mux size */
+  short max_cb_mux_size = 0;
+  for (int inode = 0; inode < num_rr_nodes; ++inode) {
+    /* MUX multiplexers for SBs */
+    if (IPIN == rr_node[inode].type) {
+      max_cb_mux_size = std::max(rr_node[inode].fan_in, max_cb_mux_size); 
+    }
+  } 
+  /* Get the minimum SB mux size */
+  short min_cb_mux_size = max_cb_mux_size;
+  for (int inode = 0; inode < num_rr_nodes; ++inode) {
+    /* MUX multiplexers for SBs */
+    if (IPIN == rr_node[inode].type) {
+      min_cb_mux_size = std::min(rr_node[inode].fan_in, min_cb_mux_size); 
+    }
+  } 
+
+  /* Get the minimum SB mux size */
+  int num_cb_mux = 0;
+  size_t avg_cb_mux_size = 0;
+  for (int inode = 0; inode < num_rr_nodes; ++inode) {
+    /* MUX multiplexers for SBs */
+    if (IPIN == rr_node[inode].type) {
+      avg_cb_mux_size += rr_node[inode].fan_in; 
+      num_cb_mux++;
+    }
+  } 
+  avg_cb_mux_size /= num_cb_mux;
+  vpr_printf(TIO_MESSAGE_INFO, "------------------------------------------------\n");
+  vpr_printf(TIO_MESSAGE_INFO, "Total No. of Connection Block Multiplexer size:%d\n", num_cb_mux);
+  vpr_printf(TIO_MESSAGE_INFO, "Maximum Connection Block Multiplexer size:%d\n", max_cb_mux_size);
+  vpr_printf(TIO_MESSAGE_INFO, "Minimum Connection Block Multiplexer size:%d\n", min_cb_mux_size);
+  vpr_printf(TIO_MESSAGE_INFO, "Average Connection Block Multiplexer size:%lu\n", avg_cb_mux_size);
+  vpr_printf(TIO_MESSAGE_INFO, "------------------------------------------------\n");
+
+
+  return;
+}
+
+/************************************************************************
+ * End of file : rr_graph_builder_utils.cpp
+ ***********************************************************************/

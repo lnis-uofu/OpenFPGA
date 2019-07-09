@@ -1,4 +1,39 @@
-/* The XML parser processes an XML file into a tree data structure composed of      *
+/**********************************************************
+ * MIT License
+ *
+ * Copyright (c) 2018 LNIS - The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ ***********************************************************************/
+
+/************************************************************************
+ * Filename:    read_xml_arch_file.c
+ * Created by:   Jason Luu
+ * Change history:
+ * +-------------------------------------+
+ * |  Date       |    Author   | Notes
+ * +-------------------------------------+
+ * | 2019/07/02  |  Xifan Tang | Modified to support passing_track_type for switch blocks 
+ * +-------------------------------------+
+ ***********************************************************************/
+/************************************************************************
+ * The XML parser processes an XML file into a tree data structure composed of      *
  * ezxml_t nodes.  Each ezxml_t node represents an XML element.  For example        *
  * <a> <b/> </a> will generate two ezxml_t nodes.  One called "a" and its           *
  * child "b".  Each ezxml_t node can contain various XML data such as attribute     *
@@ -22,7 +57,7 @@
  * Because of how the XML tree traversal works, we free everything when we're       *
  * done reading an architecture file to make sure that there isn't some part        *
  * of the architecture file that got missed.                                        *
- */
+ ***********************************************************************/
 
 #include <string.h>
 #include <assert.h>
@@ -2142,6 +2177,33 @@ static void ProcessDevice(INOUTP ezxml_t Node, OUTP struct s_arch *arch,
 
 	arch->Fs = GetIntProperty(Cur, "fs", TRUE, 3);
 
+    /* SubType is the switch block type of passing tracks */
+    /* By default, the subType is the same as the main type */ 
+	Prop = FindProperty(Cur, "sub_type", FALSE);
+    if (NULL != Prop) {
+   	  if (strcmp(Prop, "wilton") == 0) {
+	  	arch->SBSubType = WILTON;
+	  } else if (strcmp(Prop, "universal") == 0) {
+	  	arch->SBSubType = UNIVERSAL;
+	  } else if (strcmp(Prop, "subset") == 0) {
+	  	arch->SBSubType = SUBSET;
+	  } else {
+	  	vpr_printf(TIO_MESSAGE_ERROR,
+	  			"[LINE %d] Unknown property %s for switch block type x\n",
+	  			Cur->line, Prop);
+	  	exit(1);
+	  }
+    }
+	ezxml_set_attr(Cur, "sub_type", NULL);
+
+    /* SubFs is Fs for the switch block type of passing tracks */
+    /* By default, the subFs is the same as the main Fs */ 
+	arch->SubFs = GetIntProperty(Cur, "sub_fs", FALSE, arch->Fs);
+
+    /* A switch to allow passing tracks wired to the same routing channels */
+	arch->wire_opposite_side = GetBooleanProperty(Cur, "wire_opposite_side", FALSE, FALSE);
+	ezxml_set_attr(Cur, "wire_opposite_side", NULL);
+
 	FreeNode(Cur);
 }
 
@@ -4132,3 +4194,6 @@ void SetupPinEquivalenceAutoDetect(ezxml_t Parent, t_type_descriptor* Type) {
   return;
 }
 
+/************************************************************************
+ * End of file : read_xml_arch_file.c 
+ ***********************************************************************/

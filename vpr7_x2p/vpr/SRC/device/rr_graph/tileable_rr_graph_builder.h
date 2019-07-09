@@ -5,10 +5,14 @@
 
 #include "vpr_types.h"
 
+int adapt_to_tileable_route_chan_width(int chanW, t_segment_inf* segment_inf);
+
 void build_tileable_unidir_rr_graph(INP const int L_num_types,
                                     INP t_type_ptr types, INP const int L_nx, INP const int L_ny,
                                     INP struct s_grid_tile **L_grid, INP const int chan_width,
                                     INP const enum e_switch_block_type sb_type, INP const int Fs, 
+                                    INP const enum e_switch_block_type sb_subtype, INP const int subFs, 
+                                    INP const boolean wire_opposite_side,
                                     INP const int num_seg_types,
                                     INP const t_segment_inf * segment_inf,
                                     INP const int num_switches, INP const int delayless_switch, 

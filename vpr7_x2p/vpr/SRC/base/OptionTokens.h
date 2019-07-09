@@ -74,6 +74,8 @@ enum e_OptionBaseToken {
 	OT_ACTIVITY_FILE,
 	OT_POWER_OUT_FILE,
 	OT_CMOS_TECH_BEHAVIOR_FILE,
+    /* Xifan Tang: Tileable routing support !!! */
+    OT_USE_TILEABLE_ROUTE_CHAN_WIDTH,
     /* General FPGA_X2P: FPGA-SPICE/Verilog/Bitstream Options */
     OT_FPGA_X2P_RENAME_ILLEGAL_PORT, 
     OT_FPGA_X2P_SIGNAL_DENSITY_WEIGHT, /* The weight of signal density in determining number of clock cycles in simulation */
