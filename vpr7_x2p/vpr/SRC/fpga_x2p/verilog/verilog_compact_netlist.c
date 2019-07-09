@@ -378,7 +378,7 @@ void dump_compact_verilog_one_physical_block(t_sram_orgz_info* cur_sram_orgz_inf
   /* I/O PAD */
   dump_verilog_grid_common_port(fp, iopad_verilog_model, gio_inout_prefix, 
                                 0, phy_block_type->capacity * phy_block_type->pb_type->physical_mode_num_iopads - 1,
-                                VERILOG_PORT_INOUT, is_explicit_mapping); 
+                                VERILOG_PORT_INOUT, false); 
 
   /* Print configuration ports */
   /* Reserved configuration ports */
@@ -622,9 +622,9 @@ void dump_compact_verilog_defined_one_grid(t_sram_orgz_info* cur_sram_orgz_info,
   }
 
   if (IO_TYPE == grid[ix][iy].type) {
-    dump_verilog_io_grid_pins(fp, ix, iy, TRUE, FALSE, FALSE);
+    dump_verilog_io_grid_pins(fp, ix, iy, TRUE, border_side, FALSE, FALSE, is_explicit_mapping);
   } else {
-    dump_verilog_grid_pins(fp, ix, iy, TRUE, FALSE, FALSE);
+    dump_verilog_grid_pins(fp, ix, iy, TRUE, FALSE, FALSE, is_explicit_mapping);
   }
  
   /* IO PAD */
@@ -792,10 +792,20 @@ void dump_compact_verilog_defined_one_switch_box(t_sram_orgz_info* cur_sram_orgz
 
     fprintf(fp, "//----- %s side channel ports-----\n", side_manager.c_str());
     for (size_t itrack = 0; itrack < rr_sb.get_chan_width(side_manager.get_side()); ++itrack) {
-      fprintf(fp, "%s,\n",
+      if (true == is_explicit_mapping) {
+        fprintf(fp, ".%s(",
               gen_verilog_routing_channel_one_pin_name(rr_sb.get_chan_node(side_manager.get_side(), itrack),
                                                        chan_coordinator.get_x(), chan_coordinator.get_y(), itrack, 
                                                        rr_sb.get_chan_node_direction(side_manager.get_side(), itrack)));
+      }
+      fprintf(fp, "%s",
+              gen_verilog_routing_channel_one_pin_name(rr_sb.get_chan_node(side_manager.get_side(), itrack),
+                                                       chan_coordinator.get_x(), chan_coordinator.get_y(), itrack, 
+                                                       rr_sb.get_chan_node_direction(side_manager.get_side(), itrack)));
+      if (true == is_explicit_mapping) {
+        fprintf(fp, ")",itrack);
+      }
+      fprintf(fp, ",\n",itrack);
     }
     fprintf(fp, "//----- %s side inputs: CLB output pins -----\n", convert_side_index_to_string(side));
     /* Dump OPINs of adjacent CLBs */
@@ -917,9 +927,16 @@ void dump_compact_verilog_defined_one_connection_box(t_sram_orgz_info* cur_sram_
   fprintf(fp, "//----- %s side inputs: channel track middle outputs -----\n", 
           convert_side_index_to_string(rr_gsb.get_cb_chan_side(cb_type)));
   for (size_t itrack = 0; itrack < rr_gsb.get_cb_chan_width(cb_type); ++itrack) {
-    fprintf(fp, "%s, ",
+    if (true == is_explicit_mapping) {
+      fprintf(fp, ".%s (",
             rr_gsb.gen_cb_verilog_routing_track_name(cb_type, itrack));
-    fprintf(fp, "\n");
+    }
+    fprintf(fp, "%s",
+            rr_gsb.gen_cb_verilog_routing_track_name(cb_type, itrack));
+    if (true == is_explicit_mapping) {
+      fprintf(fp, ")",itrack);
+    }
+    fprintf(fp, ",\n");
   }
 
   std::vector<enum e_side> cb_sides = rr_gsb.get_cb_ipin_sides(cb_type);

@@ -806,16 +806,14 @@ int rec_dump_verilog_spice_model_lib_global_ports(FILE* fp,
               cur_spice_model_port->lib_name);
     } else {
       /* Add explicit port mapping if required */
-      if ((TRUE == require_explicit_port_map) 
-         && (TRUE == cur_spice_model->dump_explicit_port_map)) {
+      if (TRUE == require_explicit_port_map) {
         fprintf(fp, ".%s(",
                 cur_spice_model_port->lib_name);
       }
       fprintf(fp, "%s[0:%d]", 
             cur_spice_model_port->lib_name,
             cur_spice_model_port->size - 1); 
-      if ((TRUE == require_explicit_port_map) 
-         && (TRUE == cur_spice_model->dump_explicit_port_map)) {
+      if (TRUE == require_explicit_port_map) {
         fprintf(fp, ")");
       }
     }
@@ -902,8 +900,7 @@ int rec_dump_verilog_spice_model_global_ports(FILE* fp,
               cur_spice_model_port->prefix);
     } else {
       /* Add explicit port mapping if required */
-      if ((TRUE == require_explicit_port_map) 
-         && (TRUE == cur_spice_model->dump_explicit_port_map)) {
+      if (TRUE == require_explicit_port_map ) {
         fprintf(fp, ".%s(",
                 /* cur_spice_model_port->lib_name); /* Old version*/
                 cur_spice_model_port->prefix);
@@ -911,8 +908,7 @@ int rec_dump_verilog_spice_model_global_ports(FILE* fp,
       fprintf(fp, "%s[0:%d]", 
             cur_spice_model_port->prefix,
             cur_spice_model_port->size - 1); 
-      if ((TRUE == require_explicit_port_map) 
-         && (TRUE == cur_spice_model->dump_explicit_port_map)) {
+      if (TRUE == require_explicit_port_map) {
         fprintf(fp, ")");
       }
     }
@@ -2736,9 +2732,15 @@ void dump_verilog_grid_common_port(FILE* fp, t_spice_model* cur_verilog_model,
   /*Malloc and generate the full name of port */
   port_full_name = (char*)my_malloc(sizeof(char)*(strlen(general_port_prefix) + strlen(cur_verilog_model->prefix) + 1));
   sprintf(port_full_name, "%s%s", general_port_prefix, cur_verilog_model->prefix);
-
   fprintf(fp, ",\n");
+  if (true == is_explicit_mapping) {
+    fprintf(fp, ".%s(",
+            port_full_name);
+  }
   dump_verilog_generic_port(fp, dump_port_type, port_full_name, msb, lsb); 
+  if (true == is_explicit_mapping) {
+    fprintf(fp, ")");
+  }
 
   /* Free */
   /* Local variables such as port1_name and port2 name are automatically freed  */
@@ -3099,6 +3101,7 @@ void dump_verilog_mem_sram_submodule(FILE* fp,
 
   int num_bl_per_sram = 0;
   int num_wl_per_sram = 0;
+  int iport = 0;
 
   /* Check the file handler*/ 
   if (NULL == fp) {
@@ -3201,75 +3204,99 @@ void dump_verilog_mem_sram_submodule(FILE* fp,
     if (SPICE_MODEL_MUX == cur_verilog_model->type) {
       /* Input of Scan-chain DFF, should be connected to the output of its precedent */
     if (true == is_explicit_mapping) {
+      while(TRUE == cur_sram_verilog_model->ports[iport].is_global) {
+        iport++;
+      }
       fprintf(fp, ".%s(",
-              cur_sram_verilog_model->ports[0].prefix);
+              cur_sram_verilog_model->ports[iport].prefix);
     }
       dump_verilog_mux_sram_one_outport(fp, cur_sram_orgz_info,
                                         cur_verilog_model, mux_size,
                                         lsb, msb,
                                         -1, VERILOG_PORT_CONKT);
     if (true == is_explicit_mapping) {
+        iport++;
       fprintf(fp, ")");
     }
-      fprintf(fp, ", \n");  //
+      fprintf(fp, ", \n"); 
       /* Output of Scan-chain DFF, should be connected to the output of its successor */
+      while(TRUE == cur_sram_verilog_model->ports[iport].is_global) {
+        iport++;
+      }
     if (true == is_explicit_mapping) {
       fprintf(fp, ".%s(",
-              cur_sram_verilog_model->ports[1].prefix);
+              cur_sram_verilog_model->ports[iport].prefix);
     }
       dump_verilog_mux_sram_one_outport(fp, cur_sram_orgz_info,
                                         cur_verilog_model, mux_size,
                                         lsb, msb,
                                         0, VERILOG_PORT_CONKT);
     if (true == is_explicit_mapping) {
+        iport++;
       fprintf(fp, ")");
     }
-      fprintf(fp, ", \n");  //
+      fprintf(fp, ", \n");
+      while(TRUE == cur_sram_verilog_model->ports[iport].is_global) {
+        iport++;
+      }
     if (true == is_explicit_mapping) {
       fprintf(fp, ".%s(",
-              cur_sram_verilog_model->ports[2].prefix);
+              cur_sram_verilog_model->ports[iport].prefix);
     }
       dump_verilog_mux_sram_one_outport(fp, cur_sram_orgz_info, 
                                         cur_verilog_model, mux_size,
                                         lsb, msb,
                                         1, VERILOG_PORT_CONKT);
     if (true == is_explicit_mapping) {
+        iport++;
       fprintf(fp, ")");
     }
       break;
     } 
     /* Input of Scan-chain DFF, should be connected to the output of its precedent */
     if (true == is_explicit_mapping) {
+      while(TRUE == cur_sram_verilog_model->ports[iport].is_global) {
+        iport++;
+      }
       fprintf(fp, ".%s(",
-              cur_sram_verilog_model->ports[0].prefix);
+              cur_sram_verilog_model->ports[iport].prefix);
     }
     dump_verilog_sram_one_local_outport(fp, cur_sram_orgz_info,
                                         lsb, msb,
                                          -1, VERILOG_PORT_CONKT);
     if (true == is_explicit_mapping) {
+        iport++;
       fprintf(fp, ")");
     }
-    fprintf(fp, ", \n");  //
+    fprintf(fp, ", \n");  
     /* Output of Scan-chain DFF, should be connected to the output of its successor */
     if (true == is_explicit_mapping) {
+      while(TRUE == cur_sram_verilog_model->ports[iport].is_global) {
+        iport++;
+      }
       fprintf(fp, ".%s(",
-              cur_sram_verilog_model->ports[1].prefix);
+              cur_sram_verilog_model->ports[iport].prefix);
     }
     dump_verilog_sram_one_local_outport(fp, cur_sram_orgz_info,
                                         lsb, msb,
                                          0, VERILOG_PORT_CONKT);
     if (true == is_explicit_mapping) {
+        iport++;
       fprintf(fp, ")");
     }
-    fprintf(fp, ", \n");  //
+    fprintf(fp, ", \n");  
     if (true == is_explicit_mapping) {
+      while(TRUE == cur_sram_verilog_model->ports[iport].is_global) {
+        iport++;
+      }
       fprintf(fp, ".%s(",
-              cur_sram_verilog_model->ports[2].prefix);
+              cur_sram_verilog_model->ports[iport].prefix);
     }
     dump_verilog_sram_one_local_outport(fp, cur_sram_orgz_info,
                                         lsb, msb,
                                         1, VERILOG_PORT_CONKT);
     if (true == is_explicit_mapping) {
+        iport++;
       fprintf(fp, ")");
     }
     break;

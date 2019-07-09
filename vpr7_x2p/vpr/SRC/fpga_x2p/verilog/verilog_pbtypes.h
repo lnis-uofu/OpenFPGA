@@ -32,7 +32,8 @@ void dump_verilog_pb_type_ports(FILE* fp,
                           t_pb_type* cur_pb_type,
                           boolean dump_port_type,
                           boolean dump_last_comma,
-                          boolean require_explicit_port_map);
+                          boolean require_explicit_port_map,
+                          bool is_full_name);
 
 void dump_verilog_dangling_des_pb_graph_pin_interc(FILE* fp,
                                                    t_pb_graph_pin* des_pb_graph_pin,
@@ -111,13 +112,16 @@ void dump_verilog_grid_pins(FILE* fp,
                             int x, int y,
                             boolean top_level,
                             boolean dump_port_type,
-                            boolean dump_last_comma);
+                            boolean dump_last_comma,
+                            bool is_explicit_mapping);
 
 void dump_verilog_io_grid_pins(FILE* fp,
                                int x, int y,
                                boolean top_level,
+                               int border_side,
                                boolean dump_port_type,
-                               boolean dump_last_comma);
+                               boolean dump_last_comma,
+                               bool is_explicit_mapping);
 
 char* get_grid_block_subckt_name(int x,
                                  int y,

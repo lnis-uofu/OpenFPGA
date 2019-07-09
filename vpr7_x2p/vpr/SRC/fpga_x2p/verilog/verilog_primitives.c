@@ -134,8 +134,7 @@ void dump_verilog_pb_generic_primitive(t_sram_orgz_info* cur_sram_orgz_info,
   get_sram_orgz_info_num_blwl(cur_sram_orgz_info, &cur_bl, &cur_wl);
 
   /* print ports --> input ports */
-  dump_verilog_pb_type_ports(fp, port_prefix, 0, prim_pb_type, TRUE, FALSE, FALSE); 
-
+  dump_verilog_pb_type_ports(fp, port_prefix, 0, prim_pb_type, TRUE, FALSE, FALSE, false); 
   /* IOPADs requires a specical port to output */
   if (SPICE_MODEL_IOPAD == verilog_model->type) {
     fprintf(fp, ",\n");
@@ -236,22 +235,21 @@ void dump_verilog_pb_generic_primitive(t_sram_orgz_info* cur_sram_orgz_info,
   /* assert */
   num_sram = count_num_sram_bits_one_spice_model(verilog_model, -1);
   /* print ports --> input ports */
-  dump_verilog_pb_type_bus_ports(fp, port_prefix, 1, prim_pb_type, FALSE, FALSE, verilog_model->dump_explicit_port_map); 
-
+  dump_verilog_pb_type_bus_ports(fp, port_prefix, 1, prim_pb_type, FALSE, FALSE, my_bool_to_boolean(is_explicit_mapping)); 
   /* IOPADs requires a specical port to output */
   if (SPICE_MODEL_IOPAD == verilog_model->type) {
     fprintf(fp, ",\n");
     assert(1 == num_pad_port);
     assert(NULL != pad_ports[0]);
     /* Add explicit port mapping if required */
-    if (TRUE == verilog_model->dump_explicit_port_map) {
+    if (true == is_explicit_mapping) {
       fprintf(fp, ".%s(",
               pad_ports[0]->lib_name);
     }
     /* Print inout port */
     fprintf(fp, "%s%s[%d]", gio_inout_prefix, 
                 verilog_model->prefix, verilog_model->cnt);
-    if (TRUE == verilog_model->dump_explicit_port_map) {
+    if (true == is_explicit_mapping) {
       fprintf(fp, ")");
     }
     fprintf(fp, ", ");
@@ -265,7 +263,7 @@ void dump_verilog_pb_generic_primitive(t_sram_orgz_info* cur_sram_orgz_info,
     case SPICE_SRAM_SCAN_CHAIN:
       /* Add explicit port mapping if required */
       if ( (0 < num_sram) 
-        && (TRUE == verilog_model->dump_explicit_port_map)) {
+        && (true == is_explicit_mapping)) {
         assert( 1 == num_sram_port);
         assert( NULL != sram_ports[0]);
         fprintf(fp, ".%s(",
@@ -275,7 +273,7 @@ void dump_verilog_pb_generic_primitive(t_sram_orgz_info* cur_sram_orgz_info,
                                           cur_num_sram, cur_num_sram + num_sram - 1,
                                           0, VERILOG_PORT_CONKT);
       if ( (0 < num_sram) 
-        && (TRUE == verilog_model->dump_explicit_port_map)) {
+        && (true == is_explicit_mapping)) {
         fprintf(fp, ")");
       }
 
@@ -286,7 +284,7 @@ void dump_verilog_pb_generic_primitive(t_sram_orgz_info* cur_sram_orgz_info,
       fprintf(fp, ", ");
       /* Add explicit port mapping if required */
       if ( (0 < num_sram) 
-        && (TRUE == verilog_model->dump_explicit_port_map)) {
+        && (true == is_explicit_mapping)) {
         assert( 1 == num_sram_port);
         assert( NULL != sram_ports[0]);
         fprintf(fp, ".%s(",
@@ -296,14 +294,14 @@ void dump_verilog_pb_generic_primitive(t_sram_orgz_info* cur_sram_orgz_info,
                                           cur_num_sram, cur_num_sram + num_sram - 1,
                                           1, VERILOG_PORT_CONKT);
       if ( (0 < num_sram) 
-        && (TRUE == verilog_model->dump_explicit_port_map)) {
+        && (true == is_explicit_mapping)) {
         fprintf(fp, ")");
       }
       break;
     case SPICE_SRAM_MEMORY_BANK:
       /* Add explicit port mapping if required */
       if ( (0 < num_sram) 
-        && (TRUE == verilog_model->dump_explicit_port_map)) {
+        && (true == is_explicit_mapping)) {
         assert( 1 == num_sram_port);
         assert( NULL != sram_ports[0]);
         fprintf(fp, ".%s(",
@@ -313,7 +311,7 @@ void dump_verilog_pb_generic_primitive(t_sram_orgz_info* cur_sram_orgz_info,
                                     cur_num_sram, cur_num_sram + num_sram - 1, 
                                     0, VERILOG_PORT_CONKT);
       if ( (0 < num_sram) 
-        && (TRUE == verilog_model->dump_explicit_port_map)) {
+        && (true == is_explicit_mapping)) {
         fprintf(fp, ")");
       }
       /* Check if we have an inverterd prefix */
@@ -323,7 +321,7 @@ void dump_verilog_pb_generic_primitive(t_sram_orgz_info* cur_sram_orgz_info,
       fprintf(fp, ", ");
       /* Add explicit port mapping if required */
       if ( (0 < num_sram) 
-        && (TRUE == verilog_model->dump_explicit_port_map)) {
+        && (true == is_explicit_mapping)) {
         assert( 1 == num_sram_port);
         assert( NULL != sram_ports[0]);
         fprintf(fp, ".%s(",
@@ -333,7 +331,7 @@ void dump_verilog_pb_generic_primitive(t_sram_orgz_info* cur_sram_orgz_info,
                                     cur_num_sram, cur_num_sram + num_sram - 1, 
                                     1, VERILOG_PORT_CONKT);
       if ( (0 < num_sram) 
-        && (TRUE == verilog_model->dump_explicit_port_map)) {
+        && (true == is_explicit_mapping)) {
         fprintf(fp, ")");
       }
       break;
@@ -531,7 +529,7 @@ void dump_verilog_pb_primitive_lut(t_sram_orgz_info* cur_sram_orgz_info,
     fprintf(fp, ",\n");
   }
   /* Print inputs, outputs, inouts, clocks, NO SRAMs*/
-  dump_verilog_pb_type_ports(fp, port_prefix, 0, cur_pb_type, TRUE, TRUE, FALSE); 
+  dump_verilog_pb_type_ports(fp, port_prefix, 0, cur_pb_type, TRUE, TRUE, FALSE, false); 
   /* Print SRAM ports */
   cur_num_sram = get_sram_orgz_info_num_mem_bit(cur_sram_orgz_info); 
   get_sram_orgz_info_num_blwl(cur_sram_orgz_info, &cur_bl, &cur_wl);

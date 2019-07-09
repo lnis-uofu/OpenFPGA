@@ -2101,7 +2101,7 @@ void dump_verilog_routing_switch_box_unique_module(t_sram_orgz_info* cur_sram_or
                                                 rr_gsb.get_sb_conf_bits_lsb(),
                                                 rr_gsb.get_sb_conf_bits_msb(),
                                                 VERILOG_PORT_INPUT, 
-                                                is_explicit_mapping);
+                                                false);
     fprintf(fp, "\n");
     fprintf(fp, "`endif\n");
   }

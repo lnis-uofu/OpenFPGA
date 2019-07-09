@@ -396,9 +396,9 @@ void dump_verilog_defined_one_grid(t_sram_orgz_info* cur_sram_orgz_info,
   }
 
   if (IO_TYPE == grid[ix][iy].type) {
-    dump_verilog_io_grid_pins(fp, ix, iy, TRUE, FALSE, FALSE);
+    dump_verilog_io_grid_pins(fp, ix, iy, TRUE, 0, FALSE, FALSE, my_bool_to_boolean(is_explicit_mapping));
   } else {
-    dump_verilog_grid_pins(fp, ix, iy, TRUE, FALSE, FALSE);
+    dump_verilog_grid_pins(fp, ix, iy, TRUE, FALSE, FALSE, is_explicit_mapping);
   }
  
   /* IO PAD */
@@ -1474,8 +1474,15 @@ void dump_compact_verilog_io_grid_block_subckt_pins(FILE* fp,
         if (0 < dump_pin_cnt) {
           fprintf(fp, ",\n");
         }
+        if (true == is_explicit_mapping) {
+          fprintf(fp, ".%s (",
+                  gen_verilog_one_pb_type_pin_name(chomp_verilog_prefix(top_pb_graph_node->pb_type->name), top_pb_graph_node->input_pins[iport]->port, ipin));
+        }
         fprintf(fp, "%s_height_%d__pin_%d_", 
                 convert_side_index_to_string(border_side), pin_height, grid_pin_index);
+        if (true == is_explicit_mapping) {
+          fprintf(fp, ")");
+        }
         side_pin_index++;
         dump_pin_cnt++;
       }
@@ -1497,8 +1504,15 @@ void dump_compact_verilog_io_grid_block_subckt_pins(FILE* fp,
         if (0 < dump_pin_cnt) {
           fprintf(fp, ",\n");
         }
+        if (true == is_explicit_mapping) {
+          fprintf(fp, ".%s (",
+                  gen_verilog_one_pb_type_pin_name(chomp_verilog_prefix(top_pb_graph_node->pb_type->name), top_pb_graph_node->output_pins[iport]->port, ipin));
+        }
         fprintf(fp, "%s_height_%d__pin_%d_", 
                 convert_side_index_to_string(border_side), pin_height, grid_pin_index);
+        if (true == is_explicit_mapping) {
+          fprintf(fp, ")");
+        }
         side_pin_index++;
         dump_pin_cnt++;
       }
@@ -1520,8 +1534,15 @@ void dump_compact_verilog_io_grid_block_subckt_pins(FILE* fp,
         if (0 < dump_pin_cnt) {
           fprintf(fp, ",\n");
         }
+        if (true == is_explicit_mapping) {
+          fprintf(fp, ".%s (",
+                  gen_verilog_one_pb_type_pin_name(chomp_verilog_prefix(top_pb_graph_node->pb_type->name), top_pb_graph_node->clock_pins[iport]->port, ipin));
+        }
         fprintf(fp, "%s_height_%d__pin_%d_", 
                 convert_side_index_to_string(border_side), pin_height, grid_pin_index);
+        if (true == is_explicit_mapping) {
+          fprintf(fp, ")");
+        }
         side_pin_index++;
         dump_pin_cnt++;
       }

@@ -3088,7 +3088,7 @@ void dump_verilog_submodule_one_lut(FILE* fp,
           input_port[0]->prefix);
   /* Connect MUX inverted configuration port to inverted LUT inputs */
   if (true == is_explicit_mapping) {
-    fprintf(fp, "), sram_inv(");
+    fprintf(fp, "), .sram_inv(");
   } else {
     fprintf(fp, ", ");
   }
