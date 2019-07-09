@@ -687,10 +687,15 @@ void alloc_rr_graph_fast_lookup(const DeviceCoordinator& device_size,
     if ((SOURCE == type) || (OPIN == type) ) {
       continue;
     }
-    rr_graph->rr_node_indices[type] = (t_ivec **) my_malloc(sizeof(t_ivec *) * device_size.get_x());
-    for (size_t i = 0; i < device_size.get_x(); ++i) {
-      rr_graph->rr_node_indices[type][i] = (t_ivec *) my_malloc(sizeof(t_ivec) * device_size.get_y());
-      for (size_t j = 0; j < device_size.get_y(); ++j) {
+    DeviceCoordinator actual_device_size(device_size);
+    /* Special for CHANX: we use (y,x) in allocation */
+    if (CHANX == type) {
+      actual_device_size.rotate();
+    }
+    rr_graph->rr_node_indices[type] = (t_ivec **) my_malloc(sizeof(t_ivec *) * actual_device_size.get_x());
+    for (size_t i = 0; i < actual_device_size.get_x(); ++i) {
+      rr_graph->rr_node_indices[type][i] = (t_ivec *) my_malloc(sizeof(t_ivec) * actual_device_size.get_y());
+      for (size_t j = 0; j < actual_device_size.get_y(); ++j) {
         rr_graph->rr_node_indices[type][i][j].nelem = 0;
         rr_graph->rr_node_indices[type][i][j].list = NULL;
       }

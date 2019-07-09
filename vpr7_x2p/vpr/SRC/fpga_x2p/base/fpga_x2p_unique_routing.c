@@ -1354,6 +1354,12 @@ DeviceRRGSB build_device_rr_gsb(boolean output_sb_xml, char* sb_xml_dir,
              "Backannotated %d switch blocks.\n",
              (nx + 1) * (ny + 1) );
 
+  /* End time count */
+  t_end = clock();
+ 
+  run_time_sec = (float)(t_end - t_start) / CLOCKS_PER_SEC;
+  vpr_printf(TIO_MESSAGE_INFO, "Backannotation of Switch Block took %g seconds\n\n", run_time_sec);  
+
 
   if (TRUE == output_sb_xml) {
     create_dir_path(sb_xml_dir);
@@ -1406,7 +1412,7 @@ DeviceRRGSB build_device_rr_gsb(boolean output_sb_xml, char* sb_xml_dir,
   t_end = clock();
  
   run_time_sec = (float)(t_end - t_start) / CLOCKS_PER_SEC;
-  vpr_printf(TIO_MESSAGE_INFO, "Routing architecture uniqifying took %g seconds\n", run_time_sec);  
+  vpr_printf(TIO_MESSAGE_INFO, "Routing architecture uniqifying took %g seconds\n\n", run_time_sec);  
 
   return LL_device_rr_gsb;
 }
