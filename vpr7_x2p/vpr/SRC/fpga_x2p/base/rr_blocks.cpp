@@ -2598,7 +2598,7 @@ void DeviceRRGSB::reserve_sb_unique_submodule_id(DeviceCoordinator& coordinator)
 }
 
 /* Resize rr_switch_block array is needed*/
-void DeviceRRGSB::resize_upon_need(DeviceCoordinator& coordinator) { 
+void DeviceRRGSB::resize_upon_need(const DeviceCoordinator& coordinator) { 
   if (coordinator.get_x() + 1 > rr_gsb_.size()) {
     rr_gsb_.resize(coordinator.get_x() + 1);
 
@@ -2622,7 +2622,7 @@ void DeviceRRGSB::resize_upon_need(DeviceCoordinator& coordinator) {
 }
 
 /* Add a switch block to the array, which will automatically identify and update the lists of unique mirrors and rotatable mirrors */
-void DeviceRRGSB::add_rr_gsb(DeviceCoordinator& coordinator, 
+void DeviceRRGSB::add_rr_gsb(const DeviceCoordinator& coordinator, 
                              const RRGSB& rr_gsb) {
   /* Resize upon needs*/
   resize_upon_need(coordinator);
