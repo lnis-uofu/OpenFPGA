@@ -928,13 +928,12 @@ void dump_compact_verilog_defined_one_connection_box(t_sram_orgz_info* cur_sram_
           convert_side_index_to_string(rr_gsb.get_cb_chan_side(cb_type)));
   for (size_t itrack = 0; itrack < rr_gsb.get_cb_chan_width(cb_type); ++itrack) {
     if (true == is_explicit_mapping) {
-      fprintf(fp, ".%s (",
-            rr_gsb.gen_cb_verilog_routing_track_name(cb_type, itrack));
+      fprintf(fp, ".%s(", unique_mirror.gen_cb_verilog_routing_track_name(cb_type, itrack));
     }
     fprintf(fp, "%s",
             rr_gsb.gen_cb_verilog_routing_track_name(cb_type, itrack));
     if (true == is_explicit_mapping) {
-      fprintf(fp, ")",itrack);
+      fprintf(fp, ")");
     }
     fprintf(fp, ",\n");
   }
@@ -949,12 +948,26 @@ void dump_compact_verilog_defined_one_connection_box(t_sram_orgz_info* cur_sram_
     for (size_t inode = 0; inode < rr_gsb.get_num_ipin_nodes(cb_ipin_side); ++inode) {
       t_rr_node* cur_ipin_node = rr_gsb.get_ipin_node(cb_ipin_side, inode);
       /* Print each INPUT Pins of a grid */
+    if (true == is_explicit_mapping) {
+      if (RIGHT == side_manager.get_side()) {
+        fprintf(fp, ".grid_%d__%d__pin_%d__%d__%d_ (", unique_mirror.get_sb_coordinator().get_x() + 1, unique_mirror.get_sb_coordinator().get_y() + 1, get_grid_pin_height(cur_ipin_node->xlow, cur_ipin_node->ylow,cur_ipin_node->ptc_num), rr_gsb.get_ipin_node_grid_side(cb_ipin_side,inode), cur_ipin_node->ptc_num);
+      } else if (TOP == side_manager.get_side()) {
+        fprintf(fp, ".grid_%d__%d__pin_%d__%d__%d_ (", unique_mirror.get_sb_coordinator().get_x(), unique_mirror.get_sb_coordinator().get_y() + 1, get_grid_pin_height(cur_ipin_node->xlow, cur_ipin_node->ylow,cur_ipin_node->ptc_num), rr_gsb.get_ipin_node_grid_side(cb_ipin_side,inode), cur_ipin_node->ptc_num);
+      } else if (LEFT == side_manager.get_side()) {
+      fprintf(fp, ".grid_%d__%d__pin_%d__%d__%d_ (", unique_mirror.get_sb_coordinator().get_x(), unique_mirror.get_sb_coordinator().get_y() + 1, get_grid_pin_height(cur_ipin_node->xlow, cur_ipin_node->ylow,cur_ipin_node->ptc_num), rr_gsb.get_ipin_node_grid_side(cb_ipin_side,inode), cur_ipin_node->ptc_num);
+      } else if (BOTTOM == side_manager.get_side()) {
+      fprintf(fp, ".grid_%d__%d__pin_%d__%d__%d_ (", unique_mirror.get_sb_coordinator().get_x(), unique_mirror.get_sb_coordinator().get_y(), get_grid_pin_height(cur_ipin_node->xlow, cur_ipin_node->ylow,cur_ipin_node->ptc_num), rr_gsb.get_ipin_node_grid_side(cb_ipin_side,inode), cur_ipin_node->ptc_num);
+      }
+    }
       dump_verilog_grid_side_pin_with_given_index(fp, OPIN,
                                                   cur_ipin_node->ptc_num,
                                                   rr_gsb.get_ipin_node_grid_side(cb_ipin_side, inode),
                                                   cur_ipin_node->xlow,
                                                   cur_ipin_node->ylow, 
-                                                  FALSE, is_explicit_mapping); /* Do not specify direction of port */
+                                                  FALSE, false); /* Do not specify direction of port */
+    if (true == is_explicit_mapping) {
+      fprintf(fp, ")");
+    }
       fprintf(fp, ", \n");
     }
   }
