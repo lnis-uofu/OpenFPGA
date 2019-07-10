@@ -21,6 +21,7 @@ Mandatory options: <br />
 - -parse_results_only : *only parse the flow results and write CSV report.*
 - -debug : *debug mode*
 - -help : *print usage*
+- -end_flow_with_test: *Uses Icarus Verilog simulator to verified bencmark implementation*
 ### ODIN II
 - -min_hard_adder_size: *min. size of hard adder in carry chain defined in Arch XML.(Default:1)*
 - -mem_size: *size of memory, mandatory when VTR/VTR_MCCL/VTR_MIG_MCCL flow is chosen*
@@ -55,11 +56,11 @@ Mandatory options: <br />
 - -vpr_fpga_spice_testbench_load_extraction_off : *turn off testbench_load_extraction in VPR FPGA SPICE*
 - -vpr_fpga_spice_simulator_path <string> : *Specify simulator path*
 ### VPR - FPGA-Verilog Extension
-- -vpr_fpga_verilog : *turn on Verilog Generator of VPR FPGA SPICE*
+- -vpr_fpga_verilog : *turn on OpenFPGA Verilog Generator*
 - -vpr_fpga_verilog_dir <verilog_path>: *provides the path where generated verilog files will be written*
 - -vpr_fpga_verilog_include_timing : *turn on printing delay specification in Verilog files*
 - -vpr_fpga_verilog_include_signal_init : *turn on printing signal initialization in Verilog files*
-- -vpr_fpga_verilog_print_autocheck_top_testbench: *turn on printing autochecked top-level testbench for Verilog Generator of VPR FPGA SPICE*
+- -vpr_fpga_verilog_print_autocheck_top_testbench: *turn on printing autochecked top-level testbench for OpenFPGA Verilog Generator*
 - -vpr_fpga_verilog_formal_verification_top_netlist : *turn on printing formal top Verilog files*
 - -vpr_fpga_verilog_include_icarus_simulator : *Add syntax and definition required to use Icarus Verilog simulator*
 - -vpr_fpga_verilog_print_user_defined_template : *Generates a template of hierarchy modules and their port mapping*
@@ -67,8 +68,8 @@ Mandatory options: <br />
 - -vpr_fpga_verilog_report_timing_rpt_path <path_to_generate_reports> : *Specify path for report timing*
 - -vpr_fpga_verilog_print_sdc_pnr : *Generates sdc file to constraint Hardware P&R*
 - -vpr_fpga_verilog_print_sdc_analysis : *Generates sdc file to do STA*
-- -vpr_fpga_verilog_print_top_tb : *turn on printing top-level testbench for Verilog Generator of VPR FPGA SPICE*
-- -vpr_fpga_verilog_print_input_blif_tb : *turn on printing testbench for input blif file in Verilog Generator of VPR FPGA SPICE*
+- -vpr_fpga_verilog_print_top_tb : *turn on printing top-level testbench for OpenFPGA Verilog Generator*
+- -vpr_fpga_verilog_print_input_blif_tb : *turn on printing testbench for input blif file in OpenFPGA Verilog Generator*
 - -vpr_fpga_verilog_print_modelsim_autodeck <modelsim.ini_path>: *turn on printing modelsim simulation script*
 ### VPR - FPGA-Bitstream Extension
 - -vpr_fpga_bitstream_generator: *turn on FPGA-SPICE bitstream generator*
