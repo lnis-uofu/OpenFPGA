@@ -10,7 +10,7 @@ OpenFPGA is an extension to VPR. It is an IP Verilog Generator allowing reliable
 ## Compilation
 
 The different ways of compiling can be found in the **./compilation** folder.<br />
-Dependancies and help using docker can be found at **./tutorials/building.md**.
+Dependancies and help using docker can be found at [**./tutorials/building.md**](https://github.com/LNIS-Projects/OpenFPGA/blob/documentation/tutorials/building.md).
 
 **Compilation steps:**
 1. Create a folder named build in OpenPFGA repository (mkdir build && cd build)

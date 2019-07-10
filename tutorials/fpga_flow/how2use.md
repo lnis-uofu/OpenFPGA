@@ -16,15 +16,11 @@ cd fpga_flow<br />
 
 By running this script we took an architecture description file, generated its netlist, generated a bitstream to implement a benchmark on it and verified this implementation.<br />
 When you open this file you can see that 2 scripts are called. The first one is **rewrite_path_in_file.pl** which allow us to make this tutorial generic by generating full path to dependancies.<br />
-The second one is **fpga_flow.pl**. This script launch OpenFPGA flow and can be used with a lot of [options](https://github.com/LNIS-Projects/OpenFPGA/blob/documentation/tutorials/fpga_flow/options.md). In this example we activated all FPGA-Verilog options
-
-
-
-*Any script provides help if launch without argument*
-
-fpga_flow.pl has dependencies which need to be configured. They are:
-* configuration file, which provides dependencies path and flow type
-* benchmark list file
+The second one is **fpga_flow.pl**. This script launch OpenFPGA flow and can be used with a lot of [options](https://github.com/LNIS-Projects/OpenFPGA/blob/documentation/tutorials/fpga_flow/options.md).<br />
+There is 3 important things to see:
+- All FPGA-Verilog options have been activated
+- fpga_flow.pl calls a configuration file through "config_file" variable
+- fpga_flow.pl calls a list of benchmark to implement and test through "bench_txt" variable
 
 ## Configuration file
 
@@ -60,13 +56,13 @@ m2net_conf = not_used<br />
 mpack2_arch = not_used<br />
 power_tech_xml = *<wherever the xml tech file is saved>*<br />
 
-[csv_tags] *to complete*<br />
+[csv_tags]<br />
 mpack1_tags = Global mapping efficiency:|efficiency:|occupancy wo buf:|efficiency wo buf:<br />
 mpack2_tags = BLE Number:|BLE Fill Rate: <br />
 vpr_tags = Netlist clb blocks:|Final critical path:|Total logic delay:|total net delay:|Total routing area:|Total used logic block area:|Total wirelength:|Packing took|Placement took|Routing took|Average net density:|Median net density:|Recommend no. of clock cycles:<br />
 vpr_power_tags = PB Types|Routing|Switch Box|Connection Box|Primitives|Interc Structures|lut6|ff<br />
 
-*An example of this file can be found at OPENFPGAPATHKEYWORD/fpga_flow/configs/tutorial/tuto.conf*
+*This example file can be found at OPENFPGAPATHKEYWORD/fpga_flow/configs/tutorial/tuto.conf*
 
 ## Benchmark list
 
@@ -79,4 +75,4 @@ Blif and Verilog folders are organized by folders with the name of projects. **F
 The benchmark list file can contain as many benchmarks as available in the same folder targetted by "benchmark_dir" variable from the configuration file. It's written as:<br />
 top_module/*.v,<int_value>; where <int_value> is the number of channel/wire between each block.
 
-*An example of this file can be found at OPENFPGAPATHKEYWORD/fpga_flow/benchmarks/List/tuto_benchmark.txt*
+*This example file can be found at OPENFPGAPATHKEYWORD/fpga_flow/benchmarks/List/tuto_benchmark.txt*
