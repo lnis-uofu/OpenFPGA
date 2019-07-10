@@ -1019,7 +1019,7 @@ void dump_compact_verilog_defined_connection_boxes(t_sram_orgz_info* cur_sram_or
       /* Get X-channel CB coordinator */
       const DeviceCoordinator cbx_coordinator = rr_gsb.get_cb_coordinator(CHANX);
       /* X - channels [1...nx][0..ny]*/
-      if ((TRUE == is_cb_exist(CHANX, cbx_coordinator.get_x(), cbx_coordinator.get_x()))
+      if ((TRUE == is_cb_exist(CHANX, cbx_coordinator.get_x(), cbx_coordinator.get_y()))
         &&(true == rr_gsb.is_cb_exist(CHANX))) {
         dump_compact_verilog_defined_one_connection_box(cur_sram_orgz_info, fp, rr_gsb, CHANX, is_explicit_mapping);
       }
@@ -1027,7 +1027,7 @@ void dump_compact_verilog_defined_connection_boxes(t_sram_orgz_info* cur_sram_or
       /* Get X-channel CB coordinator */
       const DeviceCoordinator cby_coordinator = rr_gsb.get_cb_coordinator(CHANY);
       /* Y - channels [1...ny][0..nx]*/
-      if ((TRUE == is_cb_exist(CHANY, cby_coordinator.get_x(), cby_coordinator.get_x()))
+      if ((TRUE == is_cb_exist(CHANY, cby_coordinator.get_x(), cby_coordinator.get_y()))
         &&(true == rr_gsb.is_cb_exist(CHANY))) {
         dump_compact_verilog_defined_one_connection_box(cur_sram_orgz_info, fp, rr_gsb, CHANY, is_explicit_mapping);
       }
