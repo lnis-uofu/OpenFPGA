@@ -1,22 +1,31 @@
-# Tutorial
+# FPGA flow
 
-This tutorial purpose it to clarify how to use:
-1. The full flow using fpga_flow.pl script
-2. Architecture customization
+This tutorial will help the user to understand how to use OpenFPGA flow.<br />
+During this tutorial we consider the user start in the OpenFPGA folder and we'll use tips and informations provided in [tutorial index](https://github.com/LNIS-Projects/OpenFPGA/blob/documentation/tutorials/tutorial_index.md#tips-and-informations).
 
-Some keywords will be used during this tutorial:
-* OPENFPGAPATHKEYWORD: refers to OpenFPGA folder full path
+## Running fpga_flow.pl
 
-### Folder organization
+A script example can be found at OPENFPGAPATHKEYWORD/fpga_flow/tuto_fpga_flow.sh.
 
-OpenFPGA repository is organized as follow:
-* **abc**: open source synthesys tool
-* **ace2**: abc extension generating .act files
-* **vpr7_x2p**: sources of modified vpr
-* **yosys**: opensource synthesys tool
-* **fpga_flow**: scripts and dependencies to run the complete flow
+**Experiment**<br />
+cd fpga_flow<br />
+./tuto_fpga_flow.sh<br />
 
-##   1. FPGA flow
+**Explanation**<br />
+By running this script we took an architecture description file, generated its netlist, generated a bitstream to implement a benchmark on it and verified this implementation.<br />
+When you open this file you can see that 2 scripts are called. The first one is **rewrite_path_in_file.pl** which allow us to make this tutorial generic by generating full path to dependancies.<br />
+The second one is **fpga_flow.pl**. This script launch OpenFPGA flow andcan be used with a lot of [options](https://github.com/LNIS-Projects/OpenFPGA/blob/documentation/tutorials/fpga_flow/options.md)
+
+Once the configuration is done, we can select which option we want to enable in fpga_flow. fpga_flow options don't exactly have the name of those listed in the [documentation](https://openfpga.readthedocs.io/en/master/fpga_verilog/command_line_usage.html "documentation"), which are used on the modifed version of vpr. Indeed, where vpr will take an option as "**--fpga_XXX**" fpgs_flow will call it "**-vpr_fpga_XXX**".<br />
+Few options are only in fpga_flow:
+* **-N**: number of LUT per CLB
+* **-K**: LUT size/ number of input
+* **-rpt <path>**: specifies wherever fpga_flow will write its report
+* **-ace_d <int_value>**: specifies inputs average probability of switching
+* **-multi_thread <int_value>**: specifies number of core to use
+* **-end_flow_with_test**: uses Icarus Verilog to verify generated netlist
+
+**
 
 The folder is organized as follow:
 * **arch**: contains architectures description files
@@ -35,7 +44,7 @@ fpga_flow.pl has dependencies which need to be configured. They are:
 * configuration file, which provides dependencies path and flow type
 * benchmark list file
 
-### a. Configuration file
+## Configuration file
 
 In this file paths have to be full path. Relative path could lead to errors.<br />
 The file is organized in 3 parts: 
@@ -77,7 +86,7 @@ vpr_power_tags = PB Types|Routing|Switch Box|Connection Box|Primitives|Interc St
 
 *An example of this file can be found at OPENFPGAPATHKEYWORD/fpga_flow/configs/tutorial/tuto.conf*
 
-###   b. Benchmark list
+## Benchmark list
 
 The benchmark folder contains 3 sub-folders:
 * **Blif**: contains .blif and .act of benchmarks
@@ -89,18 +98,3 @@ The benchmark list file can contain as many benchmarks as available in the same 
 top_module/*.v,<int_value>; where <int_value> is the number of channel/wire between each block.
 
 *An example of this file can be found at OPENFPGAPATHKEYWORD/fpga_flow/benchmarks/List/tuto_benchmark.txt*
-
-###   c. Running fpga_flow.pl
-
-Once the configuration is done, we can select which option we want to enable in fpga_flow. fpga_flow options don't exactly have the name of those listed in the [documentation](https://openfpga.readthedocs.io/en/master/fpga_verilog/command_line_usage.html "documentation"), which are used on the modifed version of vpr. Indeed, where vpr will take an option as "**--fpga_XXX**" fpgs_flow will call it "**-vpr_fpga_XXX**".<br />
-Few options are only in fpga_flow:
-* **-N**: number of LUT per CLB
-* **-K**: LUT size/ number of input
-* **-rpt <path>**: specifies wherever fpga_flow will write its report
-* **-ace_d <int_value>**: specifies inputs average probability of switching
-* **-multi_thread <int_value>**: specifies number of core to use
-* **-end_flow_with_test**: uses Icarus Verilog to verify generated netlist
-
-*An script example can be found at OPENFPGAPATHKEYWORD/fpga_flow/tuto_fpga_flow.sh*
-
-

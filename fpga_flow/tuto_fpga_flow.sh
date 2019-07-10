@@ -18,10 +18,10 @@ rm -rf ${pwd_path}/results_OpenPithon
 cd ${pwd_path}/scripts
 
 # Replace keyword in config and architecture files
-perl rewrite_path_in_file -i $config_file	# Replace OPENFPGAPATHKEYWORD in the config file
-perl rewrite_path_in_file -i $architecture_template -o $architecture_generated	# Replace OPENFPGAPATHKEYWORD in the architecture file
-perl rewrite_path_in_file -i $architecture_generated -k $ff_keyword $ff_path	# Set the ff path in the architecture file
-perl rewrite_path_in_file -i $ff_path -k $dir_keyword $verilog_path	# Set the define path in the ff.v file
+perl rewrite_path_in_file.pl -i $config_file	# Replace OPENFPGAPATHKEYWORD in the config file
+perl rewrite_path_in_file.pl -i $architecture_template -o $architecture_generated	# Replace OPENFPGAPATHKEYWORD in the architecture file
+perl rewrite_path_in_file.pl -i $architecture_generated -k $ff_keyword $ff_path	# Set the ff path in the architecture file
+perl rewrite_path_in_file.pl -i $ff_path -k $dir_keyword $verilog_path	# Set the define path in the ff.v file
 
 
 # SRAM FPGA
