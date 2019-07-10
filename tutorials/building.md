@@ -48,5 +48,5 @@ If all these dependancies are not installed in your machine you can choose to us
 
 To build the tool you have to be in OpenFPGA folder and do:
 - mkdir build && cd build
-- cmake ..
+- cmake .. -DCMAKE_BUILD_TYPE=debug
 - make OR make -j

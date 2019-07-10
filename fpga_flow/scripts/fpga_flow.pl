@@ -1790,7 +1790,7 @@ sub run_vpr_in_flow($ $ $ $ $ $ $ $ $ $ $ $) {
     my ($fix_chan_width) = ($benchmarks_ptr->{$benchmark_file}->{fix_route_chan_width});
     # Remove previous route results
     if (-e $vpr_route) {
-      system(rm $vpr_route);
+      system("rm $vpr_route");
     }
     # Keep increase min_chan_width until route success
     &run_std_vpr($abc_blif_out,$benchmark,$vpr_arch,$vpr_net,$vpr_place,$vpr_route,$fix_chan_width,$vpr_log,$act_file);

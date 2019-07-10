@@ -14,7 +14,7 @@ Dependancies and help using docker can be found at **./tutorials/building.md**.
 
 **Compilation steps:**
 1. Create a folder named build in OpenPFGA repository (mkdir build && cd build)
-2. Create Makefile in this folder using cmake (cmake ..)
+2. Create Makefile in this folder using cmake (cmake ..  -DCMAKE_BUILD_TYPE=debug)
 3. Compile the tool and its dependencies (make)
 
 *We currently implemented OpenFPGA for:*
