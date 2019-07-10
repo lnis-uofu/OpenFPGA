@@ -2379,6 +2379,11 @@ size_t DeviceRRGSB::get_num_sb_unique_module() const {
   return sb_unique_module_.size();
 } 
 
+/* get the number of unique mirrors of switch blocks */
+size_t DeviceRRGSB::get_num_gsb_unique_module() const {
+  return gsb_unique_module_.size();
+} 
+
 
 /* Get the submodule id of a SB */ 
 size_t DeviceRRGSB::get_sb_unique_submodule_id(DeviceCoordinator& coordinator, enum e_side side, size_t seg_id) const {
@@ -2565,6 +2570,8 @@ void DeviceRRGSB::set_sb_conf_bits_msb(DeviceCoordinator& coordinator, size_t co
 void DeviceRRGSB::reserve(DeviceCoordinator& coordinator) { 
   rr_gsb_.resize(coordinator.get_x());
 
+  gsb_unique_module_id_.resize(coordinator.get_x());
+
   sb_unique_submodule_id_.resize(coordinator.get_x());
   sb_unique_module_id_.resize(coordinator.get_x());
 
@@ -2573,6 +2580,8 @@ void DeviceRRGSB::reserve(DeviceCoordinator& coordinator) {
 
   for (size_t x = 0; x < coordinator.get_x(); ++x) {
     rr_gsb_[x].resize(coordinator.get_y()); 
+
+    gsb_unique_module_id_[x].resize(coordinator.get_y()); 
 
     sb_unique_submodule_id_[x].resize(coordinator.get_y());
     sb_unique_module_id_[x].resize(coordinator.get_y()); 
@@ -2769,6 +2778,45 @@ void DeviceRRGSB::add_sb_unique_side_segment_submodule(DeviceCoordinator& coordi
   return;
 }
 
+/* Find repeatable GSB block in the array */
+void DeviceRRGSB::build_gsb_unique_module() {
+  /* Make sure a clean start */
+  clear_gsb_unique_module();
+
+  for (size_t ix = 0; ix < rr_gsb_.size(); ++ix) {
+    for (size_t iy = 0; iy < rr_gsb_[ix].size(); ++iy) {
+      bool is_unique_module = true;
+      DeviceCoordinator gsb_coordinator(ix, iy);
+
+      /* Traverse the unique_mirror list and check it is an mirror of another */
+      for (size_t id = 0; id < get_num_gsb_unique_module(); ++id) {
+        /* We have alreay built sb and cb unique module list 
+         * We just need to check if the unique module id of SBs, CBX and CBY are the same or not 
+         */
+        const DeviceCoordinator& gsb_unique_module_coordinator = gsb_unique_module_[id];
+        if ((sb_unique_module_id_[ix][iy] == sb_unique_module_id_[gsb_unique_module_coordinator.get_x()][gsb_unique_module_coordinator.get_y()])
+         && (cbx_unique_module_id_[ix][iy] == cbx_unique_module_id_[gsb_unique_module_coordinator.get_x()][gsb_unique_module_coordinator.get_y()])
+         && (cby_unique_module_id_[ix][iy] == cby_unique_module_id_[gsb_unique_module_coordinator.get_x()][gsb_unique_module_coordinator.get_y()])) {
+          /* This is a mirror, raise the flag and we finish */
+          is_unique_module = false;
+          /* Record the id of unique mirror */
+          gsb_unique_module_id_[ix][iy] = id; 
+          break;
+        }
+      }
+      /* Add to list if this is a unique mirror*/
+      if (true == is_unique_module) {
+        add_gsb_unique_module(gsb_coordinator);
+        /* Record the id of unique mirror */
+        gsb_unique_module_id_[ix][iy] = get_num_gsb_unique_module() - 1;
+      }
+    }
+  } 
+  return;
+}
+
+
+
 void DeviceRRGSB::build_unique_module() {
   build_segment_ids();
 
@@ -2776,6 +2824,8 @@ void DeviceRRGSB::build_unique_module() {
 
   build_cb_unique_module(CHANX);
   build_cb_unique_module(CHANY);
+
+  build_gsb_unique_module();
 
   return;
 }
@@ -2794,6 +2844,11 @@ void DeviceRRGSB::add_sb_unique_side_submodule(DeviceCoordinator& coordinator,
     add_sb_unique_side_segment_submodule(coordinator, rr_sb, side, iseg);
   }
 
+  return;
+}
+
+void DeviceRRGSB::add_gsb_unique_module(const DeviceCoordinator& coordinator) {
+  gsb_unique_module_.push_back(coordinator); 
   return;
 }
 
@@ -2868,6 +2923,9 @@ void DeviceRRGSB::build_segment_ids() {
 void DeviceRRGSB::clear() { 
   clear_gsb();
 
+  clear_gsb_unique_module();
+  clear_gsb_unique_module_id();
+
   /* clean unique module lists */
   clear_cb_unique_module(CHANX);
   clear_cb_unique_module_id(CHANX);
@@ -2892,6 +2950,15 @@ void DeviceRRGSB::clear_gsb() {
   rr_gsb_.clear();
   return;
 }
+
+void DeviceRRGSB::clear_gsb_unique_module_id() {
+  /* clean rr_switch_block array */
+  for (size_t x = 0; x < rr_gsb_.size(); ++x) {
+    gsb_unique_module_id_[x].clear(); 
+  }
+  return;
+}
+
 
 void DeviceRRGSB::clear_sb_unique_module_id() {
   /* clean rr_switch_block array */
@@ -2946,6 +3013,14 @@ void DeviceRRGSB::clear_sb_unique_submodule() {
     }
     sb_unique_submodule_[side].clear();
   }
+
+  return;
+} 
+
+/* clean the content related to unique_mirrors */
+void DeviceRRGSB::clear_gsb_unique_module() {
+  /* clean unique mirror */
+  gsb_unique_module_.clear();
 
   return;
 } 

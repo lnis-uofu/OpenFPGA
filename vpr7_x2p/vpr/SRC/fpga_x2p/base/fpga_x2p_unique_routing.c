@@ -1395,17 +1395,22 @@ DeviceRRGSB build_device_rr_gsb(boolean output_sb_xml, char* sb_xml_dir,
 
   /* Report number of unique CB Modules */
   vpr_printf(TIO_MESSAGE_INFO, 
-             "Detect %d independent connection blocks from %d X-channel connection blocks.\n",
+             "Detect %d unique connection blocks from %d X-channel connection blocks.\n",
              LL_device_rr_gsb.get_num_cb_unique_module(CHANX), (nx + 0) * (ny + 1) );
 
   vpr_printf(TIO_MESSAGE_INFO, 
-             "Detect %d independent connection blocks from %d Y-channel connection blocks.\n",
+             "Detect %d unique connection blocks from %d Y-channel connection blocks.\n",
              LL_device_rr_gsb.get_num_cb_unique_module(CHANY), (nx + 1) * (ny + 0) );
 
 
   /* Report number of unique SB modules */
   vpr_printf(TIO_MESSAGE_INFO, 
-             "Detect %d independent switch blocks from %d switch blocks.\n",
+             "Detect %d unique switch blocks from %d switch blocks.\n",
+             LL_device_rr_gsb.get_num_sb_unique_module(), (nx + 1) * (ny + 1) );
+
+  /* Report number of unique GSB modules */
+  vpr_printf(TIO_MESSAGE_INFO, 
+             "Detect %d unique GSBs from %d GSBs.\n",
              LL_device_rr_gsb.get_num_sb_unique_module(), (nx + 1) * (ny + 1) );
 
   /* Report number of unique mirrors */
