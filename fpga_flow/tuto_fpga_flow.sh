@@ -7,8 +7,9 @@ task_name="tuto"
 config_file="$pwd_path/configs/tutorial/${task_name}.conf" 
 bench_txt="$pwd_path/benchmarks/List/tuto_benchmark.txt"
 rpt_file="$pwd_path/csv_rpts/fpga_spice/${task_name}.csv"
-
 verilog_path="${pwd_path}/${task_name}_Verilog"
+architecture_generated="${pwd_path}/arch/generated/k6_N10_sram_chain_HC.xml"
+architecture_template="${pwd_path}/arch/template/k6_N10_sram_chain_HC_template.xml"
 
 ff_keyword="FFPATHKEYWORD"
 ff_path="${pwd_path}/vpr7_x2p/vpr/Verilognetlists/ff.v"
