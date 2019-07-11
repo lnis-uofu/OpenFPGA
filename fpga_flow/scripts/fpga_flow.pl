@@ -761,6 +761,8 @@ sub run_abc_fpgamap($ $ $)
 # Run ABC by FPGA-oriented synthesis
 sub run_abc_bb_fpgamap($ $ $) {
   my ($bm,$blif_out,$log) = @_;
+  my ($cmd_log) = ($log."cmd");
+
   # Get ABC path
   my ($abc_dir,$abc_name) = &split_prog_path($conf_ptr->{dir_path}->{abc_with_bb_support_path}->{val});
   my ($lut_num) = $opt_ptr->{K_val};
@@ -777,9 +779,26 @@ sub run_abc_bb_fpgamap($ $ $) {
     $dump_verilog = "write_verilog $bm.v";
   }
 
+  #
+  # Create a local copy for the commands
+  #
+  my ($ABC_CMD_FH) = (FileHandle->new);
+  if ($ABC_CMD_FH->open("> $cmd_log")) {
+    print "INFO: auto generating cmds for ABC ($cmd_log) ...\n";
+  } else {
+    die "ERROR: fail to auto generating cmds for ABC ($cmd_log) ...\n";
+  }
+  # Output the standard format (refer to VTR_flow script)
+  print $ABC_CMD_FH "read $bm; resyn; resyn2; $fpga_synthesis_method -K $lut_num; $abc_seq_optimize sweep; write_hie $bm $blif_out; $dump_verilog; quit;\n";
+
+  close($ABC_CMD_FH);
+
+  # Go to ABC directory and run FPGA with commands
+  print "Entering $abc_dir\n";
   chdir $abc_dir;
+
   # Run FPGA ABC
-  system("./$abc_name -c \"read $bm; resyn; resyn2; $fpga_synthesis_method -K $lut_num; $abc_seq_optimize sweep; write_hie $bm $blif_out; $dump_verilog; quit;\" > $log");
+  system("./$abc_name -F $cmd_log > $log");
 
   if (!(-e $blif_out)) {
     die "ERROR: Fail ABC_with_bb_support for benchmark $bm.\n";
@@ -789,6 +808,7 @@ sub run_abc_bb_fpgamap($ $ $) {
     die "ERROR: ABC verilog rewrite failed for benchmark $bm!\n";
   }
 
+  print "Leaving $abc_dir\n";
   chdir $cwd;
 }
 
