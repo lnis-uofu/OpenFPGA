@@ -42,7 +42,7 @@ OpenFPGA requires all the dependancies listed below:
 
 If all these dependancies are not installed in your machine you can choose to use a Docker (docker tool need to be installed). To ease customer first experience a Dockerfile is provided in OpenFPGA folder. It can be build using the commands: 
 - docker build . -t open_fpga
-- docker run -it --rm -v $PWD:/localfile -w="/localfile/OpenFPGA/vpr7_x2p/vpr" open_fpga bash
+- docker run -it --rm -v $PWD:/localfile/OpenFPGA -w="/localfile/OpenFPGA" open_fpga bash<br />
 [*docker download link*](https://www.docker.com/products/docker-desktop)
 
 ## Building
