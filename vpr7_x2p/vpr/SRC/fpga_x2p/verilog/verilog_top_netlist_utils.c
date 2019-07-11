@@ -1069,7 +1069,8 @@ void dump_verilog_configuration_circuits_standalone_srams(t_sram_orgz_info* cur_
  */
 static 
 void dump_verilog_configuration_circuits_scan_chains(t_sram_orgz_info* cur_sram_orgz_info, 
-                                                     FILE* fp) {
+                                                     FILE* fp,
+                                                     bool is_explicit_mapping) {
   int num_mem_bits = 0;
 
   /* Check */
@@ -1088,12 +1089,31 @@ void dump_verilog_configuration_circuits_scan_chains(t_sram_orgz_info* cur_sram_
               verilog_config_peripheral_prefix,
               verilog_config_peripheral_prefix);
   /* Scan-chain input*/
+  if (true == is_explicit_mapping) {
+    fprintf(fp, ".%s (", 
+            top_netlist_scan_chain_head_prefix);
+  }
   dump_verilog_generic_port(fp, VERILOG_PORT_CONKT,
                             top_netlist_scan_chain_head_prefix, 0, 0);
+  if (true == is_explicit_mapping) {
+    fprintf(fp, ")");
+  }
   fprintf(fp, ",\n");
+  if (true == is_explicit_mapping) {
+    fprintf(fp, ".scff_scff_in_local_bus ("); 
+  }
   dump_verilog_sram_one_local_outport(fp, cur_sram_orgz_info, 0, num_mem_bits - 1, -1, VERILOG_PORT_CONKT);
+  if (true == is_explicit_mapping) {
+    fprintf(fp, ")");
+  }
   fprintf(fp, ",\n");
+  if (true == is_explicit_mapping) {
+    fprintf(fp, ".scff_scff_out_local_bus ("); 
+  }
   dump_verilog_sram_one_local_outport(fp, cur_sram_orgz_info, 0, num_mem_bits - 1, 0, VERILOG_PORT_CONKT);
+  if (true == is_explicit_mapping) {
+    fprintf(fp, ")");
+  }
   fprintf(fp, ");\n");
   fprintf(fp, "//------ END Configuration peripheral Scan-chain FFs -----\n");
 
@@ -1103,7 +1123,8 @@ void dump_verilog_configuration_circuits_scan_chains(t_sram_orgz_info* cur_sram_
 /* Dump a memory bank to configure all the Bit lines and Word lines */
 static 
 void dump_verilog_configuration_circuits_memory_bank(FILE* fp, 
-                                                     t_sram_orgz_info* cur_sram_orgz_info) {
+                                                     t_sram_orgz_info* cur_sram_orgz_info,
+                                                     bool is_explicit_mapping) {
   int num_bl, num_wl;
   int num_reserved_bl, num_reserved_wl;
   int num_array_bl, num_array_wl;
@@ -1210,16 +1231,18 @@ void dump_verilog_configuration_circuits_memory_bank(FILE* fp,
  * 3. Standalone SRAMs
  */
 void dump_verilog_configuration_circuits(t_sram_orgz_info* cur_sram_orgz_info, 
-                                         FILE* fp) {
+                                         FILE* fp,
+                                         bool is_explicit_mapping) {
   switch(cur_sram_orgz_info->type) {
   case SPICE_SRAM_STANDALONE:
     dump_verilog_configuration_circuits_standalone_srams(cur_sram_orgz_info, fp);
     break;
   case SPICE_SRAM_SCAN_CHAIN:
-    dump_verilog_configuration_circuits_scan_chains(cur_sram_orgz_info, fp);
+    dump_verilog_configuration_circuits_scan_chains(cur_sram_orgz_info, fp, is_explicit_mapping);
     break;
   case SPICE_SRAM_MEMORY_BANK:
-    dump_verilog_configuration_circuits_memory_bank(fp, cur_sram_orgz_info);
+  /* BC: TODO explicit_mapping*/
+    dump_verilog_configuration_circuits_memory_bank(fp, cur_sram_orgz_info, is_explicit_mapping);
     break;
   default:
     vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid type of SRAM organization in Verilog Generator!\n",

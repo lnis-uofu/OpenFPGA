@@ -2595,7 +2595,7 @@ void dump_verilog_cmos_mux_config_bus_ports(FILE* fp, t_spice_model* mux_spice_m
      * We do not need a prefix implying MUX name, size and index 
      */
     if (true == is_explicit_mapping) {
-      fprintf(fp, ".sram(");
+      fprintf(fp, ".sram (");
     }
     dump_verilog_mux_sram_one_outport(fp, cur_sram_orgz_info, 
                                       mux_spice_model, mux_size,
@@ -2607,7 +2607,7 @@ void dump_verilog_cmos_mux_config_bus_ports(FILE* fp, t_spice_model* mux_spice_m
     }
     fprintf(fp, ", ");
     if (TRUE == is_explicit_mapping) {
-      fprintf(fp, ".sram_inv(");
+      fprintf(fp, ".sram_inv (");
     }
     dump_verilog_mux_sram_one_outport(fp, cur_sram_orgz_info, 
                                       mux_spice_model, mux_size,
