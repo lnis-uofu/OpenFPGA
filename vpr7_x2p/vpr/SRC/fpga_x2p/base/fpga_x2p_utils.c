@@ -3476,3 +3476,13 @@ int my_strlen_int(int input_int) {
 
   return length_input;
 }  
+
+boolean my_bool_to_boolean(bool my_bool) {
+
+  if(true == my_bool)
+    return TRUE;
+  if(false == my_bool)
+    return FALSE;
+    vpr_printf(TIO_MESSAGE_ERROR,"Failure to convert bool to boolean. Parameter is neither true nor false.\n");
+    exit(1);
+}

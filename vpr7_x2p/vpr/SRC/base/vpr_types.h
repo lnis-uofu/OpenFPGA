@@ -1258,6 +1258,7 @@ struct s_spice_opts {
 typedef struct s_syn_verilog_opts t_syn_verilog_opts;
 struct s_syn_verilog_opts {
   boolean dump_syn_verilog;
+  boolean dump_explicit_verilog;
   char* syn_verilog_dump_dir;
   boolean print_top_testbench;
   boolean print_input_blif_testbench;

@@ -187,7 +187,7 @@ void dump_verilog_formal_verfication_top_netlist_call_top_module(t_sram_orgz_inf
               circuit_name,
               formal_verification_top_module_uut_name); 
 
-  dump_verilog_top_module_ports(cur_sram_orgz_info, fp, VERILOG_PORT_CONKT);
+  dump_verilog_top_module_ports(cur_sram_orgz_info, fp, VERILOG_PORT_CONKT, false);
 
   fprintf(fp, ");\n");
   return;
@@ -338,14 +338,14 @@ void dump_verilog_formal_verification_top_netlist_config_bitstream(t_sram_orgz_i
     case SPICE_SRAM_SCAN_CHAIN:
       dump_verilog_formal_verification_sram_ports(fp, cur_sram_orgz_info, 
                                                   cur_conf_bit->index, cur_conf_bit->index,
-                                                  VERILOG_PORT_CONKT);
+                                                  VERILOG_PORT_CONKT, false);
       fprintf(fp, " = 1'b%d",
               cur_conf_bit->sram_bit->val); 
       break;
     case SPICE_SRAM_MEMORY_BANK:
       dump_verilog_formal_verification_sram_ports(fp, cur_sram_orgz_info, 
                                                   cur_conf_bit->bl->addr, cur_conf_bit->bl->addr,
-                                                  VERILOG_PORT_CONKT);
+                                                  VERILOG_PORT_CONKT, false);
       fprintf(fp, " = 1'b%d",
               cur_conf_bit->bl->val); 
       break;

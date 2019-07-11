@@ -1318,7 +1318,7 @@ sub run_std_vpr($ $ $ $ $ $ $ $ $)
 
   my ($chan_width_opt) = ("");
   if (($fix_chan_width > 0)||($fix_chan_width == 0)) {
-    $chan_width_opt = "-route_chan_width $fix_chan_width";
+    $chan_width_opt = "--route_chan_width $fix_chan_width";
   }
   if ("on" eq $opt_ptr->{vpr_use_tileable_route_chan_width}) {
     $chan_width_opt = $chan_width_opt." --use_tileable_route_chan_width";
@@ -1569,7 +1569,7 @@ sub run_mpack2_vpr($ $ $ $ $ $ $)
     if (0 != $min_chan_width%2) {
       $min_chan_width += 1;
     }
-    $chan_width_opt = "-route_chan_width $min_chan_width";
+    $chan_width_opt = "--route_chan_width $min_chan_width";
   }
 
   chdir $vpr_dir;
