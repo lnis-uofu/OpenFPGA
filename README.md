@@ -13,9 +13,10 @@ The different ways of compiling can be found in the **./compilation** folder.<br
 Dependancies and help using docker can be found at [**./tutorials/building.md**](https://github.com/LNIS-Projects/OpenFPGA/blob/documentation/tutorials/building.md).
 
 **Compilation steps:**
-1. Create a folder named build in OpenPFGA repository (mkdir build && cd build)
-2. Create Makefile in this folder using cmake (cmake ..  -DCMAKE_BUILD_TYPE=debug)
-3. Compile the tool and its dependencies (make)
+1. Clone the repository (git clone https://github.com/LNIS-Projects/OpenFPGA.git && cd OpenFPGA)
+2. Create a folder named build in OpenPFGA repository (mkdir build && cd build)
+3. Create Makefile in this folder using cmake (cmake ..  -DCMAKE_BUILD_TYPE=debug)
+4. Compile the tool and its dependencies (make)
 
 *We currently implemented OpenFPGA for:*
 
