@@ -40,7 +40,10 @@ OpenFPGA requires all the dependancies listed below:
 
 ## Docker
 
-If all these dependancies are not installed in your machine you can choose to use a Docker (docker tool need to be installed). To ease customer first experience a Dockerfile is provided in OpenFPGA folder. It can be build using the commands: 
+If all these dependancies are not installed in your machine you can choose to use a Docker (docker tool need to be installed). To ease customer first experience a Dockerfile is provided in OpenFPGA folder. A container ready to use can be created with the following command:
+- docker run -it --rm -v `pwd`:/localfile/OpenFPGA -w=“/localfile/OpenFPGAr” lnis-projects/open_fpga bash
+
+Or a container where you can build OpenFPGA yourself can be created with the following commands:
 - docker build . -t open_fpga
 - docker run -it --rm -v $PWD:/localfile/OpenFPGA -w="/localfile/OpenFPGA" open_fpga bash<br />
 [*docker download link*](https://www.docker.com/products/docker-desktop)

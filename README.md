@@ -5,11 +5,11 @@
 
 ## Introduction
 
-OpenFPGA is an extension to VPR. It is an IP Verilog Generator allowing reliable and fast testing of homogeneous architectures.
+The OpenFPGA framework is the **first open-source FPGA IP generator** supporting highly-customizable homogeneous FPGA architectures. OpenFPGA provides a full set of EDA support for customized FPGAs, including Verilog-to-bitstream generation and self-testing verification testbenches/scripts. OpenFPGA opens the door to democratizing FPGA technology and EDA techniques, with agile prototyping approaches and constantly evolving EDA tools for chip designers and researchers.<br />
 
 ## Compilation
 
-The different ways of compiling can be found in the **./compilation** folder.<br />
+The different ways of compiling can be found in the [**./compilation**](https://github.com/LNIS-Projects/OpenFPGA/tree/documentation/compilation) folder.<br />
 Dependancies and help using docker can be found at [**./tutorials/building.md**](https://github.com/LNIS-Projects/OpenFPGA/blob/documentation/tutorials/building.md).
 
 **Compilation steps:**
@@ -20,7 +20,7 @@ Dependancies and help using docker can be found at [**./tutorials/building.md**]
 
 *We currently implemented OpenFPGA for:*
 
-*1. Ubuntu 18.04*
+*1. Ubuntu 16.04*
 *2. Red Hat 7.5*
 *3. MacOS High Sierra 10.13.4*
 
@@ -31,9 +31,10 @@ OpenFPGA's [full documentation](https://openfpga.readthedocs.io/en/master/) incl
 
 ## Tutorial
 
-You can find in the folder **./tutorials**. This will help you get in touch with the software and test different configurations to see how OpenFPGA reacts to them. 
+You can find in the folder [**./tutorials**](https://github.com/LNIS-Projects/OpenFPGA/tree/documentation/tutorials). This will help you get in touch with the software and test different configurations to see how OpenFPGA reacts to them. 
 
-Through this tutorial users can learn how to use the flow and set the dependancies.
+Through this tutorial users can learn how to use the flow and set the dependancies.<br />
+The [tutorial index](https://github.com/LNIS-Projects/OpenFPGA/blob/documentation/tutorials/tutorial_index.md) will
 
 
 
