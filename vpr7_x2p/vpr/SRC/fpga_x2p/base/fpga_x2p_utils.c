@@ -736,7 +736,7 @@ t_block* search_mapped_block(int x, int y, int z) {
   assert((0 < x)||(0 == x));
   assert((x < (nx + 1))||(x == (nx + 1)));
   assert((0 < y)||(0 == y));
-  assert((x < (ny + 1))||(x == (ny + 1)));
+  assert((y < (ny + 1))||(y == (ny + 1)));
 
   /* Search all blocks*/
   for (iblk = 0; iblk < num_blocks; iblk++) {
@@ -3479,10 +3479,10 @@ int my_strlen_int(int input_int) {
 
 boolean my_bool_to_boolean(bool my_bool) {
 
-  if(true == my_bool)
+  if(true == my_bool) {
     return TRUE;
-  if(false == my_bool)
-    return FALSE;
-    vpr_printf(TIO_MESSAGE_ERROR,"Failure to convert bool to boolean. Parameter is neither true nor false.\n");
-    exit(1);
+  } else {
+   assert (false == my_bool);
+   return FALSE;
+  }
 }
