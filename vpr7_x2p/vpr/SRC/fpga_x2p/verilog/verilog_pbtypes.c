@@ -370,7 +370,7 @@ void dump_verilog_pb_type_one_bus_port(FILE* fp,
                 port_prefix, pb_type_port->name);
   } else {
     if (TRUE == dump_explicit_port_map) {
-      fprintf(fp, ".%s(", 
+      fprintf(fp, ".%s (", 
               pb_type_port->spice_model_port->lib_name);
     }
     if (1 < pb_type_port->num_pins) {
@@ -445,7 +445,7 @@ void dump_verilog_pb_type_bus_ports(FILE* fp,
       }
     }
     dump_verilog_pb_type_one_bus_port(fp, cur_pb_type, formatted_port_prefix, "inout", 
-                                      pb_type_inout_ports[iport], dump_port_type, TRUE);
+                                      pb_type_inout_ports[iport], dump_port_type, dump_explicit_port_map);
 
     /* Update the counter */
     num_dumped_port++;
@@ -464,7 +464,7 @@ void dump_verilog_pb_type_bus_ports(FILE* fp,
       }
     }
     dump_verilog_pb_type_one_bus_port(fp, cur_pb_type, formatted_port_prefix, "input", 
-                                      pb_type_input_ports[iport], dump_port_type, TRUE);
+                                      pb_type_input_ports[iport], dump_port_type, dump_explicit_port_map);
     /* Update the counter */
     num_dumped_port++;
   }
@@ -482,7 +482,7 @@ void dump_verilog_pb_type_bus_ports(FILE* fp,
       }
     }
     dump_verilog_pb_type_one_bus_port(fp, cur_pb_type, formatted_port_prefix, "output", 
-                                      pb_type_output_ports[iport], dump_port_type, TRUE);
+                                      pb_type_output_ports[iport], dump_port_type, dump_explicit_port_map);
     /* Update the counter */
     num_dumped_port++;
   }
@@ -501,7 +501,7 @@ void dump_verilog_pb_type_bus_ports(FILE* fp,
         }
       }
       dump_verilog_pb_type_one_bus_port(fp, cur_pb_type, formatted_port_prefix, "input", 
-                                        pb_type_clk_ports[iport], dump_port_type, TRUE);
+                                        pb_type_clk_ports[iport], dump_port_type, dump_explicit_port_map);
       /* Update the counter */
       num_dumped_port++;
     }

@@ -184,7 +184,6 @@ void dump_verilog_pb_generic_primitive(t_sram_orgz_info* cur_sram_orgz_info,
     dump_verilog_sram_config_bus_internal_wires(fp, cur_sram_orgz_info, 
                                                 cur_num_sram, cur_num_sram + num_sram - 1);
   }
-
   if (0 < num_sram_port) {
     switch (cur_sram_orgz_info->type) {
     case SPICE_SRAM_MEMORY_BANK:
@@ -243,7 +242,7 @@ void dump_verilog_pb_generic_primitive(t_sram_orgz_info* cur_sram_orgz_info,
     assert(NULL != pad_ports[0]);
     /* Add explicit port mapping if required */
     if (true == is_explicit_mapping) {
-      fprintf(fp, ".%s(",
+      fprintf(fp, ".%s (",
               pad_ports[0]->lib_name);
     }
     /* Print inout port */
@@ -266,7 +265,7 @@ void dump_verilog_pb_generic_primitive(t_sram_orgz_info* cur_sram_orgz_info,
         && (true == is_explicit_mapping)) {
         assert( 1 == num_sram_port);
         assert( NULL != sram_ports[0]);
-        fprintf(fp, ".%s(",
+        fprintf(fp, ".%s (",
                 sram_ports[0]->lib_name);
       }
       dump_verilog_sram_one_local_outport(fp, cur_sram_orgz_info,
@@ -287,7 +286,7 @@ void dump_verilog_pb_generic_primitive(t_sram_orgz_info* cur_sram_orgz_info,
         && (true == is_explicit_mapping)) {
         assert( 1 == num_sram_port);
         assert( NULL != sram_ports[0]);
-        fprintf(fp, ".%s(",
+        fprintf(fp, ".%s (",
                 sram_ports[0]->inv_prefix);
       }
       dump_verilog_sram_one_local_outport(fp, cur_sram_orgz_info,
@@ -304,7 +303,7 @@ void dump_verilog_pb_generic_primitive(t_sram_orgz_info* cur_sram_orgz_info,
         && (true == is_explicit_mapping)) {
         assert( 1 == num_sram_port);
         assert( NULL != sram_ports[0]);
-        fprintf(fp, ".%s(",
+        fprintf(fp, ".%s (",
                 sram_ports[0]->lib_name);
       }
       dump_verilog_sram_one_outport(fp, cur_sram_orgz_info, 
@@ -324,7 +323,7 @@ void dump_verilog_pb_generic_primitive(t_sram_orgz_info* cur_sram_orgz_info,
         && (true == is_explicit_mapping)) {
         assert( 1 == num_sram_port);
         assert( NULL != sram_ports[0]);
-        fprintf(fp, ".%s(",
+        fprintf(fp, ".%s (",
                 sram_ports[0]->inv_prefix);
       }
       dump_verilog_sram_one_outport(fp, cur_sram_orgz_info, 
