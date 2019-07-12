@@ -46,7 +46,8 @@ my @supported_flows = ("standard",
                        "mpack1",
                        "vtr",
                        "vtr_standard",
-                       "yosys_vpr");
+                       "yosys_vpr",
+                       "vpr_only");
 my %selected_flows;
 
 # Configuration file keywords list
@@ -2024,6 +2025,34 @@ sub parse_yosys_vpr_flow_results($ $ $ $)
   return;
 }
 
+sub run_vpr_only_flow($ $ $ $ $)
+{
+  my ($tag,$benchmark_file,$vpr_arch, $parse_results) = @_;
+  my ($benchmark, $rpt_dir,$prefix);
+  my ($vpr_net,$vpr_place,$vpr_route,$vpr_reroute_log,$vpr_log);
+
+  $benchmark = $benchmark_file;
+  $benchmark =~ s/\.blif$//g;
+  # Run Standard flow
+  $rpt_dir = "$conf_ptr->{dir_path}->{rpt_dir}->{val}"."/$benchmark/$tag";
+  &generate_path($rpt_dir);
+  $prefix = "$rpt_dir/$benchmark\_"."K$opt_ptr->{K_val}\_"."N$opt_ptr->{N_val}\_";
+
+  my ($input_blif) = ("$conf_ptr->{dir_path}->{benchmark_dir}->{val}"."/$benchmark".".blif");
+  my ($act_file,$ace_new_blif,$ace_log) = ("$prefix"."ace.act","$prefix"."ace.blif","$prefix"."ace.log");
+
+  $vpr_net = "$prefix"."vpr.net";
+  $vpr_place = "$prefix"."vpr.place";
+  $vpr_route = "$prefix"."vpr.route";
+  $vpr_log = "$prefix"."vpr.log";
+  $vpr_reroute_log = "$prefix"."vpr_reroute.log";
+
+  &run_ace_in_flow($prefix, $input_blif, $act_file, $ace_new_blif, $ace_log);
+
+  &run_vpr_in_flow($tag, $benchmark, $benchmark_file, $input_blif, $vpr_arch, $act_file, $vpr_net, $vpr_place, $vpr_route, $vpr_log, $vpr_reroute_log, $parse_results);
+
+  return;
+}
 
 sub run_standard_flow($ $ $ $ $)
 {
@@ -2748,6 +2777,8 @@ sub run_benchmark_selected_flow($ $ $)
     &run_mig_mccl_flow("mig_mccl",$benchmark,$conf_ptr->{flow_conf}->{vpr_arch}->{val}, $parse_results);
   } elsif ($flow_type eq "yosys_vpr") {
     &run_yosys_vpr_flow("yosys_vpr",$benchmark,$conf_ptr->{flow_conf}->{vpr_arch}->{val}, "classic", $parse_results);
+  } elsif ($flow_type eq "vpr_only") {
+    &run_vpr_only_flow("vpr_only",$benchmark,$conf_ptr->{flow_conf}->{vpr_arch}->{val}, $parse_results);
   } else {
     die "ERROR: unsupported flow type ($flow_type) is chosen!\n";
   }
@@ -2776,6 +2807,8 @@ sub parse_benchmark_selected_flow($ $) {
     &parse_standard_flow_results("mig_mccl", $benchmark, $conf_ptr->{flow_conf}->{vpr_arch}->{val}, "abc_black_box");
   } elsif ($flow_type eq "yosys_vpr") {
     &parse_yosys_vpr_flow_results("yosys_vpr",$benchmark,$conf_ptr->{flow_conf}->{vpr_arch}->{val},"abc_black_box");
+  } elsif ($flow_type eq "vpr_only") {
+    &parse_standard_flow_results("vpr_only",$benchmark,$conf_ptr->{flow_conf}->{vpr_arch}->{val}, "classic");
   } else {
     die "ERROR: unsupported flow type ($flow_type) is chosen!\n";
   }
@@ -3566,6 +3599,11 @@ sub gen_csv_rpt($)
         if (1 == &check_flow_all_benchmarks_done("yosys_vpr")) {
           print "INFO: writing yosys_vpr flow results ...\n";
           &gen_csv_rpt_yosys_vpr_flow("yosys_vpr",$CSVFH);
+        }
+      } elsif ($flow_type eq "vpr_only") {
+        if (1 == &check_flow_all_benchmarks_done("vpr_only")) {
+          print "INFO: writing vpr_only flow results ...\n";
+          &gen_csv_rpt_standard_flow("vpr_only",$CSVFH);
         }
       } else {
         die "ERROR: flow_type: $flow_type is not supported!\n";
