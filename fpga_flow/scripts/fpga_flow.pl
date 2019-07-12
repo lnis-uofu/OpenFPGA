@@ -189,6 +189,7 @@ sub print_usage()
   print "      \t-vpr_fpga_verilog_print_top_tb : turn on printing top-level testbench for Verilog Generator of VPR FPGA SPICE\n";
   print "      \t-vpr_fpga_verilog_print_input_blif_tb : turn on printing testbench for input blif file in Verilog Generator of VPR FPGA SPICE\n";
   print "      \t-vpr_fpga_verilog_print_modelsim_autodeck <modelsim.ini_path>: turn on printing modelsim simulation script\n";
+  print "      \t-vpr_fpga_verilog_explicit_mapping\n";
   print "      [ VPR - FPGA-Bitstream Extension ] \n";
   print "      \t-vpr_fpga_bitstream_generator: turn on FPGA-SPICE bitstream generator\n";
   exit(1);
@@ -373,6 +374,7 @@ sub opts_read()
   &read_opt_into_hash("vpr_fpga_verilog_print_sdc_pnr","off","off");
   &read_opt_into_hash("vpr_fpga_verilog_print_sdc_analysis","off","off");
   &read_opt_into_hash("vpr_fpga_verilog_print_user_defined_template","off","off");
+  &read_opt_into_hash("vpr_fpga_verilog_explicit_mapping","off","off");
 
   # Regression test option
   &read_opt_into_hash("end_flow_with_test","off","off");
@@ -1419,6 +1421,9 @@ sub run_std_vpr($ $ $ $ $ $ $ $ $)
     }
     if ("on" eq $opt_ptr->{vpr_fpga_verilog_print_sdc_analysis}) {
       $vpr_spice_opts = $vpr_spice_opts." --fpga_verilog_print_sdc_analysis";
+    }
+    if ("on" eq $opt_ptr->{vpr_fpga_verilog_explicit_mapping}) {
+      $vpr_spice_opts = $vpr_spice_opts." --fpga_verilog_explicit_mapping";
     }
   }
 

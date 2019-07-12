@@ -40,6 +40,13 @@ FPGA-Verilog Supported Options::
    <reference_verilog_file_path>", "Prints a testbench stimulating the generated FPGA and the initial benchmark to compare stimuli responses, which includes programming phase and operationg phase (random patterns)"
    "--fpga_verilog_print_formal_verification_top_netlist", "Prints a Verilog top file compliant with formal verification tools. With this top file the FPGA is initialy programmed. It also prints a testbench with random patterns, which can be manually or automatically check regarding previous options."
    "--fpga_verilog_include_icarus_simulator", "Activates waveforms .vcd file generation and simulation timeout, which are required for Icarus Verilog simulator"
+   "--fpga_verilog_print_input_blif_testbench", "Generates a Verilog test-bench to use with input blif file"
+   "--fpga_verilog_print_report_timing_tcl", "Generates tcl commands to run STA analysis with TO COMPLETE TOOL"
+   "--fpga_verilog_report_timing_rpt_path <path_to_generate_reports>", "Specifies path where report timing are written"
+   "--fpga_verilog_print_sdc_pnr", "Generates SDC constraints to PNR"
+   "--fpga_verilog_print_sdc_analysis", "Generates SDC to run timing analysis in PNR tool"
+   "--fpga_verilog_print_user_defined_template", "Generates a template of hierarchy modules and their port mapping"
+   "", ""
 >>>>>>> f56adc681567b73c7826228641e089482dffc009
 
 .. note:: The selected directory will contain the *Verilog top file* and three other folders. The folders are: 
