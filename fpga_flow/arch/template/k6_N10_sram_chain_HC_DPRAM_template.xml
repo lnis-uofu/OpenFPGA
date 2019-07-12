@@ -164,7 +164,7 @@
  
   <!-- Physical descriptions begin -->
   <layout auto="1.0" tileable_routing="off"/>
-  <!--layout width="5" height="5" tileable_routing="off"/-->
+  <!--layout width="12" height="12" tileable_routing="off"/-->
   <spice_settings>
     <parameters>
       <options sim_temp="25" post="off" captab="off" fast="on"/>
