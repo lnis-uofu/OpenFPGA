@@ -5,7 +5,7 @@
 my_pwd=$PWD
 fpga_flow_scripts=${my_pwd}/fpga_flow/scripts
 vpr_path=${my_pwd}/vpr7_x2p/vpr
-benchmark="pipelined_8b_adder"
+benchmark="test_modes"
 include_netlists="_include_netlists.v"
 compiled_file="compiled_$benchmark"
 tb_formal_postfix="_top_formal_verification_random_tb"
@@ -45,5 +45,7 @@ if ["$result" = ""]; then
   fi
 else
   echo "Verification succeed"
-  cd $my_pwd
 fi
+
+gtkwave ${benchmark}_formal.vcd &
+cd $my_pwd
