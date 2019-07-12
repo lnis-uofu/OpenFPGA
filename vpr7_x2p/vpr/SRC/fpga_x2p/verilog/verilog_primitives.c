@@ -134,7 +134,7 @@ void dump_verilog_pb_generic_primitive(t_sram_orgz_info* cur_sram_orgz_info,
   get_sram_orgz_info_num_blwl(cur_sram_orgz_info, &cur_bl, &cur_wl);
 
   /* print ports --> input ports */
-  dump_verilog_pb_type_ports(fp, port_prefix, 0, prim_pb_type, TRUE, FALSE, FALSE, false); 
+  dump_verilog_pb_type_ports(fp, port_prefix, 0, prim_pb_type, TRUE, FALSE, FALSE, true); 
   /* IOPADs requires a specical port to output */
   if (SPICE_MODEL_IOPAD == verilog_model->type) {
     fprintf(fp, ",\n");
