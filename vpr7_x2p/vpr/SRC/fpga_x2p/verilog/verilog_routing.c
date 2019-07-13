@@ -1453,6 +1453,10 @@ void dump_verilog_unique_switch_box_interc(t_sram_orgz_info* cur_sram_orgz_info,
   } else {
     num_drive_rr_nodes = cur_rr_node->num_drive_rr_nodes;
     drive_rr_nodes = cur_rr_node->drive_rr_nodes;
+    /* Special: if there are zero-driver nodes. We skip here */
+    if (0 == num_drive_rr_nodes) {
+      return; 
+    }
   }
 
   if (0 == num_drive_rr_nodes) {
