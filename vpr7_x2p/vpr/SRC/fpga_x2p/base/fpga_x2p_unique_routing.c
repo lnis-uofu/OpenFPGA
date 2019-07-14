@@ -1143,17 +1143,23 @@ void sort_rr_gsb_one_ipin_node_drive_rr_nodes(const RRGSB& rr_gsb,
   /* Create a copy of the edges and switches of this node */
   std::vector<t_rr_node*> sorted_drive_nodes;
   std::vector<int> sorted_drive_switches;
+  std::vector<int> sorted_drive_nodes_chan_node_index;
 
-  /* Ensure a clean start */
-  sorted_drive_nodes.clear();
-  sorted_drive_switches.clear();
+  /* Ensure a clean start and avoid frequent realloc */
+  sorted_drive_nodes.reserve(ipin_node->num_drive_rr_nodes);
+  sorted_drive_switches.reserve(ipin_node->num_drive_rr_nodes);
+  sorted_drive_nodes_chan_node_index.reserve(ipin_node->num_drive_rr_nodes);
 
   /* Build the vectors w.r.t. to the order of node_type and ptc_num */
   for (int i_from_node = 0; i_from_node < ipin_node->num_drive_rr_nodes; ++i_from_node) {
+    int i_from_node_track_index = rr_gsb.get_chan_node_index(ipin_chan_side, ipin_node->drive_rr_nodes[i_from_node]); 
+    /* We must have a valide node index */
+    assert (-1 != i_from_node_track_index);
     /* For blank edges: directly push_back */
     if (0 == sorted_drive_nodes.size()) {
       sorted_drive_nodes.push_back(ipin_node->drive_rr_nodes[i_from_node]);
       sorted_drive_switches.push_back(ipin_node->drive_switches[i_from_node]);
+      sorted_drive_nodes_chan_node_index.push_back(i_from_node_track_index);
       continue;
     }
 
@@ -1167,12 +1173,8 @@ void sort_rr_gsb_one_ipin_node_drive_rr_nodes(const RRGSB& rr_gsb,
         break; /* least type should stay in the front of the vector */
       } else if (ipin_node->drive_rr_nodes[i_from_node]->type 
               == sorted_drive_nodes[j_from_node]->type) {
-        int i_from_node_track_index = rr_gsb.get_chan_node_index(ipin_chan_side, ipin_node->drive_rr_nodes[i_from_node]); 
-        int j_from_node_track_index = rr_gsb.get_chan_node_index(ipin_chan_side, sorted_drive_nodes[j_from_node]); 
-        /* We must have a valide node index */
-        assert ( (-1 != i_from_node_track_index) && (-1 != j_from_node_track_index) );
         /* Now a lower ptc_num will win */ 
-        if ( i_from_node_track_index < j_from_node_track_index ) { 
+        if ( i_from_node_track_index < sorted_drive_nodes_chan_node_index[j_from_node] ) { 
           insert_pos = j_from_node;
           break; /* least type should stay in the front of the vector */
         }
@@ -1181,6 +1183,7 @@ void sort_rr_gsb_one_ipin_node_drive_rr_nodes(const RRGSB& rr_gsb,
     /* We find the position, inserted to the vector */
     sorted_drive_nodes.insert(sorted_drive_nodes.begin() + insert_pos, ipin_node->drive_rr_nodes[i_from_node]); 
     sorted_drive_switches.insert(sorted_drive_switches.begin() + insert_pos, ipin_node->drive_switches[i_from_node]); 
+    sorted_drive_nodes_chan_node_index.insert(sorted_drive_nodes_chan_node_index.begin() + insert_pos, i_from_node_track_index); 
   }
 
   /* Overwrite the edges and switches with sorted numbers */
@@ -1215,10 +1218,10 @@ void sort_rr_gsb_one_chan_node_drive_rr_nodes(const RRGSB& rr_gsb,
   std::vector<int> sorted_drive_switches;
   std::vector<int> sorted_drive_nodes_from_node_index;
 
-  /* Ensure a clean start */
-  sorted_drive_nodes.clear();
-  sorted_drive_switches.clear();
-  sorted_drive_nodes_from_node_index.clear();
+  /* Ensure a clean start and avoid frequent realloc */
+  sorted_drive_nodes.reserve(chan_node->num_drive_rr_nodes);
+  sorted_drive_switches.reserve(chan_node->num_drive_rr_nodes);
+  sorted_drive_nodes_from_node_index.reserve(chan_node->num_drive_rr_nodes);
 
   /* Build the vectors w.r.t. to the order of node_type and ptc_num */
   for (int i_from_node = 0; i_from_node < chan_node->num_drive_rr_nodes; ++i_from_node) {
@@ -1360,7 +1363,8 @@ DeviceRRGSB build_device_rr_gsb(boolean output_sb_xml, char* sb_xml_dir,
       /* Print info */
       vpr_printf(TIO_MESSAGE_INFO, 
                  "[%lu%] Backannotated GSB[%lu][%lu]\r",
-                 100 * gsb_cnt / (sb_range.get_x() * sb_range.get_y()), ix, iy );
+                 100 * gsb_cnt / ((sb_range.get_x() + 1)* (sb_range.get_y() + 1)), 
+                 ix, iy );
     }
   }
   /* Report number of unique mirrors */
