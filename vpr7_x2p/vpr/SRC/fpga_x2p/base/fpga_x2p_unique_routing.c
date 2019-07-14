@@ -1153,8 +1153,11 @@ void sort_rr_gsb_one_ipin_node_drive_rr_nodes(const RRGSB& rr_gsb,
   /* Build the vectors w.r.t. to the order of node_type and ptc_num */
   for (int i_from_node = 0; i_from_node < ipin_node->num_drive_rr_nodes; ++i_from_node) {
     int i_from_node_track_index = rr_gsb.get_chan_node_index(ipin_chan_side, ipin_node->drive_rr_nodes[i_from_node]); 
-    /* We must have a valide node index */
-    assert (-1 != i_from_node_track_index);
+    /* We must have a valide node index for CHANX and CHANY */
+    if ( (CHANX == ipin_node->drive_rr_nodes[i_from_node]->type) 
+      || (CHANY == ipin_node->drive_rr_nodes[i_from_node]->type) ) {
+      assert (-1 != i_from_node_track_index);
+    } 
     /* For blank edges: directly push_back */
     if (0 == sorted_drive_nodes.size()) {
       sorted_drive_nodes.push_back(ipin_node->drive_rr_nodes[i_from_node]);
