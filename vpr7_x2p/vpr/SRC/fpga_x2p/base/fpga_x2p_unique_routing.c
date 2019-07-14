@@ -1336,9 +1336,11 @@ DeviceRRGSB build_device_rr_gsb(boolean output_sb_xml, char* sb_xml_dir,
   DeviceCoordinator reserve_range((size_t)nx + 1, (size_t)ny + 1);
   LL_device_rr_gsb.reserve(reserve_range);
 
+  size_t gsb_cnt = 0;
   /* For each switch block, determine the size of array */
   for (size_t ix = 0; ix <= sb_range.get_x(); ++ix) {
     for (size_t iy = 0; iy <= sb_range.get_y(); ++iy) {
+      gsb_cnt++; /* Update counter */
       const RRGSB& rr_gsb = build_rr_gsb(sb_range, ix, iy,
                                          LL_num_rr_nodes, LL_rr_node, 
                                          LL_rr_node_indices, 
@@ -1355,6 +1357,10 @@ DeviceRRGSB build_device_rr_gsb(boolean output_sb_xml, char* sb_xml_dir,
       /* Add to device_rr_gsb */
       DeviceCoordinator sb_coordinator = rr_gsb.get_sb_coordinator();
       LL_device_rr_gsb.add_rr_gsb(sb_coordinator, rr_gsb);
+      /* Print info */
+      vpr_printf(TIO_MESSAGE_INFO, 
+                 "[%lu%] Backannotated GSB[%lu][%lu]\r",
+                 100 * gsb_cnt / (sb_range.get_x() * sb_range.get_y()), ix, iy );
     }
   }
   /* Report number of unique mirrors */
@@ -1366,9 +1372,9 @@ DeviceRRGSB build_device_rr_gsb(boolean output_sb_xml, char* sb_xml_dir,
   t_end = clock();
  
   run_time_sec = (float)(t_end - t_start) / CLOCKS_PER_SEC;
+  vpr_printf(TIO_MESSAGE_INFO, "Edge sorting for Switch Block took %g seconds\n", run_time_sec_profiling);  
   vpr_printf(TIO_MESSAGE_INFO, "Backannotation of Switch Block took %g seconds\n\n", run_time_sec);  
 
-  vpr_printf(TIO_MESSAGE_INFO, "Edge sorting for Switch Block took %g seconds\n\n", run_time_sec_profiling);  
 
 
   if (TRUE == output_sb_xml) {
