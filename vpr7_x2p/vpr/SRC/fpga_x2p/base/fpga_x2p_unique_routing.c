@@ -1213,17 +1213,26 @@ void sort_rr_gsb_one_chan_node_drive_rr_nodes(const RRGSB& rr_gsb,
   /* Create a copy of the edges and switches of this node */
   std::vector<t_rr_node*> sorted_drive_nodes;
   std::vector<int> sorted_drive_switches;
+  std::vector<int> sorted_drive_nodes_from_node_index;
 
   /* Ensure a clean start */
   sorted_drive_nodes.clear();
   sorted_drive_switches.clear();
+  sorted_drive_nodes_from_node_index.clear();
 
   /* Build the vectors w.r.t. to the order of node_type and ptc_num */
   for (int i_from_node = 0; i_from_node < chan_node->num_drive_rr_nodes; ++i_from_node) {
+    enum e_side i_from_node_side = NUM_SIDES;
+    int i_from_node_index = -1;
+    rr_gsb.get_node_side_and_index(chan_node->drive_rr_nodes[i_from_node], 
+                                   IN_PORT, &i_from_node_side, &i_from_node_index);
+    /* check */
+    assert ( (NUM_SIDES != i_from_node_side) && (-1 != i_from_node_index) );
     /* For blank edges: directly push_back */
     if (0 == sorted_drive_nodes.size()) {
       sorted_drive_nodes.push_back(chan_node->drive_rr_nodes[i_from_node]);
       sorted_drive_switches.push_back(chan_node->drive_switches[i_from_node]);
+      sorted_drive_nodes_from_node_index.push_back(i_from_node_index);
       continue;
     }
 
@@ -1241,22 +1250,9 @@ void sort_rr_gsb_one_chan_node_drive_rr_nodes(const RRGSB& rr_gsb,
          * But we are pretty sure it is either IN_PORT or OUT_PORT
          * So we just try and find what is valid
          */
-        enum e_side i_from_node_side = NUM_SIDES;
-        int i_from_node_index = -1;
-        rr_gsb.get_node_side_and_index(chan_node->drive_rr_nodes[i_from_node], 
-                                       IN_PORT, &i_from_node_side, &i_from_node_index);
-        /* check */
-        if (! ( (NUM_SIDES != i_from_node_side) && (-1 != i_from_node_index) ) )
-        assert ( (NUM_SIDES != i_from_node_side) && (-1 != i_from_node_index) );
 
-        enum e_side j_from_node_side = NUM_SIDES;
-        int j_from_node_index = -1;
-        rr_gsb.get_node_side_and_index(sorted_drive_nodes[j_from_node], 
-                                       IN_PORT, &j_from_node_side, &j_from_node_index);
-        /* check */
-        assert ( (NUM_SIDES != j_from_node_side) && (-1 != j_from_node_index) );
         /* Now a lower ptc_num will win */ 
-        if ( i_from_node_index < j_from_node_index) { 
+        if ( i_from_node_index < sorted_drive_nodes_from_node_index[j_from_node]) { 
           insert_pos = j_from_node;
           break; /* least type should stay in the front of the vector */
         }
@@ -1265,6 +1261,7 @@ void sort_rr_gsb_one_chan_node_drive_rr_nodes(const RRGSB& rr_gsb,
     /* We find the position, inserted to the vector */
     sorted_drive_nodes.insert(sorted_drive_nodes.begin() + insert_pos, chan_node->drive_rr_nodes[i_from_node]); 
     sorted_drive_switches.insert(sorted_drive_switches.begin() + insert_pos, chan_node->drive_switches[i_from_node]); 
+    sorted_drive_nodes_from_node_index.insert(sorted_drive_nodes_from_node_index.begin() + insert_pos, i_from_node_index); 
   }
 
   /* Overwrite the edges and switches with sorted numbers */
