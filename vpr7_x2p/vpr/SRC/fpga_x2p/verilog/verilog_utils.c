@@ -902,8 +902,8 @@ int rec_dump_verilog_spice_model_global_ports(FILE* fp,
       /* Add explicit port mapping if required */
       if (TRUE == require_explicit_port_map ) {
         fprintf(fp, ".%s(",
-                /* cur_spice_model_port->lib_name); /* Old version*/
-                cur_spice_model_port->prefix);
+                 cur_spice_model_port->lib_name);
+                /*cur_spice_model_port->prefix);*/
       }
       fprintf(fp, "%s[0:%d]", 
             cur_spice_model_port->prefix,

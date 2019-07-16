@@ -667,10 +667,12 @@ void verilog_generate_sdc_constrain_one_cb_path(FILE* fp,
   } 
 
   /* Check */
-  assert ((INC_DIRECTION == src_rr_node->direction)
-        ||(DEC_DIRECTION == src_rr_node->direction));
+  if (! ((CHANX == src_rr_node->type) ||(CHANY == src_rr_node->type))) 
   assert ((CHANX == src_rr_node->type)
         ||(CHANY == src_rr_node->type));
+
+  assert ((INC_DIRECTION == src_rr_node->direction)
+        ||(DEC_DIRECTION == src_rr_node->direction));
   assert (IPIN == des_rr_node->type);
 
   fprintf(fp, "set_max_delay");
@@ -928,6 +930,13 @@ void verilog_generate_sdc_constrain_one_cb(FILE* fp,
     for (size_t inode = 0; inode < rr_gsb.get_num_ipin_nodes(cb_ipin_side); ++inode) {
       t_rr_node* cur_ipin_node = rr_gsb.get_ipin_node(cb_ipin_side, inode);
       for (int iedge = 0; iedge < cur_ipin_node->num_drive_rr_nodes; iedge++) {
+        /* Skip the drivers that are not CHANX or CHANY. 
+         * OPINs should be handled by directlist 
+         */
+        if ( (CHANX != cur_ipin_node->drive_rr_nodes[iedge]->type) 
+          && (CHANY != cur_ipin_node->drive_rr_nodes[iedge]->type) ) {
+          continue;
+        }
         /* Get the switch delay */
         int switch_id = cur_ipin_node->drive_switches[iedge];
         float switch_delay = get_switch_sdc_tmax (&(switch_inf[switch_id]));
