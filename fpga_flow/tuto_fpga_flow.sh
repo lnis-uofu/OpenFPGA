@@ -18,7 +18,7 @@ dir_keyword="GENERATED_DIR_KEYWORD"
 rm -rf ${pwd_path}/results_OpenPithon
 
 cd ${pwd_path}/arch
-mkdir generated	# create folder to save rewritten architecture
+mkdir -p generated	# create folder to save rewritten architecture
 cd ${pwd_path}/scripts
 
 # Replace keyword in config and architecture files
