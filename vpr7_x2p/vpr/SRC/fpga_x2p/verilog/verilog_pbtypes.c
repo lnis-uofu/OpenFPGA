@@ -1072,6 +1072,10 @@ void dump_verilog_pb_graph_pin_interc(t_sram_orgz_info* cur_sram_orgz_info,
   char* mem_subckt_name = NULL;
   char* hierarchical_name = NULL;
   char* mux_name = NULL;
+  int num_input_port;
+  int num_output_port;
+  t_spice_model_port** input_port;
+  t_spice_model_port** output_port;
 
   /* Check the file handler*/ 
   if (NULL == fp) {
@@ -1087,6 +1091,8 @@ void dump_verilog_pb_graph_pin_interc(t_sram_orgz_info* cur_sram_orgz_info,
   fan_in = 0;
   cur_interc = NULL;
   find_interc_fan_in_des_pb_graph_pin(des_pb_graph_pin, cur_mode, &cur_interc, &fan_in);
+  input_port = find_spice_model_ports(cur_interc->spice_model, SPICE_MODEL_PORT_INPUT, &num_input_port, TRUE);
+  output_port = find_spice_model_ports(cur_interc->spice_model, SPICE_MODEL_PORT_OUTPUT, &num_output_port, TRUE);
   if ((NULL == cur_interc)||(0 == fan_in)) { 
     /* No interconnection matched */
     /* Connect this pin to GND for better convergence */
@@ -1148,7 +1154,8 @@ void dump_verilog_pb_graph_pin_interc(t_sram_orgz_info* cur_sram_orgz_info,
     assert(src_pb_type == des_pb_graph_pin->input_edges[iedge]->input_pins[0]->port->parent_pb_type);
     /* Print */
     if (true == is_explicit_mapping) {
-      fprintf(fp, ".in (");
+      fprintf(fp, ".%s(",
+              input_port[0]->prefix);
     }
     fprintf(fp, "%s__%s_%d_", 
             src_pin_prefix, src_pb_graph_pin->port->name, src_pb_graph_pin->pin_number);
@@ -1158,7 +1165,8 @@ void dump_verilog_pb_graph_pin_interc(t_sram_orgz_info* cur_sram_orgz_info,
       fprintf(fp, ", ");
     /* Output */
     if (true == is_explicit_mapping) {
-      fprintf(fp, ".out (");
+      fprintf(fp, ".%s(",
+              output_port[0]->prefix);
     }
     fprintf(fp, "%s__%s_%d_", 
             des_pin_prefix, des_pb_graph_pin->port->name, des_pb_graph_pin->pin_number); 
@@ -1275,7 +1283,8 @@ void dump_verilog_pb_graph_pin_interc(t_sram_orgz_info* cur_sram_orgz_info,
     }
     /* Inputs */
     if (true == is_explicit_mapping) {
-      fprintf(fp, ".in (");
+      fprintf(fp, ".%s(",
+              input_port[0]->prefix);
     }
     fprintf(fp, "in_bus_%s_size%d_%d_",
             cur_interc->spice_model->name, fan_in, cur_interc->spice_model->cnt);
@@ -1285,7 +1294,8 @@ void dump_verilog_pb_graph_pin_interc(t_sram_orgz_info* cur_sram_orgz_info,
     fprintf(fp, ", ");
     /* Generate the pin_prefix for src_pb_graph_node and des_pb_graph_node*/
     if (true == is_explicit_mapping) {
-      fprintf(fp, ".out (");
+      fprintf(fp, ".%s(",
+              output_port[0]->prefix);
     }
     generate_verilog_src_des_pb_graph_pin_prefix(src_pb_graph_pin, des_pb_graph_pin, pin2pin_interc_type, 
                                                cur_interc, formatted_parent_pin_prefix, &src_pin_prefix, &des_pin_prefix);
