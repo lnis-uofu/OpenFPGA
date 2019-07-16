@@ -32,9 +32,9 @@ This will show the different options that can be used. Our modifications concern
 
 A script is already prepared in the folder to test FPGA-SPICE and FPGA-Verilog
 
-`source ./go.sh`
+`source ./go_fpga_verilog.sh`
 
-This script uses the enhanced version of vpr with some new options such as --fpga_spice_print_top_testbench which automatically generates a testbench for the full FPGA and --fpga_verilog_dir which allows us to choose the destination directory for the verilog output we generate.
+This script uses the enhanced version of vpr with some new options such as --fpga_verilog_print_top_testbench which automatically generates a testbench for the full FPGA and --fpga_verilog_dir which allows us to choose the destination directory for the verilog output we generate.
 For more informations on how the new commands work, please visit [OpenFPGA Options FPGA-SPICE](https://openfpga.readthedocs.io/en/latest/fpga_spice/command_line_usage.html).
 
 As a result, we get a new folder, /verilog_test, which contains the verilog code. The name_top.v contains the full FPGA we just created. Three other folders are created, *lb*, *routing* and *sub_modules*. *lb* contains the different CLBs used in the architecture. *routing* contains the different connection blocks, the switch boxes and the wires. *sub_modules* contains the different modules needed in the architecture.

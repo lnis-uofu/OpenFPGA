@@ -1,4 +1,39 @@
-/* The XML parser processes an XML file into a tree data structure composed of      *
+/**********************************************************
+ * MIT License
+ *
+ * Copyright (c) 2018 LNIS - The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ ***********************************************************************/
+
+/************************************************************************
+ * Filename:    read_xml_arch_file.c
+ * Created by:   Jason Luu
+ * Change history:
+ * +-------------------------------------+
+ * |  Date       |    Author   | Notes
+ * +-------------------------------------+
+ * | 2019/07/02  |  Xifan Tang | Modified to support passing_track_type for switch blocks 
+ * +-------------------------------------+
+ ***********************************************************************/
+/************************************************************************
+ * The XML parser processes an XML file into a tree data structure composed of      *
  * ezxml_t nodes.  Each ezxml_t node represents an XML element.  For example        *
  * <a> <b/> </a> will generate two ezxml_t nodes.  One called "a" and its           *
  * child "b".  Each ezxml_t node can contain various XML data such as attribute     *
@@ -22,7 +57,7 @@
  * Because of how the XML tree traversal works, we free everything when we're       *
  * done reading an architecture file to make sure that there isn't some part        *
  * of the architecture file that got missed.                                        *
- */
+ ***********************************************************************/
 
 #include <string.h>
 #include <assert.h>
@@ -1017,9 +1052,9 @@ static void ProcessPb_Type(INOUTP ezxml_t Parent, t_pb_type * pb_type,
      * We should have a spice_model_name if this mode defines the transistor-level circuit design
      * Since this is a leaf node
      */
-    pb_type->spice_model_name = my_strdup(FindProperty(Parent, "spice_model_name", FALSE));
+    pb_type->spice_model_name = my_strdup(FindProperty(Parent, "circuit_model_name", FALSE));
     pb_type->spice_model = NULL;
-    ezxml_set_attr(Parent, "spice_model_name", NULL);
+    ezxml_set_attr(Parent, "circuit_model_name", NULL);
     /* Multi-mode CLB support:
      * We can read the mode configuration bits if they are defined 
      */
@@ -1365,7 +1400,7 @@ static void ProcessInterconnect(INOUTP ezxml_t Parent, t_mode * mode) {
 
 
             /* Xifan TANG: SPICE Support */
-            Prop = FindProperty(Cur, "spice_model_name", FALSE);
+            Prop = FindProperty(Cur, "circuit_model_name", FALSE);
             /* Default spice_model will be define later*/
             mode->interconnect[i].spice_model_name = my_strdup(Prop);
             mode->interconnect[i].spice_model = NULL;
@@ -1373,7 +1408,7 @@ static void ProcessInterconnect(INOUTP ezxml_t Parent, t_mode * mode) {
             mode->interconnect[i].fan_in = 0;
             mode->interconnect[i].fan_out = 0;
             mode->interconnect[i].num_mux = 0;
-            ezxml_set_attr(Cur, "spice_model_name", NULL);
+            ezxml_set_attr(Cur, "circuit_model_name", NULL);
             /* Get sram offset */
             mode->interconnect[i].spice_model_sram_offset = GetIntProperty(Cur, "spice_model_sram_offset", FALSE, 0); 
             ezxml_set_attr(Cur, "spice_model_sram_offset", NULL);
@@ -2141,6 +2176,33 @@ static void ProcessDevice(INOUTP ezxml_t Node, OUTP struct s_arch *arch,
 	ezxml_set_attr(Cur, "type", NULL);
 
 	arch->Fs = GetIntProperty(Cur, "fs", TRUE, 3);
+
+    /* SubType is the switch block type of passing tracks */
+    /* By default, the subType is the same as the main type */ 
+	Prop = FindProperty(Cur, "sub_type", FALSE);
+    if (NULL != Prop) {
+   	  if (strcmp(Prop, "wilton") == 0) {
+	  	arch->SBSubType = WILTON;
+	  } else if (strcmp(Prop, "universal") == 0) {
+	  	arch->SBSubType = UNIVERSAL;
+	  } else if (strcmp(Prop, "subset") == 0) {
+	  	arch->SBSubType = SUBSET;
+	  } else {
+	  	vpr_printf(TIO_MESSAGE_ERROR,
+	  			"[LINE %d] Unknown property %s for switch block type x\n",
+	  			Cur->line, Prop);
+	  	exit(1);
+	  }
+    }
+	ezxml_set_attr(Cur, "sub_type", NULL);
+
+    /* SubFs is Fs for the switch block type of passing tracks */
+    /* By default, the subFs is the same as the main Fs */ 
+	arch->SubFs = GetIntProperty(Cur, "sub_fs", FALSE, arch->Fs);
+
+    /* A switch to allow passing tracks wired to the same routing channels */
+	arch->wire_opposite_side = GetBooleanProperty(Cur, "wire_opposite_side", FALSE, FALSE);
+	ezxml_set_attr(Cur, "wire_opposite_side", NULL);
 
 	FreeNode(Cur);
 }
@@ -3188,9 +3250,9 @@ static void ProcessSegments(INOUTP ezxml_t Parent,
 		(*Segs)[i].Rmetal = GetFloatProperty(Node, "Rmetal", timing_enabled, 0);
 		(*Segs)[i].Cmetal = GetFloatProperty(Node, "Cmetal", timing_enabled, 0);
         /* Xifan TANG: SPICE Model Support*/
-        (*Segs)[i].spice_model_name = my_strdup(FindProperty(Node, "spice_model_name", FALSE));
+        (*Segs)[i].spice_model_name = my_strdup(FindProperty(Node, "circuit_model_name", FALSE));
         (*Segs)[i].spice_model = NULL;
-	    ezxml_set_attr(Node, "spice_model_name", NULL);
+	    ezxml_set_attr(Node, "circuit_model_name", NULL);
 		/* Get Power info */
 		/*
 		(*Segs)[i].Cmetal_per_m = GetFloatProperty(Node, "Cmetal_per_m", FALSE,
@@ -3466,9 +3528,9 @@ static void ProcessSwitches(INOUTP ezxml_t Parent,
 				FALSE, 1);
 
         /* Xifan TANG: Spice Model Support */
-        (*Switches)[i].spice_model_name = my_strdup(FindProperty(Node, "spice_model_name", FALSE));
+        (*Switches)[i].spice_model_name = my_strdup(FindProperty(Node, "circuit_model_name", FALSE));
         (*Switches)[i].spice_model = NULL;
-	    ezxml_set_attr(Node, "spice_model_name", NULL);
+	    ezxml_set_attr(Node, "circuit_model_name", NULL);
         /* Xifan TANG : Read in MUX structure*/ 
         /* Default, we use tree */
         structure_type = FindProperty(Node, "structure", FALSE);
@@ -3581,9 +3643,9 @@ static void ProcessDirects(INOUTP ezxml_t Parent, OUTP t_direct_inf **Directs,
         /* Spice Model Support: Xifan TANG
          * We should have a spice_model_name for this direct connection 
          */
-        (*Directs)[i].spice_model_name = my_strdup(FindProperty(Node, "spice_model_name", FALSE));
+        (*Directs)[i].spice_model_name = my_strdup(FindProperty(Node, "circuit_model_name", FALSE));
         (*Directs)[i].spice_model = NULL;
-         ezxml_set_attr(Node,"spice_model_name",NULL);
+         ezxml_set_attr(Node,"circuit_model_name",NULL);
  
 
 		(*Directs)[i].line = Node->line;
@@ -4132,3 +4194,6 @@ void SetupPinEquivalenceAutoDetect(ezxml_t Parent, t_type_descriptor* Type) {
   return;
 }
 
+/************************************************************************
+ * End of file : read_xml_arch_file.c 
+ ***********************************************************************/

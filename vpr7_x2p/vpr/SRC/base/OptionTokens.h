@@ -74,6 +74,8 @@ enum e_OptionBaseToken {
 	OT_ACTIVITY_FILE,
 	OT_POWER_OUT_FILE,
 	OT_CMOS_TECH_BEHAVIOR_FILE,
+    /* Xifan Tang: Tileable routing support !!! */
+    OT_USE_TILEABLE_ROUTE_CHAN_WIDTH,
     /* General FPGA_X2P: FPGA-SPICE/Verilog/Bitstream Options */
     OT_FPGA_X2P_RENAME_ILLEGAL_PORT, 
     OT_FPGA_X2P_SIGNAL_DENSITY_WEIGHT, /* The weight of signal density in determining number of clock cycles in simulation */
@@ -101,6 +103,7 @@ enum e_OptionBaseToken {
     /* Xifan TANG: Verilog Generation */
     OT_FPGA_VERILOG_SYN, /* Xifan TANG: Synthesizable Verilog Dump */
     OT_FPGA_VERILOG_SYN_DIR, /* Xifan TANG: Synthesizable Verilog Dump */
+    OT_FPGA_VERILOG_SYN_EXPLICIT_MAPPING, /* Baudouin Chauviere: explicit pin mapping during verilog generation */
     OT_FPGA_VERILOG_SYN_PRINT_TOP_TESTBENCH, /* Xifan Tang: Synthesizable Verilog, turn on option: output testbench for top-level netlist */
     OT_FPGA_VERILOG_SYN_PRINT_AUTOCHECK_TOP_TESTBENCH, /* Xifan Tang: Synthesizable Verilog, turn on option: output testbench for top-level netlist */
     OT_FPGA_VERILOG_SYN_PRINT_INPUT_BLIF_TESTBENCH, /* Xifan Tang: Synthesizable Verilog, turn on option: output testbench for the orignial input blif  */

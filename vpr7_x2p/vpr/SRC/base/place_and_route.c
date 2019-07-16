@@ -27,6 +27,8 @@
 /* CLB PIN REMAP */
 #include "place_clb_pin_remap.h"
 
+#include "tileable_chan_details_builder.h"
+
 /******************* Subroutines local to this module ************************/
 
 static int binary_search_place_and_route(struct s_placer_opts placer_opts,
@@ -150,6 +152,21 @@ void place_and_route(enum e_operation operation,
 			}
 		}
 		/* Other constraints can be left to rr_graph to check since this is one pass routing */
+
+        /* Xifan Tang: W estimation for tileable routing architecture */
+        /* Build the segment inf vector */
+        std::vector<t_segment_inf> segment_vec;
+        for (int iseg = 0; iseg < det_routing_arch.num_segment; ++iseg) {
+          segment_vec.push_back(segment_inf[iseg]);
+        }
+    
+        if (TRUE == router_opts.use_tileable_route_chan_width) {
+          int adapted_W = adapt_to_tileable_route_chan_width(width_fac, segment_vec); 
+          vpr_printf(TIO_MESSAGE_INFO, 
+                     "Adapt routing channel width (%d) to be tileable: %d\n", 
+                     width_fac, adapted_W);
+          width_fac = adapted_W;
+        }
 
 		/* Allocate the major routing structures. */
 
@@ -326,13 +343,21 @@ static int binary_search_place_and_route(struct s_placer_opts placer_opts,
 		udsd_multiplier = 2;
 	/* UDSD by AY End */
 
+
 	if (router_opts.fixed_channel_width != NO_FIXED_CHANNEL_WIDTH) {
 		current = router_opts.fixed_channel_width + 5 * udsd_multiplier;
 		low = router_opts.fixed_channel_width - 1 * udsd_multiplier;
 	} else {
 		current = max_pins_per_clb + max_pins_per_clb % 2; /* Binary search part */
+        /* End */
 		low = -1;
 	}
+
+    /* Build the segment inf vector */
+    std::vector<t_segment_inf> segment_vec;
+    for (int iseg = 0; iseg < det_routing_arch.num_segment; ++iseg) {
+      segment_vec.push_back(segment_inf[iseg]);
+    }
 
 	/* Constraints must be checked to not break rr_graph generator */
 	if (det_routing_arch.directionality == UNI_DIRECTIONAL) {
@@ -356,6 +381,21 @@ static int binary_search_place_and_route(struct s_placer_opts placer_opts,
 	attempt_count = 0;
 
 	while (final == -1) {
+        /* Xifan Tang: W estimation for tileable routing architecture */
+        if (TRUE == router_opts.use_tileable_route_chan_width) {
+          int adapted_W = adapt_to_tileable_route_chan_width(current, segment_vec); 
+          vpr_printf(TIO_MESSAGE_INFO, 
+                     "Adapt routing channel width (%d) to be tileable: %d\n", 
+                     current, adapted_W);
+          current = adapted_W;
+        }
+        /* Do a early exit when the current equals to high or low, 
+         * This means that the current W has been tried already. We just return a final value (high) 
+         */
+        if ( (current == high) || (current == low) ) {
+          final = high;
+	      break;
+        }
 
 		vpr_printf(TIO_MESSAGE_INFO, "Using low: %d, high: %d, current: %d\n", low, high, current);
 		fflush(stdout);
@@ -442,6 +482,7 @@ static int binary_search_place_and_route(struct s_placer_opts placer_opts,
 
 			if (low != -1) {
 				current = (high + low) / 2;
+
 			} else {
 				current = high / 2; /* haven't found lower bound yet */
 			}
@@ -457,6 +498,7 @@ static int binary_search_place_and_route(struct s_placer_opts placer_opts,
 					final = high;
 
 				current = (high + low) / 2;
+
 			} else {
 				if (router_opts.fixed_channel_width != NO_FIXED_CHANNEL_WIDTH) {
 					/* FOR Wneed = f(Fs) search */
@@ -468,6 +510,7 @@ static int binary_search_place_and_route(struct s_placer_opts placer_opts,
 					}
 				} else {
 					current = low * 2; /* Haven't found upper bound yet */
+  
 				}
 			}
 		}
@@ -560,8 +603,11 @@ static int binary_search_place_and_route(struct s_placer_opts placer_opts,
 	free_rr_graph();
 
 	build_rr_graph(graph_type, num_types, type_descriptors, nx, ny, grid,
-			chan_width_x[0], NULL, det_routing_arch.switch_block_type,
-			det_routing_arch.Fs, det_routing_arch.num_segment,
+			chan_width_x[0], NULL, 
+            det_routing_arch.switch_block_type, det_routing_arch.Fs, 
+            det_routing_arch.switch_block_sub_type, det_routing_arch.sub_Fs, 
+            det_routing_arch.wire_opposite_side,
+            det_routing_arch.num_segment,
 			det_routing_arch.num_switch, segment_inf,
 			det_routing_arch.global_route_switch,
 			det_routing_arch.delayless_switch, timing_inf,

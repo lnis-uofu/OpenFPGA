@@ -536,9 +536,12 @@ static void SetupRoutingArch(INP t_arch Arch,
 		OUTP struct s_det_routing_arch *RoutingArch) {
 
 	RoutingArch->switch_block_type = Arch.SBType;
+	RoutingArch->switch_block_sub_type = Arch.SBSubType;
 	RoutingArch->R_minW_nmos = Arch.R_minW_nmos;
 	RoutingArch->R_minW_pmos = Arch.R_minW_pmos;
 	RoutingArch->Fs = Arch.Fs;
+	RoutingArch->sub_Fs = Arch.SubFs;
+	RoutingArch->wire_opposite_side = Arch.wire_opposite_side;
 	RoutingArch->directionality = BI_DIRECTIONAL;
 	if (Arch.Segments)
 		RoutingArch->directionality = Arch.Segments[0].directionality;
@@ -624,6 +627,13 @@ static void SetupRouterOpts(INP t_options Options, INP boolean TimingEnabled,
     if (Options.Count[OT_SHOW_PASS_TRANS]) {
       is_show_pass_trans = TRUE;
     } 
+    /* END */
+
+    /* Xifan Tang: Tileable routing support !!! */
+    RouterOpts->use_tileable_route_chan_width = FALSE;
+    if (Options.Count[OT_USE_TILEABLE_ROUTE_CHAN_WIDTH]) {
+      RouterOpts->use_tileable_route_chan_width = TRUE;
+    }
     /* END */
 
 	/* Depends on RouterOpts->router_algorithm */
@@ -1088,6 +1098,7 @@ static void SetupSynVerilogOpts(t_options Options,
   /* Initialize */  
   syn_verilog_opts->dump_syn_verilog = FALSE;
   syn_verilog_opts->syn_verilog_dump_dir = NULL;
+  syn_verilog_opts->dump_explicit_verilog = FALSE;
   syn_verilog_opts->print_top_testbench = FALSE;
   syn_verilog_opts->print_autocheck_top_testbench = FALSE;
   syn_verilog_opts->reference_verilog_benchmark_file = NULL;
@@ -1112,6 +1123,10 @@ static void SetupSynVerilogOpts(t_options Options,
 
   if (Options.Count[OT_FPGA_VERILOG_SYN_DIR]) {
     syn_verilog_opts->syn_verilog_dump_dir = my_strdup(Options.fpga_syn_verilog_dir);
+  }
+
+  if (Options.Count[OT_FPGA_VERILOG_SYN_EXPLICIT_MAPPING]) {
+    syn_verilog_opts->dump_explicit_verilog = TRUE;
   }
 
   if (Options.Count[OT_FPGA_VERILOG_SYN_PRINT_TOP_TESTBENCH]) {

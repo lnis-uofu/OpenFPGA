@@ -67,6 +67,5 @@ void generate_spice_routing_resources(char* subckt_dir,
                                       t_arch arch,
                                       t_det_routing_arch* routing_arch,
                                       int LL_num_rr_nodes, t_rr_node* LL_rr_node,
-                                      t_ivec*** LL_rr_node_indices,
-                                      boolean compact_routing_hierarchy);
+                                      t_ivec*** LL_rr_node_indices);
 
