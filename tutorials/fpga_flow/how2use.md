@@ -1,7 +1,7 @@
 # FPGA flow
 
 This tutorial will help the user to understand how to use OpenFPGA flow.<br />
-During this tutorial we consider the user start in the OpenFPGA folder and we'll use tips and informations provided in [tutorial index](https://github.com/LNIS-Projects/OpenFPGA/blob/documentation/tutorials/tutorial_index.md#tips-and-informations). Details on how the folder is organized are available [here](https://github.com/LNIS-Projects/OpenFPGA/blob/documentation/tutorials/fpga_flow/folder_organization.md).
+During this tutorial we consider the user start in the OpenFPGA folder and we'll use tips and informations provided in [tutorial index](https://github.com/LNIS-Projects/OpenFPGA/blob/master/tutorials/tutorial_index.md#tips-and-informations). Details on how the folder is organized are available [here](https://github.com/LNIS-Projects/OpenFPGA/blob/master/tutorials/fpga_flow/folder_organization.md).
 
 ## Running fpga_flow.pl
 
@@ -16,7 +16,7 @@ cd fpga_flow<br />
 
 By running this script we took an architecture description file, generated its netlist, generated a bitstream to implement a benchmark on it and verified this implementation.<br />
 When you open this file you can see that 2 scripts are called. The first one is **rewrite_path_in_file.pl** which allow us to make this tutorial generic by generating full path to dependancies.<br />
-The second one is **fpga_flow.pl**. This script launch OpenFPGA flow and can be used with a lot of [options](https://github.com/LNIS-Projects/OpenFPGA/blob/documentation/tutorials/fpga_flow/options.md).<br />
+The second one is **fpga_flow.pl**. This script launch OpenFPGA flow and can be used with a lot of [options](https://github.com/LNIS-Projects/OpenFPGA/blob/master/tutorials/fpga_flow/options.md).<br />
 There is 3 important things to see:
 - All FPGA-Verilog options have been activated
 - fpga_flow.pl calls a configuration file through "config_file" variable

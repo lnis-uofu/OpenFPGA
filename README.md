@@ -13,17 +13,15 @@ The different ways of compiling can be found in the [**./compilation**](https://
 Dependancies and help using docker can be found at [**./tutorials/building.md**](https://github.com/LNIS-Projects/OpenFPGA/blob/documentation/tutorials/building.md).
 
 **Compilation steps:**
-1. Clone the repository (git clone https://github.com/LNIS-Projects/OpenFPGA.git && cd OpenFPGA)
-2. Create a folder named build in OpenPFGA repository (mkdir build && cd build)
-3. Create Makefile in this folder using cmake (cmake ..  -DCMAKE_BUILD_TYPE=debug)
-4. Compile the tool and its dependencies (make)
+1. git clone https://github.com/LNIS-Projects/OpenFPGA.git && cd OpenFPGA # *Clone the repository and go into it*
+2. mkdir build && cd build # *Create a folder named build in OpenPFGA repository*
+3. cmake ..  -DCMAKE_BUILD_TYPE=debug # *Create Makefile in this folder using cmake*
+4. make # *Compile the tool and its dependencies*
 
-*We currently implemented OpenFPGA for:*
-
-*1. Ubuntu 16.04*
-*2. Red Hat 7.5*
-*3. MacOS High Sierra 10.13.4*
-
+*We currently implemented OpenFPGA for:*<br />
+*1. Ubuntu 16.04*<br />
+*2. Red Hat 7.5*<br />
+*3. MacOS Mojiva 10.13.4*<br /><br />
 *Please note that those were the versions we tested the software for. It might work with earlier versions and other distributions.*
 
 ## Documentation

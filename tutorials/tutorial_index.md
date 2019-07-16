@@ -3,8 +3,8 @@
 OpenFPGA an IP Verilog Generator allowing reliable and fast testing of homogeneous architectures.<br />
 Its main goal is to easily and efficiently generated a complete customizable FPGA. It uses a semi-custom design technic.<br /><br />
 These tutorials are organized as follow:
-* [Building the tool and his dependancies](https://github.com/LNIS-Projects/OpenFPGA/blob/documentation/tutorials/building.md)
-* [Launching the flow and understand how it works](https://github.com/LNIS-Projects/OpenFPGA/blob/documentation/tutorials/fpga_flow/how2use.md)
+* [Building the tool and his dependancies](https://github.com/LNIS-Projects/OpenFPGA/blob/master/tutorials/building.md)
+* [Launching the flow and understand how it works](https://github.com/LNIS-Projects/OpenFPGA/blob/master/tutorials/fpga_flow/how2use.md)
 * Architecture modification
 
 ## Folder organization
