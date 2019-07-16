@@ -2732,12 +2732,13 @@ void verilog_generate_sdc_pnr(t_sram_orgz_info* cur_sram_orgz_info,
   }
 
   /* Part 5. Output routing constraints for Connection Blocks */
-  if (TRUE == sdc_opts.constrain_routing_channels) {
+  /* BC: Might not be useful as it constrains nets which are assigned too*/
+  /*if (TRUE == sdc_opts.constrain_routing_channels) {
     verilog_generate_sdc_constrain_routing_channels(sdc_opts, arch, 
                                                     LL_nx, LL_ny, 
                                                     LL_num_rr_nodes, LL_rr_node, 
                                                     LL_rr_node_indices, LL_rr_indexed_data); 
-  }
+  }*/
 
   /* Part 6. Output routing constraints for Programmable blocks */
   if (TRUE == sdc_opts.constrain_pbs) {
