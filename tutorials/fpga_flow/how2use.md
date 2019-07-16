@@ -1,7 +1,7 @@
 # FPGA flow
 
 This tutorial will help the user to understand how to use OpenFPGA flow.<br />
-During this tutorial we consider the user start in the OpenFPGA folder and we'll use tips and informations provided in [tutorial index](https://github.com/LNIS-Projects/OpenFPGA/blob/documentation/tutorials/tutorial_index.md#tips-and-informations). Details on how the folder is organized are available [here](https://github.com/LNIS-Projects/OpenFPGA/blob/documentation/tutorials/fpga_flow/folder_organization.md).
+During this tutorial we consider the user start in the OpenFPGA folder and we'll use tips and informations provided in [tutorial index](https://github.com/LNIS-Projects/OpenFPGA/blob/master/tutorials/tutorial_index.md#tips-and-informations). Details on how the folder is organized are available [here](https://github.com/LNIS-Projects/OpenFPGA/blob/master/tutorials/fpga_flow/folder_organization.md).
 
 ## Running fpga_flow.pl
 
@@ -16,13 +16,13 @@ cd fpga_flow<br />
 
 By running this script we took an architecture description file, generated its netlist, generated a bitstream to implement a benchmark on it and verified this implementation.<br />
 When you open this file you can see that 2 scripts are called. The first one is **rewrite_path_in_file.pl** which allow us to make this tutorial generic by generating full path to dependancies.<br />
-The second one is **fpga_flow.pl**. This script launch OpenFPGA flow and can be used with a lot of [options](https://github.com/LNIS-Projects/OpenFPGA/blob/documentation/tutorials/fpga_flow/options.md).<br />
+The second one is **fpga_flow.pl**. This script launch OpenFPGA flow and can be used with a lot of [options](https://github.com/LNIS-Projects/OpenFPGA/blob/master/tutorials/fpga_flow/options.md).<br />
 There is 3 important things to see:
 - All FPGA-Verilog options have been activated
 - fpga_flow.pl calls a configuration file through "config_file" variable
 - fpga_flow.pl calls a list of benchmark to implement and test through "bench_txt" variable
 
-## Configuration file
+### Configuration file
 
 In this file paths have to be full path. Relative path could lead to errors.<br />
 The file is organized in 3 parts: 
@@ -64,7 +64,7 @@ vpr_power_tags = PB Types|Routing|Switch Box|Connection Box|Primitives|Interc St
 
 *This example file can be found at OPENFPGAPATHKEYWORD/fpga_flow/configs/tutorial/tuto.conf*
 
-## Benchmark list
+### Benchmark list
 
 The benchmark folder contains 3 sub-folders:
 * **Blif**: contains .blif and .act of benchmarks
@@ -76,3 +76,21 @@ The benchmark list file can contain as many benchmarks as available in the same 
 top_module/*.v,<int_value>; where <int_value> is the number of channel/wire between each block.
 
 *This example file can be found at OPENFPGAPATHKEYWORD/fpga_flow/benchmarks/List/tuto_benchmark.txt*
+
+
+## Modifying flow
+Once dependancies are understood, we can modify the flow by changing the architecture and the route channel width.
+
+### Experiment
+
+* cd OPENFPGAPATHKEYWORD/fpga_flow/configs/tutorial
+* replace the architectures "k6_N10_sram_chain_HC_template.xml" and "k6_N10_sram_chain_HC.xml" respectively with "k8_N10_sram_chain_FC_template.xml" and "k8_N10_sram_chain_FC.xml" in tuto.conf
+* cd OPENFPGAPATHKEYWORD/fpga_flow/benchmarks/List
+* replace "200" with "300" in tuto_benchmark.txt
+* cd OPENFPGAPATHKEYWORD/fpga_flow
+* replace the architectures "k6_N10_sram_chain_HC_template.xml" and "k6_N10_sram_chain_HC.xml" respectively with "k8_N10_sram_chain_FC_template.xml" and "k8_N10_sram_chain_FC.xml" in tuto_fpga_flow.sh
+* ./tuto_fpga_flow.sh
+
+### Explanation
+
+With this last experiment we replace the [**K6 architecture**](https://github.com/LNIS-Projects/OpenFPGA/blob/master/tutorials/image/architectures_schematics/frac_lut6.pdf) with a [**K8 architecture**](https://github.com/LNIS-Projects/OpenFPGA/blob/master/tutorials/image/architectures_schematics/frac_lut8.pdf), which means a 8-inputs fracturable LUT (implemented by LUT6 and LUT4 with 2 shared inputs). This architecture provides more modes for the CLB and the crossbar changed from a half-connected to a fully connected, implying bigger multiplexor between the CLB and LUT inputs. These requirement in term of interconnection will lead to the increase in routing channel width. Indeed, if the routing channel is to low, it could be impossible to route a benchmark or the FPGA output can be delayed.
