@@ -1340,7 +1340,8 @@ void dump_compact_verilog_top_netlist(t_sram_orgz_info* cur_sram_orgz_info,
   dump_verilog_clb2clb_directs(fp, num_clb2clb_directs, clb2clb_direct);
 
   /* Dump configuration circuits */
-  dump_verilog_configuration_circuits(cur_sram_orgz_info, fp);
+  dump_verilog_configuration_circuits(cur_sram_orgz_info, fp, 
+                                      is_explicit_mapping);
 
   /* verilog ends*/
   fprintf(fp, "endmodule\n");

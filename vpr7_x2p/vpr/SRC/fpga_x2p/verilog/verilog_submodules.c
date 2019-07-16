@@ -722,8 +722,10 @@ void dump_verilog_cmos_mux_one_basis_module_structural(FILE* fp,
   t_spice_model* tgate_spice_model = cur_spice_model->pass_gate_logic->spice_model;
   int num_input_port = 0;
   int num_output_port = 0;
+  int num_sram_port = 0;
   t_spice_model_port** input_port = NULL;
   t_spice_model_port** output_port = NULL;
+  t_spice_model_port** sram_port = NULL;
 
   assert(TRUE == cur_spice_model->dump_structural_verilog);
 
@@ -737,6 +739,7 @@ void dump_verilog_cmos_mux_one_basis_module_structural(FILE* fp,
   assert ( NULL != tgate_spice_model);
   input_port = find_spice_model_ports(tgate_spice_model, SPICE_MODEL_PORT_INPUT, &num_input_port, TRUE);
   output_port = find_spice_model_ports(tgate_spice_model, SPICE_MODEL_PORT_OUTPUT, &num_output_port, TRUE);
+  sram_port = find_spice_model_ports(tgate_spice_model, SPICE_MODEL_PORT_SRAM, &num_sram_port, TRUE);
 
   /* Check */
   assert ((3 == num_input_port));
@@ -764,9 +767,9 @@ void dump_verilog_cmos_mux_one_basis_module_structural(FILE* fp,
   fprintf(fp, "input [0:%d] in,\n", num_input_basis_subckt - 1);
   fprintf(fp, "output out,\n");
   fprintf(fp, "input [0:%d] mem,\n",
-          num_mem - 1);
+          num_mem - 1/*, sram_port[0]->prefix*/);
   fprintf(fp, "input [0:%d] mem_inv);\n",
-          num_mem - 1);
+          num_mem - 1/*, sram_port[0]->prefix*/);
   /* Verilog Behavior description for a MUX */
   fprintf(fp, "//---- Structure-level description -----\n");
   /* Special case: only one memory, switch case is simpler 
@@ -1678,7 +1681,8 @@ void dump_verilog_cmos_mux_submodule(FILE* fp,
   switch (cur_mux_structure) {
   case SPICE_MODEL_STRUCTURE_TREE:
     dump_verilog_cmos_mux_tree_structure(fp, mux_basis_subckt_name, 
-                                         spice_model, spice_mux_arch, num_sram_port, sram_port, is_explicit_mapping);
+                                         spice_model, spice_mux_arch, 
+                                         num_sram_port, sram_port, is_explicit_mapping);
     break;
   case SPICE_MODEL_STRUCTURE_ONELEVEL:
     dump_verilog_cmos_mux_onelevel_structure(fp, mux_basis_subckt_name, 
