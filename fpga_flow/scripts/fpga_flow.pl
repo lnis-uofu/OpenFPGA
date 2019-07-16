@@ -1358,9 +1358,6 @@ sub run_std_vpr($ $ $ $ $ $ $ $ $)
     if ("on" eq $opt_ptr->{vpr_fpga_x2p_sim_window_size}) {
       $vpr_spice_opts = $vpr_spice_opts." --fpga_x2p_sim_window_size $opt_ptr->{vpr_fpga_x2p_sim_window_size_val}";
     }
-    if ("on" eq $opt_ptr->{vpr_fpga_x2p_compact_routing_hierarchy}) {
-      $vpr_spice_opts = $vpr_spice_opts." --fpga_x2p_compact_routing_hierarchy";
-    }
     if ("on" eq $opt_ptr->{vpr_fpga_spice_sim_mt_num}) {
       $vpr_spice_opts = $vpr_spice_opts." --fpga_spice_sim_mt_num $opt_ptr->{vpr_fpga_spice_sim_mt_num_val}";
     }
@@ -1445,6 +1442,9 @@ sub run_std_vpr($ $ $ $ $ $ $ $ $)
     }
     if ("on" eq $opt_ptr->{vpr_fpga_verilog_explicit_mapping}) {
       $vpr_spice_opts = $vpr_spice_opts." --fpga_verilog_explicit_mapping";
+    }
+    if ("on" eq $opt_ptr->{vpr_fpga_x2p_compact_routing_hierarchy}) {
+      $vpr_spice_opts = $vpr_spice_opts." --fpga_x2p_compact_routing_hierarchy";
     }
   }
 

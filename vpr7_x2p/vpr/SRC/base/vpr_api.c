@@ -213,8 +213,8 @@ void vpr_print_usage(void) {
   vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_verilog_print_sdc_analysis\n");
     /* Xifan Tang: Bitstream generator */
   vpr_printf(TIO_MESSAGE_INFO, "Bitstream Generator Options:\n");
-  vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_bitstream_generator <string>\n");
-  vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_bitstream_output_file <string>\n");
+  vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_bitstream_generator\n");
+//  vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_bitstream_output_file <string>\n");    // AA: temporarily deprecated
 }
 
 void vpr_init_file_handler() {
