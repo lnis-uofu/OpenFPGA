@@ -9,7 +9,6 @@ The OpenFPGA framework is the **first open-source FPGA IP generator** supporting
 
 ## Compilation
 
-The different ways of compiling can be found in the [**./compilation**](https://github.com/LNIS-Projects/OpenFPGA/tree/master/compilation) folder.<br />
 Dependancies and help using docker can be found at [**./tutorials/building.md**](https://github.com/LNIS-Projects/OpenFPGA/blob/master/tutorials/building.md).
 
 **Compilation steps:**
