@@ -9,8 +9,8 @@ The OpenFPGA framework is the **first open-source FPGA IP generator** supporting
 
 ## Compilation
 
-The different ways of compiling can be found in the [**./compilation**](https://github.com/LNIS-Projects/OpenFPGA/tree/documentation/compilation) folder.<br />
-Dependancies and help using docker can be found at [**./tutorials/building.md**](https://github.com/LNIS-Projects/OpenFPGA/blob/documentation/tutorials/building.md).
+The different ways of compiling can be found in the [**./compilation**](https://github.com/LNIS-Projects/OpenFPGA/tree/master/compilation) folder.<br />
+Dependancies and help using docker can be found at [**./tutorials/building.md**](https://github.com/LNIS-Projects/OpenFPGA/blob/master/tutorials/building.md).
 
 **Compilation steps:**
 1. git clone https://github.com/LNIS-Projects/OpenFPGA.git && cd OpenFPGA # *Clone the repository and go into it*
@@ -29,10 +29,8 @@ OpenFPGA's [full documentation](https://openfpga.readthedocs.io/en/master/) incl
 
 ## Tutorial
 
-You can find in the folder [**./tutorials**](https://github.com/LNIS-Projects/OpenFPGA/tree/documentation/tutorials). This will help you get in touch with the software and test different configurations to see how OpenFPGA reacts to them. 
+You can find in the folder [**./tutorials**](https://github.com/LNIS-Projects/OpenFPGA/tree/master/tutorials). This will help you get in touch with the software and test different configurations to see how OpenFPGA reacts to them. 
 
 Through this tutorial users can learn how to use the flow and set the dependancies.<br />
-The [tutorial index](https://github.com/LNIS-Projects/OpenFPGA/blob/documentation/tutorials/tutorial_index.md) will
-
-
+The [tutorial index](https://github.com/LNIS-Projects/OpenFPGA/blob/master/tutorials/tutorial_index.md) will guide you through trainings and explain folder oraganization as well as referencing tips and used keywords.
 
