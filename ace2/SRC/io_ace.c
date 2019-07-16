@@ -1,5 +1,7 @@
 #include <stdlib.h>
 
+#include "vtr_assert.h"
+
 #include "ace.h"
 #include "io_ace.h"
 
@@ -34,7 +36,7 @@ void ace_io_print_activity(Abc_Ntk_t * ntk, FILE * fp) {
 
 	Abc_NtkForEachObj(ntk, obj, i)
 	{
-		assert(obj->pCopy);
+		VTR_ASSERT(obj->pCopy);
 		obj_new = obj->pCopy;
 
 		Ace_Obj_Info_t * info = Ace_ObjInfo(obj);
@@ -269,7 +271,7 @@ int ace_io_read_activity(Abc_Ntk_t * ntk, FILE * in_file_desc,
 
 			// Read real PIs activity values from file
 			res = fgets(line, ACE_CHAR_BUFFER_SIZE, in_file_desc);
-            assert(res);
+            VTR_ASSERT(res);
 			while (!feof(in_file_desc)) {
 				sscanf(line, "%s %lf %lf\n", pi_name, &static_prob,
 						&switch_prob);
@@ -292,7 +294,7 @@ int ace_io_read_activity(Abc_Ntk_t * ntk, FILE * in_file_desc,
 				info->switch_act = switch_prob;
 
 				res = fgets(line, ACE_CHAR_BUFFER_SIZE, in_file_desc);
-                assert(res);
+                VTR_ASSERT(res);
 			}
 		} else if (pi_format == ACE_VEC) {
 			printf("Reading vector file...\n");
@@ -305,10 +307,10 @@ int ace_io_read_activity(Abc_Ntk_t * ntk, FILE * in_file_desc,
             char* res;
 
 			res = fgets(line, ACE_CHAR_BUFFER_SIZE, in_file_desc);
-            assert(res);
+            VTR_ASSERT(res);
 			while (!feof(in_file_desc)) {
 				res = fgets(line, ACE_CHAR_BUFFER_SIZE, in_file_desc);
-                assert(res);
+                VTR_ASSERT(res);
 				num_vec++;
 			}
 			Abc_NtkForEachPi(ntk, obj_ptr, i)
@@ -325,7 +327,7 @@ int ace_io_read_activity(Abc_Ntk_t * ntk, FILE * in_file_desc,
 
 			num_vec = 0;
 			res = fgets(line, ACE_CHAR_BUFFER_SIZE, in_file_desc);
-            assert(res);
+            VTR_ASSERT(res);
 			while (!feof(in_file_desc)) {
 				sscanf(line, "%s\n", vector);
 
@@ -364,7 +366,7 @@ int ace_io_read_activity(Abc_Ntk_t * ntk, FILE * in_file_desc,
 				}
 
 				res = fgets(line, ACE_CHAR_BUFFER_SIZE, in_file_desc);
-                assert(res);
+                VTR_ASSERT(res);
 				num_vec++;
 			}
 
