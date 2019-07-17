@@ -13,4 +13,4 @@ RUN echo "mkdir -p build && build" >> build.sh
 RUN echo "cmake .. -DCMAKE_BUILD_TYPE=debug" >> build.sh
 RUN echo "make" >> build.sh
 RUN chmod +x build.sh
-ENTRYPOINT ["bin/sh", "/build.sh"]
+RUN build.sh
