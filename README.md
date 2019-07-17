@@ -21,15 +21,15 @@ Dependencies and help using docker can be found at [**./tutorials/building.md**]
 *1. Ubuntu 16.04*<br />
 *2. Red Hat 7.5*<br />
 *3. MacOS Mojave 10.13.4*<br /><br />
-*Please note that those were the versions we tested the software for. It might work with earlier versions and other distributions.*
+*Please note that those were the versions for which we tested the software. It might work with earlier versions and other distributions.*
 
 ## Documentation
 OpenFPGA's [full documentation](https://openfpga.readthedocs.io/en/master/) includes tutorials, descriptions of the design flow, and tool options.
 
 ## Tutorial
 
-You can find in the folder [**./tutorials**](https://github.com/LNIS-Projects/OpenFPGA/tree/master/tutorials). This will help you get in touch with the software and test different configurations to see how OpenFPGA reacts to them. 
+You can find some tutorials in the [**./tutorials**](https://github.com/LNIS-Projects/OpenFPGA/tree/master/tutorials) folder. Those will help you get more familiar with the software and see how OpenFPGA works under different configurations. 
 
-Through this tutorial users can learn how to use the flow and set the dependancies.<br />
-The [tutorial index](https://github.com/LNIS-Projects/OpenFPGA/blob/master/tutorials/tutorial_index.md) will guide you through trainings and explain folder oraganization as well as referencing tips and used keywords.
+Through this tutorial, users can learn how to use the flow and set the different dependencies.<br />
+The [tutorial index](https://github.com/LNIS-Projects/OpenFPGA/blob/master/tutorials/tutorial_index.md) will guide you through training and explain the folder organizations as well as introducing some tips and commonly used keywords.
 
