@@ -215,6 +215,24 @@ SRAMs
 
 .. note:: The support SRAM modules should have a BL and a WL when the memory-bank-style configuration circuit is declared. Note that the WL should be the write/read enable signal, while BL is the data input.
 
+Logic gates
+-----
+
+.. code-block:: xml
+
+  <circuit_model type="gate" name="string" prefix="string" netlist="string" dump_explicit_port_map="true|false"/>
+    <design_technology type="cmos" topology="string"/>
+    <input_buffer exist="string" circuit_model_name="string"/>
+    <output_buffer exist="string" circuit_model_name="string"/>
+    <port type="input" prefix="string" lib_name="string" size="int"/>
+    <port type="output" prefix="string" lib_name="string" size="int"/>
+  </circuit_model>
+
+.. note::  The circuit model in the type of gate aims to support direct mapping to standard cells or customized cells provided by technology vendors or users. 
+
+.. note:: The logic functionality of a gate can be defined through the XML keyword topology. Currently, OpenFPGA supports AND, OR and MUX2 gates. As for standard cells, the size of each port is limited to 1. Currently, only 2-input and single-output logic gates are supported.
+
+.. note:: It may happen that the port sequence in generated Verilog netlists has conflicts with the port sequence in standard and customized cells. To avoid this, users can set the XML keyword dump_explicit_port_map to be true, which enables explicit port mapping are dumped. Users can specify the pin/port name in the standard cell library using the XML keyword lib_name.
 
 Multiplexers
 ------------
@@ -319,14 +337,16 @@ Look-Up Tables
 .. code-block:: xml
 
   <circuit_model type="lut" name="string" prefix="string" is_default="int" netlist="string"/>
-    <design_technology type="cmos"/>
-    <lut_input_buffer exist="string" circuit_model_name="string"/>
+    <design_technology type="cmos" fracturable_lut="true|false"/>
     <input_buffer exist="string" circuit_model_name="string"/>
     <output_buffer exist="string" circuit_model_name="string"/>
+    <lut_input_buffer exist="string" circuit_model_name="string"/>
+    <lut_intermediate_buffer exist="string" circuit_model_name="string" location_map="string"/>
+    <lut_input_inverter exist="string" circuit_model_name="string"/>
     <pass_gate_logic type="string" circuit_model_name="string"/>
-    <port type="input" prefix="string" size="int"/>
-    <port type="output" prefix="string" size="int"/>
-    <port type="sram" prefix="string" size="int"/>
+    <port type="input" prefix="string" size="int" tri_state_map="----11" circuit_model_name="string"/>
+    <port type="output" prefix="string" size="int" lut_frac_level="int" lut_output_mask="int"/>
+    <port type="sram" prefix="string" size="int" mode_select="true|false" circuit_model_name="string" default_val="0|1"/>
   </circuit_model>
 
 .. note:: The SPICE netlists of LUT can be auto-generated or customized.
@@ -335,7 +355,13 @@ Look-Up Tables
 
 Additional design parameters for LUTs:
 
-* **lut_input_buffer:** Specify the buffer for the inputs of a LUT (gates of the internal multiplexer).
+* **lut_input_buffer:** Define transistor-level description for the buffer for the inputs of a LUT (gates of the internal multiplexer). Use keyword circuit_model_name to specify the circuit_model that containing details of the circuit. 
+
+* **lut_input_inverter:** Define transistor-level description for the inverter for the inputs of a LUT (gates of the internal multiplexer). Use keyword circuit_model_name to specify the circuit_model that containing details of the circuit. 
+
+
+* **lut_intermediate_buffer:** Define transistor-level description for the buffer locating at intermediate stages of internal multiplexer of a LUT. Use keyword circuit_model_name to specify the circuit_model that containing details of the circuit. To customize the location, users can define an integer array in the XML keyword location_map. For example, "-1-1-" indicates buffer inseration to every two stages of the LUT multiplexer tree, considering a 6-input LUT. 
+
 
 Instructions of defining design parameters:
 
@@ -343,7 +369,9 @@ Instructions of defining design parameters:
 
 * **pass_gate_logic:** Specify the pass-gates of the internal multiplexer, the same as the multiplexers.
 
-* **port:** three types of ports (input, output and sram) should be defined. If the user provides an customized SPICE netlist, the bandwidth of ports should be defined to the same as the SPICE netlist.
+* **port:** three types of ports (input, output and sram) should be defined. If the user provides an customized SPICE netlist, the bandwidth of ports should be defined to the same as the SPICE netlist. To support customizable LUTs, each type of port contain special keywords. For input ports, the keyword tri_state_map aims to customize which inputs are fixed to constant values when the LUT is in fracturable modes. For example, tri_state_map="----11" indicates that the last two inputs will be fixed to be logic '1' when a 6-input LUT is in fracturable modes. The circuit_model_name of input port is used to specify which logic gates will be used to tri-state the inputs in fracturable LUT modes. It is required to use an AND gate to force logic '0' or an OR gate to force logic '1' for the input ports. For output ports, the keyword lut_frac_level is used to specify the level in LUT multiplexer tree where the output port are wired to. For example, lut_frac_level="4" in a fracturable LUT6 means that the output are potentially wired to the 4th stage of a LUT multiplexer and it is an output of a LUT4. The keyword lut_output_mask describes which fracturable outputs are used. For instance, in a 6-LUT, there are potentially four LUT4 outputs can be wired out. lut_output_mask="0,2" indicates that only the first and the thrid LUT4 outputs will be used in fracturable mode. Note that the size of the output port should be consistent to the length of lut_output_mask. 
+
+* **SRAM port for mode selection:** To enable switch between different operating modes, the SRAM bits of a fracturable LUT consists of two parts: configuration memory and mode selecting. The SRAM port for mode selection is specified through the XML keyword mode_select. Note that the size of such SRAM port should be consistent to the number of 1s or 0s in the tri_state_map.
 
 **LUT example**
 
