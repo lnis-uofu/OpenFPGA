@@ -2921,10 +2921,17 @@ char* generate_verilog_mux_subckt_name(t_spice_model* spice_model,
                                        int mux_size, char* postfix) {
   char* mux_subckt_name = NULL;
 
-  mux_subckt_name = (char*)my_malloc(sizeof(char)*(strlen(spice_model->name) + 5 
-                                     + strlen(my_itoa(mux_size)) + strlen(postfix) + 1)); 
-  sprintf(mux_subckt_name, "%s_size%d%s",
-          spice_model->name, mux_size, postfix);
+  /* If the tgate spice model of this MUX is a MUX2 standard cell,
+   * the mux_subckt name will be the name of the standard cell
+   */
+  if ( SPICE_MODEL_GATE_MUX2 == spice_model->pass_gate_logic->spice_model->type) {
+    mux_subckt_name = my_strdup(spice_model->pass_gate_logic->spice_model->name);
+  } else {
+    mux_subckt_name = (char*)my_malloc(sizeof(char)*(strlen(spice_model->name) + 5 
+                                       + strlen(my_itoa(mux_size)) + strlen(postfix) + 1)); 
+    sprintf(mux_subckt_name, "%s_size%d%s",
+            spice_model->name, mux_size, postfix);
+  }
 
   return mux_subckt_name;
 }

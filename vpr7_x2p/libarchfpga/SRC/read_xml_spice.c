@@ -616,8 +616,10 @@ static void ProcessSpiceModelGate(ezxml_t Node,
     gate_info->type = SPICE_MODEL_GATE_AND;
   } else if (0 == strcmp(FindProperty(Node,"topology",TRUE),"OR")) {
     gate_info->type = SPICE_MODEL_GATE_OR;
+  } else if (0 == strcmp(FindProperty(Node,"topology",TRUE),"MUX2")) {
+    gate_info->type = SPICE_MODEL_GATE_MUX2;
   } else {
-    vpr_printf(TIO_MESSAGE_ERROR,"[LINE %d] Invalid topology of gates. Should be [AND|OR].\n",
+    vpr_printf(TIO_MESSAGE_ERROR,"[LINE %d] Invalid topology of gates. Should be [AND|OR|MUX2].\n",
               Node->line);
     exit(1);
   } 
