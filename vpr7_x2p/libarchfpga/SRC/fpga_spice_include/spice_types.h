@@ -55,7 +55,8 @@ enum e_spice_model_pass_gate_logic_type {
 
 enum e_spice_model_gate_type {
   SPICE_MODEL_GATE_AND, 
-  SPICE_MODEL_GATE_OR
+  SPICE_MODEL_GATE_OR,
+  SPICE_MODEL_GATE_MUX2
 };
 
 /* Transistor-level basic informations*/
