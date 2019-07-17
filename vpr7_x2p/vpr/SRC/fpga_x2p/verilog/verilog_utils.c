@@ -902,8 +902,8 @@ int rec_dump_verilog_spice_model_global_ports(FILE* fp,
       /* Add explicit port mapping if required */
       if (TRUE == require_explicit_port_map ) {
         fprintf(fp, ".%s(",
-                 cur_spice_model_port->lib_name);
-                /*cur_spice_model_port->prefix);*/
+                cur_spice_model_port->lib_name);
+                //cur_spice_model_port->prefix);
       }
       fprintf(fp, "%s[0:%d]", 
             cur_spice_model_port->prefix,
@@ -2575,6 +2575,8 @@ void dump_verilog_cmos_mux_config_bus_ports(FILE* fp, t_spice_model* mux_spice_m
                                             int num_mux_reserved_conf_bits,
                                             int num_mux_conf_bits,
                                             bool is_explicit_mapping) { 
+  int num_sram_port;
+  t_spice_model_port** sram_port = find_spice_model_ports(mux_spice_model, SPICE_MODEL_PORT_SRAM, &num_sram_port, TRUE);
   /* Check the file handler*/ 
   if (NULL == fp) {
     vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid file handler.\n", 
@@ -2595,7 +2597,8 @@ void dump_verilog_cmos_mux_config_bus_ports(FILE* fp, t_spice_model* mux_spice_m
      * We do not need a prefix implying MUX name, size and index 
      */
     if (true == is_explicit_mapping) {
-      fprintf(fp, ".sram(");
+      fprintf(fp, ".%s (",
+              sram_port[0]->prefix);
     }
     dump_verilog_mux_sram_one_outport(fp, cur_sram_orgz_info, 
                                       mux_spice_model, mux_size,
@@ -2607,7 +2610,8 @@ void dump_verilog_cmos_mux_config_bus_ports(FILE* fp, t_spice_model* mux_spice_m
     }
     fprintf(fp, ", ");
     if (TRUE == is_explicit_mapping) {
-      fprintf(fp, ".sram_inv(");
+      fprintf(fp, ".%s_inv (",
+              sram_port[0]->prefix);
     }
     dump_verilog_mux_sram_one_outport(fp, cur_sram_orgz_info, 
                                       mux_spice_model, mux_size,
@@ -2624,7 +2628,8 @@ void dump_verilog_cmos_mux_config_bus_ports(FILE* fp, t_spice_model* mux_spice_m
      * We need a prefix implying MUX name, size and index 
      */
     if (TRUE == is_explicit_mapping) {
-      fprintf(fp, ".sram(");
+      fprintf(fp, ".%s (",
+              sram_port[0]->prefix);
     }
     dump_verilog_mux_sram_one_outport(fp, cur_sram_orgz_info, 
                                       mux_spice_model, mux_size,
@@ -2636,7 +2641,8 @@ void dump_verilog_cmos_mux_config_bus_ports(FILE* fp, t_spice_model* mux_spice_m
     }
     fprintf(fp, ",\n");
     if (TRUE == is_explicit_mapping) {
-      fprintf(fp, ".sram_inv(");
+      fprintf(fp, ".%s_inv (",
+              sram_port[0]->prefix);
     }
     dump_verilog_mux_sram_one_outport(fp, cur_sram_orgz_info, 
                                       mux_spice_model, mux_size,
@@ -3102,6 +3108,7 @@ void dump_verilog_mem_sram_submodule(FILE* fp,
   int num_bl_per_sram = 0;
   int num_wl_per_sram = 0;
   int iport = 0;
+  t_llist* spice_model_head = NULL;
 
   /* Check the file handler*/ 
   if (NULL == fp) {
@@ -3198,7 +3205,11 @@ void dump_verilog_mem_sram_submodule(FILE* fp,
     break;
   case SPICE_SRAM_SCAN_CHAIN:
     /* Only dump the global ports belonging to a spice_model */
-    if (0 < rec_dump_verilog_spice_model_global_ports(fp, cur_sram_verilog_model, FALSE, TRUE, my_bool_to_boolean(is_explicit_mapping))) {
+    rec_stats_spice_model_global_ports(cur_sram_verilog_model,
+                                       TRUE,
+                                       &spice_model_head);
+    if (0 < dump_verilog_global_ports( fp, spice_model_head, FALSE, is_explicit_mapping)) {
+    //if (0 < rec_dump_verilog_spice_model_global_ports(fp, cur_sram_verilog_model, FALSE, TRUE, FALSE)) {
       fprintf(fp, ",\n");
     }
     if (SPICE_MODEL_MUX == cur_verilog_model->type) {

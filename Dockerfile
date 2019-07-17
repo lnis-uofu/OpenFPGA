@@ -12,3 +12,5 @@ RUN echo "cmake .. -DCMAKE_BUILD_TYPE=debug" >> build.sh
 RUN echo "make" >> build.sh
 RUN chmod +x build.sh
 RUN ./build.sh
+
+VOLUME /OpenFPGA

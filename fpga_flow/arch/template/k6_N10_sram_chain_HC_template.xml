@@ -397,7 +397,7 @@
         <port type="output" prefix="inpad" size="1"/>
       </circuit_model>
       <!-- Hard logic definition for heterogenous blocks -->
-      <circuit_model type="hard_logic" name="adder" prefix="adder" dump_explicit_port_map="true" spice_netlist="OPENFPGAPATHKEYWORD/vpr7_x2p/vpr/SpiceNetlists/adder.sp" verilog_netlist="OPENFPGAPATHKEYWORD/vpr7_x2p/vpr/VerilogNetlists/adder.v">
+      <circuit_model type="hard_logic" name="adder" prefix="adder" dump_explicit_port_map="false" spice_netlist="OPENFPGAPATHKEYWORD/vpr7_x2p/vpr/SpiceNetlists/adder.sp" verilog_netlist="OPENFPGAPATHKEYWORD/vpr7_x2p/vpr/VerilogNetlists/adder.v">
          <design_technology type="cmos"/>
          <input_buffer exist="on" circuit_model_name="INV1X"/>
          <output_buffer exist="on" circuit_model_name="INV1X"/>

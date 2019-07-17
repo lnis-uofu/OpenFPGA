@@ -981,6 +981,7 @@ void dump_verilog_unique_switch_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
   int cur_bl, cur_wl;
   t_spice_model* mem_model = NULL;
   char* mem_subckt_name = NULL;
+  int num_input_port, num_output_port, num_sram_port;
 
   /* Check the file handler*/ 
   if (NULL == fp) {
@@ -1096,8 +1097,11 @@ void dump_verilog_unique_switch_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
     fprintf(fp, ",\n");
   }
 
+    t_spice_model_port** input_port = find_spice_model_ports(verilog_model, SPICE_MODEL_PORT_INPUT, &num_input_port, TRUE);
+    t_spice_model_port** output_port = find_spice_model_ports(verilog_model, SPICE_MODEL_PORT_OUTPUT, &num_output_port, TRUE);
   if (TRUE == is_explicit_mapping) {
-    fprintf(fp, ".in(");
+    fprintf(fp, ".%s(",
+            input_port[0]->prefix);
     fprintf(fp, "%s_size%d_%d_inbus), ",
             verilog_model->prefix, mux_size, verilog_model->cnt);
   }  
@@ -1107,7 +1111,8 @@ void dump_verilog_unique_switch_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
   }
   /* Output port */
   if (TRUE == is_explicit_mapping) {
-    fprintf(fp, ".out(");
+    fprintf(fp, ".%s(",
+            output_port[0]->prefix);
     dump_verilog_unique_switch_box_chan_port(fp, rr_sb, chan_side, cur_rr_node, OUT_PORT);
     fprintf(fp, ")");
   }
@@ -1453,6 +1458,10 @@ void dump_verilog_unique_switch_box_interc(t_sram_orgz_info* cur_sram_orgz_info,
   } else {
     num_drive_rr_nodes = cur_rr_node->num_drive_rr_nodes;
     drive_rr_nodes = cur_rr_node->drive_rr_nodes;
+    /* Special: if there are zero-driver nodes. We skip here */
+    if (0 == num_drive_rr_nodes) {
+      return; 
+    }
   }
 
   if (0 == num_drive_rr_nodes) {
