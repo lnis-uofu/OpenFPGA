@@ -9,7 +9,7 @@ RUN git clone https://github.com/LNIS-Projects/OpenFPGA.git
 
 RUN cd OpenFPGA
 
-RUN echo "mkdir -p build && build" >> build.sh
+RUN echo "mkdir -p build && cd build" >> build.sh
 RUN echo "cmake .. -DCMAKE_BUILD_TYPE=debug" >> build.sh
 RUN echo "make" >> build.sh
 RUN chmod +x build.sh
