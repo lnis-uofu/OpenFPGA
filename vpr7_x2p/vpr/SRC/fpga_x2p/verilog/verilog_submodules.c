@@ -1256,12 +1256,18 @@ void dump_verilog_cmos_mux_tree_structure(FILE* fp,
         /* Quick check on the number of ports */
         assert(3 == num_input_port); /* A, B and SEL */
         assert(1 == num_output_port); /* OUT */
+
+        bool use_explicit_port_map;
+        if ( (true == is_explicit_mapping) 
+          || (TRUE == tgate_spice_model->dump_explicit_port_map) ) {
+          use_explicit_port_map = true;
+        }
       
         /* Dump global ports */
-        if  (0 < rec_dump_verilog_spice_model_global_ports(fp, tgate_spice_model, FALSE, FALSE, my_bool_to_boolean(is_explicit_mapping))) {
+        if  (0 < rec_dump_verilog_spice_model_global_ports(fp, tgate_spice_model, FALSE, FALSE, my_bool_to_boolean(use_explicit_port_map))) {
           fprintf(fp, ",\n");
         }
-        if (true == is_explicit_mapping) {
+        if (true == use_explicit_port_map) {
           fprintf(fp, ".%s(", input_port[0]->lib_name);
         }
         /* For intermediate buffers */ 
@@ -1270,7 +1276,7 @@ void dump_verilog_cmos_mux_tree_structure(FILE* fp,
         } else {
           fprintf(fp, "mux2_l%d_in[%d]", level, j); /* input0  */
         }
-        if (true == is_explicit_mapping) {
+        if (true == use_explicit_port_map) {
           fprintf(fp, "), .%s(", input_port[1]->lib_name);
         } else {
           fprintf(fp, ", ");
@@ -1281,19 +1287,19 @@ void dump_verilog_cmos_mux_tree_structure(FILE* fp,
         } else {
           fprintf(fp, "mux2_l%d_in[%d]", level, nextj); /* input1 */
         }
-        if (true == is_explicit_mapping) {
+        if (true == use_explicit_port_map) {
           fprintf(fp, "), .%s(", output_port[0]->lib_name);
         } else {
           fprintf(fp, ", ");
         }
         fprintf(fp, "mux2_l%d_in[%d]", nextlevel, out_idx); /* output */
-        if (true == is_explicit_mapping) {
+        if (true == use_explicit_port_map) {
           fprintf(fp, "), .%s(", input_port[2]->lib_name);
         } else {
           fprintf(fp, ", ");
         }
         fprintf(fp, "%s[%d]", sram_port[0]->prefix, i); /* sram  */
-        if (true == is_explicit_mapping) {
+        if (true == use_explicit_port_map) {
           fprintf(fp, "));\n");
         } else {
           fprintf(fp, ");\n");
