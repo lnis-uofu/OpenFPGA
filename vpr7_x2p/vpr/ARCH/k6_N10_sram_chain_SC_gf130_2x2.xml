@@ -273,7 +273,7 @@
          <port type="input" prefix="Set" size="1" is_global="true" default_val="0" is_set="true"/>
          <port type="input" prefix="Reset" size="1" is_global="true" default_val="1" is_reset="true"/>
          <port type="output" prefix="Q" size="1"/>
-         <port type="clock" prefix="clk" size="1" is_global="true" default_val="0" />
+         <port type="clock" prefix="CK" size="1" is_global="true" default_val="0" />
       </circuit_model>
       <circuit_model type="lut" name="frac_lut6" prefix="frac_lut6" dump_structural_verilog="true">
         <design_technology type="cmos" fracturable_lut="true"/>
@@ -300,7 +300,7 @@
          <port type="input" prefix="D" size="1"/>
          <port type="output" prefix="Q" size="1"/>
          <port type="output" prefix="Qb" size="1"/>
-         <port type="clock" prefix="prog_clk" size="1" is_global="true" default_val="0" is_prog="true"/>
+         <port type="clock" prefix="prog_CK" size="1" is_global="true" default_val="0" is_prog="true"/>
       </circuit_model>
       <circuit_model type="iopad" name="iopad" prefix="iopad" spice_netlist="/research/ece/lnis/USERS/alacchi/Current_release/OpenFPGA/vpr7_x2p/vpr/SpiceNetlists/io.sp" verilog_netlist="/research/ece/lnis/USERS/alacchi/Current_release/OpenFPGA/vpr7_x2p/vpr/VerilogNetlists/io.v">
         <design_technology type="cmos"/>
@@ -515,7 +515,7 @@
         <input name="cin" num_pins="1"/>
         <output name="O" num_pins="20" equivalent="false"/>
         <output name="cout" num_pins="1"/>
-        <clock name="clk" num_pins="1"/>
+        <clock name="CK" num_pins="1"/>
 
         <!-- Describe fracturable logic element.  
              Each fracturable logic element has a 6-LUT that can alternatively operate as two 5-LUTs with shared inputs. 
@@ -526,7 +526,7 @@
           <input name="cin" num_pins="1"/>
           <output name="out" num_pins="2"/>
           <output name="cout" num_pins="1"/>
-          <clock name="clk" num_pins="1"/>
+          <clock name="CK" num_pins="1"/>
      
           <mode name="fle_phy" disabled_in_packing="true">
               <pb_type name="frac_logic" num_pb="1">
@@ -571,12 +571,12 @@
               <pb_type name="ff_phy" blif_model=".latch" num_pb="2" class="flipflop" circuit_model_name="static_dff">
                 <input name="D" num_pins="1" port_class="D"/>
                 <output name="Q" num_pins="1" port_class="Q"/>
-                <clock name="clk" num_pins="1" port_class="clock"/>
-                <T_setup value="66e-12" port="ff_phy.D" clock="clk"/>
-                <T_clock_to_Q max="124e-12" port="ff_phy.Q" clock="clk"/>
+                <clock name="CK" num_pins="1" port_class="clock"/>
+                <T_setup value="66e-12" port="ff_phy.D" clock="CK"/>
+                <T_clock_to_Q max="124e-12" port="ff_phy.Q" clock="CK"/>
               </pb_type>
               <interconnect> 
-                <complete name="direct_clk" input="fle.clk" output="ff_phy[1:0].clk"/>
+                <complete name="direct_CK" input="fle.CK" output="ff_phy[1:0].CK"/>
                 <direct name="direct_in" input="fle.in[5:0]" output="frac_logic.in[5:0]"/>
                 <direct name="direct_cin" input="fle.cin" output="frac_logic.cin"/>
                 <direct name="direct_cout" input="frac_logic.cout" output="fle.cout"/>
@@ -595,18 +595,18 @@
               <input name="cin" num_pins="1"/>
               <output name="out" num_pins="2"/>
               <output name="cout" num_pins="1"/>
-              <clock name="clk" num_pins="1"/>
+              <clock name="CK" num_pins="1"/>
               <pb_type name="ble5" num_pb="2" idle_mode_name="blut5">
                 <input name="in" num_pins="5"/>
                 <input name="cin" num_pins="1"/>
                 <output name="out" num_pins="1"/>
                 <output name="cout" num_pins="1"/>
-                <clock name="clk" num_pins="1"/> 
+                <clock name="CK" num_pins="1"/> 
                 <mode name="blut5">
                   <pb_type name="flut5" num_pb="1">
                     <input name="in" num_pins="5"/>
                     <output name="out" num_pins="1"/>
-                    <clock name="clk" num_pins="1"/> 
+                    <clock name="CK" num_pins="1"/> 
                     <!-- Regular LUT mode -->
                     <pb_type name="lut5" blif_model=".names" num_pb="1" class="lut" mode_bits="01" physical_pb_type_name="frac_lut6" physical_pb_type_index_factor="0.5">
                       <input name="in" num_pins="5" port_class="lut_in" physical_mode_pin="in[5:0]"/>
@@ -632,16 +632,16 @@
                     <pb_type name="ff" blif_model=".latch" num_pb="1" class="flipflop" physical_pb_type_name="ff_phy">
                       <input name="D" num_pins="1" port_class="D" physical_mode_pin="D"/>
                       <output name="Q" num_pins="1" port_class="Q" physical_mode_pin="Q"/>
-                      <clock name="clk" num_pins="1" port_class="clock" physical_mode_pin="clk"/>
-                      <T_setup value="66e-12" port="ff.D" clock="clk"/>
-                      <T_clock_to_Q max="124e-12" port="ff.Q" clock="clk"/>
+                      <clock name="CK" num_pins="1" port_class="clock" physical_mode_pin="CK"/>
+                      <T_setup value="66e-12" port="ff.D" clock="CK"/>
+                      <T_clock_to_Q max="124e-12" port="ff.Q" clock="CK"/>
                     </pb_type>
                     <interconnect>
                       <direct name="direct1" input="flut5.in" output="lut5.in"/>
                       <direct name="direct2" input="lut5.out" output="ff.D">
                         <pack_pattern name="ble5" in_port="lut5.out" out_port="ff.D"/>
                       </direct>
-                      <direct name="direct3" input="flut5.clk" output="ff.clk"/>                    
+                      <direct name="direct3" input="flut5.CK" output="ff.CK"/>                    
                       <mux name="mux1" input="ff.Q lut5.out" output="flut5.out" spice_model_sram_offset="0">
                         <delay_constant max="25e-12" in_port="lut5.out" out_port="flut5.out" />
                         <delay_constant max="45e-12" in_port="ff.Q" out_port="flut5.out" />
@@ -650,7 +650,7 @@
                   </pb_type>
                   <interconnect>
                     <direct name="direct1" input="ble5.in" output="flut5.in"/>
-                    <direct name="direct2" input="ble5.clk" output="flut5.clk"/>
+                    <direct name="direct2" input="ble5.CK" output="flut5.CK"/>
                     <direct name="direct3" input="flut5.out" output="ble5.out"/>                                          
                   </interconnect>
                 </mode>
@@ -660,7 +660,7 @@
                     <input name="cin" num_pins="1"/>
                     <output name="out" num_pins="1"/>
                     <output name="cout" num_pins="1"/>
-                    <clock name="clk" num_pins="1"/> 
+                    <clock name="CK" num_pins="1"/> 
                     <!-- Special dual-LUT mode that drives adder only -->
                     <pb_type name="lut4" blif_model=".names" num_pb="2" class="lut" mode_bits="11" physical_pb_type_name="frac_lut6" physical_pb_type_index_factor="0.25">
                       <input name="in" num_pins="4" port_class="lut_in" physical_mode_pin="in[4:0]"/>
@@ -696,12 +696,12 @@
                     <pb_type name="ff" blif_model=".latch" num_pb="1" class="flipflop" physical_pb_type_name="ff_phy">
                       <input name="D" num_pins="1" port_class="D" physical_mode_pin="D"/>
                       <output name="Q" num_pins="1" port_class="Q" physical_mode_pin="Q"/>
-                      <clock name="clk" num_pins="1" port_class="clock" physical_mode_pin="clk"/>
-                      <T_setup value="66e-12" port="ff.D" clock="clk"/>
-                      <T_clock_to_Q max="124e-12" port="ff.Q" clock="clk"/>
+                      <clock name="CK" num_pins="1" port_class="clock" physical_mode_pin="CK"/>
+                      <T_setup value="66e-12" port="ff.D" clock="CK"/>
+                      <T_clock_to_Q max="124e-12" port="ff.Q" clock="CK"/>
                     </pb_type>
                     <interconnect>
-                      <direct name="clock" input="arithmetic.clk" output="ff.clk"/>
+                      <direct name="clock" input="arithmetic.CK" output="ff.CK"/>
                       <direct name="lut_in1" input="arithmetic.in[3:0]" output="lut4[0:0].in[3:0]"/>
                       <direct name="lut_in2" input="arithmetic.in[3:0]" output="lut4[1:1].in[3:0]"/>
                       <direct name="lut_to_add1" input="lut4[0:0].out" output="adder.a">
@@ -732,7 +732,7 @@
                     <direct name="carry_out" input="arithmetic.cout" output="ble5.cout">
                       <pack_pattern name="chain" in_port="arithmetic.cout" out_port="ble5.cout"/>
                     </direct>
-                    <direct name="direct2" input="ble5.clk" output="arithmetic.clk"/>
+                    <direct name="direct2" input="ble5.CK" output="arithmetic.CK"/>
                     <direct name="direct3" input="arithmetic.out" output="ble5.out"/> 
                   </interconnect>
                 </mode>
@@ -750,13 +750,13 @@
                 <direct name="carry_link" input="ble5[0:0].cout" output="ble5[1:1].cin">
                   <pack_pattern name="chain" in_port="ble5[0:0].cout" out_port="ble5[1:1].cout"/>
                 </direct>
-                <complete name="complete1" input="lut5inter.clk" output="ble5[1:0].clk"/>                  
+                <complete name="complete1" input="lut5inter.CK" output="ble5[1:0].CK"/>                  
               </interconnect>
             </pb_type>
             <interconnect>
               <direct name="direct1" input="fle.in[4:0]" output="lut5inter.in"/>
               <direct name="direct2" input="lut5inter.out" output="fle.out"/>
-              <direct name="direct3" input="fle.clk" output="lut5inter.clk"/>
+              <direct name="direct3" input="fle.CK" output="lut5inter.CK"/>
               <direct name="carry_in" input="fle.cin" output="lut5inter.cin">
                 <pack_pattern name="chain" in_port="fle.cin" out_port="lut5inter.cin"/>
               </direct>
@@ -769,7 +769,7 @@
             <pb_type name="ble6" num_pb="1">
               <input name="in" num_pins="6"/>
               <output name="out" num_pins="1"/>
-              <clock name="clk" num_pins="1"/> 
+              <clock name="CK" num_pins="1"/> 
               <pb_type name="lut6" blif_model=".names" num_pb="1" class="lut" mode_bits="00" physical_pb_type_name="frac_lut6" spice_model_sram_offset="0">
                 <input name="in" num_pins="6" port_class="lut_in" physical_mode_pin="in[5:0]"/>
                 <output name="out" num_pins="1" port_class="lut_out" physical_mode_pin="lut6_out[0]"/>
@@ -795,9 +795,9 @@
               <pb_type name="ff" blif_model=".latch" num_pb="1" class="flipflop" physical_pb_type_name="ff_phy" physical_pb_type_index_factor="2" physical_pb_type_index_offset="1">
                 <input name="D" num_pins="1" port_class="D" physical_mode_pin="D"/>
                 <output name="Q" num_pins="1" port_class="Q" physical_mode_pin="Q"/>
-                <clock name="clk" num_pins="1" port_class="clock" physical_mode_pin="clk"/>
-                <T_setup value="66e-12" port="ff.D" clock="clk"/>
-                <T_clock_to_Q max="124e-12" port="ff.Q" clock="clk"/>
+                <clock name="CK" num_pins="1" port_class="clock" physical_mode_pin="CK"/>
+                <T_setup value="66e-12" port="ff.D" clock="CK"/>
+                <T_clock_to_Q max="124e-12" port="ff.Q" clock="CK"/>
               </pb_type>
 
               <interconnect>
@@ -805,7 +805,7 @@
                 <direct name="direct2" input="lut6.out" output="ff.D">
                   <pack_pattern name="ble6" in_port="lut6.out" out_port="ff.D"/>
                 </direct>
-                <direct name="direct3" input="ble6.clk" output="ff.clk"/>                    
+                <direct name="direct3" input="ble6.CK" output="ff.CK"/>                    
                 <mux name="mux1" input="ff.Q lut6.out" output="ble6.out">
                   <delay_constant max="25e-12" in_port="lut6.out" out_port="ble6.out" />
                   <delay_constant max="45e-12" in_port="ff.Q" out_port="ble6.out" />
@@ -815,7 +815,7 @@
             <interconnect>
               <direct name="direct1" input="fle.in" output="ble6.in"/>
               <direct name="direct2" input="ble6.out" output="fle.out[1:1]"/>
-              <direct name="direct3" input="fle.clk" output="ble6.clk"/>
+              <direct name="direct3" input="fle.CK" output="ble6.CK"/>
             </interconnect>
           </mode> <!-- n1_lut6 -->
         </pb_type>
@@ -833,7 +833,7 @@
             <delay_constant max="95e-12" in_port="clb.I" out_port="fle[9:0].in" />
             <delay_constant max="75e-12" in_port="fle[9:0].out" out_port="fle[9:0].in" />
           </complete>
-          <complete name="clks" input="clb.clk" output="fle[9:0].clk">
+          <complete name="CKs" input="clb.CK" output="fle[9:0].CK">
           </complete>
 
           <!-- This way of specifying direct connection to clb outputs is important because this architecture uses automatic spreading of opins.  

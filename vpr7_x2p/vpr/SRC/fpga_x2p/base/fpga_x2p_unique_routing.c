@@ -1143,17 +1143,26 @@ void sort_rr_gsb_one_ipin_node_drive_rr_nodes(const RRGSB& rr_gsb,
   /* Create a copy of the edges and switches of this node */
   std::vector<t_rr_node*> sorted_drive_nodes;
   std::vector<int> sorted_drive_switches;
+  std::vector<int> sorted_drive_nodes_chan_node_index;
 
-  /* Ensure a clean start */
-  sorted_drive_nodes.clear();
-  sorted_drive_switches.clear();
+  /* Ensure a clean start and avoid frequent realloc */
+  sorted_drive_nodes.reserve(ipin_node->num_drive_rr_nodes);
+  sorted_drive_switches.reserve(ipin_node->num_drive_rr_nodes);
+  sorted_drive_nodes_chan_node_index.reserve(ipin_node->num_drive_rr_nodes);
 
   /* Build the vectors w.r.t. to the order of node_type and ptc_num */
   for (int i_from_node = 0; i_from_node < ipin_node->num_drive_rr_nodes; ++i_from_node) {
+    int i_from_node_track_index = rr_gsb.get_chan_node_index(ipin_chan_side, ipin_node->drive_rr_nodes[i_from_node]); 
+    /* We must have a valide node index for CHANX and CHANY */
+    if ( (CHANX == ipin_node->drive_rr_nodes[i_from_node]->type) 
+      || (CHANY == ipin_node->drive_rr_nodes[i_from_node]->type) ) {
+      assert (-1 != i_from_node_track_index);
+    } 
     /* For blank edges: directly push_back */
     if (0 == sorted_drive_nodes.size()) {
       sorted_drive_nodes.push_back(ipin_node->drive_rr_nodes[i_from_node]);
       sorted_drive_switches.push_back(ipin_node->drive_switches[i_from_node]);
+      sorted_drive_nodes_chan_node_index.push_back(i_from_node_track_index);
       continue;
     }
 
@@ -1167,12 +1176,8 @@ void sort_rr_gsb_one_ipin_node_drive_rr_nodes(const RRGSB& rr_gsb,
         break; /* least type should stay in the front of the vector */
       } else if (ipin_node->drive_rr_nodes[i_from_node]->type 
               == sorted_drive_nodes[j_from_node]->type) {
-        int i_from_node_track_index = rr_gsb.get_chan_node_index(ipin_chan_side, ipin_node->drive_rr_nodes[i_from_node]); 
-        int j_from_node_track_index = rr_gsb.get_chan_node_index(ipin_chan_side, sorted_drive_nodes[j_from_node]); 
-        /* We must have a valide node index */
-        assert ( (-1 != i_from_node_track_index) && (-1 != j_from_node_track_index) );
         /* Now a lower ptc_num will win */ 
-        if ( i_from_node_track_index < j_from_node_track_index ) { 
+        if ( i_from_node_track_index < sorted_drive_nodes_chan_node_index[j_from_node] ) { 
           insert_pos = j_from_node;
           break; /* least type should stay in the front of the vector */
         }
@@ -1181,6 +1186,7 @@ void sort_rr_gsb_one_ipin_node_drive_rr_nodes(const RRGSB& rr_gsb,
     /* We find the position, inserted to the vector */
     sorted_drive_nodes.insert(sorted_drive_nodes.begin() + insert_pos, ipin_node->drive_rr_nodes[i_from_node]); 
     sorted_drive_switches.insert(sorted_drive_switches.begin() + insert_pos, ipin_node->drive_switches[i_from_node]); 
+    sorted_drive_nodes_chan_node_index.insert(sorted_drive_nodes_chan_node_index.begin() + insert_pos, i_from_node_track_index); 
   }
 
   /* Overwrite the edges and switches with sorted numbers */
@@ -1213,17 +1219,26 @@ void sort_rr_gsb_one_chan_node_drive_rr_nodes(const RRGSB& rr_gsb,
   /* Create a copy of the edges and switches of this node */
   std::vector<t_rr_node*> sorted_drive_nodes;
   std::vector<int> sorted_drive_switches;
+  std::vector<int> sorted_drive_nodes_from_node_index;
 
-  /* Ensure a clean start */
-  sorted_drive_nodes.clear();
-  sorted_drive_switches.clear();
+  /* Ensure a clean start and avoid frequent realloc */
+  sorted_drive_nodes.reserve(chan_node->num_drive_rr_nodes);
+  sorted_drive_switches.reserve(chan_node->num_drive_rr_nodes);
+  sorted_drive_nodes_from_node_index.reserve(chan_node->num_drive_rr_nodes);
 
   /* Build the vectors w.r.t. to the order of node_type and ptc_num */
   for (int i_from_node = 0; i_from_node < chan_node->num_drive_rr_nodes; ++i_from_node) {
+    enum e_side i_from_node_side = NUM_SIDES;
+    int i_from_node_index = -1;
+    rr_gsb.get_node_side_and_index(chan_node->drive_rr_nodes[i_from_node], 
+                                   IN_PORT, &i_from_node_side, &i_from_node_index);
+    /* check */
+    assert ( (NUM_SIDES != i_from_node_side) && (-1 != i_from_node_index) );
     /* For blank edges: directly push_back */
     if (0 == sorted_drive_nodes.size()) {
       sorted_drive_nodes.push_back(chan_node->drive_rr_nodes[i_from_node]);
       sorted_drive_switches.push_back(chan_node->drive_switches[i_from_node]);
+      sorted_drive_nodes_from_node_index.push_back(i_from_node_index);
       continue;
     }
 
@@ -1241,22 +1256,9 @@ void sort_rr_gsb_one_chan_node_drive_rr_nodes(const RRGSB& rr_gsb,
          * But we are pretty sure it is either IN_PORT or OUT_PORT
          * So we just try and find what is valid
          */
-        enum e_side i_from_node_side = NUM_SIDES;
-        int i_from_node_index = -1;
-        rr_gsb.get_node_side_and_index(chan_node->drive_rr_nodes[i_from_node], 
-                                       IN_PORT, &i_from_node_side, &i_from_node_index);
-        /* check */
-        if (! ( (NUM_SIDES != i_from_node_side) && (-1 != i_from_node_index) ) )
-        assert ( (NUM_SIDES != i_from_node_side) && (-1 != i_from_node_index) );
 
-        enum e_side j_from_node_side = NUM_SIDES;
-        int j_from_node_index = -1;
-        rr_gsb.get_node_side_and_index(sorted_drive_nodes[j_from_node], 
-                                       IN_PORT, &j_from_node_side, &j_from_node_index);
-        /* check */
-        assert ( (NUM_SIDES != j_from_node_side) && (-1 != j_from_node_index) );
         /* Now a lower ptc_num will win */ 
-        if ( i_from_node_index < j_from_node_index) { 
+        if ( i_from_node_index < sorted_drive_nodes_from_node_index[j_from_node]) { 
           insert_pos = j_from_node;
           break; /* least type should stay in the front of the vector */
         }
@@ -1265,6 +1267,7 @@ void sort_rr_gsb_one_chan_node_drive_rr_nodes(const RRGSB& rr_gsb,
     /* We find the position, inserted to the vector */
     sorted_drive_nodes.insert(sorted_drive_nodes.begin() + insert_pos, chan_node->drive_rr_nodes[i_from_node]); 
     sorted_drive_switches.insert(sorted_drive_switches.begin() + insert_pos, chan_node->drive_switches[i_from_node]); 
+    sorted_drive_nodes_from_node_index.insert(sorted_drive_nodes_from_node_index.begin() + insert_pos, i_from_node_index); 
   }
 
   /* Overwrite the edges and switches with sorted numbers */
@@ -1339,9 +1342,11 @@ DeviceRRGSB build_device_rr_gsb(boolean output_sb_xml, char* sb_xml_dir,
   DeviceCoordinator reserve_range((size_t)nx + 1, (size_t)ny + 1);
   LL_device_rr_gsb.reserve(reserve_range);
 
+  size_t gsb_cnt = 0;
   /* For each switch block, determine the size of array */
   for (size_t ix = 0; ix <= sb_range.get_x(); ++ix) {
     for (size_t iy = 0; iy <= sb_range.get_y(); ++iy) {
+      gsb_cnt++; /* Update counter */
       const RRGSB& rr_gsb = build_rr_gsb(sb_range, ix, iy,
                                          LL_num_rr_nodes, LL_rr_node, 
                                          LL_rr_node_indices, 
@@ -1358,6 +1363,11 @@ DeviceRRGSB build_device_rr_gsb(boolean output_sb_xml, char* sb_xml_dir,
       /* Add to device_rr_gsb */
       DeviceCoordinator sb_coordinator = rr_gsb.get_sb_coordinator();
       LL_device_rr_gsb.add_rr_gsb(sb_coordinator, rr_gsb);
+      /* Print info */
+      vpr_printf(TIO_MESSAGE_INFO, 
+                 "[%lu%] Backannotated GSB[%lu][%lu]\r",
+                 100 * gsb_cnt / ((sb_range.get_x() + 1)* (sb_range.get_y() + 1)), 
+                 ix, iy );
     }
   }
   /* Report number of unique mirrors */
@@ -1369,9 +1379,9 @@ DeviceRRGSB build_device_rr_gsb(boolean output_sb_xml, char* sb_xml_dir,
   t_end = clock();
  
   run_time_sec = (float)(t_end - t_start) / CLOCKS_PER_SEC;
+  vpr_printf(TIO_MESSAGE_INFO, "Edge sorting for Switch Block took %g seconds\n", run_time_sec_profiling);  
   vpr_printf(TIO_MESSAGE_INFO, "Backannotation of Switch Block took %g seconds\n\n", run_time_sec);  
 
-  vpr_printf(TIO_MESSAGE_INFO, "Edge sorting for Switch Block took %g seconds\n\n", run_time_sec_profiling);  
 
 
   if (TRUE == output_sb_xml) {

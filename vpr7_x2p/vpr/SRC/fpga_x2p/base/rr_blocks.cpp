@@ -2432,7 +2432,7 @@ const RRGSB DeviceRRGSB::get_sb_unique_module(size_t index) const {
 }
 
 /* Get a rr switch block which a unique mirror */ 
-const RRGSB DeviceRRGSB::get_cb_unique_module(t_rr_type cb_type, size_t index) const {
+const RRGSB& DeviceRRGSB::get_cb_unique_module(t_rr_type cb_type, size_t index) const {
   assert (validate_cb_unique_module_index(cb_type, index));
   assert (validate_cb_type(cb_type));
   switch(cb_type) {
@@ -2449,7 +2449,7 @@ const RRGSB DeviceRRGSB::get_cb_unique_module(t_rr_type cb_type, size_t index) c
 }
 
 /* Give a coordinator of a rr switch block, and return its unique mirror */ 
-const RRGSB DeviceRRGSB::get_cb_unique_module(t_rr_type cb_type, DeviceCoordinator& coordinator) const {
+const RRGSB& DeviceRRGSB::get_cb_unique_module(t_rr_type cb_type, DeviceCoordinator& coordinator) const {
   assert (validate_cb_type(cb_type));
   assert(validate_coordinator(coordinator));
   size_t cb_unique_module_id;
@@ -2659,7 +2659,8 @@ void DeviceRRGSB::build_cb_unique_module(t_rr_type cb_type) {
 
       /* Traverse the unique_mirror list and check it is an mirror of another */
       for (size_t id = 0; id < get_num_cb_unique_module(cb_type); ++id) {
-        if (true == rr_gsb_[ix][iy].is_cb_mirror(get_cb_unique_module(cb_type, id), cb_type)) {
+        const RRGSB& unique_module = get_cb_unique_module(cb_type, id);
+        if (true == rr_gsb_[ix][iy].is_cb_mirror(unique_module, cb_type)) {
           /* This is a mirror, raise the flag and we finish */
           is_unique_module = false;
           /* Record the id of unique mirror */
@@ -3109,7 +3110,7 @@ bool DeviceRRGSB::validate_cb_unique_module_index(t_rr_type cb_type, size_t inde
     }
     return true;
   case CHANY:
-    if (index >= cbx_unique_module_.size()) {
+    if (index >= cby_unique_module_.size()) {
       return false;
     }
     return true;

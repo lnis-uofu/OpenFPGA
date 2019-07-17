@@ -37,6 +37,7 @@ set_target_properties(libace PROPERTIES PREFIX "") #Avoid extra 'lib' prefix#Cre
 # Specify dependency 
 target_link_libraries(libace
                       libabc
+                      libvtrutil
                       ${CMAKE_DL_LIBS})
 
 add_executable(ace ${EXEC_SOURCES})

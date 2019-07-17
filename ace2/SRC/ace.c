@@ -1,3 +1,6 @@
+#include "vtr_assert.h"
+#include "vtr_time.h" //For some reason this causes compilation errors if included below the std headers on with g++-5
+#include "vtr_assert.h"
 
 #include <stdio.h>
 #include <inttypes.h>
@@ -50,8 +53,7 @@ void print_status(Abc_Ntk_t * ntk) {
 			printf("%d: OLD\n", i);
 			break;
         default:
-            printf("Invalid ABC object info status");
-            exit(1);
+            VTR_ASSERT_MSG(false, "Invalid ABC object info status");
 		}
 	}
 }
@@ -169,11 +171,11 @@ int ace_calc_activity(Abc_Ntk_t * ntk, int num_vectors, char * clk_name) {
 	{
 		info = Ace_ObjInfo(obj);
 		if (strcmp(Abc_ObjName(obj), clk_name) != 0) {
-			assert(info->static_prob >= 0 && info->static_prob <= 1.0);
-			assert(info->switch_prob >= 0 && info->switch_prob <= 1.0);
-			assert(info->switch_act >= 0 && info->switch_act <= 1.0);
-			assert(info->switch_prob <= 2.0 * (1.0 - info->static_prob));
-			assert(info->switch_prob <= 2.0 * info->static_prob);
+			VTR_ASSERT(info->static_prob >= 0 && info->static_prob <= 1.0);
+			VTR_ASSERT(info->switch_prob >= 0 && info->switch_prob <= 1.0);
+			VTR_ASSERT(info->switch_act >= 0 && info->switch_act <= 1.0);
+			VTR_ASSERT(info->switch_prob <= 2.0 * (1.0 - info->static_prob));
+			VTR_ASSERT(info->switch_prob <= 2.0 * info->static_prob);
 		}
 		info->status = ACE_DEF;
 	}
@@ -233,11 +235,11 @@ int ace_calc_activity(Abc_Ntk_t * ntk, int num_vectors, char * clk_name) {
 		Ace_Obj_Info_t * info2 = Ace_ObjInfo(obj);
 
 		info2->switch_act = info2->switch_prob;
-		assert(info2->switch_act >= 0.0);
+		VTR_ASSERT(info2->switch_act >= 0.0);
 	}
 	Abc_NtkForEachPi(ntk, obj, i)
 	{
-		assert(Ace_ObjInfo(obj)->switch_act >= 0.0);
+		VTR_ASSERT(Ace_ObjInfo(obj)->switch_act >= 0.0);
 	}
 
 	/*------------- Calculate switching activities. ---------------------*/
@@ -275,7 +277,7 @@ int ace_calc_activity(Abc_Ntk_t * ntk, int num_vectors, char * clk_name) {
 		Ace_Obj_Info_t * info2 = Ace_ObjInfo(obj);
 		//Ace_Obj_Info_t * fanin_info2;
 
-		assert(Abc_ObjType(obj) == ABC_OBJ_NODE);
+		VTR_ASSERT(Abc_ObjType(obj) == ABC_OBJ_NODE);
 
 		if (Abc_ObjFaninNum(obj) < 1) {
 			info2->switch_act = 0.0;
@@ -284,7 +286,7 @@ int ace_calc_activity(Abc_Ntk_t * ntk, int num_vectors, char * clk_name) {
 			Vec_Ptr_t * literals = Vec_PtrAlloc(0);
 			Abc_Obj_t * fanin;
 
-			assert(obj->Type == ABC_OBJ_NODE);
+			VTR_ASSERT(obj->Type == ABC_OBJ_NODE);
 
 			Abc_ObjForEachFanin(obj, fanin, j)
 			{
@@ -294,7 +296,7 @@ int ace_calc_activity(Abc_Ntk_t * ntk, int num_vectors, char * clk_name) {
 					literals);
 			Vec_PtrFree(literals);
 		}
-		assert(info2->switch_act >= 0);
+		VTR_ASSERT(info2->switch_act >= 0);
 	}
     Vec_PtrFree(nodes_logic);
     Vec_PtrFree(latches_in_cycles_vec);
@@ -308,21 +310,22 @@ Ace_Obj_Info_t * Ace_ObjInfo(Abc_Obj_t * obj) {
 	if (st__lookup(ace_info_hash_table, (char *) obj, (char **) &info)) {
 		return info;
 	}
-	assert(0);
+	VTR_ASSERT(0);
     return NULL;
 }
 
 void prob_epsilon_fix(double * d) {
 	if (*d < 0) {
-		assert(*d > 0 - EPSILON);
+		VTR_ASSERT(*d > 0 - EPSILON);
 		*d = 0;
 	} else if (*d > 1) {
-		assert(*d < 1 + EPSILON);
+		VTR_ASSERT(*d < 1 + EPSILON);
 		*d = 1.;
 	}
 }
 
 int main(int argc, char * argv[]) {
+    vtr::ScopedFinishTimer t("Ace");
 	FILE * BLIF = NULL;
 	FILE * IN_ACT = NULL;
 	FILE * OUT_ACT = stdout;
@@ -351,7 +354,7 @@ int main(int argc, char * argv[]) {
 
 	ntk = Io_Read(blif_file_name, IO_FILE_BLIF, 1, 0);
 
-    assert(ntk);
+    VTR_ASSERT(ntk);
 
 	printf("Objects in network: %d\n", Abc_NtkObjNum(ntk));
 	printf("PIs in network: %d\n", Abc_NtkPiNum(ntk));
@@ -383,7 +386,7 @@ int main(int argc, char * argv[]) {
 	// Check Depth
 	depth = ace_calc_network_depth(ntk);
 	printf("Max Depth: %d\n", depth);
-	assert(depth > 0);
+	VTR_ASSERT(depth > 0);
 
 	alloc_and_init_activity_info(ntk);
 
