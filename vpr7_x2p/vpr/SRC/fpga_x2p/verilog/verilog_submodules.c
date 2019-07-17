@@ -1250,6 +1250,9 @@ void dump_verilog_cmos_mux_tree_structure(FILE* fp,
         int num_output_port = 0;
         t_spice_model_port** input_port = NULL;
         t_spice_model_port** output_port = NULL;
+
+        input_port = find_spice_model_ports(tgate_spice_model, SPICE_MODEL_PORT_INPUT, &num_input_port, TRUE);
+        output_port = find_spice_model_ports(tgate_spice_model, SPICE_MODEL_PORT_OUTPUT, &num_output_port, TRUE);
         /* Quick check on the number of ports */
         assert(3 == num_input_port); /* A, B and SEL */
         assert(1 == num_output_port); /* OUT */
@@ -1268,7 +1271,9 @@ void dump_verilog_cmos_mux_tree_structure(FILE* fp,
           fprintf(fp, "mux2_l%d_in[%d]", level, j); /* input0  */
         }
         if (true == is_explicit_mapping) {
-          fprintf(fp, ".%s(", input_port[1]->lib_name);
+          fprintf(fp, "), .%s(", input_port[1]->lib_name);
+        } else {
+          fprintf(fp, ", ");
         }
         /* For intermediate buffers */ 
         if (TRUE == inter_buf_loc[level]) {

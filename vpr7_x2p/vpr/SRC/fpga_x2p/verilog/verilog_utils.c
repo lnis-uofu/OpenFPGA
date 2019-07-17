@@ -2924,7 +2924,8 @@ char* generate_verilog_mux_subckt_name(t_spice_model* spice_model,
   /* If the tgate spice model of this MUX is a MUX2 standard cell,
    * the mux_subckt name will be the name of the standard cell
    */
-  if ( SPICE_MODEL_GATE_MUX2 == spice_model->pass_gate_logic->spice_model->type) {
+  if ( SPICE_MODEL_GATE == spice_model->pass_gate_logic->spice_model->type) {
+    assert ( SPICE_MODEL_GATE_MUX2 == spice_model->design_tech_info.gate_info->type);
     mux_subckt_name = my_strdup(spice_model->pass_gate_logic->spice_model->name);
   } else {
     mux_subckt_name = (char*)my_malloc(sizeof(char)*(strlen(spice_model->name) + 5 

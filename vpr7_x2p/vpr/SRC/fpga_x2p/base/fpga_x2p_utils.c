@@ -440,7 +440,15 @@ void config_spice_model_input_output_buffers_pass_gate(int num_spice_models,
         exit(1);
       }
       /* Copy the information from found spice model to current spice model*/
-      memcpy(spice_model[i].pass_gate_logic, pgl_spice_model->design_tech_info.pass_gate_info, sizeof(t_spice_model_pass_gate_logic));
+      /* copy gate info if this is a standard cell */
+      if (SPICE_MODEL_GATE == pgl_spice_model->type) {
+        assert ( SPICE_MODEL_GATE_MUX2 == pgl_spice_model->design_tech_info.gate_info->type);
+        spice_model[i].design_tech_info.gate_info = (t_spice_model_gate*)my_calloc(1, sizeof(t_spice_model_gate));
+        memcpy(spice_model[i].design_tech_info.gate_info, pgl_spice_model->design_tech_info.gate_info, sizeof(t_spice_model_gate));
+      } else { 
+        assert (SPICE_MODEL_PASSGATE == pgl_spice_model->type);
+        memcpy(spice_model[i].pass_gate_logic, pgl_spice_model->design_tech_info.pass_gate_info, sizeof(t_spice_model_pass_gate_logic));
+      }
       /* Recover the spice_model_name */
       spice_model[i].pass_gate_logic->spice_model_name = my_strdup(pgl_spice_model->name);
       spice_model[i].pass_gate_logic->spice_model = pgl_spice_model;
