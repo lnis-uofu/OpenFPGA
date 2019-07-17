@@ -1128,9 +1128,9 @@ void dump_verilog_mux_basis_module(FILE* fp,
 
   /* Prepare the basis subckt name:
    */
-  mux_basis_subckt_name = generate_verilog_mux_subckt_name(spice_mux_model->spice_model, spice_mux_model->size, verilog_mux_basis_posfix);
+  mux_basis_subckt_name = generate_verilog_mux_basis_subckt_name(spice_mux_model->spice_model, spice_mux_model->size, verilog_mux_basis_posfix);
 
-  special_basis_subckt_name = generate_verilog_mux_subckt_name(spice_mux_model->spice_model, spice_mux_model->size, verilog_mux_special_basis_posfix);
+  special_basis_subckt_name = generate_verilog_mux_basis_subckt_name(spice_mux_model->spice_model, spice_mux_model->size, verilog_mux_special_basis_posfix);
 
   /* deteremine the number of inputs of basis subckt */ 
   num_input_basis_subckt = spice_mux_model->spice_mux_arch->num_input_basis;
@@ -1647,9 +1647,9 @@ void dump_verilog_cmos_mux_submodule(FILE* fp,
   char* mux_basis_subckt_name = NULL;
   char* mux_special_basis_subckt_name = NULL;
 
-  mux_basis_subckt_name = generate_verilog_mux_subckt_name(&spice_model, mux_size, verilog_mux_basis_posfix);
+  mux_basis_subckt_name = generate_verilog_mux_basis_subckt_name(&spice_model, mux_size, verilog_mux_basis_posfix);
 
-  mux_special_basis_subckt_name = generate_verilog_mux_subckt_name(&spice_model, mux_size, verilog_mux_special_basis_posfix);
+  mux_special_basis_subckt_name = generate_verilog_mux_basis_subckt_name(&spice_model, mux_size, verilog_mux_special_basis_posfix);
  
   /* Make sure we have a valid file handler*/
   if (NULL == fp) {
@@ -2156,9 +2156,9 @@ void dump_verilog_rram_mux_submodule(FILE* fp,
   char* mux_basis_subckt_name = NULL;
   char* mux_special_basis_subckt_name = NULL;
 
-  mux_basis_subckt_name = generate_verilog_mux_subckt_name(&spice_model, mux_size, verilog_mux_basis_posfix);
+  mux_basis_subckt_name = generate_verilog_mux_basis_subckt_name(&spice_model, mux_size, verilog_mux_basis_posfix);
 
-  mux_special_basis_subckt_name = generate_verilog_mux_subckt_name(&spice_model, mux_size, verilog_mux_special_basis_posfix);
+  mux_special_basis_subckt_name = generate_verilog_mux_basis_subckt_name(&spice_model, mux_size, verilog_mux_special_basis_posfix);
  
   /* Make sure we have a valid file handler*/
   if (NULL == fp) {
