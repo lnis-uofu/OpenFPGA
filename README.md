@@ -1,5 +1,5 @@
 # Getting Started with OpenFPGA
-![OpenFPGA](./docs/source/figures/OpenFPGA_logo.png =100x)
+<img src="./docs/source/figures/OpenFPGA_logo.png" width="48">
 [![Build Status](https://travis-ci.org/LNIS-Projects/OpenFPGA.svg?branch=master)](https://travis-ci.org/LNIS-Projects/OpenFPGA)
 [![Documentation Status](https://readthedocs.org/projects/openfpga/badge/?version=master)](https://openfpga.readthedocs.io/en/master/?badge=master)
 
