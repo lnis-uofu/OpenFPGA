@@ -17,7 +17,7 @@ Dependencies and help using docker can be found at [**./tutorials/building.md**]
 *We currently implemented OpenFPGA for:*<br />
 *1. Ubuntu 16.04*<br />
 *2. Red Hat 7.5*<br />
-*3. MacOS Mojave 10.13.4*<br /><br />
+*3. MacOS Mojave 10.14.4*<br /><br />
 *Please note that those were the versions for which the tool was tested. It might work with earlier versions and other distributions.*
 
 ## Documentation
