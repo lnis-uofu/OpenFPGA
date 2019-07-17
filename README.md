@@ -1,6 +1,4 @@
-<!--img src="./docs/source/figures/OpenFPGA_logo.png" width="200"-->
-
-# ![Getting Started with OpenFPGA](./docs/source/figures/OpenFPGA_logo.png)
+# Getting Started with OpenFPGA  <img src="./docs/source/figures/OpenFPGA_logo.png" width="200">
 [![Build Status](https://travis-ci.org/LNIS-Projects/OpenFPGA.svg?branch=master)](https://travis-ci.org/LNIS-Projects/OpenFPGA)
 [![Documentation Status](https://readthedocs.org/projects/openfpga/badge/?version=master)](https://openfpga.readthedocs.io/en/master/?badge=master)
 
