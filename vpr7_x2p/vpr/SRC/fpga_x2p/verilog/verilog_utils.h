@@ -221,6 +221,9 @@ char* generate_verilog_mem_subckt_name(t_spice_model* spice_model,
                                        t_spice_model* mem_model,
                                        char* postfix);
 
+char* generate_verilog_mux_basis_subckt_name(t_spice_model* spice_model, 
+                                             int mux_size, char* postfix);
+
 char* generate_verilog_mux_subckt_name(t_spice_model* spice_model, 
                                        int mux_size, char* postfix);
 

@@ -3213,7 +3213,7 @@ void dump_verilog_connection_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
                                                          cur_num_sram, 
                                                          cur_num_sram + num_mux_conf_bits - 1);
   
-  fprintf(fp, "is_explicit_mappingf\n");
+  fprintf(fp, "`endif\n");
 
 
   /* Call the MUX SPICE model */
