@@ -12,4 +12,4 @@ RUN cmake .. -DCMAKE_BUILD_TYPE=debug
 RUN make
 RUN ./build.sh
 
-
+WORKDIR /OpenFPGA
