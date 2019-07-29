@@ -145,7 +145,8 @@ void dump_verilog_one_sb_chan_pin(FILE* fp,
 /* Output the pin name of a routing wire in a SB */
 void dump_verilog_one_sb_routing_pin(FILE* fp,
                                      const RRGSB& rr_sb,
-                                     t_rr_node* cur_rr_node) {
+                                     t_rr_node* cur_rr_node,
+                                     bool is_explicit_mapping) {
   int side;
 
   /* Check the file handler */
@@ -186,7 +187,7 @@ void dump_verilog_one_sb_routing_pin(FILE* fp,
                                                 side,
                                                 mirror_node->xlow,
                                                 mirror_node->ylow, 
-                                                FALSE); /* Do not specify direction of port */
+                                                FALSE,is_explicit_mapping); /* Do not specify direction of port */
     break; 
   }
   case CHANX:
@@ -206,7 +207,8 @@ void dump_verilog_one_sb_routing_pin(FILE* fp,
 /* Output the pin name of a routing wire in a SB */
 void dump_verilog_one_sb_routing_pin(FILE* fp,
                                      t_sb* cur_sb_info,
-                                     t_rr_node* cur_rr_node) {
+                                     t_rr_node* cur_rr_node,
+                                     bool is_explicit_mapping) {
   int side;
 
   /* Check the file handler */
@@ -229,7 +231,7 @@ void dump_verilog_one_sb_routing_pin(FILE* fp,
                                                 side,
                                                 cur_rr_node->xlow,
                                                 cur_rr_node->ylow, 
-                                                FALSE); /* Do not specify direction of port */
+                                                FALSE, is_explicit_mapping); /* Do not specify direction of port */
     break; 
   case CHANX:
   case CHANY:

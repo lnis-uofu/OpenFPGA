@@ -244,7 +244,7 @@ void load_one_grid_rr_nodes_basic_info(const DeviceCoordinator& grid_coordinator
         rr_graph->rr_node[*cur_node_id].xlow  = grid_coordinator.get_x(); 
         rr_graph->rr_node[*cur_node_id].xhigh = grid_coordinator.get_x(); 
         rr_graph->rr_node[*cur_node_id].ylow  = grid_coordinator.get_y(); 
-        rr_graph->rr_node[*cur_node_id].yhigh = grid_coordinator.get_y(); 
+        rr_graph->rr_node[*cur_node_id].yhigh = grid_coordinator.get_y() + cur_grid.type->height - 1; 
         rr_graph->rr_node[*cur_node_id].ptc_num  = opin_list[pin]; 
         rr_graph->rr_node[*cur_node_id].capacity = 1; 
         rr_graph->rr_node[*cur_node_id].occ = 0; 
@@ -253,6 +253,15 @@ void load_one_grid_rr_nodes_basic_info(const DeviceCoordinator& grid_coordinator
         /* Switch info */
         rr_graph->rr_node[*cur_node_id].driver_switch = delayless_switch; 
         /* fill fast look-up table */
+        /* If height > 1, we will update fast lookup to twice: 
+         * 1. for the x, y + height. This enable fast fast look-up for node collection in rr_gsb
+         * 2. for the x, y. This enables fast lookup for SOURCE and SINK nodes drive/driven by the node 
+         */
+        load_one_node_to_rr_graph_fast_lookup(rr_graph, *cur_node_id, 
+                                              rr_graph->rr_node[*cur_node_id].type, 
+                                              rr_graph->rr_node[*cur_node_id].xlow, 
+                                              rr_graph->rr_node[*cur_node_id].ylow + height,
+                                              rr_graph->rr_node[*cur_node_id].ptc_num);
         load_one_node_to_rr_graph_fast_lookup(rr_graph, *cur_node_id, 
                                               rr_graph->rr_node[*cur_node_id].type, 
                                               rr_graph->rr_node[*cur_node_id].xlow, 
@@ -269,7 +278,7 @@ void load_one_grid_rr_nodes_basic_info(const DeviceCoordinator& grid_coordinator
         rr_graph->rr_node[*cur_node_id].xlow  = grid_coordinator.get_x(); 
         rr_graph->rr_node[*cur_node_id].xhigh = grid_coordinator.get_x(); 
         rr_graph->rr_node[*cur_node_id].ylow  = grid_coordinator.get_y(); 
-        rr_graph->rr_node[*cur_node_id].yhigh = grid_coordinator.get_y(); 
+        rr_graph->rr_node[*cur_node_id].yhigh = grid_coordinator.get_y() + cur_grid.type->height - 1; 
         rr_graph->rr_node[*cur_node_id].ptc_num  = ipin_list[pin]; 
         rr_graph->rr_node[*cur_node_id].capacity = 1; 
         rr_graph->rr_node[*cur_node_id].occ = 0; 
@@ -278,6 +287,15 @@ void load_one_grid_rr_nodes_basic_info(const DeviceCoordinator& grid_coordinator
         /* Switch info */
         rr_graph->rr_node[*cur_node_id].driver_switch = wire_to_ipin_switch; 
         /* fill fast look-up table */
+        /* If height > 1, we will update fast lookup to twice: 
+         * 1. for the x, y + height. This enable fast fast look-up for node collection in rr_gsb
+         * 2. for the x, y. This enables fast lookup for SOURCE and SINK nodes drive/driven by the node 
+         */
+        load_one_node_to_rr_graph_fast_lookup(rr_graph, *cur_node_id, 
+                                              rr_graph->rr_node[*cur_node_id].type, 
+                                              rr_graph->rr_node[*cur_node_id].xlow, 
+                                              rr_graph->rr_node[*cur_node_id].ylow + height,
+                                              rr_graph->rr_node[*cur_node_id].ptc_num);
         load_one_node_to_rr_graph_fast_lookup(rr_graph, *cur_node_id, 
                                               rr_graph->rr_node[*cur_node_id].type, 
                                               rr_graph->rr_node[*cur_node_id].xlow, 
@@ -289,46 +307,44 @@ void load_one_grid_rr_nodes_basic_info(const DeviceCoordinator& grid_coordinator
     } /* End of side enumeration */
   } /* End of height enumeration */
 
-  /* Walk through the height of each grid,
+  /* No need to Walk through the height of each grid,
    * get pins and configure the rr_nodes */
-  for (int height = 0; height < cur_grid.type->height; ++height) {
-    /* Set a SOURCE or a SINK rr_node for each class */
-    for (int iclass = 0; iclass < cur_grid.type->num_class; ++iclass) {
-      /* Set a SINK rr_node for the OPIN */
-      if ( DRIVER == cur_grid.type->class_inf[iclass].type) {
-        rr_graph->rr_node[*cur_node_id].type  = SOURCE; 
-      } 
-      if ( RECEIVER == cur_grid.type->class_inf[iclass].type) {
-        rr_graph->rr_node[*cur_node_id].type  = SINK; 
-      }
-      rr_graph->rr_node[*cur_node_id].xlow  = grid_coordinator.get_x(); 
-      rr_graph->rr_node[*cur_node_id].xhigh = grid_coordinator.get_x(); 
-      rr_graph->rr_node[*cur_node_id].ylow  = grid_coordinator.get_y(); 
-      rr_graph->rr_node[*cur_node_id].yhigh = grid_coordinator.get_y(); 
-      rr_graph->rr_node[*cur_node_id].ptc_num  = iclass; 
-      /* FIXME: need to confirm if the capacity should be the number of pins in this class*/ 
-      rr_graph->rr_node[*cur_node_id].capacity = cur_grid.type->class_inf[iclass].num_pins; 
-      rr_graph->rr_node[*cur_node_id].occ = 0; 
-      /* cost index is a FIXED value for SOURCE and SINK */
-      if (SOURCE == rr_graph->rr_node[*cur_node_id].type) {
-        rr_graph->rr_node[*cur_node_id].cost_index = SOURCE_COST_INDEX; 
-      }
-      if (SINK == rr_graph->rr_node[*cur_node_id].type) {
-        rr_graph->rr_node[*cur_node_id].cost_index = SINK_COST_INDEX; 
-      }
-      /* Switch info */
-      rr_graph->rr_node[*cur_node_id].driver_switch = delayless_switch; 
-      /* TODO: should we set pb_graph_pin here? */
-      /* fill fast look-up table */
-      load_one_node_to_rr_graph_fast_lookup(rr_graph, *cur_node_id, 
-                                            rr_graph->rr_node[*cur_node_id].type, 
-                                            rr_graph->rr_node[*cur_node_id].xlow, 
-                                            rr_graph->rr_node[*cur_node_id].ylow,
-                                            rr_graph->rr_node[*cur_node_id].ptc_num);
-      /* Update node counter */
-      (*cur_node_id)++;
-    } /* End of height enumeration */
-  } /* End of pin_class enumeration */
+  /* Set a SOURCE or a SINK rr_node for each class */
+  for (int iclass = 0; iclass < cur_grid.type->num_class; ++iclass) {
+    /* Set a SINK rr_node for the OPIN */
+    if ( DRIVER == cur_grid.type->class_inf[iclass].type) {
+      rr_graph->rr_node[*cur_node_id].type  = SOURCE; 
+    } 
+    if ( RECEIVER == cur_grid.type->class_inf[iclass].type) {
+      rr_graph->rr_node[*cur_node_id].type  = SINK; 
+    }
+    rr_graph->rr_node[*cur_node_id].xlow  = grid_coordinator.get_x(); 
+    rr_graph->rr_node[*cur_node_id].xhigh = grid_coordinator.get_x(); 
+    rr_graph->rr_node[*cur_node_id].ylow  = grid_coordinator.get_y(); 
+    rr_graph->rr_node[*cur_node_id].yhigh = grid_coordinator.get_y() + cur_grid.type->height - 1; 
+    rr_graph->rr_node[*cur_node_id].ptc_num  = iclass; 
+    /* FIXME: need to confirm if the capacity should be the number of pins in this class*/ 
+    rr_graph->rr_node[*cur_node_id].capacity = cur_grid.type->class_inf[iclass].num_pins; 
+    rr_graph->rr_node[*cur_node_id].occ = 0; 
+    /* cost index is a FIXED value for SOURCE and SINK */
+    if (SOURCE == rr_graph->rr_node[*cur_node_id].type) {
+      rr_graph->rr_node[*cur_node_id].cost_index = SOURCE_COST_INDEX; 
+    }
+    if (SINK == rr_graph->rr_node[*cur_node_id].type) {
+      rr_graph->rr_node[*cur_node_id].cost_index = SINK_COST_INDEX; 
+    }
+    /* Switch info */
+    rr_graph->rr_node[*cur_node_id].driver_switch = delayless_switch; 
+    /* TODO: should we set pb_graph_pin here? */
+    /* fill fast look-up table */
+    load_one_node_to_rr_graph_fast_lookup(rr_graph, *cur_node_id, 
+                                          rr_graph->rr_node[*cur_node_id].type, 
+                                          rr_graph->rr_node[*cur_node_id].xlow, 
+                                          rr_graph->rr_node[*cur_node_id].ylow,
+                                          rr_graph->rr_node[*cur_node_id].ptc_num);
+    /* Update node counter */
+    (*cur_node_id)++;
+  } /* End of height enumeration */
 
   return;
 }
@@ -640,7 +656,7 @@ void load_rr_nodes_basic_info(t_rr_graph* rr_graph,
             || (OPIN == rr_graph->rr_node[inode].type)
             || (IPIN == rr_graph->rr_node[inode].type));
       assert (rr_graph->rr_node[inode].xlow == rr_graph->rr_node[inode].xhigh);
-      assert (rr_graph->rr_node[inode].ylow == rr_graph->rr_node[inode].yhigh);
+      assert (rr_graph->rr_node[inode].ylow + grids[rr_graph->rr_node[inode].xlow][rr_graph->rr_node[inode].ylow].type->height - 1 == rr_graph->rr_node[inode].yhigh);
     }
   }
 
@@ -687,10 +703,15 @@ void alloc_rr_graph_fast_lookup(const DeviceCoordinator& device_size,
     if ((SOURCE == type) || (OPIN == type) ) {
       continue;
     }
-    rr_graph->rr_node_indices[type] = (t_ivec **) my_malloc(sizeof(t_ivec *) * device_size.get_x());
-    for (size_t i = 0; i < device_size.get_x(); ++i) {
-      rr_graph->rr_node_indices[type][i] = (t_ivec *) my_malloc(sizeof(t_ivec) * device_size.get_y());
-      for (size_t j = 0; j < device_size.get_y(); ++j) {
+    DeviceCoordinator actual_device_size(device_size);
+    /* Special for CHANX: we use (y,x) in allocation */
+    if (CHANX == type) {
+      actual_device_size.rotate();
+    }
+    rr_graph->rr_node_indices[type] = (t_ivec **) my_malloc(sizeof(t_ivec *) * actual_device_size.get_x());
+    for (size_t i = 0; i < actual_device_size.get_x(); ++i) {
+      rr_graph->rr_node_indices[type][i] = (t_ivec *) my_malloc(sizeof(t_ivec) * actual_device_size.get_y());
+      for (size_t j = 0; j < actual_device_size.get_y(); ++j) {
         rr_graph->rr_node_indices[type][i][j].nelem = 0;
         rr_graph->rr_node_indices[type][i][j].list = NULL;
       }
@@ -780,7 +801,8 @@ void build_rr_graph_edges(t_rr_graph* rr_graph,
                           const std::vector<t_segment_inf> segment_inf,
                           int** Fc_in, int** Fc_out,
                           const enum e_switch_block_type sb_type, const int Fs,
-                          const enum e_switch_block_type sb_subtype, const int subFs) {
+                          const enum e_switch_block_type sb_subtype, const int subFs,
+                          const bool wire_opposite_side) {
 
   /* Create edges for SOURCE and SINK nodes for a tileable rr_graph */
   build_rr_graph_edges_for_source_nodes(rr_graph, grids);
@@ -807,7 +829,9 @@ void build_rr_graph_edges(t_rr_graph* rr_graph,
 
       /* adapt the switch_block_conn for the GSB nodes */      
       t_track2track_map sb_conn; /* [0..from_gsb_side][0..chan_width-1][track_indices] */
-      sb_conn = build_gsb_track_to_track_map(rr_graph, rr_gsb, sb_type, Fs, sb_subtype, subFs, segment_inf);
+      sb_conn = build_gsb_track_to_track_map(rr_graph, rr_gsb, 
+                                             sb_type, Fs, sb_subtype, subFs, wire_opposite_side, 
+                                             segment_inf);
 
       /* Build edges for a GSB */
       build_edges_for_one_tileable_rr_gsb(rr_graph, &rr_gsb,
@@ -908,6 +932,7 @@ void build_tileable_unidir_rr_graph(INP const int L_num_types,
                                     INP struct s_grid_tile **L_grid, INP const int chan_width,
                                     INP const enum e_switch_block_type sb_type, INP const int Fs, 
                                     INP const enum e_switch_block_type sb_subtype, INP const int subFs, 
+                                    INP const boolean wire_opposite_side,
                                     INP const int num_seg_types,
                                     INP const t_segment_inf * segment_inf,
                                     INP const int num_switches, INP const int delayless_switch, 
@@ -984,6 +1009,13 @@ void build_tileable_unidir_rr_graph(INP const int L_num_types,
    ***********************************************************************/
   alloc_rr_graph_fast_lookup(device_size, &rr_graph);
 
+  /* FIXME: DEBUG CODES TO BE REMOVED
+  vpr_printf(TIO_MESSAGE_INFO, "estimated %lu SOURCE NODE.\n", num_rr_nodes_per_type[SOURCE]);
+  vpr_printf(TIO_MESSAGE_INFO, "estimated %lu SINK   NODE.\n", num_rr_nodes_per_type[SINK]);
+  vpr_printf(TIO_MESSAGE_INFO, "estimated %lu OPIN   NODE.\n", num_rr_nodes_per_type[OPIN]);
+  vpr_printf(TIO_MESSAGE_INFO, "estimated %lu IPIN   NODE.\n", num_rr_nodes_per_type[IPIN]);
+  */
+
   load_rr_nodes_basic_info(&rr_graph, device_size, grids, device_chan_width, segment_infs,
                            wire_to_ipin_switch, delayless_switch); 
 
@@ -1025,7 +1057,7 @@ void build_tileable_unidir_rr_graph(INP const int L_num_types,
   /* Create edges for a tileable rr_graph */
   build_rr_graph_edges(&rr_graph, device_size, grids, device_chan_width, segment_infs, 
                        Fc_in, Fc_out,
-                       sb_type, Fs, sb_subtype, subFs);
+                       sb_type, Fs, sb_subtype, subFs, (bool)wire_opposite_side);
 
   /************************************************************************
    * 6.2 Build direction connection lists

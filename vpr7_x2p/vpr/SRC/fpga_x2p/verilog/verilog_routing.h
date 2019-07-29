@@ -14,7 +14,8 @@ void dump_verilog_routing_chan_subckt(t_sram_orgz_info* cur_sram_orgz_info,
 void dump_verilog_grid_side_pin_with_given_index(FILE* fp, t_rr_type pin_type,
                                                  int pin_index, int side,
                                                  int x, int y,
-                                                 boolean dump_port_type);
+                                                 boolean dump_port_type,
+                                                 bool is_explicit_mapping);
 
 void dump_verilog_grid_side_pins(FILE* fp,
                                  t_rr_type pin_type, int x, int y, int side,
@@ -31,7 +32,8 @@ void dump_verilog_switch_box_short_interc(FILE* fp,
                                           int chan_side,
                                           t_rr_node* cur_rr_node,
                                           int actual_fan_in,
-                                          t_rr_node* drive_rr_node);
+                                          t_rr_node* drive_rr_node,
+                                          bool is_explicit_mapping);
 
 void dump_verilog_switch_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
                                  FILE* fp, 
@@ -40,7 +42,8 @@ void dump_verilog_switch_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
                                  t_rr_node* cur_rr_node,
                                  int mux_size,
                                  t_rr_node** drive_rr_nodes,
-                                 int switch_index);
+                                 int switch_index,
+                                 bool is_explicit_mapping);
 
 int count_verilog_switch_box_interc_conf_bits(t_sram_orgz_info* cur_sram_orgz_info,
                                               t_sb cur_sb_info, int chan_side, 
@@ -54,7 +57,8 @@ void dump_verilog_switch_box_interc(t_sram_orgz_info* cur_sram_orgz_info,
                                     FILE* fp, 
                                     t_sb* cur_sb_info,
                                     int chan_side,
-                                    t_rr_node* cur_rr_node);
+                                    t_rr_node* cur_rr_node,
+                                    bool is_explicit_mapping);
 
 int count_verilog_switch_box_reserved_conf_bits(t_sram_orgz_info* cur_sram_orgz_info,
                                       t_sb cur_sb_info);
@@ -68,22 +72,26 @@ void dump_verilog_routing_switch_box_subckt(t_sram_orgz_info* cur_sram_orgz_info
                                             int LL_num_rr_nodes, t_rr_node* LL_rr_node,
                                             t_ivec*** LL_rr_node_indices,
                                             t_syn_verilog_opts fpga_verilog_opts,
-                                            boolean compact_routing_hierarchy);
+                                            boolean compact_routing_hierarchy,
+                                            bool is_explicit_mapping);
 
 
 void dump_verilog_connection_box_short_interc(FILE* fp,
                                               t_cb* cur_cb_info,
-                                              t_rr_node* src_rr_node);
+                                              t_rr_node* src_rr_node,
+                                              bool is_explicit_mapping);
 
 void dump_verilog_connection_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
                                      FILE* fp,
                                      t_cb* cur_cb_info,
-                                     t_rr_node* src_rr_node);
+                                     t_rr_node* src_rr_node,
+                                     bool is_explicit_mapping);
 
 void dump_verilog_connection_box_interc(t_sram_orgz_info* cur_sram_orgz_info,
                                         FILE* fp,
                                         t_cb* cur_cb_info,
-                                        t_rr_node* src_rr_node);
+                                        t_rr_node* src_rr_node,
+                                        bool is_explicit_mapping);
 
 
 int count_verilog_connection_box_interc_conf_bits(t_sram_orgz_info* cur_sram_orgz_info,
@@ -121,7 +129,8 @@ int count_verilog_connection_box_reserved_conf_bits(t_sram_orgz_info* cur_sram_o
 void dump_verilog_routing_connection_box_subckt(t_sram_orgz_info* cur_sram_orgz_info,
                                                 char* verilog_dir, char* subckt_dir, 
                                                 t_cb* cur_cb_info,
-                                                boolean compact_routing_hierarchy);
+                                                boolean compact_routing_hierarchy,
+                                                bool is_explicit_mapping);
 
 
 void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
@@ -132,6 +141,6 @@ void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
                                     int LL_num_rr_nodes, t_rr_node* LL_rr_node,
                                     t_ivec*** LL_rr_node_indices,
                                     t_rr_indexed_data* LL_rr_indexed_data,
-                                    boolean compact_routing_hierarchy);
+                                    t_fpga_spice_opts FPGA_SPICE_Opts);
 
 #endif

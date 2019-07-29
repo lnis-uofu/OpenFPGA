@@ -312,7 +312,8 @@ void dump_verilog_top_testbench_ports(t_sram_orgz_info* cur_sram_orgz_info,
 
 void dump_verilog_top_testbench_call_top_module(t_sram_orgz_info* cur_sram_orgz_info,
                                                 FILE* fp,
-                                                char* circuit_name) {
+                                                char* circuit_name,
+                                                bool is_explicit_mapping) {
   /*
   int iblock, iopad_idx;
   */
@@ -322,7 +323,7 @@ void dump_verilog_top_testbench_call_top_module(t_sram_orgz_info* cur_sram_orgz_
   fprintf(fp, "//------Call defined Top-level Verilog Module -----\n");
   fprintf(fp, "%s_top U0 (\n", circuit_name);
 
-  dump_verilog_top_module_ports(cur_sram_orgz_info, fp, VERILOG_PORT_CONKT);
+  dump_verilog_top_module_ports(cur_sram_orgz_info, fp, VERILOG_PORT_CONKT, is_explicit_mapping);
 
   fprintf(fp, ");\n");
   return;
@@ -1354,7 +1355,7 @@ void dump_verilog_top_testbench(t_sram_orgz_info* cur_sram_orgz_info,
   dump_verilog_top_testbench_ports(cur_sram_orgz_info, fp, circuit_name);
 
   /* Call defined top-level module */
-  dump_verilog_top_testbench_call_top_module(cur_sram_orgz_info, fp, circuit_name);
+  dump_verilog_top_testbench_call_top_module(cur_sram_orgz_info, fp, circuit_name, false);
 
   /* Add stimuli for reset, set, clock and iopad signals */
   dump_verilog_top_testbench_stimuli(cur_sram_orgz_info, fp, verilog);

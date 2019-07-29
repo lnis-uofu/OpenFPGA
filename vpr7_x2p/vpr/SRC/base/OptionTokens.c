@@ -57,6 +57,8 @@ struct s_TokenPair OptionBaseTokenList[] = {
 		{ "power_output_file", OT_POWER_OUT_FILE }, /* Output file for power results */
 		{ "power", OT_POWER }, /* Run power estimation? */
 		{ "tech_properties", OT_CMOS_TECH_BEHAVIOR_FILE }, /* Technology properties */
+        /* Xifan Tang: Tileable routing support !!! */
+		{ "use_tileable_route_chan_width", OT_USE_TILEABLE_ROUTE_CHAN_WIDTH}, /* Enable adaption to tileable route chan_width  */
         /* General FPGA_X2P: FPGA-SPICE/Verilog/Bitstream Options */
         { "fpga_x2p_rename_illegal_port", OT_FPGA_X2P_RENAME_ILLEGAL_PORT }, /* Xifan TANG: rename illegal port names */
         { "fpga_x2p_signal_density_weight", OT_FPGA_X2P_SIGNAL_DENSITY_WEIGHT }, /* The weight of signal density */
@@ -84,6 +86,7 @@ struct s_TokenPair OptionBaseTokenList[] = {
         /* Xifan TANG: Synthsizable Verilog */
         { "fpga_verilog", OT_FPGA_VERILOG_SYN },
         { "fpga_verilog_dir", OT_FPGA_VERILOG_SYN_DIR },
+        { "fpga_verilog_explicit_mapping", OT_FPGA_VERILOG_SYN_EXPLICIT_MAPPING },
         { "fpga_verilog_print_top_testbench", OT_FPGA_VERILOG_SYN_PRINT_TOP_TESTBENCH },
         { "fpga_verilog_print_autocheck_top_testbench", OT_FPGA_VERILOG_SYN_PRINT_AUTOCHECK_TOP_TESTBENCH },
         { "fpga_verilog_print_input_blif_testbench", OT_FPGA_VERILOG_SYN_PRINT_INPUT_BLIF_TESTBENCH },
@@ -99,7 +102,7 @@ struct s_TokenPair OptionBaseTokenList[] = {
         { "fpga_verilog_print_sdc_analysis", OT_FPGA_VERILOG_SYN_PRINT_SDC_ANALYSIS }, /* Specify the simulator path for Verilog netlists */
         /* Xifan Tang: Bitstream generator */
         { "fpga_bitstream_generator", OT_FPGA_BITSTREAM_GENERATOR }, /* turn on bitstream generator, and specify the output file */
-        { "fpga_bitstream_output_file", OT_FPGA_BITSTREAM_OUTPUT_FILE }, /* turn on bitstream generator, and specify the output file */
+ //       { "fpga_bitstream_output_file", OT_FPGA_BITSTREAM_OUTPUT_FILE }, /* turn on bitstream generator, and specify the output file */ // AA: temporarily deprecated
         /* mrFPGA: Xifan TANG */
         {"show_sram", OT_SHOW_SRAM},
         {"show_pass_trans", OT_SHOW_PASS_TRANS},

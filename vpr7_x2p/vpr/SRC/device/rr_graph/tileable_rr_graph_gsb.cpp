@@ -357,6 +357,7 @@ void build_gsb_one_group_track_to_track_map(const t_rr_graph* rr_graph,
                                             const RRGSB& rr_gsb, 
                                             const enum e_switch_block_type sb_type, 
                                             const int Fs,
+                                            const bool wire_opposite_side,
                                             const t_track_group from_tracks, /* [0..gsb_side][track_indices] */
                                             const t_track_group to_tracks, /* [0..gsb_side][track_indices] */
                                             t_track2track_map* track2track_map) {
@@ -387,7 +388,11 @@ void build_gsb_one_group_track_to_track_map(const t_rr_graph* rr_graph,
         if (from_side == to_side) {
           continue;
         }
-
+        /* Bypass those from_side is opposite to to_side if required */
+        if ( (true == wire_opposite_side) 
+          && (to_side_manager.get_opposite() == from_side) ) {
+          continue;
+        }
         /* Get other track_ids depending on the switch block pattern */
         /* Find the track ids that will start at the other sides */
         std::vector<size_t> to_track_ids = get_switch_block_to_track_id(sb_type, Fs, from_side, inode, 
@@ -477,6 +482,7 @@ t_track2track_map build_gsb_track_to_track_map(const t_rr_graph* rr_graph,
                                                const int Fs,
                                                const enum e_switch_block_type sb_subtype, 
                                                const int subFs,
+                                               const bool wire_opposite_side,
                                                const std::vector<t_segment_inf> segment_inf) {
   t_track2track_map track2track_map; /* [0..gsb_side][0..chan_width][track_indices] */
 
@@ -549,7 +555,8 @@ t_track2track_map build_gsb_track_to_track_map(const t_rr_graph* rr_graph,
   /* For Group 1: we build connections between end_tracks and start_tracks*/
   build_gsb_one_group_track_to_track_map(rr_graph, rr_gsb, 
                                          sb_type, Fs,
-                                         end_tracks, start_tracks, 
+                                         true, /* End tracks should always to wired to start tracks */ 
+                                         end_tracks, start_tracks,
                                          &track2track_map);
 
   /* For Group 2: we build connections between end_tracks and start_tracks*/
@@ -558,6 +565,7 @@ t_track2track_map build_gsb_track_to_track_map(const t_rr_graph* rr_graph,
    */
   build_gsb_one_group_track_to_track_map(rr_graph, rr_gsb, 
                                          sb_subtype, subFs,
+                                         wire_opposite_side, /* Pass tracks may not be wired to start tracks */ 
                                          pass_tracks, start_tracks, 
                                          &track2track_map);
 
@@ -1054,52 +1062,53 @@ void build_gsb_one_ipin_track2pin_map(const t_rr_graph* rr_graph,
     assert (0 == actual_track_list.size() % 2);
    
     /* Scale Fc  */
-    int actual_Fc = Fc * actual_track_list.size() / chan_width; 
+    int actual_Fc = std::ceil((float)Fc * (float)actual_track_list.size() / (float)chan_width); 
     /* Minimum Fc should be 2 : ensure we will connect to a pair of routing tracks */
-    actual_Fc = std::max(2, actual_Fc);
+    actual_Fc = std::max(1, actual_Fc);
     /* Compute the step between two connection from this IPIN to tracks: 
      * step = W' / Fc', W' and Fc' are the adapted W and Fc from actual_track_list and Fc_in 
-    */
-    size_t track_step = actual_track_list.size() / actual_Fc;
-    /* Track step mush be a multiple of 2!!!*/
-    if (0 != track_step % 2) {
-      track_step--; /* minus 1 to increase connectivity */
-    }
+     */
+    size_t track_step = std::floor((float)actual_track_list.size() / (float)actual_Fc);
     /* Make sure step should be at least 2 */
-    track_step = std::max(2, (int)track_step);
+    track_step = std::max(1, (int)track_step);
     /* Adapt offset to the range of actual_track_list */
     size_t actual_offset = offset % actual_track_list.size();
     /* rotate the track list by an offset */
-    std::rotate(actual_track_list.begin(), actual_track_list.begin() + actual_offset, actual_track_list.end());   
+    if (0 < actual_offset) {
+      std::rotate(actual_track_list.begin(), actual_track_list.begin() + actual_offset, actual_track_list.end());   
+    }
 
     /* Assign tracks: since we assign 2 track per round, we increment itrack by 2* step  */
     int track_cnt = 0;
+    /* Keep assigning until we meet the Fc requirement */
     for (size_t itrack = 0; itrack < actual_track_list.size(); itrack = itrack + 2 * track_step) {
       /* Update pin2track map */ 
       size_t chan_side_index = chan_side_manager.to_size_t();
       size_t ipin_index = ipin_node - rr_graph->rr_node;
+      /* itrack may exceed the size of actual_track_list, adapt it */
+      size_t actual_itrack = itrack % actual_track_list.size();
       /* track_index may exceed the chan_width(), adapt it */
-      size_t track_index = actual_track_list[itrack] % chan_width;
+      size_t track_index = actual_track_list[actual_itrack] % chan_width;
 
       (*track2ipin_map)[chan_side_index][track_index].push_back(ipin_index);
 
       /* track_index may exceed the chan_width(), adapt it */
-      track_index = (actual_track_list[itrack] + 1) % chan_width;
+      track_index = (actual_track_list[actual_itrack] + 1) % chan_width;
 
       (*track2ipin_map)[chan_side_index][track_index].push_back(ipin_index);
 
       track_cnt += 2;
-      /* Stop when we have enough Fc: this may lead to some tracks have zero drivers. 
-       * So I comment it. And we just make sure its track_cnt >= actual_Fc
-      if (actual_Fc == track_cnt) {
-        break;
-      }
-       */
     }
 
     /* Ensure the number of tracks is similar to Fc */
-    //printf("Fc_in=%d, track_cnt=%d\n", actual_Fc, track_cnt);
-    assert (actual_Fc <= track_cnt);
+    /* Give a warning if Fc is < track_cnt */
+    /*
+    if (actual_Fc != track_cnt) {
+      vpr_printf(TIO_MESSAGE_INFO, 
+                 "IPIN Node(%lu) will have a different Fc(=%lu) than specified(=%lu)!\n",
+                 ipin_node - rr_graph->rr_node, track_cnt, actual_Fc);
+    }
+    */
   }
   
   return;
@@ -1155,13 +1164,13 @@ void build_gsb_one_opin_pin2track_map(const t_rr_graph* rr_graph,
     }
    
     /* Scale Fc  */
-    int actual_Fc = Fc * actual_track_list.size() / chan_width; 
+    int actual_Fc = std::ceil((float)Fc * (float)actual_track_list.size() / (float)chan_width); 
     /* Minimum Fc should be 1 : ensure we will drive 1 routing track */
     actual_Fc = std::max(1, actual_Fc);
     /* Compute the step between two connection from this IPIN to tracks: 
      * step = W' / Fc', W' and Fc' are the adapted W and Fc from actual_track_list and Fc_in 
     */
-    size_t track_step = actual_track_list.size() / actual_Fc;
+    size_t track_step = std::floor((float)actual_track_list.size() / (float)actual_Fc);
     /* Track step mush be a multiple of 2!!!*/
     /* Make sure step should be at least 1 */
     track_step = std::max(1, (int)track_step);
@@ -1176,10 +1185,13 @@ void build_gsb_one_opin_pin2track_map(const t_rr_graph* rr_graph,
 
     /* Assign tracks  */
     int track_cnt = 0;
+    /* Keep assigning until we meet the Fc requirement */
     for (size_t itrack = 0; itrack < actual_track_list.size(); itrack = itrack + track_step) {
       /* Update pin2track map */ 
       size_t opin_side_index = opin_side_manager.to_size_t();
-      size_t track_index = actual_track_list[itrack];
+      /* itrack may exceed the size of actual_track_list, adapt it */
+      size_t actual_itrack = itrack % actual_track_list.size();
+      size_t track_index = actual_track_list[actual_itrack];
       size_t track_rr_node_index = rr_gsb.get_chan_node(chan_side, track_index) - rr_graph->rr_node;
       (*opin2track_map)[opin_side_index][opin_node_id].push_back(track_rr_node_index);
       /* update track counter */
@@ -1193,8 +1205,14 @@ void build_gsb_one_opin_pin2track_map(const t_rr_graph* rr_graph,
     }
 
     /* Ensure the number of tracks is similar to Fc */
-    //printf("Fc_out=%lu, scaled_Fc_out=%d, track_cnt=%d, actual_track_cnt=%lu/%lu\n", Fc, actual_Fc, track_cnt, actual_track_list.size(), chan_width);
-    assert (actual_Fc <= track_cnt);
+    /* Give a warning if Fc is < track_cnt */
+    /*
+    if (actual_Fc != track_cnt) {
+      vpr_printf(TIO_MESSAGE_INFO, 
+                 "OPIN Node(%lu) will have a different Fc(=%lu) than specified(=%lu)!\n",
+                 opin_node_id, track_cnt, actual_Fc);
+    }
+    */
   }
   
   return;

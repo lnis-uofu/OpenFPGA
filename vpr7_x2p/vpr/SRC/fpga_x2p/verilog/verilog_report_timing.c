@@ -284,7 +284,7 @@ void verilog_generate_one_report_timing_within_sb(FILE* fp,
   fprintf(fp, "%s/", 
           rr_sb.gen_sb_verilog_instance_name()); 
   /* Find which side the ending pin locates, and determine the coordinate */
-  dump_verilog_one_sb_routing_pin(fp, rr_sb, src_rr_node);
+  dump_verilog_one_sb_routing_pin(fp, rr_sb, src_rr_node, false);
 
   fprintf(fp, " -to "); 
 
@@ -326,7 +326,7 @@ void verilog_generate_one_report_timing_within_sb(FILE* fp,
   fprintf(fp, "%s/", 
               gen_verilog_one_sb_instance_name(cur_sb_info)); 
   /* Find which side the ending pin locates, and determine the coordinate */
-  dump_verilog_one_sb_routing_pin(fp, cur_sb_info, src_rr_node);
+  dump_verilog_one_sb_routing_pin(fp, cur_sb_info, src_rr_node, false);
 
   fprintf(fp, " -to "); 
 
@@ -906,7 +906,7 @@ void dump_verilog_one_sb_wire_segemental_report_timing(FILE* fp,
   fprintf(fp, "%s/", 
           src_sb.gen_sb_verilog_instance_name()); 
   /* Find which side the ending pin locates, and determine the coordinate */
-  dump_verilog_one_sb_routing_pin(fp, src_sb, drive_rr_node);
+  dump_verilog_one_sb_routing_pin(fp, src_sb, drive_rr_node, false);
 
   /* Switch depends on the type of des_rr_node  */
   switch(des_rr_node->type) {
@@ -1048,23 +1048,24 @@ void dump_verilog_one_sb_wire_segemental_report_timing(FILE* fp,
           break;
         case CHANX:
         case CHANY: {
-          /* Get the coordinate of ending SB */
-          next_sb_coordinator = get_chan_node_ending_sb_coordinator(src_rr_node, des_rr_node);
-          const RRGSB& next_sb = device_rr_gsb.get_gsb(next_sb_coordinator); 
+            /* Get the coordinate of ending SB */
+            next_sb_coordinator = get_chan_node_ending_sb_coordinator(src_rr_node, des_rr_node);
+            const RRGSB& next_sb = device_rr_gsb.get_gsb(next_sb_coordinator); 
 
-          fprintf(fp, " -to "); 
-        
-          /* output instance name */
-          fprintf(fp, "%s/",
-                  next_sb.gen_sb_verilog_instance_name());
-          /* Find which side the ending pin locates, and determine the coordinate */
-          dump_verilog_one_sb_chan_pin(fp, next_sb, src_rr_node, IN_PORT); 
-        
-          fprintf(fp, " -point_to_point"); 
-          fprintf(fp, " -unconstrained"); 
-        
-          break;
+            fprintf(fp, " -to "); 
+          
+            /* output instance name */
+            fprintf(fp, "%s/",
+                    next_sb.gen_sb_verilog_instance_name());
+            /* Find which side the ending pin locates, and determine the coordinate */
+            dump_verilog_one_sb_chan_pin(fp, next_sb, src_rr_node, IN_PORT); 
+          
+            fprintf(fp, " -point_to_point"); 
+            fprintf(fp, " -unconstrained"); 
+          
+            break;
           }
+
         /* Verification is done before the loops.*/
         default:
           break;
@@ -1114,6 +1115,7 @@ void dump_verilog_one_sb_wire_segemental_report_timing(FILE* fp,
         
           break;
           }
+
         /* Verification is done before the loops.*/
         default:
           break;
@@ -1163,6 +1165,7 @@ void dump_verilog_one_sb_wire_segemental_report_timing(FILE* fp,
         
           break;
           }
+
         /* Verification is done before the loops.*/
         default:
           break;
@@ -1212,6 +1215,7 @@ void dump_verilog_one_sb_wire_segemental_report_timing(FILE* fp,
         
           break;
           }
+
         /* Verification is done before the loops.*/
         default:
           break;
@@ -1283,7 +1287,7 @@ void dump_verilog_one_sb_wire_segemental_report_timing(FILE* fp,
   fprintf(fp, "%s/", 
               gen_verilog_one_sb_instance_name(src_sb_info)); 
   /* Find which side the ending pin locates, and determine the coordinate */
-  dump_verilog_one_sb_routing_pin(fp, src_sb_info, drive_rr_node);
+  dump_verilog_one_sb_routing_pin(fp, src_sb_info, drive_rr_node, false);
 
   /* Switch depends on the type of des_rr_node  */
   switch(des_rr_node->type) {
@@ -1427,6 +1431,9 @@ void dump_verilog_one_sb_wire_segemental_report_timing(FILE* fp,
 
           fprintf(fp, " -point_to_point"); 
           fprintf(fp, " -unconstrained"); 
+        
+          break;
+
         /* Verification is done before the loops.*/
         default:
           break;
@@ -1465,6 +1472,9 @@ void dump_verilog_one_sb_wire_segemental_report_timing(FILE* fp,
 
           fprintf(fp, " -point_to_point"); 
           fprintf(fp, " -unconstrained"); 
+        
+          break;
+
         /* Verification is done before the loops.*/
         default:
           break;
@@ -1503,6 +1513,9 @@ void dump_verilog_one_sb_wire_segemental_report_timing(FILE* fp,
 
           fprintf(fp, " -point_to_point"); 
           fprintf(fp, " -unconstrained"); 
+        
+          break;
+
         /* Verification is done before the loops.*/
         default:
           break;
@@ -1541,6 +1554,9 @@ void dump_verilog_one_sb_wire_segemental_report_timing(FILE* fp,
 
           fprintf(fp, " -point_to_point"); 
           fprintf(fp, " -unconstrained"); 
+        
+          break;
+
         /* Verification is done before the loops.*/
         default:
           break;
@@ -1549,7 +1565,7 @@ void dump_verilog_one_sb_wire_segemental_report_timing(FILE* fp,
     }
   }
 
-  if (NULL != rpt_name) {
+   if (NULL != rpt_name) {
     fprintf(fp, " > %s\n", rpt_name); 
   } else {
     fprintf(fp, "\n"); 
@@ -2063,7 +2079,7 @@ void verilog_generate_one_routing_wire_report_timing(FILE* fp,
         fprintf(fp, "%s/", rr_sb.gen_sb_verilog_instance_name()); 
         /* output pin name */
         dump_verilog_one_sb_routing_pin(fp, rr_sb, 
-                                        wire_rr_node->drive_rr_nodes[iedge]);
+                                        wire_rr_node->drive_rr_nodes[iedge], false);
         fprintf(fp, " -to "); 
         /* output instance name */
         fprintf(fp, "%s/",
@@ -2121,14 +2137,14 @@ void verilog_generate_one_routing_wire_report_timing(FILE* fp,
                 rr_sb.gen_sb_verilog_instance_name()); 
         /* output pin name */
         dump_verilog_one_sb_routing_pin(fp, rr_sb, 
-                                        wire_rr_node->drive_rr_nodes[iedge]);
+                                        wire_rr_node->drive_rr_nodes[iedge], false);
         fprintf(fp, " -to "); 
         /* output instance name */
         fprintf(fp, "%s/",
                 next_sb.gen_sb_verilog_instance_name());
         /* Find which side the ending pin locates, and determine the coordinate */
         dump_verilog_one_sb_routing_pin(fp, next_sb, 
-                                        wire_rr_node);
+                                        wire_rr_node, false);
         /* Print through pins */
         if (TRUE == sdc_opts.print_thru_pins) { 
           fprintf(fp, " -through_pins "); 
@@ -2229,7 +2245,8 @@ void verilog_generate_one_routing_wire_report_timing(FILE* fp,
                     gen_verilog_one_sb_instance_name(cur_sb_info)); 
         /* output pin name */
         dump_verilog_one_sb_routing_pin(fp, cur_sb_info, 
-                                        wire_rr_node->drive_rr_nodes[iedge]);
+                                        wire_rr_node->drive_rr_nodes[iedge],
+                                        false);
         fprintf(fp, " -to "); 
         /* output instance name */
         fprintf(fp, "%s/",
@@ -2273,14 +2290,14 @@ void verilog_generate_one_routing_wire_report_timing(FILE* fp,
                     gen_verilog_one_sb_instance_name(cur_sb_info)); 
         /* output pin name */
         dump_verilog_one_sb_routing_pin(fp, cur_sb_info, 
-                                        wire_rr_node->drive_rr_nodes[iedge]);
+                                        wire_rr_node->drive_rr_nodes[iedge], false);
         fprintf(fp, " -to "); 
         /* output instance name */
         fprintf(fp, "%s/",
                 gen_verilog_one_sb_instance_name(next_sb));
         /* Find which side the ending pin locates, and determine the coordinate */
         dump_verilog_one_sb_routing_pin(fp, next_sb, 
-                                        wire_rr_node);
+                                        wire_rr_node, false);
         /* Print through pins */
         if (TRUE == sdc_opts.print_thru_pins) { 
           fprintf(fp, " -through_pins "); 
@@ -2723,6 +2740,9 @@ void verilog_generate_routing_wire_report_timing(t_trpt_opts trpt_opts,
   vpr_printf(TIO_MESSAGE_INFO,
              "Generating TCL script to report timing for routing wires\n");
 
+  vpr_printf(TIO_MESSAGE_INFO,
+             "Generating TCL script to report timing for routing wires horizontal\n");
+  /* Start with horizontal SBs*/
   /* We start from a SB[x][y] */
   DeviceCoordinator sb_range = device_rr_gsb.get_gsb_range();
   for (size_t ix = 0; ix < sb_range.get_x(); ++ix) {
@@ -2741,6 +2761,9 @@ void verilog_generate_routing_wire_report_timing(t_trpt_opts trpt_opts,
           /* Bypass if we have only 1 driving node */
           if (1 == rr_sb.get_chan_node(side_manager.get_side(), itrack)->num_drive_rr_nodes) {
             continue; 
+          }
+          if (CHANY == rr_sb.get_chan_node(side_manager.get_side(), itrack)->type) {
+            continue;
           }
           /* Check if L_wire exists in the linked list */
           L_wire = get_rr_node_wire_length(rr_sb.get_chan_node(side_manager.get_side(), itrack));
@@ -2775,6 +2798,72 @@ void verilog_generate_routing_wire_report_timing(t_trpt_opts trpt_opts,
       }
     }
   }
+
+  /* close file*/
+  fclose_wire_L_file_handler_in_llist(rr_path_cnt);
+  /* Need to reset the different variables */
+  rr_path_cnt = NULL;
+  wireL_cnt = NULL;
+  path_cnt = 0; 
+
+  vpr_printf(TIO_MESSAGE_INFO,
+             "Generating TCL script to report timing for routing wires vertical\n");
+  /* Continue with vertical SBs*/
+  /* We start from a SB[x][y] */
+  for (size_t ix = 0; ix < sb_range.get_x(); ++ix) {
+    for (size_t iy = 0; iy < sb_range.get_y(); ++iy) {
+      const RRGSB& rr_sb = device_rr_gsb.get_gsb(ix, iy);
+      for (size_t side = 0; side < rr_sb.get_num_sides(); ++side) {
+        Side side_manager(side);
+        for (size_t itrack = 0; itrack < rr_sb.get_chan_width(side_manager.get_side()); ++itrack) {
+          assert((CHANX == rr_sb.get_chan_node(side_manager.get_side(), itrack)->type)
+               ||(CHANY == rr_sb.get_chan_node(side_manager.get_side(), itrack)->type));
+          /* We only care the output port and it should indicate a SB mux */
+          if ( (OUT_PORT != rr_sb.get_chan_node_direction(side_manager.get_side(), itrack)) 
+             || (false != rr_sb.is_sb_node_passing_wire(side_manager.get_side(), itrack))) {
+            continue; 
+          }
+          /* Bypass if we have only 1 driving node */
+          if (1 == rr_sb.get_chan_node(side_manager.get_side(), itrack)->num_drive_rr_nodes) {
+            continue; 
+          }
+          if (CHANX == rr_sb.get_chan_node(side_manager.get_side(), itrack)->type) {
+            continue;
+          }
+          /* Check if L_wire exists in the linked list */
+          L_wire = get_rr_node_wire_length(rr_sb.get_chan_node(side_manager.get_side(), itrack));
+          /* Get counter */
+          rr_path_cnt = get_wire_L_counter_in_llist(rr_path_cnt, trpt_opts, "vertical", L_wire, &wireL_cnt);
+          path_cnt = wireL_cnt->cnt;
+          fp = wireL_cnt->file_handler;
+          /* This is a new L-wire, create the file handler and the mkdir command to the TCL script */
+          if (0 == path_cnt) {
+            fprintf(fp, "exec mkdir -p %s\n",
+                    gen_verilog_one_routing_report_timing_Lwire_dir_path(fpga_verilog_opts.report_timing_path, L_wire)); 
+          }
+          /* Restore the disable_timing for the SB outputs on the path */
+          /*fprintf(fp, "# Restore disable timing for the following Switch Block output:\n");
+          restore_disable_timing_one_sb_output(fp, 
+                                               rr_sb,
+                                               rr_sb.get_chan_node(side_manager.get_side(), itrack));*/
+          fprintf(fp, "# Report timing for all the paths using this output:\n");
+          /* Dump report_timing command */
+          verilog_generate_one_routing_segmental_report_timing(fp, fpga_verilog_opts,
+                                                               rr_sb, 
+                                                               side_manager.get_side(), itrack, 
+                                                               LL_rr_node, "vertical", &path_cnt);
+          /* Disable the timing again */
+          /*fprintf(fp, "# Set disable timing for the following Switch Block output:\n");
+          set_disable_timing_one_sb_output(fp, 
+                                           rr_sb,
+                                           rr_sb.get_chan_node(side_manager.get_side(), itrack));*/
+          /* Update the wire L*/
+          update_wire_L_counter_in_llist(rr_path_cnt, L_wire, path_cnt);
+        }
+      }
+    }
+  }
+
 
   /* close file*/
   fclose_wire_L_file_handler_in_llist(rr_path_cnt);

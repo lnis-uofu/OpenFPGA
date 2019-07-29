@@ -119,6 +119,25 @@ std::vector<size_t> get_num_tracks_per_seg_type(const size_t chan_width,
 } 
 
 /************************************************************************
+ * Adapt the number of channel width to a tileable routing architecture
+ ***********************************************************************/
+int adapt_to_tileable_route_chan_width(int chan_width, 
+                                       std::vector<t_segment_inf> segment_infs) {
+  int tileable_chan_width = 0;
+  
+  /* Estimate the number of segments per type by the given ChanW*/ 
+  std::vector<size_t> num_tracks_per_seg_type = get_num_tracks_per_seg_type(chan_width, 
+                                                                            segment_infs, 
+                                                                            true); /* Force to use the full segment group */
+  /* Sum-up the number of tracks */
+  for (size_t iseg = 0; iseg < num_tracks_per_seg_type.size(); ++iseg) {
+    tileable_chan_width += num_tracks_per_seg_type[iseg];
+  }
+  
+  return tileable_chan_width;
+}
+
+/************************************************************************
  * Build details of routing tracks in a channel 
  * The function will 
  * 1. Assign the segments for each routing channel,

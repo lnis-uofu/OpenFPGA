@@ -759,6 +759,8 @@ struct s_router_opts {
 	boolean verify_binary_search;
 	boolean full_stats;
 	boolean doRouting;
+    /* Xifan Tang: option to enable adaption to tileable route channel width */
+    boolean use_tileable_route_chan_width;
 };
 
 /* All the parameters controlling the router's operation are in this        *
@@ -808,6 +810,7 @@ struct s_det_routing_arch {
 	int Fs;
 	enum e_switch_block_type switch_block_type;
 	int sub_Fs;
+    boolean wire_opposite_side;
 	enum e_switch_block_type switch_block_sub_type;
 	int num_segment;
 	short num_switch;
@@ -1255,6 +1258,7 @@ struct s_spice_opts {
 typedef struct s_syn_verilog_opts t_syn_verilog_opts;
 struct s_syn_verilog_opts {
   boolean dump_syn_verilog;
+  boolean dump_explicit_verilog;
   char* syn_verilog_dump_dir;
   boolean print_top_testbench;
   boolean print_input_blif_testbench;

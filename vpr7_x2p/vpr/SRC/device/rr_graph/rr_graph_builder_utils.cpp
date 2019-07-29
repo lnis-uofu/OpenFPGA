@@ -625,7 +625,7 @@ void print_rr_graph_stats() {
 
   /* Get the minimum SB mux size */
   int num_sb_mux = 0;
-  short avg_sb_mux_size = 0;
+  size_t avg_sb_mux_size = 0;
   for (int inode = 0; inode < num_rr_nodes; ++inode) {
     /* MUX multiplexers for SBs */
     if ( (CHANX == rr_node[inode].type) 
@@ -640,7 +640,7 @@ void print_rr_graph_stats() {
   vpr_printf(TIO_MESSAGE_INFO, "Total No. of Switch Block Multiplexer size:%d\n", num_sb_mux);
   vpr_printf(TIO_MESSAGE_INFO, "Maximum Switch Block Multiplexer size:%d\n", max_sb_mux_size);
   vpr_printf(TIO_MESSAGE_INFO, "Minimum Switch Block Multiplexer size:%d\n", min_sb_mux_size);
-  vpr_printf(TIO_MESSAGE_INFO, "Average Switch Block Multiplexer size:%d\n", avg_sb_mux_size);
+  vpr_printf(TIO_MESSAGE_INFO, "Average Switch Block Multiplexer size:%lu\n", avg_sb_mux_size);
   vpr_printf(TIO_MESSAGE_INFO, "------------------------------------------------\n");
 
   /* Get the maximum SB mux size */
@@ -662,7 +662,7 @@ void print_rr_graph_stats() {
 
   /* Get the minimum SB mux size */
   int num_cb_mux = 0;
-  short avg_cb_mux_size = 0;
+  size_t avg_cb_mux_size = 0;
   for (int inode = 0; inode < num_rr_nodes; ++inode) {
     /* MUX multiplexers for SBs */
     if (IPIN == rr_node[inode].type) {
@@ -675,7 +675,7 @@ void print_rr_graph_stats() {
   vpr_printf(TIO_MESSAGE_INFO, "Total No. of Connection Block Multiplexer size:%d\n", num_cb_mux);
   vpr_printf(TIO_MESSAGE_INFO, "Maximum Connection Block Multiplexer size:%d\n", max_cb_mux_size);
   vpr_printf(TIO_MESSAGE_INFO, "Minimum Connection Block Multiplexer size:%d\n", min_cb_mux_size);
-  vpr_printf(TIO_MESSAGE_INFO, "Average Connection Block Multiplexer size:%d\n", avg_cb_mux_size);
+  vpr_printf(TIO_MESSAGE_INFO, "Average Connection Block Multiplexer size:%lu\n", avg_cb_mux_size);
   vpr_printf(TIO_MESSAGE_INFO, "------------------------------------------------\n");
 
 

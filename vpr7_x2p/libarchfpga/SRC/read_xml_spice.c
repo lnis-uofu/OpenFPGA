@@ -451,8 +451,8 @@ static void ProcessSpiceModelBuffer(ezxml_t Node,
     read_spice_model = FALSE;
   }
 
-  buffer->spice_model_name = my_strdup(FindProperty(Node, "spice_model_name", read_spice_model));
-  ezxml_set_attr(Node, "spice_model_name", NULL); 
+  buffer->spice_model_name = my_strdup(FindProperty(Node, "circuit_model_name", read_spice_model));
+  ezxml_set_attr(Node, "circuit_model_name", NULL); 
 
   /*Find Type*/
   Prop = my_strdup(FindProperty(Node, "topology", read_buf_info));
@@ -475,9 +475,9 @@ static void ProcessSpiceModelBuffer(ezxml_t Node,
     if (0 == strcmp(Prop,"on")) {
       buffer->tapered_buf = 1;
       /* Try to dig more properites ...*/
-     buffer->tap_buf_level = GetIntProperty(Node, "tap_buf_level", TRUE, 1);
+     buffer->tap_buf_level = GetIntProperty(Node, "tap_drive_level", TRUE, 1);
      buffer->f_per_stage = GetIntProperty(Node, "f_per_stage", FALSE, 4);
-      ezxml_set_attr(Node, "tap_buf_level", NULL);
+      ezxml_set_attr(Node, "tap_drive_level", NULL);
       ezxml_set_attr(Node, "f_per_stage", NULL);
     } else if (0 == strcmp(FindProperty(Node,"tapered",TRUE),"off")) {
       buffer->tapered_buf = 0;
@@ -616,8 +616,10 @@ static void ProcessSpiceModelGate(ezxml_t Node,
     gate_info->type = SPICE_MODEL_GATE_AND;
   } else if (0 == strcmp(FindProperty(Node,"topology",TRUE),"OR")) {
     gate_info->type = SPICE_MODEL_GATE_OR;
+  } else if (0 == strcmp(FindProperty(Node,"topology",TRUE),"MUX2")) {
+    gate_info->type = SPICE_MODEL_GATE_MUX2;
   } else {
-    vpr_printf(TIO_MESSAGE_ERROR,"[LINE %d] Invalid topology of gates. Should be [AND|OR].\n",
+    vpr_printf(TIO_MESSAGE_ERROR,"[LINE %d] Invalid topology of gates. Should be [AND|OR|MUX2].\n",
               Node->line);
     exit(1);
   } 
@@ -752,16 +754,16 @@ static void ProcessSpiceModelPort(ezxml_t Node,
   ezxml_set_attr(Node, "is_config_enable", NULL);
 
   /* Check if this port is linked to another spice_model*/
-  port->spice_model_name = my_strdup(FindProperty(Node,"spice_model_name",FALSE));
-  ezxml_set_attr(Node, "spice_model_name", NULL);
+  port->spice_model_name = my_strdup(FindProperty(Node,"circuit_model_name",FALSE));
+  ezxml_set_attr(Node, "circuit_model_name", NULL);
 
   /* For BL/WL, BLB/WLB ports, we need to get the spice_model for inverters */
   if ((SPICE_MODEL_PORT_BL == port->type)
     ||(SPICE_MODEL_PORT_WL == port->type) 
     ||(SPICE_MODEL_PORT_BLB == port->type) 
     ||(SPICE_MODEL_PORT_WLB == port->type)) {
-    port->inv_spice_model_name = my_strdup(FindProperty(Node, "inv_spice_model_name", FALSE));
-    ezxml_set_attr(Node, "inv_spice_model_name", NULL);
+    port->inv_spice_model_name = my_strdup(FindProperty(Node, "inv_circuit_model_name", FALSE));
+    ezxml_set_attr(Node, "inv_circuit_model_name", NULL);
   }
  
   return;
@@ -1042,8 +1044,8 @@ static void ProcessSpiceModel(ezxml_t Parent,
   if (Node) {
     spice_model->pass_gate_logic = (t_spice_model_pass_gate_logic*)my_malloc(sizeof(t_spice_model_pass_gate_logic));
     /* Find spice_model_name */
-    spice_model->pass_gate_logic->spice_model_name = my_strdup(FindProperty(Node, "spice_model_name", TRUE));
-	ezxml_set_attr(Node, "spice_model_name", NULL);
+    spice_model->pass_gate_logic->spice_model_name = my_strdup(FindProperty(Node, "circuit_model_name", TRUE));
+	ezxml_set_attr(Node, "circuit_model_name", NULL);
     FreeNode(Node);
   } else if ((SPICE_MODEL_MUX == spice_model->type)
             ||(SPICE_MODEL_LUT == spice_model->type)) {
@@ -1106,9 +1108,9 @@ void ProcessSpiceSRAMOrganization(INOUTP ezxml_t Node,
     return;
   } 
 
-  cur_sram_inf_orgz->spice_model_name = my_strdup(FindProperty(Node, "spice_model_name", required));
+  cur_sram_inf_orgz->spice_model_name = my_strdup(FindProperty(Node, "circuit_model_name", required));
   cur_sram_inf_orgz->spice_model = NULL;
-  ezxml_set_attr(Node, "spice_model_name", NULL);
+  ezxml_set_attr(Node, "circuit_model_name", NULL);
 
   /* read organization type*/
   Prop = FindProperty(Node, "organization", required);
@@ -1501,14 +1503,14 @@ void ProcessSpiceSettings(ezxml_t Parent,
   ProcessSpiceTechLibTransistors(Parent, &(spice->tech_lib));
   
   /* module spice models*/
-  Node = FindElement(Parent, "module_spice_models", FALSE);
+  Node = FindElement(Parent, "module_circuit_models", FALSE);
   if (Node) {
-    spice->num_spice_model = CountChildren(Node, "spice_model", 1);
+    spice->num_spice_model = CountChildren(Node, "circuit_model", 1);
     /*Alloc*/
     spice->spice_models = (t_spice_model*)my_malloc(spice->num_spice_model*sizeof(t_spice_model));
     /* Assign each found spice model*/
     for (imodel = 0; imodel < spice->num_spice_model; imodel++) {
-      Cur = FindFirstElement(Node, "spice_model", TRUE);
+      Cur = FindFirstElement(Node, "circuit_model", TRUE);
       ProcessSpiceModel(Cur, &(spice->spice_models[imodel]));
       FreeNode(Cur); 
     }
