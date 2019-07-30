@@ -15,7 +15,7 @@ In this manual, we will introduce how to use FPGA-SPICE to conduct an accurate p
 
 In the appendix, we introduce the hierarchy of the generated SPICE netlists and testbenches, to help you customize the SPICE netlists. We also attach an example of an architecture XML file for your interest.
 
-The technical details can be found in our ICCD’15 paper :cite:`XTang_ICCD_2015`.
+The technical details can be found in our ICCD’15 paper :cite:`XTang_ICCD_2015` and TVLSI'19 paper :cite:`XTang_TVLSI_2019`.
 
 FPGA-Verilog
 ------------
@@ -24,7 +24,9 @@ On a second note, it is becoming more and more necessary to have fast access to 
 
 This motivates us to generate the Verilog code of the architecture to enable a second level of research concerning the architectures to be explored. This Verilog code encompasses the whole design and is divided into multiple sub-directories for targetted analysis or a global one. This is left to the choice of the user. 
 
-In this manual, we present FPGA-Verilog. This extension enables the generation of a fully functional Verilog code enabling a deeper understanding of the architectures of the FPGAs. We introduce different options to this module to do the verification of the system. This will be presented in more depth in the FPGA-Bitstream section
+In this manual, we present FPGA-Verilog. This extension enables the generation of a fully functional Verilog code enabling a deeper understanding of the architectures of the FPGAs. We introduce different options to this module to do the verification of the system. This will be presented in more depth in the FPGA-Bitstream section.
+
+The technical details can be found in our TVLSI'19 paper :cite:`XTang_TVLSI_2019`.
 
 FPGA-Bitstream
 --------------
