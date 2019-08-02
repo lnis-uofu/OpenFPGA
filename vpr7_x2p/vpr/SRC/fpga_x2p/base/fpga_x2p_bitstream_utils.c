@@ -199,6 +199,9 @@ int count_num_sram_bits_one_mux_spice_model(t_spice_model* cur_spice_model,
     exit(1);
   }
 
+  /* When a local encoder is added 
+   */
+
   /* Free */
 
   return num_sram_bits;

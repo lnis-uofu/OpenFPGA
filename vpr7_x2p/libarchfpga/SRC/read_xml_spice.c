@@ -600,6 +600,10 @@ static void ProcessSpiceModelMUX(ezxml_t Node,
   mux_info->advanced_rram_design = GetBooleanProperty(Node,"advanced_rram_design", FALSE, FALSE);
   ezxml_set_attr(Node, "advanced_rram_design", NULL);
 
+  /* Specify if should use a local encoder for this multiplexer */
+  mux_info->local_encoder = GetBooleanProperty(Node, "local_encoder", FALSE, FALSE);
+  ezxml_set_attr(Node, "local_encoder", NULL);
+
   return;
 }
 

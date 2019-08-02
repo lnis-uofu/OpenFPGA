@@ -96,7 +96,7 @@ enum e_sram_orgz {
   SPICE_SRAM_STANDALONE,   /* SRAMs are organized and accessed as standalone elements */
   SPICE_SRAM_SCAN_CHAIN,   /* SRAMs are organized and accessed by a scan-chain */
   SPICE_SRAM_MEMORY_BANK,  /* SRAMs are organized and accessed by memory bank */
-  SPICE_SRAM_LOCAL_ENCODER /* SRAMs are organized and accessed by a local encoder */
+  SPICE_SRAM_LOCAL_ENCODER  /* SRAMs are organized and accessed by a local encoder */
 };
 
 enum e_spice_accuracy_type {
@@ -274,6 +274,7 @@ struct s_spice_model_mux {
   boolean add_const_input;
   int const_input_val;
   boolean advanced_rram_design;
+  boolean local_encoder; /* Define if a local encoder should be added to this mux */
 };
 
 struct s_spice_model_lut {

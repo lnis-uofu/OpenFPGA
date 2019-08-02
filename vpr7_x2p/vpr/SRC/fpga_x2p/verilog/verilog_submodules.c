@@ -34,8 +34,11 @@
 #include "verilog_pbtypes.h"
 #include "verilog_decoder.h"
 
+#include "verilog_submodules.h"
+
 /***** Subroutines *****/
 
+static 
 void dump_verilog_submodule_timing(FILE* fp,
                                    t_spice_model* cur_spice_model) {
   int iport, ipin, iedge;
@@ -85,6 +88,7 @@ void dump_verilog_submodule_timing(FILE* fp,
   return;
 }
 
+static 
 void dump_verilog_submodule_signal_init(FILE* fp,
                                         t_spice_model* cur_spice_model) {
   int iport;
@@ -124,6 +128,7 @@ void dump_verilog_submodule_signal_init(FILE* fp,
 
 
 /* Dump a module of inverter or buffer or tapered buffer */
+static 
 void dump_verilog_invbuf_module(FILE* fp,
                                 t_spice_model* invbuf_spice_model) {
   int ipin, iport, port_cnt;
@@ -344,6 +349,7 @@ void dump_verilog_invbuf_module(FILE* fp,
 }
 
 /* Dump a module of pass-gate logic */
+static 
 void dump_verilog_passgate_module(FILE* fp,
                                   t_spice_model* passgate_spice_model) {
   int iport;
@@ -448,6 +454,7 @@ void dump_verilog_passgate_module(FILE* fp,
 }
 
 /* Dump a module of pass-gate logic */
+static 
 void dump_verilog_gate_module(FILE* fp,
                               t_spice_model* gate_spice_model) {
   int iport, ipin, jport, jpin;
@@ -568,10 +575,10 @@ void dump_verilog_gate_module(FILE* fp,
  * 1. inverters
  * 2. buffers
  * 3. pass-gate logics */
+static 
 void dump_verilog_submodule_essentials(char* verilog_dir, char* submodule_dir,
                                        int num_spice_model,
-                                       t_spice_model* spice_models,
-                                       t_syn_verilog_opts fpga_verilog_opts) {
+                                       t_spice_model* spice_models) {
   int imodel; 
   char* verilog_name = my_strcat(submodule_dir, essentials_verilog_file_name);
   FILE* fp = NULL;
@@ -616,6 +623,7 @@ void dump_verilog_submodule_essentials(char* verilog_dir, char* submodule_dir,
 }
 
 /* Dump a CMOS MUX basis module */
+static 
 void dump_verilog_cmos_mux_one_basis_module(FILE* fp, 
                                             char* mux_basis_subckt_name, 
                                             int mux_size, 
@@ -906,6 +914,7 @@ void dump_verilog_rram_mux_one_basis_module_structural(FILE* fp,
 
 
 /* Dump a RRAM MUX basis module */
+static 
 void dump_verilog_rram_mux_one_basis_module(FILE* fp, 
                                             char* mux_basis_subckt_name, 
                                             int num_input_basis_subckt, 
@@ -1021,6 +1030,7 @@ void dump_verilog_rram_mux_one_basis_module(FILE* fp,
 }
 
 /* Print a basis submodule */
+static 
 void dump_verilog_mux_one_basis_module(FILE* fp, 
                                        char* mux_basis_subckt_name, 
                                        int mux_size,
@@ -1073,6 +1083,7 @@ void dump_verilog_mux_one_basis_module(FILE* fp,
 /**
  * Dump a verilog module for the basis circuit of a MUX
  */
+static 
 void dump_verilog_mux_basis_module(FILE* fp, 
                                    t_spice_mux_model* spice_mux_model) {
   /** Act depends on the structure of MUX
@@ -1165,6 +1176,7 @@ void dump_verilog_mux_basis_module(FILE* fp,
   return;
 }
 
+static 
 void dump_verilog_cmos_mux_tree_structure(FILE* fp, 
                                           char* mux_basis_subckt_name,
                                           t_spice_model spice_model,
@@ -1195,7 +1207,7 @@ void dump_verilog_cmos_mux_tree_structure(FILE* fp,
     inter_buf_loc[i] = FALSE;
   }
   if (NULL != spice_model.lut_intermediate_buffer->location_map) {
-    assert (spice_mux_arch.num_level - 1 == strlen(spice_model.lut_intermediate_buffer->location_map));
+    assert ((size_t)spice_mux_arch.num_level - 1 == strlen(spice_model.lut_intermediate_buffer->location_map));
     /* For intermediate buffers */ 
     for (i = 0; i < spice_mux_arch.num_level - 1; i++) {
       if ('1' == spice_model.lut_intermediate_buffer->location_map[i]) {
@@ -1404,6 +1416,7 @@ void dump_verilog_cmos_mux_tree_structure(FILE* fp,
   return;
 }
 
+static 
 void dump_verilog_cmos_mux_multilevel_structure(FILE* fp, 
                                                 char* mux_basis_subckt_name,
                                                 char* mux_special_basis_subckt_name,
@@ -1541,6 +1554,7 @@ void dump_verilog_cmos_mux_multilevel_structure(FILE* fp,
   return;
 }
 
+static 
 void dump_verilog_cmos_mux_onelevel_structure(FILE* fp, 
                                               char* mux_basis_subckt_name,
                                               t_spice_model spice_model,
@@ -1622,6 +1636,7 @@ void dump_verilog_cmos_mux_onelevel_structure(FILE* fp,
   return;
 }
 
+static 
 void dump_verilog_cmos_mux_submodule(FILE* fp,
                                      int mux_size,
                                      t_spice_model spice_model,
@@ -1927,6 +1942,7 @@ void dump_verilog_cmos_mux_submodule(FILE* fp,
  * However I use another function, because in future the internal structure may change.
  * We will suffer less software problems.
  */
+static 
 void dump_verilog_rram_mux_tree_structure(FILE* fp, 
                                           char* mux_basis_subckt_name,
                                           t_spice_model spice_model,
@@ -1995,6 +2011,7 @@ void dump_verilog_rram_mux_tree_structure(FILE* fp,
   return;
 }
 
+static 
 void dump_verilog_rram_mux_multilevel_structure(FILE* fp, 
                                                 char* mux_basis_subckt_name,
                                                 char* mux_special_basis_subckt_name,
@@ -2095,6 +2112,7 @@ void dump_verilog_rram_mux_multilevel_structure(FILE* fp,
   return;
 }
 
+static 
 void dump_verilog_rram_mux_onelevel_structure(FILE* fp, 
                                               char* mux_basis_subckt_name,
                                               t_spice_model spice_model,
@@ -2133,6 +2151,7 @@ void dump_verilog_rram_mux_onelevel_structure(FILE* fp,
   return;
 }
 
+static 
 void dump_verilog_rram_mux_submodule(FILE* fp,
                                      int mux_size,
                                      t_spice_model spice_model,
@@ -2366,6 +2385,7 @@ void dump_verilog_rram_mux_submodule(FILE* fp,
 }
 
 /* Dump a memory submodule for the MUX */
+static 
 void dump_verilog_cmos_mux_mem_submodule(FILE* fp,
                                          int mux_size,
                                          t_spice_model spice_model,
@@ -2428,6 +2448,7 @@ void dump_verilog_cmos_mux_mem_submodule(FILE* fp,
    * 3. output ports 
    * 4. bl/wl ports 
    */
+  /* Local Encoding support */
   dump_verilog_mem_module_port_map(fp, mem_model, TRUE, 0, num_conf_bits, my_bool_to_boolean(is_explicit_mapping)); 
   fprintf(fp, ");\n");
 
@@ -2453,6 +2474,7 @@ void dump_verilog_cmos_mux_mem_submodule(FILE* fp,
  * We always dump a basis submodule for a MUX
  * whatever structure it is: one-level, two-level or multi-level
  */
+static 
 void dump_verilog_mux_mem_module(FILE* fp, 
                                  t_spice_mux_model* spice_mux_model,
                                  bool is_explicit_mapping) {
@@ -2506,6 +2528,7 @@ void dump_verilog_mux_mem_module(FILE* fp,
  * We always dump a basis submodule for a MUX
  * whatever structure it is: one-level, two-level or multi-level
  */
+static 
 void dump_verilog_mux_module(FILE* fp, 
                              t_spice_mux_model* spice_mux_model,
                              bool is_explicit_mapping) {
@@ -2568,7 +2591,7 @@ void dump_verilog_mux_module(FILE* fp,
 /*** Top-level function *****/
 
 /* We should count how many multiplexers with different sizes are needed */
-
+static 
 void dump_verilog_submodule_muxes(t_sram_orgz_info* cur_sram_orgz_info,
                                   char* verilog_dir,
                                   char* submodule_dir,
@@ -2696,6 +2719,7 @@ void dump_verilog_submodule_muxes(t_sram_orgz_info* cur_sram_orgz_info,
   return;
 }
 
+static 
 void dump_verilog_wire_module(FILE* fp,
                               char* wire_subckt_name,
                               t_spice_model verilog_model) {
@@ -2765,6 +2789,7 @@ void dump_verilog_wire_module(FILE* fp,
 }
 
 /* Dump one module of a LUT */
+static 
 void dump_verilog_submodule_one_lut(FILE* fp, 
                                     t_spice_model* verilog_model,
                                     bool is_explicit_mapping) {
@@ -3203,6 +3228,7 @@ void dump_verilog_submodule_one_lut(FILE* fp,
 }
 
 /* Dump one module of a LUT */
+static 
 void dump_verilog_submodule_one_mem(FILE* fp, 
                                     t_spice_model* verilog_model) {
   int iport, ipin, pin_index;
@@ -3275,6 +3301,7 @@ void dump_verilog_submodule_one_mem(FILE* fp,
 }
 
 /* Dump verilog top-level module for LUTs */
+static 
 void dump_verilog_submodule_luts(char* verilog_dir,
                                  char* submodule_dir,
                                  int num_spice_model,
@@ -3317,6 +3344,7 @@ void dump_verilog_submodule_luts(char* verilog_dir,
 }
 
 /* Dump a submodule which is a constant vdd */
+static 
 void dump_verilog_hard_wired_vdd(FILE* fp, 
                                  t_spice_model verilog_model) {
   int num_output_port = 0;
@@ -3349,6 +3377,7 @@ void dump_verilog_hard_wired_vdd(FILE* fp,
 }
 
 /* Dump a submodule which is a constant vdd */
+static 
 void dump_verilog_hard_wired_gnd(FILE* fp, 
                                  t_spice_model verilog_model) {
   int num_output_port = 0;
@@ -3380,6 +3409,7 @@ void dump_verilog_hard_wired_gnd(FILE* fp,
   return;
 }
 
+static 
 void dump_verilog_submodule_wires(char* verilog_dir,
                                   char* subckt_dir, 
                                   int num_segments,
@@ -3461,6 +3491,7 @@ void dump_verilog_submodule_wires(char* verilog_dir,
   return;
 }
 
+static 
 void dump_verilog_submodule_memories(t_sram_orgz_info* cur_sram_orgz_info,
                                      char* verilog_dir,
                                      char* submodule_dir,
@@ -3581,6 +3612,7 @@ void dump_verilog_submodule_memories(t_sram_orgz_info* cur_sram_orgz_info,
 
 
 /* Print a non-global port for the template */
+static 
 void dump_one_verilog_template_module_one_port(FILE* fp, int* cnt,
                                               t_spice_model* cur_spice_model,
                                               enum e_spice_model_port_type port_type) {
@@ -3607,6 +3639,7 @@ void dump_one_verilog_template_module_one_port(FILE* fp, int* cnt,
 }
 
 /* Give a template for a user-defined module */
+static 
 void dump_one_verilog_template_module(FILE* fp,
                                       t_spice_model* cur_spice_model) {
   int iport;
@@ -3663,6 +3696,7 @@ void dump_one_verilog_template_module(FILE* fp,
 }
 
 /* Give a template of all the submodules that are user-defined */
+static 
 void dump_verilog_submodule_templates(t_sram_orgz_info* cur_sram_orgz_info, 
                                       char* verilog_dir,
                                       char* submodule_dir,
@@ -3714,8 +3748,7 @@ void dump_verilog_submodules(t_sram_orgz_info* cur_sram_orgz_info,
   vpr_printf(TIO_MESSAGE_INFO, "Generating essential modules...\n");
   dump_verilog_submodule_essentials(verilog_dir, submodule_dir,
                                     Arch.spice->num_spice_model, 
-                                    Arch.spice->spice_models,
-                                    fpga_verilog_opts);
+                                    Arch.spice->spice_models);
 
   /* 1. MUXes */
   vpr_printf(TIO_MESSAGE_INFO, "Generating modules of multiplexers...\n");

@@ -3029,7 +3029,10 @@ int dump_verilog_mem_module_one_port_map(FILE* fp,
   return cnt;
 }
 
-/* Output the ports of a SRAM MUX */
+/* 
+ * Dump the port map of a memory module 
+ * which consist of a number of SRAMs/SCFFs etc.
+ */
 void dump_verilog_mem_module_port_map(FILE* fp, 
                                       t_spice_model* mem_model,
                                       boolean dump_port_type,
