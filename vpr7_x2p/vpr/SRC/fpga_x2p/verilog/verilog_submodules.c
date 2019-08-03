@@ -2848,25 +2848,41 @@ void dump_verilog_mux_local_encoder_module(FILE* fp, int num_outputs) {
   /* Outputs */
   dump_verilog_generic_port(fp, VERILOG_PORT_OUTPUT,
                             "data", 
-                            num_outputs - 1, 0); 
+                            0, num_outputs - 1); 
   fprintf(fp, ",\n");
   dump_verilog_generic_port(fp, VERILOG_PORT_OUTPUT,
                             "data_inv", 
-                            num_outputs - 1, 0); 
+                            0, num_outputs - 1); 
   fprintf(fp, "\n);\n");
 
   dump_verilog_generic_port(fp, VERILOG_PORT_REG,
                             "data_reg", 
-                            num_outputs - 1, 0); 
+                            0, num_outputs - 1); 
   fprintf(fp, ";\n");
 
   /* Print the truth table of this encoder */
   /* Internal logics */
+  /* We use a magic number -1 as the addr=1 should be mapped to ...1
+   * Otherwise addr will map addr=1 to ..10 
+   * Note that there should be a range for the shift operators
+   * We should narrow the encoding to be applied to a given set of data
+   * This will lead to that any addr which falls out of the op code of data
+   * will give a all-zero code
+   * For example: 
+   * data is 5-bit while addr is 3-bit 
+   * data=8'b0_0000 is reserved by addr=3'b000;
+   * data=8'b0_0001 will be encoded to addr=3'b001;
+   * data=8'b0_0010 will be encoded to addr=3'b010;
+   * data=8'b0_0100 will be encoded to addr=3'b011;
+   * data=8'b0_1000 will be encoded to addr=3'b100;
+   * data=8'b1_0000 will be encoded to addr=3'b101;
+   * The rest of addr codes 3'b110, 3'b111 will be decoded to data=8'b0_0000;
+   */
   fprintf(fp, "always@(addr, data)\n");
   fprintf(fp, "begin\n");
   fprintf(fp, "\tdata_reg = %d'b0;\n", num_outputs);
-  fprintf(fp, "\tif (0 < addr) begin\n");
-  fprintf(fp, "\t\tdata_reg = 1'b1 << addr;\n");
+  fprintf(fp, "\tif ((0 < addr) && (addr < %d) ) begin\n", num_outputs);
+  fprintf(fp, "\t\tdata_reg = 1'b1 << (addr - 1)\n"); 
   fprintf(fp, "\tend\n");
   fprintf(fp, "end\n");
 
