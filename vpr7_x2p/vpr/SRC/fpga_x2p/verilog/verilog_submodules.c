@@ -1452,6 +1452,16 @@ void dump_verilog_cmos_mux_multilevel_structure(FILE* fp,
   }
   fprintf(fp, "wire [%d:%d] mux2_l%d_in; \n",
           0, 0, 0);
+
+  if (TRUE == spice_model.design_tech_info.mux_info->local_encoder) {
+    /* Print local wires for local encoders */
+    fprintf(fp, "wire [%d:0] %s_data;\n", 
+            spice_mux_arch.num_level * spice_mux_arch.num_input_basis - 1,
+            sram_port[0]->prefix);
+    fprintf(fp, "wire [%d:0] %s_data_inv;\n", 
+            spice_mux_arch.num_level * spice_mux_arch.num_input_basis - 1,
+            sram_port[0]->prefix);
+  }
  
   for (i = 0; i < spice_mux_arch.num_level; i++) {
     level = spice_mux_arch.num_level - i;
@@ -1459,6 +1469,24 @@ void dump_verilog_cmos_mux_multilevel_structure(FILE* fp,
     sram_idx = nextlevel * spice_mux_arch.num_input_basis;
     /* Check */
     assert(nextlevel > -1);
+    /* Determine the number of input of this basis */
+    cur_num_input_basis = spice_mux_arch.num_input_basis;
+    /* Instanciate local encoder circuit here */
+    if (TRUE == spice_model.design_tech_info.mux_info->local_encoder) {
+      /* Get the number of inputs */
+      int num_outputs = spice_mux_arch.num_input - 1;
+      int num_inputs = ceil(log(num_outputs + 1) / log(2));
+      /* Find the decoder name */
+      fprintf(fp, "%s %s_0_ (", 
+              generate_verilog_decoder_subckt_name(num_inputs, num_outputs),
+              generate_verilog_decoder_subckt_name(num_inputs, num_outputs));
+      if (true == is_explicit_mapping) {
+        fprintf(fp, ".addr(%s), .data(%s_data[%d:%d]), .data_inv(%s_data_inv[%d:%d]) );\n", 
+                sram_port[0]->prefix,
+                sram_port[0]->prefix, sram_idx + cur_num_input_basis - 1, sram_idx,
+                sram_port[0]->prefix, sram_idx + cur_num_input_basis - 1, sram_idx);
+      }
+    }
     /* Print basis muxQto1 for each level*/
     for (j = 0; j < spice_mux_arch.num_input_per_level[nextlevel]; j = j + cur_num_input_basis) {
       /* output index */
@@ -1489,15 +1517,25 @@ void dump_verilog_cmos_mux_multilevel_structure(FILE* fp,
           } else {
             fprintf(fp, ", ");
           }
-          fprintf(fp, "%s[%d:%d]", 
-          sram_port[0]->prefix, sram_idx, sram_idx + cur_num_input_basis -1);
+          if (TRUE == spice_model.design_tech_info.mux_info->local_encoder) {
+            fprintf(fp, "%s_data[%d:%d]", 
+                    sram_port[0]->prefix, sram_idx, sram_idx + cur_num_input_basis -1);
+          } else {
+            fprintf(fp, "%s[%d:%d]", 
+                    sram_port[0]->prefix, sram_idx, sram_idx + cur_num_input_basis -1);
+          }
           if (true == is_explicit_mapping) {
             fprintf(fp, "), .mem_inv(");
           } else {
             fprintf(fp, ", ");
           }
-          fprintf(fp, "%s_inv[%d:%d]", 
-          sram_port[0]->prefix, sram_idx, sram_idx + cur_num_input_basis -1);
+          if (TRUE == spice_model.design_tech_info.mux_info->local_encoder) {
+            fprintf(fp, "%s_data_inv[%d:%d]", 
+                    sram_port[0]->prefix, sram_idx, sram_idx + cur_num_input_basis -1);
+          } else {
+            fprintf(fp, "%s_inv[%d:%d]", 
+                    sram_port[0]->prefix, sram_idx, sram_idx + cur_num_input_basis -1);
+          }
           if (true == is_explicit_mapping) {
             fprintf(fp, ")");
           }
@@ -1529,15 +1567,25 @@ void dump_verilog_cmos_mux_multilevel_structure(FILE* fp,
       } else {
         fprintf(fp, ", ");
       }
-      fprintf(fp, "%s[%d:%d]", 
-      sram_port[0]->prefix, sram_idx, sram_idx + cur_num_input_basis -1);
+      if (TRUE == spice_model.design_tech_info.mux_info->local_encoder) {
+        fprintf(fp, "%s_data[%d:%d]", 
+                sram_port[0]->prefix, sram_idx, sram_idx + cur_num_input_basis -1);
+      } else {
+        fprintf(fp, "%s[%d:%d]", 
+                sram_port[0]->prefix, sram_idx, sram_idx + cur_num_input_basis -1);
+      }
       if (true == is_explicit_mapping) {
         fprintf(fp, "), .mem_inv(");
       } else {
         fprintf(fp, ", ");
       }
-      fprintf(fp, "%s_inv[%d:%d]", 
-      sram_port[0]->prefix, sram_idx, sram_idx + cur_num_input_basis -1);
+      if (TRUE == spice_model.design_tech_info.mux_info->local_encoder) {
+        fprintf(fp, "%s_data_inv[%d:%d]", 
+                sram_port[0]->prefix, sram_idx, sram_idx + cur_num_input_basis -1);
+      } else {
+        fprintf(fp, "%s_inv[%d:%d]", 
+                sram_port[0]->prefix, sram_idx, sram_idx + cur_num_input_basis -1);
+      }
       if (true == is_explicit_mapping) {
         fprintf(fp, ")");
       }
@@ -1619,21 +1667,57 @@ void dump_verilog_cmos_mux_onelevel_structure(FILE* fp,
     if (true == is_explicit_mapping) {
       fprintf(fp, ".mem(");
     }
-    fprintf(fp, "%s[0:%d]", 
-    sram_port[0]->prefix, spice_mux_arch.num_input - 1); /* sram */
+    if (TRUE == spice_model.design_tech_info.mux_info->local_encoder) {
+      fprintf(fp, "%s_data[0:%d]", 
+              sram_port[0]->prefix, spice_mux_arch.num_input - 1); /* sram */
+    } else {
+      fprintf(fp, "%s[0:%d]", 
+              sram_port[0]->prefix, spice_mux_arch.num_input - 1); /* sram */
+    }
     if (true == is_explicit_mapping) {
       fprintf(fp, "), .mem_inv(");
     } else {
       fprintf(fp, ", ");
     }
-    fprintf(fp, "%s_inv[0:%d]", 
-    sram_port[0]->prefix, spice_mux_arch.num_input - 1); /* sram_inv */
+    if (TRUE == spice_model.design_tech_info.mux_info->local_encoder) {
+      fprintf(fp, "%s_data_inv[0:%d]", 
+              sram_port[0]->prefix, spice_mux_arch.num_input - 1); /* sram_inv */
+    } else {
+      fprintf(fp, "%s_inv[0:%d]", 
+              sram_port[0]->prefix, spice_mux_arch.num_input - 1); /* sram_inv */
+    }
     if (true == is_explicit_mapping) {
       fprintf(fp, ")");
     }
   }
   fprintf(fp, "\n");
   fprintf(fp, ");\n");
+
+  if (2 < spice_mux_arch.num_input) {
+    /* Instanciate local encoder circuit here */
+    if (TRUE == spice_model.design_tech_info.mux_info->local_encoder) {
+      /* Get the number of inputs */
+      int num_outputs = spice_mux_arch.num_input - 1;
+      int num_inputs = ceil(log(num_outputs + 1) / log(2));
+      /* Print local wires for local encoders */
+      fprintf(fp, "wire [%d:0] %s_data;\n", 
+              spice_mux_arch.num_input - 1,
+              sram_port[0]->prefix);
+      fprintf(fp, "wire [%d:0] %s_data_inv;\n", 
+              spice_mux_arch.num_input - 1,
+              sram_port[0]->prefix);
+      /* Find the decoder name */
+      fprintf(fp, "%s %s_0_ (", 
+              generate_verilog_decoder_subckt_name(num_inputs, num_outputs),
+              generate_verilog_decoder_subckt_name(num_inputs, num_outputs));
+      if (true == is_explicit_mapping) {
+        fprintf(fp, ".addr(%s), .data(%s_data), .data_inv(%s_data_inv) );\n", 
+                sram_port[0]->prefix,
+                sram_port[0]->prefix,
+                sram_port[0]->prefix);
+      }
+    } 
+  }
  
   return;
 }
@@ -1923,9 +2007,6 @@ void dump_verilog_cmos_mux_submodule(FILE* fp,
     }
   }
 
-  /* Instanciate local encoder circuit here */
-  
-   
   fprintf(fp, "endmodule\n");
   fprintf(fp, "//----- END CMOS MUX info: spice_model_name=%s, size=%d -----\n\n", spice_model.name, mux_size);
   fprintf(fp, "\n");
@@ -2767,6 +2848,10 @@ void dump_verilog_mux_local_encoder_module(FILE* fp, int num_outputs) {
   dump_verilog_generic_port(fp, VERILOG_PORT_OUTPUT,
                             "data", 
                             num_outputs - 1, 0); 
+  fprintf(fp, ",\n");
+  dump_verilog_generic_port(fp, VERILOG_PORT_OUTPUT,
+                            "data_inv", 
+                            num_outputs - 1, 0); 
   fprintf(fp, "\n);\n");
 
   dump_verilog_generic_port(fp, VERILOG_PORT_REG,
@@ -2785,6 +2870,8 @@ void dump_verilog_mux_local_encoder_module(FILE* fp, int num_outputs) {
   fprintf(fp, "end\n");
 
   fprintf(fp, "assign data = data_reg;\n");
+  fprintf(fp, "assign data_inv = ~data;\n");
+  
 
   /* Finish */
   fprintf(fp, "endmodule\n");
