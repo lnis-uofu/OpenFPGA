@@ -2915,6 +2915,19 @@ char* generate_verilog_mem_subckt_name(t_spice_model* spice_model,
   return subckt_name;
 }
 
+/* Generate the subckt name for a decoder submodule */
+char* generate_verilog_decoder_subckt_name(int addr_len, int data_len) {
+  char* subckt_name = NULL;
+
+  subckt_name = (char*)my_malloc(sizeof(char)*(strlen("decoder") 
+                                 + strlen(my_itoa(addr_len)) + 1 
+                                 + strlen(my_itoa(data_len)) + 1)); 
+  sprintf(subckt_name, "%s%d_%d",
+          "decoder", addr_len, data_len);
+
+  return subckt_name;
+}
+
 /* Generate the subckt name for a MUX module/submodule */
 char* generate_verilog_mux_basis_subckt_name(t_spice_model* spice_model, 
                                              int mux_size, char* postfix) {

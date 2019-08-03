@@ -10,6 +10,8 @@
 #include <assert.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <vector>
+#include <algorithm>
 
 /* Include vpr structs*/
 #include "util.h"
@@ -1770,7 +1772,7 @@ void dump_verilog_cmos_mux_submodule(FILE* fp,
   if (2 == spice_mux_arch.num_input) {
     cur_mux_structure = SPICE_MODEL_STRUCTURE_ONELEVEL;
   }
-  
+
   /* Print internal architecture*/ 
   switch (cur_mux_structure) {
   case SPICE_MODEL_STRUCTURE_TREE:
@@ -1921,6 +1923,8 @@ void dump_verilog_cmos_mux_submodule(FILE* fp,
     }
   }
 
+  /* Instanciate local encoder circuit here */
+  
    
   fprintf(fp, "endmodule\n");
   fprintf(fp, "//----- END CMOS MUX info: spice_model_name=%s, size=%d -----\n\n", spice_model.name, mux_size);
@@ -2719,6 +2723,203 @@ void dump_verilog_submodule_muxes(t_sram_orgz_info* cur_sram_orgz_info,
   return;
 }
 
+/***************************************************************************************
+ * Create a Verilog module for a encoder with a given output size
+ *                     Inputs 
+ *                   | | | | | 
+ *                 +-----------+
+ *                /             \
+ *               /     Encoder   \
+ *              +-----------------+
+ *                | | | | | | | |
+ *                  Outputs
+ *               
+ *  The outputs are assumes to be one-hot codes (at most only one '1' exist)
+ *  Considering this fact, there are only num_of_outputs + 1 conditions to be encoded.
+ *  Therefore, the number of inputs is ceil(log(num_of_outputs+1)/log(2))
+ *  We plus 1, which is all-zero condition for outputs
+ ***************************************************************************************/
+static 
+void dump_verilog_mux_local_encoder_module(FILE* fp, int num_outputs) {
+  /* Make sure we have a encoder which is at least 2 ! */
+  assert (2 <= num_outputs);
+
+  /* Get the number of inputs */
+  int num_inputs = ceil(log(num_outputs + 1) / log(2));
+
+  /* Validate the FILE handler */
+  if (NULL == fp) {
+    vpr_printf(TIO_MESSAGE_ERROR,
+               "(FILE:%s,LINE[%d]Invalid file handler!\n", 
+               __FILE__, __LINE__); 
+    exit(1);
+  } 
+
+  /* Print the name of encoder */
+  fprintf(fp, "module %s(", generate_verilog_decoder_subckt_name(num_inputs, num_outputs));
+  fprintf(fp, "\n");
+  /* Inputs */
+  dump_verilog_generic_port(fp, VERILOG_PORT_INPUT,
+                            "addr", 
+                            num_inputs - 1, 0); 
+  fprintf(fp, ",\n");
+  /* Outputs */
+  dump_verilog_generic_port(fp, VERILOG_PORT_OUTPUT,
+                            "data", 
+                            num_outputs - 1, 0); 
+  fprintf(fp, "\n);\n");
+
+  dump_verilog_generic_port(fp, VERILOG_PORT_REG,
+                            "data_reg", 
+                            num_outputs - 1, 0); 
+  fprintf(fp, ";\n");
+
+  /* Print the truth table of this encoder */
+  /* Internal logics */
+  fprintf(fp, "always@(addr, data)\n");
+  fprintf(fp, "begin\n");
+  fprintf(fp, "\tdata_reg = %d'b0;\n", num_outputs);
+  fprintf(fp, "\tif (0 < addr) begin\n");
+  fprintf(fp, "\t\tdata_reg = 1'b1 << addr;\n");
+  fprintf(fp, "\tend\n");
+  fprintf(fp, "end\n");
+
+  fprintf(fp, "assign data = data_reg;\n");
+
+  /* Finish */
+  fprintf(fp, "endmodule\n");
+
+  return;
+}
+
+/* We should count how many multiplexers with different sizes are needed */
+static 
+void dump_verilog_submodule_local_encoders(t_sram_orgz_info* cur_sram_orgz_info,
+                                           char* verilog_dir,
+                                           char* submodule_dir,
+                                           int num_switch,
+                                           t_switch_inf* switches,
+                                           t_spice* spice,
+                                           t_det_routing_arch* routing_arch,
+                                           bool is_explicit_mapping) {
+  
+  /* Statisitcs for input sizes and structures of MUXes 
+   * used in FPGA architecture 
+   */
+  /* We have linked list whichs stores spice model information of multiplexer*/
+  t_llist* muxes_head = NULL; 
+  t_llist* temp = NULL;
+  FILE* fp = NULL;
+  char* verilog_name = my_strcat(submodule_dir, local_encoder_verilog_file_name);
+  int num_input_ports = 0;
+  t_spice_model_port** input_ports = NULL;
+  int num_sram_ports = 0;
+  t_spice_model_port** sram_ports = NULL;
+
+  int num_input_basis = 0;
+  t_spice_mux_model* cur_spice_mux_model = NULL;
+
+  /* Alloc the muxes*/
+  muxes_head = stats_spice_muxes(num_switch, switches, spice, routing_arch);
+
+  /* Print the muxes netlist*/
+  fp = fopen(verilog_name, "w");
+  if (NULL == fp) {
+    vpr_printf(TIO_MESSAGE_ERROR,"(FILE:%s,LINE[%d])Failure in create subckt SPICE netlist %s",__FILE__, __LINE__, verilog_name); 
+    exit(1);
+  } 
+  /* Generate the descriptions*/
+  dump_verilog_file_header(fp,"MUXes used in FPGA");
+
+  verilog_include_defines_preproc_file(fp, verilog_dir);
+
+  /* Create a vector for local encoders with different sizes */
+  std::vector<int> encoder_sizes;
+  /* Make sure a clean start */
+  encoder_sizes.clear();
+
+  /* Print mux netlist one by one*/
+  temp = muxes_head;
+  while(temp) {
+    assert(NULL != temp->dptr);
+    cur_spice_mux_model = (t_spice_mux_model*)(temp->dptr);
+    /* Bypass the spice models who has a user-defined subckt */
+    if (NULL != cur_spice_mux_model->spice_model->verilog_netlist) {
+      input_ports = find_spice_model_ports(cur_spice_mux_model->spice_model, SPICE_MODEL_PORT_INPUT, &num_input_ports, TRUE);
+      sram_ports = find_spice_model_ports(cur_spice_mux_model->spice_model, SPICE_MODEL_PORT_SRAM, &num_sram_ports, TRUE);
+      assert(0 != num_input_ports);
+      assert(0 != num_sram_ports);
+      /* Check the Input port size */
+      if (cur_spice_mux_model->size != input_ports[0]->size) {
+        vpr_printf(TIO_MESSAGE_ERROR, 
+                   "(File:%s,[LINE%d])User-defined MUX SPICE MODEL(%s) size(%d) unmatch with the architecture needs(%d)!\n",
+                   __FILE__, __LINE__, cur_spice_mux_model->spice_model->name, input_ports[0]->size,cur_spice_mux_model->size);
+        exit(1);
+      }
+      /* Check the SRAM port size */
+      num_input_basis = determine_num_input_basis_multilevel_mux(cur_spice_mux_model->size, 
+                                                                 cur_spice_mux_model->spice_model->design_tech_info.mux_info->mux_num_level);
+      if ((num_input_basis * cur_spice_mux_model->spice_model->design_tech_info.mux_info->mux_num_level) != sram_ports[0]->size) {
+        vpr_printf(TIO_MESSAGE_ERROR, 
+                   "(File:%s,[LINE%d])User-defined MUX SPICE MODEL(%s) SRAM size(%d) unmatch with the num of level(%d)!\n",
+                   __FILE__, __LINE__, cur_spice_mux_model->spice_model->name, sram_ports[0]->size, cur_spice_mux_model->spice_model->design_tech_info.mux_info->mux_num_level*num_input_basis);
+        exit(1);
+      }
+      /* Move on to the next*/
+      temp = temp->next;
+      continue;
+    }
+    /* Bypass those without local encoders */
+    if (FALSE == cur_spice_mux_model->spice_model->design_tech_info.mux_info->local_encoder) {
+      /* Move on to the next*/
+      temp = temp->next;
+      continue;
+    }
+    /* Reach here, we need to generate a local encoder Verilog module */
+    /* Generate the spice_mux_arch */
+    cur_spice_mux_model->spice_mux_arch = (t_spice_mux_arch*)my_malloc(sizeof(t_spice_mux_arch));
+    init_spice_mux_arch(cur_spice_mux_model->spice_model, cur_spice_mux_model->spice_mux_arch, cur_spice_mux_model->size);
+    /* We will bypass all the TREE-LIKE multiplexers and those with 2-inputs */
+    if ( (SPICE_MODEL_STRUCTURE_TREE == cur_spice_mux_model->spice_mux_arch->structure) 
+      || ( 2 == cur_spice_mux_model->spice_mux_arch->num_input) ) {
+      /* Move on to the next*/
+      temp = temp->next;
+      continue;
+    }
+    /* Find the size of local encoders */
+    std::vector<int>::iterator it = std::find(encoder_sizes.begin(), encoder_sizes.end(), cur_spice_mux_model->spice_mux_arch->num_input_basis);
+    /* See if a same-sized local encoder is already in the list */
+    if (it == encoder_sizes.end()) {
+       /* Need to add to the list */
+       encoder_sizes.push_back(cur_spice_mux_model->spice_mux_arch->num_input_basis);
+    }
+    /* Move on to the next*/
+    temp = temp->next;
+  }
+
+
+  /* Print the local encoder subckt */
+  for (size_t i = 0; i < encoder_sizes.size(); ++i) { 
+    dump_verilog_mux_local_encoder_module(fp, encoder_sizes[i]);
+  }
+
+  vpr_printf(TIO_MESSAGE_INFO,"Generated %d local encoders for Multiplexers.\n",
+             encoder_sizes.size());
+
+  /* Add fname to the linked list */
+  submodule_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(submodule_verilog_subckt_file_path_head, verilog_name);  
+
+  /* Close the file*/
+  fclose(fp);
+
+  /* remember to free the linked list*/
+  free_muxes_llist(muxes_head);
+  /* Free strings */
+  free(verilog_name);
+
+  return;
+}
+
 static 
 void dump_verilog_wire_module(FILE* fp,
                               char* wire_subckt_name,
@@ -3343,72 +3544,6 @@ void dump_verilog_submodule_luts(char* verilog_dir,
   return;
 }
 
-/* Dump a submodule which is a constant vdd */
-static 
-void dump_verilog_hard_wired_vdd(FILE* fp, 
-                                 t_spice_model verilog_model) {
-  int num_output_port = 0;
-  t_spice_model_port** output_port = NULL;
-
-  /* Find the input port, output port*/
-  output_port = find_spice_model_ports(&verilog_model, SPICE_MODEL_PORT_OUTPUT, &num_output_port, TRUE);
-
-  /* Asserts*/
-  assert(1 == num_output_port);
-  assert(1 == output_port[0]->size);
-
-  /* Ensure a valid file handler*/
-  if (NULL == fp) {
-    vpr_printf(TIO_MESSAGE_ERROR,"(FILE:%s,LINE[%d])Invalid File handler.\n",
-               __FILE__, __LINE__); 
-    exit(1);
-  }
-
-  /* print the spice model*/
-  fprintf(fp, "//-----Hard-wired VDD module, verilog_model_name=%s -----\n", verilog_model.name);  
-  fprintf(fp, "module %s(output wire %s);\n", verilog_model.name, output_port[0]->prefix);
-  /* Constant logic 1*/
-  fprintf(fp, "assign %s = 1\'b1;\n", output_port[0]->prefix);
-  /* Finish*/ 
-  fprintf(fp, "endmodule\n");
-  fprintf(fp, "//-----END VDD module, verilog_model_name=%s -----\n", verilog_model.name);  
-  fprintf(fp, "\n");
-  return;
-}
-
-/* Dump a submodule which is a constant vdd */
-static 
-void dump_verilog_hard_wired_gnd(FILE* fp, 
-                                 t_spice_model verilog_model) {
-  int num_output_port = 0;
-  t_spice_model_port** output_port = NULL;
-
-  /* Find the input port, output port*/
-  output_port = find_spice_model_ports(&verilog_model, SPICE_MODEL_PORT_OUTPUT, &num_output_port, TRUE);
-
-  /* Asserts*/
-  assert(1 == num_output_port);
-  assert(1 == output_port[0]->size);
-
-  /* Ensure a valid file handler*/
-  if (NULL == fp) {
-    vpr_printf(TIO_MESSAGE_ERROR,"(FILE:%s,LINE[%d])Invalid File handler.\n",
-               __FILE__, __LINE__); 
-    exit(1);
-  }
-
-  /* print the spice model*/
-  fprintf(fp, "//-----Hard-wired GND module, verilog_model_name=%s -----\n", verilog_model.name);  
-  fprintf(fp, "module %s(output wire %s);\n", verilog_model.name, output_port[0]->prefix);
-  /* Constant logic 1*/
-  fprintf(fp, "assign %s = 1\'b0;\n", output_port[0]->prefix);
-  /* Finish*/ 
-  fprintf(fp, "endmodule\n");
-  fprintf(fp, "//-----END GND module, verilog_model_name=%s -----\n", verilog_model.name);  
-  fprintf(fp, "\n");
-  return;
-}
-
 static 
 void dump_verilog_submodule_wires(char* verilog_dir,
                                   char* subckt_dir, 
@@ -3610,34 +3745,6 @@ void dump_verilog_submodule_memories(t_sram_orgz_info* cur_sram_orgz_info,
   return;
 }
 
-
-/* Print a non-global port for the template */
-static 
-void dump_one_verilog_template_module_one_port(FILE* fp, int* cnt,
-                                              t_spice_model* cur_spice_model,
-                                              enum e_spice_model_port_type port_type) {
-  int iport;
-  int num_port_to_dump= 0;
-  t_spice_model_port** port_to_dump = NULL;
-
-  port_to_dump = find_spice_model_ports(cur_spice_model, port_type, &num_port_to_dump, TRUE);
-  for (iport = 0; iport < num_port_to_dump; iport++) {
-    if (0 < *cnt) { 
-      fprintf(fp, ",\n");
-    }
-    dump_verilog_generic_port(fp, 
-                              convert_spice_model_port_type_to_verilog_port_type(port_to_dump[iport]->type),
-                              port_to_dump[iport]->lib_name, 
-                              port_to_dump[iport]->size - 1, 0); 
-   (*cnt)++;
-  }
-
-  /* Free */
-  my_free(port_to_dump);
-
-  return;
-}
-
 /* Give a template for a user-defined module */
 static 
 void dump_one_verilog_template_module(FILE* fp,
@@ -3754,6 +3861,9 @@ void dump_verilog_submodules(t_sram_orgz_info* cur_sram_orgz_info,
   vpr_printf(TIO_MESSAGE_INFO, "Generating modules of multiplexers...\n");
   dump_verilog_submodule_muxes(cur_sram_orgz_info, verilog_dir, submodule_dir, routing_arch->num_switch, 
                                switch_inf, Arch.spice, routing_arch, fpga_verilog_opts.dump_explicit_verilog);
+  vpr_printf(TIO_MESSAGE_INFO, "Generating local encoders for multiplexers...\n");
+  dump_verilog_submodule_local_encoders(cur_sram_orgz_info, verilog_dir, submodule_dir, routing_arch->num_switch, 
+                                        switch_inf, Arch.spice, routing_arch, fpga_verilog_opts.dump_explicit_verilog);
  
   /* 2. LUTes */
   vpr_printf(TIO_MESSAGE_INFO, "Generating modules of LUTs...\n");
