@@ -582,6 +582,7 @@ int* my_itobin_int(int in_int, int bin_len) {
   int i, temp;
 
   /* Make sure we do not have any overflow! */
+  if (! ( (-1 < in_int) && (in_int < pow(2., bin_len)) ) )
   assert ( (-1 < in_int) && (in_int < pow(2., bin_len)) );
   
   temp = in_int;

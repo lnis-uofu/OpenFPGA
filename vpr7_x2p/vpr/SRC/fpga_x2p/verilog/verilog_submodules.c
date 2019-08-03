@@ -1485,6 +1485,11 @@ void dump_verilog_cmos_mux_multilevel_structure(FILE* fp,
                 sram_port[0]->prefix,
                 sram_port[0]->prefix, sram_idx + cur_num_input_basis - 1, sram_idx,
                 sram_port[0]->prefix, sram_idx + cur_num_input_basis - 1, sram_idx);
+      } else {
+        fprintf(fp, "%s, %s_data[%d:%d], %s_data_inv[%d:%d]);\n", 
+                sram_port[0]->prefix,
+                sram_port[0]->prefix, sram_idx + cur_num_input_basis - 1, sram_idx,
+                sram_port[0]->prefix, sram_idx + cur_num_input_basis - 1, sram_idx);
       }
     }
     /* Print basis muxQto1 for each level*/
@@ -1713,6 +1718,11 @@ void dump_verilog_cmos_mux_onelevel_structure(FILE* fp,
               generate_verilog_decoder_subckt_name(num_inputs, num_outputs));
       if (true == is_explicit_mapping) {
         fprintf(fp, ".addr(%s), .data(%s_data), .data_inv(%s_data_inv) );\n", 
+                sram_port[0]->prefix,
+                sram_port[0]->prefix,
+                sram_port[0]->prefix);
+      } else {
+        fprintf(fp, "%s, %s_data, %s_data_inv);\n", 
                 sram_port[0]->prefix,
                 sram_port[0]->prefix,
                 sram_port[0]->prefix);
@@ -2838,12 +2848,14 @@ void dump_verilog_mux_local_encoder_module(FILE* fp, int num_outputs) {
   } 
 
   /* Print the name of encoder */
+  fprintf(fp, "//-------- Local Decoder convert %d-bit addr to %d-bit data \n",
+          num_inputs, num_outputs);
   fprintf(fp, "module %s(", generate_verilog_decoder_subckt_name(num_inputs, num_outputs));
   fprintf(fp, "\n");
   /* Inputs */
   dump_verilog_generic_port(fp, VERILOG_PORT_INPUT,
                             "addr", 
-                            num_inputs - 1, 0); 
+                            0, num_inputs - 1); 
   fprintf(fp, ",\n");
   /* Outputs */
   dump_verilog_generic_port(fp, VERILOG_PORT_OUTPUT,
@@ -2892,6 +2904,9 @@ void dump_verilog_mux_local_encoder_module(FILE* fp, int num_outputs) {
 
   /* Finish */
   fprintf(fp, "endmodule\n");
+
+  fprintf(fp, "//-------- END Local Decoder convert %d-bit addr to %d-bit data \n\n",
+          num_inputs, num_outputs);
 
   return;
 }

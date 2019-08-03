@@ -340,7 +340,7 @@ int* decode_multilevel_mux_sram_bits(int fan_in,
      * For example: when path_id=3, using a 4-input encoder 
      * the sram_bits will be the 4-digit binary number of 3: 0011
      */
-    int* tmp_bits = my_itobin_int(path_id, num_bits_per_level);
+    int* tmp_bits = my_itobin_int(encoded_path_id, num_bits_per_level);
     /* Copy tmp_bits to encoded bits */
     for (int idx = 0; idx < num_bits_per_level; ++idx) { 
       encoded_ret[idx + ilvl* num_bits_per_level] = tmp_bits[idx];

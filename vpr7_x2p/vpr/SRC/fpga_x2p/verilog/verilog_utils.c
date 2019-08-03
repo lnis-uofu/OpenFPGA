@@ -2920,9 +2920,9 @@ char* generate_verilog_decoder_subckt_name(int addr_len, int data_len) {
   char* subckt_name = NULL;
 
   subckt_name = (char*)my_malloc(sizeof(char)*(strlen("decoder") 
-                                 + strlen(my_itoa(addr_len)) + 1 
+                                 + strlen(my_itoa(addr_len)) + 2 
                                  + strlen(my_itoa(data_len)) + 1)); 
-  sprintf(subckt_name, "%s%d_%d",
+  sprintf(subckt_name, "%s%dto%d",
           "decoder", addr_len, data_len);
 
   return subckt_name;
