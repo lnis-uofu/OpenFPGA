@@ -1474,22 +1474,23 @@ void dump_verilog_cmos_mux_multilevel_structure(FILE* fp,
     /* Instanciate local encoder circuit here */
     if (TRUE == spice_model.design_tech_info.mux_info->local_encoder) {
       /* Get the number of inputs */
-      int num_outputs = spice_mux_arch.num_input - 1;
+      int num_outputs = cur_num_input_basis;
       int num_inputs =  determine_mux_local_encoder_num_inputs(num_outputs);
       /* Find the decoder name */
-      fprintf(fp, "%s %s_0_ (", 
+      fprintf(fp, "%s %s_%d_ (", 
               generate_verilog_decoder_subckt_name(num_inputs, num_outputs),
-              generate_verilog_decoder_subckt_name(num_inputs, num_outputs));
+              generate_verilog_decoder_subckt_name(num_inputs, num_outputs),
+              i);
       if (true == is_explicit_mapping) {
-        fprintf(fp, ".addr(%s), .data(%s_data[%d:%d]), .data_inv(%s_data_inv[%d:%d]) );\n", 
-                sram_port[0]->prefix,
-                sram_port[0]->prefix, sram_idx + cur_num_input_basis - 1, sram_idx,
-                sram_port[0]->prefix, sram_idx + cur_num_input_basis - 1, sram_idx);
+        fprintf(fp, ".addr(%s[%d:%d]), .data(%s_data[%d:%d]), .data_inv(%s_data_inv[%d:%d]) );\n", 
+                sram_port[0]->prefix, nextlevel * num_inputs, (nextlevel + 1) * num_inputs - 1,
+                sram_port[0]->prefix, sram_idx, sram_idx + cur_num_input_basis - 1,
+                sram_port[0]->prefix, sram_idx, sram_idx + cur_num_input_basis - 1);
       } else {
-        fprintf(fp, "%s, %s_data[%d:%d], %s_data_inv[%d:%d]);\n", 
-                sram_port[0]->prefix,
-                sram_port[0]->prefix, sram_idx + cur_num_input_basis - 1, sram_idx,
-                sram_port[0]->prefix, sram_idx + cur_num_input_basis - 1, sram_idx);
+        fprintf(fp, "%s[%d:%d], %s_data[%d:%d], %s_data_inv[%d:%d]);\n", 
+                sram_port[0]->prefix, nextlevel * num_inputs, (nextlevel + 1) * num_inputs - 1,
+                sram_port[0]->prefix, sram_idx, sram_idx + cur_num_input_basis - 1,
+                sram_port[0]->prefix, sram_idx, sram_idx + cur_num_input_basis - 1);
       }
     }
     /* Print basis muxQto1 for each level*/
