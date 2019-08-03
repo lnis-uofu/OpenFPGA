@@ -577,6 +577,26 @@ t_spice_transistor_type* find_mosfet_tech_lib(t_spice_tech_lib tech_lib,
 }
 
 /* Converter an integer to a binary string */
+int* my_itobin_int(int in_int, int bin_len) {
+  int* ret = (int*) my_calloc (bin_len, sizeof(int));
+  int i, temp;
+
+  /* Make sure we do not have any overflow! */
+  assert ( (-1 < in_int) && (in_int < pow(2., bin_len)) );
+  
+  temp = in_int;
+  for (i = 0; i < bin_len; i++) {
+    if (1 == temp % 2) { 
+      ret[i] = 1; 
+    }
+    temp = temp / 2;
+  }
+ 
+  return ret;
+}
+
+
+/* Converter an integer to a binary string */
 char* my_itobin(int in_int, int bin_len) {
   char* ret = (char*) my_calloc (bin_len + 1, sizeof(char));
   int i, temp;

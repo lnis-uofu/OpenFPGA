@@ -1475,7 +1475,7 @@ void dump_verilog_cmos_mux_multilevel_structure(FILE* fp,
     if (TRUE == spice_model.design_tech_info.mux_info->local_encoder) {
       /* Get the number of inputs */
       int num_outputs = spice_mux_arch.num_input - 1;
-      int num_inputs = ceil(log(num_outputs + 1) / log(2));
+      int num_inputs =  determine_mux_local_encoder_num_inputs(num_outputs);
       /* Find the decoder name */
       fprintf(fp, "%s %s_0_ (", 
               generate_verilog_decoder_subckt_name(num_inputs, num_outputs),
@@ -1698,7 +1698,8 @@ void dump_verilog_cmos_mux_onelevel_structure(FILE* fp,
     if (TRUE == spice_model.design_tech_info.mux_info->local_encoder) {
       /* Get the number of inputs */
       int num_outputs = spice_mux_arch.num_input - 1;
-      int num_inputs = ceil(log(num_outputs + 1) / log(2));
+      int num_inputs = determine_mux_local_encoder_num_inputs(num_outputs);
+
       /* Print local wires for local encoders */
       fprintf(fp, "wire [%d:0] %s_data;\n", 
               spice_mux_arch.num_input - 1,
@@ -2826,7 +2827,7 @@ void dump_verilog_mux_local_encoder_module(FILE* fp, int num_outputs) {
   assert (2 <= num_outputs);
 
   /* Get the number of inputs */
-  int num_inputs = ceil(log(num_outputs + 1) / log(2));
+  int num_inputs = determine_mux_local_encoder_num_inputs(num_outputs);
 
   /* Validate the FILE handler */
   if (NULL == fp) {

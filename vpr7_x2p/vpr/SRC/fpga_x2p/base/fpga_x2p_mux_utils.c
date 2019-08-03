@@ -187,6 +187,26 @@ int multilevel_mux_last_level_input_num(int num_level, int num_input_per_unit,
   return ret;
 }
 
+/***************************************************************************************
+ * Find the number of inputs for a encoder with a given output size
+ *                     Inputs 
+ *                   | | | | | 
+ *                 +-----------+
+ *                /             \
+ *               /     Encoder   \
+ *              +-----------------+
+ *                | | | | | | | |
+ *                  Outputs
+ *               
+ *  The outputs are assumes to be one-hot codes (at most only one '1' exist)
+ *  Considering this fact, there are only num_of_outputs + 1 conditions to be encoded.
+ *  Therefore, the number of inputs is ceil(log(num_of_outputs+1)/log(2))
+ *  We plus 1, which is all-zero condition for outputs
+ ***************************************************************************************/
+int determine_mux_local_encoder_num_inputs(int num_outputs) {
+  return ceil(log(num_outputs + 1) / log(2));
+}
+
 /* Decoding a one-level MUX:
  * SPICE/Verilog model declare the sram port sequence as follows:
  * sel0, sel1, ... , selN, 
@@ -198,24 +218,36 @@ int multilevel_mux_last_level_input_num(int num_level, int num_input_per_unit,
  */
 int* decode_onelevel_mux_sram_bits(int fan_in,
                                    int mux_level,
-                                   int path_id) {
-  int* ret = (int*)my_malloc(sizeof(int)*fan_in);
-  int i;
-
+                                   int path_id,
+                                   boolean use_local_encoder) {
   /* Check */
   assert( (!(0 > path_id)) && (path_id < fan_in) );
   
-  for (i = 0; i < fan_in; i++) {
-    ret[i] = 0;
+  /* If we use local encoder, we have a different number of sram bits! */
+  int num_sram_bits = fan_in;
+  if (TRUE == use_local_encoder) {
+    num_sram_bits = determine_mux_local_encoder_num_inputs(fan_in);
   }
-  ret[path_id] = 1;
+  /* Allocate sram_bits array to return */
+  int* ret = (int*)my_calloc(num_sram_bits, sizeof(int));
+
+  if (TRUE == use_local_encoder) {
+    /* The encoder will convert the path_id to a binary number 
+     * For example: when path_id=3, using a 4-input encoder 
+     * the sram_bits will be the 4-digit binary number of 3: 0011
+     */
+    ret = my_itobin_int(path_id, num_sram_bits);
+  } else {
+    ret[path_id] = 1;
+  }
   /* ret[fan_in - 1 - path_id] = 1; */
   return ret; 
 }
 
 int* decode_multilevel_mux_sram_bits(int fan_in,
                                      int mux_level,
-                                     int path_id) {
+                                     int path_id,
+                                     boolean use_local_encoder) {
   int* ret = NULL;
   int i, j, path_differ, temp;
   int num_last_level_input, active_mux_level, active_path_id, num_input_basis;
@@ -228,7 +260,7 @@ int* decode_multilevel_mux_sram_bits(int fan_in,
   switch (mux_level) {
   case 1:
     /* Special: 1-level should be have special care !!! */
-    return decode_onelevel_mux_sram_bits(fan_in, mux_level, path_id);
+    return decode_onelevel_mux_sram_bits(fan_in, mux_level, path_id, use_local_encoder);
   default:
     assert(1 < mux_level); 
     num_input_basis = determine_num_input_basis_multilevel_mux(fan_in, mux_level);
@@ -258,12 +290,7 @@ int* decode_multilevel_mux_sram_bits(int fan_in,
   } else {
     assert(num_last_level_input == fan_in);
   }
-  /*
-  if ((41 == fan_in) && (40 == path_id)) {
-    printf("num_last_level_input=%d, active_mux_lvl=%d, active_path_id=%d\n",
-           num_last_level_input, active_mux_level, active_path_id);
-  }
-  */
+
   temp = active_path_id;
   for (i = mux_level - 1; i > (mux_level - active_mux_level - 1); i--) {
     for (j = 0; j < num_input_basis; j++) {
@@ -283,8 +310,49 @@ int* decode_multilevel_mux_sram_bits(int fan_in,
 
   /* Check */
   assert(0 == temp);
-  
-  return ret;
+
+  /* If we do not use a local encoder, these are the sram bits we want */
+  if (FALSE == use_local_encoder) {
+    return ret;
+  }
+
+  /* If we use local encoder, we have a different number of sram bits! */
+  int num_bits_per_level = determine_mux_local_encoder_num_inputs(num_input_basis);
+  int num_sram_bits = mux_level * num_bits_per_level;
+  /* Allocate sram_bits array to return */
+  int* encoded_ret = (int*)my_calloc(num_sram_bits, sizeof(int));
+
+  /* Walk through each level and find the path_id and encode it */
+  for (int ilvl = 0; ilvl < mux_level; ++ilvl) {
+    int start_idx = num_input_basis * ilvl;
+    int end_idx = num_input_basis * (ilvl + 1) - 1;
+    int encoded_path_id = 0;
+    int checker = 0;
+    for (int idx = start_idx; idx < end_idx; ++idx) { 
+      if ('1' == ret[idx]) {
+        checker++;
+        encoded_path_id = idx; 
+      }
+    }
+    /* There should be at most one '1' */
+    assert( (0 == checker) || (1 == checker));
+    /* The encoder will convert the path_id to a binary number 
+     * For example: when path_id=3, using a 4-input encoder 
+     * the sram_bits will be the 4-digit binary number of 3: 0011
+     */
+    int* tmp_bits = my_itobin_int(path_id, num_bits_per_level);
+    /* Copy tmp_bits to encoded bits */
+    for (int idx = 0; idx < num_bits_per_level; ++idx) { 
+      encoded_ret[idx + ilvl* num_bits_per_level] = tmp_bits[idx];
+    }
+    /* Free */
+    my_free(tmp_bits);
+  }
+
+  /* Free ret */
+  my_free(ret);
+
+  return encoded_ret; 
 }
 
 /* Decode the configuration to sram_bits
@@ -428,12 +496,14 @@ void decode_cmos_mux_sram_bits(t_spice_model* mux_spice_model,
   case SPICE_MODEL_STRUCTURE_ONELEVEL:
     (*mux_level) = 1;
     (*bit_len) = num_mux_input;
-    (*conf_bits) = decode_onelevel_mux_sram_bits(num_mux_input, (*mux_level), datapath_id); 
+    (*conf_bits) = decode_onelevel_mux_sram_bits(num_mux_input, (*mux_level), datapath_id, 
+                                                 mux_spice_model->design_tech_info.mux_info->local_encoder); 
     break;
   case SPICE_MODEL_STRUCTURE_MULTILEVEL:
     (*mux_level) = mux_spice_model->design_tech_info.mux_info->mux_num_level;
     (*bit_len) = determine_num_input_basis_multilevel_mux(num_mux_input, (*mux_level)) * (*mux_level);
-    (*conf_bits) = decode_multilevel_mux_sram_bits(num_mux_input, (*mux_level), datapath_id); 
+    (*conf_bits) = decode_multilevel_mux_sram_bits(num_mux_input, (*mux_level), datapath_id, 
+                                                   mux_spice_model->design_tech_info.mux_info->local_encoder); 
     break;
   default:
     vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid structure for mux_spice_model (%s)!\n",
