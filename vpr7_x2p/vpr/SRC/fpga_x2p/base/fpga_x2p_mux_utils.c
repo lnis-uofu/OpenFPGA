@@ -496,12 +496,22 @@ void decode_cmos_mux_sram_bits(t_spice_model* mux_spice_model,
   case SPICE_MODEL_STRUCTURE_ONELEVEL:
     (*mux_level) = 1;
     (*bit_len) = num_mux_input;
+    /* Mux has local encoders are different in the number of bits */
+    if (TRUE == mux_spice_model->design_tech_info.mux_info->local_encoder) {
+      (*bit_len) = determine_mux_local_encoder_num_inputs(*bit_len);
+    }
     (*conf_bits) = decode_onelevel_mux_sram_bits(num_mux_input, (*mux_level), datapath_id, 
                                                  mux_spice_model->design_tech_info.mux_info->local_encoder); 
     break;
   case SPICE_MODEL_STRUCTURE_MULTILEVEL:
     (*mux_level) = mux_spice_model->design_tech_info.mux_info->mux_num_level;
-    (*bit_len) = determine_num_input_basis_multilevel_mux(num_mux_input, (*mux_level)) * (*mux_level);
+    /* Mux has local encoders are different in the number of bits */
+    if (TRUE == mux_spice_model->design_tech_info.mux_info->local_encoder) {
+      int num_bits_per_level = determine_mux_local_encoder_num_inputs(determine_num_input_basis_multilevel_mux(num_mux_input, (*mux_level)));
+      (*bit_len) = (*mux_level) * num_bits_per_level;
+    } else {
+      (*bit_len) = (*mux_level) * determine_num_input_basis_multilevel_mux(num_mux_input, (*mux_level));
+    }
     (*conf_bits) = decode_multilevel_mux_sram_bits(num_mux_input, (*mux_level), datapath_id, 
                                                    mux_spice_model->design_tech_info.mux_info->local_encoder); 
     break;

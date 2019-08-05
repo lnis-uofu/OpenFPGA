@@ -2989,8 +2989,9 @@ void dump_verilog_submodule_local_encoders(t_sram_orgz_info* cur_sram_orgz_info,
       temp = temp->next;
       continue;
     }
-    /* Bypass those without local encoders */
-    if (FALSE == cur_spice_mux_model->spice_model->design_tech_info.mux_info->local_encoder) {
+    /* Bypass those without local encoders, we only care SPICE models whose type is MUX! */
+    if ( (SPICE_MODEL_MUX != cur_spice_mux_model->spice_model->type) 
+       || (FALSE == cur_spice_mux_model->spice_model->design_tech_info.mux_info->local_encoder) ) {
       /* Move on to the next*/
       temp = temp->next;
       continue;
