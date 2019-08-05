@@ -253,24 +253,25 @@ Multiplexers
 
 * design_technology:
 
-	* **structure:** can be [tree|multi-level|one-level]. The structure options are valid for SRAM-based multiplexers. For RRAM-based multiplexers, currently we only support the circuit design in [5]. If ``multi-level`` the following parameter is required:
+	* **structure:** can be [``tree``\|``multi-level``\|``one-level``]. The structure options are valid for SRAM-based multiplexers. For RRAM-based multiplexers, currently we only support the circuit design in [5]. If ``multi-level`` the following parameter is required:
 
 		* **num_level:** specify the number of levels when multi-level structure is selected, only.
     
-    * **add_const_input:** can be [true|false]. When enabled, an extra input will be added to the multiplexer circuits defined in this ``circuit_model``. For example, an 4-input multiplexer will be turned to a 5-input multiplexer. The extra input will be wired to a constant value, which can be specified through the XML syntax ``const_input_val``. The constant value can be either 0 or 1 (By default it is 0). Note that adding such input will help reducing the leakage power of FPGA and parasitic signal activities, with a limited area overhead.
+    * **add_const_input:** can be [``true``\|``false``]. When enabled, an extra input will be added to the multiplexer circuits defined in this ``circuit_model``. For example, an 4-input multiplexer will be turned to a 5-input multiplexer. The extra input will be wired to a constant value, which can be specified through the XML syntax ``const_input_val``. The constant value can be either 0 or 1 (By default it is 0). Note that adding such input will help reducing the leakage power of FPGA and parasitic signal activities, with a limited area overhead.
+
 		* **const_input_val:** specify the constant value, to which the extra input will be connected. This syntax is only valid when the ``add_const_input`` is set to true.
   
-    * **local_encoder:** can be [true|false]. When enabled, an local encoder will be added to the multiplexer circuits defined in this ``circuit_model``. The local encoder will be interface the SRAM inputs of multiplexing structure and SRAMs. It can encode the one-hot codes (that drive the select port of multiplexing structure) to a binary code. For example, 8-bit ``00000001`` will be encoded to 3-bit ``000``. This will help reduce the number of SRAM cells used in FPGAs as well as configuration time (especially for scan-chain configuration protocols). But it may cost an area overhead.  
+    * **local_encoder:** can be [``true``\|``false``]. When enabled, an local encoder will be added to the multiplexer circuits defined in this ``circuit_model``. The local encoder will be interface the SRAM inputs of multiplexing structure and SRAMs. It can encode the one-hot codes (that drive the select port of multiplexing structure) to a binary code. For example, 8-bit ``00000001`` will be encoded to 3-bit ``000``. This will help reduce the number of SRAM cells used in FPGAs as well as configuration time (especially for scan-chain configuration protocols). But it may cost an area overhead.  
 
-	* **prog_transistor_size:** valid only when the type of design technology is rram. Specify the size of programming transistors used in the RRAM-based multiplexer, we use only n-type transistor and the size should be expressed in terms of the min_width defined in XML node <transistors>.
+        .. note:: Local encoders are only applicable for one-level and multi-level multiplexers. Tree-like multiplexers are already encoded in their nature.
 
-	* If type of design technology is **rram**, then the following parameters are required:
+    * **prog_transistor_size:** valid only when the type of design technology is ``rram``. Specify the size of programming transistors used in the RRAM-based multiplexer, we use only n-type transistor and the size should be expressed in terms of the min_width defined in XML node ``transistors``. If type of design technology is ``rram``, then the following parameters are required:
 
 		* **ron:** valid only when the type of design technology is rram. Specify the on-resistance of the RRAM device used in the RRAM-based multiplexer. 
 
 		* **roff:** valid only when the type of design technology is rram. Specify the off-resistance of the RRAM device used in the RRAM-based multiplexer. 
 
-* port: for a multiplexer, the three types of ports, input, output and sram should be defined. 
+* port: for a multiplexer, the three types of ports, ``input``, ``output`` and ``sram`` should be defined. 
 
 .. note:: For tree-like multiplexers, they can be built with standard cell MUX2. To enable this, users should define a ``circuit_model``, which describes a 2-input multiplexer (See details and examples in how to define a logic gate using ``circuit_model``. In this case, the ``circuit_model_name`` in the ``pass_gate_logic`` should be the name of MUX2 ``circuit_model``.
 
