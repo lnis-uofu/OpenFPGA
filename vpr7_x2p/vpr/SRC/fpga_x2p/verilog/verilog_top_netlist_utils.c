@@ -934,7 +934,7 @@ void dump_verilog_one_clb2clb_direct(FILE* fp,
     fprintf(fp, "%s ", cur_direct->spice_model->name);
     fprintf(fp, "%s_%d_ (", cur_direct->spice_model->prefix, cur_direct->spice_model->cnt); 
     /* Dump global ports */
-    if  (0 < rec_dump_verilog_spice_model_global_ports(fp, cur_direct->spice_model, FALSE, FALSE, FALSE)) {
+    if  (0 < rec_dump_verilog_spice_model_global_ports(fp, cur_direct->spice_model, FALSE, FALSE, FALSE, TRUE)) {
       fprintf(fp, ",\n");
     }
     /* Input: Print the source grid pin */

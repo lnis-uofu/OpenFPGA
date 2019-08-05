@@ -836,7 +836,7 @@ void dump_verilog_switch_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
           verilog_model->prefix, mux_size, verilog_model->cnt);
 
   /* Dump global ports */
-  if  (0 < rec_dump_verilog_spice_model_global_ports(fp, verilog_model, FALSE, FALSE, my_bool_to_boolean(is_explicit_mapping))) {
+  if  (0 < rec_dump_verilog_spice_model_global_ports(fp, verilog_model, FALSE, FALSE, my_bool_to_boolean(is_explicit_mapping), TRUE)) {
     fprintf(fp, ",\n");
   }
   if (true == is_explicit_mapping) {
@@ -1093,7 +1093,7 @@ void dump_verilog_unique_switch_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
           verilog_model->prefix, mux_size, verilog_model->cnt);
 
   /* Dump global ports */
-  if  (0 < rec_dump_verilog_spice_model_global_ports(fp, verilog_model, FALSE, FALSE, my_bool_to_boolean(is_explicit_mapping))) {
+  if  (0 < rec_dump_verilog_spice_model_global_ports(fp, verilog_model, FALSE, FALSE, my_bool_to_boolean(is_explicit_mapping), TRUE)) {
     fprintf(fp, ",\n");
   }
 
@@ -2975,7 +2975,7 @@ void dump_verilog_connection_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
           verilog_model->prefix, mux_size, verilog_model->cnt);
 
   /* Dump global ports */
-  if  (0 < rec_dump_verilog_spice_model_global_ports(fp, verilog_model, FALSE, FALSE, my_bool_to_boolean(is_explicit_mapping))) {
+  if  (0 < rec_dump_verilog_spice_model_global_ports(fp, verilog_model, FALSE, FALSE, my_bool_to_boolean(is_explicit_mapping), TRUE)) {
     fprintf(fp, ",\n");
   }
 
@@ -3222,7 +3222,7 @@ void dump_verilog_connection_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
           verilog_model->prefix, mux_size, verilog_model->cnt);
 
   /* Dump global ports */
-  if  (0 < rec_dump_verilog_spice_model_global_ports(fp, verilog_model, FALSE, FALSE, my_bool_to_boolean(is_explicit_mapping))) {
+  if  (0 < rec_dump_verilog_spice_model_global_ports(fp, verilog_model, FALSE, FALSE, my_bool_to_boolean(is_explicit_mapping), TRUE)) {
     fprintf(fp, ",\n");
   }
 

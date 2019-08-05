@@ -372,7 +372,7 @@ void dump_verilog_membank_one_inv_module(FILE* fp,
           inv_spice_model->name, inv_spice_model->prefix, 
           instance_tag, inv_index);
   /* Dump global ports */
-  if  (0 < rec_dump_verilog_spice_model_global_ports(fp, inv_spice_model, FALSE, FALSE, inv_spice_model->dump_explicit_port_map)) {
+  if  (0 < rec_dump_verilog_spice_model_global_ports(fp, inv_spice_model, FALSE, FALSE, inv_spice_model->dump_explicit_port_map, TRUE)) {
     fprintf(fp, ",\n");
   }
   /* Dump explicit port map if required */

@@ -1142,7 +1142,7 @@ void dump_verilog_pb_graph_pin_interc(t_sram_orgz_info* cur_sram_orgz_info,
     fprintf(fp, "%s_%d_ (", cur_interc->spice_model->prefix, cur_interc->spice_model->cnt); 
     cur_interc->spice_model->cnt++; /* Stats the number of spice_model used*/
     /* Dump global ports */
-    if  (0 < rec_dump_verilog_spice_model_global_ports(fp, cur_interc->spice_model, FALSE, FALSE, my_bool_to_boolean(is_explicit_mapping))) {
+    if  (0 < rec_dump_verilog_spice_model_global_ports(fp, cur_interc->spice_model, FALSE, FALSE, my_bool_to_boolean(is_explicit_mapping), TRUE)) {
       fprintf(fp, ",\n");
     }
     /* Print the pin names! Input and output
@@ -1278,7 +1278,7 @@ void dump_verilog_pb_graph_pin_interc(t_sram_orgz_info* cur_sram_orgz_info,
     fprintf(fp, "%s_size%d ", cur_interc->spice_model->name, fan_in);
     fprintf(fp, "%s_size%d_%d_ (", cur_interc->spice_model->prefix, fan_in, cur_interc->spice_model->cnt);
     /* Dump global ports */
-    if  (0 < rec_dump_verilog_spice_model_global_ports(fp, cur_interc->spice_model, FALSE, FALSE, my_bool_to_boolean(is_explicit_mapping))) {
+    if  (0 < rec_dump_verilog_spice_model_global_ports(fp, cur_interc->spice_model, FALSE, FALSE, my_bool_to_boolean(is_explicit_mapping), TRUE)) {
       fprintf(fp, ",\n");
     }
     /* Inputs */
@@ -1873,7 +1873,9 @@ void dump_verilog_phy_pb_graph_node_rec(t_sram_orgz_info* cur_sram_orgz_info,
       } else {
         if (0 < rec_dump_verilog_spice_model_global_ports(fp, 
                                                           cur_pb_type->modes[mode_index].pb_type_children[ipb].spice_model,
-                                                          FALSE, TRUE, my_bool_to_boolean(is_explicit_mapping))) {
+                                                          FALSE, TRUE, my_bool_to_boolean(is_explicit_mapping),
+                                                          FALSE)) {
+
           fprintf(fp, ",\n");
         }
       }
