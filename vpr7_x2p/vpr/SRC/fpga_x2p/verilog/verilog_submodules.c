@@ -547,7 +547,49 @@ void dump_verilog_gate_module(FILE* fp,
         fprintf(fp, ";\n");
       }
     }
-
+    break;
+  case SPICE_MODEL_GATE_MUX2:
+    /* Check on the port sequence and map */
+    /* MUX2 should only have 1 output port with size 1 */
+    if (1 != num_output_port) {
+      vpr_printf(TIO_MESSAGE_ERROR, 
+                 "(File:%s, [LINE%d]) MUX2 circuit model must have only 1 output!\n",
+                 __FILE__, __LINE__);
+      exit(1);
+    } else if (1 != output_port[0]->size) {
+      vpr_printf(TIO_MESSAGE_ERROR, 
+                 "(File:%s, [LINE%d]) Output size of a MUX2 circuit model must be 1!\n",
+                 __FILE__, __LINE__);
+      exit(1);
+    }
+    /* MUX2 should only have 3 output port, each of which has a port size of 1 */
+    if (3 != num_input_port) {
+      vpr_printf(TIO_MESSAGE_ERROR, 
+                 "(File:%s, [LINE%d]) MUX2 circuit model must have only 3 input!\n",
+                 __FILE__, __LINE__);
+      exit(1);
+    } else {
+      for (iport = 0; iport < num_input_port; iport++) {
+        /* Bypass port size of 1 */
+        if (1 == input_port[iport]->size) {
+          continue;
+        }
+        vpr_printf(TIO_MESSAGE_ERROR, 
+                   "(File:%s, [LINE%d]) Input size MUX2 circuit model must be 1!\n",
+                   __FILE__, __LINE__);
+        exit(1);
+      }
+    }
+    /* Now, we output the logic of MUX2
+     * IMPORTANT Restriction:
+     * We always assum the first two inputs are data inputs
+     * the third input is the select port  
+     */
+    fprintf(fp, "assign %s[%d] = %s[%d] ? %s[%d] : %s[%d];\n",
+                output_port[0]->lib_name, 0,
+                input_port[2]->lib_name, 0,
+                input_port[0]->lib_name, 0,
+                input_port[1]->lib_name, 0);
     break;
   default:
     vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid topology for spice model (%s)!\n",
