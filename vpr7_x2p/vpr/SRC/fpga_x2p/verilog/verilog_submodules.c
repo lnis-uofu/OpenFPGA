@@ -2895,7 +2895,7 @@ void dump_verilog_mux_local_encoder_module(FILE* fp, int num_outputs) {
   fprintf(fp, "begin\n");
   fprintf(fp, "\tdata_reg = %d'b0;\n", num_outputs);
   fprintf(fp, "\tif ((0 < addr) && (addr < %d) ) begin\n", num_outputs);
-  fprintf(fp, "\t\tdata_reg = 1'b1 << (addr - 1)\n"); 
+  fprintf(fp, "\t\tdata_reg = 1'b1 << (addr - 1);\n"); 
   fprintf(fp, "\tend\n");
   fprintf(fp, "end\n");
 
