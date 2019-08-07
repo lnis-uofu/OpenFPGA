@@ -117,11 +117,12 @@ CircuitModelId CircuitLibrary::add_circuit_model() {
   buffer_circuit_model_names_.emplace_back();
   buffer_circuit_model_ids_.emplace_back();
 
-    /* Pass-gate-related parameters */
+  /* Pass-gate-related parameters */
   pass_gate_logic_circuit_model_names_.emplace_back();
   pass_gate_logic_circuit_model_ids_.emplace_back();
 
   /* Port information */
+  port_ids_.emplace_back();
   port_types_.emplace_back();
   port_sizes_.emplace_back();
   port_prefix_.emplace_back();
@@ -334,6 +335,77 @@ void CircuitLibrary::set_circuit_model_lut_intermediate_buffer(const CircuitMode
   return;
 }
 
+/* Set pass-gate logic information of a circuit model */
+void CircuitLibrary::set_circuit_model_pass_gate_logic(const CircuitModelId& circuit_model_id, const std::string& circuit_model_name) {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  pass_gate_logic_circuit_model_names_[circuit_model_id] = circuit_model_name;
+  return;
+}
+
+/* Add a port to a circuit model */
+CircuitPortId CircuitLibrary::add_circuit_model_port(const CircuitModelId& circuit_model_id) {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  /* Create a port id */
+  CircuitPortId circuit_port_id = CircuitPortId(port_ids_[circuit_model_id].size()); 
+  /* Update the id list */
+  port_ids_[circuit_model_id].push_back(circuit_port_id);
+  
+  /* Initialize other attributes */
+  port_types_[circuit_model_id].push_back(NUM_CIRCUIT_MODEL_PORT_TYPES);
+  port_sizes_[circuit_model_id].push_back(-1);
+  port_prefix_[circuit_model_id].emplace_back();
+  port_lib_names_[circuit_model_id].emplace_back();
+  port_inv_prefix_[circuit_model_id].emplace_back();
+  port_is_mode_select_[circuit_model_id].push_back(false);
+  port_is_global_[circuit_model_id].push_back(false);
+  port_is_reset_[circuit_model_id].push_back(false);
+  port_is_set_[circuit_model_id].push_back(false);
+  port_is_config_enable_[circuit_model_id].push_back(false);
+  port_is_prog_[circuit_model_id].push_back(false);
+  port_circuit_model_names_[circuit_model_id].emplace_back();
+  port_circuit_model_ids_[circuit_model_id].push_back(CIRCUIT_MODEL_OPEN_ID);
+  port_inv_circuit_model_names_[circuit_model_id].emplace_back();
+  port_inv_circuit_model_ids_[circuit_model_id].push_back(CIRCUIT_MODEL_OPEN_ID);
+  port_tri_state_maps_[circuit_model_id].emplace_back();
+  port_lut_frac_level_[circuit_model_id].push_back(-1);
+  port_lut_output_masks_[circuit_model_id].emplace_back();
+  port_sram_orgz_[circuit_model_id].push_back(NUM_CIRCUIT_MODEL_SRAM_ORGZ_TYPES);
+
+  return circuit_port_id;
+}
+
+/* Set the type for a port of a circuit model */
+void CircuitLibrary::set_port_types(const CircuitModelId& circuit_model_id, 
+                                    const CircuitPortId& circuit_port_id, 
+                                    const enum e_spice_model_port_type& port_type) {
+  /* validate the circuit_port_id */
+  VTR_ASSERT_SAFE(valid_circuit_port_id(circuit_model_id, circuit_port_id));
+  port_types_[circuit_model_id][circuit_port_id] = port_type;
+  return;
+}
+
+/* Set the size for a port of a circuit model */
+void CircuitLibrary::set_port_sizes(const CircuitModelId& circuit_model_id, 
+                                    const CircuitPortId& circuit_port_id, 
+                                    const size_t& port_size) {
+  /* validate the circuit_port_id */
+  VTR_ASSERT_SAFE(valid_circuit_port_id(circuit_model_id, circuit_port_id));
+  port_sizes_[circuit_model_id][circuit_port_id] = port_size;
+  return;
+}
+
+/* Set the prefix for a port of a circuit model */
+void CircuitLibrary::set_port_prefix(const CircuitModelId& circuit_model_id, 
+                                     const CircuitPortId& circuit_port_id, 
+                                     const std::string& port_prefix) {
+  /* validate the circuit_port_id */
+  VTR_ASSERT_SAFE(valid_circuit_port_id(circuit_model_id, circuit_port_id));
+  port_prefix_[circuit_model_id][circuit_port_id] = port_prefix;
+  return;
+}
+
 /************************************************************************
  * Internal Mutators 
  ***********************************************************************/
@@ -409,6 +481,12 @@ void CircuitLibrary::build_circuit_model_lookup() {
 /* Validators */
 bool CircuitLibrary::valid_circuit_model_id(const CircuitModelId& circuit_model_id) const {
   return ( size_t(circuit_model_id) < circuit_model_ids_.size() ) && ( circuit_model_id == circuit_model_ids_[circuit_model_id] ); 
+}
+
+bool CircuitLibrary::valid_circuit_port_id(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  return ( size_t(circuit_port_id) < port_ids_[circuit_model_id].size() ) && ( circuit_port_id == port_ids_[circuit_model_id][circuit_port_id] ); 
 }
 
 /* Invalidators */

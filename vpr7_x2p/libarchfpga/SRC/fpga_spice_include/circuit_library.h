@@ -117,25 +117,26 @@ typedef vtr::StrongId<circuit_edge_id_tag> CircuitEdgeId;
  *  2. pass_gate_logic_circuit_model_id_: specify the id of circuit model for the pass gate logic 
  *
  *  ------ Port information ------
- * 1. port_types_: types of ports belonging to a circuit model 
- * 2. port_sizes_: width of ports belonging to a circuit model
- * 3. port_prefix_: prefix of a port when instance of a circuit model 
- * 4. port_lib_names_: port name in the standard cell library, only used when explicit_port_mapping is enabled   
- * 5. port_inv_prefix_: the prefix to be added for the inverted port. This is mainly used by SRAM ports, which have an coupled inverterd port 
- * 6. port_is_mode_select: specify if this port is used to select operating modes of the circuit model  
- * 7. port_is_global: specify if this port is a global signal shared by other circuit model
- * 8. port_is_reset: specify if this port is a reset signal which needs special pulse widths in testbenches 
- * 9. port_is_set: specify if this port is a set signal which needs special pulse widths in testbenches 
- * 10. port_is_config_enable: specify if this port is a config_enable signal which needs special pulse widths in testbenches 
- * 11. port_is_prog: specify if this port is for FPGA programming use which needs special pulse widths in testbenches 
- * 12. port_circuit_model_name: the name of circuit model linked to the port  
- * 13. port_circuit_model_ids_: the Id of circuit model linked to the port 
- * 14. port_inv_circuit_model_names_: the name of inverter circuit model linked to the port 
- * 15. port_inv_circuit_model_ids_: the Id of inverter circuit model linked to the port
- * 16. port_tri_state_map_: only applicable to inputs of LUTs, the tri-state map applied to each pin of this port 
- * 17. port_lut_frac_level_:  only applicable to outputs of LUTs, indicate which level of outputs inside LUT multiplexing structure will be used
- * 18. port_lut_output_mask_: only applicable to outputs of LUTs, indicate which output at an internal level of LUT multiplexing structure will be used
- * 19. port_sram_orgz_: only applicable to SRAM ports, indicate how the SRAMs will be organized, either memory decoders or scan-chains
+ * 1. port_ids_: unique id of ports belonging to a circuit model 
+ * 2. port_types_: types of ports belonging to a circuit model 
+ * 3. port_sizes_: width of ports belonging to a circuit model
+ * 4. port_prefix_: prefix of a port when instance of a circuit model 
+ * 5. port_lib_names_: port name in the standard cell library, only used when explicit_port_mapping is enabled   
+ * 6. port_inv_prefix_: the prefix to be added for the inverted port. This is mainly used by SRAM ports, which have an coupled inverterd port 
+ * 7. port_is_mode_select: specify if this port is used to select operating modes of the circuit model  
+ * 8. port_is_global: specify if this port is a global signal shared by other circuit model
+ * 9. port_is_reset: specify if this port is a reset signal which needs special pulse widths in testbenches 
+ * 10. port_is_set: specify if this port is a set signal which needs special pulse widths in testbenches 
+ * 11. port_is_config_enable: specify if this port is a config_enable signal which needs special pulse widths in testbenches 
+ * 12. port_is_prog: specify if this port is for FPGA programming use which needs special pulse widths in testbenches 
+ * 13. port_circuit_model_name: the name of circuit model linked to the port  
+ * 14. port_circuit_model_ids_: the Id of circuit model linked to the port 
+ * 15. port_inv_circuit_model_names_: the name of inverter circuit model linked to the port 
+ * 16. port_inv_circuit_model_ids_: the Id of inverter circuit model linked to the port
+ * 17. port_tri_state_map_: only applicable to inputs of LUTs, the tri-state map applied to each pin of this port 
+ * 18. port_lut_frac_level_:  only applicable to outputs of LUTs, indicate which level of outputs inside LUT multiplexing structure will be used
+ * 19. port_lut_output_mask_: only applicable to outputs of LUTs, indicate which output at an internal level of LUT multiplexing structure will be used
+ * 20. port_sram_orgz_: only applicable to SRAM ports, indicate how the SRAMs will be organized, either memory decoders or scan-chains
  *
  *  ------ Delay information ------
  * 1. delay_types_: type of pin-to-pin delay, either rising_edge of falling_edge
@@ -223,21 +224,43 @@ class CircuitLibrary {
     CircuitModelId get_default_circuit_model_id(const enum e_spice_model_type& type) const;
   public: /* Public Mutators */
     CircuitModelId add_circuit_model();
+    /* Fundamental information */
     void set_circuit_model_type(const CircuitModelId& circuit_model_id, const enum e_spice_model_type& type);
     void set_circuit_model_name(const CircuitModelId& circuit_model_id, const std::string& name);
     void set_circuit_model_prefix(const CircuitModelId& circuit_model_id, const std::string& prefix);
     void set_circuit_model_verilog_netlist(const CircuitModelId& circuit_model_id, const std::string& verilog_netlist);
     void set_circuit_model_spice_netlist(const CircuitModelId& circuit_model_id, const std::string& spice_netlist);
     void set_circuit_model_is_default(const CircuitModelId& circuit_model_id, const bool& is_default);
+    /* Verilog generator options */ 
     void set_circuit_model_dump_structural_verilog(const CircuitModelId& circuit_model_id, const bool& dump_structural_verilog);
     void set_circuit_model_dump_explicit_port_map(const CircuitModelId& circuit_model_id, const bool& dump_explicit_port_map);
+    /* Design technology information */ 
     void set_circuit_model_design_tech_type(const CircuitModelId& circuit_model_id, const enum e_spice_model_design_tech& design_tech_type);
     void set_circuit_model_power_gated(const CircuitModelId& circuit_model_id, const bool& power_gated);
-    void set_circuit_model_input_buffer(const CircuitModelId& circuit_model_id, const bool& existence, const std::string& circuit_model_name);
-    void set_circuit_model_output_buffer(const CircuitModelId& circuit_model_id, const bool& existence, const std::string& circuit_model_name);
-    void set_circuit_model_lut_input_buffer(const CircuitModelId& circuit_model_id, const bool& existence, const std::string& circuit_model_name);
-    void set_circuit_model_lut_input_inverter(const CircuitModelId& circuit_model_id, const bool& existence, const std::string& circuit_model_name);
-    void set_circuit_model_lut_intermediate_buffer(const CircuitModelId& circuit_model_id, const bool& existence, const std::string& circuit_model_name);
+    /* Buffer existence */
+    void set_circuit_model_input_buffer(const CircuitModelId& circuit_model_id, 
+                                        const bool& existence, const std::string& circuit_model_name);
+    void set_circuit_model_output_buffer(const CircuitModelId& circuit_model_id, 
+                                         const bool& existence, const std::string& circuit_model_name);
+    void set_circuit_model_lut_input_buffer(const CircuitModelId& circuit_model_id, 
+                                            const bool& existence, const std::string& circuit_model_name);
+    void set_circuit_model_lut_input_inverter(const CircuitModelId& circuit_model_id, 
+                                              const bool& existence, const std::string& circuit_model_name);
+    void set_circuit_model_lut_intermediate_buffer(const CircuitModelId& circuit_model_id, 
+                                                   const bool& existence, const std::string& circuit_model_name);
+    /* Pass-gate-related parameters */
+    void set_circuit_model_pass_gate_logic(const CircuitModelId& circuit_model_id, const std::string& circuit_model_name);
+    /* Port information */
+    CircuitPortId add_circuit_model_port(const CircuitModelId& circuit_model_id);
+    void set_port_types(const CircuitModelId& circuit_model_id, 
+                        const CircuitPortId& circuit_port_id, 
+                        const enum e_spice_model_port_type& port_type);
+    void set_port_sizes(const CircuitModelId& circuit_model_id, 
+                        const CircuitPortId& circuit_port_id, 
+                        const size_t& port_size);
+    void set_port_prefix(const CircuitModelId& circuit_model_id, 
+                         const CircuitPortId& circuit_port_id, 
+                         const std::string& port_prefix);
   public: /* Internal mutators: link circuit_models */
     void set_circuit_model_buffer(const CircuitModelId& circuit_model_id, const enum e_buffer_type buffer_type, const bool& existence, const std::string& circuit_model_name);
     void set_circuit_model_port_inv_circuit_model(const CircuitModelId& circuit_model_id);      
@@ -246,6 +269,7 @@ class CircuitLibrary {
   private: /* Internal invalidators/validators */
     /* Validators */
     bool valid_circuit_model_id(const CircuitModelId& circuit_model_id) const;
+    bool valid_circuit_port_id(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
     /* Invalidators */
     void invalidate_circuit_model_lookup() const;
     void invalidate_circuit_model_port_lookup(const CircuitModelId& circuit_model_id) const;
@@ -286,6 +310,7 @@ class CircuitLibrary {
     vtr::vector<CircuitModelId, CircuitModelId> pass_gate_logic_circuit_model_ids_;
 
     /* Port information */
+    vtr::vector<CircuitModelId, vtr::vector<CircuitPortId, CircuitPortId>> port_ids_;
     vtr::vector<CircuitModelId, vtr::vector<CircuitPortId, enum e_spice_model_port_type>> port_types_;
     vtr::vector<CircuitModelId, vtr::vector<CircuitPortId, size_t>> port_sizes_;
     vtr::vector<CircuitModelId, vtr::vector<CircuitPortId, std::string>> port_prefix_;

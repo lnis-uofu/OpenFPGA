@@ -87,7 +87,8 @@ enum e_spice_model_port_type {
   SPICE_MODEL_PORT_BL,
   SPICE_MODEL_PORT_BLB,
   SPICE_MODEL_PORT_WL,
-  SPICE_MODEL_PORT_WLB
+  SPICE_MODEL_PORT_WLB,
+  NUM_CIRCUIT_MODEL_PORT_TYPES
 };
 
 /* For process corner */
@@ -102,7 +103,8 @@ enum e_sram_orgz {
   SPICE_SRAM_STANDALONE,   /* SRAMs are organized and accessed as standalone elements */
   SPICE_SRAM_SCAN_CHAIN,   /* SRAMs are organized and accessed by a scan-chain */
   SPICE_SRAM_MEMORY_BANK,  /* SRAMs are organized and accessed by memory bank */
-  SPICE_SRAM_LOCAL_ENCODER  /* SRAMs are organized and accessed by a local encoder */
+  SPICE_SRAM_LOCAL_ENCODER,  /* SRAMs are organized and accessed by a local encoder */
+  NUM_CIRCUIT_MODEL_SRAM_ORGZ_TYPES
 };
 
 enum e_spice_accuracy_type {
