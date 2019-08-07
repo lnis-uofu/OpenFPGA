@@ -47,6 +47,8 @@
  */
 /* Header files should be included in a sequence */
 /* Standard header files required go first */
+#include <string>
+
 #include "vtr_strong_id.h"
 #include "vtr_geometry.h"
 
@@ -100,7 +102,7 @@ typedef vtr::StrongId<circuit_edge_id_tag> CircuitEdgeId;
  * 2. dump_explicit_port_map_: if Verilog generator will use explicit port mapping when instanciate the circuit model
  *
  *  ------ Design technology information -----
- * 1. design_tech_: the design technology [cmos|rram] for each circuit model 
+ * 1. design_tech_types_: the design technology [cmos|rram] for each circuit model 
  * 2. power_gated_: specify if the circuit model is power-gated (contain a input to turn on/off VDD and GND) 
  *
  *  ------ Buffer existence -----
@@ -210,20 +212,43 @@ class CircuitLibrary {
     typedef vtr::Range<circuit_edge_iterator> circuit_edge_range;
     /* local enumeration for buffer existence */
     enum e_buffer_type: unsigned char{ 
-      INPUT = 0, OUTPUT, LUT_INPUT_BUFFER, LUT_INPUT_INV, LUT_INTER_BUFFER, NUM_BUFFER_TYPE /* Last one is a counter */ 
+      INPUT = 0, OUTPUT, LUT_INPUT_BUFFER, LUT_INPUT_INVERTER, LUT_INTER_BUFFER, NUM_BUFFER_TYPE /* Last one is a counter */ 
     };
   public: /* Constructors */
   public: /* Accessors: aggregates */
     circuit_model_range circuit_models() const;
-  public: /* Accessors: Basic data query */
-  public: /* Accessors: Methods to find circuit model */
+  public: /* Public Accessors: Basic data query */
+  public: /* Public Accessors: Methods to find circuit model */
     CircuitModelId get_circuit_model_id_by_name(const std::string& name) const ;
     CircuitModelId get_default_circuit_model_id(const enum e_spice_model_type& type) const;
-  public: /* Mutators */
+  public: /* Public Mutators */
     CircuitModelId add_circuit_model();
-  public: /* Internal mutators */
+    void set_circuit_model_type(const CircuitModelId& circuit_model_id, const enum e_spice_model_type& type);
+    void set_circuit_model_name(const CircuitModelId& circuit_model_id, const std::string& name);
+    void set_circuit_model_prefix(const CircuitModelId& circuit_model_id, const std::string& prefix);
+    void set_circuit_model_verilog_netlist(const CircuitModelId& circuit_model_id, const std::string& verilog_netlist);
+    void set_circuit_model_spice_netlist(const CircuitModelId& circuit_model_id, const std::string& spice_netlist);
+    void set_circuit_model_is_default(const CircuitModelId& circuit_model_id, const bool& is_default);
+    void set_circuit_model_dump_structural_verilog(const CircuitModelId& circuit_model_id, const bool& dump_structural_verilog);
+    void set_circuit_model_dump_explicit_port_map(const CircuitModelId& circuit_model_id, const bool& dump_explicit_port_map);
+    void set_circuit_model_design_tech_type(const CircuitModelId& circuit_model_id, const enum e_spice_model_design_tech& design_tech_type);
+    void set_circuit_model_power_gated(const CircuitModelId& circuit_model_id, const bool& power_gated);
+    void set_circuit_model_input_buffer(const CircuitModelId& circuit_model_id, const bool& existence, const std::string& circuit_model_name);
+    void set_circuit_model_output_buffer(const CircuitModelId& circuit_model_id, const bool& existence, const std::string& circuit_model_name);
+    void set_circuit_model_lut_input_buffer(const CircuitModelId& circuit_model_id, const bool& existence, const std::string& circuit_model_name);
+    void set_circuit_model_lut_input_inverter(const CircuitModelId& circuit_model_id, const bool& existence, const std::string& circuit_model_name);
+    void set_circuit_model_lut_intermediate_buffer(const CircuitModelId& circuit_model_id, const bool& existence, const std::string& circuit_model_name);
+  public: /* Internal mutators: link circuit_models */
+    void set_circuit_model_buffer(const CircuitModelId& circuit_model_id, const enum e_buffer_type buffer_type, const bool& existence, const std::string& circuit_model_name);
     void set_circuit_model_port_inv_circuit_model(const CircuitModelId& circuit_model_id);      
-  private: /* Internal validators */
+  public: /* Internal mutators: build fast look-ups */
+    void build_circuit_model_lookup();
+  private: /* Internal invalidators/validators */
+    /* Validators */
+    bool valid_circuit_model_id(const CircuitModelId& circuit_model_id) const;
+    /* Invalidators */
+    void invalidate_circuit_model_lookup() const;
+    void invalidate_circuit_model_port_lookup(const CircuitModelId& circuit_model_id) const;
   private: /* Internal data */
     /* Fundamental information */
     vtr::vector<CircuitModelId, CircuitModelId> circuit_model_ids_;
@@ -240,15 +265,15 @@ class CircuitLibrary {
      */
     typedef std::vector<std::vector<CircuitModelId>> CircuitModelLookup;
     mutable CircuitModelLookup circuit_model_lookup_; /* [circuit_model_type][circuit_model_ids] */
-    typedef std::vector<std::vector<std::vector<std::vector<CircuitPortId>>>> CircuitModelPortLookup;
-    mutable CircuitModelPortLookup circuit_model_port_lookup_; /* [circuit_model_type][circuit_model_id][port_type][port_ids] */
+    typedef std::vector<std::vector<std::vector<CircuitPortId>>> CircuitModelPortLookup;
+    mutable CircuitModelPortLookup circuit_model_port_lookup_; /* [circuit_model_id][port_type][port_ids] */
 
     /* Verilog generator options */ 
     vtr::vector<CircuitModelId, bool> dump_structural_verilog_;
     vtr::vector<CircuitModelId, bool> dump_explicit_port_map_;
     
     /* Design technology information */ 
-    vtr::vector<CircuitModelId, enum e_spice_model_design_tech> design_tech_;
+    vtr::vector<CircuitModelId, enum e_spice_model_design_tech> design_tech_types_;
     vtr::vector<CircuitModelId, bool> power_gated_;
 
     /* Buffer existence */
