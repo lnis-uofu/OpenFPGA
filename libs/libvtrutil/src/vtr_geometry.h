@@ -49,6 +49,7 @@ template<class T>
 class Point {
     public: //Constructors
         Point(T x_val, T y_val);
+        Point();
 
     public: //Accessors
 

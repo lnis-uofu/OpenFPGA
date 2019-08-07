@@ -11,6 +11,12 @@ namespace vtr {
     }
 
     template<class T>
+    Point<T>::Point() {
+        //pass
+    }
+
+
+    template<class T>
     T Point<T>::x() const {
         return x_;
     }

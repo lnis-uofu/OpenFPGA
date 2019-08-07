@@ -48,6 +48,7 @@
 /* Header files should be included in a sequence */
 /* Standard header files required go first */
 #include "vtr_strong_id.h"
+#include "vtr_geometry.h"
 
 #include "vtr_vector.h"
 #include "vtr_range.h"
@@ -65,6 +66,12 @@ typedef vtr::StrongId<circuit_model_id_tag> CircuitModelId;
 typedef vtr::StrongId<circuit_port_id_tag> CircuitPortId;
 typedef vtr::StrongId<circuit_edge_id_tag> CircuitEdgeId;
 
+
+/* Alias for open ids */
+#define CIRCUIT_MODEL_OPEN_ID CircuitModelId(-1)
+#define CIRCUIT_PORT_OPEN_ID CircuitPortId(-1)
+#define CIRCUIT_EDGE_OPEN_ID CircuitEdgeId(-1)
+
 /************************************************************************
  * The class CircuitLibrary is a critical data structure for OpenFPGA
  * It stores all the circuit-level details from XML architecture file
@@ -81,6 +88,12 @@ typedef vtr::StrongId<circuit_edge_id_tag> CircuitEdgeId;
  * 5. verilog_netlist_: specified path and file name of Verilog netlist if a circuit model is not auto-generated
  * 6. spice_netlist_: specified path and file name of SPICE netlist if a circuit model is not auto-generated
  * 7. is_default_: indicate if the circuit model is the default one among all those in the same type 
+ *
+ *  ------ Fast look-ups-----
+ *  1. circuit_model_lookup_: A multi-dimension vector to provide fast look-up on circuit models for users 
+ *                            It classifies CircuitModelIds by their type and set the default model in the first element for each type.
+ *  2. circuit_model_port_lookup_: A multi-dimension vector to provide fast look-up on ports of circuit models for users
+ *                                 It classifies Ports by their types 
  *
  *  ------ Verilog generation options -----
  * 1. dump_structural_verilog_: if Verilog generator will output structural Verilog syntax for the circuit model
@@ -188,6 +201,7 @@ typedef vtr::StrongId<circuit_edge_id_tag> CircuitEdgeId;
 class CircuitLibrary {
   public: /* Types */
     typedef vtr::vector<CircuitModelId, CircuitModelId>::const_iterator circuit_model_iterator;
+    typedef vtr::vector<CircuitModelId, std::string>::const_iterator circuit_model_string_iterator;
     typedef vtr::vector<CircuitPortId, CircuitPortId>::const_iterator circuit_port_iterator;
     typedef vtr::vector<CircuitEdgeId, CircuitEdgeId>::const_iterator circuit_edge_iterator;
     /* Create range */
@@ -199,20 +213,35 @@ class CircuitLibrary {
       INPUT = 0, OUTPUT, LUT_INPUT_BUFFER, LUT_INPUT_INV, LUT_INTER_BUFFER, NUM_BUFFER_TYPE /* Last one is a counter */ 
     };
   public: /* Constructors */
-  public: /* Accessors */
-    /* Aggregates */
+  public: /* Accessors: aggregates */
     circuit_model_range circuit_models() const;
+  public: /* Accessors: Basic data query */
+  public: /* Accessors: Methods to find circuit model */
+    CircuitModelId get_circuit_model_id_by_name(const std::string& name) const ;
+    CircuitModelId get_default_circuit_model_id(const enum e_spice_model_type& type) const;
   public: /* Mutators */
-  private: /* Internal functions */
+    CircuitModelId add_circuit_model();
+  public: /* Internal mutators */
+    void set_circuit_model_port_inv_circuit_model(const CircuitModelId& circuit_model_id);      
+  private: /* Internal validators */
   private: /* Internal data */
     /* Fundamental information */
     vtr::vector<CircuitModelId, CircuitModelId> circuit_model_ids_;
     vtr::vector<CircuitModelId, enum e_spice_model_type> circuit_model_types_;
     vtr::vector<CircuitModelId, std::string> circuit_model_names_;
     vtr::vector<CircuitModelId, std::string> circuit_model_prefix_;
-    vtr::vector<CircuitModelId, std::string> verilog_netlists_;
-    vtr::vector<CircuitModelId, std::string> spice_netlists_;
-    vtr::vector<CircuitModelId, bool> is_default_;
+    vtr::vector<CircuitModelId, std::string> circuit_model_verilog_netlists_;
+    vtr::vector<CircuitModelId, std::string> circuit_model_spice_netlists_;
+    vtr::vector<CircuitModelId, bool> circuit_model_is_default_;
+
+    /* fast look-up for circuit models to categorize by types 
+     * [type][num_ids]
+     * Important: we force the default circuit model in the first element for each type
+     */
+    typedef std::vector<std::vector<CircuitModelId>> CircuitModelLookup;
+    mutable CircuitModelLookup circuit_model_lookup_; /* [circuit_model_type][circuit_model_ids] */
+    typedef std::vector<std::vector<std::vector<std::vector<CircuitPortId>>>> CircuitModelPortLookup;
+    mutable CircuitModelPortLookup circuit_model_port_lookup_; /* [circuit_model_type][circuit_model_id][port_type][port_ids] */
 
     /* Verilog generator options */ 
     vtr::vector<CircuitModelId, bool> dump_structural_verilog_;
@@ -224,12 +253,12 @@ class CircuitLibrary {
 
     /* Buffer existence */
     vtr::vector<CircuitModelId, std::vector<bool>> buffer_existence_;
-    vtr::vector<CircuitModelId, std::vector<std::string>> buffer_circuit_model_name_;
-    vtr::vector<CircuitModelId, std::vector<CircuitModelId>> buffer_circuit_model_id_;
+    vtr::vector<CircuitModelId, std::vector<std::string>> buffer_circuit_model_names_;
+    vtr::vector<CircuitModelId, std::vector<CircuitModelId>> buffer_circuit_model_ids_;
 
     /* Pass-gate-related parameters */
-    vtr::vector<CircuitModelId, std::string> pass_gate_logic_circuit_model_name_;
-    vtr::vector<CircuitModelId, CircuitModelId> pass_gate_logic_circuit_model_id_;
+    vtr::vector<CircuitModelId, std::string> pass_gate_logic_circuit_model_names_;
+    vtr::vector<CircuitModelId, CircuitModelId> pass_gate_logic_circuit_model_ids_;
 
     /* Port information */
     vtr::vector<CircuitModelId, vtr::vector<CircuitPortId, enum e_spice_model_port_type>> port_types_;
@@ -247,9 +276,9 @@ class CircuitLibrary {
     vtr::vector<CircuitModelId, vtr::vector<CircuitPortId, CircuitModelId>> port_circuit_model_ids_;
     vtr::vector<CircuitModelId, vtr::vector<CircuitPortId, std::string>> port_inv_circuit_model_names_;
     vtr::vector<CircuitModelId, vtr::vector<CircuitPortId, CircuitModelId>> port_inv_circuit_model_ids_;
-    vtr::vector<CircuitModelId, vtr::vector<CircuitPortId, std::string>> port_tri_state_map_;
+    vtr::vector<CircuitModelId, vtr::vector<CircuitPortId, std::string>> port_tri_state_maps_;
     vtr::vector<CircuitModelId, vtr::vector<CircuitPortId, size_t>> port_lut_frac_level_;
-    vtr::vector<CircuitModelId, vtr::vector<CircuitPortId, std::vector<size_t>>> port_lut_output_mask_;
+    vtr::vector<CircuitModelId, vtr::vector<CircuitPortId, std::vector<size_t>>> port_lut_output_masks_;
     vtr::vector<CircuitModelId, vtr::vector<CircuitPortId, enum e_sram_orgz>> port_sram_orgz_;
 
     /* Timing graphs */
@@ -294,17 +323,13 @@ class CircuitLibrary {
     vtr::vector<CircuitModelId, bool> lut_is_fracturable_;
 
     /* RRAM-related design technology information */
-    vtr::vector<CircuitModelId, float> rlrs_;
-    vtr::vector<CircuitModelId, float> rhrs_;
-    vtr::vector<CircuitModelId, float> wprog_set_nmos_;
-    vtr::vector<CircuitModelId, float> wprog_set_pmos_;
-    vtr::vector<CircuitModelId, float> wprog_reset_nmos_;
-    vtr::vector<CircuitModelId, float> wprog_reset_pmos_;
+    vtr::vector<CircuitModelId, vtr::Point<float>> rram_res_; /* x => R_LRS, y => R_HRS */
+    vtr::vector<CircuitModelId, vtr::Point<float>> wprog_set_; /* x => wprog_set_nmos, y=> wprog_set_pmos */
+    vtr::vector<CircuitModelId, vtr::Point<float>> wprog_reset_; /* x => wprog_reset_nmos, y=> wprog_reset_pmos */
     
     /* Wire parameters */
     vtr::vector<CircuitModelId, enum e_wire_model_type> wire_types_;
-    vtr::vector<CircuitModelId, float> wire_res_val_;
-    vtr::vector<CircuitModelId, float> wire_cap_val_;
+    vtr::vector<CircuitModelId, vtr::Point<float>> wire_rc_; /* x => wire_res_val, y=> wire_cap_val */
     vtr::vector<CircuitModelId, size_t> wire_num_levels_;
      
 };
