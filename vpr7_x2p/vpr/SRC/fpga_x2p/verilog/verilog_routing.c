@@ -313,6 +313,7 @@ void dump_verilog_routing_chan_subckt(char* verilog_dir,
 void dump_verilog_grid_side_pin_with_given_index(FILE* fp, t_rr_type pin_type, 
                                                  int pin_index, int side,
                                                  int x, int y,
+                                                 int unique_x, int unique_y, /* If explicit, needs the coordinates of the mirror*/
                                                  boolean dump_port_type,
                                                  bool is_explicit_mapping) {
   int height;  
@@ -360,7 +361,7 @@ void dump_verilog_grid_side_pin_with_given_index(FILE* fp, t_rr_type pin_type,
       is_explicit_mapping = false; /* Both cannot be true at the same time */
     }
     if (true == is_explicit_mapping) {
-      fprintf(fp, ".%s(", gen_verilog_grid_one_pin_name(x, y, height, side, pin_index, TRUE));
+      fprintf(fp, ".%s(", gen_verilog_grid_one_pin_name(unique_x, unique_y, height, side, pin_index, TRUE));
     }
     fprintf(fp, "%s", gen_verilog_grid_one_pin_name(x, y, height, side, pin_index, TRUE));
     if (true == is_explicit_mapping) {
@@ -565,6 +566,7 @@ void dump_verilog_unique_switch_box_short_interc(FILE* fp,
                                                 drive_rr_node->ptc_num, 
                                                 rr_sb.get_opin_node_grid_side(drive_rr_node),
                                                 grid_x, grid_y, 
+                                                0, 0, /* No explicit mapping*/
                                                 FALSE, false); /* Do not dump the direction of the port! */
     break;
   case CHANX:
@@ -667,6 +669,8 @@ void dump_verilog_switch_box_short_interc(FILE* fp,
                                                 drive_rr_node->ptc_num, 
                                                 cur_sb_info->opin_rr_node_grid_side[side][index],
                                                 grid_x, grid_y, 
+                                                0, /*Used in more recent version*/
+                                                0, /*Used in more recent version*/
                                                 FALSE, is_explicit_mapping); /* Do not dump the direction of the port! */
     break;
   case CHANX:
@@ -767,12 +771,16 @@ void dump_verilog_switch_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
       /* Find grid_x and grid_y */
       grid_x = drive_rr_nodes[inode]->xlow; 
       grid_y = drive_rr_nodes[inode]->ylow; /*Plus the offset in function fprint_grid_side_pin_with_given_index */
+      //const RRGSB& unique_mirror = device_rr_gsb.get_cb_unique_module(cb_type, coordinator);
       /* Print a grid pin */
       fprintf(fp, "assign %s_size%d_%d_inbus[%d] = ",
               verilog_model->prefix, mux_size, verilog_model->cnt, input_cnt);
       dump_verilog_grid_side_pin_with_given_index(fp, IPIN, drive_rr_nodes[inode]->ptc_num, 
                                                   cur_sb_info->opin_rr_node_grid_side[side][index],
-                                                  grid_x, grid_y, FALSE, is_explicit_mapping);
+                                                  grid_x, grid_y,
+                                                  0,/*Used in more recent version*/
+                                                  0,/*Used in more recent version*/
+                                                  FALSE, is_explicit_mapping);
       fprintf(fp, ";\n");
       input_cnt++;
       break;
@@ -1029,7 +1037,9 @@ void dump_verilog_unique_switch_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
               verilog_model->prefix, mux_size, verilog_model->cnt, input_cnt);
       dump_verilog_grid_side_pin_with_given_index(fp, IPIN, drive_rr_nodes[inode]->ptc_num, 
                                                   rr_sb.get_opin_node_grid_side(drive_rr_nodes[inode]),
-                                                  grid_x, grid_y, FALSE, false);
+                                                  grid_x, grid_y,
+                                                  0,0,/*No explicit mapping */
+                                                  FALSE, false);
       fprintf(fp, ";\n");
       input_cnt++;
       break;
@@ -1803,11 +1813,14 @@ void dump_verilog_routing_switch_box_unique_side_subckt_portmap(FILE* fp,
     }
 
     /* Dump OPINs of adjacent CLBs */
+      //const RRGSB& unique_mirror = device_rr_gsb.get_cb_unique_module(port_coordinator);
     for (size_t inode = 0; inode < rr_sb.get_num_opin_nodes(side_manager.get_side()); ++inode) {
       fprintf(fp, "  ");
       dump_verilog_grid_side_pin_with_given_index(fp, OPIN, /* This is an input of a SB */
                                                   rr_sb.get_opin_node(side_manager.get_side(), inode)->ptc_num,
                                                   rr_sb.get_opin_node_grid_side(side_manager.get_side(), inode),
+                                                  rr_sb.get_opin_node(side_manager.get_side(), inode)->xlow,
+                                                  rr_sb.get_opin_node(side_manager.get_side(), inode)->ylow,
                                                   rr_sb.get_opin_node(side_manager.get_side(), inode)->xlow,
                                                   rr_sb.get_opin_node(side_manager.get_side(), inode)->ylow,
                                                   dump_port_type, is_explicit_mapping); /* Dump the direction of the port ! */ 
@@ -2078,7 +2091,8 @@ void dump_verilog_routing_switch_box_unique_module(t_sram_orgz_info* cur_sram_or
                                                   rr_gsb.get_opin_node_grid_side(side_manager.get_side(), inode),
                                                   rr_gsb.get_opin_node(side_manager.get_side(), inode)->xlow,
                                                   rr_gsb.get_opin_node(side_manager.get_side(), inode)->ylow,
-                                                  TRUE, is_explicit_mapping); /* Dump the direction of the port ! */ 
+                                                  0,0, /*No explicit mapping */
+                                                  TRUE, false); /* Dump the direction of the port ! */ 
     } 
   }
   
@@ -2315,6 +2329,8 @@ void dump_verilog_routing_switch_box_unique_subckt(t_sram_orgz_info* cur_sram_or
       }
     }
     /* Dump OPINs of adjacent CLBs */
+    puts("CHECK4");
+    const RRGSB& unique_mirror = device_rr_gsb.get_sb_unique_module(port_coordinator);
     for (size_t inode = 0; inode < rr_gsb.get_num_opin_nodes(side_manager.get_side()); ++inode) {
       fprintf(fp, "  ");
       dump_verilog_grid_side_pin_with_given_index(fp, OPIN, /* This is an input of a SB */
@@ -2322,6 +2338,8 @@ void dump_verilog_routing_switch_box_unique_subckt(t_sram_orgz_info* cur_sram_or
                                                   rr_gsb.get_opin_node_grid_side(side_manager.get_side(), inode),
                                                   rr_gsb.get_opin_node(side_manager.get_side(), inode)->xlow,
                                                   rr_gsb.get_opin_node(side_manager.get_side(), inode)->ylow,
+                                                  unique_mirror.get_opin_node(side_manager.get_side(), inode)->xlow,
+                                                  unique_mirror.get_opin_node(side_manager.get_side(), inode)->ylow,
                                                   TRUE, is_explicit_mapping); /* Dump the direction of the port ! */ 
     } 
   }
@@ -2524,6 +2542,8 @@ void dump_verilog_routing_switch_box_subckt(t_sram_orgz_info* cur_sram_orgz_info
                                                   cur_sb_info->opin_rr_node_grid_side[side][inode],
                                                   cur_sb_info->opin_rr_node[side][inode]->xlow,
                                                   cur_sb_info->opin_rr_node[side][inode]->ylow, 
+                                                  0,/*used in more recent version*/
+                                                  0,/*used in more recent version*/
                                                   TRUE, is_explicit_mapping); /* Dump the direction of the port ! */ 
     } 
   }
@@ -2772,6 +2792,7 @@ void dump_verilog_connection_box_short_interc(FILE* fp,
                                               rr_gsb.get_ipin_node(side, index)->ptc_num, 
                                               rr_gsb.get_ipin_node_grid_side(side, index), 
                                               xlow, ylow, /* Coordinator of Grid */ 
+                                              0,0, /*No explicit mapping */
                                               FALSE, false); /* Do not specify the direction of this pin */
 
   /* End */
@@ -2849,6 +2870,7 @@ void dump_verilog_connection_box_short_interc(FILE* fp,
                                               cur_cb_info->ipin_rr_node[side][index]->ptc_num, 
                                               cur_cb_info->ipin_rr_node_grid_side[side][index], 
                                               xlow, ylow, /* Coordinator of Grid */ 
+                                              0,0, /*No explicit mapping */
                                               FALSE, false); /* Do not specify the direction of this pin */
 
   /* End */
@@ -3006,6 +3028,7 @@ void dump_verilog_connection_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
                                               rr_gsb.get_ipin_node(side, index)->ptc_num, 
                                               rr_gsb.get_ipin_node_grid_side(side, index), 
                                               xlow, ylow, /* Coordinator of Grid */ 
+                                              0,0, /*No explicit mapping*/
                                               FALSE, false); /* Do not specify the direction of port */
   if (true == is_explicit_mapping) {
     fprintf(fp, ")");
@@ -3253,6 +3276,8 @@ void dump_verilog_connection_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
                                               cur_cb_info->ipin_rr_node[side][index]->ptc_num, 
                                               cur_cb_info->ipin_rr_node_grid_side[side][index], 
                                               xlow, ylow, /* Coordinator of Grid */ 
+                                              0,/*No explicit mapping*/
+                                              0,/*No explicit mapping*/
                                               FALSE, false); /* Do not specify the direction of port */
   if (true == is_explicit_mapping) {
     fprintf(fp, ")");
@@ -3582,6 +3607,8 @@ void dump_verilog_routing_connection_box_unique_module(t_sram_orgz_info* cur_sra
                                                   rr_gsb.get_ipin_node_grid_side(cb_ipin_side, inode),
                                                   rr_gsb.get_ipin_node(cb_ipin_side, inode)->xlow,
                                                   rr_gsb.get_ipin_node(cb_ipin_side, inode)->ylow,
+                                                  0,/*No explicit mapping */
+                                                  0,/*No explicit mapping */
                                                   TRUE, false); 
 
     }
@@ -3785,6 +3812,7 @@ void dump_verilog_routing_connection_box_subckt(t_sram_orgz_info* cur_sram_orgz_
   assert((1 == side_cnt)||(2 == side_cnt));
 
   side_cnt = 0;
+  //const RRGSB& unique_mirror = device_rr_gsb.get_cb_unique_module(cb_type, coordinator);
   /* Print the ports of grids*/
   /* only check ipin_rr_nodes of cur_cb_info */
   for (side = 0; side < cur_cb_info->num_sides; side++) {
@@ -3802,6 +3830,8 @@ void dump_verilog_routing_connection_box_subckt(t_sram_orgz_info* cur_sram_orgz_
                                                   cur_cb_info->ipin_rr_node_grid_side[side][inode],
                                                   cur_cb_info->ipin_rr_node[side][inode]->xlow,
                                                   cur_cb_info->ipin_rr_node[side][inode]->ylow,
+                                                  0,/*Used in more recent version*/
+                                                  0,/*Used in more recent version*/
                                                   TRUE, is_explicit_mapping); 
 
     }

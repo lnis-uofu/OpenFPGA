@@ -686,6 +686,8 @@ void dump_verilog_defined_one_connection_box(t_sram_orgz_info* cur_sram_orgz_inf
                                                  cur_cb_info.ipin_rr_node_grid_side[side][inode],
                                                  cur_cb_info.ipin_rr_node[side][inode]->xlow,
                                                  cur_cb_info.ipin_rr_node[side][inode]->ylow, 
+                                                 0, /*Used in newer version*/
+                                                 0, /*Used in newer version*/
                                                  FALSE, is_explicit_mapping); /* Do not specify direction of port */
       fprintf(fp, ", \n");
     }
@@ -833,6 +835,8 @@ void dump_verilog_defined_one_switch_box(t_sram_orgz_info* cur_sram_orgz_info,
                                                   cur_sb_info.opin_rr_node_grid_side[side][inode],
                                                   cur_sb_info.opin_rr_node[side][inode]->xlow,
                                                   cur_sb_info.opin_rr_node[side][inode]->ylow,
+                                                  0, /*Used in a more recent version*/ 
+                                                  0, /*Used in a more recent version*/ 
                                                   FALSE, is_explicit_mapping); /* Do not specify the direction of port */ 
       fprintf(fp, ",\n");
     } 
