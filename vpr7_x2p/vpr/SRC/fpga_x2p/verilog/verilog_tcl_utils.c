@@ -187,6 +187,8 @@ void dump_verilog_one_sb_routing_pin(FILE* fp,
                                                 side,
                                                 mirror_node->xlow,
                                                 mirror_node->ylow, 
+                                                0, /*Used in newer version*/
+                                                0, /*Used in newer version*/
                                                 FALSE,is_explicit_mapping); /* Do not specify direction of port */
     break; 
   }
@@ -231,6 +233,8 @@ void dump_verilog_one_sb_routing_pin(FILE* fp,
                                                 side,
                                                 cur_rr_node->xlow,
                                                 cur_rr_node->ylow, 
+                                                0, /*Used in newer version*/
+                                                0, /*Used in newer version*/
                                                 FALSE, is_explicit_mapping); /* Do not specify direction of port */
     break; 
   case CHANX:
