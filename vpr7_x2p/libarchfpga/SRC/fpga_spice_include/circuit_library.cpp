@@ -193,6 +193,15 @@ std::string CircuitLibrary::port_inv_prefix(const CircuitModelId& circuit_model_
   return port_inv_prefix_[circuit_model_id][circuit_port_id];
 }
 
+/* Return the default value of a port of a circuit model */
+size_t CircuitLibrary::port_default_value(const CircuitModelId& circuit_model_id, 
+                                        const CircuitPortId& circuit_port_id) const {
+  /* validate the circuit_port_id */
+  VTR_ASSERT_SAFE(valid_circuit_port_id(circuit_model_id, circuit_port_id));
+  return port_default_values_[circuit_model_id][circuit_port_id];
+}
+
+
 /* Return a flag if the port is used in mode-selection purpuse of a circuit model */
 bool CircuitLibrary::port_is_mode_select(const CircuitModelId& circuit_model_id, 
                                          const CircuitPortId& circuit_port_id) const {
@@ -303,6 +312,7 @@ CircuitModelId CircuitLibrary::add_circuit_model() {
   buffer_existence_.emplace_back();
   buffer_circuit_model_names_.emplace_back();
   buffer_circuit_model_ids_.emplace_back();
+  buffer_location_maps_.emplace_back();
 
   /* Pass-gate-related parameters */
   pass_gate_logic_circuit_model_names_.emplace_back();
@@ -314,6 +324,8 @@ CircuitModelId CircuitLibrary::add_circuit_model() {
   port_sizes_.emplace_back();
   port_prefix_.emplace_back();
   port_lib_names_.emplace_back();
+  port_inv_prefix_.emplace_back();
+  port_default_values_.emplace_back();
   port_is_mode_select_.emplace_back();
   port_is_global_.emplace_back();
   port_is_reset_.emplace_back();
@@ -348,7 +360,6 @@ CircuitModelId CircuitLibrary::add_circuit_model() {
 
   /* Buffer/Inverter-related parameters */
   buffer_types_.push_back(NUM_CIRCUIT_MODEL_BUF_TYPES);
-  buffer_location_maps_.emplace_back();
   buffer_sizes_.push_back(-1);
   buffer_num_levels_.push_back(-1);
   buffer_f_per_stage_.push_back(-1);
@@ -366,6 +377,9 @@ CircuitModelId CircuitLibrary::add_circuit_model() {
 
   /* LUT-related parameters */
   lut_is_fracturable_.push_back(false);
+
+  /* Gate-related parameters */
+  gate_types_.push_back(NUM_SPICE_MODEL_GATE_TYPES);
 
   /* RRAM-related design technology information */
   rram_res_.emplace_back();
@@ -519,6 +533,15 @@ void CircuitLibrary::set_circuit_model_lut_intermediate_buffer(const CircuitMode
   return;
 }
 
+void CircuitLibrary::set_circuit_model_lut_intermediate_buffer_location_map(const CircuitModelId& circuit_model_id,
+                                                                            const std::string& location_map) {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  buffer_location_maps_[circuit_model_id][LUT_INTER_BUFFER] = location_map; 
+  return;
+}
+
+
 /* Set pass-gate logic information of a circuit model */
 void CircuitLibrary::set_circuit_model_pass_gate_logic(const CircuitModelId& circuit_model_id, const std::string& circuit_model_name) {
   /* validate the circuit_model_id */
@@ -542,6 +565,7 @@ CircuitPortId CircuitLibrary::add_circuit_model_port(const CircuitModelId& circu
   port_prefix_[circuit_model_id].emplace_back();
   port_lib_names_[circuit_model_id].emplace_back();
   port_inv_prefix_[circuit_model_id].emplace_back();
+  port_default_values_[circuit_model_id].push_back(-1);
   port_is_mode_select_[circuit_model_id].push_back(false);
   port_is_global_[circuit_model_id].push_back(false);
   port_is_reset_[circuit_model_id].push_back(false);
@@ -561,9 +585,9 @@ CircuitPortId CircuitLibrary::add_circuit_model_port(const CircuitModelId& circu
 }
 
 /* Set the type for a port of a circuit model */
-void CircuitLibrary::set_port_types(const CircuitModelId& circuit_model_id, 
-                                    const CircuitPortId& circuit_port_id, 
-                                    const enum e_spice_model_port_type& port_type) {
+void CircuitLibrary::set_port_type(const CircuitModelId& circuit_model_id, 
+                                   const CircuitPortId& circuit_port_id, 
+                                   const enum e_spice_model_port_type& port_type) {
   /* validate the circuit_port_id */
   VTR_ASSERT_SAFE(valid_circuit_port_id(circuit_model_id, circuit_port_id));
   port_types_[circuit_model_id][circuit_port_id] = port_type;
@@ -571,9 +595,9 @@ void CircuitLibrary::set_port_types(const CircuitModelId& circuit_model_id,
 }
 
 /* Set the size for a port of a circuit model */
-void CircuitLibrary::set_port_sizes(const CircuitModelId& circuit_model_id, 
-                                    const CircuitPortId& circuit_port_id, 
-                                    const size_t& port_size) {
+void CircuitLibrary::set_port_size(const CircuitModelId& circuit_model_id, 
+                                   const CircuitPortId& circuit_port_id, 
+                                   const size_t& port_size) {
   /* validate the circuit_port_id */
   VTR_ASSERT_SAFE(valid_circuit_port_id(circuit_model_id, circuit_port_id));
   port_sizes_[circuit_model_id][circuit_port_id] = port_size;
@@ -607,6 +631,16 @@ void CircuitLibrary::set_port_inv_prefix(const CircuitModelId& circuit_model_id,
   /* validate the circuit_port_id */
   VTR_ASSERT_SAFE(valid_circuit_port_id(circuit_model_id, circuit_port_id));
   port_inv_prefix_[circuit_model_id][circuit_port_id] = inv_prefix;
+  return;
+}
+
+/* Set the default value for a port of a circuit model */
+void CircuitLibrary::set_port_default_value(const CircuitModelId& circuit_model_id, 
+                                            const CircuitPortId& circuit_port_id, 
+                                            const size_t& default_value) {
+  /* validate the circuit_port_id */
+  VTR_ASSERT_SAFE(valid_circuit_port_id(circuit_model_id, circuit_port_id));
+  port_default_values_[circuit_model_id][circuit_port_id] = default_value;
   return;
 }
 
@@ -822,18 +856,8 @@ void CircuitLibrary::set_buffer_type(const CircuitModelId& circuit_model_id,
   return;
 }
 
-void CircuitLibrary::set_buffer_location_map(const CircuitModelId& circuit_model_id,
-                                             const std::string& location_map) {
-  /* validate the circuit_model_id */
-  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
-  /* validate that the type of this circuit_model should be BUFFER or INVERTER */
-  VTR_ASSERT_SAFE(SPICE_MODEL_INVBUF == circuit_model_type(circuit_model_id));
-  buffer_location_maps_[circuit_model_id] = location_map; 
-  return;
-}
-
 void CircuitLibrary::set_buffer_size(const CircuitModelId& circuit_model_id,
-                                     const size_t& buffer_size) {
+                                     const float& buffer_size) {
   /* validate the circuit_model_id */
   VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
   /* validate that the type of this circuit_model should be BUFFER or INVERTER */
@@ -874,7 +898,7 @@ void CircuitLibrary::set_pass_gate_logic_type(const CircuitModelId& circuit_mode
 }
 
 void CircuitLibrary::set_pass_gate_logic_nmos_size(const CircuitModelId& circuit_model_id,
-                                                   const size_t& nmos_size) {
+                                                   const float& nmos_size) {
   /* validate the circuit_model_id */
   VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
   /* validate that the type of this circuit_model should be BUFFER or INVERTER */
@@ -884,7 +908,7 @@ void CircuitLibrary::set_pass_gate_logic_nmos_size(const CircuitModelId& circuit
 }
 
 void CircuitLibrary::set_pass_gate_logic_pmos_size(const CircuitModelId& circuit_model_id,
-                                                   const size_t& pmos_size) {
+                                                   const float& pmos_size) {
   /* validate the circuit_model_id */
   VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
   /* validate that the type of this circuit_model should be BUFFER or INVERTER */
@@ -954,6 +978,18 @@ void CircuitLibrary::set_lut_is_fracturable(const CircuitModelId& circuit_model_
   lut_is_fracturable_[circuit_model_id] = is_fracturable; 
   return;
 }
+
+/* Gate-related parameters */
+void CircuitLibrary::set_gate_type(const CircuitModelId& circuit_model_id,
+                                   const enum e_spice_model_gate_type& gate_type) {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  /* validate that the type of this circuit_model should be GATE */
+  VTR_ASSERT_SAFE(SPICE_MODEL_GATE == circuit_model_type(circuit_model_id));
+  gate_types_[circuit_model_id] = gate_type; 
+  return;
+}
+
 
 /* RRAM-related design technology information */
 void CircuitLibrary::set_rram_rlrs(const CircuitModelId& circuit_model_id,
@@ -1079,6 +1115,7 @@ void CircuitLibrary::set_circuit_model_buffer(const CircuitModelId& circuit_mode
     buffer_existence_[circuit_model_id].resize(size_t(buffer_type) + 1); 
     buffer_circuit_model_names_[circuit_model_id].resize(size_t(buffer_type) + 1); 
     buffer_circuit_model_ids_[circuit_model_id].resize(size_t(buffer_type) + 1); 
+    buffer_location_maps_[circuit_model_id].resize(size_t(buffer_type) + 1); 
   }
   /* Now we are in the range, assign values */
   buffer_existence_[circuit_model_id][size_t(buffer_type)] = existence;

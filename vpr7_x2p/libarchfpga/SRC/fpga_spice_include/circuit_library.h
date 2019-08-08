@@ -55,7 +55,7 @@
 #include "vtr_vector.h"
 #include "vtr_range.h"
 
-#include "spice_types.h"
+#include "circuit_types.h"
 
 /************************************************************************
  * Create strong id for Circuit Models/Ports to avoid illegal type casting 
@@ -238,6 +238,7 @@ class CircuitLibrary {
     std::string port_prefix(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
     std::string port_lib_name(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
     std::string port_inv_prefix(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
+    size_t port_default_value(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
     bool port_is_mode_select(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
     bool port_is_global(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
     bool port_is_reset(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
@@ -273,16 +274,18 @@ class CircuitLibrary {
                                               const bool& existence, const std::string& circuit_model_name);
     void set_circuit_model_lut_intermediate_buffer(const CircuitModelId& circuit_model_id, 
                                                    const bool& existence, const std::string& circuit_model_name);
+    void set_circuit_model_lut_intermediate_buffer_location_map(const CircuitModelId& circuit_model_id,
+                                                                const std::string& location_map);
     /* Pass-gate-related parameters */
     void set_circuit_model_pass_gate_logic(const CircuitModelId& circuit_model_id, const std::string& circuit_model_name);
     /* Port information */
     CircuitPortId add_circuit_model_port(const CircuitModelId& circuit_model_id);
-    void set_port_types(const CircuitModelId& circuit_model_id, 
-                        const CircuitPortId& circuit_port_id, 
-                        const enum e_spice_model_port_type& port_type);
-    void set_port_sizes(const CircuitModelId& circuit_model_id, 
-                        const CircuitPortId& circuit_port_id, 
-                        const size_t& port_size);
+    void set_port_type(const CircuitModelId& circuit_model_id, 
+                       const CircuitPortId& circuit_port_id, 
+                       const enum e_spice_model_port_type& port_type);
+    void set_port_size(const CircuitModelId& circuit_model_id, 
+                       const CircuitPortId& circuit_port_id, 
+                       const size_t& port_size);
     void set_port_prefix(const CircuitModelId& circuit_model_id, 
                          const CircuitPortId& circuit_port_id, 
                          const std::string& port_prefix);
@@ -292,6 +295,9 @@ class CircuitLibrary {
     void set_port_inv_prefix(const CircuitModelId& circuit_model_id, 
                              const CircuitPortId& circuit_port_id, 
                              const std::string& inv_prefix);
+    void set_port_default_value(const CircuitModelId& circuit_model_id, 
+                                const CircuitPortId& circuit_port_id, 
+                                const size_t& default_val);
     void set_port_is_mode_select(const CircuitModelId& circuit_model_id, 
                                  const CircuitPortId& circuit_port_id, 
                                  const bool& is_mode_select);
@@ -349,10 +355,8 @@ class CircuitLibrary {
     /* Buffer/Inverter-related parameters */
     void set_buffer_type(const CircuitModelId& circuit_model_id,
                          const enum e_spice_model_buffer_type& buffer_type);
-    void set_buffer_location_map(const CircuitModelId& circuit_model_id,
-                                 const std::string& location_map);
     void set_buffer_size(const CircuitModelId& circuit_model_id,
-                         const size_t& buffer_size);
+                         const float& buffer_size);
     void set_buffer_num_levels(const CircuitModelId& circuit_model_id,
                                const size_t& num_levels);
     void set_buffer_f_per_stage(const CircuitModelId& circuit_model_id,
@@ -361,9 +365,9 @@ class CircuitLibrary {
     void set_pass_gate_logic_type(const CircuitModelId& circuit_model_id,
                                   const enum e_spice_model_pass_gate_logic_type& pass_gate_logic_type);
     void set_pass_gate_logic_nmos_size(const CircuitModelId& circuit_model_id,
-                                       const size_t& nmos_size);
+                                       const float& nmos_size);
     void set_pass_gate_logic_pmos_size(const CircuitModelId& circuit_model_id,
-                                       const size_t& pmos_size);
+                                       const float& pmos_size);
     /* Multiplexer-related parameters */
     void set_mux_structure(const CircuitModelId& circuit_model_id,
                            const enum e_spice_model_structure& mux_structure);
@@ -378,6 +382,9 @@ class CircuitLibrary {
     /* LUT-related parameters */
     void set_lut_is_fracturable(const CircuitModelId& circuit_model_id,
                                 const bool& is_fracturable);
+    /* Gate-related parameters */
+    void set_gate_type(const CircuitModelId& circuit_model_id,
+                       const enum e_spice_model_gate_type& gate_type);
     /* RRAM-related design technology information */
     void set_rram_rlrs(const CircuitModelId& circuit_model_id,
                        const float& rlrs);
@@ -444,6 +451,7 @@ class CircuitLibrary {
     vtr::vector<CircuitModelId, std::vector<bool>> buffer_existence_;
     vtr::vector<CircuitModelId, std::vector<std::string>> buffer_circuit_model_names_;
     vtr::vector<CircuitModelId, std::vector<CircuitModelId>> buffer_circuit_model_ids_;
+    vtr::vector<CircuitModelId, std::vector<std::string>> buffer_location_maps_;
 
     /* Pass-gate-related parameters */
     vtr::vector<CircuitModelId, std::string> pass_gate_logic_circuit_model_names_;
@@ -456,6 +464,7 @@ class CircuitLibrary {
     vtr::vector<CircuitModelId, vtr::vector<CircuitPortId, std::string>> port_prefix_;
     vtr::vector<CircuitModelId, vtr::vector<CircuitPortId, std::string>> port_lib_names_;
     vtr::vector<CircuitModelId, vtr::vector<CircuitPortId, std::string>> port_inv_prefix_;
+    vtr::vector<CircuitModelId, vtr::vector<CircuitPortId, size_t>> port_default_values_;
     vtr::vector<CircuitModelId, vtr::vector<CircuitPortId, bool>> port_is_mode_select_;
     vtr::vector<CircuitModelId, vtr::vector<CircuitPortId, bool>> port_is_global_;
     vtr::vector<CircuitModelId, vtr::vector<CircuitPortId, bool>> port_is_reset_;
@@ -490,14 +499,13 @@ class CircuitLibrary {
 
     /* Buffer/Inverter-related parameters */
     vtr::vector<CircuitModelId, enum e_spice_model_buffer_type> buffer_types_;
-    vtr::vector<CircuitModelId, std::string> buffer_location_maps_;
-    vtr::vector<CircuitModelId, size_t> buffer_sizes_;
+    vtr::vector<CircuitModelId, float> buffer_sizes_;
     vtr::vector<CircuitModelId, size_t> buffer_num_levels_;
     vtr::vector<CircuitModelId, size_t> buffer_f_per_stage_;
 
     /* Pass-gate-related parameters */
     vtr::vector<CircuitModelId, enum e_spice_model_pass_gate_logic_type> pass_gate_logic_types_;
-    vtr::vector<CircuitModelId, vtr::Point<size_t>> pass_gate_logic_sizes_; /* x=> nmos_size; y => pmos_size */
+    vtr::vector<CircuitModelId, vtr::Point<float>> pass_gate_logic_sizes_; /* x=> nmos_size; y => pmos_size */
 
     /* Multiplexer-related parameters */
     vtr::vector<CircuitModelId, enum e_spice_model_structure> mux_structure_;
@@ -508,6 +516,9 @@ class CircuitLibrary {
 
     /* LUT-related parameters */
     vtr::vector<CircuitModelId, bool> lut_is_fracturable_;
+
+    /* Gate-related parameters */
+    vtr::vector<CircuitModelId, enum e_spice_model_gate_type> gate_types_;
 
     /* RRAM-related design technology information */
     vtr::vector<CircuitModelId, vtr::Point<float>> rram_res_; /* x => R_LRS, y => R_HRS */
