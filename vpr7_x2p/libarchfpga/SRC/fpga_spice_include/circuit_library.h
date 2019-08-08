@@ -103,7 +103,7 @@ typedef vtr::StrongId<circuit_edge_id_tag> CircuitEdgeId;
  *
  *  ------ Design technology information -----
  * 1. design_tech_types_: the design technology [cmos|rram] for each circuit model 
- * 2. power_gated_: specify if the circuit model is power-gated (contain a input to turn on/off VDD and GND) 
+ * 2. is_power_gated_: specify if the circuit model is power-gated (contain a input to turn on/off VDD and GND) 
  *
  *  ------ Buffer existence -----
  *  Use vectors to simplify the defition of buffer existence:
@@ -217,11 +217,33 @@ class CircuitLibrary {
     };
   public: /* Constructors */
   public: /* Accessors: aggregates */
+  public: /* Public Accessors: Basic data query on Circuit Models*/
     circuit_model_range circuit_models() const;
     enum e_spice_model_type circuit_model_type(const CircuitModelId& circuit_model_id) const;
-    enum e_spice_model_port_type port_type(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
+    std::string circuit_model_name(const CircuitModelId& circuit_model_id) const;
+    std::string circuit_model_prefix(const CircuitModelId& circuit_model_id) const;
+    std::string circuit_model_verilog_netlist(const CircuitModelId& circuit_model_id) const;
+    std::string circuit_model_spice_netlist(const CircuitModelId& circuit_model_id) const;
+    bool circuit_model_is_default(const CircuitModelId& circuit_model_id) const;
+    bool dump_structural_verilog(const CircuitModelId& circuit_model_id) const;
+    bool dump_explicit_port_map(const CircuitModelId& circuit_model_id) const;
     enum e_spice_model_design_tech design_tech_type(const CircuitModelId& circuit_model_id) const;
-  public: /* Public Accessors: Basic data query */
+    bool is_power_gated(const CircuitModelId& circuit_model_id) const;
+    bool is_input_buffered(const CircuitModelId& circuit_model_id) const;
+    bool is_output_buffered(const CircuitModelId& circuit_model_id) const;
+    bool is_lut_intermediate_buffered(const CircuitModelId& circuit_model_id) const;
+  public: /* Public Accessors: Basic data query on Circuit Ports*/
+    enum e_spice_model_port_type port_type(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
+    size_t port_size(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
+    std::string port_prefix(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
+    std::string port_lib_name(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
+    std::string port_inv_prefix(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
+    bool port_is_mode_select(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
+    bool port_is_global(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
+    bool port_is_reset(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
+    bool port_is_set(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
+    bool port_is_config_enable(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
+    bool port_is_prog(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
   public: /* Public Accessors: Methods to find circuit model */
     CircuitModelId get_circuit_model_id_by_name(const std::string& name) const ;
     CircuitModelId get_default_circuit_model_id(const enum e_spice_model_type& type) const;
@@ -239,7 +261,7 @@ class CircuitLibrary {
     void set_circuit_model_dump_explicit_port_map(const CircuitModelId& circuit_model_id, const bool& dump_explicit_port_map);
     /* Design technology information */ 
     void set_circuit_model_design_tech_type(const CircuitModelId& circuit_model_id, const enum e_spice_model_design_tech& design_tech_type);
-    void set_circuit_model_power_gated(const CircuitModelId& circuit_model_id, const bool& power_gated);
+    void set_circuit_model_is_power_gated(const CircuitModelId& circuit_model_id, const bool& is_power_gated);
     /* Buffer existence */
     void set_circuit_model_input_buffer(const CircuitModelId& circuit_model_id, 
                                         const bool& existence, const std::string& circuit_model_name);
@@ -416,7 +438,7 @@ class CircuitLibrary {
     
     /* Design technology information */ 
     vtr::vector<CircuitModelId, enum e_spice_model_design_tech> design_tech_types_;
-    vtr::vector<CircuitModelId, bool> power_gated_;
+    vtr::vector<CircuitModelId, bool> is_power_gated_;
 
     /* Buffer existence */
     vtr::vector<CircuitModelId, std::vector<bool>> buffer_existence_;

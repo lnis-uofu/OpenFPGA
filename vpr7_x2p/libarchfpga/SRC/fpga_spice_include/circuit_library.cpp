@@ -55,14 +55,105 @@ CircuitLibrary::circuit_model_range CircuitLibrary::circuit_models() const {
 }
 
 /************************************************************************
- * Public Accessors : Basic data query
+ * Public Accessors : Basic data query on Circuit Models
  ***********************************************************************/
+/* Access the type of a circuit model */
 enum e_spice_model_type CircuitLibrary::circuit_model_type(const CircuitModelId& circuit_model_id) const {
   /* validate the circuit_model_id */
   VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
   return circuit_model_types_[circuit_model_id]; 
 }
 
+/* Access the name of a circuit model */
+std::string CircuitLibrary::circuit_model_name(const CircuitModelId& circuit_model_id) const {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  return circuit_model_names_[circuit_model_id]; 
+}
+
+/* Access the prefix of a circuit model */
+std::string CircuitLibrary::circuit_model_prefix(const CircuitModelId& circuit_model_id) const {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  return circuit_model_prefix_[circuit_model_id]; 
+}
+
+/* Access the path + file of user-defined verilog netlist of a circuit model */
+std::string CircuitLibrary::circuit_model_verilog_netlist(const CircuitModelId& circuit_model_id) const {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  return circuit_model_verilog_netlists_[circuit_model_id]; 
+}
+
+/* Access the path + file of user-defined spice netlist of a circuit model */
+std::string CircuitLibrary::circuit_model_spice_netlist(const CircuitModelId& circuit_model_id) const {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  return circuit_model_spice_netlists_[circuit_model_id]; 
+}
+
+/* Access the is_default flag (check if this is the default circuit model in the type) of a circuit model */
+bool CircuitLibrary::circuit_model_is_default(const CircuitModelId& circuit_model_id) const {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  return circuit_model_is_default_[circuit_model_id]; 
+}
+
+/* Access the dump_structural_verilog flag of a circuit model */
+bool CircuitLibrary::dump_structural_verilog(const CircuitModelId& circuit_model_id) const {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  return dump_structural_verilog_[circuit_model_id]; 
+}
+
+/* Access the dump_explicit_port_map flag of a circuit model */
+bool CircuitLibrary::dump_explicit_port_map(const CircuitModelId& circuit_model_id) const {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  return dump_explicit_port_map_[circuit_model_id]; 
+}
+
+/* Access the design technology type of a circuit model */
+enum e_spice_model_design_tech CircuitLibrary::design_tech_type(const CircuitModelId& circuit_model_id) const {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  return design_tech_types_[circuit_model_id]; 
+}
+
+/* Access the is_power_gated flag of a circuit model */
+bool CircuitLibrary::is_power_gated(const CircuitModelId& circuit_model_id) const {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  return is_power_gated_[circuit_model_id]; 
+}
+
+/* Return a flag showing if inputs are buffered for a circuit model */
+bool CircuitLibrary::is_input_buffered(const CircuitModelId& circuit_model_id) const {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  return buffer_existence_[circuit_model_id][INPUT]; 
+}
+
+/* Return a flag showing if outputs are buffered for a circuit model */
+bool CircuitLibrary::is_output_buffered(const CircuitModelId& circuit_model_id) const {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  return buffer_existence_[circuit_model_id][OUTPUT]; 
+}
+
+/* Return a flag showing if intermediate stages of a LUT are buffered for a circuit model */
+bool CircuitLibrary::is_lut_intermediate_buffered(const CircuitModelId& circuit_model_id) const {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  /* validate the circuit model type is LUT */
+  VTR_ASSERT_SAFE(SPICE_MODEL_LUT == circuit_model_type(circuit_model_id));
+  return buffer_existence_[circuit_model_id][LUT_INTER_BUFFER]; 
+}
+
+/************************************************************************
+ * Public Accessors : Basic data query on Circuit Porst
+ ***********************************************************************/
+/* Access the type of a port of a circuit model */
 enum e_spice_model_port_type CircuitLibrary::port_type(const CircuitModelId& circuit_model_id, 
                                                        const CircuitPortId& circuit_port_id) const {
   /* validate the circuit_port_id */
@@ -70,11 +161,86 @@ enum e_spice_model_port_type CircuitLibrary::port_type(const CircuitModelId& cir
   return port_types_[circuit_model_id][circuit_port_id];
 }
 
-enum e_spice_model_design_tech CircuitLibrary::design_tech_type(const CircuitModelId& circuit_model_id) const {
-  /* validate the circuit_model_id */
-  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
-  return design_tech_types_[circuit_model_id]; 
+/* Access the type of a port of a circuit model */
+size_t CircuitLibrary::port_size(const CircuitModelId& circuit_model_id, 
+                                 const CircuitPortId& circuit_port_id) const {
+  /* validate the circuit_port_id */
+  VTR_ASSERT_SAFE(valid_circuit_port_id(circuit_model_id, circuit_port_id));
+  return port_sizes_[circuit_model_id][circuit_port_id];
 }
+
+/* Access the prefix of a port of a circuit model */
+std::string CircuitLibrary::port_prefix(const CircuitModelId& circuit_model_id, 
+                                        const CircuitPortId& circuit_port_id) const {
+  /* validate the circuit_port_id */
+  VTR_ASSERT_SAFE(valid_circuit_port_id(circuit_model_id, circuit_port_id));
+  return port_prefix_[circuit_model_id][circuit_port_id];
+}
+
+/* Access the lib_name of a port of a circuit model */
+std::string CircuitLibrary::port_lib_name(const CircuitModelId& circuit_model_id, 
+                                          const CircuitPortId& circuit_port_id) const {
+  /* validate the circuit_port_id */
+  VTR_ASSERT_SAFE(valid_circuit_port_id(circuit_model_id, circuit_port_id));
+  return port_lib_names_[circuit_model_id][circuit_port_id];
+}
+
+/* Access the inv_prefix of a port of a circuit model */
+std::string CircuitLibrary::port_inv_prefix(const CircuitModelId& circuit_model_id, 
+                                            const CircuitPortId& circuit_port_id) const {
+  /* validate the circuit_port_id */
+  VTR_ASSERT_SAFE(valid_circuit_port_id(circuit_model_id, circuit_port_id));
+  return port_inv_prefix_[circuit_model_id][circuit_port_id];
+}
+
+/* Return a flag if the port is used in mode-selection purpuse of a circuit model */
+bool CircuitLibrary::port_is_mode_select(const CircuitModelId& circuit_model_id, 
+                                         const CircuitPortId& circuit_port_id) const {
+  /* validate the circuit_port_id */
+  VTR_ASSERT_SAFE(valid_circuit_port_id(circuit_model_id, circuit_port_id));
+  return port_is_mode_select_[circuit_model_id][circuit_port_id];
+}
+
+/* Return a flag if the port is a global one of a circuit model */
+bool CircuitLibrary::port_is_global(const CircuitModelId& circuit_model_id, 
+                                    const CircuitPortId& circuit_port_id) const {
+  /* validate the circuit_port_id */
+  VTR_ASSERT_SAFE(valid_circuit_port_id(circuit_model_id, circuit_port_id));
+  return port_is_global_[circuit_model_id][circuit_port_id];
+}
+
+/* Return a flag if the port does a reset functionality in a circuit model */
+bool CircuitLibrary::port_is_reset(const CircuitModelId& circuit_model_id, 
+                                   const CircuitPortId& circuit_port_id) const {
+  /* validate the circuit_port_id */
+  VTR_ASSERT_SAFE(valid_circuit_port_id(circuit_model_id, circuit_port_id));
+  return port_is_reset_[circuit_model_id][circuit_port_id];
+}
+
+/* Return a flag if the port does a set functionality in a circuit model */
+bool CircuitLibrary::port_is_set(const CircuitModelId& circuit_model_id, 
+                                 const CircuitPortId& circuit_port_id) const {
+  /* validate the circuit_port_id */
+  VTR_ASSERT_SAFE(valid_circuit_port_id(circuit_model_id, circuit_port_id));
+  return port_is_set_[circuit_model_id][circuit_port_id];
+}
+
+/* Return a flag if the port enables a configuration in a circuit model */
+bool CircuitLibrary::port_is_config_enable(const CircuitModelId& circuit_model_id, 
+                                           const CircuitPortId& circuit_port_id) const {
+  /* validate the circuit_port_id */
+  VTR_ASSERT_SAFE(valid_circuit_port_id(circuit_model_id, circuit_port_id));
+  return port_is_config_enable_[circuit_model_id][circuit_port_id];
+}
+
+/* Return a flag if the port is used during programming a FPGA in a circuit model */
+bool CircuitLibrary::port_is_prog(const CircuitModelId& circuit_model_id, 
+                                  const CircuitPortId& circuit_port_id) const {
+  /* validate the circuit_port_id */
+  VTR_ASSERT_SAFE(valid_circuit_port_id(circuit_model_id, circuit_port_id));
+  return port_is_prog_[circuit_model_id][circuit_port_id];
+}
+
 
 /************************************************************************
  * Public Accessors : Methods to find circuit model 
@@ -131,7 +297,7 @@ CircuitModelId CircuitLibrary::add_circuit_model() {
  
   /* Design technology information */ 
   design_tech_types_.push_back(NUM_CIRCUIT_MODEL_DESIGN_TECH_TYPES);
-  power_gated_.push_back(false);
+  is_power_gated_.push_back(false);
   
   /* Buffer existence */
   buffer_existence_.emplace_back();
@@ -294,10 +460,10 @@ void CircuitLibrary::set_circuit_model_design_tech_type(const CircuitModelId& ci
 }
 
 /* Set the power-gated flag of a Circuit Model */
-void CircuitLibrary::set_circuit_model_power_gated(const CircuitModelId& circuit_model_id, const bool& power_gated) {
+void CircuitLibrary::set_circuit_model_is_power_gated(const CircuitModelId& circuit_model_id, const bool& is_power_gated) {
   /* validate the circuit_model_id */
   VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
-  power_gated_[circuit_model_id] = power_gated;
+  is_power_gated_[circuit_model_id] = is_power_gated;
   return;
 }
 
