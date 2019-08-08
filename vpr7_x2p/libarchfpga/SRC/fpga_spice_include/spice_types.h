@@ -12,7 +12,8 @@ enum e_spice_tech_lib_type {
 
 enum spice_model_delay_type {
   SPICE_MODEL_DELAY_RISE, 
-  SPICE_MODEL_DELAY_FALL
+  SPICE_MODEL_DELAY_FALL,
+  NUM_CIRCUIT_MODEL_DELAY_TYPES
 };
 
 /*Struct for a SPICE model of a module*/

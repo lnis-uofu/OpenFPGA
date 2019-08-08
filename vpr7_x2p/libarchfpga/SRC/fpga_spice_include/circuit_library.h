@@ -309,6 +309,18 @@ class CircuitLibrary {
     void set_port_sram_orgz(const CircuitModelId& circuit_model_id, 
                             const CircuitPortId& circuit_port_id, 
                             const enum e_sram_orgz& sram_orgz);
+    /* Delay information */
+    void add_delay_info(const CircuitModelId& circuit_model_id,
+                        const enum spice_model_delay_type& delay_type);
+    void set_delay_in_port_names(const CircuitModelId& circuit_model_id,
+                                 const enum spice_model_delay_type& delay_type,
+                                 const std::string& in_port_names);
+    void set_delay_out_port_names(const CircuitModelId& circuit_model_id,
+                                  const enum spice_model_delay_type& delay_type,
+                                  const std::string& out_port_names);
+    void set_delay_values(const CircuitModelId& circuit_model_id,
+                          const enum spice_model_delay_type& delay_type,
+                          const std::string& delay_values);
   public: /* Internal mutators: link circuit_models */
     void set_circuit_model_buffer(const CircuitModelId& circuit_model_id, const enum e_buffer_type buffer_type, const bool& existence, const std::string& circuit_model_name);
     void set_circuit_model_port_inv_circuit_model(const CircuitModelId& circuit_model_id);      
@@ -318,6 +330,7 @@ class CircuitLibrary {
     /* Validators */
     bool valid_circuit_model_id(const CircuitModelId& circuit_model_id) const;
     bool valid_circuit_port_id(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
+    bool valid_delay_type(const CircuitModelId& circuit_model_id, const enum spice_model_delay_type& delay_type) const;
     /* Invalidators */
     void invalidate_circuit_model_lookup() const;
     void invalidate_circuit_model_port_lookup(const CircuitModelId& circuit_model_id) const;

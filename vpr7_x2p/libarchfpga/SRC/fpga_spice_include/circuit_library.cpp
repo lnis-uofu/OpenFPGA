@@ -572,6 +572,62 @@ void CircuitLibrary::set_port_sram_orgz(const CircuitModelId& circuit_model_id,
   return;
 }
 
+/* Delay information */
+/* Add a delay info:
+ * Check if the delay type is in the range of vector
+ * if yes, assign values 
+ * if no, resize and assign values
+ */
+void CircuitLibrary::add_delay_info(const CircuitModelId& circuit_model_id,
+                                    const enum spice_model_delay_type& delay_type) {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  /* Check the range of vector */
+  if (size_t(delay_type) >= delay_types_[circuit_model_id].size()) {
+    /* Resize */
+    delay_types_[circuit_model_id].resize(size_t(delay_type) + 1); 
+    delay_in_port_names_[circuit_model_id].resize(size_t(delay_type) + 1); 
+    delay_out_port_names_[circuit_model_id].resize(size_t(delay_type) + 1); 
+    delay_values_[circuit_model_id].resize(size_t(delay_type) + 1); 
+  }
+  delay_types_[circuit_model_id][size_t(delay_type)] = delay_type; 
+  return;
+}
+
+void CircuitLibrary::set_delay_in_port_names(const CircuitModelId& circuit_model_id,
+                                             const enum spice_model_delay_type& delay_type,
+                                             const std::string& in_port_names) {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  /* Validate delay_type */
+  VTR_ASSERT_SAFE(valid_delay_type(circuit_model_id, delay_type));
+  delay_in_port_names_[circuit_model_id][size_t(delay_type)] = in_port_names; 
+  return; 
+}
+
+void CircuitLibrary::set_delay_out_port_names(const CircuitModelId& circuit_model_id,
+                                             const enum spice_model_delay_type& delay_type,
+                                             const std::string& out_port_names) {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  /* Validate delay_type */
+  VTR_ASSERT_SAFE(valid_delay_type(circuit_model_id, delay_type));
+  delay_out_port_names_[circuit_model_id][size_t(delay_type)] = out_port_names; 
+  return; 
+}
+
+void CircuitLibrary::set_delay_values(const CircuitModelId& circuit_model_id,
+                                     const enum spice_model_delay_type& delay_type,
+                                     const std::string& delay_values) {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  /* Validate delay_type */
+  VTR_ASSERT_SAFE(valid_delay_type(circuit_model_id, delay_type));
+  delay_values_[circuit_model_id][size_t(delay_type)] = delay_values; 
+  return; 
+}
+
+/* Buffer/Inverter-related parameters */
 
 /************************************************************************
  * Internal Mutators 
@@ -654,6 +710,12 @@ bool CircuitLibrary::valid_circuit_port_id(const CircuitModelId& circuit_model_i
   /* validate the circuit_model_id */
   VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
   return ( size_t(circuit_port_id) < port_ids_[circuit_model_id].size() ) && ( circuit_port_id == port_ids_[circuit_model_id][circuit_port_id] ); 
+}
+
+bool CircuitLibrary::valid_delay_type(const CircuitModelId& circuit_model_id, const enum spice_model_delay_type& delay_type) const { 
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  return ( size_t(delay_type) < delay_types_[circuit_model_id].size() ) && ( delay_type == delay_types_[circuit_model_id][size_t(delay_type)] ); 
 }
 
 /* Invalidators */
