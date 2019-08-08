@@ -261,6 +261,54 @@ class CircuitLibrary {
     void set_port_prefix(const CircuitModelId& circuit_model_id, 
                          const CircuitPortId& circuit_port_id, 
                          const std::string& port_prefix);
+    void set_port_lib_name(const CircuitModelId& circuit_model_id, 
+                           const CircuitPortId& circuit_port_id, 
+                           const std::string& lib_name);
+    void set_port_inv_prefix(const CircuitModelId& circuit_model_id, 
+                             const CircuitPortId& circuit_port_id, 
+                             const std::string& inv_prefix);
+    void set_port_is_mode_select(const CircuitModelId& circuit_model_id, 
+                                 const CircuitPortId& circuit_port_id, 
+                                 const bool& is_mode_select);
+    void set_port_is_global(const CircuitModelId& circuit_model_id, 
+                            const CircuitPortId& circuit_port_id, 
+                            const bool& is_global);
+    void set_port_is_reset(const CircuitModelId& circuit_model_id, 
+                           const CircuitPortId& circuit_port_id, 
+                           const bool& is_reset);
+    void set_port_is_set(const CircuitModelId& circuit_model_id, 
+                         const CircuitPortId& circuit_port_id, 
+                         const bool& is_set);
+    void set_port_is_config_enable(const CircuitModelId& circuit_model_id, 
+                                   const CircuitPortId& circuit_port_id, 
+                                   const bool& is_config_enable);
+    void set_port_is_prog(const CircuitModelId& circuit_model_id, 
+                          const CircuitPortId& circuit_port_id, 
+                          const bool& is_prog);
+    void set_port_circuit_model_name(const CircuitModelId& circuit_model_id, 
+                                     const CircuitPortId& circuit_port_id, 
+                                     const std::string& circuit_model_name);
+    void set_port_circuit_model_id(const CircuitModelId& circuit_model_id, 
+                                   const CircuitPortId& circuit_port_id, 
+                                   const CircuitModelId& port_circuit_model_id);
+    void set_port_inv_circuit_model_name(const CircuitModelId& circuit_model_id, 
+                                         const CircuitPortId& circuit_port_id, 
+                                         const std::string& inv_circuit_model_name);
+    void set_port_inv_circuit_model_id(const CircuitModelId& circuit_model_id, 
+                                       const CircuitPortId& circuit_port_id, 
+                                       const CircuitModelId& inv_circuit_model_id);
+    void set_port_tri_state_map(const CircuitModelId& circuit_model_id, 
+                                const CircuitPortId& circuit_port_id, 
+                                const std::string& tri_state_map);
+    void set_port_lut_frac_level(const CircuitModelId& circuit_model_id, 
+                                 const CircuitPortId& circuit_port_id, 
+                                 const size_t& lut_frac_level);
+    void set_port_lut_output_mask(const CircuitModelId& circuit_model_id, 
+                                  const CircuitPortId& circuit_port_id, 
+                                  const std::vector<size_t>& lut_output_masks);
+    void set_port_sram_orgz(const CircuitModelId& circuit_model_id, 
+                            const CircuitPortId& circuit_port_id, 
+                            const enum e_sram_orgz& sram_orgz);
   public: /* Internal mutators: link circuit_models */
     void set_circuit_model_buffer(const CircuitModelId& circuit_model_id, const enum e_buffer_type buffer_type, const bool& existence, const std::string& circuit_model_name);
     void set_circuit_model_port_inv_circuit_model(const CircuitModelId& circuit_model_id);      

@@ -406,6 +406,173 @@ void CircuitLibrary::set_port_prefix(const CircuitModelId& circuit_model_id,
   return;
 }
 
+/* Set the lib_name for a port of a circuit model */
+void CircuitLibrary::set_port_lib_name(const CircuitModelId& circuit_model_id, 
+                                       const CircuitPortId& circuit_port_id, 
+                                       const std::string& lib_name) {
+  /* validate the circuit_port_id */
+  VTR_ASSERT_SAFE(valid_circuit_port_id(circuit_model_id, circuit_port_id));
+  port_lib_names_[circuit_model_id][circuit_port_id] = lib_name;
+  return;
+}
+
+/* Set the inv_prefix for a port of a circuit model */
+void CircuitLibrary::set_port_inv_prefix(const CircuitModelId& circuit_model_id, 
+                                         const CircuitPortId& circuit_port_id, 
+                                         const std::string& inv_prefix) {
+  /* validate the circuit_port_id */
+  VTR_ASSERT_SAFE(valid_circuit_port_id(circuit_model_id, circuit_port_id));
+  port_inv_prefix_[circuit_model_id][circuit_port_id] = inv_prefix;
+  return;
+}
+
+/* Set the is_mode_select for a port of a circuit model */
+void CircuitLibrary::set_port_is_mode_select(const CircuitModelId& circuit_model_id, 
+                                             const CircuitPortId& circuit_port_id, 
+                                             const bool& is_mode_select) {
+  /* validate the circuit_port_id */
+  VTR_ASSERT_SAFE(valid_circuit_port_id(circuit_model_id, circuit_port_id));
+  port_is_mode_select_[circuit_model_id][circuit_port_id] = is_mode_select;
+  return;
+}
+
+/* Set the is_global for a port of a circuit model */
+void CircuitLibrary::set_port_is_global(const CircuitModelId& circuit_model_id, 
+                                        const CircuitPortId& circuit_port_id, 
+                                        const bool& is_global) {
+  /* validate the circuit_port_id */
+  VTR_ASSERT_SAFE(valid_circuit_port_id(circuit_model_id, circuit_port_id));
+  port_is_global_[circuit_model_id][circuit_port_id] = is_global;
+  return;
+}
+
+/* Set the is_reset for a port of a circuit model */
+void CircuitLibrary::set_port_is_reset(const CircuitModelId& circuit_model_id, 
+                                       const CircuitPortId& circuit_port_id, 
+                                       const bool& is_reset) {
+  /* validate the circuit_port_id */
+  VTR_ASSERT_SAFE(valid_circuit_port_id(circuit_model_id, circuit_port_id));
+  port_is_reset_[circuit_model_id][circuit_port_id] = is_reset;
+  return;
+}
+
+/* Set the is_set for a port of a circuit model */
+void CircuitLibrary::set_port_is_set(const CircuitModelId& circuit_model_id, 
+                                     const CircuitPortId& circuit_port_id, 
+                                     const bool& is_set) {
+  /* validate the circuit_port_id */
+  VTR_ASSERT_SAFE(valid_circuit_port_id(circuit_model_id, circuit_port_id));
+  port_is_set_[circuit_model_id][circuit_port_id] = is_set;
+  return;
+}
+
+/* Set the is_config_enable for a port of a circuit model */
+void CircuitLibrary::set_port_is_config_enable(const CircuitModelId& circuit_model_id, 
+                                               const CircuitPortId& circuit_port_id, 
+                                               const bool& is_config_enable) {
+  /* validate the circuit_port_id */
+  VTR_ASSERT_SAFE(valid_circuit_port_id(circuit_model_id, circuit_port_id));
+  port_is_config_enable_[circuit_model_id][circuit_port_id] = is_config_enable;
+  return;
+}
+
+/* Set the is_prog for a port of a circuit model */
+void CircuitLibrary::set_port_is_prog(const CircuitModelId& circuit_model_id, 
+                                      const CircuitPortId& circuit_port_id, 
+                                      const bool& is_prog) {
+  /* validate the circuit_port_id */
+  VTR_ASSERT_SAFE(valid_circuit_port_id(circuit_model_id, circuit_port_id));
+  port_is_prog_[circuit_model_id][circuit_port_id] = is_prog;
+  return;
+}
+
+/* Set the circuit_model_name for a port of a circuit model */
+void CircuitLibrary::set_port_circuit_model_name(const CircuitModelId& circuit_model_id, 
+                                                 const CircuitPortId& circuit_port_id, 
+                                                 const std::string& circuit_model_name) {
+  /* validate the circuit_port_id */
+  VTR_ASSERT_SAFE(valid_circuit_port_id(circuit_model_id, circuit_port_id));
+  port_circuit_model_names_[circuit_model_id][circuit_port_id] = circuit_model_name;
+  return;
+}
+
+/* Set the circuit_model_id for a port of a circuit model */
+void CircuitLibrary::set_port_circuit_model_id(const CircuitModelId& circuit_model_id, 
+                                               const CircuitPortId& circuit_port_id, 
+                                               const CircuitModelId& port_circuit_model_id) {
+  /* validate the circuit_port_id */
+  VTR_ASSERT_SAFE(valid_circuit_port_id(circuit_model_id, circuit_port_id));
+  port_circuit_model_ids_[circuit_model_id][circuit_port_id] = port_circuit_model_id;
+  return;
+}
+
+/* Set the inv_circuit_model_name for a port of a circuit model */
+void CircuitLibrary::set_port_inv_circuit_model_name(const CircuitModelId& circuit_model_id, 
+                                                 const CircuitPortId& circuit_port_id, 
+                                                 const std::string& inv_circuit_model_name) {
+  /* validate the circuit_port_id */
+  VTR_ASSERT_SAFE(valid_circuit_port_id(circuit_model_id, circuit_port_id));
+  port_inv_circuit_model_names_[circuit_model_id][circuit_port_id] = inv_circuit_model_name;
+  return;
+}
+
+/* Set the inv_circuit_model_id for a port of a circuit model */
+void CircuitLibrary::set_port_inv_circuit_model_id(const CircuitModelId& circuit_model_id, 
+                                                 const CircuitPortId& circuit_port_id, 
+                                                 const CircuitModelId& inv_circuit_model_id) {
+  /* validate the circuit_port_id */
+  VTR_ASSERT_SAFE(valid_circuit_port_id(circuit_model_id, circuit_port_id));
+  port_inv_circuit_model_ids_[circuit_model_id][circuit_port_id] = inv_circuit_model_id;
+  return;
+}
+
+/* Set the tri-state map for a port of a circuit model */
+void CircuitLibrary::set_port_tri_state_map(const CircuitModelId& circuit_model_id, 
+                                            const CircuitPortId& circuit_port_id, 
+                                            const std::string& tri_state_map) {
+  /* validate the circuit_port_id */
+  VTR_ASSERT_SAFE(valid_circuit_port_id(circuit_model_id, circuit_port_id));
+  port_tri_state_maps_[circuit_model_id][circuit_port_id] = tri_state_map;
+  return;
+}
+
+/* Set the LUT fracturable level for a port of a circuit model, only applicable to LUTs */
+void CircuitLibrary::set_port_lut_frac_level(const CircuitModelId& circuit_model_id, 
+                                             const CircuitPortId& circuit_port_id, 
+                                             const size_t& lut_frac_level) {
+  /* validate the circuit_port_id */
+  VTR_ASSERT_SAFE(valid_circuit_port_id(circuit_model_id, circuit_port_id));
+  /* Make sure this is a LUT */
+  VTR_ASSERT_SAFE(SPICE_MODEL_LUT == circuit_model_types_[circuit_model_id]);
+  port_lut_frac_level_[circuit_model_id][circuit_port_id] = lut_frac_level;
+  return;
+}
+
+/* Set the LUT fracturable level for a port of a circuit model, only applicable to LUTs */
+void CircuitLibrary::set_port_lut_output_mask(const CircuitModelId& circuit_model_id, 
+                                              const CircuitPortId& circuit_port_id, 
+                                              const std::vector<size_t>& lut_output_masks) {
+  /* validate the circuit_port_id */
+  VTR_ASSERT_SAFE(valid_circuit_port_id(circuit_model_id, circuit_port_id));
+  /* Make sure this is a LUT */
+  VTR_ASSERT_SAFE(SPICE_MODEL_LUT == circuit_model_types_[circuit_model_id]);
+  port_lut_output_masks_[circuit_model_id][circuit_port_id] = lut_output_masks;
+  return;
+}
+
+/* Set the SRAM organization for a port of a circuit model, only applicable to SRAM ports */
+void CircuitLibrary::set_port_sram_orgz(const CircuitModelId& circuit_model_id, 
+                                        const CircuitPortId& circuit_port_id, 
+                                        const enum e_sram_orgz& sram_orgz) {
+  /* validate the circuit_port_id */
+  VTR_ASSERT_SAFE(valid_circuit_port_id(circuit_model_id, circuit_port_id));
+  /* Make sure this is a SRAM port */
+  VTR_ASSERT_SAFE(SPICE_MODEL_PORT_SRAM == port_types_[circuit_model_id][circuit_port_id]);
+  port_sram_orgz_[circuit_model_id][circuit_port_id] = sram_orgz;
+  return;
+}
+
+
 /************************************************************************
  * Internal Mutators 
  ***********************************************************************/
