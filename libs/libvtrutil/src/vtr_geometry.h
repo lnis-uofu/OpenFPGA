@@ -60,6 +60,9 @@ class Point {
         friend bool operator== <>(Point<T> lhs, Point<T> rhs);
         friend bool operator!= <>(Point<T> lhs, Point<T> rhs);
         friend bool operator< <>(Point<T> lhs, Point<T> rhs);
+    public: //Mutators
+        void set_x(T x_val);
+        void set_y(T y_val);
     private:
         T x_;
         T y_;

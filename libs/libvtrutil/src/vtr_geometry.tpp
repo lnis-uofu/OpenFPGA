@@ -42,6 +42,16 @@ namespace vtr {
         return std::make_tuple(lhs.x(), lhs.y()) < std::make_tuple(rhs.x(), rhs.y());
     }
 
+    template<class T>
+    void Point<T>::set_x(T x_val) {
+      x_  = x_val;
+    } 
+
+    template<class T>
+    void Point<T>::set_y(T y_val) {
+      y_  = y_val;
+    } 
+
     /*
      * Rect
      */

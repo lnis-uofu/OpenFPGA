@@ -218,6 +218,9 @@ class CircuitLibrary {
   public: /* Constructors */
   public: /* Accessors: aggregates */
     circuit_model_range circuit_models() const;
+    enum e_spice_model_type circuit_model_type(const CircuitModelId& circuit_model_id) const;
+    enum e_spice_model_port_type port_type(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
+    enum e_spice_model_design_tech design_tech_type(const CircuitModelId& circuit_model_id) const;
   public: /* Public Accessors: Basic data query */
   public: /* Public Accessors: Methods to find circuit model */
     CircuitModelId get_circuit_model_id_by_name(const std::string& name) const ;
@@ -321,6 +324,60 @@ class CircuitLibrary {
     void set_delay_values(const CircuitModelId& circuit_model_id,
                           const enum spice_model_delay_type& delay_type,
                           const std::string& delay_values);
+    /* Buffer/Inverter-related parameters */
+    void set_buffer_type(const CircuitModelId& circuit_model_id,
+                         const enum e_spice_model_buffer_type& buffer_type);
+    void set_buffer_location_map(const CircuitModelId& circuit_model_id,
+                                 const std::string& location_map);
+    void set_buffer_size(const CircuitModelId& circuit_model_id,
+                         const size_t& buffer_size);
+    void set_buffer_num_levels(const CircuitModelId& circuit_model_id,
+                               const size_t& num_levels);
+    void set_buffer_f_per_stage(const CircuitModelId& circuit_model_id,
+                                const size_t& f_per_stage);
+    /* Pass-gate-related parameters */
+    void set_pass_gate_logic_type(const CircuitModelId& circuit_model_id,
+                                  const enum e_spice_model_pass_gate_logic_type& pass_gate_logic_type);
+    void set_pass_gate_logic_nmos_size(const CircuitModelId& circuit_model_id,
+                                       const size_t& nmos_size);
+    void set_pass_gate_logic_pmos_size(const CircuitModelId& circuit_model_id,
+                                       const size_t& pmos_size);
+    /* Multiplexer-related parameters */
+    void set_mux_structure(const CircuitModelId& circuit_model_id,
+                           const enum e_spice_model_structure& mux_structure);
+    void set_mux_num_levels(const CircuitModelId& circuit_model_id,
+                            const size_t& num_levels);
+    void set_mux_const_input_value(const CircuitModelId& circuit_model_id,
+                                   const size_t& const_input_value);
+    void set_mux_use_local_encoder(const CircuitModelId& circuit_model_id,
+                                   const bool& use_local_encoder);
+    void set_mux_use_advanced_rram_design(const CircuitModelId& circuit_model_id,
+                                          const bool& use_advanced_rram_design);
+    /* LUT-related parameters */
+    void set_lut_is_fracturable(const CircuitModelId& circuit_model_id,
+                                const bool& is_fracturable);
+    /* RRAM-related design technology information */
+    void set_rram_rlrs(const CircuitModelId& circuit_model_id,
+                       const float& rlrs);
+    void set_rram_rhrs(const CircuitModelId& circuit_model_id,
+                       const float& rhrs);
+    void set_rram_wprog_set_nmos(const CircuitModelId& circuit_model_id,
+                                 const float& wprog_set_nmos);
+    void set_rram_wprog_set_pmos(const CircuitModelId& circuit_model_id,
+                                 const float& wprog_set_pmos);
+    void set_rram_wprog_reset_nmos(const CircuitModelId& circuit_model_id,
+                                   const float& wprog_reset_nmos);
+    void set_rram_wprog_reset_pmos(const CircuitModelId& circuit_model_id,
+                                   const float& wprog_reset_pmos);
+    /* Wire parameters */
+    void set_wire_type(const CircuitModelId& circuit_model_id,
+                       const enum e_wire_model_type& wire_type);
+    void set_wire_r(const CircuitModelId& circuit_model_id,
+                    const float& r_val);
+    void set_wire_c(const CircuitModelId& circuit_model_id,
+                    const float& c_val);
+    void set_wire_num_levels(const CircuitModelId& circuit_model_id,
+                             const size_t& num_level);
   public: /* Internal mutators: link circuit_models */
     void set_circuit_model_buffer(const CircuitModelId& circuit_model_id, const enum e_buffer_type buffer_type, const bool& existence, const std::string& circuit_model_name);
     void set_circuit_model_port_inv_circuit_model(const CircuitModelId& circuit_model_id);      
@@ -413,22 +470,19 @@ class CircuitLibrary {
     vtr::vector<CircuitModelId, enum e_spice_model_buffer_type> buffer_types_;
     vtr::vector<CircuitModelId, std::string> buffer_location_maps_;
     vtr::vector<CircuitModelId, size_t> buffer_sizes_;
-    vtr::vector<CircuitModelId, bool> buffer_is_tapered_;
     vtr::vector<CircuitModelId, size_t> buffer_num_levels_;
     vtr::vector<CircuitModelId, size_t> buffer_f_per_stage_;
 
     /* Pass-gate-related parameters */
     vtr::vector<CircuitModelId, enum e_spice_model_pass_gate_logic_type> pass_gate_logic_types_;
-    vtr::vector<CircuitModelId, float> pass_gate_logic_nmos_sizes_;
-    vtr::vector<CircuitModelId, float> pass_gate_logic_pmos_sizes_;
+    vtr::vector<CircuitModelId, vtr::Point<size_t>> pass_gate_logic_sizes_; /* x=> nmos_size; y => pmos_size */
 
     /* Multiplexer-related parameters */
     vtr::vector<CircuitModelId, enum e_spice_model_structure> mux_structure_;
     vtr::vector<CircuitModelId, size_t> mux_num_levels_;
-    vtr::vector<CircuitModelId, bool> mux_add_const_input_;
     vtr::vector<CircuitModelId, size_t> mux_const_input_values_;
     vtr::vector<CircuitModelId, bool> mux_use_local_encoder_;
-    vtr::vector<CircuitModelId, bool> mux_advanced_rram_design_;
+    vtr::vector<CircuitModelId, bool> mux_use_advanced_rram_design_;
 
     /* LUT-related parameters */
     vtr::vector<CircuitModelId, bool> lut_is_fracturable_;

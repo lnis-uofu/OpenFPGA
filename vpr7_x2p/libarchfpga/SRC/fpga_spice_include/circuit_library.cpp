@@ -54,6 +54,27 @@ CircuitLibrary::circuit_model_range CircuitLibrary::circuit_models() const {
   return vtr::make_range(circuit_model_ids_.begin(), circuit_model_ids_.end());
 }
 
+/************************************************************************
+ * Public Accessors : Basic data query
+ ***********************************************************************/
+enum e_spice_model_type CircuitLibrary::circuit_model_type(const CircuitModelId& circuit_model_id) const {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  return circuit_model_types_[circuit_model_id]; 
+}
+
+enum e_spice_model_port_type CircuitLibrary::port_type(const CircuitModelId& circuit_model_id, 
+                                                       const CircuitPortId& circuit_port_id) const {
+  /* validate the circuit_port_id */
+  VTR_ASSERT_SAFE(valid_circuit_port_id(circuit_model_id, circuit_port_id));
+  return port_types_[circuit_model_id][circuit_port_id];
+}
+
+enum e_spice_model_design_tech CircuitLibrary::design_tech_type(const CircuitModelId& circuit_model_id) const {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  return design_tech_types_[circuit_model_id]; 
+}
 
 /************************************************************************
  * Public Accessors : Methods to find circuit model 
@@ -163,22 +184,19 @@ CircuitModelId CircuitLibrary::add_circuit_model() {
   buffer_types_.push_back(NUM_CIRCUIT_MODEL_BUF_TYPES);
   buffer_location_maps_.emplace_back();
   buffer_sizes_.push_back(-1);
-  buffer_is_tapered_.push_back(false);
   buffer_num_levels_.push_back(-1);
   buffer_f_per_stage_.push_back(-1);
 
   /* Pass-gate-related parameters */
   pass_gate_logic_types_.push_back(NUM_CIRCUIT_MODEL_PASS_GATE_TYPES);
-  pass_gate_logic_nmos_sizes_.push_back(-1);
-  pass_gate_logic_pmos_sizes_.push_back(-1);
+  pass_gate_logic_sizes_.emplace_back();
 
   /* Multiplexer-related parameters */
   mux_structure_.push_back(NUM_CIRCUIT_MODEL_STRUCTURE_TYPES);
   mux_num_levels_.push_back(-1);
-  mux_add_const_input_.push_back(false);
   mux_const_input_values_.push_back(-1);
   mux_use_local_encoder_.push_back(false);
-  mux_advanced_rram_design_.push_back(false);
+  mux_use_advanced_rram_design_.push_back(false);
 
   /* LUT-related parameters */
   lut_is_fracturable_.push_back(false);
@@ -543,7 +561,7 @@ void CircuitLibrary::set_port_lut_frac_level(const CircuitModelId& circuit_model
   /* validate the circuit_port_id */
   VTR_ASSERT_SAFE(valid_circuit_port_id(circuit_model_id, circuit_port_id));
   /* Make sure this is a LUT */
-  VTR_ASSERT_SAFE(SPICE_MODEL_LUT == circuit_model_types_[circuit_model_id]);
+  VTR_ASSERT_SAFE(SPICE_MODEL_LUT == circuit_model_type(circuit_model_id));
   port_lut_frac_level_[circuit_model_id][circuit_port_id] = lut_frac_level;
   return;
 }
@@ -555,7 +573,7 @@ void CircuitLibrary::set_port_lut_output_mask(const CircuitModelId& circuit_mode
   /* validate the circuit_port_id */
   VTR_ASSERT_SAFE(valid_circuit_port_id(circuit_model_id, circuit_port_id));
   /* Make sure this is a LUT */
-  VTR_ASSERT_SAFE(SPICE_MODEL_LUT == circuit_model_types_[circuit_model_id]);
+  VTR_ASSERT_SAFE(SPICE_MODEL_LUT == circuit_model_type(circuit_model_id));
   port_lut_output_masks_[circuit_model_id][circuit_port_id] = lut_output_masks;
   return;
 }
@@ -567,7 +585,7 @@ void CircuitLibrary::set_port_sram_orgz(const CircuitModelId& circuit_model_id,
   /* validate the circuit_port_id */
   VTR_ASSERT_SAFE(valid_circuit_port_id(circuit_model_id, circuit_port_id));
   /* Make sure this is a SRAM port */
-  VTR_ASSERT_SAFE(SPICE_MODEL_PORT_SRAM == port_types_[circuit_model_id][circuit_port_id]);
+  VTR_ASSERT_SAFE(SPICE_MODEL_PORT_SRAM == port_type(circuit_model_id, circuit_port_id));
   port_sram_orgz_[circuit_model_id][circuit_port_id] = sram_orgz;
   return;
 }
@@ -617,8 +635,8 @@ void CircuitLibrary::set_delay_out_port_names(const CircuitModelId& circuit_mode
 }
 
 void CircuitLibrary::set_delay_values(const CircuitModelId& circuit_model_id,
-                                     const enum spice_model_delay_type& delay_type,
-                                     const std::string& delay_values) {
+                                      const enum spice_model_delay_type& delay_type,
+                                      const std::string& delay_values) {
   /* validate the circuit_model_id */
   VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
   /* Validate delay_type */
@@ -628,6 +646,254 @@ void CircuitLibrary::set_delay_values(const CircuitModelId& circuit_model_id,
 }
 
 /* Buffer/Inverter-related parameters */
+void CircuitLibrary::set_buffer_type(const CircuitModelId& circuit_model_id,
+                                     const enum e_spice_model_buffer_type& buffer_type) {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  /* validate that the type of this circuit_model should be BUFFER or INVERTER */
+  VTR_ASSERT_SAFE(SPICE_MODEL_INVBUF == circuit_model_type(circuit_model_id));
+  buffer_types_[circuit_model_id] = buffer_type; 
+  return;
+}
+
+void CircuitLibrary::set_buffer_location_map(const CircuitModelId& circuit_model_id,
+                                             const std::string& location_map) {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  /* validate that the type of this circuit_model should be BUFFER or INVERTER */
+  VTR_ASSERT_SAFE(SPICE_MODEL_INVBUF == circuit_model_type(circuit_model_id));
+  buffer_location_maps_[circuit_model_id] = location_map; 
+  return;
+}
+
+void CircuitLibrary::set_buffer_size(const CircuitModelId& circuit_model_id,
+                                     const size_t& buffer_size) {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  /* validate that the type of this circuit_model should be BUFFER or INVERTER */
+  VTR_ASSERT_SAFE(SPICE_MODEL_INVBUF == circuit_model_type(circuit_model_id));
+  buffer_sizes_[circuit_model_id] = buffer_size; 
+  return;
+}
+
+void CircuitLibrary::set_buffer_num_levels(const CircuitModelId& circuit_model_id,
+                                           const size_t& num_levels) {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  /* validate that the type of this circuit_model should be BUFFER or INVERTER */
+  VTR_ASSERT_SAFE(SPICE_MODEL_INVBUF == circuit_model_type(circuit_model_id));
+  buffer_num_levels_[circuit_model_id] = num_levels; 
+  return;
+}
+
+void CircuitLibrary::set_buffer_f_per_stage(const CircuitModelId& circuit_model_id,
+                                            const size_t& f_per_stage) {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  /* validate that the type of this circuit_model should be BUFFER or INVERTER */
+  VTR_ASSERT_SAFE(SPICE_MODEL_INVBUF == circuit_model_type(circuit_model_id));
+  buffer_f_per_stage_[circuit_model_id] = f_per_stage; 
+  return;
+}
+
+/* Pass-gate-related parameters */
+void CircuitLibrary::set_pass_gate_logic_type(const CircuitModelId& circuit_model_id,
+                                              const enum e_spice_model_pass_gate_logic_type& pass_gate_logic_type) {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  /* validate that the type of this circuit_model should be BUFFER or INVERTER */
+  VTR_ASSERT_SAFE(SPICE_MODEL_PASSGATE == circuit_model_type(circuit_model_id));
+  pass_gate_logic_types_[circuit_model_id] = pass_gate_logic_type; 
+  return;
+}
+
+void CircuitLibrary::set_pass_gate_logic_nmos_size(const CircuitModelId& circuit_model_id,
+                                                   const size_t& nmos_size) {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  /* validate that the type of this circuit_model should be BUFFER or INVERTER */
+  VTR_ASSERT_SAFE(SPICE_MODEL_PASSGATE == circuit_model_type(circuit_model_id));
+  pass_gate_logic_sizes_[circuit_model_id].set_x(nmos_size); 
+  return;
+}
+
+void CircuitLibrary::set_pass_gate_logic_pmos_size(const CircuitModelId& circuit_model_id,
+                                                   const size_t& pmos_size) {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  /* validate that the type of this circuit_model should be BUFFER or INVERTER */
+  VTR_ASSERT_SAFE(SPICE_MODEL_PASSGATE == circuit_model_type(circuit_model_id));
+  pass_gate_logic_sizes_[circuit_model_id].set_y(pmos_size); 
+  return;
+}
+
+/* Multiplexer-related parameters */
+void CircuitLibrary::set_mux_structure(const CircuitModelId& circuit_model_id,
+                                       const enum e_spice_model_structure& mux_structure) {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  /* validate that the type of this circuit_model should be MUX */
+  VTR_ASSERT_SAFE(SPICE_MODEL_MUX == circuit_model_type(circuit_model_id));
+  mux_structure_[circuit_model_id] = mux_structure; 
+  return;
+}
+
+void CircuitLibrary::set_mux_num_levels(const CircuitModelId& circuit_model_id,
+                                        const size_t& num_levels) {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  /* validate that the type of this circuit_model should be MUX */
+  VTR_ASSERT_SAFE(SPICE_MODEL_MUX == circuit_model_type(circuit_model_id));
+  mux_num_levels_[circuit_model_id] = num_levels; 
+  return;
+}
+
+void CircuitLibrary::set_mux_const_input_value(const CircuitModelId& circuit_model_id,
+                                               const size_t& const_input_value) {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  /* validate that the type of this circuit_model should be MUX */
+  VTR_ASSERT_SAFE(SPICE_MODEL_MUX == circuit_model_type(circuit_model_id));
+  mux_const_input_values_[circuit_model_id] = const_input_value; 
+  return;
+}
+
+void CircuitLibrary::set_mux_use_local_encoder(const CircuitModelId& circuit_model_id,
+                                               const bool& use_local_encoder) {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  /* validate that the type of this circuit_model should be MUX */
+  VTR_ASSERT_SAFE(SPICE_MODEL_MUX == circuit_model_type(circuit_model_id));
+  mux_use_local_encoder_[circuit_model_id] = use_local_encoder; 
+  return;
+}
+
+void CircuitLibrary::set_mux_use_advanced_rram_design(const CircuitModelId& circuit_model_id,
+                                                      const bool& use_advanced_rram_design) {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  /* validate that the type of this circuit_model should be MUX */
+  VTR_ASSERT_SAFE(SPICE_MODEL_MUX == circuit_model_type(circuit_model_id));
+  mux_use_advanced_rram_design_[circuit_model_id] = use_advanced_rram_design; 
+  return;
+}
+
+/* LUT-related parameters */
+void CircuitLibrary::set_lut_is_fracturable(const CircuitModelId& circuit_model_id,
+                                            const bool& is_fracturable) {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  /* validate that the type of this circuit_model should be LUT */
+  VTR_ASSERT_SAFE(SPICE_MODEL_LUT == circuit_model_type(circuit_model_id));
+  lut_is_fracturable_[circuit_model_id] = is_fracturable; 
+  return;
+}
+
+/* RRAM-related design technology information */
+void CircuitLibrary::set_rram_rlrs(const CircuitModelId& circuit_model_id,
+                                   const float& rlrs) {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  /* validate that the design_tech of this circuit_model should be RRAM */
+  VTR_ASSERT_SAFE(SPICE_MODEL_DESIGN_RRAM == design_tech_type(circuit_model_id));
+  rram_res_[circuit_model_id].set_x(rlrs); 
+  return;
+}
+
+void CircuitLibrary::set_rram_rhrs(const CircuitModelId& circuit_model_id,
+                                   const float& rhrs) {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  /* validate that the design_tech of this circuit_model should be RRAM */
+  VTR_ASSERT_SAFE(SPICE_MODEL_DESIGN_RRAM == design_tech_type(circuit_model_id));
+  rram_res_[circuit_model_id].set_y(rhrs); 
+  return;
+}
+
+void CircuitLibrary::set_rram_wprog_set_nmos(const CircuitModelId& circuit_model_id,
+                                             const float& wprog_set_nmos) {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  /* validate that the design_tech of this circuit_model should be RRAM */
+  VTR_ASSERT_SAFE(SPICE_MODEL_DESIGN_RRAM == design_tech_type(circuit_model_id));
+  wprog_set_[circuit_model_id].set_x(wprog_set_nmos); 
+  return;
+}
+
+void CircuitLibrary::set_rram_wprog_set_pmos(const CircuitModelId& circuit_model_id,
+                                             const float& wprog_set_pmos) {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  /* validate that the design_tech of this circuit_model should be RRAM */
+  VTR_ASSERT_SAFE(SPICE_MODEL_DESIGN_RRAM == design_tech_type(circuit_model_id));
+  wprog_set_[circuit_model_id].set_y(wprog_set_pmos); 
+  return;
+}
+
+void CircuitLibrary::set_rram_wprog_reset_nmos(const CircuitModelId& circuit_model_id,
+                                               const float& wprog_reset_nmos) {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  /* validate that the design_tech of this circuit_model should be RRAM */
+  VTR_ASSERT_SAFE(SPICE_MODEL_DESIGN_RRAM == design_tech_type(circuit_model_id));
+  wprog_reset_[circuit_model_id].set_x(wprog_reset_nmos); 
+  return;
+}
+
+void CircuitLibrary::set_rram_wprog_reset_pmos(const CircuitModelId& circuit_model_id,
+                                               const float& wprog_reset_pmos) {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  /* validate that the design_tech of this circuit_model should be RRAM */
+  VTR_ASSERT_SAFE(SPICE_MODEL_DESIGN_RRAM == design_tech_type(circuit_model_id));
+  wprog_reset_[circuit_model_id].set_y(wprog_reset_pmos); 
+  return;
+}
+
+/* Wire parameters */
+void CircuitLibrary::set_wire_type(const CircuitModelId& circuit_model_id,
+                                   const enum e_wire_model_type& wire_type) {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  /* validate that the type of this circuit_model should be WIRE or CHAN_WIRE */
+  VTR_ASSERT_SAFE( (SPICE_MODEL_WIRE      == circuit_model_type(circuit_model_id))
+                || (SPICE_MODEL_CHAN_WIRE == circuit_model_type(circuit_model_id)) );
+  wire_types_[circuit_model_id] = wire_type; 
+  return;
+}
+
+void CircuitLibrary::set_wire_r(const CircuitModelId& circuit_model_id,
+                                const float& r_val) {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  /* validate that the type of this circuit_model should be WIRE or CHAN_WIRE */
+  VTR_ASSERT_SAFE( (SPICE_MODEL_WIRE      == circuit_model_type(circuit_model_id))
+                || (SPICE_MODEL_CHAN_WIRE == circuit_model_type(circuit_model_id)) );
+  wire_rc_[circuit_model_id].set_x(r_val); 
+  return;
+}
+
+void CircuitLibrary::set_wire_c(const CircuitModelId& circuit_model_id,
+                                const float& c_val) {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  /* validate that the type of this circuit_model should be WIRE or CHAN_WIRE */
+  VTR_ASSERT_SAFE( (SPICE_MODEL_WIRE      == circuit_model_type(circuit_model_id))
+                || (SPICE_MODEL_CHAN_WIRE == circuit_model_type(circuit_model_id)) );
+  wire_rc_[circuit_model_id].set_y(c_val); 
+  return;
+}
+
+void CircuitLibrary::set_wire_num_levels(const CircuitModelId& circuit_model_id,
+                                         const size_t& num_level) {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  /* validate that the type of this circuit_model should be WIRE or CHAN_WIRE */
+  VTR_ASSERT_SAFE( (SPICE_MODEL_WIRE      == circuit_model_type(circuit_model_id))
+                || (SPICE_MODEL_CHAN_WIRE == circuit_model_type(circuit_model_id)) );
+  wire_num_levels_[circuit_model_id] = num_level; 
+  return;
+}
 
 /************************************************************************
  * Internal Mutators 
