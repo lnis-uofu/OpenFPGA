@@ -33,6 +33,7 @@
  * +-------------------------------------+
  ***********************************************************************/
 
+#include <numeric>
 #include <algorithm>
 
 #include "vtr_assert.h"
@@ -57,6 +58,49 @@ CircuitLibrary::circuit_model_range CircuitLibrary::circuit_models() const {
 CircuitLibrary::circuit_port_range CircuitLibrary::ports(const CircuitModelId& circuit_model_id) const {
   return vtr::make_range(port_ids_[circuit_model_id].begin(), port_ids_[circuit_model_id].end());
 }
+
+/* Create a vector for all the ports whose directionality is input
+ * This includes all the ports other than whose types are OUPUT or INOUT 
+ */
+std::vector<CircuitPortId> CircuitLibrary::input_ports(const CircuitModelId& circuit_model_id) const {
+  std::vector<CircuitPortId> input_ports;
+  for (const auto& port_id : ports(circuit_model_id)) {
+    /* We skip output ports */
+    if ( (SPICE_MODEL_PORT_OUTPUT == port_type(circuit_model_id, port_id))
+      || (SPICE_MODEL_PORT_INOUT == port_type(circuit_model_id, port_id)) ) {
+      continue; 
+    }
+    input_ports.push_back(port_id);
+  } 
+  return input_ports;
+}
+
+/* Create a vector for all the ports whose directionality is output
+ * This includes all the ports whose types are OUPUT or INOUT 
+ */
+std::vector<CircuitPortId> CircuitLibrary::output_ports(const CircuitModelId& circuit_model_id) const {
+  std::vector<CircuitPortId> output_ports;
+  for (const auto& port_id : ports(circuit_model_id)) {
+    /* We skip output ports */
+    if ( (SPICE_MODEL_PORT_OUTPUT != port_type(circuit_model_id, port_id))
+      && (SPICE_MODEL_PORT_INOUT != port_type(circuit_model_id, port_id)) ) {
+      continue; 
+    }
+   output_ports.push_back(port_id);
+  } 
+  return output_ports;
+}
+
+/* Create a vector for the pin indices, which is bounded by the size of a port
+ * Start from 0 and end to port_size - 1
+ */
+std::vector<size_t> CircuitLibrary::pins(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const {
+  std::vector<size_t> pin_range(port_size(circuit_model_id, circuit_port_id));
+  /* Create a vector, with sequentially increasing numbers */
+  std::iota(pin_range.begin(), pin_range.end(), 0);
+  return pin_range;
+}
+
 
 /************************************************************************
  * Public Accessors : Basic data query on Circuit Models
@@ -356,9 +400,9 @@ CircuitModelId CircuitLibrary::add_circuit_model() {
   edge_ids_.emplace_back();
   port_in_edge_ids_.emplace_back();
   port_out_edge_ids_.emplace_back();
-  edge_src_ports_.emplace_back();
+  edge_src_port_ids_.emplace_back();
   edge_src_pin_ids_.emplace_back();
-  edge_sink_ports_.emplace_back();
+  edge_sink_port_ids_.emplace_back();
   edge_sink_pin_ids_.emplace_back();
   edge_trise_.emplace_back();
   edge_tfall_.emplace_back();
@@ -593,6 +637,10 @@ CircuitPortId CircuitLibrary::add_circuit_model_port(const CircuitModelId& circu
   port_lut_frac_level_[circuit_model_id].push_back(-1);
   port_lut_output_masks_[circuit_model_id].emplace_back();
   port_sram_orgz_[circuit_model_id].push_back(NUM_CIRCUIT_MODEL_SRAM_ORGZ_TYPES);
+
+  /* For timing graphs */
+  port_in_edge_ids_[circuit_model_id].emplace_back();
+  port_out_edge_ids_[circuit_model_id].emplace_back();
 
   return circuit_port_id;
 }
@@ -1229,6 +1277,25 @@ void CircuitLibrary::build_circuit_model_links() {
 
 /* Build the timing graph for a circuit models*/
 void CircuitLibrary::build_circuit_model_timing_graph(const CircuitModelId& circuit_model_id) {
+  /* Now we start allocating a timing graph 
+   * Add outgoing edges for each input pin of the circuit model 
+   */
+  for (auto& from_port_id : input_ports(circuit_model_id)) {
+    /* Add edges for each input pin  */
+    for (auto& from_pin_id : pins(circuit_model_id, from_port_id)) {
+      /* We should walk through output pins here */
+      for (auto& to_port_id : output_ports(circuit_model_id)) {
+        for (auto& to_pin_id : pins(circuit_model_id, to_port_id)) {
+          /* Skip self-loops */
+          if (from_port_id == to_port_id) {
+            continue;
+          }
+          /* Add an edge to bridge the from_pin_id and to_pin_id */
+          add_edge(circuit_model_id, from_port_id, from_pin_id, to_port_id, to_pin_id);
+        }
+      }
+    }
+  }
   return;
 }
 
@@ -1236,10 +1303,76 @@ void CircuitLibrary::build_circuit_model_timing_graph(const CircuitModelId& circ
 void CircuitLibrary::build_timing_graphs() {
   /* Walk through each circuit model, build timing graph one by one */
   for (auto& circuit_model_id : circuit_models()) {
+    /* Free the timing graph if it already exists, we will rebuild one */
+    invalidate_circuit_model_timing_graph(circuit_model_id);
     build_circuit_model_timing_graph(circuit_model_id); 
+    /* Annotate timing information */
   }
   return;
 }
+
+/************************************************************************
+ * Internal mutators: build timing graphs 
+ ***********************************************************************/
+/* Add an edge between two pins of two ports, and assign an default timing value */
+void CircuitLibrary::add_edge(const CircuitModelId& circuit_model_id,
+                              const CircuitPortId& from_port, const size_t& from_pin, 
+                              const CircuitPortId& to_port,   const size_t& to_pin) {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+
+  /* Create an edge in the edge id list */ 
+  CircuitEdgeId edge_id = CircuitEdgeId(edge_ids_[circuit_model_id].size());
+  /* Expand the edge list  */
+  edge_ids_[circuit_model_id].push_back(edge_id);
+  
+  /* Initialize other attributes */
+
+  /* Update the list of incoming edges for to_port */
+  /* Resize upon need */
+  if (to_pin >= port_in_edge_ids_[circuit_model_id][to_port].size()) {
+    port_in_edge_ids_[circuit_model_id][to_port].resize(to_pin + 1);
+  }
+  port_in_edge_ids_[circuit_model_id][to_port][to_pin] = edge_id;
+
+  /* Update the list of outgoing edges for from_port */
+  /* Resize upon need */
+  if (from_pin >= port_out_edge_ids_[circuit_model_id][from_port].size()) {
+    port_out_edge_ids_[circuit_model_id][from_port].resize(from_pin + 1);
+  }
+  port_out_edge_ids_[circuit_model_id][from_port][from_pin] = edge_id;
+
+  /* Update source ports and pins of the edge */
+  edge_src_port_ids_[circuit_model_id].push_back(from_port);
+  edge_src_pin_ids_[circuit_model_id].push_back(from_pin);
+
+  /* Update sink ports and pins of the edge */
+  edge_sink_port_ids_[circuit_model_id].push_back(to_port);
+  edge_sink_pin_ids_[circuit_model_id].push_back(to_pin);
+
+  /* Give a default value for timing values */
+  edge_trise_[circuit_model_id].push_back(0);
+  edge_tfall_[circuit_model_id].push_back(0);
+
+  return;
+}
+
+void CircuitLibrary::set_edge_trise(const CircuitModelId& circuit_model_id, const CircuitEdgeId& circuit_edge_id, const float& trise) {
+  /* validate the circuit_edge_id */
+  VTR_ASSERT_SAFE(valid_circuit_edge_id(circuit_model_id, circuit_edge_id));
+  
+  edge_trise_[circuit_model_id][circuit_edge_id] = trise;
+  return;
+}
+
+void CircuitLibrary::set_edge_tfall(const CircuitModelId& circuit_model_id, const CircuitEdgeId& circuit_edge_id, const float& tfall) {
+  /* validate the circuit_edge_id */
+  VTR_ASSERT_SAFE(valid_circuit_edge_id(circuit_model_id, circuit_edge_id));
+  
+  edge_tfall_[circuit_model_id][circuit_edge_id] = tfall;
+  return;
+}
+
 
 /************************************************************************
  * Internal mutators: build fast look-ups 
@@ -1290,7 +1423,6 @@ void CircuitLibrary::build_circuit_model_port_lookup(const CircuitModelId& circu
   return;
 }
 
-
 /************************************************************************
  * Internal invalidators/validators 
  ***********************************************************************/
@@ -1311,6 +1443,12 @@ bool CircuitLibrary::valid_delay_type(const CircuitModelId& circuit_model_id, co
   return ( size_t(delay_type) < delay_types_[circuit_model_id].size() ) && ( delay_type == delay_types_[circuit_model_id][size_t(delay_type)] ); 
 }
 
+bool CircuitLibrary::valid_circuit_edge_id(const CircuitModelId& circuit_model_id, const CircuitEdgeId& circuit_edge_id) const {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  return ( size_t(circuit_edge_id) < edge_ids_[circuit_model_id].size() ) && ( circuit_edge_id == edge_ids_[circuit_model_id][circuit_edge_id] ); 
+}
+
 /* Invalidators */
 /* Empty fast lookup for circuit_models*/
 void CircuitLibrary::invalidate_circuit_model_lookup() const {
@@ -1323,6 +1461,28 @@ void CircuitLibrary::invalidate_circuit_model_port_lookup(const CircuitModelId& 
   /* validate the circuit_model_id */
   VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
   circuit_model_port_lookup_[size_t(circuit_model_id)].clear();
+  return;
+}
+
+/* Clear all the data structure related to the timing graph */
+void CircuitLibrary::invalidate_circuit_model_timing_graph(const CircuitModelId& circuit_model_id) {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  edge_ids_[circuit_model_id].clear();
+
+  for (const auto& port_id : ports(circuit_model_id)) {
+    port_in_edge_ids_[circuit_model_id][port_id].clear();
+    port_out_edge_ids_[circuit_model_id][port_id].clear();
+  } 
+
+  edge_src_port_ids_[circuit_model_id].clear();
+  edge_src_pin_ids_[circuit_model_id].clear();
+
+  edge_sink_port_ids_[circuit_model_id].clear();
+  edge_sink_pin_ids_[circuit_model_id].clear();
+
+  edge_trise_[circuit_model_id].clear();
+  edge_tfall_[circuit_model_id].clear();
   return;
 }
 

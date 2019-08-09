@@ -217,8 +217,12 @@ class CircuitLibrary {
     };
   public: /* Constructors */
   public: /* Accessors: aggregates */
-  public: /* Public Accessors: Basic data query on Circuit Models*/
     circuit_model_range circuit_models() const;
+    circuit_port_range ports(const CircuitModelId& circuit_model_id) const;
+    std::vector<CircuitPortId> input_ports(const CircuitModelId& circuit_model_id) const;
+    std::vector<CircuitPortId> output_ports(const CircuitModelId& circuit_model_id) const;
+    std::vector<size_t> pins(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
+  public: /* Public Accessors: Basic data query on Circuit Models*/
     enum e_spice_model_type circuit_model_type(const CircuitModelId& circuit_model_id) const;
     std::string circuit_model_name(const CircuitModelId& circuit_model_id) const;
     std::string circuit_model_prefix(const CircuitModelId& circuit_model_id) const;
@@ -233,7 +237,6 @@ class CircuitLibrary {
     bool is_output_buffered(const CircuitModelId& circuit_model_id) const;
     bool is_lut_intermediate_buffered(const CircuitModelId& circuit_model_id) const;
   public: /* Public Accessors: Basic data query on Circuit Ports*/
-    circuit_port_range ports(const CircuitModelId& circuit_model_id) const;
     size_t num_ports(const CircuitModelId& circuit_model_id) const;
     enum e_spice_model_port_type port_type(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
     size_t port_size(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
@@ -419,6 +422,12 @@ class CircuitLibrary {
     void build_circuit_model_links();
     void build_circuit_model_timing_graph(const CircuitModelId& circuit_model_id);
     void build_timing_graphs();
+  public: /* Internal mutators: build timing graphs */
+    void add_edge(const CircuitModelId& circuit_model_id,
+                  const CircuitPortId& from_port, const size_t& from_pin, 
+                  const CircuitPortId& to_port, const size_t& to_pin);
+    void set_edge_trise(const CircuitModelId& circuit_model_id, const CircuitEdgeId& circuit_edge_id, const float& trise);
+    void set_edge_tfall(const CircuitModelId& circuit_model_id, const CircuitEdgeId& circuit_edge_id, const float& tfall);
   public: /* Internal mutators: build fast look-ups */
     void build_circuit_model_lookup();
     void build_circuit_model_port_lookup(const CircuitModelId& circuit_model_id);
@@ -427,9 +436,11 @@ class CircuitLibrary {
     bool valid_circuit_model_id(const CircuitModelId& circuit_model_id) const;
     bool valid_circuit_port_id(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
     bool valid_delay_type(const CircuitModelId& circuit_model_id, const enum spice_model_delay_type& delay_type) const;
+    bool valid_circuit_edge_id(const CircuitModelId& circuit_model_id, const CircuitEdgeId& circuit_edge_id) const;
     /* Invalidators */
     void invalidate_circuit_model_lookup() const;
     void invalidate_circuit_model_port_lookup(const CircuitModelId& circuit_model_id) const;
+    void invalidate_circuit_model_timing_graph(const CircuitModelId& circuit_model_id);
   private: /* Internal data */
     /* Fundamental information */
     vtr::vector<CircuitModelId, CircuitModelId> circuit_model_ids_;
@@ -494,9 +505,9 @@ class CircuitLibrary {
     vtr::vector<CircuitModelId, vtr::vector<CircuitEdgeId, CircuitEdgeId>> edge_ids_;
     vtr::vector<CircuitModelId, vtr::vector<CircuitPortId, vtr::vector<size_t, CircuitEdgeId>>> port_in_edge_ids_;
     vtr::vector<CircuitModelId, vtr::vector<CircuitPortId, vtr::vector<size_t, CircuitEdgeId>>> port_out_edge_ids_;
-    vtr::vector<CircuitModelId, vtr::vector<CircuitEdgeId, CircuitPortId>> edge_src_ports_;
+    vtr::vector<CircuitModelId, vtr::vector<CircuitEdgeId, CircuitPortId>> edge_src_port_ids_;
     vtr::vector<CircuitModelId, vtr::vector<CircuitEdgeId, size_t>> edge_src_pin_ids_;
-    vtr::vector<CircuitModelId, vtr::vector<CircuitEdgeId, CircuitPortId>> edge_sink_ports_;
+    vtr::vector<CircuitModelId, vtr::vector<CircuitEdgeId, CircuitPortId>> edge_sink_port_ids_;
     vtr::vector<CircuitModelId, vtr::vector<CircuitEdgeId, size_t>> edge_sink_pin_ids_;
     vtr::vector<CircuitModelId, vtr::vector<CircuitEdgeId, float>> edge_trise_;
     vtr::vector<CircuitModelId, vtr::vector<CircuitEdgeId, float>> edge_tfall_;
