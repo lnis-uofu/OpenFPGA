@@ -23,7 +23,7 @@
  ***********************************************************************/
 
 /************************************************************************
- * Filename:    string_token.cpp
+ * Filename:    port_parser.cpp
  * Created by:   Xifan Tang
  * Change history:
  * +-------------------------------------+
@@ -34,109 +34,109 @@
  ***********************************************************************/
 
 /************************************************************************
- * Member functions for StringToken class 
+ * Member functions for PortParser class 
  ***********************************************************************/
 
 #include "string.h"
 
 #include "vtr_assert.h"
+#include "vtr_geometry.h"
 
 #include "string_token.h"
+
+#include "port_parser.h"
 
 /************************************************************************
  * Constructors
  ***********************************************************************/
-StringToken::StringToken (const std::string& data) {
+PortParser::PortParser (const std::string& data) {
   set_data(data);
+  set_default_bracket();
+  set_default_delim();
+  parse();
 }
 
 /************************************************************************
  * Public Accessors
  ***********************************************************************/
 /* Get the data string */
-std::string StringToken::data() const {
+std::string PortParser::data() const {
   return data_;
 }
 
-/* Split the string using a given delim */
-std::vector<std::string> StringToken::split(const std::string& delims) const {
-  /* Return vector */
-  std::vector<std::string> ret;
-
-  /* Get a writable char array */
-  char* tmp = new char[data_.size() + 1];
-  std::copy(data_.begin(), data_.end(), tmp);
-  tmp[data_.size()] = '\0';
-  /* Split using strtok */
-  char* result = strtok(tmp, delims.c_str());
-  while (NULL != result) {
-    std::string result_str(result);
-    /* Store the token */
-    ret.push_back(result_str);
-    /* Got to next */
-    result = strtok(NULL, delims.c_str());
-  }
-
-  /* Free the tmp */
-  delete[] tmp;
-
-  return ret;
-}
-
-/* Split the string using a given delim */
-std::vector<std::string> StringToken::split(const char& delim) const {
-  /* Create delims */
-  std::string delims(1, delim);
-
-  return split(delims);
-}
-
-/* Split the string using a given delim */
-std::vector<std::string> StringToken::split(const char* delim) const {
-  /* Create delims */
-  std::string delims(delim);
-
-  return split(delims);
-}
-
-/* Split the string */
-std::vector<std::string> StringToken::split() {
-  /* Add a default delim */ 
-  if (true == delims_.empty()) {
-    add_default_delim();
-  }
-  /* Create delims */
-  std::string delims;
-  for (const auto& delim : delims_) {
-    delims.push_back(delim);
-  }
-
-  return split(delims);
-}
 
 /************************************************************************
  * Public Mutators
  ***********************************************************************/
-void StringToken::set_data(const std::string& data) {
+void PortParser::set_data(const std::string& data) {
   data_ = data;
+  parse();
   return;
-}
-
-/* Add a delima to the list */
-void StringToken::add_delim(const char& delim) {
-  delims_.push_back(delim);
 }
 
 /************************************************************************
  * Internal Mutators
  ***********************************************************************/
-void StringToken::add_default_delim() {
-  VTR_ASSERT_SAFE(true == delims_.empty());
-  delims_.push_back(' ');
+/* Parse the data */
+void PortParser::parse() {
+  /* Create a tokenizer */
+  StringToken tokenizer(data_);
+
+  /* Split the data into <port_name> and <pin_string> */
+  std::vector<std::string> port_tokens = tokenizer.split(bracket_.x());
+  /* Make sure we have a port name! */
+  VTR_ASSERT_SAFE ((1 == port_tokens.size()) || (2 == port_tokens.size()));
+  /* Store the port name! */
+  port_name_ = port_tokens[0];
+
+  /* If we only have one token */
+  if (1 == port_tokens.size()) {
+    pin_range_.set_x(-1); 
+    pin_range_.set_y(-1); 
+    return; /* We can finish here */
+  }
+
+  /* Chomp the ']' */
+  tokenizer.set_data(port_tokens[1]);
+  std::vector<std::string> pin_tokens = tokenizer.split(bracket_.y());
+  /* Make sure we have a valid string! */
+  VTR_ASSERT_SAFE (1 == port_tokens.size());
+
+  /* Split the pin string now */
+  tokenizer.set_data(port_tokens[0]);
+  pin_tokens = tokenizer.split(delim_);
+
+  /* Check if we have LSB and MSB or just one */
+  if ( 1 == pin_tokens.size() ) {
+    /* Single pin */
+    pin_range_.set_x(stoi(pin_tokens[0])); 
+    pin_range_.set_y(stoi(pin_tokens[0])); 
+  } else if ( 2 == pin_tokens.size() ) {
+    /* A number of pin */
+    pin_range_.set_x(stoi(pin_tokens[0])); 
+    pin_range_.set_y(stoi(pin_tokens[1])); 
+  }
+
+  /* Reorder to ensure LSB <= MSB */
+  if (pin_range_.x() > pin_range_.y()) {
+    pin_range_.swap(); 
+  }
+
+  return;  
+}
+
+void PortParser::set_default_bracket() {
+  bracket_.set_x('[');
+  bracket_.set_y(']');
+  return;
+}
+
+void PortParser::set_default_delim() {
+  delim_ = ':';
   return;
 }
 
 /************************************************************************
- * End of file : string_token.cpp
+ * End of file : port_parser.cpp
  ***********************************************************************/
 

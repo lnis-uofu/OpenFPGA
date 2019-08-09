@@ -23,7 +23,7 @@
  ***********************************************************************/
 
 /************************************************************************
- * Filename:    string_token.h
+ * Filename:    port_parser.h
  * Created by:   Xifan Tang
  * Change history:
  * +-------------------------------------+
@@ -37,8 +37,8 @@
  * The following preprocessing flags are added to 
  * avoid compilation error when this headers are included in more than 1 times 
  */
-#ifndef STRING_TOKEN_H
-#define STRING_TOKEN_H
+#ifndef PORT_PARSER_H
+#define PORT_PARSER_H
 
 /*
  * Notes in include header files in a head file 
@@ -50,35 +50,44 @@
 #include <string>
 #include <vector>
 
+#include "string_token.h"
 
 /************************************************************************
- * This file includes a tokenizer for string objects
- * It splits a string with given delima and return a vector of tokens
- * It can accept different delima in splitting strings
+ * This file includes parsers for port definition in the architecture XML
+ * language. Note that it is also compatiable to Verilog syntax.
+ * It means we may reuse this for constructing a structural Verilog parser
+ * Supported port definition:
+ * 1. <port_name>[<LSB>:<MSB>]
+ * 2. <port_name>[<MSB>:<LSB>]
+ * 3. <port_name>[<single_pin_index>]
+ * 4. <port_name>[]  
+ * 5. <port_name>  
+ * In case 4 and 5, we will assign (-1,-1) for LSB and MSB
  ***********************************************************************/
 
-class StringToken {
+class PortParser{
   public : /* Constructors*/
-    StringToken (const std::string& data);
+    PortParser (const std::string& data);
   public : /* Public Accessors */ 
     std::string data() const;
-    std::vector<std::string> split(const std::string& delims) const;
-    std::vector<std::string> split(const char& delim) const;
-    std::vector<std::string> split(const char* delim) const;
     std::vector<std::string> split();
   public : /* Public Mutators */ 
     void set_data(const std::string& data);
-    void add_delim(const char& delim);
   private : /* Private Mutators */ 
-    void add_default_delim();
+    void parse();
+    void set_default_bracket();
+    void set_default_delim();
   private: /* Internal data */
     std::string data_; /* Lines to be splited */
-    std::vector<char> delims_;
+    vtr::Point<char> bracket_;
+    char delim_;
+    std::string port_name_;
+    vtr::Point<size_t> pin_range_;
 };
 
 #endif
 
 /************************************************************************
- * End of file : string_token.h
+ * End of file : port_parser.h
  ***********************************************************************/
 

@@ -63,6 +63,7 @@ class Point {
     public: //Mutators
         void set_x(T x_val);
         void set_y(T y_val);
+        void swap();
     private:
         T x_;
         T y_;

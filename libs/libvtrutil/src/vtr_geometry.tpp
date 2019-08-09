@@ -52,6 +52,12 @@ namespace vtr {
       y_  = y_val;
     } 
 
+    template<class T>
+    void Point<T>::swap() {
+      std::swap(x_, y_);
+    } 
+
+
     /*
      * Rect
      */
