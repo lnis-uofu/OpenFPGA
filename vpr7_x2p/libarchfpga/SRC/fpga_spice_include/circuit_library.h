@@ -237,6 +237,9 @@ class CircuitLibrary {
     bool is_output_buffered(const CircuitModelId& circuit_model_id) const;
     bool is_lut_intermediate_buffered(const CircuitModelId& circuit_model_id) const;
   public: /* Public Accessors: Basic data query on Circuit Ports*/
+    bool is_input_port(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
+    bool is_output_port(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
+    CircuitPortId port(const CircuitModelId& circuit_model_id, const std::string& name) const;
     size_t num_ports(const CircuitModelId& circuit_model_id) const;
     enum e_spice_model_port_type port_type(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
     size_t port_size(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
@@ -428,6 +431,11 @@ class CircuitLibrary {
                   const CircuitPortId& to_port, const size_t& to_pin);
     void set_edge_trise(const CircuitModelId& circuit_model_id, const CircuitEdgeId& circuit_edge_id, const float& trise);
     void set_edge_tfall(const CircuitModelId& circuit_model_id, const CircuitEdgeId& circuit_edge_id, const float& tfall);
+    std::vector<CircuitPortId> get_delay_info_input_port_ids(const CircuitModelId& circuit_model_id, 
+                                                             const enum spice_model_delay_type& delay_type) const;
+    std::vector<CircuitPortId> get_delay_info_output_port_ids(const CircuitModelId& circuit_model_id, 
+                                                              const enum spice_model_delay_type& delay_type) const;
+    void set_timing_graph_delays(const CircuitModelId& circuit_model_id);
   public: /* Internal mutators: build fast look-ups */
     void build_circuit_model_lookup();
     void build_circuit_model_port_lookup(const CircuitModelId& circuit_model_id);
@@ -509,8 +517,7 @@ class CircuitLibrary {
     vtr::vector<CircuitModelId, vtr::vector<CircuitEdgeId, size_t>> edge_src_pin_ids_;
     vtr::vector<CircuitModelId, vtr::vector<CircuitEdgeId, CircuitPortId>> edge_sink_port_ids_;
     vtr::vector<CircuitModelId, vtr::vector<CircuitEdgeId, size_t>> edge_sink_pin_ids_;
-    vtr::vector<CircuitModelId, vtr::vector<CircuitEdgeId, float>> edge_trise_;
-    vtr::vector<CircuitModelId, vtr::vector<CircuitEdgeId, float>> edge_tfall_;
+    vtr::vector<CircuitModelId, vtr::vector<CircuitEdgeId, std::vector<float>>> edge_timing_info_; /* x0 => trise, x1 => tfall */
 
     /* Delay information */
     vtr::vector<CircuitModelId, std::vector<enum spice_model_delay_type>> delay_types_;

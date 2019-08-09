@@ -66,8 +66,7 @@ std::vector<CircuitPortId> CircuitLibrary::input_ports(const CircuitModelId& cir
   std::vector<CircuitPortId> input_ports;
   for (const auto& port_id : ports(circuit_model_id)) {
     /* We skip output ports */
-    if ( (SPICE_MODEL_PORT_OUTPUT == port_type(circuit_model_id, port_id))
-      || (SPICE_MODEL_PORT_INOUT == port_type(circuit_model_id, port_id)) ) {
+    if ( false == is_input_port(circuit_model_id, port_id) ) {
       continue; 
     }
     input_ports.push_back(port_id);
@@ -81,12 +80,11 @@ std::vector<CircuitPortId> CircuitLibrary::input_ports(const CircuitModelId& cir
 std::vector<CircuitPortId> CircuitLibrary::output_ports(const CircuitModelId& circuit_model_id) const {
   std::vector<CircuitPortId> output_ports;
   for (const auto& port_id : ports(circuit_model_id)) {
-    /* We skip output ports */
-    if ( (SPICE_MODEL_PORT_OUTPUT != port_type(circuit_model_id, port_id))
-      && (SPICE_MODEL_PORT_INOUT != port_type(circuit_model_id, port_id)) ) {
+    /* We skip input ports */
+    if ( false == is_output_port(circuit_model_id, port_id) ) {
       continue; 
     }
-   output_ports.push_back(port_id);
+    output_ports.push_back(port_id);
   } 
   return output_ports;
 }
@@ -201,9 +199,47 @@ bool CircuitLibrary::is_lut_intermediate_buffered(const CircuitModelId& circuit_
 /************************************************************************
  * Public Accessors : Basic data query on Circuit Porst
  ***********************************************************************/
+
+/* identify if this port is an input port */
+bool CircuitLibrary::is_input_port(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const {
+  /* validate the circuit_model_id and circuit_port_id */
+  VTR_ASSERT_SAFE(valid_circuit_port_id(circuit_model_id, circuit_port_id));
+  /* Only SPICE_MODEL_OUTPUT AND INOUT are considered as outputs */
+  return ( (SPICE_MODEL_PORT_OUTPUT != port_type(circuit_model_id, circuit_port_id)) 
+        && (SPICE_MODEL_PORT_INOUT  != port_type(circuit_model_id, circuit_port_id)) );
+}
+
+/* identify if this port is an output port */
+bool CircuitLibrary::is_output_port(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const {
+  /* validate the circuit_model_id and circuit_port_id */
+  VTR_ASSERT_SAFE(valid_circuit_port_id(circuit_model_id, circuit_port_id));
+  /* Only SPICE_MODEL_OUTPUT AND INOUT are considered as outputs */
+  return ( (SPICE_MODEL_PORT_OUTPUT == port_type(circuit_model_id, circuit_port_id)) 
+        || (SPICE_MODEL_PORT_INOUT  == port_type(circuit_model_id, circuit_port_id)) );
+}
+
+/* Given a name and return the port id */
+CircuitPortId CircuitLibrary::port(const CircuitModelId& circuit_model_id, const std::string& name) const {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  /* Walk through the ports and try to find a matched name */
+  CircuitPortId ret = CIRCUIT_PORT_OPEN_ID;
+  size_t num_found = 0;
+  for (auto port_id : ports(circuit_model_id)) {
+    if (0 != name.compare(port_prefix(circuit_model_id, port_id))) {
+      continue; /* Not the one, go to the next*/
+    }
+    ret = port_id; /* Find one */
+    num_found++;
+  }
+  /* Make sure we will not find two ports with the same name */
+  VTR_ASSERT_SAFE( (0 == num_found) || (1 == num_found) );
+  return ret;
+}
+
 /* Access the type of a port of a circuit model */
 size_t CircuitLibrary::num_ports(const CircuitModelId& circuit_model_id) const {
-  /* validate the circuit_port_id */
+  /* validate the circuit_model_id */
   VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
   return port_ids_[circuit_model_id].size();
 }
@@ -404,8 +440,7 @@ CircuitModelId CircuitLibrary::add_circuit_model() {
   edge_src_pin_ids_.emplace_back();
   edge_sink_port_ids_.emplace_back();
   edge_sink_pin_ids_.emplace_back();
-  edge_trise_.emplace_back();
-  edge_tfall_.emplace_back();
+  edge_timing_info_.emplace_back();
 
   /* Delay information */
   delay_types_.emplace_back();
@@ -1307,6 +1342,7 @@ void CircuitLibrary::build_timing_graphs() {
     invalidate_circuit_model_timing_graph(circuit_model_id);
     build_circuit_model_timing_graph(circuit_model_id); 
     /* Annotate timing information */
+    set_timing_graph_delays(circuit_model_id);
   }
   return;
 }
@@ -1351,8 +1387,8 @@ void CircuitLibrary::add_edge(const CircuitModelId& circuit_model_id,
   edge_sink_pin_ids_[circuit_model_id].push_back(to_pin);
 
   /* Give a default value for timing values */
-  edge_trise_[circuit_model_id].push_back(0);
-  edge_tfall_[circuit_model_id].push_back(0);
+  std::vector<float> timing_info(2, 0);
+  edge_timing_info_[circuit_model_id].emplace_back(timing_info);
 
   return;
 }
@@ -1361,7 +1397,7 @@ void CircuitLibrary::set_edge_trise(const CircuitModelId& circuit_model_id, cons
   /* validate the circuit_edge_id */
   VTR_ASSERT_SAFE(valid_circuit_edge_id(circuit_model_id, circuit_edge_id));
   
-  edge_trise_[circuit_model_id][circuit_edge_id] = trise;
+  edge_timing_info_[circuit_model_id][circuit_edge_id][size_t(SPICE_MODEL_DELAY_RISE)] = trise;
   return;
 }
 
@@ -1369,10 +1405,76 @@ void CircuitLibrary::set_edge_tfall(const CircuitModelId& circuit_model_id, cons
   /* validate the circuit_edge_id */
   VTR_ASSERT_SAFE(valid_circuit_edge_id(circuit_model_id, circuit_edge_id));
   
-  edge_tfall_[circuit_model_id][circuit_edge_id] = tfall;
+  edge_timing_info_[circuit_model_id][circuit_edge_id][size_t(SPICE_MODEL_DELAY_FALL)] = tfall;
   return;
 }
 
+/* Decode input names of delay_info to CircuitPorts */
+std::vector<CircuitPortId> CircuitLibrary::get_delay_info_input_port_ids(const CircuitModelId& circuit_model_id, 
+                                                                         const enum spice_model_delay_type& delay_type) const {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  /* Parse the string */
+//  MultiPortParser input_port_parser(delay_in_port_names[circuit_model_id][size_t(delay_type)]);
+//  input_port_parser.add_delima(" ");
+//  std::vector<std::string> input_port_names = input_port_parser.port_names();
+
+  /* Find port ids with given names */
+  std::vector<CircuitPortId> input_port_ids;
+//  for (const auto& name : input_port_names) {
+    /* We must have a valid port ! */
+//    VTR_ASSERT_SAFE(CIRCUIT_PORT_OPEN_ID != port(circuit_model_id, name));
+    /* Convert to CircuitPortId */
+//    input_port_ids.push_back(port(circuit_model_id, name));
+    /* This must be an input port! */
+//    VTR_ASSERT_SAFE(true == is_input_port(circuit_model_id, input_port_ids.back()));
+//  }
+  return input_port_ids;
+}
+
+/* Decode input names of delay_info to CircuitPorts */
+std::vector<CircuitPortId> CircuitLibrary::get_delay_info_output_port_ids(const CircuitModelId& circuit_model_id, 
+                                                                          const enum spice_model_delay_type& delay_type) const {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  /* Parse the string */
+//  MultiPortParser output_port_parser(delay_out_port_names[circuit_model_id][size_t(delay_type)]);
+//  output_port_parser.add_delima(" ");
+//  std::vector<std::string> output_port_names = output_port_parser.port_names();
+
+  /* Find port ids with given names */
+  std::vector<CircuitPortId> output_port_ids;
+//  for (const auto& name : output_port_names) {
+    /* We must have a valid port ! */
+//    VTR_ASSERT_SAFE(CIRCUIT_PORT_OPEN_ID != port(circuit_model_id, name));
+    /* Convert to CircuitPortId */
+//    output_port_ids.push_back(port(circuit_model_id, name));
+    /* This must be an output port! */
+//    VTR_ASSERT_SAFE(true == is_output_port(circuit_model_id, output_port_ids.back()));
+//  }
+  return output_port_ids;
+}
+
+
+/* Annotate delay values on a timing graph */
+void CircuitLibrary::set_timing_graph_delays(const CircuitModelId& circuit_model_id) {
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  /* Go one delay_info by another */
+  for (size_t i_delay_type = 0; i_delay_type < delay_types_[circuit_model_id].size(); ++i_delay_type) {
+    /* Parse the input port names and output names.
+     * We will store the parsing results in vectors:
+     * 1. vector for port ids for each port name 
+     * 2. vector for pin ids for each port name
+     */
+    std::vector<CircuitPortId> input_port_ids;
+    std::vector<size_t> input_pin_ids;
+
+    std::vector<CircuitPortId> output_port_ids;
+    std::vector<size_t> output_pin_ids;
+  }
+  return;
+}
 
 /************************************************************************
  * Internal mutators: build fast look-ups 
@@ -1481,8 +1583,7 @@ void CircuitLibrary::invalidate_circuit_model_timing_graph(const CircuitModelId&
   edge_sink_port_ids_[circuit_model_id].clear();
   edge_sink_pin_ids_[circuit_model_id].clear();
 
-  edge_trise_[circuit_model_id].clear();
-  edge_tfall_[circuit_model_id].clear();
+  edge_timing_info_[circuit_model_id].clear();
   return;
 }
 
