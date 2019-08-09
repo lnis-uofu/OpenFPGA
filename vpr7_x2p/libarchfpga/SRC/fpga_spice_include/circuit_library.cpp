@@ -54,6 +54,10 @@ CircuitLibrary::circuit_model_range CircuitLibrary::circuit_models() const {
   return vtr::make_range(circuit_model_ids_.begin(), circuit_model_ids_.end());
 }
 
+CircuitLibrary::circuit_port_range CircuitLibrary::ports(const CircuitModelId& circuit_model_id) const {
+  return vtr::make_range(port_ids_[circuit_model_id].begin(), port_ids_[circuit_model_id].end());
+}
+
 /************************************************************************
  * Public Accessors : Basic data query on Circuit Models
  ***********************************************************************/
@@ -153,6 +157,13 @@ bool CircuitLibrary::is_lut_intermediate_buffered(const CircuitModelId& circuit_
 /************************************************************************
  * Public Accessors : Basic data query on Circuit Porst
  ***********************************************************************/
+/* Access the type of a port of a circuit model */
+size_t CircuitLibrary::num_ports(const CircuitModelId& circuit_model_id) const {
+  /* validate the circuit_port_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  return port_ids_[circuit_model_id].size();
+}
+
 /* Access the type of a port of a circuit model */
 enum e_spice_model_port_type CircuitLibrary::port_type(const CircuitModelId& circuit_model_id, 
                                                        const CircuitPortId& circuit_port_id) const {
@@ -255,7 +266,7 @@ bool CircuitLibrary::port_is_prog(const CircuitModelId& circuit_model_id,
  * Public Accessors : Methods to find circuit model 
  ***********************************************************************/
 /* Find a circuit model by a given name and return its id */
-CircuitModelId CircuitLibrary::get_circuit_model_id_by_name(const std::string& name) const { 
+CircuitModelId CircuitLibrary::circuit_model(const std::string& name) const { 
   CircuitModelId ret = CIRCUIT_MODEL_OPEN_ID;
   size_t num_found = 0;
   for (circuit_model_string_iterator it = circuit_model_names_.begin();
@@ -276,7 +287,7 @@ CircuitModelId CircuitLibrary::get_circuit_model_id_by_name(const std::string& n
 }
 
 /* Get the CircuitModelId of a default circuit model with a given type */
-CircuitModelId CircuitLibrary::get_default_circuit_model_id(const enum e_spice_model_type& type) const {
+CircuitModelId CircuitLibrary::default_circuit_model(const enum e_spice_model_type& type) const {
   /* Default circuit model id is the first element by type in the fast look-up */
   return circuit_model_lookup_[size_t(type)].front();
 }
@@ -406,6 +417,8 @@ void CircuitLibrary::set_circuit_model_type(const CircuitModelId& circuit_model_
   /* validate the circuit_model_id */
   VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
   circuit_model_types_[circuit_model_id] = type;
+  /* Build the fast look-up for circuit models */
+  build_circuit_model_lookup();
   return;
 }
 
@@ -591,6 +604,8 @@ void CircuitLibrary::set_port_type(const CircuitModelId& circuit_model_id,
   /* validate the circuit_port_id */
   VTR_ASSERT_SAFE(valid_circuit_port_id(circuit_model_id, circuit_port_id));
   port_types_[circuit_model_id][circuit_port_id] = port_type;
+  /* Build the fast look-up for circuit model ports */
+  build_circuit_model_port_lookup(circuit_model_id);
   return;
 }
 
@@ -1098,7 +1113,7 @@ void CircuitLibrary::set_wire_num_levels(const CircuitModelId& circuit_model_id,
 }
 
 /************************************************************************
- * Internal Mutators 
+ * Internal Mutators: builders and linkers 
  ***********************************************************************/
 /* Set the information for a buffer 
  * For a buffer type, we check if it is in the range of vector
@@ -1124,21 +1139,112 @@ void CircuitLibrary::set_circuit_model_buffer(const CircuitModelId& circuit_mode
   return;
 }
 
+/* Link the circuit_model_id for each port of a circuit model.
+ * We search the inv_circuit_model_name in the CircuitLibrary and 
+ * configure the port inv_circuit_model_id
+ */
+void CircuitLibrary::link_port_circuit_model(const CircuitModelId& circuit_model_id) { 
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  /* Walk through each ports, get the port id and find the circuit model id by name */
+  for (auto& port_id : ports(circuit_model_id)) {
+    /* Bypass empty name */
+    if (true == port_circuit_model_names_[circuit_model_id][port_id].empty()) {
+      continue;
+    }
+    port_circuit_model_ids_[circuit_model_id][port_id] = circuit_model(port_circuit_model_names_[circuit_model_id][port_id]);
+  }
+  return;
+}      
+
 /* Link the inv_circuit_model_id for each port of a circuit model.
  * We search the inv_circuit_model_name in the CircuitLibrary and 
  * configure the port inv_circuit_model_id
  */
-void CircuitLibrary::set_circuit_model_port_inv_circuit_model(const CircuitModelId& circuit_model_id) { 
+void CircuitLibrary::link_port_inv_circuit_model(const CircuitModelId& circuit_model_id) { 
   /* validate the circuit_model_id */
   VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
-  /* TODO: complete this function when port mutators are finished */
+  /* Walk through each ports, get the port id and find the circuit model id by name */
+  for (auto& port_id : ports(circuit_model_id)) {
+    /* Bypass empty name */
+    if (true == port_inv_circuit_model_names_[circuit_model_id][port_id].empty()) {
+      continue;
+    }
+    port_inv_circuit_model_ids_[circuit_model_id][port_id] = circuit_model(port_inv_circuit_model_names_[circuit_model_id][port_id]);
+  }
   return;
 }      
 
+/* Link all the circuit model ids for each port of a circuit model */
+void CircuitLibrary::link_port_circuit_models(const CircuitModelId& circuit_model_id) {
+  link_port_circuit_model(circuit_model_id); 
+  link_port_inv_circuit_model(circuit_model_id); 
+  return;
+}
+
+/* Link the buffer_circuit_model
+ * We search the buffer_circuit_model_name in the CircuitLibrary and 
+ * configure the buffer_circuit_model_id
+ */
+void CircuitLibrary::link_buffer_circuit_model(const CircuitModelId& circuit_model_id) { 
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  /* Get the circuit model id by name, skip those with empty names*/
+  for (size_t buffer_id = 0; buffer_id < buffer_circuit_model_names_[circuit_model_id].size(); ++buffer_id) {
+    if (true == buffer_circuit_model_names_[circuit_model_id][buffer_id].empty()) {
+      return;
+    }
+    buffer_circuit_model_ids_[circuit_model_id][buffer_id] = circuit_model(buffer_circuit_model_names_[circuit_model_id][buffer_id]);
+  }
+  return;
+}      
+
+/* Link the buffer_circuit_model
+ * We search the buffer_circuit_model_name in the CircuitLibrary and 
+ * configure the buffer_circuit_model_id
+ */
+void CircuitLibrary::link_pass_gate_logic_circuit_model(const CircuitModelId& circuit_model_id) { 
+  /* validate the circuit_model_id */
+  VTR_ASSERT_SAFE(valid_circuit_model_id(circuit_model_id));
+  /* Get the circuit model id by name, skip those with empty names*/
+  if (true == pass_gate_logic_circuit_model_names_[circuit_model_id].empty()) {
+    return;
+  }
+  pass_gate_logic_circuit_model_ids_[circuit_model_id] = circuit_model(pass_gate_logic_circuit_model_names_[circuit_model_id]);
+  return;
+}      
+
+/* Build the links for attributes of each circuit_model by searching the circuit_model_names */
+void CircuitLibrary::build_circuit_model_links() {
+  /* Walk through each circuit model, build links one by one */
+  for (auto& circuit_model_id : circuit_models()) {
+    /* Build links for buffers, pass-gates circuit_model */
+    link_buffer_circuit_model(circuit_model_id); 
+    link_pass_gate_logic_circuit_model(circuit_model_id); 
+    /* Build links for ports */
+    link_port_circuit_models(circuit_model_id); 
+  }
+  return;
+}
+
+/* Build the timing graph for a circuit models*/
+void CircuitLibrary::build_circuit_model_timing_graph(const CircuitModelId& circuit_model_id) {
+  return;
+}
+
+/* Build the timing graph for a circuit models*/
+void CircuitLibrary::build_timing_graphs() {
+  /* Walk through each circuit model, build timing graph one by one */
+  for (auto& circuit_model_id : circuit_models()) {
+    build_circuit_model_timing_graph(circuit_model_id); 
+  }
+  return;
+}
 
 /************************************************************************
  * Internal mutators: build fast look-ups 
  ***********************************************************************/
+/* Build fast look-up for circuit models */
 void CircuitLibrary::build_circuit_model_lookup() {
   /* invalidate fast look-up */
   invalidate_circuit_model_lookup();
@@ -1150,6 +1256,10 @@ void CircuitLibrary::build_circuit_model_lookup() {
   }
   /* Make the default circuit_model to be the first element for each type */
   for (auto& type : circuit_model_lookup_) {
+    /* Skip zero-length parts of look-up */
+    if (true == type.empty()) {
+      continue;
+    }
     /* if the first element is already a default model, we skip this  */
     if (true == circuit_model_is_default_[type[0]]) {
       continue;
@@ -1166,6 +1276,20 @@ void CircuitLibrary::build_circuit_model_lookup() {
   }
   return;
 }
+
+/* Build fast look-up for circuit model ports */
+void CircuitLibrary::build_circuit_model_port_lookup(const CircuitModelId& circuit_model_id) {
+  /* invalidate fast look-up */
+  invalidate_circuit_model_port_lookup(circuit_model_id);
+  /* Classify circuit models by type */
+  circuit_model_port_lookup_[size_t(circuit_model_id)].resize(NUM_CIRCUIT_MODEL_PORT_TYPES);
+  /* Walk through circuit_models and categorize */
+  for (auto& port_id : port_ids_[circuit_model_id]) {
+    circuit_model_port_lookup_[size_t(circuit_model_id)][port_type(circuit_model_id, port_id)].push_back(port_id);
+  }
+  return;
+}
+
 
 /************************************************************************
  * Internal invalidators/validators 

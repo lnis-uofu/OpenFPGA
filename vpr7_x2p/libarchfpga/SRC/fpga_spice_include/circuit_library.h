@@ -233,6 +233,8 @@ class CircuitLibrary {
     bool is_output_buffered(const CircuitModelId& circuit_model_id) const;
     bool is_lut_intermediate_buffered(const CircuitModelId& circuit_model_id) const;
   public: /* Public Accessors: Basic data query on Circuit Ports*/
+    circuit_port_range ports(const CircuitModelId& circuit_model_id) const;
+    size_t num_ports(const CircuitModelId& circuit_model_id) const;
     enum e_spice_model_port_type port_type(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
     size_t port_size(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
     std::string port_prefix(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
@@ -246,8 +248,8 @@ class CircuitLibrary {
     bool port_is_config_enable(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
     bool port_is_prog(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
   public: /* Public Accessors: Methods to find circuit model */
-    CircuitModelId get_circuit_model_id_by_name(const std::string& name) const ;
-    CircuitModelId get_default_circuit_model_id(const enum e_spice_model_type& type) const;
+    CircuitModelId circuit_model(const std::string& name) const;
+    CircuitModelId default_circuit_model(const enum e_spice_model_type& type) const;
   public: /* Public Mutators */
     CircuitModelId add_circuit_model();
     /* Fundamental information */
@@ -407,11 +409,19 @@ class CircuitLibrary {
                     const float& c_val);
     void set_wire_num_levels(const CircuitModelId& circuit_model_id,
                              const size_t& num_level);
-  public: /* Internal mutators: link circuit_models */
+  public: /* Public Mutators: builders */
     void set_circuit_model_buffer(const CircuitModelId& circuit_model_id, const enum e_buffer_type buffer_type, const bool& existence, const std::string& circuit_model_name);
-    void set_circuit_model_port_inv_circuit_model(const CircuitModelId& circuit_model_id);      
+    void link_port_circuit_model(const CircuitModelId& circuit_model_id);      
+    void link_port_inv_circuit_model(const CircuitModelId& circuit_model_id);      
+    void link_port_circuit_models(const CircuitModelId& circuit_model_id);      
+    void link_buffer_circuit_model(const CircuitModelId& circuit_model_id);      
+    void link_pass_gate_logic_circuit_model(const CircuitModelId& circuit_model_id);      
+    void build_circuit_model_links();
+    void build_circuit_model_timing_graph(const CircuitModelId& circuit_model_id);
+    void build_timing_graphs();
   public: /* Internal mutators: build fast look-ups */
     void build_circuit_model_lookup();
+    void build_circuit_model_port_lookup(const CircuitModelId& circuit_model_id);
   private: /* Internal invalidators/validators */
     /* Validators */
     bool valid_circuit_model_id(const CircuitModelId& circuit_model_id) const;
@@ -482,8 +492,8 @@ class CircuitLibrary {
 
     /* Timing graphs */
     vtr::vector<CircuitModelId, vtr::vector<CircuitEdgeId, CircuitEdgeId>> edge_ids_;
-    vtr::vector<CircuitModelId, vtr::vector<CircuitPortId, std::vector<size_t>>> port_in_edge_ids_;
-    vtr::vector<CircuitModelId, vtr::vector<CircuitPortId, std::vector<size_t>>> port_out_edge_ids_;
+    vtr::vector<CircuitModelId, vtr::vector<CircuitPortId, vtr::vector<size_t, CircuitEdgeId>>> port_in_edge_ids_;
+    vtr::vector<CircuitModelId, vtr::vector<CircuitPortId, vtr::vector<size_t, CircuitEdgeId>>> port_out_edge_ids_;
     vtr::vector<CircuitModelId, vtr::vector<CircuitEdgeId, CircuitPortId>> edge_src_ports_;
     vtr::vector<CircuitModelId, vtr::vector<CircuitEdgeId, size_t>> edge_src_pin_ids_;
     vtr::vector<CircuitModelId, vtr::vector<CircuitEdgeId, CircuitPortId>> edge_sink_ports_;

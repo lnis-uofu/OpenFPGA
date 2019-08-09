@@ -1743,6 +1743,12 @@ CircuitLibrary build_circuit_library(int num_spice_model, t_spice_model* spice_m
     } 
   }
 
+  /* Build circuit_model links */
+  circuit_lib.build_circuit_model_links();
+
+  /* Build timing graph */
+  circuit_lib.build_timing_graphs();
+
   return circuit_lib;
 }
 
