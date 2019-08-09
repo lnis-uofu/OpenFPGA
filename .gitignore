@@ -36,3 +36,5 @@ vpr7_x2p/pcre/pcredemo
 # Some local temporary files
 .vscode
 *_local.bat
+fpga_flow/csv_rpts
+tmp/

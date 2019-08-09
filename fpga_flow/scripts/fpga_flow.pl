@@ -1,4 +1,4 @@
-#!usr/bin/perl -w
+#!/usr/bin/perl -w
 # use the strict mode
 use strict;
 # Use the Shell enviornment
@@ -1182,6 +1182,7 @@ sub run_odin2($ $ $) {
 }
 
 sub run_pro_blif_3arg($ $ $) {
+  # Adopt blif format
   my ($abc_blif_out_bak, $abc_blif_out, $initial_blif) = @_;
   my ($pro_blif_path) = ($conf_ptr->{dir_path}->{script_base}->{val});
 
@@ -1301,7 +1302,7 @@ sub run_std_vpr($ $ $ $ $ $ $ $ $)
 {
   my ($blif,$bm,$arch,$net,$place,$route,$fix_chan_width,$log,$act_file) = @_;
   my ($vpr_dir,$vpr_name) = &split_prog_path($conf_ptr->{dir_path}->{vpr_path}->{val});
-  
+
   my ($power_opts);
   if ("on" eq $opt_ptr->{power}) {
     $power_opts = "--power --activity_file $act_file --tech_properties $conf_ptr->{flow_conf}->{power_tech_xml}->{val}";
@@ -1460,7 +1461,7 @@ sub run_std_vpr($ $ $ $ $ $ $ $ $)
   #  foreach my $file (0..$#files){
   #    print "$files[$file]\t";
   #  }
-  3  print "\n";
+  # print "\n";
   #}
   chdir $cwd;
 }
@@ -1765,7 +1766,7 @@ sub run_vpr_in_flow($ $ $ $ $ $ $ $ $ $ $ $) {
         print "INFO: try route_chan_width($min_chan_width) success!\n";
         last; #Jump out
       } elsif ($max_route_width_retry < $min_chan_width) {
-      # I set a threshold of 1000 as it is the limit of VPR 
+      # I set a threshold of 1000 as it is the limit of VPR
         die "ERROR: Route Fail for $abc_blif_out with a min_chan_width of $min_chan_width!\n";
       } else {
         print "INFO: try route_chan_width($min_chan_width) failed! Retry with +2...\n";
@@ -1791,7 +1792,7 @@ sub run_vpr_in_flow($ $ $ $ $ $ $ $ $ $ $ $) {
         print "INFO: try route_chan_width($fix_chan_width) success!\n";
         last; #Jump out
       } elsif ($max_route_width_retry < $fix_chan_width) {
-      # I set a threshold of 1000 as it is the limit of VPR 
+      # I set a threshold of 1000 as it is the limit of VPR
         die "ERROR: Route Fail for $abc_blif_out with a min_chan_width of $fix_chan_width!\n";
       } else {
         print "INFO: try route_chan_width($fix_chan_width) failed! Retry with +2...\n";
@@ -2994,11 +2995,11 @@ sub gen_csv_rpt_vtr_flow($ $)
   my @keywords;
   my ($K_val,$N_val) = ($opt_ptr->{K_val},$opt_ptr->{N_val});
 
-  # adapt to matlab format if the option is enabled 
+  # adapt to matlab format if the option is enabled
   if ("on" eq $opt_ptr->{matlab_rpt}) {
-    # Print the data name 
+    # Print the data name
     print $CSVFH "$opt_ptr->{matlab_rpt_val} = [\n";
-    # We will set the stats line to be commented 
+    # We will set the stats line to be commented
     print $CSVFH "%";
   }
 
@@ -3029,7 +3030,7 @@ sub gen_csv_rpt_vtr_flow($ $)
   print $CSVFH "\n";
   # Check log/stats one by one
   foreach $tmp(@benchmark_names) {
-    $tmp =~ s/\.v$//g;     
+    $tmp =~ s/\.v$//g;
     print $CSVFH "$tmp";
     print $CSVFH ",$rpt_h{$tag}->{$tmp}->{$N_val}->{$K_val}->{LUTs}";
     if ("on" eq $opt_ptr->{min_route_chan_width}) {
@@ -3078,12 +3079,12 @@ sub gen_csv_rpt_yosys_vpr_flow($ $)
   my ($tmp,$ikw,$tmpkw);
   my @keywords;
   my ($K_val,$N_val) = ($opt_ptr->{K_val},$opt_ptr->{N_val});
- 
-  # adapt to matlab format if the option is enabled 
+
+  # adapt to matlab format if the option is enabled
   if ("on" eq $opt_ptr->{matlab_rpt}) {
-    # Print the data name 
+    # Print the data name
     print $CSVFH "$opt_ptr->{matlab_rpt_val} = [\n";
-    # We will set the stats line to be commented 
+    # We will set the stats line to be commented
     print $CSVFH "%";
   }
 
@@ -3117,9 +3118,9 @@ sub gen_csv_rpt_yosys_vpr_flow($ $)
     my @tokens = split('/', $tmp);
     $tmp = $tokens[0];
 
-    # For matlab script, we use {} for string 
+    # For matlab script, we use {} for string
     if ("on" eq $opt_ptr->{matlab_rpt}) {
-      print $CSVFH "{'$tmp'}"; 
+      print $CSVFH "{'$tmp'}";
     } else {
       print $CSVFH "$tmp";
     }
@@ -3171,12 +3172,12 @@ sub gen_csv_rpt_standard_flow($ $)
   my ($tmp,$ikw,$tmpkw);
   my @keywords;
   my ($K_val,$N_val) = ($opt_ptr->{K_val},$opt_ptr->{N_val});
- 
-  # adapt to matlab format if the option is enabled 
+
+  # adapt to matlab format if the option is enabled
   if ("on" eq $opt_ptr->{matlab_rpt}) {
-    # Print the data name 
+    # Print the data name
     print $CSVFH "$opt_ptr->{matlab_rpt_val} = [\n";
-    # We will set the stats line to be commented 
+    # We will set the stats line to be commented
     print $CSVFH "%";
   }
 
@@ -3207,7 +3208,7 @@ sub gen_csv_rpt_standard_flow($ $)
   print $CSVFH "\n";
   # Check log/stats one by one
   foreach $tmp(@benchmark_names) {
-    $tmp =~ s/\.blif$//g;     
+    $tmp =~ s/\.blif$//g;
     print $CSVFH "$tmp";
     print $CSVFH ",$rpt_h{$tag}->{$tmp}->{$N_val}->{$K_val}->{LUTs}";
     if ("on" eq $opt_ptr->{min_route_chan_width}) {
@@ -3222,7 +3223,7 @@ sub gen_csv_rpt_standard_flow($ $)
     @keywords = split /\|/,$conf_ptr->{csv_tags}->{vpr_tags}->{val};
     for($ikw=0; $ikw < ($#keywords+1); $ikw++) {
       $tmpkw = $keywords[$ikw];
-      $tmpkw =~ s/\s//g;  
+      $tmpkw =~ s/\s//g;
       print $CSVFH ",$rpt_ptr->{$tag}->{$tmp}->{$N_val}->{$K_val}->{$keywords[$ikw]}";
     }
     if ("on" eq $opt_ptr->{power}) {
@@ -3258,11 +3259,11 @@ sub gen_csv_rpt_mpack2_flow($ $)
   my @keywords;
   my ($K_val,$N_val) = ($opt_ptr->{K_val},$opt_ptr->{N_val});
 
-  # adapt to matlab format if the option is enabled 
+  # adapt to matlab format if the option is enabled
   if ("on" eq $opt_ptr->{matlab_rpt}) {
-    # Print the data name 
+    # Print the data name
     print $CSVFH "$opt_ptr->{matlab_rpt_val} = [\n";
-    # We will set the stats line to be commented 
+    # We will set the stats line to be commented
     print $CSVFH "%";
   }
 
@@ -3298,7 +3299,7 @@ sub gen_csv_rpt_mpack2_flow($ $)
   print $CSVFH "\n";
   # Check log/stats one by one
   foreach $tmp(@benchmark_names) {
-    $tmp =~ s/\.blif$//g;     
+    $tmp =~ s/\.blif$//g;
     print $CSVFH "$tmp";
     if ("on" eq $opt_ptr->{min_route_chan_width}) {
       print $CSVFH ",$rpt_h{$tag}->{$tmp}->{$N_val}->{$K_val}->{min_route_chan_width}";
@@ -3353,11 +3354,11 @@ sub gen_csv_rpt_mpack1_flow($ $)
   my @keywords;
   my ($N_val,$M_val) = ($opt_ptr->{N_val},$opt_ptr->{M_val});
 
-  # adapt to matlab format if the option is enabled 
+  # adapt to matlab format if the option is enabled
   if ("on" eq $opt_ptr->{matlab_rpt}) {
-    # Print the data name 
+    # Print the data name
     print $CSVFH "$opt_ptr->{matlab_rpt_val} = [\n";
-    # We will set the stats line to be commented 
+    # We will set the stats line to be commented
     print $CSVFH "%";
   }
 
@@ -3383,7 +3384,7 @@ sub gen_csv_rpt_mpack1_flow($ $)
   print $CSVFH "\n";
   # Check log/stats one by one
   foreach $tmp(@benchmark_names) {
-    $tmp =~ s/\.blif$//g;     
+    $tmp =~ s/\.blif$//g;
     print $CSVFH "$tmp";
     #foreach $tmpkw(@keywords) {
     print $CSVFH ",$rpt_ptr->{$tag}->{$tmp}->{$N_val}->{$M_val}->{MATRIX}";
