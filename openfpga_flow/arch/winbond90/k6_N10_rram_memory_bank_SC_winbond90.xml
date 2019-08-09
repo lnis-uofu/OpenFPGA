@@ -168,7 +168,7 @@
         <port type="sram" prefix="sram" size="1" spice_model_name="sram6T_rram"/>
       </spice_model>
       <!--DFF subckt ports should be defined as <D> <Q> <CLK> <RESET> <SET>  -->
-      <spice_model type="ff" name="static_dff" prefix="dff" spice_netlist="/research/ece/lnis/USERS/alacchi/Ganesh/OpenFPGA/vpr7_x2p/vpr/SpiceNetlists/ff.sp" verilog_netlist="VerilogNetlists/ff.v">
+      <spice_model type="ff" name="static_dff" prefix="dff" spice_netlist="${OPENFPGA_PATH}/vpr7_x2p/vpr/SpiceNetlists/ff.sp" verilog_netlist="VerilogNetlists/ff.v">
         <design_technology type="cmos"/>
         <input_buffer exist="on" spice_model_name="INVD1BWP"/>
         <output_buffer exist="on" spice_model_name="INVD1BWP"/>
