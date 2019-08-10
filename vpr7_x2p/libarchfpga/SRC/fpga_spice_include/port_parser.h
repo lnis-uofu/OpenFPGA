@@ -50,12 +50,19 @@
 #include <string>
 #include <vector>
 
+#include "vtr_geometry.h"
+
+#include "device_port.h"
 #include "string_token.h"
 
 /************************************************************************
  * This file includes parsers for port definition in the architecture XML
  * language. Note that it is also compatiable to Verilog syntax.
  * It means we may reuse this for constructing a structural Verilog parser
+ ***********************************************************************/
+
+/************************************************************************
+ * Class PortParser: single port parser
  * Supported port definition:
  * 1. <port_name>[<LSB>:<MSB>]
  * 2. <port_name>[<MSB>:<LSB>]
@@ -64,13 +71,12 @@
  * 5. <port_name>  
  * In case 4 and 5, we will assign (-1,-1) for LSB and MSB
  ***********************************************************************/
-
 class PortParser{
   public : /* Constructors*/
     PortParser (const std::string& data);
   public : /* Public Accessors */ 
     std::string data() const;
-    std::vector<std::string> split();
+    BasicPort port() const;
   public : /* Public Mutators */ 
     void set_data(const std::string& data);
   private : /* Private Mutators */ 
@@ -81,8 +87,28 @@ class PortParser{
     std::string data_; /* Lines to be splited */
     vtr::Point<char> bracket_;
     char delim_;
-    std::string port_name_;
-    vtr::Point<size_t> pin_range_;
+    BasicPort port_;
+};
+
+/************************************************************************
+ * MultiPortParser: a parser for multiple ports in one line 
+ ***********************************************************************/
+class MultiPortParser {
+  public : /* Constructors*/
+    MultiPortParser (const std::string& data);
+  public : /* Public Accessors */ 
+    std::string data() const;
+    std::vector<BasicPort> ports() const;
+  public : /* Public Mutators */ 
+    void set_data(const std::string& data);
+  private : /* Private Mutators */ 
+    void parse();
+    void set_default_delim();
+    void clear();
+  private: /* Internal data */
+    std::string data_; /* Lines to be splited */
+    char delim_;
+    std::vector<BasicPort> ports_;
 };
 
 #endif

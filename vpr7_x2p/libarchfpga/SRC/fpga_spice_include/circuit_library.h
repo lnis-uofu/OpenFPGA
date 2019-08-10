@@ -431,10 +431,6 @@ class CircuitLibrary {
                   const CircuitPortId& to_port, const size_t& to_pin);
     void set_edge_trise(const CircuitModelId& circuit_model_id, const CircuitEdgeId& circuit_edge_id, const float& trise);
     void set_edge_tfall(const CircuitModelId& circuit_model_id, const CircuitEdgeId& circuit_edge_id, const float& tfall);
-    std::vector<CircuitPortId> get_delay_info_input_port_ids(const CircuitModelId& circuit_model_id, 
-                                                             const enum spice_model_delay_type& delay_type) const;
-    std::vector<CircuitPortId> get_delay_info_output_port_ids(const CircuitModelId& circuit_model_id, 
-                                                              const enum spice_model_delay_type& delay_type) const;
     void set_timing_graph_delays(const CircuitModelId& circuit_model_id);
   public: /* Internal mutators: build fast look-ups */
     void build_circuit_model_lookup();
@@ -443,6 +439,7 @@ class CircuitLibrary {
     /* Validators */
     bool valid_circuit_model_id(const CircuitModelId& circuit_model_id) const;
     bool valid_circuit_port_id(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
+    bool valid_circuit_pin_id(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id, const size_t& pin_id) const;
     bool valid_delay_type(const CircuitModelId& circuit_model_id, const enum spice_model_delay_type& delay_type) const;
     bool valid_circuit_edge_id(const CircuitModelId& circuit_model_id, const CircuitEdgeId& circuit_edge_id) const;
     /* Invalidators */

@@ -34,7 +34,7 @@
  ***********************************************************************/
 
 /************************************************************************
- * Member functions for PortParser class 
+ * Member functions for Port parsers
  ***********************************************************************/
 
 #include "string.h"
@@ -45,6 +45,10 @@
 #include "string_token.h"
 
 #include "port_parser.h"
+
+/************************************************************************
+ * Member functions for PortParser class 
+ ***********************************************************************/
 
 /************************************************************************
  * Constructors
@@ -64,6 +68,9 @@ std::string PortParser::data() const {
   return data_;
 }
 
+BasicPort PortParser::port() const {
+  return port_;
+}
 
 /************************************************************************
  * Public Mutators
@@ -87,12 +94,11 @@ void PortParser::parse() {
   /* Make sure we have a port name! */
   VTR_ASSERT_SAFE ((1 == port_tokens.size()) || (2 == port_tokens.size()));
   /* Store the port name! */
-  port_name_ = port_tokens[0];
+  port_.set_name(port_tokens[0]);
 
   /* If we only have one token */
   if (1 == port_tokens.size()) {
-    pin_range_.set_x(-1); 
-    pin_range_.set_y(-1); 
+    port_.set_width(0); 
     return; /* We can finish here */
   }
 
@@ -109,17 +115,15 @@ void PortParser::parse() {
   /* Check if we have LSB and MSB or just one */
   if ( 1 == pin_tokens.size() ) {
     /* Single pin */
-    pin_range_.set_x(stoi(pin_tokens[0])); 
-    pin_range_.set_y(stoi(pin_tokens[0])); 
+    port_.set_width(stoi(pin_tokens[0]), stoi(pin_tokens[0])); 
   } else if ( 2 == pin_tokens.size() ) {
     /* A number of pin */
-    pin_range_.set_x(stoi(pin_tokens[0])); 
-    pin_range_.set_y(stoi(pin_tokens[1])); 
+    port_.set_width(stoi(pin_tokens[0]), stoi(pin_tokens[1])); 
   }
 
-  /* Reorder to ensure LSB <= MSB */
-  if (pin_range_.x() > pin_range_.y()) {
-    pin_range_.swap(); 
+  /* Re-order to ensure LSB <= MSB */
+  if (false == port_.is_valid()) {
+    port_.revert(); 
   }
 
   return;  
@@ -133,6 +137,74 @@ void PortParser::set_default_bracket() {
 
 void PortParser::set_default_delim() {
   delim_ = ':';
+  return;
+}
+
+/************************************************************************
+ * Member functions for MultiPortParser class 
+ ***********************************************************************/
+
+/************************************************************************
+ * Constructors
+ ***********************************************************************/
+MultiPortParser::MultiPortParser (const std::string& data) {
+  set_data(data);
+  set_default_delim();
+  parse();
+}
+
+/************************************************************************
+ * Public Accessors
+ ***********************************************************************/
+/* Get the data string */
+std::string MultiPortParser::data() const {
+  return data_;
+}
+
+std::vector<BasicPort> MultiPortParser::ports() const {
+  return ports_;
+}
+
+/************************************************************************
+ * Public Mutators
+ ***********************************************************************/
+void MultiPortParser::set_data(const std::string& data) {
+  data_ = data;
+  parse();
+  return;
+}
+
+/************************************************************************
+ * Internal Mutators
+ ***********************************************************************/
+/* Split the data line into fragments and parse one by one */
+void MultiPortParser::parse() {
+  /* Clear content */
+  clear();
+
+  /* Create a tokenizer */
+  StringToken tokenizer(data_);
+
+  /* Split the data into <port_name> and <pin_string> */
+  std::vector<std::string> port_tokens = tokenizer.split(delim_);
+  
+  /* Use PortParser for each token */
+  for (const auto& port : port_tokens) {
+    PortParser port_parser(port);
+    /* Get the port name, LSB and MSB */
+    ports_.push_back(port_parser.port());
+  }
+
+  return;
+}
+
+void MultiPortParser::set_default_delim() {
+  delim_ = ' ';
+  return;
+}
+
+void MultiPortParser::clear() {
+  ports_.clear();
   return;
 }
 
