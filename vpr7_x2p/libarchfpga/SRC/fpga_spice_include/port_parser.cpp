@@ -54,10 +54,9 @@
  * Constructors
  ***********************************************************************/
 PortParser::PortParser (const std::string& data) {
-  set_data(data);
   set_default_bracket();
   set_default_delim();
-  parse();
+  set_data(data);
 }
 
 /************************************************************************
@@ -148,9 +147,8 @@ void PortParser::set_default_delim() {
  * Constructors
  ***********************************************************************/
 MultiPortParser::MultiPortParser (const std::string& data) {
-  set_data(data);
   set_default_delim();
-  parse();
+  set_data(data);
 }
 
 /************************************************************************
@@ -207,6 +205,125 @@ void MultiPortParser::clear() {
   ports_.clear();
   return;
 }
+
+/************************************************************************
+ * Member functions for PortDelayParser class 
+ ***********************************************************************/
+
+/************************************************************************
+ * Constructors
+ ***********************************************************************/
+PortDelayParser::PortDelayParser (const std::string& data) {
+  set_default_element_delim();
+  set_default_line_delim();
+  set_data(data);
+}
+
+/************************************************************************
+ * Public Accessors
+ ***********************************************************************/
+/* Get the data string */
+std::string PortDelayParser::data() const {
+  return data_;
+}
+
+/* Get the size of delay matrix [height, width]*/
+size_t PortDelayParser::height() const {
+  return delay_matrix_.dim_size(0);
+}
+
+size_t PortDelayParser::width() const {
+  return delay_matrix_.dim_size(1);
+}
+
+vtr::Point<size_t> PortDelayParser::delay_size() const {
+  vtr::Point<size_t> matrix_size(height(), width());
+  return matrix_size;
+}
+
+float PortDelayParser::delay(size_t x, size_t y) const {
+  /* Make sure x and y are in range */
+  VTR_ASSERT_SAFE( (x < width()) && (y < height()) );
+  return delay_matrix_[x][y];
+}
+
+/************************************************************************
+ * Public Mutators
+ ***********************************************************************/
+void PortDelayParser::set_data(const std::string& data) {
+  data_ = data;
+  parse();
+  return;
+}
+
+/************************************************************************
+ * Internal Mutators
+ ***********************************************************************/
+/* Split the data line into fragments and parse one by one */
+void PortDelayParser::parse() {
+  /* Clear content */
+  clear();
+
+  /* Create a tokenizer */
+  StringToken delay_tokenizer(data_);
+  /* Ensure a clean start! Trim whitespace at the beginning and end of the string */
+  delay_tokenizer.trim();
+
+  /* Split the data into different lines */
+  std::vector<std::string> delay_lines = delay_tokenizer.split(line_delim_);
+
+  /* The number of lines is actually the height of delay matrix */
+  size_t matrix_height = delay_lines.size();
+  size_t matrix_width = 0;
+
+  /* Visit each line and split with element_delim */
+  for (const auto& line : delay_lines) {
+    /* Create a tokenizer for each line  */
+    StringToken line_tokenizer(line);
+    std::vector<std::string> delay_elements = line_tokenizer.split(element_delim_);
+    /* Get maximum number of length, which is the width of delay matrix  */
+    matrix_width = std::max(matrix_width, delay_elements.size());
+  }
+
+  /* Resize matrix */
+  delay_matrix_.resize({matrix_height, matrix_width});
+
+  /* Fill matrix */
+  for (const auto& line : delay_lines) {
+    /* Create a tokenizer for each line  */
+    StringToken line_tokenizer(line);
+    std::vector<std::string> delay_elements = line_tokenizer.split(element_delim_);
+    /* Get maximum number of length, which is the width of delay matrix  */
+    for (const auto& element : delay_elements) {
+      delay_matrix_[size_t(&line - &delay_lines[0])][size_t(&element - &delay_elements[0])] = stof(element);
+    }
+  }
+
+  return;
+}
+
+void PortDelayParser::set_default_element_delim() {
+  /* Ensure a clean start */
+  element_delim_.clear();
+  element_delim_.push_back(' ');
+  element_delim_.push_back('\t');
+  return;
+}
+
+void PortDelayParser::set_default_line_delim() {
+  /* Ensure a clean start */
+  line_delim_.clear();
+  line_delim_.push_back('\n');
+  line_delim_.push_back('\r');
+  return;
+}
+
+void PortDelayParser::clear() {
+  delay_matrix_.clear();
+  return;
+}
+
+
 
 /************************************************************************
  * End of file : port_parser.cpp

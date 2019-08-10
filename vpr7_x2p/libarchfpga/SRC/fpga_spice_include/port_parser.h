@@ -50,6 +50,7 @@
 #include <string>
 #include <vector>
 
+#include "vtr_ndmatrix.h"
 #include "vtr_geometry.h"
 
 #include "device_port.h"
@@ -110,6 +111,33 @@ class MultiPortParser {
     char delim_;
     std::vector<BasicPort> ports_;
 };
+
+/************************************************************************
+ * PortDelayParser: a parser for 2D delay matrix
+ ***********************************************************************/
+class PortDelayParser {
+  public : /* Constructors*/
+    PortDelayParser (const std::string& data);
+  public : /* Public Accessors */ 
+    std::string data() const;
+    size_t height() const;
+    size_t width() const;
+    vtr::Point<size_t> delay_size() const;
+    float delay(size_t x, size_t y) const;
+  public : /* Public Mutators */ 
+    void set_data(const std::string& data);
+  private : /* Private Mutators */ 
+    void parse();
+    void set_default_element_delim();
+    void set_default_line_delim();
+    void clear();
+  private: /* Internal data */
+    std::string data_; /* Lines to be splited */
+    std::vector<char> element_delim_;
+    std::vector<char> line_delim_;
+    vtr::Matrix<float> delay_matrix_;
+};
+
 
 #endif
 

@@ -99,6 +99,18 @@ std::vector<std::string> StringToken::split(const char* delim) const {
   return split(delims);
 }
 
+/* Split the string using a given delim */
+std::vector<std::string> StringToken::split(const std::vector<char>& delims) const {
+  /* Create delims */
+  std::string delims_str;
+  for (const auto& delim : delims) {
+    delims_str.push_back(delim);
+  }
+
+  return split(delims_str);
+}
+
+
 /* Split the string */
 std::vector<std::string> StringToken::split() {
   /* Add a default delim */ 
@@ -125,6 +137,26 @@ void StringToken::set_data(const std::string& data) {
 /* Add a delima to the list */
 void StringToken::add_delim(const char& delim) {
   delims_.push_back(delim);
+}
+
+/* Remove the string repeated at the beginning of string */
+void StringToken::ltrim(const std::string& sensitive_word) {
+  size_t start = data_.find_first_not_of(sensitive_word);
+  data_ = (start == std::string::npos) ? "" : data_.substr(start);
+  return;
+}
+
+/* Remove the string repeated at the end of string */
+void StringToken::rtrim(const std::string& sensitive_word) {
+  size_t end = data_.find_last_not_of(sensitive_word);
+  data_ = (end == std::string::npos) ? "" : data_.substr(0, end + 1);
+  return;
+}
+
+void StringToken::trim() {
+  rtrim(" ");
+  ltrim(" ");
+  return;
 }
 
 /************************************************************************

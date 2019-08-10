@@ -256,6 +256,10 @@ class CircuitLibrary {
   public: /* Public Accessors: Methods to find circuit model */
     CircuitModelId circuit_model(const std::string& name) const;
     CircuitModelId default_circuit_model(const enum e_spice_model_type& type) const;
+  public: /* Public Accessors: Timing graph */
+    CircuitEdgeId edge(const CircuitModelId& circuit_model_id,
+                       const CircuitPortId& from_port, const size_t from_pin,
+                       const CircuitPortId& to_port, const size_t to_pin);
   public: /* Public Mutators */
     CircuitModelId add_circuit_model();
     /* Fundamental information */
@@ -429,8 +433,11 @@ class CircuitLibrary {
     void add_edge(const CircuitModelId& circuit_model_id,
                   const CircuitPortId& from_port, const size_t& from_pin, 
                   const CircuitPortId& to_port, const size_t& to_pin);
-    void set_edge_trise(const CircuitModelId& circuit_model_id, const CircuitEdgeId& circuit_edge_id, const float& trise);
-    void set_edge_tfall(const CircuitModelId& circuit_model_id, const CircuitEdgeId& circuit_edge_id, const float& tfall);
+    void set_edge_delay(const CircuitModelId& circuit_model_id, 
+                        const CircuitEdgeId& circuit_edge_id, 
+                        const enum spice_model_delay_type& delay_type, 
+                        const float& delay_value);
+    /* validate the circuit_edge_id */
     void set_timing_graph_delays(const CircuitModelId& circuit_model_id);
   public: /* Internal mutators: build fast look-ups */
     void build_circuit_model_lookup();

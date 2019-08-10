@@ -374,6 +374,29 @@ CircuitModelId CircuitLibrary::default_circuit_model(const enum e_spice_model_ty
 }
 
 /************************************************************************
+ * Public Accessors: Timing graph 
+ ***********************************************************************/
+/* Given the source and sink port information, find the edge connecting the two ports */
+CircuitEdgeId CircuitLibrary::edge(const CircuitModelId& circuit_model_id,
+                                   const CircuitPortId& from_port, const size_t from_pin,
+                                   const CircuitPortId& to_port, const size_t to_pin) {
+  /* validate the circuit_pin_id */
+  VTR_ASSERT_SAFE(valid_circuit_pin_id(circuit_model_id, from_port, from_pin));
+  VTR_ASSERT_SAFE(valid_circuit_pin_id(circuit_model_id, to_port, to_pin));
+  /* Walk through the edge list until we find the one */
+  for (auto edge : edge_ids_[circuit_model_id]) { 
+    if ( (from_port == edge_src_port_ids_[circuit_model_id][edge])
+      && (from_pin  == edge_src_pin_ids_[circuit_model_id][edge])
+      && (to_port == edge_sink_port_ids_[circuit_model_id][edge])
+      && (to_pin  == edge_sink_pin_ids_[circuit_model_id][edge]) ) {
+      return edge;
+    }
+  }
+  /* Reach here it means we find nothing! */
+  return CIRCUIT_EDGE_OPEN_ID;
+}
+
+/************************************************************************
  * Public Mutators 
  ***********************************************************************/
 /* Add a circuit model to the library, and return it Id */
@@ -1388,25 +1411,21 @@ void CircuitLibrary::add_edge(const CircuitModelId& circuit_model_id,
   edge_sink_pin_ids_[circuit_model_id].push_back(to_pin);
 
   /* Give a default value for timing values */
-  std::vector<float> timing_info(2, 0);
-  edge_timing_info_[circuit_model_id].emplace_back(timing_info);
+  std::vector<float> timing_info(NUM_CIRCUIT_MODEL_DELAY_TYPES, 0);
+  edge_timing_info_[circuit_model_id].push_back(timing_info);
 
   return;
 }
 
-void CircuitLibrary::set_edge_trise(const CircuitModelId& circuit_model_id, const CircuitEdgeId& circuit_edge_id, const float& trise) {
+void CircuitLibrary::set_edge_delay(const CircuitModelId& circuit_model_id, 
+                                    const CircuitEdgeId& circuit_edge_id, 
+                                    const enum spice_model_delay_type& delay_type, 
+                                    const float& delay_value) {
   /* validate the circuit_edge_id */
   VTR_ASSERT_SAFE(valid_circuit_edge_id(circuit_model_id, circuit_edge_id));
+  VTR_ASSERT_SAFE(valid_delay_type(circuit_model_id, delay_type));
   
-  edge_timing_info_[circuit_model_id][circuit_edge_id][size_t(SPICE_MODEL_DELAY_RISE)] = trise;
-  return;
-}
-
-void CircuitLibrary::set_edge_tfall(const CircuitModelId& circuit_model_id, const CircuitEdgeId& circuit_edge_id, const float& tfall) {
-  /* validate the circuit_edge_id */
-  VTR_ASSERT_SAFE(valid_circuit_edge_id(circuit_model_id, circuit_edge_id));
-  
-  edge_timing_info_[circuit_model_id][circuit_edge_id][size_t(SPICE_MODEL_DELAY_FALL)] = tfall;
+  edge_timing_info_[circuit_model_id][circuit_edge_id][size_t(delay_type)] = delay_value;
   return;
 }
 
@@ -1428,11 +1447,20 @@ void CircuitLibrary::set_timing_graph_delays(const CircuitModelId& circuit_model
     std::vector<CircuitPortId> input_port_ids;
     std::vector<size_t> input_pin_ids;
     /* Check each element */
-    for (const auto& port_info : input_ports) {
+    for (auto& port_info : input_ports) {
       /* Try to find a port by the given name */
       CircuitPortId port_id = port(circuit_model_id, port_info.get_name());
       /* We must have a valid port and Port width must be 1! */
-      VTR_ASSERT_SAFE( (CIRCUIT_PORT_OPEN_ID != port_id) && (1 == port_info.get_width()) );
+      VTR_ASSERT_SAFE(CIRCUIT_PORT_OPEN_ID != port_id);
+      if (0 == port_info.get_width()) {
+        /* we need to configure the port width if it is zero.
+         * This means that parser find some compact port defintion such as <port_name> 
+         */
+        size_t port_width = port_size(circuit_model_id, port_id);
+        port_info.set_width(port_width);
+      } else {
+        VTR_ASSERT_SAFE(1 == port_info.get_width());
+      }
       /* The pin id should be valid! */
       VTR_ASSERT_SAFE(true == valid_circuit_pin_id(circuit_model_id, port_id, port_info.get_lsb()));
       /* This must be an input port! */
@@ -1448,11 +1476,20 @@ void CircuitLibrary::set_timing_graph_delays(const CircuitModelId& circuit_model
     std::vector<CircuitPortId> output_port_ids;
     std::vector<size_t> output_pin_ids;
     /* Check each element */
-    for (const auto& port_info : output_ports) {
+    for (auto& port_info : output_ports) {
       /* Try to find a port by the given name */
       CircuitPortId port_id = port(circuit_model_id, port_info.get_name());
       /* We must have a valid port and Port width must be 1! */
-      VTR_ASSERT_SAFE( (CIRCUIT_PORT_OPEN_ID != port_id) && (1 == port_info.get_width()) );
+      VTR_ASSERT_SAFE(CIRCUIT_PORT_OPEN_ID != port_id);
+      if (0 == port_info.get_width()) {
+        /* we need to configure the port width if it is zero.
+         * This means that parser find some compact port defintion such as <port_name> 
+         */
+        size_t port_width = port_size(circuit_model_id, port_id);
+        port_info.set_width(port_width);
+      } else {
+        VTR_ASSERT_SAFE(1 == port_info.get_width());
+      }
       /* The pin id should be valid! */
       VTR_ASSERT_SAFE(true == valid_circuit_pin_id(circuit_model_id, port_id, port_info.get_lsb()));
       /* This must be an output port! */
@@ -1462,6 +1499,28 @@ void CircuitLibrary::set_timing_graph_delays(const CircuitModelId& circuit_model
       output_pin_ids.push_back(port_info.get_lsb());
     }
 
+    /* Parse the delay matrix */
+    PortDelayParser port_delay_parser(delay_values_[circuit_model_id][size_t(delay_type)]);
+
+    /* Make sure the delay matrix size matches */
+    VTR_ASSERT_SAFE(port_delay_parser.height() == output_port_ids.size());
+    VTR_ASSERT_SAFE(port_delay_parser.height() == output_pin_ids.size());
+    VTR_ASSERT_SAFE(port_delay_parser.width() == input_port_ids.size());
+    VTR_ASSERT_SAFE(port_delay_parser.width() == input_pin_ids.size());
+
+    /* Configure timing graph */
+    for (size_t i = 0; i < port_delay_parser.height(); ++i) {
+      for (size_t j = 0; j < port_delay_parser.width(); ++j) {
+        float delay_value = port_delay_parser.delay(i, j);
+        CircuitEdgeId edge_id = edge(circuit_model_id, 
+                                     input_port_ids[j], input_pin_ids[j],
+                                     output_port_ids[i], output_pin_ids[i]); 
+        /* make sure we have an valid edge_id */
+        VTR_ASSERT_SAFE(true == valid_circuit_edge_id(circuit_model_id, edge_id));
+        set_edge_delay(circuit_model_id, edge_id,
+                       delay_type, delay_value);
+      }
+    }
   }
   return;
 }
