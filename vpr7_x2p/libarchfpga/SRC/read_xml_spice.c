@@ -1,3 +1,40 @@
+/**********************************************************
+ * MIT License
+ *
+ * Copyright (c) 2018 LNIS - The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ ***********************************************************************/
+
+/************************************************************************
+ * Filename:    read_xml_spice.c
+ * Created by:   Xifan Tang
+ * Change history:
+ * +-------------------------------------+
+ * |  Date       |    Author   | Notes
+ * +-------------------------------------+
+ * | 2015/XX/XX  |  Xifan Tang | Created 
+ * +-------------------------------------+
+ * | 2019/08/12  |  Xifan Tang | Code construction for circuit library  
+ * +-------------------------------------+
+ ***********************************************************************/
+
 #include <string.h>
 #include <assert.h>
 #include "util.h"
@@ -11,6 +48,7 @@
 #include "read_xml_spice.h"
 
 #include "circuit_library.h"
+#include "check_circuit_library.h"
 
 /*********** Subroutines Declaration (only called in this source file) **********/
 static void ProcessSpiceMeasParams(ezxml_t Parent,
@@ -1787,6 +1825,7 @@ void ProcessSpiceSettings(ezxml_t Parent,
   }
   /* Build the CircuitLibrary here from spice_models */
   spice->circuit_lib = build_circuit_library(spice->num_spice_model, spice->spice_models);
+  //check_circuit_library(spice->circuit_lib);
  
   /* Check codes*/
   check_tech_lib(spice->tech_lib, spice->num_spice_model, spice->spice_models);
@@ -1795,4 +1834,6 @@ void ProcessSpiceSettings(ezxml_t Parent,
   return;
 }
 
-
+/************************************************************************
+ * End of file : read_xml_spice.c
+ ***********************************************************************/
