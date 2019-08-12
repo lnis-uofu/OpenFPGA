@@ -41,7 +41,7 @@ void InitSpiceMeasParams(t_spice_meas_params* meas_params) {
   return;
 }
 
-void FreeSpiceMeasParams(t_spice_meas_params* meas_params) {
+void FreeSpiceMeasParams() {
   return;
 }
 
@@ -64,7 +64,7 @@ void InitSpiceStimulateParams(t_spice_stimulate_params* stimulate_params) {
   return;
 }
 
-void FreeSpiceStimulateParams(t_spice_stimulate_params* stimulate_params) {
+void FreeSpiceStimulateParams() {
   return;
 }
 
@@ -74,7 +74,7 @@ void InitSpiceVariationParams(t_spice_mc_variation_params* mc_variation_params) 
   mc_variation_params->num_sigma = 1; 
 }
 
-void FreeSpiceVariationParams(t_spice_mc_variation_params* mc_variation_params) {
+void FreeSpiceVariationParams() {
   return; 
 }
 
@@ -86,7 +86,7 @@ void InitSpiceMonteCarloParams(t_spice_mc_params* mc_params) {
   return;
 }
 
-void FreeSpiceMonteCarloParams(t_spice_mc_params* mc_params) {
+void FreeSpiceMonteCarloParams() {
   return;
 }
 
@@ -110,7 +110,7 @@ void InitSpiceParams(t_spice_params* params) {
   return;
 }
 
-void FreeSpiceParams(t_spice_params* params) {
+void FreeSpiceParams() {
 
   return;
 }
@@ -121,12 +121,12 @@ void FreeSpiceModelNetlist(t_spice_model_netlist* spice_model_netlist) {
   return;	
 }
 
-void FreeSpiceModelBuffer(t_spice_model_buffer* spice_model_buffer) {
+void FreeSpiceModelBuffer() {
     
   return;
 }
 
-void FreeSpiceModelPassGateLogic(t_spice_model_pass_gate_logic* spice_model_pass_gate_logic) {
+void FreeSpiceModelPassGateLogic() {
 
   return;
 }
@@ -137,8 +137,7 @@ void FreeSpiceModelPort(t_spice_model_port* spice_model_port) {
   return;
 }
 
-void FreeSpiceModelWireParam(t_spice_model_wire_param* spice_model_wire_param) {
- 
+void FreeSpiceModelWireParam() {
   return;
 }
 
@@ -152,14 +151,14 @@ void FreeSpiceModel(t_spice_model* spice_model) {
   spice_model->include_netlist = NULL;
   
   /* Free the buffers */
-  FreeSpiceModelBuffer(spice_model->input_buffer);
-  FreeSpiceModelBuffer(spice_model->output_buffer);
+  FreeSpiceModelBuffer();
+  FreeSpiceModelBuffer();
   my_free(spice_model->input_buffer);
   my_free(spice_model->output_buffer);
   spice_model->input_buffer = NULL;
   spice_model->output_buffer = NULL;
 
-  FreeSpiceModelPassGateLogic(spice_model->pass_gate_logic);
+  FreeSpiceModelPassGateLogic();
   my_free(spice_model->pass_gate_logic);
   spice_model->pass_gate_logic = NULL;
   
@@ -173,7 +172,7 @@ void FreeSpiceModel(t_spice_model* spice_model) {
 	
   /* Free wire parameters */
   if (NULL != spice_model->wire_param) {
-    FreeSpiceModelWireParam(spice_model->wire_param);
+    FreeSpiceModelWireParam();
     my_free(spice_model->wire_param);
     spice_model->wire_param = NULL;
   }
@@ -220,6 +219,7 @@ void FreeSpiceMuxArch(t_spice_mux_arch* spice_mux_arch) {
   return;
 }
 
+static 
 void FreeSramInfOrgz(t_sram_inf_orgz* sram_inf_orgz) {
   my_free(sram_inf_orgz->spice_model_name);
 

@@ -13,4 +13,4 @@ RUN echo "make" >> build.sh
 RUN chmod +x build.sh
 RUN ./build.sh
 
-VOLUME /OpenFPGA
+WORKDIR /OpenFPGA

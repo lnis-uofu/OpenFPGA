@@ -600,6 +600,10 @@ static void ProcessSpiceModelMUX(ezxml_t Node,
   mux_info->advanced_rram_design = GetBooleanProperty(Node,"advanced_rram_design", FALSE, FALSE);
   ezxml_set_attr(Node, "advanced_rram_design", NULL);
 
+  /* Specify if should use a local encoder for this multiplexer */
+  mux_info->local_encoder = GetBooleanProperty(Node, "local_encoder", FALSE, FALSE);
+  ezxml_set_attr(Node, "local_encoder", NULL);
+
   return;
 }
 
@@ -765,6 +769,26 @@ static void ProcessSpiceModelPort(ezxml_t Node,
     port->inv_spice_model_name = my_strdup(FindProperty(Node, "inv_circuit_model_name", FALSE));
     ezxml_set_attr(Node, "inv_circuit_model_name", NULL);
   }
+
+  /* Add a feature to enable/disable the configuration encoders for multiplexers */
+  const char* Prop = FindProperty(Node, "organization", FALSE);
+  if (NULL == Prop) {
+    port->organization = SPICE_SRAM_STANDALONE; /* Default */
+  } else if (0 == strcmp("scan-chain", Prop)) {
+    port->organization = SPICE_SRAM_SCAN_CHAIN;
+  } else if (0 == strcmp("memory-bank", Prop)) {
+    port->organization = SPICE_SRAM_MEMORY_BANK;
+  } else if (0 == strcmp("standalone", Prop)) {
+    port->organization = SPICE_SRAM_STANDALONE;
+  } else if (0 == strcmp("local-encoder", Prop)) {
+    port->organization = SPICE_SRAM_LOCAL_ENCODER;
+  } else {
+    vpr_printf(TIO_MESSAGE_ERROR,
+			   "[LINE %d] Unknown property %s for SRAM organization\n",
+ 			   Node->line, FindProperty(Node, "organization", FALSE));
+    exit(1);
+  }
+  ezxml_set_attr(Node, "organization", NULL);
  
   return;
 }

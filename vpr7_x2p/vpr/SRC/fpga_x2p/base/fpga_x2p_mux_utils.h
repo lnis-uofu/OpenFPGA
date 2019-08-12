@@ -17,13 +17,17 @@ int tree_mux_last_level_input_num(int num_level,
 int multilevel_mux_last_level_input_num(int num_level, int num_input_per_unit,
                                         int mux_size);
 
+int determine_mux_local_encoder_num_inputs(int num_outputs);
+
 int* decode_onelevel_mux_sram_bits(int fan_in,
                                    int mux_level,
-                                   int path_id);
+                                   int path_id,
+                                   boolean use_local_encoder);
 
 int* decode_multilevel_mux_sram_bits(int fan_in,
                                      int mux_level,
-                                     int path_id);
+                                     int path_id,
+                                     boolean use_local_encoder);
 
 int* decode_tree_mux_sram_bits(int fan_in,
                                int mux_level,

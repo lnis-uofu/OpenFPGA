@@ -2915,6 +2915,19 @@ char* generate_verilog_mem_subckt_name(t_spice_model* spice_model,
   return subckt_name;
 }
 
+/* Generate the subckt name for a decoder submodule */
+char* generate_verilog_decoder_subckt_name(int addr_len, int data_len) {
+  char* subckt_name = NULL;
+
+  subckt_name = (char*)my_malloc(sizeof(char)*(strlen("decoder") 
+                                 + strlen(my_itoa(addr_len)) + 2 
+                                 + strlen(my_itoa(data_len)) + 1)); 
+  sprintf(subckt_name, "%s%dto%d",
+          "decoder", addr_len, data_len);
+
+  return subckt_name;
+}
+
 /* Generate the subckt name for a MUX module/submodule */
 char* generate_verilog_mux_basis_subckt_name(t_spice_model* spice_model, 
                                              int mux_size, char* postfix) {
@@ -3029,7 +3042,10 @@ int dump_verilog_mem_module_one_port_map(FILE* fp,
   return cnt;
 }
 
-/* Output the ports of a SRAM MUX */
+/* 
+ * Dump the port map of a memory module 
+ * which consist of a number of SRAMs/SCFFs etc.
+ */
 void dump_verilog_mem_module_port_map(FILE* fp, 
                                       t_spice_model* mem_model,
                                       boolean dump_port_type,

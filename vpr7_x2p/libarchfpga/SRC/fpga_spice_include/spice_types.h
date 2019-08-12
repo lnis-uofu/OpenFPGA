@@ -93,9 +93,10 @@ enum e_process_corner {
 
 /* For SRAM */
 enum e_sram_orgz {
-  SPICE_SRAM_STANDALONE,
-  SPICE_SRAM_SCAN_CHAIN,
-  SPICE_SRAM_MEMORY_BANK
+  SPICE_SRAM_STANDALONE,   /* SRAMs are organized and accessed as standalone elements */
+  SPICE_SRAM_SCAN_CHAIN,   /* SRAMs are organized and accessed by a scan-chain */
+  SPICE_SRAM_MEMORY_BANK,  /* SRAMs are organized and accessed by memory bank */
+  SPICE_SRAM_LOCAL_ENCODER  /* SRAMs are organized and accessed by a local encoder */
 };
 
 enum e_spice_accuracy_type {
@@ -240,6 +241,8 @@ struct s_spice_model_port {
   /* Timing edeges linked to other t_model_ports */
   int* num_tedges; /* 1-D Array, show number of tedges of each pin */
   t_spice_model_tedge*** tedge; /* 3-D array, considering the each pin in this port, [pin_number][num_edges[iedge]] is an edge pointor */
+  /* SRAM organization only applicable SRAM ports */
+  enum e_sram_orgz organization;
 };
 
 struct s_spice_model_wire_param {
@@ -271,6 +274,7 @@ struct s_spice_model_mux {
   boolean add_const_input;
   int const_input_val;
   boolean advanced_rram_design;
+  boolean local_encoder; /* Define if a local encoder should be added to this mux */
 };
 
 struct s_spice_model_lut {

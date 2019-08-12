@@ -120,7 +120,7 @@ ProcessWireBuffer(INOUTP ezxml_t Node,
   return;
 }
 
-void
+static void
 ProcessTechComp(INOUTP ezxml_t Node,
 	      OUTP struct s_arch *arch) {
     const char *Prop;
