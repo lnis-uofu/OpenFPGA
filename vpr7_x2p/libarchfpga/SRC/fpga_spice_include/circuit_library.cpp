@@ -60,6 +60,34 @@ CircuitLibrary::circuit_port_range CircuitLibrary::ports(const CircuitModelId& c
   return vtr::make_range(port_ids_[circuit_model_id].begin(), port_ids_[circuit_model_id].end());
 }
 
+/* Find circuit models in the same type (defined by users) and return a list of ids */
+std::vector<CircuitModelId> CircuitLibrary::circuit_models_by_type(const enum e_spice_model_type& type) const {
+  std::vector<CircuitModelId> type_ids;
+  for (auto id : circuit_models()) {
+    /* Skip unmatched types */
+    if (type != circuit_model_type(id)) {
+      continue;
+    }
+    /* Matched type, update the vector */
+    type_ids.push_back(id);
+  }
+  return type_ids;
+}
+
+/* Find the ports of a circuit model by a given type, return a list of qualified ports */
+std::vector<CircuitPortId> CircuitLibrary::ports_by_type(const CircuitModelId& circuit_model_id, 
+                                                         const enum e_spice_model_port_type& type) const {
+  std::vector<CircuitPortId> port_ids;
+  for (const auto& port_id : ports(circuit_model_id)) {
+    /* We skip unmatched ports */
+    if ( type != port_type(circuit_model_id, port_id) ) {
+      continue; 
+    }
+    port_ids.push_back(port_id);
+  } 
+  return port_ids;
+}
+
 /* Create a vector for all the ports whose directionality is input
  * This includes all the ports other than whose types are OUPUT or INOUT 
  */
@@ -104,6 +132,11 @@ std::vector<size_t> CircuitLibrary::pins(const CircuitModelId& circuit_model_id,
 /************************************************************************
  * Public Accessors : Basic data query on Circuit Models
  ***********************************************************************/
+/* Get the number of circuit models */
+size_t CircuitLibrary::num_circuit_models() const {
+  return circuit_model_ids_.size();
+}
+
 /* Access the type of a circuit model */
 enum e_spice_model_type CircuitLibrary::circuit_model_type(const CircuitModelId& circuit_model_id) const {
   /* validate the circuit_model_id */

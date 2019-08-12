@@ -1825,7 +1825,7 @@ void ProcessSpiceSettings(ezxml_t Parent,
   }
   /* Build the CircuitLibrary here from spice_models */
   spice->circuit_lib = build_circuit_library(spice->num_spice_model, spice->spice_models);
-  //check_circuit_library(spice->circuit_lib);
+  check_circuit_library(spice->circuit_lib);
  
   /* Check codes*/
   check_tech_lib(spice->tech_lib, spice->num_spice_model, spice->spice_models);

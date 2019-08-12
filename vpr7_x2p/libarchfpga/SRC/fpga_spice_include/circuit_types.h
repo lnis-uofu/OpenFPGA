@@ -73,6 +73,8 @@ enum e_spice_model_type {
   SPICE_MODEL_GATE,
   NUM_CIRCUIT_MODEL_TYPES
 };
+/* Strings correspond to each port type */
+constexpr std::array<const char*, NUM_CIRCUIT_MODEL_TYPES> CIRCUIT_MODEL_TYPE_STRING = {{"CHAN_WIRE", "WIRE", "MUX", "LUT", "FF", "SRAM", "HARDLOGIC", "SCFF", "IOPAD", "INVBUF", "PASSGATE", "GATE"}};
 
 enum e_spice_model_design_tech {
   SPICE_MODEL_DESIGN_CMOS, 
@@ -125,6 +127,8 @@ enum e_spice_model_port_type {
   SPICE_MODEL_PORT_WLB,
   NUM_CIRCUIT_MODEL_PORT_TYPES
 };
+/* Strings correspond to each port type */
+constexpr std::array<const char*, NUM_CIRCUIT_MODEL_PORT_TYPES> CIRCUIT_MODEL_PORT_TYPE_STRING = {{"INPUT", "OUTPUT", "INOUT", "CLOCK", "SRAM", "BL", "BLB", "WL", "WLB"}};
 
 /* For SRAM */
 enum e_sram_orgz {

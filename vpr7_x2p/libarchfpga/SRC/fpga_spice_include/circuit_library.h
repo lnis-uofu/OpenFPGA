@@ -219,10 +219,13 @@ class CircuitLibrary {
   public: /* Accessors: aggregates */
     circuit_model_range circuit_models() const;
     circuit_port_range ports(const CircuitModelId& circuit_model_id) const;
+    std::vector<CircuitModelId> circuit_models_by_type(const enum e_spice_model_type& type) const;
+    std::vector<CircuitPortId> ports_by_type(const CircuitModelId& circuit_model_id, const enum e_spice_model_port_type& port_type) const;
     std::vector<CircuitPortId> input_ports(const CircuitModelId& circuit_model_id) const;
     std::vector<CircuitPortId> output_ports(const CircuitModelId& circuit_model_id) const;
     std::vector<size_t> pins(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
   public: /* Public Accessors: Basic data query on Circuit Models*/
+    size_t num_circuit_models() const;
     enum e_spice_model_type circuit_model_type(const CircuitModelId& circuit_model_id) const;
     std::string circuit_model_name(const CircuitModelId& circuit_model_id) const;
     std::string circuit_model_prefix(const CircuitModelId& circuit_model_id) const;
