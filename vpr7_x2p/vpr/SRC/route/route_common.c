@@ -20,6 +20,8 @@
 #include "buffer_insertion.h"
 /* end */
 
+#include "rr_graph_builder_utils.h"
+
 /* Xifan TANG: useful functions for pb_pin_eq_auto_detect */
 void reassign_rr_node_net_num_from_scratch();
 
@@ -1214,7 +1216,18 @@ void print_route(char *route_file) {
 						break;
 					}
 
-					fprintf(fp, "%d  ", rr_node[inode].ptc_num);
+                    /* A kind of dirty fix for tileable routing,
+                     * the track_ids is allocated by tileable routing.
+                     * If the vector is not empty, it means tileable routing is enabled 
+                     * we need another function to get the track_id rather than ptc_num
+                     */
+                    if (0 == rr_node[inode].track_ids.size()) {
+					  fprintf(fp, "%d  ", rr_node[inode].ptc_num);
+                    } else {
+                      /* Xifan Tang: for routing tracks, get the actual track ids */
+                      DeviceCoordinator cur_coord(ilow, jlow);
+					  fprintf(fp, "%d  ", get_rr_node_actual_track_id(&(rr_node[inode]), cur_coord));
+                    }
 
 					/* Uncomment line below if you're debugging and want to see the switch types *
 					 * used in the routing.                                                      */
