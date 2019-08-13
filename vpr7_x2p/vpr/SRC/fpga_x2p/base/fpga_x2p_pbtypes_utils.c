@@ -1005,8 +1005,7 @@ int rec_count_num_conf_bits_pb_type_physical_mode(t_pb_type* cur_pb_type,
   cur_pb_type->physical_mode_num_conf_bits = 0;
 
   /* Recursively finish all the child pb_types*/
-  if ((NULL == cur_pb_type->spice_model_name) 
-     && (NULL == cur_pb_type->physical_pb_type_name)) { 
+  if ( FALSE == is_primitive_pb_type(cur_pb_type)) {
     /* Find the mode that define_idle_mode*/
     mode_index = find_pb_type_physical_mode_index((*cur_pb_type));
     for (ipb = 0; ipb < cur_pb_type->modes[mode_index].num_pb_type_children; ipb++) {
@@ -1017,8 +1016,7 @@ int rec_count_num_conf_bits_pb_type_physical_mode(t_pb_type* cur_pb_type,
   }
 
   /* Check if this has defined a spice_model*/
-  if ((NULL != cur_pb_type->spice_model_name)
-     || (NULL != cur_pb_type->physical_pb_type_name)) { 
+  if ( TRUE == is_primitive_pb_type(cur_pb_type)) {
     sum_num_conf_bits = count_num_conf_bits_one_spice_model(cur_pb_type->phy_pb_type->spice_model, cur_sram_orgz_info->type, 0);
     cur_pb_type->physical_mode_num_conf_bits = sum_num_conf_bits;
     /* calculate the number of reserved configuration bits */
