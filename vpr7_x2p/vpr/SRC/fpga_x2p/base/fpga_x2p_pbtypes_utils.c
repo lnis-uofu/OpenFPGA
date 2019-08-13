@@ -1023,6 +1023,7 @@ int rec_count_num_conf_bits_pb_type_physical_mode(t_pb_type* cur_pb_type,
     cur_pb_type->physical_mode_num_reserved_conf_bits = 
          count_num_reserved_conf_bits_one_spice_model(cur_pb_type->phy_pb_type->spice_model,
                                                       cur_sram_orgz_info->type, 0);
+
   } else { /* Count the sum of configuration bits of all the children pb_types */
     /* Find the mode that define_idle_mode*/
     mode_index = find_pb_type_physical_mode_index((*cur_pb_type));
@@ -1229,6 +1230,28 @@ void init_grids_num_conf_bits(t_sram_orgz_info* cur_sram_orgz_info) {
     init_one_grid_num_conf_bits(ix, iy, cur_sram_orgz_info);
   }
  
+  return;
+}
+
+/********************************************************************
+ * Initialize the number of configuration bits for each pb_type
+ * in the list of type descriptors
+ *******************************************************************/
+void init_pb_types_num_conf_bits(t_sram_orgz_info* cur_sram_orgz_info) {
+  for (int itype = 0; itype < num_types; ++itype) {
+    /* bypass EMPTY_TYPES */
+    if (EMPTY_TYPE == &(type_descriptors[itype])) {
+      continue;
+    }
+    int capacity= type_descriptors[itype].capacity;
+    assert(0 < capacity);
+
+    /* check capacity and if this has been mapped */
+    for (int iz = 0; iz < capacity; iz++) {
+      /* Check in all the blocks(clustered logic block), there is a match x,y,z*/
+      rec_count_num_conf_bits_pb_type_physical_mode(type_descriptors[itype].pb_type, cur_sram_orgz_info);
+    }
+  }
   return;
 }
 
@@ -1790,6 +1813,29 @@ void init_grids_num_iopads() {
     init_one_grid_num_iopads(ix, iy);
   }
  
+  return;
+}
+
+/********************************************************************
+ * Initialize the number of configuration bits for each pb_type
+ * in the list of type descriptors
+ *******************************************************************/
+void init_pb_types_num_iopads() {
+  for (int itype = 0; itype < num_types; ++itype) {
+    /* bypass EMPTY_TYPES */
+    if (EMPTY_TYPE == &(type_descriptors[itype])) {
+      continue;
+    }
+
+    int capacity= type_descriptors[itype].capacity;
+    assert(0 < capacity);
+
+    /* check capacity and if this has been mapped */
+    for (int iz = 0; iz < capacity; iz++) {
+      /* Check in all the blocks(clustered logic block), there is a match x,y,z*/
+      rec_count_num_iopads_pb_type_physical_mode(type_descriptors[itype].pb_type);
+    }
+  }
   return;
 }
 
