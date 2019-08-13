@@ -265,6 +265,7 @@ struct s_port {
     /* FPGA_SPICE_model support:
      * mapped SPICE model port */
     t_spice_model_port* spice_model_port;
+    CircuitPortId circuit_model_port;
     char* physical_mode_pin;
     int physical_mode_pin_rotate_offset; /* The pin number will rotate by an offset unit when mapping to physical modes */
     int phy_mode_pin_rotate_offset_acc; /* The pin number will rotate by an offset unit when mapping to physical modes */
@@ -341,6 +342,7 @@ struct s_interconnect {
     /* Xifan TANG: SPICE Support*/
     char* spice_model_name;
     t_spice_model* spice_model;
+    CircuitModelId circuit_model;
     int fan_in;
     int fan_out;
     int num_mux;
@@ -658,6 +660,7 @@ struct s_pb_type {
     char* physical_mode_name;
     char* spice_model_name;
     t_spice_model* spice_model;
+    CircuitModelId circuit_model;
     char* mode_bits; /* Mode bits to select */
     int spice_model_sram_offset;
     char* physical_pb_type_name;
@@ -846,6 +849,7 @@ typedef struct s_segment_inf {
     /* Xifan TANG: SPICE model support*/
     char* spice_model_name;
     t_spice_model* spice_model;
+    CircuitModelId circuit_model;
     /* mrFPGA: Xifan TANG */
     short seg_switch;
     /* end */
@@ -879,6 +883,7 @@ typedef struct s_switch_inf {
     /* Xifan TANG: spice support*/
     char* spice_model_name;
     t_spice_model* spice_model;
+    CircuitModelId circuit_model;
     /* Xifan TANG: switch structure */
     enum e_spice_model_structure structure;
     int switch_num_level;
@@ -922,6 +927,7 @@ typedef struct s_direct_inf {
     /* Xifan Tang: FPGA-SPICE support */
     char* spice_model_name;
     t_spice_model* spice_model;
+    CircuitModelId circuit_model;
 } t_direct_inf;
 
 

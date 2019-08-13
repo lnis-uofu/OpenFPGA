@@ -1023,6 +1023,8 @@ static void ProcessSpiceModel(ezxml_t Parent,
       spice_model->design_tech_info.mux_info->structure = SPICE_MODEL_STRUCTURE_TREE;
       spice_model->design_tech_info.mux_info->add_const_input = FALSE;
       spice_model->design_tech_info.mux_info->const_input_val = 0;
+      spice_model->design_tech_info.mux_info->advanced_rram_design = FALSE;
+      spice_model->design_tech_info.mux_info->local_encoder = FALSE;
     }
 	ezxml_set_attr(Node, "fracturable_lut", NULL);
 
@@ -1632,7 +1634,8 @@ CircuitLibrary build_circuit_library(int num_spice_model, t_spice_model* spice_m
       }
       circuit_lib.set_circuit_model_lut_input_inverter(model_id, 0 != spice_models[imodel].lut_input_inverter->exist, model_name);
     }
-    if (NULL != spice_models[imodel].lut_intermediate_buffer) {
+    if ( (NULL != spice_models[imodel].lut_intermediate_buffer)
+        && (1 == spice_models[imodel].lut_intermediate_buffer->exist) ) {
       std::string model_name;
       if (NULL != spice_models[imodel].lut_intermediate_buffer->spice_model_name) {
         model_name = spice_models[imodel].lut_intermediate_buffer->spice_model_name;

@@ -1128,6 +1128,7 @@ typedef struct s_clb_to_clb_directs {
 	int y_offset;
 	int z_offset;
     t_spice_model* spice_model;
+    CircuitModelId circuit_model;
     char* name;
 } t_clb_to_clb_directs;
 

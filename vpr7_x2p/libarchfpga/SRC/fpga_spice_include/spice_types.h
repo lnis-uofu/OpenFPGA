@@ -396,6 +396,7 @@ struct s_spice_mux_model {
 struct s_sram_inf_orgz {
   char* spice_model_name; // Xifan TANG: Spice Support
   t_spice_model* spice_model; // Xifan TANG: Spice Support
+  CircuitModelId circuit_model;
   enum e_sram_orgz type;
 };
 

@@ -33,6 +33,7 @@
 #include "verilog_api.h"
 #include "fpga_x2p_unique_routing.h"
 
+#include "link_arch_circuit_lib.h"
 #include "fpga_x2p_setup.h"
 
 /***** Subroutines Declarations *****/
@@ -1322,10 +1323,14 @@ void fpga_x2p_setup(t_vpr_setup vpr_setup,
   /* Start time count */
   t_start = clock();
 
-  vpr_printf(TIO_MESSAGE_INFO, "\nFPGA-SPICE Tool suites Initilization begins...\n"); 
+  vpr_printf(TIO_MESSAGE_INFO, "\nFPGA-X2P Tool suites Initilization begins...\n"); 
   
-  /* Initialize Arch SPICE MODELS*/
+  /* FIXME: this function is going to be removed when new linking function is working
+   * Initialize Arch SPICE MODELS
+   */
   init_check_arch_spice_models(Arch, &(vpr_setup.RoutingArch));
+  /* Link circuit models to architecture */ 
+  link_circuit_library_to_arch(Arch, &(vpr_setup.RoutingArch));  
 
   /* Initialize idle mode and physical mode of each pb_type and pb_graph_node */
   init_check_arch_pb_type_idle_and_phy_mode();

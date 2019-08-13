@@ -1301,6 +1301,7 @@ t_port* find_pb_type_port_match_spice_model_port(t_pb_type* pb_type,
   return ret;
 }
 
+
 t_port** find_pb_type_ports_match_spice_model_port_type(t_pb_type* pb_type,
                                                         enum e_spice_model_port_type port_type,
                                                         int* port_num) {
