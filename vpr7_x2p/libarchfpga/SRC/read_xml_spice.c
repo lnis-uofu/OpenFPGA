@@ -1028,7 +1028,6 @@ static void ProcessSpiceModel(ezxml_t Parent,
     }
 	ezxml_set_attr(Node, "fracturable_lut", NULL);
 
-
     spice_model->design_tech_info.gate_info = NULL;
     if (SPICE_MODEL_GATE == spice_model->type) {
       /* Malloc */
@@ -1073,13 +1072,15 @@ static void ProcessSpiceModel(ezxml_t Parent,
 
   /* LUT intermediate buffers */
   Node = ezxml_child(Parent, "lut_intermediate_buffer");
-  spice_model->lut_intermediate_buffer = (t_spice_model_buffer*)my_calloc(1, sizeof(t_spice_model_buffer));
+  spice_model->lut_intermediate_buffer = NULL;
   if (Node) {
+    spice_model->lut_intermediate_buffer = (t_spice_model_buffer*)my_calloc(1, sizeof(t_spice_model_buffer));
     /* Malloc the lut_input_buffer */
     ProcessSpiceModelBuffer(Node,spice_model->lut_intermediate_buffer);
     FreeNode(Node);
   } else if ((SPICE_MODEL_LUT == spice_model->type) 
            || (SPICE_MODEL_MUX == spice_model->type)) { 
+    spice_model->lut_intermediate_buffer = (t_spice_model_buffer*)my_calloc(1, sizeof(t_spice_model_buffer));
     /* Assign default values */
     spice_model->lut_intermediate_buffer->exist = 0; 
     spice_model->lut_intermediate_buffer->spice_model = NULL; 

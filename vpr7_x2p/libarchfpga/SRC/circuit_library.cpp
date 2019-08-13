@@ -48,6 +48,9 @@
 /************************************************************************
  * Constructors
  ***********************************************************************/
+CircuitLibrary::CircuitLibrary() {
+  return;
+}
 
 /************************************************************************
  * Public Accessors : aggregates
@@ -1272,7 +1275,7 @@ void CircuitLibrary::set_wire_type(const CircuitModelId& circuit_model_id,
   VTR_ASSERT(valid_circuit_model_id(circuit_model_id));
   /* validate that the type of this circuit_model should be WIRE or CHAN_WIRE */
   VTR_ASSERT( (SPICE_MODEL_WIRE      == circuit_model_type(circuit_model_id))
-                || (SPICE_MODEL_CHAN_WIRE == circuit_model_type(circuit_model_id)) );
+           || (SPICE_MODEL_CHAN_WIRE == circuit_model_type(circuit_model_id)) );
   wire_types_[circuit_model_id] = wire_type; 
   return;
 }
@@ -1283,7 +1286,7 @@ void CircuitLibrary::set_wire_r(const CircuitModelId& circuit_model_id,
   VTR_ASSERT(valid_circuit_model_id(circuit_model_id));
   /* validate that the type of this circuit_model should be WIRE or CHAN_WIRE */
   VTR_ASSERT( (SPICE_MODEL_WIRE      == circuit_model_type(circuit_model_id))
-                || (SPICE_MODEL_CHAN_WIRE == circuit_model_type(circuit_model_id)) );
+           || (SPICE_MODEL_CHAN_WIRE == circuit_model_type(circuit_model_id)) );
   wire_rc_[circuit_model_id].set_x(r_val); 
   return;
 }
@@ -1294,7 +1297,7 @@ void CircuitLibrary::set_wire_c(const CircuitModelId& circuit_model_id,
   VTR_ASSERT(valid_circuit_model_id(circuit_model_id));
   /* validate that the type of this circuit_model should be WIRE or CHAN_WIRE */
   VTR_ASSERT( (SPICE_MODEL_WIRE      == circuit_model_type(circuit_model_id))
-                || (SPICE_MODEL_CHAN_WIRE == circuit_model_type(circuit_model_id)) );
+           || (SPICE_MODEL_CHAN_WIRE == circuit_model_type(circuit_model_id)) );
   wire_rc_[circuit_model_id].set_y(c_val); 
   return;
 }
@@ -1305,7 +1308,7 @@ void CircuitLibrary::set_wire_num_levels(const CircuitModelId& circuit_model_id,
   VTR_ASSERT(valid_circuit_model_id(circuit_model_id));
   /* validate that the type of this circuit_model should be WIRE or CHAN_WIRE */
   VTR_ASSERT( (SPICE_MODEL_WIRE      == circuit_model_type(circuit_model_id))
-                || (SPICE_MODEL_CHAN_WIRE == circuit_model_type(circuit_model_id)) );
+           || (SPICE_MODEL_CHAN_WIRE == circuit_model_type(circuit_model_id)) );
   wire_num_levels_[circuit_model_id] = num_level; 
   return;
 }

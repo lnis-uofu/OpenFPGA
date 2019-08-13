@@ -114,7 +114,7 @@ enum e_spice_model_gate_type {
 enum e_wire_model_type {
   WIRE_MODEL_PIE,
   WIRE_MODEL_T,
-  NUM_WIRE_MODEL_TYPES,
+  NUM_WIRE_MODEL_TYPES
 };
 
 enum e_spice_model_port_type {

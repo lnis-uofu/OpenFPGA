@@ -1186,7 +1186,7 @@ static void SetupSynVerilogOpts(t_options Options,
   /* SynVerilog needs the input from spice modeling */
   if (FALSE == arch->read_xml_spice) {
     arch->read_xml_spice = syn_verilog_opts->dump_syn_verilog;
-    arch->spice = (t_spice*)my_malloc(sizeof(t_spice));
+    arch->spice = (t_spice*)my_calloc(1, sizeof(t_spice));
   }
 
   return;

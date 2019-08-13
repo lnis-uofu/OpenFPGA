@@ -1,2 +1,2 @@
 rm tags
-ctags -R shell_main.c main.c ./* ../../libarchfpga/SRC/*.[ch] ../../pcre/SRC/*.[ch]
+ctags -R shell_main.c main.c ./* ../../libarchfpga/SRC/* ../../pcre/SRC/*.[ch]

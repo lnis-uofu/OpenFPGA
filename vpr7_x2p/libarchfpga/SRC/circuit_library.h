@@ -216,6 +216,7 @@ class CircuitLibrary {
       INPUT = 0, OUTPUT, LUT_INPUT_BUFFER, LUT_INPUT_INVERTER, LUT_INTER_BUFFER, NUM_BUFFER_TYPE /* Last one is a counter */ 
     };
   public: /* Constructors */
+    CircuitLibrary();
   public: /* Accessors: aggregates */
     circuit_model_range circuit_models() const;
     circuit_port_range ports(const CircuitModelId& circuit_model_id) const;
