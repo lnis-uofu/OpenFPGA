@@ -2350,7 +2350,7 @@ void dump_verilog_routing_switch_box_unique_subckt(t_sram_orgz_info* cur_sram_or
     dump_verilog_formal_verification_sram_ports(fp, cur_sram_orgz_info, 
                                                 rr_gsb.get_sb_conf_bits_lsb(),
                                                 rr_gsb.get_sb_conf_bits_msb(),
-                                                VERILOG_PORT_OUTPUT, is_explicit_mapping);
+                                                VERILOG_PORT_INPUT, is_explicit_mapping);
     fprintf(fp, "\n");
     fprintf(fp, "`endif\n");
   }
@@ -3967,7 +3967,7 @@ void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
     /* Create a snapshot on sram_orgz_info */
     t_sram_orgz_info* stamped_sram_orgz_info = snapshot_sram_orgz_info(cur_sram_orgz_info);
 
-    /* Output unique side modules */
+    /* Output unique side modules 
     for (size_t side = 0; side < device_rr_gsb.get_max_num_sides(); ++side) {
       Side side_manager(side);
       for (size_t iseg = 0; iseg < device_rr_gsb.get_num_segments(); ++iseg) {
@@ -3978,11 +3978,16 @@ void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
         }
       }
     }
+    */
 
     /* Output unique modules */
     for (size_t isb = 0; isb < device_rr_gsb.get_num_sb_unique_module(); ++isb) {
       const RRGSB& unique_mirror = device_rr_gsb.get_sb_unique_module(isb);
+      /*
       dump_verilog_routing_switch_box_unique_module(cur_sram_orgz_info, verilog_dir,
+                                                    subckt_dir, unique_mirror, explicit_port_mapping);
+       */
+      dump_verilog_routing_switch_box_unique_subckt(cur_sram_orgz_info, verilog_dir,
                                                     subckt_dir, unique_mirror, explicit_port_mapping);
     }
 
