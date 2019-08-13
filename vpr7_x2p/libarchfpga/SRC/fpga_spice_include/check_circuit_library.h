@@ -23,13 +23,13 @@
  ***********************************************************************/
 
 /************************************************************************
- * Filename:   read_xml_spice.h
+ * Filename:    check_circuit_library.h
  * Created by:   Xifan Tang
  * Change history:
  * +-------------------------------------+
  * |  Date       |    Author   | Notes
  * +-------------------------------------+
- * | 2015/XX/XX  |  Xifan Tang | Created 
+ * | 2019/08/12  |  Xifan Tang | Created 
  * +-------------------------------------+
  ***********************************************************************/
 
@@ -37,19 +37,24 @@
  * The following preprocessing flags are added to 
  * avoid compilation error when this headers are included in more than 1 times 
  */
-#ifndef READ_XML_SPICE_H
-#define READ_XML_SPICE_H
+#ifndef CHECK_CIRCUIT_LIBRARY_H
+#define CHECK_CIRCUIT_LIBRARY_H
 
-/* Xifan TANG: Spice Support*/
+/*
+ * Notes in include header files in a head file 
+ * Only include the neccessary header files 
+ * that is required by the data types in the function/class declarations!
+ */
+/* Header files should be included in a sequence */
+/* Standard header files required go first */
+#include "circuit_library.h"
 
-void ProcessSpiceSRAM(INOUTP ezxml_t Node, OUTP struct s_arch* arch);
-
-void ProcessSpiceSettings(ezxml_t Parent,
-                          t_spice* spice);
+/* Check points to make sure we have a valid circuit library */
+void check_circuit_library(const CircuitLibrary& circuit_lib);
 
 #endif
 
 /************************************************************************
- * End of file : read_xml_spice.h
+ * End of file : check_circuit_library.h
  ***********************************************************************/
 

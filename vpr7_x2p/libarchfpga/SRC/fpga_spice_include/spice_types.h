@@ -3,60 +3,12 @@
 
 #include "util.h"
 #include "linkedlist.h"
+#include "circuit_library.h"
 
 /* Xifan TANG: Spice support*/
 enum e_spice_tech_lib_type {
   SPICE_LIB_INDUSTRY,
   SPICE_LIB_ACADEMIA
-};
-
-enum spice_model_delay_type {
-  SPICE_MODEL_DELAY_RISE, 
-  SPICE_MODEL_DELAY_FALL
-};
-
-/*Struct for a SPICE model of a module*/
-enum e_spice_model_type {
-  SPICE_MODEL_CHAN_WIRE, 
-  SPICE_MODEL_WIRE, 
-  SPICE_MODEL_MUX, 
-  SPICE_MODEL_LUT, 
-  SPICE_MODEL_FF, 
-  SPICE_MODEL_SRAM, 
-  SPICE_MODEL_HARDLOGIC,
-  SPICE_MODEL_SCFF,
-  SPICE_MODEL_IOPAD, 
-  SPICE_MODEL_INVBUF, 
-  SPICE_MODEL_PASSGATE, 
-  SPICE_MODEL_GATE 
-};
-
-enum e_spice_model_design_tech {
-  SPICE_MODEL_DESIGN_CMOS, 
-  SPICE_MODEL_DESIGN_RRAM
-};
-
-enum e_spice_model_structure {
-  SPICE_MODEL_STRUCTURE_TREE, 
-  SPICE_MODEL_STRUCTURE_ONELEVEL, 
-  SPICE_MODEL_STRUCTURE_MULTILEVEL, 
-  SPICE_MODEL_STRUCTURE_CROSSBAR 
-};
-
-enum e_spice_model_buffer_type {
-  SPICE_MODEL_BUF_INV, 
-  SPICE_MODEL_BUF_BUF
-};
-
-enum e_spice_model_pass_gate_logic_type {
-  SPICE_MODEL_PASS_GATE_TRANSMISSION, 
-  SPICE_MODEL_PASS_GATE_TRANSISTOR
-};
-
-enum e_spice_model_gate_type {
-  SPICE_MODEL_GATE_AND, 
-  SPICE_MODEL_GATE_OR,
-  SPICE_MODEL_GATE_MUX2
 };
 
 /* Transistor-level basic informations*/
@@ -67,36 +19,11 @@ enum e_spice_trans_type {
   SPICE_TRANS_IO_PMOS
 };
 
-enum e_wire_model_type {
-  WIRE_MODEL_PIE,
-  WIRE_MODEL_T
-};
-
-enum e_spice_model_port_type {
-  SPICE_MODEL_PORT_INPUT, 
-  SPICE_MODEL_PORT_OUTPUT, 
-  SPICE_MODEL_PORT_INOUT, 
-  SPICE_MODEL_PORT_CLOCK, 
-  SPICE_MODEL_PORT_SRAM,
-  SPICE_MODEL_PORT_BL,
-  SPICE_MODEL_PORT_BLB,
-  SPICE_MODEL_PORT_WL,
-  SPICE_MODEL_PORT_WLB
-};
-
 /* For process corner */
 enum e_process_corner {
  BEST_CORNER,
  TYPICAL_CORNER,
  WORST_CORNER
-};
-
-/* For SRAM */
-enum e_sram_orgz {
-  SPICE_SRAM_STANDALONE,   /* SRAMs are organized and accessed as standalone elements */
-  SPICE_SRAM_SCAN_CHAIN,   /* SRAMs are organized and accessed by a scan-chain */
-  SPICE_SRAM_MEMORY_BANK,  /* SRAMs are organized and accessed by memory bank */
-  SPICE_SRAM_LOCAL_ENCODER  /* SRAMs are organized and accessed by a local encoder */
 };
 
 enum e_spice_accuracy_type {
@@ -441,6 +368,8 @@ struct s_spice {
   t_spice_tech_lib tech_lib;
   int num_spice_model;
   t_spice_model* spice_models;
+  /* Circuit library, object to replace the legacy spice_models */
+  CircuitLibrary circuit_lib;
 };
 
 /* Information needed to build a Multiplexer architecture*/

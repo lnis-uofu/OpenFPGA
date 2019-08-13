@@ -37,12 +37,24 @@ size_t BasicPort::get_lsb() const {
   return lsb_; 
 }
 
+/* get the name */
+std::string BasicPort::get_name() const {
+  return name_;
+} 
+
 /* Mutators */
 /* copy */
 void BasicPort::set(const BasicPort& basic_port) {
+  name_ = basic_port.get_name();
   lsb_ = basic_port.get_lsb(); 
   msb_ = basic_port.get_msb(); 
 
+  return;
+}
+
+/* set the port LSB and MSB */
+void BasicPort::set_name(const std::string& name) { 
+  name_ = name;
   return;
 }
  

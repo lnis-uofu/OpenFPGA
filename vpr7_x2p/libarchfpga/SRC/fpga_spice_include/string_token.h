@@ -23,13 +23,13 @@
  ***********************************************************************/
 
 /************************************************************************
- * Filename:   read_xml_spice.h
+ * Filename:    string_token.h
  * Created by:   Xifan Tang
  * Change history:
  * +-------------------------------------+
  * |  Date       |    Author   | Notes
  * +-------------------------------------+
- * | 2015/XX/XX  |  Xifan Tang | Created 
+ * | 2019/08/09  |  Xifan Tang | Created 
  * +-------------------------------------+
  ***********************************************************************/
 
@@ -37,19 +37,52 @@
  * The following preprocessing flags are added to 
  * avoid compilation error when this headers are included in more than 1 times 
  */
-#ifndef READ_XML_SPICE_H
-#define READ_XML_SPICE_H
+#ifndef STRING_TOKEN_H
+#define STRING_TOKEN_H
 
-/* Xifan TANG: Spice Support*/
+/*
+ * Notes in include header files in a head file 
+ * Only include the neccessary header files 
+ * that is required by the data types in the function/class declarations!
+ */
+/* Header files should be included in a sequence */
+/* Standard header files required go first */
+#include <string>
+#include <vector>
 
-void ProcessSpiceSRAM(INOUTP ezxml_t Node, OUTP struct s_arch* arch);
 
-void ProcessSpiceSettings(ezxml_t Parent,
-                          t_spice* spice);
+/************************************************************************
+ * This file includes a tokenizer for string objects
+ * It splits a string with given delima and return a vector of tokens
+ * It can accept different delima in splitting strings
+ ***********************************************************************/
+
+class StringToken {
+  public : /* Constructors*/
+    StringToken (const std::string& data);
+  public : /* Public Accessors */ 
+    std::string data() const;
+    std::vector<std::string> split(const std::string& delims) const;
+    std::vector<std::string> split(const char& delim) const;
+    std::vector<std::string> split(const char* delim) const;
+    std::vector<std::string> split(const std::vector<char>& delim) const;
+    std::vector<std::string> split();
+  public : /* Public Mutators */ 
+    void set_data(const std::string& data);
+    void add_delim(const char& delim);
+    void ltrim(const std::string& sensitive_word);
+    void rtrim(const std::string& sensitive_word);
+    void trim();
+  private : /* Private Mutators */ 
+    void add_default_delim();
+  private: /* Internal data */
+    std::string data_; /* Lines to be splited */
+    std::vector<char> delims_;
+};
 
 #endif
 
 /************************************************************************
- * End of file : read_xml_spice.h
+ * End of file : string_token.h
  ***********************************************************************/
 
