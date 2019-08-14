@@ -89,6 +89,8 @@ enum e_spice_model_structure {
   SPICE_MODEL_STRUCTURE_CROSSBAR,
   NUM_CIRCUIT_MODEL_STRUCTURE_TYPES
 };
+/* Strings correspond to each type of mux structure */
+constexpr std::array<const char*, NUM_CIRCUIT_MODEL_STRUCTURE_TYPES> CIRCUIT_MODEL_STRUCTURE_TYPE_STRING = {{"TREE-LIKE", "ONE-LEVEL", "MULTI-LEVEL", "CROSSBAR"}};
 
 enum e_spice_model_buffer_type {
   SPICE_MODEL_BUF_INV, 
@@ -112,7 +114,7 @@ enum e_spice_model_gate_type {
 enum e_wire_model_type {
   WIRE_MODEL_PIE,
   WIRE_MODEL_T,
-  NUM_WIRE_MODEL_TYPES,
+  NUM_WIRE_MODEL_TYPES
 };
 
 enum e_spice_model_port_type {
@@ -138,6 +140,7 @@ enum e_sram_orgz {
   SPICE_SRAM_LOCAL_ENCODER,  /* SRAMs are organized and accessed by a local encoder */
   NUM_CIRCUIT_MODEL_SRAM_ORGZ_TYPES
 };
+constexpr std::array<const char*, NUM_CIRCUIT_MODEL_SRAM_ORGZ_TYPES> CIRCUIT_MODEL_SRAM_ORGZ_TYPE_STRING = {{"STANDALONE", "SCAN-CHAIN", "MEMORY_BANK", "LOCAL_ENCODER"}};
 
 
 #endif

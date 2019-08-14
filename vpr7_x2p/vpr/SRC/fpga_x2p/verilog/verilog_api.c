@@ -242,8 +242,10 @@ void vpr_fpga_verilog(t_vpr_setup vpr_setup,
   /* Initialize the number of configuration bits of all the grids */
   vpr_printf(TIO_MESSAGE_INFO, "Count the number of configuration bits, IO pads in each logic block...\n");
   /* init_grids_num_conf_bits(sram_verilog_orgz_type); */
-  init_grids_num_conf_bits(sram_verilog_orgz_info);
-  init_grids_num_iopads();
+  //init_grids_num_conf_bits(sram_verilog_orgz_info);
+  init_pb_types_num_conf_bits(sram_verilog_orgz_info);
+  //init_grids_num_iopads();
+  init_pb_types_num_iopads();
   /* init_grids_num_mode_bits(); */
 
   dump_verilog_defines_preproc(src_dir_path,

@@ -342,6 +342,33 @@ void add_edges_for_two_rr_nodes(const t_rr_graph* rr_graph,
 }
 
 /************************************************************************
+ * Get the track_id of a routing track w.r.t its coordinator 
+ * In tileable routing architecture, the track_id changes SB by SB.
+ * Therefore the track_ids are stored in a vector, indexed by the relative coordinator
+ * based on the starting point of the track
+ * For routing tracks in INC_DIRECTION
+ * (xlow, ylow) should be the starting point 
+ * 
+ * (xlow, ylow)                                      (xhigh, yhigh)
+ *  track_id[0]  -------------------------------> track_id[xhigh - xlow + yhigh - ylow]
+ *
+ * For routing tracks in DEC_DIRECTION
+ * (xhigh, yhigh) should be the starting point 
+ *
+ * (xlow, ylow)                                      (xhigh, yhigh)
+ *  track_id[0]  <------------------------------- track_id[xhigh - xlow + yhigh - ylow]
+ *
+ *
+ ***********************************************************************/
+short get_rr_node_actual_track_id(const t_rr_node* track_rr_node,
+                                  const DeviceCoordinator& coord) {
+  DeviceCoordinator low_coord(track_rr_node->xlow, track_rr_node->ylow);
+  size_t offset = (int)abs((int)coord.get_x() -  (int)low_coord.get_x() + (int)coord.get_y() - (int)low_coord.get_y());
+  return track_rr_node->track_ids[offset];
+}
+
+
+/************************************************************************
  * Get the coordinator of a starting point of a routing track 
  * For routing tracks in INC_DIRECTION
  * (xlow, ylow) should be the starting point 

@@ -23,7 +23,7 @@
  ***********************************************************************/
 
 /************************************************************************
- * Filename:    check_circuit_library.h
+ * Filename:    link_arch_circuit_lib.h
  * Created by:   Xifan Tang
  * Change history:
  * +-------------------------------------+
@@ -37,8 +37,8 @@
  * The following preprocessing flags are added to 
  * avoid compilation error when this headers are included in more than 1 times 
  */
-#ifndef CHECK_CIRCUIT_LIBRARY_H
-#define CHECK_CIRCUIT_LIBRARY_H
+#ifndef LINK_ARCH_CIRCUIT_LIB_H
+#define LINK_ARCH_CIRCUIT_LIB_H
 
 /*
  * Notes in include header files in a head file 
@@ -47,14 +47,22 @@
  */
 /* Header files should be included in a sequence */
 /* Standard header files required go first */
-#include "circuit_library.h"
 
-/* Check points to make sure we have a valid circuit library */
-void check_circuit_library(const CircuitLibrary& circuit_lib);
+CircuitModelId link_circuit_model_by_name_and_type(const char* circuit_model_name,
+                                                   const CircuitLibrary& circuit_lib,
+                                                   const enum e_spice_model_type& model_type);
+
+t_port* find_pb_type_port_match_circuit_model_port(const t_pb_type* pb_type,
+                                                   const CircuitLibrary& circuit_lib,
+                                                   const CircuitModelId& circuit_model,
+                                                   const CircuitPortId& circuit_port);
+
+void link_circuit_library_to_arch(t_arch* arch,
+                                  t_det_routing_arch* routing_arch);
 
 #endif
 
 /************************************************************************
- * End of file : check_circuit_library.h
+ * End of file : link_arch_circuit_lib.h
  ***********************************************************************/
 

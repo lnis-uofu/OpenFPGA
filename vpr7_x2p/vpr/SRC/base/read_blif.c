@@ -524,7 +524,7 @@ static void add_latch(int doall, INP t_model *latch_model) {
     /* Store the initial value */
     logical_block[num_logical_blocks - 1].init_val = my_atoi(saved_names[4]);
     /* Add clock identification */
-    logical_block[logical_block[num_logical_blocks - 1].clock_net].is_clock = TRUE;
+    logical_block[vpack_net[logical_block[num_logical_blocks - 1].clock_net].node_block[0]].is_clock = TRUE;
     /*END*/
 
 	num_latches++;
@@ -722,6 +722,9 @@ static void add_subckt(int doall, t_model *user_models) {
 								add_vpack_net(circuit_signal_name[i], RECEIVER,
 										num_logical_blocks - 1, port->index,
 										my_atoi(pin_number), TRUE, doall);
+
+                        /* Add clock identification */
+                        logical_block[vpack_net[logical_block[num_logical_blocks - 1].clock_net].node_block[0]].is_clock = TRUE;
 					} else {
 						logical_block[num_logical_blocks - 1].input_nets[port->index][my_atoi(
 								pin_number)] = add_vpack_net(

@@ -216,11 +216,13 @@ class CircuitLibrary {
       INPUT = 0, OUTPUT, LUT_INPUT_BUFFER, LUT_INPUT_INVERTER, LUT_INTER_BUFFER, NUM_BUFFER_TYPE /* Last one is a counter */ 
     };
   public: /* Constructors */
+    CircuitLibrary();
   public: /* Accessors: aggregates */
     circuit_model_range circuit_models() const;
     circuit_port_range ports(const CircuitModelId& circuit_model_id) const;
     std::vector<CircuitModelId> circuit_models_by_type(const enum e_spice_model_type& type) const;
     std::vector<CircuitPortId> ports_by_type(const CircuitModelId& circuit_model_id, const enum e_spice_model_port_type& port_type) const;
+    std::vector<CircuitPortId> ports_by_type(const CircuitModelId& circuit_model_id, const enum e_spice_model_port_type& port_type, const bool& include_global_port) const;
     std::vector<CircuitPortId> input_ports(const CircuitModelId& circuit_model_id) const;
     std::vector<CircuitPortId> output_ports(const CircuitModelId& circuit_model_id) const;
     std::vector<size_t> pins(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
@@ -239,11 +241,13 @@ class CircuitLibrary {
     bool is_input_buffered(const CircuitModelId& circuit_model_id) const;
     bool is_output_buffered(const CircuitModelId& circuit_model_id) const;
     bool is_lut_intermediate_buffered(const CircuitModelId& circuit_model_id) const;
+    enum e_spice_model_structure mux_structure(const CircuitModelId& circuit_model_id) const;
   public: /* Public Accessors: Basic data query on Circuit Ports*/
     bool is_input_port(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
     bool is_output_port(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
     CircuitPortId port(const CircuitModelId& circuit_model_id, const std::string& name) const;
     size_t num_ports(const CircuitModelId& circuit_model_id) const;
+    size_t num_ports_by_type(const CircuitModelId& circuit_model_id, const enum e_spice_model_port_type& port_type, const bool& include_global_port) const;
     enum e_spice_model_port_type port_type(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
     size_t port_size(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
     std::string port_prefix(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
@@ -257,6 +261,7 @@ class CircuitLibrary {
     bool port_is_config_enable(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
     bool port_is_prog(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
   public: /* Public Accessors: Methods to find circuit model */
+    CircuitModelId circuit_model(const char* name) const;
     CircuitModelId circuit_model(const std::string& name) const;
     CircuitModelId default_circuit_model(const enum e_spice_model_type& type) const;
   public: /* Public Accessors: Timing graph */

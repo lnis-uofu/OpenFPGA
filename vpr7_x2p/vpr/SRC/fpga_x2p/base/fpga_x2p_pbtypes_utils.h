@@ -93,6 +93,8 @@ void init_one_grid_num_conf_bits(int ix, int iy,
 
 void init_grids_num_conf_bits(t_sram_orgz_info* cur_sram_orgz_info);
 
+void init_pb_types_num_conf_bits(t_sram_orgz_info* cur_sram_orgz_info);
+
 void map_clb_pins_to_pb_graph_pins();
 
 t_port* find_pb_type_port_match_spice_model_port(t_pb_type* pb_type,
@@ -101,7 +103,6 @@ t_port* find_pb_type_port_match_spice_model_port(t_pb_type* pb_type,
 t_port** find_pb_type_ports_match_spice_model_port_type(t_pb_type* pb_type,
                                                         enum e_spice_model_port_type port_type,
                                                         int* port_num);
-
 
 enum e_interconnect find_pb_graph_pin_in_edges_interc_type(t_pb_graph_pin pb_graph_pin);
 
@@ -135,6 +136,8 @@ void rec_count_num_iopads_pb(t_pb* cur_pb);
 void init_one_grid_num_iopads(int ix, int iy);
 
 void init_grids_num_iopads();
+
+void init_pb_types_num_iopads();
 
 void rec_count_num_mode_bits_pb_type_default_mode(t_pb_type* cur_pb_type);
 

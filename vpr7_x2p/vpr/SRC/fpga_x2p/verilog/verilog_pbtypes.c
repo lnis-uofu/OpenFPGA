@@ -1751,6 +1751,7 @@ void dump_verilog_phy_pb_graph_node_rec(t_sram_orgz_info* cur_sram_orgz_info,
     /* update stamped sram counter */
     stamped_sram_cnt += cur_pb_type->physical_mode_num_conf_bits;
     /* Check */
+    if (stamped_sram_cnt != get_sram_orgz_info_num_mem_bit(cur_sram_orgz_info)) 
     assert(stamped_sram_cnt == get_sram_orgz_info_num_mem_bit(cur_sram_orgz_info)); 
     assert(stamped_iopad_cnt == iopad_verilog_model->cnt);
     /* Finish for primitive node, return  */
