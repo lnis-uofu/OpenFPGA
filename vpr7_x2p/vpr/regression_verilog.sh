@@ -10,7 +10,7 @@ verilog_output_dirpath="$PWD"
 tech_file="${OpenFPGA_path}/fpga_flow/tech/PTM_45nm/45nm.xml"
 # VPR critical inputs
 template_arch_xml_file="${OpenFPGA_path}/fpga_flow/arch/template/k6_N10_sram_chain_HC_template.xml"
-arch_xml_file="${OpenFPGA_path}/fpga_flow/arch/generated/k6_N10_sram_chain_HC_DPRAM.xml"
+arch_xml_file="${OpenFPGA_path}/fpga_flow/arch/generated/k6_N10_sram_chain_HC.xml"
 blif_file="${OpenFPGA_path}/fpga_flow/benchmarks/Blif/Test_Modes/$benchmark.blif" 
 act_file="${OpenFPGA_path}/fpga_flow/benchmarks/Blif/Test_Modes/$benchmark.act "
 verilog_reference="${OpenFPGA_path}/fpga_flow/benchmarks/Verilog/Test_Modes/$benchmark.v"
