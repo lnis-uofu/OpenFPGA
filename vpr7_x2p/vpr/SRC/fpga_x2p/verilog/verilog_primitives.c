@@ -656,25 +656,25 @@ void dump_verilog_pb_primitive_lut(t_sram_orgz_info* cur_sram_orgz_info,
     }
     if (0 < num_mode_sram) {
       fprintf(fp, ", ");
-    }
-    if (TRUE == subckt_require_explicit_port_map) {
-      fprintf(fp, ".mode_out( ");
-    }
-    dump_verilog_sram_one_local_outport(fp, cur_sram_orgz_info, 
-                                        cur_num_sram + num_lut_sram, cur_num_sram + num_lut_sram + num_mode_sram - 1, 
-                                        0, VERILOG_PORT_CONKT);
-    if (TRUE == subckt_require_explicit_port_map) {
-      fprintf(fp, ")");
-    }
+      if (TRUE == subckt_require_explicit_port_map) {
+        fprintf(fp, ".mode_out( ");
+      }
+      dump_verilog_sram_one_local_outport(fp, cur_sram_orgz_info, 
+                                          cur_num_sram + num_lut_sram, cur_num_sram + num_lut_sram + num_mode_sram - 1, 
+                                          0, VERILOG_PORT_CONKT);
+      if (TRUE == subckt_require_explicit_port_map) {
+        fprintf(fp, ")");
+      }
       fprintf(fp, ", ");
-    if (TRUE == subckt_require_explicit_port_map) {
-      fprintf(fp, ".mode_outb( ");
-    }
-    dump_verilog_sram_one_local_outport(fp, cur_sram_orgz_info, 
-                                        cur_num_sram + num_lut_sram, cur_num_sram + num_lut_sram + num_mode_sram - 1, 
-                                        1, VERILOG_PORT_CONKT);
-    if (TRUE == subckt_require_explicit_port_map) {
-      fprintf(fp, ")");
+      if (TRUE == subckt_require_explicit_port_map) {
+        fprintf(fp, ".mode_outb( ");
+      }
+      dump_verilog_sram_one_local_outport(fp, cur_sram_orgz_info, 
+                                          cur_num_sram + num_lut_sram, cur_num_sram + num_lut_sram + num_mode_sram - 1, 
+                                          1, VERILOG_PORT_CONKT);
+      if (TRUE == subckt_require_explicit_port_map) {
+        fprintf(fp, ")");
+      }
     }
     break;
   case SPICE_SRAM_MEMORY_BANK:
