@@ -10,73 +10,203 @@ import glob
 import subprocess
 import threading
 from string import Template
+import re
 import xml.etree.ElementTree as ET
 
-
+# = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+# Initialise general paths for the script
+# = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+# Copy directory where flow file exist
 flow_script_dir = os.path.dirname(os.path.abspath(__file__))
+# Find OpenFPGA base directory
 openfpga_base_dir = os.path.abspath(
     os.path.join(flow_script_dir, os.pardir, os.pardir))
-default_cad_tool_conf = os.path.join(flow_script_dir, os.pardir, 'misc',
-                                     'fpgaflow_default_tool_path.conf')
+# Copy directory from where script is laucnhed
+# [req to resolve relative paths provided while launching script]
 launch_dir = os.getcwd()
 
-# = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-# Setting up print and logging system
-# = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-logging.basicConfig(level=logging.INFO,
-                    format='%(levelname)s (%(threadName)-9s) - %(message)s')
-logger = logging.getLogger('OpenFPGA_Task_logs')
-
-# = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-# Reading commnad-line argument
-# = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-parser = argparse.ArgumentParser()
-parser.add_argument('arch_file', type=str)
-parser.add_argument('benchmark_files', type=str, nargs='+')
-parser.add_argument('--top_module', type=str)
-parser.add_argument('--fpga_flow', type=str, default="yosys_vpr")
-parser.add_argument('--cad_tool_conf',
-                    type=str,
-                    default=default_cad_tool_conf,
-                    help="CAD tool path and configurations")
-parser.add_argument('--run_dir',
-                    type=str,
-                    default=os.path.join(openfpga_base_dir,  'tmp'),
-                    help="Directory to store intermidiate file & final results")
-args = parser.parse_args()
-
-
-# = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-# Reading CAD Tools path configuration file
-# = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+# Path section to append in configuration file to interpolate path
 script_env_vars = {"PATH": {
     "OPENFPGA_FLOW_PATH": flow_script_dir,
     "OPENFPGA_PATH": openfpga_base_dir}}
 
-config = ConfigParser(interpolation=ExtendedInterpolation())
-config.read_dict(script_env_vars)
-config.read_file(
-    open(os.path.join(args.cad_tool_conf)))
-cad_tools = config["CAD_TOOLS_PATH"]
+# = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+# Reading command-line argument
+# = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
+# Helper function to provide better alignment to help print
+
+
+def formatter(prog): return argparse.HelpFormatter(prog, max_help_position=60)
+
+
+parser = argparse.ArgumentParser(formatter_class=formatter)
+
+# Mandatory arguments
+parser.add_argument('arch_file', type=str)
+parser.add_argument('benchmark_files', type=str, nargs='+')
+
+# Optional arguments
+parser.add_argument('--top_module', type=str, default="top")
+parser.add_argument('--fpga_flow', type=str, default="yosys_vpr")
+parser.add_argument('--cad_tool_conf', type=str,
+                    help="CAD tools path overrides default setting")
+parser.add_argument('--run_dir', type=str,
+                    default=os.path.join(openfpga_base_dir,  'tmp'),
+                    help="Directory to store intermidiate file & final results")
+parser.add_argument('--yosys_tmpl', type=str,
+                    help="Alternate yosys template, generates top_module.blif")
+
+# ACE2 and power estimation related arguments
+parser.add_argument('--K', type=int,
+                    help="LUT Size, if not specified extracted from arch file")
+parser.add_argument('--power', action='store_true')
+parser.add_argument('--power_tech', type=str,
+                    help="Power tech xml file for power calculation")
+parser.add_argument('--ace_d', type=float,
+                    help="Specify the default signal density of PIs in ACE2")
+parser.add_argument('--ace_p', type=float,
+                    help="Specify the default signal probablity of PIs in ACE2")
+parser.add_argument('--black_box_ace', action='store_true')
+
+# VPR Options
+parser.add_argument('--min_route_chan_width', type=int,
+                    help="Turn on min_route_chan_width")
+parser.add_argument('--max_route_width_retry', type=int, default=100,
+                    help="Maximum iterations to perform to reroute")
+parser.add_argument('--fix_route_chan_width', type=int,
+                    help="Turn on fix_route_chan_width")
+parser.add_argument('--vpr_timing_pack_off', action='store_true',
+                    help="Turn off the timing-driven pack for vpr")
+parser.add_argument('--vpr_place_clb_pin_remap', action='store_true',
+                    help="Turn on place_clb_pin_remap in VPR")
+parser.add_argument('--vpr_max_router_iteration', type=int,
+                    help="Specify the max router iteration in VPR")
+parser.add_argument('--vpr_route_breadthfirst', action='store_true',
+                    help="Use the breadth-first routing algorithm of VPR")
+parser.add_argument('--vpr_use_tileable_route_chan_width', action='store_true',
+                    help="Turn on the conversion to " +
+                    "tileable_route_chan_width in VPR")
+
+#  VPR - FPGA-X2P Extension
+X2PParse = parser.add_argument_group('VPR-FPGA-X2P Extension')
+X2PParse.add_argument('--vpr_fpga_x2p_rename_illegal_port', action='store_true',
+                      help="Rename illegal ports option of VPR FPGA SPICE")
+X2PParse.add_argument('--vpr_fpga_x2p_signal_density_weight', type=float,
+                      help="Specify the signal_density_weight of VPR FPGA SPICE")
+X2PParse.add_argument('--vpr_fpga_x2p_sim_window_size', type=float,
+                      help="specify the sim_window_size of VPR FPGA SPICE")
+
+# VPR - FPGA-SPICE Extension
+SPParse = parser.add_argument_group('FPGA-SPICE Extension')
+SPParse.add_argument('--vpr_fpga_spice', type=str,
+                     help="Print SPICE netlists in VPR")
+SPParse.add_argument('--vpr_fpga_spice_sim_mt_num', type=int,
+                     help="Specify the option sim_mt_num of VPR FPGA SPICE")
+SPParse.add_argument('--vpr_fpga_spice_print_component_tb', action='store_true',
+                     help="Output component-level testbench")
+SPParse.add_argument('--vpr_fpga_spice_print_grid_tb', action='store_true',
+                     help="Output grid-level testbench")
+SPParse.add_argument('--vpr_fpga_spice_print_top_tb', action='store_true',
+                     help="Output full-chip-level testbench")
+SPParse.add_argument('--vpr_fpga_spice_leakage_only', action='store_true',
+                     help="Turn on leakage_only mode in VPR FPGA SPICE")
+SPParse.add_argument('--vpr_fpga_spice_parasitic_net_estimation_off',
+                     action='store_true',
+                     help="Turn off parasitic_net_estimation in VPR FPGA SPICE")
+SPParse.add_argument('--vpr_fpga_spice_testbench_load_extraction_off',
+                     action='store_true',
+                     help="Turn off testbench_load_extraction in VPR FPGA SPICE")
+SPParse.add_argument('--vpr_fpga_spice_simulator_path', type=str,
+                     help="Specify simulator path")
+
+# VPR - FPGA-Verilog Extension
+VeriPar = parser.add_argument_group('FPGA-Verilog Extension')
+VeriPar.add_argument('--vpr_fpga_verilog', action='store_true',
+                     help="Generator verilog of VPR FPGA SPICE")
+VeriPar.add_argument('--vpr_fpga_verilog_dir', type=str,
+                     help="path to store generated verilog files")
+VeriPar.add_argument('--vpr_fpga_verilog_include_timing', action="store_true",
+                     help="Print delay specification in Verilog files")
+VeriPar.add_argument('--vpr_fpga_verilog_include_signal_init',
+                     action="store_true",
+                     help="Print signal initialization in Verilog files")
+VeriPar.add_argument('--vpr_fpga_verilog_print_autocheck_top_testbench',
+                     action="store_true", help="Print autochecked top-level " +
+                     "testbench for Verilog Generator of VPR FPGA SPICE")
+VeriPar.add_argument('--vpr_fpga_verilog_formal_verification_top_netlist',
+                     action="store_true", help="Print formal top Verilog files")
+VeriPar.add_argument('--vpr_fpga_verilog_include_icarus_simulator',
+                     action="store_true", help="dd syntax and definition" +
+                     " required to use Icarus Verilog simulator")
+VeriPar.add_argument('--vpr_fpga_verilog_print_user_defined_template',
+                     action="store_true", help="Unknown parameter")
+VeriPar.add_argument('--vpr_fpga_verilog_print_report_timing_tcl',
+                     action="store_true", help="Generate tcl script useful " +
+                     "for timing report generation")
+VeriPar.add_argument('--vpr_fpga_verilog_report_timing_rpt_path',
+                     type=str, help="Specify path for report timing results")
+VeriPar.add_argument('--vpr_fpga_verilog_print_sdc_pnr', action="store_true",
+                     help="Generate sdc file to constraint Hardware P&R")
+VeriPar.add_argument('--vpr_fpga_verilog_print_sdc_analysis',
+                     action="store_true", help="Generate sdc file to do STA")
+VeriPar.add_argument('--vpr_fpga_verilog_print_top_tb', action="store_true",
+                     help="Print top-level testbench for Verilog Generator " +
+                     "of VPR FPGA SPICE")
+VeriPar.add_argument('--vpr_fpga_verilog_print_input_blif_tb',
+                     action="store_true", help="Print testbench" +
+                     "for input blif file in Verilog Generator")
+VeriPar.add_argument('--vpr_fpga_verilog_print_modelsim_autodeck', type=str,
+                     help="Print modelsim " +
+                     "simulation script", metavar="<modelsim.ini_path>")
+
+# VPR - FPGA-Bitstream Extension
+BSparse = parser.add_argument_group('FPGA-Bitstream Extension')
+BSparse.add_argument('--vpr_fpga_bitstream_generator', action="store_true",
+                     help="Generate FPGA-SPICE bitstream")
+
+# Regression test option
+RegParse = parser.add_argument_group('Regression Test Extension')
+RegParse.add_argument("--end_flow_with_test", action="store_true",
+                      help="Run verification test at the end")
+
+
+# = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+# Global varaibles declaration
+# = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+# Varible to store logger instance
+logger = None
+# arguments are parsed at the end of the script depending upon whether script
+# is called externally or as a standalone
+args = None
+# variable to store script_configuration and cad tool paths
+config, cad_tools = None, None
 
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 # Main program starts here
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+
+
 def main():
-    validate_command_line_arguments(args)
+    check_required_file()
+    read_script_config()
+    validate_command_line_arguments()
     prepare_run_directory(args.run_dir)
     if (args.fpga_flow == "yosys_vpr"):
         logger.info('Running "yosys_vpr" Flow')
         run_yosys_with_abc()
-        exit()
     if (args.fpga_flow == "vtr"):
         run_odin2()
         run_abc_vtr()
     if (args.fpga_flow == "vtr_standard"):
         run_abc_for_standarad()
-    run_ace2()
+    if args.power:
+        run_ace2()
+        run_pro_blif_3arg()
+    run_rewrite_verilog()
     run_vpr()
+    if args.end_flow_with_test:
+        run_netlists_verification()
     exit()
 
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
@@ -84,7 +214,31 @@ def main():
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
 
-def validate_command_line_arguments(args):
+def check_required_file():
+    """ Function ensure existace of all required files for the script """
+    files_dict = {
+        "CAD TOOL PATH": os.path.join(flow_script_dir, os.pardir, 'misc',
+                                      'fpgaflow_default_tool_path.conf'),
+    }
+    for filename, filepath in files_dict.items():
+        if not os.path.isfile(filepath):
+            clean_up_and_exit("Not able to locate deafult file " + filename)
+
+
+def read_script_config():
+    """ This fucntion reads default CAD tools path from configuration file """
+    global config, cad_tools
+    config = ConfigParser(interpolation=ExtendedInterpolation())
+    config.read_dict(script_env_vars)
+    default_cad_tool_conf = os.path.join(flow_script_dir, os.pardir, 'misc',
+                                         'fpgaflow_default_tool_path.conf')
+    config.read_file(open(default_cad_tool_conf))
+    if args.cad_tool_conf:
+        config.read_file(open(args.cad_tool_conf))
+    cad_tools = config["CAD_TOOLS_PATH"]
+
+
+def validate_command_line_arguments():
     """
     TODO :
     This funtion validates all supplied paramters
@@ -95,6 +249,7 @@ def validate_command_line_arguments(args):
     benchmark argument convert glob to list of files
     Dont maintain the directory strcuture
     Throw error for directory in benchmark
+    check if args.powertech_file is provided for power measurement
     """
     logger.info("Parsing commnad line arguments - Pending implementation")
 
@@ -110,6 +265,13 @@ def validate_command_line_arguments(args):
             if not os.path.isfile(everyfile):
                 clean_up_and_exit(
                     "Failed to copy benchmark file-%s", args.arch_file)
+
+    # Filter provided architecrue files
+    if args.power_tech:
+        args.power_tech = os.path.abspath(args.power_tech)
+        if not os.path.isfile(args.power_tech):
+            clean_up_and_exit(
+                "Power Tech file not found. -%s", args.power_tech)
     pass
 
 
@@ -148,10 +310,11 @@ def prepare_run_directory(run_dir):
 
     # Create arch dir in run_dir and copy flattern architecrture file
     os.mkdir("arch")
-    tmpl = Template(open(args.arch_file).read())
+    tmpl = Template(
+        open(args.arch_file, encoding='utf-8').read())
     arch_filename = os.path.basename(args.arch_file)
     args.arch_file = os.path.join(run_dir, "arch", arch_filename)
-    with open(args.arch_file, 'w') as archfile:
+    with open(args.arch_file, 'w', encoding='utf-8') as archfile:
         archfile.write(tmpl.substitute(script_env_vars["PATH"]))
 
     # Create benchmark dir in run_dir and copy flattern architecrture file
@@ -166,12 +329,14 @@ def prepare_run_directory(run_dir):
 
 def clean_up_and_exit(msg, clean=False):
     logger.error(msg)
-    logger.error("Existing . . . . . .")
+    logger.error("Exiting . . . . . .")
     exit()
 
 
 def run_yosys_with_abc():
-    # Extract lut Input size from architecture file
+    """
+    Execute yosys with ABC and optional blackbox support
+    """
     tree = ET.parse(args.arch_file)
     root = tree.getroot()
     try:
@@ -182,7 +347,7 @@ def run_yosys_with_abc():
     except:
         logger.exception("Failed to extract lut_size from XML file")
         clean_up_and_exit("")
-
+    args.K = lut_size
     # Yosys script parameter mapping
     ys_params = {
         "READ_VERILOG_FILE": " \n".join([
@@ -194,13 +359,12 @@ def run_yosys_with_abc():
     }
     yosys_template = os.path.join(
         cad_tools["misc_dir"], "ys_tmpl_yosys_vpr_flow.ys")
-    tmpl = Template(open(yosys_template).read())
+    tmpl = Template(open(yosys_template, encoding='utf-8').read())
     with open("yosys.ys", 'w') as archfile:
         archfile.write(tmpl.substitute(ys_params))
-
     try:
         with open('yosys_output.txt', 'w+') as output:
-            process = subprocess.run([cad_tools["yosys_path"], 'yosys1.ys'],
+            process = subprocess.run([cad_tools["yosys_path"], 'yosys.ys'],
                                      check=True,
                                      stdout=subprocess.PIPE,
                                      stderr=subprocess.PIPE,
@@ -212,7 +376,7 @@ def run_yosys_with_abc():
     except:
         logger.exception("Failed to run yosys")
         clean_up_and_exit("")
-    logger.info("Yosys output written in file yosys_output.txt")
+    logger.info("Yosys output is written in file yosys_output.txt")
 
 
 def run_odin2():
@@ -228,166 +392,465 @@ def run_abc_for_standarad():
 
 
 def run_ace2():
+    if args.black_box_ace:
+        with open(args.top_module+'.blif', 'r') as fp:
+            blif_lines = fp.readlines()
 
-    pass
+        with open(args.top_module+'_bb.blif', 'w') as fp:
+            for eachline in blif_lines:
+                if ".names" in eachline:
+                    input_nets = eachline.split()[1:]
+                    if len(input_nets)-1 > args.K:
+                        logger.error("One module in blif have more inputs" +
+                                     " than K value")
+                    # Map CEll to each logic in blif
+                    map_nets = (input_nets[:-1] + ["unconn"]*args.K)[:args.K]
+                    map_nets = ["I[%d]=%s" % (indx, eachnet)
+                                for indx, eachnet in enumerate(map_nets)]
+                    map_nets += ["O[0]=%s\n" % input_nets[-1]]
+                    fp.write(".subckt CELL ")
+                    fp.write(" ".join(map_nets))
+                else:
+                    fp.write(eachline)
+
+            declar_input = " ".join(["I[%d]" % i for i in range(args.K)])
+            model_tmpl = "\n" + \
+                ".model CELL\n" + \
+                ".inputs " + declar_input + " \n" + \
+                ".outputs O[0]\n" + \
+                ".blackbox\n" + \
+                ".end\n"
+            fp.write(model_tmpl)
+    # Prepare ACE run command
+    command = [
+        "-b", args.top_module+('_bb.blif' if args.black_box_ace else ".blif"),
+        "-o", args.top_module+"_ace_out.act",
+        "-n", args.top_module+"_ace_out.blif",
+        "-c", "clk",
+    ]
+    command += ["-d", "%.4f" % args.ace_d] if args.ace_d else [""]
+    command += ["-p", "%.4f" % args.ace_d] if args.ace_p else [""]
+    try:
+        filename = args.top_module + '_ace2_output.txt'
+        with open(filename, 'w+') as output:
+            process = subprocess.run([cad_tools["ace_path"]] + command,
+                                     check=True,
+                                     stdout=subprocess.PIPE,
+                                     stderr=subprocess.PIPE,
+                                     universal_newlines=True)
+            output.write(process.stdout)
+            if process.returncode:
+                logger.info("ACE2 failed with returncode %d",
+                            process.returncode)
+    except:
+        logger.exception("Failed to run ACE2")
+        clean_up_and_exit("")
+    logger.info("ACE2 output is written in file %s" % filename)
+
+
+def run_pro_blif_3arg():
+    command = [
+        "-i", args.top_module+"_ace_out.blif",
+        "-o", args.top_module+"_ace_corrected_out.blif",
+        "-initial_blif", args.top_module+'.blif',
+    ]
+    try:
+        filename = args.top_module+'_blif_3args_output.txt'
+        with open(filename, 'w+') as output:
+            process = subprocess.run(["perl", cad_tools["pro_blif_path"]] +
+                                     command,
+                                     check=True,
+                                     stdout=subprocess.PIPE,
+                                     stderr=subprocess.PIPE,
+                                     universal_newlines=True)
+            output.write(process.stdout)
+            if process.returncode:
+                logger.info("blif_3args script failed with returncode %d",
+                            process.returncode)
+    except:
+        logger.exception("Failed to run blif_3args")
+        clean_up_and_exit("")
+    logger.info("blif_3args output is written in file %s" % filename)
 
 
 def run_vpr():
-    pass
-# def generate_single_task_actions(taskname):
-#     """
-#     This script generates all the scripts required for each benchmark
-#     """
-#     curr_task_dir=os.path.join(gc["task_dir"], taskname)
-#     if not os.path.isdir(curr_task_dir):
-#         clean_up_and_exit("Task directory not found")
-#     os.chdir(curr_task_dir)
+    # Run Standard VPR Flow
+    min_channel_width = run_standard_vpr(
+        args.top_module+"_ace_corrected_out.blif",
+        -1,
+        args.top_module+"_min_chan_width_vpr.txt")
+    logger.info("Standard VPR flow routed with minimum %d Channels" %
+                min_channel_width)
 
-#     curr_task_conf_file=os.path.join(curr_task_dir, "config", "task.conf")
-#     if not os.path.isfile(curr_task_conf_file):
-#         clean_up_and_exit(
-#             "Missing configuration file for task %s" % curr_task_dir)
+    # Minimum routing channel width
+    if (args.min_route_chan_width):
+        logger.info("Executing minimum channel width routing")
+        min_channel_width *= 1+(args.min_route_chan_width/100)
+        min_channel_width = int(min_channel_width)
+        min_channel_width += 1 if (min_channel_width % 2) else 0
+        logger.info("Trying to route using %d channels" % min_channel_width)
 
-#     task_conf=ConfigParser(allow_no_value = True,
-#                              interpolation = ExtendedInterpolation())
-#     task_conf.optionxform=str
-#     task_conf.read_dict(script_env_vars)
-#     task_conf.read_file(open(curr_task_conf_file))
-#     # Check required sections in config file
-#     required_sec=["GENERAL", "BENCHMARKS", "ARCHITECTURES", "POST_RUN"]
-#     missing_section=list(set(required_sec)-set(task_conf.sections()))
-#     if missing_section:
-#         clean_up_and_exit(
-#             "Missing section %s in task configuration file" % " ".join(missing_section))
+        while(1):
+            res = run_vpr_route(args.top_module+"_ace_corrected_out.blif",
+                                min_channel_width,
+                                args.top_module+"_min_channel_reroute_vpr.txt")
 
-#     benchmark_list=[]
-#     for _, bench_file in task_conf["BENCHMARKS"].items():
-#         if(glob.glob(bench_file)):
-#             benchmark_list.append(bench_file)
-#         else:
-#             logger.warning(
-#                 "File Not Found: Skipping %s benchmark " % bench_file)
+            if res:
+                logger.info("Routing with channel width=%d successful" %
+                            min_channel_width)
+                break
+            elif args.min_channel_width > (min_channel_width-2):
+                clean_up_and_exit("Failed to route within maximum " +
+                                  "iteration of channel width")
+            else:
+                logger.info("Unable to route using channel width %d" %
+                            min_channel_width)
+            min_channel_width += 2
 
-#     # Check if all benchmark/architecture files exits
-#     archfile_list=[]
-#     for _, arch_file in task_conf["ARCHITECTURES"].items():
-#         arch_full_path=arch_file
-#         if os.path.isfile(arch_full_path):
-#             archfile_list.append(arch_full_path)
-#         else:
-#             logger.warning(
-#                 "File Not Found: Skipping %s architecture " % arch_file)
+        extract_vpr_stats(args.top_module+"_min_channel_reroute_vpr.txt")
 
-#     script_list=[]
-#     for eacharch in archfile_list:
-#         script_list.append(create_run_script(gc["temp_run_dir"],
-#                                              eacharch,
-#                                              benchmark_list,
-#                                              task_conf["GENERAL"]["power_tech_file"],
-#                                              task_conf["SCRIPT_PARAM"]))
-#     return script_list
+    # Fixed routing channel width
+    elif args.fix_route_chan_width:
+        min_channel_width = run_standard_vpr(
+            args.top_module+"_ace_corrected_out.blif",
+            args.fix_route_chan_width,
+            args.top_module+"_fr_chan_width.txt")
+        logger.info("Fixed routing channel successfully routed with %d width" %
+                    min_channel_width)
+        extract_vpr_stats(args.top_module+"_fr_chan_width.txt")
+    else:
+        extract_vpr_stats(args.top_module+"_min_chan_width.txt")
+    if args.power:
+        extract_vpr_power_esti(args.top_module+"_ace_corrected_out.power")
 
 
-# def create_run_script(task_run_dir, archfile, benchmark_list, power_tech_file, additional_fpga_flow_params):
-#     """
-#     Create_run_script function accespts run directory, architecture list and
-#     fpga_flow configuration file and prepare final executable fpga_flow script
-#     TODO : Replace this section after convert fpga_flow to python script
-#     Config file creation and bechnmark list can be skipped
-#     """
-#     # = = = = = = = = = File/Directory Consitancy Check = = = = = = = = = =
-#     if not os.path.isdir(gc["misc_dir"]):
-#         clean_up_and_exit("Miscellaneous directory does not exist")
+def run_standard_vpr(bench_blif, fixed_chan_width, logfile):
+    command = [cad_tools["vpr_path"],
+               args.arch_file,
+               bench_blif,
+               "--net_file", args.top_module+"_vpr.net",
+               "--place_file", args.top_module+"_vpr.place",
+               "--route_file", args.top_module+"_vpr.route",
+               "--full_stats", "--nodisp"
+               ]
+    # Power options
+    if args.power:
+        command += ["--power",
+                    "--activity_file", args.top_module+"_ace_out.act",
+                    "--tech_properties", args.power_tech]
+    # packer options
+    if args.vpr_timing_pack_off:
+        command += ["--timing_driven_clustering", "off"]
+    #  channel width option
+    if fixed_chan_width >= 0:
+        command += ["-route_chan_width", fixed_chan_width]
+    if args.vpr_use_tileable_route_chan_width:
+        command += ["--use_tileable_route_chan_width"]
 
-#     fpga_flow_script=os.path.join(gc["misc_dir"], "fpga_flow_template.sh")
-#     if not os.path.isfile(fpga_flow_script):
-#         clean_up_and_exit("Missing fpga_flow script template %s" %
-#                           fpga_flow_script)
+    # FPGA_Spice Options
+    if (args.power and args.vpr_fpga_spice):
+        command += ["--fpga_spice"]
+        if args.vpr_fpga_x2p_signal_density_weight:
+            command += ["--fpga_x2p_signal_density_weight",
+                        args.vpr_fpga_x2p_signal_density_weight]
+        if args.vpr_fpga_x2p_sim_window_size:
+            command += ["--fpga_x2p_sim_window_size",
+                        args.vpr_fpga_x2p_sim_window_size]
+        if args.vpr_fpga_spice_sim_mt_num:
+            command += ["--fpga_spice_sim_mt_num",
+                        args.vpr_fpga_spice_sim_mt_num]
+        if args.vpr_fpga_spice_simulator_path:
+            command += ["--fpga_spice_simulator_path",
+                        args.vpr_fpga_spice_simulator_path]
+        if args.vpr_fpga_spice_print_component_tb:
+            command += ["--fpga_spice_print_lut_testbench",
+                        "--fpga_spice_print_hardlogic_testbench",
+                        "--fpga_spice_print_pb_mux_testbench",
+                        "--fpga_spice_print_cb_mux_testbench",
+                        "--fpga_spice_print_sb_mux_testbench"
+                        ]
+        if args.vpr_fpga_spice_print_grid_tb:
+            command += ["--fpga_spice_print_grid_testbench",
+                        "--fpga_spice_print_cb_testbench",
+                        "--fpga_spice_print_sb_testbench"
+                        ]
+        if args.vpr_fpga_spice_print_top_tb:
+            command += ["--fpga_spice_print_top_testbench"]
+        if args.vpr_fpga_spice_leakage_only:
+            command += ["--fpga_spice_leakage_only"]
+        if args.vpr_fpga_spice_parasitic_net_estimation_off:
+            command += ["--fpga_spice_parasitic_net_estimation", "off"]
+        if args.vpr_fpga_spice_testbench_load_extraction_off:
+            command += ["--fpga_spice_testbench_load_extraction", "off"]
 
-#     fpga_flow_conf_tmpl=os.path.join(gc["misc_dir"], "fpga_flow_script.conf")
-#     if not os.path.isfile(fpga_flow_conf_tmpl):
-#         clean_up_and_exit("fpga_flow configuration tempalte is missing %s" %
-#                           fpga_flow_conf_tmpl)
+    # FPGA Verilog options
+    if (args.power and args.vpr_fpga_verilog):
+        command += ["--fpga_verilog"]
+        if args.vpr_fpga_verilog_dir:
+            command += ["--fpga_verilog_dir", args.vpr_fpga_verilog_dir]
+        if args.vpr_fpga_verilog_print_top_tb:
+            command += ["--fpga_verilog_print_top_testbench"]
+        if args.vpr_fpga_verilog_print_input_blif_tb:
+            command += ["--fpga_verilog_print_input_blif_testbench"]
+        if args.vpr_fpga_verilog_print_autocheck_top_testbench:
+            command += ["--fpga_verilog_print_autocheck_top_testbench",
+                        args.top_module+"_output_verilog.v"]
+        if args.vpr_fpga_verilog_include_timing:
+            command += ["--fpga_verilog_include_timing"]
+        if args.vpr_fpga_verilog_include_signal_init:
+            command += ["--fpga_verilog_include_signal_init"]
+        if args.vpr_fpga_verilog_formal_verification_top_netlist:
+            command += ["--fpga_verilog_formal_verification_top_netlist"]
+        if args.vpr_fpga_verilog_print_modelsim_autodeck:
+            command += ["--fpga_verilog_print_modelsim_autodeck",
+                        args.vpr_fpga_verilog_print_modelsim_autodeck]
+        if args.vpr_fpga_verilog_include_icarus_simulator:
+            command += ["--fpga_verilog_include_icarus_simulator"]
+        if args.vpr_fpga_verilog_print_report_timing_tcl:
+            command += ["--fpga_verilog_print_report_timing_tcl"]
+        if args.vpr_fpga_verilog_report_timing_rpt_path:
+            command += ["--fpga_verilog_report_timing_rpt_path",
+                        args.vpr_fpga_verilog_report_timing_rpt_path]
+        if args.vpr_fpga_verilog_print_sdc_pnr:
+            command += ["--fpga_verilog_print_sdc_pnr"]
+        if args.vpr_fpga_verilog_print_user_defined_template:
+            command += ["--fpga_verilog_print_user_defined_template"]
+        if args.vpr_fpga_verilog_print_sdc_analysis:
+            command += ["--fpga_verilog_print_sdc_analysis"]
 
-#     # = = = = = = = = = = = =  Create execution folder = = = = = = = = = = = =
-#     # TODO : this directory should change as <architecture>/<benchmark>/{conf_opt}
-#     curr_job_dir=os.path.join(task_run_dir, "tmp")
-#     if os.path.isdir(curr_job_dir):
-#         shutil.rmtree(curr_job_dir)
-#     os.makedirs(curr_job_dir)
-#     os.chdir(curr_job_dir)
+    # FPGA Bitstream Genration options
+    if args.vpr_fpga_verilog_print_sdc_analysis:
+        command += ["--fpga_bitstream_generator"]
 
-#     # = = = = = = = = = = = Create config file= = = = = = = = = = = = = = = =
-#     fpga_flow_conf=ConfigParser(
-#         strict=False,
-#         interpolation=ExtendedInterpolation())
-#     fpga_flow_conf.read_dict(script_env_vars)
-#     fpga_flow_conf.read_file(open(fpga_flow_conf_tmpl))
+    if args.vpr_fpga_x2p_rename_illegal_port or \
+            args.vpr_fpga_spice or \
+            args.vpr_fpga_verilog:
+        command += ["--fpga_x2p_rename_illegal_port"]
 
-#     # HACK: Find better way to resolve all interpolations in the script and write back
-#     for eachSection in fpga_flow_conf:
-#         for eachkey in fpga_flow_conf[eachSection].keys():
-#             fpga_flow_conf[eachSection][eachkey] = fpga_flow_conf.get(
-#                 eachSection, eachkey)
+    # Other VPR options
+    if args.vpr_place_clb_pin_remap:
+        command += ["--place_clb_pin_remap"]
+    if args.vpr_route_breadthfirst:
+        command += ["--router_algorithm", "breadth_first"]
+    if args.vpr_max_router_iteration:
+        command += ["--max_router_iterations", args.vpr_max_router_iteration]
 
-#     # Update configuration file with script realated parameters
-#     fpga_flow_conf["flow_conf"]["vpr_arch"] = archfile
-#     fpga_flow_conf["flow_conf"]["power_tech_xml"] = power_tech_file
-
-#     # Remove extra path section and create configuration file
-#     fpga_flow_conf.remove_section("PATH")
-#     with open("openfpga_job.conf", 'w') as configfile:
-#         fpga_flow_conf.write(configfile)
-
-#     # = = = = = = = = = = = Create Benchmark List file = = = = = = = = = = = =
-#     # TODO: This script strips common path from bechmark list and add
-#     # only single directory and filename to benchmarklist file
-#     # This can be imporoved by modifying fpga_flow script
-#     with open("openfpga_benchmark_list.txt", 'w') as configfile:
-#         configfile.write("# Circuit Names, fixed routing channel width\n")
-#         for eachBenchMark in benchmark_list:
-#             configfile.write(eachBenchMark.replace(
-#                 fpga_flow_conf["dir_path"]["benchmark_dir"], ""))
-#             configfile.write(",30")
-#             configfile.write("\n")
-
-#     # = = = = = = = = = Create fpga_flow_shell Script  = = = = = = = = = = = =
-#     d = {
-#         "fpga_flow_script": shlex.quote(gc["script_default"]),
-#         "conf_file": shlex.quote(os.path.join(os.getcwd(), "openfpga_job.conf")),
-#         "benchmark_list_file":  shlex.quote(os.path.join(os.getcwd(), "openfpga_benchmark_list.txt")),
-#         "csv_rpt_file": shlex.quote(os.path.join(os.getcwd(), os.path.join(gc["csv_rpt_dir"], "fpga_flow.csv"))),
-#         "verilog_output_path": shlex.quote(os.path.join(os.getcwd(), gc["verilog_output_path"])),
-#         "additional_params": " \\\n    ".join(["-%s  %s" % (key, value or "") for key, value in additional_fpga_flow_params.items()])
-#     }
-#     result = Template(open(fpga_flow_script).read()).substitute(d)
-#     fpga_flow_script_path = os.path.join(os.getcwd(), "openfpga_flow.sh")
-#     with open(fpga_flow_script_path, 'w') as configfile:
-#         configfile.write(result)
-#     return fpga_flow_script_path
+    chan_width = None
+    try:
+        with open(logfile, 'w+') as output:
+            output.write(" ".join(command)+"\n")
+            process = subprocess.run(command,
+                                     check=True,
+                                     stdout=subprocess.PIPE,
+                                     stderr=subprocess.PIPE,
+                                     universal_newlines=True)
+            for line in process.stdout.split('\n'):
+                if "Best routing" in line:
+                    chan_width = re.search(
+                        r"channel width factor of ([0-9]+)", line).group(1)
+                if "Circuit successfully routed" in line:
+                    chan_width = re.search(
+                        r"a channel width factor of ([0-9]+)", line).group(1)
+            output.write(process.stdout)
+            if process.returncode:
+                logger.info("Standard VPR run failed with returncode %d",
+                            process.returncode)
+    except:
+        logger.exception("Failed to run VPR")
+        clean_up_and_exit("")
+    logger.info("VPR output is written in file %s" % logfile)
+    return int(chan_width)
 
 
-# def run_single_script(s, script_path):
-#     logging.debug('Waiting to join the pool')
-#     with s:
-#         name = threading.currentThread().getName()
-#         subprocess.run(["bash", script_path], stdout=subprocess.PIPE)
-#         logging.info("%s Finished " % name)
+def run_vpr_route(bench_blif, fixed_chan_width, logfile):
+    command = [cad_tools["vpr_path"],
+               args.arch_file,
+               bench_blif,
+               "--net_file", args.top_module+"_vpr.net",
+               "--place_file", args.top_module+"_vpr.place",
+               "--route_file", args.top_module+"_vpr.route",
+               "--full_stats", "--nodisp"
+               ]
+    if args.power:
+        command += [
+            "--power",
+            "--activity_file", args.top_module+"_ace_out.act",
+            "--tech_properties", args.power_tech]
+    if fixed_chan_width >= 0:
+        command += ["-route_chan_width", "%d" % fixed_chan_width]
+
+    # VPR - SPICE options
+    if args.power and args.vpr_fpga_spice:
+        command += "--fpga_spice"
+        if args.vpr_fpga_spice_print_cbsbtb:
+            command += ["--print_spice_cb_mux_testbench",
+                        "--print_spice_sb_mux_testbench"]
+        if args.vpr_fpga_spice_print_pbtb:
+            command += ["--print_spice_pb_mux_testbench",
+                        "--print_spice_lut_testbench",
+                        "--print_spice_hardlogic_testbench"]
+        if args.vpr_fpga_spice_print_gridtb:
+            command += ["--print_spice_grid_testbench"]
+        if args.vpr_fpga_spice_print_toptb:
+            command += ["--print_spice_top_testbench"]
+        if args.vpr_fpga_spice_leakage_only:
+            command += ["--fpga_spice_leakage_only"]
+        if args.vpr_fpga_spice_parasitic_net_estimation_off:
+            command += ["--fpga_spice_parasitic_net_estimation_off"]
+
+    if args.vpr_fpga_verilog:
+        command += ["--fpga_verilog"]
+        if args.vpr_fpga_x2p_rename_illegal_port:
+            command += ["--fpga_x2p_rename_illegal_port"]
+
+    if args.vpr_max_router_iteration:
+        command += ["--max_router_iterations", args.vpr_max_router_iteration]
+    if args.vpr_route_breadthfirst:
+        command += ["--router_algorithm", "breadth_first"]
+    chan_width = None
+    try:
+        with open(logfile, 'w+') as output:
+            output.write(" ".join(command)+"\n")
+            process = subprocess.run(command,
+                                     check=True,
+                                     stdout=subprocess.PIPE,
+                                     stderr=subprocess.PIPE,
+                                     universal_newlines=True)
+            for line in process.stdout.split('\n'):
+                if "Best routing" in line:
+                    chan_width = re.search(
+                        r"channel width factor of ([0-9]+)", line).group(1)
+                if "Circuit successfully routed" in line:
+                    chan_width = re.search(
+                        r"a channel width factor of ([0-9]+)", line).group(1)
+            output.write(process.stdout)
+            if process.returncode:
+                logger.info("Standard VPR run failed with returncode %d",
+                            process.returncode)
+    except:
+        logger.exception("Failed to run VPR")
+        clean_up_and_exit("")
+    logger.info("VPR output is written in file %s" % logfile)
+    return chan_width
 
 
-# def run_actions(actions):
-#     thread_sema = threading.Semaphore(args.maxthreads)
-#     thred_list = []
-#     for index, eachAction in enumerate(actions):
-#         t = threading.Thread(target=run_single_script,
-#                              name='benchmark_' + str(index),
-#                              args=(thread_sema, eachAction))
-#         t.start()
-#         thred_list.append(t)
+def extract_vpr_stats(logfile):
+    # TODO: Sloppy code need improovement
+    # Without changing config input format
 
-#     for eachthread in thred_list:
-#         eachthread.join()
+    vpr_log = open(logfile).read()
+    resultDict = {}
+    for name, value in config.items("DEFAULT_PARSE_RESULT_VPR"):
+        reg_string, _ = value.split(",")
+        match = re.search(reg_string[1:-1], vpr_log)
+        if match:
+            extract_val = match.group(1)
+            resultDict[name] = extract_val
+
+    dummyparser = ConfigParser()
+    dummyparser.read_dict({args.top_module+"_RESULTS": resultDict})
+
+    with open('vpr_stat.result', 'w') as configfile:
+        dummyparser.write(configfile)
+    logger.info("VPR statistics is extracted in file vpr_stat.result")
+
+
+def extract_vpr_power_esti(logfile):
+    vpr_log = open(logfile).read()
+    resultDict = {}
+    for name, value in config.items("DEFAULT_PARSE_RESULT_VPR"):
+        reg_string, _ = value.split(",")
+        match = re.search(reg_string[1:-1], vpr_log)
+        if match:
+            extract_val = match.group(1)
+            resultDict[name] = extract_val
+
+    dummyparser = ConfigParser()
+    dummyparser.read_dict({args.top_module+"_RESULTS": resultDict})
+
+    with open('vpr_power_stat.result', 'w') as configfile:
+        dummyparser.write(configfile)
+    logger.info("VPR_Power statistics are extracted vpr_power_stat.result")
+
+
+def run_rewrite_verilog():
+    # Rewrite the verilog after optimization
+    script_cmd = [
+        "read_blif %s" % args.top_module+"_ace_corrected_out.blif",
+        "write_verilog %s" % args.top_module+"_output_verilog.v"
+    ]
+    command = [cad_tools["yosys_path"], "-p", "; ".join(script_cmd)]
+    try:
+        with open('yosys_rewrite_veri_output.txt', 'w+') as output:
+            process = subprocess.run(command,
+                                     check=True,
+                                     stdout=subprocess.PIPE,
+                                     stderr=subprocess.PIPE,
+                                     universal_newlines=True)
+            output.write(process.stdout)
+            if process.returncode:
+                logger.info("Rewrite veri yosys run failed with returncode %d",
+                            process.returncode)
+    except:
+        logger.exception("Failed to run VPR")
+        clean_up_and_exit("")
+    logger.info("Yosys output is written in file yosys_rewrite_veri_output.txt")
+
+
+def run_netlists_verification():
+    compiled_file = "compiled_"+args.top_module
+    # include_netlists = args.top_module+"_include_netlists.v"
+    tb_top_formal = args.top_module+"_top_formal_verification_random_tb"
+    tb_top_autochecked = args.top_module+"_autocheck_top_tb"
+    # netlists_path = args.vpr_fpga_verilog_dir_val+"/SRC/"
+
+    command = [cad_tools["iverilog_path"]]
+    command += ["-o", compiled_file]
+    command += [cad_tools["include_netlist_verification"]]
+    command += ["-s"]
+    if args.vpr_fpga_verilog_formal_verification_top_netlist:
+        command += [tb_top_formal]
+    else:
+        command += [tb_top_autochecked]
+    run_command("iverilog_verification", "iverilog_output.txt", command)
+
+    vvp_command = ["vvp", compiled_file]
+    run_command("vvp_verification", "vvp_sim_output.txt", vvp_command)
+
+
+def run_command(taskname, logfile, command, exit_if_fail=True):
+    try:
+        with open(logfile, 'w+') as output:
+            output.write(" ".join(command)+"\n")
+            process = subprocess.run(command,
+                                     check=True,
+                                     stdout=subprocess.PIPE,
+                                     stderr=subprocess.PIPE,
+                                     universal_newlines=True)
+            output.write(process.stdout)
+            if process.returncode:
+                logger.error("%s run failed with returncode %d" %
+                             (taskname, process.returncode))
+    except:
+        logger.exception()
+        if exit_if_fail:
+            clean_up_and_exit("Failed to run %s task" % taskname)
+    logger.info("%s is written in file %s" % (taskname, logfile))
+
+
+def external_call(parent_logger=None, passed_args=[]):
+    global logger, args
+    parent_logger = parent_logger
+    args = parser.parse_args(passed_args)
+    main()
 
 
 if __name__ == "__main__":
+    # Setting up print and logging system
+    logging.basicConfig(level=logging.INFO,
+                        format='%(levelname)s (%(threadName)-9s) - %(message)s')
+    logger = logging.getLogger('OpenFPGA_Flow_Logs')
+
+    # Parse commandline argument
+    args = parser.parse_args()
     main()
