@@ -35,11 +35,12 @@ set_target_properties(libarchfpga PROPERTIES PREFIX "") #Avoid extra 'lib' prefi
 
 # Specify dependency 
 target_link_libraries(libarchfpga
+                      libvtrutil
                       libpcre
                       libprinthandler)
 
 add_executable(read_arch ${EXEC_SOURCES})
-target_link_libraries(read_arch libarchfpga)
+target_link_libraries(read_arch libarchfpga libvtrutil)
 
 
 # install: TO BE TESTED

@@ -192,6 +192,18 @@ int count_num_sram_bits_one_mux_spice_model(t_spice_model* cur_spice_model,
     } 
     break;
   case SPICE_MODEL_DESIGN_CMOS:
+    /* When a local encoder is added, the number of sram bits will be reduced
+     * to N * log_2{X}, where N is the number of levels and X is the number of inputs per level
+     * Note that: we only apply this to one-level and multi-level multiplexers
+     */
+    if ( (TRUE == cur_spice_model->design_tech_info.mux_info->local_encoder) 
+        && (2 < num_input_size) ) { 
+      if (SPICE_MODEL_STRUCTURE_ONELEVEL == cur_spice_model->design_tech_info.mux_info->structure) {
+        num_sram_bits = ceil(log(num_sram_bits + 1) / log(2));
+      } else if (SPICE_MODEL_STRUCTURE_MULTILEVEL == cur_spice_model->design_tech_info.mux_info->structure) {
+        num_sram_bits = cur_spice_model->design_tech_info.mux_info->mux_num_level * ceil(log(num_sram_bits / cur_spice_model->design_tech_info.mux_info->mux_num_level + 1) / log(2));
+      }
+    }
     break;
   default:
     vpr_printf(TIO_MESSAGE_ERROR,"(FILE:%s,LINE[%d])Invalid design_technology of MUX(name: %s)\n",
@@ -702,6 +714,18 @@ int count_num_conf_bits_one_mux_spice_model(t_spice_model* cur_spice_model,
     }
     break;
   case SPICE_MODEL_DESIGN_CMOS:
+    /* When a local encoder is added, the number of sram bits will be reduced
+     * to N * log_2{X}, where N is the number of levels and X is the number of inputs per level
+     * Note that: we only apply this to one-level and multi-level multiplexers
+     */
+    if ( (TRUE == cur_spice_model->design_tech_info.mux_info->local_encoder) 
+        && (2 < num_input_size) ) { 
+      if (SPICE_MODEL_STRUCTURE_ONELEVEL == cur_spice_model->design_tech_info.mux_info->structure) {
+        num_conf_bits = ceil(log(num_conf_bits + 1) / log(2));
+      } else if (SPICE_MODEL_STRUCTURE_MULTILEVEL == cur_spice_model->design_tech_info.mux_info->structure) {
+        num_conf_bits = cur_spice_model->design_tech_info.mux_info->mux_num_level * ceil(log(num_conf_bits / cur_spice_model->design_tech_info.mux_info->mux_num_level + 1) / log(2));
+      }
+    }
     break;
   default:
     vpr_printf(TIO_MESSAGE_ERROR,"(FILE:%s,LINE[%d])Invalid design_technology of MUX(name: %s)\n",

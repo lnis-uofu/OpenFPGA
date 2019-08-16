@@ -810,6 +810,7 @@ struct s_det_routing_arch {
 	int Fs;
 	enum e_switch_block_type switch_block_type;
 	int sub_Fs;
+    boolean wire_opposite_side;
 	enum e_switch_block_type switch_block_sub_type;
 	int num_segment;
 	short num_switch;
@@ -1127,6 +1128,7 @@ typedef struct s_clb_to_clb_directs {
 	int y_offset;
 	int z_offset;
     t_spice_model* spice_model;
+    CircuitModelId circuit_model;
     char* name;
 } t_clb_to_clb_directs;
 
@@ -1257,6 +1259,7 @@ struct s_spice_opts {
 typedef struct s_syn_verilog_opts t_syn_verilog_opts;
 struct s_syn_verilog_opts {
   boolean dump_syn_verilog;
+  boolean dump_explicit_verilog;
   char* syn_verilog_dump_dir;
   boolean print_top_testbench;
   boolean print_input_blif_testbench;

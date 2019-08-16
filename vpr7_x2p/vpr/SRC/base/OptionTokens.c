@@ -86,6 +86,7 @@ struct s_TokenPair OptionBaseTokenList[] = {
         /* Xifan TANG: Synthsizable Verilog */
         { "fpga_verilog", OT_FPGA_VERILOG_SYN },
         { "fpga_verilog_dir", OT_FPGA_VERILOG_SYN_DIR },
+        { "fpga_verilog_explicit_mapping", OT_FPGA_VERILOG_SYN_EXPLICIT_MAPPING },
         { "fpga_verilog_print_top_testbench", OT_FPGA_VERILOG_SYN_PRINT_TOP_TESTBENCH },
         { "fpga_verilog_print_autocheck_top_testbench", OT_FPGA_VERILOG_SYN_PRINT_AUTOCHECK_TOP_TESTBENCH },
         { "fpga_verilog_print_input_blif_testbench", OT_FPGA_VERILOG_SYN_PRINT_INPUT_BLIF_TESTBENCH },
@@ -101,7 +102,7 @@ struct s_TokenPair OptionBaseTokenList[] = {
         { "fpga_verilog_print_sdc_analysis", OT_FPGA_VERILOG_SYN_PRINT_SDC_ANALYSIS }, /* Specify the simulator path for Verilog netlists */
         /* Xifan Tang: Bitstream generator */
         { "fpga_bitstream_generator", OT_FPGA_BITSTREAM_GENERATOR }, /* turn on bitstream generator, and specify the output file */
-        { "fpga_bitstream_output_file", OT_FPGA_BITSTREAM_OUTPUT_FILE }, /* turn on bitstream generator, and specify the output file */
+ //       { "fpga_bitstream_output_file", OT_FPGA_BITSTREAM_OUTPUT_FILE }, /* turn on bitstream generator, and specify the output file */ // AA: temporarily deprecated
         /* mrFPGA: Xifan TANG */
         {"show_sram", OT_SHOW_SRAM},
         {"show_pass_trans", OT_SHOW_PASS_TRANS},

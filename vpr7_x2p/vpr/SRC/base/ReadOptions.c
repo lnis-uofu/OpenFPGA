@@ -531,6 +531,8 @@ ProcessOption(INP char **Args, INOUTP t_options * Options) {
       return Args;
     case OT_FPGA_VERILOG_SYN_DIR:
       return ReadString(Args, &Options->fpga_syn_verilog_dir);
+    case OT_FPGA_VERILOG_SYN_EXPLICIT_MAPPING:
+      return Args;
     case OT_FPGA_VERILOG_SYN_PRINT_TOP_TESTBENCH:
       return Args;
     case OT_FPGA_VERILOG_SYN_PRINT_AUTOCHECK_TOP_TESTBENCH:
@@ -560,8 +562,8 @@ ProcessOption(INP char **Args, INOUTP t_options * Options) {
     /* Xifan TANG: Bitstream generator */
     case OT_FPGA_BITSTREAM_GENERATOR:
       return Args;
-    case OT_FPGA_BITSTREAM_OUTPUT_FILE:
-      return ReadString(Args, &Options->fpga_bitstream_file);
+//    case OT_FPGA_BITSTREAM_OUTPUT_FILE:	// AA: temporarily deprecated
+//      return ReadString(Args, &Options->fpga_bitstream_file);
     /* mrFPGA: Xifan TANG */
     case OT_SHOW_SRAM:
     case OT_SHOW_PASS_TRANS:

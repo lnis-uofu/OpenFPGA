@@ -23,8 +23,8 @@
  ***********************************************************************/
 
 /************************************************************************
- * Filename:    rr_blocks.cpp
- * Created by:   Xifan Tang
+ * Filename:    read_xml_arch_file.c
+ * Created by:   Jason Luu
  * Change history:
  * +-------------------------------------+
  * |  Date       |    Author   | Notes
@@ -1052,9 +1052,9 @@ static void ProcessPb_Type(INOUTP ezxml_t Parent, t_pb_type * pb_type,
      * We should have a spice_model_name if this mode defines the transistor-level circuit design
      * Since this is a leaf node
      */
-    pb_type->spice_model_name = my_strdup(FindProperty(Parent, "spice_model_name", FALSE));
+    pb_type->spice_model_name = my_strdup(FindProperty(Parent, "circuit_model_name", FALSE));
     pb_type->spice_model = NULL;
-    ezxml_set_attr(Parent, "spice_model_name", NULL);
+    ezxml_set_attr(Parent, "circuit_model_name", NULL);
     /* Multi-mode CLB support:
      * We can read the mode configuration bits if they are defined 
      */
@@ -1400,7 +1400,7 @@ static void ProcessInterconnect(INOUTP ezxml_t Parent, t_mode * mode) {
 
 
             /* Xifan TANG: SPICE Support */
-            Prop = FindProperty(Cur, "spice_model_name", FALSE);
+            Prop = FindProperty(Cur, "circuit_model_name", FALSE);
             /* Default spice_model will be define later*/
             mode->interconnect[i].spice_model_name = my_strdup(Prop);
             mode->interconnect[i].spice_model = NULL;
@@ -1408,7 +1408,7 @@ static void ProcessInterconnect(INOUTP ezxml_t Parent, t_mode * mode) {
             mode->interconnect[i].fan_in = 0;
             mode->interconnect[i].fan_out = 0;
             mode->interconnect[i].num_mux = 0;
-            ezxml_set_attr(Cur, "spice_model_name", NULL);
+            ezxml_set_attr(Cur, "circuit_model_name", NULL);
             /* Get sram offset */
             mode->interconnect[i].spice_model_sram_offset = GetIntProperty(Cur, "spice_model_sram_offset", FALSE, 0); 
             ezxml_set_attr(Cur, "spice_model_sram_offset", NULL);
@@ -2199,6 +2199,10 @@ static void ProcessDevice(INOUTP ezxml_t Node, OUTP struct s_arch *arch,
     /* SubFs is Fs for the switch block type of passing tracks */
     /* By default, the subFs is the same as the main Fs */ 
 	arch->SubFs = GetIntProperty(Cur, "sub_fs", FALSE, arch->Fs);
+
+    /* A switch to allow passing tracks wired to the same routing channels */
+	arch->wire_opposite_side = GetBooleanProperty(Cur, "wire_opposite_side", FALSE, FALSE);
+	ezxml_set_attr(Cur, "wire_opposite_side", NULL);
 
 	FreeNode(Cur);
 }
@@ -3246,9 +3250,9 @@ static void ProcessSegments(INOUTP ezxml_t Parent,
 		(*Segs)[i].Rmetal = GetFloatProperty(Node, "Rmetal", timing_enabled, 0);
 		(*Segs)[i].Cmetal = GetFloatProperty(Node, "Cmetal", timing_enabled, 0);
         /* Xifan TANG: SPICE Model Support*/
-        (*Segs)[i].spice_model_name = my_strdup(FindProperty(Node, "spice_model_name", FALSE));
+        (*Segs)[i].spice_model_name = my_strdup(FindProperty(Node, "circuit_model_name", FALSE));
         (*Segs)[i].spice_model = NULL;
-	    ezxml_set_attr(Node, "spice_model_name", NULL);
+	    ezxml_set_attr(Node, "circuit_model_name", NULL);
 		/* Get Power info */
 		/*
 		(*Segs)[i].Cmetal_per_m = GetFloatProperty(Node, "Cmetal_per_m", FALSE,
@@ -3524,9 +3528,9 @@ static void ProcessSwitches(INOUTP ezxml_t Parent,
 				FALSE, 1);
 
         /* Xifan TANG: Spice Model Support */
-        (*Switches)[i].spice_model_name = my_strdup(FindProperty(Node, "spice_model_name", FALSE));
+        (*Switches)[i].spice_model_name = my_strdup(FindProperty(Node, "circuit_model_name", FALSE));
         (*Switches)[i].spice_model = NULL;
-	    ezxml_set_attr(Node, "spice_model_name", NULL);
+	    ezxml_set_attr(Node, "circuit_model_name", NULL);
         /* Xifan TANG : Read in MUX structure*/ 
         /* Default, we use tree */
         structure_type = FindProperty(Node, "structure", FALSE);
@@ -3639,9 +3643,9 @@ static void ProcessDirects(INOUTP ezxml_t Parent, OUTP t_direct_inf **Directs,
         /* Spice Model Support: Xifan TANG
          * We should have a spice_model_name for this direct connection 
          */
-        (*Directs)[i].spice_model_name = my_strdup(FindProperty(Node, "spice_model_name", FALSE));
+        (*Directs)[i].spice_model_name = my_strdup(FindProperty(Node, "circuit_model_name", FALSE));
         (*Directs)[i].spice_model = NULL;
-         ezxml_set_attr(Node,"spice_model_name",NULL);
+         ezxml_set_attr(Node,"circuit_model_name",NULL);
  
 
 		(*Directs)[i].line = Node->line;

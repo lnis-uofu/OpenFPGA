@@ -1,39 +1,30 @@
-# Getting Started with FPGA-SPICE
-
+# Getting Started with OpenFPGA <img src="./docs/source/figures/OpenFPGA_logo.png" width="200" align="right">
 [![Build Status](https://travis-ci.org/LNIS-Projects/OpenFPGA.svg?branch=master)](https://travis-ci.org/LNIS-Projects/OpenFPGA)
 [![Documentation Status](https://readthedocs.org/projects/openfpga/badge/?version=master)](https://openfpga.readthedocs.io/en/master/?badge=master)
 
 ## Introduction
-
-FPGA-SPICE is an extension to VPR. It is an IP Verilog Generator allowing reliable and fast testing of heterogeneous architectures.
+The OpenFPGA framework is the **first open-source FPGA IP generator** supporting highly-customizable homogeneous FPGA architectures. OpenFPGA provides a full set of EDA support for customized FPGAs, including Verilog-to-bitstream generation and self-testing verification testbenches/scripts. OpenFPGA opens the door to democratizing FPGA technology and EDA techniques, with agile prototyping approaches and constantly evolving EDA tools for chip designers and researchers.<br />
 
 ## Compilation
+Dependencies and help using docker can be found at [**./tutorials/building.md**](https://github.com/LNIS-Projects/OpenFPGA/blob/master/tutorials/building.md).
 
-The different ways of compiling can be found in the **./compilation** folder. 
+**Compilation Steps:**
+1. git clone https://github.com/LNIS-Projects/OpenFPGA.git && cd OpenFPGA # *Clone the repository and go inside it*
+2. mkdir build && cd build # *Create a folder named build in the OpenPFGA repository*
+3. cmake ..  -DCMAKE_BUILD_TYPE=debug # *Create a Makefile in this folder using cmake*
+4. make # *Compile the tool and its dependencies*
 
-We currently implemented it for:
-
-1. Ubuntu 18.04
-2. Red Hat 7.5
-3. MacOS High Sierra 10.13.4
-
-Please note that those were the versions we tested the software for. It might work with earlier versions and other distributions.
+*We currently implemented OpenFPGA for:*<br />
+*1. Ubuntu 16.04*<br />
+*2. Red Hat 7.5*<br />
+*3. MacOS Mojave 10.14.4*<br /><br />
+*Please note that those were the versions for which the tool was tested. It might work with earlier versions and other distributions.*
 
 ## Documentation
 OpenFPGA's [full documentation](https://openfpga.readthedocs.io/en/master/) includes tutorials, descriptions of the design flow, and tool options.
 
-## Examples
+## Tutorials
+You can find some tutorials in the [**./tutorials**](https://github.com/LNIS-Projects/OpenFPGA/tree/master/tutorials) folder. This will help you get more familiar with the tool and use OpenFPGA under different configurations. 
 
-You can find in the folder **./examples**. This will help you get in touch with the software and test different configurations to see how FPGA-SPICE reacts to them. 
-
-./example_x.sh allows to launch the script linked to example_x.xml and .blif.
-
-In all the examples, the CLBs are composed of LUTs, FFs and MUXs as a base. 
-
-Example 1 shows a very basic design with only 4 inputs on the LUTs, a FF and a MUX in the CLB (only 1). It implements an inverter and allows the user to see the very core of the .xml file.
-
-Example 2 increases the complexity by having 3x3 CLBs and 4 slices per CLB. The slices provide a feedback to the input structure and input MUXs are added.
-
-
-
-
+Through those tutorials, users can learn how to use the flow and install the different dependencies.<br />
+The [tutorial index](https://github.com/LNIS-Projects/OpenFPGA/blob/master/tutorials/tutorial_index.md) will guide you through training and explain the folder oraganization as well as introducing some tips and commonly used keywords.

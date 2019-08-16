@@ -147,6 +147,7 @@ sub process_blifmodel($ $) {
         if ($temp eq $default_clk_name) {
           $have_default_clk = 1;
           $clk_num++;
+          print "Found 1 clock: $temp in @tokens\n";
           last;
         }
       }

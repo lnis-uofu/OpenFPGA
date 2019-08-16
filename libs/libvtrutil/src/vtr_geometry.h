@@ -49,6 +49,7 @@ template<class T>
 class Point {
     public: //Constructors
         Point(T x_val, T y_val);
+        Point();
 
     public: //Accessors
 
@@ -59,6 +60,10 @@ class Point {
         friend bool operator== <>(Point<T> lhs, Point<T> rhs);
         friend bool operator!= <>(Point<T> lhs, Point<T> rhs);
         friend bool operator< <>(Point<T> lhs, Point<T> rhs);
+    public: //Mutators
+        void set_x(T x_val);
+        void set_y(T y_val);
+        void swap();
     private:
         T x_;
         T y_;

@@ -60,6 +60,8 @@ t_spice_transistor_type* find_mosfet_tech_lib(t_spice_tech_lib tech_lib,
 
 char* my_itobin(int in_int, int bin_len);
 
+int* my_itobin_int(int in_int, int bin_len);
+
 char* my_itoa(int input);
 
 char* fpga_spice_create_one_subckt_filename(const char* file_name_prefix,
@@ -406,4 +408,5 @@ void get_fpga_x2p_global_all_clock_ports(t_llist* head,
 
 int my_strlen_int(int input_int);
 
+boolean my_bool_to_boolean(bool my_bool);
 #endif

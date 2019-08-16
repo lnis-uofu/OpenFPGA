@@ -63,6 +63,7 @@ char* logic_block_verilog_file_name = "logic_blocks.v";
 char* luts_verilog_file_name = "luts.v";
 char* routing_verilog_file_name = "routing.v";
 char* muxes_verilog_file_name = "muxes.v";
+char* local_encoder_verilog_file_name = "local_encoder.v";
 char* memories_verilog_file_name = "memories.v";
 char* wires_verilog_file_name = "wires.v";
 char* essentials_verilog_file_name = "inv_buf_passgate.v";

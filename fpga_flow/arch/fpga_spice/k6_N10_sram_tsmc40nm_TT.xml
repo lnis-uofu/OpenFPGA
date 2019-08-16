@@ -269,6 +269,7 @@
         <design_technology type="cmos"/>
         <input_buffer exist="on" circuit_model_name="INVTX1"/>
         <output_buffer exist="on" circuit_model_name="INVTX1"/>
+        <lut_input_inverter exist="on" circuit_model_name="INVTX1"/>
         <lut_input_buffer exist="on" circuit_model_name="buf4"/>
         <pass_gate_logic circuit_model_name="TGATE"/>
         <port type="input" prefix="in" size="6"/>

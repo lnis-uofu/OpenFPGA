@@ -55,6 +55,7 @@ extern char* logic_block_verilog_file_name;
 extern char* luts_verilog_file_name;
 extern char* routing_verilog_file_name;
 extern char* muxes_verilog_file_name;
+extern char* local_encoder_verilog_file_name;
 extern char* memories_verilog_file_name;
 extern char* wires_verilog_file_name;
 extern char* essentials_verilog_file_name;

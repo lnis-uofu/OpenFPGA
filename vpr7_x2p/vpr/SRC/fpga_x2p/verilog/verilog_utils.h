@@ -76,7 +76,11 @@ int rec_dump_verilog_spice_model_global_ports(FILE* fp,
                                               boolean require_explicit_port_map);
 
 int dump_verilog_global_ports(FILE* fp, t_llist* head,
-                              boolean dump_port_type);
+                              boolean dump_port_type,
+                              bool is_explicit_mapping);
+
+int dump_verilog_global_ports_explicit(FILE* fp, t_llist* head,
+                                       boolean dump_port_type);
 
 void dump_verilog_mux_sram_one_outport(FILE* fp, 
                                        t_sram_orgz_info* cur_sram_orgz_info,
@@ -96,7 +100,8 @@ void dump_verilog_mux_sram_one_local_outport(FILE* fp,
                                              t_spice_model* cur_mux_spice_model, int mux_size,
                                              int sram_lsb, int sram_msb,
                                              int port_type_index, 
-                                             enum e_dump_verilog_port_type dump_port_type);
+                                             enum e_dump_verilog_port_type dump_port_type,
+                                             bool is_explicit_mapping);
 
 void dump_verilog_sram_one_local_outport(FILE* fp, 
                                          t_sram_orgz_info* cur_sram_orgz_info,
@@ -112,7 +117,8 @@ void dump_verilog_sram_outports(FILE* fp,
 void dump_verilog_formal_verification_sram_ports(FILE* fp, 
                                                  t_sram_orgz_info* cur_sram_orgz_info,
                                                  int sram_lsb, int sram_msb,
-                                                 enum e_dump_verilog_port_type dump_port_type);
+                                                 enum e_dump_verilog_port_type dump_port_type,
+                                                 bool is_explicit_mapping);
 
 void dump_verilog_sram_one_port(FILE* fp, 
                                 t_sram_orgz_info* cur_sram_orgz_info,
@@ -123,7 +129,8 @@ void dump_verilog_sram_one_port(FILE* fp,
 void dump_verilog_sram_local_ports(FILE* fp, 
                                    t_sram_orgz_info* cur_sram_orgz_info,
                                    int sram_lsb, int sram_msb,
-                                   enum e_dump_verilog_port_type dump_port_type);
+                                   enum e_dump_verilog_port_type dump_port_type,
+                                   bool is_explicit_mapping);
 
 void dump_verilog_sram_ports(FILE* fp, t_sram_orgz_info* cur_sram_orgz_info,
                              int sram_lsb, int sram_msb,
@@ -184,17 +191,20 @@ void dump_verilog_cmos_mux_config_bus_ports(FILE* fp, t_spice_model* mux_spice_m
                                             t_sram_orgz_info* cur_sram_orgz_info,
                                             int mux_size, int cur_num_sram,
                                             int num_mux_reserved_conf_bits,
-                                            int num_mux_conf_bits); 
+                                            int num_mux_conf_bits,
+                                            bool is_explicit_mapping); 
 
 void dump_verilog_mux_config_bus_ports(FILE* fp, t_spice_model* mux_spice_model, 
                                        t_sram_orgz_info* cur_sram_orgz_info,
                                        int mux_size, int cur_num_sram,
                                        int num_mux_reserved_conf_bits,
-                                       int num_mux_conf_bits); 
+                                       int num_mux_conf_bits,
+                                       bool is_explicit_mapping); 
 
 void dump_verilog_grid_common_port(FILE* fp, t_spice_model* cur_verilog_model,
                                    char* general_port_prefix, int lsb, int msb,
-                                   enum e_dump_verilog_port_type dump_port_type);
+                                   enum e_dump_verilog_port_type dump_port_type,
+                                   bool is_explicit_mapping);
 
 void dump_verilog_sram_config_bus_internal_wires(FILE* fp, t_sram_orgz_info* cur_sram_orgz_info, 
                                                  int lsb, int msb);
@@ -210,6 +220,11 @@ char* generate_verilog_subckt_name(t_spice_model* spice_model,
 char* generate_verilog_mem_subckt_name(t_spice_model* spice_model, 
                                        t_spice_model* mem_model,
                                        char* postfix);
+
+char* generate_verilog_decoder_subckt_name(int addr_len, int data_len);
+
+char* generate_verilog_mux_basis_subckt_name(t_spice_model* spice_model, 
+                                             int mux_size, char* postfix);
 
 char* generate_verilog_mux_subckt_name(t_spice_model* spice_model, 
                                        int mux_size, char* postfix);
@@ -234,7 +249,8 @@ void dump_verilog_mem_sram_submodule(FILE* fp,
                                      t_sram_orgz_info* cur_sram_orgz_info,
                                      t_spice_model* cur_verilog_model, int mux_size,
                                      t_spice_model* cur_sram_verilog_model,
-                                     int lsb, int msb);
+                                     int lsb, int msb,
+                                     bool is_explicit_mapping);
 
 char* gen_verilog_grid_one_pin_name(int x, int y,
                                    int height, int side, int pin_index,

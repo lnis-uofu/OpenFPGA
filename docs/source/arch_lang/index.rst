@@ -19,6 +19,4 @@ Extended Architecture Description Language
   
    link_circuit_modules
 
-   .. multimode_support
-
    

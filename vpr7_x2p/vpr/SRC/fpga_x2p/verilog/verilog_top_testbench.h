@@ -6,7 +6,8 @@ void dump_verilog_top_testbench_global_ports_stimuli(FILE* fp, t_llist* head);
 
 void dump_verilog_top_testbench_call_top_module(t_sram_orgz_info* cur_sram_orgz_info,
                                                 FILE* fp,
-                                                char* circuit_name);
+                                                char* circuit_name,
+                                                bool is_explicit_mapping);
 
 void dump_verilog_top_testbench_stimuli(t_sram_orgz_info* cur_sram_orgz_info, 
                                         FILE* fp,

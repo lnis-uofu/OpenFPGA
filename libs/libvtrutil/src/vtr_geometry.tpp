@@ -11,6 +11,12 @@ namespace vtr {
     }
 
     template<class T>
+    Point<T>::Point() {
+        //pass
+    }
+
+
+    template<class T>
     T Point<T>::x() const {
         return x_;
     }
@@ -35,6 +41,22 @@ namespace vtr {
     bool operator<(Point<T> lhs, Point<T> rhs) {
         return std::make_tuple(lhs.x(), lhs.y()) < std::make_tuple(rhs.x(), rhs.y());
     }
+
+    template<class T>
+    void Point<T>::set_x(T x_val) {
+      x_  = x_val;
+    } 
+
+    template<class T>
+    void Point<T>::set_y(T y_val) {
+      y_  = y_val;
+    } 
+
+    template<class T>
+    void Point<T>::swap() {
+      std::swap(x_, y_);
+    } 
+
 
     /*
      * Rect

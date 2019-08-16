@@ -541,6 +541,7 @@ static void SetupRoutingArch(INP t_arch Arch,
 	RoutingArch->R_minW_pmos = Arch.R_minW_pmos;
 	RoutingArch->Fs = Arch.Fs;
 	RoutingArch->sub_Fs = Arch.SubFs;
+	RoutingArch->wire_opposite_side = Arch.wire_opposite_side;
 	RoutingArch->directionality = BI_DIRECTIONAL;
 	if (Arch.Segments)
 		RoutingArch->directionality = Arch.Segments[0].directionality;
@@ -1097,6 +1098,7 @@ static void SetupSynVerilogOpts(t_options Options,
   /* Initialize */  
   syn_verilog_opts->dump_syn_verilog = FALSE;
   syn_verilog_opts->syn_verilog_dump_dir = NULL;
+  syn_verilog_opts->dump_explicit_verilog = FALSE;
   syn_verilog_opts->print_top_testbench = FALSE;
   syn_verilog_opts->print_autocheck_top_testbench = FALSE;
   syn_verilog_opts->reference_verilog_benchmark_file = NULL;
@@ -1121,6 +1123,10 @@ static void SetupSynVerilogOpts(t_options Options,
 
   if (Options.Count[OT_FPGA_VERILOG_SYN_DIR]) {
     syn_verilog_opts->syn_verilog_dump_dir = my_strdup(Options.fpga_syn_verilog_dir);
+  }
+
+  if (Options.Count[OT_FPGA_VERILOG_SYN_EXPLICIT_MAPPING]) {
+    syn_verilog_opts->dump_explicit_verilog = TRUE;
   }
 
   if (Options.Count[OT_FPGA_VERILOG_SYN_PRINT_TOP_TESTBENCH]) {
@@ -1180,7 +1186,7 @@ static void SetupSynVerilogOpts(t_options Options,
   /* SynVerilog needs the input from spice modeling */
   if (FALSE == arch->read_xml_spice) {
     arch->read_xml_spice = syn_verilog_opts->dump_syn_verilog;
-    arch->spice = (t_spice*)my_malloc(sizeof(t_spice));
+    arch->spice = (t_spice*)my_calloc(1, sizeof(t_spice));
   }
 
   return;

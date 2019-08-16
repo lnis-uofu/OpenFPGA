@@ -153,6 +153,21 @@ void place_and_route(enum e_operation operation,
 		}
 		/* Other constraints can be left to rr_graph to check since this is one pass routing */
 
+        /* Xifan Tang: W estimation for tileable routing architecture */
+        /* Build the segment inf vector */
+        std::vector<t_segment_inf> segment_vec;
+        for (int iseg = 0; iseg < det_routing_arch.num_segment; ++iseg) {
+          segment_vec.push_back(segment_inf[iseg]);
+        }
+    
+        if (TRUE == router_opts.use_tileable_route_chan_width) {
+          int adapted_W = adapt_to_tileable_route_chan_width(width_fac, segment_vec); 
+          vpr_printf(TIO_MESSAGE_INFO, 
+                     "Adapt routing channel width (%d) to be tileable: %d\n", 
+                     width_fac, adapted_W);
+          width_fac = adapted_W;
+        }
+
 		/* Allocate the major routing structures. */
 
 		clb_opins_used_locally = alloc_route_structs();
@@ -338,19 +353,10 @@ static int binary_search_place_and_route(struct s_placer_opts placer_opts,
 		low = -1;
 	}
 
-    /* Xifan Tang: W estimation for tileable routing architecture */
     /* Build the segment inf vector */
     std::vector<t_segment_inf> segment_vec;
     for (int iseg = 0; iseg < det_routing_arch.num_segment; ++iseg) {
       segment_vec.push_back(segment_inf[iseg]);
-    }
-
-    if (TRUE == router_opts.use_tileable_route_chan_width) {
-      int adapted_W = adapt_to_tileable_route_chan_width(current, segment_vec); 
-      vpr_printf(TIO_MESSAGE_INFO, 
-                 "Adapt routing channel width (%d) to be tileable: %d\n", 
-                 current, adapted_W);
-      current = adapted_W;
     }
 
 	/* Constraints must be checked to not break rr_graph generator */
@@ -375,6 +381,21 @@ static int binary_search_place_and_route(struct s_placer_opts placer_opts,
 	attempt_count = 0;
 
 	while (final == -1) {
+        /* Xifan Tang: W estimation for tileable routing architecture */
+        if (TRUE == router_opts.use_tileable_route_chan_width) {
+          int adapted_W = adapt_to_tileable_route_chan_width(current, segment_vec); 
+          vpr_printf(TIO_MESSAGE_INFO, 
+                     "Adapt routing channel width (%d) to be tileable: %d\n", 
+                     current, adapted_W);
+          current = adapted_W;
+        }
+        /* Do a early exit when the current equals to high or low, 
+         * This means that the current W has been tried already. We just return a final value (high) 
+         */
+        if ( (current == high) || (current == low) ) {
+          final = high;
+	      break;
+        }
 
 		vpr_printf(TIO_MESSAGE_INFO, "Using low: %d, high: %d, current: %d\n", low, high, current);
 		fflush(stdout);
@@ -494,15 +515,6 @@ static int binary_search_place_and_route(struct s_placer_opts placer_opts,
 			}
 		}
 		current = current + current % udsd_multiplier;
-
-        /* Xifan Tang: W estimation for tileable routing architecture */
-        if (TRUE == router_opts.use_tileable_route_chan_width) {
-          int adapted_W = adapt_to_tileable_route_chan_width(current, segment_vec); 
-          vpr_printf(TIO_MESSAGE_INFO, 
-                     "Adapt routing channel width (%d) to be tileable: %d\n", 
-                     current, adapted_W);
-          current = adapted_W;
-        }
 	}
 
 	/* The binary search above occassionally does not find the minimum    *
@@ -594,6 +606,7 @@ static int binary_search_place_and_route(struct s_placer_opts placer_opts,
 			chan_width_x[0], NULL, 
             det_routing_arch.switch_block_type, det_routing_arch.Fs, 
             det_routing_arch.switch_block_sub_type, det_routing_arch.sub_Fs, 
+            det_routing_arch.wire_opposite_side,
             det_routing_arch.num_segment,
 			det_routing_arch.num_switch, segment_inf,
 			det_routing_arch.global_route_switch,

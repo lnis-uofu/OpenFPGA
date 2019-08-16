@@ -12,7 +12,7 @@ use Cwd;
 use FileHandle;
 # Multi-thread support
 use threads;
-use threads::shared;
+#use threads::shared;
 
 # Date
 my $mydate = gmctime();
@@ -46,7 +46,8 @@ my @supported_flows = ("standard",
                        "mpack1",
                        "vtr",
                        "vtr_standard",
-                       "yosys_vpr");
+                       "yosys_vpr",
+                       "vpr_only");
 my %selected_flows;
 
 # Configuration file keywords list
@@ -162,6 +163,7 @@ sub print_usage()
   print "      \t-vpr_fpga_x2p_rename_illegal_port : turn on renaming illegal ports option of VPR FPGA SPICE\n";
   print "      \t-vpr_fpga_x2p_signal_density_weight <float>: specify the option signal_density_weight of VPR FPGA SPICE\n";
   print "      \t-vpr_fpga_x2p_sim_window_size <float>: specify the option sim_window_size of VPR FPGA SPICE\n";
+  print "      \t-vpr_fpga_x2p_compact_routing_hierarchy : allow routing block modularization\n";
   print "      [ VPR - FPGA-SPICE Extension ] \n";
   print "      \t-vpr_fpga_spice <task_file> : turn on SPICE netlists print-out in VPR, specify a task file\n";
   print "      \t-vpr_fpga_spice_sim_mt_num <int>: specify the option sim_mt_num of VPR FPGA SPICE\n";
@@ -188,6 +190,7 @@ sub print_usage()
   print "      \t-vpr_fpga_verilog_print_top_tb : turn on printing top-level testbench for Verilog Generator of VPR FPGA SPICE\n";
   print "      \t-vpr_fpga_verilog_print_input_blif_tb : turn on printing testbench for input blif file in Verilog Generator of VPR FPGA SPICE\n";
   print "      \t-vpr_fpga_verilog_print_modelsim_autodeck <modelsim.ini_path>: turn on printing modelsim simulation script\n";
+  print "      \t-vpr_fpga_verilog_explicit_mapping\n";
   print "      [ VPR - FPGA-Bitstream Extension ] \n";
   print "      \t-vpr_fpga_bitstream_generator: turn on FPGA-SPICE bitstream generator\n";
   exit(1);
@@ -344,6 +347,7 @@ sub opts_read()
   &read_opt_into_hash("vpr_fpga_x2p_rename_illegal_port","off","off");
   &read_opt_into_hash("vpr_fpga_x2p_signal_density_weight","on","off");
   &read_opt_into_hash("vpr_fpga_x2p_sim_window_size","on","off");
+  &read_opt_into_hash("vpr_fpga_x2p_compact_routing_hierarchy","off","off");
   &read_opt_into_hash("vpr_fpga_spice_sim_mt_num","on","off");
   &read_opt_into_hash("vpr_fpga_spice_print_component_tb","off","off");
   &read_opt_into_hash("vpr_fpga_spice_print_grid_tb","off","off");
@@ -371,6 +375,7 @@ sub opts_read()
   &read_opt_into_hash("vpr_fpga_verilog_print_sdc_pnr","off","off");
   &read_opt_into_hash("vpr_fpga_verilog_print_sdc_analysis","off","off");
   &read_opt_into_hash("vpr_fpga_verilog_print_user_defined_template","off","off");
+  &read_opt_into_hash("vpr_fpga_verilog_explicit_mapping","off","off");
 
   # Regression test option
   &read_opt_into_hash("end_flow_with_test","off","off");
@@ -709,8 +714,6 @@ sub run_abc_fpgamap($ $ $)
   # Get ABC path
   my ($abc_dir,$abc_name) = &split_prog_path($conf_ptr->{dir_path}->{abc_path}->{val});
 
-  print "Entering $abc_dir\n";
-  chdir $abc_dir;
   my ($lut_num) = $opt_ptr->{K_val};
   # Before we run this blif, identify it is a combinational or sequential
   my ($abc_seq_optimize) = ("");
@@ -738,6 +741,9 @@ sub run_abc_fpgamap($ $ $)
   close($ABC_CMD_FH);
   #
   # Create a local copy for the commands
+  #
+  print "Entering $abc_dir\n";
+  chdir $abc_dir;
 
   system("./$abc_name -F $cmd_log > $log");
 
@@ -756,6 +762,8 @@ sub run_abc_fpgamap($ $ $)
 # Run ABC by FPGA-oriented synthesis
 sub run_abc_bb_fpgamap($ $ $) {
   my ($bm,$blif_out,$log) = @_;
+  my ($cmd_log) = ($log."cmd");
+
   # Get ABC path
   my ($abc_dir,$abc_name) = &split_prog_path($conf_ptr->{dir_path}->{abc_with_bb_support_path}->{val});
   my ($lut_num) = $opt_ptr->{K_val};
@@ -772,9 +780,26 @@ sub run_abc_bb_fpgamap($ $ $) {
     $dump_verilog = "write_verilog $bm.v";
   }
 
+  #
+  # Create a local copy for the commands
+  #
+  my ($ABC_CMD_FH) = (FileHandle->new);
+  if ($ABC_CMD_FH->open("> $cmd_log")) {
+    print "INFO: auto generating cmds for ABC ($cmd_log) ...\n";
+  } else {
+    die "ERROR: fail to auto generating cmds for ABC ($cmd_log) ...\n";
+  }
+  # Output the standard format (refer to VTR_flow script)
+  print $ABC_CMD_FH "read $bm; resyn; resyn2; $fpga_synthesis_method -K $lut_num; $abc_seq_optimize sweep; write_hie $bm $blif_out; $dump_verilog; quit;\n";
+
+  close($ABC_CMD_FH);
+
+  # Go to ABC directory and run FPGA with commands
+  print "Entering $abc_dir\n";
   chdir $abc_dir;
+
   # Run FPGA ABC
-  system("./$abc_name -c \"read $bm; resyn; resyn2; $fpga_synthesis_method -K $lut_num; $abc_seq_optimize sweep; write_hie $bm $blif_out; $dump_verilog; quit;\" > $log");
+  system("./$abc_name -F $cmd_log > $log");
 
   if (!(-e $blif_out)) {
     die "ERROR: Fail ABC_with_bb_support for benchmark $bm.\n";
@@ -784,6 +809,7 @@ sub run_abc_bb_fpgamap($ $ $) {
     die "ERROR: ABC verilog rewrite failed for benchmark $bm!\n";
   }
 
+  print "Leaving $abc_dir\n";
   chdir $cwd;
 }
 
@@ -1316,7 +1342,7 @@ sub run_std_vpr($ $ $ $ $ $ $ $ $)
 
   my ($chan_width_opt) = ("");
   if (($fix_chan_width > 0)||($fix_chan_width == 0)) {
-    $chan_width_opt = "-route_chan_width $fix_chan_width";
+    $chan_width_opt = "--route_chan_width $fix_chan_width";
   }
   if ("on" eq $opt_ptr->{vpr_use_tileable_route_chan_width}) {
     $chan_width_opt = $chan_width_opt." --use_tileable_route_chan_width";
@@ -1415,6 +1441,12 @@ sub run_std_vpr($ $ $ $ $ $ $ $ $)
     if ("on" eq $opt_ptr->{vpr_fpga_verilog_print_sdc_analysis}) {
       $vpr_spice_opts = $vpr_spice_opts." --fpga_verilog_print_sdc_analysis";
     }
+    if ("on" eq $opt_ptr->{vpr_fpga_verilog_explicit_mapping}) {
+      $vpr_spice_opts = $vpr_spice_opts." --fpga_verilog_explicit_mapping";
+    }
+    if ("on" eq $opt_ptr->{vpr_fpga_x2p_compact_routing_hierarchy}) {
+      $vpr_spice_opts = $vpr_spice_opts." --fpga_x2p_compact_routing_hierarchy";
+    }
   }
 
   # FPGA Bitstream Generator Options
@@ -1461,7 +1493,7 @@ sub run_std_vpr($ $ $ $ $ $ $ $ $)
   #  foreach my $file (0..$#files){
   #    print "$files[$file]\t";
   #  }
-  # print "\n";
+  #  print "\n";
   #}
   chdir $cwd;
 }
@@ -1480,7 +1512,10 @@ sub run_vpr_route($ $ $ $ $ $ $ $ $)
 
   my ($chan_width_opt) = ("");
   if (($fix_chan_width > 0)||($fix_chan_width == 0)) {
-    $chan_width_opt = "-route_chan_width $fix_chan_width";
+    $chan_width_opt = "--route_chan_width $fix_chan_width";
+  }
+  if ("on" eq $opt_ptr->{vpr_use_tileable_route_chan_width}) {
+    $chan_width_opt = $chan_width_opt." --use_tileable_route_chan_width";
   }
 
   my ($vpr_spice_opts) = ("");
@@ -1561,7 +1596,7 @@ sub run_mpack2_vpr($ $ $ $ $ $ $)
     if (0 != $min_chan_width%2) {
       $min_chan_width += 1;
     }
-    $chan_width_opt = "-route_chan_width $min_chan_width";
+    $chan_width_opt = "--route_chan_width $min_chan_width";
   }
 
   chdir $vpr_dir;
@@ -1754,7 +1789,7 @@ sub run_vpr_in_flow($ $ $ $ $ $ $ $ $ $ $ $) {
     }
     # Remove previous route results
     if (-e $vpr_route) {
-      `rm $vpr_route`;
+      system("rm $vpr_route");
     }
     # Keep increase min_chan_width until route success
     # Extract data from VPR stats
@@ -1782,7 +1817,7 @@ sub run_vpr_in_flow($ $ $ $ $ $ $ $ $ $ $ $) {
     my ($fix_chan_width) = ($benchmarks_ptr->{$benchmark_file}->{fix_route_chan_width});
     # Remove previous route results
     if (-e $vpr_route) {
-      `rm $vpr_route`;
+      system("rm $vpr_route");
     }
     # Keep increase min_chan_width until route success
     &run_std_vpr($abc_blif_out,$benchmark,$vpr_arch,$vpr_net,$vpr_place,$vpr_route,$fix_chan_width,$vpr_log,$act_file);
@@ -1991,6 +2026,34 @@ sub parse_yosys_vpr_flow_results($ $ $ $)
   return;
 }
 
+sub run_vpr_only_flow($ $ $ $ $)
+{
+  my ($tag,$benchmark_file,$vpr_arch, $parse_results) = @_;
+  my ($benchmark, $rpt_dir,$prefix);
+  my ($vpr_net,$vpr_place,$vpr_route,$vpr_reroute_log,$vpr_log);
+
+  $benchmark = $benchmark_file;
+  $benchmark =~ s/\.blif$//g;
+  # Run Standard flow
+  $rpt_dir = "$conf_ptr->{dir_path}->{rpt_dir}->{val}"."/$benchmark/$tag";
+  &generate_path($rpt_dir);
+  $prefix = "$rpt_dir/$benchmark\_"."K$opt_ptr->{K_val}\_"."N$opt_ptr->{N_val}\_";
+
+  my ($input_blif) = ("$conf_ptr->{dir_path}->{benchmark_dir}->{val}"."/$benchmark".".blif");
+  my ($act_file,$ace_new_blif,$ace_log) = ("$prefix"."ace.act","$prefix"."ace.blif","$prefix"."ace.log");
+
+  $vpr_net = "$prefix"."vpr.net";
+  $vpr_place = "$prefix"."vpr.place";
+  $vpr_route = "$prefix"."vpr.route";
+  $vpr_log = "$prefix"."vpr.log";
+  $vpr_reroute_log = "$prefix"."vpr_reroute.log";
+
+  &run_ace_in_flow($prefix, $input_blif, $act_file, $ace_new_blif, $ace_log);
+
+  &run_vpr_in_flow($tag, $benchmark, $benchmark_file, $input_blif, $vpr_arch, $act_file, $vpr_net, $vpr_place, $vpr_route, $vpr_log, $vpr_reroute_log, $parse_results);
+
+  return;
+}
 
 sub run_standard_flow($ $ $ $ $)
 {
@@ -2163,7 +2226,7 @@ sub run_mpack2_flow($ $ $ $)
     }
 
     # Remove previous route results
-    `rm $vpr_route`;
+    system("rm $vpr_route");
     # Keep increase min_chan_width until route success
     # Extract data from VPR stats
     while (1) {
@@ -2186,7 +2249,7 @@ sub run_mpack2_flow($ $ $ $)
     my ($fix_chan_width) = ($benchmarks_ptr->{$benchmark_file}->{fix_route_chan_width});
     # Remove previous route results
     if (-e $vpr_route) {
-      `rm $vpr_route`;
+      system("rm $vpr_route");
     }
     # Keep increase min_chan_width until route success
     # Extract data from VPR stats
@@ -2715,6 +2778,8 @@ sub run_benchmark_selected_flow($ $ $)
     &run_mig_mccl_flow("mig_mccl",$benchmark,$conf_ptr->{flow_conf}->{vpr_arch}->{val}, $parse_results);
   } elsif ($flow_type eq "yosys_vpr") {
     &run_yosys_vpr_flow("yosys_vpr",$benchmark,$conf_ptr->{flow_conf}->{vpr_arch}->{val}, "classic", $parse_results);
+  } elsif ($flow_type eq "vpr_only") {
+    &run_vpr_only_flow("vpr_only",$benchmark,$conf_ptr->{flow_conf}->{vpr_arch}->{val}, $parse_results);
   } else {
     die "ERROR: unsupported flow type ($flow_type) is chosen!\n";
   }
@@ -2743,6 +2808,8 @@ sub parse_benchmark_selected_flow($ $) {
     &parse_standard_flow_results("mig_mccl", $benchmark, $conf_ptr->{flow_conf}->{vpr_arch}->{val}, "abc_black_box");
   } elsif ($flow_type eq "yosys_vpr") {
     &parse_yosys_vpr_flow_results("yosys_vpr",$benchmark,$conf_ptr->{flow_conf}->{vpr_arch}->{val},"abc_black_box");
+  } elsif ($flow_type eq "vpr_only") {
+    &parse_standard_flow_results("vpr_only",$benchmark,$conf_ptr->{flow_conf}->{vpr_arch}->{val}, "classic");
   } else {
     die "ERROR: unsupported flow type ($flow_type) is chosen!\n";
   }
@@ -3208,8 +3275,14 @@ sub gen_csv_rpt_standard_flow($ $)
   print $CSVFH "\n";
   # Check log/stats one by one
   foreach $tmp(@benchmark_names) {
-    $tmp =~ s/\.blif$//g;
-    print $CSVFH "$tmp";
+    $tmp =~ s/\.blif$//g;     
+
+    if ("on" eq $opt_ptr->{matlab_rpt}) {
+      print $CSVFH "{'$tmp'}";
+    } else {
+      print $CSVFH "$tmp";
+    }
+
     print $CSVFH ",$rpt_h{$tag}->{$tmp}->{$N_val}->{$K_val}->{LUTs}";
     if ("on" eq $opt_ptr->{min_route_chan_width}) {
       print $CSVFH ",$rpt_h{$tag}->{$tmp}->{$N_val}->{$K_val}->{min_route_chan_width}";
@@ -3528,6 +3601,11 @@ sub gen_csv_rpt($)
           print "INFO: writing yosys_vpr flow results ...\n";
           &gen_csv_rpt_yosys_vpr_flow("yosys_vpr",$CSVFH);
         }
+      } elsif ($flow_type eq "vpr_only") {
+        if (1 == &check_flow_all_benchmarks_done("vpr_only")) {
+          print "INFO: writing vpr_only flow results ...\n";
+          &gen_csv_rpt_standard_flow("vpr_only",$CSVFH);
+        }
       } else {
         die "ERROR: flow_type: $flow_type is not supported!\n";
       }
@@ -3540,7 +3618,7 @@ sub gen_csv_rpt($)
 sub remove_designs()
 {
   if ("on" eq $opt_ptr->{remove_designs}) {
-    `rm -rf $conf_ptr->{dir_path}->{rpt_dir}->{val}`;
+    system("rm -rf $conf_ptr->{dir_path}->{rpt_dir}->{val}");
   }
 }
 

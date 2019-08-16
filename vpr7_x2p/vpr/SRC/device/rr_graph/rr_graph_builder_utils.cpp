@@ -342,6 +342,33 @@ void add_edges_for_two_rr_nodes(const t_rr_graph* rr_graph,
 }
 
 /************************************************************************
+ * Get the track_id of a routing track w.r.t its coordinator 
+ * In tileable routing architecture, the track_id changes SB by SB.
+ * Therefore the track_ids are stored in a vector, indexed by the relative coordinator
+ * based on the starting point of the track
+ * For routing tracks in INC_DIRECTION
+ * (xlow, ylow) should be the starting point 
+ * 
+ * (xlow, ylow)                                      (xhigh, yhigh)
+ *  track_id[0]  -------------------------------> track_id[xhigh - xlow + yhigh - ylow]
+ *
+ * For routing tracks in DEC_DIRECTION
+ * (xhigh, yhigh) should be the starting point 
+ *
+ * (xlow, ylow)                                      (xhigh, yhigh)
+ *  track_id[0]  <------------------------------- track_id[xhigh - xlow + yhigh - ylow]
+ *
+ *
+ ***********************************************************************/
+short get_rr_node_actual_track_id(const t_rr_node* track_rr_node,
+                                  const DeviceCoordinator& coord) {
+  DeviceCoordinator low_coord(track_rr_node->xlow, track_rr_node->ylow);
+  size_t offset = (int)abs((int)coord.get_x() -  (int)low_coord.get_x() + (int)coord.get_y() - (int)low_coord.get_y());
+  return track_rr_node->track_ids[offset];
+}
+
+
+/************************************************************************
  * Get the coordinator of a starting point of a routing track 
  * For routing tracks in INC_DIRECTION
  * (xlow, ylow) should be the starting point 
@@ -625,7 +652,7 @@ void print_rr_graph_stats() {
 
   /* Get the minimum SB mux size */
   int num_sb_mux = 0;
-  short avg_sb_mux_size = 0;
+  size_t avg_sb_mux_size = 0;
   for (int inode = 0; inode < num_rr_nodes; ++inode) {
     /* MUX multiplexers for SBs */
     if ( (CHANX == rr_node[inode].type) 
@@ -640,7 +667,7 @@ void print_rr_graph_stats() {
   vpr_printf(TIO_MESSAGE_INFO, "Total No. of Switch Block Multiplexer size:%d\n", num_sb_mux);
   vpr_printf(TIO_MESSAGE_INFO, "Maximum Switch Block Multiplexer size:%d\n", max_sb_mux_size);
   vpr_printf(TIO_MESSAGE_INFO, "Minimum Switch Block Multiplexer size:%d\n", min_sb_mux_size);
-  vpr_printf(TIO_MESSAGE_INFO, "Average Switch Block Multiplexer size:%d\n", avg_sb_mux_size);
+  vpr_printf(TIO_MESSAGE_INFO, "Average Switch Block Multiplexer size:%lu\n", avg_sb_mux_size);
   vpr_printf(TIO_MESSAGE_INFO, "------------------------------------------------\n");
 
   /* Get the maximum SB mux size */
@@ -662,7 +689,7 @@ void print_rr_graph_stats() {
 
   /* Get the minimum SB mux size */
   int num_cb_mux = 0;
-  short avg_cb_mux_size = 0;
+  size_t avg_cb_mux_size = 0;
   for (int inode = 0; inode < num_rr_nodes; ++inode) {
     /* MUX multiplexers for SBs */
     if (IPIN == rr_node[inode].type) {
@@ -675,7 +702,7 @@ void print_rr_graph_stats() {
   vpr_printf(TIO_MESSAGE_INFO, "Total No. of Connection Block Multiplexer size:%d\n", num_cb_mux);
   vpr_printf(TIO_MESSAGE_INFO, "Maximum Connection Block Multiplexer size:%d\n", max_cb_mux_size);
   vpr_printf(TIO_MESSAGE_INFO, "Minimum Connection Block Multiplexer size:%d\n", min_cb_mux_size);
-  vpr_printf(TIO_MESSAGE_INFO, "Average Connection Block Multiplexer size:%d\n", avg_cb_mux_size);
+  vpr_printf(TIO_MESSAGE_INFO, "Average Connection Block Multiplexer size:%lu\n", avg_cb_mux_size);
   vpr_printf(TIO_MESSAGE_INFO, "------------------------------------------------\n");
 
 

@@ -330,6 +330,7 @@ class DeviceRRGSB {
     DeviceCoordinator get_gsb_range() const; /* get the max coordinator of the switch block array */
     const RRGSB get_gsb(DeviceCoordinator& coordinator) const; /* Get a rr switch block in the array with a coordinator */
     const RRGSB get_gsb(size_t x, size_t y) const; /* Get a rr switch block in the array with a coordinator */
+    size_t get_num_gsb_unique_module() const; /* get the number of unique mirrors of GSB */
     size_t get_num_sb_unique_submodule(enum e_side side, size_t seg_index) const; /* get the number of unique mirrors of switch blocks */
     size_t get_num_sb_unique_module() const; /* get the number of unique mirrors of switch blocks */
     size_t get_num_cb_unique_module(t_rr_type cb_type) const; /* get the number of unique mirrors of CBs */
@@ -338,8 +339,8 @@ class DeviceRRGSB {
     const RRGSB get_sb_unique_submodule(DeviceCoordinator& coordinator, enum e_side side, size_t seg_id) const; /* Get a rr switch block which a unique mirror */ 
     const RRGSB get_sb_unique_module(size_t index) const; /* Get a rr switch block which a unique mirror */ 
     const RRGSB get_sb_unique_module(DeviceCoordinator& coordinator) const; /* Get a rr switch block which a unique mirror */ 
-    const RRGSB get_cb_unique_module(t_rr_type cb_type, size_t index) const; /* Get a rr switch block which a unique mirror */ 
-    const RRGSB get_cb_unique_module(t_rr_type cb_type, DeviceCoordinator& coordinator) const;
+    const RRGSB& get_cb_unique_module(t_rr_type cb_type, size_t index) const; /* Get a rr switch block which a unique mirror */ 
+    const RRGSB& get_cb_unique_module(t_rr_type cb_type, DeviceCoordinator& coordinator) const;
     size_t get_max_num_sides() const; /* Get the maximum number of sides across the switch blocks */
     size_t get_num_segments() const; /* Get the size of segment_ids */
     size_t get_segment_id(size_t index) const; /* Get a segment id */
@@ -353,8 +354,8 @@ class DeviceRRGSB {
     void set_cb_conf_bits_msb(DeviceCoordinator& coordinator, t_rr_type cb_type, size_t conf_bits_msb); /* TODO: TOBE DEPRECATED!!! conf_bits should be initialized when creating a switch block!!! */
     void reserve(DeviceCoordinator& coordinator); /* Pre-allocate the rr_switch_block array that the device requires */ 
     void reserve_sb_unique_submodule_id(DeviceCoordinator& coordinator); /* Pre-allocate the rr_sb_unique_module_id matrix that the device requires */ 
-    void resize_upon_need(DeviceCoordinator& coordinator); /* Resize the rr_switch_block array if needed */ 
-    void add_rr_gsb(DeviceCoordinator& coordinator, const RRGSB& rr_gsb); /* Add a switch block to the array, which will automatically identify and update the lists of unique mirrors and rotatable mirrors */
+    void resize_upon_need(const DeviceCoordinator& coordinator); /* Resize the rr_switch_block array if needed */ 
+    void add_rr_gsb(const DeviceCoordinator& coordinator, const RRGSB& rr_gsb); /* Add a switch block to the array, which will automatically identify and update the lists of unique mirrors and rotatable mirrors */
     void build_unique_module(); /* Add a switch block to the array, which will automatically identify and update the lists of unique mirrors and rotatable mirrors */
     void clear(); /* clean the content */
   private: /* Internal cleaners */
@@ -365,6 +366,8 @@ class DeviceRRGSB {
     void clear_sb_unique_module_id(); /* clean the content */
     void clear_sb_unique_submodule(); /* clean the content */
     void clear_sb_unique_submodule_id(); /* clean the content */
+    void clear_gsb_unique_module(); /* clean the content */
+    void clear_gsb_unique_module_id(); /* clean the content */
     void clear_segment_ids();
   private: /* Validators */
     bool validate_coordinator(DeviceCoordinator& coordinator) const; /* Validate if the (x,y) is the range of this device */
@@ -376,6 +379,7 @@ class DeviceRRGSB {
     bool validate_cb_type(t_rr_type cb_type) const;
   private: /* Internal builders */
     void build_segment_ids(); /* build a map of segment_ids */
+    void add_gsb_unique_module(const DeviceCoordinator& coordinator);
     void add_sb_unique_side_submodule(DeviceCoordinator& coordinator, const RRGSB& rr_sb, enum e_side side);
     void add_sb_unique_side_segment_submodule(DeviceCoordinator& coordinator, const RRGSB& rr_sb, enum e_side side, size_t seg_id);
     void add_cb_unique_module(t_rr_type cb_type, const DeviceCoordinator& coordinator);
@@ -383,8 +387,12 @@ class DeviceRRGSB {
     void build_sb_unique_submodule(); /* Add a switch block to the array, which will automatically identify and update the lists of unique side module */
     void build_sb_unique_module(); /* Add a switch block to the array, which will automatically identify and update the lists of unique mirrors and rotatable mirrors */
     void build_cb_unique_module(t_rr_type cb_type); /* Add a switch block to the array, which will automatically identify and update the lists of unique side module */
+    void build_gsb_unique_module(); /* Add a switch block to the array, which will automatically identify and update the lists of unique mirrors and rotatable mirrors */
   private: /* Internal Data */
     std::vector< std::vector<RRGSB> > rr_gsb_;
+
+    std::vector< std::vector<size_t> > gsb_unique_module_id_; /* A map from rr_gsb to its unique mirror */
+    std::vector<DeviceCoordinator> gsb_unique_module_; 
 
     std::vector< std::vector<size_t> > sb_unique_module_id_; /* A map from rr_gsb to its unique mirror */
     std::vector<DeviceCoordinator> sb_unique_module_; 
@@ -402,4 +410,8 @@ class DeviceRRGSB {
 };
 
 #endif
+
+/************************************************************************
+ * End of file : rr_blocks.h
+ ***********************************************************************/
 

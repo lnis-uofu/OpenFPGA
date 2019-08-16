@@ -24,6 +24,7 @@
 .subckt adder a=reg_a_2 b=reg_b_2 cin=cint02 cout=cint03 sumout=n03
 .subckt adder a=reg_a_3 b=reg_b_3 cin=cint03 cout=cint04 sumout=n04
 .subckt adder a=ref0 b=ref0 cin=cint04 cout=unconn sumout=n05
+
 .subckt shift D=d0 clk=clk Q=reg0
 .subckt shift D=reg0 clk=clk Q=reg1
 .subckt shift D=reg1 clk=clk Q=reg2

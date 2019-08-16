@@ -242,8 +242,10 @@ void vpr_fpga_verilog(t_vpr_setup vpr_setup,
   /* Initialize the number of configuration bits of all the grids */
   vpr_printf(TIO_MESSAGE_INFO, "Count the number of configuration bits, IO pads in each logic block...\n");
   /* init_grids_num_conf_bits(sram_verilog_orgz_type); */
-  init_grids_num_conf_bits(sram_verilog_orgz_info);
-  init_grids_num_iopads();
+  //init_grids_num_conf_bits(sram_verilog_orgz_info);
+  init_pb_types_num_conf_bits(sram_verilog_orgz_info);
+  //init_grids_num_iopads();
+  init_pb_types_num_iopads();
   /* init_grids_num_mode_bits(); */
 
   dump_verilog_defines_preproc(src_dir_path,
@@ -255,14 +257,16 @@ void vpr_fpga_verilog(t_vpr_setup vpr_setup,
   /* Dump routing resources: switch blocks, connection blocks and channel tracks */
   dump_verilog_routing_resources(sram_verilog_orgz_info, src_dir_path, rr_dir_path, Arch, &vpr_setup.RoutingArch,
                                  num_rr_nodes, rr_node, rr_node_indices, rr_indexed_data,
-                                 vpr_setup.FPGA_SPICE_Opts.compact_routing_hierarchy);
+                                 vpr_setup.FPGA_SPICE_Opts);
 
   /* Dump logic blocks 
    * Branches to go: 
    * 1. a compact output
    * 2. a full-size output
    */
-  dump_compact_verilog_logic_blocks(sram_verilog_orgz_info, src_dir_path, lb_dir_path, &Arch);
+  dump_compact_verilog_logic_blocks(sram_verilog_orgz_info, src_dir_path, 
+                                    lb_dir_path, &Arch,
+                                    vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.dump_explicit_verilog);
 
   /* Dump internal structures of submodules */
   dump_verilog_submodules(sram_verilog_orgz_info, src_dir_path, submodule_dir_path, 
@@ -275,7 +279,7 @@ void vpr_fpga_verilog(t_vpr_setup vpr_setup,
                                    num_rr_nodes, rr_node, rr_node_indices, 
                                    num_clocks,
                                    vpr_setup.FPGA_SPICE_Opts.compact_routing_hierarchy,
-								   *(Arch.spice));
+								   *(Arch.spice), vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.dump_explicit_verilog);
    
   /* Dump SDC constraints */
   /* Output SDC to contrain the P&R flow
@@ -288,8 +292,6 @@ void vpr_fpga_verilog(t_vpr_setup vpr_setup,
                              vpr_setup.FPGA_SPICE_Opts.compact_routing_hierarchy);
   }
 
-  /* dump_verilog_sdc_file(); */
-  
   /* dump verilog testbench only for input blif */
   if (TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.print_input_blif_testbench) {
     blif_testbench_file_name = my_strcat(chomped_circuit_name, blif_testbench_verilog_file_postfix);
