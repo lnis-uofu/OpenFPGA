@@ -246,7 +246,7 @@ def run_single_script(s, command):
                                          universal_newlines=True)
                 output.write(process.stdout)
         except:
-            logger.exception()
+            logger.exception("Failed to launch openfpga flow")
         logger.info("%s Finished " % name)
 
 
@@ -279,8 +279,6 @@ def collect_results(job_run_list):
         result = dict(vpr_res["RESULTS"])
         result["name"] = run["name"]
         task_result.append(result)
-
-    pprint.pprint(task_result)
 
     with open("task_result.csv", 'w', newline='') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=task_result[0].keys())

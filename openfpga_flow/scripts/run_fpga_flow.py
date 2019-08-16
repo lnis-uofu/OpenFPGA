@@ -71,7 +71,7 @@ parser.add_argument('--ace_p', type=float,
 parser.add_argument('--black_box_ace', action='store_true')
 
 # VPR Options
-parser.add_argument('--min_route_chan_width', type=int,
+parser.add_argument('--min_route_chan_width', type=float,
                     help="Turn on min_route_chan_width")
 parser.add_argument('--max_route_width_retry', type=int, default=100,
                     help="Maximum iterations to perform to reroute")
@@ -350,6 +350,7 @@ def run_yosys_with_abc():
         lut_size = max([int(pb_type.find("input").get("num_pins"))
                         for pb_type in root.iter("pb_type")
                         if pb_type.get("class") == "lut"])
+        logger.info("Extracted lut_size size from arch XML = %s", lut_size)
         logger.info("Running Yosys with lut_size = %s", lut_size)
     except:
         logger.exception("Failed to extract lut_size from XML file")
@@ -491,11 +492,11 @@ def run_vpr():
 
     # Minimum routing channel width
     if (args.min_route_chan_width):
-        logger.info("Executing minimum channel width routing")
-        min_channel_width *= 1+(args.min_route_chan_width/100)
+        min_channel_width *= args.min_route_chan_width
         min_channel_width = int(min_channel_width)
         min_channel_width += 1 if (min_channel_width % 2) else 0
-        logger.info("Trying to route using %d channels" % min_channel_width)
+        logger.info(("Trying to route using %d channels" % min_channel_width) +
+                    " (Slack of %d%%)" % ((args.min_route_chan_width-1)*100))
 
         while(1):
             res = run_vpr_route(args.top_module+"_ace_corrected_out.blif",
@@ -607,7 +608,7 @@ def run_standard_vpr(bench_blif, fixed_chan_width, logfile):
         if args.vpr_fpga_verilog_include_signal_init:
             command += ["--fpga_verilog_include_signal_init"]
         if args.vpr_fpga_verilog_formal_verification_top_netlist:
-            command += ["--fpga_verilog_formal_verification_top_netlist"]
+            command += ["--fpga_verilog_print_formal_verification_top_netlist"]
         if args.vpr_fpga_verilog_print_modelsim_autodeck:
             command += ["--fpga_verilog_print_modelsim_autodeck",
                         args.vpr_fpga_verilog_print_modelsim_autodeck]
@@ -676,7 +677,8 @@ def run_vpr_route(bench_blif, fixed_chan_width, logfile):
                "--net_file", args.top_module+"_vpr.net",
                "--place_file", args.top_module+"_vpr.place",
                "--route_file", args.top_module+"_vpr.route",
-               "--full_stats", "--nodisp"
+               "--full_stats", "--nodisp",
+               "--route"
                ]
     if args.power:
         command += [
@@ -734,8 +736,9 @@ def run_vpr_route(bench_blif, fixed_chan_width, logfile):
             if process.returncode:
                 logger.info("Standard VPR run failed with returncode %d",
                             process.returncode)
-    except:
+    except Exception as e:
         logger.exception("Failed to run VPR")
+        process_failed_vpr_run(e.output)
         clean_up_and_exit("")
     logger.info("VPR output is written in file %s" % logfile)
     return chan_width
@@ -852,10 +855,15 @@ def external_call(parent_logger=None, passed_args=[]):
     main()
 
 
+def process_failed_vpr_run(vpr_output):
+    for line in vpr_output.split("\n"):
+        if "error" in line.lower():
+            logger.error("-->>" + line)
+
 if __name__ == "__main__":
     # Setting up print and logging system
     logging.basicConfig(level=logging.INFO, stream=sys.stdout,
-                        format='%(levelname)s (%(threadName)-9s) - %(message)s')
+                        format='%(levelname)s - %(message)s')
     logger = logging.getLogger('OpenFPGA_Flow_Logs')
 
     # Parse commandline argument
