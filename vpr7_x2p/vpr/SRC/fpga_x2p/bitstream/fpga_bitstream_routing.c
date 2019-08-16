@@ -38,6 +38,7 @@
 /* Generate bitstream for a multiplexer of a switch block */
 static 
 void fpga_spice_generate_bitstream_switch_box_mux(FILE* fp,
+                                                  const t_arch& arch, 
                                                   const RRGSB& rr_sb, 
                                                   t_sram_orgz_info* cur_sram_orgz_info,
                                                   t_rr_node* cur_rr_node,
@@ -65,6 +66,7 @@ void fpga_spice_generate_bitstream_switch_box_mux(FILE* fp,
   assert((2 == mux_size)||(2 < mux_size));
 
   /* Get verilog model*/
+  CircuitModelId circuit_model = switch_inf[switch_index].circuit_model;
   verilog_model = switch_inf[switch_index].spice_model;
 
   /* Configuration bits for this MUX*/
@@ -80,7 +82,8 @@ void fpga_spice_generate_bitstream_switch_box_mux(FILE* fp,
         ((DEFAULT_PATH_ID < path_id) &&(path_id < mux_size)));
 
   /* Depend on both technology and structure of this MUX*/
-  switch (verilog_model->design_tech) {
+  const CircuitLibrary& circuit_lib = arch.spice->circuit_lib;
+  switch (circuit_lib.design_tech_type(circuit_model)) {
   case SPICE_MODEL_DESIGN_CMOS:
     decode_cmos_mux_sram_bits(verilog_model, mux_size, path_id, &num_mux_sram_bits, &mux_sram_bits, &mux_level);
     break;
@@ -213,6 +216,7 @@ void fpga_spice_generate_bitstream_switch_box_mux(FILE* fp,
 
 static 
 void fpga_spice_generate_bitstream_switch_box_interc(FILE* fp,
+                                                     const t_arch& arch,
                                                      const RRGSB& rr_sb,
                                                      t_sram_orgz_info* cur_sram_orgz_info,
                                                      enum e_side chan_side,
@@ -245,7 +249,7 @@ void fpga_spice_generate_bitstream_switch_box_interc(FILE* fp,
     /* No bitstream generation required by a special direct connection*/
   } else if (1 < num_drive_rr_nodes) {
     /* Print the multiplexer, fan_in >= 2 */
-    fpga_spice_generate_bitstream_switch_box_mux(fp, rr_sb, cur_sram_orgz_info,
+    fpga_spice_generate_bitstream_switch_box_mux(fp, arch, rr_sb, cur_sram_orgz_info,
                                                  cur_rr_node, 
                                                  num_drive_rr_nodes, drive_rr_nodes, 
                                                  cur_rr_node->drive_switches[DEFAULT_SWITCH_ID]);
@@ -344,6 +348,7 @@ void fpga_spice_generate_bitstream_switch_box_interc(FILE* fp,
  */
 static 
 void fpga_spice_generate_bitstream_routing_switch_box_subckt(FILE* fp, 
+                                                             const t_arch& arch, 
                                                              const RRGSB& rr_sb, 
                                                              t_sram_orgz_info* cur_sram_orgz_info) {
   /* Check */
@@ -362,7 +367,7 @@ void fpga_spice_generate_bitstream_routing_switch_box_subckt(FILE* fp,
            ||(CHANY == rr_sb.get_chan_node(side_manager.get_side(), itrack)->type));
       /* We care INC_DIRECTION tracks at this side*/
       if (OUT_PORT == rr_sb.get_chan_node_direction(side_manager.get_side(), itrack)) {
-        fpga_spice_generate_bitstream_switch_box_interc(fp, rr_sb, cur_sram_orgz_info, 
+        fpga_spice_generate_bitstream_switch_box_interc(fp, arch, rr_sb, cur_sram_orgz_info, 
                                                         side_manager.get_side(), 
                                                         itrack);
       } 
@@ -797,7 +802,7 @@ void fpga_spice_generate_bitstream_routing_connection_box_subckt(FILE* fp,
 /* Top Function*/
 /* Build the routing resource SPICE sub-circuits*/
 void fpga_spice_generate_bitstream_routing_resources(char* routing_bitstream_log_file_path,
-                                                     t_arch arch,
+                                                     const t_arch& arch,
                                                      t_det_routing_arch* routing_arch,
                                                      t_sram_orgz_info* cur_sram_orgz_info,
                                                      boolean compact_routing_hierarchy) {
@@ -841,7 +846,7 @@ void fpga_spice_generate_bitstream_routing_resources(char* routing_bitstream_log
     for (size_t ix = 0; ix < sb_range.get_x(); ++ix) {
       for (size_t iy = 0; iy < sb_range.get_y(); ++iy) {
         const RRGSB& rr_sb = device_rr_gsb.get_gsb(ix, iy);
-        fpga_spice_generate_bitstream_routing_switch_box_subckt(fp, 
+        fpga_spice_generate_bitstream_routing_switch_box_subckt(fp, arch, 
                                                                 rr_sb, cur_sram_orgz_info);
       }
     }
