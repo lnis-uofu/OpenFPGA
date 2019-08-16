@@ -170,8 +170,8 @@ char* my_strcat(const char* str1,
 }
 
 /* Split the path and program name*/
-int split_path_prog_name(char* prog_path,
-                         char  split_token,
+int split_path_prog_name(const char* prog_path,
+                         const char  split_token,
                          char** ret_path,
                          char** ret_prog_name) {
   int i;
