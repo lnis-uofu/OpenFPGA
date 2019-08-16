@@ -755,7 +755,7 @@ def extract_vpr_stats(logfile):
             resultDict[name] = extract_val
 
     dummyparser = ConfigParser()
-    dummyparser.read_dict({args.top_module+"_RESULTS": resultDict})
+    dummyparser.read_dict({"RESULTS": resultDict})
 
     with open('vpr_stat.result', 'w') as configfile:
         dummyparser.write(configfile)

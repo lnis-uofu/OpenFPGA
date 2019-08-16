@@ -9,6 +9,7 @@ import logging
 import glob
 import subprocess
 import threading
+import csv
 from string import Template
 import run_fpga_flow
 import pprint
@@ -53,11 +54,12 @@ def main():
     validate_command_line_arguments()
     for eachtask in args.tasks:
         logger.info("Currently running task %s" % eachtask)
-        commands = generate_each_task_actions(eachtask)
+        job_run_list = generate_each_task_actions(eachtask)
         if not args.test_run:
-            run_actions(commands)
+            run_actions(job_run_list)
+            collect_results(job_run_list)
         else:
-            pprint.pprint(commands)
+            pprint.pprint(job_run_list)
     logger.info("Task execution completed")
     exit()
 
@@ -151,13 +153,19 @@ def generate_each_task_actions(taskname):
 
     # Create OpenFPGA flow run commnad for each combination of
     # architecture, benchmark and parameters
+    # Create run_job object [arch, bench, run_dir, commnad]
     flow_run_cmd_list = []
-
-    for arch in archfile_list:
+    for indx, arch in enumerate(archfile_list):
         for bench in benchmark_list:
             flow_run_dir = get_flow_rundir(arch, bench["top_module"])
-            cmd = create_run_command(flow_run_dir, arch, bench, task_conf)
-            flow_run_cmd_list.append(cmd)
+            cmd = create_run_command(
+                flow_run_dir, arch, bench, task_conf)
+            flow_run_cmd_list.append({
+                "arch": arch,
+                "bench": bench,
+                "name": "%s_arch%d" % (bench["top_module"], indx),
+                "run_dir": flow_run_dir,
+                "commands": cmd})
     return flow_run_cmd_list
 
 
@@ -242,18 +250,43 @@ def run_single_script(s, command):
         logger.info("%s Finished " % name)
 
 
-def run_actions(actions_list):
+def run_actions(job_run_list):
     thread_sema = threading.Semaphore(args.maxthreads)
     thred_list = []
-    for index, commands in enumerate(actions_list):
+    for index, eachjob in enumerate(job_run_list):
         t = threading.Thread(target=run_single_script,
                              name='Job_%02d' % (index+1),
-                             args=(thread_sema, commands))
+                             args=(thread_sema, eachjob["commands"]))
         t.start()
         thred_list.append(t)
 
     for eachthread in thred_list:
         eachthread.join()
+
+
+def collect_results(job_run_list):
+    task_result = []
+    for run in job_run_list:
+        # Check if any result file exist
+        if not glob.glob(os.path.join(run["run_dir"], "*.result")):
+            logger.info("No result files found for %s" % run["name"])
+
+        # Read and merge result file
+        vpr_res = ConfigParser(allow_no_value=True,
+                               interpolation=ExtendedInterpolation())
+        vpr_res.read_file(
+            open(os.path.join(run["run_dir"], "vpr_stat.result")))
+        result = dict(vpr_res["RESULTS"])
+        result["name"] = run["name"]
+        task_result.append(result)
+
+    pprint.pprint(task_result)
+
+    with open("task_result.csv", 'w', newline='') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=task_result[0].keys())
+        writer.writeheader()
+        for eachResult in task_result:
+            writer.writerow(eachResult)
 
 
 if __name__ == "__main__":
