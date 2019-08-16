@@ -58,6 +58,8 @@ t_spice_model_port** find_spice_model_config_done_ports(t_spice_model* spice_mod
 t_spice_transistor_type* find_mosfet_tech_lib(t_spice_tech_lib tech_lib,
                                               e_spice_trans_type trans_type);
 
+char* my_ito1hot(int in_int, int bin_len);
+
 char* my_itobin(int in_int, int bin_len);
 
 int* my_itobin_int(int in_int, int bin_len);

@@ -153,6 +153,7 @@ int create_dir_path(char* dir_path) {
      exit(1);
      return 0;
    }
+   return 0;
 }
 
 /* Cat string2 to the end of string1 */
@@ -576,6 +577,28 @@ t_spice_transistor_type* find_mosfet_tech_lib(t_spice_tech_lib tech_lib,
   return ret; 
 }
 
+/* Convert an integer to an one-hot encoding integer array */
+char* my_ito1hot(int in_int, int bin_len) {
+  char* ret = (char*) my_calloc (bin_len + 1, sizeof(char));
+
+  /* Make sure we do not have any overflow! */
+  if (! ( (-1 < in_int) && (in_int <= bin_len) ) )
+  assert ( (-1 < in_int) && (in_int <= bin_len) );
+
+  /* Initialize */
+  for (int i = 0; i < bin_len - 1; i++) {
+    ret[i] = '0';
+  }
+  sprintf(ret + bin_len - 1, "%s", "0");
+
+  if (bin_len == in_int) {
+    return ret; /* all zero case */
+  }
+  ret[in_int] = '1'; /* Keep a good sequence of bits */
+ 
+  return ret;
+}
+
 /* Converter an integer to a binary string */
 int* my_itobin_int(int in_int, int bin_len) {
   int* ret = (int*) my_calloc (bin_len, sizeof(int));
@@ -588,14 +611,13 @@ int* my_itobin_int(int in_int, int bin_len) {
   temp = in_int;
   for (i = 0; i < bin_len; i++) {
     if (1 == temp % 2) { 
-      ret[i] = 1; 
+      ret[i] = 1; /* Keep a good sequence of bits */
     }
     temp = temp / 2;
   }
  
   return ret;
 }
-
 
 /* Converter an integer to a binary string */
 char* my_itobin(int in_int, int bin_len) {
@@ -621,6 +643,7 @@ char* my_itobin(int in_int, int bin_len) {
  
   return ret;
 }
+
 
 /* Convert a integer to a string*/
 char* my_itoa(int input) {
