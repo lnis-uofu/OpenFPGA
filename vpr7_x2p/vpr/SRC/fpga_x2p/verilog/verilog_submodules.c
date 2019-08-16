@@ -2937,7 +2937,7 @@ void dump_verilog_mux_local_encoder_module(FILE* fp, int num_outputs) {
             num_outputs, my_ito1hot(i, num_outputs));
   }
   fprintf(fp, "\tdefault : data = %d'b%s;\n",
-          num_outputs, my_ito1hot(num_outputs, num_outputs));
+          num_outputs, my_ito1hot(num_outputs - 1, num_outputs));
   fprintf(fp, "endcase\n");
 
   fprintf(fp, "assign data_inv = ~data;\n");
