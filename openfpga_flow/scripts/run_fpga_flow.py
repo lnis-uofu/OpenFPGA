@@ -1,4 +1,5 @@
 import os
+import sys
 import shutil
 import time
 import shlex
@@ -188,6 +189,7 @@ config, cad_tools = None, None
 
 
 def main():
+    logger.debug("Script Launched in "+os.getcwd())
     check_required_file()
     read_script_config()
     validate_command_line_arguments()
@@ -235,6 +237,8 @@ def read_script_config():
     config.read_file(open(default_cad_tool_conf))
     if args.cad_tool_conf:
         config.read_file(open(args.cad_tool_conf))
+    if not "CAD_TOOLS_PATH" in config.sections():
+        clean_up_and_exit("Missing CAD_TOOLS_PATH in openfpga_flow config")
     cad_tools = config["CAD_TOOLS_PATH"]
 
 
@@ -251,7 +255,7 @@ def validate_command_line_arguments():
     Throw error for directory in benchmark
     check if args.powertech_file is provided for power measurement
     """
-    logger.info("Parsing commnad line arguments - Pending implementation")
+    logger.info("Validating commnad line arguments - Pending implementation")
 
     # Filter provided architecrue files
     args.arch_file = os.path.abspath(args.arch_file)
@@ -272,6 +276,8 @@ def validate_command_line_arguments():
         if not os.path.isfile(args.power_tech):
             clean_up_and_exit(
                 "Power Tech file not found. -%s", args.power_tech)
+
+    args.run_dir = os.path.abspath(args.run_dir)
     pass
 
 
@@ -328,6 +334,7 @@ def prepare_run_directory(run_dir):
 
 
 def clean_up_and_exit(msg, clean=False):
+    logger.error("Current working directory : " + os.getcwd())
     logger.error(msg)
     logger.error("Exiting . . . . . .")
     exit()
@@ -840,14 +847,14 @@ def run_command(taskname, logfile, command, exit_if_fail=True):
 
 def external_call(parent_logger=None, passed_args=[]):
     global logger, args
-    parent_logger = parent_logger
+    logger = parent_logger
     args = parser.parse_args(passed_args)
     main()
 
 
 if __name__ == "__main__":
     # Setting up print and logging system
-    logging.basicConfig(level=logging.INFO,
+    logging.basicConfig(level=logging.INFO, stream=sys.stdout,
                         format='%(levelname)s (%(threadName)-9s) - %(message)s')
     logger = logging.getLogger('OpenFPGA_Flow_Logs')
 

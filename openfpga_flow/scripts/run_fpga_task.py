@@ -1,4 +1,5 @@
 import os
+import sys
 import shutil
 import time
 import shlex
@@ -9,12 +10,13 @@ import glob
 import subprocess
 import threading
 from string import Template
+import run_fpga_flow
 import pprint
 
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 # Configure logging system
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-logging.basicConfig(level=logging.INFO,
+logging.basicConfig(level=logging.DEBUG, stream=sys.stdout,
                     format='%(levelname)s (%(threadName)-9s) - %(message)s')
 logger = logging.getLogger('OpenFPGA_Task_logs')
 
@@ -28,6 +30,8 @@ parser.add_argument('--maxthreads', type=int, default=2,
                     help="Number of fpga_flow threads to run default = 2," +
                     "Typically <= Number of processors on the system")
 parser.add_argument('--config', help="Override default configuration")
+parser.add_argument('--test_run', action="store_true",
+                    help="Dummy run shows final generated VPR commands")
 args = parser.parse_args()
 
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
@@ -45,13 +49,15 @@ gc = config["GENERAL CONFIGURATION"]
 
 
 def main():
-    task_action = []
+
     validate_command_line_arguments()
     for eachtask in args.tasks:
         logger.info("Currently running task %s" % eachtask)
-        task_action += generate_each_task_actions(eachtask)
-    pprint.pprint(task_action)
-    # run_actions(task_action)
+        commands = generate_each_task_actions(eachtask)
+        if not args.test_run:
+            run_actions(commands)
+        else:
+            pprint.pprint(commands)
     logger.info("Task execution completed")
     exit()
 
@@ -78,7 +84,7 @@ def generate_each_task_actions(taskname):
     # Check if task directory exists and consistent
     curr_task_dir = os.path.join(gc["task_dir"], taskname)
     if not os.path.isdir(curr_task_dir):
-        clean_up_and_exit("Task directory not found")
+        clean_up_and_exit("Task directory [%s] not found" % curr_task_dir)
     os.chdir(curr_task_dir)
 
     curr_task_conf_file = os.path.join(curr_task_dir, "config", "task.conf")
@@ -97,8 +103,9 @@ def generate_each_task_actions(taskname):
         logger.info('Created "%s" directory for current task run' %
                     curr_run_dir)
     except:
-        logger.exception()
+        logger.exception("")
         logger.error("Failed to create new run directory in task directory")
+    os.chdir(curr_run_dir)
 
     # Read task configuration file and check consistency
     task_conf = ConfigParser(allow_no_value=True,
@@ -123,14 +130,15 @@ def generate_each_task_actions(taskname):
                               "%s  " % arch_file)
 
     # Check if specified benchmark files exist
-    benchmark_list, bench_files = [], []
+    benchmark_list = []
     for bech_name, each_benchmark in task_conf["BENCHMARKS"].items():
+        bench_files = []
         for eachpath in each_benchmark.split(","):
-            bench_files += glob.glob(eachpath)
-        for eachfile in bench_files:
-            if not os.path.isfile(eachfile):
-                clean_up_and_exit("Missing source file %s in benchmark %s " %
-                                  (eachfile, bech_name))
+            files = glob.glob(eachpath)
+            if not len(files):
+                clean_up_and_exit(("No files added benchmark %s" % bech_name) +
+                                  " with path %s " % (eachpath))
+            bench_files += files
 
         ys_for_task = task_conf.get("SYNTHESIS_PARAM", "bench_yosys_common")
         benchmark_list.append({
@@ -141,24 +149,15 @@ def generate_each_task_actions(taskname):
                                        fallback=ys_for_task)
         })
 
-    for eachbench in benchmark_list:
-        pprint.pprint(eachbench)
-
     # Create OpenFPGA flow run commnad for each combination of
     # architecture, benchmark and parameters
     flow_run_cmd_list = []
-    print(archfile_list)
-    print(benchmark_list)
-    # for arch in archfile_list:
-    #     for bench in benchmark_list:
-    #         flow_run_dir = get_flow_rundir(arch, bench["top_module"])
-    #         print(flow_run_dir)
-    #         flow_run_cmd_list.append(create_run_script(
-    #             gc["temp_run_dir"],
-    #             arch,
-    #             bench,
-    #             task_conf["GENERAL"]["power_tech_file"],
-    #             task_conf["SCRIPT_PARAM"]))
+
+    for arch in archfile_list:
+        for bench in benchmark_list:
+            flow_run_dir = get_flow_rundir(arch, bench["top_module"])
+            cmd = create_run_command(flow_run_dir, arch, bench, task_conf)
+            flow_run_cmd_list.append(cmd)
     return flow_run_cmd_list
 
 
@@ -168,19 +167,16 @@ def get_flow_rundir(arch, top_module, flow_params=None):
         top_module,
         flow_params if flow_params else "common"
     ]
-    return os.path.join(*path)
+    return os.path.abspath(os.path.join(*path))
 
 
-def create_run_script(curr_job_dir, archfile, benchmark_list,
-                      power_tech_file, additional_fpga_flow_params):
+def create_run_command(curr_job_dir, archfile, benchmark_obj, task_conf):
     """
     Create_run_script function accepts run directory, architecture list and
     fpga_flow configuration file and prepare final executable fpga_flow script
     TODO : Replace this section after convert fpga_flow to python script
     Config file creation and bechnmark list can be skipped
     """
-    print(archfile)
-    return
     # = = = = = = = = = File/Directory Consitancy Check = = = = = = = = = =
     if not os.path.isdir(gc["misc_dir"]):
         clean_up_and_exit("Miscellaneous directory does not exist")
@@ -197,77 +193,62 @@ def create_run_script(curr_job_dir, archfile, benchmark_list,
 
     # = = = = = = = = = = = =  Create execution folder = = = = = = = = = = = =
     if os.path.isdir(curr_job_dir):
-        shutil.rmtree(curr_job_dir)
+        question = "One the result directory already exist.\n"
+        question += "%s\n" % curr_job_dir
+        reply = str(input(question+' (y/n): ')).lower().strip()
+        if reply[:1] in ['y', 'yes']:
+            shutil.rmtree(curr_job_dir)
+        else:
+            logger.info("Result directory removal denied by the user")
+            exit()
     os.makedirs(curr_job_dir)
 
     # Make execution command to run Open FPGA flow
-    command = [archfile] + benchmark_list
+    command = [archfile] + benchmark_obj["files"]
+    command += ["--top_module", benchmark_obj["top_module"]]
+    command += ["--run_dir", curr_job_dir]
+    if task_conf.getboolean("GENERAL", "power_analysis", fallback=False):
+        command += ["--power"]
+        command += ["--power_tech",
+                    task_conf.get("GENERAL", "power_tech_file")]
+    if task_conf.getboolean("GENERAL", "spice_output", fallback=False):
+        command += ["--vpr_fpga_spice"]
+    if task_conf.getboolean("GENERAL", "verilog_output", fallback=False):
+        command += ["--vpr_fpga_verilog"]
 
-    # # = = = = = = = = = = = Create config file= = = = = = = = = = = = = = = =
-    # fpga_flow_conf = ConfigParser(
-    #     strict=False,
-    #     interpolation=ExtendedInterpolation())
-    # fpga_flow_conf.read_dict(script_env_vars)
-    # fpga_flow_conf.read_file(open(fpga_flow_conf_tmpl))
-
-    # # HACK: Find better way to resolve all interpolations in the script and write back
-    # for eachSection in fpga_flow_conf:
-    #     for eachkey in fpga_flow_conf[eachSection].keys():
-    #         fpga_flow_conf[eachSection][eachkey] = fpga_flow_conf.get(
-    #             eachSection, eachkey)
-
-    # # Update configuration file with script realated parameters
-    # fpga_flow_conf["flow_conf"]["vpr_arch"] = archfile
-    # fpga_flow_conf["flow_conf"]["power_tech_xml"] = power_tech_file
-
-    # # Remove extra path section and create configuration file
-    # fpga_flow_conf.remove_section("PATH")
-    # with open("openfpga_job.conf", 'w') as configfile:
-    #     fpga_flow_conf.write(configfile)
-
-    # # = = = = = = = = = = = Create Benchmark List file = = = = = = = = = = = =
-    # # TODO: This script strips common path from bechmark list and add
-    # # only single directory and filename to benchmarklist file
-    # # This can be imporoved by modifying fpga_flow script
-    # with open("openfpga_benchmark_list.txt", 'w') as configfile:
-    #     configfile.write("# Circuit Names, fixed routing channel width\n")
-    #     for eachBenchMark in benchmark_list:
-    #         configfile.write(eachBenchMark.replace(
-    #             fpga_flow_conf["dir_path"]["benchmark_dir"], ""))
-    #         configfile.write(",30")
-    #         configfile.write("\n")
-
-    # # = = = = = = = = = Create fpga_flow_shell Script  = = = = = = = = = = = =
-    # d = {
-    #     "fpga_flow_script": shlex.quote(gc["script_default"]),
-    #     "conf_file": shlex.quote(os.path.join(os.getcwd(), "openfpga_job.conf")),
-    #     "benchmark_list_file":  shlex.quote(os.path.join(os.getcwd(), "openfpga_benchmark_list.txt")),
-    #     "csv_rpt_file": shlex.quote(os.path.join(os.getcwd(), os.path.join(gc["csv_rpt_dir"], "fpga_flow.csv"))),
-    #     "verilog_output_path": shlex.quote(os.path.join(os.getcwd(), gc["verilog_output_path"])),
-    #     "additional_params": " \\\n    ".join(["-%s  %s" % (key, value or "") for key, value in additional_fpga_flow_params.items()])
-    # }
-    # result = Template(open(fpga_flow_script).read()).substitute(d)
-    # fpga_flow_script_path = os.path.join(os.getcwd(), "openfpga_flow.sh")
-    # with open(fpga_flow_script_path, 'w') as configfile:
-    #     configfile.write(result)
+    # Add other paramters to pass
+    for key, values in task_conf["SCRIPT_PARAM"].items():
+        command += ["--"+key, values]
     return command
 
 
-def run_single_script(s, script_path):
-    logging.debug('Waiting to join the pool')
+def run_single_script(s, command):
+    logger.debug('Added job in pool')
     with s:
+        logger.debug("Running OpenFPGA flow with " + " ".join(command))
         name = threading.currentThread().getName()
-        subprocess.run(["bash", script_path], stdout=subprocess.PIPE)
-        logging.info("%s Finished " % name)
+        # run_fpga_flow.external_call(logger, command)
+        try:
+            logfile = "%s_out.log" % name
+            with open(logfile, 'w+') as output:
+                process = subprocess.run(["python3.5", gc["script_default"]]+command,
+                                         check=True,
+                                         stdout=subprocess.PIPE,
+                                         stderr=subprocess.PIPE,
+                                         universal_newlines=True)
+                output.write(process.stdout)
+        except:
+            logger.exception()
+        logger.info("%s Finished " % name)
 
 
-def run_actions(actions):
+def run_actions(actions_list):
     thread_sema = threading.Semaphore(args.maxthreads)
     thred_list = []
-    for index, eachAction in enumerate(actions):
+    for index, commands in enumerate(actions_list):
         t = threading.Thread(target=run_single_script,
-                             name='benchmark_' + str(index),
-                             args=(thread_sema, eachAction))
+                             name='Job_%02d' % (index+1),
+                             args=(thread_sema, commands))
         t.start()
         thred_list.append(t)
 
