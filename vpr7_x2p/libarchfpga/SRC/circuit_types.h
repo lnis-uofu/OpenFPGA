@@ -101,6 +101,7 @@ enum e_spice_model_buffer_type {
 enum e_spice_model_pass_gate_logic_type {
   SPICE_MODEL_PASS_GATE_TRANSMISSION, 
   SPICE_MODEL_PASS_GATE_TRANSISTOR,
+  SPICE_MODEL_PASS_GATE_RRAM,         /* RRAM can be treated as a special type of pass-gate logic */
   NUM_CIRCUIT_MODEL_PASS_GATE_TYPES
 };
 

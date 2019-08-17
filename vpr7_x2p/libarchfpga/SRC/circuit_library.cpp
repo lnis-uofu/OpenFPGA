@@ -266,6 +266,34 @@ enum e_spice_model_structure CircuitLibrary::mux_structure(const CircuitModelId&
   return mux_structure_[circuit_model_id]; 
 }
 
+/* Return if additional constant inputs are required for a circuit model 
+ * Only applicable for MUX circuit model 
+ */
+bool CircuitLibrary::mux_add_const_input(const CircuitModelId& circuit_model_id) const {
+  /* validate the circuit_model_id */
+  VTR_ASSERT(valid_circuit_model_id(circuit_model_id));
+  /* validate the circuit model type is MUX */
+  VTR_ASSERT( (SPICE_MODEL_MUX == circuit_model_type(circuit_model_id))
+           || (SPICE_MODEL_LUT == circuit_model_type(circuit_model_id)) );
+  /* A -1 value for the const values means there is no const inputs */
+  return ( size_t(-1) != mux_const_input_values_[circuit_model_id] );
+}
+
+/* Return if additional constant inputs are required for a circuit model 
+ * Only applicable for MUX circuit model 
+ */
+size_t CircuitLibrary::mux_const_input_value(const CircuitModelId& circuit_model_id) const {
+  /* validate the circuit_model_id */
+  VTR_ASSERT(valid_circuit_model_id(circuit_model_id));
+  /* validate the circuit model type is MUX */
+  VTR_ASSERT( (SPICE_MODEL_MUX == circuit_model_type(circuit_model_id))
+           || (SPICE_MODEL_LUT == circuit_model_type(circuit_model_id)) );
+  /* A -1 value for the const values means there is no const inputs */
+  /* A 0 value for the const values means it is logic 0 */
+  /* A 1 value for the const values means it is logic 1 */
+  return mux_const_input_values_[circuit_model_id];
+}
+
 /************************************************************************
  * Public Accessors : Basic data query on Circuit Porst
  ***********************************************************************/
@@ -1158,6 +1186,8 @@ void CircuitLibrary::set_mux_const_input_value(const CircuitModelId& circuit_mod
   /* validate that the type of this circuit_model should be MUX or LUT */
   VTR_ASSERT( (SPICE_MODEL_MUX == circuit_model_type(circuit_model_id))
            || (SPICE_MODEL_LUT == circuit_model_type(circuit_model_id)) );
+  /* validate the const input values */
+  VTR_ASSERT( valid_mux_const_input_value(const_input_value) );
   mux_const_input_values_[circuit_model_id] = const_input_value; 
   return;
 }
@@ -1698,6 +1728,18 @@ bool CircuitLibrary::valid_circuit_edge_id(const CircuitModelId& circuit_model_i
   /* validate the circuit_model_id */
   VTR_ASSERT(valid_circuit_model_id(circuit_model_id));
   return ( size_t(circuit_edge_id) < edge_ids_[circuit_model_id].size() ) && ( circuit_edge_id == edge_ids_[circuit_model_id][circuit_edge_id] ); 
+}
+
+/* Validate the value of constant input 
+ * A -1 value for the const values means there is no const inputs 
+ * A 0 value for the const values means it is logic 0 
+ * A 1 value for the const values means it is logic 1 
+ * Others are invalid 
+ */
+bool CircuitLibrary::valid_mux_const_input_value(const size_t& const_input_value) const {
+  return ( (size_t(-1) == const_input_value) 
+        || (0 == const_input_value)
+        || (1 == const_input_value) );
 }
 
 /* Invalidators */

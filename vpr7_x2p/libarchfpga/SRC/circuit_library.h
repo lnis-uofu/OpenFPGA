@@ -242,6 +242,8 @@ class CircuitLibrary {
     bool is_output_buffered(const CircuitModelId& circuit_model_id) const;
     bool is_lut_intermediate_buffered(const CircuitModelId& circuit_model_id) const;
     enum e_spice_model_structure mux_structure(const CircuitModelId& circuit_model_id) const;
+    bool mux_add_const_input(const CircuitModelId& circuit_model_id) const;
+    size_t mux_const_input_value(const CircuitModelId& circuit_model_id) const;
   public: /* Public Accessors: Basic data query on Circuit Ports*/
     bool is_input_port(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
     bool is_output_port(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
@@ -457,6 +459,7 @@ class CircuitLibrary {
     bool valid_circuit_pin_id(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id, const size_t& pin_id) const;
     bool valid_delay_type(const CircuitModelId& circuit_model_id, const enum spice_model_delay_type& delay_type) const;
     bool valid_circuit_edge_id(const CircuitModelId& circuit_model_id, const CircuitEdgeId& circuit_edge_id) const;
+    bool valid_mux_const_input_value(const size_t& const_input_value) const;
     /* Invalidators */
     void invalidate_circuit_model_lookup() const;
     void invalidate_circuit_model_port_lookup(const CircuitModelId& circuit_model_id) const;
