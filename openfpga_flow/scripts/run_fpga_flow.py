@@ -507,7 +507,7 @@ def run_vpr():
                 logger.info("Routing with channel width=%d successful" %
                             min_channel_width)
                 break
-            elif args.min_channel_width > (min_channel_width-2):
+            elif args.max_route_width_retry < (min_channel_width-2):
                 clean_up_and_exit("Failed to route within maximum " +
                                   "iteration of channel width")
             else:
@@ -663,8 +663,9 @@ def run_standard_vpr(bench_blif, fixed_chan_width, logfile):
             if process.returncode:
                 logger.info("Standard VPR run failed with returncode %d",
                             process.returncode)
-    except:
+    except Exception as e:
         logger.exception("Failed to run VPR")
+        process_failed_vpr_run(e.output)
         clean_up_and_exit("")
     logger.info("VPR output is written in file %s" % logfile)
     return int(chan_width)
@@ -816,7 +817,8 @@ def run_netlists_verification():
 
     command = [cad_tools["iverilog_path"]]
     command += ["-o", compiled_file]
-    command += [cad_tools["include_netlist_verification"]]
+    command += ["./SRC/%s_ace_corrected_out_include_netlists.v" %
+                args.top_module]
     command += ["-s"]
     if args.vpr_fpga_verilog_formal_verification_top_netlist:
         command += [tb_top_formal]
@@ -841,8 +843,9 @@ def run_command(taskname, logfile, command, exit_if_fail=True):
             if process.returncode:
                 logger.error("%s run failed with returncode %d" %
                              (taskname, process.returncode))
-    except:
-        logger.exception()
+    except Exception as e:
+        logger.exception("failed to execute %s" % taskname)
+        process_failed_vpr_run(e.output)
         if exit_if_fail:
             clean_up_and_exit("Failed to run %s task" % taskname)
     logger.info("%s is written in file %s" % (taskname, logfile))
@@ -859,6 +862,7 @@ def process_failed_vpr_run(vpr_output):
     for line in vpr_output.split("\n"):
         if "error" in line.lower():
             logger.error("-->>" + line)
+
 
 if __name__ == "__main__":
     # Setting up print and logging system
