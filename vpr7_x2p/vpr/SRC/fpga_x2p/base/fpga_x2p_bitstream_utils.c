@@ -199,9 +199,9 @@ int count_num_sram_bits_one_mux_spice_model(t_spice_model* cur_spice_model,
     if ( (TRUE == cur_spice_model->design_tech_info.mux_info->local_encoder) 
         && (2 < num_input_size) ) { 
       if (SPICE_MODEL_STRUCTURE_ONELEVEL == cur_spice_model->design_tech_info.mux_info->structure) {
-        num_sram_bits = ceil(log(num_sram_bits + 1) / log(2));
+        num_sram_bits = determine_mux_local_encoder_num_inputs(num_sram_bits);
       } else if (SPICE_MODEL_STRUCTURE_MULTILEVEL == cur_spice_model->design_tech_info.mux_info->structure) {
-        num_sram_bits = cur_spice_model->design_tech_info.mux_info->mux_num_level * ceil(log(num_sram_bits / cur_spice_model->design_tech_info.mux_info->mux_num_level + 1) / log(2));
+        num_sram_bits = cur_spice_model->design_tech_info.mux_info->mux_num_level * determine_mux_local_encoder_num_inputs(num_sram_bits / cur_spice_model->design_tech_info.mux_info->mux_num_level);
       }
     }
     break;
@@ -721,9 +721,9 @@ int count_num_conf_bits_one_mux_spice_model(t_spice_model* cur_spice_model,
     if ( (TRUE == cur_spice_model->design_tech_info.mux_info->local_encoder) 
         && (2 < num_input_size) ) { 
       if (SPICE_MODEL_STRUCTURE_ONELEVEL == cur_spice_model->design_tech_info.mux_info->structure) {
-        num_conf_bits = ceil(log(num_conf_bits + 1) / log(2));
+        num_conf_bits = determine_mux_local_encoder_num_inputs(num_conf_bits);
       } else if (SPICE_MODEL_STRUCTURE_MULTILEVEL == cur_spice_model->design_tech_info.mux_info->structure) {
-        num_conf_bits = cur_spice_model->design_tech_info.mux_info->mux_num_level * ceil(log(num_conf_bits / cur_spice_model->design_tech_info.mux_info->mux_num_level + 1) / log(2));
+        num_conf_bits = cur_spice_model->design_tech_info.mux_info->mux_num_level * determine_mux_local_encoder_num_inputs(num_conf_bits / cur_spice_model->design_tech_info.mux_info->mux_num_level);
       }
     }
     break;

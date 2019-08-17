@@ -204,7 +204,7 @@ int multilevel_mux_last_level_input_num(int num_level, int num_input_per_unit,
  *  We plus 1, which is all-zero condition for outputs
  ***************************************************************************************/
 int determine_mux_local_encoder_num_inputs(int num_outputs) {
-  return ceil(log(num_outputs + 1) / log(2));
+  return ceil(log(num_outputs) / log(2));
 }
 
 /* Decoding a one-level MUX:
@@ -233,8 +233,8 @@ int* decode_onelevel_mux_sram_bits(int fan_in,
 
   if (TRUE == use_local_encoder) {
     /* The encoder will convert the path_id to a binary number 
-     * For example: when path_id=3, using a 4-input encoder 
-     * the sram_bits will be the 4-digit binary number of 3: 0011
+     * For example: when path_id=3 (use the 4th input), using a 4-input encoder 
+     * the sram_bits will be the 4-digit binary number of 3: 0100
      */
     ret = my_itobin_int(path_id, num_sram_bits);
   } else {
@@ -325,20 +325,25 @@ int* decode_multilevel_mux_sram_bits(int fan_in,
   /* Walk through each level and find the path_id and encode it */
   for (int ilvl = 0; ilvl < mux_level; ++ilvl) {
     int start_idx = num_input_basis * ilvl;
-    int end_idx = num_input_basis * (ilvl + 1) - 1;
-    int encoded_path_id = 0;
+    int end_idx = num_input_basis * (ilvl + 1);
+    int encoded_path_id = -1;
     int checker = 0;
     for (int idx = start_idx; idx < end_idx; ++idx) { 
-      if ('1' == ret[idx]) {
+      if (1 == ret[idx]) {
         checker++;
-        encoded_path_id = idx; 
+        encoded_path_id = idx - start_idx; 
       }
     }
     /* There should be at most one '1' */
     assert( (0 == checker) || (1 == checker));
+    /* If all-zero bits are found, it means that the stage is not used, assign to the last input by default */
+    if (0 == checker) {
+      encoded_path_id = num_input_basis - 1;
+    }
+    assert (-1 != encoded_path_id);
     /* The encoder will convert the path_id to a binary number 
-     * For example: when path_id=3, using a 4-input encoder 
-     * the sram_bits will be the 4-digit binary number of 3: 0011
+     * For example: when path_id=3 (use the 4th input), using a 4-input encoder 
+     * the sram_bits will be the 4-digit binary number of 3: 0100
      */
     int* tmp_bits = my_itobin_int(encoded_path_id, num_bits_per_level);
     /* Copy tmp_bits to encoded bits */

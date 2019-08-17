@@ -1497,10 +1497,10 @@ void dump_verilog_cmos_mux_multilevel_structure(FILE* fp,
 
   if (TRUE == spice_model.design_tech_info.mux_info->local_encoder) {
     /* Print local wires for local encoders */
-    fprintf(fp, "wire [%d:0] %s_data;\n", 
+    fprintf(fp, "wire [0:%d] %s_data;\n", 
             spice_mux_arch.num_level * spice_mux_arch.num_input_basis - 1,
             sram_port[0]->prefix);
-    fprintf(fp, "wire [%d:0] %s_data_inv;\n", 
+    fprintf(fp, "wire [0:%d] %s_data_inv;\n", 
             spice_mux_arch.num_level * spice_mux_arch.num_input_basis - 1,
             sram_port[0]->prefix);
   }
@@ -1670,6 +1670,37 @@ void dump_verilog_cmos_mux_onelevel_structure(FILE* fp,
   fprintf(fp, "wire [0:%d] mux2_l%d_in; \n", spice_mux_arch.num_input - 1, 1); /* input0  */
   fprintf(fp, "wire [0:%d] mux2_l%d_in; \n", 0, 0); /* output */
 
+  /* Instanciate local encoder circuit here */
+  if ( (TRUE == spice_model.design_tech_info.mux_info->local_encoder)
+    && ( 2 < spice_mux_arch.num_input) ) {
+    /* Get the number of inputs */
+    int num_outputs = spice_mux_arch.num_input;
+    int num_inputs = determine_mux_local_encoder_num_inputs(num_outputs);
+
+    /* Print local wires for local encoders */
+    fprintf(fp, "wire [0:%d] %s_data;\n", 
+            spice_mux_arch.num_input - 1,
+            sram_port[0]->prefix);
+    fprintf(fp, "wire [0:%d] %s_data_inv;\n", 
+            spice_mux_arch.num_input - 1,
+            sram_port[0]->prefix);
+    /* Find the decoder name */
+    fprintf(fp, "%s %s_0_ (", 
+            generate_verilog_decoder_subckt_name(num_inputs, num_outputs),
+            generate_verilog_decoder_subckt_name(num_inputs, num_outputs));
+    if (true == is_explicit_mapping) {
+      fprintf(fp, ".addr(%s), .data(%s_data), .data_inv(%s_data_inv) );\n", 
+              sram_port[0]->prefix,
+              sram_port[0]->prefix,
+              sram_port[0]->prefix);
+    } else {
+      fprintf(fp, "%s, %s_data, %s_data_inv);\n", 
+              sram_port[0]->prefix,
+              sram_port[0]->prefix,
+              sram_port[0]->prefix);
+    }
+  } 
+
   fprintf(fp, "%s mux_basis (\n", mux_basis_subckt_name); /* given_name */
   /* Dump global ports */
   if  (0 < rec_dump_verilog_spice_model_global_ports(fp, &spice_model, FALSE, FALSE, 
@@ -1740,38 +1771,6 @@ void dump_verilog_cmos_mux_onelevel_structure(FILE* fp,
   }
   fprintf(fp, "\n");
   fprintf(fp, ");\n");
-
-  if (2 < spice_mux_arch.num_input) {
-    /* Instanciate local encoder circuit here */
-    if (TRUE == spice_model.design_tech_info.mux_info->local_encoder) {
-      /* Get the number of inputs */
-      int num_outputs = spice_mux_arch.num_input - 1;
-      int num_inputs = determine_mux_local_encoder_num_inputs(num_outputs);
-
-      /* Print local wires for local encoders */
-      fprintf(fp, "wire [%d:0] %s_data;\n", 
-              spice_mux_arch.num_input - 1,
-              sram_port[0]->prefix);
-      fprintf(fp, "wire [%d:0] %s_data_inv;\n", 
-              spice_mux_arch.num_input - 1,
-              sram_port[0]->prefix);
-      /* Find the decoder name */
-      fprintf(fp, "%s %s_0_ (", 
-              generate_verilog_decoder_subckt_name(num_inputs, num_outputs),
-              generate_verilog_decoder_subckt_name(num_inputs, num_outputs));
-      if (true == is_explicit_mapping) {
-        fprintf(fp, ".addr(%s), .data(%s_data), .data_inv(%s_data_inv) );\n", 
-                sram_port[0]->prefix,
-                sram_port[0]->prefix,
-                sram_port[0]->prefix);
-      } else {
-        fprintf(fp, "%s, %s_data, %s_data_inv);\n", 
-                sram_port[0]->prefix,
-                sram_port[0]->prefix,
-                sram_port[0]->prefix);
-      }
-    } 
-  }
  
   return;
 }
@@ -2870,9 +2869,8 @@ void dump_verilog_submodule_muxes(t_sram_orgz_info* cur_sram_orgz_info,
  *                  Outputs
  *               
  *  The outputs are assumes to be one-hot codes (at most only one '1' exist)
- *  Considering this fact, there are only num_of_outputs + 1 conditions to be encoded.
- *  Therefore, the number of inputs is ceil(log(num_of_outputs+1)/log(2))
- *  We plus 1, which is all-zero condition for outputs
+ *  Considering this fact, there are only num_of_outputs conditions to be encoded.
+ *  Therefore, the number of inputs is ceil(log(num_of_outputs)/log(2))
  ***************************************************************************************/
 static 
 void dump_verilog_mux_local_encoder_module(FILE* fp, int num_outputs) {
@@ -2901,7 +2899,8 @@ void dump_verilog_mux_local_encoder_module(FILE* fp, int num_outputs) {
                             0, num_inputs - 1); 
   fprintf(fp, ",\n");
   /* Outputs */
-  dump_verilog_generic_port(fp, VERILOG_PORT_OUTPUT,
+  fprintf(fp, "output ");
+  dump_verilog_generic_port(fp, VERILOG_PORT_REG,
                             "data", 
                             0, num_outputs - 1); 
   fprintf(fp, ",\n");
@@ -2909,11 +2908,6 @@ void dump_verilog_mux_local_encoder_module(FILE* fp, int num_outputs) {
                             "data_inv", 
                             0, num_outputs - 1); 
   fprintf(fp, "\n);\n");
-
-  dump_verilog_generic_port(fp, VERILOG_PORT_REG,
-                            "data_reg", 
-                            0, num_outputs - 1); 
-  fprintf(fp, ";\n");
 
   /* Print the truth table of this encoder */
   /* Internal logics */
@@ -2925,23 +2919,27 @@ void dump_verilog_mux_local_encoder_module(FILE* fp, int num_outputs) {
    * will give a all-zero code
    * For example: 
    * data is 5-bit while addr is 3-bit 
-   * data=8'b0_0000 is reserved by addr=3'b000;
-   * data=8'b0_0001 will be encoded to addr=3'b001;
-   * data=8'b0_0010 will be encoded to addr=3'b010;
-   * data=8'b0_0100 will be encoded to addr=3'b011;
-   * data=8'b0_1000 will be encoded to addr=3'b100;
-   * data=8'b1_0000 will be encoded to addr=3'b101;
+   * data=8'b0_0000 will be encoded to addr=3'b001;
+   * data=8'b0_0001 will be encoded to addr=3'b010;
+   * data=8'b0_0010 will be encoded to addr=3'b011;
+   * data=8'b0_0100 will be encoded to addr=3'b100;
+   * data=8'b0_1000 will be encoded to addr=3'b101;
+   * data=8'b1_0000 will be encoded to addr=3'b110;
    * The rest of addr codes 3'b110, 3'b111 will be decoded to data=8'b0_0000;
    */
-  fprintf(fp, "always@(addr, data)\n");
-  fprintf(fp, "begin\n");
-  fprintf(fp, "\tdata_reg = %d'b0;\n", num_outputs);
-  fprintf(fp, "\tif ((0 < addr) && (addr < %d) ) begin\n", num_outputs);
-  fprintf(fp, "\t\tdata_reg = 1'b1 << (addr - 1);\n"); 
-  fprintf(fp, "\tend\n");
-  fprintf(fp, "end\n");
 
-  fprintf(fp, "assign data = data_reg;\n");
+  fprintf(fp, "always@(addr)\n");
+  fprintf(fp, "case (addr)\n");
+  /* Create a string for addr and data */
+  for (int i = 0; i < num_outputs; ++i) {
+    fprintf(fp, "\t%d'b%s : data = %d'b%s;\n", 
+            num_inputs, my_itobin(i, num_inputs),
+            num_outputs, my_ito1hot(i, num_outputs));
+  }
+  fprintf(fp, "\tdefault : data = %d'b%s;\n",
+          num_outputs, my_ito1hot(num_outputs - 1, num_outputs));
+  fprintf(fp, "endcase\n");
+
   fprintf(fp, "assign data_inv = ~data;\n");
   
 

@@ -17,8 +17,8 @@ int create_dir_path(char* dir_path);
 char* my_strcat(const char* str1,
                 const char* str2);
 
-int split_path_prog_name(char* prog_path,
-                         char  split_token,
+int split_path_prog_name(const char* prog_path,
+                         const char  split_token,
                          char** ret_path,
                          char** ret_prog_name);
 
@@ -57,6 +57,8 @@ t_spice_model_port** find_spice_model_config_done_ports(t_spice_model* spice_mod
 
 t_spice_transistor_type* find_mosfet_tech_lib(t_spice_tech_lib tech_lib,
                                               e_spice_trans_type trans_type);
+
+char* my_ito1hot(int in_int, int bin_len);
 
 char* my_itobin(int in_int, int bin_len);
 

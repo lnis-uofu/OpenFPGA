@@ -53,8 +53,8 @@ void dump_conf_bits_to_bitstream_file(FILE* fp,
  * In this file, the property of configuration bits will be shown as comments,
  * which is easy for developers to debug
  */
-void dump_fpga_spice_bitstream(char* bitstream_file_name, 
-                               char* circuit_name,
+void dump_fpga_spice_bitstream(const char* bitstream_file_name, 
+                               const char* circuit_name,
                                t_sram_orgz_info* cur_sram_orgz_info) {
   FILE* fp;
 
@@ -288,8 +288,8 @@ void dump_conf_bits_to_bitstream_file(FILE* fp,
 /* Top-level function*/
 void vpr_fpga_generate_bitstream(t_vpr_setup vpr_setup,
                                  t_arch Arch,
-                                 char* circuit_name,
-                                 char* bitstream_file_path,
+                                 const char* circuit_name,
+                                 const char* bitstream_file_path,
                                  t_sram_orgz_info** cur_sram_orgz_info) {
   /* Timer */
   clock_t t_start;
@@ -380,22 +380,20 @@ void vpr_fpga_generate_bitstream(t_vpr_setup vpr_setup,
  * Prepare all the variables required by the core generator
  */
 void vpr_fpga_bitstream_generator(t_vpr_setup vpr_setup,
-                                        t_arch Arch,
-                                        char* circuit_name,
-                                        t_sram_orgz_info** cur_sram_orgz_info) {
-  char* bitstream_file_path = NULL; 
+                                  t_arch Arch,
+                                  char* circuit_name,
+                                  t_sram_orgz_info** cur_sram_orgz_info) {
+  std::string bitstream_file_path; 
 
   if (NULL == vpr_setup.FPGA_SPICE_Opts.BitstreamGenOpts.bitstream_output_file) {
-    bitstream_file_path = my_strcat(circuit_name, fpga_spice_bitstream_output_file_postfix);
+    bitstream_file_path = circuit_name;
+    bitstream_file_path.append(fpga_spice_bitstream_output_file_postfix);
   } else {
-    bitstream_file_path = my_strdup(vpr_setup.FPGA_SPICE_Opts.BitstreamGenOpts.bitstream_output_file);
+    bitstream_file_path = vpr_setup.FPGA_SPICE_Opts.BitstreamGenOpts.bitstream_output_file;
   }
 
   /* Run bitstream generation and dump output file */
-  vpr_fpga_generate_bitstream(vpr_setup, Arch, circuit_name, bitstream_file_path, cur_sram_orgz_info);
-
-  /* Free */
-  my_free(bitstream_file_path);
+  vpr_fpga_generate_bitstream(vpr_setup, Arch, circuit_name, bitstream_file_path.c_str(), cur_sram_orgz_info);
 
 }
 

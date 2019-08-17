@@ -310,7 +310,10 @@ void vpr_fpga_verilog(t_vpr_setup vpr_setup,
                       sram_verilog_orgz_info->type);
 
   /* Force enable bitstream generator when we need to output Verilog top testbench*/  
-  if (TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.print_top_testbench) {
+  if ((TRUE == vpr_setup.FPGA_SPICE_Opts.BitstreamGenOpts.gen_bitstream)
+    || (TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.print_top_testbench)
+    || (TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.print_autocheck_top_testbench)
+    || (TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.print_formal_verification_top_netlist)) {
     vpr_setup.FPGA_SPICE_Opts.BitstreamGenOpts.gen_bitstream = TRUE;
   }
 
