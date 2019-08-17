@@ -5,15 +5,15 @@
 // Coder       : Xifan TANG
 //-----------------------------------------------------
 //------ Include defines: preproc flags -----
-`include "GENERATED_DIR_KEYWORD/SRC/fpga_defines.v"
+`include "./SRC/fpga_defines.v"
 module static_dff (
 /* Global ports go first */
 input set,     // set input
-input reset, // Reset input 
+input reset, // Reset input
 input clk, // Clock Input
 /* Local ports follow */
 input D, // Data Input
-output Q // Q output 
+output Q // Q output
 );
 //------------Internal Variables--------
 reg q_reg;
@@ -29,7 +29,7 @@ end else begin
 end
 
 // Wire q_reg to Q
-assign Q = q_reg; 
+assign Q = q_reg;
 
 endmodule //End Of Module static_dff
 
@@ -42,12 +42,12 @@ endmodule //End Of Module static_dff
 module sc_dff (
 /* Global ports go first */
 input set,     // set input
-input reset, // Reset input 
+input reset, // Reset input
 input clk, // Clock Input
 /* Local ports follow */
 input D, // Data Input
-output Q, // Q output 
-output Qb // Q output 
+output Q, // Q output
+output Qb // Q output
 );
 //------------Internal Variables--------
 reg q_reg;
@@ -63,7 +63,7 @@ end else begin
 end
 
 // Wire q_reg to Q
-assign Q = q_reg; 
+assign Q = q_reg;
 assign Qb = ~Q;
 
 endmodule //End Of Module static_dff
@@ -76,13 +76,13 @@ endmodule //End Of Module static_dff
 //-----------------------------------------------------
 module sc_dff_compact (
 /* Global ports go first */
-input reset, // Reset input 
+input reset, // Reset input
 //input set,     // set input
 input clk, // Clock Input
 /* Local ports follow */
 input D, // Data Input
-output Q, // Q output 
-output Qb // Q output 
+output Q, // Q output
+output Qb // Q output
 );
 //------------Internal Variables--------
 reg q_reg;
@@ -98,16 +98,16 @@ end else begin
 end
 /*
 // Wire q_reg to Q
-assign Q = q_reg; 
+assign Q = q_reg;
 assign Qb = ~Q;
 */
 
 `ifndef ENABLE_FORMAL_VERIFICATION
 // Wire q_reg to Q
-assign Q = q_reg; 
+assign Q = q_reg;
 assign Qb = ~q_reg;
 `else
-assign Q = 1'bZ; 
+assign Q = 1'bZ;
 assign Qb = !Q;
 `endif
 
