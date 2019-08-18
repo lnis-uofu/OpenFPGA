@@ -24,9 +24,8 @@
  *
  *************************************************/
 
-
-#ifndef MUX_ARCH_H
-#define MUX_ARCH_H
+#ifndef MUX_GRAPH_H
+#define MUX_GRAPH_H
 
 #include "vtr_vector.h"
 #include "vtr_range.h"
@@ -124,14 +123,6 @@ class MuxGraph {
     /* fast look-up */
     typedef std::vector<std::vector<std::vector<MuxNodeId>>> NodeLookup;
     mutable NodeLookup node_lookup_; /* [num_levels][num_types][num_nodes_per_level] */ 
-};
-
-class MuxLibrary {
-  private: /* Internal data */
-    /* MUX graph-based desription */
-    vtr::vector<MuxId, MuxGraph> mux_graphs_; /* Graphs describing MUX internal structures */
-    vtr::vector<MuxId, CircuitModelId> circuit_model_ids_; /* ids in the circuit library, each MUX graph belongs to*/
-    /* Local encoder description */
 };
 
 #endif

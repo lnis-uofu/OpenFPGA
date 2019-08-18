@@ -48,7 +48,8 @@ MuxGraph::mem_range MuxGraph::memories() const {
 
 /* Find the number of inputs in the MUX graph */
 size_t MuxGraph::num_inputs() const {
-  /* FIXME: need to check if the graph is valid or not */
+  /* need to check if the graph is valid or not */
+  VTR_ASSERT_SAFE(valid_mux_graph());
   /* Sum up the number of INPUT nodes in each level */
   size_t num_inputs = 0;
   for (auto node_per_level : node_lookup_) {
@@ -59,14 +60,16 @@ size_t MuxGraph::num_inputs() const {
 
 /* Find the number of levels in the MUX graph */
 size_t MuxGraph::num_levels() const {
-  /* FIXME: need to check if the graph is valid or not */
+  /* need to check if the graph is valid or not */
+  VTR_ASSERT_SAFE(valid_mux_graph());
   /* The num_levels by definition excludes the level for outputs, so a deduection is applied */
   return node_lookup_.size() - 1; 
 }
 
 /* Find the number of configuration memories in the MUX graph */
 size_t MuxGraph::num_memory_bits() const {
-  /* FIXME: need to check if the graph is valid or not */
+  /* need to check if the graph is valid or not */
+  VTR_ASSERT_SAFE(valid_mux_graph());
   return mem_ids_.size(); 
 }
 
@@ -487,6 +490,11 @@ void MuxGraph::build_node_lookup() {
     node_lookup_[node_levels_[node]][size_t(node_types_[node])].push_back(node);
   }
 }
+
+/* Invalidate (empty) the node fast lookup*/
+void MuxGraph::invalidate_node_lookup() {
+  node_lookup_.clear();
+}
  
 /**************************************************
  * Private validators
@@ -520,11 +528,6 @@ bool MuxGraph::valid_input_id(const MuxInputId& input_id) const {
 
 bool MuxGraph::valid_node_lookup() const {
   return node_lookup_.empty();
-}
-
-/* Invalidate (empty) the node fast lookup*/
-void MuxGraph::invalidate_node_lookup() {
-  node_lookup_.clear();
 }
 
 /* validate a mux graph and see if it is valid */
@@ -568,12 +571,3 @@ bool MuxGraph::valid_mux_graph() const {
 /**************************************************
  * End of Member functions for the class MuxGraph
  *************************************************/
-
-/**************************************************
- * Member functions for the class MuxLibrary
- *************************************************/
-
-/**************************************************
- * End of Member functions for the class MuxLibrary
- *************************************************/
-

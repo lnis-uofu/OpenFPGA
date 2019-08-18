@@ -9,19 +9,16 @@
 #include "vtr_strong_id.h"
 
 /* Strong Ids for MUXes */
-struct mux_id_tag;
 struct mux_node_id_tag;
 struct mux_edge_id_tag;
 struct mux_mem_id_tag;
 struct mux_input_id_tag;
 
-typedef vtr::StrongId<mux_id_tag> MuxId;
 typedef vtr::StrongId<mux_node_id_tag> MuxNodeId;
 typedef vtr::StrongId<mux_edge_id_tag> MuxEdgeId;
 typedef vtr::StrongId<mux_mem_id_tag> MuxMemId;
 typedef vtr::StrongId<mux_input_id_tag> MuxInputId;
 
 class MuxGraph;
-class MuxLibrary;
 
 #endif 
