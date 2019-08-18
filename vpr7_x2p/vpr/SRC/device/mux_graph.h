@@ -67,6 +67,10 @@ class MuxGraph {
     size_t num_memory_bits() const;
     /* Find the sizes of each branch of a MUX */
     std::vector<size_t> branch_sizes() const;
+    /* Get the node id of a given input */
+    MuxNodeId node_id(const MuxInputId& input_id) const;
+    /* Decode memory bits based on an input id */
+    std::vector<size_t> decode_memory_bits(const MuxInputId& input_id) const;
   private: /* Private mutators : basic operations */
      /* Add a unconfigured node to the MuxGraph */
      MuxNodeId add_node(const enum e_mux_graph_node_type& node_type);
@@ -94,18 +98,23 @@ class MuxGraph {
     bool valid_node_id(const MuxNodeId& node) const;
     bool valid_edge_id(const MuxEdgeId& edge) const;
     bool valid_mem_id(const MuxMemId& mem) const;
+    bool valid_input_id(const MuxInputId& input_id) const;
     /* validate/invalidate node lookup */
     bool valid_node_lookup() const;
     void invalidate_node_lookup();
+    /* validate graph */
+    bool valid_mux_graph() const;
   private: /* Internal data */
     vtr::vector<MuxNodeId, MuxNodeId> node_ids_;                        /* Unique ids for each node */
-    vtr::vector<MuxNodeId, enum e_mux_graph_node_type> node_types_;  /* type of each node, input/output/internal */
-    vtr::vector<MuxNodeId, size_t> node_input_ids_;                        /* Unique ids for each node as an input of the MUX */
-    vtr::vector<MuxNodeId, size_t> node_levels_;                     /* at which level, each node belongs to */
+    vtr::vector<MuxNodeId, enum e_mux_graph_node_type> node_types_;     /* type of each node, input/output/internal */
+    vtr::vector<MuxNodeId, MuxInputId> node_input_ids_;                 /* Unique ids for each node as an input of the MUX */
+    vtr::vector<MuxNodeId, size_t> node_levels_;                       /* at which level, each node belongs to */
     vtr::vector<MuxNodeId, std::vector<MuxEdgeId>> node_in_edges_;       /* ids of incoming edges to each node */
     vtr::vector<MuxNodeId, std::vector<MuxEdgeId>> node_out_edges_;      /* ids of outgoing edges from each node */
 
     vtr::vector<MuxEdgeId, MuxEdgeId> edge_ids_;                        /* Unique ids for each edge */
+    vtr::vector<MuxEdgeId, std::vector<MuxNodeId>> edge_src_nodes_;     /* source nodes drive this edge */
+    vtr::vector<MuxEdgeId, std::vector<MuxNodeId>> edge_sink_nodes_;    /* sink nodes this edge drives */
     vtr::vector<MuxEdgeId, enum e_spice_model_pass_gate_logic_type> edge_types_; /* type of each edge: tgate/pass-gate */
     vtr::vector<MuxEdgeId, MuxMemId> edge_mem_ids_;                   /* ids of memory bit that control the edge */
     vtr::vector<MuxEdgeId, bool> edge_inv_mem_;                       /* if the edge is controlled by an inverted output of a memory bit */
@@ -119,8 +128,10 @@ class MuxGraph {
 
 class MuxLibrary {
   private: /* Internal data */
+    /* MUX graph-based desription */
     vtr::vector<MuxId, MuxGraph> mux_graphs_; /* Graphs describing MUX internal structures */
     vtr::vector<MuxId, CircuitModelId> circuit_model_ids_; /* ids in the circuit library, each MUX graph belongs to*/
+    /* Local encoder description */
 };
 
 #endif

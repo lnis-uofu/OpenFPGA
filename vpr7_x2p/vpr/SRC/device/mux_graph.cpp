@@ -60,7 +60,8 @@ size_t MuxGraph::num_inputs() const {
 /* Find the number of levels in the MUX graph */
 size_t MuxGraph::num_levels() const {
   /* FIXME: need to check if the graph is valid or not */
-  return node_lookup_.size();
+  /* The num_levels by definition excludes the level for outputs, so a deduection is applied */
+  return node_lookup_.size() - 1; 
 }
 
 /* Find the number of configuration memories in the MUX graph */
@@ -101,6 +102,57 @@ std::vector<size_t> MuxGraph::branch_sizes() const {
   return branch;
 }
 
+/* Get the node id of a given input */
+MuxNodeId MuxGraph::node_id(const MuxInputId& input_id) const {
+  /* Use the node_lookup to accelerate the search */
+  for (const auto& lvl : node_lookup_) {
+    for (const auto& cand_node : lvl[MUX_INPUT_NODE]) {
+      if (input_id == node_input_ids_[cand_node]) {
+        return cand_node; 
+      }
+    }
+  } 
+
+  return MuxNodeId::INVALID();
+}
+
+/* Decode memory bits based on an input id */
+std::vector<size_t> MuxGraph::decode_memory_bits(const MuxInputId& input_id) const {
+  /* initialize the memory bits: TODO: support default value */ 
+  std::vector<size_t> mem_bits(mem_ids_.size(), 0);
+
+  /* valid the input */
+  VTR_ASSERT_SAFE(valid_input_id(input_id));
+
+  /* Route the input to the output and update mem */
+  MuxNodeId next_node = node_id(input_id);
+  while ( 0 < node_out_edges_[next_node].size() ) {
+    VTR_ASSERT_SAFE (1 == node_out_edges_[next_node].size());
+    MuxEdgeId edge = node_out_edges_[next_node][0];
+
+    /* Configure the mem bits: 
+     * if inv_mem is enabled, it means 0 to enable this edge 
+     * otherwise, it is 1 to enable this edge
+     */
+    MuxMemId mem = edge_mem_ids_[edge];
+    VTR_ASSERT_SAFE (valid_mem_id(mem));
+    if (true == edge_inv_mem_[edge]) {
+      mem_bits[size_t(mem)] = 0;
+    } else {
+      mem_bits[size_t(mem)] = 1;
+    }
+
+    /* each edge must have 1 fan-out */
+    VTR_ASSERT_SAFE (1 == edge_sink_nodes_[edge].size());
+
+    /* Visit the next node */
+    next_node = edge_sink_nodes_[edge][0]; 
+  }
+  VTR_ASSERT_SAFE(MUX_OUTPUT_NODE == node_types_[next_node]);
+
+  return mem_bits;
+}
+
 /**************************************************
  * Private mutators: basic operations 
  *************************************************/
@@ -111,7 +163,7 @@ MuxNodeId MuxGraph::add_node(const enum e_mux_graph_node_type& node_type) {
   node_ids_.push_back(node);
   /* Resize the other node-related vectors */
   node_types_.push_back(node_type);
-  node_input_ids_.push_back(-1);
+  node_input_ids_.push_back(MuxInputId::INVALID());
   node_levels_.push_back(-1);
   node_in_edges_.emplace_back();
   node_out_edges_.emplace_back();
@@ -129,12 +181,14 @@ MuxEdgeId MuxGraph::add_edge(const MuxNodeId& from_node, const MuxNodeId& to_nod
   edge_mem_ids_.push_back(MuxMemId::INVALID());
   edge_inv_mem_.push_back(false);
 
-  /* update the node_in_edges and node_out_edges */
+  /* update the edge-node connections */
   VTR_ASSERT(valid_node_id(from_node));
+  edge_src_nodes_[edge].push_back(from_node);
   node_out_edges_[from_node].push_back(edge);
 
   VTR_ASSERT(valid_node_id(to_node));
   node_in_edges_[to_node].push_back(edge);
+  edge_sink_nodes_[edge].push_back(to_node);
 
   return edge;
 }
@@ -302,7 +356,7 @@ void MuxGraph::build_multilevel_mux_graph(const size_t& mux_size,
                continue;
             }
             /* Update the input node ids */
-            node_input_ids_[cand_node] = input_cnt;
+            node_input_ids_[cand_node] = MuxInputId(input_cnt);
             /* Update the counter */
             input_cnt++;
           }
@@ -339,7 +393,7 @@ void MuxGraph::build_onelevel_mux_graph(const size_t& mux_size,
   for (size_t i = 0; i < mux_size; ++i) {
     MuxNodeId input_node = add_node(MUX_INPUT_NODE);
     /* All the node belong to level 0 (we have only 1 level) */
-    node_input_ids_[input_node] = i;
+    node_input_ids_[input_node] = MuxInputId(i);
     node_levels_[input_node] = 0; 
 
     /* We definitely know how many edges we need, 
@@ -433,15 +487,6 @@ void MuxGraph::build_node_lookup() {
     node_lookup_[node_levels_[node]][size_t(node_types_[node])].push_back(node);
   }
 }
-
-bool MuxGraph::valid_node_lookup() const {
-  return node_lookup_.empty();
-}
-
-/* Invalidate (empty) the node fast lookup*/
-void MuxGraph::invalidate_node_lookup() {
-  node_lookup_.clear();
-}
  
 /**************************************************
  * Private validators
@@ -458,6 +503,66 @@ bool MuxGraph::valid_edge_id(const MuxEdgeId& edge) const {
 
 bool MuxGraph::valid_mem_id(const MuxMemId& mem) const {
   return size_t(mem) < mem_ids_.size() && mem_ids_[mem] == mem;
+}
+
+/* validate an input id (from which data path signal will be progagated to the output */
+bool MuxGraph::valid_input_id(const MuxInputId& input_id) const {
+  for (const auto& lvl : node_lookup_) {
+    for (const auto& node : lvl[MUX_INPUT_NODE]) {
+      if (size_t(input_id) > size_t(node_input_ids_[node])) {
+        return false;
+      }
+    }
+  } 
+
+  return true;
+}
+
+bool MuxGraph::valid_node_lookup() const {
+  return node_lookup_.empty();
+}
+
+/* Invalidate (empty) the node fast lookup*/
+void MuxGraph::invalidate_node_lookup() {
+  node_lookup_.clear();
+}
+
+/* validate a mux graph and see if it is valid */
+bool MuxGraph::valid_mux_graph() const {
+  /* A valid MUX graph should be
+   * 1. every node has 1 fan-out except output node
+   * 2. every input can be routed to the output node 
+   */
+  for (const auto& node : nodes()) {
+    /* output node has 0 fan-out*/
+    if (MUX_OUTPUT_NODE == node_types_[node]) {
+      continue;
+    }
+    /* other nodes should have 1 fan-out */
+    if (1 != node_out_edges_[node].size()) {
+      return false;
+    }
+  }
+
+  /* Try to route to output */
+  for (const auto& node : nodes()) {
+    if (MUX_INPUT_NODE == node_types_[node]) {
+      MuxNodeId next_node = node;
+      while ( 0 < node_out_edges_[next_node].size() ) {
+        MuxEdgeId edge = node_out_edges_[next_node][0];
+        /* each edge must have 1 fan-out */
+        if (1 != edge_sink_nodes_[edge].size()) {
+          return false;
+        }
+        next_node = edge_sink_nodes_[edge][0]; 
+      }
+      if (MUX_OUTPUT_NODE != node_types_[next_node]) {
+        return false;
+      }
+    }
+  } 
+
+  return true;
 }
 
 /**************************************************
