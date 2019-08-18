@@ -43,3 +43,5 @@ vpr7_x2p/vpr/vpr_shell
 fpga_flow/csv_rpts
 tmp/
 build/
+
+message.txt

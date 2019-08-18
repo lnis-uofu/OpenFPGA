@@ -17,7 +17,7 @@ import pprint
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 # Configure logging system
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-logging.basicConfig(level=logging.DEBUG, stream=sys.stdout,
+logging.basicConfig(level=logging.INFO, stream=sys.stdout,
                     format='%(levelname)s (%(threadName)-9s) - %(message)s')
 logger = logging.getLogger('OpenFPGA_Task_logs')
 
@@ -50,11 +50,12 @@ gc = config["GENERAL CONFIGURATION"]
 
 
 def main():
-
     validate_command_line_arguments()
     for eachtask in args.tasks:
         logger.info("Currently running task %s" % eachtask)
+        eachtask = eachtask.replace("\\", "/").split("/")
         job_run_list = generate_each_task_actions(eachtask)
+        eachtask = "_".join(eachtask)
         if not args.test_run:
             run_actions(job_run_list)
             collect_results(job_run_list)
@@ -84,7 +85,7 @@ def generate_each_task_actions(taskname):
     """
 
     # Check if task directory exists and consistent
-    curr_task_dir = os.path.join(gc["task_dir"], taskname)
+    curr_task_dir = os.path.join(gc["task_dir"], *(taskname))
     if not os.path.isdir(curr_task_dir):
         clean_up_and_exit("Task directory [%s] not found" % curr_task_dir)
     os.chdir(curr_task_dir)
@@ -148,7 +149,7 @@ def generate_each_task_actions(taskname):
             "top_module": task_conf.get("SYNTHESIS_PARAM", bech_name+"_top",
                                         fallback="top"),
             "ys_script": task_conf.get("SYNTHESIS_PARAM", bech_name+"_yosys",
-                                       fallback=ys_for_task)
+                                       fallback=ys_for_task),
         })
 
     # Create OpenFPGA flow run commnad for each combination of
@@ -165,7 +166,8 @@ def generate_each_task_actions(taskname):
                 "bench": bench,
                 "name": "%s_arch%d" % (bench["top_module"], indx),
                 "run_dir": flow_run_dir,
-                "commands": cmd})
+                "commands": cmd,
+                "status": False})
     return flow_run_cmd_list
 
 
@@ -230,23 +232,28 @@ def create_run_command(curr_job_dir, archfile, benchmark_obj, task_conf):
     return command
 
 
-def run_single_script(s, command):
+def run_single_script(s, eachJob):
     logger.debug('Added job in pool')
     with s:
-        logger.debug("Running OpenFPGA flow with " + " ".join(command))
+        logger.debug("Running OpenFPGA flow with " +
+                     " ".join(eachJob["commands"]))
         name = threading.currentThread().getName()
-        # run_fpga_flow.external_call(logger, command)
         try:
             logfile = "%s_out.log" % name
             with open(logfile, 'w+') as output:
-                process = subprocess.run(["python3.5", gc["script_default"]]+command,
+                process = subprocess.run(["python3.5",
+                                          gc["script_default"]] +
+                                         eachJob["commands"],
                                          check=True,
                                          stdout=subprocess.PIPE,
                                          stderr=subprocess.PIPE,
                                          universal_newlines=True)
                 output.write(process.stdout)
+                eachJob["status"] = True
         except:
-            logger.exception("Failed to launch openfpga flow")
+            logger.error("Failed to execute openfpga flow - " +
+                         eachJob["name"])
+            # logger.exception("Failed to launch openfpga flow")
         logger.info("%s Finished " % name)
 
 
@@ -256,7 +263,7 @@ def run_actions(job_run_list):
     for index, eachjob in enumerate(job_run_list):
         t = threading.Thread(target=run_single_script,
                              name='Job_%02d' % (index+1),
-                             args=(thread_sema, eachjob["commands"]))
+                             args=(thread_sema, eachjob))
         t.start()
         thred_list.append(t)
 
@@ -267,6 +274,8 @@ def run_actions(job_run_list):
 def collect_results(job_run_list):
     task_result = []
     for run in job_run_list:
+        if not run["status"]:
+            continue
         # Check if any result file exist
         if not glob.glob(os.path.join(run["run_dir"], "*.result")):
             logger.info("No result files found for %s" % run["name"])
@@ -280,11 +289,12 @@ def collect_results(job_run_list):
         result["name"] = run["name"]
         task_result.append(result)
 
-    with open("task_result.csv", 'w', newline='') as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=task_result[0].keys())
-        writer.writeheader()
-        for eachResult in task_result:
-            writer.writerow(eachResult)
+    if len(task_result):
+        with open("task_result.csv", 'w', newline='') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=task_result[0].keys())
+            writer.writeheader()
+            for eachResult in task_result:
+                writer.writerow(eachResult)
 
 
 if __name__ == "__main__":

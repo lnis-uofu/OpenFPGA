@@ -337,7 +337,7 @@ def clean_up_and_exit(msg, clean=False):
     logger.error("Current working directory : " + os.getcwd())
     logger.error(msg)
     logger.error("Exiting . . . . . .")
-    exit()
+    exit(1)
 
 
 def run_yosys_with_abc():
@@ -499,9 +499,10 @@ def run_vpr():
                     " (Slack of %d%%)" % ((args.min_route_chan_width-1)*100))
 
         while(1):
-            res = run_vpr_route(args.top_module+"_ace_corrected_out.blif",
-                                min_channel_width,
-                                args.top_module+"_min_channel_reroute_vpr.txt")
+            res = run_standard_vpr(args.top_module+"_ace_corrected_out.blif",
+                                   int(min_channel_width),
+                                args.top_module+"_reroute_vpr.txt",
+                                route_only=True)
 
             if res:
                 logger.info("Routing with channel width=%d successful" %
@@ -532,15 +533,17 @@ def run_vpr():
         extract_vpr_power_esti(args.top_module+"_ace_corrected_out.power")
 
 
-def run_standard_vpr(bench_blif, fixed_chan_width, logfile):
+def run_standard_vpr(bench_blif, fixed_chan_width, logfile, route_only=False):
     command = [cad_tools["vpr_path"],
                args.arch_file,
                bench_blif,
                "--net_file", args.top_module+"_vpr.net",
                "--place_file", args.top_module+"_vpr.place",
                "--route_file", args.top_module+"_vpr.route",
-               "--full_stats", "--nodisp"
+               "--full_stats", "--nodisp",
                ]
+    if route_only:
+        command += ["--route"]
     # Power options
     if args.power:
         command += ["--power",
@@ -551,7 +554,7 @@ def run_standard_vpr(bench_blif, fixed_chan_width, logfile):
         command += ["--timing_driven_clustering", "off"]
     #  channel width option
     if fixed_chan_width >= 0:
-        command += ["-route_chan_width", fixed_chan_width]
+        command += ["--route_chan_width", "%d"%fixed_chan_width]
     if args.vpr_use_tileable_route_chan_width:
         command += ["--use_tileable_route_chan_width"]
 
@@ -654,90 +657,16 @@ def run_standard_vpr(bench_blif, fixed_chan_width, logfile):
                                      universal_newlines=True)
             for line in process.stdout.split('\n'):
                 if "Best routing" in line:
-                    chan_width = re.search(
-                        r"channel width factor of ([0-9]+)", line).group(1)
+                    chan_width = int(re.search(
+                        r"channel width factor of ([0-9]+)", line).group(1))
                 if "Circuit successfully routed" in line:
-                    chan_width = re.search(
-                        r"a channel width factor of ([0-9]+)", line).group(1)
+                    chan_width = int(re.search(
+                        r"a channel width factor of ([0-9]+)", line).group(1))
             output.write(process.stdout)
             if process.returncode:
                 logger.info("Standard VPR run failed with returncode %d",
                             process.returncode)
-    except Exception as e:
-        logger.exception("Failed to run VPR")
-        process_failed_vpr_run(e.output)
-        clean_up_and_exit("")
-    logger.info("VPR output is written in file %s" % logfile)
-    return int(chan_width)
-
-
-def run_vpr_route(bench_blif, fixed_chan_width, logfile):
-    command = [cad_tools["vpr_path"],
-               args.arch_file,
-               bench_blif,
-               "--net_file", args.top_module+"_vpr.net",
-               "--place_file", args.top_module+"_vpr.place",
-               "--route_file", args.top_module+"_vpr.route",
-               "--full_stats", "--nodisp",
-               "--route"
-               ]
-    if args.power:
-        command += [
-            "--power",
-            "--activity_file", args.top_module+"_ace_out.act",
-            "--tech_properties", args.power_tech]
-    if fixed_chan_width >= 0:
-        command += ["-route_chan_width", "%d" % fixed_chan_width]
-
-    # VPR - SPICE options
-    if args.power and args.vpr_fpga_spice:
-        command += "--fpga_spice"
-        if args.vpr_fpga_spice_print_cbsbtb:
-            command += ["--print_spice_cb_mux_testbench",
-                        "--print_spice_sb_mux_testbench"]
-        if args.vpr_fpga_spice_print_pbtb:
-            command += ["--print_spice_pb_mux_testbench",
-                        "--print_spice_lut_testbench",
-                        "--print_spice_hardlogic_testbench"]
-        if args.vpr_fpga_spice_print_gridtb:
-            command += ["--print_spice_grid_testbench"]
-        if args.vpr_fpga_spice_print_toptb:
-            command += ["--print_spice_top_testbench"]
-        if args.vpr_fpga_spice_leakage_only:
-            command += ["--fpga_spice_leakage_only"]
-        if args.vpr_fpga_spice_parasitic_net_estimation_off:
-            command += ["--fpga_spice_parasitic_net_estimation_off"]
-
-    if args.vpr_fpga_verilog:
-        command += ["--fpga_verilog"]
-        if args.vpr_fpga_x2p_rename_illegal_port:
-            command += ["--fpga_x2p_rename_illegal_port"]
-
-    if args.vpr_max_router_iteration:
-        command += ["--max_router_iterations", args.vpr_max_router_iteration]
-    if args.vpr_route_breadthfirst:
-        command += ["--router_algorithm", "breadth_first"]
-    chan_width = None
-    try:
-        with open(logfile, 'w+') as output:
-            output.write(" ".join(command)+"\n")
-            process = subprocess.run(command,
-                                     check=True,
-                                     stdout=subprocess.PIPE,
-                                     stderr=subprocess.PIPE,
-                                     universal_newlines=True)
-            for line in process.stdout.split('\n'):
-                if "Best routing" in line:
-                    chan_width = re.search(
-                        r"channel width factor of ([0-9]+)", line).group(1)
-                if "Circuit successfully routed" in line:
-                    chan_width = re.search(
-                        r"a channel width factor of ([0-9]+)", line).group(1)
-            output.write(process.stdout)
-            if process.returncode:
-                logger.info("Standard VPR run failed with returncode %d",
-                            process.returncode)
-    except Exception as e:
+    except (Exception, subprocess.CalledProcessError) as e:
         logger.exception("Failed to run VPR")
         process_failed_vpr_run(e.output)
         clean_up_and_exit("")
@@ -843,19 +772,12 @@ def run_command(taskname, logfile, command, exit_if_fail=True):
             if process.returncode:
                 logger.error("%s run failed with returncode %d" %
                              (taskname, process.returncode))
-    except Exception as e:
+    except (Exception, subprocess.CalledProcessError) as e:
         logger.exception("failed to execute %s" % taskname)
         process_failed_vpr_run(e.output)
         if exit_if_fail:
             clean_up_and_exit("Failed to run %s task" % taskname)
     logger.info("%s is written in file %s" % (taskname, logfile))
-
-
-def external_call(parent_logger=None, passed_args=[]):
-    global logger, args
-    logger = parent_logger
-    args = parser.parse_args(passed_args)
-    main()
 
 
 def process_failed_vpr_run(vpr_output):
