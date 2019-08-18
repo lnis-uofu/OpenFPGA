@@ -256,6 +256,26 @@ bool CircuitLibrary::is_lut_intermediate_buffered(const CircuitModelId& circuit_
   return buffer_existence_[circuit_model_id][LUT_INTER_BUFFER]; 
 }
 
+/* Find the type of pass-gate logic for a circuit model (recursive function)
+ * Two cases to be considered:
+ * 1. this is a pass-gate circuit model, just find the data and return
+ * 2. this circuit model includes a pass-gate, find the link to pass-gate circuit model and go recursively
+ */
+enum e_spice_model_pass_gate_logic_type CircuitLibrary::pass_gate_logic_type(const CircuitModelId& circuit_model_id) const {
+  /* validate the circuit_model_id */
+  VTR_ASSERT(valid_circuit_model_id(circuit_model_id));
+  
+  /* Return the data if this is a pass-gate circuit model */
+  if (SPICE_MODEL_PASSGATE == circuit_model_type(circuit_model_id)) {
+    return pass_gate_logic_types_[circuit_model_id];
+  }
+
+  /* Otherwise, we need to make sure this circuit model contains a pass-gate */
+  CircuitModelId pgl_model_id = pass_gate_logic_circuit_model_ids_[circuit_model_id];
+  VTR_ASSERT( CircuitModelId::INVALID() != pgl_model_id );
+  return pass_gate_logic_type(pgl_model_id);
+}
+
 /* Return the multiplex structure of a circuit model */
 enum e_spice_model_structure CircuitLibrary::mux_structure(const CircuitModelId& circuit_model_id) const {
   /* validate the circuit_model_id */
@@ -264,6 +284,17 @@ enum e_spice_model_structure CircuitLibrary::mux_structure(const CircuitModelId&
   VTR_ASSERT( (SPICE_MODEL_MUX == circuit_model_type(circuit_model_id))
            || (SPICE_MODEL_LUT == circuit_model_type(circuit_model_id)) );
   return mux_structure_[circuit_model_id]; 
+}
+
+
+size_t CircuitLibrary::mux_num_levels(const CircuitModelId& circuit_model_id) const {
+  /* validate the circuit_model_id */
+  VTR_ASSERT(valid_circuit_model_id(circuit_model_id));
+  /* validate the circuit model type is MUX */
+  VTR_ASSERT( (SPICE_MODEL_MUX == circuit_model_type(circuit_model_id))
+           || (SPICE_MODEL_LUT == circuit_model_type(circuit_model_id)) );
+
+  return mux_num_levels_[circuit_model_id];
 }
 
 /* Return if additional constant inputs are required for a circuit model 

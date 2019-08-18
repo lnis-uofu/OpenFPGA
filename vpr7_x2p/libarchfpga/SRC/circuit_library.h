@@ -241,7 +241,9 @@ class CircuitLibrary {
     bool is_input_buffered(const CircuitModelId& circuit_model_id) const;
     bool is_output_buffered(const CircuitModelId& circuit_model_id) const;
     bool is_lut_intermediate_buffered(const CircuitModelId& circuit_model_id) const;
+    enum e_spice_model_pass_gate_logic_type pass_gate_logic_type(const CircuitModelId& circuit_model_id) const;
     enum e_spice_model_structure mux_structure(const CircuitModelId& circuit_model_id) const;
+    size_t mux_num_levels(const CircuitModelId& circuit_model_id) const;
     bool mux_add_const_input(const CircuitModelId& circuit_model_id) const;
     size_t mux_const_input_value(const CircuitModelId& circuit_model_id) const;
   public: /* Public Accessors: Basic data query on Circuit Ports*/

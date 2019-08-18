@@ -19,4 +19,9 @@ enum e_spice_model_structure find_mux_implementation_structure(const CircuitLibr
 					                                           const CircuitModelId& circuit_model,
 						                                       const size_t& mux_size);
 
+size_t find_treelike_mux_num_levels(const size_t& mux_size);
+
+size_t find_multilevel_mux_branch_num_inputs(const size_t& mux_size,
+                                             const size_t& mux_level);
+
 #endif
