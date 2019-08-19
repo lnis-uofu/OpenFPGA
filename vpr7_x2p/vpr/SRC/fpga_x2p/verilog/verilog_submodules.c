@@ -38,6 +38,8 @@
 
 #include "verilog_submodules.h"
 
+#include "mux_utils.h"
+
 /***** Subroutines *****/
 
 static 
@@ -2762,6 +2764,9 @@ void dump_verilog_submodule_muxes(t_sram_orgz_info* cur_sram_orgz_info,
 
   /* Alloc the muxes*/
   muxes_head = stats_spice_muxes(num_switch, switches, spice, routing_arch);
+   
+  /* TODO: this is temporary. Will be removed after code reconstruction */
+  MuxLibrary mux_lib = convert_mux_arch_to_library(spice->circuit_lib, muxes_head);
 
   /* Print the muxes netlist*/
   fp = fopen(verilog_name, "w");

@@ -4,6 +4,7 @@
  *************************************************/
 #include <cmath>
 
+#include "spice_types.h"
 #include "util.h"
 #include "vtr_assert.h"
 #include "mux_utils.h"
@@ -121,5 +122,38 @@ size_t find_multilevel_mux_branch_num_inputs(const size_t& mux_size,
   }
   
   return num_input_per_unit;
+}
+
+/**************************************************
+ * Convert a linked list of MUX architecture to MuxLibrary
+ * TODO: this function will be deleted when MUXLibrary fully
+ * replace legacy data structures
+ *************************************************/
+MuxLibrary convert_mux_arch_to_library(const CircuitLibrary& circuit_lib, t_llist* muxes_head) {
+  t_llist* temp = muxes_head;
+  MuxLibrary mux_lib;
+
+  /* Walk through the linked list */
+  while(temp) {
+    VTR_ASSERT_SAFE(NULL != temp->dptr);
+    t_spice_mux_model* cur_spice_mux_model = (t_spice_mux_model*)(temp->dptr);
+
+    /* Bypass the spice models who has a user-defined subckt */
+    if (NULL != cur_spice_mux_model->spice_model->verilog_netlist) {
+      /* Move on to the next*/
+      temp = temp->next;
+      continue;
+    }
+
+    /* Build a MUX graph for the model */
+    /* Find the circuit model id by the name */
+    CircuitModelId circuit_model = circuit_lib.circuit_model(cur_spice_mux_model->spice_model->name);
+    mux_lib.add_mux(circuit_lib, circuit_model, cur_spice_mux_model->size);
+
+    /* Move on to the next*/
+    temp = temp->next;
+  }
+
+  return mux_lib;
 }
 

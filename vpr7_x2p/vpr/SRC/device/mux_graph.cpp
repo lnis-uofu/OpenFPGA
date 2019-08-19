@@ -186,12 +186,14 @@ MuxEdgeId MuxGraph::add_edge(const MuxNodeId& from_node, const MuxNodeId& to_nod
 
   /* update the edge-node connections */
   VTR_ASSERT(valid_node_id(from_node));
+  edge_src_nodes_.emplace_back();
   edge_src_nodes_[edge].push_back(from_node);
   node_out_edges_[from_node].push_back(edge);
 
   VTR_ASSERT(valid_node_id(to_node));
-  node_in_edges_[to_node].push_back(edge);
+  edge_sink_nodes_.emplace_back();
   edge_sink_nodes_[edge].push_back(to_node);
+  node_in_edges_[to_node].push_back(edge);
 
   return edge;
 }
@@ -265,8 +267,17 @@ void MuxGraph::set_edge_mem_id(const MuxEdgeId& edge, const MuxMemId& mem) {
 void MuxGraph::build_multilevel_mux_graph(const size_t& mux_size, 
                                           const size_t& num_levels, const size_t& num_inputs_per_branch,
                                           const enum e_spice_model_pass_gate_logic_type& pgl_type) {
+  /* Make sure mux_size for each branch is valid */
+  VTR_ASSERT(valid_mux_implementation_num_inputs(num_inputs_per_branch));
+
+  /* In regular cases, there is 1 mem bit for each input of a branch */
+  size_t num_mems_per_level = num_inputs_per_branch;
+  /* For 2-input branch, only 1 mem bit is needed for each level! */
+  if (2 == num_inputs_per_branch) { 
+    num_mems_per_level = 1; 
+  }
   /* Number of memory bits is definite, add them */
-  for (size_t i = 0; i < num_inputs_per_branch * num_levels; ++i) {
+  for (size_t i = 0; i < num_mems_per_level * num_levels; ++i) {
     add_mem();
   }
 
@@ -317,14 +328,14 @@ void MuxGraph::build_multilevel_mux_graph(const size_t& mux_size,
          */
         
         if ( 2 == num_inputs_per_branch) {
-          MuxMemId mem_id = MuxMemId( (lvl - 1) );
+          MuxMemId mem_id = MuxMemId(lvl);
           set_edge_mem_id(edge, mem_id);
           /* If this is a second edge in the branch, we will assign it to an inverted edge */
           if (0 != i % num_inputs_per_branch) {
             edge_inv_mem_[edge] = true;
           }
         } else {
-          MuxMemId mem_id = MuxMemId( (lvl - 1) * num_inputs_per_branch + i );
+          MuxMemId mem_id = MuxMemId( lvl * num_inputs_per_branch + i );
           set_edge_mem_id(edge, mem_id);
         }
 
@@ -387,6 +398,9 @@ void MuxGraph::build_multilevel_mux_graph(const size_t& mux_size,
  */
 void MuxGraph::build_onelevel_mux_graph(const size_t& mux_size, 
                                         const enum e_spice_model_pass_gate_logic_type& pgl_type) {
+  /* Make sure mux_size is valid */
+  VTR_ASSERT(valid_mux_implementation_num_inputs(mux_size));
+
   /* We definitely know how many nodes we need, 
    * N inputs, 1 output and 0 internal nodes
    */
@@ -419,7 +433,8 @@ void MuxGraph::build_mux_graph(const CircuitLibrary& circuit_lib,
                                const CircuitModelId& circuit_model,
                                const size_t& mux_size) {
   /* Make sure this model is a MUX */
-  VTR_ASSERT(SPICE_MODEL_MUX == circuit_lib.circuit_model_type(circuit_model));
+  VTR_ASSERT((SPICE_MODEL_MUX == circuit_lib.circuit_model_type(circuit_model))
+          || (SPICE_MODEL_LUT == circuit_lib.circuit_model_type(circuit_model)) );
 
   /* Make sure mux_size is valid */
   VTR_ASSERT(valid_mux_implementation_num_inputs(mux_size));
@@ -433,7 +448,7 @@ void MuxGraph::build_mux_graph(const CircuitLibrary& circuit_lib,
   switch (impl_structure) {
   case SPICE_MODEL_STRUCTURE_TREE: {
     /* Find the number of levels */
-    size_t num_levels = find_treelike_mux_num_levels(mux_size);
+    size_t num_levels = find_treelike_mux_num_levels(impl_mux_size);
 
     /* Find the number of inputs per branch, this is not final */
     size_t num_inputs_per_branch = 2;
@@ -448,7 +463,7 @@ void MuxGraph::build_mux_graph(const CircuitLibrary& circuit_lib,
   }
   case SPICE_MODEL_STRUCTURE_MULTILEVEL: {
     /* Find the number of inputs per branch, this is not final */
-    size_t num_inputs_per_branch = find_multilevel_mux_branch_num_inputs(mux_size, circuit_lib.mux_num_levels(circuit_model));
+    size_t num_inputs_per_branch = find_multilevel_mux_branch_num_inputs(impl_mux_size, circuit_lib.mux_num_levels(circuit_model));
 
     /* Build a multilevel mux graph */
     build_multilevel_mux_graph(impl_mux_size, circuit_lib.mux_num_levels(circuit_model), 
