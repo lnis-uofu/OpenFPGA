@@ -32,7 +32,16 @@ vpr7_x2p/vpr/vpr
 vpr7_x2p/printhandler/printhandlerdemo
 vpr7_x2p/libarchfpga/read_arch
 vpr7_x2p/pcre/pcredemo
+ace2/ace
+vpr7_x2p/libpcre/pcredemo
+vpr7_x2p/libprinthandler/printhandlerdemo
+vpr7_x2p/vpr/vpr_shell
 
 # Some local temporary files
 .vscode
 *_local.bat
+fpga_flow/csv_rpts
+tmp/
+build/
+
+message.txt
