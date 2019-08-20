@@ -18,10 +18,10 @@
 /* FPGA-X2P context header files */
 #include "spice_types.h"
 #include "fpga_x2p_naming.h"
+#include "fpga_x2p_utils.h"
 
 /* FPGA-Verilog context header files */
 #include "verilog_global.h"
-#include "verilog_utils.h"
 #include "verilog_writer_utils.h"
 #include "verilog_submodule_mux.h"
 

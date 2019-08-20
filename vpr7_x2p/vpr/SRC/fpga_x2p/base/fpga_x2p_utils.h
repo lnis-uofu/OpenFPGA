@@ -1,8 +1,12 @@
 #ifndef FPGA_X2P_UTILS_H
 #define FPGA_X2P_UTILS_H
 
+#include <fstream>
+
 #include "my_free_fwd.h"
 #include "rr_blocks_naming.h"
+
+void check_file_handler(std::fstream& fp);
 
 char* my_gettime();
 

@@ -1,16 +1,12 @@
 #ifndef VERILOG_UTILS_H
 #define VERILOG_UTILS_H
 
-#include <fstream>
-
 void init_list_include_verilog_netlists(t_spice* spice);
 
 void init_include_user_defined_verilog_netlists(t_spice spice);
  
 void dump_include_user_defined_verilog_netlists(FILE* fp,
                                                 t_spice spice);
-
-void check_file_handler(std::fstream& fp);
 
 void dump_verilog_file_header(FILE* fp,
                               char* usage);

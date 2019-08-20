@@ -228,6 +228,17 @@ char* chomp_file_name_postfix(char* file_name) {
   return ret;
 }
 
+void check_file_handler(std::fstream& fp) {
+  /* Make sure we have a valid file handler*/
+  /* Print out debugging information for if the file is not opened/created properly */
+  if (!fp.is_open() || !fp.good()) {
+    vpr_printf(TIO_MESSAGE_ERROR,
+               "(FILE:%s,LINE[%d])Failure in create file!\n",
+               __FILE__, __LINE__); 
+    exit(1);
+  }
+}
+
 
 /* Print SRAM bits, typically in a comment line */
 void fprint_commented_sram_bits(FILE* fp,
