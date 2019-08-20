@@ -246,16 +246,22 @@ def validate_command_line_arguments():
     """
     TODO :
     This funtion validates all supplied paramters
-    and check for compatibility
-    Chec correct flow
-    Check if architecture and circuit files exist
-    if argument provide relative path replace to absolute
-    benchmark argument convert glob to list of files
-    Dont maintain the directory strcuture
-    Throw error for directory in benchmark
-    check if args.powertech_file is provided for power measurement
     """
-    logger.info("Validating commnad line arguments - Pending implementation")
+    logger.info("Validating commnad line arguments")
+
+    # Check if flow supported
+    if not args.fpga_flow in config.get("FLOW_SCRIPT_CONFIG", "valid_flows"):
+        clean_up_and_exit("%s Flow not supported"%args.fpga_flow)
+
+    # Check if argument list is consistant
+    for eacharg, dependent in config.items("CMD_ARGUMENT_DEPENDANCY"):
+        if getattr(args, eacharg, None):
+            dependent = dependent.split(",")
+            for eachdep in dependent:
+                if not any([getattr(args, i, 0) for i in eachdep.split("|")]):
+                    clean_up_and_exit("'%s' argument depends on (%s) argumets"%
+                        (eacharg, ", ".join(dependent).replace("|", " or ")))
+    exit()
 
     # Filter provided architecrue files
     args.arch_file = os.path.abspath(args.arch_file)
@@ -265,20 +271,25 @@ def validate_command_line_arguments():
     # Filter provided benchmark files
     for index, everyinput in enumerate(args.benchmark_files):
         args.benchmark_files[index] = os.path.abspath(everyinput)
+        if os.path.isdir(args.benchmark_files[index]):
+            logger.warning("Skipping directory in bench %s" % everyinput)
+            logger.warning("Directory is not support in benchmark list" +
+            "use wildcard pattern to add files")
+            continue
         for everyfile in glob.glob(args.benchmark_files[index]):
             if not os.path.isfile(everyfile):
                 clean_up_and_exit(
                     "Failed to copy benchmark file-%s", args.arch_file)
 
-    # Filter provided architecrue files
+    # Filter provided powertech files
     if args.power_tech:
         args.power_tech = os.path.abspath(args.power_tech)
         if not os.path.isfile(args.power_tech):
             clean_up_and_exit(
                 "Power Tech file not found. -%s", args.power_tech)
 
+    # Expand run directory to absolute path
     args.run_dir = os.path.abspath(args.run_dir)
-    pass
 
 
 def ask_user_quetion(condition, question):
