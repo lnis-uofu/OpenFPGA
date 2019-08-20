@@ -363,7 +363,7 @@ def run_yosys_with_abc():
             for eachfile in args.benchmark_files]),
         "TOP_MODULE": args.top_module,
         "LUT_SIZE": lut_size,
-        "OUTPUT_BLIF": args.top_module+".blif",
+        "OUTPUT_BLIF": args.top_module+"_yosys_out.blif",
     }
     yosys_template = os.path.join(
         cad_tools["misc_dir"], "ys_tmpl_yosys_vpr_flow.ys")
@@ -401,7 +401,7 @@ def run_abc_for_standarad():
 
 def run_ace2():
     if args.black_box_ace:
-        with open(args.top_module+'.blif', 'r') as fp:
+        with open(args.top_module+'_yosys_out.blif', 'r') as fp:
             blif_lines = fp.readlines()
 
         with open(args.top_module+'_bb.blif', 'w') as fp:
@@ -431,7 +431,8 @@ def run_ace2():
             fp.write(model_tmpl)
     # Prepare ACE run command
     command = [
-        "-b", args.top_module+('_bb.blif' if args.black_box_ace else ".blif"),
+        "-b", args.top_module +
+        ('_bb.blif' if args.black_box_ace else "_yosys_out.blif"),
         "-o", args.top_module+"_ace_out.act",
         "-n", args.top_module+"_ace_out.blif",
         "-c", "clk",
@@ -459,8 +460,8 @@ def run_ace2():
 def run_pro_blif_3arg():
     command = [
         "-i", args.top_module+"_ace_out.blif",
-        "-o", args.top_module+"_ace_corrected_out.blif",
-        "-initial_blif", args.top_module+'.blif',
+        "-o", args.top_module+".blif",
+        "-initial_blif", args.top_module+'_yosys_out.blif',
     ]
     try:
         filename = args.top_module+'_blif_3args_output.txt'
@@ -484,7 +485,7 @@ def run_pro_blif_3arg():
 def run_vpr():
     # Run Standard VPR Flow
     min_channel_width = run_standard_vpr(
-        args.top_module+"_ace_corrected_out.blif",
+        args.top_module+".blif",
         -1,
         args.top_module+"_min_chan_width_vpr.txt")
     logger.info("Standard VPR flow routed with minimum %d Channels" %
@@ -499,7 +500,7 @@ def run_vpr():
                     " (Slack of %d%%)" % ((args.min_route_chan_width-1)*100))
 
         while(1):
-            res = run_standard_vpr(args.top_module+"_ace_corrected_out.blif",
+            res = run_standard_vpr(args.top_module+".blif",
                                    int(min_channel_width),
                                 args.top_module+"_reroute_vpr.txt",
                                 route_only=True)
@@ -516,12 +517,12 @@ def run_vpr():
                             min_channel_width)
             min_channel_width += 2
 
-        extract_vpr_stats(args.top_module+"_min_channel_reroute_vpr.txt")
+        extract_vpr_stats(args.top_module+"_reroute_vpr.txt")
 
     # Fixed routing channel width
     elif args.fix_route_chan_width:
         min_channel_width = run_standard_vpr(
-            args.top_module+"_ace_corrected_out.blif",
+            args.top_module+".blif",
             args.fix_route_chan_width,
             args.top_module+"_fr_chan_width.txt")
         logger.info("Fixed routing channel successfully routed with %d width" %
@@ -530,7 +531,9 @@ def run_vpr():
     else:
         extract_vpr_stats(args.top_module+"_min_chan_width.txt")
     if args.power:
-        extract_vpr_power_esti(args.top_module+"_ace_corrected_out.power")
+        extract_vpr_stats(logfile=args.top_module+".power",
+                          r_filename="vpr_power_stat",
+                          parse_section="power")
 
 
 def run_standard_vpr(bench_blif, fixed_chan_width, logfile, route_only=False):
@@ -701,7 +704,7 @@ def extract_vpr_stats(logfile, r_filename="vpr_stat", parse_section="vpr"):
                         mult = 1
                     extract_val = float(match.group(1))*mult
                 else:
-            extract_val = match.group(1)
+                    extract_val = match.group(1)
             except:
                 logger.exception("Filter failed")
                 extract_val= "Filter Failed"
@@ -719,7 +722,7 @@ def extract_vpr_stats(logfile, r_filename="vpr_stat", parse_section="vpr"):
 def run_rewrite_verilog():
     # Rewrite the verilog after optimization
     script_cmd = [
-        "read_blif %s" % args.top_module+"_ace_corrected_out.blif",
+        "read_blif %s" % args.top_module+".blif",
         "write_verilog %s" % args.top_module+"_output_verilog.v"
     ]
     command = [cad_tools["yosys_path"], "-p", "; ".join(script_cmd)]
@@ -749,7 +752,7 @@ def run_netlists_verification():
 
     command = [cad_tools["iverilog_path"]]
     command += ["-o", compiled_file]
-    command += ["./SRC/%s_ace_corrected_out_include_netlists.v" %
+    command += ["./SRC/%s_include_netlists.v" %
                 args.top_module]
     command += ["-s"]
     if args.vpr_fpga_verilog_formal_verification_top_netlist:
@@ -759,7 +762,11 @@ def run_netlists_verification():
     run_command("iverilog_verification", "iverilog_output.txt", command)
 
     vvp_command = ["vvp", compiled_file]
-    run_command("vvp_verification", "vvp_sim_output.txt", vvp_command)
+    output = run_command("vvp_verification", "vvp_sim_output.txt", vvp_command)
+    if "Succeed" in output:
+        logger.info("VVP Simulation Successful")
+    else:
+        logger.info(str(output).split("\n")[-1])
 
 
 def run_command(taskname, logfile, command, exit_if_fail=True):
@@ -780,7 +787,9 @@ def run_command(taskname, logfile, command, exit_if_fail=True):
         process_failed_vpr_run(e.output)
         if exit_if_fail:
             clean_up_and_exit("Failed to run %s task" % taskname)
+        return None
     logger.info("%s is written in file %s" % (taskname, logfile))
+    return process.stdout
 
 
 def process_failed_vpr_run(vpr_output):
