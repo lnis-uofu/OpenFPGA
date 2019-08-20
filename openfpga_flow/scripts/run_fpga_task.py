@@ -191,16 +191,6 @@ def create_run_command(curr_job_dir, archfile, benchmark_obj, task_conf):
     if not os.path.isdir(gc["misc_dir"]):
         clean_up_and_exit("Miscellaneous directory does not exist")
 
-    fpga_flow_script = os.path.join(gc["misc_dir"], "fpga_flow_template.sh")
-    if not os.path.isfile(fpga_flow_script):
-        clean_up_and_exit("Missing fpga_flow script template %s" %
-                          fpga_flow_script)
-
-    fpga_flow_conf_tmpl = os.path.join(gc["misc_dir"], "fpga_flow_script.conf")
-    if not os.path.isfile(fpga_flow_conf_tmpl):
-        clean_up_and_exit("fpga_flow configuration tempalte is missing %s" %
-                          fpga_flow_conf_tmpl)
-
     # = = = = = = = = = = = =  Create execution folder = = = = = = = = = = = =
     if os.path.isdir(curr_job_dir):
         question = "One the result directory already exist.\n"
