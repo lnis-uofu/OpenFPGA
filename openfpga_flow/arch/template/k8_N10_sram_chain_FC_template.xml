@@ -1,76 +1,76 @@
-<!-- 
+<!--
   Flagship Heterogeneous Architecture with Carry Chains for VTR 7.0.
 
   - 40 nm technology
-  - General purpose logic block: 
-    K = 6, N = 10, fracturable 6 LUTs (can operate as one 6-LUT or two 5-LUTs with all 5 inputs shared) 
+  - General purpose logic block:
+    K = 6, N = 10, fracturable 6 LUTs (can operate as one 6-LUT or two 5-LUTs with all 5 inputs shared)
     with optionally registered outputs
     Each 5-LUT has an arithemtic mode that converts it to a single-bit adder with both inputs driven by 4-LUTs (both 4-LUTs share all 4 inputs)
     Carry chain links to vertically adjacent logic blocks
-  - Memory size 32 Kbits, memory aspect ratios vary from a data width of 1 to data width of 64.  
+  - Memory size 32 Kbits, memory aspect ratios vary from a data width of 1 to data width of 64.
     Height = 6, found on every (8n+2)th column
-  - Multiplier modes: one 36x36, two 18x18, each 18x18 can also operate as two 9x9.  
+  - Multiplier modes: one 36x36, two 18x18, each 18x18 can also operate as two 9x9.
     Height = 4, found on every (8n+6)th column
   - Routing architecture: L = 4, fc_in = 0.15, Fc_out = 0.1
 
   Details on Modelling:
 
-  The electrical design of the architecture described here is NOT from an 
-  optimized, SPICED architecture.  Instead, we attempt to create a reasonable 
-  architecture file by using an existing commercial FPGA to approximate the area, 
-  delay, and power of the underlying components. This is combined with a reasonable 40 nm 
+  The electrical design of the architecture described here is NOT from an
+  optimized, SPICED architecture.  Instead, we attempt to create a reasonable
+  architecture file by using an existing commercial FPGA to approximate the area,
+  delay, and power of the underlying components. This is combined with a reasonable 40 nm
   model of wiring and circuit design for low-level routing components, where available.
-  The resulting architecture has delays that roughly match a commercial 40 nm FPGA, but also 
-  has wiring electrical parameters that allow the wire lengths and switch patterns to be 
+  The resulting architecture has delays that roughly match a commercial 40 nm FPGA, but also
+  has wiring electrical parameters that allow the wire lengths and switch patterns to be
   modified and you will still get reasonable delay results for the new architecture.
-  The following describes, in detail, how we obtained the various electrical values for this 
+  The following describes, in detail, how we obtained the various electrical values for this
   architecture.
 
-  Rmin for nmos and pmos, routing buffer sizes, and I/O pad delays are from the ifar 
-  architecture created by Ian Kuon: K06 N10 45nm fc 0.15 area-delay optimized architecture. 
-  (n10k06l04.fc15.area1delay1.cmos45nm.bptm.cmos45nm.xml)      
-  This routing architecture was optimized for 45 nm, and we have scaled it linearly to 40 nm to 
+  Rmin for nmos and pmos, routing buffer sizes, and I/O pad delays are from the ifar
+  architecture created by Ian Kuon: K06 N10 45nm fc 0.15 area-delay optimized architecture.
+  (n10k06l04.fc15.area1delay1.cmos45nm.bptm.cmos45nm.xml)
+  This routing architecture was optimized for 45 nm, and we have scaled it linearly to 40 nm to
   match the overall target (a 40 nm FPGA).
 
-  We obtain delay numbers by measuring delays of routing, soft logic blocks, 
-  memories, and multipliers from test circuits on a Stratix IV GX device 
-  (EP4SGX230DF29C2X, i.e. fastest speed grade). For routing, we took the average delay of H4 and V4 
-  wires.  Rmetal and Cmetal values for the routing wires were obtained from work done by Charles 
-  Chiasson. We use a 96 nm half-pitch (corresponding to mid-level metal stack 40 nm routing) and 
-  take the R and C data from the ITRS roadmap.  
+  We obtain delay numbers by measuring delays of routing, soft logic blocks,
+  memories, and multipliers from test circuits on a Stratix IV GX device
+  (EP4SGX230DF29C2X, i.e. fastest speed grade). For routing, we took the average delay of H4 and V4
+  wires.  Rmetal and Cmetal values for the routing wires were obtained from work done by Charles
+  Chiasson. We use a 96 nm half-pitch (corresponding to mid-level metal stack 40 nm routing) and
+  take the R and C data from the ITRS roadmap.
 
-  For the general purpose logic block, we assume that the area and delays of the Stratix IV 
-  crossbar is close enough to the crossbar modelled here.  We use 40 inputs and 20 feedback lines in 
+  For the general purpose logic block, we assume that the area and delays of the Stratix IV
+  crossbar is close enough to the crossbar modelled here.  We use 40 inputs and 20 feedback lines in
   the cluster and a full crossbar, leading to 53:1 multiplexers in front of each BLE input.
-  Stratix IV uses 52 inputs and 20 feedback lines, but only a half-populated crossbar, leading to 
+  Stratix IV uses 52 inputs and 20 feedback lines, but only a half-populated crossbar, leading to
   36:1 multiplexers.  We require 60 such multiplexers, while Stratix IV requires 88 for its more
-  complex fracturable BLEs + the extra control signals. We justify this rough approximation as follows: 
-  The Stratix IV crossbar has more inputs (72 vs. 60) and 
-  outputs (88 vs. 60) than our full crossbar which should increase its area and delay, but the 
-  Stratix IV crossbar is also 50% sparse (each mux is 36:1 instead of 53:1) which should reduce its 
-  area and delay.  The total number of crossbar switch points is roughly similar between the two 
-  architectures (3160 for SIV and 3600 for the academic architecture below), so we use the area 
+  complex fracturable BLEs + the extra control signals. We justify this rough approximation as follows:
+  The Stratix IV crossbar has more inputs (72 vs. 60) and
+  outputs (88 vs. 60) than our full crossbar which should increase its area and delay, but the
+  Stratix IV crossbar is also 50% sparse (each mux is 36:1 instead of 53:1) which should reduce its
+  area and delay.  The total number of crossbar switch points is roughly similar between the two
+  architectures (3160 for SIV and 3600 for the academic architecture below), so we use the area
   & delay of the Stratix IV crossbar as a rough approximation of our crossbar.
 
-  For LUTs, we include LUT 
-  delays measured from Stratix IV which is dependant on the input used (ie. some 
-  LUT inputs are faster than others).  The CAD tools at the time of VTR 7 does 
+  For LUTs, we include LUT
+  delays measured from Stratix IV which is dependant on the input used (ie. some
+  LUT inputs are faster than others).  The CAD tools at the time of VTR 7 does
   not consider differences in LUT input delays.
 
-  Adder delays obtained as approximate values from a Stratix IV EP4SE230F29C3 device.  
-  Delay obtained by compiling a 256 bit adder (registered inputs and outputs, 
-  all pins except clock virtual) then measuring the delays in chip-planner, 
-  sumout delay = 0.271ns to 0.348 ns, intra-block carry delay = 0.011 ns, 
-  inter-block carry delay = 0.327 ns.  Given this data, I will approximate 
-  sumout 0.3 ns, intra-block carry-delay = 0.01 ns, and 
-  inter-block carry-delay = 0.16 ns (since Altera inter-block carry delay has 
-  overhead that we don't have, I'll approximate the delay of a simpler chain at 
-  one half what they have.  This is very rough, anything from 0.01ns to 0.327ns 
+  Adder delays obtained as approximate values from a Stratix IV EP4SE230F29C3 device.
+  Delay obtained by compiling a 256 bit adder (registered inputs and outputs,
+  all pins except clock virtual) then measuring the delays in chip-planner,
+  sumout delay = 0.271ns to 0.348 ns, intra-block carry delay = 0.011 ns,
+  inter-block carry delay = 0.327 ns.  Given this data, I will approximate
+  sumout 0.3 ns, intra-block carry-delay = 0.01 ns, and
+  inter-block carry-delay = 0.16 ns (since Altera inter-block carry delay has
+  overhead that we don't have, I'll approximate the delay of a simpler chain at
+  one half what they have.  This is very rough, anything from 0.01ns to 0.327ns
   can be justified).
 
-  Logic block area numbers obtained by scaling overall tile area of a 65nm 
-  Stratix III device, (as given in Wong, Betz and Rose, FPGA 2011) to 40 nm, then subtracting out 
-  routing area at a channel width of 300. We use a channel width of 300 because it can route 
+  Logic block area numbers obtained by scaling overall tile area of a 65nm
+  Stratix III device, (as given in Wong, Betz and Rose, FPGA 2011) to 40 nm, then subtracting out
+  routing area at a channel width of 300. We use a channel width of 300 because it can route
   all the VTR 6.0 benchmark circuits with an approximately 20% safety margin, and is also close to the
   total channel width of Stratix IV. Hence this channel width is close to the commercial practice of
   choosing a width that provides high routability. The architecture can be routed at different channel
@@ -78,23 +78,23 @@
   a channel width of 300.
 
   Sanity checks employed:
-    1.  We confirmed the routing buffer delay is ~1/3rd of total routing delay at L = 4. This matches 
+    1.  We confirmed the routing buffer delay is ~1/3rd of total routing delay at L = 4. This matches
         common electrical design.
 
 
   Authors: Jason Luu, Jeff Goeders, Vaughn Betz
 -->
-  
-  
+
+
   <architecture>
-  
-  <!-- 
-       ODIN II specific config begins 
-       Describes the types of user-specified netlist blocks (in blif, this corresponds to 
+
+  <!--
+       ODIN II specific config begins
+       Describes the types of user-specified netlist blocks (in blif, this corresponds to
        ".model [type_of_block]") that this architecture supports.
 
-       Note: Basic LUTs, I/Os, and flip-flops are not included here as there are 
-       already special structures in blif (.names, .input, .output, and .latch) 
+       Note: Basic LUTs, I/Os, and flip-flops are not included here as there are
+       already special structures in blif (.names, .input, .output, and .latch)
        that describe them.
   -->
   <models>
@@ -148,7 +148,7 @@
     </model>
   </models>
   <!-- ODIN II specific config ends -->
- 
+
   <!-- Physical descriptions begin -->
   <layout auto="1.0" tileable_routing="off"/>
   <spice_settings>
@@ -177,7 +177,7 @@
           <rise slew_time="25e-12" slew_type="abs"/>
           <fall slew_time="25e-12" slew_type="abs"/>
         </input>
-      </stimulate>      
+      </stimulate>
     </parameters>
     <tech_lib lib_type="academia" transistor_type="TOP_TT" lib_path="OPENFPGAPATHKEYWORD/fpga_flow/tech/PTM_45nm/45nm.pm" nominal_vdd="1.0" io_vdd="2.5"/>
     <transistors pn_ratio="2" model_ref="M">
@@ -185,7 +185,7 @@
       <pmos model_name="pch" chan_length="40e-9" min_width="140e-9"/>
       <io_nmos model_name="nch_25" chan_length="270e-9" min_width="320e-9"/>
       <io_pmos model_name="pch_25" chan_length="270e-9" min_width="320e-9"/>
-    </transistors> 
+    </transistors>
     <module_circuit_models>
       <circuit_model type="inv_buf" name="INVTX1" prefix="INVTX1" is_default="1">
         <design_technology type="cmos" topology="inverter" size="1" tapered="off"/>
@@ -237,10 +237,10 @@
           10e-12
         </delay_matrix>
         <delay_matrix type="fall" in_port="a" out_port="out">
-          10e-12 
+          10e-12
         </delay_matrix>
         <delay_matrix type="fall" in_port="b" out_port="out">
-          10e-12 
+          10e-12
         </delay_matrix>
       </circuit_model>
       <circuit_model type="chan_wire" name="chan_segment" prefix="track_seg" is_default="1">
@@ -290,7 +290,7 @@
         <port type="sram" prefix="sram" size="1"/>
       </circuit_model>
       <!--DFF subckt ports should be defined as <D> <Q> <CLK> <RESET> <SET>  -->
-      <circuit_model type="ff" name="static_dff" prefix="dff" spice_netlist="OPENFPGAPATHKEYWORD/vpr7_x2p/vpr/SpiceNetlists/ff.sp" verilog_netlist="FFPATHKEYWORD">
+      <circuit_model type="ff" name="static_dff" prefix="dff" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/ff.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerlogNetlists/ff.v">
          <design_technology type="cmos"/>
          <input_buffer exist="on" circuit_model_name="INVTX1"/>
          <output_buffer exist="on" circuit_model_name="INVTX1"/>
@@ -342,7 +342,7 @@
         <port type="sram" prefix="sram" size="16"/>
         <port type="sram" prefix="mode" size="2" mode_select="true" circuit_model_name="sram6T_blwl" default_val="1"/>
       </circuit_model>
-      <circuit_model type="sram" name="sram6T" prefix="sram" spice_netlist="OPENFPGAPATHKEYWORD/vpr7_x2p/vpr/SpiceNetlists/sram.sp" verilog_netlist="OPENFPGAPATHKEYWORD/vpr7_x2p/vpr/VerilogNetlists/sram.v" >
+      <circuit_model type="sram" name="sram6T" prefix="sram" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/sram.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/sram.v" >
         <design_technology type="cmos"/>
         <input_buffer exist="on" circuit_model_name="INVTX1"/>
         <output_buffer exist="on" circuit_model_name="INVTX1"/>
@@ -350,7 +350,7 @@
         <port type="input" prefix="in" size="1"/>
         <port type="output" prefix="out" size="2"/>
       </circuit_model>
-      <circuit_model type="sram" name="sram6T_blwl" prefix="sram_blwl" spice_netlist="OPENFPGAPATHKEYWORD/vpr7_x2p/vpr/SpiceNetlists/sram.sp" verilog_netlist="OPENFPGAPATHKEYWORD/vpr7_x2p/vpr/VerilogNetlists/sram.v">
+      <circuit_model type="sram" name="sram6T_blwl" prefix="sram_blwl" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/sram.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/sram.v">
         <design_technology type="cmos"/>
         <input_buffer exist="on" circuit_model_name="INVTX1"/>
         <output_buffer exist="on" circuit_model_name="INVTX1"/>
@@ -362,7 +362,7 @@
         <port type="wl" prefix="wl" size="1" default_val="0" inv_circuit_model_name="INVTX1"/>
       </circuit_model>
       <!--Scan-chain DFF subckt ports should be defined as <D> <Q> <Qb> <CLK> <RESET> <SET>  -->
-      <circuit_model type="sff" name="sc_dff_compact" prefix="scff" spice_netlist="OPENFPGAPATHKEYWORD/vpr7_x2p/vpr/SpiceNetlists/ff.sp" verilog_netlist="FFPATHKEYWORD">
+      <circuit_model type="sff" name="sc_dff_compact" prefix="scff" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/ff.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerlogNetlists/ff.v">
          <design_technology type="cmos"/>
          <input_buffer exist="on" circuit_model_name="INVTX1"/>
          <output_buffer exist="on" circuit_model_name="INVTX1"/>
@@ -373,7 +373,7 @@
          <port type="output" prefix="Qb" size="1"/>
          <port type="clock" prefix="prog_clk" size="1" is_global="true" default_val="0" is_prog="true"/>
       </circuit_model>
-      <circuit_model type="iopad" name="iopad" prefix="iopad" spice_netlist="OPENFPGAPATHKEYWORD/vpr7_x2p/vpr/SpiceNetlists/io.sp" verilog_netlist="OPENFPGAPATHKEYWORD/vpr7_x2p/vpr/VerilogNetlists/io.v">
+      <circuit_model type="iopad" name="iopad" prefix="iopad" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/io.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/io.v">
         <design_technology type="cmos"/>
         <input_buffer exist="on" circuit_model_name="INVTX1"/>
         <output_buffer exist="on" circuit_model_name="INVTX1"/>
@@ -384,7 +384,7 @@
         <port type="output" prefix="inpad" size="1"/>
       </circuit_model>
       <!-- Hard logic definition for heterogenous blocks -->
-      <circuit_model type="hard_logic" name="adder" prefix="adder" spice_netlist="OPENFPGAPATHKEYWORD/vpr7_x2p/vpr/SpiceNetlists/adder.sp" verilog_netlist="OPENFPGAPATHKEYWORD/vpr7_x2p/vpr/VerilogNetlists/adder.v">
+      <circuit_model type="hard_logic" name="adder" prefix="adder" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/adder.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/adder.v">
          <design_technology type="cmos"/>
          <input_buffer exist="on" circuit_model_name="INVTX1"/>
          <output_buffer exist="on" circuit_model_name="INVTX1"/>
@@ -397,29 +397,29 @@
     </module_circuit_models>
   </spice_settings>
   <device>
-    <!-- VB & JL: Using Ian Kuon's transistor sizing and drive strength data for routing, at 40 nm. Ian used BPTM 
+    <!-- VB & JL: Using Ian Kuon's transistor sizing and drive strength data for routing, at 40 nm. Ian used BPTM
 			     models. We are modifying the delay values however, to include metal C and R, which allows more architecture
 			     experimentation. We are also modifying the relative resistance of PMOS to be 1.8x that of NMOS
-			     (vs. Ian's 3x) as 1.8x lines up with Jeff G's data from a 45 nm process (and is more typical of 
-			     45 nm in general). I'm upping the Rmin_nmos from Ian's just over 6k to nearly 9k, and dropping 
+			     (vs. Ian's 3x) as 1.8x lines up with Jeff G's data from a 45 nm process (and is more typical of
+			     45 nm in general). I'm upping the Rmin_nmos from Ian's just over 6k to nearly 9k, and dropping
 			     RminW_pmos from 18k to 16k to hit this 1.8x ratio, while keeping the delays of buffers approximately
-			     lined up with Stratix IV. 
+			     lined up with Stratix IV.
 			     We are using Jeff G.'s capacitance data for 45 nm (in tech/ptm_45nm).
 			     Jeff's tables list C in for transistors with widths in multiples of the minimum feature size (45 nm).
 			     The minimum contactable transistor is 2.5 * 45 nm, so I need to multiply drive strength sizes in this file
 	                     by 2.5x when looking up in Jeff's tables.
 			     The delay values are lined up with Stratix IV, which has an architecture similar to this
-			     proposed FPGA, and which is also 40 nm 
+			     proposed FPGA, and which is also 40 nm
 			     C_ipin_cblock: input capacitance of a track buffer, which VPR assumes is a single-stage
 			     4x minimum drive strength buffer. -->
-   
+
     <sizing R_minW_nmos="8926" R_minW_pmos="16067" ipin_mux_trans_size="9"/>
     <timing C_ipin_cblock="596e-18" T_ipin_cblock="77.93e-12"/>
 
     <!-- The grid_logic_tile_area below will be used for all blocks that do not explicitly set their own (non-routing)
      	  area; set to 0 since we explicitly set the area of all blocks currently in this architecture file.
 	  -->
-	<area grid_logic_tile_area="0"/> 
+	<area grid_logic_tile_area="0"/>
     <sram area="6">
       <verilog organization="scan-chain" circuit_model_name="sc_dff_compact"/>
       <!--verilog organization="memory_bank" circuit_model_name="sram6T_blwl"/-->
@@ -440,14 +440,14 @@
   <switchlist>
 	  <!-- VB: the mux_trans_size and buf_size data below is in minimum width transistor *areas*, assuming the purple
 	       book area formula. This means the mux transistors are about 5x minimum drive strength.
-	       We assume the first stage of the buffer is 3x min drive strength to be reasonable given the large 
+	       We assume the first stage of the buffer is 3x min drive strength to be reasonable given the large
 	       mux transistors, and this gives a reasonable stage ratio of a bit over 5x to the second stage. We assume
 	       the n and p transistors in the first stage are equal-sized to lower the buffer trip point, since it's fed
-	       by a pass transistor mux. We can then reverse engineer the buffer second stage to hit the specified 
+	       by a pass transistor mux. We can then reverse engineer the buffer second stage to hit the specified
 	       buf_size (really buffer area) - 16.2x minimum drive nmos and 1.8*16.2 = 29.2x minimum drive.
-	       I then took the data from Jeff G.'s PTM modeling of 45 nm to get the Cin (gate of first stage) and Cout 
+	       I then took the data from Jeff G.'s PTM modeling of 45 nm to get the Cin (gate of first stage) and Cout
 	       (diff of second stage) listed below.  Jeff's models are in tech/ptm_45nm, and are in min feature multiples.
-	       The minimum contactable transistor is 2.5 * 45 nm, so I need to multiply the drive strength sizes above by 
+	       The minimum contactable transistor is 2.5 * 45 nm, so I need to multiply the drive strength sizes above by
 	       2.5x when looking up in Jeff's tables.
 	       Finally, we choose a switch delay (58 ps) that leads to length 4 wires having a delay equal to that of SIV of 126 ps.
 	       This also leads to the switch being 46% of the total wire delay, which is reasonable. -->
@@ -459,7 +459,7 @@
     </switch>
   </switchlist>
   <segmentlist>
-    <!--- VB & JL: using ITRS metal stack data, 96 nm half pitch wires, which are intermediate metal width/space.  
+    <!--- VB & JL: using ITRS metal stack data, 96 nm half pitch wires, which are intermediate metal width/space.
 			     With the 96 nm half pitch, such wires would take 60 um of height, vs. a 90 nm high (approximated as square) Stratix IV tile so this seems
 			     reasonable. Using a tile length of 90 nm, corresponding to the length of a Stratix IV tile if it were square. -->
     <segment freq="0.4" length="4" type="unidir" Rmetal="101" Cmetal="22.5e-15" circuit_model_name="chan_segment">
@@ -479,7 +479,7 @@
     </segment>
   </segmentlist>
   <!--switch_segment_patterns>
-    <pattern type="unbuf_sb" seg_length="1" seg_type="unidir" pattern_length="2"> 
+    <pattern type="unbuf_sb" seg_length="1" seg_type="unidir" pattern_length="2">
       <unbuf_mux name="1"/>
       <sb type ="pattern">0 1</sb>
     </pattern>
@@ -512,7 +512,7 @@
 
       <!-- IOs can operate as either inputs or outputs.§
 	     Delays below come from Ian Kuon. They are small, so they should be interpreted as
-	     the delays to and from registers in the I/O (and generally I/Os are registered 
+	     the delays to and from registers in the I/O (and generally I/Os are registered
 	     today and that is when you timing analyze them.
 	     -->
       <mode name="inpad">
@@ -539,7 +539,7 @@
       <!-- Every input pin is driven by 15% of the tracks in a channel, every output pin is driven by 10% of the tracks in a channel -->
       <fc default_in_type="frac" default_in_val="0.15" default_out_type="frac" default_out_val="0.10"/>
 
-      <!-- IOs go on the periphery of the FPGA, for consistency, 
+      <!-- IOs go on the periphery of the FPGA, for consistency,
           make it physically equivalent on all sides so that only one definition of I/Os is needed.
           If I do not make a physically equivalent definition, then I need to define 4 different I/Os, one for each side of the FPGA
         -->
@@ -555,20 +555,20 @@
         <loc type="perimeter" priority="10"/>
       </gridlocations>
 
-      <power method="ignore"/>			
+      <power method="ignore"/>
     </pb_type>
     <!-- Define I/O pads ends -->
 
 
       <!-- Define general purpose logic block (CLB) begin -->
-	  <!--- Area calculation: Total Stratix IV tile area is about 8100 um^2, and a minimum width transistor 
+	  <!--- Area calculation: Total Stratix IV tile area is about 8100 um^2, and a minimum width transistor
 	   area is 60 L^2 yields a tile area of 84375 MWTAs.
-	   Routing at W=300 is 30481 MWTAs, leaving us with a total of 53000 MWTAs for logic block area 
+	   Routing at W=300 is 30481 MWTAs, leaving us with a total of 53000 MWTAs for logic block area
 	   This means that only 37% of our area is in the general routing, and 63% is inside the logic
 	   block. Note that the crossbar / local interconnect is considered part of the logic block
 	   area in this analysis. That is a lower proportion of of routing area than most academics
 	   assume, but note that the total routing area really includes the crossbar, which would push
-	   routing area up significantly, we estimate into the ~70% range. 
+	   routing area up significantly, we estimate into the ~70% range.
 	   -->
       <pb_type name="clb" area="53894">
         <input name="I" num_pins="40" equivalent="true"/>
@@ -580,8 +580,8 @@
         <output name="regout" num_pins="1"/>
         <clock name="clk" num_pins="1"/>
 
-        <!-- Describe fracturable logic element.  
-             Each fracturable logic element has a 6-LUT that can alternatively operate as two 5-LUTs with shared inputs. 
+        <!-- Describe fracturable logic element.
+             Each fracturable logic element has a 6-LUT that can alternatively operate as two 5-LUTs with shared inputs.
              The outputs of the fracturable logic element can be optionally registered
         -->
         <pb_type name="fle" num_pb="10" physical_mode_name="fle_phy" idle_mode_name="n2_lut5">
@@ -592,7 +592,7 @@
           <output name="cout" num_pins="1"/>
           <output name="regout" num_pins="1"/>
           <clock name="clk" num_pins="1"/>
-     
+
           <mode name="fle_phy" disabled_in_packing="true">
             <!--pb_type name="fle_phy" num_pb="1" circuit_model_name="fle_phy">
               <input name="in" num_pins="6"/>
@@ -612,21 +612,21 @@
                   <output name="lut4_out" num_pins="4"/>
                   <output name="lut5_out" num_pins="2"/>
                   <output name="lut6_out" num_pins="1"/>
-                </pb_type>       
+                </pb_type>
                 <pb_type name="frac_lut4" blif_model=".frac_lut4" mode_bits="11" num_pb="1" circuit_model_name="frac_lut4">
                   <input name="in" num_pins="4"/>
                   <output name="lut2_out" num_pins="4"/>
                   <output name="lut3_out" num_pins="2"/>
                   <output name="lut4_out" num_pins="1"/>
-                </pb_type>       
+                </pb_type>
                 <pb_type name="adder_phy" blif_model=".subckt adder" num_pb="2" circuit_model_name="adder">
                   <input name="a" num_pins="1"/>
                   <input name="b" num_pins="1"/>
-                  <input name="cin" num_pins="1"/>                      
+                  <input name="cin" num_pins="1"/>
                   <output name="cout" num_pins="1"/>
                   <output name="sumout" num_pins="1"/>
                 </pb_type>
-                <interconnect> 
+                <interconnect>
                   <direct name="direct_fraclut6_in" input="frac_logic.in[3:0]" output="frac_lut6.in[3:0]"/>
                   <direct name="direct_fraclut4_in1" input="frac_logic.in[6]" output="frac_lut4.in[1]"/>
                   <direct name="direct_fraclut4_in0" input="frac_logic.in[7]" output="frac_lut4.in[0]"/>
@@ -643,7 +643,7 @@
                   </mux>
                   <mux name="mux2" input="adder_phy[1].sumout frac_lut4.lut4_out[0] frac_lut4.lut3_out[0] frac_lut4.lut2_out[0] frac_lut6.lut5_out[1] frac_logic.regchain[0]" output="frac_logic.out[1]">
                   </mux>
-                </interconnect> 
+                </interconnect>
               </pb_type>
               <pb_type name="ff_phy" blif_model=".latch" num_pb="2" class="flipflop" circuit_model_name="static_dff">
                 <input name="D" num_pins="1" port_class="D"/>
@@ -652,7 +652,7 @@
                 <T_setup value="66e-12" port="ff_phy.D" clock="clk"/>
                 <T_clock_to_Q max="124e-12" port="ff_phy.Q" clock="clk"/>
               </pb_type>
-              <interconnect> 
+              <interconnect>
                 <complete name="direct_clk" input="fle.clk" output="ff_phy[1:0].clk"/>
                 <direct name="direct_in" input="fle.in[7:0]" output="frac_logic.in[7:0]"/>
                 <direct name="direct_regin" input="fle.regin" output="frac_logic.regin"/>
@@ -681,12 +681,12 @@
                 <input name="cin" num_pins="1"/>
                 <output name="out" num_pins="1"/>
                 <output name="cout" num_pins="1"/>
-                <clock name="clk" num_pins="1"/> 
+                <clock name="clk" num_pins="1"/>
                 <mode name="blut5_5">
                   <pb_type name="flut5" num_pb="1">
                     <input name="in" num_pins="5"/>
                     <output name="out" num_pins="1"/>
-                    <clock name="clk" num_pins="1"/> 
+                    <clock name="clk" num_pins="1"/>
                     <!-- Regular LUT mode -->
                     <pb_type name="lut5" blif_model=".names" num_pb="1" class="lut" mode_bits="01" physical_pb_type_name="frac_lut6" physical_pb_type_index_factor="0.5">
                       <input name="in" num_pins="5" port_class="lut_in" physical_mode_pin="in[5:0]"/>
@@ -707,8 +707,8 @@
                         235e-12
                         235e-12
                       </delay_matrix>
-                    </pb_type>       
-                    
+                    </pb_type>
+
                     <pb_type name="ff" blif_model=".latch" num_pb="1" class="flipflop" physical_pb_type_name="ff_phy">
                       <input name="D" num_pins="1" port_class="D" physical_mode_pin="D"/>
                       <output name="Q" num_pins="1" port_class="Q" physical_mode_pin="Q"/>
@@ -721,7 +721,7 @@
                       <direct name="direct2" input="lut5.out" output="ff.D">
                         <pack_pattern name="ble5" in_port="lut5.out" out_port="ff.D"/>
                       </direct>
-                      <direct name="direct3" input="flut5.clk" output="ff.clk"/>                    
+                      <direct name="direct3" input="flut5.clk" output="ff.clk"/>
                       <mux name="mux1" input="ff.Q lut5.out" output="flut5.out" spice_model_sram_offset="0">
                         <delay_constant max="25e-12" in_port="lut5.out" out_port="flut5.out" />
                         <delay_constant max="45e-12" in_port="ff.Q" out_port="flut5.out" />
@@ -731,7 +731,7 @@
                   <interconnect>
                     <direct name="direct1" input="ble5.in" output="flut5.in"/>
                     <direct name="direct2" input="ble5.clk" output="flut5.clk"/>
-                    <direct name="direct3" input="flut5.out" output="ble5.out"/>                                          
+                    <direct name="direct3" input="flut5.out" output="ble5.out"/>
                   </interconnect>
                 </mode>
                 <mode name="arithmetic">
@@ -740,7 +740,7 @@
                     <input name="cin" num_pins="1"/>
                     <output name="out" num_pins="1"/>
                     <output name="cout" num_pins="1"/>
-                    <clock name="clk" num_pins="1"/> 
+                    <clock name="clk" num_pins="1"/>
                     <!-- Special dual-LUT mode that drives adder only -->
                     <pb_type name="lut4" blif_model=".names" num_pb="2" class="lut" mode_bits="11" physical_pb_type_name="frac_lut6" physical_pb_type_index_factor="0.25">
                       <input name="in" num_pins="4" port_class="lut_in" physical_mode_pin="in[4:0]"/>
@@ -759,11 +759,11 @@
                         195e-12
                         195e-12
                       </delay_matrix>
-                    </pb_type>    
+                    </pb_type>
                     <pb_type name="adder" blif_model=".subckt adder" num_pb="1" physical_pb_type_name="adder_phy">
                       <input name="a" num_pins="1" physical_mode_pin="a"/>
                       <input name="b" num_pins="1" physical_mode_pin="b"/>
-                      <input name="cin" num_pins="1" physical_mode_pin="cin"/>                      
+                      <input name="cin" num_pins="1" physical_mode_pin="cin"/>
                       <output name="cout" num_pins="1" physical_mode_pin="cout"/>
                       <output name="sumout" num_pins="1" physical_mode_pin="sumout"/>
                       <delay_constant max="0.3e-9" in_port="adder.a" out_port="adder.sumout"/>
@@ -813,14 +813,14 @@
                       <pack_pattern name="chain" in_port="arithmetic.cout" out_port="ble5.cout"/>
                     </direct>
                     <direct name="direct2" input="ble5.clk" output="arithmetic.clk"/>
-                    <direct name="direct3" input="arithmetic.out" output="ble5.out"/> 
+                    <direct name="direct3" input="arithmetic.out" output="ble5.out"/>
                   </interconnect>
                 </mode>
               </pb_type>
               <interconnect>
                 <direct name="direct1" input="lut5inter.in" output="ble5[0:0].in"/>
                 <direct name="direct2" input="lut5inter.in" output="ble5[1:1].in"/>
-                <direct name="direct3" input="ble5[1:0].out" output="lut5inter.out"/>                 
+                <direct name="direct3" input="ble5[1:0].out" output="lut5inter.out"/>
                 <direct name="carry_in" input="lut5inter.cin" output="ble5[0:0].cin">
                   <pack_pattern name="chain" in_port="lut5inter.cin" out_port="ble5[0:0].cin"/>
                 </direct>
@@ -830,7 +830,7 @@
                 <direct name="carry_link" input="ble5[0:0].cout" output="ble5[1:1].cin">
                   <pack_pattern name="chain" in_port="ble5[0:0].cout" out_port="ble5[1:1].cout"/>
                 </direct>
-                <complete name="complete1" input="lut5inter.clk" output="ble5[1:0].clk"/>                  
+                <complete name="complete1" input="lut5inter.clk" output="ble5[1:0].clk"/>
               </interconnect>
             </pb_type>
             <interconnect>
@@ -849,7 +849,7 @@
             <pb_type name="ble6_2" num_pb="1">
               <input name="in" num_pins="8"/>
               <output name="out" num_pins="2"/>
-              <clock name="clk" num_pins="1"/> 
+              <clock name="clk" num_pins="1"/>
               <pb_type name="lut6" blif_model=".names" num_pb="1" class="lut" mode_bits="00" physical_pb_type_name="frac_lut6" spice_model_sram_offset="0">
                 <input name="in" num_pins="6" port_class="lut_in" physical_mode_pin="in[5:0]"/>
                 <output name="out" num_pins="1" port_class="lut_out" physical_mode_pin="lut6_out[0]"/>
@@ -898,11 +898,11 @@
                 <direct name="direct4" input="lut2.out" output="ff[1].D">
                   <pack_pattern name="ble2" in_port="lut2.out" out_port="ff[1].D"/>
                 </direct>
-                <complete name="direct5" input="ble6_2.clk" output="ff[1:0].clk"/>                    
+                <complete name="direct5" input="ble6_2.clk" output="ff[1:0].clk"/>
                 <mux name="mux1" input="ff[0].Q lut6.out" output="ble6_2.out[0]">
                   <delay_constant max="25e-12" in_port="lut6.out" out_port="ble6_2.out[0]" />
                   <delay_constant max="45e-12" in_port="ff[0].Q" out_port="ble6_2.out[0]" />
-                </mux>                    
+                </mux>
                 <mux name="mux2" input="ff[1].Q lut2.out" output="ble6_2.out[1]">
                   <delay_constant max="25e-12" in_port="lut2.out" out_port="ble6_2.out[1]" />
                   <delay_constant max="45e-12" in_port="ff[1].Q" out_port="ble6_2.out[1]" />
@@ -919,7 +919,7 @@
             <pb_type name="ble4_4" num_pb="1">
               <input name="in" num_pins="8"/>
               <output name="out" num_pins="2"/>
-              <clock name="clk" num_pins="1"/> 
+              <clock name="clk" num_pins="1"/>
               <pb_type name="lut4_from6" blif_model=".names" num_pb="1" class="lut" mode_bits="11" physical_pb_type_name="frac_lut6" spice_model_sram_offset="0">
                 <input name="in" num_pins="4" port_class="lut_in" physical_mode_pin="in[3:0]"/>
                 <output name="out" num_pins="1" port_class="lut_out" physical_mode_pin="lut4_out[0]"/>
@@ -960,11 +960,11 @@
                 <direct name="direct5" input="lut4_from4.out" output="ff[1].D">
                   <pack_pattern name="ble4" in_port="lut4_from4.out" out_port="ff[1].D"/>
                 </direct>
-                <complete name="direct6" input="ble4_4.clk" output="ff[1:0].clk"/>                    
+                <complete name="direct6" input="ble4_4.clk" output="ff[1:0].clk"/>
                 <mux name="mux1" input="ff[0].Q lut4_from6.out" output="ble4_4.out[0]">
                   <delay_constant max="25e-12" in_port="lut4_from6.out" out_port="ble4_4.out[0]" />
                   <delay_constant max="45e-12" in_port="ff[0].Q" out_port="ble4_4.out[0]" />
-                </mux>                    
+                </mux>
                 <mux name="mux2" input="ff[1].Q lut4_from4.out" output="ble4_4.out[1]">
                   <delay_constant max="25e-12" in_port="lut4_from4.out" out_port="ble4_4.out[1]" />
                   <delay_constant max="45e-12" in_port="ff[1].Q" out_port="ble4_4.out[1]" />
@@ -981,7 +981,7 @@
             <pb_type name="ble5_3" num_pb="1">
               <input name="in" num_pins="8"/>
               <output name="out" num_pins="2"/>
-              <clock name="clk" num_pins="1"/> 
+              <clock name="clk" num_pins="1"/>
               <pb_type name="lut5" blif_model=".names" num_pb="1" class="lut" mode_bits="01" physical_pb_type_name="frac_lut6" spice_model_sram_offset="0">
                 <input name="in" num_pins="5" port_class="lut_in" physical_mode_pin="in[4:0]"/>
                 <output name="out" num_pins="1" port_class="lut_out" physical_mode_pin="lut5_out[0]"/>
@@ -1020,11 +1020,11 @@
                 <direct name="direct5" input="lut3.out" output="ff[1].D">
                   <pack_pattern name="ble2" in_port="lut3.out" out_port="ff[1].D"/>
                 </direct>
-                <complete name="direct6" input="ble5_3.clk" output="ff[1:0].clk"/>                    
+                <complete name="direct6" input="ble5_3.clk" output="ff[1:0].clk"/>
                 <mux name="mux1" input="ff[0].Q lut5.out" output="ble5_3.out[0]">
                   <delay_constant max="25e-12" in_port="lut5.out" out_port="ble5_3.out[0]" />
                   <delay_constant max="45e-12" in_port="ff[0].Q" out_port="ble5_3.out[0]" />
-                </mux>                    
+                </mux>
                 <mux name="mux2" input="ff[1].Q lut3.out" output="ble5_3.out[1]">
                   <delay_constant max="25e-12" in_port="lut3.out" out_port="ble5_3.out[1]" />
                   <delay_constant max="45e-12" in_port="ff[1].Q" out_port="ble5_3.out[1]" />
@@ -1042,7 +1042,7 @@
               <input name="in" num_pins="1"/>
               <output name="out" num_pins="2"/>
               <output name="regout" num_pins="1"/>
-              <clock name="clk" num_pins="1"/> 
+              <clock name="clk" num_pins="1"/>
               <pb_type name="ff" blif_model=".subckt shift" num_pb="2" class="flipflop" physical_pb_type_name="ff_phy">
                 <input name="D" num_pins="1" port_class="D" physical_mode_pin="D"/>
                 <output name="Q" num_pins="1" port_class="Q" physical_mode_pin="Q"/>
@@ -1054,11 +1054,11 @@
                 <direct name="direct1" input="ble_shift.in" output="ff[0].D"/>
                 <direct name="direct2" input="ff[0].Q" output="ff[1].D">
                   <pack_pattern name="ble_shift" in_port="ff[0].Q" out_port="ff[1].D"/>
-                </direct>                 
-                <direct name="out1" input="ff[0].Q" output="ble_shift.out[0]"/>                   
+                </direct>
+                <direct name="out1" input="ff[0].Q" output="ble_shift.out[0]"/>
                 <direct name="out2" input="ff[1].Q" output="ble_shift.out[1]"/>
                 <direct name="direct_regout" input="ff[1].Q" output="ble_shift.regout"/>
-                <complete name="direct3" input="ble_shift.clk" output="ff[1:0].clk"/>   
+                <complete name="direct3" input="ble_shift.clk" output="ff[1:0].clk"/>
               </interconnect>
             </pb_type>
             <interconnect>
@@ -1070,13 +1070,13 @@
           </mode> <!-- shift_register -->
         </pb_type>
         <interconnect>
-          <!-- We use a full crossbar to get logical equivalence at inputs of CLB 
+          <!-- We use a full crossbar to get logical equivalence at inputs of CLB
            The delays below come from Stratix IV. the delay through a connection block
-           input mux + the crossbar in Stratix IV is 167 ps. We already have a 72 ps 
+           input mux + the crossbar in Stratix IV is 167 ps. We already have a 72 ps
            delay on the connection block input mux (modeled by Ian Kuon), so the remaining
-           delay within the crossbar is 95 ps. 
+           delay within the crossbar is 95 ps.
            The delays of cluster feedbacks in Stratix IV is 100 ps, when driven by a LUT.
-           Since all our outputs LUT outputs go to a BLE output, and have a delay of 
+           Since all our outputs LUT outputs go to a BLE output, and have a delay of
            25 ps to do so, we subtract 25 ps from the 100 ps delay of a feedback
            to get the part that should be marked on the crossbar.	 -->
           <complete name="crossbar" input="clb.I fle[9:0].out" output="fle[9:0].in" circuit_model_name="mux_2level">
@@ -1091,8 +1091,8 @@
             <pack_pattern name="chain" in_port="clb.cin" out_port="fle[0:0].cin"/>
           </complete>
 
-          <!-- This way of specifying direct connection to clb outputs is important because this architecture uses automatic spreading of opins.  
-                 By grouping to output pins in this fashion, if a logic block is completely filled by 6-LUTs, 
+          <!-- This way of specifying direct connection to clb outputs is important because this architecture uses automatic spreading of opins.
+                 By grouping to output pins in this fashion, if a logic block is completely filled by 6-LUTs,
                  then the outputs those 6-LUTs take get evenly distributed across all four sides of the CLB instead of clumped on two sides (which is what happens with a more
                  naive specification).
           -->
@@ -1131,7 +1131,7 @@
     <local_interconnect C_wire="2.5e-10"/>
     <mux_transistor_size mux_transistor_size="3"/>
     <FF_size FF_size="4"/>
-    <LUT_transistor_size LUT_transistor_size="4"/> 
+    <LUT_transistor_size LUT_transistor_size="4"/>
   </power>
   <clocks>
     <clock buffer_size="auto" C_wire="2.5e-10"/>
