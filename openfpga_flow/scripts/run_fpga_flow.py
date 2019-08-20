@@ -261,7 +261,6 @@ def validate_command_line_arguments():
                 if not any([getattr(args, i, 0) for i in eachdep.split("|")]):
                     clean_up_and_exit("'%s' argument depends on (%s) argumets"%
                         (eacharg, ", ".join(dependent).replace("|", " or ")))
-    exit()
 
     # Filter provided architecrue files
     args.arch_file = os.path.abspath(args.arch_file)
@@ -796,6 +795,7 @@ def run_command(taskname, logfile, command, exit_if_fail=True):
     except (Exception, subprocess.CalledProcessError) as e:
         logger.exception("failed to execute %s" % taskname)
         process_failed_vpr_run(e.output)
+        print(e.output)
         if exit_if_fail:
             clean_up_and_exit("Failed to run %s task" % taskname)
         return None
@@ -811,7 +811,7 @@ def process_failed_vpr_run(vpr_output):
 
 if __name__ == "__main__":
     # Setting up print and logging system
-    logging.basicConfig(level=logging.INFO, stream=sys.stdout,
+    logging.basicConfig(level=logging.DEBUG, stream=sys.stdout,
                         format='%(levelname)s - %(message)s')
     logger = logging.getLogger('OpenFPGA_Flow_Logs')
 
