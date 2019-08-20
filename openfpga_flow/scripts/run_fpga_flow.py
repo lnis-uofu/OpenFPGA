@@ -674,43 +674,46 @@ def run_standard_vpr(bench_blif, fixed_chan_width, logfile, route_only=False):
     return chan_width
 
 
-def extract_vpr_stats(logfile):
-    # TODO: Sloppy code need improovement
-    # Without changing config input format
-
+def extract_vpr_stats(logfile, r_filename="vpr_stat", parse_section="vpr"):
+    section = "DEFAULT_PARSE_RESULT_POWER" if parse_section == "power" \
+        else "DEFAULT_PARSE_RESULT_VPR"
     vpr_log = open(logfile).read()
     resultDict = {}
-    for name, value in config.items("DEFAULT_PARSE_RESULT_VPR"):
-        reg_string, _ = value.split(",")
+    for name, value in config.items(section):
+        reg_string, filt_function = value.split(",")
         match = re.search(reg_string[1:-1], vpr_log)
         if match:
+            try:
+                if "lambda" in filt_function.strip():
+                    eval("ParseFunction = "+filt_function.strip())
+                    extract_val = ParseFunction(**match.groups())
+                elif filt_function.strip() == "int":
+                    extract_val = int(match.group(1))
+                elif filt_function.strip() == "float":
+                    extract_val = float(match.group(1))
+                elif filt_function.strip() == "str":
+                    extract_val = str(match.group(1))
+                elif filt_function.strip() == "scientific":
+                    try:
+                        mult = {"m":1E-3, "u":1E-6, "n":1E-9,
+                        "K":1E-3, "M":1E-6, "G":1E-9,}.get(match.group(2)[0], 1)
+                    except:
+                        mult = 1
+                    extract_val = float(match.group(1))*mult
+                else:
             extract_val = match.group(1)
+            except:
+                logger.exception("Filter failed")
+                extract_val= "Filter Failed"
             resultDict[name] = extract_val
 
     dummyparser = ConfigParser()
     dummyparser.read_dict({"RESULTS": resultDict})
 
-    with open('vpr_stat.result', 'w') as configfile:
+    with open(r_filename+'.result', 'w') as configfile:
         dummyparser.write(configfile)
-    logger.info("VPR statistics is extracted in file vpr_stat.result")
-
-
-def extract_vpr_power_esti(logfile):
-    vpr_log = open(logfile).read()
-    resultDict = {}
-    for name, value in config.items("DEFAULT_PARSE_RESULT_VPR"):
-        reg_string, _ = value.split(",")
-        match = re.search(reg_string[1:-1], vpr_log)
-        if match:
-            extract_val = match.group(1)
-            resultDict[name] = extract_val
-
-    dummyparser = ConfigParser()
-    dummyparser.read_dict({args.top_module+"_RESULTS": resultDict})
-
-    with open('vpr_power_stat.result', 'w') as configfile:
-        dummyparser.write(configfile)
-    logger.info("VPR_Power statistics are extracted vpr_power_stat.result")
+    logger.info("%s result extracted in file %s" %
+    (parse_section,r_filename+'.result'))
 
 
 def run_rewrite_verilog():
