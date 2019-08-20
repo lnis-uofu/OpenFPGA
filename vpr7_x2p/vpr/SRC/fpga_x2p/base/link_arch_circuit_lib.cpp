@@ -196,7 +196,6 @@ void link_sram_inf(t_sram_inf* cur_sram_inf,
  **************************************************************************/
 t_port* find_pb_type_port_match_circuit_model_port(const t_pb_type* pb_type,
                                                    const CircuitLibrary& circuit_lib,
-                                                   const CircuitModelId& circuit_model,
                                                    const CircuitPortId& circuit_port) {
   t_port* ret = NULL; 
   size_t num_found = 0;
@@ -204,10 +203,10 @@ t_port* find_pb_type_port_match_circuit_model_port(const t_pb_type* pb_type,
   /* Search ports */
   for (int iport = 0; iport < pb_type->num_ports; iport++) {
     /* Match the name and port size*/
-    if ( (0 == circuit_lib.port_prefix(circuit_model, circuit_port).compare(pb_type->ports[iport].name)) 
-      && (size_t(pb_type->ports[iport].num_pins) == circuit_lib.port_size(circuit_model, circuit_port))) {
+    if ( (0 == circuit_lib.port_prefix(circuit_port).compare(pb_type->ports[iport].name)) 
+      && (size_t(pb_type->ports[iport].num_pins) == circuit_lib.port_size(circuit_port))) {
       /* Match the type*/
-      switch (circuit_lib.port_type(circuit_model, circuit_port)) {
+      switch (circuit_lib.port_type(circuit_port)) {
       case SPICE_MODEL_PORT_INPUT:
         if ((IN_PORT == pb_type->ports[iport].type)
           &&(0 == pb_type->ports[iport].is_clock)) {
@@ -236,7 +235,7 @@ t_port* find_pb_type_port_match_circuit_model_port(const t_pb_type* pb_type,
         break;
       default:
         vpr_printf(TIO_MESSAGE_ERROR,"(File:%s, [LINE%d])Invalid type for circuit model port(%s)!\n",
-                   __FILE__, __LINE__, circuit_lib.port_prefix(circuit_model, circuit_port));
+                   __FILE__, __LINE__, circuit_lib.port_prefix(circuit_port));
         exit(1);
       }
     }
@@ -246,7 +245,7 @@ t_port* find_pb_type_port_match_circuit_model_port(const t_pb_type* pb_type,
   if (1 < num_found) {
     vpr_printf(TIO_MESSAGE_ERROR,
                "(File:%s, [LINE%d])More than 1 pb_type(%s) port match spice_model_port(%s)!\n",
-               __FILE__, __LINE__, pb_type->name, circuit_lib.port_prefix(circuit_model, circuit_port).c_str());
+               __FILE__, __LINE__, pb_type->name, circuit_lib.port_prefix(circuit_port).c_str());
     exit(1);
   }
 
@@ -276,8 +275,8 @@ int link_pb_type_port_to_circuit_model_ports(const t_pb_type* cur_pb_type,
   }
 
   /* For each port, find a SPICE model port, which has the same name and port size */
-  for (auto& port : circuit_lib.ports(circuit_model)) {
-    t_port* cur_pb_type_port = find_pb_type_port_match_circuit_model_port(cur_pb_type, circuit_lib, circuit_model, port); 
+  for (auto& port : circuit_lib.model_ports(circuit_model)) {
+    t_port* cur_pb_type_port = find_pb_type_port_match_circuit_model_port(cur_pb_type, circuit_lib, port); 
     /* Not every spice_model_port can find a mapped pb_type_port.
      * Since a pb_type only includes necessary ports in technology mapping.
      * ports for physical designs may be ignored ! 

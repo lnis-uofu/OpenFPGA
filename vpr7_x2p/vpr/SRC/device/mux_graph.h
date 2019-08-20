@@ -63,6 +63,8 @@ class MuxGraph {
   public: /* Public accessors: Data query */
     /* Find the number of inputs in the MUX graph */
     size_t num_inputs() const;
+    /* Find the number of outputs in the MUX graph */
+    size_t num_outputs() const;
     /* Find the number of levels in the MUX graph */
     size_t num_levels() const;
     /* Find the number of SRAMs in the MUX graph */
@@ -88,10 +90,10 @@ class MuxGraph {
   private: /* Private mutators : graph builders */
     void build_multilevel_mux_graph(const size_t& mux_size, 
                                     const size_t& num_levels, const size_t& num_inputs_per_branch,
-                                    const enum e_spice_model_pass_gate_logic_type& pgl_type);
+                                    const CircuitModelId& pgl_model) ;
     /* Build the graph for a given one-level multiplexer implementation */
     void build_onelevel_mux_graph(const size_t& mux_size, 
-                                  const enum e_spice_model_pass_gate_logic_type& pgl_type); 
+                                  const CircuitModelId& pgl_model) ;
     /* Build the graph for a given multiplexer model */
     void build_mux_graph(const CircuitLibrary& circuit_lib, 
                          const CircuitModelId& circuit_model,
@@ -120,7 +122,7 @@ class MuxGraph {
     vtr::vector<MuxEdgeId, MuxEdgeId> edge_ids_;                        /* Unique ids for each edge */
     vtr::vector<MuxEdgeId, std::vector<MuxNodeId>> edge_src_nodes_;     /* source nodes drive this edge */
     vtr::vector<MuxEdgeId, std::vector<MuxNodeId>> edge_sink_nodes_;    /* sink nodes this edge drives */
-    vtr::vector<MuxEdgeId, enum e_spice_model_pass_gate_logic_type> edge_types_; /* type of each edge: tgate/pass-gate */
+    vtr::vector<MuxEdgeId, CircuitModelId> edge_models_; /* type of each edge: tgate/pass-gate */
     vtr::vector<MuxEdgeId, MuxMemId> edge_mem_ids_;                   /* ids of memory bit that control the edge */
     vtr::vector<MuxEdgeId, bool> edge_inv_mem_;                       /* if the edge is controlled by an inverted output of a memory bit */
 

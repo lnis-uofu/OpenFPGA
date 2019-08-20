@@ -67,6 +67,19 @@ size_t MuxGraph::num_inputs() const {
   return num_inputs;
 }
 
+/* Find the number of outputs in the MUX graph */
+size_t MuxGraph::num_outputs() const {
+  /* need to check if the graph is valid or not */
+  VTR_ASSERT_SAFE(valid_mux_graph());
+  /* Sum up the number of INPUT nodes in each level */
+  size_t num_outputs = 0;
+  for (auto node_per_level : node_lookup_) {
+    num_outputs += node_per_level[MUX_OUTPUT_NODE].size();
+  }
+  return num_outputs;
+}
+
+
 /* Find the number of levels in the MUX graph */
 size_t MuxGraph::num_levels() const {
   /* need to check if the graph is valid or not */
@@ -133,7 +146,7 @@ MuxGraph MuxGraph::subgraph(const MuxNodeId& root_node) const {
 
   /* Add output nodes to subgraph */
   MuxNodeId to_node_subgraph = mux_graph.add_node(MUX_OUTPUT_NODE);
-  mux_graph.node_levels_[to_node_subgraph] = 0;
+  mux_graph.node_levels_[to_node_subgraph] = 1;
   /* Update the node-to-node map */
   node2node_map[root_node] = to_node_subgraph;
 
@@ -155,7 +168,7 @@ MuxGraph MuxGraph::subgraph(const MuxNodeId& root_node) const {
     MuxEdgeId edge_subgraph = mux_graph.add_edge(node2node_map[from_node_origin], node2node_map[root_node]);
     edge2edge_map[edge_origin] = edge_subgraph; 
     /* Configure edges */
-    mux_graph.edge_types_[edge_subgraph] = this->edge_types_[edge_origin];
+    mux_graph.edge_models_[edge_subgraph] = this->edge_models_[edge_origin];
     mux_graph.edge_inv_mem_[edge_subgraph] = this->edge_inv_mem_[edge_origin];
   } 
 
@@ -178,6 +191,9 @@ MuxGraph MuxGraph::subgraph(const MuxNodeId& root_node) const {
     MuxMemId mem_subgraph = mux_graph.add_mem();
     mem2mem_map[mem_origin] = mem_subgraph;
   }
+
+  /* Since the graph is finalized, it is time to build the fast look-up */
+  mux_graph.build_node_lookup();
 
   return mux_graph; 
 }
@@ -300,7 +316,7 @@ MuxEdgeId MuxGraph::add_edge(const MuxNodeId& from_node, const MuxNodeId& to_nod
   /* Push to the node list */
   edge_ids_.push_back(edge);
   /* Resize the other node-related vectors */
-  edge_types_.push_back(NUM_CIRCUIT_MODEL_PASS_GATE_TYPES);
+  edge_models_.push_back(CircuitModelId::INVALID());
   edge_mem_ids_.push_back(MuxMemId::INVALID());
   edge_inv_mem_.push_back(false);
 
@@ -386,7 +402,7 @@ void MuxGraph::set_edge_mem_id(const MuxEdgeId& edge, const MuxMemId& mem) {
  */
 void MuxGraph::build_multilevel_mux_graph(const size_t& mux_size, 
                                           const size_t& num_levels, const size_t& num_inputs_per_branch,
-                                          const enum e_spice_model_pass_gate_logic_type& pgl_type) {
+                                          const CircuitModelId& pgl_model) {
   /* Make sure mux_size for each branch is valid */
   VTR_ASSERT(valid_mux_implementation_num_inputs(num_inputs_per_branch));
 
@@ -439,7 +455,7 @@ void MuxGraph::build_multilevel_mux_graph(const size_t& mux_size,
         /* Create an edge and connect the two nodes */
         MuxEdgeId edge = add_edge(expand_node, seed_node); 
         /* Configure the edge */
-        edge_types_[edge] = pgl_type;
+        edge_models_[edge] = pgl_model;
 
         /* Memory id depends on the level and offset in the current branch 
          * if number of inputs per branch is 2, it indicates a tree-like multiplexer, 
@@ -517,7 +533,7 @@ void MuxGraph::build_multilevel_mux_graph(const size_t& mux_size,
  *  input_node --->+
  */
 void MuxGraph::build_onelevel_mux_graph(const size_t& mux_size, 
-                                        const enum e_spice_model_pass_gate_logic_type& pgl_type) {
+                                        const CircuitModelId& pgl_model) {
   /* Make sure mux_size is valid */
   VTR_ASSERT(valid_mux_implementation_num_inputs(mux_size));
 
@@ -538,7 +554,7 @@ void MuxGraph::build_onelevel_mux_graph(const size_t& mux_size,
      */
     MuxEdgeId edge = add_edge(input_node, output_node); 
     /* Configure the edge */
-    edge_types_[edge] = pgl_type;
+    edge_models_[edge] = pgl_model;
 
     /* Create a memory bit*/
     MuxMemId mem = add_mem(); 
@@ -574,11 +590,11 @@ void MuxGraph::build_mux_graph(const CircuitLibrary& circuit_lib,
     size_t num_inputs_per_branch = 2;
 
     /* Build a multilevel mux graph */
-    build_multilevel_mux_graph(impl_mux_size, num_levels, num_inputs_per_branch, circuit_lib.pass_gate_logic_type(circuit_model));
+    build_multilevel_mux_graph(impl_mux_size, num_levels, num_inputs_per_branch, circuit_lib.pass_gate_logic_model(circuit_model));
     break;
   }
   case SPICE_MODEL_STRUCTURE_ONELEVEL: {
-    build_onelevel_mux_graph(impl_mux_size, circuit_lib.pass_gate_logic_type(circuit_model));
+    build_onelevel_mux_graph(impl_mux_size, circuit_lib.pass_gate_logic_model(circuit_model));
     break;
   }
   case SPICE_MODEL_STRUCTURE_MULTILEVEL: {
@@ -588,7 +604,7 @@ void MuxGraph::build_mux_graph(const CircuitLibrary& circuit_lib,
     /* Build a multilevel mux graph */
     build_multilevel_mux_graph(impl_mux_size, circuit_lib.mux_num_levels(circuit_model), 
                                num_inputs_per_branch,
-                               circuit_lib.pass_gate_logic_type(circuit_model));
+                               circuit_lib.pass_gate_logic_model(circuit_model));
     break;
   }
   default:

@@ -1573,11 +1573,9 @@ CircuitLibrary build_circuit_library(int num_spice_model, t_spice_model* spice_m
   /* Go spice_model by spice_model */
   for (int imodel = 0; imodel < num_spice_model; ++imodel) {
     /* Add a spice model to the circuit_lib */
-    CircuitModelId model_id = circuit_lib.add_model();
+    CircuitModelId model_id = circuit_lib.add_model(spice_models[imodel].type);
     /* Fill fundamental attributes */
     /* Basic information*/
-    circuit_lib.set_model_type(model_id, spice_models[imodel].type);
-
     std::string name(spice_models[imodel].name); 
     circuit_lib.set_model_name(model_id, name);
 
@@ -1728,59 +1726,57 @@ CircuitLibrary build_circuit_library(int num_spice_model, t_spice_model* spice_m
 
     /* Ports */
     for (int iport = 0; iport < spice_models[imodel].num_port; ++iport) {
-      CircuitPortId port_id = circuit_lib.add_model_port(model_id);
+      CircuitPortId port_id = circuit_lib.add_model_port(model_id, spice_models[imodel].ports[iport].type);
       /* Fill fundamental attributes */
-      circuit_lib.set_port_type(model_id, port_id, spice_models[imodel].ports[iport].type);
-
-      circuit_lib.set_port_size(model_id, port_id, spice_models[imodel].ports[iport].size);
+      circuit_lib.set_port_size(port_id, spice_models[imodel].ports[iport].size);
 
       std::string port_prefix(spice_models[imodel].ports[iport].prefix);
-      circuit_lib.set_port_prefix(model_id, port_id, port_prefix);
+      circuit_lib.set_port_prefix(port_id, port_prefix);
 
       std::string port_lib_name(spice_models[imodel].ports[iport].lib_name);
-      circuit_lib.set_port_lib_name(model_id, port_id, port_lib_name);
+      circuit_lib.set_port_lib_name(port_id, port_lib_name);
       
       if (NULL != spice_models[imodel].ports[iport].inv_prefix) {
         std::string port_inv_prefix(spice_models[imodel].ports[iport].inv_prefix);
-        circuit_lib.set_port_inv_prefix(model_id, port_id, port_inv_prefix);
+        circuit_lib.set_port_inv_prefix(port_id, port_inv_prefix);
       }
 
-      circuit_lib.set_port_default_value(model_id, port_id, spice_models[imodel].ports[iport].default_val);
+      circuit_lib.set_port_default_value(port_id, spice_models[imodel].ports[iport].default_val);
 
-      circuit_lib.set_port_is_mode_select(model_id, port_id, TRUE == spice_models[imodel].ports[iport].mode_select);
-      circuit_lib.set_port_is_global(model_id, port_id, TRUE == spice_models[imodel].ports[iport].is_global);
-      circuit_lib.set_port_is_reset(model_id, port_id, TRUE == spice_models[imodel].ports[iport].is_reset);
-      circuit_lib.set_port_is_set(model_id, port_id, TRUE == spice_models[imodel].ports[iport].is_set);
-      circuit_lib.set_port_is_config_enable(model_id, port_id, TRUE == spice_models[imodel].ports[iport].is_config_enable);
-      circuit_lib.set_port_is_prog(model_id, port_id, TRUE == spice_models[imodel].ports[iport].is_prog);
+      circuit_lib.set_port_is_mode_select(port_id, TRUE == spice_models[imodel].ports[iport].mode_select);
+      circuit_lib.set_port_is_global(port_id, TRUE == spice_models[imodel].ports[iport].is_global);
+      circuit_lib.set_port_is_reset(port_id, TRUE == spice_models[imodel].ports[iport].is_reset);
+      circuit_lib.set_port_is_set(port_id, TRUE == spice_models[imodel].ports[iport].is_set);
+      circuit_lib.set_port_is_config_enable(port_id, TRUE == spice_models[imodel].ports[iport].is_config_enable);
+      circuit_lib.set_port_is_prog(port_id, TRUE == spice_models[imodel].ports[iport].is_prog);
 
       if (NULL != spice_models[imodel].ports[iport].spice_model_name) {
         std::string port_model_name(spice_models[imodel].ports[iport].spice_model_name);
-        circuit_lib.set_port_model_name(model_id, port_id, port_model_name);
+        circuit_lib.set_port_tri_state_model_name(port_id, port_model_name);
       }
 
       if (NULL != spice_models[imodel].ports[iport].inv_spice_model_name) {
         std::string port_inv_model_name(spice_models[imodel].ports[iport].inv_spice_model_name);
-        circuit_lib.set_port_inv_model_name(model_id, port_id, port_inv_model_name);
+        circuit_lib.set_port_inv_model_name(port_id, port_inv_model_name);
       }
 
       if (NULL != spice_models[imodel].ports[iport].tri_state_map) {
         std::string port_tri_state_map(spice_models[imodel].ports[iport].tri_state_map);
-        circuit_lib.set_port_tri_state_map(model_id, port_id, port_tri_state_map);
+        circuit_lib.set_port_tri_state_map(port_id, port_tri_state_map);
       }
 
       if (SPICE_MODEL_LUT == spice_models[imodel].type) {
-        circuit_lib.set_port_lut_frac_level(model_id, port_id, spice_models[imodel].ports[iport].lut_frac_level);
+        circuit_lib.set_port_lut_frac_level(port_id, spice_models[imodel].ports[iport].lut_frac_level);
 
         std::vector<size_t> port_lut_output_mask;
         for (int ipin = 0; ipin < spice_models[imodel].ports[iport].size; ++ipin) {
           port_lut_output_mask.push_back(spice_models[imodel].ports[iport].lut_output_mask[ipin]);
         }
-        circuit_lib.set_port_lut_output_mask(model_id, port_id, port_lut_output_mask);
+        circuit_lib.set_port_lut_output_mask(port_id, port_lut_output_mask);
       }
 
       if (SPICE_MODEL_PORT_SRAM == spice_models[imodel].ports[iport].type) {
-        circuit_lib.set_port_sram_orgz(model_id, port_id, spice_models[imodel].ports[iport].organization);
+        circuit_lib.set_port_sram_orgz(port_id, spice_models[imodel].ports[iport].organization);
       }
     } 
   }

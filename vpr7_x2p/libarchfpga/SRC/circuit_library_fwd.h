@@ -7,6 +7,9 @@
 /************************************************************************
  * Create strong id for Circuit Models/Ports to avoid illegal type casting 
  ***********************************************************************/
+#ifndef CIRCUIT_LIBRARY_FWD_H
+#define CIRCUIT_LIBRARY_FWD_H
+
 #include "vtr_strong_id.h"
 
 struct circuit_model_id_tag;
@@ -19,3 +22,5 @@ typedef vtr::StrongId<circuit_edge_id_tag> CircuitEdgeId;
 
 /* Short declaration of class */
 class CircuitLibrary;
+
+#endif

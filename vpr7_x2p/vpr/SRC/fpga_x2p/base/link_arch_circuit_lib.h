@@ -54,7 +54,6 @@ CircuitModelId link_circuit_model_by_name_and_type(const char* circuit_model_nam
 
 t_port* find_pb_type_port_match_circuit_model_port(const t_pb_type* pb_type,
                                                    const CircuitLibrary& circuit_lib,
-                                                   const CircuitModelId& circuit_model,
                                                    const CircuitPortId& circuit_port);
 
 void link_circuit_library_to_arch(t_arch* arch,

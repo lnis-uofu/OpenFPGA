@@ -15,6 +15,7 @@
 void generate_verilog_mux_branch_module(std::fstream& fp, 
                                         const CircuitLibrary& circuit_lib, 
                                         const CircuitModelId& circuit_model, 
+                                        const size_t& mux_size, 
                                         const MuxGraph& mux_graph);
 
 #endif

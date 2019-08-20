@@ -2854,7 +2854,8 @@ void dump_verilog_submodule_muxes(t_sram_orgz_info* cur_sram_orgz_info,
     std::vector<MuxGraph> branch_mux_graphs = mux_graph.build_mux_branch_graphs();
     /* Create branch circuits, which are N:1 one-level or 2:1 tree-like MUXes */
     for (auto branch_mux_graph : branch_mux_graphs) {
-      generate_verilog_mux_branch_module(sfp, spice->circuit_lib, mux_circuit_model, branch_mux_graph);
+      generate_verilog_mux_branch_module(sfp, spice->circuit_lib, mux_circuit_model, 
+                                         mux_graph.num_inputs(), branch_mux_graph);
     }
   }
 

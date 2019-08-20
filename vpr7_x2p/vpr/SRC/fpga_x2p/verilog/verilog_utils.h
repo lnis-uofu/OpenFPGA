@@ -10,7 +10,7 @@ void init_include_user_defined_verilog_netlists(t_spice spice);
 void dump_include_user_defined_verilog_netlists(FILE* fp,
                                                 t_spice spice);
 
-void check_file_handler(const std::fstream& fp);
+void check_file_handler(std::fstream& fp);
 
 void dump_verilog_file_header(FILE* fp,
                               char* usage);
@@ -51,6 +51,7 @@ void dump_verilog_subckt_header_file(t_llist* subckt_llist_head,
                                      char* header_file_name);
 
 char determine_verilog_generic_port_split_sign(enum e_dump_verilog_port_type dump_port_type);
+
 
 void dump_verilog_generic_port(FILE* fp, 
                                enum e_dump_verilog_port_type dump_port_type,

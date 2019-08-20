@@ -150,7 +150,7 @@ size_t check_one_circuit_model_port_required(const CircuitLibrary& circuit_lib,
   size_t num_err = 0;
 
   for (const auto& port_type: port_types_to_check) {
-    if (0 == circuit_lib.ports_by_type(circuit_model, port_type).size()) {
+    if (0 == circuit_lib.model_ports_by_type(circuit_model, port_type).size()) {
       vpr_printf(TIO_MESSAGE_ERROR,
                  "%s circuit model(name=%s) does not have %s port\n",
                  CIRCUIT_MODEL_TYPE_STRING[size_t(circuit_lib.model_type(circuit_model))], 
@@ -175,11 +175,11 @@ size_t check_one_circuit_model_port_size_required(const CircuitLibrary& circuit_
 
   size_t num_err = 0;
 
-  if (port_size_to_check != circuit_lib.port_size(circuit_model, circuit_port)) {
+  if (port_size_to_check != circuit_lib.port_size(circuit_port)) {
     vpr_printf(TIO_MESSAGE_ERROR,
                "Port of circuit model(name=%s) does not have a port(type=%s) of size=%d.\n",
                circuit_lib.model_name(circuit_model).c_str(), 
-               CIRCUIT_MODEL_PORT_TYPE_STRING[size_t(circuit_lib.port_type(circuit_model, circuit_port))],
+               CIRCUIT_MODEL_PORT_TYPE_STRING[size_t(circuit_lib.port_type(circuit_port))],
                port_size_to_check);
     /* Incremental the counter for errors */
     num_err++;
@@ -202,7 +202,7 @@ size_t check_one_circuit_model_port_type_and_size_required(const CircuitLibrary&
 
   size_t num_err = 0;
 
-  std::vector<CircuitPortId> ports = circuit_lib.ports_by_type(circuit_model, port_type_to_check, include_global_ports);
+  std::vector<CircuitPortId> ports = circuit_lib.model_ports_by_type(circuit_model, port_type_to_check, include_global_ports);
   if (num_ports_to_check != ports.size()) {
     vpr_printf(TIO_MESSAGE_ERROR, 
                "Expect %d %s ports for a %s circuit model, but only have %d %s ports!\n",

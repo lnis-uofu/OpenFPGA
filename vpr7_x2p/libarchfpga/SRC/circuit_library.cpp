@@ -55,12 +55,12 @@ CircuitLibrary::CircuitLibrary() {
 /************************************************************************
  * Public Accessors : aggregates
  ***********************************************************************/
-CircuitLibrary::model_range CircuitLibrary::models() const {
+CircuitLibrary::circuit_model_range CircuitLibrary::models() const {
   return vtr::make_range(model_ids_.begin(), model_ids_.end());
 }
 
-CircuitLibrary::circuit_port_range CircuitLibrary::ports(const CircuitModelId& model_id) const {
-  return vtr::make_range(port_ids_[model_id].begin(), port_ids_[model_id].end());
+CircuitLibrary::circuit_port_range CircuitLibrary::ports() const {
+  return vtr::make_range(port_ids_.begin(), port_ids_.end());
 }
 
 /* Find circuit models in the same type (defined by users) and return a list of ids */
@@ -76,84 +76,6 @@ std::vector<CircuitModelId> CircuitLibrary::models_by_type(const enum e_spice_mo
   }
   return type_ids;
 }
-
-/* Find the ports of a circuit model by a given type, return a list of qualified ports */
-std::vector<CircuitPortId> CircuitLibrary::ports_by_type(const CircuitModelId& model_id, 
-                                                         const enum e_spice_model_port_type& type) const {
-  std::vector<CircuitPortId> port_ids;
-  for (const auto& port_id : ports(model_id)) {
-    /* We skip unmatched ports */
-    if ( type != port_type(model_id, port_id) ) {
-      continue; 
-    }
-    port_ids.push_back(port_id);
-  } 
-  return port_ids;
-}
-
-/* Find the ports of a circuit model by a given type, return a list of qualified ports 
- * with an option to include/exclude global ports
- */
-std::vector<CircuitPortId> CircuitLibrary::ports_by_type(const CircuitModelId& model_id, 
-                                                         const enum e_spice_model_port_type& type,
-                                                         const bool& include_global_port) const {
-  std::vector<CircuitPortId> port_ids;
-  for (const auto& port_id : ports(model_id)) {
-    /* We skip unmatched ports */
-    if ( type != port_type(model_id, port_id) ) {
-      continue; 
-    }
-    /* We skip global ports if specified */
-    if ( (false == include_global_port)
-      && (true == port_is_global(model_id, port_id)) ) {
-      continue; 
-    }
-    port_ids.push_back(port_id);
-  } 
-  return port_ids;
-}
-
-
-/* Create a vector for all the ports whose directionality is input
- * This includes all the ports other than whose types are OUPUT or INOUT 
- */
-std::vector<CircuitPortId> CircuitLibrary::input_ports(const CircuitModelId& model_id) const {
-  std::vector<CircuitPortId> input_ports;
-  for (const auto& port_id : ports(model_id)) {
-    /* We skip output ports */
-    if ( false == is_input_port(model_id, port_id) ) {
-      continue; 
-    }
-    input_ports.push_back(port_id);
-  } 
-  return input_ports;
-}
-
-/* Create a vector for all the ports whose directionality is output
- * This includes all the ports whose types are OUPUT or INOUT 
- */
-std::vector<CircuitPortId> CircuitLibrary::output_ports(const CircuitModelId& model_id) const {
-  std::vector<CircuitPortId> output_ports;
-  for (const auto& port_id : ports(model_id)) {
-    /* We skip input ports */
-    if ( false == is_output_port(model_id, port_id) ) {
-      continue; 
-    }
-    output_ports.push_back(port_id);
-  } 
-  return output_ports;
-}
-
-/* Create a vector for the pin indices, which is bounded by the size of a port
- * Start from 0 and end to port_size - 1
- */
-std::vector<size_t> CircuitLibrary::pins(const CircuitModelId& model_id, const CircuitPortId& circuit_port_id) const {
-  std::vector<size_t> pin_range(port_size(model_id, circuit_port_id));
-  /* Create a vector, with sequentially increasing numbers */
-  std::iota(pin_range.begin(), pin_range.end(), 0);
-  return pin_range;
-}
-
 
 /************************************************************************
  * Public Accessors : Basic data query on Circuit Models
@@ -256,24 +178,24 @@ bool CircuitLibrary::is_lut_intermediate_buffered(const CircuitModelId& model_id
   return buffer_existence_[model_id][LUT_INTER_BUFFER]; 
 }
 
-/* Find the type of pass-gate logic for a circuit model (recursive function)
+/* Find the id of pass-gate circuit model 
  * Two cases to be considered:
  * 1. this is a pass-gate circuit model, just find the data and return
  * 2. this circuit model includes a pass-gate, find the link to pass-gate circuit model and go recursively
  */
-enum e_spice_model_pass_gate_logic_type CircuitLibrary::pass_gate_logic_type(const CircuitModelId& model_id) const {
+CircuitModelId CircuitLibrary::pass_gate_logic_model(const CircuitModelId& model_id) const {
   /* validate the model_id */
   VTR_ASSERT(valid_model_id(model_id));
   
   /* Return the data if this is a pass-gate circuit model */
   if (SPICE_MODEL_PASSGATE == model_type(model_id)) {
-    return pass_gate_logic_types_[model_id];
+    return model_ids_[model_id];
   }
 
   /* Otherwise, we need to make sure this circuit model contains a pass-gate */
   CircuitModelId pgl_model_id = pass_gate_logic_model_ids_[model_id];
   VTR_ASSERT( CircuitModelId::INVALID() != pgl_model_id );
-  return pass_gate_logic_type(pgl_model_id);
+  return pgl_model_id;
 }
 
 /* Return the multiplex structure of a circuit model */
@@ -325,41 +247,36 @@ size_t CircuitLibrary::mux_const_input_value(const CircuitModelId& model_id) con
   return mux_const_input_values_[model_id];
 }
 
+/* Return the type of gate for a circuit model 
+ * Only applicable for GATE circuit model 
+ */
+enum e_spice_model_gate_type CircuitLibrary::gate_type(const CircuitModelId& model_id) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  /* validate the circuit model type is MUX */
+  VTR_ASSERT(SPICE_MODEL_GATE == model_type(model_id));
+  return gate_types_[model_id];
+}
+
 /************************************************************************
- * Public Accessors : Basic data query on Circuit Porst
+ * Public Accessors : Basic data query on Circuit models' Circuit Port
  ***********************************************************************/
 
-/* identify if this port is an input port */
-bool CircuitLibrary::is_input_port(const CircuitModelId& model_id, const CircuitPortId& circuit_port_id) const {
-  /* validate the model_id and circuit_port_id */
-  VTR_ASSERT(valid_circuit_port_id(model_id, circuit_port_id));
-  /* Only SPICE_MODEL_OUTPUT AND INOUT are considered as outputs */
-  return ( (SPICE_MODEL_PORT_OUTPUT != port_type(model_id, circuit_port_id)) 
-        && (SPICE_MODEL_PORT_INOUT  != port_type(model_id, circuit_port_id)) );
-}
-
-/* identify if this port is an output port */
-bool CircuitLibrary::is_output_port(const CircuitModelId& model_id, const CircuitPortId& circuit_port_id) const {
-  /* validate the model_id and circuit_port_id */
-  VTR_ASSERT(valid_circuit_port_id(model_id, circuit_port_id));
-  /* Only SPICE_MODEL_OUTPUT AND INOUT are considered as outputs */
-  return ( (SPICE_MODEL_PORT_OUTPUT == port_type(model_id, circuit_port_id)) 
-        || (SPICE_MODEL_PORT_INOUT  == port_type(model_id, circuit_port_id)) );
-}
-
 /* Given a name and return the port id */
-CircuitPortId CircuitLibrary::port(const CircuitModelId& model_id, const std::string& name) const {
+CircuitPortId CircuitLibrary::model_port(const CircuitModelId& model_id, const std::string& name) const {
   /* validate the model_id */
   VTR_ASSERT(valid_model_id(model_id));
   /* Walk through the ports and try to find a matched name */
   CircuitPortId ret = CircuitPortId::INVALID();
   size_t num_found = 0;
-  for (auto port_id : ports(model_id)) {
-    if (0 != name.compare(port_prefix(model_id, port_id))) {
-      continue; /* Not the one, go to the next*/
+  for (auto model_ports_by_type : model_port_lookup_[model_id]) {
+    for (auto port_id : model_ports_by_type) {
+      if (0 != name.compare(port_prefix(port_id))) {
+        continue; /* Not the one, go to the next*/
+      }
+      ret = port_id; /* Find one */
+      num_found++;
     }
-    ret = port_id; /* Find one */
-    num_found++;
   }
   /* Make sure we will not find two ports with the same name */
   VTR_ASSERT( (0 == num_found) || (1 == num_found) );
@@ -367,121 +284,258 @@ CircuitPortId CircuitLibrary::port(const CircuitModelId& model_id, const std::st
 }
 
 /* Access the type of a port of a circuit model */
-size_t CircuitLibrary::num_ports(const CircuitModelId& model_id) const {
+size_t CircuitLibrary::num_model_ports(const CircuitModelId& model_id) const {
   /* validate the model_id */
   VTR_ASSERT(valid_model_id(model_id));
-  return port_ids_[model_id].size();
+  /* Search the port look up and return a list */
+  size_t num_of_ports = 0;
+  for (auto model_ports_by_type : model_port_lookup_[model_id]) {
+    num_of_ports += model_ports_by_type.size();
+  }
+  return num_of_ports;
 }
 
 /* Access the type of a port of a circuit model 
  * with an option to include/exclude global ports 
  * when counting 
  */
-size_t CircuitLibrary::num_ports_by_type(const CircuitModelId& model_id,
-                                         const enum e_spice_model_port_type& port_type, 
-                                         const bool& include_global_port) const {
+size_t CircuitLibrary::num_model_ports_by_type(const CircuitModelId& model_id,
+                                               const enum e_spice_model_port_type& port_type, 
+                                               const bool& include_global_port) const {
   /* validate the model_id */
   VTR_ASSERT(valid_model_id(model_id));
-  return ports_by_type(model_id, port_type, include_global_port).size();
+  /* Search the port look up */
+  VTR_ASSERT(port_type < model_port_lookup_[model_id].size());
+  size_t num_ports = 0;
+  for (auto port : model_port_lookup_[model_id][port_type]) {
+    /* By pass non-global ports if required by user */
+    if ( (false == include_global_port)
+     &&  (true == port_is_global(port)) ) {
+      continue;
+    }
+    num_ports++;
+  } 
+
+  return num_ports;
+}
+
+/* Find all the ports belong to a circuit model */
+std::vector<CircuitPortId> CircuitLibrary::model_ports(const CircuitModelId& model_id) const {
+  /* validate the circuit_model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  /* Search the port look up and return a list */
+  std::vector<CircuitPortId> port_ids;
+  for (auto model_ports_by_type : model_port_lookup_[model_id]) {
+    for (auto port_id : model_ports_by_type) {
+      port_ids.push_back(port_id);
+    }
+  }
+  return port_ids;
+}
+
+/* Recursively find all the global ports in the circuit model / sub circuit_model */
+std::vector<CircuitPortId> CircuitLibrary::model_global_ports(const CircuitModelId& model_id) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+
+  /* Search all the ports */
+  std::vector<CircuitPortId> global_ports;
+  for (auto port : model_ports(model_id)) {
+    /* By pass non-global ports*/
+    if (false == port_is_global(port)) {
+      continue;
+    }
+    /* This is a global port, update global_ports */
+    global_ports.push_back(port); 
+  }
+
+  return global_ports;
+}
+
+/* Find the ports of a circuit model by a given type, return a list of qualified ports */
+std::vector<CircuitPortId> CircuitLibrary::model_ports_by_type(const CircuitModelId& model_id, 
+                                                               const enum e_spice_model_port_type& type) const {
+  std::vector<CircuitPortId> port_ids;
+  for (const auto& port_id : model_ports(model_id)) {
+    /* We skip unmatched ports */
+    if ( type != port_type(port_id) ) {
+      continue; 
+    }
+    port_ids.push_back(port_id);
+  } 
+  return port_ids;
+}
+
+/* Find the ports of a circuit model by a given type, return a list of qualified ports 
+ * with an option to include/exclude global ports
+ */
+std::vector<CircuitPortId> CircuitLibrary::model_ports_by_type(const CircuitModelId& model_id, 
+                                                               const enum e_spice_model_port_type& type,
+                                                               const bool& include_global_port) const {
+  std::vector<CircuitPortId> port_ids;
+  for (const auto& port_id : model_port_lookup_[model_id][type]) {
+    /* We skip unmatched ports */
+    if ( type != port_type(port_id) ) {
+      continue; 
+    }
+    /* We skip global ports if specified */
+    if ( (false == include_global_port)
+      && (true == port_is_global(port_id)) ) {
+      continue; 
+    }
+    port_ids.push_back(port_id);
+  } 
+  return port_ids;
+}
+
+
+/* Create a vector for all the ports whose directionality is input
+ * This includes all the ports other than whose types are OUPUT or INOUT 
+ */
+std::vector<CircuitPortId> CircuitLibrary::model_input_ports(const CircuitModelId& model_id) const {
+  std::vector<CircuitPortId> input_ports;
+  for (const auto& port_id : model_ports(model_id)) {
+    /* We skip output ports */
+    if ( false == is_input_port(port_id) ) {
+      continue; 
+    }
+    input_ports.push_back(port_id);
+  } 
+  return input_ports;
+}
+
+/* Create a vector for all the ports whose directionality is output
+ * This includes all the ports whose types are OUPUT or INOUT 
+ */
+std::vector<CircuitPortId> CircuitLibrary::model_output_ports(const CircuitModelId& model_id) const {
+  std::vector<CircuitPortId> output_ports;
+  for (const auto& port_id : model_ports(model_id)) {
+    /* We skip input ports */
+    if ( false == is_output_port(port_id) ) {
+      continue; 
+    }
+    output_ports.push_back(port_id);
+  } 
+  return output_ports;
+}
+
+/* Create a vector for the pin indices, which is bounded by the size of a port
+ * Start from 0 and end to port_size - 1
+ */
+std::vector<size_t> CircuitLibrary::pins(const CircuitPortId& circuit_port_id) const {
+  std::vector<size_t> pin_range(port_size(circuit_port_id));
+  /* Create a vector, with sequentially increasing numbers */
+  std::iota(pin_range.begin(), pin_range.end(), 0);
+  return pin_range;
+}
+
+
+/************************************************************************
+ * Public Accessors : Basic data query on Circuit Port
+ ***********************************************************************/
+
+/* identify if this port is an input port */
+bool CircuitLibrary::is_input_port(const CircuitPortId& circuit_port_id) const {
+  /* validate the circuit_port_id */
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
+  /* Only SPICE_MODEL_OUTPUT AND INOUT are considered as outputs */
+  return ( (SPICE_MODEL_PORT_OUTPUT != port_type(circuit_port_id)) 
+        && (SPICE_MODEL_PORT_INOUT  != port_type(circuit_port_id)) );
+}
+
+/* identify if this port is an output port */
+bool CircuitLibrary::is_output_port(const CircuitPortId& circuit_port_id) const {
+  /* validate the circuit_port_id */
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
+  /* Only SPICE_MODEL_OUTPUT AND INOUT are considered as outputs */
+  return ( (SPICE_MODEL_PORT_OUTPUT == port_type(circuit_port_id)) 
+        || (SPICE_MODEL_PORT_INOUT  == port_type(circuit_port_id)) );
 }
 
 /* Access the type of a port of a circuit model */
-enum e_spice_model_port_type CircuitLibrary::port_type(const CircuitModelId& model_id, 
-                                                       const CircuitPortId& circuit_port_id) const {
+enum e_spice_model_port_type CircuitLibrary::port_type(const CircuitPortId& circuit_port_id) const {
   /* validate the circuit_port_id */
-  VTR_ASSERT(valid_circuit_port_id(model_id, circuit_port_id));
-  return port_types_[model_id][circuit_port_id];
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
+  return port_types_[circuit_port_id];
 }
 
 /* Access the type of a port of a circuit model */
-size_t CircuitLibrary::port_size(const CircuitModelId& model_id, 
-                                 const CircuitPortId& circuit_port_id) const {
+size_t CircuitLibrary::port_size(const CircuitPortId& circuit_port_id) const {
   /* validate the circuit_port_id */
-  VTR_ASSERT(valid_circuit_port_id(model_id, circuit_port_id));
-  return port_sizes_[model_id][circuit_port_id];
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
+  return port_sizes_[circuit_port_id];
 }
 
 /* Access the prefix of a port of a circuit model */
-std::string CircuitLibrary::port_prefix(const CircuitModelId& model_id, 
-                                        const CircuitPortId& circuit_port_id) const {
+std::string CircuitLibrary::port_prefix(const CircuitPortId& circuit_port_id) const {
   /* validate the circuit_port_id */
-  VTR_ASSERT(valid_circuit_port_id(model_id, circuit_port_id));
-  return port_prefix_[model_id][circuit_port_id];
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
+  return port_prefix_[circuit_port_id];
 }
 
 /* Access the lib_name of a port of a circuit model */
-std::string CircuitLibrary::port_lib_name(const CircuitModelId& model_id, 
-                                          const CircuitPortId& circuit_port_id) const {
+std::string CircuitLibrary::port_lib_name(const CircuitPortId& circuit_port_id) const {
   /* validate the circuit_port_id */
-  VTR_ASSERT(valid_circuit_port_id(model_id, circuit_port_id));
-  return port_lib_names_[model_id][circuit_port_id];
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
+  return port_lib_names_[circuit_port_id];
 }
 
 /* Access the inv_prefix of a port of a circuit model */
-std::string CircuitLibrary::port_inv_prefix(const CircuitModelId& model_id, 
-                                            const CircuitPortId& circuit_port_id) const {
+std::string CircuitLibrary::port_inv_prefix(const CircuitPortId& circuit_port_id) const {
   /* validate the circuit_port_id */
-  VTR_ASSERT(valid_circuit_port_id(model_id, circuit_port_id));
-  return port_inv_prefix_[model_id][circuit_port_id];
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
+  return port_inv_prefix_[circuit_port_id];
 }
 
 /* Return the default value of a port of a circuit model */
-size_t CircuitLibrary::port_default_value(const CircuitModelId& model_id, 
-                                        const CircuitPortId& circuit_port_id) const {
+size_t CircuitLibrary::port_default_value(const CircuitPortId& circuit_port_id) const {
   /* validate the circuit_port_id */
-  VTR_ASSERT(valid_circuit_port_id(model_id, circuit_port_id));
-  return port_default_values_[model_id][circuit_port_id];
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
+  return port_default_values_[circuit_port_id];
 }
 
 
 /* Return a flag if the port is used in mode-selection purpuse of a circuit model */
-bool CircuitLibrary::port_is_mode_select(const CircuitModelId& model_id, 
-                                         const CircuitPortId& circuit_port_id) const {
+bool CircuitLibrary::port_is_mode_select(const CircuitPortId& circuit_port_id) const {
   /* validate the circuit_port_id */
-  VTR_ASSERT(valid_circuit_port_id(model_id, circuit_port_id));
-  return port_is_mode_select_[model_id][circuit_port_id];
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
+  return port_is_mode_select_[circuit_port_id];
 }
 
 /* Return a flag if the port is a global one of a circuit model */
-bool CircuitLibrary::port_is_global(const CircuitModelId& model_id, 
-                                    const CircuitPortId& circuit_port_id) const {
+bool CircuitLibrary::port_is_global(const CircuitPortId& circuit_port_id) const {
   /* validate the circuit_port_id */
-  VTR_ASSERT(valid_circuit_port_id(model_id, circuit_port_id));
-  return port_is_global_[model_id][circuit_port_id];
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
+  return port_is_global_[circuit_port_id];
 }
 
 /* Return a flag if the port does a reset functionality in a circuit model */
-bool CircuitLibrary::port_is_reset(const CircuitModelId& model_id, 
-                                   const CircuitPortId& circuit_port_id) const {
+bool CircuitLibrary::port_is_reset(const CircuitPortId& circuit_port_id) const {
   /* validate the circuit_port_id */
-  VTR_ASSERT(valid_circuit_port_id(model_id, circuit_port_id));
-  return port_is_reset_[model_id][circuit_port_id];
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
+  return port_is_reset_[circuit_port_id];
 }
 
 /* Return a flag if the port does a set functionality in a circuit model */
-bool CircuitLibrary::port_is_set(const CircuitModelId& model_id, 
-                                 const CircuitPortId& circuit_port_id) const {
+bool CircuitLibrary::port_is_set(const CircuitPortId& circuit_port_id) const {
   /* validate the circuit_port_id */
-  VTR_ASSERT(valid_circuit_port_id(model_id, circuit_port_id));
-  return port_is_set_[model_id][circuit_port_id];
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
+  return port_is_set_[circuit_port_id];
 }
 
 /* Return a flag if the port enables a configuration in a circuit model */
-bool CircuitLibrary::port_is_config_enable(const CircuitModelId& model_id, 
-                                           const CircuitPortId& circuit_port_id) const {
+bool CircuitLibrary::port_is_config_enable(const CircuitPortId& circuit_port_id) const {
   /* validate the circuit_port_id */
-  VTR_ASSERT(valid_circuit_port_id(model_id, circuit_port_id));
-  return port_is_config_enable_[model_id][circuit_port_id];
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
+  return port_is_config_enable_[circuit_port_id];
 }
 
 /* Return a flag if the port is used during programming a FPGA in a circuit model */
-bool CircuitLibrary::port_is_prog(const CircuitModelId& model_id, 
-                                  const CircuitPortId& circuit_port_id) const {
+bool CircuitLibrary::port_is_prog(const CircuitPortId& circuit_port_id) const {
   /* validate the circuit_port_id */
-  VTR_ASSERT(valid_circuit_port_id(model_id, circuit_port_id));
-  return port_is_prog_[model_id][circuit_port_id];
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
+  return port_is_prog_[circuit_port_id];
 }
-
 
 /************************************************************************
  * Public Accessors : Methods to find circuit model 
@@ -496,7 +550,7 @@ CircuitModelId CircuitLibrary::model(const char* name) const {
 CircuitModelId CircuitLibrary::model(const std::string& name) const { 
   CircuitModelId ret = CircuitModelId::INVALID();
   size_t num_found = 0;
-  for (model_string_iterator it = model_names_.begin();
+  for (circuit_model_string_iterator it = model_names_.begin();
        it != model_names_.end();
        it++) {
     /* Bypass unmatched names */
@@ -525,18 +579,17 @@ CircuitModelId CircuitLibrary::default_model(const enum e_spice_model_type& type
  * Public Accessors: Timing graph 
  ***********************************************************************/
 /* Given the source and sink port information, find the edge connecting the two ports */
-CircuitEdgeId CircuitLibrary::edge(const CircuitModelId& model_id,
-                                   const CircuitPortId& from_port, const size_t from_pin,
+CircuitEdgeId CircuitLibrary::edge(const CircuitPortId& from_port, const size_t from_pin,
                                    const CircuitPortId& to_port, const size_t to_pin) {
   /* validate the circuit_pin_id */
-  VTR_ASSERT(valid_circuit_pin_id(model_id, from_port, from_pin));
-  VTR_ASSERT(valid_circuit_pin_id(model_id, to_port, to_pin));
+  VTR_ASSERT(valid_circuit_pin_id(from_port, from_pin));
+  VTR_ASSERT(valid_circuit_pin_id(to_port, to_pin));
   /* Walk through the edge list until we find the one */
-  for (auto edge : edge_ids_[model_id]) { 
-    if ( (from_port == edge_src_port_ids_[model_id][edge])
-      && (from_pin  == edge_src_pin_ids_[model_id][edge])
-      && (to_port == edge_sink_port_ids_[model_id][edge])
-      && (to_pin  == edge_sink_pin_ids_[model_id][edge]) ) {
+  for (auto edge : edge_ids_) { 
+    if ( (from_port == edge_src_port_ids_[edge])
+      && (from_pin  == edge_src_pin_ids_[edge])
+      && (to_port == edge_sink_port_ids_[edge])
+      && (to_pin  == edge_sink_pin_ids_[edge]) ) {
       return edge;
     }
   }
@@ -548,7 +601,7 @@ CircuitEdgeId CircuitLibrary::edge(const CircuitModelId& model_id,
  * Public Mutators 
  ***********************************************************************/
 /* Add a circuit model to the library, and return it Id */
-CircuitModelId CircuitLibrary::add_model() {
+CircuitModelId CircuitLibrary::add_model(const enum e_spice_model_type& type) {
   /* Create a new id*/
   CircuitModelId model_id = CircuitModelId(model_ids_.size());
   /* Update the id list */
@@ -556,7 +609,7 @@ CircuitModelId CircuitLibrary::add_model() {
   
   /* Initialize other attributes */
   /* Fundamental information */
-  model_types_.push_back(NUM_CIRCUIT_MODEL_TYPES);
+  model_types_.push_back(type);
   model_names_.emplace_back();
   model_prefix_.emplace_back();
   model_verilog_netlists_.emplace_back();
@@ -580,39 +633,6 @@ CircuitModelId CircuitLibrary::add_model() {
   /* Pass-gate-related parameters */
   pass_gate_logic_model_names_.emplace_back();
   pass_gate_logic_model_ids_.emplace_back();
-
-  /* Port information */
-  port_ids_.emplace_back();
-  port_types_.emplace_back();
-  port_sizes_.emplace_back();
-  port_prefix_.emplace_back();
-  port_lib_names_.emplace_back();
-  port_inv_prefix_.emplace_back();
-  port_default_values_.emplace_back();
-  port_is_mode_select_.emplace_back();
-  port_is_global_.emplace_back();
-  port_is_reset_.emplace_back();
-  port_is_set_.emplace_back();
-  port_is_config_enable_.emplace_back();
-  port_is_prog_.emplace_back();
-  port_model_names_.emplace_back();
-  port_model_ids_.emplace_back();
-  port_inv_model_names_.emplace_back();
-  port_inv_model_ids_.emplace_back();
-  port_tri_state_maps_.emplace_back();
-  port_lut_frac_level_.emplace_back();
-  port_lut_output_masks_.emplace_back();
-  port_sram_orgz_.emplace_back();
-
-  /* Timing graphs */
-  edge_ids_.emplace_back();
-  port_in_edge_ids_.emplace_back();
-  port_out_edge_ids_.emplace_back();
-  edge_src_port_ids_.emplace_back();
-  edge_src_pin_ids_.emplace_back();
-  edge_sink_port_ids_.emplace_back();
-  edge_sink_pin_ids_.emplace_back();
-  edge_timing_info_.emplace_back();
 
   /* Delay information */
   delay_types_.emplace_back();
@@ -653,24 +673,10 @@ CircuitModelId CircuitLibrary::add_model() {
   wire_rc_.emplace_back();
   wire_num_levels_.push_back(-1);
 
-  /* Update circuit port fast look-up */
-  model_port_lookup_.emplace_back();
-
-  /* Invalidate fast look-up*/
-  invalidate_model_lookup();
-
-  return model_id;
-}
-
-/* Set the type of a Circuit Model */
-void CircuitLibrary::set_model_type(const CircuitModelId& model_id, 
-                                            const enum e_spice_model_type& type) {
-  /* validate the model_id */
-  VTR_ASSERT(valid_model_id(model_id));
-  model_types_[model_id] = type;
   /* Build the fast look-up for circuit models */
   build_model_lookup();
-  return;
+
+  return model_id;
 }
 
 /* Set the name of a Circuit Model */
@@ -747,7 +753,7 @@ void CircuitLibrary::set_model_is_power_gated(const CircuitModelId& model_id, co
 
 /* Set input buffer information for the circuit model */
 void CircuitLibrary::set_model_input_buffer(const CircuitModelId& model_id, 
-                                                    const bool& existence, const std::string& model_name) {
+                                            const bool& existence, const std::string& model_name) {
   /* Just call the base function and give the proper type */
   set_model_buffer(model_id, INPUT, existence, model_name);
   return;
@@ -755,7 +761,7 @@ void CircuitLibrary::set_model_input_buffer(const CircuitModelId& model_id,
 
 /* Set output buffer information for the circuit model */
 void CircuitLibrary::set_model_output_buffer(const CircuitModelId& model_id, 
-                                                    const bool& existence, const std::string& model_name) {
+                                             const bool& existence, const std::string& model_name) {
   /* Just call the base function and give the proper type */
   set_model_buffer(model_id, OUTPUT, existence, model_name);
   return;
@@ -763,7 +769,7 @@ void CircuitLibrary::set_model_output_buffer(const CircuitModelId& model_id,
 
 /* Set input buffer information for the circuit model, only applicable to LUTs! */
 void CircuitLibrary::set_model_lut_input_buffer(const CircuitModelId& model_id, 
-                                                        const bool& existence, const std::string& model_name) {
+                                                const bool& existence, const std::string& model_name) {
   /* validate the model_id */
   VTR_ASSERT(valid_model_id(model_id));
   /* Make sure the circuit model is a LUT! */
@@ -775,7 +781,7 @@ void CircuitLibrary::set_model_lut_input_buffer(const CircuitModelId& model_id,
 
 /* Set input inverter information for the circuit model, only applicable to LUTs! */
 void CircuitLibrary::set_model_lut_input_inverter(const CircuitModelId& model_id, 
-                                                          const bool& existence, const std::string& model_name) {
+                                                  const bool& existence, const std::string& model_name) {
   /* validate the model_id */
   VTR_ASSERT(valid_model_id(model_id));
   /* Make sure the circuit model is a LUT! */
@@ -787,7 +793,7 @@ void CircuitLibrary::set_model_lut_input_inverter(const CircuitModelId& model_id
 
 /* Set intermediate buffer information for the circuit model, only applicable to LUTs! */
 void CircuitLibrary::set_model_lut_intermediate_buffer(const CircuitModelId& model_id, 
-                                                               const bool& existence, const std::string& model_name) {
+                                                       const bool& existence, const std::string& model_name) {
   /* validate the model_id */
   VTR_ASSERT(valid_model_id(model_id));
   /* Make sure the circuit model is a LUT! */
@@ -798,7 +804,7 @@ void CircuitLibrary::set_model_lut_intermediate_buffer(const CircuitModelId& mod
 }
 
 void CircuitLibrary::set_model_lut_intermediate_buffer_location_map(const CircuitModelId& model_id,
-                                                                            const std::string& location_map) {
+                                                                    const std::string& location_map) {
   /* validate the model_id */
   VTR_ASSERT(valid_model_id(model_id));
   buffer_location_maps_[model_id][LUT_INTER_BUFFER] = location_map; 
@@ -815,248 +821,222 @@ void CircuitLibrary::set_model_pass_gate_logic(const CircuitModelId& model_id, c
 }
 
 /* Add a port to a circuit model */
-CircuitPortId CircuitLibrary::add_model_port(const CircuitModelId& model_id) {
+CircuitPortId CircuitLibrary::add_model_port(const CircuitModelId& model_id,
+                                             const enum e_spice_model_port_type& port_type) {
   /* validate the model_id */
   VTR_ASSERT(valid_model_id(model_id));
   /* Create a port id */
-  CircuitPortId circuit_port_id = CircuitPortId(port_ids_[model_id].size()); 
+  CircuitPortId circuit_port_id = CircuitPortId(port_ids_.size()); 
   /* Update the id list */
-  port_ids_[model_id].push_back(circuit_port_id);
+  port_ids_.push_back(circuit_port_id);
   
   /* Initialize other attributes */
-  port_types_[model_id].push_back(NUM_CIRCUIT_MODEL_PORT_TYPES);
-  port_sizes_[model_id].push_back(-1);
-  port_prefix_[model_id].emplace_back();
-  port_lib_names_[model_id].emplace_back();
-  port_inv_prefix_[model_id].emplace_back();
-  port_default_values_[model_id].push_back(-1);
-  port_is_mode_select_[model_id].push_back(false);
-  port_is_global_[model_id].push_back(false);
-  port_is_reset_[model_id].push_back(false);
-  port_is_set_[model_id].push_back(false);
-  port_is_config_enable_[model_id].push_back(false);
-  port_is_prog_[model_id].push_back(false);
-  port_model_names_[model_id].emplace_back();
-  port_model_ids_[model_id].push_back(CircuitModelId::INVALID());
-  port_inv_model_names_[model_id].emplace_back();
-  port_inv_model_ids_[model_id].push_back(CircuitModelId::INVALID());
-  port_tri_state_maps_[model_id].emplace_back();
-  port_lut_frac_level_[model_id].push_back(-1);
-  port_lut_output_masks_[model_id].emplace_back();
-  port_sram_orgz_[model_id].push_back(NUM_CIRCUIT_MODEL_SRAM_ORGZ_TYPES);
+  port_model_ids_.push_back(model_id);
+  port_types_.push_back(port_type);
+  port_sizes_.push_back(-1);
+  port_prefix_.emplace_back();
+  port_lib_names_.emplace_back();
+  port_inv_prefix_.emplace_back();
+  port_default_values_.push_back(-1);
+  port_is_mode_select_.push_back(false);
+  port_is_global_.push_back(false);
+  port_is_reset_.push_back(false);
+  port_is_set_.push_back(false);
+  port_is_config_enable_.push_back(false);
+  port_is_prog_.push_back(false);
+  port_tri_state_model_names_.emplace_back();
+  port_tri_state_model_ids_.push_back(CircuitModelId::INVALID());
+  port_inv_model_names_.emplace_back();
+  port_inv_model_ids_.push_back(CircuitModelId::INVALID());
+  port_tri_state_maps_.emplace_back();
+  port_lut_frac_level_.push_back(-1);
+  port_lut_output_masks_.emplace_back();
+  port_sram_orgz_.push_back(NUM_CIRCUIT_MODEL_SRAM_ORGZ_TYPES);
 
   /* For timing graphs */
-  port_in_edge_ids_[model_id].emplace_back();
-  port_out_edge_ids_[model_id].emplace_back();
+  port_in_edge_ids_.emplace_back();
+  port_out_edge_ids_.emplace_back();
+ 
+  /* Build the fast look-up for circuit model ports */
+  build_model_port_lookup();
 
   return circuit_port_id;
 }
 
-/* Set the type for a port of a circuit model */
-void CircuitLibrary::set_port_type(const CircuitModelId& model_id, 
-                                   const CircuitPortId& circuit_port_id, 
-                                   const enum e_spice_model_port_type& port_type) {
-  /* validate the circuit_port_id */
-  VTR_ASSERT(valid_circuit_port_id(model_id, circuit_port_id));
-  port_types_[model_id][circuit_port_id] = port_type;
-  /* Build the fast look-up for circuit model ports */
-  build_model_port_lookup(model_id);
-  return;
-}
-
 /* Set the size for a port of a circuit model */
-void CircuitLibrary::set_port_size(const CircuitModelId& model_id, 
-                                   const CircuitPortId& circuit_port_id, 
+void CircuitLibrary::set_port_size(const CircuitPortId& circuit_port_id, 
                                    const size_t& port_size) {
   /* validate the circuit_port_id */
-  VTR_ASSERT(valid_circuit_port_id(model_id, circuit_port_id));
-  port_sizes_[model_id][circuit_port_id] = port_size;
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
+  port_sizes_[circuit_port_id] = port_size;
   return;
 }
 
 /* Set the prefix for a port of a circuit model */
-void CircuitLibrary::set_port_prefix(const CircuitModelId& model_id, 
-                                     const CircuitPortId& circuit_port_id, 
+void CircuitLibrary::set_port_prefix(const CircuitPortId& circuit_port_id, 
                                      const std::string& port_prefix) {
   /* validate the circuit_port_id */
-  VTR_ASSERT(valid_circuit_port_id(model_id, circuit_port_id));
-  port_prefix_[model_id][circuit_port_id] = port_prefix;
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
+  port_prefix_[circuit_port_id] = port_prefix;
   return;
 }
 
 /* Set the lib_name for a port of a circuit model */
-void CircuitLibrary::set_port_lib_name(const CircuitModelId& model_id, 
-                                       const CircuitPortId& circuit_port_id, 
+void CircuitLibrary::set_port_lib_name(const CircuitPortId& circuit_port_id, 
                                        const std::string& lib_name) {
   /* validate the circuit_port_id */
-  VTR_ASSERT(valid_circuit_port_id(model_id, circuit_port_id));
-  port_lib_names_[model_id][circuit_port_id] = lib_name;
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
+  port_lib_names_[circuit_port_id] = lib_name;
   return;
 }
 
 /* Set the inv_prefix for a port of a circuit model */
-void CircuitLibrary::set_port_inv_prefix(const CircuitModelId& model_id, 
-                                         const CircuitPortId& circuit_port_id, 
+void CircuitLibrary::set_port_inv_prefix(const CircuitPortId& circuit_port_id, 
                                          const std::string& inv_prefix) {
   /* validate the circuit_port_id */
-  VTR_ASSERT(valid_circuit_port_id(model_id, circuit_port_id));
-  port_inv_prefix_[model_id][circuit_port_id] = inv_prefix;
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
+  port_inv_prefix_[circuit_port_id] = inv_prefix;
   return;
 }
 
 /* Set the default value for a port of a circuit model */
-void CircuitLibrary::set_port_default_value(const CircuitModelId& model_id, 
-                                            const CircuitPortId& circuit_port_id, 
+void CircuitLibrary::set_port_default_value(const CircuitPortId& circuit_port_id, 
                                             const size_t& default_value) {
   /* validate the circuit_port_id */
-  VTR_ASSERT(valid_circuit_port_id(model_id, circuit_port_id));
-  port_default_values_[model_id][circuit_port_id] = default_value;
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
+  port_default_values_[circuit_port_id] = default_value;
   return;
 }
 
 /* Set the is_mode_select for a port of a circuit model */
-void CircuitLibrary::set_port_is_mode_select(const CircuitModelId& model_id, 
-                                             const CircuitPortId& circuit_port_id, 
+void CircuitLibrary::set_port_is_mode_select(const CircuitPortId& circuit_port_id, 
                                              const bool& is_mode_select) {
   /* validate the circuit_port_id */
-  VTR_ASSERT(valid_circuit_port_id(model_id, circuit_port_id));
-  port_is_mode_select_[model_id][circuit_port_id] = is_mode_select;
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
+  port_is_mode_select_[circuit_port_id] = is_mode_select;
   return;
 }
 
 /* Set the is_global for a port of a circuit model */
-void CircuitLibrary::set_port_is_global(const CircuitModelId& model_id, 
-                                        const CircuitPortId& circuit_port_id, 
+void CircuitLibrary::set_port_is_global(const CircuitPortId& circuit_port_id, 
                                         const bool& is_global) {
   /* validate the circuit_port_id */
-  VTR_ASSERT(valid_circuit_port_id(model_id, circuit_port_id));
-  port_is_global_[model_id][circuit_port_id] = is_global;
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
+  port_is_global_[circuit_port_id] = is_global;
   return;
 }
 
 /* Set the is_reset for a port of a circuit model */
-void CircuitLibrary::set_port_is_reset(const CircuitModelId& model_id, 
-                                       const CircuitPortId& circuit_port_id, 
+void CircuitLibrary::set_port_is_reset(const CircuitPortId& circuit_port_id, 
                                        const bool& is_reset) {
   /* validate the circuit_port_id */
-  VTR_ASSERT(valid_circuit_port_id(model_id, circuit_port_id));
-  port_is_reset_[model_id][circuit_port_id] = is_reset;
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
+  port_is_reset_[circuit_port_id] = is_reset;
   return;
 }
 
 /* Set the is_set for a port of a circuit model */
-void CircuitLibrary::set_port_is_set(const CircuitModelId& model_id, 
-                                     const CircuitPortId& circuit_port_id, 
+void CircuitLibrary::set_port_is_set(const CircuitPortId& circuit_port_id, 
                                      const bool& is_set) {
   /* validate the circuit_port_id */
-  VTR_ASSERT(valid_circuit_port_id(model_id, circuit_port_id));
-  port_is_set_[model_id][circuit_port_id] = is_set;
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
+  port_is_set_[circuit_port_id] = is_set;
   return;
 }
 
 /* Set the is_config_enable for a port of a circuit model */
-void CircuitLibrary::set_port_is_config_enable(const CircuitModelId& model_id, 
-                                               const CircuitPortId& circuit_port_id, 
+void CircuitLibrary::set_port_is_config_enable(const CircuitPortId& circuit_port_id, 
                                                const bool& is_config_enable) {
   /* validate the circuit_port_id */
-  VTR_ASSERT(valid_circuit_port_id(model_id, circuit_port_id));
-  port_is_config_enable_[model_id][circuit_port_id] = is_config_enable;
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
+  port_is_config_enable_[circuit_port_id] = is_config_enable;
   return;
 }
 
 /* Set the is_prog for a port of a circuit model */
-void CircuitLibrary::set_port_is_prog(const CircuitModelId& model_id, 
-                                      const CircuitPortId& circuit_port_id, 
+void CircuitLibrary::set_port_is_prog(const CircuitPortId& circuit_port_id, 
                                       const bool& is_prog) {
   /* validate the circuit_port_id */
-  VTR_ASSERT(valid_circuit_port_id(model_id, circuit_port_id));
-  port_is_prog_[model_id][circuit_port_id] = is_prog;
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
+  port_is_prog_[circuit_port_id] = is_prog;
   return;
 }
 
 /* Set the model_name for a port of a circuit model */
-void CircuitLibrary::set_port_model_name(const CircuitModelId& model_id, 
-                                                 const CircuitPortId& circuit_port_id, 
-                                                 const std::string& model_name) {
+void CircuitLibrary::set_port_tri_state_model_name(const CircuitPortId& circuit_port_id, 
+                                                   const std::string& model_name) {
   /* validate the circuit_port_id */
-  VTR_ASSERT(valid_circuit_port_id(model_id, circuit_port_id));
-  port_model_names_[model_id][circuit_port_id] = model_name;
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
+  port_tri_state_model_names_[circuit_port_id] = model_name;
   return;
 }
 
 /* Set the model_id for a port of a circuit model */
-void CircuitLibrary::set_port_model_id(const CircuitModelId& model_id, 
-                                               const CircuitPortId& circuit_port_id, 
-                                               const CircuitModelId& port_model_id) {
+void CircuitLibrary::set_port_tri_state_model_id(const CircuitPortId& circuit_port_id, 
+                                                 const CircuitModelId& port_model_id) {
   /* validate the circuit_port_id */
-  VTR_ASSERT(valid_circuit_port_id(model_id, circuit_port_id));
-  port_model_ids_[model_id][circuit_port_id] = port_model_id;
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
+  port_tri_state_model_ids_[circuit_port_id] = port_model_id;
   return;
 }
 
 /* Set the inv_model_name for a port of a circuit model */
-void CircuitLibrary::set_port_inv_model_name(const CircuitModelId& model_id, 
-                                                 const CircuitPortId& circuit_port_id, 
-                                                 const std::string& inv_model_name) {
+void CircuitLibrary::set_port_inv_model_name(const CircuitPortId& circuit_port_id, 
+                                             const std::string& inv_model_name) {
   /* validate the circuit_port_id */
-  VTR_ASSERT(valid_circuit_port_id(model_id, circuit_port_id));
-  port_inv_model_names_[model_id][circuit_port_id] = inv_model_name;
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
+  port_inv_model_names_[circuit_port_id] = inv_model_name;
   return;
 }
 
 /* Set the inv_model_id for a port of a circuit model */
-void CircuitLibrary::set_port_inv_model_id(const CircuitModelId& model_id, 
-                                                 const CircuitPortId& circuit_port_id, 
-                                                 const CircuitModelId& inv_model_id) {
+void CircuitLibrary::set_port_inv_model_id(const CircuitPortId& circuit_port_id, 
+                                           const CircuitModelId& inv_model_id) {
   /* validate the circuit_port_id */
-  VTR_ASSERT(valid_circuit_port_id(model_id, circuit_port_id));
-  port_inv_model_ids_[model_id][circuit_port_id] = inv_model_id;
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
+  port_inv_model_ids_[circuit_port_id] = inv_model_id;
   return;
 }
 
 /* Set the tri-state map for a port of a circuit model */
-void CircuitLibrary::set_port_tri_state_map(const CircuitModelId& model_id, 
-                                            const CircuitPortId& circuit_port_id, 
+void CircuitLibrary::set_port_tri_state_map(const CircuitPortId& circuit_port_id, 
                                             const std::string& tri_state_map) {
   /* validate the circuit_port_id */
-  VTR_ASSERT(valid_circuit_port_id(model_id, circuit_port_id));
-  port_tri_state_maps_[model_id][circuit_port_id] = tri_state_map;
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
+  port_tri_state_maps_[circuit_port_id] = tri_state_map;
   return;
 }
 
 /* Set the LUT fracturable level for a port of a circuit model, only applicable to LUTs */
-void CircuitLibrary::set_port_lut_frac_level(const CircuitModelId& model_id, 
-                                             const CircuitPortId& circuit_port_id, 
+void CircuitLibrary::set_port_lut_frac_level(const CircuitPortId& circuit_port_id, 
                                              const size_t& lut_frac_level) {
   /* validate the circuit_port_id */
-  VTR_ASSERT(valid_circuit_port_id(model_id, circuit_port_id));
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
   /* Make sure this is a LUT */
-  VTR_ASSERT(SPICE_MODEL_LUT == model_type(model_id));
-  port_lut_frac_level_[model_id][circuit_port_id] = lut_frac_level;
+  VTR_ASSERT(SPICE_MODEL_LUT == model_type(port_model_ids_[circuit_port_id]));
+  port_lut_frac_level_[circuit_port_id] = lut_frac_level;
   return;
 }
 
 /* Set the LUT fracturable level for a port of a circuit model, only applicable to LUTs */
-void CircuitLibrary::set_port_lut_output_mask(const CircuitModelId& model_id, 
-                                              const CircuitPortId& circuit_port_id, 
+void CircuitLibrary::set_port_lut_output_mask(const CircuitPortId& circuit_port_id, 
                                               const std::vector<size_t>& lut_output_masks) {
   /* validate the circuit_port_id */
-  VTR_ASSERT(valid_circuit_port_id(model_id, circuit_port_id));
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
   /* Make sure this is a LUT */
-  VTR_ASSERT(SPICE_MODEL_LUT == model_type(model_id));
-  port_lut_output_masks_[model_id][circuit_port_id] = lut_output_masks;
+  VTR_ASSERT(SPICE_MODEL_LUT == model_type(port_model_ids_[circuit_port_id]));
+  port_lut_output_masks_[circuit_port_id] = lut_output_masks;
   return;
 }
 
 /* Set the SRAM organization for a port of a circuit model, only applicable to SRAM ports */
-void CircuitLibrary::set_port_sram_orgz(const CircuitModelId& model_id, 
-                                        const CircuitPortId& circuit_port_id, 
+void CircuitLibrary::set_port_sram_orgz(const CircuitPortId& circuit_port_id, 
                                         const enum e_sram_orgz& sram_orgz) {
   /* validate the circuit_port_id */
-  VTR_ASSERT(valid_circuit_port_id(model_id, circuit_port_id));
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
   /* Make sure this is a SRAM port */
-  VTR_ASSERT(SPICE_MODEL_PORT_SRAM == port_type(model_id, circuit_port_id));
-  port_sram_orgz_[model_id][circuit_port_id] = sram_orgz;
+  VTR_ASSERT(SPICE_MODEL_PORT_SRAM == port_type(circuit_port_id));
+  port_sram_orgz_[circuit_port_id] = sram_orgz;
   return;
 }
 
@@ -1383,7 +1363,7 @@ void CircuitLibrary::set_wire_num_levels(const CircuitModelId& model_id,
  * If no, resize the vector and then assign values 
  */
 void CircuitLibrary::set_model_buffer(const CircuitModelId& model_id, const enum e_buffer_type buffer_type, 
-                                              const bool& existence, const std::string& model_name) {
+                                      const bool& existence, const std::string& model_name) {
   /* validate the model_id */
   VTR_ASSERT(valid_model_id(model_id));
   /* Check the range of vector */
@@ -1405,16 +1385,14 @@ void CircuitLibrary::set_model_buffer(const CircuitModelId& model_id, const enum
  * We search the inv_model_name in the CircuitLibrary and 
  * configure the port inv_model_id
  */
-void CircuitLibrary::link_port_model(const CircuitModelId& model_id) { 
-  /* validate the model_id */
-  VTR_ASSERT(valid_model_id(model_id));
+void CircuitLibrary::link_port_tri_state_model() { 
   /* Walk through each ports, get the port id and find the circuit model id by name */
-  for (auto& port_id : ports(model_id)) {
+  for (auto& port_id : ports()) {
     /* Bypass empty name */
-    if (true == port_model_names_[model_id][port_id].empty()) {
+    if (true == port_tri_state_model_names_[port_id].empty()) {
       continue;
     }
-    port_model_ids_[model_id][port_id] = model(port_model_names_[model_id][port_id]);
+    port_tri_state_model_ids_[port_id] = model(port_tri_state_model_names_[port_id]);
   }
   return;
 }      
@@ -1423,26 +1401,17 @@ void CircuitLibrary::link_port_model(const CircuitModelId& model_id) {
  * We search the inv_model_name in the CircuitLibrary and 
  * configure the port inv_model_id
  */
-void CircuitLibrary::link_port_inv_model(const CircuitModelId& model_id) { 
-  /* validate the model_id */
-  VTR_ASSERT(valid_model_id(model_id));
+void CircuitLibrary::link_port_inv_model() { 
   /* Walk through each ports, get the port id and find the circuit model id by name */
-  for (auto& port_id : ports(model_id)) {
+  for (auto& port_id : ports()) {
     /* Bypass empty name */
-    if (true == port_inv_model_names_[model_id][port_id].empty()) {
+    if (true == port_inv_model_names_[port_id].empty()) {
       continue;
     }
-    port_inv_model_ids_[model_id][port_id] = model(port_inv_model_names_[model_id][port_id]);
+    port_inv_model_ids_[port_id] = model(port_inv_model_names_[port_id]);
   }
   return;
 }      
-
-/* Link all the circuit model ids for each port of a circuit model */
-void CircuitLibrary::link_port_models(const CircuitModelId& model_id) {
-  link_port_model(model_id); 
-  link_port_inv_model(model_id); 
-  return;
-}
 
 /* Link the buffer_model
  * We search the buffer_model_name in the CircuitLibrary and 
@@ -1476,36 +1445,26 @@ void CircuitLibrary::link_pass_gate_logic_model(const CircuitModelId& model_id) 
   return;
 }      
 
-/* Build the links for attributes of each model by searching the model_names */
-void CircuitLibrary::build_model_links() {
-  /* Walk through each circuit model, build links one by one */
-  for (auto& model_id : models()) {
-    /* Build links for buffers, pass-gates model */
-    link_buffer_model(model_id); 
-    link_pass_gate_logic_model(model_id); 
-    /* Build links for ports */
-    link_port_models(model_id); 
-  }
-  return;
-}
-
 /* Build the timing graph for a circuit models*/
 void CircuitLibrary::build_model_timing_graph(const CircuitModelId& model_id) {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+
   /* Now we start allocating a timing graph 
    * Add outgoing edges for each input pin of the circuit model 
    */
-  for (auto& from_port_id : input_ports(model_id)) {
+  for (const auto& from_port_id : model_input_ports(model_id)) {
     /* Add edges for each input pin  */
-    for (auto& from_pin_id : pins(model_id, from_port_id)) {
+    for (const auto& from_pin_id : pins(from_port_id)) {
       /* We should walk through output pins here */
-      for (auto& to_port_id : output_ports(model_id)) {
-        for (auto& to_pin_id : pins(model_id, to_port_id)) {
+      for (const auto& to_port_id : model_output_ports(model_id)) {
+        for (const auto& to_pin_id : pins(to_port_id)) {
           /* Skip self-loops */
           if (from_port_id == to_port_id) {
             continue;
           }
           /* Add an edge to bridge the from_pin_id and to_pin_id */
-          add_edge(model_id, from_port_id, from_pin_id, to_port_id, to_pin_id);
+          add_edge(from_port_id, from_pin_id, to_port_id, to_pin_id);
         }
       }
     }
@@ -1513,12 +1472,29 @@ void CircuitLibrary::build_model_timing_graph(const CircuitModelId& model_id) {
   return;
 }
 
+/************************************************************************
+ * Public Mutators: builders and linkers 
+ ***********************************************************************/
+/* Build the links for attributes of each model by searching the model_names */
+void CircuitLibrary::build_model_links() {
+  /* Walk through each circuit model, build links one by one */
+  for (auto& model_id : models()) {
+    /* Build links for buffers, pass-gates model */
+    link_buffer_model(model_id); 
+    link_pass_gate_logic_model(model_id); 
+  }
+  /* Build links for ports */
+  link_port_tri_state_model(); 
+  link_port_inv_model(); 
+  return;
+}
+
 /* Build the timing graph for a circuit models*/
 void CircuitLibrary::build_timing_graphs() {
+  /* Free the timing graph if it already exists, we will rebuild one */
+  invalidate_model_timing_graph();
   /* Walk through each circuit model, build timing graph one by one */
   for (auto& model_id : models()) {
-    /* Free the timing graph if it already exists, we will rebuild one */
-    invalidate_model_timing_graph(model_id);
     build_model_timing_graph(model_id); 
     /* Annotate timing information */
     set_timing_graph_delays(model_id);
@@ -1530,44 +1506,40 @@ void CircuitLibrary::build_timing_graphs() {
  * Internal mutators: build timing graphs 
  ***********************************************************************/
 /* Add an edge between two pins of two ports, and assign an default timing value */
-void CircuitLibrary::add_edge(const CircuitModelId& model_id,
-                              const CircuitPortId& from_port, const size_t& from_pin, 
+void CircuitLibrary::add_edge(const CircuitPortId& from_port, const size_t& from_pin, 
                               const CircuitPortId& to_port,   const size_t& to_pin) {
-  /* validate the model_id */
-  VTR_ASSERT(valid_model_id(model_id));
-
   /* Create an edge in the edge id list */ 
-  CircuitEdgeId edge_id = CircuitEdgeId(edge_ids_[model_id].size());
+  CircuitEdgeId edge_id = CircuitEdgeId(edge_ids_.size());
   /* Expand the edge list  */
-  edge_ids_[model_id].push_back(edge_id);
+  edge_ids_.push_back(edge_id);
   
   /* Initialize other attributes */
 
   /* Update the list of incoming edges for to_port */
   /* Resize upon need */
-  if (to_pin >= port_in_edge_ids_[model_id][to_port].size()) {
-    port_in_edge_ids_[model_id][to_port].resize(to_pin + 1);
+  if (to_pin >= port_in_edge_ids_[to_port].size()) {
+    port_in_edge_ids_[to_port].resize(to_pin + 1);
   }
-  port_in_edge_ids_[model_id][to_port][to_pin] = edge_id;
+  port_in_edge_ids_[to_port][to_pin] = edge_id;
 
   /* Update the list of outgoing edges for from_port */
   /* Resize upon need */
-  if (from_pin >= port_out_edge_ids_[model_id][from_port].size()) {
-    port_out_edge_ids_[model_id][from_port].resize(from_pin + 1);
+  if (from_pin >= port_out_edge_ids_[from_port].size()) {
+    port_out_edge_ids_[from_port].resize(from_pin + 1);
   }
-  port_out_edge_ids_[model_id][from_port][from_pin] = edge_id;
+  port_out_edge_ids_[from_port][from_pin] = edge_id;
 
   /* Update source ports and pins of the edge */
-  edge_src_port_ids_[model_id].push_back(from_port);
-  edge_src_pin_ids_[model_id].push_back(from_pin);
+  edge_src_port_ids_.push_back(from_port);
+  edge_src_pin_ids_.push_back(from_pin);
 
   /* Update sink ports and pins of the edge */
-  edge_sink_port_ids_[model_id].push_back(to_port);
-  edge_sink_pin_ids_[model_id].push_back(to_pin);
+  edge_sink_port_ids_.push_back(to_port);
+  edge_sink_pin_ids_.push_back(to_pin);
 
   /* Give a default value for timing values */
   std::vector<float> timing_info(NUM_CIRCUIT_MODEL_DELAY_TYPES, 0);
-  edge_timing_info_[model_id].push_back(timing_info);
+  edge_timing_info_.push_back(timing_info);
 
   return;
 }
@@ -1577,10 +1549,10 @@ void CircuitLibrary::set_edge_delay(const CircuitModelId& model_id,
                                     const enum spice_model_delay_type& delay_type, 
                                     const float& delay_value) {
   /* validate the circuit_edge_id */
-  VTR_ASSERT(valid_circuit_edge_id(model_id, circuit_edge_id));
+  VTR_ASSERT(valid_circuit_edge_id(circuit_edge_id));
   VTR_ASSERT(valid_delay_type(model_id, delay_type));
   
-  edge_timing_info_[model_id][circuit_edge_id][size_t(delay_type)] = delay_value;
+  edge_timing_info_[circuit_edge_id][size_t(delay_type)] = delay_value;
   return;
 }
 
@@ -1604,22 +1576,22 @@ void CircuitLibrary::set_timing_graph_delays(const CircuitModelId& model_id) {
     /* Check each element */
     for (auto& port_info : input_ports) {
       /* Try to find a port by the given name */
-      CircuitPortId port_id = port(model_id, port_info.get_name());
+      CircuitPortId port_id = model_port(model_id, port_info.get_name());
       /* We must have a valid port and Port width must be 1! */
       VTR_ASSERT(CircuitPortId::INVALID() != port_id);
       if (0 == port_info.get_width()) {
         /* we need to configure the port width if it is zero.
          * This means that parser find some compact port defintion such as <port_name> 
          */
-        size_t port_width = port_size(model_id, port_id);
+        size_t port_width = port_size(port_id);
         port_info.set_width(port_width);
       } else {
         VTR_ASSERT(1 == port_info.get_width());
       }
       /* The pin id should be valid! */
-      VTR_ASSERT(true == valid_circuit_pin_id(model_id, port_id, port_info.get_lsb()));
+      VTR_ASSERT(true == valid_circuit_pin_id(port_id, port_info.get_lsb()));
       /* This must be an input port! */
-      VTR_ASSERT(true == is_input_port(model_id, port_id));
+      VTR_ASSERT(true == is_input_port(port_id));
       /* Push to */
       input_port_ids.push_back(port_id);
       input_pin_ids.push_back(port_info.get_lsb());
@@ -1633,22 +1605,22 @@ void CircuitLibrary::set_timing_graph_delays(const CircuitModelId& model_id) {
     /* Check each element */
     for (auto& port_info : output_ports) {
       /* Try to find a port by the given name */
-      CircuitPortId port_id = port(model_id, port_info.get_name());
+      CircuitPortId port_id = model_port(model_id, port_info.get_name());
       /* We must have a valid port and Port width must be 1! */
       VTR_ASSERT(CircuitPortId::INVALID() != port_id);
       if (0 == port_info.get_width()) {
         /* we need to configure the port width if it is zero.
          * This means that parser find some compact port defintion such as <port_name> 
          */
-        size_t port_width = port_size(model_id, port_id);
+        size_t port_width = port_size(port_id);
         port_info.set_width(port_width);
       } else {
         VTR_ASSERT(1 == port_info.get_width());
       }
       /* The pin id should be valid! */
-      VTR_ASSERT(true == valid_circuit_pin_id(model_id, port_id, port_info.get_lsb()));
+      VTR_ASSERT(true == valid_circuit_pin_id(port_id, port_info.get_lsb()));
       /* This must be an output port! */
-      VTR_ASSERT(true == is_output_port(model_id, port_id));
+      VTR_ASSERT(true == is_output_port(port_id));
       /* Push to */
       output_port_ids.push_back(port_id);
       output_pin_ids.push_back(port_info.get_lsb());
@@ -1667,11 +1639,10 @@ void CircuitLibrary::set_timing_graph_delays(const CircuitModelId& model_id) {
     for (size_t i = 0; i < port_delay_parser.height(); ++i) {
       for (size_t j = 0; j < port_delay_parser.width(); ++j) {
         float delay_value = port_delay_parser.delay(i, j);
-        CircuitEdgeId edge_id = edge(model_id, 
-                                     input_port_ids[j], input_pin_ids[j],
+        CircuitEdgeId edge_id = edge(input_port_ids[j], input_pin_ids[j],
                                      output_port_ids[i], output_pin_ids[i]); 
         /* make sure we have an valid edge_id */
-        VTR_ASSERT(true == valid_circuit_edge_id(model_id, edge_id));
+        VTR_ASSERT(true == valid_circuit_edge_id(edge_id));
         set_edge_delay(model_id, edge_id,
                        delay_type, delay_value);
       }
@@ -1717,14 +1688,19 @@ void CircuitLibrary::build_model_lookup() {
 }
 
 /* Build fast look-up for circuit model ports */
-void CircuitLibrary::build_model_port_lookup(const CircuitModelId& model_id) {
+void CircuitLibrary::build_model_port_lookup() {
+  /* For all the ports in the list, categorize by model_id and port_type */
   /* invalidate fast look-up */
-  invalidate_model_port_lookup(model_id);
+  invalidate_model_port_lookup();
   /* Classify circuit models by type */
-  model_port_lookup_[size_t(model_id)].resize(NUM_CIRCUIT_MODEL_PORT_TYPES);
+  model_port_lookup_.resize(model_ids_.size());
+  for (const auto& model_id : model_ids_) {
+    model_port_lookup_[model_id].resize(NUM_CIRCUIT_MODEL_PORT_TYPES);
+  }
   /* Walk through models and categorize */
-  for (auto& port_id : port_ids_[model_id]) {
-    model_port_lookup_[size_t(model_id)][port_type(model_id, port_id)].push_back(port_id);
+  for (const auto& port : port_ids_) {
+    CircuitModelId model_id = port_model_ids_[port];
+    model_port_lookup_[model_id][port_type(port)].push_back(port);
   }
   return;
 }
@@ -1737,16 +1713,14 @@ bool CircuitLibrary::valid_model_id(const CircuitModelId& model_id) const {
   return ( size_t(model_id) < model_ids_.size() ) && ( model_id == model_ids_[model_id] ); 
 }
 
-bool CircuitLibrary::valid_circuit_port_id(const CircuitModelId& model_id, const CircuitPortId& circuit_port_id) const {
-  /* validate the model_id */
-  VTR_ASSERT(valid_model_id(model_id));
-  return ( size_t(circuit_port_id) < port_ids_[model_id].size() ) && ( circuit_port_id == port_ids_[model_id][circuit_port_id] ); 
+bool CircuitLibrary::valid_circuit_port_id(const CircuitPortId& circuit_port_id) const {
+  return ( size_t(circuit_port_id) < port_ids_.size() ) && ( circuit_port_id == port_ids_[circuit_port_id] ); 
 }
 
-bool CircuitLibrary::valid_circuit_pin_id(const CircuitModelId& model_id, const CircuitPortId& circuit_port_id, const size_t& pin_id) const {
+bool CircuitLibrary::valid_circuit_pin_id(const CircuitPortId& circuit_port_id, const size_t& pin_id) const {
   /* validate the model_id */
-  VTR_ASSERT(valid_circuit_port_id(model_id, circuit_port_id));
-  return ( size_t(pin_id) < port_size(model_id, circuit_port_id) ); 
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
+  return ( size_t(pin_id) < port_size(circuit_port_id) ); 
 }
 
 bool CircuitLibrary::valid_delay_type(const CircuitModelId& model_id, const enum spice_model_delay_type& delay_type) const { 
@@ -1755,10 +1729,8 @@ bool CircuitLibrary::valid_delay_type(const CircuitModelId& model_id, const enum
   return ( size_t(delay_type) < delay_types_[model_id].size() ) && ( delay_type == delay_types_[model_id][size_t(delay_type)] ); 
 }
 
-bool CircuitLibrary::valid_circuit_edge_id(const CircuitModelId& model_id, const CircuitEdgeId& circuit_edge_id) const {
-  /* validate the model_id */
-  VTR_ASSERT(valid_model_id(model_id));
-  return ( size_t(circuit_edge_id) < edge_ids_[model_id].size() ) && ( circuit_edge_id == edge_ids_[model_id][circuit_edge_id] ); 
+bool CircuitLibrary::valid_circuit_edge_id(const CircuitEdgeId& circuit_edge_id) const {
+  return ( size_t(circuit_edge_id) < edge_ids_.size() ) && ( circuit_edge_id == edge_ids_[circuit_edge_id] ); 
 }
 
 /* Validate the value of constant input 
@@ -1781,31 +1753,27 @@ void CircuitLibrary::invalidate_model_lookup() const {
 }
 
 /* Empty fast lookup for circuit ports for a model */
-void CircuitLibrary::invalidate_model_port_lookup(const CircuitModelId& model_id) const {
-  /* validate the model_id */
-  VTR_ASSERT(valid_model_id(model_id));
-  model_port_lookup_[size_t(model_id)].clear();
+void CircuitLibrary::invalidate_model_port_lookup() const {
+  model_port_lookup_.clear();
   return;
 }
 
 /* Clear all the data structure related to the timing graph */
-void CircuitLibrary::invalidate_model_timing_graph(const CircuitModelId& model_id) {
-  /* validate the model_id */
-  VTR_ASSERT(valid_model_id(model_id));
-  edge_ids_[model_id].clear();
+void CircuitLibrary::invalidate_model_timing_graph() {
+  edge_ids_.clear();
 
-  for (const auto& port_id : ports(model_id)) {
-    port_in_edge_ids_[model_id][port_id].clear();
-    port_out_edge_ids_[model_id][port_id].clear();
+  for (const auto& port_id : ports()) {
+    port_in_edge_ids_[port_id].clear();
+    port_out_edge_ids_[port_id].clear();
   } 
 
-  edge_src_port_ids_[model_id].clear();
-  edge_src_pin_ids_[model_id].clear();
+  edge_src_port_ids_.clear();
+  edge_src_pin_ids_.clear();
 
-  edge_sink_port_ids_[model_id].clear();
-  edge_sink_pin_ids_[model_id].clear();
+  edge_sink_port_ids_.clear();
+  edge_sink_pin_ids_.clear();
 
-  edge_timing_info_[model_id].clear();
+  edge_timing_info_.clear();
   return;
 }
 
