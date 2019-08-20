@@ -11,6 +11,12 @@
  * Member functions for the class MuxLibrary
  *************************************************/
 
+/**************************************************
+ * Public accessors: aggregates
+ *************************************************/
+MuxLibrary::mux_range MuxLibrary::muxes() const {
+  return vtr::make_range(mux_ids_.begin(), mux_ids_.end());
+}
 
 /**************************************************
  * Public accessors: data query
@@ -31,6 +37,12 @@ const MuxGraph& MuxLibrary::mux_graph(const MuxId& mux_id) const {
   return mux_graphs_[mux_id];
 }
 
+/* Get a mux circuit model id */
+CircuitModelId MuxLibrary::mux_circuit_model(const MuxId& mux_id) const {
+  VTR_ASSERT_SAFE(valid_mux_id(mux_id));
+  return mux_circuit_models_[mux_id];
+}
+
 /**************************************************
  * Private mutators:
  *************************************************/
@@ -47,6 +59,8 @@ void MuxLibrary::add_mux(const CircuitLibrary& circuit_lib, const CircuitModelId
   mux_ids_.push_back(mux);
   /* Add a mux graph */
   mux_graphs_.push_back(MuxGraph(circuit_lib, circuit_model, mux_size));
+  /* Recorde mux cirucit model id */
+  mux_circuit_models_.push_back(circuit_model);
 
   /* update mux_lookup*/
   mux_lookup_[circuit_model][mux_size] = mux;

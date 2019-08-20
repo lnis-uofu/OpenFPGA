@@ -48,11 +48,14 @@ class MuxGraph {
     typedef vtr::Range<node_iterator> node_range;
     typedef vtr::Range<edge_iterator> edge_range;
     typedef vtr::Range<mem_iterator> mem_range;
-  public: /* Constructors */
+  public: /* Public Constructors */
     /* Create an object based on a Circuit Model which is MUX */
     MuxGraph(const CircuitLibrary& circuit_lib, 
              const CircuitModelId& circuit_model,
              const size_t& mux_size); 
+  private: /* Private Constructors*/
+    /* Create an empty graph */
+    MuxGraph();
   public: /* Public accessors: Aggregates */
     node_range nodes() const;
     edge_range edges() const;
@@ -66,6 +69,9 @@ class MuxGraph {
     size_t num_memory_bits() const;
     /* Find the sizes of each branch of a MUX */
     std::vector<size_t> branch_sizes() const;
+    /* Generate MUX graphs for its branches */
+    MuxGraph subgraph(const MuxNodeId& node) const;
+    std::vector<MuxGraph> build_mux_branch_graphs() const; 
     /* Get the node id of a given input */
     MuxNodeId node_id(const MuxInputId& input_id) const;
     /* Decode memory bits based on an input id */

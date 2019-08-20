@@ -39,6 +39,7 @@
 #include "verilog_submodules.h"
 
 #include "mux_utils.h"
+#include "verilog_submodule_mux.h"
 
 /***** Subroutines *****/
 
@@ -2765,9 +2766,6 @@ void dump_verilog_submodule_muxes(t_sram_orgz_info* cur_sram_orgz_info,
   /* Alloc the muxes*/
   muxes_head = stats_spice_muxes(num_switch, switches, spice, routing_arch);
    
-  /* TODO: this is temporary. Will be removed after code reconstruction */
-  MuxLibrary mux_lib = convert_mux_arch_to_library(spice->circuit_lib, muxes_head);
-
   /* Print the muxes netlist*/
   fp = fopen(verilog_name, "w");
   if (NULL == fp) {
@@ -2830,6 +2828,40 @@ void dump_verilog_submodule_muxes(t_sram_orgz_info* cur_sram_orgz_info,
     /* Move on to the next*/
     temp = temp->next;
   }
+
+  /* Generate modules into a .bak file now. Rename after it is verified */
+  std::string verilog_fname(my_strcat(submodule_dir, muxes_verilog_file_name));
+  verilog_fname += ".bak";
+
+  /* Create the file stream */
+  std::fstream sfp;
+  sfp.open(verilog_fname, std::fstream::out | std::fstream::trunc);
+
+  /* Print out debugging information for if the file is not opened/created properly */
+  vpr_printf(TIO_MESSAGE_INFO,
+             "Creating Verilog netlist for Multiplexers (%s) ...\n",
+             verilog_fname.c_str()); 
+  check_file_handler(sfp);
+  
+  /* TODO: this conversion is temporary. Will be removed after code reconstruction */
+  MuxLibrary mux_lib = convert_mux_arch_to_library(spice->circuit_lib, muxes_head);
+
+  /* Generate basis sub-circuit for unique branches shared by the multiplexers */
+  for (auto mux : mux_lib.muxes()) {
+    const MuxGraph& mux_graph = mux_lib.mux_graph(mux);
+    CircuitModelId mux_circuit_model = mux_lib.mux_circuit_model(mux); 
+    /* Create a mux graph for the branch circuit */
+    std::vector<MuxGraph> branch_mux_graphs = mux_graph.build_mux_branch_graphs();
+    /* Create branch circuits, which are N:1 one-level or 2:1 tree-like MUXes */
+    for (auto branch_mux_graph : branch_mux_graphs) {
+      generate_verilog_mux_branch_module(sfp, spice->circuit_lib, mux_circuit_model, branch_mux_graph);
+    }
+  }
+
+  /* Dump MUX graph one by one */
+
+  /* Close the file steam */
+  sfp.close();
 
   /* TODO: 
    * Scan-chain configuration circuit does not need any BLs/WLs! 

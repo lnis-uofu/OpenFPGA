@@ -156,4 +156,3 @@ MuxLibrary convert_mux_arch_to_library(const CircuitLibrary& circuit_lib, t_llis
 
   return mux_lib;
 }
-

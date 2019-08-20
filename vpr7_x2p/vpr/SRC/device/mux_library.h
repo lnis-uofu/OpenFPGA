@@ -15,10 +15,18 @@
 #include "mux_library_fwd.h"
 
 class MuxLibrary {
+  public: /* Types and ranges */
+    typedef vtr::vector<MuxId, MuxId>::const_iterator mux_iterator;
+
+    typedef vtr::Range<mux_iterator> mux_range;
+  public: /* Public accessors: Aggregates */
+    mux_range muxes() const;
   public:  /* Public accessors */
     /* Get a MUX graph (read-only) */
     MuxId mux_graph(const CircuitModelId& circuit_model, const size_t& mux_size) const;
     const MuxGraph& mux_graph(const MuxId& mux_id) const;
+    /* Get a mux circuit model id */
+    CircuitModelId mux_circuit_model(const MuxId& mux_id) const;
   public:  /* Public mutators */
     /* Add a mux to the library */
     void add_mux(const CircuitLibrary& circuit_lib, const CircuitModelId& circuit_model, const size_t& mux_size); 
@@ -35,6 +43,7 @@ class MuxLibrary {
     /* MUX graph-based desription */
     vtr::vector<MuxId, MuxId> mux_ids_; /* Unique identifier for each mux graph */
     vtr::vector<MuxId, MuxGraph> mux_graphs_; /* Graphs describing MUX internal structures */
+    vtr::vector<MuxId, CircuitModelId> mux_circuit_models_; /* circuit model id in circuit library */
 
     /* Local encoder description */
     //vtr::vector<MuxLocalDecoderId, Decoder> mux_local_encoders_; /* Graphs describing MUX internal structures */

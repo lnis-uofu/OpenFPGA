@@ -3,6 +3,7 @@
  * data structures in mux_graph.h
  *************************************************/
 #include <cmath>
+#include <map>
 #include <algorithm>
 
 #include "util.h"
@@ -15,7 +16,7 @@
  *************************************************/
 
 /**************************************************
- * Constructor 
+ * Public Constructors 
  *************************************************/
 
 /* Create an object based on a Circuit Model which is MUX */
@@ -27,19 +28,27 @@ MuxGraph::MuxGraph(const CircuitLibrary& circuit_lib,
 } 
 
 /**************************************************
+ * Private Constructors
+ *************************************************/
+/* Create an empty graph */
+MuxGraph::MuxGraph() {
+  return;
+}
+
+/**************************************************
  * Public Accessors : Aggregates
  *************************************************/
 //Accessors
 MuxGraph::node_range MuxGraph::nodes() const {
-    return vtr::make_range(node_ids_.begin(), node_ids_.end());
+  return vtr::make_range(node_ids_.begin(), node_ids_.end());
 }
 
 MuxGraph::edge_range MuxGraph::edges() const {
-    return vtr::make_range(edge_ids_.begin(), edge_ids_.end());
+  return vtr::make_range(edge_ids_.begin(), edge_ids_.end());
 }
 
 MuxGraph::mem_range MuxGraph::memories() const {
-    return vtr::make_range(mem_ids_.begin(), mem_ids_.end());
+  return vtr::make_range(mem_ids_.begin(), mem_ids_.end());
 }
 
 /**************************************************
@@ -93,7 +102,7 @@ std::vector<size_t> MuxGraph::branch_sizes() const {
     std::vector<size_t>::iterator it; 
     it = std::find(branch.begin(), branch.end(), branch_size);
     /* if already exists a branch with the same size, skip updating the vector */
-    if (it == branch.end()) {
+    if (it != branch.end()) {
       continue;
     }
     branch.push_back(branch_size);
@@ -104,6 +113,117 @@ std::vector<size_t> MuxGraph::branch_sizes() const {
 
   return branch;
 }
+
+/* Build a subgraph from the given node
+ * The strategy is very simple, we just 
+ * extract a 1-level graph from here
+ */
+MuxGraph MuxGraph::subgraph(const MuxNodeId& root_node) const {
+  /* Validate the node */
+  VTR_ASSERT_SAFE(this->valid_node_id(root_node));
+
+  /* Generate an empty graph */
+  MuxGraph mux_graph;
+
+  /* A map to record node-to-node mapping from origin graph to subgraph */
+  std::map<MuxNodeId, MuxNodeId> node2node_map;
+
+  /* A map to record edge-to-edge mapping from origin graph to subgraph */
+  std::map<MuxEdgeId, MuxEdgeId> edge2edge_map;
+
+  /* Add output nodes to subgraph */
+  MuxNodeId to_node_subgraph = mux_graph.add_node(MUX_OUTPUT_NODE);
+  mux_graph.node_levels_[to_node_subgraph] = 0;
+  /* Update the node-to-node map */
+  node2node_map[root_node] = to_node_subgraph;
+
+  /* Add input nodes and edges to subgraph */
+  size_t input_cnt = 0;
+  for (auto edge_origin : this->node_in_edges_[root_node]) {
+    VTR_ASSERT_SAFE(1 == edge_src_nodes_[edge_origin].size());
+    /* Add nodes */
+    MuxNodeId from_node_origin = this->edge_src_nodes_[edge_origin][0];
+    MuxNodeId from_node_subgraph = mux_graph.add_node(MUX_INPUT_NODE);
+    /* Configure the nodes */
+    mux_graph.node_levels_[from_node_subgraph] = 0;
+    mux_graph.node_input_ids_[from_node_subgraph] = MuxInputId(input_cnt);
+    input_cnt++;
+    /* Update the node-to-node map */
+    node2node_map[from_node_origin] = from_node_subgraph;
+
+    /* Add edges */
+    MuxEdgeId edge_subgraph = mux_graph.add_edge(node2node_map[from_node_origin], node2node_map[root_node]);
+    edge2edge_map[edge_origin] = edge_subgraph; 
+    /* Configure edges */
+    mux_graph.edge_types_[edge_subgraph] = this->edge_types_[edge_origin];
+    mux_graph.edge_inv_mem_[edge_subgraph] = this->edge_inv_mem_[edge_origin];
+  } 
+
+  /* A map to record mem-to-mem mapping from origin graph to subgraph */
+  std::map<MuxMemId, MuxMemId> mem2mem_map;
+
+  /* Add memory bits and configure edges */
+  for (auto edge_origin : this->node_in_edges_[root_node]) {
+    MuxMemId mem_origin = this->edge_mem_ids_[edge_origin];
+    /* Try to find if the mem is already in the list */
+    std::map<MuxMemId, MuxMemId>::iterator it = mem2mem_map.find(mem_origin);
+    if (it != mem2mem_map.end()) {
+      /* Found, we skip mem addition. But make sure we have a valid one */
+      VTR_ASSERT_SAFE(MuxMemId::INVALID() != mem2mem_map[mem_origin]);
+      /* configure the edge */
+      mux_graph.edge_mem_ids_[edge2edge_map[edge_origin]] = mem2mem_map[mem_origin];
+      continue;
+    }
+    /* Not found, we add a memory bit and record in the mem-to-mem map */
+    MuxMemId mem_subgraph = mux_graph.add_mem();
+    mem2mem_map[mem_origin] = mem_subgraph;
+  }
+
+  return mux_graph; 
+}
+
+/* Generate MUX graphs for its branches
+ * Similar to the branch_sizes() method,
+ * we search all the internal nodes and 
+ * find out what are the input sizes of 
+ * the branches. 
+ * Then we extract unique subgraphs and return 
+ */
+std::vector<MuxGraph> MuxGraph::build_mux_branch_graphs() const {
+  std::map<size_t, bool> branch_done; /* A map showing the status of graph generation */
+
+  std::vector<MuxGraph> branch_graphs;
+
+  /* Visit each internal nodes/output nodes and find the the number of incoming edges */
+  for (auto node : node_ids_ ) {
+    /* Bypass input nodes */
+    if ( (MUX_OUTPUT_NODE != node_types_[node]) 
+      && (MUX_INTERNAL_NODE != node_types_[node]) ) {
+      continue;
+    }
+
+    size_t branch_size = node_in_edges_[node].size();
+
+    /* make sure the branch size is valid */
+    VTR_ASSERT_SAFE(valid_mux_implementation_num_inputs(branch_size));
+
+    /* check if the branch have been done in sub-graph extraction! */
+    std::map<size_t, bool>::iterator it = branch_done.find(branch_size);
+    /* if it is done, we can skip */
+    if (it != branch_done.end()) {
+      VTR_ASSERT(branch_done[branch_size]);
+      continue;
+    }
+
+    /* Generate a subgraph and push back */
+    branch_graphs.push_back(subgraph(node));
+
+    /* Mark it is done for this branch size */
+    branch_done[branch_size] = true;
+  }
+
+  return branch_graphs;
+} 
 
 /* Get the node id of a given input */
 MuxNodeId MuxGraph::node_id(const MuxInputId& input_id) const {
