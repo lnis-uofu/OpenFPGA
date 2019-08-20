@@ -553,8 +553,8 @@ void MuxGraph::build_mux_graph(const CircuitLibrary& circuit_lib,
                                const CircuitModelId& circuit_model,
                                const size_t& mux_size) {
   /* Make sure this model is a MUX */
-  VTR_ASSERT((SPICE_MODEL_MUX == circuit_lib.circuit_model_type(circuit_model))
-          || (SPICE_MODEL_LUT == circuit_lib.circuit_model_type(circuit_model)) );
+  VTR_ASSERT((SPICE_MODEL_MUX == circuit_lib.model_type(circuit_model))
+          || (SPICE_MODEL_LUT == circuit_lib.model_type(circuit_model)) );
 
   /* Make sure mux_size is valid */
   VTR_ASSERT(valid_mux_implementation_num_inputs(mux_size));
@@ -594,7 +594,7 @@ void MuxGraph::build_mux_graph(const CircuitLibrary& circuit_lib,
   default:
     vpr_printf(TIO_MESSAGE_ERROR, 
                "(File:%s, [LINE%d]) Invalid multiplexer structure for circuit model (name=%s)!\n",
-              __FILE__, __LINE__, circuit_lib.circuit_model_name(circuit_model));
+              __FILE__, __LINE__, circuit_lib.model_name(circuit_model));
     exit(1);
   }
 

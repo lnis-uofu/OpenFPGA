@@ -64,7 +64,7 @@ void generate_verilog_mux_branch_module(std::fstream& fp,
   default:
     vpr_printf(TIO_MESSAGE_ERROR,
                "(FILE:%s,LINE[%d]) Invalid design technology of multiplexer (name: %s)\n",
-               __FILE__, __LINE__, circuit_lib.circuit_model_name(circuit_model)); 
+               __FILE__, __LINE__, circuit_lib.model_name(circuit_model)); 
     exit(1);
   }
 

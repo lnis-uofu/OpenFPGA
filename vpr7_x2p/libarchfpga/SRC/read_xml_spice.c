@@ -1573,38 +1573,38 @@ CircuitLibrary build_circuit_library(int num_spice_model, t_spice_model* spice_m
   /* Go spice_model by spice_model */
   for (int imodel = 0; imodel < num_spice_model; ++imodel) {
     /* Add a spice model to the circuit_lib */
-    CircuitModelId model_id = circuit_lib.add_circuit_model();
+    CircuitModelId model_id = circuit_lib.add_model();
     /* Fill fundamental attributes */
     /* Basic information*/
-    circuit_lib.set_circuit_model_type(model_id, spice_models[imodel].type);
+    circuit_lib.set_model_type(model_id, spice_models[imodel].type);
 
     std::string name(spice_models[imodel].name); 
-    circuit_lib.set_circuit_model_name(model_id, name);
+    circuit_lib.set_model_name(model_id, name);
 
     std::string prefix(spice_models[imodel].prefix); 
-    circuit_lib.set_circuit_model_prefix(model_id, prefix);
+    circuit_lib.set_model_prefix(model_id, prefix);
 
     if (NULL != spice_models[imodel].verilog_netlist) {
       std::string verilog_netlist(spice_models[imodel].verilog_netlist); 
-      circuit_lib.set_circuit_model_verilog_netlist(model_id, verilog_netlist);
+      circuit_lib.set_model_verilog_netlist(model_id, verilog_netlist);
     }
     
     if (NULL != spice_models[imodel].model_netlist) {
       std::string spice_netlist(spice_models[imodel].model_netlist); 
-      circuit_lib.set_circuit_model_spice_netlist(model_id, spice_netlist);
+      circuit_lib.set_model_spice_netlist(model_id, spice_netlist);
     }
 
-    circuit_lib.set_circuit_model_is_default(model_id, 0 != spice_models[imodel].is_default);
+    circuit_lib.set_model_is_default(model_id, 0 != spice_models[imodel].is_default);
 
     /* Verilog generatioin options */
-    circuit_lib.set_circuit_model_dump_structural_verilog(model_id, TRUE == spice_models[imodel].dump_structural_verilog);
+    circuit_lib.set_model_dump_structural_verilog(model_id, TRUE == spice_models[imodel].dump_structural_verilog);
 
-    circuit_lib.set_circuit_model_dump_explicit_port_map(model_id, TRUE == spice_models[imodel].dump_explicit_port_map);
+    circuit_lib.set_model_dump_explicit_port_map(model_id, TRUE == spice_models[imodel].dump_explicit_port_map);
 
     /* Design technology information */
-    circuit_lib.set_circuit_model_design_tech_type(model_id, spice_models[imodel].design_tech);
+    circuit_lib.set_model_design_tech_type(model_id, spice_models[imodel].design_tech);
 
-    circuit_lib.set_circuit_model_is_power_gated(model_id, TRUE == spice_models[imodel].design_tech_info.power_gated);
+    circuit_lib.set_model_is_power_gated(model_id, TRUE == spice_models[imodel].design_tech_info.power_gated);
 
     /* Buffer linking information */
     if (NULL != spice_models[imodel].input_buffer) {
@@ -1612,28 +1612,28 @@ CircuitLibrary build_circuit_library(int num_spice_model, t_spice_model* spice_m
       if (NULL != spice_models[imodel].input_buffer->spice_model_name) {
         model_name = spice_models[imodel].input_buffer->spice_model_name;
       }
-      circuit_lib.set_circuit_model_input_buffer(model_id, 0 != spice_models[imodel].input_buffer->exist, model_name);
+      circuit_lib.set_model_input_buffer(model_id, 0 != spice_models[imodel].input_buffer->exist, model_name);
     }
     if (NULL != spice_models[imodel].output_buffer) {
       std::string model_name;
       if (NULL != spice_models[imodel].output_buffer->spice_model_name) {
         model_name = spice_models[imodel].output_buffer->spice_model_name;
       }
-      circuit_lib.set_circuit_model_output_buffer(model_id, 0 != spice_models[imodel].output_buffer->exist, model_name);
+      circuit_lib.set_model_output_buffer(model_id, 0 != spice_models[imodel].output_buffer->exist, model_name);
     }
     if (NULL != spice_models[imodel].lut_input_buffer) {
       std::string model_name;
       if (NULL != spice_models[imodel].lut_input_buffer->spice_model_name) {
         model_name = spice_models[imodel].lut_input_buffer->spice_model_name;
       }
-      circuit_lib.set_circuit_model_lut_input_buffer(model_id, 0 != spice_models[imodel].lut_input_buffer->exist, model_name);
+      circuit_lib.set_model_lut_input_buffer(model_id, 0 != spice_models[imodel].lut_input_buffer->exist, model_name);
     }
     if (NULL != spice_models[imodel].lut_input_inverter) {
       std::string model_name;
       if (NULL != spice_models[imodel].lut_input_inverter->spice_model_name) {
         model_name = spice_models[imodel].lut_input_inverter->spice_model_name;
       }
-      circuit_lib.set_circuit_model_lut_input_inverter(model_id, 0 != spice_models[imodel].lut_input_inverter->exist, model_name);
+      circuit_lib.set_model_lut_input_inverter(model_id, 0 != spice_models[imodel].lut_input_inverter->exist, model_name);
     }
     if ( (NULL != spice_models[imodel].lut_intermediate_buffer)
         && (1 == spice_models[imodel].lut_intermediate_buffer->exist) ) {
@@ -1641,19 +1641,19 @@ CircuitLibrary build_circuit_library(int num_spice_model, t_spice_model* spice_m
       if (NULL != spice_models[imodel].lut_intermediate_buffer->spice_model_name) {
         model_name = spice_models[imodel].lut_intermediate_buffer->spice_model_name;
       }
-      circuit_lib.set_circuit_model_lut_intermediate_buffer(model_id, 0 != spice_models[imodel].lut_intermediate_buffer->exist, model_name);
+      circuit_lib.set_model_lut_intermediate_buffer(model_id, 0 != spice_models[imodel].lut_intermediate_buffer->exist, model_name);
 
       std::string model_location_map;
       if (NULL != spice_models[imodel].lut_intermediate_buffer->location_map) {
         model_location_map = spice_models[imodel].lut_intermediate_buffer->location_map;
       }
-      circuit_lib.set_circuit_model_lut_intermediate_buffer_location_map(model_id, model_location_map);
+      circuit_lib.set_model_lut_intermediate_buffer_location_map(model_id, model_location_map);
     }
 
     /* Pass-gate-logic linking information */
     if (NULL != spice_models[imodel].pass_gate_logic) {
       std::string model_name(spice_models[imodel].pass_gate_logic->spice_model_name);
-      circuit_lib.set_circuit_model_pass_gate_logic(model_id, model_name); 
+      circuit_lib.set_model_pass_gate_logic(model_id, model_name); 
     }
 
     /* Buffer information */
@@ -1728,7 +1728,7 @@ CircuitLibrary build_circuit_library(int num_spice_model, t_spice_model* spice_m
 
     /* Ports */
     for (int iport = 0; iport < spice_models[imodel].num_port; ++iport) {
-      CircuitPortId port_id = circuit_lib.add_circuit_model_port(model_id);
+      CircuitPortId port_id = circuit_lib.add_model_port(model_id);
       /* Fill fundamental attributes */
       circuit_lib.set_port_type(model_id, port_id, spice_models[imodel].ports[iport].type);
 
@@ -1756,12 +1756,12 @@ CircuitLibrary build_circuit_library(int num_spice_model, t_spice_model* spice_m
 
       if (NULL != spice_models[imodel].ports[iport].spice_model_name) {
         std::string port_model_name(spice_models[imodel].ports[iport].spice_model_name);
-        circuit_lib.set_port_circuit_model_name(model_id, port_id, port_model_name);
+        circuit_lib.set_port_model_name(model_id, port_id, port_model_name);
       }
 
       if (NULL != spice_models[imodel].ports[iport].inv_spice_model_name) {
         std::string port_inv_model_name(spice_models[imodel].ports[iport].inv_spice_model_name);
-        circuit_lib.set_port_inv_circuit_model_name(model_id, port_id, port_inv_model_name);
+        circuit_lib.set_port_inv_model_name(model_id, port_id, port_inv_model_name);
       }
 
       if (NULL != spice_models[imodel].ports[iport].tri_state_map) {
@@ -1786,7 +1786,7 @@ CircuitLibrary build_circuit_library(int num_spice_model, t_spice_model* spice_m
   }
 
   /* Build circuit_model links */
-  circuit_lib.build_circuit_model_links();
+  circuit_lib.build_model_links();
 
   /* Build timing graph */
   circuit_lib.build_timing_graphs();

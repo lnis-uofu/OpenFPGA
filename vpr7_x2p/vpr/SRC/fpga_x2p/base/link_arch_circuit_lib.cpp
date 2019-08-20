@@ -81,31 +81,31 @@
 CircuitModelId link_circuit_model_by_name_and_type(const char* circuit_model_name,
                                                    const CircuitLibrary& circuit_lib,
                                                    const enum e_spice_model_type& model_type) {
-  CircuitModelId circuit_model = CIRCUIT_MODEL_OPEN_ID;
+  CircuitModelId circuit_model = CircuitModelId::INVALID();
   /* If the circuit_model_name is not defined, we use the default*/
   if (NULL == circuit_model_name) {
-    circuit_model = circuit_lib.default_circuit_model(model_type);
+    circuit_model = circuit_lib.default_model(model_type);
   } else {
-    circuit_model = circuit_lib.circuit_model(circuit_model_name);
+    circuit_model = circuit_lib.model(circuit_model_name);
   }
 
   /* Check the circuit model, we should have one! */
-  if (CIRCUIT_MODEL_OPEN_ID == circuit_model) {
+  if (CircuitModelId::INVALID() == circuit_model) {
     vpr_printf(TIO_MESSAGE_ERROR,
                "(File:%s,LINE[%d]) Fail to find a defined circuit model called %s!\n",
                __FILE__, __LINE__, 
-               circuit_lib.circuit_model_name(circuit_model).c_str());
+               circuit_lib.model_name(circuit_model).c_str());
     return circuit_model; /* Return here, no need to check the model_type */
   } 
 
   /* Check the type of circuit model, make sure it is the one we want */
-  if (model_type != circuit_lib.circuit_model_type(circuit_model)) {
+  if (model_type != circuit_lib.model_type(circuit_model)) {
     vpr_printf(TIO_MESSAGE_ERROR,
                "(File:%s,LINE[%d]) Invalid type when trying to find circuit model called %s! Expect %s but found %s!\n",
                __FILE__, __LINE__, 
                circuit_model_name,
                CIRCUIT_MODEL_TYPE_STRING[size_t(model_type)],
-               CIRCUIT_MODEL_TYPE_STRING[size_t(circuit_lib.circuit_model_type(circuit_model))]);
+               CIRCUIT_MODEL_TYPE_STRING[size_t(circuit_lib.model_type(circuit_model))]);
   }
 
   return circuit_model;
@@ -267,11 +267,11 @@ int link_pb_type_port_to_circuit_model_ports(const t_pb_type* cur_pb_type,
 
   /* Initialize each port */
   for (int iport = 0; iport < cur_pb_type->num_ports; iport++) {
-    cur_pb_type->ports[iport].circuit_model_port = CIRCUIT_PORT_OPEN_ID; 
+    cur_pb_type->ports[iport].circuit_model_port = CircuitPortId::INVALID(); 
   } 
 
   /* Return if SPICE_MODEL is NULL */
-  if (CIRCUIT_MODEL_OPEN_ID == circuit_model) {
+  if (CircuitModelId::INVALID() == circuit_model) {
     return 0;
   }
 
@@ -290,11 +290,11 @@ int link_pb_type_port_to_circuit_model_ports(const t_pb_type* cur_pb_type,
    * but each pb_type_port should be mapped to a spice_model_port
    */
   for (int iport = 0; iport < cur_pb_type->num_ports; iport++) {
-    if (CIRCUIT_PORT_OPEN_ID == cur_pb_type->ports[iport].circuit_model_port) {
+    if (CircuitPortId::INVALID() == cur_pb_type->ports[iport].circuit_model_port) {
       vpr_printf(TIO_MESSAGE_ERROR, 
                  "(File:%s, [LINE%d])Pb_type(%s) Port(%s) cannot find a corresponding port in SPICE model(%s)\n",
                  __FILE__, __LINE__, cur_pb_type->name, cur_pb_type->ports[iport].name, 
-                 circuit_lib.circuit_model_name(circuit_model).c_str());
+                 circuit_lib.model_name(circuit_model).c_str());
       exit(1);
     }
   }
@@ -319,7 +319,7 @@ void link_pb_type_interc_circuit_model_by_type(t_interconnect* cur_interc,
                                                                   circuit_lib,
                                                                   model_type);
   /* Check the circuit model, we should have one! */
-  if (CIRCUIT_MODEL_OPEN_ID == cur_interc->circuit_model) {
+  if (CircuitModelId::INVALID() == cur_interc->circuit_model) {
     vpr_printf(TIO_MESSAGE_ERROR,
                "(File:%s,LINE[%d]) Error in linking circuit model for interconnect(name %s)! Check [LINE%d] in architecture file)!\n",
                __FILE__, __LINE__, 
@@ -415,8 +415,8 @@ void link_pb_types_circuit_model_rec(t_pb_type* cur_pb_type,
       return;
     }
     /* Let's find a matched circuit model!*/
-    cur_pb_type->circuit_model = circuit_lib.circuit_model(cur_pb_type->spice_model_name);
-    if (CIRCUIT_MODEL_OPEN_ID == cur_pb_type->circuit_model) {
+    cur_pb_type->circuit_model = circuit_lib.model(cur_pb_type->spice_model_name);
+    if (CircuitModelId::INVALID() == cur_pb_type->circuit_model) {
       vpr_printf(TIO_MESSAGE_ERROR, 
                  "(File:%s,LINE[%d]) Fail to find a defined circuit model called %s, in pb_type(%s)!\n",
                  __FILE__, __LINE__, cur_pb_type->spice_model_name, cur_pb_type->name);
@@ -428,14 +428,14 @@ void link_pb_types_circuit_model_rec(t_pb_type* cur_pb_type,
   }
 
   /* Otherwise, initialize it to be OPEN node */
-  cur_pb_type->circuit_model = CIRCUIT_MODEL_OPEN_ID;
+  cur_pb_type->circuit_model = CircuitModelId::INVALID();
 
   /* Traversal the hierarchy*/
   for (int imode = 0; imode < cur_pb_type->num_modes; imode++) {
     /* Task 1: Find the interconnections and match the spice_model */
     for (int jinterc = 0; jinterc < cur_pb_type->modes[imode].num_interconnect; jinterc++) {
       /* Initialize it to be OPEN node */
-      cur_pb_type->modes[imode].interconnect[jinterc].circuit_model = CIRCUIT_MODEL_OPEN_ID;
+      cur_pb_type->modes[imode].interconnect[jinterc].circuit_model = CircuitModelId::INVALID();
       link_pb_type_interc_circuit_model(&(cur_pb_type->modes[imode].interconnect[jinterc]),
                                         circuit_lib);
     }
@@ -453,12 +453,12 @@ size_t check_circuit_model_structure_match_switch_inf(const t_switch_inf& target
                                                      const CircuitLibrary& circuit_lib) {
   size_t num_err = 0;
 
-  VTR_ASSERT_SAFE(CIRCUIT_MODEL_OPEN_ID != target_switch_inf.circuit_model);
+  VTR_ASSERT_SAFE(CircuitModelId::INVALID() != target_switch_inf.circuit_model);
   if (target_switch_inf.structure != circuit_lib.mux_structure(target_switch_inf.circuit_model)) {
     vpr_printf(TIO_MESSAGE_ERROR, 
                "(File:%s,[LINE%d]) Mismatch in MUX structure between circuit model(%s, %s) and switch_inf(%s, %s)!\n",
                __FILE__, __LINE__, 
-               circuit_lib.circuit_model_name(target_switch_inf.circuit_model).c_str(), 
+               circuit_lib.model_name(target_switch_inf.circuit_model).c_str(), 
                CIRCUIT_MODEL_STRUCTURE_TYPE_STRING[size_t(circuit_lib.mux_structure(target_switch_inf.circuit_model))],
                target_switch_inf.name,
                CIRCUIT_MODEL_STRUCTURE_TYPE_STRING[size_t(target_switch_inf.structure)]);
@@ -494,7 +494,7 @@ void link_circuit_library_to_arch(t_arch* arch,
   for (int i = 0; i < arch->num_cb_switch; i++) {
     arch->cb_switches[i].circuit_model = link_circuit_model_by_name_and_type(arch->cb_switches[i].spice_model_name,
                                                                              arch->spice->circuit_lib, SPICE_MODEL_MUX);
-    if (CIRCUIT_MODEL_OPEN_ID == arch->cb_switches[i].circuit_model) {
+    if (CircuitModelId::INVALID() == arch->cb_switches[i].circuit_model) {
       vpr_printf(TIO_MESSAGE_ERROR,
                  "(FILE:%s, LINE[%d])Invalid circuit model name(%s) of Switch(%s) is undefined in circuit models!\n",
                  __FILE__, __LINE__, arch->cb_switches[i].spice_model_name, arch->cb_switches[i].name);
@@ -517,7 +517,7 @@ void link_circuit_library_to_arch(t_arch* arch,
   for (int i = 0; i < arch->num_switches; i++) {
     arch->Switches[i].circuit_model = link_circuit_model_by_name_and_type(arch->Switches[i].spice_model_name,
                                                                           arch->spice->circuit_lib, SPICE_MODEL_MUX);
-    if (CIRCUIT_MODEL_OPEN_ID == arch->Switches[i].circuit_model) {
+    if (CircuitModelId::INVALID() == arch->Switches[i].circuit_model) {
       vpr_printf(TIO_MESSAGE_ERROR,
                  "(FILE:%s, LINE[%d])Invalid circuit model name(%s) of Switch(%s) is undefined in circuit models!\n",
                  __FILE__, __LINE__, arch->Switches[i].spice_model_name, arch->Switches[i].name);
@@ -533,7 +533,7 @@ void link_circuit_library_to_arch(t_arch* arch,
   for (int i = 0; i < routing_arch->num_switch; i++) {
     switch_inf[i].circuit_model = link_circuit_model_by_name_and_type(switch_inf[i].spice_model_name,
                                                                       arch->spice->circuit_lib, SPICE_MODEL_MUX);
-    if (CIRCUIT_MODEL_OPEN_ID == switch_inf[i].circuit_model) {
+    if (CircuitModelId::INVALID() == switch_inf[i].circuit_model) {
       vpr_printf(TIO_MESSAGE_ERROR,
                  "(FILE:%s, LINE[%d])Invalid circuit model name(%s) of Switch(%s) is undefined in circuit models!\n",
                  __FILE__, __LINE__, switch_inf[i].spice_model_name, switch_inf[i].name);
@@ -548,7 +548,7 @@ void link_circuit_library_to_arch(t_arch* arch,
   for (int i = 0; i < arch->num_segments; i++) {
     arch->Segments[i].circuit_model = link_circuit_model_by_name_and_type(arch->Segments[i].spice_model_name,
                                                                           arch->spice->circuit_lib, SPICE_MODEL_CHAN_WIRE);
-    if (CIRCUIT_MODEL_OPEN_ID == arch->Segments[i].circuit_model) {
+    if (CircuitModelId::INVALID() == arch->Segments[i].circuit_model) {
       vpr_printf(TIO_MESSAGE_ERROR, 
                  "(FILE:%s, LINE[%d])Invalid circuit model name(%s) of Segment(Length:%d) is undefined in circuit models!\n",
                  __FILE__ ,__LINE__, 
@@ -563,7 +563,7 @@ void link_circuit_library_to_arch(t_arch* arch,
     arch->Directs[i].circuit_model = link_circuit_model_by_name_and_type(arch->Directs[i].spice_model_name,
                                                                          arch->spice->circuit_lib, SPICE_MODEL_WIRE);
     /* Check SPICE model type */
-    if (CIRCUIT_MODEL_OPEN_ID == arch->Directs[i].circuit_model) {
+    if (CircuitModelId::INVALID() == arch->Directs[i].circuit_model) {
       vpr_printf(TIO_MESSAGE_ERROR, 
                  "(FILE:%s, LINE[%d])Invalid circuit model name(%s) of CLB to CLB Direct Connection (name=%s) is undefined in circuit models!\n",
                  __FILE__ ,__LINE__, 

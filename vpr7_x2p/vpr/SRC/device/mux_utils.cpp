@@ -28,10 +28,10 @@ size_t find_mux_implementation_num_inputs(const CircuitLibrary& circuit_lib,
   /* Should be either MUX or LUT
    * LUTs do have an tree-like MUX, but there is no need for a constant input! 
    */
-  VTR_ASSERT ((SPICE_MODEL_MUX == circuit_lib.circuit_model_type(circuit_model)) 
-           || (SPICE_MODEL_LUT == circuit_lib.circuit_model_type(circuit_model)) );
+  VTR_ASSERT ((SPICE_MODEL_MUX == circuit_lib.model_type(circuit_model)) 
+           || (SPICE_MODEL_LUT == circuit_lib.model_type(circuit_model)) );
 
-  if (SPICE_MODEL_LUT ==  circuit_lib.circuit_model_type(circuit_model)) {
+  if (SPICE_MODEL_LUT ==  circuit_lib.model_type(circuit_model)) {
     return mux_size;
   }
 
@@ -147,7 +147,7 @@ MuxLibrary convert_mux_arch_to_library(const CircuitLibrary& circuit_lib, t_llis
 
     /* Build a MUX graph for the model */
     /* Find the circuit model id by the name */
-    CircuitModelId circuit_model = circuit_lib.circuit_model(cur_spice_mux_model->spice_model->name);
+    CircuitModelId circuit_model = circuit_lib.model(cur_spice_mux_model->spice_model->name);
     mux_lib.add_mux(circuit_lib, circuit_model, cur_spice_mux_model->size);
 
     /* Move on to the next*/
