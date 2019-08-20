@@ -263,6 +263,7 @@ void print_verilog_submodule_essentials(const std::string& verilog_dir,
                                         const CircuitLibrary& circuit_lib) {
   /* TODO: remove .bak when this part is completed and tested */
   std::string verilog_fname = submodule_dir + essentials_verilog_file_name + ".bak";
+
   std::fstream fp;
 
   /* Create the file stream */
