@@ -1,6 +1,0 @@
-# Circuit Names, fixed routing channel width,
-# PID/*.v, 120
-# up_counter/*.v, 30
-# MultiBitAdder/*.v, 30
-# i2c_master_top/*.v, 40
-asynch_fifo/*.v, 30
