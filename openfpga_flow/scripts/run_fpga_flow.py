@@ -57,6 +57,8 @@ parser.add_argument('--run_dir', type=str,
                     help="Directory to store intermidiate file & final results")
 parser.add_argument('--yosys_tmpl', type=str,
                     help="Alternate yosys template, generates top_module.blif")
+parser.add_argument('--debug', action="store_true",
+                    help="Run script in debug mode")
 
 # ACE2 and power estimation related arguments
 parser.add_argument('--K', type=int,
@@ -248,6 +250,10 @@ def validate_command_line_arguments():
     This funtion validates all supplied paramters
     """
     logger.info("Validating commnad line arguments")
+
+    if args.debug:
+        logger.info("Setting loggger in debug mode")
+        logger.setLevel(logging.DEBUG)
 
     # Check if flow supported
     if not args.fpga_flow in config.get("FLOW_SCRIPT_CONFIG", "valid_flows"):
@@ -780,6 +786,7 @@ def run_netlists_verification():
 
 
 def run_command(taskname, logfile, command, exit_if_fail=True):
+    logger.info("Launching %s " % taskname)
     try:
         with open(logfile, 'w+') as output:
             output.write(" ".join(command)+"\n")

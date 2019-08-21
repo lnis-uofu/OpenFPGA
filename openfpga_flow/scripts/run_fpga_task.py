@@ -33,6 +33,8 @@ parser.add_argument('--maxthreads', type=int, default=2,
 parser.add_argument('--config', help="Override default configuration")
 parser.add_argument('--test_run', action="store_true",
                     help="Dummy run shows final generated VPR commands")
+parser.add_argument('--debug', action="store_true",
+                    help="Run script in debug mode")
 args = parser.parse_args()
 
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
@@ -76,7 +78,9 @@ def clean_up_and_exit(msg):
 
 
 def validate_command_line_arguments():
-    pass
+    if args.debug:
+        logger.info("Setting loggger in debug mode")
+        logger.setLevel(logging.DEBUG)
 
 
 def generate_each_task_actions(taskname):
@@ -143,7 +147,8 @@ def generate_each_task_actions(taskname):
                                   " with path %s " % (eachpath))
             bench_files += files
 
-        ys_for_task = task_conf.get("SYNTHESIS_PARAM", "bench_yosys_common")
+        ys_for_task = task_conf.get("SYNTHESIS_PARAM", "bench_yosys_common",
+                                    fallback="")
         benchmark_list.append({
             "files": bench_files,
             "top_module": task_conf.get("SYNTHESIS_PARAM", bech_name+"_top",
@@ -218,7 +223,8 @@ def create_run_command(curr_job_dir, archfile, benchmark_obj, task_conf):
 
     # Add other paramters to pass
     for key, values in task_conf["SCRIPT_PARAM"].items():
-        command += ["--"+key, values]
+    if args.debug:
+        command += ["--debug"]
     return command
 
 

@@ -10,9 +10,9 @@ if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
   #make
   mkdir build
   cd build
-  cmake .. -DCMAKE_BUILD_TYPE=debug -DENABLE_VPR_GRAPHICS=off 
+  cmake .. -DCMAKE_BUILD_TYPE=debug -DENABLE_VPR_GRAPHICS=off
   make -j2
-else 
+else
 # For linux, we enable full package compilation
   #make
   mkdir build
@@ -26,8 +26,4 @@ end_section "OpenFPGA.build"
 $SPACER
 
 cd -
-./.travis/regression.sh
-
-#cd fpga_flow
-#./regression_fpga_flow.sh
-#cd -
+python3.5 ./openfpga_flow/scripts/run_fpga_task.py basic_flow
