@@ -225,6 +225,7 @@ class CircuitLibrary {
     bool is_lut_intermediate_buffered(const CircuitModelId& model_id) const;
     /* Pass-gate-logic information */
     CircuitModelId pass_gate_logic_model(const CircuitModelId& model_id) const;
+    enum e_spice_model_pass_gate_logic_type pass_gate_logic_type(const CircuitModelId& model_id) const;
     /* Multiplexer information */
     enum e_spice_model_structure mux_structure(const CircuitModelId& model_id) const;
     size_t mux_num_levels(const CircuitModelId& model_id) const;

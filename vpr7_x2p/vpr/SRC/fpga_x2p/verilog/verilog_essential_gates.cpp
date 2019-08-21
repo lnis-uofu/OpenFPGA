@@ -9,6 +9,7 @@
 
 /* Device-level header files */
 #include "spice_types.h"
+#include "device_port.h"
 
 /* FPGA-X2P context header files */
 #include "fpga_x2p_utils.h"
@@ -33,7 +34,7 @@ void print_verilog_power_gated_invbuf_body(std::fstream& fp,
   /* Ensure a valid file handler*/
   check_file_handler(fp);
 
-  fp << "//----- Verilog codes of a power-gated inverter -----" << std::endl;
+  print_verilog_comment(fp, std::string("----- Verilog codes of a power-gated inverter -----"));
 
   /* Create a sensitive list */
   fp << "\treg " << circuit_lib.port_lib_name(output_port) << "_reg;" << std::endl;
@@ -109,7 +110,7 @@ void print_verilog_invbuf_body(std::fstream& fp,
   /* Ensure a valid file handler*/
   check_file_handler(fp);
 
-  fp << "//----- Verilog codes of a regular inverter -----" << std::endl;
+  print_verilog_comment(fp, std::string("----- Verilog codes of a regular inverter -----"));
   
   fp << "\tassign " << circuit_lib.port_lib_name(output_port) << " = (" << circuit_lib.port_lib_name(input_port) << " == 1'bz)? $random : ";
 
@@ -138,8 +139,6 @@ void print_verilog_invbuf_module(std::fstream& fp,
                                  const CircuitModelId& circuit_model) {
   /* Ensure a valid file handler*/
   check_file_handler(fp);
-
-  fp << "//----- Verilog module for " << circuit_lib.model_name(circuit_model) << " -----" << std::endl;
 
   /* Find the input port, output port and global inputs*/
   std::vector<CircuitPortId> input_ports = circuit_lib.model_ports_by_type(circuit_model, SPICE_MODEL_PORT_INPUT, true);
@@ -178,14 +177,12 @@ void print_verilog_invbuf_module(std::fstream& fp,
   }
 
   /* dump module body */
-  fp << "module " << circuit_lib.model_name(circuit_model) << " (" << std::endl;
+  print_verilog_module_definition(fp, circuit_lib.model_name(circuit_model));
 
-  /* TODO: print global ports */
+  /* TODO: print global ports, this should be handled by ModuleManager */
   for (const auto& port : global_ports) {
-    BasicPort basic_port;
-    /* Configure each input port */
-    basic_port.set_name(circuit_lib.port_prefix(port));
-    basic_port.set_width(circuit_lib.port_size(port));
+    /* Configure each global port */
+    BasicPort basic_port(circuit_lib.port_lib_name(port), circuit_lib.port_size(port));
     /* Print port */
     fp << "\t" << generate_verilog_port(VERILOG_PORT_INPUT, basic_port) << "," << std::endl;
   }
@@ -201,7 +198,7 @@ void print_verilog_invbuf_module(std::fstream& fp,
   /* Configure each input port */
   output_port.set_name(circuit_lib.port_lib_name(output_ports[0]));
   output_port.set_width(circuit_lib.port_size(output_ports[0]));
-  fp << "\t" << generate_verilog_port(VERILOG_PORT_OUTPUT, output_port) << "," << std::endl;
+  fp << "\t" << generate_verilog_port(VERILOG_PORT_OUTPUT, output_port) << std::endl;
   fp << ");" << std::endl;
   /* Finish dumping ports */
 
@@ -226,13 +223,112 @@ void print_verilog_invbuf_module(std::fstream& fp,
   /* Print timing info */
   print_verilog_submodule_timing(fp, circuit_lib, circuit_model);
 
+  /* Print signal initialization */
   print_verilog_submodule_signal_init(fp, circuit_lib, circuit_model);
 
-  fp << "endmodule" << std::endl << std::endl;
-
-  fp << "//----- END Verilog module for " << circuit_lib.model_name(circuit_model) << " -----" << std::endl;
+  /* Put an end to the Verilog module */
+  print_verilog_module_end(fp, circuit_lib.model_name(circuit_model));
 
   return;
+}
+
+/************************************************
+ * Print a Verilog module of a pass-gate,
+ * either transmission-gate or pass-transistor
+ ***********************************************/
+static 
+void print_verilog_passgate_module(std::fstream& fp,
+                                   const CircuitLibrary& circuit_lib,
+                                   const CircuitModelId& circuit_model) {
+  /* Ensure a valid file handler*/
+  check_file_handler(fp);
+
+  /* Find the input port, output port*/
+  std::vector<CircuitPortId> input_ports = circuit_lib.model_ports_by_type(circuit_model, SPICE_MODEL_PORT_INPUT, true);
+  std::vector<CircuitPortId> output_ports = circuit_lib.model_ports_by_type(circuit_model, SPICE_MODEL_PORT_OUTPUT, true);
+  std::vector<CircuitPortId> global_ports = circuit_lib.model_global_ports_by_type(circuit_model, SPICE_MODEL_PORT_INPUT);
+
+  switch (circuit_lib.pass_gate_logic_type(circuit_model)) {
+  case SPICE_MODEL_PASS_GATE_TRANSMISSION:
+    /* Make sure:
+     * There is only 3 input port (in, sel, selb), 
+     * each size of which is 1
+     */
+    VTR_ASSERT( 3 == input_ports.size() );
+    for (const auto& input_port : input_ports) {
+      VTR_ASSERT(1 == circuit_lib.port_size(input_port));
+    }
+    break;
+  case SPICE_MODEL_PASS_GATE_TRANSISTOR:
+    /* Make sure:
+     * There is only 2 input port (in, sel), 
+     * each size of which is 1
+     */
+    VTR_ASSERT( 2 == input_ports.size() );
+    for (const auto& input_port : input_ports) {
+      VTR_ASSERT(1 == circuit_lib.port_size(input_port));
+    }
+    break;
+  default:
+    vpr_printf(TIO_MESSAGE_ERROR,
+               "(File:%s,[LINE%d])Invalid topology for circuit model (name=%s)!\n",
+               __FILE__, __LINE__, circuit_lib.model_name(circuit_model));
+    exit(1);
+  }
+
+  /* Make sure:
+   * There is only 1 output port, 
+   * each size of which is 1
+   */
+  VTR_ASSERT( (1 == output_ports.size()) && (1 == circuit_lib.port_size(output_ports[0])) );
+
+  /* Print Verilog module */
+  print_verilog_module_definition(fp, circuit_lib.model_name(circuit_model));
+
+  /* TODO: print global ports, this should be handled by ModuleManager */
+  for (const auto& port : global_ports) {
+    /* Configure each global port */
+    BasicPort basic_port(circuit_lib.port_lib_name(port), circuit_lib.port_size(port));
+    /* Print port */
+    fp << "\t" << generate_verilog_port(VERILOG_PORT_INPUT, basic_port) << "," << std::endl;
+  }
+
+  for (const auto& input_port : input_ports) {
+    /* Configure each global port */
+    BasicPort basic_port(circuit_lib.port_lib_name(input_port), circuit_lib.port_size(input_port));
+    /* Print port */
+    fp << "\t" << generate_verilog_port(VERILOG_PORT_INPUT, basic_port) << "," << std::endl;
+  }
+
+  /* Configure each global port */
+  for (const auto& output_port : output_ports) {
+    BasicPort basic_port(circuit_lib.port_lib_name(output_port), circuit_lib.port_size(output_port));
+    /* Print port */
+    fp << "\t" << generate_verilog_port(VERILOG_PORT_OUTPUT, basic_port);
+    /* Last port does not need a comma */
+    if (output_port != output_ports.back()) {
+      fp << "," << std::endl;
+    } else {
+      fp << std::endl;
+    }
+  }
+  fp << ");" << std::endl;
+
+  /* Dump logics: we propagate input to the output when the gate is '1' 
+   * the input is blocked from output when the gate is '0'
+   */
+  fp << "\tassign " << circuit_lib.port_lib_name(output_ports[0]) << " = ";
+  fp << circuit_lib.port_lib_name(input_ports[1]) << " ? " << circuit_lib.port_lib_name(input_ports[0]);
+  fp << " : 1'bz;" << std::endl;
+
+  /* Print timing info */
+  print_verilog_submodule_timing(fp, circuit_lib, circuit_model);
+
+  /* Print signal initialization */
+  print_verilog_submodule_signal_init(fp, circuit_lib, circuit_model);
+   
+  /* Put an end to the Verilog module */
+  print_verilog_module_end(fp, circuit_lib.model_name(circuit_model));
 }
 
 /************************************************
@@ -270,10 +366,10 @@ void print_verilog_submodule_essentials(const std::string& verilog_dir,
     if (SPICE_MODEL_INVBUF == circuit_lib.model_type(circuit_model)) {
       print_verilog_invbuf_module(fp, circuit_lib, circuit_model);
     }
-    /*
-    if (SPICE_MODEL_PASSGATE == spice_models[imodel].type) {
-      dump_verilog_passgate_module(fp, &(spice_models[imodel]));
+    if (SPICE_MODEL_PASSGATE == circuit_lib.model_type(circuit_model)) {
+      print_verilog_passgate_module(fp, circuit_lib, circuit_model);
     }
+    /*
     if (SPICE_MODEL_GATE == spice_models[imodel].type) {
       dump_verilog_gate_module(fp, &(spice_models[imodel]));
     }

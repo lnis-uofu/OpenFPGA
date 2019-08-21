@@ -198,6 +198,15 @@ CircuitModelId CircuitLibrary::pass_gate_logic_model(const CircuitModelId& model
   return pgl_model_id;
 }
 
+/* Return the type of pass gate logic module, only applicable to circuit model whose type is pass-gate logic */
+enum e_spice_model_pass_gate_logic_type CircuitLibrary::pass_gate_logic_type(const CircuitModelId& model_id) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  /* validate the circuit model type is PASSGATE */
+  VTR_ASSERT(SPICE_MODEL_PASSGATE == model_type(model_id));
+  return pass_gate_logic_types_[model_id];
+}
+
 /* Return the multiplex structure of a circuit model */
 enum e_spice_model_structure CircuitLibrary::mux_structure(const CircuitModelId& model_id) const {
   /* validate the model_id */

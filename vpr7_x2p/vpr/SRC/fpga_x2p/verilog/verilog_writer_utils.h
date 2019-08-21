@@ -15,6 +15,15 @@ void print_verilog_file_header(std::fstream& fp,
 void print_verilog_include_defines_preproc_file(std::fstream& fp, 
                                                 const std::string& verilog_dir);
 
+void print_verilog_comment(std::fstream& fp, 
+                           const std::string& comment);
+
+void print_verilog_module_definition(std::fstream& fp, 
+                                     const std::string& module_name);
+
+void print_verilog_module_end(std::fstream& fp, 
+                              const std::string& module_name);
+
 std::string generate_verilog_port(const enum e_dump_verilog_port_type& dump_port_type,
                                   const BasicPort& port_info);
 

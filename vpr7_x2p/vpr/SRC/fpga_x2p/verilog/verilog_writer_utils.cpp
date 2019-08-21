@@ -60,6 +60,39 @@ void print_verilog_include_defines_preproc_file(std::fstream& fp,
   return;
 }
 
+/************************************************
+ * Print a Verilog comment line
+ ***********************************************/
+void print_verilog_comment(std::fstream& fp, 
+                           const std::string& comment) {
+  check_file_handler(fp);
+
+  fp << "// " << comment << std::endl;
+}
+
+/************************************************
+ * Print a Verilog module definition
+ ***********************************************/
+void print_verilog_module_definition(std::fstream& fp, 
+                                     const std::string& module_name) {
+  check_file_handler(fp);
+
+  print_verilog_comment(fp, std::string("//----- Verilog module for " + module_name + " -----"));
+  fp << "module " << module_name << "(" << std::endl;
+}
+
+/************************************************
+ * Print a Verilog module definition
+ ***********************************************/
+void print_verilog_module_end(std::fstream& fp, 
+                              const std::string& module_name) {
+  check_file_handler(fp);
+
+  fp << "endmodule" << std::endl;
+  print_verilog_comment(fp, std::string("//----- END Verilog module for " + module_name + " -----"));
+  fp << std::endl;
+}
+
 /* Generate a string of a Verilog port */
 std::string generate_verilog_port(const enum e_dump_verilog_port_type& verilog_port_type,
                                   const BasicPort& port_info) {  

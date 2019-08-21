@@ -50,7 +50,7 @@ void print_verilog_submodule_timing(std::fstream& fp,
 
   fp << std::endl;
   fp << "`ifdef " << verilog_timing_preproc_flag << std::endl;
-  fp << "//------ BEGIN Pin-to-pin Timing constraints -----" << std::endl;
+  print_verilog_comment(fp, std::string("------ BEGIN Pin-to-pin Timing constraints -----"));
   fp << "\tspecify" << std::endl;
 
   /* Read out pin-to-pin delays by finding out all the edges belonging to a circuit model */
@@ -69,13 +69,13 @@ void print_verilog_submodule_timing(std::fstream& fp,
      fp << generate_verilog_port(VERILOG_PORT_CONKT, sink_port_info) << ")";
      fp << " = ";
      fp << "(" << std::setprecision(FLOAT_PRECISION) << circuit_lib.timing_edge_delay(timing_edge, SPICE_MODEL_DELAY_RISE);
-     fp << " => ";
+     fp << " , ";
      fp << std::setprecision(FLOAT_PRECISION) << circuit_lib.timing_edge_delay(timing_edge, SPICE_MODEL_DELAY_RISE) << ")";
      fp << ";" << std::endl;
   }
 
   fp << "\tendspecify" << std::endl;
-  fp << "//------ END Pin-to-pin Timing constraints -----" << std::endl;
+  print_verilog_comment(fp, std::string("------ END Pin-to-pin Timing constraints -----"));
   fp << "`endif" << std::endl;
 
 }
@@ -88,7 +88,7 @@ void print_verilog_submodule_signal_init(std::fstream& fp,
 
   fp << std::endl;
   fp << "`ifdef " << verilog_signal_init_preproc_flag << std::endl;
-  fp << "//------ BEGIN driver initialization -----" << std::endl;
+  print_verilog_comment(fp, std::string("------ BEGIN driver initialization -----"));
   fp << "\tinitial begin" << std::endl;
   fp << "\t`ifdef " << verilog_formal_verification_preproc_flag << std::endl;
 
@@ -106,7 +106,7 @@ void print_verilog_submodule_signal_init(std::fstream& fp,
 
   fp << "\t`endif\n" << std::endl;
   fp << "\tend" << std::endl;
-  fp << "//------ END driver initialization -----" << std::endl;
+  print_verilog_comment(fp, std::string("------ END driver initialization -----"));
   fp << "`endif" << std::endl;
 }
 
