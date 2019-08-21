@@ -9,6 +9,12 @@
 #include <string>
 #include "device_port.h"
 
+void print_verilog_file_header(std::fstream& fp,
+                               const std::string& usage);
+
+void print_verilog_include_defines_preproc_file(std::fstream& fp, 
+                                                const std::string& verilog_dir);
+
 std::string generate_verilog_port(const enum e_dump_verilog_port_type& dump_port_type,
                                   const BasicPort& port_info);
 

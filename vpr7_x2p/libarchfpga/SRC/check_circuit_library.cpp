@@ -202,7 +202,7 @@ size_t check_one_circuit_model_port_type_and_size_required(const CircuitLibrary&
 
   size_t num_err = 0;
 
-  std::vector<CircuitPortId> ports = circuit_lib.model_ports_by_type(circuit_model, port_type_to_check, include_global_ports);
+  std::vector<CircuitPortId> ports = circuit_lib.model_ports_by_type(circuit_model, port_type_to_check, false == include_global_ports);
   if (num_ports_to_check != ports.size()) {
     vpr_printf(TIO_MESSAGE_ERROR, 
                "Expect %d %s ports for a %s circuit model, but only have %d %s ports!\n",

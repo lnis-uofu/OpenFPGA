@@ -10,7 +10,8 @@ void check_file_handler(std::fstream& fp);
 
 char* my_gettime();
 
-char* format_dir_path(char* dir_path);
+char* format_dir_path(char* dir_path); /* TODO: TO BE REMOVED !!! */
+std::string format_dir_path(const std::string& dir_path);
 
 int try_access_file(char* file_path);
 
@@ -380,7 +381,7 @@ boolean is_cb_exist(t_rr_type cb_type,
 int count_cb_info_num_ipin_rr_nodes(t_cb cur_cb_info);
 
 t_llist* add_one_subckt_file_name_to_llist(t_llist* cur_head, 
-                                            char* subckt_file_path);
+                                           const char* subckt_file_path);
 
 boolean check_subckt_file_exist_in_llist(t_llist* subckt_llist_head,
                                          char* subckt_file_name);

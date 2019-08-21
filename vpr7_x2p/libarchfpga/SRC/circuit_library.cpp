@@ -352,6 +352,30 @@ std::vector<CircuitPortId> CircuitLibrary::model_global_ports(const CircuitModel
   return global_ports;
 }
 
+/* Recursively find all the global ports in the circuit model / sub circuit_model */
+std::vector<CircuitPortId> CircuitLibrary::model_global_ports_by_type(const CircuitModelId& model_id,
+                                                                      const enum e_spice_model_port_type& type) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+
+  /* Search all the ports */
+  std::vector<CircuitPortId> global_ports;
+  for (auto port : model_ports(model_id)) {
+    /* By pass non-global ports*/
+    if (false == port_is_global(port)) {
+      continue;
+    }
+    /* We skip unmatched ports */
+    if ( type != port_type(port) ) {
+      continue; 
+    }
+    /* This is a global port, update global_ports */
+    global_ports.push_back(port); 
+  }
+
+  return global_ports;
+}
+
 /* Find the ports of a circuit model by a given type, return a list of qualified ports */
 std::vector<CircuitPortId> CircuitLibrary::model_ports_by_type(const CircuitModelId& model_id, 
                                                                const enum e_spice_model_port_type& type) const {
@@ -371,7 +395,7 @@ std::vector<CircuitPortId> CircuitLibrary::model_ports_by_type(const CircuitMode
  */
 std::vector<CircuitPortId> CircuitLibrary::model_ports_by_type(const CircuitModelId& model_id, 
                                                                const enum e_spice_model_port_type& type,
-                                                               const bool& include_global_port) const {
+                                                               const bool& ignore_global_port) const {
   std::vector<CircuitPortId> port_ids;
   for (const auto& port_id : model_port_lookup_[model_id][type]) {
     /* We skip unmatched ports */
@@ -379,7 +403,7 @@ std::vector<CircuitPortId> CircuitLibrary::model_ports_by_type(const CircuitMode
       continue; 
     }
     /* We skip global ports if specified */
-    if ( (false == include_global_port)
+    if ( (true == ignore_global_port)
       && (true == port_is_global(port_id)) ) {
       continue; 
     }
@@ -387,7 +411,6 @@ std::vector<CircuitPortId> CircuitLibrary::model_ports_by_type(const CircuitMode
   } 
   return port_ids;
 }
-
 
 /* Create a vector for all the ports whose directionality is input
  * This includes all the ports other than whose types are OUPUT or INOUT 

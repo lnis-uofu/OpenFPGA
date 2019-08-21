@@ -45,8 +45,9 @@ void generate_verilog_cmos_mux_branch_module_structural(std::fstream& fp,
   }
 
   /* Get model ports of tgate */
-  std::vector<CircuitPortId> tgate_input_ports = circuit_lib.model_ports_by_type(tgate_model, SPICE_MODEL_PORT_INPUT);
-  std::vector<CircuitPortId> tgate_output_ports = circuit_lib.model_ports_by_type(tgate_model, SPICE_MODEL_PORT_OUTPUT);
+  std::vector<CircuitPortId> tgate_input_ports = circuit_lib.model_ports_by_type(tgate_model, SPICE_MODEL_PORT_INPUT, true);
+  std::vector<CircuitPortId> tgate_output_ports = circuit_lib.model_ports_by_type(tgate_model, SPICE_MODEL_PORT_OUTPUT, true);
+  std::vector<CircuitPortId> tgate_global_ports = circuit_lib.model_global_ports_by_type(tgate_model, SPICE_MODEL_PORT_INPUT);
   VTR_ASSERT(3 == tgate_input_ports.size());
   VTR_ASSERT(1 == tgate_output_ports.size());
 
@@ -95,7 +96,14 @@ void generate_verilog_cmos_mux_branch_module_structural(std::fstream& fp,
   mem_inv_port.set_width(num_mems);
 
   /* TODO: Generate global ports */
-
+  for (const auto& port : tgate_global_ports) {
+    BasicPort basic_port;
+    /* Configure each input port */
+    basic_port.set_name(circuit_lib.port_prefix(port));
+    basic_port.set_width(circuit_lib.port_size(port));
+    /* Print port */
+    fp << "\t" << generate_verilog_port(VERILOG_PORT_INPUT, basic_port) << "," << std::endl;
+  }
 
   /* TODO: add a module to the Module Manager */
 
@@ -116,6 +124,7 @@ void generate_verilog_cmos_mux_branch_module_structural(std::fstream& fp,
     /* Transmission gates are connected to each input and also the output*/
     fp << "\t" << circuit_lib.model_name(tgate_model) << " " << circuit_lib.model_prefix(tgate_model) << "_0 ";
     /* Dump explicit port map if required */
+    /* TODO: add global port support for tgate model */
     if (true == circuit_lib.dump_explicit_port_map(tgate_model)) {
       fp << " (";
       fp << "  ." << circuit_lib.port_lib_name(tgate_input_ports[0]) << "(" << "in[0]" << "),";

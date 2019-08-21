@@ -233,6 +233,8 @@ class CircuitLibrary {
     size_t num_model_ports_by_type(const CircuitModelId& model_id, const enum e_spice_model_port_type& port_type, const bool& include_global_port) const;
     std::vector<CircuitPortId> model_ports(const CircuitModelId& model_id) const;
     std::vector<CircuitPortId> model_global_ports(const CircuitModelId& model_id) const;
+    std::vector<CircuitPortId> model_global_ports_by_type(const CircuitModelId& model_id,
+                                                          const enum e_spice_model_port_type& type) const;
     std::vector<CircuitPortId> model_ports_by_type(const CircuitModelId& model_id, const enum e_spice_model_port_type& port_type) const;
     std::vector<CircuitPortId> model_ports_by_type(const CircuitModelId& model_id, const enum e_spice_model_port_type& port_type, const bool& include_global_port) const;
     std::vector<CircuitPortId> model_input_ports(const CircuitModelId& model_id) const;
