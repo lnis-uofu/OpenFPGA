@@ -120,6 +120,7 @@ void generate_verilog_cmos_mux_branch_module_structural(std::fstream& fp,
    * When mem = 1, propagate input 0; 
    * when mem = 0, propagate input 1;
    */
+  /* TODO: we should output the netlist following the connections in mux_graph */
   if (1 == num_mems) {
     /* Transmission gates are connected to each input and also the output*/
     fp << "\t" << circuit_lib.model_name(tgate_model) << " " << circuit_lib.model_prefix(tgate_model) << "_0 ";

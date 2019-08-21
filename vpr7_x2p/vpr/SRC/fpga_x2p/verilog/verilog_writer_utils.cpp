@@ -34,7 +34,7 @@ void print_verilog_file_header(std::fstream& fp,
   fp << "//\tDescription: " << usage << std::endl;
   fp << "//\tAuthor: Xifan TANG" << std::endl;
   fp << "//\t Organization: University of Utah" << std::endl;
-  fp << "//\tDate: " << std::ctime(&end_time) << std::endl;
+  fp << "//\tDate: " << std::ctime(&end_time) ;
   fp << "//-------------------------------------------" << std::endl;
   fp << "//----- Time scale -----" << std::endl;
   fp << "`timescale 1ns / 1ps" << std::endl;

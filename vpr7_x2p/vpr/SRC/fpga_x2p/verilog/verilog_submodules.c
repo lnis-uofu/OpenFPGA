@@ -40,6 +40,7 @@
 
 #include "mux_utils.h"
 #include "verilog_mux.h"
+#include "verilog_essential_gates.h"
 
 /***** Subroutines *****/
 
@@ -4055,6 +4056,9 @@ void dump_verilog_submodules(t_sram_orgz_info* cur_sram_orgz_info,
   dump_verilog_submodule_essentials(verilog_dir, submodule_dir,
                                     Arch.spice->num_spice_model, 
                                     Arch.spice->spice_models);
+  print_verilog_submodule_essentials(std::string(verilog_dir), 
+                                     std::string(submodule_dir),
+                                     Arch.spice->circuit_lib);
 
   /* 1. MUXes */
   vpr_printf(TIO_MESSAGE_INFO, "Generating modules of multiplexers...\n");

@@ -19,6 +19,66 @@
 #include "verilog_writer_utils.h"
 #include "verilog_essential_gates.h"
 
+/************************************************
+ * Print Verilog codes of a power-gated inverter 
+ ***********************************************/
+static 
+void print_verilog_power_gated_inv_module(std::fstream& fp,
+                                          const CircuitLibrary& circuit_lib,
+                                          const CircuitPortId& input_port,
+                                          const CircuitPortId& output_port,
+                                          const std::vector<CircuitPortId>& power_gate_ports) {
+  /* Ensure a valid file handler*/
+  check_file_handler(fp);
+
+  fp << "//----- Verilog codes of a power-gated inverter -----" << std::endl;
+
+  /* Create a sensitive list */
+  fp << "\treg " << circuit_lib.port_lib_name(output_port) << "_reg;" << std::endl;
+
+  fp << "\talways @(" << std::endl;
+  /* Power-gate port first*/
+  for (const auto& power_gate_port : power_gate_ports) {
+    /* Skip first comma to dump*/
+    if (0 < &power_gate_port - &power_gate_ports[0]) {
+      fp << ",";
+    }
+    fp << circuit_lib.port_lib_name(power_gate_port);
+  }
+  fp << circuit_lib.port_lib_name(input_port) << ") begin" << std::endl; 
+
+  /* Dump the case of power-gated */
+  fp << "\t\tif (";
+  /* For the first pin, we skip output comma */
+  size_t port_cnt = 0;
+  for (const auto& power_gate_port : power_gate_ports) {
+    for (const auto& power_gate_pin : circuit_lib.pins(power_gate_port)) {
+      if (0 < port_cnt) { 
+        fp << std::endl << "\t\t&&";
+      }
+      fp << "(";
+
+      /* Power-gated signal are disable during operating, enabled during configuration,
+       * Therefore, we need to reverse them here   
+       */
+      if (0 == circuit_lib.port_default_value(power_gate_port)) {
+        fp << "~";
+      }
+      
+      fp << circuit_lib.port_lib_name(power_gate_port) << "[" << power_gate_pin << "])";
+
+      port_cnt++; /* Update port counter*/
+    }
+  }
+
+  fp << ") begin" << std::endl;
+  fp << "\t\t\tassign " << circuit_lib.port_lib_name(output_port) << "_reg = ~" << circuit_lib.port_lib_name(input_port) << ";" << std::endl;
+  fp << "\t\tend else begin" << std::endl;
+  fp << "\t\t\tassign " << circuit_lib.port_lib_name(output_port) << "_reg = 1'bz;" << std::endl;
+  fp << "\t\tend" << std::endl;
+  fp << "\tend" << std::endl;
+  fp << "\tassign " << circuit_lib.port_lib_name(output_port) << " = " << circuit_lib.port_lib_name(output_port) << "_reg;" << std::endl;
+}
 
 /************************************************
  * Print a Verilog module of inverter or buffer 
@@ -97,72 +157,20 @@ void print_verilog_invbuf_module(std::fstream& fp,
   fp << ");" << std::endl;
   /* Finish dumping ports */
 
-//  /* Assign logics : depending on topology */
-//  switch (invbuf_spice_model->design_tech_info.buffer_info->type) {
-//  case SPICE_MODEL_BUF_INV:
-//    if (TRUE == invbuf_spice_model->design_tech_info.power_gated) {
-//      /* Create a sensitive list */
-//      fprintf(fp, "reg %s_reg;\n", output_port[0]->lib_name);
-//      fprintf(fp, "always @(");
-//      /* Power-gate port first*/
-//      for (iport = 0; iport < num_powergate_port; iport++) {
-//        fprintf(fp, "%s,", powergate_port[iport]->lib_name);
-//      }
-//      fprintf(fp, "%s) begin\n", 
-//                  input_port[0]->lib_name); 
-//      /* Dump the case of power-gated */
-//      fprintf(fp, "  if (");
-//      port_cnt = 0; /* Initialize the counter: decide if we need to put down '&&' */
-//      for (iport = 0; iport < num_powergate_port; iport++) {
-//        if (0 == powergate_port[iport]->default_val) {
-//          for (ipin = 0; ipin < powergate_port[iport]->size; ipin++) {
-//            if ( 0 < port_cnt ) {
-//              fprintf(fp, "\n\t&&");
-//            }
-//            /* Power-gated signal are disable during operating, enabled during configuration,
-//             * Therefore, we need to reverse them here   
-//             */
-//            fprintf(fp, "(~%s[%d])", 
-//                         powergate_port[iport]->lib_name,
-//                         ipin);
-//            port_cnt++; /* Update port counter*/
-//          }
-//        } else {
-//          assert (1 == powergate_port[iport]->default_val);
-//          for (ipin = 0; ipin < powergate_port[iport]->size; ipin++) {
-//            if ( 0 < port_cnt ) {
-//              fprintf(fp, "\n\t&&");
-//            }
-//            /* Power-gated signal are disable during operating, enabled during configuration,
-//             * Therefore, we need to reverse them here   
-//             */
-//            fprintf(fp, "(%s[%d])", 
-//                        powergate_port[iport]->lib_name,
-//                        ipin);
-//            port_cnt++; /* Update port counter*/
-//          }
-//        }
-//      }
-//      fprintf(fp, ") begin\n");
-//      fprintf(fp, "\t\tassign %s_reg = ~%s;\n",
-//                  output_port[0]->lib_name,
-//                  input_port[0]->lib_name);
-//      fprintf(fp, "\tend else begin\n");
-//      fprintf(fp, "\t\tassign %s_reg = 1'bz;\n",
-//                  output_port[0]->lib_name);
-//      fprintf(fp, "\tend\n");
-//      fprintf(fp, "end\n");
-//      fprintf(fp, "assign %s = %s_reg;\n",
-//                  output_port[0]->lib_name,
-//                  output_port[0]->lib_name);
+  /* Assign logics : depending on topology */
+  switch (circuit_lib.buffer_type(circuit_model)) {
+  case SPICE_MODEL_BUF_INV:
+    if (TRUE == circuit_lib.is_power_gated(circuit_model)) {
+      print_verilog_power_gated_inv_module(fp, circuit_lib, input_ports[0], output_ports[0], global_ports);
+    }
 //    } else {
 //      fprintf(fp, "assign %s = (%s === 1'bz)? $random : ~%s;\n",
 //                  output_port[0]->lib_name,
 //                  input_port[0]->lib_name,
 //                  input_port[0]->lib_name);
 //    }
-//    break;
-//  case SPICE_MODEL_BUF_BUF:
+    break;
+  case SPICE_MODEL_BUF_BUF:
 //    if (TRUE == invbuf_spice_model->design_tech_info.power_gated) {
 //      /* Create a sensitive list */
 //      fprintf(fp, "reg %s_reg;\n", output_port[0]->lib_name);
@@ -236,12 +244,13 @@ void print_verilog_invbuf_module(std::fstream& fp,
 //      fprintf(fp, "%s;\n",
 //                  input_port[0]->lib_name);
 //    }
-//    break;
-//  default:
-//    vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid topology for spice model (%s)!\n",
-//               __FILE__, __LINE__, invbuf_spice_model->name);
-//    exit(1);
-//  }
+    break;
+  default:
+    vpr_printf(TIO_MESSAGE_ERROR,
+               "(File:%s,[LINE%d])Invalid topology for circuit model (name=%s)!\n",
+               __FILE__, __LINE__, circuit_lib.model_name(circuit_model));
+    exit(1);
+  }
 //
 //  /* Print timing info */
 //  dump_verilog_submodule_timing(fp, invbuf_spice_model);
@@ -302,7 +311,9 @@ void print_verilog_submodule_essentials(const std::string& verilog_dir,
   fp.close();
 
   /* Add fname to the linked list */
+  /* TODO: enable this when this function is completed
   submodule_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(submodule_verilog_subckt_file_path_head, verilog_fname.c_str());  
+   */
 
   return;
 }

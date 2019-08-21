@@ -227,6 +227,7 @@ class CircuitLibrary {
     bool mux_add_const_input(const CircuitModelId& model_id) const;
     size_t mux_const_input_value(const CircuitModelId& model_id) const;
     enum e_spice_model_gate_type gate_type(const CircuitModelId& model_id) const;
+    enum e_spice_model_buffer_type buffer_type(const CircuitModelId& model_id) const;
   public: /* Public Accessors: Basic data query on cirucit models' Circuit Ports*/
     CircuitPortId model_port(const CircuitModelId& model_id, const std::string& name) const;
     size_t num_model_ports(const CircuitModelId& model_id) const;

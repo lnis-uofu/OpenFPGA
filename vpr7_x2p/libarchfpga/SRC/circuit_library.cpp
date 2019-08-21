@@ -258,6 +258,17 @@ enum e_spice_model_gate_type CircuitLibrary::gate_type(const CircuitModelId& mod
   return gate_types_[model_id];
 }
 
+/* Return the type of buffer for a circuit model 
+ * Only applicable for BUF/INV circuit model 
+ */
+enum e_spice_model_buffer_type CircuitLibrary::buffer_type(const CircuitModelId& model_id) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  /* validate the circuit model type is MUX */
+  VTR_ASSERT(SPICE_MODEL_INVBUF == model_type(model_id));
+  return buffer_types_[model_id];
+}
+
 /************************************************************************
  * Public Accessors : Basic data query on Circuit models' Circuit Port
  ***********************************************************************/
