@@ -39,7 +39,7 @@
 #include "verilog_submodules.h"
 
 #include "mux_utils.h"
-#include "verilog_submodule_mux.h"
+#include "verilog_mux.h"
 
 /***** Subroutines *****/
 

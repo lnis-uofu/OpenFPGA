@@ -17,7 +17,7 @@
 /* FPGA-Verilog context header files */
 #include "verilog_global.h"
 #include "verilog_writer_utils.h"
-#include "verilog_submodule_essential.h"
+#include "verilog_essential_gates.h"
 
 
 /************************************************

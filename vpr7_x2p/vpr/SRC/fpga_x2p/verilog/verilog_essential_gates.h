@@ -6,8 +6,8 @@
  * logic gates etc. 
  ***********************************************/
 
-#ifndef VERILOG_SUBMODULE_ESSENTIAL_H
-#define VERILOG_SUBMODULE_ESSENTIAL_H
+#ifndef VERILOG_ESSENTIAL_GATES_H
+#define VERILOG_ESSENTIAL_GATES_H
 
 #include <string>
 #include "circuit_library.h"

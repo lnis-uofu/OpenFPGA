@@ -23,7 +23,7 @@
 /* FPGA-Verilog context header files */
 #include "verilog_global.h"
 #include "verilog_writer_utils.h"
-#include "verilog_submodule_mux.h"
+#include "verilog_mux.h"
 
 /***********************************************
  * Generate Verilog codes modeling an branch circuit 

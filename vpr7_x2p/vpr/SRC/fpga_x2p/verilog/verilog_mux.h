@@ -2,8 +2,8 @@
  * Header file for verilog_submodule_mux.cpp
  **********************************************/
 
-#ifndef VERILOG_SUBMODULE_MUX_H
-#define VERILOG_SUBMODULE_MUX_H
+#ifndef VERILOG_MUX_H
+#define VERILOG_MUX_H
 
 /* Include other header files which are dependency on the function declared below */
 #include <fstream>
