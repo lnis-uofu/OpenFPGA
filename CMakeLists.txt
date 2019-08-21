@@ -1,5 +1,11 @@
 cmake_minimum_required(VERSION 2.8.12)
 
+find_program(CCACHE_FOUND ccache)
+if(CCACHE_FOUND)
+        set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
+        set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
+endif(CCACHE_FOUND)
+
 if (${CMAKE_VERSION} VERSION_GREATER "3.8")
     #For cmake >= 3.9 INTERPROCEDURAL_OPTIMIZATION behaviour we need to explicitly
     #set the cmake policy version number

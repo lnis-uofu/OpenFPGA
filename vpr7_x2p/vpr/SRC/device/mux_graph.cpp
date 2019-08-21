@@ -610,7 +610,7 @@ void MuxGraph::build_mux_graph(const CircuitLibrary& circuit_lib,
   default:
     vpr_printf(TIO_MESSAGE_ERROR, 
                "(File:%s, [LINE%d]) Invalid multiplexer structure for circuit model (name=%s)!\n",
-              __FILE__, __LINE__, circuit_lib.model_name(circuit_model));
+              __FILE__, __LINE__, circuit_lib.model_name(circuit_model).c_str());
     exit(1);
   }
 
