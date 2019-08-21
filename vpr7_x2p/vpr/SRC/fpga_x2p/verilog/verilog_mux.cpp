@@ -75,32 +75,20 @@ void generate_verilog_cmos_mux_branch_module_structural(std::fstream& fp,
   fp << "module " << module_name << "(" << std::endl;
 
   /* Create port information */
-  BasicPort input_port;
   /* Configure each input port */
-  input_port.set_name(std::string("in"));
-  input_port.set_width(num_inputs);
+  BasicPort input_port("in", num_inputs);
 
-  BasicPort output_port;
-  /* Configure each input port */
-  output_port.set_name(std::string("out"));
-  output_port.set_width(num_outputs);
+  /* Configure each output port */
+  BasicPort output_port("out", num_outputs);
 
-  BasicPort mem_port;
-  /* Configure each input port */
-  mem_port.set_name(std::string("mem"));
-  mem_port.set_width(num_mems);
-
-  BasicPort mem_inv_port;
-  /* Configure each input port */
-  mem_inv_port.set_name(std::string("mem_inv"));
-  mem_inv_port.set_width(num_mems);
+  /* Configure each memory port */
+  BasicPort mem_port("mem", num_mems);
+  BasicPort mem_inv_port("mem_inv", num_mems);
 
   /* TODO: Generate global ports */
   for (const auto& port : tgate_global_ports) {
-    BasicPort basic_port;
-    /* Configure each input port */
-    basic_port.set_name(circuit_lib.port_prefix(port));
-    basic_port.set_width(circuit_lib.port_size(port));
+    /* Configure each global port */
+    BasicPort basic_port(circuit_lib.port_lib_name(port), circuit_lib.port_size(port));
     /* Print port */
     fp << "\t" << generate_verilog_port(VERILOG_PORT_INPUT, basic_port) << "," << std::endl;
   }

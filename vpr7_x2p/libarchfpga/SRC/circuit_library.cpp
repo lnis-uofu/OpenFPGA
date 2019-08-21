@@ -269,6 +269,24 @@ enum e_spice_model_buffer_type CircuitLibrary::buffer_type(const CircuitModelId&
   return buffer_types_[model_id];
 }
 
+/* Return the number of levels of buffer for a circuit model 
+ * Only applicable for BUF/INV circuit model 
+ */
+size_t CircuitLibrary::buffer_num_levels(const CircuitModelId& model_id) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  /* validate the circuit model type is BUF */
+  VTR_ASSERT(SPICE_MODEL_INVBUF == model_type(model_id));
+  return buffer_num_levels_[model_id];
+}
+
+/* Return the number of levels of delay types for a circuit model */
+size_t CircuitLibrary::num_delay_info(const CircuitModelId& model_id) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  return delay_types_[model_id].size();
+}
+
 /************************************************************************
  * Public Accessors : Basic data query on Circuit models' Circuit Port
  ***********************************************************************/
@@ -569,6 +587,57 @@ bool CircuitLibrary::port_is_prog(const CircuitPortId& circuit_port_id) const {
   /* validate the circuit_port_id */
   VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
   return port_is_prog_[circuit_port_id];
+}
+
+/************************************************************************
+ * Public Accessors : Methods to visit timing graphs 
+ ***********************************************************************/
+/* Find all the edges belonging to a circuit model */
+std::vector<CircuitEdgeId> CircuitLibrary::timing_edges_by_model(const CircuitModelId& model_id) const {
+  /* Validate the model id */
+  VTR_ASSERT_SAFE(valid_model_id(model_id));
+
+  std::vector<CircuitEdgeId> model_edges;
+  for (const auto& edge : edge_ids_) {
+    /* Bypass edges whose parent is not the model_id */
+    if (model_id != edge_parent_model_ids_[edge]) {
+      continue;
+    }
+    /* Update the edge list */
+    model_edges.push_back(edge);
+  }
+  return model_edges;
+}
+
+/* Get source/sink nodes and delay of edges */
+CircuitPortId CircuitLibrary::timing_edge_src_port(const CircuitEdgeId& edge) const {
+  /* Validate the edge id */
+  VTR_ASSERT_SAFE(valid_edge_id(edge));
+  return edge_src_port_ids_[edge];
+}
+
+size_t CircuitLibrary::timing_edge_src_pin(const CircuitEdgeId& edge) const { 
+  /* Validate the edge id */
+  VTR_ASSERT_SAFE(valid_edge_id(edge));
+  return edge_src_pin_ids_[edge];
+}
+
+CircuitPortId CircuitLibrary::timing_edge_sink_port(const CircuitEdgeId& edge) const {
+  /* Validate the edge id */
+  VTR_ASSERT_SAFE(valid_edge_id(edge));
+  return edge_sink_port_ids_[edge];
+}
+
+size_t CircuitLibrary::timing_edge_sink_pin(const CircuitEdgeId& edge) const {
+  /* Validate the edge id */
+  VTR_ASSERT_SAFE(valid_edge_id(edge));
+  return edge_sink_pin_ids_[edge];
+}
+
+float CircuitLibrary::timing_edge_delay(const CircuitEdgeId& edge, const enum spice_model_delay_type& delay_type) const {
+  /* Validate the edge id */
+  VTR_ASSERT_SAFE(valid_edge_id(edge));
+  return edge_timing_info_[edge][delay_type];
 }
 
 /************************************************************************
@@ -1498,7 +1567,7 @@ void CircuitLibrary::build_model_timing_graph(const CircuitModelId& model_id) {
             continue;
           }
           /* Add an edge to bridge the from_pin_id and to_pin_id */
-          add_edge(from_port_id, from_pin_id, to_port_id, to_pin_id);
+          add_edge(model_id, from_port_id, from_pin_id, to_port_id, to_pin_id);
         }
       }
     }
@@ -1540,14 +1609,19 @@ void CircuitLibrary::build_timing_graphs() {
  * Internal mutators: build timing graphs 
  ***********************************************************************/
 /* Add an edge between two pins of two ports, and assign an default timing value */
-void CircuitLibrary::add_edge(const CircuitPortId& from_port, const size_t& from_pin, 
+void CircuitLibrary::add_edge(const CircuitModelId& model_id, 
+                              const CircuitPortId& from_port, const size_t& from_pin, 
                               const CircuitPortId& to_port,   const size_t& to_pin) {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+
   /* Create an edge in the edge id list */ 
   CircuitEdgeId edge_id = CircuitEdgeId(edge_ids_.size());
   /* Expand the edge list  */
   edge_ids_.push_back(edge_id);
   
   /* Initialize other attributes */
+  edge_parent_model_ids_.push_back(model_id);
 
   /* Update the list of incoming edges for to_port */
   /* Resize upon need */
@@ -1755,6 +1829,11 @@ bool CircuitLibrary::valid_circuit_pin_id(const CircuitPortId& circuit_port_id, 
   /* validate the model_id */
   VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
   return ( size_t(pin_id) < port_size(circuit_port_id) ); 
+}
+
+bool CircuitLibrary::valid_edge_id(const CircuitEdgeId& edge_id) const {
+  /* validate the model_id */
+  return ( size_t(edge_id) < edge_ids_.size() ) && ( edge_id == edge_ids_[edge_id] ); 
 }
 
 bool CircuitLibrary::valid_delay_type(const CircuitModelId& model_id, const enum spice_model_delay_type& delay_type) const { 

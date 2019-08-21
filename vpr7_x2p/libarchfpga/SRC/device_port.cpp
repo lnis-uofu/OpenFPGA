@@ -13,6 +13,27 @@ BasicPort::BasicPort() {
   msb_ = 0;
 }
 
+/* Quick constructor */
+BasicPort::BasicPort(const char* name, const size_t& lsb, const size_t& msb) {
+  set_name(std::string(name));
+  set_width(lsb, msb);
+}
+
+BasicPort::BasicPort(const std::string& name, const size_t& lsb, const size_t& msb) {
+  set_name(name);
+  set_width(lsb, msb);
+}
+
+BasicPort::BasicPort(const char* name, const size_t& width) {
+  set_name(std::string(name));
+  set_width(width);
+}
+
+BasicPort::BasicPort(const std::string& name, const size_t& width) {
+  set_name(name);
+  set_width(width);
+}
+
 /* Copy constructor */
 BasicPort::BasicPort(const BasicPort& basic_port) {
   set(basic_port);
@@ -59,7 +80,7 @@ void BasicPort::set_name(const std::string& name) {
 }
  
 /* set the port LSB and MSB */
-void BasicPort::set_width(size_t width) {
+void BasicPort::set_width(const size_t& width) {
   if (0 == width) {
     make_invalid();
     return;
@@ -70,7 +91,7 @@ void BasicPort::set_width(size_t width) {
 }
  
 /* set the port LSB and MSB */
-void BasicPort::set_width(size_t lsb, size_t msb) {
+void BasicPort::set_width(const size_t& lsb, const size_t& msb) {
   /* If lsb and msb is invalid, we make a default port */
   if (lsb > msb) {
     make_invalid();
@@ -81,18 +102,18 @@ void BasicPort::set_width(size_t lsb, size_t msb) {
   return;
 }
  
-void BasicPort::set_lsb(size_t lsb) {
+void BasicPort::set_lsb(const size_t& lsb) {
   lsb_ = lsb;
   return;
 }
 
-void BasicPort::set_msb(size_t msb) {
+void BasicPort::set_msb(const size_t& msb) {
   msb_ = msb;
   return;
 }
 
 /* Increase the port width */
-void BasicPort::expand(size_t width) { 
+void BasicPort::expand(const size_t& width) { 
   if (0 == width) {
     return; /* ignore zero-width port */
   }
@@ -114,7 +135,7 @@ void BasicPort::revert() {
 }
  
 /* rotate: increase both lsb and msb by an offset  */
-bool BasicPort::rotate(size_t offset) {
+bool BasicPort::rotate(const size_t& offset) {
   /* If current port is invalid or offset is 0, 
    * we do nothing 
    */
@@ -134,7 +155,7 @@ bool BasicPort::rotate(size_t offset) {
 }
 
 /* rotate: decrease both lsb and msb by an offset  */
-bool BasicPort::counter_rotate(size_t offset) {
+bool BasicPort::counter_rotate(const size_t& offset) {
   /* If current port is invalid or offset is 0, 
    * we do nothing 
    */

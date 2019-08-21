@@ -218,16 +218,25 @@ class CircuitLibrary {
     bool dump_explicit_port_map(const CircuitModelId& model_id) const;
     enum e_spice_model_design_tech design_tech_type(const CircuitModelId& model_id) const;
     bool is_power_gated(const CircuitModelId& model_id) const;
+    /* General buffer information */
     bool is_input_buffered(const CircuitModelId& model_id) const;
     bool is_output_buffered(const CircuitModelId& model_id) const;
+    /* LUT-related information */
     bool is_lut_intermediate_buffered(const CircuitModelId& model_id) const;
+    /* Pass-gate-logic information */
     CircuitModelId pass_gate_logic_model(const CircuitModelId& model_id) const;
+    /* Multiplexer information */
     enum e_spice_model_structure mux_structure(const CircuitModelId& model_id) const;
     size_t mux_num_levels(const CircuitModelId& model_id) const;
     bool mux_add_const_input(const CircuitModelId& model_id) const;
     size_t mux_const_input_value(const CircuitModelId& model_id) const;
+    /* Gate information */
     enum e_spice_model_gate_type gate_type(const CircuitModelId& model_id) const;
+    /* Buffer information */
     enum e_spice_model_buffer_type buffer_type(const CircuitModelId& model_id) const;
+    size_t buffer_num_levels(const CircuitModelId& model_id) const;
+    /* Delay information */
+    size_t num_delay_info(const CircuitModelId& model_id) const;
   public: /* Public Accessors: Basic data query on cirucit models' Circuit Ports*/
     CircuitPortId model_port(const CircuitModelId& model_id, const std::string& name) const;
     size_t num_model_ports(const CircuitModelId& model_id) const;
@@ -256,6 +265,14 @@ class CircuitLibrary {
     bool port_is_set(const CircuitPortId& circuit_port_id) const;
     bool port_is_config_enable(const CircuitPortId& circuit_port_id) const;
     bool port_is_prog(const CircuitPortId& circuit_port_id) const;
+  public: /* Public Accessors: Timing graph */
+    /* Get source/sink nodes and delay of edges */
+    std::vector<CircuitEdgeId> timing_edges_by_model(const CircuitModelId& model_id) const;
+    CircuitPortId timing_edge_src_port(const CircuitEdgeId& edge) const;
+    size_t timing_edge_src_pin(const CircuitEdgeId& edge) const;
+    CircuitPortId timing_edge_sink_port(const CircuitEdgeId& edge) const;
+    size_t timing_edge_sink_pin(const CircuitEdgeId& edge) const;
+    float timing_edge_delay(const CircuitEdgeId& edge, const enum spice_model_delay_type& delay_type) const;
   public: /* Public Accessors: Methods to find circuit model */
     CircuitModelId model(const char* name) const;
     CircuitModelId model(const std::string& name) const;
@@ -411,7 +428,8 @@ class CircuitLibrary {
     void build_model_links();
     void build_timing_graphs();
   public: /* Internal mutators: build timing graphs */
-    void add_edge(const CircuitPortId& from_port, const size_t& from_pin, 
+    void add_edge(const CircuitModelId& model_id,
+                  const CircuitPortId& from_port, const size_t& from_pin, 
                   const CircuitPortId& to_port, const size_t& to_pin);
     void set_edge_delay(const CircuitModelId& model_id, 
                         const CircuitEdgeId& circuit_edge_id, 
@@ -427,6 +445,7 @@ class CircuitLibrary {
     bool valid_model_id(const CircuitModelId& model_id) const;
     bool valid_circuit_port_id(const CircuitPortId& circuit_port_id) const;
     bool valid_circuit_pin_id(const CircuitPortId& circuit_port_id, const size_t& pin_id) const;
+    bool valid_edge_id(const CircuitEdgeId& edge_id) const;
     bool valid_delay_type(const CircuitModelId& model_id, const enum spice_model_delay_type& delay_type) const;
     bool valid_circuit_edge_id(const CircuitEdgeId& circuit_edge_id) const;
     bool valid_mux_const_input_value(const size_t& const_input_value) const;
@@ -497,6 +516,7 @@ class CircuitLibrary {
 
     /* Timing graphs */
     vtr::vector<CircuitEdgeId, CircuitEdgeId> edge_ids_;
+    vtr::vector<CircuitEdgeId, CircuitModelId> edge_parent_model_ids_;
     vtr::vector<CircuitPortId, vtr::vector<size_t, CircuitEdgeId>> port_in_edge_ids_;
     vtr::vector<CircuitPortId, vtr::vector<size_t, CircuitEdgeId>> port_out_edge_ids_;
     vtr::vector<CircuitEdgeId, CircuitPortId> edge_src_port_ids_;

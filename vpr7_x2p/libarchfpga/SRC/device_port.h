@@ -11,6 +11,10 @@
 class BasicPort {
   public: /* Constructors */
     BasicPort();
+    BasicPort(const char* name, const size_t& lsb, const size_t& msb);
+    BasicPort(const char* name, const size_t& width);
+    BasicPort(const std::string& name, const size_t& lsb, const size_t& msb);
+    BasicPort(const std::string& name, const size_t& width);
     BasicPort(const BasicPort& basic_port); /* Copy constructor */
   public: /* Accessors */
     size_t get_width() const; /* get the port width */
@@ -21,14 +25,14 @@ class BasicPort {
   public: /* Mutators */
     void set(const BasicPort& basic_port); /* copy */
     void set_name(const std::string& name); /* set the port LSB and MSB */
-    void set_width(size_t width); /* set the port LSB and MSB */
-    void set_width(size_t lsb, size_t msb); /* set the port LSB and MSB */
-    void set_lsb(size_t lsb);
-    void set_msb(size_t msb);
-    void expand(size_t width); /* Increase the port width */
+    void set_width(const size_t& width); /* set the port LSB and MSB */
+    void set_width(const size_t& lsb, const size_t& msb); /* set the port LSB and MSB */
+    void set_lsb(const size_t& lsb);
+    void set_msb(const size_t& msb);
+    void expand(const size_t& width); /* Increase the port width */
     void revert(); /* Swap lsb and msb */
-    bool rotate(size_t offset); /* rotate */
-    bool counter_rotate(size_t offset); /* counter rotate */
+    bool rotate(const size_t& offset); /* rotate */
+    bool counter_rotate(const size_t& offset); /* counter rotate */
     void reset(); /* Reset to initial port */
     void combine(const BasicPort& port); /* Combine two ports */
   private: /* internal functions */

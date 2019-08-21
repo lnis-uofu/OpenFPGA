@@ -17,11 +17,11 @@ Inverters and Buffers
 
 * design_technology:
 
-	* **topology:** [inverter|buffer]. Specify the type of this component, can be either an inverter or a buffer.
+	* **topology:** [``inverter`` | ``buffer``]. Specify the type of this component, can be either an inverter or a buffer.
 
 	* **size:** Specify the driving strength of inverter/buffer. For a buffer, the size is the driving strength of the inverter at the second level. We consider a two-level structure for a buffer here. The support for multi-level structure of a buffer will be introduced in the tapered options.
 
-	* **tapered:** [on|off]. Define if the buffer is a tapered (multi-level) buffer. *If "on" the following parameter are required.*
+	* **tapered:** [``on`` | ``off``]. Define if the buffer is a tapered (multi-level) buffer. *If ``on`` the following parameter are required.*
 
 		* **tap_drive_level:** Define the number of levels of a tapered buffer. This parameter is valid only when tapered is turned on.
 
@@ -54,6 +54,21 @@ This example shows:
 	* Size of 1 for the output strength
 	* The tapered parameter is not declared and is off by default
 
+**Power-gated Inverter x1 example**
+
+The XML code describing an inverter which can be power-gated by the control signals ``EN`` and ``ENB`` :
+
+.. code-block:: xml
+
+  <circuit_model type="inv_buf" name="INVTX1" prefix="INVTX1">
+    <design_technology type="cmos" topology="inverter" size="3" tapered="off" power_gated="true"/>
+    <port type="input" prefix="in" size="1" lib_name="I"/>
+    <port type="input" prefix="EN" size="1" lib_name="EN" is_global="true" default_val="0" is_config_enable="true"/>
+    <port type="input" prefix="ENB" size="1" lib_name="ENB" is_global="true" default_val="1" is_config_enable="true"/>
+    <port type="output" prefix="out" size="1" lib_name="Z"/>
+  </circuit_model>
+
+.. note:: For power-gated inverters: all the control signals must be set as ``config_enable`` so that the testbench generation will generate testing waveforms. If the power-gated inverters are auto-generated , all the ``config_enable`` signals must be ``global`` signals as well. If the pwoer-gated inverters come from user-defined netlists, restrictions on ``global`` signals are free.
 
 **Buffer x2 example**
 
