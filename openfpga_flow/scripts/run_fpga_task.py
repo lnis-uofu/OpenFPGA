@@ -14,9 +14,9 @@ import csv
 from string import Template
 import run_fpga_flow
 import pprint
-import importlib
+from importlib import util
 
-if importlib.util.find_spec("humanize"):
+if util.find_spec("humanize"):
     import humanize
 
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
