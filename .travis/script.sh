@@ -26,4 +26,4 @@ end_section "OpenFPGA.build"
 $SPACER
 
 cd -
-python3.5 ./openfpga_flow/scripts/run_fpga_task.py basic_flow
+python3.5 ./openfpga_flow/scripts/run_fpga_task.py regression/regression_quick
