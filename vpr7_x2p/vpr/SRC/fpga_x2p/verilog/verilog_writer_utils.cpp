@@ -107,6 +107,10 @@ std::string generate_verilog_port(const enum e_dump_verilog_port_type& verilog_p
    * others require a format of <port_type> [<lsb>:<msb>] <port_name> 
    */
   if (VERILOG_PORT_CONKT == verilog_port_type) {
+    /* When LSB == MSB, we can use a simplified format <port_type>[<lsb>]*/
+    if ( 1 == port_info.get_width()) {
+      size_str = "[" + std::to_string(port_info.get_lsb()) + "]";
+    }
     verilog_line = port_info.get_name() + size_str;
   } else { 
     verilog_line = VERILOG_PORT_TYPE_STRING[verilog_port_type]; 
