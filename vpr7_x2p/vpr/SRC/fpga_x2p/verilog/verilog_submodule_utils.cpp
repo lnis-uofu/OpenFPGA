@@ -21,10 +21,12 @@
 #include "verilog_submodule_utils.h"
 
 /* All values are printed with this precision value. The higher the
- * value, the more accurate timing assignment is. Using numeric_limits
- * max_digits10 guarentees that no values change during a sequence of
- * float -> string -> float conversions */
-constexpr int FLOAT_PRECISION = std::numeric_limits<float>::max_digits10;
+ * value, the more accurate timing assignment is. Using a number of 6
+ * guarentees that a precision of femtosecond which is sufficent for 
+ * electrical simulation (simulation timescale is 10-9 
+ */
+/* constexpr int FLOAT_PRECISION = std::numeric_limits<float>::max_digits10; */
+constexpr int FLOAT_PRECISION = 6; 
 
 /************************************************
  * Print a timing matrix defined in theecircuit model

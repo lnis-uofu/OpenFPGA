@@ -68,11 +68,8 @@ void generate_verilog_cmos_mux_branch_module_structural(std::fstream& fp,
   /* MUX graph must have only 1 level*/
   VTR_ASSERT(1 == mux_graph.num_levels());
 
-  /* Comment lines */
-  fp << "//---- Structural Verilog for CMOS MUX basis module:" << module_name << "-----" << std::endl;
-
-  /* Print the port list and definition */
-  fp << "module " << module_name << "(" << std::endl;
+  /* Print Verilog module */
+  print_verilog_module_definition(fp, module_name);
 
   /* Create port information */
   /* Configure each input port */
@@ -103,7 +100,7 @@ void generate_verilog_cmos_mux_branch_module_structural(std::fstream& fp,
   fp << ");" << std::endl;
 
   /* Verilog Behavior description for a MUX */
-  fp << "//---- Structure-level description -----" << std::endl;
+  print_verilog_comment(fp, std::string("---- Structure-level description -----"));
   /* Special case: only one memory, switch case is simpler 
    * When mem = 1, propagate input 0; 
    * when mem = 0, propagate input 1;
@@ -172,13 +169,8 @@ void generate_verilog_cmos_mux_branch_module_structural(std::fstream& fp,
     }
   }
 
-  /* Put an end to this module */
-  fp << "endmodule" << std::endl;
-
-  /* Comment lines */
-  fp << "//---- END Structural Verilog CMOS MUX basis module: " << module_name << "-----" << std::endl << std::endl;
-
-  return;
+  /* Put an end to the Verilog module */
+  print_verilog_module_end(fp, module_name);
 }
 
 /***********************************************
@@ -224,7 +216,7 @@ void generate_verilog_mux_branch_module(std::fstream& fp,
   default:
     vpr_printf(TIO_MESSAGE_ERROR,
                "(FILE:%s,LINE[%d]) Invalid design technology of multiplexer (name: %s)\n",
-               __FILE__, __LINE__, circuit_lib.model_name(circuit_model)); 
+               __FILE__, __LINE__, circuit_lib.model_name(circuit_model).c_str()); 
     exit(1);
   }
 
