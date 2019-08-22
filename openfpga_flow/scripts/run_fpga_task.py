@@ -88,6 +88,7 @@ def validate_command_line_arguments():
     if args.debug:
         logger.info("Setting loggger in debug mode")
         logger.setLevel(logging.DEBUG)
+    logger.info("Set up to run %d Parallel threads", args.maxthreads)
 
 
 def generate_each_task_actions(taskname):
@@ -239,6 +240,16 @@ def create_run_command(curr_job_dir, archfile, benchmark_obj, task_conf):
     return command
 
 
+def strip_child_logger_info(line):
+    try:
+        logtype, message = line.split(" - ", 1)
+        lognumb = {"CRITICAL": 50, "ERROR": 40, "WARNING": 30,
+                   "INFO": 20, "DEBUG": 10, "NOTSET": 0}
+        logger.log(lognumb["INFO"], message)
+    except:
+        logger.info(line)
+
+
 def run_single_script(s, eachJob):
     logger.debug('Added job in pool')
     with s:
@@ -257,7 +268,7 @@ def run_single_script(s, eachJob):
                                            universal_newlines=True)
                 for line in process.stdout:
                     if not args.skip_tread_logs:
-                        logging.info(line[:-1])
+                        strip_child_logger_info(line[:-1])
                     sys.stdout.buffer.flush()
                     output.write(line)
                 process.wait()
