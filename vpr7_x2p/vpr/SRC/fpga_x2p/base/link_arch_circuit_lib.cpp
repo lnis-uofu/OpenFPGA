@@ -234,8 +234,9 @@ t_port* find_pb_type_port_match_circuit_model_port(const t_pb_type* pb_type,
       case SPICE_MODEL_PORT_SRAM:
         break;
       default:
-        vpr_printf(TIO_MESSAGE_ERROR,"(File:%s, [LINE%d])Invalid type for circuit model port(%s)!\n",
-                   __FILE__, __LINE__, circuit_lib.port_prefix(circuit_port));
+        vpr_printf(TIO_MESSAGE_ERROR,
+                   "(File:%s, [LINE%d])Invalid type for circuit model port(%s)!\n",
+                   __FILE__, __LINE__, circuit_lib.port_prefix(circuit_port).c_str());
         exit(1);
       }
     }

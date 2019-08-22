@@ -95,13 +95,20 @@ void print_verilog_submodule_signal_init(std::fstream& fp,
   /* Only for formal verification: deposite a zero signal values */
   /* Initialize each input port */
   for (const auto& input_port : circuit_lib.model_input_ports(circuit_model)) {
-    fp << "\t\t$deposit(" << circuit_lib.port_lib_name(input_port) << ", 1'b0);" << std::endl;
+    BasicPort input_port_info(circuit_lib.port_lib_name(input_port), circuit_lib.port_size(input_port));
+    fp << "\t\t$deposit(";
+    fp << generate_verilog_port(VERILOG_PORT_CONKT, input_port_info);
+    fp << ", " <<  circuit_lib.port_size(input_port) << "'b" << std::string(circuit_lib.port_size(input_port), '0');
+    fp << ");" << std::endl;
   }
   fp << "\t`else" << std::endl;
 
   /* Regular case: deposite initial signal values: a random value */
   for (const auto& input_port : circuit_lib.model_input_ports(circuit_model)) {
-    fp << "\t\t$deposit(" << circuit_lib.port_lib_name(input_port) << ", $random);" << std::endl;
+    BasicPort input_port_info(circuit_lib.port_lib_name(input_port), circuit_lib.port_size(input_port));
+    fp << "\t\t$deposit(";
+    fp << generate_verilog_port(VERILOG_PORT_CONKT, input_port_info);
+    fp << ", $random);" << std::endl;
   }
 
   fp << "\t`endif\n" << std::endl;

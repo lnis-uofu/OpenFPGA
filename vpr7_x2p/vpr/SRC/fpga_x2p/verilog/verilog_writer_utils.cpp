@@ -33,7 +33,7 @@ void print_verilog_file_header(std::fstream& fp,
   fp << "//\tFPGA Synthesizable Verilog Netlist" << std::endl;
   fp << "//\tDescription: " << usage << std::endl;
   fp << "//\tAuthor: Xifan TANG" << std::endl;
-  fp << "//\t Organization: University of Utah" << std::endl;
+  fp << "//\tOrganization: University of Utah" << std::endl;
   fp << "//\tDate: " << std::ctime(&end_time) ;
   fp << "//-------------------------------------------" << std::endl;
   fp << "//----- Time scale -----" << std::endl;
@@ -107,10 +107,10 @@ std::string generate_verilog_port(const enum e_dump_verilog_port_type& verilog_p
    * others require a format of <port_type> [<lsb>:<msb>] <port_name> 
    */
   if (VERILOG_PORT_CONKT == verilog_port_type) {
-    verilog_line = port_info.get_name() + " " + size_str;
+    verilog_line = port_info.get_name() + size_str;
   } else { 
     verilog_line = VERILOG_PORT_TYPE_STRING[verilog_port_type]; 
-    verilog_line += "" + size_str + " " + port_info.get_name();
+    verilog_line += " " + size_str + " " + port_info.get_name();
   }
 
   return verilog_line;
