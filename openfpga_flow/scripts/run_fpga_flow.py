@@ -60,6 +60,13 @@ parser.add_argument('--yosys_tmpl', type=str,
 parser.add_argument('--debug', action="store_true",
                     help="Run script in debug mode")
 
+# Blif_VPR Only flow arguments
+parser.add_argument('--activity_file', type=str,
+                    help="Activity file used while running yosys flow")
+parser.add_argument('--base_verilog', type=str,
+                    help="Original Verilog file to run verification in " +
+                    "blif_VPR flow")
+
 # ACE2 and power estimation related arguments
 parser.add_argument('--K', type=int,
                     help="LUT Size, if not specified extracted from arch file")
@@ -99,6 +106,8 @@ X2PParse.add_argument('--vpr_fpga_x2p_signal_density_weight', type=float,
                       help="Specify the signal_density_weight of VPR FPGA SPICE")
 X2PParse.add_argument('--vpr_fpga_x2p_sim_window_size', type=float,
                       help="specify the sim_window_size of VPR FPGA SPICE")
+X2PParse.add_argument('--vpr_fpga_x2p_compact_routing_hierarchy',
+                      action="store_true", help="Compact_routing_hierarchy")
 
 # VPR - FPGA-SPICE Extension
 SPParse = parser.add_argument_group('FPGA-SPICE Extension')
@@ -162,6 +171,8 @@ VeriPar.add_argument('--vpr_fpga_verilog_print_input_blif_tb',
 VeriPar.add_argument('--vpr_fpga_verilog_print_modelsim_autodeck', type=str,
                      help="Print modelsim " +
                      "simulation script", metavar="<modelsim.ini_path>")
+VeriPar.add_argument('--vpr_fpga_verilog_explicit_mapping', action="store_true",
+                     help="Explicit Mapping")
 
 # VPR - FPGA-Bitstream Extension
 BSparse = parser.add_argument_group('FPGA-Bitstream Extension')
@@ -199,15 +210,17 @@ def main():
     if (args.fpga_flow == "yosys_vpr"):
         logger.info('Running "yosys_vpr" Flow')
         run_yosys_with_abc()
-    if (args.fpga_flow == "vtr"):
-        run_odin2()
-        run_abc_vtr()
-    if (args.fpga_flow == "vtr_standard"):
-        run_abc_for_standarad()
+        run_rewrite_verilog()
     if args.power:
         run_ace2()
         run_pro_blif_3arg()
-    run_rewrite_verilog()
+    if (args.fpga_flow == "vpr_blif"):
+        collect_files_for_vpr()
+    # if (args.fpga_flow == "vtr"):
+    #     run_odin2()
+    #     run_abc_vtr()
+    # if (args.fpga_flow == "vtr_standard"):
+    #     run_abc_for_standarad()
     run_vpr()
     if args.end_flow_with_test:
         run_netlists_verification()
@@ -295,6 +308,10 @@ def validate_command_line_arguments():
 
     # Expand run directory to absolute path
     args.run_dir = os.path.abspath(args.run_dir)
+    if args.activity_file:
+        args.activity_file = os.path.abspath(args.activity_file)
+    if args.base_verilog:
+        args.base_verilog = os.path.abspath(args.base_verilog)
 
 
 def ask_user_quetion(condition, question):
@@ -499,6 +516,7 @@ def run_pro_blif_3arg():
 
 
 def run_vpr():
+    if not args.fix_route_chan_width:
     # Run Standard VPR Flow
     min_channel_width = run_standard_vpr(
         args.top_module+".blif",
@@ -573,7 +591,7 @@ def run_standard_vpr(bench_blif, fixed_chan_width, logfile, route_only=False):
         command += ["--timing_driven_clustering", "off"]
     #  channel width option
     if fixed_chan_width >= 0:
-        command += ["--route_chan_width", "%d"%fixed_chan_width]
+        command += ["--route_chan_width", "%d" % fixed_chan_width]
     if args.vpr_use_tileable_route_chan_width:
         command += ["--use_tileable_route_chan_width"]
 
@@ -586,6 +604,9 @@ def run_standard_vpr(bench_blif, fixed_chan_width, logfile, route_only=False):
         if args.vpr_fpga_x2p_sim_window_size:
             command += ["--fpga_x2p_sim_window_size",
                         args.vpr_fpga_x2p_sim_window_size]
+        if args.vpr_fpga_x2p_compact_routing_hierarchy:
+            command += ["--fpga_x2p_compact_routing_hierarchy"]
+
         if args.vpr_fpga_spice_sim_mt_num:
             command += ["--fpga_spice_sim_mt_num",
                         args.vpr_fpga_spice_sim_mt_num]
@@ -627,6 +648,8 @@ def run_standard_vpr(bench_blif, fixed_chan_width, logfile, route_only=False):
                         args.top_module+"_output_verilog.v"]
         if args.vpr_fpga_verilog_include_timing:
             command += ["--fpga_verilog_include_timing"]
+        if args.vpr_fpga_verilog_explicit_mapping:
+            command += ["--fpga_verilog_explicit_mapping"]
         if args.vpr_fpga_verilog_include_signal_init:
             command += ["--fpga_verilog_include_signal_init"]
         if args.vpr_fpga_verilog_formal_verification_top_netlist:
