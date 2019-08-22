@@ -84,7 +84,8 @@ void print_verilog_power_gated_invbuf_body(std::fstream& fp,
    *    we wire the input to output
    */
   if ( (SPICE_MODEL_BUF_INV == circuit_lib.buffer_type(circuit_model))
-    || ( (SPICE_MODEL_BUF_INV == circuit_lib.buffer_type(circuit_model))
+    || ( (SPICE_MODEL_BUF_BUF == circuit_lib.buffer_type(circuit_model))
+      && (size_t(-1) != circuit_lib.buffer_num_levels(circuit_model)) 
       && (1 == circuit_lib.buffer_num_levels(circuit_model) % 2 ) ) ) {
     fp << "~";
   } 
@@ -112,7 +113,7 @@ void print_verilog_invbuf_body(std::fstream& fp,
 
   print_verilog_comment(fp, std::string("----- Verilog codes of a regular inverter -----"));
   
-  fp << "\tassign " << circuit_lib.port_lib_name(output_port) << " = (" << circuit_lib.port_lib_name(input_port) << " == 1'bz)? $random : ";
+  fp << "\tassign " << circuit_lib.port_lib_name(output_port) << " = (" << circuit_lib.port_lib_name(input_port) << " === 1'bz)? $random : ";
 
   /* Branch on the type of inverter/buffer: 
    * 1. If this is an inverter or an tapered(multi-stage) buffer with odd number of stages, 
@@ -121,7 +122,8 @@ void print_verilog_invbuf_body(std::fstream& fp,
    *    we wire the input to output
    */
   if ( (SPICE_MODEL_BUF_INV == circuit_lib.buffer_type(circuit_model))
-    || ( (SPICE_MODEL_BUF_INV == circuit_lib.buffer_type(circuit_model))
+    || ( (SPICE_MODEL_BUF_BUF == circuit_lib.buffer_type(circuit_model))
+      && (size_t(-1) != circuit_lib.buffer_num_levels(circuit_model)) 
       && (1 == circuit_lib.buffer_num_levels(circuit_model) % 2 ) ) ) {
     fp << "~";
   } 
@@ -208,7 +210,7 @@ void print_verilog_invbuf_module(std::fstream& fp,
     && ( SPICE_MODEL_BUF_BUF != circuit_lib.buffer_type(circuit_model)) ) {
     vpr_printf(TIO_MESSAGE_ERROR,
                "(File:%s,[LINE%d])Invalid topology for circuit model (name=%s)!\n",
-               __FILE__, __LINE__, circuit_lib.model_name(circuit_model));
+               __FILE__, __LINE__, circuit_lib.model_name(circuit_model).c_str());
     exit(1);
   }
 
@@ -272,7 +274,7 @@ void print_verilog_passgate_module(std::fstream& fp,
   default:
     vpr_printf(TIO_MESSAGE_ERROR,
                "(File:%s,[LINE%d])Invalid topology for circuit model (name=%s)!\n",
-               __FILE__, __LINE__, circuit_lib.model_name(circuit_model));
+               __FILE__, __LINE__, circuit_lib.model_name(circuit_model).c_str());
     exit(1);
   }
 
@@ -556,7 +558,7 @@ void print_verilog_submodule_essentials(const std::string& verilog_dir,
                                         const std::string& submodule_dir,
                                         const CircuitLibrary& circuit_lib) {
   /* TODO: remove .bak when this part is completed and tested */
-  std::string verilog_fname = submodule_dir + essentials_verilog_file_name + ".bak";
+  std::string verilog_fname = submodule_dir + essentials_verilog_file_name;
 
   std::fstream fp;
 
@@ -597,9 +599,7 @@ void print_verilog_submodule_essentials(const std::string& verilog_dir,
   fp.close();
 
   /* Add fname to the linked list */
-  /* TODO: enable this when this function is completed
   submodule_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(submodule_verilog_subckt_file_path_head, verilog_fname.c_str());  
-   */
 
   return;
 }

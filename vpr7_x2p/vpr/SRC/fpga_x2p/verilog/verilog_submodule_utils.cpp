@@ -68,9 +68,9 @@ void print_verilog_submodule_timing(std::fstream& fp,
      fp << " => ";
      fp << generate_verilog_port(VERILOG_PORT_CONKT, sink_port_info) << ")";
      fp << " = ";
-     fp << "(" << std::setprecision(FLOAT_PRECISION) << circuit_lib.timing_edge_delay(timing_edge, SPICE_MODEL_DELAY_RISE);
+     fp << "(" << std::setprecision(FLOAT_PRECISION) << circuit_lib.timing_edge_delay(timing_edge, SPICE_MODEL_DELAY_RISE) / verilog_sim_timescale;
      fp << " , ";
-     fp << std::setprecision(FLOAT_PRECISION) << circuit_lib.timing_edge_delay(timing_edge, SPICE_MODEL_DELAY_RISE) << ")";
+     fp << std::setprecision(FLOAT_PRECISION) << circuit_lib.timing_edge_delay(timing_edge, SPICE_MODEL_DELAY_FALL) / verilog_sim_timescale << ")";
      fp << ";" << std::endl;
   }
 

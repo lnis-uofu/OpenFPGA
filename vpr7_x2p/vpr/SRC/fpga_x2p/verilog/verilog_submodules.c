@@ -4053,9 +4053,11 @@ void dump_verilog_submodules(t_sram_orgz_info* cur_sram_orgz_info,
 
   /* 0. basic units: inverter, buffers and pass-gate logics, */
   vpr_printf(TIO_MESSAGE_INFO, "Generating essential modules...\n");
+  /* To be removed when testing passed 
   dump_verilog_submodule_essentials(verilog_dir, submodule_dir,
                                     Arch.spice->num_spice_model, 
                                     Arch.spice->spice_models);
+   */
   print_verilog_submodule_essentials(std::string(verilog_dir), 
                                      std::string(submodule_dir),
                                      Arch.spice->circuit_lib);

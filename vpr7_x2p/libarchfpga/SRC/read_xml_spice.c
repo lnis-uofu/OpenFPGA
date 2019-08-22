@@ -510,13 +510,18 @@ static void ProcessSpiceModelBuffer(ezxml_t Node,
   ezxml_set_attr(Node, "topology", NULL);
 
   /*Find Tapered*/
+  /* Set default values*/
+  buffer->tapered_buf = 0;
+  buffer->tap_buf_level = 2;
+  buffer->f_per_stage = 4;
+  /* Parse XML */
   Prop = my_strdup(FindProperty(Node, "tapered", read_buf_info));
   if (NULL != Prop) {
     if (0 == strcmp(Prop,"on")) {
       buffer->tapered_buf = 1;
       /* Try to dig more properites ...*/
-     buffer->tap_buf_level = GetIntProperty(Node, "tap_drive_level", TRUE, 1);
-     buffer->f_per_stage = GetIntProperty(Node, "f_per_stage", FALSE, 4);
+      buffer->tap_buf_level = GetIntProperty(Node, "tap_drive_level", TRUE, 2);
+      buffer->f_per_stage = GetIntProperty(Node, "f_per_stage", FALSE, 4);
       ezxml_set_attr(Node, "tap_drive_level", NULL);
       ezxml_set_attr(Node, "f_per_stage", NULL);
     } else if (0 == strcmp(FindProperty(Node,"tapered",TRUE),"off")) {
