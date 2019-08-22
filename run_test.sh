@@ -23,7 +23,7 @@ python3.5 openfpga_flow/scripts/run_fpga_flow.py \
 --fpga_flow vpr_blif \
 --top_module test_modes \
 --activity_file ./openfpga_flow/benchmarks/Test_Modes/test_modes.act \
---base_verilog ./openfpga_flow/benchmarks/Test_Modes/test_modes.v\
+--base_verilog ./openfpga_flow/benchmarks/Test_Modes/test_modes.v \
 --power \
 --power_tech ./openfpga_flow/tech/PTM_45nm/45nm.xml \
 --fix_route_chan_width 300 \
