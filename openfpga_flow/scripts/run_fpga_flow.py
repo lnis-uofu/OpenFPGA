@@ -2,6 +2,7 @@ import os
 import sys
 import shutil
 import time
+from datetime import timedelta
 import shlex
 import glob
 import argparse
@@ -13,6 +14,9 @@ import threading
 from string import Template
 import re
 import xml.etree.ElementTree as ET
+from importlib import util
+if util.find_spec("humanize"):
+    import humanize
 
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 # Initialise general paths for the script
@@ -188,13 +192,14 @@ RegParse.add_argument("--end_flow_with_test", action="store_true",
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 # Global varaibles declaration
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-# Varible to store logger instance
-logger = None
-# arguments are parsed at the end of the script depending upon whether script
-# is called externally or as a standalone
-args = None
+# Setting up print and logging system
+logging.basicConfig(level=logging.INFO, stream=sys.stdout,
+                    format='%(levelname)s - %(message)s')
+logger = logging.getLogger('OpenFPGA_Flow_Logs')
+
 # variable to store script_configuration and cad tool paths
 config, cad_tools = None, None
+ExecTime = {}
 
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 # Main program starts here
@@ -211,9 +216,9 @@ def main():
         logger.info('Running "yosys_vpr" Flow')
         run_yosys_with_abc()
         run_rewrite_verilog()
-    if args.power:
-        run_ace2()
-        run_pro_blif_3arg()
+        if args.power:
+            run_ace2()
+            run_pro_blif_3arg()
     if (args.fpga_flow == "vpr_blif"):
         collect_files_for_vpr()
     # if (args.fpga_flow == "vtr"):
@@ -224,6 +229,20 @@ def main():
     run_vpr()
     if args.end_flow_with_test:
         run_netlists_verification()
+
+    ExecTime["End"] = time.time()
+    def timestr(x): return humanize.naturaldelta(timedelta(seconds=x)) \
+        if "humanize" in sys.modules else str(int(x)) + " Sec "
+    TimeInfo = ("Openfpga_flow completed, " +
+                "Total Time Taken %s " %
+                timestr(ExecTime["End"]-ExecTime["Start"]) +
+                "VPR Time %s " %
+                timestr(ExecTime["VPREnd"]-ExecTime["VPRStart"]))
+    TimeInfo += ("Verification Time %s " %
+                 timestr(ExecTime["VerificationEnd"] -
+                         ExecTime["VerificationStart"])
+                 if args.end_flow_with_test else "")
+    logger.info(TimeInfo)
     exit()
 
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
@@ -270,7 +289,7 @@ def validate_command_line_arguments():
 
     # Check if flow supported
     if not args.fpga_flow in config.get("FLOW_SCRIPT_CONFIG", "valid_flows"):
-        clean_up_and_exit("%s Flow not supported"%args.fpga_flow)
+        clean_up_and_exit("%s Flow not supported" % args.fpga_flow)
 
     # Check if argument list is consistant
     for eacharg, dependent in config.items("CMD_ARGUMENT_DEPENDANCY"):
@@ -278,8 +297,8 @@ def validate_command_line_arguments():
             dependent = dependent.split(",")
             for eachdep in dependent:
                 if not any([getattr(args, i, 0) for i in eachdep.split("|")]):
-                    clean_up_and_exit("'%s' argument depends on (%s) argumets"%
-                        (eacharg, ", ".join(dependent).replace("|", " or ")))
+                    clean_up_and_exit("'%s' argument depends on (%s) argumets" %
+                                      (eacharg, ", ".join(dependent).replace("|", " or ")))
 
     # Filter provided architecrue files
     args.arch_file = os.path.abspath(args.arch_file)
@@ -292,7 +311,7 @@ def validate_command_line_arguments():
         if os.path.isdir(args.benchmark_files[index]):
             logger.warning("Skipping directory in bench %s" % everyinput)
             logger.warning("Directory is not support in benchmark list" +
-            "use wildcard pattern to add files")
+                           "use wildcard pattern to add files")
             continue
         for everyfile in glob.glob(args.benchmark_files[index]):
             if not os.path.isfile(everyfile):
@@ -515,15 +534,25 @@ def run_pro_blif_3arg():
     logger.info("blif_3args output is written in file %s" % filename)
 
 
+def collect_files_for_vpr():
+    if len(args.benchmark_files) > 1:
+        logger.error("Expecting Single Benchmark BLif file.")
+    shutil.copy(args.benchmark_files[0], args.top_module+".blif")
+    shutil.copy(args.activity_file, args.top_module+"_ace_out.act")
+    shutil.copy(args.base_verilog, args.top_module+"_output_verilog.v")
+
+
 def run_vpr():
+    ExecTime["VPRStart"] = time.time()
+
     if not args.fix_route_chan_width:
-    # Run Standard VPR Flow
-    min_channel_width = run_standard_vpr(
-        args.top_module+".blif",
-        -1,
-        args.top_module+"_min_chan_width_vpr.txt")
-    logger.info("Standard VPR flow routed with minimum %d Channels" %
-                min_channel_width)
+        # Run Standard VPR Flow
+        min_channel_width = run_standard_vpr(
+            args.top_module+".blif",
+            -1,
+            args.top_module+"_min_chan_width_vpr.txt")
+        logger.info("Standard VPR flow routed with minimum %d Channels" %
+                    min_channel_width)
 
     # Minimum routing channel width
     if (args.min_route_chan_width):
@@ -536,8 +565,8 @@ def run_vpr():
         while(1):
             res = run_standard_vpr(args.top_module+".blif",
                                    int(min_channel_width),
-                                args.top_module+"_reroute_vpr.txt",
-                                route_only=True)
+                                   args.top_module+"_reroute_vpr.txt",
+                                   route_only=True)
 
             if res:
                 logger.info("Routing with channel width=%d successful" %
@@ -568,6 +597,7 @@ def run_vpr():
         extract_vpr_stats(logfile=args.top_module+".power",
                           r_filename="vpr_power_stat",
                           parse_section="power")
+    ExecTime["VPREnd"] = time.time()
 
 
 def run_standard_vpr(bench_blif, fixed_chan_width, logfile, route_only=False):
@@ -690,6 +720,7 @@ def run_standard_vpr(bench_blif, fixed_chan_width, logfile, route_only=False):
 
     chan_width = None
     try:
+        logger.debug("Running VPR : " + " ".join(command))
         with open(logfile, 'w+') as output:
             output.write(" ".join(command)+"\n")
             process = subprocess.run(command,
@@ -737,8 +768,8 @@ def extract_vpr_stats(logfile, r_filename="vpr_stat", parse_section="vpr"):
                     extract_val = str(match.group(1))
                 elif filt_function.strip() == "scientific":
                     try:
-                        mult = {"m":1E-3, "u":1E-6, "n":1E-9,
-                        "K":1E-3, "M":1E-6, "G":1E-9,}.get(match.group(2)[0], 1)
+                        mult = {"m": 1E-3, "u": 1E-6, "n": 1E-9,
+                                "K": 1E-3, "M": 1E-6, "G": 1E-9, }.get(match.group(2)[0], 1)
                     except:
                         mult = 1
                     extract_val = float(match.group(1))*mult
@@ -746,7 +777,7 @@ def extract_vpr_stats(logfile, r_filename="vpr_stat", parse_section="vpr"):
                     extract_val = match.group(1)
             except:
                 logger.exception("Filter failed")
-                extract_val= "Filter Failed"
+                extract_val = "Filter Failed"
             resultDict[name] = extract_val
 
     dummyparser = ConfigParser()
@@ -755,7 +786,7 @@ def extract_vpr_stats(logfile, r_filename="vpr_stat", parse_section="vpr"):
     with open(r_filename+'.result', 'w') as configfile:
         dummyparser.write(configfile)
     logger.info("%s result extracted in file %s" %
-    (parse_section,r_filename+'.result'))
+                (parse_section, r_filename+'.result'))
 
 
 def run_rewrite_verilog():
@@ -776,13 +807,15 @@ def run_rewrite_verilog():
             if process.returncode:
                 logger.info("Rewrite veri yosys run failed with returncode %d",
                             process.returncode)
-    except:
+    except Exception as e:
         logger.exception("Failed to run VPR")
+        print(e.output)
         clean_up_and_exit("")
     logger.info("Yosys output is written in file yosys_rewrite_veri_output.txt")
 
 
 def run_netlists_verification():
+    ExecTime["VerificationStart"] = time.time()
     compiled_file = "compiled_"+args.top_module
     # include_netlists = args.top_module+"_include_netlists.v"
     tb_top_formal = args.top_module+"_top_formal_verification_random_tb"
@@ -806,6 +839,7 @@ def run_netlists_verification():
         logger.info("VVP Simulation Successful")
     else:
         logger.info(str(output).split("\n")[-1])
+    ExecTime["VerificationEnd"] = time.time()
 
 
 def run_command(taskname, logfile, command, exit_if_fail=True):
@@ -840,11 +874,6 @@ def process_failed_vpr_run(vpr_output):
 
 
 if __name__ == "__main__":
-    # Setting up print and logging system
-    logging.basicConfig(level=logging.DEBUG, stream=sys.stdout,
-                        format='%(levelname)s - %(message)s')
-    logger = logging.getLogger('OpenFPGA_Flow_Logs')
-
-    # Parse commandline argument
+    ExecTime["Start"] = time.time()
     args = parser.parse_args()
     main()
