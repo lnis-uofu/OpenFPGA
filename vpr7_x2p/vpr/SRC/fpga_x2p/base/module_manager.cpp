@@ -15,43 +15,6 @@
 /******************************************************************************
  * Public Mutators
  ******************************************************************************/
-/* Add a module based on its circuit-level description */
-ModuleId ModuleManager::add_module_with_ports(const CircuitLibrary& circuit_lib, 
-                                              const CircuitModelId& circuit_model) { 
-  ModuleId module = add_module(circuit_lib.model_name(circuit_model)); 
-
-  /* Add ports */
-  /* Find global ports and add one by one */
-  for (const auto& port : circuit_lib.model_global_ports(circuit_model)) {
-    BasicPort port_info(circuit_lib.port_lib_name(port), circuit_lib.port_size(port));
-    add_port(module, port_info, MODULE_GLOBAL_PORT);  
-  }
-
-  /* Find other ports and add one by one */
-  /* Create a type-to-type map for ports */
-  std::map<enum e_spice_model_port_type, enum e_module_port_type> port_type2type_map;
-  port_type2type_map[SPICE_MODEL_PORT_INOUT] = MODULE_INOUT_PORT;
-  port_type2type_map[SPICE_MODEL_PORT_INPUT] = MODULE_INPUT_PORT;
-  port_type2type_map[SPICE_MODEL_PORT_CLOCK] = MODULE_INPUT_PORT;
-  port_type2type_map[SPICE_MODEL_PORT_SRAM] = MODULE_INPUT_PORT;
-  port_type2type_map[SPICE_MODEL_PORT_BL] = MODULE_INPUT_PORT;
-  port_type2type_map[SPICE_MODEL_PORT_BLB] = MODULE_INPUT_PORT;
-  port_type2type_map[SPICE_MODEL_PORT_WL] = MODULE_INPUT_PORT;
-  port_type2type_map[SPICE_MODEL_PORT_WLB] = MODULE_INPUT_PORT;
-  port_type2type_map[SPICE_MODEL_PORT_OUTPUT] = MODULE_OUTPUT_PORT;
-
-  /* Input ports (ignore all the global ports when searching the circuit_lib */
-  for (const auto& kv : port_type2type_map) {
-    for (const auto& port : circuit_lib.model_ports_by_type(circuit_model, kv.first, true)) {
-      BasicPort port_info(circuit_lib.port_lib_name(port), circuit_lib.port_size(port));
-      add_port(module, port_info, kv.second);  
-    }
-  }
-
-  /* Return the new id */
-  return module;
-}
-
 /* Add a module */
 ModuleId ModuleManager::add_module(const std::string& name) {
   /* Find if the name has been used. If used, return an invalid Id and report error! */
