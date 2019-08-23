@@ -22,7 +22,7 @@
 #include "device_port.h"
 
 class ModuleManager {
-  private: /* Private data structures */
+  public: /* Private data structures */
     enum e_module_port_type {
       MODULE_GLOBAL_PORT,
       MODULE_INOUT_PORT,
@@ -34,7 +34,6 @@ class ModuleManager {
   public: /* Public Constructors */
   public: /* Public mutators */
     /* Add a module */
-    ModuleId add_module_with_ports(const CircuitLibrary& circuit_lib, const CircuitModelId& circuit_model);
     ModuleId add_module(const std::string& name);
     /* Add a port to a module */
     ModulePortId add_port(const ModuleId& module, 
