@@ -2,6 +2,7 @@ import os
 import sys
 import shutil
 import time
+from datetime import timedelta
 import shlex
 import argparse
 from configparser import ConfigParser, ExtendedInterpolation
@@ -13,6 +14,10 @@ import csv
 from string import Template
 import run_fpga_flow
 import pprint
+from importlib import util
+
+if util.find_spec("humanize"):
+    import humanize
 
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 # Configure logging system
@@ -33,6 +38,10 @@ parser.add_argument('--maxthreads', type=int, default=2,
 parser.add_argument('--config', help="Override default configuration")
 parser.add_argument('--test_run', action="store_true",
                     help="Dummy run shows final generated VPR commands")
+parser.add_argument('--debug', action="store_true",
+                    help="Run script in debug mode")
+parser.add_argument('--skip_tread_logs', action="store_true",
+                    help="Skips logs from running thread")
 args = parser.parse_args()
 
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
@@ -76,7 +85,10 @@ def clean_up_and_exit(msg):
 
 
 def validate_command_line_arguments():
-    pass
+    if args.debug:
+        logger.info("Setting loggger in debug mode")
+        logger.setLevel(logging.DEBUG)
+    logger.info("Set up to run %d Parallel threads", args.maxthreads)
 
 
 def generate_each_task_actions(taskname):
@@ -143,7 +155,8 @@ def generate_each_task_actions(taskname):
                                   " with path %s " % (eachpath))
             bench_files += files
 
-        ys_for_task = task_conf.get("SYNTHESIS_PARAM", "bench_yosys_common")
+        ys_for_task = task_conf.get("SYNTHESIS_PARAM", "bench_yosys_common",
+                                    fallback="")
         benchmark_list.append({
             "files": bench_files,
             "top_module": task_conf.get("SYNTHESIS_PARAM", bech_name+"_top",
@@ -215,11 +228,26 @@ def create_run_command(curr_job_dir, archfile, benchmark_obj, task_conf):
         command += ["--vpr_fpga_spice"]
     if task_conf.getboolean("GENERAL", "verilog_output", fallback=False):
         command += ["--vpr_fpga_verilog"]
+        command += ["--vpr_fpga_verilog_dir", "."]
+        command += ["--vpr_fpga_x2p_rename_illegal_port"]
 
     # Add other paramters to pass
     for key, values in task_conf["SCRIPT_PARAM"].items():
-        command += ["--"+key, values]
+        command += ["--"+key, values] if values else ["--"+key]
+
+    if args.debug:
+        command += ["--debug"]
     return command
+
+
+def strip_child_logger_info(line):
+    try:
+        logtype, message = line.split(" - ", 1)
+        lognumb = {"CRITICAL": 50, "ERROR": 40, "WARNING": 30,
+                   "INFO": 20, "DEBUG": 10, "NOTSET": 0}
+        logger.log(lognumb["INFO"], message)
+    except:
+        logger.info(line)
 
 
 def run_single_script(s, eachJob):
@@ -228,23 +256,31 @@ def run_single_script(s, eachJob):
         logger.debug("Running OpenFPGA flow with " +
                      " ".join(eachJob["commands"]))
         name = threading.currentThread().getName()
+        eachJob["starttime"] = time.time()
         try:
             logfile = "%s_out.log" % name
             with open(logfile, 'w+') as output:
-                process = subprocess.run(["python3.5",
-                                          gc["script_default"]] +
-                                         eachJob["commands"],
-                                         check=True,
-                                         stdout=subprocess.PIPE,
-                                         stderr=subprocess.PIPE,
-                                         universal_newlines=True)
-                output.write(process.stdout)
+                process = subprocess.Popen(["python3.5",
+                                            gc["script_default"]] +
+                                           eachJob["commands"],
+                                           stdout=subprocess.PIPE,
+                                           stderr=subprocess.STDOUT,
+                                           universal_newlines=True)
+                for line in process.stdout:
+                    if not args.skip_tread_logs:
+                        strip_child_logger_info(line[:-1])
+                    sys.stdout.buffer.flush()
+                    output.write(line)
+                process.wait()
                 eachJob["status"] = True
         except:
-            logger.error("Failed to execute openfpga flow - " +
-                         eachJob["name"])
-            # logger.exception("Failed to launch openfpga flow")
-        logger.info("%s Finished " % name)
+            logger.exception("Failed to execute openfpga flow - " +
+                             eachJob["name"])
+        eachJob["endtime"] = time.time()
+        timediff = timedelta(seconds=(eachJob["endtime"]-eachJob["starttime"]))
+        timestr = humanize.naturaldelta(timediff) if "humanize" in sys.modules \
+            else str(timediff)
+        logger.info("%s Finished, Time Taken %s " % (name, timestr))
 
 
 def run_actions(job_run_list):

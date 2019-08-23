@@ -26,8 +26,6 @@ end_section "OpenFPGA.build"
 $SPACER
 
 cd -
-./.travis/regression.sh
-
-#cd fpga_flow
-#./regression_fpga_flow.sh
-#cd -
+# python3.5 ./openfpga_flow/scripts/run_fpga_task.py regression/regression_quick
+chmod 755 run_test.sh
+./run_test.sh
