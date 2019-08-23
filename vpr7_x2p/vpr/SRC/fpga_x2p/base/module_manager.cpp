@@ -13,6 +13,39 @@
  ******************************************************************************/
 
 /******************************************************************************
+ * Public Accessors
+ ******************************************************************************/
+/* Find the name of a module */
+std::string ModuleManager::module_name(const ModuleId& module_id) const {
+  /* Validate the module_id */
+  VTR_ASSERT(valid_module_id(module_id));
+  return names_[module_id];
+}
+
+/* Get the string of a module port type */
+std::string ModuleManager::module_port_type_str(const enum e_module_port_type& port_type) const {
+  std::array<const char*, NUM_MODULE_PORT_TYPES> MODULE_PORT_TYPE_STRING = {{"GLOBAL PORTS", "INOUT PORTS", "INPUT PORTS", "OUTPUT PORTS", "CLOCK PORTS"}};
+  return MODULE_PORT_TYPE_STRING[port_type];
+}
+
+/* Find a list of ports of a module by a given types */
+std::vector<BasicPort> ModuleManager::module_ports_by_type(const ModuleId& module_id, const enum e_module_port_type& port_type) const {
+  /* Validate the module_id */
+  VTR_ASSERT(valid_module_id(module_id));
+
+  std::vector<BasicPort> ports;
+  for (const auto& port : port_ids_[module_id]) {
+    /* Skip unmatched ports */
+    if (port_type != port_types_[module_id][port]) {
+      continue;
+    }
+    ports.push_back(ports_[module_id][port]);
+  }
+
+  return ports;
+}
+
+/******************************************************************************
  * Public Mutators
  ******************************************************************************/
 /* Add a module */

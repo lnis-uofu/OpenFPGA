@@ -3506,7 +3506,8 @@ void dump_verilog_submodule_templates(t_sram_orgz_info* cur_sram_orgz_info,
 /* Dump verilog files of submodules to be used in FPGA components :
  * 1. MUXes
  */
-void dump_verilog_submodules(t_sram_orgz_info* cur_sram_orgz_info,
+void dump_verilog_submodules(ModuleManager& module_manager, 
+                             t_sram_orgz_info* cur_sram_orgz_info,
                              char* verilog_dir, 
                              char* submodule_dir, 
                              t_arch Arch, 
@@ -3515,7 +3516,8 @@ void dump_verilog_submodules(t_sram_orgz_info* cur_sram_orgz_info,
 
   /* 0. basic units: inverter, buffers and pass-gate logics, */
   vpr_printf(TIO_MESSAGE_INFO, "Generating essential modules...\n");
-  print_verilog_submodule_essentials(std::string(verilog_dir), 
+  print_verilog_submodule_essentials(module_manager, 
+                                     std::string(verilog_dir), 
                                      std::string(submodule_dir),
                                      Arch.spice->circuit_lib);
 

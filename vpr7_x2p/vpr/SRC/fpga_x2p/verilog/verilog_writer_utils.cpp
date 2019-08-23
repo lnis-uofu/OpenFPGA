@@ -82,7 +82,52 @@ void print_verilog_module_definition(std::fstream& fp,
 }
 
 /************************************************
- * Print a Verilog module definition
+ * Print a Verilog module ports based on the module id 
+ ***********************************************/
+void print_verilog_module_ports(std::fstream& fp, 
+                                const ModuleManager& module_manager, const ModuleId& module_id) {
+  check_file_handler(fp);
+
+  /* port type2type mapping */
+  std::map<ModuleManager::e_module_port_type, enum e_dump_verilog_port_type> port_type2type_map;
+  port_type2type_map[ModuleManager::MODULE_GLOBAL_PORT] = VERILOG_PORT_INPUT;
+  port_type2type_map[ModuleManager::MODULE_INOUT_PORT] = VERILOG_PORT_INOUT;
+  port_type2type_map[ModuleManager::MODULE_INPUT_PORT] = VERILOG_PORT_INPUT;
+  port_type2type_map[ModuleManager::MODULE_OUTPUT_PORT] = VERILOG_PORT_OUTPUT;
+  port_type2type_map[ModuleManager::MODULE_CLOCK_PORT] = VERILOG_PORT_INPUT;
+
+  /* Port sequence: global, inout, input, output and clock ports, */
+  size_t port_cnt = 0;
+  for (const auto& kv : port_type2type_map) {
+    for (const auto& port : module_manager.module_ports_by_type(module_id, kv.first)) {
+      if (0 != port_cnt) {
+        /* Do not dump a comma for the first port */
+        fp << ", //----- " << module_manager.module_port_type_str(kv.first)  << " -----" << std::endl; 
+      }
+      /* Print port */
+      fp << "\t" << generate_verilog_port(kv.second, port) << std::endl;
+      port_cnt++;
+    }
+  }
+}
+
+/************************************************
+ * Print a Verilog module declaration (definition + port list
+ ***********************************************/
+void print_verilog_module_declaration(std::fstream& fp, 
+                                      const ModuleManager& module_manager, const ModuleId& module_id) {
+  check_file_handler(fp);
+
+  print_verilog_module_definition(fp, module_manager.module_name(module_id));
+
+  print_verilog_module_ports(fp, module_manager, module_id);
+
+  fp << std::endl << ");" << std::endl;
+}
+
+
+/************************************************
+ * Print an end line for a Verilog module
  ***********************************************/
 void print_verilog_module_end(std::fstream& fp, 
                               const std::string& module_name) {
