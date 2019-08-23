@@ -215,10 +215,10 @@ def main():
     if (args.fpga_flow == "yosys_vpr"):
         logger.info('Running "yosys_vpr" Flow')
         run_yosys_with_abc()
-        run_rewrite_verilog()
         if args.power:
             run_ace2()
             run_pro_blif_3arg()
+        run_rewrite_verilog()
     if (args.fpga_flow == "vpr_blif"):
         collect_files_for_vpr()
     # if (args.fpga_flow == "vtr"):
@@ -741,7 +741,7 @@ def run_standard_vpr(bench_blif, fixed_chan_width, logfile, route_only=False):
                             process.returncode)
     except (Exception, subprocess.CalledProcessError) as e:
         logger.exception("Failed to run VPR")
-        process_failed_vpr_run(e.output)
+        filter_failed_process_output(e.output)
         clean_up_and_exit("")
     logger.info("VPR output is written in file %s" % logfile)
     return chan_width
@@ -796,22 +796,7 @@ def run_rewrite_verilog():
         "write_verilog %s" % args.top_module+"_output_verilog.v"
     ]
     command = [cad_tools["yosys_path"], "-p", "; ".join(script_cmd)]
-    try:
-        with open('yosys_rewrite_veri_output.txt', 'w+') as output:
-            process = subprocess.run(command,
-                                     check=True,
-                                     stdout=subprocess.PIPE,
-                                     stderr=subprocess.PIPE,
-                                     universal_newlines=True)
-            output.write(process.stdout)
-            if process.returncode:
-                logger.info("Rewrite veri yosys run failed with returncode %d",
-                            process.returncode)
-    except Exception as e:
-        logger.exception("Failed to run VPR")
-        print(e.output)
-        clean_up_and_exit("")
-    logger.info("Yosys output is written in file yosys_rewrite_veri_output.txt")
+    run_command("Yosys", "yosys_output.txt", command)
 
 
 def run_netlists_verification():
@@ -844,8 +829,8 @@ def run_netlists_verification():
 
 def run_command(taskname, logfile, command, exit_if_fail=True):
     logger.info("Launching %s " % taskname)
-    try:
-        with open(logfile, 'w+') as output:
+    with open(logfile, 'w+') as output:
+        try:
             output.write(" ".join(command)+"\n")
             process = subprocess.run(command,
                                      check=True,
@@ -856,18 +841,18 @@ def run_command(taskname, logfile, command, exit_if_fail=True):
             if process.returncode:
                 logger.error("%s run failed with returncode %d" %
                              (taskname, process.returncode))
-    except (Exception, subprocess.CalledProcessError) as e:
-        logger.exception("failed to execute %s" % taskname)
-        process_failed_vpr_run(e.output)
-        print(e.output)
-        if exit_if_fail:
-            clean_up_and_exit("Failed to run %s task" % taskname)
-        return None
+        except (Exception, subprocess.CalledProcessError) as e:
+            logger.exception("failed to execute %s" % taskname)
+            filter_failed_process_output(e.output)
+            output.write(e.output)
+            if exit_if_fail:
+                clean_up_and_exit("Failed to run %s task" % taskname)
+            return None
     logger.info("%s is written in file %s" % (taskname, logfile))
     return process.stdout
 
 
-def process_failed_vpr_run(vpr_output):
+def filter_failed_process_output(vpr_output):
     for line in vpr_output.split("\n"):
         if "error" in line.lower():
             logger.error("-->>" + line)

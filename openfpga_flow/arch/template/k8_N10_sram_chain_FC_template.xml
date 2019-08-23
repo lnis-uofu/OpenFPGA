@@ -290,7 +290,7 @@
         <port type="sram" prefix="sram" size="1"/>
       </circuit_model>
       <!--DFF subckt ports should be defined as <D> <Q> <CLK> <RESET> <SET>  -->
-      <circuit_model type="ff" name="static_dff" prefix="dff" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/ff.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerlogNetlists/ff.v">
+      <circuit_model type="ff" name="static_dff" prefix="dff" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/ff.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/ff.v">
          <design_technology type="cmos"/>
          <input_buffer exist="on" circuit_model_name="INVTX1"/>
          <output_buffer exist="on" circuit_model_name="INVTX1"/>
@@ -362,7 +362,7 @@
         <port type="wl" prefix="wl" size="1" default_val="0" inv_circuit_model_name="INVTX1"/>
       </circuit_model>
       <!--Scan-chain DFF subckt ports should be defined as <D> <Q> <Qb> <CLK> <RESET> <SET>  -->
-      <circuit_model type="sff" name="sc_dff_compact" prefix="scff" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/ff.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerlogNetlists/ff.v">
+      <circuit_model type="sff" name="sc_dff_compact" prefix="scff" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/ff.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/ff.v">
          <design_technology type="cmos"/>
          <input_buffer exist="on" circuit_model_name="INVTX1"/>
          <output_buffer exist="on" circuit_model_name="INVTX1"/>
