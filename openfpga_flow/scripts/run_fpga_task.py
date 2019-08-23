@@ -245,7 +245,7 @@ def strip_child_logger_info(line):
         logtype, message = line.split(" - ", 1)
         lognumb = {"CRITICAL": 50, "ERROR": 40, "WARNING": 30,
                    "INFO": 20, "DEBUG": 10, "NOTSET": 0}
-        logger.log(lognumb["INFO"], message)
+        logger.log(lognumb[logtype.strip().upper()], message)
     except:
         logger.info(line)
 
