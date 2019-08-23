@@ -32,6 +32,10 @@ class ModuleManager {
       NUM_MODULE_PORT_TYPES 
     };
   public: /* Public Constructors */
+  public: /* Public accessors */
+    std::string module_name(const ModuleId& module_id) const;
+    std::string module_port_type_str(const enum e_module_port_type& port_type) const;
+    std::vector<BasicPort> module_ports_by_type(const ModuleId& module_id, const enum e_module_port_type& port_type) const;
   public: /* Public mutators */
     /* Add a module */
     ModuleId add_module(const std::string& name);

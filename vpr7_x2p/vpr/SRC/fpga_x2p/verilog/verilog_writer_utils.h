@@ -8,6 +8,7 @@
 
 #include <string>
 #include "device_port.h"
+#include "module_manager.h"
 
 void print_verilog_file_header(std::fstream& fp,
                                const std::string& usage);
@@ -20,6 +21,12 @@ void print_verilog_comment(std::fstream& fp,
 
 void print_verilog_module_definition(std::fstream& fp, 
                                      const std::string& module_name);
+
+void print_verilog_module_ports(std::fstream& fp, 
+                                const ModuleManager& module_manager, const ModuleId& module_id);
+
+void print_verilog_module_declaration(std::fstream& fp, 
+                                      const ModuleManager& module_manager, const ModuleId& module_id);
 
 void print_verilog_module_end(std::fstream& fp, 
                               const std::string& module_name);
