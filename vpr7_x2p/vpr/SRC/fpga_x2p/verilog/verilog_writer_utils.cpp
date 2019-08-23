@@ -120,7 +120,7 @@ void print_verilog_module_declaration(std::fstream& fp,
   check_file_handler(fp);
 
   print_verilog_module_definition(fp, module_manager.module_name(module_id));
-  
+
   print_verilog_module_ports(fp, module_manager, module_id);
 
   fp << std::endl << ");" << std::endl;
