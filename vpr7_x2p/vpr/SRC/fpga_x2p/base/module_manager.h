@@ -1,27 +1,66 @@
-/************************************************
- * This files includes data structures for 
- * module management.
- * It keeps a list of modules that have been
- * generated, the port map of the modules,
- * parents and children of each modules
- * This will ease instanciation of modules 
- * with explicit port map and outputting a 
- * hierarchy of modules 
- ***********************************************/
+/******************************************************************************
+ * This files includes data structures for module management.
+ * It keeps a list of modules that have been generated, the port map of the modules,
+ * parents and children of each modules. This will ease instanciation of modules 
+ * with explicit port map and outputting a hierarchy of modules 
+ *
+ * Module includes the basic information:
+ * 1. unique identifier
+ * 2. module name: which should be unique 
+ * 3. port list: basic information of all the ports belonging to the module
+ * 4. port types: types of each port, which will matter how we output the ports
+ * 5. parent modules: ids of parent modules
+ * 6. children modules: ids of child modules 
+ ******************************************************************************/
 
 #ifndef MODULE_MANAGER_H
 #define MODULE_MANAGER_H
 
 #include <string>
+#include <map>
 #include "module_manager_fwd.h"
 #include "device_port.h"
 
 class ModuleManager {
+  private: /* Private data structures */
+    enum e_module_port_type {
+      MODULE_GLOBAL_PORT,
+      MODULE_INOUT_PORT,
+      MODULE_INPUT_PORT,
+      MODULE_OUTPUT_PORT,
+      MODULE_CLOCK_PORT,
+      NUM_MODULE_PORT_TYPES 
+    };
+  public: /* Public Constructors */
+  public: /* Public mutators */
+    /* Add a module */
+    ModuleId add_module_with_ports(const CircuitLibrary& circuit_lib, const CircuitModelId& circuit_model);
+    ModuleId add_module(const std::string& name);
+    /* Add a port to a module */
+    ModulePortId add_port(const ModuleId& module, 
+                          const BasicPort& port_info, const enum e_module_port_type& port_type);
+    /* Add a child module to a parent module */
+    void add_child_module(const ModuleId& parent_module, const ModuleId& child_module);
+  private: /* Private validators/invalidators */
+    bool valid_module_id(const ModuleId& module) const;
+    bool valid_module_port_id(const ModuleId& module, const ModulePortId& port) const;
+    void invalidate_name2id_map();
+    void invalidate_port_lookup();
   private: /* Internal data */
-    vtr::vector<ModuleId, ModuleId> ids_; 
-    vtr::vector<ModuleId, BasicPort> ports_; 
-    vtr::vector<ModuleId, std::vector<ModuleId>> parents_;
-    vtr::vector<ModuleId, std::vector<ModuleId>> children_;
+    vtr::vector<ModuleId, ModuleId> ids_;                                  /* Unique identifier for each Module */
+    vtr::vector<ModuleId, std::string> names_;                                  /* Unique identifier for each Module */
+    vtr::vector<ModuleId, std::vector<ModuleId>> parents_;                 /* Parent modules that include the module */
+    vtr::vector<ModuleId, std::vector<ModuleId>> children_;                /* Child modules that this module contain */
+
+    vtr::vector<ModuleId, vtr::vector<ModulePortId, ModulePortId>> port_ids_;    /* List of ports for each Module */ 
+    vtr::vector<ModuleId, vtr::vector<ModulePortId, BasicPort>> ports_;    /* List of ports for each Module */ 
+    vtr::vector<ModuleId, vtr::vector<ModulePortId, enum e_module_port_type>> port_types_; /* Type of ports */ 
+
+    /* fast look-up for module */
+    std::map<std::string, ModuleId> name_id_map_;
+    /* fast look-up for ports */
+    typedef vtr::vector<ModuleId, std::vector<std::vector<ModulePortId>>> PortLookup;
+    mutable PortLookup port_lookup_; /* [module_ids][port_types][port_ids] */ 
 };
 
 #endif

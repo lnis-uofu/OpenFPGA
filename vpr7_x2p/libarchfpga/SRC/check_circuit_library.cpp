@@ -345,6 +345,39 @@ size_t check_sram_circuit_model_ports(const CircuitLibrary& circuit_lib,
   return num_err;
 }
 
+/* Check all the ports make sure, they satisfy the restriction */
+static 
+size_t check_circuit_library_ports(const CircuitLibrary& circuit_lib) {
+  size_t num_err = 0;
+  
+  /* Check global ports: make sure all the global ports are input ports */
+  for (const auto& port : circuit_lib.ports()) {
+    if ( (circuit_lib.port_is_global(port)) 
+      && (!circuit_lib.is_input_port(port)) ) {
+      vpr_printf(TIO_MESSAGE_ERROR,
+                 "Circuit port (type=%s) of model (name=%s) is defined as global but not an input port!\n",
+                 CIRCUIT_MODEL_PORT_TYPE_STRING[size_t(circuit_lib.port_type(port))],
+                 circuit_lib.model_name(port).c_str());
+      num_err++;
+    }
+  }
+
+  /* Check set/reset/config_enable ports: make sure they are all global ports */
+  for (const auto& port : circuit_lib.ports()) {
+    if ( ( (circuit_lib.port_is_set(port)) 
+        || (circuit_lib.port_is_reset(port)) 
+        || (circuit_lib.port_is_config_enable(port)) )
+      && (!circuit_lib.port_is_global(port)) ) {
+      vpr_printf(TIO_MESSAGE_ERROR,
+                 "Circuit port (type=%s) of model (name=%s) is defined as a set/reset/config_enable port but  it is not global!\n",
+                 CIRCUIT_MODEL_PORT_TYPE_STRING[size_t(circuit_lib.port_type(port))],
+                 circuit_lib.model_name(port).c_str());
+      num_err++;
+    }
+  }
+
+  return num_err;
+}
 
 /************************************************************************
  * Check points to make sure we have a valid circuit library
@@ -374,6 +407,9 @@ void check_circuit_library(const CircuitLibrary& circuit_lib) {
    * For each circuit model, we always make sure it does not share any prefix with any circuit model locating after it
    */
   num_err += check_circuit_library_unique_prefix(circuit_lib);
+
+  /* Check global ports */
+  num_err += check_circuit_library_ports(circuit_lib);
 
   /* 3. Check io has been defined and has input and output ports 
    * [a] We must have an IOPAD! 

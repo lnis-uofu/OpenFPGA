@@ -266,6 +266,8 @@ class CircuitLibrary {
     bool port_is_set(const CircuitPortId& circuit_port_id) const;
     bool port_is_config_enable(const CircuitPortId& circuit_port_id) const;
     bool port_is_prog(const CircuitPortId& circuit_port_id) const;
+    CircuitModelId port_parent_model(const CircuitPortId& circuit_port_id) const;
+    std::string model_name(const CircuitPortId& port_id) const;
   public: /* Public Accessors: Timing graph */
     /* Get source/sink nodes and delay of edges */
     std::vector<CircuitEdgeId> timing_edges_by_model(const CircuitModelId& model_id) const;

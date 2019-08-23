@@ -598,6 +598,20 @@ bool CircuitLibrary::port_is_prog(const CircuitPortId& circuit_port_id) const {
   return port_is_prog_[circuit_port_id];
 }
 
+/* Return the id of parent circuit model for a circuit port */
+CircuitModelId CircuitLibrary::port_parent_model(const CircuitPortId& circuit_port_id) const {
+  /* validate the circuit_port_id */
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
+  return port_model_ids_[circuit_port_id];
+}
+
+/* Return the name of parent circuit model for a circuit port */
+std::string CircuitLibrary::model_name(const CircuitPortId& port_id) const {
+  /* validate the circuit_port_id */
+  VTR_ASSERT(valid_circuit_port_id(port_id));
+  return model_names_[port_parent_model(port_id)];
+}
+
 /************************************************************************
  * Public Accessors : Methods to visit timing graphs 
  ***********************************************************************/

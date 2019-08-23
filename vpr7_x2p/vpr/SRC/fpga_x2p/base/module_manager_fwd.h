@@ -8,10 +8,12 @@
 
 #include "vtr_strong_id.h"
 
-/* Strong Ids for MUXes */
+/* Strong Ids for ModuleManager */
 struct module_id_tag;
+struct module_port_id_tag;
 
 typedef vtr::StrongId<module_id_tag> ModuleId;
+typedef vtr::StrongId<module_port_id_tag> ModulePortId;
 
 class ModuleManager;
 
