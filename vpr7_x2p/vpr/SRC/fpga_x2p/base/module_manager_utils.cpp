@@ -20,7 +20,7 @@ ModuleId add_circuit_model_to_module_manager(ModuleManager& module_manager,
 
   /* Add ports */
   /* Find global ports and add one by one */
-  for (const auto& port : circuit_lib.model_global_ports(circuit_model)) {
+  for (const auto& port : circuit_lib.model_global_ports(circuit_model, true)) {
     BasicPort port_info(circuit_lib.port_lib_name(port), circuit_lib.port_size(port));
     module_manager.add_port(module, port_info, ModuleManager::MODULE_GLOBAL_PORT);  
   }
@@ -48,5 +48,4 @@ ModuleId add_circuit_model_to_module_manager(ModuleManager& module_manager,
 
   /* Return the new id */
   return module;
-
 }

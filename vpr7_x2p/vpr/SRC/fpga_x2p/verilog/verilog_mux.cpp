@@ -47,7 +47,7 @@ void generate_verilog_cmos_mux_branch_module_structural(std::fstream& fp,
   /* Get model ports of tgate */
   std::vector<CircuitPortId> tgate_input_ports = circuit_lib.model_ports_by_type(tgate_model, SPICE_MODEL_PORT_INPUT, true);
   std::vector<CircuitPortId> tgate_output_ports = circuit_lib.model_ports_by_type(tgate_model, SPICE_MODEL_PORT_OUTPUT, true);
-  std::vector<CircuitPortId> tgate_global_ports = circuit_lib.model_global_ports_by_type(tgate_model, SPICE_MODEL_PORT_INPUT);
+  std::vector<CircuitPortId> tgate_global_ports = circuit_lib.model_global_ports_by_type(tgate_model, SPICE_MODEL_PORT_INPUT, true);
   VTR_ASSERT(3 == tgate_input_ports.size());
   VTR_ASSERT(1 == tgate_output_ports.size());
 

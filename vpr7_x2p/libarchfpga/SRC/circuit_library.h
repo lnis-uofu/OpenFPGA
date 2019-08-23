@@ -74,6 +74,8 @@
  * 5. verilog_netlist_: specified path and file name of Verilog netlist if a circuit model is not auto-generated
  * 6. spice_netlist_: specified path and file name of SPICE netlist if a circuit model is not auto-generated
  * 7. is_default_: indicate if the circuit model is the default one among all those in the same type 
+ * 8. sub_models_: the sub circuit models included by a circuit model. It is a collection of unique circuit model ids
+ *                 found in the CircuitModelId of pass-gate/buffers/port-related circuit models.
  *
  *  ------ Fast look-ups-----
  *  1. model_lookup_: A multi-dimension vector to provide fast look-up on circuit models for users 
@@ -243,9 +245,10 @@ class CircuitLibrary {
     size_t num_model_ports(const CircuitModelId& model_id) const;
     size_t num_model_ports_by_type(const CircuitModelId& model_id, const enum e_spice_model_port_type& port_type, const bool& include_global_port) const;
     std::vector<CircuitPortId> model_ports(const CircuitModelId& model_id) const;
-    std::vector<CircuitPortId> model_global_ports(const CircuitModelId& model_id) const;
+    std::vector<CircuitPortId> model_global_ports(const CircuitModelId& model_id, const bool& recursive) const;
     std::vector<CircuitPortId> model_global_ports_by_type(const CircuitModelId& model_id,
-                                                          const enum e_spice_model_port_type& type) const;
+                                                          const enum e_spice_model_port_type& type,
+                                                          const bool& recursive) const;
     std::vector<CircuitPortId> model_ports_by_type(const CircuitModelId& model_id, const enum e_spice_model_port_type& port_type) const;
     std::vector<CircuitPortId> model_ports_by_type(const CircuitModelId& model_id, const enum e_spice_model_port_type& port_type, const bool& include_global_port) const;
     std::vector<CircuitPortId> model_input_ports(const CircuitModelId& model_id) const;
@@ -426,6 +429,8 @@ class CircuitLibrary {
     void link_port_inv_model();      
     void link_buffer_model(const CircuitModelId& model_id);      
     void link_pass_gate_logic_model(const CircuitModelId& model_id);      
+    bool is_unique_submodel(const CircuitModelId& model_id, const CircuitModelId& submodel_id);
+    void build_submodels();
     void build_model_timing_graph(const CircuitModelId& model_id);
   public: /* Public Mutators: builders */
     void build_model_links();
@@ -465,6 +470,9 @@ class CircuitLibrary {
     vtr::vector<CircuitModelId, std::string> model_verilog_netlists_;
     vtr::vector<CircuitModelId, std::string> model_spice_netlists_;
     vtr::vector<CircuitModelId, bool> model_is_default_;
+
+    /* Submodules that a circuit model contains */
+    vtr::vector<CircuitModelId, std::vector<CircuitModelId>> sub_models_;
 
     /* fast look-up for circuit models to categorize by types 
      * [type][num_ids]
@@ -566,7 +574,6 @@ class CircuitLibrary {
     vtr::vector<CircuitModelId, enum e_wire_model_type> wire_types_;
     vtr::vector<CircuitModelId, vtr::Point<float>> wire_rc_; /* x => wire_res_val, y=> wire_cap_val */
     vtr::vector<CircuitModelId, size_t> wire_num_levels_;
-     
 };
 
 #endif
