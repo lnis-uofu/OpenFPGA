@@ -372,12 +372,14 @@ std::vector<CircuitPortId> CircuitLibrary::model_ports(const CircuitModelId& mod
 }
 
 /* Recursively find all the global ports in the circuit model / sub circuit_model */
-std::vector<CircuitPortId> CircuitLibrary::model_global_ports(const CircuitModelId& model_id) const {
+std::vector<CircuitPortId> CircuitLibrary::model_global_ports(const CircuitModelId& model_id, 
+                                                              const bool& recursive) const {
   /* validate the model_id */
   VTR_ASSERT(valid_model_id(model_id));
 
-  /* Search all the ports */
   std::vector<CircuitPortId> global_ports;
+
+  /* Search all the ports */
   for (auto port : model_ports(model_id)) {
     /* By pass non-global ports*/
     if (false == port_is_global(port)) {
@@ -387,12 +389,39 @@ std::vector<CircuitPortId> CircuitLibrary::model_global_ports(const CircuitModel
     global_ports.push_back(port); 
   }
 
+  /* Finish, if we do not need to go recursively */
+  if (false == recursive) {
+    return global_ports;
+  }
+
+  /* If go recursively, we search all the buffer/pass-gate circuit model ids */
+  /* Go search every sub circuit model included the current circuit model */
+  for (const auto& sub_model : sub_models_[model_id]) {
+    std::vector<CircuitPortId> sub_global_ports = model_global_ports(sub_model, recursive);
+    for (const auto& sub_global_port : sub_global_ports) {
+      /* Add to global_ports, if it is not already found in the list */
+      bool add_to_list = true;
+      for (const auto& global_port : global_ports) {
+        if (0 == port_prefix(sub_global_port).compare(port_prefix(global_port))) {
+          /* Same name, skip list update */
+          add_to_list = false;
+          break;
+        }
+      }
+      if (true == add_to_list) {
+        /* Add the sub_global_port to the list */
+        global_ports.push_back(sub_global_port);
+      }
+    }
+  }
+
   return global_ports;
 }
 
 /* Recursively find all the global ports in the circuit model / sub circuit_model */
 std::vector<CircuitPortId> CircuitLibrary::model_global_ports_by_type(const CircuitModelId& model_id,
-                                                                      const enum e_spice_model_port_type& type) const {
+                                                                      const enum e_spice_model_port_type& type,
+                                                                      const bool& recursive) const {
   /* validate the model_id */
   VTR_ASSERT(valid_model_id(model_id));
 
@@ -409,6 +438,32 @@ std::vector<CircuitPortId> CircuitLibrary::model_global_ports_by_type(const Circ
     }
     /* This is a global port, update global_ports */
     global_ports.push_back(port); 
+  }
+
+  /* Finish, if we do not need to go recursively */
+  if (false == recursive) {
+    return global_ports;
+  }
+
+  /* If go recursively, we search all the buffer/pass-gate circuit model ids */
+  /* Go search every sub circuit model included the current circuit model */
+  for (const auto& sub_model : sub_models_[model_id]) {
+    std::vector<CircuitPortId> sub_global_ports = model_global_ports_by_type(sub_model, type, recursive);
+    for (const auto& sub_global_port : sub_global_ports) {
+      /* Add to global_ports, if it is not already found in the list */
+      bool add_to_list = true;
+      for (const auto& global_port : global_ports) {
+        if (0 == port_prefix(sub_global_port).compare(port_prefix(global_port))) {
+          /* Same name, skip list update */
+          add_to_list = false;
+          break;
+        }
+      }
+      if (true == add_to_list) {
+        /* Add the sub_global_port to the list */
+        global_ports.push_back(sub_global_port);
+      }
+    }
   }
 
   return global_ports;
@@ -741,6 +796,7 @@ CircuitModelId CircuitLibrary::add_model(const enum e_spice_model_type& type) {
   model_verilog_netlists_.emplace_back();
   model_spice_netlists_.emplace_back();
   model_is_default_.push_back(false);
+  sub_models_.emplace_back();
 
   /* Verilog generator options */ 
   dump_structural_verilog_.push_back(false);
@@ -1569,7 +1625,70 @@ void CircuitLibrary::link_pass_gate_logic_model(const CircuitModelId& model_id) 
   }
   pass_gate_logic_model_ids_[model_id] = model(pass_gate_logic_model_names_[model_id]);
   return;
-}      
+}
+
+/* Find if a model is already in the submodel list */
+bool CircuitLibrary::is_unique_submodel(const CircuitModelId& model_id, const CircuitModelId& submodel_id) {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  VTR_ASSERT(valid_model_id(submodel_id));
+  
+  std::vector<CircuitModelId>::iterator it = std::find(sub_models_[model_id].begin(), sub_models_[model_id].end(), submodel_id);  
+  if (it == sub_models_[model_id].end()) {
+    return true;
+  }
+  return false;
+}
+
+/* Build the sub module list for each circuit model,
+ * Find the linked circuit model id in 
+ * pass-gate, buffers, ports */
+void CircuitLibrary::build_submodels() {
+  for (const auto& model: models()) {
+    /* Make sure a clean start */
+    sub_models_[model].clear();
+
+    /* build a list of candidates */
+    std::vector<CircuitModelId> candidates;
+
+    /* Find buffer models */
+    for (const auto& buffer_model : buffer_model_ids_[model]) {
+      /* Skip any invalid ids */
+      if (CircuitModelId::INVALID() == buffer_model) {
+        continue;
+      } 
+      candidates.push_back(buffer_model);
+    }
+
+    /* Find pass-gate models */
+    /* Skip any invalid ids */
+    if (CircuitModelId::INVALID() != pass_gate_logic_model_ids_[model]) {
+      candidates.push_back(pass_gate_logic_model_ids_[model]);
+    } 
+
+    /* Find each port circuit models */
+    for (const auto& port: model_ports(model)) {
+      /* Find tri-state circuit models */
+      /* Skip any invalid ids */
+      if (CircuitModelId::INVALID() != port_tri_state_model_ids_[port]) {
+        candidates.push_back(port_tri_state_model_ids_[port]);
+      } 
+      /* Find inv circuit models */
+      /* Skip any invalid ids */
+      if (CircuitModelId::INVALID() != port_inv_model_ids_[port]) {
+        candidates.push_back(port_inv_model_ids_[port]);
+      } 
+    }
+
+    /* Build a unique list */
+    for (const auto& cand : candidates) {
+      /* Make sure the model id is unique in the list */
+      if (true == is_unique_submodel(model,cand)) {
+        sub_models_[model].push_back(cand);
+      }
+    }
+  }
+}
 
 /* Build the timing graph for a circuit models*/
 void CircuitLibrary::build_model_timing_graph(const CircuitModelId& model_id) {
@@ -1612,6 +1731,10 @@ void CircuitLibrary::build_model_links() {
   /* Build links for ports */
   link_port_tri_state_model(); 
   link_port_inv_model(); 
+
+  /* Build submodels */
+  build_submodels();
+
   return;
 }
 
