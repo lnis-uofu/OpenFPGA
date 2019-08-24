@@ -420,6 +420,8 @@ void vpr_fpga_verilog(t_vpr_setup vpr_setup,
                          chomped_circuit_name,
                          *(Arch.spice) );
 
+  vpr_printf(TIO_MESSAGE_INFO, "Outputted %lu Verilog modules in total.\n", module_manager.num_modules());  
+
   /* End time count */
   t_end = clock();
  
