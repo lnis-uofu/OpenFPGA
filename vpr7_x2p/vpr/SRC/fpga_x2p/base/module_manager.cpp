@@ -15,6 +15,11 @@
 /******************************************************************************
  * Public Accessors
  ******************************************************************************/
+/* Return number of modules */
+size_t ModuleManager::num_modules() const {
+  return ids_.size();
+}
+
 /* Find the name of a module */
 std::string ModuleManager::module_name(const ModuleId& module_id) const {
   /* Validate the module_id */
