@@ -190,6 +190,8 @@ MuxGraph MuxGraph::subgraph(const MuxNodeId& root_node) const {
     /* Not found, we add a memory bit and record in the mem-to-mem map */
     MuxMemId mem_subgraph = mux_graph.add_mem();
     mem2mem_map[mem_origin] = mem_subgraph;
+    /* configure the edge */
+    mux_graph.edge_mem_ids_[edge2edge_map[edge_origin]] = mem_subgraph;
   }
 
   /* Since the graph is finalized, it is time to build the fast look-up */
