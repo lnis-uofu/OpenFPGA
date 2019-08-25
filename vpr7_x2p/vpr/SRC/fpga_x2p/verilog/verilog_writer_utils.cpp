@@ -77,7 +77,7 @@ void print_verilog_module_definition(std::fstream& fp,
                                      const std::string& module_name) {
   check_file_handler(fp);
 
-  print_verilog_comment(fp, std::string("//----- Verilog module for " + module_name + " -----"));
+  print_verilog_comment(fp, std::string("----- Verilog module for " + module_name + " -----"));
   fp << "module " << module_name << "(" << std::endl;
 }
 
