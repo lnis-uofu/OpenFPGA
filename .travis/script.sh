@@ -10,8 +10,8 @@ if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
   #make
   mkdir build
   cd build
-  cmake .. -DCMAKE_BUILD_TYPE=debug -DENABLE_VPR_GRAPHICS=off
-  make -j2
+  cmake .. -DCMAKE_BUILD_TYPE=debug -DENABLE_VPR_GRAPHICS=off 
+  make -j16
   alias python3.5="python3"
   ln -s /opt/local/bin/python3 /opt/local/bin/python3.5
 else

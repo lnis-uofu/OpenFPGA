@@ -1,6 +1,10 @@
 #ifndef VERILOG_SUBMODULES_H
 #define VERILOG_SUBMODULES_H
-void dump_verilog_submodules(t_sram_orgz_info* cur_sram_orgz_info,
+
+#include "module_manager.h"
+
+void dump_verilog_submodules(ModuleManager& module_manager, 
+                             t_sram_orgz_info* cur_sram_orgz_info,
                              char* verilog_dir, 
                              char* submodule_dir, 
                              t_arch Arch, 

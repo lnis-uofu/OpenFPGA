@@ -48,6 +48,7 @@ void dump_verilog_subckt_header_file(t_llist* subckt_llist_head,
 
 char determine_verilog_generic_port_split_sign(enum e_dump_verilog_port_type dump_port_type);
 
+
 void dump_verilog_generic_port(FILE* fp, 
                                enum e_dump_verilog_port_type dump_port_type,
                                char* port_name, int port_lsb, int port_msb); 

@@ -49,7 +49,6 @@
 /* Standard header files required go first */
 #include <string>
 
-#include "vtr_strong_id.h"
 #include "vtr_geometry.h"
 
 #include "vtr_vector.h"
@@ -57,22 +56,7 @@
 
 #include "circuit_types.h"
 
-/************************************************************************
- * Create strong id for Circuit Models/Ports to avoid illegal type casting 
- ***********************************************************************/
-struct circuit_model_id_tag;
-struct circuit_port_id_tag;
-struct circuit_edge_id_tag;
-
-typedef vtr::StrongId<circuit_model_id_tag> CircuitModelId;
-typedef vtr::StrongId<circuit_port_id_tag> CircuitPortId;
-typedef vtr::StrongId<circuit_edge_id_tag> CircuitEdgeId;
-
-
-/* Alias for open ids */
-#define CIRCUIT_MODEL_OPEN_ID CircuitModelId(-1)
-#define CIRCUIT_PORT_OPEN_ID CircuitPortId(-1)
-#define CIRCUIT_EDGE_OPEN_ID CircuitEdgeId(-1)
+#include "circuit_library_fwd.h"
 
 /************************************************************************
  * The class CircuitLibrary is a critical data structure for OpenFPGA
@@ -81,20 +65,22 @@ typedef vtr::StrongId<circuit_edge_id_tag> CircuitEdgeId;
  * It includes the following data:
  *
  *  ------ Fundamental Information -----
- * 1. circuit_model_ids_ : unique identifier to find a circuit model
+ * 1. model_ids_ : unique identifier to find a circuit model
  *                         Use a strong id for search, to avoid illegal type casting
- * 2. circuit_model_types_: types of the circuit model, see details in the definition of enum e_spice_model_type
- * 3. circuit_model_names_: unique names for each circuit models. 
+ * 2. model_types_: types of the circuit model, see details in the definition of enum e_spice_model_type
+ * 3. model_names_: unique names for each circuit models. 
  *                          It should be the same as user-defined Verilog modules, if it is not auto-generated
- * 4. circuit_model_prefix_: the prefix of a circuit model when it is instanciated  
+ * 4. model_prefix_: the prefix of a circuit model when it is instanciated  
  * 5. verilog_netlist_: specified path and file name of Verilog netlist if a circuit model is not auto-generated
  * 6. spice_netlist_: specified path and file name of SPICE netlist if a circuit model is not auto-generated
  * 7. is_default_: indicate if the circuit model is the default one among all those in the same type 
+ * 8. sub_models_: the sub circuit models included by a circuit model. It is a collection of unique circuit model ids
+ *                 found in the CircuitModelId of pass-gate/buffers/port-related circuit models.
  *
  *  ------ Fast look-ups-----
- *  1. circuit_model_lookup_: A multi-dimension vector to provide fast look-up on circuit models for users 
+ *  1. model_lookup_: A multi-dimension vector to provide fast look-up on circuit models for users 
  *                            It classifies CircuitModelIds by their type and set the default model in the first element for each type.
- *  2. circuit_model_port_lookup_: A multi-dimension vector to provide fast look-up on ports of circuit models for users
+ *  2. model_port_lookup_: A multi-dimension vector to provide fast look-up on ports of circuit models for users
  *                                 It classifies Ports by their types 
  *
  *  ------ Verilog generation options -----
@@ -109,15 +95,16 @@ typedef vtr::StrongId<circuit_edge_id_tag> CircuitEdgeId;
  *  Use vectors to simplify the defition of buffer existence:
  *  index (low=0 to high) represents INPUT, OUTPUT, LUT_INPUT_BUF, LUT_INPUT_INV, LUT_INTER_BUFFER
  *  1. buffer_existence_: specify if this circuit model has an buffer 
- *  2. buffer_circuit_model_name_: specify the name of circuit model for the buffer 
- *  3. buffer_circuit_model_id_: specify the id of circuit model for the buffer 
+ *  2. buffer_model_name_: specify the name of circuit model for the buffer 
+ *  3. buffer_model_id_: specify the id of circuit model for the buffer 
  *
  *  ------ Pass-gate-related parameters ------
- *  1. pass_gate_logic_circuit_model_name_: specify the name of circuit model for the pass gate logic 
- *  2. pass_gate_logic_circuit_model_id_: specify the id of circuit model for the pass gate logic 
+ *  1. pass_gate_logic_model_name_: specify the name of circuit model for the pass gate logic 
+ *  2. pass_gate_logic_model_id_: specify the id of circuit model for the pass gate logic 
  *
  *  ------ Port information ------
  * 1. port_ids_: unique id of ports belonging to a circuit model 
+ * 1. port_model_ids_: unique id of the parent circuit model for the port
  * 2. port_types_: types of ports belonging to a circuit model 
  * 3. port_sizes_: width of ports belonging to a circuit model
  * 4. port_prefix_: prefix of a port when instance of a circuit model 
@@ -129,10 +116,10 @@ typedef vtr::StrongId<circuit_edge_id_tag> CircuitEdgeId;
  * 10. port_is_set: specify if this port is a set signal which needs special pulse widths in testbenches 
  * 11. port_is_config_enable: specify if this port is a config_enable signal which needs special pulse widths in testbenches 
  * 12. port_is_prog: specify if this port is for FPGA programming use which needs special pulse widths in testbenches 
- * 13. port_circuit_model_name: the name of circuit model linked to the port  
- * 14. port_circuit_model_ids_: the Id of circuit model linked to the port 
- * 15. port_inv_circuit_model_names_: the name of inverter circuit model linked to the port 
- * 16. port_inv_circuit_model_ids_: the Id of inverter circuit model linked to the port
+ * 13. port_tri_state_model_name: the name of circuit model linked to tri-state the port  
+ * 14. port_tri_state_model_ids_: the Id of circuit model linked to tri-state the port 
+ * 15. port_inv_model_names_: the name of inverter circuit model linked to the port 
+ * 16. port_inv_model_ids_: the Id of inverter circuit model linked to the port
  * 17. port_tri_state_map_: only applicable to inputs of LUTs, the tri-state map applied to each pin of this port 
  * 18. port_lut_frac_level_:  only applicable to outputs of LUTs, indicate which level of outputs inside LUT multiplexing structure will be used
  * 19. port_lut_output_mask_: only applicable to outputs of LUTs, indicate which output at an internal level of LUT multiplexing structure will be used
@@ -196,7 +183,7 @@ typedef vtr::StrongId<circuit_edge_id_tag> CircuitEdgeId;
  *
  *  ------ Metal wire-related parameters ------
  *  Note: only applicable to circuit models whose type is wires or channel wires
- * 1. wire_types_: types of the metal wire for the circuit_model  
+ * 1. wire_types_: types of the metal wire for the model  
  * 2. wire_res_val_: resistance value of the metal wire for the circuit model 
  * 3. wire_cap_val_: capacitance value of the metal wire for the circuit model 
  * 4. wire_num_levels_: number of levels of the metal wire model for the circuit model 
@@ -218,267 +205,283 @@ class CircuitLibrary {
   public: /* Constructors */
     CircuitLibrary();
   public: /* Accessors: aggregates */
-    circuit_model_range circuit_models() const;
-    circuit_port_range ports(const CircuitModelId& circuit_model_id) const;
-    std::vector<CircuitModelId> circuit_models_by_type(const enum e_spice_model_type& type) const;
-    std::vector<CircuitPortId> ports_by_type(const CircuitModelId& circuit_model_id, const enum e_spice_model_port_type& port_type) const;
-    std::vector<CircuitPortId> ports_by_type(const CircuitModelId& circuit_model_id, const enum e_spice_model_port_type& port_type, const bool& include_global_port) const;
-    std::vector<CircuitPortId> input_ports(const CircuitModelId& circuit_model_id) const;
-    std::vector<CircuitPortId> output_ports(const CircuitModelId& circuit_model_id) const;
-    std::vector<size_t> pins(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
+    circuit_model_range models() const;
+    circuit_port_range ports() const;
+    std::vector<CircuitModelId> models_by_type(const enum e_spice_model_type& type) const;
   public: /* Public Accessors: Basic data query on Circuit Models*/
-    size_t num_circuit_models() const;
-    enum e_spice_model_type circuit_model_type(const CircuitModelId& circuit_model_id) const;
-    std::string circuit_model_name(const CircuitModelId& circuit_model_id) const;
-    std::string circuit_model_prefix(const CircuitModelId& circuit_model_id) const;
-    std::string circuit_model_verilog_netlist(const CircuitModelId& circuit_model_id) const;
-    std::string circuit_model_spice_netlist(const CircuitModelId& circuit_model_id) const;
-    bool circuit_model_is_default(const CircuitModelId& circuit_model_id) const;
-    bool dump_structural_verilog(const CircuitModelId& circuit_model_id) const;
-    bool dump_explicit_port_map(const CircuitModelId& circuit_model_id) const;
-    enum e_spice_model_design_tech design_tech_type(const CircuitModelId& circuit_model_id) const;
-    bool is_power_gated(const CircuitModelId& circuit_model_id) const;
-    bool is_input_buffered(const CircuitModelId& circuit_model_id) const;
-    bool is_output_buffered(const CircuitModelId& circuit_model_id) const;
-    bool is_lut_intermediate_buffered(const CircuitModelId& circuit_model_id) const;
-    enum e_spice_model_structure mux_structure(const CircuitModelId& circuit_model_id) const;
+    size_t num_models() const;
+    enum e_spice_model_type model_type(const CircuitModelId& model_id) const;
+    std::string model_name(const CircuitModelId& model_id) const;
+    std::string model_prefix(const CircuitModelId& model_id) const;
+    std::string model_verilog_netlist(const CircuitModelId& model_id) const;
+    std::string model_spice_netlist(const CircuitModelId& model_id) const;
+    bool model_is_default(const CircuitModelId& model_id) const;
+    bool dump_structural_verilog(const CircuitModelId& model_id) const;
+    bool dump_explicit_port_map(const CircuitModelId& model_id) const;
+    enum e_spice_model_design_tech design_tech_type(const CircuitModelId& model_id) const;
+    bool is_power_gated(const CircuitModelId& model_id) const;
+    /* General buffer information */
+    bool is_input_buffered(const CircuitModelId& model_id) const;
+    bool is_output_buffered(const CircuitModelId& model_id) const;
+    /* LUT-related information */
+    bool is_lut_intermediate_buffered(const CircuitModelId& model_id) const;
+    /* Pass-gate-logic information */
+    CircuitModelId pass_gate_logic_model(const CircuitModelId& model_id) const;
+    enum e_spice_model_pass_gate_logic_type pass_gate_logic_type(const CircuitModelId& model_id) const;
+    /* Multiplexer information */
+    enum e_spice_model_structure mux_structure(const CircuitModelId& model_id) const;
+    size_t mux_num_levels(const CircuitModelId& model_id) const;
+    bool mux_add_const_input(const CircuitModelId& model_id) const;
+    size_t mux_const_input_value(const CircuitModelId& model_id) const;
+    /* Gate information */
+    enum e_spice_model_gate_type gate_type(const CircuitModelId& model_id) const;
+    /* Buffer information */
+    enum e_spice_model_buffer_type buffer_type(const CircuitModelId& model_id) const;
+    size_t buffer_num_levels(const CircuitModelId& model_id) const;
+    /* Delay information */
+    size_t num_delay_info(const CircuitModelId& model_id) const;
+  public: /* Public Accessors: Basic data query on cirucit models' Circuit Ports*/
+    CircuitPortId model_port(const CircuitModelId& model_id, const std::string& name) const;
+    size_t num_model_ports(const CircuitModelId& model_id) const;
+    size_t num_model_ports_by_type(const CircuitModelId& model_id, const enum e_spice_model_port_type& port_type, const bool& include_global_port) const;
+    std::vector<CircuitPortId> model_ports(const CircuitModelId& model_id) const;
+    std::vector<CircuitPortId> model_global_ports(const CircuitModelId& model_id, const bool& recursive) const;
+    std::vector<CircuitPortId> model_global_ports_by_type(const CircuitModelId& model_id,
+                                                          const enum e_spice_model_port_type& type,
+                                                          const bool& recursive) const;
+    std::vector<CircuitPortId> model_ports_by_type(const CircuitModelId& model_id, const enum e_spice_model_port_type& port_type) const;
+    std::vector<CircuitPortId> model_ports_by_type(const CircuitModelId& model_id, const enum e_spice_model_port_type& port_type, const bool& include_global_port) const;
+    std::vector<CircuitPortId> model_input_ports(const CircuitModelId& model_id) const;
+    std::vector<CircuitPortId> model_output_ports(const CircuitModelId& model_id) const;
+    std::vector<size_t> pins(const CircuitPortId& circuit_port_id) const;
   public: /* Public Accessors: Basic data query on Circuit Ports*/
-    bool is_input_port(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
-    bool is_output_port(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
-    CircuitPortId port(const CircuitModelId& circuit_model_id, const std::string& name) const;
-    size_t num_ports(const CircuitModelId& circuit_model_id) const;
-    size_t num_ports_by_type(const CircuitModelId& circuit_model_id, const enum e_spice_model_port_type& port_type, const bool& include_global_port) const;
-    enum e_spice_model_port_type port_type(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
-    size_t port_size(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
-    std::string port_prefix(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
-    std::string port_lib_name(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
-    std::string port_inv_prefix(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
-    size_t port_default_value(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
-    bool port_is_mode_select(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
-    bool port_is_global(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
-    bool port_is_reset(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
-    bool port_is_set(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
-    bool port_is_config_enable(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
-    bool port_is_prog(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
-  public: /* Public Accessors: Methods to find circuit model */
-    CircuitModelId circuit_model(const char* name) const;
-    CircuitModelId circuit_model(const std::string& name) const;
-    CircuitModelId default_circuit_model(const enum e_spice_model_type& type) const;
+    bool is_input_port(const CircuitPortId& circuit_port_id) const;
+    bool is_output_port(const CircuitPortId& circuit_port_id) const;
+    enum e_spice_model_port_type port_type(const CircuitPortId& circuit_port_id) const;
+    size_t port_size(const CircuitPortId& circuit_port_id) const;
+    std::string port_prefix(const CircuitPortId& circuit_port_id) const;
+    std::string port_lib_name(const CircuitPortId& circuit_port_id) const;
+    std::string port_inv_prefix(const CircuitPortId& circuit_port_id) const;
+    size_t port_default_value(const CircuitPortId& circuit_port_id) const;
+    bool port_is_mode_select(const CircuitPortId& circuit_port_id) const;
+    bool port_is_global(const CircuitPortId& circuit_port_id) const;
+    bool port_is_reset(const CircuitPortId& circuit_port_id) const;
+    bool port_is_set(const CircuitPortId& circuit_port_id) const;
+    bool port_is_config_enable(const CircuitPortId& circuit_port_id) const;
+    bool port_is_prog(const CircuitPortId& circuit_port_id) const;
+    CircuitModelId port_parent_model(const CircuitPortId& circuit_port_id) const;
+    std::string model_name(const CircuitPortId& port_id) const;
   public: /* Public Accessors: Timing graph */
-    CircuitEdgeId edge(const CircuitModelId& circuit_model_id,
-                       const CircuitPortId& from_port, const size_t from_pin,
+    /* Get source/sink nodes and delay of edges */
+    std::vector<CircuitEdgeId> timing_edges_by_model(const CircuitModelId& model_id) const;
+    CircuitPortId timing_edge_src_port(const CircuitEdgeId& edge) const;
+    size_t timing_edge_src_pin(const CircuitEdgeId& edge) const;
+    CircuitPortId timing_edge_sink_port(const CircuitEdgeId& edge) const;
+    size_t timing_edge_sink_pin(const CircuitEdgeId& edge) const;
+    float timing_edge_delay(const CircuitEdgeId& edge, const enum spice_model_delay_type& delay_type) const;
+  public: /* Public Accessors: Methods to find circuit model */
+    CircuitModelId model(const char* name) const;
+    CircuitModelId model(const std::string& name) const;
+    CircuitModelId default_model(const enum e_spice_model_type& type) const;
+  public: /* Public Accessors: Timing graph */
+    CircuitEdgeId edge(const CircuitPortId& from_port, const size_t from_pin,
                        const CircuitPortId& to_port, const size_t to_pin);
   public: /* Public Mutators */
-    CircuitModelId add_circuit_model();
+    CircuitModelId add_model(const enum e_spice_model_type& type);
     /* Fundamental information */
-    void set_circuit_model_type(const CircuitModelId& circuit_model_id, const enum e_spice_model_type& type);
-    void set_circuit_model_name(const CircuitModelId& circuit_model_id, const std::string& name);
-    void set_circuit_model_prefix(const CircuitModelId& circuit_model_id, const std::string& prefix);
-    void set_circuit_model_verilog_netlist(const CircuitModelId& circuit_model_id, const std::string& verilog_netlist);
-    void set_circuit_model_spice_netlist(const CircuitModelId& circuit_model_id, const std::string& spice_netlist);
-    void set_circuit_model_is_default(const CircuitModelId& circuit_model_id, const bool& is_default);
+    void set_model_name(const CircuitModelId& model_id, const std::string& name);
+    void set_model_prefix(const CircuitModelId& model_id, const std::string& prefix);
+    void set_model_verilog_netlist(const CircuitModelId& model_id, const std::string& verilog_netlist);
+    void set_model_spice_netlist(const CircuitModelId& model_id, const std::string& spice_netlist);
+    void set_model_is_default(const CircuitModelId& model_id, const bool& is_default);
     /* Verilog generator options */ 
-    void set_circuit_model_dump_structural_verilog(const CircuitModelId& circuit_model_id, const bool& dump_structural_verilog);
-    void set_circuit_model_dump_explicit_port_map(const CircuitModelId& circuit_model_id, const bool& dump_explicit_port_map);
+    void set_model_dump_structural_verilog(const CircuitModelId& model_id, const bool& dump_structural_verilog);
+    void set_model_dump_explicit_port_map(const CircuitModelId& model_id, const bool& dump_explicit_port_map);
     /* Design technology information */ 
-    void set_circuit_model_design_tech_type(const CircuitModelId& circuit_model_id, const enum e_spice_model_design_tech& design_tech_type);
-    void set_circuit_model_is_power_gated(const CircuitModelId& circuit_model_id, const bool& is_power_gated);
+    void set_model_design_tech_type(const CircuitModelId& model_id, const enum e_spice_model_design_tech& design_tech_type);
+    void set_model_is_power_gated(const CircuitModelId& model_id, const bool& is_power_gated);
     /* Buffer existence */
-    void set_circuit_model_input_buffer(const CircuitModelId& circuit_model_id, 
-                                        const bool& existence, const std::string& circuit_model_name);
-    void set_circuit_model_output_buffer(const CircuitModelId& circuit_model_id, 
-                                         const bool& existence, const std::string& circuit_model_name);
-    void set_circuit_model_lut_input_buffer(const CircuitModelId& circuit_model_id, 
-                                            const bool& existence, const std::string& circuit_model_name);
-    void set_circuit_model_lut_input_inverter(const CircuitModelId& circuit_model_id, 
-                                              const bool& existence, const std::string& circuit_model_name);
-    void set_circuit_model_lut_intermediate_buffer(const CircuitModelId& circuit_model_id, 
-                                                   const bool& existence, const std::string& circuit_model_name);
-    void set_circuit_model_lut_intermediate_buffer_location_map(const CircuitModelId& circuit_model_id,
-                                                                const std::string& location_map);
+    void set_model_input_buffer(const CircuitModelId& model_id, 
+                                const bool& existence, const std::string& model_name);
+    void set_model_output_buffer(const CircuitModelId& model_id, 
+                                 const bool& existence, const std::string& model_name);
+    void set_model_lut_input_buffer(const CircuitModelId& model_id, 
+                                    const bool& existence, const std::string& model_name);
+    void set_model_lut_input_inverter(const CircuitModelId& model_id, 
+                                      const bool& existence, const std::string& model_name);
+    void set_model_lut_intermediate_buffer(const CircuitModelId& model_id, 
+                                           const bool& existence, const std::string& model_name);
+    void set_model_lut_intermediate_buffer_location_map(const CircuitModelId& model_id,
+                                                        const std::string& location_map);
     /* Pass-gate-related parameters */
-    void set_circuit_model_pass_gate_logic(const CircuitModelId& circuit_model_id, const std::string& circuit_model_name);
+    void set_model_pass_gate_logic(const CircuitModelId& model_id, const std::string& model_name);
     /* Port information */
-    CircuitPortId add_circuit_model_port(const CircuitModelId& circuit_model_id);
-    void set_port_type(const CircuitModelId& circuit_model_id, 
-                       const CircuitPortId& circuit_port_id, 
-                       const enum e_spice_model_port_type& port_type);
-    void set_port_size(const CircuitModelId& circuit_model_id, 
-                       const CircuitPortId& circuit_port_id, 
+    CircuitPortId add_model_port(const CircuitModelId& model_id,
+                                 const enum e_spice_model_port_type& port_type);
+    void set_port_size(const CircuitPortId& circuit_port_id, 
                        const size_t& port_size);
-    void set_port_prefix(const CircuitModelId& circuit_model_id, 
-                         const CircuitPortId& circuit_port_id, 
+    void set_port_prefix(const CircuitPortId& circuit_port_id, 
                          const std::string& port_prefix);
-    void set_port_lib_name(const CircuitModelId& circuit_model_id, 
-                           const CircuitPortId& circuit_port_id, 
+    void set_port_lib_name(const CircuitPortId& circuit_port_id, 
                            const std::string& lib_name);
-    void set_port_inv_prefix(const CircuitModelId& circuit_model_id, 
-                             const CircuitPortId& circuit_port_id, 
+    void set_port_inv_prefix(const CircuitPortId& circuit_port_id, 
                              const std::string& inv_prefix);
-    void set_port_default_value(const CircuitModelId& circuit_model_id, 
-                                const CircuitPortId& circuit_port_id, 
+    void set_port_default_value(const CircuitPortId& circuit_port_id, 
                                 const size_t& default_val);
-    void set_port_is_mode_select(const CircuitModelId& circuit_model_id, 
-                                 const CircuitPortId& circuit_port_id, 
+    void set_port_is_mode_select(const CircuitPortId& circuit_port_id, 
                                  const bool& is_mode_select);
-    void set_port_is_global(const CircuitModelId& circuit_model_id, 
-                            const CircuitPortId& circuit_port_id, 
+    void set_port_is_global(const CircuitPortId& circuit_port_id, 
                             const bool& is_global);
-    void set_port_is_reset(const CircuitModelId& circuit_model_id, 
-                           const CircuitPortId& circuit_port_id, 
+    void set_port_is_reset(const CircuitPortId& circuit_port_id, 
                            const bool& is_reset);
-    void set_port_is_set(const CircuitModelId& circuit_model_id, 
-                         const CircuitPortId& circuit_port_id, 
+    void set_port_is_set(const CircuitPortId& circuit_port_id, 
                          const bool& is_set);
-    void set_port_is_config_enable(const CircuitModelId& circuit_model_id, 
-                                   const CircuitPortId& circuit_port_id, 
+    void set_port_is_config_enable(const CircuitPortId& circuit_port_id, 
                                    const bool& is_config_enable);
-    void set_port_is_prog(const CircuitModelId& circuit_model_id, 
-                          const CircuitPortId& circuit_port_id, 
+    void set_port_is_prog(const CircuitPortId& circuit_port_id, 
                           const bool& is_prog);
-    void set_port_circuit_model_name(const CircuitModelId& circuit_model_id, 
-                                     const CircuitPortId& circuit_port_id, 
-                                     const std::string& circuit_model_name);
-    void set_port_circuit_model_id(const CircuitModelId& circuit_model_id, 
-                                   const CircuitPortId& circuit_port_id, 
-                                   const CircuitModelId& port_circuit_model_id);
-    void set_port_inv_circuit_model_name(const CircuitModelId& circuit_model_id, 
-                                         const CircuitPortId& circuit_port_id, 
-                                         const std::string& inv_circuit_model_name);
-    void set_port_inv_circuit_model_id(const CircuitModelId& circuit_model_id, 
-                                       const CircuitPortId& circuit_port_id, 
-                                       const CircuitModelId& inv_circuit_model_id);
-    void set_port_tri_state_map(const CircuitModelId& circuit_model_id, 
-                                const CircuitPortId& circuit_port_id, 
+    void set_port_tri_state_model_name(const CircuitPortId& circuit_port_id, 
+                                       const std::string& model_name);
+    void set_port_tri_state_model_id(const CircuitPortId& circuit_port_id, 
+                                     const CircuitModelId& port_model_id);
+    void set_port_inv_model_name(const CircuitPortId& circuit_port_id, 
+                                 const std::string& inv_model_name);
+    void set_port_inv_model_id(const CircuitPortId& circuit_port_id, 
+                               const CircuitModelId& inv_model_id);
+    void set_port_tri_state_map(const CircuitPortId& circuit_port_id, 
                                 const std::string& tri_state_map);
-    void set_port_lut_frac_level(const CircuitModelId& circuit_model_id, 
-                                 const CircuitPortId& circuit_port_id, 
+    void set_port_lut_frac_level(const CircuitPortId& circuit_port_id, 
                                  const size_t& lut_frac_level);
-    void set_port_lut_output_mask(const CircuitModelId& circuit_model_id, 
-                                  const CircuitPortId& circuit_port_id, 
+    void set_port_lut_output_mask(const CircuitPortId& circuit_port_id, 
                                   const std::vector<size_t>& lut_output_masks);
-    void set_port_sram_orgz(const CircuitModelId& circuit_model_id, 
-                            const CircuitPortId& circuit_port_id, 
+    void set_port_sram_orgz(const CircuitPortId& circuit_port_id, 
                             const enum e_sram_orgz& sram_orgz);
     /* Delay information */
-    void add_delay_info(const CircuitModelId& circuit_model_id,
+    void add_delay_info(const CircuitModelId& model_id,
                         const enum spice_model_delay_type& delay_type);
-    void set_delay_in_port_names(const CircuitModelId& circuit_model_id,
+    void set_delay_in_port_names(const CircuitModelId& model_id,
                                  const enum spice_model_delay_type& delay_type,
                                  const std::string& in_port_names);
-    void set_delay_out_port_names(const CircuitModelId& circuit_model_id,
+    void set_delay_out_port_names(const CircuitModelId& model_id,
                                   const enum spice_model_delay_type& delay_type,
                                   const std::string& out_port_names);
-    void set_delay_values(const CircuitModelId& circuit_model_id,
+    void set_delay_values(const CircuitModelId& model_id,
                           const enum spice_model_delay_type& delay_type,
                           const std::string& delay_values);
     /* Buffer/Inverter-related parameters */
-    void set_buffer_type(const CircuitModelId& circuit_model_id,
+    void set_buffer_type(const CircuitModelId& model_id,
                          const enum e_spice_model_buffer_type& buffer_type);
-    void set_buffer_size(const CircuitModelId& circuit_model_id,
+    void set_buffer_size(const CircuitModelId& model_id,
                          const float& buffer_size);
-    void set_buffer_num_levels(const CircuitModelId& circuit_model_id,
+    void set_buffer_num_levels(const CircuitModelId& model_id,
                                const size_t& num_levels);
-    void set_buffer_f_per_stage(const CircuitModelId& circuit_model_id,
+    void set_buffer_f_per_stage(const CircuitModelId& model_id,
                                 const size_t& f_per_stage);
     /* Pass-gate-related parameters */
-    void set_pass_gate_logic_type(const CircuitModelId& circuit_model_id,
+    void set_pass_gate_logic_type(const CircuitModelId& model_id,
                                   const enum e_spice_model_pass_gate_logic_type& pass_gate_logic_type);
-    void set_pass_gate_logic_nmos_size(const CircuitModelId& circuit_model_id,
+    void set_pass_gate_logic_nmos_size(const CircuitModelId& model_id,
                                        const float& nmos_size);
-    void set_pass_gate_logic_pmos_size(const CircuitModelId& circuit_model_id,
+    void set_pass_gate_logic_pmos_size(const CircuitModelId& model_id,
                                        const float& pmos_size);
     /* Multiplexer-related parameters */
-    void set_mux_structure(const CircuitModelId& circuit_model_id,
+    void set_mux_structure(const CircuitModelId& model_id,
                            const enum e_spice_model_structure& mux_structure);
-    void set_mux_num_levels(const CircuitModelId& circuit_model_id,
+    void set_mux_num_levels(const CircuitModelId& model_id,
                             const size_t& num_levels);
-    void set_mux_const_input_value(const CircuitModelId& circuit_model_id,
+    void set_mux_const_input_value(const CircuitModelId& model_id,
                                    const size_t& const_input_value);
-    void set_mux_use_local_encoder(const CircuitModelId& circuit_model_id,
+    void set_mux_use_local_encoder(const CircuitModelId& model_id,
                                    const bool& use_local_encoder);
-    void set_mux_use_advanced_rram_design(const CircuitModelId& circuit_model_id,
+    void set_mux_use_advanced_rram_design(const CircuitModelId& model_id,
                                           const bool& use_advanced_rram_design);
     /* LUT-related parameters */
-    void set_lut_is_fracturable(const CircuitModelId& circuit_model_id,
+    void set_lut_is_fracturable(const CircuitModelId& model_id,
                                 const bool& is_fracturable);
     /* Gate-related parameters */
-    void set_gate_type(const CircuitModelId& circuit_model_id,
+    void set_gate_type(const CircuitModelId& model_id,
                        const enum e_spice_model_gate_type& gate_type);
     /* RRAM-related design technology information */
-    void set_rram_rlrs(const CircuitModelId& circuit_model_id,
+    void set_rram_rlrs(const CircuitModelId& model_id,
                        const float& rlrs);
-    void set_rram_rhrs(const CircuitModelId& circuit_model_id,
+    void set_rram_rhrs(const CircuitModelId& model_id,
                        const float& rhrs);
-    void set_rram_wprog_set_nmos(const CircuitModelId& circuit_model_id,
+    void set_rram_wprog_set_nmos(const CircuitModelId& model_id,
                                  const float& wprog_set_nmos);
-    void set_rram_wprog_set_pmos(const CircuitModelId& circuit_model_id,
+    void set_rram_wprog_set_pmos(const CircuitModelId& model_id,
                                  const float& wprog_set_pmos);
-    void set_rram_wprog_reset_nmos(const CircuitModelId& circuit_model_id,
+    void set_rram_wprog_reset_nmos(const CircuitModelId& model_id,
                                    const float& wprog_reset_nmos);
-    void set_rram_wprog_reset_pmos(const CircuitModelId& circuit_model_id,
+    void set_rram_wprog_reset_pmos(const CircuitModelId& model_id,
                                    const float& wprog_reset_pmos);
     /* Wire parameters */
-    void set_wire_type(const CircuitModelId& circuit_model_id,
+    void set_wire_type(const CircuitModelId& model_id,
                        const enum e_wire_model_type& wire_type);
-    void set_wire_r(const CircuitModelId& circuit_model_id,
+    void set_wire_r(const CircuitModelId& model_id,
                     const float& r_val);
-    void set_wire_c(const CircuitModelId& circuit_model_id,
+    void set_wire_c(const CircuitModelId& model_id,
                     const float& c_val);
-    void set_wire_num_levels(const CircuitModelId& circuit_model_id,
+    void set_wire_num_levels(const CircuitModelId& model_id,
                              const size_t& num_level);
+  private: /* Private Mutators: builders */
+    void set_model_buffer(const CircuitModelId& model_id, const enum e_buffer_type buffer_type, const bool& existence, const std::string& model_name);
+    void link_port_tri_state_model();      
+    void link_port_inv_model();      
+    void link_buffer_model(const CircuitModelId& model_id);      
+    void link_pass_gate_logic_model(const CircuitModelId& model_id);      
+    bool is_unique_submodel(const CircuitModelId& model_id, const CircuitModelId& submodel_id);
+    void build_submodels();
+    void build_model_timing_graph(const CircuitModelId& model_id);
   public: /* Public Mutators: builders */
-    void set_circuit_model_buffer(const CircuitModelId& circuit_model_id, const enum e_buffer_type buffer_type, const bool& existence, const std::string& circuit_model_name);
-    void link_port_circuit_model(const CircuitModelId& circuit_model_id);      
-    void link_port_inv_circuit_model(const CircuitModelId& circuit_model_id);      
-    void link_port_circuit_models(const CircuitModelId& circuit_model_id);      
-    void link_buffer_circuit_model(const CircuitModelId& circuit_model_id);      
-    void link_pass_gate_logic_circuit_model(const CircuitModelId& circuit_model_id);      
-    void build_circuit_model_links();
-    void build_circuit_model_timing_graph(const CircuitModelId& circuit_model_id);
+    void build_model_links();
     void build_timing_graphs();
   public: /* Internal mutators: build timing graphs */
-    void add_edge(const CircuitModelId& circuit_model_id,
+    void add_edge(const CircuitModelId& model_id,
                   const CircuitPortId& from_port, const size_t& from_pin, 
                   const CircuitPortId& to_port, const size_t& to_pin);
-    void set_edge_delay(const CircuitModelId& circuit_model_id, 
+    void set_edge_delay(const CircuitModelId& model_id, 
                         const CircuitEdgeId& circuit_edge_id, 
                         const enum spice_model_delay_type& delay_type, 
                         const float& delay_value);
     /* validate the circuit_edge_id */
-    void set_timing_graph_delays(const CircuitModelId& circuit_model_id);
+    void set_timing_graph_delays(const CircuitModelId& model_id);
   public: /* Internal mutators: build fast look-ups */
-    void build_circuit_model_lookup();
-    void build_circuit_model_port_lookup(const CircuitModelId& circuit_model_id);
+    void build_model_lookup();
+    void build_model_port_lookup();
   private: /* Internal invalidators/validators */
     /* Validators */
-    bool valid_circuit_model_id(const CircuitModelId& circuit_model_id) const;
-    bool valid_circuit_port_id(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id) const;
-    bool valid_circuit_pin_id(const CircuitModelId& circuit_model_id, const CircuitPortId& circuit_port_id, const size_t& pin_id) const;
-    bool valid_delay_type(const CircuitModelId& circuit_model_id, const enum spice_model_delay_type& delay_type) const;
-    bool valid_circuit_edge_id(const CircuitModelId& circuit_model_id, const CircuitEdgeId& circuit_edge_id) const;
+    bool valid_model_id(const CircuitModelId& model_id) const;
+    bool valid_circuit_port_id(const CircuitPortId& circuit_port_id) const;
+    bool valid_circuit_pin_id(const CircuitPortId& circuit_port_id, const size_t& pin_id) const;
+    bool valid_edge_id(const CircuitEdgeId& edge_id) const;
+    bool valid_delay_type(const CircuitModelId& model_id, const enum spice_model_delay_type& delay_type) const;
+    bool valid_circuit_edge_id(const CircuitEdgeId& circuit_edge_id) const;
+    bool valid_mux_const_input_value(const size_t& const_input_value) const;
     /* Invalidators */
-    void invalidate_circuit_model_lookup() const;
-    void invalidate_circuit_model_port_lookup(const CircuitModelId& circuit_model_id) const;
-    void invalidate_circuit_model_timing_graph(const CircuitModelId& circuit_model_id);
+    void invalidate_model_lookup() const;
+    void invalidate_model_port_lookup() const;
+    void invalidate_model_timing_graph();
   private: /* Internal data */
     /* Fundamental information */
-    vtr::vector<CircuitModelId, CircuitModelId> circuit_model_ids_;
-    vtr::vector<CircuitModelId, enum e_spice_model_type> circuit_model_types_;
-    vtr::vector<CircuitModelId, std::string> circuit_model_names_;
-    vtr::vector<CircuitModelId, std::string> circuit_model_prefix_;
-    vtr::vector<CircuitModelId, std::string> circuit_model_verilog_netlists_;
-    vtr::vector<CircuitModelId, std::string> circuit_model_spice_netlists_;
-    vtr::vector<CircuitModelId, bool> circuit_model_is_default_;
+    vtr::vector<CircuitModelId, CircuitModelId> model_ids_;
+    vtr::vector<CircuitModelId, enum e_spice_model_type> model_types_;
+    vtr::vector<CircuitModelId, std::string> model_names_;
+    vtr::vector<CircuitModelId, std::string> model_prefix_;
+    vtr::vector<CircuitModelId, std::string> model_verilog_netlists_;
+    vtr::vector<CircuitModelId, std::string> model_spice_netlists_;
+    vtr::vector<CircuitModelId, bool> model_is_default_;
+
+    /* Submodules that a circuit model contains */
+    vtr::vector<CircuitModelId, std::vector<CircuitModelId>> sub_models_;
 
     /* fast look-up for circuit models to categorize by types 
      * [type][num_ids]
      * Important: we force the default circuit model in the first element for each type
      */
     typedef std::vector<std::vector<CircuitModelId>> CircuitModelLookup;
-    mutable CircuitModelLookup circuit_model_lookup_; /* [circuit_model_type][circuit_model_ids] */
-    typedef std::vector<std::vector<std::vector<CircuitPortId>>> CircuitModelPortLookup;
-    mutable CircuitModelPortLookup circuit_model_port_lookup_; /* [circuit_model_id][port_type][port_ids] */
+    mutable CircuitModelLookup model_lookup_; /* [model_type][model_ids] */
+    typedef vtr::vector<CircuitModelId, std::vector<std::vector<CircuitPortId>>> CircuitModelPortLookup;
+    mutable CircuitModelPortLookup model_port_lookup_; /* [model_id][port_type][port_ids] */
 
     /* Verilog generator options */ 
     vtr::vector<CircuitModelId, bool> dump_structural_verilog_;
@@ -490,46 +493,48 @@ class CircuitLibrary {
 
     /* Buffer existence */
     vtr::vector<CircuitModelId, std::vector<bool>> buffer_existence_;
-    vtr::vector<CircuitModelId, std::vector<std::string>> buffer_circuit_model_names_;
-    vtr::vector<CircuitModelId, std::vector<CircuitModelId>> buffer_circuit_model_ids_;
+    vtr::vector<CircuitModelId, std::vector<std::string>> buffer_model_names_;
+    vtr::vector<CircuitModelId, std::vector<CircuitModelId>> buffer_model_ids_;
     vtr::vector<CircuitModelId, std::vector<std::string>> buffer_location_maps_;
 
     /* Pass-gate-related parameters */
-    vtr::vector<CircuitModelId, std::string> pass_gate_logic_circuit_model_names_;
-    vtr::vector<CircuitModelId, CircuitModelId> pass_gate_logic_circuit_model_ids_;
+    vtr::vector<CircuitModelId, std::string> pass_gate_logic_model_names_;
+    vtr::vector<CircuitModelId, CircuitModelId> pass_gate_logic_model_ids_;
 
     /* Port information */
-    vtr::vector<CircuitModelId, vtr::vector<CircuitPortId, CircuitPortId>> port_ids_;
-    vtr::vector<CircuitModelId, vtr::vector<CircuitPortId, enum e_spice_model_port_type>> port_types_;
-    vtr::vector<CircuitModelId, vtr::vector<CircuitPortId, size_t>> port_sizes_;
-    vtr::vector<CircuitModelId, vtr::vector<CircuitPortId, std::string>> port_prefix_;
-    vtr::vector<CircuitModelId, vtr::vector<CircuitPortId, std::string>> port_lib_names_;
-    vtr::vector<CircuitModelId, vtr::vector<CircuitPortId, std::string>> port_inv_prefix_;
-    vtr::vector<CircuitModelId, vtr::vector<CircuitPortId, size_t>> port_default_values_;
-    vtr::vector<CircuitModelId, vtr::vector<CircuitPortId, bool>> port_is_mode_select_;
-    vtr::vector<CircuitModelId, vtr::vector<CircuitPortId, bool>> port_is_global_;
-    vtr::vector<CircuitModelId, vtr::vector<CircuitPortId, bool>> port_is_reset_;
-    vtr::vector<CircuitModelId, vtr::vector<CircuitPortId, bool>> port_is_set_;
-    vtr::vector<CircuitModelId, vtr::vector<CircuitPortId, bool>> port_is_config_enable_;
-    vtr::vector<CircuitModelId, vtr::vector<CircuitPortId, bool>> port_is_prog_;
-    vtr::vector<CircuitModelId, vtr::vector<CircuitPortId, std::string>> port_circuit_model_names_;
-    vtr::vector<CircuitModelId, vtr::vector<CircuitPortId, CircuitModelId>> port_circuit_model_ids_;
-    vtr::vector<CircuitModelId, vtr::vector<CircuitPortId, std::string>> port_inv_circuit_model_names_;
-    vtr::vector<CircuitModelId, vtr::vector<CircuitPortId, CircuitModelId>> port_inv_circuit_model_ids_;
-    vtr::vector<CircuitModelId, vtr::vector<CircuitPortId, std::string>> port_tri_state_maps_;
-    vtr::vector<CircuitModelId, vtr::vector<CircuitPortId, size_t>> port_lut_frac_level_;
-    vtr::vector<CircuitModelId, vtr::vector<CircuitPortId, std::vector<size_t>>> port_lut_output_masks_;
-    vtr::vector<CircuitModelId, vtr::vector<CircuitPortId, enum e_sram_orgz>> port_sram_orgz_;
+    vtr::vector<CircuitPortId, CircuitPortId> port_ids_;
+    vtr::vector<CircuitPortId, CircuitModelId> port_model_ids_;
+    vtr::vector<CircuitPortId, enum e_spice_model_port_type> port_types_;
+    vtr::vector<CircuitPortId, size_t> port_sizes_;
+    vtr::vector<CircuitPortId, std::string> port_prefix_;
+    vtr::vector<CircuitPortId, std::string> port_lib_names_;
+    vtr::vector<CircuitPortId, std::string> port_inv_prefix_;
+    vtr::vector<CircuitPortId, size_t> port_default_values_;
+    vtr::vector<CircuitPortId, bool> port_is_mode_select_;
+    vtr::vector<CircuitPortId, bool> port_is_global_;
+    vtr::vector<CircuitPortId, bool> port_is_reset_;
+    vtr::vector<CircuitPortId, bool> port_is_set_;
+    vtr::vector<CircuitPortId, bool> port_is_config_enable_;
+    vtr::vector<CircuitPortId, bool> port_is_prog_;
+    vtr::vector<CircuitPortId, std::string> port_tri_state_model_names_;
+    vtr::vector<CircuitPortId, CircuitModelId> port_tri_state_model_ids_;
+    vtr::vector<CircuitPortId, std::string> port_inv_model_names_;
+    vtr::vector<CircuitPortId, CircuitModelId> port_inv_model_ids_;
+    vtr::vector<CircuitPortId, std::string> port_tri_state_maps_;
+    vtr::vector<CircuitPortId, size_t> port_lut_frac_level_;
+    vtr::vector<CircuitPortId, std::vector<size_t>> port_lut_output_masks_;
+    vtr::vector<CircuitPortId, enum e_sram_orgz> port_sram_orgz_;
 
     /* Timing graphs */
-    vtr::vector<CircuitModelId, vtr::vector<CircuitEdgeId, CircuitEdgeId>> edge_ids_;
-    vtr::vector<CircuitModelId, vtr::vector<CircuitPortId, vtr::vector<size_t, CircuitEdgeId>>> port_in_edge_ids_;
-    vtr::vector<CircuitModelId, vtr::vector<CircuitPortId, vtr::vector<size_t, CircuitEdgeId>>> port_out_edge_ids_;
-    vtr::vector<CircuitModelId, vtr::vector<CircuitEdgeId, CircuitPortId>> edge_src_port_ids_;
-    vtr::vector<CircuitModelId, vtr::vector<CircuitEdgeId, size_t>> edge_src_pin_ids_;
-    vtr::vector<CircuitModelId, vtr::vector<CircuitEdgeId, CircuitPortId>> edge_sink_port_ids_;
-    vtr::vector<CircuitModelId, vtr::vector<CircuitEdgeId, size_t>> edge_sink_pin_ids_;
-    vtr::vector<CircuitModelId, vtr::vector<CircuitEdgeId, std::vector<float>>> edge_timing_info_; /* x0 => trise, x1 => tfall */
+    vtr::vector<CircuitEdgeId, CircuitEdgeId> edge_ids_;
+    vtr::vector<CircuitEdgeId, CircuitModelId> edge_parent_model_ids_;
+    vtr::vector<CircuitPortId, vtr::vector<size_t, CircuitEdgeId>> port_in_edge_ids_;
+    vtr::vector<CircuitPortId, vtr::vector<size_t, CircuitEdgeId>> port_out_edge_ids_;
+    vtr::vector<CircuitEdgeId, CircuitPortId> edge_src_port_ids_;
+    vtr::vector<CircuitEdgeId, size_t> edge_src_pin_ids_;
+    vtr::vector<CircuitEdgeId, CircuitPortId> edge_sink_port_ids_;
+    vtr::vector<CircuitEdgeId, size_t> edge_sink_pin_ids_;
+    vtr::vector<CircuitEdgeId, std::vector<float>> edge_timing_info_; /* x0 => trise, x1 => tfall */
 
     /* Delay information */
     vtr::vector<CircuitModelId, std::vector<enum spice_model_delay_type>> delay_types_;
@@ -569,7 +574,6 @@ class CircuitLibrary {
     vtr::vector<CircuitModelId, enum e_wire_model_type> wire_types_;
     vtr::vector<CircuitModelId, vtr::Point<float>> wire_rc_; /* x => wire_res_val, y=> wire_cap_val */
     vtr::vector<CircuitModelId, size_t> wire_num_levels_;
-     
 };
 
 #endif

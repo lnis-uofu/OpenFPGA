@@ -844,7 +844,6 @@ int rec_dump_verilog_spice_model_lib_global_ports(FILE* fp,
   return dumped_port_cnt;
 }
 
-
 /* Dump all the global ports that are stored in the linked list 
  * Return the number of ports that have been dumped 
  */

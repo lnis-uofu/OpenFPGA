@@ -47,7 +47,9 @@
  */
 /* Header files should be included in a sequence */
 /* Standard header files required go first */
-#include "circuit_library.h"
+#include <vector>
+#include "spice_types.h"
+#include "circuit_library_fwd.h"
 
 /* Check points to make sure we have a valid circuit library */
 size_t check_one_circuit_model_port_required(const CircuitLibrary& circuit_lib,

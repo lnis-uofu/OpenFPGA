@@ -1,5 +1,10 @@
 language: cpp
 
+# cache results
+cache:
+  directories:
+    - $HOME/.ccache
+
 # Currently sudo is not required, NO ENV is used 
 
 # Supported Operating systems

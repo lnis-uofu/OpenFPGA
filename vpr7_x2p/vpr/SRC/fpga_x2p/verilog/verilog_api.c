@@ -32,6 +32,8 @@
 #include "fpga_x2p_globals.h"
 #include "fpga_bitstream.h"
 
+#include "module_manager.h"
+
 /* Include SynVerilog headers */
 #include "verilog_global.h"
 #include "verilog_utils.h"
@@ -147,6 +149,9 @@ void vpr_fpga_verilog(t_vpr_setup vpr_setup,
   char* chomped_circuit_name = NULL;
  
   t_sram_orgz_info* sram_verilog_orgz_info = NULL;
+
+  /* Module manager for the Verilog modules created */
+  ModuleManager module_manager;
 
   /* Check if the routing architecture we support*/
   if (UNI_DIRECTIONAL != vpr_setup.RoutingArch.directionality) {
@@ -269,7 +274,7 @@ void vpr_fpga_verilog(t_vpr_setup vpr_setup,
                                     vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.dump_explicit_verilog);
 
   /* Dump internal structures of submodules */
-  dump_verilog_submodules(sram_verilog_orgz_info, src_dir_path, submodule_dir_path, 
+  dump_verilog_submodules(module_manager, sram_verilog_orgz_info, src_dir_path, submodule_dir_path, 
                           Arch, &vpr_setup.RoutingArch, 
                           vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts);
 
@@ -414,6 +419,8 @@ void vpr_fpga_verilog(t_vpr_setup vpr_setup,
   write_include_netlists(src_dir_path,
                          chomped_circuit_name,
                          *(Arch.spice) );
+
+  vpr_printf(TIO_MESSAGE_INFO, "Outputted %lu Verilog modules in total.\n", module_manager.num_modules());  
 
   /* End time count */
   t_end = clock();

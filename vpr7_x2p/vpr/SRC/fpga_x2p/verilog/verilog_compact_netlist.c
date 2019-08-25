@@ -803,9 +803,9 @@ void dump_compact_verilog_defined_one_switch_box(t_sram_orgz_info* cur_sram_orgz
                                                        chan_coordinator.get_x(), chan_coordinator.get_y(), itrack, 
                                                        rr_sb.get_chan_node_direction(side_manager.get_side(), itrack)));
       if (true == is_explicit_mapping) {
-        fprintf(fp, ")",itrack);
+        fprintf(fp, ")");
       }
-      fprintf(fp, ",\n",itrack);
+      fprintf(fp, ",\n");
     }
     fprintf(fp, "//----- %s side inputs: CLB output pins -----\n", convert_side_index_to_string(side));
     /* Dump OPINs of adjacent CLBs */

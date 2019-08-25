@@ -12,6 +12,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <algorithm>
 
 /* Include vpr structs*/
 #include "util.h"
@@ -63,6 +64,7 @@ char* my_gettime() {
   return c_time_string;
 }
 
+
 char* format_dir_path(char* dir_path) {
   int len = strlen(dir_path); /* String length without the last "\0"*/
   int i;
@@ -81,6 +83,26 @@ char* format_dir_path(char* dir_path) {
   }
   return ret;
 }
+
+/************************************************
+ * Format a path of directory:
+ * 1. Replace "\" with "/" 
+ * 2. add a "/" if the string does not end with a "/"
+ ***********************************************/
+std::string format_dir_path(const std::string& dir_path) {
+  std::string ret = dir_path;
+  
+  /* Replace "\" with "/" */
+  std::replace(ret.begin(), ret.end(), '\\', '/'); 
+
+  /* Complete the string with a "/" if it does not end with that */
+  if ('/' != ret.back()) {
+    ret.push_back('/');
+  }
+ 
+  return ret;
+}
+
 
 int try_access_file(char* file_path) {
   /* F_OK checks existence and also R_OK, W_OK, X_OK,
@@ -226,6 +248,17 @@ char* chomp_file_name_postfix(char* file_name) {
   my_free(postfix);
 
   return ret;
+}
+
+void check_file_handler(std::fstream& fp) {
+  /* Make sure we have a valid file handler*/
+  /* Print out debugging information for if the file is not opened/created properly */
+  if (!fp.is_open() || !fp.good()) {
+    vpr_printf(TIO_MESSAGE_ERROR,
+               "(FILE:%s,LINE[%d])Failure in create file!\n",
+               __FILE__, __LINE__); 
+    exit(1);
+  }
 }
 
 
@@ -3217,7 +3250,7 @@ int count_cb_info_num_ipin_rr_nodes(t_cb cur_cb_info) {
 
 /* Add a subckt file name to a linked list */
 t_llist* add_one_subckt_file_name_to_llist(t_llist* cur_head, 
-                                            char* subckt_file_path) {
+                                           const char* subckt_file_path) {
   t_llist* new_head = NULL;
 
   if (NULL == cur_head) {
