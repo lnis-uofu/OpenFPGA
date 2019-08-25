@@ -326,9 +326,13 @@ def run_single_script(s, eachJob):
         try:
             logfile = "%s_out.log" % name
             with open(logfile, 'w+') as output:
-                process = subprocess.Popen(["python3.5",
-                                            gc["script_default"]] +
-                                           eachJob["commands"],
+                output.write("* "*20 + '\n')
+                output.write("RunDirectory : %s\n" % os.getcwd())
+                command = [gc["python_path"], gc["script_default"]] + \
+                    eachJob["commands"]
+                output.write(" ".join(command) + '\n')
+                output.write("* "*20 + '\n')
+                process = subprocess.Popen(command,
                                            stdout=subprocess.PIPE,
                                            stderr=subprocess.STDOUT,
                                            universal_newlines=True)
