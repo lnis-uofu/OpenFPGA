@@ -55,7 +55,7 @@ void print_verilog_include_defines_preproc_file(std::fstream& fp,
 
   fp << "//------ Include defines: preproc flags -----" << std::endl;
   fp << "`include \"" << include_file_path << "\"" << std::endl; 
-  fp << "//------ End Include defines: preproc flags -----" << std::endl;
+  fp << "//------ End Include defines: preproc flags -----" << std::endl << std::endl;
 
   return;
 }
@@ -102,10 +102,11 @@ void print_verilog_module_ports(std::fstream& fp,
     for (const auto& port : module_manager.module_ports_by_type(module_id, kv.first)) {
       if (0 != port_cnt) {
         /* Do not dump a comma for the first port */
-        fp << ", //----- " << module_manager.module_port_type_str(kv.first)  << " -----" << std::endl; 
+        fp << "," << std::endl; 
       }
       /* Print port */
-      fp << "\t" << generate_verilog_port(kv.second, port) << std::endl;
+      fp << "\t//----- " << module_manager.module_port_type_str(kv.first)  << " -----" << std::endl; 
+      fp << "\t" << generate_verilog_port(kv.second, port);
       port_cnt++;
     }
   }
@@ -119,7 +120,7 @@ void print_verilog_module_declaration(std::fstream& fp,
   check_file_handler(fp);
 
   print_verilog_module_definition(fp, module_manager.module_name(module_id));
-
+  
   print_verilog_module_ports(fp, module_manager, module_id);
 
   fp << std::endl << ");" << std::endl;

@@ -33,6 +33,8 @@
 #include "fpga_bitstream.h"
 
 #include "module_manager.h"
+#include "mux_library.h"
+#include "mux_library_builder.h"
 
 /* Include SynVerilog headers */
 #include "verilog_global.h"
@@ -152,6 +154,11 @@ void vpr_fpga_verilog(t_vpr_setup vpr_setup,
 
   /* Module manager for the Verilog modules created */
   ModuleManager module_manager;
+
+  /* Build Multiplexer library */
+  MuxLibrary mux_lib = build_device_mux_library(num_rr_nodes, rr_node, switch_inf, Arch.spice->circuit_lib, &vpr_setup.RoutingArch);
+
+  /* 0. basic units: inverter, buffers and pass-gate logics, */
 
   /* Check if the routing architecture we support*/
   if (UNI_DIRECTIONAL != vpr_setup.RoutingArch.directionality) {
@@ -274,7 +281,7 @@ void vpr_fpga_verilog(t_vpr_setup vpr_setup,
                                     vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.dump_explicit_verilog);
 
   /* Dump internal structures of submodules */
-  dump_verilog_submodules(module_manager, sram_verilog_orgz_info, src_dir_path, submodule_dir_path, 
+  dump_verilog_submodules(module_manager, mux_lib, sram_verilog_orgz_info, src_dir_path, submodule_dir_path, 
                           Arch, &vpr_setup.RoutingArch, 
                           vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts);
 

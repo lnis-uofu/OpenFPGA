@@ -19,6 +19,7 @@ std::string generate_verilog_mux_subckt_name(const CircuitLibrary& circuit_lib,
 std::string generate_verilog_mux_branch_subckt_name(const CircuitLibrary& circuit_lib, 
                                                     const CircuitModelId& circuit_model, 
                                                     const size_t& mux_size, 
+                                                    const size_t& branch_mux_size, 
                                                     const std::string& posfix);
 
 #endif
