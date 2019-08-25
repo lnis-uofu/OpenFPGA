@@ -67,6 +67,18 @@ size_t MuxGraph::num_inputs() const {
   return num_inputs;
 }
 
+/* Return the node ids of all the inputs of the multiplexer */
+std::vector<MuxNodeId> MuxGraph::inputs() const {
+  std::vector<MuxNodeId> input_nodes; 
+  /* need to check if the graph is valid or not */
+  VTR_ASSERT_SAFE(valid_mux_graph());
+  /* Add the input nodes in each level */
+  for (auto node_per_level : node_lookup_) {
+    input_nodes.insert(input_nodes.end(), node_per_level[MUX_INPUT_NODE].begin(), node_per_level[MUX_INPUT_NODE].end());
+  }
+  return input_nodes;
+}
+
 /* Find the number of outputs in the MUX graph */
 size_t MuxGraph::num_outputs() const {
   /* need to check if the graph is valid or not */
@@ -79,6 +91,36 @@ size_t MuxGraph::num_outputs() const {
   return num_outputs;
 }
 
+/* Return the node ids of all the outputs of the multiplexer */
+std::vector<MuxNodeId> MuxGraph::outputs() const {
+  std::vector<MuxNodeId> output_nodes; 
+  /* need to check if the graph is valid or not */
+  VTR_ASSERT_SAFE(valid_mux_graph());
+  /* Add the output nodes in each level */
+  for (auto node_per_level : node_lookup_) {
+    output_nodes.insert(output_nodes.end(), node_per_level[MUX_OUTPUT_NODE].begin(), node_per_level[MUX_OUTPUT_NODE].end());
+  }
+  return output_nodes;
+}
+
+/* Find the edge between two MUX nodes */
+std::vector<MuxEdgeId> MuxGraph::find_edges(const MuxNodeId& from_node, const MuxNodeId& to_node) const {
+  std::vector<MuxEdgeId> edges;
+
+  VTR_ASSERT(valid_node_id(from_node));
+  VTR_ASSERT(valid_node_id(to_node));
+
+  for (const auto& edge : node_out_edges_[from_node]) {
+    for (const auto& cand : edge_sink_nodes_[edge]) {
+      if (cand == to_node) {
+        /* This is the wanted edge, add to list */
+        edges.push_back(edge);
+      }
+    }
+  }
+
+  return edges;
+}
 
 /* Find the number of levels in the MUX graph */
 size_t MuxGraph::num_levels() const {
@@ -93,6 +135,20 @@ size_t MuxGraph::num_memory_bits() const {
   /* need to check if the graph is valid or not */
   VTR_ASSERT_SAFE(valid_mux_graph());
   return mem_ids_.size(); 
+}
+
+/* Find the mem that control the edge */
+MuxMemId MuxGraph::find_edge_mem(const MuxEdgeId& edge) const {
+  /* validate the edge */
+  VTR_ASSERT(valid_edge_id(edge));
+  return edge_mem_ids_[edge];
+}
+
+/* Identify if the edge is controlled by the inverted output of a mem */
+bool MuxGraph::is_edge_use_inv_mem(const MuxEdgeId& edge) const {
+  /* validate the edge */
+  VTR_ASSERT(valid_edge_id(edge));
+  return edge_inv_mem_[edge];
 }
 
 /* Find the sizes of each branch of a MUX */
@@ -242,6 +298,15 @@ std::vector<MuxGraph> MuxGraph::build_mux_branch_graphs() const {
 
   return branch_graphs;
 } 
+
+/* Get the input id of a given node */
+MuxInputId MuxGraph::input_id(const MuxNodeId& node_id) const {
+  /* Validate node id */
+  VTR_ASSERT(valid_node_id(node_id));
+  /* Must be an input */
+  VTR_ASSERT(MUX_INPUT_NODE == node_types_[node_id]);
+  return node_input_ids_[node_id];
+}
 
 /* Get the node id of a given input */
 MuxNodeId MuxGraph::node_id(const MuxInputId& input_id) const {

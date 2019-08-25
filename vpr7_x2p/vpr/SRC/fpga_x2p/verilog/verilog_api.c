@@ -159,7 +159,6 @@ void vpr_fpga_verilog(t_vpr_setup vpr_setup,
   MuxLibrary mux_lib = build_device_mux_library(num_rr_nodes, rr_node, switch_inf, Arch.spice->circuit_lib, &vpr_setup.RoutingArch);
 
   /* 0. basic units: inverter, buffers and pass-gate logics, */
-
   /* Check if the routing architecture we support*/
   if (UNI_DIRECTIONAL != vpr_setup.RoutingArch.directionality) {
     vpr_printf(TIO_MESSAGE_ERROR, "FPGA synthesizable Verilog dumping only support uni-directional routing architecture!\n");

@@ -92,6 +92,10 @@ void generate_verilog_cmos_mux_branch_module_structural(ModuleManager& module_ma
   BasicPort mem_inv_port("mem_inv", num_mems);
   module_manager.add_port(module_id, mem_inv_port, ModuleManager::MODULE_INPUT_PORT);
 
+  /* Get the module id of tgate in Module manager */
+  ModuleId tgate_module_id = module_manager.find_module(circuit_lib.model_name(tgate_model));
+  VTR_ASSERT(ModuleId::INVALID() != tgate_module_id);
+
   /* dump module definition + ports */
   print_verilog_module_declaration(fp, module_manager, module_id);
 
