@@ -29,6 +29,7 @@
 #include "fpga_x2p_globals.h"
 #include "fpga_x2p_mux_utils.h"
 #include "fpga_x2p_bitstream_utils.h"
+#include "mux_library.h"
 
 /* Include verilog utils */
 #include "verilog_global.h"
@@ -2228,11 +2229,13 @@ void dump_verilog_submodule_muxes(t_sram_orgz_info* cur_sram_orgz_info,
 
   /* Alloc the muxes*/
   muxes_head = stats_spice_muxes(num_switch, switches, spice, routing_arch);
-   
+
   /* Print the muxes netlist*/
   fp = fopen(verilog_name, "w");
   if (NULL == fp) {
-    vpr_printf(TIO_MESSAGE_ERROR,"(FILE:%s,LINE[%d])Failure in create subckt SPICE netlist %s",__FILE__, __LINE__, verilog_name); 
+    vpr_printf(TIO_MESSAGE_ERROR, 
+               "(FILE:%s,LINE[%d])Failure in create subckt SPICE netlist %s",
+               __FILE__, __LINE__, verilog_name); 
     exit(1);
   } 
   /* Generate the descriptions*/
@@ -2291,41 +2294,6 @@ void dump_verilog_submodule_muxes(t_sram_orgz_info* cur_sram_orgz_info,
     /* Move on to the next*/
     temp = temp->next;
   }
-
-  /* Generate modules into a .bak file now. Rename after it is verified */
-  std::string verilog_fname(my_strcat(submodule_dir, muxes_verilog_file_name));
-  verilog_fname += ".bak";
-
-  /* Create the file stream */
-  std::fstream sfp;
-  sfp.open(verilog_fname, std::fstream::out | std::fstream::trunc);
-
-  /* Print out debugging information for if the file is not opened/created properly */
-  vpr_printf(TIO_MESSAGE_INFO,
-             "Creating Verilog netlist for Multiplexers (%s) ...\n",
-             verilog_fname.c_str()); 
-  check_file_handler(sfp);
-  
-  /* TODO: this conversion is temporary. Will be removed after code reconstruction */
-  MuxLibrary mux_lib = convert_mux_arch_to_library(spice->circuit_lib, muxes_head);
-
-  /* Generate basis sub-circuit for unique branches shared by the multiplexers */
-  for (auto mux : mux_lib.muxes()) {
-    const MuxGraph& mux_graph = mux_lib.mux_graph(mux);
-    CircuitModelId mux_circuit_model = mux_lib.mux_circuit_model(mux); 
-    /* Create a mux graph for the branch circuit */
-    std::vector<MuxGraph> branch_mux_graphs = mux_graph.build_mux_branch_graphs();
-    /* Create branch circuits, which are N:1 one-level or 2:1 tree-like MUXes */
-    for (auto branch_mux_graph : branch_mux_graphs) {
-      generate_verilog_mux_branch_module(sfp, spice->circuit_lib, mux_circuit_model, 
-                                         mux_graph.num_inputs(), branch_mux_graph);
-    }
-  }
-
-  /* Dump MUX graph one by one */
-
-  /* Close the file steam */
-  sfp.close();
 
   /* TODO: 
    * Scan-chain configuration circuit does not need any BLs/WLs! 
@@ -3507,6 +3475,7 @@ void dump_verilog_submodule_templates(t_sram_orgz_info* cur_sram_orgz_info,
  * 1. MUXes
  */
 void dump_verilog_submodules(ModuleManager& module_manager, 
+                             const MuxLibrary& mux_lib,
                              t_sram_orgz_info* cur_sram_orgz_info,
                              char* verilog_dir, 
                              char* submodule_dir, 
@@ -3514,7 +3483,6 @@ void dump_verilog_submodules(ModuleManager& module_manager,
                              t_det_routing_arch* routing_arch,
                              t_syn_verilog_opts fpga_verilog_opts) {
 
-  /* 0. basic units: inverter, buffers and pass-gate logics, */
   vpr_printf(TIO_MESSAGE_INFO, "Generating essential modules...\n");
   print_verilog_submodule_essentials(module_manager, 
                                      std::string(verilog_dir), 
@@ -3525,6 +3493,10 @@ void dump_verilog_submodules(ModuleManager& module_manager,
   vpr_printf(TIO_MESSAGE_INFO, "Generating modules of multiplexers...\n");
   dump_verilog_submodule_muxes(cur_sram_orgz_info, verilog_dir, submodule_dir, routing_arch->num_switch, 
                                switch_inf, Arch.spice, routing_arch, fpga_verilog_opts.dump_explicit_verilog);
+
+  print_verilog_submodule_muxes(module_manager, mux_lib, Arch.spice->circuit_lib, cur_sram_orgz_info, 
+                                verilog_dir, submodule_dir);
+
   vpr_printf(TIO_MESSAGE_INFO, "Generating local encoders for multiplexers...\n");
   dump_verilog_submodule_local_encoders(cur_sram_orgz_info, verilog_dir, submodule_dir, routing_arch->num_switch, 
                                         switch_inf, Arch.spice, routing_arch, fpga_verilog_opts.dump_explicit_verilog);

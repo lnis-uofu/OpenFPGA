@@ -12,6 +12,7 @@
 
 /* Device-level header files */
 #include "mux_graph.h"
+#include "module_manager.h"
 #include "physical_types.h"
 #include "vpr_types.h"
 
@@ -30,8 +31,9 @@
  * for a multiplexer with the given size 
  **********************************************/
 static 
-void generate_verilog_cmos_mux_branch_module_structural(std::fstream& fp,
+void generate_verilog_cmos_mux_branch_module_structural(ModuleManager& module_manager,
                                                         const CircuitLibrary& circuit_lib, 
+                                                        std::fstream& fp,
                                                         const CircuitModelId& circuit_model, 
                                                         const std::string& module_name, 
                                                         const MuxGraph& mux_graph) {
@@ -44,7 +46,7 @@ void generate_verilog_cmos_mux_branch_module_structural(std::fstream& fp,
     return;
   }
 
-  /* Get model ports of tgate */
+  /* TODO: move to check_circuit_library? Get model ports of tgate */
   std::vector<CircuitPortId> tgate_input_ports = circuit_lib.model_ports_by_type(tgate_model, SPICE_MODEL_PORT_INPUT, true);
   std::vector<CircuitPortId> tgate_output_ports = circuit_lib.model_ports_by_type(tgate_model, SPICE_MODEL_PORT_OUTPUT, true);
   std::vector<CircuitPortId> tgate_global_ports = circuit_lib.model_global_ports_by_type(tgate_model, SPICE_MODEL_PORT_INPUT, true);
@@ -68,36 +70,30 @@ void generate_verilog_cmos_mux_branch_module_structural(std::fstream& fp,
   /* MUX graph must have only 1 level*/
   VTR_ASSERT(1 == mux_graph.num_levels());
 
-  /* Print Verilog module */
-  print_verilog_module_definition(fp, module_name);
-
-  /* Create port information */
-  /* Configure each input port */
-  BasicPort input_port("in", num_inputs);
-
-  /* Configure each output port */
-  BasicPort output_port("out", num_outputs);
-
-  /* Configure each memory port */
-  BasicPort mem_port("mem", num_mems);
-  BasicPort mem_inv_port("mem_inv", num_mems);
-
-  /* TODO: Generate global ports */
+  /* Create a Verilog Module based on the circuit model, and add to module manager */
+  ModuleId module_id = module_manager.add_module(module_name); 
+  VTR_ASSERT(ModuleId::INVALID() != module_id);
+  /* Add module ports */
+  /* Add each global port */
   for (const auto& port : tgate_global_ports) {
     /* Configure each global port */
-    BasicPort basic_port(circuit_lib.port_lib_name(port), circuit_lib.port_size(port));
-    /* Print port */
-    fp << "\t" << generate_verilog_port(VERILOG_PORT_INPUT, basic_port) << "," << std::endl;
+    BasicPort global_port(circuit_lib.port_lib_name(port), circuit_lib.port_size(port));
+    module_manager.add_port(module_id, global_port, ModuleManager::MODULE_GLOBAL_PORT);
   }
+  /* Add each input port */
+  BasicPort input_port("in", num_inputs);
+  module_manager.add_port(module_id, input_port, ModuleManager::MODULE_INPUT_PORT);
+  /* Add each output port */
+  BasicPort output_port("out", num_outputs);
+  module_manager.add_port(module_id, output_port, ModuleManager::MODULE_OUTPUT_PORT);
+  /* Add each memory port */
+  BasicPort mem_port("mem", num_mems);
+  module_manager.add_port(module_id, mem_port, ModuleManager::MODULE_INPUT_PORT);
+  BasicPort mem_inv_port("mem_inv", num_mems);
+  module_manager.add_port(module_id, mem_inv_port, ModuleManager::MODULE_INPUT_PORT);
 
-  /* TODO: add a module to the Module Manager */
-
-  /* Port list */
-  fp << "\t" << generate_verilog_port(VERILOG_PORT_INPUT, input_port) << "," << std::endl;
-  fp << "\t" << generate_verilog_port(VERILOG_PORT_OUTPUT, output_port) << "," << std::endl;
-  fp << "\t" << generate_verilog_port(VERILOG_PORT_INPUT, mem_port) << "," << std::endl;
-  fp << "\t" << generate_verilog_port(VERILOG_PORT_INPUT, mem_inv_port) << std::endl;
-  fp << ");" << std::endl;
+  /* dump module definition + ports */
+  print_verilog_module_declaration(fp, module_manager, module_id);
 
   /* Verilog Behavior description for a MUX */
   print_verilog_comment(fp, std::string("---- Structure-level description -----"));
@@ -177,18 +173,20 @@ void generate_verilog_cmos_mux_branch_module_structural(std::fstream& fp,
  * Generate Verilog codes modeling an branch circuit 
  * for a multiplexer with the given size 
  **********************************************/
-void generate_verilog_mux_branch_module(std::fstream& fp, 
+static 
+void generate_verilog_mux_branch_module(ModuleManager& module_manager,
                                         const CircuitLibrary& circuit_lib, 
+                                        std::fstream& fp, 
                                         const CircuitModelId& circuit_model, 
                                         const size_t& mux_size, 
                                         const MuxGraph& mux_graph) {
-  std::string module_name = generate_verilog_mux_branch_subckt_name(circuit_lib, circuit_model, mux_size, verilog_mux_basis_posfix);
+  std::string module_name = generate_verilog_mux_branch_subckt_name(circuit_lib, circuit_model, mux_size, mux_graph.num_inputs(), verilog_mux_basis_posfix);
 
   /* Multiplexers built with different technology is in different organization */
   switch (circuit_lib.design_tech_type(circuit_model)) {
   case SPICE_MODEL_DESIGN_CMOS:
     if (true == circuit_lib.dump_structural_verilog(circuit_model)) {
-      generate_verilog_cmos_mux_branch_module_structural(fp, circuit_lib, circuit_model, module_name, mux_graph);
+      generate_verilog_cmos_mux_branch_module_structural(module_manager, circuit_lib, fp, circuit_model, module_name, mux_graph);
     } else {
       /*
       dump_verilog_cmos_mux_one_basis_module(fp, mux_basis_subckt_name,
@@ -222,3 +220,68 @@ void generate_verilog_mux_branch_module(std::fstream& fp,
 
   return;
 }
+
+/***********************************************
+ * Generate Verilog modules for all the unique
+ * multiplexers in the FPGA device
+ **********************************************/
+void print_verilog_submodule_muxes(ModuleManager& module_manager,
+                                   const MuxLibrary& mux_lib,
+                                   const CircuitLibrary& circuit_lib,
+                                   t_sram_orgz_info* cur_sram_orgz_info,
+                                   char* verilog_dir,
+                                   char* submodule_dir) {
+
+  /* TODO: Generate modules into a .bak file now. Rename after it is verified */
+  std::string verilog_fname(my_strcat(submodule_dir, muxes_verilog_file_name));
+  verilog_fname += ".bak";
+
+  /* Create the file stream */
+  std::fstream fp;
+  fp.open(verilog_fname, std::fstream::out | std::fstream::trunc);
+
+  check_file_handler(fp);
+
+  /* Print out debugging information for if the file is not opened/created properly */
+  vpr_printf(TIO_MESSAGE_INFO,
+             "Creating Verilog netlist for Multiplexers (%s) ...\n",
+             verilog_fname.c_str()); 
+
+  print_verilog_file_header(fp, "Multiplexers"); 
+
+  print_verilog_include_defines_preproc_file(fp, verilog_dir);
+  
+  /* Generate basis sub-circuit for unique branches shared by the multiplexers */
+  for (auto mux : mux_lib.muxes()) {
+    const MuxGraph& mux_graph = mux_lib.mux_graph(mux);
+    CircuitModelId mux_circuit_model = mux_lib.mux_circuit_model(mux); 
+    /* Create a mux graph for the branch circuit */
+    std::vector<MuxGraph> branch_mux_graphs = mux_graph.build_mux_branch_graphs();
+    /* Create branch circuits, which are N:1 one-level or 2:1 tree-like MUXes */
+    for (auto branch_mux_graph : branch_mux_graphs) {
+      generate_verilog_mux_branch_module(module_manager, circuit_lib, fp, mux_circuit_model, 
+                                         mux_graph.num_inputs(), branch_mux_graph);
+    }
+  }
+
+  /* Dump MUX graph one by one */
+
+  /* Close the file steam */
+  fp.close();
+
+  /* TODO: 
+   * Scan-chain configuration circuit does not need any BLs/WLs! 
+   * SRAM MUX does not need any reserved BL/WLs!
+   */
+  /* Determine reserved Bit/Word Lines if a memory bank is specified,
+   * At least 1 BL/WL should be reserved! 
+   */
+  try_update_sram_orgz_info_reserved_blwl(cur_sram_orgz_info, 
+                                          mux_lib.max_mux_size(), mux_lib.max_mux_size());
+
+  /* TODO: Add fname to the linked list when debugging is finished */
+  /*
+  submodule_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(submodule_verilog_subckt_file_path_head, verilog_name);  
+   */
+}
+

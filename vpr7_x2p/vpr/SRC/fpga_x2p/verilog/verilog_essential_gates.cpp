@@ -507,7 +507,7 @@ void print_verilog_submodule_essentials(ModuleManager& module_manager,
   /* Create file */
   vpr_printf(TIO_MESSAGE_INFO,
              "Generating Verilog netlist (%s) for essential gates...\n",
-             __FILE__, __LINE__, essentials_verilog_file_name); 
+             __FILE__, __LINE__, verilog_fname.c_str()); 
 
   print_verilog_file_header(fp, "Essential gates"); 
 

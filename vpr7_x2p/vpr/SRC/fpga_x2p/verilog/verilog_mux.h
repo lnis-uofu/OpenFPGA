@@ -11,11 +11,13 @@
 #include "circuit_library.h"
 #include "mux_graph.h"
 #include "mux_library.h"
+#include "module_manager.h"
 
-void generate_verilog_mux_branch_module(std::fstream& fp, 
-                                        const CircuitLibrary& circuit_lib, 
-                                        const CircuitModelId& circuit_model, 
-                                        const size_t& mux_size, 
-                                        const MuxGraph& mux_graph);
+void print_verilog_submodule_muxes(ModuleManager& module_manager,
+                                   const MuxLibrary& mux_lib,
+                                   const CircuitLibrary& circuit_lib,
+                                   t_sram_orgz_info* cur_sram_orgz_info,
+                                   char* verilog_dir,
+                                   char* submodule_dir);
 
 #endif

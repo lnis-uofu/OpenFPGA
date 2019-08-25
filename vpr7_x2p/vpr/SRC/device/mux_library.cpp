@@ -43,6 +43,16 @@ CircuitModelId MuxLibrary::mux_circuit_model(const MuxId& mux_id) const {
   return mux_circuit_models_[mux_id];
 }
 
+/* Find the maximum mux size among the mux graphs */
+size_t MuxLibrary::max_mux_size() const {
+  /* Iterate over all the mux graphs and find their sizes */
+  size_t max_mux_size = 0;
+  for (const auto& mux : mux_ids_) {
+    max_mux_size = std::max(max_mux_size, mux_graphs_[mux].num_inputs());
+  }
+  return max_mux_size;
+}
+
 /**************************************************
  * Private mutators:
  *************************************************/

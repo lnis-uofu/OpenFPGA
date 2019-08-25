@@ -2,8 +2,10 @@
 #define VERILOG_SUBMODULES_H
 
 #include "module_manager.h"
+#include "mux_library.h"
 
 void dump_verilog_submodules(ModuleManager& module_manager, 
+                             const MuxLibrary& mux_lib,
                              t_sram_orgz_info* cur_sram_orgz_info,
                              char* verilog_dir, 
                              char* submodule_dir, 
