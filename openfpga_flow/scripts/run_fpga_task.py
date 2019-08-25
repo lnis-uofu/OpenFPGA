@@ -12,9 +12,9 @@ import subprocess
 import threading
 import csv
 from string import Template
-import run_fpga_flow
 import pprint
 from importlib import util
+from collections import OrderedDict
 
 if util.find_spec("humanize"):
     import humanize
@@ -23,7 +23,7 @@ if util.find_spec("humanize"):
 # Configure logging system
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 logging.basicConfig(level=logging.INFO, stream=sys.stdout,
-                    format='%(levelname)s (%(threadName)-9s) - %(message)s')
+                    format='%(levelname)s (%(threadName)10s) - %(message)s')
 logger = logging.getLogger('OpenFPGA_Task_logs')
 
 
@@ -71,7 +71,7 @@ def main():
         else:
             pprint.pprint(job_run_list)
     logger.info("Task execution completed")
-    exit()
+    exit(0)
 
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 # Subroutines starts here
@@ -80,8 +80,8 @@ def main():
 
 def clean_up_and_exit(msg):
     logger.error(msg)
-    logger.error("Existing . . . . . .")
-    exit()
+    logger.error("Exiting . . . . . .")
+    exit(1)
 
 
 def validate_command_line_arguments():
@@ -112,8 +112,8 @@ def generate_each_task_actions(taskname):
     curr_run_dir = "run%03d" % (max(run_dirs+[0, ])+1)
     try:
         os.mkdir(curr_run_dir)
-        if os.path.islink('latest'):
-            os.unlink("latest")
+        if os.path.islink('latest') or os.path.exists('latest'):
+            os.remove("latest")
         os.symlink(curr_run_dir, "latest")
         logger.info('Created "%s" directory for current task run' %
                     curr_run_dir)
@@ -128,11 +128,16 @@ def generate_each_task_actions(taskname):
     task_conf.read_dict(script_env_vars)
     task_conf.read_file(open(curr_task_conf_file))
 
-    required_sec = ["GENERAL", "BENCHMARKS", "ARCHITECTURES", "POST_RUN"]
+    required_sec = ["GENERAL", "BENCHMARKS", "ARCHITECTURES"]
     missing_section = list(set(required_sec)-set(task_conf.sections()))
     if missing_section:
         clean_up_and_exit("Missing sections %s" % " ".join(missing_section) +
                           " in task configuration file")
+
+    # Declare varibles to access sections
+    TaskFileSections = task_conf.sections()
+    SynthSection = task_conf["SYNTHESIS_PARAM"]
+    GeneralSection = task_conf["GENERAL"]
 
     # Check if specified architecture files exist
     archfile_list = []
@@ -143,10 +148,16 @@ def generate_each_task_actions(taskname):
         else:
             clean_up_and_exit("Architecture file not found: " +
                               "%s  " % arch_file)
+    if not len(archfile_list) == len(list(set(archfile_list))):
+        clean_up_and_exit("Found duplicate architectures in config file")
 
     # Check if specified benchmark files exist
     benchmark_list = []
     for bech_name, each_benchmark in task_conf["BENCHMARKS"].items():
+        # Declare varible to store paramteres for current benchmark
+        CurrBenchPara = {}
+
+        # Parse benchmark file
         bench_files = []
         for eachpath in each_benchmark.split(","):
             files = glob.glob(eachpath)
@@ -155,15 +166,51 @@ def generate_each_task_actions(taskname):
                                   " with path %s " % (eachpath))
             bench_files += files
 
-        ys_for_task = task_conf.get("SYNTHESIS_PARAM", "bench_yosys_common",
-                                    fallback="")
-        benchmark_list.append({
-            "files": bench_files,
-            "top_module": task_conf.get("SYNTHESIS_PARAM", bech_name+"_top",
-                                        fallback="top"),
-            "ys_script": task_conf.get("SYNTHESIS_PARAM", bech_name+"_yosys",
-                                       fallback=ys_for_task),
-        })
+        # Read provided benchmark configurations
+        # Common configurations
+        ys_for_task_common = SynthSection.get("bench_yosys_common")
+        chan_width_common = SynthSection.get("bench_chan_width_common")
+
+        # Individual benchmark configuration
+        CurrBenchPara["files"] = bench_files
+        CurrBenchPara["top_module"] = SynthSection.get(bech_name+"_top",
+                                                       fallback="top")
+        CurrBenchPara["ys_script"] = SynthSection.get(bech_name+"_yosys",
+                                                      fallback=ys_for_task_common)
+        CurrBenchPara["chan_width"] = SynthSection.get(bech_name+"_chan_width",
+                                                       fallback=chan_width_common)
+
+        logger.info('Running "%s" flow' %
+                    GeneralSection.get("fpga_flow", fallback="yosys_vpr"))
+        if GeneralSection.get("fpga_flow") == "vpr_blif":
+            # Check if activity file exist
+            if not SynthSection.get(bech_name+"_act"):
+                clean_up_and_exit("Missing argument %s" % (bech_name+"_act") +
+                                  "for vpr_blif flow")
+            CurrBenchPara["activity_file"] = SynthSection.get(bech_name+"_act")
+
+            # Check if base verilog file exists
+            if not SynthSection.get(bech_name+"_verilog"):
+                clean_up_and_exit("Missing argument %s for vpr_blif flow" %
+                                  (bech_name+"_verilog"))
+            CurrBenchPara["verilog_file"] = SynthSection.get(
+                bech_name+"_verilog")
+
+        # Add script parameter list in current benchmark
+        ScriptSections = [x for x in TaskFileSections if "SCRIPT_PARAM" in x]
+        script_para_list = {}
+        for eachset in ScriptSections:
+            command = []
+            for key, values in task_conf[eachset].items():
+                command += ["--"+key, values] if values else ["--"+key]
+
+            # Set label for Sript Parameters
+            set_lbl = eachset.replace("SCRIPT_PARAM", "")
+            set_lbl = set_lbl[1:] if set_lbl else "Common"
+            script_para_list[set_lbl] = command
+        CurrBenchPara["script_params"] = script_para_list
+
+        benchmark_list.append(CurrBenchPara)
 
     # Create OpenFPGA flow run commnad for each combination of
     # architecture, benchmark and parameters
@@ -171,16 +218,21 @@ def generate_each_task_actions(taskname):
     flow_run_cmd_list = []
     for indx, arch in enumerate(archfile_list):
         for bench in benchmark_list:
-            flow_run_dir = get_flow_rundir(arch, bench["top_module"])
-            cmd = create_run_command(
-                flow_run_dir, arch, bench, task_conf)
-            flow_run_cmd_list.append({
-                "arch": arch,
-                "bench": bench,
-                "name": "%s_arch%d" % (bench["top_module"], indx),
-                "run_dir": flow_run_dir,
-                "commands": cmd,
-                "status": False})
+            for lbl, param in bench["script_params"].items():
+                flow_run_dir = get_flow_rundir(arch, bench["top_module"], lbl)
+                command = create_run_command(
+                    curr_job_dir=flow_run_dir,
+                    archfile=arch,
+                    benchmark_obj=bench,
+                    param=param,
+                    task_conf=task_conf)
+                flow_run_cmd_list.append({
+                    "arch": arch,
+                    "bench": bench,
+                    "name": "%02d_arch%s_%s" % (indx, bench["top_module"], lbl),
+                    "run_dir": flow_run_dir,
+                    "commands": command,
+                    "status": False})
     return flow_run_cmd_list
 
 
@@ -193,7 +245,7 @@ def get_flow_rundir(arch, top_module, flow_params=None):
     return os.path.abspath(os.path.join(*path))
 
 
-def create_run_command(curr_job_dir, archfile, benchmark_obj, task_conf):
+def create_run_command(curr_job_dir, archfile, benchmark_obj, param, task_conf):
     """
     Create_run_script function accepts run directory, architecture list and
     fpga_flow configuration file and prepare final executable fpga_flow script
@@ -217,23 +269,37 @@ def create_run_command(curr_job_dir, archfile, benchmark_obj, task_conf):
     os.makedirs(curr_job_dir)
 
     # Make execution command to run Open FPGA flow
+    task_gc = task_conf["GENERAL"]
     command = [archfile] + benchmark_obj["files"]
     command += ["--top_module", benchmark_obj["top_module"]]
     command += ["--run_dir", curr_job_dir]
-    if task_conf.getboolean("GENERAL", "power_analysis", fallback=False):
+
+    if task_gc.get("fpga_flow"):
+        command += ["--fpga_flow", task_gc.get("fpga_flow")]
+
+    if benchmark_obj.get("activity_file"):
+        command += ["--activity_file", benchmark_obj.get("activity_file")]
+
+    if benchmark_obj.get("verilog_file"):
+        command += ["--base_verilog", benchmark_obj.get("verilog_file")]
+
+    if benchmark_obj.get("ys_script"):
+        command += ["--yosys_tmpl", benchmark_obj["ys_script"]]
+
+    if task_gc.getboolean("power_analysis"):
         command += ["--power"]
-        command += ["--power_tech",
-                    task_conf.get("GENERAL", "power_tech_file")]
-    if task_conf.getboolean("GENERAL", "spice_output", fallback=False):
+        command += ["--power_tech", task_gc.get("power_tech_file")]
+
+    if task_gc.getboolean("spice_output"):
         command += ["--vpr_fpga_spice"]
-    if task_conf.getboolean("GENERAL", "verilog_output", fallback=False):
+
+    if task_gc.getboolean("verilog_output"):
         command += ["--vpr_fpga_verilog"]
         command += ["--vpr_fpga_verilog_dir", "."]
         command += ["--vpr_fpga_x2p_rename_illegal_port"]
 
     # Add other paramters to pass
-    for key, values in task_conf["SCRIPT_PARAM"].items():
-        command += ["--"+key, values] if values else ["--"+key]
+    command += param
 
     if args.debug:
         command += ["--debug"]
@@ -272,6 +338,8 @@ def run_single_script(s, eachJob):
                     sys.stdout.buffer.flush()
                     output.write(line)
                 process.wait()
+                if process.returncode:
+                    raise subprocess.CalledProcessError(0, [])
                 eachJob["status"] = True
         except:
             logger.exception("Failed to execute openfpga flow - " +
@@ -280,7 +348,8 @@ def run_single_script(s, eachJob):
         timediff = timedelta(seconds=(eachJob["endtime"]-eachJob["starttime"]))
         timestr = humanize.naturaldelta(timediff) if "humanize" in sys.modules \
             else str(timediff)
-        logger.info("%s Finished, Time Taken %s " % (name, timestr))
+        logger.info("%s Finished with returncode %d, Time Taken %s " %
+                    (name, process.returncode, timestr))
 
 
 def run_actions(job_run_list):
@@ -301,6 +370,7 @@ def collect_results(job_run_list):
     task_result = []
     for run in job_run_list:
         if not run["status"]:
+            logger.warning("Skipping %s run", run["name"])
             continue
         # Check if any result file exist
         if not glob.glob(os.path.join(run["run_dir"], "*.result")):
@@ -311,8 +381,10 @@ def collect_results(job_run_list):
                                interpolation=ExtendedInterpolation())
         vpr_res.read_file(
             open(os.path.join(run["run_dir"], "vpr_stat.result")))
-        result = dict(vpr_res["RESULTS"])
+        result = OrderedDict()
         result["name"] = run["name"]
+        result["TotalRunTime"] = int(run["endtime"]-run["starttime"])
+        result.update(vpr_res["RESULTS"])
         task_result.append(result)
 
     if len(task_result):

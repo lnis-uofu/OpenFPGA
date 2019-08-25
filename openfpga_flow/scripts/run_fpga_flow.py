@@ -535,10 +535,23 @@ def run_pro_blif_3arg():
 
 
 def collect_files_for_vpr():
+    # Sanitize provided Benchmark option
     if len(args.benchmark_files) > 1:
         logger.error("Expecting Single Benchmark BLif file.")
+    if not os.path.isfile(args.benchmark_files[0] or ""):
+        clean_up_and_exit("Provided Blif file not found")
     shutil.copy(args.benchmark_files[0], args.top_module+".blif")
+
+    # Sanitize provided Activity file option
+    if not os.path.isfile(args.activity_file or ""):
+        logger.error("Activity File - %s" % args.activity_file)
+        clean_up_and_exit("Provided activity file not found")
     shutil.copy(args.activity_file, args.top_module+"_ace_out.act")
+
+    # Sanitize provided Benchmark option
+    if not os.path.isfile(args.base_verilog or ""):
+        logger.error("Base Verilog File - %s" % args.base_verilog)
+        clean_up_and_exit("Provided base_verilog file not found")
     shutil.copy(args.base_verilog, args.top_module+"_output_verilog.v")
 
 
