@@ -63,12 +63,20 @@ class MuxGraph {
   public: /* Public accessors: Data query */
     /* Find the number of inputs in the MUX graph */
     size_t num_inputs() const;
+    std::vector<MuxNodeId> inputs() const;
     /* Find the number of outputs in the MUX graph */
     size_t num_outputs() const;
+    std::vector<MuxNodeId> outputs() const;
+    /* Find the edge between two MUX nodes */
+    std::vector<MuxEdgeId> find_edges(const MuxNodeId& from_node, const MuxNodeId& to_node) const;
     /* Find the number of levels in the MUX graph */
     size_t num_levels() const;
     /* Find the number of SRAMs in the MUX graph */
     size_t num_memory_bits() const;
+    /* Find the mem that control the edge */
+    MuxMemId find_edge_mem(const MuxEdgeId& edge) const;
+    /* Identify if the edge is controlled by the inverted output of a mem */
+    bool is_edge_use_inv_mem(const MuxEdgeId& edge) const;
     /* Find the sizes of each branch of a MUX */
     std::vector<size_t> branch_sizes() const;
     /* Generate MUX graphs for its branches */
@@ -76,6 +84,8 @@ class MuxGraph {
     std::vector<MuxGraph> build_mux_branch_graphs() const; 
     /* Get the node id of a given input */
     MuxNodeId node_id(const MuxInputId& input_id) const;
+    /* Get the input id of a given node */
+    MuxInputId input_id(const MuxNodeId& node_id) const;
     /* Decode memory bits based on an input id */
     std::vector<size_t> decode_memory_bits(const MuxInputId& input_id) const;
   private: /* Private mutators : basic operations */

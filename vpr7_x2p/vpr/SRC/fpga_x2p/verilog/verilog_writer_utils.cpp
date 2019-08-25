@@ -120,10 +120,71 @@ void print_verilog_module_declaration(std::fstream& fp,
   check_file_handler(fp);
 
   print_verilog_module_definition(fp, module_manager.module_name(module_id));
-  
+
   print_verilog_module_ports(fp, module_manager, module_id);
 
   fp << std::endl << ");" << std::endl;
+}
+
+/************************************************
+ * Print an instance for a Verilog module
+ ***********************************************/
+void print_verilog_module_instance(std::fstream& fp, 
+                                   const ModuleManager& module_manager, 
+                                   const ModuleId& parent_module_id, const ModuleId& child_module_id,
+                                   std::map<std::string, std::string>& port2port_name_map,
+                                   const bool& explicit_port_map) {
+
+  check_file_handler(fp);
+
+  /* Print module name */
+  fp << "\t" << module_manager.module_name(child_module_id) << " ";
+  /* Print instance name, <name>_<num_instance_in_parent_module> */
+  fp << module_manager.module_name(child_module_id) << "_" << module_manager.num_instance(parent_module_id, child_module_id) << "_" << " (" << std::endl;
+  
+  /* Print each port with/without explicit port map */
+  /* port type2type mapping */
+  std::map<ModuleManager::e_module_port_type, enum e_dump_verilog_port_type> port_type2type_map;
+  port_type2type_map[ModuleManager::MODULE_GLOBAL_PORT] = VERILOG_PORT_CONKT;
+  port_type2type_map[ModuleManager::MODULE_INOUT_PORT] = VERILOG_PORT_CONKT;
+  port_type2type_map[ModuleManager::MODULE_INPUT_PORT] = VERILOG_PORT_CONKT;
+  port_type2type_map[ModuleManager::MODULE_OUTPUT_PORT] = VERILOG_PORT_CONKT;
+  port_type2type_map[ModuleManager::MODULE_CLOCK_PORT] = VERILOG_PORT_CONKT;
+
+  /* Port sequence: global, inout, input, output and clock ports, */
+  size_t port_cnt = 0;
+  for (const auto& kv : port_type2type_map) {
+    for (const auto& port : module_manager.module_ports_by_type(child_module_id, kv.first)) {
+      if (0 != port_cnt) {
+        /* Do not dump a comma for the first port */
+        fp << "," << std::endl; 
+      }
+      /* Print port */
+      fp << "\t\t";
+      /* if explicit port map is required, output the port name */
+      if (true == explicit_port_map) {
+        fp << "." << port.get_name() << "(";
+      }
+      /* Try to find the instanced port name in the name map */
+      std::map<std::string, std::string>::iterator it = port2port_name_map.find(port.get_name());
+      if (it != port2port_name_map.end()) {
+        /* Found it, we assign the port name */ 
+        BasicPort instance_port(port.get_name(), 1);
+        fp << generate_verilog_port(kv.second, instance_port);
+      } else {
+        /* Not found, we give the default port name */
+        fp << generate_verilog_port(kv.second, port);
+      }
+      /* if explicit port map is required, output the pair of branket */
+      if (true == explicit_port_map) {
+        fp << ")";
+      }
+      port_cnt++;
+    }
+  }
+  
+  /* Print an end to the instance */
+  fp << "\t" << ");" << std::endl;
 }
 
 

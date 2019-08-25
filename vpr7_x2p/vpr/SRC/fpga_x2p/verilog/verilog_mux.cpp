@@ -92,76 +92,59 @@ void generate_verilog_cmos_mux_branch_module_structural(ModuleManager& module_ma
   BasicPort mem_inv_port("mem_inv", num_mems);
   module_manager.add_port(module_id, mem_inv_port, ModuleManager::MODULE_INPUT_PORT);
 
+  /* Get the module id of tgate in Module manager */
+  ModuleId tgate_module_id = module_manager.find_module(circuit_lib.model_name(tgate_model));
+  VTR_ASSERT(ModuleId::INVALID() != tgate_module_id);
+
   /* dump module definition + ports */
   print_verilog_module_declaration(fp, module_manager, module_id);
 
   /* Verilog Behavior description for a MUX */
   print_verilog_comment(fp, std::string("---- Structure-level description -----"));
-  /* Special case: only one memory, switch case is simpler 
-   * When mem = 1, propagate input 0; 
-   * when mem = 0, propagate input 1;
-   */
-  /* TODO: we should output the netlist following the connections in mux_graph */
-  if (1 == num_mems) {
-    /* Transmission gates are connected to each input and also the output*/
-    fp << "\t" << circuit_lib.model_name(tgate_model) << " " << circuit_lib.model_prefix(tgate_model) << "_0 ";
-    /* Dump explicit port map if required */
-    /* TODO: add global port support for tgate model */
-    if (true == circuit_lib.dump_explicit_port_map(tgate_model)) {
-      fp << " (";
-      fp << "  ." << circuit_lib.port_lib_name(tgate_input_ports[0]) << "(" << "in[0]" << "),";
-      fp << "  ." << circuit_lib.port_lib_name(tgate_input_ports[1]) << "(" << generate_verilog_port(VERILOG_PORT_CONKT, mem_port) << "),";
-      fp << "  ." << circuit_lib.port_lib_name(tgate_input_ports[2]) << "(" << generate_verilog_port(VERILOG_PORT_CONKT, mem_inv_port) << "),";
-      fp << "  ." << circuit_lib.port_lib_name(tgate_output_ports[0]) << "(" << generate_verilog_port(VERILOG_PORT_CONKT, output_port) << ")";
-      fp << ");" << std::endl;
-    } else {
-      fp << " (";
-      fp << generate_verilog_port(VERILOG_PORT_CONKT, input_port);
-      fp << ", " << generate_verilog_port(VERILOG_PORT_CONKT, mem_port);
-      fp << ", " << generate_verilog_port(VERILOG_PORT_CONKT, mem_inv_port);
-      fp << ", " <<  generate_verilog_port(VERILOG_PORT_CONKT, output_port);
-      fp << ");" << std::endl;
-    }
-    /* Transmission gates are connected to each input and also the output*/
-    fp << "\t" << circuit_lib.model_name(tgate_model) << " " << circuit_lib.model_prefix(tgate_model) << "_1 ";
-    /* Dump explicit port map if required */
-    if (true == circuit_lib.dump_explicit_port_map(tgate_model)) {
-      fp << " (";
-      fp << "  ." << circuit_lib.port_lib_name(tgate_input_ports[0]) << "(" << "in[1]" << "),";
-      fp << "  ." << circuit_lib.port_lib_name(tgate_input_ports[1]) << "(" << generate_verilog_port(VERILOG_PORT_CONKT, mem_inv_port) << "),";
-      fp << "  ." << circuit_lib.port_lib_name(tgate_input_ports[2]) << "(" << generate_verilog_port(VERILOG_PORT_CONKT, mem_port) << "),";
-      fp << "  ." << circuit_lib.port_lib_name(tgate_output_ports[0]) << "(" << generate_verilog_port(VERILOG_PORT_CONKT, output_port) << ")";
-      fp << ");" << std::endl;
-    } else {
-      fp << " (";
-      fp << generate_verilog_port(VERILOG_PORT_CONKT, input_port);
-      fp << ", " << generate_verilog_port(VERILOG_PORT_CONKT, mem_inv_port);
-      fp << ", " << generate_verilog_port(VERILOG_PORT_CONKT, mem_port);
-      fp << ", " <<  generate_verilog_port(VERILOG_PORT_CONKT, output_port);
-      fp << ");" << std::endl;
-    }
-  } else {
-  /* Other cases, we need to follow the rules:
-   * When mem[k] is enabled, switch on input[k]
-   * Only one memory bit is enabled!
-   */
-    for (size_t i = 0; i < num_mems; i++) {
-      fp << "\t" << circuit_lib.model_name(tgate_model) << " " << circuit_lib.model_prefix(tgate_model) << "_" << i << " ";
-      if (true == circuit_lib.dump_explicit_port_map(tgate_model)) {
-        fp << " (";
-        fp << "  ." << circuit_lib.port_lib_name(tgate_input_ports[0]) << "(" << "in[" << i << "]" << "),";
-        fp << "  ." << circuit_lib.port_lib_name(tgate_input_ports[1]) << "(" << "mem[" << i << "]" << "),";
-        fp << "  ." << circuit_lib.port_lib_name(tgate_input_ports[2]) << "(" << "mem_inv[" << i << "]" << "),";
-        fp << "  ." << circuit_lib.port_lib_name(tgate_output_ports[0]) << "(" << generate_verilog_port(VERILOG_PORT_CONKT, output_port) << ")";
-        fp << ");" << std::endl;
-      } else {
-        fp << " (";
-        fp << "in[" << i << "]";
-        fp << ", " << "mem[" << i << "]";
-        fp << ", " << "mem_inv[" << i << "]";
-        fp << ", " <<  generate_verilog_port(VERILOG_PORT_CONKT, output_port);
-        fp << ");" << std::endl;
+
+  /* Output the netlist following the connections in mux_graph */
+  /* Iterate over the inputs */
+  for (const auto& mux_input : mux_graph.inputs()) {
+    BasicPort cur_input_port(input_port.get_name(), size_t(mux_graph.input_id(mux_input)), size_t(mux_graph.input_id(mux_input)));
+    /* Iterate over the outputs */
+    for (const auto& mux_output : mux_graph.outputs()) {
+      /* TODO: the magic number 0 should be generated by MUX graph */
+      BasicPort cur_output_port(output_port.get_name(), 0);
+      /* if there is a connection between the input and output, a tgate will be outputted */
+      std::vector<MuxEdgeId> edges = mux_graph.find_edges(mux_input, mux_output);
+      /* There should be only one edge or no edge*/
+      VTR_ASSERT((1 == edges.size()) || (0 == edges.size()));
+      /* No need to output tgates if there are no edges between two nodes */
+      if (0 == edges.size()) {
+        continue;
       }
+      /* TODO: Output a tgate use a module manager */
+      /* Create a port-to-port name map */
+      std::map<std::string, std::string> port2port_name_map;
+      /* input port */
+      port2port_name_map[circuit_lib.port_lib_name(tgate_input_ports[0])] = generate_verilog_port(VERILOG_PORT_CONKT, cur_input_port);
+      /* output port */
+      port2port_name_map[circuit_lib.port_lib_name(tgate_output_ports[0])] = generate_verilog_port(VERILOG_PORT_CONKT, cur_output_port);
+      /* Find the mem_id controlling the edge */
+      MuxMemId mux_mem = mux_graph.find_edge_mem(edges[0]);
+      BasicPort cur_mem_port(mem_port.get_name(), size_t(mux_mem), size_t(mux_mem));
+      BasicPort cur_mem_inv_port(mem_inv_port.get_name(), size_t(mux_mem), size_t(mux_mem));
+      /* mem port */
+      if (false == mux_graph.is_edge_use_inv_mem(edges[0])) {
+        /* wire mem to mem of module, and wire mem_inv to mem_inv of module */
+        port2port_name_map[circuit_lib.port_lib_name(tgate_input_ports[1])] = generate_verilog_port(VERILOG_PORT_CONKT, cur_mem_port);
+        port2port_name_map[circuit_lib.port_lib_name(tgate_input_ports[2])] = generate_verilog_port(VERILOG_PORT_CONKT, cur_mem_inv_port);
+      } else {
+        /* wire mem_inv to mem of module, wire mem to mem_inv of module */
+        port2port_name_map[circuit_lib.port_lib_name(tgate_input_ports[1])] = generate_verilog_port(VERILOG_PORT_CONKT, cur_mem_inv_port);
+        port2port_name_map[circuit_lib.port_lib_name(tgate_input_ports[2])] = generate_verilog_port(VERILOG_PORT_CONKT, cur_mem_port);
+      }  
+      /* Output an instance of the module */
+      print_verilog_module_instance(fp, module_manager, module_id, tgate_module_id, port2port_name_map, circuit_lib.dump_explicit_port_map(tgate_model));
+      /* IMPORTANT: this update MUST be called after the instance outputting!!!!
+       * update the module manager with the relationship between the parent and child modules 
+       */
+      module_manager.add_child_module(module_id, tgate_module_id);
     }
   }
 
