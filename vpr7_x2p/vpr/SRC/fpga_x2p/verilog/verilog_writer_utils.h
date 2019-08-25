@@ -31,7 +31,7 @@ void print_verilog_module_declaration(std::fstream& fp,
 void print_verilog_module_instance(std::fstream& fp, 
                                    const ModuleManager& module_manager,
                                    const ModuleId& parent_module_id, const ModuleId& child_module_id,
-                                   std::map<std::string, std::string>& port2port_name_map,
+                                   const std::map<std::string, BasicPort>& port2port_name_map,
                                    const bool& explicit_port_map);
 
 void print_verilog_module_end(std::fstream& fp, 

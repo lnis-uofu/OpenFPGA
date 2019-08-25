@@ -132,7 +132,7 @@ void print_verilog_module_declaration(std::fstream& fp,
 void print_verilog_module_instance(std::fstream& fp, 
                                    const ModuleManager& module_manager, 
                                    const ModuleId& parent_module_id, const ModuleId& child_module_id,
-                                   std::map<std::string, std::string>& port2port_name_map,
+                                   const std::map<std::string, BasicPort>& port2port_name_map,
                                    const bool& explicit_port_map) {
 
   check_file_handler(fp);
@@ -166,11 +166,9 @@ void print_verilog_module_instance(std::fstream& fp,
         fp << "." << port.get_name() << "(";
       }
       /* Try to find the instanced port name in the name map */
-      std::map<std::string, std::string>::iterator it = port2port_name_map.find(port.get_name());
-      if (it != port2port_name_map.end()) {
+      if (port2port_name_map.find(port.get_name()) != port2port_name_map.end()) {
         /* Found it, we assign the port name */ 
-        BasicPort instance_port(port.get_name(), 1);
-        fp << generate_verilog_port(kv.second, instance_port);
+        fp << generate_verilog_port(kv.second, port2port_name_map.at(port.get_name()));
       } else {
         /* Not found, we give the default port name */
         fp << generate_verilog_port(kv.second, port);
