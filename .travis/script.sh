@@ -10,7 +10,7 @@ if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
   #make
   mkdir build
   cd build
-  cmake .. -DCMAKE_BUILD_TYPE=debug -DENABLE_VPR_GRAPHICS=off 
+  cmake .. -DCMAKE_BUILD_TYPE=debug -DENABLE_VPR_GRAPHICS=off
   make -j16
   alias python3.5="python3"
   ln -s /opt/local/bin/python3 /opt/local/bin/python3.5
@@ -30,4 +30,4 @@ $SPACER
 cd -
 # python3.5 ./openfpga_flow/scripts/run_fpga_task.py regression/regression_quick
 chmod 755 run_test.sh
-./run_test.sh
+python3.5 openfpga_flow/scripts/run_fpga_task.py blif_vpr_flow
