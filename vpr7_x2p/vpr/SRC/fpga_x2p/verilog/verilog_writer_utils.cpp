@@ -193,7 +193,7 @@ void print_verilog_module_end(std::fstream& fp,
   check_file_handler(fp);
 
   fp << "endmodule" << std::endl;
-  print_verilog_comment(fp, std::string("//----- END Verilog module for " + module_name + " -----"));
+  print_verilog_comment(fp, std::string("----- END Verilog module for " + module_name + " -----"));
   fp << std::endl;
 }
 
