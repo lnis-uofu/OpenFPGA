@@ -86,6 +86,8 @@ class MuxGraph {
     MuxNodeId node_id(const MuxInputId& input_id) const;
     /* Get the input id of a given node */
     MuxInputId input_id(const MuxNodeId& node_id) const;
+    /* Get the output id of a given node */
+    MuxOutputId output_id(const MuxNodeId& node_id) const;
     /* Decode memory bits based on an input id */
     std::vector<size_t> decode_memory_bits(const MuxInputId& input_id) const;
   private: /* Private mutators : basic operations */
@@ -116,6 +118,7 @@ class MuxGraph {
     bool valid_edge_id(const MuxEdgeId& edge) const;
     bool valid_mem_id(const MuxMemId& mem) const;
     bool valid_input_id(const MuxInputId& input_id) const;
+    bool valid_output_id(const MuxOutputId& output_id) const;
     /* validate/invalidate node lookup */
     bool valid_node_lookup() const;
     void invalidate_node_lookup();
@@ -125,6 +128,7 @@ class MuxGraph {
     vtr::vector<MuxNodeId, MuxNodeId> node_ids_;                        /* Unique ids for each node */
     vtr::vector<MuxNodeId, enum e_mux_graph_node_type> node_types_;     /* type of each node, input/output/internal */
     vtr::vector<MuxNodeId, MuxInputId> node_input_ids_;                 /* Unique ids for each node as an input of the MUX */
+    vtr::vector<MuxNodeId, MuxOutputId> node_output_ids_;                 /* Unique ids for each node as an input of the MUX */
     vtr::vector<MuxNodeId, size_t> node_levels_;                       /* at which level, each node belongs to */
     vtr::vector<MuxNodeId, std::vector<MuxEdgeId>> node_in_edges_;       /* ids of incoming edges to each node */
     vtr::vector<MuxNodeId, std::vector<MuxEdgeId>> node_out_edges_;      /* ids of outgoing edges from each node */

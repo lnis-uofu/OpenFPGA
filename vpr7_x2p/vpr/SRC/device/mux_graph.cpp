@@ -203,6 +203,7 @@ MuxGraph MuxGraph::subgraph(const MuxNodeId& root_node) const {
   /* Add output nodes to subgraph */
   MuxNodeId to_node_subgraph = mux_graph.add_node(MUX_OUTPUT_NODE);
   mux_graph.node_levels_[to_node_subgraph] = 1;
+  mux_graph.node_output_ids_[to_node_subgraph] = MuxOutputId(0);
   /* Update the node-to-node map */
   node2node_map[root_node] = to_node_subgraph;
 
@@ -308,6 +309,15 @@ MuxInputId MuxGraph::input_id(const MuxNodeId& node_id) const {
   return node_input_ids_[node_id];
 }
 
+/* Get the input id of a given node */
+MuxOutputId MuxGraph::output_id(const MuxNodeId& node_id) const {
+  /* Validate node id */
+  VTR_ASSERT(valid_node_id(node_id));
+  /* Must be an input */
+  VTR_ASSERT(MUX_OUTPUT_NODE == node_types_[node_id]);
+  return node_output_ids_[node_id];
+}
+
 /* Get the node id of a given input */
 MuxNodeId MuxGraph::node_id(const MuxInputId& input_id) const {
   /* Use the node_lookup to accelerate the search */
@@ -354,7 +364,10 @@ std::vector<size_t> MuxGraph::decode_memory_bits(const MuxInputId& input_id) con
     /* Visit the next node */
     next_node = edge_sink_nodes_[edge][0]; 
   }
+
+  /* valid the output */
   VTR_ASSERT_SAFE(MUX_OUTPUT_NODE == node_types_[next_node]);
+  VTR_ASSERT_SAFE(valid_output_id(node_output_ids_[next_node]));
 
   return mem_bits;
 }
@@ -370,6 +383,7 @@ MuxNodeId MuxGraph::add_node(const enum e_mux_graph_node_type& node_type) {
   /* Resize the other node-related vectors */
   node_types_.push_back(node_type);
   node_input_ids_.push_back(MuxInputId::INVALID());
+  node_output_ids_.push_back(MuxOutputId::INVALID());
   node_levels_.push_back(-1);
   node_in_edges_.emplace_back();
   node_out_edges_.emplace_back();
@@ -494,6 +508,7 @@ void MuxGraph::build_multilevel_mux_graph(const size_t& mux_size,
   /* Number of outputs is definite, add and configure */
   MuxNodeId output_node = add_node(MUX_OUTPUT_NODE);
   node_levels_[output_node] = num_levels; 
+  node_output_ids_[output_node] = MuxOutputId(0); 
   /* Update node lookup */
   node_lookup[num_levels].push_back(output_node);
 
@@ -609,6 +624,7 @@ void MuxGraph::build_onelevel_mux_graph(const size_t& mux_size,
    */
   MuxNodeId output_node = add_node(MUX_OUTPUT_NODE);
   node_levels_[output_node] = 1; 
+  node_output_ids_[output_node] = MuxOutputId(0); 
 
   for (size_t i = 0; i < mux_size; ++i) {
     MuxNodeId input_node = add_node(MUX_INPUT_NODE);
@@ -731,11 +747,24 @@ bool MuxGraph::valid_mem_id(const MuxMemId& mem) const {
   return size_t(mem) < mem_ids_.size() && mem_ids_[mem] == mem;
 }
 
-/* validate an input id (from which data path signal will be progagated to the output */
+/* validate an input id (from which data path signal will be progagated to the output) */
 bool MuxGraph::valid_input_id(const MuxInputId& input_id) const {
   for (const auto& lvl : node_lookup_) {
     for (const auto& node : lvl[MUX_INPUT_NODE]) {
       if (size_t(input_id) > size_t(node_input_ids_[node])) {
+        return false;
+      }
+    }
+  } 
+
+  return true;
+}
+
+/* validate an output id */
+bool MuxGraph::valid_output_id(const MuxOutputId& output_id) const {
+  for (const auto& lvl : node_lookup_) {
+    for (const auto& node : lvl[MUX_OUTPUT_NODE]) {
+      if (size_t(output_id) > size_t(node_output_ids_[node])) {
         return false;
       }
     }
