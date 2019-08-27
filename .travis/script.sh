@@ -29,5 +29,4 @@ $SPACER
 
 cd -
 # python3.5 ./openfpga_flow/scripts/run_fpga_task.py regression/regression_quick
-chmod 755 run_test.sh
-python3.5 openfpga_flow/scripts/run_fpga_task.py blif_vpr_flow
+python3.5 openfpga_flow/scripts/run_fpga_task.py blif_vpr_flow --maxthreads 6
