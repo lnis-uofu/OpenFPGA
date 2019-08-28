@@ -151,6 +151,10 @@ def generate_each_task_actions(taskname):
     if not len(archfile_list) == len(list(set(archfile_list))):
         clean_up_and_exit("Found duplicate architectures in config file")
 
+    # Get Flow information
+    logger.info('Running "%s" flow' %
+                    GeneralSection.get("fpga_flow", fallback="yosys_vpr"))
+
     # Check if specified benchmark files exist
     benchmark_list = []
     for bech_name, each_benchmark in task_conf["BENCHMARKS"].items():
@@ -180,8 +184,7 @@ def generate_each_task_actions(taskname):
         CurrBenchPara["chan_width"] = SynthSection.get(bech_name+"_chan_width",
                                                        fallback=chan_width_common)
 
-        logger.info('Running "%s" flow' %
-                    GeneralSection.get("fpga_flow", fallback="yosys_vpr"))
+
         if GeneralSection.get("fpga_flow") == "vpr_blif":
             # Check if activity file exist
             if not SynthSection.get(bech_name+"_act"):
@@ -233,6 +236,10 @@ def generate_each_task_actions(taskname):
                     "run_dir": flow_run_dir,
                     "commands": command,
                     "status": False})
+
+    logger.info('Found %d Architectures %d Benchmarks & %d Script Parameters' %
+                (len(archfile_list), len(benchmark_list), len(ScriptSections)))
+    logger.info('Created total %d jobs' % len(flow_run_cmd_list))
     return flow_run_cmd_list
 
 
