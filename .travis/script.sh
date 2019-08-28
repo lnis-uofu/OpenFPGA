@@ -29,4 +29,4 @@ $SPACER
 
 cd -
 # python3.5 ./openfpga_flow/scripts/run_fpga_task.py regression/regression_quick
-python3.5 openfpga_flow/scripts/run_fpga_task.py blif_vpr_flow --maxthreads 6
+python3.5 openfpga_flow/scripts/run_fpga_task.py blif_vpr_flow --maxthreads 4
