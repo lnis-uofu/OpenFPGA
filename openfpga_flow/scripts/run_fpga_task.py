@@ -343,7 +343,7 @@ def run_single_script(s, eachJob):
                     output.write(line)
                 process.wait()
                 if process.returncode:
-                    raise subprocess.CalledProcessError(0, [])
+                    raise subprocess.CalledProcessError(0, command)
                 eachJob["status"] = True
         except:
             logger.exception("Failed to execute openfpga flow - " +
@@ -390,10 +390,13 @@ def collect_results(job_run_list):
         result["TotalRunTime"] = int(run["endtime"]-run["starttime"])
         result.update(vpr_res["RESULTS"])
         task_result.append(result)
-
+        colnames = []
+        for eachLbl in task_result:
+            colnames.extend(eachLbl.keys())
     if len(task_result):
         with open("task_result.csv", 'w', newline='') as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=task_result[0].keys())
+            writer = csv.DictWriter(
+                csvfile, extrasaction='ignore', fieldnames=list(set(colnames)))
             writer.writeheader()
             for eachResult in task_result:
                 writer.writerow(eachResult)
