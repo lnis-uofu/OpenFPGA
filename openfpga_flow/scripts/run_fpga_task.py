@@ -50,6 +50,11 @@ args = parser.parse_args()
 task_script_dir = os.path.dirname(os.path.abspath(__file__))
 script_env_vars = ({"PATH": {
     "OPENFPGA_FLOW_PATH": task_script_dir,
+    "ARCH_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "arch"),
+    "BENCH_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "benchmarks"),
+    "TECH_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "tech"),
+    "SPICENETLIST_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "SpiceNetlists"),
+    "VERILOG_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "VerilogNetlists"),
     "OPENFPGA_PATH": os.path.abspath(os.path.join(task_script_dir, os.pardir,
                                                   os.pardir))}})
 config = ConfigParser(interpolation=ExtendedInterpolation())
@@ -153,7 +158,7 @@ def generate_each_task_actions(taskname):
 
     # Get Flow information
     logger.info('Running "%s" flow' %
-                    GeneralSection.get("fpga_flow", fallback="yosys_vpr"))
+                GeneralSection.get("fpga_flow", fallback="yosys_vpr"))
 
     # Check if specified benchmark files exist
     benchmark_list = []
@@ -183,7 +188,6 @@ def generate_each_task_actions(taskname):
                                                       fallback=ys_for_task_common)
         CurrBenchPara["chan_width"] = SynthSection.get(bech_name+"_chan_width",
                                                        fallback=chan_width_common)
-
 
         if GeneralSection.get("fpga_flow") == "vpr_blif":
             # Check if activity file exist
