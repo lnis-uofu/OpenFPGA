@@ -1,3 +1,12 @@
+# = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+# Script Name   : run_fpga_flow.py
+# Description   : This script designed to run different flows supported by
+#                 OpensFPGA project.
+# Args          : python3 run_fpga_flow.py --help
+# Author        : Ganesh Gore
+# Email         : ganeshgore@utah.edu
+# = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+
 import os
 import sys
 import shutil
@@ -17,6 +26,9 @@ import xml.etree.ElementTree as ET
 from importlib import util
 if util.find_spec("humanize"):
     import humanize
+
+if sys.version_info[0] < 3:
+    raise Exception("run_fpga_task script must be using Python 3")
 
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 # Initialise general paths for the script
