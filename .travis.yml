@@ -3,9 +3,11 @@ language: cpp
 # cache results
 cache:
   directories:
+    - $HOME/abc
+    - $HOME/yosys
     - $HOME/.ccache
 
-# Currently sudo is not required, NO ENV is used 
+# Currently sudo is not required, NO ENV is used
 
 # Supported Operating systems
 #os:
