@@ -3,7 +3,7 @@
 run_fpga_flow
 ---------------
 
-This python script executes the supported openfpga flow for a
+This python script executes the supported OpenFPGA flow for a
 single benchmark and architecture file for given script parameters.
 
 The script is located at::
@@ -45,7 +45,7 @@ each run independent of launch directory.
   * ``<OPENFPGA_PATH>`` Path to the base OpenFPGA directory
   * ``<OPENFPGA_FLOW_PATH>`` Path to the run_fpga_flow script directory
   * ``<SPICENETLIST_PATH>`` Path where spice netlists are saved
-  * ``<VERILOG_PATH>`` Path where verilog modules are saved
+  * ``<VERILOG_PATH>`` Path where Verilog modules are saved
   * ``<TECH_PATH>`` Path where all characterized XML files are stored
 
 For example in architecture file path vairable can be used as follows::
@@ -54,13 +54,13 @@ For example in architecture file path vairable can be used as follows::
 
 Output
 ~~~~~~
-Based on which flow is executed, resulting intermediate files are generated in run_directory
+Based on which flow is executed, resulting in intermediate files are generated in run_directory
 
-The output log of the script provides status of each stage to the user.
-If any stage failed to execute, the output log will indicate the stage at which execution failed, and execution traceback.
+The output log of the script provides the status of each stage to the user.
+If any stage failed to execute, the output log would indicate the stage at which execution failed, and execution traceback.
 
-In case of successful execution, The openfpga flow script will parse
-parameters lited in configuration from different result files and will create
+In case of successful execution, The OpenFPGA flow script will parse
+parameters listed in configuration from different result files and will create
 ``vpr_stat.txt``, ``vpr_stat_power.txt`` \(optional\) file in run_directory.
 
 Advanced Usage
@@ -99,46 +99,46 @@ General Arguments
 
 .. option:: --run_dir <directory_path>
 
-    Using this option user can provide custom path as a run directory. Default is  ``tmp`` directory in OpenFPGA root path.
+    Using this option user can provide a custom path as a run directory. Default is  ``tmp`` directory in OpenFPGA root path.
 
 .. option:: --K <lut_inputs>
 
-      This option defines the number of inputs to the LUT. By default script parses provided architecture file and finds out inputs to the biggest LUT.
+      This option defines the number of inputs to the LUT. By default, the script parses provided architecture file and finds out inputs to the biggest LUT.
 
 .. option:: --yosys_tmpl <yosys_template_file>
 
-    This option allows user to provide a custom yosys template
-    while running a yosys_vpr flow. Default template is stored in a directory ``open_fpga_flow\misc\ys_tmpl_yosys_vpr_flow.ys``. Yosys template script supports ``TOP_MODULE`` ``READ_VERILOG_FILE`` ``LUT_SIZE`` & ``OUTPUT_BLIF`` variables, which can be used as ``${var_name}``. Alternately, user can create a copy and modify according to their need.
+    This option allows the user to provide a custom Yosys template
+    While running a yosys_vpr flow. Default template is stored in a directory ``open_fpga_flow\misc\ys_tmpl_yosys_vpr_flow.ys``. Yosys template script supports ``TOP_MODULE`` ``READ_VERILOG_FILE`` ``LUT_SIZE`` & ``OUTPUT_BLIF`` variables, which can be used as ``${var_name}``. Alternately, user can create a copy and modify according to their need.
 
 .. option:: --debug
 
-    To enable detail logs printing
+    To enable detail logs printing.
 
 .. option:: --flow_config
 
-    User can provide option flow ocnfiguration file to override some of the default script paramteres.
+    User can provide option flow configuration file to override some of the default script parameters.
     for detail information refer :ref:`OpenFPGA Flow Configuration <OpenFPGA_Conf_File>`
 
 ACE Arguments
 ^^^^^^^^^^^^^
 .. option:: --black_box_ace
 
-    Performs ACE simulation on black box [deprecated]
+    Performs ACE simulation on the black box [deprecated]
 
 VPR RUN Arguments
 ^^^^^^^^^^^^^^^^^
 
 .. option:: --fix_route_chan_width <channel_number>
 
-    Perfoms VPR implementation for fixed number of channels defined as the 'channel_number'
+    Performs VPR implementation for a fixed number of channels defined as the 'channel_number'
 
 .. option:: --min_route_chan_width <percentage_slack>
 
-    Performs VPR implementation to get minimum channel width and then perform fixed channel rerouting with ``percentage_slack`` increase in the channle width.
+    Performs VPR implementation to get minimum channel width and then perform fixed channel rerouting with ``percentage_slack`` increase in the channel width.
 
 .. option:: --max_route_width_retry <max_retry_count>
 
-    Number of times  the channel width should be incresese and attempt VPR implmenetation, while performaning ``min_route_chan_width``
+    Number of times  the channel width should be increased and attempt VPR implementation, while performing ``min_route_chan_width``
 
 .. option:: --power
 .. option:: --power_tech
@@ -169,13 +169,13 @@ The OpenFPGA Flow configuration file consists of following sections
         Lists the supported flows by the script.
 
     * ``DEFAULT_PARSE_RESULT_VPR``
-        Default prarameters to parse from Place, Pack and Route output.
+        List of default parameters to be parsed from Place, Pack, and Route output
 
     * ``DEFAULT_PARSE_RESULT_POWER``
-        Default prarameters to parse from VPR power analysis output.
+        List of default parameters to be parsed from VPR power analysis output
 
     * ``INTERMIDIATE_FILE_PREFIX``
         [Not implemented yet]
 
 Default OpenFPGA_flow Configuration file is located in ``open_fpga_flow\misc\fpgaflow_default_tool_path.conf``.
-User supplied configuration file overrides or extendes the dafult configuration.
+User-supplied configuration file overrides or extends the default configuration.
