@@ -43,6 +43,7 @@ openfpga_base_dir = os.path.abspath(
 launch_dir = os.getcwd()
 
 # Path section to append in configuration file to interpolate path
+task_script_dir = os.path.dirname(os.path.abspath(__file__))
 script_env_vars = ({"PATH": {
     "OPENFPGA_FLOW_PATH": task_script_dir,
     "ARCH_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "arch"),
