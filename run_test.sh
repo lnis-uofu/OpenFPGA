@@ -1,4 +1,4 @@
-# python3.5 openfpga_flow/scripts/run_fpga_flow.py \
+# python3 openfpga_flow/scripts/run_fpga_flow.py \
 # ./openfpga_flow/arch/template/k6_N10_sram_chain_HC_template.xml \
 # ./openfpga_flow/benchmarks/MCNC_Verilog/s298/s298.v \
 # --top_module s298 \
@@ -16,7 +16,7 @@
 # --vpr_fpga_verilog_print_autocheck_top_testbench
 
 # Test popular multi-mode architecture
-python3.5 openfpga_flow/scripts/run_fpga_flow.py \
+python3 openfpga_flow/scripts/run_fpga_flow.py \
 ./openfpga_flow/arch/template/k6_N10_sram_chain_HC_template.xml \
 ./openfpga_flow/benchmarks/Test_Modes/test_modes.blif \
 --fpga_flow vpr_blif \
@@ -45,7 +45,7 @@ python3.5 openfpga_flow/scripts/run_fpga_flow.py \
 --end_flow_with_test
 
 # Test Standard cell MUX2
-python3.5 openfpga_flow/scripts/run_fpga_flow.py \
+python3 openfpga_flow/scripts/run_fpga_flow.py \
 ./openfpga_flow/arch/template/k8_N10_sram_chain_FC_template.xml \
 ./openfpga_flow/benchmarks/Test_Modes/test_modes.blif \
 --fpga_flow vpr_blif \
@@ -73,8 +73,8 @@ python3.5 openfpga_flow/scripts/run_fpga_flow.py \
 --vpr_fpga_x2p_compact_routing_hierarchy \
 --end_flow_with_test
 
-# Test local encoder feature 
-python3.5 openfpga_flow/scripts/run_fpga_flow.py \
+# Test local encoder feature
+python3 openfpga_flow/scripts/run_fpga_flow.py \
 ./openfpga_flow/arch/template/k6_N10_sram_chain_HC_local_encoder_template.xml \
 ./openfpga_flow/benchmarks/Test_Modes/test_modes.blif \
 --fpga_flow vpr_blif \
@@ -101,8 +101,8 @@ python3.5 openfpga_flow/scripts/run_fpga_flow.py \
 --vpr_fpga_x2p_compact_routing_hierarchy \
 --end_flow_with_test
 
-# Test tileable routing feature 
-#python3.5 openfpga_flow/scripts/run_fpga_flow.py \
+# Test tileable routing feature
+#python3 openfpga_flow/scripts/run_fpga_flow.py \
 #./openfpga_flow/arch/template/k6_N10_sram_chain_HC_tileable_template.xml \
 #./openfpga_flow/benchmarks/Test_Modes/test_modes.blif \
 #--fpga_flow vpr_blif \
