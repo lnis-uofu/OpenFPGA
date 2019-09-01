@@ -53,6 +53,8 @@ parser.add_argument('--test_run', action="store_true",
                     help="Dummy run shows final generated VPR commands")
 parser.add_argument('--debug', action="store_true",
                     help="Run script in debug mode")
+parser.add_argument('--exit_on_fail', action="store_true",
+                    help="Exit script with return code")
 parser.add_argument('--skip_tread_logs', action="store_true",
                     help="Skips logs from running thread")
 args = parser.parse_args()
@@ -372,6 +374,8 @@ def run_single_script(s, eachJob):
         except:
             logger.exception("Failed to execute openfpga flow - " +
                              eachJob["name"])
+            if args.exit_on_fail:
+                clean_up_and_exit("Faile to run task %s exiting" % name)
         eachJob["endtime"] = time.time()
         timediff = timedelta(seconds=(eachJob["endtime"]-eachJob["starttime"]))
         timestr = humanize.naturaldelta(timediff) if "humanize" in sys.modules \
@@ -384,12 +388,12 @@ def run_actions(job_run_list):
     thread_sema = threading.Semaphore(args.maxthreads)
     thred_list = []
     for index, eachjob in enumerate(job_run_list):
+        JobID = 'Job_%02d' % (index+1)
+        logger.info("Running %s = %s" % (JobID, eachjob["name"]))
         t = threading.Thread(target=run_single_script,
-                             name='Job_%02d' % (index+1),
-                             args=(thread_sema, eachjob))
+                             name=JobID, args=(thread_sema, eachjob))
         t.start()
         thred_list.append(t)
-
     for eachthread in thred_list:
         eachthread.join()
 
