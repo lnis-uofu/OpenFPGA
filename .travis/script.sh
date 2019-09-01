@@ -3,10 +3,7 @@
 source .travis/common.sh
 set -e
 
-$SPACER
-
 start_section "OpenFPGA.build" "${GREEN}Building..${NC}"
-
 mkdir build
 cd build
 
@@ -17,9 +14,9 @@ else
 fi
  make -j16
 end_section "OpenFPGA.build"
-$SPACER
+
 
 start_section "OpenFPGA.TaskTun" "${GREEN}..Running_Regression..${NC}"
 cd -
-python3 openfpga_flow/scripts/run_fpga_task.py blif_vpr_flow
+python3 openfpga_flow/scripts/run_fpga_task.py blif_vpr_flow --exit_on_fail
 end_section "OpenFPGA.TaskTun"
