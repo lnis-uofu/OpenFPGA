@@ -1,6 +1,6 @@
 .. _run_fpga_flow:
 
-run_fpga_flow
+OpenFPGA Flow
 ---------------
 
 This python script executes the supported OpenFPGA flow for a
@@ -32,6 +32,8 @@ where:
     The path variables declared in architecture XML file will be resolved with absolute path and copied to the ``tmp/arch`` directory before executing flow.
     All the benchmark files provided will be copied to ``tmp/bench`` directory without maintaining any directory structure.
     **Users should ensure that no important files are kept in this directory as script will clear directory before each execution**
+
+.. _openfpga-variables:
 
 OpenFPGA Variables
 ~~~~~~~~~~~~~~~~~~

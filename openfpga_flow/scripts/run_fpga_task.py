@@ -160,6 +160,7 @@ def generate_each_task_actions(taskname):
     GeneralSection = task_conf["GENERAL"]
 
     # Check if specified architecture files exist
+    # TODO Store it as a dictionary and take reference from the key
     archfile_list = []
     for _, arch_file in task_conf["ARCHITECTURES"].items():
         arch_full_path = arch_file
