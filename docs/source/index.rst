@@ -12,9 +12,14 @@ Welcome to OpenFPGA's documentation!
    motivation
 
 .. toctree::
-   :caption: Getting Started 
+   :caption: Getting Started
 
    eda_flow
+
+   run_fpga_flow
+
+   run_fpga_task
+
 
 .. toctree::
    :maxdepth: 2
@@ -37,10 +42,10 @@ Welcome to OpenFPGA's documentation!
 .. toctree::
    :maxdepth: 2
    :caption: Appendix
-  
+
    contact
    reference
-   
+
 For more information on the VTR see vtr_doc_ or vtr_github_
 
 For more information on the Yosys see yosys_doc_ or yosys_github_

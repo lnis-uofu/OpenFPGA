@@ -1,11 +1,16 @@
 language: cpp
 
 # cache results
+
 cache:
   directories:
+    - $TRAVIS_BUILD_DIR/abc
+    - $TRAVIS_BUILD_DIR/yosys
+    - $TRAVIS_BUILD_DIR/ace2
+    - $TRAVIS_BUILD_DIR/libs
     - $HOME/.ccache
 
-# Currently sudo is not required, NO ENV is used 
+# Currently sudo is not required, NO ENV is used
 
 # Supported Operating systems
 #os:
@@ -13,9 +18,6 @@ cache:
 #  - osx
 # Create a matrix to branch the building environment
 matrix:
-  allow_failures:
-    - os: osx
-     #dist: trusty
   include:
     - os: linux
     # Compiler is specified in ./travis/common.sh

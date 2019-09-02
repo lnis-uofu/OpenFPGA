@@ -1,3 +1,13 @@
+# = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+# Script Name   : run_fpga_task.py
+# Description   : This script designed to run openfpga_flow tasks,
+#                 Opensfpga task are design to run opefpga_flow on each
+#                 Combination of architecture, benchmark and script paramters
+# Args          : python3 run_fpga_task.py --help
+# Author        : Ganesh Gore
+#Email          : ganeshgore@utah.edu
+# = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+
 import os
 import sys
 import shutil
@@ -18,6 +28,9 @@ from collections import OrderedDict
 
 if util.find_spec("humanize"):
     import humanize
+
+if sys.version_info[0] < 3:
+    raise Exception("run_fpga_task script must be using Python 3")
 
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 # Configure logging system
@@ -40,6 +53,8 @@ parser.add_argument('--test_run', action="store_true",
                     help="Dummy run shows final generated VPR commands")
 parser.add_argument('--debug', action="store_true",
                     help="Run script in debug mode")
+parser.add_argument('--exit_on_fail', action="store_true",
+                    help="Exit script with return code")
 parser.add_argument('--skip_tread_logs', action="store_true",
                     help="Skips logs from running thread")
 args = parser.parse_args()
@@ -50,6 +65,11 @@ args = parser.parse_args()
 task_script_dir = os.path.dirname(os.path.abspath(__file__))
 script_env_vars = ({"PATH": {
     "OPENFPGA_FLOW_PATH": task_script_dir,
+    "ARCH_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "arch"),
+    "BENCH_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "benchmarks"),
+    "TECH_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "tech"),
+    "SPICENETLIST_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "SpiceNetlists"),
+    "VERILOG_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "VerilogNetlists"),
     "OPENFPGA_PATH": os.path.abspath(os.path.join(task_script_dir, os.pardir,
                                                   os.pardir))}})
 config = ConfigParser(interpolation=ExtendedInterpolation())
@@ -140,6 +160,7 @@ def generate_each_task_actions(taskname):
     GeneralSection = task_conf["GENERAL"]
 
     # Check if specified architecture files exist
+    # TODO Store it as a dictionary and take reference from the key
     archfile_list = []
     for _, arch_file in task_conf["ARCHITECTURES"].items():
         arch_full_path = arch_file
@@ -150,6 +171,10 @@ def generate_each_task_actions(taskname):
                               "%s  " % arch_file)
     if not len(archfile_list) == len(list(set(archfile_list))):
         clean_up_and_exit("Found duplicate architectures in config file")
+
+    # Get Flow information
+    logger.info('Running "%s" flow' %
+                GeneralSection.get("fpga_flow", fallback="yosys_vpr"))
 
     # Check if specified benchmark files exist
     benchmark_list = []
@@ -180,8 +205,6 @@ def generate_each_task_actions(taskname):
         CurrBenchPara["chan_width"] = SynthSection.get(bech_name+"_chan_width",
                                                        fallback=chan_width_common)
 
-        logger.info('Running "%s" flow' %
-                    GeneralSection.get("fpga_flow", fallback="yosys_vpr"))
         if GeneralSection.get("fpga_flow") == "vpr_blif":
             # Check if activity file exist
             if not SynthSection.get(bech_name+"_act"):
@@ -233,6 +256,10 @@ def generate_each_task_actions(taskname):
                     "run_dir": flow_run_dir,
                     "commands": command,
                     "status": False})
+
+    logger.info('Found %d Architectures %d Benchmarks & %d Script Parameters' %
+                (len(archfile_list), len(benchmark_list), len(ScriptSections)))
+    logger.info('Created total %d jobs' % len(flow_run_cmd_list))
     return flow_run_cmd_list
 
 
@@ -348,6 +375,8 @@ def run_single_script(s, eachJob):
         except:
             logger.exception("Failed to execute openfpga flow - " +
                              eachJob["name"])
+            if args.exit_on_fail:
+                clean_up_and_exit("Faile to run task %s exiting" % name)
         eachJob["endtime"] = time.time()
         timediff = timedelta(seconds=(eachJob["endtime"]-eachJob["starttime"]))
         timestr = humanize.naturaldelta(timediff) if "humanize" in sys.modules \
@@ -360,12 +389,12 @@ def run_actions(job_run_list):
     thread_sema = threading.Semaphore(args.maxthreads)
     thred_list = []
     for index, eachjob in enumerate(job_run_list):
+        JobID = 'Job_%02d' % (index+1)
+        logger.info("Running %s = %s" % (JobID, eachjob["name"]))
         t = threading.Thread(target=run_single_script,
-                             name='Job_%02d' % (index+1),
-                             args=(thread_sema, eachjob))
+                             name=JobID, args=(thread_sema, eachjob))
         t.start()
         thred_list.append(t)
-
     for eachthread in thred_list:
         eachthread.join()
 
