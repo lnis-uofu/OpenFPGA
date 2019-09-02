@@ -1306,6 +1306,19 @@ void fpga_x2p_free(t_arch* Arch) {
   free_spice_model_routing_index_low_high(Arch->spice->num_spice_model, Arch->spice->spice_models);
 }
 
+/*******************************************************
+ * This function will force the flag of 
+ * dump_explicit_port_map to be true 
+ * for all the circuit models in the circuit library
+ ******************************************************/
+static 
+void overwrite_circuit_library_dump_explicit_port_map(t_arch* Arch) {
+  /* Iterate over all the circuit models */
+  for (const auto& circuit_model : Arch->spice->circuit_lib.models()) {
+    Arch->spice->circuit_lib.set_model_dump_explicit_port_map(circuit_model, true);
+  }
+} 
+
 /* Top-level function of FPGA-SPICE setup */
 void fpga_x2p_setup(t_vpr_setup vpr_setup,
                     t_arch* Arch) {
@@ -1329,8 +1342,14 @@ void fpga_x2p_setup(t_vpr_setup vpr_setup,
    * Initialize Arch SPICE MODELS
    */
   init_check_arch_spice_models(Arch, &(vpr_setup.RoutingArch));
+
   /* Link circuit models to architecture */ 
   link_circuit_library_to_arch(Arch, &(vpr_setup.RoutingArch));  
+  /* Overwrite explicit_port_map settings if user required */
+  if (TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.dump_explicit_verilog) {
+    vpr_printf(TIO_MESSAGE_INFO, "Detect explicit Verilog option is enabled. Force all the circuit models to dump explicit Verilog...\n"); 
+    overwrite_circuit_library_dump_explicit_port_map(Arch); 
+  }
 
   /* Initialize idle mode and physical mode of each pb_type and pb_graph_node */
   init_check_arch_pb_type_idle_and_phy_mode();
