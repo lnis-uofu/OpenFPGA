@@ -507,11 +507,11 @@ void generate_verilog_rram_mux_branch_body_behavioral(std::fstream& fp,
 
   /* Print the internal logics */
   fp << "\t" << "always @(";
-  fp << generate_verilog_port(VERILOG_PORT_CONKT, blb_port) << ";" << std::endl; 
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, blb_port); 
   fp << ", ";
-  fp << generate_verilog_port(VERILOG_PORT_CONKT, wl_port) << ";" << std::endl; 
-  fp << ")" << std::endl;
-  fp << "\t" << "begin" << std::endl;
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, wl_port); 
+  fp << ")";
+  fp << " begin" << std::endl;
 
   /* Only when the last bit of wl is enabled, 
    * the propagating path can be changed 
@@ -531,11 +531,12 @@ void generate_verilog_rram_mux_branch_body_behavioral(std::fstream& fp,
     /* Create a port object */
     fp << " && "; 
     BasicPort prog_en_port(circuit_lib.port_prefix(port), circuit_lib.port_size(port));
-    if ( 1 == circuit_lib.port_default_value(port)) {
+    if ( 0 == circuit_lib.port_default_value(port)) {
       /* Default value = 0 means that this is a prog_EN port */
       fp << generate_verilog_port(VERILOG_PORT_CONKT, prog_en_port); 
       find_prog_EN = true;
     } else {
+      VTR_ASSERT ( 1 == circuit_lib.port_default_value(port));
       /* Default value = 1 means that this is a prog_ENb port, add inversion in the if condition */
       fp << "(~" << generate_verilog_port(VERILOG_PORT_CONKT, prog_en_port) << ")"; 
       find_prog_ENb = true;
@@ -559,19 +560,23 @@ void generate_verilog_rram_mux_branch_body_behavioral(std::fstream& fp,
   fp << ") begin" << std::endl;
 
   for (const auto& mux_input : mux_graph.inputs()) {
-    fp << "\t\t" << "if (1 == ";
+    /* First if clause need tabs */
+    if ( 0 == size_t(mux_graph.input_id(mux_input)) ) {
+      fp << "\t\t\t";
+    }
+    fp << "if (1 == ";
     /* Create a temp port of a BLB bit */
     BasicPort cur_blb_port(blb_port.get_name(), size_t(mux_graph.input_id(mux_input)), size_t(mux_graph.input_id(mux_input)));
     fp << generate_verilog_port(VERILOG_PORT_CONKT, cur_blb_port); 
     fp << ") begin" << std::endl;
-    fp << "\t\t\t" << "assign ";
-    fp << generate_verilog_port(VERILOG_PORT_CONKT, outreg_port); 
+    fp << "\t\t\t\t" << "assign ";
+  fp << outreg_port.get_name(); 
     fp << " = " << size_t(mux_graph.input_id(mux_input)) << ";" << std::endl;
-    fp << "\t\t" << "end else " << std::endl;
+    fp << "\t\t\t" << "end else ";
   }
-  fp << "\t\t\t" << "begin" << std::endl;
+  fp << "begin" << std::endl;
   fp << "\t\t\t\t" << "assign ";
-  fp << generate_verilog_port(VERILOG_PORT_CONKT, outreg_port); 
+  fp << outreg_port.get_name(); 
   fp << " = 0;" << std::endl;
   fp << "\t\t\t" << "end" << std::endl;
   fp << "\t\t" << "end" << std::endl;
@@ -581,7 +586,7 @@ void generate_verilog_rram_mux_branch_body_behavioral(std::fstream& fp,
   fp << generate_verilog_port(VERILOG_PORT_CONKT, output_port);
   fp << " = "; 
   fp << input_port.get_name() << "[";
-  fp << generate_verilog_port(VERILOG_PORT_CONKT, outreg_port); 
+  fp << outreg_port.get_name(); 
   fp << "];" << std::endl;
 }
 
@@ -618,18 +623,28 @@ void generate_verilog_rram_mux_branch_module(ModuleManager& module_manager,
   /* Create a Verilog Module based on the circuit model, and add to module manager */
   ModuleId module_id = module_manager.add_module(module_name); 
   VTR_ASSERT(ModuleId::INVALID() != module_id);
+
   /* Add module ports */
-  /* Add programming enable/disable ports */
+  /* Add each global programming enable/disable ports */
+  std::vector<CircuitPortId> prog_enable_ports = circuit_lib.model_global_ports_by_type(circuit_model, SPICE_MODEL_PORT_INPUT, true);
+  for (const auto& port : prog_enable_ports) {
+    /* Configure each global port */
+    BasicPort global_port(circuit_lib.port_lib_name(port), circuit_lib.port_size(port));
+    module_manager.add_port(module_id, global_port, ModuleManager::MODULE_GLOBAL_PORT);
+  }
   /* Add each input port */
   BasicPort input_port("in", num_inputs);
   module_manager.add_port(module_id, input_port, ModuleManager::MODULE_INPUT_PORT);
   /* Add each output port */
   BasicPort output_port("out", num_outputs);
   module_manager.add_port(module_id, output_port, ModuleManager::MODULE_OUTPUT_PORT);
-  /* Add RRAM programming ports  */
-  BasicPort blb_port("bl", num_mems);
+  /* Add RRAM programming ports, 
+   * RRAM MUXes require one more pair of BLB and WL 
+   * to configure the memories. See schematic for details
+   */
+  BasicPort blb_port("blb", num_mems + 1);
   module_manager.add_port(module_id, blb_port, ModuleManager::MODULE_INPUT_PORT);
-  BasicPort wl_port("wl", num_mems);
+  BasicPort wl_port("wl", num_mems + 1);
   module_manager.add_port(module_id, wl_port, ModuleManager::MODULE_INPUT_PORT);
 
   /* dump module definition + ports */
@@ -718,6 +733,7 @@ void print_verilog_submodule_muxes(ModuleManager& module_manager,
       generate_verilog_mux_branch_module(module_manager, circuit_lib, fp, mux_circuit_model, 
                                          mux_graph.num_inputs(), branch_mux_graph);
     }
+    /* TODO: create MUX modules */
   }
 
   /* Dump MUX graph one by one */
