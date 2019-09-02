@@ -1,3 +1,12 @@
+# = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+# Script Name   : run_fpga_flow.py
+# Description   : This script designed to run different flows supported by
+#                 OpensFPGA project.
+# Args          : python3 run_fpga_flow.py --help
+# Author        : Ganesh Gore
+# Email         : ganeshgore@utah.edu
+# = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+
 import os
 import sys
 import shutil
@@ -18,6 +27,9 @@ from importlib import util
 if util.find_spec("humanize"):
     import humanize
 
+if sys.version_info[0] < 3:
+    raise Exception("run_fpga_task script must be using Python 3")
+
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 # Initialise general paths for the script
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
@@ -31,9 +43,16 @@ openfpga_base_dir = os.path.abspath(
 launch_dir = os.getcwd()
 
 # Path section to append in configuration file to interpolate path
-script_env_vars = {"PATH": {
-    "OPENFPGA_FLOW_PATH": flow_script_dir,
-    "OPENFPGA_PATH": openfpga_base_dir}}
+task_script_dir = os.path.dirname(os.path.abspath(__file__))
+script_env_vars = ({"PATH": {
+    "OPENFPGA_FLOW_PATH": task_script_dir,
+    "ARCH_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "arch"),
+    "BENCH_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "benchmarks"),
+    "TECH_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "tech"),
+    "SPICENETLIST_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "SpiceNetlists"),
+    "VERILOG_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "VerilogNetlists"),
+    "OPENFPGA_PATH": os.path.abspath(os.path.join(task_script_dir, os.pardir,
+                                                  os.pardir))}})
 
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 # Reading command-line argument
@@ -54,7 +73,7 @@ parser.add_argument('benchmark_files', type=str, nargs='+')
 # Optional arguments
 parser.add_argument('--top_module', type=str, default="top")
 parser.add_argument('--fpga_flow', type=str, default="yosys_vpr")
-parser.add_argument('--cad_tool_conf', type=str,
+parser.add_argument('--flow_config', type=str,
                     help="CAD tools path overrides default setting")
 parser.add_argument('--run_dir', type=str,
                     default=os.path.join(openfpga_base_dir,  'tmp'),
@@ -269,8 +288,8 @@ def read_script_config():
     default_cad_tool_conf = os.path.join(flow_script_dir, os.pardir, 'misc',
                                          'fpgaflow_default_tool_path.conf')
     config.read_file(open(default_cad_tool_conf))
-    if args.cad_tool_conf:
-        config.read_file(open(args.cad_tool_conf))
+    if args.flow_config:
+        config.read_file(open(args.flow_config))
     if not "CAD_TOOLS_PATH" in config.sections():
         clean_up_and_exit("Missing CAD_TOOLS_PATH in openfpga_flow config")
     cad_tools = config["CAD_TOOLS_PATH"]
