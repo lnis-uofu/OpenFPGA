@@ -9,15 +9,28 @@
 
 /************************************************
  * Generate the module name for a multiplexer in Verilog format
+ * Different circuit model requires different names: 
+ * 1. LUTs are named as <model_name>_mux
+ * 2. MUXes are named as <model_name>_size<num_inputs>
  ***********************************************/
 std::string generate_verilog_mux_subckt_name(const CircuitLibrary& circuit_lib, 
                                              const CircuitModelId& circuit_model, 
                                              const size_t& mux_size, 
                                              const std::string& postfix) {
   std::string module_name = circuit_lib.model_name(circuit_model); 
-  module_name += "_size";
-  module_name += std::to_string(mux_size);
-  module_name += postfix;
+  /* Check the model type and give different names */
+  if (SPICE_MODEL_MUX == circuit_lib.model_type(circuit_model)) {
+    module_name += "_size";
+    module_name += std::to_string(mux_size);
+  } else {  
+    VTR_ASSERT(SPICE_MODEL_LUT == circuit_lib.model_type(circuit_model));
+    module_name += "_mux";
+  }
+
+  /* Add postfix if it is not empty */
+  if (!postfix.empty()) {
+    module_name += postfix;
+  }
 
   return module_name;
 }

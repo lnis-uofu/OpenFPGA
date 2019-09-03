@@ -692,6 +692,160 @@ void generate_verilog_mux_branch_module(ModuleManager& module_manager,
   }
 }
 
+/*********************************************************************
+ * Generate Verilog codes modeling a CMOS multiplexer with the given size 
+ * The Verilog module will consist of three parts:
+ * 1. instances of the branch circuits of multiplexers which are generated before  
+ *    This builds up the multiplexing structure
+ * 2. Input buffers/inverters
+ * 3. Output buffers/inverters
+ *********************************************************************/
+static 
+void generate_verilog_cmos_mux_module(ModuleManager& module_manager,
+                                      const CircuitLibrary& circuit_lib, 
+                                      std::fstream& fp,
+                                      const CircuitModelId& circuit_model, 
+                                      const std::string& module_name, 
+                                      const MuxGraph& mux_graph) {
+  /* Get the global ports required by MUX (and any submodules) */
+  std::vector<CircuitPortId> mux_global_ports = circuit_lib.model_global_ports_by_type(circuit_model, SPICE_MODEL_PORT_INPUT, true);
+  /* Get the input ports from the mux */
+  std::vector<CircuitPortId> mux_input_ports = circuit_lib.model_ports_by_type(circuit_model, SPICE_MODEL_PORT_INPUT, true);
+  /* Get the output ports from the mux */
+  std::vector<CircuitPortId> mux_output_ports = circuit_lib.model_ports_by_type(circuit_model, SPICE_MODEL_PORT_OUTPUT, true);
+  /* Get the sram ports from the mux */
+  std::vector<CircuitPortId> mux_sram_ports = circuit_lib.model_ports_by_type(circuit_model, SPICE_MODEL_PORT_SRAM, true);
+
+  /* Make sure we have a valid file handler*/
+  check_file_handler(fp);
+
+  /* Generate the Verilog netlist according to the mux_graph */
+  /* TODO: Find out the number of data-path inputs */ 
+  size_t num_inputs = mux_graph.num_inputs();
+  /* Find out the number of outputs */ 
+  size_t num_outputs = mux_graph.num_outputs();
+  /* Find out the number of memory bits */ 
+  size_t num_mems = mux_graph.num_memory_bits();
+
+  /* Check codes to ensure the port of Verilog netlists will match */
+  /* MUX graph must have only 1 output */
+  VTR_ASSERT(1 == mux_input_ports.size());
+  VTR_ASSERT(1 == mux_input_ports.size());
+  VTR_ASSERT(1 == num_outputs);
+  /* A quick check on the model ports */
+  if ((SPICE_MODEL_MUX == circuit_lib.model_type(circuit_model))
+    || ((SPICE_MODEL_LUT == circuit_lib.model_type(circuit_model))
+       && (false == circuit_lib.is_lut_fracturable(circuit_model))) ) {
+    VTR_ASSERT(1 == mux_output_ports.size());
+    VTR_ASSERT(1 == circuit_lib.port_size(mux_output_ports[0])); 
+  } else {
+    VTR_ASSERT_SAFE( (SPICE_MODEL_LUT == circuit_lib.model_type(circuit_model)) 
+                 && (true == circuit_lib.is_lut_fracturable(circuit_model)) );
+    for (const auto& port : mux_output_ports) {
+      VTR_ASSERT(0 < circuit_lib.port_size(port));
+    }
+  }
+
+  /* Create a Verilog Module based on the circuit model, and add to module manager */
+  ModuleId module_id = module_manager.add_module(module_name); 
+  VTR_ASSERT(ModuleId::INVALID() != module_id);
+  /* Add module ports */
+  /* Add each global port */
+  for (const auto& port : mux_global_ports) {
+    /* Configure each global port */
+    BasicPort global_port(circuit_lib.port_lib_name(port), circuit_lib.port_size(port));
+    module_manager.add_port(module_id, global_port, ModuleManager::MODULE_GLOBAL_PORT);
+  }
+  /* Add each input port
+   * Treat MUX and LUT differently 
+   * 1. MUXes: we do not have a specific input sizes, it is inferred by architecture 
+   * 2. LUTes: we do have a specific input sizes
+   */
+  for (const auto& port : mux_input_ports) {
+    BasicPort input_port(circuit_lib.port_lib_name(port), num_inputs);
+    if (SPICE_MODEL_LUT == circuit_lib.model_type(circuit_model)) {
+      input_port.set_width(circuit_lib.port_size(port));
+    }
+    module_manager.add_port(module_id, input_port, ModuleManager::MODULE_INPUT_PORT);
+  }
+  /* Add each output port 
+   * Treat MUX and LUT differently 
+   * 1. MUXes: we do not have a specific output sizes, it is inferred by architecture 
+   * 2. LUTes: we do have a specific input sizes
+   */
+  for (const auto& port : mux_output_ports) {
+    BasicPort output_port(circuit_lib.port_lib_name(port), num_outputs);
+    if (SPICE_MODEL_LUT == circuit_lib.model_type(circuit_model)) {
+      output_port.set_width(circuit_lib.port_size(port));
+    }
+    module_manager.add_port(module_id, output_port, ModuleManager::MODULE_OUTPUT_PORT);
+  }
+  /* Add each memory port */
+  size_t sram_port_cnt = 0;
+  for (const auto& port : mux_sram_ports) {
+    /* Multiplexing structure does not mode_sram_ports, they are handled in LUT modules
+     * Here we just bypass it.
+     */
+    if (true == circuit_lib.port_is_mode_select(port)) {
+      continue;
+    }
+    BasicPort mem_port(circuit_lib.port_lib_name(port), num_mems);
+    module_manager.add_port(module_id, mem_port, ModuleManager::MODULE_INPUT_PORT);
+    BasicPort mem_inv_port(std::string(circuit_lib.port_lib_name(port) + "_inv"), num_mems);
+    module_manager.add_port(module_id, mem_inv_port, ModuleManager::MODULE_INPUT_PORT);
+    /* Update counter */
+    sram_port_cnt++;
+  }
+  /* Double check: We should have only 1 sram port outputted here! */
+  VTR_ASSERT(1 == sram_port_cnt);
+
+  /* dump module definition + ports */
+  print_verilog_module_declaration(fp, module_manager, module_id);
+
+  /* TODO: Print the internal logic in Verilog codes */
+  /* TODO: Print the Multiplexing structure in Verilog codes */
+  /* TODO: Print the input buffers in Verilog codes */
+  /* TODO: Print the output buffers in Verilog codes */
+
+  /* Put an end to the Verilog module */
+  print_verilog_module_end(fp, module_name);
+}
+
+
+/***********************************************
+ * Generate Verilog codes modeling a multiplexer 
+ * with the given graph-level description
+ **********************************************/
+static 
+void generate_verilog_mux_module(ModuleManager& module_manager,
+                                 const CircuitLibrary& circuit_lib, 
+                                 std::fstream& fp, 
+                                 const CircuitModelId& circuit_model, 
+                                 const MuxGraph& mux_graph) {
+  std::string module_name = generate_verilog_mux_subckt_name(circuit_lib, circuit_model, mux_graph.num_inputs(), std::string(""));
+ 
+  /* Multiplexers built with different technology is in different organization */
+  switch (circuit_lib.design_tech_type(circuit_model)) {
+  case SPICE_MODEL_DESIGN_CMOS:
+    /* SRAM-based Multiplexer Verilog module generation */
+    generate_verilog_cmos_mux_module(module_manager, circuit_lib, fp, circuit_model, module_name, mux_graph);
+    break;
+  case SPICE_MODEL_DESIGN_RRAM:
+    /* TODO: RRAM-based Multiplexer Verilog module generation */
+    /*
+    generate_verilog_rram_mux_branch_module(module_manager, circuit_lib, fp, circuit_model, module_name, mux_graph, 
+                                            circuit_lib.dump_structural_verilog(circuit_model));
+     */
+    break;
+  default:
+    vpr_printf(TIO_MESSAGE_ERROR,
+               "(FILE:%s,LINE[%d]) Invalid design technology of multiplexer (name: %s)\n",
+               __FILE__, __LINE__, circuit_lib.model_name(circuit_model).c_str()); 
+    exit(1);
+  }
+}
+
+
 /***********************************************
  * Generate Verilog modules for all the unique
  * multiplexers in the FPGA device
@@ -733,10 +887,15 @@ void print_verilog_submodule_muxes(ModuleManager& module_manager,
       generate_verilog_mux_branch_module(module_manager, circuit_lib, fp, mux_circuit_model, 
                                          mux_graph.num_inputs(), branch_mux_graph);
     }
-    /* TODO: create MUX modules */
   }
 
-  /* Dump MUX graph one by one */
+  /* Generate unique Verilog modules for the multiplexers */
+  for (auto mux : mux_lib.muxes()) {
+    const MuxGraph& mux_graph = mux_lib.mux_graph(mux);
+    CircuitModelId mux_circuit_model = mux_lib.mux_circuit_model(mux); 
+    /* Create MUX circuits */
+    generate_verilog_mux_module(module_manager, circuit_lib, fp, mux_circuit_model, mux_graph);
+  }
 
   /* Close the file steam */
   fp.close();

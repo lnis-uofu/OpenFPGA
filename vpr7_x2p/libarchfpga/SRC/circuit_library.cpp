@@ -178,6 +178,15 @@ bool CircuitLibrary::is_lut_intermediate_buffered(const CircuitModelId& model_id
   return buffer_existence_[model_id][LUT_INTER_BUFFER]; 
 }
 
+/* Return a flag showing if a LUT circuit model uses fracturable structure */
+bool CircuitLibrary::is_lut_fracturable(const CircuitModelId& model_id) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  /* validate the circuit model type is LUT */
+  VTR_ASSERT(SPICE_MODEL_LUT == model_type(model_id));
+  return lut_is_fracturable_[model_id]; 
+}
+
 /* Find the id of pass-gate circuit model 
  * Two cases to be considered:
  * 1. this is a pass-gate circuit model, just find the data and return
