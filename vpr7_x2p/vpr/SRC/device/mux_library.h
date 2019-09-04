@@ -27,7 +27,7 @@ class MuxLibrary {
     const MuxGraph& mux_graph(const MuxId& mux_id) const;
     /* Get a mux circuit model id */
     CircuitModelId mux_circuit_model(const MuxId& mux_id) const;
-    /* Find the maximum mux size */
+    /* Find the mux sizes */
     size_t max_mux_size() const;
   public:  /* Public mutators */
     /* Add a mux to the library */

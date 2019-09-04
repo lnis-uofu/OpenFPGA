@@ -18,6 +18,32 @@ bool valid_mux_implementation_num_inputs(const size_t& mux_size) {
 }
 
 /**************************************************
+ * Find the actual number of datapath inputs for a multiplexer implementation
+ * 1. if there are no requirements on constant inputs, mux_size is the actual one
+ * 2. if there exist constant inputs, mux_size should minus 1
+ * This function is mainly used to recover the number of datapath inputs
+ * for MUXGraphs which is a generic representation without labelling datapath inputs
+ *************************************************/
+size_t find_mux_num_datapath_inputs(const CircuitLibrary& circuit_lib,
+                                    const CircuitModelId& circuit_model,
+                                    const size_t& mux_size) {
+  /* Should be either MUX or LUT
+   * LUTs do have an tree-like MUX, but there is no need for a constant input! 
+   */
+  VTR_ASSERT ((SPICE_MODEL_MUX == circuit_lib.model_type(circuit_model)) 
+           || (SPICE_MODEL_LUT == circuit_lib.model_type(circuit_model)) );
+
+  if (SPICE_MODEL_LUT == circuit_lib.model_type(circuit_model)) {
+    return mux_size;
+  }
+
+  if (true == circuit_lib.mux_add_const_input(circuit_model)) {
+    return mux_size - 1;
+  }
+  return mux_size;
+}
+
+/**************************************************
  * Find the actual number of inputs for a multiplexer implementation
  * 1. if there are no requirements on constant inputs, mux_size is the actual one
  * 2. if there exist constant inputs, mux_size should plus 1
@@ -31,7 +57,7 @@ size_t find_mux_implementation_num_inputs(const CircuitLibrary& circuit_lib,
   VTR_ASSERT ((SPICE_MODEL_MUX == circuit_lib.model_type(circuit_model)) 
            || (SPICE_MODEL_LUT == circuit_lib.model_type(circuit_model)) );
 
-  if (SPICE_MODEL_LUT ==  circuit_lib.model_type(circuit_model)) {
+  if (SPICE_MODEL_LUT == circuit_lib.model_type(circuit_model)) {
     return mux_size;
   }
 

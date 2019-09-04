@@ -12,10 +12,13 @@
 
 bool valid_mux_implementation_num_inputs(const size_t& mux_size);
 
+size_t find_mux_num_datapath_inputs(const CircuitLibrary& circuit_lib,
+                                    const CircuitModelId& circuit_model,
+                                    const size_t& mux_size);
+
 size_t find_mux_implementation_num_inputs(const CircuitLibrary& circuit_lib,
                                           const CircuitModelId& circuit_model,
                                           const size_t& mux_size);
-
 
 enum e_spice_model_structure find_mux_implementation_structure(const CircuitLibrary& circuit_lib,
 					                                           const CircuitModelId& circuit_model,
