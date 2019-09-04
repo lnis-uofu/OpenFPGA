@@ -732,7 +732,6 @@ void generate_verilog_cmos_mux_module(ModuleManager& module_manager,
   /* MUX graph must have only 1 output */
   VTR_ASSERT(1 == mux_input_ports.size());
   VTR_ASSERT(1 == mux_input_ports.size());
-  VTR_ASSERT(1 == num_outputs);
   /* A quick check on the model ports */
   if ((SPICE_MODEL_MUX == circuit_lib.model_type(circuit_model))
     || ((SPICE_MODEL_LUT == circuit_lib.model_type(circuit_model))
@@ -809,7 +808,6 @@ void generate_verilog_cmos_mux_module(ModuleManager& module_manager,
   /* Put an end to the Verilog module */
   print_verilog_module_end(fp, module_name);
 }
-
 
 /***********************************************
  * Generate Verilog codes modeling a multiplexer 

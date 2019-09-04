@@ -203,6 +203,7 @@ MuxGraph MuxGraph::subgraph(const MuxNodeId& root_node) const {
   /* Add output nodes to subgraph */
   MuxNodeId to_node_subgraph = mux_graph.add_node(MUX_OUTPUT_NODE);
   mux_graph.node_levels_[to_node_subgraph] = 1;
+  mux_graph.node_ids_at_level_[to_node_subgraph] = 0; 
   mux_graph.node_output_ids_[to_node_subgraph] = MuxOutputId(0);
   /* Update the node-to-node map */
   node2node_map[root_node] = to_node_subgraph;
@@ -216,6 +217,7 @@ MuxGraph MuxGraph::subgraph(const MuxNodeId& root_node) const {
     MuxNodeId from_node_subgraph = mux_graph.add_node(MUX_INPUT_NODE);
     /* Configure the nodes */
     mux_graph.node_levels_[from_node_subgraph] = 0;
+    mux_graph.node_ids_at_level_[from_node_subgraph] = input_cnt; 
     mux_graph.node_input_ids_[from_node_subgraph] = MuxInputId(input_cnt);
     input_cnt++;
     /* Update the node-to-node map */
@@ -385,6 +387,7 @@ MuxNodeId MuxGraph::add_node(const enum e_mux_graph_node_type& node_type) {
   node_input_ids_.push_back(MuxInputId::INVALID());
   node_output_ids_.push_back(MuxOutputId::INVALID());
   node_levels_.push_back(-1);
+  node_ids_at_level_.push_back(-1);
   node_in_edges_.emplace_back();
   node_out_edges_.emplace_back();
 
@@ -523,6 +526,7 @@ void MuxGraph::build_multilevel_mux_graph(const size_t& mux_size,
      * Last level should expand from output_node 
      * Other levels will expand from internal nodes!
      */
+    size_t node_cnt_per_level = 0; /* A counter to record node indices at each level */
     for (MuxNodeId seed_node : node_lookup[lvl + 1]) {
       /* Add a new node and connect to seed_node, until we reach the num_inputs_per_branch */
       for (size_t i = 0; i < num_inputs_per_branch; ++i) {
@@ -533,6 +537,9 @@ void MuxGraph::build_multilevel_mux_graph(const size_t& mux_size,
 
         /* Node level is deterministic */
         node_levels_[expand_node] = lvl; 
+        node_ids_at_level_[expand_node] = node_cnt_per_level; 
+        /* update level node counter */
+        node_cnt_per_level++;
        
         /* Create an edge and connect the two nodes */
         MuxEdgeId edge = add_edge(expand_node, seed_node); 
@@ -624,6 +631,7 @@ void MuxGraph::build_onelevel_mux_graph(const size_t& mux_size,
    */
   MuxNodeId output_node = add_node(MUX_OUTPUT_NODE);
   node_levels_[output_node] = 1; 
+  node_ids_at_level_[output_node] = 0; 
   node_output_ids_[output_node] = MuxOutputId(0); 
 
   for (size_t i = 0; i < mux_size; ++i) {
@@ -631,6 +639,7 @@ void MuxGraph::build_onelevel_mux_graph(const size_t& mux_size,
     /* All the node belong to level 0 (we have only 1 level) */
     node_input_ids_[input_node] = MuxInputId(i);
     node_levels_[input_node] = 0; 
+    node_ids_at_level_[input_node] = i; 
 
     /* We definitely know how many edges we need, 
      * the same as mux_size, add a edge connecting two nodes
@@ -646,6 +655,64 @@ void MuxGraph::build_onelevel_mux_graph(const size_t& mux_size,
   }
   /* Finish building the graph for a one-level multiplexer */
 } 
+
+/* Convert some internal nodes to be additional outputs
+ * according to the fracturable LUT port definition
+ * We will iterate over each output port of a circuit model 
+ * and find the frac_level and output_mask 
+ * Then, the internal nodes at the frac_level will be converted
+ * to output nodes with a given output_mask
+ */
+void MuxGraph::add_fracturable_outputs(const CircuitLibrary& circuit_lib, 
+                                       const CircuitModelId& circuit_model) {
+  /* Iterate over output ports */
+  for (const auto& port : circuit_lib.model_ports_by_type(circuit_model, SPICE_MODEL_PORT_OUTPUT, true)) {
+    /* Get the fracturable_level */
+    size_t frac_level = circuit_lib.port_lut_frac_level(port);
+    /* Bypass invalid frac_level */
+    if (size_t(-1) == frac_level) {
+      continue;
+    }
+    /* Iterate over output masks */
+    for (const auto& output_idx : circuit_lib.port_lut_output_masks(port)) {
+      size_t num_matched_nodes = 0;
+      /* Iterate over node and find the internal nodes, which match the frac_level and output_idx */
+      for (const auto& node : node_lookup_[frac_level][MUX_INTERNAL_NODE]) {
+        if (node_ids_at_level_[node] != output_idx) {
+          /* Bypass condition */
+          continue;
+        }
+        /* Reach here, this is the node we want
+         * Convert it to output nodes and update the counter   
+         */
+        node_types_[node] = MUX_OUTPUT_NODE;
+        node_output_ids_[node] = MuxOutputId(num_outputs());  
+        num_matched_nodes++;
+      } 
+      /* Either find 1 or 0 matched nodes */
+      if (0 != num_matched_nodes) {
+        /* We should find only one node that matches! */
+        VTR_ASSERT(1 == num_matched_nodes);
+        /* Rebuild the node look-up */
+        build_node_lookup();
+        continue; /* Finish here, go to next */
+      }
+      /* Sometime the wanted node is already an output, do a double check */
+      for (const auto& node : node_lookup_[frac_level][MUX_OUTPUT_NODE]) {
+        if (node_ids_at_level_[node] != output_idx) {
+          /* Bypass condition */
+          continue;
+        }
+        /* Reach here, this is the node we want 
+         * Just update the counter   
+         */
+        num_matched_nodes++;
+      }
+      /* We should find only one node that matches! */
+      VTR_ASSERT(1 == num_matched_nodes);
+    } 
+  }
+}
 
 /* Build the graph for a given multiplexer model */
 void MuxGraph::build_mux_graph(const CircuitLibrary& circuit_lib, 
@@ -699,6 +766,12 @@ void MuxGraph::build_mux_graph(const CircuitLibrary& circuit_lib,
 
   /* Since the graph is finalized, it is time to build the fast look-up */
   build_node_lookup();
+
+  /* For fracturable LUTs, we need to add more outputs to the MUX graph */
+  if ( (SPICE_MODEL_LUT == circuit_lib.model_type(circuit_model))
+    && (true == circuit_lib.is_lut_fracturable(circuit_model)) ) {
+    add_fracturable_outputs(circuit_lib, circuit_model);
+  }
 }
 
 /* Build fast node lookup */

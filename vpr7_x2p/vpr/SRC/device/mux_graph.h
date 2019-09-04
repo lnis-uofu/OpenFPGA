@@ -110,6 +110,9 @@ class MuxGraph {
     void build_mux_graph(const CircuitLibrary& circuit_lib, 
                          const CircuitModelId& circuit_model,
                          const size_t& mux_size); 
+    /* Convert some internal node to outputs according to fracturable LUT circuit design specifications */
+    void add_fracturable_outputs(const CircuitLibrary& circuit_lib, 
+                                 const CircuitModelId& circuit_model);
     /* Build fast node lookup */
     void build_node_lookup();
   private: /* Private validators */
@@ -130,6 +133,7 @@ class MuxGraph {
     vtr::vector<MuxNodeId, MuxInputId> node_input_ids_;                 /* Unique ids for each node as an input of the MUX */
     vtr::vector<MuxNodeId, MuxOutputId> node_output_ids_;                 /* Unique ids for each node as an input of the MUX */
     vtr::vector<MuxNodeId, size_t> node_levels_;                       /* at which level, each node belongs to */
+    vtr::vector<MuxNodeId, size_t> node_ids_at_level_;                       /* the index at the level that each node belongs to */
     vtr::vector<MuxNodeId, std::vector<MuxEdgeId>> node_in_edges_;       /* ids of incoming edges to each node */
     vtr::vector<MuxNodeId, std::vector<MuxEdgeId>> node_out_edges_;      /* ids of outgoing edges from each node */
 

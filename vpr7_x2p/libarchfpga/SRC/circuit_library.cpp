@@ -662,6 +662,20 @@ bool CircuitLibrary::port_is_prog(const CircuitPortId& circuit_port_id) const {
   return port_is_prog_[circuit_port_id];
 }
 
+/* Return which level the output port locates at a LUT multiplexing structure */
+size_t CircuitLibrary::port_lut_frac_level(const CircuitPortId& circuit_port_id) const {
+  /* validate the circuit_port_id */
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
+  return port_lut_frac_level_[circuit_port_id];
+}
+
+/* Return indices of internal nodes in a LUT multiplexing structure to which the output port is wired to */
+std::vector<size_t> CircuitLibrary::port_lut_output_masks(const CircuitPortId& circuit_port_id) const {
+  /* validate the circuit_port_id */
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
+  return port_lut_output_masks_[circuit_port_id];
+}
+
 /* Return the id of parent circuit model for a circuit port */
 CircuitModelId CircuitLibrary::port_parent_model(const CircuitPortId& circuit_port_id) const {
   /* validate the circuit_port_id */
