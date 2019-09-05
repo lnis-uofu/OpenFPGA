@@ -452,6 +452,7 @@ def run_yosys_with_abc():
             if process.returncode:
                 logger.info("Yosys failed with returncode %d",
                             process.returncode)
+                raise subprocess.CalledProcessError(0, command)
     except:
         logger.exception("Failed to run yosys")
         clean_up_and_exit("")
@@ -522,6 +523,7 @@ def run_ace2():
             if process.returncode:
                 logger.info("ACE2 failed with returncode %d",
                             process.returncode)
+                raise subprocess.CalledProcessError(0, command)
     except:
         logger.exception("Failed to run ACE2")
         clean_up_and_exit("")
@@ -771,6 +773,7 @@ def run_standard_vpr(bench_blif, fixed_chan_width, logfile, route_only=False):
             if process.returncode:
                 logger.info("Standard VPR run failed with returncode %d",
                             process.returncode)
+                raise subprocess.CalledProcessError(0, command)
     except (Exception, subprocess.CalledProcessError) as e:
         logger.exception("Failed to run VPR")
         filter_failed_process_output(e.output)

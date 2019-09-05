@@ -19,7 +19,7 @@ import shlex
 
 import sphinx_rtd_theme
 
-# Uncomment for local build 
+# Uncomment for local build
 #html_theme = "sphinx_rtd_theme"
 #html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
@@ -55,7 +55,8 @@ extensions = [
     'sphinx.ext.todo',
     'sphinx.ext.mathjax',
     'sphinx.ext.graphviz',
-    'sphinxcontrib.bibtex'
+    'sphinxcontrib.bibtex',
+    'sphinx.ext.autosectionlabel',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -89,7 +90,7 @@ pygments_style = 'sphinx'
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
 
-#Number figures for referencing
+# Number figures for referencing
 numfig = True
 
 
