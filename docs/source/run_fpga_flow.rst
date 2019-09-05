@@ -114,7 +114,7 @@ General Arguments
 
 .. option:: --debug
 
-    To enable detail logs printing.
+    To enable detailed log printing.
 
 .. option:: --flow_config
 

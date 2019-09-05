@@ -55,7 +55,7 @@ parser.add_argument('--debug', action="store_true",
                     help="Run script in debug mode")
 parser.add_argument('--exit_on_fail', action="store_true",
                     help="Exit script with return code")
-parser.add_argument('--skip_tread_logs', action="store_true",
+parser.add_argument('--skip_thread_logs', action="store_true",
                     help="Skips logs from running thread")
 args = parser.parse_args()
 
@@ -364,7 +364,7 @@ def run_single_script(s, eachJob):
                                            stderr=subprocess.STDOUT,
                                            universal_newlines=True)
                 for line in process.stdout:
-                    if not args.skip_tread_logs:
+                    if not args.skip_thread_logs:
                         strip_child_logger_info(line[:-1])
                     sys.stdout.buffer.flush()
                     output.write(line)
