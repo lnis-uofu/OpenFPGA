@@ -37,6 +37,11 @@ class ModuleManager {
     std::string module_name(const ModuleId& module_id) const;
     std::string module_port_type_str(const enum e_module_port_type& port_type) const;
     std::vector<BasicPort> module_ports_by_type(const ModuleId& module_id, const enum e_module_port_type& port_type) const;
+    /* Find a port of a module by a given name */
+    ModulePortId find_module_port(const ModuleId& module_id, const std::string& port_name) const;
+    /* Find the Port information with a given port id */
+    BasicPort module_port(const ModuleId& module_id, const ModulePortId& port_id) const;
+    /* Find a module by a given name */
     ModuleId find_module(const std::string& name) const;
     /* Find the number of instances of a child module in the parent module */
     size_t num_instance(const ModuleId& parent_module, const ModuleId& child_module) const;

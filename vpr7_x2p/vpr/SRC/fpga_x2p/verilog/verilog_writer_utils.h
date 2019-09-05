@@ -40,4 +40,8 @@ void print_verilog_module_end(std::fstream& fp,
 std::string generate_verilog_port(const enum e_dump_verilog_port_type& dump_port_type,
                                   const BasicPort& port_info);
 
+std::vector<BasicPort> combine_verilog_ports(const std::vector<BasicPort>& ports); 
+
+std::string generate_verilog_ports(const std::vector<BasicPort>& merged_ports); 
+
 #endif

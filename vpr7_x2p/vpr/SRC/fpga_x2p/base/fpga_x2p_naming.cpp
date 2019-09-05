@@ -8,6 +8,27 @@
 #include "fpga_x2p_naming.h"
 
 /************************************************
+ * Generate the node name for a multiplexing structure 
+ * Case 1 : If there is an intermediate buffer followed by,
+ *          the node name will be mux_l<node_level>_in_buf
+ * Case 1 : If there is NO intermediate buffer followed by,
+ *          the node name will be mux_l<node_level>_in
+ ***********************************************/
+std::string generate_verilog_mux_node_name(const size_t& node_level, 
+                                           const bool& add_buffer_postfix) {
+  /* Generate the basic node_name */
+  std::string node_name = "mux_l" + std::to_string(node_level) + "_in";
+
+  /* Add a postfix upon requests */
+  if (true == add_buffer_postfix)  {
+    /* '1' indicates that the location is needed */
+    node_name += "_buf";
+  }
+
+  return node_name;
+}
+
+/************************************************
  * Generate the module name for a multiplexer in Verilog format
  * Different circuit model requires different names: 
  * 1. LUTs are named as <model_name>_mux

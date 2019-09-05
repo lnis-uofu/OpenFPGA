@@ -50,6 +50,29 @@ std::vector<BasicPort> ModuleManager::module_ports_by_type(const ModuleId& modul
   return ports;
 }
 
+/* Find a port of a module by a given name */
+ModulePortId ModuleManager::find_module_port(const ModuleId& module_id, const std::string& port_name) const {
+  /* Validate the module id */
+  VTR_ASSERT(valid_module_id(module_id));
+
+  /* Iterate over the ports of the module */
+  for (const auto& port : port_ids_[module_id]) {
+    if (0 == port_name.compare(ports_[module_id][port].get_name())) {
+      /* Find it, return the id */
+      return port; 
+    }
+  }
+  /* Not found, return an invalid id */
+  return ModulePortId::INVALID();
+}
+
+/* Find the Port information with a given port id */
+BasicPort ModuleManager::module_port(const ModuleId& module_id, const ModulePortId& port_id) const {
+  /* Validate the module and port id */
+  VTR_ASSERT(valid_module_port_id(module_id, port_id));
+  return ports_[module_id][port_id]; 
+}
+
 /* Find the module id by a given name, return invalid if not found */
 ModuleId ModuleManager::find_module(const std::string& name) const {
   if (name_id_map_.find(name) != name_id_map_.end()) {

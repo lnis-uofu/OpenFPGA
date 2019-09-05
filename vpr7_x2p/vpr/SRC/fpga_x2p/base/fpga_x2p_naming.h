@@ -11,6 +11,9 @@
 
 #include "circuit_library.h"
 
+std::string generate_verilog_mux_node_name(const size_t& node_level, 
+                                           const bool& add_buffer_postfix);
+
 std::string generate_verilog_mux_subckt_name(const CircuitLibrary& circuit_lib, 
                                              const CircuitModelId& circuit_model, 
                                              const size_t& mux_size, 

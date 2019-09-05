@@ -128,6 +128,25 @@ void print_verilog_module_declaration(std::fstream& fp,
 
 /************************************************
  * Print an instance for a Verilog module
+ * This function will output the port map
+ * by referring to a port-to-port mapping:
+ *   <module_port_name> -> <instance_port_name>
+ * The key of the port-to-port mapping is the 
+ * port name of the module: 
+ * The value of the port-to-port mapping is the
+ * port information of the instance
+ * With link between module and instance, the function
+ * can output a Verilog instance easily, supporting
+ * both explicit port mapping:
+ *   .<module_port_name>(<instance_port_name>)
+ * and inexplicit port mapping
+ *   <instance_port_name>
+ *
+ * Note that, it is not necessary that 
+ * the port-to-port mapping covers all the module ports.
+ * Any instance/module port which are not specified in the 
+ * port-to-port mapping will be output by the module 
+ * port name.
  ***********************************************/
 void print_verilog_module_instance(std::fstream& fp, 
                                    const ModuleManager& module_manager, 
@@ -168,6 +187,11 @@ void print_verilog_module_instance(std::fstream& fp,
       /* Try to find the instanced port name in the name map */
       if (port2port_name_map.find(port.get_name()) != port2port_name_map.end()) {
         /* Found it, we assign the port name */ 
+        /* TODO: make sure the port width matches! */
+        ModulePortId module_port_id = module_manager.find_module_port(child_module_id, port.get_name());
+        /* Get the port from module */
+        BasicPort module_port = module_manager.module_port(child_module_id, module_port_id);
+        VTR_ASSERT(module_port.get_width() == port2port_name_map.at(port.get_name()).get_width());
         fp << generate_verilog_port(kv.second, port2port_name_map.at(port.get_name()));
       } else {
         /* Not found, we give the default port name */
@@ -197,7 +221,9 @@ void print_verilog_module_end(std::fstream& fp,
   fp << std::endl;
 }
 
-/* Generate a string of a Verilog port */
+/************************************************
+ * Generate a string of a Verilog port  
+ ***********************************************/
 std::string generate_verilog_port(const enum e_dump_verilog_port_type& verilog_port_type,
                                   const BasicPort& port_info) {  
   std::string verilog_line;
@@ -224,4 +250,86 @@ std::string generate_verilog_port(const enum e_dump_verilog_port_type& verilog_p
   return verilog_line;
 }
 
+/************************************************
+ * This function takes a list of ports and
+ * combine the port string by comparing the name 
+ * and width of ports.
+ * For example, two ports A and B share the same name is 
+ * mergable as long as A's MSB + 1 == B's LSB
+ * Note that the port sequence really matters!
+ * This function will NOT change the sequence
+ * of ports in the list port_info
+ ***********************************************/
+std::vector<BasicPort> combine_verilog_ports(const std::vector<BasicPort>& ports) { 
+  std::vector<BasicPort> merged_ports;
 
+  /* Directly return if there are no ports */
+  if (0 == ports.size()) {
+    return merged_ports;
+  }
+  /* Push the first port to the merged ports */
+  merged_ports.push_back(ports[0]);
+
+  /* Iterate over ports */
+  for (const auto& port : ports) {
+    /* Bypass the first port, it is already in the list */
+    if (&port == &ports[0]) {
+      continue;
+    } 
+    /* Identify if the port name can be potentially merged: if the port name is already in the merged port list, it may be merged */
+    for (auto& merged_port : merged_ports) {
+      if (0 != port.get_name().compare(merged_port.get_name())) {
+        /* Unable to merge, add the port to merged port list */
+        merged_ports.push_back(port);
+        /* Go to next */
+        break;
+      }
+      /* May be merged, check LSB of port and MSB of merged_port */
+      if (merged_port.get_msb() + 1 != port.get_lsb()) {
+        /* Unable to merge, add the port to merged port list */
+        merged_ports.push_back(port);
+        /* Go to next */
+        break;
+      } 
+      /* Reach here, we should merge the ports,
+       * LSB of merged_port remains the same,
+       * MSB of merged_port will be updated 
+       * to the MSB of port 
+       */
+      merged_port.set_msb(port.get_msb());
+      break;
+    }
+  }
+
+  return merged_ports;
+}
+
+/************************************************
+ * Generate the string of a list of verilog ports 
+ ***********************************************/
+std::string generate_verilog_ports(const std::vector<BasicPort>& merged_ports) {  
+
+  /* Output the string of ports:
+   * If there is only one port in the merged_port list
+   * we only output the port.
+   * If there are more than one port in the merged port list, we output an concatenated port:
+   *  {<port1>, <port2>, ... <last_port>}  
+   */
+  VTR_ASSERT(0 < merged_ports.size());
+  if ( 1 == merged_ports.size()) {
+    /* Use connection type of verilog port */
+    return generate_verilog_port(VERILOG_PORT_CONKT, merged_ports[0]);  
+  }
+
+  std::string verilog_line = "{";
+  for (const auto& port : merged_ports) {
+    /* The first port does not need a comma */
+    if (&port != &merged_ports[0]) {
+      verilog_line += ", ";
+    }
+    verilog_line += generate_verilog_port(VERILOG_PORT_CONKT, merged_ports[0]);  
+  }
+  verilog_line += "}";
+
+  return verilog_line;
+}

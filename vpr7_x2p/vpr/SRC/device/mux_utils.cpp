@@ -151,6 +151,34 @@ size_t find_multilevel_mux_branch_num_inputs(const size_t& mux_size,
 }
 
 /**************************************************
+ * Find if there is an intermediate buffer 
+ * locating at the multiplexing structure of a LUT
+ *************************************************/
+bool require_intermediate_buffer_at_mux_level(const CircuitLibrary& circuit_lib, 
+                                              const CircuitModelId& circuit_model,
+                                              const size_t& node_level) {
+  std::string intermediate_buffer_location_map; 
+
+  /* ONLY for LUTs: intermediate buffers may exist if specified */
+  if (SPICE_MODEL_LUT == circuit_lib.model_type(circuit_model)) {
+    intermediate_buffer_location_map = circuit_lib.lut_intermediate_buffer_location_map(circuit_model);
+  }
+  /* If no location map is specified, we can return here */
+  if (intermediate_buffer_location_map.empty()) {
+    return false;
+  }
+  /* We have a location map. Make sure we are in the range */
+  if (node_level >= intermediate_buffer_location_map.length()) {
+    return false;
+  }
+  /* '1' indicates that the location is needed */
+  if ('1' == intermediate_buffer_location_map[node_level]) {
+    return true;
+  }
+  return false;
+}
+
+/**************************************************
  * Convert a linked list of MUX architecture to MuxLibrary
  * TODO: this function will be deleted when MUXLibrary fully
  * replace legacy data structures

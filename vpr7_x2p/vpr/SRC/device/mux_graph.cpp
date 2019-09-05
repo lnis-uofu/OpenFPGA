@@ -43,6 +43,20 @@ MuxGraph::node_range MuxGraph::nodes() const {
   return vtr::make_range(node_ids_.begin(), node_ids_.end());
 }
 
+/* Find the non-input nodes */
+std::vector<MuxNodeId> MuxGraph::non_input_nodes() const {
+  std::vector<MuxNodeId> node_list;
+  for (const auto& node : nodes()) {
+    /* Bypass any nodes which are not OUTPUT and INTERNAL */
+    if (MUX_INPUT_NODE == node_types_[node]) { 
+      continue;
+    }
+    /* Reach here, this is either an OUTPUT or INTERNAL node */ 
+    node_list.push_back(node);
+  }
+  return node_list;
+}
+
 MuxGraph::edge_range MuxGraph::edges() const {
   return vtr::make_range(edge_ids_.begin(), edge_ids_.end());
 }
@@ -135,6 +149,47 @@ size_t MuxGraph::num_memory_bits() const {
   /* need to check if the graph is valid or not */
   VTR_ASSERT_SAFE(valid_mux_graph());
   return mem_ids_.size(); 
+}
+
+/* Find the number of nodes at a given level in the MUX graph */
+size_t MuxGraph::num_nodes_at_level(const size_t& level) const {
+  /* validate the level numbers */
+  VTR_ASSERT_SAFE(valid_level(level));
+  VTR_ASSERT_SAFE(valid_mux_graph());
+  
+  size_t num_nodes = 0;
+  for (size_t node_type = 0; node_type < size_t(NUM_MUX_NODE_TYPES); ++node_type) {
+    num_nodes += node_lookup_[level][node_type].size(); 
+  }
+  return num_nodes; 
+}
+
+/* Find the level of a node */
+size_t MuxGraph::node_level(const MuxNodeId& node) const {
+  /* validate the node */
+  VTR_ASSERT(valid_node_id(node));
+  return node_levels_[node]; 
+}
+
+/* Find the index of a node at its level */
+size_t MuxGraph::node_index_at_level(const MuxNodeId& node) const {
+  /* validate the node */
+  VTR_ASSERT(valid_node_id(node));
+  return node_ids_at_level_[node]; 
+}
+
+/* Find the  input edges for a node */
+std::vector<MuxEdgeId> MuxGraph::node_in_edges(const MuxNodeId& node) const {
+  /* validate the node */
+  VTR_ASSERT(valid_node_id(node));
+  return node_in_edges_[node];
+}
+
+/* Find the input nodes for a edge */
+std::vector<MuxNodeId> MuxGraph::edge_src_nodes(const MuxEdgeId& edge) const {
+  /* validate the edge */
+  VTR_ASSERT(valid_edge_id(edge));
+  return edge_src_nodes_[edge];
 }
 
 /* Find the mem that control the edge */
@@ -844,6 +899,10 @@ bool MuxGraph::valid_output_id(const MuxOutputId& output_id) const {
   } 
 
   return true;
+}
+
+bool MuxGraph::valid_level(const size_t& level) const {
+  return level < num_levels(); 
 }
 
 bool MuxGraph::valid_node_lookup() const {

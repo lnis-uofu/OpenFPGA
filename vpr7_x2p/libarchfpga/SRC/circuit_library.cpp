@@ -298,6 +298,22 @@ size_t CircuitLibrary::buffer_num_levels(const CircuitModelId& model_id) const {
   return buffer_num_levels_[model_id];
 }
 
+/* Return the location map of intermediate buffers
+ * that are inserted inside LUT multiplexing structures
+ */
+std::string CircuitLibrary::lut_intermediate_buffer_location_map(const CircuitModelId& model_id) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  /* validate the circuit model type is BUF */
+  VTR_ASSERT(SPICE_MODEL_LUT == model_type(model_id));
+  /* if we have an intermediate buffer, we return something, otherwise return an empty map */
+  if (true == is_lut_intermediate_buffered(model_id)) {
+    return buffer_location_maps_[model_id][LUT_INTER_BUFFER];
+  } else {
+    return std::string();
+  }
+}
+
 /* Return the number of levels of delay types for a circuit model */
 size_t CircuitLibrary::num_delay_info(const CircuitModelId& model_id) const {
   /* validate the model_id */

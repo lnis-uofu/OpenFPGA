@@ -58,6 +58,8 @@ class MuxGraph {
     MuxGraph();
   public: /* Public accessors: Aggregates */
     node_range nodes() const;
+    /* Find the non-input nodes */
+    std::vector<MuxNodeId> non_input_nodes() const;
     edge_range edges() const;
     mem_range memories() const;
   public: /* Public accessors: Data query */
@@ -73,6 +75,16 @@ class MuxGraph {
     size_t num_levels() const;
     /* Find the number of SRAMs in the MUX graph */
     size_t num_memory_bits() const;
+    /* Find the number of nodes at a given level in the MUX graph */
+    size_t num_nodes_at_level(const size_t& level) const;
+    /* Find the level of a node */
+    size_t node_level(const MuxNodeId& node) const;
+    /* Find the index of a node at its level */
+    size_t node_index_at_level(const MuxNodeId& node) const;
+    /* Find the input edges for a node */
+    std::vector<MuxEdgeId> node_in_edges(const MuxNodeId& node) const;
+    /* Find the input nodes for a edge */
+    std::vector<MuxNodeId> edge_src_nodes(const MuxEdgeId& edge) const;
     /* Find the mem that control the edge */
     MuxMemId find_edge_mem(const MuxEdgeId& edge) const;
     /* Identify if the edge is controlled by the inverted output of a mem */
@@ -122,6 +134,7 @@ class MuxGraph {
     bool valid_mem_id(const MuxMemId& mem) const;
     bool valid_input_id(const MuxInputId& input_id) const;
     bool valid_output_id(const MuxOutputId& output_id) const;
+    bool valid_level(const size_t& level) const;
     /* validate/invalidate node lookup */
     bool valid_node_lookup() const;
     void invalidate_node_lookup();
