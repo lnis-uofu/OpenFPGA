@@ -73,6 +73,7 @@ class MuxGraph {
     std::vector<MuxEdgeId> find_edges(const MuxNodeId& from_node, const MuxNodeId& to_node) const;
     /* Find the number of levels in the MUX graph */
     size_t num_levels() const;
+    size_t num_node_levels() const;
     /* Find the number of SRAMs in the MUX graph */
     size_t num_memory_bits() const;
     /* Find the number of nodes at a given level in the MUX graph */

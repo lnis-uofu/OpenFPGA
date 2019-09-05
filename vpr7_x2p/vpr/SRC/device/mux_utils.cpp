@@ -151,31 +151,52 @@ size_t find_multilevel_mux_branch_num_inputs(const size_t& mux_size,
 }
 
 /**************************************************
- * Find if there is an intermediate buffer 
- * locating at the multiplexing structure of a LUT
+ * Build a location map for intermediate buffers
+ * that may appear at the multiplexing structure of a LUT
+ * Here is a tricky thing: 
+ * By default, the first and last stage should not exist any intermediate buffers
+ * For example: 
+ * There are 5 stages in a 4-stage multiplexer is available for buffering
+ * but only 3 stages [1,2,3] are intermedate buffers 
+ * and these are users' specification
+ *  
+ *          +-------+          +-------+           +-------+           +-------+
+ * location | stage | location | stage |  location | stage |  location | stage | location 
+ *    [0]   |  [0]  |   [1]    |  [1]  |    [2]    |  [2]  |    [3]    |  [3]  |    [5]
+ *          +-------+          +-------+           +-------+           +-------+
+ *
+ * We will check if the length of location map matches the number of
+ * multiplexer levels. And then complete a location map
+ * for the given multiplexers
  *************************************************/
-bool require_intermediate_buffer_at_mux_level(const CircuitLibrary& circuit_lib, 
-                                              const CircuitModelId& circuit_model,
-                                              const size_t& node_level) {
-  std::string intermediate_buffer_location_map; 
+std::vector<bool> build_mux_intermediate_buffer_location_map(const CircuitLibrary& circuit_lib, 
+                                                             const CircuitModelId& circuit_model,
+                                                             const size_t& num_mux_levels) {
+  /* Deposite a default location map */
+  std::vector<bool> location_map(num_mux_levels, false); 
+  std::string location_map_str;
 
   /* ONLY for LUTs: intermediate buffers may exist if specified */
   if (SPICE_MODEL_LUT == circuit_lib.model_type(circuit_model)) {
-    intermediate_buffer_location_map = circuit_lib.lut_intermediate_buffer_location_map(circuit_model);
+    location_map_str = circuit_lib.lut_intermediate_buffer_location_map(circuit_model);
   }
   /* If no location map is specified, we can return here */
-  if (intermediate_buffer_location_map.empty()) {
-    return false;
+  if (location_map_str.empty()) {
+    return location_map;
   }
-  /* We have a location map. Make sure we are in the range */
-  if (node_level >= intermediate_buffer_location_map.length()) {
-    return false;
+
+  /* Check if the user-defined location map matches the number of mux levels*/
+  VTR_ASSERT(num_mux_levels - 2 == location_map_str.length());
+
+  /* Apply the location_map string to the intermediate stages of multiplexers */
+  for (size_t i = 0; i < location_map_str.length(); ++i) {
+    /* '1' indicates that an intermediate buffer is needed at the location */
+    if ('1' == location_map_str[i]) {
+      location_map[i + 1] = true;
+    }
   }
-  /* '1' indicates that the location is needed */
-  if ('1' == intermediate_buffer_location_map[node_level]) {
-    return true;
-  }
-  return false;
+  
+  return location_map;
 }
 
 /**************************************************

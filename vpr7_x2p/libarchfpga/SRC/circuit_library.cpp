@@ -175,7 +175,12 @@ bool CircuitLibrary::is_lut_intermediate_buffered(const CircuitModelId& model_id
   VTR_ASSERT(valid_model_id(model_id));
   /* validate the circuit model type is LUT */
   VTR_ASSERT(SPICE_MODEL_LUT == model_type(model_id));
-  return buffer_existence_[model_id][LUT_INTER_BUFFER]; 
+  /* LUT inter buffer may not always exist */
+  if (LUT_INTER_BUFFER < buffer_existence_[model_id].size()) {
+    return buffer_existence_[model_id][LUT_INTER_BUFFER]; 
+  } else {
+    return false;
+  }
 }
 
 /* Return a flag showing if a LUT circuit model uses fracturable structure */
@@ -185,6 +190,38 @@ bool CircuitLibrary::is_lut_fracturable(const CircuitModelId& model_id) const {
   /* validate the circuit model type is LUT */
   VTR_ASSERT(SPICE_MODEL_LUT == model_type(model_id));
   return lut_is_fracturable_[model_id]; 
+}
+
+/* Return the circuit model of intermediate buffers
+ * that are inserted inside LUT multiplexing structures
+ */
+CircuitModelId CircuitLibrary::lut_intermediate_buffer_model(const CircuitModelId& model_id) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  /* validate the circuit model type is BUF */
+  VTR_ASSERT(SPICE_MODEL_LUT == model_type(model_id));
+  /* if we have an intermediate buffer, we return something, otherwise return an empty map */
+  if (true == is_lut_intermediate_buffered(model_id)) {
+    return buffer_model_ids_[model_id][LUT_INTER_BUFFER];
+  } else {
+    return CircuitModelId::INVALID();
+  }
+}
+
+/* Return the location map of intermediate buffers
+ * that are inserted inside LUT multiplexing structures
+ */
+std::string CircuitLibrary::lut_intermediate_buffer_location_map(const CircuitModelId& model_id) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  /* validate the circuit model type is BUF */
+  VTR_ASSERT(SPICE_MODEL_LUT == model_type(model_id));
+  /* if we have an intermediate buffer, we return something, otherwise return an empty map */
+  if (true == is_lut_intermediate_buffered(model_id)) {
+    return buffer_location_maps_[model_id][LUT_INTER_BUFFER];
+  } else {
+    return std::string();
+  }
 }
 
 /* Find the id of pass-gate circuit model 
@@ -296,22 +333,6 @@ size_t CircuitLibrary::buffer_num_levels(const CircuitModelId& model_id) const {
   /* validate the circuit model type is BUF */
   VTR_ASSERT(SPICE_MODEL_INVBUF == model_type(model_id));
   return buffer_num_levels_[model_id];
-}
-
-/* Return the location map of intermediate buffers
- * that are inserted inside LUT multiplexing structures
- */
-std::string CircuitLibrary::lut_intermediate_buffer_location_map(const CircuitModelId& model_id) const {
-  /* validate the model_id */
-  VTR_ASSERT(valid_model_id(model_id));
-  /* validate the circuit model type is BUF */
-  VTR_ASSERT(SPICE_MODEL_LUT == model_type(model_id));
-  /* if we have an intermediate buffer, we return something, otherwise return an empty map */
-  if (true == is_lut_intermediate_buffered(model_id)) {
-    return buffer_location_maps_[model_id][LUT_INTER_BUFFER];
-  } else {
-    return std::string();
-  }
 }
 
 /* Return the number of levels of delay types for a circuit model */

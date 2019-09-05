@@ -6,6 +6,8 @@
 #ifndef MUX_UTILS_H
 #define MUX_UTILS_H
 
+#include <vector>
+
 #include "linkedlist.h"
 #include "circuit_library.h"
 #include "mux_library.h"
@@ -29,9 +31,9 @@ size_t find_treelike_mux_num_levels(const size_t& mux_size);
 size_t find_multilevel_mux_branch_num_inputs(const size_t& mux_size,
                                              const size_t& mux_level);
 
-bool require_intermediate_buffer_at_mux_level(const CircuitLibrary& circuit_lib, 
-                                              const CircuitModelId& circuit_model,
-                                              const size_t& node_level);
+std::vector<bool> build_mux_intermediate_buffer_location_map(const CircuitLibrary& circuit_lib, 
+                                                             const CircuitModelId& circuit_model,
+                                                             const size_t& num_mux_levels);
 
 MuxLibrary convert_mux_arch_to_library(const CircuitLibrary& circuit_lib, t_llist* muxes_head);
 

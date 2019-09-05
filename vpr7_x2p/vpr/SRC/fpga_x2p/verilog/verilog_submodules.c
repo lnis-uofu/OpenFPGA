@@ -3471,9 +3471,62 @@ void dump_verilog_submodule_templates(t_sram_orgz_info* cur_sram_orgz_info,
   return;
 }
 
-/* Dump verilog files of submodules to be used in FPGA components :
+/*********************************************************************
+ * Register all the user-defined modules in the module manager
+ * Walk through the circuit library and add user-defined circuit models
+ * to the module_manager
+ ********************************************************************/
+static 
+void add_user_defined_verilog_modules(ModuleManager& module_manager, 
+                                      const CircuitLibrary& circuit_lib) {
+  /* Module port depends on the model port attributes:
+   * Any model ports whose is_global_port() is true => MODULE_GLOBAL_PORT 
+   * Inout model port: SPICE_MODEL_PORT_INOUT => MODULE_INOUT_PORT
+   * Input model port: SPICE_MODEL_PORT_INPUT/SRAM/BL/WL/BLB/WLB => MODULE_INPUT_PORT
+   * Output model port: SPICE_MODEL_PORT_OUTPUT => MODULE_OUTPUT_PORT
+   * Clock model port: SPICE_MODEL_PORT_CLOCK => MODULE_CLOCK_PORT
+   */
+  std::map<e_spice_model_port_type, ModuleManager::e_module_port_type> port_type2type_map;
+  port_type2type_map[SPICE_MODEL_PORT_INOUT] = ModuleManager::MODULE_INOUT_PORT;
+  port_type2type_map[SPICE_MODEL_PORT_INPUT] = ModuleManager::MODULE_INPUT_PORT;
+  port_type2type_map[SPICE_MODEL_PORT_SRAM] = ModuleManager::MODULE_INPUT_PORT;
+  port_type2type_map[SPICE_MODEL_PORT_BL] = ModuleManager::MODULE_INPUT_PORT;
+  port_type2type_map[SPICE_MODEL_PORT_WL] = ModuleManager::MODULE_INPUT_PORT;
+  port_type2type_map[SPICE_MODEL_PORT_BLB] = ModuleManager::MODULE_INPUT_PORT;
+  port_type2type_map[SPICE_MODEL_PORT_WLB] = ModuleManager::MODULE_INPUT_PORT;
+  port_type2type_map[SPICE_MODEL_PORT_OUTPUT] = ModuleManager::MODULE_OUTPUT_PORT;
+  port_type2type_map[SPICE_MODEL_PORT_CLOCK] = ModuleManager::MODULE_CLOCK_PORT;
+
+  /* Iterate over verilog modules */
+  for (const auto& model : circuit_lib.models()) {
+    /* We only care about user-defined models */
+    if (true == circuit_lib.model_verilog_netlist(model).empty()) {
+      continue;
+    }
+    /* Reach here, the model requires a user-defined Verilog netlist, 
+     * Register it in the module_manager  
+     */
+    ModuleId module_id = module_manager.add_module(circuit_lib.model_name(model));
+    /* Iterate over the ports of circuit model, and add them to module_manager */
+    for (const auto& model_port : circuit_lib.model_ports(model)) {
+      /* Create port information */
+      BasicPort module_port(circuit_lib.port_lib_name(model_port), circuit_lib.port_size(model_port));
+
+      /* Deposite a module port type */
+      ModuleManager::e_module_port_type module_port_type = port_type2type_map[circuit_lib.port_type(model_port)];
+      /* Force a global port type */
+      if (true == circuit_lib.port_is_global(model_port)) {
+        module_port_type = ModuleManager::MODULE_GLOBAL_PORT;
+      }
+      module_manager.add_port(module_id, module_port, module_port_type);
+    }
+  }
+}
+
+/*********************************************************************
+ * Dump verilog files of submodules to be used in FPGA components :
  * 1. MUXes
- */
+ ********************************************************************/
 void dump_verilog_submodules(ModuleManager& module_manager, 
                              const MuxLibrary& mux_lib,
                              t_sram_orgz_info* cur_sram_orgz_info,
@@ -3482,6 +3535,13 @@ void dump_verilog_submodules(ModuleManager& module_manager,
                              t_arch Arch, 
                              t_det_routing_arch* routing_arch,
                              t_syn_verilog_opts fpga_verilog_opts) {
+
+  /* TODO: Register all the user-defined modules in the module manager
+   * This should be done prior to other steps in this function, 
+   * because they will be instanciated by other primitive modules 
+   */
+  vpr_printf(TIO_MESSAGE_INFO, "Registering user-defined modules...\n");
+  add_user_defined_verilog_modules(module_manager, Arch.spice->circuit_lib);
 
   vpr_printf(TIO_MESSAGE_INFO, "Generating essential modules...\n");
   print_verilog_submodule_essentials(module_manager, 

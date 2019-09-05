@@ -144,6 +144,13 @@ size_t MuxGraph::num_levels() const {
   return node_lookup_.size() - 1; 
 }
 
+/* Find the actual number of levels in the MUX graph */
+size_t MuxGraph::num_node_levels() const {
+  /* need to check if the graph is valid or not */
+  VTR_ASSERT_SAFE(valid_mux_graph());
+  return node_lookup_.size(); 
+}
+
 /* Find the number of configuration memories in the MUX graph */
 size_t MuxGraph::num_memory_bits() const {
   /* need to check if the graph is valid or not */
@@ -566,6 +573,7 @@ void MuxGraph::build_multilevel_mux_graph(const size_t& mux_size,
   /* Number of outputs is definite, add and configure */
   MuxNodeId output_node = add_node(MUX_OUTPUT_NODE);
   node_levels_[output_node] = num_levels; 
+  node_ids_at_level_[output_node] = 0; 
   node_output_ids_[output_node] = MuxOutputId(0); 
   /* Update node lookup */
   node_lookup[num_levels].push_back(output_node);

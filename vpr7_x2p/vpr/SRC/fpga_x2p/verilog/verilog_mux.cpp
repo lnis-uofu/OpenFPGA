@@ -695,20 +695,222 @@ void generate_verilog_mux_branch_module(ModuleManager& module_manager,
 }
 
 /********************************************************************
- * Generate the internal logic (multiplexing structure) for 
- * a multiplexer or LUT in Verilog codes 
+ * Generate the standard-cell-based internal logic (multiplexing structure) 
+ * for a multiplexer or LUT in Verilog codes 
  * This function will : 
- * 1. build a multiplexing structure by instanciating the branch circuits
- *    generated before or standard cells MUX2
+ * 1. build a multiplexing structure by instanciating standard cells MUX2
  * 2. add intermediate buffers between multiplexing stages if specified.
  *******************************************************************/
 static 
-void generate_verilog_cmos_mux_module_multiplexing_structure(ModuleManager& module_manager,
-                                                             const CircuitLibrary& circuit_lib, 
-                                                             std::fstream& fp, 
-                                                             const ModuleId& module_id, 
-                                                             const CircuitModelId& circuit_model, 
-                                                             const MuxGraph& mux_graph) {
+void generate_verilog_cmos_mux_module_mux2_multiplexing_structure(ModuleManager& module_manager,
+                                                                  const CircuitLibrary& circuit_lib, 
+                                                                  std::fstream& fp, 
+                                                                  const ModuleId& module_id, 
+                                                                  const CircuitModelId& circuit_model, 
+                                                                  const CircuitModelId& std_cell_model, 
+                                                                  const MuxGraph& mux_graph) {
+  /* Make sure we have a valid file handler*/
+  check_file_handler(fp);
+
+  /* TODO: these are duplicated codes, find a way to simplify it!!! 
+   * Get the regular (non-mode-select) sram ports from the mux 
+   */
+  std::vector<CircuitPortId> mux_regular_sram_ports;
+  for (const auto& port : circuit_lib.model_ports_by_type(circuit_model, SPICE_MODEL_PORT_SRAM, true)) {
+    /* Multiplexing structure does not mode_sram_ports, they are handled in LUT modules
+     * Here we just bypass it.
+     */
+    if (true == circuit_lib.port_is_mode_select(port)) {
+      continue;
+    }  
+    mux_regular_sram_ports.push_back(port);
+  }
+  VTR_ASSERT(1 == mux_regular_sram_ports.size());
+
+  /* Find the input ports and output ports of the standard cell */
+  std::vector<CircuitPortId> std_cell_input_ports = circuit_lib.model_ports_by_type(std_cell_model, SPICE_MODEL_PORT_INPUT, true);
+  std::vector<CircuitPortId> std_cell_output_ports = circuit_lib.model_ports_by_type(std_cell_model, SPICE_MODEL_PORT_OUTPUT, true);
+  /* Quick check the requirements on port map */
+  VTR_ASSERT(3 == std_cell_input_ports.size());
+  VTR_ASSERT(1 == std_cell_output_ports.size());
+
+  /* Build the location map of intermediate buffers */
+  std::vector<bool> inter_buffer_location_map = build_mux_intermediate_buffer_location_map(circuit_lib, circuit_model, mux_graph.num_node_levels());
+
+  print_verilog_comment(fp, std::string("---- BEGIN Internal Logic of a CMOS MUX module based on Standard Cells -----"));
+
+  print_verilog_comment(fp, std::string("---- BEGIN Internal wires of a CMOS MUX module -----"));
+  /* Print local wires which are the nodes in the mux graph */
+  for (size_t level = 0; level < mux_graph.num_levels(); ++level) {
+    /* Print the internal wires located at this level */
+    BasicPort internal_wire_port(generate_verilog_mux_node_name(level, false), mux_graph.num_nodes_at_level(level));
+    fp << "\t" << generate_verilog_port(VERILOG_PORT_WIRE, internal_wire_port) << ";" << std::endl;
+    /* Identify if an intermediate buffer is needed */
+    if (false == inter_buffer_location_map[level]) { 
+      continue;
+    }
+    BasicPort internal_wire_buffered_port(generate_verilog_mux_node_name(level, true), mux_graph.num_nodes_at_level(level));
+    fp << "\t" << generate_verilog_port(VERILOG_PORT_WIRE, internal_wire_buffered_port) << std::endl;
+  }
+  print_verilog_comment(fp, std::string("---- END Internal wires of a CMOS MUX module -----"));
+
+  /* Iterate over all the internal nodes and output nodes in the mux graph */
+  for (const auto& node : mux_graph.non_input_nodes()) {
+    print_verilog_comment(fp, std::string("---- BEGIN Instanciation of a branch CMOS MUX modules -----"));
+    /* Get the size of branch circuit 
+     * Instanciate an branch circuit by the size (fan-in) of the node 
+     */
+    size_t branch_size = mux_graph.node_in_edges(node).size();
+
+    /* Get the nodes which drive the root_node */
+    std::vector<MuxNodeId> input_nodes; 
+    for (const auto& edge : mux_graph.node_in_edges(node)) {
+      /* Get the nodes drive the edge */
+      for (const auto& src_node : mux_graph.edge_src_nodes(edge)) {
+        input_nodes.push_back(src_node);
+      }
+    }
+    /* Number of inputs should match the branch_input_size!!! */
+    VTR_ASSERT(input_nodes.size() == branch_size);
+
+    /* Get the node level and index in the current level */
+    size_t output_node_level = mux_graph.node_level(node);
+    size_t output_node_index_at_level = mux_graph.node_index_at_level(node);
+
+    /* Get the mems in the branch circuits */
+    std::vector<MuxMemId> mems; 
+    for (const auto& edge : mux_graph.node_in_edges(node)) {
+      /* Get the mem control the edge */
+      MuxMemId mem = mux_graph.find_edge_mem(edge);
+      /* Add the mem if it is not in the list */
+      if (mems.end() == std::find(mems.begin(), mems.end(), mem)) {
+        mems.push_back(mem);
+      }
+    }
+
+    /* Instanciate the branch module, which is a standard cell MUX2
+     * We follow a fixed port map: 
+     * TODO: the port map could be more flexible? 
+     * input_port[0] of MUX2 standard cell is wired to input_node[0]
+     * input_port[1] of MUX2 standard cell is wired to input_node[1]
+     * output_port[0] of MUX2 standard cell is wired to output_node[0]
+     * input_port[2] of MUX2 standard cell is wired to mem_node[0]
+     */
+    std::string branch_module_name= circuit_lib.model_name(std_cell_model);
+    /* Get the moduleId for the submodule */
+    ModuleId branch_module_id = module_manager.find_module(branch_module_name);
+    /* We must have one */
+    VTR_ASSERT(ModuleId::INVALID() != branch_module_id);
+
+    /* Create a port-to-port map */
+    std::map<std::string, BasicPort> port2port_name_map;
+
+    /* To match the standard cell MUX2: We should have only 2 input_nodes */
+    VTR_ASSERT(2 == input_nodes.size());
+    /* Build the link between input_node[0] and std_cell_input_port[0] 
+     * Build the link between input_node[1] and std_cell_input_port[1] 
+     */
+    for (const auto& input_node : input_nodes) {
+      /* Generate the port info of each input node */
+      size_t input_node_level = mux_graph.node_level(input_node);
+      size_t input_node_index_at_level = mux_graph.node_index_at_level(input_node);
+      BasicPort instance_input_port(generate_verilog_mux_node_name(input_node_level, inter_buffer_location_map[input_node_level]), input_node_index_at_level, input_node_index_at_level);
+
+      /* Link nodes to input ports for the branch module */
+      std::string module_input_port_name = circuit_lib.port_lib_name(std_cell_input_ports[&input_node - &input_nodes[0]]);
+      port2port_name_map[module_input_port_name] = instance_input_port; 
+    } 
+
+    /* Build the link between output_node[0] and std_cell_output_port[0] */
+    { /* Create a code block to accommodate the local variables */
+      BasicPort instance_output_port(generate_verilog_mux_node_name(output_node_level, false), output_node_index_at_level, output_node_index_at_level);
+      std::string module_output_port_name = circuit_lib.port_lib_name(std_cell_output_ports[0]);
+      port2port_name_map[module_output_port_name] = instance_output_port; 
+    }
+
+    /* To match the standard cell MUX2: We should have only 1 mem_node */
+    VTR_ASSERT(1 == mems.size());
+    /* Build the link between mem_node[0] and std_cell_intput_port[2] */
+    for (const auto& mem : mems) {
+      /* Generate the port info of each mem node */
+      BasicPort instance_mem_port(circuit_lib.port_lib_name(mux_regular_sram_ports[0]), size_t(mem), size_t(mem));
+      std::string module_mem_port_name = circuit_lib.port_lib_name(std_cell_input_ports[2]);
+      port2port_name_map[module_mem_port_name] = instance_mem_port; 
+    } 
+
+    /* Output an instance of the module */
+    print_verilog_module_instance(fp, module_manager, module_id, branch_module_id, port2port_name_map, circuit_lib.dump_explicit_port_map(std_cell_model));
+    /* IMPORTANT: this update MUST be called after the instance outputting!!!!
+     * update the module manager with the relationship between the parent and child modules 
+     */
+    module_manager.add_child_module(module_id, branch_module_id);
+
+    print_verilog_comment(fp, std::string("---- END Instanciation of a branch CMOS MUX modules -----"));
+
+    if (false == inter_buffer_location_map[output_node_level]) {
+      continue; /* No need for intermediate buffers */
+    }
+
+    print_verilog_comment(fp, std::string("---- BEGIN Instanciation of a intermediate buffer modules -----"));
+
+    /* Now we need to add intermediate buffers by instanciating the modules */
+    CircuitModelId buffer_model = circuit_lib.lut_intermediate_buffer_model(circuit_model);
+    /* We must have a valid model id */
+    VTR_ASSERT(CircuitModelId::INVALID() != buffer_model);
+    /* To match the context, Buffer should have only 2 non-global ports: 1 input port and 1 output port */
+    std::vector<CircuitPortId> buffer_model_input_ports = circuit_lib.model_ports_by_type(buffer_model, SPICE_MODEL_PORT_INPUT, true);
+    std::vector<CircuitPortId> buffer_model_output_ports = circuit_lib.model_ports_by_type(buffer_model, SPICE_MODEL_PORT_OUTPUT, true);
+    VTR_ASSERT(1 == buffer_model_input_ports.size());
+    VTR_ASSERT(1 == buffer_model_output_ports.size());
+
+    /* Get the moduleId for the buffer module */
+    ModuleId buffer_module_id = module_manager.find_module(circuit_lib.model_name(buffer_model));
+    /* We must have one */
+    VTR_ASSERT(ModuleId::INVALID() != buffer_module_id);
+
+    /* Create a port-to-port map */
+    std::map<std::string, BasicPort> buffer_port2port_name_map;
+
+    /* Build the link between buffer_input_port[0] and output_node_pre_buffer 
+     * Build the link between buffer_output_port[0] and output_node_bufferred
+     */
+    { /* Create a code block to accommodate the local variables */
+      BasicPort buffer_instance_input_port(generate_verilog_mux_node_name(output_node_level, false), output_node_index_at_level, output_node_index_at_level);
+      std::string module_input_port_name = circuit_lib.port_lib_name(buffer_model_input_ports[0]);
+      buffer_port2port_name_map[module_input_port_name] = buffer_instance_input_port; 
+      BasicPort buffer_instance_output_port(generate_verilog_mux_node_name(output_node_level, true), output_node_index_at_level, output_node_index_at_level);
+      std::string module_output_port_name = circuit_lib.port_lib_name(buffer_model_output_ports[0]);
+      buffer_port2port_name_map[module_output_port_name] = buffer_instance_output_port; 
+    }
+
+    /* Output an instance of the module */
+    print_verilog_module_instance(fp, module_manager, module_id, buffer_module_id, buffer_port2port_name_map, circuit_lib.dump_explicit_port_map(buffer_model));
+    /* IMPORTANT: this update MUST be called after the instance outputting!!!!
+     * update the module manager with the relationship between the parent and child modules 
+     */
+    module_manager.add_child_module(module_id, buffer_module_id);
+
+    print_verilog_comment(fp, std::string("---- END Instanciation of a intermediate buffer modules -----"));
+  }
+
+  print_verilog_comment(fp, std::string("---- END Internal Logic of a CMOS MUX module based on Standard Cells -----"));
+}
+
+/********************************************************************
+ * Generate the pass-transistor/transmission-gate -based internal logic 
+ * (multiplexing structure) for a multiplexer or LUT in Verilog codes 
+ * This function will : 
+ * 1. build a multiplexing structure by instanciating the branch circuits
+ *    generated before
+ * 2. add intermediate buffers between multiplexing stages if specified.
+ *******************************************************************/
+static 
+void generate_verilog_cmos_mux_module_tgate_multiplexing_structure(ModuleManager& module_manager,
+                                                                   const CircuitLibrary& circuit_lib, 
+                                                                   std::fstream& fp, 
+                                                                   const ModuleId& module_id, 
+                                                                   const CircuitModelId& circuit_model, 
+                                                                   const MuxGraph& mux_graph) {
   /* Make sure we have a valid file handler*/
   check_file_handler(fp);
 
@@ -730,6 +932,11 @@ void generate_verilog_cmos_mux_module_multiplexing_structure(ModuleManager& modu
   }
   VTR_ASSERT(1 == mux_regular_sram_ports.size());
 
+  /* Build the location map of intermediate buffers */
+  std::vector<bool> inter_buffer_location_map = build_mux_intermediate_buffer_location_map(circuit_lib, circuit_model, mux_graph.num_node_levels());
+
+  print_verilog_comment(fp, std::string("---- BEGIN Internal Logic of a CMOS MUX module based on Pass-transistor/Transmission-gates -----"));
+
   print_verilog_comment(fp, std::string("---- BEGIN Internal wires of a CMOS MUX module -----"));
   /* Print local wires which are the nodes in the mux graph */
   for (size_t level = 0; level < mux_graph.num_levels(); ++level) {
@@ -737,7 +944,7 @@ void generate_verilog_cmos_mux_module_multiplexing_structure(ModuleManager& modu
     BasicPort internal_wire_port(generate_verilog_mux_node_name(level, false), mux_graph.num_nodes_at_level(level));
     fp << "\t" << generate_verilog_port(VERILOG_PORT_WIRE, internal_wire_port) << ";" << std::endl;
     /* Identify if an intermediate buffer is needed */
-    if (false == require_intermediate_buffer_at_mux_level(circuit_lib, circuit_model, level)) { 
+    if (false == inter_buffer_location_map[level]) { 
       continue;
     }
     BasicPort internal_wire_buffered_port(generate_verilog_mux_node_name(level, true), mux_graph.num_nodes_at_level(level));
@@ -745,22 +952,14 @@ void generate_verilog_cmos_mux_module_multiplexing_structure(ModuleManager& modu
   }
   print_verilog_comment(fp, std::string("---- END Internal wires of a CMOS MUX module -----"));
 
-  print_verilog_comment(fp, std::string("---- BEGIN Instanciation of a branch CMOS MUX modules -----"));
+  print_verilog_comment(fp, std::string("---- BEGIN Instanciation of a branch CMOS MUX module -----"));
   /* Iterate over all the internal nodes and output nodes in the mux graph */
   for (const auto& node : mux_graph.non_input_nodes()) {
+    print_verilog_comment(fp, std::string("---- BEGIN Instanciation of a branch CMOS MUX module -----"));
     /* Get the size of branch circuit 
      * Instanciate an branch circuit by the size (fan-in) of the node 
      */
     size_t branch_size = mux_graph.node_in_edges(node).size();
-    /* Instanciate the branch module: 
-     * Case 1: the branch module is a standard cell MUX2
-     * Case 2: the branch module is a tgate-based module  
-     */
-    std::string branch_module_name = generate_verilog_mux_branch_subckt_name(circuit_lib, circuit_model, mux_size, branch_size, verilog_mux_basis_posfix);
-    /* Get the moduleId for the submodule */
-    ModuleId branch_module_id = module_manager.find_module(branch_module_name);
-    /* We must have one */
-    VTR_ASSERT(ModuleId::INVALID() != branch_module_id);
 
     /* Get the node level and index in the current level */
     size_t output_node_level = mux_graph.node_level(node);
@@ -788,19 +987,25 @@ void generate_verilog_cmos_mux_module_multiplexing_structure(ModuleManager& modu
       }
     }
 
+    /* Instanciate the branch module which is a tgate-based module  
+     */
+    std::string branch_module_name= generate_verilog_mux_branch_subckt_name(circuit_lib, circuit_model, mux_size, branch_size, verilog_mux_basis_posfix);
+    /* Get the moduleId for the submodule */
+    ModuleId branch_module_id = module_manager.find_module(branch_module_name);
+    /* We must have one */
+    VTR_ASSERT(ModuleId::INVALID() != branch_module_id);
+
     /* Create a port-to-port map */
     std::map<std::string, BasicPort> port2port_name_map;
     /* TODO: the branch module name should NOT be hard-coded. Use the port lib_name given by users! */
 
-    /* TODO: for clean representation, need to merge the node names in [a:b] format, if possible!!!
-     * All the input node names organized in bus 
-     */
+    /* All the input node names organized in bus */
     std::vector<BasicPort> branch_node_input_ports;
     for (const auto& input_node : input_nodes) {
       /* Generate the port info of each input node */
       size_t input_node_level = mux_graph.node_level(input_node);
       size_t input_node_index_at_level = mux_graph.node_index_at_level(input_node);
-      BasicPort branch_node_input_port(generate_verilog_mux_node_name(input_node_level, require_intermediate_buffer_at_mux_level(circuit_lib, circuit_model, input_node_level)), input_node_index_at_level, input_node_index_at_level);
+      BasicPort branch_node_input_port(generate_verilog_mux_node_name(input_node_level, inter_buffer_location_map[input_node_level]), input_node_index_at_level, input_node_index_at_level);
       branch_node_input_ports.push_back(branch_node_input_port);  
     } 
     /* Try to combine the ports */
@@ -828,13 +1033,10 @@ void generate_verilog_cmos_mux_module_multiplexing_structure(ModuleManager& modu
     }
 
     /* Link nodes to input ports for the branch module */
-    /* TODO: the naming could be more flexible? */
     ModulePortId module_input_port_id = module_manager.find_module_port(branch_module_id, "in");
     VTR_ASSERT(ModulePortId::INVALID() != module_input_port_id);
     /* Get the port from module */
     BasicPort module_input_port = module_manager.module_port(branch_module_id, module_input_port_id);
-    /* Double check: Port width should match the number of input nodes */
-    VTR_ASSERT(module_input_port.get_width() == instance_input_port.get_width());
     port2port_name_map[module_input_port.get_name()] = instance_input_port; 
 
     /* Link nodes to output ports for the branch module */
@@ -843,9 +1045,7 @@ void generate_verilog_cmos_mux_module_multiplexing_structure(ModuleManager& modu
     VTR_ASSERT(ModulePortId::INVALID() != module_output_port_id);
     /* Get the port from module */
     BasicPort module_output_port = module_manager.module_port(branch_module_id, module_output_port_id);
-    /* Double check: Port width should match the number of output nodes */
-    VTR_ASSERT(module_output_port.get_width() == instance_output_port.get_width());
-    port2port_name_map[module_output_port.get_name()] = module_output_port; 
+    port2port_name_map[module_output_port.get_name()] = instance_output_port; 
 
     /* All the mem node names organized in bus */
     std::vector<BasicPort> branch_node_mem_ports;
@@ -857,10 +1057,10 @@ void generate_verilog_cmos_mux_module_multiplexing_structure(ModuleManager& modu
     /* Try to combine the ports */
     std::vector<BasicPort> combined_branch_node_mem_ports = combine_verilog_ports(branch_node_mem_ports);
     /* If we have more than 1 port in the combined ports , 
- *
-     * output a local wire */
+     * output a local wire 
+     */
     VTR_ASSERT(0 < combined_branch_node_mem_ports.size());
-    /* Create the port info for the input */
+    /* Create the port info for the mem */
     BasicPort instance_mem_port;
     if (1 == combined_branch_node_mem_ports.size()) {
       instance_mem_port = combined_branch_node_mem_ports[0];
@@ -885,9 +1085,47 @@ void generate_verilog_cmos_mux_module_multiplexing_structure(ModuleManager& modu
     VTR_ASSERT(ModulePortId::INVALID() != module_mem_port_id);
     /* Get the port from module */
     BasicPort module_mem_port = module_manager.module_port(branch_module_id, module_mem_port_id);
-    /* Double check: Port width should match the number of input nodes */
-    VTR_ASSERT(module_mem_port.get_width() == instance_mem_port.get_width());
     port2port_name_map[module_mem_port.get_name()] = instance_mem_port; 
+
+    /* TODO: the postfix _inv can be soft coded in the circuit library as a port_inv_postfix */
+    /* Create the port info for the mem_inv */
+    std::vector<BasicPort> branch_node_mem_inv_ports;
+    for (const auto& mem : mems) {
+      /* Generate the port info of each mem node */
+      BasicPort branch_node_mem_inv_port(circuit_lib.port_lib_name(mux_regular_sram_ports[0]) + "_inv", size_t(mem), size_t(mem));
+      branch_node_mem_inv_ports.push_back(branch_node_mem_inv_port);  
+    } 
+    /* Try to combine the ports */
+    std::vector<BasicPort> combined_branch_node_mem_inv_ports = combine_verilog_ports(branch_node_mem_inv_ports);
+    /* If we have more than 1 port in the combined ports , 
+     * output a local wire 
+     */
+    VTR_ASSERT(0 < combined_branch_node_mem_inv_ports.size());
+    BasicPort instance_mem_inv_port;
+    if (1 == combined_branch_node_mem_inv_ports.size()) {
+      instance_mem_inv_port = combined_branch_node_mem_inv_ports[0];
+    } else {
+      /* TODO: the naming could be more flexible? */
+      instance_mem_inv_port.set_name(generate_verilog_mux_node_name(output_node_level, false) + "_mem");
+      /* Deposite a [0:0] port */
+      instance_mem_inv_port.set_width(1);
+      /* TODO: combine the ports could be a function? */
+      for (const auto& port : combined_branch_node_mem_inv_ports) {
+        instance_mem_inv_port.combine(port);
+      }
+      /* Print a local wire for the merged ports */
+      fp << "\t" << generate_verilog_port(VERILOG_PORT_WIRE, instance_mem_inv_port);
+      fp << " = " << generate_verilog_ports(combined_branch_node_mem_inv_ports);
+      fp << ";" << std::endl;
+    }
+
+    /* Link nodes to input ports for the branch module */
+    /* TODO: the naming could be more flexible? */
+    ModulePortId module_mem_inv_port_id = module_manager.find_module_port(branch_module_id, "mem_inv");
+    VTR_ASSERT(ModulePortId::INVALID() != module_mem_inv_port_id);
+    /* Get the port from module */
+    BasicPort module_mem_inv_port = module_manager.module_port(branch_module_id, module_mem_inv_port_id);
+    port2port_name_map[module_mem_inv_port.get_name()] = instance_mem_inv_port; 
  
     /* Output an instance of the module */
     print_verilog_module_instance(fp, module_manager, module_id, branch_module_id, port2port_name_map, circuit_lib.dump_explicit_port_map(circuit_model));
@@ -896,9 +1134,56 @@ void generate_verilog_cmos_mux_module_multiplexing_structure(ModuleManager& modu
      */
     module_manager.add_child_module(module_id, branch_module_id);
 
-    /* TODO: Now we need to add intermediate buffers by instanciating the modules */
+    print_verilog_comment(fp, std::string("---- END Instanciation of a branch CMOS MUX module -----"));
+
+    if (false == inter_buffer_location_map[output_node_level]) {
+      continue; /* No need for intermediate buffers */
+    }
+
+    print_verilog_comment(fp, std::string("---- BEGIN Instanciation of a intermediate buffer modules -----"));
+
+    /* Now we need to add intermediate buffers by instanciating the modules */
+    CircuitModelId buffer_model = circuit_lib.lut_intermediate_buffer_model(circuit_model);
+    /* We must have a valid model id */
+    VTR_ASSERT(CircuitModelId::INVALID() != buffer_model);
+    /* To match the context, Buffer should have only 2 non-global ports: 1 input port and 1 output port */
+    std::vector<CircuitPortId> buffer_model_input_ports = circuit_lib.model_ports_by_type(buffer_model, SPICE_MODEL_PORT_INPUT, true);
+    std::vector<CircuitPortId> buffer_model_output_ports = circuit_lib.model_ports_by_type(buffer_model, SPICE_MODEL_PORT_OUTPUT, true);
+    VTR_ASSERT(1 == buffer_model_input_ports.size());
+    VTR_ASSERT(1 == buffer_model_output_ports.size());
+
+    /* Get the moduleId for the buffer module */
+    ModuleId buffer_module_id = module_manager.find_module(circuit_lib.model_name(buffer_model));
+    /* We must have one */
+    VTR_ASSERT(ModuleId::INVALID() != buffer_module_id);
+
+    /* Create a port-to-port map */
+    std::map<std::string, BasicPort> buffer_port2port_name_map;
+
+    /* Build the link between buffer_input_port[0] and output_node_pre_buffer 
+     * Build the link between buffer_output_port[0] and output_node_bufferred
+     */
+    { /* Create a code block to accommodate the local variables */
+      BasicPort buffer_instance_input_port(generate_verilog_mux_node_name(output_node_level, false), output_node_index_at_level, output_node_index_at_level);
+      std::string module_input_port_name = circuit_lib.port_lib_name(buffer_model_input_ports[0]);
+      buffer_port2port_name_map[module_input_port_name] = buffer_instance_input_port; 
+      BasicPort buffer_instance_output_port(generate_verilog_mux_node_name(output_node_level, true), output_node_index_at_level, output_node_index_at_level);
+      std::string module_output_port_name = circuit_lib.port_lib_name(buffer_model_output_ports[0]);
+      buffer_port2port_name_map[module_output_port_name] = buffer_instance_output_port; 
+    }
+
+    /* Output an instance of the module */
+    print_verilog_module_instance(fp, module_manager, module_id, buffer_module_id, buffer_port2port_name_map, circuit_lib.dump_explicit_port_map(buffer_model));
+    /* IMPORTANT: this update MUST be called after the instance outputting!!!!
+     * update the module manager with the relationship between the parent and child modules 
+     */
+    module_manager.add_child_module(module_id, buffer_module_id);
+
+    print_verilog_comment(fp, std::string("---- END Instanciation of a intermediate buffer modules -----"));
+
   }
-  print_verilog_comment(fp, std::string("---- END Instanciation of a branch CMOS MUX modules -----"));
+
+  print_verilog_comment(fp, std::string("---- END Internal Logic of a CMOS MUX module based on Pass-transistor/Transmission-gates -----"));
 }
 
 /*********************************************************************
@@ -1008,8 +1293,27 @@ void generate_verilog_cmos_mux_module(ModuleManager& module_manager,
   print_verilog_module_declaration(fp, module_manager, module_id);
 
   /* TODO: Print the internal logic in Verilog codes */
-  /* TODO: Print the Multiplexing structure in Verilog codes */
-  generate_verilog_cmos_mux_module_multiplexing_structure(module_manager, circuit_lib, fp, module_id, circuit_model, mux_graph);
+  /* TODO: Print the Multiplexing structure in Verilog codes 
+   * TODO: branch the module port name by using standard cell MUX2 or TGATE,
+   * 1. MUX2 has a fixed port map: input_port[0] and input_port[1] is the data_path input 
+   * 2. Branch TGATE-based module has a fixed port name  
+   * TODO: the naming could be more flexible? 
+   */
+  /* Get the tgate model */
+  CircuitModelId tgate_model = circuit_lib.pass_gate_logic_model(circuit_model);
+  /* Instanciate the branch module: 
+   * Case 1: the branch module is a standard cell MUX2
+   * Case 2: the branch module is a tgate-based module  
+   */
+  std::string branch_module_name;
+  if (SPICE_MODEL_GATE == circuit_lib.model_type(tgate_model)) {
+    VTR_ASSERT(SPICE_MODEL_GATE_MUX2 == circuit_lib.gate_type(tgate_model));
+    generate_verilog_cmos_mux_module_mux2_multiplexing_structure(module_manager, circuit_lib, fp, module_id, circuit_model, tgate_model, mux_graph);
+  } else {
+    VTR_ASSERT(SPICE_MODEL_PASSGATE == circuit_lib.model_type(tgate_model));
+    generate_verilog_cmos_mux_module_tgate_multiplexing_structure(module_manager, circuit_lib, fp, module_id, circuit_model, mux_graph);
+  }
+
   /* TODO: Print the input buffers in Verilog codes */
   /* TODO: Print the output buffers in Verilog codes */
 

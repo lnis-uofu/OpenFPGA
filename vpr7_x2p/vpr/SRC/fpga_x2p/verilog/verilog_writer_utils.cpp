@@ -156,6 +156,12 @@ void print_verilog_module_instance(std::fstream& fp,
 
   check_file_handler(fp);
 
+  /* Check: all the key ports in the port2port_name_map does exist in the child module */
+  for (const auto& kv : port2port_name_map) {
+    ModulePortId module_port_id = module_manager.find_module_port(child_module_id, kv.first);
+    VTR_ASSERT(ModulePortId::INVALID() != module_port_id);
+  }
+
   /* Print module name */
   fp << "\t" << module_manager.module_name(child_module_id) << " ";
   /* Print instance name, <name>_<num_instance_in_parent_module> */
