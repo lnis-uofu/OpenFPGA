@@ -396,6 +396,40 @@ MuxNodeId MuxGraph::node_id(const MuxInputId& input_id) const {
   return MuxNodeId::INVALID();
 }
 
+/* Get the node id w.r.t. the node level and node_index at the level
+ * Return an invalid value if not found 
+ */
+MuxNodeId MuxGraph::node_id(const size_t& node_level, const size_t& node_index_at_level) const {
+  /* Ensure we have a valid node_look-up */
+  VTR_ASSERT_SAFE(valid_node_lookup());
+
+  MuxNodeId ret_node = MuxNodeId::INVALID(); 
+
+  /* Search in the fast look up */
+  if (node_level >= node_lookup_.size()) {
+    return ret_node; 
+  }
+  
+  size_t node_cnt = 0;
+  /* Node level is valid, search in the node list */
+  for (const auto& nodes_by_type : node_lookup_[node_level]) {
+    /* Search the node_index_at_level of each node */
+    for (const auto& node : nodes_by_type) {
+      if (node_index_at_level != node_ids_at_level_[node]) {
+        continue;
+      } 
+      /* Find the node, assign value and update the counter */
+      ret_node = node;
+      node_cnt++; 
+    }
+  }
+
+  /* We should either find a node or nothing */
+  VTR_ASSERT((0 == node_cnt) || (1 == node_cnt));
+
+  return ret_node;
+}
+
 /* Decode memory bits based on an input id */
 std::vector<size_t> MuxGraph::decode_memory_bits(const MuxInputId& input_id) const {
   /* initialize the memory bits: TODO: support default value */ 

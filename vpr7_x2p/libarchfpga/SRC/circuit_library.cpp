@@ -335,6 +335,30 @@ size_t CircuitLibrary::buffer_num_levels(const CircuitModelId& model_id) const {
   return buffer_num_levels_[model_id];
 }
 
+/* Find the circuit model id of the input buffer of a circuit model */
+CircuitModelId CircuitLibrary::input_buffer_model(const CircuitModelId& model_id) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  /* INPUT buffer may not always exist */
+  if (INPUT < buffer_existence_[model_id].size()) {
+    return buffer_model_ids_[model_id][INPUT]; 
+  } else {
+    return CircuitModelId::INVALID();
+  }
+}
+
+/* Find the circuit model id of the output buffer of a circuit model */
+CircuitModelId CircuitLibrary::output_buffer_model(const CircuitModelId& model_id) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  /* OUTPUT buffer may not always exist */
+  if (OUTPUT < buffer_existence_[model_id].size()) {
+    return buffer_model_ids_[model_id][OUTPUT]; 
+  } else {
+    return CircuitModelId::INVALID();
+  }
+}
+
 /* Return the number of levels of delay types for a circuit model */
 size_t CircuitLibrary::num_delay_info(const CircuitModelId& model_id) const {
   /* validate the model_id */

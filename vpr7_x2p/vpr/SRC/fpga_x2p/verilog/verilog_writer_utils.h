@@ -44,4 +44,26 @@ std::vector<BasicPort> combine_verilog_ports(const std::vector<BasicPort>& ports
 
 std::string generate_verilog_ports(const std::vector<BasicPort>& merged_ports); 
 
+BasicPort generate_verilog_bus_port(const std::vector<BasicPort>& input_ports, 
+                                    const std::string& bus_port_name);
+
+std::string generate_verilog_local_wire(const BasicPort& output_port,
+                                        const std::vector<BasicPort>& input_ports);
+
+void print_verilog_wire_constant_values(std::fstream& fp,
+                                        const BasicPort& output_port,
+                                        const std::vector<size_t>& const_values);
+
+void print_verilog_wire_connection(std::fstream& fp,
+                                   const BasicPort& output_port,
+                                   const BasicPort& input_port);
+
+void print_verilog_buffer_instance(std::fstream& fp,
+                                   ModuleManager& module_manager, 
+                                   const CircuitLibrary& circuit_lib, 
+                                   const ModuleId& parent_module_id, 
+                                   const CircuitModelId& buffer_model, 
+                                   const BasicPort& instance_input_port,
+                                   const BasicPort& instance_output_port);
+
 #endif

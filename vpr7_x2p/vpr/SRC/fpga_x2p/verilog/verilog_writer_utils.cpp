@@ -212,7 +212,7 @@ void print_verilog_module_instance(std::fstream& fp,
   }
   
   /* Print an end to the instance */
-  fp << "\t" << ");" << std::endl;
+  fp << ");" << std::endl;
 }
 
 /************************************************
@@ -339,3 +339,168 @@ std::string generate_verilog_ports(const std::vector<BasicPort>& merged_ports) {
 
   return verilog_line;
 }
+
+/********************************************************************
+ * Generate a bus port (could be used to create a local wire) 
+ * for a list of Verilog ports
+ * The bus port will be created by aggregating the ports in the list 
+ * A bus port name may be need only there are many ports with 
+ * different names. It is hard to name the bus port
+ *******************************************************************/
+BasicPort generate_verilog_bus_port(const std::vector<BasicPort>& input_ports, 
+                                    const std::string& bus_port_name) {
+  /* Try to combine the ports */
+  std::vector<BasicPort> combined_input_ports = combine_verilog_ports(input_ports);
+  
+  /* Create a port data structure that is to be returned */
+  BasicPort bus_port;
+
+  if (1 == combined_input_ports.size()) {
+    bus_port = combined_input_ports[0];
+  } else {
+    /* TODO: the naming could be more flexible? */
+    bus_port.set_name(bus_port_name);
+    /* Deposite a [0:0] port */
+    bus_port.set_width(1);
+    for (const auto& port : combined_input_ports) {
+      bus_port.combine(port);
+    }
+  }
+  
+  return bus_port;
+}
+
+/********************************************************************
+ * Generate a bus wire declaration for a list of Verilog ports
+ * Output ports: the local_wire name
+ * Input ports: the driving ports
+ * When there are more than two ports, a bus wiring will be created
+ *     {<port0>, <port1>, ... <last_port>}
+ *******************************************************************/
+std::string generate_verilog_local_wire(const BasicPort& output_port,
+                                        const std::vector<BasicPort>& input_ports) {
+  /* Try to combine the ports */
+  std::vector<BasicPort> combined_input_ports = combine_verilog_ports(input_ports);
+
+  /* If we have more than 1 port in the combined ports , 
+   * output a local wire */
+  VTR_ASSERT(0 < combined_input_ports.size());
+
+  /* Must check: the port width matches */
+  size_t input_ports_width = 0;
+  for (const auto& port : combined_input_ports) {
+    /* We must have valid ports! */
+    VTR_ASSERT( 0 < port.get_width() );
+    input_ports_width += port.get_width();
+  }
+  VTR_ASSERT( input_ports_width == output_port.get_width() );
+
+  std::string wire_str;
+  wire_str += generate_verilog_port(VERILOG_PORT_WIRE, output_port);
+  wire_str += " = ";
+  wire_str += generate_verilog_ports(combined_input_ports);
+  wire_str += ";";
+
+  return wire_str;
+}
+
+/********************************************************************
+ * Generate a wire connection, that assigns constant values to a 
+ * Verilog port 
+ *******************************************************************/
+void print_verilog_wire_constant_values(std::fstream& fp,
+                                        const BasicPort& output_port,
+                                        const std::vector<size_t>& const_values) {
+  /* Make sure we have a valid file handler*/
+  check_file_handler(fp);
+
+  /* Must check: the port width matches */
+  VTR_ASSERT( const_values.size() == output_port.get_width() );
+
+  fp << "\t";
+  fp << "assign ";
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, output_port);
+  fp << " = ";
+  fp << const_values.size() << "'b";
+  for (const auto& val : const_values) {
+    fp << val;
+  }
+  fp << ";" << std::endl;
+}
+
+/********************************************************************
+ * Generate a wire connection for two Verilog ports 
+ * using "assign" syntax  
+ *******************************************************************/
+void print_verilog_wire_connection(std::fstream& fp,
+                                   const BasicPort& output_port,
+                                   const BasicPort& input_port) {
+  /* Make sure we have a valid file handler*/
+  check_file_handler(fp);
+
+  /* Must check: the port width matches */
+  VTR_ASSERT( input_port.get_width() == output_port.get_width() );
+
+  fp << "\t";
+  fp << "assign ";
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, output_port);
+  fp << " = ";
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, input_port);
+  fp << ";" << std::endl;
+}
+
+/********************************************************************
+ * Generate an instance of a buffer module  
+ * with given information about the input and output ports of instance
+ *
+ *                                          Buffer instance
+ *                             +----------------------------------------+
+ *     instance_input_port --->| buffer_input_port    buffer_output_port|----> instance_output_port 
+ *                             +----------------------------------------+
+ *
+ * Restrictions:
+ *    Buffer must have only 1 input (non-global) port and 1 output (non-global) port
+ *******************************************************************/
+void print_verilog_buffer_instance(std::fstream& fp,
+                                   ModuleManager& module_manager, 
+                                   const CircuitLibrary& circuit_lib, 
+                                   const ModuleId& parent_module_id, 
+                                   const CircuitModelId& buffer_model, 
+                                   const BasicPort& instance_input_port,
+                                   const BasicPort& instance_output_port) {
+  /* Make sure we have a valid file handler*/
+  check_file_handler(fp);
+
+  /* To match the context, Buffer should have only 2 non-global ports: 1 input port and 1 output port */
+  std::vector<CircuitPortId> buffer_model_input_ports = circuit_lib.model_ports_by_type(buffer_model, SPICE_MODEL_PORT_INPUT, true);
+  std::vector<CircuitPortId> buffer_model_output_ports = circuit_lib.model_ports_by_type(buffer_model, SPICE_MODEL_PORT_OUTPUT, true);
+  VTR_ASSERT(1 == buffer_model_input_ports.size());
+  VTR_ASSERT(1 == buffer_model_output_ports.size());
+
+  /* Get the moduleId for the buffer module */
+  ModuleId buffer_module_id = module_manager.find_module(circuit_lib.model_name(buffer_model));
+  /* We must have one */
+  VTR_ASSERT(ModuleId::INVALID() != buffer_module_id);
+
+  /* Create a port-to-port map */
+  std::map<std::string, BasicPort> buffer_port2port_name_map;
+
+  /* Build the link between buffer_input_port[0] and output_node_pre_buffer 
+   * Build the link between buffer_output_port[0] and output_node_bufferred
+   */
+  { /* Create a code block to accommodate the local variables */
+    std::string module_input_port_name = circuit_lib.port_lib_name(buffer_model_input_ports[0]);
+    buffer_port2port_name_map[module_input_port_name] = instance_input_port; 
+    std::string module_output_port_name = circuit_lib.port_lib_name(buffer_model_output_ports[0]);
+    buffer_port2port_name_map[module_output_port_name] = instance_output_port; 
+  }
+
+  /* Output an instance of the module */
+  print_verilog_module_instance(fp, module_manager, parent_module_id, buffer_module_id, buffer_port2port_name_map, circuit_lib.dump_explicit_port_map(buffer_model));
+
+  /* IMPORTANT: this update MUST be called after the instance outputting!!!!
+   * update the module manager with the relationship between the parent and child modules 
+   */
+  module_manager.add_child_module(parent_module_id, buffer_module_id);
+}
+

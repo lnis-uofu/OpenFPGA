@@ -97,6 +97,8 @@ class MuxGraph {
     std::vector<MuxGraph> build_mux_branch_graphs() const; 
     /* Get the node id of a given input */
     MuxNodeId node_id(const MuxInputId& input_id) const;
+    /* Get the node id w.r.t. the node level and node_index at the level */
+    MuxNodeId node_id(const size_t& node_level, const size_t& node_index_at_level) const;
     /* Get the input id of a given node */
     MuxInputId input_id(const MuxNodeId& node_id) const;
     /* Get the output id of a given node */

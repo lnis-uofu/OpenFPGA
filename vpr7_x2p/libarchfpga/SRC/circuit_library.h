@@ -241,6 +241,8 @@ class CircuitLibrary {
     /* Buffer information */
     enum e_spice_model_buffer_type buffer_type(const CircuitModelId& model_id) const;
     size_t buffer_num_levels(const CircuitModelId& model_id) const;
+    CircuitModelId input_buffer_model(const CircuitModelId& model_id) const;
+    CircuitModelId output_buffer_model(const CircuitModelId& model_id) const;
     /* Delay information */
     size_t num_delay_info(const CircuitModelId& model_id) const;
   public: /* Public Accessors: Basic data query on cirucit models' Circuit Ports*/
