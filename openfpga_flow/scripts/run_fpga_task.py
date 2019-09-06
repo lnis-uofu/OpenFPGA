@@ -255,6 +255,7 @@ def generate_each_task_actions(taskname):
                     "name": "%02d_arch%s_%s" % (indx, bench["top_module"], lbl),
                     "run_dir": flow_run_dir,
                     "commands": command,
+                    "finished" : False,
                     "status": False})
 
     logger.info('Found %d Architectures %d Benchmarks & %d Script Parameters' %
@@ -343,7 +344,7 @@ def strip_child_logger_info(line):
         logger.info(line)
 
 
-def run_single_script(s, eachJob):
+def run_single_script(s, eachJob, job_list):
     logger.debug('Added job in pool')
     with s:
         logger.debug("Running OpenFPGA flow with " +
@@ -383,16 +384,19 @@ def run_single_script(s, eachJob):
             else str(timediff)
         logger.info("%s Finished with returncode %d, Time Taken %s " %
                     (name, process.returncode, timestr))
+        eachJob["finished"] = True
+        no_of_finished_job = sum([ not eachJ["finished"] for eachJ in job_list])
+        logger.info("***** %d runs pending *****" % (no_of_finished_job))
 
 
-def run_actions(job_run_list):
+def run_actions(job_list):
     thread_sema = threading.Semaphore(args.maxthreads)
     thred_list = []
-    for index, eachjob in enumerate(job_run_list):
+    for index, eachjob in enumerate(job_list):
         JobID = 'Job_%02d' % (index+1)
         logger.info("Running %s = %s" % (JobID, eachjob["name"]))
         t = threading.Thread(target=run_single_script,
-                             name=JobID, args=(thread_sema, eachjob))
+                             name=JobID, args=(thread_sema, eachjob, job_list))
         t.start()
         thred_list.append(t)
     for eachthread in thred_list:
