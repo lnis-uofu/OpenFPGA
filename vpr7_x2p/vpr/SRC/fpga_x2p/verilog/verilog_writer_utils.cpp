@@ -72,13 +72,45 @@ void print_verilog_comment(std::fstream& fp,
 
 /************************************************
  * Print a Verilog module definition
+ * We use the following format:
+ * module <module_name> (<ports without directions>);
  ***********************************************/
 void print_verilog_module_definition(std::fstream& fp, 
-                                     const std::string& module_name) {
+                                     const ModuleManager& module_manager, const ModuleId& module_id) {
   check_file_handler(fp);
 
-  print_verilog_comment(fp, std::string("----- Verilog module for " + module_name + " -----"));
-  fp << "module " << module_name << "(" << std::endl;
+  print_verilog_comment(fp, std::string("----- Verilog module for " + module_manager.module_name(module_id) + " -----"));
+
+  std::string module_head_line = "module " + module_manager.module_name(module_id) + "(";
+  fp << module_head_line;
+
+  /* port type2type mapping */
+  std::map<ModuleManager::e_module_port_type, enum e_dump_verilog_port_type> port_type2type_map;
+  port_type2type_map[ModuleManager::MODULE_GLOBAL_PORT] = VERILOG_PORT_CONKT;
+  port_type2type_map[ModuleManager::MODULE_INOUT_PORT] = VERILOG_PORT_CONKT;
+  port_type2type_map[ModuleManager::MODULE_INPUT_PORT] = VERILOG_PORT_CONKT;
+  port_type2type_map[ModuleManager::MODULE_OUTPUT_PORT] = VERILOG_PORT_CONKT;
+  port_type2type_map[ModuleManager::MODULE_CLOCK_PORT] = VERILOG_PORT_CONKT;
+
+  /* Port sequence: global, inout, input, output and clock ports, */
+  size_t port_cnt = 0;
+  for (const auto& kv : port_type2type_map) {
+    for (const auto& port : module_manager.module_ports_by_type(module_id, kv.first)) {
+      if (0 != port_cnt) {
+        /* Do not dump a comma for the first port */
+        fp << "," << std::endl; 
+      }
+      /* Create a space for "module <module_name>" except the first line! */
+      if (0 != port_cnt) {
+        std::string port_whitespace(module_head_line.length(), ' ');
+        fp << port_whitespace;
+      }
+      /* Print port */
+      fp << generate_verilog_port(kv.second, port);
+      port_cnt++;
+    }
+  }
+  fp << ");" << std::endl;
 }
 
 /************************************************
@@ -97,33 +129,45 @@ void print_verilog_module_ports(std::fstream& fp,
   port_type2type_map[ModuleManager::MODULE_CLOCK_PORT] = VERILOG_PORT_INPUT;
 
   /* Port sequence: global, inout, input, output and clock ports, */
-  size_t port_cnt = 0;
   for (const auto& kv : port_type2type_map) {
     for (const auto& port : module_manager.module_ports_by_type(module_id, kv.first)) {
-      if (0 != port_cnt) {
-        /* Do not dump a comma for the first port */
-        fp << "," << std::endl; 
+      /* Print port */
+      fp << "//----- " << module_manager.module_port_type_str(kv.first)  << " -----" << std::endl; 
+      fp << generate_verilog_port(kv.second, port);
+      fp << ";" << std::endl;
+    }
+  }
+ 
+  /* Output any port that is registered */
+  fp << "//----- Registered ports -----" << std::endl; 
+  for (const auto& kv : port_type2type_map) {
+    for (const auto& port : module_manager.module_ports_by_type(module_id, kv.first)) {
+      /* Skip the ports that are not registered */
+      ModulePortId port_id = module_manager.find_module_port(module_id, port.get_name());
+      VTR_ASSERT(ModulePortId::INVALID() != port_id);
+      if (false == module_manager.port_is_register(module_id, port_id)) {
+        continue;
       }
       /* Print port */
-      fp << "\t//----- " << module_manager.module_port_type_str(kv.first)  << " -----" << std::endl; 
-      fp << "\t" << generate_verilog_port(kv.second, port);
-      port_cnt++;
+      fp << generate_verilog_port(VERILOG_PORT_REG, port);
+      fp << ";" << std::endl;
     }
   }
 }
 
 /************************************************
  * Print a Verilog module declaration (definition + port list
+ * We use the following format:
+ * module <module_name> (<ports without directions>);
+ * <tab><port definition with direction> 
  ***********************************************/
 void print_verilog_module_declaration(std::fstream& fp, 
                                       const ModuleManager& module_manager, const ModuleId& module_id) {
   check_file_handler(fp);
 
-  print_verilog_module_definition(fp, module_manager.module_name(module_id));
+  print_verilog_module_definition(fp, module_manager, module_id);
 
   print_verilog_module_ports(fp, module_manager, module_id);
-
-  fp << std::endl << ");" << std::endl;
 }
 
 /************************************************
@@ -405,6 +449,35 @@ std::string generate_verilog_local_wire(const BasicPort& output_port,
 }
 
 /********************************************************************
+ * Generate a string for a constant value in Verilog format:
+ *  <#.of bits>'b<binary numbers>
+ *******************************************************************/
+std::string generate_verilog_constant_values(const std::vector<size_t>& const_values) {
+  std::string str = std::to_string(const_values.size());
+  str += "'b";
+  for (const auto& val : const_values) {
+    str += std::to_string(val);
+  }
+  return str;
+}
+
+/********************************************************************
+ * Generate a verilog port with a deposite of constant values
+ ********************************************************************/
+std::string generate_verilog_port_constant_values(const BasicPort& output_port,
+                                                  const std::vector<size_t>& const_values) {
+  std::string port_str;
+
+  /* Must check: the port width matches */
+  VTR_ASSERT( const_values.size() == output_port.get_width() );
+
+  port_str = generate_verilog_port(VERILOG_PORT_CONKT, output_port);
+  port_str += " = ";
+  port_str += generate_verilog_constant_values(const_values);
+  return port_str;
+}
+
+/********************************************************************
  * Generate a wire connection, that assigns constant values to a 
  * Verilog port 
  *******************************************************************/
@@ -414,17 +487,9 @@ void print_verilog_wire_constant_values(std::fstream& fp,
   /* Make sure we have a valid file handler*/
   check_file_handler(fp);
 
-  /* Must check: the port width matches */
-  VTR_ASSERT( const_values.size() == output_port.get_width() );
-
   fp << "\t";
   fp << "assign ";
-  fp << generate_verilog_port(VERILOG_PORT_CONKT, output_port);
-  fp << " = ";
-  fp << const_values.size() << "'b";
-  for (const auto& val : const_values) {
-    fp << val;
-  }
+  fp << generate_verilog_port_constant_values(output_port, const_values);
   fp << ";" << std::endl;
 }
 
@@ -434,7 +499,8 @@ void print_verilog_wire_constant_values(std::fstream& fp,
  *******************************************************************/
 void print_verilog_wire_connection(std::fstream& fp,
                                    const BasicPort& output_port,
-                                   const BasicPort& input_port) {
+                                   const BasicPort& input_port, 
+                                   const bool& inverted) {
   /* Make sure we have a valid file handler*/
   check_file_handler(fp);
 
@@ -445,6 +511,11 @@ void print_verilog_wire_connection(std::fstream& fp,
   fp << "assign ";
   fp << generate_verilog_port(VERILOG_PORT_CONKT, output_port);
   fp << " = ";
+  
+  if (true == inverted) {
+    fp << "~";
+  }
+
   fp << generate_verilog_port(VERILOG_PORT_CONKT, input_port);
   fp << ";" << std::endl;
 }

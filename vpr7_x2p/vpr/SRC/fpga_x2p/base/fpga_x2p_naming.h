@@ -25,4 +25,7 @@ std::string generate_verilog_mux_branch_subckt_name(const CircuitLibrary& circui
                                                     const size_t& branch_mux_size, 
                                                     const std::string& posfix);
 
+std::string generate_mux_local_decoder_subckt_name(const size_t& addr_size, 
+                                                   const size_t& data_size); 
+
 #endif

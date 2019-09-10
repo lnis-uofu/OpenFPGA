@@ -42,6 +42,7 @@
 #include "mux_utils.h"
 #include "verilog_mux.h"
 #include "verilog_essential_gates.h"
+#include "verilog_decoders.h"
 
 /***** Subroutines *****/
 
@@ -3560,6 +3561,8 @@ void dump_verilog_submodules(ModuleManager& module_manager,
   vpr_printf(TIO_MESSAGE_INFO, "Generating local encoders for multiplexers...\n");
   dump_verilog_submodule_local_encoders(cur_sram_orgz_info, verilog_dir, submodule_dir, routing_arch->num_switch, 
                                         switch_inf, Arch.spice, routing_arch, fpga_verilog_opts.dump_explicit_verilog);
+
+  print_verilog_submodule_mux_local_decoders(module_manager, mux_lib, Arch.spice->circuit_lib, std::string(verilog_dir), std::string(submodule_dir));
  
   /* 2. LUTes */
   vpr_printf(TIO_MESSAGE_INFO, "Generating modules of LUTs...\n");

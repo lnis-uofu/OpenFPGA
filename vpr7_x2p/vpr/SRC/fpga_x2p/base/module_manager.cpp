@@ -99,6 +99,13 @@ size_t ModuleManager::num_instance(const ModuleId& parent_module, const ModuleId
   return 0;
 }
 
+/* Find if a port is register */
+bool ModuleManager::port_is_register(const ModuleId& module, const ModulePortId& port) const {
+  /* validate both module id and port id*/
+  VTR_ASSERT(valid_module_port_id(module, port));
+  return port_is_register_[module][port];
+}
+
 /******************************************************************************
  * Public Mutators
  ******************************************************************************/
@@ -123,6 +130,7 @@ ModuleId ModuleManager::add_module(const std::string& name) {
   port_ids_.emplace_back();
   ports_.emplace_back();
   port_types_.emplace_back();
+  port_is_register_.emplace_back();
 
   /* Register in the name-to-id map */
   name_id_map_[name] = module;
@@ -146,11 +154,21 @@ ModulePortId ModuleManager::add_port(const ModuleId& module,
   port_ids_[module].push_back(port);
   ports_[module].push_back(port_info);
   port_types_[module].push_back(port_type);
+  port_is_register_[module].push_back(false);
 
   /* Update fast look-up for port */
   port_lookup_[module][port_type].push_back(port);
 
   return port;
+}
+
+/* Set a port to be a register */
+void ModuleManager::set_port_is_register(const ModuleId& module, const std::string& port_name, const bool& is_register) {
+  /* Find the port */
+  ModulePortId port = find_module_port(module, port_name);
+  /* Must find something, otherwise drop an error */
+  VTR_ASSERT(ModulePortId::INVALID() != port);
+  port_is_register_[module][port] = is_register;
 }
 
 /* Add a child module to a parent module */

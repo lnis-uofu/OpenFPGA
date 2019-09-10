@@ -2,6 +2,7 @@
 #define FPGA_X2P_UTILS_H
 
 #include <fstream>
+#include <vector>
 
 #include "my_free_fwd.h"
 #include "rr_blocks_naming.h"
@@ -65,9 +66,13 @@ t_spice_transistor_type* find_mosfet_tech_lib(t_spice_tech_lib tech_lib,
 
 char* my_ito1hot(int in_int, int bin_len);
 
+std::vector<size_t> my_ito1hot_vec(const size_t& in_int, const size_t& bin_len);
+
 char* my_itobin(int in_int, int bin_len);
 
 int* my_itobin_int(int in_int, int bin_len);
+
+std::vector<size_t> my_itobin_vec(const size_t& in_int, const size_t& bin_len);
 
 char* my_itoa(int input);
 

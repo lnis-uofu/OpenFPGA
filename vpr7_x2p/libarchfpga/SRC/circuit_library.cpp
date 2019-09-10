@@ -253,7 +253,7 @@ enum e_spice_model_pass_gate_logic_type CircuitLibrary::pass_gate_logic_type(con
   return pass_gate_logic_types_[model_id];
 }
 
-/* Return the multiplex structure of a circuit model */
+/* Return the type of multiplexing structure of a circuit model */
 enum e_spice_model_structure CircuitLibrary::mux_structure(const CircuitModelId& model_id) const {
   /* validate the model_id */
   VTR_ASSERT(valid_model_id(model_id));
@@ -263,7 +263,7 @@ enum e_spice_model_structure CircuitLibrary::mux_structure(const CircuitModelId&
   return mux_structure_[model_id]; 
 }
 
-
+/* Return the number of levels of multiplexing structure of a circuit model */
 size_t CircuitLibrary::mux_num_levels(const CircuitModelId& model_id) const {
   /* validate the model_id */
   VTR_ASSERT(valid_model_id(model_id));
@@ -275,7 +275,7 @@ size_t CircuitLibrary::mux_num_levels(const CircuitModelId& model_id) const {
 }
 
 /* Return if additional constant inputs are required for a circuit model 
- * Only applicable for MUX circuit model 
+ * Only applicable for MUX/LUT circuit model 
  */
 bool CircuitLibrary::mux_add_const_input(const CircuitModelId& model_id) const {
   /* validate the model_id */
@@ -288,7 +288,7 @@ bool CircuitLibrary::mux_add_const_input(const CircuitModelId& model_id) const {
 }
 
 /* Return if additional constant inputs are required for a circuit model 
- * Only applicable for MUX circuit model 
+ * Only applicable for MUX/LUT circuit model 
  */
 size_t CircuitLibrary::mux_const_input_value(const CircuitModelId& model_id) const {
   /* validate the model_id */
@@ -300,6 +300,18 @@ size_t CircuitLibrary::mux_const_input_value(const CircuitModelId& model_id) con
   /* A 0 value for the const values means it is logic 0 */
   /* A 1 value for the const values means it is logic 1 */
   return mux_const_input_values_[model_id];
+}
+
+/* Return if local encoders are used for a circuit model 
+ * Only applicable for MUX/LUT circuit model 
+ */
+bool CircuitLibrary::mux_use_local_encoder(const CircuitModelId& model_id) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  /* validate the circuit model type is MUX */
+  VTR_ASSERT( (SPICE_MODEL_MUX == model_type(model_id))
+           || (SPICE_MODEL_LUT == model_type(model_id)) );
+  return mux_use_local_encoder_[model_id];
 }
 
 /* Return the type of gate for a circuit model 

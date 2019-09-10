@@ -15,6 +15,7 @@
 #include <algorithm>
 
 /* Include vpr structs*/
+#include "vtr_assert.h"
 #include "util.h"
 #include "physical_types.h"
 #include "vpr_types.h"
@@ -632,6 +633,22 @@ char* my_ito1hot(int in_int, int bin_len) {
   return ret;
 }
 
+/* Convert an integer to an one-hot encoding integer array */
+std::vector<size_t> my_ito1hot_vec(const size_t& in_int, const size_t& bin_len) {
+  /* Make sure we do not have any overflow! */
+  VTR_ASSERT ( (in_int <= bin_len) );
+
+  /* Initialize */
+  std::vector<size_t> ret(bin_len, 0);
+
+  if (bin_len == in_int) {
+    return ret; /* all zero case */
+  }
+  ret[in_int] = 1; /* Keep a good sequence of bits */
+ 
+  return ret;
+}
+
 /* Converter an integer to a binary string */
 int* my_itobin_int(int in_int, int bin_len) {
   int* ret = (int*) my_calloc (bin_len, sizeof(int));
@@ -643,6 +660,24 @@ int* my_itobin_int(int in_int, int bin_len) {
   
   temp = in_int;
   for (i = 0; i < bin_len; i++) {
+    if (1 == temp % 2) { 
+      ret[i] = 1; /* Keep a good sequence of bits */
+    }
+    temp = temp / 2;
+  }
+ 
+  return ret;
+}
+
+/* Converter an integer to a binary vector */
+std::vector<size_t> my_itobin_vec(const size_t& in_int, const size_t& bin_len) {
+  std::vector<size_t> ret(bin_len, 0);
+
+  /* Make sure we do not have any overflow! */
+  VTR_ASSERT ( (in_int < pow(2., bin_len)) );
+  
+  size_t temp = in_int;
+  for (size_t i = 0; i < bin_len; i++) {
     if (1 == temp % 2) { 
       ret[i] = 1; /* Keep a good sequence of bits */
     }

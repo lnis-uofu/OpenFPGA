@@ -1176,7 +1176,7 @@ void generate_verilog_cmos_mux_module_input_buffers(ModuleManager& module_manage
       print_verilog_comment(fp, std::string("---- BEGIN short-wire a multiplexing structure input to MUX module input -----"));
 
       /* Short wire all the datapath inputs to the MUX inputs */
-      print_verilog_wire_connection(fp, instance_output_port, instance_input_port);      
+      print_verilog_wire_connection(fp, instance_output_port, instance_input_port, false);      
 
       print_verilog_comment(fp, std::string("---- END short-wire a multiplexing structure input to MUX module input -----"));
       fp << std::endl;
@@ -1255,7 +1255,7 @@ void generate_verilog_cmos_mux_module_output_buffers(ModuleManager& module_manag
         print_verilog_comment(fp, std::string("---- BEGIN short-wire a multiplexing structure output to MUX module output -----"));
 
         /* Short wire all the datapath inputs to the MUX inputs */
-        print_verilog_wire_connection(fp, instance_output_port, instance_input_port);      
+        print_verilog_wire_connection(fp, instance_output_port, instance_input_port, false);      
 
         print_verilog_comment(fp, std::string("---- END short-wire a multiplexing structure output to MUX module output -----"));
         fp << std::endl;

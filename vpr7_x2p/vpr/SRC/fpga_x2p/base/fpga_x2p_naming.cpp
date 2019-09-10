@@ -1,8 +1,11 @@
-/************************************************
+/********************************************************************
  * This file includes functions to 
  * generate module/port names for Verilog 
  * and SPICE netlists 
- ***********************************************/
+ *
+ * IMPORTANT: keep all the naming functions in this file to be 
+ * generic for both Verilog and SPICE generators 
+ ********************************************************************/
 #include "vtr_assert.h"
 
 #include "fpga_x2p_naming.h"
@@ -77,3 +80,17 @@ std::string generate_verilog_mux_branch_subckt_name(const CircuitLibrary& circui
 
   return generate_verilog_mux_subckt_name(circuit_lib, circuit_model, mux_size, branch_postfix);
 }
+
+/************************************************
+ * Generate the module name of a local decoder
+ * for multiplexer
+ ***********************************************/
+std::string generate_mux_local_decoder_subckt_name(const size_t& addr_size, 
+                                                   const size_t& data_size) {
+  std::string subckt_name = "decoder";
+  subckt_name += std::to_string(addr_size);
+  subckt_name += "to";
+  subckt_name += std::to_string(data_size);
+
+  return subckt_name;
+} 

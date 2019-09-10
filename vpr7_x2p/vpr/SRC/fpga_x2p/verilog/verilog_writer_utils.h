@@ -10,6 +10,13 @@
 #include "device_port.h"
 #include "module_manager.h"
 
+/* Tips: for naming your function in this header/source file
+ * If a function outputs to a file, its name should begin with "print_verilog"
+ * If a function creates a string without outputting to a file, its name should begin with "generate_verilog"
+ * Please show respect to this naming convention, in order to keep a clean header/source file
+ * as well maintain a easy way to identify the functions
+ */
+
 void print_verilog_file_header(std::fstream& fp,
                                const std::string& usage);
 
@@ -20,7 +27,7 @@ void print_verilog_comment(std::fstream& fp,
                            const std::string& comment);
 
 void print_verilog_module_definition(std::fstream& fp, 
-                                     const std::string& module_name);
+                                     const ModuleManager& module_manager, const ModuleId& module_id);
 
 void print_verilog_module_ports(std::fstream& fp, 
                                 const ModuleManager& module_manager, const ModuleId& module_id);
@@ -50,13 +57,19 @@ BasicPort generate_verilog_bus_port(const std::vector<BasicPort>& input_ports,
 std::string generate_verilog_local_wire(const BasicPort& output_port,
                                         const std::vector<BasicPort>& input_ports);
 
+std::string generate_verilog_constant_values(const std::vector<size_t>& const_values);
+
+std::string generate_verilog_port_constant_values(const BasicPort& output_port,
+                                                  const std::vector<size_t>& const_values);
+
 void print_verilog_wire_constant_values(std::fstream& fp,
                                         const BasicPort& output_port,
                                         const std::vector<size_t>& const_values);
 
 void print_verilog_wire_connection(std::fstream& fp,
                                    const BasicPort& output_port,
-                                   const BasicPort& input_port);
+                                   const BasicPort& input_port,
+                                   const bool& inverted);
 
 void print_verilog_buffer_instance(std::fstream& fp,
                                    ModuleManager& module_manager, 

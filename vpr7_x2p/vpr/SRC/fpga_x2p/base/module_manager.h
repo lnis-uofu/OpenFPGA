@@ -45,12 +45,16 @@ class ModuleManager {
     ModuleId find_module(const std::string& name) const;
     /* Find the number of instances of a child module in the parent module */
     size_t num_instance(const ModuleId& parent_module, const ModuleId& child_module) const;
+    /* Find if a port is register */
+    bool port_is_register(const ModuleId& module, const ModulePortId& port) const;
   public: /* Public mutators */
     /* Add a module */
     ModuleId add_module(const std::string& name);
     /* Add a port to a module */
     ModulePortId add_port(const ModuleId& module, 
                           const BasicPort& port_info, const enum e_module_port_type& port_type);
+    /* Set a port to be a register */
+    void set_port_is_register(const ModuleId& module, const std::string& port_name, const bool& is_register);
     /* Add a child module to a parent module */
     void add_child_module(const ModuleId& parent_module, const ModuleId& child_module);
   private: /* Private validators/invalidators */
@@ -68,6 +72,7 @@ class ModuleManager {
     vtr::vector<ModuleId, vtr::vector<ModulePortId, ModulePortId>> port_ids_;    /* List of ports for each Module */ 
     vtr::vector<ModuleId, vtr::vector<ModulePortId, BasicPort>> ports_;    /* List of ports for each Module */ 
     vtr::vector<ModuleId, vtr::vector<ModulePortId, enum e_module_port_type>> port_types_; /* Type of ports */ 
+    vtr::vector<ModuleId, vtr::vector<ModulePortId, bool>> port_is_register_; /* If the port is a register, use for Verilog port definition. If enabled: <port_type> reg <port_name>  */ 
 
     /* fast look-up for module */
     std::map<std::string, ModuleId> name_id_map_;

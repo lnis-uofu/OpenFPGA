@@ -236,6 +236,7 @@ class CircuitLibrary {
     size_t mux_num_levels(const CircuitModelId& model_id) const;
     bool mux_add_const_input(const CircuitModelId& model_id) const;
     size_t mux_const_input_value(const CircuitModelId& model_id) const;
+    bool mux_use_local_encoder(const CircuitModelId& model_id) const;
     /* Gate information */
     enum e_spice_model_gate_type gate_type(const CircuitModelId& model_id) const;
     /* Buffer information */
