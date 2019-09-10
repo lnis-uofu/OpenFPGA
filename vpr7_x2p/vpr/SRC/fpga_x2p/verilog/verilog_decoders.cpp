@@ -190,10 +190,17 @@ void print_verilog_submodule_mux_local_decoders(ModuleManager& module_manager,
     std::vector<MuxGraph> branch_mux_graphs = mux_graph.build_mux_branch_graphs();
     /* Add the decoder to the decoder library */
     for (auto branch_mux_graph : branch_mux_graphs) {
+      /* The decoder size depends on the number of memories of a branch MUX.
+       * Note that only when there are >=2 memories, a decoder is needed
+       */
+      size_t decoder_data_size = branch_mux_graph.num_memory_bits();
+      if (2 > decoder_data_size) {
+        continue;
+      }
       /* Try to find if the decoder already exists in the library, 
        * If there is no such decoder, add it to the library 
        */
-      add_mux_local_decoder_to_library(decoder_lib, branch_mux_graph.num_inputs());
+      add_mux_local_decoder_to_library(decoder_lib, decoder_data_size);
     }
   }
 
