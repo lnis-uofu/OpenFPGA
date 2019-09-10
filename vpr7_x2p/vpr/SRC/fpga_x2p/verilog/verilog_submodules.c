@@ -3559,8 +3559,10 @@ void dump_verilog_submodules(ModuleManager& module_manager,
                                 verilog_dir, submodule_dir);
 
   vpr_printf(TIO_MESSAGE_INFO, "Generating local encoders for multiplexers...\n");
+  /*
   dump_verilog_submodule_local_encoders(cur_sram_orgz_info, verilog_dir, submodule_dir, routing_arch->num_switch, 
                                         switch_inf, Arch.spice, routing_arch, fpga_verilog_opts.dump_explicit_verilog);
+   */
 
   print_verilog_submodule_mux_local_decoders(module_manager, mux_lib, Arch.spice->circuit_lib, std::string(verilog_dir), std::string(submodule_dir));
  

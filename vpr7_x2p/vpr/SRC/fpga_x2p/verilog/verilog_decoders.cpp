@@ -159,7 +159,7 @@ void print_verilog_submodule_mux_local_decoders(ModuleManager& module_manager,
 
   /* TODO: Generate modules into a .bak file now. Rename after it is verified */
   std::string verilog_fname(submodule_dir + local_encoder_verilog_file_name);
-  verilog_fname += ".bak";
+  /* verilog_fname += ".bak"; */
 
   /* Create the file stream */
   std::fstream fp;
@@ -209,8 +209,6 @@ void print_verilog_submodule_mux_local_decoders(ModuleManager& module_manager,
   fp.close();
 
   /* TODO: Add fname to the linked list when debugging is finished */
-  /*
-  submodule_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(submodule_verilog_subckt_file_path_head, verilog_name);  
-   */
+  submodule_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(submodule_verilog_subckt_file_path_head, verilog_fname.c_str());  
 }
 
