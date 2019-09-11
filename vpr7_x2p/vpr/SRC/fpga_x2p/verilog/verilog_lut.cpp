@@ -355,7 +355,7 @@ void print_verilog_submodule_luts(ModuleManager& module_manager,
   /* Create file */
   vpr_printf(TIO_MESSAGE_INFO,
              "Generating Verilog netlist for LUTs (%s)...\n",
-             __FILE__, __LINE__, verilog_fname.c_str()); 
+             verilog_fname.c_str()); 
 
   print_verilog_file_header(fp, "Look-Up Tables"); 
 
