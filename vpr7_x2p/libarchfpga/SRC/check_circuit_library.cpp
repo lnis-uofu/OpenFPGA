@@ -376,6 +376,24 @@ size_t check_circuit_library_ports(const CircuitLibrary& circuit_lib) {
     }
   }
 
+  /* Check the tri-state map of ports, the length should match the port size! */
+  for (const auto& port : circuit_lib.ports()) {
+    if (circuit_lib.port_tri_state_map(port).empty()) {
+      continue; /* No tri-state map is found, go to the next */
+    }
+    if (circuit_lib.port_tri_state_map(port).length() == circuit_lib.port_size(port)) {
+      continue; /* Sizes match, go to the next */
+    }
+    /* We have a problem here, sizes do not match, leave a message and raise the error flag */
+    vpr_printf(TIO_MESSAGE_ERROR,
+               "Tri-state map (=%s) of circuit port (type=%s) of model (name=%s) does not match the port size (=%lu)!\n",
+               circuit_lib.port_tri_state_map(port).c_str(),
+               CIRCUIT_MODEL_PORT_TYPE_STRING[size_t(circuit_lib.port_type(port))],
+               circuit_lib.model_name(port).c_str(),
+               circuit_lib.port_size(port));
+    num_err++;
+  }
+
   return num_err;
 }
 

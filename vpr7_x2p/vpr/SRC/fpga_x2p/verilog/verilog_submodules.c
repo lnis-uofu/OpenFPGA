@@ -43,6 +43,7 @@
 #include "verilog_mux.h"
 #include "verilog_essential_gates.h"
 #include "verilog_decoders.h"
+#include "verilog_lut.h"
 
 /***** Subroutines *****/
 
@@ -3344,6 +3345,7 @@ void dump_verilog_submodules(ModuleManager& module_manager,
                               fpga_verilog_opts.include_timing, 
                               fpga_verilog_opts.include_signal_init,
                               fpga_verilog_opts.dump_explicit_verilog);
+  print_verilog_submodule_luts(module_manager, Arch.spice->circuit_lib, std::string(verilog_dir), std::string(submodule_dir));
 
   /* 3. Hardwires */
   vpr_printf(TIO_MESSAGE_INFO, "Generating modules of hardwires...\n");

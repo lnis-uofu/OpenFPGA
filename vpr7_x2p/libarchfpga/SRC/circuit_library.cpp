@@ -192,6 +192,32 @@ bool CircuitLibrary::is_lut_fracturable(const CircuitModelId& model_id) const {
   return lut_is_fracturable_[model_id]; 
 }
 
+/* Return the circuit model of input buffers
+ * that are inserted between multiplexing structure and LUT inputs
+ */
+CircuitModelId CircuitLibrary::lut_input_inverter_model(const CircuitModelId& model_id) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  /* validate the circuit model type is BUF */
+  VTR_ASSERT(SPICE_MODEL_LUT == model_type(model_id));
+  /* We MUST have an input inverter */
+  VTR_ASSERT(true == buffer_existence_[model_id][LUT_INPUT_INVERTER]); 
+  return buffer_model_ids_[model_id][LUT_INPUT_INVERTER];
+}
+
+/* Return the circuit model of input buffers
+ * that are inserted between multiplexing structure and LUT inputs
+ */
+CircuitModelId CircuitLibrary::lut_input_buffer_model(const CircuitModelId& model_id) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  /* validate the circuit model type is BUF */
+  VTR_ASSERT(SPICE_MODEL_LUT == model_type(model_id));
+  /* We MUST have an input buffer */
+  VTR_ASSERT(true == buffer_existence_[model_id][LUT_INPUT_BUFFER]); 
+  return buffer_model_ids_[model_id][LUT_INPUT_BUFFER];
+}
+
 /* Return the circuit model of intermediate buffers
  * that are inserted inside LUT multiplexing structures
  */
@@ -200,7 +226,7 @@ CircuitModelId CircuitLibrary::lut_intermediate_buffer_model(const CircuitModelI
   VTR_ASSERT(valid_model_id(model_id));
   /* validate the circuit model type is BUF */
   VTR_ASSERT(SPICE_MODEL_LUT == model_type(model_id));
-  /* if we have an intermediate buffer, we return something, otherwise return an empty map */
+  /* if we have an intermediate buffer, we return something, otherwise return an invalid id */
   if (true == is_lut_intermediate_buffered(model_id)) {
     return buffer_model_ids_[model_id][LUT_INTER_BUFFER];
   } else {
@@ -747,6 +773,20 @@ std::vector<size_t> CircuitLibrary::port_lut_output_masks(const CircuitPortId& c
   /* validate the circuit_port_id */
   VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
   return port_lut_output_masks_[circuit_port_id];
+}
+
+/* Return tri-state map of a port */
+std::string CircuitLibrary::port_tri_state_map(const CircuitPortId& circuit_port_id) const {
+  /* validate the circuit_port_id */
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
+  return port_tri_state_maps_[circuit_port_id];
+}
+
+/* Return circuit model id which is used to tri-state a port */
+CircuitModelId CircuitLibrary::port_tri_state_model(const CircuitPortId& circuit_port_id) const {
+  /* validate the circuit_port_id */
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
+  return port_tri_state_model_ids_[circuit_port_id];
 }
 
 /* Return the id of parent circuit model for a circuit port */

@@ -226,6 +226,8 @@ class CircuitLibrary {
     /* LUT-related information */
     bool is_lut_intermediate_buffered(const CircuitModelId& model_id) const;
     bool is_lut_fracturable(const CircuitModelId& model_id) const;
+    CircuitModelId lut_input_buffer_model(const CircuitModelId& model_id) const;
+    CircuitModelId lut_input_inverter_model(const CircuitModelId& model_id) const;
     CircuitModelId lut_intermediate_buffer_model(const CircuitModelId& model_id) const;
     std::string lut_intermediate_buffer_location_map(const CircuitModelId& model_id) const;
     /* Pass-gate-logic information */
@@ -277,6 +279,8 @@ class CircuitLibrary {
     bool port_is_prog(const CircuitPortId& circuit_port_id) const;
     size_t port_lut_frac_level(const CircuitPortId& circuit_port_id) const;
     std::vector<size_t> port_lut_output_masks(const CircuitPortId& circuit_port_id) const;
+    std::string port_tri_state_map(const CircuitPortId& circuit_port_id) const;
+    CircuitModelId port_tri_state_model(const CircuitPortId& circuit_port_id) const;
     CircuitModelId port_parent_model(const CircuitPortId& circuit_port_id) const;
     std::string model_name(const CircuitPortId& port_id) const;
   public: /* Public Accessors: Timing graph */
