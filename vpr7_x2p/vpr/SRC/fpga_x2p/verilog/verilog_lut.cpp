@@ -45,7 +45,7 @@ void print_verilog_submodule_lut(ModuleManager& module_manager,
   check_file_handler(fp);
 
   /* Get the global ports required by MUX (and any submodules) */
-  std::vector<CircuitPortId> lut_global_ports = circuit_lib.model_global_ports_by_type(circuit_model, SPICE_MODEL_PORT_INPUT, true);
+  std::vector<CircuitPortId> lut_global_ports = circuit_lib.model_global_ports_by_type(circuit_model, SPICE_MODEL_PORT_INPUT, true, true);
   /* Get the input ports from the mux */
   std::vector<CircuitPortId> lut_input_ports = circuit_lib.model_ports_by_type(circuit_model, SPICE_MODEL_PORT_INPUT, true);
   /* Get the output ports from the mux */

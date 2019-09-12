@@ -529,7 +529,8 @@ std::vector<CircuitPortId> CircuitLibrary::model_global_ports(const CircuitModel
 /* Recursively find all the global ports in the circuit model / sub circuit_model */
 std::vector<CircuitPortId> CircuitLibrary::model_global_ports_by_type(const CircuitModelId& model_id,
                                                                       const enum e_spice_model_port_type& type,
-                                                                      const bool& recursive) const {
+                                                                      const bool& recursive, 
+                                                                      const std::vector<enum e_spice_model_type>& ignore_model_types) const {
   /* validate the model_id */
   VTR_ASSERT(valid_model_id(model_id));
 
@@ -556,7 +557,21 @@ std::vector<CircuitPortId> CircuitLibrary::model_global_ports_by_type(const Circ
   /* If go recursively, we search all the buffer/pass-gate circuit model ids */
   /* Go search every sub circuit model included the current circuit model */
   for (const auto& sub_model : sub_models_[model_id]) {
-    std::vector<CircuitPortId> sub_global_ports = model_global_ports_by_type(sub_model, type, recursive);
+    /* Bypass this sub model if user specified an ignore list */
+    bool ignore = false;
+    for (const auto& ignore_model_type : ignore_model_types)  {
+      if (ignore_model_type != model_type(sub_model)) {
+        continue;
+      }
+      ignore = true;
+      break;
+    }
+    if (true == ignore) {
+      continue;
+    }
+    
+    /* Now we can add global ports */
+    std::vector<CircuitPortId> sub_global_ports = model_global_ports_by_type(sub_model, type, recursive, ignore_model_types);
     for (const auto& sub_global_port : sub_global_ports) {
       /* Add to global_ports, if it is not already found in the list */
       bool add_to_list = true;
@@ -575,6 +590,21 @@ std::vector<CircuitPortId> CircuitLibrary::model_global_ports_by_type(const Circ
   }
 
   return global_ports;
+}
+
+/* Recursively find all the global ports in the circuit model / sub circuit_model 
+ * but ignore all the SRAM and SCFF, which are configuration memories
+ */
+std::vector<CircuitPortId> CircuitLibrary::model_global_ports_by_type(const CircuitModelId& model_id,
+                                                                      const enum e_spice_model_port_type& type,
+                                                                      const bool& recursive, 
+                                                                      const bool& ignore_config_memories) const {
+  std::vector<enum e_spice_model_type> ignore_list;
+  if (true == ignore_config_memories) {
+    ignore_list.push_back(SPICE_MODEL_SRAM);
+    ignore_list.push_back(SPICE_MODEL_SCFF);
+  }
+  return model_global_ports_by_type(model_id, type, recursive, ignore_list);
 }
 
 /* Find the ports of a circuit model by a given type, return a list of qualified ports */

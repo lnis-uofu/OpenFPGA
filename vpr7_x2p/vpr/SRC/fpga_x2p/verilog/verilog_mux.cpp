@@ -200,7 +200,7 @@ void generate_verilog_cmos_mux_branch_module(ModuleManager& module_manager,
     return;
   }
 
-  std::vector<CircuitPortId> tgate_global_ports = circuit_lib.model_global_ports_by_type(tgate_model, SPICE_MODEL_PORT_INPUT, true);
+  std::vector<CircuitPortId> tgate_global_ports = circuit_lib.model_global_ports_by_type(tgate_model, SPICE_MODEL_PORT_INPUT, true, true);
 
   /* Make sure we have a valid file handler*/
   check_file_handler(fp);
@@ -641,7 +641,7 @@ void generate_verilog_rram_mux_branch_module(ModuleManager& module_manager,
 
   /* Add module ports */
   /* Add each global programming enable/disable ports */
-  std::vector<CircuitPortId> prog_enable_ports = circuit_lib.model_global_ports_by_type(circuit_model, SPICE_MODEL_PORT_INPUT, true);
+  std::vector<CircuitPortId> prog_enable_ports = circuit_lib.model_global_ports_by_type(circuit_model, SPICE_MODEL_PORT_INPUT, true, true);
   for (const auto& port : prog_enable_ports) {
     /* Configure each global port */
     BasicPort global_port(circuit_lib.port_lib_name(port), circuit_lib.port_size(port));
@@ -1310,7 +1310,7 @@ void generate_verilog_cmos_mux_module(ModuleManager& module_manager,
                                       const std::string& module_name, 
                                       const MuxGraph& mux_graph) {
   /* Get the global ports required by MUX (and any submodules) */
-  std::vector<CircuitPortId> mux_global_ports = circuit_lib.model_global_ports_by_type(circuit_model, SPICE_MODEL_PORT_INPUT, true);
+  std::vector<CircuitPortId> mux_global_ports = circuit_lib.model_global_ports_by_type(circuit_model, SPICE_MODEL_PORT_INPUT, true, true);
   /* Get the input ports from the mux */
   std::vector<CircuitPortId> mux_input_ports = circuit_lib.model_ports_by_type(circuit_model, SPICE_MODEL_PORT_INPUT, true);
   /* Get the output ports from the mux */
@@ -1726,7 +1726,7 @@ void generate_verilog_rram_mux_module(ModuleManager& module_manager,
   }
 
   /* Get the global ports required by MUX (and any submodules) */
-  std::vector<CircuitPortId> mux_global_ports = circuit_lib.model_global_ports_by_type(circuit_model, SPICE_MODEL_PORT_INPUT, true);
+  std::vector<CircuitPortId> mux_global_ports = circuit_lib.model_global_ports_by_type(circuit_model, SPICE_MODEL_PORT_INPUT, true, true);
   /* Get the input ports from the mux */
   std::vector<CircuitPortId> mux_input_ports = circuit_lib.model_ports_by_type(circuit_model, SPICE_MODEL_PORT_INPUT, true);
   /* Get the output ports from the mux */

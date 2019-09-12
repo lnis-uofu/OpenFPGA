@@ -256,7 +256,13 @@ class CircuitLibrary {
     std::vector<CircuitPortId> model_global_ports(const CircuitModelId& model_id, const bool& recursive) const;
     std::vector<CircuitPortId> model_global_ports_by_type(const CircuitModelId& model_id,
                                                           const enum e_spice_model_port_type& type,
-                                                          const bool& recursive) const;
+                                                          const bool& recursive,
+                                                          const std::vector<enum e_spice_model_type>& ignore_model_types) const;
+    std::vector<CircuitPortId> model_global_ports_by_type(const CircuitModelId& model_id,
+                                                          const enum e_spice_model_port_type& type,
+                                                          const bool& recursive,
+                                                          const bool& ignore_config_memories) const;
+
     std::vector<CircuitPortId> model_ports_by_type(const CircuitModelId& model_id, const enum e_spice_model_port_type& port_type) const;
     std::vector<CircuitPortId> model_ports_by_type(const CircuitModelId& model_id, const enum e_spice_model_port_type& port_type, const bool& include_global_port) const;
     std::vector<CircuitPortId> model_input_ports(const CircuitModelId& model_id) const;
