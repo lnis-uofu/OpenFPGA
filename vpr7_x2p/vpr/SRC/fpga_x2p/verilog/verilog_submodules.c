@@ -3349,9 +3349,11 @@ void dump_verilog_submodules(ModuleManager& module_manager,
   print_verilog_submodule_luts(module_manager, Arch.spice->circuit_lib, std::string(verilog_dir), std::string(submodule_dir));
 
   /* 3. Hardwires */
+  /*
   vpr_printf(TIO_MESSAGE_INFO, "Generating modules of hardwires...\n");
   dump_verilog_submodule_wires(verilog_dir, submodule_dir, Arch.num_segments, Arch.Segments,
                                Arch.spice->num_spice_model, Arch.spice->spice_models);
+   */
   /* Create a vector of segments. TODO: should come from DeviceContext */
   std::vector<t_segment_inf> L_segment_vec;
   for (int i = 0; i < Arch.num_segments; ++i) {

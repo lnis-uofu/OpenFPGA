@@ -175,8 +175,7 @@ void print_verilog_submodule_wires(ModuleManager& module_manager,
                                    std::vector<t_segment_inf> routing_segments,
                                    const std::string& verilog_dir,
                                    const std::string& submodule_dir) {
-  /* TODO: remove .bak when it is ready to be plugged in */
-  std::string verilog_fname(submodule_dir + wires_verilog_file_name + ".bak");
+  std::string verilog_fname(submodule_dir + wires_verilog_file_name);
 
   /* Create the file stream */
   std::fstream fp;
@@ -229,8 +228,8 @@ void print_verilog_submodule_wires(ModuleManager& module_manager,
 
   /* Add fname to the linked list */
   /* Uncomment this when it is ready to be plugged in
-  submodule_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(submodule_verilog_subckt_file_path_head, verilog_fname.c_str());  
    */
+  submodule_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(submodule_verilog_subckt_file_path_head, verilog_fname.c_str());  
 
   return;
 }
