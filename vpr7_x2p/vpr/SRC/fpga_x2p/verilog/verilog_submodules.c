@@ -2329,75 +2329,6 @@ void dump_verilog_submodule_muxes(t_sram_orgz_info* cur_sram_orgz_info,
   return;
 }
 
-static 
-void dump_verilog_wire_module(FILE* fp,
-                              char* wire_subckt_name,
-                              t_spice_model verilog_model) {
-  int num_input_port = 0;
-  int num_output_port = 0;
-  t_spice_model_port** input_port = NULL;
-  t_spice_model_port** output_port = NULL;
- 
-  /* Ensure a valid file handler*/
-  if (NULL == fp) {
-    vpr_printf(TIO_MESSAGE_ERROR,"(FILE:%s,LINE[%d])Invalid File handler.\n",
-               __FILE__, __LINE__); 
-    exit(1);
-  } 
-  /* Check the wire model*/
-  assert(NULL != verilog_model.wire_param);
-  assert(0 < verilog_model.wire_param->level);
-  /* Find the input port, output port*/
-  input_port = find_spice_model_ports(&verilog_model, SPICE_MODEL_PORT_INPUT, &num_input_port, TRUE);
-  output_port = find_spice_model_ports(&verilog_model, SPICE_MODEL_PORT_OUTPUT, &num_output_port, TRUE);
-
-  /* Asserts*/
-  assert(1 == num_input_port);
-  assert(1 == num_output_port);
-  assert(1 == input_port[0]->size);
-  assert(1 == output_port[0]->size);
-  /* print the spice model*/
-  fprintf(fp, "//-----Wire module, verilog_model_name=%s -----\n", verilog_model.name);  
-  switch (verilog_model.type) {
-  case SPICE_MODEL_CHAN_WIRE: 
-    /* Add an output at middle point for connecting CB inputs */
-    fprintf(fp, "module %s (\n", wire_subckt_name);
-    /* Dump global ports */
-    if  (0 < rec_dump_verilog_spice_model_global_ports(fp, &verilog_model, TRUE, FALSE, FALSE)) {
-      fprintf(fp, ",\n");
-    }
-    fprintf(fp, "input wire %s, output wire %s, output wire mid_out);\n",
-            input_port[0]->prefix, output_port[0]->prefix);
-    fprintf(fp, "\tassign %s = %s;\n", output_port[0]->prefix, input_port[0]->prefix);
-    fprintf(fp, "\tassign mid_out = %s;\n", input_port[0]->prefix);
-    break;
-  case SPICE_MODEL_WIRE: 
-    /* Add an output at middle point for connecting CB inputs */
-    fprintf(fp, "module %s (\n",
-            wire_subckt_name);
-    /* Dump global ports */
-    if  (0 < rec_dump_verilog_spice_model_global_ports(fp, &verilog_model, TRUE, FALSE, FALSE)) {
-      fprintf(fp, ",\n");
-    }
-    fprintf(fp, "input wire %s, output wire %s);\n",
-            input_port[0]->prefix, output_port[0]->prefix);
-    /* Direct shortcut */
-    fprintf(fp, "\t\tassign %s = %s;\n", output_port[0]->prefix, input_port[0]->prefix);
-    break;
-  default: 
-    vpr_printf(TIO_MESSAGE_ERROR, "(File:%s,[LINE%d])Invalid type of spice_model! Expect [chan_wire|wire].\n",
-               __FILE__, __LINE__);
-    exit(1);
-  }
-  
-  /* Finish*/ 
-  fprintf(fp, "endmodule\n");
-  fprintf(fp, "//-----END Wire module, verilog_model_name=%s -----\n", verilog_model.name);  
-  fprintf(fp, "\n");
-
-  return;
-}
-
 /* Dump one module of a LUT */
 static 
 void dump_verilog_submodule_one_lut(FILE* fp, 
@@ -2954,88 +2885,6 @@ void dump_verilog_submodule_luts(char* verilog_dir,
 }
 
 static 
-void dump_verilog_submodule_wires(char* verilog_dir,
-                                  char* subckt_dir, 
-                                  int num_segments,
-                                  t_segment_inf* segments,
-                                  int num_spice_model,
-                                  t_spice_model* spice_models) {
-  FILE* fp = NULL;
-  char* verilog_name = my_strcat(subckt_dir, wires_verilog_file_name);
-  char* seg_wire_subckt_name = NULL;
-  char* seg_index_str = NULL;
-  int iseg, imodel, len_seg_subckt_name;
- 
-  fp = fopen(verilog_name, "w");
-  if (NULL == fp) {
-    vpr_printf(TIO_MESSAGE_ERROR,"(FILE:%s,LINE[%d])Failure in create Verilog netlist %s",__FILE__, __LINE__, wires_verilog_file_name); 
-    exit(1);
-  } 
-  dump_verilog_file_header(fp,"Wires");
-
-  verilog_include_defines_preproc_file(fp, verilog_dir);
-
-  /* Output wire models*/
-  for (imodel = 0; imodel < num_spice_model; imodel++) {
-    /* Bypass user-defined spice models */
-    if (NULL != spice_models[imodel].verilog_netlist) {
-      continue;
-    }
-    if (SPICE_MODEL_WIRE == spice_models[imodel].type) {
-      assert(NULL != spice_models[imodel].wire_param);
-      dump_verilog_wire_module(fp, spice_models[imodel].name,
-                              spice_models[imodel]);
-    }
-  }
- 
-  /* Create wire models for routing segments*/
-  fprintf(fp,"//----- Wire models for segments in routing -----\n");
-  for (iseg = 0; iseg < num_segments; iseg++) {
-    assert(NULL != segments[iseg].spice_model);
-    assert(SPICE_MODEL_CHAN_WIRE == segments[iseg].spice_model->type);
-    assert(NULL != segments[iseg].spice_model->wire_param);
-    /* Give a unique name for subckt of wire_model of segment, 
-     * spice_model name is unique, and segment name is unique as well
-     */
-    seg_index_str = my_itoa(iseg);
-    len_seg_subckt_name = strlen(segments[iseg].spice_model->name)
-                        + 4 + strlen(seg_index_str) + 1; /* '\0'*/
-    seg_wire_subckt_name = (char*)my_malloc(sizeof(char)*len_seg_subckt_name);
-    sprintf(seg_wire_subckt_name,"%s_seg%s",
-            segments[iseg].spice_model->name, seg_index_str);
-    /* Bypass user-defined spice models */
-    if (NULL != segments[iseg].spice_model->verilog_netlist) {
-      continue;
-    }
-    dump_verilog_wire_module(fp, seg_wire_subckt_name,
-                            *(segments[iseg].spice_model));
-  }
-
-  /* Create module for hard-wired VDD and GND */
-  /*
-  for (imodel = 0; imodel < num_spice_model; imodel++) {
-    if (SPICE_MODEL_VDD == spice_models[imodel].type) {
-      dump_verilog_hard_wired_vdd(fp, spice_models[imodel]);
-    } else if (SPICE_MODEL_GND == spice_models[imodel].type) {
-      dump_verilog_hard_wired_gnd(fp, spice_models[imodel]);
-    }
-  }
-  */
-  
-  /* Close the file handler */
-  fclose(fp);
-
-  /* Add fname to the linked list */
-  submodule_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(submodule_verilog_subckt_file_path_head, verilog_name);  
-
-  /*Free*/
-  my_free(seg_index_str);
-  my_free(seg_wire_subckt_name);
-
-  return;
-}
-
-static 
 void dump_verilog_submodule_memories(t_sram_orgz_info* cur_sram_orgz_info,
                                      char* verilog_dir,
                                      char* submodule_dir,
@@ -3322,7 +3171,6 @@ void dump_verilog_submodules(ModuleManager& module_manager,
   vpr_printf(TIO_MESSAGE_INFO, "Registering user-defined modules...\n");
   add_user_defined_verilog_modules(module_manager, Arch.spice->circuit_lib);
 
-  vpr_printf(TIO_MESSAGE_INFO, "Generating essential modules...\n");
   print_verilog_submodule_essentials(module_manager, 
                                      std::string(verilog_dir), 
                                      std::string(submodule_dir),
@@ -3336,7 +3184,6 @@ void dump_verilog_submodules(ModuleManager& module_manager,
   print_verilog_submodule_muxes(module_manager, mux_lib, Arch.spice->circuit_lib, cur_sram_orgz_info, 
                                 verilog_dir, submodule_dir);
 
-  vpr_printf(TIO_MESSAGE_INFO, "Generating local encoders for multiplexers...\n");
   print_verilog_submodule_mux_local_decoders(module_manager, mux_lib, Arch.spice->circuit_lib, std::string(verilog_dir), std::string(submodule_dir));
  
   /* 2. LUTes */
@@ -3349,11 +3196,6 @@ void dump_verilog_submodules(ModuleManager& module_manager,
   print_verilog_submodule_luts(module_manager, Arch.spice->circuit_lib, std::string(verilog_dir), std::string(submodule_dir));
 
   /* 3. Hardwires */
-  /*
-  vpr_printf(TIO_MESSAGE_INFO, "Generating modules of hardwires...\n");
-  dump_verilog_submodule_wires(verilog_dir, submodule_dir, Arch.num_segments, Arch.Segments,
-                               Arch.spice->num_spice_model, Arch.spice->spice_models);
-   */
   /* Create a vector of segments. TODO: should come from DeviceContext */
   std::vector<t_segment_inf> L_segment_vec;
   for (int i = 0; i < Arch.num_segments; ++i) {
