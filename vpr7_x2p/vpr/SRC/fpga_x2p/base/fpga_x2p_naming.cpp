@@ -94,3 +94,37 @@ std::string generate_mux_local_decoder_subckt_name(const size_t& addr_size,
 
   return subckt_name;
 } 
+
+/************************************************
+ * Generate the module name of a routing track wire
+ ***********************************************/
+std::string generate_segment_wire_subckt_name(const std::string& wire_model_name, 
+                                              const size_t& segment_id) {
+  std::string segment_wire_subckt_name = wire_model_name + "_seg" + std::to_string(segment_id);
+
+  return segment_wire_subckt_name;
+} 
+
+/*********************************************************************
+ * Generate the port name for the mid-output of a routing track wire
+ * Mid-output is the output that is wired to a Connection block multiplexer.
+ *      
+ *                  |    CLB     |
+ *                  +------------+
+ *                        ^
+ *                        |
+ *           +------------------------------+
+ *           | Connection block multiplexer |
+ *           +------------------------------+
+ *                        ^
+ *                        |  mid-output         +--------------
+ *              +--------------------+          |
+ *    input --->| Routing track wire |--------->| Switch Block
+ *              +--------------------+  output  |
+ *                                              +--------------
+
+ ********************************************************************/
+std::string generate_segment_wire_mid_output_name(const std::string& regular_output_name) {
+  /* TODO: maybe have a postfix? */
+  return std::string("mid_" + regular_output_name);
+} 

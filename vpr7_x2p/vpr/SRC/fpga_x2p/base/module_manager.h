@@ -18,6 +18,7 @@
 
 #include <string>
 #include <map>
+#include "vtr_vector.h"
 #include "module_manager_fwd.h"
 #include "device_port.h"
 
@@ -53,6 +54,8 @@ class ModuleManager {
     /* Add a port to a module */
     ModulePortId add_port(const ModuleId& module, 
                           const BasicPort& port_info, const enum e_module_port_type& port_type);
+    /* Set a name for a module */
+    void set_module_name(const ModuleId& module, const std::string& name);
     /* Set a port to be a register */
     void set_port_is_register(const ModuleId& module, const std::string& port_name, const bool& is_register);
     /* Add a child module to a parent module */

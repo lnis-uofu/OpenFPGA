@@ -14,9 +14,17 @@
 #include "module_manager.h"
 #include "module_manager_utils.h"
 
+/******************************************************************************
+ * Add a module to the module manager based on the circuit-level
+ * description of a circuit model
+ * This function add a module with a given customized name
+ * as well as add the ports of circuit model to the module manager
+ ******************************************************************************/
 ModuleId add_circuit_model_to_module_manager(ModuleManager& module_manager, 
-                                             const CircuitLibrary& circuit_lib, const CircuitModelId& circuit_model) {
-  ModuleId module = module_manager.add_module(circuit_lib.model_name(circuit_model)); 
+                                             const CircuitLibrary& circuit_lib, const CircuitModelId& circuit_model,
+                                             const std::string& module_name) {
+  ModuleId module = module_manager.add_module(module_name); 
+  VTR_ASSERT(ModuleId::INVALID() != module);
 
   /* Add ports */
   /* Find global ports and add one by one */
@@ -49,3 +57,18 @@ ModuleId add_circuit_model_to_module_manager(ModuleManager& module_manager,
   /* Return the new id */
   return module;
 }
+
+/******************************************************************************
+ * Add a module to the module manager based on the circuit-level
+ * description of a circuit model
+ * This function add a module in the name of the circuit model
+ * as well as add the ports of circuit model to the module manager
+ *
+ * This function is a wrapper of a more customizable function in the same name
+ ******************************************************************************/
+ModuleId add_circuit_model_to_module_manager(ModuleManager& module_manager, 
+                                             const CircuitLibrary& circuit_lib, const CircuitModelId& circuit_model) {
+ 
+  return add_circuit_model_to_module_manager(module_manager, circuit_lib, circuit_model, circuit_lib.model_name(circuit_model));
+}
+

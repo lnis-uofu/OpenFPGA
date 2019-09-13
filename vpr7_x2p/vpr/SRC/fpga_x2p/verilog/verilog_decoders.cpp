@@ -209,7 +209,7 @@ void print_verilog_submodule_mux_local_decoders(ModuleManager& module_manager,
     print_verilog_mux_local_decoder_module(fp, module_manager, decoder_lib, decoder);
   }
 
-  /* Close the file steam */
+  /* Close the file stream */
   fp.close();
 
   /* Add fname to the linked list when debugging is finished */

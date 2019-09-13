@@ -162,6 +162,13 @@ ModulePortId ModuleManager::add_port(const ModuleId& module,
   return port;
 }
 
+/* Set a name for a module */
+void ModuleManager::set_module_name(const ModuleId& module, const std::string& name) {
+  /* Validate the id of module */
+  VTR_ASSERT( valid_module_id(module) );
+  names_[module] = name;
+}
+
 /* Set a port to be a register */
 void ModuleManager::set_port_is_register(const ModuleId& module, const std::string& port_name, const bool& is_register) {
   /* Find the port */

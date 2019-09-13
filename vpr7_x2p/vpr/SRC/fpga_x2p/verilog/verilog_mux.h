@@ -1,5 +1,5 @@
 /***********************************************
- * Header file for verilog_submodule_mux.cpp
+ * Header file for verilog_mux.cpp
  **********************************************/
 
 #ifndef VERILOG_MUX_H
