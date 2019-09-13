@@ -3008,102 +3008,6 @@ void dump_verilog_submodule_memories(t_sram_orgz_info* cur_sram_orgz_info,
   return;
 }
 
-/* Give a template for a user-defined module */
-static 
-void dump_one_verilog_template_module(FILE* fp,
-                                      t_spice_model* cur_spice_model) {
-  int iport;
-  int cnt = 0;
-
-  /* Ensure a valid file handler*/
-  if (NULL == fp) {
-    vpr_printf(TIO_MESSAGE_ERROR,"(FILE:%s,LINE[%d])Invalid File handler.\n",
-               __FILE__, __LINE__); 
-    exit(1);
-  }
-
-  fprintf(fp, "//----- Template Verilog module for %s -----\n",
-          cur_spice_model->name);
-
-  /* dump module body */
-  fprintf(fp, "module %s (\n",
-          cur_spice_model->name);
-
-  /* Dump ports */
-  for (iport = 0; iport < cur_spice_model->num_port; iport++) {
-    if (0 < cnt) {
-      fprintf(fp, ",\n"); 
-    }
-    dump_verilog_generic_port(fp, 
-                              convert_spice_model_port_type_to_verilog_port_type(cur_spice_model->ports[iport].type),
-                              cur_spice_model->ports[iport].lib_name, 
-                              cur_spice_model->ports[iport].size - 1, 0); 
-    cnt++;
-    /* if there is an inv_prefix, we will dump the paired port */
-    if (NULL == cur_spice_model->ports[iport].inv_prefix) {
-      continue;
-    } 
-    if (0 < cnt) {
-      fprintf(fp, ",\n"); 
-    }
-    dump_verilog_generic_port(fp, 
-                              convert_spice_model_port_type_to_verilog_port_type(cur_spice_model->ports[iport].type),
-                              cur_spice_model->ports[iport].inv_prefix, 
-                              cur_spice_model->ports[iport].size - 1, 0); 
-    cnt++;
-  }
-
-  fprintf(fp, ");\n");
-
-  fprintf(fp, "\n//------ User-defined Verilog netlist model should start from here! -----\n");
-
-
-  fprintf(fp, "endmodule\n");
-
-  fprintf(fp, "\n");
-
-  return;
-}
-
-/* Give a template of all the submodules that are user-defined */
-static 
-void dump_verilog_submodule_templates(t_sram_orgz_info* cur_sram_orgz_info, 
-                                      char* verilog_dir,
-                                      char* submodule_dir,
-                                      int num_spice_model,
-                                      t_spice_model* spice_models) {
-  int imodel;
-  char* verilog_name = my_strcat(submodule_dir, user_defined_template_verilog_file_name);
-  FILE* fp = NULL;
-
-  /* Create file */
-  fp = fopen(verilog_name, "w");
-  if (NULL == fp) {
-    vpr_printf(TIO_MESSAGE_ERROR,"(FILE:%s,LINE[%d])Failure in create Verilog netlist %s",
-                                 __FILE__, __LINE__, user_defined_template_verilog_file_name); 
-    exit(1);
-  } 
-  dump_verilog_file_header(fp,"User-defined netlists template"); 
-
-  /* Output essential models*/
-  for (imodel = 0; imodel < num_spice_model; imodel++) {
-    /* Focus on user-defined modules */
-    if (NULL == spice_models[imodel].verilog_netlist) {
-      continue;
-    }
-    /* Create the port template */
-    dump_one_verilog_template_module(fp, &spice_models[imodel]); 
-  }
-
-  /* close file */
-  fclose(fp);
-
-  /* Free */
-  my_free(verilog_name);
- 
-  return;
-}
-
 /*********************************************************************
  * Register all the user-defined modules in the module manager
  * Walk through the circuit library and add user-defined circuit models
@@ -3322,11 +3226,6 @@ void dump_verilog_submodules(ModuleManager& module_manager,
 
   /* 6. Dump template for all the modules */
   if (TRUE == fpga_verilog_opts.print_user_defined_template) { 
-    dump_verilog_submodule_templates(cur_sram_orgz_info, 
-                                     verilog_dir,
-                                     submodule_dir,
-                                     Arch.spice->num_spice_model, 
-                                     Arch.spice->spice_models);
     print_verilog_submodule_templates(module_manager, Arch.spice->circuit_lib, L_segment_vec, std::string(verilog_dir), std::string(submodule_dir));
   }
 
