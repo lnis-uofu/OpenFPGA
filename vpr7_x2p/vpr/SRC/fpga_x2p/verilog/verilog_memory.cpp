@@ -288,8 +288,7 @@ void print_verilog_submodule_memories(ModuleManager& module_manager,
                                       const CircuitLibrary& circuit_lib,
                                       const std::string& verilog_dir,
                                       const std::string& submodule_dir) {
-
-  /* TODO: Generate modules into a .bak file now. Rename after it is verified */
+  /* Plug in with the mux subckt */
   std::string verilog_fname(submodule_dir + memories_verilog_file_name);
   verilog_fname += ".bak";
 
@@ -368,8 +367,7 @@ void print_verilog_submodule_memories(ModuleManager& module_manager,
   /* Close the file stream */
   fp.close();
 
-  /* TODO: Add fname to the linked list when debugging is finished */
-  /*
+  /* Add fname to the linked list
   submodule_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(submodule_verilog_subckt_file_path_head, verilog_fname.c_str());  
    */
 }
