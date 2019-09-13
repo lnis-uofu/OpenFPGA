@@ -123,7 +123,7 @@ void print_verilog_routing_wire_module(ModuleManager& module_manager,
   std::vector<CircuitPortId> input_ports = circuit_lib.model_ports_by_type(wire_model, SPICE_MODEL_PORT_INPUT, true);
   std::vector<CircuitPortId> output_ports = circuit_lib.model_ports_by_type(wire_model, SPICE_MODEL_PORT_OUTPUT, true);
 
-  /* Makre sure the port size is what we want */
+  /* Make sure the port size is what we want */
   VTR_ASSERT (1 == input_ports.size());
   VTR_ASSERT (1 == output_ports.size());
   VTR_ASSERT (1 == circuit_lib.port_size(input_ports[0]));

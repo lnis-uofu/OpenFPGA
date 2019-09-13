@@ -22,14 +22,18 @@
 #include "vpr_utils.h"
 #include "path_delay.h"
 #include "stats.h"
+#include "vtr_assert.h"
 
 /* Include FPGA-SPICE utils */
 #include "linkedlist.h"
 #include "fpga_x2p_utils.h"
+#include "fpga_x2p_naming.h"
 #include "fpga_x2p_globals.h"
 #include "fpga_x2p_mux_utils.h"
 #include "fpga_x2p_bitstream_utils.h"
 #include "mux_library.h"
+#include "module_manager.h"
+#include "module_manager_utils.h"
 
 /* Include verilog utils */
 #include "verilog_global.h"
@@ -37,14 +41,15 @@
 #include "verilog_pbtypes.h"
 #include "verilog_decoder.h"
 
-#include "verilog_submodules.h"
-
 #include "mux_utils.h"
+#include "verilog_writer_utils.h"
 #include "verilog_mux.h"
 #include "verilog_essential_gates.h"
 #include "verilog_decoders.h"
 #include "verilog_lut.h"
 #include "verilog_wire.h"
+
+#include "verilog_submodules.h"
 
 /***** Subroutines *****/
 
@@ -3106,49 +3111,152 @@ void dump_verilog_submodule_templates(t_sram_orgz_info* cur_sram_orgz_info,
  ********************************************************************/
 static 
 void add_user_defined_verilog_modules(ModuleManager& module_manager, 
-                                      const CircuitLibrary& circuit_lib) {
-  /* Module port depends on the model port attributes:
-   * Any model ports whose is_global_port() is true => MODULE_GLOBAL_PORT 
-   * Inout model port: SPICE_MODEL_PORT_INOUT => MODULE_INOUT_PORT
-   * Input model port: SPICE_MODEL_PORT_INPUT/SRAM/BL/WL/BLB/WLB => MODULE_INPUT_PORT
-   * Output model port: SPICE_MODEL_PORT_OUTPUT => MODULE_OUTPUT_PORT
-   * Clock model port: SPICE_MODEL_PORT_CLOCK => MODULE_CLOCK_PORT
-   */
-  std::map<e_spice_model_port_type, ModuleManager::e_module_port_type> port_type2type_map;
-  port_type2type_map[SPICE_MODEL_PORT_INOUT] = ModuleManager::MODULE_INOUT_PORT;
-  port_type2type_map[SPICE_MODEL_PORT_INPUT] = ModuleManager::MODULE_INPUT_PORT;
-  port_type2type_map[SPICE_MODEL_PORT_SRAM] = ModuleManager::MODULE_INPUT_PORT;
-  port_type2type_map[SPICE_MODEL_PORT_BL] = ModuleManager::MODULE_INPUT_PORT;
-  port_type2type_map[SPICE_MODEL_PORT_WL] = ModuleManager::MODULE_INPUT_PORT;
-  port_type2type_map[SPICE_MODEL_PORT_BLB] = ModuleManager::MODULE_INPUT_PORT;
-  port_type2type_map[SPICE_MODEL_PORT_WLB] = ModuleManager::MODULE_INPUT_PORT;
-  port_type2type_map[SPICE_MODEL_PORT_OUTPUT] = ModuleManager::MODULE_OUTPUT_PORT;
-  port_type2type_map[SPICE_MODEL_PORT_CLOCK] = ModuleManager::MODULE_CLOCK_PORT;
-
-  /* Iterate over verilog modules */
+                                      const CircuitLibrary& circuit_lib, 
+                                      const std::vector<t_segment_inf>& routing_segments) {
+  /* Iterate over Verilog modules */
   for (const auto& model : circuit_lib.models()) {
     /* We only care about user-defined models */
     if (true == circuit_lib.model_verilog_netlist(model).empty()) {
       continue;
     }
+    /* Skip Routing channel wire models because they need a different name. Do it later */
+    if (SPICE_MODEL_CHAN_WIRE == circuit_lib.model_type(model)) {
+      continue;
+    }
     /* Reach here, the model requires a user-defined Verilog netlist, 
      * Register it in the module_manager  
      */
-    ModuleId module_id = module_manager.add_module(circuit_lib.model_name(model));
-    /* Iterate over the ports of circuit model, and add them to module_manager */
-    for (const auto& model_port : circuit_lib.model_ports(model)) {
-      /* Create port information */
-      BasicPort module_port(circuit_lib.port_lib_name(model_port), circuit_lib.port_size(model_port));
-
-      /* Deposite a module port type */
-      ModuleManager::e_module_port_type module_port_type = port_type2type_map[circuit_lib.port_type(model_port)];
-      /* Force a global port type */
-      if (true == circuit_lib.port_is_global(model_port)) {
-        module_port_type = ModuleManager::MODULE_GLOBAL_PORT;
-      }
-      module_manager.add_port(module_id, module_port, module_port_type);
-    }
+    add_circuit_model_to_module_manager(module_manager, circuit_lib, model);
   }
+
+  /* Register the routing channel wires  */
+  for (const auto& seg : routing_segments) {
+    VTR_ASSERT( CircuitModelId::INVALID() != seg.circuit_model);
+    VTR_ASSERT( SPICE_MODEL_CHAN_WIRE == circuit_lib.model_type(seg.circuit_model));
+    /* We care only user-defined circuit models */
+    if (circuit_lib.model_verilog_netlist(seg.circuit_model).empty()) {
+      continue;
+    }
+    /* Give a unique name for subckt of wire_model of segment, 
+     * circuit_model name is unique, and segment id is unique as well
+     */
+    std::string segment_wire_subckt_name = generate_segment_wire_subckt_name(circuit_lib.model_name(seg.circuit_model), &seg - &routing_segments[0]);
+
+    /* Create a Verilog Module based on the circuit model, and add to module manager */
+    ModuleId module_id = add_circuit_model_to_module_manager(module_manager, circuit_lib, seg.circuit_model, segment_wire_subckt_name); 
+
+    /* Find the output port*/
+    std::vector<CircuitPortId> output_ports = circuit_lib.model_ports_by_type(seg.circuit_model, SPICE_MODEL_PORT_OUTPUT, true);
+    /* Make sure the port size is what we want */
+    VTR_ASSERT (1 == circuit_lib.port_size(output_ports[0]));
+  
+    /* Add a mid-output port to the module */
+    BasicPort module_mid_output_port(generate_segment_wire_mid_output_name(circuit_lib.port_lib_name(output_ports[0])), circuit_lib.port_size(output_ports[0]));
+    module_manager.add_port(module_id, module_mid_output_port, ModuleManager::MODULE_OUTPUT_PORT);
+  }
+}
+
+/* Print a template for a user-defined circuit model
+ * The template will include just the port declaration of the Verilog module
+ * The template aims to help user to write Verilog codes with a guaranteed
+ * module definition, which can be correctly instanciated (with correct
+ * port mapping) in the FPGA fabric
+ */
+static 
+void print_one_verilog_template_module(const ModuleManager& module_manager,
+                                       std::fstream& fp,
+                                       const std::string& module_name) {
+  /* Ensure a valid file handler*/
+  check_file_handler(fp);
+
+  print_verilog_comment(fp, std::string("----- Template Verilog module for " + module_name + " -----"));
+
+  /* Find the module in module manager, which should be already registered */
+  /* TODO: routing channel wire model may have a different name! */
+  ModuleId template_module = module_manager.find_module(module_name);
+  VTR_ASSERT(ModuleId::INVALID() != template_module);
+
+  /* dump module definition + ports */
+  print_verilog_module_declaration(fp, module_manager, template_module);
+  /* Finish dumping ports */
+
+  print_verilog_comment(fp, std::string("----- Internal logic should start here -----"));
+
+  /* Add some empty lines as placeholders for the internal logic*/
+  fp << std::endl << std::endl;
+ 
+  print_verilog_comment(fp, std::string("----- Internal logic should end here -----"));
+
+  /* Put an end to the Verilog module */
+  print_verilog_module_end(fp, module_name);
+
+  /* Add an empty line as a splitter */
+  fp << std::endl;
+}
+
+/* Print a template of all the submodules that are user-defined
+ * The template will include just the port declaration of the submodule
+ * The template aims to help user to write Verilog codes with a guaranteed
+ * module definition, which can be correctly instanciated (with correct
+ * port mapping) in the FPGA fabric
+ */
+static 
+void print_verilog_submodule_templates(const ModuleManager& module_manager,
+                                       const CircuitLibrary& circuit_lib,
+                                       const std::vector<t_segment_inf>& routing_segments,
+                                       const std::string& verilog_dir,
+                                       const std::string& submodule_dir) {
+  std::string verilog_fname(submodule_dir + user_defined_template_verilog_file_name + ".bak");
+
+  /* Create the file stream */
+  std::fstream fp;
+  fp.open(verilog_fname, std::fstream::out | std::fstream::trunc);
+
+  check_file_handler(fp);
+
+  /* Print out debugging information for if the file is not opened/created properly */
+  vpr_printf(TIO_MESSAGE_INFO,
+             "Creating template for user-defined Verilog modules (%s)...\n",
+             verilog_fname.c_str()); 
+
+  print_verilog_file_header(fp, "Template for user-defined Verilog modules"); 
+
+  print_verilog_include_defines_preproc_file(fp, verilog_dir);
+
+  /* Output essential models*/
+  for (const auto& model : circuit_lib.models()) {
+    /* Focus on user-defined modules, which must have a Verilog netlist defined */
+    if (circuit_lib.model_verilog_netlist(model).empty()) {
+      continue;
+    }
+    /* Skip Routing channel wire models because they need a different name. Do it later */
+    if (SPICE_MODEL_CHAN_WIRE == circuit_lib.model_type(model)) {
+      continue;
+    }
+    /* Print a Verilog template for the circuit model */
+    print_one_verilog_template_module(module_manager, fp, circuit_lib.model_name(model)); 
+  }
+
+  /* Register the routing channel wires  */
+  for (const auto& seg : routing_segments) {
+    VTR_ASSERT( CircuitModelId::INVALID() != seg.circuit_model);
+    VTR_ASSERT( SPICE_MODEL_CHAN_WIRE == circuit_lib.model_type(seg.circuit_model));
+    /* We care only user-defined circuit models */
+    if (circuit_lib.model_verilog_netlist(seg.circuit_model).empty()) {
+      continue;
+    }
+    /* Give a unique name for subckt of wire_model of segment, 
+     * circuit_model name is unique, and segment id is unique as well
+     */
+    std::string segment_wire_subckt_name = generate_segment_wire_subckt_name(circuit_lib.model_name(seg.circuit_model), &seg - &routing_segments[0]);
+    /* Print a Verilog template for the circuit model */
+    print_one_verilog_template_module(module_manager, fp, segment_wire_subckt_name); 
+  }
+
+  /* close file stream */
+  fp.close();
+ 
+  /* No need to add the template to the subckt include files! */
 }
 
 /*********************************************************************
@@ -3164,12 +3272,18 @@ void dump_verilog_submodules(ModuleManager& module_manager,
                              t_det_routing_arch* routing_arch,
                              t_syn_verilog_opts fpga_verilog_opts) {
 
+  /* Create a vector of segments. TODO: should come from DeviceContext */
+  std::vector<t_segment_inf> L_segment_vec;
+  for (int i = 0; i < Arch.num_segments; ++i) {
+    L_segment_vec.push_back(Arch.Segments[i]);
+  }
+
   /* TODO: Register all the user-defined modules in the module manager
    * This should be done prior to other steps in this function, 
    * because they will be instanciated by other primitive modules 
    */
   vpr_printf(TIO_MESSAGE_INFO, "Registering user-defined modules...\n");
-  add_user_defined_verilog_modules(module_manager, Arch.spice->circuit_lib);
+  add_user_defined_verilog_modules(module_manager, Arch.spice->circuit_lib, L_segment_vec);
 
   print_verilog_submodule_essentials(module_manager, 
                                      std::string(verilog_dir), 
@@ -3196,11 +3310,6 @@ void dump_verilog_submodules(ModuleManager& module_manager,
   print_verilog_submodule_luts(module_manager, Arch.spice->circuit_lib, std::string(verilog_dir), std::string(submodule_dir));
 
   /* 3. Hardwires */
-  /* Create a vector of segments. TODO: should come from DeviceContext */
-  std::vector<t_segment_inf> L_segment_vec;
-  for (int i = 0; i < Arch.num_segments; ++i) {
-    L_segment_vec.push_back(Arch.Segments[i]);
-  }
   print_verilog_submodule_wires(module_manager, Arch.spice->circuit_lib, L_segment_vec, std::string(verilog_dir), std::string(submodule_dir));
 
   /* 4. Memories */
@@ -3218,6 +3327,7 @@ void dump_verilog_submodules(ModuleManager& module_manager,
                                      submodule_dir,
                                      Arch.spice->num_spice_model, 
                                      Arch.spice->spice_models);
+    print_verilog_submodule_templates(module_manager, Arch.spice->circuit_lib, L_segment_vec, std::string(verilog_dir), std::string(submodule_dir));
   }
 
   /* Create a header file to include all the subckts */

@@ -139,7 +139,8 @@ void print_verilog_module_ports(std::fstream& fp,
   }
  
   /* Output any port that is registered */
-  fp << "//----- Registered ports -----" << std::endl; 
+  fp << std::endl;
+  fp << "//----- BEGIN Registered ports -----" << std::endl; 
   for (const auto& kv : port_type2type_map) {
     for (const auto& port : module_manager.module_ports_by_type(module_id, kv.first)) {
       /* Skip the ports that are not registered */
@@ -153,6 +154,8 @@ void print_verilog_module_ports(std::fstream& fp,
       fp << ";" << std::endl;
     }
   }
+  fp << "//----- END Registered ports -----" << std::endl; 
+  fp << std::endl;
 }
 
 /************************************************
