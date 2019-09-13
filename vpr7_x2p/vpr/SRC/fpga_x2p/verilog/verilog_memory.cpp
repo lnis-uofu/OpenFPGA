@@ -99,31 +99,23 @@
  *
  ********************************************************************/
 static 
-void print_verilog_cmos_mux_memory_module(ModuleManager& module_manager,
-                                          const CircuitLibrary& circuit_lib,
-                                          std::fstream& fp,
-                                          const CircuitModelId& mux_model,
-                                          const MuxGraph& mux_graph) {
+void print_verilog_memory_module(ModuleManager& module_manager,
+                                 const CircuitLibrary& circuit_lib,
+                                 std::fstream& fp,
+                                 const std::string& module_name,
+                                 const CircuitModelId& sram_model,
+                                 const size_t& num_mems) {
   /* Make sure we have a valid file handler*/
   check_file_handler(fp);
-
-  /* Generate module name */
-  std::string module_name = generate_verilog_mux_subckt_name(circuit_lib, mux_model, 
-                                                             find_mux_num_datapath_inputs(circuit_lib, mux_model, mux_graph.num_inputs()), 
-                                                             std::string(verilog_mem_posfix));
-
-  /* Get the sram ports from the mux */
-  std::vector<CircuitPortId> mux_sram_ports = circuit_lib.model_ports_by_type(mux_model, SPICE_MODEL_PORT_SRAM, true);
-  VTR_ASSERT( 1 == mux_sram_ports.size() );
-  /* Get the circuit model for the memory circuit used by the multiplexer */
-  CircuitModelId sram_model = circuit_lib.port_tri_state_model(mux_sram_ports[0]);
-  VTR_ASSERT(CircuitModelId::INVALID() != sram_model);
 
   /* Create a module and add to the module manager */
   ModuleId module_id = module_manager.add_module(module_name); 
   VTR_ASSERT(ModuleId::INVALID() != module_id);
   /* Get the global ports required by the SRAM */
-  std::vector<CircuitPortId> sram_global_ports = circuit_lib.model_global_ports_by_type(sram_model, SPICE_MODEL_PORT_INPUT, true, true);
+  std::vector<enum e_spice_model_port_type> global_port_types;
+  global_port_types.push_back(SPICE_MODEL_PORT_CLOCK);
+  global_port_types.push_back(SPICE_MODEL_PORT_INPUT);
+  std::vector<CircuitPortId> sram_global_ports = circuit_lib.model_global_ports_by_type(sram_model, global_port_types, true, false);
   /* Get the input ports from the SRAM */
   std::vector<CircuitPortId> sram_input_ports = circuit_lib.model_ports_by_type(sram_model, SPICE_MODEL_PORT_INPUT, true);
   /* Get the output ports from the SRAM */
@@ -134,9 +126,6 @@ void print_verilog_cmos_mux_memory_module(ModuleManager& module_manager,
   std::vector<CircuitPortId> sram_wl_ports  = circuit_lib.model_ports_by_type(sram_model, SPICE_MODEL_PORT_WL, true);
   std::vector<CircuitPortId> sram_wlb_ports = circuit_lib.model_ports_by_type(sram_model, SPICE_MODEL_PORT_WLB, true);
   
-  /* Find the number of SRAMs in the module, this is also the port width */
-  size_t num_mems = mux_graph.num_memory_bits();
-
   /* Add module ports: the ports come from the SRAM modules */
   /* Add each global port */
   for (const auto& port : sram_global_ports) {
@@ -244,9 +233,25 @@ void print_verilog_mux_memory_module(ModuleManager& module_manager,
                                      const MuxGraph& mux_graph) {
   /* Multiplexers built with different technology is in different organization */
   switch (circuit_lib.design_tech_type(mux_model)) {
-  case SPICE_MODEL_DESIGN_CMOS:
-    print_verilog_cmos_mux_memory_module(module_manager, circuit_lib, fp, mux_model, mux_graph);
+  case SPICE_MODEL_DESIGN_CMOS: {
+    /* Generate module name */
+    std::string module_name = generate_verilog_mux_subckt_name(circuit_lib, mux_model, 
+                                                               find_mux_num_datapath_inputs(circuit_lib, mux_model, mux_graph.num_inputs()), 
+                                                               std::string(verilog_mem_posfix));
+
+    /* Get the sram ports from the mux */
+    std::vector<CircuitPortId> mux_sram_ports = circuit_lib.model_ports_by_type(mux_model, SPICE_MODEL_PORT_SRAM, true);
+    VTR_ASSERT( 1 == mux_sram_ports.size() );
+    /* Get the circuit model for the memory circuit used by the multiplexer */
+    CircuitModelId sram_model = circuit_lib.port_tri_state_model(mux_sram_ports[0]);
+    VTR_ASSERT(CircuitModelId::INVALID() != sram_model);
+
+    /* Find the number of SRAMs in the module, this is also the port width */
+    size_t num_mems = mux_graph.num_memory_bits();
+
+    print_verilog_memory_module(module_manager, circuit_lib, fp, module_name, sram_model, num_mems);
     break;
+  }
   case SPICE_MODEL_DESIGN_RRAM:
     /* We do not need a memory submodule for RRAM MUX,
      * RRAM are embedded in the datapath  
@@ -332,7 +337,32 @@ void print_verilog_submodule_memories(ModuleManager& module_manager,
     if (0 == sram_ports.size()) {
       continue;
     }
+    /* Find the name of memory module */
+    /* Get the total number of SRAMs */
+    size_t num_mems = 0; 
+    for (const auto& port : sram_ports) {
+      num_mems += circuit_lib.port_size(port);
+    }
+    /* Get the circuit model for the memory circuit used by the multiplexer */
+    std::vector<CircuitModelId> sram_models;
+    for (const auto& port : sram_ports) {
+      CircuitModelId sram_model = circuit_lib.port_tri_state_model(port);
+      VTR_ASSERT(CircuitModelId::INVALID() != sram_model);
+      /* Found in the vector of sram_models, do not update and go to the next */
+      if (sram_models.end() != std::find(sram_models.begin(), sram_models.end(), sram_model)) {
+        continue;
+      }
+      /* sram_model not found in the vector, update the sram_models */
+      sram_models.push_back(sram_model);
+    }
+    /* Should have only 1 SRAM model */
+    VTR_ASSERT( 1 == sram_models.size() );
+  
+    /* Create the module name for the memory block */
+    std::string module_name = generate_memory_module_name(circuit_lib, model, sram_models[0], std::string(verilog_mem_posfix));
+
     /* Create a Verilog module for the memories used by the circuit model */
+    print_verilog_memory_module(module_manager, circuit_lib, fp, module_name, sram_models[0], num_mems);
   }
 
   /* Close the file stream */

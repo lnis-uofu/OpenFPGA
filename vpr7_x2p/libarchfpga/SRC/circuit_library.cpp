@@ -592,6 +592,25 @@ std::vector<CircuitPortId> CircuitLibrary::model_global_ports_by_type(const Circ
   return global_ports;
 }
 
+
+/* Recursively find all the global ports in the circuit model / sub circuit_model 
+ * whose port type matches users' specification
+ */
+std::vector<CircuitPortId> CircuitLibrary::model_global_ports_by_type(const CircuitModelId& model_id,
+                                                                      const std::vector<enum e_spice_model_port_type>& types,
+                                                                      const bool& recursive,
+                                                                      const bool& ignore_config_memories) const {
+  std::vector<CircuitPortId> global_ports;
+  std::vector<enum e_spice_model_type> ignore_list;
+
+  for (const auto& port_type : types) {
+    std::vector<CircuitPortId> global_port_by_type = model_global_ports_by_type(model_id, port_type, recursive, ignore_config_memories);
+    /* Insert the vector to the final global_ports */
+    global_ports.insert(global_ports.begin(), global_port_by_type.begin(), global_port_by_type.end()); 
+  }
+  return global_ports;
+}
+
 /* Recursively find all the global ports in the circuit model / sub circuit_model 
  * but ignore all the SRAM and SCFF, which are configuration memories
  */
