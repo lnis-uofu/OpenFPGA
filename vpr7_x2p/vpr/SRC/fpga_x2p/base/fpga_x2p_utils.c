@@ -3148,6 +3148,39 @@ void config_spice_models_sram_port_spice_model(int num_spice_model,
   return;
 }
 
+/********************************************************************
+ * Link the circuit model of SRAM ports of each circuit model
+ * to a default SRAM circuit model.
+ * This function aims to ease the XML writing, allowing users to skip
+ * the circuit model definition for SRAM ports that are used by default
+ * TODO: Maybe deprecated as we prefer strict definition 
+ *******************************************************************/
+void config_circuit_models_sram_port_to_default_sram_model(CircuitLibrary& circuit_lib,
+                                                           const CircuitModelId& default_sram_model) {
+  for (const auto& model : circuit_lib.models()) {
+    for (const auto& port : circuit_lib.model_ports(model)) {
+      /* Bypass non SRAM ports */
+      if (SPICE_MODEL_PORT_SRAM != circuit_lib.port_type(port)) {
+        continue;
+      }
+      /* Write for the default SRAM SPICE model! */
+      circuit_lib.set_port_tri_state_model_id(port, default_sram_model);
+      /* Only show warning when we try to override the given spice_model_name ! */ 
+      if (circuit_lib.port_tri_state_model_name(port).empty()) { 
+        continue;
+      }
+      /* Give a warning !!! */
+      if (0 != circuit_lib.model_name(default_sram_model).compare(circuit_lib.port_tri_state_model_name(port))) {
+        vpr_printf(TIO_MESSAGE_WARNING, 
+                   "Overwrite SRAM circuit model for circuit model port (name:%s, port:%s) to be the correct one (name:%s)!\n",
+                   circuit_lib.model_name(model).c_str(),
+                   circuit_lib.port_prefix(port).c_str(),
+                   circuit_lib.model_name(default_sram_model).c_str());
+      }
+    }
+  }
+}
+
 void determine_sb_port_coordinator(t_sb cur_sb_info, int side, 
                                    int* port_x, int* port_y) {
    /* Check */

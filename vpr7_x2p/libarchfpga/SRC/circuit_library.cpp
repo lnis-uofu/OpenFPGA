@@ -819,6 +819,13 @@ CircuitModelId CircuitLibrary::port_tri_state_model(const CircuitPortId& circuit
   return port_tri_state_model_ids_[circuit_port_id];
 }
 
+/* Return circuit model name which is used to tri-state a port */
+std::string CircuitLibrary::port_tri_state_model_name(const CircuitPortId& circuit_port_id) const {
+  /* validate the circuit_port_id */
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
+  return port_tri_state_model_names_[circuit_port_id];
+}
+
 /* Return the id of parent circuit model for a circuit port */
 CircuitModelId CircuitLibrary::port_parent_model(const CircuitPortId& circuit_port_id) const {
   /* validate the circuit_port_id */

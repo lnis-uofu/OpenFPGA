@@ -287,6 +287,7 @@ class CircuitLibrary {
     std::vector<size_t> port_lut_output_masks(const CircuitPortId& circuit_port_id) const;
     std::string port_tri_state_map(const CircuitPortId& circuit_port_id) const;
     CircuitModelId port_tri_state_model(const CircuitPortId& circuit_port_id) const;
+    std::string port_tri_state_model_name(const CircuitPortId& circuit_port_id) const;
     CircuitModelId port_parent_model(const CircuitPortId& circuit_port_id) const;
     std::string model_name(const CircuitPortId& port_id) const;
   public: /* Public Accessors: Timing graph */

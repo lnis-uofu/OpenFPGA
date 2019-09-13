@@ -362,6 +362,9 @@ void config_spice_models_sram_port_spice_model(int num_spice_model,
                                                t_spice_model* spice_models,
                                                t_spice_model* default_sram_spice_model);
 
+void config_circuit_models_sram_port_to_default_sram_model(CircuitLibrary& circuit_lib,
+                                                           const CircuitModelId& default_sram_model);
+
 void determine_sb_port_coordinator(t_sb cur_sb_info, int side, 
                                    int* port_x, int* port_y);
 

@@ -236,6 +236,7 @@ void vpr_fpga_verilog(t_vpr_setup vpr_setup,
   config_spice_models_sram_port_spice_model(Arch.spice->num_spice_model, 
                                             Arch.spice->spice_models,
                                             Arch.sram_inf.verilog_sram_inf_orgz->spice_model);
+  config_circuit_models_sram_port_to_default_sram_model(Arch.spice->circuit_lib, Arch.sram_inf.verilog_sram_inf_orgz->circuit_model); 
 
   /* Assign global variables of input and output pads */
   iopad_verilog_model = find_iopad_spice_model(Arch.spice->num_spice_model, Arch.spice->spice_models);
