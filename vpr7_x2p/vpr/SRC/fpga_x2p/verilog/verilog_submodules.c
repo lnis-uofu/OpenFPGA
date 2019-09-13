@@ -47,6 +47,7 @@
 #include "verilog_essential_gates.h"
 #include "verilog_decoders.h"
 #include "verilog_lut.h"
+#include "verilog_memory.h"
 #include "verilog_wire.h"
 
 #include "verilog_submodules.h"
@@ -3110,7 +3111,7 @@ void print_verilog_submodule_templates(const ModuleManager& module_manager,
                                        const std::vector<t_segment_inf>& routing_segments,
                                        const std::string& verilog_dir,
                                        const std::string& submodule_dir) {
-  std::string verilog_fname(submodule_dir + user_defined_template_verilog_file_name + ".bak");
+  std::string verilog_fname(submodule_dir + user_defined_template_verilog_file_name);
 
   /* Create the file stream */
   std::fstream fp;
@@ -3199,8 +3200,7 @@ void dump_verilog_submodules(ModuleManager& module_manager,
   dump_verilog_submodule_muxes(cur_sram_orgz_info, verilog_dir, submodule_dir, routing_arch->num_switch, 
                                switch_inf, Arch.spice, routing_arch, fpga_verilog_opts.dump_explicit_verilog);
 
-  print_verilog_submodule_muxes(module_manager, mux_lib, Arch.spice->circuit_lib, cur_sram_orgz_info, 
-                                verilog_dir, submodule_dir);
+  print_verilog_submodule_muxes(module_manager, mux_lib, Arch.spice->circuit_lib, cur_sram_orgz_info, std::string(verilog_dir), std::string(submodule_dir));
 
   print_verilog_submodule_mux_local_decoders(module_manager, mux_lib, Arch.spice->circuit_lib, std::string(verilog_dir), std::string(submodule_dir));
  
@@ -3220,6 +3220,7 @@ void dump_verilog_submodules(ModuleManager& module_manager,
   vpr_printf(TIO_MESSAGE_INFO, "Generating modules of memories...\n");
   dump_verilog_submodule_memories(cur_sram_orgz_info, verilog_dir, submodule_dir, routing_arch->num_switch, 
                                   switch_inf, Arch.spice, routing_arch, fpga_verilog_opts.dump_explicit_verilog);
+  print_verilog_submodule_memories(module_manager, mux_lib, Arch.spice->circuit_lib, std::string(verilog_dir), std::string(submodule_dir));
 
   /* 5. Dump decoder modules only when memory bank is required */
   dump_verilog_config_peripherals(cur_sram_orgz_info, verilog_dir, submodule_dir);

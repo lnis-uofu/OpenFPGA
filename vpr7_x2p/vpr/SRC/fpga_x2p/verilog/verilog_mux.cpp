@@ -1856,11 +1856,11 @@ void print_verilog_submodule_muxes(ModuleManager& module_manager,
                                    const MuxLibrary& mux_lib,
                                    const CircuitLibrary& circuit_lib,
                                    t_sram_orgz_info* cur_sram_orgz_info,
-                                   char* verilog_dir,
-                                   char* submodule_dir) {
+                                   const std::string& verilog_dir,
+                                   const std::string& submodule_dir) {
 
   /* TODO: Generate modules into a .bak file now. Rename after it is verified */
-  std::string verilog_fname(my_strcat(submodule_dir, muxes_verilog_file_name));
+  std::string verilog_fname(submodule_dir + muxes_verilog_file_name);
   verilog_fname += ".bak";
 
   /* Create the file stream */
@@ -1900,7 +1900,7 @@ void print_verilog_submodule_muxes(ModuleManager& module_manager,
     generate_verilog_mux_module(module_manager, circuit_lib, fp, mux_circuit_model, mux_graph);
   }
 
-  /* Close the file steam */
+  /* Close the file stream */
   fp.close();
 
   /* TODO: 
@@ -1915,7 +1915,7 @@ void print_verilog_submodule_muxes(ModuleManager& module_manager,
 
   /* TODO: Add fname to the linked list when debugging is finished */
   /*
-  submodule_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(submodule_verilog_subckt_file_path_head, verilog_name);  
+  submodule_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(submodule_verilog_subckt_file_path_head, verilog_fname.c_str());  
    */
 }
 
