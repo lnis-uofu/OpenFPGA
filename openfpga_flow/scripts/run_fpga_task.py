@@ -53,9 +53,9 @@ parser.add_argument('--test_run', action="store_true",
                     help="Dummy run shows final generated VPR commands")
 parser.add_argument('--debug', action="store_true",
                     help="Run script in debug mode")
-parser.add_argument('--exit_on_fail', action="store_true",
+parser.add_argument('--continue_on_fail', action="store_true",
                     help="Exit script with return code")
-parser.add_argument('--skip_thread_logs', action="store_true",
+parser.add_argument('--show_thread_logs', action="store_true",
                     help="Skips logs from running thread")
 args = parser.parse_args()
 
@@ -365,7 +365,7 @@ def run_single_script(s, eachJob, job_list):
                                            stderr=subprocess.STDOUT,
                                            universal_newlines=True)
                 for line in process.stdout:
-                    if not args.skip_thread_logs:
+                    if args.show_thread_logs:
                         strip_child_logger_info(line[:-1])
                     sys.stdout.buffer.flush()
                     output.write(line)
@@ -376,7 +376,7 @@ def run_single_script(s, eachJob, job_list):
         except:
             logger.exception("Failed to execute openfpga flow - " +
                              eachJob["name"])
-            if args.exit_on_fail:
+            if not args.continue_on_fail:
                 clean_up_and_exit("Faile to run task %s exiting" % name)
         eachJob["endtime"] = time.time()
         timediff = timedelta(seconds=(eachJob["endtime"]-eachJob["starttime"]))
