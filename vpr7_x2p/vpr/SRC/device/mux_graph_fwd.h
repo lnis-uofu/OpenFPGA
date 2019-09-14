@@ -13,11 +13,13 @@ struct mux_node_id_tag;
 struct mux_edge_id_tag;
 struct mux_mem_id_tag;
 struct mux_input_id_tag;
+struct mux_output_id_tag;
 
 typedef vtr::StrongId<mux_node_id_tag> MuxNodeId;
 typedef vtr::StrongId<mux_edge_id_tag> MuxEdgeId;
 typedef vtr::StrongId<mux_mem_id_tag> MuxMemId;
 typedef vtr::StrongId<mux_input_id_tag> MuxInputId;
+typedef vtr::StrongId<mux_output_id_tag> MuxOutputId;
 
 class MuxGraph;
 

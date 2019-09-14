@@ -50,6 +50,32 @@ std::vector<BasicPort> ModuleManager::module_ports_by_type(const ModuleId& modul
   return ports;
 }
 
+/* Find the module id by a given name, return invalid if not found */
+ModuleId ModuleManager::find_module(const std::string& name) const {
+  if (name_id_map_.find(name) != name_id_map_.end()) {
+    /* Find it, return the id */
+    return name_id_map_.at(name); 
+  }
+  /* Not found, return an invalid id */
+  return ModuleId::INVALID();
+}
+
+/* Find the number of instances of a child module in the parent module */
+size_t ModuleManager::num_instance(const ModuleId& parent_module, const ModuleId& child_module) const {
+  /* validate both module ids */
+  VTR_ASSERT(valid_module_id(parent_module));
+  VTR_ASSERT(valid_module_id(child_module));
+  /* Try to find the child_module in the children list of parent_module*/
+  for (size_t i = 0; i < children_[parent_module].size(); ++i) {
+    if (child_module == children_[parent_module][i]) {
+      /* Found, return the number of instances */
+      return num_child_instances_[parent_module][i]; 
+    }
+  }
+  /* Not found, return a zero */
+  return 0;
+}
+
 /******************************************************************************
  * Public Mutators
  ******************************************************************************/
@@ -69,6 +95,7 @@ ModuleId ModuleManager::add_module(const std::string& name) {
   names_.push_back(name);
   parents_.emplace_back();
   children_.emplace_back();
+  num_child_instances_.emplace_back();
 
   port_ids_.emplace_back();
   ports_.emplace_back();
@@ -116,10 +143,14 @@ void ModuleManager::add_child_module(const ModuleId& parent_module, const Module
     parents_[child_module].push_back(parent_module);
   }
 
-  std::vector<ModuleId>::iterator child_it = std::find(children_[child_module].begin(), children_[child_module].end(), child_module);
+  std::vector<ModuleId>::iterator child_it = std::find(children_[parent_module].begin(), children_[parent_module].end(), child_module);
   if (child_it == children_[parent_module].end()) {
     /* Update the child module of parent module */
     children_[parent_module].push_back(child_module);
+    num_child_instances_[parent_module].push_back(1); /* By default give one */
+  } else {
+    /* Increase the counter of instances */
+    num_child_instances_[parent_module][child_it - children_[parent_module].begin()]++;
   }
 }
 

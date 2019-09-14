@@ -55,7 +55,7 @@ void print_verilog_include_defines_preproc_file(std::fstream& fp,
 
   fp << "//------ Include defines: preproc flags -----" << std::endl;
   fp << "`include \"" << include_file_path << "\"" << std::endl; 
-  fp << "//------ End Include defines: preproc flags -----" << std::endl;
+  fp << "//------ End Include defines: preproc flags -----" << std::endl << std::endl;
 
   return;
 }
@@ -77,7 +77,7 @@ void print_verilog_module_definition(std::fstream& fp,
                                      const std::string& module_name) {
   check_file_handler(fp);
 
-  print_verilog_comment(fp, std::string("//----- Verilog module for " + module_name + " -----"));
+  print_verilog_comment(fp, std::string("----- Verilog module for " + module_name + " -----"));
   fp << "module " << module_name << "(" << std::endl;
 }
 
@@ -102,10 +102,11 @@ void print_verilog_module_ports(std::fstream& fp,
     for (const auto& port : module_manager.module_ports_by_type(module_id, kv.first)) {
       if (0 != port_cnt) {
         /* Do not dump a comma for the first port */
-        fp << ", //----- " << module_manager.module_port_type_str(kv.first)  << " -----" << std::endl; 
+        fp << "," << std::endl; 
       }
       /* Print port */
-      fp << "\t" << generate_verilog_port(kv.second, port) << std::endl;
+      fp << "\t//----- " << module_manager.module_port_type_str(kv.first)  << " -----" << std::endl; 
+      fp << "\t" << generate_verilog_port(kv.second, port);
       port_cnt++;
     }
   }
@@ -125,6 +126,64 @@ void print_verilog_module_declaration(std::fstream& fp,
   fp << std::endl << ");" << std::endl;
 }
 
+/************************************************
+ * Print an instance for a Verilog module
+ ***********************************************/
+void print_verilog_module_instance(std::fstream& fp, 
+                                   const ModuleManager& module_manager, 
+                                   const ModuleId& parent_module_id, const ModuleId& child_module_id,
+                                   const std::map<std::string, BasicPort>& port2port_name_map,
+                                   const bool& explicit_port_map) {
+
+  check_file_handler(fp);
+
+  /* Print module name */
+  fp << "\t" << module_manager.module_name(child_module_id) << " ";
+  /* Print instance name, <name>_<num_instance_in_parent_module> */
+  fp << module_manager.module_name(child_module_id) << "_" << module_manager.num_instance(parent_module_id, child_module_id) << "_" << " (" << std::endl;
+  
+  /* Print each port with/without explicit port map */
+  /* port type2type mapping */
+  std::map<ModuleManager::e_module_port_type, enum e_dump_verilog_port_type> port_type2type_map;
+  port_type2type_map[ModuleManager::MODULE_GLOBAL_PORT] = VERILOG_PORT_CONKT;
+  port_type2type_map[ModuleManager::MODULE_INOUT_PORT] = VERILOG_PORT_CONKT;
+  port_type2type_map[ModuleManager::MODULE_INPUT_PORT] = VERILOG_PORT_CONKT;
+  port_type2type_map[ModuleManager::MODULE_OUTPUT_PORT] = VERILOG_PORT_CONKT;
+  port_type2type_map[ModuleManager::MODULE_CLOCK_PORT] = VERILOG_PORT_CONKT;
+
+  /* Port sequence: global, inout, input, output and clock ports, */
+  size_t port_cnt = 0;
+  for (const auto& kv : port_type2type_map) {
+    for (const auto& port : module_manager.module_ports_by_type(child_module_id, kv.first)) {
+      if (0 != port_cnt) {
+        /* Do not dump a comma for the first port */
+        fp << "," << std::endl; 
+      }
+      /* Print port */
+      fp << "\t\t";
+      /* if explicit port map is required, output the port name */
+      if (true == explicit_port_map) {
+        fp << "." << port.get_name() << "(";
+      }
+      /* Try to find the instanced port name in the name map */
+      if (port2port_name_map.find(port.get_name()) != port2port_name_map.end()) {
+        /* Found it, we assign the port name */ 
+        fp << generate_verilog_port(kv.second, port2port_name_map.at(port.get_name()));
+      } else {
+        /* Not found, we give the default port name */
+        fp << generate_verilog_port(kv.second, port);
+      }
+      /* if explicit port map is required, output the pair of branket */
+      if (true == explicit_port_map) {
+        fp << ")";
+      }
+      port_cnt++;
+    }
+  }
+  
+  /* Print an end to the instance */
+  fp << "\t" << ");" << std::endl;
+}
 
 /************************************************
  * Print an end line for a Verilog module
@@ -134,7 +193,7 @@ void print_verilog_module_end(std::fstream& fp,
   check_file_handler(fp);
 
   fp << "endmodule" << std::endl;
-  print_verilog_comment(fp, std::string("//----- END Verilog module for " + module_name + " -----"));
+  print_verilog_comment(fp, std::string("----- END Verilog module for " + module_name + " -----"));
   fp << std::endl;
 }
 
