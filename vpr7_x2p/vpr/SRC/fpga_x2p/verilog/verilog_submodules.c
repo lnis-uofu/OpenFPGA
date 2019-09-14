@@ -3224,6 +3224,7 @@ void dump_verilog_submodules(ModuleManager& module_manager,
 
   /* 5. Dump decoder modules only when memory bank is required */
   dump_verilog_config_peripherals(cur_sram_orgz_info, verilog_dir, submodule_dir);
+  print_verilog_config_peripherals(module_manager, cur_sram_orgz_info, std::string(verilog_dir), std::string(submodule_dir));
 
   /* 6. Dump template for all the modules */
   if (TRUE == fpga_verilog_opts.print_user_defined_template) { 

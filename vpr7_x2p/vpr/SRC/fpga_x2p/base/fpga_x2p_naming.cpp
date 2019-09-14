@@ -138,4 +138,3 @@ std::string generate_memory_module_name(const CircuitLibrary& circuit_lib,
                                         const std::string& postfix) {
   return std::string( circuit_lib.model_name(circuit_model) + "_" + circuit_lib.model_name(sram_model) + postfix );
 }
-

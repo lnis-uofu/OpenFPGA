@@ -21,4 +21,9 @@ void print_verilog_submodule_mux_local_decoders(ModuleManager& module_manager,
                                                 const std::string& verilog_dir,
                                                 const std::string& submodule_dir);
 
+void print_verilog_config_peripherals(ModuleManager& module_manager,
+                                      t_sram_orgz_info* cur_sram_orgz_info,
+                                      const std::string& verilog_dir,
+                                      const std::string& submodule_dir);
+
 #endif

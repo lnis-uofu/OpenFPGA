@@ -1182,7 +1182,6 @@ void dump_verilog_mux_sram_one_local_outport(FILE* fp,
   return;
 }
 
-
 /* Always dump the output ports of a SRAM */
 void dump_verilog_sram_one_local_outport(FILE* fp, 
                                          t_sram_orgz_info* cur_sram_orgz_info,

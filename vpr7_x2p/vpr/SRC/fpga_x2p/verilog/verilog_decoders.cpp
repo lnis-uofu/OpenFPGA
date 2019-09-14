@@ -216,3 +216,150 @@ void print_verilog_submodule_mux_local_decoders(ModuleManager& module_manager,
   submodule_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(submodule_verilog_subckt_file_path_head, verilog_fname.c_str());  
 }
 
+/***************************************************************************************
+ * For scan-chain configuration organization:
+ * Generate the Verilog module of configuration module 
+ * which connect configuration ports to SRAMs/SCFFs in a chain: 
+ *
+ *          +------+    +------+             +------+
+ * sc_in--->| SCFF |--->| SCFF |---> ... --->| SCFF |----> sc_out
+ *          +------+    +------+             +------+
+ ***************************************************************************************/
+static 
+void print_verilog_scan_chain_config_module(ModuleManager& module_manager,
+                                            std::fstream& fp,
+                                            t_sram_orgz_info* cur_sram_orgz_info) {
+  /* Validate the FILE handler */
+  check_file_handler(fp);
+
+  /* Get the total memory bits */
+  int num_mem_bits = get_sram_orgz_info_num_mem_bit(cur_sram_orgz_info);
+
+  /* Create a module definition for the configuration chain */
+  print_verilog_comment(fp, std::string("----- BEGIN Configuration Peripheral for Scan-chain FFs -----"));
+
+  /* Create a Verilog Module based on the circuit model, and add to module manager */
+  ModuleId module_id = module_manager.add_module(std::string(verilog_config_peripheral_prefix)); 
+  VTR_ASSERT(ModuleId::INVALID() != module_id);
+  /* Add module ports */
+  /* Add the head of scan-chain: a 1-bit input port */
+  BasicPort sc_head_port(std::string(top_netlist_scan_chain_head_prefix), 1);
+  module_manager.add_port(module_id, sc_head_port, ModuleManager::MODULE_INPUT_PORT);
+  /* Add the inputs of scan-chain FFs, which are the outputs of the module */
+  BasicPort sc_input_port(std::string("chain_input"), num_mem_bits);
+  module_manager.add_port(module_id, sc_input_port, ModuleManager::MODULE_OUTPUT_PORT);
+  /* Add the outputs of scan-chain FFs, which are inputs of the module */
+  BasicPort sc_output_port(std::string("chain_output"), num_mem_bits);
+  module_manager.add_port(module_id, sc_output_port, ModuleManager::MODULE_INPUT_PORT);
+
+  /* dump module definition + ports */
+  print_verilog_module_declaration(fp, module_manager, module_id);
+  /* Finish dumping ports */
+
+  /* Declare the sc_output_port is a wire */
+  fp << generate_verilog_port(VERILOG_PORT_WIRE, sc_output_port) << ";" << std::endl;
+  fp << std::endl;
+
+  /* Connect scan-chain input to the first scan-chain input */
+  BasicPort sc_first_input_port(sc_input_port.get_name(), 1);
+  print_verilog_wire_connection(fp, sc_first_input_port, sc_head_port, false);
+
+  /* Connect the head of current scff to the tail of previous scff*/
+  BasicPort chain_output_port(sc_input_port.get_name(), 1, num_mem_bits - 1);
+  BasicPort chain_input_port(sc_output_port.get_name(), 0, num_mem_bits - 2);
+  print_verilog_wire_connection(fp, chain_output_port, chain_input_port, false);
+
+  print_verilog_comment(fp, std::string("----- END Configuration Peripheral for Scan-chain FFs -----"));
+
+  /* Put an end to the Verilog module */
+  print_verilog_module_end(fp, module_manager.module_name(module_id));
+
+  return;
+}
+
+/***************************************************************************************
+ * Generate the configuration peripheral circuits for the top-level Verilog netlist
+ * This function will create Verilog modules depending on the configuration scheme:
+ * 1. Scan-chain:
+ *    It will create a module which connects the Scan-Chain Flip-Flops (SCFFs)
+ *    as a chain: 
+ *
+ *          +------+    +------+             +------+
+ * sc_in--->| SCFF |--->| SCFF |---> ... --->| SCFF |----> sc_out
+ *          +------+    +------+             +------+
+ *
+ * 2. Memory bank:
+ *    It will create a BL decoder and a WL decoder which will configure the SRAMs
+ *    as a memory bank
+ *      
+ *                  +------------------------+
+ *                  |       WL Decoder       |
+ *                  +------------------------+
+ *                     |  |  |   ...   |  |
+ *                     v  v  v         v  v
+ *   +---------+    +------------------------+
+ *   |         |--->|                        |
+ *   |         |    |                        |
+ *   |   BL    |--->|                        |
+ *   | Decoder | .. |    FPGA Core logic     |
+ *   |         | .. |                        |
+ *   |         |--->|                        |
+ *   +---------+    +------------------------+
+ ***************************************************************************************/
+void print_verilog_config_peripherals(ModuleManager& module_manager,
+                                      t_sram_orgz_info* cur_sram_orgz_info,
+                                      const std::string& verilog_dir,
+                                      const std::string& submodule_dir) {
+  std::string verilog_fname(submodule_dir + config_peripheral_verilog_file_name);
+  verilog_fname += ".bak";
+
+  /* Create the file stream */
+  std::fstream fp;
+  fp.open(verilog_fname, std::fstream::out | std::fstream::trunc);
+
+  check_file_handler(fp);
+
+  /* Print out debugging information for if the file is not opened/created properly */
+  vpr_printf(TIO_MESSAGE_INFO,
+             "Creating Verilog netlist for configuration peripherals (%s)...\n",
+             verilog_fname.c_str()); 
+
+  print_verilog_file_header(fp, "Configuration Peripheral Circuits"); 
+
+  print_verilog_include_defines_preproc_file(fp, verilog_dir);
+
+  /* Create a library for decoders */
+  DecoderLibrary decoder_lib;
+
+  switch(cur_sram_orgz_info->type) {
+  case SPICE_SRAM_STANDALONE:
+    break;
+  case SPICE_SRAM_SCAN_CHAIN:
+    print_verilog_scan_chain_config_module(module_manager, fp, cur_sram_orgz_info);
+    break;
+  case SPICE_SRAM_MEMORY_BANK:
+    /* TODO: Finish refactoring this part after the sram_orgz_info ! */
+    /*
+    dump_verilog_decoder(fp, cur_sram_orgz_info);
+    dump_verilog_membank_config_module(fp, cur_sram_orgz_info);
+     */
+    break;
+  default:
+    vpr_printf(TIO_MESSAGE_ERROR,
+              "(File:%s,[LINE%d])Invalid type of SRAM organization in Verilog Generator!\n",
+               __FILE__, __LINE__);
+    exit(1);
+  }
+
+  /* Close the file stream */
+  fp.close();
+
+  /* Add fname to the linked list when debugging is finished */
+  /* TODO: uncomment this when it is ready to be plugged-in 
+  submodule_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(submodule_verilog_subckt_file_path_head, verilog_fname.c_str());  
+  */
+
+  return;
+}
+
+
