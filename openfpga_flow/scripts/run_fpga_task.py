@@ -36,7 +36,7 @@ if sys.version_info[0] < 3:
 # Configure logging system
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 logging.basicConfig(level=logging.INFO, stream=sys.stdout,
-                    format='%(levelname)s (%(threadName)10s) - %(message)s')
+                    format='%(levelname)s (%(threadName)15s) - %(message)s')
 logger = logging.getLogger('OpenFPGA_Task_logs')
 
 
@@ -392,11 +392,9 @@ def run_single_script(s, eachJob, job_list):
 def run_actions(job_list):
     thread_sema = threading.Semaphore(args.maxthreads)
     thred_list = []
-    for index, eachjob in enumerate(job_list):
-        JobID = 'Job_%02d' % (index+1)
-        logger.info("Running %s = %s" % (JobID, eachjob["name"]))
+    for _ , eachjob in enumerate(job_list):
         t = threading.Thread(target=run_single_script,
-                             name=JobID, args=(thread_sema, eachjob, job_list))
+                             name=eachjob["name"], args=(thread_sema, eachjob, job_list))
         t.start()
         thred_list.append(t)
     for eachthread in thred_list:
