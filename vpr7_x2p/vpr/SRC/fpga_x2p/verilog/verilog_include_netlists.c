@@ -113,6 +113,9 @@ void write_include_netlists (char* src_dir_formatted,
 	fprintf(fp, "`include \"%s%s%s\"\n",  src_dir_formatted, 
 							default_submodule_dir_name, 
 							submodule_verilog_file_name);
+	fprintf(fp, "`include \"%s%s%s\"\n",  src_dir_formatted, 
+							default_submodule_dir_name, 
+						    config_peripheral_verilog_file_name);
 	init_include_user_defined_verilog_netlists(spice);
 	include_netlists_include_user_defined_verilog_netlists(fp, spice);
 	

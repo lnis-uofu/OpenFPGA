@@ -40,6 +40,8 @@
 #include "verilog_global.h"
 #include "verilog_utils.h"
 #include "verilog_submodules.h"
+#include "verilog_decoder.h"
+#include "verilog_decoders.h"
 #include "verilog_pbtypes.h"
 #include "verilog_routing.h"
 #include "verilog_compact_netlist.h"
@@ -266,6 +268,17 @@ void vpr_fpga_verilog(t_vpr_setup vpr_setup,
   dump_verilog_simulation_preproc(src_dir_path,
                                vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts);
 
+  /* Generate primitive Verilog modules, which are corner stones of FPGA fabric 
+   * Note that this function MUST be called before Verilog generation of
+   * core logic (i.e., logic blocks and routing resources) !!!
+   * This is because that this function will add the primitive Verilog modules to 
+   * the module manager.
+   * Without the modules in the module manager, core logic generation is not possible!!!
+   */
+  dump_verilog_submodules(module_manager, mux_lib, sram_verilog_orgz_info, src_dir_path, submodule_dir_path, 
+                          Arch, &vpr_setup.RoutingArch, 
+                          vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts);
+
   /* Dump routing resources: switch blocks, connection blocks and channel tracks */
   dump_verilog_routing_resources(sram_verilog_orgz_info, src_dir_path, rr_dir_path, Arch, &vpr_setup.RoutingArch,
                                  num_rr_nodes, rr_node, rr_node_indices, rr_indexed_data,
@@ -280,10 +293,17 @@ void vpr_fpga_verilog(t_vpr_setup vpr_setup,
                                     lb_dir_path, &Arch,
                                     vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.dump_explicit_verilog);
 
-  /* Dump internal structures of submodules */
-  dump_verilog_submodules(module_manager, mux_lib, sram_verilog_orgz_info, src_dir_path, submodule_dir_path, 
-                          Arch, &vpr_setup.RoutingArch, 
-                          vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts);
+  /* Generate the Verilog module of the configuration peripheral protocol 
+   * which loads bitstream to FPGA fabric
+   * 
+   * IMPORTANT: this function should be called after Verilog generation of
+   * core logic (i.e., logic blocks and routing resources) !!!
+   * This is due to the configuration protocol requires the total
+   * number of memory cells across the FPGA fabric 
+   */
+  print_verilog_config_peripherals(module_manager, sram_verilog_orgz_info, std::string(src_dir_path), std::string(submodule_dir_path));
+  /* TODO: This is the old function, which will be deprecated when refactoring is done */
+  dump_verilog_config_peripherals(sram_verilog_orgz_info, src_dir_path, submodule_dir_path);
 
   /* Dump top-level verilog */
   dump_compact_verilog_top_netlist(sram_verilog_orgz_info, chomped_circuit_name, 

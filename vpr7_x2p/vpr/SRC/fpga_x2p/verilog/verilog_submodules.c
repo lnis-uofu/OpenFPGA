@@ -3222,11 +3222,7 @@ void dump_verilog_submodules(ModuleManager& module_manager,
                                   switch_inf, Arch.spice, routing_arch, fpga_verilog_opts.dump_explicit_verilog);
   print_verilog_submodule_memories(module_manager, mux_lib, Arch.spice->circuit_lib, std::string(verilog_dir), std::string(submodule_dir));
 
-  /* 5. Dump decoder modules only when memory bank is required */
-  dump_verilog_config_peripherals(cur_sram_orgz_info, verilog_dir, submodule_dir);
-  print_verilog_config_peripherals(module_manager, cur_sram_orgz_info, std::string(verilog_dir), std::string(submodule_dir));
-
-  /* 6. Dump template for all the modules */
+  /* 5. Dump template for all the modules */
   if (TRUE == fpga_verilog_opts.print_user_defined_template) { 
     print_verilog_submodule_templates(module_manager, Arch.spice->circuit_lib, L_segment_vec, std::string(verilog_dir), std::string(submodule_dir));
   }
