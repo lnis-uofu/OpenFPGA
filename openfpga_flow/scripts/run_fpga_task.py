@@ -252,7 +252,7 @@ def generate_each_task_actions(taskname):
                 flow_run_cmd_list.append({
                     "arch": arch,
                     "bench": bench,
-                    "name": "%02d_arch%s_%s" % (indx, bench["top_module"], lbl),
+                    "name": "%02d_%s_%s" % (indx, bench["top_module"], lbl),
                     "run_dir": flow_run_dir,
                     "commands": command,
                     "finished" : False,
@@ -345,14 +345,11 @@ def strip_child_logger_info(line):
 
 
 def run_single_script(s, eachJob, job_list):
-    logger.debug('Added job in pool')
     with s:
-        logger.debug("Running OpenFPGA flow with " +
-                     " ".join(eachJob["commands"]))
-        name = threading.currentThread().getName()
+        thread_name = threading.currentThread().getName()
         eachJob["starttime"] = time.time()
         try:
-            logfile = "%s_out.log" % name
+            logfile = "%s_out.log" % thread_name
             with open(logfile, 'w+') as output:
                 output.write("* "*20 + '\n')
                 output.write("RunDirectory : %s\n" % os.getcwd())
@@ -360,6 +357,7 @@ def run_single_script(s, eachJob, job_list):
                     eachJob["commands"]
                 output.write(" ".join(command) + '\n')
                 output.write("* "*20 + '\n')
+                logger.debug("Running OpenFPGA flow with [%s]" % command)
                 process = subprocess.Popen(command,
                                            stdout=subprocess.PIPE,
                                            stderr=subprocess.STDOUT,
@@ -371,19 +369,19 @@ def run_single_script(s, eachJob, job_list):
                     output.write(line)
                 process.wait()
                 if process.returncode:
-                    raise subprocess.CalledProcessError(0, command)
+                    raise subprocess.CalledProcessError(0, " ".join(command))
                 eachJob["status"] = True
         except:
             logger.exception("Failed to execute openfpga flow - " +
                              eachJob["name"])
             if not args.continue_on_fail:
-                clean_up_and_exit("Faile to run task %s exiting" % name)
+                os._exit(1)
         eachJob["endtime"] = time.time()
         timediff = timedelta(seconds=(eachJob["endtime"]-eachJob["starttime"]))
         timestr = humanize.naturaldelta(timediff) if "humanize" in sys.modules \
             else str(timediff)
         logger.info("%s Finished with returncode %d, Time Taken %s " %
-                    (name, process.returncode, timestr))
+                    (thread_name, process.returncode, timestr))
         eachJob["finished"] = True
         no_of_finished_job = sum([ not eachJ["finished"] for eachJ in job_list])
         logger.info("***** %d runs pending *****" % (no_of_finished_job))
@@ -391,13 +389,13 @@ def run_single_script(s, eachJob, job_list):
 
 def run_actions(job_list):
     thread_sema = threading.Semaphore(args.maxthreads)
-    thred_list = []
+    thread_list = []
     for _ , eachjob in enumerate(job_list):
-        t = threading.Thread(target=run_single_script,
-                             name=eachjob["name"], args=(thread_sema, eachjob, job_list))
+        t = threading.Thread(target=run_single_script, name=eachjob["name"],
+                             args=(thread_sema, eachjob, job_list))
         t.start()
-        thred_list.append(t)
-    for eachthread in thred_list:
+        thread_list.append(t)
+    for eachthread in thread_list:
         eachthread.join()
 
 
