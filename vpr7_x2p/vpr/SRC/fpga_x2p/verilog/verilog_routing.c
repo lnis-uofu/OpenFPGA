@@ -1,7 +1,7 @@
-/***********************************/
-/*      SPICE Modeling for VPR     */
-/*       Xifan TANG, EPFL/LSI      */
-/***********************************/
+/*********************************************************************
+ * This file includes functions that are used for 
+ * Verilog generation of FPGA routing architecture (global routing) 
+ *********************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <vector>
+#include <fstream>
 #include <algorithm>
 
 /* Include vpr structs*/
@@ -24,6 +25,8 @@
 #include "route_common.h"
 #include "vpr_utils.h"
 
+#include "vtr_assert.h"
+
 /* Include SPICE support headers*/
 #include "linkedlist.h"
 #include "rr_blocks.h"
@@ -34,11 +37,420 @@
 #include "fpga_x2p_pbtypes_utils.h"
 #include "fpga_x2p_bitstream_utils.h"
 #include "fpga_x2p_globals.h"
+#include "fpga_x2p_naming.h"
 
 /* Include Verilog support headers*/
 #include "verilog_global.h"
 #include "verilog_utils.h"
+#include "verilog_writer_utils.h"
 #include "verilog_routing.h"
+
+/*********************************************************************
+ * Generate the Verilog module for a routing channel
+ * Routing track wire, which is 1-input and dual output
+ * This type of wires are used in the global routing architecture.
+ * One of the output is wired to another Switch block multiplexer, 
+ * while the mid-output is wired to a Connection block multiplexer.
+ *     
+ *                  |    CLB     |
+ *                  +------------+
+ *                        ^
+ *                        |
+ *           +------------------------------+
+ *           | Connection block multiplexer |
+ *           +------------------------------+
+ *                        ^
+ *                        |  mid-output         +--------------
+ *              +--------------------+          |
+ *    input --->| Routing track wire |--------->| Switch Block
+ *              +--------------------+  output  |
+ *                                              +--------------
+ *
+ * IMPORTANT: This function is designed for outputting unique Verilog modules                                             
+ *            of routing channels
+ *
+ * TODO: This function should be adapted to the RRGraph object
+ *********************************************************************/
+static 
+void print_verilog_routing_unique_chan_subckt(ModuleManager& module_manager, 
+                                              const std::string& verilog_dir,
+                                              const std::string& subckt_dir,
+                                              const size_t& rr_chan_subckt_id, 
+                                              const RRChan& rr_chan) {
+  std::string fname_prefix;
+
+  /* TODO: use a constexpr String arrary to replace this switch cases? */
+  /* Find the prefix for the Verilog file name */
+  switch (rr_chan.get_type()) {
+  case CHANX:
+    fname_prefix = std::string(chanx_verilog_file_name_prefix); 
+    break;
+  case CHANY:
+    fname_prefix = std::string(chany_verilog_file_name_prefix); 
+    break;
+  default:
+    vpr_printf(TIO_MESSAGE_ERROR, 
+               "(File:%s, [LINE%d])Invalid Channel type! Should be CHANX or CHANY.\n",
+               __FILE__, __LINE__);
+    exit(1);
+  }
+
+  std::string verilog_fname(subckt_dir + generate_routing_block_netlist_name(fname_prefix, rr_chan_subckt_id, std::string(verilog_netlist_file_postfix)));
+  /* TODO: remove the bak file when the file is ready */
+  verilog_fname += ".bak";
+
+  /* Create the file stream */
+  std::fstream fp;
+  fp.open(verilog_fname, std::fstream::out | std::fstream::trunc);
+
+  check_file_handler(fp);
+
+  print_verilog_file_header(fp, "Verilog modules for routing channel in X- and Y-direction"); 
+
+  /* Print preprocessing flags */
+  print_verilog_include_defines_preproc_file(fp, verilog_dir);
+
+  /* Create a Verilog Module based on the circuit model, and add to module manager */
+  ModuleId module_id = module_manager.add_module(generate_routing_channel_module_name(rr_chan.get_type(), rr_chan_subckt_id)); 
+
+  /* Add ports to the module */
+  /* For the LEFT side of a X-direction routing channel 
+   * or the BOTTOM bottom side of a Y-direction routing channel 
+   * Routing Resource Nodes in INC_DIRECTION are inputs of the module 
+   *
+   * For the RIGHT side of a X-direction routing channel 
+   * or the TOP bottom side of a Y-direction routing channel 
+   * Routing Resource Nodes in INC_DIRECTION are outputs of the module 
+   *
+   * An example of X-direction routing channel consisting of W routing nodes:
+   *                            +--------------------------+
+   *    nodeA(INC_DIRECTION)--->| in[0]             out[0] |---> nodeA(INC_DIRECTION) 
+   *    nodeB(DEC_DIRECTION)<---| out[1]             in[1] |<--- nodeB(DEC_DIRECTION) 
+   *          ...                  ...               ...           ...
+   *    nodeX(INC_DIRECTION)--->| in[W-1]         out[W-1] |---> nodeX(INC_DIRECTION) 
+   *                            +--------------------------+
+   *
+   * An example of Y-direction routing channel consisting of W routing nodes:
+   *
+   *                           nodeA              nodeB              nodeX
+   *                      (INC_DIRECTION)      (DEC_DIRECTION)   (DEC_DIRECTION)
+   *                             ^                  |       ...      |
+   *                             |                  v                v
+   *                      +------------------------------   ...   -------+
+   *                      |  out[0]               in[1]            in[X] |
+   *                      |                                              |
+   *                      |                                              |
+   *                      |   in[0]               out[1]    ...   out[X] |
+   *                      +------------------------------   ...   -------+
+   *                             ^                  |                |
+   *                             |                  v                v
+   *                           nodeA              nodeB            nodeX
+   *                      (INC_DIRECTION)      (DEC_DIRECTION)   (DEC_DIRECTION)
+   */
+  /* Add ports at LEFT/BOTTOM side of the module */
+  for (size_t itrack = 0; itrack < rr_chan.get_chan_width(); ++itrack) {
+    switch (rr_chan.get_node(itrack)->direction) {
+    case INC_DIRECTION: {
+      /* TODO: naming should be more flexible !!! */
+      BasicPort input_port(std::string("in" + std::to_string(itrack)), 1);
+      module_manager.add_port(module_id, input_port, ModuleManager::MODULE_INPUT_PORT);
+      break;
+    }
+    case DEC_DIRECTION: {
+      /* TODO: naming should be more flexible !!! */
+      BasicPort output_port(std::string("out" + std::to_string(itrack)), 1);
+      module_manager.add_port(module_id, output_port, ModuleManager::MODULE_OUTPUT_PORT);
+      break;
+    }
+    case BI_DIRECTION:
+    default:
+      vpr_printf(TIO_MESSAGE_ERROR, 
+                 "(File: %s [LINE%d]) Invalid direction of rr_node %s[%lu]_in/out[%lu]!\n",
+                 __FILE__, __LINE__, 
+                 convert_chan_type_to_string(rr_chan.get_type()),
+                 rr_chan_subckt_id, itrack);
+      exit(1);
+    }
+  }
+  /* Add ports at RIGHT/TOP side of the module */
+  for (size_t itrack = 0; itrack < rr_chan.get_chan_width(); ++itrack) {
+    switch (rr_chan.get_node(itrack)->direction) {
+    case INC_DIRECTION: {
+      /* TODO: naming should be more flexible !!! */
+      BasicPort output_port(std::string("out" + std::to_string(itrack)), 1);
+      module_manager.add_port(module_id, output_port, ModuleManager::MODULE_OUTPUT_PORT);
+      break;
+    }
+    case DEC_DIRECTION: {
+      /* TODO: naming should be more flexible !!! */
+      BasicPort input_port(std::string("in" + std::to_string(itrack)), 1);
+      module_manager.add_port(module_id, input_port, ModuleManager::MODULE_INPUT_PORT);
+      break;
+    }
+    case BI_DIRECTION:
+    default:
+      vpr_printf(TIO_MESSAGE_ERROR, 
+                 "(File: %s [LINE%d]) Invalid direction of rr_node %s[%lu]_in/out[%lu]!\n",
+                 __FILE__, __LINE__, 
+                 convert_chan_type_to_string(rr_chan.get_type()),
+                 rr_chan_subckt_id, itrack);
+      exit(1);
+    }
+  }
+  /* Add middle-point output for connection box inputs */
+  for (size_t itrack = 0; itrack < rr_chan.get_chan_width(); ++itrack) {
+    /* TODO: naming should be more flexible !!! */
+    BasicPort mid_output_port(std::string("mid_out" + std::to_string(itrack)), 1);
+    module_manager.add_port(module_id, mid_output_port, ModuleManager::MODULE_OUTPUT_PORT);
+  }
+
+  /* dump module definition + ports */
+  print_verilog_module_declaration(fp, module_manager, module_id);
+  /* Finish dumping ports */
+
+  /* Print short-wire connection: 
+   *    
+   *   in[i] ----------> out[i]
+   *             |
+   *             +-----> mid_out[i]
+   */
+  for (size_t itrack = 0; itrack < rr_chan.get_chan_width(); ++itrack) {
+    /* short connecting inputs and outputs: 
+     * length of metal wire and parasitics are handled by semi-custom flow
+     */
+    BasicPort input_port(std::string("in" + std::to_string(itrack)), 1);
+    BasicPort output_port(std::string("out" + std::to_string(itrack)), 1);
+    BasicPort mid_output_port(std::string("mid_out" + std::to_string(itrack)), 1);
+    print_verilog_wire_connection(fp, output_port, input_port, false);
+    print_verilog_wire_connection(fp, mid_output_port, input_port, false);
+  }
+
+  /* Put an end to the Verilog module */
+  print_verilog_module_end(fp, module_manager.module_name(module_id));
+
+  /* Add an empty line as a splitter */
+  fp << std::endl;
+
+  /* Close file handler */
+  fp.close();
+
+  /* Add fname to the linked list */
+  /* Uncomment this when it is ready
+  routing_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(routing_verilog_subckt_file_path_head, verilog_fname.c_str());  
+   */
+
+  return;
+}
+
+/*********************************************************************
+ * Generate the Verilog module for a routing channel
+ * Routing track wire, which is 1-input and dual output
+ * This type of wires are used in the global routing architecture.
+ * One of the output is wired to another Switch block multiplexer, 
+ * while the mid-output is wired to a Connection block multiplexer.
+ *     
+ *                  |    CLB     |
+ *                  +------------+
+ *                        ^
+ *                        |
+ *           +------------------------------+
+ *           | Connection block multiplexer |
+ *           +------------------------------+
+ *                        ^
+ *                        |  mid-output         +--------------
+ *              +--------------------+          |
+ *    input --->| Routing track wire |--------->| Switch Block
+ *              +--------------------+  output  |
+ *                                              +--------------
+ *
+ * IMPORTANT: This function is designed for outputting non-unique Verilog modules                                             
+ *            of routing channels
+ *
+ * TODO: This function should be adapted to the RRGraph object
+ *********************************************************************/
+static 
+void print_verilog_routing_chan_subckt(ModuleManager& module_manager, 
+                                       const std::string& verilog_dir,
+                                       const std::string& subckt_dir,
+                                       const vtr::Point<size_t>& chan_coordinate,
+                                       const t_rr_type& chan_type, 
+                                       int LL_num_rr_nodes, t_rr_node* LL_rr_node,
+                                       t_ivec*** LL_rr_node_indices) {
+  int chan_width = 0;
+  t_rr_node** chan_rr_nodes = NULL;
+
+  std::string fname_prefix;
+
+  /* TODO: use a constexpr String arrary to replace this switch cases? */
+  /* Find the prefix for the Verilog file name */
+  switch (chan_type) {
+  case CHANX:
+    fname_prefix = std::string(chanx_verilog_file_name_prefix); 
+    break;
+  case CHANY:
+    fname_prefix = std::string(chany_verilog_file_name_prefix); 
+    break;
+  default:
+    vpr_printf(TIO_MESSAGE_ERROR, 
+               "(File:%s, [LINE%d])Invalid Channel type! Should be CHANX or CHANY.\n",
+               __FILE__, __LINE__);
+    exit(1);
+  }
+
+  std::string verilog_fname(subckt_dir + generate_routing_block_netlist_name(fname_prefix, chan_coordinate, std::string(verilog_netlist_file_postfix)));
+  /* TODO: remove the bak file when the file is ready */
+  verilog_fname += ".bak";
+
+  /* Create the file stream */
+  std::fstream fp;
+  fp.open(verilog_fname, std::fstream::out | std::fstream::trunc);
+
+  check_file_handler(fp);
+
+  print_verilog_file_header(fp, "Verilog modules for routing channel in X- and Y-direction"); 
+
+  /* Print preprocessing flags */
+  print_verilog_include_defines_preproc_file(fp, verilog_dir);
+
+  /* Create a Verilog Module based on the circuit model, and add to module manager */
+  ModuleId module_id = module_manager.add_module(generate_routing_channel_module_name(chan_type, chan_coordinate)); 
+
+  /* Collect rr_nodes for Tracks for chanx[ix][iy] */
+  chan_rr_nodes = get_chan_rr_nodes(&chan_width, chan_type, chan_coordinate.x(), chan_coordinate.y(),
+                                    LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices);
+
+  /* Add ports to the module */
+  /* For the LEFT side of a X-direction routing channel 
+   * or the BOTTOM bottom side of a Y-direction routing channel 
+   * Routing Resource Nodes in INC_DIRECTION are inputs of the module 
+   *
+   * For the RIGHT side of a X-direction routing channel 
+   * or the TOP bottom side of a Y-direction routing channel 
+   * Routing Resource Nodes in INC_DIRECTION are outputs of the module 
+   *
+   * An example of X-direction routing channel consisting of W routing nodes:
+   *                            +--------------------------+
+   *    nodeA(INC_DIRECTION)--->| in[0]             out[0] |---> nodeA(INC_DIRECTION) 
+   *    nodeB(DEC_DIRECTION)<---| out[1]             in[1] |<--- nodeB(DEC_DIRECTION) 
+   *          ...                  ...               ...           ...
+   *    nodeX(INC_DIRECTION)--->| in[W-1]         out[W-1] |---> nodeX(INC_DIRECTION) 
+   *                            +--------------------------+
+   *
+   * An example of Y-direction routing channel consisting of W routing nodes:
+   *
+   *                           nodeA              nodeB              nodeX
+   *                      (INC_DIRECTION)      (DEC_DIRECTION)   (DEC_DIRECTION)
+   *                             ^                  |       ...      |
+   *                             |                  v                v
+   *                      +------------------------------   ...   -------+
+   *                      |  out[0]               in[1]            in[X] |
+   *                      |                                              |
+   *                      |                                              |
+   *                      |   in[0]               out[1]    ...   out[X] |
+   *                      +------------------------------   ...   -------+
+   *                             ^                  |                |
+   *                             |                  v                v
+   *                           nodeA              nodeB            nodeX
+   *                      (INC_DIRECTION)      (DEC_DIRECTION)   (DEC_DIRECTION)
+   */
+  /* Add ports at LEFT/BOTTOM side of the module */
+  for (size_t itrack = 0; itrack < size_t(chan_width); ++itrack) {
+    switch (chan_rr_nodes[itrack]->direction) {
+    case INC_DIRECTION: {
+      /* TODO: naming should be more flexible !!! */
+      BasicPort input_port(std::string("in" + std::to_string(itrack)), 1);
+      module_manager.add_port(module_id, input_port, ModuleManager::MODULE_INPUT_PORT);
+      break;
+    }
+    case DEC_DIRECTION: {
+      /* TODO: naming should be more flexible !!! */
+      BasicPort output_port(std::string("out" + std::to_string(itrack)), 1);
+      module_manager.add_port(module_id, output_port, ModuleManager::MODULE_OUTPUT_PORT);
+      break;
+    }
+    case BI_DIRECTION:
+    default:
+      vpr_printf(TIO_MESSAGE_ERROR, 
+                 "(File: %s [LINE%d]) Invalid direction of rr_node %s[%lu][%lu]_in/out[%lu]!\n",
+                 __FILE__, __LINE__, 
+                 convert_chan_type_to_string(chan_type),
+                 chan_coordinate.x(), chan_coordinate.y(), itrack);
+      exit(1);
+    }
+  }
+  /* Add ports at RIGHT/TOP side of the module */
+  for (size_t itrack = 0; itrack < size_t(chan_width); ++itrack) {
+    switch (chan_rr_nodes[itrack]->direction) {
+    case INC_DIRECTION: {
+      /* TODO: naming should be more flexible !!! */
+      BasicPort output_port(std::string("out" + std::to_string(itrack)), 1);
+      module_manager.add_port(module_id, output_port, ModuleManager::MODULE_OUTPUT_PORT);
+      break;
+    }
+    case DEC_DIRECTION: {
+      /* TODO: naming should be more flexible !!! */
+      BasicPort input_port(std::string("in" + std::to_string(itrack)), 1);
+      module_manager.add_port(module_id, input_port, ModuleManager::MODULE_INPUT_PORT);
+      break;
+    }
+    case BI_DIRECTION:
+    default:
+      vpr_printf(TIO_MESSAGE_ERROR, 
+                 "(File: %s [LINE%d]) Invalid direction of rr_node %s[%lu][%lu]_in/out[%lu]!\n",
+                 __FILE__, __LINE__, 
+                 convert_chan_type_to_string(chan_type),
+                 chan_coordinate.x(), chan_coordinate.y(), itrack);
+      exit(1);
+    }
+  }
+  /* Add middle-point output for connection box inputs */
+  for (size_t itrack = 0; itrack < size_t(chan_width); ++itrack) {
+    /* TODO: naming should be more flexible !!! */
+    BasicPort mid_output_port(std::string("mid_out" + std::to_string(itrack)), 1);
+    module_manager.add_port(module_id, mid_output_port, ModuleManager::MODULE_OUTPUT_PORT);
+  }
+
+  /* dump module definition + ports */
+  print_verilog_module_declaration(fp, module_manager, module_id);
+  /* Finish dumping ports */
+
+  /* Print short-wire connection: 
+   *    
+   *   in[i] ----------> out[i]
+   *             |
+   *             +-----> mid_out[i]
+   */
+  for (size_t itrack = 0; itrack < size_t(chan_width); ++itrack) {
+    /* short connecting inputs and outputs: 
+     * length of metal wire and parasitics are handled by semi-custom flow
+     */
+    BasicPort input_port(std::string("in" + std::to_string(itrack)), 1);
+    BasicPort output_port(std::string("out" + std::to_string(itrack)), 1);
+    BasicPort mid_output_port(std::string("mid_out" + std::to_string(itrack)), 1);
+    print_verilog_wire_connection(fp, output_port, input_port, false);
+    print_verilog_wire_connection(fp, mid_output_port, input_port, false);
+  }
+
+  /* Put an end to the Verilog module */
+  print_verilog_module_end(fp, module_manager.module_name(module_id));
+
+  /* Add an empty line as a splitter */
+  fp << std::endl;
+
+  /* Close file handler */
+  fp.close();
+
+  /* Add fname to the linked list */
+  /* Uncomment this when it is ready
+  routing_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(routing_verilog_subckt_file_path_head, verilog_fname.c_str());  
+   */
+
+  /* Free */
+  my_free(chan_rr_nodes);
+
+  return;
+}
+
 
 static 
 void dump_verilog_routing_chan_subckt(char* verilog_dir,
@@ -3894,18 +4306,33 @@ void dump_verilog_routing_connection_box_subckt(t_sram_orgz_info* cur_sram_orgz_
   return;
 }
 
-/* Top Function*/
-/* Build the routing resource SPICE sub-circuits*/
-void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
-                                    char* verilog_dir,
-                                    char* subckt_dir,
-                                    t_arch arch,
-                                    t_det_routing_arch* routing_arch,
-                                    int LL_num_rr_nodes, t_rr_node* LL_rr_node,
-                                    t_ivec*** LL_rr_node_indices,
-                                    t_rr_indexed_data* LL_rr_indexed_data,
-                                    t_fpga_spice_opts FPGA_SPICE_Opts) {
-  assert(UNI_DIRECTIONAL == routing_arch->directionality);
+/*********************************************************************
+ * Top-level function: 
+ * Build the Verilog modules for global routing architecture
+ * 1. Routing channels
+ * 2. Switch blocks
+ * 3. Connection blocks
+ *
+ * This function supports two styles in Verilog generation:
+ * 1. Explicit port mapping
+ * 2. Inexplicit port mapping
+ *
+ * This function also supports high hierarchical Verilog generation
+ * (when the compact_routing_hierarchy is set true)
+ * In this mode, Verilog generation will be done for only those
+ * unique modules in terms of internal logics
+ *********************************************************************/
+void print_verilog_routing_resources(ModuleManager& module_manager,
+                                     t_sram_orgz_info* cur_sram_orgz_info,
+                                     char* verilog_dir,
+                                     char* subckt_dir,
+                                     const t_arch& arch,
+                                     const t_det_routing_arch& routing_arch,
+                                     int LL_num_rr_nodes, t_rr_node* LL_rr_node, /* To be replaced by RRGraph object */
+                                     t_ivec*** LL_rr_node_indices,
+                                     t_rr_indexed_data* LL_rr_indexed_data,
+                                     const t_fpga_spice_opts& FPGA_SPICE_Opts) {
+  VTR_ASSERT (UNI_DIRECTIONAL == routing_arch.directionality);
   
   boolean compact_routing_hierarchy = FPGA_SPICE_Opts.compact_routing_hierarchy;
   boolean explicit_port_mapping = FPGA_SPICE_Opts.SynVerilogOpts.dump_explicit_verilog;
@@ -3934,12 +4361,18 @@ void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
     for (size_t ichan = 0; ichan < device_rr_chan.get_num_modules(CHANX); ++ichan) {
       dump_verilog_routing_chan_subckt(verilog_dir, subckt_dir, 
                                        ichan, device_rr_chan.get_module(CHANX, ichan), explicit_port_mapping);
+
+      print_verilog_routing_unique_chan_subckt(module_manager, std::string(verilog_dir), std::string(subckt_dir), 
+                                               ichan, device_rr_chan.get_module(CHANX, ichan));
     }
     /* Y - channels [1...ny][0..nx]*/
     vpr_printf(TIO_MESSAGE_INFO, "Writing Y-direction Channels...\n");
     for (size_t ichan = 0; ichan < device_rr_chan.get_num_modules(CHANY); ++ichan) {
       dump_verilog_routing_chan_subckt(verilog_dir, subckt_dir, 
                                        ichan, device_rr_chan.get_module(CHANY, ichan), explicit_port_mapping);
+
+      print_verilog_routing_unique_chan_subckt(module_manager, std::string(verilog_dir), std::string(subckt_dir), 
+                                               ichan, device_rr_chan.get_module(CHANY, ichan));
     }
   } else { 
     /* Output the full array of routing channels */
@@ -3949,6 +4382,12 @@ void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
         dump_verilog_routing_chan_subckt(verilog_dir, subckt_dir, ix, iy, CHANX, 
                                          LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices, LL_rr_indexed_data, 
                                          arch.num_segments, explicit_port_mapping);
+
+        vtr::Point<size_t> chan_coordinate;
+        chan_coordinate.set_x(size_t(ix));
+        chan_coordinate.set_y(size_t(iy));
+        print_verilog_routing_chan_subckt(module_manager, std::string(verilog_dir), std::string(subckt_dir), chan_coordinate, CHANX, 
+                                          LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices);
       }
     }
     /* Y - channels [1...ny][0..nx]*/
@@ -3958,6 +4397,12 @@ void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
         dump_verilog_routing_chan_subckt(verilog_dir, subckt_dir, ix, iy, CHANY,
                                          LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices, LL_rr_indexed_data, 
                                          arch.num_segments, explicit_port_mapping);
+
+        vtr::Point<size_t> chan_coordinate;
+        chan_coordinate.set_x(size_t(ix));
+        chan_coordinate.set_y(size_t(iy));
+        print_verilog_routing_chan_subckt(module_manager, std::string(verilog_dir), std::string(subckt_dir), chan_coordinate, CHANY, 
+                                          LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices);
       }
     }
   }

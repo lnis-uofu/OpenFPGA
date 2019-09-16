@@ -9,7 +9,9 @@
 
 #include <string>
 
+#include "vtr_geometry.h"
 #include "circuit_library.h"
+#include "vpr_types.h"
 
 std::string generate_verilog_mux_node_name(const size_t& node_level, 
                                            const bool& add_buffer_postfix);
@@ -37,5 +39,19 @@ std::string generate_memory_module_name(const CircuitLibrary& circuit_lib,
                                         const CircuitModelId& circuit_model, 
                                         const CircuitModelId& sram_model, 
                                         const std::string& postfix);
+
+std::string generate_routing_block_netlist_name(const std::string& prefix, 
+                                                const size_t& block_id,
+                                                const std::string& postfix);
+
+std::string generate_routing_block_netlist_name(const std::string& prefix, 
+                                                const vtr::Point<size_t>& block_id,
+                                                const std::string& postfix);
+
+std::string generate_routing_channel_module_name(const t_rr_type& chan_type, 
+                                                 const size_t& block_id);
+
+std::string generate_routing_channel_module_name(const t_rr_type& chan_type, 
+                                                 const vtr::Point<size_t>& block_id);
 
 #endif

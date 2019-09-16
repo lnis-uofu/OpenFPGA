@@ -1,5 +1,12 @@
+/***********************************************
+ * Header file for verilog_routing.cpp
+ **********************************************/
 #ifndef VERILOG_ROUTING_H
 #define VERILOG_ROUTING_H
+
+/* Include other header files which are dependency on the function declared below */
+#include "module_manager.h"
+
 void dump_verilog_routing_chan_subckt(t_sram_orgz_info* cur_sram_orgz_info,
                                       char* verilog_dir,
                                       char* subckt_dir,
@@ -133,14 +140,15 @@ void dump_verilog_routing_connection_box_subckt(t_sram_orgz_info* cur_sram_orgz_
                                                 bool is_explicit_mapping);
 
 
-void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
-                                    char* verilog_dir,
-                                    char* subckt_dir,
-                                    t_arch arch,
-                                    t_det_routing_arch* routing_arch,
-                                    int LL_num_rr_nodes, t_rr_node* LL_rr_node,
-                                    t_ivec*** LL_rr_node_indices,
-                                    t_rr_indexed_data* LL_rr_indexed_data,
-                                    t_fpga_spice_opts FPGA_SPICE_Opts);
+void print_verilog_routing_resources(ModuleManager& module_manager,
+                                     t_sram_orgz_info* cur_sram_orgz_info,
+                                     char* verilog_dir,
+                                     char* subckt_dir,
+                                     const t_arch& arch,
+                                     const t_det_routing_arch& routing_arch,
+                                     int LL_num_rr_nodes, t_rr_node* LL_rr_node,
+                                     t_ivec*** LL_rr_node_indices,
+                                     t_rr_indexed_data* LL_rr_indexed_data,
+                                     const t_fpga_spice_opts& FPGA_SPICE_Opts);
 
 #endif

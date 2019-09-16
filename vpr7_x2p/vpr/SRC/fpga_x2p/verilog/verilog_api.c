@@ -280,9 +280,9 @@ void vpr_fpga_verilog(t_vpr_setup vpr_setup,
                           vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts);
 
   /* Dump routing resources: switch blocks, connection blocks and channel tracks */
-  dump_verilog_routing_resources(sram_verilog_orgz_info, src_dir_path, rr_dir_path, Arch, &vpr_setup.RoutingArch,
-                                 num_rr_nodes, rr_node, rr_node_indices, rr_indexed_data,
-                                 vpr_setup.FPGA_SPICE_Opts);
+  print_verilog_routing_resources(module_manager, sram_verilog_orgz_info, src_dir_path, rr_dir_path, Arch, vpr_setup.RoutingArch,
+                                  num_rr_nodes, rr_node, rr_node_indices, rr_indexed_data,
+                                  vpr_setup.FPGA_SPICE_Opts);
 
   /* Dump logic blocks 
    * Branches to go: 
@@ -295,6 +295,7 @@ void vpr_fpga_verilog(t_vpr_setup vpr_setup,
 
   /* Generate the Verilog module of the configuration peripheral protocol 
    * which loads bitstream to FPGA fabric
+   * TODO: generate the BL/WL decoders!!!!
    * 
    * IMPORTANT: this function should be called after Verilog generation of
    * core logic (i.e., logic blocks and routing resources) !!!

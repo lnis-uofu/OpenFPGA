@@ -138,3 +138,64 @@ std::string generate_memory_module_name(const CircuitLibrary& circuit_lib,
                                         const std::string& postfix) {
   return std::string( circuit_lib.model_name(circuit_model) + "_" + circuit_lib.model_name(sram_model) + postfix );
 }
+
+/*********************************************************************
+ * Generate the netlist name for a unique routing block 
+ * It could be 
+ * 1. Routing channel
+ * 2. Connection block
+ * 3. Switch block
+ * A unique block id should be given
+ *********************************************************************/
+std::string generate_routing_block_netlist_name(const std::string& prefix, 
+                                                const size_t& block_id,
+                                                const std::string& postfix) {
+  return std::string( prefix + std::to_string(block_id) + postfix );
+}
+
+/*********************************************************************
+ * Generate the netlist name for a routing block with a given coordinate
+ * It could be 
+ * 1. Routing channel
+ * 2. Connection block
+ * 3. Switch block
+ *********************************************************************/
+std::string generate_routing_block_netlist_name(const std::string& prefix, 
+                                                const vtr::Point<size_t>& coordinate,
+                                                const std::string& postfix) {
+  return std::string( prefix + std::to_string(coordinate.x()) + std::string("_") + std::to_string(coordinate.y()) + postfix );
+}
+
+/*********************************************************************
+ * Generate the module name for a unique routing channel
+ *********************************************************************/
+std::string generate_routing_channel_module_name(const t_rr_type& chan_type, 
+                                                 const size_t& block_id) {
+  /* Channel must be either CHANX or CHANY */
+  VTR_ASSERT( (CHANX == chan_type) || (CHANY == chan_type) );
+
+  /* Create a map between chan_type and module_prefix */
+  std::map<t_rr_type, std::string> module_prefix_map;
+  /* TODO: use a constexpr string to replace the fixed name? */
+  module_prefix_map[CHANX] = std::string("chanx");
+  module_prefix_map[CHANY] = std::string("chany");
+
+  return std::string( module_prefix_map[chan_type] + std::string("_") + std::to_string(block_id) + std::string("_") );
+}
+
+/*********************************************************************
+ * Generate the module name for a routing channel with a given coordinate
+ *********************************************************************/
+std::string generate_routing_channel_module_name(const t_rr_type& chan_type, 
+                                                 const vtr::Point<size_t>& coordinate) {
+  /* Channel must be either CHANX or CHANY */
+  VTR_ASSERT( (CHANX == chan_type) || (CHANY == chan_type) );
+
+  /* Create a map between chan_type and module_prefix */
+  std::map<t_rr_type, std::string> module_prefix_map;
+  /* TODO: use a constexpr string to replace the fixed name? */
+  module_prefix_map[CHANX] = std::string("chanx");
+  module_prefix_map[CHANY] = std::string("chany");
+
+  return std::string( module_prefix_map[chan_type] + std::to_string(coordinate.x()) + std::string("_") + std::to_string(coordinate.y()) + std::string("_") );
+}
