@@ -371,6 +371,7 @@ class DeviceRRGSB {
     void clear_segment_ids();
   private: /* Validators */
     bool validate_coordinator(DeviceCoordinator& coordinator) const; /* Validate if the (x,y) is the range of this device */
+    bool validate_coordinator_edge(DeviceCoordinator& coordinator) const; /* Validate if the (x,y) is the range of this device but takes into consideration the fact that edges are 1 off */
     bool validate_side(enum e_side side) const; /* validate if side is in the range of unique_side_module_ */
     bool validate_sb_unique_module_index(size_t index) const; /* Validate if the index in the range of unique_mirror vector*/
     bool validate_cb_unique_module_index(t_rr_type cb_type, size_t index) const; /* Validate if the index in the range of unique_mirror vector*/

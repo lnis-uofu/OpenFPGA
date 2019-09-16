@@ -2329,8 +2329,6 @@ void dump_verilog_routing_switch_box_unique_subckt(t_sram_orgz_info* cur_sram_or
       }
     }
     /* Dump OPINs of adjacent CLBs */
-    puts("CHECK4");
-    const RRGSB& unique_mirror = device_rr_gsb.get_sb_unique_module(port_coordinator);
     for (size_t inode = 0; inode < rr_gsb.get_num_opin_nodes(side_manager.get_side()); ++inode) {
       fprintf(fp, "  ");
       dump_verilog_grid_side_pin_with_given_index(fp, OPIN, /* This is an input of a SB */
@@ -2338,8 +2336,8 @@ void dump_verilog_routing_switch_box_unique_subckt(t_sram_orgz_info* cur_sram_or
                                                   rr_gsb.get_opin_node_grid_side(side_manager.get_side(), inode),
                                                   rr_gsb.get_opin_node(side_manager.get_side(), inode)->xlow,
                                                   rr_gsb.get_opin_node(side_manager.get_side(), inode)->ylow,
-                                                  unique_mirror.get_opin_node(side_manager.get_side(), inode)->xlow,
-                                                  unique_mirror.get_opin_node(side_manager.get_side(), inode)->ylow,
+                                                  rr_sb.get_opin_node(side_manager.get_side(), inode)->xlow,
+                                                  rr_sb.get_opin_node(side_manager.get_side(), inode)->ylow,
                                                   TRUE, is_explicit_mapping); /* Dump the direction of the port ! */ 
     } 
   }

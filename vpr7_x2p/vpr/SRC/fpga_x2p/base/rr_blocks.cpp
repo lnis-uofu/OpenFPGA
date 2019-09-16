@@ -2473,7 +2473,7 @@ const RRGSB& DeviceRRGSB::get_cb_unique_module(t_rr_type cb_type, DeviceCoordina
 
 /* Give a coordinator of a rr switch block, and return its unique mirror */ 
 const RRGSB DeviceRRGSB::get_sb_unique_module(DeviceCoordinator& coordinator) const {
-  assert(validate_coordinator(coordinator));
+  assert(validate_coordinator_edge(coordinator));
   size_t sb_unique_module_id = sb_unique_module_id_[coordinator.get_x()][coordinator.get_y()];  
   return get_sb_unique_module(sb_unique_module_id);
 } 
@@ -3071,6 +3071,18 @@ bool DeviceRRGSB::validate_coordinator(DeviceCoordinator& coordinator) const {
   }
   return true;
 } 
+
+/* Validate if the (x,y) is the range of this device, but takes into consideration that edges are 1 off */
+bool DeviceRRGSB::validate_coordinator_edge(DeviceCoordinator& coordinator) const {
+  if (coordinator.get_x() >= rr_gsb_.capacity() + 1) {
+    return false;
+  }
+  if (coordinator.get_y() >= rr_gsb_[coordinator.get_x()].capacity() + 1) {
+    return false;
+  }
+  return true;
+} 
+
 
 /* Validate if the index in the range of unique_mirror vector*/
 bool DeviceRRGSB::validate_side(enum e_side side) const {
