@@ -3874,9 +3874,7 @@ void print_verilog_routing_resources(ModuleManager& module_manager,
                                          LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices, LL_rr_indexed_data, 
                                          arch.num_segments);
 
-        vtr::Point<size_t> chan_coordinate;
-        chan_coordinate.set_x(size_t(ix));
-        chan_coordinate.set_y(size_t(iy));
+        vtr::Point<size_t> chan_coordinate((size_t)ix, (size_t)iy);
         print_verilog_routing_chan_subckt(module_manager, std::string(verilog_dir), std::string(subckt_dir), chan_coordinate, CHANX, 
                                           LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices);
       }
@@ -3889,9 +3887,7 @@ void print_verilog_routing_resources(ModuleManager& module_manager,
                                          LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices, LL_rr_indexed_data, 
                                          arch.num_segments);
 
-        vtr::Point<size_t> chan_coordinate;
-        chan_coordinate.set_x(size_t(ix));
-        chan_coordinate.set_y(size_t(iy));
+        vtr::Point<size_t> chan_coordinate((size_t)ix, (size_t)iy);
         print_verilog_routing_chan_subckt(module_manager, std::string(verilog_dir), std::string(subckt_dir), chan_coordinate, CHANY, 
                                           LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices);
       }
@@ -3902,19 +3898,6 @@ void print_verilog_routing_resources(ModuleManager& module_manager,
   if (TRUE == compact_routing_hierarchy) { 
     /* Create a snapshot on sram_orgz_info */
     t_sram_orgz_info* stamped_sram_orgz_info = snapshot_sram_orgz_info(cur_sram_orgz_info);
-
-    /* Output unique side modules 
-    for (size_t side = 0; side < device_rr_gsb.get_max_num_sides(); ++side) {
-      Side side_manager(side);
-      for (size_t iseg = 0; iseg < device_rr_gsb.get_num_segments(); ++iseg) {
-        for (size_t isb = 0; isb < device_rr_gsb.get_num_sb_unique_submodule(side_manager.get_side(), iseg); ++isb) {
-          const RRGSB& unique_mirror = device_rr_gsb.get_sb_unique_submodule(isb, side_manager.get_side(), iseg);
-          size_t seg_id = device_rr_gsb.get_segment_id(iseg);
-          dump_verilog_routing_switch_box_unique_side_module(cur_sram_orgz_info, verilog_dir, subckt_dir, isb, seg_id, unique_mirror, side_manager.get_side(), explicit_port_mapping);
-        }
-      }
-    }
-    */
 
     /* Output unique modules */
     for (size_t isb = 0; isb < device_rr_gsb.get_num_sb_unique_module(); ++isb) {
