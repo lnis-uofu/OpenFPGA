@@ -482,9 +482,11 @@ void dump_verilog_defined_one_channel(FILE* fp,
   fprintf(fp, "(");
   fprintf(fp, "\n");
   /* dump global ports */
+  /*
   if (0 < dump_verilog_global_ports(fp, global_ports_head, FALSE, is_explicit_mapping)) {
     fprintf(fp, ",\n");
   }
+   */
 
   /* LEFT/BOTTOM side port of CHANX/CHANY */
   /* We apply an opposite port naming rule than function: fprint_routing_chan_subckt 

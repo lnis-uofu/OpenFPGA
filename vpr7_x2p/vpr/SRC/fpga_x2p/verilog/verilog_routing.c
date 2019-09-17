@@ -456,8 +456,7 @@ static
 void dump_verilog_routing_chan_subckt(char* verilog_dir,
                                       char* subckt_dir,
                                       size_t rr_chan_subckt_id, 
-                                      const RRChan& rr_chan,
-                                      bool is_explicit_mapping) {
+                                      const RRChan& rr_chan) {
   FILE* fp = NULL;
   char* fname = NULL;
 
@@ -491,9 +490,11 @@ void dump_verilog_routing_chan_subckt(char* verilog_dir,
           gen_verilog_one_routing_channel_module_name(rr_chan.get_type(), rr_chan_subckt_id, -1));
   fprintf(fp, "\n");
   /* dump global ports */
+  /*
   if (0 < dump_verilog_global_ports(fp, global_ports_head, TRUE, false)) {
     fprintf(fp, ",\n");
   }
+  */
   /* Inputs and outputs,
    * Rules for CHANX:
    * print left-hand ports(in) first, then right-hand ports(out)
@@ -583,8 +584,7 @@ void dump_verilog_routing_chan_subckt(char* verilog_dir,
                                       int LL_num_rr_nodes, t_rr_node* LL_rr_node,
                                       t_ivec*** LL_rr_node_indices,
                                       t_rr_indexed_data* LL_rr_indexed_data,
-                                      int num_segment,
-                                      bool is_explicit_mapping) {
+                                      int num_segment) {
   int itrack, iseg, cost_index;
   int chan_width = 0;
   t_rr_node** chan_rr_nodes = NULL;
@@ -629,9 +629,11 @@ void dump_verilog_routing_chan_subckt(char* verilog_dir,
           gen_verilog_one_routing_channel_module_name(chan_type, x, y));
   fprintf(fp, "\n");
   /* dump global ports */
+  /*
   if (0 < dump_verilog_global_ports(fp, global_ports_head, TRUE, false)) {
     fprintf(fp, ",\n");
   }
+   */
   /* Inputs and outputs,
    * Rules for CHANX:
    * print left-hand ports(in) first, then right-hand ports(out)
@@ -933,8 +935,7 @@ void dump_verilog_unique_switch_box_short_interc(FILE* fp,
                                                  enum e_side chan_side,
                                                  t_rr_node* cur_rr_node,
                                                  int actual_fan_in,
-                                                 t_rr_node* drive_rr_node,
-                                                 bool is_explicit_mapping) {
+                                                 t_rr_node* drive_rr_node) {
   /* Check the file handler*/ 
   if (NULL == fp) {
     vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid file handler.\n", 
@@ -1393,7 +1394,7 @@ void dump_verilog_unique_switch_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
   int cur_bl, cur_wl;
   t_spice_model* mem_model = NULL;
   char* mem_subckt_name = NULL;
-  int num_input_port, num_output_port, num_sram_port;
+  int num_input_port, num_output_port;
 
   /* Check the file handler*/ 
   if (NULL == fp) {
@@ -1879,13 +1880,11 @@ void dump_verilog_unique_switch_box_interc(t_sram_orgz_info* cur_sram_orgz_info,
   if (0 == num_drive_rr_nodes) {
     /* Print a special direct connection*/
     dump_verilog_unique_switch_box_short_interc(fp, rr_sb, chan_side, cur_rr_node, 
-                                                num_drive_rr_nodes, cur_rr_node, 
-                                                is_explicit_mapping);
+                                                num_drive_rr_nodes, cur_rr_node);
   } else if (1 == num_drive_rr_nodes) {
     /* Print a direct connection*/
     dump_verilog_unique_switch_box_short_interc(fp, rr_sb, chan_side, cur_rr_node, 
-                                                num_drive_rr_nodes, drive_rr_nodes[DEFAULT_SWITCH_ID], 
-                                                is_explicit_mapping);
+                                                num_drive_rr_nodes, drive_rr_nodes[DEFAULT_SWITCH_ID]);
   } else if (1 < num_drive_rr_nodes) {
     /* Print the multiplexer, fan_in >= 2 */
     dump_verilog_unique_switch_box_mux(cur_sram_orgz_info, fp, rr_sb, chan_side, cur_rr_node, 
@@ -3194,10 +3193,10 @@ void dump_verilog_connection_box_short_interc(FILE* fp,
 
 
 /* SRC rr_node is the IPIN of a grid.*/
+static 
 void dump_verilog_connection_box_short_interc(FILE* fp,
                                               t_cb* cur_cb_info,
-                                              t_rr_node* src_rr_node,
-                                              bool is_explicit_mapping) {
+                                              t_rr_node* src_rr_node) {
   t_rr_node* drive_rr_node = NULL;
   int iedge, check_flag;
   int xlow, ylow, height, side, index;
@@ -3803,7 +3802,7 @@ void dump_verilog_connection_box_interc(t_sram_orgz_info* cur_sram_orgz_info,
 
   if (1 == src_rr_node->fan_in) {
     /* Print a direct connection*/
-    dump_verilog_connection_box_short_interc(fp, cur_cb_info, src_rr_node, is_explicit_mapping);
+    dump_verilog_connection_box_short_interc(fp, cur_cb_info, src_rr_node);
   } else if (1 < src_rr_node->fan_in) {
     /* Print the multiplexer, fan_in >= 2 */
     dump_verilog_connection_box_mux(cur_sram_orgz_info, fp, cur_cb_info, 
@@ -4360,7 +4359,7 @@ void print_verilog_routing_resources(ModuleManager& module_manager,
     /* X - channels [1...nx][0..ny]*/
     for (size_t ichan = 0; ichan < device_rr_chan.get_num_modules(CHANX); ++ichan) {
       dump_verilog_routing_chan_subckt(verilog_dir, subckt_dir, 
-                                       ichan, device_rr_chan.get_module(CHANX, ichan), explicit_port_mapping);
+                                       ichan, device_rr_chan.get_module(CHANX, ichan));
 
       print_verilog_routing_unique_chan_subckt(module_manager, std::string(verilog_dir), std::string(subckt_dir), 
                                                ichan, device_rr_chan.get_module(CHANX, ichan));
@@ -4369,7 +4368,7 @@ void print_verilog_routing_resources(ModuleManager& module_manager,
     vpr_printf(TIO_MESSAGE_INFO, "Writing Y-direction Channels...\n");
     for (size_t ichan = 0; ichan < device_rr_chan.get_num_modules(CHANY); ++ichan) {
       dump_verilog_routing_chan_subckt(verilog_dir, subckt_dir, 
-                                       ichan, device_rr_chan.get_module(CHANY, ichan), explicit_port_mapping);
+                                       ichan, device_rr_chan.get_module(CHANY, ichan));
 
       print_verilog_routing_unique_chan_subckt(module_manager, std::string(verilog_dir), std::string(subckt_dir), 
                                                ichan, device_rr_chan.get_module(CHANY, ichan));
@@ -4381,7 +4380,7 @@ void print_verilog_routing_resources(ModuleManager& module_manager,
       for (int ix = 1; ix < (nx + 1); ix++) {
         dump_verilog_routing_chan_subckt(verilog_dir, subckt_dir, ix, iy, CHANX, 
                                          LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices, LL_rr_indexed_data, 
-                                         arch.num_segments, explicit_port_mapping);
+                                         arch.num_segments);
 
         vtr::Point<size_t> chan_coordinate;
         chan_coordinate.set_x(size_t(ix));
@@ -4396,7 +4395,7 @@ void print_verilog_routing_resources(ModuleManager& module_manager,
       for (int iy = 1; iy < (ny + 1); iy++) {
         dump_verilog_routing_chan_subckt(verilog_dir, subckt_dir, ix, iy, CHANY,
                                          LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices, LL_rr_indexed_data, 
-                                         arch.num_segments, explicit_port_mapping);
+                                         arch.num_segments);
 
         vtr::Point<size_t> chan_coordinate;
         chan_coordinate.set_x(size_t(ix));
