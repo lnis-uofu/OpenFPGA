@@ -726,7 +726,8 @@ void dump_verilog_cmos_mux_tree_structure(FILE* fp,
   for (i = 0; i < spice_mux_arch.num_level + 1; i++) {
     inter_buf_loc[i] = FALSE;
   }
-  if (NULL != spice_model.lut_intermediate_buffer->location_map) {
+  if ( (TRUE == spice_model.lut_intermediate_buffer->exist) 
+    && (NULL != spice_model.lut_intermediate_buffer->location_map) ) {
     assert ((size_t)spice_mux_arch.num_level - 1 == strlen(spice_model.lut_intermediate_buffer->location_map));
     /* For intermediate buffers */ 
     for (i = 0; i < spice_mux_arch.num_level - 1; i++) {
