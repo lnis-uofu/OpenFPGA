@@ -854,12 +854,14 @@ def run_netlists_verification():
         command += [tb_top_autochecked]
     run_command("iverilog_verification", "iverilog_output.txt", command)
 
-    vvp_command = ["vvp", "-Nvs", compiled_file]
+    vvp_command = ["vvp", compiled_file]
     output = run_command("vvp_verification", "vvp_sim_output.txt", vvp_command)
     if "Succeed" in output:
         logger.info("VVP Simulation Successful")
     else:
-        logger.info(str(output).split("\n")[-1])
+        logger.error(str(output).split("\n")[-1])
+        if exit_if_fail:
+            clean_up_and_exit("Failed to run VVP verification")
     ExecTime["VerificationEnd"] = time.time()
 
 
