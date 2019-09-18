@@ -177,9 +177,15 @@ std::vector<bool> build_mux_intermediate_buffer_location_map(const CircuitLibrar
   std::string location_map_str;
 
   /* ONLY for LUTs: intermediate buffers may exist if specified */
-  if (SPICE_MODEL_LUT == circuit_lib.model_type(circuit_model)) {
+  if (SPICE_MODEL_LUT != circuit_lib.model_type(circuit_model)) {
+    return location_map;
+  }
+
+  /* Get location map when the flag of intermediate buffer is on */
+  if (true == circuit_lib.is_lut_intermediate_buffered(circuit_model)) { 
     location_map_str = circuit_lib.lut_intermediate_buffer_location_map(circuit_model);
   }
+
   /* If no location map is specified, we can return here */
   if (location_map_str.empty()) {
     return location_map;
