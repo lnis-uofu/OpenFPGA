@@ -659,6 +659,9 @@ def run_standard_vpr(bench_blif, fixed_chan_width, logfile, route_only=False):
     if args.vpr_use_tileable_route_chan_width:
         command += ["--use_tileable_route_chan_width"]
 
+    if args.vpr_fpga_x2p_compact_routing_hierarchy:
+        command += ["--fpga_x2p_compact_routing_hierarchy"]
+
     # FPGA_Spice Options
     if (args.power and args.vpr_fpga_spice):
         command += ["--fpga_spice"]
@@ -668,8 +671,6 @@ def run_standard_vpr(bench_blif, fixed_chan_width, logfile, route_only=False):
         if args.vpr_fpga_x2p_sim_window_size:
             command += ["--fpga_x2p_sim_window_size",
                         args.vpr_fpga_x2p_sim_window_size]
-        if args.vpr_fpga_x2p_compact_routing_hierarchy:
-            command += ["--fpga_x2p_compact_routing_hierarchy"]
 
         if args.vpr_fpga_spice_sim_mt_num:
             command += ["--fpga_spice_sim_mt_num",
@@ -853,7 +854,7 @@ def run_netlists_verification():
         command += [tb_top_autochecked]
     run_command("iverilog_verification", "iverilog_output.txt", command)
 
-    vvp_command = ["vvp", "-Ns", compiled_file]
+    vvp_command = ["vvp", "-Nvs", compiled_file]
     output = run_command("vvp_verification", "vvp_sim_output.txt", vvp_command)
     if "Succeed" in output:
         logger.info("VVP Simulation Successful")
