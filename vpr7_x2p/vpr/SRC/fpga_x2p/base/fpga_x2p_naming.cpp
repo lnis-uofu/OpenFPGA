@@ -8,6 +8,7 @@
  ********************************************************************/
 #include "vtr_assert.h"
 
+#include "sides.h"
 #include "fpga_x2p_naming.h"
 
 /************************************************
@@ -198,4 +199,86 @@ std::string generate_routing_channel_module_name(const t_rr_type& chan_type,
   module_prefix_map[CHANY] = std::string("chany");
 
   return std::string( module_prefix_map[chan_type] + std::to_string(coordinate.x()) + std::string("_") + std::to_string(coordinate.y()) + std::string("_") );
+}
+
+/*********************************************************************
+ * Generate the port name for a routing track with a given coordinate
+ * and port direction
+ *********************************************************************/
+std::string generate_routing_track_port_name(const t_rr_type& chan_type, 
+                                             const vtr::Point<size_t>& coordinate,
+                                             const size_t& track_id,
+                                             const PORTS& port_direction) {
+  /* Channel must be either CHANX or CHANY */
+  VTR_ASSERT( (CHANX == chan_type) || (CHANY == chan_type) );
+
+  /* Create a map between chan_type and module_prefix */
+  std::map<t_rr_type, std::string> module_prefix_map;
+  /* TODO: use a constexpr string to replace the fixed name? */
+  module_prefix_map[CHANX] = std::string("chanx");
+  module_prefix_map[CHANY] = std::string("chany");
+
+  std::string port_name = module_prefix_map[chan_type]; 
+  port_name += std::string("_" + std::to_string(coordinate.x()) + std::string("__") + std::to_string(coordinate.y()) + std::string("__"));
+
+  switch (port_direction) {
+  case OUT_PORT:
+    port_name += std::string("out_"); 
+    break;
+  case IN_PORT:
+    port_name += std::string("in_"); 
+    break;
+  default:
+    vpr_printf(TIO_MESSAGE_ERROR, "(File: %s [LINE%d]) Invalid direction of chan_rr_node!\n",
+               __FILE__, __LINE__);
+    exit(1);
+  }
+
+  /* Add the track id to the port name */
+  port_name += std::to_string(track_id) + std::string("_");
+
+  return port_name;
+}
+
+/*********************************************************************
+ * Generate the module name for a switch block with a given coordinate
+ *********************************************************************/
+std::string generate_switch_block_module_name(const vtr::Point<size_t>& coordinate) {
+  return std::string( "sb_" + std::to_string(coordinate.x()) + std::string("__") + std::to_string(coordinate.y()) + std::string("_") );
+}
+
+/*********************************************************************
+ * Generate the port name for a Grid
+ * TODO: add more comments about why we need different names for 
+ * top and non-top netlists
+ *********************************************************************/
+std::string generate_grid_port_name(const vtr::Point<size_t>& coordinate,
+                                    const size_t& height, 
+                                    const e_side& side, 
+                                    const size_t& pin_id,
+                                    const bool& for_top_netlist) {
+  if (true == for_top_netlist) {
+    std::string port_name = "grid_";
+    port_name += std::to_string(coordinate.x());
+    port_name += "__";
+    port_name += std::to_string(coordinate.y());
+    port_name += "__pin_";
+    port_name += std::to_string(height);
+    port_name += "__";
+    port_name += std::to_string(size_t(side));
+    port_name += "__";
+    port_name += std::to_string(pin_id);
+    port_name += "_";
+    return port_name;
+  } 
+  /* For non-top netlist */
+  VTR_ASSERT( false == for_top_netlist );
+  Side side_manager(side);
+  std::string port_name = std::string(side_manager.to_string());
+  port_name += "_height_";
+  port_name += std::to_string(height);
+  port_name += "__pin_";
+  port_name += std::to_string(pin_id);
+  port_name += "_";
+  return port_name;
 }

@@ -52,6 +52,19 @@ std::string generate_routing_channel_module_name(const t_rr_type& chan_type,
                                                  const size_t& block_id);
 
 std::string generate_routing_channel_module_name(const t_rr_type& chan_type, 
-                                                 const vtr::Point<size_t>& block_id);
+                                                 const vtr::Point<size_t>& coordinate);
+
+std::string generate_routing_track_port_name(const t_rr_type& chan_type, 
+                                             const vtr::Point<size_t>& coordinate,
+                                             const size_t& track_id,
+                                             const PORTS& port_direction);
+
+std::string generate_switch_block_module_name(const vtr::Point<size_t>& coordinate);
+
+std::string generate_grid_port_name(const vtr::Point<size_t>& coordinate,
+                                    const size_t& height, 
+                                    const e_side& side, 
+                                    const size_t& pin_id,
+                                    const bool& for_top_netlist);
 
 #endif

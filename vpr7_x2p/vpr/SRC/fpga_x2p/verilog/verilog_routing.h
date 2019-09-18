@@ -5,6 +5,7 @@
 #define VERILOG_ROUTING_H
 
 /* Include other header files which are dependency on the function declared below */
+#include "mux_library.h"
 #include "module_manager.h"
 
 void dump_verilog_routing_chan_subckt(t_sram_orgz_info* cur_sram_orgz_info,
@@ -140,7 +141,12 @@ void dump_verilog_routing_connection_box_subckt(t_sram_orgz_info* cur_sram_orgz_
                                                 bool is_explicit_mapping);
 
 
+std::string generate_grid_side_port_name(const vtr::Point<size_t>& coordinate,
+                                         const e_side& side, 
+                                         const size_t& pin_id);
+
 void print_verilog_routing_resources(ModuleManager& module_manager,
+                                     const MuxLibrary& mux_lib,
                                      t_sram_orgz_info* cur_sram_orgz_info,
                                      char* verilog_dir,
                                      char* subckt_dir,
