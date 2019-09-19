@@ -653,7 +653,7 @@ void dump_compact_verilog_defined_one_grid(t_sram_orgz_info* cur_sram_orgz_info,
   }
 
   /* Dump ports only visible during formal verification*/
-  if (0 < (cur_sram_orgz_info->grid_conf_bits_msb[ix][iy] - 1
+  if (0 < (cur_sram_orgz_info->grid_conf_bits_msb[ix][iy] 
            - cur_sram_orgz_info->grid_conf_bits_lsb[ix][iy])) {
     fprintf(fp, "\n");
     fprintf(fp, "`ifdef %s\n", verilog_formal_verification_preproc_flag);
