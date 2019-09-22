@@ -105,8 +105,8 @@ void print_verilog_module_definition(std::fstream& fp,
         std::string port_whitespace(module_head_line.length(), ' ');
         fp << port_whitespace;
       }
-      /* Print port */
-      fp << generate_verilog_port(kv.second, port);
+      /* Print port: only the port name is enough */
+      fp << port.get_name();
       port_cnt++;
     }
   }
