@@ -1,7 +1,6 @@
 /********************************************************************
- * This file includes functions to 
- * generate module/port names for Verilog 
- * and SPICE netlists 
+ * This file includes functions to generate module/port names for 
+ * Verilog and SPICE netlists 
  *
  * IMPORTANT: keep all the naming functions in this file to be 
  * generic for both Verilog and SPICE generators 

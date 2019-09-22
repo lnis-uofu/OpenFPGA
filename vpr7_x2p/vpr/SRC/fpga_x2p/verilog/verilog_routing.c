@@ -39,6 +39,8 @@
 #include "fpga_x2p_bitstream_utils.h"
 #include "fpga_x2p_globals.h"
 #include "fpga_x2p_naming.h"
+#include "module_manager.h"
+#include "module_manager_utils.h"
 
 /* Include Verilog support headers*/
 #include "verilog_global.h"
@@ -2278,20 +2280,13 @@ void print_verilog_routing_switch_box_unique_module(ModuleManager& module_manage
   }
   
   /* Add configuration ports */
-  /* TODO: Reserved sram ports */
+  /* Reserved sram ports */
   if (0 < rr_sb.get_sb_num_reserved_conf_bits()) {
     /* Check: this SRAM organization type must be memory-bank ! */
     VTR_ASSERT( SPICE_SRAM_MEMORY_BANK == cur_sram_orgz_info->type );
-
-    /* Add a reserved BLB port to the module */
-    std::string blb_port_name = generate_reserved_sram_port_name(SPICE_MODEL_PORT_BLB);
-    BasicPort blb_module_port(blb_port_name, rr_gsb.get_sb_num_reserved_conf_bits()); 
-    module_manager.add_port(module_id, blb_module_port, ModuleManager::MODULE_INPUT_PORT);
-    
-    /* Add a reserved BLB port to the module */
-    std::string wl_port_name = generate_reserved_sram_port_name(SPICE_MODEL_PORT_WL);
-    BasicPort wl_module_port(wl_port_name, rr_gsb.get_sb_num_reserved_conf_bits()); 
-    module_manager.add_port(module_id, wl_module_port, ModuleManager::MODULE_INPUT_PORT);
+    /* Generate a list of ports */
+    add_reserved_sram_ports_to_module_manager(module_manager, module_id, 
+                                              rr_gsb.get_sb_num_reserved_conf_bits()); 
   }
   /* TODO: Normal sram ports */
   /*
@@ -2315,6 +2310,10 @@ void print_verilog_routing_switch_box_unique_module(ModuleManager& module_manage
   }
   fprintf(fp, "); \n");
    */
+
+  /* Print module definition + ports */
+  print_verilog_module_declaration(fp, module_manager, module_id);
+  /* Finish printing ports */
 
   /* TODO: Local wires for memory configurations */
   /*
