@@ -2279,15 +2279,20 @@ void print_verilog_routing_switch_box_unique_module(ModuleManager& module_manage
   
   /* Add configuration ports */
   /* TODO: Reserved sram ports */
-  /*
   if (0 < rr_sb.get_sb_num_reserved_conf_bits()) {
-    dump_verilog_reserved_sram_ports(fp, cur_sram_orgz_info, 
-                                     rr_gsb.get_sb_reserved_conf_bits_lsb(),
-                                     rr_gsb.get_sb_reserved_conf_bits_msb(),
-                                     VERILOG_PORT_INPUT);
-    fprintf(fp, ",\n");
+    /* Check: this SRAM organization type must be memory-bank ! */
+    VTR_ASSERT( SPICE_SRAM_MEMORY_BANK == cur_sram_orgz_info->type );
+
+    /* Add a reserved BLB port to the module */
+    std::string blb_port_name = generate_reserved_sram_port_name(SPICE_MODEL_PORT_BLB);
+    BasicPort blb_module_port(blb_port_name, rr_gsb.get_sb_num_reserved_conf_bits()); 
+    module_manager.add_port(module_id, blb_module_port, ModuleManager::MODULE_INPUT_PORT);
+    
+    /* Add a reserved BLB port to the module */
+    std::string wl_port_name = generate_reserved_sram_port_name(SPICE_MODEL_PORT_WL);
+    BasicPort wl_module_port(wl_port_name, rr_gsb.get_sb_num_reserved_conf_bits()); 
+    module_manager.add_port(module_id, wl_module_port, ModuleManager::MODULE_INPUT_PORT);
   }
-  */
   /* TODO: Normal sram ports */
   /*
   dump_verilog_sram_ports(fp, cur_sram_orgz_info, 
@@ -4143,13 +4148,11 @@ void print_verilog_routing_resources(ModuleManager& module_manager,
       const RRGSB& unique_mirror = device_rr_gsb.get_sb_unique_module(isb);
       dump_verilog_routing_switch_box_unique_subckt(cur_sram_orgz_info, verilog_dir,
                                                     subckt_dir, unique_mirror, explicit_port_mapping);
-      /*
       print_verilog_routing_switch_box_unique_module(module_manager, arch.spice->circuit_lib, mux_lib, 
                                                      rr_switches,
                                                      cur_sram_orgz_info, std::string(verilog_dir),
                                                      std::string(subckt_dir), unique_mirror, 
                                                      explicit_port_mapping);
-       */
     }
 
     /* Restore sram_orgz_info to the base */ 
