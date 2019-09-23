@@ -12,6 +12,9 @@
 
 #include "circuit_library.h"
 #include "module_manager.h"
+
+#include "fpga_x2p_naming.h"
+
 #include "module_manager_utils.h"
 
 /******************************************************************************
@@ -70,5 +73,37 @@ ModuleId add_circuit_model_to_module_manager(ModuleManager& module_manager,
                                              const CircuitLibrary& circuit_lib, const CircuitModelId& circuit_model) {
  
   return add_circuit_model_to_module_manager(module_manager, circuit_lib, circuit_model, circuit_lib.model_name(circuit_model));
+}
+
+/********************************************************************
+ * Add a list of ports that are used for reserved SRAM ports to a module
+ * in the module manager
+ * The reserved SRAM ports are mainly designed for RRAM-based FPGA,
+ * which are shared across modules.
+ * Note that different modules may require different size of reserved
+ * SRAM ports but their LSB must all start from 0 
+ *                                +---------+
+ *    reserved_sram_port[0:X] --->| ModuleA |
+ *                                +---------+
+ *
+ *                                +---------+
+ *    reserved_sram_port[0:Y] --->| ModuleB |
+ *                                +---------+
+ *
+ ********************************************************************/
+void add_reserved_sram_ports_to_module_manager(ModuleManager& module_manager, 
+                                               const ModuleId& module_id,
+                                               const size_t& port_size) {
+  /* Add a reserved BLB port to the module */
+  std::string blb_port_name = generate_reserved_sram_port_name(SPICE_MODEL_PORT_BLB);
+  BasicPort blb_module_port(blb_port_name, port_size); 
+  /* Add generated ports to the ModuleManager */
+  module_manager.add_port(module_id, blb_module_port, ModuleManager::MODULE_INPUT_PORT);
+
+  /* Add a reserved BLB port to the module */
+  std::string wl_port_name = generate_reserved_sram_port_name(SPICE_MODEL_PORT_WL);
+  BasicPort wl_module_port(wl_port_name, port_size); 
+  /* Add generated ports to the ModuleManager */
+  module_manager.add_port(module_id, wl_module_port, ModuleManager::MODULE_INPUT_PORT);
 }
 

@@ -39,6 +39,8 @@
 #include "fpga_x2p_bitstream_utils.h"
 #include "fpga_x2p_globals.h"
 #include "fpga_x2p_naming.h"
+#include "module_manager.h"
+#include "module_manager_utils.h"
 
 /* Include Verilog support headers*/
 #include "verilog_global.h"
@@ -2278,16 +2280,14 @@ void print_verilog_routing_switch_box_unique_module(ModuleManager& module_manage
   }
   
   /* Add configuration ports */
-  /* TODO: Reserved sram ports */
-  /*
+  /* Reserved sram ports */
   if (0 < rr_sb.get_sb_num_reserved_conf_bits()) {
-    dump_verilog_reserved_sram_ports(fp, cur_sram_orgz_info, 
-                                     rr_gsb.get_sb_reserved_conf_bits_lsb(),
-                                     rr_gsb.get_sb_reserved_conf_bits_msb(),
-                                     VERILOG_PORT_INPUT);
-    fprintf(fp, ",\n");
+    /* Check: this SRAM organization type must be memory-bank ! */
+    VTR_ASSERT( SPICE_SRAM_MEMORY_BANK == cur_sram_orgz_info->type );
+    /* Generate a list of ports */
+    add_reserved_sram_ports_to_module_manager(module_manager, module_id, 
+                                              rr_gsb.get_sb_num_reserved_conf_bits()); 
   }
-  */
   /* TODO: Normal sram ports */
   /*
   dump_verilog_sram_ports(fp, cur_sram_orgz_info, 
@@ -2310,6 +2310,10 @@ void print_verilog_routing_switch_box_unique_module(ModuleManager& module_manage
   }
   fprintf(fp, "); \n");
    */
+
+  /* Print module definition + ports */
+  print_verilog_module_declaration(fp, module_manager, module_id);
+  /* Finish printing ports */
 
   /* TODO: Local wires for memory configurations */
   /*
@@ -4143,13 +4147,11 @@ void print_verilog_routing_resources(ModuleManager& module_manager,
       const RRGSB& unique_mirror = device_rr_gsb.get_sb_unique_module(isb);
       dump_verilog_routing_switch_box_unique_subckt(cur_sram_orgz_info, verilog_dir,
                                                     subckt_dir, unique_mirror, explicit_port_mapping);
-      /*
       print_verilog_routing_switch_box_unique_module(module_manager, arch.spice->circuit_lib, mux_lib, 
                                                      rr_switches,
                                                      cur_sram_orgz_info, std::string(verilog_dir),
                                                      std::string(subckt_dir), unique_mirror, 
                                                      explicit_port_mapping);
-       */
     }
 
     /* Restore sram_orgz_info to the base */ 

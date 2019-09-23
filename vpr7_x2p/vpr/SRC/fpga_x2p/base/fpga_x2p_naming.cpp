@@ -1,7 +1,6 @@
 /********************************************************************
- * This file includes functions to 
- * generate module/port names for Verilog 
- * and SPICE netlists 
+ * This file includes functions to generate module/port names for 
+ * Verilog and SPICE netlists 
  *
  * IMPORTANT: keep all the naming functions in this file to be 
  * generic for both Verilog and SPICE generators 
@@ -281,4 +280,24 @@ std::string generate_grid_port_name(const vtr::Point<size_t>& coordinate,
   port_name += std::to_string(pin_id);
   port_name += "_";
   return port_name;
+}
+
+
+/*********************************************************************
+ * Generate the port name for a reserved sram port, i.e., BLB/WL port
+ * When port_type is BLB, a string denoting to the reserved BLB port is generated
+ * When port_type is WL, a string denoting to the reserved WL port is generated
+ *
+ * DO NOT put any SRAM organization check codes HERE!!!
+ * Even though the reserved BLB/WL ports are used by RRAM-based FPGA only, 
+ * try to keep this function does simple job. 
+ * Check codes should be added outside, when print the ports to files!!!  
+ *********************************************************************/
+std::string generate_reserved_sram_port_name(const e_spice_model_port_type& port_type) {
+  VTR_ASSERT( (port_type == SPICE_MODEL_PORT_BLB) || (port_type == SPICE_MODEL_PORT_WL) ); 
+
+  if (SPICE_MODEL_PORT_BLB == port_type) {
+    return std::string("reserved_blb");
+  }
+  return std::string("reserved_wl");
 }

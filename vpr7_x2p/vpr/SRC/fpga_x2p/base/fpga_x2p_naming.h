@@ -67,4 +67,6 @@ std::string generate_grid_port_name(const vtr::Point<size_t>& coordinate,
                                     const size_t& pin_id,
                                     const bool& for_top_netlist);
 
+std::string generate_reserved_sram_port_name(const e_spice_model_port_type& port_type);
+
 #endif

@@ -36,7 +36,7 @@ std::vector<CircuitPortId> find_switch_block_global_ports(const RRGSB& rr_gsb,
       /* Get the model, and try to add to the sub_model list */
       CircuitModelId switch_circuit_model = switch_lib[driver_switch].circuit_model;
       /* Make sure it is a valid id */
-      VTR_ASSERT( CircuitModelId::INVALID() == switch_circuit_model );
+      VTR_ASSERT( CircuitModelId::INVALID() != switch_circuit_model );
       /* Get the model, and try to add to the sub_model list */
       if (sub_models.end() == std::find(sub_models.begin(), sub_models.end(), switch_circuit_model)) {
         /* Not yet in the list, add it */
