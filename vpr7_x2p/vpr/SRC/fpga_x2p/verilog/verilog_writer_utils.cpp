@@ -86,7 +86,7 @@ void print_verilog_preprocessing_flag(std::fstream& fp,
 void print_verilog_endif(std::fstream& fp) {
   check_file_handler(fp);
 
-  fp << "endif" << std::endl;
+  fp << "`endif" << std::endl;
 }
 
 /************************************************
@@ -113,6 +113,7 @@ void print_verilog_module_definition(std::fstream& fp,
 
   /* Port sequence: global, inout, input, output and clock ports, */
   size_t port_cnt = 0;
+  bool printed_ifdef = false; /* A flag to tell if an ifdef has been printed for the last port */
   for (const auto& kv : port_type2type_map) {
     for (const auto& port : module_manager.module_ports_by_type(module_id, kv.first)) {
       if (0 != port_cnt) {
@@ -120,15 +121,22 @@ void print_verilog_module_definition(std::fstream& fp,
         fp << "," << std::endl; 
       }
 
+      if (true == printed_ifdef) {
+        /* Print an endif to pair the ifdef */
+        print_verilog_endif(fp);
+        /* Reset the flag */
+        printed_ifdef = false;
+      }
+
       ModulePortId port_id = module_manager.find_module_port(module_id, port.get_name());
       VTR_ASSERT(ModulePortId::INVALID() != port_id);
       /* Print pre-processing flag for a port, if defined */
       std::string preproc_flag = module_manager.port_preproc_flag(module_id, port_id);
       if (false == preproc_flag.empty()) {
-        /* Start a new line because an ifdef line will be outputted */
-        fp << std::endl;
         /* Print an ifdef Verilog syntax */
         print_verilog_preprocessing_flag(fp, preproc_flag);
+        /* Raise the flag */
+        printed_ifdef = true;
       }
 
       /* Create a space for "module <module_name>" except the first line! */
@@ -138,13 +146,6 @@ void print_verilog_module_definition(std::fstream& fp,
       }
       /* Print port: only the port name is enough */
       fp << port.get_name();
-
-      if (false == preproc_flag.empty()) {
-        /* Start a new line because an endif line will be outputted */
-        fp << std::endl;
-        /* Print an endif to pair the ifdef */
-        print_verilog_endif(fp);
-      }
 
       /* Increase the counter */
       port_cnt++;

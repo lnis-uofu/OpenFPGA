@@ -107,3 +107,23 @@ void add_reserved_sram_ports_to_module_manager(ModuleManager& module_manager,
   module_manager.add_port(module_id, wl_module_port, ModuleManager::MODULE_INPUT_PORT);
 }
 
+/********************************************************************
+ * Add a list of ports that are used for formal verification to a module
+ * in the module manager
+ *
+ * The formal verification port will appear only when a pre-processing flag is defined
+ * This function will add the pre-processing flag along with the port
+ ********************************************************************/
+void add_formal_verification_sram_ports_to_module_manager(ModuleManager& module_manager, 
+                                                          const ModuleId& module_id,
+                                                          t_sram_orgz_info* cur_sram_orgz_info,
+                                                          const std::string& preproc_flag,
+                                                          const size_t& port_size) {
+  /* Create a port */
+  std::string port_name = generate_formal_verification_sram_port_name(cur_sram_orgz_info);
+  BasicPort module_port(port_name, port_size); 
+  /* Add generated ports to the ModuleManager */
+  ModulePortId port_id = module_manager.add_port(module_id, module_port, ModuleManager::MODULE_INPUT_PORT);
+  /* Add pre-processing flag if defined */
+  module_manager.set_port_preproc_flag(module_id, port_id, preproc_flag);
+}

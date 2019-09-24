@@ -188,11 +188,9 @@ void ModuleManager::set_port_is_register(const ModuleId& module, const std::stri
 }
 
 /* Set the preprocessing flag for a port */
-void ModuleManager::set_port_preproc_flag(const ModuleId& module, const std::string& port_name, const std::string& preproc_flag) {
-  /* Find the port */
-  ModulePortId port = find_module_port(module, port_name);
+void ModuleManager::set_port_preproc_flag(const ModuleId& module, const ModulePortId& port, const std::string& preproc_flag) {
   /* Must find something, otherwise drop an error */
-  VTR_ASSERT(ModulePortId::INVALID() != port);
+  VTR_ASSERT(valid_module_port_id(module, port));
   port_preproc_flags_[module][port] = preproc_flag;
 }
 

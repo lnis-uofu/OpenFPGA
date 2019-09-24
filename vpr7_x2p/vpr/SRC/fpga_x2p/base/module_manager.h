@@ -61,7 +61,7 @@ class ModuleManager {
     /* Set a port to be a register */
     void set_port_is_register(const ModuleId& module, const std::string& port_name, const bool& is_register);
     /* Set the preprocessing flag for a port */
-    void set_port_preproc_flag(const ModuleId& module, const std::string& port_name, const std::string& preproc_flag);
+    void set_port_preproc_flag(const ModuleId& module, const ModulePortId& port, const std::string& preproc_flag);
     /* Add a child module to a parent module */
     void add_child_module(const ModuleId& parent_module, const ModuleId& child_module);
   private: /* Private validators/invalidators */

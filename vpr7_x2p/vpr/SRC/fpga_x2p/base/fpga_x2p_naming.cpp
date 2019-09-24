@@ -8,6 +8,7 @@
 #include "vtr_assert.h"
 
 #include "sides.h"
+#include "fpga_x2p_utils.h"
 #include "fpga_x2p_naming.h"
 
 /************************************************
@@ -228,7 +229,8 @@ std::string generate_routing_track_port_name(const t_rr_type& chan_type,
     port_name += std::string("in_"); 
     break;
   default:
-    vpr_printf(TIO_MESSAGE_ERROR, "(File: %s [LINE%d]) Invalid direction of chan_rr_node!\n",
+    vpr_printf(TIO_MESSAGE_ERROR, 
+               "(File: %s [LINE%d]) Invalid direction of chan_rr_node!\n",
                __FILE__, __LINE__);
     exit(1);
   }
@@ -301,3 +303,21 @@ std::string generate_reserved_sram_port_name(const e_spice_model_port_type& port
   }
   return std::string("reserved_wl");
 }
+
+/*********************************************************************
+ * Generate the port name for a sram port, used for formal verification
+ * The port name is named after the cell name of SRAM in circuit library
+ * TODO: 
+ * Use the new refactored data structure to replace the sram_orgz_info
+ *********************************************************************/
+std::string generate_formal_verification_sram_port_name(t_sram_orgz_info* cur_sram_orgz_info) {
+  /* Get memory_model */
+  t_spice_model* mem_model = NULL;
+  get_sram_orgz_info_mem_model(cur_sram_orgz_info, &mem_model);
+  VTR_ASSERT(NULL != mem_model); /* We must have a valid memory model */
+
+  std::string port_name = std::string(mem_model->name) + std::string("_out_fm");
+
+  return port_name;
+}
+
