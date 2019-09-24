@@ -26,6 +26,11 @@ void print_verilog_include_defines_preproc_file(std::fstream& fp,
 void print_verilog_comment(std::fstream& fp, 
                            const std::string& comment);
 
+void print_verilog_preprocessing_flag(std::fstream& fp,
+                                      const std::string& preproc_flag);
+
+void print_verilog_endif(std::fstream& fp);
+
 void print_verilog_module_definition(std::fstream& fp, 
                                      const ModuleManager& module_manager, const ModuleId& module_id);
 

@@ -106,6 +106,13 @@ bool ModuleManager::port_is_register(const ModuleId& module, const ModulePortId&
   return port_is_register_[module][port];
 }
 
+/* Return the pre-processing flag of a port */
+std::string ModuleManager::port_preproc_flag(const ModuleId& module, const ModulePortId& port) const {
+  /* validate both module id and port id*/
+  VTR_ASSERT(valid_module_port_id(module, port));
+  return port_preproc_flags_[module][port];
+}
+
 /******************************************************************************
  * Public Mutators
  ******************************************************************************/
@@ -131,6 +138,7 @@ ModuleId ModuleManager::add_module(const std::string& name) {
   ports_.emplace_back();
   port_types_.emplace_back();
   port_is_register_.emplace_back();
+  port_preproc_flags_.emplace_back();
 
   /* Register in the name-to-id map */
   name_id_map_[name] = module;
@@ -155,6 +163,7 @@ ModulePortId ModuleManager::add_port(const ModuleId& module,
   ports_[module].push_back(port_info);
   port_types_[module].push_back(port_type);
   port_is_register_[module].push_back(false);
+  port_preproc_flags_[module].emplace_back(); /* Create an empty string for the pre-processing flags */
 
   /* Update fast look-up for port */
   port_lookup_[module][port_type].push_back(port);
@@ -176,6 +185,15 @@ void ModuleManager::set_port_is_register(const ModuleId& module, const std::stri
   /* Must find something, otherwise drop an error */
   VTR_ASSERT(ModulePortId::INVALID() != port);
   port_is_register_[module][port] = is_register;
+}
+
+/* Set the preprocessing flag for a port */
+void ModuleManager::set_port_preproc_flag(const ModuleId& module, const std::string& port_name, const std::string& preproc_flag) {
+  /* Find the port */
+  ModulePortId port = find_module_port(module, port_name);
+  /* Must find something, otherwise drop an error */
+  VTR_ASSERT(ModulePortId::INVALID() != port);
+  port_preproc_flags_[module][port] = preproc_flag;
 }
 
 /* Add a child module to a parent module */
