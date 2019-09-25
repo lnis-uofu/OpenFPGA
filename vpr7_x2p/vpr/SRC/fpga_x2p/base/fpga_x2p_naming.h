@@ -69,6 +69,12 @@ std::string generate_grid_port_name(const vtr::Point<size_t>& coordinate,
 
 std::string generate_reserved_sram_port_name(const e_spice_model_port_type& port_type);
 
-std::string generate_formal_verification_sram_port_name(t_sram_orgz_info* cur_sram_orgz_info);
+std::string generate_formal_verification_sram_port_name(const CircuitLibrary& circuit_lib,
+                                                        const CircuitModelId& sram_model);
+
+std::string generate_sram_port_name(const CircuitLibrary& circuit_lib,
+                                    const CircuitModelId& sram_model,
+                                    const e_sram_orgz& sram_orgz_type,
+                                    const e_spice_model_port_type& port_type);
 
 #endif

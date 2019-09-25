@@ -2287,16 +2287,19 @@ void print_verilog_routing_switch_box_unique_module(ModuleManager& module_manage
     add_reserved_sram_ports_to_module_manager(module_manager, module_id, 
                                               rr_gsb.get_sb_num_reserved_conf_bits()); 
   }
-  /* TODO: Normal sram ports */
-  /*
-  dump_verilog_sram_ports(fp, cur_sram_orgz_info, 
-                          rr_gsb.get_sb_conf_bits_lsb(),
-                          rr_gsb.get_sb_conf_bits_msb(),
-                          VERILOG_PORT_INPUT);
-   */
-  /* Add ports only visible during formal verification to the module */
+  /* Normal sram ports */
   if (0 < rr_gsb.get_sb_num_conf_bits()) {
-    add_formal_verification_sram_ports_to_module_manager(module_manager, module_id, cur_sram_orgz_info, 
+    /* TODO: this should be added to the cur_sram_orgz_info !!! */
+    t_spice_model* mem_model = NULL;
+    get_sram_orgz_info_mem_model(cur_sram_orgz_info, & mem_model);
+    CircuitModelId sram_model = circuit_lib.model(mem_model->name);  
+    VTR_ASSERT(CircuitModelId::INVALID() != sram_model);
+    add_sram_ports_to_module_manager(module_manager, module_id,
+                                     circuit_lib, sram_model, cur_sram_orgz_info->type,
+                                     rr_gsb.get_sb_num_conf_bits());
+    /* Add ports only visible during formal verification to the module */
+    add_formal_verification_sram_ports_to_module_manager(module_manager, module_id, circuit_lib, sram_model, 
+                                                         cur_sram_orgz_info->type,
                                                          std::string(verilog_formal_verification_preproc_flag),
                                                          rr_gsb.get_sb_num_conf_bits());
   }

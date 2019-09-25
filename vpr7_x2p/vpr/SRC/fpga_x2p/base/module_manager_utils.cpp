@@ -116,14 +116,95 @@ void add_reserved_sram_ports_to_module_manager(ModuleManager& module_manager,
  ********************************************************************/
 void add_formal_verification_sram_ports_to_module_manager(ModuleManager& module_manager, 
                                                           const ModuleId& module_id,
-                                                          t_sram_orgz_info* cur_sram_orgz_info,
+                                                          const CircuitLibrary& circuit_lib,
+                                                          const CircuitModelId& sram_model,
+                                                          const e_sram_orgz sram_orgz_type,
                                                           const std::string& preproc_flag,
                                                           const size_t& port_size) {
   /* Create a port */
-  std::string port_name = generate_formal_verification_sram_port_name(cur_sram_orgz_info);
+  std::string port_name = generate_formal_verification_sram_port_name(circuit_lib, sram_model);
   BasicPort module_port(port_name, port_size); 
   /* Add generated ports to the ModuleManager */
   ModulePortId port_id = module_manager.add_port(module_id, module_port, ModuleManager::MODULE_INPUT_PORT);
   /* Add pre-processing flag if defined */
   module_manager.set_port_preproc_flag(module_id, port_id, preproc_flag);
+}
+
+/********************************************************************
+ * Add a list of ports that are used for SRAM configuration to a module
+ * in the module manager
+ * The type and names of added ports strongly depend on the 
+ * organization of SRAMs.
+ * 1. Standalone SRAMs: 
+ *    two ports will be added, which are regular output and inverted output 
+ * 2. Scan-chain Flip-flops:
+ *    two ports will be added, which are the head of scan-chain 
+ *    and the tail of scan-chain
+ * 3. Memory decoders:
+ *    2-4 ports will be added, depending on the ports available in the SRAM
+ *    Among these, two ports are mandatory: BL and WL 
+ *    The other two ports are optional: BLB and WLB
+ *    Note that the constraints are correletated to the checking rules 
+ *    in check_circuit_library()
+ ********************************************************************/
+void add_sram_ports_to_module_manager(ModuleManager& module_manager, 
+                                      const ModuleId& module_id,
+                                      const CircuitLibrary& circuit_lib,
+                                      const CircuitModelId& sram_model,
+                                      const e_sram_orgz sram_orgz_type,
+                                      const size_t& port_size) {
+  /* Prepare a list of port types to be added, the port type will be used to create port names */
+  std::vector<e_spice_model_port_type> model_port_types; 
+  /* Prepare a list of module port types to be added, the port type will be used to specify the port type in Verilog/SPICE module */
+  std::vector<ModuleManager::e_module_port_type> module_port_types; 
+  /* Actual port size may be different from user specification. Think about SCFF */
+  size_t sram_port_size = port_size;
+
+  switch (sram_orgz_type) {
+  case SPICE_SRAM_STANDALONE: 
+    model_port_types.push_back(SPICE_MODEL_PORT_INPUT);
+    module_port_types.push_back(ModuleManager::MODULE_INPUT_PORT);
+    model_port_types.push_back(SPICE_MODEL_PORT_OUTPUT);
+    module_port_types.push_back(ModuleManager::MODULE_INPUT_PORT);
+    break;
+  case SPICE_SRAM_SCAN_CHAIN: 
+    model_port_types.push_back(SPICE_MODEL_PORT_INPUT);
+    module_port_types.push_back(ModuleManager::MODULE_INPUT_PORT);
+    model_port_types.push_back(SPICE_MODEL_PORT_OUTPUT);
+    module_port_types.push_back(ModuleManager::MODULE_OUTPUT_PORT);
+    /* SCFF head/tail are single-bit ports */
+    sram_port_size = 1;
+    break;
+  case SPICE_SRAM_MEMORY_BANK: {
+    std::vector<e_spice_model_port_type> ports_to_search;
+    ports_to_search.push_back(SPICE_MODEL_PORT_BL);
+    ports_to_search.push_back(SPICE_MODEL_PORT_WL);
+    ports_to_search.push_back(SPICE_MODEL_PORT_BLB);
+    ports_to_search.push_back(SPICE_MODEL_PORT_WLB);
+    /* Try to find a BL/WL/BLB/WLB port and update the port types/module port types to be added */
+    for (const auto& port_to_search : ports_to_search) {
+      std::vector<CircuitPortId> found_port = circuit_lib.model_ports_by_type(sram_model, port_to_search);
+      if (0 == found_port.size()) {
+        continue;
+      }
+      model_port_types.push_back(port_to_search);
+      module_port_types.push_back(ModuleManager::MODULE_INPUT_PORT);
+    }
+    break;
+  }
+  default:
+    vpr_printf(TIO_MESSAGE_ERROR,
+               "(File:%s,[LINE%d])Invalid type of SRAM organization !\n",
+               __FILE__, __LINE__);
+    exit(1);
+  }
+
+  /* Add ports to the module manager */
+  for (size_t iport = 0; iport < model_port_types.size(); ++iport) {
+    /* Create a port */
+    std::string port_name = generate_sram_port_name(circuit_lib, sram_model, sram_orgz_type, model_port_types[iport]);
+    BasicPort module_port(port_name, sram_port_size); 
+    /* Add generated ports to the ModuleManager */
+    module_manager.add_port(module_id, module_port, module_port_types[iport]);
+  }
 }

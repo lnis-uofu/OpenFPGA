@@ -26,9 +26,18 @@ void add_reserved_sram_ports_to_module_manager(ModuleManager& module_manager,
 
 void add_formal_verification_sram_ports_to_module_manager(ModuleManager& module_manager, 
                                                           const ModuleId& module_id,
-                                                          t_sram_orgz_info* cur_sram_orgz_info,
+                                                          const CircuitLibrary& circuit_lib,
+                                                          const CircuitModelId& sram_model,
+                                                          const e_sram_orgz sram_orgz_type,
                                                           const std::string& preproc_flag,
                                                           const size_t& port_size);
+
+void add_sram_ports_to_module_manager(ModuleManager& module_manager, 
+                                      const ModuleId& module_id,
+                                      const CircuitLibrary& circuit_lib,
+                                      const CircuitModelId& sram_model,
+                                      const e_sram_orgz sram_orgz_type,
+                                      const size_t& port_size);
 
 #endif
 
