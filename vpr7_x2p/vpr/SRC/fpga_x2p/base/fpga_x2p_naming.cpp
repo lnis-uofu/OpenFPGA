@@ -8,6 +8,7 @@
 #include "vtr_assert.h"
 
 #include "sides.h"
+#include "fpga_x2p_utils.h"
 #include "fpga_x2p_naming.h"
 
 /************************************************
@@ -228,7 +229,8 @@ std::string generate_routing_track_port_name(const t_rr_type& chan_type,
     port_name += std::string("in_"); 
     break;
   default:
-    vpr_printf(TIO_MESSAGE_ERROR, "(File: %s [LINE%d]) Invalid direction of chan_rr_node!\n",
+    vpr_printf(TIO_MESSAGE_ERROR, 
+               "(File: %s [LINE%d]) Invalid direction of chan_rr_node!\n",
                __FILE__, __LINE__);
     exit(1);
   }
@@ -300,4 +302,96 @@ std::string generate_reserved_sram_port_name(const e_spice_model_port_type& port
     return std::string("reserved_blb");
   }
   return std::string("reserved_wl");
+}
+
+/*********************************************************************
+ * Generate the port name for a sram port, used for formal verification
+ * The port name is named after the cell name of SRAM in circuit library
+ * TODO: 
+ * Use the new refactored data structure to replace the t_sram_orgz_info
+ *********************************************************************/
+std::string generate_formal_verification_sram_port_name(const CircuitLibrary& circuit_lib,
+                                                        const CircuitModelId& sram_model) {
+  std::string port_name = circuit_lib.model_name(sram_model) + std::string("_out_fm");
+
+  return port_name;
+}
+
+/*********************************************************************
+ * Generate the port name for a regular sram port
+ * The port name is named after the cell name of SRAM in circuit library
+ * TODO: 
+ * Use the new refactored data structure to replace the t_sram_orgz_info
+ *********************************************************************/
+std::string generate_sram_port_name(const CircuitLibrary& circuit_lib,
+                                    const CircuitModelId& sram_model,
+                                    const e_sram_orgz& sram_orgz_type,
+                                    const e_spice_model_port_type& port_type) {
+  /* Get memory_model */
+
+  std::string port_name = circuit_lib.model_name(sram_model) + std::string("_");
+
+  switch (sram_orgz_type) {
+  case SPICE_SRAM_STANDALONE: {
+    /* Two types of ports are available:  
+     * (1) Regular output of a SRAM, enabled by port type of INPUT
+     * (2) Inverted output of a SRAM, enabled by port type of OUTPUT
+     */
+    if (SPICE_MODEL_PORT_INPUT == port_type) {
+      port_name += std::string("out"); 
+    } else {
+      VTR_ASSERT( SPICE_MODEL_PORT_OUTPUT == port_type );
+      port_name += std::string("outb"); 
+    }
+    break;
+  }
+  case SPICE_SRAM_SCAN_CHAIN:
+    /* Two types of ports are available:  
+     * (1) Head of a chain of Scan-chain Flip-Flops (SCFFs), enabled by port type of INPUT
+     * (2) Tail of a chian of Scan-chain Flip-flops (SCFFs), enabled by port type of OUTPUT
+     *           +------+    +------+    +------+
+     *  Head --->| SCFF |--->| SCFF |--->| SCFF |---> Tail
+     *           +------+    +------+    +------+
+     */
+    if (SPICE_MODEL_PORT_INPUT == port_type) {
+      port_name += std::string("scff_head"); 
+    } else {
+      VTR_ASSERT( SPICE_MODEL_PORT_OUTPUT == port_type );
+      port_name += std::string("scff_tail"); 
+    }
+    break;
+  case SPICE_SRAM_MEMORY_BANK:
+    /* Four types of ports are available:  
+     * (1) Bit Lines (BLs) of a SRAM cell, enabled by port type of BL
+     * (2) Word Lines (WLs) of a SRAM cell, enabled by port type of WL
+     * (3) Inverted Bit Lines (BLBs) of a SRAM cell, enabled by port type of BLB
+     * (4) Inverted Word Lines (WLBs) of a SRAM cell, enabled by port type of WLB
+     *
+     *           BL BLB WL WLB    BL BLB WL WLB    BL BLB WL WLB
+     *          [0] [0] [0] [0]  [1] [1] [1] [1]  [i] [i] [i] [i]
+     *            ^  ^  ^  ^       ^  ^  ^  ^       ^  ^  ^  ^
+     *            |  |  |  |       |  |  |  |       |  |  |  |
+     *           +----------+     +----------+     +----------+
+     *           |   SRAM   |     |   SRAM   | ... |   SRAM   |         
+     *           +----------+     +----------+     +----------+
+     */
+    if (SPICE_MODEL_PORT_BL == port_type) {
+      port_name += std::string("bl"); 
+    } else if (SPICE_MODEL_PORT_WL == port_type) {
+      port_name += std::string("wl"); 
+    } else if (SPICE_MODEL_PORT_BLB == port_type) {
+      port_name += std::string("blb"); 
+    } else {
+      VTR_ASSERT( SPICE_MODEL_PORT_WLB == port_type );
+      port_name += std::string("wlb"); 
+    }
+    break;
+  default:
+    vpr_printf(TIO_MESSAGE_ERROR,
+               "(File:%s,[LINE%d])Invalid type of SRAM organization !\n",
+               __FILE__, __LINE__);
+    exit(1);
+  }
+
+  return port_name;
 }

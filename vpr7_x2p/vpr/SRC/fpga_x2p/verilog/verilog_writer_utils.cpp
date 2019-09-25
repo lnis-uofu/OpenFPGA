@@ -71,6 +71,25 @@ void print_verilog_comment(std::fstream& fp,
 }
 
 /************************************************
+ * Print the declaration of a Verilog preprocessing flag
+ ***********************************************/
+void print_verilog_preprocessing_flag(std::fstream& fp,
+                                      const std::string& preproc_flag) {
+  check_file_handler(fp);
+
+  fp << "`ifdef " << preproc_flag << std::endl;
+}
+
+/************************************************
+ * Print the endif of a Verilog preprocessing flag
+ ***********************************************/
+void print_verilog_endif(std::fstream& fp) {
+  check_file_handler(fp);
+
+  fp << "`endif" << std::endl;
+}
+
+/************************************************
  * Print a Verilog module definition
  * We use the following format:
  * module <module_name> (<ports without directions>);
@@ -94,12 +113,32 @@ void print_verilog_module_definition(std::fstream& fp,
 
   /* Port sequence: global, inout, input, output and clock ports, */
   size_t port_cnt = 0;
+  bool printed_ifdef = false; /* A flag to tell if an ifdef has been printed for the last port */
   for (const auto& kv : port_type2type_map) {
     for (const auto& port : module_manager.module_ports_by_type(module_id, kv.first)) {
       if (0 != port_cnt) {
         /* Do not dump a comma for the first port */
         fp << "," << std::endl; 
       }
+
+      if (true == printed_ifdef) {
+        /* Print an endif to pair the ifdef */
+        print_verilog_endif(fp);
+        /* Reset the flag */
+        printed_ifdef = false;
+      }
+
+      ModulePortId port_id = module_manager.find_module_port(module_id, port.get_name());
+      VTR_ASSERT(ModulePortId::INVALID() != port_id);
+      /* Print pre-processing flag for a port, if defined */
+      std::string preproc_flag = module_manager.port_preproc_flag(module_id, port_id);
+      if (false == preproc_flag.empty()) {
+        /* Print an ifdef Verilog syntax */
+        print_verilog_preprocessing_flag(fp, preproc_flag);
+        /* Raise the flag */
+        printed_ifdef = true;
+      }
+
       /* Create a space for "module <module_name>" except the first line! */
       if (0 != port_cnt) {
         std::string port_whitespace(module_head_line.length(), ' ');
@@ -107,6 +146,8 @@ void print_verilog_module_definition(std::fstream& fp,
       }
       /* Print port: only the port name is enough */
       fp << port.get_name();
+
+      /* Increase the counter */
       port_cnt++;
     }
   }
@@ -131,10 +172,24 @@ void print_verilog_module_ports(std::fstream& fp,
   /* Port sequence: global, inout, input, output and clock ports, */
   for (const auto& kv : port_type2type_map) {
     for (const auto& port : module_manager.module_ports_by_type(module_id, kv.first)) {
+      ModulePortId port_id = module_manager.find_module_port(module_id, port.get_name());
+      VTR_ASSERT(ModulePortId::INVALID() != port_id);
+      /* Print pre-processing flag for a port, if defined */
+      std::string preproc_flag = module_manager.port_preproc_flag(module_id, port_id);
+      if (false == preproc_flag.empty()) {
+        /* Print an ifdef Verilog syntax */
+        print_verilog_preprocessing_flag(fp, preproc_flag);
+      }
+
       /* Print port */
       fp << "//----- " << module_manager.module_port_type_str(kv.first)  << " -----" << std::endl; 
       fp << generate_verilog_port(kv.second, port);
       fp << ";" << std::endl;
+
+      if (false == preproc_flag.empty()) {
+        /* Print an endif to pair the ifdef */
+        print_verilog_endif(fp);
+      }
     }
   }
  
@@ -149,9 +204,22 @@ void print_verilog_module_ports(std::fstream& fp,
       if (false == module_manager.port_is_register(module_id, port_id)) {
         continue;
       }
+
+      /* Print pre-processing flag for a port, if defined */
+      std::string preproc_flag = module_manager.port_preproc_flag(module_id, port_id);
+      if (false == preproc_flag.empty()) {
+        /* Print an ifdef Verilog syntax */
+        print_verilog_preprocessing_flag(fp, preproc_flag);
+      }
+
       /* Print port */
       fp << generate_verilog_port(VERILOG_PORT_REG, port);
       fp << ";" << std::endl;
+
+      if (false == preproc_flag.empty()) {
+        /* Print an endif to pair the ifdef */
+        print_verilog_endif(fp);
+      }
     }
   }
   fp << "//----- END Registered ports -----" << std::endl; 
