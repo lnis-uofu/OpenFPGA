@@ -926,7 +926,7 @@ void dump_verilog_one_clb2clb_direct(FILE* fp,
     exit(1);
   }
 
-  for (ipin = 0; ipin < cur_direct->from_clb_pin_end_index - cur_direct->from_clb_pin_start_index; ipin++) {
+  for (ipin = 0; ipin < 1 + cur_direct->from_clb_pin_end_index - cur_direct->from_clb_pin_start_index; ipin++) {
     /* Update pin index and get the side of the pins on grids */
     cur_from_clb_pin_index = cur_direct->from_clb_pin_start_index + ipin;
     cur_to_clb_pin_index = cur_direct->to_clb_pin_start_index + ipin;
@@ -950,7 +950,7 @@ void dump_verilog_one_clb2clb_direct(FILE* fp,
     dump_verilog_toplevel_one_grid_side_pin_with_given_index(fp, IPIN, 
                                                              cur_to_clb_pin_index,
                                                              cur_to_clb_pin_side,
-                                                             to_grid_x, from_grid_y,
+                                                             to_grid_x, to_grid_y,
                                                              FALSE);
     fprintf(fp, ");\n");
   
