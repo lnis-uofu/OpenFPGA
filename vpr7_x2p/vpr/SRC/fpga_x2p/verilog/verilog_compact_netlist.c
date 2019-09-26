@@ -79,7 +79,7 @@ char* generate_compact_verilog_grid_module_name(t_type_ptr phy_block_type,
 
 /* ONLY for compact Verilog netlists:
  * Update the grid_index_low and grid_index_high for each spice_models 
- * Currently, we focus on three spice_models: SRAMs/SCFFs/IOPADs
+ * Currently, we focus on three spice_models: SRAMs/CCFFs/IOPADs
  */
 static 
 void compact_verilog_update_one_spice_model_grid_index(t_type_ptr phy_block_type,
@@ -102,7 +102,7 @@ void compact_verilog_update_one_spice_model_grid_index(t_type_ptr phy_block_type
     case SPICE_MODEL_HARDLOGIC:
     case SPICE_MODEL_GATE:
       break;
-    case SPICE_MODEL_SCFF:
+    case SPICE_MODEL_CCFF:
     case SPICE_MODEL_SRAM:
       stamped_cnt = spice_model[i].cnt;
       spice_model[i].grid_index_low[grid_x][grid_y] = stamped_cnt; 
@@ -158,7 +158,7 @@ void compact_verilog_update_sram_orgz_info_grid_index(t_sram_orgz_info* cur_sram
 
 /* ONLY for compact Verilog netlists:
  * Update the grid_index_low and grid_index_high for each spice_models
- * Currently, we focus on three spice_models: SRAMs/SCFFs/IOPADs
+ * Currently, we focus on three spice_models: SRAMs/CCFFs/IOPADs
  * IMPORTANT: The sequence of for loop should be consistent with 
  * 1. bitstream logic block 
  * 2. verilog pbtypes logic block 

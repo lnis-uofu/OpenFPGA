@@ -219,10 +219,10 @@ void print_verilog_submodule_mux_local_decoders(ModuleManager& module_manager,
 /***************************************************************************************
  * For scan-chain configuration organization:
  * Generate the Verilog module of configuration module 
- * which connect configuration ports to SRAMs/SCFFs in a chain: 
+ * which connect configuration ports to SRAMs/CCFFs in a chain: 
  *
  *          +------+    +------+             +------+
- * sc_in--->| SCFF |--->| SCFF |---> ... --->| SCFF |----> sc_out
+ * sc_in--->| CCFF |--->| CCFF |---> ... --->| CCFF |----> sc_out
  *          +------+    +------+             +------+
  ***************************************************************************************/
 static 
@@ -264,7 +264,7 @@ void print_verilog_scan_chain_config_module(ModuleManager& module_manager,
   BasicPort sc_first_input_port(sc_input_port.get_name(), 1);
   print_verilog_wire_connection(fp, sc_first_input_port, sc_head_port, false);
 
-  /* Connect the head of current scff to the tail of previous scff*/
+  /* Connect the head of current ccff to the tail of previous ccff*/
   BasicPort chain_output_port(sc_input_port.get_name(), 1, num_mem_bits - 1);
   BasicPort chain_input_port(sc_output_port.get_name(), 0, num_mem_bits - 2);
   print_verilog_wire_connection(fp, chain_output_port, chain_input_port, false);
@@ -281,11 +281,11 @@ void print_verilog_scan_chain_config_module(ModuleManager& module_manager,
  * Generate the configuration peripheral circuits for the top-level Verilog netlist
  * This function will create Verilog modules depending on the configuration scheme:
  * 1. Scan-chain:
- *    It will create a module which connects the Scan-Chain Flip-Flops (SCFFs)
+ *    It will create a module which connects the Scan-Chain Flip-Flops (CCFFs)
  *    as a chain: 
  *
  *          +------+    +------+             +------+
- * sc_in--->| SCFF |--->| SCFF |---> ... --->| SCFF |----> sc_out
+ * sc_in--->| CCFF |--->| CCFF |---> ... --->| CCFF |----> sc_out
  *          +------+    +------+             +------+
  *
  * 2. Memory bank:

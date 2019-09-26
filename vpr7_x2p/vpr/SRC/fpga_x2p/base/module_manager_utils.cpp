@@ -157,7 +157,7 @@ void add_sram_ports_to_module_manager(ModuleManager& module_manager,
   std::vector<e_spice_model_port_type> model_port_types; 
   /* Prepare a list of module port types to be added, the port type will be used to specify the port type in Verilog/SPICE module */
   std::vector<ModuleManager::e_module_port_type> module_port_types; 
-  /* Actual port size may be different from user specification. Think about SCFF */
+  /* Actual port size may be different from user specification. Think about CCFF */
   size_t sram_port_size = port_size;
 
   switch (sram_orgz_type) {
@@ -172,7 +172,7 @@ void add_sram_ports_to_module_manager(ModuleManager& module_manager,
     module_port_types.push_back(ModuleManager::MODULE_INPUT_PORT);
     model_port_types.push_back(SPICE_MODEL_PORT_OUTPUT);
     module_port_types.push_back(ModuleManager::MODULE_OUTPUT_PORT);
-    /* SCFF head/tail are single-bit ports */
+    /* CCFF head/tail are single-bit ports */
     sram_port_size = 1;
     break;
   case SPICE_SRAM_MEMORY_BANK: {

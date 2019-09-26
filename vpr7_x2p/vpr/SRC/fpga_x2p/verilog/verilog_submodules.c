@@ -2041,7 +2041,7 @@ void dump_verilog_cmos_mux_mem_submodule(FILE* fp,
   /* Asserts*/
   assert ((1 == num_sram_port) && (NULL != sram_port));
   assert (NULL != sram_port[0]->spice_model);
-  assert ((SPICE_MODEL_SCFF == sram_port[0]->spice_model->type) 
+  assert ((SPICE_MODEL_CCFF == sram_port[0]->spice_model->type) 
        || (SPICE_MODEL_SRAM == sram_port[0]->spice_model->type));
 
   /* Get the memory model */

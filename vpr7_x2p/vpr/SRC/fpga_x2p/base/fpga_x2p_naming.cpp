@@ -347,17 +347,17 @@ std::string generate_sram_port_name(const CircuitLibrary& circuit_lib,
   }
   case SPICE_SRAM_SCAN_CHAIN:
     /* Two types of ports are available:  
-     * (1) Head of a chain of Scan-chain Flip-Flops (SCFFs), enabled by port type of INPUT
-     * (2) Tail of a chian of Scan-chain Flip-flops (SCFFs), enabled by port type of OUTPUT
+     * (1) Head of a chain of Configuration-chain Flip-Flops (CCFFs), enabled by port type of INPUT
+     * (2) Tail of a chian of Configuration-chain Flip-flops (CCFFs), enabled by port type of OUTPUT
      *           +------+    +------+    +------+
-     *  Head --->| SCFF |--->| SCFF |--->| SCFF |---> Tail
+     *  Head --->| CCFF |--->| CCFF |--->| CCFF |---> Tail
      *           +------+    +------+    +------+
      */
     if (SPICE_MODEL_PORT_INPUT == port_type) {
-      port_name += std::string("scff_head"); 
+      port_name += std::string("ccff_head"); 
     } else {
       VTR_ASSERT( SPICE_MODEL_PORT_OUTPUT == port_type );
-      port_name += std::string("scff_tail"); 
+      port_name += std::string("ccff_tail"); 
     }
     break;
   case SPICE_SRAM_MEMORY_BANK:

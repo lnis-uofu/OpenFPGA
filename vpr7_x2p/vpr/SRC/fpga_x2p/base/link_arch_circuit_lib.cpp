@@ -114,7 +114,7 @@ CircuitModelId link_circuit_model_by_name_and_type(const char* circuit_model_nam
 /************************************************************************
  * Link circuit model to the SRAM organization
  * Case 1: standalone organization required a SRAM circuit model
- * Case 1: scan-chain organization required a SCFF circuit model
+ * Case 1: configuration-chain organization required a CCFF circuit model
  * Case 1: memory-bank organization required a SRAM circuit model
  ***********************************************************************/
 static 
@@ -128,9 +128,9 @@ void link_one_sram_inf_orgz(t_sram_inf_orgz* cur_sram_inf_orgz,
   /* Check the type of SRAM_Ciruit_MODEL required by different sram organization */
   /* check SRAM ports 
    * Checker for circuit models used by the SRAM organization
-   * either SRAMs or SCFFs
-   * 1. It will check the basic port required for SRAMs and SCFFs
-   * 2. It will check any special ports required for SRAMs and SCFFs
+   * either SRAMs or CCFFs
+   * 1. It will check the basic port required for SRAMs and CCFFs
+   * 2. It will check any special ports required for SRAMs and CCFFs
    */
   switch (cur_sram_inf_orgz->type) {
   case SPICE_SRAM_STANDALONE:
@@ -145,8 +145,8 @@ void link_one_sram_inf_orgz(t_sram_inf_orgz* cur_sram_inf_orgz,
     break;
   case SPICE_SRAM_SCAN_CHAIN:
     /* check Scan-chain Flip-flop ports */
-    cur_sram_inf_orgz->circuit_model = link_circuit_model_by_name_and_type(cur_sram_inf_orgz->spice_model_name, circuit_lib, SPICE_MODEL_SCFF);
-    check_scff_circuit_model_ports(circuit_lib, cur_sram_inf_orgz->circuit_model);
+    cur_sram_inf_orgz->circuit_model = link_circuit_model_by_name_and_type(cur_sram_inf_orgz->spice_model_name, circuit_lib, SPICE_MODEL_CCFF);
+    check_ccff_circuit_model_ports(circuit_lib, cur_sram_inf_orgz->circuit_model);
     break;
   case SPICE_SRAM_LOCAL_ENCODER:
     /* Wipe out LOCAL ENCODER, it is not supported here ! */

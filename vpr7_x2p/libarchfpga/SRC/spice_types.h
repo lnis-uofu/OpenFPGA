@@ -476,12 +476,12 @@ struct s_mem_bank_info {
 };
 
 /* Scan-chain Flip-flops information */
-typedef struct s_scff_info t_scff_info;
-struct s_scff_info {
+typedef struct s_ccff_info t_ccff_info;
+struct s_ccff_info {
   t_spice_model* mem_model; /* SPICE model of a memory bit */
   int num_mem_bit; /* Number of memory bits in total */
-  int num_scff; /* Number of Scan-chain flip-flops */
-  /* TODO:  More to be added, SCFF support is naive now */
+  int num_ccff; /* Number of Scan-chain flip-flops */
+  /* TODO:  More to be added, CCFF support is naive now */
 };
 
 /* Standalone SRAMs information */
@@ -495,7 +495,7 @@ struct s_standalone_sram_info {
 struct s_sram_orgz_info {
   enum e_sram_orgz type;
   t_mem_bank_info* mem_bank_info; /* Only be allocated when orgz type is memory bank */
-  t_scff_info* scff_info; /* Only be allocated when orgz type is scan-chain */
+  t_ccff_info* ccff_info; /* Only be allocated when orgz type is scan-chain */
   t_standalone_sram_info* standalone_sram_info; /* Only be allocated when orgz type is standalone */
   
   /* Head of configuration bits,

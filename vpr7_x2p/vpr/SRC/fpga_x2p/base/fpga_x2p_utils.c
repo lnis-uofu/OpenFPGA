@@ -1094,7 +1094,7 @@ char* generate_string_spice_model_type(enum e_spice_model_type spice_model_type)
   case SPICE_MODEL_IOPAD:
     ret = "iopad";
     break;
-  case SPICE_MODEL_SCFF:
+  case SPICE_MODEL_CCFF:
     ret = "Scan-chain Flip-flop";
     break;
   default:
@@ -2220,7 +2220,7 @@ void check_sram_spice_model_ports(t_spice_model* cur_spice_model,
 }
 
 void check_ff_spice_model_ports(t_spice_model* cur_spice_model,
-                                boolean is_scff) {
+                                boolean is_ccff) {
   int iport;
   int num_input_ports;
   t_spice_model_port** input_ports = NULL;
@@ -2232,22 +2232,22 @@ void check_ff_spice_model_ports(t_spice_model* cur_spice_model,
   int num_err = 0;
 
   /* Check the type of SPICE model */
-  if (FALSE == is_scff) {
+  if (FALSE == is_ccff) {
     assert(SPICE_MODEL_FF == cur_spice_model->type);
   } else {
-    assert(SPICE_MODEL_SCFF == cur_spice_model->type);
+    assert(SPICE_MODEL_CCFF == cur_spice_model->type);
   }
   /* Check if we have D, Set and Reset */
   input_ports = find_spice_model_ports(cur_spice_model, SPICE_MODEL_PORT_INPUT, &num_input_ports, FALSE);
-  if (TRUE == is_scff) {
+  if (TRUE == is_ccff) {
    if (1 > num_input_ports) {
-      vpr_printf(TIO_MESSAGE_ERROR, "(File:%s,[LINE%d]) SCFF SPICE MODEL should at least have an input port!\n",
+      vpr_printf(TIO_MESSAGE_ERROR, "(File:%s,[LINE%d]) CCFF SPICE MODEL should at least have an input port!\n",
                  __FILE__, __LINE__);
       num_err++;
     }
     for (iport = 0; iport < num_input_ports; iport++) { 
       if (1 != input_ports[iport]->size) { 
-        vpr_printf(TIO_MESSAGE_ERROR, "(File:%s,[LINE%d]) SCFF SPICE MODEL: each input port with size 1!\n",
+        vpr_printf(TIO_MESSAGE_ERROR, "(File:%s,[LINE%d]) CCFF SPICE MODEL: each input port with size 1!\n",
                  __FILE__, __LINE__);
         num_err++;
       }
@@ -2269,20 +2269,20 @@ void check_ff_spice_model_ports(t_spice_model* cur_spice_model,
   /* Check if we have clock */
   clock_ports = find_spice_model_ports(cur_spice_model, SPICE_MODEL_PORT_CLOCK, &num_clock_ports, FALSE);
   if (1 > num_clock_ports) {
-    vpr_printf(TIO_MESSAGE_ERROR, "(File:%s,[LINE%d]) [FF|SCFF] SPICE MODEL should have at least 1 clock port!\n",
+    vpr_printf(TIO_MESSAGE_ERROR, "(File:%s,[LINE%d]) [FF|CCFF] SPICE MODEL should have at least 1 clock port!\n",
                __FILE__, __LINE__);
     num_err++;
   }
   for (iport = 0; iport < num_clock_ports; iport++) { 
     if (1 != clock_ports[iport]->size) {
-      vpr_printf(TIO_MESSAGE_ERROR, "(File:%s,[LINE%d]) [FF|SCFF] SPICE MODEL: 1 clock port with size 1!\n",
+      vpr_printf(TIO_MESSAGE_ERROR, "(File:%s,[LINE%d]) [FF|CCFF] SPICE MODEL: 1 clock port with size 1!\n",
                  __FILE__, __LINE__);
       num_err++;
     }
   }
   /* Check if we have output */
   output_ports = find_spice_model_ports(cur_spice_model, SPICE_MODEL_PORT_OUTPUT, &num_output_ports, TRUE);
-  if (FALSE == is_scff) {
+  if (FALSE == is_ccff) {
     if (1 != output_ports[0]->size) {
       vpr_printf(TIO_MESSAGE_ERROR, "(File:%s,[LINE%d]) FF SPICE MODEL: each output port with size 1!\n",
                  __FILE__, __LINE__);
@@ -2290,12 +2290,12 @@ void check_ff_spice_model_ports(t_spice_model* cur_spice_model,
     }
   } else {
     if (2 != num_output_ports) {
-      vpr_printf(TIO_MESSAGE_ERROR, "(File:%s,[LINE%d]) SCFF SPICE MODEL should have 2 output ports!\n",
+      vpr_printf(TIO_MESSAGE_ERROR, "(File:%s,[LINE%d]) CCFF SPICE MODEL should have 2 output ports!\n",
                __FILE__, __LINE__);
       num_err++;
       for (iport = 0; iport < num_output_ports; iport++) { 
         if (1 != output_ports[iport]->size) {
-          vpr_printf(TIO_MESSAGE_ERROR, "(File:%s,[LINE%d]) SCFF SPICE MODEL: the output port (%s) should have a size of 1!\n",
+          vpr_printf(TIO_MESSAGE_ERROR, "(File:%s,[LINE%d]) CCFF SPICE MODEL: the output port (%s) should have a size of 1!\n",
                      __FILE__, __LINE__, output_ports[iport]->prefix);
           num_err++;
         }
@@ -2462,11 +2462,11 @@ void free_one_mem_bank_info(t_mem_bank_info* mem_bank_info) {
   return; 
 }
 
-t_scff_info* alloc_one_scff_info() {
-  return (t_scff_info*)my_malloc(sizeof(t_scff_info));
+t_ccff_info* alloc_one_ccff_info() {
+  return (t_ccff_info*)my_malloc(sizeof(t_ccff_info));
 }
 
-void free_one_scff_info(t_scff_info* scff_info) {
+void free_one_ccff_info(t_ccff_info* ccff_info) {
   return;
 }
 
@@ -2501,23 +2501,23 @@ void update_mem_bank_info_num_mem_bit(t_mem_bank_info* cur_mem_bank_info,
   return;
 }
 
-void init_scff_info(t_scff_info* cur_scff_info,
+void init_ccff_info(t_ccff_info* cur_ccff_info,
                     t_spice_model* cur_mem_model) {
-  assert(NULL != cur_scff_info); 
+  assert(NULL != cur_ccff_info); 
   assert(NULL != cur_mem_model);
 
-  cur_scff_info->mem_model = cur_mem_model;
-  cur_scff_info->num_mem_bit = 0; 
-  cur_scff_info->num_scff = 0; 
+  cur_ccff_info->mem_model = cur_mem_model;
+  cur_ccff_info->num_mem_bit = 0; 
+  cur_ccff_info->num_ccff = 0; 
   
   return;
 }
 
-void update_scff_info_num_mem_bit(t_scff_info* cur_scff_info,
+void update_ccff_info_num_mem_bit(t_ccff_info* cur_ccff_info,
                                   int num_mem_bit) {
-  assert(NULL != cur_scff_info); 
+  assert(NULL != cur_ccff_info); 
 
-  cur_scff_info->num_mem_bit = num_mem_bit; 
+  cur_ccff_info->num_mem_bit = num_mem_bit; 
 
   return;
 }
@@ -2573,8 +2573,8 @@ void init_sram_orgz_info(t_sram_orgz_info* cur_sram_orgz_info,
                                             num_bl_per_sram, num_wl_per_sram);
     break;
   case SPICE_SRAM_SCAN_CHAIN:
-    cur_sram_orgz_info->scff_info = alloc_one_scff_info();
-    init_scff_info(cur_sram_orgz_info->scff_info, cur_mem_model);
+    cur_sram_orgz_info->ccff_info = alloc_one_ccff_info();
+    init_ccff_info(cur_sram_orgz_info->ccff_info, cur_mem_model);
     break;
   case SPICE_SRAM_STANDALONE:
     cur_sram_orgz_info->standalone_sram_info = alloc_one_standalone_sram_info();
@@ -2624,7 +2624,7 @@ void free_sram_orgz_info(t_sram_orgz_info* cur_sram_orgz_info,
     free_one_mem_bank_info(cur_sram_orgz_info->mem_bank_info);
     break;
   case SPICE_SRAM_SCAN_CHAIN:
-    free_one_scff_info(cur_sram_orgz_info->scff_info);
+    free_one_ccff_info(cur_sram_orgz_info->ccff_info);
     break;
   case SPICE_SRAM_STANDALONE:
     free_one_standalone_sram_info(cur_sram_orgz_info->standalone_sram_info);
@@ -2831,7 +2831,7 @@ int get_sram_orgz_info_num_mem_bit(t_sram_orgz_info* cur_sram_orgz_info) {
   case SPICE_SRAM_STANDALONE:
     return cur_sram_orgz_info->standalone_sram_info->num_mem_bit; 
   case SPICE_SRAM_SCAN_CHAIN:
-    return cur_sram_orgz_info->scff_info->num_mem_bit; 
+    return cur_sram_orgz_info->ccff_info->num_mem_bit; 
   case SPICE_SRAM_MEMORY_BANK:
     return cur_sram_orgz_info->mem_bank_info->num_mem_bit; 
   default:
@@ -2854,7 +2854,7 @@ void update_sram_orgz_info_num_mem_bit(t_sram_orgz_info* cur_sram_orgz_info,
     update_standalone_sram_info_num_mem_bit(cur_sram_orgz_info->standalone_sram_info, new_num_mem_bit); 
     break;
   case SPICE_SRAM_SCAN_CHAIN:
-    update_scff_info_num_mem_bit(cur_sram_orgz_info->scff_info, new_num_mem_bit); 
+    update_ccff_info_num_mem_bit(cur_sram_orgz_info->ccff_info, new_num_mem_bit); 
     break;
   case SPICE_SRAM_MEMORY_BANK:
     update_mem_bank_info_num_mem_bit(cur_sram_orgz_info->mem_bank_info, new_num_mem_bit); 
@@ -2903,7 +2903,7 @@ void get_sram_orgz_info_mem_model(t_sram_orgz_info* cur_sram_orgz_info,
     (*mem_model_ptr) = cur_sram_orgz_info->standalone_sram_info->mem_model;
     break;
   case SPICE_SRAM_SCAN_CHAIN:
-    (*mem_model_ptr) = cur_sram_orgz_info->scff_info->mem_model;
+    (*mem_model_ptr) = cur_sram_orgz_info->ccff_info->mem_model;
     break;
   case SPICE_SRAM_MEMORY_BANK:
     (*mem_model_ptr) = cur_sram_orgz_info->mem_bank_info->mem_model;
@@ -2929,7 +2929,7 @@ void update_sram_orgz_info_mem_model(t_sram_orgz_info* cur_sram_orgz_info,
     cur_sram_orgz_info->standalone_sram_info->mem_model = cur_mem_model;
     break;
   case SPICE_SRAM_SCAN_CHAIN:
-    cur_sram_orgz_info->scff_info->mem_model = cur_mem_model;
+    cur_sram_orgz_info->ccff_info->mem_model = cur_mem_model;
     break;
   case SPICE_SRAM_MEMORY_BANK:
     cur_sram_orgz_info->mem_bank_info->mem_model = cur_mem_model;

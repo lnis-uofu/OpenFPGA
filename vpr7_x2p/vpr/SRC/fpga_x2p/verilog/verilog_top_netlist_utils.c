@@ -191,8 +191,8 @@ void dump_verilog_top_netlist_scan_chain_ports(t_sram_orgz_info* cur_sram_orgz_i
 static 
 void dump_verilog_top_netlist_scan_chain_internal_wires(t_sram_orgz_info* cur_sram_orgz_info, 
                                                         FILE* fp) {
-  t_spice_model* scff_mem_model = NULL;
-  int num_scffs;
+  t_spice_model* ccff_mem_model = NULL;
+  int num_ccffs;
 
   /* A valid file handler */
   if (NULL == fp) {
@@ -200,23 +200,23 @@ void dump_verilog_top_netlist_scan_chain_internal_wires(t_sram_orgz_info* cur_sr
     exit(1);
   }
 
-  num_scffs = get_sram_orgz_info_num_mem_bit(cur_sram_orgz_info);
-  get_sram_orgz_info_mem_model(cur_sram_orgz_info, &scff_mem_model);
+  num_ccffs = get_sram_orgz_info_num_mem_bit(cur_sram_orgz_info);
+  get_sram_orgz_info_mem_model(cur_sram_orgz_info, &ccff_mem_model);
   /* Check */
-  assert( SPICE_MODEL_SCFF == scff_mem_model->type );
+  assert( SPICE_MODEL_CCFF == ccff_mem_model->type );
 
   /* Delcare local wires */
-  fprintf(fp, "  wire [0:%d] %s_scff_in_local_bus;\n",
-          num_scffs - 1, scff_mem_model->prefix);
+  fprintf(fp, "  wire [0:%d] %s_ccff_in_local_bus;\n",
+          num_ccffs - 1, ccff_mem_model->prefix);
 
-  fprintf(fp, "  wire [0:%d] %s_scff_out_local_bus;\n",
-          num_scffs - 1, scff_mem_model->prefix);
+  fprintf(fp, "  wire [0:%d] %s_ccff_out_local_bus;\n",
+          num_ccffs - 1, ccff_mem_model->prefix);
 
   /* Dump ports only visible during formal verification*/
   fprintf(fp, "`ifdef %s\n", verilog_formal_verification_preproc_flag);
   fprintf(fp, "  ");
   dump_verilog_formal_verification_sram_ports(fp, cur_sram_orgz_info, 
-                                              0, num_scffs - 1,
+                                              0, num_ccffs - 1,
                                               VERILOG_PORT_WIRE, false);
   fprintf(fp, ";\n");
   fprintf(fp, "`endif\n");
@@ -224,8 +224,8 @@ void dump_verilog_top_netlist_scan_chain_internal_wires(t_sram_orgz_info* cur_sr
 
   /* Exception for head: connect to primary inputs */ 
   /*
-  fprintf(fp, "  assign %s_scff_in[%d] = %s;\n",
-          scff_mem_model->prefix, 0,
+  fprintf(fp, "  assign %s_ccff_in[%d] = %s;\n",
+          ccff_mem_model->prefix, 0,
           top_netlist_scan_chain_head_prefix);
   */
   /* Connected the scan-chain flip-flops */
@@ -234,10 +234,10 @@ void dump_verilog_top_netlist_scan_chain_internal_wires(t_sram_orgz_info* cur_sr
   fprintf(fp, "  genvar i;\n");
   fprintf(fp, "  generate\n");
   fprintf(fp, "    for (i = %d; i < %d; i = i + 1) begin\n", 
-          1, num_scffs - 1);
-  fprintf(fp,   "assign %s_scff_in[i] = %s_scff_out[i - 1];\n",
-            scff_mem_model->prefix, 
-            scff_mem_model->prefix);
+          1, num_ccffs - 1);
+  fprintf(fp,   "assign %s_ccff_in[i] = %s_ccff_out[i - 1];\n",
+            ccff_mem_model->prefix, 
+            ccff_mem_model->prefix);
   fprintf(fp, "    end\n");
   fprintf(fp, "  endgenerate;\n");
   */
@@ -1102,7 +1102,7 @@ void dump_verilog_configuration_circuits_scan_chains(t_sram_orgz_info* cur_sram_
   }
   fprintf(fp, ",\n");
   if (true == is_explicit_mapping) {
-    fprintf(fp, ".scff_scff_in_local_bus ("); 
+    fprintf(fp, ".ccff_ccff_in_local_bus ("); 
   }
   dump_verilog_sram_one_local_outport(fp, cur_sram_orgz_info, 0, num_mem_bits - 1, -1, VERILOG_PORT_CONKT);
   if (true == is_explicit_mapping) {
@@ -1110,7 +1110,7 @@ void dump_verilog_configuration_circuits_scan_chains(t_sram_orgz_info* cur_sram_
   }
   fprintf(fp, ",\n");
   if (true == is_explicit_mapping) {
-    fprintf(fp, ".scff_scff_out_local_bus ("); 
+    fprintf(fp, ".ccff_ccff_out_local_bus ("); 
   }
   dump_verilog_sram_one_local_outport(fp, cur_sram_orgz_info, 0, num_mem_bits - 1, 0, VERILOG_PORT_CONKT);
   if (true == is_explicit_mapping) {

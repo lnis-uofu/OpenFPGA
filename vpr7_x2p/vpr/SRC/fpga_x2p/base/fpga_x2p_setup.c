@@ -344,7 +344,7 @@ void init_and_check_one_sram_inf_orgz(t_sram_inf_orgz* cur_sram_inf_orgz,
     break;
   case SPICE_SRAM_SCAN_CHAIN:
     vpr_printf(TIO_MESSAGE_INFO, "INFO: Checking if SRAM spice model fit scan-chain organization...\n");
-    if (SPICE_MODEL_SCFF != cur_sram_inf_orgz->spice_model->type) {
+    if (SPICE_MODEL_CCFF != cur_sram_inf_orgz->spice_model->type) {
       vpr_printf(TIO_MESSAGE_ERROR, "(File:%s,LINE[%d]) Scan-chain SRAM organization requires a SPICE model(type=sff)!\n",
                  __FILE__, __LINE__);
       exit(1);

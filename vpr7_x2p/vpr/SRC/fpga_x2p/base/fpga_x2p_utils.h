@@ -235,7 +235,7 @@ void check_sram_spice_model_ports(t_spice_model* cur_spice_model,
                                   boolean include_bl_wl);
 
 void check_ff_spice_model_ports(t_spice_model* cur_spice_model,
-                                boolean is_scff);
+                                boolean is_ccff);
 
 /* Functions to manipulate t_conf_bit and t_conf_bit_info */
 void free_conf_bit(t_conf_bit* conf_bit);
@@ -270,9 +270,9 @@ t_mem_bank_info* alloc_one_mem_bank_info();
 
 void free_one_mem_bank_info(t_mem_bank_info* mem_bank_info);
 
-t_scff_info* alloc_one_scff_info();
+t_ccff_info* alloc_one_ccff_info();
 
-void free_one_scff_info(t_scff_info* scff_info);
+void free_one_ccff_info(t_ccff_info* ccff_info);
 
 t_standalone_sram_info* alloc_one_standalone_sram_info();
 
@@ -299,10 +299,10 @@ void get_sram_orgz_info_reserved_blwl(t_sram_orgz_info* cur_sram_orgz_info,
 void update_mem_bank_info_num_mem_bit(t_mem_bank_info* cur_mem_bank_info,
                                       int num_mem_bit);
 
-void init_scff_info(t_scff_info* cur_scff_info,
+void init_ccff_info(t_ccff_info* cur_ccff_info,
                     t_spice_model* cur_mem_model);
 
-void update_scff_info_num_mem_bit(t_scff_info* cur_scff_info,
+void update_ccff_info_num_mem_bit(t_ccff_info* cur_ccff_info,
                                   int num_mem_bit);
 
 void init_standalone_sram_info(t_standalone_sram_info* cur_standalone_sram_info,

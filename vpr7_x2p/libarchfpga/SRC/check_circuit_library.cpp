@@ -286,14 +286,14 @@ size_t check_ff_circuit_model_ports(const CircuitLibrary& circuit_lib,
 }
 
 /************************************************************************
- * A function to check the port map of SCFF circuit model
+ * A function to check the port map of CCFF circuit model
  ***********************************************************************/
-size_t check_scff_circuit_model_ports(const CircuitLibrary& circuit_lib,
+size_t check_ccff_circuit_model_ports(const CircuitLibrary& circuit_lib,
                                       const CircuitModelId& circuit_model) {
   size_t num_err = 0;
 
   /* Check the type of circuit model */
-  VTR_ASSERT(SPICE_MODEL_SCFF == circuit_lib.model_type(circuit_model));
+  VTR_ASSERT(SPICE_MODEL_CCFF == circuit_lib.model_type(circuit_model));
 
   /* Check if we have D, Set and Reset */
   num_err += check_one_circuit_model_port_type_and_size_required(circuit_lib, circuit_model, 
@@ -404,9 +404,9 @@ size_t check_circuit_library_ports(const CircuitLibrary& circuit_lib) {
  * 2. Circuit models have unique prefix
  * 3. Check IOPADs have input and output ports
  * 4. Check MUXes has been defined and has input and output ports
- * 5. We must have at least one SRAM or SCFF 
+ * 5. We must have at least one SRAM or CCFF 
  * 6. SRAM must have at least an input and an output ports
- * 7. SCFF must have at least a clock, an input and an output ports
+ * 7. CCFF must have at least a clock, an input and an output ports
  * 8. FF must have at least a clock, an input and an output ports
  * 9. LUT must have at least an input, an output and a SRAM ports
  * 10. We must have default circuit models for these types: MUX, channel wires and wires
@@ -456,13 +456,13 @@ void check_circuit_library(const CircuitLibrary& circuit_lib) {
 
   num_err += check_circuit_model_port_required(circuit_lib, SPICE_MODEL_MUX, mux_port_types_required);
 
-  /* 5. We must have at least one SRAM or SCFF */
+  /* 5. We must have at least one SRAM or CCFF */
   if ( ( 0 == circuit_lib.models_by_type(SPICE_MODEL_SRAM).size())
-    && ( 0 == circuit_lib.models_by_type(SPICE_MODEL_SCFF).size()) ) {
+    && ( 0 == circuit_lib.models_by_type(SPICE_MODEL_CCFF).size()) ) {
     vpr_printf(TIO_MESSAGE_ERROR,
                "At least one %s or %s circuit model is required!\n",
                CIRCUIT_MODEL_TYPE_STRING[size_t(SPICE_MODEL_SRAM)], 
-               CIRCUIT_MODEL_TYPE_STRING[size_t(SPICE_MODEL_SCFF)]);
+               CIRCUIT_MODEL_TYPE_STRING[size_t(SPICE_MODEL_CCFF)]);
     /* Incremental the counter for errors */
     num_err++;
   }
@@ -474,13 +474,13 @@ void check_circuit_library(const CircuitLibrary& circuit_lib) {
 
   num_err += check_circuit_model_port_required(circuit_lib, SPICE_MODEL_SRAM, sram_port_types_required);
 
-  /* 7. SCFF must have at least a clock, an input and an output ports*/
-  std::vector<enum e_spice_model_port_type> scff_port_types_required;
-  scff_port_types_required.push_back(SPICE_MODEL_PORT_CLOCK);
-  scff_port_types_required.push_back(SPICE_MODEL_PORT_INPUT);
-  scff_port_types_required.push_back(SPICE_MODEL_PORT_OUTPUT);
+  /* 7. CCFF must have at least a clock, an input and an output ports*/
+  std::vector<enum e_spice_model_port_type> ccff_port_types_required;
+  ccff_port_types_required.push_back(SPICE_MODEL_PORT_CLOCK);
+  ccff_port_types_required.push_back(SPICE_MODEL_PORT_INPUT);
+  ccff_port_types_required.push_back(SPICE_MODEL_PORT_OUTPUT);
 
-  num_err += check_circuit_model_port_required(circuit_lib, SPICE_MODEL_SCFF, scff_port_types_required);
+  num_err += check_circuit_model_port_required(circuit_lib, SPICE_MODEL_CCFF, ccff_port_types_required);
 
   /* 8. FF must have at least a clock, an input and an output ports*/
   std::vector<enum e_spice_model_port_type> ff_port_types_required;
