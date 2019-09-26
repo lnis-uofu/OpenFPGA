@@ -11,7 +11,7 @@
  
 /*********************************************************************
  * This function will find the global ports required by a Switch Block
- * module. It wil find all the circuit models in the circuit library 
+ * module. It will find all the circuit models in the circuit library 
  * that may be included in the Switch Block
  * Collect the global ports from the circuit_models and merge with the same name
  ********************************************************************/
@@ -60,3 +60,31 @@ std::vector<CircuitPortId> find_switch_block_global_ports(const RRGSB& rr_gsb,
 
   return global_ports;
 }
+
+/*********************************************************************
+ * This function will find the number of multiplexers required by 
+ * a Switch Block module. 
+ ********************************************************************/
+size_t find_switch_block_number_of_muxes(const RRGSB& rr_gsb) {
+  size_t num_muxes = 0;
+  /* Walk through the OUTPUT nodes at each side of a GSB, 
+   * get the switch id of incoming edges 
+   * and get the circuit model linked to the switch id
+   */
+  for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
+    Side side_manager(side);
+    for (size_t itrack = 0; itrack < rr_gsb.get_chan_width(side_manager.get_side()); ++itrack) {
+      if (OUT_PORT != rr_gsb.get_chan_node_direction(side_manager.get_side(), itrack)) {
+        continue;
+      }
+      /* Check if this node is driven by a multiplexer */
+      if (true == rr_gsb.is_sb_node_passing_wire(side_manager.get_side(), itrack)) {
+        continue;
+      }
+      /* This means we need a multiplexer, update the counter */
+      num_muxes++;
+    }
+  }
+  return num_muxes;
+}
+

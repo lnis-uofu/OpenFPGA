@@ -14,4 +14,6 @@ std::vector<CircuitPortId> find_switch_block_global_ports(const RRGSB& rr_gsb,
                                                           const CircuitLibrary& circuit_lib,
                                                           const std::vector<t_switch_inf>& switch_lib);
 
+size_t find_switch_block_number_of_muxes(const RRGSB& rr_gsb);
+
 #endif

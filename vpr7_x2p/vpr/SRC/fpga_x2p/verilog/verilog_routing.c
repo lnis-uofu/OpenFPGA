@@ -48,6 +48,27 @@
 #include "verilog_writer_utils.h"
 #include "verilog_routing.h"
 
+/********************************************************************
+ * Print local wires that are used for SRAM configuration 
+ * This function is supposed to be used by Verilog generation
+ * of switch blocks
+ * It will count the number of switch blocks, which is the 
+ * port width for local wires when Configuration chain is used
+ ********************************************************************/
+static 
+void print_verilog_switch_block_local_sram_wires(std::fstream& fp,
+                                                 const RRGSB& rr_gsb,
+                                                 const CircuitLibrary& circuit_lib,
+                                                 const CircuitModelId& sram_model,
+                                                 const e_sram_orgz sram_orgz_type,
+                                                 const size_t& port_size) {
+  size_t local_port_size = port_size;
+  if (SPICE_SRAM_SCAN_CHAIN == sram_orgz_type) {
+    local_port_size = find_switch_block_number_of_muxes(rr_gsb); 
+  }
+  print_verilog_local_sram_wires(fp, circuit_lib, sram_model, sram_orgz_type, local_port_size);
+}
+
 /*********************************************************************
  * Generate the Verilog module for a routing channel
  * Routing track wire, which is 1-input and dual output
@@ -2287,13 +2308,15 @@ void print_verilog_routing_switch_box_unique_module(ModuleManager& module_manage
     add_reserved_sram_ports_to_module_manager(module_manager, module_id, 
                                               rr_gsb.get_sb_num_reserved_conf_bits()); 
   }
+
+  /* TODO: this should be added to the cur_sram_orgz_info !!! */
+  t_spice_model* mem_model = NULL;
+  get_sram_orgz_info_mem_model(cur_sram_orgz_info, & mem_model);
+  CircuitModelId sram_model = circuit_lib.model(mem_model->name);  
+  VTR_ASSERT(CircuitModelId::INVALID() != sram_model);
+
   /* Normal sram ports */
   if (0 < rr_gsb.get_sb_num_conf_bits()) {
-    /* TODO: this should be added to the cur_sram_orgz_info !!! */
-    t_spice_model* mem_model = NULL;
-    get_sram_orgz_info_mem_model(cur_sram_orgz_info, & mem_model);
-    CircuitModelId sram_model = circuit_lib.model(mem_model->name);  
-    VTR_ASSERT(CircuitModelId::INVALID() != sram_model);
     add_sram_ports_to_module_manager(module_manager, module_id,
                                      circuit_lib, sram_model, cur_sram_orgz_info->type,
                                      rr_gsb.get_sb_num_conf_bits());
@@ -2308,12 +2331,14 @@ void print_verilog_routing_switch_box_unique_module(ModuleManager& module_manage
   print_verilog_module_declaration(fp, module_manager, module_id);
   /* Finish printing ports */
 
-  /* TODO: Local wires for memory configurations */
-  /*
-  dump_verilog_sram_config_bus_internal_wires(fp, cur_sram_orgz_info, 
-                                              rr_gsb.get_sb_conf_bits_lsb(),
-                                              rr_gsb.get_sb_conf_bits_msb());
-   */
+  print_verilog_comment(fp, std::string("---- BEGIN local wires for SRAM data ports ----"));
+  /* Local wires for memory configurations */
+  print_verilog_switch_block_local_sram_wires(fp, rr_gsb, circuit_lib, sram_model, cur_sram_orgz_info->type, 
+                                              rr_gsb.get_sb_num_conf_bits());
+  print_verilog_comment(fp, std::string("---- END local wires for SRAM data ports ----"));
+
+  /* TODO: Print routing multiplexers */
+
   /* Put an end to the Verilog module */
   print_verilog_module_end(fp, module_manager.module_name(module_id));
 

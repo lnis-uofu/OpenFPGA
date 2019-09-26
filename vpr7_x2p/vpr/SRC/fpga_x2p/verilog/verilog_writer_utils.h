@@ -84,4 +84,10 @@ void print_verilog_buffer_instance(std::fstream& fp,
                                    const BasicPort& instance_input_port,
                                    const BasicPort& instance_output_port);
 
+void print_verilog_local_sram_wires(std::fstream& fp,
+                                    const CircuitLibrary& circuit_lib,
+                                    const CircuitModelId& sram_model,
+                                    const e_sram_orgz sram_orgz_type,
+                                    const size_t& port_size);
+
 #endif

@@ -482,7 +482,7 @@ void link_circuit_library_to_arch(t_arch* arch,
   /* Check Circuit models first*/
   VTR_ASSERT_SAFE( (NULL != arch) && (NULL != arch->spice) );
 
-  /* 1. Link the spice model defined in pb_types and routing switches */
+  /* 1. Link the circuit model defined in pb_types and routing switches */
   /* Step A:  Check routing switches, connection blocks*/
   if (0 >= arch->num_cb_switch) {
     vpr_printf(TIO_MESSAGE_ERROR,
@@ -500,7 +500,7 @@ void link_circuit_library_to_arch(t_arch* arch,
                  __FILE__, __LINE__, arch->cb_switches[i].spice_model_name, arch->cb_switches[i].name);
       exit(1);
     }
-    /* Check the spice model structure is matched with the structure in switch_inf */
+    /* Check the circuit model structure is matched with the structure in switch_inf */
     if (0 < check_circuit_model_structure_match_switch_inf(arch->cb_switches[i], arch->spice->circuit_lib)) {
       exit(1);
     }
@@ -544,7 +544,7 @@ void link_circuit_library_to_arch(t_arch* arch,
   /* Step C: Find SRAM Model*/
   link_sram_inf(&(arch->sram_inf), arch->spice->circuit_lib);
 
-  /* Step D: Find the segment spice_model*/
+  /* Step D: Find the segment circuit_model*/
   for (int i = 0; i < arch->num_segments; i++) {
     arch->Segments[i].circuit_model = link_circuit_model_by_name_and_type(arch->Segments[i].spice_model_name,
                                                                           arch->spice->circuit_lib, SPICE_MODEL_CHAN_WIRE);
@@ -562,7 +562,7 @@ void link_circuit_library_to_arch(t_arch* arch,
   for (int i = 0; i < arch->num_directs; i++) {
     arch->Directs[i].circuit_model = link_circuit_model_by_name_and_type(arch->Directs[i].spice_model_name,
                                                                          arch->spice->circuit_lib, SPICE_MODEL_WIRE);
-    /* Check SPICE model type */
+    /* Check Circuit model type */
     if (CircuitModelId::INVALID() == arch->Directs[i].circuit_model) {
       vpr_printf(TIO_MESSAGE_ERROR, 
                  "(FILE:%s, LINE[%d])Invalid circuit model name(%s) of CLB to CLB Direct Connection (name=%s) is undefined in circuit models!\n",

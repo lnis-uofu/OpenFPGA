@@ -77,4 +77,9 @@ std::string generate_sram_port_name(const CircuitLibrary& circuit_lib,
                                     const e_sram_orgz& sram_orgz_type,
                                     const e_spice_model_port_type& port_type);
 
+std::string generate_sram_local_port_name(const CircuitLibrary& circuit_lib,
+                                          const CircuitModelId& sram_model,
+                                          const e_sram_orgz& sram_orgz_type,
+                                          const e_spice_model_port_type& port_type);
+
 #endif
