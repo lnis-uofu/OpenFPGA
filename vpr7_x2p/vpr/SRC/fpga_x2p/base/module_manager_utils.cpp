@@ -140,6 +140,8 @@ void add_formal_verification_sram_ports_to_module_manager(ModuleManager& module_
  * 2. Scan-chain Flip-flops:
  *    two ports will be added, which are the head of scan-chain 
  *    and the tail of scan-chain
+ *    IMPORTANT: the port size will be forced to 1 in this case 
+ *               because the head and tail are both 1-bit ports!!!
  * 3. Memory decoders:
  *    2-4 ports will be added, depending on the ports available in the SRAM
  *    Among these, two ports are mandatory: BL and WL 

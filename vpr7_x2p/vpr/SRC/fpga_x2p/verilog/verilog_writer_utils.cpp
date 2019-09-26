@@ -12,6 +12,7 @@
 
 /* FPGA-X2P context header files */
 #include "spice_types.h"
+#include "fpga_x2p_naming.h"
 #include "fpga_x2p_utils.h"
 
 /* FPGA-Verilog context header files */
@@ -646,3 +647,125 @@ void print_verilog_buffer_instance(std::fstream& fp,
   module_manager.add_child_module(parent_module_id, buffer_module_id);
 }
 
+/********************************************************************
+ * Print local wires that are used for SRAM configuration 
+ * The local wires are strongly dependent on the organization of SRAMs.
+ * 1. Standalone SRAMs: 
+ *    No need for local wires, their outputs are port of the module
+ *        
+ *              Module
+ *             +------------------------------+
+ *             |  Sub-module                  |
+ *             |  +---------------------+     |
+ *             |  |             sram_out|---->|---->sram_out
+ *             |  |                     |     |
+ *             |  |             sram_out|---->|---->sram_out
+ *             |  |                     |     |
+ *             |  +---------------------+     |
+ *             +------------------------------+      
+ *
+ * 2. Configuration-chain Flip-flops:
+ *    two ports will be added, which are the head of scan-chain 
+ *    and the tail of scan-chain
+ *
+ *              Module
+ *             +-----------------------------------------+
+ *             |                                         |
+ *             |    +------+    +------+     +------+    |
+ *             | +->| CCFF |--->| CCFF | ... | CCFF |-+  |
+ *             | |  +------+ |  +------+  |  +------+ |  |
+ *     head--->|-+-----------+------------+-----------+->|--->tail
+ *             |               local wire                |
+ *             +-----------------------------------------+
+ * 3. Memory decoders:
+ *    two ports will be added, which are regular output and inverted output 
+ *    Note that the outputs are the data outputs of SRAMs 
+ *    BL/WLs of memory decoders are ports of module but not local wires
+ *
+ *              Module
+ *             +-----------------------------------------+
+ *             |                                         |
+ *             |    +------+    +------+     +------+    |
+ *             |    | SRAM |    | SRAM | ... | SRAM |    |
+ *             |    +------+    +------+     +------+    |
+ *             |       ^           ^            ^        |
+ *             |       |           |            |        |
+ *    BL/WL--->|---------------------------------------->|
+ *             |               local wire                |
+ *             +-----------------------------------------+
+
+ *
+ ********************************************************************/
+void print_verilog_local_sram_wires(std::fstream& fp,
+                                    const CircuitLibrary& circuit_lib,
+                                    const CircuitModelId& sram_model,
+                                    const e_sram_orgz sram_orgz_type,
+                                    const size_t& port_size) {
+  /* Make sure we have a valid file handler*/
+  check_file_handler(fp);
+
+  /* Port size must be at least one! */
+  if (0 == port_size) {
+    return;
+  }
+
+  /* Depend on the configuraion style */
+  switch(sram_orgz_type) {
+  case SPICE_SRAM_STANDALONE:
+    /* Nothing to do here */
+    break;
+  case SPICE_SRAM_SCAN_CHAIN: {
+    /* Generate the name of local wire for the CCFF inputs, CCFF output and inverted output */
+    std::vector<BasicPort> ccff_ports;
+    /* [0] => CCFF input */
+    ccff_ports.push_back(BasicPort(generate_sram_local_port_name(circuit_lib, sram_model, sram_orgz_type, SPICE_MODEL_PORT_INPUT), port_size));
+    /* [1] => CCFF output */
+    ccff_ports.push_back(BasicPort(generate_sram_local_port_name(circuit_lib, sram_model, sram_orgz_type, SPICE_MODEL_PORT_OUTPUT), port_size));
+    /* [2] => CCFF inverted output */
+    ccff_ports.push_back(BasicPort(generate_sram_local_port_name(circuit_lib, sram_model, sram_orgz_type, SPICE_MODEL_PORT_INOUT), port_size));
+    /* Print local wire definition */
+    for (const auto& ccff_port : ccff_ports) {
+      fp << generate_verilog_port(VERILOG_PORT_WIRE, ccff_port) << ";" << std::endl; 
+    }
+    /* Connect first CCFF to the head */
+    /* Head is always a 1-bit port */
+    BasicPort ccff_head_port(generate_sram_port_name(circuit_lib, sram_model, sram_orgz_type, SPICE_MODEL_PORT_INPUT), 1); 
+    BasicPort ccff_head_local_port(ccff_ports[0].get_name(), 1); 
+    print_verilog_wire_connection(fp, ccff_head_local_port, ccff_head_port, false); 
+    /* Connect last CCFF to the tail */
+    /* Tail is always a 1-bit port */
+    BasicPort ccff_tail_port(generate_sram_port_name(circuit_lib, sram_model, sram_orgz_type, SPICE_MODEL_PORT_OUTPUT), 1); 
+    BasicPort ccff_tail_local_port(ccff_ports[1].get_name(), ccff_ports[1].get_msb(), ccff_ports[1].get_msb()); 
+    print_verilog_wire_connection(fp, ccff_tail_local_port, ccff_tail_port, false); 
+    /* Connect CCFFs into chains */
+    /* If port size is 0 or 1, there is no need for the chain connection */
+    if (2 > port_size) {
+      break;
+    }
+    /* Cascade the CCFF between head and tail */
+    BasicPort ccff_chain_input_port(ccff_ports[0].get_name(), port_size - 1);
+    BasicPort ccff_chain_output_port(ccff_ports[1].get_name(), 1, port_size - 1);
+    print_verilog_wire_connection(fp, ccff_chain_output_port, ccff_chain_input_port, false); 
+    break;
+  }
+  case SPICE_SRAM_MEMORY_BANK: {
+    /* Generate the name of local wire for the SRAM output and inverted output */
+    std::vector<BasicPort> sram_ports;
+    /* [0] => SRAM output */
+    sram_ports.push_back(BasicPort(generate_sram_local_port_name(circuit_lib, sram_model, sram_orgz_type, SPICE_MODEL_PORT_INPUT), port_size));
+    /* [1] => SRAM inverted output */
+    sram_ports.push_back(BasicPort(generate_sram_local_port_name(circuit_lib, sram_model, sram_orgz_type, SPICE_MODEL_PORT_OUTPUT), port_size));
+    /* Print local wire definition */
+    for (const auto& sram_port : sram_ports) {
+      fp << generate_verilog_port(VERILOG_PORT_WIRE, sram_port) << ";" << std::endl; 
+    }
+
+    break;
+  }
+  default:
+    vpr_printf(TIO_MESSAGE_ERROR,
+               "(File:%s,[LINE%d])Invalid SRAM organization!\n", 
+               __FILE__, __LINE__);
+    exit(1);
+  }
+}
