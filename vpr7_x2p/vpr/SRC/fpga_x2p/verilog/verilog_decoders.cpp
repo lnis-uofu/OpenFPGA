@@ -222,7 +222,7 @@ void print_verilog_submodule_mux_local_decoders(ModuleManager& module_manager,
  * which connect configuration ports to SRAMs/CCFFs in a chain: 
  *
  *          +------+    +------+             +------+
- * sc_in--->| CCFF |--->| CCFF |---> ... --->| CCFF |----> sc_out
+ * cc_in--->| CCFF |--->| CCFF |---> ... --->| CCFF |----> sc_out
  *          +------+    +------+             +------+
  ***************************************************************************************/
 static 
@@ -246,8 +246,8 @@ void print_verilog_scan_chain_config_module(ModuleManager& module_manager,
   BasicPort sc_head_port(std::string(top_netlist_scan_chain_head_prefix), 1);
   module_manager.add_port(module_id, sc_head_port, ModuleManager::MODULE_INPUT_PORT);
   /* Add the inputs of scan-chain FFs, which are the outputs of the module */
-  BasicPort sc_input_port(std::string("chain_input"), num_mem_bits);
-  module_manager.add_port(module_id, sc_input_port, ModuleManager::MODULE_OUTPUT_PORT);
+  BasicPort cc_input_port(std::string("chain_input"), num_mem_bits);
+  module_manager.add_port(module_id, cc_input_port, ModuleManager::MODULE_OUTPUT_PORT);
   /* Add the outputs of scan-chain FFs, which are inputs of the module */
   BasicPort sc_output_port(std::string("chain_output"), num_mem_bits);
   module_manager.add_port(module_id, sc_output_port, ModuleManager::MODULE_INPUT_PORT);
@@ -261,11 +261,11 @@ void print_verilog_scan_chain_config_module(ModuleManager& module_manager,
   fp << std::endl;
 
   /* Connect scan-chain input to the first scan-chain input */
-  BasicPort sc_first_input_port(sc_input_port.get_name(), 1);
+  BasicPort sc_first_input_port(cc_input_port.get_name(), 1);
   print_verilog_wire_connection(fp, sc_first_input_port, sc_head_port, false);
 
   /* Connect the head of current ccff to the tail of previous ccff*/
-  BasicPort chain_output_port(sc_input_port.get_name(), 1, num_mem_bits - 1);
+  BasicPort chain_output_port(cc_input_port.get_name(), 1, num_mem_bits - 1);
   BasicPort chain_input_port(sc_output_port.get_name(), 0, num_mem_bits - 2);
   print_verilog_wire_connection(fp, chain_output_port, chain_input_port, false);
 
@@ -285,7 +285,7 @@ void print_verilog_scan_chain_config_module(ModuleManager& module_manager,
  *    as a chain: 
  *
  *          +------+    +------+             +------+
- * sc_in--->| CCFF |--->| CCFF |---> ... --->| CCFF |----> sc_out
+ * cc_in--->| CCFF |--->| CCFF |---> ... --->| CCFF |----> sc_out
  *          +------+    +------+             +------+
  *
  * 2. Memory bank:

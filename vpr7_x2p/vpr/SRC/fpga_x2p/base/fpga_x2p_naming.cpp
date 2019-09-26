@@ -418,20 +418,20 @@ std::string generate_sram_local_port_name(const CircuitLibrary& circuit_lib,
   }
   case SPICE_SRAM_SCAN_CHAIN:
     /* Three types of ports are available:  
-     * (1) Input of Scan-chain Flip-Flops (SCFFs), enabled by port type of INPUT
-     * (2) Output of a chian of Scan-chain Flip-flops (SCFFs), enabled by port type of OUTPUT
-     * (2) Inverted output of a chian of Scan-chain Flip-flops (SCFFs), enabled by port type of INOUT
+     * (1) Input of Configuration-chain Flip-Flops (CCFFs), enabled by port type of INPUT
+     * (2) Output of a chian of Configuration-chain Flip-flops (CCFFs), enabled by port type of OUTPUT
+     * (2) Inverted output of a chian of Configuration-chain Flip-flops (CCFFs), enabled by port type of INOUT
      *           +------+    +------+    +------+
-     *  Head --->| SCFF |--->| SCFF |--->| SCFF |---> Tail
+     *  Head --->| CCFF |--->| CCFF |--->| CCFF |---> Tail
      *           +------+    +------+    +------+
      */
     if (SPICE_MODEL_PORT_INPUT == port_type) {
-      port_name += std::string("scff_in_local_bus"); 
+      port_name += std::string("ccff_in_local_bus"); 
     } else if ( SPICE_MODEL_PORT_OUTPUT == port_type ) {
-      port_name += std::string("scff_out_local_bus"); 
+      port_name += std::string("ccff_out_local_bus"); 
     } else {
       VTR_ASSERT( SPICE_MODEL_PORT_INOUT == port_type );
-      port_name += std::string("scff_outb_local_bus"); 
+      port_name += std::string("ccff_outb_local_bus"); 
     }
     break;
   case SPICE_SRAM_MEMORY_BANK: {
