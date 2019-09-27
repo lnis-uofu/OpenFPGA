@@ -2376,7 +2376,9 @@ void print_verilog_unique_switch_box_mux(ModuleManager& module_manager,
   /* Generate input ports that are wired to the input bus of the routing multiplexer */
   std::vector<BasicPort> mux_input_ports = generate_switch_block_input_ports(rr_sb, drive_rr_nodes);
   /* Connect input ports to bus */
+  print_verilog_comment(fp, std::string("----- A local bus wire for multiplexer inputs -----"));
   fp << generate_verilog_local_wire(inbus_port, mux_input_ports) << std::endl;
+  fp << std::endl;
 
   /* Find the number of reserved configuration bits for the routing multiplexer */
   size_t mux_num_reserved_config_bits = find_mux_num_reserved_config_bits(circuit_lib, mux_model, mux_graph);
@@ -2385,31 +2387,32 @@ void print_verilog_unique_switch_box_mux(ModuleManager& module_manager,
   size_t mux_num_config_bits = find_mux_num_config_bits(circuit_lib, mux_model, mux_graph, cur_sram_orgz_info->type);
 
   /* Print the configuration bus for the routing multiplexers */
+  print_verilog_comment(fp, std::string("----- Local wires to group configuration ports -----"));
   print_verilog_mux_config_bus(fp, circuit_lib, mux_model, cur_sram_orgz_info->type,
                                datapath_mux_size, mux_instance_id, 
                                mux_num_reserved_config_bits, mux_num_config_bits); 
+  fp << std::endl;
 
   /* Dump ports visible only during formal verification */
-  fp << std::endl;
+  print_verilog_comment(fp, std::string("----- Local wires used in only formal verification purpose -----"));
   print_verilog_preprocessing_flag(fp, std::string(verilog_formal_verification_preproc_flag));
-  /* TODO: Print the SRAM configuration ports for formal verification
-  dump_verilog_formal_verification_mux_sram_ports_wiring(fp, cur_sram_orgz_info,
-                                                         verilog_model, mux_size,
-                                                         cur_num_sram, 
-                                                         cur_num_sram + num_mux_conf_bits - 1);
-   */
+  /* Print the SRAM configuration ports for formal verification */
+  print_verilog_formal_verification_mux_sram_ports_wiring(fp, circuit_lib, mux_model, 
+                                                          datapath_mux_size, mux_instance_id, mux_num_config_bits);
   print_verilog_endif(fp);
+  fp << std::endl;
   
-  /* TODO: Instanciate the Mux Module */
-  /* TODO: add global ports */
-  /* TODO: add input bus port */
-  /* TODO: add output port */
-  /* TODO: Add different configuraton port for the routing multiplexer
+  /* TODO: Instanciate the MUX Module */
+  /* TODO: create port-to-port map */
+  /* Link input bus port to Switch Block inputs */
+  /* Link output port to Switch Block outputs */
+  /* Link SRAM port to different configuraton port for the routing multiplexer
    * Different design technology requires different configuration bus! 
   dump_verilog_mux_config_bus_ports(fp, verilog_model, cur_sram_orgz_info,
                                     mux_size, cur_num_sram, num_mux_reserved_conf_bits, 
                                     num_mux_conf_bits, is_explicit_mapping);
    */
+  /* TODO: Print an instance of the MUX Module */
 
   /* TODO: Instanciate memory modules */
   switch (circuit_lib.design_tech_type(mux_model)) {
