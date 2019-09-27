@@ -2378,17 +2378,11 @@ void print_verilog_unique_switch_box_mux(ModuleManager& module_manager,
   /* Connect input ports to bus */
   fp << generate_verilog_local_wire(inbus_port, mux_input_ports);
 
-  /* TODO: Find the number of reserved configuration bits for the routing multiplexer 
-  num_mux_reserved_conf_bits = count_num_reserved_conf_bits_one_spice_model(verilog_model, 
-                                                                            cur_sram_orgz_info->type, 
-                                                                            mux_size);
-   */
+  /* Find the number of reserved configuration bits for the routing multiplexer */
+  size_t mux_num_reserved_config_bits = find_mux_num_reserved_config_bits(circuit_lib, mux_model, mux_graph);
 
-  /* TODO: Find the number of configuration bits for the routing multiplexer 
-  num_mux_conf_bits = count_num_conf_bits_one_spice_model(verilog_model, 
-                                                          cur_sram_orgz_info->type, 
-                                                          mux_size);
-   */
+  /* Find the number of configuration bits for the routing multiplexer */
+  size_t mux_num_config_bits = find_mux_num_config_bits(circuit_lib, mux_model, mux_graph, cur_sram_orgz_info->type);
 
   /* Print the configuration port bus */
   /* TODO: Print the configuration bus for the routing multiplexers

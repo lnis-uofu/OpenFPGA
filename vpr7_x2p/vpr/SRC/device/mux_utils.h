@@ -43,6 +43,7 @@ size_t find_mux_num_reserved_config_bits(const CircuitLibrary& circuit_lib,
 
 size_t find_mux_num_config_bits(const CircuitLibrary& circuit_lib,
                                 const CircuitModelId& mux_model,
-                                const MuxGraph& mux_graph);
+                                const MuxGraph& mux_graph, 
+                                const e_sram_orgz& sram_orgz_type);
 
 #endif

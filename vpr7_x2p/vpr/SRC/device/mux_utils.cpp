@@ -271,18 +271,111 @@ size_t find_mux_num_reserved_config_bits(const CircuitLibrary& circuit_lib,
 }
 
 /**************************************************
- * Find the number of configuration bits for a multiplexer
+ * Find the number of configuration bits for a CMOS multiplexer
  * In general, the number of configuration bits is 
  * the number of memory bits for a mux_graph
- * However, when local decoders are used, this should be changed!
+ * However, when local decoders are used, 
+ * the number of configuration bits are reduced to log2(X)
  *************************************************/
-size_t find_mux_num_config_bits(const CircuitLibrary& circuit_lib,
-                                const CircuitModelId& mux_model,
-                                const MuxGraph& mux_graph) {
+static 
+size_t find_cmos_mux_num_config_bits(const CircuitLibrary& circuit_lib,
+                                     const CircuitModelId& mux_model,
+                                     const MuxGraph& mux_graph,
+                                     const e_sram_orgz& sram_orgz_type) {
+  size_t num_config_bits = 0; 
+  switch (sram_orgz_type) {
+  case SPICE_SRAM_MEMORY_BANK:
+  case SPICE_SRAM_SCAN_CHAIN:
+  case SPICE_SRAM_STANDALONE:
+    num_config_bits = mux_graph.num_memory_bits();
+    break;
+  default:
+    vpr_printf(TIO_MESSAGE_ERROR,
+               "(FILE:%s,LINE[%d])Invalid type of SRAM organization!\n",
+               __FILE__, __LINE__); 
+    exit(1);
+  }
+
   if (true == circuit_lib.mux_use_local_encoder(mux_model)) {
+    num_config_bits = find_mux_local_decoder_addr_size(mux_graph.num_memory_bits());
+  }
+
+  return num_config_bits;
+}
+
+/**************************************************
+ * Find the number of configuration bits for a RRAM multiplexer
+ * In general, the number of configuration bits is 
+ * the number of levels for a mux_graph
+ * This is due to only the last BL/WL of the multiplexer is
+ * independent from each other
+ * However, when local decoders are used, 
+ * the number of configuration bits should be consider all the
+ * shared(reserved) configuration bits and independent bits 
+ *************************************************/
+static 
+size_t find_rram_mux_num_config_bits(const CircuitLibrary& circuit_lib,
+                                     const CircuitModelId& mux_model,
+                                     const MuxGraph& mux_graph, 
+                                     const e_sram_orgz& sram_orgz_type) {
+  size_t num_config_bits = 0; 
+  switch (sram_orgz_type) {
+  case SPICE_SRAM_MEMORY_BANK:
+    /* In memory bank, by intensively share the Bit/Word Lines,
+     * we only need 1 additional BL and WL for each MUX level.
+     */
+    num_config_bits = mux_graph.num_levels();
+    break;
+  case SPICE_SRAM_SCAN_CHAIN:
+  case SPICE_SRAM_STANDALONE:
+    /* Currently we DO NOT SUPPORT THESE, given an invalid number */
+    num_config_bits = size_t(-1);
+    break;
+  default:
+    vpr_printf(TIO_MESSAGE_ERROR,
+               "(FILE:%s,LINE[%d])Invalid type of SRAM organization!\n",
+               __FILE__, __LINE__); 
+    exit(1);
+  }
+
+  if (true == circuit_lib.mux_use_local_encoder(mux_model)) {
+    /* TODO: this is a to-do work for ReRAM-based multiplexers and FPGAs 
+     * The number of states of a local decoder only depends on how many 
+     * memory bits that the multiplexer will have
+     * This may NOT be correct!!! 
+     */
     return find_mux_local_decoder_addr_size(mux_graph.num_memory_bits());
   }
 
-  return mux_graph.num_memory_bits();
+  return num_config_bits;
 }
 
+/**************************************************
+ * Find the number of configuration bits for 
+ * a routing multiplexer
+ * Two cases are considered here.
+ * They are placed in different branches (sub-functions)
+ * in order to be easy in extending to new technology!
+ *************************************************/
+size_t find_mux_num_config_bits(const CircuitLibrary& circuit_lib,
+                                const CircuitModelId& mux_model,
+                                const MuxGraph& mux_graph, 
+                                const e_sram_orgz& sram_orgz_type) {
+  size_t num_config_bits = size_t(-1);
+
+  switch (circuit_lib.design_tech_type(mux_model)) {
+  case SPICE_MODEL_DESIGN_CMOS:
+    num_config_bits = find_rram_mux_num_config_bits(circuit_lib, mux_model, mux_graph, sram_orgz_type);
+    break;
+  case SPICE_MODEL_DESIGN_RRAM:
+    num_config_bits = find_rram_mux_num_config_bits(circuit_lib, mux_model, mux_graph, sram_orgz_type);
+    break;
+  default:
+    vpr_printf(TIO_MESSAGE_ERROR,
+               "(FILE:%s,LINE[%d])Invalid design_technology of MUX(name: %s)\n",
+               __FILE__, __LINE__, circuit_lib.model_name(mux_model).c_str()); 
+    exit(1);
+  }
+
+  return num_config_bits;
+}
