@@ -924,6 +924,10 @@ typedef struct s_direct_inf {
 	int y_offset;
 	int z_offset;
 	int line;
+    /* Aurelien: point to point support in direct connection from directlist */
+    enum e_point2point_interconnection_type interconnection_type;
+    enum e_point2point_interconnection_dir x_dir;
+    enum e_point2point_interconnection_dir y_dir;
     /* Xifan Tang: FPGA-SPICE support */
     char* spice_model_name;
     t_spice_model* spice_model;

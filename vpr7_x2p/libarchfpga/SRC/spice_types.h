@@ -5,6 +5,20 @@
 #include "linkedlist.h"
 #include "circuit_library.h"
 
+/* Aurelien: point to point connection */
+enum e_point2point_interconnection_type {
+  NO_P2P,
+  P2P_DIRECT_COLUMN,
+  P2P_DIRECT_ROW,
+  NUM_POINT2POINT_INTERCONNECT_TYPE
+};
+
+enum e_point2point_interconnection_dir {
+  POSITIVE_DIR,
+  NEGATIVE_DIR,
+  NUM_POINT2POINT_INTERCONNECT_DIR
+};
+
 /* Xifan TANG: Spice support*/
 enum e_spice_tech_lib_type {
   SPICE_LIB_INDUSTRY,
