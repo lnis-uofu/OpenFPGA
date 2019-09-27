@@ -283,6 +283,7 @@ size_t find_cmos_mux_num_config_bits(const CircuitLibrary& circuit_lib,
                                      const MuxGraph& mux_graph,
                                      const e_sram_orgz& sram_orgz_type) {
   size_t num_config_bits = 0; 
+
   switch (sram_orgz_type) {
   case SPICE_SRAM_MEMORY_BANK:
   case SPICE_SRAM_SCAN_CHAIN:
@@ -296,9 +297,15 @@ size_t find_cmos_mux_num_config_bits(const CircuitLibrary& circuit_lib,
     exit(1);
   }
 
-  if (true == circuit_lib.mux_use_local_encoder(mux_model)) {
-    num_config_bits = find_mux_local_decoder_addr_size(mux_graph.num_memory_bits());
+  if (false == circuit_lib.mux_use_local_encoder(mux_model)) {
+    return num_config_bits;
   }
+
+  num_config_bits = 0;
+  /* Multiplexer local encoders are applied to memory bits at each stage */
+  for (const auto& lvl : mux_graph.levels()) {
+    num_config_bits += find_mux_local_decoder_addr_size(mux_graph.num_memory_bits_at_level(lvl));
+  } 
 
   return num_config_bits;
 }

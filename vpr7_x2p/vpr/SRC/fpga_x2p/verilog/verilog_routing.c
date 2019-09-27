@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <vector>
+#include <map>
 #include <fstream>
 #include <algorithm>
 
@@ -2328,7 +2329,7 @@ void print_verilog_unique_switch_box_mux(ModuleManager& module_manager,
                                          t_rr_node* cur_rr_node,
                                          const std::vector<t_rr_node*>& drive_rr_nodes,
                                          const size_t& switch_index,
-                                         const bool& is_explicit_mapping) {
+                                         const bool& use_explicit_mapping) {
   /* Check the file handler*/ 
   check_file_handler(fp);
 
@@ -2341,11 +2342,9 @@ void print_verilog_unique_switch_box_mux(ModuleManager& module_manager,
 
   /* Find the input size of the implementation of a routing multiplexer */
   size_t datapath_mux_size = drive_rr_nodes.size();
-  size_t impl_mux_size = find_mux_implementation_num_inputs(circuit_lib, mux_model, datapath_mux_size); 
-  VTR_ASSERT(true == valid_mux_implementation_num_inputs(impl_mux_size));
 
   /* Get the multiplexing graph from the Mux Library */
-  MuxId mux_id = mux_lib.mux_graph(mux_model, impl_mux_size);
+  MuxId mux_id = mux_lib.mux_graph(mux_model, datapath_mux_size);
   const MuxGraph& mux_graph = mux_lib.mux_graph(mux_id);
 
   /* Find the module name of the multiplexer and try to find it in the module manager */
@@ -2365,19 +2364,12 @@ void print_verilog_unique_switch_box_mux(ModuleManager& module_manager,
   inbus_port.set_name(generate_mux_input_bus_port_name(circuit_lib, mux_model, datapath_mux_size, mux_instance_id));
   inbus_port.set_width(datapath_mux_size);
 
-  /* Create the path of the input of multiplexer in the hierarchy 
-   * TODO: this MUST be deprecated later because module manager is created to handle these problems!!! 
-   */
-  std::string mux_input_hie_path = std::string(rr_sb.gen_sb_verilog_instance_name()) + std::string("/") 
-                                 + mux_module_name + std::string("_") 
-                                 + std::to_string(mux_instance_id) + std::string("_/in");
-  cur_rr_node->name_mux = my_strdup(mux_input_hie_path.c_str());
-
   /* Generate input ports that are wired to the input bus of the routing multiplexer */
   std::vector<BasicPort> mux_input_ports = generate_switch_block_input_ports(rr_sb, drive_rr_nodes);
   /* Connect input ports to bus */
-  print_verilog_comment(fp, std::string("----- A local bus wire for multiplexer inputs -----"));
+  print_verilog_comment(fp, std::string("----- BEGIN A local bus wire for multiplexer inputs -----"));
   fp << generate_verilog_local_wire(inbus_port, mux_input_ports) << std::endl;
+  print_verilog_comment(fp, std::string("----- END A local bus wire for multiplexer inputs -----"));
   fp << std::endl;
 
   /* Find the number of reserved configuration bits for the routing multiplexer */
@@ -2387,32 +2379,66 @@ void print_verilog_unique_switch_box_mux(ModuleManager& module_manager,
   size_t mux_num_config_bits = find_mux_num_config_bits(circuit_lib, mux_model, mux_graph, cur_sram_orgz_info->type);
 
   /* Print the configuration bus for the routing multiplexers */
-  print_verilog_comment(fp, std::string("----- Local wires to group configuration ports -----"));
+  print_verilog_comment(fp, std::string("----- BEGIN Local wires to group configuration ports -----"));
   print_verilog_mux_config_bus(fp, circuit_lib, mux_model, cur_sram_orgz_info->type,
                                datapath_mux_size, mux_instance_id, 
                                mux_num_reserved_config_bits, mux_num_config_bits); 
+  print_verilog_comment(fp, std::string("----- END Local wires to group configuration ports -----"));
   fp << std::endl;
 
   /* Dump ports visible only during formal verification */
-  print_verilog_comment(fp, std::string("----- Local wires used in only formal verification purpose -----"));
+  print_verilog_comment(fp, std::string("----- BEGIN Local wires used in only formal verification purpose -----"));
   print_verilog_preprocessing_flag(fp, std::string(verilog_formal_verification_preproc_flag));
   /* Print the SRAM configuration ports for formal verification */
+  /* TODO: align with the port width of formal verification port of SB module */
   print_verilog_formal_verification_mux_sram_ports_wiring(fp, circuit_lib, mux_model, 
                                                           datapath_mux_size, mux_instance_id, mux_num_config_bits);
   print_verilog_endif(fp);
+  print_verilog_comment(fp, std::string("----- END Local wires used in only formal verification purpose -----"));
   fp << std::endl;
   
-  /* TODO: Instanciate the MUX Module */
-  /* TODO: create port-to-port map */
+  /* Instanciate the MUX Module */
+  /* Create port-to-port map */
+  std::map<std::string, BasicPort> mux_port2port_name_map;
+
   /* Link input bus port to Switch Block inputs */
+  std::vector<CircuitPortId> mux_model_input_ports = circuit_lib.model_ports_by_type(mux_model, SPICE_MODEL_PORT_INPUT, true);
+  VTR_ASSERT(1 == mux_model_input_ports.size());
+  /* Use the port name convention in the circuit library */
+  mux_port2port_name_map[circuit_lib.port_lib_name(mux_model_input_ports[0])] = inbus_port;
+
   /* Link output port to Switch Block outputs */
+  std::vector<CircuitPortId> mux_model_output_ports = circuit_lib.model_ports_by_type(mux_model, SPICE_MODEL_PORT_OUTPUT, true);
+  VTR_ASSERT(1 == mux_model_output_ports.size());
+  /* Use the port name convention in the circuit library */
+  mux_port2port_name_map[circuit_lib.port_lib_name(mux_model_output_ports[0])] = generate_verilog_unique_switch_box_chan_port(rr_sb, chan_side, cur_rr_node, OUT_PORT); 
+
   /* Link SRAM port to different configuraton port for the routing multiplexer
    * Different design technology requires different configuration bus! 
-  dump_verilog_mux_config_bus_ports(fp, verilog_model, cur_sram_orgz_info,
-                                    mux_size, cur_num_sram, num_mux_reserved_conf_bits, 
-                                    num_mux_conf_bits, is_explicit_mapping);
    */
-  /* TODO: Print an instance of the MUX Module */
+  std::vector<CircuitPortId> mux_model_sram_ports = circuit_lib.model_ports_by_type(mux_model, SPICE_MODEL_PORT_SRAM, true);
+  VTR_ASSERT( 1 == mux_model_sram_ports.size() );
+  /* For the regular SRAM port, module port use the same name */
+  std::string mux_module_sram_port_name = circuit_lib.port_lib_name(mux_model_sram_ports[0]);
+  BasicPort mux_config_port(generate_mux_sram_port_name(circuit_lib, mux_model, datapath_mux_size, mux_instance_id, SPICE_MODEL_PORT_INPUT), 
+                            mux_num_config_bits);
+  mux_port2port_name_map[mux_module_sram_port_name] = mux_config_port; 
+
+  /* For the inverted SRAM port */
+  std::string mux_module_sram_inv_port_name = circuit_lib.port_lib_name(mux_model_sram_ports[0]) + std::string("_inv");
+  BasicPort mux_config_inv_port(generate_mux_sram_port_name(circuit_lib, mux_model, datapath_mux_size, mux_instance_id, SPICE_MODEL_PORT_OUTPUT), 
+                                mux_num_config_bits);
+  mux_port2port_name_map[mux_module_sram_inv_port_name] = mux_config_inv_port; 
+
+  /* Print an instance of the MUX Module */
+  print_verilog_comment(fp, std::string("----- BEGIN Instanciation of a routing multiplexer -----"));
+  print_verilog_module_instance(fp, module_manager, sb_module, mux_module, mux_port2port_name_map, use_explicit_mapping);
+  print_verilog_comment(fp, std::string("----- END Instanciation of a routing multiplexer -----"));
+  fp << std::endl;
+  /* IMPORTANT: this update MUST be called after the instance outputting!!!!
+   * update the module manager with the relationship between the parent and child modules 
+   */
+  module_manager.add_child_module(sb_module, mux_module);
 
   /* TODO: Instanciate memory modules */
   switch (circuit_lib.design_tech_type(mux_model)) {
@@ -2443,6 +2469,14 @@ void print_verilog_unique_switch_box_mux(ModuleManager& module_manager,
                "(File:%s,[LINE%d])Invalid design technology for circuit model (%s)!\n",
                __FILE__, __LINE__, circuit_lib.model_name(mux_model).c_str());
   }
+
+  /* Create the path of the input of multiplexer in the hierarchy 
+   * TODO: this MUST be deprecated later because module manager is created to handle these problems!!! 
+   */
+  std::string mux_input_hie_path = std::string(rr_sb.gen_sb_verilog_instance_name()) + std::string("/") 
+                                 + mux_module_name + std::string("_") 
+                                 + std::to_string(mux_instance_id) + std::string("_/in");
+  cur_rr_node->name_mux = my_strdup(mux_input_hie_path.c_str());
 }
 
 
