@@ -1,8 +1,0 @@
-read_verilog -container r -libname WORK -05 { ${SOURCE_DESIGN} }
-set_top r:${SOURCE_TOP_DIR}
-read_verilog -container i -libname WORK -05 { ${IMPL_DESIGN} }
-
-set_top i:${IMPL_TOP_DIR}
-match
-${MATCH_MODUEL_LIST}
-verify
