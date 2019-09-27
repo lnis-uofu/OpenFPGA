@@ -994,7 +994,7 @@ void dump_verilog_cmos_mux_multilevel_structure(FILE* fp,
     if (TRUE == spice_model.design_tech_info.mux_info->local_encoder) {
       /* Get the number of inputs */
       int num_outputs = cur_num_input_basis;
-      int num_inputs =  determine_mux_local_encoder_num_inputs(num_outputs);
+      int num_inputs = determine_mux_local_encoder_num_inputs(num_outputs);
       /* Find the decoder name */
       fprintf(fp, "%s %s_%d_ (", 
               generate_verilog_decoder_subckt_name(num_inputs, num_outputs),

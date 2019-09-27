@@ -62,6 +62,7 @@ class MuxGraph {
     std::vector<MuxNodeId> non_input_nodes() const;
     edge_range edges() const;
     mem_range memories() const;
+    std::vector<size_t> levels() const;
   public: /* Public accessors: Data query */
     /* Find the number of inputs in the MUX graph */
     size_t num_inputs() const;
@@ -76,6 +77,8 @@ class MuxGraph {
     size_t num_node_levels() const;
     /* Find the number of SRAMs in the MUX graph */
     size_t num_memory_bits() const;
+    /* Find the number of SRAMs at a level in the MUX graph */
+    size_t num_memory_bits_at_level(const size_t& level) const;
     /* Find the number of nodes at a given level in the MUX graph */
     size_t num_nodes_at_level(const size_t& level) const;
     /* Find the level of a node */
@@ -112,6 +115,8 @@ class MuxGraph {
      MuxEdgeId add_edge(const MuxNodeId& from_node, const MuxNodeId& to_node);
      /* Add a memory bit to the MuxGraph */
      MuxMemId add_mem();
+     /* Configure the level of a memory */
+     void set_mem_level(const MuxMemId& mem, const size_t& level);
      /* Link an edge to a mem */
      void set_edge_mem_id(const MuxEdgeId& edge, const MuxMemId& mem);
   private: /* Private mutators : graph builders */
@@ -130,6 +135,8 @@ class MuxGraph {
                                  const CircuitModelId& circuit_model);
     /* Build fast node lookup */
     void build_node_lookup();
+    /* Build fast mem lookup */
+    void build_mem_lookup();
   private: /* Private validators */
     /* valid ids */
     bool valid_node_id(const MuxNodeId& node) const;
@@ -141,6 +148,7 @@ class MuxGraph {
     /* validate/invalidate node lookup */
     bool valid_node_lookup() const;
     void invalidate_node_lookup();
+    void invalidate_mem_lookup();
     /* validate graph */
     bool valid_mux_graph() const;
   private: /* Internal data */
@@ -161,10 +169,13 @@ class MuxGraph {
     vtr::vector<MuxEdgeId, bool> edge_inv_mem_;                       /* if the edge is controlled by an inverted output of a memory bit */
 
     vtr::vector<MuxMemId, MuxMemId> mem_ids_;                        /* ids of configuration memories */
+    vtr::vector<MuxMemId, size_t> mem_levels_;                        /* ids of configuration memories */
 
     /* fast look-up */
     typedef std::vector<std::vector<std::vector<MuxNodeId>>> NodeLookup;
     mutable NodeLookup node_lookup_; /* [num_levels][num_types][num_nodes_per_level] */ 
+    typedef std::vector<std::vector<MuxMemId>> MemLookup;
+    mutable MemLookup mem_lookup_; /* [num_levels][num_mems_per_level] */ 
 };
 
 #endif

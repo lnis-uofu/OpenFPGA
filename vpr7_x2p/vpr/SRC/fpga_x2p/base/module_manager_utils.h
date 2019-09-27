@@ -28,7 +28,6 @@ void add_formal_verification_sram_ports_to_module_manager(ModuleManager& module_
                                                           const ModuleId& module_id,
                                                           const CircuitLibrary& circuit_lib,
                                                           const CircuitModelId& sram_model,
-                                                          const e_sram_orgz sram_orgz_type,
                                                           const std::string& preproc_flag,
                                                           const size_t& port_size);
 

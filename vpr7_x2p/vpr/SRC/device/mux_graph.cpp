@@ -65,6 +65,14 @@ MuxGraph::mem_range MuxGraph::memories() const {
   return vtr::make_range(mem_ids_.begin(), mem_ids_.end());
 }
 
+std::vector<size_t> MuxGraph::levels() const {
+  std::vector<size_t> graph_levels;
+  for (size_t lvl = 0; lvl < num_levels(); ++lvl) {
+    graph_levels.push_back(lvl);
+  }
+  return graph_levels;
+}
+
 /**************************************************
  * Public Accessors: Data query
  *************************************************/
@@ -156,6 +164,14 @@ size_t MuxGraph::num_memory_bits() const {
   /* need to check if the graph is valid or not */
   VTR_ASSERT_SAFE(valid_mux_graph());
   return mem_ids_.size(); 
+}
+
+/* Find the number of SRAMs at a level in the MUX graph */
+size_t MuxGraph::num_memory_bits_at_level(const size_t& level) const {
+  /* need to check if the graph is valid or not */
+  VTR_ASSERT_SAFE(valid_level(level));
+  VTR_ASSERT_SAFE(valid_mux_graph());
+  return mem_lookup_[level].size(); 
 }
 
 /* Find the number of nodes at a given level in the MUX graph */
@@ -310,6 +326,7 @@ MuxGraph MuxGraph::subgraph(const MuxNodeId& root_node) const {
     }
     /* Not found, we add a memory bit and record in the mem-to-mem map */
     MuxMemId mem_subgraph = mux_graph.add_mem();
+    mux_graph.set_mem_level(mem_subgraph, 0);
     mem2mem_map[mem_origin] = mem_subgraph;
     /* configure the edge */
     mux_graph.edge_mem_ids_[edge2edge_map[edge_origin]] = mem_subgraph;
@@ -317,6 +334,7 @@ MuxGraph MuxGraph::subgraph(const MuxNodeId& root_node) const {
 
   /* Since the graph is finalized, it is time to build the fast look-up */
   mux_graph.build_node_lookup();
+  mux_graph.build_mem_lookup();
 
   return mux_graph; 
 }
@@ -519,9 +537,18 @@ MuxMemId MuxGraph::add_mem() {
   MuxMemId mem = MuxMemId(mem_ids_.size());
   /* Push to the node list */
   mem_ids_.push_back(mem);
+  mem_levels_.push_back(size_t(-1));
   /* Resize the other node-related vectors */
 
   return mem;
+}
+
+/* Configure the level of a memory */
+void MuxGraph::set_mem_level(const MuxMemId& mem, const size_t& level) {
+  /* Make sure we have valid edge and mem */
+  VTR_ASSERT( valid_mem_id(mem) );
+
+  mem_levels_[mem] = level;
 }
 
 /* Link an edge to a memory bit */
@@ -593,8 +620,11 @@ void MuxGraph::build_multilevel_mux_graph(const size_t& mux_size,
     num_mems_per_level = 1; 
   }
   /* Number of memory bits is definite, add them */
-  for (size_t i = 0; i < num_mems_per_level * num_levels; ++i) {
-    add_mem();
+  for (size_t ilvl = 0; ilvl < num_levels; ++ilvl) {
+    for (size_t imem = 0; imem < num_mems_per_level; ++imem) {
+      MuxMemId mem = add_mem();
+      mem_levels_[mem] = ilvl;
+    }
   }
 
   /* Create a fast node lookup locally.
@@ -747,6 +777,7 @@ void MuxGraph::build_onelevel_mux_graph(const size_t& mux_size,
 
     /* Create a memory bit*/
     MuxMemId mem = add_mem(); 
+    mem_levels_[mem] = 0;
     /* Link the edge to a memory bit */
     set_edge_mem_id(edge, mem);
   }
@@ -863,6 +894,7 @@ void MuxGraph::build_mux_graph(const CircuitLibrary& circuit_lib,
 
   /* Since the graph is finalized, it is time to build the fast look-up */
   build_node_lookup();
+  build_mem_lookup();
 
   /* For fracturable LUTs, we need to add more outputs to the MUX graph */
   if ( (SPICE_MODEL_LUT == circuit_lib.model_type(circuit_model))
@@ -895,9 +927,33 @@ void MuxGraph::build_node_lookup() {
   }
 }
 
+/* Build fast mem lookup */
+void MuxGraph::build_mem_lookup() {
+  /* Invalidate the mem lookup if necessary */
+  invalidate_mem_lookup();
+
+  /* Find the maximum number of levels */
+  size_t num_levels = 0;
+  for (auto mem : memories()) {
+    num_levels = std::max((int)mem_levels_[mem], (int)num_levels);
+  }
+
+  /* Resize mem_lookup */
+  mem_lookup_.resize(num_levels + 1);
+  for (auto mem : memories()) {
+    /* Categorize mem nodes into mem_lookup */
+    mem_lookup_[mem_levels_[mem]].push_back(mem);
+  }
+}
+
 /* Invalidate (empty) the node fast lookup*/
 void MuxGraph::invalidate_node_lookup() {
   node_lookup_.clear();
+}
+
+/* Invalidate (empty) the mem fast lookup*/
+void MuxGraph::invalidate_mem_lookup() {
+  mem_lookup_.clear();
 }
  
 /**************************************************

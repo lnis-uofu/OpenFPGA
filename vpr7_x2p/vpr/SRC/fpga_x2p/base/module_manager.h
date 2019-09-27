@@ -64,9 +64,10 @@ class ModuleManager {
     void set_port_preproc_flag(const ModuleId& module, const ModulePortId& port, const std::string& preproc_flag);
     /* Add a child module to a parent module */
     void add_child_module(const ModuleId& parent_module, const ModuleId& child_module);
-  private: /* Private validators/invalidators */
+  public: /* Public validators/invalidators */
     bool valid_module_id(const ModuleId& module) const;
     bool valid_module_port_id(const ModuleId& module, const ModulePortId& port) const;
+  private: /* Private validators/invalidators */
     void invalidate_name2id_map();
     void invalidate_port_lookup();
   private: /* Internal data */

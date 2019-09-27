@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <vector>
+#include <map>
 #include <fstream>
 #include <algorithm>
 
@@ -39,6 +40,7 @@
 #include "fpga_x2p_bitstream_utils.h"
 #include "fpga_x2p_globals.h"
 #include "fpga_x2p_naming.h"
+#include "mux_utils.h"
 #include "module_manager.h"
 #include "module_manager_utils.h"
 
@@ -2146,6 +2148,391 @@ void update_routing_connection_box_conf_bits(t_sram_orgz_info* cur_sram_orgz_inf
 }
 
 /*********************************************************************
+ * Generate a port for a routing track of a swtich block
+ ********************************************************************/
+static 
+BasicPort generate_verilog_unique_switch_box_chan_port(const RRGSB& rr_sb, 
+                                                       const e_side& chan_side,
+                                                       t_rr_node* cur_rr_node,
+                                                       const PORTS& cur_rr_node_direction) {
+  /* Get the index in sb_info of cur_rr_node */
+  int index = rr_sb.get_node_index(cur_rr_node, chan_side, cur_rr_node_direction);
+  /* Make sure this node is included in this sb_info */
+  VTR_ASSERT((-1 != index)&&(NUM_SIDES != chan_side));
+
+  DeviceCoordinator chan_rr_node_coordinator = rr_sb.get_side_block_coordinator(chan_side);
+
+  vtr::Point<size_t> chan_port_coord(chan_rr_node_coordinator.get_x(), chan_rr_node_coordinator.get_y());
+  std::string chan_port_name = generate_routing_track_port_name(rr_sb.get_chan_node(chan_side, index)->type,
+                                                                chan_port_coord, index,  
+                                                                rr_sb.get_chan_node_direction(chan_side, index));
+  return BasicPort(chan_port_name, 1); /* Every track has a port size of 1 */
+}
+
+/*********************************************************************
+ * Generate an input port for routing multiplexer inside the switch block
+ * In addition to give the Routing Resource node of the input
+ * Users should provide the side of input, which is different case by case:
+ * 1. When the input is a pin of a CLB/Logic Block, the input_side should
+ *    be the side of the node on its grid!
+ *    For example, the input pin is on the top side of a switch block
+ *    but on the right side of a switch block
+ *                      +--------+
+ *                      |        |
+ *                      |  Grid  |---+
+ *                      |        |   |
+ *                      +--------+   v input_pin
+ *                      +----------------+
+ *                      |  Switch Block  |
+ *                      +----------------+
+ * 2. When the input is a routing track, the input_side should be
+ *    the side of the node locating on the switch block
+ ********************************************************************/
+static 
+BasicPort generate_switch_block_input_port(const RRGSB& rr_sb, 
+                                           const e_side& input_side,
+                                           t_rr_node* input_rr_node) {
+  BasicPort input_port;
+  /* Generate the input port object */
+  switch (input_rr_node->type) {
+  /* case SOURCE: */
+  case OPIN: {
+    /* Find the coordinator (grid_x and grid_y) for the input port */
+    vtr::Point<size_t> input_port_coord(input_rr_node->xlow, input_rr_node->ylow);
+    std::string input_port_name = generate_grid_side_port_name(input_port_coord,
+                                                               input_side,
+                                                               input_rr_node->ptc_num); 
+    input_port.set_name(input_port_name);
+    input_port.set_width(1); /* Every grid output has a port size of 1 */
+    break;
+  }
+  case CHANX:
+  case CHANY: {
+    input_port = generate_verilog_unique_switch_box_chan_port(rr_sb, input_side, input_rr_node, IN_PORT);
+    break;
+  }
+  default: /* SOURCE, IPIN, SINK are invalid*/
+    vpr_printf(TIO_MESSAGE_ERROR, 
+               "(File:%s, [LINE%d])Invalid rr_node type! Should be [OPIN|CHANX|CHANY].\n",
+               __FILE__, __LINE__);
+    exit(1);
+  }
+
+  return input_port;
+}
+
+/*********************************************************************
+ * Generate a list of input ports for routing multiplexer inside the switch block
+ ********************************************************************/
+static 
+std::vector<BasicPort> generate_switch_block_input_ports(const RRGSB& rr_sb, 
+                                                         const std::vector<t_rr_node*>& input_rr_nodes) {
+  std::vector<BasicPort> input_ports;
+
+  for (auto input_rr_node : input_rr_nodes) {
+    enum e_side input_pin_side = NUM_SIDES;
+    switch (input_rr_node->type) {
+    case OPIN: 
+      input_pin_side = rr_sb.get_opin_node_grid_side(input_rr_node);
+      break;
+    case CHANX:
+    case CHANY: {
+      /* The input could be at any side of the switch block, find it */
+      int index = -1;
+      rr_sb.get_node_side_and_index(input_rr_node, IN_PORT, &input_pin_side, &index);
+      VTR_ASSERT(NUM_SIDES != input_pin_side);
+      break;
+    }
+    default: /* SOURCE, IPIN, SINK are invalid*/
+      vpr_printf(TIO_MESSAGE_ERROR, 
+                 "(File:%s, [LINE%d])Invalid rr_node type! Should be [OPIN|CHANX|CHANY].\n",
+                 __FILE__, __LINE__);
+      exit(1);
+    }
+    input_ports.push_back(generate_switch_block_input_port(rr_sb, input_pin_side, input_rr_node));
+  }
+
+  return input_ports;
+}
+
+/*********************************************************************
+ * Print a short interconneciton in switch box
+ * There are two cases should be noticed.
+ * 1. The actual fan-in of cur_rr_node is 0. In this case,
+      the cur_rr_node need to be short connected to itself which is on the opposite side of this switch
+ * 2. The actual fan-in of cur_rr_node is 0. In this case,
+ *    The cur_rr_node need to connected to the drive_rr_node
+ ********************************************************************/
+static 
+void print_verilog_unique_switch_box_short_interc(std::fstream& fp, 
+                                                  const RRGSB& rr_sb,
+                                                  const e_side& chan_side,
+                                                  t_rr_node* cur_rr_node,
+                                                  t_rr_node* drive_rr_node) {
+  /* Check the file handler*/ 
+  check_file_handler(fp);
+
+  /* Find the name of output port */
+  BasicPort output_port = generate_verilog_unique_switch_box_chan_port(rr_sb, chan_side, cur_rr_node, OUT_PORT);
+  enum e_side input_pin_side = chan_side;
+
+  /* Generate the input port object */
+  switch (drive_rr_node->type) {
+  case OPIN: 
+    input_pin_side = rr_sb.get_opin_node_grid_side(drive_rr_node);
+    break;
+  case CHANX:
+  case CHANY: {
+    /* This should be an input in the data structure of RRGSB */
+    if (cur_rr_node == drive_rr_node) {
+      /* To be strict, the input should locate on the opposite side. 
+       * Use the else part if this may change in some architecture.
+       */
+      Side side_manager(chan_side);
+      input_pin_side = side_manager.get_opposite(); 
+    } else {
+      /* The input could be at any side of the switch block, find it */
+      int index = -1;
+      rr_sb.get_node_side_and_index(drive_rr_node, IN_PORT, &input_pin_side, &index);
+    }
+    break;
+  }
+  default: /* SOURCE, IPIN, SINK are invalid*/
+    vpr_printf(TIO_MESSAGE_ERROR, 
+               "(File:%s, [LINE%d])Invalid rr_node type! Should be [OPIN|CHANX|CHANY].\n",
+               __FILE__, __LINE__);
+    exit(1);
+  }
+  /* Find the name of input port */
+  BasicPort input_port = generate_switch_block_input_port(rr_sb, input_pin_side, drive_rr_node);
+
+  /* Print the wire connection in Verilog format */
+  print_verilog_comment(fp, std::string("----- Short connection " + output_port.get_name() + " -----"));
+  print_verilog_wire_connection(fp, output_port, input_port, false);
+  fp << std::endl;
+}
+
+/*********************************************************************
+ * Print a Verilog instance of a routing multiplexer as well as
+ * associated memory modules for a connection inside a switch block
+ ********************************************************************/
+static  
+void print_verilog_unique_switch_box_mux(ModuleManager& module_manager, 
+                                         std::fstream& fp,
+                                         t_sram_orgz_info* cur_sram_orgz_info,
+                                         const ModuleId& sb_module, 
+                                         const RRGSB& rr_sb, 
+                                         const CircuitLibrary& circuit_lib,
+                                         const MuxLibrary& mux_lib,
+                                         const std::vector<t_switch_inf>& rr_switches,
+                                         const e_side& chan_side,
+                                         t_rr_node* cur_rr_node,
+                                         const std::vector<t_rr_node*>& drive_rr_nodes,
+                                         const size_t& switch_index,
+                                         const bool& use_explicit_mapping) {
+  /* Check the file handler*/ 
+  check_file_handler(fp);
+
+  /* Check */
+  /* Check current rr_node is CHANX or CHANY*/
+  VTR_ASSERT((CHANX == cur_rr_node->type)||(CHANY == cur_rr_node->type));
+
+  /* Get the circuit model id of the routing multiplexer */
+  CircuitModelId mux_model = rr_switches[switch_index].circuit_model;
+
+  /* Find the input size of the implementation of a routing multiplexer */
+  size_t datapath_mux_size = drive_rr_nodes.size();
+
+  /* Get the multiplexing graph from the Mux Library */
+  MuxId mux_id = mux_lib.mux_graph(mux_model, datapath_mux_size);
+  const MuxGraph& mux_graph = mux_lib.mux_graph(mux_id);
+
+  /* Find the module name of the multiplexer and try to find it in the module manager */
+  std::string mux_module_name = generate_verilog_mux_subckt_name(circuit_lib, mux_model, datapath_mux_size, std::string(""));
+  ModuleId mux_module = module_manager.find_module(mux_module_name);
+  VTR_ASSERT (true == module_manager.valid_module_id(mux_module));
+
+  /* Get the MUX instance id from the module manager */
+  size_t mux_instance_id = module_manager.num_instance(sb_module, mux_module);
+
+  /* Print the input bus for the inputs of a multiplexer 
+   * We use the datapath input size (mux_size) to name the bus
+   * just to following the naming convention when the tool is built
+   * The bus port size should be the input size of multiplexer implementation
+   */
+  BasicPort inbus_port;
+  inbus_port.set_name(generate_mux_input_bus_port_name(circuit_lib, mux_model, datapath_mux_size, mux_instance_id));
+  inbus_port.set_width(datapath_mux_size);
+
+  /* Generate input ports that are wired to the input bus of the routing multiplexer */
+  std::vector<BasicPort> mux_input_ports = generate_switch_block_input_ports(rr_sb, drive_rr_nodes);
+  /* Connect input ports to bus */
+  print_verilog_comment(fp, std::string("----- BEGIN A local bus wire for multiplexer inputs -----"));
+  fp << generate_verilog_local_wire(inbus_port, mux_input_ports) << std::endl;
+  print_verilog_comment(fp, std::string("----- END A local bus wire for multiplexer inputs -----"));
+  fp << std::endl;
+
+  /* Find the number of reserved configuration bits for the routing multiplexer */
+  size_t mux_num_reserved_config_bits = find_mux_num_reserved_config_bits(circuit_lib, mux_model, mux_graph);
+
+  /* Find the number of configuration bits for the routing multiplexer */
+  size_t mux_num_config_bits = find_mux_num_config_bits(circuit_lib, mux_model, mux_graph, cur_sram_orgz_info->type);
+
+  /* Print the configuration bus for the routing multiplexers */
+  print_verilog_comment(fp, std::string("----- BEGIN Local wires to group configuration ports -----"));
+  print_verilog_mux_config_bus(fp, circuit_lib, mux_model, cur_sram_orgz_info->type,
+                               datapath_mux_size, mux_instance_id, 
+                               mux_num_reserved_config_bits, mux_num_config_bits); 
+  print_verilog_comment(fp, std::string("----- END Local wires to group configuration ports -----"));
+  fp << std::endl;
+
+  /* Dump ports visible only during formal verification */
+  print_verilog_comment(fp, std::string("----- BEGIN Local wires used in only formal verification purpose -----"));
+  print_verilog_preprocessing_flag(fp, std::string(verilog_formal_verification_preproc_flag));
+  /* Print the SRAM configuration ports for formal verification */
+  /* TODO: align with the port width of formal verification port of SB module */
+  print_verilog_formal_verification_mux_sram_ports_wiring(fp, circuit_lib, mux_model, 
+                                                          datapath_mux_size, mux_instance_id, mux_num_config_bits);
+  print_verilog_endif(fp);
+  print_verilog_comment(fp, std::string("----- END Local wires used in only formal verification purpose -----"));
+  fp << std::endl;
+  
+  /* Instanciate the MUX Module */
+  /* Create port-to-port map */
+  std::map<std::string, BasicPort> mux_port2port_name_map;
+
+  /* Link input bus port to Switch Block inputs */
+  std::vector<CircuitPortId> mux_model_input_ports = circuit_lib.model_ports_by_type(mux_model, SPICE_MODEL_PORT_INPUT, true);
+  VTR_ASSERT(1 == mux_model_input_ports.size());
+  /* Use the port name convention in the circuit library */
+  mux_port2port_name_map[circuit_lib.port_lib_name(mux_model_input_ports[0])] = inbus_port;
+
+  /* Link output port to Switch Block outputs */
+  std::vector<CircuitPortId> mux_model_output_ports = circuit_lib.model_ports_by_type(mux_model, SPICE_MODEL_PORT_OUTPUT, true);
+  VTR_ASSERT(1 == mux_model_output_ports.size());
+  /* Use the port name convention in the circuit library */
+  mux_port2port_name_map[circuit_lib.port_lib_name(mux_model_output_ports[0])] = generate_verilog_unique_switch_box_chan_port(rr_sb, chan_side, cur_rr_node, OUT_PORT); 
+
+  /* Link SRAM port to different configuraton port for the routing multiplexer
+   * Different design technology requires different configuration bus! 
+   */
+  std::vector<CircuitPortId> mux_model_sram_ports = circuit_lib.model_ports_by_type(mux_model, SPICE_MODEL_PORT_SRAM, true);
+  VTR_ASSERT( 1 == mux_model_sram_ports.size() );
+  /* For the regular SRAM port, module port use the same name */
+  std::string mux_module_sram_port_name = circuit_lib.port_lib_name(mux_model_sram_ports[0]);
+  BasicPort mux_config_port(generate_mux_sram_port_name(circuit_lib, mux_model, datapath_mux_size, mux_instance_id, SPICE_MODEL_PORT_INPUT), 
+                            mux_num_config_bits);
+  mux_port2port_name_map[mux_module_sram_port_name] = mux_config_port; 
+
+  /* For the inverted SRAM port */
+  std::string mux_module_sram_inv_port_name = circuit_lib.port_lib_name(mux_model_sram_ports[0]) + std::string("_inv");
+  BasicPort mux_config_inv_port(generate_mux_sram_port_name(circuit_lib, mux_model, datapath_mux_size, mux_instance_id, SPICE_MODEL_PORT_OUTPUT), 
+                                mux_num_config_bits);
+  mux_port2port_name_map[mux_module_sram_inv_port_name] = mux_config_inv_port; 
+
+  /* Print an instance of the MUX Module */
+  print_verilog_comment(fp, std::string("----- BEGIN Instanciation of a routing multiplexer -----"));
+  print_verilog_module_instance(fp, module_manager, sb_module, mux_module, mux_port2port_name_map, use_explicit_mapping);
+  print_verilog_comment(fp, std::string("----- END Instanciation of a routing multiplexer -----"));
+  fp << std::endl;
+  /* IMPORTANT: this update MUST be called after the instance outputting!!!!
+   * update the module manager with the relationship between the parent and child modules 
+   */
+  module_manager.add_child_module(sb_module, mux_module);
+
+  /* TODO: Instanciate memory modules */
+  switch (circuit_lib.design_tech_type(mux_model)) {
+  case SPICE_MODEL_DESIGN_CMOS:
+    /* Call the memory module defined for this SRAM-based MUX! */
+    /*
+    mem_subckt_name = generate_verilog_mux_subckt_name(verilog_model, mux_size, verilog_mem_posfix);
+    dump_verilog_mem_sram_submodule(fp, cur_sram_orgz_info, 
+                                    verilog_model, mux_size, mem_model, 
+                                    cur_num_sram, cur_num_sram + num_mux_conf_bits - 1,
+                                    is_explicit_mapping); 
+     */
+    break;
+  case SPICE_MODEL_DESIGN_RRAM:
+    /* RRAM-based MUX does not need any SRAM dumping
+     * But we have to get the number of configuration bits required by this MUX 
+     * and update the number of memory bits 
+     */
+    /*
+    update_sram_orgz_info_num_mem_bit(cur_sram_orgz_info, cur_num_sram + num_mux_conf_bits);
+    update_sram_orgz_info_num_blwl(cur_sram_orgz_info, 
+                                   cur_bl + num_mux_conf_bits, 
+                                   cur_wl + num_mux_conf_bits);
+     */
+    break;  
+  default:
+    vpr_printf(TIO_MESSAGE_ERROR,
+               "(File:%s,[LINE%d])Invalid design technology for circuit model (%s)!\n",
+               __FILE__, __LINE__, circuit_lib.model_name(mux_model).c_str());
+  }
+
+  /* Create the path of the input of multiplexer in the hierarchy 
+   * TODO: this MUST be deprecated later because module manager is created to handle these problems!!! 
+   */
+  std::string mux_input_hie_path = std::string(rr_sb.gen_sb_verilog_instance_name()) + std::string("/") 
+                                 + mux_module_name + std::string("_") 
+                                 + std::to_string(mux_instance_id) + std::string("_/in");
+  cur_rr_node->name_mux = my_strdup(mux_input_hie_path.c_str());
+}
+
+
+/*********************************************************************
+ * Print the Verilog modules for a interconnection inside switch block
+ * The interconnection could be either a wire or a routing multiplexer,
+ * which depends on the fan-in of the rr_nodes in the switch block
+ ********************************************************************/
+static  
+void print_verilog_unique_switch_box_interc(ModuleManager& module_manager,
+                                            std::fstream& fp, 
+                                            t_sram_orgz_info* cur_sram_orgz_info,
+                                            const ModuleId& sb_module, 
+                                            const RRGSB& rr_sb,
+                                            const CircuitLibrary& circuit_lib,
+                                            const MuxLibrary& mux_lib,
+                                            const std::vector<t_switch_inf>& rr_switches,
+                                            const e_side& chan_side,
+                                            const size_t& chan_node_id,
+                                            const bool& use_explicit_mapping) {
+  std::vector<t_rr_node*> drive_rr_nodes;
+
+  /* Get the node */
+  t_rr_node* cur_rr_node = rr_sb.get_chan_node(chan_side, chan_node_id);
+
+  /* Determine if the interc lies inside a channel wire, that is interc between segments */
+  if (false == rr_sb.is_sb_node_passing_wire(chan_side, chan_node_id)) {
+    for (int i = 0; i < cur_rr_node->num_drive_rr_nodes; ++i) {
+      drive_rr_nodes.push_back(cur_rr_node->drive_rr_nodes[i]);
+    }
+    /* Special: if there are zero-driver nodes. We skip here */
+    if (0 == drive_rr_nodes.size()) {
+      return; 
+    }
+  }
+
+  if (0 == drive_rr_nodes.size()) {
+    /* Print a special direct connection*/
+    print_verilog_unique_switch_box_short_interc(fp, rr_sb, chan_side, cur_rr_node, 
+                                                 cur_rr_node);
+  } else if (1 == drive_rr_nodes.size()) {
+    /* Print a direct connection*/
+    print_verilog_unique_switch_box_short_interc(fp, rr_sb, chan_side, cur_rr_node, 
+                                                 drive_rr_nodes[DEFAULT_SWITCH_ID]);
+  } else if (1 < drive_rr_nodes.size()) {
+    /* Print the multiplexer, fan_in >= 2 */
+    print_verilog_unique_switch_box_mux(module_manager, fp, cur_sram_orgz_info, 
+                                        sb_module, rr_sb, circuit_lib, mux_lib,
+                                        rr_switches, chan_side, cur_rr_node,  
+                                        drive_rr_nodes, 
+                                        cur_rr_node->drive_switches[DEFAULT_SWITCH_ID],
+                                        use_explicit_mapping);
+  } /*Nothing should be done else*/ 
+}
+
+/*********************************************************************
  * Generate the Verilog module for a Switch Box.
  * A Switch Box module consists of following ports:
  * 1. Channel Y [x][y] inputs 
@@ -2322,7 +2709,6 @@ void print_verilog_routing_switch_box_unique_module(ModuleManager& module_manage
                                      rr_gsb.get_sb_num_conf_bits());
     /* Add ports only visible during formal verification to the module */
     add_formal_verification_sram_ports_to_module_manager(module_manager, module_id, circuit_lib, sram_model, 
-                                                         cur_sram_orgz_info->type,
                                                          std::string(verilog_formal_verification_preproc_flag),
                                                          rr_gsb.get_sb_num_conf_bits());
   }
@@ -2338,6 +2724,19 @@ void print_verilog_routing_switch_box_unique_module(ModuleManager& module_manage
   print_verilog_comment(fp, std::string("---- END local wires for SRAM data ports ----"));
 
   /* TODO: Print routing multiplexers */
+  for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
+    Side side_manager(side);
+    print_verilog_comment(fp, std::string("----- " + side_manager.to_string() + " side Routing Multiplexers -----")); 
+    for (size_t itrack = 0; itrack < rr_gsb.get_chan_width(side_manager.get_side()); ++itrack) {
+      /* We care INC_DIRECTION tracks at this side*/
+      if (OUT_PORT == rr_gsb.get_chan_node_direction(side_manager.get_side(), itrack)) {
+        print_verilog_unique_switch_box_interc(module_manager, fp, cur_sram_orgz_info, module_id, rr_sb, 
+                                               circuit_lib, mux_lib, rr_switches, 
+                                               side_manager.get_side(), 
+                                               itrack, is_explicit_mapping);
+      } 
+    }
+  }
 
   /* Put an end to the Verilog module */
   print_verilog_module_end(fp, module_manager.module_name(module_id));
