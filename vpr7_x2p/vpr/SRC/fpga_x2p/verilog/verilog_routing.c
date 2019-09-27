@@ -2376,7 +2376,7 @@ void print_verilog_unique_switch_box_mux(ModuleManager& module_manager,
   /* Generate input ports that are wired to the input bus of the routing multiplexer */
   std::vector<BasicPort> mux_input_ports = generate_switch_block_input_ports(rr_sb, drive_rr_nodes);
   /* Connect input ports to bus */
-  fp << generate_verilog_local_wire(inbus_port, mux_input_ports);
+  fp << generate_verilog_local_wire(inbus_port, mux_input_ports) << std::endl;
 
   /* Find the number of reserved configuration bits for the routing multiplexer */
   size_t mux_num_reserved_config_bits = find_mux_num_reserved_config_bits(circuit_lib, mux_model, mux_graph);
@@ -2384,11 +2384,10 @@ void print_verilog_unique_switch_box_mux(ModuleManager& module_manager,
   /* Find the number of configuration bits for the routing multiplexer */
   size_t mux_num_config_bits = find_mux_num_config_bits(circuit_lib, mux_model, mux_graph, cur_sram_orgz_info->type);
 
-  /* Print the configuration port bus */
-  /* TODO: Print the configuration bus for the routing multiplexers
-  dump_verilog_mux_config_bus(fp, verilog_model, cur_sram_orgz_info,
-                              mux_size, cur_num_sram, num_mux_reserved_conf_bits, num_mux_conf_bits); 
-   */
+  /* Print the configuration bus for the routing multiplexers */
+  print_verilog_mux_config_bus(fp, circuit_lib, mux_model, cur_sram_orgz_info->type,
+                               datapath_mux_size, mux_instance_id, 
+                               mux_num_reserved_config_bits, mux_num_config_bits); 
 
   /* Dump ports visible only during formal verification */
   fp << std::endl;

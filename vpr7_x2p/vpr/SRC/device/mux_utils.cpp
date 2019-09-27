@@ -365,7 +365,7 @@ size_t find_mux_num_config_bits(const CircuitLibrary& circuit_lib,
 
   switch (circuit_lib.design_tech_type(mux_model)) {
   case SPICE_MODEL_DESIGN_CMOS:
-    num_config_bits = find_rram_mux_num_config_bits(circuit_lib, mux_model, mux_graph, sram_orgz_type);
+    num_config_bits = find_cmos_mux_num_config_bits(circuit_lib, mux_model, mux_graph, sram_orgz_type);
     break;
   case SPICE_MODEL_DESIGN_RRAM:
     num_config_bits = find_rram_mux_num_config_bits(circuit_lib, mux_model, mux_graph, sram_orgz_type);

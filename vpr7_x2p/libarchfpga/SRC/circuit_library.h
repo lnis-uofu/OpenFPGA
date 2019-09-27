@@ -471,11 +471,12 @@ class CircuitLibrary {
   public: /* Internal mutators: build fast look-ups */
     void build_model_lookup();
     void build_model_port_lookup();
-  private: /* Internal invalidators/validators */
-    /* Validators */
+  public: /* Public invalidators/validators */
     bool valid_model_id(const CircuitModelId& model_id) const;
     bool valid_circuit_port_id(const CircuitPortId& circuit_port_id) const;
     bool valid_circuit_pin_id(const CircuitPortId& circuit_port_id, const size_t& pin_id) const;
+  private: /* Internal invalidators/validators */
+    /* Validators */
     bool valid_edge_id(const CircuitEdgeId& edge_id) const;
     bool valid_delay_type(const CircuitModelId& model_id, const enum spice_model_delay_type& delay_type) const;
     bool valid_circuit_edge_id(const CircuitEdgeId& circuit_edge_id) const;

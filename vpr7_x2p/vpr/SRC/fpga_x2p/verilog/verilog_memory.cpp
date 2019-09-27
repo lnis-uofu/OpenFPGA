@@ -83,7 +83,7 @@
  *               |               |
  *               v               v
  *      +------------------------------------+
- *      |   Multiplexer Configuration port   |
+ *      |   Memory Module Configuration port |
  *      +------------------------------------+
  *          |            |               |
  *          v            v               v
@@ -133,7 +133,14 @@ void print_verilog_memory_module(ModuleManager& module_manager,
     BasicPort global_port(circuit_lib.port_lib_name(port), circuit_lib.port_size(port));
     module_manager.add_port(module_id, global_port, ModuleManager::MODULE_GLOBAL_PORT);
   }
-  /* Add each input port: port width should match the number of memories */
+  /* TODO: when Configuration-chain style is selected, the port map should be different!
+   * It should have only a head as input, a tail as output and other regular output ports  
+   */
+  /* Add each input port: port width should match the number of memories 
+   * The number of inputs will not match the number of memory bits of a multiplexer
+   * when local decoders are used. 
+   * It should be calculated by the decoder builders!  
+   */
   for (const auto& port : sram_input_ports) {
     BasicPort input_port(circuit_lib.port_lib_name(port), num_mems);
     module_manager.add_port(module_id, input_port, ModuleManager::MODULE_INPUT_PORT);
@@ -206,7 +213,10 @@ void print_verilog_memory_module(ModuleManager& module_manager,
      * update the module manager with the relationship between the parent and child modules 
      */
     module_manager.add_child_module(module_id, sram_module_id);
+
+    /* TODO: Wire the memory cells into a chain, when Configuration-chain style is selected!!! */
   }
+
 
   /* Put an end to the Verilog module */
   print_verilog_module_end(fp, module_name);
