@@ -259,28 +259,28 @@ std::string generate_grid_port_name(const vtr::Point<size_t>& coordinate,
                                     const size_t& pin_id,
                                     const bool& for_top_netlist) {
   if (true == for_top_netlist) {
-    std::string port_name = "grid_";
+    std::string port_name = std::string("grid_");
     port_name += std::to_string(coordinate.x());
-    port_name += "__";
+    port_name += std::string("__");
     port_name += std::to_string(coordinate.y());
-    port_name += "__pin_";
+    port_name += std::string("__pin_");
     port_name += std::to_string(height);
-    port_name += "__";
+    port_name += std::string("__");
     port_name += std::to_string(size_t(side));
-    port_name += "__";
+    port_name += std::string("__");
     port_name += std::to_string(pin_id);
-    port_name += "_";
+    port_name += std::string("_");
     return port_name;
   } 
   /* For non-top netlist */
   VTR_ASSERT( false == for_top_netlist );
   Side side_manager(side);
   std::string port_name = std::string(side_manager.to_string());
-  port_name += "_height_";
+  port_name += std::string("_height_");
   port_name += std::to_string(height);
-  port_name += "__pin_";
+  port_name += std::string("__pin_");
   port_name += std::to_string(pin_id);
-  port_name += "_";
+  port_name += std::string("_");
   return port_name;
 }
 
@@ -455,4 +455,23 @@ std::string generate_sram_local_port_name(const CircuitLibrary& circuit_lib,
   }
 
   return port_name;
+}
+
+/*********************************************************************
+ * Generate the port name for the input bus of a routing multiplexer
+ * This is very useful in Verilog code generation where the inputs of 
+ * a routing multiplexer may come from different ports. 
+ * On the other side, the datapath input of a routing multiplexer
+ * is defined as a bus port. 
+ * Therefore, to interface, a bus port is required, and this function
+ * give a name to the bus port
+ * To keep the bus port name unique to each multiplexer we will instance,
+ * a mux_instance_id should be provided by user
+ *********************************************************************/
+std::string generate_mux_input_bus_port_name(const CircuitLibrary& circuit_lib,
+                                             const CircuitModelId& mux_model,
+                                             const size_t& mux_size, 
+                                             const size_t& mux_instance_id) {
+  std::string postfix = std::string("_") + std::to_string(mux_instance_id) + std::string("_inbus");
+  return generate_verilog_mux_subckt_name(circuit_lib, mux_model, mux_size, postfix);
 }

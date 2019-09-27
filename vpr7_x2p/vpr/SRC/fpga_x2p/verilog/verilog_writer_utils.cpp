@@ -449,7 +449,7 @@ std::string generate_verilog_ports(const std::vector<BasicPort>& merged_ports) {
     if (&port != &merged_ports[0]) {
       verilog_line += ", ";
     }
-    verilog_line += generate_verilog_port(VERILOG_PORT_CONKT, merged_ports[0]);  
+    verilog_line += generate_verilog_port(VERILOG_PORT_CONKT, port);  
   }
   verilog_line += "}";
 

@@ -3,10 +3,12 @@
  * that are used to implement a multiplexer 
  *************************************************/
 #include <cmath>
+#include <algorithm>
 
 #include "spice_types.h"
 #include "util.h"
 #include "vtr_assert.h"
+#include "decoder_library_utils.h"
 #include "mux_utils.h"
 
 /* Validate the number of inputs for a multiplexer implementation,
@@ -237,3 +239,50 @@ MuxLibrary convert_mux_arch_to_library(const CircuitLibrary& circuit_lib, t_llis
 
   return mux_lib;
 }
+
+/**************************************************
+ * Find the number of reserved configuration bits for a multiplexer
+ * The reserved configuration bits is only used by ReRAM-based multiplexers
+ * It is actually the shared BL/WLs among ReRAMs
+ *************************************************/
+size_t find_mux_num_reserved_config_bits(const CircuitLibrary& circuit_lib,
+                                         const CircuitModelId& mux_model,
+                                         const MuxGraph& mux_graph) {
+  if (SPICE_MODEL_DESIGN_RRAM != circuit_lib.design_tech_type(mux_model)) {
+    return 0;
+  }
+
+  std::vector<size_t> mux_branch_sizes = mux_graph.branch_sizes(); 
+  /* For tree-like multiplexers: they have two shared configuration bits */
+  if ( (1 == mux_branch_sizes.size()) 
+    && (2 == mux_branch_sizes[0]) ) {
+    return mux_branch_sizes[0];
+  }
+  /* One-level multiplexer */
+  if ( 1 == mux_graph.num_levels() ) {
+    return mux_graph.num_inputs();
+  }
+  /* Multi-level multiplexers: TODO: This should be better tested and clarified 
+   * Now the multi-level multiplexers are treated as cascaded one-level multiplexers 
+   * Use the maximum branch sizes and multiply it by the number of levels 
+   */
+  std::vector<size_t>::iterator max_mux_branch_size = std::max_element(mux_branch_sizes.begin(), mux_branch_sizes.end());
+  return mux_graph.num_levels() * (*max_mux_branch_size);
+}
+
+/**************************************************
+ * Find the number of configuration bits for a multiplexer
+ * In general, the number of configuration bits is 
+ * the number of memory bits for a mux_graph
+ * However, when local decoders are used, this should be changed!
+ *************************************************/
+size_t find_mux_num_config_bits(const CircuitLibrary& circuit_lib,
+                                const CircuitModelId& mux_model,
+                                const MuxGraph& mux_graph) {
+  if (true == circuit_lib.mux_use_local_encoder(mux_model)) {
+    return find_mux_local_decoder_addr_size(mux_graph.num_memory_bits());
+  }
+
+  return mux_graph.num_memory_bits();
+}
+
