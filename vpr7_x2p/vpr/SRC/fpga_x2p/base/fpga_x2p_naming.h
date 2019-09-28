@@ -72,6 +72,10 @@ std::string generate_reserved_sram_port_name(const e_spice_model_port_type& port
 std::string generate_formal_verification_sram_port_name(const CircuitLibrary& circuit_lib,
                                                         const CircuitModelId& sram_model);
 
+std::string generate_configuration_chain_head_name();
+
+std::string generate_configuration_chain_tail_name();
+
 std::string generate_sram_port_name(const CircuitLibrary& circuit_lib,
                                     const CircuitModelId& sram_model,
                                     const e_sram_orgz& sram_orgz_type,

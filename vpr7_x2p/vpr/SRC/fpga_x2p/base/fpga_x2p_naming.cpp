@@ -317,6 +317,22 @@ std::string generate_formal_verification_sram_port_name(const CircuitLibrary& ci
 }
 
 /*********************************************************************
+ * Generate the head port name of a configuration chain
+ * TODO: This could be replaced as a constexpr string
+ *********************************************************************/
+std::string generate_configuration_chain_head_name() {
+  return std::string("ccff_head");
+}
+
+/*********************************************************************
+ * Generate the tail port name of a configuration chain
+ * TODO: This could be replaced as a constexpr string
+ *********************************************************************/
+std::string generate_configuration_chain_tail_name() {
+  return std::string("ccff_tail");
+}
+
+/*********************************************************************
  * Generate the port name for a regular sram port which appears in the
  * port list of a module
  * The port name is named after the cell name of SRAM in circuit library

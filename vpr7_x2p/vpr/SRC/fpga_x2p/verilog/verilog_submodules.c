@@ -3201,9 +3201,13 @@ void dump_verilog_submodules(ModuleManager& module_manager,
   dump_verilog_submodule_muxes(cur_sram_orgz_info, verilog_dir, submodule_dir, routing_arch->num_switch, 
                                switch_inf, Arch.spice, routing_arch, fpga_verilog_opts.dump_explicit_verilog);
 
+  /* NOTE: local decoders generation must go before the MUX generation!!! 
+   *       because local decoders modules will be instanciated in the MUX modules 
+   */
+  print_verilog_submodule_mux_local_decoders(module_manager, mux_lib, Arch.spice->circuit_lib, 
+                                             std::string(verilog_dir), std::string(submodule_dir));
   print_verilog_submodule_muxes(module_manager, mux_lib, Arch.spice->circuit_lib, cur_sram_orgz_info, std::string(verilog_dir), std::string(submodule_dir));
 
-  print_verilog_submodule_mux_local_decoders(module_manager, mux_lib, Arch.spice->circuit_lib, std::string(verilog_dir), std::string(submodule_dir));
  
   /* 2. LUTes */
   vpr_printf(TIO_MESSAGE_INFO, "Generating modules of LUTs...\n");
@@ -3221,7 +3225,9 @@ void dump_verilog_submodules(ModuleManager& module_manager,
   vpr_printf(TIO_MESSAGE_INFO, "Generating modules of memories...\n");
   dump_verilog_submodule_memories(cur_sram_orgz_info, verilog_dir, submodule_dir, routing_arch->num_switch, 
                                   switch_inf, Arch.spice, routing_arch, fpga_verilog_opts.dump_explicit_verilog);
-  print_verilog_submodule_memories(module_manager, mux_lib, Arch.spice->circuit_lib, std::string(verilog_dir), std::string(submodule_dir));
+  print_verilog_submodule_memories(module_manager, mux_lib, Arch.spice->circuit_lib, 
+                                   cur_sram_orgz_info->type,
+                                   std::string(verilog_dir), std::string(submodule_dir));
 
   /* 5. Dump template for all the modules */
   if (TRUE == fpga_verilog_opts.print_user_defined_template) { 

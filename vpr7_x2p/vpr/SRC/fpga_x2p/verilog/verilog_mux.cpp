@@ -1381,6 +1381,10 @@ void generate_verilog_cmos_mux_module(ModuleManager& module_manager,
     module_manager.add_port(module_id, output_port, ModuleManager::MODULE_OUTPUT_PORT);
   }
 
+
+  /* TODO: the size of of memory ports depend on 
+   * if a local encoder is used for the mux or not 
+   */
   size_t sram_port_cnt = 0;
   for (const auto& port : mux_sram_ports) {
     /* Multiplexing structure does not mode_sram_ports, they are handled in LUT modules
@@ -1425,6 +1429,8 @@ void generate_verilog_cmos_mux_module(ModuleManager& module_manager,
   /* Print the input and output buffers in Verilog codes */
   generate_verilog_cmos_mux_module_input_buffers(module_manager, circuit_lib, fp, module_id, circuit_model, mux_graph);
   generate_verilog_cmos_mux_module_output_buffers(module_manager, circuit_lib, fp, module_id, circuit_model, mux_graph);
+
+  /* TODO: add local decoder instance here */
 
   /* Put an end to the Verilog module */
   print_verilog_module_end(fp, module_name);
