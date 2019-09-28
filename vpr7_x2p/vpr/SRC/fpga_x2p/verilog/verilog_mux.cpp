@@ -17,6 +17,8 @@
 #include "physical_types.h"
 #include "vpr_types.h"
 #include "mux_utils.h"
+#include "circuit_library_utils.h"
+#include "decoder_library_utils.h"
 
 /* FPGA-X2P context header files */
 #include "spice_types.h"
@@ -853,6 +855,10 @@ void generate_verilog_cmos_mux_module_mux2_multiplexing_structure(ModuleManager&
       /* Generate the port info of each mem node */
       BasicPort instance_mem_port(circuit_lib.port_lib_name(mux_regular_sram_ports[0]), size_t(mem), size_t(mem));
       std::string module_mem_port_name = circuit_lib.port_lib_name(std_cell_input_ports[2]);
+      /* If use local decoders, we should use another name for the mem port */
+      if (true == circuit_lib.mux_use_local_encoder(circuit_model)) {
+        instance_mem_port.set_name(generate_mux_local_decoder_data_port_name());
+      }
       port2port_name_map[module_mem_port_name] = instance_mem_port; 
     } 
 
@@ -910,19 +916,8 @@ void generate_verilog_cmos_mux_module_tgate_multiplexing_structure(ModuleManager
   /* Find the actual mux size */
   size_t mux_size = find_mux_num_datapath_inputs(circuit_lib, circuit_model, mux_graph.num_inputs());
 
-  /* TODO: these are duplicated codes, find a way to simplify it!!! 
-   * Get the regular (non-mode-select) sram ports from the mux 
-   */
-  std::vector<CircuitPortId> mux_regular_sram_ports;
-  for (const auto& port : circuit_lib.model_ports_by_type(circuit_model, SPICE_MODEL_PORT_SRAM, true)) {
-    /* Multiplexing structure does not mode_sram_ports, they are handled in LUT modules
-     * Here we just bypass it.
-     */
-    if (true == circuit_lib.port_is_mode_select(port)) {
-      continue;
-    }  
-    mux_regular_sram_ports.push_back(port);
-  }
+  /* Get the regular (non-mode-select) sram ports from the mux */
+  std::vector<CircuitPortId> mux_regular_sram_ports = find_circuit_regular_sram_ports(circuit_lib, circuit_model);
   VTR_ASSERT(1 == mux_regular_sram_ports.size());
 
   /* Build the location map of intermediate buffers */
@@ -1035,6 +1030,10 @@ void generate_verilog_cmos_mux_module_tgate_multiplexing_structure(ModuleManager
     for (const auto& mem : mems) {
       /* Generate the port info of each mem node */
       BasicPort branch_node_mem_port(circuit_lib.port_lib_name(mux_regular_sram_ports[0]), size_t(mem), size_t(mem));
+      /* If use local decoders, we should use another name for the mem port */
+      if (true == circuit_lib.mux_use_local_encoder(circuit_model)) {
+        branch_node_mem_port.set_name(generate_mux_local_decoder_data_port_name());
+      }
       branch_node_mem_ports.push_back(branch_node_mem_port);  
     } 
 
@@ -1065,6 +1064,10 @@ void generate_verilog_cmos_mux_module_tgate_multiplexing_structure(ModuleManager
     for (const auto& mem : mems) {
       /* Generate the port info of each mem node */
       BasicPort branch_node_mem_inv_port(circuit_lib.port_lib_name(mux_regular_sram_ports[0]) + "_inv", size_t(mem), size_t(mem));
+      /* If use local decoders, we should use another name for the mem port */
+      if (true == circuit_lib.mux_use_local_encoder(circuit_model)) {
+        branch_node_mem_inv_port.set_name(generate_mux_local_decoder_data_inv_port_name());
+      }
       branch_node_mem_inv_ports.push_back(branch_node_mem_inv_port);  
     } 
 
@@ -1315,8 +1318,11 @@ void generate_verilog_cmos_mux_module(ModuleManager& module_manager,
   std::vector<CircuitPortId> mux_input_ports = circuit_lib.model_ports_by_type(circuit_model, SPICE_MODEL_PORT_INPUT, true);
   /* Get the output ports from the mux */
   std::vector<CircuitPortId> mux_output_ports = circuit_lib.model_ports_by_type(circuit_model, SPICE_MODEL_PORT_OUTPUT, true);
-  /* Get the sram ports from the mux */
-  std::vector<CircuitPortId> mux_sram_ports = circuit_lib.model_ports_by_type(circuit_model, SPICE_MODEL_PORT_SRAM, true);
+  /* Get the sram ports from the mux 
+   * Multiplexing structure does not mode_sram_ports, they are handled in LUT modules
+   * Here we just bypass it.
+   */
+  std::vector<CircuitPortId> mux_sram_ports = find_circuit_regular_sram_ports(circuit_lib, circuit_model);
 
   /* Make sure we have a valid file handler*/
   check_file_handler(fp);
@@ -1328,6 +1334,18 @@ void generate_verilog_cmos_mux_module(ModuleManager& module_manager,
   size_t num_outputs = mux_graph.num_outputs();
   /* Find out the number of memory bits */ 
   size_t num_mems = mux_graph.num_memory_bits();
+
+  /* The size of of memory ports depend on 
+   * if a local encoder is used for the mux or not 
+   * Multiplexer local encoders are applied to memory bits at each stage 
+   */
+  if (true == circuit_lib.mux_use_local_encoder(circuit_model)) {
+    num_mems = 0;
+    for (const auto& lvl : mux_graph.levels()) {
+      size_t data_size = mux_graph.num_memory_bits_at_level(lvl);
+      num_mems += find_mux_local_decoder_addr_size(data_size);
+    } 
+  }
 
   /* Check codes to ensure the port of Verilog netlists will match */
   /* MUX graph must have only 1 output */
@@ -1381,18 +1399,8 @@ void generate_verilog_cmos_mux_module(ModuleManager& module_manager,
     module_manager.add_port(module_id, output_port, ModuleManager::MODULE_OUTPUT_PORT);
   }
 
-
-  /* TODO: the size of of memory ports depend on 
-   * if a local encoder is used for the mux or not 
-   */
   size_t sram_port_cnt = 0;
   for (const auto& port : mux_sram_ports) {
-    /* Multiplexing structure does not mode_sram_ports, they are handled in LUT modules
-     * Here we just bypass it.
-     */
-    if (true == circuit_lib.port_is_mode_select(port)) {
-      continue;
-    }
     BasicPort mem_port(circuit_lib.port_lib_name(port), num_mems);
     module_manager.add_port(module_id, mem_port, ModuleManager::MODULE_INPUT_PORT);
     BasicPort mem_inv_port(std::string(circuit_lib.port_lib_name(port) + "_inv"), num_mems);
@@ -1400,11 +1408,56 @@ void generate_verilog_cmos_mux_module(ModuleManager& module_manager,
     /* Update counter */
     sram_port_cnt++;
   }
+  VTR_ASSERT(1 == sram_port_cnt);
  
   /* dump module definition + ports */
   print_verilog_module_declaration(fp, module_manager, module_id);
 
-  /* TODO: Print the internal logic in Verilog codes */
+  /* Add local decoder instance here */
+  if (true == circuit_lib.mux_use_local_encoder(circuit_model)) {
+    BasicPort decoder_data_port(generate_mux_local_decoder_data_port_name(), mux_graph.num_memory_bits());
+    BasicPort decoder_data_inv_port(generate_mux_local_decoder_data_inv_port_name(), mux_graph.num_memory_bits());
+    /* Print local wires to bridge the port of module and memory inputs 
+     * of each MUX branch instance 
+     */
+    fp << generate_verilog_port(VERILOG_PORT_WIRE, decoder_data_port) << ";" << std::endl;
+    fp << generate_verilog_port(VERILOG_PORT_WIRE, decoder_data_inv_port) << ";" << std::endl;
+
+    /* Local port to record the LSB and MSB of each level, here, we deposite (0, 0) */
+    BasicPort lvl_addr_port(circuit_lib.port_lib_name(mux_sram_ports[0]), 0);
+    BasicPort lvl_data_port(decoder_data_port.get_name(), 0);
+    BasicPort lvl_data_inv_port(decoder_data_inv_port.get_name(), 0);
+    for (const auto& lvl : mux_graph.levels()) {
+      size_t addr_size = find_mux_local_decoder_addr_size(mux_graph.num_memory_bits_at_level(lvl));
+      size_t data_size = mux_graph.num_memory_bits_at_level(lvl);
+      /* Update the LSB and MSB of addr and data port for the current level */
+      lvl_addr_port.rotate(addr_size);
+      lvl_data_port.rotate(data_size);
+      lvl_data_inv_port.rotate(data_size);
+      /* Print the instance of local decoder */
+      std::string decoder_module_name = generate_mux_local_decoder_subckt_name(addr_size, data_size);
+      ModuleId decoder_module = module_manager.find_module(decoder_module_name); 
+      VTR_ASSERT(ModuleId::INVALID() != decoder_module);
+      
+      /* Create a port-to-port map */ 
+      std::map<std::string, BasicPort> decoder_port2port_name_map;
+      decoder_port2port_name_map[generate_mux_local_decoder_addr_port_name()] = lvl_addr_port;
+      decoder_port2port_name_map[generate_mux_local_decoder_data_port_name()] = lvl_data_port;
+      decoder_port2port_name_map[generate_mux_local_decoder_data_inv_port_name()] = lvl_data_inv_port;
+
+      /* Print an instance of the MUX Module */
+      print_verilog_comment(fp, std::string("----- BEGIN Instanciation of a local decoder -----"));
+      print_verilog_module_instance(fp, module_manager, module_id, decoder_module, decoder_port2port_name_map, circuit_lib.dump_explicit_port_map(circuit_model));
+      print_verilog_comment(fp, std::string("----- END Instanciation of a local decoder -----"));
+      fp << std::endl;
+      /* IMPORTANT: this update MUST be called after the instance outputting!!!!
+       * update the module manager with the relationship between the parent and child modules 
+       */
+      module_manager.add_child_module(module_id, decoder_module);
+    } 
+  }
+
+  /* Print the internal logic in Verilog codes */
   /* Print the Multiplexing structure in Verilog codes 
    * Separated generation strategy on using standard cell MUX2 or TGATE,
    * 1. MUX2 has a fixed port map: input_port[0] and input_port[1] is the data_path input 
@@ -1429,8 +1482,6 @@ void generate_verilog_cmos_mux_module(ModuleManager& module_manager,
   /* Print the input and output buffers in Verilog codes */
   generate_verilog_cmos_mux_module_input_buffers(module_manager, circuit_lib, fp, module_id, circuit_model, mux_graph);
   generate_verilog_cmos_mux_module_output_buffers(module_manager, circuit_lib, fp, module_id, circuit_model, mux_graph);
-
-  /* TODO: add local decoder instance here */
 
   /* Put an end to the Verilog module */
   print_verilog_module_end(fp, module_name);

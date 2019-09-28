@@ -442,7 +442,7 @@ void print_verilog_mux_memory_module(ModuleManager& module_manager,
                                                        std::string(verilog_mem_posfix));
 
     /* Get the sram ports from the mux */
-    std::vector<CircuitModelId> sram_models = get_circuit_sram_models(circuit_lib, mux_model);
+    std::vector<CircuitModelId> sram_models = find_circuit_sram_models(circuit_lib, mux_model);
     VTR_ASSERT( 1 == sram_models.size() );
 
     /* Find the number of SRAMs in the module, this is also the port width */

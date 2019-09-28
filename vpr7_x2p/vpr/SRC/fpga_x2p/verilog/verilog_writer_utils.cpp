@@ -872,7 +872,7 @@ void print_verilog_cmos_mux_config_bus(std::fstream& fp,
     fp << generate_verilog_port(VERILOG_PORT_WIRE, inverted_sram_output_bus) << ";" << std::endl;
 
     /* Get the SRAM model of the mux_model */
-    std::vector<CircuitModelId> sram_models = get_circuit_sram_models(circuit_lib, mux_model);
+    std::vector<CircuitModelId> sram_models = find_circuit_sram_models(circuit_lib, mux_model);
     /* TODO: maybe later multiplexers may have mode select ports... This should be relaxed */
     VTR_ASSERT( 1 == sram_models.size() );
     std::vector<CircuitPortId> blb_ports = circuit_lib.model_ports_by_type(sram_models[0], SPICE_MODEL_PORT_BLB);
@@ -998,7 +998,7 @@ void print_verilog_rram_mux_config_bus(std::fstream& fp,
     fp << generate_verilog_port(VERILOG_PORT_WIRE, inverted_sram_output_bus) << ";" << std::endl;
 
     /* Get the SRAM model of the mux_model */
-    std::vector<CircuitModelId> sram_models = get_circuit_sram_models(circuit_lib, mux_model);
+    std::vector<CircuitModelId> sram_models = find_circuit_sram_models(circuit_lib, mux_model);
     /* TODO: maybe later multiplexers may have mode select ports... This should be relaxed */
     VTR_ASSERT( 1 == sram_models.size() );
 
@@ -1078,7 +1078,7 @@ void print_verilog_formal_verification_mux_sram_ports_wiring(std::fstream& fp,
   BasicPort mux_sram_output(generate_mux_sram_port_name(circuit_lib, mux_model, mux_size, mux_instance_id, SPICE_MODEL_PORT_INPUT),
                             num_conf_bits);
   /* Get the SRAM model of the mux_model */
-  std::vector<CircuitModelId> sram_models = get_circuit_sram_models(circuit_lib, mux_model);
+  std::vector<CircuitModelId> sram_models = find_circuit_sram_models(circuit_lib, mux_model);
   /* TODO: maybe later multiplexers may have mode select ports... This should be relaxed */
   VTR_ASSERT( 1 == sram_models.size() );
   BasicPort formal_verification_port(generate_formal_verification_sram_port_name(circuit_lib, sram_models[0]),

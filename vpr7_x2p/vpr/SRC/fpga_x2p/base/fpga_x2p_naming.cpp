@@ -333,6 +333,33 @@ std::string generate_configuration_chain_tail_name() {
 }
 
 /*********************************************************************
+ * Generate the addr port (input) for a local decoder of a multiplexer
+ * TODO: This could be replaced as a constexpr string
+ *********************************************************************/
+std::string generate_mux_local_decoder_addr_port_name() {
+  return std::string("addr");
+}
+
+
+
+/*********************************************************************
+ * Generate the data port (output) for a local decoder of a multiplexer
+ * TODO: This could be replaced as a constexpr string
+ *********************************************************************/
+std::string generate_mux_local_decoder_data_port_name() {
+  return std::string("data");
+}
+
+/*********************************************************************
+ * Generate the inverted data port (output) for a local decoder of a multiplexer
+ * TODO: This could be replaced as a constexpr string
+ *********************************************************************/
+std::string generate_mux_local_decoder_data_inv_port_name() {
+  return std::string("data_inv");
+}
+
+
+/*********************************************************************
  * Generate the port name for a regular sram port which appears in the
  * port list of a module
  * The port name is named after the cell name of SRAM in circuit library

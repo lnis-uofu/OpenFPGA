@@ -59,17 +59,17 @@ void print_verilog_mux_local_decoder_module(std::fstream& fp,
   VTR_ASSERT(ModuleId::INVALID() != module_id);
   /* Add module ports */
   /* Add each input port */
-  BasicPort addr_port("addr", addr_size);
+  BasicPort addr_port(generate_mux_local_decoder_addr_port_name(), addr_size);
   module_manager.add_port(module_id, addr_port, ModuleManager::MODULE_INPUT_PORT);
   /* Add each output port */
-  BasicPort data_port("data", data_size);
+  BasicPort data_port(generate_mux_local_decoder_data_port_name(), data_size);
   module_manager.add_port(module_id, data_port, ModuleManager::MODULE_OUTPUT_PORT);
   /* Data port is registered. It should be outputted as 
    *   output reg [lsb:msb] data 
    */
   module_manager.set_port_is_register(module_id, data_port.get_name(), true);
   /* Add data_in port */
-  BasicPort data_inv_port("data_inv", data_size);
+  BasicPort data_inv_port(generate_mux_local_decoder_data_inv_port_name(), data_size);
   VTR_ASSERT(true == decoder_lib.use_data_inv_port(decoder));
   module_manager.add_port(module_id, data_inv_port, ModuleManager::MODULE_OUTPUT_PORT);
 
@@ -81,6 +81,20 @@ void print_verilog_mux_local_decoder_module(std::fstream& fp,
 
   /* Print the truth table of this decoder */
   /* Internal logics */
+  /* Early exit: Corner case for data size = 1 the logic is very simple:
+   * data = addr;  
+   * data_inv = ~data_inv
+   */
+  if (1 == data_size) {
+    print_verilog_wire_connection(fp, addr_port, data_port, false);
+    print_verilog_wire_connection(fp, data_inv_port, data_port, true);
+    print_verilog_comment(fp, std::string("----- END Verilog codes for Decoder convert " + std::to_string(addr_size) + "-bit addr to " + std::to_string(data_size) + "-bit data -----"));
+
+    /* Put an end to the Verilog module */
+    print_verilog_module_end(fp, module_name);
+    return;
+  }
+
   /* We use a magic number -1 as the addr=1 should be mapped to ...1
    * Otherwise addr will map addr=1 to ..10 
    * Note that there should be a range for the shift operators
@@ -194,7 +208,7 @@ void print_verilog_submodule_mux_local_decoders(ModuleManager& module_manager,
        * Note that only when there are >=2 memories, a decoder is needed
        */
       size_t decoder_data_size = branch_mux_graph.num_memory_bits();
-      if (2 > decoder_data_size) {
+      if (0 == decoder_data_size) {
         continue;
       }
       /* Try to find if the decoder already exists in the library, 
