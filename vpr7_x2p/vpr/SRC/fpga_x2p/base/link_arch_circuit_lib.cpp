@@ -114,7 +114,7 @@ CircuitModelId link_circuit_model_by_name_and_type(const char* circuit_model_nam
 /************************************************************************
  * Link circuit model to the SRAM organization
  * Case 1: standalone organization required a SRAM circuit model
- * Case 1: scan-chain organization required a SCFF circuit model
+ * Case 1: configuration-chain organization required a CCFF circuit model
  * Case 1: memory-bank organization required a SRAM circuit model
  ***********************************************************************/
 static 
@@ -128,9 +128,9 @@ void link_one_sram_inf_orgz(t_sram_inf_orgz* cur_sram_inf_orgz,
   /* Check the type of SRAM_Ciruit_MODEL required by different sram organization */
   /* check SRAM ports 
    * Checker for circuit models used by the SRAM organization
-   * either SRAMs or SCFFs
-   * 1. It will check the basic port required for SRAMs and SCFFs
-   * 2. It will check any special ports required for SRAMs and SCFFs
+   * either SRAMs or CCFFs
+   * 1. It will check the basic port required for SRAMs and CCFFs
+   * 2. It will check any special ports required for SRAMs and CCFFs
    */
   switch (cur_sram_inf_orgz->type) {
   case SPICE_SRAM_STANDALONE:
@@ -145,8 +145,8 @@ void link_one_sram_inf_orgz(t_sram_inf_orgz* cur_sram_inf_orgz,
     break;
   case SPICE_SRAM_SCAN_CHAIN:
     /* check Scan-chain Flip-flop ports */
-    cur_sram_inf_orgz->circuit_model = link_circuit_model_by_name_and_type(cur_sram_inf_orgz->spice_model_name, circuit_lib, SPICE_MODEL_SCFF);
-    check_scff_circuit_model_ports(circuit_lib, cur_sram_inf_orgz->circuit_model);
+    cur_sram_inf_orgz->circuit_model = link_circuit_model_by_name_and_type(cur_sram_inf_orgz->spice_model_name, circuit_lib, SPICE_MODEL_CCFF);
+    check_ccff_circuit_model_ports(circuit_lib, cur_sram_inf_orgz->circuit_model);
     break;
   case SPICE_SRAM_LOCAL_ENCODER:
     /* Wipe out LOCAL ENCODER, it is not supported here ! */
@@ -482,7 +482,7 @@ void link_circuit_library_to_arch(t_arch* arch,
   /* Check Circuit models first*/
   VTR_ASSERT_SAFE( (NULL != arch) && (NULL != arch->spice) );
 
-  /* 1. Link the spice model defined in pb_types and routing switches */
+  /* 1. Link the circuit model defined in pb_types and routing switches */
   /* Step A:  Check routing switches, connection blocks*/
   if (0 >= arch->num_cb_switch) {
     vpr_printf(TIO_MESSAGE_ERROR,
@@ -500,7 +500,7 @@ void link_circuit_library_to_arch(t_arch* arch,
                  __FILE__, __LINE__, arch->cb_switches[i].spice_model_name, arch->cb_switches[i].name);
       exit(1);
     }
-    /* Check the spice model structure is matched with the structure in switch_inf */
+    /* Check the circuit model structure is matched with the structure in switch_inf */
     if (0 < check_circuit_model_structure_match_switch_inf(arch->cb_switches[i], arch->spice->circuit_lib)) {
       exit(1);
     }
@@ -544,7 +544,7 @@ void link_circuit_library_to_arch(t_arch* arch,
   /* Step C: Find SRAM Model*/
   link_sram_inf(&(arch->sram_inf), arch->spice->circuit_lib);
 
-  /* Step D: Find the segment spice_model*/
+  /* Step D: Find the segment circuit_model*/
   for (int i = 0; i < arch->num_segments; i++) {
     arch->Segments[i].circuit_model = link_circuit_model_by_name_and_type(arch->Segments[i].spice_model_name,
                                                                           arch->spice->circuit_lib, SPICE_MODEL_CHAN_WIRE);
@@ -562,7 +562,7 @@ void link_circuit_library_to_arch(t_arch* arch,
   for (int i = 0; i < arch->num_directs; i++) {
     arch->Directs[i].circuit_model = link_circuit_model_by_name_and_type(arch->Directs[i].spice_model_name,
                                                                          arch->spice->circuit_lib, SPICE_MODEL_WIRE);
-    /* Check SPICE model type */
+    /* Check Circuit model type */
     if (CircuitModelId::INVALID() == arch->Directs[i].circuit_model) {
       vpr_printf(TIO_MESSAGE_ERROR, 
                  "(FILE:%s, LINE[%d])Invalid circuit model name(%s) of CLB to CLB Direct Connection (name=%s) is undefined in circuit models!\n",

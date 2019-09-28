@@ -5,6 +5,20 @@
 #include "linkedlist.h"
 #include "circuit_library.h"
 
+/* Aurelien: point to point connection */
+enum e_point2point_interconnection_type {
+  NO_P2P,
+  P2P_DIRECT_COLUMN,
+  P2P_DIRECT_ROW,
+  NUM_POINT2POINT_INTERCONNECT_TYPE
+};
+
+enum e_point2point_interconnection_dir {
+  POSITIVE_DIR,
+  NEGATIVE_DIR,
+  NUM_POINT2POINT_INTERCONNECT_DIR
+};
+
 /* Xifan TANG: Spice support*/
 enum e_spice_tech_lib_type {
   SPICE_LIB_INDUSTRY,
@@ -476,12 +490,12 @@ struct s_mem_bank_info {
 };
 
 /* Scan-chain Flip-flops information */
-typedef struct s_scff_info t_scff_info;
-struct s_scff_info {
+typedef struct s_ccff_info t_ccff_info;
+struct s_ccff_info {
   t_spice_model* mem_model; /* SPICE model of a memory bit */
   int num_mem_bit; /* Number of memory bits in total */
-  int num_scff; /* Number of Scan-chain flip-flops */
-  /* TODO:  More to be added, SCFF support is naive now */
+  int num_ccff; /* Number of Scan-chain flip-flops */
+  /* TODO:  More to be added, CCFF support is naive now */
 };
 
 /* Standalone SRAMs information */
@@ -495,7 +509,7 @@ struct s_standalone_sram_info {
 struct s_sram_orgz_info {
   enum e_sram_orgz type;
   t_mem_bank_info* mem_bank_info; /* Only be allocated when orgz type is memory bank */
-  t_scff_info* scff_info; /* Only be allocated when orgz type is scan-chain */
+  t_ccff_info* ccff_info; /* Only be allocated when orgz type is scan-chain */
   t_standalone_sram_info* standalone_sram_info; /* Only be allocated when orgz type is standalone */
   
   /* Head of configuration bits,

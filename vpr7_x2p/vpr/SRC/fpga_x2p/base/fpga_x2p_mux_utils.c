@@ -189,20 +189,20 @@ int multilevel_mux_last_level_input_num(int num_level, int num_input_per_unit,
 
 /***************************************************************************************
  * Find the number of inputs for a encoder with a given output size
- *                     Inputs 
- *                   | | | | | 
- *                 +-----------+
- *                /             \
- *               /     Encoder   \
- *              +-----------------+
- *                | | | | | | | |
- *                  Outputs
- *               
- *  The outputs are assumes to be one-hot codes (at most only one '1' exist)
- *  Considering this fact, there are only num_of_outputs + 1 conditions to be encoded.
- *  Therefore, the number of inputs is ceil(log(num_of_outputs+1)/log(2))
- *  We plus 1, which is all-zero condition for outputs
- ***************************************************************************************/
+ *                      Inputs 
+ *                    | | | | | 
+ *                  +-----------+
+ *                 /             \
+ *                /     Encoder   \
+ *               +-----------------+
+ *                 | | | | | | | |
+ *                    Outputs
+ *             
+ * The outputs are assumes to be one-hot codes (at most only one '1' exist)
+ * Considering this fact, there are only num_of_outputs + 1 conditions to be encoded.
+ * Therefore, the number of inputs is ceil(log(num_of_outputs+1)/log(2))
+ * We plus 1, which is all-zero condition for outputs
+ ****************************************************************************************/
 int determine_mux_local_encoder_num_inputs(int num_outputs) {
   return ceil(log(num_outputs) / log(2));
 }

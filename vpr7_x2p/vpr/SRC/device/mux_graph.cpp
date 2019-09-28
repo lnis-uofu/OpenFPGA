@@ -43,12 +43,34 @@ MuxGraph::node_range MuxGraph::nodes() const {
   return vtr::make_range(node_ids_.begin(), node_ids_.end());
 }
 
+/* Find the non-input nodes */
+std::vector<MuxNodeId> MuxGraph::non_input_nodes() const {
+  std::vector<MuxNodeId> node_list;
+  for (const auto& node : nodes()) {
+    /* Bypass any nodes which are not OUTPUT and INTERNAL */
+    if (MUX_INPUT_NODE == node_types_[node]) { 
+      continue;
+    }
+    /* Reach here, this is either an OUTPUT or INTERNAL node */ 
+    node_list.push_back(node);
+  }
+  return node_list;
+}
+
 MuxGraph::edge_range MuxGraph::edges() const {
   return vtr::make_range(edge_ids_.begin(), edge_ids_.end());
 }
 
 MuxGraph::mem_range MuxGraph::memories() const {
   return vtr::make_range(mem_ids_.begin(), mem_ids_.end());
+}
+
+std::vector<size_t> MuxGraph::levels() const {
+  std::vector<size_t> graph_levels;
+  for (size_t lvl = 0; lvl < num_levels(); ++lvl) {
+    graph_levels.push_back(lvl);
+  }
+  return graph_levels;
 }
 
 /**************************************************
@@ -130,11 +152,67 @@ size_t MuxGraph::num_levels() const {
   return node_lookup_.size() - 1; 
 }
 
+/* Find the actual number of levels in the MUX graph */
+size_t MuxGraph::num_node_levels() const {
+  /* need to check if the graph is valid or not */
+  VTR_ASSERT_SAFE(valid_mux_graph());
+  return node_lookup_.size(); 
+}
+
 /* Find the number of configuration memories in the MUX graph */
 size_t MuxGraph::num_memory_bits() const {
   /* need to check if the graph is valid or not */
   VTR_ASSERT_SAFE(valid_mux_graph());
   return mem_ids_.size(); 
+}
+
+/* Find the number of SRAMs at a level in the MUX graph */
+size_t MuxGraph::num_memory_bits_at_level(const size_t& level) const {
+  /* need to check if the graph is valid or not */
+  VTR_ASSERT_SAFE(valid_level(level));
+  VTR_ASSERT_SAFE(valid_mux_graph());
+  return mem_lookup_[level].size(); 
+}
+
+/* Find the number of nodes at a given level in the MUX graph */
+size_t MuxGraph::num_nodes_at_level(const size_t& level) const {
+  /* validate the level numbers */
+  VTR_ASSERT_SAFE(valid_level(level));
+  VTR_ASSERT_SAFE(valid_mux_graph());
+  
+  size_t num_nodes = 0;
+  for (size_t node_type = 0; node_type < size_t(NUM_MUX_NODE_TYPES); ++node_type) {
+    num_nodes += node_lookup_[level][node_type].size(); 
+  }
+  return num_nodes; 
+}
+
+/* Find the level of a node */
+size_t MuxGraph::node_level(const MuxNodeId& node) const {
+  /* validate the node */
+  VTR_ASSERT(valid_node_id(node));
+  return node_levels_[node]; 
+}
+
+/* Find the index of a node at its level */
+size_t MuxGraph::node_index_at_level(const MuxNodeId& node) const {
+  /* validate the node */
+  VTR_ASSERT(valid_node_id(node));
+  return node_ids_at_level_[node]; 
+}
+
+/* Find the  input edges for a node */
+std::vector<MuxEdgeId> MuxGraph::node_in_edges(const MuxNodeId& node) const {
+  /* validate the node */
+  VTR_ASSERT(valid_node_id(node));
+  return node_in_edges_[node];
+}
+
+/* Find the input nodes for a edge */
+std::vector<MuxNodeId> MuxGraph::edge_src_nodes(const MuxEdgeId& edge) const {
+  /* validate the edge */
+  VTR_ASSERT(valid_edge_id(edge));
+  return edge_src_nodes_[edge];
 }
 
 /* Find the mem that control the edge */
@@ -203,6 +281,7 @@ MuxGraph MuxGraph::subgraph(const MuxNodeId& root_node) const {
   /* Add output nodes to subgraph */
   MuxNodeId to_node_subgraph = mux_graph.add_node(MUX_OUTPUT_NODE);
   mux_graph.node_levels_[to_node_subgraph] = 1;
+  mux_graph.node_ids_at_level_[to_node_subgraph] = 0; 
   mux_graph.node_output_ids_[to_node_subgraph] = MuxOutputId(0);
   /* Update the node-to-node map */
   node2node_map[root_node] = to_node_subgraph;
@@ -216,6 +295,7 @@ MuxGraph MuxGraph::subgraph(const MuxNodeId& root_node) const {
     MuxNodeId from_node_subgraph = mux_graph.add_node(MUX_INPUT_NODE);
     /* Configure the nodes */
     mux_graph.node_levels_[from_node_subgraph] = 0;
+    mux_graph.node_ids_at_level_[from_node_subgraph] = input_cnt; 
     mux_graph.node_input_ids_[from_node_subgraph] = MuxInputId(input_cnt);
     input_cnt++;
     /* Update the node-to-node map */
@@ -246,6 +326,7 @@ MuxGraph MuxGraph::subgraph(const MuxNodeId& root_node) const {
     }
     /* Not found, we add a memory bit and record in the mem-to-mem map */
     MuxMemId mem_subgraph = mux_graph.add_mem();
+    mux_graph.set_mem_level(mem_subgraph, 0);
     mem2mem_map[mem_origin] = mem_subgraph;
     /* configure the edge */
     mux_graph.edge_mem_ids_[edge2edge_map[edge_origin]] = mem_subgraph;
@@ -253,6 +334,7 @@ MuxGraph MuxGraph::subgraph(const MuxNodeId& root_node) const {
 
   /* Since the graph is finalized, it is time to build the fast look-up */
   mux_graph.build_node_lookup();
+  mux_graph.build_mem_lookup();
 
   return mux_graph; 
 }
@@ -332,6 +414,40 @@ MuxNodeId MuxGraph::node_id(const MuxInputId& input_id) const {
   return MuxNodeId::INVALID();
 }
 
+/* Get the node id w.r.t. the node level and node_index at the level
+ * Return an invalid value if not found 
+ */
+MuxNodeId MuxGraph::node_id(const size_t& node_level, const size_t& node_index_at_level) const {
+  /* Ensure we have a valid node_look-up */
+  VTR_ASSERT_SAFE(valid_node_lookup());
+
+  MuxNodeId ret_node = MuxNodeId::INVALID(); 
+
+  /* Search in the fast look up */
+  if (node_level >= node_lookup_.size()) {
+    return ret_node; 
+  }
+  
+  size_t node_cnt = 0;
+  /* Node level is valid, search in the node list */
+  for (const auto& nodes_by_type : node_lookup_[node_level]) {
+    /* Search the node_index_at_level of each node */
+    for (const auto& node : nodes_by_type) {
+      if (node_index_at_level != node_ids_at_level_[node]) {
+        continue;
+      } 
+      /* Find the node, assign value and update the counter */
+      ret_node = node;
+      node_cnt++; 
+    }
+  }
+
+  /* We should either find a node or nothing */
+  VTR_ASSERT((0 == node_cnt) || (1 == node_cnt));
+
+  return ret_node;
+}
+
 /* Decode memory bits based on an input id */
 std::vector<size_t> MuxGraph::decode_memory_bits(const MuxInputId& input_id) const {
   /* initialize the memory bits: TODO: support default value */ 
@@ -385,6 +501,7 @@ MuxNodeId MuxGraph::add_node(const enum e_mux_graph_node_type& node_type) {
   node_input_ids_.push_back(MuxInputId::INVALID());
   node_output_ids_.push_back(MuxOutputId::INVALID());
   node_levels_.push_back(-1);
+  node_ids_at_level_.push_back(-1);
   node_in_edges_.emplace_back();
   node_out_edges_.emplace_back();
 
@@ -420,9 +537,18 @@ MuxMemId MuxGraph::add_mem() {
   MuxMemId mem = MuxMemId(mem_ids_.size());
   /* Push to the node list */
   mem_ids_.push_back(mem);
+  mem_levels_.push_back(size_t(-1));
   /* Resize the other node-related vectors */
 
   return mem;
+}
+
+/* Configure the level of a memory */
+void MuxGraph::set_mem_level(const MuxMemId& mem, const size_t& level) {
+  /* Make sure we have valid edge and mem */
+  VTR_ASSERT( valid_mem_id(mem) );
+
+  mem_levels_[mem] = level;
 }
 
 /* Link an edge to a memory bit */
@@ -494,8 +620,11 @@ void MuxGraph::build_multilevel_mux_graph(const size_t& mux_size,
     num_mems_per_level = 1; 
   }
   /* Number of memory bits is definite, add them */
-  for (size_t i = 0; i < num_mems_per_level * num_levels; ++i) {
-    add_mem();
+  for (size_t ilvl = 0; ilvl < num_levels; ++ilvl) {
+    for (size_t imem = 0; imem < num_mems_per_level; ++imem) {
+      MuxMemId mem = add_mem();
+      mem_levels_[mem] = ilvl;
+    }
   }
 
   /* Create a fast node lookup locally.
@@ -508,6 +637,7 @@ void MuxGraph::build_multilevel_mux_graph(const size_t& mux_size,
   /* Number of outputs is definite, add and configure */
   MuxNodeId output_node = add_node(MUX_OUTPUT_NODE);
   node_levels_[output_node] = num_levels; 
+  node_ids_at_level_[output_node] = 0; 
   node_output_ids_[output_node] = MuxOutputId(0); 
   /* Update node lookup */
   node_lookup[num_levels].push_back(output_node);
@@ -523,6 +653,7 @@ void MuxGraph::build_multilevel_mux_graph(const size_t& mux_size,
      * Last level should expand from output_node 
      * Other levels will expand from internal nodes!
      */
+    size_t node_cnt_per_level = 0; /* A counter to record node indices at each level */
     for (MuxNodeId seed_node : node_lookup[lvl + 1]) {
       /* Add a new node and connect to seed_node, until we reach the num_inputs_per_branch */
       for (size_t i = 0; i < num_inputs_per_branch; ++i) {
@@ -533,6 +664,9 @@ void MuxGraph::build_multilevel_mux_graph(const size_t& mux_size,
 
         /* Node level is deterministic */
         node_levels_[expand_node] = lvl; 
+        node_ids_at_level_[expand_node] = node_cnt_per_level; 
+        /* update level node counter */
+        node_cnt_per_level++;
        
         /* Create an edge and connect the two nodes */
         MuxEdgeId edge = add_edge(expand_node, seed_node); 
@@ -624,6 +758,7 @@ void MuxGraph::build_onelevel_mux_graph(const size_t& mux_size,
    */
   MuxNodeId output_node = add_node(MUX_OUTPUT_NODE);
   node_levels_[output_node] = 1; 
+  node_ids_at_level_[output_node] = 0; 
   node_output_ids_[output_node] = MuxOutputId(0); 
 
   for (size_t i = 0; i < mux_size; ++i) {
@@ -631,6 +766,7 @@ void MuxGraph::build_onelevel_mux_graph(const size_t& mux_size,
     /* All the node belong to level 0 (we have only 1 level) */
     node_input_ids_[input_node] = MuxInputId(i);
     node_levels_[input_node] = 0; 
+    node_ids_at_level_[input_node] = i; 
 
     /* We definitely know how many edges we need, 
      * the same as mux_size, add a edge connecting two nodes
@@ -641,11 +777,70 @@ void MuxGraph::build_onelevel_mux_graph(const size_t& mux_size,
 
     /* Create a memory bit*/
     MuxMemId mem = add_mem(); 
+    mem_levels_[mem] = 0;
     /* Link the edge to a memory bit */
     set_edge_mem_id(edge, mem);
   }
   /* Finish building the graph for a one-level multiplexer */
 } 
+
+/* Convert some internal nodes to be additional outputs
+ * according to the fracturable LUT port definition
+ * We will iterate over each output port of a circuit model 
+ * and find the frac_level and output_mask 
+ * Then, the internal nodes at the frac_level will be converted
+ * to output nodes with a given output_mask
+ */
+void MuxGraph::add_fracturable_outputs(const CircuitLibrary& circuit_lib, 
+                                       const CircuitModelId& circuit_model) {
+  /* Iterate over output ports */
+  for (const auto& port : circuit_lib.model_ports_by_type(circuit_model, SPICE_MODEL_PORT_OUTPUT, true)) {
+    /* Get the fracturable_level */
+    size_t frac_level = circuit_lib.port_lut_frac_level(port);
+    /* Bypass invalid frac_level */
+    if (size_t(-1) == frac_level) {
+      continue;
+    }
+    /* Iterate over output masks */
+    for (const auto& output_idx : circuit_lib.port_lut_output_masks(port)) {
+      size_t num_matched_nodes = 0;
+      /* Iterate over node and find the internal nodes, which match the frac_level and output_idx */
+      for (const auto& node : node_lookup_[frac_level][MUX_INTERNAL_NODE]) {
+        if (node_ids_at_level_[node] != output_idx) {
+          /* Bypass condition */
+          continue;
+        }
+        /* Reach here, this is the node we want
+         * Convert it to output nodes and update the counter   
+         */
+        node_types_[node] = MUX_OUTPUT_NODE;
+        node_output_ids_[node] = MuxOutputId(num_outputs());  
+        num_matched_nodes++;
+      } 
+      /* Either find 1 or 0 matched nodes */
+      if (0 != num_matched_nodes) {
+        /* We should find only one node that matches! */
+        VTR_ASSERT(1 == num_matched_nodes);
+        /* Rebuild the node look-up */
+        build_node_lookup();
+        continue; /* Finish here, go to next */
+      }
+      /* Sometime the wanted node is already an output, do a double check */
+      for (const auto& node : node_lookup_[frac_level][MUX_OUTPUT_NODE]) {
+        if (node_ids_at_level_[node] != output_idx) {
+          /* Bypass condition */
+          continue;
+        }
+        /* Reach here, this is the node we want 
+         * Just update the counter   
+         */
+        num_matched_nodes++;
+      }
+      /* We should find only one node that matches! */
+      VTR_ASSERT(1 == num_matched_nodes);
+    } 
+  }
+}
 
 /* Build the graph for a given multiplexer model */
 void MuxGraph::build_mux_graph(const CircuitLibrary& circuit_lib, 
@@ -699,6 +894,13 @@ void MuxGraph::build_mux_graph(const CircuitLibrary& circuit_lib,
 
   /* Since the graph is finalized, it is time to build the fast look-up */
   build_node_lookup();
+  build_mem_lookup();
+
+  /* For fracturable LUTs, we need to add more outputs to the MUX graph */
+  if ( (SPICE_MODEL_LUT == circuit_lib.model_type(circuit_model))
+    && (true == circuit_lib.is_lut_fracturable(circuit_model)) ) {
+    add_fracturable_outputs(circuit_lib, circuit_model);
+  }
 }
 
 /* Build fast node lookup */
@@ -725,9 +927,33 @@ void MuxGraph::build_node_lookup() {
   }
 }
 
+/* Build fast mem lookup */
+void MuxGraph::build_mem_lookup() {
+  /* Invalidate the mem lookup if necessary */
+  invalidate_mem_lookup();
+
+  /* Find the maximum number of levels */
+  size_t num_levels = 0;
+  for (auto mem : memories()) {
+    num_levels = std::max((int)mem_levels_[mem], (int)num_levels);
+  }
+
+  /* Resize mem_lookup */
+  mem_lookup_.resize(num_levels + 1);
+  for (auto mem : memories()) {
+    /* Categorize mem nodes into mem_lookup */
+    mem_lookup_[mem_levels_[mem]].push_back(mem);
+  }
+}
+
 /* Invalidate (empty) the node fast lookup*/
 void MuxGraph::invalidate_node_lookup() {
   node_lookup_.clear();
+}
+
+/* Invalidate (empty) the mem fast lookup*/
+void MuxGraph::invalidate_mem_lookup() {
+  mem_lookup_.clear();
 }
  
 /**************************************************
@@ -771,6 +997,10 @@ bool MuxGraph::valid_output_id(const MuxOutputId& output_id) const {
   } 
 
   return true;
+}
+
+bool MuxGraph::valid_level(const size_t& level) const {
+  return level < num_levels(); 
 }
 
 bool MuxGraph::valid_node_lookup() const {

@@ -58,8 +58,11 @@ class MuxGraph {
     MuxGraph();
   public: /* Public accessors: Aggregates */
     node_range nodes() const;
+    /* Find the non-input nodes */
+    std::vector<MuxNodeId> non_input_nodes() const;
     edge_range edges() const;
     mem_range memories() const;
+    std::vector<size_t> levels() const;
   public: /* Public accessors: Data query */
     /* Find the number of inputs in the MUX graph */
     size_t num_inputs() const;
@@ -71,8 +74,21 @@ class MuxGraph {
     std::vector<MuxEdgeId> find_edges(const MuxNodeId& from_node, const MuxNodeId& to_node) const;
     /* Find the number of levels in the MUX graph */
     size_t num_levels() const;
+    size_t num_node_levels() const;
     /* Find the number of SRAMs in the MUX graph */
     size_t num_memory_bits() const;
+    /* Find the number of SRAMs at a level in the MUX graph */
+    size_t num_memory_bits_at_level(const size_t& level) const;
+    /* Find the number of nodes at a given level in the MUX graph */
+    size_t num_nodes_at_level(const size_t& level) const;
+    /* Find the level of a node */
+    size_t node_level(const MuxNodeId& node) const;
+    /* Find the index of a node at its level */
+    size_t node_index_at_level(const MuxNodeId& node) const;
+    /* Find the input edges for a node */
+    std::vector<MuxEdgeId> node_in_edges(const MuxNodeId& node) const;
+    /* Find the input nodes for a edge */
+    std::vector<MuxNodeId> edge_src_nodes(const MuxEdgeId& edge) const;
     /* Find the mem that control the edge */
     MuxMemId find_edge_mem(const MuxEdgeId& edge) const;
     /* Identify if the edge is controlled by the inverted output of a mem */
@@ -84,6 +100,8 @@ class MuxGraph {
     std::vector<MuxGraph> build_mux_branch_graphs() const; 
     /* Get the node id of a given input */
     MuxNodeId node_id(const MuxInputId& input_id) const;
+    /* Get the node id w.r.t. the node level and node_index at the level */
+    MuxNodeId node_id(const size_t& node_level, const size_t& node_index_at_level) const;
     /* Get the input id of a given node */
     MuxInputId input_id(const MuxNodeId& node_id) const;
     /* Get the output id of a given node */
@@ -97,6 +115,8 @@ class MuxGraph {
      MuxEdgeId add_edge(const MuxNodeId& from_node, const MuxNodeId& to_node);
      /* Add a memory bit to the MuxGraph */
      MuxMemId add_mem();
+     /* Configure the level of a memory */
+     void set_mem_level(const MuxMemId& mem, const size_t& level);
      /* Link an edge to a mem */
      void set_edge_mem_id(const MuxEdgeId& edge, const MuxMemId& mem);
   private: /* Private mutators : graph builders */
@@ -110,8 +130,13 @@ class MuxGraph {
     void build_mux_graph(const CircuitLibrary& circuit_lib, 
                          const CircuitModelId& circuit_model,
                          const size_t& mux_size); 
+    /* Convert some internal node to outputs according to fracturable LUT circuit design specifications */
+    void add_fracturable_outputs(const CircuitLibrary& circuit_lib, 
+                                 const CircuitModelId& circuit_model);
     /* Build fast node lookup */
     void build_node_lookup();
+    /* Build fast mem lookup */
+    void build_mem_lookup();
   private: /* Private validators */
     /* valid ids */
     bool valid_node_id(const MuxNodeId& node) const;
@@ -119,9 +144,11 @@ class MuxGraph {
     bool valid_mem_id(const MuxMemId& mem) const;
     bool valid_input_id(const MuxInputId& input_id) const;
     bool valid_output_id(const MuxOutputId& output_id) const;
+    bool valid_level(const size_t& level) const;
     /* validate/invalidate node lookup */
     bool valid_node_lookup() const;
     void invalidate_node_lookup();
+    void invalidate_mem_lookup();
     /* validate graph */
     bool valid_mux_graph() const;
   private: /* Internal data */
@@ -130,6 +157,7 @@ class MuxGraph {
     vtr::vector<MuxNodeId, MuxInputId> node_input_ids_;                 /* Unique ids for each node as an input of the MUX */
     vtr::vector<MuxNodeId, MuxOutputId> node_output_ids_;                 /* Unique ids for each node as an input of the MUX */
     vtr::vector<MuxNodeId, size_t> node_levels_;                       /* at which level, each node belongs to */
+    vtr::vector<MuxNodeId, size_t> node_ids_at_level_;                       /* the index at the level that each node belongs to */
     vtr::vector<MuxNodeId, std::vector<MuxEdgeId>> node_in_edges_;       /* ids of incoming edges to each node */
     vtr::vector<MuxNodeId, std::vector<MuxEdgeId>> node_out_edges_;      /* ids of outgoing edges from each node */
 
@@ -141,10 +169,13 @@ class MuxGraph {
     vtr::vector<MuxEdgeId, bool> edge_inv_mem_;                       /* if the edge is controlled by an inverted output of a memory bit */
 
     vtr::vector<MuxMemId, MuxMemId> mem_ids_;                        /* ids of configuration memories */
+    vtr::vector<MuxMemId, size_t> mem_levels_;                        /* ids of configuration memories */
 
     /* fast look-up */
     typedef std::vector<std::vector<std::vector<MuxNodeId>>> NodeLookup;
     mutable NodeLookup node_lookup_; /* [num_levels][num_types][num_nodes_per_level] */ 
+    typedef std::vector<std::vector<MuxMemId>> MemLookup;
+    mutable MemLookup mem_lookup_; /* [num_levels][num_mems_per_level] */ 
 };
 
 #endif

@@ -50,6 +50,29 @@ std::vector<BasicPort> ModuleManager::module_ports_by_type(const ModuleId& modul
   return ports;
 }
 
+/* Find a port of a module by a given name */
+ModulePortId ModuleManager::find_module_port(const ModuleId& module_id, const std::string& port_name) const {
+  /* Validate the module id */
+  VTR_ASSERT(valid_module_id(module_id));
+
+  /* Iterate over the ports of the module */
+  for (const auto& port : port_ids_[module_id]) {
+    if (0 == port_name.compare(ports_[module_id][port].get_name())) {
+      /* Find it, return the id */
+      return port; 
+    }
+  }
+  /* Not found, return an invalid id */
+  return ModulePortId::INVALID();
+}
+
+/* Find the Port information with a given port id */
+BasicPort ModuleManager::module_port(const ModuleId& module_id, const ModulePortId& port_id) const {
+  /* Validate the module and port id */
+  VTR_ASSERT(valid_module_port_id(module_id, port_id));
+  return ports_[module_id][port_id]; 
+}
+
 /* Find the module id by a given name, return invalid if not found */
 ModuleId ModuleManager::find_module(const std::string& name) const {
   if (name_id_map_.find(name) != name_id_map_.end()) {
@@ -76,6 +99,20 @@ size_t ModuleManager::num_instance(const ModuleId& parent_module, const ModuleId
   return 0;
 }
 
+/* Find if a port is register */
+bool ModuleManager::port_is_register(const ModuleId& module, const ModulePortId& port) const {
+  /* validate both module id and port id*/
+  VTR_ASSERT(valid_module_port_id(module, port));
+  return port_is_register_[module][port];
+}
+
+/* Return the pre-processing flag of a port */
+std::string ModuleManager::port_preproc_flag(const ModuleId& module, const ModulePortId& port) const {
+  /* validate both module id and port id*/
+  VTR_ASSERT(valid_module_port_id(module, port));
+  return port_preproc_flags_[module][port];
+}
+
 /******************************************************************************
  * Public Mutators
  ******************************************************************************/
@@ -100,6 +137,8 @@ ModuleId ModuleManager::add_module(const std::string& name) {
   port_ids_.emplace_back();
   ports_.emplace_back();
   port_types_.emplace_back();
+  port_is_register_.emplace_back();
+  port_preproc_flags_.emplace_back();
 
   /* Register in the name-to-id map */
   name_id_map_[name] = module;
@@ -123,11 +162,36 @@ ModulePortId ModuleManager::add_port(const ModuleId& module,
   port_ids_[module].push_back(port);
   ports_[module].push_back(port_info);
   port_types_[module].push_back(port_type);
+  port_is_register_[module].push_back(false);
+  port_preproc_flags_[module].emplace_back(); /* Create an empty string for the pre-processing flags */
 
   /* Update fast look-up for port */
   port_lookup_[module][port_type].push_back(port);
 
   return port;
+}
+
+/* Set a name for a module */
+void ModuleManager::set_module_name(const ModuleId& module, const std::string& name) {
+  /* Validate the id of module */
+  VTR_ASSERT( valid_module_id(module) );
+  names_[module] = name;
+}
+
+/* Set a port to be a register */
+void ModuleManager::set_port_is_register(const ModuleId& module, const std::string& port_name, const bool& is_register) {
+  /* Find the port */
+  ModulePortId port = find_module_port(module, port_name);
+  /* Must find something, otherwise drop an error */
+  VTR_ASSERT(ModulePortId::INVALID() != port);
+  port_is_register_[module][port] = is_register;
+}
+
+/* Set the preprocessing flag for a port */
+void ModuleManager::set_port_preproc_flag(const ModuleId& module, const ModulePortId& port, const std::string& preproc_flag) {
+  /* Must find something, otherwise drop an error */
+  VTR_ASSERT(valid_module_port_id(module, port));
+  port_preproc_flags_[module][port] = preproc_flag;
 }
 
 /* Add a child module to a parent module */

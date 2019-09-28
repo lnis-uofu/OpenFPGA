@@ -39,6 +39,7 @@
 #include "verilog_decoder.h"
 #include "verilog_top_netlist_utils.h"
 
+
 /* Local Subroutines declaration */
 
 /******** Subroutines ***********/
@@ -191,8 +192,8 @@ void dump_verilog_top_netlist_scan_chain_ports(t_sram_orgz_info* cur_sram_orgz_i
 static 
 void dump_verilog_top_netlist_scan_chain_internal_wires(t_sram_orgz_info* cur_sram_orgz_info, 
                                                         FILE* fp) {
-  t_spice_model* scff_mem_model = NULL;
-  int num_scffs;
+  t_spice_model* ccff_mem_model = NULL;
+  int num_ccffs;
 
   /* A valid file handler */
   if (NULL == fp) {
@@ -200,23 +201,23 @@ void dump_verilog_top_netlist_scan_chain_internal_wires(t_sram_orgz_info* cur_sr
     exit(1);
   }
 
-  num_scffs = get_sram_orgz_info_num_mem_bit(cur_sram_orgz_info);
-  get_sram_orgz_info_mem_model(cur_sram_orgz_info, &scff_mem_model);
+  num_ccffs = get_sram_orgz_info_num_mem_bit(cur_sram_orgz_info);
+  get_sram_orgz_info_mem_model(cur_sram_orgz_info, &ccff_mem_model);
   /* Check */
-  assert( SPICE_MODEL_SCFF == scff_mem_model->type );
+  assert( SPICE_MODEL_CCFF == ccff_mem_model->type );
 
   /* Delcare local wires */
-  fprintf(fp, "  wire [0:%d] %s_scff_in_local_bus;\n",
-          num_scffs - 1, scff_mem_model->prefix);
+  fprintf(fp, "  wire [0:%d] %s_ccff_in_local_bus;\n",
+          num_ccffs - 1, ccff_mem_model->prefix);
 
-  fprintf(fp, "  wire [0:%d] %s_scff_out_local_bus;\n",
-          num_scffs - 1, scff_mem_model->prefix);
+  fprintf(fp, "  wire [0:%d] %s_ccff_out_local_bus;\n",
+          num_ccffs - 1, ccff_mem_model->prefix);
 
   /* Dump ports only visible during formal verification*/
   fprintf(fp, "`ifdef %s\n", verilog_formal_verification_preproc_flag);
   fprintf(fp, "  ");
   dump_verilog_formal_verification_sram_ports(fp, cur_sram_orgz_info, 
-                                              0, num_scffs - 1,
+                                              0, num_ccffs - 1,
                                               VERILOG_PORT_WIRE, false);
   fprintf(fp, ";\n");
   fprintf(fp, "`endif\n");
@@ -224,8 +225,8 @@ void dump_verilog_top_netlist_scan_chain_internal_wires(t_sram_orgz_info* cur_sr
 
   /* Exception for head: connect to primary inputs */ 
   /*
-  fprintf(fp, "  assign %s_scff_in[%d] = %s;\n",
-          scff_mem_model->prefix, 0,
+  fprintf(fp, "  assign %s_ccff_in[%d] = %s;\n",
+          ccff_mem_model->prefix, 0,
           top_netlist_scan_chain_head_prefix);
   */
   /* Connected the scan-chain flip-flops */
@@ -234,10 +235,10 @@ void dump_verilog_top_netlist_scan_chain_internal_wires(t_sram_orgz_info* cur_sr
   fprintf(fp, "  genvar i;\n");
   fprintf(fp, "  generate\n");
   fprintf(fp, "    for (i = %d; i < %d; i = i + 1) begin\n", 
-          1, num_scffs - 1);
-  fprintf(fp,   "assign %s_scff_in[i] = %s_scff_out[i - 1];\n",
-            scff_mem_model->prefix, 
-            scff_mem_model->prefix);
+          1, num_ccffs - 1);
+  fprintf(fp,   "assign %s_ccff_in[i] = %s_ccff_out[i - 1];\n",
+            ccff_mem_model->prefix, 
+            ccff_mem_model->prefix);
   fprintf(fp, "    end\n");
   fprintf(fp, "  endgenerate;\n");
   */
@@ -482,9 +483,11 @@ void dump_verilog_defined_one_channel(FILE* fp,
   fprintf(fp, "(");
   fprintf(fp, "\n");
   /* dump global ports */
+  /*
   if (0 < dump_verilog_global_ports(fp, global_ports_head, FALSE, is_explicit_mapping)) {
     fprintf(fp, ",\n");
   }
+   */
 
   /* LEFT/BOTTOM side port of CHANX/CHANY */
   /* We apply an opposite port naming rule than function: fprint_routing_chan_subckt 
@@ -924,7 +927,7 @@ void dump_verilog_one_clb2clb_direct(FILE* fp,
     exit(1);
   }
 
-  for (ipin = 0; ipin < cur_direct->from_clb_pin_end_index - cur_direct->from_clb_pin_start_index; ipin++) {
+  for (ipin = 0; ipin < 1 + cur_direct->from_clb_pin_end_index - cur_direct->from_clb_pin_start_index; ipin++) {
     /* Update pin index and get the side of the pins on grids */
     cur_from_clb_pin_index = cur_direct->from_clb_pin_start_index + ipin;
     cur_to_clb_pin_index = cur_direct->to_clb_pin_start_index + ipin;
@@ -948,7 +951,7 @@ void dump_verilog_one_clb2clb_direct(FILE* fp,
     dump_verilog_toplevel_one_grid_side_pin_with_given_index(fp, IPIN, 
                                                              cur_to_clb_pin_index,
                                                              cur_to_clb_pin_side,
-                                                             to_grid_x, from_grid_y,
+                                                             to_grid_x, to_grid_y,
                                                              FALSE);
     fprintf(fp, ");\n");
   
@@ -957,7 +960,7 @@ void dump_verilog_one_clb2clb_direct(FILE* fp,
   }
 
   return;
-}                 
+} 
 
 /* Apply CLB to CLB direct connections to a Verilog netlist 
  */
@@ -988,12 +991,12 @@ void dump_verilog_clb2clb_directs(FILE* fp,
        */ 
       for (idirect = 0; idirect < num_directs; idirect++) {
         /* Bypass unmatch types */
-        if (grid[ix][iy].type != direct[idirect].from_clb_type) {
-          continue;
-        }
         /* Apply x/y_offset */ 
         to_clb_x = ix + direct[idirect].x_offset;
         to_clb_y = iy + direct[idirect].y_offset;
+        if (grid[ix][iy].type != direct[idirect].from_clb_type) {
+          continue;
+        }
         /* see if the destination CLB is in the bound */
         if ((FALSE == is_grid_coordinate_in_range(0, nx, to_clb_x))
            ||(FALSE == is_grid_coordinate_in_range(0, ny, to_clb_y))) {
@@ -1004,21 +1007,157 @@ void dump_verilog_clb2clb_directs(FILE* fp,
           continue;
         }
         */
-        /* Check if the to_clb_type matches */
-        if (grid[to_clb_x][to_clb_y].type != direct[idirect].to_clb_type) {
-          continue;
-        }
         /* Bypass x/y_offset =  1 
          * since it may be addressed in Connection blocks 
         if (1 == (x_offset + y_offset)) {
           continue;
         }
          */
-        /* Now we can print a direct connection with the spice models */
-        dump_verilog_one_clb2clb_direct(fp, 
-                                        ix, iy, 
-                                        to_clb_x, to_clb_y, 
-                                        &direct[idirect]);
+
+        /* Check if the to_clb_type matches */
+        if (grid[to_clb_x][to_clb_y].type == direct[idirect].to_clb_type) {
+          /* Now we can print a direct connection with the spice models */
+          dump_verilog_one_clb2clb_direct(fp, 
+                                          ix, iy, 
+                                          to_clb_x, to_clb_y, 
+                                          &direct[idirect]);
+        /* Check if we can make a point to point connection between direct connection */
+        }else if((P2P_DIRECT_COLUMN == direct[idirect].interconnection_type) ||
+                 (P2P_DIRECT_ROW == direct[idirect].interconnection_type)){
+          /* Check in which case we are to adapt coordinates */
+          if((P2P_DIRECT_COLUMN == direct[idirect].interconnection_type) &&
+             (POSITIVE_DIR == direct[idirect].x_dir) &&
+             (POSITIVE_DIR == direct[idirect].y_dir)){           // Bottom to Top on Right
+            if (grid[ix][iy].type == direct[idirect].from_clb_type) {
+              to_clb_x = ix + 1;
+              to_clb_y = ny + 1;
+              do{                                                // Find next available type 
+                to_clb_y --;                                     // Scan types from Top to Bottom
+                if(0 > to_clb_y){                                // If scan fails scan the column on the Right until match or no more column
+                  to_clb_x ++;
+                  to_clb_y = ny;
+                }
+              } while((grid[to_clb_x][to_clb_y].type != direct[idirect].to_clb_type) &&
+                      (nx > to_clb_x));
+            }
+          } else if((P2P_DIRECT_COLUMN == direct[idirect].interconnection_type) &&
+                    (POSITIVE_DIR == direct[idirect].x_dir) &&
+                    (NEGATIVE_DIR == direct[idirect].y_dir)){    // Top to Bottom on Right
+            if (grid[ix][iy].type != direct[idirect].from_clb_type) {
+              to_clb_x = ix + 1;
+              to_clb_y = -1;
+              do{                                                // Find next available type 
+                to_clb_y ++;                                     // Scan types from Bottom to Top
+                if(ny < to_clb_y){                               // If scan fails scan the column on the Right until match or no more column
+                  to_clb_x ++;
+                  to_clb_y = 0;
+                }
+              } while((grid[to_clb_x][to_clb_y].type != direct[idirect].to_clb_type) &&
+                      (nx >= to_clb_x));
+            }
+          } else if((P2P_DIRECT_COLUMN == direct[idirect].interconnection_type) &&
+                    (NEGATIVE_DIR == direct[idirect].x_dir) &&
+                    (NEGATIVE_DIR == direct[idirect].y_dir)){    // Top to Bottom on Left
+            if (grid[ix][iy].type != direct[idirect].from_clb_type) {
+              to_clb_x = ix - 1;
+              to_clb_y = -1;
+              do{                                                // Find next available type 
+                to_clb_y ++;                                     // Scan types from Bottom to Top
+                if(ny < to_clb_y){                               // If scan fails scan the column on the Left until match or no more column
+                  to_clb_x --;
+                  to_clb_y = 0;
+                } 
+              } while((grid[to_clb_x][to_clb_y].type != direct[idirect].to_clb_type) &&
+                      (0 <= to_clb_x));
+            }
+          } else if((P2P_DIRECT_COLUMN == direct[idirect].interconnection_type) &&
+                    (NEGATIVE_DIR == direct[idirect].x_dir) &&
+                    (POSITIVE_DIR == direct[idirect].y_dir)){    // Bottom to Top on Left
+            if (grid[ix][iy].type != direct[idirect].from_clb_type) {
+              to_clb_x = ix - 1;
+              to_clb_y = ny + 1;
+              do{                                                // Find next available type 
+                to_clb_y --;                                     // Scan types from Top to Bottom
+                if(0 > to_clb_y){                                // If scan fails scan the column on the Left until match or no more column
+                  to_clb_x --;
+                  to_clb_y = ny;
+                }
+              } while((grid[to_clb_x][to_clb_y].type != direct[idirect].to_clb_type) &&
+                      (0 <= to_clb_x));
+            }
+          } else if((P2P_DIRECT_ROW == direct[idirect].interconnection_type) &&
+                    (POSITIVE_DIR == direct[idirect].x_dir) &&
+                    (POSITIVE_DIR == direct[idirect].y_dir)){    // Left to Right Above
+            if (grid[ix][iy].type != direct[idirect].from_clb_type) {
+              to_clb_x = nx + 1;
+              to_clb_y = iy + 1;
+              do{                                                // Find next available type 
+                to_clb_x --;                                     // Scan types from Right to Left
+                if(0 > to_clb_x){                                // If scan fails scan the row above until match or no more row
+                  to_clb_x = nx;
+                  to_clb_y ++;
+                }
+              } while((grid[to_clb_x][to_clb_y].type != direct[idirect].to_clb_type) &&
+                      (ny >= to_clb_y));
+            }
+          } else if((P2P_DIRECT_ROW == direct[idirect].interconnection_type) &&
+                    (POSITIVE_DIR == direct[idirect].x_dir) &&
+                    (NEGATIVE_DIR == direct[idirect].y_dir)){    // Left to Right Below
+            if (grid[ix][iy].type != direct[idirect].from_clb_type) {
+              to_clb_x = nx + 1;
+              to_clb_y = iy - 1;
+              do{                                                // Find next available type 
+                to_clb_x --;                                     // Scan types from Right to Left
+                if(0 > to_clb_x){                                // If scan fails scan the row below until match or no more row
+                  to_clb_x = nx;
+                  to_clb_y --;
+                }
+              } while((grid[to_clb_x][to_clb_y].type != direct[idirect].to_clb_type) &&
+                      (0 <= to_clb_y));
+            }
+          } else if((P2P_DIRECT_ROW == direct[idirect].interconnection_type) &&
+                    (NEGATIVE_DIR == direct[idirect].x_dir) &&
+                    (NEGATIVE_DIR == direct[idirect].y_dir)){    // Right to Left Below
+            if (grid[ix][iy].type != direct[idirect].from_clb_type) {
+              to_clb_x = -1;
+              to_clb_y = iy - 1;
+              do{                                                // Find next available type 
+                to_clb_x ++;                                     // Scan types from Left to Right
+                if(nx < to_clb_x){                               // If scan fails scan the row below until match or no more row
+                  to_clb_x = 0;
+                  to_clb_y --;
+                }
+              } while((grid[to_clb_x][to_clb_y].type != direct[idirect].to_clb_type) &&
+                      (0 <= to_clb_y));
+            }
+          } else if((P2P_DIRECT_ROW == direct[idirect].interconnection_type) &&
+                    (NEGATIVE_DIR == direct[idirect].x_dir) &&
+                    (POSITIVE_DIR == direct[idirect].y_dir)){    // Right to Left Above
+            if (grid[ix][iy].type != direct[idirect].from_clb_type) {
+              to_clb_x = -1;
+              to_clb_y = iy + 1;
+              do{                                                // Find next available type 
+                to_clb_x ++;                                     // Scan types from Left to Right
+                if(nx < to_clb_x){                               // If scan fails scan the row below until match or no more row
+                  to_clb_x = 0;
+                  to_clb_y ++;
+                }
+              } while((grid[to_clb_x][to_clb_y].type != direct[idirect].to_clb_type) &&
+                      (ny >= to_clb_y));
+            }
+          }
+          if(grid[to_clb_x][to_clb_y].type == direct[idirect].from_clb_type){
+            /* Now we can print a direct connection with the spice models */
+            fprintf(fp, "    //----- Point to Point from grid_%d__%d_ to  grid_%d__%d_ -----\n", ix, iy,
+                                                                                               to_clb_x, to_clb_y);
+            dump_verilog_one_clb2clb_direct(fp, 
+                                            ix, iy, 
+                                            to_clb_x, to_clb_y, 
+                                            &direct[idirect]);
+            fprintf(fp, "    //----- END Point to Point from grid_%d__%d_ to  grid_%d__%d_ -----\n", ix, iy,
+                                                                                               to_clb_x, to_clb_y);
+          }
+        }
       }
     }
   }
@@ -1100,7 +1239,7 @@ void dump_verilog_configuration_circuits_scan_chains(t_sram_orgz_info* cur_sram_
   }
   fprintf(fp, ",\n");
   if (true == is_explicit_mapping) {
-    fprintf(fp, ".scff_scff_in_local_bus ("); 
+    fprintf(fp, ".ccff_ccff_in_local_bus ("); 
   }
   dump_verilog_sram_one_local_outport(fp, cur_sram_orgz_info, 0, num_mem_bits - 1, -1, VERILOG_PORT_CONKT);
   if (true == is_explicit_mapping) {
@@ -1108,7 +1247,7 @@ void dump_verilog_configuration_circuits_scan_chains(t_sram_orgz_info* cur_sram_
   }
   fprintf(fp, ",\n");
   if (true == is_explicit_mapping) {
-    fprintf(fp, ".scff_scff_out_local_bus ("); 
+    fprintf(fp, ".ccff_ccff_out_local_bus ("); 
   }
   dump_verilog_sram_one_local_outport(fp, cur_sram_orgz_info, 0, num_mem_bits - 1, 0, VERILOG_PORT_CONKT);
   if (true == is_explicit_mapping) {

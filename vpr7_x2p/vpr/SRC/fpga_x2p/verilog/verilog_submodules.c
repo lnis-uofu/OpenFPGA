@@ -22,14 +22,18 @@
 #include "vpr_utils.h"
 #include "path_delay.h"
 #include "stats.h"
+#include "vtr_assert.h"
 
 /* Include FPGA-SPICE utils */
 #include "linkedlist.h"
 #include "fpga_x2p_utils.h"
+#include "fpga_x2p_naming.h"
 #include "fpga_x2p_globals.h"
 #include "fpga_x2p_mux_utils.h"
 #include "fpga_x2p_bitstream_utils.h"
 #include "mux_library.h"
+#include "module_manager.h"
+#include "module_manager_utils.h"
 
 /* Include verilog utils */
 #include "verilog_global.h"
@@ -37,11 +41,16 @@
 #include "verilog_pbtypes.h"
 #include "verilog_decoder.h"
 
-#include "verilog_submodules.h"
-
 #include "mux_utils.h"
+#include "verilog_writer_utils.h"
 #include "verilog_mux.h"
 #include "verilog_essential_gates.h"
+#include "verilog_decoders.h"
+#include "verilog_lut.h"
+#include "verilog_memory.h"
+#include "verilog_wire.h"
+
+#include "verilog_submodules.h"
 
 /***** Subroutines *****/
 
@@ -717,7 +726,8 @@ void dump_verilog_cmos_mux_tree_structure(FILE* fp,
   for (i = 0; i < spice_mux_arch.num_level + 1; i++) {
     inter_buf_loc[i] = FALSE;
   }
-  if (NULL != spice_model.lut_intermediate_buffer->location_map) {
+  if ( (TRUE == spice_model.lut_intermediate_buffer->exist) 
+    && (NULL != spice_model.lut_intermediate_buffer->location_map) ) {
     assert ((size_t)spice_mux_arch.num_level - 1 == strlen(spice_model.lut_intermediate_buffer->location_map));
     /* For intermediate buffers */ 
     for (i = 0; i < spice_mux_arch.num_level - 1; i++) {
@@ -984,7 +994,7 @@ void dump_verilog_cmos_mux_multilevel_structure(FILE* fp,
     if (TRUE == spice_model.design_tech_info.mux_info->local_encoder) {
       /* Get the number of inputs */
       int num_outputs = cur_num_input_basis;
-      int num_inputs =  determine_mux_local_encoder_num_inputs(num_outputs);
+      int num_inputs = determine_mux_local_encoder_num_inputs(num_outputs);
       /* Find the decoder name */
       fprintf(fp, "%s %s_%d_ (", 
               generate_verilog_decoder_subckt_name(num_inputs, num_outputs),
@@ -2031,7 +2041,7 @@ void dump_verilog_cmos_mux_mem_submodule(FILE* fp,
   /* Asserts*/
   assert ((1 == num_sram_port) && (NULL != sram_port));
   assert (NULL != sram_port[0]->spice_model);
-  assert ((SPICE_MODEL_SCFF == sram_port[0]->spice_model->type) 
+  assert ((SPICE_MODEL_CCFF == sram_port[0]->spice_model->type) 
        || (SPICE_MODEL_SRAM == sram_port[0]->spice_model->type));
 
   /* Get the memory model */
@@ -2322,299 +2332,6 @@ void dump_verilog_submodule_muxes(t_sram_orgz_info* cur_sram_orgz_info,
   free_muxes_llist(muxes_head);
   /* Free strings */
   free(verilog_name);
-
-  return;
-}
-
-/***************************************************************************************
- * Create a Verilog module for a encoder with a given output size
- *                     Inputs 
- *                   | | | | | 
- *                 +-----------+
- *                /             \
- *               /     Encoder   \
- *              +-----------------+
- *                | | | | | | | |
- *                  Outputs
- *               
- *  The outputs are assumes to be one-hot codes (at most only one '1' exist)
- *  Considering this fact, there are only num_of_outputs conditions to be encoded.
- *  Therefore, the number of inputs is ceil(log(num_of_outputs)/log(2))
- ***************************************************************************************/
-static 
-void dump_verilog_mux_local_encoder_module(FILE* fp, int num_outputs) {
-  /* Make sure we have a encoder which is at least 2 ! */
-  assert (2 <= num_outputs);
-
-  /* Get the number of inputs */
-  int num_inputs = determine_mux_local_encoder_num_inputs(num_outputs);
-
-  /* Validate the FILE handler */
-  if (NULL == fp) {
-    vpr_printf(TIO_MESSAGE_ERROR,
-               "(FILE:%s,LINE[%d]Invalid file handler!\n", 
-               __FILE__, __LINE__); 
-    exit(1);
-  } 
-
-  /* Print the name of encoder */
-  fprintf(fp, "//-------- Local Decoder convert %d-bit addr to %d-bit data \n",
-          num_inputs, num_outputs);
-  fprintf(fp, "module %s(", generate_verilog_decoder_subckt_name(num_inputs, num_outputs));
-  fprintf(fp, "\n");
-  /* Inputs */
-  dump_verilog_generic_port(fp, VERILOG_PORT_INPUT,
-                            "addr", 
-                            0, num_inputs - 1); 
-  fprintf(fp, ",\n");
-  /* Outputs */
-  fprintf(fp, "output ");
-  dump_verilog_generic_port(fp, VERILOG_PORT_REG,
-                            "data", 
-                            0, num_outputs - 1); 
-  fprintf(fp, ",\n");
-  dump_verilog_generic_port(fp, VERILOG_PORT_OUTPUT,
-                            "data_inv", 
-                            0, num_outputs - 1); 
-  fprintf(fp, "\n);\n");
-
-  /* Print the truth table of this encoder */
-  /* Internal logics */
-  /* We use a magic number -1 as the addr=1 should be mapped to ...1
-   * Otherwise addr will map addr=1 to ..10 
-   * Note that there should be a range for the shift operators
-   * We should narrow the encoding to be applied to a given set of data
-   * This will lead to that any addr which falls out of the op code of data
-   * will give a all-zero code
-   * For example: 
-   * data is 5-bit while addr is 3-bit 
-   * data=8'b0_0000 will be encoded to addr=3'b001;
-   * data=8'b0_0001 will be encoded to addr=3'b010;
-   * data=8'b0_0010 will be encoded to addr=3'b011;
-   * data=8'b0_0100 will be encoded to addr=3'b100;
-   * data=8'b0_1000 will be encoded to addr=3'b101;
-   * data=8'b1_0000 will be encoded to addr=3'b110;
-   * The rest of addr codes 3'b110, 3'b111 will be decoded to data=8'b0_0000;
-   */
-
-  fprintf(fp, "always@(addr)\n");
-  fprintf(fp, "case (addr)\n");
-  /* Create a string for addr and data */
-  for (int i = 0; i < num_outputs; ++i) {
-    fprintf(fp, "\t%d'b%s : data = %d'b%s;\n", 
-            num_inputs, my_itobin(i, num_inputs),
-            num_outputs, my_ito1hot(i, num_outputs));
-  }
-  fprintf(fp, "\tdefault : data = %d'b%s;\n",
-          num_outputs, my_ito1hot(num_outputs - 1, num_outputs));
-  fprintf(fp, "endcase\n");
-
-  fprintf(fp, "assign data_inv = ~data;\n");
-  
-
-  /* Finish */
-  fprintf(fp, "endmodule\n");
-
-  fprintf(fp, "//-------- END Local Decoder convert %d-bit addr to %d-bit data \n\n",
-          num_inputs, num_outputs);
-
-  return;
-}
-
-/* We should count how many multiplexers with different sizes are needed */
-static 
-void dump_verilog_submodule_local_encoders(t_sram_orgz_info* cur_sram_orgz_info,
-                                           char* verilog_dir,
-                                           char* submodule_dir,
-                                           int num_switch,
-                                           t_switch_inf* switches,
-                                           t_spice* spice,
-                                           t_det_routing_arch* routing_arch,
-                                           bool is_explicit_mapping) {
-  
-  /* Statisitcs for input sizes and structures of MUXes 
-   * used in FPGA architecture 
-   */
-  /* We have linked list whichs stores spice model information of multiplexer*/
-  t_llist* muxes_head = NULL; 
-  t_llist* temp = NULL;
-  FILE* fp = NULL;
-  char* verilog_name = my_strcat(submodule_dir, local_encoder_verilog_file_name);
-  int num_input_ports = 0;
-  t_spice_model_port** input_ports = NULL;
-  int num_sram_ports = 0;
-  t_spice_model_port** sram_ports = NULL;
-
-  int num_input_basis = 0;
-  t_spice_mux_model* cur_spice_mux_model = NULL;
-
-  /* Alloc the muxes*/
-  muxes_head = stats_spice_muxes(num_switch, switches, spice, routing_arch);
-
-  /* Print the muxes netlist*/
-  fp = fopen(verilog_name, "w");
-  if (NULL == fp) {
-    vpr_printf(TIO_MESSAGE_ERROR,"(FILE:%s,LINE[%d])Failure in create subckt SPICE netlist %s",__FILE__, __LINE__, verilog_name); 
-    exit(1);
-  } 
-  /* Generate the descriptions*/
-  dump_verilog_file_header(fp,"MUXes used in FPGA");
-
-  verilog_include_defines_preproc_file(fp, verilog_dir);
-
-  /* Create a vector for local encoders with different sizes */
-  std::vector<int> encoder_sizes;
-  /* Make sure a clean start */
-  encoder_sizes.clear();
-
-  /* Print mux netlist one by one*/
-  temp = muxes_head;
-  while(temp) {
-    assert(NULL != temp->dptr);
-    cur_spice_mux_model = (t_spice_mux_model*)(temp->dptr);
-    /* Bypass the spice models who has a user-defined subckt */
-    if (NULL != cur_spice_mux_model->spice_model->verilog_netlist) {
-      input_ports = find_spice_model_ports(cur_spice_mux_model->spice_model, SPICE_MODEL_PORT_INPUT, &num_input_ports, TRUE);
-      sram_ports = find_spice_model_ports(cur_spice_mux_model->spice_model, SPICE_MODEL_PORT_SRAM, &num_sram_ports, TRUE);
-      assert(0 != num_input_ports);
-      assert(0 != num_sram_ports);
-      /* Check the Input port size */
-      if (cur_spice_mux_model->size != input_ports[0]->size) {
-        vpr_printf(TIO_MESSAGE_ERROR, 
-                   "(File:%s,[LINE%d])User-defined MUX SPICE MODEL(%s) size(%d) unmatch with the architecture needs(%d)!\n",
-                   __FILE__, __LINE__, cur_spice_mux_model->spice_model->name, input_ports[0]->size,cur_spice_mux_model->size);
-        exit(1);
-      }
-      /* Check the SRAM port size */
-      num_input_basis = determine_num_input_basis_multilevel_mux(cur_spice_mux_model->size, 
-                                                                 cur_spice_mux_model->spice_model->design_tech_info.mux_info->mux_num_level);
-      if ((num_input_basis * cur_spice_mux_model->spice_model->design_tech_info.mux_info->mux_num_level) != sram_ports[0]->size) {
-        vpr_printf(TIO_MESSAGE_ERROR, 
-                   "(File:%s,[LINE%d])User-defined MUX SPICE MODEL(%s) SRAM size(%d) unmatch with the num of level(%d)!\n",
-                   __FILE__, __LINE__, cur_spice_mux_model->spice_model->name, sram_ports[0]->size, cur_spice_mux_model->spice_model->design_tech_info.mux_info->mux_num_level*num_input_basis);
-        exit(1);
-      }
-      /* Move on to the next*/
-      temp = temp->next;
-      continue;
-    }
-    /* Bypass those without local encoders, we only care SPICE models whose type is MUX! */
-    if ( (SPICE_MODEL_MUX != cur_spice_mux_model->spice_model->type) 
-       || (FALSE == cur_spice_mux_model->spice_model->design_tech_info.mux_info->local_encoder) ) {
-      /* Move on to the next*/
-      temp = temp->next;
-      continue;
-    }
-    /* Reach here, we need to generate a local encoder Verilog module */
-    /* Generate the spice_mux_arch */
-    cur_spice_mux_model->spice_mux_arch = (t_spice_mux_arch*)my_malloc(sizeof(t_spice_mux_arch));
-    init_spice_mux_arch(cur_spice_mux_model->spice_model, cur_spice_mux_model->spice_mux_arch, cur_spice_mux_model->size);
-    /* We will bypass all the TREE-LIKE multiplexers and those with 2-inputs */
-    if ( (SPICE_MODEL_STRUCTURE_TREE == cur_spice_mux_model->spice_mux_arch->structure) 
-      || ( 2 == cur_spice_mux_model->spice_mux_arch->num_input) ) {
-      /* Move on to the next*/
-      temp = temp->next;
-      continue;
-    }
-    /* Find the size of local encoders */
-    std::vector<int>::iterator it = std::find(encoder_sizes.begin(), encoder_sizes.end(), cur_spice_mux_model->spice_mux_arch->num_input_basis);
-    /* See if a same-sized local encoder is already in the list */
-    if (it == encoder_sizes.end()) {
-       /* Need to add to the list */
-       encoder_sizes.push_back(cur_spice_mux_model->spice_mux_arch->num_input_basis);
-    }
-    /* Move on to the next*/
-    temp = temp->next;
-  }
-
-
-  /* Print the local encoder subckt */
-  for (size_t i = 0; i < encoder_sizes.size(); ++i) { 
-    dump_verilog_mux_local_encoder_module(fp, encoder_sizes[i]);
-  }
-
-  vpr_printf(TIO_MESSAGE_INFO,"Generated %d local encoders for Multiplexers.\n",
-             encoder_sizes.size());
-
-  /* Add fname to the linked list */
-  submodule_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(submodule_verilog_subckt_file_path_head, verilog_name);  
-
-  /* Close the file*/
-  fclose(fp);
-
-  /* remember to free the linked list*/
-  free_muxes_llist(muxes_head);
-  /* Free strings */
-  free(verilog_name);
-
-  return;
-}
-
-static 
-void dump_verilog_wire_module(FILE* fp,
-                              char* wire_subckt_name,
-                              t_spice_model verilog_model) {
-  int num_input_port = 0;
-  int num_output_port = 0;
-  t_spice_model_port** input_port = NULL;
-  t_spice_model_port** output_port = NULL;
- 
-  /* Ensure a valid file handler*/
-  if (NULL == fp) {
-    vpr_printf(TIO_MESSAGE_ERROR,"(FILE:%s,LINE[%d])Invalid File handler.\n",
-               __FILE__, __LINE__); 
-    exit(1);
-  } 
-  /* Check the wire model*/
-  assert(NULL != verilog_model.wire_param);
-  assert(0 < verilog_model.wire_param->level);
-  /* Find the input port, output port*/
-  input_port = find_spice_model_ports(&verilog_model, SPICE_MODEL_PORT_INPUT, &num_input_port, TRUE);
-  output_port = find_spice_model_ports(&verilog_model, SPICE_MODEL_PORT_OUTPUT, &num_output_port, TRUE);
-
-  /* Asserts*/
-  assert(1 == num_input_port);
-  assert(1 == num_output_port);
-  assert(1 == input_port[0]->size);
-  assert(1 == output_port[0]->size);
-  /* print the spice model*/
-  fprintf(fp, "//-----Wire module, verilog_model_name=%s -----\n", verilog_model.name);  
-  switch (verilog_model.type) {
-  case SPICE_MODEL_CHAN_WIRE: 
-    /* Add an output at middle point for connecting CB inputs */
-    fprintf(fp, "module %s (\n", wire_subckt_name);
-    /* Dump global ports */
-    if  (0 < rec_dump_verilog_spice_model_global_ports(fp, &verilog_model, TRUE, FALSE, FALSE)) {
-      fprintf(fp, ",\n");
-    }
-    fprintf(fp, "input wire %s, output wire %s, output wire mid_out);\n",
-            input_port[0]->prefix, output_port[0]->prefix);
-    fprintf(fp, "\tassign %s = %s;\n", output_port[0]->prefix, input_port[0]->prefix);
-    fprintf(fp, "\tassign mid_out = %s;\n", input_port[0]->prefix);
-    break;
-  case SPICE_MODEL_WIRE: 
-    /* Add an output at middle point for connecting CB inputs */
-    fprintf(fp, "module %s (\n",
-            wire_subckt_name);
-    /* Dump global ports */
-    if  (0 < rec_dump_verilog_spice_model_global_ports(fp, &verilog_model, TRUE, FALSE, FALSE)) {
-      fprintf(fp, ",\n");
-    }
-    fprintf(fp, "input wire %s, output wire %s);\n",
-            input_port[0]->prefix, output_port[0]->prefix);
-    /* Direct shortcut */
-    fprintf(fp, "\t\tassign %s = %s;\n", output_port[0]->prefix, input_port[0]->prefix);
-    break;
-  default: 
-    vpr_printf(TIO_MESSAGE_ERROR, "(File:%s,[LINE%d])Invalid type of spice_model! Expect [chan_wire|wire].\n",
-               __FILE__, __LINE__);
-    exit(1);
-  }
-  
-  /* Finish*/ 
-  fprintf(fp, "endmodule\n");
-  fprintf(fp, "//-----END Wire module, verilog_model_name=%s -----\n", verilog_model.name);  
-  fprintf(fp, "\n");
 
   return;
 }
@@ -3175,88 +2892,6 @@ void dump_verilog_submodule_luts(char* verilog_dir,
 }
 
 static 
-void dump_verilog_submodule_wires(char* verilog_dir,
-                                  char* subckt_dir, 
-                                  int num_segments,
-                                  t_segment_inf* segments,
-                                  int num_spice_model,
-                                  t_spice_model* spice_models) {
-  FILE* fp = NULL;
-  char* verilog_name = my_strcat(subckt_dir, wires_verilog_file_name);
-  char* seg_wire_subckt_name = NULL;
-  char* seg_index_str = NULL;
-  int iseg, imodel, len_seg_subckt_name;
- 
-  fp = fopen(verilog_name, "w");
-  if (NULL == fp) {
-    vpr_printf(TIO_MESSAGE_ERROR,"(FILE:%s,LINE[%d])Failure in create Verilog netlist %s",__FILE__, __LINE__, wires_verilog_file_name); 
-    exit(1);
-  } 
-  dump_verilog_file_header(fp,"Wires");
-
-  verilog_include_defines_preproc_file(fp, verilog_dir);
-
-  /* Output wire models*/
-  for (imodel = 0; imodel < num_spice_model; imodel++) {
-    /* Bypass user-defined spice models */
-    if (NULL != spice_models[imodel].verilog_netlist) {
-      continue;
-    }
-    if (SPICE_MODEL_WIRE == spice_models[imodel].type) {
-      assert(NULL != spice_models[imodel].wire_param);
-      dump_verilog_wire_module(fp, spice_models[imodel].name,
-                              spice_models[imodel]);
-    }
-  }
- 
-  /* Create wire models for routing segments*/
-  fprintf(fp,"//----- Wire models for segments in routing -----\n");
-  for (iseg = 0; iseg < num_segments; iseg++) {
-    assert(NULL != segments[iseg].spice_model);
-    assert(SPICE_MODEL_CHAN_WIRE == segments[iseg].spice_model->type);
-    assert(NULL != segments[iseg].spice_model->wire_param);
-    /* Give a unique name for subckt of wire_model of segment, 
-     * spice_model name is unique, and segment name is unique as well
-     */
-    seg_index_str = my_itoa(iseg);
-    len_seg_subckt_name = strlen(segments[iseg].spice_model->name)
-                        + 4 + strlen(seg_index_str) + 1; /* '\0'*/
-    seg_wire_subckt_name = (char*)my_malloc(sizeof(char)*len_seg_subckt_name);
-    sprintf(seg_wire_subckt_name,"%s_seg%s",
-            segments[iseg].spice_model->name, seg_index_str);
-    /* Bypass user-defined spice models */
-    if (NULL != segments[iseg].spice_model->verilog_netlist) {
-      continue;
-    }
-    dump_verilog_wire_module(fp, seg_wire_subckt_name,
-                            *(segments[iseg].spice_model));
-  }
-
-  /* Create module for hard-wired VDD and GND */
-  /*
-  for (imodel = 0; imodel < num_spice_model; imodel++) {
-    if (SPICE_MODEL_VDD == spice_models[imodel].type) {
-      dump_verilog_hard_wired_vdd(fp, spice_models[imodel]);
-    } else if (SPICE_MODEL_GND == spice_models[imodel].type) {
-      dump_verilog_hard_wired_gnd(fp, spice_models[imodel]);
-    }
-  }
-  */
-  
-  /* Close the file handler */
-  fclose(fp);
-
-  /* Add fname to the linked list */
-  submodule_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(submodule_verilog_subckt_file_path_head, verilog_name);  
-
-  /*Free*/
-  my_free(seg_index_str);
-  my_free(seg_wire_subckt_name);
-
-  return;
-}
-
-static 
 void dump_verilog_submodule_memories(t_sram_orgz_info* cur_sram_orgz_info,
                                      char* verilog_dir,
                                      char* submodule_dir,
@@ -3375,105 +3010,165 @@ void dump_verilog_submodule_memories(t_sram_orgz_info* cur_sram_orgz_info,
   return;
 }
 
-/* Give a template for a user-defined module */
+/*********************************************************************
+ * Register all the user-defined modules in the module manager
+ * Walk through the circuit library and add user-defined circuit models
+ * to the module_manager
+ ********************************************************************/
 static 
-void dump_one_verilog_template_module(FILE* fp,
-                                      t_spice_model* cur_spice_model) {
-  int iport;
-  int cnt = 0;
-
-  /* Ensure a valid file handler*/
-  if (NULL == fp) {
-    vpr_printf(TIO_MESSAGE_ERROR,"(FILE:%s,LINE[%d])Invalid File handler.\n",
-               __FILE__, __LINE__); 
-    exit(1);
-  }
-
-  fprintf(fp, "//----- Template Verilog module for %s -----\n",
-          cur_spice_model->name);
-
-  /* dump module body */
-  fprintf(fp, "module %s (\n",
-          cur_spice_model->name);
-
-  /* Dump ports */
-  for (iport = 0; iport < cur_spice_model->num_port; iport++) {
-    if (0 < cnt) {
-      fprintf(fp, ",\n"); 
-    }
-    dump_verilog_generic_port(fp, 
-                              convert_spice_model_port_type_to_verilog_port_type(cur_spice_model->ports[iport].type),
-                              cur_spice_model->ports[iport].lib_name, 
-                              cur_spice_model->ports[iport].size - 1, 0); 
-    cnt++;
-    /* if there is an inv_prefix, we will dump the paired port */
-    if (NULL == cur_spice_model->ports[iport].inv_prefix) {
+void add_user_defined_verilog_modules(ModuleManager& module_manager, 
+                                      const CircuitLibrary& circuit_lib, 
+                                      const std::vector<t_segment_inf>& routing_segments) {
+  /* Iterate over Verilog modules */
+  for (const auto& model : circuit_lib.models()) {
+    /* We only care about user-defined models */
+    if (true == circuit_lib.model_verilog_netlist(model).empty()) {
       continue;
-    } 
-    if (0 < cnt) {
-      fprintf(fp, ",\n"); 
     }
-    dump_verilog_generic_port(fp, 
-                              convert_spice_model_port_type_to_verilog_port_type(cur_spice_model->ports[iport].type),
-                              cur_spice_model->ports[iport].inv_prefix, 
-                              cur_spice_model->ports[iport].size - 1, 0); 
-    cnt++;
+    /* Skip Routing channel wire models because they need a different name. Do it later */
+    if (SPICE_MODEL_CHAN_WIRE == circuit_lib.model_type(model)) {
+      continue;
+    }
+    /* Reach here, the model requires a user-defined Verilog netlist, 
+     * Register it in the module_manager  
+     */
+    add_circuit_model_to_module_manager(module_manager, circuit_lib, model);
   }
 
-  fprintf(fp, ");\n");
+  /* Register the routing channel wires  */
+  for (const auto& seg : routing_segments) {
+    VTR_ASSERT( CircuitModelId::INVALID() != seg.circuit_model);
+    VTR_ASSERT( SPICE_MODEL_CHAN_WIRE == circuit_lib.model_type(seg.circuit_model));
+    /* We care only user-defined circuit models */
+    if (circuit_lib.model_verilog_netlist(seg.circuit_model).empty()) {
+      continue;
+    }
+    /* Give a unique name for subckt of wire_model of segment, 
+     * circuit_model name is unique, and segment id is unique as well
+     */
+    std::string segment_wire_subckt_name = generate_segment_wire_subckt_name(circuit_lib.model_name(seg.circuit_model), &seg - &routing_segments[0]);
 
-  fprintf(fp, "\n//------ User-defined Verilog netlist model should start from here! -----\n");
+    /* Create a Verilog Module based on the circuit model, and add to module manager */
+    ModuleId module_id = add_circuit_model_to_module_manager(module_manager, circuit_lib, seg.circuit_model, segment_wire_subckt_name); 
 
-
-  fprintf(fp, "endmodule\n");
-
-  fprintf(fp, "\n");
-
-  return;
+    /* Find the output port*/
+    std::vector<CircuitPortId> output_ports = circuit_lib.model_ports_by_type(seg.circuit_model, SPICE_MODEL_PORT_OUTPUT, true);
+    /* Make sure the port size is what we want */
+    VTR_ASSERT (1 == circuit_lib.port_size(output_ports[0]));
+  
+    /* Add a mid-output port to the module */
+    BasicPort module_mid_output_port(generate_segment_wire_mid_output_name(circuit_lib.port_lib_name(output_ports[0])), circuit_lib.port_size(output_ports[0]));
+    module_manager.add_port(module_id, module_mid_output_port, ModuleManager::MODULE_OUTPUT_PORT);
+  }
 }
 
-/* Give a template of all the submodules that are user-defined */
+/* Print a template for a user-defined circuit model
+ * The template will include just the port declaration of the Verilog module
+ * The template aims to help user to write Verilog codes with a guaranteed
+ * module definition, which can be correctly instanciated (with correct
+ * port mapping) in the FPGA fabric
+ */
 static 
-void dump_verilog_submodule_templates(t_sram_orgz_info* cur_sram_orgz_info, 
-                                      char* verilog_dir,
-                                      char* submodule_dir,
-                                      int num_spice_model,
-                                      t_spice_model* spice_models) {
-  int imodel;
-  char* verilog_name = my_strcat(submodule_dir, user_defined_template_verilog_file_name);
-  FILE* fp = NULL;
+void print_one_verilog_template_module(const ModuleManager& module_manager,
+                                       std::fstream& fp,
+                                       const std::string& module_name) {
+  /* Ensure a valid file handler*/
+  check_file_handler(fp);
 
-  /* Create file */
-  fp = fopen(verilog_name, "w");
-  if (NULL == fp) {
-    vpr_printf(TIO_MESSAGE_ERROR,"(FILE:%s,LINE[%d])Failure in create Verilog netlist %s",
-                                 __FILE__, __LINE__, user_defined_template_verilog_file_name); 
-    exit(1);
-  } 
-  dump_verilog_file_header(fp,"User-defined netlists template"); 
+  print_verilog_comment(fp, std::string("----- Template Verilog module for " + module_name + " -----"));
+
+  /* Find the module in module manager, which should be already registered */
+  /* TODO: routing channel wire model may have a different name! */
+  ModuleId template_module = module_manager.find_module(module_name);
+  VTR_ASSERT(ModuleId::INVALID() != template_module);
+
+  /* dump module definition + ports */
+  print_verilog_module_declaration(fp, module_manager, template_module);
+  /* Finish dumping ports */
+
+  print_verilog_comment(fp, std::string("----- Internal logic should start here -----"));
+
+  /* Add some empty lines as placeholders for the internal logic*/
+  fp << std::endl << std::endl;
+ 
+  print_verilog_comment(fp, std::string("----- Internal logic should end here -----"));
+
+  /* Put an end to the Verilog module */
+  print_verilog_module_end(fp, module_name);
+
+  /* Add an empty line as a splitter */
+  fp << std::endl;
+}
+
+/* Print a template of all the submodules that are user-defined
+ * The template will include just the port declaration of the submodule
+ * The template aims to help user to write Verilog codes with a guaranteed
+ * module definition, which can be correctly instanciated (with correct
+ * port mapping) in the FPGA fabric
+ */
+static 
+void print_verilog_submodule_templates(const ModuleManager& module_manager,
+                                       const CircuitLibrary& circuit_lib,
+                                       const std::vector<t_segment_inf>& routing_segments,
+                                       const std::string& verilog_dir,
+                                       const std::string& submodule_dir) {
+  std::string verilog_fname(submodule_dir + user_defined_template_verilog_file_name);
+
+  /* Create the file stream */
+  std::fstream fp;
+  fp.open(verilog_fname, std::fstream::out | std::fstream::trunc);
+
+  check_file_handler(fp);
+
+  /* Print out debugging information for if the file is not opened/created properly */
+  vpr_printf(TIO_MESSAGE_INFO,
+             "Creating template for user-defined Verilog modules (%s)...\n",
+             verilog_fname.c_str()); 
+
+  print_verilog_file_header(fp, "Template for user-defined Verilog modules"); 
+
+  print_verilog_include_defines_preproc_file(fp, verilog_dir);
 
   /* Output essential models*/
-  for (imodel = 0; imodel < num_spice_model; imodel++) {
-    /* Focus on user-defined modules */
-    if (NULL == spice_models[imodel].verilog_netlist) {
+  for (const auto& model : circuit_lib.models()) {
+    /* Focus on user-defined modules, which must have a Verilog netlist defined */
+    if (circuit_lib.model_verilog_netlist(model).empty()) {
       continue;
     }
-    /* Create the port template */
-    dump_one_verilog_template_module(fp, &spice_models[imodel]); 
+    /* Skip Routing channel wire models because they need a different name. Do it later */
+    if (SPICE_MODEL_CHAN_WIRE == circuit_lib.model_type(model)) {
+      continue;
+    }
+    /* Print a Verilog template for the circuit model */
+    print_one_verilog_template_module(module_manager, fp, circuit_lib.model_name(model)); 
   }
 
-  /* close file */
-  fclose(fp);
+  /* Register the routing channel wires  */
+  for (const auto& seg : routing_segments) {
+    VTR_ASSERT( CircuitModelId::INVALID() != seg.circuit_model);
+    VTR_ASSERT( SPICE_MODEL_CHAN_WIRE == circuit_lib.model_type(seg.circuit_model));
+    /* We care only user-defined circuit models */
+    if (circuit_lib.model_verilog_netlist(seg.circuit_model).empty()) {
+      continue;
+    }
+    /* Give a unique name for subckt of wire_model of segment, 
+     * circuit_model name is unique, and segment id is unique as well
+     */
+    std::string segment_wire_subckt_name = generate_segment_wire_subckt_name(circuit_lib.model_name(seg.circuit_model), &seg - &routing_segments[0]);
+    /* Print a Verilog template for the circuit model */
+    print_one_verilog_template_module(module_manager, fp, segment_wire_subckt_name); 
+  }
 
-  /* Free */
-  my_free(verilog_name);
+  /* close file stream */
+  fp.close();
  
-  return;
+  /* No need to add the template to the subckt include files! */
 }
 
-/* Dump verilog files of submodules to be used in FPGA components :
+/*********************************************************************
+ * Dump verilog files of submodules to be used in FPGA components :
  * 1. MUXes
- */
+ ********************************************************************/
 void dump_verilog_submodules(ModuleManager& module_manager, 
                              const MuxLibrary& mux_lib,
                              t_sram_orgz_info* cur_sram_orgz_info,
@@ -3483,7 +3178,19 @@ void dump_verilog_submodules(ModuleManager& module_manager,
                              t_det_routing_arch* routing_arch,
                              t_syn_verilog_opts fpga_verilog_opts) {
 
-  vpr_printf(TIO_MESSAGE_INFO, "Generating essential modules...\n");
+  /* Create a vector of segments. TODO: should come from DeviceContext */
+  std::vector<t_segment_inf> L_segment_vec;
+  for (int i = 0; i < Arch.num_segments; ++i) {
+    L_segment_vec.push_back(Arch.Segments[i]);
+  }
+
+  /* TODO: Register all the user-defined modules in the module manager
+   * This should be done prior to other steps in this function, 
+   * because they will be instanciated by other primitive modules 
+   */
+  vpr_printf(TIO_MESSAGE_INFO, "Registering user-defined modules...\n");
+  add_user_defined_verilog_modules(module_manager, Arch.spice->circuit_lib, L_segment_vec);
+
   print_verilog_submodule_essentials(module_manager, 
                                      std::string(verilog_dir), 
                                      std::string(submodule_dir),
@@ -3494,12 +3201,13 @@ void dump_verilog_submodules(ModuleManager& module_manager,
   dump_verilog_submodule_muxes(cur_sram_orgz_info, verilog_dir, submodule_dir, routing_arch->num_switch, 
                                switch_inf, Arch.spice, routing_arch, fpga_verilog_opts.dump_explicit_verilog);
 
-  print_verilog_submodule_muxes(module_manager, mux_lib, Arch.spice->circuit_lib, cur_sram_orgz_info, 
-                                verilog_dir, submodule_dir);
+  /* NOTE: local decoders generation must go before the MUX generation!!! 
+   *       because local decoders modules will be instanciated in the MUX modules 
+   */
+  print_verilog_submodule_mux_local_decoders(module_manager, mux_lib, Arch.spice->circuit_lib, 
+                                             std::string(verilog_dir), std::string(submodule_dir));
+  print_verilog_submodule_muxes(module_manager, mux_lib, Arch.spice->circuit_lib, cur_sram_orgz_info, std::string(verilog_dir), std::string(submodule_dir));
 
-  vpr_printf(TIO_MESSAGE_INFO, "Generating local encoders for multiplexers...\n");
-  dump_verilog_submodule_local_encoders(cur_sram_orgz_info, verilog_dir, submodule_dir, routing_arch->num_switch, 
-                                        switch_inf, Arch.spice, routing_arch, fpga_verilog_opts.dump_explicit_verilog);
  
   /* 2. LUTes */
   vpr_printf(TIO_MESSAGE_INFO, "Generating modules of LUTs...\n");
@@ -3508,27 +3216,22 @@ void dump_verilog_submodules(ModuleManager& module_manager,
                               fpga_verilog_opts.include_timing, 
                               fpga_verilog_opts.include_signal_init,
                               fpga_verilog_opts.dump_explicit_verilog);
+  print_verilog_submodule_luts(module_manager, Arch.spice->circuit_lib, std::string(verilog_dir), std::string(submodule_dir));
 
   /* 3. Hardwires */
-  vpr_printf(TIO_MESSAGE_INFO, "Generating modules of hardwires...\n");
-  dump_verilog_submodule_wires(verilog_dir, submodule_dir, Arch.num_segments, Arch.Segments,
-                               Arch.spice->num_spice_model, Arch.spice->spice_models);
+  print_verilog_submodule_wires(module_manager, Arch.spice->circuit_lib, L_segment_vec, std::string(verilog_dir), std::string(submodule_dir));
 
   /* 4. Memories */
   vpr_printf(TIO_MESSAGE_INFO, "Generating modules of memories...\n");
   dump_verilog_submodule_memories(cur_sram_orgz_info, verilog_dir, submodule_dir, routing_arch->num_switch, 
                                   switch_inf, Arch.spice, routing_arch, fpga_verilog_opts.dump_explicit_verilog);
+  print_verilog_submodule_memories(module_manager, mux_lib, Arch.spice->circuit_lib, 
+                                   cur_sram_orgz_info->type,
+                                   std::string(verilog_dir), std::string(submodule_dir));
 
-  /* 5. Dump decoder modules only when memory bank is required */
-  dump_verilog_config_peripherals(cur_sram_orgz_info, verilog_dir, submodule_dir);
-
-  /* 6. Dump template for all the modules */
+  /* 5. Dump template for all the modules */
   if (TRUE == fpga_verilog_opts.print_user_defined_template) { 
-    dump_verilog_submodule_templates(cur_sram_orgz_info, 
-                                     verilog_dir,
-                                     submodule_dir,
-                                     Arch.spice->num_spice_model, 
-                                     Arch.spice->spice_models);
+    print_verilog_submodule_templates(module_manager, Arch.spice->circuit_lib, L_segment_vec, std::string(verilog_dir), std::string(submodule_dir));
   }
 
   /* Create a header file to include all the subckts */

@@ -1123,6 +1123,10 @@ typedef struct s_clb_to_clb_directs {
 	t_type_descriptor *to_clb_type;
 	int to_clb_pin_start_index;
 	int to_clb_pin_end_index;
+    /* Aurelien: point to point support in direct connection from directlist */
+    enum e_point2point_interconnection_type interconnection_type;
+    enum e_point2point_interconnection_dir x_dir;
+    enum e_point2point_interconnection_dir y_dir;
     /* Xifan Tang: add useful addition info to this struct */
 	int x_offset;
 	int y_offset;

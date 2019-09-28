@@ -1245,7 +1245,10 @@ t_clb_to_clb_directs * alloc_and_load_clb_to_clb_directs(INP const t_direct_inf 
 			vpr_printf(TIO_MESSAGE_ERROR, "[LINE %d] Range mismatch from %s to %s.\n", directs[i].line, directs[i].from_pin, directs[i].to_pin);
 				exit(1);
 		}
-
+        /* Aurelien: assign point to point parameters */
+        clb_to_clb_directs[i].interconnection_type = directs[i].interconnection_type;
+        clb_to_clb_directs[i].x_dir = directs[i].x_dir;
+        clb_to_clb_directs[i].y_dir = directs[i].y_dir;
         /* Xifan Tang: assign values to x,y,z_offset */
         clb_to_clb_directs[i].x_offset = directs[i].x_offset;
         clb_to_clb_directs[i].y_offset = directs[i].y_offset;

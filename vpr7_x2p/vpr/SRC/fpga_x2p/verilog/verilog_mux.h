@@ -1,5 +1,5 @@
 /***********************************************
- * Header file for verilog_submodule_mux.cpp
+ * Header file for verilog_mux.cpp
  **********************************************/
 
 #ifndef VERILOG_MUX_H
@@ -17,7 +17,7 @@ void print_verilog_submodule_muxes(ModuleManager& module_manager,
                                    const MuxLibrary& mux_lib,
                                    const CircuitLibrary& circuit_lib,
                                    t_sram_orgz_info* cur_sram_orgz_info,
-                                   char* verilog_dir,
-                                   char* submodule_dir);
+                                   const std::string& verilog_dir,
+                                   const std::string& submodule_dir);
 
 #endif

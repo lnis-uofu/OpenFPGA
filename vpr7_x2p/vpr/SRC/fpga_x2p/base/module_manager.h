@@ -18,6 +18,7 @@
 
 #include <string>
 #include <map>
+#include "vtr_vector.h"
 #include "module_manager_fwd.h"
 #include "device_port.h"
 
@@ -37,20 +38,36 @@ class ModuleManager {
     std::string module_name(const ModuleId& module_id) const;
     std::string module_port_type_str(const enum e_module_port_type& port_type) const;
     std::vector<BasicPort> module_ports_by_type(const ModuleId& module_id, const enum e_module_port_type& port_type) const;
+    /* Find a port of a module by a given name */
+    ModulePortId find_module_port(const ModuleId& module_id, const std::string& port_name) const;
+    /* Find the Port information with a given port id */
+    BasicPort module_port(const ModuleId& module_id, const ModulePortId& port_id) const;
+    /* Find a module by a given name */
     ModuleId find_module(const std::string& name) const;
     /* Find the number of instances of a child module in the parent module */
     size_t num_instance(const ModuleId& parent_module, const ModuleId& child_module) const;
+    /* Find if a port is register */
+    bool port_is_register(const ModuleId& module, const ModulePortId& port) const;
+    /* Return the pre-processing flag of a port */
+    std::string port_preproc_flag(const ModuleId& module, const ModulePortId& port) const;
   public: /* Public mutators */
     /* Add a module */
     ModuleId add_module(const std::string& name);
     /* Add a port to a module */
     ModulePortId add_port(const ModuleId& module, 
                           const BasicPort& port_info, const enum e_module_port_type& port_type);
+    /* Set a name for a module */
+    void set_module_name(const ModuleId& module, const std::string& name);
+    /* Set a port to be a register */
+    void set_port_is_register(const ModuleId& module, const std::string& port_name, const bool& is_register);
+    /* Set the preprocessing flag for a port */
+    void set_port_preproc_flag(const ModuleId& module, const ModulePortId& port, const std::string& preproc_flag);
     /* Add a child module to a parent module */
     void add_child_module(const ModuleId& parent_module, const ModuleId& child_module);
-  private: /* Private validators/invalidators */
+  public: /* Public validators/invalidators */
     bool valid_module_id(const ModuleId& module) const;
     bool valid_module_port_id(const ModuleId& module, const ModulePortId& port) const;
+  private: /* Private validators/invalidators */
     void invalidate_name2id_map();
     void invalidate_port_lookup();
   private: /* Internal data */
@@ -63,6 +80,8 @@ class ModuleManager {
     vtr::vector<ModuleId, vtr::vector<ModulePortId, ModulePortId>> port_ids_;    /* List of ports for each Module */ 
     vtr::vector<ModuleId, vtr::vector<ModulePortId, BasicPort>> ports_;    /* List of ports for each Module */ 
     vtr::vector<ModuleId, vtr::vector<ModulePortId, enum e_module_port_type>> port_types_; /* Type of ports */ 
+    vtr::vector<ModuleId, vtr::vector<ModulePortId, bool>> port_is_register_; /* If the port is a register, use for Verilog port definition. If enabled: <port_type> reg <port_name>  */ 
+    vtr::vector<ModuleId, vtr::vector<ModulePortId, std::string>> port_preproc_flags_; /* If a port is available only when a pre-processing flag is enabled. This is to record the pre-processing flags */ 
 
     /* fast look-up for module */
     std::map<std::string, ModuleId> name_id_map_;

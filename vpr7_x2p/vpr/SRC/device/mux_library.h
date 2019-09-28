@@ -27,13 +27,14 @@ class MuxLibrary {
     const MuxGraph& mux_graph(const MuxId& mux_id) const;
     /* Get a mux circuit model id */
     CircuitModelId mux_circuit_model(const MuxId& mux_id) const;
-    /* Find the maximum mux size */
+    /* Find the mux sizes */
     size_t max_mux_size() const;
   public:  /* Public mutators */
     /* Add a mux to the library */
     void add_mux(const CircuitLibrary& circuit_lib, const CircuitModelId& circuit_model, const size_t& mux_size); 
-  private:  /* Private accessors */
+  public:  /* Public validators */
     bool valid_mux_id(const MuxId& mux) const;
+  private:  /* Private accessors */
     bool valid_mux_lookup() const;
     bool valid_mux_circuit_model_id(const CircuitModelId& circuit_model) const;
     bool valid_mux_size(const CircuitModelId& circuit_model, const size_t& mux_size) const;

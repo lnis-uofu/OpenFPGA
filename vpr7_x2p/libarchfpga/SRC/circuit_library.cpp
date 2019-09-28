@@ -175,7 +175,79 @@ bool CircuitLibrary::is_lut_intermediate_buffered(const CircuitModelId& model_id
   VTR_ASSERT(valid_model_id(model_id));
   /* validate the circuit model type is LUT */
   VTR_ASSERT(SPICE_MODEL_LUT == model_type(model_id));
-  return buffer_existence_[model_id][LUT_INTER_BUFFER]; 
+  /* LUT inter buffer may not always exist */
+  if (LUT_INTER_BUFFER < buffer_existence_[model_id].size()) {
+    return buffer_existence_[model_id][LUT_INTER_BUFFER]; 
+  } else {
+    return false;
+  }
+}
+
+/* Return a flag showing if a LUT circuit model uses fracturable structure */
+bool CircuitLibrary::is_lut_fracturable(const CircuitModelId& model_id) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  /* validate the circuit model type is LUT */
+  VTR_ASSERT(SPICE_MODEL_LUT == model_type(model_id));
+  return lut_is_fracturable_[model_id]; 
+}
+
+/* Return the circuit model of input buffers
+ * that are inserted between multiplexing structure and LUT inputs
+ */
+CircuitModelId CircuitLibrary::lut_input_inverter_model(const CircuitModelId& model_id) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  /* validate the circuit model type is BUF */
+  VTR_ASSERT(SPICE_MODEL_LUT == model_type(model_id));
+  /* We MUST have an input inverter */
+  VTR_ASSERT(true == buffer_existence_[model_id][LUT_INPUT_INVERTER]); 
+  return buffer_model_ids_[model_id][LUT_INPUT_INVERTER];
+}
+
+/* Return the circuit model of input buffers
+ * that are inserted between multiplexing structure and LUT inputs
+ */
+CircuitModelId CircuitLibrary::lut_input_buffer_model(const CircuitModelId& model_id) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  /* validate the circuit model type is BUF */
+  VTR_ASSERT(SPICE_MODEL_LUT == model_type(model_id));
+  /* We MUST have an input buffer */
+  VTR_ASSERT(true == buffer_existence_[model_id][LUT_INPUT_BUFFER]); 
+  return buffer_model_ids_[model_id][LUT_INPUT_BUFFER];
+}
+
+/* Return the circuit model of intermediate buffers
+ * that are inserted inside LUT multiplexing structures
+ */
+CircuitModelId CircuitLibrary::lut_intermediate_buffer_model(const CircuitModelId& model_id) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  /* validate the circuit model type is BUF */
+  VTR_ASSERT(SPICE_MODEL_LUT == model_type(model_id));
+  /* if we have an intermediate buffer, we return something, otherwise return an invalid id */
+  if (true == is_lut_intermediate_buffered(model_id)) {
+    return buffer_model_ids_[model_id][LUT_INTER_BUFFER];
+  } else {
+    return CircuitModelId::INVALID();
+  }
+}
+
+/* Return the location map of intermediate buffers
+ * that are inserted inside LUT multiplexing structures
+ */
+std::string CircuitLibrary::lut_intermediate_buffer_location_map(const CircuitModelId& model_id) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  /* validate the circuit model type is BUF */
+  VTR_ASSERT(SPICE_MODEL_LUT == model_type(model_id));
+  /* if we have an intermediate buffer, we return something, otherwise return an empty map */
+  if (true == is_lut_intermediate_buffered(model_id)) {
+    return buffer_location_maps_[model_id][LUT_INTER_BUFFER];
+  } else {
+    return std::string();
+  }
 }
 
 /* Find the id of pass-gate circuit model 
@@ -207,7 +279,7 @@ enum e_spice_model_pass_gate_logic_type CircuitLibrary::pass_gate_logic_type(con
   return pass_gate_logic_types_[model_id];
 }
 
-/* Return the multiplex structure of a circuit model */
+/* Return the type of multiplexing structure of a circuit model */
 enum e_spice_model_structure CircuitLibrary::mux_structure(const CircuitModelId& model_id) const {
   /* validate the model_id */
   VTR_ASSERT(valid_model_id(model_id));
@@ -217,7 +289,7 @@ enum e_spice_model_structure CircuitLibrary::mux_structure(const CircuitModelId&
   return mux_structure_[model_id]; 
 }
 
-
+/* Return the number of levels of multiplexing structure of a circuit model */
 size_t CircuitLibrary::mux_num_levels(const CircuitModelId& model_id) const {
   /* validate the model_id */
   VTR_ASSERT(valid_model_id(model_id));
@@ -229,7 +301,7 @@ size_t CircuitLibrary::mux_num_levels(const CircuitModelId& model_id) const {
 }
 
 /* Return if additional constant inputs are required for a circuit model 
- * Only applicable for MUX circuit model 
+ * Only applicable for MUX/LUT circuit model 
  */
 bool CircuitLibrary::mux_add_const_input(const CircuitModelId& model_id) const {
   /* validate the model_id */
@@ -242,7 +314,7 @@ bool CircuitLibrary::mux_add_const_input(const CircuitModelId& model_id) const {
 }
 
 /* Return if additional constant inputs are required for a circuit model 
- * Only applicable for MUX circuit model 
+ * Only applicable for MUX/LUT circuit model 
  */
 size_t CircuitLibrary::mux_const_input_value(const CircuitModelId& model_id) const {
   /* validate the model_id */
@@ -254,6 +326,18 @@ size_t CircuitLibrary::mux_const_input_value(const CircuitModelId& model_id) con
   /* A 0 value for the const values means it is logic 0 */
   /* A 1 value for the const values means it is logic 1 */
   return mux_const_input_values_[model_id];
+}
+
+/* Return if local encoders are used for a circuit model 
+ * Only applicable for MUX/LUT circuit model 
+ */
+bool CircuitLibrary::mux_use_local_encoder(const CircuitModelId& model_id) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  /* validate the circuit model type is MUX */
+  VTR_ASSERT( (SPICE_MODEL_MUX == model_type(model_id))
+           || (SPICE_MODEL_LUT == model_type(model_id)) );
+  return mux_use_local_encoder_[model_id];
 }
 
 /* Return the type of gate for a circuit model 
@@ -287,6 +371,30 @@ size_t CircuitLibrary::buffer_num_levels(const CircuitModelId& model_id) const {
   /* validate the circuit model type is BUF */
   VTR_ASSERT(SPICE_MODEL_INVBUF == model_type(model_id));
   return buffer_num_levels_[model_id];
+}
+
+/* Find the circuit model id of the input buffer of a circuit model */
+CircuitModelId CircuitLibrary::input_buffer_model(const CircuitModelId& model_id) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  /* INPUT buffer may not always exist */
+  if (INPUT < buffer_existence_[model_id].size()) {
+    return buffer_model_ids_[model_id][INPUT]; 
+  } else {
+    return CircuitModelId::INVALID();
+  }
+}
+
+/* Find the circuit model id of the output buffer of a circuit model */
+CircuitModelId CircuitLibrary::output_buffer_model(const CircuitModelId& model_id) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  /* OUTPUT buffer may not always exist */
+  if (OUTPUT < buffer_existence_[model_id].size()) {
+    return buffer_model_ids_[model_id][OUTPUT]; 
+  } else {
+    return CircuitModelId::INVALID();
+  }
 }
 
 /* Return the number of levels of delay types for a circuit model */
@@ -421,7 +529,8 @@ std::vector<CircuitPortId> CircuitLibrary::model_global_ports(const CircuitModel
 /* Recursively find all the global ports in the circuit model / sub circuit_model */
 std::vector<CircuitPortId> CircuitLibrary::model_global_ports_by_type(const CircuitModelId& model_id,
                                                                       const enum e_spice_model_port_type& type,
-                                                                      const bool& recursive) const {
+                                                                      const bool& recursive, 
+                                                                      const std::vector<enum e_spice_model_type>& ignore_model_types) const {
   /* validate the model_id */
   VTR_ASSERT(valid_model_id(model_id));
 
@@ -448,7 +557,21 @@ std::vector<CircuitPortId> CircuitLibrary::model_global_ports_by_type(const Circ
   /* If go recursively, we search all the buffer/pass-gate circuit model ids */
   /* Go search every sub circuit model included the current circuit model */
   for (const auto& sub_model : sub_models_[model_id]) {
-    std::vector<CircuitPortId> sub_global_ports = model_global_ports_by_type(sub_model, type, recursive);
+    /* Bypass this sub model if user specified an ignore list */
+    bool ignore = false;
+    for (const auto& ignore_model_type : ignore_model_types)  {
+      if (ignore_model_type != model_type(sub_model)) {
+        continue;
+      }
+      ignore = true;
+      break;
+    }
+    if (true == ignore) {
+      continue;
+    }
+    
+    /* Now we can add global ports */
+    std::vector<CircuitPortId> sub_global_ports = model_global_ports_by_type(sub_model, type, recursive, ignore_model_types);
     for (const auto& sub_global_port : sub_global_ports) {
       /* Add to global_ports, if it is not already found in the list */
       bool add_to_list = true;
@@ -467,6 +590,40 @@ std::vector<CircuitPortId> CircuitLibrary::model_global_ports_by_type(const Circ
   }
 
   return global_ports;
+}
+
+
+/* Recursively find all the global ports in the circuit model / sub circuit_model 
+ * whose port type matches users' specification
+ */
+std::vector<CircuitPortId> CircuitLibrary::model_global_ports_by_type(const CircuitModelId& model_id,
+                                                                      const std::vector<enum e_spice_model_port_type>& types,
+                                                                      const bool& recursive,
+                                                                      const bool& ignore_config_memories) const {
+  std::vector<CircuitPortId> global_ports;
+  std::vector<enum e_spice_model_type> ignore_list;
+
+  for (const auto& port_type : types) {
+    std::vector<CircuitPortId> global_port_by_type = model_global_ports_by_type(model_id, port_type, recursive, ignore_config_memories);
+    /* Insert the vector to the final global_ports */
+    global_ports.insert(global_ports.begin(), global_port_by_type.begin(), global_port_by_type.end()); 
+  }
+  return global_ports;
+}
+
+/* Recursively find all the global ports in the circuit model / sub circuit_model 
+ * but ignore all the SRAM and CCFF, which are configuration memories
+ */
+std::vector<CircuitPortId> CircuitLibrary::model_global_ports_by_type(const CircuitModelId& model_id,
+                                                                      const enum e_spice_model_port_type& type,
+                                                                      const bool& recursive, 
+                                                                      const bool& ignore_config_memories) const {
+  std::vector<enum e_spice_model_type> ignore_list;
+  if (true == ignore_config_memories) {
+    ignore_list.push_back(SPICE_MODEL_SRAM);
+    ignore_list.push_back(SPICE_MODEL_CCFF);
+  }
+  return model_global_ports_by_type(model_id, type, recursive, ignore_list);
 }
 
 /* Find the ports of a circuit model by a given type, return a list of qualified ports */
@@ -651,6 +808,41 @@ bool CircuitLibrary::port_is_prog(const CircuitPortId& circuit_port_id) const {
   /* validate the circuit_port_id */
   VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
   return port_is_prog_[circuit_port_id];
+}
+
+/* Return which level the output port locates at a LUT multiplexing structure */
+size_t CircuitLibrary::port_lut_frac_level(const CircuitPortId& circuit_port_id) const {
+  /* validate the circuit_port_id */
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
+  return port_lut_frac_level_[circuit_port_id];
+}
+
+/* Return indices of internal nodes in a LUT multiplexing structure to which the output port is wired to */
+std::vector<size_t> CircuitLibrary::port_lut_output_masks(const CircuitPortId& circuit_port_id) const {
+  /* validate the circuit_port_id */
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
+  return port_lut_output_masks_[circuit_port_id];
+}
+
+/* Return tri-state map of a port */
+std::string CircuitLibrary::port_tri_state_map(const CircuitPortId& circuit_port_id) const {
+  /* validate the circuit_port_id */
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
+  return port_tri_state_maps_[circuit_port_id];
+}
+
+/* Return circuit model id which is used to tri-state a port */
+CircuitModelId CircuitLibrary::port_tri_state_model(const CircuitPortId& circuit_port_id) const {
+  /* validate the circuit_port_id */
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
+  return port_tri_state_model_ids_[circuit_port_id];
+}
+
+/* Return circuit model name which is used to tri-state a port */
+std::string CircuitLibrary::port_tri_state_model_name(const CircuitPortId& circuit_port_id) const {
+  /* validate the circuit_port_id */
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
+  return port_tri_state_model_names_[circuit_port_id];
 }
 
 /* Return the id of parent circuit model for a circuit port */
@@ -1683,7 +1875,7 @@ void CircuitLibrary::build_submodels() {
     /* Build a unique list */
     for (const auto& cand : candidates) {
       /* Make sure the model id is unique in the list */
-      if (true == is_unique_submodel(model,cand)) {
+      if (true == is_unique_submodel(model, cand)) {
         sub_models_[model].push_back(cand);
       }
     }

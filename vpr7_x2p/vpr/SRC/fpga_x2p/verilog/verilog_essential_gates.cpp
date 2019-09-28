@@ -148,7 +148,7 @@ void print_verilog_invbuf_module(ModuleManager& module_manager,
   /* Find the input port, output port and global inputs*/
   std::vector<CircuitPortId> input_ports = circuit_lib.model_ports_by_type(circuit_model, SPICE_MODEL_PORT_INPUT, true);
   std::vector<CircuitPortId> output_ports = circuit_lib.model_ports_by_type(circuit_model, SPICE_MODEL_PORT_OUTPUT, true);
-  std::vector<CircuitPortId> global_ports = circuit_lib.model_global_ports_by_type(circuit_model, SPICE_MODEL_PORT_INPUT, true);
+  std::vector<CircuitPortId> global_ports = circuit_lib.model_global_ports_by_type(circuit_model, SPICE_MODEL_PORT_INPUT, true, true);
 
   /* Make sure:
    * There is only 1 input port and 1 output port, 
@@ -233,7 +233,7 @@ void print_verilog_passgate_module(ModuleManager& module_manager,
   /* Find the input port, output port*/
   std::vector<CircuitPortId> input_ports = circuit_lib.model_ports_by_type(circuit_model, SPICE_MODEL_PORT_INPUT, true);
   std::vector<CircuitPortId> output_ports = circuit_lib.model_ports_by_type(circuit_model, SPICE_MODEL_PORT_OUTPUT, true);
-  std::vector<CircuitPortId> global_ports = circuit_lib.model_global_ports_by_type(circuit_model, SPICE_MODEL_PORT_INPUT, true);
+  std::vector<CircuitPortId> global_ports = circuit_lib.model_global_ports_by_type(circuit_model, SPICE_MODEL_PORT_INPUT, true, true);
 
   switch (circuit_lib.pass_gate_logic_type(circuit_model)) {
   case SPICE_MODEL_PASS_GATE_TRANSMISSION:
@@ -444,7 +444,7 @@ void print_verilog_gate_module(ModuleManager& module_manager,
   /* Find the input port, output port*/
   std::vector<CircuitPortId> input_ports = circuit_lib.model_ports_by_type(circuit_model, SPICE_MODEL_PORT_INPUT, true);
   std::vector<CircuitPortId> output_ports = circuit_lib.model_ports_by_type(circuit_model, SPICE_MODEL_PORT_OUTPUT, true);
-  std::vector<CircuitPortId> global_ports = circuit_lib.model_global_ports_by_type(circuit_model, SPICE_MODEL_PORT_INPUT, true);
+  std::vector<CircuitPortId> global_ports = circuit_lib.model_global_ports_by_type(circuit_model, SPICE_MODEL_PORT_INPUT, true, true);
 
   /* Make sure:
    * There is only 1 output port, 

@@ -558,7 +558,7 @@
       </mode>
 
       <!-- Every input pin is driven by 15% of the tracks in a channel, every output pin is driven by 10% of the tracks in a channel -->
-      <fc default_in_type="frac" default_in_val="0.055" default_out_type="frac" default_out_val="0.10"/>
+      <fc default_in_type="frac" default_in_val="0.15" default_out_type="frac" default_out_val="0.10"/>
 
       <!-- IOs go on the periphery of the FPGA, for consistency,
           make it physically equivalent on all sides so that only one definition of I/Os is needed.
@@ -1013,7 +1013,7 @@
         </direct>
       </interconnect>
 
-      <fc default_in_type="frac" default_in_val="0.055" default_out_type="frac" default_out_val="0.10">
+      <fc default_in_type="frac" default_in_val="0.15" default_out_type="frac" default_out_val="0.10">
         <pin name="cin" fc_type="frac" fc_val="0"/>
         <pin name="cout" fc_type="frac" fc_val="0"/>
       </fc>

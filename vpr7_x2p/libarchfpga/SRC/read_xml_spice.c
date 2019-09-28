@@ -915,7 +915,7 @@ static void ProcessSpiceModel(ezxml_t Parent,
   } else if (0 == strcmp(FindProperty(Parent,"type",TRUE),"hard_logic")) {
     spice_model->type = SPICE_MODEL_HARDLOGIC;
   } else if (0 == strcmp(FindProperty(Parent,"type",TRUE),"sff")) {
-    spice_model->type = SPICE_MODEL_SCFF;
+    spice_model->type = SPICE_MODEL_CCFF;
   } else if (0 == strcmp(FindProperty(Parent,"type",TRUE),"iopad")) {
     spice_model->type = SPICE_MODEL_IOPAD;
   } else if (0 == strcmp(FindProperty(Parent,"type",TRUE),"inv_buf")) {
@@ -1417,7 +1417,7 @@ static void check_spice_models(int num_spice_model,
       }
     }
     /* Check scan-chain dff has input and output, clock ports*/
-    if (SPICE_MODEL_SCFF == spice_models[i].type) {
+    if (SPICE_MODEL_CCFF == spice_models[i].type) {
       has_sram = 1;
       has_clock_port = 0;
       has_in_port = 0;
