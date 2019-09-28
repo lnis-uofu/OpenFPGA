@@ -9,6 +9,7 @@
 
 #include "sides.h"
 #include "fpga_x2p_utils.h"
+#include "circuit_library_utils.h"
 #include "fpga_x2p_naming.h"
 
 /************************************************
@@ -18,8 +19,8 @@
  * Case 1 : If there is NO intermediate buffer followed by,
  *          the node name will be mux_l<node_level>_in
  ***********************************************/
-std::string generate_verilog_mux_node_name(const size_t& node_level, 
-                                           const bool& add_buffer_postfix) {
+std::string generate_mux_node_name(const size_t& node_level, 
+                                   const bool& add_buffer_postfix) {
   /* Generate the basic node_name */
   std::string node_name = "mux_l" + std::to_string(node_level) + "_in";
 
@@ -38,10 +39,10 @@ std::string generate_verilog_mux_node_name(const size_t& node_level,
  * 1. LUTs are named as <model_name>_mux
  * 2. MUXes are named as <model_name>_size<num_inputs>
  ***********************************************/
-std::string generate_verilog_mux_subckt_name(const CircuitLibrary& circuit_lib, 
-                                             const CircuitModelId& circuit_model, 
-                                             const size_t& mux_size, 
-                                             const std::string& postfix) {
+std::string generate_mux_subckt_name(const CircuitLibrary& circuit_lib, 
+                                     const CircuitModelId& circuit_model, 
+                                     const size_t& mux_size, 
+                                     const std::string& postfix) {
   std::string module_name = circuit_lib.model_name(circuit_model); 
   /* Check the model type and give different names */
   if (SPICE_MODEL_MUX == circuit_lib.model_type(circuit_model)) {
@@ -64,11 +65,11 @@ std::string generate_verilog_mux_subckt_name(const CircuitLibrary& circuit_lib,
  * Generate the module name of a branch for a
  * multiplexer in Verilog format
  ***********************************************/
-std::string generate_verilog_mux_branch_subckt_name(const CircuitLibrary& circuit_lib, 
-                                                    const CircuitModelId& circuit_model, 
-                                                    const size_t& mux_size, 
-                                                    const size_t& branch_mux_size, 
-                                                    const std::string& postfix) {
+std::string generate_mux_branch_subckt_name(const CircuitLibrary& circuit_lib, 
+                                            const CircuitModelId& circuit_model, 
+                                            const size_t& mux_size, 
+                                            const size_t& branch_mux_size, 
+                                            const std::string& postfix) {
   /* If the tgate spice model of this MUX is a MUX2 standard cell,
    * the mux_subckt name will be the name of the standard cell
    */
@@ -79,7 +80,7 @@ std::string generate_verilog_mux_branch_subckt_name(const CircuitLibrary& circui
   }
   std::string branch_postfix = postfix + "_size" + std::to_string(branch_mux_size);
 
-  return generate_verilog_mux_subckt_name(circuit_lib, circuit_model, mux_size, branch_postfix);
+  return generate_mux_subckt_name(circuit_lib, circuit_model, mux_size, branch_postfix);
 }
 
 /************************************************
@@ -473,7 +474,7 @@ std::string generate_mux_input_bus_port_name(const CircuitLibrary& circuit_lib,
                                              const size_t& mux_size, 
                                              const size_t& mux_instance_id) {
   std::string postfix = std::string("_") + std::to_string(mux_instance_id) + std::string("_inbus");
-  return generate_verilog_mux_subckt_name(circuit_lib, mux_model, mux_size, postfix);
+  return generate_mux_subckt_name(circuit_lib, mux_model, mux_size, postfix);
 }
 
 /*********************************************************************
@@ -492,7 +493,7 @@ std::string generate_mux_config_bus_port_name(const CircuitLibrary& circuit_lib,
      postfix += std::string("_b");  
   }
 
-  return generate_verilog_mux_subckt_name(circuit_lib, mux_model, mux_size, postfix);
+  return generate_mux_subckt_name(circuit_lib, mux_model, mux_size, postfix);
 }
 
 /*********************************************************************
@@ -516,6 +517,6 @@ std::string generate_mux_sram_port_name(const CircuitLibrary& circuit_lib,
       postfix += std::string("outb"); 
   }
 
-  return generate_verilog_mux_subckt_name(circuit_lib, mux_model, mux_size, postfix);
+  return generate_mux_subckt_name(circuit_lib, mux_model, mux_size, postfix);
 }
 

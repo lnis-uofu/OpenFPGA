@@ -453,8 +453,8 @@ class CircuitLibrary {
     void link_buffer_model(const CircuitModelId& model_id);      
     void link_pass_gate_logic_model(const CircuitModelId& model_id);      
     bool is_unique_submodel(const CircuitModelId& model_id, const CircuitModelId& submodel_id);
-    void build_submodels();
     void build_model_timing_graph(const CircuitModelId& model_id);
+    void build_submodels();
   public: /* Public Mutators: builders */
     void build_model_links();
     void build_timing_graphs();

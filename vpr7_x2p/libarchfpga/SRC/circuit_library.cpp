@@ -1875,7 +1875,7 @@ void CircuitLibrary::build_submodels() {
     /* Build a unique list */
     for (const auto& cand : candidates) {
       /* Make sure the model id is unique in the list */
-      if (true == is_unique_submodel(model,cand)) {
+      if (true == is_unique_submodel(model, cand)) {
         sub_models_[model].push_back(cand);
       }
     }

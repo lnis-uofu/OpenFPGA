@@ -14,6 +14,7 @@
 #include "module_manager.h"
 #include "physical_types.h"
 #include "vpr_types.h"
+#include "circuit_library_utils.h"
 #include "mux_utils.h"
 
 /* FPGA-X2P context header files */
@@ -217,6 +218,7 @@ void print_verilog_memory_module(ModuleManager& module_manager,
     /* TODO: Wire the memory cells into a chain, when Configuration-chain style is selected!!! */
   }
 
+  /* TODO: Add local decoders here if required */
 
   /* Put an end to the Verilog module */
   print_verilog_module_end(fp, module_name);
@@ -245,21 +247,18 @@ void print_verilog_mux_memory_module(ModuleManager& module_manager,
   switch (circuit_lib.design_tech_type(mux_model)) {
   case SPICE_MODEL_DESIGN_CMOS: {
     /* Generate module name */
-    std::string module_name = generate_verilog_mux_subckt_name(circuit_lib, mux_model, 
-                                                               find_mux_num_datapath_inputs(circuit_lib, mux_model, mux_graph.num_inputs()), 
-                                                               std::string(verilog_mem_posfix));
+    std::string module_name = generate_mux_subckt_name(circuit_lib, mux_model, 
+                                                       find_mux_num_datapath_inputs(circuit_lib, mux_model, mux_graph.num_inputs()), 
+                                                       std::string(verilog_mem_posfix));
 
     /* Get the sram ports from the mux */
-    std::vector<CircuitPortId> mux_sram_ports = circuit_lib.model_ports_by_type(mux_model, SPICE_MODEL_PORT_SRAM, true);
-    VTR_ASSERT( 1 == mux_sram_ports.size() );
-    /* Get the circuit model for the memory circuit used by the multiplexer */
-    CircuitModelId sram_model = circuit_lib.port_tri_state_model(mux_sram_ports[0]);
-    VTR_ASSERT(CircuitModelId::INVALID() != sram_model);
+    std::vector<CircuitModelId> sram_models = get_circuit_sram_models(circuit_lib, mux_model);
+    VTR_ASSERT( 1 == sram_models.size() );
 
     /* Find the number of SRAMs in the module, this is also the port width */
     size_t num_mems = mux_graph.num_memory_bits();
 
-    print_verilog_memory_module(module_manager, circuit_lib, fp, module_name, sram_model, num_mems);
+    print_verilog_memory_module(module_manager, circuit_lib, fp, module_name, sram_models[0], num_mems);
     break;
   }
   case SPICE_MODEL_DESIGN_RRAM:

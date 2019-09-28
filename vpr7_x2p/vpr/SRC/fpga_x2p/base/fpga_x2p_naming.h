@@ -13,19 +13,19 @@
 #include "circuit_library.h"
 #include "vpr_types.h"
 
-std::string generate_verilog_mux_node_name(const size_t& node_level, 
-                                           const bool& add_buffer_postfix);
+std::string generate_mux_node_name(const size_t& node_level, 
+                                   const bool& add_buffer_postfix);
 
-std::string generate_verilog_mux_subckt_name(const CircuitLibrary& circuit_lib, 
-                                             const CircuitModelId& circuit_model, 
-                                             const size_t& mux_size, 
-                                             const std::string& posfix) ;
+std::string generate_mux_subckt_name(const CircuitLibrary& circuit_lib, 
+                                     const CircuitModelId& circuit_model, 
+                                     const size_t& mux_size, 
+                                     const std::string& posfix) ;
 
-std::string generate_verilog_mux_branch_subckt_name(const CircuitLibrary& circuit_lib, 
-                                                    const CircuitModelId& circuit_model, 
-                                                    const size_t& mux_size, 
-                                                    const size_t& branch_mux_size, 
-                                                    const std::string& posfix);
+std::string generate_mux_branch_subckt_name(const CircuitLibrary& circuit_lib, 
+                                            const CircuitModelId& circuit_model, 
+                                            const size_t& mux_size, 
+                                            const size_t& branch_mux_size, 
+                                            const std::string& posfix);
 
 std::string generate_mux_local_decoder_subckt_name(const size_t& addr_size, 
                                                    const size_t& data_size); 
