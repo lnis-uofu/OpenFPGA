@@ -651,7 +651,8 @@ void print_verilog_buffer_instance(std::fstream& fp,
 /********************************************************************
  * Print local wires that are used for SRAM configuration 
  * The local wires are strongly dependent on the organization of SRAMs.
- * 1. Standalone SRAMs: 
+ * Standalone SRAMs: 
+ * -----------------
  *    No need for local wires, their outputs are port of the module
  *        
  *              Module
@@ -665,36 +666,61 @@ void print_verilog_buffer_instance(std::fstream& fp,
  *             |  +---------------------+     |
  *             +------------------------------+      
  *
- * 2. Configuration-chain Flip-flops:
- *    two ports will be added, which are the head of scan-chain 
- *    and the tail of scan-chain
+ * Configuration chain-style
+ * -------------------------
+ * wire [0:N] config_bus
  *
- *              Module
- *             +-----------------------------------------+
- *             |                                         |
- *             |    +------+    +------+     +------+    |
- *             | +->| CCFF |--->| CCFF | ... | CCFF |-+  |
- *             | |  +------+ |  +------+  |  +------+ |  |
- *     head--->|-+-----------+------------+-----------+->|--->tail
- *             |               local wire                |
- *             +-----------------------------------------+
- * 3. Memory decoders:
+ *
+ *           Module
+ *          +--------------------------------------------------------------+
+ *          |  config_bus    config_bus    config_bus       config_bus     |
+ *          |     [0]           [1]           [2]              [N]         |
+ *          |      |             |             |                |          |
+ *          |      v             v             v                v          |
+ * ccff_head| ----------+  +---------+   +------------+   +----------------|-> ccff_tail
+ *          |           |  ^         |   ^            |   ^                |
+ *          |      head v  |tail     v   |            v   |                |
+ *          |       +----------+  +----------+     +----------+            |
+ *          |       |  Memory  |  |  Memory  |     |  Memory  |            |
+ *          |       |  Module  |  |  Module  | ... |  Module  |            |
+ *          |       |   [0]    |  |   [1]    |     |    [N]   |            |
+ *          |       +----------+  +----------+     +----------+            |
+ *          |            |             |                 |                 |
+ *          |            v             v                 v                 |
+ *          |       +----------+  +----------+     +----------+            |
+ *          |       |  MUX     |  |  MUX     |     |  MUX     |            |
+ *          |       |  Module  |  |  Module  | ... |  Module  |            |
+ *          |       |   [0]    |  |   [1]    |     |    [N]   |            |
+ *          |       +----------+  +----------+     +----------+            |
+ *          |                                                              |
+ *          +--------------------------------------------------------------+
+ *
+ * Memory bank-style
+ * -----------------
  *    two ports will be added, which are regular output and inverted output 
  *    Note that the outputs are the data outputs of SRAMs 
  *    BL/WLs of memory decoders are ports of module but not local wires
  *
- *              Module
- *             +-----------------------------------------+
- *             |                                         |
- *             |    +------+    +------+     +------+    |
- *             |    | SRAM |    | SRAM | ... | SRAM |    |
- *             |    +------+    +------+     +------+    |
- *             |       ^           ^            ^        |
- *             |       |           |            |        |
- *    BL/WL--->|---------------------------------------->|
- *             |               local wire                |
- *             +-----------------------------------------+
-
+ *             Module
+ *            +-------------------------------------------------+
+ *            |                                                 |
+  BL/WL bus --+--------+------------+-----------------+         |
+ *            |         |            |                |         |
+ *            |   BL/WL v      BL/WL v          BL/WL v         |
+ *            |   +----------+  +----------+     +----------+   |
+ *            |   |  Memory  |  |  Memory  |     |  Memory  |   |
+ *            |   |  Module  |  |  Module  | ... |  Module  |   |
+ *            |   |   [0]    |  |   [1]    |     |    [N]   |   |
+ *            |   +----------+  +----------+     +----------+   |
+ *            |        |             |                 |        |
+ *            |        v             v                 v        |
+ *            |   +----------+  +----------+     +----------+   |
+ *            |   |  MUX     |  |  MUX     |     |  MUX     |   |
+ *            |   |  Module  |  |  Module  | ... |  Module  |   |
+ *            |   |   [0]    |  |   [1]    |     |    [N]   |   |
+ *            |   +----------+  +----------+     +----------+   |
+ *            |                                                 |
+ *            +-------------------------------------------------+
  *
  ********************************************************************/
 void print_verilog_local_sram_wires(std::fstream& fp,
@@ -717,36 +743,19 @@ void print_verilog_local_sram_wires(std::fstream& fp,
     break;
   case SPICE_SRAM_SCAN_CHAIN: {
     /* Generate the name of local wire for the CCFF inputs, CCFF output and inverted output */
-    std::vector<BasicPort> ccff_ports;
     /* [0] => CCFF input */
-    ccff_ports.push_back(BasicPort(generate_sram_local_port_name(circuit_lib, sram_model, sram_orgz_type, SPICE_MODEL_PORT_INPUT), port_size));
-    /* [1] => CCFF output */
-    ccff_ports.push_back(BasicPort(generate_sram_local_port_name(circuit_lib, sram_model, sram_orgz_type, SPICE_MODEL_PORT_OUTPUT), port_size));
-    /* [2] => CCFF inverted output */
-    ccff_ports.push_back(BasicPort(generate_sram_local_port_name(circuit_lib, sram_model, sram_orgz_type, SPICE_MODEL_PORT_INOUT), port_size));
-    /* Print local wire definition */
-    for (const auto& ccff_port : ccff_ports) {
-      fp << generate_verilog_port(VERILOG_PORT_WIRE, ccff_port) << ";" << std::endl; 
-    }
+    BasicPort ccff_config_bus_port(generate_local_config_bus_port_name(), port_size);
+    fp << generate_verilog_port(VERILOG_PORT_WIRE, ccff_config_bus_port) << ";" << std::endl; 
     /* Connect first CCFF to the head */
     /* Head is always a 1-bit port */
     BasicPort ccff_head_port(generate_sram_port_name(circuit_lib, sram_model, sram_orgz_type, SPICE_MODEL_PORT_INPUT), 1); 
-    BasicPort ccff_head_local_port(ccff_ports[0].get_name(), 1); 
+    BasicPort ccff_head_local_port(ccff_config_bus_port.get_name(), 1); 
     print_verilog_wire_connection(fp, ccff_head_local_port, ccff_head_port, false); 
     /* Connect last CCFF to the tail */
     /* Tail is always a 1-bit port */
     BasicPort ccff_tail_port(generate_sram_port_name(circuit_lib, sram_model, sram_orgz_type, SPICE_MODEL_PORT_OUTPUT), 1); 
-    BasicPort ccff_tail_local_port(ccff_ports[1].get_name(), ccff_ports[1].get_msb(), ccff_ports[1].get_msb()); 
+    BasicPort ccff_tail_local_port(ccff_config_bus_port.get_name(), ccff_config_bus_port.get_msb(), ccff_config_bus_port.get_msb()); 
     print_verilog_wire_connection(fp, ccff_tail_local_port, ccff_tail_port, false); 
-    /* Connect CCFFs into chains */
-    /* If port size is 0 or 1, there is no need for the chain connection */
-    if (2 > port_size) {
-      break;
-    }
-    /* Cascade the CCFF between head and tail */
-    BasicPort ccff_chain_input_port(ccff_ports[0].get_name(), port_size - 1);
-    BasicPort ccff_chain_output_port(ccff_ports[1].get_name(), 1, port_size - 1);
-    print_verilog_wire_connection(fp, ccff_chain_output_port, ccff_chain_input_port, false); 
     break;
   }
   case SPICE_SRAM_MEMORY_BANK: {

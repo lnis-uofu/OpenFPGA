@@ -82,6 +82,8 @@ std::string generate_mux_local_decoder_data_port_name();
 
 std::string generate_mux_local_decoder_data_inv_port_name();
 
+std::string generate_local_config_bus_port_name();
+
 std::string generate_sram_port_name(const CircuitLibrary& circuit_lib,
                                     const CircuitModelId& sram_model,
                                     const e_sram_orgz& sram_orgz_type,

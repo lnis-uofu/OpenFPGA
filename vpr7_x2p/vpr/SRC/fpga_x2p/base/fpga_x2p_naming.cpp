@@ -340,8 +340,6 @@ std::string generate_mux_local_decoder_addr_port_name() {
   return std::string("addr");
 }
 
-
-
 /*********************************************************************
  * Generate the data port (output) for a local decoder of a multiplexer
  * TODO: This could be replaced as a constexpr string
@@ -358,6 +356,13 @@ std::string generate_mux_local_decoder_data_inv_port_name() {
   return std::string("data_inv");
 }
 
+/*********************************************************************
+ * Generate the port name of a local configuration bus
+ * TODO: This could be replaced as a constexpr string
+ *********************************************************************/
+std::string generate_local_config_bus_port_name() {
+  return std::string("config_bus");
+}
 
 /*********************************************************************
  * Generate the port name for a regular sram port which appears in the
