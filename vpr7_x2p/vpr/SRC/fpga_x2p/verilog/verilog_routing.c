@@ -2449,9 +2449,9 @@ void print_verilog_unique_switch_box_mux(ModuleManager& module_manager,
   /* Create port-to-port map */
   std::map<std::string, BasicPort> mem_port2port_name_map;
 
-  /* Link input port to Switch block configuration bus */
+  /* TODO: Link input port to Switch block configuration bus */
 
-  /* Link output port to MUX configuration port */
+  /* TODO: Link output port to MUX configuration port */
 
   /* Print an instance of the MUX Module */
   print_verilog_comment(fp, std::string("----- BEGIN Instanciation of memory cells for a routing multiplexer -----"));

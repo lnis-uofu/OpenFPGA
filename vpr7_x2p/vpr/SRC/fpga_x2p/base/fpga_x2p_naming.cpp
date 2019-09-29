@@ -540,26 +540,39 @@ std::string generate_mux_config_bus_port_name(const CircuitLibrary& circuit_lib,
 }
 
 /*********************************************************************
+ * Generate the port name for a SRAM port of a circuit
+ * This name is used for local wires that connecting SRAM ports
+ * of a circuit model inside a Verilog/SPICE module
+ * Note that the SRAM ports share the same naming
+ * convention regardless of their configuration style
+ *********************************************************************/
+std::string generate_local_sram_port_name(const std::string& port_prefix, 
+                                          const size_t& instance_id,
+                                          const e_spice_model_port_type& port_type) {
+  std::string port_name = port_prefix + std::string("_") + std::to_string(instance_id) + std::string("_");
+
+  if (SPICE_MODEL_PORT_INPUT == port_type) {
+    port_name += std::string("out"); 
+  } else {
+    VTR_ASSERT( SPICE_MODEL_PORT_OUTPUT == port_type );
+    port_name += std::string("outb"); 
+  }
+
+  return port_name;
+}
+
+/*********************************************************************
  * Generate the port name for a SRAM port of a routing multiplexer
  * This name is used for local wires that connecting SRAM ports
  * of routing multiplexers inside a Verilog/SPICE module
  * Note that the SRAM ports of routing multiplexers share the same naming
  * convention regardless of their configuration style
- *********************************************************************/
+ **********************************************************************/
 std::string generate_mux_sram_port_name(const CircuitLibrary& circuit_lib,
                                         const CircuitModelId& mux_model,
                                         const size_t& mux_size, 
                                         const size_t& mux_instance_id,
                                         const e_spice_model_port_type& port_type) {
-  std::string postfix = std::string("_") + std::to_string(mux_instance_id) + std::string("_");
-
-  if (SPICE_MODEL_PORT_INPUT == port_type) {
-      postfix += std::string("out"); 
-  } else {
-      VTR_ASSERT( SPICE_MODEL_PORT_OUTPUT == port_type );
-      postfix += std::string("outb"); 
-  }
-
-  return generate_mux_subckt_name(circuit_lib, mux_model, mux_size, postfix);
+  std::string prefix = generate_mux_subckt_name(circuit_lib, mux_model, mux_size, std::string());
+  return generate_local_sram_port_name(prefix, mux_instance_id, port_type);
 }
-

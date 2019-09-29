@@ -103,6 +103,10 @@ std::string generate_mux_config_bus_port_name(const CircuitLibrary& circuit_lib,
                                               const size_t& bus_id,
                                               const bool& inverted);
 
+std::string generate_local_sram_port_name(const std::string& port_prefix, 
+                                          const size_t& instance_id,
+                                          const e_spice_model_port_type& port_type);
+
 std::string generate_mux_sram_port_name(const CircuitLibrary& circuit_lib,
                                         const CircuitModelId& mux_model,
                                         const size_t& mux_size, 
