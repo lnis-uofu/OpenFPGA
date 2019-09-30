@@ -76,6 +76,10 @@ std::string generate_configuration_chain_head_name();
 
 std::string generate_configuration_chain_tail_name();
 
+std::string generate_configuration_chain_data_out_name();
+
+std::string generate_configuration_chain_inverted_data_out_name();
+
 std::string generate_mux_local_decoder_addr_port_name();
 
 std::string generate_mux_local_decoder_data_port_name();

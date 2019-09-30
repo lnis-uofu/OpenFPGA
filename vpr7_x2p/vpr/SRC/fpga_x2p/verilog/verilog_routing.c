@@ -66,7 +66,8 @@ void print_verilog_switch_block_local_sram_wires(std::fstream& fp,
                                                  const size_t& port_size) {
   size_t local_port_size = port_size;
   if (SPICE_SRAM_SCAN_CHAIN == sram_orgz_type) {
-    local_port_size = find_switch_block_number_of_muxes(rr_gsb); 
+    /* Plus 1 for the wire size to connect to the tail of the configuration chain */
+    local_port_size = find_switch_block_number_of_muxes(rr_gsb) + 1; 
   }
   print_verilog_local_sram_wires(fp, circuit_lib, sram_model, sram_orgz_type, local_port_size);
 }
@@ -2449,9 +2450,17 @@ void print_verilog_unique_switch_box_mux(ModuleManager& module_manager,
   /* Create port-to-port map */
   std::map<std::string, BasicPort> mem_port2port_name_map;
 
-  /* TODO: Link input port to Switch block configuration bus */
-
-  /* TODO: Link output port to MUX configuration port */
+  /* TODO: Make the port2port map generation more generic!!! */
+  std::vector<BasicPort> config_ports;
+  config_ports.push_back(BasicPort(generate_local_config_bus_port_name(), mux_instance_id - 1, mux_instance_id));
+  std::vector<BasicPort> mem_output_ports;
+  mem_output_ports.push_back(mux_config_port);
+  mem_output_ports.push_back(mux_config_inv_port);
+  mem_port2port_name_map = generate_mem_module_port2port_map(module_manager, mem_module, 
+                                                             config_ports,
+                                                             mem_output_ports,
+                                                             circuit_lib.design_tech_type(mux_model),
+                                                             cur_sram_orgz_info->type);
 
   /* Print an instance of the MUX Module */
   print_verilog_comment(fp, std::string("----- BEGIN Instanciation of memory cells for a routing multiplexer -----"));

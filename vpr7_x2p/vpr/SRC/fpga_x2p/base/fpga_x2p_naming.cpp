@@ -333,6 +333,22 @@ std::string generate_configuration_chain_tail_name() {
 }
 
 /*********************************************************************
+ * Generate the memory output port name of a configuration chain
+ * TODO: This could be replaced as a constexpr string
+ *********************************************************************/
+std::string generate_configuration_chain_data_out_name() {
+  return std::string("mem_out");
+}
+
+/*********************************************************************
+ * Generate the inverted memory output port name of a configuration chain
+ * TODO: This could be replaced as a constexpr string
+ *********************************************************************/
+std::string generate_configuration_chain_inverted_data_out_name() {
+  return std::string("mem_outb");
+}
+
+/*********************************************************************
  * Generate the addr port (input) for a local decoder of a multiplexer
  * TODO: This could be replaced as a constexpr string
  *********************************************************************/
