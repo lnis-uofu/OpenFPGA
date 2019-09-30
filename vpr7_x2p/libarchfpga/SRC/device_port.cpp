@@ -136,10 +136,14 @@ void BasicPort::revert() {
  
 /* rotate: increase both lsb and msb by an offset  */
 bool BasicPort::rotate(const size_t& offset) {
-  /* If current port is invalid or offset is 0, 
-   * we do nothing 
-   */
-  if ((0 == offset) || (0 == get_width())) {
+  /* If offset is 0, we do nothing */
+  if (0 == offset) {
+    return true;
+  }
+
+  /* If current width is 0, we set a width using the offset! */
+  if (0 == get_width()) {
+    set_width(offset);
     return true;
   }
   /* check if leads to overflow: 

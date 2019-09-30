@@ -10,7 +10,10 @@
 #include <vector>
 #include "circuit_library.h"
 
-std::vector<CircuitModelId> get_circuit_sram_models(const CircuitLibrary& circuit_lib,
-                                                    const CircuitModelId& circuit_model);
+std::vector<CircuitModelId> find_circuit_sram_models(const CircuitLibrary& circuit_lib,
+                                                     const CircuitModelId& circuit_model);
+
+std::vector<CircuitPortId> find_circuit_regular_sram_ports(const CircuitLibrary& circuit_lib,
+                                                           const CircuitModelId& circuit_model);
 
 #endif

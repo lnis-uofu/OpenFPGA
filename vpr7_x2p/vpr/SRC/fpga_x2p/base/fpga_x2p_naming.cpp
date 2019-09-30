@@ -9,6 +9,7 @@
 
 #include "sides.h"
 #include "fpga_x2p_utils.h"
+#include "circuit_library_utils.h"
 #include "fpga_x2p_naming.h"
 
 /************************************************
@@ -18,8 +19,8 @@
  * Case 1 : If there is NO intermediate buffer followed by,
  *          the node name will be mux_l<node_level>_in
  ***********************************************/
-std::string generate_verilog_mux_node_name(const size_t& node_level, 
-                                           const bool& add_buffer_postfix) {
+std::string generate_mux_node_name(const size_t& node_level, 
+                                   const bool& add_buffer_postfix) {
   /* Generate the basic node_name */
   std::string node_name = "mux_l" + std::to_string(node_level) + "_in";
 
@@ -38,10 +39,10 @@ std::string generate_verilog_mux_node_name(const size_t& node_level,
  * 1. LUTs are named as <model_name>_mux
  * 2. MUXes are named as <model_name>_size<num_inputs>
  ***********************************************/
-std::string generate_verilog_mux_subckt_name(const CircuitLibrary& circuit_lib, 
-                                             const CircuitModelId& circuit_model, 
-                                             const size_t& mux_size, 
-                                             const std::string& postfix) {
+std::string generate_mux_subckt_name(const CircuitLibrary& circuit_lib, 
+                                     const CircuitModelId& circuit_model, 
+                                     const size_t& mux_size, 
+                                     const std::string& postfix) {
   std::string module_name = circuit_lib.model_name(circuit_model); 
   /* Check the model type and give different names */
   if (SPICE_MODEL_MUX == circuit_lib.model_type(circuit_model)) {
@@ -64,11 +65,11 @@ std::string generate_verilog_mux_subckt_name(const CircuitLibrary& circuit_lib,
  * Generate the module name of a branch for a
  * multiplexer in Verilog format
  ***********************************************/
-std::string generate_verilog_mux_branch_subckt_name(const CircuitLibrary& circuit_lib, 
-                                                    const CircuitModelId& circuit_model, 
-                                                    const size_t& mux_size, 
-                                                    const size_t& branch_mux_size, 
-                                                    const std::string& postfix) {
+std::string generate_mux_branch_subckt_name(const CircuitLibrary& circuit_lib, 
+                                            const CircuitModelId& circuit_model, 
+                                            const size_t& mux_size, 
+                                            const size_t& branch_mux_size, 
+                                            const std::string& postfix) {
   /* If the tgate spice model of this MUX is a MUX2 standard cell,
    * the mux_subckt name will be the name of the standard cell
    */
@@ -79,7 +80,7 @@ std::string generate_verilog_mux_branch_subckt_name(const CircuitLibrary& circui
   }
   std::string branch_postfix = postfix + "_size" + std::to_string(branch_mux_size);
 
-  return generate_verilog_mux_subckt_name(circuit_lib, circuit_model, mux_size, branch_postfix);
+  return generate_mux_subckt_name(circuit_lib, circuit_model, mux_size, branch_postfix);
 }
 
 /************************************************
@@ -316,6 +317,70 @@ std::string generate_formal_verification_sram_port_name(const CircuitLibrary& ci
 }
 
 /*********************************************************************
+ * Generate the head port name of a configuration chain
+ * TODO: This could be replaced as a constexpr string
+ *********************************************************************/
+std::string generate_configuration_chain_head_name() {
+  return std::string("ccff_head");
+}
+
+/*********************************************************************
+ * Generate the tail port name of a configuration chain
+ * TODO: This could be replaced as a constexpr string
+ *********************************************************************/
+std::string generate_configuration_chain_tail_name() {
+  return std::string("ccff_tail");
+}
+
+/*********************************************************************
+ * Generate the memory output port name of a configuration chain
+ * TODO: This could be replaced as a constexpr string
+ *********************************************************************/
+std::string generate_configuration_chain_data_out_name() {
+  return std::string("mem_out");
+}
+
+/*********************************************************************
+ * Generate the inverted memory output port name of a configuration chain
+ * TODO: This could be replaced as a constexpr string
+ *********************************************************************/
+std::string generate_configuration_chain_inverted_data_out_name() {
+  return std::string("mem_outb");
+}
+
+/*********************************************************************
+ * Generate the addr port (input) for a local decoder of a multiplexer
+ * TODO: This could be replaced as a constexpr string
+ *********************************************************************/
+std::string generate_mux_local_decoder_addr_port_name() {
+  return std::string("addr");
+}
+
+/*********************************************************************
+ * Generate the data port (output) for a local decoder of a multiplexer
+ * TODO: This could be replaced as a constexpr string
+ *********************************************************************/
+std::string generate_mux_local_decoder_data_port_name() {
+  return std::string("data");
+}
+
+/*********************************************************************
+ * Generate the inverted data port (output) for a local decoder of a multiplexer
+ * TODO: This could be replaced as a constexpr string
+ *********************************************************************/
+std::string generate_mux_local_decoder_data_inv_port_name() {
+  return std::string("data_inv");
+}
+
+/*********************************************************************
+ * Generate the port name of a local configuration bus
+ * TODO: This could be replaced as a constexpr string
+ *********************************************************************/
+std::string generate_local_config_bus_port_name() {
+  return std::string("config_bus");
+}
+
+/*********************************************************************
  * Generate the port name for a regular sram port which appears in the
  * port list of a module
  * The port name is named after the cell name of SRAM in circuit library
@@ -473,7 +538,7 @@ std::string generate_mux_input_bus_port_name(const CircuitLibrary& circuit_lib,
                                              const size_t& mux_size, 
                                              const size_t& mux_instance_id) {
   std::string postfix = std::string("_") + std::to_string(mux_instance_id) + std::string("_inbus");
-  return generate_verilog_mux_subckt_name(circuit_lib, mux_model, mux_size, postfix);
+  return generate_mux_subckt_name(circuit_lib, mux_model, mux_size, postfix);
 }
 
 /*********************************************************************
@@ -492,7 +557,29 @@ std::string generate_mux_config_bus_port_name(const CircuitLibrary& circuit_lib,
      postfix += std::string("_b");  
   }
 
-  return generate_verilog_mux_subckt_name(circuit_lib, mux_model, mux_size, postfix);
+  return generate_mux_subckt_name(circuit_lib, mux_model, mux_size, postfix);
+}
+
+/*********************************************************************
+ * Generate the port name for a SRAM port of a circuit
+ * This name is used for local wires that connecting SRAM ports
+ * of a circuit model inside a Verilog/SPICE module
+ * Note that the SRAM ports share the same naming
+ * convention regardless of their configuration style
+ *********************************************************************/
+std::string generate_local_sram_port_name(const std::string& port_prefix, 
+                                          const size_t& instance_id,
+                                          const e_spice_model_port_type& port_type) {
+  std::string port_name = port_prefix + std::string("_") + std::to_string(instance_id) + std::string("_");
+
+  if (SPICE_MODEL_PORT_INPUT == port_type) {
+    port_name += std::string("out"); 
+  } else {
+    VTR_ASSERT( SPICE_MODEL_PORT_OUTPUT == port_type );
+    port_name += std::string("outb"); 
+  }
+
+  return port_name;
 }
 
 /*********************************************************************
@@ -501,21 +588,12 @@ std::string generate_mux_config_bus_port_name(const CircuitLibrary& circuit_lib,
  * of routing multiplexers inside a Verilog/SPICE module
  * Note that the SRAM ports of routing multiplexers share the same naming
  * convention regardless of their configuration style
- *********************************************************************/
+ **********************************************************************/
 std::string generate_mux_sram_port_name(const CircuitLibrary& circuit_lib,
                                         const CircuitModelId& mux_model,
                                         const size_t& mux_size, 
                                         const size_t& mux_instance_id,
                                         const e_spice_model_port_type& port_type) {
-  std::string postfix = std::string("_") + std::to_string(mux_instance_id) + std::string("_");
-
-  if (SPICE_MODEL_PORT_INPUT == port_type) {
-      postfix += std::string("out"); 
-  } else {
-      VTR_ASSERT( SPICE_MODEL_PORT_OUTPUT == port_type );
-      postfix += std::string("outb"); 
-  }
-
-  return generate_verilog_mux_subckt_name(circuit_lib, mux_model, mux_size, postfix);
+  std::string prefix = generate_mux_subckt_name(circuit_lib, mux_model, mux_size, std::string());
+  return generate_local_sram_port_name(prefix, mux_instance_id, port_type);
 }
-

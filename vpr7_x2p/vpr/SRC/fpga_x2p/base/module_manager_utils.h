@@ -38,5 +38,12 @@ void add_sram_ports_to_module_manager(ModuleManager& module_manager,
                                       const e_sram_orgz sram_orgz_type,
                                       const size_t& port_size);
 
+std::map<std::string, BasicPort> generate_mem_module_port2port_map(const ModuleManager& module_manager, 
+                                                                   const ModuleId& mem_module,
+                                                                   const std::vector<BasicPort>& config_bus_ports,
+                                                                   const std::vector<BasicPort>& mem_output_bus_ports,
+                                                                   const e_spice_model_design_tech& mem_design_tech,
+                                                                   const e_sram_orgz& sram_orgz_type);
+
 #endif
 

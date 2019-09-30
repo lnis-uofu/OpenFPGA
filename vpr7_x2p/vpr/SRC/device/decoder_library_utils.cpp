@@ -27,11 +27,13 @@
  *  We plus 1, which is all-zero condition for outputs
  ***************************************************************************************/
 size_t find_mux_local_decoder_addr_size(const size_t& data_size) {
-  /* Make sure we have a encoder which is at least 2 ! */
+  /* if data size is 1, it is an corner case for the decoder (addr = 1) */
+  if (1 == data_size) {
+    return 1;
+  }
   VTR_ASSERT (2 <= data_size);
   return ceil(log(data_size) / log(2));
 }
-
 
 /***************************************************************************************
  * Try to find if the decoder already exists in the library, 

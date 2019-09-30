@@ -299,7 +299,7 @@ void print_verilog_submodule_lut(ModuleManager& module_manager,
   /* Instanciate the multiplexing structure for the LUT */ 
   print_verilog_comment(fp, std::string("---- BEGIN Instanciation of LUT multiplexer module -----"));
   /* Find the name of LUT MUX: no need to provide a mux size, just give an invalid number (=-1) */
-  std::string lut_mux_module_name = generate_verilog_mux_subckt_name(circuit_lib, circuit_model, size_t(-1), std::string(""));
+  std::string lut_mux_module_name = generate_mux_subckt_name(circuit_lib, circuit_model, size_t(-1), std::string(""));
   /* Find the module id of LUT MUX in the module manager */
   ModuleId lut_mux_module_id = module_manager.find_module(lut_mux_module_name);
   /* We must have a valid id */

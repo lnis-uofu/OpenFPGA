@@ -54,8 +54,8 @@
  * Get the model id of a SRAM model that is used to configure 
  * a circuit model
  *******************************************************************/
-std::vector<CircuitModelId> get_circuit_sram_models(const CircuitLibrary& circuit_lib,
-                                                    const CircuitModelId& circuit_model) {
+std::vector<CircuitModelId> find_circuit_sram_models(const CircuitLibrary& circuit_lib,
+                                                     const CircuitModelId& circuit_model) {
   /* SRAM model id is stored in the sram ports of a circuit model */
   std::vector<CircuitPortId> sram_ports = circuit_lib.model_ports_by_type(circuit_model, SPICE_MODEL_PORT_SRAM);
   std::vector<CircuitModelId> sram_models;
@@ -72,4 +72,22 @@ std::vector<CircuitModelId> get_circuit_sram_models(const CircuitLibrary& circui
   }
   
   return sram_models;
+}
+
+/********************************************************************
+ * Find regular (not mode select) sram ports of a circuit model
+ *******************************************************************/
+std::vector<CircuitPortId> find_circuit_regular_sram_ports(const CircuitLibrary& circuit_lib,
+                                                           const CircuitModelId& circuit_model) {
+  std::vector<CircuitPortId> sram_ports = circuit_lib.model_ports_by_type(circuit_model, SPICE_MODEL_PORT_SRAM, true);
+  std::vector<CircuitPortId> regular_sram_ports;
+
+  for (const auto& port : sram_ports) {
+    if (true == circuit_lib.port_is_mode_select(port)) {
+      continue;
+    }
+    regular_sram_ports.push_back(port);
+  }
+
+  return regular_sram_ports;
 }

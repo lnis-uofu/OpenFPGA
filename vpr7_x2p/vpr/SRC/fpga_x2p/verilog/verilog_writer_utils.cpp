@@ -651,7 +651,8 @@ void print_verilog_buffer_instance(std::fstream& fp,
 /********************************************************************
  * Print local wires that are used for SRAM configuration 
  * The local wires are strongly dependent on the organization of SRAMs.
- * 1. Standalone SRAMs: 
+ * Standalone SRAMs: 
+ * -----------------
  *    No need for local wires, their outputs are port of the module
  *        
  *              Module
@@ -665,36 +666,61 @@ void print_verilog_buffer_instance(std::fstream& fp,
  *             |  +---------------------+     |
  *             +------------------------------+      
  *
- * 2. Configuration-chain Flip-flops:
- *    two ports will be added, which are the head of scan-chain 
- *    and the tail of scan-chain
+ * Configuration chain-style
+ * -------------------------
+ * wire [0:N] config_bus
  *
- *              Module
- *             +-----------------------------------------+
- *             |                                         |
- *             |    +------+    +------+     +------+    |
- *             | +->| CCFF |--->| CCFF | ... | CCFF |-+  |
- *             | |  +------+ |  +------+  |  +------+ |  |
- *     head--->|-+-----------+------------+-----------+->|--->tail
- *             |               local wire                |
- *             +-----------------------------------------+
- * 3. Memory decoders:
+ *
+ *           Module
+ *          +--------------------------------------------------------------+
+ *          |  config_bus    config_bus    config_bus       config_bus     |
+ *          |     [0]           [1]           [2]              [N]         |
+ *          |      |             |             |                |          |
+ *          |      v             v             v                v          |
+ * ccff_head| ----------+  +---------+   +------------+   +----------------|-> ccff_tail
+ *          |           |  ^         |   ^            |   ^                |
+ *          |      head v  |tail     v   |            v   |                |
+ *          |       +----------+  +----------+     +----------+            |
+ *          |       |  Memory  |  |  Memory  |     |  Memory  |            |
+ *          |       |  Module  |  |  Module  | ... |  Module  |            |
+ *          |       |   [0]    |  |   [1]    |     |    [N]   |            |
+ *          |       +----------+  +----------+     +----------+            |
+ *          |            |             |                 |                 |
+ *          |            v             v                 v                 |
+ *          |       +----------+  +----------+     +----------+            |
+ *          |       |  MUX     |  |  MUX     |     |  MUX     |            |
+ *          |       |  Module  |  |  Module  | ... |  Module  |            |
+ *          |       |   [0]    |  |   [1]    |     |    [N]   |            |
+ *          |       +----------+  +----------+     +----------+            |
+ *          |                                                              |
+ *          +--------------------------------------------------------------+
+ *
+ * Memory bank-style
+ * -----------------
  *    two ports will be added, which are regular output and inverted output 
  *    Note that the outputs are the data outputs of SRAMs 
  *    BL/WLs of memory decoders are ports of module but not local wires
  *
- *              Module
- *             +-----------------------------------------+
- *             |                                         |
- *             |    +------+    +------+     +------+    |
- *             |    | SRAM |    | SRAM | ... | SRAM |    |
- *             |    +------+    +------+     +------+    |
- *             |       ^           ^            ^        |
- *             |       |           |            |        |
- *    BL/WL--->|---------------------------------------->|
- *             |               local wire                |
- *             +-----------------------------------------+
-
+ *             Module
+ *            +-------------------------------------------------+
+ *            |                                                 |
+  BL/WL bus --+--------+------------+-----------------+         |
+ *            |         |            |                |         |
+ *            |   BL/WL v      BL/WL v          BL/WL v         |
+ *            |   +----------+  +----------+     +----------+   |
+ *            |   |  Memory  |  |  Memory  |     |  Memory  |   |
+ *            |   |  Module  |  |  Module  | ... |  Module  |   |
+ *            |   |   [0]    |  |   [1]    |     |    [N]   |   |
+ *            |   +----------+  +----------+     +----------+   |
+ *            |        |             |                 |        |
+ *            |        v             v                 v        |
+ *            |   +----------+  +----------+     +----------+   |
+ *            |   |  MUX     |  |  MUX     |     |  MUX     |   |
+ *            |   |  Module  |  |  Module  | ... |  Module  |   |
+ *            |   |   [0]    |  |   [1]    |     |    [N]   |   |
+ *            |   +----------+  +----------+     +----------+   |
+ *            |                                                 |
+ *            +-------------------------------------------------+
  *
  ********************************************************************/
 void print_verilog_local_sram_wires(std::fstream& fp,
@@ -717,36 +743,19 @@ void print_verilog_local_sram_wires(std::fstream& fp,
     break;
   case SPICE_SRAM_SCAN_CHAIN: {
     /* Generate the name of local wire for the CCFF inputs, CCFF output and inverted output */
-    std::vector<BasicPort> ccff_ports;
     /* [0] => CCFF input */
-    ccff_ports.push_back(BasicPort(generate_sram_local_port_name(circuit_lib, sram_model, sram_orgz_type, SPICE_MODEL_PORT_INPUT), port_size));
-    /* [1] => CCFF output */
-    ccff_ports.push_back(BasicPort(generate_sram_local_port_name(circuit_lib, sram_model, sram_orgz_type, SPICE_MODEL_PORT_OUTPUT), port_size));
-    /* [2] => CCFF inverted output */
-    ccff_ports.push_back(BasicPort(generate_sram_local_port_name(circuit_lib, sram_model, sram_orgz_type, SPICE_MODEL_PORT_INOUT), port_size));
-    /* Print local wire definition */
-    for (const auto& ccff_port : ccff_ports) {
-      fp << generate_verilog_port(VERILOG_PORT_WIRE, ccff_port) << ";" << std::endl; 
-    }
+    BasicPort ccff_config_bus_port(generate_local_config_bus_port_name(), port_size);
+    fp << generate_verilog_port(VERILOG_PORT_WIRE, ccff_config_bus_port) << ";" << std::endl; 
     /* Connect first CCFF to the head */
     /* Head is always a 1-bit port */
     BasicPort ccff_head_port(generate_sram_port_name(circuit_lib, sram_model, sram_orgz_type, SPICE_MODEL_PORT_INPUT), 1); 
-    BasicPort ccff_head_local_port(ccff_ports[0].get_name(), 1); 
+    BasicPort ccff_head_local_port(ccff_config_bus_port.get_name(), 1); 
     print_verilog_wire_connection(fp, ccff_head_local_port, ccff_head_port, false); 
     /* Connect last CCFF to the tail */
     /* Tail is always a 1-bit port */
     BasicPort ccff_tail_port(generate_sram_port_name(circuit_lib, sram_model, sram_orgz_type, SPICE_MODEL_PORT_OUTPUT), 1); 
-    BasicPort ccff_tail_local_port(ccff_ports[1].get_name(), ccff_ports[1].get_msb(), ccff_ports[1].get_msb()); 
+    BasicPort ccff_tail_local_port(ccff_config_bus_port.get_name(), ccff_config_bus_port.get_msb(), ccff_config_bus_port.get_msb()); 
     print_verilog_wire_connection(fp, ccff_tail_local_port, ccff_tail_port, false); 
-    /* Connect CCFFs into chains */
-    /* If port size is 0 or 1, there is no need for the chain connection */
-    if (2 > port_size) {
-      break;
-    }
-    /* Cascade the CCFF between head and tail */
-    BasicPort ccff_chain_input_port(ccff_ports[0].get_name(), port_size - 1);
-    BasicPort ccff_chain_output_port(ccff_ports[1].get_name(), 1, port_size - 1);
-    print_verilog_wire_connection(fp, ccff_chain_output_port, ccff_chain_input_port, false); 
     break;
   }
   case SPICE_SRAM_MEMORY_BANK: {
@@ -776,59 +785,61 @@ void print_verilog_local_sram_wires(std::fstream& fp,
  * ports of a CMOS (SRAM-based) routing multiplexer
  * This port is supposed to be used locally inside a Verilog/SPICE module 
  *
+ * The following shows a few representative examples:
+ *
  * For standalone configuration style:
  * ------------------------------------
  * No bus needed
  *
- * For configuration-chain configuration style:
- * --------------------------------------------
+ * Configuration chain-style
+ * -------------------------
+ * wire [0:N] config_bus
  *
- *            Module Port
- *                |
- *                v
- *             bus_port  --------+----------------+---->      ...
- *                               |                |
- *                 sram_outputs  v                v
- *                        +-----------+     +-----------+
- *                        |  Memory   |     |  Memory   |
- *                        | Module[0] |     | Module[1] |    ...
- *                        +-----------+     +-----------+
- *                               |                |
- *                               v                v
- *                        +-----------+     +-----------+
- *                        |  Routing  |     |  Routing  |
- *                        |   MUX [0] |     |   MUX[1]  |    ...
- *                        +-----------+     +-----------+
+ *            config_bus    config_bus    config_bus       config_bus
+ *               [0]           [1]           [2]              [N]
+ *                |             |             |                |
+ *                v             v             v                v
+ * ccff_head ----------+  +---------+   +------------+   +----> ccff_tail
+ *                     |  ^         |   ^            |   ^
+ *                head v  |tail     v   |            v   |
+ *                 +----------+  +----------+     +----------+
+ *                 |  Memory  |  |  Memory  |     |  Memory  |
+ *                 |  Module  |  |  Module  | ... |  Module  |
+ *                 |   [0]    |  |   [1]    |     |    [N]   |
+ *                 +----------+  +----------+     +----------+
+ *                      |             |                 |
+ *                      v             v                 v
+ *                 +----------+  +----------+     +----------+
+ *                 |  MUX     |  |  MUX     |     |  MUX     |
+ *                 |  Module  |  |  Module  | ... |  Module  |
+ *                 |   [0]    |  |   [1]    |     |    [N]   |
+ *                 +----------+  +----------+     +----------+
  *
- * For memory-bank configuration style:
- * ------------------------------------
- *
- *            Module Port
- *                |
- *                v
- *             bus_port  --------+----------------+---->      ...
- *                               |                |
- *          bl/wl/../sram_ports  v                v
- *                        +-----------+     +-----------+
- *                        |  Memory   |     |  Memory   |
- *                        | Module[0] |     | Module[1] |    ...
- *                        +-----------+     +-----------+
- *                               |                |
- *                               v                v
- *                        +-----------+     +-----------+
- *                        |  Routing  |     |  Routing  |
- *                        |   MUX [0] |     |   MUX[1]  |    ...
- *                        +-----------+     +-----------+
+ * Memory bank-style
+ * -----------------
+ *         BL/WL bus --+------------+-------------------->
+ *                     |            |                |
+ *               BL/WL v      BL/WL v          BL/WL v
+ *               +----------+  +----------+     +----------+
+ *               |  Memory  |  |  Memory  |     |  Memory  |
+ *               |  Module  |  |  Module  | ... |  Module  |
+ *               |   [0]    |  |   [1]    |     |    [N]   |
+ *               +----------+  +----------+     +----------+
+ *                    |             |                 |
+ *                    v             v                 v
+ *               +----------+  +----------+     +----------+
+ *               |  MUX     |  |  MUX     |     |  MUX     |
+ *               |  Module  |  |  Module  | ... |  Module  |
+ *               |   [0]    |  |   [1]    |     |    [N]   |
+ *               +----------+  +----------+     +----------+
  *     
  *********************************************************************/
 static 
-void print_verilog_cmos_mux_config_bus(std::fstream& fp, 
-                                       const CircuitLibrary& circuit_lib,
-                                       const CircuitModelId& mux_model,
-                                       const e_sram_orgz& sram_orgz_type,
-                                       const size_t& mux_size,
-                                       const size_t& mux_instance_id,
-                                       const size_t& num_conf_bits) { 
+void print_verilog_local_config_bus(std::fstream& fp, 
+                                    const std::string& prefix,
+                                    const e_sram_orgz& sram_orgz_type,
+                                    const size_t& instance_id,
+                                    const size_t& num_conf_bits) { 
   /* Make sure we have a valid file handler*/
   check_file_handler(fp);
 
@@ -838,76 +849,18 @@ void print_verilog_cmos_mux_config_bus(std::fstream& fp,
      * The configuration ports of SRAM are directly wired to the ports of modules
      */
     break;
-  case SPICE_SRAM_SCAN_CHAIN: {
-    /* To support chain-like configuration protocol, two configuration buses should be outputted
+  case SPICE_SRAM_SCAN_CHAIN: 
+  case SPICE_SRAM_MEMORY_BANK: {
+    /* Two configuration buses should be outputted
      * One for the regular SRAM ports of a routing multiplexer
      * The other for the inverted SRAM ports of a routing multiplexer
      */
-    BasicPort config_port(generate_mux_sram_port_name(circuit_lib, mux_model, mux_size, mux_instance_id, SPICE_MODEL_PORT_INPUT), 
+    BasicPort config_port(generate_local_sram_port_name(prefix, instance_id, SPICE_MODEL_PORT_INPUT), 
                           num_conf_bits);
     fp << generate_verilog_port(VERILOG_PORT_WIRE, config_port) << ";" << std::endl;
-    BasicPort inverted_config_port(generate_mux_sram_port_name(circuit_lib, mux_model, mux_size, mux_instance_id, SPICE_MODEL_PORT_OUTPUT), 
+    BasicPort inverted_config_port(generate_local_sram_port_name(prefix, instance_id, SPICE_MODEL_PORT_OUTPUT), 
                                    num_conf_bits); 
     fp << generate_verilog_port(VERILOG_PORT_WIRE, inverted_config_port) << ";" << std::endl;
-    break;
-  }
-  case SPICE_SRAM_MEMORY_BANK: {
-    /* To support memory-bank configuration, SRAM outputs are supposed to be exposed to the upper level as buses 
-     * In addition, the BL/WL ports should be grouped and be exposed to the upper level as buses 
-     */
-    /* Print configuration bus to group BL/WLs */
-    BasicPort bl_bus(generate_mux_config_bus_port_name(circuit_lib, mux_model, mux_size, 0, false), 
-                    num_conf_bits);
-    fp << generate_verilog_port(VERILOG_PORT_WIRE, bl_bus) << ";" << std::endl;
-    BasicPort wl_bus(generate_mux_config_bus_port_name(circuit_lib, mux_model, mux_size, 1, false), 
-                     num_conf_bits);
-    fp << generate_verilog_port(VERILOG_PORT_WIRE, wl_bus) << ";" << std::endl;
-
-    /* Print bus to group SRAM outputs, this is to interface memory cells to routing multiplexers */
-    BasicPort sram_output_bus(generate_mux_sram_port_name(circuit_lib, mux_model, mux_size, mux_instance_id, SPICE_MODEL_PORT_INPUT), 
-                          num_conf_bits);
-    fp << generate_verilog_port(VERILOG_PORT_WIRE, sram_output_bus) << ";" << std::endl;
-    BasicPort inverted_sram_output_bus(generate_mux_sram_port_name(circuit_lib, mux_model, mux_size, mux_instance_id, SPICE_MODEL_PORT_OUTPUT), 
-                                       num_conf_bits); 
-    fp << generate_verilog_port(VERILOG_PORT_WIRE, inverted_sram_output_bus) << ";" << std::endl;
-
-    /* Get the SRAM model of the mux_model */
-    std::vector<CircuitModelId> sram_models = get_circuit_sram_models(circuit_lib, mux_model);
-    /* TODO: maybe later multiplexers may have mode select ports... This should be relaxed */
-    VTR_ASSERT( 1 == sram_models.size() );
-    std::vector<CircuitPortId> blb_ports = circuit_lib.model_ports_by_type(sram_models[0], SPICE_MODEL_PORT_BLB);
-    std::vector<CircuitPortId> wlb_ports = circuit_lib.model_ports_by_type(sram_models[0], SPICE_MODEL_PORT_WLB);
-
-    /* Connect SRAM BL/WLs to bus */
-    BasicPort mux_bl_wire(generate_sram_port_name(circuit_lib, sram_models[0], sram_orgz_type, SPICE_MODEL_PORT_BL), 
-                          num_conf_bits);
-    print_verilog_wire_connection(fp, bl_bus, mux_bl_wire, false);
-    BasicPort mux_wl_wire(generate_sram_port_name(circuit_lib, sram_models[0], sram_orgz_type, SPICE_MODEL_PORT_WL), 
-                          num_conf_bits);
-    print_verilog_wire_connection(fp, wl_bus, mux_wl_wire, false);
-
-    /* Print configuration bus to group BLBs, if the ports are available in SRAM models */
-    if (0 < blb_ports.size()) {
-      BasicPort blb_bus(generate_mux_config_bus_port_name(circuit_lib, mux_model, mux_size, 0, true), 
-                        num_conf_bits);
-      fp << generate_verilog_port(VERILOG_PORT_WIRE, blb_bus) << ";" << std::endl;
-      /* Connect SRAM BLBs to bus */
-      BasicPort mux_blb_wire(generate_sram_port_name(circuit_lib, sram_models[0], sram_orgz_type, SPICE_MODEL_PORT_BLB),
-                             num_conf_bits); 
-      print_verilog_wire_connection(fp, blb_bus, mux_blb_wire, false);
-    }
-
-    /* Print configuration bus to group WLBs, if the ports are available in SRAM models */
-    if (0 < wlb_ports.size()) {
-      BasicPort wlb_bus(generate_mux_config_bus_port_name(circuit_lib, mux_model, mux_size, 1, true), 
-                        num_conf_bits);
-      fp << generate_verilog_port(VERILOG_PORT_WIRE, wlb_bus) << ";" << std::endl;
-      /* Connect SRAM WLBs to bus */
-      BasicPort mux_wlb_wire(generate_sram_port_name(circuit_lib, sram_models[0], sram_orgz_type, SPICE_MODEL_PORT_WLB), 
-                             num_conf_bits); 
-      print_verilog_wire_connection(fp, wlb_bus, mux_wlb_wire, false);
-    }
-
     break;
   }
   default:
@@ -998,7 +951,7 @@ void print_verilog_rram_mux_config_bus(std::fstream& fp,
     fp << generate_verilog_port(VERILOG_PORT_WIRE, inverted_sram_output_bus) << ";" << std::endl;
 
     /* Get the SRAM model of the mux_model */
-    std::vector<CircuitModelId> sram_models = get_circuit_sram_models(circuit_lib, mux_model);
+    std::vector<CircuitModelId> sram_models = find_circuit_sram_models(circuit_lib, mux_model);
     /* TODO: maybe later multiplexers may have mode select ports... This should be relaxed */
     VTR_ASSERT( 1 == sram_models.size() );
 
@@ -1031,7 +984,11 @@ void print_verilog_rram_mux_config_bus(std::fstream& fp,
 
 /*********************************************************************
  * Print a number of bus ports which are wired to the configuration
- * ports of a routing multiplexer
+ * ports of a memory module, which consists of a number of configuration
+ * memory cells, such as SRAMs.
+ * Note that the configuration bus will only interface the memory
+ * module, rather than the programming routing multiplexers, LUTs, IOs
+ * etc. This helps us to keep clean and simple Verilog generation
  *********************************************************************/
 void print_verilog_mux_config_bus(std::fstream& fp, 
                                   const CircuitLibrary& circuit_lib,
@@ -1050,9 +1007,11 @@ void print_verilog_mux_config_bus(std::fstream& fp,
    * Currently, this is fine.
    */
   switch (circuit_lib.design_tech_type(mux_model)) {
-  case SPICE_MODEL_DESIGN_CMOS:
-    print_verilog_cmos_mux_config_bus(fp, circuit_lib, mux_model, sram_orgz_type, mux_size, mux_instance_id, num_conf_bits);
+  case SPICE_MODEL_DESIGN_CMOS: {
+    std::string prefix = generate_mux_subckt_name(circuit_lib, mux_model, mux_size, std::string());
+    print_verilog_local_config_bus(fp, prefix, sram_orgz_type, mux_instance_id, num_conf_bits);
     break;
+  }
   case SPICE_MODEL_DESIGN_RRAM:
     print_verilog_rram_mux_config_bus(fp, circuit_lib, mux_model, sram_orgz_type, mux_size, mux_instance_id, num_reserved_conf_bits, num_conf_bits);
     break;
@@ -1078,7 +1037,7 @@ void print_verilog_formal_verification_mux_sram_ports_wiring(std::fstream& fp,
   BasicPort mux_sram_output(generate_mux_sram_port_name(circuit_lib, mux_model, mux_size, mux_instance_id, SPICE_MODEL_PORT_INPUT),
                             num_conf_bits);
   /* Get the SRAM model of the mux_model */
-  std::vector<CircuitModelId> sram_models = get_circuit_sram_models(circuit_lib, mux_model);
+  std::vector<CircuitModelId> sram_models = find_circuit_sram_models(circuit_lib, mux_model);
   /* TODO: maybe later multiplexers may have mode select ports... This should be relaxed */
   VTR_ASSERT( 1 == sram_models.size() );
   BasicPort formal_verification_port(generate_formal_verification_sram_port_name(circuit_lib, sram_models[0]),

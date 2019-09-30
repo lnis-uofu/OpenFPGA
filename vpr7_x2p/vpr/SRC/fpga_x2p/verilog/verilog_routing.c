@@ -66,7 +66,8 @@ void print_verilog_switch_block_local_sram_wires(std::fstream& fp,
                                                  const size_t& port_size) {
   size_t local_port_size = port_size;
   if (SPICE_SRAM_SCAN_CHAIN == sram_orgz_type) {
-    local_port_size = find_switch_block_number_of_muxes(rr_gsb); 
+    /* Plus 1 for the wire size to connect to the tail of the configuration chain */
+    local_port_size = find_switch_block_number_of_muxes(rr_gsb) + 1; 
   }
   print_verilog_local_sram_wires(fp, circuit_lib, sram_model, sram_orgz_type, local_port_size);
 }
@@ -2348,7 +2349,7 @@ void print_verilog_unique_switch_box_mux(ModuleManager& module_manager,
   const MuxGraph& mux_graph = mux_lib.mux_graph(mux_id);
 
   /* Find the module name of the multiplexer and try to find it in the module manager */
-  std::string mux_module_name = generate_verilog_mux_subckt_name(circuit_lib, mux_model, datapath_mux_size, std::string(""));
+  std::string mux_module_name = generate_mux_subckt_name(circuit_lib, mux_model, datapath_mux_size, std::string(""));
   ModuleId mux_module = module_manager.find_module(mux_module_name);
   VTR_ASSERT (true == module_manager.valid_module_id(mux_module));
 
@@ -2440,35 +2441,36 @@ void print_verilog_unique_switch_box_mux(ModuleManager& module_manager,
    */
   module_manager.add_child_module(sb_module, mux_module);
 
-  /* TODO: Instanciate memory modules */
-  switch (circuit_lib.design_tech_type(mux_model)) {
-  case SPICE_MODEL_DESIGN_CMOS:
-    /* Call the memory module defined for this SRAM-based MUX! */
-    /*
-    mem_subckt_name = generate_verilog_mux_subckt_name(verilog_model, mux_size, verilog_mem_posfix);
-    dump_verilog_mem_sram_submodule(fp, cur_sram_orgz_info, 
-                                    verilog_model, mux_size, mem_model, 
-                                    cur_num_sram, cur_num_sram + num_mux_conf_bits - 1,
-                                    is_explicit_mapping); 
-     */
-    break;
-  case SPICE_MODEL_DESIGN_RRAM:
-    /* RRAM-based MUX does not need any SRAM dumping
-     * But we have to get the number of configuration bits required by this MUX 
-     * and update the number of memory bits 
-     */
-    /*
-    update_sram_orgz_info_num_mem_bit(cur_sram_orgz_info, cur_num_sram + num_mux_conf_bits);
-    update_sram_orgz_info_num_blwl(cur_sram_orgz_info, 
-                                   cur_bl + num_mux_conf_bits, 
-                                   cur_wl + num_mux_conf_bits);
-     */
-    break;  
-  default:
-    vpr_printf(TIO_MESSAGE_ERROR,
-               "(File:%s,[LINE%d])Invalid design technology for circuit model (%s)!\n",
-               __FILE__, __LINE__, circuit_lib.model_name(mux_model).c_str());
-  }
+  /* Instanciate memory modules */
+  /* Find the name and module id of the memory module */
+  std::string mem_module_name = generate_mux_subckt_name(circuit_lib, mux_model, datapath_mux_size, std::string(verilog_mem_posfix)); 
+  ModuleId mem_module = module_manager.find_module(mem_module_name);
+  VTR_ASSERT (true == module_manager.valid_module_id(mem_module));
+
+  /* Create port-to-port map */
+  std::map<std::string, BasicPort> mem_port2port_name_map;
+
+  /* TODO: Make the port2port map generation more generic!!! */
+  std::vector<BasicPort> config_ports;
+  config_ports.push_back(BasicPort(generate_local_config_bus_port_name(), mux_instance_id - 1, mux_instance_id));
+  std::vector<BasicPort> mem_output_ports;
+  mem_output_ports.push_back(mux_config_port);
+  mem_output_ports.push_back(mux_config_inv_port);
+  mem_port2port_name_map = generate_mem_module_port2port_map(module_manager, mem_module, 
+                                                             config_ports,
+                                                             mem_output_ports,
+                                                             circuit_lib.design_tech_type(mux_model),
+                                                             cur_sram_orgz_info->type);
+
+  /* Print an instance of the MUX Module */
+  print_verilog_comment(fp, std::string("----- BEGIN Instanciation of memory cells for a routing multiplexer -----"));
+  print_verilog_module_instance(fp, module_manager, sb_module, mem_module, mem_port2port_name_map, use_explicit_mapping);
+  print_verilog_comment(fp, std::string("----- END Instanciation of memory cells for a routing multiplexer -----"));
+  fp << std::endl;
+  /* IMPORTANT: this update MUST be called after the instance outputting!!!!
+   * update the module manager with the relationship between the parent and child modules 
+   */
+  module_manager.add_child_module(sb_module, mem_module);
 
   /* Create the path of the input of multiplexer in the hierarchy 
    * TODO: this MUST be deprecated later because module manager is created to handle these problems!!! 

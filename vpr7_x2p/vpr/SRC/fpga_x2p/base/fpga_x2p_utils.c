@@ -3179,6 +3179,10 @@ void config_circuit_models_sram_port_to_default_sram_model(CircuitLibrary& circu
       }
     }
   }
+  /* TODO: this should be done right after XML parsing!!!
+   * Rebuild the submodels for circuit_library, because we have created links for ports 
+   */
+  circuit_lib.build_model_links();
 }
 
 void determine_sb_port_coordinator(t_sb cur_sb_info, int side, 

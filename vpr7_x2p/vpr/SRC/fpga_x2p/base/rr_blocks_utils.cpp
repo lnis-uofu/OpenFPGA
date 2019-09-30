@@ -77,8 +77,12 @@ size_t find_switch_block_number_of_muxes(const RRGSB& rr_gsb) {
       if (OUT_PORT != rr_gsb.get_chan_node_direction(side_manager.get_side(), itrack)) {
         continue;
       }
-      /* Check if this node is driven by a multiplexer */
+      /* Check if this node is just a passing wire */
       if (true == rr_gsb.is_sb_node_passing_wire(side_manager.get_side(), itrack)) {
+        continue;
+      }
+      /* Check if this node has more than 2 drivers */
+	  if (2 > rr_gsb.get_chan_node(side_manager.get_side(), itrack)->num_drive_rr_nodes) {
         continue;
       }
       /* This means we need a multiplexer, update the counter */
