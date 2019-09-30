@@ -26,7 +26,9 @@ Our extension include three more options:
     <direct name="string" from_pin="string" to_pin="string" x_offset="int" y_offset="int" z_offset="int" switch_name="string" interconnection_type="string" x_dir="string" y_dir="string"/>
   </directlist>
 
-* **interconnection_type**: [``NONE`` | ``column`` | ``row``], specifies if it applies on a column or a row ot if it doesn't apply. This option is optional and do not need to be set for any direct connection in the direclist. If this option is set *x_dir* and *y_dir* are required.
+.. note:: these options are optional. However, if *interconnection_type* is set *x_dir* and *y_dir* are required.
+
+* **interconnection_type**: [``NONE`` | ``column`` | ``row``], specifies if it applies on a column or a row ot if it doesn't apply.
 
 * **x_dir**: [``positive`` | ``negative``], specifies if the next cell to connect has a bigger or lower x value. Considering a coordinate system where (0,0) is the origin at the bottom left and *x* and *y* are positives: 
 
@@ -50,7 +52,7 @@ Our extension include three more options:
 
 		* interconnection_type="row": a row will be connected on an **above** row, if it exists.
 
-	* y_dir="positive": 
+	* y_dir="negative": 
 
 		* interconnection_type="column": the **top** cell of a column will be connected to the next column **bottom** cell, if it exists.
 
@@ -67,13 +69,13 @@ For this example, we will study a scan-chain implementation.The description coul
     <direct name="scff_chain" from_pin="clb.sc_out" to_pin="clb.sc_in" x_offset="0" y_offset="-1" z_offset="0" interconnection_type="column" x_dir="positive" y_dir="positive"/>
   </directlist>
 
-:numref:`fig_p2p_expl` is the graphical representation of the above scan-chain description on a 4x4 FPGA.
+:numref:`fig_p2p_exple` is the graphical representation of the above scan-chain description on a 4x4 FPGA.
 
-.. _fig_p2p_expl:
+.. _fig_p2p_exple:
 
 .. figure:: ./figures/point2point_example.png
-   :scale: 100%
-   :alt: example of scan-chain implementation
+
+	An example of scan-chain implementation
 
 
 In this figure, the red arrows represent the initial direct connection. The green arrows represent the point to point connection to connect all the columns of CLB together.
@@ -85,8 +87,8 @@ A point to point connection can be applied in different ways than showed in the 
 
 :numref:`fig_p2p_trtable` provides all possible variable combination and the connection it will generate.
 
-.. _fig_p2p_expl:
+.. _fig_p2p_trtable:
 
 .. figure:: ./figures/point2point_truthtable.png
-   :scale: 100%
-   :alt: point to point truth table
+
+	Point to point truth table
