@@ -1,12 +1,12 @@
 Interconnection extensions
 ==========================
 
-This section will introduce extensions on the architecture description file about existing interconnection description.
+This section introduces extensions on the architecture description file about existing interconnection description.
 
 Directlist
 ----------
 
-The original direct connections in the directlist section is doccumented here_. Its description is given below:
+The original direct connections in the directlist section are documented here_. Its description is given below:
 
 .. _here: http://docs.verilogtorouting.org/en/latest/arch/reference/?highlight=directlist#direct-inter-block-connections
 
@@ -32,36 +32,36 @@ Our extension include three more options:
 
 * **x_dir**: [``positive`` | ``negative``], specifies if the next cell to connect has a bigger or lower x value. Considering a coordinate system where (0,0) is the origin at the bottom left and *x* and *y* are positives: 
 
-	* x_dir="positive": 
+    * x_dir="positive": 
 
-		* interconnection_type="column": a column will be connected to a column on the **right**, if it exists.
+        * interconnection_type="column": a column will be connected to a column on the **right**, if it exists.
 
-		* interconnection_type="row": the most on the **right** cell from a row connection will connect the most on the **left** cell of next row, if it exists.
+        * interconnection_type="row": the most on the **right** cell from a row connection will connect the most on the **left** cell of next row, if it exists.
 
-	* x_dir="negative": 
+    * x_dir="negative": 
 
-		* interconnection_type="column": a column will be connected to a column on the **left**, if it exists.
+        * interconnection_type="column": a column will be connected to a column on the **left**, if it exists.
 
-		* interconnection_type="row": the most on the **left** cell from a row connection will connect the most on the **right** cell of next row, if it exists.
+        * interconnection_type="row": the most on the **left** cell from a row connection will connect the most on the **right** cell of next row, if it exists.
 
 * **y_dir**: [``positive`` | ``negative``], specifies if the next cell to connect has a bigger or lower x value. Considering a coordinate system where (0,0) is the origin at the bottom left and *x* and *y* are positives:
 
-	* y_dir="positive": 
+    * y_dir="positive": 
 
-		* interconnection_type="column": the **bottom** cell of a column will be connected to the next column **top** cell, if it exists.
+        * interconnection_type="column": the **bottom** cell of a column will be connected to the next column **top** cell, if it exists.
 
-		* interconnection_type="row": a row will be connected on an **above** row, if it exists.
+        * interconnection_type="row": a row will be connected on an **above** row, if it exists.
 
-	* y_dir="negative": 
+    * y_dir="negative": 
 
-		* interconnection_type="column": the **top** cell of a column will be connected to the next column **bottom** cell, if it exists.
+        * interconnection_type="column": the **top** cell of a column will be connected to the next column **bottom** cell, if it exists.
 
-		* interconnection_type="row": a row will be connected on a row **below**, if it exists.
+        * interconnection_type="row": a row will be connected on a row **below**, if it exists.
 
 Example
 -------
 
-For this example, we will study a scan-chain implementation.The description could be:
+For this example, we will study a scan-chain implementation. The description could be:
 
 .. code-block:: xml
 
@@ -75,15 +75,15 @@ For this example, we will study a scan-chain implementation.The description coul
 
 .. figure:: ./figures/point2point_example.png
 
-	An example of scan-chain implementation
+    An example of scan-chain implementation
 
 
-In this figure, the red arrows represent the initial direct connection. The green arrows represent the point to point connection to connect all the columns of CLB together.
+In this figure, the red arrows represent the initial direct connection. The green arrows represent the point to point connection to connect all the columns of CLB.
 
 Truth table
 -----------
 
-A point to point connection can be applied in different ways than showed in the example section. To help the designer implement his own point to point connection, a truth table with our new parameters id provided below.
+A point to point connection can be applied in different ways than showed in the example section. To help the designer implement his point to point connection, a truth table with our new parameters id provided below.
 
 :numref:`fig_p2p_trtable` provides all possible variable combination and the connection it will generate.
 
@@ -91,4 +91,4 @@ A point to point connection can be applied in different ways than showed in the 
 
 .. figure:: ./figures/point2point_truthtable.png
 
-	Point to point truth table
+    Point to point truth table
