@@ -71,7 +71,7 @@ size_t check_one_circuit_model_port_type_and_size_required(const CircuitLibrary&
 size_t check_ff_circuit_model_ports(const CircuitLibrary& circuit_lib,
                                     const CircuitModelId& circuit_model);
 
-size_t check_scff_circuit_model_ports(const CircuitLibrary& circuit_lib,
+size_t check_ccff_circuit_model_ports(const CircuitLibrary& circuit_lib,
                                       const CircuitModelId& circuit_model);
 
 size_t check_sram_circuit_model_ports(const CircuitLibrary& circuit_lib,

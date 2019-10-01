@@ -66,7 +66,7 @@ enum e_spice_model_type {
   SPICE_MODEL_FF, 
   SPICE_MODEL_SRAM, 
   SPICE_MODEL_HARDLOGIC,
-  SPICE_MODEL_SCFF,
+  SPICE_MODEL_CCFF,
   SPICE_MODEL_IOPAD, 
   SPICE_MODEL_INVBUF, 
   SPICE_MODEL_PASSGATE, 
@@ -74,7 +74,7 @@ enum e_spice_model_type {
   NUM_CIRCUIT_MODEL_TYPES
 };
 /* Strings correspond to each port type */
-constexpr std::array<const char*, NUM_CIRCUIT_MODEL_TYPES> CIRCUIT_MODEL_TYPE_STRING = {{"CHAN_WIRE", "WIRE", "MUX", "LUT", "FF", "SRAM", "HARDLOGIC", "SCFF", "IOPAD", "INVBUF", "PASSGATE", "GATE"}};
+constexpr std::array<const char*, NUM_CIRCUIT_MODEL_TYPES> CIRCUIT_MODEL_TYPE_STRING = {{"CHAN_WIRE", "WIRE", "MUX", "LUT", "FF", "SRAM", "HARDLOGIC", "CCFF", "IOPAD", "INVBUF", "PASSGATE", "GATE"}};
 
 enum e_spice_model_design_tech {
   SPICE_MODEL_DESIGN_CMOS, 

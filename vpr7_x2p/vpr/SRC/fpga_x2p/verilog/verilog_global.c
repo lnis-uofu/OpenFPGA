@@ -131,7 +131,7 @@ char* top_netlist_normal_bl_port_postfix = "_bl";
 char* top_netlist_normal_wl_port_postfix = "_wl";
 char* top_netlist_normal_blb_port_postfix = "_blb";
 char* top_netlist_normal_wlb_port_postfix = "_wlb";
-char* top_netlist_scan_chain_head_prefix = "sc_in";
+char* top_netlist_scan_chain_head_prefix = "cc_in";
 
 char* top_tb_reset_port_name = "greset";
 char* top_tb_set_port_name = "gset";

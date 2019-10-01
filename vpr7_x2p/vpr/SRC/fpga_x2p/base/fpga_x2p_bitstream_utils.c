@@ -270,7 +270,7 @@ int count_num_sram_bits_one_spice_model(t_spice_model* cur_spice_model,
   case SPICE_MODEL_FF:
   case SPICE_MODEL_SRAM:
   case SPICE_MODEL_HARDLOGIC:
-  case SPICE_MODEL_SCFF:
+  case SPICE_MODEL_CCFF:
   case SPICE_MODEL_IOPAD:
     return count_num_sram_bits_one_generic_spice_model(cur_spice_model);
   default:
@@ -336,7 +336,7 @@ int count_num_mode_bits_one_spice_model(t_spice_model* cur_spice_model) {
   case SPICE_MODEL_FF:
   case SPICE_MODEL_SRAM:
   case SPICE_MODEL_HARDLOGIC:
-  case SPICE_MODEL_SCFF:
+  case SPICE_MODEL_CCFF:
   case SPICE_MODEL_IOPAD:
     return count_num_mode_bits_one_generic_spice_model(cur_spice_model);
   default:
@@ -528,7 +528,7 @@ int count_num_reserved_conf_bits_one_spice_model(t_spice_model* cur_spice_model,
   case SPICE_MODEL_FF:
   case SPICE_MODEL_SRAM:
   case SPICE_MODEL_HARDLOGIC:
-  case SPICE_MODEL_SCFF:
+  case SPICE_MODEL_CCFF:
   case SPICE_MODEL_IOPAD:
     /* Other block, we just count the number SRAM ports defined by user */
     num_reserved_conf_bits = 0;
@@ -829,7 +829,7 @@ int count_num_conf_bits_one_spice_model(t_spice_model* cur_spice_model,
   case SPICE_MODEL_FF:
   case SPICE_MODEL_SRAM:
   case SPICE_MODEL_HARDLOGIC:
-  case SPICE_MODEL_SCFF:
+  case SPICE_MODEL_CCFF:
   case SPICE_MODEL_IOPAD:
     return count_num_conf_bits_one_generic_spice_model(cur_spice_model, cur_sram_orgz_type);
   default:
@@ -919,7 +919,7 @@ int count_num_reserved_conf_bit_one_interc(t_interconnect* cur_interc,
 /* add configuration bits of a MUX to linked-list
  * when SRAM organization type is scan-chain */
 void  
-add_mux_scff_conf_bits_to_llist(int mux_size,
+add_mux_ccff_conf_bits_to_llist(int mux_size,
                            t_sram_orgz_info* cur_sram_orgz_info, 
                            int num_mux_sram_bits, int* mux_sram_bits,
                            t_spice_model* mux_spice_model) {
@@ -1134,7 +1134,7 @@ add_mux_conf_bits_to_llist(int mux_size,
   switch (cur_sram_orgz_info->type) {
   case SPICE_SRAM_STANDALONE:
   case SPICE_SRAM_SCAN_CHAIN:
-    add_mux_scff_conf_bits_to_llist(mux_size, cur_sram_orgz_info, 
+    add_mux_ccff_conf_bits_to_llist(mux_size, cur_sram_orgz_info, 
                                     num_mux_sram_bits, mux_sram_bits, 
                                     mux_spice_model);
     break;
@@ -1152,9 +1152,9 @@ add_mux_conf_bits_to_llist(int mux_size,
   return;
 }
 
-/* Add SCFF configutration bits to a linked list*/
+/* Add CCFF configutration bits to a linked list*/
 static 
-void add_sram_scff_conf_bits_to_llist(t_sram_orgz_info* cur_sram_orgz_info, 
+void add_sram_ccff_conf_bits_to_llist(t_sram_orgz_info* cur_sram_orgz_info, 
                                       int num_sram_bits, int* sram_bits) {
   int ibit, cur_mem_bit;
   t_conf_bit** sram_bit = NULL;
@@ -1304,7 +1304,7 @@ add_sram_conf_bits_to_llist(t_sram_orgz_info* cur_sram_orgz_info, int mem_index,
   switch (cur_sram_orgz_info->type) {
   case SPICE_SRAM_STANDALONE:
   case SPICE_SRAM_SCAN_CHAIN:
-    add_sram_scff_conf_bits_to_llist(cur_sram_orgz_info, 
+    add_sram_ccff_conf_bits_to_llist(cur_sram_orgz_info, 
                                      num_sram_bits, sram_bits);
     break;
   case SPICE_SRAM_MEMORY_BANK:

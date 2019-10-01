@@ -3578,6 +3578,9 @@ static void ProcessDirects(INOUTP ezxml_t Parent, OUTP t_direct_inf **Directs,
 	const char *direct_name;
 	const char *from_pin_name;
 	const char *to_pin_name;
+	const char *point2point_type;
+	const char *x_dir;
+	const char *y_dir;
 
 	ezxml_t Node;
 
@@ -3631,6 +3634,77 @@ static void ProcessDirects(INOUTP ezxml_t Parent, OUTP t_direct_inf **Directs,
 		ezxml_set_attr(Node, "x_offset", NULL);
 		ezxml_set_attr(Node, "y_offset", NULL);
 		ezxml_set_attr(Node, "z_offset", NULL);
+
+        // Aurelien: Read point to point connection parameters
+        if((!FindProperty(Node, "interconnection_type", FALSE)) ||
+           (0 == strcmp(FindProperty(Node, "interconnection_type", FALSE), "NONE"))) {
+          (*Directs)[i].interconnection_type = NO_P2P;
+        } else if(0 == strcmp(FindProperty(Node, "interconnection_type", FALSE), "column")) {
+          (*Directs)[i].interconnection_type = P2P_DIRECT_COLUMN;
+        } else if(0 == strcmp(FindProperty(Node, "interconnection_type", FALSE), "row")) {
+          (*Directs)[i].interconnection_type = P2P_DIRECT_ROW;
+        } else {
+          (*Directs)[i].interconnection_type = NUM_POINT2POINT_INTERCONNECT_TYPE;
+          vpr_printf(TIO_MESSAGE_ERROR,
+                     "Invalid point to point connection '%s' in directlist. '%s' value should be '%s', '%s' or '%s' !\n",
+                     (*Directs)[i].name, 
+                     "interconnection_type", 
+                     "column",
+                     "row",
+                     "NONE" );
+          exit(1);
+        }
+        if((P2P_DIRECT_COLUMN == (*Directs)[i].interconnection_type) || 
+           (P2P_DIRECT_ROW == (*Directs)[i].interconnection_type)){
+          if(0 == strcmp(FindProperty(Node, "x_dir", TRUE), "positive")){
+            (*Directs)[i].x_dir = POSITIVE_DIR;
+          } else if(0 == strcmp(FindProperty(Node, "x_dir", TRUE), "negative")){
+            (*Directs)[i].x_dir = NEGATIVE_DIR;
+          } else {
+            (*Directs)[i].x_dir = NUM_POINT2POINT_INTERCONNECT_DIR;
+            vpr_printf(TIO_MESSAGE_ERROR,
+                       "Invalid point to point connection '%s' in directlist. '%s' value should be '%s' or '%s' !\n",
+                       (*Directs)[i].name, 
+                       "x_dir", 
+                       "positive",
+                       "negative" );
+          }
+          if(0 == strcmp(FindProperty(Node, "y_dir", TRUE), "positive")){
+            (*Directs)[i].y_dir = POSITIVE_DIR;
+          } else if(0 == strcmp(FindProperty(Node, "y_dir", TRUE), "negative")){
+            (*Directs)[i].y_dir = NEGATIVE_DIR;
+          } else {
+            (*Directs)[i].y_dir = NUM_POINT2POINT_INTERCONNECT_DIR;
+            vpr_printf(TIO_MESSAGE_ERROR,
+                       "Invalid point to point connection '%s' in directlist. '%s' value should be '%s' or '%s' !\n",
+                       (*Directs)[i].name, 
+                       "y_dir", 
+                       "positive",
+                       "negative" );
+          }
+        } else {
+          if(NULL == FindProperty(Node, "x_dir", FALSE)){
+            (*Directs)[i].x_dir = NUM_POINT2POINT_INTERCONNECT_DIR;
+          } else if(0 == strcmp(FindProperty(Node, "x_dir", FALSE), "positive")){
+            (*Directs)[i].x_dir = POSITIVE_DIR;
+          } else if(0 == strcmp(FindProperty(Node, "x_dir", FALSE), "negative")){
+            (*Directs)[i].x_dir = NEGATIVE_DIR;
+          } else {
+            (*Directs)[i].x_dir = NUM_POINT2POINT_INTERCONNECT_DIR;
+          }
+          if(NULL == FindProperty(Node, "y_dir", FALSE)){
+            (*Directs)[i].y_dir = NUM_POINT2POINT_INTERCONNECT_DIR;
+          } else if(0 == strcmp(FindProperty(Node, "y_dir", FALSE), "positive")){
+            (*Directs)[i].y_dir = POSITIVE_DIR;
+          } else if(0 == strcmp(FindProperty(Node, "y_dir", FALSE), "negative")){
+            (*Directs)[i].y_dir = NEGATIVE_DIR;
+          } else {
+            (*Directs)[i].y_dir = NUM_POINT2POINT_INTERCONNECT_DIR;
+          }
+        }
+		ezxml_set_attr(Node, "x_dir", NULL);
+		ezxml_set_attr(Node, "y_dir", NULL);
+		ezxml_set_attr(Node, "interconnection_type", NULL);
 
 		/* Check that the direct chain connection is not zero in both direction */
 		if ((*Directs)[i].x_offset == 0 && (*Directs)[i].y_offset == 0) {

@@ -453,8 +453,8 @@ class CircuitLibrary {
     void link_buffer_model(const CircuitModelId& model_id);      
     void link_pass_gate_logic_model(const CircuitModelId& model_id);      
     bool is_unique_submodel(const CircuitModelId& model_id, const CircuitModelId& submodel_id);
-    void build_submodels();
     void build_model_timing_graph(const CircuitModelId& model_id);
+    void build_submodels();
   public: /* Public Mutators: builders */
     void build_model_links();
     void build_timing_graphs();
@@ -471,11 +471,12 @@ class CircuitLibrary {
   public: /* Internal mutators: build fast look-ups */
     void build_model_lookup();
     void build_model_port_lookup();
-  private: /* Internal invalidators/validators */
-    /* Validators */
+  public: /* Public invalidators/validators */
     bool valid_model_id(const CircuitModelId& model_id) const;
     bool valid_circuit_port_id(const CircuitPortId& circuit_port_id) const;
     bool valid_circuit_pin_id(const CircuitPortId& circuit_port_id, const size_t& pin_id) const;
+  private: /* Internal invalidators/validators */
+    /* Validators */
     bool valid_edge_id(const CircuitEdgeId& edge_id) const;
     bool valid_delay_type(const CircuitModelId& model_id, const enum spice_model_delay_type& delay_type) const;
     bool valid_circuit_edge_id(const CircuitEdgeId& circuit_edge_id) const;

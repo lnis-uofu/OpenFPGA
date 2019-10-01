@@ -30,7 +30,7 @@ int count_num_reserved_conf_bit_one_interc(t_interconnect* cur_interc,
                                            enum e_sram_orgz cur_sram_orgz_type);
 
 void  
-add_mux_scff_conf_bits_to_llist(int mux_size,
+add_mux_ccff_conf_bits_to_llist(int mux_size,
                            t_sram_orgz_info* cur_sram_orgz_info, 
                            int num_mux_sram_bits, int* mux_sram_bits,
                            t_spice_model* mux_spice_model);

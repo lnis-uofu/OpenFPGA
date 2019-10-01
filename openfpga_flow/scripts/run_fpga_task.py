@@ -5,7 +5,7 @@
 #                 Combination of architecture, benchmark and script paramters
 # Args          : python3 run_fpga_task.py --help
 # Author        : Ganesh Gore
-#Email          : ganeshgore@utah.edu
+# Email          : ganeshgore@utah.edu
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
 import os
@@ -36,7 +36,7 @@ if sys.version_info[0] < 3:
 # Configure logging system
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 logging.basicConfig(level=logging.INFO, stream=sys.stdout,
-                    format='%(levelname)s (%(threadName)10s) - %(message)s')
+                    format='%(levelname)s (%(threadName)15s) - %(message)s')
 logger = logging.getLogger('OpenFPGA_Task_logs')
 
 
@@ -48,14 +48,19 @@ parser.add_argument('tasks', nargs='+')
 parser.add_argument('--maxthreads', type=int, default=2,
                     help="Number of fpga_flow threads to run default = 2," +
                     "Typically <= Number of processors on the system")
+parser.add_argument('--remove_run_dir', type=str,
+                    help="Remove run dir " +
+                         "'all' to remove all." +
+                         "<int>,<int> to remove specific run dir" +
+                         "<int>-<int> To remove range of directory")
 parser.add_argument('--config', help="Override default configuration")
 parser.add_argument('--test_run', action="store_true",
                     help="Dummy run shows final generated VPR commands")
 parser.add_argument('--debug', action="store_true",
                     help="Run script in debug mode")
-parser.add_argument('--exit_on_fail', action="store_true",
+parser.add_argument('--continue_on_fail', action="store_true",
                     help="Exit script with return code")
-parser.add_argument('--skip_thread_logs', action="store_true",
+parser.add_argument('--show_thread_logs', action="store_true",
                     help="Skips logs from running thread")
 args = parser.parse_args()
 
@@ -84,6 +89,8 @@ def main():
         logger.info("Currently running task %s" % eachtask)
         eachtask = eachtask.replace("\\", "/").split("/")
         job_run_list = generate_each_task_actions(eachtask)
+        if args.remove_run_dir:
+            continue
         eachtask = "_".join(eachtask)
         if not args.test_run:
             run_actions(job_run_list)
@@ -111,6 +118,40 @@ def validate_command_line_arguments():
     logger.info("Set up to run %d Parallel threads", args.maxthreads)
 
 
+def remove_run_dir():
+    remove_dir = []
+    try:
+        argval = args.remove_run_dir.lower()
+        if argval == "all":
+            for eachRun in glob.glob("run*"):
+                remove_dir += [eachRun]
+        elif "-" in argval:
+            minval, maxval = map(int, argval.split("-"))
+            if minval > maxval:
+                raise Exception("Enter valid range to remove")
+            for eachRun in glob.glob("run*"):
+                if minval <= int(eachRun[-3:]) <= maxval:
+                    remove_dir += [eachRun]
+        elif "," in argval:
+            for eachRun in argval.split(","):
+                remove_dir += ["run%03d" % int(eachRun)]
+        else:
+            logger.error("Unknow argument to --remove_run_dir")
+    except:
+        logger.exception("Failed to parse remove rund_dir options")
+
+    try:
+        for eachdir in remove_dir:
+            logger.info('Removing run_dir %s' % (eachdir))
+            if os.path.exists('latest'):
+                if eachdir == os.readlink('latest'):
+                    remove_dir += ["latest"]
+            shutil.rmtree(eachdir, ignore_errors=True)
+    except:
+        logger.exception("Failed to remove %s run directory" %
+                         (eachdir or "Unknown"))
+
+
 def generate_each_task_actions(taskname):
     """
     This script generates all the scripts required for each benchmark
@@ -130,6 +171,9 @@ def generate_each_task_actions(taskname):
     # Create run directory for current task run ./runxxx
     run_dirs = [int(os.path.basename(x)[-3:]) for x in glob.glob('run*[0-9]')]
     curr_run_dir = "run%03d" % (max(run_dirs+[0, ])+1)
+    if args.remove_run_dir:
+        remove_run_dir()
+        return
     try:
         os.mkdir(curr_run_dir)
         if os.path.islink('latest') or os.path.exists('latest'):
@@ -252,10 +296,10 @@ def generate_each_task_actions(taskname):
                 flow_run_cmd_list.append({
                     "arch": arch,
                     "bench": bench,
-                    "name": "%02d_arch%s_%s" % (indx, bench["top_module"], lbl),
+                    "name": "%02d_%s_%s" % (indx, bench["top_module"], lbl),
                     "run_dir": flow_run_dir,
                     "commands": command,
-                    "finished" : False,
+                    "finished": False,
                     "status": False})
 
     logger.info('Found %d Architectures %d Benchmarks & %d Script Parameters' %
@@ -345,14 +389,11 @@ def strip_child_logger_info(line):
 
 
 def run_single_script(s, eachJob, job_list):
-    logger.debug('Added job in pool')
     with s:
-        logger.debug("Running OpenFPGA flow with " +
-                     " ".join(eachJob["commands"]))
-        name = threading.currentThread().getName()
+        thread_name = threading.currentThread().getName()
         eachJob["starttime"] = time.time()
         try:
-            logfile = "%s_out.log" % name
+            logfile = "%s_out.log" % thread_name
             with open(logfile, 'w+') as output:
                 output.write("* "*20 + '\n')
                 output.write("RunDirectory : %s\n" % os.getcwd())
@@ -360,46 +401,45 @@ def run_single_script(s, eachJob, job_list):
                     eachJob["commands"]
                 output.write(" ".join(command) + '\n')
                 output.write("* "*20 + '\n')
+                logger.debug("Running OpenFPGA flow with [%s]" % command)
                 process = subprocess.Popen(command,
                                            stdout=subprocess.PIPE,
                                            stderr=subprocess.STDOUT,
                                            universal_newlines=True)
                 for line in process.stdout:
-                    if not args.skip_thread_logs:
+                    if args.show_thread_logs:
                         strip_child_logger_info(line[:-1])
                     sys.stdout.buffer.flush()
                     output.write(line)
                 process.wait()
                 if process.returncode:
-                    raise subprocess.CalledProcessError(0, command)
+                    raise subprocess.CalledProcessError(0, " ".join(command))
                 eachJob["status"] = True
         except:
             logger.exception("Failed to execute openfpga flow - " +
                              eachJob["name"])
-            if args.exit_on_fail:
-                clean_up_and_exit("Faile to run task %s exiting" % name)
+            if not args.continue_on_fail:
+                os._exit(1)
         eachJob["endtime"] = time.time()
         timediff = timedelta(seconds=(eachJob["endtime"]-eachJob["starttime"]))
         timestr = humanize.naturaldelta(timediff) if "humanize" in sys.modules \
             else str(timediff)
         logger.info("%s Finished with returncode %d, Time Taken %s " %
-                    (name, process.returncode, timestr))
+                    (thread_name, process.returncode, timestr))
         eachJob["finished"] = True
-        no_of_finished_job = sum([ not eachJ["finished"] for eachJ in job_list])
+        no_of_finished_job = sum([not eachJ["finished"] for eachJ in job_list])
         logger.info("***** %d runs pending *****" % (no_of_finished_job))
 
 
 def run_actions(job_list):
     thread_sema = threading.Semaphore(args.maxthreads)
-    thred_list = []
-    for index, eachjob in enumerate(job_list):
-        JobID = 'Job_%02d' % (index+1)
-        logger.info("Running %s = %s" % (JobID, eachjob["name"]))
-        t = threading.Thread(target=run_single_script,
-                             name=JobID, args=(thread_sema, eachjob, job_list))
+    thread_list = []
+    for _, eachjob in enumerate(job_list):
+        t = threading.Thread(target=run_single_script, name=eachjob["name"],
+                             args=(thread_sema, eachjob, job_list))
         t.start()
-        thred_list.append(t)
-    for eachthread in thred_list:
+        thread_list.append(t)
+    for eachthread in thread_list:
         eachthread.join()
 
 

@@ -612,7 +612,7 @@ std::vector<CircuitPortId> CircuitLibrary::model_global_ports_by_type(const Circ
 }
 
 /* Recursively find all the global ports in the circuit model / sub circuit_model 
- * but ignore all the SRAM and SCFF, which are configuration memories
+ * but ignore all the SRAM and CCFF, which are configuration memories
  */
 std::vector<CircuitPortId> CircuitLibrary::model_global_ports_by_type(const CircuitModelId& model_id,
                                                                       const enum e_spice_model_port_type& type,
@@ -621,7 +621,7 @@ std::vector<CircuitPortId> CircuitLibrary::model_global_ports_by_type(const Circ
   std::vector<enum e_spice_model_type> ignore_list;
   if (true == ignore_config_memories) {
     ignore_list.push_back(SPICE_MODEL_SRAM);
-    ignore_list.push_back(SPICE_MODEL_SCFF);
+    ignore_list.push_back(SPICE_MODEL_CCFF);
   }
   return model_global_ports_by_type(model_id, type, recursive, ignore_list);
 }
@@ -1875,7 +1875,7 @@ void CircuitLibrary::build_submodels() {
     /* Build a unique list */
     for (const auto& cand : candidates) {
       /* Make sure the model id is unique in the list */
-      if (true == is_unique_submodel(model,cand)) {
+      if (true == is_unique_submodel(model, cand)) {
         sub_models_[model].push_back(cand);
       }
     }

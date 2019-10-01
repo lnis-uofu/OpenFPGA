@@ -26,6 +26,11 @@ void print_verilog_include_defines_preproc_file(std::fstream& fp,
 void print_verilog_comment(std::fstream& fp, 
                            const std::string& comment);
 
+void print_verilog_preprocessing_flag(std::fstream& fp,
+                                      const std::string& preproc_flag);
+
+void print_verilog_endif(std::fstream& fp);
+
 void print_verilog_module_definition(std::fstream& fp, 
                                      const ModuleManager& module_manager, const ModuleId& module_id);
 
@@ -78,5 +83,27 @@ void print_verilog_buffer_instance(std::fstream& fp,
                                    const CircuitModelId& buffer_model, 
                                    const BasicPort& instance_input_port,
                                    const BasicPort& instance_output_port);
+
+void print_verilog_local_sram_wires(std::fstream& fp,
+                                    const CircuitLibrary& circuit_lib,
+                                    const CircuitModelId& sram_model,
+                                    const e_sram_orgz sram_orgz_type,
+                                    const size_t& port_size);
+
+void print_verilog_mux_config_bus(std::fstream& fp, 
+                                  const CircuitLibrary& circuit_lib,
+                                  const CircuitModelId& mux_model,
+                                  const e_sram_orgz& sram_orgz_type,
+                                  const size_t& mux_size,
+                                  const size_t& mux_instance_id,
+                                  const size_t& num_reserved_conf_bits, 
+                                  const size_t& num_conf_bits); 
+
+void print_verilog_formal_verification_mux_sram_ports_wiring(std::fstream& fp, 
+                                                             const CircuitLibrary& circuit_lib,
+                                                             const CircuitModelId& mux_model,
+                                                             const size_t& mux_size,
+                                                             const size_t& mux_instance_id,
+                                                             const size_t& num_conf_bits); 
 
 #endif

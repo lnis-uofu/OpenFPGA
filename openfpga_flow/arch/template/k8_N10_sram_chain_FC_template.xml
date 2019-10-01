@@ -202,11 +202,23 @@
         <design_technology type="cmos" topology="buffer" size="1" tapered="on" tap_drive_level="2" f_per_stage="4"/>
         <port type="input" prefix="in" size="1"/>
         <port type="output" prefix="out" size="1"/>
+        <delay_matrix type="rise" in_port="in" out_port="out">
+          10e-12
+        </delay_matrix>
+        <delay_matrix type="fall" in_port="in" out_port="out">
+          10e-12
+        </delay_matrix>
       </circuit_model>
       <circuit_model type="inv_buf" name="tap_buf4" prefix="tap_buf4" is_default="0">
         <design_technology type="cmos" topology="buffer" size="1" tapered="on" tap_drive_level="3" f_per_stage="4"/>
         <port type="input" prefix="in" size="1"/>
         <port type="output" prefix="out" size="1"/>
+        <delay_matrix type="rise" in_port="in" out_port="out">
+          10e-12
+        </delay_matrix>
+        <delay_matrix type="fall" in_port="in" out_port="out">
+          10e-12
+        </delay_matrix>
       </circuit_model>
       <circuit_model type="pass_gate" name="TGATE" prefix="TGATE" is_default="1">
         <design_technology type="cmos" topology="transmission_gate" nmos_size="1" pmos_size="2"/>
@@ -217,10 +229,10 @@
         <port type="input" prefix="selb" size="1"/>
         <port type="output" prefix="out" size="1"/>
         <delay_matrix type="rise" in_port="in sel selb" out_port="out">
-          10e-12 0e-12 0e-12
+          10e-12 5e-12 5e-12
         </delay_matrix>
         <delay_matrix type="fall" in_port="in sel selb" out_port="out">
-          10e-12 0e-12 0e-12
+          10e-12 5e-12 5e-12
         </delay_matrix>
       </circuit_model>
       <circuit_model type="gate" name="OR2" prefix="OR2" is_default="1">
@@ -230,17 +242,11 @@
         <port type="input" prefix="a" size="1"/>
         <port type="input" prefix="b" size="1"/>
         <port type="output" prefix="out" size="1"/>
-        <delay_matrix type="rise" in_port="a" out_port="out">
-          10e-12
+        <delay_matrix type="rise" in_port="a b" out_port="out">
+          10e-12 10e-12
         </delay_matrix>
-        <delay_matrix type="rise" in_port="b" out_port="out">
-          10e-12
-        </delay_matrix>
-        <delay_matrix type="fall" in_port="a" out_port="out">
-          10e-12
-        </delay_matrix>
-        <delay_matrix type="fall" in_port="b" out_port="out">
-          10e-12
+        <delay_matrix type="fall" in_port="a b" out_port="out">
+          10e-12 10e-12
         </delay_matrix>
       </circuit_model>
       <circuit_model type="chan_wire" name="chan_segment" prefix="track_seg" is_default="1">
@@ -325,7 +331,7 @@
         <port type="output" prefix="lut5_out" size="2" lut_frac_level="5" lut_output_mask="0,1"/>
         <port type="output" prefix="lut6_out" size="1" lut_output_mask="0"/>
         <port type="sram" prefix="sram" size="64"/>
-        <port type="sram" prefix="mode" size="2" mode_select="true" circuit_model_name="sram6T_blwl" default_val="1"/>
+        <port type="sram" prefix="mode" size="2" mode_select="true" circuit_model_name="sc_dff_compact" default_val="1"/>
       </circuit_model>
       <circuit_model type="lut" name="frac_lut4" prefix="frac_lut4" dump_structural_verilog="true">
         <design_technology type="cmos" fracturable_lut="true"/>
@@ -340,7 +346,7 @@
         <port type="output" prefix="lut3_out" size="2" lut_frac_level="3" lut_output_mask="0,1"/>
         <port type="output" prefix="lut4_out" size="1" lut_output_mask="0"/>
         <port type="sram" prefix="sram" size="16"/>
-        <port type="sram" prefix="mode" size="2" mode_select="true" circuit_model_name="sram6T_blwl" default_val="1"/>
+        <port type="sram" prefix="mode" size="2" mode_select="true" circuit_model_name="sc_dff_compact" default_val="1"/>
       </circuit_model>
       <circuit_model type="sram" name="sram6T" prefix="sram" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/sram.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/sram.v" >
         <design_technology type="cmos"/>

@@ -726,7 +726,8 @@ void dump_verilog_cmos_mux_tree_structure(FILE* fp,
   for (i = 0; i < spice_mux_arch.num_level + 1; i++) {
     inter_buf_loc[i] = FALSE;
   }
-  if (NULL != spice_model.lut_intermediate_buffer->location_map) {
+  if ( (TRUE == spice_model.lut_intermediate_buffer->exist) 
+    && (NULL != spice_model.lut_intermediate_buffer->location_map) ) {
     assert ((size_t)spice_mux_arch.num_level - 1 == strlen(spice_model.lut_intermediate_buffer->location_map));
     /* For intermediate buffers */ 
     for (i = 0; i < spice_mux_arch.num_level - 1; i++) {
@@ -993,7 +994,7 @@ void dump_verilog_cmos_mux_multilevel_structure(FILE* fp,
     if (TRUE == spice_model.design_tech_info.mux_info->local_encoder) {
       /* Get the number of inputs */
       int num_outputs = cur_num_input_basis;
-      int num_inputs =  determine_mux_local_encoder_num_inputs(num_outputs);
+      int num_inputs = determine_mux_local_encoder_num_inputs(num_outputs);
       /* Find the decoder name */
       fprintf(fp, "%s %s_%d_ (", 
               generate_verilog_decoder_subckt_name(num_inputs, num_outputs),
@@ -2040,7 +2041,7 @@ void dump_verilog_cmos_mux_mem_submodule(FILE* fp,
   /* Asserts*/
   assert ((1 == num_sram_port) && (NULL != sram_port));
   assert (NULL != sram_port[0]->spice_model);
-  assert ((SPICE_MODEL_SCFF == sram_port[0]->spice_model->type) 
+  assert ((SPICE_MODEL_CCFF == sram_port[0]->spice_model->type) 
        || (SPICE_MODEL_SRAM == sram_port[0]->spice_model->type));
 
   /* Get the memory model */
@@ -3268,9 +3269,13 @@ void dump_verilog_submodules(ModuleManager& module_manager,
   dump_verilog_submodule_muxes(cur_sram_orgz_info, verilog_dir, submodule_dir, routing_arch->num_switch, 
                                switch_inf, Arch.spice, routing_arch, fpga_verilog_opts.dump_explicit_verilog);
 
+  /* NOTE: local decoders generation must go before the MUX generation!!! 
+   *       because local decoders modules will be instanciated in the MUX modules 
+   */
+  print_verilog_submodule_mux_local_decoders(module_manager, mux_lib, Arch.spice->circuit_lib, 
+                                             std::string(verilog_dir), std::string(submodule_dir));
   print_verilog_submodule_muxes(module_manager, mux_lib, Arch.spice->circuit_lib, cur_sram_orgz_info, std::string(verilog_dir), std::string(submodule_dir));
 
-  print_verilog_submodule_mux_local_decoders(module_manager, mux_lib, Arch.spice->circuit_lib, std::string(verilog_dir), std::string(submodule_dir));
  
   /* 2. LUTes */
   vpr_printf(TIO_MESSAGE_INFO, "Generating modules of LUTs...\n");
@@ -3288,12 +3293,11 @@ void dump_verilog_submodules(ModuleManager& module_manager,
   vpr_printf(TIO_MESSAGE_INFO, "Generating modules of memories...\n");
   dump_verilog_submodule_memories(cur_sram_orgz_info, verilog_dir, submodule_dir, routing_arch->num_switch, 
                                   switch_inf, Arch.spice, routing_arch, fpga_verilog_opts.dump_explicit_verilog);
-  print_verilog_submodule_memories(module_manager, mux_lib, Arch.spice->circuit_lib, std::string(verilog_dir), std::string(submodule_dir));
+  print_verilog_submodule_memories(module_manager, mux_lib, Arch.spice->circuit_lib, 
+                                   cur_sram_orgz_info->type,
+                                   std::string(verilog_dir), std::string(submodule_dir));
 
-  /* 5. Dump decoder modules only when memory bank is required */
-  dump_verilog_config_peripherals(cur_sram_orgz_info, verilog_dir, submodule_dir);
-
-  /* 6. Dump template for all the modules */
+  /* 5. Dump template for all the modules */
   if (TRUE == fpga_verilog_opts.print_user_defined_template) { 
     print_verilog_submodule_templates(module_manager, Arch.spice->circuit_lib, L_segment_vec, std::string(verilog_dir), std::string(submodule_dir));
   }

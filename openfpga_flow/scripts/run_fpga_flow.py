@@ -659,6 +659,9 @@ def run_standard_vpr(bench_blif, fixed_chan_width, logfile, route_only=False):
     if args.vpr_use_tileable_route_chan_width:
         command += ["--use_tileable_route_chan_width"]
 
+    if args.vpr_fpga_x2p_compact_routing_hierarchy:
+        command += ["--fpga_x2p_compact_routing_hierarchy"]
+
     # FPGA_Spice Options
     if (args.power and args.vpr_fpga_spice):
         command += ["--fpga_spice"]
@@ -668,8 +671,6 @@ def run_standard_vpr(bench_blif, fixed_chan_width, logfile, route_only=False):
         if args.vpr_fpga_x2p_sim_window_size:
             command += ["--fpga_x2p_sim_window_size",
                         args.vpr_fpga_x2p_sim_window_size]
-        if args.vpr_fpga_x2p_compact_routing_hierarchy:
-            command += ["--fpga_x2p_compact_routing_hierarchy"]
 
         if args.vpr_fpga_spice_sim_mt_num:
             command += ["--fpga_spice_sim_mt_num",
@@ -858,7 +859,9 @@ def run_netlists_verification():
     if "Succeed" in output:
         logger.info("VVP Simulation Successful")
     else:
-        logger.info(str(output).split("\n")[-1])
+        logger.error(str(output).split("\n")[-1])
+        if exit_if_fail:
+            clean_up_and_exit("Failed to run VVP verification")
     ExecTime["VerificationEnd"] = time.time()
 
 

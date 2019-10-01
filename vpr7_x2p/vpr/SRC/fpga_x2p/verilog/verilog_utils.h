@@ -165,7 +165,7 @@ void dump_verilog_mux_sram_submodule(FILE* fp, t_sram_orgz_info* cur_sram_orgz_i
 void dump_verilog_sram_submodule(FILE* fp, t_sram_orgz_info* cur_sram_orgz_info,
                                  t_spice_model* sram_verilog_model);
 
-void dump_verilog_scff_config_bus(FILE* fp,
+void dump_verilog_ccff_config_bus(FILE* fp,
                                  t_spice_model* mem_spice_model, 
                                  t_sram_orgz_info* cur_sram_orgz_info,
                                  int lsb, int msb,
