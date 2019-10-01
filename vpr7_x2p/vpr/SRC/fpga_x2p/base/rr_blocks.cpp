@@ -2473,7 +2473,7 @@ const RRGSB& DeviceRRGSB::get_cb_unique_module(t_rr_type cb_type, DeviceCoordina
 
 /* Give a coordinator of a rr switch block, and return its unique mirror */ 
 const RRGSB DeviceRRGSB::get_sb_unique_module(DeviceCoordinator& coordinator) const {
-  assert(validate_coordinator_edge(coordinator));
+  assert(validate_coordinator(coordinator));
   size_t sb_unique_module_id = sb_unique_module_id_[coordinator.get_x()][coordinator.get_y()];  
   return get_sb_unique_module(sb_unique_module_id);
 } 

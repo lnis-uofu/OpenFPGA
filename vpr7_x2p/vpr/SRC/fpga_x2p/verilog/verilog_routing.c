@@ -2200,7 +2200,8 @@ void dump_verilog_routing_switch_box_unique_module(t_sram_orgz_info* cur_sram_or
         dump_verilog_formal_verification_sram_ports(fp, cur_sram_orgz_info, 
                                                     cur_sram_lsb,
                                                     cur_sram_msb,
-                                                    VERILOG_PORT_CONKT, is_explicit_mapping);
+                                                    VERILOG_PORT_CONKT,
+													false);
         fprintf(fp, "\n");
         fprintf(fp, "`endif\n");
       }
@@ -2297,7 +2298,7 @@ void dump_verilog_routing_switch_box_unique_subckt(t_sram_orgz_info* cur_sram_or
   /* Print the definition of subckt*/
   fprintf(fp, "module %s ( \n", rr_gsb.gen_sb_verilog_module_name());
   /* dump global ports */
-  if (0 < dump_verilog_global_ports(fp, global_ports_head, TRUE, is_explicit_mapping)) {
+  if (0 < dump_verilog_global_ports(fp, global_ports_head, TRUE, false)) {
     fprintf(fp, ",\n");
   }
 
@@ -2336,9 +2337,9 @@ void dump_verilog_routing_switch_box_unique_subckt(t_sram_orgz_info* cur_sram_or
                                                   rr_gsb.get_opin_node_grid_side(side_manager.get_side(), inode),
                                                   rr_gsb.get_opin_node(side_manager.get_side(), inode)->xlow,
                                                   rr_gsb.get_opin_node(side_manager.get_side(), inode)->ylow,
-                                                  rr_sb.get_opin_node(side_manager.get_side(), inode)->xlow,
-                                                  rr_sb.get_opin_node(side_manager.get_side(), inode)->ylow,
-                                                  TRUE, is_explicit_mapping); /* Dump the direction of the port ! */ 
+                                                  rr_gsb.get_opin_node(side_manager.get_side(), inode)->xlow,
+                                                  rr_gsb.get_opin_node(side_manager.get_side(), inode)->ylow,
+                                                  TRUE, false); /* Dump the direction of the port ! */ 
     } 
   }
   
@@ -2366,7 +2367,7 @@ void dump_verilog_routing_switch_box_unique_subckt(t_sram_orgz_info* cur_sram_or
     dump_verilog_formal_verification_sram_ports(fp, cur_sram_orgz_info, 
                                                 rr_gsb.get_sb_conf_bits_lsb(),
                                                 rr_gsb.get_sb_conf_bits_msb(),
-                                                VERILOG_PORT_INPUT, is_explicit_mapping);
+                                                VERILOG_PORT_INPUT, false);
     fprintf(fp, "\n");
     fprintf(fp, "`endif\n");
   }
@@ -2569,7 +2570,7 @@ void dump_verilog_routing_switch_box_subckt(t_sram_orgz_info* cur_sram_orgz_info
     dump_verilog_formal_verification_sram_ports(fp, cur_sram_orgz_info, 
                                                 cur_sb_info->conf_bits_lsb, 
                                                 cur_sb_info->conf_bits_msb - 1,
-                                                VERILOG_PORT_INPUT, is_explicit_mapping);
+                                                VERILOG_PORT_INPUT, false);
     fprintf(fp, "\n");
     fprintf(fp, "`endif\n");
   }
@@ -3861,7 +3862,7 @@ void dump_verilog_routing_connection_box_subckt(t_sram_orgz_info* cur_sram_orgz_
     dump_verilog_formal_verification_sram_ports(fp, cur_sram_orgz_info, 
                                                 cur_cb_info->conf_bits_lsb, 
                                                 cur_cb_info->conf_bits_msb - 1,
-                                                VERILOG_PORT_INPUT, is_explicit_mapping);
+                                                VERILOG_PORT_INPUT, false);
     fprintf(fp, "\n");
     fprintf(fp, "`endif\n");
   }

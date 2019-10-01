@@ -1319,15 +1319,20 @@ void dump_compact_verilog_top_netlist(t_sram_orgz_info* cur_sram_orgz_info,
 
   /* Quote Routing structures: Channels */
   if (TRUE == compact_routing_hierarchy ) {
+  fprintf(fp, "//TEST1\n");
     dump_compact_verilog_defined_channels(fp, is_explicit_mapping);
   } else {
+  fprintf(fp, "//TEST2\n");
+    dump_compact_verilog_defined_channels(fp, is_explicit_mapping);
     dump_verilog_defined_channels(fp, LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices, is_explicit_mapping);
   }
 
   /* Quote Routing structures: Switch Boxes */
   if (TRUE == compact_routing_hierarchy ) {
+  fprintf(fp, "//TEST3\n");
     dump_compact_verilog_defined_switch_boxes(cur_sram_orgz_info, fp, is_explicit_mapping); 
   } else {
+  fprintf(fp, "//TEST4\n");
     dump_verilog_defined_switch_boxes(cur_sram_orgz_info, fp, is_explicit_mapping); /* BC: Explicit mapping not done because we will erase this in the future*/
   }
 
