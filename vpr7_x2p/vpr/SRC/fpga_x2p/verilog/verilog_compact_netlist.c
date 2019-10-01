@@ -1110,27 +1110,27 @@ void dump_compact_verilog_defined_one_channel(FILE* fp,
   for (size_t itrack = 0; itrack < rr_chan.get_chan_width(); ++itrack) {
     switch (rr_chan.get_node(itrack)->direction) {
     case INC_DIRECTION:
-    if (true == is_explicit_mapping) {
-      fprintf(fp, ".in%d (",itrack);
-    }
+      if (true == is_explicit_mapping) {
+        fprintf(fp, ".in%d (",itrack);
+      }
       fprintf(fp, "%s",
               gen_verilog_routing_channel_one_pin_name(rr_chan.get_node(itrack),
                                                        x, y, itrack, OUT_PORT));
-    if (true == is_explicit_mapping) {
-      fprintf(fp, ")");
-    }
+      if (true == is_explicit_mapping) {
+        fprintf(fp, ")");
+      }
       fprintf(fp, ",\n");
       break;
     case DEC_DIRECTION:
-    if (true == is_explicit_mapping) {
-      fprintf(fp, ".out%d (",itrack);
-    }
+      if (true == is_explicit_mapping) {
+        fprintf(fp, ".out%d (",itrack);
+      }
       fprintf(fp, "%s",
               gen_verilog_routing_channel_one_pin_name(rr_chan.get_node(itrack),
                                                        x, y, itrack, IN_PORT));
-    if (true == is_explicit_mapping) {
-      fprintf(fp, ")");
-    }
+      if (true == is_explicit_mapping) {
+        fprintf(fp, ")");
+      }
       fprintf(fp, ",\n");
       break;
     default:
@@ -1150,27 +1150,27 @@ void dump_compact_verilog_defined_one_channel(FILE* fp,
   for (size_t itrack = 0; itrack < rr_chan.get_chan_width(); ++itrack) {
     switch (rr_chan.get_node(itrack)->direction) {
     case INC_DIRECTION:
-    if (true == is_explicit_mapping) {
-      fprintf(fp, ".out%d (",itrack);
-    }
+      if (true == is_explicit_mapping) {
+        fprintf(fp, ".out%d (",itrack);
+      }
       fprintf(fp, "%s",
               gen_verilog_routing_channel_one_pin_name(rr_chan.get_node(itrack),
                                                        x, y, itrack, IN_PORT));
-    if (true == is_explicit_mapping) {
-      fprintf(fp, ")");
-    }
+      if (true == is_explicit_mapping) {
+        fprintf(fp, ")");
+      }
       fprintf(fp, ",\n");
       break;
     case DEC_DIRECTION:
-    if (true == is_explicit_mapping) {
-      fprintf(fp, ".in%d (",itrack);
-    }
+      if (true == is_explicit_mapping) {
+        fprintf(fp, ".in%d (",itrack);
+      }
       fprintf(fp, "%s",
               gen_verilog_routing_channel_one_pin_name(rr_chan.get_node(itrack),
                                                        x, y, itrack, OUT_PORT));
-    if (true == is_explicit_mapping) {
-      fprintf(fp, ")");
-    }
+      if (true == is_explicit_mapping) {
+        fprintf(fp, ")");
+      }
       fprintf(fp, ",\n");
       break;
     default:
@@ -1319,20 +1319,15 @@ void dump_compact_verilog_top_netlist(t_sram_orgz_info* cur_sram_orgz_info,
 
   /* Quote Routing structures: Channels */
   if (TRUE == compact_routing_hierarchy ) {
-  fprintf(fp, "//TEST1\n");
     dump_compact_verilog_defined_channels(fp, is_explicit_mapping);
   } else {
-  fprintf(fp, "//TEST2\n");
-    dump_compact_verilog_defined_channels(fp, is_explicit_mapping);
     dump_verilog_defined_channels(fp, LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices, is_explicit_mapping);
   }
 
   /* Quote Routing structures: Switch Boxes */
   if (TRUE == compact_routing_hierarchy ) {
-  fprintf(fp, "//TEST3\n");
     dump_compact_verilog_defined_switch_boxes(cur_sram_orgz_info, fp, is_explicit_mapping); 
   } else {
-  fprintf(fp, "//TEST4\n");
     dump_verilog_defined_switch_boxes(cur_sram_orgz_info, fp, is_explicit_mapping); /* BC: Explicit mapping not done because we will erase this in the future*/
   }
 
