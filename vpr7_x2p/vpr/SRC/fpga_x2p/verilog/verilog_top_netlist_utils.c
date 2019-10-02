@@ -1215,6 +1215,7 @@ void dump_verilog_configuration_circuits_scan_chains(t_sram_orgz_info* cur_sram_
                                                      FILE* fp,
                                                      bool is_explicit_mapping) {
   int num_mem_bits = 0;
+  t_spice_model* ccff_mem_model = NULL;
 
   /* Check */
   assert(SPICE_SRAM_SCAN_CHAIN == cur_sram_orgz_info->type);
@@ -1225,6 +1226,9 @@ void dump_verilog_configuration_circuits_scan_chains(t_sram_orgz_info* cur_sram_
 
   /* Get the total memory bits */
   num_mem_bits = get_sram_orgz_info_num_mem_bit(cur_sram_orgz_info);
+
+  /* Get model of the configuration chain */
+  get_sram_orgz_info_mem_model(cur_sram_orgz_info, &ccff_mem_model);
 
   /* Dump each Scan-chain FF */
   fprintf(fp, "//------ Configuration peripheral for Scan-chain FFs -----\n");
@@ -1243,7 +1247,8 @@ void dump_verilog_configuration_circuits_scan_chains(t_sram_orgz_info* cur_sram_
   }
   fprintf(fp, ",\n");
   if (true == is_explicit_mapping) {
-    fprintf(fp, ".ccff_ccff_in_local_bus ("); 
+    fprintf(fp, ".%s_ccff_in_local_bus (",
+            ccff_mem_model->prefix); 
   }
   dump_verilog_sram_one_local_outport(fp, cur_sram_orgz_info, 0, num_mem_bits - 1, -1, VERILOG_PORT_CONKT);
   if (true == is_explicit_mapping) {
@@ -1251,7 +1256,8 @@ void dump_verilog_configuration_circuits_scan_chains(t_sram_orgz_info* cur_sram_
   }
   fprintf(fp, ",\n");
   if (true == is_explicit_mapping) {
-    fprintf(fp, ".ccff_ccff_out_local_bus ("); 
+    fprintf(fp, ".%s_ccff_out_local_bus (",
+            ccff_mem_model->prefix); 
   }
   dump_verilog_sram_one_local_outport(fp, cur_sram_orgz_info, 0, num_mem_bits - 1, 0, VERILOG_PORT_CONKT);
   if (true == is_explicit_mapping) {

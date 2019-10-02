@@ -1560,6 +1560,7 @@ void dump_verilog_sram_local_ports(FILE* fp,
   t_spice_model_port** blb_port = NULL;
   t_spice_model_port** wlb_port = NULL;
   t_spice_model* cur_sram_verilog_model = NULL;
+  t_spice_model* ccff_mem_model = NULL;
 
   /* Check the file handler*/ 
   if (NULL == fp) {
@@ -1577,6 +1578,10 @@ void dump_verilog_sram_local_ports(FILE* fp,
                __FILE__, __LINE__, sram_lsb, sram_msb);
     return;
   }
+
+  /* Get model of the configuration chain */
+  get_sram_orgz_info_mem_model(cur_sram_orgz_info, &ccff_mem_model);
+
   switch (cur_sram_orgz_info->type) {
   case SPICE_SRAM_STANDALONE:
   case SPICE_SRAM_MEMORY_BANK:
@@ -1593,7 +1598,8 @@ void dump_verilog_sram_local_ports(FILE* fp,
   case SPICE_SRAM_SCAN_CHAIN:
     /* Dump the first port: SRAM_out of CMOS MUX or BL of RRAM MUX */ 
     if (true == is_explicit_mapping) {
-      fprintf(fp, ".ccff_ccff_head(");
+      fprintf(fp, ".%s_ccff_head(",
+                   ccff_mem_model->prefix);
     }
     dump_verilog_sram_one_local_outport(fp, cur_sram_orgz_info, 
                                         sram_lsb, sram_lsb, 
@@ -1604,7 +1610,8 @@ void dump_verilog_sram_local_ports(FILE* fp,
     fprintf(fp, ",\n");
     /* Dump the first port: SRAM_outb of CMOS MUX or WL of RRAM MUX */ 
     if (true == is_explicit_mapping) {
-      fprintf(fp, ".ccff_ccff_tail(");
+      fprintf(fp, ".%s_ccff_tail(",
+                   ccff_mem_model->prefix);
     }
     dump_verilog_sram_one_local_outport(fp, cur_sram_orgz_info, 
                                         sram_msb, sram_msb, 
