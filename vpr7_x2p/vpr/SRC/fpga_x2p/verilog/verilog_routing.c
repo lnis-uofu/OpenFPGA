@@ -63,7 +63,7 @@ void print_verilog_switch_block_local_sram_wires(std::fstream& fp,
                                                  const RRGSB& rr_gsb,
                                                  const CircuitLibrary& circuit_lib,
                                                  const CircuitModelId& sram_model,
-                                                 const e_sram_orgz sram_orgz_type,
+                                                 const e_sram_orgz& sram_orgz_type,
                                                  const size_t& port_size) {
   size_t local_port_size = port_size;
   if (SPICE_SRAM_SCAN_CHAIN == sram_orgz_type) {
@@ -71,6 +71,28 @@ void print_verilog_switch_block_local_sram_wires(std::fstream& fp,
     local_port_size = find_switch_block_number_of_muxes(rr_gsb) + 1; 
   }
   print_verilog_local_sram_wires(fp, circuit_lib, sram_model, sram_orgz_type, local_port_size);
+}
+
+/********************************************************************
+ * Check if the MSB of a configuration bus of a switch block
+ * matches the expected value
+ * Exception: 
+ * 1. Configuration bus for configuration chain will follow 
+ * the number of multiplexers in the switch block 
+ ********************************************************************/
+static 
+bool check_switch_block_mem_config_bus(const e_sram_orgz& sram_orgz_type, 
+                                       const RRGSB& rr_gsb,
+                                       const BasicPort& config_bus, 
+                                       const size_t& expected_msb) {
+  size_t local_expected_msb = expected_msb;
+  if (SPICE_SRAM_SCAN_CHAIN == sram_orgz_type) {
+    /* Note the size of local wires is number of routing multiplexers + 1
+     * Wire MSB is the number of routing multiplexers in the configuration chain 
+     */
+    local_expected_msb = find_switch_block_number_of_muxes(rr_gsb); 
+  }
+  return check_mem_config_bus(sram_orgz_type, config_bus, local_expected_msb);
 }
 
 /*********************************************************************
@@ -2763,6 +2785,9 @@ void print_verilog_routing_switch_box_unique_module(ModuleManager& module_manage
   }
 
   /* TODO: Add check code for config_bus. The MSB should match the number of configuration bits!!! */
+  VTR_ASSERT(true == check_switch_block_mem_config_bus(cur_sram_orgz_info->type, 
+                                                       rr_gsb, config_bus,
+                                                       rr_gsb.get_sb_num_conf_bits()));
 
   /* Put an end to the Verilog module */
   print_verilog_module_end(fp, module_manager.module_name(module_id));

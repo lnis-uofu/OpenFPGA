@@ -270,3 +270,35 @@ void update_mem_module_config_bus(const e_sram_orgz& sram_orgz_type,
     exit(1);
   }
 }
+
+/********************************************************************
+ * Check if the MSB of a configuration bus of a switch block
+ * matches the expected value
+ ********************************************************************/
+bool check_mem_config_bus(const e_sram_orgz& sram_orgz_type, 
+                          const BasicPort& config_bus, 
+                          const size_t& local_expected_msb) {
+  switch (sram_orgz_type) {
+  case SPICE_SRAM_STANDALONE:
+    /* Not supported */
+    return false;
+    break;
+  case SPICE_SRAM_SCAN_CHAIN:
+    /* TODO: comment on why
+     */
+    return (local_expected_msb == config_bus.get_msb());
+    break;
+  case SPICE_SRAM_MEMORY_BANK:
+    /* TODO: comment on why
+     */
+    return (local_expected_msb == config_bus.get_msb());
+    break;
+  default:
+    vpr_printf(TIO_MESSAGE_ERROR,
+               "(File:%s,[LINE%d])Invalid type of SRAM organization!\n",
+               __FILE__, __LINE__);
+    exit(1);
+  }
+  /* Reach here, it means something goes wrong, return a false value */
+  return false;
+}

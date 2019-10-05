@@ -22,4 +22,8 @@ void update_mem_module_config_bus(const e_sram_orgz& sram_orgz_type,
                                   const size_t& num_config_bits,
                                   BasicPort& config_bus);
 
+bool check_mem_config_bus(const e_sram_orgz& sram_orgz_type, 
+                          const BasicPort& config_bus, 
+                          const size_t& local_expected_msb);
+
 #endif
