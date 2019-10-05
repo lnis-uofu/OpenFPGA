@@ -43,6 +43,7 @@
 #include "mux_utils.h"
 #include "module_manager.h"
 #include "module_manager_utils.h"
+#include "fpga_x2p_mem_utils.h"
 
 /* Include Verilog support headers*/
 #include "verilog_global.h"
@@ -2321,6 +2322,7 @@ static
 void print_verilog_unique_switch_box_mux(ModuleManager& module_manager, 
                                          std::fstream& fp,
                                          t_sram_orgz_info* cur_sram_orgz_info,
+                                         BasicPort& config_bus,
                                          const ModuleId& sb_module, 
                                          const RRGSB& rr_sb, 
                                          const CircuitLibrary& circuit_lib,
@@ -2451,18 +2453,22 @@ void print_verilog_unique_switch_box_mux(ModuleManager& module_manager,
   std::map<std::string, BasicPort> mem_port2port_name_map;
 
   /* TODO: Make the port2port map generation more generic!!! */
-  std::vector<BasicPort> config_ports;
-  config_ports.push_back(BasicPort(generate_local_config_bus_port_name(), mux_instance_id - 1, mux_instance_id));
+  /* Link the SRAM ports of the routing multiplexer to the memory module */
   std::vector<BasicPort> mem_output_ports;
   mem_output_ports.push_back(mux_config_port);
   mem_output_ports.push_back(mux_config_inv_port);
   mem_port2port_name_map = generate_mem_module_port2port_map(module_manager, mem_module, 
-                                                             config_ports,
+                                                             config_bus,
                                                              mem_output_ports,
                                                              circuit_lib.design_tech_type(mux_model),
                                                              cur_sram_orgz_info->type);
+  /* Update the config bus for the module */
+  update_mem_module_config_bus(cur_sram_orgz_info->type, 
+                               circuit_lib.design_tech_type(mux_model),
+                               mux_num_config_bits,
+                               config_bus);
 
-  /* Print an instance of the MUX Module */
+  /* Print an instance of the memory module associated with the routing multiplexer */
   print_verilog_comment(fp, std::string("----- BEGIN Instanciation of memory cells for a routing multiplexer -----"));
   print_verilog_module_instance(fp, module_manager, sb_module, mem_module, mem_port2port_name_map, use_explicit_mapping);
   print_verilog_comment(fp, std::string("----- END Instanciation of memory cells for a routing multiplexer -----"));
@@ -2491,6 +2497,7 @@ static
 void print_verilog_unique_switch_box_interc(ModuleManager& module_manager,
                                             std::fstream& fp, 
                                             t_sram_orgz_info* cur_sram_orgz_info,
+                                            BasicPort& config_bus,
                                             const ModuleId& sb_module, 
                                             const RRGSB& rr_sb,
                                             const CircuitLibrary& circuit_lib,
@@ -2525,7 +2532,7 @@ void print_verilog_unique_switch_box_interc(ModuleManager& module_manager,
                                                  drive_rr_nodes[DEFAULT_SWITCH_ID]);
   } else if (1 < drive_rr_nodes.size()) {
     /* Print the multiplexer, fan_in >= 2 */
-    print_verilog_unique_switch_box_mux(module_manager, fp, cur_sram_orgz_info, 
+    print_verilog_unique_switch_box_mux(module_manager, fp, cur_sram_orgz_info, config_bus, 
                                         sb_module, rr_sb, circuit_lib, mux_lib,
                                         rr_switches, chan_side, cur_rr_node,  
                                         drive_rr_nodes, 
@@ -2725,6 +2732,11 @@ void print_verilog_routing_switch_box_unique_module(ModuleManager& module_manage
                                               rr_gsb.get_sb_num_conf_bits());
   print_verilog_comment(fp, std::string("---- END local wires for SRAM data ports ----"));
 
+  /* Create a counter for the configuration bus */
+  BasicPort config_bus;
+  /* Counter start from 0 */
+  config_bus.set_width(0, 0);
+
   /* TODO: Print routing multiplexers */
   for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
     Side side_manager(side);
@@ -2732,13 +2744,16 @@ void print_verilog_routing_switch_box_unique_module(ModuleManager& module_manage
     for (size_t itrack = 0; itrack < rr_gsb.get_chan_width(side_manager.get_side()); ++itrack) {
       /* We care INC_DIRECTION tracks at this side*/
       if (OUT_PORT == rr_gsb.get_chan_node_direction(side_manager.get_side(), itrack)) {
-        print_verilog_unique_switch_box_interc(module_manager, fp, cur_sram_orgz_info, module_id, rr_sb, 
+        print_verilog_unique_switch_box_interc(module_manager, fp, cur_sram_orgz_info, config_bus, 
+                                               module_id, rr_sb, 
                                                circuit_lib, mux_lib, rr_switches, 
                                                side_manager.get_side(), 
                                                itrack, is_explicit_mapping);
       } 
     }
   }
+
+  /* TODO: Add check code for config_bus. The MSB should match the number of configuration bits!!! */
 
   /* Put an end to the Verilog module */
   print_verilog_module_end(fp, module_manager.module_name(module_id));
