@@ -851,7 +851,8 @@ int rec_dump_verilog_spice_model_global_ports(FILE* fp,
                                               const t_spice_model* cur_spice_model,
                                               boolean dump_port_type, 
                                               boolean recursive,
-                                              boolean require_explicit_port_map) {
+                                              boolean require_explicit_port_map,
+                                              boolean is_lib_name) {
   int dumped_port_cnt;
   boolean dump_comma = FALSE;
   t_spice_model_port* cur_spice_model_port = NULL;
@@ -900,9 +901,13 @@ int rec_dump_verilog_spice_model_global_ports(FILE* fp,
     } else {
       /* Add explicit port mapping if required */
       if (TRUE == require_explicit_port_map ) {
-        fprintf(fp, ".%s(",
-                cur_spice_model_port->lib_name);
-                //cur_spice_model_port->prefix);
+        if (TRUE == is_lib_name) {
+          fprintf(fp, ".%s(",
+                  cur_spice_model_port->lib_name);
+        } else {
+          fprintf(fp, ".%s(",
+                  cur_spice_model_port->prefix);
+        }
       }
       fprintf(fp, "%s[0:%d]", 
             cur_spice_model_port->prefix,
@@ -1555,6 +1560,7 @@ void dump_verilog_sram_local_ports(FILE* fp,
   t_spice_model_port** blb_port = NULL;
   t_spice_model_port** wlb_port = NULL;
   t_spice_model* cur_sram_verilog_model = NULL;
+  t_spice_model* ccff_mem_model = NULL;
 
   /* Check the file handler*/ 
   if (NULL == fp) {
@@ -1572,6 +1578,10 @@ void dump_verilog_sram_local_ports(FILE* fp,
                __FILE__, __LINE__, sram_lsb, sram_msb);
     return;
   }
+
+  /* Get model of the configuration chain */
+  get_sram_orgz_info_mem_model(cur_sram_orgz_info, &ccff_mem_model);
+
   switch (cur_sram_orgz_info->type) {
   case SPICE_SRAM_STANDALONE:
   case SPICE_SRAM_MEMORY_BANK:
@@ -1588,7 +1598,8 @@ void dump_verilog_sram_local_ports(FILE* fp,
   case SPICE_SRAM_SCAN_CHAIN:
     /* Dump the first port: SRAM_out of CMOS MUX or BL of RRAM MUX */ 
     if (true == is_explicit_mapping) {
-      fprintf(fp, ".ccff_ccff_head(");
+      fprintf(fp, ".%s_ccff_head(",
+                   ccff_mem_model->prefix);
     }
     dump_verilog_sram_one_local_outport(fp, cur_sram_orgz_info, 
                                         sram_lsb, sram_lsb, 
@@ -1599,7 +1610,8 @@ void dump_verilog_sram_local_ports(FILE* fp,
     fprintf(fp, ",\n");
     /* Dump the first port: SRAM_outb of CMOS MUX or WL of RRAM MUX */ 
     if (true == is_explicit_mapping) {
-      fprintf(fp, ".ccff_ccff_tail(");
+      fprintf(fp, ".%s_ccff_tail(",
+                   ccff_mem_model->prefix);
     }
     dump_verilog_sram_one_local_outport(fp, cur_sram_orgz_info, 
                                         sram_msb, sram_msb, 
@@ -1859,7 +1871,7 @@ void dump_verilog_mux_sram_submodule(FILE* fp, t_sram_orgz_info* cur_sram_orgz_i
     fprintf(fp, "%s %s_%d_ (", cur_sram_verilog_model->name, cur_sram_verilog_model->prefix, 
                                cur_sram_verilog_model->cnt); 
     /* Only dump the global ports belonging to a spice_model */
-    if (0 < rec_dump_verilog_spice_model_global_ports(fp, cur_sram_verilog_model, FALSE, TRUE, FALSE)) {
+    if (0 < rec_dump_verilog_spice_model_global_ports(fp, cur_sram_verilog_model, FALSE, TRUE, FALSE, TRUE)) {
       fprintf(fp, ",\n");
     }
     dump_verilog_mux_sram_one_outport(fp, cur_sram_orgz_info, 
@@ -1912,7 +1924,7 @@ void dump_verilog_mux_sram_submodule(FILE* fp, t_sram_orgz_info* cur_sram_orgz_i
     fprintf(fp, "%s %s_%d_ (", cur_sram_verilog_model->name, cur_sram_verilog_model->prefix, 
                                cur_sram_verilog_model->cnt); 
     /* Only dump the global ports belonging to a spice_model */
-    if (0 < rec_dump_verilog_spice_model_global_ports(fp, cur_sram_verilog_model, FALSE, TRUE, FALSE)) {
+    if (0 < rec_dump_verilog_spice_model_global_ports(fp, cur_sram_verilog_model, FALSE, TRUE, FALSE, TRUE)) {
       fprintf(fp, ",\n");
     }
     fprintf(fp, "%s_out[%d], ", cur_sram_verilog_model->prefix, cur_sram_verilog_model->cnt); /* Input*/
@@ -1929,7 +1941,7 @@ void dump_verilog_mux_sram_submodule(FILE* fp, t_sram_orgz_info* cur_sram_orgz_i
     fprintf(fp, "%s %s_%d_ (", cur_sram_verilog_model->name, cur_sram_verilog_model->prefix, 
                                cur_sram_verilog_model->cnt); 
     /* Only dump the global ports belonging to a spice_model */
-    if (0 < rec_dump_verilog_spice_model_global_ports(fp, cur_sram_verilog_model, FALSE, TRUE, FALSE)) {
+    if (0 < rec_dump_verilog_spice_model_global_ports(fp, cur_sram_verilog_model, FALSE, TRUE, FALSE, TRUE)) {
       fprintf(fp, ",\n");
     }
     /* Input of Scan-chain DFF, should be connected to the output of its precedent */
@@ -2025,7 +2037,7 @@ void dump_verilog_sram_submodule(FILE* fp, t_sram_orgz_info* cur_sram_orgz_info,
     fprintf(fp, "%s %s_%d_ (", cur_sram_verilog_model->name, cur_sram_verilog_model->prefix, 
                                cur_sram_verilog_model->cnt); 
     /* Only dump the global ports belonging to a spice_model */
-    if (0 < rec_dump_verilog_spice_model_global_ports(fp, cur_sram_verilog_model, FALSE, TRUE, FALSE)) {
+    if (0 < rec_dump_verilog_spice_model_global_ports(fp, cur_sram_verilog_model, FALSE, TRUE, FALSE, TRUE)) {
       fprintf(fp, ",\n");
     }
     fprintf(fp, "%s_out[%d], ", cur_sram_verilog_model->prefix, cur_num_sram); /* Input*/
@@ -2065,7 +2077,7 @@ void dump_verilog_sram_submodule(FILE* fp, t_sram_orgz_info* cur_sram_orgz_info,
     fprintf(fp, "%s %s_%d_ (", cur_sram_verilog_model->name, cur_sram_verilog_model->prefix, 
                                cur_sram_verilog_model->cnt); 
     /* Only dump the global ports belonging to a spice_model */
-    if (0 < rec_dump_verilog_spice_model_global_ports(fp, cur_sram_verilog_model, FALSE, TRUE, FALSE)) {
+    if (0 < rec_dump_verilog_spice_model_global_ports(fp, cur_sram_verilog_model, FALSE, TRUE, FALSE, TRUE)) {
       fprintf(fp, ",\n");
     }
     fprintf(fp, "%s_out[%d], ", cur_sram_verilog_model->prefix, cur_sram_verilog_model->cnt); /* Input*/
@@ -2082,7 +2094,7 @@ void dump_verilog_sram_submodule(FILE* fp, t_sram_orgz_info* cur_sram_orgz_info,
     fprintf(fp, "%s %s_%d_ (", cur_sram_verilog_model->name, cur_sram_verilog_model->prefix, 
                                cur_sram_verilog_model->cnt); 
     /* Only dump the global ports belonging to a spice_model */
-    if (0 < rec_dump_verilog_spice_model_global_ports(fp, cur_sram_verilog_model, FALSE, TRUE, FALSE)) {
+    if (0 < rec_dump_verilog_spice_model_global_ports(fp, cur_sram_verilog_model, FALSE, TRUE, FALSE, TRUE)) {
       fprintf(fp, ",\n");
     }
    /* Input of Scan-chain DFF, should be connected to the output of its precedent */
@@ -3061,7 +3073,7 @@ void dump_verilog_mem_module_port_map(FILE* fp,
    * Other ports are not accepted!!! 
    */
   /* 1. Global ports!  */
-  if (0 < rec_dump_verilog_spice_model_global_ports(fp, mem_model, dump_port_type, TRUE, require_explicit_port_map)) {
+  if (0 < rec_dump_verilog_spice_model_global_ports(fp, mem_model, dump_port_type, TRUE, require_explicit_port_map, TRUE)) {
     dump_first_comma = TRUE;
   }
 
@@ -3178,7 +3190,7 @@ void dump_verilog_mem_sram_submodule(FILE* fp,
     }
 
     /* Only dump the global ports belonging to a spice_model */
-    if (0 < rec_dump_verilog_spice_model_global_ports(fp, cur_sram_verilog_model, FALSE, TRUE, my_bool_to_boolean(is_explicit_mapping))) {
+    if (0 < rec_dump_verilog_spice_model_global_ports(fp, cur_sram_verilog_model, FALSE, TRUE, my_bool_to_boolean(is_explicit_mapping), TRUE)) {
       fprintf(fp, ",\n");
     }
 
@@ -3226,7 +3238,7 @@ void dump_verilog_mem_sram_submodule(FILE* fp,
   case SPICE_SRAM_STANDALONE:
     /* SRAM subckts*/
     /* Only dump the global ports belonging to a spice_model */
-    if (0 < rec_dump_verilog_spice_model_global_ports(fp, cur_sram_verilog_model, FALSE, TRUE, my_bool_to_boolean(is_explicit_mapping))) {
+    if (0 < rec_dump_verilog_spice_model_global_ports(fp, cur_sram_verilog_model, FALSE, TRUE, my_bool_to_boolean(is_explicit_mapping), TRUE)) {
       fprintf(fp, ",\n");
     }
     fprintf(fp, "%s_in[%d:%d], ", 

@@ -22,6 +22,7 @@ void dump_verilog_routing_chan_subckt(t_sram_orgz_info* cur_sram_orgz_info,
 void dump_verilog_grid_side_pin_with_given_index(FILE* fp, t_rr_type pin_type,
                                                  int pin_index, int side,
                                                  int x, int y,
+                                                 int unique_x, int unique_y, /* If explicit, needs the coordinates of the mirror*/
                                                  boolean dump_port_type,
                                                  bool is_explicit_mapping);
 

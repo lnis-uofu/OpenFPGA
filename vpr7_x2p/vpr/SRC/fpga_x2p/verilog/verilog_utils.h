@@ -74,7 +74,8 @@ int rec_dump_verilog_spice_model_global_ports(FILE* fp,
                                               const t_spice_model* cur_spice_model,
                                               boolean dump_port_type,
                                               boolean recursive,
-                                              boolean require_explicit_port_map);
+                                              boolean require_explicit_port_map,
+                                              boolean is_lib_name);
 
 int dump_verilog_global_ports(FILE* fp, t_llist* head,
                               boolean dump_port_type,

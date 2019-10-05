@@ -3072,6 +3072,18 @@ bool DeviceRRGSB::validate_coordinator(DeviceCoordinator& coordinator) const {
   return true;
 } 
 
+/* Validate if the (x,y) is the range of this device, but takes into consideration that edges are 1 off */
+bool DeviceRRGSB::validate_coordinator_edge(DeviceCoordinator& coordinator) const {
+  if (coordinator.get_x() >= rr_gsb_.capacity() + 1) {
+    return false;
+  }
+  if (coordinator.get_y() >= rr_gsb_[coordinator.get_x()].capacity() + 1) {
+    return false;
+  }
+  return true;
+} 
+
+
 /* Validate if the index in the range of unique_mirror vector*/
 bool DeviceRRGSB::validate_side(enum e_side side) const {
   Side side_manager(side);
