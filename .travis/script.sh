@@ -18,5 +18,5 @@ end_section "OpenFPGA.build"
 
 start_section "OpenFPGA.TaskTun" "${GREEN}..Running_Regression..${NC}"
 cd -
-python3 openfpga_flow/scripts/run_fpga_task.py blif_vpr_flow tileable_routing --maxthreads 2
+python3 openfpga_flow/scripts/run_fpga_task.py blif_vpr_flow tileable_routing explicit_verilog --maxthreads 3
 end_section "OpenFPGA.TaskTun"
