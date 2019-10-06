@@ -9,6 +9,7 @@
 #include "physical_types.h"
 #include "circuit_library.h"
 #include "rr_blocks.h"
+#include "mux_library.h"
 
 std::vector<CircuitPortId> find_connection_block_global_ports(const RRGSB& rr_gsb, 
                                                               const t_rr_type& cb_type,
@@ -23,5 +24,18 @@ size_t find_connection_block_number_of_muxes(const RRGSB& rr_gsb,
                                              const t_rr_type& cb_type);
 
 size_t find_switch_block_number_of_muxes(const RRGSB& rr_gsb);
+
+size_t find_connection_block_num_conf_bits(t_sram_orgz_info* cur_sram_orgz_info,
+                                           const CircuitLibrary& circuit_lib,
+                                           const MuxLibrary& mux_lib,
+                                           const std::vector<t_switch_inf>& rr_switches,
+                                           const RRGSB& rr_gsb,
+                                           const t_rr_type& cb_type);
+
+size_t find_switch_block_num_conf_bits(t_sram_orgz_info* cur_sram_orgz_info,
+                                       const CircuitLibrary& circuit_lib,
+                                       const MuxLibrary& mux_lib,
+                                       const std::vector<t_switch_inf>& rr_switches,
+                                       const RRGSB& rr_gsb);
 
 #endif

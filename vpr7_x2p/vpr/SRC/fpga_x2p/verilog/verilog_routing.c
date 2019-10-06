@@ -98,6 +98,30 @@ void print_verilog_switch_block_local_sram_wires(std::fstream& fp,
 }
 
 /********************************************************************
+ * Check if the MSB of a configuration bus of a connection block
+ * matches the expected value
+ * Exception: 
+ * 1. Configuration bus for configuration chain will follow 
+ * the number of multiplexers in the connection block 
+ ********************************************************************/
+static 
+bool check_connection_block_mem_config_bus(const e_sram_orgz& sram_orgz_type, 
+                                           const RRGSB& rr_gsb,
+                                           const t_rr_type& cb_type,
+                                           const BasicPort& config_bus, 
+                                           const size_t& expected_msb) {
+  size_t local_expected_msb = expected_msb;
+  if (SPICE_SRAM_SCAN_CHAIN == sram_orgz_type) {
+    /* Note the size of local wires is number of routing multiplexers + 1
+     * Wire MSB is the number of routing multiplexers in the configuration chain 
+     */
+    local_expected_msb = find_connection_block_number_of_muxes(rr_gsb, cb_type); 
+  }
+  return check_mem_config_bus(sram_orgz_type, config_bus, local_expected_msb);
+}
+
+
+/********************************************************************
  * Check if the MSB of a configuration bus of a switch block
  * matches the expected value
  * Exception: 
@@ -2452,6 +2476,7 @@ void print_verilog_unique_switch_box_mux(ModuleManager& module_manager,
                                          std::fstream& fp,
                                          t_sram_orgz_info* cur_sram_orgz_info,
                                          BasicPort& config_bus,
+                                         BasicPort& fm_config_bus,
                                          const ModuleId& sb_module, 
                                          const RRGSB& rr_sb, 
                                          const CircuitLibrary& circuit_lib,
@@ -2522,9 +2547,15 @@ void print_verilog_unique_switch_box_mux(ModuleManager& module_manager,
   print_verilog_comment(fp, std::string("----- BEGIN Local wires used in only formal verification purpose -----"));
   print_verilog_preprocessing_flag(fp, std::string(verilog_formal_verification_preproc_flag));
   /* Print the SRAM configuration ports for formal verification */
-  /* TODO: align with the port width of formal verification port of SB module */
+  /* Update config bus for formal verification, 
+   * shift with number of configuration bit of the MUX
+   */
+  fm_config_bus.set_width(fm_config_bus.get_msb() + 1, fm_config_bus.get_msb() + mux_num_config_bits);
+
+  /* Align with the port width of formal verification port of SB module */
   print_verilog_formal_verification_mux_sram_ports_wiring(fp, circuit_lib, mux_model, 
-                                                          datapath_mux_size, mux_instance_id, mux_num_config_bits);
+                                                          datapath_mux_size, mux_instance_id, 
+                                                          mux_num_config_bits, fm_config_bus);
   print_verilog_endif(fp);
   print_verilog_comment(fp, std::string("----- END Local wires used in only formal verification purpose -----"));
   fp << std::endl;
@@ -2627,6 +2658,7 @@ void print_verilog_unique_switch_box_interc(ModuleManager& module_manager,
                                             std::fstream& fp, 
                                             t_sram_orgz_info* cur_sram_orgz_info,
                                             BasicPort& config_bus,
+                                            BasicPort& fm_config_bus,
                                             const ModuleId& sb_module, 
                                             const RRGSB& rr_sb,
                                             const CircuitLibrary& circuit_lib,
@@ -2661,7 +2693,8 @@ void print_verilog_unique_switch_box_interc(ModuleManager& module_manager,
                                                  drive_rr_nodes[DEFAULT_SWITCH_ID]);
   } else if (1 < drive_rr_nodes.size()) {
     /* Print the multiplexer, fan_in >= 2 */
-    print_verilog_unique_switch_box_mux(module_manager, fp, cur_sram_orgz_info, config_bus, 
+    print_verilog_unique_switch_box_mux(module_manager, fp, cur_sram_orgz_info, 
+                                        config_bus, fm_config_bus, 
                                         sb_module, rr_sb, circuit_lib, mux_lib,
                                         rr_switches, chan_side, cur_rr_node,  
                                         drive_rr_nodes, 
@@ -2745,7 +2778,7 @@ void print_verilog_routing_switch_box_unique_module(ModuleManager& module_manage
                                                     const bool& is_explicit_mapping) {
   /* TODO: move this part to another function where we count the conf bits for all the switch blocks !!!*/
   /* Count the number of configuration bits to be consumed by this Switch block */
-  int num_conf_bits = count_verilog_switch_box_conf_bits(cur_sram_orgz_info, rr_sb);
+  int num_conf_bits = find_switch_block_num_conf_bits(cur_sram_orgz_info, circuit_lib, mux_lib, rr_switches, rr_sb);
   /* Count the number of reserved configuration bits to be consumed by this Switch block */
   int num_reserved_conf_bits = count_verilog_switch_box_reserved_conf_bits(cur_sram_orgz_info, rr_sb);
   /* Estimate the sram_verilog_model->cnt */
@@ -2866,6 +2899,11 @@ void print_verilog_routing_switch_box_unique_module(ModuleManager& module_manage
   /* Counter start from 0 */
   config_bus.set_width(0, 0);
 
+  /* Create a counter for the configuration bus used for formal verification */
+  BasicPort fm_config_bus;
+  /* fm_config_bus has an invalid width here. It is designed to be easy to rotate */
+  fm_config_bus.set_width(0, -1);
+
   /* TODO: Print routing multiplexers */
   for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
     Side side_manager(side);
@@ -2873,7 +2911,8 @@ void print_verilog_routing_switch_box_unique_module(ModuleManager& module_manage
     for (size_t itrack = 0; itrack < rr_gsb.get_chan_width(side_manager.get_side()); ++itrack) {
       /* We care INC_DIRECTION tracks at this side*/
       if (OUT_PORT == rr_gsb.get_chan_node_direction(side_manager.get_side(), itrack)) {
-        print_verilog_unique_switch_box_interc(module_manager, fp, cur_sram_orgz_info, config_bus, 
+        print_verilog_unique_switch_box_interc(module_manager, fp, cur_sram_orgz_info, 
+                                               config_bus, fm_config_bus,
                                                module_id, rr_sb, 
                                                circuit_lib, mux_lib, rr_switches, 
                                                side_manager.get_side(), 
@@ -2882,10 +2921,13 @@ void print_verilog_routing_switch_box_unique_module(ModuleManager& module_manage
     }
   }
 
-  /* TODO: Add check code for config_bus. The MSB should match the number of configuration bits!!! */
+  /* Add check code for config_bus. 
+   * The MSB should match the number of configuration bits!!! 
+   */
   VTR_ASSERT(true == check_switch_block_mem_config_bus(cur_sram_orgz_info->type, 
                                                        rr_gsb, config_bus,
                                                        rr_gsb.get_sb_num_conf_bits()));
+  VTR_ASSERT(fm_config_bus.get_msb() == rr_gsb.get_sb_num_conf_bits() - 1);
 
   /* Put an end to the Verilog module */
   print_verilog_module_end(fp, module_manager.module_name(module_id));
@@ -3598,6 +3640,7 @@ void print_verilog_connection_box_mux(ModuleManager& module_manager,
                                       std::fstream& fp,
                                       t_sram_orgz_info* cur_sram_orgz_info,
                                       BasicPort& config_bus,
+                                      BasicPort& fm_config_bus,
                                       const ModuleId& cb_module, 
                                       const RRGSB& rr_gsb, 
                                       const t_rr_type& cb_type, 
@@ -3674,9 +3717,14 @@ void print_verilog_connection_box_mux(ModuleManager& module_manager,
   print_verilog_comment(fp, std::string("----- BEGIN Local wires used in only formal verification purpose -----"));
   print_verilog_preprocessing_flag(fp, std::string(verilog_formal_verification_preproc_flag));
   /* Print the SRAM configuration ports for formal verification */
-  /* TODO: align with the port width of formal verification port of SB module */
+  /* Update config bus for formal verification, 
+   * shift with number of configuration bit of the MUX
+   */
+  fm_config_bus.set_width(fm_config_bus.get_msb() + 1, fm_config_bus.get_msb() + mux_num_config_bits);
+  /* Align with the port width of formal verification port of SB module */
   print_verilog_formal_verification_mux_sram_ports_wiring(fp, circuit_lib, mux_model, 
-                                                          datapath_mux_size, mux_instance_id, mux_num_config_bits);
+                                                          datapath_mux_size, mux_instance_id, 
+                                                          mux_num_config_bits, fm_config_bus);
   print_verilog_endif(fp);
   print_verilog_comment(fp, std::string("----- END Local wires used in only formal verification purpose -----"));
   fp << std::endl;
@@ -4273,6 +4321,7 @@ void print_verilog_connection_box_interc(ModuleManager& module_manager,
                                          std::fstream& fp, 
                                          t_sram_orgz_info* cur_sram_orgz_info,
                                          BasicPort& config_bus,
+                                         BasicPort& fm_config_bus,
                                          const ModuleId& cb_module, 
                                          const RRGSB& rr_gsb,
                                          const t_rr_type& cb_type,
@@ -4289,7 +4338,8 @@ void print_verilog_connection_box_interc(ModuleManager& module_manager,
 
   } else if (1 < src_rr_node->fan_in) {
     /* Print the multiplexer, fan_in >= 2 */
-    print_verilog_connection_box_mux(module_manager, fp, cur_sram_orgz_info, config_bus,
+    print_verilog_connection_box_mux(module_manager, fp, cur_sram_orgz_info, 
+                                     config_bus, fm_config_bus,
                                      cb_module, rr_gsb, cb_type, 
                                      circuit_lib, mux_lib, rr_switches, 
                                      src_rr_node, use_explicit_mapping); 
@@ -4514,7 +4564,7 @@ void print_verilog_routing_connection_box_unique_module(ModuleManager& module_ma
 
   /* TODO: These should be done when initializing the tool */
   /* Count the number of configuration bits to be consumed by this Switch block */
-  int num_conf_bits = count_verilog_connection_box_conf_bits(cur_sram_orgz_info, rr_gsb, cb_type);
+  int num_conf_bits = (int)find_connection_block_num_conf_bits(cur_sram_orgz_info, circuit_lib, mux_lib, rr_switches, rr_gsb, cb_type);
   /* Count the number of reserved configuration bits to be consumed by this Switch block */
   int num_reserved_conf_bits = count_verilog_connection_box_reserved_conf_bits(cur_sram_orgz_info, rr_gsb, cb_type);
   /* Estimate the sram_verilog_model->cnt */
@@ -4689,17 +4739,32 @@ void print_verilog_routing_connection_box_unique_module(ModuleManager& module_ma
   /* Counter start from 0 */
   config_bus.set_width(0, 0);
 
+  /* Create a counter for the configuration bus used for formal verification */
+  BasicPort fm_config_bus;
+  /* fm_config_bus has an invalid width here. It is designed to be easy to rotate */
+  fm_config_bus.set_width(0, -1);
+
   /* TODO: Print routing multiplexers or direct interconnect*/
   for (size_t iside = 0; iside < cb_ipin_sides.size(); ++iside) {
     enum e_side cb_ipin_side = cb_ipin_sides[iside];
     for (size_t inode = 0; inode < rr_gsb.get_num_ipin_nodes(cb_ipin_side); ++inode) {
       print_verilog_connection_box_interc(module_manager, fp, cur_sram_orgz_info,
-                                          config_bus, module_id, rr_gsb, cb_type, 
+                                          config_bus, fm_config_bus, 
+                                          module_id, rr_gsb, cb_type, 
                                           circuit_lib, mux_lib, rr_switches, 
                                           rr_gsb.get_ipin_node(cb_ipin_side, inode), 
                                           use_explicit_mapping);
     }
   }
+
+  /* Add check code for config_bus. 
+   * The MSB should match the number of configuration bits!!! 
+   */
+  VTR_ASSERT(true == check_connection_block_mem_config_bus(cur_sram_orgz_info->type, 
+                                                           rr_gsb, cb_type, config_bus,
+                                                           rr_gsb.get_cb_num_conf_bits(cb_type)));
+  VTR_ASSERT(fm_config_bus.get_msb() == rr_gsb.get_cb_num_conf_bits(cb_type) - 1);
+
 
   /* Put an end to the Verilog module */
   print_verilog_module_end(fp, module_manager.module_name(module_id));

@@ -1027,21 +1027,28 @@ void print_verilog_mux_config_bus(std::fstream& fp,
  * Print a wire to connect MUX configuration ports 
  * This function connects the sram ports to the ports of a Verilog module
  * used for formal verification
+ *
+ * Note: MSB and LSB of formal verification configuration bus MUST be updated 
+ * before running this function !!!!
  *********************************************************************/
 void print_verilog_formal_verification_mux_sram_ports_wiring(std::fstream& fp, 
                                                              const CircuitLibrary& circuit_lib,
                                                              const CircuitModelId& mux_model,
                                                              const size_t& mux_size,
                                                              const size_t& mux_instance_id,
-                                                             const size_t& num_conf_bits) { 
+                                                             const size_t& num_conf_bits, 
+                                                             const BasicPort& fm_config_bus) { 
   BasicPort mux_sram_output(generate_mux_sram_port_name(circuit_lib, mux_model, mux_size, mux_instance_id, SPICE_MODEL_PORT_INPUT),
                             num_conf_bits);
   /* Get the SRAM model of the mux_model */
   std::vector<CircuitModelId> sram_models = find_circuit_sram_models(circuit_lib, mux_model);
   /* TODO: maybe later multiplexers may have mode select ports... This should be relaxed */
   VTR_ASSERT( 1 == sram_models.size() );
-  BasicPort formal_verification_port(generate_formal_verification_sram_port_name(circuit_lib, sram_models[0]),
-                                     num_conf_bits);
+  BasicPort formal_verification_port;
+  formal_verification_port.set_name(generate_formal_verification_sram_port_name(circuit_lib, sram_models[0]));
+  VTR_ASSERT(num_conf_bits == fm_config_bus.get_width());
+  formal_verification_port.set_lsb(fm_config_bus.get_lsb());
+  formal_verification_port.set_msb(fm_config_bus.get_msb());
   print_verilog_wire_connection(fp, mux_sram_output, formal_verification_port, false);
 }
 

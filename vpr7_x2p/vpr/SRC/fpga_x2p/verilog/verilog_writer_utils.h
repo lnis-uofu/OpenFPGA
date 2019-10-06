@@ -104,6 +104,7 @@ void print_verilog_formal_verification_mux_sram_ports_wiring(std::fstream& fp,
                                                              const CircuitModelId& mux_model,
                                                              const size_t& mux_size,
                                                              const size_t& mux_instance_id,
-                                                             const size_t& num_conf_bits); 
+                                                             const size_t& num_conf_bits, 
+                                                             const BasicPort& fm_config_bus); 
 
 #endif
