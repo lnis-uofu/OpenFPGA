@@ -62,7 +62,10 @@ class MuxGraph {
     std::vector<MuxNodeId> non_input_nodes() const;
     edge_range edges() const;
     mem_range memories() const;
+    /* Find the number of levels in terms of the multiplexer */
     std::vector<size_t> levels() const;
+    /* Find the actual number of levels in the graph */
+    std::vector<size_t> node_levels() const;
   public: /* Public accessors: Data query */
     /* Find the number of inputs in the MUX graph */
     size_t num_inputs() const;
@@ -95,6 +98,8 @@ class MuxGraph {
     bool is_edge_use_inv_mem(const MuxEdgeId& edge) const;
     /* Find the sizes of each branch of a MUX */
     std::vector<size_t> branch_sizes() const;
+    /* Find the sizes of each branch of a MUX at a given level */
+    std::vector<size_t> branch_sizes(const size_t& level) const;
     /* Generate MUX graphs for its branches */
     MuxGraph subgraph(const MuxNodeId& node) const;
     std::vector<MuxGraph> build_mux_branch_graphs() const; 

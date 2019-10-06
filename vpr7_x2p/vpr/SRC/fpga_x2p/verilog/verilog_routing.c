@@ -2780,7 +2780,7 @@ void print_verilog_routing_switch_box_unique_module(ModuleManager& module_manage
   /* Count the number of configuration bits to be consumed by this Switch block */
   int num_conf_bits = find_switch_block_num_conf_bits(cur_sram_orgz_info, circuit_lib, mux_lib, rr_switches, rr_sb);
   /* Count the number of reserved configuration bits to be consumed by this Switch block */
-  int num_reserved_conf_bits = count_verilog_switch_box_reserved_conf_bits(cur_sram_orgz_info, rr_sb);
+  int num_reserved_conf_bits = find_switch_block_num_shared_conf_bits(cur_sram_orgz_info, circuit_lib, mux_lib, rr_switches, rr_sb);
   /* Estimate the sram_verilog_model->cnt */
   int cur_num_sram = get_sram_orgz_info_num_mem_bit(cur_sram_orgz_info); 
   RRGSB rr_gsb = rr_sb; /* IMPORTANT: this copy will be removed when the config ports are initialized when created!!! */
@@ -4566,7 +4566,7 @@ void print_verilog_routing_connection_box_unique_module(ModuleManager& module_ma
   /* Count the number of configuration bits to be consumed by this Switch block */
   int num_conf_bits = (int)find_connection_block_num_conf_bits(cur_sram_orgz_info, circuit_lib, mux_lib, rr_switches, rr_gsb, cb_type);
   /* Count the number of reserved configuration bits to be consumed by this Switch block */
-  int num_reserved_conf_bits = count_verilog_connection_box_reserved_conf_bits(cur_sram_orgz_info, rr_gsb, cb_type);
+  int num_reserved_conf_bits = (int)find_connection_block_num_shared_conf_bits(cur_sram_orgz_info, circuit_lib, mux_lib, rr_switches, rr_gsb, cb_type);
   /* Estimate the sram_verilog_model->cnt */
   int cur_num_sram = get_sram_orgz_info_num_mem_bit(cur_sram_orgz_info); 
   /* Record index */

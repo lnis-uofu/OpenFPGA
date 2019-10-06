@@ -256,3 +256,82 @@ size_t find_switch_block_num_conf_bits(t_sram_orgz_info* cur_sram_orgz_info,
   return num_conf_bits;
 }
 
+/*********************************************************************
+ * Find the number of shared configuration bits of a Connection Block
+ ********************************************************************/
+size_t find_connection_block_num_shared_conf_bits(t_sram_orgz_info* cur_sram_orgz_info,
+                                                  const CircuitLibrary& circuit_lib,
+                                                  const MuxLibrary& mux_lib,
+                                                  const std::vector<t_switch_inf>& rr_switches,
+                                                  const RRGSB& rr_gsb,
+                                                  const t_rr_type& cb_type) {
+  size_t num_shared_conf_bits = 0;
+
+  std::vector<enum e_side> cb_ipin_sides = rr_gsb.get_cb_ipin_sides(cb_type);
+  for (size_t iside = 0; iside < cb_ipin_sides.size(); ++iside) {
+    enum e_side cb_ipin_side = cb_ipin_sides[iside];
+    for (size_t inode = 0; inode < rr_gsb.get_num_ipin_nodes(cb_ipin_side); ++inode) {
+      /* Find the size of routing multiplexers driving this IPIN node */
+      int mux_size = rr_gsb.get_ipin_node(cb_ipin_side, inode)->fan_in;
+      /* Bypass fan_in == 1 or 0, they are not considered as routing multiplexers */
+      if (2 > mux_size) {
+        continue;
+      }
+
+      /* Get the circuit model id of the routing multiplexer */
+      size_t switch_index = rr_gsb.get_ipin_node(cb_ipin_side, inode)->drive_switches[DEFAULT_SWITCH_ID];
+      CircuitModelId mux_model = rr_switches[switch_index].circuit_model;
+
+      /* Find the input size of the implementation of a routing multiplexer */
+      size_t datapath_mux_size = rr_gsb.get_ipin_node(cb_ipin_side, inode)->fan_in;
+      /* Get the multiplexing graph from the Mux Library */
+      MuxId mux_id = mux_lib.mux_graph(mux_model, datapath_mux_size);
+      const MuxGraph& mux_graph = mux_lib.mux_graph(mux_id);
+      num_shared_conf_bits += find_mux_num_shared_config_bits(circuit_lib, mux_model, mux_graph, cur_sram_orgz_info->type);
+    }
+  }
+
+  return num_shared_conf_bits;
+}
+
+/*********************************************************************
+ * Find the number of shared configuration bits of a Switch Block
+ ********************************************************************/
+size_t find_switch_block_num_shared_conf_bits(t_sram_orgz_info* cur_sram_orgz_info,
+                                              const CircuitLibrary& circuit_lib,
+                                              const MuxLibrary& mux_lib,
+                                              const std::vector<t_switch_inf>& rr_switches,
+                                              const RRGSB& rr_gsb) {
+  size_t num_shared_conf_bits = 0;
+
+  for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
+    Side side_manager(side);
+    for (size_t itrack = 0; itrack < rr_gsb.get_chan_width(side_manager.get_side()); ++itrack) {
+      if (OUT_PORT != rr_gsb.get_chan_node_direction(side_manager.get_side(), itrack)) {
+        continue;
+      }
+      /* Check if this node is just a passing wire */
+      if (true == rr_gsb.is_sb_node_passing_wire(side_manager.get_side(), itrack)) {
+        continue;
+      }
+      /* Check if this node has more than 2 drivers */
+	  if (2 > rr_gsb.get_chan_node(side_manager.get_side(), itrack)->num_drive_rr_nodes) {
+        continue;
+      }
+      /* Get the circuit model id of the routing multiplexer */
+      size_t switch_index = rr_gsb.get_chan_node(side_manager.get_side(), itrack)->drive_switches[DEFAULT_SWITCH_ID];
+      CircuitModelId mux_model = rr_switches[switch_index].circuit_model;
+
+      /* Find the input size of the implementation of a routing multiplexer */
+      size_t datapath_mux_size = rr_gsb.get_chan_node(side_manager.get_side(), itrack)->num_drive_rr_nodes;
+      /* Get the multiplexing graph from the Mux Library */
+      MuxId mux_id = mux_lib.mux_graph(mux_model, datapath_mux_size);
+      const MuxGraph& mux_graph = mux_lib.mux_graph(mux_id);
+      num_shared_conf_bits += find_mux_num_shared_config_bits(circuit_lib, mux_model, mux_graph, cur_sram_orgz_info->type);
+    }
+  }
+
+  return num_shared_conf_bits;
+}
+
+

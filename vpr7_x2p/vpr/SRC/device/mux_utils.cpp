@@ -386,3 +386,109 @@ size_t find_mux_num_config_bits(const CircuitLibrary& circuit_lib,
 
   return num_config_bits;
 }
+
+/**************************************************
+ * Find the number of shared configuration bits for a CMOS multiplexer
+ * Currently, all the supported CMOS multiplexers
+ * do NOT require any shared configuration bits 
+ *************************************************/
+static 
+size_t find_cmos_mux_num_shared_config_bits(const e_sram_orgz& sram_orgz_type) {
+  size_t num_shared_config_bits = 0; 
+
+  switch (sram_orgz_type) {
+  case SPICE_SRAM_MEMORY_BANK:
+  case SPICE_SRAM_SCAN_CHAIN:
+  case SPICE_SRAM_STANDALONE:
+    num_shared_config_bits = 0;
+    break;
+  default:
+    vpr_printf(TIO_MESSAGE_ERROR,
+               "(FILE:%s,LINE[%d])Invalid type of SRAM organization!\n",
+               __FILE__, __LINE__); 
+    exit(1);
+  }
+
+  return num_shared_config_bits;
+}
+
+/**************************************************
+ * Find the number of shared configuration bits for a ReRAM multiplexer
+ *************************************************/
+static 
+size_t find_rram_mux_num_shared_config_bits(const CircuitLibrary& circuit_lib,
+                                     const CircuitModelId& mux_model,
+                                     const MuxGraph& mux_graph, 
+                                     const e_sram_orgz& sram_orgz_type) {
+  size_t num_shared_config_bits = 0; 
+  switch (sram_orgz_type) {
+  case SPICE_SRAM_MEMORY_BANK: {
+    /* In memory bank, the number of shared configuration bits is
+     * the sum of largest branch size at each level 
+     */
+    for (auto lvl : mux_graph.node_levels()) {
+      /* Find the maximum branch size: 
+       * Note that branch_sizes() returns a sorted vector
+       * The last one is the maximum
+       */
+      num_shared_config_bits += mux_graph.branch_sizes(lvl).back();
+    }
+    break;
+  }
+  case SPICE_SRAM_SCAN_CHAIN:
+  case SPICE_SRAM_STANDALONE:
+    /* Currently we DO NOT SUPPORT THESE, given an invalid number */
+    num_shared_config_bits = size_t(-1);
+    break;
+  default:
+    vpr_printf(TIO_MESSAGE_ERROR,
+               "(FILE:%s,LINE[%d])Invalid type of SRAM organization!\n",
+               __FILE__, __LINE__); 
+    exit(1);
+  }
+
+  if (true == circuit_lib.mux_use_local_encoder(mux_model)) {
+    /* TODO: this is a to-do work for ReRAM-based multiplexers and FPGAs 
+     * The number of states of a local decoder only depends on how many 
+     * memory bits that the multiplexer will have
+     * This may NOT be correct!!! 
+     * If local encoders are introduced, zero shared configuration bits are required
+     */
+    return 0;
+  }
+
+  return num_shared_config_bits;
+}
+
+/**************************************************
+ * Find the number of shared configuration bits for 
+ * a routing multiplexer
+ * Two cases are considered here.
+ * They are placed in different branches (sub-functions)
+ * in order to be easy in extending to new technology!
+ *
+ * Note: currently, shared configuration bits are demanded
+ * by ReRAM-based multiplexers only
+ *************************************************/
+size_t find_mux_num_shared_config_bits(const CircuitLibrary& circuit_lib,
+                                       const CircuitModelId& mux_model,
+                                       const MuxGraph& mux_graph, 
+                                       const e_sram_orgz& sram_orgz_type) {
+  size_t num_shared_config_bits = size_t(-1);
+
+  switch (circuit_lib.design_tech_type(mux_model)) {
+  case SPICE_MODEL_DESIGN_CMOS:
+    num_shared_config_bits = find_cmos_mux_num_shared_config_bits(sram_orgz_type);
+    break;
+  case SPICE_MODEL_DESIGN_RRAM:
+    num_shared_config_bits = find_rram_mux_num_shared_config_bits(circuit_lib, mux_model, mux_graph, sram_orgz_type);
+    break;
+  default:
+    vpr_printf(TIO_MESSAGE_ERROR,
+               "(FILE:%s,LINE[%d])Invalid design_technology of MUX(name: %s)\n",
+               __FILE__, __LINE__, circuit_lib.model_name(mux_model).c_str()); 
+    exit(1);
+  }
+
+  return num_shared_config_bits;
+}

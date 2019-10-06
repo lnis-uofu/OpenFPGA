@@ -73,6 +73,14 @@ std::vector<size_t> MuxGraph::levels() const {
   return graph_levels;
 }
 
+std::vector<size_t> MuxGraph::node_levels() const {
+  std::vector<size_t> graph_levels;
+  for (size_t lvl = 0; lvl < num_node_levels(); ++lvl) {
+    graph_levels.push_back(lvl);
+  }
+  return graph_levels;
+}
+
 /**************************************************
  * Public Accessors: Data query
  *************************************************/
@@ -260,6 +268,43 @@ std::vector<size_t> MuxGraph::branch_sizes() const {
 
   return branch;
 }
+
+/* Find the sizes of each branch of a MUX at a given level */
+std::vector<size_t> MuxGraph::branch_sizes(const size_t& level) const {
+  std::vector<size_t> branch;
+  /* Visit each internal nodes/output nodes and find the the number of incoming edges */
+  for (auto node : node_ids_ ) {
+    /* Bypass input nodes */
+    if ( (MUX_OUTPUT_NODE != node_types_[node]) 
+      && (MUX_INTERNAL_NODE != node_types_[node]) ) {
+      continue;
+    }
+    /* Bypass nodes that is not at the level */
+    if ( level != node_levels_[node]) {
+      continue;
+    }
+
+    size_t branch_size = node_in_edges_[node].size();
+
+    /* make sure the branch size is valid */
+    VTR_ASSERT_SAFE(valid_mux_implementation_num_inputs(branch_size));
+
+    /* Nodes with the same number of incoming edges, indicate the same size of branch circuit */
+    std::vector<size_t>::iterator it; 
+    it = std::find(branch.begin(), branch.end(), branch_size);
+    /* if already exists a branch with the same size, skip updating the vector */
+    if (it != branch.end()) {
+      continue;
+    }
+    branch.push_back(branch_size);
+  }
+
+  /* Sort the branch by size */
+  std::sort(branch.begin(), branch.end());
+
+  return branch;
+}
+
 
 /* Build a subgraph from the given node
  * The strategy is very simple, we just 
