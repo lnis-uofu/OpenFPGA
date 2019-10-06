@@ -169,6 +169,30 @@ std::string generate_routing_block_netlist_name(const std::string& prefix,
 }
 
 /*********************************************************************
+ * Generate the netlist name for a connection block with a given coordinate
+ *********************************************************************/
+std::string generate_connection_block_netlist_name(const t_rr_type& cb_type, 
+                                                   const vtr::Point<size_t>& coordinate,
+                                                   const std::string& postfix) {
+  std::string prefix("cb");
+  switch (cb_type) {
+  case CHANX:
+    prefix += std::string("x_");
+    break;
+  case CHANY:
+    prefix += std::string("y_");
+    break;
+  default:
+    vpr_printf(TIO_MESSAGE_ERROR, 
+               "(File: %s [LINE%d]) Invalid type of connection block!\n",
+               __FILE__, __LINE__);
+    exit(1);
+  }
+
+  return generate_routing_block_netlist_name(prefix, coordinate, postfix);
+}
+
+/*********************************************************************
  * Generate the module name for a unique routing channel
  *********************************************************************/
 std::string generate_routing_channel_module_name(const t_rr_type& chan_type, 
@@ -243,10 +267,60 @@ std::string generate_routing_track_port_name(const t_rr_type& chan_type,
 }
 
 /*********************************************************************
+ * Generate the middle output port name for a routing track 
+ * with a given coordinate
+ *********************************************************************/
+std::string generate_routing_track_middle_output_port_name(const t_rr_type& chan_type, 
+                                                           const vtr::Point<size_t>& coordinate,
+                                                           const size_t& track_id) {
+  /* Channel must be either CHANX or CHANY */
+  VTR_ASSERT( (CHANX == chan_type) || (CHANY == chan_type) );
+
+  /* Create a map between chan_type and module_prefix */
+  std::map<t_rr_type, std::string> module_prefix_map;
+  /* TODO: use a constexpr string to replace the fixed name? */
+  module_prefix_map[CHANX] = std::string("chanx");
+  module_prefix_map[CHANY] = std::string("chany");
+
+  std::string port_name = module_prefix_map[chan_type]; 
+  port_name += std::string("_" + std::to_string(coordinate.x()) + std::string("__") + std::to_string(coordinate.y()) + std::string("__"));
+
+  port_name += std::string("midout_"); 
+
+  /* Add the track id to the port name */
+  port_name += std::to_string(track_id) + std::string("_");
+
+  return port_name;
+}
+
+/*********************************************************************
  * Generate the module name for a switch block with a given coordinate
  *********************************************************************/
 std::string generate_switch_block_module_name(const vtr::Point<size_t>& coordinate) {
   return std::string( "sb_" + std::to_string(coordinate.x()) + std::string("__") + std::to_string(coordinate.y()) + std::string("_") );
+}
+
+/*********************************************************************
+ * Generate the module name for a connection block with a given coordinate
+ *********************************************************************/
+std::string generate_connection_block_module_name(const t_rr_type& cb_type, 
+                                                  const vtr::Point<size_t>& coordinate) {
+  std::string prefix("cb");
+  switch (cb_type) {
+  case CHANX:
+    prefix += std::string("x_");
+    break;
+  case CHANY:
+    prefix += std::string("y_");
+    break;
+  default:
+    vpr_printf(TIO_MESSAGE_ERROR, 
+               "(File: %s [LINE%d]) Invalid type of connection block!\n",
+               __FILE__, __LINE__);
+    exit(1);
+  }
+
+  return std::string( prefix + std::to_string(coordinate.x()) + std::string("__") + std::to_string(coordinate.y()) + std::string("_") );
 }
 
 /*********************************************************************
