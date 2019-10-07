@@ -43,6 +43,7 @@
 #include "verilog_decoder.h"
 #include "verilog_decoders.h"
 #include "verilog_pbtypes.h"
+#include "verilog_grid.h"
 #include "verilog_routing.h"
 #include "verilog_compact_netlist.h"
 #include "verilog_top_testbench.h"
@@ -290,10 +291,14 @@ void vpr_fpga_verilog(t_vpr_setup vpr_setup,
    * 1. a compact output
    * 2. a full-size output
    */
-  print_compact_verilog_logic_blocks(module_manager, mux_lib,
-                                     sram_verilog_orgz_info, src_dir_path, 
+  print_compact_verilog_logic_blocks(sram_verilog_orgz_info, src_dir_path, 
                                      lb_dir_path, Arch,
                                      vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.dump_explicit_verilog);
+
+  print_verilog_grids(module_manager, Arch.spice->circuit_lib, mux_lib,
+                      sram_verilog_orgz_info, 
+                      std::string(src_dir_path), std::string(lb_dir_path),
+                      vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.dump_explicit_verilog);
 
   /* Generate the Verilog module of the configuration peripheral protocol 
    * which loads bitstream to FPGA fabric

@@ -433,8 +433,8 @@ FILE* verilog_create_one_subckt_file(char* subckt_dir,
  * that can be easily imported in a top-level netlist
  */
 void dump_verilog_subckt_header_file(t_llist* subckt_llist_head,
-                                     char* subckt_dir,
-                                     char* header_file_name) {
+                                     const char* subckt_dir,
+                                     const char* header_file_name) {
   FILE* fp = NULL;
   char* verilog_fname = NULL;
   t_llist* temp = NULL; 
