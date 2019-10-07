@@ -1,6 +1,16 @@
 #ifndef VERILOG_COMPACT_NETLIST_H 
 #define VERILOG_COMPACT_NETLIST_H 
 
+void print_verilog_physical_block(ModuleManager& module_manager,
+                                  const MuxLibrary& mux_lib,
+                                  const CircuitLibrary& circuit_lib,
+                                  t_sram_orgz_info* cur_sram_orgz_info, 
+                                  const std::string& verilog_dir_path,
+                                  const std::string& subckt_dir_path,
+                                  t_type_ptr phy_block_type,
+                                  const e_side& border_side,
+                                  const bool& use_explicit_mapping);
+
 void dump_compact_verilog_one_physical_block(t_sram_orgz_info* cur_sram_orgz_info, 
                                              char* verilog_dir_path,
                                              char* subckt_dir_path,
@@ -8,11 +18,13 @@ void dump_compact_verilog_one_physical_block(t_sram_orgz_info* cur_sram_orgz_inf
                                              int border_side,
                                              bool is_explicit_mapping);
 
-void dump_compact_verilog_logic_blocks(t_sram_orgz_info* cur_sram_orgz_info,
-                                       char* verilog_dir,
-                                       char* subckt_dir,
-                                       t_arch* arch,
-                                       bool is_explicit_mapping);
+void print_compact_verilog_logic_blocks(ModuleManager& module_manager,
+                                        const MuxLibrary& mux_lib,
+                                        t_sram_orgz_info* cur_sram_orgz_info,
+                                        char* verilog_dir,
+                                        char* subckt_dir,
+                                        t_arch& arch,
+                                        const bool& is_explicit_mapping);
 
 void dump_compact_verilog_top_netlist(t_sram_orgz_info* cur_sram_orgz_info,
                                       char* circuit_name,

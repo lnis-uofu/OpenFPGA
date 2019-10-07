@@ -671,3 +671,38 @@ std::string generate_mux_sram_port_name(const CircuitLibrary& circuit_lib,
   std::string prefix = generate_mux_subckt_name(circuit_lib, mux_model, mux_size, std::string());
   return generate_local_sram_port_name(prefix, mux_instance_id, port_type);
 }
+
+/*********************************************************************
+ * Generate the netlist name of a physical block
+ **********************************************************************/
+std::string generate_physical_block_netlist_name(const std::string& block_name,
+                                                 const bool& is_block_io,
+                                                 const e_side& io_side,
+                                                 const std::string& postfix) {
+  /* Add the name of physical block */
+  std::string module_name(block_name);
+
+  if (true == is_block_io) {
+    Side side_manager(io_side);
+    module_name += std::string("_");
+    module_name += std::string(side_manager.to_string());
+  }
+
+  module_name += postfix;
+
+  return module_name;
+}
+
+/*********************************************************************
+ * Generate the module name of a physical block
+ **********************************************************************/
+std::string generate_physical_block_module_name(const std::string& prefix,
+                                                const std::string& block_name,
+                                                const bool& is_block_io,
+                                                const e_side& io_side) {
+  std::string module_name(prefix);
+
+  module_name += generate_physical_block_netlist_name(block_name, is_block_io, io_side, std::string());
+
+  return module_name;
+}

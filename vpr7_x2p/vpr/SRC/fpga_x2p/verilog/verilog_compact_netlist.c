@@ -12,6 +12,7 @@
 #include <unistd.h>
 
 /* Include vpr structs*/
+#include "vtr_assert.h"
 #include "util.h"
 #include "physical_types.h"
 #include "vpr_types.h"
@@ -29,6 +30,7 @@
 #include "fpga_x2p_bitstream_utils.h"
 #include "spice_mux.h"
 #include "fpga_x2p_globals.h"
+#include "fpga_x2p_naming.h"
 
 /* Include Synthesizable Verilog headers */
 #include "verilog_global.h"
@@ -36,6 +38,7 @@
 #include "verilog_primitives.h"
 #include "verilog_pbtypes.h"
 #include "verilog_routing.h"
+#include "verilog_writer_utils.h"
 #include "verilog_top_netlist_utils.h"
 
 #include "verilog_compact_netlist.h"
@@ -272,6 +275,113 @@ void compact_verilog_update_grid_spice_model_and_sram_orgz_info(t_sram_orgz_info
   /* Free */
    
   return;
+}
+
+/*****************************************************************************
+ * This function will create a Verilog file and print out a Verilog netlist 
+ * for a type of physical block 
+ *
+ * For IO blocks: 
+ * The param 'border_side' is required, which is specify which side of fabric
+ * the I/O block locates at.
+ *****************************************************************************/
+void print_verilog_physical_block(ModuleManager& module_manager,
+                                  const MuxLibrary& mux_lib,
+                                  const CircuitLibrary& circuit_lib,
+                                  t_sram_orgz_info* cur_sram_orgz_info, 
+                                  const std::string& verilog_dir,
+                                  const std::string& subckt_dir,
+                                  t_type_ptr phy_block_type,
+                                  const e_side& border_side,
+                                  const bool& use_explicit_mapping) {
+  /* Check code: if this is an IO block, the border side MUST be valid */
+  if (IO_TYPE == phy_block_type) {
+    VTR_ASSERT(NUM_SIDES != border_side);
+  }
+  
+  /* Give a name to the Verilog netlist */
+  /* Create the file name for Verilog */
+  std::string verilog_fname(subckt_dir 
+                          + generate_physical_block_netlist_name(std::string(phy_block_type->name), 
+                                                                 IO_TYPE == phy_block_type, 
+                                                                 border_side, 
+                                                                 std::string(verilog_netlist_file_postfix))
+                           );
+  /* TODO: remove the bak file when the file is ready */
+  verilog_fname += ".bak";
+
+  /* Create the file stream */
+
+  /* Echo status */
+  if (IO_TYPE == phy_block_type) {
+    Side side_manager(border_side);
+    vpr_printf(TIO_MESSAGE_INFO, 
+               "Writing FPGA Verilog Netlist (%s) for logic block %s at %s side ...\n",
+               verilog_fname.c_str(), phy_block_type->name, 
+               side_manager.c_str());
+  } else { 
+    vpr_printf(TIO_MESSAGE_INFO, 
+               "Writing FPGA Verilog Netlist (%s) for logic block %s...\n",
+               verilog_fname.c_str(), phy_block_type->name);
+  }
+
+  /* Create the file stream */
+  std::fstream fp;
+  fp.open(verilog_fname, std::fstream::out | std::fstream::trunc);
+
+  check_file_handler(fp);
+
+  print_verilog_file_header(fp, std::string("Verilog modules for physical block: " + std::string(phy_block_type->name) + "]")); 
+
+  /* Print preprocessing flags */
+  print_verilog_include_defines_preproc_file(fp, verilog_dir);
+
+  /* TODO: Print Verilog modules for all the pb_types/pb_graph_nodes */
+  for (int iz = 0; iz < phy_block_type->capacity; ++iz) {
+    /* ONLY output one Verilog module (which is unique), others are the same */
+    if (0 < iz) {
+      continue;
+    }
+    /* TODO: use a Depth-First Search Algorithm to print the sub-modules 
+     * Note: DFS is the right way. Do NOT use BFS.
+     * DFS can guarantee that all the sub-modules can be registered properly
+     * to its parent in module manager  
+     */
+    print_verilog_comment(fp, std::string("---- BEGIN Sub-module of physical block:" + std::string(phy_block_type->name) + " ----"));
+    print_verilog_comment(fp, std::string("---- END Sub-module of physical block:" + std::string(phy_block_type->name) + " ----"));
+  }
+
+  /* TODO: Create a Verilog Module for the top-level physical block, and add to module manager */
+  std::string module_name = generate_physical_block_module_name(std::string(grid_verilog_file_name_prefix), phy_block_type->name, IO_TYPE == phy_block_type, border_side);
+  ModuleId module_id = module_manager.add_module(module_name); 
+
+  /* TODO: Add ports to the module */
+
+
+  /* TODO: Print the module definition for the top-level Verilog module of physical block */
+  print_verilog_module_declaration(fp, module_manager, module_id);
+  /* Finish printing ports */
+
+  /* Print an empty line a splitter */
+  fp << std::endl;
+
+  /* TODO: instanciate all the sub modules */
+  for (int iz = 0; iz < phy_block_type->capacity; ++iz) {
+  }
+
+  /* Put an end to the top-level Verilog module of physical block */
+  print_verilog_module_end(fp, module_manager.module_name(module_id));
+
+  /* Add an empty line as a splitter */
+  fp << std::endl;
+
+  /* Close file handler */
+  fp.close();
+
+  /* Add fname to the linked list */
+  /*
+  grid_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(grid_verilog_subckt_file_path_head, verilog_fname.c_str());  
+   */
 }
 
 /* Create a Verilog file and dump a module consisting of a I/O block,
@@ -511,63 +621,81 @@ void dump_compact_verilog_one_physical_block(t_sram_orgz_info* cur_sram_orgz_inf
  * 2. Only one module for each CLB (FILL_TYPE)
  * 3. Only one module for each heterogeneous block
  */
-void dump_compact_verilog_logic_blocks(t_sram_orgz_info* cur_sram_orgz_info,
-                                       char* verilog_dir,
-                                       char* subckt_dir,
-                                       t_arch* arch,
-                                       bool is_explicit_mapping) {
-  int itype, iside, num_sides;
-  int* stamped_spice_model_cnt = NULL;
-  t_sram_orgz_info* stamped_sram_orgz_info = NULL;
-
+void print_compact_verilog_logic_blocks(ModuleManager& module_manager,
+                                        const MuxLibrary& mux_lib,
+                                        t_sram_orgz_info* cur_sram_orgz_info,
+                                        char* verilog_dir,
+                                        char* subckt_dir,
+                                        t_arch& arch,
+                                        const bool& is_explicit_mapping) {
   /* Create a snapshot on spice_model counter */
-  stamped_spice_model_cnt = snapshot_spice_model_counter(arch->spice->num_spice_model, 
-                                                         arch->spice->spice_models);
+  int* stamped_spice_model_cnt = snapshot_spice_model_counter(arch.spice->num_spice_model, 
+                                                         arch.spice->spice_models);
   /* Create a snapshot on sram_orgz_info */
-  stamped_sram_orgz_info = snapshot_sram_orgz_info(cur_sram_orgz_info);
+  t_sram_orgz_info* stamped_sram_orgz_info = snapshot_sram_orgz_info(cur_sram_orgz_info);
  
   /* Enumerate the types, dump one Verilog module for each */
-  for (itype = 0; itype < num_types; itype++) {
+  for (int itype = 0; itype < num_types; itype++) {
     if (EMPTY_TYPE == &type_descriptors[itype]) {
     /* Bypass empty type or NULL */
       continue;
     } else if (IO_TYPE == &type_descriptors[itype]) {
-      num_sides = 4;
-    /* Special for I/O block, generate one module for each border side */
-      for (iside = 0; iside < num_sides; iside++) {
+      /* Special for I/O block, generate one module for each border side */
+      for (int iside = 0; iside < NUM_SIDES; iside++) {
+        Side side_manager(iside);
         dump_compact_verilog_one_physical_block(cur_sram_orgz_info, 
                                                 verilog_dir, subckt_dir, 
                                                 &type_descriptors[itype], iside,
                                                 is_explicit_mapping);
+
+        print_verilog_physical_block(module_manager, mux_lib, arch.spice->circuit_lib,
+                                     cur_sram_orgz_info, 
+                                     std::string(verilog_dir), std::string(subckt_dir), 
+                                     &type_descriptors[itype],
+                                     side_manager.get_side(),
+                                     is_explicit_mapping);
       } 
       continue;
     } else if (FILL_TYPE == &type_descriptors[itype]) {
-    /* For CLB */
-      dump_compact_verilog_one_physical_block(cur_sram_orgz_info,  
-                                              verilog_dir, subckt_dir, 
-                                              &type_descriptors[itype], -1,
-                                              is_explicit_mapping);
-      continue;
-    } else {
-    /* For heterogenenous blocks */
+      /* For CLB */
       dump_compact_verilog_one_physical_block(cur_sram_orgz_info,  
                                               verilog_dir, subckt_dir, 
                                               &type_descriptors[itype], -1,
                                               is_explicit_mapping);
 
+      print_verilog_physical_block(module_manager, mux_lib, arch.spice->circuit_lib,
+                                   cur_sram_orgz_info, 
+                                   std::string(verilog_dir), std::string(subckt_dir), 
+                                   &type_descriptors[itype],
+                                   NUM_SIDES,
+                                   is_explicit_mapping);
+      continue;
+    } else {
+      /* For heterogenenous blocks */
+      dump_compact_verilog_one_physical_block(cur_sram_orgz_info,  
+                                              verilog_dir, subckt_dir, 
+                                              &type_descriptors[itype], -1,
+                                              is_explicit_mapping);
+
+      print_verilog_physical_block(module_manager, mux_lib, arch.spice->circuit_lib,
+                                   cur_sram_orgz_info, 
+                                   std::string(verilog_dir), std::string(subckt_dir), 
+                                   &type_descriptors[itype],
+                                   NUM_SIDES,
+                                   is_explicit_mapping);
     }
   }
 
   /* Output a header file for all the logic blocks */
-  vpr_printf(TIO_MESSAGE_INFO,"Generating header file for grid submodules...\n");
+  vpr_printf(TIO_MESSAGE_INFO, "Generating header file for grid submodules...\n");
   dump_verilog_subckt_header_file(grid_verilog_subckt_file_path_head,
                                   subckt_dir,
                                   logic_block_verilog_file_name);
 
 
   /* Recover spice_model counter */
-  set_spice_model_counter(arch->spice->num_spice_model, 
-                          arch->spice->spice_models,
+  set_spice_model_counter(arch.spice->num_spice_model, 
+                          arch.spice->spice_models,
                           stamped_spice_model_cnt);
 
   /* Restore sram_orgz_info to the base */ 
@@ -577,8 +705,8 @@ void dump_compact_verilog_logic_blocks(t_sram_orgz_info* cur_sram_orgz_info,
    * THIS FUNCTION MUST GO AFTER OUTPUTING PHYSICAL LOGIC BLOCKS!!!
    */
   compact_verilog_update_grid_spice_model_and_sram_orgz_info(cur_sram_orgz_info,
-                                                             arch->spice->num_spice_model, 
-                                                             arch->spice->spice_models);
+                                                             arch.spice->num_spice_model, 
+                                                             arch.spice->spice_models);
   /* Free */
   free_sram_orgz_info(stamped_sram_orgz_info, stamped_sram_orgz_info->type);
   my_free (stamped_spice_model_cnt); 

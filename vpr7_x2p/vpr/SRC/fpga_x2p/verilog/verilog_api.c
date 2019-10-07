@@ -280,7 +280,8 @@ void vpr_fpga_verilog(t_vpr_setup vpr_setup,
                           vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts);
 
   /* Dump routing resources: switch blocks, connection blocks and channel tracks */
-  print_verilog_routing_resources(module_manager, mux_lib, sram_verilog_orgz_info, src_dir_path, rr_dir_path, Arch, vpr_setup.RoutingArch,
+  print_verilog_routing_resources(module_manager, mux_lib, sram_verilog_orgz_info, 
+                                  src_dir_path, rr_dir_path, Arch, vpr_setup.RoutingArch,
                                   num_rr_nodes, rr_node, rr_node_indices, rr_indexed_data,
                                   vpr_setup.FPGA_SPICE_Opts);
 
@@ -289,9 +290,10 @@ void vpr_fpga_verilog(t_vpr_setup vpr_setup,
    * 1. a compact output
    * 2. a full-size output
    */
-  dump_compact_verilog_logic_blocks(sram_verilog_orgz_info, src_dir_path, 
-                                    lb_dir_path, &Arch,
-                                    vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.dump_explicit_verilog);
+  print_compact_verilog_logic_blocks(module_manager, mux_lib,
+                                     sram_verilog_orgz_info, src_dir_path, 
+                                     lb_dir_path, Arch,
+                                     vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.dump_explicit_verilog);
 
   /* Generate the Verilog module of the configuration peripheral protocol 
    * which loads bitstream to FPGA fabric

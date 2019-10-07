@@ -130,4 +130,14 @@ std::string generate_mux_sram_port_name(const CircuitLibrary& circuit_lib,
                                         const size_t& mux_instance_id,
                                         const e_spice_model_port_type& port_type);
 
+std::string generate_physical_block_netlist_name(const std::string& block_name,
+                                                 const bool& is_block_io,
+                                                 const e_side& io_side,
+                                                 const std::string& postfix);
+
+std::string generate_physical_block_module_name(const std::string& prefix,
+                                                const std::string& block_name,
+                                                const bool& is_block_io,
+                                                const e_side& io_side);
+
 #endif
