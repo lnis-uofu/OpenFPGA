@@ -19,6 +19,8 @@
 #include "fpga_x2p_types.h"
 #include "fpga_x2p_utils.h"
 #include "fpga_x2p_pbtypes_utils.h"
+#include "module_manager_utils.h"
+#include "fpga_x2p_globals.h"
 
 /* Header files for Verilog generator */
 #include "verilog_global.h"
@@ -90,37 +92,28 @@ void print_verilog_primitive_block(std::fstream& fp,
   VTR_ASSERT(ModuleId::INVALID() != primitive_module);
 
   /* Find the global ports required by the primitive node, and add them to the module */
-  std::vector<CircuitPortId> primitive_model_global_ports = circuit_lib.model_global_ports_by_type(primitive_model, SPICE_MODEL_PORT_INPUT, true, false);
+  std::vector<CircuitPortId> primitive_model_global_ports = circuit_lib.model_global_ports(primitive_model, true);
   for (auto port : primitive_model_global_ports) {
+    /* The global I/O of the FPGA has a special name */
     BasicPort module_port(circuit_lib.port_lib_name(port), circuit_lib.port_size(port));
-    module_manager.add_port(primitive_module, module_port, ModuleManager::MODULE_INPUT_PORT);
+    module_manager.add_port(primitive_module, module_port, ModuleManager::MODULE_GLOBAL_PORT);
   }
+
   /* Find the inout ports required by the primitive node, and add them to the module
    * This is mainly due to the I/O blocks, which have inout ports for the top-level fabric
    */
-  std::vector<CircuitPortId> primitive_model_inout_ports = circuit_lib.model_ports_by_type(primitive_model, SPICE_MODEL_PORT_INOUT);
-  for (auto port : primitive_model_inout_ports) {
-    BasicPort module_port(circuit_lib.port_lib_name(port), circuit_lib.port_size(port));
-    module_manager.add_port(primitive_module, module_port, ModuleManager::MODULE_INOUT_PORT);
+  if (SPICE_MODEL_IOPAD == circuit_lib.model_type(primitive_model)) {
+    std::vector<CircuitPortId> primitive_model_inout_ports = circuit_lib.model_ports_by_type(primitive_model, SPICE_MODEL_PORT_INOUT);
+    for (auto port : primitive_model_inout_ports) {
+      BasicPort module_port(generate_fpga_global_io_port_name(std::string(gio_inout_prefix), circuit_lib, primitive_model), circuit_lib.port_size(port));
+      module_manager.add_port(primitive_module, module_port, ModuleManager::MODULE_INOUT_PORT);
+    }
   }
-  /* Find the input ports required by the primitive node, and add them to the module */
-  std::vector<CircuitPortId> primitive_model_input_ports = circuit_lib.model_ports_by_type(primitive_model, SPICE_MODEL_PORT_INPUT);
-  for (auto port : primitive_model_input_ports) {
-    BasicPort module_port(circuit_lib.port_lib_name(port), circuit_lib.port_size(port));
-    module_manager.add_port(primitive_module, module_port, ModuleManager::MODULE_INPUT_PORT);
-  }
-  /* Find the output ports required by the primitive node, and add them to the module */
-  std::vector<CircuitPortId> primitive_model_output_ports = circuit_lib.model_ports_by_type(primitive_model, SPICE_MODEL_PORT_OUTPUT);
-  for (auto port : primitive_model_output_ports) {
-    BasicPort module_port(circuit_lib.port_lib_name(port), circuit_lib.port_size(port));
-    module_manager.add_port(primitive_module, module_port, ModuleManager::MODULE_OUTPUT_PORT);
-  }
-  /* Find the clock ports required by the primitive node, and add them to the module */
-  std::vector<CircuitPortId> primitive_model_clock_ports = circuit_lib.model_ports_by_type(primitive_model, SPICE_MODEL_PORT_CLOCK);
-  for (auto port : primitive_model_clock_ports) {
-    BasicPort module_port(circuit_lib.port_lib_name(port), circuit_lib.port_size(port));
-    module_manager.add_port(primitive_module, module_port, ModuleManager::MODULE_CLOCK_PORT);
-  }
+  /* Note: to cooperate with the pb_type hierarchy and connections, we add the port of primitive pb_type here.
+   * Since we have linked pb_type ports to circuit models when setting up FPGA-X2P,
+   * no ports of the circuit model will be missing here  
+   */
+  add_pb_type_ports_to_module_manager(module_manager, primitive_module, primitive_pb_graph_node->pb_type); 
 
   /* Add configuration ports */
   /* TODO: Shared SRAM ports*/

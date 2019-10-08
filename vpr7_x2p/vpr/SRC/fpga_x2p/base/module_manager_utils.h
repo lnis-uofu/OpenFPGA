@@ -10,6 +10,7 @@
 #include <vector>
 #include "device_port.h"
 #include "spice_types.h"
+#include "vpr_types.h"
 #include "circuit_library.h"
 #include "module_manager.h"
 
@@ -37,6 +38,10 @@ void add_sram_ports_to_module_manager(ModuleManager& module_manager,
                                       const CircuitModelId& sram_model,
                                       const e_sram_orgz sram_orgz_type,
                                       const size_t& port_size);
+
+void add_pb_type_ports_to_module_manager(ModuleManager& module_manager, 
+                                         const ModuleId& module_id,
+                                         t_pb_type* cur_pb_type);
 
 #endif
 

@@ -12,6 +12,7 @@
 #include <unistd.h>
 
 /* Include vpr structs*/
+#include "vtr_assert.h"
 #include "util.h"
 #include "physical_types.h"
 #include "vpr_types.h"

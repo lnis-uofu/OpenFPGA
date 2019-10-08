@@ -14,6 +14,7 @@
 #include "module_manager.h"
 
 #include "fpga_x2p_naming.h"
+#include "fpga_x2p_pbtypes_utils.h"
 
 #include "module_manager_utils.h"
 
@@ -207,6 +208,47 @@ void add_sram_ports_to_module_manager(ModuleManager& module_manager,
     BasicPort module_port(port_name, sram_port_size); 
     /* Add generated ports to the ModuleManager */
     module_manager.add_port(module_id, module_port, module_port_types[iport]);
+  }
+}
+
+/********************************************************************
+ * Add ports of a pb_type block to module manager
+ * Port addition will follow the sequence: inout, input, output, clock
+ * This will help use to keep a clean module definition when printing out
+ * To avoid port mismatch between the pb_type and its linked circuit model
+ * This function will also check that each pb_type port is actually exist
+ * in the linked circuit model
+ *******************************************************************/
+void add_pb_type_ports_to_module_manager(ModuleManager& module_manager, 
+                                         const ModuleId& module_id,
+                                         t_pb_type* cur_pb_type) {
+   
+  /* Find the inout ports required by the primitive pb_type, and add them to the module */
+  std::vector<t_port*> pb_type_inout_ports = find_pb_type_ports_match_circuit_model_port_type(cur_pb_type, SPICE_MODEL_PORT_INOUT);
+  for (auto port : pb_type_inout_ports) {
+    BasicPort module_port(generate_pb_type_port_name(port), port->num_pins);
+    module_manager.add_port(module_id, module_port, ModuleManager::MODULE_INOUT_PORT);
+  }
+
+  /* Find the input ports required by the primitive pb_type, and add them to the module */
+  std::vector<t_port*> pb_type_input_ports = find_pb_type_ports_match_circuit_model_port_type(cur_pb_type, SPICE_MODEL_PORT_INPUT);
+  for (auto port : pb_type_input_ports) {
+    BasicPort module_port(generate_pb_type_port_name(port), port->num_pins);
+    module_manager.add_port(module_id, module_port, ModuleManager::MODULE_INPUT_PORT);
+  }
+
+  /* Find the output ports required by the primitive pb_type, and add them to the module */
+  std::vector<t_port*> pb_type_output_ports = find_pb_type_ports_match_circuit_model_port_type(cur_pb_type, SPICE_MODEL_PORT_OUTPUT);
+  for (auto port : pb_type_output_ports) {
+    BasicPort module_port(generate_pb_type_port_name(port), port->num_pins);
+    module_manager.add_port(module_id, module_port, ModuleManager::MODULE_OUTPUT_PORT);
+  }
+
+  /* Find the clock ports required by the primitive pb_type, and add them to the module */
+  std::vector<t_port*> pb_type_clock_ports = find_pb_type_ports_match_circuit_model_port_type(cur_pb_type, SPICE_MODEL_PORT_CLOCK);
+  for (auto port : pb_type_clock_ports) {
+    BasicPort module_port(generate_pb_type_port_name(port), port->num_pins);
+    module_manager.add_port(module_id, module_port, ModuleManager::MODULE_CLOCK_PORT);
   }
 }
 

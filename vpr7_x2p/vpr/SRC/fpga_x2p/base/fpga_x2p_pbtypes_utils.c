@@ -1,7 +1,15 @@
-/***********************************/
-/*      SPICE Modeling for VPR     */
-/*       Xifan TANG, EPFL/LSI      */
-/***********************************/
+/******************************************************************** 
+ * This file includes most utilized functions to operate on pb_type
+ * related data structures, including t_pb_type, t_pb_graph_node, t_pb
+ * 
+ * Note: 
+ * If you want to classify functions, functions in this file should meet
+ * at least one of it 
+ * 1. non-generic data query of pb_type - related data structures
+ * 2. non-generic mutator/copy the pb_type 
+ *
+ * Generic accessors/mutators should be a method of the data structure
+ ********************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,6 +20,7 @@
 #include <unistd.h>
 
 /* Include vpr structs*/
+#include "vtr_assert.h"
 #include "util.h"
 #include "physical_types.h"
 #include "vpr_types.h"
@@ -1322,6 +1331,54 @@ t_port* find_pb_type_port_match_spice_model_port(t_pb_type* pb_type,
   return ret;
 }
 
+/********************************************************************
+ * Return a list of ports of a pb_type which matches the ports defined
+ * in its linked circuit model 
+ * This function will only care if the port type matches  
+ *******************************************************************/
+std::vector<t_port*> find_pb_type_ports_match_circuit_model_port_type(t_pb_type* pb_type,
+                                                                      enum e_spice_model_port_type port_type) {
+  std::vector<t_port*> ports;
+
+  for (int iport = 0; iport < pb_type->num_ports; ++iport) {
+    /* Check the circuit_port id of the port ? */
+    VTR_ASSERT(CircuitPortId::INVALID() != pb_type->ports[iport].circuit_model_port);
+    switch (port_type) {
+    case SPICE_MODEL_PORT_INPUT:
+      if ( (IN_PORT == pb_type->ports[iport].type)
+        && (0 == pb_type->ports[iport].is_clock) ) {
+        ports.push_back(&pb_type->ports[iport]);
+      }
+      break;
+    case SPICE_MODEL_PORT_OUTPUT: 
+      if ( (OUT_PORT == pb_type->ports[iport].type)
+        && (0 == pb_type->ports[iport].is_clock) ) {
+        ports.push_back(&pb_type->ports[iport]);
+      }
+      break;
+    case SPICE_MODEL_PORT_INOUT: 
+      if ( (INOUT_PORT == pb_type->ports[iport].type)
+        && (0 == pb_type->ports[iport].is_clock) ) {
+        ports.push_back(&pb_type->ports[iport]);
+      }
+      break;
+    case SPICE_MODEL_PORT_CLOCK: 
+      if ( (IN_PORT == pb_type->ports[iport].type)
+        && (1 == pb_type->ports[iport].is_clock) ) {
+        ports.push_back(&pb_type->ports[iport]);
+      }
+      break;
+    /* Configuration ports are not in pb_type definition */
+    default:
+      vpr_printf(TIO_MESSAGE_ERROR,
+                 "(File:%s, [LINE%d]) Invalid type for port!\n",
+                 __FILE__, __LINE__);
+      exit(1);
+    }
+  }
+ 
+  return ports;
+}
 
 t_port** find_pb_type_ports_match_spice_model_port_type(t_pb_type* pb_type,
                                                         enum e_spice_model_port_type port_type,

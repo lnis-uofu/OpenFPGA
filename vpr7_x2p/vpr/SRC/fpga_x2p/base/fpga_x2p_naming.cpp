@@ -760,3 +760,31 @@ std::string generate_physical_block_module_name(const std::string& prefix,
 
   return module_name;
 }
+
+
+/*********************************************************************
+ * Generate the port name of a Verilog module describing a pb_type
+ * The name convention is 
+ * <pb_type_name>_<port_name>
+ ********************************************************************/
+std::string generate_pb_type_port_name(t_port* pb_type_port) {
+  std::string port_name;
+  
+  port_name = std::string(pb_type_port->parent_pb_type->name) + std::string("_") + std::string(pb_type_port->name);
+   
+  return port_name;
+}
+
+/*********************************************************************
+ * Generate the global I/O port name of a Verilog module
+ * This is mainly used by I/O circuit models
+ ********************************************************************/
+std::string generate_fpga_global_io_port_name(const std::string& prefix, 
+                                              const CircuitLibrary& circuit_lib,
+                                              const CircuitModelId& circuit_model) {
+  std::string port_name(prefix);
+  
+  port_name += circuit_lib.model_name(circuit_model);
+   
+  return port_name;
+}

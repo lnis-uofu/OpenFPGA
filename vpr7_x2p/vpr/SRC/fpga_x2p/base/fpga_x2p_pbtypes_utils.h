@@ -1,6 +1,9 @@
 #ifndef FPGA_X2P_PBTYPES_UTILS_H
 #define FPGA_X2P_PBTYPES_UTILS_H
 
+/* Only include header files those are required by the data types in the following function declaration */
+#include <vector>
+#include "fpga_x2p_types.h"
 #include "fpga_x2p_bitstream_utils.h"
 
 void check_pb_graph_edge(t_pb_graph_edge pb_graph_edge);
@@ -99,6 +102,9 @@ void map_clb_pins_to_pb_graph_pins();
 
 t_port* find_pb_type_port_match_spice_model_port(t_pb_type* pb_type,
                                                  t_spice_model_port* spice_model_port);
+
+std::vector<t_port*> find_pb_type_ports_match_circuit_model_port_type(t_pb_type* pb_type,
+                                                                      enum e_spice_model_port_type port_type);
 
 t_port** find_pb_type_ports_match_spice_model_port_type(t_pb_type* pb_type,
                                                         enum e_spice_model_port_type port_type,

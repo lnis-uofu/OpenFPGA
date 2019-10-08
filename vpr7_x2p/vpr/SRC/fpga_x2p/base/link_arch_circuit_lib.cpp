@@ -270,12 +270,12 @@ int link_pb_type_port_to_circuit_model_ports(const t_pb_type* cur_pb_type,
     cur_pb_type->ports[iport].circuit_model_port = CircuitPortId::INVALID(); 
   } 
 
-  /* Return if SPICE_MODEL is NULL */
+  /* Return if circuit model is NULL */
   if (CircuitModelId::INVALID() == circuit_model) {
     return 0;
   }
 
-  /* For each port, find a SPICE model port, which has the same name and port size */
+  /* For each port, find a circuit model port, which has the same name and port size */
   for (auto& port : circuit_lib.model_ports(circuit_model)) {
     t_port* cur_pb_type_port = find_pb_type_port_match_circuit_model_port(cur_pb_type, circuit_lib, port); 
     /* Not every spice_model_port can find a mapped pb_type_port.
@@ -292,7 +292,7 @@ int link_pb_type_port_to_circuit_model_ports(const t_pb_type* cur_pb_type,
   for (int iport = 0; iport < cur_pb_type->num_ports; iport++) {
     if (CircuitPortId::INVALID() == cur_pb_type->ports[iport].circuit_model_port) {
       vpr_printf(TIO_MESSAGE_ERROR, 
-                 "(File:%s, [LINE%d])Pb_type(%s) Port(%s) cannot find a corresponding port in SPICE model(%s)\n",
+                 "(File:%s, [LINE%d]) Pb_type(%s) Port(%s) cannot find a corresponding port in SPICE model(%s)\n",
                  __FILE__, __LINE__, cur_pb_type->name, cur_pb_type->ports[iport].name, 
                  circuit_lib.model_name(circuit_model).c_str());
       exit(1);

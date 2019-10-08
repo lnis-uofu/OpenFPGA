@@ -143,4 +143,9 @@ std::string generate_grid_block_module_name(const std::string& prefix,
 std::string generate_physical_block_module_name(const std::string& prefix,
                                                 t_pb_type* physical_pb_type);
 
+std::string generate_pb_type_port_name(t_port* pb_type_port);
+
+std::string generate_fpga_global_io_port_name(const std::string& prefix, 
+                                              const CircuitLibrary& circuit_lib,
+                                              const CircuitModelId& circuit_model);
 #endif
