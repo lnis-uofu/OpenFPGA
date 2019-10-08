@@ -27,6 +27,88 @@
 #include "verilog_grid.h"
 
 /********************************************************************
+ * Print Verilog modules of a LUT as a primitive node in the 
+ * pb_graph_node graph
+ * This function will instanciate the LUT Verilog module 
+ * generated in the print_verilog_submodule_luts() 
+ *
+ * Verilog module structure:
+ *
+ *       Primitive LUT
+ *     +---------------------------------------+
+ *     |                                       | 
+ *     |      +---------+    +---------+       |
+ *  in |----->|         |--->|         |<------|configuration lines
+ *     |      | LUT_MUX |... | LUT_MEM |       |
+ *  out|<-----|         |--->|         |       |
+ *     |      +---------+    +---------+       |
+ *     |                                       | 
+ *     +---------------------------------------+
+ *
+ *******************************************************************/
+static 
+void print_verilog_primitive_lut(std::fstream& fp,
+                                 ModuleManager& module_manager,
+                                 const CircuitLibrary& circuit_lib,
+                                 t_sram_orgz_info* cur_sram_orgz_info,
+                                 t_pb_graph_node* lut_pb_graph_node,
+                                 const e_side& io_side,
+                                 const bool& use_explicit_mapping) {
+  /* Ensure a valid file handler */ 
+  check_file_handler(fp);
+
+  /* Ensure a valid pb_graph_node */ 
+  if (NULL == lut_pb_graph_node) {
+    vpr_printf(TIO_MESSAGE_ERROR,
+               "(File:%s,[LINE%d]) Invalid lut_pb_graph_node!\n",
+               __FILE__, __LINE__);
+    exit(1);
+  }
+
+  /* Find the circuit model id linked to the pb_graph_node */
+  CircuitModelId& lut_model = lut_pb_graph_node->pb_type->circuit_model;
+
+  /* The circuit model must be a LUT */
+  VTR_ASSERT(SPICE_MODEL_LUT == circuit_lib.model_type(lut_model));
+
+  /* Generate the module name for this primitive pb_graph_node*/
+  std::string lut_module_name_prefix(grid_verilog_file_name_prefix);
+  /* Add side string to the name if it is valid */
+  if (NUM_SIDES != io_side) {
+    Side side_manager(io_side);
+    lut_module_name_prefix += std::string(side_manager.to_string());
+    lut_module_name_prefix += std::string("_");
+  }
+  std::string lut_module_name = generate_physical_block_module_name(lut_module_name_prefix, lut_pb_graph_node->pb_type);
+
+  /* TODO: Create a module of the primitive LUT
+   * and register it to module manager
+   */
+  ModuleId lut_module = module_manager.add_module(lut_module_name);
+  VTR_ASSERT(ModuleId::INVALID() != lut_module);
+
+  /* TODO: find the global ports required by the primitive LUT */
+
+  /* TODO: Print the module definition for the top-level Verilog module of physical block */
+  print_verilog_module_declaration(fp, module_manager, lut_module);
+  /* Finish printing ports */
+
+  /* TODO: Create local wires as configuration bus */
+
+  /* TODO: Create a bus wire for the inputs of the LUT */
+
+  /* TODO: Instanciate LUT MUX module */
+
+  /* TODO: Instanciate associated memory module for the LUT */
+
+  /* Print an end to the Verilog module */
+  print_verilog_module_end(fp, module_manager.module_name(lut_module));
+
+  /* Add an empty line as a splitter */
+  fp << std::endl;
+}
+
+/********************************************************************
  * Print Verilog modules of physical blocks inside a grid (CLB, I/O. etc.)
  * This function will traverse the graph of complex logic block (t_pb_graph_node)
  * in a recursive way, using a Depth First Search (DFS) algorithm.
@@ -48,6 +130,7 @@ void print_verilog_physical_blocks_rec(std::fstream& fp,
                                        const MuxLibrary& mux_lib,
                                        t_sram_orgz_info* cur_sram_orgz_info,
                                        t_pb_graph_node* physical_pb_graph_node,
+                                       const e_side& io_side,
                                        const bool& use_explicit_mapping) {
   /* Check the file handler*/ 
   check_file_handler(fp);
@@ -75,6 +158,7 @@ void print_verilog_physical_blocks_rec(std::fstream& fp,
       print_verilog_physical_blocks_rec(fp, module_manager, circuit_lib, mux_lib, 
                                         cur_sram_orgz_info, 
                                         &(physical_pb_graph_node->child_pb_graph_nodes[physical_mode_index][ipb][0]),
+                                        io_side,
                                         use_explicit_mapping);
     }
   }
@@ -84,12 +168,11 @@ void print_verilog_physical_blocks_rec(std::fstream& fp,
     /* Branch on the type of this physical pb_type, different Verilog modules are generated */
     switch (physical_pb_type->class_type) {
     case LUT_CLASS: 
-      /* TODO: refactor this function
-      dump_verilog_pb_primitive_verilog_model(cur_sram_orgz_info, fp, formatted_subckt_prefix, 
-                                              cur_pb_graph_node, pb_type_index, 
-                                              cur_pb_type->spice_model, 
-                                              my_bool_to_boolean(is_explicit_mapping)); 
-       */
+      print_verilog_primitive_lut(fp, module_manager, circuit_lib,
+                                  cur_sram_orgz_info, 
+                                  physical_pb_graph_node, 
+                                  io_side, 
+                                  use_explicit_mapping); 
       break;
     case LATCH_CLASS:
       VTR_ASSERT(0 == physical_pb_type->num_modes);
@@ -119,9 +202,19 @@ void print_verilog_physical_blocks_rec(std::fstream& fp,
     return;
   }
 
-  /* TODO: Generate the name of the Verilog module for this pb_type */
+  /* Generate the name of the Verilog module for this pb_type */
+  std::string pb_module_name_prefix(grid_verilog_file_name_prefix);
+  /* Add side string to the name if it is valid */
+  if (NUM_SIDES != io_side) {
+    Side side_manager(io_side);
+    pb_module_name_prefix += std::string(side_manager.to_string());
+    pb_module_name_prefix += std::string("_");
+  }
+  std::string pb_module_name = generate_physical_block_module_name(pb_module_name_prefix, physical_pb_type);
 
-  /* TODO: Register the Verilog module in module manager */
+  /* Register the Verilog module in module manager */
+  ModuleId pb_module = module_manager.add_module(pb_module_name);
+  VTR_ASSERT(ModuleId::INVALID() != pb_module);
 
   /* TODO: Add ports to the Verilog module */
 
@@ -130,7 +223,9 @@ void print_verilog_physical_blocks_rec(std::fstream& fp,
   /* TODO: Count SRAM ports from the sub-modules under this Verilog module */
   /* TODO: Count formal verification ports from the sub-modules under this Verilog module */
 
-  /* TODO: Print Verilog module declaration */
+  /* Print Verilog module declaration */
+  print_verilog_module_declaration(fp, module_manager, pb_module);
+
   /* Comment lines */
   print_verilog_comment(fp, std::string("----- BEGIN Physical programmable logic block Verilog module: " + std::string(physical_pb_type->name) + " -----"));
 
@@ -157,11 +252,13 @@ void print_verilog_physical_blocks_rec(std::fstream& fp,
    */
 
   /* Print an end to the Verilog module */
-  print_verilog_comment(fp, std::string("----- BEGIN Physical programmable logic block Verilog module: " + std::string(physical_pb_type->name) + " -----"));
+  print_verilog_module_end(fp, module_manager.module_name(pb_module));
 
-  return;
+  print_verilog_comment(fp, std::string("----- END Physical programmable logic block Verilog module: " + std::string(physical_pb_type->name) + " -----"));
+
+  /* Add an empty line as a splitter */
+  fp << std::endl;
 }
-
 
 /*****************************************************************************
  * This function will create a Verilog file and print out a Verilog netlist 
@@ -189,10 +286,10 @@ void print_verilog_grid(ModuleManager& module_manager,
   /* Give a name to the Verilog netlist */
   /* Create the file name for Verilog */
   std::string verilog_fname(subckt_dir 
-                          + generate_physical_block_netlist_name(std::string(phy_block_type->name), 
-                                                                 IO_TYPE == phy_block_type, 
-                                                                 border_side, 
-                                                                 std::string(verilog_netlist_file_postfix))
+                          + generate_grid_block_netlist_name(std::string(phy_block_type->name), 
+                                                             IO_TYPE == phy_block_type, 
+                                                             border_side, 
+                                                             std::string(verilog_netlist_file_postfix))
                            );
   /* TODO: remove the bak file when the file is ready */
   verilog_fname += ".bak";
@@ -222,30 +319,26 @@ void print_verilog_grid(ModuleManager& module_manager,
   print_verilog_include_defines_preproc_file(fp, verilog_dir);
 
   /* TODO: Print Verilog modules for all the pb_types/pb_graph_nodes */
-  for (int iz = 0; iz < phy_block_type->capacity; ++iz) {
-    /* ONLY output one Verilog module (which is unique), others are the same */
-    if (0 < iz) {
-      continue;
-    }
-    /* TODO: use a Depth-First Search Algorithm to print the sub-modules 
-     * Note: DFS is the right way. Do NOT use BFS.
-     * DFS can guarantee that all the sub-modules can be registered properly
-     * to its parent in module manager  
-     */
-    print_verilog_comment(fp, std::string("---- BEGIN Sub-module of physical block:" + std::string(phy_block_type->name) + " ----"));
+  /* TODO: use a Depth-First Search Algorithm to print the sub-modules 
+   * Note: DFS is the right way. Do NOT use BFS.
+   * DFS can guarantee that all the sub-modules can be registered properly
+   * to its parent in module manager  
+   */
+  print_verilog_comment(fp, std::string("---- BEGIN Sub-module of physical block:" + std::string(phy_block_type->name) + " ----"));
 
-    /* Print Verilog modules starting from the top-level pb_type/pb_graph_node, and traverse the graph in a recursive way */
-    print_verilog_physical_blocks_rec(fp, module_manager, circuit_lib, mux_lib, 
-                                      cur_sram_orgz_info, 
-                                      phy_block_type->pb_graph_head,
-                                      use_explicit_mapping);
+  /* Print Verilog modules starting from the top-level pb_type/pb_graph_node, and traverse the graph in a recursive way */
+  print_verilog_physical_blocks_rec(fp, module_manager, circuit_lib, mux_lib, 
+                                    cur_sram_orgz_info, 
+                                    phy_block_type->pb_graph_head,
+                                    border_side,
+                                    use_explicit_mapping);
 
-    print_verilog_comment(fp, std::string("---- END Sub-module of physical block:" + std::string(phy_block_type->name) + " ----"));
-  }
+  print_verilog_comment(fp, std::string("---- END Sub-module of physical block:" + std::string(phy_block_type->name) + " ----"));
 
   /* TODO: Create a Verilog Module for the top-level physical block, and add to module manager */
-  std::string module_name = generate_physical_block_module_name(std::string(grid_verilog_file_name_prefix), phy_block_type->name, IO_TYPE == phy_block_type, border_side);
+  std::string module_name = generate_grid_block_module_name(std::string(grid_verilog_file_name_prefix), phy_block_type->name, IO_TYPE == phy_block_type, border_side);
   ModuleId module_id = module_manager.add_module(module_name); 
+  VTR_ASSERT(ModuleId::INVALID() != module_id);
 
   /* TODO: Add ports to the module */
 

@@ -673,12 +673,12 @@ std::string generate_mux_sram_port_name(const CircuitLibrary& circuit_lib,
 }
 
 /*********************************************************************
- * Generate the netlist name of a physical block
+ * Generate the netlist name of a grid block
  **********************************************************************/
-std::string generate_physical_block_netlist_name(const std::string& block_name,
-                                                 const bool& is_block_io,
-                                                 const e_side& io_side,
-                                                 const std::string& postfix) {
+std::string generate_grid_block_netlist_name(const std::string& block_name,
+                                             const bool& is_block_io,
+                                             const e_side& io_side,
+                                             const std::string& postfix) {
   /* Add the name of physical block */
   std::string module_name(block_name);
 
@@ -694,15 +694,69 @@ std::string generate_physical_block_netlist_name(const std::string& block_name,
 }
 
 /*********************************************************************
- * Generate the module name of a physical block
+ * Generate the module name of a grid block
  **********************************************************************/
-std::string generate_physical_block_module_name(const std::string& prefix,
-                                                const std::string& block_name,
-                                                const bool& is_block_io,
-                                                const e_side& io_side) {
+std::string generate_grid_block_module_name(const std::string& prefix,
+                                            const std::string& block_name,
+                                            const bool& is_block_io,
+                                            const e_side& io_side) {
   std::string module_name(prefix);
 
-  module_name += generate_physical_block_netlist_name(block_name, is_block_io, io_side, std::string());
+  module_name += generate_grid_block_netlist_name(block_name, is_block_io, io_side, std::string());
+
+  return module_name;
+}
+
+/*********************************************************************
+ * Generate the module name of a physical block
+ * To ensure a unique name for each physical block inside the graph of complex blocks
+ * (pb_graph_nodes), this function trace backward to the top-level node
+ * in the graph and add the name of these parents 
+ * The final name will be in the following format:
+ * <top_physical_block_name>_<mode_name>_<parent_physical_block_name> ... <current_physical_block_name>
+ *
+ * TODO: to make sure the length of this name does not exceed the size of
+ * chars in a line of a file!!! 
+ **********************************************************************/
+std::string generate_physical_block_module_name(const std::string& prefix,
+                                                t_pb_type* physical_pb_type) {
+  std::string module_name(physical_pb_type->name);
+
+  t_pb_type* parent_pb_type = physical_pb_type;
+
+  /* Backward trace until we meet the top-level pb_type */
+  while (1) {
+    /* If there is no parent mode, this is a top-level pb_type, quit the loop here */
+    t_mode* parent_mode = parent_pb_type->parent_mode;
+    if (NULL == parent_mode) {
+      break;
+    }
+    
+    /* Add the mode name to the module name */
+    module_name = std::string("mode[") + std::string(parent_mode->name) + std::string("]_") + module_name;
+
+    /* Backtrace to the upper level */
+    parent_pb_type = parent_mode->parent_pb_type;
+
+    /* If there is no parent pb_type, this is a top-level pb_type, quit the loop here */
+    if (NULL == parent_pb_type) {
+      break;
+    }
+
+    /* Add the current pb_type name to the module name */
+    module_name = std::string(parent_pb_type->name) + std::string("_") + module_name;
+  }
+
+  /* Exception for top-level pb_type: add an virtual mode name (same name as the pb_type) 
+   * This is to follow the naming convention as non top-level pb_types
+   * In addition, the name can be really unique, being different than the grid blocks
+   */
+  if (NULL == physical_pb_type->parent_mode) {
+    module_name += std::string("_mode[") + std::string(physical_pb_type->name) + std::string("]");
+  }
+
+  /* Add the prefix */
+  module_name = prefix + module_name;
 
   return module_name;
 }

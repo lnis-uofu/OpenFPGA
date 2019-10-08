@@ -39,9 +39,7 @@
  *
  **********************************************************************/
 static 
-std::map<std::string, BasicPort> generate_cmos_mem_module_port2port_map(const ModuleManager& module_manager, 
-                                                                        const ModuleId& mem_module,
-                                                                        const BasicPort& config_bus,
+std::map<std::string, BasicPort> generate_cmos_mem_module_port2port_map(const BasicPort& config_bus,
                                                                         const std::vector<BasicPort>& mem_output_bus_ports,
                                                                         const e_sram_orgz& sram_orgz_type) {
   std::map<std::string, BasicPort> port2port_name_map;
@@ -100,9 +98,7 @@ std::map<std::string, BasicPort> generate_cmos_mem_module_port2port_map(const Mo
  *         Mem_out              Mem_outb
  **********************************************************************/
 static 
-std::map<std::string, BasicPort> generate_rram_mem_module_port2port_map(const ModuleManager& module_manager, 
-                                                                        const ModuleId& mem_module,
-                                                                        const BasicPort& config_bus,
+std::map<std::string, BasicPort> generate_rram_mem_module_port2port_map(const BasicPort& config_bus,
                                                                         const std::vector<BasicPort>& mem_output_bus_ports,
                                                                         const e_sram_orgz& sram_orgz_type) {
   std::map<std::string, BasicPort> port2port_name_map;
@@ -152,9 +148,7 @@ std::map<std::string, BasicPort> generate_rram_mem_module_port2port_map(const Mo
  * configuration styles of FPGA fabric.
  * Here we will branch on the design technology
  **********************************************************************/
-std::map<std::string, BasicPort> generate_mem_module_port2port_map(const ModuleManager& module_manager, 
-                                                                   const ModuleId& mem_module,
-                                                                   const BasicPort& config_bus,
+std::map<std::string, BasicPort> generate_mem_module_port2port_map(const BasicPort& config_bus,
                                                                    const std::vector<BasicPort>& mem_output_bus_ports,
                                                                    const e_spice_model_design_tech& mem_design_tech,
                                                                    const e_sram_orgz& sram_orgz_type) {
@@ -162,10 +156,10 @@ std::map<std::string, BasicPort> generate_mem_module_port2port_map(const ModuleM
 
   switch (mem_design_tech) {
   case SPICE_MODEL_DESIGN_CMOS:
-    port2port_name_map = generate_cmos_mem_module_port2port_map(module_manager, mem_module, config_bus, mem_output_bus_ports, sram_orgz_type);
+    port2port_name_map = generate_cmos_mem_module_port2port_map(config_bus, mem_output_bus_ports, sram_orgz_type);
     break;
   case SPICE_MODEL_DESIGN_RRAM:
-    port2port_name_map = generate_rram_mem_module_port2port_map(module_manager, mem_module, config_bus, mem_output_bus_ports, sram_orgz_type);
+    port2port_name_map = generate_rram_mem_module_port2port_map(config_bus, mem_output_bus_ports, sram_orgz_type);
     break;
   default:
     vpr_printf(TIO_MESSAGE_ERROR,
@@ -215,7 +209,6 @@ void update_cmos_mem_module_config_bus(const e_sram_orgz& sram_orgz_type,
  **********************************************************************/
 static 
 void update_rram_mem_module_config_bus(const e_sram_orgz& sram_orgz_type,
-                                       const size_t& num_config_bits,
                                        BasicPort& config_bus) {
   switch (sram_orgz_type) {
   case SPICE_SRAM_STANDALONE:
@@ -261,7 +254,7 @@ void update_mem_module_config_bus(const e_sram_orgz& sram_orgz_type,
     update_cmos_mem_module_config_bus(sram_orgz_type, num_config_bits, config_bus);
     break;
   case SPICE_MODEL_DESIGN_RRAM:
-    update_rram_mem_module_config_bus(sram_orgz_type, num_config_bits, config_bus);
+    update_rram_mem_module_config_bus(sram_orgz_type, config_bus);
     break;
   default:
     vpr_printf(TIO_MESSAGE_ERROR,

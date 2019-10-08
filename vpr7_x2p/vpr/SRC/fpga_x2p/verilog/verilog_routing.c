@@ -2617,8 +2617,7 @@ void print_verilog_unique_switch_box_mux(ModuleManager& module_manager,
   std::vector<BasicPort> mem_output_ports;
   mem_output_ports.push_back(mux_config_port);
   mem_output_ports.push_back(mux_config_inv_port);
-  mem_port2port_name_map = generate_mem_module_port2port_map(module_manager, mem_module, 
-                                                             config_bus,
+  mem_port2port_name_map = generate_mem_module_port2port_map(config_bus,
                                                              mem_output_ports,
                                                              circuit_lib.design_tech_type(mux_model),
                                                              cur_sram_orgz_info->type);
@@ -3786,8 +3785,7 @@ void print_verilog_connection_box_mux(ModuleManager& module_manager,
   std::vector<BasicPort> mem_output_ports;
   mem_output_ports.push_back(mux_config_port);
   mem_output_ports.push_back(mux_config_inv_port);
-  mem_port2port_name_map = generate_mem_module_port2port_map(module_manager, mem_module, 
-                                                             config_bus,
+  mem_port2port_name_map = generate_mem_module_port2port_map(config_bus,
                                                              mem_output_ports,
                                                              circuit_lib.design_tech_type(mux_model),
                                                              cur_sram_orgz_info->type);
