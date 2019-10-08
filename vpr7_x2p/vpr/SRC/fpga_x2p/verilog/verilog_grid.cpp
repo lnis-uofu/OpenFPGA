@@ -27,19 +27,25 @@
 #include "verilog_grid.h"
 
 /********************************************************************
- * Print Verilog modules of a LUT as a primitive node in the 
- * pb_graph_node graph
- * This function will instanciate the LUT Verilog module 
- * generated in the print_verilog_submodule_luts() 
+ * Print Verilog modules of a primitive node in the pb_graph_node graph
+ * This generic function can support all the different types of primitive nodes
+ * i.e., Look-Up Tables (LUTs), Flip-flops (FFs) and hard logic blocks such as adders.
+ *
+ * The Verilog module will consist of two parts:
+ * 1. Logic module of the primitive node
+ *    This module performs the logic function of the block
+ * 2. Memory module of the primitive node
+ *    This module stores the configuration bits for the logic module
+ *    if the logic module is a programmable resource, such as LUT
  *
  * Verilog module structure:
  *
- *       Primitive LUT
+ *       Primitive block
  *     +---------------------------------------+
  *     |                                       | 
  *     |      +---------+    +---------+       |
  *  in |----->|         |--->|         |<------|configuration lines
- *     |      | LUT_MUX |... | LUT_MEM |       |
+ *     |      |  Logic  |... |  Memory |       |
  *  out|<-----|         |--->|         |       |
  *     |      +---------+    +---------+       |
  *     |                                       | 
@@ -47,50 +53,82 @@
  *
  *******************************************************************/
 static 
-void print_verilog_primitive_lut(std::fstream& fp,
-                                 ModuleManager& module_manager,
-                                 const CircuitLibrary& circuit_lib,
-                                 t_sram_orgz_info* cur_sram_orgz_info,
-                                 t_pb_graph_node* lut_pb_graph_node,
-                                 const e_side& io_side,
-                                 const bool& use_explicit_mapping) {
+void print_verilog_primitive_block(std::fstream& fp,
+                                   ModuleManager& module_manager,
+                                   const CircuitLibrary& circuit_lib,
+                                   t_sram_orgz_info* cur_sram_orgz_info,
+                                   t_pb_graph_node* primitive_pb_graph_node,
+                                   const e_side& io_side,
+                                   const bool& use_explicit_mapping) {
   /* Ensure a valid file handler */ 
   check_file_handler(fp);
 
   /* Ensure a valid pb_graph_node */ 
-  if (NULL == lut_pb_graph_node) {
+  if (NULL == primitive_pb_graph_node) {
     vpr_printf(TIO_MESSAGE_ERROR,
-               "(File:%s,[LINE%d]) Invalid lut_pb_graph_node!\n",
+               "(File:%s,[LINE%d]) Invalid primitive_pb_graph_node!\n",
                __FILE__, __LINE__);
     exit(1);
   }
 
   /* Find the circuit model id linked to the pb_graph_node */
-  CircuitModelId& lut_model = lut_pb_graph_node->pb_type->circuit_model;
-
-  /* The circuit model must be a LUT */
-  VTR_ASSERT(SPICE_MODEL_LUT == circuit_lib.model_type(lut_model));
+  CircuitModelId& primitive_model = primitive_pb_graph_node->pb_type->circuit_model;
 
   /* Generate the module name for this primitive pb_graph_node*/
-  std::string lut_module_name_prefix(grid_verilog_file_name_prefix);
-  /* Add side string to the name if it is valid */
+  std::string primitive_module_name_prefix(grid_verilog_file_name_prefix);
+  /* Add side string to the name if it is valid, this is mainly for I/O block */
   if (NUM_SIDES != io_side) {
     Side side_manager(io_side);
-    lut_module_name_prefix += std::string(side_manager.to_string());
-    lut_module_name_prefix += std::string("_");
+    primitive_module_name_prefix += std::string(side_manager.to_string());
+    primitive_module_name_prefix += std::string("_");
   }
-  std::string lut_module_name = generate_physical_block_module_name(lut_module_name_prefix, lut_pb_graph_node->pb_type);
+  std::string primitive_module_name = generate_physical_block_module_name(primitive_module_name_prefix, primitive_pb_graph_node->pb_type);
 
-  /* TODO: Create a module of the primitive LUT
-   * and register it to module manager
+  /* Create a module of the primitive LUT and register it to module manager */
+  ModuleId primitive_module = module_manager.add_module(primitive_module_name);
+  /* Ensure that the module has been created and thus unique! */
+  VTR_ASSERT(ModuleId::INVALID() != primitive_module);
+
+  /* Find the global ports required by the primitive node, and add them to the module */
+  std::vector<CircuitPortId> primitive_model_global_ports = circuit_lib.model_global_ports_by_type(primitive_model, SPICE_MODEL_PORT_INPUT, true, false);
+  for (auto port : primitive_model_global_ports) {
+    BasicPort module_port(circuit_lib.port_lib_name(port), circuit_lib.port_size(port));
+    module_manager.add_port(primitive_module, module_port, ModuleManager::MODULE_INPUT_PORT);
+  }
+  /* Find the inout ports required by the primitive node, and add them to the module
+   * This is mainly due to the I/O blocks, which have inout ports for the top-level fabric
    */
-  ModuleId lut_module = module_manager.add_module(lut_module_name);
-  VTR_ASSERT(ModuleId::INVALID() != lut_module);
+  std::vector<CircuitPortId> primitive_model_inout_ports = circuit_lib.model_ports_by_type(primitive_model, SPICE_MODEL_PORT_INOUT);
+  for (auto port : primitive_model_inout_ports) {
+    BasicPort module_port(circuit_lib.port_lib_name(port), circuit_lib.port_size(port));
+    module_manager.add_port(primitive_module, module_port, ModuleManager::MODULE_INOUT_PORT);
+  }
+  /* Find the input ports required by the primitive node, and add them to the module */
+  std::vector<CircuitPortId> primitive_model_input_ports = circuit_lib.model_ports_by_type(primitive_model, SPICE_MODEL_PORT_INPUT);
+  for (auto port : primitive_model_input_ports) {
+    BasicPort module_port(circuit_lib.port_lib_name(port), circuit_lib.port_size(port));
+    module_manager.add_port(primitive_module, module_port, ModuleManager::MODULE_INPUT_PORT);
+  }
+  /* Find the output ports required by the primitive node, and add them to the module */
+  std::vector<CircuitPortId> primitive_model_output_ports = circuit_lib.model_ports_by_type(primitive_model, SPICE_MODEL_PORT_OUTPUT);
+  for (auto port : primitive_model_output_ports) {
+    BasicPort module_port(circuit_lib.port_lib_name(port), circuit_lib.port_size(port));
+    module_manager.add_port(primitive_module, module_port, ModuleManager::MODULE_OUTPUT_PORT);
+  }
+  /* Find the clock ports required by the primitive node, and add them to the module */
+  std::vector<CircuitPortId> primitive_model_clock_ports = circuit_lib.model_ports_by_type(primitive_model, SPICE_MODEL_PORT_CLOCK);
+  for (auto port : primitive_model_clock_ports) {
+    BasicPort module_port(circuit_lib.port_lib_name(port), circuit_lib.port_size(port));
+    module_manager.add_port(primitive_module, module_port, ModuleManager::MODULE_CLOCK_PORT);
+  }
 
-  /* TODO: find the global ports required by the primitive LUT */
+  /* Add configuration ports */
+  /* TODO: Shared SRAM ports*/
+  /* TODO: Regular (independent) SRAM ports */
+  /* TODO: SRAM ports for formal verfiication */
 
-  /* TODO: Print the module definition for the top-level Verilog module of physical block */
-  print_verilog_module_declaration(fp, module_manager, lut_module);
+  /* Print the module definition for the top-level Verilog module of physical block */
+  print_verilog_module_declaration(fp, module_manager, primitive_module);
   /* Finish printing ports */
 
   /* TODO: Create local wires as configuration bus */
@@ -102,7 +140,7 @@ void print_verilog_primitive_lut(std::fstream& fp,
   /* TODO: Instanciate associated memory module for the LUT */
 
   /* Print an end to the Verilog module */
-  print_verilog_module_end(fp, module_manager.module_name(lut_module));
+  print_verilog_module_end(fp, module_manager.module_name(primitive_module));
 
   /* Add an empty line as a splitter */
   fp << std::endl;
@@ -165,39 +203,11 @@ void print_verilog_physical_blocks_rec(std::fstream& fp,
 
   /* For leaf node, a primitive Verilog module will be generated */
   if (TRUE == is_primitive_pb_type(physical_pb_type)) { 
-    /* Branch on the type of this physical pb_type, different Verilog modules are generated */
-    switch (physical_pb_type->class_type) {
-    case LUT_CLASS: 
-      print_verilog_primitive_lut(fp, module_manager, circuit_lib,
+    print_verilog_primitive_block(fp, module_manager, circuit_lib,
                                   cur_sram_orgz_info, 
                                   physical_pb_graph_node, 
                                   io_side, 
                                   use_explicit_mapping); 
-      break;
-    case LATCH_CLASS:
-      VTR_ASSERT(0 == physical_pb_type->num_modes);
-      /* TODO: refactor this function
-      dump_verilog_pb_primitive_verilog_model(cur_sram_orgz_info, fp, formatted_subckt_prefix, 
-                                              cur_pb_graph_node,  pb_type_index, 
-                                              cur_pb_type->spice_model,
-                                              my_bool_to_boolean(is_explicit_mapping));
-       */
-      break;
-    case UNKNOWN_CLASS:
-    case MEMORY_CLASS:
-      /* TODO: refactor this function
-      dump_verilog_pb_primitive_verilog_model(cur_sram_orgz_info, fp, formatted_subckt_prefix, 
-                                              cur_pb_graph_node , pb_type_index, 
-                                              cur_pb_type->spice_model,
-                                              my_bool_to_boolean(is_explicit_mapping));
-       */
-      break;  
-    default:
-      vpr_printf(TIO_MESSAGE_ERROR, 
-                 "(File:%s,[LINE%d]) Unknown class type of pb_type(%s)!\n",
-                 __FILE__, __LINE__, physical_pb_type->name);
-      exit(1);
-    }
     /* Finish for primitive node, return */
     return;
   }

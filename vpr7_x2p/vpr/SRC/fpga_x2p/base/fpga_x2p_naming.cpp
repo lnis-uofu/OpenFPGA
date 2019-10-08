@@ -733,7 +733,7 @@ std::string generate_physical_block_module_name(const std::string& prefix,
     }
     
     /* Add the mode name to the module name */
-    module_name = std::string("mode[") + std::string(parent_mode->name) + std::string("]_") + module_name;
+    module_name = std::string("mode_") + std::string(parent_mode->name) + std::string("__") + module_name;
 
     /* Backtrace to the upper level */
     parent_pb_type = parent_mode->parent_pb_type;
@@ -752,7 +752,7 @@ std::string generate_physical_block_module_name(const std::string& prefix,
    * In addition, the name can be really unique, being different than the grid blocks
    */
   if (NULL == physical_pb_type->parent_mode) {
-    module_name += std::string("_mode[") + std::string(physical_pb_type->name) + std::string("]");
+    module_name += std::string("_mode_") + std::string(physical_pb_type->name) + std::string("_");
   }
 
   /* Add the prefix */
