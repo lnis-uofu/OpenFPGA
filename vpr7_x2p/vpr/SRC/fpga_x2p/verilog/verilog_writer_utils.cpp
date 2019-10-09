@@ -867,7 +867,6 @@ void print_verilog_local_sram_wires(std::fstream& fp,
  *               +----------+  +----------+     +----------+
  *     
  *********************************************************************/
-static 
 void print_verilog_local_config_bus(std::fstream& fp, 
                                     const std::string& prefix,
                                     const e_sram_orgz& sram_orgz_type,

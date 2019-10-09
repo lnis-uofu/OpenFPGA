@@ -149,13 +149,40 @@ void print_verilog_primitive_block(std::fstream& fp,
   print_verilog_module_declaration(fp, module_manager, primitive_module);
   /* Finish printing ports */
 
-  /* TODO: Create local wires as configuration bus */
+  /* Find the module id in the module manager */
+  ModuleId logic_module = module_manager.find_module(circuit_lib.model_name(primitive_model));
+  VTR_ASSERT(ModuleId::INVALID() != logic_module);
+  size_t logic_instance_id = module_manager.num_instance(primitive_module, logic_module); 
 
-  /* TODO: Create a bus wire for the inputs of the LUT */
+  /* Local wires for memory configurations */
+  print_verilog_comment(fp, std::string("---- BEGIN local configuration bus ----"));
+  print_verilog_local_config_bus(fp, circuit_lib.model_name(primitive_model), cur_sram_orgz_info->type, logic_instance_id, num_config_bits);
+  print_verilog_comment(fp, std::string("---- END local configuration bus ----"));
 
-  /* TODO: Instanciate LUT MUX module */
+  /* Add an empty line as a splitter */
+  fp << std::endl;
 
-  /* TODO: Instanciate associated memory module for the LUT */
+  /* TODO: Instanciate the logic module */
+  /* Create port-to-port map */
+  std::map<std::string, BasicPort> logic_port2port_name_map;
+  /* Link the logic model ports to pb_type ports */
+  generate_pb_type_circuit_port2port_name_map(logic_port2port_name_map, primitive_pb_graph_node->pb_type, circuit_lib);
+  /* TODO: Link both regular and mode-select SRAM ports */
+
+  /* Print an instance of the logic Module */
+  print_verilog_comment(fp, std::string("----- BEGIN Instanciation of " + circuit_lib.model_name(primitive_model) + " -----"));
+  print_verilog_module_instance(fp, module_manager, primitive_module, logic_module, logic_port2port_name_map, use_explicit_mapping);
+  print_verilog_comment(fp, std::string("----- END Instanciation of " + circuit_lib.model_name(primitive_model) + " -----"));
+  fp << std::endl;
+  /* IMPORTANT: this update MUST be called after the instance outputting!!!!
+   * update the module manager with the relationship between the parent and child modules 
+   */
+  module_manager.add_child_module(primitive_module, logic_module);
+
+  /* Add an empty line as a splitter */
+  fp << std::endl;
+
+  /* TODO: Instanciate associated memory module */
 
   /* Print an end to the Verilog module */
   print_verilog_module_end(fp, module_manager.module_name(primitive_module));

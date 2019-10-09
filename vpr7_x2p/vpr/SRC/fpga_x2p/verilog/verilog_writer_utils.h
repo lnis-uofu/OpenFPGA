@@ -90,6 +90,12 @@ void print_verilog_local_sram_wires(std::fstream& fp,
                                     const e_sram_orgz sram_orgz_type,
                                     const size_t& port_size);
 
+void print_verilog_local_config_bus(std::fstream& fp, 
+                                    const std::string& prefix,
+                                    const e_sram_orgz& sram_orgz_type,
+                                    const size_t& instance_id,
+                                    const size_t& num_conf_bits); 
+
 void print_verilog_mux_config_bus(std::fstream& fp, 
                                   const CircuitLibrary& circuit_lib,
                                   const CircuitModelId& mux_model,

@@ -3,6 +3,9 @@
 
 /* Only include header files those are required by the data types in the following function declaration */
 #include <vector>
+#include <map>
+#include "device_port.h"
+#include "circuit_library.h"
 #include "fpga_x2p_types.h"
 #include "fpga_x2p_bitstream_utils.h"
 
@@ -102,6 +105,10 @@ void map_clb_pins_to_pb_graph_pins();
 
 t_port* find_pb_type_port_match_spice_model_port(t_pb_type* pb_type,
                                                  t_spice_model_port* spice_model_port);
+
+void generate_pb_type_circuit_port2port_name_map(std::map<std::string, BasicPort>& port2port_name_map,
+                                                 t_pb_type* cur_pb_type,
+                                                 const CircuitLibrary& circuit_lib);
 
 std::vector<t_port*> find_pb_type_ports_match_circuit_model_port_type(t_pb_type* pb_type,
                                                                       enum e_spice_model_port_type port_type);
