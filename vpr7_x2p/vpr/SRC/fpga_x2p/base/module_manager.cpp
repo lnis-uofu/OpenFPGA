@@ -99,6 +99,13 @@ size_t ModuleManager::num_instance(const ModuleId& parent_module, const ModuleId
   return 0;
 }
 
+/* Find if a port is a wire connection */
+bool ModuleManager::port_is_wire(const ModuleId& module, const ModulePortId& port) const {
+  /* validate both module id and port id*/
+  VTR_ASSERT(valid_module_port_id(module, port));
+  return port_is_wire_[module][port];
+}
+
 /* Find if a port is register */
 bool ModuleManager::port_is_register(const ModuleId& module, const ModulePortId& port) const {
   /* validate both module id and port id*/
@@ -137,6 +144,7 @@ ModuleId ModuleManager::add_module(const std::string& name) {
   port_ids_.emplace_back();
   ports_.emplace_back();
   port_types_.emplace_back();
+  port_is_wire_.emplace_back();
   port_is_register_.emplace_back();
   port_preproc_flags_.emplace_back();
 
@@ -162,6 +170,7 @@ ModulePortId ModuleManager::add_port(const ModuleId& module,
   port_ids_[module].push_back(port);
   ports_[module].push_back(port_info);
   port_types_[module].push_back(port_type);
+  port_is_wire_[module].push_back(false);
   port_is_register_[module].push_back(false);
   port_preproc_flags_[module].emplace_back(); /* Create an empty string for the pre-processing flags */
 
@@ -176,6 +185,15 @@ void ModuleManager::set_module_name(const ModuleId& module, const std::string& n
   /* Validate the id of module */
   VTR_ASSERT( valid_module_id(module) );
   names_[module] = name;
+}
+
+/* Set a port to be a wire */
+void ModuleManager::set_port_is_wire(const ModuleId& module, const std::string& port_name, const bool& is_wire) {
+  /* Find the port */
+  ModulePortId port = find_module_port(module, port_name);
+  /* Must find something, otherwise drop an error */
+  VTR_ASSERT(ModulePortId::INVALID() != port);
+  port_is_wire_[module][port] = is_wire;
 }
 
 /* Set a port to be a register */

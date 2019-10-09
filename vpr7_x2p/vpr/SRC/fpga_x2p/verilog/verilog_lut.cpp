@@ -104,11 +104,15 @@ void print_verilog_submodule_lut(ModuleManager& module_manager,
   for (const auto& port : lut_input_ports) {
     BasicPort input_port(circuit_lib.port_lib_name(port), circuit_lib.port_size(port));
     module_manager.add_port(module_id, input_port, ModuleManager::MODULE_INPUT_PORT);
+    /* Set the port to be wire-connection */
+    module_manager.set_port_is_wire(module_id, input_port.get_name(), true);
   }
   /* Add each output port */
   for (const auto& port : lut_output_ports) {
     BasicPort output_port(circuit_lib.port_lib_name(port), circuit_lib.port_size(port));
     module_manager.add_port(module_id, output_port, ModuleManager::MODULE_OUTPUT_PORT);
+    /* Set the port to be wire-connection */
+    module_manager.set_port_is_wire(module_id, output_port.get_name(), true);
   }
   /* Add each regular (not mode select) SRAM port */
   for (const auto& port : lut_regular_sram_ports) {

@@ -46,6 +46,8 @@ class ModuleManager {
     ModuleId find_module(const std::string& name) const;
     /* Find the number of instances of a child module in the parent module */
     size_t num_instance(const ModuleId& parent_module, const ModuleId& child_module) const;
+    /* Find if a port is a wire connection */
+    bool port_is_wire(const ModuleId& module, const ModulePortId& port) const;
     /* Find if a port is register */
     bool port_is_register(const ModuleId& module, const ModulePortId& port) const;
     /* Return the pre-processing flag of a port */
@@ -58,6 +60,8 @@ class ModuleManager {
                           const BasicPort& port_info, const enum e_module_port_type& port_type);
     /* Set a name for a module */
     void set_module_name(const ModuleId& module, const std::string& name);
+    /* Set a port to be a wire */
+    void set_port_is_wire(const ModuleId& module, const std::string& port_name, const bool& is_wire);
     /* Set a port to be a register */
     void set_port_is_register(const ModuleId& module, const std::string& port_name, const bool& is_register);
     /* Set the preprocessing flag for a port */
@@ -80,6 +84,7 @@ class ModuleManager {
     vtr::vector<ModuleId, vtr::vector<ModulePortId, ModulePortId>> port_ids_;    /* List of ports for each Module */ 
     vtr::vector<ModuleId, vtr::vector<ModulePortId, BasicPort>> ports_;    /* List of ports for each Module */ 
     vtr::vector<ModuleId, vtr::vector<ModulePortId, enum e_module_port_type>> port_types_; /* Type of ports */ 
+    vtr::vector<ModuleId, vtr::vector<ModulePortId, bool>> port_is_wire_; /* If the port is a wire, use for Verilog port definition. If enabled: <port_type> reg <port_name>  */ 
     vtr::vector<ModuleId, vtr::vector<ModulePortId, bool>> port_is_register_; /* If the port is a register, use for Verilog port definition. If enabled: <port_type> reg <port_name>  */ 
     vtr::vector<ModuleId, vtr::vector<ModulePortId, std::string>> port_preproc_flags_; /* If a port is available only when a pre-processing flag is enabled. This is to record the pre-processing flags */ 
 

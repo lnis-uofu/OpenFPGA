@@ -194,6 +194,39 @@ void print_verilog_module_ports(std::fstream& fp,
       }
     }
   }
+
+  /* Output any port that is also wire connection */
+  fp << std::endl;
+  fp << "//----- BEGIN wire-connection ports -----" << std::endl; 
+  for (const auto& kv : port_type2type_map) {
+    for (const auto& port : module_manager.module_ports_by_type(module_id, kv.first)) {
+      /* Skip the ports that are not registered */
+      ModulePortId port_id = module_manager.find_module_port(module_id, port.get_name());
+      VTR_ASSERT(ModulePortId::INVALID() != port_id);
+      if (false == module_manager.port_is_wire(module_id, port_id)) {
+        continue;
+      }
+
+      /* Print pre-processing flag for a port, if defined */
+      std::string preproc_flag = module_manager.port_preproc_flag(module_id, port_id);
+      if (false == preproc_flag.empty()) {
+        /* Print an ifdef Verilog syntax */
+        print_verilog_preprocessing_flag(fp, preproc_flag);
+      }
+
+      /* Print port */
+      fp << generate_verilog_port(VERILOG_PORT_WIRE, port);
+      fp << ";" << std::endl;
+
+      if (false == preproc_flag.empty()) {
+        /* Print an endif to pair the ifdef */
+        print_verilog_endif(fp);
+      }
+    }
+  }
+  fp << "//----- END wire-connection ports -----" << std::endl; 
+  fp << std::endl;
+
  
   /* Output any port that is registered */
   fp << std::endl;

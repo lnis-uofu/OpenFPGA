@@ -228,6 +228,8 @@ void add_pb_type_ports_to_module_manager(ModuleManager& module_manager,
   for (auto port : pb_type_inout_ports) {
     BasicPort module_port(generate_pb_type_port_name(port), port->num_pins);
     module_manager.add_port(module_id, module_port, ModuleManager::MODULE_INOUT_PORT);
+    /* Set the port to be wire-connection */
+    module_manager.set_port_is_wire(module_id, module_port.get_name(), true);
   }
 
   /* Find the input ports required by the primitive pb_type, and add them to the module */
@@ -235,6 +237,8 @@ void add_pb_type_ports_to_module_manager(ModuleManager& module_manager,
   for (auto port : pb_type_input_ports) {
     BasicPort module_port(generate_pb_type_port_name(port), port->num_pins);
     module_manager.add_port(module_id, module_port, ModuleManager::MODULE_INPUT_PORT);
+    /* Set the port to be wire-connection */
+    module_manager.set_port_is_wire(module_id, module_port.get_name(), true);
   }
 
   /* Find the output ports required by the primitive pb_type, and add them to the module */
@@ -242,6 +246,8 @@ void add_pb_type_ports_to_module_manager(ModuleManager& module_manager,
   for (auto port : pb_type_output_ports) {
     BasicPort module_port(generate_pb_type_port_name(port), port->num_pins);
     module_manager.add_port(module_id, module_port, ModuleManager::MODULE_OUTPUT_PORT);
+    /* Set the port to be wire-connection */
+    module_manager.set_port_is_wire(module_id, module_port.get_name(), true);
   }
 
   /* Find the clock ports required by the primitive pb_type, and add them to the module */
@@ -249,6 +255,8 @@ void add_pb_type_ports_to_module_manager(ModuleManager& module_manager,
   for (auto port : pb_type_clock_ports) {
     BasicPort module_port(generate_pb_type_port_name(port), port->num_pins);
     module_manager.add_port(module_id, module_port, ModuleManager::MODULE_CLOCK_PORT);
+    /* Set the port to be wire-connection */
+    module_manager.set_port_is_wire(module_id, module_port.get_name(), true);
   }
 }
 
