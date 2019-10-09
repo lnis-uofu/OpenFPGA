@@ -9,6 +9,7 @@
 /* Header files from external libs */
 #include "util.h"
 #include "vtr_assert.h"
+#include "circuit_library_utils.h"
 
 /* Header files for VPR */
 #include "vpr_types.h"
@@ -116,9 +117,33 @@ void print_verilog_primitive_block(std::fstream& fp,
   add_pb_type_ports_to_module_manager(module_manager, primitive_module, primitive_pb_graph_node->pb_type); 
 
   /* Add configuration ports */
-  /* TODO: Shared SRAM ports*/
-  /* TODO: Regular (independent) SRAM ports */
-  /* TODO: SRAM ports for formal verfiication */
+  /* Shared SRAM ports*/
+  size_t num_shared_config_bits = find_circuit_num_shared_config_bits(circuit_lib, primitive_model, cur_sram_orgz_info->type);
+  if (0 < num_shared_config_bits) {
+    /* Check: this SRAM organization type must be memory-bank ! */
+    VTR_ASSERT( SPICE_SRAM_MEMORY_BANK == cur_sram_orgz_info->type );
+    /* Generate a list of ports */
+    add_reserved_sram_ports_to_module_manager(module_manager, primitive_module, 
+                                              num_shared_config_bits); 
+  }
+
+  /* TODO: this should be added to the cur_sram_orgz_info !!! */
+  t_spice_model* mem_model = NULL;
+  get_sram_orgz_info_mem_model(cur_sram_orgz_info, & mem_model);
+  CircuitModelId sram_model = circuit_lib.model(mem_model->name);  
+  VTR_ASSERT(CircuitModelId::INVALID() != sram_model);
+
+  /* Regular (independent) SRAM ports */
+  size_t num_config_bits = find_circuit_num_config_bits(circuit_lib, primitive_model);
+  if (0 < num_config_bits) {
+    add_sram_ports_to_module_manager(module_manager, primitive_module,
+                                     circuit_lib, sram_model, cur_sram_orgz_info->type,
+                                     num_config_bits);
+    /* Add ports only visible during formal verification to the module */
+    add_formal_verification_sram_ports_to_module_manager(module_manager, primitive_module, circuit_lib, sram_model, 
+                                                         std::string(verilog_formal_verification_preproc_flag),
+                                                         num_config_bits);
+  }
 
   /* Print the module definition for the top-level Verilog module of physical block */
   print_verilog_module_declaration(fp, module_manager, primitive_module);
