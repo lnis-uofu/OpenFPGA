@@ -7,6 +7,7 @@
 #define VERILOG_WRITER_UTILS_H 
 
 #include <string>
+#include "verilog_global.h"
 #include "device_port.h"
 #include "module_manager.h"
 

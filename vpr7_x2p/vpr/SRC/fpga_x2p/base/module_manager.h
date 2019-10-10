@@ -32,9 +32,29 @@ class ModuleManager {
       MODULE_CLOCK_PORT,
       NUM_MODULE_PORT_TYPES 
     };
+
   public: /* Public Constructors */
+
+  public: /* Types and ranges */
+    typedef vtr::vector<ModuleId, ModuleId>::const_iterator module_iterator;
+    typedef vtr::vector<ModuleNetId, ModuleNetId>::const_iterator module_net_iterator;
+
+    typedef vtr::Range<module_iterator> module_range;
+    typedef vtr::Range<module_net_iterator> module_net_range;
+
+  public: /* Public aggregators */
+    /* Find all the modules */
+    module_range modules() const;
+    /* Find all the nets belonging to a module */
+    module_net_range module_nets(const ModuleId& module) const;
+    /* Find all the child modules under a parent module */
+    std::vector<ModuleId> child_modules(const ModuleId& parent_module) const;
+    /* Find all the instances under a parent module */
+    std::vector<size_t> child_module_instances(const ModuleId& parent_module, const ModuleId& child_module) const;
+
   public: /* Public accessors */
     size_t num_modules() const;
+    size_t num_nets(const ModuleId& module) const;
     std::string module_name(const ModuleId& module_id) const;
     std::string module_port_type_str(const enum e_module_port_type& port_type) const;
     std::vector<BasicPort> module_ports_by_type(const ModuleId& module_id, const enum e_module_port_type& port_type) const;
@@ -58,6 +78,22 @@ class ModuleManager {
                                          const ModulePortId& child_port, const size_t& child_pin) const;
     /* Find the name of net */
     std::string net_name(const ModuleId& module, const ModuleNetId& net) const;
+    /* Find the source modules of a net */
+    std::vector<ModuleId> net_source_modules(const ModuleId& module, const ModuleNetId& net) const;
+    /* Find the ids of source instances of a net */
+    std::vector<size_t> net_source_instances(const ModuleId& module, const ModuleNetId& net) const;
+    /* Find the source ports of a net */
+    std::vector<ModulePortId> net_source_ports(const ModuleId& module, const ModuleNetId& net) const;
+    /* Find the source pin indices of a net */
+    std::vector<size_t> net_source_pins(const ModuleId& module, const ModuleNetId& net) const;
+    /* Find the sink modules of a net */
+    std::vector<ModuleId> net_sink_modules(const ModuleId& module, const ModuleNetId& net) const;
+    /* Find the ids of sink instances of a net */
+    std::vector<size_t> net_sink_instances(const ModuleId& module, const ModuleNetId& net) const;
+    /* Find the sink ports of a net */
+    std::vector<ModulePortId> net_sink_ports(const ModuleId& module, const ModuleNetId& net) const;
+    /* Find the sink pin indices of a net */
+    std::vector<size_t> net_sink_pins(const ModuleId& module, const ModuleNetId& net) const;
   public: /* Public mutators */
     /* Add a module */
     ModuleId add_module(const std::string& name);

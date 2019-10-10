@@ -2,6 +2,7 @@
  * Memember functions for data structure ModuleManager
  ******************************************************************************/
 #include <string>
+#include <numeric>
 #include <algorithm>
 #include "vtr_assert.h"
 
@@ -12,12 +13,62 @@
  * Public Constructors
  ******************************************************************************/
 
+/**************************************************
+ * Public Accessors : Aggregates
+ *************************************************/
+/* Find all the modules */
+ModuleManager::module_range ModuleManager::modules() const {
+  return vtr::make_range(ids_.begin(), ids_.end());
+}
+
+/* Find all the nets belonging to a module */
+ModuleManager::module_net_range ModuleManager::module_nets(const ModuleId& module) const {
+  /* Validate the module_id */
+  VTR_ASSERT(valid_module_id(module));
+  return vtr::make_range(net_ids_[module].begin(), net_ids_[module].end());
+}
+
+/* Find all the child modules under a parent module */
+std::vector<ModuleId> ModuleManager::child_modules(const ModuleId& parent_module) const {
+  /* Validate the module_id */
+  VTR_ASSERT(valid_module_id(parent_module));
+  return children_[parent_module];
+}
+
+/* Find all the instances under a parent module */
+std::vector<size_t> ModuleManager::child_module_instances(const ModuleId& parent_module, const ModuleId& child_module) const {
+  /* Validate the module_id */
+  VTR_ASSERT(valid_module_id(parent_module));
+  /* Ensure that the child module is in the child list of parent module */
+  size_t child_index = children_[parent_module].size();
+  for (size_t i = 0; i < children_[parent_module].size(); ++i) {
+    if (child_module == children_[parent_module][i]) {
+      child_index = i;
+      break;
+    } 
+  }
+  VTR_ASSERT(child_index != children_[parent_module].size());
+  
+  /* Create a vector, with sequentially increasing numbers */
+  std::vector<size_t> instance_range(num_child_instances_[parent_module][child_index]);
+  std::iota(instance_range.begin(), instance_range.end(), 0);
+
+  return instance_range;
+}
+
 /******************************************************************************
  * Public Accessors
  ******************************************************************************/
 /* Return number of modules */
 size_t ModuleManager::num_modules() const {
   return ids_.size();
+}
+
+/* Return number of net of a module */
+size_t ModuleManager::num_nets(const ModuleId& module) const {
+  /* Validate the module_id */
+  VTR_ASSERT(valid_module_id(module));
+  return net_ids_[module].size();
 }
 
 /* Find the name of a module */
@@ -120,7 +171,6 @@ std::string ModuleManager::port_preproc_flag(const ModuleId& module, const Modul
   return port_preproc_flags_[module][port];
 }
 
-
 /* Find a net from an instance of a module */
 ModuleNetId ModuleManager::module_instance_port_net(const ModuleId& parent_module, 
                                                     const ModuleId& child_module, const size_t& child_instance,
@@ -154,6 +204,70 @@ std::string ModuleManager::net_name(const ModuleId& module, const ModuleNetId& n
   VTR_ASSERT(valid_module_net_id(module, net));
 
   return net_names_[module][net];
+}
+
+/* Find the source modules of a net */
+std::vector<ModuleId> ModuleManager::net_source_modules(const ModuleId& module, const ModuleNetId& net) const {
+  /* Validate module net */
+  VTR_ASSERT(valid_module_net_id(module, net));
+
+  return net_src_module_ids_[module][net];
+}
+
+/* Find the ids of source instances of a net */
+std::vector<size_t> ModuleManager::net_source_instances(const ModuleId& module, const ModuleNetId& net) const {
+  /* Validate module net */
+  VTR_ASSERT(valid_module_net_id(module, net));
+
+  return net_src_instance_ids_[module][net];
+}
+
+/* Find the source ports of a net */
+std::vector<ModulePortId> ModuleManager::net_source_ports(const ModuleId& module, const ModuleNetId& net) const {
+  /* Validate module net */
+  VTR_ASSERT(valid_module_net_id(module, net));
+
+  return net_src_port_ids_[module][net];
+}
+
+/* Find the source pin indices of a net */
+std::vector<size_t> ModuleManager::net_source_pins(const ModuleId& module, const ModuleNetId& net) const {
+  /* Validate module net */
+  VTR_ASSERT(valid_module_net_id(module, net));
+
+  return net_src_pin_ids_[module][net];
+}
+
+/* Find the sink modules of a net */
+std::vector<ModuleId> ModuleManager::net_sink_modules(const ModuleId& module, const ModuleNetId& net) const {
+  /* Validate module net */
+  VTR_ASSERT(valid_module_net_id(module, net));
+
+  return net_sink_module_ids_[module][net];
+}
+
+/* Find the ids of sink instances of a net */
+std::vector<size_t> ModuleManager::net_sink_instances(const ModuleId& module, const ModuleNetId& net) const {
+  /* Validate module net */
+  VTR_ASSERT(valid_module_net_id(module, net));
+
+  return net_sink_instance_ids_[module][net];
+}
+
+/* Find the sink ports of a net */
+std::vector<ModulePortId> ModuleManager::net_sink_ports(const ModuleId& module, const ModuleNetId& net) const {
+  /* Validate module net */
+  VTR_ASSERT(valid_module_net_id(module, net));
+
+  return net_sink_port_ids_[module][net];
+}
+
+/* Find the sink pin indices of a net */
+std::vector<size_t> ModuleManager::net_sink_pins(const ModuleId& module, const ModuleNetId& net) const {
+  /* Validate module net */
+  VTR_ASSERT(valid_module_net_id(module, net));
+
+  return net_sink_pin_ids_[module][net];
 }
 
 /******************************************************************************
