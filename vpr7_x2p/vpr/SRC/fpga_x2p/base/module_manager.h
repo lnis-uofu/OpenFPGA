@@ -68,19 +68,33 @@ class ModuleManager {
     void set_port_preproc_flag(const ModuleId& module, const ModulePortId& port, const std::string& preproc_flag);
     /* Add a child module to a parent module */
     void add_child_module(const ModuleId& parent_module, const ModuleId& child_module);
+    /* Add a net to the connection graph of the module */ 
+    ModuleNetId create_module_net(const ModuleId& module);
+    /* Add a source to a net in the connection graph */
+    void add_module_net_source(const ModuleId& module, const ModuleNetId& net,
+                               const ModuleId& src_module, const size_t& instance_id,
+                               const ModulePortId& src_port, const size_t& src_pin);
+    /* Add a sink to a net in the connection graph */
+    void add_module_net_sink(const ModuleId& module, const ModuleNetId& net,
+                             const ModuleId& sink_module, const size_t& instance_id,
+                             const ModulePortId& sink_port, const size_t& sink_pin);
   public: /* Public validators/invalidators */
     bool valid_module_id(const ModuleId& module) const;
     bool valid_module_port_id(const ModuleId& module, const ModulePortId& port) const;
+    bool valid_module_net_id(const ModuleId& module, const ModuleNetId& net) const;
   private: /* Private validators/invalidators */
     void invalidate_name2id_map();
     void invalidate_port_lookup();
+    void invalidate_net_lookup();
   private: /* Internal data */
+    /* Module-level data */
     vtr::vector<ModuleId, ModuleId> ids_;                                  /* Unique identifier for each Module */
     vtr::vector<ModuleId, std::string> names_;                                  /* Unique identifier for each Module */
     vtr::vector<ModuleId, std::vector<ModuleId>> parents_;                 /* Parent modules that include the module */
     vtr::vector<ModuleId, std::vector<ModuleId>> children_;                /* Child modules that this module contain */
     vtr::vector<ModuleId, std::vector<size_t>> num_child_instances_;          /* Number of children instance in each child module */
 
+    /* Port-level data */
     vtr::vector<ModuleId, vtr::vector<ModulePortId, ModulePortId>> port_ids_;    /* List of ports for each Module */ 
     vtr::vector<ModuleId, vtr::vector<ModulePortId, BasicPort>> ports_;    /* List of ports for each Module */ 
     vtr::vector<ModuleId, vtr::vector<ModulePortId, enum e_module_port_type>> port_types_; /* Type of ports */ 
@@ -88,11 +102,31 @@ class ModuleManager {
     vtr::vector<ModuleId, vtr::vector<ModulePortId, bool>> port_is_register_; /* If the port is a register, use for Verilog port definition. If enabled: <port_type> reg <port_name>  */ 
     vtr::vector<ModuleId, vtr::vector<ModulePortId, std::string>> port_preproc_flags_; /* If a port is available only when a pre-processing flag is enabled. This is to record the pre-processing flags */ 
 
+    /* Graph-level data: 
+     * We use nets to model the connection between pins of modules and instances.  
+     * To avoid large memory footprint, we do NOT create pins,   
+     * To enable fast look-up on pins, we create a fast look-up
+     */
+    vtr::vector<ModuleId, vtr::vector<ModuleNetId, ModuleNetId>> net_ids_;    /* List of nets for each Module */ 
+    vtr::vector<ModuleId, vtr::vector<ModuleNetId, std::string>> net_names_;    /* Name of net */ 
+    vtr::vector<ModuleId, vtr::vector<ModuleNetId, std::vector<ModuleId>>> net_src_module_ids_;  /* Pin ids that drive the net */ 
+    vtr::vector<ModuleId, vtr::vector<ModuleNetId, std::vector<size_t>>> net_src_instance_ids_;  /* Pin ids that drive the net */ 
+    vtr::vector<ModuleId, vtr::vector<ModuleNetId, std::vector<ModulePortId>>> net_src_port_ids_;  /* Pin ids that drive the net */ 
+    vtr::vector<ModuleId, vtr::vector<ModuleNetId, std::vector<size_t>>> net_src_pin_ids_;  /* Pin ids that drive the net */ 
+    vtr::vector<ModuleId, vtr::vector<ModuleNetId, std::vector<ModuleId>>> net_sink_module_ids_;  /* Pin ids that the net drives */ 
+    vtr::vector<ModuleId, vtr::vector<ModuleNetId, std::vector<size_t>>> net_sink_instance_ids_;  /* Pin ids that drive the net */ 
+    vtr::vector<ModuleId, vtr::vector<ModuleNetId, std::vector<ModulePortId>>> net_sink_port_ids_;  /* Pin ids that drive the net */ 
+    vtr::vector<ModuleId, vtr::vector<ModuleNetId, std::vector<size_t>>> net_sink_pin_ids_;  /* Pin ids that drive the net */ 
+
     /* fast look-up for module */
     std::map<std::string, ModuleId> name_id_map_;
     /* fast look-up for ports */
     typedef vtr::vector<ModuleId, std::vector<std::vector<ModulePortId>>> PortLookup;
     mutable PortLookup port_lookup_; /* [module_ids][port_types][port_ids] */ 
+
+    /* fast look-up for nets */
+    typedef vtr::vector<ModuleId, std::map<ModuleId, std::vector<std::map<ModulePortId, std::vector<ModuleNetId>>>>> NetLookup;
+    mutable NetLookup net_lookup_; /* [module_ids][module_ids][instance_ids][port_ids][pin_ids] */ 
 };
 
 #endif

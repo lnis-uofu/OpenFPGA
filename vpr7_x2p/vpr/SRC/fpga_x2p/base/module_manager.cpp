@@ -148,12 +148,29 @@ ModuleId ModuleManager::add_module(const std::string& name) {
   port_is_register_.emplace_back();
   port_preproc_flags_.emplace_back();
 
+  net_ids_.emplace_back();
+  net_names_.emplace_back();
+  net_src_module_ids_.emplace_back();
+  net_src_instance_ids_.emplace_back();
+  net_src_port_ids_.emplace_back();
+  net_src_pin_ids_.emplace_back();
+
+  net_sink_module_ids_.emplace_back();
+  net_sink_instance_ids_.emplace_back();
+  net_sink_port_ids_.emplace_back();
+  net_sink_pin_ids_.emplace_back();
+
   /* Register in the name-to-id map */
   name_id_map_[name] = module;
 
   /* Build port lookup */
   port_lookup_.emplace_back();
   port_lookup_[module].resize(NUM_MODULE_PORT_TYPES);
+
+  /* Build fast look-up for nets */
+  net_lookup_.emplace_back();
+  /* Reserve the instance 0 for the module */
+  net_lookup_[module][module].emplace_back();
 
   /* Return the new id */
   return module;
@@ -176,6 +193,10 @@ ModulePortId ModuleManager::add_port(const ModuleId& module,
 
   /* Update fast look-up for port */
   port_lookup_[module][port_type].push_back(port);
+
+  /* Update fast look-up for nets */
+  VTR_ASSERT_SAFE(1 == net_lookup_[module][module].size());
+  net_lookup_[module][module][0][port].resize(port_info.get_width());
 
   return port;
 }
@@ -234,6 +255,106 @@ void ModuleManager::add_child_module(const ModuleId& parent_module, const Module
     /* Increase the counter of instances */
     num_child_instances_[parent_module][child_it - children_[parent_module].begin()]++;
   }
+
+  /* Update fast look-up for nets */
+  size_t instance_id = net_lookup_[parent_module][child_module].size();
+  /* Find the ports for the child module and update the fast look-up */
+  for (ModulePortId child_port : port_ids_[child_module]) {
+    net_lookup_[parent_module][child_module].emplace_back();
+    net_lookup_[parent_module][child_module][instance_id][child_port].resize(ports_[child_module][child_port].get_width());
+  } 
+}
+
+/* Add a net to the connection graph of the module */ 
+ModuleNetId ModuleManager::create_module_net(const ModuleId& module) {
+  /* Validate the module id */
+  VTR_ASSERT ( valid_module_id(module) );
+
+  /* Create an new id */
+  ModuleNetId net = ModuleNetId(net_ids_[module].size());
+  net_ids_[module].push_back(net);
+  
+  /* Allocate net-related data structures */
+  net_names_[module].emplace_back();
+  net_src_module_ids_[module].emplace_back();
+  net_src_instance_ids_[module].emplace_back();
+  net_src_port_ids_[module].emplace_back();
+  net_src_pin_ids_[module].emplace_back();
+
+  net_sink_module_ids_[module].emplace_back();
+  net_sink_instance_ids_[module].emplace_back();
+  net_sink_port_ids_[module].emplace_back();
+  net_sink_pin_ids_[module].emplace_back();
+
+  return net;
+}
+
+/* Add a source to a net in the connection graph */
+void ModuleManager::add_module_net_source(const ModuleId& module, const ModuleNetId& net,
+                                          const ModuleId& src_module, const size_t& instance_id,
+                                          const ModulePortId& src_port, const size_t& src_pin) {
+  /* Validate the module and net id */
+  VTR_ASSERT(valid_module_net_id(module, net));
+
+  /* Validate the source module */
+  VTR_ASSERT(valid_module_id(src_module));
+  net_src_module_ids_[module][net].push_back(src_module);
+
+  /* if it has the same id as module, our instance id will be by default 0 */
+  size_t src_instance_id = instance_id;
+  if (src_module == module) {
+    src_instance_id = 0;
+    net_src_instance_ids_[module][net].push_back(src_instance_id);
+  } else {
+    /* Check the instance id of the src module */
+    VTR_ASSERT (src_instance_id < num_instance(module, src_module));
+    net_src_instance_ids_[module][net].push_back(src_instance_id);
+  } 
+
+  /* Validate the port exists in the src module */
+  VTR_ASSERT(valid_module_port_id(src_module, src_port));
+  net_src_port_ids_[module][net].push_back(src_port);
+
+  /* Validate the pin id is in the range of the port width */
+  VTR_ASSERT(src_pin < module_port(src_module, src_port).get_width());
+  net_src_pin_ids_[module][net].push_back(src_pin);
+
+  /* Update fast look-up for nets */
+  net_lookup_[module][src_module][src_instance_id][src_port][src_pin] = net;
+}
+
+/* Add a sink to a net in the connection graph */
+void ModuleManager::add_module_net_sink(const ModuleId& module, const ModuleNetId& net,
+                                        const ModuleId& sink_module, const size_t& instance_id,
+                                        const ModulePortId& sink_port, const size_t& sink_pin) {
+  /* Validate the module and net id */
+  VTR_ASSERT(valid_module_net_id(module, net));
+
+  /* Validate the source module */
+  VTR_ASSERT(valid_module_id(sink_module));
+  net_sink_module_ids_[module][net].push_back(sink_module);
+
+  /* if it has the same id as module, our instance id will be by default 0 */
+  size_t sink_instance_id = instance_id;
+  if (sink_module == module) {
+    sink_instance_id = 0;
+    net_sink_instance_ids_[module][net].push_back(sink_instance_id);
+  } else {
+    /* Check the instance id of the src module */
+    VTR_ASSERT (sink_instance_id < num_instance(module, sink_module));
+    net_sink_instance_ids_[module][net].push_back(sink_instance_id);
+  } 
+
+  /* Validate the port exists in the sink module */
+  VTR_ASSERT(valid_module_port_id(sink_module, sink_port));
+  net_sink_port_ids_[module][net].push_back(sink_port);
+
+  /* Validate the pin id is in the range of the port width */
+  VTR_ASSERT(sink_pin < module_port(sink_module, sink_port).get_width());
+  net_sink_pin_ids_[module][net].push_back(sink_pin);
+
+  /* Update fast look-up for nets */
+  net_lookup_[module][sink_module][sink_instance_id][sink_port][sink_pin] = net;
 }
 
 /******************************************************************************
@@ -250,10 +371,21 @@ bool ModuleManager::valid_module_port_id(const ModuleId& module, const ModulePor
   return ( size_t(port) < port_ids_[module].size() ) && ( port == port_ids_[module][port] ); 
 }
 
+bool ModuleManager::valid_module_net_id(const ModuleId& module, const ModuleNetId& net) const {
+  if (false == valid_module_id(module)) {
+    return false;
+  }
+  return ( size_t(net) < net_ids_[module].size() ) && ( net == net_ids_[module][net] ); 
+}
+
 void ModuleManager::invalidate_name2id_map() {
   name_id_map_.clear();
 }
 
 void ModuleManager::invalidate_port_lookup() {
   port_lookup_.clear();
+}
+
+void ModuleManager::invalidate_net_lookup() {
+  net_lookup_.clear();
 }
