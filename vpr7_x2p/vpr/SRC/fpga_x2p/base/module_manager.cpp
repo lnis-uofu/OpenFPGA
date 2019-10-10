@@ -120,6 +120,42 @@ std::string ModuleManager::port_preproc_flag(const ModuleId& module, const Modul
   return port_preproc_flags_[module][port];
 }
 
+
+/* Find a net from an instance of a module */
+ModuleNetId ModuleManager::module_instance_port_net(const ModuleId& parent_module, 
+                                                    const ModuleId& child_module, const size_t& child_instance,
+                                                    const ModulePortId& child_port, const size_t& child_pin) const {
+  /* Validate parent_module */
+  VTR_ASSERT(valid_module_id(parent_module));
+  
+  /* Validate child_module */
+  VTR_ASSERT(valid_module_id(child_module));
+
+  /* Validate instance id */
+  if (child_module == parent_module) {
+    /* Assume a default instance id as zero */
+    VTR_ASSERT(0 == child_instance);
+  } else {
+    VTR_ASSERT(child_instance < num_instance(parent_module, child_module));
+  }
+
+  /* Validate child_port */
+  VTR_ASSERT(valid_module_port_id(child_module, child_port));
+
+  /* Validate child_pin */
+  VTR_ASSERT(child_pin < module_port(child_module, child_port).get_width());
+  
+  return net_lookup_[parent_module][child_module][child_instance][child_port][child_pin];
+}
+
+/* Find the name of net */
+std::string ModuleManager::net_name(const ModuleId& module, const ModuleNetId& net) const {
+  /* Validate module net */
+  VTR_ASSERT(valid_module_net_id(module, net));
+
+  return net_names_[module][net];
+}
+
 /******************************************************************************
  * Public Mutators
  ******************************************************************************/
@@ -196,7 +232,7 @@ ModulePortId ModuleManager::add_port(const ModuleId& module,
 
   /* Update fast look-up for nets */
   VTR_ASSERT_SAFE(1 == net_lookup_[module][module].size());
-  net_lookup_[module][module][0][port].resize(port_info.get_width());
+  net_lookup_[module][module][0][port].resize(port_info.get_width(), ModuleNetId::INVALID());
 
   return port;
 }
@@ -261,7 +297,7 @@ void ModuleManager::add_child_module(const ModuleId& parent_module, const Module
   /* Find the ports for the child module and update the fast look-up */
   for (ModulePortId child_port : port_ids_[child_module]) {
     net_lookup_[parent_module][child_module].emplace_back();
-    net_lookup_[parent_module][child_module][instance_id][child_port].resize(ports_[child_module][child_port].get_width());
+    net_lookup_[parent_module][child_module][instance_id][child_port].resize(ports_[child_module][child_port].get_width(), ModuleNetId::INVALID());
   } 
 }
 
@@ -287,6 +323,15 @@ ModuleNetId ModuleManager::create_module_net(const ModuleId& module) {
   net_sink_pin_ids_[module].emplace_back();
 
   return net;
+}
+
+/* Set the name of net */
+void ModuleManager::set_net_name(const ModuleId& module, const ModuleNetId& net,
+                                 const std::string& name) {
+  /* Validate module net */
+  VTR_ASSERT(valid_module_net_id(module, net));
+
+  net_names_[module][net] = name;
 }
 
 /* Add a source to a net in the connection graph */

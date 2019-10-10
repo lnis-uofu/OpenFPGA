@@ -52,6 +52,12 @@ class ModuleManager {
     bool port_is_register(const ModuleId& module, const ModulePortId& port) const;
     /* Return the pre-processing flag of a port */
     std::string port_preproc_flag(const ModuleId& module, const ModulePortId& port) const;
+    /* Find a net from an instance of a module */
+    ModuleNetId module_instance_port_net(const ModuleId& parent_module, 
+                                         const ModuleId& child_module, const size_t& child_instance,
+                                         const ModulePortId& child_port, const size_t& child_pin) const;
+    /* Find the name of net */
+    std::string net_name(const ModuleId& module, const ModuleNetId& net) const;
   public: /* Public mutators */
     /* Add a module */
     ModuleId add_module(const std::string& name);
@@ -70,6 +76,9 @@ class ModuleManager {
     void add_child_module(const ModuleId& parent_module, const ModuleId& child_module);
     /* Add a net to the connection graph of the module */ 
     ModuleNetId create_module_net(const ModuleId& module);
+    /* Set the name of net */
+    void set_net_name(const ModuleId& module, const ModuleNetId& net,
+                      const std::string& name);
     /* Add a source to a net in the connection graph */
     void add_module_net_source(const ModuleId& module, const ModuleNetId& net,
                                const ModuleId& src_module, const size_t& instance_id,
