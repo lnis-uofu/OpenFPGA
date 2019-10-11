@@ -406,6 +406,37 @@ std::string generate_verilog_port(const enum e_dump_verilog_port_type& verilog_p
   return verilog_line;
 }
 
+/********************************************************************
+ * Evaluate if two Verilog ports can be merged:
+ * If the port name is same, it can merged 
+ *******************************************************************/
+bool two_verilog_ports_mergeable(const BasicPort& portA,
+                                 const BasicPort& portB) {
+  if (0 == portA.get_name().compare(portB.get_name())) {
+    return true;
+  }
+  return false;
+}
+
+/********************************************************************
+ * Merge two Verilog ports, return the merged port
+ * The ports should have the same name
+ * The new LSB will be minimum of the LSBs of the two ports
+ * The new MSB will the maximum of the MSBs of the two ports
+ *******************************************************************/
+BasicPort merge_two_verilog_ports(const BasicPort& portA,
+                                  const BasicPort& portB) {
+  BasicPort merged_port;
+  
+  VTR_ASSERT(true == two_verilog_ports_mergeable(portA, portB));
+
+  merged_port.set_name(portA.get_name());
+  merged_port.set_lsb((size_t)std::min((int)portA.get_lsb(), (int)portB.get_lsb()));
+  merged_port.set_msb((size_t)std::max((int)portA.get_msb(), (int)portB.get_msb()));
+
+  return merged_port;
+}
+
 /************************************************
  * This function takes a list of ports and
  * combine the port string by comparing the name 

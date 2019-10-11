@@ -1,6 +1,8 @@
+#include <numeric>
 #include <algorithm>
 #include <limits>
-#include <cassert>
+
+#include "vtr_assert.h"
 
 #include "device_port.h"
 
@@ -62,6 +64,24 @@ size_t BasicPort::get_lsb() const {
 std::string BasicPort::get_name() const {
   return name_;
 } 
+
+/* Make a range of the pin indices */
+std::vector<size_t> BasicPort::pins() const {
+  std::vector<size_t> pin_indices; 
+
+  /* Return if the port is invalid */
+  if (false == is_valid()) {
+    return pin_indices; /* Return an empty vector */
+  }
+  /* For valid ports, create a vector whose length is the port width */
+  pin_indices.resize(get_width());
+  /* Fill in an incremental sequence */
+  std::iota(pin_indices.begin(), pin_indices.end(), get_lsb()); 
+  /* Ensure the last one is MSB */
+  VTR_ASSERT(get_msb() == pin_indices.back());
+
+  return pin_indices;
+}
 
 /* Mutators */
 /* copy */
@@ -188,7 +208,7 @@ void BasicPort::reset() {
 void BasicPort::combine(const BasicPort& port) {
   /* LSB follows the current LSB */
   /* MSB increases */
-  assert( 0 <  port.get_width() ); /* Make sure port is valid */
+  VTR_ASSERT(0 <  port.get_width() ); /* Make sure port is valid */
   /* If current port is invalid, we do not combine */
   if (0 == get_width()) {
     return;

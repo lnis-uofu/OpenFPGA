@@ -38,9 +38,13 @@ class ModuleManager {
   public: /* Types and ranges */
     typedef vtr::vector<ModuleId, ModuleId>::const_iterator module_iterator;
     typedef vtr::vector<ModuleNetId, ModuleNetId>::const_iterator module_net_iterator;
+    typedef vtr::vector<ModuleNetSrcId, ModuleNetSrcId>::const_iterator module_net_src_iterator;
+    typedef vtr::vector<ModuleNetSinkId, ModuleNetSinkId>::const_iterator module_net_sink_iterator;
 
     typedef vtr::Range<module_iterator> module_range;
     typedef vtr::Range<module_net_iterator> module_net_range;
+    typedef vtr::Range<module_net_src_iterator> module_net_src_range;
+    typedef vtr::Range<module_net_sink_iterator> module_net_sink_range;
 
   public: /* Public aggregators */
     /* Find all the modules */
@@ -51,6 +55,10 @@ class ModuleManager {
     std::vector<ModuleId> child_modules(const ModuleId& parent_module) const;
     /* Find all the instances under a parent module */
     std::vector<size_t> child_module_instances(const ModuleId& parent_module, const ModuleId& child_module) const;
+    /* Find the source ids of modules */
+    module_net_src_range module_net_sources(const ModuleId& module, const ModuleNetId& net) const;
+    /* Find the sink ids of modules */
+    module_net_sink_range module_net_sinks(const ModuleId& module, const ModuleNetId& net) const;
 
   public: /* Public accessors */
     size_t num_modules() const;
@@ -58,6 +66,7 @@ class ModuleManager {
     std::string module_name(const ModuleId& module_id) const;
     std::string module_port_type_str(const enum e_module_port_type& port_type) const;
     std::vector<BasicPort> module_ports_by_type(const ModuleId& module_id, const enum e_module_port_type& port_type) const;
+    std::vector<ModulePortId> module_port_ids_by_type(const ModuleId& module_id, const enum e_module_port_type& port_type) const;
     /* Find a port of a module by a given name */
     ModulePortId find_module_port(const ModuleId& module_id, const std::string& port_name) const;
     /* Find the Port information with a given port id */
@@ -79,21 +88,22 @@ class ModuleManager {
     /* Find the name of net */
     std::string net_name(const ModuleId& module, const ModuleNetId& net) const;
     /* Find the source modules of a net */
-    std::vector<ModuleId> net_source_modules(const ModuleId& module, const ModuleNetId& net) const;
+    vtr::vector<ModuleNetSrcId, ModuleId> net_source_modules(const ModuleId& module, const ModuleNetId& net) const;
     /* Find the ids of source instances of a net */
-    std::vector<size_t> net_source_instances(const ModuleId& module, const ModuleNetId& net) const;
+    vtr::vector<ModuleNetSrcId, size_t> net_source_instances(const ModuleId& module, const ModuleNetId& net) const;
     /* Find the source ports of a net */
-    std::vector<ModulePortId> net_source_ports(const ModuleId& module, const ModuleNetId& net) const;
+    vtr::vector<ModuleNetSrcId, ModulePortId> net_source_ports(const ModuleId& module, const ModuleNetId& net) const;
     /* Find the source pin indices of a net */
-    std::vector<size_t> net_source_pins(const ModuleId& module, const ModuleNetId& net) const;
+    vtr::vector<ModuleNetSrcId, size_t> net_source_pins(const ModuleId& module, const ModuleNetId& net) const;
+
     /* Find the sink modules of a net */
-    std::vector<ModuleId> net_sink_modules(const ModuleId& module, const ModuleNetId& net) const;
+    vtr::vector<ModuleNetSinkId, ModuleId> net_sink_modules(const ModuleId& module, const ModuleNetId& net) const;
     /* Find the ids of sink instances of a net */
-    std::vector<size_t> net_sink_instances(const ModuleId& module, const ModuleNetId& net) const;
+    vtr::vector<ModuleNetSinkId, size_t> net_sink_instances(const ModuleId& module, const ModuleNetId& net) const;
     /* Find the sink ports of a net */
-    std::vector<ModulePortId> net_sink_ports(const ModuleId& module, const ModuleNetId& net) const;
+    vtr::vector<ModuleNetSinkId, ModulePortId> net_sink_ports(const ModuleId& module, const ModuleNetId& net) const;
     /* Find the sink pin indices of a net */
-    std::vector<size_t> net_sink_pins(const ModuleId& module, const ModuleNetId& net) const;
+    vtr::vector<ModuleNetSinkId, size_t> net_sink_pins(const ModuleId& module, const ModuleNetId& net) const;
   public: /* Public mutators */
     /* Add a module */
     ModuleId add_module(const std::string& name);
@@ -116,13 +126,13 @@ class ModuleManager {
     void set_net_name(const ModuleId& module, const ModuleNetId& net,
                       const std::string& name);
     /* Add a source to a net in the connection graph */
-    void add_module_net_source(const ModuleId& module, const ModuleNetId& net,
-                               const ModuleId& src_module, const size_t& instance_id,
-                               const ModulePortId& src_port, const size_t& src_pin);
+    ModuleNetSrcId add_module_net_source(const ModuleId& module, const ModuleNetId& net,
+                                         const ModuleId& src_module, const size_t& instance_id,
+                                         const ModulePortId& src_port, const size_t& src_pin);
     /* Add a sink to a net in the connection graph */
-    void add_module_net_sink(const ModuleId& module, const ModuleNetId& net,
-                             const ModuleId& sink_module, const size_t& instance_id,
-                             const ModulePortId& sink_port, const size_t& sink_pin);
+    ModuleNetSinkId add_module_net_sink(const ModuleId& module, const ModuleNetId& net,
+                                        const ModuleId& sink_module, const size_t& instance_id,
+                                        const ModulePortId& sink_port, const size_t& sink_pin);
   public: /* Public validators/invalidators */
     bool valid_module_id(const ModuleId& module) const;
     bool valid_module_port_id(const ModuleId& module, const ModulePortId& port) const;
@@ -154,14 +164,19 @@ class ModuleManager {
      */
     vtr::vector<ModuleId, vtr::vector<ModuleNetId, ModuleNetId>> net_ids_;    /* List of nets for each Module */ 
     vtr::vector<ModuleId, vtr::vector<ModuleNetId, std::string>> net_names_;    /* Name of net */ 
-    vtr::vector<ModuleId, vtr::vector<ModuleNetId, std::vector<ModuleId>>> net_src_module_ids_;  /* Pin ids that drive the net */ 
-    vtr::vector<ModuleId, vtr::vector<ModuleNetId, std::vector<size_t>>> net_src_instance_ids_;  /* Pin ids that drive the net */ 
-    vtr::vector<ModuleId, vtr::vector<ModuleNetId, std::vector<ModulePortId>>> net_src_port_ids_;  /* Pin ids that drive the net */ 
-    vtr::vector<ModuleId, vtr::vector<ModuleNetId, std::vector<size_t>>> net_src_pin_ids_;  /* Pin ids that drive the net */ 
-    vtr::vector<ModuleId, vtr::vector<ModuleNetId, std::vector<ModuleId>>> net_sink_module_ids_;  /* Pin ids that the net drives */ 
-    vtr::vector<ModuleId, vtr::vector<ModuleNetId, std::vector<size_t>>> net_sink_instance_ids_;  /* Pin ids that drive the net */ 
-    vtr::vector<ModuleId, vtr::vector<ModuleNetId, std::vector<ModulePortId>>> net_sink_port_ids_;  /* Pin ids that drive the net */ 
-    vtr::vector<ModuleId, vtr::vector<ModuleNetId, std::vector<size_t>>> net_sink_pin_ids_;  /* Pin ids that drive the net */ 
+
+    vtr::vector<ModuleId, vtr::vector<ModuleNetId, vtr::vector<ModuleNetSrcId, ModuleNetSrcId>>> net_src_ids_;  /* Unique id of the source that drive the net */ 
+    vtr::vector<ModuleId, vtr::vector<ModuleNetId, vtr::vector<ModuleNetSrcId, ModuleId>>> net_src_module_ids_;  /* Pin ids that drive the net */ 
+    vtr::vector<ModuleId, vtr::vector<ModuleNetId, vtr::vector<ModuleNetSrcId, size_t>>> net_src_instance_ids_;  /* Pin ids that drive the net */ 
+    vtr::vector<ModuleId, vtr::vector<ModuleNetId, vtr::vector<ModuleNetSrcId, ModulePortId>>> net_src_port_ids_;  /* Pin ids that drive the net */ 
+    vtr::vector<ModuleId, vtr::vector<ModuleNetId, vtr::vector<ModuleNetSrcId, size_t>>> net_src_pin_ids_;  /* Pin ids that drive the net */ 
+
+
+    vtr::vector<ModuleId, vtr::vector<ModuleNetId, vtr::vector<ModuleNetSinkId, ModuleNetSinkId>>> net_sink_ids_;  /* Unique ids of the sink that the net drives */ 
+    vtr::vector<ModuleId, vtr::vector<ModuleNetId, vtr::vector<ModuleNetSinkId, ModuleId>>> net_sink_module_ids_;  /* Pin ids that the net drives */ 
+    vtr::vector<ModuleId, vtr::vector<ModuleNetId, vtr::vector<ModuleNetSinkId, size_t>>> net_sink_instance_ids_;  /* Pin ids that drive the net */ 
+    vtr::vector<ModuleId, vtr::vector<ModuleNetId, vtr::vector<ModuleNetSinkId, ModulePortId>>> net_sink_port_ids_;  /* Pin ids that drive the net */ 
+    vtr::vector<ModuleId, vtr::vector<ModuleNetId, vtr::vector<ModuleNetSinkId, size_t>>> net_sink_pin_ids_;  /* Pin ids that drive the net */ 
 
     /* fast look-up for module */
     std::map<std::string, ModuleId> name_id_map_;

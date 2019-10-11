@@ -56,6 +56,20 @@ std::vector<size_t> ModuleManager::child_module_instances(const ModuleId& parent
   return instance_range;
 }
 
+/* Find the source ids of modules */
+ModuleManager::module_net_src_range ModuleManager::module_net_sources(const ModuleId& module, const ModuleNetId& net) const {
+  /* Validate the module_id */
+  VTR_ASSERT(valid_module_net_id(module, net));
+  return vtr::make_range(net_src_ids_[module][net].begin(), net_src_ids_[module][net].end());
+}
+
+/* Find the sink ids of modules */
+ModuleManager::module_net_sink_range ModuleManager::module_net_sinks(const ModuleId& module, const ModuleNetId& net) const {
+  /* Validate the module_id */
+  VTR_ASSERT(valid_module_net_id(module, net));
+  return vtr::make_range(net_sink_ids_[module][net].begin(), net_sink_ids_[module][net].end());
+}
+
 /******************************************************************************
  * Public Accessors
  ******************************************************************************/
@@ -100,6 +114,24 @@ std::vector<BasicPort> ModuleManager::module_ports_by_type(const ModuleId& modul
 
   return ports;
 }
+
+/* Find a list of port ids of a module by a given types */
+std::vector<ModulePortId> ModuleManager::module_port_ids_by_type(const ModuleId& module_id, const enum e_module_port_type& port_type) const {
+  /* Validate the module_id */
+  VTR_ASSERT(valid_module_id(module_id));
+
+  std::vector<ModulePortId> port_ids;
+  for (const auto& port : port_ids_[module_id]) {
+    /* Skip unmatched ports */
+    if (port_type != port_types_[module_id][port]) {
+      continue;
+    }
+    port_ids.push_back(port_ids_[module_id][port]);
+  }
+
+  return port_ids;
+}
+
 
 /* Find a port of a module by a given name */
 ModulePortId ModuleManager::find_module_port(const ModuleId& module_id, const std::string& port_name) const {
@@ -207,7 +239,7 @@ std::string ModuleManager::net_name(const ModuleId& module, const ModuleNetId& n
 }
 
 /* Find the source modules of a net */
-std::vector<ModuleId> ModuleManager::net_source_modules(const ModuleId& module, const ModuleNetId& net) const {
+vtr::vector<ModuleNetSrcId, ModuleId> ModuleManager::net_source_modules(const ModuleId& module, const ModuleNetId& net) const {
   /* Validate module net */
   VTR_ASSERT(valid_module_net_id(module, net));
 
@@ -215,7 +247,7 @@ std::vector<ModuleId> ModuleManager::net_source_modules(const ModuleId& module, 
 }
 
 /* Find the ids of source instances of a net */
-std::vector<size_t> ModuleManager::net_source_instances(const ModuleId& module, const ModuleNetId& net) const {
+vtr::vector<ModuleNetSrcId, size_t> ModuleManager::net_source_instances(const ModuleId& module, const ModuleNetId& net) const {
   /* Validate module net */
   VTR_ASSERT(valid_module_net_id(module, net));
 
@@ -223,7 +255,7 @@ std::vector<size_t> ModuleManager::net_source_instances(const ModuleId& module, 
 }
 
 /* Find the source ports of a net */
-std::vector<ModulePortId> ModuleManager::net_source_ports(const ModuleId& module, const ModuleNetId& net) const {
+vtr::vector<ModuleNetSrcId, ModulePortId> ModuleManager::net_source_ports(const ModuleId& module, const ModuleNetId& net) const {
   /* Validate module net */
   VTR_ASSERT(valid_module_net_id(module, net));
 
@@ -231,7 +263,7 @@ std::vector<ModulePortId> ModuleManager::net_source_ports(const ModuleId& module
 }
 
 /* Find the source pin indices of a net */
-std::vector<size_t> ModuleManager::net_source_pins(const ModuleId& module, const ModuleNetId& net) const {
+vtr::vector<ModuleNetSrcId, size_t> ModuleManager::net_source_pins(const ModuleId& module, const ModuleNetId& net) const {
   /* Validate module net */
   VTR_ASSERT(valid_module_net_id(module, net));
 
@@ -239,7 +271,7 @@ std::vector<size_t> ModuleManager::net_source_pins(const ModuleId& module, const
 }
 
 /* Find the sink modules of a net */
-std::vector<ModuleId> ModuleManager::net_sink_modules(const ModuleId& module, const ModuleNetId& net) const {
+vtr::vector<ModuleNetSinkId, ModuleId> ModuleManager::net_sink_modules(const ModuleId& module, const ModuleNetId& net) const {
   /* Validate module net */
   VTR_ASSERT(valid_module_net_id(module, net));
 
@@ -247,7 +279,7 @@ std::vector<ModuleId> ModuleManager::net_sink_modules(const ModuleId& module, co
 }
 
 /* Find the ids of sink instances of a net */
-std::vector<size_t> ModuleManager::net_sink_instances(const ModuleId& module, const ModuleNetId& net) const {
+vtr::vector<ModuleNetSinkId, size_t> ModuleManager::net_sink_instances(const ModuleId& module, const ModuleNetId& net) const {
   /* Validate module net */
   VTR_ASSERT(valid_module_net_id(module, net));
 
@@ -255,7 +287,7 @@ std::vector<size_t> ModuleManager::net_sink_instances(const ModuleId& module, co
 }
 
 /* Find the sink ports of a net */
-std::vector<ModulePortId> ModuleManager::net_sink_ports(const ModuleId& module, const ModuleNetId& net) const {
+vtr::vector<ModuleNetSinkId, ModulePortId> ModuleManager::net_sink_ports(const ModuleId& module, const ModuleNetId& net) const {
   /* Validate module net */
   VTR_ASSERT(valid_module_net_id(module, net));
 
@@ -263,7 +295,7 @@ std::vector<ModulePortId> ModuleManager::net_sink_ports(const ModuleId& module, 
 }
 
 /* Find the sink pin indices of a net */
-std::vector<size_t> ModuleManager::net_sink_pins(const ModuleId& module, const ModuleNetId& net) const {
+vtr::vector<ModuleNetSinkId, size_t> ModuleManager::net_sink_pins(const ModuleId& module, const ModuleNetId& net) const {
   /* Validate module net */
   VTR_ASSERT(valid_module_net_id(module, net));
 
@@ -300,11 +332,13 @@ ModuleId ModuleManager::add_module(const std::string& name) {
 
   net_ids_.emplace_back();
   net_names_.emplace_back();
+  net_src_ids_.emplace_back();
   net_src_module_ids_.emplace_back();
   net_src_instance_ids_.emplace_back();
   net_src_port_ids_.emplace_back();
   net_src_pin_ids_.emplace_back();
 
+  net_sink_ids_.emplace_back();
   net_sink_module_ids_.emplace_back();
   net_sink_instance_ids_.emplace_back();
   net_sink_port_ids_.emplace_back();
@@ -426,11 +460,13 @@ ModuleNetId ModuleManager::create_module_net(const ModuleId& module) {
   
   /* Allocate net-related data structures */
   net_names_[module].emplace_back();
+  net_src_ids_[module].emplace_back();
   net_src_module_ids_[module].emplace_back();
   net_src_instance_ids_[module].emplace_back();
   net_src_port_ids_[module].emplace_back();
   net_src_pin_ids_[module].emplace_back();
 
+  net_sink_ids_[module].emplace_back();
   net_sink_module_ids_[module].emplace_back();
   net_sink_instance_ids_[module].emplace_back();
   net_sink_port_ids_[module].emplace_back();
@@ -449,11 +485,15 @@ void ModuleManager::set_net_name(const ModuleId& module, const ModuleNetId& net,
 }
 
 /* Add a source to a net in the connection graph */
-void ModuleManager::add_module_net_source(const ModuleId& module, const ModuleNetId& net,
-                                          const ModuleId& src_module, const size_t& instance_id,
-                                          const ModulePortId& src_port, const size_t& src_pin) {
+ModuleNetSrcId ModuleManager::add_module_net_source(const ModuleId& module, const ModuleNetId& net,
+                                                    const ModuleId& src_module, const size_t& instance_id,
+                                                    const ModulePortId& src_port, const size_t& src_pin) {
   /* Validate the module and net id */
   VTR_ASSERT(valid_module_net_id(module, net));
+
+  /* Create a new id for src node */
+  ModuleNetSrcId net_src = ModuleNetSrcId(net_src_ids_[module][net].size());
+  net_src_ids_[module][net].push_back(net_src);
 
   /* Validate the source module */
   VTR_ASSERT(valid_module_id(src_module));
@@ -480,14 +520,20 @@ void ModuleManager::add_module_net_source(const ModuleId& module, const ModuleNe
 
   /* Update fast look-up for nets */
   net_lookup_[module][src_module][src_instance_id][src_port][src_pin] = net;
+
+  return net_src;
 }
 
 /* Add a sink to a net in the connection graph */
-void ModuleManager::add_module_net_sink(const ModuleId& module, const ModuleNetId& net,
-                                        const ModuleId& sink_module, const size_t& instance_id,
-                                        const ModulePortId& sink_port, const size_t& sink_pin) {
+ModuleNetSinkId ModuleManager::add_module_net_sink(const ModuleId& module, const ModuleNetId& net,
+                                                   const ModuleId& sink_module, const size_t& instance_id,
+                                                   const ModulePortId& sink_port, const size_t& sink_pin) {
   /* Validate the module and net id */
   VTR_ASSERT(valid_module_net_id(module, net));
+
+  /* Create a new id for sink node */
+  ModuleNetSinkId net_sink = ModuleNetSinkId(net_sink_ids_[module][net].size());
+  net_sink_ids_[module][net].push_back(net_sink);
 
   /* Validate the source module */
   VTR_ASSERT(valid_module_id(sink_module));
@@ -514,6 +560,8 @@ void ModuleManager::add_module_net_sink(const ModuleId& module, const ModuleNetI
 
   /* Update fast look-up for nets */
   net_lookup_[module][sink_module][sink_instance_id][sink_port][sink_pin] = net;
+
+  return net_sink;
 }
 
 /******************************************************************************

@@ -8,8 +8,9 @@
 #include <fstream>
 #include "module_manager.h"
 
-void writer_verilog_module_to_file(std::fstream& fp,
-                                   const ModuleManager& module_manager,
-                                   const ModuleId& module_id);
+void write_verilog_module_to_file(std::fstream& fp,
+                                  const ModuleManager& module_manager,
+                                  const ModuleId& module_id,
+                                  const bool& use_explicit_port_map);
 
 #endif

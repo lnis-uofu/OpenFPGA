@@ -260,3 +260,31 @@ void add_pb_type_ports_to_module_manager(ModuleManager& module_manager,
   }
 }
 
+/********************************************************************
+ * Identify if a net is a local wire inside a module: 
+ * A net is a local wire if it connects between two instances,
+ * It means that any of its source and sink modules should not include current module_id
+ *******************************************************************/
+bool module_net_is_local_wire(const ModuleManager& module_manager, 
+                              const ModuleId& module_id, const ModuleNetId& module_net) {
+  /* A flag to identify local wire */
+  /* Check all the sink modules of the net, 
+   * if we have a source module is the current module, this is not local wire 
+   */
+  for (ModuleId src_module : module_manager.net_source_modules(module_id, module_net)) {
+    if (module_id == src_module) {
+      /* Here, this is not a local wire */
+      return false;
+    }
+  }
+
+  /* Check all the sink modules of the net */
+  for (ModuleId sink_module : module_manager.net_sink_modules(module_id, module_net)) {
+    if (module_id == sink_module) {
+      /* Here, this is not a local wire */
+      return false;
+    }
+  }
+
+  return true;
+}

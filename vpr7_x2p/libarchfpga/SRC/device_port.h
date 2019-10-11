@@ -6,6 +6,7 @@
 #define DEVICE_PORT_H
 
 #include <string>
+#include <vector>
 
 /* A basic port */
 class BasicPort {
@@ -22,6 +23,7 @@ class BasicPort {
     size_t get_lsb() const; /* get the LSB */
     std::string get_name() const; /* get the name */
     bool is_valid() const; /* check if port size is valid > 0 */
+    std::vector<size_t> pins() const; /* Make a range of the pin indices */
   public: /* Mutators */
     void set(const BasicPort& basic_port); /* copy */
     void set_name(const std::string& name); /* set the port LSB and MSB */
