@@ -474,6 +474,9 @@ void add_module_nets_between_logic_and_memory_sram_ports(ModuleManager& module_m
     /* Create a net for each pin */
     for (size_t pin_id = 0; pin_id < logic_module_sram_ports[port_index].pins().size(); ++pin_id) {
       ModuleNetId net = module_manager.create_module_net(parent_module);
+      /* TODO: Give a name to make it clear */
+      std::string net_name = module_manager.module_name(logic_module) + std::string("_") + logic_module_sram_ports[port_index].get_name();
+      module_manager.set_net_name(parent_module, net, net_name);
       /* Add net source */
       module_manager.add_module_net_source(parent_module, net, logic_module, logic_instance_id, logic_module_sram_port_ids[port_index], logic_module_sram_ports[port_index].pins()[pin_id]);
       /* Add net sink */

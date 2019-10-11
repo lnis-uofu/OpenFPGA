@@ -464,19 +464,16 @@ std::vector<BasicPort> combine_verilog_ports(const std::vector<BasicPort>& ports
       continue;
     } 
     /* Identify if the port name can be potentially merged: if the port name is already in the merged port list, it may be merged */
+    bool merged = false;
     for (auto& merged_port : merged_ports) {
       if (0 != port.get_name().compare(merged_port.get_name())) {
-        /* Unable to merge, add the port to merged port list */
-        merged_ports.push_back(port);
-        /* Go to next */
-        break;
+        /* Unable to merge, Go to next */
+        continue;
       }
       /* May be merged, check LSB of port and MSB of merged_port */
       if (merged_port.get_msb() + 1 != port.get_lsb()) {
-        /* Unable to merge, add the port to merged port list */
-        merged_ports.push_back(port);
-        /* Go to next */
-        break;
+        /* Unable to merge, Go to next */
+        continue;
       } 
       /* Reach here, we should merge the ports,
        * LSB of merged_port remains the same,
@@ -484,7 +481,12 @@ std::vector<BasicPort> combine_verilog_ports(const std::vector<BasicPort>& ports
        * to the MSB of port 
        */
       merged_port.set_msb(port.get_msb());
+      merged = true;
       break;
+    }
+    if (false == merged) {
+      /* Unable to merge, add the port to merged port list */
+      merged_ports.push_back(port);
     }
   }
 

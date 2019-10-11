@@ -50,6 +50,7 @@ BasicPort generate_verilog_port_for_module_net(const ModuleManager& module_manag
   }
 
   /* Reach here, this is a local wire */
+
   std::string net_name;
 
   /* Each net must only one 1 source */ 
@@ -64,9 +65,14 @@ BasicPort generate_verilog_port_for_module_net(const ModuleManager& module_manag
   /* Get the pin id */
   size_t net_src_pin = module_manager.net_source_pins(module_id, module_net)[ModuleNetSrcId(0)]; 
 
-  net_name  = module_manager.module_name(net_src_module); 
-  net_name += std::string("_") + std::to_string(net_src_instance) + std::string("_");
-  net_name += module_manager.module_port(module_id, net_src_port).get_name();
+  /* Load user-defined name if we have it */
+  if (false == module_manager.net_name(module_id, module_net).empty()) {
+    net_name = module_manager.net_name(module_id, module_net);
+  } else {
+    net_name  = module_manager.module_name(net_src_module); 
+    net_name += std::string("_") + std::to_string(net_src_instance) + std::string("_");
+    net_name += module_manager.module_port(module_id, net_src_port).get_name();
+  }
   
   return BasicPort(net_name, net_src_pin, net_src_pin);
 }
@@ -213,7 +219,7 @@ void write_verilog_instance_to_file(std::fstream& fp,
   /* Print module name */
   fp << "\t" << module_manager.module_name(child_module) << " ";
   /* Print instance name, <name>_<num_instance_in_parent_module> */
-  fp << module_manager.module_name(child_module) << "_" << module_manager.num_instance(parent_module, child_module) << "_" << " (" << std::endl;
+  fp << module_manager.module_name(child_module) << "_" << instance_id << "_" << " (" << std::endl;
 
   /* Print each port with/without explicit port map */
   /* port type2type mapping */

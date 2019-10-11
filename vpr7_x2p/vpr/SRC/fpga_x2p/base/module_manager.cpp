@@ -50,7 +50,7 @@ std::vector<size_t> ModuleManager::child_module_instances(const ModuleId& parent
   VTR_ASSERT(child_index != children_[parent_module].size());
   
   /* Create a vector, with sequentially increasing numbers */
-  std::vector<size_t> instance_range(num_child_instances_[parent_module][child_index]);
+  std::vector<size_t> instance_range(num_child_instances_[parent_module][child_index], 0);
   std::iota(instance_range.begin(), instance_range.end(), 0);
 
   return instance_range;
