@@ -14,6 +14,12 @@
 #include "verilog_module_writer.h"
 
 /********************************************************************
+ * Local constant variables for naming purpose 
+          instance_port.set_name(VERILOG_MODULE_LOCAL_GND_WIRE_NAME);
+ *******************************************************************/
+constexpr char* VERILOG_MODULE_LOCAL_GND_WIRE_NAME = "VERILOG_CONSTANT_GND";
+
+/********************************************************************
  * Name a net for a local wire for a verilog module 
  * 1. If this is a local wire, name it after the <src_module_name>_<instance_id>_<src_port_name>
  * 2. If this is not a local wire, name it after the port name of parent module 
@@ -111,6 +117,79 @@ std::vector<BasicPort> find_verilog_module_local_wires(const ModuleManager& modu
 }
 
 /********************************************************************
+ * Print a Verilog wire connection 
+ * We search all the sources of the net, 
+ * if we find a module input, we try to find a module output 
+ * among the sinks of the net
+ * If we find such a pair, we print a wire connection 
+ *******************************************************************/
+static 
+void print_verilog_module_local_short_connection(std::fstream& fp, 
+                                                 const ModuleManager& module_manager,
+                                                 const ModuleId& module_id,
+                                                 const ModuleNetId& module_net) {
+  /* Ensure a valid file stream */
+  check_file_handler(fp);
+
+  for (ModuleNetSrcId net_src : module_manager.module_net_sources(module_id, module_net)) {
+    ModuleId src_module = module_manager.net_source_modules(module_id, module_net)[net_src];
+    if (module_id != src_module) {
+      continue;
+    }
+    /* Find the source port and pin information */
+    ModulePortId src_port_id = module_manager.net_source_ports(module_id, module_net)[net_src];
+    size_t src_pin = module_manager.net_source_pins(module_id, module_net)[net_src];
+    BasicPort src_port(module_manager.module_port(module_id, src_port_id).get_name(), src_pin, src_pin);
+
+    /* We have found a module input, now check all the sink modules of the net */
+    for (ModuleNetSinkId net_sink : module_manager.module_net_sinks(module_id, module_net)) {
+      ModuleId sink_module = module_manager.net_sink_modules(module_id, module_net)[net_sink];
+      if (module_id != sink_module) {
+        continue;
+      }
+
+      /* Find the sink port and pin information */
+      ModulePortId sink_port_id = module_manager.net_sink_ports(module_id, module_net)[net_sink];
+      size_t sink_pin = module_manager.net_sink_pins(module_id, module_net)[net_sink];
+      BasicPort sink_port(module_manager.module_port(module_id, sink_port_id).get_name(), sink_pin, sink_pin);
+
+      /* We need to print a wire connection here */
+      print_verilog_wire_connection(fp, sink_port, src_port, false);
+    }
+  }
+}
+
+/********************************************************************
+ * Print short connections inside a Verilog module
+ * The short connection is defined as the direct connection
+ * between an input port of the module and an output port of the module
+ * This type of connection is not covered when printing Verilog instances
+ * Therefore, they are covered in this function 
+ *
+ *            module
+ *            +-----------------------------+
+ *            |                             |
+ *  inputA--->|---------------------------->|--->outputB
+ *            |                             |
+ *            |                             |
+ *            |                             |
+ *            +-----------------------------+
+ *******************************************************************/
+static 
+void print_verilog_module_local_short_connections(std::fstream& fp, 
+                                                  const ModuleManager& module_manager,
+                                                  const ModuleId& module_id) {
+  /* Local wires come from the child modules */
+  for (ModuleNetId module_net : module_manager.module_nets(module_id)) {
+    /* We only care the nets that indicate short connections */ 
+    if (false == module_net_include_local_short_connection(module_manager, module_id, module_net)) {
+      continue;
+    }
+    print_verilog_module_local_short_connection(fp, module_manager, module_id, module_net); 
+  }
+}
+
+/********************************************************************
  * Write a Verilog instance to a file
  * This function will name the input and output connections to
  * the inputs/output or local wires available in the parent module
@@ -173,8 +252,18 @@ void write_verilog_instance_to_file(std::fstream& fp,
         /* Find the net linked to the pin */
         ModuleNetId net = module_manager.module_instance_port_net(parent_module, child_module, instance_id, 
                                                                   child_port_id, child_pin);
-        /* Find the name for this child port */
-        BasicPort instance_port = generate_verilog_port_for_module_net(module_manager, parent_module, net);
+        BasicPort instance_port;
+        if (ModuleNetId::INVALID() == net) {
+          /* For unused net: assign a constant 0 value 
+           * TODO: make it flexible to select between 0 and 1 
+           */
+          /* TODO: output a warning? This could be potential issues for Verilog netlists */
+          instance_port.set_name(VERILOG_MODULE_LOCAL_GND_WIRE_NAME);
+          instance_port.set_width(1); 
+        } else {
+          /* Find the name for this child port */
+          instance_port = generate_verilog_port_for_module_net(module_manager, parent_module, net);
+        }
         /* Create the port information for the net */
         instance_ports.push_back(instance_port);
       } 
@@ -194,7 +283,6 @@ void write_verilog_instance_to_file(std::fstream& fp,
   
   /* Print an end to the instance */
   fp << ");" << std::endl;
-
 }
 
 /********************************************************************
@@ -215,7 +303,10 @@ void write_verilog_module_to_file(std::fstream& fp,
   /* Print an empty line as splitter */
   fp << std::endl;
    
-  /* TODO: Print internal wires */
+  /* Print constant GND wires */
+  BasicPort constant_gnd_local_wire(VERILOG_MODULE_LOCAL_GND_WIRE_NAME, 1);
+  fp << generate_verilog_port(VERILOG_PORT_WIRE, constant_gnd_local_wire) << ";" << std::endl;
+  /* Print internal wires */
   std::vector<BasicPort> local_wires = find_verilog_module_local_wires(module_manager, module_id);
   for (BasicPort local_wire : local_wires) {
     fp << generate_verilog_port(VERILOG_PORT_WIRE, local_wire) << ";" << std::endl;
@@ -224,7 +315,8 @@ void write_verilog_module_to_file(std::fstream& fp,
   /* Print an empty line as splitter */
   fp << std::endl;
 
-  /* TODO: Print local connection (from module inputs to output! */
+  /* Print local connection (from module inputs to output! */
+  print_verilog_module_local_short_connections(fp, module_manager, module_id);
  
   /* Print an empty line as splitter */
   fp << std::endl;

@@ -267,7 +267,6 @@ void add_pb_type_ports_to_module_manager(ModuleManager& module_manager,
  *******************************************************************/
 bool module_net_is_local_wire(const ModuleManager& module_manager, 
                               const ModuleId& module_id, const ModuleNetId& module_net) {
-  /* A flag to identify local wire */
   /* Check all the sink modules of the net, 
    * if we have a source module is the current module, this is not local wire 
    */
@@ -287,4 +286,43 @@ bool module_net_is_local_wire(const ModuleManager& module_manager,
   }
 
   return true;
+}
+
+/********************************************************************
+ * Identify if a net is a local short connection inside a module: 
+ * The short connection is defined as the direct connection
+ * between an input port of the module and an output port of the module
+ *
+ *             module
+ *            +-----------------------------+
+ *            |                             |
+ *  inputA--->|---------------------------->|--->outputB
+ *            |                             |
+ *            |                             |
+ *            |                             |
+ *            +-----------------------------+
+ *******************************************************************/
+bool module_net_include_local_short_connection(const ModuleManager& module_manager, 
+                                               const ModuleId& module_id, const ModuleNetId& module_net) {
+  /* Check all the sink modules of the net, 
+   * if we have a source module is the current module, this is not local wire 
+   */
+  bool contain_module_input = false;
+  for (ModuleId src_module : module_manager.net_source_modules(module_id, module_net)) {
+    if (module_id == src_module) {
+      contain_module_input = true;
+      break;
+    }
+  }
+
+  /* Check all the sink modules of the net */
+  bool contain_module_output = false;
+  for (ModuleId sink_module : module_manager.net_sink_modules(module_id, module_net)) {
+    if (module_id == sink_module) {
+      contain_module_output = true;
+      break;
+    }
+  }
+
+  return contain_module_input & contain_module_output;
 }
