@@ -156,11 +156,26 @@ void print_verilog_primitive_block(std::fstream& fp,
   /* Add nets to connect the logic model ports to pb_type ports */
   add_primitive_pb_type_module_nets(module_manager, primitive_module, logic_module, logic_instance_id, circuit_lib, primitive_pb_graph_node->pb_type);
 
-  /* TODO: add the associated memory module as a child of primitive module */
+  /* Add the associated memory module as a child of primitive module */
+  std::string memory_module_name = generate_memory_module_name(circuit_lib, primitive_model, sram_model, std::string(verilog_mem_posfix));
+  ModuleId memory_module = module_manager.find_module(memory_module_name);
 
-  /* TODO: Add nets to connect regular and mode-select SRAM ports to the SRAM port of memory module */
-
-  /* TODO: write the verilog module */
+  /* If there is no memory module required, we can skip the assocated net addition */
+  if (ModuleId::INVALID() != memory_module) {
+    size_t memory_instance_id = module_manager.num_instance(primitive_module, memory_module); 
+    /* Add the memory module as a child of primitive module */
+    module_manager.add_child_module(primitive_module, memory_module);
+  
+    /* Add nets to connect regular and mode-select SRAM ports to the SRAM port of memory module */
+    add_module_nets_between_logic_and_memory_sram_bus(module_manager, primitive_module, 
+                                                      logic_module, logic_instance_id,
+                                                      memory_module, memory_instance_id,
+                                                      circuit_lib, primitive_model);
+    /* TODO: Add nets to connect configuration ports from memory module to primitive module */
+    /* TODO: Add nets to connect formal verification ports from memory module to primitive module */
+  }
+  
+  /* Write the verilog module */
   write_verilog_module_to_file(fp, module_manager, primitive_module, use_explicit_mapping);
 
   /* Add an empty line as a splitter */

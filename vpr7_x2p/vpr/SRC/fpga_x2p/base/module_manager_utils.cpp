@@ -12,10 +12,12 @@
 #include "spice_types.h"
 
 #include "circuit_library.h"
+#include "circuit_library_utils.h"
 #include "module_manager.h"
 
 #include "fpga_x2p_naming.h"
 #include "fpga_x2p_pbtypes_utils.h"
+#include "fpga_x2p_mem_utils.h"
 
 #include "module_manager_utils.h"
 
@@ -396,4 +398,234 @@ void add_primitive_pb_type_module_nets(ModuleManager& module_manager,
     }
   } 
 }
+
+/********************************************************************
+ * Add the port-to-port connection between a logic module 
+ * and a memory module 
+ * Create nets to wire SRAM ports between logic module and memory module  
+ *
+ * The information about SRAM ports of logic module are stored in the
+ * mem_output_bus_ports, where element [0] denotes the SRAM port while
+ * element [1] denotes the SRAMb port
+ *
+ *         +---------+                          +--------+
+ *         |         | regular SRAM port        |        |
+ *         |  Logic  |-----------------------+  | Memory |
+ *         | Module  | mode-select SRAM port |->| Module |
+ *         |         |-----------------------+  |        |
+ *         +---------+                          +--------+
+ *
+ * There could be multiple SRAM ports of logic module, which are wired to
+ * the SRAM ports of memory module
+ *
+ * Note: this function SHOULD be called after the pb_type_module is created
+ * and its child module (logic_module and memory_module) is created! 
+ *
+ * Note: this function only handle either SRAM or SRAMb ports.
+ *       So, this function may be called twice to complete the wiring 
+ *******************************************************************/
+static 
+void add_module_nets_between_logic_and_memory_sram_ports(ModuleManager& module_manager,
+                                                         const ModuleId& parent_module,
+                                                         const ModuleId& logic_module,
+                                                         const size_t& logic_instance_id,
+                                                         const ModuleId& memory_module,
+                                                         const size_t& memory_instance_id, 
+                                                         const std::vector<ModulePortId>& logic_module_sram_port_ids,
+                                                         const ModulePortId& mem_module_sram_port_id) {
+  /* Find mem_output_bus ports in logic module */
+  std::vector<BasicPort> logic_module_sram_ports;
+  for (const ModulePortId& logic_module_sram_port_id : logic_module_sram_port_ids) {
+    logic_module_sram_ports.push_back(module_manager.module_port(logic_module, logic_module_sram_port_id));
+  }
+ 
+  /* Create a list of virtual ports to align with the SRAM port of logic module
+   * Physical ports:
+   *
+   *      logic_module_sram_port[0]   logic_module_sram_port[1]
+   *
+   *      LSB[0]------------>MSB[0]   LSB------------------>MSB 
+   *
+   *      memory_sram_port
+   *      LSBY---------------------------------------------->MSBY  
+   *
+   * Virtual ports:
+   *      mem_module_sram_port[0]     mem_module_sram_port[1]
+   *      LSBY--------------->MSBX    MSBX+1------------------>MSBY 
+   *
+   */
+  BasicPort mem_module_port = module_manager.module_port(memory_module, mem_module_sram_port_id);
+  std::vector<BasicPort> virtual_mem_module_ports;
+
+  /* Create a counter for the LSB of virtual ports */
+  size_t port_lsb = 0;
+  for (const BasicPort& logic_module_sram_port : logic_module_sram_ports) {
+    BasicPort virtual_port;
+    virtual_port.set_name(mem_module_port.get_name());
+    virtual_port.set_width(port_lsb, port_lsb + logic_module_sram_port.get_width() - 1);
+    virtual_mem_module_ports.push_back(virtual_port);
+    port_lsb = virtual_port.get_msb() + 1;
+  }
+  /* port_lsb should be aligned with the MSB of memory_sram_port */
+  VTR_ASSERT(port_lsb == mem_module_port.get_msb() + 1);
+
+  /* Wire port to port */
+  for (size_t port_index = 0; port_index < logic_module_sram_ports.size(); ++port_index) {
+    /* Create a net for each pin */
+    for (size_t pin_id = 0; pin_id < logic_module_sram_ports[port_index].pins().size(); ++pin_id) {
+      ModuleNetId net = module_manager.create_module_net(parent_module);
+      /* Add net source */
+      module_manager.add_module_net_source(parent_module, net, logic_module, logic_instance_id, logic_module_sram_port_ids[port_index], logic_module_sram_ports[port_index].pins()[pin_id]);
+      /* Add net sink */
+      module_manager.add_module_net_sink(parent_module, net, memory_module, memory_instance_id, mem_module_sram_port_id, virtual_mem_module_ports[port_index].pins()[pin_id]);
+    }
+  }
+}
+
+/********************************************************************
+ * Add the port-to-port connection between a logic module 
+ * and a memory module 
+ * Create nets to wire SRAM ports between logic module and memory module  
+ *
+ *
+ *         +---------+                        +--------+
+ *         |         |  SRAM ports            |        |
+ *         |  Logic  |----------------------->| Memory |
+ *         | Module  |  SRAMb ports           | Module |
+ *         |         |----------------------->|        |
+ *         +---------+                        +--------+
+ *
+ * Note: this function SHOULD be called after the pb_type_module is created
+ * and its child module (logic_module and memory_module) is created! 
+ *
+ *******************************************************************/
+void add_module_nets_between_logic_and_memory_sram_bus(ModuleManager& module_manager,
+                                                       const ModuleId& parent_module,
+                                                       const ModuleId& logic_module,
+                                                       const size_t& logic_instance_id,
+                                                       const ModuleId& memory_module,
+                                                       const size_t& memory_instance_id, 
+                                                       const CircuitLibrary& circuit_lib,
+                                                       const CircuitModelId& logic_model) {
+
+  /* Connect SRAM port */
+  /* Find SRAM ports in the circuit model for logic module */
+  std::vector<std::string> logic_model_sram_port_names;
+  /* Regular sram port goes first */
+  for (CircuitPortId regular_sram_port : find_circuit_regular_sram_ports(circuit_lib, logic_model)) {
+    logic_model_sram_port_names.push_back(circuit_lib.port_lib_name(regular_sram_port));
+  }
+  /* Mode-select sram port goes first */
+  for (CircuitPortId mode_select_sram_port : find_circuit_mode_select_sram_ports(circuit_lib, logic_model)) {
+    logic_model_sram_port_names.push_back(circuit_lib.port_lib_name(mode_select_sram_port));
+  }
+  /* Find the port ids in the memory */
+  std::vector<ModulePortId> logic_module_sram_port_ids;
+  for (const std::string& logic_model_sram_port_name : logic_model_sram_port_names) {
+    /* Skip non-exist ports */
+    if (ModulePortId::INVALID() == module_manager.find_module_port(logic_module, logic_model_sram_port_name)) {
+      continue;
+    }
+    logic_module_sram_port_ids.push_back(module_manager.find_module_port(logic_module, logic_model_sram_port_name));
+  }
+
+  /* Get the SRAM port name of memory model */
+  /* TODO: this should be a constant expression and it should be the same for all the memory module! */
+  std::string memory_model_sram_port_name = generate_configuration_chain_data_out_name();
+  /* Find the corresponding ports in memory module */ 
+  ModulePortId mem_module_sram_port_id = module_manager.find_module_port(memory_module, memory_model_sram_port_name);
+
+  /* Do wiring only when we have sram ports */
+  if ( (false == logic_module_sram_port_ids.empty())
+    || (ModulePortId::INVALID() == mem_module_sram_port_id) ) {
+    add_module_nets_between_logic_and_memory_sram_ports(module_manager, parent_module, 
+                                                        logic_module, logic_instance_id,
+                                                        memory_module, memory_instance_id,
+                                                        logic_module_sram_port_ids, mem_module_sram_port_id);
+  }
+
+  /* Connect SRAMb port */
+  /* Find SRAM ports in the circuit model for logic module */
+  std::vector<std::string> logic_model_sramb_port_names;
+  /* Regular sram port goes first */
+  for (CircuitPortId regular_sram_port : find_circuit_regular_sram_ports(circuit_lib, logic_model)) {
+    logic_model_sramb_port_names.push_back(circuit_lib.port_lib_name(regular_sram_port) + std::string("_inv"));
+  }
+  /* Mode-select sram port goes first */
+  for (CircuitPortId mode_select_sram_port : find_circuit_mode_select_sram_ports(circuit_lib, logic_model)) {
+    logic_model_sramb_port_names.push_back(circuit_lib.port_lib_name(mode_select_sram_port) + std::string("_inv"));
+  }
+  /* Find the port ids in the memory */
+  std::vector<ModulePortId> logic_module_sramb_port_ids;
+  for (const std::string& logic_model_sramb_port_name : logic_model_sramb_port_names) {
+    /* Skip non-exist ports */
+    if (ModulePortId::INVALID() == module_manager.find_module_port(logic_module, logic_model_sramb_port_name)) {
+      continue;
+    }
+    logic_module_sramb_port_ids.push_back(module_manager.find_module_port(logic_module, logic_model_sramb_port_name));
+  }
+
+  /* Get the SRAM port name of memory model */
+  std::string memory_model_sramb_port_name = generate_configuration_chain_inverted_data_out_name();
+  /* Find the corresponding ports in memory module */ 
+  ModulePortId mem_module_sramb_port_id = module_manager.find_module_port(memory_module, memory_model_sramb_port_name);
+
+  /* Do wiring only when we have sramb ports */
+  if ( (false == logic_module_sramb_port_ids.empty())
+    || (ModulePortId::INVALID() == mem_module_sramb_port_id) ) {
+    add_module_nets_between_logic_and_memory_sram_ports(module_manager, parent_module, 
+                                                        logic_module, logic_instance_id,
+                                                        memory_module, memory_instance_id,
+                                                        logic_module_sramb_port_ids, mem_module_sramb_port_id);
+  }
+}
+
+/********************************************************************
+ * TODO:
+ * Add the port-to-port connection between a logic module 
+ * and a memory module inside a primitive module
+ *
+ * Create nets to wire the control signals of memory module to 
+ *    the configuration ports of primitive module
+ *
+ *              Primitive module
+ *             +----------------------------+
+ *             |                +--------+  |
+ *  config     |                |        |  |
+ *   ports --->|--------------->| Memory |  |
+ *             |                | Module |  |
+ *             |                |        |  |
+ *             |                +--------+  |
+ *             +----------------------------+
+ *     The detailed config ports really depend on the type
+ *     of SRAM organization. 
+ *
+ * Note: this function SHOULD be called after the pb_type_module is created
+ * and its child module (logic_module and memory_module) is created! 
+ *******************************************************************/
+
+/********************************************************************
+ * TODO:
+ * Add the port-to-port connection between a logic module 
+ * and a memory module inside a primitive module
+ *
+ * Create nets to wire the formal verification ports of 
+ * primitive module to SRAM ports of logic module 
+ * 
+ *    Primitive module
+ *
+ *                     formal_port_sram
+ *    +-----------------------------------------------+
+ *    |                       ^                       |
+ *    |    +---------+        |    +--------+         |
+ *    |    |         | SRAM   |    |        |         |
+ *    |    |  Logic  |--------+--->| Memory |         |
+ *    |    | Module  | SRAMb       | Module |         |
+ *    |    |         |--------+--->|        |         |
+ *    |    +---------+        |    +--------+         |
+ *    |                       v                       |
+ *    +-----------------------------------------------+
+ *                     formal_port_sramb
+ *
+ *******************************************************************/
 

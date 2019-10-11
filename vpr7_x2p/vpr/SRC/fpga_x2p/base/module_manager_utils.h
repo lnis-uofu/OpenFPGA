@@ -55,4 +55,14 @@ void add_primitive_pb_type_module_nets(ModuleManager& module_manager,
                                        const size_t& child_instance_id,
                                        const CircuitLibrary& circuit_lib,
                                        t_pb_type* cur_pb_type);
+
+void add_module_nets_between_logic_and_memory_sram_bus(ModuleManager& module_manager,
+                                                       const ModuleId& parent_module,
+                                                       const ModuleId& logic_module,
+                                                       const size_t& logic_instance_id,
+                                                       const ModuleId& memory_module,
+                                                       const size_t& memory_instance_id, 
+                                                       const CircuitLibrary& circuit_lib,
+                                                       const CircuitModelId& logic_model);
+
 #endif

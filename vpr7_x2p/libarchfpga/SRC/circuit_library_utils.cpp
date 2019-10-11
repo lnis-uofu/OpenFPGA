@@ -93,6 +93,25 @@ std::vector<CircuitPortId> find_circuit_regular_sram_ports(const CircuitLibrary&
 }
 
 /********************************************************************
+ * Find mode select sram ports of a circuit model
+ *******************************************************************/
+std::vector<CircuitPortId> find_circuit_mode_select_sram_ports(const CircuitLibrary& circuit_lib,
+                                                               const CircuitModelId& circuit_model) {
+  std::vector<CircuitPortId> sram_ports = circuit_lib.model_ports_by_type(circuit_model, SPICE_MODEL_PORT_SRAM, true);
+  std::vector<CircuitPortId> mode_select_sram_ports;
+
+  for (const auto& port : sram_ports) {
+    if (false == circuit_lib.port_is_mode_select(port)) {
+      continue;
+    }
+    mode_select_sram_ports.push_back(port);
+  }
+
+  return mode_select_sram_ports;
+}
+
+
+/********************************************************************
  * Find the number of shared configuration bits for a ReRAM circuit 
  * TODO: this function is subjected to be changed due to ReRAM-based SRAM cell design!!!
  *******************************************************************/
