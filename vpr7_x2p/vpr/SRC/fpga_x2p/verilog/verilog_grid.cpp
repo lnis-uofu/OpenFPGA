@@ -27,6 +27,7 @@
 #include "verilog_global.h"
 #include "verilog_utils.h"
 #include "verilog_writer_utils.h"
+#include "verilog_module_writer.h"
 #include "verilog_grid.h"
 
 /********************************************************************
@@ -145,47 +146,22 @@ void print_verilog_primitive_block(std::fstream& fp,
                                                          num_config_bits);
   }
 
-  /* Print the module definition for the top-level Verilog module of physical block */
-  print_verilog_module_declaration(fp, module_manager, primitive_module);
-  /* Finish printing ports */
-
   /* Find the module id in the module manager */
   ModuleId logic_module = module_manager.find_module(circuit_lib.model_name(primitive_model));
   VTR_ASSERT(ModuleId::INVALID() != logic_module);
   size_t logic_instance_id = module_manager.num_instance(primitive_module, logic_module); 
-
-  /* Local wires for memory configurations */
-  print_verilog_comment(fp, std::string("---- BEGIN local configuration bus ----"));
-  print_verilog_local_config_bus(fp, circuit_lib.model_name(primitive_model), cur_sram_orgz_info->type, logic_instance_id, num_config_bits);
-  print_verilog_comment(fp, std::string("---- END local configuration bus ----"));
-
-  /* Add an empty line as a splitter */
-  fp << std::endl;
-
-  /* TODO: Instanciate the logic module */
-  /* Create port-to-port map */
-  std::map<std::string, BasicPort> logic_port2port_name_map;
-  /* Link the logic model ports to pb_type ports */
-  generate_pb_type_circuit_port2port_name_map(logic_port2port_name_map, primitive_pb_graph_node->pb_type, circuit_lib);
-  /* TODO: Link both regular and mode-select SRAM ports */
-
-  /* Print an instance of the logic Module */
-  print_verilog_comment(fp, std::string("----- BEGIN Instanciation of " + circuit_lib.model_name(primitive_model) + " -----"));
-  print_verilog_module_instance(fp, module_manager, primitive_module, logic_module, logic_port2port_name_map, use_explicit_mapping);
-  print_verilog_comment(fp, std::string("----- END Instanciation of " + circuit_lib.model_name(primitive_model) + " -----"));
-  fp << std::endl;
-  /* IMPORTANT: this update MUST be called after the instance outputting!!!!
-   * update the module manager with the relationship between the parent and child modules 
-   */
+  /* Add the logic module as a child of primitive module */
   module_manager.add_child_module(primitive_module, logic_module);
 
-  /* Add an empty line as a splitter */
-  fp << std::endl;
+  /* Add nets to connect the logic model ports to pb_type ports */
+  add_primitive_pb_type_module_nets(module_manager, primitive_module, logic_module, logic_instance_id, circuit_lib, primitive_pb_graph_node->pb_type);
 
-  /* TODO: Instanciate associated memory module */
+  /* TODO: add the associated memory module as a child of primitive module */
 
-  /* Print an end to the Verilog module */
-  print_verilog_module_end(fp, module_manager.module_name(primitive_module));
+  /* TODO: Add nets to connect regular and mode-select SRAM ports to the SRAM port of memory module */
+
+  /* TODO: write the verilog module */
+  write_verilog_module_to_file(fp, module_manager, primitive_module, use_explicit_mapping);
 
   /* Add an empty line as a splitter */
   fp << std::endl;

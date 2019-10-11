@@ -14,12 +14,6 @@
 #include "verilog_module_writer.h"
 
 /********************************************************************
- * Local constant variables for naming purpose 
-          instance_port.set_name(VERILOG_MODULE_LOCAL_GND_WIRE_NAME);
- *******************************************************************/
-constexpr char* VERILOG_MODULE_LOCAL_GND_WIRE_NAME = "VERILOG_CONSTANT_GND";
-
-/********************************************************************
  * Name a net for a local wire for a verilog module 
  * 1. If this is a local wire, name it after the <src_module_name>_<instance_id>_<src_port_name>
  * 2. If this is not a local wire, name it after the port name of parent module 
@@ -254,12 +248,9 @@ void write_verilog_instance_to_file(std::fstream& fp,
                                                                   child_port_id, child_pin);
         BasicPort instance_port;
         if (ModuleNetId::INVALID() == net) {
-          /* For unused net: assign a constant 0 value 
-           * TODO: make it flexible to select between 0 and 1 
-           */
-          /* TODO: output a warning? This could be potential issues for Verilog netlists */
-          instance_port.set_name(VERILOG_MODULE_LOCAL_GND_WIRE_NAME);
-          instance_port.set_width(1); 
+          /* We give the same port name as child module, this case happens to global ports */
+          instance_port.set_name(module_manager.module_port(child_module, child_port_id).get_name());
+          instance_port.set_width(child_pin, child_pin); 
         } else {
           /* Find the name for this child port */
           instance_port = generate_verilog_port_for_module_net(module_manager, parent_module, net);
@@ -303,9 +294,6 @@ void write_verilog_module_to_file(std::fstream& fp,
   /* Print an empty line as splitter */
   fp << std::endl;
    
-  /* Print constant GND wires */
-  BasicPort constant_gnd_local_wire(VERILOG_MODULE_LOCAL_GND_WIRE_NAME, 1);
-  fp << generate_verilog_port(VERILOG_PORT_WIRE, constant_gnd_local_wire) << ";" << std::endl;
   /* Print internal wires */
   std::vector<BasicPort> local_wires = find_verilog_module_local_wires(module_manager, module_id);
   for (BasicPort local_wire : local_wires) {

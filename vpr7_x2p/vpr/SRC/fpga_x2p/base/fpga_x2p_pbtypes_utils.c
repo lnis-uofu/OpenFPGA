@@ -1333,25 +1333,6 @@ t_port* find_pb_type_port_match_spice_model_port(t_pb_type* pb_type,
 }
 
 /********************************************************************
- * Add the port-to-port mapping between a pb_type and its linked circuit model 
- * This function is mainly used to create instance of the module for a pb_type
- *******************************************************************/
-void generate_pb_type_circuit_port2port_name_map(std::map<std::string, BasicPort>& port2port_name_map,
-                                                 t_pb_type* cur_pb_type,
-                                                 const CircuitLibrary& circuit_lib) {
-  for (int iport = 0; iport < cur_pb_type->num_ports; ++iport) {
-    t_port* pb_type_port = &(cur_pb_type->ports[iport]);
-    /* Must have a linked circuit model port */
-    VTR_ASSERT( CircuitPortId::INVALID() != pb_type_port->circuit_model_port);
-    std::string module_port_name = circuit_lib.port_lib_name(pb_type_port->circuit_model_port);
-    /* Generate the module port name of pb_type */
-    BasicPort instance_port(generate_pb_type_port_name(pb_type_port), circuit_lib.port_size(pb_type_port->circuit_model_port));
-    /* Create the port of primitive model */
-    port2port_name_map[module_port_name] = instance_port; 
-  } 
-}
-
-/********************************************************************
  * Return a list of ports of a pb_type which matches the ports defined
  * in its linked circuit model 
  * This function will only care if the port type matches  

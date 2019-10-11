@@ -49,4 +49,10 @@ bool module_net_is_local_wire(const ModuleManager& module_manager,
 bool module_net_include_local_short_connection(const ModuleManager& module_manager, 
                                                const ModuleId& module_id, const ModuleNetId& module_net);
 
+void add_primitive_pb_type_module_nets(ModuleManager& module_manager,
+                                       const ModuleId& pb_type_module,
+                                       const ModuleId& child_module,
+                                       const size_t& child_instance_id,
+                                       const CircuitLibrary& circuit_lib,
+                                       t_pb_type* cur_pb_type);
 #endif

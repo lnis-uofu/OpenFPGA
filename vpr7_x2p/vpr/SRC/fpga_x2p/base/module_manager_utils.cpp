@@ -6,6 +6,7 @@
 #include <map>
 #include <algorithm>
 
+#include "util.h"
 #include "vtr_assert.h"
 
 #include "spice_types.h"
@@ -326,3 +327,73 @@ bool module_net_include_local_short_connection(const ModuleManager& module_manag
 
   return contain_module_input & contain_module_output;
 }
+
+/********************************************************************
+ * Add the port-to-port connection between a pb_type and its linked circuit model 
+ * This function is mainly used to create instance of the module for a pb_type
+ *
+ * Note: this function SHOULD be called after the pb_type_module is created
+ * and its child module is created! 
+ *******************************************************************/
+void add_primitive_pb_type_module_nets(ModuleManager& module_manager,
+                                       const ModuleId& pb_type_module,
+                                       const ModuleId& child_module,
+                                       const size_t& child_instance_id,
+                                       const CircuitLibrary& circuit_lib,
+                                       t_pb_type* cur_pb_type) {
+  for (int iport = 0; iport < cur_pb_type->num_ports; ++iport) {
+    t_port* pb_type_port = &(cur_pb_type->ports[iport]);
+    /* Must have a linked circuit model port */
+    VTR_ASSERT( CircuitPortId::INVALID() != pb_type_port->circuit_model_port);
+
+    /* Find the source port in pb_type module */
+    /* Get the src module port id */
+    ModulePortId src_module_port_id = module_manager.find_module_port(pb_type_module, generate_pb_type_port_name(pb_type_port));
+    VTR_ASSERT(ModulePortId::INVALID() != src_module_port_id);
+    BasicPort src_port = module_manager.module_port(pb_type_module, src_module_port_id);
+
+    /* Get the des module port id */
+    std::string des_module_port_name = circuit_lib.port_lib_name(pb_type_port->circuit_model_port);
+    ModulePortId des_module_port_id = module_manager.find_module_port(child_module, des_module_port_name);
+    VTR_ASSERT(ModulePortId::INVALID() != des_module_port_id);
+    BasicPort des_port = module_manager.module_port(child_module, des_module_port_id);
+
+    /* Port size must match */
+    if (src_port.get_width() != des_port.get_width()) 
+    VTR_ASSERT(src_port.get_width() == des_port.get_width());
+
+    /* For each pin, generate the nets.
+     * For non-output ports (input ports, inout ports and clock ports),
+     * src_port is the source of the net   
+     * For output ports
+     * src_port is the sink of the net
+     */
+    switch (pb_type_port->type) {
+    case IN_PORT:
+    case INOUT_PORT:
+      for (size_t pin_id = 0; pin_id < src_port.pins().size(); ++pin_id) {
+        ModuleNetId net = module_manager.create_module_net(pb_type_module);
+        /* Add net source */
+        module_manager.add_module_net_source(pb_type_module, net, pb_type_module, 0, src_module_port_id, src_port.pins()[pin_id]);
+        /* Add net sink */
+        module_manager.add_module_net_sink(pb_type_module, net, child_module, child_instance_id, des_module_port_id, des_port.pins()[pin_id]);
+      }
+      break;
+    case OUT_PORT: 
+      for (size_t pin_id = 0; pin_id < src_port.pins().size(); ++pin_id) {
+        ModuleNetId net = module_manager.create_module_net(pb_type_module);
+        /* Add net source */
+        module_manager.add_module_net_sink(pb_type_module, net, pb_type_module, 0, src_module_port_id, src_port.pins()[pin_id]);
+        /* Add net sink */
+        module_manager.add_module_net_source(pb_type_module, net, child_module, child_instance_id, des_module_port_id, des_port.pins()[pin_id]);
+      }
+      break;
+    default:
+      vpr_printf(TIO_MESSAGE_ERROR,
+                 "(File:%s, [LINE%d]) Invalid port of pb_type!\n",
+                 __FILE__, __LINE__);
+      exit(1);
+    }
+  } 
+}
+
