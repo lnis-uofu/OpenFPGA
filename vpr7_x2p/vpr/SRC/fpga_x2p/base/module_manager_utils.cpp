@@ -583,10 +583,208 @@ void add_module_nets_between_logic_and_memory_sram_bus(ModuleManager& module_man
   }
 }
 
-/********************************************************************
+/*********************************************************************
+ * Add the port-to-port connection between all the memory modules 
+ * and their parent module
+ *
+ * Create nets to wire the control signals of memory module to 
+ *    the configuration ports of primitive module
+ *
+ * Configuration Chain 
+ * -------------------
+ *
+ *        config_bus (head)   config_bus (tail) 
+ *            |                   ^
+ * primitive  |                   |
+ *   +---------------------------------------------+
+ *   |        |                   |                |
+ *   |        v                   |                |
+ *   |  +-------------------------------------+    |
+ *   |  |        CMOS-based Memory Modules    |    |
+ *   |  +-------------------------------------+    |
+ *   |        |                   |                |
+ *   |        v                   v                |
+ *   |     sram_out             sram_outb          |
+ *   |                                             |
+ *   +---------------------------------------------+
+ *
+ * Memory bank 
+ * -----------
+ *
+ *        config_bus (BL)   config_bus (WL) 
+ *            |                   |
+ * primitive  |                   |
+ *   +---------------------------------------------+
+ *   |        |                   |                |
+ *   |        v                   v                |
+ *   |  +-------------------------------------+    |
+ *   |  |        CMOS-based Memory Modules    |    |
+ *   |  +-------------------------------------+    |
+ *   |        |                   |                |
+ *   |        v                   v                |
+ *   |     sram_out             sram_outb          |
+ *   |                                             |
+ *   +---------------------------------------------+
+ *
+ **********************************************************************/
+static 
+void add_module_nets_cmos_memory_config_bus(ModuleManager& module_manager,
+                                            const ModuleId& parent_module,
+                                            const std::vector<ModuleId>& memory_modules,
+                                            const std::vector<size_t>& memory_instances,
+                                            const e_sram_orgz& sram_orgz_type, 
+                                            const CircuitLibrary& circuit_lib,
+                                            const std::vector<CircuitModelId>& memory_models) {
+  /* Ensure that the size of memory_model vector matches the memory_module vector */
+  VTR_ASSERT( (memory_modules.size() == memory_instances.size())
+           && (memory_modules.size() == memory_models.size()) );
+
+  switch (sram_orgz_type) {
+  case SPICE_SRAM_STANDALONE:
+    /* Nothing to do */
+    break;
+  case SPICE_SRAM_SCAN_CHAIN: {
+    /* Connect all the memory modules under the parent module in a chain
+     * 
+     *                +--------+    +--------+            +--------+
+     *  ccff_head --->| Memory |--->| Memory |--->... --->| Memory |----> ccff_tail
+     *                | Module |    | Module |            | Module |
+     *                |   [0]  |    |   [1]  |            |  [N-1] |             
+     *                +--------+    +--------+            +--------+
+     *  For the 1st memory module:
+     *    net source is the configuration chain head of the primitive module
+     *    net sink is the configuration chain head of the next memory module
+     *
+     *  For the rest of memory modules:
+     *    net source is the configuration chain tail of the previous memory module
+     *    net sink is the configuration chain head of the next memory module
+     */
+    for (size_t mem_index = 0; mem_index < memory_modules.size(); ++mem_index) {
+      ModuleId net_src_module_id;
+      size_t net_src_instance_id;
+      ModulePortId net_src_port_id;
+
+      ModuleId net_sink_module_id;
+      size_t net_sink_instance_id;
+      ModulePortId net_sink_port_id;
+
+      if (0 == mem_index) {
+        /* Find the port name of configuration chain head */
+        std::string src_port_name = generate_sram_port_name(circuit_lib, memory_models[mem_index], sram_orgz_type, SPICE_MODEL_PORT_INPUT);
+        net_src_module_id = parent_module; 
+        net_src_instance_id = 0;
+        net_src_port_id = module_manager.find_module_port(net_src_module_id, src_port_name); 
+
+        /* Find the port name of next memory module */
+        std::string sink_port_name = generate_configuration_chain_head_name();
+        net_sink_module_id = memory_modules[mem_index]; 
+        net_sink_instance_id = memory_instances[mem_index];
+        net_sink_port_id = module_manager.find_module_port(net_sink_module_id, sink_port_name); 
+      } else {
+        /* Find the port name of previous memory module */
+        std::string src_port_name = generate_configuration_chain_tail_name();
+        net_src_module_id = memory_modules[mem_index - 1]; 
+        net_src_instance_id = memory_instances[mem_index - 1];
+        net_src_port_id = module_manager.find_module_port(net_src_module_id, src_port_name); 
+
+        /* Find the port name of next memory module */
+        std::string sink_port_name = generate_configuration_chain_head_name();
+        net_sink_module_id = memory_modules[mem_index]; 
+        net_sink_instance_id = memory_instances[mem_index];
+        net_sink_port_id = module_manager.find_module_port(net_sink_module_id, sink_port_name); 
+      }
+
+      /* Get the pin id for source port */
+      BasicPort net_src_port = module_manager.module_port(net_src_module_id, net_src_port_id); 
+      /* Get the pin id for sink port */
+      BasicPort net_sink_port = module_manager.module_port(net_sink_module_id, net_sink_port_id); 
+      /* Port sizes of source and sink should match */
+      VTR_ASSERT(net_src_port.get_width() == net_sink_port.get_width());
+      
+      /* Create a net for each pin */
+      for (size_t pin_id = 0; pin_id < net_src_port.pins().size(); ++pin_id) {
+        /* Create a net and add source and sink to it */
+        ModuleNetId net = module_manager.create_module_net(parent_module);
+        /* Add net source */
+        module_manager.add_module_net_source(parent_module, net, net_src_module_id, net_src_instance_id, net_src_port_id, net_src_port.pins()[pin_id]);
+        /* Add net sink */
+        module_manager.add_module_net_sink(parent_module, net, net_sink_module_id, net_sink_instance_id, net_sink_port_id, net_sink_port.pins()[pin_id]);
+      }
+    }
+
+    /* For the last memory module:
+     *    net source is the configuration chain tail of the previous memory module
+     *    net sink is the configuration chain tail of the primitive module
+     */
+    /* Find the port name of previous memory module */
+    std::string src_port_name = generate_configuration_chain_tail_name();
+    ModuleId net_src_module_id = memory_modules.back(); 
+    size_t net_src_instance_id = memory_instances.back();
+    ModulePortId net_src_port_id = module_manager.find_module_port(net_src_module_id, src_port_name); 
+
+    /* Find the port name of next memory module */
+    std::string sink_port_name = generate_sram_port_name(circuit_lib, memory_models.back(), sram_orgz_type, SPICE_MODEL_PORT_OUTPUT);
+    ModuleId net_sink_module_id = parent_module; 
+    size_t net_sink_instance_id = 0;
+    ModulePortId net_sink_port_id = module_manager.find_module_port(net_sink_module_id, sink_port_name); 
+
+    /* Get the pin id for source port */
+    BasicPort net_src_port = module_manager.module_port(net_src_module_id, net_src_port_id); 
+    /* Get the pin id for sink port */
+    BasicPort net_sink_port = module_manager.module_port(net_sink_module_id, net_sink_port_id); 
+    /* Port sizes of source and sink should match */
+    VTR_ASSERT(net_src_port.get_width() == net_sink_port.get_width());
+    
+    /* Create a net for each pin */
+    for (size_t pin_id = 0; pin_id < net_src_port.pins().size(); ++pin_id) {
+      /* Create a net and add source and sink to it */
+      ModuleNetId net = module_manager.create_module_net(parent_module);
+      /* Add net source */
+      module_manager.add_module_net_source(parent_module, net, net_src_module_id, net_src_instance_id, net_src_port_id, net_src_port.pins()[pin_id]);
+      /* Add net sink */
+      module_manager.add_module_net_sink(parent_module, net, net_sink_module_id, net_sink_instance_id, net_sink_port_id, net_sink_port.pins()[pin_id]);
+    }
+    break;
+  }
+  case SPICE_SRAM_MEMORY_BANK:
+    /* TODO: */
+    break;
+  default:
+    vpr_printf(TIO_MESSAGE_ERROR,
+               "(File:%s,[LINE%d])Invalid type of SRAM organization!\n",
+               __FILE__, __LINE__);
+    exit(1);
+  }
+}
+
+/*********************************************************************
  * TODO:
  * Add the port-to-port connection between a logic module 
  * and a memory module inside a primitive module
+ *
+ * Memory bank 
+ * -----------
+ *        config_bus (BL)   config_bus (WL) shared_config_bugs(shared_BL/WLs) 
+ *            |                   |              |        |
+ * primitive  |                   |              |        |
+ *   +------------------------------------------------------------+
+ *   |        |                   |              |        |       |
+ *   |        v                   v              v        v       |
+ *   |  +----------------------------------------------------+    |
+ *   |  |              ReRAM-based Memory Module             |    |
+ *   |  +----------------------------------------------------+    |
+ *   |        |                   |                               |
+ *   |        v                   v                               |
+ *   |      mem_out              mem_outb                         |
+ *   |                                                            |
+ *   +------------------------------------------------------------+
+ *
+ **********************************************************************/
+
+/********************************************************************
+ * TODO:
+ * Add the port-to-port connection between a memory module 
+ * and the configuration bus of a primitive module
  *
  * Create nets to wire the control signals of memory module to 
  *    the configuration ports of primitive module
@@ -603,9 +801,42 @@ void add_module_nets_between_logic_and_memory_sram_bus(ModuleManager& module_man
  *     The detailed config ports really depend on the type
  *     of SRAM organization. 
  *
+ * The config_bus in the argument is the reserved address of configuration
+ * bus in the parent_module for this memory module
+ *
+ * The configuration bus connection will depend not only 
+ * the design technology of the memory cells but also the 
+ * configuration styles of FPGA fabric.
+ * Here we will branch on the design technology
+ *
  * Note: this function SHOULD be called after the pb_type_module is created
  * and its child module (logic_module and memory_module) is created! 
  *******************************************************************/
+void add_module_nets_memory_config_bus(ModuleManager& module_manager,
+                                       const ModuleId& parent_module,
+                                       const std::vector<ModuleId>& memory_modules,
+                                       const std::vector<size_t>& memory_instances,
+                                       const e_sram_orgz& sram_orgz_type, 
+                                       const e_spice_model_design_tech& mem_tech,
+                                       const CircuitLibrary& circuit_lib,
+                                       const std::vector<CircuitModelId>& memory_models) {
+  switch (mem_tech) {
+  case SPICE_MODEL_DESIGN_CMOS:
+    add_module_nets_cmos_memory_config_bus(module_manager, parent_module, 
+                                           memory_modules, memory_instances, 
+                                           sram_orgz_type, 
+                                           circuit_lib, memory_models);
+    break;
+  case SPICE_MODEL_DESIGN_RRAM:
+    /* TODO: */
+    break;
+  default:
+    vpr_printf(TIO_MESSAGE_ERROR,
+               "(File:%s,[LINE%d])Invalid type of memory design technology !\n",
+               __FILE__, __LINE__);
+    exit(1);
+  }
+}
 
 /********************************************************************
  * TODO:

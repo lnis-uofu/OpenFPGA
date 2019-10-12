@@ -65,4 +65,13 @@ void add_module_nets_between_logic_and_memory_sram_bus(ModuleManager& module_man
                                                        const CircuitLibrary& circuit_lib,
                                                        const CircuitModelId& logic_model);
 
+void add_module_nets_memory_config_bus(ModuleManager& module_manager,
+                                       const ModuleId& parent_module,
+                                       const std::vector<ModuleId>& memory_modules,
+                                       const std::vector<size_t>& memory_instances,
+                                       const e_sram_orgz& sram_orgz_type, 
+                                       const e_spice_model_design_tech& mem_tech,
+                                       const CircuitLibrary& circuit_lib,
+                                       const std::vector<CircuitModelId>& memory_models);
+
 #endif
