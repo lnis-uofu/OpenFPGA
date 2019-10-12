@@ -442,9 +442,9 @@ void ModuleManager::add_child_module(const ModuleId& parent_module, const Module
 
   /* Update fast look-up for nets */
   size_t instance_id = net_lookup_[parent_module][child_module].size();
+  net_lookup_[parent_module][child_module].emplace_back();
   /* Find the ports for the child module and update the fast look-up */
   for (ModulePortId child_port : port_ids_[child_module]) {
-    net_lookup_[parent_module][child_module].emplace_back();
     net_lookup_[parent_module][child_module][instance_id][child_port].resize(ports_[child_module][child_port].get_width(), ModuleNetId::INVALID());
   } 
 }

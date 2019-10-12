@@ -295,3 +295,104 @@ bool check_mem_config_bus(const e_sram_orgz& sram_orgz_type,
   /* Reach here, it means something goes wrong, return a false value */
   return false;
 }
+
+/********************************************************************
+ * Generate a list of ports that are used for SRAM configuration to a module
+ * The type and names of added ports strongly depend on the 
+ * organization of SRAMs.
+ * 1. Standalone SRAMs: 
+ *    two ports will be added, which are regular output and inverted output 
+ * 2. Scan-chain Flip-flops:
+ *    two ports will be added, which are the head of scan-chain 
+ *    and the tail of scan-chain
+ *    IMPORTANT: the port size will be forced to 1 in this case 
+ *               because the head and tail are both 1-bit ports!!!
+ * 3. Memory decoders:
+ *    2-4 ports will be added, depending on the ports available in the SRAM
+ *    Among these, two ports are mandatory: BL and WL 
+ *    The other two ports are optional: BLB and WLB
+ *    Note that the constraints are correletated to the checking rules 
+ *    in check_circuit_library()
+ ********************************************************************/
+std::vector<std::string> generate_sram_port_names(const CircuitLibrary& circuit_lib,
+                                                  const CircuitModelId& sram_model,
+                                                  const e_sram_orgz sram_orgz_type) {
+  std::vector<std::string> sram_port_names;
+  /* Prepare a list of port types to be added, the port type will be used to create port names */
+  std::vector<e_spice_model_port_type> model_port_types; 
+
+  switch (sram_orgz_type) {
+  case SPICE_SRAM_STANDALONE: 
+    model_port_types.push_back(SPICE_MODEL_PORT_INPUT);
+    model_port_types.push_back(SPICE_MODEL_PORT_OUTPUT);
+    break;
+  case SPICE_SRAM_SCAN_CHAIN: 
+    model_port_types.push_back(SPICE_MODEL_PORT_INPUT);
+    model_port_types.push_back(SPICE_MODEL_PORT_OUTPUT);
+    break;
+  case SPICE_SRAM_MEMORY_BANK: {
+    std::vector<e_spice_model_port_type> ports_to_search;
+    ports_to_search.push_back(SPICE_MODEL_PORT_BL);
+    ports_to_search.push_back(SPICE_MODEL_PORT_WL);
+    ports_to_search.push_back(SPICE_MODEL_PORT_BLB);
+    ports_to_search.push_back(SPICE_MODEL_PORT_WLB);
+    /* Try to find a BL/WL/BLB/WLB port and update the port types/module port types to be added */
+    for (const auto& port_to_search : ports_to_search) {
+      std::vector<CircuitPortId> found_port = circuit_lib.model_ports_by_type(sram_model, port_to_search);
+      if (0 == found_port.size()) {
+        continue;
+      }
+      model_port_types.push_back(port_to_search);
+    }
+    break;
+  }
+  default:
+    vpr_printf(TIO_MESSAGE_ERROR,
+               "(File:%s,[LINE%d])Invalid type of SRAM organization !\n",
+               __FILE__, __LINE__);
+    exit(1);
+  }
+
+  /* Add ports to the module manager */
+  for (size_t iport = 0; iport < model_port_types.size(); ++iport) {
+    /* Create a port */
+    std::string port_name = generate_sram_port_name(sram_orgz_type, model_port_types[iport]);
+    sram_port_names.push_back(port_name);
+  }
+
+  return sram_port_names;
+}
+
+/********************************************************************
+ * Generate a list of ports that are used for SRAM configuration to a module
+ * 1. Standalone SRAMs: 
+ *    use the suggested port_size 
+ * 2. Scan-chain Flip-flops:
+ *    IMPORTANT: the port size will be forced to 1 in this case 
+ * 3. Memory decoders:
+ *    use the suggested port_size 
+ ********************************************************************/
+size_t generate_sram_port_size(const e_sram_orgz sram_orgz_type,
+                               const size_t& num_config_bits) {
+  size_t sram_port_size = num_config_bits;
+
+  switch (sram_orgz_type) {
+  case SPICE_SRAM_STANDALONE: 
+    break;
+  case SPICE_SRAM_SCAN_CHAIN: 
+    /* CCFF head/tail are single-bit ports */
+    sram_port_size = 1;
+    break;
+  case SPICE_SRAM_MEMORY_BANK:
+    break;
+  default:
+    vpr_printf(TIO_MESSAGE_ERROR,
+               "(File:%s,[LINE%d])Invalid type of SRAM organization !\n",
+               __FILE__, __LINE__);
+    exit(1);
+  }
+
+  return sram_port_size;
+}
+
+

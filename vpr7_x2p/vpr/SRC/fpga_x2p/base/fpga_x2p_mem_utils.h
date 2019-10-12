@@ -24,4 +24,11 @@ bool check_mem_config_bus(const e_sram_orgz& sram_orgz_type,
                           const BasicPort& config_bus, 
                           const size_t& local_expected_msb);
 
+std::vector<std::string> generate_sram_port_names(const CircuitLibrary& circuit_lib,
+                                                  const CircuitModelId& sram_model,
+                                                  const e_sram_orgz sram_orgz_type);
+
+size_t generate_sram_port_size(const e_sram_orgz sram_orgz_type,
+                               const size_t& num_config_bits);
+
 #endif

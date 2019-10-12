@@ -37,7 +37,11 @@ void add_sram_ports_to_module_manager(ModuleManager& module_manager,
                                       const CircuitLibrary& circuit_lib,
                                       const CircuitModelId& sram_model,
                                       const e_sram_orgz sram_orgz_type,
-                                      const size_t& port_size);
+                                      const size_t& num_config_bits);
+
+void add_primitive_pb_type_ports_to_module_manager(ModuleManager& module_manager, 
+                                                   const ModuleId& module_id,
+                                                   t_pb_type* cur_pb_type);
 
 void add_pb_type_ports_to_module_manager(ModuleManager& module_manager, 
                                          const ModuleId& module_id,
@@ -71,5 +75,11 @@ void add_module_nets_memory_config_bus(ModuleManager& module_manager,
                                        const std::vector<size_t>& memory_instances,
                                        const e_sram_orgz& sram_orgz_type, 
                                        const e_spice_model_design_tech& mem_tech);
+
+size_t find_module_num_config_bits(const ModuleManager& module_manager,
+                                   const ModuleId& module_id,
+                                   const CircuitLibrary& circuit_lib,
+                                   const CircuitModelId& sram_model,
+                                   const e_sram_orgz& sram_orgz_type);
 
 #endif

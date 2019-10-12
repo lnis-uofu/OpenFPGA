@@ -133,6 +133,7 @@ void add_formal_verification_sram_ports_to_module_manager(ModuleManager& module_
   module_manager.set_port_preproc_flag(module_id, port_id, preproc_flag);
 }
 
+
 /********************************************************************
  * Add a list of ports that are used for SRAM configuration to a module
  * in the module manager
@@ -157,60 +158,15 @@ void add_sram_ports_to_module_manager(ModuleManager& module_manager,
                                       const CircuitLibrary& circuit_lib,
                                       const CircuitModelId& sram_model,
                                       const e_sram_orgz sram_orgz_type,
-                                      const size_t& port_size) {
-  /* Prepare a list of port types to be added, the port type will be used to create port names */
-  std::vector<e_spice_model_port_type> model_port_types; 
-  /* Prepare a list of module port types to be added, the port type will be used to specify the port type in Verilog/SPICE module */
-  std::vector<ModuleManager::e_module_port_type> module_port_types; 
-  /* Actual port size may be different from user specification. Think about CCFF */
-  size_t sram_port_size = port_size;
-
-  switch (sram_orgz_type) {
-  case SPICE_SRAM_STANDALONE: 
-    model_port_types.push_back(SPICE_MODEL_PORT_INPUT);
-    module_port_types.push_back(ModuleManager::MODULE_INPUT_PORT);
-    model_port_types.push_back(SPICE_MODEL_PORT_OUTPUT);
-    module_port_types.push_back(ModuleManager::MODULE_INPUT_PORT);
-    break;
-  case SPICE_SRAM_SCAN_CHAIN: 
-    model_port_types.push_back(SPICE_MODEL_PORT_INPUT);
-    module_port_types.push_back(ModuleManager::MODULE_INPUT_PORT);
-    model_port_types.push_back(SPICE_MODEL_PORT_OUTPUT);
-    module_port_types.push_back(ModuleManager::MODULE_OUTPUT_PORT);
-    /* CCFF head/tail are single-bit ports */
-    sram_port_size = 1;
-    break;
-  case SPICE_SRAM_MEMORY_BANK: {
-    std::vector<e_spice_model_port_type> ports_to_search;
-    ports_to_search.push_back(SPICE_MODEL_PORT_BL);
-    ports_to_search.push_back(SPICE_MODEL_PORT_WL);
-    ports_to_search.push_back(SPICE_MODEL_PORT_BLB);
-    ports_to_search.push_back(SPICE_MODEL_PORT_WLB);
-    /* Try to find a BL/WL/BLB/WLB port and update the port types/module port types to be added */
-    for (const auto& port_to_search : ports_to_search) {
-      std::vector<CircuitPortId> found_port = circuit_lib.model_ports_by_type(sram_model, port_to_search);
-      if (0 == found_port.size()) {
-        continue;
-      }
-      model_port_types.push_back(port_to_search);
-      module_port_types.push_back(ModuleManager::MODULE_INPUT_PORT);
-    }
-    break;
-  }
-  default:
-    vpr_printf(TIO_MESSAGE_ERROR,
-               "(File:%s,[LINE%d])Invalid type of SRAM organization !\n",
-               __FILE__, __LINE__);
-    exit(1);
-  }
+                                      const size_t& num_config_bits) {
+  std::vector<std::string> sram_port_names = generate_sram_port_names(circuit_lib, sram_model, sram_orgz_type);
+  size_t sram_port_size = generate_sram_port_size(sram_orgz_type, num_config_bits); 
 
   /* Add ports to the module manager */
-  for (size_t iport = 0; iport < model_port_types.size(); ++iport) {
-    /* Create a port */
-    std::string port_name = generate_sram_port_name(sram_orgz_type, model_port_types[iport]);
-    BasicPort module_port(port_name, sram_port_size); 
+  for (const std::string& sram_port_name : sram_port_names) {
     /* Add generated ports to the ModuleManager */
-    module_manager.add_port(module_id, module_port, module_port_types[iport]);
+    BasicPort sram_port(sram_port_name, sram_port_size);
+    module_manager.add_port(module_id, sram_port, ModuleManager::MODULE_INPUT_PORT);
   }
 }
 
@@ -222,9 +178,9 @@ void add_sram_ports_to_module_manager(ModuleManager& module_manager,
  * This function will also check that each pb_type port is actually exist
  * in the linked circuit model
  *******************************************************************/
-void add_pb_type_ports_to_module_manager(ModuleManager& module_manager, 
-                                         const ModuleId& module_id,
-                                         t_pb_type* cur_pb_type) {
+void add_primitive_pb_type_ports_to_module_manager(ModuleManager& module_manager, 
+                                                   const ModuleId& module_id,
+                                                   t_pb_type* cur_pb_type) {
    
   /* Find the inout ports required by the primitive pb_type, and add them to the module */
   std::vector<t_port*> pb_type_inout_ports = find_pb_type_ports_match_circuit_model_port_type(cur_pb_type, SPICE_MODEL_PORT_INOUT);
@@ -258,6 +214,32 @@ void add_pb_type_ports_to_module_manager(ModuleManager& module_manager,
   for (auto port : pb_type_clock_ports) {
     BasicPort module_port(generate_pb_type_port_name(port), port->num_pins);
     module_manager.add_port(module_id, module_port, ModuleManager::MODULE_CLOCK_PORT);
+    /* Set the port to be wire-connection */
+    module_manager.set_port_is_wire(module_id, module_port.get_name(), true);
+  }
+}
+
+/********************************************************************
+ * Add ports of a pb_type block to module manager
+ * This function is designed for non-primitive pb_types, which are
+ * NOT linked to any circuit model.
+ * Actually, this makes things much simpler.
+ * We just iterate over all the ports and add it to the module
+ * with the naming convention
+ *******************************************************************/
+void add_pb_type_ports_to_module_manager(ModuleManager& module_manager, 
+                                         const ModuleId& module_id,
+                                         t_pb_type* cur_pb_type) {
+  /* Create a type-to-type mapping between module ports and pb_type ports */
+  std::map<PORTS, ModuleManager::e_module_port_type> port_type2type_map;
+  port_type2type_map[IN_PORT] = ModuleManager::MODULE_INPUT_PORT;
+  port_type2type_map[OUT_PORT] = ModuleManager::MODULE_OUTPUT_PORT;
+  port_type2type_map[INOUT_PORT] = ModuleManager::MODULE_INOUT_PORT;
+
+  for (int port = 0; port < cur_pb_type->num_ports; ++port) {
+    t_port* pb_type_port = &(cur_pb_type->ports[port]);
+    BasicPort module_port(generate_pb_type_port_name(pb_type_port), pb_type_port->num_pins);
+    module_manager.add_port(module_id, module_port, port_type2type_map[pb_type_port->type]);
     /* Set the port to be wire-connection */
     module_manager.set_port_is_wire(module_id, module_port.get_name(), true);
   }
@@ -831,6 +813,33 @@ void add_module_nets_memory_config_bus(ModuleManager& module_manager,
     exit(1);
   }
 }
+
+/********************************************************************
+ * Find the size of configuration ports for module 
+ *******************************************************************/
+size_t find_module_num_config_bits(const ModuleManager& module_manager,
+                                   const ModuleId& module_id,
+                                   const CircuitLibrary& circuit_lib,
+                                   const CircuitModelId& sram_model,
+                                   const e_sram_orgz& sram_orgz_type) {
+  std::vector<std::string> config_port_names = generate_sram_port_names(circuit_lib, sram_model, sram_orgz_type);
+  size_t num_config_bits = 0; /* By default it has zero configuration bits*/
+
+  /* Try to find these ports in the module manager */
+  for (const std::string& config_port_name : config_port_names) {
+    ModulePortId module_port_id = module_manager.find_module_port(module_id, config_port_name);
+    /* If the port does not exist, go to the next */
+    if (false == module_manager.valid_module_port_id(module_id, module_port_id)) {
+      continue;
+    }
+    /* The port exist, find the port size and update the num_config_bits if the size is larger */
+    BasicPort module_port = module_manager.module_port(module_id, module_port_id);
+    num_config_bits = std::max((int)num_config_bits, (int)module_port.get_width());
+  }
+
+  return num_config_bits;
+}
+
 
 /********************************************************************
  * TODO:

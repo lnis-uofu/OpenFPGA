@@ -115,7 +115,7 @@ void print_verilog_primitive_block(std::fstream& fp,
    * Since we have linked pb_type ports to circuit models when setting up FPGA-X2P,
    * no ports of the circuit model will be missing here  
    */
-  add_pb_type_ports_to_module_manager(module_manager, primitive_module, primitive_pb_graph_node->pb_type); 
+  add_primitive_pb_type_ports_to_module_manager(module_manager, primitive_module, primitive_pb_graph_node->pb_type); 
 
   /* Add configuration ports */
   /* Shared SRAM ports*/
@@ -273,43 +273,83 @@ void print_verilog_physical_blocks_rec(std::fstream& fp,
   ModuleId pb_module = module_manager.add_module(pb_module_name);
   VTR_ASSERT(ModuleId::INVALID() != pb_module);
 
-  /* TODO: Add ports to the Verilog module */
+  /* Add ports to the Verilog module */
+  add_pb_type_ports_to_module_manager(module_manager, pb_module, physical_pb_type); 
 
-  /* TODO: Count I/O (INOUT) ports from the sub-modules under this Verilog module */
-  /* TODO: Count shared SRAM ports from the sub-modules under this Verilog module */
-  /* TODO: Count SRAM ports from the sub-modules under this Verilog module */
-  /* TODO: Count formal verification ports from the sub-modules under this Verilog module */
-
-  /* Print Verilog module declaration */
-  print_verilog_module_declaration(fp, module_manager, pb_module);
-
-  /* Comment lines */
-  print_verilog_comment(fp, std::string("----- BEGIN Physical programmable logic block Verilog module: " + std::string(physical_pb_type->name) + " -----"));
-
-  /* TODO: Print local wires (bus wires for memory configuration) */
-  /*
-    dump_verilog_sram_config_bus_internal_wires(fp, cur_sram_orgz_info, 
-                                              stamped_sram_cnt, 
-                                              stamped_sram_cnt + num_conf_bits - 1); 
+  /* Vectors to record all the memory modules have been added
+   * They are used to add module nets of configuration bus
    */
+  std::vector<ModuleId> memory_modules;
+  std::vector<size_t> memory_instances;
 
-  /* TODO: Instanciate all the child Verilog modules */
-  for (int ipb = 0; ipb < physical_pb_type->modes[physical_mode_index].num_pb_type_children; ipb++) {
+  /* TODO: this should be added to the cur_sram_orgz_info !!! */
+  t_spice_model* mem_model = NULL;
+  get_sram_orgz_info_mem_model(cur_sram_orgz_info, & mem_model);
+  CircuitModelId sram_model = circuit_lib.model(mem_model->name);  
+  VTR_ASSERT(CircuitModelId::INVALID() != sram_model);
+
+  /* TODO: Add all the child Verilog modules as instances */
+  for (int ichild = 0; ichild < physical_pb_type->modes[physical_mode_index].num_pb_type_children; ++ichild) {
+    /* Get the name and module id for this child pb_type */
+    std::string child_pb_module_name = generate_physical_block_module_name(pb_module_name_prefix, &(physical_pb_type->modes[physical_mode_index].pb_type_children[ichild]));
+    ModuleId child_pb_module = module_manager.find_module(child_pb_module_name);
+    /* We must have one valid id! */
+    VTR_ASSERT(true == module_manager.valid_module_id(child_pb_module));
+
     /* Each child may exist multiple times in the hierarchy*/
-    for (int jpb = 0; jpb < physical_pb_type->modes[physical_mode_index].pb_type_children[ipb].num_pb; jpb++) {
+    for (int inst = 0; inst < physical_pb_type->modes[physical_mode_index].pb_type_children[ichild].num_pb; ++inst) {
       /* we should make sure this placement index == child_pb_type[jpb] */
-      VTR_ASSERT(jpb == physical_pb_graph_node->child_pb_graph_nodes[physical_mode_index][ipb][jpb].placement_index);
+      VTR_ASSERT(inst == physical_pb_graph_node->child_pb_graph_nodes[physical_mode_index][ichild][inst].placement_index);
+
+      size_t child_instance_id = module_manager.num_instance(pb_module, child_pb_module); 
+      /* Add the memory module as a child of primitive module */
+      module_manager.add_child_module(pb_module, child_pb_module); 
+      /* TODO: Identify if this sub module includes configuration bits, 
+       * we will update the memory module and instance list
+       */
+      if (0 < find_module_num_config_bits(module_manager, child_pb_module,
+                                          circuit_lib, sram_model, 
+                                          cur_sram_orgz_info->type)) {
+        memory_modules.push_back(child_pb_module);
+        memory_instances.push_back(child_instance_id);
+      }
     }
   }
-  /* TODO: Print programmable/non-programmable interconnections inside the Verilog module */
+
+  /* TODO: Add global ports to the pb_module:
+   * This is a much easier job after adding sub modules (instances), 
+   * we just need to find all the global ports from the child modules and build a list of it
+   */
+
+  /* TODO: Count I/O (INOUT) ports from the sub-modules under this Verilog module 
+   * This is a much easier job after adding sub modules (instances), 
+   * we just need to find all the I/O ports from the child modules and build a list of it
+   */
+
+  /* TODO: Count shared SRAM ports from the sub-modules under this Verilog module
+   * This is a much easier job after adding sub modules (instances), 
+   * we just need to find all the I/O ports from the child modules and build a list of it
+   */
+
+  /* TODO: Count SRAM ports from the sub-modules under this Verilog module
+   * This is a much easier job after adding sub modules (instances), 
+   * we just need to find all the I/O ports from the child modules and build a list of it
+   */
+
+  /* TODO: Add modules and nets for programmable/non-programmable interconnections 
+   * inside the Verilog module */
   /*
   dump_verilog_pb_graph_interc(cur_sram_orgz_info, fp, subckt_name, 
                                cur_pb_graph_node, mode_index,
                                is_explicit_mapping);
    */
 
-  /* Print an end to the Verilog module */
-  print_verilog_module_end(fp, module_manager.module_name(pb_module));
+
+  /* Comment lines */
+  print_verilog_comment(fp, std::string("----- BEGIN Physical programmable logic block Verilog module: " + std::string(physical_pb_type->name) + " -----"));
+
+  /* Write the verilog module */
+  write_verilog_module_to_file(fp, module_manager, pb_module, use_explicit_mapping);
 
   print_verilog_comment(fp, std::string("----- END Physical programmable logic block Verilog module: " + std::string(physical_pb_type->name) + " -----"));
 
