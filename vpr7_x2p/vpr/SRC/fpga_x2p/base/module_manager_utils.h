@@ -70,8 +70,6 @@ void add_module_nets_memory_config_bus(ModuleManager& module_manager,
                                        const std::vector<ModuleId>& memory_modules,
                                        const std::vector<size_t>& memory_instances,
                                        const e_sram_orgz& sram_orgz_type, 
-                                       const e_spice_model_design_tech& mem_tech,
-                                       const CircuitLibrary& circuit_lib,
-                                       const std::vector<CircuitModelId>& memory_models);
+                                       const e_spice_model_design_tech& mem_tech);
 
 #endif

@@ -161,7 +161,6 @@ void print_verilog_primitive_block(std::fstream& fp,
    */
   std::vector<ModuleId> memory_modules;
   std::vector<size_t> memory_instances;
-  std::vector<CircuitModelId> memory_models;
 
   /* If there is no memory module required, we can skip the assocated net addition */
   if (ModuleId::INVALID() != memory_module) {
@@ -177,7 +176,6 @@ void print_verilog_primitive_block(std::fstream& fp,
     /* Record memory-related information */
     memory_modules.push_back(memory_module);
     memory_instances.push_back(memory_instance_id);
-    memory_models.push_back(sram_model);
   }
   /* Add all the nets to connect configuration ports from memory module to primitive modules
    * This is a one-shot addition that covers all the memory modules in this primitive module!
@@ -185,8 +183,7 @@ void print_verilog_primitive_block(std::fstream& fp,
   if (false == memory_modules.empty()) {
     add_module_nets_memory_config_bus(module_manager, primitive_module, 
                                       memory_modules, memory_instances,
-                                      cur_sram_orgz_info->type, circuit_lib.design_tech_type(sram_model),
-                                      circuit_lib, memory_models);
+                                      cur_sram_orgz_info->type, circuit_lib.design_tech_type(sram_model));
   }
   
   /* Write the verilog module */

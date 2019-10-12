@@ -207,7 +207,7 @@ void add_sram_ports_to_module_manager(ModuleManager& module_manager,
   /* Add ports to the module manager */
   for (size_t iport = 0; iport < model_port_types.size(); ++iport) {
     /* Create a port */
-    std::string port_name = generate_sram_port_name(circuit_lib, sram_model, sram_orgz_type, model_port_types[iport]);
+    std::string port_name = generate_sram_port_name(sram_orgz_type, model_port_types[iport]);
     BasicPort module_port(port_name, sram_port_size); 
     /* Add generated ports to the ModuleManager */
     module_manager.add_port(module_id, module_port, module_port_types[iport]);
@@ -632,12 +632,9 @@ void add_module_nets_cmos_memory_config_bus(ModuleManager& module_manager,
                                             const ModuleId& parent_module,
                                             const std::vector<ModuleId>& memory_modules,
                                             const std::vector<size_t>& memory_instances,
-                                            const e_sram_orgz& sram_orgz_type, 
-                                            const CircuitLibrary& circuit_lib,
-                                            const std::vector<CircuitModelId>& memory_models) {
+                                            const e_sram_orgz& sram_orgz_type) {
   /* Ensure that the size of memory_model vector matches the memory_module vector */
-  VTR_ASSERT( (memory_modules.size() == memory_instances.size())
-           && (memory_modules.size() == memory_models.size()) );
+  VTR_ASSERT(memory_modules.size() == memory_instances.size());
 
   switch (sram_orgz_type) {
   case SPICE_SRAM_STANDALONE:
@@ -670,7 +667,7 @@ void add_module_nets_cmos_memory_config_bus(ModuleManager& module_manager,
 
       if (0 == mem_index) {
         /* Find the port name of configuration chain head */
-        std::string src_port_name = generate_sram_port_name(circuit_lib, memory_models[mem_index], sram_orgz_type, SPICE_MODEL_PORT_INPUT);
+        std::string src_port_name = generate_sram_port_name(sram_orgz_type, SPICE_MODEL_PORT_INPUT);
         net_src_module_id = parent_module; 
         net_src_instance_id = 0;
         net_src_port_id = module_manager.find_module_port(net_src_module_id, src_port_name); 
@@ -723,7 +720,7 @@ void add_module_nets_cmos_memory_config_bus(ModuleManager& module_manager,
     ModulePortId net_src_port_id = module_manager.find_module_port(net_src_module_id, src_port_name); 
 
     /* Find the port name of next memory module */
-    std::string sink_port_name = generate_sram_port_name(circuit_lib, memory_models.back(), sram_orgz_type, SPICE_MODEL_PORT_OUTPUT);
+    std::string sink_port_name = generate_sram_port_name(sram_orgz_type, SPICE_MODEL_PORT_OUTPUT);
     ModuleId net_sink_module_id = parent_module; 
     size_t net_sink_instance_id = 0;
     ModulePortId net_sink_port_id = module_manager.find_module_port(net_sink_module_id, sink_port_name); 
@@ -817,15 +814,12 @@ void add_module_nets_memory_config_bus(ModuleManager& module_manager,
                                        const std::vector<ModuleId>& memory_modules,
                                        const std::vector<size_t>& memory_instances,
                                        const e_sram_orgz& sram_orgz_type, 
-                                       const e_spice_model_design_tech& mem_tech,
-                                       const CircuitLibrary& circuit_lib,
-                                       const std::vector<CircuitModelId>& memory_models) {
+                                       const e_spice_model_design_tech& mem_tech) {
   switch (mem_tech) {
   case SPICE_MODEL_DESIGN_CMOS:
     add_module_nets_cmos_memory_config_bus(module_manager, parent_module, 
                                            memory_modules, memory_instances, 
-                                           sram_orgz_type, 
-                                           circuit_lib, memory_models);
+                                           sram_orgz_type);
     break;
   case SPICE_MODEL_DESIGN_RRAM:
     /* TODO: */

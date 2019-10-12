@@ -814,12 +814,12 @@ void print_verilog_local_sram_wires(std::fstream& fp,
     fp << generate_verilog_port(VERILOG_PORT_WIRE, ccff_config_bus_port) << ";" << std::endl; 
     /* Connect first CCFF to the head */
     /* Head is always a 1-bit port */
-    BasicPort ccff_head_port(generate_sram_port_name(circuit_lib, sram_model, sram_orgz_type, SPICE_MODEL_PORT_INPUT), 1); 
+    BasicPort ccff_head_port(generate_sram_port_name(sram_orgz_type, SPICE_MODEL_PORT_INPUT), 1); 
     BasicPort ccff_head_local_port(ccff_config_bus_port.get_name(), 1); 
     print_verilog_wire_connection(fp, ccff_head_local_port, ccff_head_port, false); 
     /* Connect last CCFF to the tail */
     /* Tail is always a 1-bit port */
-    BasicPort ccff_tail_port(generate_sram_port_name(circuit_lib, sram_model, sram_orgz_type, SPICE_MODEL_PORT_OUTPUT), 1); 
+    BasicPort ccff_tail_port(generate_sram_port_name(sram_orgz_type, SPICE_MODEL_PORT_OUTPUT), 1); 
     BasicPort ccff_tail_local_port(ccff_config_bus_port.get_name(), ccff_config_bus_port.get_msb(), ccff_config_bus_port.get_msb()); 
     print_verilog_wire_connection(fp, ccff_tail_local_port, ccff_tail_port, false); 
     break;
@@ -1027,11 +1027,11 @@ void print_verilog_rram_mux_config_bus(std::fstream& fp,
     print_verilog_wire_connection(fp, wl_bus_reserved_bits, reserved_wl_bus, false);
 
     /* Connect SRAM BL/WLs to bus */
-    BasicPort mux_bl_wire(generate_sram_port_name(circuit_lib, sram_models[0], sram_orgz_type, SPICE_MODEL_PORT_BL), 
+    BasicPort mux_bl_wire(generate_sram_port_name(sram_orgz_type, SPICE_MODEL_PORT_BL), 
                           num_conf_bits); 
     BasicPort bl_bus_regular_bits(bl_bus.get_name(), num_reserved_conf_bits, num_reserved_conf_bits + num_conf_bits - 1);
     print_verilog_wire_connection(fp, bl_bus_regular_bits, mux_bl_wire, false);
-    BasicPort mux_wl_wire(generate_sram_port_name(circuit_lib, sram_models[0], sram_orgz_type, SPICE_MODEL_PORT_WL), 
+    BasicPort mux_wl_wire(generate_sram_port_name(sram_orgz_type, SPICE_MODEL_PORT_WL), 
                           num_conf_bits); 
     BasicPort wl_bus_regular_bits(wl_bus.get_name(), num_reserved_conf_bits, num_reserved_conf_bits + num_conf_bits - 1);
     print_verilog_wire_connection(fp, wl_bus_regular_bits, mux_wl_wire, false);

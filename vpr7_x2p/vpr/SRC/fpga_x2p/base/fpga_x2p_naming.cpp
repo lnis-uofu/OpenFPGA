@@ -459,11 +459,9 @@ std::string generate_local_config_bus_port_name() {
  * port list of a module
  * The port name is named after the cell name of SRAM in circuit library
  *********************************************************************/
-std::string generate_sram_port_name(const CircuitLibrary& circuit_lib,
-                                    const CircuitModelId& sram_model,
-                                    const e_sram_orgz& sram_orgz_type,
+std::string generate_sram_port_name(const e_sram_orgz& sram_orgz_type,
                                     const e_spice_model_port_type& port_type) {
-  std::string port_name = circuit_lib.model_name(sram_model) + std::string("_");
+  std::string port_name;
 
   switch (sram_orgz_type) {
   case SPICE_SRAM_STANDALONE: {
@@ -472,10 +470,10 @@ std::string generate_sram_port_name(const CircuitLibrary& circuit_lib,
      * (2) Inverted output of a SRAM, enabled by port type of OUTPUT
      */
     if (SPICE_MODEL_PORT_INPUT == port_type) {
-      port_name += std::string("out"); 
+      port_name = std::string("mem_out"); 
     } else {
       VTR_ASSERT( SPICE_MODEL_PORT_OUTPUT == port_type );
-      port_name += std::string("outb"); 
+      port_name = std::string("mem_outb"); 
     }
     break;
   }
@@ -488,10 +486,10 @@ std::string generate_sram_port_name(const CircuitLibrary& circuit_lib,
      *           +------+    +------+    +------+
      */
     if (SPICE_MODEL_PORT_INPUT == port_type) {
-      port_name += std::string("ccff_head"); 
+      port_name = std::string("ccff_head"); 
     } else {
       VTR_ASSERT( SPICE_MODEL_PORT_OUTPUT == port_type );
-      port_name += std::string("ccff_tail"); 
+      port_name = std::string("ccff_tail"); 
     }
     break;
   case SPICE_SRAM_MEMORY_BANK:
@@ -510,14 +508,14 @@ std::string generate_sram_port_name(const CircuitLibrary& circuit_lib,
      *           +----------+     +----------+     +----------+
      */
     if (SPICE_MODEL_PORT_BL == port_type) {
-      port_name += std::string("bl"); 
+      port_name = std::string("bl"); 
     } else if (SPICE_MODEL_PORT_WL == port_type) {
-      port_name += std::string("wl"); 
+      port_name = std::string("wl"); 
     } else if (SPICE_MODEL_PORT_BLB == port_type) {
-      port_name += std::string("blb"); 
+      port_name = std::string("blb"); 
     } else {
       VTR_ASSERT( SPICE_MODEL_PORT_WLB == port_type );
-      port_name += std::string("wlb"); 
+      port_name = std::string("wlb"); 
     }
     break;
   default:
