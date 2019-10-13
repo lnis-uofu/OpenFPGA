@@ -76,6 +76,9 @@ void add_module_nets_memory_config_bus(ModuleManager& module_manager,
                                        const e_sram_orgz& sram_orgz_type, 
                                        const e_spice_model_design_tech& mem_tech);
 
+size_t find_module_num_shared_config_bits(const ModuleManager& module_manager,
+                                          const ModuleId& module_id);
+
 size_t find_module_num_config_bits(const ModuleManager& module_manager,
                                    const ModuleId& module_id,
                                    const CircuitLibrary& circuit_lib,
@@ -87,5 +90,14 @@ void add_module_global_ports_from_child_modules(ModuleManager& module_manager,
 
 void add_module_gpio_ports_from_child_modules(ModuleManager& module_manager, 
                                               const ModuleId& module_id);
+
+size_t find_module_num_shared_config_bits_from_child_modules(ModuleManager& module_manager, 
+                                                             const ModuleId& module_id);
+
+size_t find_module_num_config_bits_from_child_modules(ModuleManager& module_manager, 
+                                                      const ModuleId& module_id,
+                                                      const CircuitLibrary& circuit_lib,
+                                                      const CircuitModelId& sram_model,
+                                                      const e_sram_orgz& sram_orgz_type);
 
 #endif

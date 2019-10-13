@@ -775,17 +775,33 @@ void print_verilog_physical_blocks_rec(std::fstream& fp,
    */
   add_module_gpio_ports_from_child_modules(module_manager, pb_module);
 
-  /* TODO: Count shared SRAM ports from the sub-modules under this Verilog module
+  /* Count shared SRAM ports from the sub-modules under this Verilog module
    * This is a much easier job after adding sub modules (instances), 
    * we just need to find all the I/O ports from the child modules and build a list of it
    */
+  size_t module_num_shared_config_bits = find_module_num_shared_config_bits_from_child_modules(module_manager, pb_module); 
+  if (0 < module_num_shared_config_bits) {
+    add_reserved_sram_ports_to_module_manager(module_manager, pb_module, module_num_shared_config_bits);
+  }
 
-  /* TODO: Count SRAM ports from the sub-modules under this Verilog module
+  /* Count SRAM ports from the sub-modules under this Verilog module
    * This is a much easier job after adding sub modules (instances), 
    * we just need to find all the I/O ports from the child modules and build a list of it
    */
+  size_t module_num_config_bits = find_module_num_config_bits_from_child_modules(module_manager, pb_module, circuit_lib, sram_model, cur_sram_orgz_info->type); 
+  printf("Add %lu configuration bits to module %s\n", module_num_config_bits, module_manager.module_name(pb_module).c_str());
+  if (0 < module_num_config_bits) {
+    add_sram_ports_to_module_manager(module_manager, pb_module, circuit_lib, sram_model, cur_sram_orgz_info->type, module_num_config_bits);
+  }
 
-  /* TODO: Add module nets to connect memory cells inside */
+  /* Add module nets to connect memory cells inside
+   * This is a one-shot addition that covers all the memory modules in this pb module!
+   */
+  if (false == memory_modules.empty()) {
+    add_module_nets_memory_config_bus(module_manager, pb_module, 
+                                      memory_modules, memory_instances,
+                                      cur_sram_orgz_info->type, circuit_lib.design_tech_type(sram_model));
+  }
 
   /* Comment lines */
   print_verilog_comment(fp, std::string("----- BEGIN Physical programmable logic block Verilog module: " + std::string(physical_pb_type->name) + " -----"));
@@ -857,8 +873,8 @@ void print_verilog_grid(ModuleManager& module_manager,
   /* Print preprocessing flags */
   print_verilog_include_defines_preproc_file(fp, verilog_dir);
 
-  /* TODO: Print Verilog modules for all the pb_types/pb_graph_nodes */
-  /* TODO: use a Depth-First Search Algorithm to print the sub-modules 
+  /* Print Verilog modules for all the pb_types/pb_graph_nodes
+   * use a Depth-First Search Algorithm to print the sub-modules 
    * Note: DFS is the right way. Do NOT use BFS.
    * DFS can guarantee that all the sub-modules can be registered properly
    * to its parent in module manager  

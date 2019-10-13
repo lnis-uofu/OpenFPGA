@@ -815,6 +815,31 @@ void add_module_nets_memory_config_bus(ModuleManager& module_manager,
 }
 
 /********************************************************************
+ * Find the size of shared(reserved) configuration ports for module 
+ *******************************************************************/
+size_t find_module_num_shared_config_bits(const ModuleManager& module_manager,
+                                          const ModuleId& module_id) {
+  std::vector<std::string> shared_config_port_names;
+  shared_config_port_names.push_back(generate_reserved_sram_port_name(SPICE_MODEL_PORT_BLB));
+  shared_config_port_names.push_back(generate_reserved_sram_port_name(SPICE_MODEL_PORT_WL));
+  size_t num_shared_config_bits = 0; /* By default it has zero configuration bits*/
+
+  /* Try to find these ports in the module manager */
+  for (const std::string& shared_config_port_name : shared_config_port_names) {
+    ModulePortId module_port_id = module_manager.find_module_port(module_id, shared_config_port_name);
+    /* If the port does not exist, go to the next */
+    if (false == module_manager.valid_module_port_id(module_id, module_port_id)) {
+      continue;
+    }
+    /* The port exist, find the port size and update the num_config_bits if the size is larger */
+    BasicPort module_port = module_manager.module_port(module_id, module_port_id);
+    num_shared_config_bits = std::max((int)num_shared_config_bits, (int)module_port.get_width());
+  }
+
+  return num_shared_config_bits;
+}
+
+/********************************************************************
  * Find the size of configuration ports for module 
  *******************************************************************/
 size_t find_module_num_config_bits(const ModuleManager& module_manager,
@@ -915,6 +940,49 @@ void add_module_global_ports_from_child_modules(ModuleManager& module_manager,
   for (const BasicPort& global_port_to_add : global_ports_to_add) {
     module_manager.add_port(module_id, global_port_to_add, ModuleManager::MODULE_GLOBAL_PORT);
   } 
+}
+
+/********************************************************************
+ * Find the number of shared configuration bits for a module 
+ * by selected the maximum number of shared configuration bits of child modules
+ *
+ * Note: This function should be call ONLY after all the sub modules (instances)
+ * have been added to the pb_module!
+ * Otherwise, some global ports of the sub modules may be missed!
+ *******************************************************************/
+size_t find_module_num_shared_config_bits_from_child_modules(ModuleManager& module_manager, 
+                                                             const ModuleId& module_id) {
+  size_t num_shared_config_bits = 0;
+
+  /* Iterate over the child modules */
+  for (const ModuleId& child : module_manager.child_modules(module_id)) {
+    num_shared_config_bits = std::max((int)num_shared_config_bits, (int)find_module_num_shared_config_bits(module_manager, child));
+  } 
+
+  return num_shared_config_bits;
+}
+
+/********************************************************************
+ * Find the number of configuration bits for a module 
+ * by summing up the number of configuration bits of child modules
+ *
+ * Note: This function should be call ONLY after all the sub modules (instances)
+ * have been added to the pb_module!
+ * Otherwise, some global ports of the sub modules may be missed!
+ *******************************************************************/
+size_t find_module_num_config_bits_from_child_modules(ModuleManager& module_manager, 
+                                                      const ModuleId& module_id,
+                                                      const CircuitLibrary& circuit_lib,
+                                                      const CircuitModelId& sram_model,
+                                                      const e_sram_orgz& sram_orgz_type) {
+  size_t num_config_bits = 0;
+
+  /* Iterate over the child modules */
+  for (const ModuleId& child : module_manager.child_modules(module_id)) {
+    num_config_bits += find_module_num_config_bits(module_manager, child, circuit_lib, sram_model, sram_orgz_type);
+  } 
+
+  return num_config_bits;
 }
 
 

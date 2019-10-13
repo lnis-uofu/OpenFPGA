@@ -468,7 +468,7 @@ std::vector<BasicPort> combine_verilog_ports(const std::vector<BasicPort>& ports
     /* Identify if the port name can be potentially merged: if the port name is already in the merged port list, it may be merged */
     bool merged = false;
     for (auto& merged_port : merged_ports) {
-      if (0 != port.get_name().compare(merged_port.get_name())) {
+      if (false == port.mergeable(merged_port)) {
         /* Unable to merge, Go to next */
         continue;
       }
