@@ -71,7 +71,7 @@ BasicPort generate_verilog_port_for_module_net(const ModuleManager& module_manag
   } else {
     net_name  = module_manager.module_name(net_src_module); 
     net_name += std::string("_") + std::to_string(net_src_instance) + std::string("_");
-    net_name += module_manager.module_port(module_id, net_src_port).get_name();
+    net_name += module_manager.module_port(net_src_module, net_src_port).get_name();
   }
   
   return BasicPort(net_name, net_src_pin, net_src_pin);

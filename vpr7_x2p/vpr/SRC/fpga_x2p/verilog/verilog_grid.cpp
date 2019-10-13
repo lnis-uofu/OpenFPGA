@@ -194,6 +194,386 @@ void print_verilog_primitive_block(std::fstream& fp,
 }
 
 /********************************************************************
+ * This function add a net for a pin-to-pin connection defined in pb_graph
+ * It supports two cases for the pin-to-pin connection
+ * 1. The net source is a pb_graph_pin while the net sink is a pin of an interconnection
+ * 2. The net source is a pin of an interconnection while the net sink a pb_graph_pin
+ * The type is enabled by an argument pin2pin_interc_type
+ *******************************************************************/
+static 
+void add_module_pb_graph_pin2pin_net(ModuleManager& module_manager,
+                                     const ModuleId& pb_module,
+                                     const ModuleId& interc_module,
+                                     const size_t& interc_instance,
+                                     const std::string& interc_port_name,
+                                     const std::string& module_name_prefix,
+                                     t_pb_graph_pin* pb_graph_pin,
+                                     const enum e_spice_pin2pin_interc_type& pin2pin_interc_type) {
+
+  ModuleNetId pin2pin_net = module_manager.create_module_net(pb_module);
+
+  /* Find port and pin ids for the module, which is the parent of pb_graph_pin  */
+  t_pb_type* pin_pb_type = pb_graph_pin->parent_node->pb_type;
+  /* Find the module contains the source pin */
+  ModuleId pin_pb_type_module = module_manager.find_module(generate_physical_block_module_name(module_name_prefix, pin_pb_type));
+  VTR_ASSERT(true == module_manager.valid_module_id(pin_pb_type_module));
+  size_t pin_pb_type_instance = 0; /* Deposite the instance with a zero, which is the default value is the source module is actually pb_module itself */
+  if (pin_pb_type_module != pb_module) {
+    pin_pb_type_instance = pb_graph_pin->parent_node->placement_index;
+    /* Ensure this is an valid instance */
+    VTR_ASSERT(pin_pb_type_instance < module_manager.num_instance(pb_module, pin_pb_type_module));
+  }
+  ModulePortId pin_module_port_id = module_manager.find_module_port(pin_pb_type_module, generate_pb_type_port_name(pb_graph_pin->port)); 
+  VTR_ASSERT(true == module_manager.valid_module_port_id(pin_pb_type_module, pin_module_port_id));
+  size_t pin_module_pin_id = pb_graph_pin->pin_number;
+  /* Ensure this is an valid pin index */
+  VTR_ASSERT(pin_module_pin_id < module_manager.module_port(pin_pb_type_module, pin_module_port_id).get_width());
+
+  /* Find port and pin ids for the interconnection module */
+  ModulePortId interc_port_id = module_manager.find_module_port(interc_module, interc_port_name); 
+  VTR_ASSERT(true == module_manager.valid_module_port_id(interc_module, interc_port_id));
+  size_t interc_pin_id = 0;
+  /* Ensure this is an valid pin index */
+  VTR_ASSERT(interc_pin_id < module_manager.module_port(interc_module, interc_port_id).get_width());
+  
+  /* Add net sources and sinks:
+   * For input-to-input connection, net_source is pin_graph_pin, while net_sink is interc pin   
+   * For output-to-output connection, net_source is interc pin, while net_sink is pin_graph pin   
+   */
+  switch (pin2pin_interc_type) {
+  case INPUT2INPUT_INTERC:
+    module_manager.add_module_net_source(pb_module, pin2pin_net, pin_pb_type_module, pin_pb_type_instance, pin_module_port_id, pin_module_pin_id);
+    module_manager.add_module_net_sink(pb_module, pin2pin_net, interc_module, interc_instance, interc_port_id, interc_pin_id);
+    break;
+  case OUTPUT2OUTPUT_INTERC:
+    module_manager.add_module_net_source(pb_module, pin2pin_net, interc_module, interc_instance, interc_port_id, interc_pin_id);
+    module_manager.add_module_net_sink(pb_module, pin2pin_net, pin_pb_type_module, pin_pb_type_instance, pin_module_port_id, pin_module_pin_id);
+    break;
+  default:
+    vpr_printf(TIO_MESSAGE_ERROR,
+               "(File:%s, [LINE%d]) Invalid pin-to-pin interconnection type!\n",
+               __FILE__, __LINE__);
+    exit(1);
+  }
+}
+
+/********************************************************************
+ * We check output_pins of cur_pb_graph_node and its the input_edges
+ * Built the interconnections between outputs of cur_pb_graph_node and outputs of child_pb_graph_node
+ *   src_pb_graph_node.[in|out]_pins -----------------> des_pb_graph_node.[in|out]pins
+ *                                        /|\
+ *                                         |
+ *                         input_pins,   edges,       output_pins
+ *
+ * This function does the following task:
+ * 1. identify pin interconnection type, 
+ * 2. Identify the number of fan-in (Consider interconnection edges of only selected mode)
+ * 3. Add mux/direct connection as a child module to pb_module
+ * 4. Add nets related to the mux/direction 
+ *******************************************************************/
+static 
+void add_module_pb_graph_pin_interc(ModuleManager& module_manager,
+                                    const ModuleId& pb_module,
+                                    const CircuitLibrary& circuit_lib,
+                                    t_sram_orgz_info* cur_sram_orgz_info,
+                                    const std::string& module_name_prefix,
+                                    t_pb_graph_pin* des_pb_graph_pin,
+                                    t_mode* physical_mode) {
+  /* Find the number of fan-in and detailed interconnection information 
+   * related to the destination pb_graph_pin 
+   */
+  int fan_in = 0;
+  t_interconnect* cur_interc = NULL;
+  find_interc_fan_in_des_pb_graph_pin(des_pb_graph_pin, physical_mode, &cur_interc, &fan_in);
+
+  /* If no interconnection is needed, we can return early */
+  if ((NULL == cur_interc) || (0 == fan_in)) { 
+    return;
+  }
+
+  /* Initialize the interconnection type that will be physically implemented in module */
+  enum e_interconnect verilog_interc_type = determine_actual_pb_interc_type(cur_interc, fan_in);
+
+  /* Branch on the type of physical implementation,
+   * We add instances of programmable interconnection 
+   */ 
+  switch (verilog_interc_type) {
+  case DIRECT_INTERC: {
+    /* Ensure direct interc has only one fan-in */
+    VTR_ASSERT(1 == fan_in);
+
+    /* For more than one mode defined, the direct interc has more than one input_edge ,
+     * We need to find which edge is connected the pin we want
+     */
+    int iedge = 0;
+    for (iedge = 0; iedge < des_pb_graph_pin->num_input_edges; iedge++) {
+      if (cur_interc == des_pb_graph_pin->input_edges[iedge]->interconnect) {
+        break;
+      }
+    }
+    t_pb_graph_pin* src_pb_graph_pin = des_pb_graph_pin->input_edges[iedge]->input_pins[0];
+
+    /* Ensure that circuit model is a wire */ 
+    VTR_ASSERT(SPICE_MODEL_WIRE == circuit_lib.model_type(cur_interc->circuit_model));
+    /* Find the wire module in the module manager */
+    ModuleId wire_module = module_manager.find_module(circuit_lib.model_name(cur_interc->circuit_model));
+    VTR_ASSERT(true == module_manager.valid_module_id(wire_module));
+    /* Get the instance id and add an instance of wire */
+    size_t wire_instance = module_manager.num_instance(pb_module, wire_module);
+    module_manager.add_child_module(pb_module, wire_module);
+
+    /* Find input ports of the wire module */
+    std::vector<CircuitPortId> wire_model_inputs = circuit_lib.model_ports_by_type(cur_interc->circuit_model, SPICE_MODEL_PORT_INPUT, true); /* the last argument to guarantee that we ignore any global inputs */
+    VTR_ASSERT(1 == wire_model_inputs.size());
+    /* Find output ports of the wire module */
+    std::vector<CircuitPortId> wire_model_outputs = circuit_lib.model_ports_by_type(cur_interc->circuit_model, SPICE_MODEL_PORT_OUTPUT, true); /* the last argument to guarantee that we ignore any global ports */
+    VTR_ASSERT(1 == wire_model_outputs.size());
+
+    /* Add nets to connect the wires to ports of pb_module */
+    /* First net is to connect input of src_pb_graph_node to input of the wire module */ 
+    add_module_pb_graph_pin2pin_net(module_manager, pb_module, 
+                                    wire_module, wire_instance, 
+                                    circuit_lib.port_lib_name(wire_model_inputs[0]),
+                                    module_name_prefix,
+                                    src_pb_graph_pin, 
+                                    INPUT2INPUT_INTERC);
+
+    /* Second net is to connect output of the wire module to output of des_pb_graph_pin */ 
+    add_module_pb_graph_pin2pin_net(module_manager, pb_module, 
+                                    wire_module, wire_instance, 
+                                    circuit_lib.port_lib_name(wire_model_outputs[0]),
+                                    module_name_prefix,
+                                    des_pb_graph_pin, 
+                                    OUTPUT2OUTPUT_INTERC);
+    break;
+  }
+  case COMPLETE_INTERC:
+  case MUX_INTERC: {
+    /* Check: MUX should have at least 2 fan_in */
+    VTR_ASSERT((2 == fan_in)||(2 < fan_in));
+    /* Ensure that circuit model is a MUX */ 
+    VTR_ASSERT(SPICE_MODEL_MUX == circuit_lib.model_type(cur_interc->circuit_model));
+    /* Find the wire module in the module manager */
+    ModuleId mux_module = module_manager.find_module(generate_mux_subckt_name(circuit_lib, cur_interc->circuit_model, fan_in, std::string()));
+    VTR_ASSERT(true == module_manager.valid_module_id(mux_module));
+
+    /* Instanciate the MUX */
+    size_t mux_instance = module_manager.num_instance(pb_module, mux_module);
+    module_manager.add_child_module(pb_module, mux_module);
+
+    /* TODO: Instance the memory module for the MUX */
+    /* TODO: Create nets to wire between the MUX and it memory module */
+    /* TODO: Create nets to wire between the MUX and PB module */
+    
+    int ipin = 0;
+    for (int iedge = 0; iedge < des_pb_graph_pin->num_input_edges; iedge++) {
+      if (physical_mode != des_pb_graph_pin->input_edges[iedge]->interconnect->parent_mode) {
+        continue;
+      }
+      check_pb_graph_edge(*(des_pb_graph_pin->input_edges[iedge]));
+      ipin++;
+    }
+    VTR_ASSERT(ipin == fan_in);
+
+    break;
+  }
+  default:
+    vpr_printf(TIO_MESSAGE_ERROR,
+               "(File:%s,[LINE%d])Invalid interconnection type for %s (Arch[LINE%d])!\n",
+               __FILE__, __LINE__, cur_interc->name, cur_interc->line_num);
+    exit(1);
+  }
+
+  return;
+}
+
+
+/********************************************************************
+ * Add modules and nets for programmable/non-programmable interconnections 
+ * which end to a port of pb_module
+ * This function will add the following elements to a module
+ * 1. Instances of direct connections
+ * 2. Instances of programmable routing multiplexers
+ * 3. nets to connect direct connections/multiplexer 
+ *
+ *  +-----------------------------------------+
+ *  |                                        
+ *  |    +--------------+    +------------+
+ *  |--->|              |--->|            |
+ *  |... | Multiplexers |... |            |
+ *  |--->|              |--->|            |
+ *  |    +--------------+    |   des_pb_  | 
+ *  |                        | graph_node |                      
+ *  |    +--------------+    |            |
+ *  |--->|              |--->|            |
+ *  | ...|    Direct    |... |            |
+ *  |--->|  Connections |--->|            |
+ *  |    +--------------+    +------------+
+ *  |                                        
+ *  +----------------------------------------+
+
+ *
+ *  Note: this function should be run after ALL the child pb_modules
+ *  have been added to the pb_module and ALL the ports defined 
+ *  in pb_type have been added to the pb_module!!!
+ *
+ ********************************************************************/
+static 
+void add_module_pb_graph_port_interc(ModuleManager& module_manager,
+                                     const ModuleId& pb_module,
+                                     const CircuitLibrary& circuit_lib,
+                                     t_pb_graph_node* des_pb_graph_node,
+                                     t_sram_orgz_info* cur_sram_orgz_info,
+                                     const std::string& module_name_prefix,
+                                     const e_spice_pb_port_type& pb_port_type,
+                                     t_mode* physical_mode) {
+  switch (pb_port_type) {
+  case SPICE_PB_PORT_INPUT: {
+    for (int iport = 0; iport < des_pb_graph_node->num_input_ports; ++iport) {
+      for (int ipin = 0; ipin < des_pb_graph_node->num_input_pins[iport]; ++ipin) {
+        /* Get the selected edge of current pin*/
+        add_module_pb_graph_pin_interc(module_manager, pb_module,
+                                       circuit_lib,
+                                       cur_sram_orgz_info,
+                                       module_name_prefix,
+                                       &(des_pb_graph_node->input_pins[iport][ipin]),
+                                       physical_mode);
+      }
+    }
+    break;
+  }
+  case SPICE_PB_PORT_OUTPUT: {
+    for (int iport = 0; iport < des_pb_graph_node->num_output_ports; ++iport) {
+      for (int ipin = 0; ipin < des_pb_graph_node->num_output_pins[iport]; ++ipin) {
+        add_module_pb_graph_pin_interc(module_manager, pb_module,
+                                       circuit_lib,
+                                       cur_sram_orgz_info,
+                                       module_name_prefix,
+                                       &(des_pb_graph_node->output_pins[iport][ipin]),
+                                       physical_mode);
+      }
+    }
+    break;
+  }
+  case SPICE_PB_PORT_CLOCK: {
+    for (int iport = 0; iport < des_pb_graph_node->num_clock_ports; ++iport) {
+      for (int ipin = 0; ipin < des_pb_graph_node->num_clock_pins[iport]; ++ipin) {
+        add_module_pb_graph_pin_interc(module_manager, pb_module,
+                                       circuit_lib,
+                                       cur_sram_orgz_info,
+                                       module_name_prefix,
+                                       &(des_pb_graph_node->clock_pins[iport][ipin]),
+                                       physical_mode);
+      }
+    }
+    break;
+  }
+  default:
+   vpr_printf(TIO_MESSAGE_ERROR,
+              "(File:%s,[LINE%d])Invalid pb port type!\n",
+               __FILE__, __LINE__);
+    exit(1);
+  }
+}
+
+/********************************************************************
+ * TODO: 
+ * Add modules and nets for programmable/non-programmable interconnections 
+ * inside a module of pb_type
+ * This function will add the following elements to a module
+ * 1. Instances of direct connections
+ * 2. Instances of programmable routing multiplexers
+ * 3. nets to connect direct connections/multiplexer 
+ *
+ *   Pb_module
+ *  +--------------------------------------------------------------+
+ *  |                                                              |
+ *  |    +--------------+    +------------+    +--------------+    |
+ *  |--->|              |--->|            |--->|              |--->|
+ *  |... | Multiplexers |... |            |... | Multiplexers |... |
+ *  |--->|              |--->|            |--->|              |--->|
+ *  |    +--------------+    |   Child    |    +--------------+    |
+ *  |                        | Pb_modules |                        |
+ *  |    +--------------+    |            |    +--------------+    |
+ *  |--->|              |--->|            |--->|              |--->|
+ *  | ...|    Direct    |... |            |... |    Direct    |... |
+ *  |--->|  Connections |--->|            |--->|  Connections |--->|
+ *  |    +--------------+    +------------+    +--------------+    |
+ *  |                                                              |
+ *  +--------------------------------------------------------------+
+ *
+ *  Note: this function should be run after ALL the child pb_modules
+ *  have been added to the pb_module and ALL the ports defined 
+ *  in pb_type have been added to the pb_module!!!
+ *
+ ********************************************************************/
+static 
+void add_module_pb_graph_interc(ModuleManager& module_manager,
+                                const ModuleId& pb_module,
+                                const CircuitLibrary& circuit_lib,
+                                t_pb_graph_node* physical_pb_graph_node,
+                                t_sram_orgz_info* cur_sram_orgz_info,
+                                const std::string& module_name_prefix,
+                                const int& physical_mode_index) {
+  /* Check cur_pb_graph_node*/
+  if (NULL == physical_pb_graph_node) {
+    vpr_printf(TIO_MESSAGE_ERROR,
+               "(File:%s,[LINE%d]) Invalid cur_pb_graph_node.\n", 
+               __FILE__, __LINE__); 
+    exit(1);
+  }
+  
+  /* Assign physical mode */
+  t_mode* physical_mode = &(physical_pb_graph_node->pb_type->modes[physical_mode_index]);
+
+  /* We check output_pins of cur_pb_graph_node and its the input_edges
+   * Built the interconnections between outputs of cur_pb_graph_node and outputs of child_pb_graph_node
+   *   child_pb_graph_node.output_pins -----------------> cur_pb_graph_node.outpins
+   *                                        /|\
+   *                                         |
+   *                         input_pins,   edges,       output_pins
+   */ 
+  add_module_pb_graph_port_interc(module_manager, pb_module,
+                                  circuit_lib, 
+                                  physical_pb_graph_node, 
+                                  cur_sram_orgz_info, 
+                                  module_name_prefix, 
+                                  SPICE_PB_PORT_OUTPUT,
+                                  physical_mode);
+  
+  /* We check input_pins of child_pb_graph_node and its the input_edges
+   * Built the interconnections between inputs of cur_pb_graph_node and inputs of child_pb_graph_node
+   *   cur_pb_graph_node.input_pins -----------------> child_pb_graph_node.input_pins
+   *                                        /|\
+   *                                         |
+   *                         input_pins,   edges,       output_pins
+   */ 
+  for (int child = 0; child < physical_pb_graph_node->pb_type->modes[physical_mode_index].num_pb_type_children; ++child) {
+    for (int inst = 0; inst < physical_pb_graph_node->pb_type->modes[physical_mode_index].pb_type_children[child].num_pb; ++inst) {
+      t_pb_graph_node* child_pb_graph_node = &(physical_pb_graph_node->child_pb_graph_nodes[physical_mode_index][child][inst]);
+      /* For each child_pb_graph_node input pins*/
+      add_module_pb_graph_port_interc(module_manager, pb_module,
+                                      circuit_lib, 
+                                      child_pb_graph_node, 
+                                      cur_sram_orgz_info, 
+                                      module_name_prefix, 
+                                      SPICE_PB_PORT_INPUT,
+                                      physical_mode);
+
+      /* For each child_pb_graph_node clock pins*/
+      add_module_pb_graph_port_interc(module_manager, pb_module,
+                                      circuit_lib, 
+                                      child_pb_graph_node, 
+                                      cur_sram_orgz_info, 
+                                      module_name_prefix, 
+                                      SPICE_PB_PORT_CLOCK,
+                                      physical_mode);
+    }
+  }
+}
+
+
+/********************************************************************
  * Print Verilog modules of physical blocks inside a grid (CLB, I/O. etc.)
  * This function will traverse the graph of complex logic block (t_pb_graph_node)
  * in a recursive way, using a Depth First Search (DFS) algorithm.
@@ -298,13 +678,16 @@ void print_verilog_physical_blocks_rec(std::fstream& fp,
 
     /* Each child may exist multiple times in the hierarchy*/
     for (int inst = 0; inst < physical_pb_type->modes[physical_mode_index].pb_type_children[ichild].num_pb; ++inst) {
-      /* we should make sure this placement index == child_pb_type[jpb] */
-      VTR_ASSERT(inst == physical_pb_graph_node->child_pb_graph_nodes[physical_mode_index][ichild][inst].placement_index);
-
       size_t child_instance_id = module_manager.num_instance(pb_module, child_pb_module); 
+      /* Ensure the instance of this child module is the same as placement index,
+       * This check is necessary because placement_index is used to identify instance id for children 
+       * when adding local interconnection for this pb_type 
+       */
+      VTR_ASSERT(child_instance_id == (size_t)physical_pb_graph_node->child_pb_graph_nodes[physical_mode_index][ichild][inst].placement_index);
+
       /* Add the memory module as a child of primitive module */
       module_manager.add_child_module(pb_module, child_pb_module); 
-      /* TODO: Identify if this sub module includes configuration bits, 
+      /* Identify if this sub module includes configuration bits, 
        * we will update the memory module and instance list
        */
       if (0 < find_module_num_config_bits(module_manager, child_pb_module,
@@ -338,12 +721,11 @@ void print_verilog_physical_blocks_rec(std::fstream& fp,
 
   /* TODO: Add modules and nets for programmable/non-programmable interconnections 
    * inside the Verilog module */
-  /*
-  dump_verilog_pb_graph_interc(cur_sram_orgz_info, fp, subckt_name, 
-                               cur_pb_graph_node, mode_index,
-                               is_explicit_mapping);
-   */
-
+  add_module_pb_graph_interc(module_manager, pb_module,
+                             circuit_lib, physical_pb_graph_node,
+                             cur_sram_orgz_info,
+                             pb_module_name_prefix,
+                             physical_mode_index);
 
   /* Comment lines */
   print_verilog_comment(fp, std::string("----- BEGIN Physical programmable logic block Verilog module: " + std::string(physical_pb_type->name) + " -----"));
