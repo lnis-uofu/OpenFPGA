@@ -108,6 +108,7 @@ void print_verilog_module_definition(std::fstream& fp,
   /* port type2type mapping */
   std::map<ModuleManager::e_module_port_type, enum e_dump_verilog_port_type> port_type2type_map;
   port_type2type_map[ModuleManager::MODULE_GLOBAL_PORT] = VERILOG_PORT_CONKT;
+  port_type2type_map[ModuleManager::MODULE_GPIO_PORT] = VERILOG_PORT_CONKT;
   port_type2type_map[ModuleManager::MODULE_INOUT_PORT] = VERILOG_PORT_CONKT;
   port_type2type_map[ModuleManager::MODULE_INPUT_PORT] = VERILOG_PORT_CONKT;
   port_type2type_map[ModuleManager::MODULE_OUTPUT_PORT] = VERILOG_PORT_CONKT;
@@ -166,6 +167,7 @@ void print_verilog_module_ports(std::fstream& fp,
   /* port type2type mapping */
   std::map<ModuleManager::e_module_port_type, enum e_dump_verilog_port_type> port_type2type_map;
   port_type2type_map[ModuleManager::MODULE_GLOBAL_PORT] = VERILOG_PORT_INPUT;
+  port_type2type_map[ModuleManager::MODULE_GPIO_PORT] = VERILOG_PORT_INPUT;
   port_type2type_map[ModuleManager::MODULE_INOUT_PORT] = VERILOG_PORT_INOUT;
   port_type2type_map[ModuleManager::MODULE_INPUT_PORT] = VERILOG_PORT_INPUT;
   port_type2type_map[ModuleManager::MODULE_OUTPUT_PORT] = VERILOG_PORT_OUTPUT;

@@ -83,6 +83,34 @@ std::vector<size_t> BasicPort::pins() const {
   return pin_indices;
 }
 
+/* Check if a port can be merged with this port: their name should be the same */
+bool BasicPort::mergeable(const BasicPort& portA) const {
+  return (0 == this->get_name().compare(portA.get_name()));
+} 
+
+/* Check if a port is contained by this port:
+ * this function will check if the (LSB, MSB) of portA 
+ * is contained by the (LSB, MSB) of this port 
+ */
+bool BasicPort::contained(const BasicPort& portA) const {
+  return ( lsb_ <= portA.get_lsb() && portA.get_msb() <= msb_ );
+}
+
+/* Overloaded operators */
+/* Two ports are the same only when: 
+ * 1. port names are the same
+ * 2. LSBs are the same
+ * 3. MSBs are the same 
+ */
+bool BasicPort::operator== (const BasicPort& portA) const {
+  if  ( (0 == this->get_name().compare(portA.get_name())) 
+     && (this->get_lsb() == portA.get_lsb())
+     && (this->get_msb() == portA.get_msb()) ) {
+    return true;
+  }
+  return false;
+}
+
 /* Mutators */
 /* copy */
 void BasicPort::set(const BasicPort& basic_port) {
@@ -218,6 +246,28 @@ void BasicPort::combine(const BasicPort& port) {
   return;
 } 
 
+/* A restricted combine function for two ports,
+ * Following conditions will be applied:
+ * 1. the two ports have the same name
+ *    Note: you must run mergable() function first 
+ *          to make sure this assumption is valid
+ * 2. the new MSB will be the maximum MSB of the two ports
+ * 3. the new LSB will be the minimum LSB of the two ports
+ * 4. both ports should be valid!!!
+ */
+void BasicPort::merge(const BasicPort& portA) {
+  VTR_ASSERT(true == this->mergeable(portA));
+  VTR_ASSERT(true == this->is_valid() && true == portA.is_valid());
+  /* We skip merging if the portA is already contained by this port */
+  if (true == this->contained(portA)) {
+    return;
+  }
+  /* LSB follows the minium LSB of the two ports */
+  lsb_ = std::min((int)lsb_, (int)portA.get_lsb());
+  /* MSB follows the minium MSB of the two ports */
+  msb_ = std::max((int)msb_, (int)portA.get_msb());
+  return;
+}
 
 /* Internal functions */
 /* Make a port to be invalid: msb < lsb */

@@ -25,11 +25,12 @@
 class ModuleManager {
   public: /* Private data structures */
     enum e_module_port_type {
-      MODULE_GLOBAL_PORT,
-      MODULE_INOUT_PORT,
-      MODULE_INPUT_PORT,
-      MODULE_OUTPUT_PORT,
-      MODULE_CLOCK_PORT,
+      MODULE_GLOBAL_PORT, /* Global inputs */
+      MODULE_GPIO_PORT,   /* General-purpose IOs, which are data IOs of the fabric */
+      MODULE_INOUT_PORT,  /* Normal (non-global) inout ports */
+      MODULE_INPUT_PORT,  /* Normal (non-global) input ports */
+      MODULE_OUTPUT_PORT, /* Normal (non-global) output ports */
+      MODULE_CLOCK_PORT,  /* Nromal (non-global) clock ports*/
       NUM_MODULE_PORT_TYPES 
     };
 
@@ -37,11 +38,13 @@ class ModuleManager {
 
   public: /* Types and ranges */
     typedef vtr::vector<ModuleId, ModuleId>::const_iterator module_iterator;
+    typedef vtr::vector<ModulePortId, ModulePortId>::const_iterator module_port_iterator;
     typedef vtr::vector<ModuleNetId, ModuleNetId>::const_iterator module_net_iterator;
     typedef vtr::vector<ModuleNetSrcId, ModuleNetSrcId>::const_iterator module_net_src_iterator;
     typedef vtr::vector<ModuleNetSinkId, ModuleNetSinkId>::const_iterator module_net_sink_iterator;
 
     typedef vtr::Range<module_iterator> module_range;
+    typedef vtr::Range<module_port_iterator> module_port_range;
     typedef vtr::Range<module_net_iterator> module_net_range;
     typedef vtr::Range<module_net_src_iterator> module_net_src_range;
     typedef vtr::Range<module_net_sink_iterator> module_net_sink_range;
@@ -49,6 +52,8 @@ class ModuleManager {
   public: /* Public aggregators */
     /* Find all the modules */
     module_range modules() const;
+    /* Find all the ports belonging to a module */
+    module_port_range module_ports(const ModuleId& module) const;
     /* Find all the nets belonging to a module */
     module_net_range module_nets(const ModuleId& module) const;
     /* Find all the child modules under a parent module */

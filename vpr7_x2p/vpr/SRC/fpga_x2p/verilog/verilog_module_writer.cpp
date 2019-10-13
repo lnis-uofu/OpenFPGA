@@ -7,11 +7,23 @@
  * You should NOT modify any content of the module manager
  * Please use const keyword to restrict this!
  *******************************************************************/
+#include <algorithm>
 #include "vtr_assert.h"
 #include "fpga_x2p_utils.h"
 #include "module_manager_utils.h"
 #include "verilog_writer_utils.h"
 #include "verilog_module_writer.h"
+
+/********************************************************************
+ * Generate the name of a local wire for a undriven port inside Verilog 
+ * module 
+ *******************************************************************/
+static 
+std::string generate_verilog_undriven_local_wire_name(const ModuleManager& module_manager, 
+                                                      const ModuleId& module, 
+                                                      const ModulePortId& module_port_id) {
+  return module_manager.module_port(module, module_port_id).get_name();
+}
 
 /********************************************************************
  * Name a net for a local wire for a verilog module 
@@ -110,6 +122,36 @@ std::vector<BasicPort> find_verilog_module_local_wires(const ModuleManager& modu
     /* If not merged, push the port to the list */
     if (false == merged) {
       local_wires.push_back(local_wire_candidate);
+    }
+  }
+
+  /* Local wires could also happen for undriven ports of child module */
+  for (const ModuleId& child : module_manager.child_modules(module_id)) {
+    for (size_t instance : module_manager.child_module_instances(module_id, child)) {
+      for (const ModulePortId& child_port_id : module_manager.module_ports(child)) {
+        BasicPort child_port = module_manager.module_port(child, child_port_id);
+        std::vector<size_t> undriven_pins;
+        for (size_t child_pin : child_port.pins()) {
+          /* Find the net linked to the pin */
+          ModuleNetId net = module_manager.module_instance_port_net(module_id, child, instance, 
+                                                                    child_port_id, child_pin);
+          /* We only care undriven ports */
+          if (ModuleNetId::INVALID() == net) {
+            undriven_pins.push_back(child_pin);
+          }
+        }
+        if (true == undriven_pins.empty()) {
+          continue;
+        }
+        /* Reach here, we need a local wire, we will create a port only for the undriven pins of the port! */
+        BasicPort instance_port;
+        instance_port.set_name(generate_verilog_undriven_local_wire_name(module_manager, child, child_port_id));
+        /* We give the same port name as child module, this case happens to global ports */
+        instance_port.set_width(*std::min_element(undriven_pins.begin(), undriven_pins.end()),
+                                *std::max_element(undriven_pins.begin(), undriven_pins.end())); 
+
+        local_wires.push_back(instance_port);
+      }
     }
   }
 
@@ -225,6 +267,7 @@ void write_verilog_instance_to_file(std::fstream& fp,
   /* port type2type mapping */
   std::map<ModuleManager::e_module_port_type, enum e_dump_verilog_port_type> port_type2type_map;
   port_type2type_map[ModuleManager::MODULE_GLOBAL_PORT] = VERILOG_PORT_CONKT;
+  port_type2type_map[ModuleManager::MODULE_GPIO_PORT] = VERILOG_PORT_CONKT;
   port_type2type_map[ModuleManager::MODULE_INOUT_PORT] = VERILOG_PORT_CONKT;
   port_type2type_map[ModuleManager::MODULE_INPUT_PORT] = VERILOG_PORT_CONKT;
   port_type2type_map[ModuleManager::MODULE_OUTPUT_PORT] = VERILOG_PORT_CONKT;
@@ -255,7 +298,7 @@ void write_verilog_instance_to_file(std::fstream& fp,
         BasicPort instance_port;
         if (ModuleNetId::INVALID() == net) {
           /* We give the same port name as child module, this case happens to global ports */
-          instance_port.set_name(module_manager.module_port(child_module, child_port_id).get_name());
+          instance_port.set_name(generate_verilog_undriven_local_wire_name(module_manager, child_module, child_port_id));
           instance_port.set_width(child_pin, child_pin); 
         } else {
           /* Find the name for this child port */

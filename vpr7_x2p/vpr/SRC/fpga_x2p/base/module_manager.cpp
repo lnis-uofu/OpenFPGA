@@ -21,6 +21,13 @@ ModuleManager::module_range ModuleManager::modules() const {
   return vtr::make_range(ids_.begin(), ids_.end());
 }
 
+/* Find all the ports belonging to a module */
+ModuleManager::module_port_range ModuleManager::module_ports(const ModuleId& module) const {
+  /* Validate the module_id */
+  VTR_ASSERT(valid_module_id(module));
+  return vtr::make_range(port_ids_[module].begin(), port_ids_[module].end());
+}
+
 /* Find all the nets belonging to a module */
 ModuleManager::module_net_range ModuleManager::module_nets(const ModuleId& module) const {
   /* Validate the module_id */
@@ -94,7 +101,7 @@ std::string ModuleManager::module_name(const ModuleId& module_id) const {
 
 /* Get the string of a module port type */
 std::string ModuleManager::module_port_type_str(const enum e_module_port_type& port_type) const {
-  std::array<const char*, NUM_MODULE_PORT_TYPES> MODULE_PORT_TYPE_STRING = {{"GLOBAL PORTS", "INOUT PORTS", "INPUT PORTS", "OUTPUT PORTS", "CLOCK PORTS"}};
+  std::array<const char*, NUM_MODULE_PORT_TYPES> MODULE_PORT_TYPE_STRING = {{"GLOBAL PORTS", "GPIO PORTS", "INOUT PORTS", "INPUT PORTS", "OUTPUT PORTS", "CLOCK PORTS"}};
   return MODULE_PORT_TYPE_STRING[port_type];
 }
 

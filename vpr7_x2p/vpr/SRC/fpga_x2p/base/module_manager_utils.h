@@ -82,4 +82,10 @@ size_t find_module_num_config_bits(const ModuleManager& module_manager,
                                    const CircuitModelId& sram_model,
                                    const e_sram_orgz& sram_orgz_type);
 
+void add_module_global_ports_from_child_modules(ModuleManager& module_manager, 
+                                                const ModuleId& module_id);
+
+void add_module_gpio_ports_from_child_modules(ModuleManager& module_manager, 
+                                              const ModuleId& module_id);
+
 #endif

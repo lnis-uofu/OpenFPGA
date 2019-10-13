@@ -30,6 +30,7 @@
 #include "verilog_module_writer.h"
 #include "verilog_grid.h"
 
+
 /********************************************************************
  * Print Verilog modules of a primitive node in the pb_graph_node graph
  * This generic function can support all the different types of primitive nodes
@@ -108,7 +109,7 @@ void print_verilog_primitive_block(std::fstream& fp,
     std::vector<CircuitPortId> primitive_model_inout_ports = circuit_lib.model_ports_by_type(primitive_model, SPICE_MODEL_PORT_INOUT);
     for (auto port : primitive_model_inout_ports) {
       BasicPort module_port(generate_fpga_global_io_port_name(std::string(gio_inout_prefix), circuit_lib, primitive_model), circuit_lib.port_size(port));
-      module_manager.add_port(primitive_module, module_port, ModuleManager::MODULE_INOUT_PORT);
+      module_manager.add_port(primitive_module, module_port, ModuleManager::MODULE_GPIO_PORT);
     }
   }
   /* Note: to cooperate with the pb_type hierarchy and connections, we add the port of primitive pb_type here.
@@ -627,7 +628,6 @@ void add_module_pb_graph_interc(ModuleManager& module_manager,
   }
 }
 
-
 /********************************************************************
  * Print Verilog modules of physical blocks inside a grid (CLB, I/O. etc.)
  * This function will traverse the graph of complex logic block (t_pb_graph_node)
@@ -763,15 +763,17 @@ void print_verilog_physical_blocks_rec(std::fstream& fp,
                              pb_module_name_prefix,
                              physical_mode_index);
 
-  /* TODO: Add global ports to the pb_module:
+  /* Add global ports to the pb_module:
    * This is a much easier job after adding sub modules (instances), 
    * we just need to find all the global ports from the child modules and build a list of it
    */
+  add_module_global_ports_from_child_modules(module_manager, pb_module);
 
-  /* TODO: Count I/O (INOUT) ports from the sub-modules under this Verilog module 
+  /* Count GPIO ports from the sub-modules under this Verilog module 
    * This is a much easier job after adding sub modules (instances), 
    * we just need to find all the I/O ports from the child modules and build a list of it
    */
+  add_module_gpio_ports_from_child_modules(module_manager, pb_module);
 
   /* TODO: Count shared SRAM ports from the sub-modules under this Verilog module
    * This is a much easier job after adding sub modules (instances), 
@@ -784,7 +786,6 @@ void print_verilog_physical_blocks_rec(std::fstream& fp,
    */
 
   /* TODO: Add module nets to connect memory cells inside */
-
 
   /* Comment lines */
   print_verilog_comment(fp, std::string("----- BEGIN Physical programmable logic block Verilog module: " + std::string(physical_pb_type->name) + " -----"));
