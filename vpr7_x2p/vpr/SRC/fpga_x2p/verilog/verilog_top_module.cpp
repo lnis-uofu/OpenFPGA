@@ -3,8 +3,12 @@
  * module for the FPGA fabric in Verilog format
  *******************************************************************/
 #include <fstream>
+#include <map>
 
 #include "vtr_assert.h"
+
+#include "vpr_types.h"
+#include "globals.h"
 
 #include "fpga_x2p_naming.h"
 #include "fpga_x2p_utils.h"
@@ -14,6 +18,128 @@
 #include "verilog_writer_utils.h"
 #include "verilog_module_writer.h"
 #include "verilog_top_module.h"
+
+
+/********************************************************************
+ * Add a instance of a grid module to the top module
+ *******************************************************************/
+static 
+void add_top_module_grid_instance(ModuleManager& module_manager,
+                                  const ModuleId& top_module,
+                                  t_type_ptr grid_type,
+                                  const e_side& border_side) {
+  /* Find the module name for this type of grid */
+  std::string grid_module_name_prefix(grid_verilog_file_name_prefix);
+  /* Add side string to the name if it is valid */
+  if (NUM_SIDES != border_side) {
+    Side side_manager(border_side);
+    grid_module_name_prefix += std::string(side_manager.to_string());
+    grid_module_name_prefix += std::string("_");
+  }
+  std::string grid_module_name = generate_physical_block_module_name(grid_module_name_prefix, grid_type->pb_graph_head->pb_type);
+  ModuleId grid_module = module_manager.find_module(grid_module_name);
+  VTR_ASSERT(true == module_manager.valid_module_id(grid_module));
+  /* Add the module to top_module */ 
+  module_manager.add_child_module(top_module, grid_module);
+}
+
+/********************************************************************
+ * Add all the grids as sub-modules across the fabric
+ * The grid modules are created for each unique type of grid (based 
+ * on the type in data structure data_structure
+ * Here, we will iterate over the full fabric (coordinates)
+ * and instanciate the grid modules 
+ *
+ * This function assumes an island-style floorplanning for FPGA fabric 
+ *
+ *                +-----------------------------------+
+ *                |              I/O grids            |
+ *                |              TOP side             |
+ *                +-----------------------------------+
+ *
+ * +-----------+  +-----------------------------------+ +------------+
+ * |           |  |                                   | |            |
+ * | I/O grids |  |          Core grids               | | I/O grids  |
+ * | LEFT side |  | (CLB, Heterogeneous blocks, etc.) | | RIGHT side |
+ * |           |  |                                   | |            |
+ * +-----------+  +-----------------------------------+ +------------+
+ *
+ *                +-----------------------------------+
+ *                |              I/O grids            |
+ *                |             BOTTOM side           |
+ *                +-----------------------------------+
+ *
+ *******************************************************************/
+static 
+void add_top_module_grid_instances(ModuleManager& module_manager,
+                                   const ModuleId& top_module,
+                                   const vtr::Point<size_t>& device_size,
+                                   const std::vector<std::vector<t_grid_tile>>& grids) {
+  /* Instanciate core grids */
+  for (size_t ix = 1; ix < device_size.x() - 1; ++ix) {
+    for (size_t iy = 1; iy < device_size.y() - 1; ++iy) {
+      /* Bypass EMPTY grid */
+      if (EMPTY_TYPE == grids[ix][iy].type) {
+        continue;
+      } 
+      /* Skip height > 1 tiles (mostly heterogeneous blocks) */
+      if (0 < grids[ix][iy].offset) {
+        continue;
+      }
+      /* We should not meet any I/O grid */
+      VTR_ASSERT(IO_TYPE != grids[ix][iy].type);
+      /* Add a grid module to top_module*/
+      add_top_module_grid_instance(module_manager, top_module,
+                                   grids[ix][iy].type,
+                                   NUM_SIDES);
+    }
+  }
+
+  /* Instanciate I/O grids */
+  /* Create the coordinate range for each side of FPGA fabric */
+  std::vector<e_side> io_sides{TOP, RIGHT, BOTTOM, LEFT};
+  std::map<e_side, std::vector<vtr::Point<size_t>>> io_coordinates;
+
+  /* TOP side*/
+  for (size_t ix = 1; ix < device_size.x() - 1; ++ix) { 
+    io_coordinates[TOP].push_back(vtr::Point<size_t>(ix, device_size.y() - 1));
+  } 
+
+  /* RIGHT side */
+  for (size_t iy = 1; iy < device_size.y() - 1; ++iy) { 
+    io_coordinates[RIGHT].push_back(vtr::Point<size_t>(device_size.x() - 1, iy));
+  } 
+
+  /* BOTTOM side*/
+  for (size_t ix = 1; ix < device_size.x() - 1; ++ix) { 
+    io_coordinates[BOTTOM].push_back(vtr::Point<size_t>(ix, 0));
+  } 
+
+  /* LEFT side */
+  for (size_t iy = 1; iy < device_size.y() - 1; ++iy) { 
+    io_coordinates[LEFT].push_back(vtr::Point<size_t>(0, iy));
+  }
+
+  /* Add instances of I/O grids to top_module */
+  for (const e_side& io_side : io_sides) {
+    for (const vtr::Point<size_t>& io_coordinate : io_coordinates[io_side]) {
+      /* Bypass EMPTY grid */
+      if (EMPTY_TYPE == grids[io_coordinate.x()][io_coordinate.y()].type) {
+        continue;
+      } 
+      /* Skip height > 1 tiles (mostly heterogeneous blocks) */
+      if (0 < grids[io_coordinate.x()][io_coordinate.y()].offset) {
+        continue;
+      }
+      /* We should not meet any I/O grid */
+      VTR_ASSERT(IO_TYPE == grids[io_coordinate.x()][io_coordinate.y()].type);
+      /* Add a grid module to top_module*/
+      add_top_module_grid_instance(module_manager, top_module,
+                                   grids[io_coordinate.x()][io_coordinate.y()].type,
+                                   io_side);
+    }
+  }
+}
 
 /********************************************************************
  * Print the top-level module for the FPGA fabric in Verilog format
@@ -28,6 +154,8 @@
  *******************************************************************/
 void print_verilog_top_module(ModuleManager& module_manager,
                               const CircuitLibrary& circuit_lib,
+                              const vtr::Point<size_t>& device_size,
+                              const std::vector<std::vector<t_grid_tile>>& grids,
                               t_sram_orgz_info* cur_sram_orgz_info,
                               const std::string& arch_name,
                               const std::string& verilog_dir,
@@ -37,8 +165,13 @@ void print_verilog_top_module(ModuleManager& module_manager,
   ModuleId top_module = module_manager.add_module(top_module_name);
  
   /* TODO: Add sub modules, which are grid, SB and CBX/CBY modules as instances */
+  /* Add all the grids across the fabric */
+  add_top_module_grid_instances(module_manager, top_module, device_size, grids);
+  /* Add all the SBs across the fabric */
+  /* Add all the CBX and CBYs across the fabric */
 
   /* TODO: Add module nets to connect the sub modules */
+  /* TODO: Add inter-CLB direct connections */
 
   /* TODO: Add global ports to the top-level module */
 

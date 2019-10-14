@@ -10,8 +10,10 @@
 #include <assert.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <vector>
 
 /* Include vpr structs*/
+#include "vtr_geometry.h"
 #include "util.h"
 #include "physical_types.h"
 #include "vpr_types.h"
@@ -315,7 +317,19 @@ void vpr_fpga_verilog(t_vpr_setup vpr_setup,
   dump_verilog_config_peripherals(sram_verilog_orgz_info, src_dir_path, submodule_dir_path);
 
   /* Print top-level Verilog module */
-  print_verilog_top_module(module_manager, Arch.spice->circuit_lib, sram_verilog_orgz_info, 
+  vtr::Point<size_t> device_size(nx + 2, ny + 2);
+  std::vector<std::vector<t_grid_tile>> grids;
+  /* Fill the grid vectors */
+  grids.resize(device_size.x());
+  for (size_t ix = 0; ix < device_size.x(); ++ix) {
+    grids[ix].resize(device_size.y());
+    for (size_t iy = 0; iy < device_size.y(); ++iy) {
+      grids[ix][iy] = grid[ix][iy];
+    }
+  } 
+  print_verilog_top_module(module_manager, Arch.spice->circuit_lib, 
+                           device_size, grids, 
+                           sram_verilog_orgz_info, 
                            std::string(vpr_setup.FileNameOpts.ArchFile), 
                            std::string(src_dir_path),
                            TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.dump_explicit_verilog);
