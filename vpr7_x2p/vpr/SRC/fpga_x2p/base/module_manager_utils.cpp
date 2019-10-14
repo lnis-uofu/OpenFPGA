@@ -866,11 +866,12 @@ size_t find_module_num_config_bits(const ModuleManager& module_manager,
 }
 
 /********************************************************************
- * Add global ports to the module:
+ * Add GPIO ports to the module:
  * In this function, the following tasks are done: 
  * 1. find all the GPIO ports from the child modules and build a list of it,
  * 2. Merge all the GPIO ports with the same name
  * 3. add the ports to the pb_module
+ * 4. add module nets to connect to the GPIO ports of each sub module 
  *
  * Note: This function should be call ONLY after all the sub modules (instances)
  * have been added to the pb_module!
@@ -882,37 +883,84 @@ void add_module_gpio_ports_from_child_modules(ModuleManager& module_manager,
 
   /* Iterate over the child modules */
   for (const ModuleId& child : module_manager.child_modules(module_id)) {
-    /* Find all the global ports, whose port type is special */
-    for (BasicPort gpio_port : module_manager.module_ports_by_type(child, ModuleManager::MODULE_GPIO_PORT)) {
-      /* If this port is not mergeable, we update the list */
-      bool is_mergeable = false;
-      for (BasicPort& gpio_port_to_add : gpio_ports_to_add) {
-        if (false == gpio_port_to_add.mergeable(gpio_port)) {
-          continue;
+    /* Iterate over the child instances */
+    for (size_t i = 0; i < module_manager.num_instance(module_id, child); ++i) {
+      /* Find all the global ports, whose port type is special */
+      for (BasicPort gpio_port : module_manager.module_ports_by_type(child, ModuleManager::MODULE_GPIO_PORT)) {
+        /* If this port is not mergeable, we update the list */
+        bool is_mergeable = false;
+        for (BasicPort& gpio_port_to_add : gpio_ports_to_add) {
+          if (false == gpio_port_to_add.mergeable(gpio_port)) {
+            continue;
+          }
+          is_mergeable = true;
+          /* For mergeable ports, we combine the port
+           * Note: do NOT use the merge() method!
+           * the GPIO ports should be accumulated by the sizes of ports
+           * not by the LSB/MSB range !!! 
+           */
+          gpio_port_to_add.combine(gpio_port);
+          break;
         }
-        is_mergeable = true;
-        /* For mergeable ports, we do a strong merge */
-        gpio_port_to_add.merge(gpio_port);
-        break;
-      }
-      if (false == is_mergeable) {
-        /* Reach here, this is an unique gpio port, update the list */
-        gpio_ports_to_add.push_back(gpio_port);
+        if (false == is_mergeable) {
+          /* Reach here, this is an unique gpio port, update the list */
+          gpio_ports_to_add.push_back(gpio_port);
+        }
       }
     }
   } 
 
+  /* Record the port id for each type of GPIO port */
+  std::vector<ModulePortId> gpio_port_ids;
   /* Add the gpio ports for the module */
   for (const BasicPort& gpio_port_to_add : gpio_ports_to_add) {
-    module_manager.add_port(module_id, gpio_port_to_add, ModuleManager::MODULE_GPIO_PORT);
+    ModulePortId port_id = module_manager.add_port(module_id, gpio_port_to_add, ModuleManager::MODULE_GPIO_PORT);
+    gpio_port_ids.push_back(port_id);
   } 
+
+  /* Set up a counter for each type of GPIO port */
+  std::vector<size_t> gpio_port_lsb(gpio_ports_to_add.size(), 0);
+  /* Add module nets to connect the GPIOs of the module to the GPIOs of the sub module */
+  for (const ModuleId& child : module_manager.child_modules(module_id)) {
+    /* Iterate over the child instances */
+    for (const size_t& child_instance : module_manager.child_module_instances(module_id, child)) {
+      /* Find all the global ports, whose port type is special */
+      for (ModulePortId child_gpio_port_id : module_manager.module_port_ids_by_type(child, ModuleManager::MODULE_GPIO_PORT)) {
+        BasicPort child_gpio_port = module_manager.module_port(child, child_gpio_port_id);
+        /* Find the port with the same name! */
+        for (size_t iport = 0; iport < gpio_ports_to_add.size(); ++iport) {
+          if (false == gpio_ports_to_add[iport].mergeable(child_gpio_port)) {
+            continue;
+          }
+          /* For each pin of the child port, create a net and do wiring */
+          for (const size_t& pin_id : child_gpio_port.pins()) {
+            /* Reach here, it means this is the port we want, create a net and configure its source and sink */
+            ModuleNetId net = module_manager.create_module_net(module_id);
+            module_manager.add_module_net_source(module_id, net, module_id, 0, gpio_port_ids[iport], gpio_port_lsb[iport]); 
+            module_manager.add_module_net_sink(module_id, net, child, child_instance, child_gpio_port_id, pin_id); 
+            /* Update the LSB counter */
+            gpio_port_lsb[iport]++;
+          }
+          /* We finish for this child gpio port */
+          break;
+        }
+      }
+    }
+  }
+
+  /* Check: all the lsb should now match the size of each GPIO port */
+  for (size_t iport = 0; iport < gpio_ports_to_add.size(); ++iport) {
+    if (gpio_ports_to_add[iport].get_width() != gpio_port_lsb[iport]) 
+    VTR_ASSERT(gpio_ports_to_add[iport].get_width() == gpio_port_lsb[iport]);
+  }
 }
 
 /********************************************************************
- * Add GPIO ports to the module:
+ * Add global ports to the module:
  * In this function, the following tasks are done: 
  * 1. find all the global ports from the child modules and build a list of it,
  * 2. add the ports to the pb_module
+ * 3. add the module nets to connect the pb_module global ports to those of child modules
  *
  * Note: This function should be call ONLY after all the sub modules (instances)
  * have been added to the pb_module!
@@ -924,21 +972,54 @@ void add_module_global_ports_from_child_modules(ModuleManager& module_manager,
 
   /* Iterate over the child modules */
   for (const ModuleId& child : module_manager.child_modules(module_id)) {
-    /* Find all the global ports, whose port type is special */
-    for (BasicPort global_port : module_manager.module_ports_by_type(child, ModuleManager::MODULE_GLOBAL_PORT)) {
-      /* Search in the global port list to be added, if this is unique, we update the list */
-      std::vector<BasicPort>::iterator it = std::find(global_ports_to_add.begin(), global_ports_to_add.end(), global_port);
-      if (it != global_ports_to_add.end()) {
-        continue;
+    /* Iterate over the child instances */
+    for (size_t i = 0; i < module_manager.num_instance(module_id, child); ++i) {
+      /* Find all the global ports, whose port type is special */
+      for (BasicPort global_port : module_manager.module_ports_by_type(child, ModuleManager::MODULE_GLOBAL_PORT)) {
+        /* Search in the global port list to be added, if this is unique, we update the list */
+        std::vector<BasicPort>::iterator it = std::find(global_ports_to_add.begin(), global_ports_to_add.end(), global_port);
+        if (it != global_ports_to_add.end()) {
+          continue;
+        }
+        /* Reach here, this is an unique global port, update the list */
+        global_ports_to_add.push_back(global_port);
       }
-      /* Reach here, this is an unique global port, update the list */
-      global_ports_to_add.push_back(global_port);
     }
   } 
 
+  /* Record the port id for each type of global port */
+  std::vector<ModulePortId> global_port_ids;
   /* Add the global ports for the module */
   for (const BasicPort& global_port_to_add : global_ports_to_add) {
-    module_manager.add_port(module_id, global_port_to_add, ModuleManager::MODULE_GLOBAL_PORT);
+    ModulePortId port_id = module_manager.add_port(module_id, global_port_to_add, ModuleManager::MODULE_GLOBAL_PORT);
+    global_port_ids.push_back(port_id);
+  } 
+
+  /* Add module nets to connect the global ports of the module to the global ports of the sub module */
+  /* Iterate over the child modules */
+  for (const ModuleId& child : module_manager.child_modules(module_id)) {
+    /* Iterate over the child instances */
+    for (const size_t& child_instance : module_manager.child_module_instances(module_id, child)) {
+      /* Find all the global ports, whose port type is special */
+      for (ModulePortId child_global_port_id : module_manager.module_port_ids_by_type(child, ModuleManager::MODULE_GLOBAL_PORT)) {
+        BasicPort child_global_port = module_manager.module_port(child, child_global_port_id);
+        /* Search in the global port list to be added, find the port id */
+        std::vector<BasicPort>::iterator it = std::find(global_ports_to_add.begin(), global_ports_to_add.end(), child_global_port);
+        VTR_ASSERT(it != global_ports_to_add.end());
+        ModulePortId module_global_port_id = global_port_ids[it - global_ports_to_add.begin()];
+        BasicPort module_global_port = module_manager.module_port(module_id, module_global_port_id);
+        /* The global ports should match in size */
+        VTR_ASSERT(module_global_port.get_width() == child_global_port.get_width());
+        /* For each pin of the child port, create a net and do wiring */
+        for (size_t pin_id = 0; pin_id < child_global_port.pins().size(); ++pin_id) {
+          /* Reach here, it means this is the port we want, create a net and configure its source and sink */
+          ModuleNetId net = module_manager.create_module_net(module_id);
+          module_manager.add_module_net_source(module_id, net, module_id, 0, module_global_port_id, module_global_port.pins()[pin_id]); 
+          module_manager.add_module_net_sink(module_id, net, child, child_instance, child_global_port_id, child_global_port.pins()[pin_id]); 
+          /* We finish for this child gpio port */
+        }
+      }
+    }
   } 
 }
 

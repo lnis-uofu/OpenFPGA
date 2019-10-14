@@ -146,4 +146,9 @@ std::string generate_pb_type_port_name(t_port* pb_type_port);
 std::string generate_fpga_global_io_port_name(const std::string& prefix, 
                                               const CircuitLibrary& circuit_lib,
                                               const CircuitModelId& circuit_model);
+
+std::string generate_fpga_top_module_name();
+
+std::string generate_fpga_top_netlist_name(const std::string& postfix);
+
 #endif

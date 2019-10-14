@@ -45,6 +45,7 @@
 #include "verilog_pbtypes.h"
 #include "verilog_grid.h"
 #include "verilog_routing.h"
+#include "verilog_top_module.h"
 #include "verilog_compact_netlist.h"
 #include "verilog_top_testbench.h"
 #include "verilog_autocheck_top_testbench.h"
@@ -298,7 +299,7 @@ void vpr_fpga_verilog(t_vpr_setup vpr_setup,
   print_verilog_grids(module_manager, Arch.spice->circuit_lib, mux_lib,
                       sram_verilog_orgz_info, 
                       std::string(src_dir_path), std::string(lb_dir_path),
-                      vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.dump_explicit_verilog);
+                      TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.dump_explicit_verilog);
 
   /* Generate the Verilog module of the configuration peripheral protocol 
    * which loads bitstream to FPGA fabric
@@ -313,7 +314,13 @@ void vpr_fpga_verilog(t_vpr_setup vpr_setup,
   /* TODO: This is the old function, which will be deprecated when refactoring is done */
   dump_verilog_config_peripherals(sram_verilog_orgz_info, src_dir_path, submodule_dir_path);
 
-  /* Dump top-level verilog */
+  /* Print top-level Verilog module */
+  print_verilog_top_module(module_manager, Arch.spice->circuit_lib, sram_verilog_orgz_info, 
+                           std::string(vpr_setup.FileNameOpts.ArchFile), 
+                           std::string(src_dir_path),
+                           TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.dump_explicit_verilog);
+  
+  /* TODO: This is the old function, which will be deprecated when refactoring is done */
   dump_compact_verilog_top_netlist(sram_verilog_orgz_info, chomped_circuit_name, 
                                    top_netlist_path, src_dir_path, submodule_dir_path, lb_dir_path, rr_dir_path, 
                                    num_rr_nodes, rr_node, rr_node_indices, 

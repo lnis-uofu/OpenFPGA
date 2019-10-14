@@ -785,3 +785,21 @@ std::string generate_fpga_global_io_port_name(const std::string& prefix,
    
   return port_name;
 }
+
+/*********************************************************************
+ * Generate the module name for the top-level module 
+ * The top-level module is actually the FPGA fabric
+ * We give a fixed name here, because it is independent from benchmark file
+ ********************************************************************/
+std::string generate_fpga_top_module_name() {
+  return std::string("fpga_top");
+}
+
+/*********************************************************************
+ * Generate the netlist name for the top-level module 
+ * The top-level module is actually the FPGA fabric
+ * We give a fixed name here, because it is independent from benchmark file
+ ********************************************************************/
+std::string generate_fpga_top_netlist_name(const std::string& postfix) {
+  return std::string("fpga_top" + postfix);
+}
