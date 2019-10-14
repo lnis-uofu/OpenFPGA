@@ -359,7 +359,6 @@ std::string generate_grid_port_name(const vtr::Point<size_t>& coordinate,
   return port_name;
 }
 
-
 /*********************************************************************
  * Generate the port name for a reserved sram port, i.e., BLB/WL port
  * When port_type is BLB, a string denoting to the reserved BLB port is generated

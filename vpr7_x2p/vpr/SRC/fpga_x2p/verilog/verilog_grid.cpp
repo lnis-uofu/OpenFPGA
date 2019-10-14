@@ -7,6 +7,7 @@
 #include <fstream>
 
 /* Header files from external libs */
+#include "vtr_geometry.h"
 #include "util.h"
 #include "vtr_assert.h"
 #include "circuit_library_utils.h"
@@ -30,6 +31,211 @@
 #include "verilog_module_writer.h"
 #include "verilog_grid.h"
 
+/********************************************************************
+ * Find the side where I/O pins locate on a grid I/O block
+ * 1. I/O grids on the top    side of FPGA only have ports on its bottom side
+ * 2. I/O grids on the right  side of FPGA only have ports on its left   side
+ * 3. I/O grids on the bottom side of FPGA only have ports on its top    side
+ * 4. I/O grids on the left   side of FPGA only have ports on its right side
+ *******************************************************************/
+static 
+e_side find_grid_module_pin_side(t_type_ptr grid_type_descriptor,
+                                 const e_side& border_side) {
+  VTR_ASSERT(IO_TYPE == grid_type_descriptor);
+  Side side_manager(border_side);
+  return side_manager.get_opposite(); 
+}
+
+/********************************************************************
+ * Add ports/pins to a grid module 
+ * This function will iterate over all the pins that are defined 
+ * in type_descripter and give a name by its height, side and index
+ *
+ * In particular, for I/O grid, only part of the ports on required
+ * on a specific side.
+ *******************************************************************/
+static 
+void add_grid_module_pb_type_ports(ModuleManager& module_manager,
+                                   const ModuleId& grid_module,
+                                   t_type_ptr grid_type_descriptor,
+                                   const e_side& border_side) {
+  /* Ensure that we have a valid grid_type_descriptor */
+  VTR_ASSERT(NULL != grid_type_descriptor);
+
+  /* Find the pin side for I/O grids*/
+  std::vector<e_side> grid_pin_sides;
+  /* For I/O grids, we care only one side
+   * Otherwise, we will iterate all the 4 sides  
+   */
+  if (IO_TYPE == grid_type_descriptor) {
+    grid_pin_sides.push_back(find_grid_module_pin_side(grid_type_descriptor, border_side));
+  } else {
+    grid_pin_sides.push_back(TOP); 
+    grid_pin_sides.push_back(RIGHT); 
+    grid_pin_sides.push_back(BOTTOM); 
+    grid_pin_sides.push_back(LEFT); 
+  }
+
+  /* Create a map between pin class type and grid pin direction */
+  std::map<e_pin_type, ModuleManager::e_module_port_type> pin_type2type_map;
+  pin_type2type_map[RECEIVER] = ModuleManager::MODULE_INPUT_PORT;
+  pin_type2type_map[DRIVER] = ModuleManager::MODULE_OUTPUT_PORT;
+
+  /* Iterate over sides, height and pins */
+  for (const e_side& side : grid_pin_sides) {
+    for (int iheight = 0; iheight < grid_type_descriptor->height; ++iheight) {
+      for (int ipin = 0; ipin < grid_type_descriptor->num_pins; ++ipin) {
+        if (1 != grid_type_descriptor->pinloc[iheight][side][ipin]) {
+          continue;
+        }
+        /* Reach here, it means this pin is on this side */
+        int class_id = grid_type_descriptor->pin_class[ipin];
+        e_pin_type pin_class_type = grid_type_descriptor->class_inf[class_id].type;
+        /* Generate the pin name, 
+         * we give a empty coordinate but it will not be used (see details in the function 
+         */
+        vtr::Point<size_t> dummy_coordinate;
+        std::string port_name = generate_grid_port_name(dummy_coordinate, iheight, side, ipin, false);
+        BasicPort grid_port(port_name, 0, 0);
+        /* Add the port to the module */
+        module_manager.add_port(grid_module, grid_port, pin_type2type_map[pin_class_type]);
+      }  
+    }
+  }
+}
+
+/********************************************************************
+ * Add module nets to connect a port of child pb_module
+ * to the grid module 
+ *******************************************************************/
+static 
+void add_grid_module_net_connect_pb_graph_pin(ModuleManager& module_manager,
+                                              const ModuleId& grid_module,
+                                              const ModuleId& child_module,
+                                              const size_t& child_instance,
+                                              t_type_ptr grid_type_descriptor,
+                                              t_pb_graph_pin* pb_graph_pin,
+                                              const e_side& border_side,
+                                              const enum e_spice_pin2pin_interc_type& pin2pin_interc_type) {
+  /* Find the pin side for I/O grids*/
+  std::vector<e_side> grid_pin_sides;
+  /* For I/O grids, we care only one side
+   * Otherwise, we will iterate all the 4 sides  
+   */
+  if (IO_TYPE == grid_type_descriptor) {
+    grid_pin_sides.push_back(find_grid_module_pin_side(grid_type_descriptor, border_side));
+  } else {
+    grid_pin_sides.push_back(TOP); 
+    grid_pin_sides.push_back(RIGHT); 
+    grid_pin_sides.push_back(BOTTOM); 
+    grid_pin_sides.push_back(LEFT); 
+  }
+
+  /* num_pins/capacity = the number of pins that each type_descriptor has.
+   * Capacity defines the number of type_descriptors in each grid
+   * so the pin index at grid level = pin_index_in_type_descriptor 
+   *                                + type_descriptor_index_in_capacity * num_pins_per_type_descriptor
+   */
+  size_t grid_pin_index = pb_graph_pin->pin_count_in_cluster 
+                        + child_instance * grid_type_descriptor->num_pins / grid_type_descriptor->capacity;
+  int pin_height = grid_type_descriptor->pin_height[grid_pin_index];
+  for (const e_side& side : grid_pin_sides) {
+    if (1 != grid_type_descriptor->pinloc[pin_height][side][grid_pin_index]) {
+      continue;
+    }
+    /* Reach here, it means this pin is on this side */
+    /* Create a net to connect the grid pin to child module pin */
+    ModuleNetId net = module_manager.create_module_net(grid_module);
+    /* Find the port in grid_module */
+    vtr::Point<size_t> dummy_coordinate;
+    std::string grid_port_name = generate_grid_port_name(dummy_coordinate, pin_height, side, grid_pin_index, false);
+    ModulePortId grid_module_port_id = module_manager.find_module_port(grid_module, grid_port_name);
+    VTR_ASSERT(true == module_manager.valid_module_port_id(grid_module, grid_module_port_id));
+    /* Grid port always has only 1 pin, it is assumed when adding these ports to the module
+     * if you need a change, please also change the port adding codes  
+     */
+    size_t grid_module_pin_id = 0;
+    /* Find the port in child module */
+    std::string child_module_port_name = generate_pb_type_port_name(pb_graph_pin->port);
+    ModulePortId child_module_port_id = module_manager.find_module_port(child_module, child_module_port_name);
+    VTR_ASSERT(true == module_manager.valid_module_port_id(child_module, child_module_port_id));
+    size_t child_module_pin_id = pb_graph_pin->pin_number;
+    /* Add net sources and sinks:
+     * For input-to-input connection, net_source is grid pin, while net_sink is pb_graph_pin   
+     * For output-to-output connection, net_source is pb_graph_pin, while net_sink is grid pin   
+     */
+    switch (pin2pin_interc_type) {
+    case INPUT2INPUT_INTERC:
+      module_manager.add_module_net_source(grid_module, net, grid_module, 0, grid_module_port_id, grid_module_pin_id);
+      module_manager.add_module_net_sink(grid_module, net, child_module, child_instance, child_module_port_id, child_module_pin_id);
+      break;
+    case OUTPUT2OUTPUT_INTERC:
+      module_manager.add_module_net_source(grid_module, net, child_module, child_instance, child_module_port_id, child_module_pin_id);
+      module_manager.add_module_net_sink(grid_module, net, grid_module, 0, grid_module_port_id, grid_module_pin_id);
+      break;
+    default:
+      vpr_printf(TIO_MESSAGE_ERROR,
+                 "(File:%s, [LINE%d]) Invalid pin-to-pin interconnection type!\n",
+                 __FILE__, __LINE__);
+      exit(1);
+    }
+  }
+}
+
+
+/********************************************************************
+ * Add module nets to connect ports/pins of a grid module 
+ * to its child modules
+ * This function will iterate over all the pins that are defined 
+ * in type_descripter and find the corresponding pin in the top
+ * pb_graph_node of the grid 
+ *******************************************************************/
+static 
+void add_grid_module_nets_connect_pb_type_ports(ModuleManager& module_manager,
+                                                const ModuleId& grid_module,
+                                                const ModuleId& child_module,
+                                                const size_t& child_instance,
+                                                t_type_ptr grid_type_descriptor,
+                                                const e_side& border_side) {
+  /* Ensure that we have a valid grid_type_descriptor */
+  VTR_ASSERT(NULL != grid_type_descriptor);
+  t_pb_graph_node* top_pb_graph_node = grid_type_descriptor->pb_graph_head;
+  VTR_ASSERT(NULL != top_pb_graph_node); 
+
+  for (int iport = 0; iport < top_pb_graph_node->num_input_ports; ++iport) {
+    for (int ipin = 0; ipin < top_pb_graph_node->num_input_pins[iport]; ++ipin) {
+      add_grid_module_net_connect_pb_graph_pin(module_manager, grid_module,
+                                               child_module, child_instance,
+                                               grid_type_descriptor,
+                                               &(top_pb_graph_node->input_pins[iport][ipin]),
+                                               border_side,
+                                               INPUT2INPUT_INTERC);
+
+    }
+  }
+
+  for (int iport = 0; iport < top_pb_graph_node->num_output_ports; ++iport) {
+    for (int ipin = 0; ipin < top_pb_graph_node->num_output_pins[iport]; ++ipin) {
+      add_grid_module_net_connect_pb_graph_pin(module_manager, grid_module,
+                                               child_module, child_instance,
+                                               grid_type_descriptor,
+                                               &(top_pb_graph_node->output_pins[iport][ipin]),
+                                               border_side,
+                                               OUTPUT2OUTPUT_INTERC);
+    }
+  }
+
+  for (int iport = 0; iport < top_pb_graph_node->num_clock_ports; ++iport) {
+    for (int ipin = 0; ipin < top_pb_graph_node->num_clock_pins[iport]; ++ipin) {
+      add_grid_module_net_connect_pb_graph_pin(module_manager, grid_module,
+                                               child_module, child_instance,
+                                               grid_type_descriptor,
+                                               &(top_pb_graph_node->clock_pins[iport][ipin]),
+                                               border_side,
+                                               INPUT2INPUT_INTERC);
+    } 
+  }
+}
 
 /********************************************************************
  * Print Verilog modules of a primitive node in the pb_graph_node graph
@@ -789,7 +995,6 @@ void print_verilog_physical_blocks_rec(std::fstream& fp,
    * we just need to find all the I/O ports from the child modules and build a list of it
    */
   size_t module_num_config_bits = find_module_num_config_bits_from_child_modules(module_manager, pb_module, circuit_lib, sram_model, cur_sram_orgz_info->type); 
-  printf("Add %lu configuration bits to module %s\n", module_num_config_bits, module_manager.module_name(pb_module).c_str());
   if (0 < module_num_config_bits) {
     add_sram_ports_to_module_manager(module_manager, pb_module, circuit_lib, sram_model, cur_sram_orgz_info->type, module_num_config_bits);
   }
@@ -890,27 +1095,105 @@ void print_verilog_grid(ModuleManager& module_manager,
 
   print_verilog_comment(fp, std::string("---- END Sub-module of physical block:" + std::string(phy_block_type->name) + " ----"));
 
-  /* TODO: Create a Verilog Module for the top-level physical block, and add to module manager */
-  std::string module_name = generate_grid_block_module_name(std::string(grid_verilog_file_name_prefix), phy_block_type->name, IO_TYPE == phy_block_type, border_side);
-  ModuleId module_id = module_manager.add_module(module_name); 
-  VTR_ASSERT(ModuleId::INVALID() != module_id);
+  /* Create a Verilog Module for the top-level physical block, and add to module manager */
+  std::string grid_module_name = generate_grid_block_module_name(std::string(grid_verilog_file_name_prefix), phy_block_type->name, IO_TYPE == phy_block_type, border_side);
+  ModuleId grid_module = module_manager.add_module(grid_module_name); 
+  VTR_ASSERT(true == module_manager.valid_module_id(grid_module));
 
-  /* TODO: Add ports to the module */
+  /* Vectors to record all the memory modules have been added
+   * They are used to add module nets of configuration bus
+   */
+  std::vector<ModuleId> memory_modules;
+  std::vector<size_t> memory_instances;
 
+  /* TODO: this should be added to the cur_sram_orgz_info !!! */
+  t_spice_model* mem_model = NULL;
+  get_sram_orgz_info_mem_model(cur_sram_orgz_info, & mem_model);
+  CircuitModelId sram_model = circuit_lib.model(mem_model->name);  
+  VTR_ASSERT(CircuitModelId::INVALID() != sram_model);
 
-  /* TODO: Print the module definition for the top-level Verilog module of physical block */
-  print_verilog_module_declaration(fp, module_manager, module_id);
-  /* Finish printing ports */
+  /* Generate the name of the Verilog module for this pb_type */
+  std::string pb_module_name_prefix(grid_verilog_file_name_prefix);
+  /* Add side string to the name if it is valid */
+  if (NUM_SIDES != border_side) {
+    Side side_manager(border_side);
+    pb_module_name_prefix += std::string(side_manager.to_string());
+    pb_module_name_prefix += std::string("_");
+  }
+  std::string pb_module_name = generate_physical_block_module_name(pb_module_name_prefix, phy_block_type->pb_graph_head->pb_type);
+  ModuleId pb_module = module_manager.find_module(pb_module_name);
+  VTR_ASSERT(true == module_manager.valid_module_id(pb_module));
 
-  /* Print an empty line a splitter */
-  fp << std::endl;
-
-  /* TODO: instanciate all the sub modules */
+  /* Add all the sub modules */
   for (int iz = 0; iz < phy_block_type->capacity; ++iz) {
+    size_t pb_instance_id = module_manager.num_instance(grid_module, pb_module);
+    module_manager.add_child_module(grid_module, pb_module);
+    /* Identify if this sub module includes configuration bits, 
+     * we will update the memory module and instance list
+     */
+    if (0 < find_module_num_config_bits(module_manager, pb_module,
+                                        circuit_lib, sram_model, 
+                                        cur_sram_orgz_info->type)) {
+      memory_modules.push_back(pb_module);
+      memory_instances.push_back(pb_instance_id);
+    }
   }
 
-  /* Put an end to the top-level Verilog module of physical block */
-  print_verilog_module_end(fp, module_manager.module_name(module_id));
+  /* Add grid ports(pins) to the module */
+  add_grid_module_pb_type_ports(module_manager, grid_module,
+                                phy_block_type, border_side);
+
+  /* Add module nets to connect the pb_type ports to sub modules */
+  for (const size_t& child_instance : module_manager.child_module_instances(grid_module, pb_module)) {
+    add_grid_module_nets_connect_pb_type_ports(module_manager, grid_module,
+                                               pb_module, child_instance,
+                                               phy_block_type, border_side);
+  }
+
+  /* Add global ports to the pb_module:
+   * This is a much easier job after adding sub modules (instances), 
+   * we just need to find all the global ports from the child modules and build a list of it
+   */
+  add_module_global_ports_from_child_modules(module_manager, grid_module);
+
+  /* Count GPIO ports from the sub-modules under this Verilog module 
+   * This is a much easier job after adding sub modules (instances), 
+   * we just need to find all the I/O ports from the child modules and build a list of it
+   */
+  add_module_gpio_ports_from_child_modules(module_manager, grid_module);
+
+  /* Count shared SRAM ports from the sub-modules under this Verilog module
+   * This is a much easier job after adding sub modules (instances), 
+   * we just need to find all the I/O ports from the child modules and build a list of it
+   */
+  size_t module_num_shared_config_bits = find_module_num_shared_config_bits_from_child_modules(module_manager, grid_module); 
+  if (0 < module_num_shared_config_bits) {
+    add_reserved_sram_ports_to_module_manager(module_manager, grid_module, module_num_shared_config_bits);
+  }
+
+  /* Count SRAM ports from the sub-modules under this Verilog module
+   * This is a much easier job after adding sub modules (instances), 
+   * we just need to find all the I/O ports from the child modules and build a list of it
+   */
+  size_t module_num_config_bits = find_module_num_config_bits_from_child_modules(module_manager, grid_module, circuit_lib, sram_model, cur_sram_orgz_info->type); 
+  if (0 < module_num_config_bits) {
+    add_sram_ports_to_module_manager(module_manager, grid_module, circuit_lib, sram_model, cur_sram_orgz_info->type, module_num_config_bits);
+  }
+
+  /* Add module nets to connect memory cells inside
+   * This is a one-shot addition that covers all the memory modules in this pb module!
+   */
+  if (false == memory_modules.empty()) {
+    add_module_nets_memory_config_bus(module_manager, grid_module, 
+                                      memory_modules, memory_instances,
+                                      cur_sram_orgz_info->type, circuit_lib.design_tech_type(sram_model));
+  }
+
+  /* Write the verilog module */
+  print_verilog_comment(fp, std::string("----- BEGIN Grid Verilog module: " + module_manager.module_name(grid_module) + " -----"));
+  write_verilog_module_to_file(fp, module_manager, grid_module, use_explicit_mapping);
+
+  print_verilog_comment(fp, std::string("----- END Grid Verilog module: " + module_manager.module_name(grid_module) + " -----"));
 
   /* Add an empty line as a splitter */
   fp << std::endl;
