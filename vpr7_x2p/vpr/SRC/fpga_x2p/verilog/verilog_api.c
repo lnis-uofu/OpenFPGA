@@ -328,10 +328,11 @@ void vpr_fpga_verilog(t_vpr_setup vpr_setup,
     }
   } 
   print_verilog_top_module(module_manager, Arch.spice->circuit_lib, 
-                           device_size, grids, 
+                           device_size, grids, device_rr_gsb, 
                            sram_verilog_orgz_info, 
                            std::string(vpr_setup.FileNameOpts.ArchFile), 
                            std::string(src_dir_path),
+                           TRUE == vpr_setup.FPGA_SPICE_Opts.compact_routing_hierarchy,
                            TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.dump_explicit_verilog);
   
   /* TODO: This is the old function, which will be deprecated when refactoring is done */

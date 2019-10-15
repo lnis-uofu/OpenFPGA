@@ -142,6 +142,73 @@ void add_top_module_grid_instances(ModuleManager& module_manager,
 }
 
 /********************************************************************
+ * Add switch blocks across the FPGA fabric to the top-level module
+ *******************************************************************/
+static 
+void add_top_module_switch_block_instances(ModuleManager& module_manager, 
+                                           const ModuleId& top_module, 
+                                           const DeviceRRGSB& L_device_rr_gsb,
+                                           const bool& compact_routing_hierarchy) {
+  DeviceCoordinator sb_range = L_device_rr_gsb.get_gsb_range();
+  for (size_t ix = 0; ix < sb_range.get_x(); ++ix) {
+    for (size_t iy = 0; iy < sb_range.get_y(); ++iy) {
+      vtr::Point<size_t> sb_coordinate(ix, iy);
+      /* If we use compact routing hierarchy, we should instanciate the unique module of SB */
+      if (true == compact_routing_hierarchy) {
+        DeviceCoordinator sb_coord(sb_coordinate.x(), sb_coordinate.y());
+        const RRGSB& unique_mirror = L_device_rr_gsb.get_sb_unique_module(sb_coord);
+        sb_coordinate.set_x(unique_mirror.get_sb_x()); 
+        sb_coordinate.set_y(unique_mirror.get_sb_y()); 
+      } 
+      std::string sb_module_name = generate_switch_block_module_name(sb_coordinate);
+      ModuleId sb_module = module_manager.find_module(sb_module_name);
+      VTR_ASSERT(true == module_manager.valid_module_id(sb_module));
+      /* Add the module to top_module */ 
+      module_manager.add_child_module(top_module, sb_module);
+    }
+  }
+}
+
+/********************************************************************
+ * Add switch blocks across the FPGA fabric to the top-level module
+ *******************************************************************/
+static 
+void add_top_module_connection_block_instances(ModuleManager& module_manager, 
+                                               const ModuleId& top_module, 
+                                               const DeviceRRGSB& L_device_rr_gsb,
+                                               const t_rr_type& cb_type,
+                                               const bool& compact_routing_hierarchy) {
+  DeviceCoordinator cb_range = L_device_rr_gsb.get_gsb_range();
+  for (size_t ix = 0; ix < cb_range.get_x(); ++ix) {
+    for (size_t iy = 0; iy < cb_range.get_y(); ++iy) {
+      vtr::Point<size_t> cb_coordinate(ix, iy);
+      /* Check if the connection block exists in the device!
+       * Some of them do NOT exist due to heterogeneous blocks (height > 1) 
+       * We will skip those modules
+       */
+      const RRGSB& rr_gsb = L_device_rr_gsb.get_gsb(ix, iy);
+      const DeviceCoordinator cb_coordinator = rr_gsb.get_cb_coordinator(cb_type);
+      if ( (TRUE != is_cb_exist(cb_type, cb_coordinator.get_x(), cb_coordinator.get_y()))
+        || (true != rr_gsb.is_cb_exist(cb_type))) {
+        continue;
+      }
+      /* If we use compact routing hierarchy, we should instanciate the unique module of SB */
+      if (true == compact_routing_hierarchy) {
+        DeviceCoordinator cb_coord(cb_coordinate.x(), cb_coordinate.y());
+        const RRGSB& unique_mirror = L_device_rr_gsb.get_cb_unique_module(cb_type, cb_coord);
+        cb_coordinate.set_x(unique_mirror.get_cb_x(cb_type)); 
+        cb_coordinate.set_y(unique_mirror.get_cb_y(cb_type)); 
+      } 
+      std::string cb_module_name = generate_connection_block_module_name(cb_type, cb_coordinate);
+      ModuleId cb_module = module_manager.find_module(cb_module_name);
+      VTR_ASSERT(true == module_manager.valid_module_id(cb_module));
+      /* Add the module to top_module */ 
+      module_manager.add_child_module(top_module, cb_module);
+    }
+  }
+}
+
+/********************************************************************
  * Print the top-level module for the FPGA fabric in Verilog format
  * This function will 
  * 1. name the top-level module
@@ -156,19 +223,24 @@ void print_verilog_top_module(ModuleManager& module_manager,
                               const CircuitLibrary& circuit_lib,
                               const vtr::Point<size_t>& device_size,
                               const std::vector<std::vector<t_grid_tile>>& grids,
+                              const DeviceRRGSB& L_device_rr_gsb,
                               t_sram_orgz_info* cur_sram_orgz_info,
                               const std::string& arch_name,
                               const std::string& verilog_dir,
+                              const bool& compact_routing_hierarchy,
                               const bool& use_explicit_mapping) {
   /* Create a module as the top-level fabric, and add it to the module manager */
   std::string top_module_name = generate_fpga_top_module_name();
   ModuleId top_module = module_manager.add_module(top_module_name);
  
-  /* TODO: Add sub modules, which are grid, SB and CBX/CBY modules as instances */
+  /* Add sub modules, which are grid, SB and CBX/CBY modules as instances */
   /* Add all the grids across the fabric */
   add_top_module_grid_instances(module_manager, top_module, device_size, grids);
   /* Add all the SBs across the fabric */
+  add_top_module_switch_block_instances(module_manager, top_module, L_device_rr_gsb, compact_routing_hierarchy);
   /* Add all the CBX and CBYs across the fabric */
+  add_top_module_connection_block_instances(module_manager, top_module, L_device_rr_gsb, CHANX, compact_routing_hierarchy);
+  add_top_module_connection_block_instances(module_manager, top_module, L_device_rr_gsb, CHANY, compact_routing_hierarchy);
 
   /* TODO: Add module nets to connect the sub modules */
   /* TODO: Add inter-CLB direct connections */
