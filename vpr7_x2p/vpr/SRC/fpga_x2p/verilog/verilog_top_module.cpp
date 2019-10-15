@@ -59,8 +59,6 @@ size_t add_top_module_grid_instance(ModuleManager& module_manager,
   /* Add the module to top_module */ 
   module_manager.add_child_module(top_module, grid_module);
 
-  printf("Added grid module %s to top-level module\n", grid_module_name.c_str());
-
   return grid_instance;
 }
 
@@ -348,10 +346,6 @@ void add_top_module_nets_connect_grids_and_sb(ModuleManager& module_manager,
       for (size_t pin_id = 0; pin_id < src_grid_port.pins().size(); ++pin_id) {
         ModuleNetId net = module_manager.create_module_net(top_module);
         /* Configure the net source */
-        printf("src_grid_module_name: %s[%lu][%lu], src_grid_instance_id: %lu (%lu)\n", 
-               src_grid_module_name.c_str(), 
-               grid_coordinate.x(),grid_coordinate.y(),
-               src_grid_instance, module_manager.num_instance(top_module, src_grid_module));
         module_manager.add_module_net_source(top_module, net, src_grid_module, src_grid_instance, src_grid_port_id, src_grid_port.pins()[pin_id]);
         /* Configure the net sink */
         module_manager.add_module_net_sink(top_module, net, sink_sb_module, sink_sb_instance, sink_sb_port_id, sink_sb_port.pins()[pin_id]);

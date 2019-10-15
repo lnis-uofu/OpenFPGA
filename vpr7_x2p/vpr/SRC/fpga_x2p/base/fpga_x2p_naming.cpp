@@ -679,8 +679,8 @@ std::string generate_grid_block_prefix(const std::string& prefix,
 
   if (NUM_SIDES != io_side) {
     Side side_manager(io_side);
-    block_prefix += std::string("_");
     block_prefix += std::string(side_manager.to_string());
+    block_prefix += std::string("_");
   }
   
   return block_prefix;
@@ -697,7 +697,9 @@ std::string generate_grid_block_netlist_name(const std::string& block_name,
   std::string module_name(block_name);
 
   if (true == is_block_io) {
-    module_name = generate_grid_block_prefix(block_name, io_side);
+    Side side_manager(io_side);
+    module_name += std::string("_");
+    module_name += std::string(side_manager.to_string());
   }
 
   module_name += postfix;
@@ -718,7 +720,6 @@ std::string generate_grid_block_module_name(const std::string& prefix,
 
   return module_name;
 }
-
 
 /*********************************************************************
  * Generate the module name of a physical block
