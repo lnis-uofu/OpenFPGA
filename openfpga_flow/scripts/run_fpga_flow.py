@@ -621,7 +621,7 @@ def run_vpr():
         min_channel_width = run_standard_vpr(
             args.top_module+".blif",
             args.fix_route_chan_width,
-            args.top_module+"_fr_chan_width.txt")
+            args.top_module+"_fr_chan_width_vpr.txt")
         logger.info("Fixed routing channel successfully routed with %d width" %
                     min_channel_width)
         extract_vpr_stats(args.top_module+"_fr_chan_width.txt")
