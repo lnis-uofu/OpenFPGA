@@ -5186,6 +5186,11 @@ void dump_verilog_routing_connection_box_subckt(t_sram_orgz_info* cur_sram_orgz_
 
 /*********************************************************************
  * Generate the port name for a Grid
+ * This is a wrapper function for generate_port_name()
+ * which can automatically decode the port name by the pin side and height
+ *
+ * TODO: This function is dependent on the global variable: grid 
+ * This should be replaced by a local variable!!!
  *********************************************************************/
 std::string generate_grid_side_port_name(const vtr::Point<size_t>& coordinate,
                                          const e_side& side, 

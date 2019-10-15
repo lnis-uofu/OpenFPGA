@@ -7,6 +7,7 @@
 /* Include other header files which are dependency on the function declared below */
 #include "mux_library.h"
 #include "module_manager.h"
+#include "rr_blocks.h"
 
 void dump_verilog_routing_chan_subckt(t_sram_orgz_info* cur_sram_orgz_info,
                                       char* verilog_dir,

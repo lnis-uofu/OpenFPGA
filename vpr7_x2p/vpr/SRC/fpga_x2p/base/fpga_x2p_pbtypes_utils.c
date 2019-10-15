@@ -2136,6 +2136,27 @@ t_pb* get_hardlogic_child_pb(t_pb* cur_hardlogic_pb,
   return (&(cur_hardlogic_pb->child_pbs[0][0])); 
 }
 
+/********************************************************************
+ * Find the height of a pin in a grid definition
+ *******************************************************************/
+size_t find_grid_pin_height(const std::vector<std::vector<t_grid_tile>>& grids, 
+                            const vtr::Point<size_t>& grid_coordinate,
+                            const size_t& pin_index) {
+  t_type_ptr grid_type = grids[grid_coordinate.x()][grid_coordinate.y()].type;
+
+  /* Return if this is an empty type */
+  if ( (NULL == grid_type)
+     || (EMPTY_TYPE == grid_type)) {
+    return size_t(-1);
+  }
+
+  /* Check if the pin index is in the range */
+  VTR_ASSERT(pin_index < size_t(grid_type->num_pins));
+
+  /* Find the pin_height */
+  return grid_type->pin_height[pin_index];
+}
+
 int get_grid_pin_height(int grid_x, int grid_y, int pin_index) {
   int pin_height;
   t_type_ptr grid_type = NULL;

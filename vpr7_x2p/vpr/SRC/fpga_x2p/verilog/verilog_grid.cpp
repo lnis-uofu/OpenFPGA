@@ -70,10 +70,7 @@ void add_grid_module_pb_type_ports(ModuleManager& module_manager,
   if (IO_TYPE == grid_type_descriptor) {
     grid_pin_sides.push_back(find_grid_module_pin_side(grid_type_descriptor, border_side));
   } else {
-    grid_pin_sides.push_back(TOP); 
-    grid_pin_sides.push_back(RIGHT); 
-    grid_pin_sides.push_back(BOTTOM); 
-    grid_pin_sides.push_back(LEFT); 
+    grid_pin_sides = {TOP, RIGHT, BOTTOM, LEFT}; 
   }
 
   /* Create a map between pin class type and grid pin direction */
@@ -286,13 +283,7 @@ void print_verilog_primitive_block(std::fstream& fp,
   CircuitModelId& primitive_model = primitive_pb_graph_node->pb_type->circuit_model;
 
   /* Generate the module name for this primitive pb_graph_node*/
-  std::string primitive_module_name_prefix(grid_verilog_file_name_prefix);
-  /* Add side string to the name if it is valid, this is mainly for I/O block */
-  if (NUM_SIDES != io_side) {
-    Side side_manager(io_side);
-    primitive_module_name_prefix += std::string(side_manager.to_string());
-    primitive_module_name_prefix += std::string("_");
-  }
+  std::string primitive_module_name_prefix = generate_grid_block_prefix(std::string(grid_verilog_file_name_prefix), io_side);
   std::string primitive_module_name = generate_physical_block_module_name(primitive_module_name_prefix, primitive_pb_graph_node->pb_type);
 
   /* Create a module of the primitive LUT and register it to module manager */
@@ -901,13 +892,7 @@ void print_verilog_physical_blocks_rec(std::fstream& fp,
   }
 
   /* Generate the name of the Verilog module for this pb_type */
-  std::string pb_module_name_prefix(grid_verilog_file_name_prefix);
-  /* Add side string to the name if it is valid */
-  if (NUM_SIDES != io_side) {
-    Side side_manager(io_side);
-    pb_module_name_prefix += std::string(side_manager.to_string());
-    pb_module_name_prefix += std::string("_");
-  }
+  std::string pb_module_name_prefix = generate_grid_block_prefix(std::string(grid_verilog_file_name_prefix), io_side);
   std::string pb_module_name = generate_physical_block_module_name(pb_module_name_prefix, physical_pb_type);
 
   /* Register the Verilog module in module manager */
@@ -1096,7 +1081,7 @@ void print_verilog_grid(ModuleManager& module_manager,
   print_verilog_comment(fp, std::string("---- END Sub-module of physical block:" + std::string(phy_block_type->name) + " ----"));
 
   /* Create a Verilog Module for the top-level physical block, and add to module manager */
-  std::string grid_module_name = generate_grid_block_module_name(std::string(grid_verilog_file_name_prefix), phy_block_type->name, IO_TYPE == phy_block_type, border_side);
+  std::string grid_module_name = generate_grid_block_module_name(std::string(grid_verilog_file_name_prefix), std::string(phy_block_type->name), IO_TYPE == phy_block_type, border_side);
   ModuleId grid_module = module_manager.add_module(grid_module_name); 
   VTR_ASSERT(true == module_manager.valid_module_id(grid_module));
 
@@ -1114,13 +1099,7 @@ void print_verilog_grid(ModuleManager& module_manager,
 
   /* Generate the name of the Verilog module for this pb_type */
   std::string pb_module_name_prefix(grid_verilog_file_name_prefix);
-  /* Add side string to the name if it is valid */
-  if (NUM_SIDES != border_side) {
-    Side side_manager(border_side);
-    pb_module_name_prefix += std::string(side_manager.to_string());
-    pb_module_name_prefix += std::string("_");
-  }
-  std::string pb_module_name = generate_physical_block_module_name(pb_module_name_prefix, phy_block_type->pb_graph_head->pb_type);
+  std::string pb_module_name = generate_grid_physical_block_module_name(pb_module_name_prefix, phy_block_type->pb_graph_head->pb_type, border_side);
   ModuleId pb_module = module_manager.find_module(pb_module_name);
   VTR_ASSERT(true == module_manager.valid_module_id(pb_module));
 

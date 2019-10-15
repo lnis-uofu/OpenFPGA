@@ -128,6 +128,9 @@ std::string generate_mux_sram_port_name(const CircuitLibrary& circuit_lib,
                                         const size_t& mux_instance_id,
                                         const e_spice_model_port_type& port_type);
 
+std::string generate_grid_block_prefix(const std::string& prefix,
+                                       const e_side& io_side);
+
 std::string generate_grid_block_netlist_name(const std::string& block_name,
                                              const bool& is_block_io,
                                              const e_side& io_side,
@@ -140,6 +143,13 @@ std::string generate_grid_block_module_name(const std::string& prefix,
 
 std::string generate_physical_block_module_name(const std::string& prefix,
                                                 t_pb_type* physical_pb_type);
+
+std::string generate_grid_physical_block_module_name(const std::string& prefix,
+                                                     t_pb_type* pb_type,
+                                                     const e_side& border_side);
+
+e_side find_grid_border_side(const vtr::Point<size_t>& device_size,
+                             const vtr::Point<size_t>& grid_coordinate);
 
 std::string generate_pb_type_port_name(t_port* pb_type_port);
 

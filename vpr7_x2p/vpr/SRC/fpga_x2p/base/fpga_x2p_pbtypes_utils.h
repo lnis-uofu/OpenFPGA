@@ -4,7 +4,9 @@
 /* Only include header files those are required by the data types in the following function declaration */
 #include <vector>
 #include <map>
+#include "vtr_geometry.h"
 #include "device_port.h"
+#include "vpr_types.h"
 #include "circuit_library.h"
 #include "fpga_x2p_types.h"
 #include "fpga_x2p_bitstream_utils.h"
@@ -164,6 +166,10 @@ t_phy_pb* get_lut_child_phy_pb(t_phy_pb* cur_lut_pb,
 
 t_pb* get_hardlogic_child_pb(t_pb* cur_hardlogic_pb,
                              int mode_index);
+
+size_t find_grid_pin_height(const std::vector<std::vector<t_grid_tile>>& grids, 
+                            const vtr::Point<size_t>& grid_coordinate,
+                            const size_t& pin_index);
 
 int get_grid_pin_height(int grid_x, int grid_y, int pin_index);
 

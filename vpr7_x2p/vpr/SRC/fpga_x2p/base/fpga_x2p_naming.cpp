@@ -670,6 +670,23 @@ std::string generate_mux_sram_port_name(const CircuitLibrary& circuit_lib,
 }
 
 /*********************************************************************
+ * Generate the prefix for naming a grid block netlist or a grid module
+ * This function will consider the io side and add it to the prefix 
+ **********************************************************************/
+std::string generate_grid_block_prefix(const std::string& prefix,
+                                       const e_side& io_side) {
+  std::string block_prefix(prefix);
+
+  if (NUM_SIDES != io_side) {
+    Side side_manager(io_side);
+    block_prefix += std::string("_");
+    block_prefix += std::string(side_manager.to_string());
+  }
+  
+  return block_prefix;
+}
+
+/*********************************************************************
  * Generate the netlist name of a grid block
  **********************************************************************/
 std::string generate_grid_block_netlist_name(const std::string& block_name,
@@ -680,9 +697,7 @@ std::string generate_grid_block_netlist_name(const std::string& block_name,
   std::string module_name(block_name);
 
   if (true == is_block_io) {
-    Side side_manager(io_side);
-    module_name += std::string("_");
-    module_name += std::string(side_manager.to_string());
+    module_name = generate_grid_block_prefix(block_name, io_side);
   }
 
   module_name += postfix;
@@ -703,6 +718,7 @@ std::string generate_grid_block_module_name(const std::string& prefix,
 
   return module_name;
 }
+
 
 /*********************************************************************
  * Generate the module name of a physical block
@@ -758,6 +774,65 @@ std::string generate_physical_block_module_name(const std::string& prefix,
   return module_name;
 }
 
+/*********************************************************************
+ * This function is a wrapper for the function generate_physical_block_module_name()
+ * which can automatically decode the io_side and add a prefix 
+ **********************************************************************/
+std::string generate_grid_physical_block_module_name(const std::string& prefix, 
+                                                     t_pb_type* pb_type, 
+                                                     const e_side& border_side) {
+  std::string module_name_prefix = generate_grid_block_prefix(prefix, border_side);
+  return generate_physical_block_module_name(module_name_prefix, pb_type); 
+}
+
+/********************************************************************
+ * This function try to infer if a grid locates at the border of a 
+ * FPGA fabric, i.e., TOP/RIGHT/BOTTOM/LEFT sides
+ * 1. if this grid is on the border, it will return the side it locates,
+ * 2. if this grid is in the center, it will return an valid value NUM_SIDES 
+ *
+ * In this function, we assume that the corner grids are actually empty!
+ *
+ *   +-------+  +----------------------------+  +-------+
+ *   | EMPTY |  |      TOP side I/O          |  | EMPTY |
+ *   +-------+  +----------------------------+  +-------+
+ *
+ *   +-------+  +----------------------------+  +-------+
+ *   |       |  |                            |  |       |
+ *   |       |  |                            |  |       |
+ *   |       |  |                            |  |       |
+ *   | LEFT  |  |                            |  | RIGHT |
+ *   | side  |  |         Core grids         |  | side  |
+ *   | I/O   |  |                            |  |  I/O  |
+ *   |       |  |                            |  |       |
+ *   |       |  |                            |  |       |
+ *   |       |  |                            |  |       |
+ *   |       |  |                            |  |       |
+ *   +-------+  +----------------------------+  +-------+
+ *
+ *   +-------+  +----------------------------+  +-------+
+ *   | EMPTY |  |    BOTTOM side I/O         |  | EMPTY |
+ *   +-------+  +----------------------------+  +-------+
+ *******************************************************************/
+e_side find_grid_border_side(const vtr::Point<size_t>& device_size,
+                             const vtr::Point<size_t>& grid_coordinate) {
+  e_side grid_side = NUM_SIDES;
+
+  if (device_size.y() - 1 == grid_coordinate.y()) {
+    return TOP;
+  }
+  if (device_size.x() - 1 == grid_coordinate.x()) {
+    return RIGHT;
+  }
+  if (0 == grid_coordinate.y()) {
+    return BOTTOM;
+  }
+  if (0 == grid_coordinate.x()) {
+    return LEFT;
+  }
+
+  return grid_side;
+}
 
 /*********************************************************************
  * Generate the port name of a Verilog module describing a pb_type
