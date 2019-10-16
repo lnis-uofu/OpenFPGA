@@ -40,6 +40,50 @@ std::string generate_grid_block_module_name_in_top_module(const std::string& pre
                                          IO_TYPE == grids[grid_coordinate.x()][grid_coordinate.y()].type, border_side);
 }
 
+/********************************************************************
+ * Find the cb_type of a GSB in the top-level module 
+ * depending on the side of SB
+ * TOP/BOTTOM side: CHANY
+ * RIGHT/LEFT side: CHANX
+ *******************************************************************/
+static 
+t_rr_type find_top_module_cb_type_by_sb_side(const e_side& sb_side) {
+  VTR_ASSERT(NUM_SIDES != sb_side);
+
+  if ((TOP == sb_side) || (BOTTOM == sb_side)) {
+    return CHANY;
+  }
+
+  VTR_ASSERT((RIGHT == sb_side) || (LEFT == sb_side));
+  return CHANX;
+}
+
+/********************************************************************
+ * Find the GSB coordinate for a CB in the top-level module 
+ * depending on the side of a SB
+ * TODO: use vtr::Point<size_t> to replace DeviceCoordinator
+ *******************************************************************/
+static 
+DeviceCoordinator find_top_module_gsb_coordinate_by_sb_side(const RRGSB& rr_gsb,
+                                                            const e_side& sb_side) {
+  VTR_ASSERT(NUM_SIDES != sb_side);
+
+  DeviceCoordinator gsb_coordinate;
+
+  if ((TOP == sb_side) || (LEFT == sb_side)) {
+    gsb_coordinate.set_x(rr_gsb.get_x()); 
+    gsb_coordinate.set_y(rr_gsb.get_y()); 
+    return gsb_coordinate;
+  }
+ 
+  VTR_ASSERT((RIGHT == sb_side) || (BOTTOM == sb_side));
+  DeviceCoordinator side_coord = rr_gsb.get_side_block_coordinator(sb_side);
+
+  gsb_coordinate.set_x(side_coord.get_x()); 
+  gsb_coordinate.set_y(side_coord.get_y()); 
+
+  return gsb_coordinate;
+}
 
 /********************************************************************
  * Add a instance of a grid module to the top module
@@ -194,10 +238,11 @@ std::vector<std::vector<size_t>> add_top_module_switch_block_instances(ModuleMan
 
   for (size_t ix = 0; ix < sb_range.get_x(); ++ix) {
     for (size_t iy = 0; iy < sb_range.get_y(); ++iy) {
-      vtr::Point<size_t> sb_coordinate(ix, iy);
       /* If we use compact routing hierarchy, we should instanciate the unique module of SB */
+      const RRGSB& rr_gsb = L_device_rr_gsb.get_gsb(ix, iy);
+      vtr::Point<size_t> sb_coordinate(rr_gsb.get_sb_x(), rr_gsb.get_sb_x());
       if (true == compact_routing_hierarchy) {
-        DeviceCoordinator sb_coord(sb_coordinate.x(), sb_coordinate.y());
+        DeviceCoordinator sb_coord(ix, iy);
         const RRGSB& unique_mirror = L_device_rr_gsb.get_sb_unique_module(sb_coord);
         sb_coordinate.set_x(unique_mirror.get_sb_x()); 
         sb_coordinate.set_y(unique_mirror.get_sb_y()); 
@@ -206,7 +251,7 @@ std::vector<std::vector<size_t>> add_top_module_switch_block_instances(ModuleMan
       ModuleId sb_module = module_manager.find_module(sb_module_name);
       VTR_ASSERT(true == module_manager.valid_module_id(sb_module));
       /* Record the instance id */
-      sb_instance_ids[ix][iy] = module_manager.num_instance(top_module, sb_module);
+      sb_instance_ids[rr_gsb.get_sb_x()][rr_gsb.get_sb_y()] = module_manager.num_instance(top_module, sb_module);
       /* Add the module to top_module */ 
       module_manager.add_child_module(top_module, sb_module);
     }
@@ -236,12 +281,12 @@ std::vector<std::vector<size_t>> add_top_module_connection_block_instances(Modul
 
   for (size_t ix = 0; ix < cb_range.get_x(); ++ix) {
     for (size_t iy = 0; iy < cb_range.get_y(); ++iy) {
-      vtr::Point<size_t> cb_coordinate(ix, iy);
       /* Check if the connection block exists in the device!
        * Some of them do NOT exist due to heterogeneous blocks (height > 1) 
        * We will skip those modules
        */
       const RRGSB& rr_gsb = L_device_rr_gsb.get_gsb(ix, iy);
+      vtr::Point<size_t> cb_coordinate(rr_gsb.get_cb_x(cb_type), rr_gsb.get_cb_y(cb_type));
       const DeviceCoordinator cb_coordinator = rr_gsb.get_cb_coordinator(cb_type);
       if ( (TRUE != is_cb_exist(cb_type, cb_coordinator.get_x(), cb_coordinator.get_y()))
         || (true != rr_gsb.is_cb_exist(cb_type))) {
@@ -249,7 +294,7 @@ std::vector<std::vector<size_t>> add_top_module_connection_block_instances(Modul
       }
       /* If we use compact routing hierarchy, we should instanciate the unique module of SB */
       if (true == compact_routing_hierarchy) {
-        DeviceCoordinator cb_coord(cb_coordinate.x(), cb_coordinate.y());
+        DeviceCoordinator cb_coord(ix, iy);
         const RRGSB& unique_mirror = L_device_rr_gsb.get_cb_unique_module(cb_type, cb_coord);
         cb_coordinate.set_x(unique_mirror.get_cb_x(cb_type)); 
         cb_coordinate.set_y(unique_mirror.get_cb_y(cb_type)); 
@@ -258,7 +303,7 @@ std::vector<std::vector<size_t>> add_top_module_connection_block_instances(Modul
       ModuleId cb_module = module_manager.find_module(cb_module_name);
       VTR_ASSERT(true == module_manager.valid_module_id(cb_module));
       /* Record the instance id */
-      cb_instance_ids[ix][iy] = module_manager.num_instance(top_module, cb_module);
+      cb_instance_ids[rr_gsb.get_cb_x(cb_type)][rr_gsb.get_cb_y(cb_type)] = module_manager.num_instance(top_module, cb_module);
       /* Add the module to top_module */ 
       module_manager.add_child_module(top_module, cb_module);
     }
@@ -441,7 +486,7 @@ void add_top_module_nets_connect_grids_and_cb(ModuleManager& module_manager,
                                               const std::vector<std::vector<size_t>>& cb_instance_ids,
                                               const bool& compact_routing_hierarchy) {
   /* We could have two different coordinators, one is the instance, the other is the module */
-  vtr::Point<size_t> instance_cb_coordinate(rr_gsb.get_x(), rr_gsb.get_y());
+  vtr::Point<size_t> instance_cb_coordinate(rr_gsb.get_cb_x(cb_type), rr_gsb.get_cb_y(cb_type));
   DeviceCoordinator module_gsb_coordinate(rr_gsb.get_x(), rr_gsb.get_y());
 
   /* Skip those Connection blocks that do not exist */
@@ -485,7 +530,9 @@ void add_top_module_nets_connect_grids_and_cb(ModuleManager& module_manager,
       BasicPort src_cb_port = module_manager.module_port(src_cb_module, src_cb_port_id); 
 
       /* Collect sink-related information */
-      /* Note that we use the instance cb pin here, because it has the correct coordinator for the grid!!! */
+      /* Note that we use the instance cb pin here!!!
+       * because it has the correct coordinator for the grid!!! 
+       */
       t_rr_node* instance_ipin_node = rr_gsb.get_ipin_node(cb_ipin_side, inode);
       vtr::Point<size_t> grid_coordinate(instance_ipin_node->xlow, instance_ipin_node->ylow);
       std::string sink_grid_module_name = generate_grid_block_module_name_in_top_module(std::string(grid_verilog_file_name_prefix), device_size, grids, grid_coordinate); 
@@ -515,7 +562,7 @@ void add_top_module_nets_connect_grids_and_cb(ModuleManager& module_manager,
 }
 
 /********************************************************************
- * TODO: This function will create nets for the connections
+ * This function will create nets for the connections
  * between connection block and switch block pins
  * Two cases should be considered:
  * a. The switch block pin denotes an input of a routing track
@@ -541,23 +588,133 @@ void add_top_module_nets_connect_grids_and_cb(ModuleManager& module_manager,
  *    +------------+      +------------------+      +------------+
  *                            |        ^
  *                            v        |
- *    +------------+      +------------------+
- *    |            |      |                  |
- *    |    Grid    |      | Connection Block |
- *    |   [x][y]   |      |   Y-direction    |
- *    |            |      |    [x][y]        |
- *    +------------+      +------------------+
-
+ *    +------------+      +------------------+      +------------+
+ *    |            |      |                  |      |            |
+ *    |    Grid    |      | Connection Block |      |    Grid    |
+ *    |   [x][y]   |      |   Y-direction    |      |  [x][y+1]  |
+ *    |            |      |    [x][y]        |      |            |
+ *    +------------+      +------------------+      +------------+
+ *
+ * Here, to achieve the purpose, we can simply iterate over the 
+ * four sides of switch block and make connections to adjancent 
+ * connection blocks
+ *
  *******************************************************************/
 static 
 void add_top_module_nets_connect_sb_and_cb(ModuleManager& module_manager, 
                                            const ModuleId& top_module, 
+                                           const DeviceRRGSB& L_device_rr_gsb,
                                            const RRGSB& rr_gsb, 
                                            const std::vector<std::vector<size_t>>& sb_instance_ids,
-                                           const std::vector<std::vector<size_t>>& cbx_instance_ids,
-                                           const std::vector<std::vector<size_t>>& cby_instance_ids) {
-}
+                                           const std::map<t_rr_type, std::vector<std::vector<size_t>>>& cb_instance_ids,
+                                           const bool& compact_routing_hierarchy) {
+  /* We could have two different coordinators, one is the instance, the other is the module */
+  vtr::Point<size_t> instance_sb_coordinate(rr_gsb.get_sb_x(), rr_gsb.get_sb_y());
+  DeviceCoordinator module_gsb_sb_coordinate(rr_gsb.get_x(), rr_gsb.get_y());
 
+  /* If we use compact routing hierarchy, we should find the unique module of CB, which is added to the top module */
+  if (true == compact_routing_hierarchy) {
+    DeviceCoordinator gsb_coord(rr_gsb.get_x(), rr_gsb.get_y());
+    const RRGSB& unique_mirror = L_device_rr_gsb.get_sb_unique_module(gsb_coord);
+    module_gsb_sb_coordinate.set_x(unique_mirror.get_x()); 
+    module_gsb_sb_coordinate.set_y(unique_mirror.get_y()); 
+  } 
+
+  /* This is the source cb that is added to the top module */
+  const RRGSB& module_sb = L_device_rr_gsb.get_gsb(module_gsb_sb_coordinate);
+  vtr::Point<size_t> module_sb_coordinate(module_sb.get_sb_x(), module_sb.get_sb_y());
+  std::string sb_module_name = generate_switch_block_module_name(module_sb_coordinate);
+  ModuleId sb_module_id = module_manager.find_module(sb_module_name);
+  VTR_ASSERT(true == module_manager.valid_module_id(sb_module_id));
+  size_t sb_instance = sb_instance_ids[instance_sb_coordinate.x()][instance_sb_coordinate.y()];
+
+  /* Connect grid output pins (OPIN) to switch block grid pins */
+  for (size_t side = 0; side < module_sb.get_num_sides(); ++side) {
+    Side side_manager(side);
+    /* Iterate over the routing tracks on this side */
+    DeviceCoordinator port_coordinator = module_sb.get_side_block_coordinator(side_manager.get_side()); 
+    /* Early skip: if there is no routing tracks at this side */
+    if (0 == module_sb.get_chan_width(side_manager.get_side())) {
+      continue;
+    }
+    /* Find the Connection Block module */
+    /* We find the original connection block and then spot its unique mirror! 
+     * Do NOT use module_sb here!!!
+     */
+    t_rr_type cb_type = find_top_module_cb_type_by_sb_side(side_manager.get_side());
+    DeviceCoordinator instance_gsb_cb_coordinate = find_top_module_gsb_coordinate_by_sb_side(rr_gsb, side_manager.get_side());
+    DeviceCoordinator module_gsb_cb_coordinate = find_top_module_gsb_coordinate_by_sb_side(rr_gsb, side_manager.get_side());
+
+    /* Skip those Connection blocks that do not exist */
+    if ( (TRUE != is_cb_exist(cb_type, rr_gsb.get_cb_x(cb_type), rr_gsb.get_cb_y(cb_type)))
+      || (true != rr_gsb.is_cb_exist(cb_type))) {
+      continue;
+    }
+
+    /* If we use compact routing hierarchy, we should find the unique module of CB, which is added to the top module */
+    if (true == compact_routing_hierarchy) {
+      const RRGSB& unique_mirror = L_device_rr_gsb.get_cb_unique_module(cb_type, module_gsb_cb_coordinate);
+      module_gsb_cb_coordinate.set_x(unique_mirror.get_x()); 
+      module_gsb_cb_coordinate.set_y(unique_mirror.get_y()); 
+    } 
+  
+    const RRGSB& module_cb = L_device_rr_gsb.get_gsb(module_gsb_cb_coordinate);
+    vtr::Point<size_t> module_cb_coordinate(module_cb.get_cb_x(cb_type), module_cb.get_cb_y(cb_type));
+    std::string cb_module_name = generate_connection_block_module_name(cb_type, module_cb_coordinate);
+    ModuleId cb_module_id = module_manager.find_module(cb_module_name);
+    VTR_ASSERT(true == module_manager.valid_module_id(cb_module_id));
+    const RRGSB& instance_cb = L_device_rr_gsb.get_gsb(instance_gsb_cb_coordinate);
+    vtr::Point<size_t> instance_cb_coordinate(instance_cb.get_cb_x(cb_type), instance_cb.get_cb_y(cb_type));
+    size_t cb_instance = cb_instance_ids.at(cb_type)[instance_cb_coordinate.x()][instance_cb_coordinate.y()];
+ 
+    for (size_t itrack = 0; itrack < module_sb.get_chan_width(side_manager.get_side()); ++itrack) {
+      vtr::Point<size_t> sb_port_coord(port_coordinator.get_x(), port_coordinator.get_y());
+      std::string sb_port_name = generate_routing_track_port_name(module_sb.get_chan_node(side_manager.get_side(), itrack)->type,
+                                                                  sb_port_coord, itrack,  
+                                                                  module_sb.get_chan_node_direction(side_manager.get_side(), itrack));
+      /* Prepare SB-related port information */
+      ModulePortId sb_port_id = module_manager.find_module_port(sb_module_id, sb_port_name); 
+      VTR_ASSERT(true == module_manager.valid_module_port_id(sb_module_id, sb_port_id));
+      BasicPort sb_port = module_manager.module_port(sb_module_id, sb_port_id);
+     
+      /* Prepare CB-related port information */ 
+      PORTS cb_port_direction = OUT_PORT;
+      /* The cb port direction should be opposite to the sb port !!! */
+      if (OUT_PORT == module_sb.get_chan_node_direction(side_manager.get_side(), itrack)) {
+        cb_port_direction = IN_PORT;
+      } else {
+        VTR_ASSERT(IN_PORT == module_sb.get_chan_node_direction(side_manager.get_side(), itrack));
+      }  
+      vtr::Point<size_t> cb_port_coord(module_cb.get_cb_x(cb_type), module_cb.get_cb_y(cb_type));
+      std::string cb_port_name = generate_routing_track_port_name(cb_type,
+                                                                  cb_port_coord, itrack,  
+                                                                  cb_port_direction);
+      ModulePortId cb_port_id = module_manager.find_module_port(cb_module_id, cb_port_name); 
+      VTR_ASSERT(true == module_manager.valid_module_port_id(cb_module_id, cb_port_id));
+      BasicPort cb_port = module_manager.module_port(cb_module_id, cb_port_id);
+
+      /* Source and sink port should match in size */
+      VTR_ASSERT(cb_port.get_width() == sb_port.get_width());
+      
+      /* Create a net for each pin */
+      for (size_t pin_id = 0; pin_id < cb_port.pins().size(); ++pin_id) {
+        ModuleNetId net = module_manager.create_module_net(top_module);
+        /* Configure the net source and sink:
+         * If sb port is an output (source), cb port is an input (sink) 
+         * If sb port is an input (sink), cb port is an output (source) 
+         */
+        if (OUT_PORT == module_sb.get_chan_node_direction(side_manager.get_side(), itrack)) {
+          module_manager.add_module_net_sink(top_module, net, cb_module_id, cb_instance, cb_port_id, cb_port.pins()[pin_id]);
+          module_manager.add_module_net_source(top_module, net, sb_module_id, sb_instance, sb_port_id, sb_port.pins()[pin_id]);
+        } else {
+          VTR_ASSERT(IN_PORT == module_sb.get_chan_node_direction(side_manager.get_side(), itrack));
+          module_manager.add_module_net_source(top_module, net, cb_module_id, cb_instance, cb_port_id, cb_port.pins()[pin_id]);
+          module_manager.add_module_net_sink(top_module, net, sb_module_id, sb_instance, sb_port_id, sb_port.pins()[pin_id]);
+        }  
+      }
+    }
+  }
+}
 
 /********************************************************************
  * Add module nets to connect the grid ports/pins to Connection Blocks
@@ -600,8 +757,7 @@ void add_top_module_nets_connect_grids_and_gsbs(ModuleManager& module_manager,
                                                 const std::vector<std::vector<size_t>>& grid_instance_ids,
                                                 const DeviceRRGSB& L_device_rr_gsb,
                                                 const std::vector<std::vector<size_t>>& sb_instance_ids,
-                                                const std::vector<std::vector<size_t>>& cbx_instance_ids,
-                                                const std::vector<std::vector<size_t>>& cby_instance_ids,
+                                                const std::map<t_rr_type, std::vector<std::vector<size_t>>>& cb_instance_ids,
                                                 const bool& compact_routing_hierarchy) {
   DeviceCoordinator gsb_range = L_device_rr_gsb.get_gsb_range();
   for (size_t ix = 0; ix < gsb_range.get_x(); ++ix) {
@@ -616,16 +772,18 @@ void add_top_module_nets_connect_grids_and_gsbs(ModuleManager& module_manager,
 
       add_top_module_nets_connect_grids_and_cb(module_manager, top_module, 
                                                device_size, grids, grid_instance_ids,
-                                               L_device_rr_gsb, rr_gsb, CHANX, cbx_instance_ids,
+                                               L_device_rr_gsb, rr_gsb, CHANX, cb_instance_ids.at(CHANX),
                                                compact_routing_hierarchy);
 
       add_top_module_nets_connect_grids_and_cb(module_manager, top_module, 
                                                device_size, grids, grid_instance_ids,
-                                               L_device_rr_gsb, rr_gsb, CHANY, cby_instance_ids,
+                                               L_device_rr_gsb, rr_gsb, CHANY, cb_instance_ids.at(CHANY),
                                                compact_routing_hierarchy);
 
       add_top_module_nets_connect_sb_and_cb(module_manager, top_module, 
-                                            rr_gsb, sb_instance_ids, cbx_instance_ids, cby_instance_ids);
+                                            L_device_rr_gsb, rr_gsb, sb_instance_ids, cb_instance_ids,
+                                            compact_routing_hierarchy);
+
     }
   }
 }
@@ -654,6 +812,8 @@ void print_verilog_top_module(ModuleManager& module_manager,
   /* Create a module as the top-level fabric, and add it to the module manager */
   std::string top_module_name = generate_fpga_top_module_name();
   ModuleId top_module = module_manager.add_module(top_module_name);
+
+  std::map<t_rr_type, std::vector<std::vector<size_t>>> cb_instance_ids;
  
   /* Add sub modules, which are grid, SB and CBX/CBY modules as instances */
   /* Add all the grids across the fabric */
@@ -661,19 +821,15 @@ void print_verilog_top_module(ModuleManager& module_manager,
   /* Add all the SBs across the fabric */
   std::vector<std::vector<size_t>> sb_instance_ids = add_top_module_switch_block_instances(module_manager, top_module, L_device_rr_gsb, compact_routing_hierarchy);
   /* Add all the CBX and CBYs across the fabric */
-  std::vector<std::vector<size_t>> cbx_instance_ids = add_top_module_connection_block_instances(module_manager, top_module, L_device_rr_gsb, CHANX, compact_routing_hierarchy);
-  std::vector<std::vector<size_t>> cby_instance_ids = add_top_module_connection_block_instances(module_manager, top_module, L_device_rr_gsb, CHANY, compact_routing_hierarchy);
+  cb_instance_ids[CHANX] = add_top_module_connection_block_instances(module_manager, top_module, L_device_rr_gsb, CHANX, compact_routing_hierarchy);
+  cb_instance_ids[CHANY] = add_top_module_connection_block_instances(module_manager, top_module, L_device_rr_gsb, CHANY, compact_routing_hierarchy);
 
   /* TODO: Add module nets to connect the sub modules */
   add_top_module_nets_connect_grids_and_gsbs(module_manager, top_module, 
                                              device_size, grids, grid_instance_ids, 
-                                             L_device_rr_gsb, sb_instance_ids, cbx_instance_ids, cby_instance_ids,
+                                             L_device_rr_gsb, sb_instance_ids, cb_instance_ids,
                                              compact_routing_hierarchy);
   /* TODO: Add inter-CLB direct connections */
-
-  /* TODO: Add  ports to the top-level module */
-
-  /* TODO: Add module nets to connect the top-level ports to sub modules */
 
   /* Add global ports to the pb_module:
    * This is a much easier job after adding sub modules (instances), 
