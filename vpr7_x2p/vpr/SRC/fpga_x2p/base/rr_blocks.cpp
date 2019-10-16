@@ -2339,7 +2339,7 @@ DeviceCoordinator DeviceRRGSB::get_gsb_range() const {
 } 
 
 /* Get a rr switch block in the array with a coordinator */
-const RRGSB DeviceRRGSB::get_gsb(DeviceCoordinator& coordinator) const {
+const RRGSB DeviceRRGSB::get_gsb(const DeviceCoordinator& coordinator) const {
   assert(validate_coordinator(coordinator));
   return rr_gsb_[coordinator.get_x()][coordinator.get_y()];
 } 
@@ -3062,7 +3062,7 @@ void DeviceRRGSB::clear_segment_ids() {
 
 
 /* Validate if the (x,y) is the range of this device */
-bool DeviceRRGSB::validate_coordinator(DeviceCoordinator& coordinator) const {
+bool DeviceRRGSB::validate_coordinator(const DeviceCoordinator& coordinator) const {
   if (coordinator.get_x() >= rr_gsb_.capacity()) {
     return false;
   }

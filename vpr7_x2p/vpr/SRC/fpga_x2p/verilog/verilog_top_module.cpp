@@ -304,13 +304,37 @@ void add_top_module_nets_connect_grids_and_sb(ModuleManager& module_manager,
                                               const vtr::Point<size_t>& device_size,
                                               const std::vector<std::vector<t_grid_tile>>& grids,
                                               const std::vector<std::vector<size_t>>& grid_instance_ids,
+                                              const DeviceRRGSB& L_device_rr_gsb,
                                               const RRGSB& rr_gsb, 
-                                              const std::vector<std::vector<size_t>>& sb_instance_ids) {
-  vtr::Point<size_t> sb_coordinate(rr_gsb.get_sb_x(), rr_gsb.get_sb_y());
+                                              const std::vector<std::vector<size_t>>& sb_instance_ids,
+                                              const bool& compact_routing_hierarchy) {
+
+  /* We could have two different coordinators, one is the instance, the other is the module */
+  vtr::Point<size_t> instance_sb_coordinate(rr_gsb.get_sb_x(), rr_gsb.get_sb_y());
+  DeviceCoordinator module_gsb_coordinate(rr_gsb.get_x(), rr_gsb.get_y());
+
+  /* If we use compact routing hierarchy, we should find the unique module of CB, which is added to the top module */
+  if (true == compact_routing_hierarchy) {
+    DeviceCoordinator gsb_coord(rr_gsb.get_x(), rr_gsb.get_y());
+    const RRGSB& unique_mirror = L_device_rr_gsb.get_sb_unique_module(gsb_coord);
+    module_gsb_coordinate.set_x(unique_mirror.get_x()); 
+    module_gsb_coordinate.set_y(unique_mirror.get_y()); 
+  } 
+
+  /* This is the source cb that is added to the top module */
+  const RRGSB& module_sb = L_device_rr_gsb.get_gsb(module_gsb_coordinate);
+  vtr::Point<size_t> module_sb_coordinate(module_sb.get_sb_x(), module_sb.get_sb_y());
+
+  /* Collect sink-related information */
+  std::string sink_sb_module_name = generate_switch_block_module_name(module_sb_coordinate);
+  ModuleId sink_sb_module = module_manager.find_module(sink_sb_module_name);
+  VTR_ASSERT(true == module_manager.valid_module_id(sink_sb_module));
+  size_t sink_sb_instance = sb_instance_ids[instance_sb_coordinate.x()][instance_sb_coordinate.y()];
+
   /* Connect grid output pins (OPIN) to switch block grid pins */
-  for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
+  for (size_t side = 0; side < module_sb.get_num_sides(); ++side) {
     Side side_manager(side);
-    for (size_t inode = 0; inode < rr_gsb.get_num_opin_nodes(side_manager.get_side()); ++inode) {
+    for (size_t inode = 0; inode < module_sb.get_num_opin_nodes(side_manager.get_side()); ++inode) {
       /* Collect source-related information */
       /* Generate the grid module name by considering if it locates on the border */
       vtr::Point<size_t> grid_coordinate(rr_gsb.get_opin_node(side_manager.get_side(), inode)->xlow, (rr_gsb.get_opin_node(side_manager.get_side(), inode)->ylow));
@@ -326,14 +350,10 @@ void add_top_module_nets_connect_grids_and_sb(ModuleManager& module_manager,
       BasicPort src_grid_port = module_manager.module_port(src_grid_module, src_grid_port_id); 
 
       /* Collect sink-related information */
-      std::string sink_sb_module_name = generate_switch_block_module_name(sb_coordinate);
-      ModuleId sink_sb_module = module_manager.find_module(sink_sb_module_name);
-      VTR_ASSERT(true == module_manager.valid_module_id(sink_sb_module));
-      size_t sink_sb_instance = sb_instance_ids[sb_coordinate.x()][sb_coordinate.y()];
-      vtr::Point<size_t> sink_sb_port_coord(rr_gsb.get_opin_node(side_manager.get_side(), inode)->xlow,
-                                            rr_gsb.get_opin_node(side_manager.get_side(), inode)->ylow);
+      vtr::Point<size_t> sink_sb_port_coord(module_sb.get_opin_node(side_manager.get_side(), inode)->xlow,
+                                            module_sb.get_opin_node(side_manager.get_side(), inode)->ylow);
       std::string sink_sb_port_name = generate_grid_side_port_name(sink_sb_port_coord,
-                                                                   rr_gsb.get_opin_node_grid_side(side_manager.get_side(), inode),
+                                                                   module_sb.get_opin_node_grid_side(side_manager.get_side(), inode),
                                                                    src_grid_pin_index); 
       ModulePortId sink_sb_port_id = module_manager.find_module_port(sink_sb_module, sink_sb_port_name);
       VTR_ASSERT(true == module_manager.valid_module_port_id(sink_sb_module, sink_sb_port_id));
@@ -355,7 +375,7 @@ void add_top_module_nets_connect_grids_and_sb(ModuleManager& module_manager,
 }
 
 /********************************************************************
- * TODO: This function will create nets for the connections
+ * This function will create nets for the connections
  * between grid input pins and connection blocks
  * In this case, the net source is the connection block pin, 
  * while the net sink is the grid input
@@ -383,6 +403,31 @@ void add_top_module_nets_connect_grids_and_sb(ModuleManager& module_manager,
  *    |            |      
  *    +------------+    
  *
+ *
+ *    Relationship between source connection block and its unique module 
+ *    Take an example of a CBY
+ *
+ *    grid_pin name should follow unique module of Grid[x][y+1]
+ *    cb_pin name should follow unique module of CBY[x][y+1]
+ *    
+ *    However, instace id should follow the origin Grid and Connection block 
+ *                    
+ *                    
+ *    +------------+             +------------------+ 
+ *    |            |             |                  | 
+ *    |    Grid    |<------------| Connection Block |
+ *    |  [x][y+1]  |             |  Y-direction     | 
+ *    |            |             |    [x][y+1]      |
+ *    +------------+             +------------------+
+ *                                         ^
+ *                                        || unique mirror
+ *    +------------+             +------------------+ 
+ *    |            |             |                  | 
+ *    |    Grid    |<------------| Connection Block |
+ *    |  [i][j+1]  |             |  Y-direction     | 
+ *    |            |             |    [i][j+1]      |
+ *    +------------+             +------------------+
+ *
  *******************************************************************/
 static 
 void add_top_module_nets_connect_grids_and_cb(ModuleManager& module_manager, 
@@ -390,9 +435,83 @@ void add_top_module_nets_connect_grids_and_cb(ModuleManager& module_manager,
                                               const vtr::Point<size_t>& device_size,
                                               const std::vector<std::vector<t_grid_tile>>& grids,
                                               const std::vector<std::vector<size_t>>& grid_instance_ids,
+                                              const DeviceRRGSB& L_device_rr_gsb,
                                               const RRGSB& rr_gsb, 
-                                              const std::vector<std::vector<size_t>>& cbx_instance_ids,
-                                              const std::vector<std::vector<size_t>>& cby_instance_ids) {
+                                              const t_rr_type& cb_type,
+                                              const std::vector<std::vector<size_t>>& cb_instance_ids,
+                                              const bool& compact_routing_hierarchy) {
+  /* We could have two different coordinators, one is the instance, the other is the module */
+  vtr::Point<size_t> instance_cb_coordinate(rr_gsb.get_x(), rr_gsb.get_y());
+  DeviceCoordinator module_gsb_coordinate(rr_gsb.get_x(), rr_gsb.get_y());
+
+  /* Skip those Connection blocks that do not exist */
+  if ( (TRUE != is_cb_exist(cb_type, rr_gsb.get_cb_x(cb_type), rr_gsb.get_cb_y(cb_type)))
+    || (true != rr_gsb.is_cb_exist(cb_type))) {
+    return;
+  }
+
+  /* If we use compact routing hierarchy, we should find the unique module of CB, which is added to the top module */
+  if (true == compact_routing_hierarchy) {
+    DeviceCoordinator gsb_coord(rr_gsb.get_x(), rr_gsb.get_y());
+    const RRGSB& unique_mirror = L_device_rr_gsb.get_cb_unique_module(cb_type, gsb_coord);
+    module_gsb_coordinate.set_x(unique_mirror.get_x()); 
+    module_gsb_coordinate.set_y(unique_mirror.get_y()); 
+  } 
+
+  /* This is the source cb that is added to the top module */
+  const RRGSB& module_cb = L_device_rr_gsb.get_gsb(module_gsb_coordinate);
+  vtr::Point<size_t> module_cb_coordinate(module_cb.get_cb_x(cb_type), module_cb.get_cb_y(cb_type));
+
+  /* Collect source-related information */
+  std::string src_cb_module_name = generate_connection_block_module_name(cb_type, module_cb_coordinate);
+  ModuleId src_cb_module = module_manager.find_module(src_cb_module_name);
+  VTR_ASSERT(true == module_manager.valid_module_id(src_cb_module));
+  /* Instance id should follow the instance cb coordinate */
+  size_t src_cb_instance = cb_instance_ids[instance_cb_coordinate.x()][instance_cb_coordinate.y()];
+
+  /* Iterate over the output pins of the Connection Block */
+  std::vector<enum e_side> cb_ipin_sides = module_cb.get_cb_ipin_sides(cb_type);
+  for (size_t iside = 0; iside < cb_ipin_sides.size(); ++iside) {
+    enum e_side cb_ipin_side = cb_ipin_sides[iside];
+    for (size_t inode = 0; inode < module_cb.get_num_ipin_nodes(cb_ipin_side); ++inode) {
+      /* Collect source-related information */
+      t_rr_node* module_ipin_node = module_cb.get_ipin_node(cb_ipin_side, inode);
+      vtr::Point<size_t> cb_src_port_coord(module_ipin_node->xlow, module_ipin_node->ylow);
+      std::string src_cb_port_name = generate_grid_side_port_name(cb_src_port_coord,
+                                                                  module_cb.get_ipin_node_grid_side(cb_ipin_side, inode),
+                                                                  module_ipin_node->ptc_num); 
+      ModulePortId src_cb_port_id = module_manager.find_module_port(src_cb_module, src_cb_port_name);
+      VTR_ASSERT(true == module_manager.valid_module_port_id(src_cb_module, src_cb_port_id));
+      BasicPort src_cb_port = module_manager.module_port(src_cb_module, src_cb_port_id); 
+
+      /* Collect sink-related information */
+      /* Note that we use the instance cb pin here, because it has the correct coordinator for the grid!!! */
+      t_rr_node* instance_ipin_node = rr_gsb.get_ipin_node(cb_ipin_side, inode);
+      vtr::Point<size_t> grid_coordinate(instance_ipin_node->xlow, instance_ipin_node->ylow);
+      std::string sink_grid_module_name = generate_grid_block_module_name_in_top_module(std::string(grid_verilog_file_name_prefix), device_size, grids, grid_coordinate); 
+      ModuleId sink_grid_module = module_manager.find_module(sink_grid_module_name);
+      VTR_ASSERT(true == module_manager.valid_module_id(sink_grid_module));
+      size_t sink_grid_instance = grid_instance_ids[grid_coordinate.x()][grid_coordinate.y()];
+      size_t sink_grid_pin_index = instance_ipin_node->ptc_num;
+      size_t sink_grid_pin_height = find_grid_pin_height(grids, grid_coordinate, sink_grid_pin_index);
+      std::string sink_grid_port_name = generate_grid_port_name(grid_coordinate, sink_grid_pin_height, rr_gsb.get_ipin_node_grid_side(cb_ipin_side, inode), sink_grid_pin_index, false);
+      ModulePortId sink_grid_port_id = module_manager.find_module_port(sink_grid_module, sink_grid_port_name);
+      VTR_ASSERT(true == module_manager.valid_module_port_id(sink_grid_module, sink_grid_port_id));
+      BasicPort sink_grid_port = module_manager.module_port(sink_grid_module, sink_grid_port_id); 
+
+      /* Source and sink port should match in size */
+      VTR_ASSERT(src_cb_port.get_width() == sink_grid_port.get_width());
+      
+      /* Create a net for each pin */
+      for (size_t pin_id = 0; pin_id < src_cb_port.pins().size(); ++pin_id) {
+        ModuleNetId net = module_manager.create_module_net(top_module);
+        /* Configure the net source */
+        module_manager.add_module_net_source(top_module, net, src_cb_module, src_cb_instance, src_cb_port_id, src_cb_port.pins()[pin_id]);
+        /* Configure the net sink */
+        module_manager.add_module_net_sink(top_module, net, sink_grid_module, sink_grid_instance, sink_grid_port_id, sink_grid_port.pins()[pin_id]);
+      }
+    }
+  }
 }
 
 /********************************************************************
@@ -482,7 +601,8 @@ void add_top_module_nets_connect_grids_and_gsbs(ModuleManager& module_manager,
                                                 const DeviceRRGSB& L_device_rr_gsb,
                                                 const std::vector<std::vector<size_t>>& sb_instance_ids,
                                                 const std::vector<std::vector<size_t>>& cbx_instance_ids,
-                                                const std::vector<std::vector<size_t>>& cby_instance_ids) {
+                                                const std::vector<std::vector<size_t>>& cby_instance_ids,
+                                                const bool& compact_routing_hierarchy) {
   DeviceCoordinator gsb_range = L_device_rr_gsb.get_gsb_range();
   for (size_t ix = 0; ix < gsb_range.get_x(); ++ix) {
     for (size_t iy = 0; iy < gsb_range.get_y(); ++iy) {
@@ -491,11 +611,18 @@ void add_top_module_nets_connect_grids_and_gsbs(ModuleManager& module_manager,
       /* Connect the grid pins of the GSB to adjacent grids */
       add_top_module_nets_connect_grids_and_sb(module_manager, top_module, 
                                                device_size, grids, grid_instance_ids,
-                                               rr_gsb, sb_instance_ids);
+                                               L_device_rr_gsb, rr_gsb, sb_instance_ids, 
+                                               compact_routing_hierarchy);
 
       add_top_module_nets_connect_grids_and_cb(module_manager, top_module, 
                                                device_size, grids, grid_instance_ids,
-                                               rr_gsb, cbx_instance_ids, cby_instance_ids);
+                                               L_device_rr_gsb, rr_gsb, CHANX, cbx_instance_ids,
+                                               compact_routing_hierarchy);
+
+      add_top_module_nets_connect_grids_and_cb(module_manager, top_module, 
+                                               device_size, grids, grid_instance_ids,
+                                               L_device_rr_gsb, rr_gsb, CHANY, cby_instance_ids,
+                                               compact_routing_hierarchy);
 
       add_top_module_nets_connect_sb_and_cb(module_manager, top_module, 
                                             rr_gsb, sb_instance_ids, cbx_instance_ids, cby_instance_ids);
@@ -540,7 +667,8 @@ void print_verilog_top_module(ModuleManager& module_manager,
   /* TODO: Add module nets to connect the sub modules */
   add_top_module_nets_connect_grids_and_gsbs(module_manager, top_module, 
                                              device_size, grids, grid_instance_ids, 
-                                             L_device_rr_gsb, sb_instance_ids, cbx_instance_ids, cby_instance_ids);
+                                             L_device_rr_gsb, sb_instance_ids, cbx_instance_ids, cby_instance_ids,
+                                             compact_routing_hierarchy);
   /* TODO: Add inter-CLB direct connections */
 
   /* TODO: Add  ports to the top-level module */
