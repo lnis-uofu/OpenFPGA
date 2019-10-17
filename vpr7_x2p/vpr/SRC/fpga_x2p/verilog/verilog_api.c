@@ -319,7 +319,7 @@ void vpr_fpga_verilog(t_vpr_setup vpr_setup,
   /* Print top-level Verilog module */
   vtr::Point<size_t> device_size(nx + 2, ny + 2);
   std::vector<std::vector<t_grid_tile>> grids;
-  /* Fill the grid vectors */
+  /* Organize a vector (matrix) of grids to feed the top-level module generation */
   grids.resize(device_size.x());
   for (size_t ix = 0; ix < device_size.x(); ++ix) {
     grids[ix].resize(device_size.y());
@@ -327,8 +327,14 @@ void vpr_fpga_verilog(t_vpr_setup vpr_setup,
       grids[ix][iy] = grid[ix][iy];
     }
   } 
+  /* Organize a vector (matrix) of clb2clb directs to feed the top-level module generation */
+  std::vector<t_clb_to_clb_directs> clb2clb_directs;
+  for (int i = 0; i < num_clb2clb_directs; ++i) {
+    clb2clb_directs.push_back(clb2clb_direct[i]); 
+  }
   print_verilog_top_module(module_manager, Arch.spice->circuit_lib, 
                            device_size, grids, device_rr_gsb, 
+                           clb2clb_directs, 
                            sram_verilog_orgz_info, 
                            std::string(vpr_setup.FileNameOpts.ArchFile), 
                            std::string(src_dir_path),

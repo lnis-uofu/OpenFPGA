@@ -22,6 +22,15 @@
 #include "verilog_top_module.h"
 
 /********************************************************************
+ * Check if the grid coorindate given is in the device grid range 
+ *******************************************************************/
+static 
+bool is_grid_coordinate_exist_in_device(const vtr::Point<size_t>& device_size,
+                                        const vtr::Point<size_t>& grid_coordinate) {
+  return (grid_coordinate < device_size);
+}
+
+/********************************************************************
  * Generate the name for a grid block, by considering
  * 1. if it locates on the border with given device size
  * 2. its type
@@ -789,6 +798,205 @@ void add_top_module_nets_connect_grids_and_gsbs(ModuleManager& module_manager,
 }
 
 /********************************************************************
+ * Add module net for one direction connection between two CLBs or
+ * two grids
+ * This function will 
+ * 1. find the pin id and port id of the source clb port in module manager
+ * 2. find the pin id and port id of the destination clb port in module manager
+ * 3. add a direct connection module to the top module 
+ * 4. add a first module net and configure its source and sink, 
+ * in order to connect the source pin to the input of the top module
+ * 4. add a second module net and configure its source and sink, 
+ * in order to connect the sink pin to the output of the top module
+ *******************************************************************/
+static 
+void add_module_nets_clb2clb_direct_connection(ModuleManager& module_manager, 
+                                               const ModuleId& top_module,  
+                                               const CircuitLibrary& circuit_lib, 
+                                               const vtr::Point<size_t>& device_size,
+                                               const std::vector<std::vector<t_grid_tile>>& grids,
+                                               const std::vector<std::vector<size_t>>& grid_instance_ids,
+                                               const vtr::Point<size_t>& src_clb_coord, 
+                                               const vtr::Point<size_t>& des_clb_coord,  
+                                               const t_clb_to_clb_directs& direct) {
+  /* Find the source port and destination port on the CLBs */
+  BasicPort src_clb_port;
+  BasicPort des_clb_port;
+
+  src_clb_port.set_width(direct.from_clb_pin_start_index, direct.from_clb_pin_end_index);
+  des_clb_port.set_width(direct.to_clb_pin_start_index, direct.to_clb_pin_end_index);
+
+  /* Check bandwidth match between from_clb and to_clb pins */
+  if (src_clb_port.get_width() != des_clb_port.get_width()) {
+    vpr_printf(TIO_MESSAGE_ERROR, 
+               "(File:%s, [LINE%d]) Unmatch pin bandwidth in direct connection (name=%s)!\n",
+               __FILE__, __LINE__, direct.name);
+    exit(1);
+  }
+
+  /* Find the module name of source clb */
+  t_type_ptr src_grid_type = grids[src_clb_coord.x()][src_clb_coord.y()].type;
+  e_side src_grid_border_side = find_grid_border_side(device_size, src_clb_coord);
+  std::string src_module_name_prefix(grid_verilog_file_name_prefix);
+  std::string src_module_name = generate_grid_block_module_name(src_module_name_prefix, std::string(src_grid_type->name), IO_TYPE == src_grid_type, src_grid_border_side);
+  ModuleId src_grid_module = module_manager.find_module(src_module_name);
+  VTR_ASSERT(true == module_manager.valid_module_id(src_grid_module));
+  /* Record the instance id */
+  size_t src_grid_instance = grid_instance_ids[src_clb_coord.x()][src_clb_coord.y()];
+
+  /* Find the module name of sink clb */
+  t_type_ptr sink_grid_type = grids[des_clb_coord.x()][des_clb_coord.y()].type;
+  e_side sink_grid_border_side = find_grid_border_side(device_size, des_clb_coord);
+  std::string sink_module_name_prefix(grid_verilog_file_name_prefix);
+  std::string sink_module_name = generate_grid_block_module_name(sink_module_name_prefix, std::string(sink_grid_type->name), IO_TYPE == sink_grid_type, sink_grid_border_side);
+  ModuleId sink_grid_module = module_manager.find_module(sink_module_name);
+  VTR_ASSERT(true == module_manager.valid_module_id(sink_grid_module));
+  /* Record the instance id */
+  size_t sink_grid_instance = grid_instance_ids[des_clb_coord.x()][des_clb_coord.y()];
+
+  /* Find the module id of a direct connection module */
+  std::string direct_module_name = circuit_lib.model_name(direct.circuit_model);
+  ModuleId direct_module = module_manager.find_module(direct_module_name);
+  VTR_ASSERT(true == module_manager.valid_module_id(direct_module));
+
+  /* Find inputs and outputs of the direct circuit module */
+  std::vector<CircuitPortId> direct_input_ports = circuit_lib.model_ports_by_type(direct.circuit_model, SPICE_MODEL_PORT_INPUT, true);
+  VTR_ASSERT(1 == direct_input_ports.size());
+  ModulePortId direct_input_port_id = module_manager.find_module_port(direct_module, circuit_lib.port_lib_name(direct_input_ports[0]));
+  VTR_ASSERT(true == module_manager.valid_module_port_id(direct_module, direct_input_port_id));
+  VTR_ASSERT(1 == module_manager.module_port(direct_module, direct_input_port_id).get_width());
+
+  std::vector<CircuitPortId> direct_output_ports = circuit_lib.model_ports_by_type(direct.circuit_model, SPICE_MODEL_PORT_OUTPUT, true);
+  VTR_ASSERT(1 == direct_output_ports.size());
+  ModulePortId direct_output_port_id = module_manager.find_module_port(direct_module, circuit_lib.port_lib_name(direct_output_ports[0]));
+  VTR_ASSERT(true == module_manager.valid_module_port_id(direct_module, direct_output_port_id));
+  VTR_ASSERT(1 == module_manager.module_port(direct_module, direct_output_port_id).get_width());
+
+  for (size_t pin_id : src_clb_port.pins()) {
+    /* Generate the pin name of source port/pin in the grid */
+    size_t src_pin_height = find_grid_pin_height(grids, src_clb_coord, src_clb_port.pins()[pin_id]);
+    e_side src_pin_grid_side = find_grid_pin_side(device_size, grids, src_clb_coord, src_pin_height, src_clb_port.pins()[pin_id]);
+    std::string src_port_name = generate_grid_port_name(src_clb_coord, src_pin_height, src_pin_grid_side, src_clb_port.pins()[pin_id], false);
+    ModulePortId src_port_id = module_manager.find_module_port(src_grid_module, src_port_name); 
+    VTR_ASSERT(true == module_manager.valid_module_port_id(src_grid_module, src_port_id));
+    VTR_ASSERT(1 == module_manager.module_port(src_grid_module, src_port_id).get_width());
+
+    /* Generate the pin name of sink port/pin in the grid */
+    size_t sink_pin_height = find_grid_pin_height(grids, des_clb_coord, des_clb_port.pins()[pin_id]);
+    e_side sink_pin_grid_side = find_grid_pin_side(device_size, grids, des_clb_coord, sink_pin_height, des_clb_port.pins()[pin_id]);
+    std::string sink_port_name = generate_grid_port_name(des_clb_coord, sink_pin_height, sink_pin_grid_side, des_clb_port.pins()[pin_id], false);
+    ModulePortId sink_port_id = module_manager.find_module_port(sink_grid_module, sink_port_name); 
+    VTR_ASSERT(true == module_manager.valid_module_port_id(sink_grid_module, sink_port_id));
+    VTR_ASSERT(1 == module_manager.module_port(sink_grid_module, sink_port_id).get_width());
+
+    /* Add a submodule of direct connection module to the top-level module */
+    size_t direct_instance_id = module_manager.num_instance(top_module, direct_module);
+    module_manager.add_child_module(top_module, direct_module);
+
+    /* Create the 1st module net */
+    ModuleNetId net_direct_src = module_manager.create_module_net(top_module); 
+    /* Connect the wire between src_pin of clb and direct_instance input*/
+    module_manager.add_module_net_source(top_module, net_direct_src, src_grid_module, src_grid_instance, src_port_id, 0);
+    module_manager.add_module_net_sink(top_module, net_direct_src, direct_module, direct_instance_id, direct_input_port_id, 0);
+
+    /* Create the 2nd module net */
+    ModuleNetId net_direct_sink = module_manager.create_module_net(top_module); 
+    /* Connect the wire between direct_instance output and sink_pin of clb */
+    module_manager.add_module_net_source(top_module, net_direct_sink, direct_module, direct_instance_id, direct_output_port_id, 0);
+    module_manager.add_module_net_sink(top_module, net_direct_sink, sink_grid_module, sink_grid_instance, sink_port_id, 0);
+  }
+}
+
+/********************************************************************
+ * Add module net of clb-to-clb direct connections to module manager
+ * Note that the direct connections are not limited to CLBs only.
+ * It can be more generic and thus cover all the grid types,
+ * such as heterogeneous blocks
+ *
+ * This function supports the following types of direct connection:
+ * 1. Direct connection between grids in the same column or row
+ *     +------+      +------+
+ *     |      |      |      |
+ *     | Grid |----->| Grid |
+ *     |      |      |      |
+ *     +------+      +------+
+ *         | direction connection 
+ *         v
+ *     +------+
+ *     |      |
+ *     | Grid |
+ *     |      |
+ *     +------+
+ *
+ * 2. Direct connections across columns and rows 
+ *               +------+
+ *               |      |
+ *               |      v 
+ *     +------+  |   +------+
+ *     |      |  |   |      |
+ *     | Grid |  |   | Grid |
+ *     |      |  |   |      |
+ *     +------+  |   +------+
+ *               |
+ *     +------+  |   +------+
+ *     |      |  |   |      |
+ *     | Grid |  |   | Grid |
+ *     |      |  |   |      |
+ *     +------+  |   +------+
+ *        |      |
+ *        +------+
+ *
+ *******************************************************************/
+static 
+void add_top_module_nets_clb2clb_direct_connections(ModuleManager& module_manager, 
+                                                    const ModuleId& top_module, 
+                                                    const CircuitLibrary& circuit_lib, 
+                                                    const vtr::Point<size_t>& device_size,
+                                                    const std::vector<std::vector<t_grid_tile>>& grids,
+                                                    const std::vector<std::vector<size_t>>& grid_instance_ids,
+                                                    const std::vector<t_clb_to_clb_directs>& clb2clb_directs) {
+  /* Scan the grid, visit each grid and apply direct connections */
+  for (size_t ix = 0; ix < device_size.x(); ++ix) {
+    for (size_t iy = 0; iy < device_size.y(); ++iy) {
+      /* Bypass EMPTY_TYPE*/
+      if ( (NULL == grids[ix][iy].type)
+        || (EMPTY_TYPE == grids[ix][iy].type)) {
+        continue;
+      }
+      /* Bypass any grid with a non-zero offset! They have been visited in the offset=0 case */
+      if (0 != grids[ix][iy].offset) {
+        continue;
+      }
+      /* Check each clb2clb directs by comparing the source and destination clb types
+       * Direct connections are made only for those matched clbs
+       */ 
+      for (const t_clb_to_clb_directs& direct : clb2clb_directs) {
+        /* Bypass unmatched clb type */
+        if (grids[ix][iy].type != direct.from_clb_type) {
+          continue;
+        }
+        
+        /* See if the destination CLB is in the bound */
+        vtr::Point<size_t> src_clb_coord(ix, iy);
+        vtr::Point<size_t> des_clb_coord(ix + direct.x_offset, iy + direct.y_offset);
+        if (false == is_grid_coordinate_exist_in_device(device_size, des_clb_coord)) {
+          continue;
+        }
+
+        /* Check if the destination clb_type matches */
+        if (grids[des_clb_coord.x()][des_clb_coord.y()].type == direct.to_clb_type) {
+          /* Add a module net for a direct connection with the two grids in top_model */
+          add_module_nets_clb2clb_direct_connection(module_manager, top_module, circuit_lib, 
+                                                    device_size, grids, grid_instance_ids,
+                                                    src_clb_coord, des_clb_coord,  
+                                                    direct);
+        }
+      }
+    }
+  }
+}
+
+/********************************************************************
  * Print the top-level module for the FPGA fabric in Verilog format
  * This function will 
  * 1. name the top-level module
@@ -804,6 +1012,7 @@ void print_verilog_top_module(ModuleManager& module_manager,
                               const vtr::Point<size_t>& device_size,
                               const std::vector<std::vector<t_grid_tile>>& grids,
                               const DeviceRRGSB& L_device_rr_gsb,
+                              const std::vector<t_clb_to_clb_directs>& clb2clb_directs,
                               t_sram_orgz_info* cur_sram_orgz_info,
                               const std::string& arch_name,
                               const std::string& verilog_dir,
@@ -824,12 +1033,15 @@ void print_verilog_top_module(ModuleManager& module_manager,
   cb_instance_ids[CHANX] = add_top_module_connection_block_instances(module_manager, top_module, L_device_rr_gsb, CHANX, compact_routing_hierarchy);
   cb_instance_ids[CHANY] = add_top_module_connection_block_instances(module_manager, top_module, L_device_rr_gsb, CHANY, compact_routing_hierarchy);
 
-  /* TODO: Add module nets to connect the sub modules */
+  /* Add module nets to connect the sub modules */
   add_top_module_nets_connect_grids_and_gsbs(module_manager, top_module, 
                                              device_size, grids, grid_instance_ids, 
                                              L_device_rr_gsb, sb_instance_ids, cb_instance_ids,
                                              compact_routing_hierarchy);
   /* TODO: Add inter-CLB direct connections */
+  add_top_module_nets_clb2clb_direct_connections(module_manager, top_module, circuit_lib, 
+                                                 device_size, grids, grid_instance_ids,
+                                                 clb2clb_directs);
 
   /* Add global ports to the pb_module:
    * This is a much easier job after adding sub modules (instances), 

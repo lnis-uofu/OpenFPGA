@@ -2138,6 +2138,7 @@ t_pb* get_hardlogic_child_pb(t_pb* cur_hardlogic_pb,
 
 /********************************************************************
  * Find the height of a pin in a grid definition
+ * TODO: this should be a method of a grid class!!!
  *******************************************************************/
 size_t find_grid_pin_height(const std::vector<std::vector<t_grid_tile>>& grids, 
                             const vtr::Point<size_t>& grid_coordinate,
@@ -2180,6 +2181,72 @@ int get_grid_pin_height(int grid_x, int grid_y, int pin_index) {
   
   return pin_height;
 }
+
+/********************************************************************
+ * Find the side where a pin locates on a grid 
+ * TODO: this should be a method of a grid class!!!
+ *******************************************************************/
+e_side find_grid_pin_side(const vtr::Point<size_t>& device_size,
+                          const std::vector<std::vector<t_grid_tile>>& grids, 
+                          const vtr::Point<size_t>& grid_coordinate,
+                          const size_t& pin_height,
+                          const size_t& pin_index) {
+  t_type_ptr grid_type = grids[grid_coordinate.x()][grid_coordinate.y()].type;
+
+  /* Return an invalid side value if this is an empty type */
+  if ( (NULL == grid_type)
+     || (EMPTY_TYPE == grid_type)) {
+    return NUM_SIDES;
+  }
+
+  /* Check if the pin index is in the range */
+  VTR_ASSERT(pin_index < size_t(grid_type->num_pins));
+
+  std::vector<e_side> pin_sides = {TOP, RIGHT, BOTTOM, LEFT};
+  /* It could happen that some grids locate on the border of the device, 
+   * In these case, only one side is allowed for the pin
+   */
+  /* TOP side of the device */
+  if (grid_coordinate.y() == device_size.y() - 1) {
+    Side side_manager(TOP);
+    pin_sides.clear();
+    pin_sides.push_back(side_manager.get_opposite());
+  }
+
+  /* RIGHT side of the device */
+  if (grid_coordinate.x() == device_size.x() - 1) {
+    Side side_manager(RIGHT);
+    pin_sides.clear();
+    pin_sides.push_back(side_manager.get_opposite());
+  }
+
+  /* BOTTOM side of the device */
+  if (grid_coordinate.y() == 0) {
+    Side side_manager(BOTTOM);
+    pin_sides.clear();
+    pin_sides.push_back(side_manager.get_opposite());
+  }
+
+  /* LEFT side of the device */
+  if (grid_coordinate.x() == 0) {
+    Side side_manager(LEFT);
+    pin_sides.clear();
+    pin_sides.push_back(side_manager.get_opposite());
+  }
+
+  std::vector<e_side> found_pin_sides;
+  for (const e_side& pin_side : pin_sides) {
+    if (1 == grid_type->pinloc[pin_height][pin_side][pin_index]) {
+      found_pin_sides.push_back(pin_side);
+    }
+  }
+
+  /* We should find only one side ! */
+  VTR_ASSERT(1 == found_pin_sides.size());
+
+  return found_pin_sides[0];
+}
+
 
 int get_grid_pin_side(int grid_x, int grid_y, int pin_index) {
   int pin_height, side, pin_side;

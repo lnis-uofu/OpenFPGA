@@ -175,6 +175,12 @@ int get_grid_pin_height(int grid_x, int grid_y, int pin_index);
 
 int get_grid_pin_side(int grid_x, int grid_y, int pin_index);
 
+e_side find_grid_pin_side(const vtr::Point<size_t>& device_size,
+                          const std::vector<std::vector<t_grid_tile>>& grids, 
+                          const vtr::Point<size_t>& grid_coordinate,
+                          const size_t& pin_height,
+                          const size_t& pin_index);
+
 int* decode_mode_bits(char* mode_bits, int* num_sram_bits);
 
 enum e_interconnect determine_actual_pb_interc_type(t_interconnect* def_interc, 
