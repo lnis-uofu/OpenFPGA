@@ -565,6 +565,113 @@ void add_module_nets_between_logic_and_memory_sram_bus(ModuleManager& module_man
   }
 }
 
+/* Connect all the memory modules under the parent module in a chain
+ * 
+ *                +--------+    +--------+            +--------+
+ *  ccff_head --->| Memory |--->| Memory |--->... --->| Memory |----> ccff_tail
+ *                | Module |    | Module |            | Module |
+ *                |   [0]  |    |   [1]  |            |  [N-1] |             
+ *                +--------+    +--------+            +--------+
+ *  For the 1st memory module:
+ *    net source is the configuration chain head of the primitive module
+ *    net sink is the configuration chain head of the next memory module
+ *
+ *  For the rest of memory modules:
+ *    net source is the configuration chain tail of the previous memory module
+ *    net sink is the configuration chain head of the next memory module
+ */
+void add_module_nets_cmos_memory_chain_config_bus(ModuleManager& module_manager,
+                                                  const ModuleId& parent_module,
+                                                  const std::vector<ModuleId>& memory_modules,
+                                                  const std::vector<size_t>& memory_instances,
+                                                  const e_sram_orgz& sram_orgz_type) {
+  for (size_t mem_index = 0; mem_index < memory_modules.size(); ++mem_index) {
+    ModuleId net_src_module_id;
+    size_t net_src_instance_id;
+    ModulePortId net_src_port_id;
+
+    ModuleId net_sink_module_id;
+    size_t net_sink_instance_id;
+    ModulePortId net_sink_port_id;
+
+    if (0 == mem_index) {
+      /* Find the port name of configuration chain head */
+      std::string src_port_name = generate_sram_port_name(sram_orgz_type, SPICE_MODEL_PORT_INPUT);
+      net_src_module_id = parent_module; 
+      net_src_instance_id = 0;
+      net_src_port_id = module_manager.find_module_port(net_src_module_id, src_port_name); 
+
+      /* Find the port name of next memory module */
+      std::string sink_port_name = generate_configuration_chain_head_name();
+      net_sink_module_id = memory_modules[mem_index]; 
+      net_sink_instance_id = memory_instances[mem_index];
+      net_sink_port_id = module_manager.find_module_port(net_sink_module_id, sink_port_name); 
+    } else {
+      /* Find the port name of previous memory module */
+      std::string src_port_name = generate_configuration_chain_tail_name();
+      net_src_module_id = memory_modules[mem_index - 1]; 
+      net_src_instance_id = memory_instances[mem_index - 1];
+      net_src_port_id = module_manager.find_module_port(net_src_module_id, src_port_name); 
+
+      /* Find the port name of next memory module */
+      std::string sink_port_name = generate_configuration_chain_head_name();
+      net_sink_module_id = memory_modules[mem_index]; 
+      net_sink_instance_id = memory_instances[mem_index];
+      net_sink_port_id = module_manager.find_module_port(net_sink_module_id, sink_port_name); 
+    }
+
+    /* Get the pin id for source port */
+    BasicPort net_src_port = module_manager.module_port(net_src_module_id, net_src_port_id); 
+    /* Get the pin id for sink port */
+    BasicPort net_sink_port = module_manager.module_port(net_sink_module_id, net_sink_port_id); 
+    /* Port sizes of source and sink should match */
+    VTR_ASSERT(net_src_port.get_width() == net_sink_port.get_width());
+    
+    /* Create a net for each pin */
+    for (size_t pin_id = 0; pin_id < net_src_port.pins().size(); ++pin_id) {
+      /* Create a net and add source and sink to it */
+      ModuleNetId net = module_manager.create_module_net(parent_module);
+      /* Add net source */
+      module_manager.add_module_net_source(parent_module, net, net_src_module_id, net_src_instance_id, net_src_port_id, net_src_port.pins()[pin_id]);
+      /* Add net sink */
+      module_manager.add_module_net_sink(parent_module, net, net_sink_module_id, net_sink_instance_id, net_sink_port_id, net_sink_port.pins()[pin_id]);
+    }
+  }
+
+  /* For the last memory module:
+   *    net source is the configuration chain tail of the previous memory module
+   *    net sink is the configuration chain tail of the primitive module
+   */
+  /* Find the port name of previous memory module */
+  std::string src_port_name = generate_configuration_chain_tail_name();
+  ModuleId net_src_module_id = memory_modules.back(); 
+  size_t net_src_instance_id = memory_instances.back();
+  ModulePortId net_src_port_id = module_manager.find_module_port(net_src_module_id, src_port_name); 
+
+  /* Find the port name of next memory module */
+  std::string sink_port_name = generate_sram_port_name(sram_orgz_type, SPICE_MODEL_PORT_OUTPUT);
+  ModuleId net_sink_module_id = parent_module; 
+  size_t net_sink_instance_id = 0;
+  ModulePortId net_sink_port_id = module_manager.find_module_port(net_sink_module_id, sink_port_name); 
+
+  /* Get the pin id for source port */
+  BasicPort net_src_port = module_manager.module_port(net_src_module_id, net_src_port_id); 
+  /* Get the pin id for sink port */
+  BasicPort net_sink_port = module_manager.module_port(net_sink_module_id, net_sink_port_id); 
+  /* Port sizes of source and sink should match */
+  VTR_ASSERT(net_src_port.get_width() == net_sink_port.get_width());
+  
+  /* Create a net for each pin */
+  for (size_t pin_id = 0; pin_id < net_src_port.pins().size(); ++pin_id) {
+    /* Create a net and add source and sink to it */
+    ModuleNetId net = module_manager.create_module_net(parent_module);
+    /* Add net source */
+    module_manager.add_module_net_source(parent_module, net, net_src_module_id, net_src_instance_id, net_src_port_id, net_src_port.pins()[pin_id]);
+    /* Add net sink */
+    module_manager.add_module_net_sink(parent_module, net, net_sink_module_id, net_sink_instance_id, net_sink_port_id, net_sink_port.pins()[pin_id]);
+  }
+}
+
 /*********************************************************************
  * Add the port-to-port connection between all the memory modules 
  * and their parent module
@@ -623,106 +730,7 @@ void add_module_nets_cmos_memory_config_bus(ModuleManager& module_manager,
     /* Nothing to do */
     break;
   case SPICE_SRAM_SCAN_CHAIN: {
-    /* Connect all the memory modules under the parent module in a chain
-     * 
-     *                +--------+    +--------+            +--------+
-     *  ccff_head --->| Memory |--->| Memory |--->... --->| Memory |----> ccff_tail
-     *                | Module |    | Module |            | Module |
-     *                |   [0]  |    |   [1]  |            |  [N-1] |             
-     *                +--------+    +--------+            +--------+
-     *  For the 1st memory module:
-     *    net source is the configuration chain head of the primitive module
-     *    net sink is the configuration chain head of the next memory module
-     *
-     *  For the rest of memory modules:
-     *    net source is the configuration chain tail of the previous memory module
-     *    net sink is the configuration chain head of the next memory module
-     */
-    for (size_t mem_index = 0; mem_index < memory_modules.size(); ++mem_index) {
-      ModuleId net_src_module_id;
-      size_t net_src_instance_id;
-      ModulePortId net_src_port_id;
-
-      ModuleId net_sink_module_id;
-      size_t net_sink_instance_id;
-      ModulePortId net_sink_port_id;
-
-      if (0 == mem_index) {
-        /* Find the port name of configuration chain head */
-        std::string src_port_name = generate_sram_port_name(sram_orgz_type, SPICE_MODEL_PORT_INPUT);
-        net_src_module_id = parent_module; 
-        net_src_instance_id = 0;
-        net_src_port_id = module_manager.find_module_port(net_src_module_id, src_port_name); 
-
-        /* Find the port name of next memory module */
-        std::string sink_port_name = generate_configuration_chain_head_name();
-        net_sink_module_id = memory_modules[mem_index]; 
-        net_sink_instance_id = memory_instances[mem_index];
-        net_sink_port_id = module_manager.find_module_port(net_sink_module_id, sink_port_name); 
-      } else {
-        /* Find the port name of previous memory module */
-        std::string src_port_name = generate_configuration_chain_tail_name();
-        net_src_module_id = memory_modules[mem_index - 1]; 
-        net_src_instance_id = memory_instances[mem_index - 1];
-        net_src_port_id = module_manager.find_module_port(net_src_module_id, src_port_name); 
-
-        /* Find the port name of next memory module */
-        std::string sink_port_name = generate_configuration_chain_head_name();
-        net_sink_module_id = memory_modules[mem_index]; 
-        net_sink_instance_id = memory_instances[mem_index];
-        net_sink_port_id = module_manager.find_module_port(net_sink_module_id, sink_port_name); 
-      }
-
-      /* Get the pin id for source port */
-      BasicPort net_src_port = module_manager.module_port(net_src_module_id, net_src_port_id); 
-      /* Get the pin id for sink port */
-      BasicPort net_sink_port = module_manager.module_port(net_sink_module_id, net_sink_port_id); 
-      /* Port sizes of source and sink should match */
-      VTR_ASSERT(net_src_port.get_width() == net_sink_port.get_width());
-      
-      /* Create a net for each pin */
-      for (size_t pin_id = 0; pin_id < net_src_port.pins().size(); ++pin_id) {
-        /* Create a net and add source and sink to it */
-        ModuleNetId net = module_manager.create_module_net(parent_module);
-        /* Add net source */
-        module_manager.add_module_net_source(parent_module, net, net_src_module_id, net_src_instance_id, net_src_port_id, net_src_port.pins()[pin_id]);
-        /* Add net sink */
-        module_manager.add_module_net_sink(parent_module, net, net_sink_module_id, net_sink_instance_id, net_sink_port_id, net_sink_port.pins()[pin_id]);
-      }
-    }
-
-    /* For the last memory module:
-     *    net source is the configuration chain tail of the previous memory module
-     *    net sink is the configuration chain tail of the primitive module
-     */
-    /* Find the port name of previous memory module */
-    std::string src_port_name = generate_configuration_chain_tail_name();
-    ModuleId net_src_module_id = memory_modules.back(); 
-    size_t net_src_instance_id = memory_instances.back();
-    ModulePortId net_src_port_id = module_manager.find_module_port(net_src_module_id, src_port_name); 
-
-    /* Find the port name of next memory module */
-    std::string sink_port_name = generate_sram_port_name(sram_orgz_type, SPICE_MODEL_PORT_OUTPUT);
-    ModuleId net_sink_module_id = parent_module; 
-    size_t net_sink_instance_id = 0;
-    ModulePortId net_sink_port_id = module_manager.find_module_port(net_sink_module_id, sink_port_name); 
-
-    /* Get the pin id for source port */
-    BasicPort net_src_port = module_manager.module_port(net_src_module_id, net_src_port_id); 
-    /* Get the pin id for sink port */
-    BasicPort net_sink_port = module_manager.module_port(net_sink_module_id, net_sink_port_id); 
-    /* Port sizes of source and sink should match */
-    VTR_ASSERT(net_src_port.get_width() == net_sink_port.get_width());
-    
-    /* Create a net for each pin */
-    for (size_t pin_id = 0; pin_id < net_src_port.pins().size(); ++pin_id) {
-      /* Create a net and add source and sink to it */
-      ModuleNetId net = module_manager.create_module_net(parent_module);
-      /* Add net source */
-      module_manager.add_module_net_source(parent_module, net, net_src_module_id, net_src_instance_id, net_src_port_id, net_src_port.pins()[pin_id]);
-      /* Add net sink */
-      module_manager.add_module_net_sink(parent_module, net, net_sink_module_id, net_sink_instance_id, net_sink_port_id, net_sink_port.pins()[pin_id]);
-    }
+    add_module_nets_cmos_memory_chain_config_bus(module_manager, parent_module, memory_modules, memory_instances, sram_orgz_type);
     break;
   }
   case SPICE_SRAM_MEMORY_BANK:

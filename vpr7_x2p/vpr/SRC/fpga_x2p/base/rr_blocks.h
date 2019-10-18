@@ -338,9 +338,9 @@ class DeviceRRGSB {
     const RRGSB get_sb_unique_submodule(size_t index, enum e_side side, size_t seg_id) const; /* Get a rr switch block which a unique mirror */ 
     const RRGSB get_sb_unique_submodule(DeviceCoordinator& coordinator, enum e_side side, size_t seg_id) const; /* Get a rr switch block which a unique mirror */ 
     const RRGSB get_sb_unique_module(size_t index) const; /* Get a rr switch block which a unique mirror */ 
-    const RRGSB get_sb_unique_module(DeviceCoordinator& coordinator) const; /* Get a rr switch block which a unique mirror */ 
+    const RRGSB get_sb_unique_module(const DeviceCoordinator& coordinator) const; /* Get a rr switch block which a unique mirror */ 
     const RRGSB& get_cb_unique_module(t_rr_type cb_type, size_t index) const; /* Get a rr switch block which a unique mirror */ 
-    const RRGSB& get_cb_unique_module(t_rr_type cb_type, DeviceCoordinator& coordinator) const;
+    const RRGSB& get_cb_unique_module(t_rr_type cb_type, const DeviceCoordinator& coordinator) const;
     size_t get_max_num_sides() const; /* Get the maximum number of sides across the switch blocks */
     size_t get_num_segments() const; /* Get the size of segment_ids */
     size_t get_segment_id(size_t index) const; /* Get a segment id */
