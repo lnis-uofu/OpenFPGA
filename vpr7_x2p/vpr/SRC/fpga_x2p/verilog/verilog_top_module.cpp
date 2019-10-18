@@ -1015,8 +1015,8 @@ vtr::Point<size_t> find_intra_direct_destination_coordinate(const vtr::Point<siz
   vtr::Point<size_t> des_coord(size_t(-1), size_t(-1));
   t_type_ptr src_grid_type = grids[src_coord.x()][src_coord.y()].type;
 
-  std::vector<size_t> x_search_space;
-  std::vector<size_t> y_search_space;
+  std::vector<size_t> first_search_space;
+  std::vector<size_t> second_search_space;
 
   /* Cross column connection from Bottom to Top on Right 
    * The next column may NOT have the grid type we want!
@@ -1026,34 +1026,60 @@ vtr::Point<size_t> find_intra_direct_destination_coordinate(const vtr::Point<siz
    */
   if (P2P_DIRECT_COLUMN == direct.interconnection_type) {
     if (POSITIVE_DIR == direct.x_dir) {
-     /* By default our search space in x-direction is like
-      *    ----->
+     /* Our first search space will be in x-direction:
+      *
+      *      x      ...      nx 
+      *   +-----+
+      *   |Grid |  ----->
+      *   +-----+
       */
       for (size_t ix = src_coord.x() + 1; ix < device_size.x() - 1; ++ix) {
-        x_search_space.push_back(ix);
+        first_search_space.push_back(ix);
       }
     } else { 
       VTR_ASSERT(NEGATIVE_DIR == direct.x_dir);
-     /* By default our search space in x-direction is like
-      *    <-----
+     /* Our first search space will be in x-direction:
+      *
+      *    1   ...      x    
+      *              +-----+
+      *     < -------|Grid | 
+      *              +-----+
       */
       for (size_t ix = src_coord.x() - 1; ix >= 1; --ix) {
-        x_search_space.push_back(ix);
+        first_search_space.push_back(ix);
       }
     }
 
-    /* By default our search space in y-direction is like
-     * y_search_space
-     *     |
-     *     |
-     *     v
+    /* Our second search space will be in y-direction:
+     *
+     *  +------+  
+     *  | Grid | ny
+     *  +------+
+     *     |     .
+     *     |     .
+     *     v     .
+     *  +------+
+     *  | Grid | 1
+     *  +------+
      */
     for (size_t iy = 1 ; iy < device_size.y() - 1; ++iy) {
-      y_search_space.push_back(iy);
+      second_search_space.push_back(iy);
     }
 
+    /* For negative direction, our second search space will be in y-direction:
+     *
+     *  +------+  
+     *  | Grid | ny
+     *  +------+
+     *     ^     .
+     *     |     .
+     *     |     .
+     *  +------+
+     *  | Grid | 1
+     *  +------+
+     */
     if (NEGATIVE_DIR == direct.y_dir) {
-      std::reverse(y_search_space.begin(), y_search_space.end());
+      std::reverse(second_search_space.begin(), second_search_space.end());
     }
   }
 
@@ -1065,45 +1091,78 @@ vtr::Point<size_t> find_intra_direct_destination_coordinate(const vtr::Point<siz
    * and ends at the RIGHT side of fabric 
    */
   if (P2P_DIRECT_ROW == direct.interconnection_type) {
-    if (POSITIVE_DIR == direct.x_dir) {
-     /* By default our search space in y-direction is like
-      *     |
-      *     |
-      *     v
+    if (POSITIVE_DIR == direct.y_dir) {
+     /* Our first search space will be in y-direction:
+      *
+      *  +------+  
+      *  | Grid | ny
+      *  +------+
+      *     ^     .
+      *     |     .
+      *     |     .
+      *  +------+
+      *  | Grid | y
+      *  +------+
       */
       for (size_t iy = src_coord.y() + 1; iy < device_size.y() - 1; ++iy) {
-        y_search_space.push_back(iy);
+        first_search_space.push_back(iy);
       }
     } else { 
       VTR_ASSERT(NEGATIVE_DIR == direct.y_dir);
-     /* By default our search space in y-direction is like
-      *     ^
-      *     |
-      *     |
-      */
+      /* For negative y-direction,
+       * Our first search space will be in y-direction:
+       *
+       *  +------+  
+       *  | Grid | ny
+       *  +------+
+       *     |     .
+       *     |     .
+       *     v     .
+       *  +------+
+       *  | Grid | y
+       *  +------+
+       */
       for (size_t iy = src_coord.y() - 1; iy >= 1; --iy) {
-        y_search_space.push_back(iy);
+        first_search_space.push_back(iy);
       }
     }
 
-    /* By default our search space in x-direction is like
-     * x_search_space ------>
+    /* Our second search space will be in x-direction:
+     *
+     *     1      ...     nx
+     *  +------+       +------+
+     *  | Grid |------>| Grid |
+     *  +------+       +------+
      */
     for (size_t ix = 1 ; ix < device_size.x() - 1; ++ix) {
-      x_search_space.push_back(ix);
+      second_search_space.push_back(ix);
     }
 
+    /* For negative direction,
+     * our second search space will be in x-direction:
+     *
+     *     1      ...     nx
+     *  +------+       +------+
+     *  | Grid |<------| Grid |
+     *  +------+       +------+
+     */
     if (NEGATIVE_DIR == direct.x_dir) {
-      std::reverse(x_search_space.begin(), x_search_space.end());
+      std::reverse(second_search_space.begin(), second_search_space.end());
     }
   }
 
-  for (size_t ix : x_search_space) {
-    std::vector<vtr::Point<size_t>> next_col_coords;
-    for (size_t iy : y_search_space) {
-      next_col_coords.push_back(vtr::Point<size_t>(ix, iy));
+  for (size_t ix : first_search_space) {
+    std::vector<vtr::Point<size_t>> next_col_row_coords;
+    for (size_t iy : second_search_space) {
+      if (P2P_DIRECT_COLUMN == direct.interconnection_type) {
+        next_col_row_coords.push_back(vtr::Point<size_t>(ix, iy));
+      } else {
+        VTR_ASSERT(P2P_DIRECT_ROW == direct.interconnection_type);
+        /* For cross-row connection, our search space is flipped */
+        next_col_row_coords.push_back(vtr::Point<size_t>(iy, ix));
+      }
     }
-    vtr::Point<size_t> des_coord_cand = find_grid_coordinate_given_type(device_size, grids, next_col_coords, src_grid_type); 
+    vtr::Point<size_t> des_coord_cand = find_grid_coordinate_given_type(device_size, grids, next_col_row_coords, src_grid_type); 
     /* For a valid coordinate, we can return */
     if ( (size_t(-1) != des_coord_cand.x()) 
       && (size_t(-1) != des_coord_cand.y()) ) {
@@ -1154,49 +1213,97 @@ void add_top_module_nets_inter_clb2clb_direct_connections(ModuleManager& module_
 
   std::vector<e_side> border_sides = {TOP, RIGHT, BOTTOM, LEFT};
 
-  /* Scan the grid, visit each grid and apply direct connections */
-  for (size_t ix = 1; ix < device_size.x() - 1; ++ix) {
-    for (size_t iy = 1; iy < device_size.y() - 1; ++iy) {
-      /* Bypass EMPTY_TYPE*/
-      if ( (NULL == grids[ix][iy].type)
-        || (EMPTY_TYPE == grids[ix][iy].type)) {
-        continue;
-      }
-      /* Bypass any grid with a non-zero offset! They have been visited in the offset=0 case */
-      if (0 != grids[ix][iy].offset) {
-        continue;
-      }
-
-      vtr::Point<size_t> src_clb_coord(ix, iy);
-      /* We only care clb/heterogeneous blocks on the border of core logic! */
-      for (const e_side& border_side : border_sides) {
-        if (false == is_core_grid_on_given_border_side(device_size, src_clb_coord, border_side)) {
+  /* Go through the direct connection list, see if we need intra-column/row connection here */
+  for (const t_clb_to_clb_directs& direct: clb2clb_directs) {
+    if ( (P2P_DIRECT_COLUMN != direct.interconnection_type)
+      && (P2P_DIRECT_ROW != direct.interconnection_type)) {
+      continue;
+    }
+    /* For cross-column connection, we will search the first valid grid in each column 
+     * from y = 1 to y = ny
+     *
+     *   +------+
+     *   | Grid |  y=ny
+     *   +------+
+     *      ^
+     *      |  search direction (when y_dir is negative)
+     *     ...
+     *      |
+     *   +------+
+     *   | Grid |  y=1
+     *   +------+
+     * 
+     */
+    if (P2P_DIRECT_COLUMN == direct.interconnection_type) {
+      for (size_t ix = 1; ix < device_size.x() - 1; ++ix) {
+        std::vector<vtr::Point<size_t>> next_col_src_grid_coords;
+        /* For negative y- direction, we should start from y = ny */
+        for (size_t iy = 1; iy < device_size.y() - 1; ++iy) {
+          next_col_src_grid_coords.push_back(vtr::Point<size_t>(ix, iy));
+        }
+        /* For positive y- direction, we should start from y = 1 */
+        if (POSITIVE_DIR == direct.y_dir) {
+          std::reverse(next_col_src_grid_coords.begin(), next_col_src_grid_coords.end());
+        }
+        vtr::Point<size_t> src_clb_coord = find_grid_coordinate_given_type(device_size, grids, next_col_src_grid_coords, direct.from_clb_type); 
+        /* Skip if we do not have a valid coordinate for source CLB/heterogeneous block */
+        if ( (size_t(-1) == src_clb_coord.x()) 
+          || (size_t(-1) == src_clb_coord.y()) ) {
           continue;
         }
-        /* Go through the direct connection list, see if we need intra-column/row connection here */
-        for (const t_clb_to_clb_directs& direct: clb2clb_directs) {
-          if ( (P2P_DIRECT_COLUMN != direct.interconnection_type)
-            && (P2P_DIRECT_ROW != direct.interconnection_type)) {
-            continue;
-          }
-          /* Bypass unmatched clb type */
-          if (grids[src_clb_coord.x()][src_clb_coord.y()].type != direct.from_clb_type) {
-            continue;
-          }
-          /* Reach here it means we may of great possibility to add direct connection */
-          /* Find the coordinate of the destination clb */
-          vtr::Point<size_t> des_clb_coord = find_intra_direct_destination_coordinate(device_size, grids, src_clb_coord, direct);
-          /* If destination clb is valid, we should add something */
-          if ( (size_t(-1) == des_clb_coord.x()) 
-            || (size_t(-1) == des_clb_coord.y()) ) {
-            continue;
-          }
-          add_module_nets_clb2clb_direct_connection(module_manager, top_module, circuit_lib, 
-                                                    device_size, grids, grid_instance_ids,
-                                                    src_clb_coord, des_clb_coord,  
-                                                    direct);
-        }
+        /* For a valid coordinate, we can find the coordinate of the destination clb */
+         vtr::Point<size_t> des_clb_coord = find_intra_direct_destination_coordinate(device_size, grids, src_clb_coord, direct);
+         /* If destination clb is valid, we should add something */
+         if ( (size_t(-1) == des_clb_coord.x()) 
+           || (size_t(-1) == des_clb_coord.y()) ) {
+           continue;
+         }
+         add_module_nets_clb2clb_direct_connection(module_manager, top_module, circuit_lib, 
+                                                   device_size, grids, grid_instance_ids,
+                                                   src_clb_coord, des_clb_coord,  
+                                                   direct);
       }
+      continue; /* Go to next direct type */
+    }
+    
+    /* Reach here, it must be a cross-row connection */
+    VTR_ASSERT(P2P_DIRECT_ROW == direct.interconnection_type);
+    /* For cross-row connection, we will search the first valid grid in each column 
+     * from x = 1 to x = nx
+     *
+     *     x=1                    x=nx
+     *   +------+               +------+
+     *   | Grid | <--- ... ---- | Grid |
+     *   +------+               +------+
+     * 
+     */
+    for (size_t iy = 1; iy < device_size.y() - 1; ++iy) {
+      std::vector<vtr::Point<size_t>> next_col_src_grid_coords;
+      /* For negative x- direction, we should start from x = nx */
+      for (size_t ix = 1; ix < device_size.x() - 1; ++ix) {
+        next_col_src_grid_coords.push_back(vtr::Point<size_t>(ix, iy));
+      }
+      /* For positive x- direction, we should start from x = 1 */
+      if (POSITIVE_DIR == direct.x_dir) {
+        std::reverse(next_col_src_grid_coords.begin(), next_col_src_grid_coords.end());
+      }
+      vtr::Point<size_t> src_clb_coord = find_grid_coordinate_given_type(device_size, grids, next_col_src_grid_coords, direct.from_clb_type); 
+      /* Skip if we do not have a valid coordinate for source CLB/heterogeneous block */
+      if ( (size_t(-1) == src_clb_coord.x()) 
+        || (size_t(-1) == src_clb_coord.y()) ) {
+        continue;
+      }
+      /* For a valid coordinate, we can find the coordinate of the destination clb */
+       vtr::Point<size_t> des_clb_coord = find_intra_direct_destination_coordinate(device_size, grids, src_clb_coord, direct);
+       /* If destination clb is valid, we should add something */
+       if ( (size_t(-1) == des_clb_coord.x()) 
+         || (size_t(-1) == des_clb_coord.y()) ) {
+         continue;
+       }
+       add_module_nets_clb2clb_direct_connection(module_manager, top_module, circuit_lib, 
+                                                 device_size, grids, grid_instance_ids,
+                                                 src_clb_coord, des_clb_coord,  
+                                                 direct);
     }
   }
 }
@@ -1267,7 +1374,7 @@ void print_verilog_top_module(ModuleManager& module_manager,
                                              device_size, grids, grid_instance_ids, 
                                              L_device_rr_gsb, sb_instance_ids, cb_instance_ids,
                                              compact_routing_hierarchy);
-  /* TODO: Add inter-CLB direct connections */
+  /* Add inter-CLB direct connections */
   add_top_module_nets_clb2clb_direct_connections(module_manager, top_module, circuit_lib, 
                                                  device_size, grids, grid_instance_ids,
                                                  clb2clb_directs);
