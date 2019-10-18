@@ -835,6 +835,63 @@ e_side find_grid_border_side(const vtr::Point<size_t>& device_size,
   return grid_side;
 }
 
+/********************************************************************
+ * This function try to infer if a grid locates at the border of the
+ * core FPGA fabric, i.e., TOP/RIGHT/BOTTOM/LEFT sides
+ * 1. if this grid is on the border and it matches the given side, return true,
+ * 2. if this grid is in the center, return false 
+ *
+ * In this function, we assume that the corner grids are actually empty!
+ *
+ *   +-------+  +----------------------------+  +-------+
+ *   | EMPTY |  |      TOP side I/O          |  | EMPTY |
+ *   +-------+  +----------------------------+  +-------+
+ *
+ *   +-------+  +----------------------------+  +-------+
+ *   |       |  |          TOP               |  |       |
+ *   |       |  |----------------------------|  |       |
+ *   |       |  |      |              |      |  |       |
+ *   | LEFT  |  |      |              |      |  | RIGHT |
+ *   | side  |  | LEFT |  Core grids  | RIGHT|  | side  |
+ *   | I/O   |  |      |              |      |  |  I/O  |
+ *   |       |  |      |              |      |  |       |
+ *   |       |  |      |              |      |  |       |
+ *   |       |  |---------------------|      |  |       |
+ *   |       |  |          BOTTOM     |      |  |       |
+ *   +-------+  +----------------------------+  +-------+
+ *
+ *   +-------+  +----------------------------+  +-------+
+ *   | EMPTY |  |    BOTTOM side I/O         |  | EMPTY |
+ *   +-------+  +----------------------------+  +-------+
+ *
+ *   Note: for the blocks on the four corners of the core grids
+ *   Please refer to the figure above to infer its border_side
+ *******************************************************************/
+bool is_core_grid_on_given_border_side(const vtr::Point<size_t>& device_size,
+                                       const vtr::Point<size_t>& grid_coordinate,
+                                       const e_side& border_side) {
+
+  if ( (device_size.y() - 2 == grid_coordinate.y())
+    && (TOP == border_side) ) {
+    return true;
+  }
+  if ( (device_size.x() - 2 == grid_coordinate.x())
+    && (RIGHT == border_side) ) {
+    return true;
+  }
+  if ( (1 == grid_coordinate.y())
+    && (BOTTOM == border_side) ) {
+    return true;
+  }
+  if ( (1 == grid_coordinate.x())
+    && (LEFT == border_side) ) {
+    return true;
+  }
+
+  return false;
+}
+
+
 /*********************************************************************
  * Generate the port name of a Verilog module describing a pb_type
  * The name convention is 

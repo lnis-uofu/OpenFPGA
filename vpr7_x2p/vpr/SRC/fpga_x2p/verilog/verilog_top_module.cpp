@@ -4,6 +4,7 @@
  *******************************************************************/
 #include <fstream>
 #include <map>
+#include <algorithm>
 
 #include "vtr_assert.h"
 
@@ -913,7 +914,7 @@ void add_module_nets_clb2clb_direct_connection(ModuleManager& module_manager,
  * It can be more generic and thus cover all the grid types,
  * such as heterogeneous blocks
  *
- * This function supports the following types of direct connection:
+ * This function supports the following type of direct connection:
  * 1. Direct connection between grids in the same column or row
  *     +------+      +------+
  *     |      |      |      |
@@ -928,33 +929,15 @@ void add_module_nets_clb2clb_direct_connection(ModuleManager& module_manager,
  *     |      |
  *     +------+
  *
- * 2. Direct connections across columns and rows 
- *               +------+
- *               |      |
- *               |      v 
- *     +------+  |   +------+
- *     |      |  |   |      |
- *     | Grid |  |   | Grid |
- *     |      |  |   |      |
- *     +------+  |   +------+
- *               |
- *     +------+  |   +------+
- *     |      |  |   |      |
- *     | Grid |  |   | Grid |
- *     |      |  |   |      |
- *     +------+  |   +------+
- *        |      |
- *        +------+
- *
  *******************************************************************/
 static 
-void add_top_module_nets_clb2clb_direct_connections(ModuleManager& module_manager, 
-                                                    const ModuleId& top_module, 
-                                                    const CircuitLibrary& circuit_lib, 
-                                                    const vtr::Point<size_t>& device_size,
-                                                    const std::vector<std::vector<t_grid_tile>>& grids,
-                                                    const std::vector<std::vector<size_t>>& grid_instance_ids,
-                                                    const std::vector<t_clb_to_clb_directs>& clb2clb_directs) {
+void add_top_module_nets_intra_clb2clb_direct_connections(ModuleManager& module_manager, 
+                                                          const ModuleId& top_module, 
+                                                          const CircuitLibrary& circuit_lib, 
+                                                          const vtr::Point<size_t>& device_size,
+                                                          const std::vector<std::vector<t_grid_tile>>& grids,
+                                                          const std::vector<std::vector<size_t>>& grid_instance_ids,
+                                                          const std::vector<t_clb_to_clb_directs>& clb2clb_directs) {
   /* Scan the grid, visit each grid and apply direct connections */
   for (size_t ix = 0; ix < device_size.x(); ++ix) {
     for (size_t iy = 0; iy < device_size.y(); ++iy) {
@@ -994,6 +977,252 @@ void add_top_module_nets_clb2clb_direct_connections(ModuleManager& module_manage
       }
     }
   }
+}
+
+/********************************************************************
+ * Find the coordinate of a grid in a specific column 
+ * with a given type
+ * This function will return the coordinate of the grid that satifies
+ * the type requirement
+ *******************************************************************/
+static 
+vtr::Point<size_t> find_grid_coordinate_given_type(const vtr::Point<size_t>& device_size,
+                                                   const std::vector<std::vector<t_grid_tile>>& grids,
+                                                   const std::vector<vtr::Point<size_t>>& candidate_coords, 
+                                                   t_type_ptr wanted_grid_type) {
+  for (vtr::Point<size_t> coord : candidate_coords) {
+    /* If the next column is not longer in device range, we can return */
+    if (false == is_grid_coordinate_exist_in_device(device_size, coord)) {
+      continue;
+    }
+    if (wanted_grid_type == grids[coord.x()][coord.y()].type) {
+      return coord;
+    }
+  }
+  /* Return an valid coordinate */
+  return vtr::Point<size_t>(size_t(-1), size_t(-1)); 
+}
+
+/********************************************************************
+ * Find the coordinate of the destination clb/heterogeneous block
+ * considering intra column/row direct connections in core grids
+ *******************************************************************/
+static 
+vtr::Point<size_t> find_intra_direct_destination_coordinate(const vtr::Point<size_t>& device_size,
+                                                            const std::vector<std::vector<t_grid_tile>>& grids,
+                                                            const vtr::Point<size_t> src_coord,
+                                                            const t_clb_to_clb_directs& direct) {
+  vtr::Point<size_t> des_coord(size_t(-1), size_t(-1));
+  t_type_ptr src_grid_type = grids[src_coord.x()][src_coord.y()].type;
+
+  std::vector<size_t> x_search_space;
+  std::vector<size_t> y_search_space;
+
+  /* Cross column connection from Bottom to Top on Right 
+   * The next column may NOT have the grid type we want!
+   * Think about heterogeneous architecture!  
+   * Our search space will start from the next column 
+   * and ends at the RIGHT side of fabric 
+   */
+  if (P2P_DIRECT_COLUMN == direct.interconnection_type) {
+    if (POSITIVE_DIR == direct.x_dir) {
+     /* By default our search space in x-direction is like
+      *    ----->
+      */
+      for (size_t ix = src_coord.x() + 1; ix < device_size.x() - 1; ++ix) {
+        x_search_space.push_back(ix);
+      }
+    } else { 
+      VTR_ASSERT(NEGATIVE_DIR == direct.x_dir);
+     /* By default our search space in x-direction is like
+      *    <-----
+      */
+      for (size_t ix = src_coord.x() - 1; ix >= 1; --ix) {
+        x_search_space.push_back(ix);
+      }
+    }
+
+    /* By default our search space in y-direction is like
+     * y_search_space
+     *     |
+     *     |
+     *     v
+     */
+    for (size_t iy = 1 ; iy < device_size.y() - 1; ++iy) {
+      y_search_space.push_back(iy);
+    }
+
+    if (NEGATIVE_DIR == direct.y_dir) {
+      std::reverse(y_search_space.begin(), y_search_space.end());
+    }
+  }
+
+
+  /* Cross row connection from Bottom to Top on Right 
+   * The next column may NOT have the grid type we want!
+   * Think about heterogeneous architecture!  
+   * Our search space will start from the next column 
+   * and ends at the RIGHT side of fabric 
+   */
+  if (P2P_DIRECT_ROW == direct.interconnection_type) {
+    if (POSITIVE_DIR == direct.x_dir) {
+     /* By default our search space in y-direction is like
+      *     |
+      *     |
+      *     v
+      */
+      for (size_t iy = src_coord.y() + 1; iy < device_size.y() - 1; ++iy) {
+        y_search_space.push_back(iy);
+      }
+    } else { 
+      VTR_ASSERT(NEGATIVE_DIR == direct.y_dir);
+     /* By default our search space in y-direction is like
+      *     ^
+      *     |
+      *     |
+      */
+      for (size_t iy = src_coord.y() - 1; iy >= 1; --iy) {
+        y_search_space.push_back(iy);
+      }
+    }
+
+    /* By default our search space in x-direction is like
+     * x_search_space ------>
+     */
+    for (size_t ix = 1 ; ix < device_size.x() - 1; ++ix) {
+      x_search_space.push_back(ix);
+    }
+
+    if (NEGATIVE_DIR == direct.x_dir) {
+      std::reverse(x_search_space.begin(), x_search_space.end());
+    }
+  }
+
+  for (size_t ix : x_search_space) {
+    std::vector<vtr::Point<size_t>> next_col_coords;
+    for (size_t iy : y_search_space) {
+      next_col_coords.push_back(vtr::Point<size_t>(ix, iy));
+    }
+    vtr::Point<size_t> des_coord_cand = find_grid_coordinate_given_type(device_size, grids, next_col_coords, src_grid_type); 
+    /* For a valid coordinate, we can return */
+    if ( (size_t(-1) != des_coord_cand.x()) 
+      && (size_t(-1) != des_coord_cand.y()) ) {
+      return des_coord_cand;
+    }
+  }
+  return des_coord;
+}
+
+/********************************************************************
+ * Add module net of clb-to-clb direct connections to module manager
+ * Note that the direct connections are not limited to CLBs only.
+ * It can be more generic and thus cover all the grid types,
+ * such as heterogeneous blocks
+ *
+ * This function supports the following type of direct connection:
+ *
+ * 1. Direct connections across columns and rows 
+ *               +------+
+ *               |      |
+ *               |      v 
+ *     +------+  |   +------+
+ *     |      |  |   |      |
+ *     | Grid |  |   | Grid |
+ *     |      |  |   |      |
+ *     +------+  |   +------+
+ *               |
+ *     +------+  |   +------+
+ *     |      |  |   |      |
+ *     | Grid |  |   | Grid |
+ *     |      |  |   |      |
+ *     +------+  |   +------+
+ *        |      |
+ *        +------+
+ *
+ * Note that: this will only apply to the core grids!
+ *            I/Os or any blocks on the border of fabric are NOT supported!
+ *
+ *******************************************************************/
+static 
+void add_top_module_nets_inter_clb2clb_direct_connections(ModuleManager& module_manager, 
+                                                          const ModuleId& top_module, 
+                                                          const CircuitLibrary& circuit_lib, 
+                                                          const vtr::Point<size_t>& device_size,
+                                                          const std::vector<std::vector<t_grid_tile>>& grids,
+                                                          const std::vector<std::vector<size_t>>& grid_instance_ids,
+                                                          const std::vector<t_clb_to_clb_directs>& clb2clb_directs) {
+
+  std::vector<e_side> border_sides = {TOP, RIGHT, BOTTOM, LEFT};
+
+  /* Scan the grid, visit each grid and apply direct connections */
+  for (size_t ix = 1; ix < device_size.x() - 1; ++ix) {
+    for (size_t iy = 1; iy < device_size.y() - 1; ++iy) {
+      /* Bypass EMPTY_TYPE*/
+      if ( (NULL == grids[ix][iy].type)
+        || (EMPTY_TYPE == grids[ix][iy].type)) {
+        continue;
+      }
+      /* Bypass any grid with a non-zero offset! They have been visited in the offset=0 case */
+      if (0 != grids[ix][iy].offset) {
+        continue;
+      }
+
+      vtr::Point<size_t> src_clb_coord(ix, iy);
+      /* We only care clb/heterogeneous blocks on the border of core logic! */
+      for (const e_side& border_side : border_sides) {
+        if (false == is_core_grid_on_given_border_side(device_size, src_clb_coord, border_side)) {
+          continue;
+        }
+        /* Go through the direct connection list, see if we need intra-column/row connection here */
+        for (const t_clb_to_clb_directs& direct: clb2clb_directs) {
+          if ( (P2P_DIRECT_COLUMN != direct.interconnection_type)
+            && (P2P_DIRECT_ROW != direct.interconnection_type)) {
+            continue;
+          }
+          /* Bypass unmatched clb type */
+          if (grids[src_clb_coord.x()][src_clb_coord.y()].type != direct.from_clb_type) {
+            continue;
+          }
+          /* Reach here it means we may of great possibility to add direct connection */
+          /* Find the coordinate of the destination clb */
+          vtr::Point<size_t> des_clb_coord = find_intra_direct_destination_coordinate(device_size, grids, src_clb_coord, direct);
+          /* If destination clb is valid, we should add something */
+          if ( (size_t(-1) == des_clb_coord.x()) 
+            || (size_t(-1) == des_clb_coord.y()) ) {
+            continue;
+          }
+          add_module_nets_clb2clb_direct_connection(module_manager, top_module, circuit_lib, 
+                                                    device_size, grids, grid_instance_ids,
+                                                    src_clb_coord, des_clb_coord,  
+                                                    direct);
+        }
+      }
+    }
+  }
+}
+
+/********************************************************************
+ * Add module net of clb-to-clb direct connections to module manager
+ * Note that the direct connections are not limited to CLBs only.
+ * It can be more generic and thus cover all the grid types,
+ * such as heterogeneous blocks
+ *******************************************************************/
+static 
+void add_top_module_nets_clb2clb_direct_connections(ModuleManager& module_manager, 
+                                                    const ModuleId& top_module, 
+                                                    const CircuitLibrary& circuit_lib, 
+                                                    const vtr::Point<size_t>& device_size,
+                                                    const std::vector<std::vector<t_grid_tile>>& grids,
+                                                    const std::vector<std::vector<size_t>>& grid_instance_ids,
+                                                    const std::vector<t_clb_to_clb_directs>& clb2clb_directs) {
+
+  add_top_module_nets_intra_clb2clb_direct_connections(module_manager, top_module, circuit_lib, 
+                                                       device_size, grids, grid_instance_ids,
+                                                       clb2clb_directs);
+
+  add_top_module_nets_inter_clb2clb_direct_connections(module_manager, top_module, circuit_lib, 
+                                                       device_size, grids, grid_instance_ids,
+                                                       clb2clb_directs);
 }
 
 /********************************************************************
