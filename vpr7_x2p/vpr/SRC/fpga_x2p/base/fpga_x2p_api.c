@@ -31,7 +31,7 @@
 #include "fpga_bitstream.h"
 
 #include "mux_library_builder.h"
-#include "build_device_modules.h"
+#include "build_module_graph.h"
 
 #include "fpga_x2p_api.h"
 

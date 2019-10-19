@@ -10,7 +10,8 @@
 #include "spice_types.h"
 #include "fpga_x2p_utils.h"
 
-#include "build_device_modules.h"
+#include "build_essential_modules.h"
+#include "build_module_graph.h"
 
 /********************************************************************
  * The main function to be called for building module graphs 
@@ -60,7 +61,23 @@ ModuleManager build_device_module_graph(const t_vpr_setup& vpr_setup,
   config_circuit_models_sram_port_to_default_sram_model(arch.spice->circuit_lib, arch.sram_inf.verilog_sram_inf_orgz->circuit_model); 
 
   /* TODO: Build elmentary modules */
+  build_essential_modules(module_manager, arch.spice->circuit_lib);
 
+  /* TODO: Build local encoders for multiplexers, this MUST be called before multiplexer building */
+
+  /* TODO: Build multiplexer modules */
+
+  /* TODO: Build LUT modules */
+
+  /* TODO: Build wire modules */
+
+  /* TODO: Build memory modules */
+
+  /* TODO: Build grid and programmable block modules */
+
+  /* TODO: Build global routing architecture modules */
+
+  /* TODO: Build FPGA fabric top-level module */
 
   /* End time count */
   clock_t t_end = clock();

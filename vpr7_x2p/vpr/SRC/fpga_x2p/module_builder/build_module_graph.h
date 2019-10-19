@@ -1,5 +1,5 @@
-#ifndef BUILD_DEVICE_MODULES_H
-#define BUILD_DEVICE_MODULES_H
+#ifndef BUILD_MODULE_GRAPH_H
+#define BUILD_MODULE_GRAPH_H
 
 #include "vpr_types.h"
 #include "mux_library.h"
