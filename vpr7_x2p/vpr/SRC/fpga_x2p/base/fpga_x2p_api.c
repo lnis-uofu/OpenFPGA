@@ -30,11 +30,14 @@
 #include "verilog_api.h"
 #include "fpga_bitstream.h"
 
+#include "mux_library_builder.h"
+#include "build_device_modules.h"
+
 #include "fpga_x2p_api.h"
 
 /* Top-level API of FPGA-SPICE */
 void vpr_fpga_x2p_tool_suites(t_vpr_setup vpr_setup,
-                                t_arch Arch) {
+                              t_arch Arch) {
   t_sram_orgz_info* sram_bitstream_orgz_info = NULL;
 
   /* Common initializations and malloc operations */
@@ -42,6 +45,12 @@ void vpr_fpga_x2p_tool_suites(t_vpr_setup vpr_setup,
   if (TRUE == vpr_setup.FPGA_SPICE_Opts.do_fpga_spice) {
     fpga_x2p_setup(vpr_setup, &Arch);
   }
+
+  /* Build multiplexer graphs */
+  MuxLibrary mux_lib = build_device_mux_library(num_rr_nodes, rr_node, switch_inf, Arch.spice->circuit_lib, &vpr_setup.RoutingArch);
+
+  /* Build module graphs */
+  ModuleManager module_manager = build_device_module_graph(vpr_setup, Arch, mux_lib);
 
   /* Xifan TANG: SPICE Modeling, SPICE Netlist Output  */ 
   if (TRUE == vpr_setup.FPGA_SPICE_Opts.SpiceOpts.do_spice) {
