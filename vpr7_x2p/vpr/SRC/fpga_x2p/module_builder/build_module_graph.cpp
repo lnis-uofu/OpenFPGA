@@ -11,6 +11,7 @@
 #include "fpga_x2p_utils.h"
 
 #include "build_essential_modules.h"
+#include "build_decoder_modules.h"
 #include "build_module_graph.h"
 
 /********************************************************************
@@ -60,10 +61,11 @@ ModuleManager build_device_module_graph(const t_vpr_setup& vpr_setup,
                                             arch.sram_inf.verilog_sram_inf_orgz->spice_model);
   config_circuit_models_sram_port_to_default_sram_model(arch.spice->circuit_lib, arch.sram_inf.verilog_sram_inf_orgz->circuit_model); 
 
-  /* TODO: Build elmentary modules */
+  /* Build elmentary modules */
   build_essential_modules(module_manager, arch.spice->circuit_lib);
 
-  /* TODO: Build local encoders for multiplexers, this MUST be called before multiplexer building */
+  /* Build local encoders for multiplexers, this MUST be called before multiplexer building */
+  build_mux_local_decoder_modules(module_manager, mux_lib, arch.spice->circuit_lib);
 
   /* TODO: Build multiplexer modules */
 
