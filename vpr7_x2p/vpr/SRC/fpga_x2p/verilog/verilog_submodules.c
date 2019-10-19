@@ -3098,9 +3098,13 @@ void add_user_defined_verilog_modules(ModuleManager& module_manager,
       continue;
     }
     /* Reach here, the model requires a user-defined Verilog netlist, 
-     * Register it in the module_manager  
+     * Try to find it in the module manager 
+     * If not found, register it in the module_manager  
      */
-    add_circuit_model_to_module_manager(module_manager, circuit_lib, model);
+    ModuleId module_id = module_manager.find_module(circuit_lib.model_name(model));
+    if (ModuleId::INVALID() == module_id) {
+      add_circuit_model_to_module_manager(module_manager, circuit_lib, model);
+    }
   }
 
   /* Register the routing channel wires  */
@@ -3116,7 +3120,12 @@ void add_user_defined_verilog_modules(ModuleManager& module_manager,
      */
     std::string segment_wire_subckt_name = generate_segment_wire_subckt_name(circuit_lib.model_name(seg.circuit_model), &seg - &routing_segments[0]);
 
-    /* Create a Verilog Module based on the circuit model, and add to module manager */
+    /* Try to find the module in the module manager,
+     * If not found, create a Verilog Module based on the circuit model, 
+     * and add to module manager */
+    if (ModuleId::INVALID() != module_manager.find_module(segment_wire_subckt_name)) {
+      continue;
+    } 
     ModuleId module_id = add_circuit_model_to_module_manager(module_manager, circuit_lib, seg.circuit_model, segment_wire_subckt_name); 
 
     /* Find the output port*/

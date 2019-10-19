@@ -1,3 +1,9 @@
+#ifndef SHELL_TYPES_H 
+#define SHELL_TYPES_H 
+
+#include "vpr_types.h"
+#include "module_manager.h"
+
 
 typedef struct s_cmd_category t_cmd_category;
 typedef struct s_shell_cmd t_shell_cmd;
@@ -28,6 +34,7 @@ struct s_shell_cmd {
 };
 
 struct s_shell_env {
+  ModuleManager module_manager;
   t_arch arch;
   t_vpr_setup vpr_setup;
   t_shell_cmd* cmd;
@@ -36,4 +43,4 @@ struct s_shell_env {
 
 #define LAST_CMD_NAME NULL
 
-
+#endif

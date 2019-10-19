@@ -51,7 +51,7 @@ void shell_execute_fpga_verilog(t_shell_env* env, t_opt_info* opts) {
     return;
   }
   
-  vpr_fpga_verilog(env->vpr_setup, env->arch,
+  vpr_fpga_verilog(env->module_manager, env->vpr_setup, env->arch,
                    env->vpr_setup.FileNameOpts.CircuitName);
 
   return;

@@ -182,7 +182,8 @@ void print_verilog_invbuf_module(ModuleManager& module_manager,
   }
 
   /* Create a Verilog Module based on the circuit model, and add to module manager */
-  ModuleId module_id = add_circuit_model_to_module_manager(module_manager, circuit_lib, circuit_model); 
+  ModuleId module_id = module_manager.find_module(circuit_lib.model_name(circuit_model)); 
+  VTR_ASSERT(true == module_manager.valid_module_id(module_id));
 
   /* dump module definition + ports */
   print_verilog_module_declaration(fp, module_manager, module_id);
@@ -270,7 +271,8 @@ void print_verilog_passgate_module(ModuleManager& module_manager,
   VTR_ASSERT( (1 == output_ports.size()) && (1 == circuit_lib.port_size(output_ports[0])) );
 
   /* Create a Verilog Module based on the circuit model, and add to module manager */
-  ModuleId module_id = add_circuit_model_to_module_manager(module_manager, circuit_lib, circuit_model); 
+  ModuleId module_id = module_manager.find_module(circuit_lib.model_name(circuit_model)); 
+  VTR_ASSERT(true == module_manager.valid_module_id(module_id));
 
   /* dump module definition + ports */
   print_verilog_module_declaration(fp, module_manager, module_id);
@@ -453,7 +455,8 @@ void print_verilog_gate_module(ModuleManager& module_manager,
   VTR_ASSERT( (1 == output_ports.size()) && (1 == circuit_lib.port_size(output_ports[0])) );
 
   /* Create a Verilog Module based on the circuit model, and add to module manager */
-  ModuleId module_id = add_circuit_model_to_module_manager(module_manager, circuit_lib, circuit_model); 
+  ModuleId module_id = module_manager.find_module(circuit_lib.model_name(circuit_model)); 
+  VTR_ASSERT(true == module_manager.valid_module_id(module_id));
 
   /* dump module definition + ports */
   print_verilog_module_declaration(fp, module_manager, module_id);

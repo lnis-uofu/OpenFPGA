@@ -26,12 +26,13 @@
 #include "fpga_x2p_utils.h"
 #include "fpga_x2p_backannotate_utils.h"
 #include "fpga_x2p_setup.h"
-#include "spice_api.h"
-#include "verilog_api.h"
-#include "fpga_bitstream.h"
 
 #include "mux_library_builder.h"
 #include "build_module_graph.h"
+
+#include "spice_api.h"
+#include "verilog_api.h"
+#include "fpga_bitstream.h"
 
 #include "fpga_x2p_api.h"
 
@@ -59,7 +60,7 @@ void vpr_fpga_x2p_tool_suites(t_vpr_setup vpr_setup,
 
   /* Xifan TANG: Synthesizable verilog dumping */
   if (TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.dump_syn_verilog) {
-    vpr_fpga_verilog(vpr_setup, Arch, vpr_setup.FileNameOpts.CircuitName);
+    vpr_fpga_verilog(module_manager, vpr_setup, Arch, vpr_setup.FileNameOpts.CircuitName);
   }	
 
   /* Xifan Tang: Bitstream Generator */

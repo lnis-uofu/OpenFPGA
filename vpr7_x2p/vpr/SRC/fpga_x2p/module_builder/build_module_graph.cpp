@@ -61,6 +61,17 @@ ModuleManager build_device_module_graph(const t_vpr_setup& vpr_setup,
                                             arch.sram_inf.verilog_sram_inf_orgz->spice_model);
   config_circuit_models_sram_port_to_default_sram_model(arch.spice->circuit_lib, arch.sram_inf.verilog_sram_inf_orgz->circuit_model); 
 
+  /* Create a vector of segments. TODO: should come from DeviceContext */
+  std::vector<t_segment_inf> L_segment_vec;
+  for (int i = 0; i < arch.num_segments; ++i) {
+    L_segment_vec.push_back(arch.Segments[i]);
+  }
+  /* Register all the user-defined modules in the module manager
+   * This should be done prior to other steps in this function, 
+   * because they will be instanciated by other primitive modules 
+   */
+  build_user_defined_modules(module_manager, arch.spice->circuit_lib, L_segment_vec);
+
   /* Build elmentary modules */
   build_essential_modules(module_manager, arch.spice->circuit_lib);
 

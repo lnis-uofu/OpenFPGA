@@ -117,7 +117,8 @@ void free_global_routing_conf_bits() {
 }
  
 /* Top-level function*/
-void vpr_fpga_verilog(t_vpr_setup vpr_setup,
+void vpr_fpga_verilog(ModuleManager& module_manager,
+                      t_vpr_setup vpr_setup,
                       t_arch Arch,
                       char* circuit_name) {
   /* Timer */
@@ -157,9 +158,6 @@ void vpr_fpga_verilog(t_vpr_setup vpr_setup,
   char* chomped_circuit_name = NULL;
  
   t_sram_orgz_info* sram_verilog_orgz_info = NULL;
-
-  /* Module manager for the Verilog modules created */
-  ModuleManager module_manager;
 
   /* Build Multiplexer library */
   MuxLibrary mux_lib = build_device_mux_library(num_rr_nodes, rr_node, switch_inf, Arch.spice->circuit_lib, &vpr_setup.RoutingArch);
