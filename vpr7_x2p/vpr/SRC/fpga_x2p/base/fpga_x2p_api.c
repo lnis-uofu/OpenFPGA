@@ -60,7 +60,7 @@ void vpr_fpga_x2p_tool_suites(t_vpr_setup vpr_setup,
 
   /* Xifan TANG: Synthesizable verilog dumping */
   if (TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.dump_syn_verilog) {
-    vpr_fpga_verilog(module_manager, vpr_setup, Arch, vpr_setup.FileNameOpts.CircuitName);
+    vpr_fpga_verilog(module_manager, mux_lib, vpr_setup, Arch, vpr_setup.FileNameOpts.CircuitName);
   }	
 
   /* Xifan Tang: Bitstream Generator */

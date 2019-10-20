@@ -118,6 +118,7 @@ void free_global_routing_conf_bits() {
  
 /* Top-level function*/
 void vpr_fpga_verilog(ModuleManager& module_manager,
+                      const MuxLibrary& mux_lib,
                       t_vpr_setup vpr_setup,
                       t_arch Arch,
                       char* circuit_name) {
@@ -158,9 +159,6 @@ void vpr_fpga_verilog(ModuleManager& module_manager,
   char* chomped_circuit_name = NULL;
  
   t_sram_orgz_info* sram_verilog_orgz_info = NULL;
-
-  /* Build Multiplexer library */
-  MuxLibrary mux_lib = build_device_mux_library(num_rr_nodes, rr_node, switch_inf, Arch.spice->circuit_lib, &vpr_setup.RoutingArch);
 
   /* 0. basic units: inverter, buffers and pass-gate logics, */
   /* Check if the routing architecture we support*/
