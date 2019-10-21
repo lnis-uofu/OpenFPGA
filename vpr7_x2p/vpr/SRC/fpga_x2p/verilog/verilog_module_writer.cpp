@@ -64,28 +64,8 @@ BasicPort generate_verilog_port_for_module_net(const ModuleManager& module_manag
   /* Reach here, this is a local wire */
   std::string net_name;
 
-  if (false == module_manager.net_name(module_id, module_net).empty()) {
-    net_name = module_manager.net_name(module_id, module_net);
-    printf("net_name:%s\n", net_name.c_str());
-  }
-
   /* Each net must only one 1 source */ 
-  if (1 != module_manager.net_source_modules(module_id, module_net).size()) {
-    for (auto src_module : module_manager.net_source_modules(module_id, module_net)) {
-      printf("net_source_module: %s\n", 
-             module_manager.module_name(src_module).c_str());
-    }
-    for (auto sink_module : module_manager.net_sink_modules(module_id, module_net)) {
-      printf("net_sink_module: %s\n", 
-             module_manager.module_name(sink_module).c_str());
-      for (auto sink_port : module_manager.net_sink_ports(module_id, module_net)) {
-      printf("\tnet_sink_port: %s\n", 
-             module_manager.module_port(sink_module, sink_port).get_name().c_str());
-      } 
-    }
-
   VTR_ASSERT(1 == module_manager.net_source_modules(module_id, module_net).size());
-  }
 
   /* Get the source module */
   ModuleId net_src_module = module_manager.net_source_modules(module_id, module_net)[ModuleNetSrcId(0)];
@@ -121,11 +101,17 @@ std::vector<BasicPort> find_verilog_module_local_wires(const ModuleManager& modu
 
   /* Local wires come from the child modules */
   for (ModuleNetId module_net : module_manager.module_nets(module_id)) {
-    /* Bypass dangling nets */
+    /* Bypass dangling nets:
+     * Xifan Tang: I comment this part because it will shadow our problems in creating module graph
+     * Indeed this make a robust and a smooth Verilog module writing
+     * But I do want the module graph create is nice and clean !!! 
+     */
+    /*
     if ( (0 == module_manager.net_source_modules(module_id, module_net).size()) 
       && (0 == module_manager.net_source_modules(module_id, module_net).size()) ) {
       continue;
     }
+    */
 
     /* We only care local wires */ 
     if (false == module_net_is_local_wire(module_manager, module_id, module_net)) {

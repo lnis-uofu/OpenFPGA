@@ -1029,6 +1029,161 @@ vtr::vector<MuxOutputId, ModuleNetId> build_mux_module_output_buffers(ModuleMana
 }
 
 /*********************************************************************
+ * This function will 
+ * 1. Build local encoders for a MUX module (if specified)
+ * 2. Build nets between memory ports of a MUX module and branch circuits
+ *    This happens when local encoders are not needed
+ *
+ *               MUX module     
+ *             +---------------------
+ *             | mux_mem_nets/mux_mem_inv_nets
+ *             |   |
+ *             |   v     +---------
+ *         mem-+-------->|
+ *             |         | Branch Module 
+ *             |         |
+ *
+ * 3. Build nets between local encoders and memory ports of a MUX module
+ *    This happens when local encoders are needed
+ * 4. Build nets between local encoders and branch circuits
+ *    This happens when local encoders are needed
+ *
+ *               MUX module
+ *             +---------------------
+ *             |
+ *             |       +-------+  mux_mem_nets/mux_mem_inv_nets
+ *             |       |       |    |
+ *        mem--+------>|       |    v    +---------
+ *             |       | Local |-------->|
+ *             |       |Encoder|         | Branch
+ *             |       |       |         | Module
+ *             |       |       |         |
+ *             |       |       |         |
+ *
+ *********************************************************************/
+static 
+void build_mux_module_local_encoders_and_memory_nets(ModuleManager& module_manager, 
+                                                     const ModuleId& mux_module, 
+                                                     const CircuitLibrary& circuit_lib, 
+                                                     const CircuitModelId& mux_model, 
+                                                     const std::vector<CircuitPortId>& mux_sram_ports, 
+                                                     const MuxGraph& mux_graph,
+                                                     vtr::vector<MuxMemId, ModuleNetId>& mux_mem_nets,
+                                                     vtr::vector<MuxMemId, ModuleNetId>& mux_mem_inv_nets) {
+
+  /* Create nets here, and we will configure the net source later */
+  for (size_t mem = 0; mem < mux_graph.num_memory_bits(); ++mem) {
+    ModuleNetId mem_net = module_manager.create_module_net(mux_module);
+    mux_mem_nets.push_back(mem_net);
+    ModuleNetId mem_inv_net = module_manager.create_module_net(mux_module);
+    mux_mem_inv_nets.push_back(mem_inv_net);
+  }
+
+  if (false == circuit_lib.mux_use_local_encoder(mux_model)) {
+    /* Add mem and mem_inv nets here */
+    size_t mem_net_cnt = 0;
+    for (const auto& port : mux_sram_ports) {
+      ModulePortId mem_port_id = module_manager.find_module_port(mux_module, circuit_lib.port_lib_name(port));
+      BasicPort mem_port = module_manager.module_port(mux_module, mem_port_id);
+      for (const size_t& pin : mem_port.pins()) {
+        MuxMemId mem_id = MuxMemId(mem_net_cnt);
+        /* Set the module net source */
+        module_manager.add_module_net_source(mux_module, mux_mem_nets[mem_id], mux_module, 0, mem_port_id, pin);
+        /* Update counter */
+        mem_net_cnt++;
+      }
+    }
+    VTR_ASSERT(mem_net_cnt == mux_graph.num_memory_bits());
+
+    /* Add mem and mem_inv nets here */
+    size_t mem_inv_net_cnt = 0;
+    for (const auto& port : mux_sram_ports) {
+      ModulePortId mem_inv_port_id = module_manager.find_module_port(mux_module, std::string(circuit_lib.port_lib_name(port) + "_inv"));
+      BasicPort mem_inv_port = module_manager.module_port(mux_module, mem_inv_port_id);
+      for (const size_t& pin : mem_inv_port.pins()) {
+        MuxMemId mem_id = MuxMemId(mem_inv_net_cnt);
+        /* Set the module net source */
+        module_manager.add_module_net_source(mux_module, mux_mem_inv_nets[mem_id], mux_module, 0, mem_inv_port_id, pin);
+        /* Update counter */
+        mem_inv_net_cnt++;
+      }
+    }
+    VTR_ASSERT(mem_inv_net_cnt == mux_graph.num_memory_bits());
+    return; /* Finish here if local encoders are not required */
+  }
+
+  /* Add local decoder instance here */
+  VTR_ASSERT(true == circuit_lib.mux_use_local_encoder(mux_model));
+  BasicPort decoder_data_port(generate_mux_local_decoder_data_port_name(), mux_graph.num_memory_bits());
+  BasicPort decoder_data_inv_port(generate_mux_local_decoder_data_inv_port_name(), mux_graph.num_memory_bits());
+
+  /* Local port to record the LSB and MSB of each level, here, we deposite (0, 0) */
+  ModulePortId mux_module_sram_port_id = module_manager.find_module_port(mux_module, circuit_lib.port_lib_name(mux_sram_ports[0]));
+  BasicPort lvl_addr_port(circuit_lib.port_lib_name(mux_sram_ports[0]), 0);
+  BasicPort lvl_data_port(decoder_data_port.get_name(), 0);
+  BasicPort lvl_data_inv_port(decoder_data_inv_port.get_name(), 0);
+
+  /* Counter for mem index */
+  size_t mem_net_cnt = 0;
+  size_t mem_inv_net_cnt = 0;
+
+  for (const auto& lvl : mux_graph.levels()) {
+    size_t addr_size = find_mux_local_decoder_addr_size(mux_graph.num_memory_bits_at_level(lvl));
+    size_t data_size = mux_graph.num_memory_bits_at_level(lvl);
+    /* Update the LSB and MSB of addr and data port for the current level */
+    lvl_addr_port.rotate(addr_size);
+    lvl_data_port.rotate(data_size);
+    lvl_data_inv_port.rotate(data_size);
+
+    std::string decoder_module_name = generate_mux_local_decoder_subckt_name(addr_size, data_size);
+    ModuleId decoder_module = module_manager.find_module(decoder_module_name); 
+    VTR_ASSERT(ModuleId::INVALID() != decoder_module);
+
+    size_t decoder_instance = module_manager.num_instance(mux_module, decoder_module);
+    module_manager.add_child_module(mux_module, decoder_module);
+  
+    /* Add module nets to connect sram ports of MUX to address port */
+    ModulePortId decoder_module_addr_port_id = module_manager.find_module_port(decoder_module, generate_mux_local_decoder_addr_port_name());
+    BasicPort decoder_module_addr_port = module_manager.module_port(decoder_module, decoder_module_addr_port_id);
+    VTR_ASSERT(decoder_module_addr_port.get_width() == lvl_addr_port.get_width());
+
+    /* Build pin-to-pin net connection */
+    for (size_t pin_id = 0; pin_id < lvl_addr_port.pins().size(); ++pin_id) {
+      ModuleNetId net = module_manager.create_module_net(mux_module);
+      module_manager.add_module_net_source(mux_module, net, mux_module, 0, mux_module_sram_port_id, lvl_addr_port.pins()[pin_id]);
+      module_manager.add_module_net_sink(mux_module, net, decoder_module, decoder_instance, decoder_module_addr_port_id, decoder_module_addr_port.pins()[pin_id]);
+    }
+
+    /* Add module nets to connect data port to MUX mem ports */
+    ModulePortId decoder_module_data_port_id = module_manager.find_module_port(decoder_module, generate_mux_local_decoder_data_port_name());
+    BasicPort decoder_module_data_port = module_manager.module_port(decoder_module, decoder_module_data_port_id);
+
+    /* Build pin-to-pin net connection */
+    for (const size_t& pin :  decoder_module_data_port.pins()) {
+      ModuleNetId net = mux_mem_nets[MuxMemId(mem_net_cnt)];
+      module_manager.add_module_net_source(mux_module, net, decoder_module, decoder_instance, decoder_module_data_port_id, pin);
+      module_manager.set_net_name(mux_module, net, std::string(decoder_module_data_port.get_name() + "_" + std::to_string(pin) + "_"));
+      /* Add the module nets to mux_mem_nets cache */
+      mem_net_cnt++;
+    }
+
+    ModulePortId decoder_module_data_inv_port_id = module_manager.find_module_port(decoder_module, generate_mux_local_decoder_data_inv_port_name());
+    BasicPort decoder_module_data_inv_port = module_manager.module_port(decoder_module, decoder_module_data_inv_port_id);
+
+    /* Build pin-to-pin net connection */
+    for (const size_t& pin : decoder_module_data_inv_port.pins()) {
+      ModuleNetId net = mux_mem_inv_nets[MuxMemId(mem_inv_net_cnt)];
+      module_manager.add_module_net_source(mux_module, net, decoder_module, decoder_instance, decoder_module_data_inv_port_id, pin);
+      module_manager.set_net_name(mux_module, net, std::string(decoder_module_data_inv_port.get_name() + "_" + std::to_string(pin) + "_"));
+      /* Add the module nets to mux_mem_inv_nets cache */
+      mem_inv_net_cnt++;
+    }
+  } 
+  VTR_ASSERT(mem_net_cnt == mux_graph.num_memory_bits());
+  VTR_ASSERT(mem_inv_net_cnt == mux_graph.num_memory_bits());
+}
+
+/*********************************************************************
  * Generate module of a CMOS multiplexer with the given size 
  * The module will consist of three parts:
  * 1. instances of the branch circuits of multiplexers which are generated before  
@@ -1140,118 +1295,12 @@ void build_cmos_mux_module(ModuleManager& module_manager,
   /* Create module nets for mem and mem_inv ports */
   vtr::vector<MuxMemId, ModuleNetId> mux_mem_nets;
   vtr::vector<MuxMemId, ModuleNetId> mux_mem_inv_nets;
-  /* Create nets here, and we will configure the net source later */
-  for (size_t mem = 0; mem < mux_graph.num_memory_bits(); ++mem) {
-    ModuleNetId mem_net = module_manager.create_module_net(mux_module);
-    mux_mem_nets.push_back(mem_net);
-    ModuleNetId mem_inv_net = module_manager.create_module_net(mux_module);
-    mux_mem_inv_nets.push_back(mem_inv_net);
-  }
-
-  if (false == circuit_lib.mux_use_local_encoder(mux_model)) {
-    /* Add mem and mem_inv nets here */
-    size_t mem_net_cnt = 0;
-    for (const auto& port : mux_sram_ports) {
-      ModulePortId mem_port_id = module_manager.find_module_port(mux_module, circuit_lib.port_lib_name(port));
-      BasicPort mem_port = module_manager.module_port(mux_module, mem_port_id);
-      for (const size_t& pin : mem_port.pins()) {
-        MuxMemId mem_id = MuxMemId(mem_net_cnt);
-        /* Set the module net source */
-        module_manager.add_module_net_source(mux_module, mux_mem_nets[mem_id], mux_module, 0, mem_port_id, pin);
-        /* Update counter */
-        mem_net_cnt++;
-      }
-    }
-    VTR_ASSERT(mem_net_cnt == mux_graph.num_memory_bits());
-
-    /* Add mem and mem_inv nets here */
-    size_t mem_inv_net_cnt = 0;
-    for (const auto& port : mux_sram_ports) {
-      ModulePortId mem_inv_port_id = module_manager.find_module_port(mux_module, std::string(circuit_lib.port_lib_name(port) + "_inv"));
-      BasicPort mem_inv_port = module_manager.module_port(mux_module, mem_inv_port_id);
-      for (const size_t& pin : mem_inv_port.pins()) {
-        MuxMemId mem_id = MuxMemId(mem_inv_net_cnt);
-        /* Set the module net source */
-        module_manager.add_module_net_source(mux_module, mux_mem_inv_nets[mem_id], mux_module, 0, mem_inv_port_id, pin);
-        /* Update counter */
-        mem_inv_net_cnt++;
-      }
-    }
-    VTR_ASSERT(mem_inv_net_cnt == mux_graph.num_memory_bits());
-  } else {
-    /* Add local decoder instance here */
-    VTR_ASSERT(true == circuit_lib.mux_use_local_encoder(mux_model));
-    BasicPort decoder_data_port(generate_mux_local_decoder_data_port_name(), mux_graph.num_memory_bits());
-    BasicPort decoder_data_inv_port(generate_mux_local_decoder_data_inv_port_name(), mux_graph.num_memory_bits());
-
-    /* Local port to record the LSB and MSB of each level, here, we deposite (0, 0) */
-    ModulePortId mux_module_sram_port_id = module_manager.find_module_port(mux_module, circuit_lib.port_lib_name(mux_sram_ports[0]));
-    BasicPort lvl_addr_port(circuit_lib.port_lib_name(mux_sram_ports[0]), 0);
-    BasicPort lvl_data_port(decoder_data_port.get_name(), 0);
-    BasicPort lvl_data_inv_port(decoder_data_inv_port.get_name(), 0);
-
-    /* Counter for mem index */
-    size_t mem_net_cnt = 0;
-    size_t mem_inv_net_cnt = 0;
-
-    for (const auto& lvl : mux_graph.levels()) {
-      size_t addr_size = find_mux_local_decoder_addr_size(mux_graph.num_memory_bits_at_level(lvl));
-      size_t data_size = mux_graph.num_memory_bits_at_level(lvl);
-      /* Update the LSB and MSB of addr and data port for the current level */
-      lvl_addr_port.rotate(addr_size);
-      lvl_data_port.rotate(data_size);
-      lvl_data_inv_port.rotate(data_size);
-
-      std::string decoder_module_name = generate_mux_local_decoder_subckt_name(addr_size, data_size);
-      ModuleId decoder_module = module_manager.find_module(decoder_module_name); 
-      VTR_ASSERT(ModuleId::INVALID() != decoder_module);
-
-      size_t decoder_instance = module_manager.num_instance(mux_module, decoder_module);
-      module_manager.add_child_module(mux_module, decoder_module);
-    
-      /* Add module nets to connect sram ports of MUX to address port */
-      ModulePortId decoder_module_addr_port_id = module_manager.find_module_port(decoder_module, generate_mux_local_decoder_addr_port_name());
-      BasicPort decoder_module_addr_port = module_manager.module_port(decoder_module, decoder_module_addr_port_id);
-      VTR_ASSERT(decoder_module_addr_port.get_width() == lvl_addr_port.get_width());
-
-      /* Build pin-to-pin net connection */
-      for (size_t pin_id = 0; pin_id < lvl_addr_port.pins().size(); ++pin_id) {
-        ModuleNetId net = module_manager.create_module_net(mux_module);
-        module_manager.add_module_net_source(mux_module, net, mux_module, 0, mux_module_sram_port_id, lvl_addr_port.pins()[pin_id]);
-        module_manager.add_module_net_sink(mux_module, net, decoder_module, decoder_instance, decoder_module_addr_port_id, decoder_module_addr_port.pins()[pin_id]);
-      }
-
-      /* Add module nets to connect data port to MUX mem ports */
-      ModulePortId decoder_module_data_port_id = module_manager.find_module_port(decoder_module, generate_mux_local_decoder_data_port_name());
-      BasicPort decoder_module_data_port = module_manager.module_port(decoder_module, decoder_module_data_port_id);
-
-      /* Build pin-to-pin net connection */
-      for (const size_t& pin :  decoder_module_data_port.pins()) {
-        ModuleNetId net = module_manager.create_module_net(mux_module);
-        module_manager.add_module_net_source(mux_module, net, decoder_module, decoder_instance, decoder_module_data_port_id, pin);
-        module_manager.set_net_name(mux_module, net, std::string(decoder_module_data_port.get_name() + "_" + std::to_string(pin) + "_"));
-        /* Add the module nets to mux_mem_nets cache */
-        mux_mem_nets[MuxMemId(mem_net_cnt)] = net;
-        mem_net_cnt++;
-      }
-
-      ModulePortId decoder_module_data_inv_port_id = module_manager.find_module_port(decoder_module, generate_mux_local_decoder_data_inv_port_name());
-      BasicPort decoder_module_data_inv_port = module_manager.module_port(decoder_module, decoder_module_data_inv_port_id);
-
-      /* Build pin-to-pin net connection */
-      for (const size_t& pin : decoder_module_data_inv_port.pins()) {
-        ModuleNetId net = module_manager.create_module_net(mux_module);
-        module_manager.add_module_net_source(mux_module, net, decoder_module, decoder_instance, decoder_module_data_inv_port_id, pin);
-        module_manager.set_net_name(mux_module, net, std::string(decoder_module_data_inv_port.get_name() + "_" + std::to_string(pin) + "_"));
-        /* Add the module nets to mux_mem_inv_nets cache */
-        mux_mem_inv_nets[MuxMemId(mem_inv_net_cnt)] = net;
-        mem_inv_net_cnt++;
-      }
-    } 
-    VTR_ASSERT(mem_net_cnt == mux_graph.num_memory_bits());
-    VTR_ASSERT(mem_inv_net_cnt == mux_graph.num_memory_bits());
-  }
-
+  
+  build_mux_module_local_encoders_and_memory_nets(module_manager, mux_module, 
+                                                  circuit_lib, mux_model, mux_sram_ports, 
+                                                  mux_graph,
+                                                  mux_mem_nets, mux_mem_inv_nets);
+  
   /* Print the internal logic in Verilog codes */
   /* Print the Multiplexing structure in Verilog codes 
    * Separated generation strategy on using standard cell MUX2 or TGATE,
