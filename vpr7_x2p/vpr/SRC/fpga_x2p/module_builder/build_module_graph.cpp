@@ -13,6 +13,7 @@
 #include "build_essential_modules.h"
 #include "build_decoder_modules.h"
 #include "build_mux_modules.h"
+#include "build_lut_modules.h"
 #include "build_module_graph.h"
 
 /********************************************************************
@@ -86,7 +87,8 @@ ModuleManager build_device_module_graph(const t_vpr_setup& vpr_setup,
   /* Build multiplexer modules */
   build_mux_modules(module_manager, mux_lib, arch.spice->circuit_lib);
 
-  /* TODO: Build LUT modules */
+  /* Build LUT modules */
+  build_lut_modules(module_manager, arch.spice->circuit_lib);
 
   /* TODO: Build wire modules */
 
