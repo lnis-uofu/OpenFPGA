@@ -956,11 +956,11 @@ std::string generate_fpga_top_netlist_name(const std::string& postfix) {
  ********************************************************************/
 std::string generate_const_value_module_name(const size_t& const_val) {
   if (0 == const_val) {
-    return std::string("gnd");
+    return std::string("const0");
   }
 
   VTR_ASSERT (1 == const_val); 
-  return std::string("vdd");
+  return std::string("const1");
 }
 
 /*********************************************************************

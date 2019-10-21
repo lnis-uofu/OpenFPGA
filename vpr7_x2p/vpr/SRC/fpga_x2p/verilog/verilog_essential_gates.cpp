@@ -13,6 +13,7 @@
 
 /* FPGA-X2P context header files */
 #include "fpga_x2p_utils.h"
+#include "fpga_x2p_naming.h"
 #include "module_manager.h"
 #include "module_manager_utils.h"
 
@@ -489,6 +490,36 @@ void print_verilog_gate_module(ModuleManager& module_manager,
 }
 
 /************************************************
+ * Generate the Verilog netlist for a constant generator,
+ * i.e., either VDD or GND
+ ***********************************************/
+static 
+void print_verilog_constant_generator_module(const ModuleManager& module_manager, 
+                                             std::fstream& fp, 
+                                             const size_t& const_value) {
+  /* Find the module in module manager */
+  std::string module_name = generate_const_value_module_name(const_value);
+  ModuleId const_val_module = module_manager.find_module(module_name);
+  VTR_ASSERT(true == module_manager.valid_module_id(const_val_module));
+
+  /* Ensure a valid file handler*/
+  check_file_handler(fp);
+
+  /* dump module definition + ports */
+  print_verilog_module_declaration(fp, module_manager, const_val_module);
+  /* Finish dumping ports */
+
+  /* Find the only output*/
+  for (const ModulePortId& module_port_id : module_manager.module_ports(const_val_module)) {
+    BasicPort module_port = module_manager.module_port(const_val_module, module_port_id);
+    print_verilog_wire_constant_values(fp, module_port, std::vector<size_t>(1, const_value));
+  }
+  
+  /* Put an end to the Verilog module */
+  print_verilog_module_end(fp, module_name);
+}
+
+/************************************************
  * Generate the Verilog netlist for essential gates
  * include inverters, buffers, transmission-gates,
  * etc.
@@ -515,6 +546,12 @@ void print_verilog_submodule_essentials(ModuleManager& module_manager,
   print_verilog_file_header(fp, "Essential gates"); 
 
   print_verilog_include_defines_preproc_file(fp, verilog_dir);
+
+  /* Print constant generators */
+  /* VDD */
+  print_verilog_constant_generator_module(module_manager, fp, 0);
+  /* GND */
+  print_verilog_constant_generator_module(module_manager, fp, 1);
 
   for (const auto& circuit_model : circuit_lib.models()) {
     /* By pass user-defined modules */
