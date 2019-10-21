@@ -16,6 +16,10 @@
 std::string generate_mux_node_name(const size_t& node_level, 
                                    const bool& add_buffer_postfix);
 
+std::string generate_mux_branch_instance_name(const size_t& node_level, 
+                                              const size_t& node_index_at_level,
+                                              const bool& add_buffer_postfix);
+
 std::string generate_mux_subckt_name(const CircuitLibrary& circuit_lib, 
                                      const CircuitModelId& circuit_model, 
                                      const size_t& mux_size, 
@@ -164,5 +168,9 @@ std::string generate_fpga_global_io_port_name(const std::string& prefix,
 std::string generate_fpga_top_module_name();
 
 std::string generate_fpga_top_netlist_name(const std::string& postfix);
+
+std::string generate_const_value_module_name(const size_t& const_val);
+
+std::string generate_const_value_module_output_port_name(const size_t& const_val);
 
 #endif

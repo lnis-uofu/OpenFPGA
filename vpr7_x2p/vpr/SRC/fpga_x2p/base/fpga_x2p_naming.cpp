@@ -33,6 +33,19 @@ std::string generate_mux_node_name(const size_t& node_level,
   return node_name;
 }
 
+ /************************************************
+ * Generate the instance name for a branch circuit in multiplexing structure 
+ * Case 1 : If there is an intermediate buffer followed by,
+ *          the node name will be mux_l<node_level>_in_buf
+ * Case 1 : If there is NO intermediate buffer followed by,
+ *          the node name will be mux_l<node_level>_in
+ ***********************************************/
+std::string generate_mux_branch_instance_name(const size_t& node_level, 
+                                              const size_t& node_index_at_level,
+                                              const bool& add_buffer_postfix) {
+  return std::string(generate_mux_node_name(node_level, add_buffer_postfix) + "_" + std::to_string(node_index_at_level) + "_");
+}
+
 /************************************************
  * Generate the module name for a multiplexer in Verilog format
  * Different circuit model requires different names: 
@@ -935,4 +948,25 @@ std::string generate_fpga_top_module_name() {
  ********************************************************************/
 std::string generate_fpga_top_netlist_name(const std::string& postfix) {
   return std::string("fpga_top" + postfix);
+}
+
+/*********************************************************************
+ * Generate the module name for a constant generator
+ * either VDD or GND, depending on the input argument
+ ********************************************************************/
+std::string generate_const_value_module_name(const size_t& const_val) {
+  if (0 == const_val) {
+    return std::string("gnd");
+  }
+
+  VTR_ASSERT (1 == const_val); 
+  return std::string("vdd");
+}
+
+/*********************************************************************
+ * Generate the output port name for a constant generator module
+ * either VDD or GND, depending on the input argument
+ ********************************************************************/
+std::string generate_const_value_module_output_port_name(const size_t& const_val) {
+  return generate_const_value_module_name(const_val);
 }

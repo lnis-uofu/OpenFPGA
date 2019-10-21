@@ -80,6 +80,12 @@ class ModuleManager {
     ModuleId find_module(const std::string& name) const;
     /* Find the number of instances of a child module in the parent module */
     size_t num_instance(const ModuleId& parent_module, const ModuleId& child_module) const;
+    /* Find the instance name of a child module */
+    std::string instance_name(const ModuleId& parent_module, const ModuleId& child_module,
+                              const size_t& instance_id) const;
+    /* Find the instance id of a given instance name */
+    size_t instance_id(const ModuleId& parent_module, const ModuleId& child_module,
+                       const std::string& instance_name) const;
     /* Find if a port is a wire connection */
     bool port_is_wire(const ModuleId& module, const ModulePortId& port) const;
     /* Find if a port is register */
@@ -109,6 +115,8 @@ class ModuleManager {
     vtr::vector<ModuleNetSinkId, ModulePortId> net_sink_ports(const ModuleId& module, const ModuleNetId& net) const;
     /* Find the sink pin indices of a net */
     vtr::vector<ModuleNetSinkId, size_t> net_sink_pins(const ModuleId& module, const ModuleNetId& net) const;
+  private: /* Private accessors */
+    size_t find_child_module_index_in_parent_module(const ModuleId& parent_module, const ModuleId& child_module) const;
   public: /* Public mutators */
     /* Add a module */
     ModuleId add_module(const std::string& name);
@@ -125,6 +133,8 @@ class ModuleManager {
     void set_port_preproc_flag(const ModuleId& module, const ModulePortId& port, const std::string& preproc_flag);
     /* Add a child module to a parent module */
     void add_child_module(const ModuleId& parent_module, const ModuleId& child_module);
+    /* Set the instance name of a child module */
+    void set_child_instance_name(const ModuleId& parent_module, const ModuleId& child_module, const size_t& instance_id, const std::string& instance_name);
     /* Add a net to the connection graph of the module */ 
     ModuleNetId create_module_net(const ModuleId& module);
     /* Set the name of net */
@@ -153,6 +163,7 @@ class ModuleManager {
     vtr::vector<ModuleId, std::vector<ModuleId>> parents_;                 /* Parent modules that include the module */
     vtr::vector<ModuleId, std::vector<ModuleId>> children_;                /* Child modules that this module contain */
     vtr::vector<ModuleId, std::vector<size_t>> num_child_instances_;          /* Number of children instance in each child module */
+    vtr::vector<ModuleId, std::vector<std::vector<std::string>>> child_instance_names_;          /* Number of children instance in each child module */
 
     /* Port-level data */
     vtr::vector<ModuleId, vtr::vector<ModulePortId, ModulePortId>> port_ids_;    /* List of ports for each Module */ 

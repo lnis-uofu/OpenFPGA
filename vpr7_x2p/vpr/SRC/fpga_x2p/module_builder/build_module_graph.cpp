@@ -12,6 +12,7 @@
 
 #include "build_essential_modules.h"
 #include "build_decoder_modules.h"
+#include "build_mux_modules.h"
 #include "build_module_graph.h"
 
 /********************************************************************
@@ -66,9 +67,13 @@ ModuleManager build_device_module_graph(const t_vpr_setup& vpr_setup,
   for (int i = 0; i < arch.num_segments; ++i) {
     L_segment_vec.push_back(arch.Segments[i]);
   }
+
+  /* Add constant generator modules: VDD and GND */
+  build_constant_generator_modules(module_manager);
+
   /* Register all the user-defined modules in the module manager
    * This should be done prior to other steps in this function, 
-   * because they will be instanciated by other primitive modules 
+   * because they will be instanciated by other primitive modules
    */
   build_user_defined_modules(module_manager, arch.spice->circuit_lib, L_segment_vec);
 
@@ -78,7 +83,8 @@ ModuleManager build_device_module_graph(const t_vpr_setup& vpr_setup,
   /* Build local encoders for multiplexers, this MUST be called before multiplexer building */
   build_mux_local_decoder_modules(module_manager, mux_lib, arch.spice->circuit_lib);
 
-  /* TODO: Build multiplexer modules */
+  /* Build multiplexer modules */
+  build_mux_modules(module_manager, mux_lib, arch.spice->circuit_lib);
 
   /* TODO: Build LUT modules */
 

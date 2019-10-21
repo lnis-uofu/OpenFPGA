@@ -45,15 +45,24 @@ MuxGraph::node_range MuxGraph::nodes() const {
 
 /* Find the non-input nodes */
 std::vector<MuxNodeId> MuxGraph::non_input_nodes() const {
+  /* Must be an valid graph */
+  VTR_ASSERT_SAFE(valid_mux_graph());
   std::vector<MuxNodeId> node_list;
-  for (const auto& node : nodes()) {
-    /* Bypass any nodes which are not OUTPUT and INTERNAL */
-    if (MUX_INPUT_NODE == node_types_[node]) { 
-      continue;
+  
+  /* Build the node list, level by level */
+  for (size_t level = 0; level < num_node_levels(); ++level) {
+    for (size_t node_type = 0; node_type < size_t(NUM_MUX_NODE_TYPES); ++node_type) {
+      /* Bypass any nodes which are not OUTPUT and INTERNAL */
+      if (size_t(MUX_INPUT_NODE) == node_type) { 
+        continue;
+      }
+      /* Reach here, this is either an OUTPUT or INTERNAL node */ 
+      for (auto node : node_lookup_[level][node_type]) { 
+        node_list.push_back(node); 
+      }
     }
-    /* Reach here, this is either an OUTPUT or INTERNAL node */ 
-    node_list.push_back(node);
   }
+
   return node_list;
 }
 
@@ -436,13 +445,27 @@ MuxInputId MuxGraph::input_id(const MuxNodeId& node_id) const {
   return node_input_ids_[node_id];
 }
 
-/* Get the input id of a given node */
+/* Identify if the node is an input of the MUX */
+bool MuxGraph::is_node_input(const MuxNodeId& node_id) const {
+  /* Validate node id */
+  VTR_ASSERT(true == valid_node_id(node_id));
+  return (MUX_INPUT_NODE == node_types_[node_id]);
+}
+
+/* Get the output id of a given node */
 MuxOutputId MuxGraph::output_id(const MuxNodeId& node_id) const {
   /* Validate node id */
   VTR_ASSERT(valid_node_id(node_id));
-  /* Must be an input */
+  /* Must be an output */
   VTR_ASSERT(MUX_OUTPUT_NODE == node_types_[node_id]);
   return node_output_ids_[node_id];
+}
+
+/* Identify if the node is an output of the MUX */
+bool MuxGraph::is_node_output(const MuxNodeId& node_id) const {
+  /* Validate node id */
+  VTR_ASSERT(true == valid_node_id(node_id));
+  return (MUX_OUTPUT_NODE == node_types_[node_id]);
 }
 
 /* Get the node id of a given input */
@@ -1045,7 +1068,7 @@ bool MuxGraph::valid_output_id(const MuxOutputId& output_id) const {
 }
 
 bool MuxGraph::valid_level(const size_t& level) const {
-  return level < num_levels(); 
+  return level < num_node_levels(); 
 }
 
 bool MuxGraph::valid_node_lookup() const {

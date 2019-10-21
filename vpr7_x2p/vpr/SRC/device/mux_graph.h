@@ -109,8 +109,12 @@ class MuxGraph {
     MuxNodeId node_id(const size_t& node_level, const size_t& node_index_at_level) const;
     /* Get the input id of a given node */
     MuxInputId input_id(const MuxNodeId& node_id) const;
+    /* Identify if the node is an input of the MUX */
+    bool is_node_input(const MuxNodeId& node_id) const;
     /* Get the output id of a given node */
     MuxOutputId output_id(const MuxNodeId& node_id) const;
+    /* Identify if the node is an output of the MUX */
+    bool is_node_output(const MuxNodeId& node_id) const;
     /* Decode memory bits based on an input id */
     std::vector<size_t> decode_memory_bits(const MuxInputId& input_id) const;
   private: /* Private mutators : basic operations */

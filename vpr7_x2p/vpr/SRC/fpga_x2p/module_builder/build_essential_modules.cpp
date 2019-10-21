@@ -217,3 +217,33 @@ void build_user_defined_modules(ModuleManager& module_manager,
   }
 }
 
+/*********************************************************************
+ * This function will build a constant generator modules 
+ * and add it to the module manager
+ * It could be either
+ * 1. VDD or 2. GND
+ * Each module will have only one output port
+ ********************************************************************/
+static 
+void build_constant_generator_module(ModuleManager& module_manager, 
+                                     const size_t& const_value) {
+  ModuleId const_module = module_manager.add_module(generate_const_value_module_name(const_value));
+  /* Add one output port */
+  BasicPort const_output_port(generate_const_value_module_output_port_name(const_value), 1);
+  module_manager.add_port(const_module, const_output_port, ModuleManager::MODULE_OUTPUT_PORT);
+}
+
+/*********************************************************************
+ * This function will add two constant generator modules 
+ * to the module manager
+ * 1. VDD
+ * 2. GND
+ ********************************************************************/
+void build_constant_generator_modules(ModuleManager& module_manager) {
+
+  /* VDD */
+  build_constant_generator_module(module_manager, 1);
+
+  /* GND */
+  build_constant_generator_module(module_manager, 0);
+}

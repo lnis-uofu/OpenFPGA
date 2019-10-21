@@ -175,18 +175,51 @@ ModuleId ModuleManager::find_module(const std::string& name) const {
 
 /* Find the number of instances of a child module in the parent module */
 size_t ModuleManager::num_instance(const ModuleId& parent_module, const ModuleId& child_module) const {
-  /* validate both module ids */
-  VTR_ASSERT(valid_module_id(parent_module));
-  VTR_ASSERT(valid_module_id(child_module));
-  /* Try to find the child_module in the children list of parent_module*/
-  for (size_t i = 0; i < children_[parent_module].size(); ++i) {
-    if (child_module == children_[parent_module][i]) {
-      /* Found, return the number of instances */
-      return num_child_instances_[parent_module][i]; 
+  size_t child_index = find_child_module_index_in_parent_module(parent_module, child_module);
+  if (size_t(-1) == child_index) {
+    /* Not found, return a zero */
+    return 0;
+  }
+
+  return num_child_instances_[parent_module][child_index]; 
+}
+
+/* Find the instance name of a child module */
+std::string ModuleManager::instance_name(const ModuleId& parent_module, const ModuleId& child_module,
+                                         const size_t& instance_id) const {
+  /* Validate the id of both parent and child modules */
+  VTR_ASSERT ( valid_module_id(parent_module) );
+  VTR_ASSERT ( valid_module_id(child_module) );
+
+  /* Find the index of child module in the child list of parent module */
+  size_t child_index = find_child_module_index_in_parent_module(parent_module, child_module);
+  VTR_ASSERT (child_index < children_[parent_module].size());
+  /* Ensure that instance id is valid */
+  VTR_ASSERT (instance_id < num_instance(parent_module, child_module));
+  return child_instance_names_[parent_module][child_index][instance_id];
+}
+
+/* Find the instance id of a given instance name */
+size_t ModuleManager::instance_id(const ModuleId& parent_module, const ModuleId& child_module,
+                                  const std::string& instance_name) const {
+  /* Validate the id of both parent and child modules */
+  VTR_ASSERT ( valid_module_id(parent_module) );
+  VTR_ASSERT ( valid_module_id(child_module) );
+
+  /* Find the index of child module in the child list of parent module */
+  size_t child_index = find_child_module_index_in_parent_module(parent_module, child_module);
+  VTR_ASSERT (child_index < children_[parent_module].size());
+
+  /* Search the instance name list and try to find a match */
+  for (size_t name_id = 0; name_id < child_instance_names_[parent_module][child_index].size(); ++name_id) {
+    const std::string& name = child_instance_names_[parent_module][child_index][name_id];
+    if (0 == name.compare(instance_name)) {
+      return name_id;
     }
   }
-  /* Not found, return a zero */
-  return 0;
+  
+  /* Not found, return an invalid name */
+  return size_t(-1);
 }
 
 /* Find if a port is a wire connection */
@@ -310,6 +343,24 @@ vtr::vector<ModuleNetSinkId, size_t> ModuleManager::net_sink_pins(const ModuleId
 }
 
 /******************************************************************************
+ * Private Accessors
+ ******************************************************************************/
+size_t ModuleManager::find_child_module_index_in_parent_module(const ModuleId& parent_module, const ModuleId& child_module) const {
+  /* validate both module ids */
+  VTR_ASSERT(valid_module_id(parent_module));
+  VTR_ASSERT(valid_module_id(child_module));
+  /* Try to find the child_module in the children list of parent_module*/
+  for (size_t i = 0; i < children_[parent_module].size(); ++i) {
+    if (child_module == children_[parent_module][i]) {
+      /* Found, return the number of instances */
+      return i; 
+    }
+  }
+  /* Not found: return an valid value */
+  return size_t(-1);
+}
+
+/******************************************************************************
  * Public Mutators
  ******************************************************************************/
 /* Add a module */
@@ -329,6 +380,7 @@ ModuleId ModuleManager::add_module(const std::string& name) {
   parents_.emplace_back();
   children_.emplace_back();
   num_child_instances_.emplace_back();
+  child_instance_names_.emplace_back();
 
   port_ids_.emplace_back();
   ports_.emplace_back();
@@ -442,9 +494,13 @@ void ModuleManager::add_child_module(const ModuleId& parent_module, const Module
     /* Update the child module of parent module */
     children_[parent_module].push_back(child_module);
     num_child_instances_[parent_module].push_back(1); /* By default give one */
+    /* Update the instance name list */
+    child_instance_names_[parent_module].emplace_back();
+    child_instance_names_[parent_module].back().emplace_back();
   } else {
     /* Increase the counter of instances */
     num_child_instances_[parent_module][child_it - children_[parent_module].begin()]++;
+    child_instance_names_[parent_module][child_it - children_[parent_module].begin()].emplace_back();
   }
 
   /* Update fast look-up for nets */
@@ -454,6 +510,24 @@ void ModuleManager::add_child_module(const ModuleId& parent_module, const Module
   for (ModulePortId child_port : port_ids_[child_module]) {
     net_lookup_[parent_module][child_module][instance_id][child_port].resize(ports_[child_module][child_port].get_width(), ModuleNetId::INVALID());
   } 
+}
+
+/* Set the instance name of a child module */
+void ModuleManager::set_child_instance_name(const ModuleId& parent_module, 
+                                            const ModuleId& child_module, 
+                                            const size_t& instance_id, 
+                                            const std::string& instance_name) {
+  /* Validate the id of both parent and child modules */
+  VTR_ASSERT ( valid_module_id(parent_module) );
+  VTR_ASSERT ( valid_module_id(child_module) );
+  /* Ensure that the instance id is in range */
+  VTR_ASSERT ( instance_id < num_instance(parent_module, child_module));
+  /* Try to find the child_module in the children list of parent_module*/
+  size_t child_index = find_child_module_index_in_parent_module(parent_module, child_module);
+  /* We must find something! */
+  VTR_ASSERT(size_t(-1) != child_index);
+  /* Set the name */
+  child_instance_names_[parent_module][child_index][instance_id] = instance_name;
 }
 
 /* Add a net to the connection graph of the module */ 
