@@ -1157,12 +1157,11 @@ void build_mux_module_local_encoders_and_memory_nets(ModuleManager& module_manag
     /* Add module nets to connect data port to MUX mem ports */
     ModulePortId decoder_module_data_port_id = module_manager.find_module_port(decoder_module, generate_mux_local_decoder_data_port_name());
     BasicPort decoder_module_data_port = module_manager.module_port(decoder_module, decoder_module_data_port_id);
-
+    
     /* Build pin-to-pin net connection */
-    for (const size_t& pin :  decoder_module_data_port.pins()) {
+    for (const size_t& pin : decoder_module_data_port.pins()) {
       ModuleNetId net = mux_mem_nets[MuxMemId(mem_net_cnt)];
       module_manager.add_module_net_source(mux_module, net, decoder_module, decoder_instance, decoder_module_data_port_id, pin);
-      module_manager.set_net_name(mux_module, net, std::string(decoder_module_data_port.get_name() + "_" + std::to_string(pin) + "_"));
       /* Add the module nets to mux_mem_nets cache */
       mem_net_cnt++;
     }
@@ -1174,7 +1173,6 @@ void build_mux_module_local_encoders_and_memory_nets(ModuleManager& module_manag
     for (const size_t& pin : decoder_module_data_inv_port.pins()) {
       ModuleNetId net = mux_mem_inv_nets[MuxMemId(mem_inv_net_cnt)];
       module_manager.add_module_net_source(mux_module, net, decoder_module, decoder_instance, decoder_module_data_inv_port_id, pin);
-      module_manager.set_net_name(mux_module, net, std::string(decoder_module_data_inv_port.get_name() + "_" + std::to_string(pin) + "_"));
       /* Add the module nets to mux_mem_inv_nets cache */
       mem_inv_net_cnt++;
     }
