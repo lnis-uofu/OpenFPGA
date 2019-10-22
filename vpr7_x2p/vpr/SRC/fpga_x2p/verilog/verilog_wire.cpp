@@ -54,22 +54,23 @@ void print_verilog_wire_module(ModuleManager& module_manager,
   VTR_ASSERT (1 == circuit_lib.port_size(output_ports[0]));
 
   /* Create a Verilog Module based on the circuit model, and add to module manager */
-  ModuleId module_id = add_circuit_model_to_module_manager(module_manager, circuit_lib, wire_model); 
+  ModuleId wire_module = module_manager.find_module(circuit_lib.model_name(wire_model)); 
+  VTR_ASSERT(true == module_manager.valid_module_id(wire_module));
 
   /* dump module definition + ports */
-  print_verilog_module_declaration(fp, module_manager, module_id);
+  print_verilog_module_declaration(fp, module_manager, wire_module);
   /* Finish dumping ports */
 
   /* Print the internal logic of Verilog module */
   /* Find the input port of the module */
-  ModulePortId module_input_port_id = module_manager.find_module_port(module_id, circuit_lib.port_lib_name(input_ports[0]));
+  ModulePortId module_input_port_id = module_manager.find_module_port(wire_module, circuit_lib.port_lib_name(input_ports[0]));
   VTR_ASSERT(ModulePortId::INVALID() != module_input_port_id);
-  BasicPort module_input_port = module_manager.module_port(module_id, module_input_port_id);
+  BasicPort module_input_port = module_manager.module_port(wire_module, module_input_port_id);
 
   /* Find the output port of the module */
-  ModulePortId module_output_port_id = module_manager.find_module_port(module_id, circuit_lib.port_lib_name(output_ports[0]));
+  ModulePortId module_output_port_id = module_manager.find_module_port(wire_module, circuit_lib.port_lib_name(output_ports[0]));
   VTR_ASSERT(ModulePortId::INVALID() != module_output_port_id);
-  BasicPort module_output_port = module_manager.module_port(module_id, module_output_port_id);
+  BasicPort module_output_port = module_manager.module_port(wire_module, module_output_port_id);
 
   /* Print wire declaration for the inputs and outputs */
   fp << generate_verilog_port(VERILOG_PORT_WIRE, module_input_port) << ";" << std::endl;
@@ -130,26 +131,28 @@ void print_verilog_routing_wire_module(ModuleManager& module_manager,
   VTR_ASSERT (1 == circuit_lib.port_size(output_ports[0]));
 
   /* Create a Verilog Module based on the circuit model, and add to module manager */
-  ModuleId module_id = add_circuit_model_to_module_manager(module_manager, circuit_lib, wire_model, wire_subckt_name); 
+  ModuleId wire_module = module_manager.find_module(wire_subckt_name); 
+  VTR_ASSERT(true == module_manager.valid_module_id(wire_module));
 
   /* Add a mid-output port to the module */
   BasicPort module_mid_output_port(generate_segment_wire_mid_output_name(circuit_lib.port_lib_name(output_ports[0])), circuit_lib.port_size(output_ports[0]));
-  module_manager.add_port(module_id, module_mid_output_port, ModuleManager::MODULE_OUTPUT_PORT);
+  ModulePortId module_mid_output_port_id = module_manager.find_module_port(wire_module, module_mid_output_port.get_name());
+  VTR_ASSERT(ModulePortId::INVALID() != module_mid_output_port_id);
 
   /* dump module definition + ports */
-  print_verilog_module_declaration(fp, module_manager, module_id);
+  print_verilog_module_declaration(fp, module_manager, wire_module);
   /* Finish dumping ports */
 
   /* Print the internal logic of Verilog module */
   /* Find the input port of the module */
-  ModulePortId module_input_port_id = module_manager.find_module_port(module_id, circuit_lib.port_lib_name(input_ports[0]));
+  ModulePortId module_input_port_id = module_manager.find_module_port(wire_module, circuit_lib.port_lib_name(input_ports[0]));
   VTR_ASSERT(ModulePortId::INVALID() != module_input_port_id);
-  BasicPort module_input_port = module_manager.module_port(module_id, module_input_port_id);
+  BasicPort module_input_port = module_manager.module_port(wire_module, module_input_port_id);
 
   /* Find the output port of the module */
-  ModulePortId module_output_port_id = module_manager.find_module_port(module_id, circuit_lib.port_lib_name(output_ports[0]));
+  ModulePortId module_output_port_id = module_manager.find_module_port(wire_module, circuit_lib.port_lib_name(output_ports[0]));
   VTR_ASSERT(ModulePortId::INVALID() != module_output_port_id);
-  BasicPort module_output_port = module_manager.module_port(module_id, module_output_port_id);
+  BasicPort module_output_port = module_manager.module_port(wire_module, module_output_port_id);
 
   /* Print wire declaration for the inputs and outputs */
   fp << generate_verilog_port(VERILOG_PORT_WIRE, module_input_port) << ";" << std::endl;
