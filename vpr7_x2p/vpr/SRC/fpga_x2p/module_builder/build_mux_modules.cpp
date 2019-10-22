@@ -20,6 +20,7 @@
 #include "circuit_library_utils.h"
 #include "decoder_library_utils.h"
 #include "module_manager_utils.h"
+#include "build_module_graph_utils.h"
 
 /* FPGA-X2P context header files */
 #include "spice_types.h"
@@ -524,40 +525,9 @@ void build_cmos_mux_module_mux2_multiplexing_structure(ModuleManager& module_man
     CircuitModelId buffer_model = circuit_lib.lut_intermediate_buffer_model(mux_model);
     /* We must have a valid model id */
     VTR_ASSERT(CircuitModelId::INVALID() != buffer_model);
-    /* Get the moduleId for the buffer module */
-    ModuleId buffer_module_id = module_manager.find_module(circuit_lib.model_name(buffer_model));
-    /* We must have one */
-    VTR_ASSERT(ModuleId::INVALID() != buffer_module_id);
-
-    /* Find the instance id */
-    size_t buffer_instance_id = module_manager.num_instance(mux_module, buffer_module_id);
-    /* Add the module to mux_module */
-    module_manager.add_child_module(mux_module, buffer_module_id);
-    /* Set a name for the instance */
-    std::string buffer_instance_name = generate_mux_branch_instance_name(output_node_level, output_node_index_at_level, true);
-    module_manager.set_child_instance_name(mux_module, buffer_module_id, buffer_instance_id, buffer_instance_name);
-
-    /* Add module nets to wire to the buffer module */
-    /* To match the context, Buffer should have only 2 non-global ports: 1 input port and 1 output port */
-    std::vector<CircuitPortId> buffer_model_input_ports = circuit_lib.model_ports_by_type(buffer_model, SPICE_MODEL_PORT_INPUT, true);
-    std::vector<CircuitPortId> buffer_model_output_ports = circuit_lib.model_ports_by_type(buffer_model, SPICE_MODEL_PORT_OUTPUT, true);
-    VTR_ASSERT(1 == buffer_model_input_ports.size());
-    VTR_ASSERT(1 == buffer_model_output_ports.size());
-
-    /* Find the input and output module ports */
-    ModulePortId buffer_input_port_id = module_manager.find_module_port(buffer_module_id, circuit_lib.port_lib_name(buffer_model_input_ports[0]));
-    ModulePortId buffer_output_port_id = module_manager.find_module_port(buffer_module_id, circuit_lib.port_lib_name(buffer_model_output_ports[0]));
-
-    /* Port size should be 1 ! */
-    VTR_ASSERT(1 == module_manager.module_port(buffer_module_id, buffer_input_port_id).get_width());
-    VTR_ASSERT(1 == module_manager.module_port(buffer_module_id, buffer_output_port_id).get_width());
-
-    /* Connect the module net from branch output to buffer input */
-    module_manager.add_module_net_sink(mux_module, branch_net, buffer_module_id, buffer_instance_id, buffer_input_port_id, module_manager.module_port(buffer_module_id, buffer_input_port_id).get_lsb());
 
     /* Create a module net which sources from buffer output */
-    ModuleNetId buffer_net = module_manager.create_module_net(mux_module);
-    module_manager.add_module_net_source(mux_module, buffer_net, buffer_module_id, buffer_instance_id, buffer_output_port_id, module_manager.module_port(buffer_module_id, buffer_output_port_id).get_lsb());
+    ModuleNetId buffer_net = add_inverter_buffer_child_module_and_nets(module_manager, mux_module, circuit_lib, buffer_model, branch_net); 
 
     /* Record the module net id in the cache */
     module_nets_by_level[output_node_level][output_node_index_at_level] = buffer_net;
@@ -718,40 +688,8 @@ void build_cmos_mux_module_tgate_multiplexing_structure(ModuleManager& module_ma
     CircuitModelId buffer_model = circuit_lib.lut_intermediate_buffer_model(circuit_model);
     /* We must have a valid model id */
     VTR_ASSERT(CircuitModelId::INVALID() != buffer_model);
-    /* Get the moduleId for the buffer module */
-    ModuleId buffer_module_id = module_manager.find_module(circuit_lib.model_name(buffer_model));
-    /* We must have one */
-    VTR_ASSERT(ModuleId::INVALID() != buffer_module_id);
 
-    /* Find the instance id */
-    size_t buffer_instance_id = module_manager.num_instance(mux_module, buffer_module_id);
-    /* Add the module to mux_module */
-    module_manager.add_child_module(mux_module, buffer_module_id);
-    /* Set a name for the instance */
-    std::string buffer_instance_name = generate_mux_branch_instance_name(output_node_level, output_node_index_at_level, true);
-    module_manager.set_child_instance_name(mux_module, buffer_module_id, buffer_instance_id, buffer_instance_name);
-
-    /* Add module nets to wire to the buffer module */
-    /* To match the context, Buffer should have only 2 non-global ports: 1 input port and 1 output port */
-    std::vector<CircuitPortId> buffer_model_input_ports = circuit_lib.model_ports_by_type(buffer_model, SPICE_MODEL_PORT_INPUT, true);
-    std::vector<CircuitPortId> buffer_model_output_ports = circuit_lib.model_ports_by_type(buffer_model, SPICE_MODEL_PORT_OUTPUT, true);
-    VTR_ASSERT(1 == buffer_model_input_ports.size());
-    VTR_ASSERT(1 == buffer_model_output_ports.size());
-
-    /* Find the input and output module ports */
-    ModulePortId buffer_input_port_id = module_manager.find_module_port(buffer_module_id, circuit_lib.port_lib_name(buffer_model_input_ports[0]));
-    ModulePortId buffer_output_port_id = module_manager.find_module_port(buffer_module_id, circuit_lib.port_lib_name(buffer_model_output_ports[0]));
-
-    /* Port size should be 1 ! */
-    VTR_ASSERT(1 == module_manager.module_port(buffer_module_id, buffer_input_port_id).get_width());
-    VTR_ASSERT(1 == module_manager.module_port(buffer_module_id, buffer_output_port_id).get_width());
-
-    /* Connect the module net from branch output to buffer input */
-    module_manager.add_module_net_sink(mux_module, branch_net, buffer_module_id, buffer_instance_id, buffer_input_port_id, module_manager.module_port(buffer_module_id, buffer_input_port_id).get_lsb());
-
-    /* Create a module net which sources from buffer output */
-    ModuleNetId buffer_net = module_manager.create_module_net(mux_module);
-    module_manager.add_module_net_source(mux_module, buffer_net, buffer_module_id, buffer_instance_id, buffer_output_port_id, module_manager.module_port(buffer_module_id, buffer_output_port_id).get_lsb());
+    ModuleNetId buffer_net = add_inverter_buffer_child_module_and_nets(module_manager, mux_module, circuit_lib, buffer_model, branch_net); 
 
     /* Record the module net id in the cache */
     module_nets_by_level[output_node_level][output_node_index_at_level] = buffer_net;
@@ -854,39 +792,13 @@ vtr::vector<MuxInputId, ModuleNetId> build_mux_module_input_buffers(ModuleManage
     CircuitModelId buffer_model = circuit_lib.input_buffer_model(mux_model);
     /* We must have a valid model id */
     VTR_ASSERT(CircuitModelId::INVALID() != buffer_model);
-    /* Get the moduleId for the buffer module */
-    ModuleId buffer_module_id = module_manager.find_module(circuit_lib.model_name(buffer_model));
-    /* We must have one */
-    VTR_ASSERT(ModuleId::INVALID() != buffer_module_id);
-
-    /* Find the instance id */
-    size_t buffer_instance_id = module_manager.num_instance(mux_module, buffer_module_id);
-    /* Add the module to mux_module */
-    module_manager.add_child_module(mux_module, buffer_module_id);
-
-    /* Add module nets to wire to the buffer module */
-    /* To match the context, Buffer should have only 2 non-global ports: 1 input port and 1 output port */
-    std::vector<CircuitPortId> buffer_model_input_ports = circuit_lib.model_ports_by_type(buffer_model, SPICE_MODEL_PORT_INPUT, true);
-    std::vector<CircuitPortId> buffer_model_output_ports = circuit_lib.model_ports_by_type(buffer_model, SPICE_MODEL_PORT_OUTPUT, true);
-    VTR_ASSERT(1 == buffer_model_input_ports.size());
-    VTR_ASSERT(1 == buffer_model_output_ports.size());
-
-    /* Find the input and output module ports */
-    ModulePortId buffer_input_port_id = module_manager.find_module_port(buffer_module_id, circuit_lib.port_lib_name(buffer_model_input_ports[0]));
-    ModulePortId buffer_output_port_id = module_manager.find_module_port(buffer_module_id, circuit_lib.port_lib_name(buffer_model_output_ports[0]));
-
-    /* Port size should be 1 ! */
-    VTR_ASSERT(1 == module_manager.module_port(buffer_module_id, buffer_input_port_id).get_width());
-    VTR_ASSERT(1 == module_manager.module_port(buffer_module_id, buffer_output_port_id).get_width());
 
     /* Connect the module net from branch output to buffer input */
     ModuleNetId buffer_net = module_manager.create_module_net(mux_module);
     module_manager.add_module_net_source(mux_module, buffer_net, mux_module, 0, module_input_port_id, size_t(input_index));
-    module_manager.add_module_net_sink(mux_module, buffer_net, buffer_module_id, buffer_instance_id, buffer_input_port_id, module_manager.module_port(buffer_module_id, buffer_input_port_id).get_lsb());
 
     /* Create a module net which sources from buffer output */
-    ModuleNetId input_net = module_manager.create_module_net(mux_module);
-    module_manager.add_module_net_source(mux_module, input_net, buffer_module_id, buffer_instance_id, buffer_output_port_id, module_manager.module_port(buffer_module_id, buffer_output_port_id).get_lsb());
+    ModuleNetId input_net = add_inverter_buffer_child_module_and_nets(module_manager, mux_module, circuit_lib, buffer_model, buffer_net); 
     mux_input_nets[input_index] = input_net;
   }
 
@@ -988,40 +900,12 @@ vtr::vector<MuxOutputId, ModuleNetId> build_mux_module_output_buffers(ModuleMana
       CircuitModelId buffer_model = circuit_lib.output_buffer_model(mux_model);
       /* We must have a valid model id */
       VTR_ASSERT(CircuitModelId::INVALID() != buffer_model);
-      /* Get the moduleId for the buffer module */
-      ModuleId buffer_module_id = module_manager.find_module(circuit_lib.model_name(buffer_model));
-      /* We must have one */
-      VTR_ASSERT(ModuleId::INVALID() != buffer_module_id);
-  
-      /* Find the instance id */
-      size_t buffer_instance_id = module_manager.num_instance(mux_module, buffer_module_id);
-      /* Add the module to mux_module */
-      module_manager.add_child_module(mux_module, buffer_module_id);
-  
-      /* Add module nets to wire to the buffer module */
-      /* To match the context, Buffer should have only 2 non-global ports: 1 input port and 1 output port */
-      std::vector<CircuitPortId> buffer_model_input_ports = circuit_lib.model_ports_by_type(buffer_model, SPICE_MODEL_PORT_INPUT, true);
-      std::vector<CircuitPortId> buffer_model_output_ports = circuit_lib.model_ports_by_type(buffer_model, SPICE_MODEL_PORT_OUTPUT, true);
-      VTR_ASSERT(1 == buffer_model_input_ports.size());
-      VTR_ASSERT(1 == buffer_model_output_ports.size());
-  
-      /* Find the input and output module ports */
-      ModulePortId buffer_input_port_id = module_manager.find_module_port(buffer_module_id, circuit_lib.port_lib_name(buffer_model_input_ports[0]));
-      ModulePortId buffer_output_port_id = module_manager.find_module_port(buffer_module_id, circuit_lib.port_lib_name(buffer_model_output_ports[0]));
-  
-      /* Port size should be 1 ! */
-      VTR_ASSERT(1 == module_manager.module_port(buffer_module_id, buffer_input_port_id).get_width());
-      VTR_ASSERT(1 == module_manager.module_port(buffer_module_id, buffer_output_port_id).get_width());
-  
-      /* Connect the module net from buffer output to MUX output */
-      ModuleNetId buffer_net = module_manager.create_module_net(mux_module);
-      module_manager.add_module_net_source(mux_module, buffer_net, buffer_module_id, buffer_instance_id, buffer_output_port_id, module_manager.module_port(buffer_module_id, buffer_output_port_id).get_lsb());
-      module_manager.add_module_net_sink(mux_module, buffer_net, mux_module, 0, module_output_port_id, pin);
-  
+
       /* Create a module net which sinks at buffer input */
-      ModuleNetId output_net = module_manager.create_module_net(mux_module);
-      module_manager.add_module_net_sink(mux_module, output_net, buffer_module_id, buffer_instance_id, buffer_input_port_id, module_manager.module_port(buffer_module_id, buffer_input_port_id).get_lsb());
-      mux_output_nets[output_index] = output_net;
+      ModuleNetId input_net = module_manager.create_module_net(mux_module);
+      ModuleNetId output_net = add_inverter_buffer_child_module_and_nets(module_manager, mux_module, circuit_lib, buffer_model, output_net); 
+      module_manager.add_module_net_sink(mux_module, output_net, mux_module, 0, module_output_port_id, pin);
+      mux_output_nets[output_index] = input_net;
     }
   }
 
