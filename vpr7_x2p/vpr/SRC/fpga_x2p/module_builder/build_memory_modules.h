@@ -1,9 +1,9 @@
 /***********************************************
- * Header file for verilog_memory.cpp
+ * Header file for build_memory_modules.cpp
  **********************************************/
 
-#ifndef BUILD_MEMORY_MODULE_H
-#define BUILD_MEMORY_MODULE_H
+#ifndef BUILD_MEMORY_MODULES_H
+#define BUILD_MEMORY_MODULES_H
 
 /* Include other header files which are dependency on the function declared below */
 

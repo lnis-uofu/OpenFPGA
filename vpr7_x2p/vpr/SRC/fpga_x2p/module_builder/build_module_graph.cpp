@@ -16,6 +16,7 @@
 #include "build_lut_modules.h"
 #include "build_wire_modules.h"
 #include "build_memory_modules.h"
+#include "build_grid_modules.h"
 #include "build_module_graph.h"
 
 /********************************************************************
@@ -63,7 +64,7 @@ ModuleManager build_device_module_graph(const t_vpr_setup& vpr_setup,
   config_spice_models_sram_port_spice_model(arch.spice->num_spice_model, 
                                             arch.spice->spice_models,
                                             arch.sram_inf.verilog_sram_inf_orgz->spice_model);
-  config_circuit_models_sram_port_to_default_sram_model(arch.spice->circuit_lib, arch.sram_inf.verilog_sram_inf_orgz->circuit_model); 
+  config_circuit_models_sram_port_to_default_sram_model(arch.spice->circuit_lib, sram_model); 
 
   /* Create a vector of segments. TODO: should come from DeviceContext */
   std::vector<t_segment_inf> L_segment_vec;
@@ -99,7 +100,9 @@ ModuleManager build_device_module_graph(const t_vpr_setup& vpr_setup,
   build_memory_modules(module_manager, mux_lib, arch.spice->circuit_lib,
                        arch.sram_inf.verilog_sram_inf_orgz->type);
 
-  /* TODO: Build grid and programmable block modules */
+  /* Build grid and programmable block modules */
+  build_grid_modules(module_manager, arch.spice->circuit_lib, mux_lib,  
+                     arch.sram_inf.verilog_sram_inf_orgz->type, sram_model);
 
   /* TODO: Build global routing architecture modules */
 

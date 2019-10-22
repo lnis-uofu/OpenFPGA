@@ -294,8 +294,7 @@ void vpr_fpga_verilog(ModuleManager& module_manager,
                                      lb_dir_path, Arch,
                                      vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.dump_explicit_verilog);
 
-  print_verilog_grids(module_manager, Arch.spice->circuit_lib, mux_lib,
-                      sram_verilog_orgz_info, 
+  print_verilog_grids(module_manager, 
                       std::string(src_dir_path), std::string(lb_dir_path),
                       TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.dump_explicit_verilog);
 

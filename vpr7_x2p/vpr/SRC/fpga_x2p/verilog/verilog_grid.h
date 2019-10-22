@@ -11,11 +11,8 @@
 #include "mux_library.h"
 
 void print_verilog_grids(ModuleManager& module_manager,
-                         const CircuitLibrary& circuit_lib,
-                         const MuxLibrary& mux_lib,
-                         t_sram_orgz_info* cur_sram_orgz_info,
                          const std::string& verilog_dir,
                          const std::string& subckt_dir,
-                         const bool& is_explicit_mapping);
+                         const bool& use_explicit_mapping);
 
 #endif
