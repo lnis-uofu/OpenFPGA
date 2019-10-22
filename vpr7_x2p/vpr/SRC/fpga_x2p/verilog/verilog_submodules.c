@@ -3283,7 +3283,9 @@ void dump_verilog_submodules(ModuleManager& module_manager,
    */
   print_verilog_submodule_mux_local_decoders(module_manager, mux_lib, Arch.spice->circuit_lib, 
                                              std::string(verilog_dir), std::string(submodule_dir));
-  print_verilog_submodule_muxes(module_manager, mux_lib, Arch.spice->circuit_lib, cur_sram_orgz_info, std::string(verilog_dir), std::string(submodule_dir));
+  print_verilog_submodule_muxes(module_manager, mux_lib, Arch.spice->circuit_lib, cur_sram_orgz_info, 
+                                std::string(verilog_dir), std::string(submodule_dir),
+                                fpga_verilog_opts.dump_explicit_verilog);
 
  
   /* 2. LUTes */
@@ -3293,7 +3295,8 @@ void dump_verilog_submodules(ModuleManager& module_manager,
                               fpga_verilog_opts.include_timing, 
                               fpga_verilog_opts.include_signal_init,
                               fpga_verilog_opts.dump_explicit_verilog);
-  print_verilog_submodule_luts(module_manager, Arch.spice->circuit_lib, std::string(verilog_dir), std::string(submodule_dir));
+  print_verilog_submodule_luts(module_manager, Arch.spice->circuit_lib, std::string(verilog_dir), std::string(submodule_dir),
+                               fpga_verilog_opts.dump_explicit_verilog);
 
   /* 3. Hardwires */
   print_verilog_submodule_wires(module_manager, Arch.spice->circuit_lib, L_segment_vec, std::string(verilog_dir), std::string(submodule_dir));
@@ -3303,8 +3306,8 @@ void dump_verilog_submodules(ModuleManager& module_manager,
   dump_verilog_submodule_memories(cur_sram_orgz_info, verilog_dir, submodule_dir, routing_arch->num_switch, 
                                   switch_inf, Arch.spice, routing_arch, fpga_verilog_opts.dump_explicit_verilog);
   print_verilog_submodule_memories(module_manager, mux_lib, Arch.spice->circuit_lib, 
-                                   cur_sram_orgz_info->type,
-                                   std::string(verilog_dir), std::string(submodule_dir));
+                                   std::string(verilog_dir), std::string(submodule_dir),
+                                   fpga_verilog_opts.dump_explicit_verilog);
 
   /* 5. Dump template for all the modules */
   if (TRUE == fpga_verilog_opts.print_user_defined_template) { 

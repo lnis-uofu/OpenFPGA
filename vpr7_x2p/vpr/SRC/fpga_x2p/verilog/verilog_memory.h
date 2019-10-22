@@ -16,8 +16,8 @@
 void print_verilog_submodule_memories(ModuleManager& module_manager,
                                       const MuxLibrary& mux_lib,
                                       const CircuitLibrary& circuit_lib,
-                                      const e_sram_orgz& sram_orgz_type,
                                       const std::string& verilog_dir,
-                                      const std::string& submodule_dir);
+                                      const std::string& submodule_dir,
+                                      const bool& use_explicit_port_map);
 
 #endif

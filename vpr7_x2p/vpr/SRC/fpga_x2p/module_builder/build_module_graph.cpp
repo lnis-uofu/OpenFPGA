@@ -15,6 +15,7 @@
 #include "build_mux_modules.h"
 #include "build_lut_modules.h"
 #include "build_wire_modules.h"
+#include "build_memory_modules.h"
 #include "build_module_graph.h"
 
 /********************************************************************
@@ -94,7 +95,9 @@ ModuleManager build_device_module_graph(const t_vpr_setup& vpr_setup,
   /* Build wire modules */
   build_wire_modules(module_manager, arch.spice->circuit_lib, L_segment_vec);
 
-  /* TODO: Build memory modules */
+  /* Build memory modules */
+  build_memory_modules(module_manager, mux_lib, arch.spice->circuit_lib,
+                       arch.sram_inf.verilog_sram_inf_orgz->type);
 
   /* TODO: Build grid and programmable block modules */
 

@@ -565,7 +565,8 @@ void add_module_nets_between_logic_and_memory_sram_bus(ModuleManager& module_man
   }
 }
 
-/* Connect all the memory modules under the parent module in a chain
+/********************************************************************
+ * Connect all the memory modules under the parent module in a chain
  * 
  *                +--------+    +--------+            +--------+
  *  ccff_head --->| Memory |--->| Memory |--->... --->| Memory |----> ccff_tail
@@ -579,7 +580,7 @@ void add_module_nets_between_logic_and_memory_sram_bus(ModuleManager& module_man
  *  For the rest of memory modules:
  *    net source is the configuration chain tail of the previous memory module
  *    net sink is the configuration chain head of the next memory module
- */
+ *********************************************************************/
 void add_module_nets_cmos_memory_chain_config_bus(ModuleManager& module_manager,
                                                   const ModuleId& parent_module,
                                                   const std::vector<ModuleId>& memory_modules,

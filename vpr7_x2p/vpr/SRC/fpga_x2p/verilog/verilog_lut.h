@@ -15,6 +15,7 @@
 void print_verilog_submodule_luts(ModuleManager& module_manager,
                                   const CircuitLibrary& circuit_lib,
                                   const std::string& verilog_dir,
-                                  const std::string& submodule_dir);
+                                  const std::string& submodule_dir,
+                                  const bool& use_explicit_port_map);
 
 #endif

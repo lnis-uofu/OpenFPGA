@@ -18,6 +18,7 @@ void print_verilog_submodule_muxes(ModuleManager& module_manager,
                                    const CircuitLibrary& circuit_lib,
                                    t_sram_orgz_info* cur_sram_orgz_info,
                                    const std::string& verilog_dir,
-                                   const std::string& submodule_dir);
+                                   const std::string& submodule_dir,
+                                   const bool& use_explicit_port_map);
 
 #endif

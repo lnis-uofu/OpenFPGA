@@ -31,7 +31,8 @@
 void print_verilog_submodule_luts(ModuleManager& module_manager,
                                   const CircuitLibrary& circuit_lib,
                                   const std::string& verilog_dir,
-                                  const std::string& submodule_dir) {
+                                  const std::string& submodule_dir,
+                                  const bool& use_explicit_port_map) {
   /* TODO: remove .bak when this part is completed and tested */
   std::string verilog_fname = submodule_dir + luts_verilog_file_name + ".bak";
 
@@ -61,7 +62,8 @@ void print_verilog_submodule_luts(ModuleManager& module_manager,
     /* Find the module id */
     ModuleId lut_module = module_manager.find_module(circuit_lib.model_name(lut_model));
     VTR_ASSERT(true == module_manager.valid_module_id(lut_module));
-    write_verilog_module_to_file(fp, module_manager, lut_module, circuit_lib.dump_explicit_port_map(lut_model));
+    write_verilog_module_to_file(fp, module_manager, lut_module, 
+                                 use_explicit_port_map || circuit_lib.dump_explicit_port_map(lut_model));
   }
 
   /* Close the file handler */
