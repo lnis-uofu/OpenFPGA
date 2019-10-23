@@ -864,26 +864,18 @@ void build_top_module(ModuleManager& module_manager,
     add_sram_ports_to_module_manager(module_manager, top_module, circuit_lib, sram_model, sram_orgz_type, module_num_config_bits);
   }
 
-  /* Vectors to record all the memory modules have been added
-   * They are used to add module nets of configuration bus
-   */
-  std::vector<ModuleId> memory_modules;
-  std::vector<size_t> memory_instances;
-
   /* Organize the list of memory modules and instances */
-  organize_top_module_memory_modules(module_manager, 
+  organize_top_module_memory_modules(module_manager, top_module, 
                                      circuit_lib, sram_orgz_type, sram_model,
                                      device_size, grids, grid_instance_ids, 
                                      L_device_rr_gsb, sb_instance_ids, cb_instance_ids,
-                                     compact_routing_hierarchy,
-                                     memory_modules, memory_instances);
+                                     compact_routing_hierarchy);
 
   /* Add module nets to connect memory cells inside
    * This is a one-shot addition that covers all the memory modules in this pb module!
    */
-  if (false == memory_modules.empty()) {
+  if (0 < module_manager.configurable_children(top_module).size()) {
     add_top_module_nets_memory_config_bus(module_manager, top_module, 
-                                          memory_modules, memory_instances,
                                           sram_orgz_type, circuit_lib.design_tech_type(sram_model));
   }
 }

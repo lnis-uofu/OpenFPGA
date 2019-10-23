@@ -8,7 +8,8 @@
 #include "circuit_library.h"
 #include "rr_blocks.h"
 
-void organize_top_module_memory_modules(const ModuleManager& module_manager, 
+void organize_top_module_memory_modules(ModuleManager& module_manager, 
+                                        const ModuleId& top_module,
                                         const CircuitLibrary& circuit_lib,
                                         const e_sram_orgz& sram_orgz_type,
                                         const CircuitModelId& sram_model,
@@ -18,14 +19,10 @@ void organize_top_module_memory_modules(const ModuleManager& module_manager,
                                         const DeviceRRGSB& L_device_rr_gsb,
                                         const std::vector<std::vector<size_t>>& sb_instance_ids,
                                         const std::map<t_rr_type, std::vector<std::vector<size_t>>>& cb_instance_ids,
-                                        const bool& compact_routing_hierarchy,
-                                        std::vector<ModuleId>& memory_modules,
-                                        std::vector<size_t>& memory_instances);
+                                        const bool& compact_routing_hierarchy);
 
 void add_top_module_nets_memory_config_bus(ModuleManager& module_manager,
                                            const ModuleId& parent_module,
-                                           const std::vector<ModuleId>& memory_modules,
-                                           const std::vector<size_t>& memory_instances,
                                            const e_sram_orgz& sram_orgz_type, 
                                            const e_spice_model_design_tech& mem_tech);
 

@@ -359,15 +359,13 @@ void build_primitive_block_module(ModuleManager& module_manager,
                                                       memory_module, memory_instance_id,
                                                       circuit_lib, primitive_model);
     /* Record memory-related information */
-    memory_modules.push_back(memory_module);
-    memory_instances.push_back(memory_instance_id);
+    module_manager.add_configurable_child(primitive_module, memory_module, memory_instance_id);
   }
   /* Add all the nets to connect configuration ports from memory module to primitive modules
    * This is a one-shot addition that covers all the memory modules in this primitive module!
    */
   if (false == memory_modules.empty()) {
     add_module_nets_memory_config_bus(module_manager, primitive_module, 
-                                      memory_modules, memory_instances,
                                       sram_orgz_type, circuit_lib.design_tech_type(sram_model));
   }
 }
@@ -908,8 +906,7 @@ void rec_build_physical_block_modules(ModuleManager& module_manager,
       if (0 < find_module_num_config_bits(module_manager, child_pb_module,
                                           circuit_lib, sram_model, 
                                           sram_orgz_type)) {
-        memory_modules.push_back(child_pb_module);
-        memory_instances.push_back(child_instance_id);
+        module_manager.add_configurable_child(pb_module, child_pb_module, child_instance_id);
       }
     }
   }
@@ -958,7 +955,6 @@ void rec_build_physical_block_modules(ModuleManager& module_manager,
    */
   if (false == memory_modules.empty()) {
     add_module_nets_memory_config_bus(module_manager, pb_module, 
-                                      memory_modules, memory_instances,
                                       sram_orgz_type, circuit_lib.design_tech_type(sram_model));
   }
 }
@@ -1001,12 +997,6 @@ void build_grid_module(ModuleManager& module_manager,
   ModuleId grid_module = module_manager.add_module(grid_module_name); 
   VTR_ASSERT(true == module_manager.valid_module_id(grid_module));
 
-  /* Vectors to record all the memory modules have been added
-   * They are used to add module nets of configuration bus
-   */
-  std::vector<ModuleId> memory_modules;
-  std::vector<size_t> memory_instances;
-
   /* Generate the name of the Verilog module for this pb_type */
   std::string pb_module_name_prefix(grid_verilog_file_name_prefix);
   std::string pb_module_name = generate_grid_physical_block_module_name(pb_module_name_prefix, phy_block_type->pb_graph_head->pb_type, border_side);
@@ -1023,8 +1013,7 @@ void build_grid_module(ModuleManager& module_manager,
     if (0 < find_module_num_config_bits(module_manager, pb_module,
                                         circuit_lib, sram_model, 
                                         sram_orgz_type)) {
-      memory_modules.push_back(pb_module);
-      memory_instances.push_back(pb_instance_id);
+      module_manager.add_configurable_child(grid_module, pb_module, pb_instance_id);
     }
   }
 
@@ -1072,9 +1061,8 @@ void build_grid_module(ModuleManager& module_manager,
   /* Add module nets to connect memory cells inside
    * This is a one-shot addition that covers all the memory modules in this pb module!
    */
-  if (false == memory_modules.empty()) {
+  if (0 < module_manager.configurable_children(grid_module).size()) {
     add_module_nets_memory_config_bus(module_manager, grid_module, 
-                                      memory_modules, memory_instances,
                                       sram_orgz_type, circuit_lib.design_tech_type(sram_model));
   }
 }

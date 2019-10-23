@@ -63,6 +63,22 @@ std::vector<size_t> ModuleManager::child_module_instances(const ModuleId& parent
   return instance_range;
 }
 
+/* Find all the configurable child modules under a parent module */
+std::vector<ModuleId> ModuleManager::configurable_children(const ModuleId& parent_module) const {
+  /* Validate the module_id */
+  VTR_ASSERT(valid_module_id(parent_module));
+
+  return configurable_children_[parent_module];
+}
+
+/* Find all the instances of configurable child modules under a parent module */
+std::vector<size_t> ModuleManager::configurable_child_instances(const ModuleId& parent_module) const {
+  /* Validate the module_id */
+  VTR_ASSERT(valid_module_id(parent_module));
+
+  return configurable_child_instances_[parent_module];
+}
+
 /* Find the source ids of modules */
 ModuleManager::module_net_src_range ModuleManager::module_net_sources(const ModuleId& module, const ModuleNetId& net) const {
   /* Validate the module_id */
@@ -381,6 +397,8 @@ ModuleId ModuleManager::add_module(const std::string& name) {
   children_.emplace_back();
   num_child_instances_.emplace_back();
   child_instance_names_.emplace_back();
+  configurable_children_.emplace_back();
+  configurable_child_instances_.emplace_back();
 
   port_ids_.emplace_back();
   ports_.emplace_back();
@@ -528,6 +546,24 @@ void ModuleManager::set_child_instance_name(const ModuleId& parent_module,
   VTR_ASSERT(size_t(-1) != child_index);
   /* Set the name */
   child_instance_names_[parent_module][child_index][instance_id] = instance_name;
+}
+
+/* Add a configurable child module to module
+ * Note: this function should be called after add_child_module!
+ * It will check if the child module does exist in the parent module
+ * And the instance id is in range or not
+ */
+void ModuleManager::add_configurable_child(const ModuleId& parent_module, 
+                                           const ModuleId& child_module, 
+                                           const size_t& child_instance) {
+  /* Validate the id of both parent and child modules */
+  VTR_ASSERT ( valid_module_id(parent_module) );
+  VTR_ASSERT ( valid_module_id(child_module) );
+  /* Ensure that the instance id is in range */
+  VTR_ASSERT ( child_instance < num_instance(parent_module, child_module));
+
+  configurable_children_[parent_module].push_back(child_module);
+  configurable_child_instances_[parent_module].push_back(child_instance);
 }
 
 /* Add a net to the connection graph of the module */ 

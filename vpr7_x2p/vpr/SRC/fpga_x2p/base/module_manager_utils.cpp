@@ -583,10 +583,8 @@ void add_module_nets_between_logic_and_memory_sram_bus(ModuleManager& module_man
  *********************************************************************/
 void add_module_nets_cmos_memory_chain_config_bus(ModuleManager& module_manager,
                                                   const ModuleId& parent_module,
-                                                  const std::vector<ModuleId>& memory_modules,
-                                                  const std::vector<size_t>& memory_instances,
                                                   const e_sram_orgz& sram_orgz_type) {
-  for (size_t mem_index = 0; mem_index < memory_modules.size(); ++mem_index) {
+  for (size_t mem_index = 0; mem_index < module_manager.configurable_children(parent_module).size(); ++mem_index) {
     ModuleId net_src_module_id;
     size_t net_src_instance_id;
     ModulePortId net_src_port_id;
@@ -604,20 +602,20 @@ void add_module_nets_cmos_memory_chain_config_bus(ModuleManager& module_manager,
 
       /* Find the port name of next memory module */
       std::string sink_port_name = generate_configuration_chain_head_name();
-      net_sink_module_id = memory_modules[mem_index]; 
-      net_sink_instance_id = memory_instances[mem_index];
+      net_sink_module_id = module_manager.configurable_children(parent_module)[mem_index]; 
+      net_sink_instance_id = module_manager.configurable_child_instances(parent_module)[mem_index];
       net_sink_port_id = module_manager.find_module_port(net_sink_module_id, sink_port_name); 
     } else {
       /* Find the port name of previous memory module */
       std::string src_port_name = generate_configuration_chain_tail_name();
-      net_src_module_id = memory_modules[mem_index - 1]; 
-      net_src_instance_id = memory_instances[mem_index - 1];
+      net_src_module_id = module_manager.configurable_children(parent_module)[mem_index - 1]; 
+      net_src_instance_id = module_manager.configurable_child_instances(parent_module)[mem_index - 1];
       net_src_port_id = module_manager.find_module_port(net_src_module_id, src_port_name); 
 
       /* Find the port name of next memory module */
       std::string sink_port_name = generate_configuration_chain_head_name();
-      net_sink_module_id = memory_modules[mem_index]; 
-      net_sink_instance_id = memory_instances[mem_index];
+      net_sink_module_id = module_manager.configurable_children(parent_module)[mem_index]; 
+      net_sink_instance_id = module_manager.configurable_child_instances(parent_module)[mem_index];
       net_sink_port_id = module_manager.find_module_port(net_sink_module_id, sink_port_name); 
     }
 
@@ -645,8 +643,8 @@ void add_module_nets_cmos_memory_chain_config_bus(ModuleManager& module_manager,
    */
   /* Find the port name of previous memory module */
   std::string src_port_name = generate_configuration_chain_tail_name();
-  ModuleId net_src_module_id = memory_modules.back(); 
-  size_t net_src_instance_id = memory_instances.back();
+  ModuleId net_src_module_id = module_manager.configurable_children(parent_module).back(); 
+  size_t net_src_instance_id = module_manager.configurable_child_instances(parent_module).back();
   ModulePortId net_src_port_id = module_manager.find_module_port(net_src_module_id, src_port_name); 
 
   /* Find the port name of next memory module */
@@ -720,18 +718,13 @@ void add_module_nets_cmos_memory_chain_config_bus(ModuleManager& module_manager,
 static 
 void add_module_nets_cmos_memory_config_bus(ModuleManager& module_manager,
                                             const ModuleId& parent_module,
-                                            const std::vector<ModuleId>& memory_modules,
-                                            const std::vector<size_t>& memory_instances,
                                             const e_sram_orgz& sram_orgz_type) {
-  /* Ensure that the size of memory_model vector matches the memory_module vector */
-  VTR_ASSERT(memory_modules.size() == memory_instances.size());
-
   switch (sram_orgz_type) {
   case SPICE_SRAM_STANDALONE:
     /* Nothing to do */
     break;
   case SPICE_SRAM_SCAN_CHAIN: {
-    add_module_nets_cmos_memory_chain_config_bus(module_manager, parent_module, memory_modules, memory_instances, sram_orgz_type);
+    add_module_nets_cmos_memory_chain_config_bus(module_manager, parent_module, sram_orgz_type);
     break;
   }
   case SPICE_SRAM_MEMORY_BANK:
@@ -802,14 +795,11 @@ void add_module_nets_cmos_memory_config_bus(ModuleManager& module_manager,
  *******************************************************************/
 void add_module_nets_memory_config_bus(ModuleManager& module_manager,
                                        const ModuleId& parent_module,
-                                       const std::vector<ModuleId>& memory_modules,
-                                       const std::vector<size_t>& memory_instances,
                                        const e_sram_orgz& sram_orgz_type, 
                                        const e_spice_model_design_tech& mem_tech) {
   switch (mem_tech) {
   case SPICE_MODEL_DESIGN_CMOS:
     add_module_nets_cmos_memory_config_bus(module_manager, parent_module, 
-                                           memory_modules, memory_instances, 
                                            sram_orgz_type);
     break;
   case SPICE_MODEL_DESIGN_RRAM:

@@ -60,6 +60,10 @@ class ModuleManager {
     std::vector<ModuleId> child_modules(const ModuleId& parent_module) const;
     /* Find all the instances under a parent module */
     std::vector<size_t> child_module_instances(const ModuleId& parent_module, const ModuleId& child_module) const;
+    /* Find all the configurable child modules under a parent module */
+    std::vector<ModuleId> configurable_children(const ModuleId& parent_module) const;
+    /* Find all the instances of configurable child modules under a parent module */
+    std::vector<size_t> configurable_child_instances(const ModuleId& parent_module) const;
     /* Find the source ids of modules */
     module_net_src_range module_net_sources(const ModuleId& module, const ModuleNetId& net) const;
     /* Find the sink ids of modules */
@@ -135,6 +139,8 @@ class ModuleManager {
     void add_child_module(const ModuleId& parent_module, const ModuleId& child_module);
     /* Set the instance name of a child module */
     void set_child_instance_name(const ModuleId& parent_module, const ModuleId& child_module, const size_t& instance_id, const std::string& instance_name);
+    /* Add a configurable child module to module */
+    void add_configurable_child(const ModuleId& module, const ModuleId& child_module, const size_t& child_instance);
     /* Add a net to the connection graph of the module */ 
     ModuleNetId create_module_net(const ModuleId& module);
     /* Set the name of net */
@@ -164,6 +170,15 @@ class ModuleManager {
     vtr::vector<ModuleId, std::vector<ModuleId>> children_;                /* Child modules that this module contain */
     vtr::vector<ModuleId, std::vector<size_t>> num_child_instances_;          /* Number of children instance in each child module */
     vtr::vector<ModuleId, std::vector<std::vector<std::string>>> child_instance_names_;          /* Number of children instance in each child module */
+
+    /* Configurable child modules are used to record the position of configurable modules in bitstream
+     * The sequence of children in the list denotes which one is configured first, etc. 
+     * Note that the sequence can be totally different from the children_ list
+     * This is really dependent how the configuration protocol is organized
+     * which should be made by users/designers 
+     */
+    vtr::vector<ModuleId, std::vector<ModuleId>> configurable_children_;                /* Child modules with configurable memory bits that this module contain */
+    vtr::vector<ModuleId, std::vector<size_t>> configurable_child_instances_;           /* Instances of child modules with configurable memory bits that this module contain */
 
     /* Port-level data */
     vtr::vector<ModuleId, vtr::vector<ModulePortId, ModulePortId>> port_ids_;    /* List of ports for each Module */ 

@@ -229,9 +229,7 @@ void build_switch_block_mux_module(ModuleManager& module_manager,
                                    t_rr_node* cur_rr_node,
                                    const std::vector<t_rr_node*>& drive_rr_nodes,
                                    const size_t& switch_index,
-                                   const std::map<ModulePortId, ModuleNetId>& input_port_to_module_nets,
-                                   std::vector<ModuleId>& memory_modules,
-                                   std::vector<size_t>& memory_instances) {
+                                   const std::map<ModulePortId, ModuleNetId>& input_port_to_module_nets) {
   /* Check current rr_node is CHANX or CHANY*/
   VTR_ASSERT((CHANX == cur_rr_node->type)||(CHANY == cur_rr_node->type));
 
@@ -306,8 +304,7 @@ void build_switch_block_mux_module(ModuleManager& module_manager,
                                                     mem_module, mem_instance_id,
                                                     circuit_lib, mux_model);
   /* Update memory and instance list */
-  memory_modules.push_back(mem_module);
-  memory_instances.push_back(mem_instance_id);
+  module_manager.add_configurable_child(sb_module, mem_module, mem_instance_id);
 }
 
 /*********************************************************************
@@ -324,9 +321,7 @@ void build_switch_block_interc_modules(ModuleManager& module_manager,
                                        const std::vector<t_switch_inf>& rr_switches,
                                        const e_side& chan_side,
                                        const size_t& chan_node_id,
-                                       const std::map<ModulePortId, ModuleNetId>& input_port_to_module_nets,
-                                       std::vector<ModuleId>& memory_modules,
-                                       std::vector<size_t>& memory_instances) {
+                                       const std::map<ModulePortId, ModuleNetId>& input_port_to_module_nets) {
   std::vector<t_rr_node*> drive_rr_nodes;
 
   /* Get the node */
@@ -363,8 +358,7 @@ void build_switch_block_interc_modules(ModuleManager& module_manager,
                                   grids, rr_switches, chan_side, cur_rr_node,  
                                   drive_rr_nodes, 
                                   cur_rr_node->drive_switches[DEFAULT_SWITCH_ID],
-                                  input_port_to_module_nets,
-                                  memory_modules, memory_instances);
+                                  input_port_to_module_nets);
   } /*Nothing should be done else*/ 
 }
 
@@ -497,12 +491,6 @@ void build_switch_block_module(ModuleManager& module_manager,
     } 
   }
 
-  /* Vectors to record all the memory modules have been added
-   * They are used to add module nets of configuration bus
-   */
-  std::vector<ModuleId> memory_modules;
-  std::vector<size_t> memory_instances;
-  
   /* Add routing multiplexers as child modules */
   for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
     Side side_manager(side);
@@ -514,8 +502,7 @@ void build_switch_block_module(ModuleManager& module_manager,
                                           circuit_lib, grids, rr_switches, 
                                           side_manager.get_side(), 
                                           itrack, 
-                                          input_port_to_module_nets,
-                                          memory_modules, memory_instances);
+                                          input_port_to_module_nets);
       } 
     }
   }
@@ -547,9 +534,8 @@ void build_switch_block_module(ModuleManager& module_manager,
   /* Add all the nets to connect configuration ports from memory module to primitive modules
    * This is a one-shot addition that covers all the memory modules in this primitive module!
    */
-  if (false == memory_modules.empty()) {
+  if (0 < module_manager.configurable_children(sb_module).size()) {
     add_module_nets_memory_config_bus(module_manager, sb_module, 
-                                      memory_modules, memory_instances,
                                       sram_orgz_type, circuit_lib.design_tech_type(sram_model));
   }
 }
@@ -701,9 +687,7 @@ void build_connection_block_mux_module(ModuleManager& module_manager,
                                        const std::vector<std::vector<t_grid_tile>>& grids,
                                        const std::vector<t_switch_inf>& rr_switches,
                                        t_rr_node* cur_rr_node,
-                                       const std::map<ModulePortId, ModuleNetId>& input_port_to_module_nets,
-                                       std::vector<ModuleId>& memory_modules,
-                                       std::vector<size_t>& memory_instances) {
+                                       const std::map<ModulePortId, ModuleNetId>& input_port_to_module_nets) {
   /* Check current rr_node is an input pin of a CLB */
   VTR_ASSERT(IPIN == cur_rr_node->type);
 
@@ -785,8 +769,7 @@ void build_connection_block_mux_module(ModuleManager& module_manager,
                                                     mem_module, mem_instance_id,
                                                     circuit_lib, mux_model);
   /* Update memory and instance list */
-  memory_modules.push_back(mem_module);
-  memory_instances.push_back(mem_instance_id);
+  module_manager.add_configurable_child(cb_module, mem_module, mem_instance_id);
 }
 
 /********************************************************************
@@ -805,9 +788,7 @@ void build_connection_block_interc_modules(ModuleManager& module_manager,
                                            const std::vector<std::vector<t_grid_tile>>& grids,
                                            const std::vector<t_switch_inf>& rr_switches,
                                            t_rr_node* src_rr_node,
-                                           const std::map<ModulePortId, ModuleNetId>& input_port_to_module_nets,
-                                           std::vector<ModuleId>& memory_modules,
-                                           std::vector<size_t>& memory_instances) {
+                                           const std::map<ModulePortId, ModuleNetId>& input_port_to_module_nets) {
   if (1 > src_rr_node->fan_in) {
     return; /* This port has no driver, skip it */
   } else if (1 == src_rr_node->fan_in) {
@@ -820,8 +801,7 @@ void build_connection_block_interc_modules(ModuleManager& module_manager,
                                       cb_module, rr_gsb, cb_type, 
                                       circuit_lib, grids, rr_switches, 
                                       src_rr_node, 
-                                      input_port_to_module_nets,
-                                      memory_modules, memory_instances); 
+                                      input_port_to_module_nets); 
   } /*Nothing should be done else*/ 
 }
 
@@ -973,12 +953,6 @@ void build_connection_block_module(ModuleManager& module_manager,
     }
   }
 
-  /* Vectors to record all the memory modules have been added
-   * They are used to add module nets of configuration bus
-   */
-  std::vector<ModuleId> memory_modules;
-  std::vector<size_t> memory_instances;
-
   /* TODO: Add sub modules of routing multiplexers or direct interconnect*/
   for (size_t iside = 0; iside < cb_ipin_sides.size(); ++iside) {
     enum e_side cb_ipin_side = cb_ipin_sides[iside];
@@ -987,8 +961,7 @@ void build_connection_block_module(ModuleManager& module_manager,
                                             cb_module, rr_gsb, cb_type, 
                                             circuit_lib, grids, rr_switches, 
                                             rr_gsb.get_ipin_node(cb_ipin_side, inode),
-                                            input_port_to_module_nets,
-                                            memory_modules, memory_instances);
+                                            input_port_to_module_nets);
     }
   }
 
@@ -1019,9 +992,8 @@ void build_connection_block_module(ModuleManager& module_manager,
   /* Add all the nets to connect configuration ports from memory module to primitive modules
    * This is a one-shot addition that covers all the memory modules in this primitive module!
    */
-  if (false == memory_modules.empty()) {
+  if (0 < module_manager.configurable_children(cb_module).size()) {
     add_module_nets_memory_config_bus(module_manager, cb_module, 
-                                      memory_modules, memory_instances,
                                       sram_orgz_type, circuit_lib.design_tech_type(sram_model));
   }
 }
