@@ -241,7 +241,7 @@ std::vector<std::vector<size_t>> add_top_module_switch_block_instances(ModuleMan
     for (size_t iy = 0; iy < sb_range.get_y(); ++iy) {
       /* If we use compact routing hierarchy, we should instanciate the unique module of SB */
       const RRGSB& rr_gsb = L_device_rr_gsb.get_gsb(ix, iy);
-      vtr::Point<size_t> sb_coordinate(rr_gsb.get_sb_x(), rr_gsb.get_sb_x());
+      vtr::Point<size_t> sb_coordinate(rr_gsb.get_sb_x(), rr_gsb.get_sb_y());
       if (true == compact_routing_hierarchy) {
         DeviceCoordinator sb_coord(ix, iy);
         const RRGSB& unique_mirror = L_device_rr_gsb.get_sb_unique_module(sb_coord);
