@@ -71,8 +71,16 @@ void vpr_fpga_x2p_tool_suites(t_vpr_setup vpr_setup,
     }
   } 
 
+  /* Organize a vector (matrix) of clb2clb directs to feed the top-level module generation */
+  std::vector<t_clb_to_clb_directs> clb2clb_directs;
+  for (int i = 0; i < num_clb2clb_directs; ++i) {
+    clb2clb_directs.push_back(clb2clb_direct[i]); 
+  }
+
   /* Build module graphs */
-  ModuleManager module_manager = build_device_module_graph(vpr_setup, Arch, mux_lib, grids, rr_switches, device_rr_gsb);
+  ModuleManager module_manager = build_device_module_graph(vpr_setup, Arch, mux_lib, 
+                                                           device_size, grids, 
+                                                           rr_switches, clb2clb_directs, device_rr_gsb);
 
   /* Xifan TANG: SPICE Modeling, SPICE Netlist Output  */ 
   if (TRUE == vpr_setup.FPGA_SPICE_Opts.SpiceOpts.do_spice) {

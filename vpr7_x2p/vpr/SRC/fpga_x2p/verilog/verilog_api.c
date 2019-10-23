@@ -326,29 +326,9 @@ void vpr_fpga_verilog(ModuleManager& module_manager,
   /* TODO: This is the old function, which will be deprecated when refactoring is done */
   dump_verilog_config_peripherals(sram_verilog_orgz_info, src_dir_path, submodule_dir_path);
 
-  /* Print top-level Verilog module */
-  vtr::Point<size_t> device_size(nx + 2, ny + 2);
-  std::vector<std::vector<t_grid_tile>> grids;
-  /* Organize a vector (matrix) of grids to feed the top-level module generation */
-  grids.resize(device_size.x());
-  for (size_t ix = 0; ix < device_size.x(); ++ix) {
-    grids[ix].resize(device_size.y());
-    for (size_t iy = 0; iy < device_size.y(); ++iy) {
-      grids[ix][iy] = grid[ix][iy];
-    }
-  } 
-  /* Organize a vector (matrix) of clb2clb directs to feed the top-level module generation */
-  std::vector<t_clb_to_clb_directs> clb2clb_directs;
-  for (int i = 0; i < num_clb2clb_directs; ++i) {
-    clb2clb_directs.push_back(clb2clb_direct[i]); 
-  }
-  print_verilog_top_module(module_manager, Arch.spice->circuit_lib, 
-                           device_size, grids, device_rr_gsb, 
-                           clb2clb_directs, 
-                           sram_verilog_orgz_info, 
+  print_verilog_top_module(module_manager, 
                            std::string(vpr_setup.FileNameOpts.ArchFile), 
                            std::string(src_dir_path),
-                           TRUE == vpr_setup.FPGA_SPICE_Opts.compact_routing_hierarchy,
                            TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.dump_explicit_verilog);
   
   /* TODO: This is the old function, which will be deprecated when refactoring is done */

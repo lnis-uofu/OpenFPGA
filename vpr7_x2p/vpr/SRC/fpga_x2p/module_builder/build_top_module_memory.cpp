@@ -22,8 +22,8 @@
 static 
 void organize_top_module_tile_cb_modules(const ModuleManager& module_manager, 
                                          const CircuitLibrary& circuit_lib,
+                                         const e_sram_orgz& sram_orgz_type,
                                          const CircuitModelId& sram_model,
-                                         t_sram_orgz_info* cur_sram_orgz_info,
                                          const std::vector<std::vector<size_t>>& cb_instance_ids,
                                          const DeviceRRGSB& L_device_rr_gsb,
                                          const RRGSB& rr_gsb,
@@ -54,7 +54,7 @@ void organize_top_module_tile_cb_modules(const ModuleManager& module_manager,
    */
   if (0 < find_module_num_config_bits(module_manager, cb_module,
                                       circuit_lib, sram_model, 
-                                      cur_sram_orgz_info->type)) {
+                                      sram_orgz_type)) {
     memory_modules.push_back(cb_module);
     memory_instances.push_back(cb_instance_ids[cb_coord.x()][cb_coord.y()]);
   }
@@ -69,8 +69,8 @@ void organize_top_module_tile_cb_modules(const ModuleManager& module_manager,
 static 
 void organize_top_module_tile_memory_modules(const ModuleManager& module_manager, 
                                              const CircuitLibrary& circuit_lib,
+                                             const e_sram_orgz& sram_orgz_type,
                                              const CircuitModelId& sram_model,
-                                             t_sram_orgz_info* cur_sram_orgz_info,
                                              const std::vector<std::vector<t_grid_tile>>& grids,
                                              const std::vector<std::vector<size_t>>& grid_instance_ids,
                                              const DeviceRRGSB& L_device_rr_gsb,
@@ -109,21 +109,21 @@ void organize_top_module_tile_memory_modules(const ModuleManager& module_manager
      */
     if (0 < find_module_num_config_bits(module_manager, sb_module,
                                         circuit_lib, sram_model, 
-                                        cur_sram_orgz_info->type)) {
+                                        sram_orgz_type)) {
       memory_modules.push_back(sb_module);
       memory_instances.push_back(sb_instance_ids[sb_coord.x()][sb_coord.y()]);
     }
     
     /* Try to find and add CBX and CBY */
     organize_top_module_tile_cb_modules(module_manager, circuit_lib,
-                                        sram_model, cur_sram_orgz_info,
+                                        sram_orgz_type, sram_model,
                                         cb_instance_ids.at(CHANX),
                                         L_device_rr_gsb, rr_gsb, CHANX,
                                         compact_routing_hierarchy,
                                         memory_modules, memory_instances);
 
     organize_top_module_tile_cb_modules(module_manager, circuit_lib,
-                                        sram_model, cur_sram_orgz_info,
+                                        sram_orgz_type, sram_model,
                                         cb_instance_ids.at(CHANY),
                                         L_device_rr_gsb, rr_gsb, CHANY,
                                         compact_routing_hierarchy,
@@ -142,7 +142,7 @@ void organize_top_module_tile_memory_modules(const ModuleManager& module_manager
    */
   if (0 < find_module_num_config_bits(module_manager, grid_module,
                                       circuit_lib, sram_model, 
-                                      cur_sram_orgz_info->type)) {
+                                      sram_orgz_type)) {
     memory_modules.push_back(grid_module);
     memory_instances.push_back(grid_instance_ids[tile_coord.x()][tile_coord.y()]);
   }
@@ -209,8 +209,8 @@ void organize_top_module_tile_memory_modules(const ModuleManager& module_manager
  *******************************************************************/
 void organize_top_module_memory_modules(const ModuleManager& module_manager, 
                                         const CircuitLibrary& circuit_lib,
+                                        const e_sram_orgz& sram_orgz_type,
                                         const CircuitModelId& sram_model,
-                                        t_sram_orgz_info* cur_sram_orgz_info,
                                         const vtr::Point<size_t>& device_size,
                                         const std::vector<std::vector<t_grid_tile>>& grids,
                                         const std::vector<std::vector<size_t>>& grid_instance_ids,
@@ -255,7 +255,7 @@ void organize_top_module_memory_modules(const ModuleManager& module_manager,
     for (const vtr::Point<size_t>& io_coord : io_coords[io_side]) {
       /* Identify the GSB that surrounds the grid */
       organize_top_module_tile_memory_modules(module_manager, 
-                                              circuit_lib, sram_model, cur_sram_orgz_info,
+                                              circuit_lib, sram_orgz_type, sram_model,
                                               grids, grid_instance_ids,
                                               L_device_rr_gsb, sb_instance_ids, cb_instance_ids,
                                               compact_routing_hierarchy,
@@ -286,7 +286,7 @@ void organize_top_module_memory_modules(const ModuleManager& module_manager,
 
   for (const vtr::Point<size_t>& core_coord : core_coords) {
     organize_top_module_tile_memory_modules(module_manager, 
-                                            circuit_lib, sram_model, cur_sram_orgz_info,
+                                            circuit_lib, sram_orgz_type, sram_model, 
                                             grids, grid_instance_ids,
                                             L_device_rr_gsb, sb_instance_ids, cb_instance_ids,
                                             compact_routing_hierarchy,

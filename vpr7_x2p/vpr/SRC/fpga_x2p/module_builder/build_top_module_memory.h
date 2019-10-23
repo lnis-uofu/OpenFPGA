@@ -10,8 +10,8 @@
 
 void organize_top_module_memory_modules(const ModuleManager& module_manager, 
                                         const CircuitLibrary& circuit_lib,
+                                        const e_sram_orgz& sram_orgz_type,
                                         const CircuitModelId& sram_model,
-                                        t_sram_orgz_info* cur_sram_orgz_info,
                                         const vtr::Point<size_t>& device_size,
                                         const std::vector<std::vector<t_grid_tile>>& grids,
                                         const std::vector<std::vector<size_t>>& grid_instance_ids,

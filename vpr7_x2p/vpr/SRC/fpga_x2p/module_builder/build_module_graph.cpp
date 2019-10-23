@@ -19,6 +19,7 @@
 #include "build_memory_modules.h"
 #include "build_grid_modules.h"
 #include "build_routing_modules.h"
+#include "build_top_module.h"
 #include "build_module_graph.h"
 
 /********************************************************************
@@ -28,8 +29,10 @@
 ModuleManager build_device_module_graph(const t_vpr_setup& vpr_setup,
                                         const t_arch& arch,
                                         const MuxLibrary& mux_lib,
+                                        const vtr::Point<size_t>& device_size,
                                         const std::vector<std::vector<t_grid_tile>>& grids,
                                         const std::vector<t_switch_inf>& rr_switches,
+                                        const std::vector<t_clb_to_clb_directs>& clb2clb_directs,
                                         const DeviceRRGSB& L_device_rr_gsb) {
   /* Check if the routing architecture we support*/
   if (UNI_DIRECTIONAL != vpr_setup.RoutingArch.directionality) {
@@ -121,7 +124,12 @@ ModuleManager build_device_module_graph(const t_vpr_setup& vpr_setup,
   }
 
 
-  /* TODO: Build FPGA fabric top-level module */
+  /* Build FPGA fabric top-level module */
+  build_top_module(module_manager, arch.spice->circuit_lib, 
+                   device_size, grids, L_device_rr_gsb, 
+                   clb2clb_directs, 
+                   arch.sram_inf.verilog_sram_inf_orgz->type, sram_model, 
+                   TRUE == vpr_setup.FPGA_SPICE_Opts.compact_routing_hierarchy);
 
   /* End time count */
   clock_t t_end = clock();
