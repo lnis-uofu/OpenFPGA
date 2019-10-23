@@ -1,14 +1,14 @@
 /**************************************************
  * This file includes only declarations for 
- * the data structures for module managers
- * Please refer to module_manager.h for more details
+ * the data structures for bitstream database
+ * Please refer to bitstream_context.h for more details
  *************************************************/
-#ifndef MODULE_MANAGER_FWD_H
-#define MODULE_MANAGER_FWD_H
+#ifndef BITSTREAM_CONTEXT_FWD_H
+#define BITSTREAM_CONTEXT_MANAGER_FWD_H
 
 #include "vtr_strong_id.h"
 
-/* Strong Ids for ModuleManager */
+/* Strong Ids for BitstreamContext */
 struct config_bit_id_tag;
 
 typedef vtr::StrongId<config_bit_id_tag> ConfigBitId;
