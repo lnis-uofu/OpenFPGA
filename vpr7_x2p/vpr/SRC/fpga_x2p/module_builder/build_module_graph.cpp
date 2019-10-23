@@ -2,6 +2,7 @@
  * This file includes the main function to build module graphs
  * for the FPGA fabric
  *******************************************************************/
+#include <vector>
 #include <time.h>
 #include <unistd.h>
 
@@ -17,6 +18,7 @@
 #include "build_wire_modules.h"
 #include "build_memory_modules.h"
 #include "build_grid_modules.h"
+#include "build_routing_modules.h"
 #include "build_module_graph.h"
 
 /********************************************************************
@@ -25,7 +27,10 @@
  *******************************************************************/
 ModuleManager build_device_module_graph(const t_vpr_setup& vpr_setup,
                                         const t_arch& arch,
-                                        const MuxLibrary& mux_lib) {
+                                        const MuxLibrary& mux_lib,
+                                        const std::vector<std::vector<t_grid_tile>>& grids,
+                                        const std::vector<t_switch_inf>& rr_switches,
+                                        const DeviceRRGSB& L_device_rr_gsb) {
   /* Check if the routing architecture we support*/
   if (UNI_DIRECTIONAL != vpr_setup.RoutingArch.directionality) {
     vpr_printf(TIO_MESSAGE_ERROR, 
@@ -104,7 +109,17 @@ ModuleManager build_device_module_graph(const t_vpr_setup& vpr_setup,
   build_grid_modules(module_manager, arch.spice->circuit_lib, mux_lib,  
                      arch.sram_inf.verilog_sram_inf_orgz->type, sram_model);
 
-  /* TODO: Build global routing architecture modules */
+  if (TRUE == vpr_setup.FPGA_SPICE_Opts.compact_routing_hierarchy) {
+    build_unique_routing_modules(module_manager, L_device_rr_gsb, arch.spice->circuit_lib, 
+                                 arch.sram_inf.verilog_sram_inf_orgz->type, sram_model, grids, 
+                                 vpr_setup.RoutingArch, rr_switches);
+  } else {
+    VTR_ASSERT(FALSE == vpr_setup.FPGA_SPICE_Opts.compact_routing_hierarchy);
+    build_flatten_routing_modules(module_manager, L_device_rr_gsb, arch.spice->circuit_lib, 
+                                  arch.sram_inf.verilog_sram_inf_orgz->type, sram_model, grids, 
+                                  vpr_setup.RoutingArch, rr_switches);
+  }
+
 
   /* TODO: Build FPGA fabric top-level module */
 

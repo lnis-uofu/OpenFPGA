@@ -142,13 +142,7 @@ void dump_verilog_routing_connection_box_subckt(t_sram_orgz_info* cur_sram_orgz_
                                                 boolean compact_routing_hierarchy,
                                                 bool is_explicit_mapping);
 
-
-std::string generate_grid_side_port_name(const vtr::Point<size_t>& coordinate,
-                                         const e_side& side, 
-                                         const size_t& pin_id);
-
 void print_verilog_routing_resources(ModuleManager& module_manager,
-                                     const MuxLibrary& mux_lib,
                                      t_sram_orgz_info* cur_sram_orgz_info,
                                      char* verilog_dir,
                                      char* subckt_dir,
@@ -158,5 +152,19 @@ void print_verilog_routing_resources(ModuleManager& module_manager,
                                      t_ivec*** LL_rr_node_indices,
                                      t_rr_indexed_data* LL_rr_indexed_data,
                                      const t_fpga_spice_opts& FPGA_SPICE_Opts);
+
+void print_verilog_flatten_routing_modules(ModuleManager& module_manager,
+                                           const DeviceRRGSB& L_device_rr_gsb,
+                                           const t_det_routing_arch& routing_arch,
+                                           const std::string& verilog_dir,
+                                           const std::string& subckt_dir,
+                                           const bool& use_explicit_port_map);
+
+void print_verilog_unique_routing_modules(ModuleManager& module_manager,
+                                          const DeviceRRGSB& L_device_rr_gsb,
+                                          const t_det_routing_arch& routing_arch,
+                                          const std::string& verilog_dir,
+                                          const std::string& subckt_dir,
+                                          const bool& use_explicit_port_map);
 
 #endif

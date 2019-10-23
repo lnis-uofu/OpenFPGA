@@ -13,6 +13,7 @@
 #include <vector>
 
 /* Include vpr structs*/
+#include "vtr_assert.h"
 #include "vtr_geometry.h"
 #include "util.h"
 #include "physical_types.h"
@@ -280,10 +281,24 @@ void vpr_fpga_verilog(ModuleManager& module_manager,
                           vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts);
 
   /* Dump routing resources: switch blocks, connection blocks and channel tracks */
-  print_verilog_routing_resources(module_manager, mux_lib, sram_verilog_orgz_info, 
+  print_verilog_routing_resources(module_manager, sram_verilog_orgz_info, 
                                   src_dir_path, rr_dir_path, Arch, vpr_setup.RoutingArch,
                                   num_rr_nodes, rr_node, rr_node_indices, rr_indexed_data,
                                   vpr_setup.FPGA_SPICE_Opts);
+
+  if (TRUE == vpr_setup.FPGA_SPICE_Opts.compact_routing_hierarchy) {
+    print_verilog_unique_routing_modules(module_manager, device_rr_gsb,  
+                                         vpr_setup.RoutingArch,
+                                         std::string(src_dir_path), std::string(rr_dir_path),
+                                         TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.dump_explicit_verilog);
+  } else {
+    VTR_ASSERT(FALSE == vpr_setup.FPGA_SPICE_Opts.compact_routing_hierarchy);
+    print_verilog_flatten_routing_modules(module_manager, device_rr_gsb, 
+                                          vpr_setup.RoutingArch,
+                                          std::string(src_dir_path), std::string(rr_dir_path),
+                                          TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.dump_explicit_verilog);
+  }
+
 
   /* Dump logic blocks 
    * Branches to go: 

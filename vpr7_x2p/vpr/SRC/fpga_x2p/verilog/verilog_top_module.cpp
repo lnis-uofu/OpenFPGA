@@ -19,7 +19,7 @@
 #include "build_top_module_directs.h"
 
 #include "verilog_global.h"
-#include "verilog_routing.h"
+#include "build_module_graph_utils.h"
 #include "verilog_writer_utils.h"
 #include "verilog_module_writer.h"
 #include "verilog_top_module.h"
@@ -401,7 +401,7 @@ void add_top_module_nets_connect_grids_and_sb(ModuleManager& module_manager,
       /* Collect sink-related information */
       vtr::Point<size_t> sink_sb_port_coord(module_sb.get_opin_node(side_manager.get_side(), inode)->xlow,
                                             module_sb.get_opin_node(side_manager.get_side(), inode)->ylow);
-      std::string sink_sb_port_name = generate_grid_side_port_name(sink_sb_port_coord,
+      std::string sink_sb_port_name = generate_grid_side_port_name(grids, sink_sb_port_coord,
                                                                    module_sb.get_opin_node_grid_side(side_manager.get_side(), inode),
                                                                    src_grid_pin_index); 
       ModulePortId sink_sb_port_id = module_manager.find_module_port(sink_sb_module, sink_sb_port_name);
@@ -526,7 +526,7 @@ void add_top_module_nets_connect_grids_and_cb(ModuleManager& module_manager,
       /* Collect source-related information */
       t_rr_node* module_ipin_node = module_cb.get_ipin_node(cb_ipin_side, inode);
       vtr::Point<size_t> cb_src_port_coord(module_ipin_node->xlow, module_ipin_node->ylow);
-      std::string src_cb_port_name = generate_grid_side_port_name(cb_src_port_coord,
+      std::string src_cb_port_name = generate_grid_side_port_name(grids, cb_src_port_coord,
                                                                   module_cb.get_ipin_node_grid_side(cb_ipin_side, inode),
                                                                   module_ipin_node->ptc_num); 
       ModulePortId src_cb_port_id = module_manager.find_module_port(src_cb_module, src_cb_port_name);

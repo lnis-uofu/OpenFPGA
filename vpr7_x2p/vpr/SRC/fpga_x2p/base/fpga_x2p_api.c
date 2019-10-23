@@ -10,6 +10,7 @@
 #include <assert.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <vector>
 
 /* Include vpr structs*/
 #include "util.h"
@@ -34,6 +35,7 @@
 #include "verilog_api.h"
 #include "fpga_bitstream.h"
 
+#include "fpga_x2p_globals.h"
 #include "fpga_x2p_api.h"
 
 /* Top-level API of FPGA-SPICE */
@@ -50,8 +52,27 @@ void vpr_fpga_x2p_tool_suites(t_vpr_setup vpr_setup,
   /* Build multiplexer graphs */
   MuxLibrary mux_lib = build_device_mux_library(num_rr_nodes, rr_node, switch_inf, Arch.spice->circuit_lib, &vpr_setup.RoutingArch);
 
+  /* TODO: Build global routing architecture modules */
+  /* Create a vector of switch infs. TODO: this should be replaced switch objects!!! */
+  std::vector<t_switch_inf> rr_switches;
+  for (short i = 0; i < vpr_setup.RoutingArch.num_switch; ++i) {
+    rr_switches.push_back(switch_inf[i]);
+  }
+
+  /* TODO: This should be done outside this function!!! */
+  vtr::Point<size_t> device_size(nx + 2, ny + 2);
+  std::vector<std::vector<t_grid_tile>> grids;
+  /* Organize a vector (matrix) of grids to feed the top-level module generation */
+  grids.resize(device_size.x());
+  for (size_t ix = 0; ix < device_size.x(); ++ix) {
+    grids[ix].resize(device_size.y());
+    for (size_t iy = 0; iy < device_size.y(); ++iy) {
+      grids[ix][iy] = grid[ix][iy];
+    }
+  } 
+
   /* Build module graphs */
-  ModuleManager module_manager = build_device_module_graph(vpr_setup, Arch, mux_lib);
+  ModuleManager module_manager = build_device_module_graph(vpr_setup, Arch, mux_lib, grids, rr_switches, device_rr_gsb);
 
   /* Xifan TANG: SPICE Modeling, SPICE Netlist Output  */ 
   if (TRUE == vpr_setup.FPGA_SPICE_Opts.SpiceOpts.do_spice) {
