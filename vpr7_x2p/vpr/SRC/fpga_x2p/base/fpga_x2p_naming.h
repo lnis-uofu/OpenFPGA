@@ -145,6 +145,12 @@ std::string generate_grid_block_module_name(const std::string& prefix,
                                             const bool& is_block_io,
                                             const e_side& io_side);
 
+std::string generate_grid_block_instance_name(const std::string& prefix,
+                                              const std::string& block_name,
+                                              const bool& is_block_io,
+                                              const e_side& io_side,
+                                              const vtr::Point<size_t>& grid_coord);
+
 std::string generate_physical_block_module_name(const std::string& prefix,
                                                 t_pb_type* physical_pb_type);
 

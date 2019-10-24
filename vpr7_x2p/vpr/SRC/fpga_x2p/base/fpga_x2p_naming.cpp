@@ -735,6 +735,26 @@ std::string generate_grid_block_module_name(const std::string& prefix,
 }
 
 /*********************************************************************
+ * Generate the instance name of a grid block
+ **********************************************************************/
+std::string generate_grid_block_instance_name(const std::string& prefix,
+                                              const std::string& block_name,
+                                              const bool& is_block_io,
+                                              const e_side& io_side,
+                                              const vtr::Point<size_t>& grid_coord) {
+  std::string module_name(prefix);
+
+  module_name += generate_grid_block_netlist_name(block_name, is_block_io, io_side, std::string());
+  module_name += std::string("_");
+  module_name += std::to_string(grid_coord.x());
+  module_name += std::string("_");
+  module_name += std::to_string(grid_coord.y());
+
+  return module_name;
+}
+
+
+/*********************************************************************
  * Generate the module name of a physical block
  * To ensure a unique name for each physical block inside the graph of complex blocks
  * (pb_graph_nodes), this function trace backward to the top-level node

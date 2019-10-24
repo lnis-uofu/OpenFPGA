@@ -92,7 +92,8 @@ static
 size_t add_top_module_grid_instance(ModuleManager& module_manager,
                                     const ModuleId& top_module,
                                     t_type_ptr grid_type,
-                                    const e_side& border_side) {
+                                    const e_side& border_side,
+                                    const vtr::Point<size_t>& grid_coord) {
   /* Find the module name for this type of grid */
   std::string grid_module_name_prefix(grid_verilog_file_name_prefix);
   std::string grid_module_name = generate_grid_block_module_name(grid_module_name_prefix, std::string(grid_type->name), IO_TYPE == grid_type, border_side);
@@ -102,6 +103,11 @@ size_t add_top_module_grid_instance(ModuleManager& module_manager,
   size_t grid_instance = module_manager.num_instance(top_module, grid_module);
   /* Add the module to top_module */ 
   module_manager.add_child_module(top_module, grid_module);
+  /* Set an unique name to the instance
+   * Note: it is your risk to gurantee the name is unique!
+   */
+  std::string instance_name = generate_grid_block_instance_name(grid_module_name_prefix, std::string(grid_type->name), IO_TYPE == grid_type, border_side, grid_coord);
+  module_manager.set_child_instance_name(top_module, grid_module, grid_instance, instance_name);
 
   return grid_instance;
 }
@@ -164,9 +170,10 @@ std::vector<std::vector<size_t>> add_top_module_grid_instances(ModuleManager& mo
       /* We should not meet any I/O grid */
       VTR_ASSERT(IO_TYPE != grids[ix][iy].type);
       /* Add a grid module to top_module*/
+      vtr::Point<size_t> grid_coord(ix, iy);
       grid_instance_ids[ix][iy] = add_top_module_grid_instance(module_manager, top_module,
                                                                grids[ix][iy].type,
-                                                               NUM_SIDES);
+                                                               NUM_SIDES, grid_coord);
     }
   }
 
@@ -209,7 +216,7 @@ std::vector<std::vector<size_t>> add_top_module_grid_instances(ModuleManager& mo
       /* We should not meet any I/O grid */
       VTR_ASSERT(IO_TYPE == grids[io_coordinate.x()][io_coordinate.y()].type);
       /* Add a grid module to top_module*/
-      grid_instance_ids[io_coordinate.x()][io_coordinate.y()] = add_top_module_grid_instance(module_manager, top_module, grids[io_coordinate.x()][io_coordinate.y()].type, io_side);
+      grid_instance_ids[io_coordinate.x()][io_coordinate.y()] = add_top_module_grid_instance(module_manager, top_module, grids[io_coordinate.x()][io_coordinate.y()].type, io_side, io_coordinate);
     }
   }
 
@@ -255,6 +262,12 @@ std::vector<std::vector<size_t>> add_top_module_switch_block_instances(ModuleMan
       sb_instance_ids[rr_gsb.get_sb_x()][rr_gsb.get_sb_y()] = module_manager.num_instance(top_module, sb_module);
       /* Add the module to top_module */ 
       module_manager.add_child_module(top_module, sb_module);
+      /* Set an unique name to the instance
+       * Note: it is your risk to gurantee the name is unique!
+       */
+      module_manager.set_child_instance_name(top_module, sb_module, 
+                                             sb_instance_ids[rr_gsb.get_sb_x()][rr_gsb.get_sb_y()],
+                                             generate_switch_block_module_name(vtr::Point<size_t>(rr_gsb.get_sb_x(), rr_gsb.get_sb_y())));
     }
   }
 
@@ -307,6 +320,13 @@ std::vector<std::vector<size_t>> add_top_module_connection_block_instances(Modul
       cb_instance_ids[rr_gsb.get_cb_x(cb_type)][rr_gsb.get_cb_y(cb_type)] = module_manager.num_instance(top_module, cb_module);
       /* Add the module to top_module */ 
       module_manager.add_child_module(top_module, cb_module);
+      /* Set an unique name to the instance
+       * Note: it is your risk to gurantee the name is unique!
+       */
+      module_manager.set_child_instance_name(top_module, cb_module, 
+                                             cb_instance_ids[rr_gsb.get_cb_x(cb_type)][rr_gsb.get_cb_y(cb_type)],
+                                             generate_connection_block_module_name(cb_type, vtr::Point<size_t>(rr_gsb.get_cb_x(cb_type), rr_gsb.get_cb_y(cb_type))));
+
     }
   }
 
