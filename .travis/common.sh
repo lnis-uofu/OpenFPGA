@@ -31,12 +31,12 @@ function end_section() {
 
 # For Mac OS, we use g++ and gcc as default compilers
 if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
-  export CC=gcc-4.9
-  export CXX=g++-4.9
+  export CC=gcc-6
+  export CXX=g++-6
   # export PATH="/usr/local/opt/bison/bin:/usr/local/bin:$PATH"
   # export PATH="/usr/local/opt/qt/bin:$PATH"
   # Install header files in Mojave, if not gcc-4.9 cannot spot stdio.h
-  sudo installer -pkg /Library/Developer/CommandLineTools/Packages/macOS_SDK_headers_for_macOS_10.14.pkg -target /
+  sudo installer -pkg /Library/Developer/CommandLineTools/Packages/macOS_SDK_headers_for_macOS_10.14.pkg -target / -allowUntrusted
 else
   # For linux, we use g++-8 and gcc-8 as default compilers
   export CC=gcc-8
