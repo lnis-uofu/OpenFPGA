@@ -3,9 +3,12 @@
  * which are based on different technology
  *******************************************************************/
 #include "vtr_assert.h"
+#include "vtr_vector.h"
 
 #include "mux_utils.h"
+#include "decoder_library_utils.h"
 #include "fpga_x2p_types.h"
+#include "fpga_x2p_utils.h"
 
 #include "build_mux_bitstream.h"
 
@@ -74,7 +77,53 @@ std::vector<bool> build_cmos_mux_bitstream(const CircuitLibrary& circuit_lib,
   VTR_ASSERT(1 == mux_graph.outputs().size());
 
   /* Generate the memory bits */
-  return mux_graph.decode_memory_bits(MuxInputId(datapath_id), mux_graph.output_id(mux_graph.outputs()[0]));
+  vtr::vector<MuxMemId, bool> raw_bitstream = mux_graph.decode_memory_bits(MuxInputId(datapath_id), mux_graph.output_id(mux_graph.outputs()[0]));
+
+  std::vector<bool> mux_bitstream;
+  for (const bool& bit : mux_bitstream) {
+    mux_bitstream.push_back(bit);
+  }
+
+  /* Consider local encoder support, we need further encode the bitstream */
+  if (false == circuit_lib.mux_use_local_encoder(mux_model)) {
+    return mux_bitstream;
+  }
+
+  /* Clear the mux_bitstream, we need to apply encoding */
+  mux_bitstream.clear();
+
+  /* Encode the memory bits level by level,
+   * One local encoder is used for each level of multiplexers 
+   */
+  for (const size_t& level : mux_graph.levels()) {
+    /* The encoder will convert the path_id to a binary number 
+     * For example: when path_id=3 (use the 4th input), using a 4-input encoder 
+     * the sram_bits will be the 4-digit binary number of 3: 0100
+     */
+    std::vector<size_t> encoder_data;
+    for (size_t mem_index = 0; mem_index < mux_graph.memories_at_level(level).size(); ++mem_index) {
+      /* Conversion rule: true = 1, false = 0 */
+      if (true == raw_bitstream[mux_graph.memories_at_level(level)[mem_index]]) {
+        encoder_data.push_back(mem_index);
+      } 
+    }
+    /* There should be at most one '1' */
+    VTR_ASSERT( (0 == encoder_data.size()) || (1 == encoder_data.size()));
+    /* Convert to encoded bits */
+    std::vector<size_t> encoder_addr;
+    if (0 == encoder_data.size()) { 
+      encoder_addr = my_itobin_vec(0, find_mux_local_decoder_addr_size(mux_graph.memories_at_level(level).size()));
+    } else {
+      VTR_ASSERT(1 == encoder_data.size());
+      encoder_addr = my_itobin_vec(encoder_data[0], find_mux_local_decoder_addr_size(mux_graph.memories_at_level(level).size()));
+    }
+    /* Build final mux bitstream */
+    for (const size_t& bit : encoder_addr) {
+      mux_bitstream.push_back((bool)bit);
+    }
+  } 
+
+  return mux_bitstream;
 }
 
 /********************************************************************

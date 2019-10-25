@@ -83,6 +83,8 @@ class MuxGraph {
     size_t num_memory_bits() const;
     /* Find the number of SRAMs at a level in the MUX graph */
     size_t num_memory_bits_at_level(const size_t& level) const;
+    /* Return memory id at level */
+    std::vector<MuxMemId> memories_at_level(const size_t& level) const;
     /* Find the number of nodes at a given level in the MUX graph */
     size_t num_nodes_at_level(const size_t& level) const;
     /* Find the level of a node */
@@ -122,8 +124,8 @@ class MuxGraph {
      * This function will start from the input node 
      * and do a forward propagation until reaching the output node  
      */
-    std::vector<bool> decode_memory_bits(const MuxInputId& input_id,
-                                           const MuxOutputId& output_id) const;
+    vtr::vector<MuxMemId, bool> decode_memory_bits(const MuxInputId& input_id,
+                                                   const MuxOutputId& output_id) const;
     /* Find the input node that the memory bits will route an output node to 
      * This function backward propagate from the output node to an input node
      * assuming the memory bits are applied  

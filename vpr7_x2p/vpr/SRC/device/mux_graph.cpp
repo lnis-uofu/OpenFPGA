@@ -192,6 +192,14 @@ size_t MuxGraph::num_memory_bits_at_level(const size_t& level) const {
   return mem_lookup_[level].size(); 
 }
 
+/* Return memory id at level */
+std::vector<MuxMemId> MuxGraph::memories_at_level(const size_t& level) const {
+  /* need to check if the graph is valid or not */
+  VTR_ASSERT_SAFE(valid_level(level));
+  VTR_ASSERT_SAFE(valid_mux_graph());
+  return mem_lookup_[level]; 
+}
+
 /* Find the number of nodes at a given level in the MUX graph */
 size_t MuxGraph::num_nodes_at_level(const size_t& level) const {
   /* validate the level numbers */
@@ -533,10 +541,10 @@ MuxNodeId MuxGraph::node_id(const size_t& node_level, const size_t& node_index_a
 }
 
 /* Decode memory bits based on an input id and an output id */
-std::vector<bool> MuxGraph::decode_memory_bits(const MuxInputId& input_id,
-                                                 const MuxOutputId& output_id) const {
+vtr::vector<MuxMemId, bool> MuxGraph::decode_memory_bits(const MuxInputId& input_id,
+                                                         const MuxOutputId& output_id) const {
   /* initialize the memory bits: TODO: support default value */ 
-  std::vector<bool> mem_bits(mem_ids_.size(), false);
+  vtr::vector<MuxMemId, bool> mem_bits(mem_ids_.size(), false);
 
   /* valid the input and output */
   VTR_ASSERT_SAFE(valid_input_id(input_id));
@@ -575,9 +583,9 @@ std::vector<bool> MuxGraph::decode_memory_bits(const MuxInputId& input_id,
     MuxMemId mem = edge_mem_ids_[edge];
     VTR_ASSERT_SAFE (valid_mem_id(mem));
     if (true == edge_inv_mem_[edge]) {
-      mem_bits[size_t(mem)] = false;
+      mem_bits[mem] = false;
     } else {
-      mem_bits[size_t(mem)] = true;
+      mem_bits[mem] = true;
     }
 
     /* each edge must have 1 fan-out */
