@@ -3,6 +3,7 @@
  * data structures in mux_graph.h
  *************************************************/
 #include <cmath>
+#include <list>
 #include <map>
 #include <algorithm>
 
@@ -482,6 +483,21 @@ MuxNodeId MuxGraph::node_id(const MuxInputId& input_id) const {
   return MuxNodeId::INVALID();
 }
 
+/* Get the node id of a given output */
+MuxNodeId MuxGraph::node_id(const MuxOutputId& output_id) const {
+  /* Use the node_lookup to accelerate the search */
+  for (const auto& lvl : node_lookup_) {
+    for (const auto& cand_node : lvl[MUX_OUTPUT_NODE]) {
+      if (output_id == node_output_ids_[cand_node]) {
+        return cand_node; 
+      }
+    }
+  } 
+
+  return MuxNodeId::INVALID();
+}
+
+
 /* Get the node id w.r.t. the node level and node_index at the level
  * Return an invalid value if not found 
  */
@@ -516,19 +532,41 @@ MuxNodeId MuxGraph::node_id(const size_t& node_level, const size_t& node_index_a
   return ret_node;
 }
 
-/* Decode memory bits based on an input id */
-std::vector<size_t> MuxGraph::decode_memory_bits(const MuxInputId& input_id) const {
+/* Decode memory bits based on an input id and an output id */
+std::vector<bool> MuxGraph::decode_memory_bits(const MuxInputId& input_id,
+                                                 const MuxOutputId& output_id) const {
   /* initialize the memory bits: TODO: support default value */ 
-  std::vector<size_t> mem_bits(mem_ids_.size(), 0);
+  std::vector<bool> mem_bits(mem_ids_.size(), false);
 
-  /* valid the input */
+  /* valid the input and output */
   VTR_ASSERT_SAFE(valid_input_id(input_id));
+  VTR_ASSERT_SAFE(valid_output_id(output_id));
 
-  /* Route the input to the output and update mem */
-  MuxNodeId next_node = node_id(input_id);
-  while ( 0 < node_out_edges_[next_node].size() ) {
-    VTR_ASSERT_SAFE (1 == node_out_edges_[next_node].size());
-    MuxEdgeId edge = node_out_edges_[next_node][0];
+  /* Mark all the nodes as not visited */
+  vtr::vector<MuxNodeId, bool> visited(nodes().size(), false); 
+
+  /* Create a queue for Breadth-First Search */ 
+  std::list<MuxNodeId> queue; 
+
+  /* Mark the input node as visited and enqueue it */
+  visited[node_id(input_id)] = true; 
+  queue.push_back(node_id(input_id)); 
+
+  /* Create a flag to indicate if the route is success or not */
+  bool route_success = false;
+
+  while(!queue.empty()) { 
+    /* Dequeue a mux node from queue, 
+     * we will walk through all the fan-in of this node in this loop
+     */
+    MuxNodeId node_to_expand = queue.front(); 
+    queue.pop_front(); 
+                                                                                                               /* Get all fan-in nodes of the dequeued node
+     * If the node has not been visited,  
+     * then mark it visited and enqueue it
+     */
+    VTR_ASSERT_SAFE (1 == node_out_edges_[node_to_expand].size());
+    MuxEdgeId edge = node_out_edges_[node_to_expand][0];
 
     /* Configure the mem bits: 
      * if inv_mem is enabled, it means 0 to enable this edge 
@@ -537,23 +575,111 @@ std::vector<size_t> MuxGraph::decode_memory_bits(const MuxInputId& input_id) con
     MuxMemId mem = edge_mem_ids_[edge];
     VTR_ASSERT_SAFE (valid_mem_id(mem));
     if (true == edge_inv_mem_[edge]) {
-      mem_bits[size_t(mem)] = 0;
+      mem_bits[size_t(mem)] = false;
     } else {
-      mem_bits[size_t(mem)] = 1;
+      mem_bits[size_t(mem)] = true;
     }
 
     /* each edge must have 1 fan-out */
     VTR_ASSERT_SAFE (1 == edge_sink_nodes_[edge].size());
 
-    /* Visit the next node */
-    next_node = edge_sink_nodes_[edge][0]; 
+    /* Get the fan-out node */
+    MuxNodeId next_node = edge_sink_nodes_[edge][0]; 
+
+    /* If next node is the output node we want, we can finish here */
+    if (next_node == node_id(output_id)) {
+      route_success = true;
+      break;
+    }
+
+    /* Add next node to the queue if not visited yet */
+    if (false == visited[next_node]) { 
+       visited[next_node] = true; 
+       queue.push_back(next_node); 
+    }
   }
 
-  /* valid the output */
-  VTR_ASSERT_SAFE(MUX_OUTPUT_NODE == node_types_[next_node]);
-  VTR_ASSERT_SAFE(valid_output_id(node_output_ids_[next_node]));
+  /* Routing must be success! */
+  VTR_ASSERT(true == route_success);
 
   return mem_bits;
+}
+
+/* Find the input node that the memory bits will route an output node to 
+ * This function backward propagate from the output node to an input node
+ * assuming the memory bits are applied  
+ */
+MuxInputId MuxGraph::find_input_node_driven_by_output_node(const std::map<MuxMemId, bool>& memory_bits,
+                                                           const MuxOutputId& output_id) const {
+  /* Ensure that the memory bits fit the size of memory bits in this MUX */ 
+  VTR_ASSERT(memory_bits.size() == mem_ids_.size());
+
+  /* valid the output */
+  VTR_ASSERT_SAFE(valid_output_id(output_id));
+
+  /* Start from the output node */
+  /* Mark all the nodes as not visited */
+  vtr::vector<MuxNodeId, bool> visited(nodes().size(), false); 
+
+  /* Create a queue for Breadth-First Search */ 
+  std::list<MuxNodeId> queue; 
+
+  /* Mark the output node as visited and enqueue it */
+  visited[node_id(output_id)] = true; 
+  queue.push_back(node_id(output_id)); 
+
+  /* Record the destination input id */
+  MuxInputId des_input_id = MuxInputId::INVALID();
+
+  while(!queue.empty()) { 
+    /* Dequeue a mux node from queue, 
+     * we will walk through all the fan-in of this node in this loop
+     */
+    MuxNodeId node_to_expand = queue.front(); 
+    queue.pop_front(); 
+                                                                                                               /* Get all fan-in nodes of the dequeued node
+     * If the node has not been visited,  
+     * then mark it visited and enqueue it
+     */
+    MuxEdgeId next_edge = MuxEdgeId::INVALID(); 
+    for (const MuxEdgeId& edge : node_in_edges_[node_to_expand]) {
+      /* Configure the mem bits and find the edge that will propagate the signal 
+       * if inv_mem is enabled, it means false to enable this edge 
+       * otherwise, it is true to enable this edge
+       */
+      MuxMemId mem = edge_mem_ids_[edge];
+      VTR_ASSERT_SAFE (valid_mem_id(mem));
+      if (edge_inv_mem_[edge] ==  !memory_bits.at(mem)) { 
+        next_edge = edge;
+        break;
+      }
+    }
+    /* We must have a valid next edge */
+    VTR_ASSERT(MuxEdgeId::INVALID() != next_edge);
+
+    /* each edge must have 1 fan-out */
+    VTR_ASSERT_SAFE (1 == edge_src_nodes_[next_edge].size());
+
+    /* Get the fan-in node */
+    MuxNodeId next_node = edge_src_nodes_[next_edge][0]; 
+
+    /* If next node is an input node, we can finish here */
+    if (true == is_node_input(next_node)) {
+      des_input_id = input_id(next_node);
+      break;
+    }
+
+    /* Add next node to the queue if not visited yet */
+    if (false == visited[next_node]) { 
+       visited[next_node] = true; 
+       queue.push_back(next_node); 
+    }
+  }
+
+  /* Routing must be success! */
+  VTR_ASSERT(MuxInputId::INVALID() != des_input_id);
+
+  return des_input_id;
 }
 
 /**************************************************

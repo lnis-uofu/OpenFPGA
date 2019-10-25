@@ -27,6 +27,7 @@
 #ifndef MUX_GRAPH_H
 #define MUX_GRAPH_H
 
+#include <map>
 #include "vtr_vector.h"
 #include "vtr_range.h"
 #include "mux_graph_fwd.h"
@@ -105,6 +106,8 @@ class MuxGraph {
     std::vector<MuxGraph> build_mux_branch_graphs() const; 
     /* Get the node id of a given input */
     MuxNodeId node_id(const MuxInputId& input_id) const;
+    /* Get the node id of a given output */
+    MuxNodeId node_id(const MuxOutputId& output_id) const;
     /* Get the node id w.r.t. the node level and node_index at the level */
     MuxNodeId node_id(const size_t& node_level, const size_t& node_index_at_level) const;
     /* Get the input id of a given node */
@@ -115,8 +118,19 @@ class MuxGraph {
     MuxOutputId output_id(const MuxNodeId& node_id) const;
     /* Identify if the node is an output of the MUX */
     bool is_node_output(const MuxNodeId& node_id) const;
-    /* Decode memory bits based on an input id */
-    std::vector<size_t> decode_memory_bits(const MuxInputId& input_id) const;
+    /* Decode memory bits based on an input id and an output id 
+     * This function will start from the input node 
+     * and do a forward propagation until reaching the output node  
+     */
+    std::vector<bool> decode_memory_bits(const MuxInputId& input_id,
+                                           const MuxOutputId& output_id) const;
+    /* Find the input node that the memory bits will route an output node to 
+     * This function backward propagate from the output node to an input node
+     * assuming the memory bits are applied  
+     * Note: This function is mainly used for decoding LUT MUXes
+     */
+    MuxInputId find_input_node_driven_by_output_node(const std::map<MuxMemId, bool>& memory_bits,
+                                                     const MuxOutputId& output_id) const;
   private: /* Private mutators : basic operations */
      /* Add a unconfigured node to the MuxGraph */
      MuxNodeId add_node(const enum e_mux_graph_node_type& node_type);

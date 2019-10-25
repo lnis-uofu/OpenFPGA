@@ -30,6 +30,7 @@
 
 #include "mux_library_builder.h"
 #include "build_module_graph.h"
+#include "build_device_bitstream.h"
 
 #include "spice_api.h"
 #include "verilog_api.h"
@@ -81,6 +82,18 @@ void vpr_fpga_x2p_tool_suites(t_vpr_setup vpr_setup,
   ModuleManager module_manager = build_device_module_graph(vpr_setup, Arch, mux_lib, 
                                                            device_size, grids, 
                                                            rr_switches, clb2clb_directs, device_rr_gsb);
+
+  /* Build bitstream database if needed */
+  BitstreamManager bitstream_manager;
+  if ((TRUE == vpr_setup.FPGA_SPICE_Opts.BitstreamGenOpts.gen_bitstream)
+    &&(FALSE == vpr_setup.FPGA_SPICE_Opts.SpiceOpts.do_spice)
+    &&(FALSE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.dump_syn_verilog)) {
+    bitstream_manager = build_device_bitstream(vpr_setup, Arch, module_manager, 
+                                               Arch.spice->circuit_lib, mux_lib, 
+                                               device_size, grids, 
+                                               rr_switches, rr_node, device_rr_gsb);
+                        
+  }
 
   /* Xifan TANG: SPICE Modeling, SPICE Netlist Output  */ 
   if (TRUE == vpr_setup.FPGA_SPICE_Opts.SpiceOpts.do_spice) {

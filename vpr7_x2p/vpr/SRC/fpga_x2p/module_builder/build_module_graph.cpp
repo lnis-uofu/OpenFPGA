@@ -51,7 +51,8 @@ ModuleManager build_device_module_graph(const t_vpr_setup& vpr_setup,
 #endif
 
   /* Module Graph builder formally starts*/
-  vpr_printf(TIO_MESSAGE_INFO, "\nStart building module graphs for FPGA fabric...\n");
+  vpr_printf(TIO_MESSAGE_INFO, 
+             "\nStart building module graphs for FPGA fabric...\n");
 
   /* Module manager to be built */
   ModuleManager module_manager;
@@ -135,8 +136,9 @@ ModuleManager build_device_module_graph(const t_vpr_setup& vpr_setup,
   clock_t t_end = clock();
 
   float run_time_sec = (float)(t_end - t_start) / CLOCKS_PER_SEC;
-  vpr_printf(TIO_MESSAGE_INFO, "Building module graphs took %g seconds\n", run_time_sec);  
-
+  vpr_printf(TIO_MESSAGE_INFO, 
+             "Building module graphs took %g seconds\n", 
+             run_time_sec);  
 
   return module_manager;
 }

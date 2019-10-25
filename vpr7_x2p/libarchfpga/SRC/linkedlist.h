@@ -1,6 +1,8 @@
 #ifndef LINKEDLIST_H
 #define LINKEDLIST_H
 
+#include "util.h"
+
 /*General Purpose Linked List*/
 typedef struct s_llist t_llist;
 struct s_llist
