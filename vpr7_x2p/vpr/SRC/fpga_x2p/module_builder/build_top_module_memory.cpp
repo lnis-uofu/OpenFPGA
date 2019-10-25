@@ -233,12 +233,12 @@ void organize_top_module_memory_modules(ModuleManager& module_manager,
   }
 
   /* TOP side I/Os */
-  for (size_t ix = 1; ix < device_size.x() - 1; ++ix) {
+  for (size_t ix = device_size.x() - 2; ix >= 1; --ix) {
     io_coords[TOP].push_back(vtr::Point<size_t>(ix, device_size.y() - 1));
   }
 
   /* LEFT side I/Os */
-  for (size_t iy = 1; iy < device_size.y() - 1; ++iy) {
+  for (size_t iy = device_size.y() - 2; iy >= 1; --iy) {
     io_coords[LEFT].push_back(vtr::Point<size_t>(0, iy));
   }
 
