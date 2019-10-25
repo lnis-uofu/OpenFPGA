@@ -8,7 +8,9 @@
 #include "vtr_assert.h"
 
 #include "sides.h"
+#include "vpr_types.h"
 #include "fpga_x2p_utils.h"
+#include "fpga_x2p_pbtypes_utils.h"
 #include "circuit_library_utils.h"
 #include "fpga_x2p_naming.h"
 
@@ -370,6 +372,28 @@ std::string generate_grid_port_name(const vtr::Point<size_t>& coordinate,
   port_name += std::to_string(pin_id);
   port_name += std::string("_");
   return port_name;
+}
+
+/*********************************************************************
+ * Generate the port name for a Grid
+ * This is a wrapper function for generate_port_name()
+ * which can automatically decode the port name by the pin side and height
+ *********************************************************************/
+std::string generate_grid_side_port_name(const std::vector<std::vector<t_grid_tile>>& grids,
+                                         const vtr::Point<size_t>& coordinate,
+                                         const e_side& side, 
+                                         const size_t& pin_id) {
+  /* Output the pins on the side*/ 
+  size_t height = find_grid_pin_height(grids, coordinate, pin_id);
+  if (1 != grids[coordinate.x()][coordinate.y()].type->pinloc[height][side][pin_id]) {
+    Side side_manager(side);
+    vpr_printf(TIO_MESSAGE_ERROR, 
+               "(File:%s, [LINE%d])Fail to generate a grid pin (x=%lu, y=%lu, height=%lu, side=%s, index=%d)\n",
+               __FILE__, __LINE__, 
+               coordinate.x(), coordinate.y(), height, side_manager.c_str(), pin_id);
+    exit(1);
+  } 
+  return generate_grid_port_name(coordinate, height, side, pin_id, true);
 }
 
 /*********************************************************************
@@ -742,13 +766,29 @@ std::string generate_sb_memory_instance_name(const std::string& prefix,
                                              const size_t& track_id, 
                                              const std::string& postfix) {
   std::string instance_name(prefix);
-  instance_name += std::string("_") + Side(sb_side).to_string();
+  instance_name += Side(sb_side).to_string();
   instance_name += std::string("_track_") + std::to_string(track_id);
   instance_name += postfix;
 
   return instance_name;
 }
 
+/*********************************************************************
+ * Generate the instance name for a configurable memory module in a Connection Block
+ ********************************************************************/
+std::string generate_cb_memory_instance_name(const std::string& prefix,
+                                             const std::vector<std::vector<t_grid_tile>>& grids,
+                                             const vtr::Point<size_t>& coordinate,
+                                             const e_side& cb_side, 
+                                             const size_t& pin_id, 
+                                             const std::string& postfix) {
+  std::string instance_name(prefix);
+
+  instance_name += generate_grid_side_port_name(grids, coordinate, cb_side, pin_id);
+  instance_name += postfix;
+
+  return instance_name;
+}
 
 /*********************************************************************
  * Generate the instance name of a grid block

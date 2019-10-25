@@ -693,8 +693,10 @@ void build_connection_block_mux_module(ModuleManager& module_manager,
                                        const CircuitLibrary& circuit_lib,
                                        const std::vector<std::vector<t_grid_tile>>& grids,
                                        const std::vector<t_switch_inf>& rr_switches,
-                                       t_rr_node* cur_rr_node,
+                                       const e_side& cb_ipin_side,
+                                       const size_t& ipin_index,
                                        const std::map<ModulePortId, ModuleNetId>& input_port_to_module_nets) {
+  t_rr_node* cur_rr_node = rr_gsb.get_ipin_node(cb_ipin_side, ipin_index);
   /* Check current rr_node is an input pin of a CLB */
   VTR_ASSERT(IPIN == cur_rr_node->type);
 
@@ -770,6 +772,13 @@ void build_connection_block_mux_module(ModuleManager& module_manager,
   size_t mem_instance_id = module_manager.num_instance(cb_module, mem_module);
   module_manager.add_child_module(cb_module, mem_module);
 
+  /* Give an instance name: this name should be consistent with the block name given in bitstream manager,
+   * If you want to bind the bitstream generation to modules
+   */
+  vtr::Point<size_t> ipin_coord(cur_rr_node->xlow, cur_rr_node->ylow);
+  std::string mem_instance_name = generate_cb_memory_instance_name(CONNECTION_BLOCK_MEM_INSTANCE_PREFIX, grids, ipin_coord, rr_gsb.get_ipin_node_grid_side(cb_ipin_side, ipin_index), cur_rr_node->ptc_num, std::string(""));
+  module_manager.set_child_instance_name(cb_module, mem_module, mem_instance_id, mem_instance_name);
+
   /* Add nets to connect regular and mode-select SRAM ports to the SRAM port of memory module */
   add_module_nets_between_logic_and_memory_sram_bus(module_manager, cb_module, 
                                                     mux_module, mux_instance_id,
@@ -794,8 +803,10 @@ void build_connection_block_interc_modules(ModuleManager& module_manager,
                                            const CircuitLibrary& circuit_lib,
                                            const std::vector<std::vector<t_grid_tile>>& grids,
                                            const std::vector<t_switch_inf>& rr_switches,
-                                           t_rr_node* src_rr_node,
+                                           const e_side& cb_ipin_side,
+                                           const size_t& ipin_index,
                                            const std::map<ModulePortId, ModuleNetId>& input_port_to_module_nets) {
+  t_rr_node* src_rr_node = rr_gsb.get_ipin_node(cb_ipin_side, ipin_index);
   if (1 > src_rr_node->fan_in) {
     return; /* This port has no driver, skip it */
   } else if (1 == src_rr_node->fan_in) {
@@ -807,7 +818,7 @@ void build_connection_block_interc_modules(ModuleManager& module_manager,
     build_connection_block_mux_module(module_manager, 
                                       cb_module, rr_gsb, cb_type, 
                                       circuit_lib, grids, rr_switches, 
-                                      src_rr_node, 
+                                      cb_ipin_side, ipin_index, 
                                       input_port_to_module_nets); 
   } /*Nothing should be done else*/ 
 }
@@ -967,7 +978,7 @@ void build_connection_block_module(ModuleManager& module_manager,
       build_connection_block_interc_modules(module_manager,  
                                             cb_module, rr_gsb, cb_type, 
                                             circuit_lib, grids, rr_switches, 
-                                            rr_gsb.get_ipin_node(cb_ipin_side, inode),
+                                            cb_ipin_side, inode,
                                             input_port_to_module_nets);
     }
   }
@@ -1029,7 +1040,7 @@ void build_flatten_connection_block_modules(ModuleManager& module_manager,
        * We will skip those modules
        */
       const RRGSB& rr_gsb = L_device_rr_gsb.get_gsb(ix, iy);
-      if ( (TRUE != is_cb_exist(CHANX, rr_gsb.get_cb_x(cb_type), rr_gsb.get_cb_y(cb_type)))
+      if ( (TRUE != is_cb_exist(cb_type, rr_gsb.get_cb_x(cb_type), rr_gsb.get_cb_y(cb_type)))
         || (true != rr_gsb.is_cb_exist(cb_type))) {
         continue;
       }

@@ -8,6 +8,7 @@
 #define FPGA_X2P_RESERVED_WORDS_H
 
 constexpr char* SWITCH_BLOCK_MEM_INSTANCE_PREFIX = "mem_"; 
+constexpr char* CONNECTION_BLOCK_MEM_INSTANCE_PREFIX = "mem_"; 
 constexpr char* MEMORY_MODULE_POSTFIX = "_mem";
 
 #endif

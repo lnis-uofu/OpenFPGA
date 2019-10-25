@@ -81,11 +81,23 @@ std::string generate_sb_memory_instance_name(const std::string& prefix,
                                              const size_t& track_id, 
                                              const std::string& postfix);
 
+std::string generate_cb_memory_instance_name(const std::string& prefix,
+                                             const std::vector<std::vector<t_grid_tile>>& grids,
+                                             const vtr::Point<size_t>& coordinate,
+                                             const e_side& cb_side, 
+                                             const size_t& pin_id, 
+                                             const std::string& postfix);
+
 std::string generate_grid_port_name(const vtr::Point<size_t>& coordinate,
                                     const size_t& height, 
                                     const e_side& side, 
                                     const size_t& pin_id,
                                     const bool& for_top_netlist);
+
+std::string generate_grid_side_port_name(const std::vector<std::vector<t_grid_tile>>& grids,
+                                         const vtr::Point<size_t>& coordinate,
+                                         const e_side& side, 
+                                         const size_t& pin_id);
 
 std::string generate_reserved_sram_port_name(const e_spice_model_port_type& port_type);
 

@@ -9,29 +9,6 @@
 #include "fpga_x2p_pbtypes_utils.h" 
 #include "build_module_graph_utils.h" 
 
-/*********************************************************************
- * Generate the port name for a Grid
- * This is a wrapper function for generate_port_name()
- * which can automatically decode the port name by the pin side and height
- *********************************************************************/
-std::string generate_grid_side_port_name(const std::vector<std::vector<t_grid_tile>>& grids,
-                                         const vtr::Point<size_t>& coordinate,
-                                         const e_side& side, 
-                                         const size_t& pin_id) {
-  /* Output the pins on the side*/ 
-  size_t height = find_grid_pin_height(grids, coordinate, pin_id);
-  if (1 != grids[coordinate.x()][coordinate.y()].type->pinloc[height][side][pin_id]) {
-    Side side_manager(side);
-    vpr_printf(TIO_MESSAGE_ERROR, 
-               "(File:%s, [LINE%d])Fail to generate a grid pin (x=%lu, y=%lu, height=%lu, side=%s, index=%d)\n",
-               __FILE__, __LINE__, 
-               coordinate.x(), coordinate.y(), height, side_manager.c_str(), pin_id);
-    exit(1);
-  } 
-  return generate_grid_port_name(coordinate, height, side, pin_id, true);
-}
-
-
 /********************************************************************
  * Find input port of a buffer/inverter module
  ********************************************************************/
