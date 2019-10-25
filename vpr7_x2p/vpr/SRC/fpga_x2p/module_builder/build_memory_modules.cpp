@@ -20,6 +20,7 @@
 
 /* FPGA-X2P context header files */
 #include "spice_types.h"
+#include "fpga_x2p_reserved_words.h"
 #include "fpga_x2p_naming.h"
 #include "fpga_x2p_utils.h"
 
@@ -586,7 +587,7 @@ void build_mux_memory_module(ModuleManager& module_manager,
     /* Generate module name */
     std::string module_name = generate_mux_subckt_name(circuit_lib, mux_model, 
                                                        find_mux_num_datapath_inputs(circuit_lib, mux_model, mux_graph.num_inputs()), 
-                                                       std::string(verilog_mem_posfix));
+                                                       std::string(MEMORY_MODULE_POSTFIX));
 
     /* Get the sram ports from the mux */
     std::vector<CircuitModelId> sram_models = find_circuit_sram_models(circuit_lib, mux_model);
@@ -671,7 +672,7 @@ void build_memory_modules(ModuleManager& module_manager,
     VTR_ASSERT( 1 == sram_models.size() );
   
     /* Create the module name for the memory block */
-    std::string module_name = generate_memory_module_name(circuit_lib, model, sram_models[0], std::string(verilog_mem_posfix));
+    std::string module_name = generate_memory_module_name(circuit_lib, model, sram_models[0], std::string(MEMORY_MODULE_POSTFIX));
 
     /* Create a Verilog module for the memories used by the circuit model */
     build_memory_module(module_manager, circuit_lib, sram_orgz_type, module_name, sram_models[0], num_mems);

@@ -735,6 +735,22 @@ std::string generate_grid_block_module_name(const std::string& prefix,
 }
 
 /*********************************************************************
+ * Generate the instance name for a configurable memory module in a Switch Block
+ ********************************************************************/
+std::string generate_sb_memory_instance_name(const std::string& prefix,
+                                             const e_side& sb_side, 
+                                             const size_t& track_id, 
+                                             const std::string& postfix) {
+  std::string instance_name(prefix);
+  instance_name += std::string("_") + Side(sb_side).to_string();
+  instance_name += std::string("_track_") + std::to_string(track_id);
+  instance_name += postfix;
+
+  return instance_name;
+}
+
+
+/*********************************************************************
  * Generate the instance name of a grid block
  **********************************************************************/
 std::string generate_grid_block_instance_name(const std::string& prefix,
@@ -752,7 +768,6 @@ std::string generate_grid_block_instance_name(const std::string& prefix,
 
   return module_name;
 }
-
 
 /*********************************************************************
  * Generate the module name of a physical block

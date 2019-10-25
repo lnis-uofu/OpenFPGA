@@ -76,6 +76,11 @@ std::string generate_switch_block_module_name(const vtr::Point<size_t>& coordina
 std::string generate_connection_block_module_name(const t_rr_type& cb_type, 
                                                   const vtr::Point<size_t>& coordinate);
 
+std::string generate_sb_memory_instance_name(const std::string& prefix,
+                                             const e_side& sb_side, 
+                                             const size_t& track_id, 
+                                             const std::string& postfix);
+
 std::string generate_grid_port_name(const vtr::Point<size_t>& coordinate,
                                     const size_t& height, 
                                     const e_side& side, 

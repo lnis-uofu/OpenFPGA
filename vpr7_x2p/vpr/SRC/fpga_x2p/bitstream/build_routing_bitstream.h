@@ -13,6 +13,7 @@
 #include "rr_blocks.h"
 
 void build_routing_bitstream(BitstreamManager& bitstream_manager,
+                             const ConfigBlockId& top_configurable_block,
                              const ModuleManager& module_manager,
                              const CircuitLibrary& circuit_lib,
                              const MuxLibrary& mux_lib,

@@ -16,6 +16,7 @@
 #include "globals.h"
 
 /* Header files for FPGA X2P tool suite */
+#include "fpga_x2p_reserved_words.h"
 #include "fpga_x2p_naming.h"
 #include "fpga_x2p_types.h"
 #include "fpga_x2p_utils.h"
@@ -338,7 +339,7 @@ void build_primitive_block_module(ModuleManager& module_manager,
   add_primitive_pb_type_module_nets(module_manager, primitive_module, logic_module, logic_instance_id, circuit_lib, primitive_pb_graph_node->pb_type);
 
   /* Add the associated memory module as a child of primitive module */
-  std::string memory_module_name = generate_memory_module_name(circuit_lib, primitive_model, sram_model, std::string(verilog_mem_posfix));
+  std::string memory_module_name = generate_memory_module_name(circuit_lib, primitive_model, sram_model, std::string(MEMORY_MODULE_POSTFIX));
   ModuleId memory_module = module_manager.find_module(memory_module_name);
 
   /* Vectors to record all the memory modules have been added
@@ -551,7 +552,7 @@ void add_module_pb_graph_pin_interc(ModuleManager& module_manager,
     std::string mux_mem_module_name = generate_mux_subckt_name(circuit_lib, 
                                                                cur_interc->circuit_model, 
                                                                fan_in, 
-                                                               std::string(verilog_mem_posfix));
+                                                               std::string(MEMORY_MODULE_POSTFIX));
     ModuleId mux_mem_module = module_manager.find_module(mux_mem_module_name);
     VTR_ASSERT(true == module_manager.valid_module_id(mux_mem_module));
     size_t mux_mem_instance = module_manager.num_instance(pb_module, mux_mem_module);

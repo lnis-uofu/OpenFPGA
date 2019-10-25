@@ -77,7 +77,7 @@ BitstreamManager build_device_bitstream(const t_vpr_setup& vpr_setup,
   ConfigBlockId top_block = bitstream_manager.add_block(top_block_name);
 
   /* Create bitstream from routing architectures */
-  build_routing_bitstream(bitstream_manager, module_manager, circuit_lib, mux_lib, rr_switches, L_rr_node, L_device_rr_gsb);
+  build_routing_bitstream(bitstream_manager, top_block, module_manager, circuit_lib, mux_lib, rr_switches, L_rr_node, L_device_rr_gsb);
 
   /* End time count */
   clock_t t_end = clock();

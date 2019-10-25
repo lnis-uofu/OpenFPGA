@@ -10,6 +10,7 @@
 #include "vtr_assert.h"
 #include "util.h"
 #include "mux_utils.h"
+#include "fpga_x2p_reserved_words.h"
 #include "fpga_x2p_types.h"
 #include "fpga_x2p_naming.h"
 #include "fpga_x2p_utils.h"
@@ -25,12 +26,12 @@
  *******************************************************************/
 static 
 void build_switch_block_mux_bitstream(BitstreamManager& bitstream_manager,
+                                      const ConfigBlockId& mux_mem_block,
                                       const ModuleManager& module_manager,
                                       const CircuitLibrary& circuit_lib,
                                       const MuxLibrary& mux_lib,
                                       const std::vector<t_switch_inf>& rr_switches,
                                       t_rr_node* L_rr_node,
-                                      const RRGSB& rr_gsb,
                                       t_rr_node* cur_rr_node,
                                       const std::vector<t_rr_node*>& drive_rr_nodes,
                                       const int& switch_index) {
@@ -60,9 +61,18 @@ void build_switch_block_mux_bitstream(BitstreamManager& bitstream_manager,
   /* Generate bitstream depend on both technology and structure of this MUX */
   std::vector<bool> mux_bitstream = build_mux_bitstream(circuit_lib, mux_model, mux_lib, datapath_mux_size,  path_id); 
 
+  /* Find the module in module manager and ensure the bitstream size matches! */
+  std::string mem_module_name = generate_mux_subckt_name(circuit_lib, mux_model, datapath_mux_size, std::string(MEMORY_MODULE_POSTFIX)); 
+  ModuleId mux_mem_module = module_manager.find_module(mem_module_name); 
+  VTR_ASSERT (true == module_manager.valid_module_id(mux_mem_module));
+  ModulePortId mux_mem_out_port_id = module_manager.find_module_port(mux_mem_module, generate_configuration_chain_data_out_name());
+  VTR_ASSERT(mux_bitstream.size() == module_manager.module_port(mux_mem_module, mux_mem_out_port_id).get_width());
+
   /* Add the bistream to the bitstream manager */
   for (const bool& bit : mux_bitstream) {
-    bitstream_manager.add_bit(bit);
+    ConfigBitId config_bit = bitstream_manager.add_bit(bit);
+    /* Link the memory bits to the mux mem block */
+    bitstream_manager.add_bit_to_block(mux_mem_block, config_bit);
   }
 }
 
@@ -75,6 +85,7 @@ void build_switch_block_mux_bitstream(BitstreamManager& bitstream_manager,
  *******************************************************************/
 static 
 void build_switch_block_interc_bitstream(BitstreamManager& bitstream_manager,
+                                         const ConfigBlockId& sb_configurable_block,
                                          const ModuleManager& module_manager,
                                          const CircuitLibrary& circuit_lib,
                                          const MuxLibrary& mux_lib,
@@ -105,10 +116,14 @@ void build_switch_block_interc_bitstream(BitstreamManager& bitstream_manager,
     /* No bitstream generation required by a special direct connection*/
     return;
   } else if (1 < drive_rr_nodes.size()) {
+    /* Create the block denoting the memory instances that drives this node in Switch Block */
+    std::string mem_block_name = generate_sb_memory_instance_name(SWITCH_BLOCK_MEM_INSTANCE_PREFIX, chan_side, chan_node_id, std::string(""));
+    ConfigBlockId mux_mem_block = bitstream_manager.add_block(mem_block_name);
+    bitstream_manager.add_child_block(sb_configurable_block, mux_mem_block);
     /* This is a routing multiplexer! Generate bitstream */
-    build_switch_block_mux_bitstream(bitstream_manager, module_manager,
+    build_switch_block_mux_bitstream(bitstream_manager, mux_mem_block, module_manager,
                                      circuit_lib, mux_lib, rr_switches, L_rr_node, 
-                                     rr_gsb, cur_rr_node, drive_rr_nodes, 
+                                     cur_rr_node, drive_rr_nodes, 
                                      cur_rr_node->drive_switches[DEFAULT_SWITCH_ID]);
   } /*Nothing should be done else*/ 
 }
@@ -126,27 +141,28 @@ void build_switch_block_interc_bitstream(BitstreamManager& bitstream_manager,
  *******************************************************************/
 static 
 void build_switch_block_bitstream(BitstreamManager& bitstream_manager,
+                                  const ConfigBlockId& sb_configurable_block,
                                   const ModuleManager& module_manager,
                                   const CircuitLibrary& circuit_lib,
                                   const MuxLibrary& mux_lib,
                                   const std::vector<t_switch_inf>& rr_switches,
                                   t_rr_node* L_rr_node,
-                                  const RRGSB& rr_sb) {
-  /* TODO: Create a block for the bitstream which corresponds to the Switch block */
+                                  const RRGSB& rr_gsb) {
 
   /* Iterate over all the multiplexers */
-  for (size_t side = 0; side < rr_sb.get_num_sides(); ++side) {
+  for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
     Side side_manager(side);
-    for (size_t itrack = 0; itrack < rr_sb.get_chan_width(side_manager.get_side()); ++itrack) {
-      VTR_ASSERT( (CHANX == rr_sb.get_chan_node(side_manager.get_side(), itrack)->type)
-               || (CHANY == rr_sb.get_chan_node(side_manager.get_side(), itrack)->type));
+    for (size_t itrack = 0; itrack < rr_gsb.get_chan_width(side_manager.get_side()); ++itrack) {
+      VTR_ASSERT( (CHANX == rr_gsb.get_chan_node(side_manager.get_side(), itrack)->type)
+               || (CHANY == rr_gsb.get_chan_node(side_manager.get_side(), itrack)->type));
       /* Only output port indicates a routing multiplexer */
-      if (OUT_PORT != rr_sb.get_chan_node_direction(side_manager.get_side(), itrack)) {
+      if (OUT_PORT != rr_gsb.get_chan_node_direction(side_manager.get_side(), itrack)) {
         continue;
       }
-      build_switch_block_interc_bitstream(bitstream_manager, module_manager, 
+      build_switch_block_interc_bitstream(bitstream_manager, sb_configurable_block, 
+                                          module_manager, 
                                           circuit_lib, mux_lib, rr_switches, L_rr_node,
-                                          rr_sb, side_manager.get_side(), itrack);
+                                          rr_gsb, side_manager.get_side(), itrack);
     }
   }
 }
@@ -158,6 +174,7 @@ void build_switch_block_bitstream(BitstreamManager& bitstream_manager,
  * 2. Generate bitstreams for both X-direction and Y-direction Connection Blocks
  *******************************************************************/
 void build_routing_bitstream(BitstreamManager& bitstream_manager,
+                             const ConfigBlockId& top_configurable_block,
                              const ModuleManager& module_manager,
                              const CircuitLibrary& circuit_lib,
                              const MuxLibrary& mux_lib,
@@ -175,7 +192,13 @@ void build_routing_bitstream(BitstreamManager& bitstream_manager,
   for (size_t ix = 0; ix < sb_range.get_x(); ++ix) {
     for (size_t iy = 0; iy < sb_range.get_y(); ++iy) {
       const RRGSB& rr_gsb = L_device_rr_gsb.get_gsb(ix, iy);
-      build_switch_block_bitstream(bitstream_manager, module_manager,  
+      /* Create a block for the bitstream which corresponds to the Switch block */
+      vtr::Point<size_t> sb_coord(rr_gsb.get_sb_x(), rr_gsb.get_sb_y());
+      ConfigBlockId sb_configurable_block = bitstream_manager.add_block(generate_switch_block_module_name(sb_coord));
+      /* Set switch block as a child of top block */
+      bitstream_manager.add_child_block(top_configurable_block, sb_configurable_block);
+
+      build_switch_block_bitstream(bitstream_manager, sb_configurable_block, module_manager,  
                                    circuit_lib, mux_lib, rr_switches, L_rr_node,
                                    rr_gsb);
     }

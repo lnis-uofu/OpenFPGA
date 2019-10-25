@@ -13,6 +13,7 @@
 #include "util.h"
 #include "device_coordinator.h"
 
+#include "fpga_x2p_reserved_words.h"
 #include "fpga_x2p_types.h"
 #include "fpga_x2p_naming.h"
 
@@ -226,6 +227,7 @@ void build_switch_block_mux_module(ModuleManager& module_manager,
                                    const std::vector<std::vector<t_grid_tile>>& grids,
                                    const std::vector<t_switch_inf>& rr_switches,
                                    const e_side& chan_side,
+                                   const size_t& chan_node_id,
                                    t_rr_node* cur_rr_node,
                                    const std::vector<t_rr_node*>& drive_rr_nodes,
                                    const size_t& switch_index,
@@ -291,12 +293,17 @@ void build_switch_block_mux_module(ModuleManager& module_manager,
 
   /* Instanciate memory modules */
   /* Find the name and module id of the memory module */
-  std::string mem_module_name = generate_mux_subckt_name(circuit_lib, mux_model, datapath_mux_size, std::string(verilog_mem_posfix)); 
+  std::string mem_module_name = generate_mux_subckt_name(circuit_lib, mux_model, datapath_mux_size, std::string(MEMORY_MODULE_POSTFIX)); 
   ModuleId mem_module = module_manager.find_module(mem_module_name);
   VTR_ASSERT (true == module_manager.valid_module_id(mem_module));
 
   size_t mem_instance_id = module_manager.num_instance(sb_module, mem_module);
   module_manager.add_child_module(sb_module, mem_module);
+  /* Give an instance name: this name should be consistent with the block name given in bitstream manager,
+   * If you want to bind the bitstream generation to modules
+   */
+  std::string mem_instance_name = generate_sb_memory_instance_name(SWITCH_BLOCK_MEM_INSTANCE_PREFIX, chan_side, chan_node_id, std::string(""));
+  module_manager.set_child_instance_name(sb_module, mem_module, mem_instance_id, mem_instance_name);
 
   /* Add nets to connect regular and mode-select SRAM ports to the SRAM port of memory module */
   add_module_nets_between_logic_and_memory_sram_bus(module_manager, sb_module, 
@@ -355,7 +362,7 @@ void build_switch_block_interc_modules(ModuleManager& module_manager,
     /* Print the multiplexer, fan_in >= 2 */
     build_switch_block_mux_module(module_manager, 
                                   sb_module, rr_gsb, circuit_lib, 
-                                  grids, rr_switches, chan_side, cur_rr_node,  
+                                  grids, rr_switches, chan_side, chan_node_id, cur_rr_node,  
                                   drive_rr_nodes, 
                                   cur_rr_node->drive_switches[DEFAULT_SWITCH_ID],
                                   input_port_to_module_nets);
@@ -756,7 +763,7 @@ void build_connection_block_mux_module(ModuleManager& module_manager,
 
   /* Instanciate memory modules */
   /* Find the name and module id of the memory module */
-  std::string mem_module_name = generate_mux_subckt_name(circuit_lib, mux_model, datapath_mux_size, std::string(verilog_mem_posfix)); 
+  std::string mem_module_name = generate_mux_subckt_name(circuit_lib, mux_model, datapath_mux_size, std::string(MEMORY_MODULE_POSTFIX)); 
   ModuleId mem_module = module_manager.find_module(mem_module_name);
   VTR_ASSERT (true == module_manager.valid_module_id(mem_module));
 
