@@ -64,7 +64,7 @@ matrix:
           - zip
           - qt5-default
     - os: osx
-      osx_image: xcode10.2 # we target latest MacOS Mojave
+      osx_image: xcode11.2 # we target latest MacOS Mojave
       sudo: true
       compiler: gcc-6 # Use clang instead of gcc in MacOS
       addons:
@@ -77,7 +77,6 @@ matrix:
           - fontconfig
           - git
           - gcc@6
-          - gcc@4.9
           - gawk
           - icarus-verilog
           - libxml++
