@@ -16,4 +16,8 @@ constexpr char* SWITCH_BLOCK_MEM_INSTANCE_PREFIX = "mem_";
 constexpr char* CONNECTION_BLOCK_MEM_INSTANCE_PREFIX = "mem_"; 
 constexpr char* MEMORY_MODULE_POSTFIX = "_mem";
 
+
+/* Bitstream file strings */
+constexpr char* BITSTREAM_XML_FILE_NAME_POSTFIX = "_bitstream.xml";
+
 #endif

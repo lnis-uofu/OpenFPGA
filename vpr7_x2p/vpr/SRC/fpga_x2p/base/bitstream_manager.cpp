@@ -36,6 +36,16 @@ std::string BitstreamManager::block_name(const ConfigBlockId& block_id) const {
   return block_names_[block_id];
 }
 
+ConfigBlockId BitstreamManager::find_block(const std::string& block_name) const {
+  if (block_lookup_.find(block_name) != block_lookup_.end()) {
+    /* Find it, return the id */
+    return block_lookup_.at(block_name); 
+  }
+  /* Not found, return an invalid id */
+  return ConfigBlockId::INVALID();
+
+}
+
 ConfigBlockId BitstreamManager::block_parent(const ConfigBlockId& block_id) const {
   /* Ensure the input ids are valid */
   VTR_ASSERT(true == valid_block_id(block_id));
@@ -79,6 +89,12 @@ ConfigBitId BitstreamManager::add_bit(const bool& bit_value) {
 }
 
 ConfigBlockId BitstreamManager::add_block(const std::string& block_name) {
+  /* Find if the name has been used. If used, return an invalid Id and report error! */
+  std::map<std::string, ConfigBlockId>::iterator it = block_lookup_.find(block_name);
+  if (it != block_lookup_.end()) {
+    return ConfigBlockId::INVALID();
+  }
+
   ConfigBlockId block = ConfigBlockId(block_ids_.size());
   /* Add a new bit, and allocate associated data structures */
   block_ids_.push_back(block);
@@ -139,3 +155,11 @@ bool BitstreamManager::valid_bit_id(const ConfigBitId& bit_id) const {
 bool BitstreamManager::valid_block_id(const ConfigBlockId& block_id) const {
   return (size_t(block_id) < block_ids_.size()) && (block_id == block_ids_[block_id]);
 }
+
+/******************************************************************************
+ * Private Validators
+ ******************************************************************************/
+void BitstreamManager::invalidate_block_lookup() {
+  block_lookup_.clear();
+}
+

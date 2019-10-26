@@ -35,6 +35,7 @@
 #define BITSTREAM_MANAGER_H
 
 #include <vector>
+#include <map>
 #include "vtr_vector.h"
 
 #include "bitstream_manager_fwd.h"
@@ -60,6 +61,9 @@ class BitstreamManager {
     /* Find a name of a block */
     std::string block_name(const ConfigBlockId& block_id) const;
 
+    /* Find a block by name */
+    ConfigBlockId find_block(const std::string& block_name) const;
+    
     /* Find the parent of a block */
     ConfigBlockId block_parent(const ConfigBlockId& block_id) const;
 
@@ -93,6 +97,9 @@ class BitstreamManager {
 
     bool valid_block_id(const ConfigBlockId& block_id) const;
 
+  private:  /* Private Validators */
+    void invalidate_block_lookup();
+
   private: /* Internal data */
     /* Unique id of a block of bits in the Bitstream */
     vtr::vector<ConfigBlockId, ConfigBlockId> block_ids_; 
@@ -116,6 +123,9 @@ class BitstreamManager {
     vtr::vector<ConfigBitId, bool> bit_values_;
     /* value of a shared configuration bits in the Bitstream */
     vtr::vector<ConfigBitId, std::vector<bool>> shared_config_bit_values_;
+
+    /* Fast look-up for block */
+    std::map<std::string, ConfigBlockId> block_lookup_;
 };
 
 #endif
