@@ -903,7 +903,7 @@ vtr::vector<MuxOutputId, ModuleNetId> build_mux_module_output_buffers(ModuleMana
 
       /* Create a module net which sinks at buffer input */
       ModuleNetId input_net = module_manager.create_module_net(mux_module);
-      ModuleNetId output_net = add_inverter_buffer_child_module_and_nets(module_manager, mux_module, circuit_lib, buffer_model, output_net); 
+      ModuleNetId output_net = add_inverter_buffer_child_module_and_nets(module_manager, mux_module, circuit_lib, buffer_model, input_net); 
       module_manager.add_module_net_sink(mux_module, output_net, mux_module, 0, module_output_port_id, pin);
       mux_output_nets[output_index] = input_net;
     }

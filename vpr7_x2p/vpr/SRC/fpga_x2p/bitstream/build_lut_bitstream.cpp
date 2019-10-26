@@ -29,6 +29,13 @@
  *
  * In this case, LUT is configured as a wiring module
  * This function will generate a truth for the wiring LUT
+ *
+ * For example: 
+ * The truth table of the case where the 3rd input of 
+ * a 4-input LUT is wired to output 
+ *    
+ *    --1- 1
+ * 
  ********************************************************************/
 LutTruthTable build_post_routing_wired_lut_truth_table(const int& lut_output_vpack_net_num,
                                                        const size_t& lut_size, 
@@ -116,7 +123,11 @@ LutTruthTable build_post_routing_lut_truth_table(t_logical_block* mapped_logical
    *      net1 --->|  LUT  |          net0--->|  LUT  |
    *           ... |       |              ... |       |
    *               +-------+                  +-------+
-   */
+   *
+   *         Truth table line             Truth table line
+   *     .names net0 net1 out          .names net1 net0 out
+   *     01 1                          10 1
+   */  
   while (head) {
     /* Cache a line of truth table */
     std::string tt_line;
@@ -147,11 +158,62 @@ LutTruthTable build_post_routing_lut_truth_table(t_logical_block* mapped_logical
   return truth_table;
 } 
 
+
+/********************************************************************
+ * Generate the mask bits for a truth table 
+ * This function actually converts an integer to a binary vector 
+ *******************************************************************/
+static 
+std::string generate_mask_bits(const size_t& mask_code, 
+                               const size_t& num_mask_bits) {
+  std::vector<size_t> mask_bits(num_mask_bits, 0);
+
+  /* Make sure we do not have any overflow! */
+  VTR_ASSERT ( (mask_code < pow(2., num_mask_bits)) );
+  
+  size_t temp = mask_code;
+  for (size_t i = 0; i < num_mask_bits; ++i) {
+    if (1 == temp % 2) { 
+      mask_bits[i] = 1; /* Keep a good sequence of bits */
+    }
+    temp = temp / 2;
+  }
+
+  std::string mask_bits_str;
+  for (const size_t& mask_bit : mask_bits) {
+    VTR_ASSERT( 0 == mask_bit || 1 == mask_bit );
+    if (0 == mask_bit) {
+      mask_bits_str.push_back('1');
+      continue;
+    }
+    mask_bits_str.push_back('0');
+  }
+ 
+  return mask_bits_str;
+}
+
 /********************************************************************
  * Adapt truth table for a fracturable LUT
  * Determine fixed input bits for this truth table:
  * 1. input bits within frac_level (all '-' if not specified) 
  * 2. input bits outside frac_level, decoded to its output mask (0 -> first part -> all '1') 
+ *
+ * For example: 
+ *   A 4-input function is mapped to input[0..3] of a 6-input fracturable LUT 
+ *   Plus, it uses the 2nd output of the fracturable LUT
+ *   The truth table of the 4-input function is
+ *     1001 1
+ *   while truth table of a 6-input LUT requires 6 characters
+ *   Therefore, it must be adapted by adding mask bits, which are
+ *   a number of fixed digits to configure the fracturable LUT to
+ *   operate in a 4-input LUT mode
+ *   The mask bits can be decoded from the index of output used in the fracturable LUT
+ *   For the 2nd output, it will be '01', the binary representation of index '1'
+ *   Now the truth table will be adapt to
+ *     100101 1
+ *   where the first 4 digits come from the original truth table
+ *   the 2 following digits are mask bits
+ *   
  ********************************************************************/
 LutTruthTable adapt_truth_table_for_frac_lut(const CircuitLibrary& circuit_lib,
                                              t_pb_graph_pin* lut_out_pb_graph_pin, 
@@ -181,17 +243,17 @@ LutTruthTable adapt_truth_table_for_frac_lut(const CircuitLibrary& circuit_lib,
     /* Check if we need to modify any bits */
     VTR_ASSERT(0 <= num_mask_bits);
     if ( 0 == num_mask_bits ) {
+      /* No modification needed, push to adapted truth table */
+      adapt_truth_table.push_back(tt_line);
       continue;
     }
     /* Modify bits starting from lut_frac_level */
     /* Decode the lut_output_mask to LUT input codes */ 
     int temp = pow(2., num_mask_bits) - 1 - lut_output_mask;
-    std::vector<size_t> mask_bits = my_itobin_vec(temp, num_mask_bits);
+    std::string mask_bits_str = generate_mask_bits(temp, num_mask_bits);
     /* Copy the bits to the truth table line */
     std::string adapt_tt_line = tt_line;
-    for (const size_t& mask_bit : mask_bits) {
-      adapt_tt_line.insert(lut_frac_level, std::to_string(mask_bit));
-    }
+    adapt_tt_line.replace(lut_frac_level, mask_bits_str.size(), mask_bits_str);
 
     /* Push to adapted truth table */
     adapt_truth_table.push_back(adapt_tt_line);
@@ -283,7 +345,8 @@ std::string complete_truth_table_line(const size_t& lut_size,
 /********************************************************************
  * For each lut_bit_lines, we should recover the truth table,
  * and then set the sram bits to "1" if the truth table defines so.
- * Start_point: the position we start decode recursively
+ * Start_point: the position we start converting don't care sign '-'
+ *              to explicit '0' or '1'
  *******************************************************************/
 static 
 void rec_build_lut_bitstream_per_line(std::vector<bool>& lut_bitstream, 

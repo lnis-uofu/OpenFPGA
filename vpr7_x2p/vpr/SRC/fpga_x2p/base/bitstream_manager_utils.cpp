@@ -35,3 +35,20 @@ std::vector<ConfigBlockId> find_bitstream_manager_block_hierarchy(const Bitstrea
 
   return block_hierarchy;
 }
+
+
+/********************************************************************
+ * Find all the top-level blocks in a bitstream manager, 
+ * which have no parents
+ *******************************************************************/
+std::vector<ConfigBlockId> find_bitstream_manager_top_blocks(const BitstreamManager& bitstream_manager) {
+  std::vector<ConfigBlockId> top_blocks;
+  for (const ConfigBlockId& blk : bitstream_manager.blocks()) {
+    if (ConfigBlockId::INVALID() != bitstream_manager.block_parent(blk)) {
+      continue;
+    }
+    top_blocks.push_back(blk);
+  }
+
+  return top_blocks;
+}

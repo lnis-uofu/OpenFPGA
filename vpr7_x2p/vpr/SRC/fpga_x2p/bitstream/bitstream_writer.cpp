@@ -121,11 +121,14 @@ void write_arch_independent_bitstream_to_xml_file(const BitstreamManager& bitstr
   write_bitstream_xml_file_head(fp);
 
   std::string top_block_name = generate_fpga_top_module_name();
-  /* Find the top block */
-  ConfigBlockId top_block = bitstream_manager.find_block(top_block_name);
+  /* Find the top block, which has not parents */
+  std::vector<ConfigBlockId> top_block = find_bitstream_manager_top_blocks(bitstream_manager);
+  /* Make sure we have only 1 top block and its name matches the top module */
+  VTR_ASSERT(1 == top_block.size());
+  VTR_ASSERT(0 == top_block_name.compare(bitstream_manager.block_name(top_block[0])));
 
   /* Write bitstream, block by block, in a recursive way */
-  rec_write_block_bitstream_to_xml_file(fp, bitstream_manager, top_block);
+  rec_write_block_bitstream_to_xml_file(fp, bitstream_manager, top_block[0]);
 
   /* Close file handler */
   fp.close();

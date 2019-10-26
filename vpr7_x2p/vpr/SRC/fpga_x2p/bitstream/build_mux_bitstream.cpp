@@ -32,7 +32,7 @@ size_t find_mux_default_path_id(const CircuitLibrary& circuit_lib,
   size_t default_path_id;
 
   if (TRUE == circuit_lib.mux_add_const_input(mux_model)) {
-    default_path_id = mux_size; /* When there is a constant input, use the last path */
+    default_path_id = mux_size - 1; /* When there is a constant input, use the last path */
   } else {
     default_path_id = DEFAULT_MUX_PATH_ID; /* When there is no constant input, use the default one */
   }
@@ -61,7 +61,8 @@ std::vector<bool> build_cmos_mux_bitstream(const CircuitLibrary& circuit_lib,
    * We will find the input size of implemented MUX and fetch the graph-based representation in MUX library 
    */
   size_t implemented_mux_size = find_mux_implementation_num_inputs(circuit_lib, mux_model, mux_size);
-  MuxId mux_graph_id = mux_lib.mux_graph(mux_model, implemented_mux_size);
+  /* Note that the mux graph is indexed using datapath MUX size!!!! */
+  MuxId mux_graph_id = mux_lib.mux_graph(mux_model, mux_size);
   const MuxGraph mux_graph = mux_lib.mux_graph(mux_graph_id);
 
   size_t datapath_id = path_id;
@@ -72,7 +73,8 @@ std::vector<bool> build_cmos_mux_bitstream(const CircuitLibrary& circuit_lib,
   } else { 
     VTR_ASSERT( datapath_id < mux_size);
   }
-
+  /* Path id should makes sense */
+  VTR_ASSERT(datapath_id < mux_graph.inputs().size());
   /* We should have only one output for this MUX! */
   VTR_ASSERT(1 == mux_graph.outputs().size());
 
@@ -80,7 +82,7 @@ std::vector<bool> build_cmos_mux_bitstream(const CircuitLibrary& circuit_lib,
   vtr::vector<MuxMemId, bool> raw_bitstream = mux_graph.decode_memory_bits(MuxInputId(datapath_id), mux_graph.output_id(mux_graph.outputs()[0]));
 
   std::vector<bool> mux_bitstream;
-  for (const bool& bit : mux_bitstream) {
+  for (const bool& bit : raw_bitstream) {
     mux_bitstream.push_back(bit);
   }
 

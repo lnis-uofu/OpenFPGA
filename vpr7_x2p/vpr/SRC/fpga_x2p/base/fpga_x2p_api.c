@@ -88,8 +88,8 @@ void vpr_fpga_x2p_tool_suites(t_vpr_setup vpr_setup,
   /* Build bitstream database if needed */
   BitstreamManager bitstream_manager;
   if ( (TRUE == vpr_setup.FPGA_SPICE_Opts.BitstreamGenOpts.gen_bitstream)
-    && (FALSE == vpr_setup.FPGA_SPICE_Opts.SpiceOpts.do_spice)
-    && (FALSE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.dump_syn_verilog)) {
+    || (TRUE == vpr_setup.FPGA_SPICE_Opts.SpiceOpts.do_spice)
+    || (TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.dump_syn_verilog)) {
 
     bitstream_manager = build_device_bitstream(vpr_setup, Arch, module_manager, 
                                                Arch.spice->circuit_lib, mux_lib, 

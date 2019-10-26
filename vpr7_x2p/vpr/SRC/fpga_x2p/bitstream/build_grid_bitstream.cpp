@@ -616,7 +616,7 @@ void rec_build_physical_block_bitstream(BitstreamManager& bitstream_manager,
   /* Generate the bitstream for the interconnection in this physical block */
   build_physical_block_interc_bitstream(bitstream_manager, pb_configurable_block,
                                         module_manager, circuit_lib, mux_lib,
-                                        physical_pb->pb_graph_node, physical_pb, physical_mode_index);
+                                        physical_pb_graph_node, physical_pb, physical_mode_index);
 }
 
 /********************************************************************
@@ -650,7 +650,7 @@ void build_physical_block_bitstream(BitstreamManager& bitstream_manager,
 
     /* Check in all the mapped blocks(clustered logic block), there is a match x,y,z*/
     t_block* mapped_block = search_mapped_block(grid_coordinate.x(), grid_coordinate.y(), z); 
-    t_phy_pb* top_pb;
+    t_phy_pb* top_pb = NULL;
     if (NULL != mapped_block) {
       top_pb = (t_phy_pb*)mapped_block->phy_pb; 
       VTR_ASSERT(NULL != top_pb);
