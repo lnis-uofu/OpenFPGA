@@ -175,9 +175,19 @@ std::string generate_grid_block_instance_name(const std::string& prefix,
 std::string generate_physical_block_module_name(const std::string& prefix,
                                                 t_pb_type* physical_pb_type);
 
+std::string generate_physical_block_instance_name(const std::string& prefix,
+                                                  t_pb_type* pb_type,
+                                                  const size_t& index);
+
 std::string generate_grid_physical_block_module_name(const std::string& prefix,
                                                      t_pb_type* pb_type,
                                                      const e_side& border_side);
+
+std::string generate_grid_physical_block_instance_name(const std::string& prefix, 
+                                                       t_pb_type* pb_type, 
+                                                       const e_side& border_side,
+                                                       const size_t& index);
+
 
 e_side find_grid_border_side(const vtr::Point<size_t>& device_size,
                              const vtr::Point<size_t>& grid_coordinate);

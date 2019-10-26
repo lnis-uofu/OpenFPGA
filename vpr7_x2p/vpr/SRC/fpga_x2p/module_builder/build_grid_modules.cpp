@@ -908,6 +908,11 @@ void rec_build_physical_block_modules(ModuleManager& module_manager,
 
       /* Add the memory module as a child of primitive module */
       module_manager.add_child_module(pb_module, child_pb_module); 
+
+      /* Set an instance name to bind to a block in bitstream generation */
+      std::string child_pb_instance_name = generate_physical_block_instance_name(pb_module_name_prefix, &(physical_pb_type->modes[physical_mode_index].pb_type_children[ichild]), inst);
+      module_manager.set_child_instance_name(pb_module, child_pb_module, child_instance_id, child_pb_instance_name);
+
       /* Identify if this sub module includes configuration bits, 
        * we will update the memory module and instance list
        */
@@ -1015,6 +1020,12 @@ void build_grid_module(ModuleManager& module_manager,
   for (int iz = 0; iz < phy_block_type->capacity; ++iz) {
     size_t pb_instance_id = module_manager.num_instance(grid_module, pb_module);
     module_manager.add_child_module(grid_module, pb_module);
+
+    /* Give the child module with a unique instance name */
+    std::string instance_name = generate_grid_physical_block_instance_name(pb_module_name_prefix, phy_block_type->pb_graph_head->pb_type, border_side, iz);
+    /* Set an instance name to bind to a block in bitstream generation */
+    module_manager.set_child_instance_name(grid_module, pb_module, pb_instance_id, instance_name);
+
     /* Identify if this sub module includes configuration bits, 
      * we will update the memory module and instance list
      */

@@ -881,6 +881,21 @@ std::string generate_physical_block_module_name(const std::string& prefix,
   return module_name;
 }
 
+
+/*********************************************************************
+ * Generate the instance name for physical block with a given index 
+ **********************************************************************/
+std::string generate_physical_block_instance_name(const std::string& prefix,
+                                                  t_pb_type* pb_type,
+                                                  const size_t& index) {
+  std::string instance_name = generate_physical_block_module_name(prefix, pb_type);
+  /* Add index to the name */
+  instance_name += std::string("_");
+  instance_name += std::to_string(index);
+
+  return instance_name;
+}
+
 /*********************************************************************
  * This function is a wrapper for the function generate_physical_block_module_name()
  * which can automatically decode the io_side and add a prefix 
@@ -890,6 +905,22 @@ std::string generate_grid_physical_block_module_name(const std::string& prefix,
                                                      const e_side& border_side) {
   std::string module_name_prefix = generate_grid_block_prefix(prefix, border_side);
   return generate_physical_block_module_name(module_name_prefix, pb_type); 
+}
+
+/*********************************************************************
+ * Generate the instance name for physical block in Grid with a given index 
+ **********************************************************************/
+std::string generate_grid_physical_block_instance_name(const std::string& prefix, 
+                                                       t_pb_type* pb_type, 
+                                                       const e_side& border_side,
+                                                       const size_t& index) {
+  std::string module_name_prefix = generate_grid_block_prefix(prefix, border_side);
+  std::string instance_name = generate_physical_block_module_name(module_name_prefix, pb_type);
+  /* Add index to the name */
+  instance_name += std::string("_");
+  instance_name += std::to_string(index);
+
+  return instance_name;
 }
 
 /********************************************************************

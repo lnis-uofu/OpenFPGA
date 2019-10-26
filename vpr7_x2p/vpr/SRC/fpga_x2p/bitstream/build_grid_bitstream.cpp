@@ -552,7 +552,8 @@ void rec_build_physical_block_bitstream(BitstreamManager& bitstream_manager,
                                         const MuxLibrary& mux_lib,
                                         const e_side& border_side,
                                         t_phy_pb* physical_pb, 
-                                        t_pb_graph_node* physical_pb_graph_node) {
+                                        t_pb_graph_node* physical_pb_graph_node,
+                                        const size_t& pb_graph_node_index) {
   /* Get the physical pb_type that is linked to the pb_graph node */
   t_pb_type* physical_pb_type = physical_pb_graph_node->pb_type;
 
@@ -561,7 +562,7 @@ void rec_build_physical_block_bitstream(BitstreamManager& bitstream_manager,
 
   /* Create a block for the physical block under the grid block in bitstream manager */
   std::string pb_block_name_prefix = generate_grid_block_prefix(std::string(GRID_MODULE_NAME_PREFIX), border_side);
-  std::string pb_block_name = generate_physical_block_module_name(pb_block_name_prefix, physical_pb_type);
+  std::string pb_block_name = generate_physical_block_instance_name(pb_block_name_prefix, physical_pb_type, pb_graph_node_index);
   ConfigBlockId pb_configurable_block = bitstream_manager.add_block(pb_block_name);
   bitstream_manager.add_child_block(parent_configurable_block, pb_configurable_block);
 
@@ -579,7 +580,8 @@ void rec_build_physical_block_bitstream(BitstreamManager& bitstream_manager,
                                            module_manager, circuit_lib, mux_lib, 
                                            border_side, 
                                            child_pb,
-                                           &(physical_pb_graph_node->child_pb_graph_nodes[physical_mode_index][ipb][jpb]));
+                                           &(physical_pb_graph_node->child_pb_graph_nodes[physical_mode_index][ipb][jpb]),
+                                           jpb);
       }
     }
   }
@@ -660,7 +662,7 @@ void build_physical_block_bitstream(BitstreamManager& bitstream_manager,
     rec_build_physical_block_bitstream(bitstream_manager, grid_configurable_block, 
                                        module_manager, circuit_lib, mux_lib, 
                                        border_side, 
-                                       top_pb, top_pb_graph_node);
+                                       top_pb, top_pb_graph_node, z);
   } 
 }
 
