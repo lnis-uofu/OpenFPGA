@@ -10,6 +10,7 @@
 #include "vpr_types.h"
 #include "globals.h"
 
+#include "fpga_x2p_reserved_words.h"
 #include "fpga_x2p_naming.h"
 #include "fpga_x2p_utils.h"
 #include "fpga_x2p_pbtypes_utils.h"
@@ -95,7 +96,7 @@ size_t add_top_module_grid_instance(ModuleManager& module_manager,
                                     const e_side& border_side,
                                     const vtr::Point<size_t>& grid_coord) {
   /* Find the module name for this type of grid */
-  std::string grid_module_name_prefix(grid_verilog_file_name_prefix);
+  std::string grid_module_name_prefix(GRID_MODULE_NAME_PREFIX);
   std::string grid_module_name = generate_grid_block_module_name(grid_module_name_prefix, std::string(grid_type->name), IO_TYPE == grid_type, border_side);
   ModuleId grid_module = module_manager.find_module(grid_module_name);
   VTR_ASSERT(true == module_manager.valid_module_id(grid_module));
@@ -404,7 +405,7 @@ void add_top_module_nets_connect_grids_and_sb(ModuleManager& module_manager,
       /* Collect source-related information */
       /* Generate the grid module name by considering if it locates on the border */
       vtr::Point<size_t> grid_coordinate(rr_gsb.get_opin_node(side_manager.get_side(), inode)->xlow, (rr_gsb.get_opin_node(side_manager.get_side(), inode)->ylow));
-      std::string src_grid_module_name = generate_grid_block_module_name_in_top_module(std::string(grid_verilog_file_name_prefix), device_size, grids, grid_coordinate); 
+      std::string src_grid_module_name = generate_grid_block_module_name_in_top_module(std::string(GRID_MODULE_NAME_PREFIX), device_size, grids, grid_coordinate); 
       ModuleId src_grid_module = module_manager.find_module(src_grid_module_name);
       VTR_ASSERT(true == module_manager.valid_module_id(src_grid_module));
       size_t src_grid_instance = grid_instance_ids[grid_coordinate.x()][grid_coordinate.y()];
@@ -556,7 +557,7 @@ void add_top_module_nets_connect_grids_and_cb(ModuleManager& module_manager,
        */
       t_rr_node* instance_ipin_node = rr_gsb.get_ipin_node(cb_ipin_side, inode);
       vtr::Point<size_t> grid_coordinate(instance_ipin_node->xlow, instance_ipin_node->ylow);
-      std::string sink_grid_module_name = generate_grid_block_module_name_in_top_module(std::string(grid_verilog_file_name_prefix), device_size, grids, grid_coordinate); 
+      std::string sink_grid_module_name = generate_grid_block_module_name_in_top_module(std::string(GRID_MODULE_NAME_PREFIX), device_size, grids, grid_coordinate); 
       ModuleId sink_grid_module = module_manager.find_module(sink_grid_module_name);
       VTR_ASSERT(true == module_manager.valid_module_id(sink_grid_module));
       size_t sink_grid_instance = grid_instance_ids[grid_coordinate.x()][grid_coordinate.y()];

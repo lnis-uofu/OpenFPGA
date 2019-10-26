@@ -791,6 +791,24 @@ std::string generate_cb_memory_instance_name(const std::string& prefix,
 }
 
 /*********************************************************************
+ * Generate the instance name for a configurable memory module in a 
+ * physical block of a grid
+ ********************************************************************/
+std::string generate_pb_memory_instance_name(const std::string& prefix,
+                                             t_pb_graph_pin* pb_graph_pin, 
+                                             const std::string& postfix) {
+  std::string instance_name(prefix);
+  instance_name += std::string(pb_graph_pin->parent_node->pb_type->name);
+  instance_name += std::string("_");
+  instance_name += std::string(pb_graph_pin->port->name);
+  instance_name += std::string("_");
+  instance_name += std::to_string(pb_graph_pin->pin_number);
+  instance_name += postfix;
+
+  return instance_name;
+}
+
+/*********************************************************************
  * Generate the instance name of a grid block
  **********************************************************************/
 std::string generate_grid_block_instance_name(const std::string& prefix,

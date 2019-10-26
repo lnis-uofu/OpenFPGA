@@ -247,11 +247,15 @@ void alloc_and_load_phy_pb_children_for_one_mapped_block(t_pb* cur_pb,
 void get_mapped_lut_phy_pb_input_pin_vpack_net_num(t_phy_pb* lut_phy_pb,
                                                    int* num_lut_pin, int** lut_pin_net);
 
+std::vector<int> find_mapped_lut_phy_pb_input_pin_vpack_net_num(t_phy_pb* lut_phy_pb);
+
 void get_mapped_lut_pb_input_pin_vpack_net_num(t_pb* lut_pb,
                                                int* num_lut_pin, int** lut_pin_net);
 
 void get_lut_logical_block_input_pin_vpack_net_num(t_logical_block* lut_logical_block,
                                                    int* num_lut_pin, int** lut_pin_net);
+
+std::vector<int> find_lut_logical_block_input_pin_vpack_net_num(t_logical_block* lut_logical_block);
 
 void rec_reset_pb_type_temp_placement_index(t_pb_type* cur_pb_type);
 

@@ -3205,6 +3205,25 @@ void get_mapped_lut_phy_pb_input_pin_vpack_net_num(t_phy_pb* lut_phy_pb,
   return;
 }
 
+/********************************************************************
+ * Find the vpack_net_num of all the input pins of a LUT physical pb 
+ *******************************************************************/
+std::vector<int> find_mapped_lut_phy_pb_input_pin_vpack_net_num(t_phy_pb* lut_phy_pb) {
+  std::vector<int> lut_pin_net; 
+
+  /* Check */ 
+  VTR_ASSERT (1 == lut_phy_pb->pb_graph_node->num_input_ports);
+  lut_pin_net.resize(lut_phy_pb->pb_graph_node->num_input_pins[0]); 
+ 
+  /* Fill the array */
+  for (size_t ipin = 0; ipin < lut_pin_net.size(); ++ipin) {
+    int inode = lut_phy_pb->pb_graph_node->input_pins[0][ipin].rr_node_index_physical_pb;
+    lut_pin_net[ipin] = lut_phy_pb->rr_graph->rr_node[inode].vpack_net_num;
+  }
+
+  return lut_pin_net;
+}
+
 /* Get the vpack_net_num of all the input pins of a LUT physical pb */
 void get_mapped_lut_pb_input_pin_vpack_net_num(t_pb* lut_pb,
                                                int* num_lut_pin, int** lut_pin_net) {
@@ -3224,6 +3243,25 @@ void get_mapped_lut_pb_input_pin_vpack_net_num(t_pb* lut_pb,
 
   return;
 }
+
+
+/********************************************************************
+ * Get the vpack_net_num of all the input pins of a LUT physical pb 
+ *******************************************************************/
+std::vector<int> find_lut_logical_block_input_pin_vpack_net_num(t_logical_block* lut_logical_block) {
+  /* Ensure there is only one pin in the LUT logical block */ 
+  VTR_ASSERT (NULL == lut_logical_block->model->inputs[0].next);
+  
+  std::vector<int> lut_pin_nets(lut_logical_block->model->inputs[0].size);  
+ 
+  /* Fill the array */
+  for (size_t ipin = 0; ipin < lut_pin_nets.size(); ++ipin) {
+    lut_pin_nets[ipin] = lut_logical_block->input_nets[0][ipin];
+  }
+
+  return lut_pin_nets;
+}
+
 
 /* Get the vpack_net_num of all the input pins of a LUT physical pb */
 void get_lut_logical_block_input_pin_vpack_net_num(t_logical_block* lut_logical_block,

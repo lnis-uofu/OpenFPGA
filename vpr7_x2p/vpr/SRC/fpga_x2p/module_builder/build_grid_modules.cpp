@@ -277,7 +277,7 @@ void build_primitive_block_module(ModuleManager& module_manager,
   CircuitModelId& primitive_model = primitive_pb_graph_node->pb_type->circuit_model;
 
   /* Generate the module name for this primitive pb_graph_node*/
-  std::string primitive_module_name_prefix = generate_grid_block_prefix(std::string(grid_verilog_file_name_prefix), io_side);
+  std::string primitive_module_name_prefix = generate_grid_block_prefix(std::string(GRID_MODULE_NAME_PREFIX), io_side);
   std::string primitive_module_name = generate_physical_block_module_name(primitive_module_name_prefix, primitive_pb_graph_node->pb_type);
 
   /* Create a module of the primitive LUT and register it to module manager */
@@ -353,6 +353,8 @@ void build_primitive_block_module(ModuleManager& module_manager,
     size_t memory_instance_id = module_manager.num_instance(primitive_module, memory_module); 
     /* Add the memory module as a child of primitive module */
     module_manager.add_child_module(primitive_module, memory_module);
+    /* Set an instance name to bind to a block in bitstream generation */
+    module_manager.set_child_instance_name(primitive_module, memory_module, memory_instance_id, memory_module_name);
   
     /* Add nets to connect regular and mode-select SRAM ports to the SRAM port of memory module */
     add_module_nets_between_logic_and_memory_sram_bus(module_manager, primitive_module, 
@@ -557,6 +559,11 @@ void add_module_pb_graph_pin_interc(ModuleManager& module_manager,
     VTR_ASSERT(true == module_manager.valid_module_id(mux_mem_module));
     size_t mux_mem_instance = module_manager.num_instance(pb_module, mux_mem_module);
     module_manager.add_child_module(pb_module, mux_mem_module);
+    /* Give an instance name: this name should be consistent with the block name given in bitstream manager,
+     * If you want to bind the bitstream generation to modules
+     */
+    std::string mux_mem_instance_name = generate_pb_memory_instance_name(GRID_MEM_INSTANCE_PREFIX, des_pb_graph_pin, std::string(""));
+    module_manager.set_child_instance_name(pb_module, mux_mem_module, mux_mem_instance, mux_mem_instance_name);
 
     /* Add nets to connect SRAM ports of the MUX to the SRAM port of memory module */
     add_module_nets_between_logic_and_memory_sram_bus(module_manager, pb_module, 
@@ -866,7 +873,7 @@ void rec_build_physical_block_modules(ModuleManager& module_manager,
   }
 
   /* Generate the name of the Verilog module for this pb_type */
-  std::string pb_module_name_prefix = generate_grid_block_prefix(std::string(grid_verilog_file_name_prefix), io_side);
+  std::string pb_module_name_prefix = generate_grid_block_prefix(std::string(GRID_MODULE_NAME_PREFIX), io_side);
   std::string pb_module_name = generate_physical_block_module_name(pb_module_name_prefix, physical_pb_type);
 
   /* Register the Verilog module in module manager */
@@ -994,12 +1001,12 @@ void build_grid_module(ModuleManager& module_manager,
                                    border_side);
 
   /* Create a Verilog Module for the top-level physical block, and add to module manager */
-  std::string grid_module_name = generate_grid_block_module_name(std::string(grid_verilog_file_name_prefix), std::string(phy_block_type->name), IO_TYPE == phy_block_type, border_side);
+  std::string grid_module_name = generate_grid_block_module_name(std::string(GRID_MODULE_NAME_PREFIX), std::string(phy_block_type->name), IO_TYPE == phy_block_type, border_side);
   ModuleId grid_module = module_manager.add_module(grid_module_name); 
   VTR_ASSERT(true == module_manager.valid_module_id(grid_module));
 
   /* Generate the name of the Verilog module for this pb_type */
-  std::string pb_module_name_prefix(grid_verilog_file_name_prefix);
+  std::string pb_module_name_prefix(GRID_MODULE_NAME_PREFIX);
   std::string pb_module_name = generate_grid_physical_block_module_name(pb_module_name_prefix, phy_block_type->pb_graph_head->pb_type, border_side);
   ModuleId pb_module = module_manager.find_module(pb_module_name);
   VTR_ASSERT(true == module_manager.valid_module_id(pb_module));

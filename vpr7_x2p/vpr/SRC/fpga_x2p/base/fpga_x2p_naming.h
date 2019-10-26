@@ -88,6 +88,10 @@ std::string generate_cb_memory_instance_name(const std::string& prefix,
                                              const size_t& pin_id, 
                                              const std::string& postfix);
 
+std::string generate_pb_memory_instance_name(const std::string& prefix,
+                                             t_pb_graph_pin* pb_graph_pin, 
+                                             const std::string& postfix);
+
 std::string generate_grid_port_name(const vtr::Point<size_t>& coordinate,
                                     const size_t& height, 
                                     const e_side& side, 
