@@ -63,25 +63,25 @@ matrix:
           - valgrind
           - zip
           - qt5-default
-    - os: osx
-      osx_image: xcode10.2 # we target latest MacOS Mojave
-      sudo: true
-      compiler: gcc-4.9 # Use clang instead of gcc in MacOS
-      addons:
-        homebrew:
-          packages:
-          - bison
-          - cmake
-          - ctags
-          - flex
-          - fontconfig
-          - git
-          - gcc@6
-          - gcc@4.9
-          - gawk
-          - icarus-verilog
-          - libxml++
-          - qt5
+#    - os: osx
+#      osx_image: xcode10.2 # we target latest MacOS Mojave
+#      sudo: true
+#      compiler: gcc-4.9 # Use clang instead of gcc in MacOS
+#      addons:
+#        homebrew:
+#          packages:
+#          - bison
+#          - cmake
+#          - ctags
+#          - flex
+#          - fontconfig
+#          - git
+#          - gcc@6
+#          - gcc@4.9
+#          - gawk
+#          - icarus-verilog
+#          - libxml++
+#          - qt5
 
 before_install:
   - source .travis/common.sh
