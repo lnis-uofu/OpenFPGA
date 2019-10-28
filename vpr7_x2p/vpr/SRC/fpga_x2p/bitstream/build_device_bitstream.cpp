@@ -17,7 +17,7 @@
 #include "build_device_bitstream.h"
 
 /********************************************************************
- * Top-level function to build a bistream from the FPGA device
+ * A top-level function to build a bistream from the FPGA device
  * 1. It will organize the bitstream w.r.t. the hierarchy of module graphs 
  *    describing the FPGA fabric
  * 2. It will decode configuration bits from routing multiplexers used in 
@@ -56,7 +56,7 @@ BitstreamManager build_device_bitstream(const t_vpr_setup& vpr_setup,
 #endif
 
   /* Bistream builder formally starts*/
-  vpr_printf(TIO_MESSAGE_INFO, "\nStart building bitstream for FPGA fabric...\n");
+  vpr_printf(TIO_MESSAGE_INFO, "\nStart building fabric-independent bitstream for FPGA...\n");
 
   /* Bitstream manager to be built */
   BitstreamManager bitstream_manager;
@@ -81,7 +81,7 @@ BitstreamManager build_device_bitstream(const t_vpr_setup& vpr_setup,
   build_grid_bitstream(bitstream_manager, top_block, module_manager, circuit_lib, mux_lib, device_size, grids);
 
   /* Create bitstream from routing architectures */
-  build_routing_bitstream(bitstream_manager, top_block, module_manager, circuit_lib, mux_lib, grids, rr_switches, L_rr_node, L_device_rr_gsb);
+  build_routing_bitstream(bitstream_manager, top_block, module_manager, circuit_lib, mux_lib, rr_switches, L_rr_node, L_device_rr_gsb);
 
   /* End time count */
   clock_t t_end = clock();
@@ -93,3 +93,5 @@ BitstreamManager build_device_bitstream(const t_vpr_setup& vpr_setup,
 
   return bitstream_manager;
 }
+
+

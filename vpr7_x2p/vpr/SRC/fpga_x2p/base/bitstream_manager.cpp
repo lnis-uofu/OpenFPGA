@@ -64,6 +64,29 @@ ConfigBlockId BitstreamManager::bit_parent_block(const ConfigBitId& bit_id) cons
   return bit_parent_block_ids_[bit_id];
 }
 
+/* Find the child block in a bitstream manager with a given name */
+ConfigBlockId BitstreamManager::find_child_block(const ConfigBlockId& block_id, 
+                                                 const std::string& child_block_name) const {
+  /* Ensure the input ids are valid */
+  VTR_ASSERT(true == valid_block_id(block_id));
+
+  std::vector<ConfigBlockId> candidates;
+
+  for (const ConfigBlockId& child : block_children(block_id)) {
+    if (0 == child_block_name.compare(block_name(child))) {
+      candidates.push_back(child);
+    }
+  }
+
+  /* We should have 0 or 1 candidate! */
+  VTR_ASSERT(0 == candidates.size() || 1 == candidates.size());
+  if (0 == candidates.size()) {
+    /* Not found, return an invalid value */
+    return ConfigBlockId::INVALID();
+  }
+  return candidates[0];
+}
+
 /******************************************************************************
  * Public Mutators
  ******************************************************************************/

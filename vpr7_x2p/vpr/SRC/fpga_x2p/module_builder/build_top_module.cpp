@@ -310,6 +310,7 @@ std::vector<std::vector<size_t>> add_top_module_connection_block_instances(Modul
       /* If we use compact routing hierarchy, we should instanciate the unique module of SB */
       if (true == compact_routing_hierarchy) {
         DeviceCoordinator cb_coord(ix, iy);
+        /* Note: use GSB coordinate when inquire for unique modules!!! */
         const RRGSB& unique_mirror = L_device_rr_gsb.get_cb_unique_module(cb_type, cb_coord);
         cb_coordinate.set_x(unique_mirror.get_cb_x(cb_type)); 
         cb_coordinate.set_y(unique_mirror.get_cb_y(cb_type)); 
@@ -324,10 +325,10 @@ std::vector<std::vector<size_t>> add_top_module_connection_block_instances(Modul
       /* Set an unique name to the instance
        * Note: it is your risk to gurantee the name is unique!
        */
+      std::string cb_instance_name = generate_connection_block_module_name(cb_type, vtr::Point<size_t>(rr_gsb.get_cb_x(cb_type), rr_gsb.get_cb_y(cb_type)));
       module_manager.set_child_instance_name(top_module, cb_module, 
                                              cb_instance_ids[rr_gsb.get_cb_x(cb_type)][rr_gsb.get_cb_y(cb_type)],
-                                             generate_connection_block_module_name(cb_type, vtr::Point<size_t>(rr_gsb.get_cb_x(cb_type), rr_gsb.get_cb_y(cb_type))));
-
+                                             cb_instance_name); 
     }
   }
 

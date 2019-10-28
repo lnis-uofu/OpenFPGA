@@ -760,6 +760,9 @@ std::string generate_grid_block_module_name(const std::string& prefix,
 
 /*********************************************************************
  * Generate the instance name for a configurable memory module in a Switch Block
+ * To keep a unique name in each module and also consider unique routing modules,
+ * please do NOT include any coordinates in the naming!!!
+ * Consider only relative coordinate, such as side!
  ********************************************************************/
 std::string generate_sb_memory_instance_name(const std::string& prefix,
                                              const e_side& sb_side, 
@@ -775,16 +778,18 @@ std::string generate_sb_memory_instance_name(const std::string& prefix,
 
 /*********************************************************************
  * Generate the instance name for a configurable memory module in a Connection Block
+ * To keep a unique name in each module and also consider unique routing modules,
+ * please do NOT include any coordinates in the naming!!!
+ * Consider only relative coordinate, such as side!
  ********************************************************************/
 std::string generate_cb_memory_instance_name(const std::string& prefix,
-                                             const std::vector<std::vector<t_grid_tile>>& grids,
-                                             const vtr::Point<size_t>& coordinate,
                                              const e_side& cb_side, 
                                              const size_t& pin_id, 
                                              const std::string& postfix) {
   std::string instance_name(prefix);
 
-  instance_name += generate_grid_side_port_name(grids, coordinate, cb_side, pin_id);
+  instance_name += Side(cb_side).to_string();
+  instance_name += std::string("_ipin_") + std::to_string(pin_id);
   instance_name += postfix;
 
   return instance_name;
@@ -793,12 +798,26 @@ std::string generate_cb_memory_instance_name(const std::string& prefix,
 /*********************************************************************
  * Generate the instance name for a configurable memory module in a 
  * physical block of a grid
+ * To guarentee a unique name for pb_graph pin,
+ * the instance name includes the index of parent node
+ * as well as the port name and pin index of this pin
+ *
+ * Exceptions: 
+ * For OUTPUT ports, due to hierarchical module organization, 
+ * their parent nodes will be uniquified
+ * So, we should not add any index here
  ********************************************************************/
 std::string generate_pb_memory_instance_name(const std::string& prefix,
                                              t_pb_graph_pin* pb_graph_pin, 
                                              const std::string& postfix) {
   std::string instance_name(prefix);
   instance_name += std::string(pb_graph_pin->parent_node->pb_type->name);
+
+  if (IN_PORT == pb_graph_pin->port->type) {
+    instance_name += std::string("_");
+    instance_name += std::to_string(pb_graph_pin->parent_node->placement_index);
+  }
+
   instance_name += std::string("_");
   instance_name += std::string(pb_graph_pin->port->name);
   instance_name += std::string("_");

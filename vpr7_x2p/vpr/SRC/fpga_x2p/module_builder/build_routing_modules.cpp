@@ -775,8 +775,7 @@ void build_connection_block_mux_module(ModuleManager& module_manager,
   /* Give an instance name: this name should be consistent with the block name given in bitstream manager,
    * If you want to bind the bitstream generation to modules
    */
-  vtr::Point<size_t> ipin_coord(cur_rr_node->xlow, cur_rr_node->ylow);
-  std::string mem_instance_name = generate_cb_memory_instance_name(CONNECTION_BLOCK_MEM_INSTANCE_PREFIX, grids, ipin_coord, rr_gsb.get_ipin_node_grid_side(cb_ipin_side, ipin_index), cur_rr_node->ptc_num, std::string(""));
+  std::string mem_instance_name = generate_cb_memory_instance_name(CONNECTION_BLOCK_MEM_INSTANCE_PREFIX, rr_gsb.get_ipin_node_grid_side(cb_ipin_side, ipin_index), cur_rr_node->ptc_num, std::string(""));
   module_manager.set_child_instance_name(cb_module, mem_module, mem_instance_id, mem_instance_name);
 
   /* Add nets to connect regular and mode-select SRAM ports to the SRAM port of memory module */

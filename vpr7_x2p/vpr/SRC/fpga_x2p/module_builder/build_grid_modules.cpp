@@ -564,6 +564,8 @@ void add_module_pb_graph_pin_interc(ModuleManager& module_manager,
      */
     std::string mux_mem_instance_name = generate_pb_memory_instance_name(GRID_MEM_INSTANCE_PREFIX, des_pb_graph_pin, std::string(""));
     module_manager.set_child_instance_name(pb_module, mux_mem_module, mux_mem_instance, mux_mem_instance_name);
+    /* Add this MUX as a configurable child to the pb_module */
+    module_manager.add_configurable_child(pb_module, mux_mem_module, mux_mem_instance);
 
     /* Add nets to connect SRAM ports of the MUX to the SRAM port of memory module */
     add_module_nets_between_logic_and_memory_sram_bus(module_manager, pb_module, 

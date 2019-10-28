@@ -39,7 +39,8 @@ void organize_top_module_tile_cb_modules(ModuleManager& module_manager,
   vtr::Point<size_t> cb_coord(rr_gsb.get_cb_x(cb_type), rr_gsb.get_cb_y(cb_type));
   /* If we use compact routing hierarchy, we should instanciate the unique module of SB */
   if (true == compact_routing_hierarchy) {
-    const RRGSB& unique_mirror = L_device_rr_gsb.get_cb_unique_module(cb_type, DeviceCoordinator(cb_coord.x(), cb_coord.y()));
+    /* Note: use GSB coordinate when inquire for unique modules!!! */
+    const RRGSB& unique_mirror = L_device_rr_gsb.get_cb_unique_module(cb_type, DeviceCoordinator(rr_gsb.get_x(), rr_gsb.get_y()));
     cb_coord.set_x(unique_mirror.get_cb_x(cb_type)); 
     cb_coord.set_y(unique_mirror.get_cb_y(cb_type)); 
   } 
@@ -54,7 +55,8 @@ void organize_top_module_tile_cb_modules(ModuleManager& module_manager,
   if (0 < find_module_num_config_bits(module_manager, cb_module,
                                       circuit_lib, sram_model, 
                                       sram_orgz_type)) {
-    module_manager.add_configurable_child(top_module, cb_module, cb_instance_ids[cb_coord.x()][cb_coord.y()]);
+    /* Note that use the original CB coodinate for instance id searching ! */
+    module_manager.add_configurable_child(top_module, cb_module, cb_instance_ids[rr_gsb.get_cb_x(cb_type)][rr_gsb.get_cb_y(cb_type)]);
   }
 }
 
@@ -107,7 +109,7 @@ void organize_top_module_tile_memory_modules(ModuleManager& module_manager,
     if (0 < find_module_num_config_bits(module_manager, sb_module,
                                         circuit_lib, sram_model, 
                                         sram_orgz_type)) {
-      module_manager.add_configurable_child(top_module, sb_module, sb_instance_ids[sb_coord.x()][sb_coord.y()]);
+      module_manager.add_configurable_child(top_module, sb_module, sb_instance_ids[rr_gsb.get_sb_x()][rr_gsb.get_sb_y()]);
     }
     
     /* Try to find and add CBX and CBY */
@@ -126,6 +128,16 @@ void organize_top_module_tile_memory_modules(ModuleManager& module_manager,
 
   /* Find the module name for this type of grid */
   t_type_ptr grid_type = grids[tile_coord.x()][tile_coord.y()].type;
+
+  /* Skip EMPTY Grid */
+  if (EMPTY_TYPE == grid_type) {
+    return;
+  }
+  /* Skip height>1 Grid, which should already been processed when offset=0 */
+  if (0 < grids[tile_coord.x()][tile_coord.y()].offset) {
+    return;
+  }
+
   std::string grid_module_name_prefix(grid_verilog_file_name_prefix);
   std::string grid_module_name = generate_grid_block_module_name(grid_module_name_prefix, std::string(grid_type->name), IO_TYPE == grid_type, tile_border_side);
   ModuleId grid_module = module_manager.find_module(grid_module_name);
@@ -232,10 +244,26 @@ void organize_top_module_memory_modules(ModuleManager& module_manager,
     io_coords[RIGHT].push_back(vtr::Point<size_t>(device_size.x() - 1, iy));
   }
 
-  /* TOP side I/Os */
+  /* TOP side I/Os 
+   * Special case for TOP side: We need tile at ix = 0, which has a SB!!! 
+   *
+   *  TOP-LEFT CORNER of FPGA fabric
+   *    
+   *    +--------+ +-------+
+   *    | EMPTY  | | EMPTY |
+   *    | Grid   | |  CBX  |
+   *    | [0][x] | |       |
+   *    +--------+ +-------+
+   *    +--------+ +--------+
+   *    | EMPTY  | |  SB    |
+   *    | CBX    | | [0][x] |
+   *    +--------+ +--------+
+   * 
+   */
   for (size_t ix = device_size.x() - 2; ix >= 1; --ix) {
     io_coords[TOP].push_back(vtr::Point<size_t>(ix, device_size.y() - 1));
   }
+  io_coords[TOP].push_back(vtr::Point<size_t>(0, device_size.y() - 1));
 
   /* LEFT side I/Os */
   for (size_t iy = device_size.y() - 2; iy >= 1; --iy) {

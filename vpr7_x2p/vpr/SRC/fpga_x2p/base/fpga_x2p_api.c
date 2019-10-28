@@ -31,6 +31,7 @@
 #include "mux_library_builder.h"
 #include "build_module_graph.h"
 #include "build_device_bitstream.h"
+#include "build_fabric_bitstream.h"
 #include "bitstream_writer.h"
 
 #include "spice_api.h"
@@ -87,14 +88,20 @@ void vpr_fpga_x2p_tool_suites(t_vpr_setup vpr_setup,
 
   /* Build bitstream database if needed */
   BitstreamManager bitstream_manager;
+  std::vector<ConfigBitId> fabric_bitstream;
   if ( (TRUE == vpr_setup.FPGA_SPICE_Opts.BitstreamGenOpts.gen_bitstream)
     || (TRUE == vpr_setup.FPGA_SPICE_Opts.SpiceOpts.do_spice)
     || (TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.dump_syn_verilog)) {
 
+    /* Build fabric independent bitstream */
     bitstream_manager = build_device_bitstream(vpr_setup, Arch, module_manager, 
                                                Arch.spice->circuit_lib, mux_lib, 
                                                device_size, grids, 
                                                rr_switches, rr_node, device_rr_gsb);
+
+    /* Build fabric dependent bitstream */
+    fabric_bitstream = build_fabric_dependent_bitstream(bitstream_manager, module_manager);
+
     /* Write bitstream to files */
     std::string bitstream_file_path; 
 

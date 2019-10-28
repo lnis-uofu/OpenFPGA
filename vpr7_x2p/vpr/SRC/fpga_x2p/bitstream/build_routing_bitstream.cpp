@@ -236,7 +236,6 @@ void build_connection_block_interc_bitstream(BitstreamManager& bitstream_manager
                                          const ModuleManager& module_manager,
                                          const CircuitLibrary& circuit_lib,
                                          const MuxLibrary& mux_lib,
-                                         const std::vector<std::vector<t_grid_tile>>& grids,
                                          const std::vector<t_switch_inf>& rr_switches,
                                          t_rr_node* L_rr_node,
                                          const RRGSB& rr_gsb,
@@ -248,8 +247,7 @@ void build_connection_block_interc_bitstream(BitstreamManager& bitstream_manager
     /* No bitstream generation required by a special direct connection*/
   } else if (1 < src_rr_node->fan_in) {
     /* Create the block denoting the memory instances that drives this node in Switch Block */
-    vtr::Point<size_t> ipin_coord(src_rr_node->xlow, src_rr_node->ylow);
-    std::string mem_block_name = generate_cb_memory_instance_name(CONNECTION_BLOCK_MEM_INSTANCE_PREFIX, grids, ipin_coord, rr_gsb.get_ipin_node_grid_side(cb_ipin_side, ipin_index), src_rr_node->ptc_num, std::string(""));
+    std::string mem_block_name = generate_cb_memory_instance_name(CONNECTION_BLOCK_MEM_INSTANCE_PREFIX, rr_gsb.get_ipin_node_grid_side(cb_ipin_side, ipin_index), src_rr_node->ptc_num, std::string(""));
     ConfigBlockId mux_mem_block = bitstream_manager.add_block(mem_block_name);
     bitstream_manager.add_child_block(cb_configurable_block, mux_mem_block);
     /* This is a routing multiplexer! Generate bitstream */
@@ -276,7 +274,6 @@ void build_connection_block_bitstream(BitstreamManager& bitstream_manager,
                                       const ModuleManager& module_manager,
                                       const CircuitLibrary& circuit_lib,
                                       const MuxLibrary& mux_lib,
-                                      const std::vector<std::vector<t_grid_tile>>& grids,
                                       const std::vector<t_switch_inf>& rr_switches,
                                       t_rr_node* L_rr_node,
                                       const RRGSB& rr_gsb,
@@ -291,7 +288,7 @@ void build_connection_block_bitstream(BitstreamManager& bitstream_manager,
     for (size_t inode = 0; inode < rr_gsb.get_num_ipin_nodes(cb_ipin_side); ++inode) { 
       build_connection_block_interc_bitstream(bitstream_manager, cb_configurable_block,
                                               module_manager, circuit_lib, mux_lib, 
-                                              grids, rr_switches, L_rr_node, 
+                                              rr_switches, L_rr_node, 
                                               rr_gsb,
                                               cb_ipin_side, inode);
     }
@@ -307,7 +304,6 @@ void build_connection_block_bitstreams(BitstreamManager& bitstream_manager,
                                        const ModuleManager& module_manager,
                                        const CircuitLibrary& circuit_lib,
                                        const MuxLibrary& mux_lib,
-                                       const std::vector<std::vector<t_grid_tile>>& grids,
                                        const std::vector<t_switch_inf>& rr_switches,
                                        t_rr_node* L_rr_node,
                                        const DeviceRRGSB& L_device_rr_gsb,
@@ -333,7 +329,7 @@ void build_connection_block_bitstreams(BitstreamManager& bitstream_manager,
       bitstream_manager.add_child_block(top_configurable_block, cb_configurable_block);
   
       build_connection_block_bitstream(bitstream_manager, cb_configurable_block, module_manager,  
-                                       circuit_lib, mux_lib, grids, rr_switches, L_rr_node,
+                                       circuit_lib, mux_lib, rr_switches, L_rr_node,
                                        rr_gsb, cb_type);
     }
   }
@@ -350,7 +346,6 @@ void build_routing_bitstream(BitstreamManager& bitstream_manager,
                              const ModuleManager& module_manager,
                              const CircuitLibrary& circuit_lib,
                              const MuxLibrary& mux_lib,
-                             const std::vector<std::vector<t_grid_tile>>& grids,
                              const std::vector<t_switch_inf>& rr_switches,
                              t_rr_node* L_rr_node,
                              const DeviceRRGSB& L_device_rr_gsb) {
@@ -384,13 +379,13 @@ void build_routing_bitstream(BitstreamManager& bitstream_manager,
   vpr_printf(TIO_MESSAGE_INFO,"Generating bitstream for X-directionConnection blocks ...\n");
 
   build_connection_block_bitstreams(bitstream_manager, top_configurable_block, module_manager,  
-                                    circuit_lib, mux_lib, grids, rr_switches, L_rr_node,
+                                    circuit_lib, mux_lib, rr_switches, L_rr_node,
                                     L_device_rr_gsb, CHANX);
 
   vpr_printf(TIO_MESSAGE_INFO,"Generating bitstream for Y-directionConnection blocks ...\n");
 
   build_connection_block_bitstreams(bitstream_manager, top_configurable_block, module_manager,  
-                                    circuit_lib, mux_lib, grids, rr_switches, L_rr_node,
+                                    circuit_lib, mux_lib, rr_switches, L_rr_node,
                                     L_device_rr_gsb, CHANY);
 
 }

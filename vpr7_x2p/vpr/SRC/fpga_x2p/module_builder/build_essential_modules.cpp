@@ -3,6 +3,7 @@
  * which are the leaf circuit model in the circuit library
  *******************************************************************/
 #include <vector>
+#include <ctime>
 #include "util.h"
 #include "vtr_assert.h"
 
@@ -240,10 +241,23 @@ void build_constant_generator_module(ModuleManager& module_manager,
  * 2. GND
  ********************************************************************/
 void build_constant_generator_modules(ModuleManager& module_manager) {
+  /* Start time count */
+  clock_t t_start = clock();
+
+  vpr_printf(TIO_MESSAGE_INFO,
+             "Building modules for constant generator...");
 
   /* VDD */
   build_constant_generator_module(module_manager, 1);
 
   /* GND */
   build_constant_generator_module(module_manager, 0);
+
+  /* End time count */
+  clock_t t_end = clock();
+
+  float run_time_sec = (float)(t_end - t_start) / CLOCKS_PER_SEC;
+  vpr_printf(TIO_MESSAGE_INFO, 
+             "took %g seconds\n", 
+             run_time_sec);  
 }

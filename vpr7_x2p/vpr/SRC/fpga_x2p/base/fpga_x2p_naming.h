@@ -82,8 +82,6 @@ std::string generate_sb_memory_instance_name(const std::string& prefix,
                                              const std::string& postfix);
 
 std::string generate_cb_memory_instance_name(const std::string& prefix,
-                                             const std::vector<std::vector<t_grid_tile>>& grids,
-                                             const vtr::Point<size_t>& coordinate,
                                              const e_side& cb_side, 
                                              const size_t& pin_id, 
                                              const std::string& postfix);

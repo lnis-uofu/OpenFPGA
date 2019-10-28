@@ -73,6 +73,9 @@ class BitstreamManager {
     /* Find the parent block of a bit */
     ConfigBlockId bit_parent_block(const ConfigBitId& bit_id) const;
 
+    /* Find the child block in a bitstream manager with a given name */
+    ConfigBlockId find_child_block(const ConfigBlockId& block_id, const std::string& child_block_name) const;
+
   public:  /* Public Mutators */
     /* Add a new configuration bit to the bitstream manager */
     ConfigBitId add_bit(const bool& bit_value);

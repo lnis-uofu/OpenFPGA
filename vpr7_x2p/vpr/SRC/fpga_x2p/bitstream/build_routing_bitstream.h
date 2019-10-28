@@ -17,7 +17,6 @@ void build_routing_bitstream(BitstreamManager& bitstream_manager,
                              const ModuleManager& module_manager,
                              const CircuitLibrary& circuit_lib,
                              const MuxLibrary& mux_lib,
-                             const std::vector<std::vector<t_grid_tile>>& grids,
                              const std::vector<t_switch_inf>& rr_switches,
                              t_rr_node* L_rr_node,
                              const DeviceRRGSB& L_device_rr_gsb);
