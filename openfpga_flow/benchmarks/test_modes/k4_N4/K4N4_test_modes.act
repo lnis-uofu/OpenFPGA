@@ -1,0 +1,16 @@
+clk       0.5 0.2    
+a         0.5 0.2    
+b         0.5 0.2     
+c         0.5 0.2     
+XOR       0.5 0.2     
+XNOR      0.5 0.2    
+OR        0.5 0.2    
+NOR       0.5 0.2     
+AND       0.5 0.2     
+NAND      0.5 0.2        
+XOR_sync  0.5 0.2     
+XNOR_sync 0.5 0.2    
+OR_sync   0.5 0.2    
+NOR_sync  0.5 0.2     
+AND_sync  0.5 0.2     
+NAND_sync 0.5 0.2  
