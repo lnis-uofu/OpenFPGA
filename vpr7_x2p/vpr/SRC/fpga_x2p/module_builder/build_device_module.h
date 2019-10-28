@@ -1,5 +1,5 @@
-#ifndef BUILD_MODULE_GRAPH_H
-#define BUILD_MODULE_GRAPH_H
+#ifndef BUILD_DEVICE_MODULE_H
+#define BUILD_DEVICE_MODULE_H
 
 #include <vector>
 #include "vpr_types.h"

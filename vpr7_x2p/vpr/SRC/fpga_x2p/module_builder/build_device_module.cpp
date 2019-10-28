@@ -20,7 +20,7 @@
 #include "build_grid_modules.h"
 #include "build_routing_modules.h"
 #include "build_top_module.h"
-#include "build_module_graph.h"
+#include "build_device_module.h"
 
 /********************************************************************
  * The main function to be called for building module graphs 

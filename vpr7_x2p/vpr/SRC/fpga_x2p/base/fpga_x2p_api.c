@@ -29,7 +29,7 @@
 #include "fpga_x2p_setup.h"
 
 #include "mux_library_builder.h"
-#include "build_module_graph.h"
+#include "build_device_module.h"
 #include "build_device_bitstream.h"
 #include "build_fabric_bitstream.h"
 #include "bitstream_writer.h"
