@@ -418,11 +418,6 @@ void vpr_fpga_verilog(ModuleManager& module_manager,
     std::string random_top_testbench_file_path = std::string(src_dir_path) 
                                                + std::string(chomped_circuit_name) 
                                                + std::string(random_top_testbench_verilog_file_postfix);
-    /* FIXME: old function TO BE REMOVED */
-	dump_verilog_random_top_testbench(sram_verilog_orgz_info, chomped_circuit_name, 
-                                      std::string(random_top_testbench_file_path + ".bak").c_str(), src_dir_path,
-                                      vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts, *(Arch.spice));
-    /* TODO: remove the .bak when it is ready */
     print_verilog_random_top_testbench(std::string(chomped_circuit_name), random_top_testbench_file_path, 
                                        std::string(src_dir_path), L_logical_blocks,  
                                        vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts, Arch.spice->spice_params);
