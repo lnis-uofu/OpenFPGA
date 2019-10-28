@@ -33,7 +33,7 @@ constexpr char* BENCHMARK_PORT_POSTFIX = "_bench";
 constexpr char* CHECKFLAG_PORT_POSTFIX = "_flag";
 constexpr char* DEFAULT_CLOCK_NAME = "clk";
 constexpr char* BENCHMARK_INSTANCE_NAME = "REF_DUT";
-constexpr char* FPGA_INSTANCE_NAME = "REF_DUT";
+constexpr char* FPGA_INSTANCE_NAME = "FPGA_DUT";
 constexpr char* ERROR_COUNTER = "nb_error";
 constexpr int MAGIC_NUMBER_FOR_SIMULATION_TIME = 200;
 
@@ -250,7 +250,7 @@ void print_verilog_top_random_testbench_benchmark_instance(std::fstream& fp,
   print_verilog_comment(fp, std::string("----- Reference Benchmark Instanication -------"));
 
   print_verilog_random_testbench_instance(fp, reference_verilog_top_name,
-                                          std::string(reference_verilog_top_name + std::string(BENCHMARK_INSTANCE_NAME)),
+                                          std::string(BENCHMARK_INSTANCE_NAME),
                                           std::string(BENCHMARK_PORT_POSTFIX), L_logical_blocks);
 
   print_verilog_comment(fp, std::string("----- End reference Benchmark Instanication -------"));
@@ -402,8 +402,8 @@ void print_verilog_random_testbench_fpga_instance(std::fstream& fp,
   print_verilog_comment(fp, std::string("----- FPGA fabric instanciation -------"));
 
 
-  print_verilog_random_testbench_instance(fp, circuit_name,
-                                          std::string(circuit_name + std::string(formal_verification_top_postfix)),
+  print_verilog_random_testbench_instance(fp, std::string(circuit_name + std::string(formal_verification_top_postfix)),
+                                          std::string(FPGA_INSTANCE_NAME),
                                           std::string(FPGA_PORT_POSTFIX), L_logical_blocks);
 
   print_verilog_comment(fp, std::string("----- End FPGA Fabric Instanication -------"));
@@ -443,10 +443,10 @@ void print_verilog_top_random_stimuli(std::fstream& fp,
   
   /* Creae clock stimuli */
   BasicPort clock_port = generate_verilog_top_clock_port(clock_port_names);
-  fp << "\t" << generate_verilog_port(VERILOG_PORT_CONKT, clock_port) << " <= 1'b0;" << std::endl;
-  fp << "\twhile(1) begin" << std::endl;
-  fp << "\t\t#" << std::setprecision(2) << ((0.5/simulation_parameters.stimulate_params.op_clock_freq)/verilog_sim_timescale) << std::endl;
-  fp << "\t\t" << generate_verilog_port(VERILOG_PORT_CONKT, clock_port);
+  fp << "\t\t" << generate_verilog_port(VERILOG_PORT_CONKT, clock_port) << " <= 1'b0;" << std::endl;
+  fp << "\t\twhile(1) begin" << std::endl;
+  fp << "\t\t\t#" << std::setprecision(2) << ((0.5/simulation_parameters.stimulate_params.op_clock_freq)/verilog_sim_timescale) << std::endl;
+  fp << "\t\t\t" << generate_verilog_port(VERILOG_PORT_CONKT, clock_port);
   fp << " <= !";
   fp << generate_verilog_port(VERILOG_PORT_CONKT, clock_port);
   fp << ";" << std::endl;
