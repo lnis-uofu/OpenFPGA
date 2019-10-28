@@ -153,8 +153,6 @@ void vpr_fpga_verilog(ModuleManager& module_manager,
   char* formal_verification_top_netlist_file_path = NULL;
   char* autocheck_top_testbench_file_name = NULL;
   char* autocheck_top_testbench_file_path = NULL;
-  char* random_top_testbench_file_name = NULL;
-  char* random_top_testbench_file_path = NULL;
 
   char* chomped_parent_dir = NULL;
   char* chomped_circuit_name = NULL;
@@ -396,6 +394,12 @@ void vpr_fpga_verilog(ModuleManager& module_manager,
     my_free(top_testbench_file_path);
   }
 
+  /* Create vectors for logical blocks */
+  std::vector<t_logical_block> L_logical_blocks;
+  for (int i = 0; i < num_logical_blocks; ++i) {
+    L_logical_blocks.push_back(logical_block[i]);
+  }
+
   if (TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.print_formal_verification_top_netlist) {
     formal_verification_top_netlist_file_name = my_strcat(chomped_circuit_name, formal_verification_verilog_file_postfix);
     formal_verification_top_netlist_file_path = my_strcat(src_dir_path, formal_verification_top_netlist_file_name);
@@ -407,11 +411,20 @@ void vpr_fpga_verilog(ModuleManager& module_manager,
                            src_dir_path,
                            chomped_circuit_name,
                            *(Arch.spice));
-    random_top_testbench_file_name = my_strcat(chomped_circuit_name, random_top_testbench_verilog_file_postfix);
-    random_top_testbench_file_path = my_strcat(src_dir_path, random_top_testbench_file_name);
+
+    /* Print out top-level testbench using random vectors */
+    std::string random_top_testbench_file_path = std::string(src_dir_path) 
+                                               + std::string(chomped_circuit_name) 
+                                               + std::string(random_top_testbench_verilog_file_postfix);
+    /* FIXME: old function TO BE REMOVED */
 	dump_verilog_random_top_testbench(sram_verilog_orgz_info, chomped_circuit_name, 
-                                      random_top_testbench_file_path, src_dir_path,
+                                      random_top_testbench_file_path.c_str(), src_dir_path,
                                       vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts, *(Arch.spice));
+    /* TODO: remove the .bak when it is ready */
+    print_verilog_random_top_testbench(std::string(chomped_circuit_name), random_top_testbench_file_path + ".bak", 
+                                       std::string(src_dir_path), L_logical_blocks,  
+                                       vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts, Arch.spice->spice_params);
+    
     /* Free */
     my_free(formal_verification_top_netlist_file_name);
     my_free(formal_verification_top_netlist_file_path);

@@ -43,23 +43,29 @@ void print_verilog_file_header(std::fstream& fp,
   fp << "\n";
 }
 
+/********************************************************************
+ * Print Verilog codes to include a netlist  
+ *******************************************************************/
+void print_verilog_include_netlist(std::fstream& fp, 
+                                   const std::string& netlist_name) {
+  check_file_handler(fp);
+
+  fp << "//------ Include external netlist: " << netlist_name << " -----" << std::endl;
+  fp << "`include \"" << netlist_name << "\"" << std::endl; 
+  fp << "//------ End include external netlist: " << netlist_name << " -----" << std::endl;
+}
 
 /************************************************
  * Generate include files for a Verilog netlist
  ***********************************************/
 void print_verilog_include_defines_preproc_file(std::fstream& fp, 
                                                 const std::string& verilog_dir) {
-  check_file_handler(fp);
   
   /* Generate the file name */
   std::string include_file_path = format_dir_path(verilog_dir);
   include_file_path += defines_verilog_file_name;
 
-  fp << "//------ Include defines: preproc flags -----" << std::endl;
-  fp << "`include \"" << include_file_path << "\"" << std::endl; 
-  fp << "//------ End Include defines: preproc flags -----" << std::endl << std::endl;
-
-  return;
+  print_verilog_include_netlist(fp, include_file_path); 
 }
 
 /************************************************
