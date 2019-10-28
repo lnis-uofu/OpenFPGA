@@ -426,6 +426,20 @@ void print_verilog_top_random_stimuli(std::fstream& fp,
   print_verilog_comment(fp, std::string("----- Initialization -------"));
 
   fp << "\tinitial begin" << std::endl;
+  /* Create clock stimuli */
+  BasicPort clock_port = generate_verilog_top_clock_port(clock_port_names);
+  fp << "\t\t" << generate_verilog_port(VERILOG_PORT_CONKT, clock_port) << " <= 1'b0;" << std::endl;
+  fp << "\t\twhile(1) begin" << std::endl;
+  fp << "\t\t\t#" << std::setprecision(2) << ((0.5/simulation_parameters.stimulate_params.op_clock_freq)/verilog_sim_timescale) << std::endl;
+  fp << "\t\t\t" << generate_verilog_port(VERILOG_PORT_CONKT, clock_port);
+  fp << " <= !";
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, clock_port);
+  fp << ";" << std::endl;
+  fp << "\t\tend" << std::endl;
+
+  /* Add an empty line as splitter */
+  fp << std::endl;
+
   for (const t_logical_block& lb : L_logical_blocks) {
     /* Bypass non-I/O logical blocks ! */
     if ( (VPACK_INPAD != lb.type) && (VPACK_OUTPAD != lb.type) ) {
@@ -441,17 +455,20 @@ void print_verilog_top_random_stimuli(std::fstream& fp,
   /* Add an empty line as splitter */
   fp << std::endl;
   
-  /* Creae clock stimuli */
-  BasicPort clock_port = generate_verilog_top_clock_port(clock_port_names);
-  fp << "\t\t" << generate_verilog_port(VERILOG_PORT_CONKT, clock_port) << " <= 1'b0;" << std::endl;
-  fp << "\t\twhile(1) begin" << std::endl;
-  fp << "\t\t\t#" << std::setprecision(2) << ((0.5/simulation_parameters.stimulate_params.op_clock_freq)/verilog_sim_timescale) << std::endl;
-  fp << "\t\t\t" << generate_verilog_port(VERILOG_PORT_CONKT, clock_port);
-  fp << " <= !";
-  fp << generate_verilog_port(VERILOG_PORT_CONKT, clock_port);
-  fp << ";" << std::endl;
-  fp << "\t\tend" << std::endl;
+  /* Set 0 to registers for checking flags */
+  for (const t_logical_block& lb : L_logical_blocks) {
+    /* We care only those logic blocks which are input I/Os */
+    if (VPACK_OUTPAD != lb.type) { 
+      continue;
+    }
+
+    /* Each logical block assumes a single-width port */
+    BasicPort output_port(std::string(std::string(lb.name) + std::string(CHECKFLAG_PORT_POSTFIX)), 1); 
+    fp << "\t\t" << generate_verilog_port(VERILOG_PORT_CONKT, output_port) << " <= 1'b0;" << std::endl;
+  }
+
   fp << "\tend" << std::endl;
+  /* Finish initialization */
 
   /* Add an empty line as splitter */
   fp << std::endl;
