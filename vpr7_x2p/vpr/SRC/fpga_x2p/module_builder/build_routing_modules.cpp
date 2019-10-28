@@ -5,6 +5,7 @@
  * 1. Connection blocks
  * 2. Switch blocks
  *******************************************************************/
+#include <ctime>
 #include <vector>
 
 #include "vtr_assert.h"
@@ -1069,6 +1070,12 @@ void build_flatten_routing_modules(ModuleManager& module_manager,
                                    const std::vector<std::vector<t_grid_tile>>& grids,
                                    const t_det_routing_arch& routing_arch,
                                    const std::vector<t_switch_inf>& rr_switches) {
+  /* Start time count */
+  clock_t t_start = clock();
+
+  vpr_printf(TIO_MESSAGE_INFO,
+             "Building routing modules...");
+
   /* We only support uni-directional routing architecture now */
   VTR_ASSERT (UNI_DIRECTIONAL == routing_arch.directionality);
 
@@ -1098,6 +1105,13 @@ void build_flatten_routing_modules(ModuleManager& module_manager,
                                          sram_orgz_type, sram_model, 
                                          CHANY);
 
+  /* End time count */
+  clock_t t_end = clock();
+
+  float run_time_sec = (float)(t_end - t_start) / CLOCKS_PER_SEC;
+  vpr_printf(TIO_MESSAGE_INFO, 
+             "took %.2g seconds\n", 
+             run_time_sec);  
 }
 
 /********************************************************************
@@ -1119,6 +1133,12 @@ void build_unique_routing_modules(ModuleManager& module_manager,
                                   const std::vector<std::vector<t_grid_tile>>& grids,
                                   const t_det_routing_arch& routing_arch,
                                   const std::vector<t_switch_inf>& rr_switches) {
+  /* Start time count */
+  clock_t t_start = clock();
+
+  vpr_printf(TIO_MESSAGE_INFO,
+             "Building unique routing modules...");
+
   /* We only support uni-directional routing architecture now */
   VTR_ASSERT (UNI_DIRECTIONAL == routing_arch.directionality);
 
@@ -1152,4 +1172,12 @@ void build_unique_routing_modules(ModuleManager& module_manager,
                                   sram_orgz_type, sram_model, 
                                   unique_mirror, CHANY);
   }
+
+  /* End time count */
+  clock_t t_end = clock();
+
+  float run_time_sec = (float)(t_end - t_start) / CLOCKS_PER_SEC;
+  vpr_printf(TIO_MESSAGE_INFO, 
+             "took %.2g seconds\n", 
+             run_time_sec);  
 }

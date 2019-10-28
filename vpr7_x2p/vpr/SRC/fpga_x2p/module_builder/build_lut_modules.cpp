@@ -2,6 +2,7 @@
  * This file include functions that create modules for 
  * the Look-Up Tables (LUTs) 
  ********************************************************************/
+#include <ctime>
 #include <string>
 #include <vector>
 
@@ -389,6 +390,11 @@ void build_lut_module(ModuleManager& module_manager,
  ********************************************************************/
 void build_lut_modules(ModuleManager& module_manager,
                        const CircuitLibrary& circuit_lib) {
+  /* Start time count */
+  clock_t t_start = clock();
+
+  vpr_printf(TIO_MESSAGE_INFO,
+             "Building Look-Up Table (LUT) modules...");
 
   /* Search for each LUT circuit model */
   for (const auto& lut_model : circuit_lib.models()) {
@@ -398,5 +404,13 @@ void build_lut_modules(ModuleManager& module_manager,
     }
     build_lut_module(module_manager, circuit_lib, lut_model);
   }
+
+  /* End time count */
+  clock_t t_end = clock();
+
+  float run_time_sec = (float)(t_end - t_start) / CLOCKS_PER_SEC;
+  vpr_printf(TIO_MESSAGE_INFO, 
+             "took %.2g seconds\n", 
+             run_time_sec);  
 }
 

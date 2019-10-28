@@ -5,6 +5,7 @@
  * such as a branch in a multiplexer 
  * and the full multiplexer
  **********************************************/
+#include <ctime>
 #include <string>
 #include <algorithm>
 
@@ -1369,6 +1370,11 @@ void build_mux_module(ModuleManager& module_manager,
 void build_mux_modules(ModuleManager& module_manager,
                        const MuxLibrary& mux_lib,
                        const CircuitLibrary& circuit_lib) {
+  /* Start time count */
+  clock_t t_start = clock();
+
+  vpr_printf(TIO_MESSAGE_INFO,
+             "Building multiplexer modules...");
 
   /* Generate basis sub-circuit for unique branches shared by the multiplexers */
   for (auto mux : mux_lib.muxes()) {
@@ -1391,5 +1397,13 @@ void build_mux_modules(ModuleManager& module_manager,
     /* Create MUX circuits */
     build_mux_module(module_manager, circuit_lib, mux_circuit_model, mux_graph);
   }
+
+  /* End time count */
+  clock_t t_end = clock();
+
+  float run_time_sec = (float)(t_end - t_start) / CLOCKS_PER_SEC;
+  vpr_printf(TIO_MESSAGE_INFO, 
+             "took %.2g seconds\n", 
+             run_time_sec);  
 }
 

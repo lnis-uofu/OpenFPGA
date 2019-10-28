@@ -3,6 +3,7 @@
  * the memories that are affiliated to multiplexers and other programmable
  * circuit models, such as IOPADs, LUTs, etc.
  ********************************************************************/
+#include <ctime>
 #include <string>
 #include <algorithm>
 
@@ -630,6 +631,11 @@ void build_memory_modules(ModuleManager& module_manager,
                           const MuxLibrary& mux_lib,
                           const CircuitLibrary& circuit_lib,
                           const e_sram_orgz& sram_orgz_type) {
+  /* Start time count */
+  clock_t t_start = clock();
+
+  vpr_printf(TIO_MESSAGE_INFO,
+             "Building memory modules...");
   
   /* Create the memory circuits for the multiplexer */
   for (auto mux : mux_lib.muxes()) {
@@ -677,5 +683,13 @@ void build_memory_modules(ModuleManager& module_manager,
     /* Create a Verilog module for the memories used by the circuit model */
     build_memory_module(module_manager, circuit_lib, sram_orgz_type, module_name, sram_models[0], num_mems);
   }
+
+  /* End time count */
+  clock_t t_end = clock();
+
+  float run_time_sec = (float)(t_end - t_start) / CLOCKS_PER_SEC;
+  vpr_printf(TIO_MESSAGE_INFO, 
+             "took %.2g seconds\n", 
+             run_time_sec);  
 }
 

@@ -4,6 +4,7 @@
  * 2. Decoders used by grid/routing/top-level module for memory address decoding
  ***************************************************************************************/
 #include <vector>
+#include <ctime>
 #include "util.h"
 #include "vtr_assert.h"
 
@@ -93,6 +94,12 @@ void build_mux_local_decoder_module(ModuleManager& module_manager,
 void build_mux_local_decoder_modules(ModuleManager& module_manager,
                                      const MuxLibrary& mux_lib,
                                      const CircuitLibrary& circuit_lib) {
+  /* Start time count */
+  clock_t t_start = clock();
+
+  vpr_printf(TIO_MESSAGE_INFO,
+             "Building local encoder (for multiplexers) modules...");
+
   /* Create a library for local encoders with different sizes */
   DecoderLibrary decoder_lib;
   
@@ -128,4 +135,12 @@ void build_mux_local_decoder_modules(ModuleManager& module_manager,
   for (const auto& decoder : decoder_lib.decoders()) {
     build_mux_local_decoder_module(module_manager, decoder_lib, decoder);
   }
+
+  /* End time count */
+  clock_t t_end = clock();
+
+  float run_time_sec = (float)(t_end - t_start) / CLOCKS_PER_SEC;
+  vpr_printf(TIO_MESSAGE_INFO, 
+             "took %.2g seconds\n", 
+             run_time_sec);  
 }

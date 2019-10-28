@@ -148,6 +148,11 @@ void build_gate_module(ModuleManager& module_manager,
  ***********************************************/
 void build_essential_modules(ModuleManager& module_manager, 
                              const CircuitLibrary& circuit_lib) {
+  /* Start time count */
+  clock_t t_start = clock();
+
+  vpr_printf(TIO_MESSAGE_INFO,
+             "Building essential (inverter/buffer/logic gate) modules...");
 
   for (const auto& circuit_model : circuit_lib.models()) {
     if (SPICE_MODEL_INVBUF == circuit_lib.model_type(circuit_model)) {
@@ -163,6 +168,14 @@ void build_essential_modules(ModuleManager& module_manager,
       continue;
     }
   }
+
+  /* End time count */
+  clock_t t_end = clock();
+
+  float run_time_sec = (float)(t_end - t_start) / CLOCKS_PER_SEC;
+  vpr_printf(TIO_MESSAGE_INFO, 
+             "took %.2g seconds\n", 
+             run_time_sec);  
 }
 
 /*********************************************************************
@@ -173,6 +186,12 @@ void build_essential_modules(ModuleManager& module_manager,
 void build_user_defined_modules(ModuleManager& module_manager, 
                                 const CircuitLibrary& circuit_lib, 
                                 const std::vector<t_segment_inf>& routing_segments) {
+  /* Start time count */
+  clock_t t_start = clock();
+
+  vpr_printf(TIO_MESSAGE_INFO,
+             "Building user-defined modules...");
+
   /* Iterate over Verilog modules */
   for (const auto& model : circuit_lib.models()) {
     /* We only care about user-defined models */
@@ -216,6 +235,14 @@ void build_user_defined_modules(ModuleManager& module_manager,
     BasicPort module_mid_output_port(generate_segment_wire_mid_output_name(circuit_lib.port_lib_name(output_ports[0])), circuit_lib.port_size(output_ports[0]));
     module_manager.add_port(module_id, module_mid_output_port, ModuleManager::MODULE_OUTPUT_PORT);
   }
+
+  /* End time count */
+  clock_t t_end = clock();
+
+  float run_time_sec = (float)(t_end - t_start) / CLOCKS_PER_SEC;
+  vpr_printf(TIO_MESSAGE_INFO, 
+             "took %.2g seconds\n", 
+             run_time_sec);  
 }
 
 /*********************************************************************
@@ -245,7 +272,7 @@ void build_constant_generator_modules(ModuleManager& module_manager) {
   clock_t t_start = clock();
 
   vpr_printf(TIO_MESSAGE_INFO,
-             "Building modules for constant generator...");
+             "Building constant generator modules...");
 
   /* VDD */
   build_constant_generator_module(module_manager, 1);
@@ -258,6 +285,6 @@ void build_constant_generator_modules(ModuleManager& module_manager) {
 
   float run_time_sec = (float)(t_end - t_start) / CLOCKS_PER_SEC;
   vpr_printf(TIO_MESSAGE_INFO, 
-             "took %g seconds\n", 
+             "took %.2g seconds\n", 
              run_time_sec);  
 }

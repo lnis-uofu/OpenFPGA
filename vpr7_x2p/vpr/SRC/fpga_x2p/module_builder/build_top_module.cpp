@@ -2,6 +2,7 @@
  * This file includes functions that are used to print the top-level
  * module for the FPGA fabric in Verilog format
  *******************************************************************/
+#include <ctime>
 #include <map>
 #include <algorithm>
 
@@ -831,6 +832,12 @@ void build_top_module(ModuleManager& module_manager,
                       const e_sram_orgz& sram_orgz_type,
                       const CircuitModelId& sram_model,
                       const bool& compact_routing_hierarchy) {
+  /* Start time count */
+  clock_t t_start = clock();
+
+  vpr_printf(TIO_MESSAGE_INFO,
+             "Building FPGA fabric module...");
+
   /* Create a module as the top-level fabric, and add it to the module manager */
   std::string top_module_name = generate_fpga_top_module_name();
   ModuleId top_module = module_manager.add_module(top_module_name);
@@ -900,4 +907,12 @@ void build_top_module(ModuleManager& module_manager,
     add_top_module_nets_memory_config_bus(module_manager, top_module, 
                                           sram_orgz_type, circuit_lib.design_tech_type(sram_model));
   }
+
+  /* End time count */
+  clock_t t_end = clock();
+
+  float run_time_sec = (float)(t_end - t_start) / CLOCKS_PER_SEC;
+  vpr_printf(TIO_MESSAGE_INFO, 
+             "took %.2g seconds\n", 
+             run_time_sec);  
 }

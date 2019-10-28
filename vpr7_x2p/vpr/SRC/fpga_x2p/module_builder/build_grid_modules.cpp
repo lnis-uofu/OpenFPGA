@@ -3,6 +3,7 @@
  * (CLBs, I/Os, heterogeneous blocks etc.) 
  *******************************************************************/
 /* System header files */
+#include <ctime>
 #include <vector>
 
 /* Header files from external libs */
@@ -1099,6 +1100,12 @@ void build_grid_modules(ModuleManager& module_manager,
                         const MuxLibrary& mux_lib,
                         const e_sram_orgz& sram_orgz_type,
                         const CircuitModelId& sram_model) {
+  /* Start time count */
+  clock_t t_start = clock();
+
+  vpr_printf(TIO_MESSAGE_INFO,
+             "Building grid modules...");
+
   /* Enumerate the types, dump one Verilog module for each */
   for (int itype = 0; itype < num_types; itype++) {
     if (EMPTY_TYPE == &type_descriptors[itype]) {
@@ -1129,5 +1136,13 @@ void build_grid_modules(ModuleManager& module_manager,
                         NUM_SIDES);
     }
   }
+
+  /* End time count */
+  clock_t t_end = clock();
+
+  float run_time_sec = (float)(t_end - t_start) / CLOCKS_PER_SEC;
+  vpr_printf(TIO_MESSAGE_INFO, 
+             "took %.2g seconds\n", 
+             run_time_sec);  
 }
 

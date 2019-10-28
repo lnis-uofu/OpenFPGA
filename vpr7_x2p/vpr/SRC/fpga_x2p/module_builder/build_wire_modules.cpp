@@ -2,6 +2,7 @@
  * This file includes functions to generate
  * Verilog submodules for wires.
  **********************************************/
+#include <ctime>
 #include <string>
 #include <algorithm>
 
@@ -105,6 +106,12 @@ void build_routing_wire_module(ModuleManager& module_manager,
 void build_wire_modules(ModuleManager& module_manager,
                         const CircuitLibrary& circuit_lib,
                         std::vector<t_segment_inf> routing_segments) {
+  /* Start time count */
+  clock_t t_start = clock();
+
+  vpr_printf(TIO_MESSAGE_INFO,
+             "Building wire modules...");
+
   /* Print Verilog models for regular wires*/
   for (const auto& wire_model : circuit_lib.models_by_type(SPICE_MODEL_WIRE)) { 
     /* Bypass user-defined circuit models */
@@ -131,4 +138,12 @@ void build_wire_modules(ModuleManager& module_manager,
     /* Print a Verilog module */
     build_routing_wire_module(module_manager, circuit_lib, seg.circuit_model, segment_wire_subckt_name);
   }
+
+  /* End time count */
+  clock_t t_end = clock();
+
+  float run_time_sec = (float)(t_end - t_start) / CLOCKS_PER_SEC;
+  vpr_printf(TIO_MESSAGE_INFO, 
+             "took %.2g seconds\n", 
+             run_time_sec);  
 }
