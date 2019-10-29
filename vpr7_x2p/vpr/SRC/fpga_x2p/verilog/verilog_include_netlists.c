@@ -95,6 +95,7 @@ void write_include_netlists (char* src_dir_formatted,
 							chomped_circuit_name, 
 							random_top_testbench_verilog_file_postfix);
 	fprintf(fp, "  `endif\n");
+    /* TODO: bring these testbench onboard when it is ready
 	fprintf(fp, "`elsif %s\n", initial_simulation_flag);
 	fprintf(fp, "`include \"%s%s%s\"\n",  src_dir_formatted, 
 							chomped_circuit_name, 
@@ -104,6 +105,7 @@ void write_include_netlists (char* src_dir_formatted,
 							chomped_circuit_name, 
 							autocheck_top_testbench_verilog_file_postfix);
 	fprintf(fp, "`endif\n");
+    */
 	fprintf(fp, "`include \"%s%s%s\"\n",  src_dir_formatted, 
 							default_rr_dir_name, 
 							routing_verilog_file_name);
