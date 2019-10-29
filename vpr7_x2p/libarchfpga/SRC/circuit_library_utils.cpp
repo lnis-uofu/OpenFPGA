@@ -208,3 +208,35 @@ size_t find_circuit_num_config_bits(const CircuitLibrary& circuit_lib,
 
   return num_config_bits;
 }
+
+/********************************************************************
+ * A generic function to find all the global ports in a circuit library
+ * 
+ * IMPORTANT: This function will uniquify the global ports whose share 
+ * share the same name !!!
+ *******************************************************************/
+std::vector<CircuitPortId> find_circuit_library_global_ports(const CircuitLibrary& circuit_lib) {
+  std::vector<CircuitPortId> global_ports;
+
+  for (auto port : circuit_lib.ports()) {
+    /* By pass non-global ports*/
+    if (false == circuit_lib.port_is_global(port)) {
+      continue;
+    }
+    /* Check if a same port with the same name has already been in the list */
+    bool add_to_list = true;
+    for (const auto& global_port : global_ports) {
+      if (0 == circuit_lib.port_lib_name(port).compare(circuit_lib.port_lib_name(global_port))) {
+        /* Same name, skip list update */
+        add_to_list = false;
+        break;
+      }
+    }
+    if (true == add_to_list) {
+      /* Add the global_port to the list */
+      global_ports.push_back(port);
+    }
+  } 
+
+  return global_ports;
+}

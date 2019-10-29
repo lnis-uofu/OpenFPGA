@@ -1,9 +1,12 @@
 #ifndef SHELL_TYPES_H 
 #define SHELL_TYPES_H 
 
+#include <vector>
+#include "vtr_geometry.h"
 #include "vpr_types.h"
 #include "mux_library.h"
 #include "module_manager.h"
+#include "bitstream_manager.h"
 
 typedef struct s_cmd_category t_cmd_category;
 typedef struct s_shell_cmd t_shell_cmd;
@@ -35,7 +38,13 @@ struct s_shell_cmd {
 
 struct s_shell_env {
   ModuleManager module_manager;
+  BitstreamManager bitstream_manager;
+  std::vector<ConfigBitId> fabric_bitstream;
   MuxLibrary mux_lib;
+  std::vector<t_logical_block> logical_blocks;
+  vtr::Point<size_t> device_size;
+  std::vector<std::vector<t_grid_tile>> grids; 
+  std::vector<t_block> blocks;
   t_arch arch;
   t_vpr_setup vpr_setup;
   t_shell_cmd* cmd;

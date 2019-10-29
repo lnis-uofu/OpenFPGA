@@ -81,6 +81,18 @@ void vpr_fpga_x2p_tool_suites(t_vpr_setup vpr_setup,
     clb2clb_directs.push_back(clb2clb_direct[i]); 
   }
 
+  /* Organize a vector for logical blocks to feed Verilog generator */
+  std::vector<t_logical_block> L_logical_blocks;
+  for (int i = 0; i < num_logical_blocks; ++i) {
+    L_logical_blocks.push_back(logical_block[i]);
+  }
+
+  /* Organize a vector for blocks to feed Verilog generator */
+  std::vector<t_block> L_blocks;
+  for (int i = 0; i < num_blocks; ++i) {
+    L_blocks.push_back(block[i]);
+  }
+
   /* Build module graphs */
   ModuleManager module_manager = build_device_module_graph(vpr_setup, Arch, mux_lib, 
                                                            device_size, grids, 
@@ -122,7 +134,9 @@ void vpr_fpga_x2p_tool_suites(t_vpr_setup vpr_setup,
 
   /* Xifan TANG: Synthesizable verilog dumping */
   if (TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.dump_syn_verilog) {
-    vpr_fpga_verilog(module_manager, mux_lib, vpr_setup, Arch, vpr_setup.FileNameOpts.CircuitName);
+    vpr_fpga_verilog(module_manager, bitstream_manager, fabric_bitstream, mux_lib, 
+                     L_logical_blocks, device_size, grids, L_blocks,
+                     vpr_setup, Arch, vpr_setup.FileNameOpts.CircuitName);
   }	
 
   /* Xifan Tang: Bitstream Generator */

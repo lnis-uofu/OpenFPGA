@@ -27,4 +27,6 @@ size_t find_circuit_num_shared_config_bits(const CircuitLibrary& circuit_lib,
 size_t find_circuit_num_config_bits(const CircuitLibrary& circuit_lib,
                                     const CircuitModelId& circuit_model);
 
+std::vector<CircuitPortId> find_circuit_library_global_ports(const CircuitLibrary& circuit_lib);
+
 #endif

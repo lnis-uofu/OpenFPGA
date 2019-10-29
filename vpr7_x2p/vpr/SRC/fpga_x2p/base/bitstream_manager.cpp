@@ -64,6 +64,24 @@ ConfigBlockId BitstreamManager::bit_parent_block(const ConfigBitId& bit_id) cons
   return bit_parent_block_ids_[bit_id];
 }
 
+size_t BitstreamManager::bit_index_in_parent_block(const ConfigBitId& bit_id) const {
+  /* Ensure the input ids are valid */
+  VTR_ASSERT(true == valid_bit_id(bit_id));
+
+  ConfigBlockId bit_parent_block = bit_parent_block_ids_[bit_id];
+
+  VTR_ASSERT(true == valid_block_id(bit_parent_block));
+
+  for (size_t index = 0; index < block_bits(bit_parent_block).size(); ++index) {
+    if (bit_id == block_bits(bit_parent_block)[index]) {
+      return index;
+    }
+  }
+
+  /* Not found, return in valid value */
+  return size_t(-1); 
+}
+
 /* Find the child block in a bitstream manager with a given name */
 ConfigBlockId BitstreamManager::find_child_block(const ConfigBlockId& block_id, 
                                                  const std::string& child_block_name) const {

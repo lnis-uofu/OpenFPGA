@@ -36,7 +36,6 @@ std::vector<ConfigBlockId> find_bitstream_manager_block_hierarchy(const Bitstrea
   return block_hierarchy;
 }
 
-
 /********************************************************************
  * Find all the top-level blocks in a bitstream manager, 
  * which have no parents

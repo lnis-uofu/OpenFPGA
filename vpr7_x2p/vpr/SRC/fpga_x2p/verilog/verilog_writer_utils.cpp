@@ -284,46 +284,46 @@ void print_verilog_module_declaration(std::fstream& fp,
   print_verilog_module_ports(fp, module_manager, module_id);
 }
 
-/************************************************
- * Print an instance for a Verilog module
- * This function will output the port map
- * by referring to a port-to-port mapping:
+
+/********************************************************************
+ * Print an instance in Verilog format (a generic version)
+ * This function will require user to provide an instance name
+ *
+ * This function will output the port map by referring to a port-to-port 
+ * mapping:
  *   <module_port_name> -> <instance_port_name>
- * The key of the port-to-port mapping is the 
- * port name of the module: 
- * The value of the port-to-port mapping is the
- * port information of the instance
- * With link between module and instance, the function
- * can output a Verilog instance easily, supporting
- * both explicit port mapping:
+ * The key of the port-to-port mapping is the port name of the module: 
+ * The value of the port-to-port mapping is the port information of the instance
+ * With link between module and instance, the function can output a Verilog 
+ * instance easily, supporting both explicit port mapping:
  *   .<module_port_name>(<instance_port_name>)
  * and inexplicit port mapping
  *   <instance_port_name>
  *
- * Note that, it is not necessary that 
- * the port-to-port mapping covers all the module ports.
- * Any instance/module port which are not specified in the 
- * port-to-port mapping will be output by the module 
- * port name.
- ***********************************************/
+ * Note that, it is not necessary that the port-to-port mapping 
+ * covers all the module ports.
+ * Any instance/module port which are not specified in the port-to-port 
+ * mapping will be output by the module port name.
+ *******************************************************************/
 void print_verilog_module_instance(std::fstream& fp, 
                                    const ModuleManager& module_manager, 
-                                   const ModuleId& parent_module_id, const ModuleId& child_module_id,
+                                   const ModuleId& module_id,
+                                   const std::string& instance_name,
                                    const std::map<std::string, BasicPort>& port2port_name_map,
-                                   const bool& explicit_port_map) {
+                                   const bool& use_explicit_port_map) {
 
   check_file_handler(fp);
 
   /* Check: all the key ports in the port2port_name_map does exist in the child module */
   for (const auto& kv : port2port_name_map) {
-    ModulePortId module_port_id = module_manager.find_module_port(child_module_id, kv.first);
+    ModulePortId module_port_id = module_manager.find_module_port(module_id, kv.first);
     VTR_ASSERT(ModulePortId::INVALID() != module_port_id);
   }
 
   /* Print module name */
-  fp << "\t" << module_manager.module_name(child_module_id) << " ";
-  /* Print instance name, <name>_<num_instance_in_parent_module> */
-  fp << module_manager.module_name(child_module_id) << "_" << module_manager.num_instance(parent_module_id, child_module_id) << "_" << " (" << std::endl;
+  fp << "\t" << module_manager.module_name(module_id) << " ";
+  /* Print instance name */
+  fp << instance_name << " (" << std::endl;
   
   /* Print each port with/without explicit port map */
   /* port type2type mapping */
@@ -337,7 +337,7 @@ void print_verilog_module_instance(std::fstream& fp,
   /* Port sequence: global, inout, input, output and clock ports, */
   size_t port_cnt = 0;
   for (const auto& kv : port_type2type_map) {
-    for (const auto& port : module_manager.module_ports_by_type(child_module_id, kv.first)) {
+    for (const auto& port : module_manager.module_ports_by_type(module_id, kv.first)) {
       if (0 != port_cnt) {
         /* Do not dump a comma for the first port */
         fp << "," << std::endl; 
@@ -345,16 +345,16 @@ void print_verilog_module_instance(std::fstream& fp,
       /* Print port */
       fp << "\t\t";
       /* if explicit port map is required, output the port name */
-      if (true == explicit_port_map) {
+      if (true == use_explicit_port_map) {
         fp << "." << port.get_name() << "(";
       }
       /* Try to find the instanced port name in the name map */
       if (port2port_name_map.find(port.get_name()) != port2port_name_map.end()) {
         /* Found it, we assign the port name */ 
         /* TODO: make sure the port width matches! */
-        ModulePortId module_port_id = module_manager.find_module_port(child_module_id, port.get_name());
+        ModulePortId module_port_id = module_manager.find_module_port(module_id, port.get_name());
         /* Get the port from module */
-        BasicPort module_port = module_manager.module_port(child_module_id, module_port_id);
+        BasicPort module_port = module_manager.module_port(module_id, module_port_id);
         VTR_ASSERT(module_port.get_width() == port2port_name_map.at(port.get_name()).get_width());
         fp << generate_verilog_port(kv.second, port2port_name_map.at(port.get_name()));
       } else {
@@ -362,7 +362,7 @@ void print_verilog_module_instance(std::fstream& fp,
         fp << generate_verilog_port(kv.second, port);
       }
       /* if explicit port map is required, output the pair of branket */
-      if (true == explicit_port_map) {
+      if (true == use_explicit_port_map) {
         fp << ")";
       }
       port_cnt++;
@@ -371,6 +371,30 @@ void print_verilog_module_instance(std::fstream& fp,
   
   /* Print an end to the instance */
   fp << ");" << std::endl;
+}
+
+
+/************************************************
+ * Print an instance for a Verilog module
+ * This function is a wrapper for the generic version of
+ * print_verilog_module_instance() 
+ * This function create an instance name based on the index
+ * of the child module in its parent module
+ ***********************************************/
+void print_verilog_module_instance(std::fstream& fp, 
+                                   const ModuleManager& module_manager, 
+                                   const ModuleId& parent_module_id, const ModuleId& child_module_id,
+                                   const std::map<std::string, BasicPort>& port2port_name_map,
+                                   const bool& use_explicit_port_map) {
+
+  /* Create instance name, <name>_<num_instance_in_parent_module> */
+  std::string instance_name = module_manager.module_name(child_module_id) 
+                            + "_" 
+                            + std::to_string(module_manager.num_instance(parent_module_id, child_module_id)) 
+                            + "_";
+
+  print_verilog_module_instance(fp, module_manager, child_module_id, instance_name,
+                                port2port_name_map, use_explicit_port_map);
 }
 
 /************************************************

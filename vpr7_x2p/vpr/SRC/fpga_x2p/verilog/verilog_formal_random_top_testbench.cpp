@@ -18,6 +18,7 @@
 
 /* Include FPGA-X2P headers*/
 #include "fpga_x2p_utils.h"
+#include "fpga_x2p_benchmark_utils.h"
 
 /* Include FPGA Verilog headers*/
 #include "verilog_global.h"
@@ -36,28 +37,6 @@ constexpr char* BENCHMARK_INSTANCE_NAME = "REF_DUT";
 constexpr char* FPGA_INSTANCE_NAME = "FPGA_DUT";
 constexpr char* ERROR_COUNTER = "nb_error";
 constexpr int MAGIC_NUMBER_FOR_SIMULATION_TIME = 200;
-
-/********************************************************************
- * Find the clock port name to be used in this testbench
- *******************************************************************/
-static
-std::vector<std::string> find_verilog_top_clock_port_name(const std::vector<t_logical_block>& L_logical_blocks) {
-  std::vector<std::string> clock_port_names;
-
-  for (const t_logical_block& lb : L_logical_blocks) {
-    /* Bypass non-I/O logical blocks ! */
-    if ( (VPACK_INPAD != lb.type) && (VPACK_OUTPAD != lb.type) ) {
-      continue;
-    }
-
-    /* Find the clock signals */
-    if ( (VPACK_INPAD == lb.type) && (TRUE == lb.is_clock) ) {
-      clock_port_names.push_back(std::string(lb.name));
-    }
-  }
-
-  return clock_port_names;
-}
 
 /********************************************************************
  * Generate the clock port name to be used in this testbench
@@ -568,7 +547,7 @@ void print_verilog_random_top_testbench(const std::string& circuit_name,
   print_verilog_include_netlist(fp, std::string(fpga_verilog_opts.reference_verilog_benchmark_file));
 
   /* Preparation: find all the clock ports */
-  std::vector<std::string> clock_port_names = find_verilog_top_clock_port_name(L_logical_blocks);
+  std::vector<std::string> clock_port_names = find_benchmark_clock_port_name(L_logical_blocks);
 
   /* Start of testbench */
   print_verilog_top_random_testbench_ports(fp, circuit_name, clock_port_names, L_logical_blocks);

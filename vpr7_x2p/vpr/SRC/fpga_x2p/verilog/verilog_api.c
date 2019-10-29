@@ -38,6 +38,7 @@
 #include "module_manager.h"
 #include "mux_library.h"
 #include "mux_library_builder.h"
+#include "circuit_library_utils.h"
 
 /* Include SynVerilog headers */
 #include "verilog_global.h"
@@ -53,6 +54,7 @@
 #include "verilog_top_testbench.h"
 #include "verilog_autocheck_top_testbench.h"
 #include "verilog_formal_random_top_testbench.h"
+#include "verilog_preconfig_top_module.h"
 #include "verilog_verification_top_netlist.h"
 #include "verilog_modelsim_autodeck.h"
 #include "verilog_report_timing.h"
@@ -119,7 +121,13 @@ void free_global_routing_conf_bits() {
  
 /* Top-level function*/
 void vpr_fpga_verilog(ModuleManager& module_manager,
+                      const BitstreamManager& bitstream_manager,
+                      const std::vector<ConfigBitId>& fabric_bitstream,
                       const MuxLibrary& mux_lib,
+                      const std::vector<t_logical_block>& L_logical_blocks,
+                      const vtr::Point<size_t>& device_size,
+                      const std::vector<std::vector<t_grid_tile>>& L_grids, 
+                      const std::vector<t_block>& L_blocks,
                       t_vpr_setup vpr_setup,
                       t_arch Arch,
                       char* circuit_name) {
@@ -149,8 +157,6 @@ void vpr_fpga_verilog(ModuleManager& module_manager,
   char* blif_testbench_file_path = NULL;
   char* bitstream_file_name = NULL;
   char* bitstream_file_path = NULL;
-  char* formal_verification_top_netlist_file_name = NULL;
-  char* formal_verification_top_netlist_file_path = NULL;
   char* autocheck_top_testbench_file_name = NULL;
   char* autocheck_top_testbench_file_path = NULL;
 
@@ -393,20 +399,23 @@ void vpr_fpga_verilog(ModuleManager& module_manager,
     my_free(top_testbench_file_name);
     my_free(top_testbench_file_path);
   }
-
-  /* TODO: this should be outside this function! 
-   * Create vectors for logical blocks 
-   */
-  std::vector<t_logical_block> L_logical_blocks;
-  for (int i = 0; i < num_logical_blocks; ++i) {
-    L_logical_blocks.push_back(logical_block[i]);
-  }
+  
+  std::vector<CircuitPortId> global_ports = find_circuit_library_global_ports(Arch.spice->circuit_lib);
 
   if (TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.print_formal_verification_top_netlist) {
-    formal_verification_top_netlist_file_name = my_strcat(chomped_circuit_name, formal_verification_verilog_file_postfix);
-    formal_verification_top_netlist_file_path = my_strcat(src_dir_path, formal_verification_top_netlist_file_name);
+    std::string formal_verification_top_netlist_file_path = std::string(src_dir_path) 
+                                                          + std::string(chomped_circuit_name) 
+                                                          + std::string(formal_verification_verilog_file_postfix);
+    /* TODO: this is an old function, to be shadowed */
     dump_verilog_formal_verification_top_netlist(sram_verilog_orgz_info, chomped_circuit_name, 
-                                                 formal_verification_top_netlist_file_path, src_dir_path);
+                                                 formal_verification_top_netlist_file_path.c_str(), src_dir_path);
+    /* TODO: new function: to be tested */
+    print_verilog_preconfig_top_module(module_manager, bitstream_manager, fabric_bitstream, 
+                                       Arch.spice->circuit_lib, global_ports, L_logical_blocks,
+                                       device_size, L_grids, L_blocks, 
+                                       std::string(chomped_circuit_name), formal_verification_top_netlist_file_path + std::string(".bak"),
+                                       std::string(src_dir_path)); 
+                                       
     /* Output script for formality */
     write_formality_script(vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts,
                            fm_dir_path,
@@ -421,10 +430,6 @@ void vpr_fpga_verilog(ModuleManager& module_manager,
     print_verilog_random_top_testbench(std::string(chomped_circuit_name), random_top_testbench_file_path, 
                                        std::string(src_dir_path), L_logical_blocks,  
                                        vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts, Arch.spice->spice_params);
-    
-    /* Free */
-    my_free(formal_verification_top_netlist_file_name);
-    my_free(formal_verification_top_netlist_file_path);
   }
 
   if (TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.print_autocheck_top_testbench) {
@@ -433,9 +438,6 @@ void vpr_fpga_verilog(ModuleManager& module_manager,
     dump_verilog_autocheck_top_testbench(sram_verilog_orgz_info, chomped_circuit_name, 
                                          autocheck_top_testbench_file_path, src_dir_path, 
                                          vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts, *(Arch.spice));
-    /* Free */
-    my_free(autocheck_top_testbench_file_name);
-    my_free(autocheck_top_testbench_file_path);
   }
 
   /* Output Modelsim Autodeck scripts */
