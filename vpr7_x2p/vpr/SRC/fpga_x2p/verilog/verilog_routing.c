@@ -2101,7 +2101,9 @@ void dump_verilog_routing_switch_box_unique_subckt(t_sram_orgz_info* cur_sram_or
   fclose(fp);
 
   /* Add fname to the linked list */
+  /*
   routing_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(routing_verilog_subckt_file_path_head, fname);  
+   */
 
   /* Free chan_rr_nodes */
   my_free(fname);
@@ -2302,7 +2304,9 @@ void dump_verilog_routing_switch_box_subckt(t_sram_orgz_info* cur_sram_orgz_info
   fclose(fp);
 
   /* Add fname to the linked list */
+  /*
   routing_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(routing_verilog_subckt_file_path_head, fname);  
+   */
 
   /* Free chan_rr_nodes */
   my_free(fname);
@@ -3368,7 +3372,9 @@ void dump_verilog_routing_connection_box_unique_module(t_sram_orgz_info* cur_sra
   fclose(fp);
 
   /* Add fname to the linked list */
+  /*
   routing_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(routing_verilog_subckt_file_path_head, fname);  
+   */
 
   /* Free */
   my_free(fname);
@@ -3606,7 +3612,9 @@ void dump_verilog_routing_connection_box_subckt(t_sram_orgz_info* cur_sram_orgz_
   fclose(fp);
 
   /* Add fname to the linked list */
+  /*
   routing_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(routing_verilog_subckt_file_path_head, fname);  
+   */
 
   /* Free */
   my_free(fname);
@@ -3826,10 +3834,12 @@ void print_verilog_routing_resources(ModuleManager& module_manager,
   }
 
   /* Output a header file for all the routing blocks */
+  /*
   vpr_printf(TIO_MESSAGE_INFO,"Generating header file for routing submodules...\n");
   dump_verilog_subckt_header_file(routing_verilog_subckt_file_path_head,
                                   subckt_dir,
                                   routing_verilog_file_name);
+   */
   
   return;
 }
@@ -3900,7 +3910,7 @@ void print_verilog_routing_connection_box_unique_module(ModuleManager& module_ma
   vtr::Point<size_t> gsb_coordinate(rr_gsb.get_cb_x(cb_type), rr_gsb.get_cb_y(cb_type));
   std::string verilog_fname(subckt_dir + generate_connection_block_netlist_name(cb_type, gsb_coordinate, std::string(verilog_netlist_file_postfix)));
   /* TODO: remove the bak file when the file is ready */
-  verilog_fname += ".bak";
+  //verilog_fname += ".bak";
 
   /* Create the file stream */
   std::fstream fp;
@@ -3927,9 +3937,7 @@ void print_verilog_routing_connection_box_unique_module(ModuleManager& module_ma
   fp.close();
 
   /* Add fname to the linked list */
-  /*
-  routing_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(routing_verilog_subckt_file_path_head, fname);  
-   */
+  routing_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(routing_verilog_subckt_file_path_head, verilog_fname.c_str());  
 }
 
 /*********************************************************************
@@ -4005,7 +4013,7 @@ void print_verilog_routing_switch_box_unique_module(ModuleManager& module_manage
   vtr::Point<size_t> gsb_coordinate(rr_gsb.get_sb_x(), rr_gsb.get_sb_y());
   std::string verilog_fname(subckt_dir + generate_routing_block_netlist_name(sb_verilog_file_name_prefix, gsb_coordinate, std::string(verilog_netlist_file_postfix)));
   /* TODO: remove the bak file when the file is ready */
-  verilog_fname += ".bak";
+  //verilog_fname += ".bak";
 
   /* Create the file stream */
   std::fstream fp;
@@ -4029,9 +4037,7 @@ void print_verilog_routing_switch_box_unique_module(ModuleManager& module_manage
   fp.close();
 
   /* Add fname to the linked list */
-  /*
   routing_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(routing_verilog_subckt_file_path_head, verilog_fname.c_str());  
-   */
 
   return;
 }
@@ -4108,6 +4114,10 @@ void print_verilog_flatten_routing_modules(ModuleManager& module_manager,
 
   print_verilog_flatten_connection_block_modules(module_manager, L_device_rr_gsb, verilog_dir, subckt_dir, CHANY, use_explicit_port_map);
 
+  vpr_printf(TIO_MESSAGE_INFO,"Generating header file for routing submodules...\n");
+  dump_verilog_subckt_header_file(routing_verilog_subckt_file_path_head,
+                                  subckt_dir.c_str(),
+                                  routing_verilog_file_name);
 }
 
 
@@ -4161,4 +4171,10 @@ void print_verilog_unique_routing_modules(ModuleManager& module_manager,
                                                        unique_mirror, CHANY,  
                                                        use_explicit_port_map);
   }
+
+  vpr_printf(TIO_MESSAGE_INFO,"Generating header file for routing submodules...\n");
+  dump_verilog_subckt_header_file(routing_verilog_subckt_file_path_head,
+                                  subckt_dir.c_str(),
+                                  routing_verilog_file_name);
+
 }

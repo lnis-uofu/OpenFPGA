@@ -1217,7 +1217,7 @@ void print_verilog_submodule_muxes(ModuleManager& module_manager,
 
   /* TODO: Generate modules into a .bak file now. Rename after it is verified */
   std::string verilog_fname(submodule_dir + muxes_verilog_file_name);
-  verilog_fname += ".bak";
+  //verilog_fname += ".bak";
 
   /* Create the file stream */
   std::fstream fp;

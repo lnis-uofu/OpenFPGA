@@ -79,10 +79,18 @@ DeviceCoordinator find_top_module_gsb_coordinate_by_sb_side(const RRGSB& rr_gsb,
   }
  
   VTR_ASSERT((RIGHT == sb_side) || (BOTTOM == sb_side));
-  DeviceCoordinator side_coord = rr_gsb.get_side_block_coordinator(sb_side);
 
-  gsb_coordinate.set_x(side_coord.get_x()); 
-  gsb_coordinate.set_y(side_coord.get_y()); 
+  /* RIGHT side: x + 1 */
+  if (RIGHT == sb_side) {
+    gsb_coordinate.set_x(rr_gsb.get_x() + 1); 
+    gsb_coordinate.set_y(rr_gsb.get_y()); 
+  }
+
+  /* BOTTOM side: y - 1 */
+  if (BOTTOM == sb_side) {
+    gsb_coordinate.set_x(rr_gsb.get_x()); 
+    gsb_coordinate.set_y(rr_gsb.get_y() - 1); 
+  }
 
   return gsb_coordinate;
 }
@@ -669,10 +677,25 @@ void add_top_module_nets_connect_sb_and_cb(ModuleManager& module_manager,
     DeviceCoordinator instance_gsb_cb_coordinate = find_top_module_gsb_coordinate_by_sb_side(rr_gsb, side_manager.get_side());
     DeviceCoordinator module_gsb_cb_coordinate = find_top_module_gsb_coordinate_by_sb_side(rr_gsb, side_manager.get_side());
 
-    /* Skip those Connection blocks that do not exist */
-    if ( (TRUE != is_cb_exist(cb_type, rr_gsb.get_cb_x(cb_type), rr_gsb.get_cb_y(cb_type)))
-      || (true != rr_gsb.is_cb_exist(cb_type))) {
-      continue;
+    /* Skip those Connection blocks that do not exist:
+     * 1. The CB does not exist in the device level! We should skip! 
+     * 2. The CB does exist but we need to make sure if the GSB includes such CBs 
+     *    For TOP and LEFT side, check the existence using RRGSB method is_cb_exist()
+     *    FOr RIGHT and BOTTOM side, find the adjacent RRGSB and then use is_cb_exist()
+     */
+    if ( TOP == side_manager.get_side() || LEFT == side_manager.get_side() ) {
+      if ( (TRUE != is_cb_exist(cb_type, module_gsb_cb_coordinate.get_x(), module_gsb_cb_coordinate.get_y())) 
+        || (true != rr_gsb.is_cb_exist(cb_type))) {
+        continue;
+      }
+    }
+
+    if ( RIGHT == side_manager.get_side() || BOTTOM == side_manager.get_side() ) {
+      const RRGSB& adjancent_gsb = L_device_rr_gsb.get_gsb(module_gsb_cb_coordinate);
+      if ( (TRUE != is_cb_exist(cb_type, module_gsb_cb_coordinate.get_x(), module_gsb_cb_coordinate.get_y())) 
+        || (true != adjancent_gsb.is_cb_exist(cb_type))) {
+        continue;
+      }
     }
 
     /* If we use compact routing hierarchy, we should find the unique module of CB, which is added to the top module */

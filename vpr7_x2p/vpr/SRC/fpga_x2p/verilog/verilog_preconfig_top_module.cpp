@@ -80,25 +80,10 @@ void print_verilog_preconfig_top_module_internal_wires(std::fstream& fp,
   check_file_handler(fp);
 
   /* Global ports of top-level module  */
-  print_verilog_comment(fp, std::string("----- Global ports of FPGA fabric -----"));
-  for (const BasicPort& global_port : module_manager.module_ports_by_type(top_module, ModuleManager::MODULE_GLOBAL_PORT)) {
-    fp << generate_verilog_port(VERILOG_PORT_WIRE, global_port) << ";" << std::endl;
-  }
-  /* Add an empty line as a splitter */
-  fp << std::endl;
-
-  /* Datapath I/Os of FPGA fabric */
-  print_verilog_comment(fp, std::string("----- I/Os of FPGA fabric -----"));
-  for (const BasicPort& gpio_port : module_manager.module_ports_by_type(top_module, ModuleManager::MODULE_GPIO_PORT)) {
-    fp << generate_verilog_port(VERILOG_PORT_WIRE, gpio_port) << ";" << std::endl;
-  }
-  /* Add an empty line as a splitter */
-  fp << std::endl;
-
-  /* Datapath I/Os of FPGA fabric */
-  print_verilog_comment(fp, std::string("----- Configuration protocols of FPGA fabric -----"));
-  for (const BasicPort& input_port : module_manager.module_ports_by_type(top_module, ModuleManager::MODULE_INPUT_PORT)) {
-    fp << generate_verilog_port(VERILOG_PORT_WIRE, input_port) << ";" << std::endl;
+  print_verilog_comment(fp, std::string("----- Local wires for FPGA fabric -----"));
+  for (const ModulePortId& module_port_id : module_manager.module_ports(top_module)) {
+    BasicPort module_port = module_manager.module_port(top_module, module_port_id);
+    fp << generate_verilog_port(VERILOG_PORT_WIRE, module_port) << ";" << std::endl;
   }
   /* Add an empty line as a splitter */
   fp << std::endl;
@@ -244,7 +229,12 @@ void print_verilog_preconfig_top_module_connect_ios(std::fstream& fp,
     BasicPort benchmark_io_port(std::string(std::string(io_lb.name)+ std::string(formal_verification_top_module_port_postfix)), 1); 
 
     print_verilog_comment(fp, std::string("----- Blif Benchmark inout " + std::string(io_lb.name) + " is mapped to FPGA IOPAD " + module_mapped_io_port.get_name() + "[" + std::to_string(io_index) + "] -----"));
-    print_verilog_wire_connection(fp, module_mapped_io_port, benchmark_io_port, false);
+    if (VPACK_INPAD == io_lb.type) {
+      print_verilog_wire_connection(fp, module_mapped_io_port, benchmark_io_port, false);
+    } else {
+      VTR_ASSERT(VPACK_OUTPAD == io_lb.type);
+      print_verilog_wire_connection(fp, benchmark_io_port, module_mapped_io_port, false);
+    }
 
     /* Mark this I/O has been used/wired */
     io_used[io_index] = true;

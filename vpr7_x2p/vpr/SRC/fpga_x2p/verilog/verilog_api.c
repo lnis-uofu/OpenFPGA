@@ -408,12 +408,12 @@ void vpr_fpga_verilog(ModuleManager& module_manager,
                                                           + std::string(formal_verification_verilog_file_postfix);
     /* TODO: this is an old function, to be shadowed */
     dump_verilog_formal_verification_top_netlist(sram_verilog_orgz_info, chomped_circuit_name, 
-                                                 formal_verification_top_netlist_file_path.c_str(), src_dir_path);
+                                                 std::string(formal_verification_top_netlist_file_path + std::string(".bak")).c_str(), src_dir_path);
     /* TODO: new function: to be tested */
     print_verilog_preconfig_top_module(module_manager, bitstream_manager, fabric_bitstream, 
                                        Arch.spice->circuit_lib, global_ports, L_logical_blocks,
                                        device_size, L_grids, L_blocks, 
-                                       std::string(chomped_circuit_name), formal_verification_top_netlist_file_path + std::string(".bak"),
+                                       std::string(chomped_circuit_name), formal_verification_top_netlist_file_path,
                                        std::string(src_dir_path)); 
                                        
     /* Output script for formality */

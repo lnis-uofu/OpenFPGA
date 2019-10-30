@@ -363,7 +363,7 @@ void build_memory_chain_module(ModuleManager& module_manager,
    */
   BasicPort chain_tail_port(generate_configuration_chain_tail_name(), 
                             circuit_lib.port_size(sram_output_ports[0]));
-  module_manager.add_port(mem_module, chain_tail_port, ModuleManager::MODULE_INPUT_PORT);
+  module_manager.add_port(mem_module, chain_tail_port, ModuleManager::MODULE_OUTPUT_PORT);
 
   /* Add each output port: port width should match the number of memories */
   for (size_t iport = 0; iport < sram_output_ports.size(); ++iport) {

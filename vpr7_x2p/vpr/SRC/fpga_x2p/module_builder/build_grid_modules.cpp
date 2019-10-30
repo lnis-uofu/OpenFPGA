@@ -286,24 +286,6 @@ void build_primitive_block_module(ModuleManager& module_manager,
   /* Ensure that the module has been created and thus unique! */
   VTR_ASSERT(ModuleId::INVALID() != primitive_module);
 
-  /* Find the global ports required by the primitive node, and add them to the module */
-  std::vector<CircuitPortId> primitive_model_global_ports = circuit_lib.model_global_ports(primitive_model, true);
-  for (auto port : primitive_model_global_ports) {
-    /* The global I/O of the FPGA has a special name */
-    BasicPort module_port(circuit_lib.port_lib_name(port), circuit_lib.port_size(port));
-    module_manager.add_port(primitive_module, module_port, ModuleManager::MODULE_GLOBAL_PORT);
-  }
-
-  /* Find the inout ports required by the primitive node, and add them to the module
-   * This is mainly due to the I/O blocks, which have inout ports for the top-level fabric
-   */
-  if (SPICE_MODEL_IOPAD == circuit_lib.model_type(primitive_model)) {
-    std::vector<CircuitPortId> primitive_model_inout_ports = circuit_lib.model_ports_by_type(primitive_model, SPICE_MODEL_PORT_INOUT);
-    for (auto port : primitive_model_inout_ports) {
-      BasicPort module_port(generate_fpga_global_io_port_name(std::string(gio_inout_prefix), circuit_lib, primitive_model), circuit_lib.port_size(port));
-      module_manager.add_port(primitive_module, module_port, ModuleManager::MODULE_GPIO_PORT);
-    }
-  }
   /* Note: to cooperate with the pb_type hierarchy and connections, we add the port of primitive pb_type here.
    * Since we have linked pb_type ports to circuit models when setting up FPGA-X2P,
    * no ports of the circuit model will be missing here  
@@ -371,6 +353,33 @@ void build_primitive_block_module(ModuleManager& module_manager,
   if (false == memory_modules.empty()) {
     add_module_nets_memory_config_bus(module_manager, primitive_module, 
                                       sram_orgz_type, circuit_lib.design_tech_type(sram_model));
+  }
+
+  /* Add global ports to the pb_module:
+   * This is a much easier job after adding sub modules (instances), 
+   * we just need to find all the global ports from the child modules and build a list of it
+   */
+  add_module_global_ports_from_child_modules(module_manager, primitive_module);
+
+  /* Find the inout ports required by the primitive node, and add them to the module
+   * This is mainly due to the I/O blocks, which have inout ports for the top-level fabric
+   */
+  if (SPICE_MODEL_IOPAD == circuit_lib.model_type(primitive_model)) {
+    std::vector<CircuitPortId> primitive_model_inout_ports = circuit_lib.model_ports_by_type(primitive_model, SPICE_MODEL_PORT_INOUT);
+    for (auto port : primitive_model_inout_ports) {
+      BasicPort module_port(generate_fpga_global_io_port_name(std::string(gio_inout_prefix), circuit_lib, primitive_model), circuit_lib.port_size(port));
+      ModulePortId primitive_gpio_port_id = module_manager.add_port(primitive_module, module_port, ModuleManager::MODULE_GPIO_PORT);
+      ModulePortId logic_gpio_port_id = module_manager.find_module_port(logic_module, circuit_lib.port_lib_name(port));
+      BasicPort logic_gpio_port = module_manager.module_port(logic_module, logic_gpio_port_id);
+      VTR_ASSERT(logic_gpio_port.get_width() == module_port.get_width());
+
+      /* Wire the GPIO port form primitive_module to the logic module!*/
+      for (size_t pin_id = 0; pin_id < module_port.pins().size(); ++pin_id) {      
+        ModuleNetId net = module_manager.create_module_net(primitive_module);
+        module_manager.add_module_net_source(primitive_module, net, primitive_module, 0, primitive_gpio_port_id, module_port.pins()[pin_id]);
+        module_manager.add_module_net_sink(primitive_module, net, logic_module, logic_instance_id, logic_gpio_port_id, logic_gpio_port.pins()[pin_id]);
+      }
+    }
   }
 }
 

@@ -112,7 +112,7 @@ size_t find_benchmark_io_index(const t_logical_block& io_lb,
   /* TOP side I/Os */
   if (device_size.y() - 1 == y) {
     io_index = io_index_offset[io_side];
-    for (size_t ix = 1; ix < x - 1; ++ix) {
+    for (size_t ix = 1; ix < x ; ++ix) {
       io_index += L_grids[ix][y].type->capacity; 
     }
     io_index += z;
@@ -120,7 +120,7 @@ size_t find_benchmark_io_index(const t_logical_block& io_lb,
   /* RIGHT side I/Os */
   if (device_size.x() - 1 == x) {
     io_index = io_index_offset[io_side];
-    for (size_t iy = 1; iy < y - 1; ++iy) {
+    for (size_t iy = 1; iy < y; ++iy) {
       io_index += L_grids[x][iy].type->capacity; 
     }
     io_index += z;
@@ -128,7 +128,7 @@ size_t find_benchmark_io_index(const t_logical_block& io_lb,
   /* BOTTOM side I/Os */
   if (0 == y) {
     io_index = io_index_offset[io_side];
-    for (size_t ix = 1; ix < x - 1; ++ix) {
+    for (size_t ix = 1; ix < x; ++ix) {
       io_index += L_grids[ix][y].type->capacity; 
     }
     io_index += z;
@@ -136,7 +136,7 @@ size_t find_benchmark_io_index(const t_logical_block& io_lb,
   /* LEFT side I/Os */
   if (0 == x) {
     io_index = io_index_offset[io_side];
-    for (size_t iy = 1; iy < y - 1; ++iy) {
+    for (size_t iy = 1; iy < y; ++iy) {
       io_index += L_grids[x][iy].type->capacity; 
     }
     io_index += z;

@@ -200,7 +200,7 @@ void print_verilog_grid(ModuleManager& module_manager,
                                                              std::string(verilog_netlist_file_postfix))
                            );
   /* TODO: remove the bak file when the file is ready */
-  verilog_fname += ".bak";
+  //verilog_fname += ".bak";
 
   /* Echo status */
   if (IO_TYPE == phy_block_type) {
@@ -313,7 +313,7 @@ void print_verilog_grids(ModuleManager& module_manager,
   vpr_printf(TIO_MESSAGE_INFO, "Generating header file for grid Verilog modules...\n");
   std::string grid_verilog_fname(logic_block_verilog_file_name);
   /* TODO: remove .bak when it is ready */
-  grid_verilog_fname += ".bak";
+  //grid_verilog_fname += ".bak";
   dump_verilog_subckt_header_file(grid_verilog_subckt_file_path_head,
                                   subckt_dir.c_str(),
                                   grid_verilog_fname.c_str());

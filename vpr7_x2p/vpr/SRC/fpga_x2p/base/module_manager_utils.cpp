@@ -35,7 +35,7 @@ ModuleId add_circuit_model_to_module_manager(ModuleManager& module_manager,
 
   /* Add ports */
   /* Find global ports and add one by one */
-  for (const auto& port : circuit_lib.model_global_ports(circuit_model, true)) {
+  for (const auto& port : circuit_lib.model_global_ports(circuit_model, false)) {
     BasicPort port_info(circuit_lib.port_lib_name(port), circuit_lib.port_size(port));
     module_manager.add_port(module, port_info, ModuleManager::MODULE_GLOBAL_PORT);  
   }
@@ -163,10 +163,41 @@ void add_sram_ports_to_module_manager(ModuleManager& module_manager,
   size_t sram_port_size = generate_sram_port_size(sram_orgz_type, num_config_bits); 
 
   /* Add ports to the module manager */
-  for (const std::string& sram_port_name : sram_port_names) {
-    /* Add generated ports to the ModuleManager */
-    BasicPort sram_port(sram_port_name, sram_port_size);
-    module_manager.add_port(module_id, sram_port, ModuleManager::MODULE_INPUT_PORT);
+  switch (sram_orgz_type) {
+  case SPICE_SRAM_STANDALONE: 
+  case SPICE_SRAM_MEMORY_BANK: {
+    for (const std::string& sram_port_name : sram_port_names) {
+      /* Add generated ports to the ModuleManager */
+      BasicPort sram_port(sram_port_name, sram_port_size);
+      module_manager.add_port(module_id, sram_port, ModuleManager::MODULE_INPUT_PORT);
+    }
+    break;
+  }
+  case SPICE_SRAM_SCAN_CHAIN: { 
+    /* Note that configuration chain tail is an output while head is an input 
+     * IMPORTANT: this is co-designed with function generate_sram_port_names()
+     * If the return vector is changed, the following codes MUST be adapted!
+     */
+    VTR_ASSERT(2 == sram_port_names.size());
+    size_t port_counter = 0;
+    for (const std::string& sram_port_name : sram_port_names) {
+      /* Add generated ports to the ModuleManager */
+      BasicPort sram_port(sram_port_name, sram_port_size);
+      if (0 == port_counter) { 
+        module_manager.add_port(module_id, sram_port, ModuleManager::MODULE_INPUT_PORT);
+      } else {
+        VTR_ASSERT(1 == port_counter);
+        module_manager.add_port(module_id, sram_port, ModuleManager::MODULE_OUTPUT_PORT);
+      }
+      port_counter++;
+    }
+    break;
+  }
+  default:
+    vpr_printf(TIO_MESSAGE_ERROR,
+               "(File:%s,[LINE%d]) Invalid type of SRAM organization !\n",
+               __FILE__, __LINE__);
+    exit(1);
   }
 }
 
@@ -457,7 +488,7 @@ void add_module_nets_between_logic_and_memory_sram_ports(ModuleManager& module_m
     for (size_t pin_id = 0; pin_id < logic_module_sram_ports[port_index].pins().size(); ++pin_id) {
       ModuleNetId net = module_manager.create_module_net(parent_module);
       /* TODO: Give a name to make it clear */
-      std::string net_name = module_manager.module_name(logic_module) + std::string("_") + logic_module_sram_ports[port_index].get_name();
+      std::string net_name = module_manager.module_name(logic_module) + std::string("_") + std::to_string(logic_instance_id) + std::string("_") + logic_module_sram_ports[port_index].get_name();
       module_manager.set_net_name(parent_module, net, net_name);
       /* Add net source */
       module_manager.add_module_net_source(parent_module, net, logic_module, logic_instance_id, logic_module_sram_port_ids[port_index], logic_module_sram_ports[port_index].pins()[pin_id]);

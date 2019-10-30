@@ -183,10 +183,10 @@ std::string generate_mask_bits(const size_t& mask_code,
   for (const size_t& mask_bit : mask_bits) {
     VTR_ASSERT( 0 == mask_bit || 1 == mask_bit );
     if (0 == mask_bit) {
-      mask_bits_str.push_back('1');
+      mask_bits_str.push_back('0');
       continue;
     }
-    mask_bits_str.push_back('0');
+    mask_bits_str.push_back('1');
   }
  
   return mask_bits_str;
@@ -496,6 +496,10 @@ std::vector<bool> build_frac_lut_bitstream(const CircuitLibrary& circuit_lib,
     /* Find the corresponding circuit model output port and assoicated lut_output_mask */
     CircuitPortId lut_model_output_port = lut_pb->lut_output_pb_graph_pin[ilb]->port->circuit_model_port;
     size_t lut_frac_level = circuit_lib.port_lut_frac_level(lut_model_output_port);
+    /* By default, lut_frac_level will be the lut_size, i.e., number of levels of the mux graph */
+    if ( size_t(-1) == lut_frac_level ) {
+      lut_frac_level = lut_mux_graph.num_levels();
+    }
 
     /* Find the corresponding circuit model output port and assoicated lut_output_mask */
     size_t lut_output_mask = circuit_lib.port_lut_output_masks(lut_model_output_port)[lut_pb->lut_output_pb_graph_pin[ilb]->pin_number];

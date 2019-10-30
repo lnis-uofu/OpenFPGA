@@ -104,7 +104,7 @@ void print_verilog_submodule_memories(ModuleManager& module_manager,
                                       const bool& use_explicit_port_map) {
   /* Plug in with the mux subckt */
   std::string verilog_fname(submodule_dir + memories_verilog_file_name);
-  verilog_fname += ".bak";
+  //verilog_fname += ".bak";
 
   /* Create the file stream */
   std::fstream fp;

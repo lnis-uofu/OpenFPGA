@@ -282,14 +282,16 @@ void build_switch_block_mux_module(ModuleManager& module_manager,
   VTR_ASSERT(true == module_manager.valid_module_port_id(mux_module, mux_output_port_id));
   BasicPort mux_output_port = module_manager.module_port(mux_module, mux_output_port_id);
   ModulePortId sb_output_port_id = find_switch_block_module_chan_port(module_manager, sb_module, rr_gsb, chan_side, cur_rr_node, OUT_PORT); 
+  BasicPort sb_output_port = module_manager.module_port(sb_module, sb_output_port_id);
 
   /* Check port size should match */
-  VTR_ASSERT(1 == mux_output_port.get_width());
+  VTR_ASSERT(sb_output_port.get_width() == mux_output_port.get_width());
   for (size_t pin_id = 0; pin_id < mux_output_port.pins().size(); ++pin_id) {
     ModuleNetId net = module_manager.create_module_net(sb_module);
-    /* Skip Configuring the net source, it is done before */
+    /* Configuring the net source */
+    module_manager.add_module_net_source(sb_module, net, mux_module, mux_instance_id, mux_output_port_id, mux_output_port.pins()[pin_id]);
     /* Configure the net sink */
-    module_manager.add_module_net_sink(sb_module, net, sb_module, 0, sb_output_port_id, 0);
+    module_manager.add_module_net_sink(sb_module, net, sb_module, 0, sb_output_port_id, sb_output_port.pins()[pin_id]);
   }
 
   /* Instanciate memory modules */
@@ -754,14 +756,16 @@ void build_connection_block_mux_module(ModuleManager& module_manager,
   VTR_ASSERT(true == module_manager.valid_module_port_id(mux_module, mux_output_port_id));
   BasicPort mux_output_port = module_manager.module_port(mux_module, mux_output_port_id);
   ModulePortId cb_output_port_id = find_connection_block_module_ipin_port(module_manager, cb_module, rr_gsb, grids, cur_rr_node);
+  BasicPort cb_output_port = module_manager.module_port(cb_module, cb_output_port_id);
 
   /* Check port size should match */
-  VTR_ASSERT(1 == mux_output_port.get_width());
+  VTR_ASSERT(cb_output_port.get_width() == mux_output_port.get_width());
   for (size_t pin_id = 0; pin_id < mux_output_port.pins().size(); ++pin_id) {
     ModuleNetId net = module_manager.create_module_net(cb_module);
-    /* Skip Configuring the net source, it is done before */
+    /* Configuring the net source */
+    module_manager.add_module_net_source(cb_module, net, mux_module, mux_instance_id, mux_output_port_id, mux_output_port.pins()[pin_id]);
     /* Configure the net sink */
-    module_manager.add_module_net_sink(cb_module, net, cb_module, 0, cb_output_port_id, 0);
+    module_manager.add_module_net_sink(cb_module, net, cb_module, 0, cb_output_port_id, cb_output_port.pins()[pin_id]);
   }
 
   /* Instanciate memory modules */
@@ -932,7 +936,7 @@ void build_connection_block_module(ModuleManager& module_manager,
   /* Create a cache (fast look up) for module nets whose source are input ports */
   std::map<ModulePortId, ModuleNetId> input_port_to_module_nets;
 
-  /* TODO: Generate short-wire connection for each routing track : 
+  /* Generate short-wire connection for each routing track : 
    * Each input port is short-wired to its output port and middle output port
    *    
    *   in[i] ----------> out[i]
@@ -971,7 +975,7 @@ void build_connection_block_module(ModuleManager& module_manager,
     }
   }
 
-  /* TODO: Add sub modules of routing multiplexers or direct interconnect*/
+  /* Add sub modules of routing multiplexers or direct interconnect*/
   for (size_t iside = 0; iside < cb_ipin_sides.size(); ++iside) {
     enum e_side cb_ipin_side = cb_ipin_sides[iside];
     for (size_t inode = 0; inode < rr_gsb.get_num_ipin_nodes(cb_ipin_side); ++inode) {

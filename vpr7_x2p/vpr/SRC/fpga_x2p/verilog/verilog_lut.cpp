@@ -34,7 +34,8 @@ void print_verilog_submodule_luts(ModuleManager& module_manager,
                                   const std::string& submodule_dir,
                                   const bool& use_explicit_port_map) {
   /* TODO: remove .bak when this part is completed and tested */
-  std::string verilog_fname = submodule_dir + luts_verilog_file_name + ".bak";
+  std::string verilog_fname = submodule_dir + luts_verilog_file_name;
+  //verilog_fname +=".bak";
 
   std::fstream fp;
 

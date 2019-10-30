@@ -42,7 +42,7 @@ void print_verilog_top_module(ModuleManager& module_manager,
   /* Create the file name for Verilog netlist */
   std::string verilog_fname(verilog_dir + generate_fpga_top_netlist_name(std::string(verilog_netlist_file_postfix)));
   /* TODO: remove the bak file when the file is ready */
-  verilog_fname += ".bak";
+  //verilog_fname += ".bak";
 
   vpr_printf(TIO_MESSAGE_INFO,
              "Writing Verilog Netlist for top-level module of FPGA fabric (%s)...\n",
