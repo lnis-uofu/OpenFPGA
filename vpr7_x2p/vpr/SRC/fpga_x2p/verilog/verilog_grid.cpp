@@ -141,12 +141,14 @@ void print_verilog_physical_blocks_rec(std::fstream& fp,
     }
   }
 
-  /* For leaf node, a primitive Verilog module will be generated */
+  /* For leaf node, a primitive Verilog module will be generated.
+   * Note that the primitive may be mapped to a standard cell, we force to use that
+   */
   if (TRUE == is_primitive_pb_type(physical_pb_type)) { 
     print_verilog_primitive_block(fp, module_manager,
                                   physical_pb_graph_node, 
                                   io_side, 
-                                  use_explicit_mapping); 
+                                  true);
     /* Finish for primitive node, return */
     return;
   }

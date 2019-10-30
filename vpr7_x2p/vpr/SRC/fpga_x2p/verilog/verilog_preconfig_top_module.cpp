@@ -271,14 +271,17 @@ static
 void print_verilog_preconfig_top_module_load_bitstream(std::fstream& fp,
                                                        const ModuleManager& module_manager,
                                                        const ModuleId& top_module,
-                                                       const BitstreamManager& bitstream_manager,
-                                                       const std::vector<ConfigBitId>& fabric_bitstream) {
+                                                       const BitstreamManager& bitstream_manager) {
   print_verilog_comment(fp, std::string("----- Begin load bitstream to configuration memories -----"));
+  fp << "initial begin" << std::endl;
 
-  for (const ConfigBitId& config_bit_id : fabric_bitstream) {
-    ConfigBlockId bit_parent_block = bitstream_manager.bit_parent_block(config_bit_id);
+  for (const ConfigBlockId& config_block_id : bitstream_manager.blocks()) {
+    /* We only cares blocks with configuration bits */
+    if (0 == bitstream_manager.block_bits(config_block_id).size()) {
+      continue;
+    }
     /* Build the hierarchical path of the configuration bit in modules */   
-    std::vector<ConfigBlockId> block_hierarchy = find_bitstream_manager_block_hierarchy(bitstream_manager, bit_parent_block);
+    std::vector<ConfigBlockId> block_hierarchy = find_bitstream_manager_block_hierarchy(bitstream_manager, config_block_id);
     /* Drop the first block, which is the top module, it should be replaced by the instance name here */
     /* Ensure that this is the module we want to drop! */
     VTR_ASSERT(0 == module_manager.module_name(top_module).compare(bitstream_manager.block_name(block_hierarchy[0])));
@@ -290,18 +293,29 @@ void print_verilog_preconfig_top_module_load_bitstream(std::fstream& fp,
       bit_hierarchy_path += bitstream_manager.block_name(temp_block);
     }
     bit_hierarchy_path += std::string(".");
-    bit_hierarchy_path += generate_configuration_chain_data_out_name();
 
     /* Find the bit index in the parent block */
-    BasicPort config_port(bit_hierarchy_path, 
-                          bitstream_manager.bit_index_in_parent_block(config_bit_id),
-                          bitstream_manager.bit_index_in_parent_block(config_bit_id));
+    BasicPort config_data_port(bit_hierarchy_path + generate_configuration_chain_data_out_name(),
+                               bitstream_manager.block_bits(config_block_id).size());
 
-    /* Wire it to the configuration bit */
-    std::vector<size_t> default_values(config_port.get_width(), bitstream_manager.bit_value(config_bit_id));
-    print_verilog_wire_constant_values(fp, config_port, default_values);
+    BasicPort config_datab_port(bit_hierarchy_path + generate_configuration_chain_inverted_data_out_name(),
+                               bitstream_manager.block_bits(config_block_id).size());
+
+    /* Wire it to the configuration bit: access both data out and data outb ports */
+    std::vector<size_t> config_data_values;
+    for (const ConfigBitId config_bit : bitstream_manager.block_bits(config_block_id)) {
+      config_data_values.push_back(bitstream_manager.bit_value(config_bit));
+    }
+    print_verilog_deposit_wire_constant_values(fp, config_data_port, config_data_values);
+
+    std::vector<size_t> config_datab_values;
+    for (const ConfigBitId config_bit : bitstream_manager.block_bits(config_block_id)) {
+      config_datab_values.push_back(!bitstream_manager.bit_value(config_bit));
+    }
+    print_verilog_deposit_wire_constant_values(fp, config_datab_port, config_datab_values);
   }
 
+  fp << "end" << std::endl;
   print_verilog_comment(fp, std::string("----- End load bitstream to configuration memories -----"));
 }
 
@@ -340,7 +354,6 @@ void print_verilog_preconfig_top_module_load_bitstream(std::fstream& fp,
  *******************************************************************/
 void print_verilog_preconfig_top_module(const ModuleManager& module_manager,
                                         const BitstreamManager& bitstream_manager,
-                                        const std::vector<ConfigBitId>& fabric_bitstream,
                                         const CircuitLibrary& circuit_lib,
                                         const std::vector<CircuitPortId>& global_ports,
                                         const std::vector<t_logical_block>& L_logical_blocks,
@@ -401,7 +414,7 @@ void print_verilog_preconfig_top_module(const ModuleManager& module_manager,
 
   /* Assign FPGA internal SRAM/Memory ports to bitstream values */
   print_verilog_preconfig_top_module_load_bitstream(fp, module_manager, top_module,
-                                                    bitstream_manager, fabric_bitstream);
+                                                    bitstream_manager);
 
   /* Testbench ends*/
   print_verilog_module_end(fp, std::string(circuit_name) + std::string(formal_verification_top_module_postfix));

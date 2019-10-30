@@ -88,6 +88,10 @@ void print_verilog_wire_constant_values(std::fstream& fp,
                                         const BasicPort& output_port,
                                         const std::vector<size_t>& const_values);
 
+void print_verilog_deposit_wire_constant_values(std::fstream& fp,
+                                                const BasicPort& output_port,
+                                                const std::vector<size_t>& const_values);
+
 void print_verilog_wire_connection(std::fstream& fp,
                                    const BasicPort& output_port,
                                    const BasicPort& input_port,

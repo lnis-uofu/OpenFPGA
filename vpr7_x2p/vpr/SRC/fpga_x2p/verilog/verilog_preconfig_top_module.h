@@ -10,7 +10,6 @@
 
 void print_verilog_preconfig_top_module(const ModuleManager& module_manager,
                                         const BitstreamManager& bitstream_manager,
-                                        const std::vector<ConfigBitId>& fabric_bitstream,
                                         const CircuitLibrary& circuit_lib,
                                         const std::vector<CircuitPortId>& global_ports,
                                         const std::vector<t_logical_block>& L_logical_blocks,
