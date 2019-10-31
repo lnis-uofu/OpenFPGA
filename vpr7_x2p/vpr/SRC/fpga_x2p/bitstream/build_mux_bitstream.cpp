@@ -99,10 +99,18 @@ std::vector<bool> build_cmos_mux_bitstream(const CircuitLibrary& circuit_lib,
    */
   for (const size_t& level : mux_graph.levels()) {
     /* The encoder will convert the path_id to a binary number 
-     * For example: when path_id=3 (use the 4th input), using a 4-input encoder 
-     * the sram_bits will be the 4-digit binary number of 3: 0100
+     * For example: when path_id=3 (use the 4th input), using a 2-input encoder 
+     * the sram_bits will be the 2-digit binary number of 3: 10
      */
     std::vector<size_t> encoder_data;
+
+    /* Exception: there is only 1 memory at this level, bitstream will not be changed!!! */
+    if (1 == mux_graph.memories_at_level(level).size()) {
+      mux_bitstream.push_back(raw_bitstream[mux_graph.memories_at_level(level)[0]]);
+      continue;
+    }
+
+    /* Otherwise: we follow a regular recipe */
     for (size_t mem_index = 0; mem_index < mux_graph.memories_at_level(level).size(); ++mem_index) {
       /* Conversion rule: true = 1, false = 0 */
       if (true == raw_bitstream[mux_graph.memories_at_level(level)[mem_index]]) {
@@ -121,7 +129,7 @@ std::vector<bool> build_cmos_mux_bitstream(const CircuitLibrary& circuit_lib,
     }
     /* Build final mux bitstream */
     for (const size_t& bit : encoder_addr) {
-      mux_bitstream.push_back((bool)bit);
+      mux_bitstream.push_back(1 == bit);
     }
   } 
 

@@ -1004,6 +1004,7 @@ void build_mux_module_local_encoders_and_memory_nets(ModuleManager& module_manag
 
   /* Local port to record the LSB and MSB of each level, here, we deposite (0, 0) */
   ModulePortId mux_module_sram_port_id = module_manager.find_module_port(mux_module, circuit_lib.port_lib_name(mux_sram_ports[0]));
+  ModulePortId mux_module_sram_inv_port_id = module_manager.find_module_port(mux_module, circuit_lib.port_lib_name(mux_sram_ports[0]) + "_inv");
   BasicPort lvl_addr_port(circuit_lib.port_lib_name(mux_sram_ports[0]), 0);
   BasicPort lvl_data_port(decoder_data_port.get_name(), 0);
   BasicPort lvl_data_inv_port(decoder_data_inv_port.get_name(), 0);
@@ -1019,6 +1020,24 @@ void build_mux_module_local_encoders_and_memory_nets(ModuleManager& module_manag
     lvl_addr_port.rotate(addr_size);
     lvl_data_port.rotate(data_size);
     lvl_data_inv_port.rotate(data_size);
+
+    /* Exception: if the data size is one, we just need wires! */
+    if (1 == data_size) {
+      for (size_t pin_id = 0; pin_id < lvl_addr_port.pins().size(); ++pin_id) {
+        MuxMemId mem_id = MuxMemId(mem_net_cnt);
+        /* Set the module net source */
+        module_manager.add_module_net_source(mux_module, mux_mem_nets[mem_id], mux_module, 0, mux_module_sram_port_id, lvl_addr_port.pins()[pin_id]);
+        /* Update counter */
+        mem_net_cnt++;
+
+        MuxMemId mem_inv_id = MuxMemId(mem_inv_net_cnt);
+        /* Set the module net source */
+        module_manager.add_module_net_source(mux_module, mux_mem_inv_nets[mem_inv_id], mux_module, 0, mux_module_sram_inv_port_id, lvl_addr_port.pins()[pin_id]);
+        /* Update counter */
+        mem_inv_net_cnt++;
+      }
+      continue;
+    }
 
     std::string decoder_module_name = generate_mux_local_decoder_subckt_name(addr_size, data_size);
     ModuleId decoder_module = module_manager.find_module(decoder_module_name); 

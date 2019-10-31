@@ -266,13 +266,101 @@ void print_verilog_preconfig_top_module_connect_ios(std::fstream& fp,
 
 /********************************************************************
  * Impose the bitstream on the configuration memories
+ * This function uses 'assign' syntax to impost the bitstream at mem port
+ * while uses 'force' syntax to impost the bitstream at mem_inv port
  *******************************************************************/
 static 
-void print_verilog_preconfig_top_module_load_bitstream(std::fstream& fp,
-                                                       const ModuleManager& module_manager,
-                                                       const ModuleId& top_module,
-                                                       const BitstreamManager& bitstream_manager) {
-  print_verilog_comment(fp, std::string("----- Begin load bitstream to configuration memories -----"));
+void print_verilog_preconfig_top_module_assign_bitstream(std::fstream& fp,
+                                                         const ModuleManager& module_manager,
+                                                         const ModuleId& top_module,
+                                                         const BitstreamManager& bitstream_manager) {
+  /* Validate the file stream */
+  check_file_handler(fp);
+
+  print_verilog_comment(fp, std::string("----- Begin assign bitstream to configuration memories -----"));
+
+  for (const ConfigBlockId& config_block_id : bitstream_manager.blocks()) {
+    /* We only cares blocks with configuration bits */
+    if (0 == bitstream_manager.block_bits(config_block_id).size()) {
+      continue;
+    }
+    /* Build the hierarchical path of the configuration bit in modules */   
+    std::vector<ConfigBlockId> block_hierarchy = find_bitstream_manager_block_hierarchy(bitstream_manager, config_block_id);
+    /* Drop the first block, which is the top module, it should be replaced by the instance name here */
+    /* Ensure that this is the module we want to drop! */
+    VTR_ASSERT(0 == module_manager.module_name(top_module).compare(bitstream_manager.block_name(block_hierarchy[0])));
+    block_hierarchy.erase(block_hierarchy.begin());
+    /* Build the full hierarchy path */
+    std::string bit_hierarchy_path(formal_verification_top_module_uut_name);
+    for (const ConfigBlockId& temp_block : block_hierarchy) {
+      bit_hierarchy_path += std::string(".");
+      bit_hierarchy_path += bitstream_manager.block_name(temp_block);
+    }
+    bit_hierarchy_path += std::string(".");
+
+    /* Find the bit index in the parent block */
+    BasicPort config_data_port(bit_hierarchy_path + generate_configuration_chain_data_out_name(),
+                               bitstream_manager.block_bits(config_block_id).size());
+
+    /* Wire it to the configuration bit: access both data out and data outb ports */
+    std::vector<size_t> config_data_values;
+    for (const ConfigBitId config_bit : bitstream_manager.block_bits(config_block_id)) {
+      config_data_values.push_back(bitstream_manager.bit_value(config_bit));
+    }
+    print_verilog_wire_constant_values(fp, config_data_port, config_data_values);
+  }
+
+  fp << "initial begin" << std::endl;
+
+  for (const ConfigBlockId& config_block_id : bitstream_manager.blocks()) {
+    /* We only cares blocks with configuration bits */
+    if (0 == bitstream_manager.block_bits(config_block_id).size()) {
+      continue;
+    }
+    /* Build the hierarchical path of the configuration bit in modules */   
+    std::vector<ConfigBlockId> block_hierarchy = find_bitstream_manager_block_hierarchy(bitstream_manager, config_block_id);
+    /* Drop the first block, which is the top module, it should be replaced by the instance name here */
+    /* Ensure that this is the module we want to drop! */
+    VTR_ASSERT(0 == module_manager.module_name(top_module).compare(bitstream_manager.block_name(block_hierarchy[0])));
+    block_hierarchy.erase(block_hierarchy.begin());
+    /* Build the full hierarchy path */
+    std::string bit_hierarchy_path(formal_verification_top_module_uut_name);
+    for (const ConfigBlockId& temp_block : block_hierarchy) {
+      bit_hierarchy_path += std::string(".");
+      bit_hierarchy_path += bitstream_manager.block_name(temp_block);
+    }
+    bit_hierarchy_path += std::string(".");
+
+    /* Find the bit index in the parent block */
+    BasicPort config_datab_port(bit_hierarchy_path + generate_configuration_chain_inverted_data_out_name(),
+                                bitstream_manager.block_bits(config_block_id).size());
+
+    std::vector<size_t> config_datab_values;
+    for (const ConfigBitId config_bit : bitstream_manager.block_bits(config_block_id)) {
+      config_datab_values.push_back(!bitstream_manager.bit_value(config_bit));
+    }
+    print_verilog_force_wire_constant_values(fp, config_datab_port, config_datab_values);
+  }
+
+  fp << "end" << std::endl;
+
+  print_verilog_comment(fp, std::string("----- End assign bitstream to configuration memories -----"));
+}
+
+/********************************************************************
+ * Impose the bitstream on the configuration memories
+ * This function uses '$deposit' syntax to do so
+ *******************************************************************/
+static 
+void print_verilog_preconfig_top_module_deposit_bitstream(std::fstream& fp,
+                                                          const ModuleManager& module_manager,
+                                                          const ModuleId& top_module,
+                                                          const BitstreamManager& bitstream_manager) {
+  /* Validate the file stream */
+  check_file_handler(fp);
+
+  print_verilog_comment(fp, std::string("----- Begin deposit bitstream to configuration memories -----"));
+  
   fp << "initial begin" << std::endl;
 
   for (const ConfigBlockId& config_block_id : bitstream_manager.blocks()) {
@@ -316,6 +404,35 @@ void print_verilog_preconfig_top_module_load_bitstream(std::fstream& fp,
   }
 
   fp << "end" << std::endl;
+
+  print_verilog_comment(fp, std::string("----- End deposit bitstream to configuration memories -----"));
+}
+
+/********************************************************************
+ * Impose the bitstream on the configuration memories
+ * We branch here for different simulators:
+ * 1. iVerilog Icarus prefers using 'assign' syntax to force the values
+ * 2. Mentor Modelsim prefers using '$deposit' syntax to do so
+ *******************************************************************/
+static 
+void print_verilog_preconfig_top_module_load_bitstream(std::fstream& fp,
+                                                       const ModuleManager& module_manager,
+                                                       const ModuleId& top_module,
+                                                       const BitstreamManager& bitstream_manager) {
+  print_verilog_comment(fp, std::string("----- Begin load bitstream to configuration memories -----"));
+  
+  print_verilog_preprocessing_flag(fp, std::string(icarus_simulator_flag)); 
+
+  /* Use assign syntax for Icarus simulator */
+  print_verilog_preconfig_top_module_assign_bitstream(fp, module_manager, top_module, bitstream_manager);
+
+  fp << "`else" << std::endl;
+
+  /* Use assign syntax for Icarus simulator */
+  print_verilog_preconfig_top_module_deposit_bitstream(fp, module_manager, top_module, bitstream_manager);
+
+  print_verilog_endif(fp);
+
   print_verilog_comment(fp, std::string("----- End load bitstream to configuration memories -----"));
 }
 

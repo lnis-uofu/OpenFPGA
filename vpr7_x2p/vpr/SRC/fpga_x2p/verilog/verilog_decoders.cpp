@@ -82,8 +82,8 @@ void print_verilog_mux_local_decoder_module(std::fstream& fp,
    * data_inv = ~data_inv
    */
   if (1 == data_size) {
-    print_verilog_wire_connection(fp, addr_port, data_port, false);
-    print_verilog_wire_connection(fp, data_inv_port, data_port, true);
+    print_verilog_wire_connection(fp, data_port, addr_port, false);
+    print_verilog_wire_connection(fp, data_inv_port, addr_port, true);
     print_verilog_comment(fp, std::string("----- END Verilog codes for Decoder convert " + std::to_string(addr_size) + "-bit addr to " + std::to_string(data_size) + "-bit data -----"));
 
     /* Put an end to the Verilog module */

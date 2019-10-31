@@ -682,6 +682,21 @@ void print_verilog_deposit_wire_constant_values(std::fstream& fp,
   fp << ");" << std::endl;
 }
 
+/********************************************************************
+ * Generate a wire connection, that assigns constant values to a 
+ * Verilog port 
+ *******************************************************************/
+void print_verilog_force_wire_constant_values(std::fstream& fp,
+                                              const BasicPort& output_port,
+                                              const std::vector<size_t>& const_values) {
+  /* Make sure we have a valid file handler*/
+  check_file_handler(fp);
+
+  fp << "\t";
+  fp << "force ";
+  fp << generate_verilog_port_constant_values(output_port, const_values);
+  fp << ";" << std::endl;
+}
 
 /********************************************************************
  * Generate a wire connection for two Verilog ports 
