@@ -43,8 +43,6 @@ matrix:
           - fontconfig
           - g++-8
           - gcc-8
-          - g++-4.9
-          - gcc-4.9
           - gdb
           - git
           - gperf
