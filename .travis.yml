@@ -22,6 +22,7 @@ matrix:
     - os: linux
     # Compiler is specified in ./travis/common.sh
       sudo: false
+      dist: bionic
       compiler: g++-8
       addons:
         apt:
