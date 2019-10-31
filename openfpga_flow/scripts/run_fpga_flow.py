@@ -836,7 +836,7 @@ def run_rewrite_verilog():
     run_command("Yosys", "yosys_output.txt", command)
 
 
-def run_netlists_verification():
+def run_netlists_verification(exit_if_fail=True):
     ExecTime["VerificationStart"] = time.time()
     compiled_file = "compiled_"+args.top_module
     # include_netlists = args.top_module+"_include_netlists.v"
