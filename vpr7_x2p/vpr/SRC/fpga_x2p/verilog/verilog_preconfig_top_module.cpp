@@ -278,6 +278,7 @@ void print_verilog_preconfig_top_module_assign_bitstream(std::fstream& fp,
   check_file_handler(fp);
 
   print_verilog_comment(fp, std::string("----- Begin assign bitstream to configuration memories -----"));
+  fp << "initial begin" << std::endl;
 
   for (const ConfigBlockId& config_block_id : bitstream_manager.blocks()) {
     /* We only cares blocks with configuration bits */
@@ -307,8 +308,9 @@ void print_verilog_preconfig_top_module_assign_bitstream(std::fstream& fp,
     for (const ConfigBitId config_bit : bitstream_manager.block_bits(config_block_id)) {
       config_data_values.push_back(bitstream_manager.bit_value(config_bit));
     }
-    print_verilog_wire_constant_values(fp, config_data_port, config_data_values);
+    print_verilog_force_wire_constant_values(fp, config_data_port, config_data_values);
   }
+  fp << "end" << std::endl;
 
   fp << "initial begin" << std::endl;
 
