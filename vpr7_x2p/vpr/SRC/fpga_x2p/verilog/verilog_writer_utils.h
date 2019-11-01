@@ -101,6 +101,11 @@ void print_verilog_wire_connection(std::fstream& fp,
                                    const BasicPort& input_port,
                                    const bool& inverted);
 
+void print_verilog_register_connection(std::fstream& fp,
+                                       const BasicPort& output_port,
+                                       const BasicPort& input_port, 
+                                       const bool& inverted);
+
 void print_verilog_buffer_instance(std::fstream& fp,
                                    ModuleManager& module_manager, 
                                    const CircuitLibrary& circuit_lib, 

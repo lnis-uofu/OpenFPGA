@@ -36,6 +36,7 @@ constexpr char* DEFAULT_CLOCK_NAME = "clk";
 constexpr char* BENCHMARK_INSTANCE_NAME = "REF_DUT";
 constexpr char* FPGA_INSTANCE_NAME = "FPGA_DUT";
 constexpr char* ERROR_COUNTER = "nb_error";
+constexpr char* FORMAL_TB_SIM_START_PORT_NAME = "sim_start";
 constexpr int MAGIC_NUMBER_FOR_SIMULATION_TIME = 200;
 
 /********************************************************************
@@ -279,23 +280,29 @@ void print_verilog_timeout_and_vcd(std::fstream& fp,
   fp << "\t\t$dumpvars(1, " << circuit_name << FORMAL_RANDOM_TOP_TESTBENCH_POSTFIX << ");" << std::endl;
   fp << "\tend" << std::endl;
 
-  fp << "\tinitial begin" << std::endl;
-  fp << "\t\t$timeformat(-9, 2, \"ns\", 20);" << std::endl;
-  fp << "\t\t$display(\"Simulation start\");" << std::endl;
-  print_verilog_comment(fp, std::string("----- Can be changed by the user for his/her need -------"));
-  fp << "\t\t#" << simulation_time << std::endl;
-  fp << "\t\tif(" << ERROR_COUNTER << " == 0) begin" << std::endl;
-  fp << "\t\t\t$display(\"Simulation Succeed\");" << std::endl;
-  fp << "\t\tend else begin" << std::endl;
-  fp << "\t\t\t$display(\"Simulation Failed with " << std::string("%d") << " error(s)\", " << ERROR_COUNTER << ");" << std::endl;
-  fp << "\t\tend" << std::endl;
-  fp << "\t\t$finish;" << std::endl;
-  fp << "\tend" << std::endl;
+  /* Condition ends for the Icarus requirement */
+  print_verilog_endif(fp);
 
   print_verilog_comment(fp, std::string("----- END Icarus requirement -------"));
 
-  /* Condition ends for the Icarus requirement */
-  print_verilog_endif(fp);
+  /* Add an empty line as splitter */
+  fp << std::endl;
+
+  BasicPort sim_start_port(std::string(FORMAL_TB_SIM_START_PORT_NAME), 1);
+
+  fp << "initial begin" << std::endl;
+  fp << "\t" << generate_verilog_port(VERILOG_PORT_CONKT, sim_start_port) << " <= 1'b1;" << std::endl;
+  fp << "\t$timeformat(-9, 2, \"ns\", 20);" << std::endl;
+  fp << "\t$display(\"Simulation start\");" << std::endl;
+  print_verilog_comment(fp, std::string("----- Can be changed by the user for his/her need -------"));
+  fp << "\t#" << simulation_time << std::endl;
+  fp << "\tif(" << ERROR_COUNTER << " == 0) begin" << std::endl;
+  fp << "\t\t$display(\"Simulation Succeed\");" << std::endl;
+  fp << "\tend else begin" << std::endl;
+  fp << "\t\t$display(\"Simulation Failed with " << std::string("%d") << " error(s)\", " << ERROR_COUNTER << ");" << std::endl;
+  fp << "\tend" << std::endl;
+  fp << "\t$finish;" << std::endl;
+  fp << "end" << std::endl;
 
   /* Add an empty line as splitter */
   fp << std::endl;
@@ -321,7 +328,19 @@ void print_verilog_top_random_testbench_check(std::fstream& fp,
 
   BasicPort clock_port = generate_verilog_top_clock_port(clock_port_names);
 
+  print_verilog_comment(fp, std::string("----- Skip the first falling edge of clock, it is for initialization -------"));
+
+  BasicPort sim_start_port(std::string(FORMAL_TB_SIM_START_PORT_NAME), 1);
+
+  fp << "\t" << generate_verilog_port(VERILOG_PORT_REG, sim_start_port) << ";" << std::endl;
+  fp << std::endl;
+
   fp << "\talways@(negedge " << generate_verilog_port(VERILOG_PORT_CONKT, clock_port) << ") begin" << std::endl;
+  fp << "\t\tif (1'b1 == " << generate_verilog_port(VERILOG_PORT_CONKT, sim_start_port) << ") begin" << std::endl;
+  fp << "\t\t";
+  print_verilog_register_connection(fp, sim_start_port, sim_start_port, true);
+  fp << "\t\tend else begin" << std::endl;
+
   for (const t_logical_block& lb : L_logical_blocks) {
     /* Bypass non-I/O logical blocks ! */
     if ( (VPACK_INPAD != lb.type) && (VPACK_OUTPAD != lb.type) ) {
@@ -329,16 +348,17 @@ void print_verilog_top_random_testbench_check(std::fstream& fp,
     }
 
     if (VPACK_OUTPAD == lb.type){
-     fp << "\t\tif(!(" << std::string(lb.name) << std::string(FPGA_PORT_POSTFIX);
+     fp << "\t\t\tif(!(" << std::string(lb.name) << std::string(FPGA_PORT_POSTFIX);
      fp << " === " << std::string(lb.name) << std::string(BENCHMARK_PORT_POSTFIX);
      fp << ") && !(" << std::string(lb.name) << std::string(BENCHMARK_PORT_POSTFIX);
      fp << " === 1'bx)) begin" << std::endl;
-     fp << "\t\t\t" << std::string(lb.name) << std::string(CHECKFLAG_PORT_POSTFIX) << " <= 1'b1;" << std::endl;
-     fp << "\t\tend else begin" << std::endl;
-     fp << "\t\t\t" << std::string(lb.name) << std::string(CHECKFLAG_PORT_POSTFIX) << "<= 1'b0;" << std::endl;
-     fp << "\t\tend" << std::endl; 
+     fp << "\t\t\t\t" << std::string(lb.name) << std::string(CHECKFLAG_PORT_POSTFIX) << " <= 1'b1;" << std::endl;
+     fp << "\t\t\tend else begin" << std::endl;
+     fp << "\t\t\t\t" << std::string(lb.name) << std::string(CHECKFLAG_PORT_POSTFIX) << "<= 1'b0;" << std::endl;
+     fp << "\t\t\tend" << std::endl; 
     }
   } 
+  fp << "\t\tend" << std::endl;
   fp << "\tend" << std::endl;
 
   /* Add an empty line as splitter */

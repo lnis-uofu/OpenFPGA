@@ -726,6 +726,33 @@ void print_verilog_wire_connection(std::fstream& fp,
 }
 
 /********************************************************************
+ * Generate a wire connection for two Verilog ports 
+ * using "assign" syntax  
+ *******************************************************************/
+void print_verilog_register_connection(std::fstream& fp,
+                                       const BasicPort& output_port,
+                                       const BasicPort& input_port, 
+                                       const bool& inverted) {
+  /* Make sure we have a valid file handler*/
+  check_file_handler(fp);
+
+  /* Must check: the port width matches */
+  VTR_ASSERT( input_port.get_width() == output_port.get_width() );
+
+  fp << "\t";
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, output_port);
+  fp << " <= ";
+  
+  if (true == inverted) {
+    fp << "~";
+  }
+
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, input_port);
+  fp << ";" << std::endl;
+}
+
+
+/********************************************************************
  * Generate an instance of a buffer module  
  * with given information about the input and output ports of instance
  *
