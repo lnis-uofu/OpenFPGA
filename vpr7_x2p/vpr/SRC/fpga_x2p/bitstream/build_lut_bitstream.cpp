@@ -291,6 +291,7 @@ bool lut_truth_table_use_on_set(const LutTruthTable& truth_table) {
     on_set = true; 
     off_set = false;
   }
+  VTR_ASSERT(on_set == !off_set);
 
   return on_set;
 }
@@ -464,9 +465,11 @@ std::vector<bool> build_single_output_lut_bitstream(const LutTruthTable& truth_t
   }
 
   /* Initial all the bits in the bitstream */
-  if (true == on_set) {
-    lut_bitstream.resize(bitstream_size, false);
-  } else if (true == off_set) {
+  if (true == off_set) {
+    /* By default, the lut_bitstream is initialize for on_set
+     * For off set, it should be flipped
+     */
+    lut_bitstream.clear(); 
     lut_bitstream.resize(bitstream_size, true);
   }
 
