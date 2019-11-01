@@ -29,7 +29,7 @@ echo -e "Testing compact routing techniques";
 python3 openfpga_flow/scripts/run_fpga_task.py compact_routing 
 
 echo -e "Testing tileable architectures";
-python3 openfpga_flow/scripts/run_fpga_task.py tileable_routing explicit_verilog 
+python3 openfpga_flow/scripts/run_fpga_task.py tileable_routing 
 
 echo -e "Testing Verilog generation with explicit port mapping ";
 python3 openfpga_flow/scripts/run_fpga_task.py explicit_verilog 
