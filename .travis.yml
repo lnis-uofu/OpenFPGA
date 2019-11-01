@@ -106,7 +106,8 @@ install:
     if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
       IVERILOG_URL="https://github.com/steveicarus/iverilog/archive/v10_3.tar.gz"
       travis_retry wget --no-clobber --no-check-certificate --quiet -O - ${IVERILOG_URL}
-      tar -xzf v10_3.tar.gz
+      mkdir -p iverilog-10_3
+      tar -xz v10_3.tar.gz
       cd iverlog-10_3
       sh autoconf.sh --prefix=${DEPS_DIR}/iverilog-10_3/bin
       ./configure --prefix=${DEPS_DIR}/iverilog-10_3/bin
