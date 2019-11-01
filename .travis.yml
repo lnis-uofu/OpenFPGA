@@ -86,7 +86,6 @@ before_install:
   - source .travis/common.sh
 
 install:
-  - cd -
   - .travis/install.sh
 
 script:
