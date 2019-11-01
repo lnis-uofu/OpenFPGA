@@ -123,7 +123,7 @@ void dump_verilog_pb_generic_primitive(t_sram_orgz_info* cur_sram_orgz_info,
   fprintf(fp, "\n");
   /* Only dump the global ports belonging to a spice_model 
    */
-  if (0 < rec_dump_verilog_spice_model_global_ports(fp, verilog_model, TRUE, TRUE, my_bool_to_boolean(is_explicit_mapping))) {
+  if (0 < rec_dump_verilog_spice_model_global_ports(fp, verilog_model, TRUE, TRUE, my_bool_to_boolean(is_explicit_mapping), TRUE)) {
     fprintf(fp, ",\n");
   }
 
@@ -228,13 +228,17 @@ void dump_verilog_pb_generic_primitive(t_sram_orgz_info* cur_sram_orgz_info,
   }
 
   /* Call the subckt*/
-  fprintf(fp, "%s %s_%d_ (", verilog_model->name, verilog_model->prefix, verilog_model->cnt);
+  if (0 == strcmp(verilog_model->name,port_prefix)) {
+    fprintf(fp, "%s %s_logic_%d_ (", verilog_model->name, verilog_model->prefix, verilog_model->cnt);
+  } else {
+    fprintf(fp, "%s %s_%d_ (", verilog_model->name, verilog_model->prefix, verilog_model->cnt);
+  }
   fprintf(fp, "\n");
   /* Only dump the global ports belonging to a spice_model 
    * Disable recursive here !
    */
   /*if (0 < rec_dump_verilog_spice_model_global_ports(fp, verilog_model, FALSE, FALSE, my_bool_to_boolean(is_explicit_mapping))) {*/
-  if (0 < rec_dump_verilog_spice_model_global_ports(fp, verilog_model, FALSE, FALSE, subckt_require_explicit_port_map)) {
+  if (0 < rec_dump_verilog_spice_model_global_ports(fp, verilog_model, FALSE, FALSE, subckt_require_explicit_port_map, TRUE)) {
     fprintf(fp, ",\n");
   }
   
@@ -535,7 +539,7 @@ void dump_verilog_pb_primitive_lut(t_sram_orgz_info* cur_sram_orgz_info,
           formatted_subckt_prefix, cur_pb_type->name);
   fprintf(fp, "\n");
   /* Only dump the global ports belonging to a spice_model */
-  if (0 < rec_dump_verilog_spice_model_global_ports(fp, verilog_model, TRUE, TRUE, my_bool_to_boolean(is_explicit_mapping))) {
+  if (0 < rec_dump_verilog_spice_model_global_ports(fp, verilog_model, TRUE, TRUE, my_bool_to_boolean(is_explicit_mapping), TRUE)) {
     fprintf(fp, ",\n");
   }
   /* Print inputs, outputs, inouts, clocks, NO SRAMs*/
@@ -610,14 +614,18 @@ void dump_verilog_pb_primitive_lut(t_sram_orgz_info* cur_sram_orgz_info,
     subckt_require_explicit_port_map = TRUE;
   }
   /* Call LUT subckt*/
-  fprintf(fp, "%s %s_%d_ (", verilog_model->name, verilog_model->prefix, verilog_model->cnt);
+  if (0 == strcmp(verilog_model->name,port_prefix)) {
+    fprintf(fp, "%s %s_logic_%d_ (", verilog_model->name, verilog_model->prefix, verilog_model->cnt);
+  } else {
+    fprintf(fp, "%s %s_%d_ (", verilog_model->name, verilog_model->prefix, verilog_model->cnt);
+  }
   fprintf(fp, "\n");
   /* if we have to add global ports when dumping submodules of LUTs
    * otherwise, the port map here does not match that of submodules 
    * Only dump the global ports belonging to a spice_model 
    * DISABLE recursive here !
    */
-  if (0 < rec_dump_verilog_spice_model_global_ports(fp, verilog_model, FALSE, FALSE, subckt_require_explicit_port_map)) {
+  if (0 < rec_dump_verilog_spice_model_global_ports(fp, verilog_model, FALSE, FALSE, subckt_require_explicit_port_map, TRUE)) {
     fprintf(fp, ",\n");
   }
   /* Connect inputs*/ 

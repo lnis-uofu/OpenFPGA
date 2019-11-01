@@ -394,7 +394,6 @@ void vpr_fpga_bitstream_generator(t_vpr_setup vpr_setup,
 
   /* Run bitstream generation and dump output file */
   vpr_fpga_generate_bitstream(vpr_setup, Arch, circuit_name, bitstream_file_path.c_str(), cur_sram_orgz_info);
-
 }
 
 

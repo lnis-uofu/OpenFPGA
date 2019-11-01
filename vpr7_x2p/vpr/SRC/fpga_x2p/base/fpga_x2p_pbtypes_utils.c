@@ -1,7 +1,15 @@
-/***********************************/
-/*      SPICE Modeling for VPR     */
-/*       Xifan TANG, EPFL/LSI      */
-/***********************************/
+/******************************************************************** 
+ * This file includes most utilized functions to operate on pb_type
+ * related data structures, including t_pb_type, t_pb_graph_node, t_pb
+ * 
+ * Note: 
+ * If you want to classify functions, functions in this file should meet
+ * at least one of it 
+ * 1. non-generic data query of pb_type - related data structures
+ * 2. non-generic mutator/copy the pb_type 
+ *
+ * Generic accessors/mutators should be a method of the data structure
+ ********************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,6 +20,7 @@
 #include <unistd.h>
 
 /* Include vpr structs*/
+#include "vtr_assert.h"
 #include "util.h"
 #include "physical_types.h"
 #include "vpr_types.h"
@@ -29,6 +38,7 @@
 #include "fpga_x2p_lut_utils.h"
 #include "fpga_x2p_bitstream_utils.h"
 #include "fpga_x2p_pbtypes_utils.h"
+#include "fpga_x2p_naming.h"
 #include "fpga_x2p_globals.h"
 
 /* Make sure the edge has only one input pin and output pin*/
@@ -1322,6 +1332,54 @@ t_port* find_pb_type_port_match_spice_model_port(t_pb_type* pb_type,
   return ret;
 }
 
+/********************************************************************
+ * Return a list of ports of a pb_type which matches the ports defined
+ * in its linked circuit model 
+ * This function will only care if the port type matches  
+ *******************************************************************/
+std::vector<t_port*> find_pb_type_ports_match_circuit_model_port_type(t_pb_type* pb_type,
+                                                                      enum e_spice_model_port_type port_type) {
+  std::vector<t_port*> ports;
+
+  for (int iport = 0; iport < pb_type->num_ports; ++iport) {
+    /* Check the circuit_port id of the port ? */
+    VTR_ASSERT(CircuitPortId::INVALID() != pb_type->ports[iport].circuit_model_port);
+    switch (port_type) {
+    case SPICE_MODEL_PORT_INPUT:
+      if ( (IN_PORT == pb_type->ports[iport].type)
+        && (0 == pb_type->ports[iport].is_clock) ) {
+        ports.push_back(&pb_type->ports[iport]);
+      }
+      break;
+    case SPICE_MODEL_PORT_OUTPUT: 
+      if ( (OUT_PORT == pb_type->ports[iport].type)
+        && (0 == pb_type->ports[iport].is_clock) ) {
+        ports.push_back(&pb_type->ports[iport]);
+      }
+      break;
+    case SPICE_MODEL_PORT_INOUT: 
+      if ( (INOUT_PORT == pb_type->ports[iport].type)
+        && (0 == pb_type->ports[iport].is_clock) ) {
+        ports.push_back(&pb_type->ports[iport]);
+      }
+      break;
+    case SPICE_MODEL_PORT_CLOCK: 
+      if ( (IN_PORT == pb_type->ports[iport].type)
+        && (1 == pb_type->ports[iport].is_clock) ) {
+        ports.push_back(&pb_type->ports[iport]);
+      }
+      break;
+    /* Configuration ports are not in pb_type definition */
+    default:
+      vpr_printf(TIO_MESSAGE_ERROR,
+                 "(File:%s, [LINE%d]) Invalid type for port!\n",
+                 __FILE__, __LINE__);
+      exit(1);
+    }
+  }
+ 
+  return ports;
+}
 
 t_port** find_pb_type_ports_match_spice_model_port_type(t_pb_type* pb_type,
                                                         enum e_spice_model_port_type port_type,
@@ -2078,6 +2136,28 @@ t_pb* get_hardlogic_child_pb(t_pb* cur_hardlogic_pb,
   return (&(cur_hardlogic_pb->child_pbs[0][0])); 
 }
 
+/********************************************************************
+ * Find the height of a pin in a grid definition
+ * TODO: this should be a method of a grid class!!!
+ *******************************************************************/
+size_t find_grid_pin_height(const std::vector<std::vector<t_grid_tile>>& grids, 
+                            const vtr::Point<size_t>& grid_coordinate,
+                            const size_t& pin_index) {
+  t_type_ptr grid_type = grids[grid_coordinate.x()][grid_coordinate.y()].type;
+
+  /* Return if this is an empty type */
+  if ( (NULL == grid_type)
+     || (EMPTY_TYPE == grid_type)) {
+    return size_t(-1);
+  }
+
+  /* Check if the pin index is in the range */
+  VTR_ASSERT(pin_index < size_t(grid_type->num_pins));
+
+  /* Find the pin_height */
+  return grid_type->pin_height[pin_index];
+}
+
 int get_grid_pin_height(int grid_x, int grid_y, int pin_index) {
   int pin_height;
   t_type_ptr grid_type = NULL;
@@ -2101,6 +2181,72 @@ int get_grid_pin_height(int grid_x, int grid_y, int pin_index) {
   
   return pin_height;
 }
+
+/********************************************************************
+ * Find the side where a pin locates on a grid 
+ * TODO: this should be a method of a grid class!!!
+ *******************************************************************/
+e_side find_grid_pin_side(const vtr::Point<size_t>& device_size,
+                          const std::vector<std::vector<t_grid_tile>>& grids, 
+                          const vtr::Point<size_t>& grid_coordinate,
+                          const size_t& pin_height,
+                          const size_t& pin_index) {
+  t_type_ptr grid_type = grids[grid_coordinate.x()][grid_coordinate.y()].type;
+
+  /* Return an invalid side value if this is an empty type */
+  if ( (NULL == grid_type)
+     || (EMPTY_TYPE == grid_type)) {
+    return NUM_SIDES;
+  }
+
+  /* Check if the pin index is in the range */
+  VTR_ASSERT(pin_index < size_t(grid_type->num_pins));
+
+  std::vector<e_side> pin_sides = {TOP, RIGHT, BOTTOM, LEFT};
+  /* It could happen that some grids locate on the border of the device, 
+   * In these case, only one side is allowed for the pin
+   */
+  /* TOP side of the device */
+  if (grid_coordinate.y() == device_size.y() - 1) {
+    Side side_manager(TOP);
+    pin_sides.clear();
+    pin_sides.push_back(side_manager.get_opposite());
+  }
+
+  /* RIGHT side of the device */
+  if (grid_coordinate.x() == device_size.x() - 1) {
+    Side side_manager(RIGHT);
+    pin_sides.clear();
+    pin_sides.push_back(side_manager.get_opposite());
+  }
+
+  /* BOTTOM side of the device */
+  if (grid_coordinate.y() == 0) {
+    Side side_manager(BOTTOM);
+    pin_sides.clear();
+    pin_sides.push_back(side_manager.get_opposite());
+  }
+
+  /* LEFT side of the device */
+  if (grid_coordinate.x() == 0) {
+    Side side_manager(LEFT);
+    pin_sides.clear();
+    pin_sides.push_back(side_manager.get_opposite());
+  }
+
+  std::vector<e_side> found_pin_sides;
+  for (const e_side& pin_side : pin_sides) {
+    if (1 == grid_type->pinloc[pin_height][pin_side][pin_index]) {
+      found_pin_sides.push_back(pin_side);
+    }
+  }
+
+  /* We should find only one side ! */
+  VTR_ASSERT(1 == found_pin_sides.size());
+
+  return found_pin_sides[0];
+}
+
 
 int get_grid_pin_side(int grid_x, int grid_y, int pin_index) {
   int pin_height, side, pin_side;
@@ -3059,6 +3205,25 @@ void get_mapped_lut_phy_pb_input_pin_vpack_net_num(t_phy_pb* lut_phy_pb,
   return;
 }
 
+/********************************************************************
+ * Find the vpack_net_num of all the input pins of a LUT physical pb 
+ *******************************************************************/
+std::vector<int> find_mapped_lut_phy_pb_input_pin_vpack_net_num(t_phy_pb* lut_phy_pb) {
+  std::vector<int> lut_pin_net; 
+
+  /* Check */ 
+  VTR_ASSERT (1 == lut_phy_pb->pb_graph_node->num_input_ports);
+  lut_pin_net.resize(lut_phy_pb->pb_graph_node->num_input_pins[0]); 
+ 
+  /* Fill the array */
+  for (size_t ipin = 0; ipin < lut_pin_net.size(); ++ipin) {
+    int inode = lut_phy_pb->pb_graph_node->input_pins[0][ipin].rr_node_index_physical_pb;
+    lut_pin_net[ipin] = lut_phy_pb->rr_graph->rr_node[inode].vpack_net_num;
+  }
+
+  return lut_pin_net;
+}
+
 /* Get the vpack_net_num of all the input pins of a LUT physical pb */
 void get_mapped_lut_pb_input_pin_vpack_net_num(t_pb* lut_pb,
                                                int* num_lut_pin, int** lut_pin_net) {
@@ -3078,6 +3243,25 @@ void get_mapped_lut_pb_input_pin_vpack_net_num(t_pb* lut_pb,
 
   return;
 }
+
+
+/********************************************************************
+ * Get the vpack_net_num of all the input pins of a LUT physical pb 
+ *******************************************************************/
+std::vector<int> find_lut_logical_block_input_pin_vpack_net_num(t_logical_block* lut_logical_block) {
+  /* Ensure there is only one pin in the LUT logical block */ 
+  VTR_ASSERT (NULL == lut_logical_block->model->inputs[0].next);
+  
+  std::vector<int> lut_pin_nets(lut_logical_block->model->inputs[0].size);  
+ 
+  /* Fill the array */
+  for (size_t ipin = 0; ipin < lut_pin_nets.size(); ++ipin) {
+    lut_pin_nets[ipin] = lut_logical_block->input_nets[0][ipin];
+  }
+
+  return lut_pin_nets;
+}
+
 
 /* Get the vpack_net_num of all the input pins of a LUT physical pb */
 void get_lut_logical_block_input_pin_vpack_net_num(t_logical_block* lut_logical_block,

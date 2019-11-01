@@ -1,6 +1,8 @@
+#include <numeric>
 #include <algorithm>
 #include <limits>
-#include <cassert>
+
+#include "vtr_assert.h"
 
 #include "device_port.h"
 
@@ -62,6 +64,52 @@ size_t BasicPort::get_lsb() const {
 std::string BasicPort::get_name() const {
   return name_;
 } 
+
+/* Make a range of the pin indices */
+std::vector<size_t> BasicPort::pins() const {
+  std::vector<size_t> pin_indices; 
+
+  /* Return if the port is invalid */
+  if (false == is_valid()) {
+    return pin_indices; /* Return an empty vector */
+  }
+  /* For valid ports, create a vector whose length is the port width */
+  pin_indices.resize(get_width());
+  /* Fill in an incremental sequence */
+  std::iota(pin_indices.begin(), pin_indices.end(), get_lsb()); 
+  /* Ensure the last one is MSB */
+  VTR_ASSERT(get_msb() == pin_indices.back());
+
+  return pin_indices;
+}
+
+/* Check if a port can be merged with this port: their name should be the same */
+bool BasicPort::mergeable(const BasicPort& portA) const {
+  return (0 == this->get_name().compare(portA.get_name()));
+} 
+
+/* Check if a port is contained by this port:
+ * this function will check if the (LSB, MSB) of portA 
+ * is contained by the (LSB, MSB) of this port 
+ */
+bool BasicPort::contained(const BasicPort& portA) const {
+  return ( lsb_ <= portA.get_lsb() && portA.get_msb() <= msb_ );
+}
+
+/* Overloaded operators */
+/* Two ports are the same only when: 
+ * 1. port names are the same
+ * 2. LSBs are the same
+ * 3. MSBs are the same 
+ */
+bool BasicPort::operator== (const BasicPort& portA) const {
+  if  ( (0 == this->get_name().compare(portA.get_name())) 
+     && (this->get_lsb() == portA.get_lsb())
+     && (this->get_msb() == portA.get_msb()) ) {
+    return true;
+  }
+  return false;
+}
 
 /* Mutators */
 /* copy */
@@ -188,7 +236,7 @@ void BasicPort::reset() {
 void BasicPort::combine(const BasicPort& port) {
   /* LSB follows the current LSB */
   /* MSB increases */
-  assert( 0 <  port.get_width() ); /* Make sure port is valid */
+  VTR_ASSERT(0 <  port.get_width() ); /* Make sure port is valid */
   /* If current port is invalid, we do not combine */
   if (0 == get_width()) {
     return;
@@ -198,6 +246,28 @@ void BasicPort::combine(const BasicPort& port) {
   return;
 } 
 
+/* A restricted combine function for two ports,
+ * Following conditions will be applied:
+ * 1. the two ports have the same name
+ *    Note: you must run mergable() function first 
+ *          to make sure this assumption is valid
+ * 2. the new MSB will be the maximum MSB of the two ports
+ * 3. the new LSB will be the minimum LSB of the two ports
+ * 4. both ports should be valid!!!
+ */
+void BasicPort::merge(const BasicPort& portA) {
+  VTR_ASSERT(true == this->mergeable(portA));
+  VTR_ASSERT(true == this->is_valid() && true == portA.is_valid());
+  /* We skip merging if the portA is already contained by this port */
+  if (true == this->contained(portA)) {
+    return;
+  }
+  /* LSB follows the minium LSB of the two ports */
+  lsb_ = std::min((int)lsb_, (int)portA.get_lsb());
+  /* MSB follows the minium MSB of the two ports */
+  msb_ = std::max((int)msb_, (int)portA.get_msb());
+  return;
+}
 
 /* Internal functions */
 /* Make a port to be invalid: msb < lsb */

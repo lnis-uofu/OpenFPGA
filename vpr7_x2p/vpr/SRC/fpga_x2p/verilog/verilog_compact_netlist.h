@@ -1,6 +1,7 @@
 #ifndef VERILOG_COMPACT_NETLIST_H 
 #define VERILOG_COMPACT_NETLIST_H 
 
+
 void dump_compact_verilog_one_physical_block(t_sram_orgz_info* cur_sram_orgz_info, 
                                              char* verilog_dir_path,
                                              char* subckt_dir_path,
@@ -8,11 +9,11 @@ void dump_compact_verilog_one_physical_block(t_sram_orgz_info* cur_sram_orgz_inf
                                              int border_side,
                                              bool is_explicit_mapping);
 
-void dump_compact_verilog_logic_blocks(t_sram_orgz_info* cur_sram_orgz_info,
-                                       char* verilog_dir,
-                                       char* subckt_dir,
-                                       t_arch* arch,
-                                       bool is_explicit_mapping);
+void print_compact_verilog_logic_blocks(t_sram_orgz_info* cur_sram_orgz_info,
+                                        char* verilog_dir,
+                                        char* subckt_dir,
+                                        t_arch& arch,
+                                        const bool& is_explicit_mapping);
 
 void dump_compact_verilog_top_netlist(t_sram_orgz_info* cur_sram_orgz_info,
                                       char* circuit_name,

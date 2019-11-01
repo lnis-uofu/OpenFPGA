@@ -23,6 +23,7 @@
 #include "linkedlist.h"
 #include "fpga_x2p_utils.h"
 #include "fpga_x2p_globals.h"
+#include "fpga_x2p_naming.h"
 
 /* Include verilog utils */
 #include "verilog_global.h"
@@ -82,10 +83,13 @@ void write_include_netlists (char* src_dir_formatted,
 	verilog_include_defines_preproc_file(fp, src_dir_formatted);
 	verilog_include_simulation_defines_file(fp, src_dir_formatted);
 
-
+    /*
 	fprintf(fp, "`include \"%s%s%s\"\n",  src_dir_formatted, 
 							chomped_circuit_name, 
 							verilog_top_postfix);
+     */
+	fprintf(fp, "`include \"%s%s\"\n",  src_dir_formatted, 
+							 generate_fpga_top_netlist_name(std::string(verilog_netlist_file_postfix)).c_str());
 	fprintf(fp, "`ifdef %s\n", verilog_formal_verification_preproc_flag);
 	fprintf(fp, "`include \"%s%s%s\"\n",  src_dir_formatted, 
 							chomped_circuit_name, 
@@ -96,6 +100,7 @@ void write_include_netlists (char* src_dir_formatted,
 							random_top_testbench_verilog_file_postfix);
 	fprintf(fp, "  `endif\n");
 	fprintf(fp, "`elsif %s\n", initial_simulation_flag);
+    /* TODO: bring these testbench onboard when it is ready
 	fprintf(fp, "`include \"%s%s%s\"\n",  src_dir_formatted, 
 							chomped_circuit_name, 
 							top_testbench_verilog_file_postfix);
@@ -103,6 +108,7 @@ void write_include_netlists (char* src_dir_formatted,
 	fprintf(fp, "`include \"%s%s%s\"\n",  src_dir_formatted, 
 							chomped_circuit_name, 
 							autocheck_top_testbench_verilog_file_postfix);
+    */
 	fprintf(fp, "`endif\n");
 	fprintf(fp, "`include \"%s%s%s\"\n",  src_dir_formatted, 
 							default_rr_dir_name, 

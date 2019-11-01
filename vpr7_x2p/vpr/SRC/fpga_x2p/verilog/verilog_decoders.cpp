@@ -55,23 +55,19 @@ void print_verilog_mux_local_decoder_module(std::fstream& fp,
   std::string module_name = generate_mux_local_decoder_subckt_name(addr_size, data_size);
 
   /* Create a Verilog Module based on the circuit model, and add to module manager */
-  ModuleId module_id = module_manager.add_module(module_name); 
-  VTR_ASSERT(ModuleId::INVALID() != module_id);
+  ModuleId module_id = module_manager.find_module(module_name); 
+  VTR_ASSERT(true == module_manager.valid_module_id(module_id));
   /* Add module ports */
   /* Add each input port */
   BasicPort addr_port(generate_mux_local_decoder_addr_port_name(), addr_size);
-  module_manager.add_port(module_id, addr_port, ModuleManager::MODULE_INPUT_PORT);
   /* Add each output port */
   BasicPort data_port(generate_mux_local_decoder_data_port_name(), data_size);
-  module_manager.add_port(module_id, data_port, ModuleManager::MODULE_OUTPUT_PORT);
   /* Data port is registered. It should be outputted as 
    *   output reg [lsb:msb] data 
    */
-  module_manager.set_port_is_register(module_id, data_port.get_name(), true);
   /* Add data_in port */
   BasicPort data_inv_port(generate_mux_local_decoder_data_inv_port_name(), data_size);
   VTR_ASSERT(true == decoder_lib.use_data_inv_port(decoder));
-  module_manager.add_port(module_id, data_inv_port, ModuleManager::MODULE_OUTPUT_PORT);
 
   /* dump module definition + ports */
   print_verilog_module_declaration(fp, module_manager, module_id);
@@ -86,8 +82,8 @@ void print_verilog_mux_local_decoder_module(std::fstream& fp,
    * data_inv = ~data_inv
    */
   if (1 == data_size) {
-    print_verilog_wire_connection(fp, addr_port, data_port, false);
-    print_verilog_wire_connection(fp, data_inv_port, data_port, true);
+    print_verilog_wire_connection(fp, data_port, addr_port, false);
+    print_verilog_wire_connection(fp, data_inv_port, addr_port, true);
     print_verilog_comment(fp, std::string("----- END Verilog codes for Decoder convert " + std::to_string(addr_size) + "-bit addr to " + std::to_string(data_size) + "-bit data -----"));
 
     /* Put an end to the Verilog module */

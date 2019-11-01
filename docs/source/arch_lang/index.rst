@@ -8,6 +8,8 @@ Extended Architecture Description Language
    :maxdepth: 2
 
    generality
+
+   interconnect
    
    spice_sim_setting
 

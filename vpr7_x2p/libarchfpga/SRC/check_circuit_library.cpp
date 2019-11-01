@@ -49,7 +49,6 @@
 
 #include "check_circuit_library.h"
 
-
 /************************************************************************
  * Circuit models have unique names, return the number of errors 
  *  If not found, we give an error
@@ -392,6 +391,82 @@ size_t check_circuit_library_ports(const CircuitLibrary& circuit_lib) {
                circuit_lib.model_name(port).c_str(),
                circuit_lib.port_size(port));
     num_err++;
+  }
+
+  /* Check all the global ports which sare the same name also share the same attributes:
+   * default_value, is_config, is_reset, is_set etc. 
+   */
+  std::vector<CircuitPortId> global_ports;
+
+  /* Collect all the global ports */
+  for (auto port : circuit_lib.ports()) {
+    /* By pass non-global ports*/
+    if (false == circuit_lib.port_is_global(port)) {
+      continue;
+    }
+    global_ports.push_back(port);
+  }
+
+  for (size_t iport = 0; iport < global_ports.size() - 1; ++iport) {
+    for (size_t jport = iport + 1; jport < global_ports.size(); ++jport) {
+      /* Bypass those do not share the same name */
+      if (0 != circuit_lib.port_lib_name(global_ports[iport]).compare(circuit_lib.port_lib_name(global_ports[jport]))) {
+        continue;
+      }
+
+      /* Check if a same port share the same attributes */
+      CircuitModelId iport_parent_model = circuit_lib.port_parent_model(global_ports[iport]);
+      CircuitModelId jport_parent_model = circuit_lib.port_parent_model(global_ports[jport]);
+
+      if (circuit_lib.port_default_value(global_ports[iport]) != circuit_lib.port_default_value(global_ports[jport])) { 
+        vpr_printf(TIO_MESSAGE_ERROR,
+                   "Global ports %s from circuit model %s and %s share the same name but have different dfefault values(%lu and %lu)!\n",
+                   circuit_lib.port_lib_name(global_ports[iport]).c_str(),
+                   circuit_lib.model_name(iport_parent_model).c_str(),
+                   circuit_lib.model_name(jport_parent_model).c_str(),
+                   circuit_lib.port_default_value(global_ports[iport]),
+                   circuit_lib.port_default_value(global_ports[jport])
+                   ); 
+        num_err++;
+      }
+
+      if (circuit_lib.port_is_reset(global_ports[iport]) != circuit_lib.port_is_reset(global_ports[jport])) { 
+        vpr_printf(TIO_MESSAGE_ERROR,
+                   "Global ports %s from circuit model %s and %s share the same name but have different is_reset attributes!\n",
+                   circuit_lib.port_lib_name(global_ports[iport]).c_str(),
+                   circuit_lib.model_name(iport_parent_model).c_str(),
+                   circuit_lib.model_name(jport_parent_model).c_str() 
+                   ); 
+        num_err++;
+      }
+      if (circuit_lib.port_is_set(global_ports[iport]) != circuit_lib.port_is_set(global_ports[jport])) { 
+        vpr_printf(TIO_MESSAGE_ERROR,
+                   "Global ports %s from circuit model %s and %s share the same name but have different is_set attributes!\n",
+                   circuit_lib.port_lib_name(global_ports[iport]).c_str(),
+                   circuit_lib.model_name(iport_parent_model).c_str(),
+                   circuit_lib.model_name(jport_parent_model).c_str() 
+                   ); 
+        num_err++;
+      }
+      if (circuit_lib.port_is_config_enable(global_ports[iport]) != circuit_lib.port_is_config_enable(global_ports[jport])) { 
+        vpr_printf(TIO_MESSAGE_ERROR,
+                   "Global ports %s from circuit model %s and %s share the same name but have different is_config_enable attributes!\n",
+                   circuit_lib.port_lib_name(global_ports[iport]).c_str(),
+                   circuit_lib.model_name(iport_parent_model).c_str(),
+                   circuit_lib.model_name(jport_parent_model).c_str() 
+                   ); 
+        num_err++;
+      }
+      if (circuit_lib.port_is_prog(global_ports[iport]) != circuit_lib.port_is_prog(global_ports[jport])) { 
+        vpr_printf(TIO_MESSAGE_ERROR,
+                   "Global ports %s from circuit model %s and %s share the same name but have different is_prog attributes!\n",
+                   circuit_lib.port_lib_name(global_ports[iport]).c_str(),
+                   circuit_lib.model_name(iport_parent_model).c_str(),
+                   circuit_lib.model_name(jport_parent_model).c_str() 
+                   ); 
+        num_err++;
+      }
+    }
   }
 
   return num_err;

@@ -328,7 +328,7 @@ class DeviceRRGSB {
   public: /* Contructors */
   public: /* Accessors */
     DeviceCoordinator get_gsb_range() const; /* get the max coordinator of the switch block array */
-    const RRGSB get_gsb(DeviceCoordinator& coordinator) const; /* Get a rr switch block in the array with a coordinator */
+    const RRGSB get_gsb(const DeviceCoordinator& coordinator) const; /* Get a rr switch block in the array with a coordinator */
     const RRGSB get_gsb(size_t x, size_t y) const; /* Get a rr switch block in the array with a coordinator */
     size_t get_num_gsb_unique_module() const; /* get the number of unique mirrors of GSB */
     size_t get_num_sb_unique_submodule(enum e_side side, size_t seg_index) const; /* get the number of unique mirrors of switch blocks */
@@ -338,9 +338,9 @@ class DeviceRRGSB {
     const RRGSB get_sb_unique_submodule(size_t index, enum e_side side, size_t seg_id) const; /* Get a rr switch block which a unique mirror */ 
     const RRGSB get_sb_unique_submodule(DeviceCoordinator& coordinator, enum e_side side, size_t seg_id) const; /* Get a rr switch block which a unique mirror */ 
     const RRGSB get_sb_unique_module(size_t index) const; /* Get a rr switch block which a unique mirror */ 
-    const RRGSB get_sb_unique_module(DeviceCoordinator& coordinator) const; /* Get a rr switch block which a unique mirror */ 
+    const RRGSB get_sb_unique_module(const DeviceCoordinator& coordinator) const; /* Get a rr switch block which a unique mirror */ 
     const RRGSB& get_cb_unique_module(t_rr_type cb_type, size_t index) const; /* Get a rr switch block which a unique mirror */ 
-    const RRGSB& get_cb_unique_module(t_rr_type cb_type, DeviceCoordinator& coordinator) const;
+    const RRGSB& get_cb_unique_module(t_rr_type cb_type, const DeviceCoordinator& coordinator) const;
     size_t get_max_num_sides() const; /* Get the maximum number of sides across the switch blocks */
     size_t get_num_segments() const; /* Get the size of segment_ids */
     size_t get_segment_id(size_t index) const; /* Get a segment id */
@@ -370,7 +370,8 @@ class DeviceRRGSB {
     void clear_gsb_unique_module_id(); /* clean the content */
     void clear_segment_ids();
   private: /* Validators */
-    bool validate_coordinator(DeviceCoordinator& coordinator) const; /* Validate if the (x,y) is the range of this device */
+    bool validate_coordinator(const DeviceCoordinator& coordinator) const; /* Validate if the (x,y) is the range of this device */
+    bool validate_coordinator_edge(DeviceCoordinator& coordinator) const; /* Validate if the (x,y) is the range of this device but takes into consideration the fact that edges are 1 off */
     bool validate_side(enum e_side side) const; /* validate if side is in the range of unique_side_module_ */
     bool validate_sb_unique_module_index(size_t index) const; /* Validate if the index in the range of unique_mirror vector*/
     bool validate_cb_unique_module_index(t_rr_type cb_type, size_t index) const; /* Validate if the index in the range of unique_mirror vector*/

@@ -6,6 +6,10 @@
 #ifndef MUX_LIBRARY_BUILDER_H
 #define MUX_LIBRARY_BUILDER_H
 
+#include "vpr_types.h"
+#include "circuit_library.h"
+#include "mux_library.h"
+
 MuxLibrary build_device_mux_library(int LL_num_rr_nodes, t_rr_node* LL_rr_node,
                                     t_switch_inf* switches,
                                     const CircuitLibrary& circuit_lib,

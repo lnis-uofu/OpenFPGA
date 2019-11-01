@@ -27,6 +27,7 @@
 #ifndef MUX_GRAPH_H
 #define MUX_GRAPH_H
 
+#include <map>
 #include "vtr_vector.h"
 #include "vtr_range.h"
 #include "mux_graph_fwd.h"
@@ -62,7 +63,10 @@ class MuxGraph {
     std::vector<MuxNodeId> non_input_nodes() const;
     edge_range edges() const;
     mem_range memories() const;
+    /* Find the number of levels in terms of the multiplexer */
     std::vector<size_t> levels() const;
+    /* Find the actual number of levels in the graph */
+    std::vector<size_t> node_levels() const;
   public: /* Public accessors: Data query */
     /* Find the number of inputs in the MUX graph */
     size_t num_inputs() const;
@@ -79,6 +83,8 @@ class MuxGraph {
     size_t num_memory_bits() const;
     /* Find the number of SRAMs at a level in the MUX graph */
     size_t num_memory_bits_at_level(const size_t& level) const;
+    /* Return memory id at level */
+    std::vector<MuxMemId> memories_at_level(const size_t& level) const;
     /* Find the number of nodes at a given level in the MUX graph */
     size_t num_nodes_at_level(const size_t& level) const;
     /* Find the level of a node */
@@ -95,19 +101,38 @@ class MuxGraph {
     bool is_edge_use_inv_mem(const MuxEdgeId& edge) const;
     /* Find the sizes of each branch of a MUX */
     std::vector<size_t> branch_sizes() const;
+    /* Find the sizes of each branch of a MUX at a given level */
+    std::vector<size_t> branch_sizes(const size_t& level) const;
     /* Generate MUX graphs for its branches */
     MuxGraph subgraph(const MuxNodeId& node) const;
     std::vector<MuxGraph> build_mux_branch_graphs() const; 
     /* Get the node id of a given input */
     MuxNodeId node_id(const MuxInputId& input_id) const;
+    /* Get the node id of a given output */
+    MuxNodeId node_id(const MuxOutputId& output_id) const;
     /* Get the node id w.r.t. the node level and node_index at the level */
     MuxNodeId node_id(const size_t& node_level, const size_t& node_index_at_level) const;
     /* Get the input id of a given node */
     MuxInputId input_id(const MuxNodeId& node_id) const;
+    /* Identify if the node is an input of the MUX */
+    bool is_node_input(const MuxNodeId& node_id) const;
     /* Get the output id of a given node */
     MuxOutputId output_id(const MuxNodeId& node_id) const;
-    /* Decode memory bits based on an input id */
-    std::vector<size_t> decode_memory_bits(const MuxInputId& input_id) const;
+    /* Identify if the node is an output of the MUX */
+    bool is_node_output(const MuxNodeId& node_id) const;
+    /* Decode memory bits based on an input id and an output id 
+     * This function will start from the input node 
+     * and do a forward propagation until reaching the output node  
+     */
+    vtr::vector<MuxMemId, bool> decode_memory_bits(const MuxInputId& input_id,
+                                                   const MuxOutputId& output_id) const;
+    /* Find the input node that the memory bits will route an output node to 
+     * This function backward propagate from the output node to an input node
+     * assuming the memory bits are applied  
+     * Note: This function is mainly used for decoding LUT MUXes
+     */
+    MuxInputId find_input_node_driven_by_output_node(const std::map<MuxMemId, bool>& memory_bits,
+                                                     const MuxOutputId& output_id) const;
   private: /* Private mutators : basic operations */
      /* Add a unconfigured node to the MuxGraph */
      MuxNodeId add_node(const enum e_mux_graph_node_type& node_type);

@@ -43,8 +43,8 @@ FILE* verilog_create_one_subckt_file(char* subckt_dir,
                                      char** verilog_fname); 
 
 void dump_verilog_subckt_header_file(t_llist* subckt_llist_head,
-                                     char* subckt_dir,
-                                     char* header_file_name);
+                                     const char* subckt_dir,
+                                     const char* header_file_name);
 
 char determine_verilog_generic_port_split_sign(enum e_dump_verilog_port_type dump_port_type);
 
@@ -74,7 +74,8 @@ int rec_dump_verilog_spice_model_global_ports(FILE* fp,
                                               const t_spice_model* cur_spice_model,
                                               boolean dump_port_type,
                                               boolean recursive,
-                                              boolean require_explicit_port_map);
+                                              boolean require_explicit_port_map,
+                                              boolean is_lib_name);
 
 int dump_verilog_global_ports(FILE* fp, t_llist* head,
                               boolean dump_port_type,

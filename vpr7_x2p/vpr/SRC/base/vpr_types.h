@@ -245,6 +245,7 @@ typedef struct s_logical_block {
 
     /* Xifan TANG: SPICE model support*/
     /* For mapping */
+    CircuitModelId mapped_circuit_model;
     t_spice_model* mapped_spice_model;
     int mapped_spice_model_index; /* index of spice_model in completed FPGA netlist */
     int temp_used;

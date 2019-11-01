@@ -36,7 +36,7 @@ if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
   # export PATH="/usr/local/opt/bison/bin:/usr/local/bin:$PATH"
   # export PATH="/usr/local/opt/qt/bin:$PATH"
   # Install header files in Mojave, if not gcc-4.9 cannot spot stdio.h
-  sudo installer -pkg /Library/Developer/CommandLineTools/Packages/macOS_SDK_headers_for_macOS_10.14.pkg -target /
+  sudo installer -pkg /Library/Developer/CommandLineTools/Packages/macOS_SDK_headers_for_macOS_10.14.pkg -target / -allowUntrusted
 else
   # For linux, we use g++-8 and gcc-8 as default compilers
   export CC=gcc-8

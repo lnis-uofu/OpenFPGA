@@ -6,6 +6,7 @@
 #define DEVICE_PORT_H
 
 #include <string>
+#include <vector>
 
 /* A basic port */
 class BasicPort {
@@ -16,12 +17,17 @@ class BasicPort {
     BasicPort(const std::string& name, const size_t& lsb, const size_t& msb);
     BasicPort(const std::string& name, const size_t& width);
     BasicPort(const BasicPort& basic_port); /* Copy constructor */
+  public: /* Overloaded operators */
+    bool operator== (const BasicPort& portA) const;
   public: /* Accessors */
     size_t get_width() const; /* get the port width */
     size_t get_msb() const; /* get the LSB */
     size_t get_lsb() const; /* get the LSB */
     std::string get_name() const; /* get the name */
     bool is_valid() const; /* check if port size is valid > 0 */
+    std::vector<size_t> pins() const; /* Make a range of the pin indices */
+    bool mergeable(const BasicPort& portA) const; /* Check if a port can be merged with this port */
+    bool contained(const BasicPort& portA) const; /* Check if a port is contained by this port */
   public: /* Mutators */
     void set(const BasicPort& basic_port); /* copy */
     void set_name(const std::string& name); /* set the port LSB and MSB */
@@ -35,6 +41,7 @@ class BasicPort {
     bool counter_rotate(const size_t& offset); /* counter rotate */
     void reset(); /* Reset to initial port */
     void combine(const BasicPort& port); /* Combine two ports */
+    void merge(const BasicPort& portA);
   private: /* internal functions */
     void make_invalid(); /* Make a port invalid */
   private: /* Internal Data */

@@ -1,6 +1,14 @@
 #ifndef FPGA_X2P_PBTYPES_UTILS_H
 #define FPGA_X2P_PBTYPES_UTILS_H
 
+/* Only include header files those are required by the data types in the following function declaration */
+#include <vector>
+#include <map>
+#include "vtr_geometry.h"
+#include "device_port.h"
+#include "vpr_types.h"
+#include "circuit_library.h"
+#include "fpga_x2p_types.h"
 #include "fpga_x2p_bitstream_utils.h"
 
 void check_pb_graph_edge(t_pb_graph_edge pb_graph_edge);
@@ -100,6 +108,9 @@ void map_clb_pins_to_pb_graph_pins();
 t_port* find_pb_type_port_match_spice_model_port(t_pb_type* pb_type,
                                                  t_spice_model_port* spice_model_port);
 
+std::vector<t_port*> find_pb_type_ports_match_circuit_model_port_type(t_pb_type* pb_type,
+                                                                      enum e_spice_model_port_type port_type);
+
 t_port** find_pb_type_ports_match_spice_model_port_type(t_pb_type* pb_type,
                                                         enum e_spice_model_port_type port_type,
                                                         int* port_num);
@@ -156,9 +167,19 @@ t_phy_pb* get_lut_child_phy_pb(t_phy_pb* cur_lut_pb,
 t_pb* get_hardlogic_child_pb(t_pb* cur_hardlogic_pb,
                              int mode_index);
 
+size_t find_grid_pin_height(const std::vector<std::vector<t_grid_tile>>& grids, 
+                            const vtr::Point<size_t>& grid_coordinate,
+                            const size_t& pin_index);
+
 int get_grid_pin_height(int grid_x, int grid_y, int pin_index);
 
 int get_grid_pin_side(int grid_x, int grid_y, int pin_index);
+
+e_side find_grid_pin_side(const vtr::Point<size_t>& device_size,
+                          const std::vector<std::vector<t_grid_tile>>& grids, 
+                          const vtr::Point<size_t>& grid_coordinate,
+                          const size_t& pin_height,
+                          const size_t& pin_index);
 
 int* decode_mode_bits(char* mode_bits, int* num_sram_bits);
 
@@ -226,11 +247,15 @@ void alloc_and_load_phy_pb_children_for_one_mapped_block(t_pb* cur_pb,
 void get_mapped_lut_phy_pb_input_pin_vpack_net_num(t_phy_pb* lut_phy_pb,
                                                    int* num_lut_pin, int** lut_pin_net);
 
+std::vector<int> find_mapped_lut_phy_pb_input_pin_vpack_net_num(t_phy_pb* lut_phy_pb);
+
 void get_mapped_lut_pb_input_pin_vpack_net_num(t_pb* lut_pb,
                                                int* num_lut_pin, int** lut_pin_net);
 
 void get_lut_logical_block_input_pin_vpack_net_num(t_logical_block* lut_logical_block,
                                                    int* num_lut_pin, int** lut_pin_net);
+
+std::vector<int> find_lut_logical_block_input_pin_vpack_net_num(t_logical_block* lut_logical_block);
 
 void rec_reset_pb_type_temp_placement_index(t_pb_type* cur_pb_type);
 
