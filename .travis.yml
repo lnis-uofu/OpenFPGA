@@ -115,7 +115,7 @@ install:
 #      export PATH=${DEPS_DIR}/iverilog-10.3/bin:${PATH}
 #      echo ${PATH}
 #    fi
-  - iverilog --version
+  - iverilog -V
   - cd -
   - .travis/install.sh
 
