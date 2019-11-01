@@ -9,6 +9,7 @@ cache:
     - $TRAVIS_BUILD_DIR/ace2
     - $TRAVIS_BUILD_DIR/libs
     - $HOME/.ccache
+    - $HOME/deps
 
 # Currently sudo is not required, NO ENV is used
 
@@ -46,7 +47,6 @@ matrix:
           - gdb
           - git
           - gperf
-          - iverilog
           - libcairo2-dev
           - libevent-dev
           - libfontconfig1-dev
@@ -86,18 +86,6 @@ before_install:
   - source .travis/common.sh
 
 install:
-  - DEPS_DIR="${HOME}/deps"
-  - mkdir -p ${DEPS_DIR} && cd ${DEPS_DIR}
-  - |
-    if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
-      CMAKE_URL="https://cmake.org/files/v3.13/cmake-3.13.0-rc3-Linux-x86_64.tar.gz"
-      mkdir cmake && travis_retry wget --no-check-certificate --quiet -O - ${CMAKE_URL} | tar --strip-components=1 -xz -C cmake
-      export PATH=${DEPS_DIR}/cmake/bin:${PATH}
-      echo ${PATH}
-    else
-      brew install cmake || brew upgrade cmake
-    fi
-  - cmake --version
   - cd -
   - .travis/install.sh
 
