@@ -47,6 +47,7 @@ matrix:
           - gdb
           - git
           - gperf
+          - iverilog
           - libcairo2-dev
           - libevent-dev
           - libfontconfig1-dev
@@ -101,19 +102,19 @@ install:
     fi
   - cmake --version
 # Install latest iVerilog. Since no deb is provided, compile from source codes
-  - |
-    if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
-      IVERILOG_URL="https://github.com/steveicarus/iverilog/archive/v10_3.tar.gz"
-      travis_retry wget --no-check-certificate --quiet -O - ${IVERILOG_URL} | tar --strip-components=1 -xz -C iverilog-10.3
-      cd iverlog-10.3
-      sh autoconf.sh --prefix=${DEPS_DIR}/iverilog-10.3/bin
-      ./configure --prefix=${DEPS_DIR}/iverilog-10.3/bin
-      make -j4
-      make check
-      make install --prefix=${HOME}/iverilog-10.3/bin
-      export PATH=${DEPS_DIR}/iverilog-10.3/bin:${PATH}
-      echo ${PATH}
-    fi
+#  - |
+#    if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
+#      IVERILOG_URL="https://github.com/steveicarus/iverilog/archive/v10_3.tar.gz"
+#      travis_retry wget --no-check-certificate --quiet -O - ${IVERILOG_URL} | tar --strip-components=1 -xz -C iverilog-10.3
+#      cd iverlog-10.3
+#      sh autoconf.sh --prefix=${DEPS_DIR}/iverilog-10.3/bin
+#      ./configure --prefix=${DEPS_DIR}/iverilog-10.3/bin
+#      make -j4
+#      make check
+#      make install --prefix=${HOME}/iverilog-10.3/bin
+#      export PATH=${DEPS_DIR}/iverilog-10.3/bin:${PATH}
+#      echo ${PATH}
+#    fi
   - iverilog --version
   - cd -
   - .travis/install.sh
