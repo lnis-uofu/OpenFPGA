@@ -23,7 +23,7 @@ python3 openfpga_flow/scripts/run_fpga_task.py single_mode
 #python3 openfpga_flow/scripts/run_fpga_task.py s298 
 
 echo -e "Testing multi-mode architectures";
-python3 openfpga_flow/scripts/run_fpga_task.py blif_vpr_flow compact_routing tileable_routing explicit_verilog --maxthreads 4
+python3 openfpga_flow/scripts/run_fpga_task.py blif_vpr_flow --maxthreads 4
 
 echo -e "Testing compact routing techniques";
 python3 openfpga_flow/scripts/run_fpga_task.py compact_routing 
