@@ -1,0 +1,2605 @@
+# Benchmark "tseng" written by ABC on Tue Mar 12 09:44:40 2019
+.model tseng
+.inputs clock tin_pv10_4_4_ tin_pv11_4_4_ tin_pv6_7_7_ tin_pv2_0_0_ \
+ tin_pv10_3_3_ tin_pv1_2_2_ tin_pv11_3_3_ tin_pv4_3_3_ tin_pv10_2_2_ \
+ tin_pv11_2_2_ tin_pv6_0_0_ tin_pv2_1_1_ tin_pv10_1_1_ tin_pv1_3_3_ \
+ preset_0_0_ tin_pv11_1_1_ tin_pv4_4_4_ tin_pready_0_0_ tin_pv10_0_0_ \
+ tin_pv11_0_0_ tin_pv6_1_1_ tin_pv2_2_2_ tin_pv1_4_4_ tin_pv4_5_5_ \
+ tin_pv6_2_2_ tin_pv2_3_3_ tin_pv1_5_5_ tin_pv4_6_6_ tin_pv6_3_3_ \
+ tin_pv2_4_4_ tin_pv1_6_6_ tin_pv4_7_7_ tin_pv6_4_4_ tin_pv2_5_5_ \
+ tin_pv1_7_7_ tin_pv4_0_0_ tin_pv6_5_5_ tin_pv2_6_6_ tin_pv10_7_7_ \
+ tin_pv1_0_0_ tin_pv11_7_7_ tin_pv4_1_1_ tin_pv10_6_6_ tin_pv11_6_6_ \
+ tin_pv6_6_6_ tin_pv2_7_7_ preset tin_pv10_5_5_ tin_pv1_1_1_ tin_pv11_5_5_ \
+ tin_pv4_2_2_
+.outputs pv14_2_2_ pv12_3_3_ pv10_4_4_ pv7_5_5_ pv3_6_6_ pv15_2_2_ \
+ pv13_3_3_ pv11_4_4_ pv6_7_7_ pv2_0_0_ pv14_1_1_ pv12_2_2_ pv10_3_3_ \
+ pv9_0_0_ pv5_1_1_ pv1_2_2_ pv15_1_1_ pv13_2_2_ pv11_3_3_ pv8_2_2_ pv4_3_3_ \
+ pv14_0_0_ pv12_1_1_ pv10_2_2_ pv7_6_6_ pv3_7_7_ pv15_0_0_ pv13_1_1_ \
+ pv11_2_2_ pv6_0_0_ pv2_1_1_ pv12_0_0_ pv10_1_1_ pv9_1_1_ pv5_2_2_ pv1_3_3_ \
+ pv13_0_0_ pv11_1_1_ pv8_3_3_ pv4_4_4_ pready_0_0_ pv10_0_0_ pv7_7_7_ \
+ pv3_0_0_ pv11_0_0_ pv6_1_1_ pv2_2_2_ pv9_2_2_ pv5_3_3_ pv1_4_4_ pv8_4_4_ \
+ pv4_5_5_ pv7_0_0_ pv3_1_1_ pv6_2_2_ pv2_3_3_ pv9_3_3_ pv5_4_4_ pv1_5_5_ \
+ pv8_5_5_ pv4_6_6_ pv7_1_1_ pv3_2_2_ pv6_3_3_ pv2_4_4_ pv9_4_4_ pv5_5_5_ \
+ pv1_6_6_ pv8_6_6_ pv4_7_7_ pv7_2_2_ pv3_3_3_ pv6_4_4_ pv2_5_5_ pv14_7_7_ \
+ pv9_5_5_ pv5_6_6_ pv1_7_7_ pv15_7_7_ pv8_7_7_ pv4_0_0_ pv14_6_6_ pv12_7_7_ \
+ pv7_3_3_ pv3_4_4_ pv15_6_6_ pv13_7_7_ pv6_5_5_ pv2_6_6_ pdn pv14_5_5_ \
+ pv12_6_6_ pv10_7_7_ pv9_6_6_ pv5_7_7_ pv1_0_0_ pv15_5_5_ pv13_6_6_ \
+ pv11_7_7_ pv8_0_0_ pv4_1_1_ pv14_4_4_ pv12_5_5_ pv10_6_6_ pv7_4_4_ \
+ pv3_5_5_ pv15_4_4_ pv13_5_5_ pv11_6_6_ pv6_6_6_ pv2_7_7_ pv14_3_3_ \
+ pv12_4_4_ pv10_5_5_ pv9_7_7_ pv5_0_0_ pv1_1_1_ pv15_3_3_ pv13_4_4_ \
+ pv11_5_5_ pv8_1_1_ pv4_2_2_
+
+.latch     n349_1        pdn re      clock  0
+.latch       n353    n_n4142 re      clock  0
+.latch       n358    n_n3936 re      clock  0
+.latch       n363    n_n3574 re      clock  0
+.latch       n368    n_n3008 re      clock  0
+.latch       n373    n_n3726 re      clock  0
+.latch       n378    n_n3604 re      clock  0
+.latch       n383    n_n3144 re      clock  0
+.latch       n388    n_n3782 re      clock  0
+.latch       n393    n_n3067 re      clock  0
+.latch       n398    n_n4258 re      clock  0
+.latch       n403    n_n3225 re      clock  0
+.latch       n408    n_n3180 re      clock  0
+.latch       n413    n_n3274 re      clock  0
+.latch       n418    n_n3475 re      clock  0
+.latch       n423    n_n3687 re      clock  0
+.latch       n428    n_n3381 re      clock  0
+.latch       n433    n_n3098 re      clock  0
+.latch       n438    n_n4108 re      clock  0
+.latch       n443    n_n3497 re      clock  0
+.latch       n448    n_n3793 re      clock  0
+.latch       n453    n_n4316 re      clock  0
+.latch       n458    n_n4349 re      clock  0
+.latch       n463    n_n3029 re      clock  0
+.latch       n468    n_n3619 re      clock  0
+.latch       n473    n_n3264 re      clock  0
+.latch       n478    n_n3780 re      clock  0
+.latch       n483     ndn3_4 re      clock  0
+.latch       n488    n_n4114 re      clock  0
+.latch       n493    n_n3146 re      clock  0
+.latch       n498    n_n3511 re      clock  0
+.latch       n503    n_n3152 re      clock  0
+.latch       n508    n_n3833 re      clock  0
+.latch       n513    n_n4282 re      clock  0
+.latch       n518    n_n3305 re      clock  0
+.latch       n523    n_n4392 re      clock  0
+.latch       n528    n_n4224 re      clock  0
+.latch       n533    n_n3198 re      clock  0
+.latch       n538    n_n3204 re      clock  0
+.latch       n543    n_n3024 re      clock  0
+.latch       n548    n_n4139 re      clock  0
+.latch       n553    ndn3_15 re      clock  0
+.latch       n558    n_n3133 re      clock  0
+.latch       n563    n_n4074 re      clock  0
+.latch       n568    n_n3270 re      clock  0
+.latch       n573    n_n3858 re      clock  0
+.latch       n578    n_n3456 re      clock  0
+.latch       n583    n_n3521 re      clock  0
+.latch       n588    n_n3081 re      clock  0
+.latch       n593    n_n4381 re      clock  0
+.latch       n598    n_n3670 re      clock  0
+.latch       n603    n_n4211 re      clock  0
+.latch       n608    n_n3493 re      clock  0
+.latch       n613    n_n3495 re      clock  0
+.latch       n618    n_n3916 re      clock  0
+.latch       n623    n_n3195 re      clock  0
+.latch       n628    n_n3525 re      clock  0
+.latch       n633    n_n3729 re      clock  0
+.latch       n638    n_n3876 re      clock  0
+.latch       n643     ndn3_5 re      clock  0
+.latch       n648    n_n3549 re      clock  0
+.latch       n653    n_n3489 re      clock  0
+.latch       n658    n_n3764 re      clock  0
+.latch       n663    n_n3281 re      clock  0
+.latch       n668    n_n3707 re      clock  0
+.latch       n673    n_n3517 re      clock  0
+.latch       n678    n_n4160 re      clock  0
+.latch       n683    n_n4222 re      clock  0
+.latch       n688    n_n3012 re      clock  0
+.latch       n693    n_n4071 re      clock  0
+.latch       n698    n_n3372 re      clock  0
+.latch       n703    n_n3344 re      clock  0
+.latch       n708    n_n3688 re      clock  0
+.latch       n713    n_n3079 re      clock  0
+.latch       n718    n_n3313 re      clock  0
+.latch       n723    n_n3411 re      clock  0
+.latch       n728    n_n3231 re      clock  0
+.latch       n733    n_n3396 re      clock  0
+.latch       n738    n_n3432 re      clock  0
+.latch       n743    n_n3606 re      clock  0
+.latch       n748    n_n3733 re      clock  0
+.latch       n753    n_n3556 re      clock  0
+.latch       n758    n_n4040 re      clock  0
+.latch       n763    n_n3120 re      clock  0
+.latch       n768    n_n3221 re      clock  0
+.latch       n773    n_n3173 re      clock  0
+.latch       n778    n_n3851 re      clock  0
+.latch       n783    n_n3113 re      clock  0
+.latch       n788    n_n3242 re      clock  0
+.latch       n793    n_n3118 re      clock  0
+.latch       n798    n_n3376 re      clock  0
+.latch       n803    n_n4089 re      clock  0
+.latch       n808    n_n3044 re      clock  0
+.latch       n813    n_n3627 re      clock  0
+.latch       n818    n_n3035 re      clock  0
+.latch       n823    n_n3111 re      clock  0
+.latch       n828    n_n3321 re      clock  0
+.latch       n833    n_n3443 re      clock  0
+.latch       n838    n_n3215 re      clock  0
+.latch       n843    ndn3_10 re      clock  0
+.latch       n848    n_n4172 re      clock  0
+.latch       n853     nlc1_2 re      clock  0
+.latch       n858    n_n3590 re      clock  0
+.latch       n863    n_n4110 re      clock  0
+.latch       n868    n_n3576 re      clock  0
+.latch       n873    n_n4129 re      clock  0
+.latch       n878    n_n4189 re      clock  0
+.latch       n883    n_n4286 re      clock  0
+.latch       n888    n_n4383 re      clock  0
+.latch       n893    n_n3567 re      clock  0
+.latch     n898_1    n_n3892 re      clock  0
+.latch     n903_1    n_n3075 re      clock  0
+.latch     n908_1    n_n3354 re      clock  0
+.latch     n913_1    n_n3465 re      clock  0
+.latch     n918_1     ndn3_6 re      clock  0
+.latch     n923_1    n_n3617 re      clock  0
+.latch     n928_1    n_n4162 re      clock  0
+.latch     n933_1    n_n3207 re      clock  0
+.latch     n938_1    n_n4120 re      clock  0
+.latch     n943_1    n_n3065 re      clock  0
+.latch     n948_1    n_n4005 re      clock  0
+.latch     n953_1    n_n3266 re      clock  0
+.latch     n958_1    n_n4337 re      clock  0
+.latch     n963_1    n_n3600 re      clock  0
+.latch     n968_1    n_n3415 re      clock  0
+.latch     n973_1    n_n4243 re      clock  0
+.latch     n978_1    n_n3872 re      clock  0
+.latch     n983_1    n_n3648 re      clock  0
+.latch     n988_1    n_n3358 re      clock  0
+.latch     n993_1    n_n3350 re      clock  0
+.latch     n998_1     ndn3_7 re      clock  0
+.latch    n1003_1    n_n3116 re      clock  0
+.latch    n1008_1    n_n3583 re      clock  0
+.latch    n1013_1    n_n3906 re      clock  0
+.latch    n1018_1    n_n4131 re      clock  0
+.latch    n1023_1    n_n3316 re      clock  0
+.latch    n1028_1    n_n3061 re      clock  0
+.latch    n1033_1    n_n3048 re      clock  0
+.latch    n1038_1    n_n3886 re      clock  0
+.latch    n1043_1    n_n3919 re      clock  0
+.latch    n1048_1    n_n3128 re      clock  0
+.latch    n1053_1    n_n3995 re      clock  0
+.latch    n1058_1    n_n4213 re      clock  0
+.latch    n1063_1    n_n3761 re      clock  0
+.latch    n1068_1     ndn3_8 re      clock  0
+.latch    n1073_1    n_n3252 re      clock  0
+.latch    n1078_1    n_n4366 re      clock  0
+.latch    n1083_1    n_n3328 re      clock  0
+.latch    n1088_1    n_n3988 re      clock  0
+.latch    n1093_1    n_n3348 re      clock  0
+.latch    n1098_1    n_n3544 re      clock  0
+.latch    n1103_1    n_n3101 re      clock  0
+.latch    n1108_1    n_n4279 re      clock  0
+.latch    n1113_1    n_n3896 re      clock  0
+.latch    n1118_1    n_n3736 re      clock  0
+.latch    n1123_1    n_n4251 re      clock  0
+.latch    n1128_1    n_n3650 re      clock  0
+.latch    n1133_1    n_n3307 re      clock  0
+.latch    n1138_1    n_n4294 re      clock  0
+.latch    n1143_1    n_n4334 re      clock  0
+.latch    n1148_1    n_n3955 re      clock  0
+.latch    n1153_1    n_n4164 re      clock  0
+.latch    n1158_1    n_n3155 re      clock  0
+.latch    n1163_1    n_n3749 re      clock  0
+.latch    n1168_1    n_n4233 re      clock  0
+.latch    n1173_1    n_n4347 re      clock  0
+.latch    n1178_1    n_n3826 re      clock  0
+.latch    n1183_1    n_n3360 re      clock  0
+.latch    n1188_1    n_n3458 re      clock  0
+.latch    n1193_1    n_n3093 re      clock  0
+.latch    n1198_1    n_n3157 re      clock  0
+.latch    n1203_1    n_n3506 re      clock  0
+.latch    n1208_1    n_n3161 re      clock  0
+.latch    n1213_1    n_n3319 re      clock  0
+.latch    n1218_1    n_n3429 re      clock  0
+.latch    n1223_1    n_n3971 re      clock  0
+.latch    n1228_1    n_n3449 re      clock  0
+.latch    n1233_1    n_n4270 re      clock  0
+.latch    n1238_1    n_n4288 re      clock  0
+.latch    n1243_1    n_n3183 re      clock  0
+.latch    n1248_1    n_n3130 re      clock  0
+.latch    n1253_1    n_n4047 re      clock  0
+.latch      n1258    n_n3978 re      clock  0
+.latch    n1263_1    n_n3239 re      clock  0
+.latch    n1268_1    n_n4145 re      clock  0
+.latch    n1273_1    n_n3890 re      clock  0
+.latch    n1278_1    n_n4003 re      clock  0
+.latch    n1283_1    n_n3091 re      clock  0
+.latch    n1288_1    n_n3985 re      clock  0
+.latch    n1293_1    n_n3326 re      clock  0
+.latch    n1298_1    n_n4052 re      clock  0
+.latch    n1303_1     nsr4_2 re      clock  0
+.latch    n1308_1    n_n4099 re      clock  0
+.latch    n1313_1    n_n4375 re      clock  0
+.latch    n1318_1    n_n4067 re      clock  0
+.latch    n1323_1    n_n4290 re      clock  0
+.latch    n1328_1    n_n3898 re      clock  0
+.latch    n1333_1    n_n4122 re      clock  0
+.latch    n1338_1    n_n3774 re      clock  0
+.latch    n1343_1    n_n3014 re      clock  0
+.latch    n1348_1    n_n4241 re      clock  0
+.latch    n1353_1    n_n3952 re      clock  0
+.latch    n1358_1    n_n3237 re      clock  0
+.latch    n1363_1    n_n3968 re      clock  0
+.latch    n1368_1    n_n3922 re      clock  0
+.latch    n1373_1    n_n3551 re      clock  0
+.latch    n1378_1    n_n3379 re      clock  0
+.latch    n1383_1    n_n4275 re      clock  0
+.latch    n1388_1    n_n3570 re      clock  0
+.latch    n1393_1    n_n3854 re      clock  0
+.latch    n1398_1    n_n4057 re      clock  0
+.latch    n1403_1    n_n3451 re      clock  0
+.latch    n1408_1    n_n4037 re      clock  0
+.latch    n1413_1    n_n3408 re      clock  0
+.latch    n1418_1    n_n4229 re      clock  0
+.latch    n1423_1    n_n4201 re      clock  0
+.latch    n1428_1    n_n3339 re      clock  0
+.latch    n1433_1    n_n4362 re      clock  0
+.latch    n1438_1    n_n3483 re      clock  0
+.latch    n1443_1    n_n3557 re      clock  0
+.latch    n1448_1    n_n4185 re      clock  0
+.latch    n1453_1    n_n3069 re      clock  0
+.latch    n1458_1    n_n3643 re      clock  0
+.latch    n1463_1    n_n3404 re      clock  0
+.latch    n1468_1    n_n3057 re      clock  0
+.latch    n1473_1    n_n3020 re      clock  0
+.latch    n1478_1    n_n3828 re      clock  0
+.latch    n1483_1    n_n3631 re      clock  0
+.latch    n1488_1    n_n3138 re      clock  0
+.latch    n1493_1     nsr1_2 re      clock  0
+.latch    n1498_1    n_n4065 re      clock  0
+.latch    n1503_1    n_n3679 re      clock  0
+.latch    n1508_1    n_n3287 re      clock  0
+.latch    n1513_1    n_n4351 re      clock  0
+.latch    n1518_1    n_n4059 re      clock  0
+.latch    n1523_1    n_n3436 re      clock  0
+.latch    n1528_1    nen3_10 re      clock  0
+.latch    n1533_1    n_n3461 re      clock  0
+.latch    n1538_1    n_n4012 re      clock  0
+.latch    n1543_1    n_n3051 re      clock  0
+.latch    n1548_1    n_n3073 re      clock  0
+.latch    n1553_1    n_n3777 re      clock  0
+.latch    n1558_1    n_n3709 re      clock  0
+.latch    n1563_1    n_n3946 re      clock  0
+.latch    n1568_1    n_n3085 re      clock  0
+.latch    n1573_1    n_n3259 re      clock  0
+.latch    n1578_1    n_n3504 re      clock  0
+.latch    n1583_1    n_n4045 re      clock  0
+.latch    n1588_1    n_n3954 re      clock  0
+.latch    n1593_1    n_n3136 re      clock  0
+.latch    n1598_1    n_n4372 re      clock  0
+.latch    n1603_1    n_n4236 re      clock  0
+.latch    n1608_1    n_n3040 re      clock  0
+.latch    n1613_1    n_n3874 re      clock  0
+.latch    n1618_1    n_n3999 re      clock  0
+.latch    n1623_1    n_n3223 re      clock  0
+.latch    n1628_1    ndn1_34 re      clock  0
+.latch    n1633_1    n_n3743 re      clock  0
+.latch    n1638_1    n_n3657 re      clock  0
+.latch    n1643_1    n_n3213 re      clock  0
+.latch    n1648_1    n_n3095 re      clock  0
+.latch    n1653_1    n_n3663 re      clock  0
+.latch    n1658_1    n_n3724 re      clock  0
+.latch    n1663_1    n_n3038 re      clock  0
+.latch    n1668_1    n_n3370 re      clock  0
+.latch    n1673_1    n_n3624 re      clock  0
+.latch    n1678_1    n_n3578 re      clock  0
+.latch    n1683_1    n_n3713 re      clock  0
+.latch    n1688_1    n_n3089 re      clock  0
+.latch    n1693_1    n_n3211 re      clock  0
+.latch    n1698_1    n_n3367 re      clock  0
+.latch    n1703_1    n_n3434 re      clock  0
+.latch    n1708_1    n_n3126 re      clock  0
+.latch    n1713_1    n_n4192 re      clock  0
+.latch    n1718_1    n_n4136 re      clock  0
+.latch    n1723_1    n_n3053 re      clock  0
+.latch    n1728_1    n_n3938 re      clock  0
+.latch    n1733_1    n_n3769 re      clock  0
+.latch    n1738_1    n_n4390 re      clock  0
+.latch    n1743_1    nsr3_17 re      clock  0
+.latch    n1748_1    n_n3903 re      clock  0
+.latch    n1753_1    n_n3658 re      clock  0
+.latch    n1758_1    nrq3_11 re      clock  0
+.latch    n1763_1    n_n3818 re      clock  0
+.latch    n1768_1    n_n3533 re      clock  0
+.latch    n1773_1    n_n3463 re      clock  0
+.latch    n1778_1    n_n3175 re      clock  0
+.latch    n1783_1    n_n3055 re      clock  0
+.latch    n1788_1    n_n3202 re      clock  0
+.latch    n1793_1    n_n3385 re      clock  0
+.latch    n1798_1    n_n4077 re      clock  0
+.latch    n1803_1    n_n3142 re      clock  0
+.latch    n1808_1    n_n3901 re      clock  0
+.latch    n1813_1    n_n3934 re      clock  0
+.latch    n1818_1    n_n3823 re      clock  0
+.latch    n1823_1    n_n3722 re      clock  0
+.latch    n1828_1    n_n4309 re      clock  0
+.latch    n1833_1    n_n4159 re      clock  0
+.latch    n1838_1    n_n4330 re      clock  0
+.latch    n1843_1    n_n3836 re      clock  0
+.latch    n1848_1    n_n3470 re      clock  0
+.latch    n1853_1    n_n3331 re      clock  0
+.latch    n1858_1    n_n3883 re      clock  0
+.latch    n1863_1    n_n4299 re      clock  0
+.latch    n1868_1    n_n4157 re      clock  0
+.latch    n1873_1     ndn3_9 re      clock  0
+.latch    n1878_1    n_n3208 re      clock  0
+.latch    n1883_1    n_n3190 re      clock  0
+.latch    n1888_1    n_n4029 re      clock  0
+.latch    n1893_1    n_n3042 re      clock  0
+.latch    n1898_1    nsr3_14 re      clock  0
+.latch    n1903_1    n_n4151 re      clock  0
+.latch    n1908_1    n_n3188 re      clock  0
+.latch    n1913_1    n_n4303 re      clock  0
+.latch    n1918_1    n_n3250 re      clock  0
+.latch    n1923_1    n_n3170 re      clock  0
+.latch    n1928_1    n_n3758 re      clock  0
+.latch    n1933_1    n_n3910 re      clock  0
+.latch    n1938_1    n_n3108 re      clock  0
+.latch    n1943_1    n_n3150 re      clock  0
+.latch    n1948_1    n_n4320 re      clock  0
+.latch    n1953_1    n_n4360 re      clock  0
+.latch    n1958_1    n_n4247 re      clock  0
+.latch    n1963_1    n_n4199 re      clock  0
+.latch    n1968_1    n_n3966 re      clock  0
+.latch    n1973_1    n_n3766 re      clock  0
+.latch    n1978_1    n_n4021 re      clock  0
+.latch    n1983_1    n_n4062 re      clock  0
+.latch    n1988_1    n_n3514 re      clock  0
+.latch    n1993_1    n_n3572 re      clock  0
+.latch    n1998_1    n_n4166 re      clock  0
+.latch    n2003_1    n_n3976 re      clock  0
+.latch    n2008_1    n_n3394 re      clock  0
+.latch    n2013_1    n_n4095 re      clock  0
+.latch    n2018_1    n_n3863 re      clock  0
+.latch    n2023_1    n_n3720 re      clock  0
+.latch    n2028_1    ngfdn_3 re      clock  0
+.latch    n2033_1    n_n3756 re      clock  0
+.latch    n2038_1    n_n3667 re      clock  0
+.latch    n2043_1    n_n3342 re      clock  0
+.latch    n2048_1    n_n3529 re      clock  0
+.latch    n2053_1    n_n4209 re      clock  0
+.latch    n2058_1    n_n4324 re      clock  0
+.latch    n2063_1    n_n3337 re      clock  0
+.latch    n2068_1    n_n4227 re      clock  0
+.latch    n2073_1    n_n4153 re      clock  0
+.latch    n2078_1    n_n3831 re      clock  0
+.latch    n2083_1    n_n3233 re      clock  0
+.latch    n2088_1    n_n3413 re      clock  0
+.latch    n2093_1    n_n4182 re      clock  0
+.latch      n2098    n_n3841 re      clock  0
+.latch    n2103_1    n_n3441 re      clock  0
+.latch    n2108_1    n_n4026 re      clock  0
+.latch    n2113_1    n_n4342 re      clock  0
+.latch    n2118_1    n_n4102 re      clock  0
+.latch    n2123_1    n_n3277 re      clock  0
+.latch    n2128_1    n_n4180 re      clock  0
+.latch    n2133_1    n_n3878 re      clock  0
+.latch    n2138_1    n_n3931 re      clock  0
+.latch    n2143_1    n_n3845 re      clock  0
+.latch    n2148_1    n_n3865 re      clock  0
+.latch    n2153_1    n_n3486 re      clock  0
+.latch    n2158_1    n_n4056 re      clock  0
+.latch    n2163_1    n_n3674 re      clock  0
+.latch    n2168_1    n_n3959 re      clock  0
+.latch    n2173_1    n_n3608 re      clock  0
+.latch    n2178_1    n_n4080 re      clock  0
+.latch    n2183_1    n_n4018 re      clock  0
+.latch    n2188_1    n_n4354 re      clock  0
+.latch    n2193_1    n_n3797 re      clock  0
+.latch    n2198_1    n_n3739 re      clock  0
+.latch    n2203_1    n_n3646 re      clock  0
+.latch    n2208_1    n_n3099 re      clock  0
+.latch    n2213_1    n_n3537 re      clock  0
+.latch    n2218_1    n_n3806 re      clock  0
+.latch    n2223_1    n_n3087 re      clock  0
+.latch    n2228_1    n_n4105 re      clock  0
+.latch    n2233_1    n_n3262 re      clock  0
+.latch    n2238_1    n_n4125 re      clock  0
+.latch    n2243_1    n_n3814 re      clock  0
+.latch    n2248_1    n_n4093 re      clock  0
+.latch    n2253_1     nsr3_3 re      clock  0
+
+.names n_n3042 tin_pv10_4_4_ n_n4136 pv10_4_4_
+01- 1
+1-1 1
+.names n_n4120 tin_pv11_4_4_ n_n3966 pv11_4_4_
+01- 1
+1-1 1
+.names n_n4164 tin_pv6_7_7_ n_n3370 pv6_7_7_
+01- 1
+1-1 1
+.names n_n3211 tin_pv2_0_0_ n_n3910 pv2_0_0_
+01- 1
+1-1 1
+.names n_n4129 tin_pv10_3_3_ n_n3213 pv10_3_3_
+01- 1
+1-1 1
+.names n_n3470 tin_pv1_2_2_ n_n3537 pv1_2_2_
+01- 1
+1-1 1
+.names n_n3432 tin_pv11_3_3_ n_n3583 pv11_3_3_
+01- 1
+1-1 1
+.names n_n3489 tin_pv4_3_3_ n_n4309 pv4_3_3_
+01- 1
+1-1 1
+.names n_n3065 tin_pv10_2_2_ n_n3549 pv10_2_2_
+01- 1
+1-1 1
+.names n_n3152 tin_pv11_2_2_ n_n3823 pv11_2_2_
+01- 1
+1-1 1
+.names n_n3029 tin_pv6_0_0_ n_n3506 pv6_0_0_
+01- 1
+1-1 1
+.names n_n3999 tin_pv2_1_1_ n_n3646 pv2_1_1_
+01- 1
+1-1 1
+.names n_n3872 tin_pv10_1_1_ n_n3270 pv10_1_1_
+01- 1
+1-1 1
+.names n_n3441 tin_pv1_3_3_ n_n4180 pv1_3_3_
+01- 1
+1-1 1
+.names n_n4185 tin_pv11_1_1_ n_n4142 pv11_1_1_
+01- 1
+1-1 1
+.names n_n4110 tin_pv4_4_4_ n_n3627 pv4_4_4_
+01- 1
+1-1 1
+.names n_n4108 tin_pready_0_0_ n_n3354 pready_0_0_
+01- 1
+1-1 1
+.names n_n4282 tin_pv10_0_0_ n_n4209 pv10_0_0_
+01- 1
+1-1 1
+.names n_n3233 tin_pv11_0_0_ n_n3514 pv11_0_0_
+01- 1
+1-1 1
+.names n_n3144 tin_pv6_1_1_ n_n3952 pv6_1_1_
+01- 1
+1-1 1
+.names n_n4354 tin_pv2_2_2_ n_n3202 pv2_2_2_
+01- 1
+1-1 1
+.names n_n3863 tin_pv1_4_4_ n_n3806 pv1_4_4_
+01- 1
+1-1 1
+.names n_n3087 tin_pv4_5_5_ n_n3733 pv4_5_5_
+01- 1
+1-1 1
+.names n_n3307 tin_pv6_2_2_ n_n3138 pv6_2_2_
+01- 1
+1-1 1
+.names n_n3874 tin_pv2_3_3_ n_n3465 pv2_3_3_
+01- 1
+1-1 1
+.names n_n3101 tin_pv1_5_5_ n_n3313 pv1_5_5_
+01- 1
+1-1 1
+.names n_n3774 tin_pv4_6_6_ n_n3413 pv4_6_6_
+01- 1
+1-1 1
+.names n_n3204 tin_pv6_3_3_ n_n3486 pv6_3_3_
+01- 1
+1-1 1
+.names n_n3643 tin_pv2_4_4_ n_n3133 pv2_4_4_
+01- 1
+1-1 1
+.names n_n4018 tin_pv1_6_6_ n_n3118 pv1_6_6_
+01- 1
+1-1 1
+.names n_n4114 tin_pv4_7_7_ n_n4166 pv4_7_7_
+01- 1
+1-1 1
+.names n_n3093 tin_pv6_4_4_ n_n4065 pv6_4_4_
+01- 1
+1-1 1
+.names n_n4059 tin_pv2_5_5_ n_n3780 pv2_5_5_
+01- 1
+1-1 1
+.names n_n3544 tin_pv1_7_7_ n_n4199 pv1_7_7_
+01- 1
+1-1 1
+.names n_n3826 tin_pv4_0_0_ n_n3517 pv4_0_0_
+01- 1
+1-1 1
+.names n_n3348 tin_pv6_5_5_ n_n4189 pv6_5_5_
+01- 1
+1-1 1
+.names n_n3120 tin_pv2_6_6_ n_n3385 pv2_6_6_
+01- 1
+1-1 1
+.names n_n3521 tin_pv10_7_7_ n_n3225 pv10_7_7_
+01- 1
+1-1 1
+.names n_n3551 tin_pv1_0_0_ n_n4192 pv1_0_0_
+01- 1
+1-1 1
+.names n_n3360 tin_pv11_7_7_ n_n3376 pv11_7_7_
+01- 1
+1-1 1
+.names n_n4089 tin_pv4_1_1_ n_n3722 pv4_1_1_
+01- 1
+1-1 1
+.names n_n3570 tin_pv10_6_6_ n_n3342 pv10_6_6_
+01- 1
+1-1 1
+.names n_n3504 tin_pv11_6_6_ n_n4279 pv11_6_6_
+01- 1
+1-1 1
+.names n_n3836 tin_pv6_6_6_ n_n3429 pv6_6_6_
+01- 1
+1-1 1
+.names n_n4131 tin_pv2_7_7_ n_n3126 pv2_7_7_
+01- 1
+1-1 1
+.names n_n3381 tin_pv10_5_5_ n_n4247 pv10_5_5_
+01- 1
+1-1 1
+.names n_n3215 tin_pv1_1_1_ n_n3183 pv1_1_1_
+01- 1
+1-1 1
+.names n_n3081 tin_pv11_5_5_ n_n3207 pv11_5_5_
+01- 1
+1-1 1
+.names n_n4347 tin_pv4_2_2_ n_n4372 pv4_2_2_
+01- 1
+1-1 1
+.names n_n3475 n1385 n1373 n1378 n418
+011- 1
+110- 1
+1--1 1
+.names n_n4145 n_n4366 n_n3898 n1374 n1373
+011- 1
+01-1 1
+0-11 1
+100- 1
+10-0 1
+1-00 1
+.names n_n3916 n_n4047 n1375 n1374
+11- 1
+1-0 1
+-10 1
+.names n_n3769 n_n4229 n1376 n1375
+00- 1
+0-0 1
+-00 1
+.names n_n3901 n_n4316 n1377 n1376
+11- 1
+1-0 1
+-10 1
+.names n_n3934 n_n3976 n_n4222 n_n4125 n1377
+111- 0
+11-1 0
+--11 0
+.names preset n1384 n1379 n_n4056 n1378
+000- 1
+00-1 1
+.names n_n4045 n1383 n1380 n1379
+110 1
+.names n_n3658 n_n3604 n1381 n1382 n1380
+0-11 1
+10-- 1
+.names n_n3533 n_n4201 n_n3968 n_n3922 n1381
+0000 1
+.names n_n3892 n_n4071 n_n4349 n_n4337 n1382
+0000 1
+.names nsr3_14 nsr3_17 n1383
+10 1
+.names n_n4057 n_n4056 n_n3557 n1384
+110 1
+.names n1384 preset n1385
+10 1
+.names n_n4366 n1385 n_n3898 n1374 n1378 n1078_1
+0101- 1
+0110- 1
+1100- 1
+1111- 1
+1---1 1
+.names n1388 n_n4334 n1414 n_n4012 n1412 n1143_1
+10111 1
+110-- 1
+11-0- 1
+11--0 1
+.names preset n1409 n1389 n_n3831 n_n3709 n1388
+1---- 0
+-1110 0
+.names n_n4093 n_n4067 n_n4360 n1397 n1390 n_n3833 n1389
+1011-- 1
+101-1- 1
+10-11- 1
+11---1 1
+.names n_n4270 n_n3841 n1391 n1396 n_n4224 n_n4251 n1390
+000100 1
+0010-- 1
+001-1- 1
+001--1 1
+0100-- 1
+010-1- 1
+010--1 1
+011100 1
+1000-- 1
+100-1- 1
+100--1 1
+101100 1
+110100 1
+1110-- 1
+111-1- 1
+111--1 1
+.names n_n4224 n_n4251 n1396 n_n4145 n_n3898 n1392 n1391
+000-1- 1
+000--0 1
+0111-- 1
+011-10 1
+0-011- 1
+0-01-0 1
+101-1- 1
+101--0 1
+10-1-- 1
+-001-- 1
+-00-10 1
+-1111- 1
+-111-0 1
+---110 1
+.names n_n3916 n_n4229 n1395 n1394 n1393 n1392
+000-- 1
+00-0- 1
+0-00- 1
+0---0 1
+-00-0 1
+-0-00 1
+--000 1
+.names n_n4330 n_n4160 n_n4159 n_n4383 n_n4182 n1393
+01--- 1
+0-1-- 1
+0--1- 1
+0---1 1
+10000 1
+.names n_n4182 n_n4160 n_n4159 n_n4383 n1394
+01-- 1
+0-1- 1
+0--1 1
+1000 1
+.names n_n4383 n_n4160 n_n4159 n_n3976 n_n4222 n_n4316 n1395
+000--- 0
+1110-- 0
+11--0- 0
+1-100- 0
+1----0 0
+-110-0 0
+-1--00 0
+---000 0
+.names n_n4160 n_n4159 n_n4383 n_n4182 n_n4330 n1396
+00000 1
+.names n_n4299 n_n4362 n1402 n1399 n1398 n1397
+110-- 1
+11-1- 1
+1-01- 1
+1---0 1
+-10-0 1
+-1-10 1
+--010 1
+.names n_n4251 n_n4145 n_n4224 n_n3898 n1396 n1392 n1398
+000110 1
+00100- 1
+0010-1 1
+001-01 1
+00-001 1
+0101-1 1
+010-00 1
+010-11 1
+011-10 1
+01-010 1
+01-100 1
+01-111 1
+1001-1 1
+100-00 1
+100-11 1
+101-10 1
+10-010 1
+10-100 1
+10-111 1
+110110 1
+11100- 1
+1110-1 1
+111-01 1
+11-001 1
+.names n_n3898 n1400 n1399
+00 1
+11 1
+.names n1401 n_n3916 n_n4229 n1395 n1394 n1393 n1400
+0111-- 1
+011-1- 1
+01-11- 1
+01---1 1
+0-11-1 1
+0-1-11 1
+0--111 1
+1000-- 1
+100-0- 1
+10-00- 1
+10---0 1
+1-00-0 1
+1-0-00 1
+1--000 1
+.names n_n4224 n_n4160 n_n4159 n_n4383 n_n4182 n_n4330 n1401
+01---- 1
+0-1--- 1
+0--1-- 1
+0---1- 1
+0----1 1
+100000 1
+.names n_n3876 n_n4258 n1408 n1404 n1403 n1402
+000-- 1
+00-1- 1
+0-01- 1
+0---0 1
+-00-0 1
+-0-10 1
+--010 1
+.names n_n3916 n1393 n_n4229 n1395 n1394 n1403
+0000- 1
+000-0 1
+00-00 1
+0111- 1
+011-1 1
+01-11 1
+1011- 1
+101-1 1
+10-11 1
+1100- 1
+110-0 1
+11-00 1
+.names n_n3756 n1407 n_n3946 n_n3743 n1406 n1405 n1404
+0000-- 1
+000-0- 1
+00-0-0 1
+00--00 1
+--000- 1
+--0--0 1
+---000 1
+.names n_n4383 n_n4316 n_n4160 n_n4222 n_n4159 n_n3976 n1405
+0001-- 1
+000-0- 1
+000--1 1
+00-10- 1
+00-1-1 1
+0110-- 1
+011-10 1
+01-010 1
+1010-- 1
+101-10 1
+10-010 1
+1101-- 1
+110-0- 1
+110--1 1
+11-10- 1
+11-1-1 1
+.names n_n4160 n_n4222 n_n4159 n_n3976 n1406
+000- 1
+00-1 1
+0110 1
+1010 1
+110- 1
+11-1 1
+.names n_n4159 n_n3976 n1407
+00 1
+11 1
+.names n_n4229 n1395 n1394 n1408
+000 1
+011 1
+101 1
+110 1
+.names n1410 n_n4026 n_n4360 n1397 n1390 n_n3851 n1409
+1011-- 1
+101-1- 1
+10-11- 1
+11---1 1
+.names nen3_10 nsr3_17 n1410
+11 1
+.names n_n4026 n_n4067 n_n3851 n1411
+100 1
+.names n_n3766 n_n4275 n1413 n1412
+111 1
+.names n_n3724 n_n4227 n_n3814 n1413
+111 1
+.names n_n3707 n_n3709 n_n3198 n1414
+110 1
+.names n1414 n_n3724 preset n_n3814 n1416 n1658_1
+010-0 1
+1001- 1
+1100- 1
+.names n_n3831 n1409 n1389 n_n3709 n1416
+1110 1
+.names n_n4324 n1385 n1418 n1378 n2058_1
+010- 1
+111- 1
+1--1 1
+.names n_n3841 n_n4366 n_n3898 n_n4145 n_n3475 n1374 n1418
+0000-- 1
+000-0- 1
+00-0-0 1
+00--00 1
+0-00-0 1
+0-0-00 1
+0--00- 1
+1111-- 1
+111-1- 1
+11-1-1 1
+11--11 1
+1-11-1 1
+1-1-11 1
+1--11- 1
+.names n_n3358 n_n4153 pv14_2_2_
+11 1
+.names n_n3631 n_n3367 pv12_3_3_
+11 1
+.names n_n3130 n_n3679 pv7_5_5_
+11 1
+.names n_n3252 n_n3057 pv3_6_6_
+11 1
+.names n_n3113 n_n4037 pv15_2_2_
+11 1
+.names n_n3600 n_n3404 pv13_3_3_
+11 1
+.names n_n3012 n_n3038 pv14_1_1_
+11 1
+.names n_n3067 n_n3576 pv12_2_2_
+11 1
+.names n_n3128 n_n3890 pv9_0_0_
+11 1
+.names n_n3443 n_n3287 pv5_1_1_
+11 1
+.names n_n3606 n_n3108 pv15_1_1_
+11 1
+.names n_n3379 n_n3463 pv13_2_2_
+11 1
+.names n_n3456 n_n3055 pv8_2_2_
+11 1
+.names n_n3761 n_n3903 pv14_0_0_
+11 1
+.names n_n3264 n_n4390 pv12_1_1_
+11 1
+.names n_n3670 n_n3617 pv7_6_6_
+11 1
+.names n_n3590 n_n4102 pv3_7_7_
+11 1
+.names n_n4003 n_n3188 pv15_0_0_
+11 1
+.names n_n3221 n_n3150 pv13_1_1_
+11 1
+.names n_n3098 n_n3339 pv12_0_0_
+11 1
+.names n_n3024 n_n3044 pv9_1_1_
+11 1
+.names n_n4286 n_n3350 pv5_2_2_
+11 1
+.names n_n3061 n_n3434 pv13_0_0_
+11 1
+.names n_n3146 n_n3091 pv8_3_3_
+11 1
+.names n_n3136 n_n4077 pv7_7_7_
+11 1
+.names n_n3173 n_n3828 pv3_0_0_
+11 1
+.names n_n3736 n_n3157 pv9_2_2_
+11 1
+.names n_n3321 n_n4236 pv5_3_3_
+11 1
+.names n_n3344 n_n3095 pv8_4_4_
+11 1
+.names n_n3161 n_n3069 pv7_0_0_
+11 1
+.names n_n3048 n_n3461 pv3_1_1_
+11 1
+.names n_n3906 n_n3749 pv9_3_3_
+11 1
+.names n_n3793 n_n4213 pv5_4_4_
+11 1
+.names n_n3116 n_n3331 pv8_5_5_
+11 1
+.names n_n3415 n_n3971 pv7_1_1_
+11 1
+.names n_n3190 n_n3739 pv3_2_2_
+11 1
+.names n_n3687 n_n3650 pv9_4_4_
+11 1
+.names n_n3266 n_n3408 pv5_5_5_
+11 1
+.names n_n3180 n_n3223 pv8_6_6_
+11 1
+.names n_n3497 n_n4105 pv7_2_2_
+11 1
+.names n_n3274 n_n4342 pv3_3_3_
+11 1
+.names n_n3449 n_n4241 pv14_7_7_
+11 1
+.names n_n3985 n_n4290 pv9_5_5_
+11 1
+.names n_n3567 n_n3237 pv5_6_6_
+11 1
+.names n_n3079 n_n3648 pv15_7_7_
+11 1
+.names n_n3525 n_n3529 pv8_7_7_
+11 1
+.names n_n3713 n_n3262 pv14_6_6_
+11 1
+.names n_n3764 n_n3720 pv12_7_7_
+11 1
+.names n_n3411 n_n4303 pv7_3_3_
+11 1
+.names n_n3729 n_n4162 pv3_4_4_
+11 1
+.names n_n4375 n_n3020 pv15_6_6_
+11 1
+.names n_n3372 n_n3394 pv13_7_7_
+11 1
+.names n_n3008 n_n3663 pv14_5_5_
+11 1
+.names n_n3782 n_n3896 pv12_6_6_
+11 1
+.names n_n4243 n_n3239 pv9_6_6_
+11 1
+.names n_n3111 n_n4005 pv5_7_7_
+11 1
+.names n_n3277 n_n3674 pv15_5_5_
+11 1
+.names n_n3155 n_n3797 pv13_6_6_
+11 1
+.names n_n3014 n_n4320 pv8_0_0_
+11 1
+.names n_n3326 n_n3089 pv14_4_4_
+11 1
+.names n_n3619 n_n3337 pv12_5_5_
+11 1
+.names n_n3073 n_n3053 pv7_4_4_
+11 1
+.names n_n3436 n_n3142 pv3_5_5_
+11 1
+.names n_n3305 n_n3667 pv15_4_4_
+11 1
+.names n_n4139 n_n3777 pv13_5_5_
+11 1
+.names n_n3396 n_n3316 pv14_3_3_
+11 1
+.names n_n3231 n_n3175 pv12_4_4_
+11 1
+.names n_n3319 n_n3040 pv9_7_7_
+11 1
+.names n_n3195 n_n3572 pv5_0_0_
+11 1
+.names n_n4172 n_n3051 pv15_3_3_
+11 1
+.names n_n3075 n_n3758 pv13_4_4_
+11 1
+.names n_n3938 n_n3883 pv8_1_1_
+11 1
+.names n1496 n_n4142 n_n3724 n1492 n1495 n353
+11--- 1
+--110 1
+.names n1494 n_n4067 n1493 n_n3833 n1492
+101- 1
+11-1 1
+.names n_n4360 n1397 n1390 n1493
+11- 1
+1-1 1
+-11 1
+.names nlc1_2 pdn preset nsr1_2 preset_0_0_ n_n4151 n1494
+00000- 1
+1000-1 1
+.names n_n4026 n_n4360 n1397 n1390 n_n3851 n1495
+000-- 1
+00-0- 1
+0-00- 1
+1---0 1
+.names preset n1497 n1496
+00 1
+.names pdn n1498 n1497
+00 1
+.names nsr1_2 nlc1_2 preset_0_0_ n_n4151 n1498
+100- 1
+11-1 1
+.names n1500 preset pv11_1_1_ n_n3936 n358
+00-1 1
+101- 1
+.names ndn3_8 ndn3_9 n1500
+10 1
+.names n1416 preset n1502 n_n3743 n_n3574 n1414 n363
+00--10 1
+10-1-- 1
+--1--- 1
+.names n1503 n_n3574 n1504 n1406 n1502
+1000 1
+1011 1
+1101 1
+1110 1
+.names n1414 preset n1503
+10 1
+.names n_n4159 n_n3976 n_n3959 n1504
+010 1
+100 1
+.names n1496 n_n3008 n1494 n_n4157 n_n3035 n368
+11--- 1
+--111 1
+.names n1416 preset n1507 n_n4360 n_n3726 n1414 n373
+00--10 1
+10-1-- 1
+--1--- 1
+.names n1503 n1508 n1390 n1507
+100 1
+111 1
+.names n_n3726 n_n4080 n_n3988 n1509 n1399 n1398 n1508
+0000-- 1
+000-0- 1
+00-00- 1
+00---1 1
+0-00-1 1
+0-0-01 1
+0--001 1
+1111-- 1
+111-1- 1
+11-11- 1
+11---0 1
+1-11-0 1
+1-1-10 1
+1--110 1
+.names n_n4040 n_n3818 n1510 n1408 n1403 n1509
+111-- 1
+11-1- 1
+1-11- 1
+1---1 1
+-11-1 1
+-1-11 1
+--111 1
+.names n_n3995 n_n3574 n1504 n1406 n1405 n1510
+110-- 1
+11-1- 1
+1-01- 1
+1---1 1
+-10-1 1
+-1-11 1
+--011 1
+.names preset n_n3604 n1512 n1383 n_n4045 n378
+01--- 1
+0-111 1
+.names n_n3658 n1381 n1382 n1512
+00- 1
+0-0 1
+.names preset n1497 n_n3144 n383
+01- 1
+0-1 1
+.names preset n1497 n_n3782 n388
+01- 1
+0-1 1
+.names preset n1497 n_n3067 n393
+01- 1
+0-1 1
+.names n1517 preset pv10_3_3_ n_n4258 n398
+00-1 1
+101- 1
+.names ndn3_7 ndn3_8 n1517
+10 1
+.names n_n3225 n1496 n_n4360 n1494 n403
+11-- 1
+--11 1
+.names preset n1497 n_n3180 n408
+01- 1
+0-1 1
+.names preset n1497 n_n3274 n413
+01- 1
+0-1 1
+.names n_n3687 n1496 n_n3458 n1494 n423
+11-- 1
+--11 1
+.names preset n1497 n_n3381 n428
+01- 1
+0-1 1
+.names n1496 n_n3098 n1494 n_n3688 n_n3624 n433
+11--- 1
+--111 1
+.names preset pdn n_n4108 n1498 ndn1_34 n438
+00-0- 1
+01--0 1
+0-1-- 1
+.names n1496 n_n3497 n1494 n_n3901 n1380 n443
+11--- 1
+--110 1
+.names n_n3793 n1496 n1494 n1403 n448
+11-- 1
+--10 1
+.names n1531 preset n1528 n_n4316 n453
+00-1 1
+100- 1
+.names n1534 n1529 n1542 n1540 n1536 n1528
+0011- 1
+001-0 1
+00-10 1
+0100- 1
+010-1 1
+01-01 1
+1000- 1
+100-1 1
+10-01 1
+1111- 1
+111-0 1
+11-10 1
+.names n1530 n_n3901 n1533 n1380 n1529
+0--- 0
+-110 0
+.names n1532 n1405 n_n3978 n1531 n1530
+10-- 0
+--11 0
+.names nen3_10 ndn3_10 n1531
+10 1
+.names nrq3_11 ngfdn_3 n1532
+10 1
+.names ngfdn_3 ndn3_15 n1533
+10 1
+.names n1535 n_n3858 n1531 n_n4316 n1532 n1534
+1---- 0
+-11-- 0
+---11 0
+.names n_n4211 n_n3657 n1533 n1535
+111 1
+.names n1538 n1537 n_n3934 n1533 n1380 n1536
+00--- 1
+0-110 1
+.names n1532 n1407 n_n3931 n1531 n1537
+10-- 0
+--11 0
+.names n1539 n_n3878 n1531 n_n3976 n1532 n1538
+1---- 0
+-11-- 0
+---11 0
+.names n_n3624 ngfdn_3 n_n3688 ndn3_15 n1539
+1110 1
+.names n1541 n_n4125 n1533 n1380 n1540
+0--- 0
+-110 0
+.names n1532 n1406 n_n3328 n1531 n1541
+10-- 0
+--11 0
+.names n1543 n_n3936 n1533 n_n3099 n1542
+0--- 0
+-111 0
+.names n_n3208 n1531 n1532 n_n4222 n1543
+11-- 0
+--11 0
+.names n1545 preset pv6_0_0_ n_n4349 n458
+00-1 1
+101- 1
+.names ndn3_6 ndn3_7 n1545
+10 1
+.names preset n1497 n_n3029 n463
+01- 1
+0-1 1
+.names preset n1497 n_n3619 n468
+01- 1
+0-1 1
+.names preset n1497 n_n3264 n473
+01- 1
+0-1 1
+.names n1494 n1496 n_n3780 n_n4288 n_n4157 n_n3035 n478
+1--1-- 1
+1---11 1
+-11--- 1
+.names preset ngfdn_3 n1551 ndn3_4 n483
+000- 1
+00-1 1
+.names nsr3_3 pready_0_0_ n1498 n1551
+10- 1
+1-0 1
+.names preset n1497 n_n4114 n488
+01- 1
+0-1 1
+.names preset n1497 n_n3146 n493
+01- 1
+0-1 1
+.names n_n3511 n1555 n1556 pv1_5_5_ n498
+11-- 1
+--11 1
+.names preset n1551 ndn3_4 n1555
+01- 1
+0-1 1
+.names ndn3_4 preset n1551 n1556
+000 1
+.names preset n1497 n_n3152 n503
+01- 1
+0-1 1
+.names preset n_n3833 n1559 n508
+000 0
+.names n1409 n1389 n1559
+11 1
+.names preset n1497 n_n4282 n513
+01- 1
+0-1 1
+.names preset n1497 n_n3305 n518
+01- 1
+0-1 1
+.names n1533 preset n1563 n_n4392 n523
+00-1 1
+101- 1
+.names n1542 n1540 n1536 n1563
+001 1
+010 1
+100 1
+111 1
+.names n1565 preset pv4_5_5_ n_n4224 n528
+00-1 1
+101- 1
+.names ndn3_5 ndn3_6 n1565
+10 1
+.names n1567 preset n533
+10 1
+.names n1414 n1508 n1390 n1568 n1567
+10-1 1
+110- 1
+.names n_n4080 n1399 n_n3988 n1509 n1398 n1569 n1568
+0011-- 1
+00--1- 1
+0101-0 1
+0110-0 1
+0-001- 1
+1000-- 1
+100--0 1
+10-0-0 1
+111-1- 1
+11-11- 1
+-0111- 1
+.names n_n4040 n1408 n_n3818 n1510 n1403 n1570 n1569
+000-1- 1
+00-01- 1
+0111-- 1
+011--1 1
+01-1-1 1
+1001-1 1
+1010-1 1
+1100-- 1
+11--1- 1
+1-111- 1
+-1001- 1
+.names n_n3995 n1406 n_n3574 n1407 n1405 n_n3959 n1570
+000-1- 1
+011--- 1
+01-1-- 1
+1001-- 1
+1010-0 1
+1100-0 1
+11--1- 1
+1-1-1- 1
+-1--10 1
+--1010 1
+.names preset n1497 n_n3204 n538
+01- 1
+0-1 1
+.names preset n1497 n_n3024 n543
+01- 1
+0-1 1
+.names preset n1497 n_n4139 n548
+01- 1
+0-1 1
+.names ndn3_15 ngfdn_3 preset n553
+100 1
+.names n1494 n1496 n_n3133 n_n3458 n_n4074 n_n3578 n558
+1--1-- 1
+1---11 1
+-11--- 1
+.names n1532 preset n2028_1
+10 1
+.names n1532 preset n1578 n_n4074 n563
+00-1 1
+100- 1
+.names n1584 n1579 n1586 n1583 n1581 n1578
+0011- 1
+001-1 1
+00-11 1
+0100- 1
+010-0 1
+01-00 1
+1000- 1
+100-0 1
+10-00 1
+1111- 1
+111-1 1
+11-11 1
+.names n1580 n1403 n1532 n1531 n_n4021 n1579
+1---- 0
+-01-- 0
+---11 0
+.names n_n4047 n1533 n1380 n1580
+110 1
+.names n1582 n1408 n1532 n1531 n_n3281 n1581
+1---- 0
+-01-- 0
+---11 0
+.names n_n3769 n1533 n1380 n1582
+110 1
+.names n1534 n1542 n1540 n1536 n1529 n1583
+111-- 1
+11-0- 1
+1-10- 1
+1---1 1
+-11-1 1
+-1-01 1
+--101 1
+.names n1585 n_n3578 n1533 n_n4074 n1584
+0--- 0
+-111 0
+.names n_n3886 n1531 n1532 n_n3916 n1585
+11-- 0
+--11 0
+.names n1587 n_n3085 n1533 n_n3250 n1586
+0--- 0
+-111 0
+.names n_n4294 n1531 n1532 n_n4229 n1587
+11-- 0
+--11 0
+.names n_n3270 n1496 n_n3743 n1494 n568
+11-- 1
+--11 1
+.names n_n3858 n1555 n1556 pv1_2_2_ n573
+11-- 1
+--11 1
+.names preset n1497 n_n3456 n578
+01- 1
+0-1 1
+.names preset n1497 n_n3521 n583
+01- 1
+0-1 1
+.names preset n1497 n_n3081 n588
+01- 1
+0-1 1
+.names preset n1594 n_n4381 n1597 n_n3892 n1596 n593
+0--1-- 1
+0---10 1
+-11--- 1
+.names preset n1595 n_n4045 n1380 n_n3493 n1594
+01--- 1
+0-000 1
+.names n1384 n_n4045 n1380 n_n3493 n1383 n_n4056 n1595
+00-1-- 1
+010--1 1
+01--0- 1
+0-11-- 1
+.names n1380 n_n4045 n1383 n_n3493 n_n4056 n1596
+011-0 0
+10-0- 0
+1-10- 0
+.names n1384 n_n4381 n1598 n_n4052 n1597
+1010 1
+110- 1
+11-1 1
+.names n_n3954 n1599 n_n3865 n1598
+110 1
+.names n_n4029 n_n3955 n_n3845 n1599
+000 1
+.names n1496 n_n3670 n1494 n_n3475 n1380 n598
+11--- 1
+--110 1
+.names n1500 preset pv11_2_2_ n_n4211 n603
+00-1 1
+101- 1
+.names n_n3493 n_n4045 preset n1380 n1383 n608
+1100- 1
+110-0 1
+.names n1533 preset n1528 n_n3495 n613
+00-1 1
+100- 1
+.names n1531 preset n1578 n_n3916 n618
+00-1 1
+100- 1
+.names preset n1497 n_n3195 n623
+01- 1
+0-1 1
+.names n_n3525 n1496 n_n3242 n1494 n628
+11-- 1
+--11 1
+.names n_n3729 n1496 n1494 n_n3916 n633
+11-- 1
+--11 1
+.names n1517 preset pv10_4_4_ n_n3876 n638
+00-1 1
+101- 1
+.names ngfdn_3 preset ndn3_4 ndn3_5 n643
+001- 1
+00-1 1
+.names n_n3549 n1496 n_n3946 n1494 n648
+11-- 1
+--11 1
+.names preset n1497 n_n3489 n653
+01- 1
+0-1 1
+.names n1496 n_n3764 n1494 n_n3170 n_n3242 n658
+11--- 1
+--111 1
+.names n1614 preset pv2_3_3_ n_n3281 n663
+00-1 1
+101- 1
+.names ndn3_4 ndn3_5 n1614
+10 1
+.names n1616 n1617 n668
+10 0
+.names preset n1389 n1411 n_n4093 n1410 n1616
+010-- 1
+0--10 1
+.names n_n3707 n1508 n1414 n1390 n1568 n1617
+10--0 1
+11-1- 1
+1-0-- 1
+.names n_n3517 n1496 n_n4159 n1494 n673
+11-- 1
+--11 1
+.names n1565 preset pv4_1_1_ n_n4160 n678
+00-1 1
+101- 1
+.names n1531 preset n1563 n_n4222 n683
+00-1 1
+101- 1
+.names n1496 n_n3012 n1494 n_n3099 n_n3936 n688
+11--- 1
+--111 1
+.names n1545 preset pv6_5_5_ n_n4071 n693
+00-1 1
+101- 1
+.names preset n1497 n_n3372 n698
+01- 1
+0-1 1
+.names n_n3344 n1496 n_n4074 n1494 n703
+11-- 1
+--11 1
+.names n1532 preset n1626 n_n3688 n708
+00-1 1
+101- 1
+.names n1538 n1537 n_n3934 n1533 n1380 n1626
+010-- 1
+01-0- 1
+01--1 1
+10--- 1
+1-110 1
+.names n1494 n1496 n_n3079 n_n4233 n_n3170 n_n3242 n713
+1--1-- 1
+1---11 1
+-11--- 1
+.names n1496 n_n3313 n1494 n_n4157 n_n3035 n718
+11--- 1
+--111 1
+.names preset n1497 n_n3411 n723
+01- 1
+0-1 1
+.names n1496 n_n3231 n1494 n_n4074 n_n3578 n728
+11--- 1
+--111 1
+.names preset n1497 n_n3396 n733
+01- 1
+0-1 1
+.names preset n1497 n_n3432 n738
+01- 1
+0-1 1
+.names preset n1497 n_n3606 n743
+01- 1
+0-1 1
+.names n_n3733 n1496 n_n4224 n1494 n748
+11-- 1
+--11 1
+.names n1500 preset pv11_6_6_ n_n3556 n753
+00-1 1
+101- 1
+.names preset n1414 n1416 n_n3876 n1637 n_n4040 n758
+000--1 1
+01--0- 1
+0-11-- 1
+.names n_n4040 n1403 n_n3818 n1510 n1408 n1637
+0000- 1
+000-0 1
+00-00 1
+0111- 1
+011-1 1
+01-11 1
+1011- 1
+101-1 1
+10-11 1
+1100- 1
+110-0 1
+11-00 1
+.names preset n1497 n_n3120 n763
+01- 1
+0-1 1
+.names n_n3221 n1496 n1494 n_n4222 n768
+11-- 1
+--11 1
+.names n_n3173 n1496 n1494 n_n3976 n773
+11-- 1
+--11 1
+.names preset n_n3851 n1493 n1642 n_n3831 n_n4026 n778
+01---- 1
+0-1110 1
+.names n1410 n1389 n1411 n1642
+110 1
+.names n1494 n1496 n_n3113 n_n3495 n_n4211 n_n3657 n783
+1--1-- 1
+1---11 1
+-11--- 1
+.names n1532 preset n1645 n_n3242 n788
+00-1 1
+101- 1
+.names n1647 n1656 n1652 n1654 n1650 n1646 n1645
+0111-- 1
+011-1- 1
+01-1-1 1
+01--11 1
+0-11-1 1
+0-1-11 1
+0--11- 1
+1000-- 1
+100-0- 1
+10-0-0 1
+10--00 1
+1-00-0 1
+1-0-00 1
+1--00- 1
+.names n1584 n1586 n1583 n1581 n1579 n1646
+111-- 1
+11-1- 1
+1-11- 1
+1---1 1
+-11-1 1
+-1-11 1
+--111 1
+.names n1649 n1648 n1390 n_n3841 n1532 n1647
+00--- 1
+0-0-1 1
+1110- 1
+11--0 1
+-0-11 1
+--011 1
+.names n1531 n_n3451 n1533 n_n4324 n1380 n1648
+11--- 0
+--110 0
+.names n1531 n_n3259 n_n3242 n1533 n_n3170 n1649
+11--- 0
+--111 0
+.names n1651 n1398 n1532 n1650
+10- 1
+1-0 1
+.names n1531 n_n4062 n1533 n_n3475 n1380 n1651
+11--- 0
+--110 0
+.names n1653 n1399 n1532 n1531 n_n3854 n1652
+1---- 0
+-01-- 0
+---11 0
+.names n_n4366 n1533 n1380 n1653
+110 1
+.names n1655 n_n3556 n1533 n_n4122 n1654
+0--- 0
+-111 0
+.names n_n3919 n1531 n1532 n_n4145 n1655
+11-- 0
+--11 0
+.names n1657 n1532 n_n3898 n1656
+10- 1
+1-0 1
+.names n1531 n_n3511 n_n3035 n1533 n_n4157 n1657
+11--- 0
+--111 0
+.names n1496 n_n3118 n1494 n_n4122 n_n3556 n793
+11--- 1
+--111 1
+.names n1496 n_n3376 n_n3483 n1492 n1495 n798
+11--- 1
+--110 1
+.names preset n1497 n_n4089 n803
+01- 1
+0-1 1
+.names n_n3044 n1496 n_n4392 n1494 n808
+11-- 1
+--11 1
+.names n_n3627 n1496 n_n4330 n1494 n813
+11-- 1
+--11 1
+.names n1500 preset pv11_5_5_ n_n3035 n818
+00-1 1
+101- 1
+.names n1494 n1390 n_n3111 n1496 n823
+10-- 1
+--11 1
+.names preset n1497 n_n3321 n828
+01- 1
+0-1 1
+.names preset n1497 n_n3443 n833
+01- 1
+0-1 1
+.names preset n1497 n_n3215 n838
+01- 1
+0-1 1
+.names ngfdn_3 preset nen3_10 ndn3_10 n843
+001- 1
+00-1 1
+.names n1494 n1496 n_n4172 n_n4351 n_n3250 n_n3085 n848
+1--1-- 1
+1---11 1
+-11--- 1
+.names preset pdn nlc1_2 nsr1_2 preset_0_0_ n853
+001-- 1
+00-10 1
+.names preset n1497 n_n3590 n858
+01- 1
+0-1 1
+.names preset n1497 n_n4110 n863
+01- 1
+0-1 1
+.names n1496 n_n3576 n1494 n_n4211 n_n3657 n868
+11--- 1
+--111 1
+.names preset n1497 n_n4129 n873
+01- 1
+0-1 1
+.names n_n4189 n1496 n_n4071 n1494 n878
+11-- 1
+--11 1
+.names n_n4286 n1496 n1494 n1405 n883
+11-- 1
+--10 1
+.names n1565 preset pv4_2_2_ n_n4383 n888
+00-1 1
+101- 1
+.names n1497 preset n349_1
+10 1
+.names preset n1497 n_n3567 n893
+01- 1
+0-1 1
+.names n1545 preset pv6_6_6_ n_n3892 n898_1
+00-1 1
+101- 1
+.names preset n1497 n_n3075 n903_1
+01- 1
+0-1 1
+.names preset n_n3354 pdn n1498 ndn1_34 n908_1
+010-- 1
+01--1 1
+0-00- 1
+.names n1494 n1496 n_n3465 n_n4351 n_n3250 n_n3085 n913_1
+1--1-- 1
+1---11 1
+-11--- 1
+.names ngfdn_3 preset ndn3_6 ndn3_5 n918_1
+001- 1
+00-1 1
+.names preset n1497 n_n3617 n923_1
+01- 1
+0-1 1
+.names preset n1497 n_n4162 n928_1
+01- 1
+0-1 1
+.names n1496 n_n3207 n_n4012 n1492 n1495 n933_1
+11--- 1
+--110 1
+.names preset n1497 n_n4120 n938_1
+01- 1
+0-1 1
+.names preset n1497 n_n3065 n943_1
+01- 1
+0-1 1
+.names preset n1497 n_n4005 n948_1
+01- 1
+0-1 1
+.names preset n1497 n_n3266 n953_1
+01- 1
+0-1 1
+.names n1545 preset pv6_7_7_ n_n4337 n958_1
+00-1 1
+101- 1
+.names preset n1497 n_n3600 n963_1
+01- 1
+0-1 1
+.names preset n1497 n_n3415 n968_1
+01- 1
+0-1 1
+.names n_n4243 n1496 n_n4095 n1494 n973_1
+11-- 1
+--11 1
+.names preset n1497 n_n3872 n978_1
+01- 1
+0-1 1
+.names preset n1497 n_n3648 n983_1
+01- 1
+0-1 1
+.names n1496 n_n3358 n1494 n_n4211 n_n3657 n988_1
+11--- 1
+--111 1
+.names preset n1497 n_n3350 n993_1
+01- 1
+0-1 1
+.names preset ngfdn_3 ndn3_7 ndn3_6 n998_1
+001- 1
+00-1 1
+.names preset n1497 n_n3116 n1003_1
+01- 1
+0-1 1
+.names n1496 n_n3583 n_n3766 n1492 n1495 n1008_1
+11--- 1
+--110 1
+.names n_n3906 n1496 n_n4351 n1494 n1013_1
+11-- 1
+--11 1
+.names preset n1497 n_n4131 n1018_1
+01- 1
+0-1 1
+.names n1496 n_n3316 n1494 n_n3250 n_n3085 n1023_1
+11--- 1
+--111 1
+.names n_n3061 n1496 n1494 n_n3976 n1028_1
+11-- 1
+--11 1
+.names n_n3048 n1496 n1494 n_n4222 n1033_1
+11-- 1
+--11 1
+.names n_n3886 n1555 n1556 pv1_4_4_ n1038_1
+11-- 1
+--11 1
+.names n_n3919 n1555 n1556 pv1_6_6_ n1043_1
+11-- 1
+--11 1
+.names n_n3128 n1496 n_n3608 n1494 n1048_1
+11-- 1
+--11 1
+.names n1416 preset n1712 n_n3946 n_n3995 n1414 n1053_1
+00--10 1
+10-1-- 1
+--1--- 1
+.names n1503 n_n3995 n1405 n_n3574 n1504 n1406 n1712
+10010- 1
+1001-1 1
+100-01 1
+10101- 1
+1010-0 1
+101-10 1
+11001- 1
+1100-0 1
+110-10 1
+11110- 1
+1111-1 1
+111-01 1
+.names preset n1497 n_n4213 n1058_1
+01- 1
+0-1 1
+.names n1496 n_n3761 n1494 n_n3688 n_n3624 n1063_1
+11--- 1
+--111 1
+.names ngfdn_3 preset ndn3_8 ndn3_7 n1068_1
+001- 1
+00-1 1
+.names preset n1497 n_n3252 n1073_1
+01- 1
+0-1 1
+.names n1614 preset pv2_1_1_ n_n3328 n1083_1
+00-1 1
+101- 1
+.names n1416 preset n1719 n_n4362 n_n3988 n1414 n1088_1
+00--10 1
+10-1-- 1
+--1--- 1
+.names n1503 n_n3988 n1509 n1399 n1719
+1001 1
+1010 1
+1100 1
+1111 1
+.names preset n1497 n_n3348 n1093_1
+01- 1
+0-1 1
+.names preset n1497 n_n3544 n1098_1
+01- 1
+0-1 1
+.names preset n1497 n_n3101 n1103_1
+01- 1
+0-1 1
+.names n1496 n_n4279 n_n4334 n1492 n1495 n1108_1
+11--- 1
+--110 1
+.names n1496 n_n3896 n1494 n_n4122 n_n3556 n1113_1
+11--- 1
+--111 1
+.names n_n3736 n1496 n_n3495 n1494 n1118_1
+11-- 1
+--11 1
+.names n1565 preset pv4_6_6_ n_n4251 n1123_1
+00-1 1
+101- 1
+.names preset n1497 n_n3650 n1128_1
+01- 1
+0-1 1
+.names preset n1497 n_n3307 n1133_1
+01- 1
+0-1 1
+.names n_n4294 n1555 n1556 pv1_3_3_ n1138_1
+11-- 1
+--11 1
+.names n1595 preset n_n3955 n1731 n_n4201 n1596 n1148_1
+00-0-- 1
+00--10 1
+101--- 1
+.names n_n3955 n1384 n_n3954 n_n3493 n_n4045 n1380 n1731
+011--- 0
+110--- 0
+1--000 0
+.names preset n1497 n_n4164 n1153_1
+01- 1
+0-1 1
+.names n_n3155 n1496 n1494 n_n4145 n1158_1
+11-- 1
+--11 1
+.names preset n1497 n_n3749 n1163_1
+01- 1
+0-1 1
+.names n1533 preset n1645 n_n4233 n1168_1
+00-1 1
+101- 1
+.names preset n1497 n_n4347 n1173_1
+01- 1
+0-1 1
+.names preset n1497 n_n3826 n1178_1
+01- 1
+0-1 1
+.names preset n1497 n_n3360 n1183_1
+01- 1
+0-1 1
+.names n1533 preset n1578 n_n3458 n1188_1
+00-1 1
+100- 1
+.names preset n1497 n_n3093 n1193_1
+01- 1
+0-1 1
+.names preset n1497 n_n3157 n1198_1
+01- 1
+0-1 1
+.names n_n3506 n1496 n_n4349 n1494 n1203_1
+11-- 1
+--11 1
+.names preset n1497 n_n3161 n1208_1
+01- 1
+0-1 1
+.names n_n3319 n1496 n_n4233 n1494 n1213_1
+11-- 1
+--11 1
+.names n_n3429 n1496 n_n3892 n1494 n1218_1
+11-- 1
+--11 1
+.names n1496 n_n3971 n1494 n_n4125 n1380 n1223_1
+11--- 1
+--110 1
+.names n1496 n_n3449 n1494 n_n3170 n_n3242 n1228_1
+11--- 1
+--111 1
+.names n1565 preset pv4_7_7_ n_n4270 n1233_1
+00-1 1
+101- 1
+.names n1533 preset n1750 n_n4288 n1238_1
+00-1 1
+101- 1
+.names n1656 n1652 n1646 n1750
+000 1
+011 1
+101 1
+110 1
+.names n1496 n_n3183 n1494 n_n3099 n_n3936 n1243_1
+11--- 1
+--111 1
+.names preset n1497 n_n3130 n1248_1
+01- 1
+0-1 1
+.names n_n4047 n1385 n_n3916 n1375 n1378 n1253_1
+0100- 1
+0111- 1
+1101- 1
+1110- 1
+1---1 1
+.names n1614 preset pv2_2_2_ n_n3978 n1258
+00-1 1
+101- 1
+.names preset n1497 n_n3239 n1263_1
+01- 1
+0-1 1
+.names n1531 preset n1757 n1758 n_n4145 n1268_1
+00--1 1
+1000- 1
+1011- 1
+.names n1656 n1652 n1646 n1757
+11- 1
+1-1 1
+-11 1
+.names n1654 n1650 n1758
+01 1
+10 1
+.names preset n1497 n_n3890 n1273_1
+01- 1
+0-1 1
+.names n1494 n1496 n_n4003 n_n3608 n_n3688 n_n3624 n1278_1
+1--1-- 1
+1---11 1
+-11--- 1
+.names n_n3091 n1496 n_n3085 n1494 n1283_1
+11-- 1
+--11 1
+.names n_n3985 n1496 n_n4288 n1494 n1288_1
+11-- 1
+--11 1
+.names preset n1497 n_n3326 n1293_1
+01- 1
+0-1 1
+.names n1595 preset n_n4052 n1765 n_n4071 n1596 n1298_1
+00-0-- 1
+00--10 1
+101--- 1
+.names n_n4052 n1384 n1598 n_n3493 n_n4045 n1380 n1765
+011--- 0
+110--- 0
+1--000 0
+.names nsr4_2 pdn preset n1303_1
+000 0
+.names preset n1594 n_n4099 n1768 n_n4337 n1596 n1308_1
+0--1-- 1
+0---10 1
+-11--- 1
+.names n1384 n_n4099 n1769 n1598 n1768
+1011 1
+110- 1
+11-0 1
+.names n_n4052 n_n4381 n1769
+00 1
+.names preset n1497 n_n4375 n1313_1
+01- 1
+0-1 1
+.names n1616 n1559 n_n4067 n1318_1
+11- 1
+1-1 1
+.names preset n1497 n_n4290 n1323_1
+01- 1
+0-1 1
+.names n1531 preset n1750 n_n3898 n1328_1
+00-1 1
+101- 1
+.names n1532 preset n1757 n1758 n_n4122 n1333_1
+00--1 1
+1000- 1
+1011- 1
+.names preset n1497 n_n3774 n1338_1
+01- 1
+0-1 1
+.names preset n1497 n_n3014 n1343_1
+01- 1
+0-1 1
+.names preset n1497 n_n4241 n1348_1
+01- 1
+0-1 1
+.names n_n3952 n1496 n_n4201 n1494 n1353_1
+11-- 1
+--11 1
+.names n1494 n1398 n_n3237 n1496 n1358_1
+11-- 1
+--11 1
+.names n1545 preset pv6_2_2_ n_n3968 n1363_1
+00-1 1
+101- 1
+.names n1545 preset pv6_4_4_ n_n3922 n1368_1
+00-1 1
+101- 1
+.names preset n1497 n_n3551 n1373_1
+01- 1
+0-1 1
+.names preset n1497 n_n3379 n1378_1
+01- 1
+0-1 1
+.names n_n4275 preset n1414 n_n3766 n1413 n1416 n1383_1
+00111- 1
+100--0 1
+1010-- 1
+10--00 1
+.names preset n1497 n_n3570 n1388_1
+01- 1
+0-1 1
+.names n1614 preset pv2_5_5_ n_n3854 n1393_1
+00-1 1
+101- 1
+.names n_n4045 preset n1788 n1380 n1383 n1398_1
+1000- 0
+100-0 0
+.names n_n4057 n1789 n1788
+10 1
+.names n1769 n1599 n1384 n_n4099 n_n3954 n_n3865 n1789
+111000 1
+.names n1614 preset pv2_7_7_ n_n3451 n1403_1
+00-1 1
+101- 1
+.names preset n1497 n_n4037 n1408_1
+01- 1
+0-1 1
+.names n1494 n1399 n_n3408 n1496 n1413_1
+10-- 1
+--11 1
+.names n1531 preset n1794 n_n4229 n1418_1
+00-1 1
+101- 1
+.names n1586 n1583 n1581 n1794
+000 1
+011 1
+101 1
+110 1
+.names n1545 preset pv6_1_1_ n_n4201 n1423_1
+00-1 1
+101- 1
+.names preset n1497 n_n3339 n1428_1
+01- 1
+0-1 1
+.names n1517 preset pv10_5_5_ n_n4362 n1433_1
+00-1 1
+101- 1
+.names n1388 n_n3483 n1799 n1414 n1412 n1438_1
+10111 1
+110-- 1
+11-0- 1
+11--0 1
+.names n_n4334 n1503 n_n4012 n1799
+10- 1
+1-1 1
+.names n1789 preset n1443_1
+10 1
+.names preset n1497 n_n4185 n1448_1
+01- 1
+0-1 1
+.names n1496 n_n3069 n1494 n_n3934 n1380 n1453_1
+11--- 1
+--110 1
+.names preset n1497 n_n3643 n1458_1
+01- 1
+0-1 1
+.names n_n3404 n1496 n1494 n_n4229 n1463_1
+11-- 1
+--11 1
+.names n_n3057 n1496 n1494 n_n4145 n1468_1
+11-- 1
+--11 1
+.names n1494 n1496 n_n3020 n_n4095 n_n4122 n_n3556 n1473_1
+1--1-- 1
+1---11 1
+-11--- 1
+.names preset n1497 n_n3828 n1478_1
+01- 1
+0-1 1
+.names n1496 n_n3631 n1494 n_n3250 n_n3085 n1483_1
+11--- 1
+--111 1
+.names n_n3138 n1496 n_n3968 n1494 n1488_1
+11-- 1
+--11 1
+.names preset pdn n1498 ngfdn_3 n1493_1
+000- 0
+00-1 0
+.names n_n4065 n1496 n_n3922 n1494 n1498_1
+11-- 1
+--11 1
+.names n1496 n_n3679 n1494 n_n4366 n1380 n1503_1
+11--- 1
+--110 1
+.names n_n3287 n1496 n1494 n1406 n1508_1
+11-- 1
+--10 1
+.names n1533 preset n1794 n_n4351 n1513_1
+00-1 1
+101- 1
+.names preset n1497 n_n4059 n1518_1
+01- 1
+0-1 1
+.names n_n3436 n1496 n1494 n_n3898 n1523_1
+11-- 1
+--11 1
+.names ngfdn_3 preset nen3_10 ndn3_9 n1528_1
+001- 1
+00-1 1
+.names preset n1497 n_n3461 n1533_1
+01- 1
+0-1 1
+.names n1388 n_n4012 n1412 n1414 n1538_1
+1011 1
+110- 1
+11-0 1
+.names preset n1497 n_n3051 n1543_1
+01- 1
+0-1 1
+.names n1496 n_n3073 n1494 n_n4047 n1380 n1548_1
+11--- 1
+--110 1
+.names n_n3777 n1496 n1494 n_n3898 n1553_1
+11-- 1
+--11 1
+.names n_n3707 preset n1416 n_n3709 n1567 n1558_1
+101-- 1
+10-10 1
+.names n1517 preset pv10_2_2_ n_n3946 n1563_1
+00-1 1
+101- 1
+.names n1532 preset n1794 n_n3085 n1568_1
+00-1 1
+101- 1
+.names n_n3259 n1555 n1556 pv1_7_7_ n1573_1
+11-- 1
+--11 1
+.names preset n1497 n_n3504 n1578_1
+01- 1
+0-1 1
+.names n1379 preset n1788 n1583_1
+100 0
+.names n_n3954 preset n1594 n_n4349 n1596 n1384 n1588_1
+0-1--- 0
+10---1 0
+-0-10- 0
+.names n1496 n_n3136 n1494 n_n4324 n1380 n1593_1
+11--- 1
+--110 1
+.names n_n4372 n1496 n_n4383 n1494 n1598_1
+11-- 1
+--11 1
+.names n_n4236 n1496 n1494 n1408 n1603_1
+11-- 1
+--10 1
+.names preset n1497 n_n3040 n1608_1
+01- 1
+0-1 1
+.names preset n1497 n_n3874 n1613_1
+01- 1
+0-1 1
+.names preset n1497 n_n3999 n1618_1
+01- 1
+0-1 1
+.names n_n3223 n1496 n_n4122 n1494 n1623_1
+11-- 1
+--11 1
+.names ndn1_34 pdn preset n1628_1
+100 1
+.names n1517 preset pv10_1_1_ n_n3743 n1633_1
+00-1 1
+101- 1
+.names n1532 preset n1528 n_n3657 n1638_1
+00-1 1
+100- 1
+.names n_n3213 n1496 n_n4258 n1494 n1643_1
+11-- 1
+--11 1
+.names preset n1497 n_n3095 n1648_1
+01- 1
+0-1 1
+.names preset n1497 n_n3663 n1653_1
+01- 1
+0-1 1
+.names preset n1497 n_n3038 n1663_1
+01- 1
+0-1 1
+.names n_n3370 n1496 n_n4337 n1494 n1668_1
+11-- 1
+--11 1
+.names n1500 preset pv11_0_0_ n_n3624 n1673_1
+00-1 1
+101- 1
+.names n1500 preset pv11_4_4_ n_n3578 n1678_1
+00-1 1
+101- 1
+.names n1496 n_n3713 n1494 n_n4122 n_n3556 n1683_1
+11--- 1
+--111 1
+.names n1496 n_n3089 n1494 n_n4074 n_n3578 n1688_1
+11--- 1
+--111 1
+.names preset n1497 n_n3211 n1693_1
+01- 1
+0-1 1
+.names preset n1497 n_n3367 n1698_1
+01- 1
+0-1 1
+.names preset n1497 n_n3434 n1703_1
+01- 1
+0-1 1
+.names n1494 n1496 n_n3126 n_n4233 n_n3170 n_n3242 n1708_1
+1--1-- 1
+1---11 1
+-11--- 1
+.names n1496 n_n4192 n1494 n_n3688 n_n3624 n1713_1
+11--- 1
+--111 1
+.names n_n4136 n1496 n_n3876 n1494 n1718_1
+11-- 1
+--11 1
+.names preset n1497 n_n3053 n1723_1
+01- 1
+0-1 1
+.names preset n1497 n_n3938 n1728_1
+01- 1
+0-1 1
+.names n_n3769 n1385 n_n4229 n1376 n1378 n1733_1
+0101- 1
+0110- 1
+1100- 1
+1111- 1
+1---1 1
+.names n1496 n_n4390 n1494 n_n3099 n_n3936 n1738_1
+11--- 1
+--111 1
+.names pdn preset nen3_10 nsr3_17 n1389 n1411 n1743_1
+001-0- 0
+001--1 0
+00-0-- 0
+.names preset n1497 n_n3903 n1748_1
+01- 1
+0-1 1
+.names n_n4045 preset n_n3658 n1383 n1512 n_n3604 n1753_1
+1010-- 1
+101--1 1
+10-11- 1
+.names preset ngfdn_3 nsr3_14 nrq3_11 n1758_1
+000- 1
+00-1 1
+.names n1416 preset n1864 n_n4258 n_n3818 n1414 n1763_1
+00--10 1
+10-1-- 1
+--1--- 1
+.names n1503 n_n3818 n1510 n1408 n1864
+1001 1
+1010 1
+1100 1
+1111 1
+.names n1545 preset pv6_3_3_ n_n3533 n1768_1
+00-1 1
+101- 1
+.names n_n3463 n1496 n1494 n_n4316 n1773_1
+11-- 1
+--11 1
+.names preset n1497 n_n3175 n1778_1
+01- 1
+0-1 1
+.names n_n3055 n1496 n_n3657 n1494 n1783_1
+11-- 1
+--11 1
+.names n1494 n1496 n_n3202 n_n3495 n_n4211 n_n3657 n1788_1
+1--1-- 1
+1---11 1
+-11--- 1
+.names n1494 n1496 n_n3385 n_n4095 n_n4122 n_n3556 n1793_1
+1--1-- 1
+1---11 1
+-11--- 1
+.names preset n1497 n_n4077 n1798_1
+01- 1
+0-1 1
+.names preset n1497 n_n3142 n1803_1
+01- 1
+0-1 1
+.names n_n3901 n1385 n_n4316 n1377 n1378 n1808_1
+0100- 1
+0111- 1
+1101- 1
+1110- 1
+1---1 1
+.names n_n3934 n1384 n_n3976 preset n1378 n1813_1
+0110- 1
+1100- 1
+1---1 1
+.names n1496 n_n3823 n_n4227 n1492 n1495 n1818_1
+11--- 1
+--110 1
+.names n_n3722 n1496 n_n4160 n1494 n1823_1
+11-- 1
+--11 1
+.names n_n4309 n1496 n_n4182 n1494 n1828_1
+11-- 1
+--11 1
+.names n1565 preset pv4_0_0_ n_n4159 n1833_1
+00-1 1
+101- 1
+.names n1565 preset pv4_4_4_ n_n4330 n1838_1
+00-1 1
+101- 1
+.names preset n1497 n_n3836 n1843_1
+01- 1
+0-1 1
+.names preset n1497 n_n3470 n1848_1
+01- 1
+0-1 1
+.names n_n3331 n1496 n_n4157 n1494 n1853_1
+11-- 1
+--11 1
+.names n_n3883 n1496 n_n3099 n1494 n1858_1
+11-- 1
+--11 1
+.names n1517 preset pv10_6_6_ n_n4299 n1863_1
+00-1 1
+101- 1
+.names n1532 preset n1750 n_n4157 n1868_1
+00-1 1
+101- 1
+.names ngfdn_3 preset ndn3_8 ndn3_9 n1873_1
+001- 1
+00-1 1
+.names n_n3208 n1555 n1556 pv1_1_1_ n1878_1
+11-- 1
+--11 1
+.names preset n1497 n_n3190 n1883_1
+01- 1
+0-1 1
+.names preset n1594 n_n4029 n1890 n_n3533 n1596 n1888_1
+0--1-- 1
+0---10 1
+-11--- 1
+.names n1384 n_n4029 n_n3954 n_n3955 n_n3845 n1890
+10100 1
+110-- 1
+11-1- 1
+11--1 1
+.names preset n1497 n_n3042 n1893_1
+01- 1
+0-1 1
+.names pdn preset nsr3_17 nsr3_14 n1380 n_n4045 n1898_1
+000-1- 0
+000--0 0
+00-0-- 0
+.names preset n_n4151 nsr1_2 nlc1_2 preset_0_0_ n1903_1
+1---- 1
+-1--- 1
+--100 1
+.names preset n1497 n_n3188 n1908_1
+01- 1
+0-1 1
+.names n1496 n_n4303 n1494 n_n3769 n1380 n1913_1
+11--- 1
+--110 1
+.names n1500 preset pv11_3_3_ n_n3250 n1918_1
+00-1 1
+101- 1
+.names n1500 preset pv11_7_7_ n_n3170 n1923_1
+00-1 1
+101- 1
+.names n_n3758 n1496 n1494 n_n3916 n1928_1
+11-- 1
+--11 1
+.names n1494 n1496 n_n3910 n_n3608 n_n3688 n_n3624 n1933_1
+1--1-- 1
+1---11 1
+-11--- 1
+.names n1494 n1496 n_n3108 n_n4392 n_n3099 n_n3936 n1938_1
+1--1-- 1
+1---11 1
+-11--- 1
+.names preset n1497 n_n3150 n1943_1
+01- 1
+0-1 1
+.names n_n4320 n1496 n_n3688 n1494 n1948_1
+11-- 1
+--11 1
+.names n1517 preset pv10_7_7_ n_n4360 n1953_1
+00-1 1
+101- 1
+.names n_n4247 n1496 n_n4362 n1494 n1958_1
+11-- 1
+--11 1
+.names n1496 n_n4199 n1494 n_n3170 n_n3242 n1963_1
+11--- 1
+--111 1
+.names n1496 n_n3966 n_n4275 n1492 n1495 n1968_1
+11--- 1
+--110 1
+.names n_n3766 preset n1413 n1414 n1416 n1973_1
+0011- 1
+100-0 1
+10-00 1
+.names n1614 preset pv2_4_4_ n_n4021 n1978_1
+00-1 1
+101- 1
+.names n1614 preset pv2_6_6_ n_n4062 n1983_1
+00-1 1
+101- 1
+.names n1496 n_n3514 n_n3814 n1492 n1495 n1988_1
+11--- 1
+--110 1
+.names n_n3572 n1496 n1494 n1407 n1993_1
+11-- 1
+--10 1
+.names n_n4166 n1496 n_n4270 n1494 n1998_1
+11-- 1
+--11 1
+.names n1531 preset n1626 n_n3976 n2003_1
+00-1 1
+101- 1
+.names n_n3394 n1496 n1494 n_n3841 n2008_1
+11-- 1
+--11 1
+.names n1533 preset n1757 n1758 n_n4095 n2013_1
+00--1 1
+1000- 1
+1011- 1
+.names preset n1497 n_n3863 n2018_1
+01- 1
+0-1 1
+.names preset n1497 n_n3720 n2023_1
+01- 1
+0-1 1
+.names n1517 preset pv10_0_0_ n_n3756 n2033_1
+00-1 1
+101- 1
+.names n1494 n1496 n_n3667 n_n3458 n_n4074 n_n3578 n2038_1
+1--1-- 1
+1---11 1
+-11--- 1
+.names n_n3342 n1496 n_n4299 n1494 n2043_1
+11-- 1
+--11 1
+.names preset n1497 n_n3529 n2048_1
+01- 1
+0-1 1
+.names n_n4209 n1496 n_n3756 n1494 n2053_1
+11-- 1
+--11 1
+.names n1496 n_n3337 n1494 n_n4157 n_n3035 n2063_1
+11--- 1
+--111 1
+.names n1414 n_n4227 preset n_n3724 n_n3814 n1416 n2068_1
+010--0 1
+10011- 1
+1100-- 1
+110-0- 1
+.names preset n1497 n_n4153 n2073_1
+01- 1
+0-1 1
+.names n1616 n1927 n1642 n_n3831 n2078_1
+101- 0
+10-0 0
+.names n_n3831 n1617 n1495 n1927
+110 1
+.names preset n1497 n_n3233 n2083_1
+01- 1
+0-1 1
+.names n_n3413 n1496 n_n4251 n1494 n2088_1
+11-- 1
+--11 1
+.names n1565 preset pv4_3_3_ n_n4182 n2093_1
+00-1 1
+101- 1
+.names n1531 preset n1645 n_n3841 n2098
+00-1 1
+101- 1
+.names preset n1497 n_n3441 n2103_1
+01- 1
+0-1 1
+.names n1616 n_n4026 n_n3831 n1559 n2108_1
+11-- 1
+1-11 1
+.names n_n4342 n1496 n1494 n_n4229 n2113_1
+11-- 1
+--11 1
+.names n_n4102 n1496 n1494 n_n3841 n2118_1
+11-- 1
+--11 1
+.names n1494 n1496 n_n3277 n_n4288 n_n4157 n_n3035 n2123_1
+1--1-- 1
+1---11 1
+-11--- 1
+.names n1496 n_n4180 n1494 n_n3250 n_n3085 n2128_1
+11--- 1
+--111 1
+.names n_n3878 n1555 n1556 pv1_0_0_ n2133_1
+11-- 1
+--11 1
+.names n1614 preset pv2_0_0_ n_n3931 n2138_1
+00-1 1
+101- 1
+.names preset n1594 n_n3845 n1941 n_n3968 n1596 n2143_1
+0--1-- 1
+0---10 1
+-11--- 1
+.names n1384 n_n3845 n_n3954 n_n3955 n1941
+1010 1
+110- 1
+11-1 1
+.names preset n1594 n_n3865 n1943 n_n3922 n1596 n2148_1
+0--1-- 1
+0---10 1
+-11--- 1
+.names n1384 n_n3865 n_n3954 n1599 n1943
+1011 1
+110- 1
+11-0 1
+.names n_n3486 n1496 n_n3533 n1494 n2153_1
+11-- 1
+--11 1
+.names n1788 preset n1379 n_n4056 n2158_1
+101- 1
+10-1 1
+.names preset n1497 n_n3674 n2163_1
+01- 1
+0-1 1
+.names preset n1414 n_n3959 n1407 n1416 n_n3756 n2168_1
+001-0- 1
+0100-- 1
+0111-- 1
+0---11 1
+.names n1533 preset n1626 n_n3608 n2173_1
+00-1 1
+101- 1
+.names n1416 preset n1950 n_n4299 n_n4080 n1414 n2178_1
+00--10 1
+10-1-- 1
+--1--- 1
+.names n1503 n_n4080 n1398 n_n3988 n1509 n1399 n1950
+10000- 1
+1000-0 1
+100-00 1
+10111- 1
+1011-1 1
+101-11 1
+11011- 1
+1101-1 1
+110-11 1
+11100- 1
+1110-0 1
+111-00 1
+.names preset n1497 n_n4018 n2183_1
+01- 1
+0-1 1
+.names preset n1497 n_n4354 n2188_1
+01- 1
+0-1 1
+.names preset n1497 n_n3797 n2193_1
+01- 1
+0-1 1
+.names n_n3739 n1496 n1494 n_n4316 n2198_1
+11-- 1
+--11 1
+.names n1494 n1496 n_n3646 n_n4392 n_n3099 n_n3936 n2203_1
+1--1-- 1
+1---11 1
+-11--- 1
+.names n1532 preset n1563 n_n3099 n2208_1
+00-1 1
+101- 1
+.names n1496 n_n3537 n1494 n_n4211 n_n3657 n2213_1
+11--- 1
+--111 1
+.names n1496 n_n3806 n1494 n_n4074 n_n3578 n2218_1
+11--- 1
+--111 1
+.names preset n1497 n_n3087 n2223_1
+01- 1
+0-1 1
+.names preset n1497 n_n4105 n2228_1
+01- 1
+0-1 1
+.names preset n1497 n_n3262 n2233_1
+01- 1
+0-1 1
+.names n_n4125 n1385 n_n4222 n_n3934 n_n3976 n1378 n2238_1
+01011- 1
+0110-- 1
+011-0- 1
+1100-- 1
+110-0- 1
+11111- 1
+1----1 1
+.names n_n3814 n1503 n1388 n2243_1
+01- 1
+101 1
+.names n1642 preset n1927 n2248_1
+100 0
+.names preset pdn n1551 n1498 nsr4_2 n2253_1
+000-- 0
+00-10 0
+.end
