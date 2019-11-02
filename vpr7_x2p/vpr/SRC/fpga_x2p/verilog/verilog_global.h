@@ -2,6 +2,10 @@
 #define VERILOG_GLOBAL_H
 /* global parameters for dumping synthesizable verilog */
 
+#include <string>
+#include "linkedlist.h"
+#include "spice_types.h"
+
 extern char* verilog_netlist_file_postfix;
 extern float verilog_sim_timescale;
 extern char* verilog_timing_preproc_flag; // the flag to enable timing definition during compilation

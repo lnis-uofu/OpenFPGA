@@ -126,7 +126,7 @@ const std::string endl = "\r\n";
 #else
 const std::string endl = "\n";
 #endif
-}; // namespace INIStringUtil
+} // namespace INIStringUtil
 
 template <typename T>
 class INIMap
@@ -321,7 +321,7 @@ inline PDataType parseLine(std::string line, T_ParseValues &parseData)
 	}
 	return PDataType::PDATA_UNKNOWN;
 }
-}; // namespace INIParser
+} // namespace INIParser
 
 class INIReader
 {
@@ -650,8 +650,8 @@ private:
 public:
 	bool prettyPrint = false;
 
-	INIWriter(std::string const &filename)
-		: filename(filename)
+	INIWriter(std::string const &file_name)
+		: filename(file_name)
 	{
 	}
 	~INIWriter() {}
@@ -709,8 +709,8 @@ private:
 	std::string filename;
 
 public:
-	INIFile(std::string const &filename)
-		: filename(filename)
+	INIFile(std::string const &file_name)
+		: filename(file_name)
 	{
 	}
 

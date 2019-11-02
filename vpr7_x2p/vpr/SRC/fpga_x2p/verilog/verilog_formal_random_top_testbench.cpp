@@ -17,6 +17,7 @@
 /* Include VPR headers*/
 
 /* Include FPGA-X2P headers*/
+#include "simulation_utils.h"
 #include "fpga_x2p_utils.h"
 #include "fpga_x2p_benchmark_utils.h"
 
@@ -243,18 +244,6 @@ void print_verilog_top_random_testbench_benchmark_instance(std::fstream& fp,
 
   /* Add an empty line as splitter */
   fp << std::endl;
-}
-
-/********************************************************************
- * Compute the time period for the simulation
- *******************************************************************/
-static 
-int get_simulation_time(const int& num_op_clock_cycles,
-                        const float& op_clock_period) {
-  /* Take into account the prog_reset and reset cycles 
-   * 1e9 is to change the unit to ns rather than second 
-   */
-  return (MAGIC_NUMBER_FOR_SIMULATION_TIME * num_op_clock_cycles * op_clock_period) / verilog_sim_timescale; 
 }
 
 /********************************************************************
@@ -583,8 +572,10 @@ void print_verilog_random_top_testbench(const std::string& circuit_name,
 
   print_verilog_top_random_testbench_check(fp, L_logical_blocks, clock_port_names);
 
-  int simulation_time = get_simulation_time(simulation_parameters.meas_params.sim_num_clock_cycle,
-                                            1./simulation_parameters.stimulate_params.op_clock_freq);
+  int simulation_time = find_operating_phase_simulation_time(MAGIC_NUMBER_FOR_SIMULATION_TIME,
+                                                             simulation_parameters.meas_params.sim_num_clock_cycle,
+                                                             1./simulation_parameters.stimulate_params.op_clock_freq,
+                                                             verilog_sim_timescale);
 
   /* Add Icarus requirement */
   print_verilog_timeout_and_vcd(fp, circuit_name, simulation_time);

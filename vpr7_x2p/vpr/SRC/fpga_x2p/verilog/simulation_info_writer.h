@@ -1,5 +1,5 @@
-#ifndef VPR_API_H
-#define VPR_API_H
+#ifndef SIMULATION_INFO_WRITER_H
+#define SIMULATION_INFO_WRITER_H
 
 #include <string>
 
