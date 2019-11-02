@@ -1920,7 +1920,7 @@ static void check_all_tracks_reach_pins(t_type_ptr type,
 
 	for (itrack = 0; itrack < nodes_per_chan; itrack++) {
 		if (num_conns_to_track[itrack] <= 0) {
-			vpr_printf(TIO_MESSAGE_ERROR, "check_all_tracks_reach_pins: Track %d does not connect to any CLB %ss.\n", 
+			vpr_printf(TIO_MESSAGE_WARNING, "check_all_tracks_reach_pins: Track %d does not connect to any CLB %ss.\n", 
 				itrack, (ipin_or_opin == DRIVER ? "OPIN" : "IPIN"));
 		}
 	}

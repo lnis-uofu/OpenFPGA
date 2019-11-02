@@ -579,13 +579,16 @@ void check_circuit_library(const CircuitLibrary& circuit_lib) {
   num_err += check_required_default_circuit_model(circuit_lib, SPICE_MODEL_WIRE);
 
   /* If we have any errors, exit */
-  vpr_printf(TIO_MESSAGE_INFO,
-             "Finished checking circuit library with %d errors!\n",
-             num_err);
 
   if (0 < num_err) {
+    vpr_printf(TIO_MESSAGE_INFO,
+               "Finished checking circuit library with %d errors!\n",
+               num_err);
     exit(1);
   }
+
+  vpr_printf(TIO_MESSAGE_INFO,
+             "Checking circuit library passed.\n");
 
   return;
 }
