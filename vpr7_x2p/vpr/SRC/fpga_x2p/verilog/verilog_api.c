@@ -62,6 +62,7 @@
 #include "verilog_formality_autodeck.h"
 #include "verilog_sdc_pb_types.h"
 #include "verilog_include_netlists.h"
+#include "simulation_info_writer.h"
 
 #include "verilog_api.h"
 
@@ -410,12 +411,12 @@ void vpr_fpga_verilog(ModuleManager& module_manager,
     dump_verilog_formal_verification_top_netlist(sram_verilog_orgz_info, chomped_circuit_name, 
                                                  std::string(formal_verification_top_netlist_file_path + std::string(".bak")).c_str(), src_dir_path);
     /* TODO: new function: to be tested */
-    print_verilog_preconfig_top_module(module_manager, bitstream_manager, 
+    print_verilog_preconfig_top_module(module_manager, bitstream_manager,
                                        Arch.spice->circuit_lib, global_ports, L_logical_blocks,
-                                       device_size, L_grids, L_blocks, 
+                                       device_size, L_grids, L_blocks,
                                        std::string(chomped_circuit_name), formal_verification_top_netlist_file_path,
-                                       std::string(src_dir_path)); 
-                                       
+                                       std::string(src_dir_path));
+
     /* Output script for formality */
     write_formality_script(vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts,
                            fm_dir_path,
@@ -430,6 +431,13 @@ void vpr_fpga_verilog(ModuleManager& module_manager,
     print_verilog_random_top_testbench(std::string(chomped_circuit_name), random_top_testbench_file_path, 
                                        std::string(src_dir_path), L_logical_blocks,  
                                        vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts, Arch.spice->spice_params);
+    print_verilog_simulation_info(Arch.spice->spice_params.meas_params.sim_num_clock_cycle,
+                                  std::string(msim_dir_path),
+                                  std::string(chomped_circuit_name),
+                                  std::string(src_dir_path),
+                                  bitstream_manager.bits().size(),
+                                  Arch.spice->spice_params.stimulate_params.prog_clock_freq,
+                                  Arch.spice->spice_params.stimulate_params.op_clock_freq);
   }
 
   if (TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.print_autocheck_top_testbench) {

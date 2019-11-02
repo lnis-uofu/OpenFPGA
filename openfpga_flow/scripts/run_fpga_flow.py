@@ -234,10 +234,11 @@ def main():
     if (args.fpga_flow == "yosys_vpr"):
         logger.info('Running "yosys_vpr" Flow')
         run_yosys_with_abc()
+        # TODO Make it optional if activity file is provided
+        run_ace2()
+        run_pro_blif_3arg()
         if args.power:
-            run_ace2()
-            run_pro_blif_3arg()
-        run_rewrite_verilog()
+            run_rewrite_verilog()
     if (args.fpga_flow == "vpr_blif"):
         collect_files_for_vpr()
     # if (args.fpga_flow == "vtr"):
@@ -621,7 +622,7 @@ def run_vpr():
         min_channel_width = run_standard_vpr(
             args.top_module+".blif",
             args.fix_route_chan_width,
-            args.top_module+"_fr_chan_width.txt")
+            args.top_module+"_fr_chan_width_vpr.txt")
         logger.info("Fixed routing channel successfully routed with %d width" %
                     min_channel_width)
         extract_vpr_stats(args.top_module+"_fr_chan_width.txt")
@@ -642,13 +643,13 @@ def run_standard_vpr(bench_blif, fixed_chan_width, logfile, route_only=False):
                "--place_file", args.top_module+"_vpr.place",
                "--route_file", args.top_module+"_vpr.route",
                "--full_stats", "--nodisp",
+               "--activity_file", args.top_module+"_ace_out.act",
                ]
     if route_only:
         command += ["--route"]
     # Power options
     if args.power:
         command += ["--power",
-                    "--activity_file", args.top_module+"_ace_out.act",
                     "--tech_properties", args.power_tech]
     # packer options
     if args.vpr_timing_pack_off:
@@ -700,7 +701,7 @@ def run_standard_vpr(bench_blif, fixed_chan_width, logfile, route_only=False):
             command += ["--fpga_spice_testbench_load_extraction", "off"]
 
     # FPGA Verilog options
-    if (args.power and args.vpr_fpga_verilog):
+    if args.vpr_fpga_verilog:
         command += ["--fpga_verilog"]
         if args.vpr_fpga_verilog_dir:
             command += ["--fpga_verilog_dir", args.vpr_fpga_verilog_dir]
@@ -710,7 +711,8 @@ def run_standard_vpr(bench_blif, fixed_chan_width, logfile, route_only=False):
             command += ["--fpga_verilog_print_input_blif_testbench"]
         if args.vpr_fpga_verilog_print_autocheck_top_testbench:
             command += ["--fpga_verilog_print_autocheck_top_testbench",
-                        args.top_module+"_output_verilog.v"]
+                        # args.vpr_fpga_verilog_print_autocheck_top_testbench]
+                        os.path.join(args.run_dir, args.top_module+"_output_verilog.v")]
         if args.vpr_fpga_verilog_include_timing:
             command += ["--fpga_verilog_include_timing"]
         if args.vpr_fpga_verilog_explicit_mapping:
@@ -835,7 +837,7 @@ def run_rewrite_verilog():
     run_command("Yosys", "yosys_output.txt", command)
 
 
-def run_netlists_verification():
+def run_netlists_verification(exit_if_fail=True):
     ExecTime["VerificationStart"] = time.time()
     compiled_file = "compiled_"+args.top_module
     # include_netlists = args.top_module+"_include_netlists.v"

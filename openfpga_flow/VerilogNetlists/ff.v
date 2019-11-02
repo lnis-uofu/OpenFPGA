@@ -5,7 +5,7 @@
 // Coder       : Xifan TANG
 //-----------------------------------------------------
 //------ Include defines: preproc flags -----
-`include "./SRC/fpga_defines.v"
+// `include "./SRC/fpga_defines.v"
 module static_dff (
 /* Global ports go first */
 input set,     // set input

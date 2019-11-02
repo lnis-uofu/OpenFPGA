@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.8.12)
 if (${CMAKE_VERSION} VERSION_GREATER "3.8")
     #For cmake >= 3.9 INTERPROCEDURAL_OPTIMIZATION behaviour we need to explicitly
     #set the cmake policy version number
-    cmake_policy(VERSION 3.9) 
+    cmake_policy(VERSION 3.9)
 
     # If we are using verison < 3.9 then setting INTERPROCEDURAL_OPTIMIZATION
     # has no effect unless an Intel compiler is used
@@ -29,13 +29,13 @@ else ()
 endif()
 
 if (NOT ENABLE_VPR_GRAPHIC_CXX_FLAG)
-  # Add a flag to notify compiler not to consider graphic-related source codes   
+  # Add a flag to notify compiler not to consider graphic-related source codes
   set (DISABLE_GRAPHIC_FLAGS "-DNO_GRAPHICS")
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${DISABLE_GRAPHIC_FLAGS}")
   message(STATUS "Add flags to disable graphics in VPR compilation: ${DISABLE_GRAPHIC_FLAGS}")
 endif()
 
-# We need readline to compile 
+# We need readline to compile
 find_package(Readline REQUIRED)
 
 #Collect the source files
@@ -65,12 +65,14 @@ if (ENABLE_VPR_GRAPHIC_CXX_FLAG)
                         libarchfpga
                         X11
                         libvtrutil
-                        readline)
-else () 
+                        readline
+                        libini)
+else ()
   target_link_libraries(libvpr
                         libarchfpga
                         libvtrutil
-                        readline)
+                        readline
+                        libini)
 endif()
 
 #Create the executables
