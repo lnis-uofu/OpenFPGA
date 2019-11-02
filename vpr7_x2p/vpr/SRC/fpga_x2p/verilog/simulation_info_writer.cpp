@@ -23,9 +23,10 @@
  * information, in order to interface different Verilog simulators
  ********************************************************************/
 void print_verilog_simulation_info(const int& num_operating_clock_cycles,
-                                   const std::string& verilog_dir_formatted,
-                                   const std::string& chomped_circuit_name,
-                                   const std::string& src_dir_path,
+                                   const std::string& parent_dir,
+                                   const std::string& verilog_dir,
+                                   const std::string& circuit_name,
+                                   const std::string& src_dir,
                                    const size_t& num_program_clock_cycles,
                                    const float& prog_clock_freq,
                                    const float& op_clock_freq) {
@@ -42,14 +43,14 @@ void print_verilog_simulation_info(const int& num_operating_clock_cycles,
                                                              1. / op_clock_freq);
 
   ini["SIMULATION_DECK"]["PROJECTNAME "] = "ModelSimProject";
-  ini["SIMULATION_DECK"]["BENCHMARK "] = chomped_circuit_name;
-  ini["SIMULATION_DECK"]["TOP_TB"] = chomped_circuit_name + std::string("_top_formal_verification_random_tb");
+  ini["SIMULATION_DECK"]["BENCHMARK "] = circuit_name;
+  ini["SIMULATION_DECK"]["TOP_TB"] = circuit_name + std::string("_top_formal_verification_random_tb");
   ini["SIMULATION_DECK"]["SIMTIME "] = std::to_string(simulation_time_period);
   ini["SIMULATION_DECK"]["UNIT "] = "ms";
-  ini["SIMULATION_DECK"]["VERILOG_PATH "] = std::string(src_dir_path);
+  ini["SIMULATION_DECK"]["VERILOG_PATH "] = std::string(src_dir);
   ini["SIMULATION_DECK"]["VERILOG_FILE1"] = std::string(defines_verilog_file_name);
-  ini["SIMULATION_DECK"]["VERILOG_FILE2"] = std::string(chomped_circuit_name + "_include_netlists.v");
+  ini["SIMULATION_DECK"]["VERILOG_FILE2"] = std::string(circuit_name + "_include_netlists.v");
 
-  mINI::INIFile file("SimulationDeckInfo.ini");
+  mINI::INIFile file(parent_dir + "SimulationDeckInfo.ini");
   file.generate(ini, true);
 }

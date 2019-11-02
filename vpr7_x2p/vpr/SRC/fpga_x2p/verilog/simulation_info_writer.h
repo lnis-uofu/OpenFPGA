@@ -4,6 +4,7 @@
 #include <string>
 
 void print_verilog_simulation_info(const int& num_operating_clock_cycles,
+                                   const std::string& parent_dir,
                                    const std::string& verilog_dir_formatted,
                                    const std::string& chomped_circuit_name,
                                    const std::string& src_dir_path,
