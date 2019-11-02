@@ -211,7 +211,7 @@ void vpr_print_usage(void) {
   vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_verilog_report_timing_rpt_path <path_to_generate_reports>\n");
   vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_verilog_print_sdc_pnr\n");
   vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_verilog_print_sdc_analysis\n");
-  vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_verilog_print_simulation_ini\n");
+  vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_verilog_print_simulation_ini <ini_file_path>\n");
     /* Xifan Tang: Bitstream generator */
   vpr_printf(TIO_MESSAGE_INFO, "Bitstream Generator Options:\n");
   vpr_printf(TIO_MESSAGE_INFO, "\t--fpga_bitstream_generator\n");

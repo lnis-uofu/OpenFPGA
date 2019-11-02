@@ -107,6 +107,7 @@ struct s_options {
     char* fpga_verilog_reference_benchmark_file;
     char* fpga_verilog_modelsim_ini_path;
     char* fpga_verilog_report_timing_path;
+    char* fpga_verilog_simulation_ini_path;
     /* Xifan TANG: Bitstream generator */
     char* fpga_bitstream_file;
 };
