@@ -55,7 +55,7 @@ before_install:
 - eval "$(ssh-agent -s)"
 - chmod 600 ./deploy_key
 - cp $TRAVIS_BUILD_DIR/deploy_key ~/.ssh/id_rsa
-- echo -e "Host github.com\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
+- echo -e "Host *\n  StrictHostKeyChecking no\n" >> ~/.ssh/config
 - ssh u1249762@lab1-1.eng.utah.edu pwd
 - ssh u1249762@lab1-1.eng.utah.edu "mkdir /var/tmp/travis_bc/$TRAVIS_JOB_ID"
 - echo $TRAVIS_JOB_ID >> build_id.txt
