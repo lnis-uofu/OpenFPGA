@@ -54,11 +54,12 @@ before_install:
 - openssl aes-256-cbc -K $encrypted_6f6cf68308be_key -iv $encrypted_6f6cf68308be_iv -in deploy_key.enc -out ./deploy_key -d
 - eval "$(ssh-agent -s)"
 - chmod 600 ./deploy_key
-- echo -e "Host $SERVER_IP_ADDRESS\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
-- ssh-add ./deploy_key
-- ssh -o StrictHostKeyChecking=no -i ./deploy_key u1249762@lab1-1.eng.utah.edu pwd
+- cp $TRAVIS_BUILD_DIR/deploy_key ~/.ssh/id_rsa
+- echo -e "Host github.com\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
+- ssh u1249762@lab1-1.eng.utah.edu pwd
+- ssh u1249762@lab1-1.eng.utah.edu "mkdir /var/tmp/travis_bc/$TRAVIS_JOB_ID"
 - echo $TRAVIS_JOB_ID >> build_id.txt
-- scp -o StrictHostKeyChecking=no -i ./deploy_key build_id.txt u1249762@lab1-1.eng.utah.edu:/var/tmp/travis_bc/build_id.txt
+- scp build_id.txt u1249762@lab1-1.eng.utah.edu:/var/tmp/travis_bc/$TRAVIS_JOB_ID/
 - source .travis/common.sh
 install:
 - DEPS_DIR="${HOME}/deps"
