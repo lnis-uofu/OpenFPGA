@@ -7,7 +7,7 @@ cache:
     - $TRAVIS_BUILD_DIR/abc
     - $TRAVIS_BUILD_DIR/yosys
     - $TRAVIS_BUILD_DIR/ace2
-#    - $TRAVIS_BUILD_DIR/libs
+    - $TRAVIS_BUILD_DIR/libs
     - $HOME/.ccache
     - $HOME/deps
 
