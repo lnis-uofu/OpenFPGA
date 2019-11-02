@@ -5,8 +5,8 @@
 #include <math.h>
 #include <time.h>
 #include <map>
-#define MINI_CASE_SENSITIVE
-#include "ini.h"
+//#define MINI_CASE_SENSITIVE
+//#include "ini.h"
 
 /* Include vpr structs*/
 #include "util.h"
@@ -30,7 +30,9 @@ void print_verilog_simulation_info(const std::string& simulation_ini_filename,
                                    const int& num_operating_clock_cycles,
                                    const float& prog_clock_freq,
                                    const float& op_clock_freq) {
+  /*
   mINI::INIStructure ini;
+   */
   // std::map<char, int> units_map;
   // units_map['s']=1;  // units_map['ms']=1E-3;  // units_map['us']=1E-6;
   // units_map['ns']=1E-9;  // units_map['ps']=1E-12;  // units_map['fs']=1E-15;
@@ -41,7 +43,7 @@ void print_verilog_simulation_info(const std::string& simulation_ini_filename,
                                                              1. / prog_clock_freq,
                                                              num_operating_clock_cycles,
                                                              1. / op_clock_freq);
-
+  /*
   ini["SIMULATION_DECK"]["PROJECTNAME "] = "ModelSimProject";
   ini["SIMULATION_DECK"]["BENCHMARK "] = circuit_name;
   ini["SIMULATION_DECK"]["TOP_TB"] = circuit_name + std::string("_top_formal_verification_random_tb");
@@ -50,6 +52,7 @@ void print_verilog_simulation_info(const std::string& simulation_ini_filename,
   ini["SIMULATION_DECK"]["VERILOG_PATH "] = std::string(src_dir);
   ini["SIMULATION_DECK"]["VERILOG_FILE1"] = std::string(defines_verilog_file_name);
   ini["SIMULATION_DECK"]["VERILOG_FILE2"] = std::string(circuit_name + "_include_netlists.v");
+   */
 
   /* Use default name if user does not provide one */
   std::string ini_fname;
@@ -59,6 +62,8 @@ void print_verilog_simulation_info(const std::string& simulation_ini_filename,
     ini_fname = simulation_ini_filename;
   }
 
+  /*
   mINI::INIFile file(ini_fname);
   file.generate(ini, true);
+   */
 }
