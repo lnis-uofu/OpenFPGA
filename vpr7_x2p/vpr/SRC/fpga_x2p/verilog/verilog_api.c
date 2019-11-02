@@ -437,7 +437,6 @@ void vpr_fpga_verilog(ModuleManager& module_manager,
     /* Print exchangeable files which contains simulation settings */
     print_verilog_simulation_info(std::string(vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.simulation_ini_path),
                                   std::string(format_dir_path(chomped_parent_dir)),
-                                  std::string(msim_dir_path),
                                   std::string(chomped_circuit_name),
                                   std::string(src_dir_path),
                                   bitstream_manager.bits().size(),

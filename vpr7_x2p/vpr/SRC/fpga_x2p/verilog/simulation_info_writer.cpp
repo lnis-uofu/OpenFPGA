@@ -24,7 +24,6 @@
  ********************************************************************/
 void print_verilog_simulation_info(const std::string& simulation_ini_filename,
                                    const std::string& parent_dir,
-                                   const std::string& verilog_dir,
                                    const std::string& circuit_name,
                                    const std::string& src_dir,
                                    const size_t& num_program_clock_cycles,
