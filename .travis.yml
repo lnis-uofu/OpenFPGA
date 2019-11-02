@@ -9,7 +9,7 @@ cache:
     - $TRAVIS_BUILD_DIR/ace2
     - $TRAVIS_BUILD_DIR/libs
     - $HOME/.ccache
-    - $HOME/deps
+#    - $HOME/deps
 
 # Currently sudo is not required, NO ENV is used
 
