@@ -625,7 +625,7 @@ def run_vpr():
             args.top_module+"_fr_chan_width_vpr.txt")
         logger.info("Fixed routing channel successfully routed with %d width" %
                     min_channel_width)
-        extract_vpr_stats(args.top_module+"_fr_chan_width.txt")
+        extract_vpr_stats(args.top_module+"_fr_chan_width_vpr.txt")
     else:
         extract_vpr_stats(args.top_module+"_min_chan_width.txt")
     if args.power:
