@@ -367,7 +367,7 @@ def create_run_command(curr_job_dir, archfile, benchmark_obj, param, task_conf):
 
     if task_gc.getboolean("verilog_output"):
         command += ["--vpr_fpga_verilog"]
-        command += ["--vpr_fpga_verilog_dir", "."]
+        command += ["--vpr_fpga_verilog_dir", curr_job_dir]
         command += ["--vpr_fpga_x2p_rename_illegal_port"]
 
     # Add other paramters to pass

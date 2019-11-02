@@ -711,7 +711,8 @@ def run_standard_vpr(bench_blif, fixed_chan_width, logfile, route_only=False):
             command += ["--fpga_verilog_print_input_blif_testbench"]
         if args.vpr_fpga_verilog_print_autocheck_top_testbench:
             command += ["--fpga_verilog_print_autocheck_top_testbench",
-                        args.top_module+"_output_verilog.v"]
+                        # args.vpr_fpga_verilog_print_autocheck_top_testbench]
+                        os.path.join(args.run_dir, args.top_module+"_output_verilog.v")]
         if args.vpr_fpga_verilog_include_timing:
             command += ["--fpga_verilog_include_timing"]
         if args.vpr_fpga_verilog_explicit_mapping:
