@@ -418,13 +418,11 @@ void vpr_fpga_verilog(ModuleManager& module_manager,
                                        std::string(src_dir_path));
 
     /* Output script for formality */
-    /*
     write_formality_script(vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts,
                            fm_dir_path,
                            src_dir_path,
                            chomped_circuit_name,
                            *(Arch.spice));
-     */
 
     /* Print out top-level testbench using random vectors */
     std::string random_top_testbench_file_path = std::string(src_dir_path) 
