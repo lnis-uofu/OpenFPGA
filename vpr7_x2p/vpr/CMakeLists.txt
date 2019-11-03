@@ -65,13 +65,13 @@ if (ENABLE_VPR_GRAPHIC_CXX_FLAG)
                         libarchfpga
                         X11
                         libvtrutil
-                        #libini
+                        libini
                         readline) 
 else ()
   target_link_libraries(libvpr
                         libarchfpga
                         libvtrutil
-                        #libini
+                        libini
                         readline)
 endif()
 

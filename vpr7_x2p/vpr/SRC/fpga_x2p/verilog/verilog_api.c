@@ -437,7 +437,6 @@ void vpr_fpga_verilog(ModuleManager& module_manager,
  
   if (TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.print_simulation_ini) {
     /* Print exchangeable files which contains simulation settings */
-    /*
     print_verilog_simulation_info(std::string(vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.simulation_ini_path),
                                   std::string(format_dir_path(chomped_parent_dir)),
                                   std::string(chomped_circuit_name),
@@ -446,7 +445,6 @@ void vpr_fpga_verilog(ModuleManager& module_manager,
                                   Arch.spice->spice_params.meas_params.sim_num_clock_cycle,
                                   Arch.spice->spice_params.stimulate_params.prog_clock_freq,
                                   Arch.spice->spice_params.stimulate_params.op_clock_freq);
-     */
   }
 
   if (TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.print_autocheck_top_testbench) {
