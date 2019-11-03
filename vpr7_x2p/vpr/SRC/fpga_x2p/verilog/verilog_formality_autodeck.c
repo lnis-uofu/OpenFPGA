@@ -10,8 +10,8 @@
 #include <assert.h>
 #include <sys/stat.h>
 #include <unistd.h>
-//#define MINI_CASE_SENSITIVE
-//#include "ini.h"
+#define MINI_CASE_SENSITIVE
+#include "ini.h"
 
 /* Include vpr structs*/
 #include "util.h"
@@ -41,7 +41,7 @@
 #include "verilog_routing.h"
 #include "verilog_tcl_utils.h"
 
-//mINI::INIStructure ini;
+mINI::INIStructure ini;
 
 static void searching_used_latch(FILE *fp, t_pb * pb, int pb_index, char* chomped_circuit_name, char* inst_name){
   int i, j;
@@ -80,7 +80,7 @@ static void searching_used_latch(FILE *fp, t_pb * pb, int pb_index, char* chompe
             inst_name, gen_verilog_one_pb_graph_node_full_name_in_hierarchy(node));
 
     sprintf(INI_lbl, "%s_reg", pb->name);
-    //ini["REGISTER_MATCH"][INI_lbl] = WriteBuffer;
+    ini["REGISTER_MATCH"][INI_lbl] = WriteBuffer;
   }
   //free(tmp); //Looks like is the cause of a double free, once free executated next iteration as no value in tmp
   return;
@@ -199,11 +199,11 @@ void write_formality_script (t_syn_verilog_opts fpga_verilog_opts,
 
   /* Load Verilog benchmark as reference */
   fprintf(fp, "read_verilog -container r -libname WORK -05 { %s }\n", benchmark_path);
-  //ini["BENCHMARK_INFO"]["benchmark_netlist "] = benchmark_path;
+  ini["BENCHMARK_INFO"]["benchmark_netlist "] = benchmark_path;
 
   /* Set reference top */
   fprintf(fp, "set_top r:/WORK/%s\n", chomped_circuit_name);
-  //ini["BENCHMARK_INFO"]["src_top_module "] = chomped_circuit_name;
+  ini["BENCHMARK_INFO"]["src_top_module "] = chomped_circuit_name;
 
   /* Load generated verilog as implemnetation */
   fprintf(fp, "read_verilog -container i -libname WORK -05 { ");
@@ -213,7 +213,7 @@ void write_formality_script (t_syn_verilog_opts fpga_verilog_opts,
   sprintf(WriteBuffer, "%s%s%s", src_dir_formatted, chomped_circuit_name,
           verilog_top_postfix);
   sprintf(INI_lbl, "impl_netlist_%02d",FileCounter++);
-  //ini["FPGA_INFO"][INI_lbl] = WriteBuffer;
+  ini["FPGA_INFO"][INI_lbl] = WriteBuffer;
 
   fprintf(fp, "%s%s%s ",  src_dir_formatted,
               chomped_circuit_name,
@@ -221,7 +221,7 @@ void write_formality_script (t_syn_verilog_opts fpga_verilog_opts,
   sprintf(WriteBuffer, "%s%s%s\n", src_dir_formatted,
           chomped_circuit_name, formal_verification_verilog_file_postfix);
   sprintf(INI_lbl, "impl_netlist_%02d", FileCounter++);
-  //ini["FPGA_INFO"][INI_lbl] = WriteBuffer;
+  ini["FPGA_INFO"][INI_lbl] = WriteBuffer;
 
   init_include_user_defined_verilog_netlists(spice);
   // formality_include_user_defined_verilog_netlists(fp, spice);
@@ -232,7 +232,7 @@ void write_formality_script (t_syn_verilog_opts fpga_verilog_opts,
       assert(NULL != spice.include_netlists[i].path);
       fprintf(fp, "%s ", spice.include_netlists[i].path);
       sprintf(INI_lbl, "impl_netlist_%02d", FileCounter++);
-      //ini["FPGA_INFO"][INI_lbl] = spice.include_netlists[i].path;
+      ini["FPGA_INFO"][INI_lbl] = spice.include_netlists[i].path;
       spice.include_netlists[i].included = 1;
     } else {
       assert(1 == spice.include_netlists[i].included);
@@ -246,7 +246,7 @@ void write_formality_script (t_syn_verilog_opts fpga_verilog_opts,
           default_rr_dir_name,
           routing_verilog_file_name);
   sprintf(INI_lbl, "impl_netlist_%02d", FileCounter++);
-  //ini["FPGA_INFO"][INI_lbl] = WriteBuffer;
+  ini["FPGA_INFO"][INI_lbl] = WriteBuffer;
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   fprintf(fp, "%s%s%s ",  src_dir_formatted,
               default_lb_dir_name,
@@ -255,7 +255,7 @@ void write_formality_script (t_syn_verilog_opts fpga_verilog_opts,
           default_lb_dir_name,
           logic_block_verilog_file_name);
   sprintf(INI_lbl, "impl_netlist_%02d", FileCounter++);
-  //ini["FPGA_INFO"][INI_lbl] = WriteBuffer;
+  ini["FPGA_INFO"][INI_lbl] = WriteBuffer;
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   fprintf(fp, "%s%s%s ",  src_dir_formatted,
               default_submodule_dir_name,
@@ -264,7 +264,7 @@ void write_formality_script (t_syn_verilog_opts fpga_verilog_opts,
           default_submodule_dir_name,
           submodule_verilog_file_name);
   sprintf(INI_lbl, "impl_netlist_%02d", FileCounter++);
-  //ini["FPGA_INFO"][INI_lbl] = WriteBuffer;
+  ini["FPGA_INFO"][INI_lbl] = WriteBuffer;
   fprintf(fp, "}\n");
 
   /* Set implementation top */
@@ -272,7 +272,7 @@ void write_formality_script (t_syn_verilog_opts fpga_verilog_opts,
                                                 formal_verification_top_postfix));
   sprintf(WriteBuffer, "%s", my_strcat(chomped_circuit_name,
                                        formal_verification_top_postfix));
-  //ini["FPGA_INFO"]["impl_top_module"] = WriteBuffer;
+  ini["FPGA_INFO"]["impl_top_module"] = WriteBuffer;
 
   /* Run matching */
   fprintf(fp, "match\n");
@@ -299,7 +299,7 @@ void write_formality_script (t_syn_verilog_opts fpga_verilog_opts,
                 my_strcat(logical_block[iblock].name, formal_verification_top_module_port_postfix));
 
         sprintf(INI_lbl, "%s", original_output_name);
-        //ini["PORT_MATCHING"][INI_lbl] = WriteBuffer;
+        ini["PORT_MATCHING"][INI_lbl] = WriteBuffer;
       }
     }
   }
@@ -309,7 +309,7 @@ void write_formality_script (t_syn_verilog_opts fpga_verilog_opts,
   /* Script END */
   fclose(fp);
 
-  //mINI::INIFile file(my_strcat(formality_script_file_name,".ini"));
-  //file.generate(ini, true);
+  mINI::INIFile file(my_strcat(formality_script_file_name,".ini"));
+  file.generate(ini, true);
   return;
 }
