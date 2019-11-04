@@ -5,6 +5,8 @@
  * Note: please try to avoid using global variables in this file
  * so that we can make it free to use anywhere
  *******************************************************************/
+#include <iomanip>
+
 #include "vtr_assert.h"
 #include "device_port.h"
 
@@ -332,3 +334,104 @@ void print_verilog_testbench_check(std::fstream& fp,
   /* Add an empty line as splitter */
   fp << std::endl;
 }
+
+/********************************************************************
+ * Generate random stimulus for the input ports
+ *******************************************************************/
+void print_verilog_testbench_random_stimuli(std::fstream& fp,
+                                            const t_spice_params& simulation_parameters,
+                                            const std::vector<t_logical_block>& L_logical_blocks,
+                                            const std::string& check_flag_port_postfix,
+                                            const std::vector<std::string>& clock_port_names,
+                                            const std::string& default_clock_name) {
+  /* Validate the file stream */
+  check_file_handler(fp);
+
+  print_verilog_comment(fp, std::string("----- Initialization -------"));
+
+  fp << "\tinitial begin" << std::endl;
+  /* Create clock stimuli */
+  BasicPort clock_port = generate_verilog_testbench_clock_port(clock_port_names, default_clock_name);
+  fp << "\t\t" << generate_verilog_port(VERILOG_PORT_CONKT, clock_port) << " <= 1'b0;" << std::endl;
+  fp << "\t\twhile(1) begin" << std::endl;
+  fp << "\t\t\t#" << std::setprecision(2) << ((0.5/simulation_parameters.stimulate_params.op_clock_freq)/verilog_sim_timescale) << std::endl;
+  fp << "\t\t\t" << generate_verilog_port(VERILOG_PORT_CONKT, clock_port);
+  fp << " <= !";
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, clock_port);
+  fp << ";" << std::endl;
+  fp << "\t\tend" << std::endl;
+
+  /* Add an empty line as splitter */
+  fp << std::endl;
+
+  for (const t_logical_block& lb : L_logical_blocks) {
+    /* Bypass non-I/O logical blocks ! */
+    if ( (VPACK_INPAD != lb.type) && (VPACK_OUTPAD != lb.type) ) {
+      continue;
+    }
+
+    /* Clock ports will be initialized later */
+    if ( (VPACK_INPAD == lb.type) && (FALSE == lb.is_clock) ) {
+      fp << "\t\t" << std::string(lb.name) << " <= 1'b0;" << std::endl;
+    }
+  }
+
+  /* Add an empty line as splitter */
+  fp << std::endl;
+  
+  /* Set 0 to registers for checking flags */
+  for (const t_logical_block& lb : L_logical_blocks) {
+    /* We care only those logic blocks which are input I/Os */
+    if (VPACK_OUTPAD != lb.type) { 
+      continue;
+    }
+
+    /* Each logical block assumes a single-width port */
+    BasicPort output_port(std::string(std::string(lb.name) + check_flag_port_postfix), 1); 
+    fp << "\t\t" << generate_verilog_port(VERILOG_PORT_CONKT, output_port) << " <= 1'b0;" << std::endl;
+  }
+
+  fp << "\tend" << std::endl;
+  /* Finish initialization */
+
+  /* Add an empty line as splitter */
+  fp << std::endl;
+
+  // Not ready yet to determine if input is reset
+/*
+  fprintf(fp, "//----- Reset Stimulis\n");      
+  fprintf(fp, "  initial begin\n");
+  fprintf(fp, "    #%.3f\n",(rand() % 10) + 0.001);
+  fprintf(fp, "    %s <= !%s;\n", reset_input_name, reset_input_name);
+  fprintf(fp, "    #%.3f\n",(rand() % 10) + 0.001);
+  fprintf(fp, "    %s <= !%s;\n", reset_input_name, reset_input_name);
+  fprintf(fp, "    while(1) begin\n");
+  fprintf(fp, "      #%.3f\n", (rand() % 15) + 0.5);
+  fprintf(fp, "      %s <= !%s;\n", reset_input_name, reset_input_name);
+  fprintf(fp, "      #%.3f\n", (rand() % 10000) + 200);
+  fprintf(fp, "      %s <= !%s;\n", reset_input_name, reset_input_name);
+  fprintf(fp, "    end\n");
+  fprintf(fp, "  end\n\n");  
+*/
+
+  print_verilog_comment(fp, std::string("----- Input Stimulus -------"));
+  fp << "\talways@(negedge " << generate_verilog_port(VERILOG_PORT_CONKT, clock_port) << ") begin" << std::endl;
+
+  for (const t_logical_block& lb : L_logical_blocks) {
+    /* Bypass non-I/O logical blocks ! */
+    if ( (VPACK_INPAD != lb.type) && (VPACK_OUTPAD != lb.type) ) {
+      continue;
+    }
+
+    /* Clock ports will be initialized later */
+    if ( (VPACK_INPAD == lb.type) && (FALSE == lb.is_clock) ) {
+      fp << "\t\t" << std::string(lb.name) << " <= $random;" << std::endl;
+    }
+  }
+
+  fp << "\tend" << std::endl;
+
+  /* Add an empty line as splitter */
+  fp << std::endl;
+}
+

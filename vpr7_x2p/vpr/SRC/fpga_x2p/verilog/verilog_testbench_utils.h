@@ -54,4 +54,11 @@ void print_verilog_testbench_check(std::fstream& fp,
                                    const std::vector<std::string>& clock_port_names,
                                    const std::string& default_clock_name);
 
+void print_verilog_testbench_random_stimuli(std::fstream& fp,
+                                            const t_spice_params& simulation_parameters,
+                                            const std::vector<t_logical_block>& L_logical_blocks,
+                                            const std::string& check_flag_port_postfix,
+                                            const std::vector<std::string>& clock_port_names,
+                                            const std::string& default_clock_name);
+
 #endif

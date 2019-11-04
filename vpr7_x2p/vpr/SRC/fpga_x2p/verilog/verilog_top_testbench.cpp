@@ -785,6 +785,11 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
   /* Preparation: find all the clock ports */
   std::vector<std::string> clock_port_names = find_benchmark_clock_port_name(L_logical_blocks);
 
+  /* Add stimuli for reset, set, clock and iopad signals */
+  print_verilog_testbench_random_stimuli(fp, simulation_parameters, L_logical_blocks, 
+                                         std::string(TOP_TESTBENCH_CHECKFLAG_PORT_POSTFIX),
+                                         clock_port_names, std::string(top_tb_op_clock_port_name));
+
   /* Add output autocheck */
   print_verilog_testbench_check(fp, 
                                 std::string(autochecked_simulation_flag),
