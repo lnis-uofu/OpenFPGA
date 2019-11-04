@@ -24,6 +24,7 @@
 /* Include FPGA Verilog headers*/
 #include "verilog_global.h"
 #include "verilog_writer_utils.h"
+#include "verilog_testbench_utils.h"
 #include "verilog_formal_random_top_testbench.h"
 
 /********************************************************************
@@ -176,61 +177,6 @@ void print_verilog_top_random_testbench_ports(std::fstream& fp,
 }
 
 /********************************************************************
- * Instanciate the FPGA fabric module
- *******************************************************************/
-static
-void print_verilog_random_testbench_instance(std::fstream& fp,
-                                             const std::string& module_name,
-                                             const std::string& instance_name,
-                                             const std::string& module_input_port_postfix,
-                                             const std::string& module_output_port_postfix,
-                                             const std::string& output_port_postfix,
-                                             const std::vector<t_logical_block>& L_logical_blocks,
-                                             const bool& use_explicit_port_map) {
-
-  /* Validate the file stream */
-  check_file_handler(fp);
-
-  fp << "\t" << module_name << " " << instance_name << "(" << std::endl;
-
-  size_t port_counter = 0;
-  for (const t_logical_block& lb : L_logical_blocks) {
-    /* Bypass non-I/O logical blocks ! */
-    if ( (VPACK_INPAD != lb.type) && (VPACK_OUTPAD != lb.type) ) {
-      continue;
-    }
-    /* The first port does not need a comma */
-    if(0 < port_counter){
-      fp << "," << std::endl;
-    }
-    /* Input port follows the logical block name while output port requires a special postfix */
-    if (VPACK_INPAD == lb.type){
-      fp << "\t\t";
-      if (true == use_explicit_port_map) {
-        fp << "." << std::string(lb.name) << module_input_port_postfix << "(";
-      }
-      fp << std::string(lb.name);
-      if (true == use_explicit_port_map) {
-        fp << ")";
-      }
-    } else {
-      VTR_ASSERT_SAFE(VPACK_OUTPAD == lb.type);
-      fp << "\t\t";
-      if (true == use_explicit_port_map) {
-        fp << "." << std::string(lb.name) << module_output_port_postfix << "(";
-      }
-      fp << std::string(lb.name) << output_port_postfix;
-      if (true == use_explicit_port_map) {
-        fp << ")";
-      }
-    }
-    /* Update the counter */
-    port_counter++;
-  }
-  fp << "\t);" << std::endl;
-}
-
-/********************************************************************
  * Instanciate the input benchmark module
  *******************************************************************/
 static
@@ -248,12 +194,12 @@ void print_verilog_top_random_testbench_benchmark_instance(std::fstream& fp,
   /* Do NOT use explicit port mapping here: 
    * VPR added a prefix of "out_" to the output ports of input benchmark
    */
-  print_verilog_random_testbench_instance(fp, reference_verilog_top_name,
-                                          std::string(BENCHMARK_INSTANCE_NAME),
-                                          std::string(),
-                                          std::string(),
-                                          std::string(BENCHMARK_PORT_POSTFIX), L_logical_blocks,
-                                          false);
+  print_verilog_testbench_benchmark_instance(fp, reference_verilog_top_name,
+                                             std::string(BENCHMARK_INSTANCE_NAME),
+                                             std::string(),
+                                             std::string(),
+                                             std::string(BENCHMARK_PORT_POSTFIX), L_logical_blocks,
+                                             false);
 
   print_verilog_comment(fp, std::string("----- End reference Benchmark Instanication -------"));
 
@@ -411,12 +357,12 @@ void print_verilog_random_testbench_fpga_instance(std::fstream& fp,
   print_verilog_comment(fp, std::string("----- FPGA fabric instanciation -------"));
 
   /* Always use explicit port mapping */
-  print_verilog_random_testbench_instance(fp, std::string(circuit_name + std::string(formal_verification_top_postfix)),
-                                          std::string(FPGA_INSTANCE_NAME),
-                                          std::string(formal_verification_top_module_port_postfix),
-                                          std::string(formal_verification_top_module_port_postfix),
-                                          std::string(FPGA_PORT_POSTFIX), L_logical_blocks,
-                                          true);
+  print_verilog_testbench_benchmark_instance(fp, std::string(circuit_name + std::string(formal_verification_top_postfix)),
+                                             std::string(FPGA_INSTANCE_NAME),
+                                             std::string(formal_verification_top_module_port_postfix),
+                                             std::string(formal_verification_top_module_port_postfix),
+                                             std::string(FPGA_PORT_POSTFIX), L_logical_blocks,
+                                             true);
 
   print_verilog_comment(fp, std::string("----- End FPGA Fabric Instanication -------"));
 
