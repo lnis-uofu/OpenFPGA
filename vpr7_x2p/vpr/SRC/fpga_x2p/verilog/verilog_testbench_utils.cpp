@@ -461,3 +461,104 @@ void print_verilog_testbench_random_stimuli(std::fstream& fp,
   fp << std::endl;
 }
 
+/********************************************************************
+ * Print Verilog declaration of shared ports appear in testbenches
+ * which are 
+ * 1. the shared input ports (registers) to drive both 
+ *    FPGA fabric and benchmark instance
+ * 2. the output ports (wires) for both FPGA fabric and benchmark instance
+ * 3. the checking flag ports to evaluate if outputs matches under the
+ *    same input vectors
+ *******************************************************************/
+void print_verilog_testbench_shared_ports(std::fstream& fp,
+                                          const std::vector<t_logical_block>& L_logical_blocks,
+                                          const std::string& benchmark_output_port_postfix,
+                                          const std::string& fpga_output_port_postfix,
+                                          const std::string& check_flag_port_postfix,
+                                          const std::string& autocheck_preprocessing_flag) {
+  /* Validate the file stream */
+  check_file_handler(fp);
+
+
+  /* Instantiate register for inputs stimulis */
+  print_verilog_comment(fp, std::string("----- Shared inputs -------"));
+  for (const t_logical_block& lb : L_logical_blocks) {
+    /* We care only those logic blocks which are input I/Os */
+    if (VPACK_INPAD != lb.type) { 
+      continue;
+    }
+
+    /* Skip clocks because they are handled in another function */
+    if (TRUE == lb.is_clock) {
+      continue;
+    } 
+   
+    /* Each logical block assumes a single-width port */
+    BasicPort input_port(std::string(lb.name), 1); 
+    fp << "\t" << generate_verilog_port(VERILOG_PORT_REG, input_port) << ";" << std::endl;
+  }
+
+  /* Add an empty line as splitter */
+  fp << std::endl;
+
+  /* Instantiate wires for FPGA fabric outputs */
+  print_verilog_comment(fp, std::string("----- FPGA fabric outputs -------"));
+
+  for (const t_logical_block& lb : L_logical_blocks) {
+    /* We care only those logic blocks which are input I/Os */
+    if (VPACK_OUTPAD != lb.type) { 
+      continue;
+    }
+
+    /* Each logical block assumes a single-width port */
+    BasicPort output_port(std::string(std::string(lb.name) + fpga_output_port_postfix), 1); 
+    fp << "\t" << generate_verilog_port(VERILOG_PORT_WIRE, output_port) << ";" << std::endl;
+  }
+
+  /* Add an empty line as splitter */
+  fp << std::endl;
+
+  /* Benchmark is instanciated conditionally: only when a preprocessing flag is enable */
+  print_verilog_preprocessing_flag(fp, std::string(autocheck_preprocessing_flag)); 
+
+  /* Add an empty line as splitter */
+  fp << std::endl;
+
+  /* Instantiate wire for benchmark output */
+  print_verilog_comment(fp, std::string("----- Benchmark outputs -------"));
+  for (const t_logical_block& lb : L_logical_blocks) {
+    /* We care only those logic blocks which are input I/Os */
+    if (VPACK_OUTPAD != lb.type) { 
+      continue;
+    }
+
+    /* Each logical block assumes a single-width port */
+    BasicPort output_port(std::string(std::string(lb.name) + benchmark_output_port_postfix), 1); 
+    fp << "\t" << generate_verilog_port(VERILOG_PORT_WIRE, output_port) << ";" << std::endl;
+  }
+
+  /* Add an empty line as splitter */
+  fp << std::endl;
+
+  /* Instantiate register for output comparison */
+  print_verilog_comment(fp, std::string("----- Output vectors checking flags -------"));
+  for (const t_logical_block& lb : L_logical_blocks) {
+    /* We care only those logic blocks which are input I/Os */
+    if (VPACK_OUTPAD != lb.type) { 
+      continue;
+    }
+
+    /* Each logical block assumes a single-width port */
+    BasicPort output_port(std::string(std::string(lb.name) + check_flag_port_postfix), 1); 
+    fp << "\t" << generate_verilog_port(VERILOG_PORT_REG, output_port) << ";" << std::endl;
+  }
+
+  /* Add an empty line as splitter */
+  fp << std::endl;
+
+  /* Condition ends for the benchmark instanciation */
+  print_verilog_endif(fp);
+
+  /* Add an empty line as splitter */
+  fp << std::endl;
+}

@@ -288,6 +288,7 @@ static
 void print_verilog_top_testbench_ports(std::fstream& fp,
                                        const ModuleManager& module_manager,
                                        const ModuleId& top_module,
+                                       const std::vector<t_logical_block>& L_logical_blocks,
                                        const e_sram_orgz& sram_orgz_type,
                                        const std::string& circuit_name){
   /* Validate the file stream */
@@ -295,7 +296,7 @@ void print_verilog_top_testbench_ports(std::fstream& fp,
 
   /* Print module definition */
   fp << "module " << circuit_name << std::string(modelsim_autocheck_testbench_module_postfix);
-  fp << " (" << std::endl;
+  fp << ";" << std::endl;
 
   /* Print regular local wires:
    * 1. global ports, i.e., reset, set and clock signals
@@ -304,7 +305,7 @@ void print_verilog_top_testbench_ports(std::fstream& fp,
   /* Global ports of top-level module  */
   print_verilog_comment(fp, std::string("----- Local wires for global ports of FPGA fabric -----"));
   for (const BasicPort& module_port : module_manager.module_ports_by_type(top_module, ModuleManager::MODULE_GLOBAL_PORT)) {
-    fp << generate_verilog_port(VERILOG_PORT_REG, module_port) << ";" << std::endl;
+    fp << generate_verilog_port(VERILOG_PORT_WIRE, module_port) << ";" << std::endl;
   }
   /* Add an empty line as a splitter */
   fp << std::endl;
@@ -312,7 +313,7 @@ void print_verilog_top_testbench_ports(std::fstream& fp,
   /* Datapath I/Os of top-level module  */
   print_verilog_comment(fp, std::string("----- Local wires for I/Os of FPGA fabric -----"));
   for (const BasicPort& module_port : module_manager.module_ports_by_type(top_module, ModuleManager::MODULE_GPIO_PORT)) {
-    fp << generate_verilog_port(VERILOG_PORT_REG, module_port) << ";" << std::endl;
+    fp << generate_verilog_port(VERILOG_PORT_WIRE, module_port) << ";" << std::endl;
   }
   /* Add an empty line as a splitter */
   fp << std::endl;
@@ -351,6 +352,12 @@ void print_verilog_top_testbench_ports(std::fstream& fp,
 
   /* Configuration ports depend on the organization of SRAMs */
   print_verilog_top_testbench_config_protocol_port(fp, sram_orgz_type);
+
+  print_verilog_testbench_shared_ports(fp, L_logical_blocks,
+                                       std::string(TOP_TESTBENCH_REFERENCE_OUTPUT_POSTFIX),
+                                       std::string(TOP_TESTBENCH_FPGA_OUTPUT_POSTFIX),
+                                       std::string(TOP_TESTBENCH_CHECKFLAG_PORT_POSTFIX),
+                                       std::string(autochecked_simulation_flag));
 
   /* Instantiate an integer to count the number of error and 
    * determine if the simulation succeed or failed
@@ -625,8 +632,10 @@ void print_verilog_top_testbench_configuration_chain_bitstream(std::fstream& fp,
   fp << "initial" << std::endl;
   fp << "\tbegin" << std::endl;
   print_verilog_comment(fp, "----- Configuration chain default input -----");
-  fp << "\t";
-  print_verilog_wire_constant_values(fp, config_chain_head_port, initial_values);
+  fp << "\t\t";
+  fp << generate_verilog_port_constant_values(config_chain_head_port, initial_values);
+  fp << ";";
+
   fp << std::endl;
 
   /* Attention: the configuration chain protcol requires the last configuration bit is fed first
@@ -718,7 +727,6 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
                                  const std::string& circuit_name,
                                  const std::string& verilog_fname,
                                  const std::string& verilog_dir,
-                                 const std::string& reference_benchmark_file,
                                  const t_spice_params& simulation_parameters) {
   vpr_printf(TIO_MESSAGE_INFO, 
              "Writing Autocheck Testbench for FPGA Top-level Verilog netlist for %s...", 
@@ -741,16 +749,13 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
   /* Print preprocessing flags and external netlists */
   print_verilog_include_defines_preproc_file(fp, verilog_dir);
 
-  /* Include reference benchmark file */
-  print_verilog_include_netlist(fp, reference_benchmark_file);
-
   /* Find the top_module */
   ModuleId top_module = module_manager.find_module(generate_fpga_top_module_name());
   VTR_ASSERT(true == module_manager.valid_module_id(top_module));
 
   /* Start of testbench */
   //dump_verilog_top_auto_testbench_ports(fp, cur_sram_orgz_info, circuit_name, fpga_verilog_opts);
-  print_verilog_top_testbench_ports(fp, module_manager, top_module,
+  print_verilog_top_testbench_ports(fp, module_manager, top_module, L_logical_blocks,
                                     sram_orgz_type, circuit_name);
 
   /* Find the clock period */

@@ -90,26 +90,36 @@ void write_include_netlists (char* src_dir_formatted,
      */
 	fprintf(fp, "`include \"%s%s\"\n",  src_dir_formatted, 
 							 generate_fpga_top_netlist_name(std::string(verilog_netlist_file_postfix)).c_str());
+    fprintf(fp, "\n");
+
 	fprintf(fp, "`ifdef %s\n", verilog_formal_verification_preproc_flag);
-	fprintf(fp, "`include \"%s%s%s\"\n",  src_dir_formatted, 
+	fprintf(fp, "\t`include \"%s%s%s\"\n",  src_dir_formatted, 
 							chomped_circuit_name, 
 							formal_verification_verilog_file_postfix);
-	fprintf(fp, "  `ifdef %s\n", formal_simulation_flag);
-	fprintf(fp, "`include \"%s%s%s\"\n",  src_dir_formatted, 
+	fprintf(fp, "\t`ifdef %s\n", formal_simulation_flag);
+	fprintf(fp, "\t\t`include \"%s%s%s\"\n",  src_dir_formatted, 
 							chomped_circuit_name, 
 							random_top_testbench_verilog_file_postfix);
-	fprintf(fp, "  `endif\n");
-	fprintf(fp, "`elsif %s\n", initial_simulation_flag);
+	fprintf(fp, " \t`endif\n");
+    fprintf(fp, "`endif\n");
+
+    fprintf(fp, "\n");
+
+	fprintf(fp, "`ifdef %s\n", autochecked_simulation_flag);
+
     /* TODO: bring these testbench onboard when it is ready
 	fprintf(fp, "`include \"%s%s%s\"\n",  src_dir_formatted, 
 							chomped_circuit_name, 
 							top_testbench_verilog_file_postfix);
 	fprintf(fp, "`elsif %s\n", autochecked_simulation_flag);
+    */
 	fprintf(fp, "`include \"%s%s%s\"\n",  src_dir_formatted, 
 							chomped_circuit_name, 
 							autocheck_top_testbench_verilog_file_postfix);
-    */
 	fprintf(fp, "`endif\n");
+
+    fprintf(fp, "\n");
+
 	fprintf(fp, "`include \"%s%s%s\"\n",  src_dir_formatted, 
 							default_rr_dir_name, 
 							routing_verilog_file_name);

@@ -448,18 +448,19 @@ void vpr_fpga_verilog(ModuleManager& module_manager,
                                                   + std::string(chomped_circuit_name) 
                                                   + std::string(autocheck_top_testbench_verilog_file_postfix);
     /* TODO: this is an old function, to be shadowed */
+    /*
     dump_verilog_autocheck_top_testbench(sram_verilog_orgz_info, chomped_circuit_name, 
                                          autocheck_top_testbench_file_path.c_str(), src_dir_path, 
                                          vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts, *(Arch.spice));
+     */
     /* TODO: new function: to be tested */
     print_verilog_top_testbench(module_manager, bitstream_manager, fabric_bitstream,
                                 sram_verilog_orgz_info->type,
                                 Arch.spice->circuit_lib, global_ports,
                                 L_logical_blocks, device_size, L_grids, L_blocks,
                                 std::string(chomped_circuit_name),
-                                std::string(autocheck_top_testbench_file_path + std::string(".bak")),
+                                autocheck_top_testbench_file_path,
                                 std::string(src_dir_path),
-                                std::string(vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.reference_verilog_benchmark_file), 
                                 Arch.spice->spice_params);
   }
 

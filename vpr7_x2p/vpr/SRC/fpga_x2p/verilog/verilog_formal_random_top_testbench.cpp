@@ -61,94 +61,21 @@ void print_verilog_top_random_testbench_ports(std::fstream& fp,
   /* Print the declaration for the module */
   fp << "module " << circuit_name << FORMAL_RANDOM_TOP_TESTBENCH_POSTFIX << ";" << std::endl;
 
-  /* Instantiate register for inputs stimulis */
-  print_verilog_comment(fp, std::string("----- Shared inputs -------"));
-  for (const t_logical_block& lb : L_logical_blocks) {
-    /* We care only those logic blocks which are input I/Os */
-    if (VPACK_INPAD != lb.type) { 
-      continue;
-    }
-   
-    /* Each logical block assumes a single-width port */
-    BasicPort input_port(std::string(lb.name), 1); 
-    fp << "\t" << generate_verilog_port(VERILOG_PORT_REG, input_port) << ";" << std::endl;
-  }
-
-  /* Add an empty line as splitter */
-  fp << std::endl;
-
   /* Create a clock port if the benchmark does not have one! 
    * The clock is used for counting and synchronizing input stimulus 
    */
-  if (0 == clock_port_names.size()) {
-    BasicPort clock_port = generate_verilog_testbench_clock_port(clock_port_names, std::string(DEFAULT_CLOCK_NAME));
-    print_verilog_comment(fp, std::string("----- Default clock port is added here since benchmark does not contain one -------"));
-    fp << "\t" << generate_verilog_port(VERILOG_PORT_REG, clock_port) << ";" << std::endl;
-  }
+  BasicPort clock_port = generate_verilog_testbench_clock_port(clock_port_names, std::string(DEFAULT_CLOCK_NAME));
+  print_verilog_comment(fp, std::string("----- Default clock port is added here since benchmark does not contain one -------"));
+  fp << "\t" << generate_verilog_port(VERILOG_PORT_REG, clock_port) << ";" << std::endl;
 
   /* Add an empty line as splitter */
   fp << std::endl;
 
-  /* Instantiate wires for FPGA fabric outputs */
-  print_verilog_comment(fp, std::string("----- FPGA fabric outputs -------"));
-
-  for (const t_logical_block& lb : L_logical_blocks) {
-    /* We care only those logic blocks which are input I/Os */
-    if (VPACK_OUTPAD != lb.type) { 
-      continue;
-    }
-
-    /* Each logical block assumes a single-width port */
-    BasicPort output_port(std::string(std::string(lb.name) + std::string(FPGA_PORT_POSTFIX)), 1); 
-    fp << "\t" << generate_verilog_port(VERILOG_PORT_WIRE, output_port) << ";" << std::endl;
-  }
-
-  /* Add an empty line as splitter */
-  fp << std::endl;
-
-  /* Benchmark is instanciated conditionally: only when a preprocessing flag is enable */
-  print_verilog_preprocessing_flag(fp, std::string(autochecked_simulation_flag)); 
-
-  /* Add an empty line as splitter */
-  fp << std::endl;
-
-  /* Instantiate wire for benchmark output */
-  print_verilog_comment(fp, std::string("----- Benchmark outputs -------"));
-  for (const t_logical_block& lb : L_logical_blocks) {
-    /* We care only those logic blocks which are input I/Os */
-    if (VPACK_OUTPAD != lb.type) { 
-      continue;
-    }
-
-    /* Each logical block assumes a single-width port */
-    BasicPort output_port(std::string(std::string(lb.name) + std::string(BENCHMARK_PORT_POSTFIX)), 1); 
-    fp << "\t" << generate_verilog_port(VERILOG_PORT_WIRE, output_port) << ";" << std::endl;
-  }
-
-  /* Add an empty line as splitter */
-  fp << std::endl;
-
-  /* Instantiate register for output comparison */
-  print_verilog_comment(fp, std::string("----- Output vectors checking flags -------"));
-  for (const t_logical_block& lb : L_logical_blocks) {
-    /* We care only those logic blocks which are input I/Os */
-    if (VPACK_OUTPAD != lb.type) { 
-      continue;
-    }
-
-    /* Each logical block assumes a single-width port */
-    BasicPort output_port(std::string(std::string(lb.name) + std::string(CHECKFLAG_PORT_POSTFIX)), 1); 
-    fp << "\t" << generate_verilog_port(VERILOG_PORT_REG, output_port) << ";" << std::endl;
-  }
-
-  /* Add an empty line as splitter */
-  fp << std::endl;
-
-  /* Condition ends for the benchmark instanciation */
-  print_verilog_endif(fp);
-
-  /* Add an empty line as splitter */
-  fp << std::endl;
+  print_verilog_testbench_shared_ports(fp, L_logical_blocks,
+                                       std::string(BENCHMARK_PORT_POSTFIX),
+                                       std::string(FPGA_PORT_POSTFIX),
+                                       std::string(CHECKFLAG_PORT_POSTFIX),
+                                       std::string(autochecked_simulation_flag));
 
   /* Instantiate an integer to count the number of error 
    * and determine if the simulation succeed or failed 

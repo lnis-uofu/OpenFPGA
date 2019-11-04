@@ -64,4 +64,11 @@ void print_verilog_testbench_random_stimuli(std::fstream& fp,
                                             const std::string& check_flag_port_postfix,
                                             const BasicPort& clock_port);
 
+void print_verilog_testbench_shared_ports(std::fstream& fp,
+                                          const std::vector<t_logical_block>& L_logical_blocks,
+                                          const std::string& benchmark_output_port_postfix,
+                                          const std::string& fpga_output_port_postfix,
+                                          const std::string& check_flag_port_postfix,
+                                          const std::string& autocheck_preprocessing_flag);
+
 #endif

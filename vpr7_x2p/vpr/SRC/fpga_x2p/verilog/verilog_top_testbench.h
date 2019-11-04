@@ -20,7 +20,6 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
                                  const std::string& circuit_name,
                                  const std::string& verilog_fname,
                                  const std::string& verilog_dir,
-                                 const std::string& reference_benchmark_file,
                                  const t_spice_params& simulation_parameters);
 
 void dump_verilog_top_testbench_global_ports(FILE* fp, t_llist* head,
