@@ -291,10 +291,14 @@ void print_verilog_random_top_testbench(const std::string& circuit_name,
   /* Call defined benchmark */
   print_verilog_top_random_testbench_benchmark_instance(fp, circuit_name, L_logical_blocks);
 
+  /* Find clock port to be used */
+  BasicPort clock_port = generate_verilog_testbench_clock_port(clock_port_names, std::string(DEFAULT_CLOCK_NAME));
+
   /* Add stimuli for reset, set, clock and iopad signals */
-  print_verilog_testbench_random_stimuli(fp, simulation_parameters, L_logical_blocks, 
-                                         std::string(CHECKFLAG_PORT_POSTFIX),
-                                         clock_port_names, std::string(DEFAULT_CLOCK_NAME));
+  print_verilog_testbench_clock_stimuli(fp, simulation_parameters, 
+                                        clock_port);
+  print_verilog_testbench_random_stimuli(fp, L_logical_blocks, 
+                                         std::string(CHECKFLAG_PORT_POSTFIX), clock_port);
 
   print_verilog_testbench_check(fp, 
                                 std::string(autochecked_simulation_flag),

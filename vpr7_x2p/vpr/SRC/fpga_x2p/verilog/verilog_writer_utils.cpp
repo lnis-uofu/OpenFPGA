@@ -1234,13 +1234,17 @@ void print_verilog_pulse_stimuli(std::fstream& fp,
   fp << "\tbegin" << std::endl;
   fp << "\t";
   std::vector<size_t> initial_values(port.get_width(), initial_value);
-  print_verilog_wire_constant_values(fp, port, initial_values);
+  fp << "\t";
+  fp << generate_verilog_port_constant_values(port, initial_values);
+  fp << ";" << std::endl;
   
   /* if flip_value is the same as initial value, we do not need to flip the signal ! */
   if (flip_value != initial_value) {
-    fp << "\t" << "#" << std::setprecision(2) << pulse_width;
+    fp << "\t" << "#" << std::setprecision(10) << pulse_width;
     std::vector<size_t> port_flip_values(port.get_width(), flip_value);
-    print_verilog_wire_constant_values(fp, port, port_flip_values);
+    fp << "\t";
+    fp << generate_verilog_port_constant_values(port, port_flip_values);
+    fp << ";" << std::endl;
   }
 
   fp << "\tend" << std::endl;
@@ -1274,7 +1278,9 @@ void print_verilog_pulse_stimuli(std::fstream& fp,
   fp << "\tbegin" << std::endl;
   fp << "\t";
   std::vector<size_t> initial_values(port.get_width(), initial_value);
-  print_verilog_wire_constant_values(fp, port, initial_values);
+  fp << "\t";
+  fp << generate_verilog_port_constant_values(port, initial_values);
+  fp << ";" << std::endl;
 
   /* Set a wait condition if specified */
   if (false == wait_condition.empty()) {
@@ -1284,9 +1290,11 @@ void print_verilog_pulse_stimuli(std::fstream& fp,
   /* Number of flip conditions and values should match */
   VTR_ASSERT(flip_values.size() == pulse_widths.size());
   for (size_t ipulse = 0; ipulse < pulse_widths.size(); ++ipulse) {
-    fp << "\t" << "#" << std::setprecision(2) << pulse_widths[ipulse];
+    fp << "\t" << "#" << std::setprecision(10) << pulse_widths[ipulse];
     std::vector<size_t> port_flip_value(port.get_width(), flip_values[ipulse]);
-    print_verilog_wire_constant_values(fp, port, port_flip_value);
+    fp << "\t";
+    fp << generate_verilog_port_constant_values(port, port_flip_value);
+    fp << ";" << std::endl;
   }
 
   fp << "\tend" << std::endl;
@@ -1318,9 +1326,12 @@ void print_verilog_clock_stimuli(std::fstream& fp,
   /* Config_done signal: indicate when configuration is finished */
   fp << "initial" << std::endl;
   fp << "\tbegin" << std::endl;
-  fp << "\t";
+
   std::vector<size_t> initial_values(port.get_width(), initial_value);
-  print_verilog_wire_constant_values(fp, port, initial_values);
+  fp << "\t\t";
+  fp << generate_verilog_port_constant_values(port, initial_values);
+  fp << ";" << std::endl;
+
   fp << "\tend" << std::endl;
   fp << "always";
 
@@ -1332,8 +1343,15 @@ void print_verilog_clock_stimuli(std::fstream& fp,
   }
 
   fp << "\tbegin" << std::endl;
-  fp << "\t\t" << "#" << std::setprecision(2) << pulse_width;
-  print_verilog_wire_connection(fp, port, port, true);
+  fp << "\t\t" << "#" << std::setprecision(10) << pulse_width;
+
+  fp << "\t";
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, port);
+  fp << " = ";
+  fp << "~";
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, port);
+  fp << ";" << std::endl;
+
   fp << "\tend" << std::endl;
 
   /* Print an empty line as splitter */

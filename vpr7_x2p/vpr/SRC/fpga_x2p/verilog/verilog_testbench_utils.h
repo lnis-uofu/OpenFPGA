@@ -29,7 +29,8 @@ void print_verilog_testbench_connect_fpga_ios(std::fstream& fp,
                                               const vtr::Point<size_t>& device_size,
                                               const std::vector<std::vector<t_grid_tile>>& L_grids, 
                                               const std::vector<t_block>& L_blocks,
-                                              const std::string& io_port_name_postfix,
+                                              const std::string& io_input_port_name_postfix,
+                                              const std::string& io_output_port_name_postfix,
                                               const size_t& unused_io_value);
 
 void print_verilog_timeout_and_vcd(std::fstream& fp,
@@ -54,11 +55,13 @@ void print_verilog_testbench_check(std::fstream& fp,
                                    const std::vector<std::string>& clock_port_names,
                                    const std::string& default_clock_name);
 
+void print_verilog_testbench_clock_stimuli(std::fstream& fp,
+                                           const t_spice_params& simulation_parameters,
+                                           const BasicPort& clock_port);
+
 void print_verilog_testbench_random_stimuli(std::fstream& fp,
-                                            const t_spice_params& simulation_parameters,
                                             const std::vector<t_logical_block>& L_logical_blocks,
                                             const std::string& check_flag_port_postfix,
-                                            const std::vector<std::string>& clock_port_names,
-                                            const std::string& default_clock_name);
+                                            const BasicPort& clock_port);
 
 #endif

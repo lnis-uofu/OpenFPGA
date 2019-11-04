@@ -422,6 +422,7 @@ void print_verilog_preconfig_top_module(const ModuleManager& module_manager,
                                            L_logical_blocks, device_size, L_grids, 
                                            L_blocks, 
                                            std::string(formal_verification_top_module_port_postfix), 
+                                           std::string(formal_verification_top_module_port_postfix), 
                                            (size_t)verilog_default_signal_init_value);
 
   /* Assign FPGA internal SRAM/Memory ports to bitstream values */

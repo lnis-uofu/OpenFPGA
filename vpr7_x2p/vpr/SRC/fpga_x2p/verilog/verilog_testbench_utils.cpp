@@ -108,7 +108,8 @@ void print_verilog_testbench_connect_fpga_ios(std::fstream& fp,
                                               const vtr::Point<size_t>& device_size,
                                               const std::vector<std::vector<t_grid_tile>>& L_grids, 
                                               const std::vector<t_block>& L_blocks,
-                                              const std::string& io_port_name_postfix,
+                                              const std::string& io_input_port_name_postfix,
+                                              const std::string& io_output_port_name_postfix,
                                               const size_t& unused_io_value) {
   /* Validate the file stream */
   check_file_handler(fp);
@@ -140,14 +141,21 @@ void print_verilog_testbench_connect_fpga_ios(std::fstream& fp,
     VTR_ASSERT(io_index < module_mapped_io_port.get_width());
     module_mapped_io_port.set_width(io_index, io_index);
 
-    /* Create the port for benchmark I/O, due to BLIF benchmark, each I/O always has a size of 1 */
-    BasicPort benchmark_io_port(std::string(std::string(io_lb.name)+ io_port_name_postfix), 1); 
-
-    print_verilog_comment(fp, std::string("----- Blif Benchmark inout " + std::string(io_lb.name) + " is mapped to FPGA IOPAD " + module_mapped_io_port.get_name() + "[" + std::to_string(io_index) + "] -----"));
+    /* Create the port for benchmark I/O, due to BLIF benchmark, each I/O always has a size of 1 
+     * In addition, the input and output ports may have different postfix in naming
+     * due to verification context! Here, we give full customization on naming 
+     */
+    BasicPort benchmark_io_port;
     if (VPACK_INPAD == io_lb.type) {
+      benchmark_io_port.set_name(std::string(std::string(io_lb.name) + io_input_port_name_postfix)); 
+      benchmark_io_port.set_width(1);
+      print_verilog_comment(fp, std::string("----- Blif Benchmark input " + std::string(io_lb.name) + " is mapped to FPGA IOPAD " + module_mapped_io_port.get_name() + "[" + std::to_string(io_index) + "] -----"));
       print_verilog_wire_connection(fp, module_mapped_io_port, benchmark_io_port, false);
     } else {
       VTR_ASSERT(VPACK_OUTPAD == io_lb.type);
+      benchmark_io_port.set_name(std::string(std::string(io_lb.name) + io_output_port_name_postfix)); 
+      benchmark_io_port.set_width(1);
+      print_verilog_comment(fp, std::string("----- Blif Benchmark output " + std::string(io_lb.name) + " is mapped to FPGA IOPAD " + module_mapped_io_port.get_name() + "[" + std::to_string(io_index) + "] -----"));
       print_verilog_wire_connection(fp, benchmark_io_port, module_mapped_io_port, false);
     }
 
@@ -336,33 +344,51 @@ void print_verilog_testbench_check(std::fstream& fp,
 }
 
 /********************************************************************
- * Generate random stimulus for the input ports
+ * Generate random stimulus for the clock port
+ * This function is designed to drive the clock port of a benchmark module
+ * If there is no clock port found, we will give a default clock name
+ * In such case, this clock will not be wired to the benchmark module
+ * but be only used as a synchronizer in verification
  *******************************************************************/
-void print_verilog_testbench_random_stimuli(std::fstream& fp,
-                                            const t_spice_params& simulation_parameters,
-                                            const std::vector<t_logical_block>& L_logical_blocks,
-                                            const std::string& check_flag_port_postfix,
-                                            const std::vector<std::string>& clock_port_names,
-                                            const std::string& default_clock_name) {
+void print_verilog_testbench_clock_stimuli(std::fstream& fp,
+                                           const t_spice_params& simulation_parameters,
+                                           const BasicPort& clock_port) {
   /* Validate the file stream */
   check_file_handler(fp);
 
-  print_verilog_comment(fp, std::string("----- Initialization -------"));
+  print_verilog_comment(fp, std::string("----- Clock Initialization -------"));
 
   fp << "\tinitial begin" << std::endl;
   /* Create clock stimuli */
-  BasicPort clock_port = generate_verilog_testbench_clock_port(clock_port_names, default_clock_name);
   fp << "\t\t" << generate_verilog_port(VERILOG_PORT_CONKT, clock_port) << " <= 1'b0;" << std::endl;
   fp << "\t\twhile(1) begin" << std::endl;
-  fp << "\t\t\t#" << std::setprecision(2) << ((0.5/simulation_parameters.stimulate_params.op_clock_freq)/verilog_sim_timescale) << std::endl;
+  fp << "\t\t\t#" << std::setprecision(10) << ((0.5/simulation_parameters.stimulate_params.op_clock_freq)/verilog_sim_timescale) << std::endl;
   fp << "\t\t\t" << generate_verilog_port(VERILOG_PORT_CONKT, clock_port);
   fp << " <= !";
   fp << generate_verilog_port(VERILOG_PORT_CONKT, clock_port);
   fp << ";" << std::endl;
   fp << "\t\tend" << std::endl;
 
+  fp << "\tend" << std::endl;
+
   /* Add an empty line as splitter */
   fp << std::endl;
+}
+
+/********************************************************************
+ * Generate random stimulus for the input ports (non-clock signals)
+ * For clock signals, please use print_verilog_testbench_clock_stimuli
+ *******************************************************************/
+void print_verilog_testbench_random_stimuli(std::fstream& fp,
+                                            const std::vector<t_logical_block>& L_logical_blocks,
+                                            const std::string& check_flag_port_postfix,
+                                            const BasicPort& clock_port) {
+  /* Validate the file stream */
+  check_file_handler(fp);
+
+  print_verilog_comment(fp, std::string("----- Input Initialization -------"));
+
+  fp << "\tinitial begin" << std::endl;
 
   for (const t_logical_block& lb : L_logical_blocks) {
     /* Bypass non-I/O logical blocks ! */

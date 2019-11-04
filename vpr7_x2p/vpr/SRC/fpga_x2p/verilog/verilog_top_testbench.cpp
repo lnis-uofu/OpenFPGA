@@ -29,12 +29,10 @@
 constexpr char* TOP_TESTBENCH_REFERENCE_INSTANCE_NAME = "REF_DUT";
 constexpr char* TOP_TESTBENCH_FPGA_INSTANCE_NAME = "FPGA_DUT";
 constexpr char* TOP_TESTBENCH_REFERENCE_OUTPUT_POSTFIX = "_benchmark";
-constexpr char* TOP_TESTBENCH_FPGA_OUTPUT_POSTFIX = "_verification";
+constexpr char* TOP_TESTBENCH_FPGA_OUTPUT_POSTFIX = "_fpga";
 
 constexpr char* TOP_TESTBENCH_CHECKFLAG_PORT_POSTFIX = "_flag";
 
-constexpr char* TOP_TESTBENCH_CONFIG_CHAIN_HEAD_PORT_NAME = "cc_in";
-constexpr char* TOP_TESTBENCH_CONFIG_CHAIN_TAIL_PORT_NAME = "cc_out";
 constexpr char* TOP_TESTBENCH_CC_PROG_TASK_NAME = "prog_cycle_task";
 
 constexpr char* TOP_TESTBENCH_SIM_START_PORT_NAME = "sim_start";
@@ -52,13 +50,13 @@ void print_verilog_top_testbench_config_chain_port(std::fstream& fp) {
 
   /* Print the head of configuraion-chains here */
   print_verilog_comment(fp, std::string("---- Configuration-chain head -----"));
-  BasicPort config_chain_head_port(std::string(TOP_TESTBENCH_CONFIG_CHAIN_HEAD_PORT_NAME), 1);
+  BasicPort config_chain_head_port(generate_configuration_chain_head_name(), 1);
   fp << generate_verilog_port(VERILOG_PORT_REG, config_chain_head_port) << ";" << std::endl;
 
   /* Print the tail of configuration-chains here */
   print_verilog_comment(fp, std::string("---- Configuration-chain tail -----"));
-  BasicPort config_chain_tail_port(std::string(TOP_TESTBENCH_CONFIG_CHAIN_TAIL_PORT_NAME), 1);
-  fp << generate_verilog_port(VERILOG_PORT_REG, config_chain_tail_port) << ";" << std::endl;
+  BasicPort config_chain_tail_port(generate_configuration_chain_tail_name(), 1);
+  fp << generate_verilog_port(VERILOG_PORT_WIRE, config_chain_tail_port) << ";" << std::endl;
 }
 
 /********************************************************************
@@ -411,8 +409,8 @@ void print_verilog_top_testbench_load_bitstream_task_configuration_chain(std::fs
   check_file_handler(fp);
 
   BasicPort prog_clock_port(std::string(top_tb_prog_clock_port_name), 1);
-  BasicPort cc_head_port(std::string(TOP_TESTBENCH_CONFIG_CHAIN_HEAD_PORT_NAME), 1);
-  BasicPort cc_head_value(std::string(TOP_TESTBENCH_CONFIG_CHAIN_HEAD_PORT_NAME) + std::string("_val"), 1);
+  BasicPort cc_head_port(generate_configuration_chain_head_name(), 1);
+  BasicPort cc_head_value(generate_configuration_chain_head_name() + std::string("_val"), 1);
 
   /* Add an empty line as splitter */
   fp << std::endl;
@@ -425,8 +423,12 @@ void print_verilog_top_testbench_load_bitstream_task_configuration_chain(std::fs
   fp << generate_verilog_port(VERILOG_PORT_INPUT, cc_head_value) << ";" << std::endl;
   fp << "\tbegin" << std::endl;
   fp << "\t\t@(negedge " << generate_verilog_port(VERILOG_PORT_CONKT, prog_clock_port) << ");" << std::endl;
-  fp << "\t\t"; 
-  print_verilog_wire_connection(fp, cc_head_port, cc_head_value, false);
+  fp << "\t\t\t"; 
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, cc_head_port);
+  fp << " = ";
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, cc_head_value);
+  fp << ";" << std::endl;
+
   fp << "\tend" << std::endl;
   fp << "endtask" << std::endl;
 
@@ -499,7 +501,7 @@ void print_verilog_top_testbench_generic_stimulus(std::fstream& fp,
   print_verilog_comment(fp, "----- Begin configuration done signal generation -----"); 
   print_verilog_pulse_stimuli(fp, config_done_port, 
                               0, /* Initial value */
-                              num_config_clock_cycles * prog_clock_period / timescale, 1); 
+                              num_config_clock_cycles * prog_clock_period / timescale, 0); 
   print_verilog_comment(fp, "----- End configuration done signal generation -----"); 
   fp << std::endl;
 
@@ -616,7 +618,7 @@ void print_verilog_top_testbench_configuration_chain_bitstream(std::fstream& fp,
    * We do not care the value of scan_chain head during the first programming cycle 
    * It is reset anyway
    */
-  BasicPort config_chain_head_port(std::string(TOP_TESTBENCH_CONFIG_CHAIN_HEAD_PORT_NAME), 1);
+  BasicPort config_chain_head_port(generate_configuration_chain_head_name(), 1);
   std::vector<size_t> initial_values(config_chain_head_port.get_width(), 0);
 
   print_verilog_comment(fp, "----- Begin bitstream loading during configuration phase -----");
@@ -636,6 +638,19 @@ void print_verilog_top_testbench_configuration_chain_bitstream(std::fstream& fp,
     fp << "\t\t" << std::string(TOP_TESTBENCH_CC_PROG_TASK_NAME);
     fp << "(1'b" << (size_t)bitstream_manager.bit_value(bit_id) << ");" << std::endl;
   }
+
+  /* Raise the flag of configuration done when bitstream loading is complete */
+  BasicPort prog_clock_port(std::string(top_tb_prog_clock_port_name), 1);
+  fp << "\t\t@(negedge " << generate_verilog_port(VERILOG_PORT_CONKT, prog_clock_port) << ");" << std::endl;
+  
+  BasicPort config_done_port(std::string(top_tb_config_done_port_name), 1);
+  fp << "\t\t\t";
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, config_done_port);
+  fp << " <= ";
+  std::vector<size_t> config_done_enable_values(config_done_port.get_width(), 1);
+  fp << generate_verilog_constant_values(config_done_enable_values);
+  fp << ";" << std::endl;
+
   fp << "\tend" << std::endl;
   print_verilog_comment(fp, "----- End bitstream loading during configuration phase -----");
 }
@@ -767,6 +782,7 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
   print_verilog_testbench_connect_fpga_ios(fp, module_manager, top_module,
                                            L_logical_blocks, device_size, L_grids, 
                                            L_blocks, 
+                                           std::string(), 
                                            std::string(TOP_TESTBENCH_FPGA_OUTPUT_POSTFIX), 
                                            (size_t)verilog_default_signal_init_value);
 
@@ -786,9 +802,9 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
   std::vector<std::string> clock_port_names = find_benchmark_clock_port_name(L_logical_blocks);
 
   /* Add stimuli for reset, set, clock and iopad signals */
-  print_verilog_testbench_random_stimuli(fp, simulation_parameters, L_logical_blocks, 
+  print_verilog_testbench_random_stimuli(fp, L_logical_blocks, 
                                          std::string(TOP_TESTBENCH_CHECKFLAG_PORT_POSTFIX),
-                                         clock_port_names, std::string(top_tb_op_clock_port_name));
+                                         BasicPort(std::string(top_tb_op_clock_port_name), 1));
 
   /* Add output autocheck */
   print_verilog_testbench_check(fp, 
