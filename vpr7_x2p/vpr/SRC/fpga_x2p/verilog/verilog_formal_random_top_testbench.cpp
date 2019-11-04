@@ -42,22 +42,6 @@ constexpr char* FORMAL_TB_SIM_START_PORT_NAME = "sim_start";
 constexpr int MAGIC_NUMBER_FOR_SIMULATION_TIME = 200;
 
 /********************************************************************
- * Generate the clock port name to be used in this testbench
- *
- * Restrictions:
- * Assume this is a single clock benchmark
- *******************************************************************/
-static 
-BasicPort generate_verilog_top_clock_port(const std::vector<std::string>& clock_port_names) {
-  if (0 == clock_port_names.size()) {
-    return BasicPort(std::string(DEFAULT_CLOCK_NAME), 1); 
-  }
-
-  VTR_ASSERT(1 == clock_port_names.size());
-  return BasicPort(clock_port_names[0], 1); 
-}
-
-/********************************************************************
  * Print the module ports for the Verilog testbench 
  * using random vectors 
  * This function generates 
@@ -97,7 +81,7 @@ void print_verilog_top_random_testbench_ports(std::fstream& fp,
    * The clock is used for counting and synchronizing input stimulus 
    */
   if (0 == clock_port_names.size()) {
-    BasicPort clock_port = generate_verilog_top_clock_port(clock_port_names);
+    BasicPort clock_port = generate_verilog_testbench_clock_port(clock_port_names, std::string(DEFAULT_CLOCK_NAME));
     print_verilog_comment(fp, std::string("----- Default clock port is added here since benchmark does not contain one -------"));
     fp << "\t" << generate_verilog_port(VERILOG_PORT_REG, clock_port) << ";" << std::endl;
   }
@@ -214,137 +198,6 @@ void print_verilog_top_random_testbench_benchmark_instance(std::fstream& fp,
 }
 
 /********************************************************************
- * Print Verilog codes to set up a timeout for the simulation 
- * and dump the waveform to VCD files
- *
- * Note that: these codes are tuned for Icarus simulator!!!
- *******************************************************************/
-static
-void print_verilog_timeout_and_vcd(std::fstream& fp,
-                                   const std::string& circuit_name,
-                                   const int& simulation_time) {
-  /* Validate the file stream */
-  check_file_handler(fp);
-
-  /* The following verilog codes are tuned for Icarus */
-  print_verilog_preprocessing_flag(fp, std::string(icarus_simulator_flag)); 
-
-  print_verilog_comment(fp, std::string("----- Begin Icarus requirement -------"));
-
-  fp << "\tinitial begin" << std::endl;
-  fp << "\t\t$dumpfile(\"" << circuit_name << "_formal.vcd\");" << std::endl;
-  fp << "\t\t$dumpvars(1, " << circuit_name << FORMAL_RANDOM_TOP_TESTBENCH_POSTFIX << ");" << std::endl;
-  fp << "\tend" << std::endl;
-
-  /* Condition ends for the Icarus requirement */
-  print_verilog_endif(fp);
-
-  print_verilog_comment(fp, std::string("----- END Icarus requirement -------"));
-
-  /* Add an empty line as splitter */
-  fp << std::endl;
-
-  BasicPort sim_start_port(std::string(FORMAL_TB_SIM_START_PORT_NAME), 1);
-
-  fp << "initial begin" << std::endl;
-  fp << "\t" << generate_verilog_port(VERILOG_PORT_CONKT, sim_start_port) << " <= 1'b1;" << std::endl;
-  fp << "\t$timeformat(-9, 2, \"ns\", 20);" << std::endl;
-  fp << "\t$display(\"Simulation start\");" << std::endl;
-  print_verilog_comment(fp, std::string("----- Can be changed by the user for his/her need -------"));
-  fp << "\t#" << simulation_time << std::endl;
-  fp << "\tif(" << ERROR_COUNTER << " == 0) begin" << std::endl;
-  fp << "\t\t$display(\"Simulation Succeed\");" << std::endl;
-  fp << "\tend else begin" << std::endl;
-  fp << "\t\t$display(\"Simulation Failed with " << std::string("%d") << " error(s)\", " << ERROR_COUNTER << ");" << std::endl;
-  fp << "\tend" << std::endl;
-  fp << "\t$finish;" << std::endl;
-  fp << "end" << std::endl;
-
-  /* Add an empty line as splitter */
-  fp << std::endl;
-}
-
-/********************************************************************
- * Print Verilog codes to check the equivalence of output vectors 
- *
- * Restriction: this function only supports single clock benchmarks!
- *******************************************************************/
-static
-void print_verilog_top_random_testbench_check(std::fstream& fp,
-                                              const std::vector<t_logical_block>& L_logical_blocks,
-                                              const std::vector<std::string>& clock_port_names) {
-
-  /* Validate the file stream */
-  check_file_handler(fp);
-
-  /* Add output autocheck conditionally: only when a preprocessing flag is enable */
-  print_verilog_preprocessing_flag(fp, std::string(autochecked_simulation_flag)); 
-
-  print_verilog_comment(fp, std::string("----- Begin checking output vectors -------"));
-
-  BasicPort clock_port = generate_verilog_top_clock_port(clock_port_names);
-
-  print_verilog_comment(fp, std::string("----- Skip the first falling edge of clock, it is for initialization -------"));
-
-  BasicPort sim_start_port(std::string(FORMAL_TB_SIM_START_PORT_NAME), 1);
-
-  fp << "\t" << generate_verilog_port(VERILOG_PORT_REG, sim_start_port) << ";" << std::endl;
-  fp << std::endl;
-
-  fp << "\talways@(negedge " << generate_verilog_port(VERILOG_PORT_CONKT, clock_port) << ") begin" << std::endl;
-  fp << "\t\tif (1'b1 == " << generate_verilog_port(VERILOG_PORT_CONKT, sim_start_port) << ") begin" << std::endl;
-  fp << "\t\t";
-  print_verilog_register_connection(fp, sim_start_port, sim_start_port, true);
-  fp << "\t\tend else begin" << std::endl;
-
-  for (const t_logical_block& lb : L_logical_blocks) {
-    /* Bypass non-I/O logical blocks ! */
-    if ( (VPACK_INPAD != lb.type) && (VPACK_OUTPAD != lb.type) ) {
-      continue;
-    }
-
-    if (VPACK_OUTPAD == lb.type){
-     fp << "\t\t\tif(!(" << std::string(lb.name) << std::string(FPGA_PORT_POSTFIX);
-     fp << " === " << std::string(lb.name) << std::string(BENCHMARK_PORT_POSTFIX);
-     fp << ") && !(" << std::string(lb.name) << std::string(BENCHMARK_PORT_POSTFIX);
-     fp << " === 1'bx)) begin" << std::endl;
-     fp << "\t\t\t\t" << std::string(lb.name) << std::string(CHECKFLAG_PORT_POSTFIX) << " <= 1'b1;" << std::endl;
-     fp << "\t\t\tend else begin" << std::endl;
-     fp << "\t\t\t\t" << std::string(lb.name) << std::string(CHECKFLAG_PORT_POSTFIX) << "<= 1'b0;" << std::endl;
-     fp << "\t\t\tend" << std::endl; 
-    }
-  } 
-  fp << "\t\tend" << std::endl;
-  fp << "\tend" << std::endl;
-
-  /* Add an empty line as splitter */
-  fp << std::endl;
-
-  for (const t_logical_block& lb : L_logical_blocks) {
-    /* Bypass non-I/O logical blocks ! */
-    if (VPACK_OUTPAD != lb.type) {
-      continue;
-    }
-
-    fp << "\talways@(posedge " << std::string(lb.name) << std::string(CHECKFLAG_PORT_POSTFIX) << ") begin" << std::endl;
-    fp << "\t\tif(" << std::string(lb.name) << std::string(CHECKFLAG_PORT_POSTFIX) << ") begin" << std::endl;
-    fp << "\t\t\t" << ERROR_COUNTER << " = " << ERROR_COUNTER << " + 1;" << std::endl;
-    fp << "\t\t\t$display(\"Mismatch on " << std::string(lb.name) << std::string(FPGA_PORT_POSTFIX) << " at time = " << std::string("%t") << "\", $realtime);" << std::endl;
-    fp << "\t\tend" << std::endl;
-    fp << "\tend" << std::endl;
-
-    /* Add an empty line as splitter */
-    fp << std::endl;
-  }
-
-  /* Condition ends */
-  print_verilog_endif(fp);
-
-  /* Add an empty line as splitter */
-  fp << std::endl;
-}
-
-/********************************************************************
  * Instanciate the FPGA fabric module
  *******************************************************************/
 static
@@ -385,7 +238,7 @@ void print_verilog_top_random_stimuli(std::fstream& fp,
 
   fp << "\tinitial begin" << std::endl;
   /* Create clock stimuli */
-  BasicPort clock_port = generate_verilog_top_clock_port(clock_port_names);
+  BasicPort clock_port = generate_verilog_testbench_clock_port(clock_port_names, std::string(DEFAULT_CLOCK_NAME));
   fp << "\t\t" << generate_verilog_port(VERILOG_PORT_CONKT, clock_port) << " <= 1'b0;" << std::endl;
   fp << "\t\twhile(1) begin" << std::endl;
   fp << "\t\t\t#" << std::setprecision(2) << ((0.5/simulation_parameters.stimulate_params.op_clock_freq)/verilog_sim_timescale) << std::endl;
@@ -540,7 +393,14 @@ void print_verilog_random_top_testbench(const std::string& circuit_name,
   /* Add stimuli for reset, set, clock and iopad signals */
   print_verilog_top_random_stimuli(fp, simulation_parameters, L_logical_blocks, clock_port_names);
 
-  print_verilog_top_random_testbench_check(fp, L_logical_blocks, clock_port_names);
+  print_verilog_testbench_check(fp, 
+                                std::string(autochecked_simulation_flag),
+                                std::string(FORMAL_TB_SIM_START_PORT_NAME),
+                                std::string(BENCHMARK_PORT_POSTFIX),
+                                std::string(FPGA_PORT_POSTFIX),
+                                std::string(CHECKFLAG_PORT_POSTFIX),
+                                std::string(ERROR_COUNTER),
+                                L_logical_blocks, clock_port_names, std::string(DEFAULT_CLOCK_NAME));
 
   int simulation_time = find_operating_phase_simulation_time(MAGIC_NUMBER_FOR_SIMULATION_TIME,
                                                              simulation_parameters.meas_params.sim_num_clock_cycle,
@@ -548,7 +408,13 @@ void print_verilog_random_top_testbench(const std::string& circuit_name,
                                                              verilog_sim_timescale);
 
   /* Add Icarus requirement */
-  print_verilog_timeout_and_vcd(fp, circuit_name, simulation_time);
+  print_verilog_timeout_and_vcd(fp, 
+                                std::string(icarus_simulator_flag),
+                                std::string(circuit_name + std::string(FORMAL_RANDOM_TOP_TESTBENCH_POSTFIX)),
+                                std::string(circuit_name + std::string("_formal.vcd")), 
+                                std::string(FORMAL_TB_SIM_START_PORT_NAME),
+                                std::string(ERROR_COUNTER),
+                                simulation_time);
 
   /* Testbench ends*/
   print_verilog_module_end(fp, std::string(circuit_name) + std::string(FORMAL_RANDOM_TOP_TESTBENCH_POSTFIX));

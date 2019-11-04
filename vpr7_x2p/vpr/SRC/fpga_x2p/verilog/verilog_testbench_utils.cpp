@@ -2,7 +2,7 @@
  * This file includes most utilized functions that are used to create
  * Verilog testbenches
  *
- * Note: please do NOT use global variables in this file
+ * Note: please try to avoid using global variables in this file
  * so that we can make it free to use anywhere
  *******************************************************************/
 #include "vtr_assert.h"
@@ -174,5 +174,161 @@ void print_verilog_testbench_connect_fpga_ios(std::fstream& fp,
   }
 
   /* Add an empty line as a splitter */
+  fp << std::endl;
+}
+
+/********************************************************************
+ * Print Verilog codes to set up a timeout for the simulation 
+ * and dump the waveform to VCD files
+ *
+ * Note that: these codes are tuned for Icarus simulator!!!
+ *******************************************************************/
+void print_verilog_timeout_and_vcd(std::fstream& fp,
+                                   const std::string& icarus_preprocessing_flag,
+                                   const std::string& module_name,
+                                   const std::string& vcd_fname,
+                                   const std::string& simulation_start_counter_name,
+                                   const std::string& error_counter_name,
+                                   const int& simulation_time) {
+  /* Validate the file stream */
+  check_file_handler(fp);
+
+  /* The following verilog codes are tuned for Icarus */
+  print_verilog_preprocessing_flag(fp, icarus_preprocessing_flag); 
+
+  print_verilog_comment(fp, std::string("----- Begin Icarus requirement -------"));
+
+  fp << "\tinitial begin" << std::endl;
+  fp << "\t\t$dumpfile(\"" << vcd_fname << "\");" << std::endl;
+  fp << "\t\t$dumpvars(1, " << module_name << ");" << std::endl;
+  fp << "\tend" << std::endl;
+
+  /* Condition ends for the Icarus requirement */
+  print_verilog_endif(fp);
+
+  print_verilog_comment(fp, std::string("----- END Icarus requirement -------"));
+
+  /* Add an empty line as splitter */
+  fp << std::endl;
+
+  BasicPort sim_start_port(simulation_start_counter_name, 1);
+
+  fp << "initial begin" << std::endl;
+  fp << "\t" << generate_verilog_port(VERILOG_PORT_CONKT, sim_start_port) << " <= 1'b1;" << std::endl;
+  fp << "\t$timeformat(-9, 2, \"ns\", 20);" << std::endl;
+  fp << "\t$display(\"Simulation start\");" << std::endl;
+  print_verilog_comment(fp, std::string("----- Can be changed by the user for his/her need -------"));
+  fp << "\t#" << simulation_time << std::endl;
+  fp << "\tif(" << error_counter_name << " == 0) begin" << std::endl;
+  fp << "\t\t$display(\"Simulation Succeed\");" << std::endl;
+  fp << "\tend else begin" << std::endl;
+  fp << "\t\t$display(\"Simulation Failed with " << std::string("%d") << " error(s)\", " << error_counter_name << ");" << std::endl;
+  fp << "\tend" << std::endl;
+  fp << "\t$finish;" << std::endl;
+  fp << "end" << std::endl;
+
+  /* Add an empty line as splitter */
+  fp << std::endl;
+}
+
+/********************************************************************
+ * Generate the clock port name to be used in this testbench
+ *
+ * Restrictions:
+ * Assume this is a single clock benchmark
+ *******************************************************************/
+BasicPort generate_verilog_testbench_clock_port(const std::vector<std::string>& clock_port_names,
+                                                const std::string& default_clock_name) {
+  if (0 == clock_port_names.size()) {
+    return BasicPort(default_clock_name, 1); 
+  }
+
+  VTR_ASSERT(1 == clock_port_names.size());
+  return BasicPort(clock_port_names[0], 1); 
+}
+
+/********************************************************************
+ * Print Verilog codes to check the equivalence of output vectors 
+ *
+ * Restriction: this function only supports single clock benchmarks!
+ *******************************************************************/
+void print_verilog_testbench_check(std::fstream& fp,
+                                   const std::string& autochecked_preprocessing_flag,
+                                   const std::string& simulation_start_counter_name,
+                                   const std::string& benchmark_port_postfix,
+                                   const std::string& fpga_port_postfix,
+                                   const std::string& check_flag_port_postfix,
+                                   const std::string& error_counter_name,
+                                   const std::vector<t_logical_block>& L_logical_blocks,
+                                   const std::vector<std::string>& clock_port_names,
+                                   const std::string& default_clock_name) {
+
+  /* Validate the file stream */
+  check_file_handler(fp);
+
+  /* Add output autocheck conditionally: only when a preprocessing flag is enable */
+  print_verilog_preprocessing_flag(fp, autochecked_preprocessing_flag); 
+
+  print_verilog_comment(fp, std::string("----- Begin checking output vectors -------"));
+
+  BasicPort clock_port = generate_verilog_testbench_clock_port(clock_port_names, default_clock_name);
+
+  print_verilog_comment(fp, std::string("----- Skip the first falling edge of clock, it is for initialization -------"));
+
+  BasicPort sim_start_port(simulation_start_counter_name, 1);
+
+  fp << "\t" << generate_verilog_port(VERILOG_PORT_REG, sim_start_port) << ";" << std::endl;
+  fp << std::endl;
+
+  fp << "\talways@(negedge " << generate_verilog_port(VERILOG_PORT_CONKT, clock_port) << ") begin" << std::endl;
+  fp << "\t\tif (1'b1 == " << generate_verilog_port(VERILOG_PORT_CONKT, sim_start_port) << ") begin" << std::endl;
+  fp << "\t\t";
+  print_verilog_register_connection(fp, sim_start_port, sim_start_port, true);
+  fp << "\t\tend else begin" << std::endl;
+
+  for (const t_logical_block& lb : L_logical_blocks) {
+    /* Bypass non-I/O logical blocks ! */
+    if ( (VPACK_INPAD != lb.type) && (VPACK_OUTPAD != lb.type) ) {
+      continue;
+    }
+
+    if (VPACK_OUTPAD == lb.type){
+     fp << "\t\t\tif(!(" << std::string(lb.name) << fpga_port_postfix;
+     fp << " === " << std::string(lb.name) << benchmark_port_postfix;
+     fp << ") && !(" << std::string(lb.name) << benchmark_port_postfix;
+     fp << " === 1'bx)) begin" << std::endl;
+     fp << "\t\t\t\t" << std::string(lb.name) << check_flag_port_postfix << " <= 1'b1;" << std::endl;
+     fp << "\t\t\tend else begin" << std::endl;
+     fp << "\t\t\t\t" << std::string(lb.name) << check_flag_port_postfix << "<= 1'b0;" << std::endl;
+     fp << "\t\t\tend" << std::endl; 
+    }
+  } 
+  fp << "\t\tend" << std::endl;
+  fp << "\tend" << std::endl;
+
+  /* Add an empty line as splitter */
+  fp << std::endl;
+
+  for (const t_logical_block& lb : L_logical_blocks) {
+    /* Bypass non-I/O logical blocks ! */
+    if (VPACK_OUTPAD != lb.type) {
+      continue;
+    }
+
+    fp << "\talways@(posedge " << std::string(lb.name) << check_flag_port_postfix << ") begin" << std::endl;
+    fp << "\t\tif(" << std::string(lb.name) << check_flag_port_postfix << ") begin" << std::endl;
+    fp << "\t\t\t" << error_counter_name << " = " << error_counter_name << " + 1;" << std::endl;
+    fp << "\t\t\t$display(\"Mismatch on " << std::string(lb.name) << fpga_port_postfix << " at time = " << std::string("%t") << "\", $realtime);" << std::endl;
+    fp << "\t\tend" << std::endl;
+    fp << "\tend" << std::endl;
+
+    /* Add an empty line as splitter */
+    fp << std::endl;
+  }
+
+  /* Condition ends */
+  print_verilog_endif(fp);
+
+  /* Add an empty line as splitter */
   fp << std::endl;
 }

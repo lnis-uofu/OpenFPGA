@@ -32,4 +32,26 @@ void print_verilog_testbench_connect_fpga_ios(std::fstream& fp,
                                               const std::string& io_port_name_postfix,
                                               const size_t& unused_io_value);
 
+void print_verilog_timeout_and_vcd(std::fstream& fp,
+                                   const std::string& icarus_preprocessing_flag,
+                                   const std::string& module_name,
+                                   const std::string& vcd_fname,
+                                   const std::string& simulation_start_counter_name,
+                                   const std::string& error_counter_name,
+                                   const int& simulation_time);
+
+BasicPort generate_verilog_testbench_clock_port(const std::vector<std::string>& clock_port_names,
+                                                const std::string& default_clock_name);
+
+void print_verilog_testbench_check(std::fstream& fp,
+                                   const std::string& autochecked_preprocessing_flag,
+                                   const std::string& simulation_start_counter_name,
+                                   const std::string& benchmark_port_postfix,
+                                   const std::string& fpga_port_postfix,
+                                   const std::string& check_flag_port_postfix,
+                                   const std::string& error_counter_name,
+                                   const std::vector<t_logical_block>& L_logical_blocks,
+                                   const std::vector<std::string>& clock_port_names,
+                                   const std::string& default_clock_name);
+
 #endif
