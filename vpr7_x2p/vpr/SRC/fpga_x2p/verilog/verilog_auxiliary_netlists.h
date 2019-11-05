@@ -13,4 +13,7 @@ void print_include_netlists(const std::string& src_dir,
 void print_verilog_preprocessing_flags_netlist(const std::string& src_dir,
                                                const t_syn_verilog_opts& fpga_verilog_opts);
 
+void print_verilog_simulation_preprocessing_flags(const std::string& src_dir,
+                                                  const t_syn_verilog_opts& fpga_verilog_opts);
+
 #endif 

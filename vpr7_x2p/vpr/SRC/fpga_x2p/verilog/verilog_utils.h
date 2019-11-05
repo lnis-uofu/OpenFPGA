@@ -22,9 +22,6 @@ void dump_simulation_preproc(FILE* fp,
 void dump_verilog_simulation_preproc(char* subckt_dir,
                                      t_syn_verilog_opts fpga_verilog_opts);
 
-void dump_verilog_defines_preproc(char* subckt_dir,
-                                 t_syn_verilog_opts fpga_verilog_opts);
-
 void verilog_include_simulation_defines_file(FILE* fp, 
                                              char* formatted_verilog_dir);
 

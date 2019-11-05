@@ -153,3 +153,43 @@ void print_verilog_preprocessing_flags_netlist(const std::string& src_dir,
   fp.close();
 }
 
+/********************************************************************
+ * Print a Verilog file containing simulation-related preprocessing flags
+ *******************************************************************/
+void print_verilog_simulation_preprocessing_flags(const std::string& src_dir,
+                                                  const t_syn_verilog_opts& fpga_verilog_opts) {
+
+  std::string verilog_fname = src_dir + std::string(defines_verilog_simulation_file_name);
+
+  /* Create the file stream */
+  std::fstream fp;
+  fp.open(verilog_fname, std::fstream::out | std::fstream::trunc);
+
+  /* Validate the file stream */
+  check_file_handler(fp);
+
+  /* Print the title */
+  print_verilog_file_header(fp, std::string("Preprocessing flags to enable/disable simulation features")); 
+
+  /* To enable manualy checked simulation */
+  if (TRUE == fpga_verilog_opts.print_top_testbench) {
+    print_verilog_define_flag(fp, std::string(initial_simulation_flag), 1);
+    fp << std::endl;
+  } 
+
+  /* To enable auto-checked simulation */
+  if (TRUE == fpga_verilog_opts.print_autocheck_top_testbench) {
+    print_verilog_define_flag(fp, std::string(autochecked_simulation_flag), 1);
+    fp << std::endl;
+  } 
+
+  /* To enable pre-configured FPGA simulation */
+  if (TRUE == fpga_verilog_opts.print_formal_verification_top_netlist) {
+    print_verilog_define_flag(fp, std::string(formal_simulation_flag), 1);
+    fp << std::endl;
+  } 
+
+
+  /* Close the file stream */
+  fp.close();
+}

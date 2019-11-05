@@ -264,17 +264,16 @@ void vpr_fpga_verilog(ModuleManager& module_manager,
   init_pb_types_num_iopads();
   /* init_grids_num_mode_bits(); */
 
-  /* TODO: This is the old function, which will be deprecated when refactoring is done */
-  /*
-  dump_verilog_defines_preproc(src_dir_path,
-                               vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts);
-   */
-
+  /* Print Verilog files containing preprocessing flags */
   print_verilog_preprocessing_flags_netlist(std::string(src_dir_path),
                                             vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts);
 
+  print_verilog_simulation_preprocessing_flags(std::string(src_dir_path),
+                                               vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts);
+  /*
   dump_verilog_simulation_preproc(src_dir_path,
                                vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts);
+   */
 
   /* Generate primitive Verilog modules, which are corner stones of FPGA fabric 
    * Note that this function MUST be called before Verilog generation of
