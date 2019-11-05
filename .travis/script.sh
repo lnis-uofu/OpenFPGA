@@ -25,6 +25,9 @@ python3 openfpga_flow/scripts/run_fpga_task.py single_mode --debug --show_thread
 echo -e "Testing multi-mode architectures";
 python3 openfpga_flow/scripts/run_fpga_task.py blif_vpr_flow --maxthreads 4 --debug --show_thread_logs
 
+echo -e "Testing tree-like multiplexer architectures";
+python3 openfpga_flow/scripts/run_fpga_task.py tree_like_mux --maxthreads 4 --debug --show_thread_logs
+
 echo -e "Testing compact routing techniques";
 python3 openfpga_flow/scripts/run_fpga_task.py compact_routing --debug --show_thread_logs
 
