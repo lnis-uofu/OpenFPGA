@@ -26,6 +26,10 @@ void print_verilog_file_header(std::fstream& fp,
 void print_verilog_include_netlist(std::fstream& fp, 
                                    const std::string& netlist_name);
 
+void print_verilog_define_flag(std::fstream& fp, 
+                               const std::string& flag_name,
+                               const int& flag_value);
+
 void print_verilog_include_defines_preproc_file(std::fstream& fp, 
                                                 const std::string& verilog_dir);
 

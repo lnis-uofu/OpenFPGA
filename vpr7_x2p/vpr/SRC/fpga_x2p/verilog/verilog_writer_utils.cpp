@@ -55,6 +55,17 @@ void print_verilog_include_netlist(std::fstream& fp,
   fp << "`include \"" << netlist_name << "\"" << std::endl; 
 }
 
+/********************************************************************
+ * Print Verilog codes to define a preprocessing flag
+ *******************************************************************/
+void print_verilog_define_flag(std::fstream& fp, 
+                               const std::string& flag_name,
+                               const int& flag_value) {
+  check_file_handler(fp);
+
+  fp << "`define " << flag_name << " " << flag_value << std::endl; 
+}
+
 /************************************************
  * Generate include files for a Verilog netlist
  ***********************************************/

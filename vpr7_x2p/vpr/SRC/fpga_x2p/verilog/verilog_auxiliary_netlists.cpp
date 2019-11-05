@@ -12,6 +12,7 @@
 #include "fpga_x2p_utils.h"
 #include "fpga_x2p_naming.h"
 
+#include "verilog_global.h"
 #include "verilog_writer_utils.h"
 #include "verilog_auxiliary_netlists.h"
 
@@ -104,3 +105,51 @@ void print_include_netlists(const std::string& src_dir,
   /* Close the file stream */
   fp.close();
 }
+
+/********************************************************************
+ * Print a Verilog file containing preprocessing flags
+ * which are used enable/disable some features in FPGA Verilog modules
+ *******************************************************************/
+void print_verilog_preprocessing_flags_netlist(const std::string& src_dir,
+                                               const t_syn_verilog_opts& fpga_verilog_opts) {
+
+  std::string verilog_fname = src_dir + std::string(defines_verilog_file_name);
+
+  /* Create the file stream */
+  std::fstream fp;
+  fp.open(verilog_fname, std::fstream::out | std::fstream::trunc);
+
+  /* Validate the file stream */
+  check_file_handler(fp);
+
+  /* Print the title */
+  print_verilog_file_header(fp, std::string("Preprocessing flags to enable/disable features in FPGA Verilog modules")); 
+
+  /* To enable timing */
+  if (TRUE == fpga_verilog_opts.include_timing) {
+    print_verilog_define_flag(fp, std::string(verilog_timing_preproc_flag), 1);
+    fp << std::endl;
+  } 
+
+  /* To enable timing */
+  if (TRUE == fpga_verilog_opts.include_signal_init) {
+    print_verilog_define_flag(fp, std::string(verilog_signal_init_preproc_flag), 1);
+    fp << std::endl;
+  } 
+
+  /* To enable formal verfication flag */
+  if (TRUE == fpga_verilog_opts.print_formal_verification_top_netlist) {
+    print_verilog_define_flag(fp, std::string(verilog_formal_verification_preproc_flag), 1);
+    fp << std::endl;
+  } 
+
+  /* To enable functional verfication with Icarus */
+  if (TRUE == fpga_verilog_opts.include_icarus_simulator) {
+    print_verilog_define_flag(fp, std::string(icarus_simulator_flag), 1);
+    fp << std::endl;
+  } 
+
+  /* Close the file stream */
+  fp.close();
+}
+
