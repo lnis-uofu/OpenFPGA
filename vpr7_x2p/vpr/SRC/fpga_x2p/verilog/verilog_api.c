@@ -505,14 +505,7 @@ void vpr_fpga_verilog(ModuleManager& module_manager,
                         sram_verilog_orgz_info->type);
   }
 
-  /* TODO: this is an old function, to be shadowed */
-  /*
-  write_include_netlists(src_dir_path,
-                         chomped_circuit_name,
-                         *(Arch.spice) );
-   */
-
-  /* TODO: new function: to be tested */
+  /* Print a Verilog file including all the netlists that have been generated */
   print_include_netlists(std::string(src_dir_path),
                          std::string(chomped_circuit_name),
                          std::string(vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.reference_verilog_benchmark_file),
