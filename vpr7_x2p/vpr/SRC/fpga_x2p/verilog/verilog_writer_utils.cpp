@@ -52,9 +52,7 @@ void print_verilog_include_netlist(std::fstream& fp,
                                    const std::string& netlist_name) {
   check_file_handler(fp);
 
-  fp << "//------ Include external netlist: " << netlist_name << " -----" << std::endl;
   fp << "`include \"" << netlist_name << "\"" << std::endl; 
-  fp << "//------ End include external netlist: " << netlist_name << " -----" << std::endl;
 }
 
 /************************************************

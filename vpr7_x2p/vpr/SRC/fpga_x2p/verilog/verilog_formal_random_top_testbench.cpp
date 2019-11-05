@@ -204,8 +204,6 @@ void print_verilog_random_top_testbench(const std::string& circuit_name,
 
   print_verilog_include_netlist(fp, std::string(verilog_dir + std::string(defines_verilog_simulation_file_name)));  
 
-  print_verilog_include_netlist(fp, std::string(fpga_verilog_opts.reference_verilog_benchmark_file));
-
   /* Preparation: find all the clock ports */
   std::vector<std::string> clock_port_names = find_benchmark_clock_port_name(L_logical_blocks);
 
