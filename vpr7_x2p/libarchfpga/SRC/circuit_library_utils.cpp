@@ -226,7 +226,7 @@ std::vector<CircuitPortId> find_circuit_library_global_ports(const CircuitLibrar
     /* Check if a same port with the same name has already been in the list */
     bool add_to_list = true;
     for (const auto& global_port : global_ports) {
-      if (0 == circuit_lib.port_lib_name(port).compare(circuit_lib.port_lib_name(global_port))) {
+      if (0 == circuit_lib.port_prefix(port).compare(circuit_lib.port_prefix(global_port))) {
         /* Same name, skip list update */
         add_to_list = false;
         break;

@@ -538,18 +538,18 @@ void generate_verilog_rram_mux_branch_module(ModuleManager& module_manager,
   VTR_ASSERT(true == module_manager.valid_module_id(module_id));
 
   /* Find each input port */
-  BasicPort input_port(circuit_lib.port_lib_name(mux_input_ports[0]), num_inputs);
+  BasicPort input_port(circuit_lib.port_prefix(mux_input_ports[0]), num_inputs);
 
   /* Find each output port */
-  BasicPort output_port(circuit_lib.port_lib_name(mux_output_ports[0]), num_outputs);
+  BasicPort output_port(circuit_lib.port_prefix(mux_output_ports[0]), num_outputs);
 
   /* Find RRAM programming ports, 
    * RRAM MUXes require one more pair of BLB and WL 
    * to configure the memories. See schematic for details
    */
-  BasicPort blb_port(circuit_lib.port_lib_name(mux_blb_ports[0]), num_mems + 1);
+  BasicPort blb_port(circuit_lib.port_prefix(mux_blb_ports[0]), num_mems + 1);
 
-  BasicPort wl_port(circuit_lib.port_lib_name(mux_wl_ports[0]), num_mems + 1);
+  BasicPort wl_port(circuit_lib.port_prefix(mux_wl_ports[0]), num_mems + 1);
 
   /* dump module definition + ports */
   print_verilog_module_declaration(fp, module_manager, module_id);
@@ -633,7 +633,7 @@ void generate_verilog_cmos_mux_module_input_buffers(ModuleManager& module_manage
   VTR_ASSERT(1 == mux_input_ports.size());
 
   /* Get the input port from MUX module */
-  ModulePortId module_input_port_id = module_manager.find_module_port(module_id, circuit_lib.port_lib_name(mux_input_ports[0]));
+  ModulePortId module_input_port_id = module_manager.find_module_port(module_id, circuit_lib.port_prefix(mux_input_ports[0]));
   VTR_ASSERT(ModulePortId::INVALID() != module_input_port_id);
   /* Get the port from module */
   BasicPort module_input_port = module_manager.module_port(module_id, module_input_port_id);
@@ -721,7 +721,7 @@ void generate_verilog_cmos_mux_module_output_buffers(ModuleManager& module_manag
   /* Iterate over all the outputs in the MUX module */
   for (const auto& output_port : mux_output_ports) {
     /* Get the output port from MUX module */
-    ModulePortId module_output_port_id = module_manager.find_module_port(module_id, circuit_lib.port_lib_name(output_port));
+    ModulePortId module_output_port_id = module_manager.find_module_port(module_id, circuit_lib.port_prefix(output_port));
     VTR_ASSERT(ModulePortId::INVALID() != module_output_port_id);
     /* Get the port from module */
     BasicPort module_output_port = module_manager.module_port(module_id, module_output_port_id);
@@ -918,7 +918,7 @@ void generate_verilog_rram_mux_module_multiplexing_structure(ModuleManager& modu
     for (const auto& mem : mems) {
       /* Generate the port info of each mem node:
        */
-      BasicPort branch_node_blb_port(circuit_lib.port_lib_name(mux_blb_ports[0]), size_t(mem), size_t(mem));
+      BasicPort branch_node_blb_port(circuit_lib.port_prefix(mux_blb_ports[0]), size_t(mem), size_t(mem));
       branch_node_blb_ports.push_back(branch_node_blb_port);  
     } 
     /* Every stage, we have an additonal BLB and WL in controlling purpose 
@@ -930,7 +930,7 @@ void generate_verilog_rram_mux_module_multiplexing_structure(ModuleManager& modu
      *
      * output_node_level is always larger than the mem_level by 1
      */
-    branch_node_blb_ports.push_back(BasicPort(circuit_lib.port_lib_name(mux_blb_ports[0]), 
+    branch_node_blb_ports.push_back(BasicPort(circuit_lib.port_prefix(mux_blb_ports[0]), 
                                               mux_graph.num_memory_bits() + output_node_level - 1, 
                                               mux_graph.num_memory_bits() + output_node_level - 1) 
                                     );
@@ -949,7 +949,7 @@ void generate_verilog_rram_mux_module_multiplexing_structure(ModuleManager& modu
     }
 
     /* Link nodes to BLB ports for the branch module */
-    ModulePortId module_blb_port_id = module_manager.find_module_port(branch_module_id, circuit_lib.port_lib_name(mux_blb_ports[0]));
+    ModulePortId module_blb_port_id = module_manager.find_module_port(branch_module_id, circuit_lib.port_prefix(mux_blb_ports[0]));
     VTR_ASSERT(ModulePortId::INVALID() != module_blb_port_id);
     /* Get the port from module */
     BasicPort module_blb_port = module_manager.module_port(branch_module_id, module_blb_port_id);
@@ -959,7 +959,7 @@ void generate_verilog_rram_mux_module_multiplexing_structure(ModuleManager& modu
     for (const auto& mem : mems) {
       /* Generate the port info of each mem node:
        */
-      BasicPort branch_node_blb_port(circuit_lib.port_lib_name(mux_wl_ports[0]), size_t(mem), size_t(mem));
+      BasicPort branch_node_blb_port(circuit_lib.port_prefix(mux_wl_ports[0]), size_t(mem), size_t(mem));
       branch_node_wl_ports.push_back(branch_node_blb_port);  
     } 
     /* Every stage, we have an additonal BLB and WL in controlling purpose 
@@ -971,7 +971,7 @@ void generate_verilog_rram_mux_module_multiplexing_structure(ModuleManager& modu
      *
      * output_node_level is always larger than the mem_level by 1
      */
-    branch_node_wl_ports.push_back(BasicPort(circuit_lib.port_lib_name(mux_wl_ports[0]), 
+    branch_node_wl_ports.push_back(BasicPort(circuit_lib.port_prefix(mux_wl_ports[0]), 
                                              mux_graph.num_memory_bits() + output_node_level - 1, 
                                              mux_graph.num_memory_bits() + output_node_level - 1) 
                                    );
@@ -990,7 +990,7 @@ void generate_verilog_rram_mux_module_multiplexing_structure(ModuleManager& modu
     }
 
     /* Link nodes to BLB ports for the branch module */
-    ModulePortId module_wl_port_id = module_manager.find_module_port(branch_module_id, circuit_lib.port_lib_name(mux_wl_ports[0]));
+    ModulePortId module_wl_port_id = module_manager.find_module_port(branch_module_id, circuit_lib.port_prefix(mux_wl_ports[0]));
     VTR_ASSERT(ModulePortId::INVALID() != module_wl_port_id);
     /* Get the port from module */
     BasicPort module_wl_port = module_manager.module_port(branch_module_id, module_wl_port_id);
@@ -1107,13 +1107,13 @@ void generate_verilog_rram_mux_module(ModuleManager& module_manager,
   /* Add each global port */
   for (const auto& port : mux_global_ports) {
     /* Configure each global port */
-    BasicPort global_port(circuit_lib.port_lib_name(port), circuit_lib.port_size(port));
+    BasicPort global_port(circuit_lib.port_prefix(port), circuit_lib.port_size(port));
     module_manager.add_port(module_id, global_port, ModuleManager::MODULE_GLOBAL_PORT);
   }
   /* Add each input port */
   size_t input_port_cnt = 0;
   for (const auto& port : mux_input_ports) {
-    BasicPort input_port(circuit_lib.port_lib_name(port), num_inputs);
+    BasicPort input_port(circuit_lib.port_prefix(port), num_inputs);
     module_manager.add_port(module_id, input_port, ModuleManager::MODULE_INPUT_PORT);
     /* Update counter */
     input_port_cnt++;
@@ -1122,7 +1122,7 @@ void generate_verilog_rram_mux_module(ModuleManager& module_manager,
   VTR_ASSERT(1 == input_port_cnt);
 
   for (const auto& port : mux_output_ports) {
-    BasicPort output_port(circuit_lib.port_lib_name(port), num_outputs);
+    BasicPort output_port(circuit_lib.port_prefix(port), num_outputs);
     if (SPICE_MODEL_LUT == circuit_lib.model_type(circuit_model)) {
       output_port.set_width(circuit_lib.port_size(port));
     }
@@ -1134,7 +1134,7 @@ void generate_verilog_rram_mux_module(ModuleManager& module_manager,
     /* IMPORTANT: RRAM-based MUX has an additional BLB pin per level 
      * So, the actual port width of BLB should be added by the number of levels of the MUX graph 
      */
-    BasicPort blb_port(circuit_lib.port_lib_name(port), num_mems + mux_graph.num_levels());
+    BasicPort blb_port(circuit_lib.port_prefix(port), num_mems + mux_graph.num_levels());
     module_manager.add_port(module_id, blb_port, ModuleManager::MODULE_INPUT_PORT);
   }
 
@@ -1143,7 +1143,7 @@ void generate_verilog_rram_mux_module(ModuleManager& module_manager,
     /* IMPORTANT: RRAM-based MUX has an additional WL pin per level 
      * So, the actual port width of WL should be added by the number of levels of the MUX graph 
      */
-    BasicPort wl_port(circuit_lib.port_lib_name(port), num_mems + mux_graph.num_levels());
+    BasicPort wl_port(circuit_lib.port_prefix(port), num_mems + mux_graph.num_levels());
     module_manager.add_port(module_id, wl_port, ModuleManager::MODULE_INPUT_PORT);
   }
  

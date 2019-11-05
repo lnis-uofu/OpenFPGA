@@ -120,7 +120,7 @@ void print_verilog_preconfig_top_module_connect_global_ports(std::fstream& fp,
     CircuitPortId linked_circuit_port_id = CircuitPortId::INVALID();
     /* Find the circuit port with the same name */
     for (const CircuitPortId& circuit_port_id : global_ports) {
-      if (0 != module_global_port.get_name().compare(circuit_lib.port_lib_name(circuit_port_id))) {
+      if (0 != module_global_port.get_name().compare(circuit_lib.port_prefix(circuit_port_id))) {
         continue;
       }
       linked_circuit_port_id = circuit_port_id;

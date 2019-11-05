@@ -13,4 +13,7 @@ void build_user_defined_modules(ModuleManager& module_manager,
 
 void build_constant_generator_modules(ModuleManager& module_manager);
 
+void rename_primitive_module_port_names(ModuleManager& module_manager, 
+                                        const CircuitLibrary& circuit_lib);
+
 #endif

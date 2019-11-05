@@ -3134,7 +3134,7 @@ void add_user_defined_verilog_modules(ModuleManager& module_manager,
     VTR_ASSERT (1 == circuit_lib.port_size(output_ports[0]));
   
     /* Add a mid-output port to the module */
-    BasicPort module_mid_output_port(generate_segment_wire_mid_output_name(circuit_lib.port_lib_name(output_ports[0])), circuit_lib.port_size(output_ports[0]));
+    BasicPort module_mid_output_port(generate_segment_wire_mid_output_name(circuit_lib.port_prefix(output_ports[0])), circuit_lib.port_size(output_ports[0]));
     module_manager.add_port(module_id, module_mid_output_port, ModuleManager::MODULE_OUTPUT_PORT);
   }
 }

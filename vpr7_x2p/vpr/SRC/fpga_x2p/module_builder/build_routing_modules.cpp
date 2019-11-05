@@ -259,7 +259,7 @@ void build_switch_block_mux_module(ModuleManager& module_manager,
   std::vector<CircuitPortId> mux_model_input_ports = circuit_lib.model_ports_by_type(mux_model, SPICE_MODEL_PORT_INPUT, true);
   VTR_ASSERT(1 == mux_model_input_ports.size());
   /* Find the module port id of the input port */
-  ModulePortId mux_input_port_id = module_manager.find_module_port(mux_module, circuit_lib.port_lib_name(mux_model_input_ports[0])); 
+  ModulePortId mux_input_port_id = module_manager.find_module_port(mux_module, circuit_lib.port_prefix(mux_model_input_ports[0])); 
   VTR_ASSERT(true == module_manager.valid_module_port_id(mux_module, mux_input_port_id));
   BasicPort mux_input_port = module_manager.module_port(mux_module, mux_input_port_id);
 
@@ -278,7 +278,7 @@ void build_switch_block_mux_module(ModuleManager& module_manager,
   std::vector<CircuitPortId> mux_model_output_ports = circuit_lib.model_ports_by_type(mux_model, SPICE_MODEL_PORT_OUTPUT, true);
   VTR_ASSERT(1 == mux_model_output_ports.size());
   /* Use the port name convention in the circuit library */
-  ModulePortId mux_output_port_id = module_manager.find_module_port(mux_module, circuit_lib.port_lib_name(mux_model_output_ports[0])); 
+  ModulePortId mux_output_port_id = module_manager.find_module_port(mux_module, circuit_lib.port_prefix(mux_model_output_ports[0])); 
   VTR_ASSERT(true == module_manager.valid_module_port_id(mux_module, mux_output_port_id));
   BasicPort mux_output_port = module_manager.module_port(mux_module, mux_output_port_id);
   ModulePortId sb_output_port_id = find_switch_block_module_chan_port(module_manager, sb_module, rr_gsb, chan_side, cur_rr_node, OUT_PORT); 
@@ -733,7 +733,7 @@ void build_connection_block_mux_module(ModuleManager& module_manager,
   std::vector<CircuitPortId> mux_model_input_ports = circuit_lib.model_ports_by_type(mux_model, SPICE_MODEL_PORT_INPUT, true);
   VTR_ASSERT(1 == mux_model_input_ports.size());
   /* Find the module port id of the input port */
-  ModulePortId mux_input_port_id = module_manager.find_module_port(mux_module, circuit_lib.port_lib_name(mux_model_input_ports[0])); 
+  ModulePortId mux_input_port_id = module_manager.find_module_port(mux_module, circuit_lib.port_prefix(mux_model_input_ports[0])); 
   VTR_ASSERT(true == module_manager.valid_module_port_id(mux_module, mux_input_port_id));
   BasicPort mux_input_port = module_manager.module_port(mux_module, mux_input_port_id);
 
@@ -752,7 +752,7 @@ void build_connection_block_mux_module(ModuleManager& module_manager,
   std::vector<CircuitPortId> mux_model_output_ports = circuit_lib.model_ports_by_type(mux_model, SPICE_MODEL_PORT_OUTPUT, true);
   VTR_ASSERT(1 == mux_model_output_ports.size());
   /* Use the port name convention in the circuit library */
-  ModulePortId mux_output_port_id = module_manager.find_module_port(mux_module, circuit_lib.port_lib_name(mux_model_output_ports[0])); 
+  ModulePortId mux_output_port_id = module_manager.find_module_port(mux_module, circuit_lib.port_prefix(mux_model_output_ports[0])); 
   VTR_ASSERT(true == module_manager.valid_module_port_id(mux_module, mux_output_port_id));
   BasicPort mux_output_port = module_manager.module_port(mux_module, mux_output_port_id);
   ModulePortId cb_output_port_id = find_connection_block_module_ipin_port(module_manager, cb_module, rr_gsb, grids, cur_rr_node);

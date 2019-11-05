@@ -82,36 +82,36 @@ void build_lut_module(ModuleManager& module_manager,
   /* Add each global port */
   for (const auto& port : lut_global_ports) {
     /* Configure each global port */
-    BasicPort global_port(circuit_lib.port_lib_name(port), circuit_lib.port_size(port));
+    BasicPort global_port(circuit_lib.port_prefix(port), circuit_lib.port_size(port));
     module_manager.add_port(lut_module, global_port, ModuleManager::MODULE_GLOBAL_PORT);
   }
   /* Add each input port */
   for (const auto& port : lut_input_ports) {
-    BasicPort input_port(circuit_lib.port_lib_name(port), circuit_lib.port_size(port));
+    BasicPort input_port(circuit_lib.port_prefix(port), circuit_lib.port_size(port));
     module_manager.add_port(lut_module, input_port, ModuleManager::MODULE_INPUT_PORT);
     /* Set the port to be wire-connection */
     module_manager.set_port_is_wire(lut_module, input_port.get_name(), true);
   }
   /* Add each output port */
   for (const auto& port : lut_output_ports) {
-    BasicPort output_port(circuit_lib.port_lib_name(port), circuit_lib.port_size(port));
+    BasicPort output_port(circuit_lib.port_prefix(port), circuit_lib.port_size(port));
     module_manager.add_port(lut_module, output_port, ModuleManager::MODULE_OUTPUT_PORT);
     /* Set the port to be wire-connection */
     module_manager.set_port_is_wire(lut_module, output_port.get_name(), true);
   }
   /* Add each regular (not mode select) SRAM port */
   for (const auto& port : lut_regular_sram_ports) {
-    BasicPort mem_port(circuit_lib.port_lib_name(port), circuit_lib.port_size(port));
+    BasicPort mem_port(circuit_lib.port_prefix(port), circuit_lib.port_size(port));
     module_manager.add_port(lut_module, mem_port, ModuleManager::MODULE_INPUT_PORT);
-    BasicPort mem_inv_port(std::string(circuit_lib.port_lib_name(port) + "_inv"), circuit_lib.port_size(port));
+    BasicPort mem_inv_port(std::string(circuit_lib.port_prefix(port) + "_inv"), circuit_lib.port_size(port));
     module_manager.add_port(lut_module, mem_inv_port, ModuleManager::MODULE_INPUT_PORT);
   }
 
   /* Add each mode-select SRAM port */
   for (const auto& port : lut_mode_select_sram_ports) {
-    BasicPort mem_port(circuit_lib.port_lib_name(port), circuit_lib.port_size(port));
+    BasicPort mem_port(circuit_lib.port_prefix(port), circuit_lib.port_size(port));
     module_manager.add_port(lut_module, mem_port, ModuleManager::MODULE_INPUT_PORT);
-    BasicPort mem_inv_port(std::string(circuit_lib.port_lib_name(port) + "_inv"), circuit_lib.port_size(port));
+    BasicPort mem_inv_port(std::string(circuit_lib.port_prefix(port) + "_inv"), circuit_lib.port_size(port));
     module_manager.add_port(lut_module, mem_inv_port, ModuleManager::MODULE_INPUT_PORT);
   }
 
@@ -149,7 +149,7 @@ void build_lut_module(ModuleManager& module_manager,
   std::string tri_state_map = circuit_lib.port_tri_state_map(lut_input_ports[0]);
   size_t mode_select_port_lsb = 0;
   for (const auto& pin : circuit_lib.pins(lut_input_ports[0])) {
-    ModulePortId lut_module_input_port_id = module_manager.find_module_port(lut_module, circuit_lib.port_lib_name(lut_input_ports[0]));
+    ModulePortId lut_module_input_port_id = module_manager.find_module_port(lut_module, circuit_lib.port_prefix(lut_input_ports[0]));
     VTR_ASSERT(true == module_manager.valid_module_port_id(lut_module, lut_module_input_port_id));
 
     /* Create a module net for the connection */
@@ -222,13 +222,13 @@ void build_lut_module(ModuleManager& module_manager,
     ModuleNetId gate_sram_net = module_manager.create_module_net(lut_module);
 
     /* Find the module port id of the SRAM port of LUT module */
-    ModulePortId lut_module_mode_select_port_id = module_manager.find_module_port(lut_module, circuit_lib.port_lib_name(lut_mode_select_sram_ports[0]));
+    ModulePortId lut_module_mode_select_port_id = module_manager.find_module_port(lut_module, circuit_lib.port_prefix(lut_mode_select_sram_ports[0]));
     VTR_ASSERT(true == module_manager.valid_module_port_id(lut_module, lut_module_mode_select_port_id));
     /* Set the source of the net to an mode-select SRAM port of the LUT module */
     module_manager.add_module_net_source(lut_module, gate_sram_net, lut_module, 0, lut_module_mode_select_port_id, mode_select_port_lsb);
 
     /* Find the module port id of the SRAM port of LUT module */
-    ModulePortId gate_module_input0_port_id = module_manager.find_module_port(gate_module, circuit_lib.port_lib_name(gate_input_ports[0]));
+    ModulePortId gate_module_input0_port_id = module_manager.find_module_port(gate_module, circuit_lib.port_prefix(gate_input_ports[0]));
     VTR_ASSERT(true == module_manager.valid_module_port_id(gate_module, gate_module_input0_port_id));
     /* Set the sink of the net to an input[0] port of the gate module */
     VTR_ASSERT(1 == module_manager.module_port(gate_module, gate_module_input0_port_id).get_width());
@@ -237,7 +237,7 @@ void build_lut_module(ModuleManager& module_manager,
     }
 
     /* Use the existing net to connect to the input[1] port of the gate module */
-    ModulePortId gate_module_input1_port_id = module_manager.find_module_port(gate_module, circuit_lib.port_lib_name(gate_input_ports[1]));
+    ModulePortId gate_module_input1_port_id = module_manager.find_module_port(gate_module, circuit_lib.port_prefix(gate_input_ports[1]));
     VTR_ASSERT(true == module_manager.valid_module_port_id(gate_module, gate_module_input1_port_id));
     VTR_ASSERT(1 == module_manager.module_port(gate_module, gate_module_input1_port_id).get_width());
     for (const size_t& gate_pin : module_manager.module_port(gate_module, gate_module_input1_port_id).pins()) {
@@ -246,7 +246,7 @@ void build_lut_module(ModuleManager& module_manager,
 
     /* Create a module net for the output connection */
     ModuleNetId gate_output_net = module_manager.create_module_net(lut_module);
-    ModulePortId gate_module_output_port_id = module_manager.find_module_port(gate_module, circuit_lib.port_lib_name(gate_output_ports[0]));
+    ModulePortId gate_module_output_port_id = module_manager.find_module_port(gate_module, circuit_lib.port_prefix(gate_output_ports[0]));
     VTR_ASSERT(true == module_manager.valid_module_port_id(gate_module, gate_module_output_port_id));
     BasicPort gate_module_output_port = module_manager.module_port(gate_module, gate_module_output_port_id);
     VTR_ASSERT(1 == gate_module_output_port.get_width());
@@ -326,7 +326,7 @@ void build_lut_module(ModuleManager& module_manager,
    * 3. Data input of LUT MUX module to SRAM port of LUT
    * 4. Data output of LUT MUX module to output ports of LUT
    */
-  ModulePortId lut_mux_sram_port_id = module_manager.find_module_port(lut_mux_module, circuit_lib.port_lib_name(lut_regular_sram_ports[0]));
+  ModulePortId lut_mux_sram_port_id = module_manager.find_module_port(lut_mux_module, circuit_lib.port_prefix(lut_regular_sram_ports[0]));
   BasicPort lut_mux_sram_port = module_manager.module_port(lut_mux_module, lut_mux_sram_port_id);
   VTR_ASSERT(lut_mux_sram_port.get_width() == lut_mux_sram_nets.size());
   /* Wire the port to lut_mux_sram_net */
@@ -334,7 +334,7 @@ void build_lut_module(ModuleManager& module_manager,
     module_manager.add_module_net_sink(lut_module, lut_mux_sram_nets[pin], lut_mux_module, lut_mux_instance, lut_mux_sram_port_id, pin);
   } 
 
-  ModulePortId lut_mux_sram_inv_port_id = module_manager.find_module_port(lut_mux_module, std::string(circuit_lib.port_lib_name(lut_regular_sram_ports[0]) + "_inv"));
+  ModulePortId lut_mux_sram_inv_port_id = module_manager.find_module_port(lut_mux_module, std::string(circuit_lib.port_prefix(lut_regular_sram_ports[0]) + "_inv"));
   BasicPort lut_mux_sram_inv_port = module_manager.module_port(lut_mux_module, lut_mux_sram_inv_port_id);
   VTR_ASSERT(lut_mux_sram_inv_port.get_width() == lut_mux_sram_inv_nets.size());
   /* Wire the port to lut_mux_sram_net */
@@ -351,9 +351,9 @@ void build_lut_module(ModuleManager& module_manager,
    *             |
    *            net
    */  
-  ModulePortId lut_sram_port_id = module_manager.find_module_port(lut_module, circuit_lib.port_lib_name(lut_regular_sram_ports[0]));
+  ModulePortId lut_sram_port_id = module_manager.find_module_port(lut_module, circuit_lib.port_prefix(lut_regular_sram_ports[0]));
   BasicPort lut_sram_port = module_manager.module_port(lut_module, lut_sram_port_id);
-  ModulePortId lut_mux_input_port_id = module_manager.find_module_port(lut_mux_module, circuit_lib.port_lib_name(lut_input_ports[0]));
+  ModulePortId lut_mux_input_port_id = module_manager.find_module_port(lut_mux_module, circuit_lib.port_prefix(lut_input_ports[0]));
   BasicPort lut_mux_input_port = module_manager.module_port(lut_mux_module, lut_mux_input_port_id);
   VTR_ASSERT(lut_mux_input_port.get_width() == lut_sram_port.get_width());
   /* Wire the port to lut_mux_sram_net */
@@ -364,9 +364,9 @@ void build_lut_module(ModuleManager& module_manager,
   } 
 
   for (const auto& port : lut_output_ports) {
-    ModulePortId lut_output_port_id = module_manager.find_module_port(lut_module, circuit_lib.port_lib_name(port));
+    ModulePortId lut_output_port_id = module_manager.find_module_port(lut_module, circuit_lib.port_prefix(port));
     BasicPort lut_output_port = module_manager.module_port(lut_module, lut_output_port_id);
-    ModulePortId lut_mux_output_port_id = module_manager.find_module_port(lut_mux_module, circuit_lib.port_lib_name(port));
+    ModulePortId lut_mux_output_port_id = module_manager.find_module_port(lut_mux_module, circuit_lib.port_prefix(port));
     BasicPort lut_mux_output_port = module_manager.module_port(lut_mux_module, lut_mux_output_port_id);
     VTR_ASSERT(lut_mux_output_port.get_width() == lut_output_port.get_width());
     /* Wire the port to lut_mux_sram_net */

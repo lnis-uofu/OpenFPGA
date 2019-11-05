@@ -93,7 +93,7 @@ void build_routing_wire_module(ModuleManager& module_manager,
   ModuleId wire_module = add_circuit_model_to_module_manager(module_manager, circuit_lib, wire_model, wire_subckt_name); 
 
   /* Add a mid-output port to the module */
-  BasicPort module_mid_output_port(generate_segment_wire_mid_output_name(circuit_lib.port_lib_name(output_ports[0])), circuit_lib.port_size(output_ports[0]));
+  BasicPort module_mid_output_port(generate_segment_wire_mid_output_name(circuit_lib.port_prefix(output_ports[0])), circuit_lib.port_size(output_ports[0]));
   module_manager.add_port(wire_module, module_mid_output_port, ModuleManager::MODULE_OUTPUT_PORT);
 }
 

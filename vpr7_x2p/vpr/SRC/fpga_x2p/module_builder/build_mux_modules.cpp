@@ -74,25 +74,25 @@ void build_cmos_mux_branch_body(ModuleManager& module_manager,
 
   /* Find the module ports of tgate module */
   /* Input port is the data path input of the tgate, whose size must be 1 ! */
-  ModulePortId tgate_module_input = module_manager.find_module_port(tgate_module_id, circuit_lib.port_lib_name(tgate_input_ports[0]));
+  ModulePortId tgate_module_input = module_manager.find_module_port(tgate_module_id, circuit_lib.port_prefix(tgate_input_ports[0]));
   VTR_ASSERT(true == module_manager.valid_module_port_id(tgate_module_id, tgate_module_input));
   BasicPort tgate_module_input_port = module_manager.module_port(tgate_module_id, tgate_module_input);
   VTR_ASSERT(1 == tgate_module_input_port.get_width());
 
   /* Mem port is the memory of the tgate, whose size must be 1 ! */
-  ModulePortId tgate_module_mem = module_manager.find_module_port(tgate_module_id, circuit_lib.port_lib_name(tgate_input_ports[1]));
+  ModulePortId tgate_module_mem = module_manager.find_module_port(tgate_module_id, circuit_lib.port_prefix(tgate_input_ports[1]));
   VTR_ASSERT(true == module_manager.valid_module_port_id(tgate_module_id, tgate_module_mem));
   BasicPort tgate_module_mem_port = module_manager.module_port(tgate_module_id, tgate_module_mem);
   VTR_ASSERT(1 == tgate_module_mem_port.get_width());
 
   /* Mem inv port is the inverted memory of the tgate, whose size must be 1 ! */
-  ModulePortId tgate_module_mem_inv = module_manager.find_module_port(tgate_module_id, circuit_lib.port_lib_name(tgate_input_ports[2]));
+  ModulePortId tgate_module_mem_inv = module_manager.find_module_port(tgate_module_id, circuit_lib.port_prefix(tgate_input_ports[2]));
   VTR_ASSERT(true == module_manager.valid_module_port_id(tgate_module_id, tgate_module_mem_inv));
   BasicPort tgate_module_mem_inv_port = module_manager.module_port(tgate_module_id, tgate_module_mem_inv);
   VTR_ASSERT(1 == tgate_module_mem_inv_port.get_width());
 
   /* Output port is the data path output of the tgate, whose size must be 1 ! */
-  ModulePortId tgate_module_output = module_manager.find_module_port(tgate_module_id, circuit_lib.port_lib_name(tgate_output_ports[0]));
+  ModulePortId tgate_module_output = module_manager.find_module_port(tgate_module_id, circuit_lib.port_prefix(tgate_output_ports[0]));
   VTR_ASSERT(true == module_manager.valid_module_port_id(tgate_module_id, tgate_module_output));
   BasicPort tgate_module_output_port = module_manager.module_port(tgate_module_id, tgate_module_output);
   VTR_ASSERT(1 == tgate_module_output_port.get_width());
@@ -300,26 +300,26 @@ void build_rram_mux_branch_module(ModuleManager& module_manager,
   std::vector<CircuitPortId> prog_enable_ports = circuit_lib.model_global_ports_by_type(mux_model, SPICE_MODEL_PORT_INPUT, true, true);
   for (const auto& port : prog_enable_ports) {
     /* Configure each global port */
-    BasicPort global_port(circuit_lib.port_lib_name(port), circuit_lib.port_size(port));
+    BasicPort global_port(circuit_lib.port_prefix(port), circuit_lib.port_size(port));
     module_manager.add_port(mux_module, global_port, ModuleManager::MODULE_GLOBAL_PORT);
   }
 
   /* Add each input port */
-  BasicPort input_port(circuit_lib.port_lib_name(mux_input_ports[0]), num_inputs);
+  BasicPort input_port(circuit_lib.port_prefix(mux_input_ports[0]), num_inputs);
   module_manager.add_port(mux_module, input_port, ModuleManager::MODULE_INPUT_PORT);
 
   /* Add each output port */
-  BasicPort output_port(circuit_lib.port_lib_name(mux_output_ports[0]), num_outputs);
+  BasicPort output_port(circuit_lib.port_prefix(mux_output_ports[0]), num_outputs);
   module_manager.add_port(mux_module, output_port, ModuleManager::MODULE_OUTPUT_PORT);
 
   /* Add RRAM programming ports, 
    * RRAM MUXes require one more pair of BLB and WL 
    * to configure the memories. See schematic for details
    */
-  BasicPort blb_port(circuit_lib.port_lib_name(mux_blb_ports[0]), num_mems + 1);
+  BasicPort blb_port(circuit_lib.port_prefix(mux_blb_ports[0]), num_mems + 1);
   module_manager.add_port(mux_module, blb_port, ModuleManager::MODULE_INPUT_PORT);
 
-  BasicPort wl_port(circuit_lib.port_lib_name(mux_wl_ports[0]), num_mems + 1);
+  BasicPort wl_port(circuit_lib.port_prefix(mux_wl_ports[0]), num_mems + 1);
   module_manager.add_port(mux_module, wl_port, ModuleManager::MODULE_INPUT_PORT);
 
   /* Note: we do not generate the internal structure of the ReRAM-based MUX
@@ -398,20 +398,20 @@ void build_cmos_mux_module_mux2_multiplexing_structure(ModuleManager& module_man
   std::vector<BasicPort> std_cell_module_input_ports;
   /* Input 0 port is the first data path input of the tgate, whose size must be 1 ! */
   for (size_t port_id = 0; port_id < 2; ++port_id) {
-    std_cell_module_inputs.push_back(module_manager.find_module_port(std_cell_module_id, circuit_lib.port_lib_name(std_cell_input_ports[port_id])));
+    std_cell_module_inputs.push_back(module_manager.find_module_port(std_cell_module_id, circuit_lib.port_prefix(std_cell_input_ports[port_id])));
     VTR_ASSERT(true == module_manager.valid_module_port_id(std_cell_module_id, std_cell_module_inputs[port_id]));
     std_cell_module_input_ports.push_back(module_manager.module_port(std_cell_module_id, std_cell_module_inputs[port_id]));
     VTR_ASSERT(1 == std_cell_module_input_ports[port_id].get_width());
   }
 
   /* Mem port is the memory of the standard cell MUX2, whose size must be 1 ! */
-  ModulePortId std_cell_module_mem = module_manager.find_module_port(std_cell_module_id, circuit_lib.port_lib_name(std_cell_input_ports[2]));
+  ModulePortId std_cell_module_mem = module_manager.find_module_port(std_cell_module_id, circuit_lib.port_prefix(std_cell_input_ports[2]));
   VTR_ASSERT(true == module_manager.valid_module_port_id(std_cell_module_id, std_cell_module_mem));
   BasicPort std_cell_module_mem_port = module_manager.module_port(std_cell_module_id, std_cell_module_mem);
   VTR_ASSERT(1 == std_cell_module_mem_port.get_width());
 
   /* Output port is the data path output of the standard cell MUX2, whose size must be 1 ! */
-  ModulePortId std_cell_module_output = module_manager.find_module_port(std_cell_module_id, circuit_lib.port_lib_name(std_cell_output_ports[0]));
+  ModulePortId std_cell_module_output = module_manager.find_module_port(std_cell_module_id, circuit_lib.port_prefix(std_cell_output_ports[0]));
   VTR_ASSERT(true == module_manager.valid_module_port_id(std_cell_module_id, std_cell_module_output));
   BasicPort std_cell_module_output_port = module_manager.module_port(std_cell_module_id, std_cell_module_output);
   VTR_ASSERT(1 == std_cell_module_output_port.get_width());
@@ -745,7 +745,7 @@ vtr::vector<MuxInputId, ModuleNetId> build_mux_module_input_buffers(ModuleManage
   VTR_ASSERT(1 == mux_input_ports.size());
 
   /* Get the input port from MUX module */
-  ModulePortId module_input_port_id = module_manager.find_module_port(mux_module, circuit_lib.port_lib_name(mux_input_ports[0]));
+  ModulePortId module_input_port_id = module_manager.find_module_port(mux_module, circuit_lib.port_prefix(mux_input_ports[0]));
   VTR_ASSERT(ModulePortId::INVALID() != module_input_port_id);
   /* Get the port from module */
   BasicPort module_input_port = module_manager.module_port(mux_module, module_input_port_id);
@@ -860,7 +860,7 @@ vtr::vector<MuxOutputId, ModuleNetId> build_mux_module_output_buffers(ModuleMana
   /* Iterate over all the outputs in the MUX module */
   for (const auto& output_port : mux_output_ports) {
     /* Get the output port from MUX module */
-    ModulePortId module_output_port_id = module_manager.find_module_port(mux_module, circuit_lib.port_lib_name(output_port));
+    ModulePortId module_output_port_id = module_manager.find_module_port(mux_module, circuit_lib.port_prefix(output_port));
     VTR_ASSERT(ModulePortId::INVALID() != module_output_port_id);
     /* Get the port from module */
     BasicPort module_output_port = module_manager.module_port(mux_module, module_output_port_id);
@@ -968,7 +968,7 @@ void build_mux_module_local_encoders_and_memory_nets(ModuleManager& module_manag
     /* Add mem and mem_inv nets here */
     size_t mem_net_cnt = 0;
     for (const auto& port : mux_sram_ports) {
-      ModulePortId mem_port_id = module_manager.find_module_port(mux_module, circuit_lib.port_lib_name(port));
+      ModulePortId mem_port_id = module_manager.find_module_port(mux_module, circuit_lib.port_prefix(port));
       BasicPort mem_port = module_manager.module_port(mux_module, mem_port_id);
       for (const size_t& pin : mem_port.pins()) {
         MuxMemId mem_id = MuxMemId(mem_net_cnt);
@@ -983,7 +983,7 @@ void build_mux_module_local_encoders_and_memory_nets(ModuleManager& module_manag
     /* Add mem and mem_inv nets here */
     size_t mem_inv_net_cnt = 0;
     for (const auto& port : mux_sram_ports) {
-      ModulePortId mem_inv_port_id = module_manager.find_module_port(mux_module, std::string(circuit_lib.port_lib_name(port) + "_inv"));
+      ModulePortId mem_inv_port_id = module_manager.find_module_port(mux_module, std::string(circuit_lib.port_prefix(port) + "_inv"));
       BasicPort mem_inv_port = module_manager.module_port(mux_module, mem_inv_port_id);
       for (const size_t& pin : mem_inv_port.pins()) {
         MuxMemId mem_id = MuxMemId(mem_inv_net_cnt);
@@ -1003,9 +1003,9 @@ void build_mux_module_local_encoders_and_memory_nets(ModuleManager& module_manag
   BasicPort decoder_data_inv_port(generate_mux_local_decoder_data_inv_port_name(), mux_graph.num_memory_bits());
 
   /* Local port to record the LSB and MSB of each level, here, we deposite (0, 0) */
-  ModulePortId mux_module_sram_port_id = module_manager.find_module_port(mux_module, circuit_lib.port_lib_name(mux_sram_ports[0]));
-  ModulePortId mux_module_sram_inv_port_id = module_manager.find_module_port(mux_module, circuit_lib.port_lib_name(mux_sram_ports[0]) + "_inv");
-  BasicPort lvl_addr_port(circuit_lib.port_lib_name(mux_sram_ports[0]), 0);
+  ModulePortId mux_module_sram_port_id = module_manager.find_module_port(mux_module, circuit_lib.port_prefix(mux_sram_ports[0]));
+  ModulePortId mux_module_sram_inv_port_id = module_manager.find_module_port(mux_module, circuit_lib.port_prefix(mux_sram_ports[0]) + "_inv");
+  BasicPort lvl_addr_port(circuit_lib.port_prefix(mux_sram_ports[0]), 0);
   BasicPort lvl_data_port(decoder_data_port.get_name(), 0);
   BasicPort lvl_data_inv_port(decoder_data_inv_port.get_name(), 0);
 
@@ -1161,7 +1161,7 @@ void build_cmos_mux_module(ModuleManager& module_manager,
    */
   size_t input_port_cnt = 0;
   for (const auto& port : mux_input_ports) {
-    BasicPort input_port(circuit_lib.port_lib_name(port), num_inputs);
+    BasicPort input_port(circuit_lib.port_prefix(port), num_inputs);
     module_manager.add_port(mux_module, input_port, ModuleManager::MODULE_INPUT_PORT);
     /* Update counter */
     input_port_cnt++;
@@ -1173,7 +1173,7 @@ void build_cmos_mux_module(ModuleManager& module_manager,
   vtr::vector<MuxInputId, ModuleNetId> mux_input_nets = build_mux_module_input_buffers(module_manager, circuit_lib, mux_module, mux_model, mux_graph);
 
   for (const auto& port : mux_output_ports) {
-    BasicPort output_port(circuit_lib.port_lib_name(port), num_outputs);
+    BasicPort output_port(circuit_lib.port_prefix(port), num_outputs);
     if (SPICE_MODEL_LUT == circuit_lib.model_type(mux_model)) {
       output_port.set_width(circuit_lib.port_size(port));
     }
@@ -1185,9 +1185,9 @@ void build_cmos_mux_module(ModuleManager& module_manager,
 
   size_t sram_port_cnt = 0;
   for (const auto& port : mux_sram_ports) {
-    BasicPort mem_port(circuit_lib.port_lib_name(port), num_mems);
+    BasicPort mem_port(circuit_lib.port_prefix(port), num_mems);
     module_manager.add_port(mux_module, mem_port, ModuleManager::MODULE_INPUT_PORT);
-    BasicPort mem_inv_port(std::string(circuit_lib.port_lib_name(port) + "_inv"), num_mems);
+    BasicPort mem_inv_port(std::string(circuit_lib.port_prefix(port) + "_inv"), num_mems);
     module_manager.add_port(mux_module, mem_inv_port, ModuleManager::MODULE_INPUT_PORT);
     /* Update counter */
     sram_port_cnt++;
@@ -1305,13 +1305,13 @@ void build_rram_mux_module(ModuleManager& module_manager,
   /* Add each global port */
   for (const auto& port : mux_global_ports) {
     /* Configure each global port */
-    BasicPort global_port(circuit_lib.port_lib_name(port), circuit_lib.port_size(port));
+    BasicPort global_port(circuit_lib.port_prefix(port), circuit_lib.port_size(port));
     module_manager.add_port(module_id, global_port, ModuleManager::MODULE_GLOBAL_PORT);
   }
   /* Add each input port */
   size_t input_port_cnt = 0;
   for (const auto& port : mux_input_ports) {
-    BasicPort input_port(circuit_lib.port_lib_name(port), num_inputs);
+    BasicPort input_port(circuit_lib.port_prefix(port), num_inputs);
     module_manager.add_port(module_id, input_port, ModuleManager::MODULE_INPUT_PORT);
     /* Update counter */
     input_port_cnt++;
@@ -1320,7 +1320,7 @@ void build_rram_mux_module(ModuleManager& module_manager,
   VTR_ASSERT(1 == input_port_cnt);
 
   for (const auto& port : mux_output_ports) {
-    BasicPort output_port(circuit_lib.port_lib_name(port), num_outputs);
+    BasicPort output_port(circuit_lib.port_prefix(port), num_outputs);
     if (SPICE_MODEL_LUT == circuit_lib.model_type(circuit_model)) {
       output_port.set_width(circuit_lib.port_size(port));
     }
@@ -1332,7 +1332,7 @@ void build_rram_mux_module(ModuleManager& module_manager,
     /* IMPORTANT: RRAM-based MUX has an additional BLB pin per level 
      * So, the actual port width of BLB should be added by the number of levels of the MUX graph 
      */
-    BasicPort blb_port(circuit_lib.port_lib_name(port), num_mems + mux_graph.num_levels());
+    BasicPort blb_port(circuit_lib.port_prefix(port), num_mems + mux_graph.num_levels());
     module_manager.add_port(module_id, blb_port, ModuleManager::MODULE_INPUT_PORT);
   }
 
@@ -1341,7 +1341,7 @@ void build_rram_mux_module(ModuleManager& module_manager,
     /* IMPORTANT: RRAM-based MUX has an additional WL pin per level 
      * So, the actual port width of WL should be added by the number of levels of the MUX graph 
      */
-    BasicPort wl_port(circuit_lib.port_lib_name(port), num_mems + mux_graph.num_levels());
+    BasicPort wl_port(circuit_lib.port_prefix(port), num_mems + mux_graph.num_levels());
     module_manager.add_port(module_id, wl_port, ModuleManager::MODULE_INPUT_PORT);
   }
 

@@ -410,7 +410,7 @@ size_t check_circuit_library_ports(const CircuitLibrary& circuit_lib) {
   for (size_t iport = 0; iport < global_ports.size() - 1; ++iport) {
     for (size_t jport = iport + 1; jport < global_ports.size(); ++jport) {
       /* Bypass those do not share the same name */
-      if (0 != circuit_lib.port_lib_name(global_ports[iport]).compare(circuit_lib.port_lib_name(global_ports[jport]))) {
+      if (0 != circuit_lib.port_prefix(global_ports[iport]).compare(circuit_lib.port_prefix(global_ports[jport]))) {
         continue;
       }
 
@@ -421,7 +421,7 @@ size_t check_circuit_library_ports(const CircuitLibrary& circuit_lib) {
       if (circuit_lib.port_default_value(global_ports[iport]) != circuit_lib.port_default_value(global_ports[jport])) { 
         vpr_printf(TIO_MESSAGE_ERROR,
                    "Global ports %s from circuit model %s and %s share the same name but have different dfefault values(%lu and %lu)!\n",
-                   circuit_lib.port_lib_name(global_ports[iport]).c_str(),
+                   circuit_lib.port_prefix(global_ports[iport]).c_str(),
                    circuit_lib.model_name(iport_parent_model).c_str(),
                    circuit_lib.model_name(jport_parent_model).c_str(),
                    circuit_lib.port_default_value(global_ports[iport]),
@@ -433,7 +433,7 @@ size_t check_circuit_library_ports(const CircuitLibrary& circuit_lib) {
       if (circuit_lib.port_is_reset(global_ports[iport]) != circuit_lib.port_is_reset(global_ports[jport])) { 
         vpr_printf(TIO_MESSAGE_ERROR,
                    "Global ports %s from circuit model %s and %s share the same name but have different is_reset attributes!\n",
-                   circuit_lib.port_lib_name(global_ports[iport]).c_str(),
+                   circuit_lib.port_prefix(global_ports[iport]).c_str(),
                    circuit_lib.model_name(iport_parent_model).c_str(),
                    circuit_lib.model_name(jport_parent_model).c_str() 
                    ); 
@@ -442,7 +442,7 @@ size_t check_circuit_library_ports(const CircuitLibrary& circuit_lib) {
       if (circuit_lib.port_is_set(global_ports[iport]) != circuit_lib.port_is_set(global_ports[jport])) { 
         vpr_printf(TIO_MESSAGE_ERROR,
                    "Global ports %s from circuit model %s and %s share the same name but have different is_set attributes!\n",
-                   circuit_lib.port_lib_name(global_ports[iport]).c_str(),
+                   circuit_lib.port_prefix(global_ports[iport]).c_str(),
                    circuit_lib.model_name(iport_parent_model).c_str(),
                    circuit_lib.model_name(jport_parent_model).c_str() 
                    ); 
@@ -451,7 +451,7 @@ size_t check_circuit_library_ports(const CircuitLibrary& circuit_lib) {
       if (circuit_lib.port_is_config_enable(global_ports[iport]) != circuit_lib.port_is_config_enable(global_ports[jport])) { 
         vpr_printf(TIO_MESSAGE_ERROR,
                    "Global ports %s from circuit model %s and %s share the same name but have different is_config_enable attributes!\n",
-                   circuit_lib.port_lib_name(global_ports[iport]).c_str(),
+                   circuit_lib.port_prefix(global_ports[iport]).c_str(),
                    circuit_lib.model_name(iport_parent_model).c_str(),
                    circuit_lib.model_name(jport_parent_model).c_str() 
                    ); 
@@ -460,7 +460,7 @@ size_t check_circuit_library_ports(const CircuitLibrary& circuit_lib) {
       if (circuit_lib.port_is_prog(global_ports[iport]) != circuit_lib.port_is_prog(global_ports[jport])) { 
         vpr_printf(TIO_MESSAGE_ERROR,
                    "Global ports %s from circuit model %s and %s share the same name but have different is_prog attributes!\n",
-                   circuit_lib.port_lib_name(global_ports[iport]).c_str(),
+                   circuit_lib.port_prefix(global_ports[iport]).c_str(),
                    circuit_lib.model_name(iport_parent_model).c_str(),
                    circuit_lib.model_name(jport_parent_model).c_str() 
                    ); 

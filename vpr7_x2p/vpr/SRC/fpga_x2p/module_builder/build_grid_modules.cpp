@@ -369,7 +369,7 @@ void build_primitive_block_module(ModuleManager& module_manager,
     for (auto port : primitive_model_inout_ports) {
       BasicPort module_port(generate_fpga_global_io_port_name(std::string(gio_inout_prefix), circuit_lib, primitive_model), circuit_lib.port_size(port));
       ModulePortId primitive_gpio_port_id = module_manager.add_port(primitive_module, module_port, ModuleManager::MODULE_GPIO_PORT);
-      ModulePortId logic_gpio_port_id = module_manager.find_module_port(logic_module, circuit_lib.port_lib_name(port));
+      ModulePortId logic_gpio_port_id = module_manager.find_module_port(logic_module, circuit_lib.port_prefix(port));
       BasicPort logic_gpio_port = module_manager.module_port(logic_module, logic_gpio_port_id);
       VTR_ASSERT(logic_gpio_port.get_width() == module_port.get_width());
 
@@ -530,7 +530,7 @@ void add_module_pb_graph_pin_interc(ModuleManager& module_manager,
     /* First net is to connect input of src_pb_graph_node to input of the wire module */ 
     add_module_pb_graph_pin2pin_net(module_manager, pb_module, 
                                     wire_module, wire_instance, 
-                                    circuit_lib.port_lib_name(interc_model_inputs[0]),
+                                    circuit_lib.port_prefix(interc_model_inputs[0]),
                                     0, /* wire input port has only 1 pin */
                                     module_name_prefix,
                                     src_pb_graph_pin, 
@@ -539,7 +539,7 @@ void add_module_pb_graph_pin_interc(ModuleManager& module_manager,
     /* Second net is to connect output of the wire module to output of des_pb_graph_pin */ 
     add_module_pb_graph_pin2pin_net(module_manager, pb_module, 
                                     wire_module, wire_instance, 
-                                    circuit_lib.port_lib_name(interc_model_outputs[0]),
+                                    circuit_lib.port_prefix(interc_model_outputs[0]),
                                     0, /* wire output port has only 1 pin */
                                     module_name_prefix,
                                     des_pb_graph_pin, 
@@ -610,7 +610,7 @@ void add_module_pb_graph_pin_interc(ModuleManager& module_manager,
       /* Add a net, set its source and sink */
       add_module_pb_graph_pin2pin_net(module_manager, pb_module, 
                                       mux_module, mux_instance, 
-                                      circuit_lib.port_lib_name(interc_model_inputs[0]),
+                                      circuit_lib.port_prefix(interc_model_inputs[0]),
                                       mux_input_pin_id,
                                       module_name_prefix,
                                       src_pb_graph_pin, 
@@ -623,7 +623,7 @@ void add_module_pb_graph_pin_interc(ModuleManager& module_manager,
     /* Add a net to wire the output of the multiplexer to des_pb_graph_pin */
     add_module_pb_graph_pin2pin_net(module_manager, pb_module, 
                                     mux_module, mux_instance, 
-                                    circuit_lib.port_lib_name(interc_model_outputs[0]),
+                                    circuit_lib.port_prefix(interc_model_outputs[0]),
                                     0, /* MUX should have only 1 pin in its output port */
                                     module_name_prefix,
                                     des_pb_graph_pin, 

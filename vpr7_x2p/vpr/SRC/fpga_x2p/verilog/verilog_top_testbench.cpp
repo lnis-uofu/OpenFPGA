@@ -109,7 +109,7 @@ void print_verilog_top_testbench_global_ports_stimuli(std::fstream& fp,
      *    connect it to the local wire of operating clock
      */
     /* Find the module port */
-    ModulePortId module_global_port = module_manager.find_module_port(top_module, circuit_lib.port_lib_name(model_global_port));
+    ModulePortId module_global_port = module_manager.find_module_port(top_module, circuit_lib.port_prefix(model_global_port));
     VTR_ASSERT(true == module_manager.valid_module_port_id(top_module, module_global_port));
 
     BasicPort stimuli_clock_port;
@@ -141,7 +141,7 @@ void print_verilog_top_testbench_global_ports_stimuli(std::fstream& fp,
     }
     /* Reach here, it means we have a configuration done port to deal with */
     /* Find the module port */
-    ModulePortId module_global_port = module_manager.find_module_port(top_module, circuit_lib.port_lib_name(model_global_port));
+    ModulePortId module_global_port = module_manager.find_module_port(top_module, circuit_lib.port_prefix(model_global_port));
     VTR_ASSERT(true == module_manager.valid_module_port_id(top_module, module_global_port));
 
     BasicPort stimuli_config_done_port(std::string(top_tb_config_done_port_name), 1);
@@ -170,7 +170,7 @@ void print_verilog_top_testbench_global_ports_stimuli(std::fstream& fp,
     }
     /* Reach here, it means we have a reset port to deal with */
     /* Find the module port */
-    ModulePortId module_global_port = module_manager.find_module_port(top_module, circuit_lib.port_lib_name(model_global_port));
+    ModulePortId module_global_port = module_manager.find_module_port(top_module, circuit_lib.port_prefix(model_global_port));
     VTR_ASSERT(true == module_manager.valid_module_port_id(top_module, module_global_port));
 
     BasicPort stimuli_reset_port;
@@ -212,7 +212,7 @@ void print_verilog_top_testbench_global_ports_stimuli(std::fstream& fp,
     }
     /* Reach here, it means we have a set port to deal with */
     /* Find the module port */
-    ModulePortId module_global_port = module_manager.find_module_port(top_module, circuit_lib.port_lib_name(model_global_port));
+    ModulePortId module_global_port = module_manager.find_module_port(top_module, circuit_lib.port_prefix(model_global_port));
     VTR_ASSERT(true == module_manager.valid_module_port_id(top_module, module_global_port));
 
     BasicPort stimuli_set_port;
@@ -256,7 +256,7 @@ void print_verilog_top_testbench_global_ports_stimuli(std::fstream& fp,
 
     /* Reach here, it means we have a port to deal with */
     /* Find the module port and wire it to constant values */
-    ModulePortId module_global_port = module_manager.find_module_port(top_module, circuit_lib.port_lib_name(model_global_port));
+    ModulePortId module_global_port = module_manager.find_module_port(top_module, circuit_lib.port_prefix(model_global_port));
     VTR_ASSERT(true == module_manager.valid_module_port_id(top_module, module_global_port));
 
     BasicPort module_port = module_manager.module_port(top_module, module_global_port);

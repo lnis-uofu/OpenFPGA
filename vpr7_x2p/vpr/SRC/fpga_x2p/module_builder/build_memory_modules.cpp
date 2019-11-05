@@ -48,8 +48,8 @@ void add_module_input_nets_to_mem_modules(ModuleManager& module_manager,
                                           const size_t& child_instance) {
   /* Wire inputs of parent module to inputs of child modules */
   for (const auto& port : circuit_ports) {
-    ModulePortId src_port_id = module_manager.find_module_port(mem_module, circuit_lib.port_lib_name(port));
-    ModulePortId sink_port_id = module_manager.find_module_port(child_module, circuit_lib.port_lib_name(port));
+    ModulePortId src_port_id = module_manager.find_module_port(mem_module, circuit_lib.port_prefix(port));
+    ModulePortId sink_port_id = module_manager.find_module_port(child_module, circuit_lib.port_prefix(port));
     for (size_t pin_id = 0; pin_id < module_manager.module_port(mem_module, sink_port_id).pins().size(); ++pin_id) {
       ModuleNetId net = module_manager.create_module_net(mem_module);
       /* Source pin is shifted by the number of memories */
@@ -82,8 +82,8 @@ void add_module_output_nets_to_mem_modules(ModuleManager& module_manager,
                                            const size_t& child_instance) {
   /* Wire inputs of parent module to inputs of child modules */
   for (const auto& port : circuit_ports) {
-    ModulePortId src_port_id = module_manager.find_module_port(child_module, circuit_lib.port_lib_name(port));
-    ModulePortId sink_port_id = module_manager.find_module_port(mem_module, circuit_lib.port_lib_name(port));
+    ModulePortId src_port_id = module_manager.find_module_port(child_module, circuit_lib.port_prefix(port));
+    ModulePortId sink_port_id = module_manager.find_module_port(mem_module, circuit_lib.port_prefix(port));
     for (size_t pin_id = 0; pin_id < module_manager.module_port(child_module, src_port_id).pins().size(); ++pin_id) {
       ModuleNetId net = module_manager.create_module_net(mem_module);
       /* Source pin is shifted by the number of memories */
@@ -121,7 +121,7 @@ std::vector<ModuleNetId> add_module_output_nets_to_chain_mem_modules(ModuleManag
   std::vector<ModuleNetId> module_nets;
 
   /* Wire inputs of parent module to inputs of child modules */
-  ModulePortId src_port_id = module_manager.find_module_port(child_module, circuit_lib.port_lib_name(circuit_port));
+  ModulePortId src_port_id = module_manager.find_module_port(child_module, circuit_lib.port_prefix(circuit_port));
   ModulePortId sink_port_id = module_manager.find_module_port(mem_module, mem_module_output_name);
   for (size_t pin_id = 0; pin_id < module_manager.module_port(child_module, src_port_id).pins().size(); ++pin_id) {
     ModuleNetId net = module_manager.create_module_net(mem_module);
@@ -188,19 +188,19 @@ void add_module_nets_to_cmos_memory_chain_module(ModuleManager& module_manager,
       net_src_port_id = module_manager.find_module_port(net_src_module_id, src_port_name); 
 
       /* Find the port name of next memory module */
-      std::string sink_port_name = circuit_lib.port_lib_name(model_input_port);
+      std::string sink_port_name = circuit_lib.port_prefix(model_input_port);
       net_sink_module_id = module_manager.configurable_children(parent_module)[mem_index]; 
       net_sink_instance_id = module_manager.configurable_child_instances(parent_module)[mem_index];
       net_sink_port_id = module_manager.find_module_port(net_sink_module_id, sink_port_name); 
     } else {
       /* Find the port name of previous memory module */
-      std::string src_port_name = circuit_lib.port_lib_name(model_output_port);
+      std::string src_port_name = circuit_lib.port_prefix(model_output_port);
       net_src_module_id = module_manager.configurable_children(parent_module)[mem_index - 1]; 
       net_src_instance_id = module_manager.configurable_child_instances(parent_module)[mem_index - 1];
       net_src_port_id = module_manager.find_module_port(net_src_module_id, src_port_name); 
 
       /* Find the port name of next memory module */
-      std::string sink_port_name = circuit_lib.port_lib_name(model_input_port);
+      std::string sink_port_name = circuit_lib.port_prefix(model_input_port);
       net_sink_module_id = module_manager.configurable_children(parent_module)[mem_index]; 
       net_sink_instance_id = module_manager.configurable_child_instances(parent_module)[mem_index];
       net_sink_port_id = module_manager.find_module_port(net_sink_module_id, sink_port_name); 
@@ -239,7 +239,7 @@ void add_module_nets_to_cmos_memory_chain_module(ModuleManager& module_manager,
    *    net sink is the configuration chain tail of the primitive module
    */
   /* Find the port name of previous memory module */
-  std::string src_port_name = circuit_lib.port_lib_name(model_output_port);
+  std::string src_port_name = circuit_lib.port_prefix(model_output_port);
   ModuleId net_src_module_id = module_manager.configurable_children(parent_module).back(); 
   size_t net_src_instance_id = module_manager.configurable_child_instances(parent_module).back();
   ModulePortId net_src_port_id = module_manager.find_module_port(net_src_module_id, src_port_name); 
@@ -311,12 +311,12 @@ void build_memory_standalone_module(ModuleManager& module_manager,
   
   /* Add each input port */
   for (const auto& port : sram_input_ports) {
-    BasicPort input_port(circuit_lib.port_lib_name(port), num_mems);
+    BasicPort input_port(circuit_lib.port_prefix(port), num_mems);
     module_manager.add_port(mem_module, input_port, ModuleManager::MODULE_INPUT_PORT);
   }
   /* Add each output port: port width should match the number of memories */
   for (const auto& port : sram_output_ports) {
-    BasicPort output_port(circuit_lib.port_lib_name(port), num_mems);
+    BasicPort output_port(circuit_lib.port_prefix(port), num_mems);
     module_manager.add_port(mem_module, output_port, ModuleManager::MODULE_OUTPUT_PORT);
   }
 
@@ -500,29 +500,29 @@ void build_memory_bank_module(ModuleManager& module_manager,
   /* Add module ports: the ports come from the SRAM modules */
   /* Add each input port */
   for (const auto& port : sram_input_ports) {
-    BasicPort input_port(circuit_lib.port_lib_name(port), num_mems * circuit_lib.port_size(port));
+    BasicPort input_port(circuit_lib.port_prefix(port), num_mems * circuit_lib.port_size(port));
     module_manager.add_port(mem_module, input_port, ModuleManager::MODULE_INPUT_PORT);
   }
   /* Add each output port: port width should match the number of memories */
   for (const auto& port : sram_output_ports) {
-    BasicPort output_port(circuit_lib.port_lib_name(port), num_mems * circuit_lib.port_size(port));
+    BasicPort output_port(circuit_lib.port_prefix(port), num_mems * circuit_lib.port_size(port));
     module_manager.add_port(mem_module, output_port, ModuleManager::MODULE_OUTPUT_PORT);
   }
   /* Add each output port: port width should match the number of memories */
   for (const auto& port : sram_bl_ports) {
-    BasicPort bl_port(circuit_lib.port_lib_name(port), num_mems * circuit_lib.port_size(port));
+    BasicPort bl_port(circuit_lib.port_prefix(port), num_mems * circuit_lib.port_size(port));
     module_manager.add_port(mem_module, bl_port, ModuleManager::MODULE_INPUT_PORT);
   }
   for (const auto& port : sram_blb_ports) {
-    BasicPort blb_port(circuit_lib.port_lib_name(port), num_mems * circuit_lib.port_size(port));
+    BasicPort blb_port(circuit_lib.port_prefix(port), num_mems * circuit_lib.port_size(port));
     module_manager.add_port(mem_module, blb_port, ModuleManager::MODULE_INPUT_PORT);
   }
   for (const auto& port : sram_wl_ports) {
-    BasicPort wl_port(circuit_lib.port_lib_name(port), num_mems * circuit_lib.port_size(port));
+    BasicPort wl_port(circuit_lib.port_prefix(port), num_mems * circuit_lib.port_size(port));
     module_manager.add_port(mem_module, wl_port, ModuleManager::MODULE_INPUT_PORT);
   }
   for (const auto& port : sram_wlb_ports) {
-    BasicPort wlb_port(circuit_lib.port_lib_name(port), num_mems * circuit_lib.port_size(port));
+    BasicPort wlb_port(circuit_lib.port_prefix(port), num_mems * circuit_lib.port_size(port));
     module_manager.add_port(mem_module, wlb_port, ModuleManager::MODULE_INPUT_PORT);
   }
 

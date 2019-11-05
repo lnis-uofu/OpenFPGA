@@ -127,6 +127,8 @@ class ModuleManager {
     /* Add a port to a module */
     ModulePortId add_port(const ModuleId& module, 
                           const BasicPort& port_info, const enum e_module_port_type& port_type);
+    /* Set a name for a module port */
+    void set_module_port_name(const ModuleId& module, const ModulePortId& module_port, const std::string& port_name);
     /* Set a name for a module */
     void set_module_name(const ModuleId& module, const std::string& name);
     /* Set a port to be a wire */

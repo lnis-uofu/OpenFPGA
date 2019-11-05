@@ -132,6 +132,15 @@ ModuleManager build_device_module_graph(const t_vpr_setup& vpr_setup,
                    arch.sram_inf.verilog_sram_inf_orgz->type, sram_model, 
                    TRUE == vpr_setup.FPGA_SPICE_Opts.compact_routing_hierarchy);
 
+  /* Now a critical correction has to be done!
+   * In the module construction, we always use prefix of ports because they are binded
+   * to the ports in architecture description (logic blocks etc.)
+   * To interface with standard cell, we should
+   * rename the ports of primitive modules using lib_name instead of prefix
+   * (which have no children and are probably linked to a standard cell!)
+   */
+  rename_primitive_module_port_names(module_manager, arch.spice->circuit_lib);
+
   /* End time count */
   clock_t t_end = clock();
 

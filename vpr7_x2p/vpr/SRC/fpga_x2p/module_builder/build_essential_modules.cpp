@@ -232,7 +232,7 @@ void build_user_defined_modules(ModuleManager& module_manager,
     VTR_ASSERT (1 == circuit_lib.port_size(output_ports[0]));
   
     /* Add a mid-output port to the module */
-    BasicPort module_mid_output_port(generate_segment_wire_mid_output_name(circuit_lib.port_lib_name(output_ports[0])), circuit_lib.port_size(output_ports[0]));
+    BasicPort module_mid_output_port(generate_segment_wire_mid_output_name(circuit_lib.port_prefix(output_ports[0])), circuit_lib.port_size(output_ports[0]));
     module_manager.add_port(module_id, module_mid_output_port, ModuleManager::MODULE_OUTPUT_PORT);
   }
 
@@ -288,3 +288,40 @@ void build_constant_generator_modules(ModuleManager& module_manager) {
              "took %.2g seconds\n", 
              run_time_sec);  
 }
+
+/*********************************************************************
+ * This function will rename the ports of primitive modules 
+ * using lib_name instead of prefix
+ * Primitive modules are defined as those modules in the module manager 
+ * which have user defined netlists
+ ********************************************************************/
+void rename_primitive_module_port_names(ModuleManager& module_manager, 
+                                        const CircuitLibrary& circuit_lib) {
+  for (const CircuitModelId& model : circuit_lib.models()) {
+    /* We only care about user-defined models */
+    if ( (true == circuit_lib.model_verilog_netlist(model).empty())
+      && (true == circuit_lib.model_verilog_netlist(model).empty()) ) {
+      continue;
+    }
+    /* Skip Routing channel wire models because they need a different name. Do it later */
+    if (SPICE_MODEL_CHAN_WIRE == circuit_lib.model_type(model)) {
+      continue;
+    }
+    /* Find the module in module manager */
+    ModuleId module = module_manager.find_module(circuit_lib.model_name(model));
+    /* We must find one! */
+    VTR_ASSERT(true == module_manager.valid_module_id(module));
+
+    /* Rename all the ports to use lib_name! */
+    for (const CircuitPortId& model_port : circuit_lib.model_ports(model)) {
+      /* Find the module port in module manager. We used prefix when creating the ports */
+      ModulePortId module_port = module_manager.find_module_port(module, circuit_lib.port_prefix(model_port));
+      /* We must find one! */
+      VTR_ASSERT(true == module_manager.valid_module_port_id(module, module_port));
+      /* Name it with lib_name */
+      module_manager.set_module_port_name(module, module_port, circuit_lib.port_lib_name(model_port));
+    }
+  }
+}
+
+
