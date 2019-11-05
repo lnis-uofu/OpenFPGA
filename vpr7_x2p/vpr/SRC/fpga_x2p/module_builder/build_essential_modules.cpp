@@ -209,33 +209,6 @@ void build_user_defined_modules(ModuleManager& module_manager,
     add_circuit_model_to_module_manager(module_manager, circuit_lib, model);
   }
 
-  /* Register the routing channel wires  */
-  for (const auto& seg : routing_segments) {
-    VTR_ASSERT( CircuitModelId::INVALID() != seg.circuit_model);
-    VTR_ASSERT( SPICE_MODEL_CHAN_WIRE == circuit_lib.model_type(seg.circuit_model));
-    /* We care only user-defined circuit models */
-    if ( (circuit_lib.model_verilog_netlist(seg.circuit_model).empty()) 
-      && (circuit_lib.model_verilog_netlist(seg.circuit_model).empty()) ) {
-      continue;
-    }
-    /* Give a unique name for subckt of wire_model of segment, 
-     * circuit_model name is unique, and segment id is unique as well
-     */
-    std::string segment_wire_subckt_name = generate_segment_wire_subckt_name(circuit_lib.model_name(seg.circuit_model), &seg - &routing_segments[0]);
-
-    /* Create a Verilog Module based on the circuit model, and add to module manager */
-    ModuleId module_id = add_circuit_model_to_module_manager(module_manager, circuit_lib, seg.circuit_model, segment_wire_subckt_name); 
-
-    /* Find the output port*/
-    std::vector<CircuitPortId> output_ports = circuit_lib.model_ports_by_type(seg.circuit_model, SPICE_MODEL_PORT_OUTPUT, true);
-    /* Make sure the port size is what we want */
-    VTR_ASSERT (1 == circuit_lib.port_size(output_ports[0]));
-  
-    /* Add a mid-output port to the module */
-    BasicPort module_mid_output_port(generate_segment_wire_mid_output_name(circuit_lib.port_prefix(output_ports[0])), circuit_lib.port_size(output_ports[0]));
-    module_manager.add_port(module_id, module_mid_output_port, ModuleManager::MODULE_OUTPUT_PORT);
-  }
-
   /* End time count */
   clock_t t_end = clock();
 

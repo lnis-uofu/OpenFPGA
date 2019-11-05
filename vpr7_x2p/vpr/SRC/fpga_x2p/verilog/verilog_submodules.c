@@ -3085,8 +3085,7 @@ void dump_verilog_submodule_memories(t_sram_orgz_info* cur_sram_orgz_info,
  ********************************************************************/
 static 
 void add_user_defined_verilog_modules(ModuleManager& module_manager, 
-                                      const CircuitLibrary& circuit_lib, 
-                                      const std::vector<t_segment_inf>& routing_segments) {
+                                      const CircuitLibrary& circuit_lib) {
   /* Iterate over Verilog modules */
   for (const auto& model : circuit_lib.models()) {
     /* We only care about user-defined models */
@@ -3105,37 +3104,6 @@ void add_user_defined_verilog_modules(ModuleManager& module_manager,
     if (ModuleId::INVALID() == module_id) {
       add_circuit_model_to_module_manager(module_manager, circuit_lib, model);
     }
-  }
-
-  /* Register the routing channel wires  */
-  for (const auto& seg : routing_segments) {
-    VTR_ASSERT( CircuitModelId::INVALID() != seg.circuit_model);
-    VTR_ASSERT( SPICE_MODEL_CHAN_WIRE == circuit_lib.model_type(seg.circuit_model));
-    /* We care only user-defined circuit models */
-    if (circuit_lib.model_verilog_netlist(seg.circuit_model).empty()) {
-      continue;
-    }
-    /* Give a unique name for subckt of wire_model of segment, 
-     * circuit_model name is unique, and segment id is unique as well
-     */
-    std::string segment_wire_subckt_name = generate_segment_wire_subckt_name(circuit_lib.model_name(seg.circuit_model), &seg - &routing_segments[0]);
-
-    /* Try to find the module in the module manager,
-     * If not found, create a Verilog Module based on the circuit model, 
-     * and add to module manager */
-    if (ModuleId::INVALID() != module_manager.find_module(segment_wire_subckt_name)) {
-      continue;
-    } 
-    ModuleId module_id = add_circuit_model_to_module_manager(module_manager, circuit_lib, seg.circuit_model, segment_wire_subckt_name); 
-
-    /* Find the output port*/
-    std::vector<CircuitPortId> output_ports = circuit_lib.model_ports_by_type(seg.circuit_model, SPICE_MODEL_PORT_OUTPUT, true);
-    /* Make sure the port size is what we want */
-    VTR_ASSERT (1 == circuit_lib.port_size(output_ports[0]));
-  
-    /* Add a mid-output port to the module */
-    BasicPort module_mid_output_port(generate_segment_wire_mid_output_name(circuit_lib.port_prefix(output_ports[0])), circuit_lib.port_size(output_ports[0]));
-    module_manager.add_port(module_id, module_mid_output_port, ModuleManager::MODULE_OUTPUT_PORT);
   }
 }
 
@@ -3186,7 +3154,6 @@ void print_one_verilog_template_module(const ModuleManager& module_manager,
 static 
 void print_verilog_submodule_templates(const ModuleManager& module_manager,
                                        const CircuitLibrary& circuit_lib,
-                                       const std::vector<t_segment_inf>& routing_segments,
                                        const std::string& verilog_dir,
                                        const std::string& submodule_dir) {
   std::string verilog_fname(submodule_dir + user_defined_template_verilog_file_name);
@@ -3220,22 +3187,6 @@ void print_verilog_submodule_templates(const ModuleManager& module_manager,
     print_one_verilog_template_module(module_manager, fp, circuit_lib.model_name(model)); 
   }
 
-  /* Register the routing channel wires  */
-  for (const auto& seg : routing_segments) {
-    VTR_ASSERT( CircuitModelId::INVALID() != seg.circuit_model);
-    VTR_ASSERT( SPICE_MODEL_CHAN_WIRE == circuit_lib.model_type(seg.circuit_model));
-    /* We care only user-defined circuit models */
-    if (circuit_lib.model_verilog_netlist(seg.circuit_model).empty()) {
-      continue;
-    }
-    /* Give a unique name for subckt of wire_model of segment, 
-     * circuit_model name is unique, and segment id is unique as well
-     */
-    std::string segment_wire_subckt_name = generate_segment_wire_subckt_name(circuit_lib.model_name(seg.circuit_model), &seg - &routing_segments[0]);
-    /* Print a Verilog template for the circuit model */
-    print_one_verilog_template_module(module_manager, fp, segment_wire_subckt_name); 
-  }
-
   /* close file stream */
   fp.close();
  
@@ -3255,18 +3206,12 @@ void dump_verilog_submodules(ModuleManager& module_manager,
                              t_det_routing_arch* routing_arch,
                              t_syn_verilog_opts fpga_verilog_opts) {
 
-  /* Create a vector of segments. TODO: should come from DeviceContext */
-  std::vector<t_segment_inf> L_segment_vec;
-  for (int i = 0; i < Arch.num_segments; ++i) {
-    L_segment_vec.push_back(Arch.Segments[i]);
-  }
-
   /* TODO: Register all the user-defined modules in the module manager
    * This should be done prior to other steps in this function, 
    * because they will be instanciated by other primitive modules 
    */
   vpr_printf(TIO_MESSAGE_INFO, "Registering user-defined modules...\n");
-  add_user_defined_verilog_modules(module_manager, Arch.spice->circuit_lib, L_segment_vec);
+  add_user_defined_verilog_modules(module_manager, Arch.spice->circuit_lib);
 
   print_verilog_submodule_essentials(module_manager, 
                                      std::string(verilog_dir), 
@@ -3299,7 +3244,7 @@ void dump_verilog_submodules(ModuleManager& module_manager,
                                fpga_verilog_opts.dump_explicit_verilog);
 
   /* 3. Hardwires */
-  print_verilog_submodule_wires(module_manager, Arch.spice->circuit_lib, L_segment_vec, std::string(verilog_dir), std::string(submodule_dir));
+  print_verilog_submodule_wires(module_manager, Arch.spice->circuit_lib, std::string(verilog_dir), std::string(submodule_dir));
 
   /* 4. Memories */
   vpr_printf(TIO_MESSAGE_INFO, "Generating modules of memories...\n");
@@ -3311,7 +3256,7 @@ void dump_verilog_submodules(ModuleManager& module_manager,
 
   /* 5. Dump template for all the modules */
   if (TRUE == fpga_verilog_opts.print_user_defined_template) { 
-    print_verilog_submodule_templates(module_manager, Arch.spice->circuit_lib, L_segment_vec, std::string(verilog_dir), std::string(submodule_dir));
+    print_verilog_submodule_templates(module_manager, Arch.spice->circuit_lib, std::string(verilog_dir), std::string(submodule_dir));
   }
 
   /* Create a header file to include all the subckts */
