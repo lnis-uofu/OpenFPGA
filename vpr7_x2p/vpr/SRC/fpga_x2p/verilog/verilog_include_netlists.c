@@ -113,7 +113,7 @@ void write_include_netlists (char* src_dir_formatted,
 							top_testbench_verilog_file_postfix);
 	fprintf(fp, "`elsif %s\n", autochecked_simulation_flag);
     */
-	fprintf(fp, "`include \"%s%s%s\"\n",  src_dir_formatted, 
+	fprintf(fp, "\t`include \"%s%s%s\"\n",  src_dir_formatted, 
 							chomped_circuit_name, 
 							autocheck_top_testbench_verilog_file_postfix);
 	fprintf(fp, "`endif\n");

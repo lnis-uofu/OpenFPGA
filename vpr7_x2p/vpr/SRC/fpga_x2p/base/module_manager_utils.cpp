@@ -305,6 +305,35 @@ bool module_net_is_local_wire(const ModuleManager& module_manager,
 }
 
 /********************************************************************
+ * Identify if a net is an output short connection inside a module: 
+ * The short connection is defined as the direct connection
+ * between two outputs port of the module
+ *
+ *            module
+ *            +-----------------------------+
+ *                                          |
+ *               src------>+--------------->|--->outputA
+ *                         |                |
+ *                         |                |
+ *                         +--------------->|--->outputB
+ *            +-----------------------------+
+
+ *******************************************************************/
+bool module_net_include_output_short_connection(const ModuleManager& module_manager, 
+                                                const ModuleId& module_id, const ModuleNetId& module_net) {
+  /* Check all the sink modules of the net */
+  size_t contain_num_module_output = 0;
+  for (ModuleId sink_module : module_manager.net_sink_modules(module_id, module_net)) {
+    if (module_id == sink_module) {
+      contain_num_module_output++;
+    }
+  }
+ 
+  /* If we have found more than 1 module outputs, it indicated output short connection! */
+  return (1 < contain_num_module_output);
+}
+
+/********************************************************************
  * Identify if a net is a local short connection inside a module: 
  * The short connection is defined as the direct connection
  * between an input port of the module and an output port of the module

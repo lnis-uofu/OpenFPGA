@@ -171,6 +171,50 @@ std::vector<BasicPort> find_verilog_module_local_wires(const ModuleManager& modu
 
 /********************************************************************
  * Print a Verilog wire connection 
+ * We search all the sinks of the net, 
+ * if we find a module output, we try to find the next module output 
+ * among the sinks of the net
+ * For each module output (except the first one), we print a wire connection 
+ *******************************************************************/
+static 
+void print_verilog_module_output_short_connection(std::fstream& fp, 
+                                                  const ModuleManager& module_manager,
+                                                  const ModuleId& module_id,
+                                                  const ModuleNetId& module_net) {
+  /* Ensure a valid file stream */
+  check_file_handler(fp);
+
+  bool first_port = true;
+  BasicPort src_port;
+
+  /* We have found a module input, now check all the sink modules of the net */
+  for (ModuleNetSinkId net_sink : module_manager.module_net_sinks(module_id, module_net)) {
+    ModuleId sink_module = module_manager.net_sink_modules(module_id, module_net)[net_sink];
+    if (module_id != sink_module) {
+      continue;
+    }
+
+    /* Find the sink port and pin information */
+    ModulePortId sink_port_id = module_manager.net_sink_ports(module_id, module_net)[net_sink];
+    size_t sink_pin = module_manager.net_sink_pins(module_id, module_net)[net_sink];
+    BasicPort sink_port(module_manager.module_port(module_id, sink_port_id).get_name(), sink_pin, sink_pin);
+
+    /* For the first module output, this is the source port, we do nothing and go to the next */
+    if (true == first_port) {
+      src_port = sink_port;
+      /* Flip the flag */
+      first_port = false;
+      continue;
+    }
+
+    /* We need to print a wire connection here */
+    print_verilog_wire_connection(fp, sink_port, src_port, false);
+  }
+}
+
+
+/********************************************************************
+ * Print a Verilog wire connection 
  * We search all the sources of the net, 
  * if we find a module input, we try to find a module output 
  * among the sinks of the net
@@ -239,6 +283,36 @@ void print_verilog_module_local_short_connections(std::fstream& fp,
       continue;
     }
     print_verilog_module_local_short_connection(fp, module_manager, module_id, module_net); 
+  }
+}
+
+/********************************************************************
+ * Print output short connections inside a Verilog module
+ * The output short connection is defined as the direct connection
+ * between two output ports of the module
+ * This type of connection is not covered when printing Verilog instances
+ * Therefore, they are covered in this function 
+ *
+ *            module
+ *            +-----------------------------+
+ *                                          |
+ *               src------>+--------------->|--->outputA
+ *                         |                |
+ *                         |                |
+ *                         +--------------->|--->outputB
+ *            +-----------------------------+
+ *******************************************************************/
+static 
+void print_verilog_module_output_short_connections(std::fstream& fp, 
+                                                   const ModuleManager& module_manager,
+                                                   const ModuleId& module_id) {
+  /* Local wires come from the child modules */
+  for (ModuleNetId module_net : module_manager.module_nets(module_id)) {
+    /* We only care the nets that indicate short connections */ 
+    if (false == module_net_include_output_short_connection(module_manager, module_id, module_net)) {
+      continue;
+    }
+    print_verilog_module_output_short_connection(fp, module_manager, module_id, module_net); 
   }
 }
 
@@ -372,6 +446,8 @@ void write_verilog_module_to_file(std::fstream& fp,
 
   /* Print local connection (from module inputs to output! */
   print_verilog_module_local_short_connections(fp, module_manager, module_id);
+
+  print_verilog_module_output_short_connections(fp, module_manager, module_id);
  
   /* Print an empty line as splitter */
   fp << std::endl;

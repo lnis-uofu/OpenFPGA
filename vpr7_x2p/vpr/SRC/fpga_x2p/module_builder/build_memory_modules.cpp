@@ -106,16 +106,20 @@ void add_module_output_nets_to_mem_modules(ModuleManager& module_manager,
  *     j-th pin of output port of the i-th child module is wired to the j + i*W -th
  *     pin of output port of the memory module, where W is the size of port 
  * 3. It assumes fixed port name for output ports
+ * 
+ * We cache the module nets that have been created because they will be used later
  ********************************************************************/
 static 
-void add_module_output_nets_to_chain_mem_modules(ModuleManager& module_manager,
-                                                 const ModuleId& mem_module,
-                                                 const std::string& mem_module_output_name,
-                                                 const CircuitLibrary& circuit_lib,
-                                                 const CircuitPortId& circuit_port,
-                                                 const ModuleId& child_module,
-                                                 const size_t& child_index,
-                                                 const size_t& child_instance) {
+std::vector<ModuleNetId> add_module_output_nets_to_chain_mem_modules(ModuleManager& module_manager,
+                                                                     const ModuleId& mem_module,
+                                                                     const std::string& mem_module_output_name,
+                                                                     const CircuitLibrary& circuit_lib,
+                                                                     const CircuitPortId& circuit_port,
+                                                                     const ModuleId& child_module,
+                                                                     const size_t& child_index,
+                                                                     const size_t& child_instance) {
+  std::vector<ModuleNetId> module_nets;
+
   /* Wire inputs of parent module to inputs of child modules */
   ModulePortId src_port_id = module_manager.find_module_port(child_module, circuit_lib.port_lib_name(circuit_port));
   ModulePortId sink_port_id = module_manager.find_module_port(mem_module, mem_module_output_name);
@@ -128,7 +132,12 @@ void add_module_output_nets_to_chain_mem_modules(ModuleManager& module_manager,
     /* Sink node of the input net is the input of sram module */
     size_t sink_pin_id = child_index * circuit_lib.port_size(circuit_port) + module_manager.module_port(mem_module, sink_port_id).pins()[pin_id];
     module_manager.add_module_net_sink(mem_module, net, mem_module, 0, sink_port_id, sink_pin_id);
+
+    /* Cache the nets */
+    module_nets.push_back(net);
   }
+
+  return module_nets;
 }
 
 /********************************************************************
@@ -155,9 +164,13 @@ void add_module_output_nets_to_chain_mem_modules(ModuleManager& module_manager,
 static 
 void add_module_nets_to_cmos_memory_chain_module(ModuleManager& module_manager,
                                                  const ModuleId& parent_module,
+                                                 const std::vector<ModuleNetId>& output_nets,
                                                  const CircuitLibrary& circuit_lib,
                                                  const CircuitPortId& model_input_port,
                                                  const CircuitPortId& model_output_port) {
+  /* Counter for the nets */
+  size_t net_counter = 0;
+
   for (size_t mem_index = 0; mem_index < module_manager.configurable_children(parent_module).size(); ++mem_index) {
     ModuleId net_src_module_id;
     size_t net_src_instance_id;
@@ -203,11 +216,21 @@ void add_module_nets_to_cmos_memory_chain_module(ModuleManager& module_manager,
     /* Create a net for each pin */
     for (size_t pin_id = 0; pin_id < net_src_port.pins().size(); ++pin_id) {
       /* Create a net and add source and sink to it */
-      ModuleNetId net = module_manager.create_module_net(parent_module);
+      ModuleNetId net;
+      if (0 == mem_index) {
+        net = module_manager.create_module_net(parent_module);
+      } else {
+        net = output_nets[net_counter];
+      }
       /* Add net source */
       module_manager.add_module_net_source(parent_module, net, net_src_module_id, net_src_instance_id, net_src_port_id, net_src_port.pins()[pin_id]);
       /* Add net sink */
       module_manager.add_module_net_sink(parent_module, net, net_sink_module_id, net_sink_instance_id, net_sink_port_id, net_sink_port.pins()[pin_id]);
+
+      /* Update net counter */
+      if (0 < mem_index) {
+        net_counter++;
+      }
     }
   }
 
@@ -237,12 +260,17 @@ void add_module_nets_to_cmos_memory_chain_module(ModuleManager& module_manager,
   /* Create a net for each pin */
   for (size_t pin_id = 0; pin_id < net_src_port.pins().size(); ++pin_id) {
     /* Create a net and add source and sink to it */
-    ModuleNetId net = module_manager.create_module_net(parent_module);
+    ModuleNetId net = output_nets[net_counter];
     /* Add net source */
     module_manager.add_module_net_source(parent_module, net, net_src_module_id, net_src_instance_id, net_src_port_id, net_src_port.pins()[pin_id]);
     /* Add net sink */
     module_manager.add_module_net_sink(parent_module, net, net_sink_module_id, net_sink_instance_id, net_sink_port_id, net_sink_port.pins()[pin_id]);
+
+    /* Update net counter */
+    net_counter++;
   }
+
+  VTR_ASSERT(net_counter == output_nets.size());
 }
 
 /*********************************************************************
@@ -381,6 +409,9 @@ void build_memory_chain_module(ModuleManager& module_manager,
   /* Find the sram module in the module manager */
   ModuleId sram_mem_module = module_manager.find_module(circuit_lib.model_name(sram_model));
 
+  /* Cache the output nets for non-inverted data output */
+  std::vector<ModuleNetId> mem_output_nets; 
+
   /* Instanciate each submodule */
   for (size_t i = 0; i < num_mems; ++i) {
     size_t sram_mem_instance = module_manager.num_instance(mem_module, sram_mem_module);
@@ -396,13 +427,18 @@ void build_memory_chain_module(ModuleManager& module_manager,
         VTR_ASSERT( 1 == iport);
         port_name = generate_configuration_chain_inverted_data_out_name();
       }
-      add_module_output_nets_to_chain_mem_modules(module_manager, mem_module, port_name, circuit_lib, sram_output_ports[iport],
-                                                  sram_mem_module, i, sram_mem_instance);
+      std::vector<ModuleNetId> output_nets = add_module_output_nets_to_chain_mem_modules(module_manager, mem_module, 
+                                                                                         port_name, circuit_lib, sram_output_ports[iport],
+                                                                                         sram_mem_module, i, sram_mem_instance);
+      /* Cache only for regular data outputs */
+      if (0 == iport) { 
+        mem_output_nets.insert(mem_output_nets.end(), output_nets.begin(), output_nets.end());
+      } 
     }
   }
 
   /* Build module nets to wire the configuration chain */
-  add_module_nets_to_cmos_memory_chain_module(module_manager, mem_module, 
+  add_module_nets_to_cmos_memory_chain_module(module_manager, mem_module, mem_output_nets, 
                                               circuit_lib, sram_input_ports[0], sram_output_ports[0]);
 
 

@@ -547,7 +547,7 @@ void print_verilog_top_testbench_generic_stimulus(std::fstream& fp,
   print_verilog_comment(fp, std::string("----- Actual operating clock is triggered only when " + config_done_port.get_name() + " is enabled -----")); 
   fp << "\tassign " << generate_verilog_port(VERILOG_PORT_CONKT, op_clock_port);
   fp << " = " << generate_verilog_port(VERILOG_PORT_CONKT, op_clock_register_port);
-  fp << " & (~" << generate_verilog_port(VERILOG_PORT_CONKT, config_done_port) << ")";
+  fp << " & " << generate_verilog_port(VERILOG_PORT_CONKT, config_done_port);
   fp << ";" << std::endl;
 
   fp << std::endl;
