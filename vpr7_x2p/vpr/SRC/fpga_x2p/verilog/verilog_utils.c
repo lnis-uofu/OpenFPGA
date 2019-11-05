@@ -283,7 +283,7 @@ void dump_verilog_defines_preproc(char* subckt_dir,
 
   if (NULL == fp) {
     vpr_printf(TIO_MESSAGE_ERROR,
-               "(FILE:%s,LINE[%d])Failure in create Verilog netlist %s",
+               "(FILE:%s,LINE[%d]) Failure in create Verilog netlist %s",
                __FILE__, __LINE__, fname); 
     exit(1);
   } 

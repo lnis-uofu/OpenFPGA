@@ -1,5 +1,5 @@
-#ifndef VERILOG_INCLUDE_NETLISTS_H
-#define VERILOG_INCLUDE_NETLISTS_H
+#ifndef VERILOG_AUXILIARY_NETLISTS_H
+#define VERILOG_AUXILIARY_NETLISTS_H
 
 #include <string>
 #include "circuit_library.h"

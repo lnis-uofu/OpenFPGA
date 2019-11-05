@@ -13,7 +13,7 @@
 #include "fpga_x2p_naming.h"
 
 #include "verilog_writer_utils.h"
-#include "verilog_include_netlists.h"
+#include "verilog_auxiliary_netlists.h"
 
 /********************************************************************
  * Local constant variables

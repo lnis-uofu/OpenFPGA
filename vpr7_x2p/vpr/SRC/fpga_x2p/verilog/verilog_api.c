@@ -61,7 +61,7 @@
 #include "verilog_sdc.h"
 #include "verilog_formality_autodeck.h"
 #include "verilog_sdc_pb_types.h"
-#include "verilog_include_netlists.h"
+#include "verilog_auxiliary_netlists.h"
 #include "simulation_info_writer.h"
 
 #include "verilog_api.h"
