@@ -354,8 +354,11 @@ t_cb* get_chan_rr_node_ending_cb(t_rr_node* src_rr_node,
      */
     assert (src_rr_node->xlow == src_rr_node->xhigh);
     next_cb_x = src_rr_node->xlow;
-    assert (end_rr_node->ylow == end_rr_node->yhigh);
-    next_cb_y = end_rr_node->ylow;
+    /* Heterogeneous blocks may have ylow != yhigh */
+    if (IPIN != end_rr_node->type) {
+      assert (end_rr_node->ylow == end_rr_node->yhigh);
+    }
+    next_cb_y = end_rr_node->yhigh;
     /* Side will be either on RIGHT or LEFT */
     ipin_side[0] = LEFT;
     ipin_side[1] = RIGHT;
@@ -372,6 +375,7 @@ t_cb* get_chan_rr_node_ending_cb(t_rr_node* src_rr_node,
   }
 
   /* Double check if src_rr_node is in the IN_PORT list */
+  /* TODO: this part should be refactored!
   node_exist = 0;
   for (iside = 0; iside < num_chan_sides; iside++) {
     if (OPEN != get_rr_node_index_in_cb_info( src_rr_node,
@@ -381,8 +385,10 @@ t_cb* get_chan_rr_node_ending_cb(t_rr_node* src_rr_node,
     }
   }
   assert (0 < node_exist);
+  */
 
   /* Double check if end_rr_node is in the OUT_PORT list */
+  /* TODO: this part should be refactored!
   node_exist = 0;
   for (iside = 0; iside < num_ipin_sides; iside++) {
     if (OPEN != get_rr_node_index_in_cb_info( end_rr_node,
@@ -392,6 +398,7 @@ t_cb* get_chan_rr_node_ending_cb(t_rr_node* src_rr_node,
     }
   }
   assert (0 < node_exist);
+  */
 
   return next_cb;
 }

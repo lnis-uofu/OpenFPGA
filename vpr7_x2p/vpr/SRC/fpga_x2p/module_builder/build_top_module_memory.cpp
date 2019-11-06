@@ -4,6 +4,7 @@
  *******************************************************************/
 #include "vtr_assert.h"
 
+#include "rr_blocks_utils.h"
 #include "fpga_x2p_utils.h"
 #include "fpga_x2p_naming.h"
 
@@ -31,8 +32,12 @@ void organize_top_module_tile_cb_modules(ModuleManager& module_manager,
                                          const t_rr_type& cb_type,
                                          const bool& compact_routing_hierarchy) {
   /* If the CB does not exist, we can skip addition */
-  if ( (TRUE != is_cb_exist(cb_type, rr_gsb.get_cb_x(cb_type), rr_gsb.get_cb_y(cb_type)))
-    || (true != rr_gsb.is_cb_exist(cb_type))) {
+  if ( false == rr_gsb.is_cb_exist(cb_type)) {
+    return;
+  }
+
+  /* Skip if the cb does not contain any configuration bits! */
+  if (true == connection_block_contain_only_routing_tracks(rr_gsb, cb_type)) {
     return;
   }
 

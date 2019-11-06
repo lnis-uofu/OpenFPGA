@@ -1044,8 +1044,7 @@ void build_flatten_connection_block_modules(ModuleManager& module_manager,
        * We will skip those modules
        */
       const RRGSB& rr_gsb = L_device_rr_gsb.get_gsb(ix, iy);
-      if ( (TRUE != is_cb_exist(cb_type, rr_gsb.get_cb_x(cb_type), rr_gsb.get_cb_y(cb_type)))
-        || (true != rr_gsb.is_cb_exist(cb_type))) {
+      if (false == rr_gsb.is_cb_exist(cb_type)) {
         continue;
       }
       build_connection_block_module(module_manager, 

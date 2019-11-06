@@ -10,6 +10,7 @@
 #include "vtr_assert.h"
 #include "util.h"
 #include "mux_utils.h"
+#include "rr_blocks_utils.h"
 #include "fpga_x2p_reserved_words.h"
 #include "fpga_x2p_types.h"
 #include "fpga_x2p_naming.h"
@@ -318,8 +319,11 @@ void build_connection_block_bitstreams(BitstreamManager& bitstream_manager,
        * Some of them do NOT exist due to heterogeneous blocks (height > 1) 
        * We will skip those modules
        */
-      if ( (TRUE != is_cb_exist(cb_type, rr_gsb.get_cb_x(cb_type), rr_gsb.get_cb_y(cb_type)))
-        || (true != rr_gsb.is_cb_exist(cb_type))) {
+      if (false == rr_gsb.is_cb_exist(cb_type)) {
+        continue;
+      }
+      /* Skip if the cb does not contain any configuration bits! */
+      if (true == connection_block_contain_only_routing_tracks(rr_gsb, cb_type)) {
         continue;
       }
       /* Create a block for the bitstream which corresponds to the Switch block */

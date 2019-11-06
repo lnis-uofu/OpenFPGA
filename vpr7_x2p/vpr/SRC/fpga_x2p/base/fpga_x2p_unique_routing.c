@@ -1119,6 +1119,22 @@ RRGSB build_rr_gsb(DeviceCoordinator& device_range,
     if (0 == rr_gsb.get_chan_width(chan_side)) {
       continue;
     }
+    /* For bottom side: Skip IPIN collection if the offset of the grid is not zero! 
+     * (it means this CB is in the middle of a grid (whose height > 1)
+     *                              
+     *        |            |         |           |
+     *        |            |         |           |
+     *        |    Grid    |         |   Grid    |
+     *        +------------+         |           |
+     *          IPIN nodes             IPIN nodes
+     *            exist               do NOT exist
+     */
+    if ((BOTTOM == ipin_rr_node_grid_side) && (0 < grid[ix][iy].offset)) {
+      continue;
+    }
+    if ((TOP == ipin_rr_node_grid_side) && (grid[ix][iy].offset != grid[ix][iy].type->height - 1)) {
+      continue;
+    }
     /* Collect IPIN rr_nodes*/ 
     temp_ipin_rr_node = get_grid_side_pin_rr_nodes(&(num_temp_ipin_rr_nodes), 
                                                    IPIN, ix, iy, ipin_rr_node_grid_side,
