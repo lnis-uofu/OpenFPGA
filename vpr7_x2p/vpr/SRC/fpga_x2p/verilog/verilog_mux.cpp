@@ -1192,7 +1192,10 @@ void generate_verilog_mux_module(ModuleManager& module_manager,
     ModuleId mux_module = module_manager.find_module(module_name);
     VTR_ASSERT(true == module_manager.valid_module_id(mux_module));
     write_verilog_module_to_file(fp, module_manager, mux_module, 
-                                 use_explicit_port_map || circuit_lib.dump_explicit_port_map(mux_model));
+                                  ( use_explicit_port_map 
+                                 || circuit_lib.dump_explicit_port_map(mux_model) 
+                                 || circuit_lib.dump_explicit_port_map(circuit_lib.pass_gate_logic_model(mux_model)) ) 
+                                 );
     /* Add an empty line as a splitter */
     fp << std::endl;
     break;
