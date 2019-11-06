@@ -155,6 +155,12 @@ void build_essential_modules(ModuleManager& module_manager,
              "Building essential (inverter/buffer/logic gate) modules...");
 
   for (const auto& circuit_model : circuit_lib.models()) {
+    /* We only care about user-defined models */
+    if ( (false == circuit_lib.model_verilog_netlist(circuit_model).empty())
+      && (false == circuit_lib.model_spice_netlist(circuit_model).empty()) ) {
+      continue;
+    }
+
     if (SPICE_MODEL_INVBUF == circuit_lib.model_type(circuit_model)) {
       build_invbuf_module(module_manager, circuit_lib, circuit_model);
       continue;
@@ -184,8 +190,7 @@ void build_essential_modules(ModuleManager& module_manager,
  * to the module_manager
  ********************************************************************/
 void build_user_defined_modules(ModuleManager& module_manager, 
-                                const CircuitLibrary& circuit_lib, 
-                                const std::vector<t_segment_inf>& routing_segments) {
+                                const CircuitLibrary& circuit_lib) {
   /* Start time count */
   clock_t t_start = clock();
 
@@ -196,7 +201,7 @@ void build_user_defined_modules(ModuleManager& module_manager,
   for (const auto& model : circuit_lib.models()) {
     /* We only care about user-defined models */
     if ( (true == circuit_lib.model_verilog_netlist(model).empty())
-      && (true == circuit_lib.model_verilog_netlist(model).empty()) ) {
+      && (true == circuit_lib.model_spice_netlist(model).empty()) ) {
       continue;
     }
     /* Skip Routing channel wire models because they need a different name. Do it later */
@@ -273,7 +278,7 @@ void rename_primitive_module_port_names(ModuleManager& module_manager,
   for (const CircuitModelId& model : circuit_lib.models()) {
     /* We only care about user-defined models */
     if ( (true == circuit_lib.model_verilog_netlist(model).empty())
-      && (true == circuit_lib.model_verilog_netlist(model).empty()) ) {
+      && (true == circuit_lib.model_spice_netlist(model).empty()) ) {
       continue;
     }
     /* Skip Routing channel wire models because they need a different name. Do it later */

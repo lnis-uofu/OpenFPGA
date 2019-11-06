@@ -14,7 +14,6 @@
 #include "module_manager.h"
 
 void build_wire_modules(ModuleManager& module_manager,
-                        const CircuitLibrary& circuit_lib,
-                        std::vector<t_segment_inf> routing_segments);
+                        const CircuitLibrary& circuit_lib);
 
 #endif

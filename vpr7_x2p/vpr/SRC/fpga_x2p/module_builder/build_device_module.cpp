@@ -75,12 +75,6 @@ ModuleManager build_device_module_graph(const t_vpr_setup& vpr_setup,
                                             arch.sram_inf.verilog_sram_inf_orgz->spice_model);
   config_circuit_models_sram_port_to_default_sram_model(arch.spice->circuit_lib, sram_model); 
 
-  /* Create a vector of segments. TODO: should come from DeviceContext */
-  std::vector<t_segment_inf> L_segment_vec;
-  for (int i = 0; i < arch.num_segments; ++i) {
-    L_segment_vec.push_back(arch.Segments[i]);
-  }
-
   /* Add constant generator modules: VDD and GND */
   build_constant_generator_modules(module_manager);
 
@@ -88,7 +82,7 @@ ModuleManager build_device_module_graph(const t_vpr_setup& vpr_setup,
    * This should be done prior to other steps in this function, 
    * because they will be instanciated by other primitive modules
    */
-  build_user_defined_modules(module_manager, arch.spice->circuit_lib, L_segment_vec);
+  build_user_defined_modules(module_manager, arch.spice->circuit_lib);
 
   /* Build elmentary modules */
   build_essential_modules(module_manager, arch.spice->circuit_lib);
@@ -103,7 +97,7 @@ ModuleManager build_device_module_graph(const t_vpr_setup& vpr_setup,
   build_lut_modules(module_manager, arch.spice->circuit_lib);
 
   /* Build wire modules */
-  build_wire_modules(module_manager, arch.spice->circuit_lib, L_segment_vec);
+  build_wire_modules(module_manager, arch.spice->circuit_lib);
 
   /* Build memory modules */
   build_memory_modules(module_manager, mux_lib, arch.spice->circuit_lib,
