@@ -289,6 +289,7 @@ void print_verilog_top_testbench_ports(std::fstream& fp,
                                        const ModuleManager& module_manager,
                                        const ModuleId& top_module,
                                        const std::vector<t_logical_block>& L_logical_blocks,
+                                       const std::vector<std::string>& clock_port_names,
                                        const e_sram_orgz& sram_orgz_type,
                                        const std::string& circuit_name){
   /* Validate the file stream */
@@ -352,6 +353,31 @@ void print_verilog_top_testbench_ports(std::fstream& fp,
 
   /* Configuration ports depend on the organization of SRAMs */
   print_verilog_top_testbench_config_protocol_port(fp, sram_orgz_type);
+
+  /* Create a clock port if the benchmark have one but not in the default name! 
+   * We will wire the clock directly to the operating clock directly
+   */
+  for (const std::string clock_port_name : clock_port_names) {
+    if (0 == clock_port_name.compare(op_clock_port.get_name())) {
+      continue;
+    }
+    /* Ensure the clock port name is not a duplication of global ports of the FPGA module */
+    bool print_clock_port = true;
+    for (const BasicPort& module_port : module_manager.module_ports_by_type(top_module, ModuleManager::MODULE_GLOBAL_PORT)) {
+      if (0 == clock_port_name.compare(module_port.get_name())) {
+        print_clock_port = false;
+      }
+    }
+    if (false == print_clock_port) {
+      continue;
+    }
+
+    /* Print the clock and wire it to op_clock */
+    print_verilog_comment(fp, std::string("----- Create a clock for benchmark and wire it to op_clock -------"));
+    BasicPort clock_port(clock_port_name, 1);
+    fp << "\t" << generate_verilog_port(VERILOG_PORT_WIRE, clock_port) << ";" << std::endl;
+    print_verilog_wire_connection(fp, clock_port, op_clock_port, false);
+  }
 
   print_verilog_testbench_shared_ports(fp, L_logical_blocks,
                                        std::string(TOP_TESTBENCH_REFERENCE_OUTPUT_POSTFIX),
@@ -753,9 +779,12 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
   ModuleId top_module = module_manager.find_module(generate_fpga_top_module_name());
   VTR_ASSERT(true == module_manager.valid_module_id(top_module));
 
+  /* Preparation: find all the clock ports */
+  std::vector<std::string> clock_port_names = find_benchmark_clock_port_name(L_logical_blocks);
+
   /* Start of testbench */
-  //dump_verilog_top_auto_testbench_ports(fp, cur_sram_orgz_info, circuit_name, fpga_verilog_opts);
-  print_verilog_top_testbench_ports(fp, module_manager, top_module, L_logical_blocks,
+  print_verilog_top_testbench_ports(fp, module_manager, top_module, 
+                                    L_logical_blocks, clock_port_names,
                                     sram_orgz_type, circuit_name);
 
   /* Find the clock period */
@@ -802,9 +831,6 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
   /* load bitstream to FPGA fabric in a configuration phase */
   print_verilog_top_testbench_bitstream(fp, sram_orgz_type,
                                         bitstream_manager, fabric_bitstream);
-
-  /* Preparation: find all the clock ports */
-  std::vector<std::string> clock_port_names = find_benchmark_clock_port_name(L_logical_blocks);
 
   /* Add stimuli for reset, set, clock and iopad signals */
   print_verilog_testbench_random_stimuli(fp, L_logical_blocks, 
