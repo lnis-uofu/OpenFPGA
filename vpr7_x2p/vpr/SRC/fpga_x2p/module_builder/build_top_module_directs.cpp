@@ -102,7 +102,7 @@ void add_module_nets_clb2clb_direct_connection(ModuleManager& module_manager,
   VTR_ASSERT(true == module_manager.valid_module_port_id(direct_module, direct_output_port_id));
   VTR_ASSERT(1 == module_manager.module_port(direct_module, direct_output_port_id).get_width());
 
-  for (size_t pin_id : src_clb_port.pins()) {
+  for (size_t pin_id = 0; pin_id < src_clb_port.pins().size(); ++pin_id) {
     /* Generate the pin name of source port/pin in the grid */
     size_t src_pin_height = find_grid_pin_height(grids, src_clb_coord, src_clb_port.pins()[pin_id]);
     e_side src_pin_grid_side = find_grid_pin_side(device_size, grids, src_clb_coord, src_pin_height, src_clb_port.pins()[pin_id]);
