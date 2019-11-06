@@ -684,16 +684,16 @@ void add_top_module_nets_connect_sb_and_cb(ModuleManager& module_manager,
      *    FOr RIGHT and BOTTOM side, find the adjacent RRGSB and then use is_cb_exist()
      */
     if ( TOP == side_manager.get_side() || LEFT == side_manager.get_side() ) {
-      if ( (TRUE != is_cb_exist(cb_type, module_gsb_cb_coordinate.get_x(), module_gsb_cb_coordinate.get_y())) 
+      if ( (TRUE != is_cb_exist(cb_type, rr_gsb.get_cb_x(cb_type), rr_gsb.get_cb_y(cb_type))) 
         || (true != rr_gsb.is_cb_exist(cb_type))) {
         continue;
       }
     }
 
     if ( RIGHT == side_manager.get_side() || BOTTOM == side_manager.get_side() ) {
-      const RRGSB& adjancent_gsb = L_device_rr_gsb.get_gsb(module_gsb_cb_coordinate);
-      if ( (TRUE != is_cb_exist(cb_type, module_gsb_cb_coordinate.get_x(), module_gsb_cb_coordinate.get_y())) 
-        || (true != adjancent_gsb.is_cb_exist(cb_type))) {
+      const RRGSB& adjacent_gsb = L_device_rr_gsb.get_gsb(module_gsb_cb_coordinate);
+      if ( (TRUE != is_cb_exist(cb_type, adjacent_gsb.get_cb_x(cb_type), adjacent_gsb.get_cb_y(cb_type))) 
+        || (true != adjacent_gsb.is_cb_exist(cb_type))) {
         continue;
       }
     }
