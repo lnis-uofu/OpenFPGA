@@ -28,7 +28,7 @@ ModulePortId find_inverter_buffer_module_port(const ModuleManager& module_manage
   VTR_ASSERT(1 == model_ports.size());
 
   /* Find the input and output module ports */
-  ModulePortId module_port_id = module_manager.find_module_port(module_id, circuit_lib.port_lib_name(model_ports[0]));
+  ModulePortId module_port_id = module_manager.find_module_port(module_id, circuit_lib.port_prefix(model_ports[0]));
   VTR_ASSERT(true == module_manager.valid_module_port_id(module_id, module_port_id));
 
   return module_port_id;  

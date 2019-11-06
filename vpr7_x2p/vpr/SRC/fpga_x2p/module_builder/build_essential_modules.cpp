@@ -155,9 +155,9 @@ void build_essential_modules(ModuleManager& module_manager,
              "Building essential (inverter/buffer/logic gate) modules...");
 
   for (const auto& circuit_model : circuit_lib.models()) {
-    /* We only care about user-defined models */
-    if ( (false == circuit_lib.model_verilog_netlist(circuit_model).empty())
-      && (false == circuit_lib.model_spice_netlist(circuit_model).empty()) ) {
+    /* Add essential modules upon on demand: only when it is not yet in the module library */
+    ModuleId module = module_manager.find_module(circuit_lib.model_name(circuit_model));
+    if (true == module_manager.valid_module_id(module)) {
       continue;
     }
 
