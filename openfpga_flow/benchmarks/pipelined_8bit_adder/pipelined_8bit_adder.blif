@@ -66,7 +66,7 @@
 # End adder
 
 # Start DPRAM
-.subckt dual_port_ram_32x1024 clk=clk wen=wen_st1 ren=ren \
+.subckt dual_port_ram_32x512 clk=clk wen=wen_st1 ren=ren \
 waddr[0]=waddr_st1_0_ waddr[1]=waddr_st1_1_ waddr[2]=waddr_st1_2_ waddr[3]=waddr_st1_3_ waddr[4]=waddr_st1_4_ \
 waddr[5]=waddr_st1_5_ waddr[6]=zero00 waddr[7]=zero00 waddr[8]=zero00 \
 raddr[0]=raddr_0_ raddr[1]=raddr_1_ raddr[2]=raddr_2_ raddr[3]=raddr_3_ raddr[4]=raddr_4_ raddr[5]=raddr_5_ \
@@ -94,8 +94,8 @@ d_out[26]=unconn d_out[27]=unconn d_out[28]=unconn d_out[29]=unconn d_out[30]=un
 .end
 
 # Start blackbox definition
-.model dual_port_ram_32x1024
-.inputs clk wen ren waddr[0] waddr[1] waddr[2] waddr[3] waddr[4] waddr[5] \
+.model dual_port_ram_32x512
+.inputs clk ren wen waddr[0] waddr[1] waddr[2] waddr[3] waddr[4] waddr[5] \
  waddr[6] waddr[7] waddr[8] raddr[0] raddr[1] raddr[2] \
  raddr[3] raddr[4] raddr[5] raddr[6] raddr[7] raddr[8] \
  d_in[0] d_in[1] d_in[2] d_in[3] d_in[4] d_in[5] d_in[6] d_in[7] d_in[8] \

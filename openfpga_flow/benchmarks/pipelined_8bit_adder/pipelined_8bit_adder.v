@@ -1,9 +1,3 @@
-//                                 //
-//    ERI summit demo-benchmark    //
-//      pipelined_8b_adder.v       //
-//          by Aurelien            // 
-//                                 //
-/////////////////////////////////////
 //-----------------------------------------------------
 // Design Name : pipelined_8bit_adder
 // File Name   : pipelined_8bit_adder.v
@@ -57,11 +51,25 @@ module pipelined_8bit_adder(
     output q_6_,
     output q_7_);
 
-	wire [5:0] raddr = { raddr_5_, raddr_4_, raddr_3_, raddr_2_, raddr_1_, raddr_0_ };
-	wire [5:0] waddr = { waddr_5_, waddr_4_, waddr_3_, waddr_2_, waddr_1_, waddr_0_ };
-	wire [6:0] a = { a_6_, a_5_, a_4_, a_3_, a_2_, a_1_, a_0_ };
-	wire [6:0] b = { b_6_, b_5_, b_4_, b_3_, b_2_, b_1_, b_0_ };
-	wire [7:0] q = { q_7_, q_6_, q_5_, q_4_, q_3_, q_2_, q_1_, q_0_ };
+	wire [5:0] raddr;
+	wire [5:0] waddr;
+	wire [6:0] a;
+	wire [6:0] b;
+	wire [7:0] q;
+
+
+	assign raddr = { raddr_5_, raddr_4_, raddr_3_, raddr_2_, raddr_1_, raddr_0_ };
+	assign waddr = { waddr_5_, waddr_4_, waddr_3_, waddr_2_, waddr_1_, waddr_0_ };
+	assign a = { a_6_, a_5_, a_4_, a_3_, a_2_, a_1_, a_0_ };
+	assign b = { b_6_, b_5_, b_4_, b_3_, b_2_, b_1_, b_0_ };
+    assign q_7_ = q[7];
+    assign q_6_ = q[6];
+    assign q_5_ = q[5];
+    assign q_4_ = q[4];
+    assign q_3_ = q[3];
+    assign q_2_ = q[2];
+    assign q_1_ = q[1];
+    assign q_0_ = q[0];
 
 	reg[7:0] ram[63:0];
 	reg[6:0] a_st0;
