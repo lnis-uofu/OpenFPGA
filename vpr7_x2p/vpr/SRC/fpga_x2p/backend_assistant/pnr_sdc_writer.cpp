@@ -43,7 +43,7 @@ void print_pnr_sdc_global_ports(const std::string& sdc_dir,
                                 const std::vector<CircuitPortId>& global_ports) {
 
   /* Create the file name for Verilog netlist */
-  std::string sdc_fname(sdc_dir + std::string(SDC_CLOCK_FILE_NAME));
+  std::string sdc_fname(sdc_dir + std::string(SDC_GLOBAL_PORTS_FILE_NAME));
 
   vpr_printf(TIO_MESSAGE_INFO, 
              "Generating SDC for constraining clocks for P&R flow: %s ...",
@@ -139,6 +139,47 @@ void print_pnr_sdc_global_ports(const std::string& sdc_dir,
 }
 
 /********************************************************************
+ * Break combintational loops in FPGA fabric, which mainly come from:
+ * 1. Configurable memory cells. 
+ *    To handle this, we disable the outputs of memory cells
+ * 2. Loops of multiplexers.
+ *    To handle this, we disable the outputs of routing multiplexers
+ *******************************************************************/
+static 
+void print_pnr_sdc_constrain_configurable_memory_outputs(const std::string& sdc_dir) {
+
+  /* Create the file name for Verilog netlist */
+  std::string sdc_fname(sdc_dir + std::string(SDC_DISABLE_CONFIG_MEM_OUTPUTS_FILE_NAME));
+
+  vpr_printf(TIO_MESSAGE_INFO, 
+             "Generating SDC for disable configurable memory outputs for P&R flow: %s ...",
+             sdc_fname.c_str());
+
+  /* Start time count */
+  clock_t t_start = clock();
+
+  /* Create the file stream */
+  std::fstream fp;
+  fp.open(sdc_fname, std::fstream::out | std::fstream::trunc);
+
+  check_file_handler(fp);
+
+  /* Generate the descriptions*/
+  print_sdc_file_header(fp, std::string("disable configurable memory outputs for PnR"));
+
+  /* Close file handler */
+  fp.close();
+
+  /* End time count */
+  clock_t t_end = clock();
+
+  float run_time_sec = (float)(t_end - t_start) / CLOCKS_PER_SEC;
+  vpr_printf(TIO_MESSAGE_INFO, 
+             "took %g seconds\n", 
+             run_time_sec);  
+}
+
+/********************************************************************
  * Top-level function to print a number of SDC files in different purpose
  * This function will generate files upon the options provided by users
  * 1. Design constraints for CLBs
@@ -155,4 +196,25 @@ void print_pnr_sdc(const SdcOption& sdc_options,
   if (true == sdc_options.constrain_global_port()) {
     print_pnr_sdc_global_ports(sdc_options.sdc_dir(), critical_path_delay, circuit_lib, global_ports);
   }
+
+  /* Part 2. Output Design Constraints to disable outputs of memory cells */
+  if (true == sdc_options.constrain_configurable_memory_outputs()) {
+    print_pnr_sdc_constrain_configurable_memory_outputs(sdc_options.sdc_dir()); 
+  } 
+
+  /* 2. Break loops from Multiplexer Output */
+  /*
+  if (TRUE == sdc_opts.break_loops_mux) {
+    verilog_generate_sdc_break_loop_mux(fp, num_switch, switches, spice, routing_arch); 
+  }
+   */
+
+  /* TODO: 3. Break loops from any SB output */
+  /*
+  if (TRUE == sdc_opts.compact_routing_hierarchy) {
+    verilog_generate_sdc_break_loop_sb(fp, LL_device_rr_gsb);
+  } else {
+    verilog_generate_sdc_break_loop_sb(fp, LL_nx, LL_ny);
+  }
+  */
 }

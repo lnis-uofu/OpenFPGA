@@ -151,7 +151,7 @@ void vpr_fpga_x2p_tool_suites(t_vpr_setup vpr_setup,
     src_dir = format_dir_path(src_dir);
   }
   SdcOption sdc_options(format_dir_path(src_dir + std::string(FPGA_X2P_DEFAULT_SDC_DIR)));
-  sdc_options.set_generate_sdc_pnr(TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.print_sdc_pnr);
+  sdc_options.set_generate_sdc_pnr(FALSE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.print_sdc_pnr);
   sdc_options.set_generate_sdc_analysis(TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.print_sdc_analysis);
 
   if (true == sdc_options.generate_sdc()) {

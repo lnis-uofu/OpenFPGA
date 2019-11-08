@@ -19,7 +19,9 @@ class SdcOption {
     bool constrain_grid() const;
     bool constrain_sb() const;
     bool constrain_cb() const;
-    bool break_loop() const;
+    bool constrain_configurable_memory_outputs() const;
+    bool constrain_routing_multiplexer_outputs() const;
+    bool constrain_switch_block_outputs() const;
   public: /* Public mutators */
     void set_sdc_dir(const std::string& sdc_dir);
     void set_generate_sdc_pnr(const bool& generate_sdc_pnr);
@@ -28,15 +30,18 @@ class SdcOption {
     void set_constrain_grid(const bool& constrain_grid);
     void set_constrain_sb(const bool& constrain_sb);
     void set_constrain_cb(const bool& constrain_cb);
-    void set_break_loop(const bool& break_loop);
+    void set_constrain_configurable_memory_outputs(const bool& constrain_config_mem_outputs);
+    void set_constrain_routing_multiplexer_outputs(const bool& constrain_routing_mux_outputs);
+    void set_constrain_switch_block_outputs(const bool& constrain_sb_outputs);
   private: /* Internal data */
     std::string sdc_dir_;
-    bool generate_sdc_pnr_; 
     bool constrain_global_port_; 
     bool constrain_grid_; 
     bool constrain_sb_;
     bool constrain_cb_;
-    bool break_loop_;
+    bool constrain_configurable_memory_outputs_;
+    bool constrain_routing_multiplexer_outputs_;
+    bool constrain_switch_block_outputs_;
     bool generate_sdc_analysis_; 
 };
 
