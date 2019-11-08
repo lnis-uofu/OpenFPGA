@@ -13,6 +13,8 @@
 #include "circuit_library.h"
 #include "vpr_types.h"
 
+constexpr char* FPGA_X2P_DEFAULT_SDC_DIR = "SDC";
+
 std::string generate_mux_node_name(const size_t& node_level, 
                                    const bool& add_buffer_postfix);
 

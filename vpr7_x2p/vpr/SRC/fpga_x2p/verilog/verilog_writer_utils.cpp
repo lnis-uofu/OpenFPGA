@@ -42,7 +42,7 @@ void print_verilog_file_header(std::fstream& fp,
   fp << "//-------------------------------------------" << std::endl;
   fp << "//----- Time scale -----" << std::endl;
   fp << "`timescale 1ns / 1ps" << std::endl;
-  fp << "\n";
+  fp << std::endl;
 }
 
 /********************************************************************

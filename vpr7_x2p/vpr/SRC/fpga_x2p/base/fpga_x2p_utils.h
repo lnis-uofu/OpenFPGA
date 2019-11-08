@@ -3,16 +3,28 @@
 
 #include <fstream>
 #include <vector>
+#include <string>
 
 #include "my_free_fwd.h"
 #include "rr_blocks_naming.h"
 
+std::string format_dir_path(const std::string& dir_path_to_format);
+
 void check_file_handler(std::fstream& fp);
+
+std::vector<size_t> my_ito1hot_vec(const size_t& in_int, const size_t& bin_len);
+
+std::string find_path_dir_name(const std::string& file_name);
+
+std::string find_path_file_name(const std::string& file_name);
+
+std::vector<size_t> my_itobin_vec(const size_t& in_int, const size_t& bin_len);
+
+/* Old functions */
 
 char* my_gettime();
 
 char* format_dir_path(char* dir_path); /* TODO: TO BE REMOVED !!! */
-std::string format_dir_path(const std::string& dir_path);
 
 int try_access_file(char* file_path);
 
@@ -66,13 +78,9 @@ t_spice_transistor_type* find_mosfet_tech_lib(t_spice_tech_lib tech_lib,
 
 char* my_ito1hot(int in_int, int bin_len);
 
-std::vector<size_t> my_ito1hot_vec(const size_t& in_int, const size_t& bin_len);
-
 char* my_itobin(int in_int, int bin_len);
 
 int* my_itobin_int(int in_int, int bin_len);
-
-std::vector<size_t> my_itobin_vec(const size_t& in_int, const size_t& bin_len);
 
 char* my_itoa(int input);
 
