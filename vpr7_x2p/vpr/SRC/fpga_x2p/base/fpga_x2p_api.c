@@ -147,9 +147,7 @@ void vpr_fpga_x2p_tool_suites(t_vpr_setup vpr_setup,
   std::string src_dir = find_path_dir_name(std::string(vpr_setup.FileNameOpts.CircuitName));
 
   /* Use current directory if there is not dir path given */
-  if (true == src_dir.empty()) {
-    src_dir = std::string("./");
-  } else {
+  if (false == src_dir.empty()) {
     src_dir = format_dir_path(src_dir);
   }
   SdcOption sdc_options(format_dir_path(src_dir + std::string(FPGA_X2P_DEFAULT_SDC_DIR)));
