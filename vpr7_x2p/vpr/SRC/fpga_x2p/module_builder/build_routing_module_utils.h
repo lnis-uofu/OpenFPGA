@@ -39,7 +39,6 @@ ModulePortId find_connection_block_module_ipin_port(const ModuleManager& module_
                                                     const std::vector<std::vector<t_grid_tile>>& grids,
                                                     t_rr_node* src_rr_node);
 
-
 std::vector<ModulePortId> find_connection_block_module_input_ports(const ModuleManager& module_manager,
                                                                    const ModuleId& cb_module,
                                                                    const RRGSB& rr_gsb, 
