@@ -3,6 +3,7 @@
  *******************************************************************/
 #include <chrono>
 #include <ctime>
+#include <iomanip>
 
 #include "fpga_x2p_utils.h"
 
@@ -49,4 +50,32 @@ std::string generate_sdc_port(const BasicPort& port) {
   sdc_line = port.get_name() + size_str;
 
   return sdc_line;
+}
+
+/********************************************************************
+ * Constrain a path between two ports of a module with a given timing value
+ *******************************************************************/
+void print_pnr_sdc_constrain_module_port2port_timing(std::fstream& fp,
+                                                     const ModuleManager& module_manager,
+                                                     const ModuleId& module_id, 
+                                                     const ModulePortId& module_input_port_id, 
+                                                     const ModulePortId& module_output_port_id, 
+                                                     const float& tmax) {
+  /* Validate file stream */
+  check_file_handler(fp);
+
+  fp << "set_max_delay";
+
+  fp << " -from ";
+  fp << module_manager.module_name(module_id) << "/";
+  fp << generate_sdc_port(module_manager.module_port(module_id, module_input_port_id));
+
+  fp << " -to ";
+ 
+  fp << module_manager.module_name(module_id) << "/";
+  fp << generate_sdc_port(module_manager.module_port(module_id, module_output_port_id));
+
+  fp << " " << std::setprecision(10) << tmax;
+
+  fp << std::endl;
 }

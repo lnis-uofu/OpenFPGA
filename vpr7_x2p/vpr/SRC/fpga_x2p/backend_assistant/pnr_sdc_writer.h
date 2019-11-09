@@ -12,9 +12,13 @@
 
 void print_pnr_sdc(const SdcOption& sdc_options,
                    const float& critical_path_delay,
+                   const std::vector<std::vector<t_grid_tile>>& grids,
+                   const std::vector<t_switch_inf>& switches,
+                   const DeviceRRGSB& L_device_rr_gsb,
+                   const ModuleManager& module_manager,
                    const MuxLibrary& mux_lib,
                    const CircuitLibrary& circuit_lib,
-                   const ModuleManager& module_manager,
-                   const std::vector<CircuitPortId>& global_ports);
+                   const std::vector<CircuitPortId>& global_ports,
+                   const bool& compact_routing_hierarchy);
 
 #endif

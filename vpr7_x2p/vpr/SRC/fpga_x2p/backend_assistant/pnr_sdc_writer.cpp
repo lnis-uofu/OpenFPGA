@@ -21,6 +21,8 @@
 #include "fpga_x2p_naming.h"
 #include "fpga_x2p_utils.h"
 
+#include "build_routing_module_utils.h"
+
 #include "sdc_writer_naming.h"
 #include "sdc_writer_utils.h"
 #include "pnr_sdc_writer.h"
@@ -306,6 +308,327 @@ void print_sdc_disable_routing_multiplexer_outputs(const std::string& sdc_dir,
 }
 
 /********************************************************************
+ * Break combinational loops in FPGA fabric, which mainly come from 
+ * loops of multiplexers.
+ * To handle this, we disable the timing at outputs of Switch blocks
+ * This function is designed for flatten routing hierarchy
+ *******************************************************************/
+static 
+void print_pnr_sdc_flatten_routing_disable_switch_block_outputs(const std::string& sdc_dir,
+                                                                const ModuleManager& module_manager,
+                                                                const DeviceRRGSB& L_device_rr_gsb) {
+  /* Create the file name for Verilog netlist */
+  std::string sdc_fname(sdc_dir + std::string(SDC_DISABLE_SB_OUTPUTS_FILE_NAME));
+
+  vpr_printf(TIO_MESSAGE_INFO, 
+             "Generating SDC for disable Switch Block outputs for P&R flow: %s ...",
+             sdc_fname.c_str());
+
+  /* Start time count */
+  clock_t t_start = clock();
+
+  /* Create the file stream */
+  std::fstream fp;
+  fp.open(sdc_fname, std::fstream::out | std::fstream::trunc);
+
+  check_file_handler(fp);
+
+  /* Generate the descriptions*/
+  print_sdc_file_header(fp, std::string("Disable Switch Block outputs for PnR"));
+
+  /* Get the range of SB array */
+  DeviceCoordinator sb_range = L_device_rr_gsb.get_gsb_range();
+  /* Go for each SB */
+  for (size_t ix = 0; ix < sb_range.get_x(); ++ix) {
+    for (size_t iy = 0; iy < sb_range.get_y(); ++iy) {
+      const RRGSB& rr_gsb = L_device_rr_gsb.get_gsb(ix, iy);
+      vtr::Point<size_t> gsb_coordinate(rr_gsb.get_sb_x(), rr_gsb.get_sb_y());
+      std::string sb_instance_name = generate_switch_block_module_name(gsb_coordinate); 
+
+      ModuleId sb_module = module_manager.find_module(sb_instance_name);
+      VTR_ASSERT(true == module_manager.valid_module_id(sb_module));
+
+      /* Disable the outputs of the module */
+      for (const BasicPort& output_port : module_manager.module_ports_by_type(sb_module, ModuleManager::MODULE_OUTPUT_PORT)) {
+        fp << "set_disable_timing " << sb_instance_name << "/" << output_port.get_name() << std::endl;
+        fp << std::endl;
+      }
+    }
+  }
+  
+  /* Close file handler */
+  fp.close();
+
+  /* End time count */
+  clock_t t_end = clock();
+
+  float run_time_sec = (float)(t_end - t_start) / CLOCKS_PER_SEC;
+  vpr_printf(TIO_MESSAGE_INFO, 
+             "took %g seconds\n", 
+             run_time_sec);  
+}
+
+/********************************************************************
+ * Break combinational loops in FPGA fabric, which mainly come from 
+ * loops of multiplexers.
+ * To handle this, we disable the timing at outputs of Switch blocks
+ * This function is designed for compact routing hierarchy
+ *******************************************************************/
+static 
+void print_pnr_sdc_compact_routing_disable_switch_block_outputs(const std::string& sdc_dir,
+                                                                const ModuleManager& module_manager,
+                                                                const ModuleId& top_module,
+                                                                const DeviceRRGSB& L_device_rr_gsb) {
+  /* Create the file name for Verilog netlist */
+  std::string sdc_fname(sdc_dir + std::string(SDC_DISABLE_SB_OUTPUTS_FILE_NAME));
+
+  vpr_printf(TIO_MESSAGE_INFO, 
+             "Generating SDC for disable Switch Block outputs for P&R flow: %s ...",
+             sdc_fname.c_str());
+
+  /* Start time count */
+  clock_t t_start = clock();
+
+  /* Create the file stream */
+  std::fstream fp;
+  fp.open(sdc_fname, std::fstream::out | std::fstream::trunc);
+
+  check_file_handler(fp);
+
+  /* Generate the descriptions*/
+  print_sdc_file_header(fp, std::string("Disable Switch Block outputs for PnR"));
+
+  /* Build unique switch block modules */
+  for (size_t isb = 0; isb < L_device_rr_gsb.get_num_sb_unique_module(); ++isb) {
+    const RRGSB& rr_gsb = L_device_rr_gsb.get_sb_unique_module(isb);
+    vtr::Point<size_t> gsb_coordinate(rr_gsb.get_sb_x(), rr_gsb.get_sb_y());
+    std::string sb_module_name = generate_switch_block_module_name(gsb_coordinate); 
+
+    ModuleId sb_module = module_manager.find_module(sb_module_name);
+    VTR_ASSERT(true == module_manager.valid_module_id(sb_module));
+
+    /* Find all the instances in the top-level module */
+    for (const size_t& instance_id : module_manager.child_module_instances(top_module, sb_module)) {
+      std::string sb_instance_name = module_manager.instance_name(top_module, sb_module, instance_id);
+      /* Disable the outputs of the module */
+      for (const BasicPort& output_port : module_manager.module_ports_by_type(sb_module, ModuleManager::MODULE_OUTPUT_PORT)) {
+        fp << "set_disable_timing " << sb_instance_name << "/" << output_port.get_name() << std::endl;
+        fp << std::endl;
+      }
+    }
+  }
+  
+  /* Close file handler */
+  fp.close();
+
+  /* End time count */
+  clock_t t_end = clock();
+
+  float run_time_sec = (float)(t_end - t_start) / CLOCKS_PER_SEC;
+  vpr_printf(TIO_MESSAGE_INFO, 
+             "took %g seconds\n", 
+             run_time_sec);  
+}
+
+/********************************************************************
+ * Find the timing constraints between the inputs and outputs of a routing
+ * multiplexer in a Switch Block
+ *******************************************************************/
+static 
+float find_pnr_sdc_switch_tmax(const t_switch_inf& switch_inf) {
+  return switch_inf.R * switch_inf.Cout + switch_inf.Tdel;
+}
+
+/********************************************************************
+ * Set timing constraints between the inputs and outputs of a routing
+ * multiplexer in a Switch Block
+ *******************************************************************/
+static 
+void print_pnr_sdc_constrain_sb_mux_timing(std::fstream& fp,
+                                           const ModuleManager& module_manager,
+                                           const ModuleId& sb_module, 
+                                           const RRGSB& rr_gsb,
+                                           const std::vector<std::vector<t_grid_tile>>& grids,
+                                           const std::vector<t_switch_inf>& switches,
+                                           const e_side& output_node_side,
+                                           t_rr_node* output_rr_node) {
+  /* Validate file stream */
+  check_file_handler(fp);
+
+  VTR_ASSERT(  ( CHANX == output_rr_node->type )
+            || ( CHANY == output_rr_node->type ));
+
+  /* Find the module port corresponding to the output rr_node */
+  ModulePortId module_output_port = find_switch_block_module_chan_port(module_manager, 
+                                                                       sb_module,
+                                                                       rr_gsb, 
+                                                                       output_node_side,
+                                                                       output_rr_node,
+                                                                       OUT_PORT);
+
+  /* Find the module port corresponding to the fan-in rr_nodes of the output rr_node */
+  std::vector<t_rr_node*> input_rr_nodes;
+  for (int iedge = 0; iedge < output_rr_node->num_drive_rr_nodes; iedge++) {
+    input_rr_nodes.push_back(output_rr_node->drive_rr_nodes[iedge]);
+  }
+     
+  std::vector<ModulePortId> module_input_ports = find_switch_block_module_input_ports(module_manager,
+                                                                                      sb_module, 
+                                                                                      rr_gsb, 
+                                                                                      grids,
+                                                                                      input_rr_nodes);
+
+  /* Find timing constraints for each path (edge) */
+  std::map<ModulePortId, float> switch_delays;
+  for (int iedge = 0; iedge < output_rr_node->num_drive_rr_nodes; iedge++) {
+    /* Get the switch delay */
+    int switch_id = output_rr_node->drive_switches[iedge];
+    switch_delays[module_input_ports[iedge]] = find_pnr_sdc_switch_tmax(switches[switch_id]);
+  }
+
+  /* Find the starting points */
+  for (const ModulePortId& module_input_port : module_input_ports) {
+    /* Constrain a path */
+    print_pnr_sdc_constrain_module_port2port_timing(fp,
+                                                    module_manager, sb_module,
+                                                    module_input_port, module_output_port,
+                                                    switch_delays[module_input_port]);
+  }
+}
+
+/********************************************************************
+ * Set timing constraints between the inputs and outputs of SBs, 
+ * which are connected by routing multiplexers with the given delays
+ * specified in architectural XML file
+ *
+ * To enable block by block timing constraining, we generate the SDC
+ * file for each unique SB module
+ *******************************************************************/
+static 
+void print_pnr_sdc_constrain_sb_timing(const std::string& sdc_dir,
+                                       const ModuleManager& module_manager,
+                                       const std::vector<std::vector<t_grid_tile>>& grids,
+                                       const std::vector<t_switch_inf>& switches,
+                                       const RRGSB& rr_gsb) {
+
+  /* Create the file name for Verilog netlist */
+  vtr::Point<size_t> gsb_coordinate(rr_gsb.get_sb_x(), rr_gsb.get_sb_y());
+  std::string sdc_fname(sdc_dir + generate_switch_block_module_name(gsb_coordinate) + std::string(SDC_FILE_NAME_POSTFIX));
+
+  /* Create the file stream */
+  std::fstream fp;
+  fp.open(sdc_fname, std::fstream::out | std::fstream::trunc);
+
+  /* Validate file stream */
+  check_file_handler(fp);
+
+  std::string sb_module_name = generate_switch_block_module_name(gsb_coordinate);
+  ModuleId sb_module = module_manager.find_module(sb_module_name);
+  VTR_ASSERT(true == module_manager.valid_module_id(sb_module));
+
+  /* Generate the descriptions*/
+  print_sdc_file_header(fp, std::string("Constrain timing of Switch Block " + sb_module_name + " outputs for PnR"));
+
+  for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
+    Side side_manager(side);
+    for (size_t itrack = 0; itrack < rr_gsb.get_chan_width(side_manager.get_side()); ++itrack) {
+      t_rr_node* chan_rr_node = rr_gsb.get_chan_node(side_manager.get_side(), itrack);
+      /* We only care the output port and it should indicate a SB mux */
+      if (OUT_PORT != rr_gsb.get_chan_node_direction(side_manager.get_side(), itrack)) { 
+        continue; 
+      }
+      /* Constrain thru wires */
+      if (false != rr_gsb.is_sb_node_passing_wire(side_manager.get_side(), itrack)) {
+        continue;
+      } 
+      /* This is a MUX, constrain all the paths from an input to an output */
+      print_pnr_sdc_constrain_sb_mux_timing(fp,
+                                            module_manager, sb_module, 
+                                            rr_gsb,
+                                            grids, switches,
+                                            side_manager.get_side(),
+                                            chan_rr_node);
+    }
+  }
+
+  /* Close file handler */
+  fp.close();
+}
+
+/********************************************************************
+ * Print SDC timing constraints for Switch blocks
+ * This function is designed for flatten routing hierarchy
+ *******************************************************************/
+static 
+void print_pnr_sdc_flatten_routing_constrain_sb_timing(const std::string& sdc_dir,
+                                                       const ModuleManager& module_manager,
+                                                       const std::vector<std::vector<t_grid_tile>>& grids,
+                                                       const std::vector<t_switch_inf>& switches,
+                                                       const DeviceRRGSB& L_device_rr_gsb) {
+  vpr_printf(TIO_MESSAGE_INFO, 
+             "Generating SDC for constrain Switch Block timing for P&R flow...");
+
+  /* Start time count */
+  clock_t t_start = clock();
+
+  /* Get the range of SB array */
+  DeviceCoordinator sb_range = L_device_rr_gsb.get_gsb_range();
+  /* Go for each SB */
+  for (size_t ix = 0; ix < sb_range.get_x(); ++ix) {
+    for (size_t iy = 0; iy < sb_range.get_y(); ++iy) {
+      const RRGSB& rr_gsb = L_device_rr_gsb.get_gsb(ix, iy);
+      print_pnr_sdc_constrain_sb_timing(sdc_dir,
+                                        module_manager,
+                                        grids, switches,
+                                        rr_gsb);
+    }
+  }
+  
+  /* End time count */
+  clock_t t_end = clock();
+
+  float run_time_sec = (float)(t_end - t_start) / CLOCKS_PER_SEC;
+  vpr_printf(TIO_MESSAGE_INFO, 
+             "took %g seconds\n", 
+             run_time_sec);  
+}
+
+/********************************************************************
+ * Break combinational loops in FPGA fabric, which mainly come from 
+ * loops of multiplexers.
+ * To handle this, we disable the timing at outputs of Switch blocks
+ * This function is designed for compact routing hierarchy
+ *******************************************************************/
+static 
+void print_pnr_sdc_compact_routing_constrain_sb_timing(const std::string& sdc_dir,
+                                                       const ModuleManager& module_manager,
+                                                       const std::vector<std::vector<t_grid_tile>>& grids,
+                                                       const std::vector<t_switch_inf>& switches,
+                                                       const DeviceRRGSB& L_device_rr_gsb) {
+  vpr_printf(TIO_MESSAGE_INFO, 
+             "Generating SDC for constrain Switch Block timing for P&R flow...");
+
+  /* Start time count */
+  clock_t t_start = clock();
+
+  for (size_t isb = 0; isb < L_device_rr_gsb.get_num_sb_unique_module(); ++isb) {
+    const RRGSB& rr_gsb = L_device_rr_gsb.get_sb_unique_module(isb);
+    print_pnr_sdc_constrain_sb_timing(sdc_dir,
+                                      module_manager,
+                                      grids, switches,
+                                      rr_gsb);
+  }
+  
+  /* End time count */
+  clock_t t_end = clock();
+
+  float run_time_sec = (float)(t_end - t_start) / CLOCKS_PER_SEC;
+  vpr_printf(TIO_MESSAGE_INFO, 
+             "took %g seconds\n", 
+             run_time_sec);  
+}
+
+/********************************************************************
  * Top-level function to print a number of SDC files in different purpose
  * This function will generate files upon the options provided by users
  * 1. Design constraints for CLBs
@@ -315,12 +638,16 @@ void print_sdc_disable_routing_multiplexer_outputs(const std::string& sdc_dir,
  *******************************************************************/
 void print_pnr_sdc(const SdcOption& sdc_options,
                    const float& critical_path_delay,
+                   const std::vector<std::vector<t_grid_tile>>& grids,
+                   const std::vector<t_switch_inf>& switches,
+                   const DeviceRRGSB& L_device_rr_gsb,
+                   const ModuleManager& module_manager,
                    const MuxLibrary& mux_lib,
                    const CircuitLibrary& circuit_lib,
-                   const ModuleManager& module_manager,
-                   const std::vector<CircuitPortId>& global_ports) {
+                   const std::vector<CircuitPortId>& global_ports,
+                   const bool& compact_routing_hierarchy) {
   
-  /* Part 1. Constrain global ports */
+  /* Constrain global ports */
   if (true == sdc_options.constrain_global_port()) {
     print_pnr_sdc_global_ports(sdc_options.sdc_dir(), critical_path_delay, circuit_lib, global_ports);
   }
@@ -329,24 +656,66 @@ void print_pnr_sdc(const SdcOption& sdc_options,
   ModuleId top_module = module_manager.find_module(top_module_name);
   VTR_ASSERT(true == module_manager.valid_module_id(top_module));
 
-  /* Part 2. Output Design Constraints to disable outputs of memory cells */
+  /* Output Design Constraints to disable outputs of memory cells */
   if (true == sdc_options.constrain_configurable_memory_outputs()) {
     print_pnr_sdc_constrain_configurable_memory_outputs(sdc_options.sdc_dir(), module_manager, top_module); 
   } 
 
-  /* 2. Break loops from Multiplexer Output */
+  /* Break loops from Multiplexer Output */
   if (true == sdc_options.constrain_routing_multiplexer_outputs()) {
     print_sdc_disable_routing_multiplexer_outputs(sdc_options.sdc_dir(),
                                                   mux_lib, circuit_lib,
                                                   module_manager);
   }
 
-  /* TODO: 3. Break loops from any SB output */
+  /* Break loops from any SB output */
+  if (true == sdc_options.constrain_switch_block_outputs()) {
+    if (true == compact_routing_hierarchy) {
+      print_pnr_sdc_compact_routing_disable_switch_block_outputs(sdc_options.sdc_dir(),
+                                                                 module_manager, top_module,
+                                                                 L_device_rr_gsb);
+    } else {
+      VTR_ASSERT_SAFE (false == compact_routing_hierarchy);
+      print_pnr_sdc_flatten_routing_disable_switch_block_outputs(sdc_options.sdc_dir(),
+                                                                module_manager,
+                                                                L_device_rr_gsb);
+    }
+  }
+
+  /* Output routing constraints for Switch Blocks */
+  if (true == sdc_options.constrain_sb()) {
+    if (true == compact_routing_hierarchy) {
+      print_pnr_sdc_compact_routing_constrain_sb_timing(sdc_options.sdc_dir(),
+                                                        module_manager,
+                                                        grids, switches,
+                                                        L_device_rr_gsb);
+    } else {
+	  VTR_ASSERT_SAFE (false == compact_routing_hierarchy);
+      print_pnr_sdc_flatten_routing_constrain_sb_timing(sdc_options.sdc_dir(),
+                                                        module_manager,
+                                                        grids, switches,
+                                                        L_device_rr_gsb);
+    }
+  }
+
+  /* TODO: Output routing constraints for Connection Blocks */
   /*
-  if (TRUE == sdc_opts.compact_routing_hierarchy) {
-    verilog_generate_sdc_break_loop_sb(fp, LL_device_rr_gsb);
-  } else {
-    verilog_generate_sdc_break_loop_sb(fp, LL_nx, LL_ny);
+  if (true == sdc_options.constrain_cb()) {
+    if (true == compact_routing_hierarchy) {
+      verilog_generate_sdc_constrain_cbs(sdc_opts, LL_nx, LL_ny, LL_device_rr_gsb); 
+    } else {
+	  VTR_ASSERT_SAFE (false == compact_routing_hierarchy);
+      verilog_generate_sdc_constrain_cbs(sdc_opts, 
+                                         LL_nx, LL_ny); 
+    }
+  }
+  */
+
+  /* TODO: Output routing constraints for Programmable blocks */
+  /*
+  if (true == sdc_options.constrain_grid()) {
+    verilog_generate_sdc_constrain_pb_types(cur_sram_orgz_info,
+                                            sdc_dir);
   }
   */
 }
