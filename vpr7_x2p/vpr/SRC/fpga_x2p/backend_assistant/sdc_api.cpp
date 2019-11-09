@@ -12,6 +12,7 @@
 void fpga_sdc_generator(const SdcOption& sdc_options,
                         const float& critical_path_delay,
                         const CircuitLibrary& circuit_lib,
+                        const ModuleManager& module_manager,
                         const std::vector<CircuitPortId>& global_ports) {
   vpr_printf(TIO_MESSAGE_INFO, 
              "SDC generator starts...");
@@ -20,7 +21,7 @@ void fpga_sdc_generator(const SdcOption& sdc_options,
   clock_t t_start = clock();
 
   if (true == sdc_options.generate_sdc_pnr()) {
-    print_pnr_sdc(sdc_options.sdc_dir(), critical_path_delay, circuit_lib, global_ports); 
+    print_pnr_sdc(sdc_options, critical_path_delay, circuit_lib, module_manager, global_ports); 
   }
 
   /* End time count */
@@ -30,5 +31,4 @@ void fpga_sdc_generator(const SdcOption& sdc_options,
   vpr_printf(TIO_MESSAGE_INFO, 
              "SDC generation took %g seconds\n", 
              run_time_sec);  
-
 }
