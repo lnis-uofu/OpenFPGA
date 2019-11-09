@@ -11,6 +11,7 @@
  *******************************************************************/
 void fpga_sdc_generator(const SdcOption& sdc_options,
                         const float& critical_path_delay,
+                        const MuxLibrary& mux_lib,
                         const CircuitLibrary& circuit_lib,
                         const ModuleManager& module_manager,
                         const std::vector<CircuitPortId>& global_ports) {
@@ -21,7 +22,7 @@ void fpga_sdc_generator(const SdcOption& sdc_options,
   clock_t t_start = clock();
 
   if (true == sdc_options.generate_sdc_pnr()) {
-    print_pnr_sdc(sdc_options, critical_path_delay, circuit_lib, module_manager, global_ports); 
+    print_pnr_sdc(sdc_options, critical_path_delay, mux_lib, circuit_lib, module_manager, global_ports); 
   }
 
   /* End time count */

@@ -16,6 +16,7 @@
 #include "device_port.h"
 
 #include "util.h"
+#include "mux_utils.h"
 
 #include "fpga_x2p_naming.h"
 #include "fpga_x2p_utils.h"
@@ -194,11 +195,9 @@ void rec_print_pnr_sdc_disable_configurable_memory_module_output(std::fstream& f
 }
 
 /********************************************************************
- * Break combinational loops in FPGA fabric, which mainly come from:
- * 1. Configurable memory cells. 
- *    To handle this, we disable the outputs of memory cells
- * 2. Loops of multiplexers.
- *    To handle this, we disable the outputs of routing multiplexers
+ * Break combinational loops in FPGA fabric, which mainly come from
+ * configurable memory cells. 
+ * To handle this, we disable the outputs of memory cells
  *******************************************************************/
 static 
 void print_pnr_sdc_constrain_configurable_memory_outputs(const std::string& sdc_dir,
@@ -241,6 +240,72 @@ void print_pnr_sdc_constrain_configurable_memory_outputs(const std::string& sdc_
 }
 
 /********************************************************************
+ * Break combinational loops in FPGA fabric, which mainly come from 
+ * loops of multiplexers.
+ * To handle this, we disable the timing at outputs of routing multiplexers
+ *******************************************************************/
+static 
+void print_sdc_disable_routing_multiplexer_outputs(const std::string& sdc_dir,
+                                                   const MuxLibrary& mux_lib,
+                                                   const CircuitLibrary& circuit_lib,
+                                                   const ModuleManager& module_manager) {
+  /* Create the file name for Verilog netlist */
+  std::string sdc_fname(sdc_dir + std::string(SDC_DISABLE_MUX_OUTPUTS_FILE_NAME));
+
+  vpr_printf(TIO_MESSAGE_INFO, 
+             "Generating SDC for disable routing multiplexer outputs for P&R flow: %s ...",
+             sdc_fname.c_str());
+
+  /* Start time count */
+  clock_t t_start = clock();
+
+  /* Create the file stream */
+  std::fstream fp;
+  fp.open(sdc_fname, std::fstream::out | std::fstream::trunc);
+
+  check_file_handler(fp);
+
+  /* Generate the descriptions*/
+  print_sdc_file_header(fp, std::string("Disable routing multiplexer outputs for PnR"));
+
+  /* Iterate over the MUX modules */
+  for (const MuxId& mux_id : mux_lib.muxes()) {
+    const CircuitModelId& mux_model = mux_lib.mux_circuit_model(mux_id);
+    
+    /* Skip LUTs, we only care about multiplexers here */
+    if (SPICE_MODEL_MUX != circuit_lib.model_type(mux_model)) {
+      continue;
+    }
+
+    const MuxGraph& mux_graph = mux_lib.mux_graph(mux_id);
+    std::string mux_module_name = generate_mux_subckt_name(circuit_lib, mux_model, 
+                                                           find_mux_num_datapath_inputs(circuit_lib, mux_model, mux_graph.num_inputs()), 
+                                                           std::string(""));
+    /* Find the module name in module manager */
+    ModuleId mux_module = module_manager.find_module(mux_module_name);
+    VTR_ASSERT(true == module_manager.valid_module_id(mux_module));
+     
+    /* Disable the timing for the output ports */ 
+    for (const BasicPort& output_port : module_manager.module_ports_by_type(mux_module, ModuleManager::MODULE_OUTPUT_PORT)) {
+      fp << "set_disable_timing [get_pins -filter \"name =~ " << output_port.get_name() << "*\" ";
+      fp << "-of [get_cells -hier -filter \"ref_lib_cell_name == " << mux_module_name << "\"]]" << std::endl;
+      fp << std::endl;
+    }
+  }
+
+  /* Close file handler */
+  fp.close();
+
+  /* End time count */
+  clock_t t_end = clock();
+
+  float run_time_sec = (float)(t_end - t_start) / CLOCKS_PER_SEC;
+  vpr_printf(TIO_MESSAGE_INFO, 
+             "took %g seconds\n", 
+             run_time_sec);  
+}
+
+/********************************************************************
  * Top-level function to print a number of SDC files in different purpose
  * This function will generate files upon the options provided by users
  * 1. Design constraints for CLBs
@@ -250,6 +315,7 @@ void print_pnr_sdc_constrain_configurable_memory_outputs(const std::string& sdc_
  *******************************************************************/
 void print_pnr_sdc(const SdcOption& sdc_options,
                    const float& critical_path_delay,
+                   const MuxLibrary& mux_lib,
                    const CircuitLibrary& circuit_lib,
                    const ModuleManager& module_manager,
                    const std::vector<CircuitPortId>& global_ports) {
@@ -259,20 +325,21 @@ void print_pnr_sdc(const SdcOption& sdc_options,
     print_pnr_sdc_global_ports(sdc_options.sdc_dir(), critical_path_delay, circuit_lib, global_ports);
   }
 
+  std::string top_module_name = generate_fpga_top_module_name();
+  ModuleId top_module = module_manager.find_module(top_module_name);
+  VTR_ASSERT(true == module_manager.valid_module_id(top_module));
+
   /* Part 2. Output Design Constraints to disable outputs of memory cells */
   if (true == sdc_options.constrain_configurable_memory_outputs()) {
-    std::string top_module_name = generate_fpga_top_module_name();
-    ModuleId top_module = module_manager.find_module(top_module_name);
-    VTR_ASSERT(true == module_manager.valid_module_id(top_module));
     print_pnr_sdc_constrain_configurable_memory_outputs(sdc_options.sdc_dir(), module_manager, top_module); 
   } 
 
   /* 2. Break loops from Multiplexer Output */
-  /*
-  if (TRUE == sdc_opts.break_loops_mux) {
-    verilog_generate_sdc_break_loop_mux(fp, num_switch, switches, spice, routing_arch); 
+  if (true == sdc_options.constrain_routing_multiplexer_outputs()) {
+    print_sdc_disable_routing_multiplexer_outputs(sdc_options.sdc_dir(),
+                                                  mux_lib, circuit_lib,
+                                                  module_manager);
   }
-   */
 
   /* TODO: 3. Break loops from any SB output */
   /*
