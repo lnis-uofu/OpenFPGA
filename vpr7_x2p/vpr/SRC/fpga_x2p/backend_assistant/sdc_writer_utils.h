@@ -26,4 +26,17 @@ void print_pnr_sdc_constrain_module_port2port_timing(std::fstream& fp,
                                                      const ModulePortId& module_output_port_id, 
                                                      const float& tmax);
 
+void print_sdc_disable_port_timing(std::fstream& fp,
+                                   const BasicPort& port);
+
+void print_sdc_set_port_input_delay(std::fstream& fp,
+                                    const BasicPort& port,
+                                    const BasicPort& clock_port,
+                                    const float& delay);
+
+void print_sdc_set_port_output_delay(std::fstream& fp,
+                                     const BasicPort& port,
+                                     const BasicPort& clock_port,
+                                     const float& delay);
+
 #endif

@@ -99,3 +99,74 @@ void print_pnr_sdc_constrain_module_port2port_timing(std::fstream& fp,
                                     tmax);
 
 }
+
+/********************************************************************
+ * Disable timing for a port 
+ *******************************************************************/
+void print_sdc_disable_port_timing(std::fstream& fp,
+                                   const BasicPort& port) {
+  /* Validate file stream */
+  check_file_handler(fp);
+
+  fp << "set_disable_timing ";
+
+  fp << generate_sdc_port(port);
+
+  fp << std::endl;
+}
+
+/********************************************************************
+ * Set the input delay for a port in SDC format 
+ * Note that the input delay will be bounded by a clock port
+ *******************************************************************/
+void print_sdc_set_port_input_delay(std::fstream& fp,
+                                    const BasicPort& port,
+                                    const BasicPort& clock_port,
+                                    const float& delay) {
+  /* Validate file stream */
+  check_file_handler(fp);
+
+  fp << "set_input_delay ";
+
+  fp << "-clock ";
+
+  fp << generate_sdc_port(clock_port);
+
+  fp << " -max ";
+ 
+  fp << std::setprecision(10) << delay;
+
+  fp << " ";
+
+  fp << generate_sdc_port(port);
+
+  fp << std::endl;
+}
+
+/********************************************************************
+ * Set the output delay for a port in SDC format 
+ * Note that the output delay will be bounded by a clock port
+ *******************************************************************/
+void print_sdc_set_port_output_delay(std::fstream& fp,
+                                     const BasicPort& port,
+                                     const BasicPort& clock_port,
+                                     const float& delay) {
+  /* Validate file stream */
+  check_file_handler(fp);
+
+  fp << "set_output_delay ";
+
+  fp << "-clock ";
+
+  fp << generate_sdc_port(clock_port);
+
+  fp << " -max ";
+ 
+  fp << std::setprecision(10) << delay;
+
+  fp << " ";
+
+  fp << generate_sdc_port(port);
+
+  fp << std::endl;
+}

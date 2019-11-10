@@ -10,4 +10,6 @@ constexpr char* SDC_DISABLE_MUX_OUTPUTS_FILE_NAME = "disable_routing_multiplexer
 constexpr char* SDC_DISABLE_SB_OUTPUTS_FILE_NAME = "disable_sb_outputs.sdc";
 constexpr char* SDC_CB_FILE_NAME = "cb.sdc";
 
+constexpr char* SDC_ANALYSIS_FILE_NAME = "fpga_top_analysis.sdc";
+
 #endif
