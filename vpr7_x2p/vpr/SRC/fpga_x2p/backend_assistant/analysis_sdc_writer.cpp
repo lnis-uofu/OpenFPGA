@@ -18,6 +18,7 @@
 
 #include "sdc_writer_naming.h"
 #include "sdc_writer_utils.h"
+#include "sdc_memory_utils.h"
 
 #include "analysis_sdc_writer.h"
 
@@ -56,8 +57,9 @@ void print_analysis_sdc_io_delays(std::fstream& fp,
       continue;
     }
    
-    /* Update the operating port list */
-    operating_clock_ports.push_back(BasicPort(circuit_lib.port_prefix(clock_port), circuit_lib.port_size(clock_port)));
+    /* Find the module port and Update the operating port list */
+    ModulePortId module_port = module_manager.find_module_port(top_module, circuit_lib.port_prefix(clock_port)); 
+    operating_clock_ports.push_back(module_manager.module_port(top_module, module_port));
   }
 
   for (const BasicPort& operating_clock_port : operating_clock_ports) {
@@ -152,6 +154,37 @@ void print_analysis_sdc_io_delays(std::fstream& fp,
 }
 
 /********************************************************************
+ * Disable the timing for all the global port except the operating clock ports
+ *******************************************************************/
+static 
+void print_analysis_sdc_disable_global_ports(std::fstream& fp,
+                                             const ModuleManager& module_manager,
+                                             const ModuleId& top_module,
+                                             const CircuitLibrary& circuit_lib,
+                                             const std::vector<CircuitPortId>& global_ports) {
+  /* Validate file stream */
+  check_file_handler(fp);
+
+  /* Print comments */
+  fp << "##################################################" << std::endl; 
+  fp << "# Disable timing for global ports                 " << std::endl;
+  fp << "##################################################" << std::endl; 
+
+  for (const CircuitPortId& global_port : global_ports) {
+    /* Skip operating clock here! */
+    if ( (SPICE_MODEL_PORT_CLOCK == circuit_lib.port_type(global_port)) 
+      && (false == circuit_lib.port_is_prog(global_port)) ) {
+      continue;
+    }
+
+    ModulePortId module_port = module_manager.find_module_port(top_module, circuit_lib.port_prefix(global_port)); 
+    BasicPort port_to_disable = module_manager.module_port(top_module, module_port);
+
+    print_sdc_disable_port_timing(fp, port_to_disable);
+  }
+}
+
+/********************************************************************
  * Top-level function outputs a SDC file
  * that constrain a FPGA fabric (P&Red netlist) using a benchmark 
  *******************************************************************/
@@ -197,27 +230,18 @@ void print_analysis_sdc(const std::string& sdc_dir,
                                circuit_lib, global_ports,
                                critical_path_delay);
 
-  /* TODO: Disable the timing for global ports */
-  /*
-  verilog_generate_sdc_disable_global_ports(fp);
-   */
+  /* Disable the timing for global ports */
+  print_analysis_sdc_disable_global_ports(fp,
+                                          module_manager, top_module,
+                                          circuit_lib, global_ports);
 
-  /* TODO: Disable the timing for configuration cells */ 
-  /*
-  verilog_generate_sdc_disable_sram_orgz(fp, cur_sram_orgz_info);
-   */
+  /* Disable the timing for configuration cells */ 
+  rec_print_pnr_sdc_disable_configurable_memory_module_output(fp, 
+                                                              module_manager, top_module, 
+                                                              format_dir_path(module_manager.module_name(top_module)));
+
 
   /* TODO: Disable timing for un-used resources */
-  /* Apply to Routing Channels */
-  /*
-  if (TRUE == compact_routing_hierarchy) {
-    verilog_generate_sdc_disable_unused_routing_channels(fp, LL_nx, LL_ny);
-  } else {
-    verilog_generate_sdc_disable_unused_routing_channels(fp, LL_nx, LL_ny, 
-                                                         LL_num_rr_nodes, LL_rr_node, 
-                                                         LL_rr_node_indices);
-  }
-   */
 
   /* TODO: Apply to Connection blocks */
   /*
