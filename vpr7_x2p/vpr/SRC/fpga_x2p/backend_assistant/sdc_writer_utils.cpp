@@ -53,29 +53,49 @@ std::string generate_sdc_port(const BasicPort& port) {
 }
 
 /********************************************************************
- * Constrain a path between two ports of a module with a given timing value
+ * Constrain a path between two ports of a module with a given maximum timing value
  *******************************************************************/
-void print_pnr_sdc_constrain_module_port2port_timing(std::fstream& fp,
-                                                     const ModuleManager& module_manager,
-                                                     const ModuleId& module_id, 
-                                                     const ModulePortId& module_input_port_id, 
-                                                     const ModulePortId& module_output_port_id, 
-                                                     const float& tmax) {
+void print_pnr_sdc_constrain_max_delay(std::fstream& fp,
+                                       const std::string& src_instance_name,
+                                       const std::string& src_port_name,
+                                       const std::string& des_instance_name,
+                                       const std::string& des_port_name,
+                                       const float& delay) {
   /* Validate file stream */
   check_file_handler(fp);
 
   fp << "set_max_delay";
 
   fp << " -from ";
-  fp << module_manager.module_name(module_id) << "/";
-  fp << generate_sdc_port(module_manager.module_port(module_id, module_input_port_id));
+  fp << src_instance_name << "/";
+  fp << src_port_name;
 
   fp << " -to ";
  
-  fp << module_manager.module_name(module_id) << "/";
-  fp << generate_sdc_port(module_manager.module_port(module_id, module_output_port_id));
+  fp << des_instance_name << "/";
+  fp << des_port_name;
 
-  fp << " " << std::setprecision(10) << tmax;
+  fp << " " << std::setprecision(10) << delay;
 
   fp << std::endl;
+}
+
+/********************************************************************
+ * Constrain a path between two ports of a module with a given timing value
+ * Note: this function uses set_max_delay !!!
+ *******************************************************************/
+void print_pnr_sdc_constrain_module_port2port_timing(std::fstream& fp,
+                                                     const ModuleManager& module_manager,
+                                                     const ModuleId& input_parent_module_id, 
+                                                     const ModulePortId& module_input_port_id, 
+                                                     const ModuleId& output_parent_module_id, 
+                                                     const ModulePortId& module_output_port_id, 
+                                                     const float& tmax) {
+  print_pnr_sdc_constrain_max_delay(fp,
+                                    module_manager.module_name(input_parent_module_id),
+                                    generate_sdc_port(module_manager.module_port(input_parent_module_id, module_input_port_id)),
+                                    module_manager.module_name(output_parent_module_id),
+                                    generate_sdc_port(module_manager.module_port(output_parent_module_id, module_output_port_id)),
+                                    tmax);
+
 }

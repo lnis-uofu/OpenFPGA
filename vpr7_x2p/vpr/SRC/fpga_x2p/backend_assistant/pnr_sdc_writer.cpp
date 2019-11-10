@@ -24,6 +24,7 @@
 #include "sdc_writer_naming.h"
 #include "sdc_writer_utils.h"
 #include "pnr_sdc_routing_writer.h"
+#include "pnr_sdc_grid_writer.h"
 #include "pnr_sdc_writer.h"
 
 /********************************************************************
@@ -517,11 +518,9 @@ void print_pnr_sdc(const SdcOption& sdc_options,
     }
   }
 
-  /* TODO: Output routing constraints for Programmable blocks */
-  /*
+  /* Output Timing constraints for Programmable blocks */
   if (true == sdc_options.constrain_grid()) {
-    verilog_generate_sdc_constrain_pb_types(cur_sram_orgz_info,
-                                            sdc_dir);
+    print_pnr_sdc_constrain_grid_timing(sdc_options.sdc_dir(),
+                                        module_manager);
   }
-  */
 }
