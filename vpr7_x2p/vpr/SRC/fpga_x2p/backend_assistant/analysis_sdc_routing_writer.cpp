@@ -6,9 +6,10 @@
 #include "vtr_assert.h"
 #include "device_port.h"
 
+#include "fpga_x2p_reserved_words.h"
 #include "fpga_x2p_naming.h"
 #include "fpga_x2p_utils.h"
-
+#include "fpga_x2p_types.h"
 
 #include "sdc_writer_utils.h"
 #include "analysis_sdc_routing_writer.h"
@@ -43,8 +44,11 @@ bool is_rr_node_to_be_disable_for_analysis(t_rr_node* cur_rr_node) {
 static 
 void print_analysis_sdc_disable_cb_unused_resources(std::fstream& fp, 
                                                     const std::vector<std::vector<t_grid_tile>>& grids,
-                                                    const DeviceRRGSB& L_device_rr_gsb,
+                                                    const std::vector<t_switch_inf>& rr_switches,
+                                                    t_rr_node* L_rr_node,
                                                     const ModuleManager& module_manager, 
+                                                    const DeviceRRGSB& L_device_rr_gsb,
+                                                    const CircuitLibrary& circuit_lib,
                                                     const RRGSB& rr_gsb, 
                                                     const t_rr_type& cb_type,
                                                     const bool& compact_routing_hierarchy) {
@@ -182,6 +186,96 @@ void print_analysis_sdc_disable_cb_unused_resources(std::fstream& fp,
   }
 
   /* TODO: Disable all the unused inputs of routing multiplexers, which are not used by benchmark */
+  for (size_t side = 0; side < cb_sides.size(); ++side) {
+    enum e_side cb_ipin_side = cb_sides[side];
+    for (size_t inode = 0; inode < rr_gsb.get_num_ipin_nodes(cb_ipin_side); ++inode) {
+      t_rr_node* ipin_node = rr_gsb.get_ipin_node(cb_ipin_side, inode);
+      if (false == is_rr_node_to_be_disable_for_analysis(ipin_node)) {
+        continue;
+      }
+      if (0 == ipin_node->fan_in) {
+        continue;
+      }
+      vtr::Point<size_t> port_coord(ipin_node->xlow, ipin_node->ylow);
+      std::string port_name = generate_grid_side_port_name(grids,
+                                                           port_coord,
+                                                           rr_gsb.get_ipin_node_grid_side(cb_ipin_side, inode),
+                                                           ipin_node->ptc_num); 
+
+      /* Find the port in unique mirror! */
+      if (true == compact_routing_hierarchy) {
+        /* Note: use GSB coordinate when inquire for unique modules!!! */
+        DeviceCoordinator cb_coord(rr_gsb.get_x(), rr_gsb.get_y());
+        const RRGSB& unique_mirror = L_device_rr_gsb.get_cb_unique_module(cb_type, cb_coord);
+        t_rr_node* unique_mirror_ipin_node = unique_mirror.get_ipin_node(cb_ipin_side, inode);
+        port_coord.set_x(unique_mirror_ipin_node->xlow);
+        port_coord.set_y(unique_mirror_ipin_node->ylow);
+        port_name = generate_grid_side_port_name(grids,
+                                                 port_coord,
+                                                 unique_mirror.get_ipin_node_grid_side(cb_ipin_side, inode),
+                                                 unique_mirror_ipin_node->ptc_num); 
+      }
+
+      /* These codes are exactly same in build_routing_modules.cpp 
+       * If you wish to change the naming rules, please change build_routing_modules.cpp as well
+       * so that consistency remains
+       */
+      /* Build a vector of driver rr_nodes */
+      std::vector<t_rr_node*> drive_rr_nodes;
+      for (int jnode = 0; jnode < ipin_node->num_drive_rr_nodes; jnode++) {
+        drive_rr_nodes.push_back(ipin_node->drive_rr_nodes[jnode]);
+      }
+    
+      int switch_index = ipin_node->drive_switches[DEFAULT_SWITCH_ID];
+    
+      /* Get the circuit model id of the routing multiplexer */
+      CircuitModelId mux_model = rr_switches[switch_index].circuit_model;
+    
+      /* Find the input size of the implementation of a routing multiplexer */
+      size_t datapath_mux_size = drive_rr_nodes.size();
+    
+      /* Find the module name of the multiplexer and try to find it in the module manager */
+      std::string mux_module_name = generate_mux_subckt_name(circuit_lib, mux_model, datapath_mux_size, std::string(""));
+      ModuleId mux_module = module_manager.find_module(mux_module_name);
+      VTR_ASSERT (true == module_manager.valid_module_id(mux_module));
+
+      /* Find the MUX instance that drives the IPIN! */
+      std::string mux_instance_name = generate_cb_mux_instance_name(CONNECTION_BLOCK_MUX_INSTANCE_PREFIX, rr_gsb.get_ipin_node_grid_side(cb_ipin_side, inode), inode, std::string(""));
+
+      /* Make sure this instance name exists! */ 
+      size_t instance_id = module_manager.instance_id(cb_module, mux_module, mux_instance_name);
+      VTR_ASSERT(instance_id < module_manager.num_instance(cb_module, mux_module));
+
+      /* Find the MUX input port from model to module */
+      std::vector<CircuitPortId> mux_model_input_ports = circuit_lib.model_ports_by_type(mux_model, SPICE_MODEL_PORT_INPUT, true);
+      VTR_ASSERT(1 == mux_model_input_ports.size());
+      /* Find the module port id of the input port */
+      ModulePortId mux_input_port_id = module_manager.find_module_port(mux_module, circuit_lib.port_prefix(mux_model_input_ports[0])); 
+      VTR_ASSERT(true == module_manager.valid_module_port_id(mux_module, mux_input_port_id));
+      BasicPort mux_input_port = module_manager.module_port(mux_module, mux_input_port_id);
+
+      /* Find out which routing path is used in this MUX */
+      int path_id = DEFAULT_PATH_ID;
+      for (size_t jnode = 0; jnode < drive_rr_nodes.size(); ++jnode) {
+        if (drive_rr_nodes[jnode] == &(L_rr_node[ipin_node->prev_node])) {
+          path_id = (int)jnode;
+          break;
+        }
+      }
+
+      for (const size_t& pin : mux_input_port.pins()) {
+        if ((size_t)path_id == pin) {
+          continue; /* For used pin, skip disable timing */
+        }
+        /* Get the input id that is used! Disable the unused inputs! */
+        fp << "set_disable_timing ";
+        fp << cb_instance_name << "/";
+        fp << mux_instance_name << "/";
+        fp << generate_sdc_port(BasicPort(mux_input_port.get_name(), pin, pin));
+        fp << std::endl;
+      }
+    }
+  }
 }
 
 
@@ -192,7 +286,10 @@ void print_analysis_sdc_disable_cb_unused_resources(std::fstream& fp,
 static 
 void print_analysis_sdc_disable_unused_cb_ports(std::fstream& fp,
                                                 const std::vector<std::vector<t_grid_tile>>& grids,
+                                                const std::vector<t_switch_inf>& rr_switches,
+                                                t_rr_node* L_rr_node,
                                                 const ModuleManager& module_manager, 
+                                                const CircuitLibrary& circuit_lib,
                                                 const DeviceRRGSB& L_device_rr_gsb,
                                                 const t_rr_type& cb_type,
                                                 const bool& compact_routing_hierarchy) {
@@ -210,8 +307,9 @@ void print_analysis_sdc_disable_unused_cb_ports(std::fstream& fp,
         continue;
       }
 
-      print_analysis_sdc_disable_cb_unused_resources(fp, grids, L_device_rr_gsb, 
+      print_analysis_sdc_disable_cb_unused_resources(fp, grids, rr_switches, L_rr_node, 
                                                      module_manager, 
+                                                     L_device_rr_gsb, circuit_lib, 
                                                      rr_gsb, 
                                                      cb_type,
                                                      compact_routing_hierarchy);
@@ -225,16 +323,19 @@ void print_analysis_sdc_disable_unused_cb_ports(std::fstream& fp,
  *******************************************************************/
 void print_analysis_sdc_disable_unused_cbs(std::fstream& fp,
                                            const std::vector<std::vector<t_grid_tile>>& grids,
+                                           const std::vector<t_switch_inf>& rr_switches,
+                                           t_rr_node* L_rr_node,
                                            const ModuleManager& module_manager, 
+                                           const CircuitLibrary& circuit_lib,
                                            const DeviceRRGSB& L_device_rr_gsb,
                                            const bool& compact_routing_hierarchy) {
 
-  print_analysis_sdc_disable_unused_cb_ports(fp, grids, module_manager, 
-                                             L_device_rr_gsb,
+  print_analysis_sdc_disable_unused_cb_ports(fp, grids, rr_switches, L_rr_node, module_manager, 
+                                             circuit_lib, L_device_rr_gsb,
                                              CHANX, compact_routing_hierarchy);
 
-  print_analysis_sdc_disable_unused_cb_ports(fp, grids, module_manager, 
-                                             L_device_rr_gsb,
+  print_analysis_sdc_disable_unused_cb_ports(fp, grids, rr_switches, L_rr_node, module_manager, 
+                                             circuit_lib, L_device_rr_gsb,
                                              CHANY, compact_routing_hierarchy);
 }
 

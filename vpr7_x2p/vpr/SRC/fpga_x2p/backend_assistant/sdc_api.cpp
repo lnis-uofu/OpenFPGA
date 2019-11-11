@@ -13,7 +13,8 @@
 void fpga_sdc_generator(const SdcOption& sdc_options,
                         const float& critical_path_delay,
                         const std::vector<std::vector<t_grid_tile>>& grids,
-                        const std::vector<t_switch_inf>& switches,
+                        const std::vector<t_switch_inf>& rr_switches,
+                        t_rr_node* L_rr_node,
                         const DeviceRRGSB& L_device_rr_gsb,
                         const std::vector<t_logical_block>& L_logical_blocks,
                         const vtr::Point<size_t>& device_size,
@@ -32,7 +33,7 @@ void fpga_sdc_generator(const SdcOption& sdc_options,
 
   if (true == sdc_options.generate_sdc_pnr()) {
     print_pnr_sdc(sdc_options, critical_path_delay, 
-                  grids, switches, L_device_rr_gsb, 
+                  grids, rr_switches, L_device_rr_gsb, 
                   module_manager, mux_lib, 
                   circuit_lib, global_ports, 
                   compact_routing_hierarchy); 
@@ -42,7 +43,8 @@ void fpga_sdc_generator(const SdcOption& sdc_options,
     print_analysis_sdc(sdc_options.sdc_dir(),
                        critical_path_delay,
                        L_device_rr_gsb, 
-                       L_logical_blocks, device_size, L_grids, L_blocks,
+                       L_logical_blocks, device_size, L_grids, rr_switches, L_rr_node,
+                       L_blocks,
                        module_manager, 
                        circuit_lib, global_ports,
                        compact_routing_hierarchy);

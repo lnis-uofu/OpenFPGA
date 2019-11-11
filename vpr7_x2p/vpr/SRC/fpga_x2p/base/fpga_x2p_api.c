@@ -159,7 +159,7 @@ void vpr_fpga_x2p_tool_suites(t_vpr_setup vpr_setup,
     /* TODO: the critical path delay unit should be explicit! */
     fpga_sdc_generator(sdc_options, 
                        Arch.spice->spice_params.stimulate_params.vpr_crit_path_delay / 1e-9,
-                       grids, rr_switches, device_rr_gsb, 
+                       grids, rr_switches, rr_node, device_rr_gsb, 
                        L_logical_blocks, device_size, grids, L_blocks, 
                        module_manager, mux_lib, 
                        Arch.spice->circuit_lib, global_ports,
