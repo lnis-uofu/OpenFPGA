@@ -25,7 +25,7 @@ void fpga_sdc_generator(const SdcOption& sdc_options,
                         const std::vector<CircuitPortId>& global_ports,
                         const bool& compact_routing_hierarchy) {
   vpr_printf(TIO_MESSAGE_INFO, 
-             "SDC generator starts...");
+             "SDC generator starts...\n");
 
   /* Start time count */
   clock_t t_start = clock();

@@ -20,6 +20,7 @@
 #include "sdc_writer_utils.h"
 #include "sdc_memory_utils.h"
 
+#include "analysis_sdc_routing_writer.h"
 #include "analysis_sdc_writer.h"
 
 /********************************************************************
@@ -241,20 +242,12 @@ void print_analysis_sdc(const std::string& sdc_dir,
                                                               format_dir_path(module_manager.module_name(top_module)));
 
 
-  /* TODO: Disable timing for un-used resources */
+  /* TODO: Disable timing for unused routing resources in connection blocks */
+  print_analysis_sdc_disable_unused_cbs(fp, L_grids, module_manager,
+                                        L_device_rr_gsb, 
+                                        compact_routing_hierarchy);
 
-  /* TODO: Apply to Connection blocks */
-  /*
-  if (TRUE == compact_routing_hierarchy) {
-    verilog_generate_sdc_disable_unused_cbs(fp, LL_nx, LL_ny, LL_device_rr_gsb); 
-    verilog_generate_sdc_disable_unused_cbs_muxs(fp, LL_nx, LL_ny, LL_device_rr_gsb);
-  } else {
-    verilog_generate_sdc_disable_unused_cbs(fp, LL_nx, LL_ny); 
-    verilog_generate_sdc_disable_unused_cbs_muxs(fp, LL_nx, LL_ny);
-  }
-   */
-
-  /* TODO: Apply to Switch blocks */
+  /* TODO: Disable timing for unused routing resources in switch blocks */
   /*
   if (TRUE == compact_routing_hierarchy) {
     verilog_generate_sdc_disable_unused_sbs(fp); 
@@ -265,7 +258,7 @@ void print_analysis_sdc(const std::string& sdc_dir,
   }
    */
 
-  /* TODO: Apply to Grids */
+  /* TODO: Disable timing for unused routing resources in grids (programmable blocks) */
   /*
   verilog_generate_sdc_disable_unused_grids(fp, LL_nx, LL_ny, LL_grid, LL_block);
   verilog_generate_sdc_disable_unused_grids_muxs(fp, LL_nx, LL_ny, LL_grid, LL_block);
