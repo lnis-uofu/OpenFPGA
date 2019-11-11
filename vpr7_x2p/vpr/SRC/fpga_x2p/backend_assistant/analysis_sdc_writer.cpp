@@ -195,8 +195,6 @@ void print_analysis_sdc(const std::string& sdc_dir,
                         const std::vector<t_logical_block>& L_logical_blocks,
                         const vtr::Point<size_t>& device_size,
                         const std::vector<std::vector<t_grid_tile>>& L_grids, 
-                        const std::vector<t_switch_inf>& rr_switches,
-                        t_rr_node* L_rr_node,
                         const std::vector<t_block>& L_blocks,
                         const ModuleManager& module_manager,
                         const CircuitLibrary& circuit_lib,
@@ -245,9 +243,8 @@ void print_analysis_sdc(const std::string& sdc_dir,
 
 
   /* TODO: Disable timing for unused routing resources in connection blocks */
-  print_analysis_sdc_disable_unused_cbs(fp, L_grids, rr_switches, L_rr_node, 
+  print_analysis_sdc_disable_unused_cbs(fp, L_grids, 
                                         module_manager,
-                                        circuit_lib,
                                         L_device_rr_gsb, 
                                         compact_routing_hierarchy);
 
