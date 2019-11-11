@@ -128,6 +128,12 @@ void build_switch_block_mux_module(ModuleManager& module_manager,
   /* Instanciate the MUX Module */
   module_manager.add_child_module(sb_module, mux_module);
 
+  /* Give an instance name: this name should be consistent with the block name given in SDC manager,
+   * If you want to bind the SDC generation to modules
+   */
+  std::string mux_instance_name = generate_sb_memory_instance_name(SWITCH_BLOCK_MUX_INSTANCE_PREFIX, chan_side, chan_node_id, std::string(""));
+  module_manager.set_child_instance_name(sb_module, mux_module, mux_instance_id, mux_instance_name);
+
   /* Generate input ports that are wired to the input bus of the routing multiplexer */
   std::vector<ModulePortId> sb_input_port_ids = find_switch_block_module_input_ports(module_manager, sb_module, rr_gsb, grids, drive_rr_nodes);
 
@@ -514,6 +520,12 @@ void build_connection_block_mux_module(ModuleManager& module_manager,
   /* Get the MUX instance id from the module manager */
   size_t mux_instance_id = module_manager.num_instance(cb_module, mux_module);
   module_manager.add_child_module(cb_module, mux_module);
+
+  /* Give an instance name: this name should be consistent with the block name given in SDC manager,
+   * If you want to bind the SDC generation to modules
+   */
+  std::string mux_instance_name = generate_cb_mux_instance_name(CONNECTION_BLOCK_MUX_INSTANCE_PREFIX, rr_gsb.get_ipin_node_grid_side(cb_ipin_side, ipin_index), ipin_index, std::string(""));
+  module_manager.set_child_instance_name(cb_module, mux_module, mux_instance_id, mux_instance_name);
 
   /* TODO: Generate input ports that are wired to the input bus of the routing multiplexer */
   std::vector<ModulePortId> cb_input_port_ids = find_connection_block_module_input_ports(module_manager, cb_module, rr_gsb, cb_type, drive_rr_nodes);

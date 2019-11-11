@@ -559,6 +559,11 @@ void add_module_pb_graph_pin_interc(ModuleManager& module_manager,
     /* Instanciate the MUX */
     size_t mux_instance = module_manager.num_instance(pb_module, mux_module);
     module_manager.add_child_module(pb_module, mux_module);
+    /* Give an instance name: this name should be consistent with the block name given in SDC generator,
+     * If you want to bind the SDC generation to modules
+     */
+    std::string mux_instance_name = generate_pb_mux_instance_name(GRID_MUX_INSTANCE_PREFIX, des_pb_graph_pin, std::string(""));
+    module_manager.set_child_instance_name(pb_module, mux_module, mux_instance, mux_instance_name);
 
     /* Instanciate a memory module for the MUX */
     std::string mux_mem_module_name = generate_mux_subckt_name(circuit_lib, 

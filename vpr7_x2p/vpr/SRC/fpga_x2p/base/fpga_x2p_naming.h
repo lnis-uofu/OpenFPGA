@@ -78,15 +78,29 @@ std::string generate_switch_block_module_name(const vtr::Point<size_t>& coordina
 std::string generate_connection_block_module_name(const t_rr_type& cb_type, 
                                                   const vtr::Point<size_t>& coordinate);
 
+std::string generate_sb_mux_instance_name(const std::string& prefix,
+                                          const e_side& sb_side, 
+                                          const size_t& track_id, 
+                                          const std::string& postfix);
+
 std::string generate_sb_memory_instance_name(const std::string& prefix,
                                              const e_side& sb_side, 
                                              const size_t& track_id, 
                                              const std::string& postfix);
 
+std::string generate_cb_mux_instance_name(const std::string& prefix,
+                                          const e_side& cb_side, 
+                                          const size_t& pin_id, 
+                                          const std::string& postfix);
+
 std::string generate_cb_memory_instance_name(const std::string& prefix,
                                              const e_side& cb_side, 
                                              const size_t& pin_id, 
                                              const std::string& postfix);
+
+std::string generate_pb_mux_instance_name(const std::string& prefix,
+                                          t_pb_graph_pin* pb_graph_pin, 
+                                          const std::string& postfix);
 
 std::string generate_pb_memory_instance_name(const std::string& prefix,
                                              t_pb_graph_pin* pb_graph_pin, 
