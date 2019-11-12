@@ -20,6 +20,7 @@
 #include "sdc_writer_utils.h"
 #include "sdc_memory_utils.h"
 
+#include "analysis_sdc_grid_writer.h"
 #include "analysis_sdc_routing_writer.h"
 #include "analysis_sdc_writer.h"
 
@@ -255,10 +256,7 @@ void print_analysis_sdc(const std::string& sdc_dir,
                                         compact_routing_hierarchy);
 
   /* TODO: Disable timing for unused routing resources in grids (programmable blocks) */
-  /*
-  verilog_generate_sdc_disable_unused_grids(fp, LL_nx, LL_ny, LL_grid, LL_block);
-  verilog_generate_sdc_disable_unused_grids_muxs(fp, LL_nx, LL_ny, LL_grid, LL_block);
-   */
+  print_analysis_sdc_disable_unused_grids(fp, device_size, L_grids, L_blocks, module_manager);
 
   /* Close file handler */
   fp.close();
