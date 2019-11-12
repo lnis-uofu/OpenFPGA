@@ -12,4 +12,11 @@ void print_analysis_sdc_disable_unused_cbs(std::fstream& fp,
                                            const ModuleManager& module_manager, 
                                            const DeviceRRGSB& L_device_rr_gsb,
                                            const bool& compact_routing_hierarchy);
+
+void print_analysis_sdc_disable_unused_sbs(std::fstream& fp,
+                                           const std::vector<std::vector<t_grid_tile>>& grids,
+                                           const ModuleManager& module_manager, 
+                                           const DeviceRRGSB& L_device_rr_gsb,
+                                           const bool& compact_routing_hierarchy);
+
 #endif

@@ -38,6 +38,84 @@ bool is_rr_node_to_be_disable_for_analysis(t_rr_node* cur_rr_node) {
 }
 
 /********************************************************************
+ * Disable all the unused inputs of routing multiplexers, which are not used by benchmark 
+ * Here, we start from each input of a routing module, and traverse forward to the sink 
+ * port of the module net whose source is the input
+ * We will find the instance name which is the parent of the sink port, and search the 
+ * net id through the instance_name_to_net_map 
+ * The the net id does not match the net id of this input, we will disable the sink port!
+ *
+ *                   parent_module
+ *                 +-----------------------
+ *                 |           MUX instance A
+ *                 |          +-----------
+ *   input_port--->|--+---x-->| sink port (disable! net_id = Y) 
+ *   (net_id = X)  |  |       +----------
+ *                 |  |        MUX instance B
+ *                 |  |       +----------
+ *                 |  +------>| sink port (do not disable! net_id = X)
+ *
+ *******************************************************************/
+static 
+void disable_analysis_module_input_port_net_sinks(std::fstream& fp,
+                                                  const ModuleManager& module_manager,
+                                                  const ModuleId& parent_module,
+                                                  const std::string& parent_instance_name,
+                                                  const ModulePortId& module_input_port,
+                                                  t_rr_node* input_rr_node,
+                                                  const std::map<std::string, int> mux_instance_to_net_map) {
+  /* Validate file stream */
+  check_file_handler(fp);
+
+  /* Find the module net which sources from this port! */
+  for (const size_t& pin : module_manager.module_port(parent_module, module_input_port).pins()) {
+    ModuleNetId module_net = module_manager.module_instance_port_net(parent_module, parent_module, 0, module_input_port, pin); 
+    VTR_ASSERT(true == module_manager.valid_module_net_id(parent_module, module_net));
+
+    /* Touch each sink of the net! */
+    for (const ModuleNetSinkId& sink_id : module_manager.module_net_sinks(parent_module, module_net)) {
+      ModuleId sink_module = module_manager.net_sink_modules(parent_module, module_net)[sink_id]; 
+      size_t sink_instance = module_manager.net_sink_instances(parent_module, module_net)[sink_id]; 
+
+      /* Skip when sink module is the parent module, 
+       * the output ports of parent modules have been disabled/enabled already! 
+       */
+      if (sink_module == parent_module) {
+        continue;
+      }
+
+      std::string sink_instance_name = module_manager.instance_name(parent_module, sink_module, sink_instance);
+      bool disable_timing = false;
+      /* Check if this node is used by benchmark  */
+      if (true == is_rr_node_to_be_disable_for_analysis(input_rr_node)) {
+        /* Disable all the sinks! */
+        disable_timing = true;
+      } else {
+        /* See if the net id matches. If does not match, we should disable! */
+        if (input_rr_node->vpack_net_num != mux_instance_to_net_map.at(sink_instance_name)) {
+          disable_timing = true;
+        }
+      }
+
+      /* Time to write SDC command to disable timing or not */
+      if (false == disable_timing) {
+        continue;
+      }
+
+      BasicPort sink_port = module_manager.module_port(sink_module, module_manager.net_sink_ports(parent_module, module_net)[sink_id]);
+      sink_port.set_width(module_manager.net_sink_pins(parent_module, module_net)[sink_id],
+                          module_manager.net_sink_pins(parent_module, module_net)[sink_id]);
+      /* Get the input id that is used! Disable the unused inputs! */
+      fp << "set_disable_timing ";
+      fp << parent_instance_name << "/";
+      fp << sink_instance_name << "/";
+      fp << generate_sdc_port(sink_port);
+      fp << std::endl;
+    }
+  }
+}
+
+/********************************************************************
  * This function will disable 
  * 1. all the unused port (unmapped by a benchmark) of a connection block
  * 2. all the unused inputs (unmapped by a benchmark) of routing multiplexers 
@@ -150,16 +228,17 @@ void print_analysis_sdc_disable_cb_unused_resources(std::fstream& fp,
     enum e_side cb_ipin_side = cb_sides[side];
     for (size_t inode = 0; inode < rr_gsb.get_num_ipin_nodes(cb_ipin_side); ++inode) {
       t_rr_node* ipin_node = rr_gsb.get_ipin_node(cb_ipin_side, inode);
+
+      /* Find the MUX instance that drives the IPIN! */
+      std::string mux_instance_name = generate_cb_mux_instance_name(CONNECTION_BLOCK_MUX_INSTANCE_PREFIX, rr_gsb.get_ipin_node_grid_side(cb_ipin_side, inode), inode, std::string(""));
+      mux_instance_to_net_map[mux_instance_name] = ipin_node->vpack_net_num;  
+
       if (false == is_rr_node_to_be_disable_for_analysis(ipin_node)) {
         continue;
       }
       if (0 == ipin_node->fan_in) {
         continue;
       }
-
-      /* Find the MUX instance that drives the IPIN! */
-      std::string mux_instance_name = generate_cb_mux_instance_name(CONNECTION_BLOCK_MUX_INSTANCE_PREFIX, rr_gsb.get_ipin_node_grid_side(cb_ipin_side, inode), inode, std::string(""));
-      mux_instance_to_net_map[mux_instance_name] = ipin_node->vpack_net_num;  
 
       vtr::Point<size_t> port_coord(ipin_node->xlow, ipin_node->ylow);
       std::string port_name = generate_grid_side_port_name(grids,
@@ -229,52 +308,12 @@ void print_analysis_sdc_disable_cb_unused_resources(std::fstream& fp,
     ModulePortId module_port = module_manager.find_module_port(cb_module, port_name);
     VTR_ASSERT(true == module_manager.valid_module_port_id(cb_module, module_port));
 
-    /* Find the module net which sources from this port! */
-    for (const size_t& pin : module_manager.module_port(cb_module, module_port).pins()) {
-      ModuleNetId module_net = module_manager.module_instance_port_net(cb_module, cb_module, 0, module_port, pin); 
-      VTR_ASSERT(true == module_manager.valid_module_net_id(cb_module, module_net));
-
-      /* Touch each sink of the net! */
-      for (const ModuleNetSinkId& sink_id : module_manager.module_net_sinks(cb_module, module_net)) {
-        ModuleId sink_module = module_manager.net_sink_modules(cb_module, module_net)[sink_id]; 
-        size_t sink_instance = module_manager.net_sink_instances(cb_module, module_net)[sink_id]; 
-
-        /* Skip when sink module is the cb module, 
-         * the output ports of cb modules have been disabled/enabled already! 
-         */
-        if (sink_module == cb_module) {
-          continue;
-        }
-
-        std::string sink_instance_name = module_manager.instance_name(cb_module, sink_module, sink_instance);
-        bool disable_timing = false;
-        /* Check if this node is used by benchmark  */
-        if (true == is_rr_node_to_be_disable_for_analysis(chan_node)) {
-          /* Disable all the sinks! */
-          disable_timing = true;
-        } else {
-          /* See if the net id matches. If does not match, we should disable! */
-          if (chan_node->vpack_net_num != mux_instance_to_net_map[sink_instance_name]) {
-            disable_timing = true;
-          }
-        }
-
-        /* Time to write SDC command to disable timing or not */
-        if (false == disable_timing) {
-          continue;
-        }
-
-        BasicPort sink_port = module_manager.module_port(sink_module, module_manager.net_sink_ports(cb_module, module_net)[sink_id]);
-        sink_port.set_width(module_manager.net_sink_pins(cb_module, module_net)[sink_id],
-                            module_manager.net_sink_pins(cb_module, module_net)[sink_id]);
-        /* Get the input id that is used! Disable the unused inputs! */
-        fp << "set_disable_timing ";
-        fp << cb_instance_name << "/";
-        fp << sink_instance_name << "/";
-        fp << generate_sdc_port(sink_port);
-        fp << std::endl;
-      }
-    }
+    disable_analysis_module_input_port_net_sinks(fp, 
+                                                 module_manager, cb_module,
+                                                 cb_instance_name,
+                                                 module_port,
+                                                 chan_node,
+                                                 mux_instance_to_net_map);
   }
 }
 
@@ -330,5 +369,277 @@ void print_analysis_sdc_disable_unused_cbs(std::fstream& fp,
   print_analysis_sdc_disable_unused_cb_ports(fp, grids, module_manager, 
                                              L_device_rr_gsb,
                                              CHANY, compact_routing_hierarchy);
+}
+
+/********************************************************************
+ * This function will disable 
+ * 1. all the unused port (unmapped by a benchmark) of a switch block
+ * 2. all the unused inputs (unmapped by a benchmark) of routing multiplexers 
+ *    in a switch block
+ *******************************************************************/
+static 
+void print_analysis_sdc_disable_sb_unused_resources(std::fstream& fp, 
+                                                    const std::vector<std::vector<t_grid_tile>>& grids,
+                                                    const ModuleManager& module_manager, 
+                                                    const DeviceRRGSB& L_device_rr_gsb,
+                                                    const RRGSB& rr_gsb, 
+                                                    const bool& compact_routing_hierarchy) {
+  /* Validate file stream */
+  check_file_handler(fp);
+
+  vtr::Point<size_t> gsb_coordinate(rr_gsb.get_sb_x(), rr_gsb.get_sb_y());
+
+  std::string sb_instance_name = generate_switch_block_module_name(gsb_coordinate);
+
+  /* If we use the compact routing hierarchy, we need to find the module name !*/
+  vtr::Point<size_t> sb_coordinate(rr_gsb.get_sb_x(), rr_gsb.get_sb_y());
+  if (true == compact_routing_hierarchy) {
+    DeviceCoordinator sb_coord(rr_gsb.get_x(), rr_gsb.get_y());
+    /* Note: use GSB coordinate when inquire for unique modules!!! */
+    const RRGSB& unique_mirror = L_device_rr_gsb.get_sb_unique_module(sb_coord);
+    sb_coordinate.set_x(unique_mirror.get_sb_x()); 
+    sb_coordinate.set_y(unique_mirror.get_sb_y()); 
+  }
+
+  std::string sb_module_name = generate_switch_block_module_name(sb_coordinate);
+
+  ModuleId sb_module = module_manager.find_module(sb_module_name);
+  VTR_ASSERT(true == module_manager.valid_module_id(sb_module));
+
+  /* Print comments */
+  fp << "##################################################" << std::endl; 
+  fp << "# Disable timing for Switch block " << sb_module_name << std::endl;
+  fp << "##################################################" << std::endl; 
+
+  /* Build a map between mux_instance name and net_num */
+  std::map<std::string, int> mux_instance_to_net_map;
+
+  /* Disable all the input/output port (routing tracks), which are not used by benchmark */
+  for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
+    Side side_manager(side);
+    DeviceCoordinator port_coordinate = rr_gsb.get_side_block_coordinator(side_manager.get_side()); 
+
+    for (size_t itrack = 0; itrack < rr_gsb.get_chan_width(side_manager.get_side()); ++itrack) {
+      t_rr_node* chan_node = rr_gsb.get_chan_node(side_manager.get_side(), itrack);
+
+      vtr::Point<size_t> port_coord(port_coordinate.get_x(), port_coordinate.get_y());
+      std::string port_name = generate_routing_track_port_name(rr_gsb.get_chan_node(side_manager.get_side(), itrack)->type,
+                                                               port_coord, itrack,  
+                                                               rr_gsb.get_chan_node_direction(side_manager.get_side(), itrack));
+
+      if (true == compact_routing_hierarchy) {
+        /* Note: use GSB coordinate when inquire for unique modules!!! */
+        DeviceCoordinator sb_coord(rr_gsb.get_x(), rr_gsb.get_y());
+        const RRGSB& unique_mirror = L_device_rr_gsb.get_sb_unique_module(sb_coord);
+        DeviceCoordinator unique_port_coordinate = unique_mirror.get_side_block_coordinator(side_manager.get_side()); 
+        port_coord.set_x(unique_port_coordinate.get_x());
+        port_coord.set_y(unique_port_coordinate.get_y());
+        port_name = generate_routing_track_port_name(unique_mirror.get_chan_node(side_manager.get_side(), itrack)->type,
+                                                     port_coord, itrack,  
+                                                     unique_mirror.get_chan_node_direction(side_manager.get_side(), itrack));
+      }
+
+      /* Ensure we have this port in the module! */
+      ModulePortId module_port = module_manager.find_module_port(sb_module, port_name);
+      VTR_ASSERT(true == module_manager.valid_module_port_id(sb_module, module_port));
+
+      /* Cache the net name for routing tracks which are outputs of the switch block */
+      if (OUT_PORT == rr_gsb.get_chan_node_direction(side_manager.get_side(), itrack)) {
+        /* Generate the name of mux instance related to this output node */
+        std::string mux_instance_name = generate_sb_memory_instance_name(SWITCH_BLOCK_MUX_INSTANCE_PREFIX, side_manager.get_side(), itrack, std::string(""));
+        mux_instance_to_net_map[mux_instance_name] = chan_node->vpack_net_num;
+      }
+
+      /* Check if this node is used by benchmark  */
+      if (false == is_rr_node_to_be_disable_for_analysis(chan_node)) {
+        continue;
+      }
+
+      fp << "set_disable_timing ";
+      fp << sb_instance_name << "/";
+      fp << generate_sdc_port(module_manager.module_port(sb_module, module_port));
+      fp << std::endl;
+    }
+  }
+
+  /* Disable all the input port (grid output pins), which are not used by benchmark */
+  for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
+    Side side_manager(side);
+
+    for (size_t inode = 0; inode < rr_gsb.get_num_opin_nodes(side_manager.get_side()); ++inode) {
+      t_rr_node* opin_node = rr_gsb.get_opin_node(side_manager.get_side(), inode);
+      vtr::Point<size_t> port_coord(rr_gsb.get_opin_node(side_manager.get_side(), inode)->xlow,
+                                    rr_gsb.get_opin_node(side_manager.get_side(), inode)->ylow);
+
+      std::string port_name = generate_grid_side_port_name(grids, port_coord,
+                                                           rr_gsb.get_opin_node_grid_side(side_manager.get_side(), inode),
+                                                           opin_node->ptc_num); 
+
+      if (true == compact_routing_hierarchy) {
+        /* Note: use GSB coordinate when inquire for unique modules!!! */
+        DeviceCoordinator sb_coord(rr_gsb.get_x(), rr_gsb.get_y());
+        const RRGSB& unique_mirror = L_device_rr_gsb.get_sb_unique_module(sb_coord);
+        port_coord.set_x(unique_mirror.get_opin_node(side_manager.get_side(), inode)->xlow);
+        port_coord.set_y(unique_mirror.get_opin_node(side_manager.get_side(), inode)->ylow);
+
+        port_name = generate_grid_side_port_name(grids, port_coord,
+                                                 unique_mirror.get_opin_node_grid_side(side_manager.get_side(), inode),
+                                                 unique_mirror.get_opin_node(side_manager.get_side(), inode)->ptc_num); 
+      }
+
+
+      /* Ensure we have this port in the module! */
+      ModulePortId module_port = module_manager.find_module_port(sb_module, port_name);
+      VTR_ASSERT(true == module_manager.valid_module_port_id(sb_module, module_port));
+
+      /* Check if this node is used by benchmark  */
+      if (false == is_rr_node_to_be_disable_for_analysis(opin_node)) {
+        continue;
+      }
+
+      fp << "set_disable_timing ";
+      fp << sb_instance_name << "/";
+      fp << generate_sdc_port(module_manager.module_port(sb_module, module_port));
+      fp << std::endl;
+    }
+  }
+
+  /* Disable all the unused inputs of routing multiplexers, which are not used by benchmark 
+   * Here, we start from each input of the Switch Blocks, and traverse forward to the sink 
+   * port of the module net whose source is the input
+   * We will find the instance name which is the parent of the sink port, and search the 
+   * net id through the instance_name_to_net_map 
+   * The the net id does not match the net id of this input, we will disable the sink port!
+   *
+   *                   sb_module
+   *                 +-----------------------
+   *                 |           MUX instance A
+   *                 |          +-----------
+   *   input_port--->|--+---x-->| sink port (disable! net_id = Y) 
+   *   (net_id = X)  |  |       +----------
+   *                 |  |        MUX instance B
+   *                 |  |       +----------
+   *                 |  +------>| sink port (do not disable! net_id = X)
+   *
+   * Because the input ports of a SB module come from 
+   * 1. Grid output pins
+   * 2. routing tracks
+   * We will walk through these ports and do conditionally disable_timing
+   */ 
+
+  /* Iterate over input ports coming from grid output pins */
+  for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
+    Side side_manager(side);
+
+    for (size_t inode = 0; inode < rr_gsb.get_num_opin_nodes(side_manager.get_side()); ++inode) {
+      t_rr_node* opin_node = rr_gsb.get_opin_node(side_manager.get_side(), inode);
+      vtr::Point<size_t> port_coord(rr_gsb.get_opin_node(side_manager.get_side(), inode)->xlow,
+                                    rr_gsb.get_opin_node(side_manager.get_side(), inode)->ylow);
+
+      std::string port_name = generate_grid_side_port_name(grids, port_coord,
+                                                           rr_gsb.get_opin_node_grid_side(side_manager.get_side(), inode),
+                                                           opin_node->ptc_num); 
+
+      if (true == compact_routing_hierarchy) {
+        /* Note: use GSB coordinate when inquire for unique modules!!! */
+        DeviceCoordinator sb_coord(rr_gsb.get_x(), rr_gsb.get_y());
+        const RRGSB& unique_mirror = L_device_rr_gsb.get_sb_unique_module(sb_coord);
+        port_coord.set_x(unique_mirror.get_opin_node(side_manager.get_side(), inode)->xlow);
+        port_coord.set_y(unique_mirror.get_opin_node(side_manager.get_side(), inode)->ylow);
+
+        port_name = generate_grid_side_port_name(grids, port_coord,
+                                                 unique_mirror.get_opin_node_grid_side(side_manager.get_side(), inode),
+                                                 unique_mirror.get_opin_node(side_manager.get_side(), inode)->ptc_num); 
+      }
+
+
+      /* Ensure we have this port in the module! */
+      ModulePortId module_port = module_manager.find_module_port(sb_module, port_name);
+      VTR_ASSERT(true == module_manager.valid_module_port_id(sb_module, module_port));
+
+      disable_analysis_module_input_port_net_sinks(fp, module_manager,
+                                                   sb_module,
+                                                   sb_instance_name,
+                                                   module_port,
+                                                   opin_node,
+                                                   mux_instance_to_net_map);
+    }
+  }
+
+  /* Iterate over input ports coming from routing tracks */
+  for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
+    Side side_manager(side);
+    DeviceCoordinator port_coordinate = rr_gsb.get_side_block_coordinator(side_manager.get_side()); 
+
+    for (size_t itrack = 0; itrack < rr_gsb.get_chan_width(side_manager.get_side()); ++itrack) {
+      /* Skip output ports, they have already been disabled or not */
+      if (OUT_PORT == rr_gsb.get_chan_node_direction(side_manager.get_side(), itrack)) {
+        continue;
+      }
+
+      t_rr_node* chan_node = rr_gsb.get_chan_node(side_manager.get_side(), itrack);
+
+      vtr::Point<size_t> port_coord(port_coordinate.get_x(), port_coordinate.get_y());
+      std::string port_name = generate_routing_track_port_name(rr_gsb.get_chan_node(side_manager.get_side(), itrack)->type,
+                                                               port_coord, itrack,  
+                                                               rr_gsb.get_chan_node_direction(side_manager.get_side(), itrack));
+
+      if (true == compact_routing_hierarchy) {
+        /* Note: use GSB coordinate when inquire for unique modules!!! */
+        DeviceCoordinator sb_coord(rr_gsb.get_x(), rr_gsb.get_y());
+        const RRGSB& unique_mirror = L_device_rr_gsb.get_sb_unique_module(sb_coord);
+        DeviceCoordinator unique_port_coordinate = unique_mirror.get_side_block_coordinator(side_manager.get_side()); 
+        port_coord.set_x(unique_port_coordinate.get_x());
+        port_coord.set_y(unique_port_coordinate.get_y());
+
+        port_name = generate_routing_track_port_name(unique_mirror.get_chan_node(side_manager.get_side(), itrack)->type,
+                                                     port_coord, itrack,  
+                                                     unique_mirror.get_chan_node_direction(side_manager.get_side(), itrack));
+      }
+
+
+      /* Ensure we have this port in the module! */
+      ModulePortId module_port = module_manager.find_module_port(sb_module, port_name);
+      VTR_ASSERT(true == module_manager.valid_module_port_id(sb_module, module_port));
+
+      disable_analysis_module_input_port_net_sinks(fp, module_manager,
+                                                   sb_module,
+                                                   sb_instance_name,
+                                                   module_port,
+                                                   chan_node,
+                                                   mux_instance_to_net_map);
+    }
+  }
+}
+
+
+/********************************************************************
+ * Iterate over all the connection blocks in a device
+ * and disable unused ports for each of them 
+ *******************************************************************/
+void print_analysis_sdc_disable_unused_sbs(std::fstream& fp,
+                                           const std::vector<std::vector<t_grid_tile>>& grids,
+                                           const ModuleManager& module_manager, 
+                                           const DeviceRRGSB& L_device_rr_gsb,
+                                           const bool& compact_routing_hierarchy) {
+
+  /* Build unique X-direction connection block modules */
+  DeviceCoordinator sb_range = L_device_rr_gsb.get_gsb_range();
+
+  for (size_t ix = 0; ix < sb_range.get_x(); ++ix) {
+    for (size_t iy = 0; iy < sb_range.get_y(); ++iy) {
+      /* Check if the connection block exists in the device!
+       * Some of them do NOT exist due to heterogeneous blocks (height > 1) 
+       * We will skip those modules
+       */
+      const RRGSB& rr_gsb = L_device_rr_gsb.get_gsb(ix, iy);
+
+      print_analysis_sdc_disable_sb_unused_resources(fp, grids, 
+                                                     module_manager, 
+                                                     L_device_rr_gsb, 
+                                                     rr_gsb, 
+                                                     compact_routing_hierarchy);
+    }
+  }
 }
 
