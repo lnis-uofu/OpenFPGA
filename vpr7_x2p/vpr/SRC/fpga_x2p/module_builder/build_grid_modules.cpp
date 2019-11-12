@@ -926,7 +926,7 @@ void rec_build_physical_block_modules(ModuleManager& module_manager,
       /* Add the memory module as a child of primitive module */
       module_manager.add_child_module(pb_module, child_pb_module); 
 
-      /* Set an instance name to bind to a block in bitstream generation */
+      /* Set an instance name to bind to a block in bitstream generation and SDC generation! */
       std::string child_pb_instance_name = generate_physical_block_instance_name(pb_module_name_prefix, &(physical_pb_type->modes[physical_mode_index].pb_type_children[ichild]), inst);
       module_manager.set_child_instance_name(pb_module, child_pb_module, child_instance_id, child_pb_instance_name);
 
