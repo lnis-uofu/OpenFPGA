@@ -483,7 +483,7 @@ void add_module_pb_graph_pin_interc(ModuleManager& module_manager,
   }
 
   /* Initialize the interconnection type that will be physically implemented in module */
-  enum e_interconnect verilog_interc_type = determine_actual_pb_interc_type(cur_interc, fan_in);
+  enum e_interconnect interc_type = determine_actual_pb_interc_type(cur_interc, fan_in);
 
   /* Find input ports of the wire module */
   std::vector<CircuitPortId> interc_model_inputs = circuit_lib.model_ports_by_type(cur_interc->circuit_model, SPICE_MODEL_PORT_INPUT, true); /* the last argument to guarantee that we ignore any global inputs */
@@ -497,7 +497,7 @@ void add_module_pb_graph_pin_interc(ModuleManager& module_manager,
   /* Branch on the type of physical implementation,
    * We add instances of programmable interconnection 
    */ 
-  switch (verilog_interc_type) {
+  switch (interc_type) {
   case DIRECT_INTERC: {
     /* Ensure direct interc has only one fan-in */
     VTR_ASSERT(1 == fan_in);
@@ -521,7 +521,7 @@ void add_module_pb_graph_pin_interc(ModuleManager& module_manager,
     /* Get the instance id and add an instance of wire */
     size_t wire_instance = module_manager.num_instance(pb_module, wire_module);
     module_manager.add_child_module(pb_module, wire_module);
-   
+
     /* Ensure input and output ports of the wire model has only 1 pin respectively */
     VTR_ASSERT(1 == circuit_lib.port_size(interc_model_inputs[0]));
     VTR_ASSERT(1 == circuit_lib.port_size(interc_model_outputs[0]));

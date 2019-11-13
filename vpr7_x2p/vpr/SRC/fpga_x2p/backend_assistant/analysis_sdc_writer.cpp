@@ -255,7 +255,7 @@ void print_analysis_sdc(const std::string& sdc_dir,
                                         L_device_rr_gsb, 
                                         compact_routing_hierarchy);
 
-  /* TODO: Disable timing for unused routing resources in grids (programmable blocks) */
+  /* Disable timing for unused routing resources in grids (programmable blocks) */
   print_analysis_sdc_disable_unused_grids(fp, device_size, L_grids, L_blocks, module_manager);
 
   /* Close file handler */
