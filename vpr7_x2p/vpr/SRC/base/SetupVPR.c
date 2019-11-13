@@ -1114,6 +1114,7 @@ static void SetupSynVerilogOpts(t_options Options,
   syn_verilog_opts->print_sdc_analysis = FALSE;
   syn_verilog_opts->include_icarus_simulator = FALSE;
   syn_verilog_opts->print_simulation_ini = FALSE;
+  syn_verilog_opts->simulation_ini_path = NULL;
 
   /* Turn on Syn_verilog options */
   if (Options.Count[OT_FPGA_VERILOG_SYN]) {
@@ -1186,7 +1187,10 @@ static void SetupSynVerilogOpts(t_options Options,
 
   if (Options.Count[OT_FPGA_VERILOG_SYN_PRINT_SIMULATION_INI]) {
     syn_verilog_opts->print_simulation_ini = TRUE;
-    syn_verilog_opts->simulation_ini_path = my_strdup(Options.fpga_verilog_simulation_ini_path);
+
+    if (Options.Count[OT_FPGA_VERILOG_SYN_SIMULATION_INI_FILE]) {
+      syn_verilog_opts->simulation_ini_path = my_strdup(Options.fpga_verilog_simulation_ini_path);
+    }
   }
 
   /* SynVerilog needs the input from spice modeling */

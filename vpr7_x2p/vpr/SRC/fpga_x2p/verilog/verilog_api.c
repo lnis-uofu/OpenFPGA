@@ -438,7 +438,11 @@ void vpr_fpga_verilog(ModuleManager& module_manager,
  
   if (TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.print_simulation_ini) {
     /* Print exchangeable files which contains simulation settings */
-    print_verilog_simulation_info(std::string(vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.simulation_ini_path),
+    std::string simulation_ini_file_name;
+    if (NULL != vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.simulation_ini_path) {
+      simulation_ini_file_name = std::string(vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.simulation_ini_path);
+    }
+    print_verilog_simulation_info(simulation_ini_file_name,
                                   std::string(format_dir_path(chomped_parent_dir)),
                                   std::string(chomped_circuit_name),
                                   std::string(src_dir_path),

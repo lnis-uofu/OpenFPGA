@@ -560,6 +560,8 @@ ProcessOption(INP char **Args, INOUTP t_options * Options) {
     case OT_FPGA_VERILOG_SYN_PRINT_SDC_ANALYSIS:
       return Args;
     case OT_FPGA_VERILOG_SYN_PRINT_SIMULATION_INI:
+      return Args;
+    case OT_FPGA_VERILOG_SYN_SIMULATION_INI_FILE:
       return ReadString(Args, &Options->fpga_verilog_simulation_ini_path);
     /* Xifan TANG: Bitstream generator */
     case OT_FPGA_BITSTREAM_GENERATOR:
