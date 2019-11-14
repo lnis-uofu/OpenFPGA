@@ -515,9 +515,13 @@ void vpr_fpga_verilog(ModuleManager& module_manager,
   }
 
   /* Print a Verilog file including all the netlists that have been generated */
+  std::string ref_verilog_benchmark_file_name;
+  if (NULL != vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.reference_verilog_benchmark_file) {
+    ref_verilog_benchmark_file_name = std::string(vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.reference_verilog_benchmark_file);
+  }
   print_include_netlists(std::string(src_dir_path),
                          std::string(chomped_circuit_name),
-                         std::string(vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.reference_verilog_benchmark_file),
+                         ref_verilog_benchmark_file_name,
                          Arch.spice->circuit_lib);
 
   vpr_printf(TIO_MESSAGE_INFO, "Outputted %lu Verilog modules in total.\n", module_manager.num_modules());  

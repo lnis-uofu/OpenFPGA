@@ -446,7 +446,7 @@ void build_connection_block_module_short_interc(ModuleManager& module_manager,
   /* Ensure we have only one 1 driver node */
   VTR_ASSERT_SAFE(1 == src_rr_node->fan_in);
 
-  /* Find  the driver node */
+  /* Find the driver node */
   t_rr_node* drive_rr_node = src_rr_node->drive_rr_nodes[0]; 
 
   /* We have OPINs since we may have direct connections:

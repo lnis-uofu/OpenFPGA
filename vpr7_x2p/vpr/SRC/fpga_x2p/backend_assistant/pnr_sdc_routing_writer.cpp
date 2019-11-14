@@ -237,6 +237,15 @@ void print_pnr_sdc_constrain_cb_mux_timing(std::fstream& fp,
   check_file_handler(fp);
 
   VTR_ASSERT(IPIN == output_rr_node->type);
+  
+  /* We have OPINs since we may have direct connections:
+   * These connections should be handled by other functions in the compact_netlist.c 
+   * So we just return here for OPINs 
+   */
+  if ( (1 == output_rr_node->num_drive_rr_nodes)
+    && (OPIN == output_rr_node->drive_rr_nodes[0]->type) ) {
+    return;
+  }
 
   /* Find the module port corresponding to the output rr_node */
   ModulePortId module_output_port = find_connection_block_module_ipin_port(module_manager, 
@@ -247,6 +256,7 @@ void print_pnr_sdc_constrain_cb_mux_timing(std::fstream& fp,
   /* Find the module port corresponding to the fan-in rr_nodes of the output rr_node */
   std::vector<t_rr_node*> input_rr_nodes;
   for (int iedge = 0; iedge < output_rr_node->num_drive_rr_nodes; iedge++) {
+    /* Skip OPINs which should be handled in direct connection */
     input_rr_nodes.push_back(output_rr_node->drive_rr_nodes[iedge]);
   }
      

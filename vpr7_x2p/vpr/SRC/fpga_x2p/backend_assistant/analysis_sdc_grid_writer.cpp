@@ -278,6 +278,11 @@ void disable_pb_graph_node_unused_mux_inputs(std::fstream& fp,
           int rr_node_index = child_pb_graph_node->output_pins[iport][ipin].rr_node_index_physical_pb;
           t_rr_node* output_rr_node = &(block_physical_pb->rr_graph->rr_node[rr_node_index]);
 
+          /* Corner case: if the rr node has no fan-out we will skip this pin */
+          if (0 == output_rr_node->num_edges) {
+            continue;
+          }
+
           disable_analysis_module_output_pin_net_sinks(fp, module_manager, parent_module,
                                                        hierarchy_name,
                                                        child_module, inst, 
