@@ -191,9 +191,8 @@ VeriPar.add_argument('--vpr_fpga_verilog_print_top_tb', action="store_true",
 VeriPar.add_argument('--vpr_fpga_verilog_print_input_blif_tb',
                      action="store_true", help="Print testbench" +
                      "for input blif file in Verilog Generator")
-VeriPar.add_argument('--vpr_fpga_verilog_print_modelsim_autodeck', type=str,
-                     help="Print modelsim " +
-                     "simulation script", metavar="<modelsim.ini_path>")
+VeriPar.add_argument('--vpr_fpga_verilog_print_simulation_ini', action="store_true",
+                     help="Create simulation INI file")
 VeriPar.add_argument('--vpr_fpga_verilog_explicit_mapping', action="store_true",
                      help="Explicit Mapping")
 
@@ -721,9 +720,8 @@ def run_standard_vpr(bench_blif, fixed_chan_width, logfile, route_only=False):
             command += ["--fpga_verilog_include_signal_init"]
         if args.vpr_fpga_verilog_formal_verification_top_netlist:
             command += ["--fpga_verilog_print_formal_verification_top_netlist"]
-        if args.vpr_fpga_verilog_print_modelsim_autodeck:
-            command += ["--fpga_verilog_print_modelsim_autodeck",
-                        args.vpr_fpga_verilog_print_modelsim_autodeck]
+        if args.vpr_fpga_verilog_print_simulation_ini:
+            command += ["--fpga_verilog_print_simulation_ini"]
         if args.vpr_fpga_verilog_include_icarus_simulator:
             command += ["--fpga_verilog_include_icarus_simulator"]
         if args.vpr_fpga_verilog_print_report_timing_tcl:
