@@ -155,6 +155,12 @@ void build_essential_modules(ModuleManager& module_manager,
              "Building essential (inverter/buffer/logic gate) modules...");
 
   for (const auto& circuit_model : circuit_lib.models()) {
+    /* Add essential modules upon on demand: only when it is not yet in the module library */
+    ModuleId module = module_manager.find_module(circuit_lib.model_name(circuit_model));
+    if (true == module_manager.valid_module_id(module)) {
+      continue;
+    }
+
     if (SPICE_MODEL_INVBUF == circuit_lib.model_type(circuit_model)) {
       build_invbuf_module(module_manager, circuit_lib, circuit_model);
       continue;
@@ -184,8 +190,7 @@ void build_essential_modules(ModuleManager& module_manager,
  * to the module_manager
  ********************************************************************/
 void build_user_defined_modules(ModuleManager& module_manager, 
-                                const CircuitLibrary& circuit_lib, 
-                                const std::vector<t_segment_inf>& routing_segments) {
+                                const CircuitLibrary& circuit_lib) {
   /* Start time count */
   clock_t t_start = clock();
 
@@ -196,7 +201,7 @@ void build_user_defined_modules(ModuleManager& module_manager,
   for (const auto& model : circuit_lib.models()) {
     /* We only care about user-defined models */
     if ( (true == circuit_lib.model_verilog_netlist(model).empty())
-      && (true == circuit_lib.model_verilog_netlist(model).empty()) ) {
+      && (true == circuit_lib.model_spice_netlist(model).empty()) ) {
       continue;
     }
     /* Skip Routing channel wire models because they need a different name. Do it later */
@@ -207,33 +212,6 @@ void build_user_defined_modules(ModuleManager& module_manager,
      * Register it in the module_manager  
      */
     add_circuit_model_to_module_manager(module_manager, circuit_lib, model);
-  }
-
-  /* Register the routing channel wires  */
-  for (const auto& seg : routing_segments) {
-    VTR_ASSERT( CircuitModelId::INVALID() != seg.circuit_model);
-    VTR_ASSERT( SPICE_MODEL_CHAN_WIRE == circuit_lib.model_type(seg.circuit_model));
-    /* We care only user-defined circuit models */
-    if ( (circuit_lib.model_verilog_netlist(seg.circuit_model).empty()) 
-      && (circuit_lib.model_verilog_netlist(seg.circuit_model).empty()) ) {
-      continue;
-    }
-    /* Give a unique name for subckt of wire_model of segment, 
-     * circuit_model name is unique, and segment id is unique as well
-     */
-    std::string segment_wire_subckt_name = generate_segment_wire_subckt_name(circuit_lib.model_name(seg.circuit_model), &seg - &routing_segments[0]);
-
-    /* Create a Verilog Module based on the circuit model, and add to module manager */
-    ModuleId module_id = add_circuit_model_to_module_manager(module_manager, circuit_lib, seg.circuit_model, segment_wire_subckt_name); 
-
-    /* Find the output port*/
-    std::vector<CircuitPortId> output_ports = circuit_lib.model_ports_by_type(seg.circuit_model, SPICE_MODEL_PORT_OUTPUT, true);
-    /* Make sure the port size is what we want */
-    VTR_ASSERT (1 == circuit_lib.port_size(output_ports[0]));
-  
-    /* Add a mid-output port to the module */
-    BasicPort module_mid_output_port(generate_segment_wire_mid_output_name(circuit_lib.port_lib_name(output_ports[0])), circuit_lib.port_size(output_ports[0]));
-    module_manager.add_port(module_id, module_mid_output_port, ModuleManager::MODULE_OUTPUT_PORT);
   }
 
   /* End time count */
@@ -288,3 +266,40 @@ void build_constant_generator_modules(ModuleManager& module_manager) {
              "took %.2g seconds\n", 
              run_time_sec);  
 }
+
+/*********************************************************************
+ * This function will rename the ports of primitive modules 
+ * using lib_name instead of prefix
+ * Primitive modules are defined as those modules in the module manager 
+ * which have user defined netlists
+ ********************************************************************/
+void rename_primitive_module_port_names(ModuleManager& module_manager, 
+                                        const CircuitLibrary& circuit_lib) {
+  for (const CircuitModelId& model : circuit_lib.models()) {
+    /* We only care about user-defined models */
+    if ( (true == circuit_lib.model_verilog_netlist(model).empty())
+      && (true == circuit_lib.model_spice_netlist(model).empty()) ) {
+      continue;
+    }
+    /* Skip Routing channel wire models because they need a different name. Do it later */
+    if (SPICE_MODEL_CHAN_WIRE == circuit_lib.model_type(model)) {
+      continue;
+    }
+    /* Find the module in module manager */
+    ModuleId module = module_manager.find_module(circuit_lib.model_name(model));
+    /* We must find one! */
+    VTR_ASSERT(true == module_manager.valid_module_id(module));
+
+    /* Rename all the ports to use lib_name! */
+    for (const CircuitPortId& model_port : circuit_lib.model_ports(model)) {
+      /* Find the module port in module manager. We used prefix when creating the ports */
+      ModulePortId module_port = module_manager.find_module_port(module, circuit_lib.port_prefix(model_port));
+      /* We must find one! */
+      VTR_ASSERT(true == module_manager.valid_module_port_id(module, module_port));
+      /* Name it with lib_name */
+      module_manager.set_module_port_name(module, module_port, circuit_lib.port_lib_name(model_port));
+    }
+  }
+}
+
+

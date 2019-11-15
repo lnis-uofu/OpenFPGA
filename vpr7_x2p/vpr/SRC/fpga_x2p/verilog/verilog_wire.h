@@ -16,7 +16,6 @@
 
 void print_verilog_submodule_wires(ModuleManager& module_manager,
                                    const CircuitLibrary& circuit_lib,
-                                   std::vector<t_segment_inf> routing_segments,
                                    const std::string& verilog_dir,
                                    const std::string& submodule_dir);
 

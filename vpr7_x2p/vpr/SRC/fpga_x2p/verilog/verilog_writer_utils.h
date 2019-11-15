@@ -6,6 +6,8 @@
 #ifndef VERILOG_WRITER_UTILS_H 
 #define VERILOG_WRITER_UTILS_H 
 
+#include <fstream>
+#include <vector>
 #include <string>
 #include "verilog_global.h"
 #include "device_port.h"
@@ -23,6 +25,10 @@ void print_verilog_file_header(std::fstream& fp,
 
 void print_verilog_include_netlist(std::fstream& fp, 
                                    const std::string& netlist_name);
+
+void print_verilog_define_flag(std::fstream& fp, 
+                               const std::string& flag_name,
+                               const int& flag_value);
 
 void print_verilog_include_defines_preproc_file(std::fstream& fp, 
                                                 const std::string& verilog_dir);
@@ -142,5 +148,24 @@ void print_verilog_formal_verification_mux_sram_ports_wiring(std::fstream& fp,
                                                              const size_t& mux_instance_id,
                                                              const size_t& num_conf_bits, 
                                                              const BasicPort& fm_config_bus); 
+
+void print_verilog_pulse_stimuli(std::fstream& fp, 
+                                 const BasicPort& port,
+                                 const size_t& initial_value,
+                                 const float& pulse_width,
+                                 const size_t& flip_value);
+
+void print_verilog_pulse_stimuli(std::fstream& fp, 
+                                 const BasicPort& port,
+                                 const size_t& initial_value,
+                                 const std::vector<float>& pulse_widths,
+                                 const std::vector<size_t>& flip_values,
+                                 const std::string& wait_condition);
+
+void print_verilog_clock_stimuli(std::fstream& fp, 
+                                 const BasicPort& port,
+                                 const size_t& initial_value,
+                                 const float& pulse_width,
+                                 const std::string& wait_condition);
 
 #endif

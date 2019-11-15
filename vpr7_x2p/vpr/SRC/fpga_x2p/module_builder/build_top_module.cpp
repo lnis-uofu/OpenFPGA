@@ -11,6 +11,7 @@
 #include "vpr_types.h"
 #include "globals.h"
 
+#include "rr_blocks_utils.h"
 #include "fpga_x2p_reserved_words.h"
 #include "fpga_x2p_naming.h"
 #include "fpga_x2p_utils.h"
@@ -311,9 +312,7 @@ std::vector<std::vector<size_t>> add_top_module_connection_block_instances(Modul
        */
       const RRGSB& rr_gsb = L_device_rr_gsb.get_gsb(ix, iy);
       vtr::Point<size_t> cb_coordinate(rr_gsb.get_cb_x(cb_type), rr_gsb.get_cb_y(cb_type));
-      const DeviceCoordinator cb_coordinator = rr_gsb.get_cb_coordinator(cb_type);
-      if ( (TRUE != is_cb_exist(cb_type, cb_coordinator.get_x(), cb_coordinator.get_y()))
-        || (true != rr_gsb.is_cb_exist(cb_type))) {
+      if ( false == rr_gsb.is_cb_exist(cb_type) ) {
         continue;
       }
       /* If we use compact routing hierarchy, we should instanciate the unique module of SB */
@@ -522,8 +521,12 @@ void add_top_module_nets_connect_grids_and_cb(ModuleManager& module_manager,
   DeviceCoordinator module_gsb_coordinate(rr_gsb.get_x(), rr_gsb.get_y());
 
   /* Skip those Connection blocks that do not exist */
-  if ( (TRUE != is_cb_exist(cb_type, rr_gsb.get_cb_x(cb_type), rr_gsb.get_cb_y(cb_type)))
-    || (true != rr_gsb.is_cb_exist(cb_type))) {
+  if (false == rr_gsb.is_cb_exist(cb_type)) {
+    return;
+  }
+
+  /* Skip if the cb does not contain any configuration bits! */
+  if (true == connection_block_contain_only_routing_tracks(rr_gsb, cb_type)) {
     return;
   }
 
@@ -684,16 +687,14 @@ void add_top_module_nets_connect_sb_and_cb(ModuleManager& module_manager,
      *    FOr RIGHT and BOTTOM side, find the adjacent RRGSB and then use is_cb_exist()
      */
     if ( TOP == side_manager.get_side() || LEFT == side_manager.get_side() ) {
-      if ( (TRUE != is_cb_exist(cb_type, module_gsb_cb_coordinate.get_x(), module_gsb_cb_coordinate.get_y())) 
-        || (true != rr_gsb.is_cb_exist(cb_type))) {
+      if ( false == rr_gsb.is_cb_exist(cb_type)) {
         continue;
       }
     }
 
     if ( RIGHT == side_manager.get_side() || BOTTOM == side_manager.get_side() ) {
-      const RRGSB& adjancent_gsb = L_device_rr_gsb.get_gsb(module_gsb_cb_coordinate);
-      if ( (TRUE != is_cb_exist(cb_type, module_gsb_cb_coordinate.get_x(), module_gsb_cb_coordinate.get_y())) 
-        || (true != adjancent_gsb.is_cb_exist(cb_type))) {
+      const RRGSB& adjacent_gsb = L_device_rr_gsb.get_gsb(module_gsb_cb_coordinate);
+      if ( false == adjacent_gsb.is_cb_exist(cb_type)) {
         continue;
       }
     }

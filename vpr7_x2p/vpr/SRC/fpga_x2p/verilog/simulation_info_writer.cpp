@@ -2,8 +2,8 @@
  * This function includes the writer for generating exchangeable
  * information, in order to interface different simulators   
  ********************************************************************/
-#include <math.h>
-#include <time.h>
+#include <cmath>
+#include <ctime>
 #include <map>
 #define MINI_CASE_SENSITIVE
 #include "ini.h"
@@ -19,16 +19,38 @@
 #include "simulation_info_writer.h"
 
 /*********************************************************************
+ * Local Variable
+ ********************************************************************/
+constexpr char* DEFAULT_SIMULATION_INI_FILE_NAME = "simulation_deck_info.ini";
+
+/*********************************************************************
  * Top-level function to write an ini file which contains exchangeable
  * information, in order to interface different Verilog simulators
  ********************************************************************/
-void print_verilog_simulation_info(const int &num_operating_clock_cycles,
-                                   const std::string &verilog_dir_formatted,
-                                   const std::string &chomped_circuit_name,
-                                   const std::string &src_dir_path,
-                                   const size_t &num_program_clock_cycles,
-                                   const float &prog_clock_freq,
-                                   const float &op_clock_freq) {
+void print_verilog_simulation_info(const std::string& simulation_ini_filename,
+                                   const std::string& parent_dir,
+                                   const std::string& circuit_name,
+                                   const std::string& src_dir,
+                                   const size_t& num_program_clock_cycles,
+                                   const int& num_operating_clock_cycles,
+                                   const float& prog_clock_freq,
+                                   const float& op_clock_freq) {
+
+  /* Start time count */
+  clock_t t_start = clock();
+
+  /* Use default name if user does not provide one */
+  std::string ini_fname;
+  if (true == simulation_ini_filename.empty()) {
+    ini_fname = parent_dir + std::string(DEFAULT_SIMULATION_INI_FILE_NAME);
+  } else {
+    ini_fname = simulation_ini_filename;
+  }
+
+  vpr_printf(TIO_MESSAGE_INFO, 
+             "Writing exchangeable file containing simulation information: %s...", 
+             ini_fname.c_str());
+
   mINI::INIStructure ini;
   // std::map<char, int> units_map;
   // units_map['s']=1;  // units_map['ms']=1E-3;  // units_map['us']=1E-6;
@@ -40,16 +62,23 @@ void print_verilog_simulation_info(const int &num_operating_clock_cycles,
                                                              1. / prog_clock_freq,
                                                              num_operating_clock_cycles,
                                                              1. / op_clock_freq);
-
   ini["SIMULATION_DECK"]["PROJECTNAME "] = "ModelSimProject";
-  ini["SIMULATION_DECK"]["BENCHMARK "] = chomped_circuit_name;
-  ini["SIMULATION_DECK"]["TOP_TB"] = chomped_circuit_name + std::string("_top_formal_verification_random_tb");
+  ini["SIMULATION_DECK"]["BENCHMARK "] = circuit_name;
+  ini["SIMULATION_DECK"]["TOP_TB"] = circuit_name + std::string("_top_formal_verification_random_tb");
   ini["SIMULATION_DECK"]["SIMTIME "] = std::to_string(simulation_time_period);
   ini["SIMULATION_DECK"]["UNIT "] = "ms";
-  ini["SIMULATION_DECK"]["VERILOG_PATH "] = std::string(src_dir_path);
+  ini["SIMULATION_DECK"]["VERILOG_PATH "] = std::string(src_dir);
   ini["SIMULATION_DECK"]["VERILOG_FILE1"] = std::string(defines_verilog_file_name);
-  ini["SIMULATION_DECK"]["VERILOG_FILE2"] = std::string(chomped_circuit_name + "_include_netlists.v");
+  ini["SIMULATION_DECK"]["VERILOG_FILE2"] = std::string(circuit_name + "_include_netlists.v");
 
-  mINI::INIFile file("SimulationDeckInfo.ini");
+  mINI::INIFile file(ini_fname);
   file.generate(ini, true);
+
+  /* End time count */
+  clock_t t_end = clock();
+
+  float run_time_sec = (float)(t_end - t_start) / CLOCKS_PER_SEC;
+  vpr_printf(TIO_MESSAGE_INFO, 
+             "took %g seconds\n", 
+             run_time_sec);  
 }

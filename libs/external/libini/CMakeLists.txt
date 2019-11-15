@@ -7,6 +7,7 @@ files_to_dirs(LIB_HEADERS LIB_INCLUDE_DIRS)
 
 #Create the library
 add_library(libini STATIC
-             ${LIB_HEADERS})
+            ${LIB_HEADERS})
+
 target_include_directories(libini PUBLIC ${LIB_INCLUDE_DIRS})
 set_target_properties(libini PROPERTIES PREFIX "" LINKER_LANGUAGE CXX)

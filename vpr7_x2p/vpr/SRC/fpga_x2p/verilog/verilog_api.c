@@ -61,7 +61,7 @@
 #include "verilog_sdc.h"
 #include "verilog_formality_autodeck.h"
 #include "verilog_sdc_pb_types.h"
-#include "verilog_include_netlists.h"
+#include "verilog_auxiliary_netlists.h"
 #include "simulation_info_writer.h"
 
 #include "verilog_api.h"
@@ -152,14 +152,10 @@ void vpr_fpga_verilog(ModuleManager& module_manager,
   char* fm_dir_path = NULL;
   char* top_netlist_file = NULL;
   char* top_netlist_path = NULL;
-  char* top_testbench_file_name = NULL;
-  char* top_testbench_file_path = NULL;
   char* blif_testbench_file_name = NULL;
   char* blif_testbench_file_path = NULL;
   char* bitstream_file_name = NULL;
   char* bitstream_file_path = NULL;
-  char* autocheck_top_testbench_file_name = NULL;
-  char* autocheck_top_testbench_file_path = NULL;
 
   char* chomped_parent_dir = NULL;
   char* chomped_circuit_name = NULL;
@@ -268,11 +264,16 @@ void vpr_fpga_verilog(ModuleManager& module_manager,
   init_pb_types_num_iopads();
   /* init_grids_num_mode_bits(); */
 
-  dump_verilog_defines_preproc(src_dir_path,
-                               vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts);
+  /* Print Verilog files containing preprocessing flags */
+  print_verilog_preprocessing_flags_netlist(std::string(src_dir_path),
+                                            vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts);
 
+  print_verilog_simulation_preprocessing_flags(std::string(src_dir_path),
+                                               vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts);
+  /*
   dump_verilog_simulation_preproc(src_dir_path,
                                vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts);
+   */
 
   /* Generate primitive Verilog modules, which are corner stones of FPGA fabric 
    * Note that this function MUST be called before Verilog generation of
@@ -390,19 +391,21 @@ void vpr_fpga_verilog(ModuleManager& module_manager,
     my_free(bitstream_file_path);
   }
 
-  /* dump verilog testbench only for top-level: ONLY valid when bitstream is generated! */
-  if (TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.print_top_testbench) {
-    top_testbench_file_name = my_strcat(chomped_circuit_name, top_testbench_verilog_file_postfix);
-    top_testbench_file_path = my_strcat(src_dir_path, top_testbench_file_name);
-    dump_verilog_top_testbench(sram_verilog_orgz_info, chomped_circuit_name, top_testbench_file_path,
-                               src_dir_path, *(Arch.spice));
-    /* Free */
-    my_free(top_testbench_file_name);
-    my_free(top_testbench_file_path);
-  }
-  
+  /* Collect global ports from the circuit library
+   * TODO: move outside this function 
+   */
   std::vector<CircuitPortId> global_ports = find_circuit_library_global_ports(Arch.spice->circuit_lib);
 
+  /* dump verilog testbench only for top-level: ONLY valid when bitstream is generated! */
+  if (TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.print_top_testbench) {
+    std::string top_testbench_file_path = std::string(src_dir_path) 
+                                        + std::string(chomped_circuit_name)
+                                        + std::string(top_testbench_verilog_file_postfix);
+    /* TODO: this is an old function, to be shadowed */
+    dump_verilog_top_testbench(sram_verilog_orgz_info, chomped_circuit_name, top_testbench_file_path.c_str(),
+                               src_dir_path, *(Arch.spice));
+  }
+  
   if (TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.print_formal_verification_top_netlist) {
     std::string formal_verification_top_netlist_file_path = std::string(src_dir_path) 
                                                           + std::string(chomped_circuit_name) 
@@ -431,21 +434,43 @@ void vpr_fpga_verilog(ModuleManager& module_manager,
     print_verilog_random_top_testbench(std::string(chomped_circuit_name), random_top_testbench_file_path, 
                                        std::string(src_dir_path), L_logical_blocks,  
                                        vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts, Arch.spice->spice_params);
-    print_verilog_simulation_info(Arch.spice->spice_params.meas_params.sim_num_clock_cycle,
-                                  std::string(msim_dir_path),
+  }
+ 
+  if (TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.print_simulation_ini) {
+    /* Print exchangeable files which contains simulation settings */
+    std::string simulation_ini_file_name;
+    if (NULL != vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.simulation_ini_path) {
+      simulation_ini_file_name = std::string(vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.simulation_ini_path);
+    }
+    print_verilog_simulation_info(simulation_ini_file_name,
+                                  std::string(format_dir_path(chomped_parent_dir)),
                                   std::string(chomped_circuit_name),
                                   std::string(src_dir_path),
                                   bitstream_manager.bits().size(),
+                                  Arch.spice->spice_params.meas_params.sim_num_clock_cycle,
                                   Arch.spice->spice_params.stimulate_params.prog_clock_freq,
                                   Arch.spice->spice_params.stimulate_params.op_clock_freq);
   }
 
   if (TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.print_autocheck_top_testbench) {
-    autocheck_top_testbench_file_name = my_strcat(chomped_circuit_name, autocheck_top_testbench_verilog_file_postfix);
-    autocheck_top_testbench_file_path = my_strcat(src_dir_path, autocheck_top_testbench_file_name);
+    std::string autocheck_top_testbench_file_path = std::string(src_dir_path)
+                                                  + std::string(chomped_circuit_name) 
+                                                  + std::string(autocheck_top_testbench_verilog_file_postfix);
+    /* TODO: this is an old function, to be shadowed */
+    /*
     dump_verilog_autocheck_top_testbench(sram_verilog_orgz_info, chomped_circuit_name, 
-                                         autocheck_top_testbench_file_path, src_dir_path, 
+                                         autocheck_top_testbench_file_path.c_str(), src_dir_path, 
                                          vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts, *(Arch.spice));
+     */
+    /* TODO: new function: to be tested */
+    print_verilog_top_testbench(module_manager, bitstream_manager, fabric_bitstream,
+                                sram_verilog_orgz_info->type,
+                                Arch.spice->circuit_lib, global_ports,
+                                L_logical_blocks, device_size, L_grids, L_blocks,
+                                std::string(chomped_circuit_name),
+                                autocheck_top_testbench_file_path,
+                                std::string(src_dir_path),
+                                Arch.spice->spice_params);
   }
 
   /* Output Modelsim Autodeck scripts */
@@ -489,9 +514,15 @@ void vpr_fpga_verilog(ModuleManager& module_manager,
                         sram_verilog_orgz_info->type);
   }
 
-  write_include_netlists(src_dir_path,
-                         chomped_circuit_name,
-                         *(Arch.spice) );
+  /* Print a Verilog file including all the netlists that have been generated */
+  std::string ref_verilog_benchmark_file_name;
+  if (NULL != vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.reference_verilog_benchmark_file) {
+    ref_verilog_benchmark_file_name = std::string(vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.reference_verilog_benchmark_file);
+  }
+  print_include_netlists(std::string(src_dir_path),
+                         std::string(chomped_circuit_name),
+                         ref_verilog_benchmark_file_name,
+                         Arch.spice->circuit_lib);
 
   vpr_printf(TIO_MESSAGE_INFO, "Outputted %lu Verilog modules in total.\n", module_manager.num_modules());  
 

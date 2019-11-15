@@ -16,6 +16,10 @@ constexpr char* SWITCH_BLOCK_MEM_INSTANCE_PREFIX = "mem_";
 constexpr char* CONNECTION_BLOCK_MEM_INSTANCE_PREFIX = "mem_"; 
 constexpr char* MEMORY_MODULE_POSTFIX = "_mem";
 
+/* Multiplexer naming constant strings */
+constexpr char* GRID_MUX_INSTANCE_PREFIX = "mux_"; 
+constexpr char* SWITCH_BLOCK_MUX_INSTANCE_PREFIX = "mux_"; 
+constexpr char* CONNECTION_BLOCK_MUX_INSTANCE_PREFIX = "mux_"; 
 
 /* Bitstream file strings */
 constexpr char* BITSTREAM_XML_FILE_NAME_POSTFIX = "_bitstream.xml";

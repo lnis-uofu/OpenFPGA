@@ -85,26 +85,6 @@ char* format_dir_path(char* dir_path) {
   return ret;
 }
 
-/************************************************
- * Format a path of directory:
- * 1. Replace "\" with "/" 
- * 2. add a "/" if the string does not end with a "/"
- ***********************************************/
-std::string format_dir_path(const std::string& dir_path) {
-  std::string ret = dir_path;
-  
-  /* Replace "\" with "/" */
-  std::replace(ret.begin(), ret.end(), '\\', '/'); 
-
-  /* Complete the string with a "/" if it does not end with that */
-  if ('/' != ret.back()) {
-    ret.push_back('/');
-  }
- 
-  return ret;
-}
-
-
 int try_access_file(char* file_path) {
   /* F_OK checks existence and also R_OK, W_OK, X_OK,
    * for readable, writable, excutable
@@ -250,18 +230,6 @@ char* chomp_file_name_postfix(char* file_name) {
 
   return ret;
 }
-
-void check_file_handler(std::fstream& fp) {
-  /* Make sure we have a valid file handler*/
-  /* Print out debugging information for if the file is not opened/created properly */
-  if (!fp.is_open() || !fp.good()) {
-    vpr_printf(TIO_MESSAGE_ERROR,
-               "(FILE:%s,LINE[%d])Failure in create file!\n",
-               __FILE__, __LINE__); 
-    exit(1);
-  }
-}
-
 
 /* Print SRAM bits, typically in a comment line */
 void fprint_commented_sram_bits(FILE* fp,
@@ -633,21 +601,6 @@ char* my_ito1hot(int in_int, int bin_len) {
   return ret;
 }
 
-/* Convert an integer to an one-hot encoding integer array */
-std::vector<size_t> my_ito1hot_vec(const size_t& in_int, const size_t& bin_len) {
-  /* Make sure we do not have any overflow! */
-  VTR_ASSERT ( (in_int <= bin_len) );
-
-  /* Initialize */
-  std::vector<size_t> ret(bin_len, 0);
-
-  if (bin_len == in_int) {
-    return ret; /* all zero case */
-  }
-  ret[in_int] = 1; /* Keep a good sequence of bits */
- 
-  return ret;
-}
 
 /* Converter an integer to a binary string */
 int* my_itobin_int(int in_int, int bin_len) {
@@ -660,24 +613,6 @@ int* my_itobin_int(int in_int, int bin_len) {
   
   temp = in_int;
   for (i = 0; i < bin_len; i++) {
-    if (1 == temp % 2) { 
-      ret[i] = 1; /* Keep a good sequence of bits */
-    }
-    temp = temp / 2;
-  }
- 
-  return ret;
-}
-
-/* Converter an integer to a binary vector */
-std::vector<size_t> my_itobin_vec(const size_t& in_int, const size_t& bin_len) {
-  std::vector<size_t> ret(bin_len, 0);
-
-  /* Make sure we do not have any overflow! */
-  VTR_ASSERT ( (in_int < pow(2., bin_len)) );
-  
-  size_t temp = in_int;
-  for (size_t i = 0; i < bin_len; i++) {
     if (1 == temp % 2) { 
       ret[i] = 1; /* Keep a good sequence of bits */
     }

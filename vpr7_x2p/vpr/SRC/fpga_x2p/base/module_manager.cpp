@@ -462,6 +462,15 @@ ModulePortId ModuleManager::add_port(const ModuleId& module,
   return port;
 }
 
+/* Set a name for a module port */
+void ModuleManager::set_module_port_name(const ModuleId& module, const ModulePortId& module_port, 
+                                         const std::string& port_name) {
+  /* Validate the id of module port */
+  VTR_ASSERT( valid_module_port_id(module, module_port) );
+  
+  ports_[module][module_port].set_name(port_name);
+}
+
 /* Set a name for a module */
 void ModuleManager::set_module_name(const ModuleId& module, const std::string& name) {
   /* Validate the id of module */

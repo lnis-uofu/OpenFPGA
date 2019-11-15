@@ -50,6 +50,9 @@ void add_pb_type_ports_to_module_manager(ModuleManager& module_manager,
 bool module_net_is_local_wire(const ModuleManager& module_manager, 
                               const ModuleId& module_id, const ModuleNetId& module_net);
 
+bool module_net_include_output_short_connection(const ModuleManager& module_manager, 
+                                                const ModuleId& module_id, const ModuleNetId& module_net);
+
 bool module_net_include_local_short_connection(const ModuleManager& module_manager, 
                                                const ModuleId& module_id, const ModuleNetId& module_net);
 

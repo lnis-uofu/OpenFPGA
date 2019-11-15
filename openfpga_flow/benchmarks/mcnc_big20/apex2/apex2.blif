@@ -1,7 +1,7 @@
 # Benchmark "apex2" written by ABC on Tue Mar 12 09:34:21 2019
 .model apex2
 .inputs i_0_ i_1_ i_2_ i_3_ i_4_ i_5_ i_6_ i_7_ i_8_ i_9_ i_10_ i_11_ i_12_ \
- i_13_ i_14_ i_15_ i_16_ i_17_ i_18_ i_19_ i_20_ i_21_ i_22_ i_23_ i_24_ \
+ i_13_ i_14_ i_16_ i_17_ i_18_ i_19_ i_20_ i_21_ i_22_ i_23_ i_24_ \
  i_25_ i_26_ i_27_ i_28_ i_29_ i_30_ i_31_ i_32_ i_33_ i_34_ i_35_ i_36_ \
  i_37_ i_38_
 .outputs o_0_ o_1_ o_2_

@@ -36,7 +36,7 @@ ModuleId add_circuit_model_to_module_manager(ModuleManager& module_manager,
   /* Add ports */
   /* Find global ports and add one by one */
   for (const auto& port : circuit_lib.model_global_ports(circuit_model, false)) {
-    BasicPort port_info(circuit_lib.port_lib_name(port), circuit_lib.port_size(port));
+    BasicPort port_info(circuit_lib.port_prefix(port), circuit_lib.port_size(port));
     module_manager.add_port(module, port_info, ModuleManager::MODULE_GLOBAL_PORT);  
   }
 
@@ -56,7 +56,7 @@ ModuleId add_circuit_model_to_module_manager(ModuleManager& module_manager,
   /* Input ports (ignore all the global ports when searching the circuit_lib */
   for (const auto& kv : port_type2type_map) {
     for (const auto& port : circuit_lib.model_ports_by_type(circuit_model, kv.first, true)) {
-      BasicPort port_info(circuit_lib.port_lib_name(port), circuit_lib.port_size(port));
+      BasicPort port_info(circuit_lib.port_prefix(port), circuit_lib.port_size(port));
       module_manager.add_port(module, port_info, kv.second);  
     }
   }
@@ -305,6 +305,35 @@ bool module_net_is_local_wire(const ModuleManager& module_manager,
 }
 
 /********************************************************************
+ * Identify if a net is an output short connection inside a module: 
+ * The short connection is defined as the direct connection
+ * between two outputs port of the module
+ *
+ *            module
+ *            +-----------------------------+
+ *                                          |
+ *               src------>+--------------->|--->outputA
+ *                         |                |
+ *                         |                |
+ *                         +--------------->|--->outputB
+ *            +-----------------------------+
+
+ *******************************************************************/
+bool module_net_include_output_short_connection(const ModuleManager& module_manager, 
+                                                const ModuleId& module_id, const ModuleNetId& module_net) {
+  /* Check all the sink modules of the net */
+  size_t contain_num_module_output = 0;
+  for (ModuleId sink_module : module_manager.net_sink_modules(module_id, module_net)) {
+    if (module_id == sink_module) {
+      contain_num_module_output++;
+    }
+  }
+ 
+  /* If we have found more than 1 module outputs, it indicated output short connection! */
+  return (1 < contain_num_module_output);
+}
+
+/********************************************************************
  * Identify if a net is a local short connection inside a module: 
  * The short connection is defined as the direct connection
  * between an input port of the module and an output port of the module
@@ -368,7 +397,7 @@ void add_primitive_pb_type_module_nets(ModuleManager& module_manager,
     BasicPort src_port = module_manager.module_port(pb_type_module, src_module_port_id);
 
     /* Get the des module port id */
-    std::string des_module_port_name = circuit_lib.port_lib_name(pb_type_port->circuit_model_port);
+    std::string des_module_port_name = circuit_lib.port_prefix(pb_type_port->circuit_model_port);
     ModulePortId des_module_port_id = module_manager.find_module_port(child_module, des_module_port_name);
     VTR_ASSERT(ModulePortId::INVALID() != des_module_port_id);
     BasicPort des_port = module_manager.module_port(child_module, des_module_port_id);
@@ -529,11 +558,11 @@ void add_module_nets_between_logic_and_memory_sram_bus(ModuleManager& module_man
   std::vector<std::string> logic_model_sram_port_names;
   /* Regular sram port goes first */
   for (CircuitPortId regular_sram_port : find_circuit_regular_sram_ports(circuit_lib, logic_model)) {
-    logic_model_sram_port_names.push_back(circuit_lib.port_lib_name(regular_sram_port));
+    logic_model_sram_port_names.push_back(circuit_lib.port_prefix(regular_sram_port));
   }
   /* Mode-select sram port goes first */
   for (CircuitPortId mode_select_sram_port : find_circuit_mode_select_sram_ports(circuit_lib, logic_model)) {
-    logic_model_sram_port_names.push_back(circuit_lib.port_lib_name(mode_select_sram_port));
+    logic_model_sram_port_names.push_back(circuit_lib.port_prefix(mode_select_sram_port));
   }
   /* Find the port ids in the memory */
   std::vector<ModulePortId> logic_module_sram_port_ids;
@@ -565,11 +594,11 @@ void add_module_nets_between_logic_and_memory_sram_bus(ModuleManager& module_man
   std::vector<std::string> logic_model_sramb_port_names;
   /* Regular sram port goes first */
   for (CircuitPortId regular_sram_port : find_circuit_regular_sram_ports(circuit_lib, logic_model)) {
-    logic_model_sramb_port_names.push_back(circuit_lib.port_lib_name(regular_sram_port) + std::string("_inv"));
+    logic_model_sramb_port_names.push_back(circuit_lib.port_prefix(regular_sram_port) + std::string("_inv"));
   }
   /* Mode-select sram port goes first */
   for (CircuitPortId mode_select_sram_port : find_circuit_mode_select_sram_ports(circuit_lib, logic_model)) {
-    logic_model_sramb_port_names.push_back(circuit_lib.port_lib_name(mode_select_sram_port) + std::string("_inv"));
+    logic_model_sramb_port_names.push_back(circuit_lib.port_prefix(mode_select_sram_port) + std::string("_inv"));
   }
   /* Find the port ids in the memory */
   std::vector<ModulePortId> logic_module_sramb_port_ids;

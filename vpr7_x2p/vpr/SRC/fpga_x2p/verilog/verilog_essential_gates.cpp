@@ -40,7 +40,7 @@ void print_verilog_power_gated_invbuf_body(std::fstream& fp,
   print_verilog_comment(fp, std::string("----- Verilog codes of a power-gated inverter -----"));
 
   /* Create a sensitive list */
-  fp << "\treg " << circuit_lib.port_lib_name(output_port) << "_reg;" << std::endl;
+  fp << "\treg " << circuit_lib.port_prefix(output_port) << "_reg;" << std::endl;
 
   fp << "\talways @(" << std::endl;
   /* Power-gate port first*/
@@ -49,9 +49,9 @@ void print_verilog_power_gated_invbuf_body(std::fstream& fp,
     if (0 < &power_gate_port - &power_gate_ports[0]) {
       fp << ",";
     }
-    fp << circuit_lib.port_lib_name(power_gate_port);
+    fp << circuit_lib.port_prefix(power_gate_port);
   }
-  fp << circuit_lib.port_lib_name(input_port) << ") begin" << std::endl; 
+  fp << circuit_lib.port_prefix(input_port) << ") begin" << std::endl; 
 
   /* Dump the case of power-gated */
   fp << "\t\tif (";
@@ -71,14 +71,14 @@ void print_verilog_power_gated_invbuf_body(std::fstream& fp,
         fp << "~";
       }
       
-      fp << circuit_lib.port_lib_name(power_gate_port) << "[" << power_gate_pin << "])";
+      fp << circuit_lib.port_prefix(power_gate_port) << "[" << power_gate_pin << "])";
 
       port_cnt++; /* Update port counter*/
     }
   }
 
   fp << ") begin" << std::endl;
-  fp << "\t\t\tassign " << circuit_lib.port_lib_name(output_port) << "_reg = "; 
+  fp << "\t\t\tassign " << circuit_lib.port_prefix(output_port) << "_reg = "; 
 
   /* Branch on the type of inverter/buffer: 
    * 1. If this is an inverter or an tapered(multi-stage) buffer with odd number of stages, 
@@ -93,12 +93,12 @@ void print_verilog_power_gated_invbuf_body(std::fstream& fp,
     fp << "~";
   } 
 
-  fp << circuit_lib.port_lib_name(input_port) << ";" << std::endl;
+  fp << circuit_lib.port_prefix(input_port) << ";" << std::endl;
   fp << "\t\tend else begin" << std::endl;
-  fp << "\t\t\tassign " << circuit_lib.port_lib_name(output_port) << "_reg = 1'bz;" << std::endl;
+  fp << "\t\t\tassign " << circuit_lib.port_prefix(output_port) << "_reg = 1'bz;" << std::endl;
   fp << "\t\tend" << std::endl;
   fp << "\tend" << std::endl;
-  fp << "\tassign " << circuit_lib.port_lib_name(output_port) << " = " << circuit_lib.port_lib_name(output_port) << "_reg;" << std::endl;
+  fp << "\tassign " << circuit_lib.port_prefix(output_port) << " = " << circuit_lib.port_prefix(output_port) << "_reg;" << std::endl;
 }
 
 /************************************************
@@ -116,7 +116,7 @@ void print_verilog_invbuf_body(std::fstream& fp,
 
   print_verilog_comment(fp, std::string("----- Verilog codes of a regular inverter -----"));
   
-  fp << "\tassign " << circuit_lib.port_lib_name(output_port) << " = (" << circuit_lib.port_lib_name(input_port) << " === 1'bz)? $random : ";
+  fp << "\tassign " << circuit_lib.port_prefix(output_port) << " = (" << circuit_lib.port_prefix(input_port) << " === 1'bz)? $random : ";
 
   /* Branch on the type of inverter/buffer: 
    * 1. If this is an inverter or an tapered(multi-stage) buffer with odd number of stages, 
@@ -131,7 +131,7 @@ void print_verilog_invbuf_body(std::fstream& fp,
     fp << "~";
   } 
 
-  fp << circuit_lib.port_lib_name(input_port) << ";" << std::endl;
+  fp << circuit_lib.port_prefix(input_port) << ";" << std::endl;
 }
 
 /************************************************
@@ -282,8 +282,8 @@ void print_verilog_passgate_module(ModuleManager& module_manager,
   /* Dump logics: we propagate input to the output when the gate is '1' 
    * the input is blocked from output when the gate is '0'
    */
-  fp << "\tassign " << circuit_lib.port_lib_name(output_ports[0]) << " = ";
-  fp << circuit_lib.port_lib_name(input_ports[1]) << " ? " << circuit_lib.port_lib_name(input_ports[0]);
+  fp << "\tassign " << circuit_lib.port_prefix(output_ports[0]) << " = ";
+  fp << circuit_lib.port_prefix(input_ports[1]) << " ? " << circuit_lib.port_prefix(input_ports[0]);
   fp << " : 1'bz;" << std::endl;
 
   /* Print timing info */
@@ -329,7 +329,7 @@ void print_verilog_and_or_gate_body(std::fstream& fp,
 
   for (const auto& output_port : output_ports) {
     for (const auto& output_pin : circuit_lib.pins(output_port)) {
-      BasicPort output_port_info(circuit_lib.port_lib_name(output_port), output_pin, output_pin);
+      BasicPort output_port_info(circuit_lib.port_prefix(output_port), output_pin, output_pin);
       fp << "\tassign " << generate_verilog_port(VERILOG_PORT_CONKT, output_port_info);
       fp << " = ";
 
@@ -341,7 +341,7 @@ void print_verilog_and_or_gate_body(std::fstream& fp,
             fp << " " << gate_verilog_operator << " ";
           }
 
-          BasicPort input_port_info(circuit_lib.port_lib_name(input_port), input_pin, input_pin);
+          BasicPort input_port_info(circuit_lib.port_prefix(input_port), input_pin, input_pin);
           fp << generate_verilog_port(VERILOG_PORT_CONKT, input_port_info);
             
           /* Increment the counter for port */ 
@@ -413,10 +413,10 @@ void print_verilog_mux2_gate_body(std::fstream& fp,
    * the third input is the select port  
    */
   fp << "\tassign ";
-  BasicPort out_port_info(circuit_lib.port_lib_name(output_ports[0]), 0, 0);
-  BasicPort sel_port_info(circuit_lib.port_lib_name(input_ports[2]), 0, 0);
-  BasicPort in0_port_info(circuit_lib.port_lib_name(input_ports[0]), 0, 0);
-  BasicPort in1_port_info(circuit_lib.port_lib_name(input_ports[1]), 0, 0);
+  BasicPort out_port_info(circuit_lib.port_prefix(output_ports[0]), 0, 0);
+  BasicPort sel_port_info(circuit_lib.port_prefix(input_ports[2]), 0, 0);
+  BasicPort in0_port_info(circuit_lib.port_prefix(input_ports[0]), 0, 0);
+  BasicPort in1_port_info(circuit_lib.port_prefix(input_ports[1]), 0, 0);
 
   fp << generate_verilog_port(VERILOG_PORT_CONKT, out_port_info);
   fp << " = ";

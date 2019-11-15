@@ -92,17 +92,17 @@ void add_module_nets_clb2clb_direct_connection(ModuleManager& module_manager,
   /* Find inputs and outputs of the direct circuit module */
   std::vector<CircuitPortId> direct_input_ports = circuit_lib.model_ports_by_type(direct.circuit_model, SPICE_MODEL_PORT_INPUT, true);
   VTR_ASSERT(1 == direct_input_ports.size());
-  ModulePortId direct_input_port_id = module_manager.find_module_port(direct_module, circuit_lib.port_lib_name(direct_input_ports[0]));
+  ModulePortId direct_input_port_id = module_manager.find_module_port(direct_module, circuit_lib.port_prefix(direct_input_ports[0]));
   VTR_ASSERT(true == module_manager.valid_module_port_id(direct_module, direct_input_port_id));
   VTR_ASSERT(1 == module_manager.module_port(direct_module, direct_input_port_id).get_width());
 
   std::vector<CircuitPortId> direct_output_ports = circuit_lib.model_ports_by_type(direct.circuit_model, SPICE_MODEL_PORT_OUTPUT, true);
   VTR_ASSERT(1 == direct_output_ports.size());
-  ModulePortId direct_output_port_id = module_manager.find_module_port(direct_module, circuit_lib.port_lib_name(direct_output_ports[0]));
+  ModulePortId direct_output_port_id = module_manager.find_module_port(direct_module, circuit_lib.port_prefix(direct_output_ports[0]));
   VTR_ASSERT(true == module_manager.valid_module_port_id(direct_module, direct_output_port_id));
   VTR_ASSERT(1 == module_manager.module_port(direct_module, direct_output_port_id).get_width());
 
-  for (size_t pin_id : src_clb_port.pins()) {
+  for (size_t pin_id = 0; pin_id < src_clb_port.pins().size(); ++pin_id) {
     /* Generate the pin name of source port/pin in the grid */
     size_t src_pin_height = find_grid_pin_height(grids, src_clb_coord, src_clb_port.pins()[pin_id]);
     e_side src_pin_grid_side = find_grid_pin_side(device_size, grids, src_clb_coord, src_pin_height, src_clb_port.pins()[pin_id]);

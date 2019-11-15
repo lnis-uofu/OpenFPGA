@@ -29,4 +29,6 @@ size_t find_circuit_num_config_bits(const CircuitLibrary& circuit_lib,
 
 std::vector<CircuitPortId> find_circuit_library_global_ports(const CircuitLibrary& circuit_lib);
 
+std::vector<std::string> find_circuit_library_unique_verilog_netlists(const CircuitLibrary& circuit_lib);
+
 #endif

@@ -51,4 +51,7 @@ size_t find_switch_block_num_shared_conf_bits(t_sram_orgz_info* cur_sram_orgz_in
                                               const std::vector<t_switch_inf>& rr_switches,
                                               const RRGSB& rr_gsb);
 
+bool connection_block_contain_only_routing_tracks(const RRGSB& rr_gsb,
+                                                  const t_rr_type& cb_type);
+
 #endif

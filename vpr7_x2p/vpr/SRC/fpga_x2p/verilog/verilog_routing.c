@@ -4064,7 +4064,7 @@ void print_verilog_flatten_connection_block_modules(ModuleManager& module_manage
        * We will skip those modules
        */
       const RRGSB& rr_gsb = L_device_rr_gsb.get_gsb(ix, iy);
-      if ( (TRUE != is_cb_exist(CHANX, rr_gsb.get_cb_x(cb_type), rr_gsb.get_cb_y(cb_type)))
+      if ( (TRUE != is_cb_exist(cb_type, rr_gsb.get_cb_x(cb_type), rr_gsb.get_cb_y(cb_type)))
         || (true != rr_gsb.is_cb_exist(cb_type))) {
         continue;
       }

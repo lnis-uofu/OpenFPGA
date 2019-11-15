@@ -177,8 +177,8 @@ void write_formality_script (t_syn_verilog_opts fpga_verilog_opts,
   char* formality_script_file_name = NULL;
   char* benchmark_path = NULL;
   char* original_output_name = NULL;
-  char WriteBuffer[200];
-  char INI_lbl[20];
+  char WriteBuffer[4096];
+  char INI_lbl[4096];
 /*  int output_length; */
 /*  int pos; */
   FILE* fp = NULL;

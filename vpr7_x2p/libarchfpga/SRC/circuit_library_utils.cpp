@@ -226,7 +226,7 @@ std::vector<CircuitPortId> find_circuit_library_global_ports(const CircuitLibrar
     /* Check if a same port with the same name has already been in the list */
     bool add_to_list = true;
     for (const auto& global_port : global_ports) {
-      if (0 == circuit_lib.port_lib_name(port).compare(circuit_lib.port_lib_name(global_port))) {
+      if (0 == circuit_lib.port_prefix(port).compare(circuit_lib.port_prefix(global_port))) {
         /* Same name, skip list update */
         add_to_list = false;
         break;
@@ -239,4 +239,27 @@ std::vector<CircuitPortId> find_circuit_library_global_ports(const CircuitLibrar
   } 
 
   return global_ports;
+}
+
+/********************************************************************
+ * A generic function to find all the unique user-defined
+ * Verilog netlists in a circuit library
+ * Netlists with same names will be considered as one
+ *******************************************************************/
+std::vector<std::string> find_circuit_library_unique_verilog_netlists(const CircuitLibrary& circuit_lib) {
+  std::vector<std::string> netlists;
+
+  for (const CircuitModelId& model : circuit_lib.models()) {
+    /* Skip empty netlist names */
+    if (true == circuit_lib.model_verilog_netlist(model).empty()) {
+      continue;
+    }
+    /* See if the netlist name is already in the list */
+    std::vector<std::string>::iterator it = std::find(netlists.begin(), netlists.end(), circuit_lib.model_verilog_netlist(model));
+    if (it == netlists.end()) {
+      netlists.push_back(circuit_lib.model_verilog_netlist(model));
+    }
+  }
+
+ return netlists;
 }

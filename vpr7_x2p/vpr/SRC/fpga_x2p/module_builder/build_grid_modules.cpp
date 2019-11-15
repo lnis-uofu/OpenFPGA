@@ -369,7 +369,7 @@ void build_primitive_block_module(ModuleManager& module_manager,
     for (auto port : primitive_model_inout_ports) {
       BasicPort module_port(generate_fpga_global_io_port_name(std::string(gio_inout_prefix), circuit_lib, primitive_model), circuit_lib.port_size(port));
       ModulePortId primitive_gpio_port_id = module_manager.add_port(primitive_module, module_port, ModuleManager::MODULE_GPIO_PORT);
-      ModulePortId logic_gpio_port_id = module_manager.find_module_port(logic_module, circuit_lib.port_lib_name(port));
+      ModulePortId logic_gpio_port_id = module_manager.find_module_port(logic_module, circuit_lib.port_prefix(port));
       BasicPort logic_gpio_port = module_manager.module_port(logic_module, logic_gpio_port_id);
       VTR_ASSERT(logic_gpio_port.get_width() == module_port.get_width());
 
@@ -483,7 +483,7 @@ void add_module_pb_graph_pin_interc(ModuleManager& module_manager,
   }
 
   /* Initialize the interconnection type that will be physically implemented in module */
-  enum e_interconnect verilog_interc_type = determine_actual_pb_interc_type(cur_interc, fan_in);
+  enum e_interconnect interc_type = determine_actual_pb_interc_type(cur_interc, fan_in);
 
   /* Find input ports of the wire module */
   std::vector<CircuitPortId> interc_model_inputs = circuit_lib.model_ports_by_type(cur_interc->circuit_model, SPICE_MODEL_PORT_INPUT, true); /* the last argument to guarantee that we ignore any global inputs */
@@ -497,7 +497,7 @@ void add_module_pb_graph_pin_interc(ModuleManager& module_manager,
   /* Branch on the type of physical implementation,
    * We add instances of programmable interconnection 
    */ 
-  switch (verilog_interc_type) {
+  switch (interc_type) {
   case DIRECT_INTERC: {
     /* Ensure direct interc has only one fan-in */
     VTR_ASSERT(1 == fan_in);
@@ -521,7 +521,7 @@ void add_module_pb_graph_pin_interc(ModuleManager& module_manager,
     /* Get the instance id and add an instance of wire */
     size_t wire_instance = module_manager.num_instance(pb_module, wire_module);
     module_manager.add_child_module(pb_module, wire_module);
-   
+
     /* Ensure input and output ports of the wire model has only 1 pin respectively */
     VTR_ASSERT(1 == circuit_lib.port_size(interc_model_inputs[0]));
     VTR_ASSERT(1 == circuit_lib.port_size(interc_model_outputs[0]));
@@ -530,7 +530,7 @@ void add_module_pb_graph_pin_interc(ModuleManager& module_manager,
     /* First net is to connect input of src_pb_graph_node to input of the wire module */ 
     add_module_pb_graph_pin2pin_net(module_manager, pb_module, 
                                     wire_module, wire_instance, 
-                                    circuit_lib.port_lib_name(interc_model_inputs[0]),
+                                    circuit_lib.port_prefix(interc_model_inputs[0]),
                                     0, /* wire input port has only 1 pin */
                                     module_name_prefix,
                                     src_pb_graph_pin, 
@@ -539,7 +539,7 @@ void add_module_pb_graph_pin_interc(ModuleManager& module_manager,
     /* Second net is to connect output of the wire module to output of des_pb_graph_pin */ 
     add_module_pb_graph_pin2pin_net(module_manager, pb_module, 
                                     wire_module, wire_instance, 
-                                    circuit_lib.port_lib_name(interc_model_outputs[0]),
+                                    circuit_lib.port_prefix(interc_model_outputs[0]),
                                     0, /* wire output port has only 1 pin */
                                     module_name_prefix,
                                     des_pb_graph_pin, 
@@ -559,6 +559,11 @@ void add_module_pb_graph_pin_interc(ModuleManager& module_manager,
     /* Instanciate the MUX */
     size_t mux_instance = module_manager.num_instance(pb_module, mux_module);
     module_manager.add_child_module(pb_module, mux_module);
+    /* Give an instance name: this name should be consistent with the block name given in SDC generator,
+     * If you want to bind the SDC generation to modules
+     */
+    std::string mux_instance_name = generate_pb_mux_instance_name(GRID_MUX_INSTANCE_PREFIX, des_pb_graph_pin, std::string(""));
+    module_manager.set_child_instance_name(pb_module, mux_module, mux_instance, mux_instance_name);
 
     /* Instanciate a memory module for the MUX */
     std::string mux_mem_module_name = generate_mux_subckt_name(circuit_lib, 
@@ -610,7 +615,7 @@ void add_module_pb_graph_pin_interc(ModuleManager& module_manager,
       /* Add a net, set its source and sink */
       add_module_pb_graph_pin2pin_net(module_manager, pb_module, 
                                       mux_module, mux_instance, 
-                                      circuit_lib.port_lib_name(interc_model_inputs[0]),
+                                      circuit_lib.port_prefix(interc_model_inputs[0]),
                                       mux_input_pin_id,
                                       module_name_prefix,
                                       src_pb_graph_pin, 
@@ -623,7 +628,7 @@ void add_module_pb_graph_pin_interc(ModuleManager& module_manager,
     /* Add a net to wire the output of the multiplexer to des_pb_graph_pin */
     add_module_pb_graph_pin2pin_net(module_manager, pb_module, 
                                     mux_module, mux_instance, 
-                                    circuit_lib.port_lib_name(interc_model_outputs[0]),
+                                    circuit_lib.port_prefix(interc_model_outputs[0]),
                                     0, /* MUX should have only 1 pin in its output port */
                                     module_name_prefix,
                                     des_pb_graph_pin, 
@@ -921,7 +926,7 @@ void rec_build_physical_block_modules(ModuleManager& module_manager,
       /* Add the memory module as a child of primitive module */
       module_manager.add_child_module(pb_module, child_pb_module); 
 
-      /* Set an instance name to bind to a block in bitstream generation */
+      /* Set an instance name to bind to a block in bitstream generation and SDC generation! */
       std::string child_pb_instance_name = generate_physical_block_instance_name(pb_module_name_prefix, &(physical_pb_type->modes[physical_mode_index].pb_type_children[ichild]), inst);
       module_manager.set_child_instance_name(pb_module, child_pb_module, child_instance_id, child_pb_instance_name);
 

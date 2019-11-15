@@ -146,7 +146,7 @@
         <port name="Q"/>
       </output_ports>
     </model>
-    <model name="dpram">
+    <model name="dual_port_ram_32x512">
       <input_ports>
         <port name="wen"/>     <!-- control -->
         <port name="ren"/>     <!-- control -->
@@ -163,8 +163,8 @@
   <!-- ODIN II specific config ends -->
 
   <!-- Physical descriptions begin -->
-  <layout auto="1.0" tileable_routing="off"/>
-  <!--layout width="12" height="12" tileable_routing="off"/-->
+  <layout auto="1.0" tileable_routing="on"/>
+  <!--layout width="5" height="2" tileable_routing="on"/-->
   <spice_settings>
     <parameters>
       <options sim_temp="25" post="off" captab="off" fast="on"/>
@@ -344,14 +344,14 @@
         <port type="output" prefix="out" size="1"/>
       </circuit_model>
       <!--DFF subckt ports should be defined as <D> <Q> <CLK> <RESET> <SET>  -->
-      <circuit_model type="ff" name="static_dff" prefix="dff" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/ff.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerlogNetlists/ff.v">
+      <circuit_model type="ff" name="static_dff" prefix="dff" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/ff.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/ff.v">
          <design_technology type="cmos"/>
          <input_buffer exist="on" circuit_model_name="INV1X"/>
          <output_buffer exist="on" circuit_model_name="INV1X"/>
          <pass_gate_logic circuit_model_name="TGATEX1"/>
          <port type="input" prefix="D" size="1"/>
-         <port type="input" prefix="Set" size="1" is_global="true" default_val="0" is_set="true"/>
-         <port type="input" prefix="Reset" size="1" is_global="true" default_val="0" is_reset="true"/>
+         <port type="input" prefix="set" size="1" is_global="true" default_val="0" is_set="true"/>
+         <port type="input" prefix="reset" size="1" is_global="true" default_val="0" is_reset="true"/>
          <port type="output" prefix="Q" size="1"/>
          <port type="clock" prefix="clk" size="1" is_global="true" default_val="0" />
       </circuit_model>
@@ -386,17 +386,17 @@
         <port type="sram" prefix="mode" size="2" mode_select="true" circuit_model_name="sc_dff_compact" default_val="1"/>
       </circuit_model>
       <!--Scan-chain DFF subckt ports should be defined as <D> <Q> <Qb> <CLK> <RESET> <SET>  -->
-      <circuit_model type="sff" name="sc_dff_compact" prefix="scff" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/ff.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerlogNetlists/ff.v">
+      <circuit_model type="sff" name="sc_dff_compact" prefix="scff" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/ff.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/ff.v">
          <design_technology type="cmos"/>
          <input_buffer exist="on" circuit_model_name="INV1X"/>
          <output_buffer exist="on" circuit_model_name="INV1X"/>
          <pass_gate_logic circuit_model_name="TGATEX1"/>
-         <port type="input" prefix="pReset" size="1" is_global="true" default_val="0" is_reset="true" is_prog="true"/>
+         <port type="input" prefix="pReset" lib_name="reset" size="1" is_global="true" default_val="0" is_reset="true" is_prog="true"/>
          <!-- <port type="input" prefix="pSet" size="1" is_global="true" default_val="0" is_set="true" is_prog="true"/> -->
          <port type="input" prefix="D" size="1"/>
          <port type="output" prefix="Q" size="1"/>
          <port type="output" prefix="Qb" size="1"/>
-         <port type="clock" prefix="prog_clk" size="1" is_global="true" default_val="0" is_prog="true"/>
+         <port type="clock" prefix="prog_clk" lib_name="clk" size="1" is_global="true" default_val="0" is_prog="true"/>
       </circuit_model>
       <circuit_model type="iopad" name="iopad" prefix="iopad" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/io.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/io.v">
         <design_technology type="cmos"/>
@@ -421,16 +421,16 @@
          <port type="output" prefix="sumout" size="1"/>
          <port type="output" prefix="cout" size="1"/>
       </circuit_model>
-      <circuit_model type="hard_logic" name="dpram" prefix="dpram" dump_explicit_port_map="true" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/spram.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/memory_wrapper.v">
+      <circuit_model type="hard_logic" name="dual_port_ram_32x512" prefix="dual_port_ram_32x512" dump_explicit_port_map="true" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/spram.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/dpram.v">
         <design_technology type="cmos"/>
          <input_buffer exist="on" circuit_model_name="buf1"/>
          <output_buffer exist="on" circuit_model_name="buf1"/>
-         <port type="input" prefix="waddr" size="11"/>
-         <port type="input" prefix="raddr" size="11"/>
-         <port type="input" prefix="d_in" size="64"/>
+         <port type="input" prefix="waddr" size="9"/>
+         <port type="input" prefix="raddr" size="9"/>
+         <port type="input" prefix="d_in" size="32"/>
          <port type="input" prefix="wen" size="1"/>
          <port type="input" prefix="ren" size="1"/>
-         <port type="output" prefix="d_out" size="64"/>
+         <port type="output" prefix="d_out" size="32"/>
          <port type="clock" prefix="clk" size="1" is_global="true" default_val="0"/>
       </circuit_model>
       <circuit_model type="sram" name="sram6T" prefix="sram" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/sram.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/sram.v">
@@ -613,31 +613,31 @@
 
     <!-- SPRAM instanciation -->
 
-    <pb_type name="memory_dp" height="6" area="548000">
+    <pb_type name="memory_dp" height="2" area="548000">
 
-      <input name="waddr" num_pins="11" equivalent="false"/>
-      <input name="raddr" num_pins="11" equivalent="false"/>
-      <input name="d_in" num_pins="64" equivalent="false"/>
+      <input name="waddr" num_pins="9" equivalent="false"/>
+      <input name="raddr" num_pins="9" equivalent="false"/>
+      <input name="d_in" num_pins="32" equivalent="false"/>
       <input name="wen" num_pins="1"/>
       <input name="ren" num_pins="1"/>
-      <output name="d_out" num_pins="64" equivalent="false"/>
+      <output name="d_out" num_pins="32" equivalent="false"/>
       <clock name="clk" num_pins="1"/>
 
       <pb_type name="memory" num_pb="1">
-        <input name="waddr" num_pins="11"/>
-        <input name="raddr" num_pins="11"/>
-        <input name="d_in" num_pins="64"/>
+        <input name="waddr" num_pins="9"/>
+        <input name="raddr" num_pins="9"/>
+        <input name="d_in" num_pins="32"/>
         <input name="wen" num_pins="1"/>
         <input name="ren" num_pins="1"/>
-        <output name="d_out" num_pins="64"/>
+        <output name="d_out" num_pins="32"/>
         <clock name="clk" num_pins="1"/>
-          <pb_type name="dpram" num_pb="1" blif_model=".subckt dpram" circuit_model_name="dpram">
-            <input name="waddr" num_pins="11" port_class="address"/>
-            <input name="raddr" num_pins="11" port_class="address"/>
-            <input name="d_in" num_pins="64" port_class="data_in"/>
+          <pb_type name="dpram" num_pb="1" blif_model=".subckt dual_port_ram_32x512" circuit_model_name="dual_port_ram_32x512">
+            <input name="waddr" num_pins="9" port_class="address"/>
+            <input name="raddr" num_pins="9" port_class="address"/>
+            <input name="d_in" num_pins="32" port_class="data_in"/>
             <input name="wen" num_pins="1" port_class="write_en"/>
-            <input name="ren" num_pins="1" port_class="write_en"/>
-            <output name="d_out" num_pins="64" port_class="data_out"/>
+            <input name="ren" num_pins="1" port_class="read_en"/>
+            <output name="d_out" num_pins="32" port_class="data_out"/>
             <clock name="clk" num_pins="1" port_class="clock"/>
           </pb_type>
           <interconnect>
@@ -647,8 +647,8 @@
             <direct name="address2" input="memory.raddr" output="dpram.raddr">
               <delay_constant max="132e-12" in_port="memory.raddr" out_port="dpram.raddr"/>
             </direct>
-            <direct name="data1" input="memory.d_in[63:0]" output="dpram.d_in">
-              <delay_constant max="132e-12" in_port="memory.d_in[63:0]" out_port="dpram.d_in"/>
+            <direct name="data1" input="memory.d_in[31:0]" output="dpram.d_in">
+              <delay_constant max="132e-12" in_port="memory.d_in[31:0]" out_port="dpram.d_in"/>
             </direct>
             <direct name="writeen1" input="memory.wen" output="dpram.wen">
               <delay_constant max="132e-12" in_port="memory.wen" out_port="dpram.wen"/>
@@ -656,8 +656,8 @@
             <direct name="readen1" input="memory.ren" output="dpram.ren">
               <delay_constant max="132e-12" in_port="memory.ren" out_port="dpram.ren"/>
             </direct>
-            <direct name="dataout1" input="dpram.d_out" output="memory.d_out[63:0]">
-              <delay_constant max="40e-12" in_port="dpram.d_out" out_port="memory.d_out[63:0]"/>
+            <direct name="dataout1" input="dpram.d_out" output="memory.d_out[31:0]">
+              <delay_constant max="40e-12" in_port="dpram.d_out" out_port="memory.d_out[31:0]"/>
             </direct>
             <direct name="clk" input="memory.clk" output="dpram.clk">
             </direct>
@@ -674,13 +674,13 @@
         <direct name="clk" input="memory_dp.clk" output="memory.clk"/>
       </interconnect>
       <fc default_in_type="frac" default_in_val="0.15" default_out_type="frac" default_out_val="0.10"/>
-      <pinlocations pattern="spread"/>
-      <!--pinlocations pattern="custom">
+      <!--pinlocations pattern="spread"/-->
+      <pinlocations pattern="custom">
         <loc side="left">memory_dp.d_in</loc>
-        <loc side="top" offset="5">memory_dp.clk memory_dp.wen memory_dp.waddr</loc>
+        <loc side="top" offset="1">memory_dp.clk memory_dp.wen memory_dp.waddr</loc>
         <loc side="right">memory_dp.d_out</loc>
         <loc side="bottom">memory_dp.ren memory_dp.raddr</loc>
-      </pinlocations-->
+      </pinlocations>
 
       <!-- Place this memory block every 8 columns from (and including) the second column -->
       <gridlocations>

@@ -1281,6 +1281,8 @@ struct s_syn_verilog_opts {
   boolean print_report_timing_tcl;
   boolean print_sdc_pnr;
   boolean print_sdc_analysis;
+  boolean print_simulation_ini;
+  char* simulation_ini_path;
 };
 
 /* Xifan TANG: bitstream generator */

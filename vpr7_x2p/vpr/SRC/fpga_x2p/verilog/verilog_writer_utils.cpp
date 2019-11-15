@@ -6,6 +6,8 @@
 #include <ctime>
 #include <string>
 #include <fstream>
+#include <iomanip>
+
 #include "vtr_assert.h"
 
 /* Device-level header files */
@@ -40,7 +42,7 @@ void print_verilog_file_header(std::fstream& fp,
   fp << "//-------------------------------------------" << std::endl;
   fp << "//----- Time scale -----" << std::endl;
   fp << "`timescale 1ns / 1ps" << std::endl;
-  fp << "\n";
+  fp << std::endl;
 }
 
 /********************************************************************
@@ -50,9 +52,18 @@ void print_verilog_include_netlist(std::fstream& fp,
                                    const std::string& netlist_name) {
   check_file_handler(fp);
 
-  fp << "//------ Include external netlist: " << netlist_name << " -----" << std::endl;
   fp << "`include \"" << netlist_name << "\"" << std::endl; 
-  fp << "//------ End include external netlist: " << netlist_name << " -----" << std::endl;
+}
+
+/********************************************************************
+ * Print Verilog codes to define a preprocessing flag
+ *******************************************************************/
+void print_verilog_define_flag(std::fstream& fp, 
+                               const std::string& flag_name,
+                               const int& flag_value) {
+  check_file_handler(fp);
+
+  fp << "`define " << flag_name << " " << flag_value << std::endl; 
 }
 
 /************************************************
@@ -1208,5 +1219,151 @@ void print_verilog_formal_verification_mux_sram_ports_wiring(std::fstream& fp,
   formal_verification_port.set_lsb(fm_config_bus.get_lsb());
   formal_verification_port.set_msb(fm_config_bus.get_msb());
   print_verilog_wire_connection(fp, mux_sram_output, formal_verification_port, false);
+}
+
+/********************************************************************
+ * Print stimuli for a pulse generation
+ *
+ *                |<--- pulse width --->|
+ *                                      +------ flip_value
+ *                                      |      
+ *  initial_value ----------------------+       
+ *
+ *******************************************************************/
+void print_verilog_pulse_stimuli(std::fstream& fp, 
+                                 const BasicPort& port,
+                                 const size_t& initial_value,
+                                 const float& pulse_width,
+                                 const size_t& flip_value) {
+  /* Validate the file stream */
+  check_file_handler(fp);
+
+  /* Config_done signal: indicate when configuration is finished */
+  fp << "initial" << std::endl;
+  fp << "\tbegin" << std::endl;
+  fp << "\t";
+  std::vector<size_t> initial_values(port.get_width(), initial_value);
+  fp << "\t";
+  fp << generate_verilog_port_constant_values(port, initial_values);
+  fp << ";" << std::endl;
+  
+  /* if flip_value is the same as initial value, we do not need to flip the signal ! */
+  if (flip_value != initial_value) {
+    fp << "\t" << "#" << std::setprecision(10) << pulse_width;
+    std::vector<size_t> port_flip_values(port.get_width(), flip_value);
+    fp << "\t";
+    fp << generate_verilog_port_constant_values(port, port_flip_values);
+    fp << ";" << std::endl;
+  }
+
+  fp << "\tend" << std::endl;
+
+  /* Print an empty line as splitter */
+  fp << std::endl;
+}
+
+/********************************************************************
+ * Print stimuli for a pulse generation
+ * This function supports multiple signal switching under different pulse width
+ *
+ *                 |<-- wait condition -->|
+ *                                        |<--- pulse width --->|
+ *                                                              +------ flip_values
+ *                                                              |      
+ *  initial_value -------  ...  --------------------------------+       
+ *
+ *******************************************************************/
+void print_verilog_pulse_stimuli(std::fstream& fp, 
+                                 const BasicPort& port,
+                                 const size_t& initial_value,
+                                 const std::vector<float>& pulse_widths,
+                                 const std::vector<size_t>& flip_values,
+                                 const std::string& wait_condition) {
+  /* Validate the file stream */
+  check_file_handler(fp);
+
+  /* Config_done signal: indicate when configuration is finished */
+  fp << "initial" << std::endl;
+  fp << "\tbegin" << std::endl;
+  fp << "\t";
+  std::vector<size_t> initial_values(port.get_width(), initial_value);
+  fp << "\t";
+  fp << generate_verilog_port_constant_values(port, initial_values);
+  fp << ";" << std::endl;
+
+  /* Set a wait condition if specified */
+  if (false == wait_condition.empty()) {
+    fp << "\twait(" << wait_condition << ")" << std::endl;
+  }
+  
+  /* Number of flip conditions and values should match */
+  VTR_ASSERT(flip_values.size() == pulse_widths.size());
+  for (size_t ipulse = 0; ipulse < pulse_widths.size(); ++ipulse) {
+    fp << "\t" << "#" << std::setprecision(10) << pulse_widths[ipulse];
+    std::vector<size_t> port_flip_value(port.get_width(), flip_values[ipulse]);
+    fp << "\t";
+    fp << generate_verilog_port_constant_values(port, port_flip_value);
+    fp << ";" << std::endl;
+  }
+
+  fp << "\tend" << std::endl;
+
+  /* Print an empty line as splitter */
+  fp << std::endl;
+}
+
+/********************************************************************
+ * Print stimuli for a clock signal
+ * This function can support if the clock signal should wait for a period
+ * of time and then start 
+ *                          pulse width
+ *                           |<----->|
+ *                           +-------+       +-------+
+ *                           |       |       |       |
+ *  initial_value --- ... ---+       +-------+       +------ ...
+ *           |<--wait_condition-->|
+ *
+ *******************************************************************/
+void print_verilog_clock_stimuli(std::fstream& fp, 
+                                 const BasicPort& port,
+                                 const size_t& initial_value,
+                                 const float& pulse_width,
+                                 const std::string& wait_condition) {
+  /* Validate the file stream */
+  check_file_handler(fp);
+
+  /* Config_done signal: indicate when configuration is finished */
+  fp << "initial" << std::endl;
+  fp << "\tbegin" << std::endl;
+
+  std::vector<size_t> initial_values(port.get_width(), initial_value);
+  fp << "\t\t";
+  fp << generate_verilog_port_constant_values(port, initial_values);
+  fp << ";" << std::endl;
+
+  fp << "\tend" << std::endl;
+  fp << "always";
+
+  /* Set a wait condition if specified */
+  if (true == wait_condition.empty()) {
+    fp << std::endl;
+  } else {
+    fp << " wait(" << wait_condition << ")" << std::endl;
+  }
+
+  fp << "\tbegin" << std::endl;
+  fp << "\t\t" << "#" << std::setprecision(10) << pulse_width;
+
+  fp << "\t";
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, port);
+  fp << " = ";
+  fp << "~";
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, port);
+  fp << ";" << std::endl;
+
+  fp << "\tend" << std::endl;
+
+  /* Print an empty line as splitter */
+  fp << std::endl;
 }
 
