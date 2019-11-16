@@ -241,7 +241,7 @@ def run_modelsim_thread(s, eachJob, job_list):
                                            universal_newlines=True)
                 for line in process.stdout:
                     if "Errors" in line:
-                        logger.debug(line.strip())
+                        logger.info(line.strip())
                     sys.stdout.buffer.flush()
                     output.write(line)
                 process.wait()
