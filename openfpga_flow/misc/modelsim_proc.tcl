@@ -47,7 +47,7 @@ proc top_create_new_project {projectname verilog_files modelsim_path simtime uni
   #Start the simulation
   vsim $projectname.$top_tb -voptargs=+acc
   #Add the waves
-  add_waves top_tb
+  add_waves $top_tb
   #run the simulation
   runsim $simtime $unit
   #Fit the window view
