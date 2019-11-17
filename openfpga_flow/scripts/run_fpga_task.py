@@ -5,7 +5,7 @@
 #                 Combination of architecture, benchmark and script paramters
 # Args          : python3 run_fpga_task.py --help
 # Author        : Ganesh Gore
-# Email          : ganeshgore@utah.edu
+# Email          : ganesh.gore@utah.edu
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
 import os
