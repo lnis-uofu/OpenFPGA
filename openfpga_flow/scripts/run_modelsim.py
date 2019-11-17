@@ -2,6 +2,7 @@ from string import Template
 import sys
 import os
 import re
+import csv
 import glob
 import time
 import threading
@@ -37,8 +38,6 @@ parser.add_argument('--modelsim_runsim_tmpl', type=str,
                     help="Modelsim runsim template file")
 parser.add_argument('--run_sim', action="store_true",
                     help="Execute generated script in formality")
-parser.add_argument('--modelsim_proj_dir',
-                    help="Provide modelsim project directory")
 parser.add_argument('--modelsim_proj_name',
                     help="Provide modelsim project name")
 parser.add_argument('--modelsim_ini', type=str,
@@ -104,6 +103,8 @@ def main():
         # = = = = = = = Create a current script log file handler = = = =
         logfile_path = os.path.join(gc["task_dir"],
                                     taskname, task_run, "modelsim_run.log")
+        resultfile_path = os.path.join(gc["task_dir"],
+                                    taskname, task_run, "modelsim_result.csv")
         logfilefh = logging.FileHandler(logfile_path, "w")
         logfilefh.setFormatter(logging.Formatter(FILE_LOG_FORMAT))
         logger.addHandler(logfilefh)
@@ -127,7 +128,8 @@ def main():
                     if os.path.isfile(INIfile):
                         task_ini_files.append(INIfile)
         logger.info(f"Found {len(task_ini_files)} INI files")
-        create_tcl_script(task_ini_files)
+        results = create_tcl_script(task_ini_files)
+        collect_result(resultfile_path, results)
 
 
 def clean_up_and_exit(msg):
@@ -148,56 +150,56 @@ def create_tcl_script(files):
         config = config["SIMULATION_DECK"]
 
         # Resolve project Modelsim project path
-        if not args.modelsim_proj_dir:
-            args.modelsim_run_dir = os.path.dirname(os.path.abspath(eachFile))
-            args.modelsim_proj_dir = os.path.join(
-                args.modelsim_run_dir, "MMSIM2")
-            logger.info(f"Modelsim project dir not provide " +
-                        f"using default {args.modelsim_proj_dir} directory")
-            if not args.skip_prompt:
-                input("Press Enter to continue, Ctrl+C to abort")
-        args.modelsim_proj_dir = os.path.abspath(args.modelsim_proj_dir)
-        config["MODELSIM_PROJ_DIR"] = args.modelsim_proj_dir
-        if not os.path.exists(args.modelsim_proj_dir):
-            os.makedirs(args.modelsim_proj_dir)
+        args.modelsim_run_dir = os.path.dirname(os.path.abspath(eachFile))
+        modelsim_proj_dir = os.path.join(
+            args.modelsim_run_dir, "MMSIM2")
+        logger.info(f"Modelsim project dir not provide " +
+                    f"using default {modelsim_proj_dir} directory")
+
+        modelsim_proj_dir = os.path.abspath(modelsim_proj_dir)
+        config["MODELSIM_PROJ_DIR"] = modelsim_proj_dir
+        if not os.path.exists(modelsim_proj_dir):
+            os.makedirs(modelsim_proj_dir)
 
         # Resolve Modelsim Project name
-        if not args.modelsim_proj_name:
-            args.modelsim_proj_name = config["BENCHMARK"] + "_MMSIM"
-            logger.info(f"Modelsim project name not provide " +
-                        f"using default {args.modelsim_proj_name} directory")
+        args.modelsim_proj_name = config["BENCHMARK"] + "_MMSIM"
+        logger.info(f"Modelsim project name not provide " +
+                    f"using default {args.modelsim_proj_name} directory")
 
-            if not args.skip_prompt:
-                input("Press Enter to continue, Ctrl+C to abort")
         config["MODELSIM_PROJ_NAME"] = args.modelsim_proj_name
         config["MODELSIM_INI"] = args.modelsim_ini
 
         # Modify the variables in config file here
         config["TOP_TB"] = os.path.splitext(config["TOP_TB"])[0]
-        # pass
 
         # Write final template file
         # Write runsim file
         tmpl = Template(open(args.modelsim_runsim_tmpl,
                              encoding='utf-8').read())
-        runsim_filename = os.path.join(args.modelsim_proj_dir,
+        runsim_filename = os.path.join(modelsim_proj_dir,
                                        "%s_runsim.tcl" % config['BENCHMARK'])
         logger.info(f"Creating tcl script at : {runsim_filename}")
         with open(runsim_filename, 'w', encoding='utf-8') as tclout:
             tclout.write(tmpl.substitute(config))
 
         # Write proc file
-        proc_filename = os.path.join(args.modelsim_proj_dir,
+        proc_filename = os.path.join(modelsim_proj_dir,
                                      "%s_autocheck_proc.tcl" % config['BENCHMARK'])
         logger.info(f"Creating tcl script at : {proc_filename}")
         with open(proc_filename, 'w', encoding='utf-8') as tclout:
             tclout.write(open(args.modelsim_proc_tmpl,
                               encoding='utf-8').read())
         runsim_files.append({
+            "ini_file": eachFile,
             "modelsim_run_dir": args.modelsim_run_dir,
             "runsim_filename": runsim_filename,
-            "status" :False,
-            "finished" : True
+            "run_complete" :False,
+            "status": False,
+            "finished" : True,
+            "starttime" : 0,
+            "endtime" : 0,
+            "Errors": 0,
+            "Warnings" : 0
         })
     # Execute modelsim
     if args.run_sim:
@@ -212,7 +214,7 @@ def create_tcl_script(files):
             thread_list.append(t)
         for eachthread in thread_list:
             eachthread.join()
-        exit()
+        return runsim_files
     else:
         logger.info("Created runsim and proc files")
         logger.info(f"runsim_filename {runsim_filename}")
@@ -226,8 +228,12 @@ def run_modelsim_thread(s, eachJob, job_list):
     with s:
         thread_name = threading.currentThread().getName()
         eachJob["starttime"] = time.time()
+        eachJob["Errors"] = 0
+        eachJob["Warnings"]= 0
         try:
             logfile = "%s_modelsim.log" % thread_name
+            eachJob["logfile"] = "<task_dir>" + \
+                os.path.relpath(logfile, gc["task_dir"])
             with open(logfile, 'w+') as output:
                 output.write("* "*20 + '\n')
                 output.write("RunDirectory : %s\n" % os.getcwd())
@@ -242,12 +248,17 @@ def run_modelsim_thread(s, eachJob, job_list):
                 for line in process.stdout:
                     if "Errors" in line:
                         logger.info(line.strip())
+                        e,w = re.match("# .*: ([0-9].*), .*: ([0-9].*)", line).groups()
+                        eachJob["Errors"] += int(e)
+                        eachJob["Warnings"] += int(w)
                     sys.stdout.buffer.flush()
                     output.write(line)
                 process.wait()
                 if process.returncode:
                     raise subprocess.CalledProcessError(0, " ".join(command))
-                eachJob["status"] = True
+                eachJob["run_complete"] = True
+                if not eachJob["Errors"]:
+                    eachJob["status"] = True
         except:
             logger.exception("Failed to execute openfpga flow - " +
                              eachJob["name"])
@@ -257,11 +268,27 @@ def run_modelsim_thread(s, eachJob, job_list):
         timediff = timedelta(seconds=(eachJob["endtime"]-eachJob["starttime"]))
         timestr = humanize.naturaldelta(timediff) if "humanize" in sys.modules \
             else str(timediff)
+        eachJob["exectime"] = timestr
         logger.info("%s Finished with returncode %d, Time Taken %s " %
                     (thread_name, process.returncode, timestr))
         eachJob["finished"] = True
         no_of_finished_job = sum([not eachJ["finished"] for eachJ in job_list])
         logger.info("***** %d runs pending *****" % (no_of_finished_job))
+
+def collect_result(result_file, result_obj):
+    colnames = ["status", "Errors", "Warnings", "run_complete", "exectime", "finished", "logfile"]
+    if len(result_obj):
+        with open(result_file, 'w', newline='') as csvfile:
+            writer = csv.DictWriter(
+                csvfile, extrasaction='ignore', fieldnames=colnames)
+            writer.writeheader()
+            for eachResult in result_obj:
+                writer.writerow(eachResult)
+    logger.info("= = = ="*10)
+    passed_jobs = [ each["status"] for each in result_obj ]
+    logger.info(f"Passed Jobs %d/%d", len(passed_jobs), len(result_obj))
+    logger.info(f"Result file stored at {result_file}")
+    logger.info("= = = ="*10)
 
 if __name__ == "__main__":
     if args.debug:

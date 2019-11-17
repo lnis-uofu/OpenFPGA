@@ -4,7 +4,7 @@
 #                 OpensFPGA project.
 # Args          : python3 run_fpga_flow.py --help
 # Author        : Ganesh Gore
-# Email         : ganeshgore@utah.edu
+# Email         : ganesh.gore@utah.edu
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
 import os

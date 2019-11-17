@@ -23,6 +23,10 @@ run-task () {
     $PYTHON_EXEC $OPENFPGA_SCRIPT_PATH/run_fpga_task.py "$@"
 }
 
+run-modelsim () {
+    $PYTHON_EXEC $OPENFPGA_SCRIPT_PATH/run_modelsim.py "$@"
+}
+
 run-flow () {
     $PYTHON_EXEC $OPENFPGA_SCRIPT_PATH/run_fpga_flow.py "$@"
 }
@@ -72,3 +76,4 @@ fi
 TaskList=$(ls -tdalh ${OPENFPGA_TASK_PATH}/* | awk '{system("basename " $9)}' |  awk '{printf("%s ",$1)}')
 complete -W "${TaskList}" goto-task
 complete -W "${TaskList}" run-task
+complete -W "${TaskList}" run-modelsim
