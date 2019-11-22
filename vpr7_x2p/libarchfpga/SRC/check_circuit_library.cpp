@@ -208,8 +208,8 @@ size_t check_one_circuit_model_port_type_and_size_required(const CircuitLibrary&
                num_ports_to_check,
                CIRCUIT_MODEL_PORT_TYPE_STRING[size_t(port_type_to_check)],
                CIRCUIT_MODEL_TYPE_STRING[size_t(circuit_lib.model_type(circuit_model))], 
-               CIRCUIT_MODEL_PORT_TYPE_STRING[size_t(port_type_to_check)],
-               ports.size());
+               ports.size(),
+               CIRCUIT_MODEL_PORT_TYPE_STRING[size_t(port_type_to_check)]);
     num_err++;
   } 
   for (const auto& port : ports) { 
