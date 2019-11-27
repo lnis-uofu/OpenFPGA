@@ -1,6 +1,6 @@
 
-CONFIG := clang
-# CONFIG := gcc
+# CONFIG := clang
+CONFIG := gcc
 # CONFIG := gcc-4.8
 # CONFIG := afl-gcc
 # CONFIG := emcc
@@ -9,7 +9,7 @@ CONFIG := clang
 # CONFIG := msys2-64
 
 # features (the more the better)
-ENABLE_TCL := 1
+ENABLE_TCL := 0
 ENABLE_ABC := 1
 ENABLE_GLOB := 1
 ENABLE_PLUGINS := 1
