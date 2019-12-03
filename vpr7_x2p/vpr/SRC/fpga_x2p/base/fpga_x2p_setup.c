@@ -33,6 +33,7 @@
 #include "verilog_api.h"
 #include "fpga_x2p_unique_routing.h"
 
+#include "link_arch_circuit_lib.h"
 #include "fpga_x2p_setup.h"
 
 /***** Subroutines Declarations *****/
@@ -343,7 +344,7 @@ void init_and_check_one_sram_inf_orgz(t_sram_inf_orgz* cur_sram_inf_orgz,
     break;
   case SPICE_SRAM_SCAN_CHAIN:
     vpr_printf(TIO_MESSAGE_INFO, "INFO: Checking if SRAM spice model fit scan-chain organization...\n");
-    if (SPICE_MODEL_SCFF != cur_sram_inf_orgz->spice_model->type) {
+    if (SPICE_MODEL_CCFF != cur_sram_inf_orgz->spice_model->type) {
       vpr_printf(TIO_MESSAGE_ERROR, "(File:%s,LINE[%d]) Scan-chain SRAM organization requires a SPICE model(type=sff)!\n",
                  __FILE__, __LINE__);
       exit(1);
@@ -547,7 +548,6 @@ void init_check_arch_spice_models(t_arch* arch,
         get_default_spice_model(SPICE_MODEL_WIRE,
                                 arch->spice->num_spice_model, 
                                 arch->spice->spice_models); 
-      continue;
     } else {
       arch->Directs[i].spice_model = 
         find_name_matched_spice_model(arch->Directs[i].spice_model_name,
@@ -561,7 +561,7 @@ void init_check_arch_spice_models(t_arch* arch,
                                     arch->Directs[i].spice_model_name, 
                                     arch->Directs[i].name);
       exit(1);
-    } else if (SPICE_MODEL_CHAN_WIRE != arch->Directs[i].spice_model->type) {
+    } else if (SPICE_MODEL_WIRE != arch->Directs[i].spice_model->type) {
       vpr_printf(TIO_MESSAGE_ERROR, "(FILE:%s, LINE[%d])Invalid SPICE model(%s) type of CLB to CLB Direct Connection (name=%s)! Should be chan_wire!\n",
                                     __FILE__ , __LINE__, 
                                     arch->Directs[i].spice_model_name, 
@@ -1305,6 +1305,19 @@ void fpga_x2p_free(t_arch* Arch) {
   free_spice_model_routing_index_low_high(Arch->spice->num_spice_model, Arch->spice->spice_models);
 }
 
+/*******************************************************
+ * This function will force the flag of 
+ * dump_explicit_port_map to be true 
+ * for all the circuit models in the circuit library
+ ******************************************************/
+static 
+void overwrite_circuit_library_dump_explicit_port_map(t_arch* Arch) {
+  /* Iterate over all the circuit models */
+  for (const auto& circuit_model : Arch->spice->circuit_lib.models()) {
+    Arch->spice->circuit_lib.set_model_dump_explicit_port_map(circuit_model, true);
+  }
+} 
+
 /* Top-level function of FPGA-SPICE setup */
 void fpga_x2p_setup(t_vpr_setup vpr_setup,
                     t_arch* Arch) {
@@ -1322,10 +1335,20 @@ void fpga_x2p_setup(t_vpr_setup vpr_setup,
   /* Start time count */
   t_start = clock();
 
-  vpr_printf(TIO_MESSAGE_INFO, "\nFPGA-SPICE Tool suites Initilization begins...\n"); 
+  vpr_printf(TIO_MESSAGE_INFO, "\nFPGA-X2P Tool suites Initilization begins...\n"); 
   
-  /* Initialize Arch SPICE MODELS*/
+  /* FIXME: this function is going to be removed when new linking function is working
+   * Initialize Arch SPICE MODELS
+   */
   init_check_arch_spice_models(Arch, &(vpr_setup.RoutingArch));
+
+  /* Link circuit models to architecture */ 
+  link_circuit_library_to_arch(Arch, &(vpr_setup.RoutingArch));  
+  /* Overwrite explicit_port_map settings if user required */
+  if (TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.dump_explicit_verilog) {
+    vpr_printf(TIO_MESSAGE_INFO, "Detect explicit Verilog option is enabled. Force all the circuit models to dump explicit Verilog...\n"); 
+    overwrite_circuit_library_dump_explicit_port_map(Arch); 
+  }
 
   /* Initialize idle mode and physical mode of each pb_type and pb_graph_node */
   init_check_arch_pb_type_idle_and_phy_mode();
@@ -1404,19 +1427,20 @@ void fpga_x2p_setup(t_vpr_setup vpr_setup,
     /* Idenify mirror and rotatable Switch blocks and Connection blocks */
     identify_mirror_switch_blocks();
     identify_mirror_connection_blocks();
-
-    /* Assign Gobal variable: build the Routing Resource Channels */
-    device_rr_chan = build_device_rr_chan(num_rr_nodes, rr_node, rr_node_indices, Arch->num_segments, rr_indexed_data);
-    device_rr_gsb = build_device_rr_gsb(vpr_setup.FPGA_SPICE_Opts.output_sb_xml,
-                                        vpr_setup.FPGA_SPICE_Opts.sb_xml_dir, 
-                                        num_rr_nodes, rr_node, rr_node_indices, 
-                                        Arch->num_segments, rr_indexed_data);
-
-    /* Rotatable will be done in the next step 
-    identify_rotatable_switch_blocks(); 
-    identify_rotatable_connection_blocks(); 
-    */ 
   }
+
+  /* Assign Gobal variable: build the Routing Resource Channels */
+  device_rr_chan = build_device_rr_chan(num_rr_nodes, rr_node, rr_node_indices, Arch->num_segments, rr_indexed_data);
+  device_rr_gsb = build_device_rr_gsb(TRUE == vpr_setup.FPGA_SPICE_Opts.output_sb_xml,
+                                      TRUE == vpr_setup.FPGA_SPICE_Opts.compact_routing_hierarchy,
+                                      vpr_setup.FPGA_SPICE_Opts.sb_xml_dir, 
+                                      num_rr_nodes, rr_node, rr_node_indices, 
+                                      Arch->num_segments, rr_indexed_data);
+
+  /* Rotatable will be done in the next step 
+  identify_rotatable_switch_blocks(); 
+  identify_rotatable_connection_blocks(); 
+  */ 
 
   /* Not should be done when read_act_file is disabled */
   if (FALSE == vpr_setup.FPGA_SPICE_Opts.read_act_file) {

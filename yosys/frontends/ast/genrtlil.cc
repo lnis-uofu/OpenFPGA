@@ -504,6 +504,7 @@ struct AST_INTERNAL::ProcessGenerator
 
 					RTLIL::CaseRule *backup_case = current_case;
 					current_case = new RTLIL::CaseRule;
+					current_case->attributes["\\src"] = stringf("%s:%d", child->filename.c_str(), child->linenum);
 					last_generated_case = current_case;
 					addChunkActions(current_case->actions, this_case_eq_ltemp, this_case_eq_rvalue);
 					for (auto node : child->children) {
@@ -853,7 +854,6 @@ RTLIL::SigSpec AstNode::genRTLIL(int width_hint, bool sign_hint)
 	case AST_FUNCTION:
 	case AST_DPI_FUNCTION:
 	case AST_AUTOWIRE:
-	case AST_LOCALPARAM:
 	case AST_DEFPARAM:
 	case AST_GENVAR:
 	case AST_GENFOR:
@@ -895,6 +895,26 @@ RTLIL::SigSpec AstNode::genRTLIL(int width_hint, bool sign_hint)
 	// remember the parameter, needed for example in techmap
 	case AST_PARAMETER:
 		current_module->avail_parameters.insert(str);
+		/* fall through */
+	case AST_LOCALPARAM:
+		if (flag_pwires)
+		{
+			if (GetSize(children) < 1 || children[0]->type != AST_CONSTANT)
+				log_file_error(filename, linenum, "Parameter `%s' with non-constant value!\n", str.c_str());
+
+			RTLIL::Const val = children[0]->bitsAsConst();
+			RTLIL::Wire *wire = current_module->addWire(str, GetSize(val));
+			current_module->connect(wire, val);
+
+			wire->attributes["\\src"] = stringf("%s:%d", filename.c_str(), linenum);
+			wire->attributes[type == AST_PARAMETER ? "\\parameter" : "\\localparam"] = 1;
+
+			for (auto &attr : attributes) {
+				if (attr.second->type != AST_CONSTANT)
+					log_file_error(filename, linenum, "Attribute `%s' with non-constant value!\n", attr.first.c_str());
+				wire->attributes[attr.first] = attr.second->asAttrConst();
+			}
+		}
 		break;
 
 	// create an RTLIL::Wire for an AST_WIRE node
@@ -904,7 +924,8 @@ RTLIL::SigSpec AstNode::genRTLIL(int width_hint, bool sign_hint)
 			if (!range_valid)
 				log_file_error(filename, linenum, "Signal `%s' with non-constant width!\n", str.c_str());
 
-			log_assert(range_left >= range_right || (range_left == -1 && range_right == 0));
+			if (!(range_left >= range_right || (range_left == -1 && range_right == 0)))
+				log_file_error(filename, linenum, "Signal `%s' with invalid width range %d!\n", str.c_str(), range_left - range_right + 1);
 
 			RTLIL::Wire *wire = current_module->addWire(str, range_left - range_right + 1);
 			wire->attributes["\\src"] = stringf("%s:%d", filename.c_str(), linenum);
@@ -919,6 +940,9 @@ RTLIL::SigSpec AstNode::genRTLIL(int width_hint, bool sign_hint)
 					log_file_error(filename, linenum, "Attribute `%s' with non-constant value!\n", attr.first.c_str());
 				wire->attributes[attr.first] = attr.second->asAttrConst();
 			}
+
+			if (is_wand) wire->set_bool_attribute("\\wand");
+			if (is_wor)  wire->set_bool_attribute("\\wor");
 		}
 		break;
 
@@ -963,8 +987,13 @@ RTLIL::SigSpec AstNode::genRTLIL(int width_hint, bool sign_hint)
 				detectSignWidth(width_hint, sign_hint);
 			is_signed = sign_hint;
 
-			if (type == AST_CONSTANT)
-				return RTLIL::SigSpec(bitsAsConst());
+			if (type == AST_CONSTANT) {
+				if (is_unsized) {
+					return RTLIL::SigSpec(bitsAsUnsizedConst(width_hint));
+				} else {
+					return RTLIL::SigSpec(bitsAsConst());
+				}
+			}
 
 			RTLIL::SigSpec sig = realAsConst(width_hint);
 			log_file_warning(filename, linenum, "converting real value %e to binary %s.\n", realvalue, log_signal(sig));
@@ -1564,6 +1593,37 @@ RTLIL::SigSpec AstNode::genRTLIL(int width_hint, bool sign_hint)
 			AstNode *always = this->clone();
 			ProcessGenerator generator(always, ignoreThisSignalsInInitial);
 			delete always;
+		} break;
+
+	case AST_TECALL: {
+			int sz = children.size();
+			if (str == "$info") {
+				if (sz > 0)
+					log_file_info(filename, linenum, "%s.\n", children[0]->str.c_str());
+				else
+					log_file_info(filename, linenum, "\n");
+			} else if (str == "$warning") {
+				if (sz > 0)
+					log_file_warning(filename, linenum, "%s.\n", children[0]->str.c_str());
+				else
+					log_file_warning(filename, linenum, "\n");
+			} else if (str == "$error") {
+				if (sz > 0)
+					log_file_error(filename, linenum, "%s.\n", children[0]->str.c_str());
+				else
+					log_file_error(filename, linenum, "\n");
+			} else if (str == "$fatal") {
+				// TODO: 1st parameter, if exists, is 0,1 or 2, and passed to $finish()
+				// if no parameter is given, default value is 1
+				// dollar_finish(sz ? children[0] : 1);
+				// perhaps create & use log_file_fatal()
+				if (sz > 0)
+					log_file_error(filename, linenum, "FATAL: %s.\n", children[0]->str.c_str());
+				else
+					log_file_error(filename, linenum, "FATAL.\n");
+			} else {
+				log_file_error(filename, linenum, "Unknown elabortoon system task '%s'.\n", str.c_str());
+			}
 		} break;
 
 	case AST_FCALL: {

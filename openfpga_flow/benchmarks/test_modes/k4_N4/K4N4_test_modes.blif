@@ -1,0 +1,40 @@
+.model K4n4_test
+.inputs clk a b c
+.outputs XOR XNOR AND NAND OR NOR XOR_sync XNOR_sync AND_sync NAND_sync OR_sync NOR_sync
+
+.names a b c XOR
+100 1
+010 1
+001 1
+111 1
+
+.names a b c XNOR
+011 1
+101 1
+110 1
+000 1
+
+.names a b c AND
+111 1
+
+.names a b c NAND
+0-- 1
+-0- 1
+--0 1
+
+.names a b c OR
+1-- 1
+-1- 1
+--1 1
+
+.names a b c NOR
+000 1
+
+.latch   XOR     XOR_sync  re  clk  0
+.latch   XNOR    XNOR_sync re  clk  0
+.latch   OR      OR_sync   re  clk  0
+.latch   NOR     NOR_sync  re  clk  0
+.latch   AND     AND_sync  re  clk  0
+.latch   NAND    NAND_sync re  clk  0
+
+.end

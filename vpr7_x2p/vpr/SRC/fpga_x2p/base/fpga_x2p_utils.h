@@ -1,12 +1,30 @@
 #ifndef FPGA_X2P_UTILS_H
 #define FPGA_X2P_UTILS_H
 
+#include <fstream>
+#include <vector>
+#include <string>
+
 #include "my_free_fwd.h"
 #include "rr_blocks_naming.h"
 
+std::string format_dir_path(const std::string& dir_path_to_format);
+
+void check_file_handler(std::fstream& fp);
+
+std::vector<size_t> my_ito1hot_vec(const size_t& in_int, const size_t& bin_len);
+
+std::string find_path_dir_name(const std::string& file_name);
+
+std::string find_path_file_name(const std::string& file_name);
+
+std::vector<size_t> my_itobin_vec(const size_t& in_int, const size_t& bin_len);
+
+/* Old functions */
+
 char* my_gettime();
 
-char* format_dir_path(char* dir_path);
+char* format_dir_path(char* dir_path); /* TODO: TO BE REMOVED !!! */
 
 int try_access_file(char* file_path);
 
@@ -17,8 +35,8 @@ int create_dir_path(char* dir_path);
 char* my_strcat(const char* str1,
                 const char* str2);
 
-int split_path_prog_name(char* prog_path,
-                         char  split_token,
+int split_path_prog_name(const char* prog_path,
+                         const char  split_token,
                          char** ret_path,
                          char** ret_prog_name);
 
@@ -58,7 +76,11 @@ t_spice_model_port** find_spice_model_config_done_ports(t_spice_model* spice_mod
 t_spice_transistor_type* find_mosfet_tech_lib(t_spice_tech_lib tech_lib,
                                               e_spice_trans_type trans_type);
 
+char* my_ito1hot(int in_int, int bin_len);
+
 char* my_itobin(int in_int, int bin_len);
+
+int* my_itobin_int(int in_int, int bin_len);
 
 char* my_itoa(int input);
 
@@ -221,7 +243,7 @@ void check_sram_spice_model_ports(t_spice_model* cur_spice_model,
                                   boolean include_bl_wl);
 
 void check_ff_spice_model_ports(t_spice_model* cur_spice_model,
-                                boolean is_scff);
+                                boolean is_ccff);
 
 /* Functions to manipulate t_conf_bit and t_conf_bit_info */
 void free_conf_bit(t_conf_bit* conf_bit);
@@ -256,9 +278,9 @@ t_mem_bank_info* alloc_one_mem_bank_info();
 
 void free_one_mem_bank_info(t_mem_bank_info* mem_bank_info);
 
-t_scff_info* alloc_one_scff_info();
+t_ccff_info* alloc_one_ccff_info();
 
-void free_one_scff_info(t_scff_info* scff_info);
+void free_one_ccff_info(t_ccff_info* ccff_info);
 
 t_standalone_sram_info* alloc_one_standalone_sram_info();
 
@@ -285,10 +307,10 @@ void get_sram_orgz_info_reserved_blwl(t_sram_orgz_info* cur_sram_orgz_info,
 void update_mem_bank_info_num_mem_bit(t_mem_bank_info* cur_mem_bank_info,
                                       int num_mem_bit);
 
-void init_scff_info(t_scff_info* cur_scff_info,
+void init_ccff_info(t_ccff_info* cur_ccff_info,
                     t_spice_model* cur_mem_model);
 
-void update_scff_info_num_mem_bit(t_scff_info* cur_scff_info,
+void update_ccff_info_num_mem_bit(t_ccff_info* cur_ccff_info,
                                   int num_mem_bit);
 
 void init_standalone_sram_info(t_standalone_sram_info* cur_standalone_sram_info,
@@ -348,6 +370,9 @@ void config_spice_models_sram_port_spice_model(int num_spice_model,
                                                t_spice_model* spice_models,
                                                t_spice_model* default_sram_spice_model);
 
+void config_circuit_models_sram_port_to_default_sram_model(CircuitLibrary& circuit_lib,
+                                                           const CircuitModelId& default_sram_model);
+
 void determine_sb_port_coordinator(t_sb cur_sb_info, int side, 
                                    int* port_x, int* port_y);
 
@@ -372,7 +397,7 @@ boolean is_cb_exist(t_rr_type cb_type,
 int count_cb_info_num_ipin_rr_nodes(t_cb cur_cb_info);
 
 t_llist* add_one_subckt_file_name_to_llist(t_llist* cur_head, 
-                                            char* subckt_file_path);
+                                           const char* subckt_file_path);
 
 boolean check_subckt_file_exist_in_llist(t_llist* subckt_llist_head,
                                          char* subckt_file_name);

@@ -245,6 +245,7 @@ typedef struct s_logical_block {
 
     /* Xifan TANG: SPICE model support*/
     /* For mapping */
+    CircuitModelId mapped_circuit_model;
     t_spice_model* mapped_spice_model;
     int mapped_spice_model_index; /* index of spice_model in completed FPGA netlist */
     int temp_used;
@@ -1123,11 +1124,16 @@ typedef struct s_clb_to_clb_directs {
 	t_type_descriptor *to_clb_type;
 	int to_clb_pin_start_index;
 	int to_clb_pin_end_index;
+    /* Aurelien: point to point support in direct connection from directlist */
+    enum e_point2point_interconnection_type interconnection_type;
+    enum e_point2point_interconnection_dir x_dir;
+    enum e_point2point_interconnection_dir y_dir;
     /* Xifan Tang: add useful addition info to this struct */
 	int x_offset;
 	int y_offset;
 	int z_offset;
     t_spice_model* spice_model;
+    CircuitModelId circuit_model;
     char* name;
 } t_clb_to_clb_directs;
 
@@ -1275,6 +1281,8 @@ struct s_syn_verilog_opts {
   boolean print_report_timing_tcl;
   boolean print_sdc_pnr;
   boolean print_sdc_analysis;
+  boolean print_simulation_ini;
+  char* simulation_ini_path;
 };
 
 /* Xifan TANG: bitstream generator */

@@ -1,6 +1,6 @@
 Circuit model examples
 ======================
-The next subsections are dedicated to detailed examples of each circuit model type. Through these examples awe give a global overview of the different implementations which are available for the user.
+The next subsections are dedicated to detailed examples of each circuit model type. Through these examples, we give a global overview of the different implementations which are available for the user.
 
 Inverters and Buffers
 ---------------------
@@ -13,15 +13,15 @@ Inverters and Buffers
     <port type="output" prefix="string" size="int"/>
   </circuit_model>
 
-.. note:: customized SPICE netlists are not currently supported for inverters and buffers.
+.. note:: customized Verilog/SPICE netlists are not currently supported for inverters and buffers.
 
 * design_technology:
 
-	* **topology:** [inverter|buffer]. Specify the type of this component, can be either an inverter or a buffer.
+	* **topology:** [``inverter`` | ``buffer``]. Specify the type of this component, can be either an inverter or a buffer.
 
 	* **size:** Specify the driving strength of inverter/buffer. For a buffer, the size is the driving strength of the inverter at the second level. We consider a two-level structure for a buffer here. The support for multi-level structure of a buffer will be introduced in the tapered options.
 
-	* **tapered:** [on|off]. Define if the buffer is a tapered (multi-level) buffer. *If "on" the following parameter are required.*
+	* **tapered:** [``on`` | ``off``]. Define if the buffer is a tapered (multi-level) buffer. When ``on`` is defined, the following parameter are required.*
 
 		* **tap_drive_level:** Define the number of levels of a tapered buffer. This parameter is valid only when tapered is turned on.
 
@@ -54,6 +54,21 @@ This example shows:
 	* Size of 1 for the output strength
 	* The tapered parameter is not declared and is off by default
 
+**Power-gated Inverter x1 example**
+
+The XML code describing an inverter which can be power-gated by the control signals ``EN`` and ``ENB`` :
+
+.. code-block:: xml
+
+  <circuit_model type="inv_buf" name="INVTX1" prefix="INVTX1">
+    <design_technology type="cmos" topology="inverter" size="3" tapered="off" power_gated="true"/>
+    <port type="input" prefix="in" size="1" lib_name="I"/>
+    <port type="input" prefix="EN" size="1" lib_name="EN" is_global="true" default_val="0" is_config_enable="true"/>
+    <port type="input" prefix="ENB" size="1" lib_name="ENB" is_global="true" default_val="1" is_config_enable="true"/>
+    <port type="output" prefix="out" size="1" lib_name="Z"/>
+  </circuit_model>
+
+.. note:: For power-gated inverters: all the control signals must be set as ``config_enable`` so that the testbench generation will generate testing waveforms. If the power-gated inverters are auto-generated , all the ``config_enable`` signals must be ``global`` signals as well. If the pwoer-gated inverters come from user-defined netlists, restrictions on ``global`` signals are free.
 
 **Buffer x2 example**
 
@@ -128,11 +143,11 @@ Pass-gate Logic
     <port type="output" prefix="string" size="int"/>
   </circuit_model>
 
-.. note:: customized SPICE netlists are not currently supported for pass-gate logics.
+.. note:: customized Verilog/SPICE netlists are not currently supported for pass-gate logics.
 
 * design_technology:
 
-	* **topology:** [transmission_gate|pass_transistor]. The transmission gate consists of a NMOS transistor and a PMOS transistor. The pass transistor consists of a NMOS transistor.
+	* **topology:** [``transmission_gate`` | ``pass_transistor``]. The transmission gate consists of a NMOS transistor and a PMOS transistor. The pass transistor consists of a NMOS transistor.
 
 	* **nmos_size:** the size of NMOS transistor in a transmission gate or pass_transistor, expressed in terms of the min_width defined in XML node <transistors>.
 
@@ -163,7 +178,7 @@ The XML code describing this pass-gate is:
   </circuit_model>
 
 This example shows:
-	* Topology is **transmission_gate**, which means the component need entries for each transistor gate (pmos and nmos)
+	* Topology is ``transmission_gate``, which means the component need entries for each transistor gate (pmos and nmos)
 	* 3 inputs considered, 1 for signal and 2 to control the transistors gates
 	* No input or output buffer used, these parameters can be uninitialized
 
@@ -191,7 +206,7 @@ The XML code describing this pass-gate is:
   </circuit_model>
 
 This example shows:
-	* Topology is **pass_transistor**, which means the component need an entry for the transistor gate (nmos)
+	* Topology is ``pass_transistor``, which means the component need an entry for the transistor gate (nmos)
 	* 2 inputs considered, 1 for signal and 1 to control the transistor gate
 	* No input or output buffer used, these parameters can be uninitialized
 
@@ -209,9 +224,9 @@ SRAMs
     <port type="output" prefix="string" size="int"/>
   </circuit_model>
 
-.. note::  The circuit designs of SRAMs are highly dependent on the technology node and well optimized by engineers. Therefore, FPGA-SPICE requires users to provide their customized SRAM SPICE/Verilog netlists. A sample SPICE netlist of SRAM can be found in the directory SpiceNetlists in the released package. FPGA-SPICE assumes that all the LUTs and MUXes employ the SRAM circuit design. Therefore, currently only one SRAM type is allowed to be defined.
+.. note::  The circuit designs of SRAMs are highly dependent on the technology node and well optimized by engineers. Therefore, FPGA-Verilog/SPICE requires users to provide their customized SRAM Verilog/SPICE/Verilog netlists. A sample Verilog/SPICE netlist of SRAM can be found in the directory SpiceNetlists in the released package. FPGA-Verilog/SPICE assumes that all the LUTs and MUXes employ the SRAM circuit design. Therefore, currently only one SRAM type is allowed to be defined.
 
-.. note:: The information of input and output buffer should be clearly specified according to the customized SPICE netlist! The existence of input/output buffers will influence the decision in creating testbenches, which may leads to larger errors in power analysis.
+.. note:: The information of input and output buffer should be clearly specified according to the customized Verilog/SPICE netlist! The existence of input/output buffers will influence the decision in creating testbenches, which may leads to larger errors in power analysis.
 
 .. note:: The support SRAM modules should have a BL and a WL when the memory-bank-style configuration circuit is declared. Note that the WL should be the write/read enable signal, while BL is the data input.
 
@@ -230,9 +245,9 @@ Logic gates
 
 .. note::  The circuit model in the type of gate aims to support direct mapping to standard cells or customized cells provided by technology vendors or users. 
 
-.. note:: The logic functionality of a gate can be defined through the XML keyword topology. Currently, OpenFPGA supports AND, OR and MUX2 gates. As for standard cells, the size of each port is limited to 1. Currently, only 2-input and single-output logic gates are supported.
+.. note:: The logic functionality of a gate can be defined through the XML keyword ``topology``. Currently, OpenFPGA supports AND, OR and MUX2 gates. As for standard cells, the size of each port is limited to 1. Currently, only 2-input and single-output logic gates are supported.
 
-.. note:: It may happen that the port sequence in generated Verilog netlists has conflicts with the port sequence in standard and customized cells. To avoid this, users can set the XML keyword dump_explicit_port_map to be true, which enables explicit port mapping are dumped. Users can specify the pin/port name in the standard cell library using the XML keyword lib_name.
+.. note:: It may happen that the port sequence in generated Verilog netlists has conflicts with the port sequence in standard and customized cells. To avoid this, users can set the XML keyword ``dump_explicit_port_map`` to be true, which enables explicit port mapping are dumped. Users can specify the pin/port name in the standard cell library using the XML keyword ``lib_name``.
 
 Multiplexers
 ------------
@@ -240,8 +255,7 @@ Multiplexers
 .. code-block:: xml
 
   <circuit_model type="mux" name="string" prefix="string" is_default="int">
-    <design_technology type="string" structure="string" num_level="int" ron="float" roff="float" 
-	prog_transistor_size="float"/>
+    <design_technology type="string" structure="string" num_level="int" add_const_input="string" const_input_val="int" local_encoder="string" ron="float" roff="float" prog_transistor_size="float"/>
     <input_buffer exist="string" circuit_model_name="string"/>
     <output_buffer exist="string" circuit_model_name="string"/>
     <pass_gate_logic type="string" circuit_model_name="string"/>
@@ -250,24 +264,31 @@ Multiplexers
     <port type="sram" prefix="string" size="int"/>
   </circuit_model>
 
-.. note:: customized SPICE netlists are not currently supported for multiplexers.
+.. note:: customized Verilog/SPICE netlists are not currently supported for multiplexers.
 
 * design_technology:
 
-	* **structure:** can be [tree|multi-level|one-level]. The structure options are valid for SRAM-based multiplexers. For RRAM-based multiplexers, currently we only support the circuit design in [5]. If *multi-level* the following parameter is required:
+	* **structure:** can be [``tree`` \| ``multi-level`` \| ``one-level``]. The structure options are valid for SRAM-based multiplexers. For RRAM-based multiplexers, currently we only support the circuit design in [5]. If ``multi-level`` the following parameter is required:
 
 		* **num_level:** specify the number of levels when multi-level structure is selected, only.
+    
+    * **add_const_input:** can be [``true`` \| ``false``]. When enabled, an extra input will be added to the multiplexer circuits defined in this ``circuit_model``. For example, an 4-input multiplexer will be turned to a 5-input multiplexer. The extra input will be wired to a constant value, which can be specified through the XML syntax ``const_input_val``. The constant value can be either 0 or 1 (By default it is 0). Note that adding such input will help reducing the leakage power of FPGA and parasitic signal activities, with a limited area overhead.
 
+		* **const_input_val:** specify the constant value, to which the extra input will be connected. This syntax is only valid when the ``add_const_input`` is set to true.
+  
+    * **local_encoder:** can be [``true`` \| ``false``]. When enabled, an local encoder will be added to the multiplexer circuits defined in this ``circuit_model``. The local encoder will be interface the SRAM inputs of multiplexing structure and SRAMs. It can encode the one-hot codes (that drive the select port of multiplexing structure) to a binary code. For example, 8-bit ``00000001`` will be encoded to 3-bit ``000``. This will help reduce the number of SRAM cells used in FPGAs as well as configuration time (especially for scan-chain configuration protocols). But it may cost an area overhead.  
 
-	* **prog_transistor_size:** valid only when the type of design technology is rram. Specify the size of programming transistors used in the RRAM-based multiplexer, we use only n-type transistor and the size should be expressed in terms of the min_width defined in XML node <transistors>.
+        .. note:: Local encoders are only applicable for one-level and multi-level multiplexers. Tree-like multiplexers are already encoded in their nature.
 
-	* If type of design technology is **rram**, then the following parameters are required:
+    * **prog_transistor_size:** valid only when the type of design technology is ``rram``. Specify the size of programming transistors used in the RRAM-based multiplexer, we use only n-type transistor and the size should be expressed in terms of the min_width defined in XML node ``transistors``. If type of design technology is ``rram``, then the following parameters are required:
 
 		* **ron:** valid only when the type of design technology is rram. Specify the on-resistance of the RRAM device used in the RRAM-based multiplexer. 
 
 		* **roff:** valid only when the type of design technology is rram. Specify the off-resistance of the RRAM device used in the RRAM-based multiplexer. 
 
-* port: for a multiplexer, the three types of ports, input, output and sram should be defined. 
+* port: for a multiplexer, the three types of ports, ``input``, ``output`` and ``sram`` should be defined. 
+
+.. note:: For tree-like multiplexers, they can be built with standard cell MUX2. To enable this, users should define a ``circuit_model``, which describes a 2-input multiplexer (See details and examples in how to define a logic gate using ``circuit_model``. In this case, the ``circuit_model_name`` in the ``pass_gate_logic`` should be the name of MUX2 ``circuit_model``.
 
 **Mux 1 level example**
 
@@ -329,7 +350,7 @@ If we arbitrarily fix the number of Mux entries at 4, the following code could i
 **This example shows:**
 	* The tree topology, 4 entries split in 2 2-to-1 Muxes then another one make the final selection.
 	* The possibility to select the input or output buffers
-	* The number of entries parametrized by *size* in input port-type.
+	* The number of entries parametrized by ``size`` in input port-type.
 
 Look-Up Tables
 --------------
@@ -349,9 +370,9 @@ Look-Up Tables
     <port type="sram" prefix="string" size="int" mode_select="true|false" circuit_model_name="string" default_val="0|1"/>
   </circuit_model>
 
-.. note:: The SPICE netlists of LUT can be auto-generated or customized.
+.. note:: The Verilog/SPICE netlists of LUT can be auto-generated or customized.
   The auto-generated LUTs are based on a tree-like multiplexer, whose gates of the transistors are used as the inputs of LUTs and the drains/sources of the transistors are used for configurable memories (SRAMs).
-  The LUT provided in customized SPICE netlist should have the same decoding methodology as the traditional LUT.
+  The LUT provided in customized Verilog/SPICE netlist should have the same decoding methodology as the traditional LUT.
 
 Additional design parameters for LUTs:
 
@@ -369,9 +390,9 @@ Instructions of defining design parameters:
 
 * **pass_gate_logic:** Specify the pass-gates of the internal multiplexer, the same as the multiplexers.
 
-* **port:** three types of ports (input, output and sram) should be defined. If the user provides an customized SPICE netlist, the bandwidth of ports should be defined to the same as the SPICE netlist. To support customizable LUTs, each type of port contain special keywords. For input ports, the keyword tri_state_map aims to customize which inputs are fixed to constant values when the LUT is in fracturable modes. For example, tri_state_map="----11" indicates that the last two inputs will be fixed to be logic '1' when a 6-input LUT is in fracturable modes. The circuit_model_name of input port is used to specify which logic gates will be used to tri-state the inputs in fracturable LUT modes. It is required to use an AND gate to force logic '0' or an OR gate to force logic '1' for the input ports. For output ports, the keyword lut_frac_level is used to specify the level in LUT multiplexer tree where the output port are wired to. For example, lut_frac_level="4" in a fracturable LUT6 means that the output are potentially wired to the 4th stage of a LUT multiplexer and it is an output of a LUT4. The keyword lut_output_mask describes which fracturable outputs are used. For instance, in a 6-LUT, there are potentially four LUT4 outputs can be wired out. lut_output_mask="0,2" indicates that only the first and the thrid LUT4 outputs will be used in fracturable mode. Note that the size of the output port should be consistent to the length of lut_output_mask. 
+* **port:** three types of ports (input, output and sram) should be defined. If the user provides an customized Verilog/SPICE netlist, the bandwidth of ports should be defined to the same as the Verilog/SPICE netlist. To support customizable LUTs, each type of port contain special keywords. For input ports, the keyword tri_state_map aims to customize which inputs are fixed to constant values when the LUT is in fracturable modes. For example, ``tri_state_map`` ="----11" indicates that the last two inputs will be fixed to be logic '1' when a 6-input LUT is in fracturable modes. The circuit_model_name of input port is used to specify which logic gates will be used to tri-state the inputs in fracturable LUT modes. It is required to use an AND gate to force logic '0' or an OR gate to force logic '1' for the input ports. For output ports, the keyword lut_frac_level is used to specify the level in LUT multiplexer tree where the output port are wired to. For example, lut_frac_level="4" in a fracturable LUT6 means that the output are potentially wired to the 4th stage of a LUT multiplexer and it is an output of a LUT4. The keyword lut_output_mask describes which fracturable outputs are used. For instance, in a 6-LUT, there are potentially four LUT4 outputs can be wired out. lut_output_mask="0,2" indicates that only the first and the thrid LUT4 outputs will be used in fracturable mode. Note that the size of the output port should be consistent to the length of lut_output_mask. 
 
-* **SRAM port for mode selection:** To enable switch between different operating modes, the SRAM bits of a fracturable LUT consists of two parts: configuration memory and mode selecting. The SRAM port for mode selection is specified through the XML keyword mode_select. Note that the size of such SRAM port should be consistent to the number of 1s or 0s in the tri_state_map.
+* **SRAM port for mode selection:** To enable switch between different operating modes, the SRAM bits of a fracturable LUT consists of two parts: configuration memory and mode selecting. The SRAM port for mode selection is specified through the XML keyword mode_select. Note that the size of such SRAM port should be consistent to the number of 1s or 0s in the ``tri_state_map``.
 
 **LUT example**
 
@@ -400,7 +421,7 @@ The code describing this LUT is:
   </circuit_model>
 
 **This example shows:**
-	* The difference between *input_buffer* and *lut_input_buffer* and that they are independent.
+	* The difference between ``input_buffer`` and ``lut_input_buffer`` and that they are independent.
 	* How each blocks is defined
 
 Flip-Flops
@@ -417,17 +438,19 @@ Flip-Flops
     <port type="clock" prefix="string" size="int"/>
   </circuit_model>
 
-.. note:: The circuit designs of flip-flops are highly dependent on the technology node and well optimized by engineers. Therefore, FPGA-SPICE requires users to provide their customized FF SPICE/Verilog netlists. A sample SPICE netlist of FF can be found in the directory SpiceNetlists in the released package.
+.. note:: The circuit designs of flip-flops are highly dependent on the technology node and well optimized by engineers. Therefore, FPGA-Verilog/SPICE requires users to provide their customized FF Verilog/SPICE/Verilog netlists. A sample Verilog/SPICE netlist of FF can be found in the directory SpiceNetlists in the released package.
   
-  The information of input and output buffer should be clearly specified according to the customized SPICE netlist! The existence of input/output buffers will influence the decision in creating testbenches, which may leads to larger errors in power analysis.
+  The information of input and output buffer should be clearly specified according to the customized Verilog/SPICE netlist! The existence of input/output buffers will influence the decision in creating testbenches, which may leads to larger errors in power analysis.
 
-  FPGA-SPICE currently support only one clock domain in the FPGA. Therefore there should be only one clock port to be defined and the size of the clock port should be 1.
+  FPGA-Verilog/SPICE currently support only one clock domain in the FPGA. Therefore there should be only one clock port to be defined and the size of the clock port should be 1.
 
 Instructions of defining design parameters:
 
-* **circuit_model type:** can be ff or scff. FF is typical Flip-Flop, SCFF is Scan-Chain Flip-Flop
+* **circuit_model type:** can be ``ff`` or ``scff``. FF is typical Flip-Flop, SCFF is Scan-Chain Flip-Flop
 
-* **port:** three types of ports (input, output and clock) should be defined. If the user provides a customized SPICE netlist, the bandwidth of ports should be defined to the same as the SPICE netlist.
+* **port:** three types of ports (``input``, ``output`` and ``clock``) should be defined. If the user provides a customized Verilog/SPICE netlist, the bandwidth of ports should be defined to the same as the Verilog/SPICE netlist.
+
+.. note:: In a valid FPGA architecture, users should provide at least either a SCFF or a SRAM, so that the configurations can loaded to core logic. 
 
 **FF example**
 
@@ -454,9 +477,9 @@ The code describing this FF is:
   </circuit_model>
 
 **This example shows:**
-	* Circuit model type as ff
-	* The verilog netlist file associated to this component *ff.v*
-	* 3 ports, *Set*, *Reset* and *clk*, defined as global
+	* Circuit model type as ``ff``
+	* The verilog netlist file associated to this component ``ff.v``
+	* 3 ports, ``Set``, ``Reset`` and ``clk``, defined as global
 
 **SCFF example**
 
@@ -481,9 +504,9 @@ The code describing this FF is:
   </circuit_model>
 
 **This example shows:**
-	* Circuit model type as scff
-	* The verilog netlist file associated to this component *scff.v*
-	* 1 port, *clk*, defined as global
+	* Circuit model type as ``scff``
+	* The verilog netlist file associated to this component ``scff.v``
+	* 1 port, ``clk``, defined as global
 
 Hard Logics
 -----------
@@ -501,21 +524,21 @@ Hard Logics
 .. note:: Hard logics are defined for non-configurable resources in FPGA architectures, such as adders, multipliers and RAM blocks.
   Their circuit designs are highly dependent on the technology node and well optimized by engineers.
   As more functional units are included in FPGA architecture, it is impossible to auto-generate these functional units [3].
-  Therefore, FPGA-SPICE requires users to provide their customized SPICE netlists. A sample SPICE netlist of a 1-bit adder can be found in the directory SpiceNetlists in the released package.
+  Therefore, FPGA-Verilog/SPICE requires users to provide their customized Verilog/SPICE netlists. A sample Verilog/SPICE netlist of a 1-bit adder can be found in the directory SpiceNetlists in the released package.
 
-  The information of input and output buffer should be clearly specified according to the customized SPICE netlist! The existence of input/output buffers will influence the decision in creating testbenches, which may leads to larger errors in power analysis.
+  The information of input and output buffer should be clearly specified according to the customized Verilog/SPICE netlist! The existence of input/output buffers will influence the decision in creating testbenches, which may leads to larger errors in power analysis.
 
 Instructions of defining design parameters:
 
-* **port:** two types of ports (input and output) should be defined. If the user provides a user-defined SPICE netlist, the bandwidth of ports should be defined to the same as the SPICE netlist.
+* **port:** two types of ports (``input`` and ``output``) should be defined. If the user provides a user-defined Verilog/SPICE netlist, the bandwidth of ports should be defined to the same as the Verilog/SPICE netlist.
 
 Routing Wire Segments
 ---------------------
 
-FPGA-SPICE provides two types of SPICE models for the wire segments in FPGA architecture:
+FPGA-Verilog/SPICE provides two types of Verilog/SPICE models for the wire segments in FPGA architecture:
 
-	* One type is called **wire**, which targets the local wires inside the logic blocks. The wire has one input and one output, directly connecting the output of a driver and the input of the downstream unit, respectively
-	* The other type is called **chan_wire**, especially targeting the channel wires. The channel wires have one input and two outputs, one of which is connected to the inputs of Connection Boxes while the other is connected to the inputs of Switch Boxes. Two outputs are created because from the view of layout, the inputs of Connection Boxes are typically connected to the middle point of channel wires, which has less parasitic resistances and capacitances than connected to the ending point.
+	* One type is called ``wire``, which targets the local wires inside the logic blocks. The wire has one input and one output, directly connecting the output of a driver and the input of the downstream unit, respectively
+	* The other type is called ``chan_wire``, especially targeting the channel wires. The channel wires have one input and two outputs, one of which is connected to the inputs of Connection Boxes while the other is connected to the inputs of Switch Boxes. Two outputs are created because from the view of layout, the inputs of Connection Boxes are typically connected to the middle point of channel wires, which has less parasitic resistances and capacitances than connected to the ending point.
 
 .. code-block:: xml
 
@@ -528,19 +551,19 @@ FPGA-SPICE provides two types of SPICE models for the wire segments in FPGA arch
     <wire_param model_type="string" res_val="float" cap_val="float" level="int"/>
   </circuit_model>
 
-.. note:: FPGA-SPICE can auto-generate the SPICE model for wires while also allows users to provide their customized SPICE netlists.
+.. note:: FPGA-Verilog/SPICE can auto-generate the Verilog/SPICE model for wires while also allows users to provide their customized Verilog/SPICE netlists.
 
   The information of input and output buffer should be clearly specified according to the customized netlist! The existence of input/output buffers will influence the decision in creating testbenches, which may leads to larger errors in power analysis.
 
 Instructions of defining design parameters:
 
-* **type:** can be [wire|chan_wire]. The SPICE model wire targets the local wire inside the logic block while the chan_wire targets the channel wires in global routing.
+* **type:** can be [``wire`` | ``chan_wire``]. The Verilog/SPICE model wire targets the local wire inside the logic block while the chan_wire targets the channel wires in global routing.
 
-* **port:** two types of ports (input and output) should be defined. If the user provides an customized SPICE netlist, the bandwidth of ports should be defined to the same as the SPICE netlist.
+* **port:** two types of ports (``input`` and ``output``) should be defined. If the user provides an customized Verilog/SPICE netlist, the bandwidth of ports should be defined to the same as the Verilog/SPICE netlist.
 
 * **wire_param:**
 
-	* **model_type:** can be [pi|T], corresponding to the π-type and T-type RC wire models.
+	* **model_type:** can be [``pi`` | ``T``], corresponding to the π-type and T-type RC wire models.
 	* **res_val:** specify the total resistance of the wire
 	* **cap_val:** specify the total capacitance of the wire.
 	* **level:** specify the number of levels of the RC wire model.
@@ -569,8 +592,8 @@ The code describing this wire is:
   </circuit_model>
 
 **This example shows**
-	* How to use the *wire_param* for a π-type RC wire model
-	* How to use this circuit_model to auto-generate the SPICE netlist
+	* How to use the ``wire_param`` for a π-type RC wire model
+	* How to use this circuit_model to auto-generate the Verilog/SPICE netlist
 
 I/O pads
 --------
@@ -588,13 +611,13 @@ I/O pads
   </circuit_model>
 
 .. note::  The circuit designs of I/O pads are highly dependent on the technology node and well optimized by engineers.
-  Therefore, FPGA-SPICE requires users to provide their customized SPICE/Verilog netlists. A sample SPICE netlist of an I/O pad can be found in the directory SpiceNetlists in the released package.
+  Therefore, FPGA-Verilog/SPICE requires users to provide their customized Verilog/SPICE/Verilog netlists. A sample Verilog/SPICE netlist of an I/O pad can be found in the directory SpiceNetlists in the released package.
 
   The information of input and output buffer should be clearly specified according to the customized netlist! The existence of input/output buffers will influence the decision in creating testbenches, which may leads to larger errors in power analysis.
 
 Instructions of defining design parameters:
 
-* **port:** two types of ports (input and output) should be defined. If the user provides a user-defined SPICE netlist, the bandwidth of ports should be defined to the same as the SPICE netlist.
+* **port:** four types of ports (``input``, ``output``, ``inout`` and ``sram``) should be defined. If the user provides a user-defined Verilog/SPICE netlist, the bandwidth of ports should be defined to the same as the Verilog/SPICE netlist.
 
 **IO-pad example**
 
@@ -622,6 +645,6 @@ The code describing this IO-Pad is:
 
 **This example shows**
 
-	* The association of the verilog netlist file *io.v*
+	* The association of the verilog netlist file ``io.v``
 	* The inout pad port_type, which means as inout as output.
 	* The instantiation of a SCFF as sram

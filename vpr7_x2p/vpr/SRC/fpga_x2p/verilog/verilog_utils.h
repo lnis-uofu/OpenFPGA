@@ -15,19 +15,6 @@ void dump_verilog_preproc(FILE* fp,
                           t_syn_verilog_opts fpga_verilog_opts,
                           enum e_verilog_tb_type verilog_tb_type);
 
-void dump_simulation_preproc(FILE* fp, 
-                          t_syn_verilog_opts fpga_verilog_opts,
-                          enum e_verilog_tb_type verilog_tb_type);
-
-void dump_verilog_simulation_preproc(char* subckt_dir,
-                                     t_syn_verilog_opts fpga_verilog_opts);
-
-void dump_verilog_defines_preproc(char* subckt_dir,
-                                 t_syn_verilog_opts fpga_verilog_opts);
-
-void verilog_include_simulation_defines_file(FILE* fp, 
-                                             char* formatted_verilog_dir);
-
 void verilog_include_defines_preproc_file(FILE* fp, 
                                           char* formatted_verilog_dir);
 
@@ -43,10 +30,11 @@ FILE* verilog_create_one_subckt_file(char* subckt_dir,
                                      char** verilog_fname); 
 
 void dump_verilog_subckt_header_file(t_llist* subckt_llist_head,
-                                     char* subckt_dir,
-                                     char* header_file_name);
+                                     const char* subckt_dir,
+                                     const char* header_file_name);
 
 char determine_verilog_generic_port_split_sign(enum e_dump_verilog_port_type dump_port_type);
+
 
 void dump_verilog_generic_port(FILE* fp, 
                                enum e_dump_verilog_port_type dump_port_type,
@@ -73,7 +61,8 @@ int rec_dump_verilog_spice_model_global_ports(FILE* fp,
                                               const t_spice_model* cur_spice_model,
                                               boolean dump_port_type,
                                               boolean recursive,
-                                              boolean require_explicit_port_map);
+                                              boolean require_explicit_port_map,
+                                              boolean is_lib_name);
 
 int dump_verilog_global_ports(FILE* fp, t_llist* head,
                               boolean dump_port_type,
@@ -163,7 +152,7 @@ void dump_verilog_mux_sram_submodule(FILE* fp, t_sram_orgz_info* cur_sram_orgz_i
 void dump_verilog_sram_submodule(FILE* fp, t_sram_orgz_info* cur_sram_orgz_info,
                                  t_spice_model* sram_verilog_model);
 
-void dump_verilog_scff_config_bus(FILE* fp,
+void dump_verilog_ccff_config_bus(FILE* fp,
                                  t_spice_model* mem_spice_model, 
                                  t_sram_orgz_info* cur_sram_orgz_info,
                                  int lsb, int msb,
@@ -220,6 +209,8 @@ char* generate_verilog_subckt_name(t_spice_model* spice_model,
 char* generate_verilog_mem_subckt_name(t_spice_model* spice_model, 
                                        t_spice_model* mem_model,
                                        char* postfix);
+
+char* generate_verilog_decoder_subckt_name(int addr_len, int data_len);
 
 char* generate_verilog_mux_basis_subckt_name(t_spice_model* spice_model, 
                                              int mux_size, char* postfix);

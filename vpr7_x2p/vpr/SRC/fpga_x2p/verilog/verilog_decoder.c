@@ -241,7 +241,7 @@ void dump_verilog_decoder(FILE* fp,
 }
 
 /* For standalone-SRAM  configuration organization:
- * Dump the module of configuration module which connect configuration ports to SRAMs/SCFFs 
+ * Dump the module of configuration module which connect configuration ports to SRAMs/CCFFs 
  */ 
 static 
 void dump_verilog_standalone_sram_config_module(FILE* fp,
@@ -288,7 +288,7 @@ void dump_verilog_standalone_sram_config_module(FILE* fp,
 
 
 /* For scan-chain configuration organization:
- * Dump the module of configuration module which connect configuration ports to SRAMs/SCFFs 
+ * Dump the module of configuration module which connect configuration ports to SRAMs/CCFFs 
  */ 
 static 
 void dump_verilog_scan_chain_config_module(FILE* fp,
@@ -331,7 +331,7 @@ void dump_verilog_scan_chain_config_module(FILE* fp,
   fprintf(fp, ";\n");
 
   /* Verilog Module body */
-  /* Connect the head of current scff to the tail of previous scff*/
+  /* Connect the head of current ccff to the tail of previous ccff*/
   fprintf(fp, "        ");
   fprintf(fp, "assign ");
   dump_verilog_sram_one_local_outport(fp, cur_sram_orgz_info, 1, num_mem_bits - 1, -1, VERILOG_PORT_CONKT);
@@ -372,7 +372,7 @@ void dump_verilog_membank_one_inv_module(FILE* fp,
           inv_spice_model->name, inv_spice_model->prefix, 
           instance_tag, inv_index);
   /* Dump global ports */
-  if  (0 < rec_dump_verilog_spice_model_global_ports(fp, inv_spice_model, FALSE, FALSE, inv_spice_model->dump_explicit_port_map)) {
+  if  (0 < rec_dump_verilog_spice_model_global_ports(fp, inv_spice_model, FALSE, FALSE, inv_spice_model->dump_explicit_port_map, TRUE)) {
     fprintf(fp, ",\n");
   }
   /* Dump explicit port map if required */
@@ -405,7 +405,7 @@ void dump_verilog_membank_one_inv_module(FILE* fp,
 }
 
 /* For Memory-bank configuration organization:
- * Dump the module of configuration module which connect configuration ports to SRAMs/SCFFs 
+ * Dump the module of configuration module which connect configuration ports to SRAMs/CCFFs 
  */ 
 static 
 void dump_verilog_membank_config_module(FILE* fp,

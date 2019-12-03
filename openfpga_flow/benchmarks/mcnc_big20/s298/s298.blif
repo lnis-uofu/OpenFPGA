@@ -1,0 +1,90 @@
+# Benchmark "s298" written by ABC on Tue Mar 12 09:40:31 2019
+.model s298
+.inputs clock G0 G1 G2
+.outputs G117 G132 G66 G118 G133 G67
+
+.latch        n21        G10 re      clock  0
+.latch        n26        G11 re      clock  0
+.latch        n31        G12 re      clock  0
+.latch        n36        G13 re      clock  0
+.latch        n41        G14 re      clock  0
+.latch        n46        G15 re      clock  0
+.latch        n51        G66 re      clock  0
+.latch        n55        G67 re      clock  0
+.latch        n59       G117 re      clock  0
+.latch        n63       G118 re      clock  0
+.latch        n67       G132 re      clock  0
+.latch        n71       G133 re      clock  0
+.latch        n75        G22 re      clock  0
+.latch        n80        G23 re      clock  0
+
+.names n56 n57 G10 n63
+0-0 1
+11- 1
+.names G15 G11 G13 G22 G14 G12 n56
+01---- 1
+0-0--- 1
+0--0-- 1
+0---1- 1
+0----1 1
+-11000 1
+.names G14 G13 G12 G118 G11 n57
+01--- 1
+100-0 1
+1-11- 1
+-1-1- 1
+.names n56 n59_1 G10 n67
+0-0 1
+11- 1
+.names G14 G13 G12 G132 G11 n59_1
+100-0 1
+11-1- 1
+1-11- 1
+.names G0 G10 n21
+00 1
+.names G10 G11 G0 G12 G13 n26
+010-- 1
+1001- 1
+100-0 1
+.names G12 G0 G11 G10 n31
+0011 1
+100- 1
+10-0 1
+.names G13 G0 G11 G12 G10 n36
+00111 1
+1001- 1
+1010- 1
+10--0 1
+.names n65 G14 G0 n41
+000 1
+110 1
+.names G23 G10 G13 G11 G12 n65
+1---- 0
+-1100 0
+.names G0 n56 n46
+00 1
+.names n56 G66 G14 G13 G12 n51
+111-1 1
+11-1- 1
+1-01- 1
+.names n56 G13 G14 G11 G67 G12 n55
+1000-- 1
+10-1-0 1
+111-1- 1
+1-1-11 1
+.names n56 G13 G117 G14 G12 G11 n59
+10-0-- 1
+10--01 1
+1111-- 1
+1-111- 1
+.names n56 G14 G12 G13 G133 G11 n71
+1010-1 1
+111-1- 1
+11-11- 1
+.names G2 G22 G0 n75
+010 1
+100 1
+.names G1 G23 G0 n80
+010 1
+100 1
+.end

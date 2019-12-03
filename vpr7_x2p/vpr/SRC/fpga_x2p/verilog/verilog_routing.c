@@ -1,7 +1,7 @@
-/***********************************/
-/*      SPICE Modeling for VPR     */
-/*       Xifan TANG, EPFL/LSI      */
-/***********************************/
+/*********************************************************************
+ * This file includes functions that are used for 
+ * Verilog generation of FPGA routing architecture (global routing) 
+ *********************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -11,6 +11,8 @@
 #include <unistd.h>
 #include <string.h>
 #include <vector>
+#include <map>
+#include <fstream>
 #include <algorithm>
 
 /* Include vpr structs*/
@@ -24,9 +26,12 @@
 #include "route_common.h"
 #include "vpr_utils.h"
 
+#include "vtr_assert.h"
+
 /* Include SPICE support headers*/
 #include "linkedlist.h"
 #include "rr_blocks.h"
+#include "rr_blocks_utils.h"
 #include "fpga_x2p_types.h"
 #include "fpga_x2p_utils.h"
 #include "fpga_x2p_backannotate_utils.h"
@@ -34,18 +39,221 @@
 #include "fpga_x2p_pbtypes_utils.h"
 #include "fpga_x2p_bitstream_utils.h"
 #include "fpga_x2p_globals.h"
+#include "fpga_x2p_naming.h"
+#include "mux_utils.h"
+#include "module_manager.h"
+#include "module_manager_utils.h"
+#include "fpga_x2p_mem_utils.h"
 
 /* Include Verilog support headers*/
 #include "verilog_global.h"
 #include "verilog_utils.h"
+#include "verilog_writer_utils.h"
+#include "verilog_module_writer.h"
 #include "verilog_routing.h"
+
+/*********************************************************************
+ * Generate the Verilog module for a routing channel
+ * Routing track wire, which is 1-input and dual output
+ * This type of wires are used in the global routing architecture.
+ * One of the output is wired to another Switch block multiplexer, 
+ * while the mid-output is wired to a Connection block multiplexer.
+ *     
+ *                  |    CLB     |
+ *                  +------------+
+ *                        ^
+ *                        |
+ *           +------------------------------+
+ *           | Connection block multiplexer |
+ *           +------------------------------+
+ *                        ^
+ *                        |  mid-output         +--------------
+ *              +--------------------+          |
+ *    input --->| Routing track wire |--------->| Switch Block
+ *              +--------------------+  output  |
+ *                                              +--------------
+ *
+ * IMPORTANT: This function is designed for outputting unique Verilog modules                                             
+ *            of routing channels
+ *
+ * TODO: This function should be adapted to the RRGraph object
+ *********************************************************************/
+static 
+void print_verilog_routing_unique_chan_subckt(ModuleManager& module_manager, 
+                                              const std::string& verilog_dir,
+                                              const std::string& subckt_dir,
+                                              const size_t& rr_chan_subckt_id, 
+                                              const RRChan& rr_chan) {
+  std::string fname_prefix;
+
+  /* TODO: use a constexpr String arrary to replace this switch cases? */
+  /* Find the prefix for the Verilog file name */
+  switch (rr_chan.get_type()) {
+  case CHANX:
+    fname_prefix = std::string(chanx_verilog_file_name_prefix); 
+    break;
+  case CHANY:
+    fname_prefix = std::string(chany_verilog_file_name_prefix); 
+    break;
+  default:
+    vpr_printf(TIO_MESSAGE_ERROR, 
+               "(File:%s, [LINE%d])Invalid Channel type! Should be CHANX or CHANY.\n",
+               __FILE__, __LINE__);
+    exit(1);
+  }
+
+  std::string verilog_fname(subckt_dir + generate_routing_block_netlist_name(fname_prefix, rr_chan_subckt_id, std::string(verilog_netlist_file_postfix)));
+  /* TODO: remove the bak file when the file is ready */
+  verilog_fname += ".bak";
+
+  /* Create the file stream */
+  std::fstream fp;
+  fp.open(verilog_fname, std::fstream::out | std::fstream::trunc);
+
+  check_file_handler(fp);
+
+  print_verilog_file_header(fp, "Verilog modules for routing channel in X- and Y-direction"); 
+
+  /* Print preprocessing flags */
+  print_verilog_include_defines_preproc_file(fp, verilog_dir);
+
+  /* Create a Verilog Module based on the circuit model, and add to module manager */
+  ModuleId module_id = module_manager.add_module(generate_routing_channel_module_name(rr_chan.get_type(), rr_chan_subckt_id)); 
+
+  /* Add ports to the module */
+  /* For the LEFT side of a X-direction routing channel 
+   * or the BOTTOM bottom side of a Y-direction routing channel 
+   * Routing Resource Nodes in INC_DIRECTION are inputs of the module 
+   *
+   * For the RIGHT side of a X-direction routing channel 
+   * or the TOP bottom side of a Y-direction routing channel 
+   * Routing Resource Nodes in INC_DIRECTION are outputs of the module 
+   *
+   * An example of X-direction routing channel consisting of W routing nodes:
+   *                            +--------------------------+
+   *    nodeA(INC_DIRECTION)--->| in[0]             out[0] |---> nodeA(INC_DIRECTION) 
+   *    nodeB(DEC_DIRECTION)<---| out[1]             in[1] |<--- nodeB(DEC_DIRECTION) 
+   *          ...                  ...               ...           ...
+   *    nodeX(INC_DIRECTION)--->| in[W-1]         out[W-1] |---> nodeX(INC_DIRECTION) 
+   *                            +--------------------------+
+   *
+   * An example of Y-direction routing channel consisting of W routing nodes:
+   *
+   *                           nodeA              nodeB              nodeX
+   *                      (INC_DIRECTION)      (DEC_DIRECTION)   (DEC_DIRECTION)
+   *                             ^                  |       ...      |
+   *                             |                  v                v
+   *                      +------------------------------   ...   -------+
+   *                      |  out[0]               in[1]            in[X] |
+   *                      |                                              |
+   *                      |                                              |
+   *                      |   in[0]               out[1]    ...   out[X] |
+   *                      +------------------------------   ...   -------+
+   *                             ^                  |                |
+   *                             |                  v                v
+   *                           nodeA              nodeB            nodeX
+   *                      (INC_DIRECTION)      (DEC_DIRECTION)   (DEC_DIRECTION)
+   */
+  /* Add ports at LEFT/BOTTOM side of the module */
+  for (size_t itrack = 0; itrack < rr_chan.get_chan_width(); ++itrack) {
+    switch (rr_chan.get_node(itrack)->direction) {
+    case INC_DIRECTION: {
+      /* TODO: naming should be more flexible !!! */
+      BasicPort input_port(std::string("in" + std::to_string(itrack)), 1);
+      module_manager.add_port(module_id, input_port, ModuleManager::MODULE_INPUT_PORT);
+      break;
+    }
+    case DEC_DIRECTION: {
+      /* TODO: naming should be more flexible !!! */
+      BasicPort output_port(std::string("out" + std::to_string(itrack)), 1);
+      module_manager.add_port(module_id, output_port, ModuleManager::MODULE_OUTPUT_PORT);
+      break;
+    }
+    case BI_DIRECTION:
+    default:
+      vpr_printf(TIO_MESSAGE_ERROR, 
+                 "(File: %s [LINE%d]) Invalid direction of rr_node %s[%lu]_in/out[%lu]!\n",
+                 __FILE__, __LINE__, 
+                 convert_chan_type_to_string(rr_chan.get_type()),
+                 rr_chan_subckt_id, itrack);
+      exit(1);
+    }
+  }
+  /* Add ports at RIGHT/TOP side of the module */
+  for (size_t itrack = 0; itrack < rr_chan.get_chan_width(); ++itrack) {
+    switch (rr_chan.get_node(itrack)->direction) {
+    case INC_DIRECTION: {
+      /* TODO: naming should be more flexible !!! */
+      BasicPort output_port(std::string("out" + std::to_string(itrack)), 1);
+      module_manager.add_port(module_id, output_port, ModuleManager::MODULE_OUTPUT_PORT);
+      break;
+    }
+    case DEC_DIRECTION: {
+      /* TODO: naming should be more flexible !!! */
+      BasicPort input_port(std::string("in" + std::to_string(itrack)), 1);
+      module_manager.add_port(module_id, input_port, ModuleManager::MODULE_INPUT_PORT);
+      break;
+    }
+    case BI_DIRECTION:
+    default:
+      vpr_printf(TIO_MESSAGE_ERROR, 
+                 "(File: %s [LINE%d]) Invalid direction of rr_node %s[%lu]_in/out[%lu]!\n",
+                 __FILE__, __LINE__, 
+                 convert_chan_type_to_string(rr_chan.get_type()),
+                 rr_chan_subckt_id, itrack);
+      exit(1);
+    }
+  }
+  /* Add middle-point output for connection box inputs */
+  for (size_t itrack = 0; itrack < rr_chan.get_chan_width(); ++itrack) {
+    /* TODO: naming should be more flexible !!! */
+    BasicPort mid_output_port(std::string("mid_out" + std::to_string(itrack)), 1);
+    module_manager.add_port(module_id, mid_output_port, ModuleManager::MODULE_OUTPUT_PORT);
+  }
+
+  /* dump module definition + ports */
+  print_verilog_module_declaration(fp, module_manager, module_id);
+  /* Finish dumping ports */
+
+  /* Print short-wire connection: 
+   *    
+   *   in[i] ----------> out[i]
+   *             |
+   *             +-----> mid_out[i]
+   */
+  for (size_t itrack = 0; itrack < rr_chan.get_chan_width(); ++itrack) {
+    /* short connecting inputs and outputs: 
+     * length of metal wire and parasitics are handled by semi-custom flow
+     */
+    BasicPort input_port(std::string("in" + std::to_string(itrack)), 1);
+    BasicPort output_port(std::string("out" + std::to_string(itrack)), 1);
+    BasicPort mid_output_port(std::string("mid_out" + std::to_string(itrack)), 1);
+    print_verilog_wire_connection(fp, output_port, input_port, false);
+    print_verilog_wire_connection(fp, mid_output_port, input_port, false);
+  }
+
+  /* Put an end to the Verilog module */
+  print_verilog_module_end(fp, module_manager.module_name(module_id));
+
+  /* Add an empty line as a splitter */
+  fp << std::endl;
+
+  /* Close file handler */
+  fp.close();
+
+  /* Add fname to the linked list */
+  /* Uncomment this when it is ready
+  routing_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(routing_verilog_subckt_file_path_head, verilog_fname.c_str());  
+   */
+
+  return;
+}
 
 static 
 void dump_verilog_routing_chan_subckt(char* verilog_dir,
                                       char* subckt_dir,
                                       size_t rr_chan_subckt_id, 
-                                      const RRChan& rr_chan,
-                                      bool is_explicit_mapping) {
+                                      const RRChan& rr_chan) {
   FILE* fp = NULL;
   char* fname = NULL;
 
@@ -79,9 +287,11 @@ void dump_verilog_routing_chan_subckt(char* verilog_dir,
           gen_verilog_one_routing_channel_module_name(rr_chan.get_type(), rr_chan_subckt_id, -1));
   fprintf(fp, "\n");
   /* dump global ports */
+  /*
   if (0 < dump_verilog_global_ports(fp, global_ports_head, TRUE, false)) {
     fprintf(fp, ",\n");
   }
+  */
   /* Inputs and outputs,
    * Rules for CHANX:
    * print left-hand ports(in) first, then right-hand ports(out)
@@ -171,8 +381,7 @@ void dump_verilog_routing_chan_subckt(char* verilog_dir,
                                       int LL_num_rr_nodes, t_rr_node* LL_rr_node,
                                       t_ivec*** LL_rr_node_indices,
                                       t_rr_indexed_data* LL_rr_indexed_data,
-                                      int num_segment,
-                                      bool is_explicit_mapping) {
+                                      int num_segment) {
   int itrack, iseg, cost_index;
   int chan_width = 0;
   t_rr_node** chan_rr_nodes = NULL;
@@ -217,9 +426,11 @@ void dump_verilog_routing_chan_subckt(char* verilog_dir,
           gen_verilog_one_routing_channel_module_name(chan_type, x, y));
   fprintf(fp, "\n");
   /* dump global ports */
+  /*
   if (0 < dump_verilog_global_ports(fp, global_ports_head, TRUE, false)) {
     fprintf(fp, ",\n");
   }
+   */
   /* Inputs and outputs,
    * Rules for CHANX:
    * print left-hand ports(in) first, then right-hand ports(out)
@@ -313,6 +524,7 @@ void dump_verilog_routing_chan_subckt(char* verilog_dir,
 void dump_verilog_grid_side_pin_with_given_index(FILE* fp, t_rr_type pin_type, 
                                                  int pin_index, int side,
                                                  int x, int y,
+                                                 int unique_x, int unique_y, /* If explicit, needs the coordinates of the mirror*/
                                                  boolean dump_port_type,
                                                  bool is_explicit_mapping) {
   int height;  
@@ -360,7 +572,7 @@ void dump_verilog_grid_side_pin_with_given_index(FILE* fp, t_rr_type pin_type,
       is_explicit_mapping = false; /* Both cannot be true at the same time */
     }
     if (true == is_explicit_mapping) {
-      fprintf(fp, ".%s(", gen_verilog_grid_one_pin_name(x, y, height, side, pin_index, TRUE));
+      fprintf(fp, ".%s(", gen_verilog_grid_one_pin_name(unique_x, unique_y, height, side, pin_index, TRUE));
     }
     fprintf(fp, "%s", gen_verilog_grid_one_pin_name(x, y, height, side, pin_index, TRUE));
     if (true == is_explicit_mapping) {
@@ -521,8 +733,7 @@ void dump_verilog_unique_switch_box_short_interc(FILE* fp,
                                                  enum e_side chan_side,
                                                  t_rr_node* cur_rr_node,
                                                  int actual_fan_in,
-                                                 t_rr_node* drive_rr_node,
-                                                 bool is_explicit_mapping) {
+                                                 t_rr_node* drive_rr_node) {
   /* Check the file handler*/ 
   if (NULL == fp) {
     vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid file handler.\n", 
@@ -565,6 +776,7 @@ void dump_verilog_unique_switch_box_short_interc(FILE* fp,
                                                 drive_rr_node->ptc_num, 
                                                 rr_sb.get_opin_node_grid_side(drive_rr_node),
                                                 grid_x, grid_y, 
+                                                0, 0, /* No explicit mapping*/
                                                 FALSE, false); /* Do not dump the direction of the port! */
     break;
   case CHANX:
@@ -667,6 +879,8 @@ void dump_verilog_switch_box_short_interc(FILE* fp,
                                                 drive_rr_node->ptc_num, 
                                                 cur_sb_info->opin_rr_node_grid_side[side][index],
                                                 grid_x, grid_y, 
+                                                0, /*Used in more recent version*/
+                                                0, /*Used in more recent version*/
                                                 FALSE, is_explicit_mapping); /* Do not dump the direction of the port! */
     break;
   case CHANX:
@@ -772,7 +986,10 @@ void dump_verilog_switch_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
               verilog_model->prefix, mux_size, verilog_model->cnt, input_cnt);
       dump_verilog_grid_side_pin_with_given_index(fp, IPIN, drive_rr_nodes[inode]->ptc_num, 
                                                   cur_sb_info->opin_rr_node_grid_side[side][index],
-                                                  grid_x, grid_y, FALSE, is_explicit_mapping);
+                                                  grid_x, grid_y,
+                                                  0,/*Used in more recent version*/
+                                                  0,/*Used in more recent version*/
+                                                  FALSE, is_explicit_mapping);
       fprintf(fp, ";\n");
       input_cnt++;
       break;
@@ -836,7 +1053,7 @@ void dump_verilog_switch_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
           verilog_model->prefix, mux_size, verilog_model->cnt);
 
   /* Dump global ports */
-  if  (0 < rec_dump_verilog_spice_model_global_ports(fp, verilog_model, FALSE, FALSE, my_bool_to_boolean(is_explicit_mapping))) {
+  if  (0 < rec_dump_verilog_spice_model_global_ports(fp, verilog_model, FALSE, FALSE, my_bool_to_boolean(is_explicit_mapping), TRUE)) {
     fprintf(fp, ",\n");
   }
   if (true == is_explicit_mapping) {
@@ -981,7 +1198,7 @@ void dump_verilog_unique_switch_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
   int cur_bl, cur_wl;
   t_spice_model* mem_model = NULL;
   char* mem_subckt_name = NULL;
-  int num_input_port, num_output_port, num_sram_port;
+  int num_input_port, num_output_port;
 
   /* Check the file handler*/ 
   if (NULL == fp) {
@@ -1029,7 +1246,9 @@ void dump_verilog_unique_switch_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
               verilog_model->prefix, mux_size, verilog_model->cnt, input_cnt);
       dump_verilog_grid_side_pin_with_given_index(fp, IPIN, drive_rr_nodes[inode]->ptc_num, 
                                                   rr_sb.get_opin_node_grid_side(drive_rr_nodes[inode]),
-                                                  grid_x, grid_y, FALSE, false);
+                                                  grid_x, grid_y,
+                                                  0,0,/*No explicit mapping */
+                                                  FALSE, false);
       fprintf(fp, ";\n");
       input_cnt++;
       break;
@@ -1093,7 +1312,7 @@ void dump_verilog_unique_switch_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
           verilog_model->prefix, mux_size, verilog_model->cnt);
 
   /* Dump global ports */
-  if  (0 < rec_dump_verilog_spice_model_global_ports(fp, verilog_model, FALSE, FALSE, my_bool_to_boolean(is_explicit_mapping))) {
+  if  (0 < rec_dump_verilog_spice_model_global_ports(fp, verilog_model, FALSE, FALSE, my_bool_to_boolean(is_explicit_mapping), TRUE)) {
     fprintf(fp, ",\n");
   }
 
@@ -1467,13 +1686,11 @@ void dump_verilog_unique_switch_box_interc(t_sram_orgz_info* cur_sram_orgz_info,
   if (0 == num_drive_rr_nodes) {
     /* Print a special direct connection*/
     dump_verilog_unique_switch_box_short_interc(fp, rr_sb, chan_side, cur_rr_node, 
-                                                num_drive_rr_nodes, cur_rr_node, 
-                                                is_explicit_mapping);
+                                                num_drive_rr_nodes, cur_rr_node);
   } else if (1 == num_drive_rr_nodes) {
     /* Print a direct connection*/
     dump_verilog_unique_switch_box_short_interc(fp, rr_sb, chan_side, cur_rr_node, 
-                                                num_drive_rr_nodes, drive_rr_nodes[DEFAULT_SWITCH_ID], 
-                                                is_explicit_mapping);
+                                                num_drive_rr_nodes, drive_rr_nodes[DEFAULT_SWITCH_ID]);
   } else if (1 < num_drive_rr_nodes) {
     /* Print the multiplexer, fan_in >= 2 */
     dump_verilog_unique_switch_box_mux(cur_sram_orgz_info, fp, rr_sb, chan_side, cur_rr_node, 
@@ -1709,515 +1926,7 @@ void update_routing_connection_box_conf_bits(t_sram_orgz_info* cur_sram_orgz_inf
 
   return;
 }
-
-
-/* Dump port list of a subckt describing a side of a switch block
- * Only output ports will be printed on the specified side
- * Only input ports will be printed on the other sides
- */
-static 
-void dump_verilog_routing_switch_box_unique_side_subckt_portmap(FILE* fp, 
-                                                                const RRGSB& rr_sb, 
-                                                                enum e_side sb_side,
-                                                                size_t seg_id,
-                                                                boolean dump_port_type,
-                                                                bool is_explicit_mapping) {
-  /* Check file handler*/
-  if (NULL == fp) {
-    vpr_printf(TIO_MESSAGE_ERROR,
-               "(FILE:%s,LINE[%d])Invalid file handler!\n",
-               __FILE__, __LINE__); 
-    exit(1);
-  } 
-
-  /* Create a side manager */
-  Side sb_side_manager(sb_side);
-
-  for (size_t side = 0; side < rr_sb.get_num_sides(); ++side) {
-    Side side_manager(side);
-    /* Print ports  */
-    fprintf(fp, "//----- Inputs/outputs of %s side -----\n", side_manager.c_str());
-    DeviceCoordinator port_coordinator = rr_sb.get_side_block_coordinator(side_manager.get_side()); 
-
-    for (size_t itrack = 0; itrack < rr_sb.get_chan_width(side_manager.get_side()); ++itrack) {
-      switch (rr_sb.get_chan_node_direction(side_manager.get_side(), itrack)) {
-      case OUT_PORT:
-        /* if this is the specified side, we only consider output ports */
-        if (sb_side_manager.get_side() != side_manager.get_side()) {
-          break;
-        }
-        /* Bypass unwanted segments */
-        if (seg_id != rr_sb.get_chan_node_segment(side_manager.get_side(), itrack)) {
-          continue;
-        }
-        fprintf(fp, "  ");
-        if (TRUE == dump_port_type)  {
-          fprintf(fp, "output ");
-          is_explicit_mapping = false; /* Both cannot be true together */
-        }
-        if (true == is_explicit_mapping) {
-          fprintf(fp, ".%s(",
-                gen_verilog_routing_channel_one_pin_name(rr_sb.get_chan_node(side_manager.get_side(), itrack), 
-                                                         port_coordinator.get_x(), port_coordinator.get_y(), itrack,
-                                                         rr_sb.get_chan_node_direction(side_manager.get_side(), itrack))); 
-        }
-        fprintf(fp, "%s",
-                gen_verilog_routing_channel_one_pin_name(rr_sb.get_chan_node(side_manager.get_side(), itrack), 
-                                                         port_coordinator.get_x(), port_coordinator.get_y(), itrack,
-                                                         rr_sb.get_chan_node_direction(side_manager.get_side(), itrack))); 
-        if (true == is_explicit_mapping) {
-          fprintf(fp, ")");
-        }
-        fprintf(fp, ",\n");
-        break;
-      case IN_PORT:
-        /* if this is not the specified side, we only consider input ports */
-        if (sb_side_manager.get_side() == side_manager.get_side()) {
-          break;
-        }
-        fprintf(fp, "  ");
-        if (TRUE == dump_port_type)  {
-          fprintf(fp, "input ");
-        }
-        if (true == is_explicit_mapping) {
-          fprintf(fp, ".%s(",
-                gen_verilog_routing_channel_one_pin_name(rr_sb.get_chan_node(side_manager.get_side(), itrack), 
-                                                         port_coordinator.get_x(), port_coordinator.get_y(), itrack,
-                                                         rr_sb.get_chan_node_direction(side_manager.get_side(), itrack))); 
-        }
-        fprintf(fp, "%s",
-                gen_verilog_routing_channel_one_pin_name(rr_sb.get_chan_node(side_manager.get_side(), itrack), 
-                                                         port_coordinator.get_x(), port_coordinator.get_y(), itrack,
-                                                         rr_sb.get_chan_node_direction(side_manager.get_side(), itrack))); 
-        if (true == is_explicit_mapping) {
-          fprintf(fp, ")");
-        }
-        fprintf(fp, ",\n");
-        break;
-      default:
-        vpr_printf(TIO_MESSAGE_ERROR, 
-                   "(File: %s [LINE%d]) Invalid direction of chan[%d][%d]_track[%d]!\n",
-                   __FILE__, __LINE__, rr_sb.get_sb_x(), rr_sb.get_sb_y(), itrack);
-        exit(1);
-      }
-    }
-
-    /* Dump OPINs of adjacent CLBs */
-    for (size_t inode = 0; inode < rr_sb.get_num_opin_nodes(side_manager.get_side()); ++inode) {
-      fprintf(fp, "  ");
-      dump_verilog_grid_side_pin_with_given_index(fp, OPIN, /* This is an input of a SB */
-                                                  rr_sb.get_opin_node(side_manager.get_side(), inode)->ptc_num,
-                                                  rr_sb.get_opin_node_grid_side(side_manager.get_side(), inode),
-                                                  rr_sb.get_opin_node(side_manager.get_side(), inode)->xlow,
-                                                  rr_sb.get_opin_node(side_manager.get_side(), inode)->ylow,
-                                                  dump_port_type, is_explicit_mapping); /* Dump the direction of the port ! */ 
-      if (FALSE == dump_port_type) {
-        fprintf(fp, ",\n");
-      }
-    } 
-  }
  
-  return; 
-}
-
-
-/* Task: Print the subckt of a side of a Switch Box.
- * For TOP side: 
- * 1. Channel Y [x][y+1] inputs 
- * 2. Grid[x][y+1] Right side outputs pins
- * 3. Grid[x+1][y+1] Left side output pins
- * For RIGHT side: 
- * 1. Channel X [x+1][y] inputs
- * 2. Grid[x+1][y+1] Bottom side output pins
- * 3. Grid[x+1][y] Top side output pins
- * For BOTTOM side: 
- * 1. Channel Y [x][y] outputs
- * 2. Grid[x][y] Right side output pins
- * 3. Grid[x+1][y] Left side output pins
- * For LEFT side: 
- * 1. Channel X [x][y] outputs
- * 2. Grid[x][y] Top side output pins
- * 3. Grid[x][y+1] Bottom side output pins
- *
- *    --------------          --------------
- *    |            |          |            |
- *    |    Grid    |  ChanY   |    Grid    |
- *    |  [x][y+1]  | [x][y+1] | [x+1][y+1] |
- *    |            |          |            |
- *    --------------          --------------
- *                  ----------
- *       ChanX      | Switch |     ChanX 
- *       [x][y]     |   Box  |    [x+1][y]
- *                  | [x][y] |
- *                  ----------
- *    --------------          --------------
- *    |            |          |            |
- *    |    Grid    |  ChanY   |    Grid    |
- *    |   [x][y]   |  [x][y]  |  [x+1][y]  |
- *    |            |          |            |
- *    --------------          --------------
- */
-static 
-void dump_verilog_routing_switch_box_unique_side_module(t_sram_orgz_info* cur_sram_orgz_info,
-                                                        char* verilog_dir, char* subckt_dir, 
-                                                        size_t module_id, size_t seg_id,
-                                                        const RRGSB& rr_sb, enum e_side side,
-                                                        bool is_explicit_mapping) {
-  FILE* fp = NULL; 
-  char* fname = NULL;
-  Side side_manager(side);
-
-  /* Get the channel width on this side, if it is zero, we return */
-  if (0 == rr_sb.get_chan_width(side)) {
-    return;
-  }
-
-  /* Count the number of configuration bits to be consumed by this Switch block */
-  int num_conf_bits = count_verilog_switch_box_side_conf_bits(cur_sram_orgz_info, rr_sb, side, seg_id);
-  /* Count the number of reserved configuration bits to be consumed by this Switch block */
-  int num_reserved_conf_bits = count_verilog_switch_box_side_reserved_conf_bits(cur_sram_orgz_info, rr_sb, side, seg_id);
-  /* Estimate the sram_verilog_model->cnt */
-  int cur_num_sram = get_sram_orgz_info_num_mem_bit(cur_sram_orgz_info); 
-  int esti_sram_cnt = cur_num_sram + num_conf_bits;
-
-  /* Create file name */
-  std::string fname_prefix(sb_verilog_file_name_prefix);
-  fname_prefix += side_manager.c_str();
-
-  std::string file_description("Unique module for Switch Block side: ");
-  file_description += side_manager.c_str();
-  file_description += "seg";
-  file_description += std::to_string(seg_id);
-
-  /* Create file handler */
-  fp = verilog_create_one_subckt_file(subckt_dir, file_description.c_str(), 
-                                      fname_prefix.c_str(), module_id, seg_id, &fname);
-
-  /* Print preprocessing flags */
-  verilog_include_defines_preproc_file(fp, verilog_dir);
-
-  /* Comment lines */
-  fprintf(fp, 
-          "//----- Verilog Module of Unique Switch Box[%lu][%lu] at Side %s, Segment id: %lu -----\n", 
-          rr_sb.get_sb_x(), rr_sb.get_sb_y(), side_manager.c_str(), seg_id);
-  /* Print the definition of subckt*/
-  fprintf(fp, "module %s ( \n", rr_sb.gen_sb_verilog_side_module_name(side, seg_id));
-  /* dump global ports */
-  if (0 < dump_verilog_global_ports(fp, global_ports_head, TRUE, false)) {
-    fprintf(fp, ",\n");
-  }
-
-  dump_verilog_routing_switch_box_unique_side_subckt_portmap(fp, rr_sb, side, 
-                                                             seg_id, TRUE, 
-                                                             false); 
-
-  /* Put down configuration port */
-  /* output of each configuration bit */
-  /* Reserved sram ports */
-  dump_verilog_reserved_sram_ports(fp, cur_sram_orgz_info, 
-                                   0,
-                                   num_reserved_conf_bits - 1,
-                                   VERILOG_PORT_INPUT);
-  if (0 < num_reserved_conf_bits) {
-    fprintf(fp, ",\n");
-  }
-  /* Normal sram ports */
-  dump_verilog_sram_ports(fp, cur_sram_orgz_info, 
-                          cur_num_sram,
-                          esti_sram_cnt - 1,
-                          VERILOG_PORT_INPUT);
-
-  /* Dump ports only visible during formal verification*/
-  if (0 < num_conf_bits) {
-    fprintf(fp, "\n");
-    fprintf(fp, "`ifdef %s\n", verilog_formal_verification_preproc_flag);
-    fprintf(fp, ",\n");
-    dump_verilog_formal_verification_sram_ports(fp, cur_sram_orgz_info, 
-                                                cur_num_sram,
-                                                esti_sram_cnt - 1,
-                                                VERILOG_PORT_INPUT, false);
-    fprintf(fp, "\n");
-    fprintf(fp, "`endif\n");
-  }
-  fprintf(fp, "); \n");
-
-  /* Local wires for memory configurations */
-  dump_verilog_sram_config_bus_internal_wires(fp, cur_sram_orgz_info, 
-                                              cur_num_sram,
-                                              esti_sram_cnt - 1);
-
-  /* Put down all the multiplexers */
-  fprintf(fp, "//----- %s side Multiplexers -----\n", 
-          side_manager.c_str());
-  for (size_t itrack = 0; itrack < rr_sb.get_chan_width(side_manager.get_side()); ++itrack) {
-    assert((CHANX == rr_sb.get_chan_node(side_manager.get_side(), itrack)->type)
-         ||(CHANY == rr_sb.get_chan_node(side_manager.get_side(), itrack)->type));
-    /* We care INC_DIRECTION tracks at this side*/
-    if (OUT_PORT == rr_sb.get_chan_node_direction(side_manager.get_side(), itrack)) {
-      /* Bypass unwanted segments */
-      if (seg_id != rr_sb.get_chan_node_segment(side_manager.get_side(), itrack)) {
-        continue;
-      }
-      dump_verilog_unique_switch_box_interc(cur_sram_orgz_info, fp, rr_sb, 
-                                            side_manager.get_side(), 
-                                            itrack, is_explicit_mapping);
-    }
-  }
- 
-  fprintf(fp, "endmodule\n");
-
-  /* Comment lines */
-  fprintf(fp, 
-          "//----- END Verilog Module of Switch Box[%lu][%lu] Side %s -----\n\n",
-          rr_sb.get_sb_x(), rr_sb.get_sb_y(), side_manager.c_str());
-
-  /* Check */
-  assert(esti_sram_cnt == get_sram_orgz_info_num_mem_bit(cur_sram_orgz_info));
-
-  /* Close file handler */
-  fclose(fp);
-
-  /* Add fname to the linked list */
-  routing_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(routing_verilog_subckt_file_path_head, fname);  
-
-  /* Free chan_rr_nodes */
-  my_free(fname);
-
-  return;
-}
-
-/* Task: Print the subckt of a Switch Box.
- * Call the four submodules dumped in function: unique_side_module
- *
- *    --------------          --------------
- *    |            |          |            |
- *    |    Grid    |  ChanY   |    Grid    |
- *    |  [x][y+1]  | [x][y+1] | [x+1][y+1] |
- *    |            |          |            |
- *    --------------          --------------
- *                  ----------
- *       ChanX      | Switch |     ChanX 
- *       [x][y]     |   Box  |    [x+1][y]
- *                  | [x][y] |
- *                  ----------
- *    --------------          --------------
- *    |            |          |            |
- *    |    Grid    |  ChanY   |    Grid    |
- *    |   [x][y]   |  [x][y]  |  [x+1][y]  |
- *    |            |          |            |
- *    --------------          --------------
- */
-static 
-void dump_verilog_routing_switch_box_unique_module(t_sram_orgz_info* cur_sram_orgz_info,
-                                                   char* verilog_dir, char* subckt_dir, 
-                                                   const RRGSB& rr_sb,
-                                                   bool is_explicit_mapping) {
-  FILE* fp = NULL; 
-  char* fname = NULL;
-
-  /* Count the number of configuration bits to be consumed by this Switch block */
-  int num_conf_bits = count_verilog_switch_box_conf_bits(cur_sram_orgz_info, rr_sb);
-  /* Count the number of reserved configuration bits to be consumed by this Switch block */
-  int num_reserved_conf_bits = count_verilog_switch_box_reserved_conf_bits(cur_sram_orgz_info, rr_sb);
-  /* Estimate the sram_verilog_model->cnt */
-  int cur_num_sram = get_sram_orgz_info_num_mem_bit(cur_sram_orgz_info); 
-  RRGSB rr_gsb = rr_sb; /* IMPORTANT: this copy will be removed when the config ports are initialized when created!!! */
-  rr_gsb.set_sb_num_reserved_conf_bits(num_reserved_conf_bits);
-  rr_gsb.set_sb_conf_bits_lsb(cur_num_sram);
-  rr_gsb.set_sb_conf_bits_msb(cur_num_sram + num_conf_bits - 1);
- 
-  /* Create file handler */
-  fp = verilog_create_one_subckt_file(subckt_dir, "Unique Switch Block ", 
-                                      sb_verilog_file_name_prefix, rr_gsb.get_sb_x(), rr_gsb.get_sb_y(), &fname);
-
-  /* Print preprocessing flags */
-  verilog_include_defines_preproc_file(fp, verilog_dir);
-
-  /* Comment lines */
-  fprintf(fp, "//----- Verilog Module of Unique Switch Box[%lu][%lu] -----\n", rr_gsb.get_sb_x(), rr_gsb.get_sb_y());
-  /* Print the definition of subckt*/
-  fprintf(fp, "module %s ( \n", rr_gsb.gen_sb_verilog_module_name());
-  /* dump global ports */
-  if (0 < dump_verilog_global_ports(fp, global_ports_head, TRUE, false)) {
-    fprintf(fp, ",\n");
-  }
-
-  for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
-    Side side_manager(side);
-    /* Print ports  */
-    fprintf(fp, "//----- Channel Inputs/outputs of %s side -----\n", side_manager.c_str());
-    DeviceCoordinator port_coordinator = rr_gsb.get_side_block_coordinator(side_manager.get_side()); 
-
-    for (size_t itrack = 0; itrack < rr_gsb.get_chan_width(side_manager.get_side()); ++itrack) {
-      switch (rr_gsb.get_chan_node_direction(side_manager.get_side(), itrack)) {
-      case OUT_PORT:
-        fprintf(fp, "  output %s,\n",
-                gen_verilog_routing_channel_one_pin_name(rr_gsb.get_chan_node(side_manager.get_side(), itrack), 
-                                                         port_coordinator.get_x(), port_coordinator.get_y(), itrack,
-                                                         rr_gsb.get_chan_node_direction(side_manager.get_side(), itrack))); 
-        break;
-      case IN_PORT:
-        fprintf(fp, "  input %s,\n",
-                gen_verilog_routing_channel_one_pin_name(rr_gsb.get_chan_node(side_manager.get_side(), itrack), 
-                                                         port_coordinator.get_x(), port_coordinator.get_y(), itrack,
-                                                         rr_gsb.get_chan_node_direction(side_manager.get_side(), itrack))); 
-        break;
-      default:
-        vpr_printf(TIO_MESSAGE_ERROR, 
-                   "(File: %s [LINE%d]) Invalid direction of chan[%d][%d]_track[%d]!\n",
-                   __FILE__, __LINE__, rr_gsb.get_sb_x(), rr_gsb.get_sb_y(), itrack);
-        exit(1);
-      }
-    }
-    /* Dump OPINs of adjacent CLBs */
-    fprintf(fp, "//----- Grid Inputs/outputs of %s side -----\n", side_manager.c_str());
-    for (size_t inode = 0; inode < rr_gsb.get_num_opin_nodes(side_manager.get_side()); ++inode) {
-      fprintf(fp, "  ");
-      dump_verilog_grid_side_pin_with_given_index(fp, OPIN, /* This is an input of a SB */
-                                                  rr_gsb.get_opin_node(side_manager.get_side(), inode)->ptc_num,
-                                                  rr_gsb.get_opin_node_grid_side(side_manager.get_side(), inode),
-                                                  rr_gsb.get_opin_node(side_manager.get_side(), inode)->xlow,
-                                                  rr_gsb.get_opin_node(side_manager.get_side(), inode)->ylow,
-                                                  TRUE, is_explicit_mapping); /* Dump the direction of the port ! */ 
-    } 
-  }
-  
-  /* Put down configuration port */
-  /* output of each configuration bit */
-  /* Reserved sram ports */
-  fprintf(fp, "//----- Reserved SRAM Ports -----\n");
-  if (0 < rr_gsb.get_sb_num_reserved_conf_bits()) {
-    dump_verilog_reserved_sram_ports(fp, cur_sram_orgz_info, 
-                                     rr_gsb.get_sb_reserved_conf_bits_lsb(),
-                                     rr_gsb.get_sb_reserved_conf_bits_msb(),
-                                     VERILOG_PORT_INPUT);
-    fprintf(fp, ",\n");
-  }
-  /* Normal sram ports */
-  fprintf(fp, "//----- Regular SRAM Ports -----\n");
-  dump_verilog_sram_ports(fp, cur_sram_orgz_info, 
-                          rr_gsb.get_sb_conf_bits_lsb(),
-                          rr_gsb.get_sb_conf_bits_msb(),
-                          VERILOG_PORT_INPUT);
-
-  /* Dump ports only visible during formal verification*/
-  if (0 < rr_gsb.get_sb_num_conf_bits()) {
-    fprintf(fp, "\n");
-    fprintf(fp, "//----- SRAM Ports for formal verification -----\n");
-    fprintf(fp, "`ifdef %s\n", verilog_formal_verification_preproc_flag);
-    fprintf(fp, ",\n");
-    dump_verilog_formal_verification_sram_ports(fp, cur_sram_orgz_info, 
-                                                rr_gsb.get_sb_conf_bits_lsb(),
-                                                rr_gsb.get_sb_conf_bits_msb(),
-                                                VERILOG_PORT_INPUT, 
-                                                false);
-    fprintf(fp, "\n");
-    fprintf(fp, "`endif\n");
-  }
-  fprintf(fp, "); \n");
-
-  /* Local wires for memory configurations */
-  dump_verilog_sram_config_bus_internal_wires(fp, cur_sram_orgz_info, 
-                                              rr_gsb.get_sb_conf_bits_lsb(),
-                                              rr_gsb.get_sb_conf_bits_msb());
-
-  /* Call submodules */
-  int cur_sram_lsb = cur_num_sram; 
-  int cur_sram_msb = cur_num_sram; 
-  for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
-    Side side_manager(side);
-    fprintf(fp, "//----- %s side Submodule -----\n", 
-            side_manager.c_str());
-
-    /* Get the channel width on this side, if it is zero, we return */
-    if (0 == rr_gsb.get_chan_width(side_manager.get_side())) {
-      fprintf(fp, "//----- %s side has zero channel width, module dump skipped -----\n", 
-              side_manager.c_str());
-      continue;
-    }
-
-    /* get segment ids */
-    std::vector<size_t> seg_ids = rr_gsb.get_chan(side_manager.get_side()).get_segment_ids();
-    for (size_t iseg = 0; iseg < seg_ids.size(); ++iseg) { 
-      fprintf(fp, "//----- %s side Submodule with Segment id: %lu -----\n", 
-              side_manager.c_str(), seg_ids[iseg]);
-
-      /* Count the number of configuration bits to be consumed by this Switch block */
-      int side_num_conf_bits = count_verilog_switch_box_side_conf_bits(cur_sram_orgz_info, rr_gsb, side_manager.get_side(), seg_ids[iseg]);
-      /* Count the number of reserved configuration bits to be consumed by this Switch block */
-      int side_num_reserved_conf_bits = count_verilog_switch_box_side_reserved_conf_bits(cur_sram_orgz_info, rr_gsb, side_manager.get_side(), seg_ids[iseg]);
-
-      /* Cache the sram counter */
-      cur_sram_msb = cur_sram_lsb + side_num_conf_bits - 1; 
-
-      /* Instanciate the subckt*/
-      fprintf(fp, 
-              "%s %s ( \n", 
-              rr_gsb.gen_sb_verilog_side_module_name(side_manager.get_side(), seg_ids[iseg]),
-              rr_gsb.gen_sb_verilog_side_instance_name(side_manager.get_side(), seg_ids[iseg]));
-      /* dump global ports */
-      if (0 < dump_verilog_global_ports(fp, global_ports_head, FALSE, is_explicit_mapping)) {
-        fprintf(fp, ",\n");
-      }
-
-      dump_verilog_routing_switch_box_unique_side_subckt_portmap(fp, rr_gsb, side_manager.get_side(), seg_ids[iseg], FALSE, is_explicit_mapping); 
-
-      /* Put down configuration port */
-      /* output of each configuration bit */
-      /* Reserved sram ports */
-      dump_verilog_reserved_sram_ports(fp, cur_sram_orgz_info, 
-                                       0,
-                                       side_num_reserved_conf_bits - 1,
-                                       VERILOG_PORT_CONKT);
-      if (0 < side_num_reserved_conf_bits) {
-        fprintf(fp, ",\n");
-      }
-      /* Normal sram ports */
-      dump_verilog_sram_local_ports(fp, cur_sram_orgz_info, 
-                                    cur_sram_lsb,
-                                    cur_sram_msb,
-                                    VERILOG_PORT_CONKT, is_explicit_mapping);
-
-      /* Dump ports only visible during formal verification*/
-      if (0 < side_num_conf_bits) {
-        fprintf(fp, "\n");
-        fprintf(fp, "`ifdef %s\n", verilog_formal_verification_preproc_flag);
-        fprintf(fp, ",\n");
-        dump_verilog_formal_verification_sram_ports(fp, cur_sram_orgz_info, 
-                                                    cur_sram_lsb,
-                                                    cur_sram_msb,
-                                                    VERILOG_PORT_CONKT, is_explicit_mapping);
-        fprintf(fp, "\n");
-        fprintf(fp, "`endif\n");
-      }
-      fprintf(fp, "); \n");
-
-      /* Update sram_lsb */
-      cur_sram_lsb = cur_sram_msb + 1;
-    }
-  }
-  /* checker */
-  assert(cur_sram_msb == cur_num_sram + num_conf_bits - 1);
- 
-  fprintf(fp, "endmodule\n");
-
-  /* Comment lines */
-  fprintf(fp, "//----- END Verilog Module of Switch Box[%lu][%lu] -----\n\n", rr_gsb.get_sb_x(), rr_gsb.get_sb_y());
-
-  /* Close file handler */
-  fclose(fp);
-
-  /* Add fname to the linked list */
-  routing_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(routing_verilog_subckt_file_path_head, fname);  
-
-  /* Free chan_rr_nodes */
-  my_free(fname);
-
-  return;
-}
-
-
-
 /* Task: Print the subckt of a Switch Box.
  * A Switch Box subckt consists of following ports:
  * 1. Channel Y [x][y] inputs 
@@ -2283,7 +1992,7 @@ void dump_verilog_routing_switch_box_unique_subckt(t_sram_orgz_info* cur_sram_or
   /* Print the definition of subckt*/
   fprintf(fp, "module %s ( \n", rr_gsb.gen_sb_verilog_module_name());
   /* dump global ports */
-  if (0 < dump_verilog_global_ports(fp, global_ports_head, TRUE, is_explicit_mapping)) {
+  if (0 < dump_verilog_global_ports(fp, global_ports_head, TRUE, false)) {
     fprintf(fp, ",\n");
   }
 
@@ -2322,6 +2031,8 @@ void dump_verilog_routing_switch_box_unique_subckt(t_sram_orgz_info* cur_sram_or
                                                   rr_gsb.get_opin_node_grid_side(side_manager.get_side(), inode),
                                                   rr_gsb.get_opin_node(side_manager.get_side(), inode)->xlow,
                                                   rr_gsb.get_opin_node(side_manager.get_side(), inode)->ylow,
+                                                  0,/*used in more recent version*/
+                                                  0,/*used in more recent version*/
                                                   TRUE, is_explicit_mapping); /* Dump the direction of the port ! */ 
     } 
   }
@@ -2350,7 +2061,7 @@ void dump_verilog_routing_switch_box_unique_subckt(t_sram_orgz_info* cur_sram_or
     dump_verilog_formal_verification_sram_ports(fp, cur_sram_orgz_info, 
                                                 rr_gsb.get_sb_conf_bits_lsb(),
                                                 rr_gsb.get_sb_conf_bits_msb(),
-                                                VERILOG_PORT_OUTPUT, is_explicit_mapping);
+                                                VERILOG_PORT_INPUT, false);
     fprintf(fp, "\n");
     fprintf(fp, "`endif\n");
   }
@@ -2390,7 +2101,9 @@ void dump_verilog_routing_switch_box_unique_subckt(t_sram_orgz_info* cur_sram_or
   fclose(fp);
 
   /* Add fname to the linked list */
+  /*
   routing_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(routing_verilog_subckt_file_path_head, fname);  
+   */
 
   /* Free chan_rr_nodes */
   my_free(fname);
@@ -2524,6 +2237,8 @@ void dump_verilog_routing_switch_box_subckt(t_sram_orgz_info* cur_sram_orgz_info
                                                   cur_sb_info->opin_rr_node_grid_side[side][inode],
                                                   cur_sb_info->opin_rr_node[side][inode]->xlow,
                                                   cur_sb_info->opin_rr_node[side][inode]->ylow, 
+                                                  cur_sb_info->opin_rr_node[side][inode]->xlow,
+                                                  cur_sb_info->opin_rr_node[side][inode]->ylow, 
                                                   TRUE, is_explicit_mapping); /* Dump the direction of the port ! */ 
     } 
   }
@@ -2589,7 +2304,9 @@ void dump_verilog_routing_switch_box_subckt(t_sram_orgz_info* cur_sram_orgz_info
   fclose(fp);
 
   /* Add fname to the linked list */
+  /*
   routing_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(routing_verilog_subckt_file_path_head, fname);  
+   */
 
   /* Free chan_rr_nodes */
   my_free(fname);
@@ -2772,6 +2489,7 @@ void dump_verilog_connection_box_short_interc(FILE* fp,
                                               rr_gsb.get_ipin_node(side, index)->ptc_num, 
                                               rr_gsb.get_ipin_node_grid_side(side, index), 
                                               xlow, ylow, /* Coordinator of Grid */ 
+                                              0,0, /*No explicit mapping */
                                               FALSE, false); /* Do not specify the direction of this pin */
 
   /* End */
@@ -2782,10 +2500,10 @@ void dump_verilog_connection_box_short_interc(FILE* fp,
 
 
 /* SRC rr_node is the IPIN of a grid.*/
+static 
 void dump_verilog_connection_box_short_interc(FILE* fp,
                                               t_cb* cur_cb_info,
-                                              t_rr_node* src_rr_node,
-                                              bool is_explicit_mapping) {
+                                              t_rr_node* src_rr_node) {
   t_rr_node* drive_rr_node = NULL;
   int iedge, check_flag;
   int xlow, ylow, height, side, index;
@@ -2849,6 +2567,7 @@ void dump_verilog_connection_box_short_interc(FILE* fp,
                                               cur_cb_info->ipin_rr_node[side][index]->ptc_num, 
                                               cur_cb_info->ipin_rr_node_grid_side[side][index], 
                                               xlow, ylow, /* Coordinator of Grid */ 
+                                              0,0, /*No explicit mapping */
                                               FALSE, false); /* Do not specify the direction of this pin */
 
   /* End */
@@ -2975,7 +2694,7 @@ void dump_verilog_connection_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
           verilog_model->prefix, mux_size, verilog_model->cnt);
 
   /* Dump global ports */
-  if  (0 < rec_dump_verilog_spice_model_global_ports(fp, verilog_model, FALSE, FALSE, my_bool_to_boolean(is_explicit_mapping))) {
+  if  (0 < rec_dump_verilog_spice_model_global_ports(fp, verilog_model, FALSE, FALSE, my_bool_to_boolean(is_explicit_mapping), TRUE)) {
     fprintf(fp, ",\n");
   }
 
@@ -3006,6 +2725,7 @@ void dump_verilog_connection_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
                                               rr_gsb.get_ipin_node(side, index)->ptc_num, 
                                               rr_gsb.get_ipin_node_grid_side(side, index), 
                                               xlow, ylow, /* Coordinator of Grid */ 
+                                              0,0, /*No explicit mapping */
                                               FALSE, false); /* Do not specify the direction of port */
   if (true == is_explicit_mapping) {
     fprintf(fp, ")");
@@ -3222,7 +2942,7 @@ void dump_verilog_connection_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
           verilog_model->prefix, mux_size, verilog_model->cnt);
 
   /* Dump global ports */
-  if  (0 < rec_dump_verilog_spice_model_global_ports(fp, verilog_model, FALSE, FALSE, my_bool_to_boolean(is_explicit_mapping))) {
+  if  (0 < rec_dump_verilog_spice_model_global_ports(fp, verilog_model, FALSE, FALSE, my_bool_to_boolean(is_explicit_mapping), TRUE)) {
     fprintf(fp, ",\n");
   }
 
@@ -3253,6 +2973,7 @@ void dump_verilog_connection_box_mux(t_sram_orgz_info* cur_sram_orgz_info,
                                               cur_cb_info->ipin_rr_node[side][index]->ptc_num, 
                                               cur_cb_info->ipin_rr_node_grid_side[side][index], 
                                               xlow, ylow, /* Coordinator of Grid */ 
+                                              0,0, /*No explicit mapping */
                                               FALSE, false); /* Do not specify the direction of port */
   if (true == is_explicit_mapping) {
     fprintf(fp, ")");
@@ -3391,7 +3112,7 @@ void dump_verilog_connection_box_interc(t_sram_orgz_info* cur_sram_orgz_info,
 
   if (1 == src_rr_node->fan_in) {
     /* Print a direct connection*/
-    dump_verilog_connection_box_short_interc(fp, cur_cb_info, src_rr_node, is_explicit_mapping);
+    dump_verilog_connection_box_short_interc(fp, cur_cb_info, src_rr_node);
   } else if (1 < src_rr_node->fan_in) {
     /* Print the multiplexer, fan_in >= 2 */
     dump_verilog_connection_box_mux(cur_sram_orgz_info, fp, cur_cb_info, 
@@ -3582,6 +3303,7 @@ void dump_verilog_routing_connection_box_unique_module(t_sram_orgz_info* cur_sra
                                                   rr_gsb.get_ipin_node_grid_side(cb_ipin_side, inode),
                                                   rr_gsb.get_ipin_node(cb_ipin_side, inode)->xlow,
                                                   rr_gsb.get_ipin_node(cb_ipin_side, inode)->ylow,
+                                                  0,0, /*No explicit mapping */
                                                   TRUE, false); 
 
     }
@@ -3650,7 +3372,9 @@ void dump_verilog_routing_connection_box_unique_module(t_sram_orgz_info* cur_sra
   fclose(fp);
 
   /* Add fname to the linked list */
+  /*
   routing_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(routing_verilog_subckt_file_path_head, fname);  
+   */
 
   /* Free */
   my_free(fname);
@@ -3802,6 +3526,8 @@ void dump_verilog_routing_connection_box_subckt(t_sram_orgz_info* cur_sram_orgz_
                                                   cur_cb_info->ipin_rr_node_grid_side[side][inode],
                                                   cur_cb_info->ipin_rr_node[side][inode]->xlow,
                                                   cur_cb_info->ipin_rr_node[side][inode]->ylow,
+                                                  0,/*Used in more recent version*/
+                                                  0,/*Used in more recent version*/
                                                   TRUE, is_explicit_mapping); 
 
     }
@@ -3886,7 +3612,9 @@ void dump_verilog_routing_connection_box_subckt(t_sram_orgz_info* cur_sram_orgz_
   fclose(fp);
 
   /* Add fname to the linked list */
+  /*
   routing_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(routing_verilog_subckt_file_path_head, fname);  
+   */
 
   /* Free */
   my_free(fname);
@@ -3894,21 +3622,43 @@ void dump_verilog_routing_connection_box_subckt(t_sram_orgz_info* cur_sram_orgz_
   return;
 }
 
-/* Top Function*/
-/* Build the routing resource SPICE sub-circuits*/
-void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
-                                    char* verilog_dir,
-                                    char* subckt_dir,
-                                    t_arch arch,
-                                    t_det_routing_arch* routing_arch,
-                                    int LL_num_rr_nodes, t_rr_node* LL_rr_node,
-                                    t_ivec*** LL_rr_node_indices,
-                                    t_rr_indexed_data* LL_rr_indexed_data,
-                                    t_fpga_spice_opts FPGA_SPICE_Opts) {
-  assert(UNI_DIRECTIONAL == routing_arch->directionality);
+/*********************************************************************
+ * Top-level function: 
+ * Build the Verilog modules for global routing architecture
+ * 1. Routing channels
+ * 2. Switch blocks
+ * 3. Connection blocks
+ *
+ * This function supports two styles in Verilog generation:
+ * 1. Explicit port mapping
+ * 2. Inexplicit port mapping
+ *
+ * This function also supports high hierarchical Verilog generation
+ * (when the compact_routing_hierarchy is set true)
+ * In this mode, Verilog generation will be done for only those
+ * unique modules in terms of internal logics
+ *********************************************************************/
+void print_verilog_routing_resources(ModuleManager& module_manager,
+                                     t_sram_orgz_info* cur_sram_orgz_info,
+                                     char* verilog_dir,
+                                     char* subckt_dir,
+                                     const t_arch& arch,
+                                     const t_det_routing_arch& routing_arch,
+                                     int LL_num_rr_nodes, t_rr_node* LL_rr_node, /* To be replaced by RRGraph object */
+                                     t_ivec*** LL_rr_node_indices,
+                                     t_rr_indexed_data* LL_rr_indexed_data,
+                                     const t_fpga_spice_opts& FPGA_SPICE_Opts) {
+  VTR_ASSERT (UNI_DIRECTIONAL == routing_arch.directionality);
   
   boolean compact_routing_hierarchy = FPGA_SPICE_Opts.compact_routing_hierarchy;
   boolean explicit_port_mapping = FPGA_SPICE_Opts.SynVerilogOpts.dump_explicit_verilog;
+
+  /* Create a vector of switch infs. TODO: this should be replaced switch objects!!! */
+  std::vector<t_switch_inf> rr_switches;
+  for (short i = 0; i < routing_arch.num_switch; ++i) {
+    rr_switches.push_back(switch_inf[i]);
+  }
+
   /* Two major tasks: 
    * 1. Generate sub-circuits for Routing Channels 
    * 2. Generate sub-circuits for Switch Boxes
@@ -3933,13 +3683,19 @@ void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
     /* X - channels [1...nx][0..ny]*/
     for (size_t ichan = 0; ichan < device_rr_chan.get_num_modules(CHANX); ++ichan) {
       dump_verilog_routing_chan_subckt(verilog_dir, subckt_dir, 
-                                       ichan, device_rr_chan.get_module(CHANX, ichan), explicit_port_mapping);
+                                       ichan, device_rr_chan.get_module(CHANX, ichan));
+
+      print_verilog_routing_unique_chan_subckt(module_manager, std::string(verilog_dir), std::string(subckt_dir), 
+                                               ichan, device_rr_chan.get_module(CHANX, ichan));
     }
     /* Y - channels [1...ny][0..nx]*/
     vpr_printf(TIO_MESSAGE_INFO, "Writing Y-direction Channels...\n");
     for (size_t ichan = 0; ichan < device_rr_chan.get_num_modules(CHANY); ++ichan) {
       dump_verilog_routing_chan_subckt(verilog_dir, subckt_dir, 
-                                       ichan, device_rr_chan.get_module(CHANY, ichan), explicit_port_mapping);
+                                       ichan, device_rr_chan.get_module(CHANY, ichan));
+
+      print_verilog_routing_unique_chan_subckt(module_manager, std::string(verilog_dir), std::string(subckt_dir), 
+                                               ichan, device_rr_chan.get_module(CHANY, ichan));
     }
   } else { 
     /* Output the full array of routing channels */
@@ -3948,7 +3704,8 @@ void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
       for (int ix = 1; ix < (nx + 1); ix++) {
         dump_verilog_routing_chan_subckt(verilog_dir, subckt_dir, ix, iy, CHANX, 
                                          LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices, LL_rr_indexed_data, 
-                                         arch.num_segments, explicit_port_mapping);
+                                         arch.num_segments);
+
       }
     }
     /* Y - channels [1...ny][0..nx]*/
@@ -3957,7 +3714,8 @@ void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
       for (int iy = 1; iy < (ny + 1); iy++) {
         dump_verilog_routing_chan_subckt(verilog_dir, subckt_dir, ix, iy, CHANY,
                                          LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices, LL_rr_indexed_data, 
-                                         arch.num_segments, explicit_port_mapping);
+                                         arch.num_segments);
+
       }
     }
   }
@@ -3967,22 +3725,10 @@ void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
     /* Create a snapshot on sram_orgz_info */
     t_sram_orgz_info* stamped_sram_orgz_info = snapshot_sram_orgz_info(cur_sram_orgz_info);
 
-    /* Output unique side modules */
-    for (size_t side = 0; side < device_rr_gsb.get_max_num_sides(); ++side) {
-      Side side_manager(side);
-      for (size_t iseg = 0; iseg < device_rr_gsb.get_num_segments(); ++iseg) {
-        for (size_t isb = 0; isb < device_rr_gsb.get_num_sb_unique_submodule(side_manager.get_side(), iseg); ++isb) {
-          const RRGSB& unique_mirror = device_rr_gsb.get_sb_unique_submodule(isb, side_manager.get_side(), iseg);
-          size_t seg_id = device_rr_gsb.get_segment_id(iseg);
-          dump_verilog_routing_switch_box_unique_side_module(cur_sram_orgz_info, verilog_dir, subckt_dir, isb, seg_id, unique_mirror, side_manager.get_side(), explicit_port_mapping);
-        }
-      }
-    }
-
     /* Output unique modules */
     for (size_t isb = 0; isb < device_rr_gsb.get_num_sb_unique_module(); ++isb) {
       const RRGSB& unique_mirror = device_rr_gsb.get_sb_unique_module(isb);
-      dump_verilog_routing_switch_box_unique_module(cur_sram_orgz_info, verilog_dir,
+      dump_verilog_routing_switch_box_unique_subckt(cur_sram_orgz_info, verilog_dir,
                                                     subckt_dir, unique_mirror, explicit_port_mapping);
     }
 
@@ -4025,6 +3771,7 @@ void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
       dump_verilog_routing_connection_box_unique_module(cur_sram_orgz_info, 
                              verilog_dir, subckt_dir, unique_mirror, CHANX,
                              explicit_port_mapping);
+
     }
 
     /* Y - channels [1...ny][0..nx]*/
@@ -4033,6 +3780,7 @@ void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
       dump_verilog_routing_connection_box_unique_module(cur_sram_orgz_info, 
                              verilog_dir, subckt_dir, unique_mirror, CHANY,
                              explicit_port_mapping);
+
     }
 
     /* Restore sram_orgz_info to the base */ 
@@ -4086,10 +3834,347 @@ void dump_verilog_routing_resources(t_sram_orgz_info* cur_sram_orgz_info,
   }
 
   /* Output a header file for all the routing blocks */
+  /*
   vpr_printf(TIO_MESSAGE_INFO,"Generating header file for routing submodules...\n");
   dump_verilog_subckt_header_file(routing_verilog_subckt_file_path_head,
                                   subckt_dir,
                                   routing_verilog_file_name);
+   */
   
   return;
+}
+
+
+/******************************************************************** 
+ * Print the sub-circuit of a connection Box (Type: [CHANX|CHANY])
+ * Actually it is very similiar to switch box but
+ * the difference is connection boxes connect Grid INPUT Pins to channels
+ * NOTE: direct connection between CLBs should NOT be included inside this
+ *       module! They should be added in the top-level module as their connection
+ *       is not limited to adjacent CLBs!!!
+ *
+ * Location of a X- and Y-direction Connection Block in FPGA fabric
+ *               +------------+       +-------------+ 
+ *               |            |------>|             |
+ *               |     CLB    |<------| Y-direction |
+ *               |            | ...   |  Connection |
+ *               |            |------>|    Block    |
+ *               +------------+       +-------------+
+ *                 |  ^ ... |            | ^ ... |
+ *                 v  |     v            v |     v
+ *           +-------------------+    +-------------+
+ *       --->|                   |--->|             |
+ *       <---|     X-direction   |<---|    Switch   |                           
+ *        ...|  Connection block |... |    Block    |
+ *       --->|                   |--->|             |
+ *           +-------------------+    +-------------+
+ *
+ *  Internal structure:
+ *  This is an example of a X-direction connection block  
+ *  Note that middle output ports are shorted wire from inputs of routing tracks, 
+ *  which are also the inputs of routing multiplexer of the connection block 
+ *
+ *                      CLB Input Pins
+ *                         (IPINs)
+ *                       ^   ^     ^
+ *                       |   | ... |
+ *              +--------------------------+
+ *              |       ^    ^     ^       |
+ *              |       |    | ... |       |   
+ *              |  +--------------------+  | 
+ *              |  |       routing      |  |
+ *              |  |    multiplexers    |  |
+ *              |  +--------------------+  | 
+ *              |      middle outputs      |
+ *              |    of routing channel    |
+ *              |    ^ ^ ^ ^     ^ ^ ^ ^   |
+ *              |    | | | | ... | | | |   |
+ *     in[0] -->|------------------------->|---> out[0]
+ *    out[1] <--|<-------------------------|<--- in[1]
+ *              |           ...            |
+ *   in[W-2] -->|------------------------->|---> out[W-2]
+ *  out[W-1] <--|<-------------------------|<--- in[W-1]
+ *              +--------------------------+
+ *
+ *  W: routing channel width
+ *              
+ ********************************************************************/
+static 
+void print_verilog_routing_connection_box_unique_module(ModuleManager& module_manager, 
+                                                        const std::string& verilog_dir, 
+                                                        const std::string& subckt_dir, 
+                                                        const RRGSB& rr_gsb,
+                                                        const t_rr_type& cb_type,
+                                                        const bool& use_explicit_port_map) {
+  /* Create the netlist */
+  vtr::Point<size_t> gsb_coordinate(rr_gsb.get_cb_x(cb_type), rr_gsb.get_cb_y(cb_type));
+  std::string verilog_fname(subckt_dir + generate_connection_block_netlist_name(cb_type, gsb_coordinate, std::string(verilog_netlist_file_postfix)));
+  /* TODO: remove the bak file when the file is ready */
+  //verilog_fname += ".bak";
+
+  /* Create the file stream */
+  std::fstream fp;
+  fp.open(verilog_fname, std::fstream::out | std::fstream::trunc);
+
+  check_file_handler(fp);
+
+  print_verilog_file_header(fp, std::string("Verilog modules for Unique Connection Blocks[" + std::to_string(rr_gsb.get_cb_x(cb_type)) + "]["+ std::to_string(rr_gsb.get_cb_y(cb_type)) + "]")); 
+
+  /* Print preprocessing flags */
+  print_verilog_include_defines_preproc_file(fp, verilog_dir);
+
+  /* Create a Verilog Module based on the circuit model, and add to module manager */
+  ModuleId cb_module = module_manager.find_module(generate_connection_block_module_name(cb_type, gsb_coordinate)); 
+  VTR_ASSERT(true == module_manager.valid_module_id(cb_module));
+
+  /* Write the verilog module */
+  write_verilog_module_to_file(fp, module_manager, cb_module, use_explicit_port_map);
+ 
+  /* Add an empty line as a splitter */
+  fp << std::endl;
+
+  /* Close file handler */
+  fp.close();
+
+  /* Add fname to the linked list */
+  routing_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(routing_verilog_subckt_file_path_head, verilog_fname.c_str());  
+}
+
+/*********************************************************************
+ * Generate the Verilog module for a Switch Box.
+ * A Switch Box module consists of following ports:
+ * 1. Channel Y [x][y] inputs 
+ * 2. Channel X [x+1][y] inputs
+ * 3. Channel Y [x][y-1] outputs
+ * 4. Channel X [x][y] outputs
+ * 5. Grid[x][y+1] Right side outputs pins
+ * 6. Grid[x+1][y+1] Left side output pins
+ * 7. Grid[x+1][y+1] Bottom side output pins
+ * 8. Grid[x+1][y] Top side output pins
+ * 9. Grid[x+1][y] Left side output pins
+ * 10. Grid[x][y] Right side output pins
+ * 11. Grid[x][y] Top side output pins
+ * 12. Grid[x][y+1] Bottom side output pins
+ *
+ * Location of a Switch Box in FPGA fabric:
+ *
+ *    --------------          --------------
+ *    |            |          |            |
+ *    |    Grid    |  ChanY   |    Grid    |
+ *    |  [x][y+1]  | [x][y+1] | [x+1][y+1] |
+ *    |            |          |            |
+ *    --------------          --------------
+ *                  ----------
+ *       ChanX      | Switch |     ChanX 
+ *       [x][y]     |   Box  |    [x+1][y]
+ *                  | [x][y] |
+ *                  ----------
+ *    --------------          --------------
+ *    |            |          |            |
+ *    |    Grid    |  ChanY   |    Grid    |
+ *    |   [x][y]   |  [x][y]  |  [x+1][y]  |
+ *    |            |          |            |
+ *    --------------          --------------
+ *
+ * Switch Block pin location map
+ *
+ *                       Grid[x][y+1]   ChanY[x][y+1]  Grid[x+1][y+1] 
+ *                        right_pins  inputs/outputs     left_pins
+ *                            |             ^                |
+ *                            |             |                |
+ *                            v             v                v
+ *                    +-----------------------------------------------+
+ *                    |                                               |
+ *    Grid[x][y+1]    |                                               |    Grid[x+1][y+1]
+ *    bottom_pins---->|                                               |<---- bottom_pins
+ *                    |                                               |
+ * ChanX[x][y]        |              Switch Box [x][y]                |     ChanX[x+1][y]
+ * inputs/outputs<--->|                                               |<---> inputs/outputs
+ *                    |                                               |
+ *    Grid[x][y+1]    |                                               |    Grid[x+1][y+1]
+ *       top_pins---->|                                               |<---- top_pins
+ *                    |                                               |
+ *                    +-----------------------------------------------+
+ *                            ^             ^                ^
+ *                            |             |                |
+ *                            |             v                |
+ *                       Grid[x][y]     ChanY[x][y]      Grid[x+1][y] 
+ *                       right_pins    inputs/outputs      left_pins
+ *
+ *
+ ********************************************************************/
+static 
+void print_verilog_routing_switch_box_unique_module(ModuleManager& module_manager, 
+                                                    const std::string& verilog_dir, 
+                                                    const std::string& subckt_dir, 
+                                                    const RRGSB& rr_gsb,
+                                                    const bool& use_explicit_port_map) {
+  /* Create the netlist */
+  vtr::Point<size_t> gsb_coordinate(rr_gsb.get_sb_x(), rr_gsb.get_sb_y());
+  std::string verilog_fname(subckt_dir + generate_routing_block_netlist_name(sb_verilog_file_name_prefix, gsb_coordinate, std::string(verilog_netlist_file_postfix)));
+  /* TODO: remove the bak file when the file is ready */
+  //verilog_fname += ".bak";
+
+  /* Create the file stream */
+  std::fstream fp;
+  fp.open(verilog_fname, std::fstream::out | std::fstream::trunc);
+
+  check_file_handler(fp);
+
+  print_verilog_file_header(fp, std::string("Verilog modules for Unique Switch Blocks[" + std::to_string(rr_gsb.get_sb_x()) + "]["+ std::to_string(rr_gsb.get_sb_y()) + "]")); 
+
+  /* Print preprocessing flags */
+  print_verilog_include_defines_preproc_file(fp, verilog_dir);
+
+  /* Create a Verilog Module based on the circuit model, and add to module manager */
+  ModuleId sb_module = module_manager.find_module(generate_switch_block_module_name(gsb_coordinate)); 
+  VTR_ASSERT(true == module_manager.valid_module_id(sb_module));
+
+  /* Write the verilog module */
+  write_verilog_module_to_file(fp, module_manager, sb_module, use_explicit_port_map);
+ 
+  /* Close file handler */
+  fp.close();
+
+  /* Add fname to the linked list */
+  routing_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(routing_verilog_subckt_file_path_head, verilog_fname.c_str());  
+
+  return;
+}
+
+
+/********************************************************************
+ * Iterate over all the connection blocks in a device
+ * and build a module for each of them 
+ *******************************************************************/
+static 
+void print_verilog_flatten_connection_block_modules(ModuleManager& module_manager, 
+                                                    const DeviceRRGSB& L_device_rr_gsb,
+                                                    const std::string& verilog_dir,
+                                                    const std::string& subckt_dir,
+                                                    const t_rr_type& cb_type,
+                                                    const bool& use_explicit_port_map) {
+  /* Build unique X-direction connection block modules */
+  DeviceCoordinator cb_range = L_device_rr_gsb.get_gsb_range();
+
+  for (size_t ix = 0; ix < cb_range.get_x(); ++ix) {
+    for (size_t iy = 0; iy < cb_range.get_y(); ++iy) {
+      /* Check if the connection block exists in the device!
+       * Some of them do NOT exist due to heterogeneous blocks (height > 1) 
+       * We will skip those modules
+       */
+      const RRGSB& rr_gsb = L_device_rr_gsb.get_gsb(ix, iy);
+      if ( (TRUE != is_cb_exist(cb_type, rr_gsb.get_cb_x(cb_type), rr_gsb.get_cb_y(cb_type)))
+        || (true != rr_gsb.is_cb_exist(cb_type))) {
+        continue;
+      }
+      print_verilog_routing_connection_box_unique_module(module_manager, 
+                                                         verilog_dir,
+                                                         subckt_dir, 
+                                                         rr_gsb, cb_type,  
+                                                         use_explicit_port_map);
+    }
+  }
+}
+
+/********************************************************************
+ * A top-level function of this file
+ * Print all the modules for global routing architecture of a FPGA fabric
+ * in Verilog format  in a flatten way:
+ *   Each connection block and switch block will be generated as a unique module
+ * Covering:
+ * 1. Connection blocks
+ * 2. Switch blocks
+ *******************************************************************/
+void print_verilog_flatten_routing_modules(ModuleManager& module_manager,
+                                           const DeviceRRGSB& L_device_rr_gsb,
+                                           const t_det_routing_arch& routing_arch,
+                                           const std::string& verilog_dir,
+                                           const std::string& subckt_dir,
+                                           const bool& use_explicit_port_map) {
+  /* We only support uni-directional routing architecture now */
+  VTR_ASSERT (UNI_DIRECTIONAL == routing_arch.directionality);
+
+  /* TODO: deprecate DeviceCoordinator, use vtr::Point<size_t> only! */
+  DeviceCoordinator sb_range = L_device_rr_gsb.get_gsb_range();
+
+  /* Build unique switch block modules */
+  for (size_t ix = 0; ix < sb_range.get_x(); ++ix) {
+    for (size_t iy = 0; iy < sb_range.get_y(); ++iy) {
+      const RRGSB& rr_gsb = L_device_rr_gsb.get_gsb(ix, iy);
+      print_verilog_routing_switch_box_unique_module(module_manager, 
+                                                     verilog_dir,
+                                                     subckt_dir, 
+                                                     rr_gsb, 
+                                                     use_explicit_port_map);
+    }
+  }
+
+  print_verilog_flatten_connection_block_modules(module_manager, L_device_rr_gsb, verilog_dir, subckt_dir, CHANX, use_explicit_port_map);
+
+  print_verilog_flatten_connection_block_modules(module_manager, L_device_rr_gsb, verilog_dir, subckt_dir, CHANY, use_explicit_port_map);
+
+  vpr_printf(TIO_MESSAGE_INFO,"Generating header file for routing submodules...\n");
+  dump_verilog_subckt_header_file(routing_verilog_subckt_file_path_head,
+                                  subckt_dir.c_str(),
+                                  routing_verilog_file_name);
+}
+
+
+/********************************************************************
+ * A top-level function of this file
+ * Print all the unique modules for global routing architecture of a FPGA fabric
+ * in Verilog format, including: 
+ * 1. Connection blocks
+ * 2. Switch blocks
+ *
+ * Note: this function SHOULD be called only when 
+ * the option compact_routing_hierarchy is turned on!!!
+ *******************************************************************/
+void print_verilog_unique_routing_modules(ModuleManager& module_manager,
+                                          const DeviceRRGSB& L_device_rr_gsb,
+                                          const t_det_routing_arch& routing_arch,
+                                          const std::string& verilog_dir,
+                                          const std::string& subckt_dir,
+                                          const bool& use_explicit_port_map) {
+  /* We only support uni-directional routing architecture now */
+  VTR_ASSERT (UNI_DIRECTIONAL == routing_arch.directionality);
+
+  /* Build unique switch block modules */
+  for (size_t isb = 0; isb < L_device_rr_gsb.get_num_sb_unique_module(); ++isb) {
+    const RRGSB& unique_mirror = L_device_rr_gsb.get_sb_unique_module(isb);
+    print_verilog_routing_switch_box_unique_module(module_manager, 
+                                                   verilog_dir,
+                                                   subckt_dir, 
+                                                   unique_mirror, 
+                                                   use_explicit_port_map);
+  }
+
+  /* Build unique X-direction connection block modules */
+  for (size_t icb = 0; icb < L_device_rr_gsb.get_num_cb_unique_module(CHANX); ++icb) {
+    const RRGSB& unique_mirror = L_device_rr_gsb.get_cb_unique_module(CHANX, icb);
+
+    print_verilog_routing_connection_box_unique_module(module_manager, 
+                                                       verilog_dir,
+                                                       subckt_dir, 
+                                                       unique_mirror, CHANX,  
+                                                       use_explicit_port_map);
+  }
+
+  /* Build unique X-direction connection block modules */
+  for (size_t icb = 0; icb < L_device_rr_gsb.get_num_cb_unique_module(CHANY); ++icb) {
+    const RRGSB& unique_mirror = L_device_rr_gsb.get_cb_unique_module(CHANY, icb);
+
+    print_verilog_routing_connection_box_unique_module(module_manager, 
+                                                       verilog_dir,
+                                                       subckt_dir, 
+                                                       unique_mirror, CHANY,  
+                                                       use_explicit_port_map);
+  }
+
+  vpr_printf(TIO_MESSAGE_INFO,"Generating header file for routing submodules...\n");
+  dump_verilog_subckt_header_file(routing_verilog_subckt_file_path_head,
+                                  subckt_dir.c_str(),
+                                  routing_verilog_file_name);
+
 }

@@ -231,16 +231,22 @@ void connect_one_rr_node_for_phy_pb_graph_node(INP t_pb_graph_pin* cur_pb_graph_
   assert(rr_node_type == local_rr_graph->rr_node[cur_rr_node_index].type);
 
   switch (rr_node_type) {
-  case INTRA_CLUSTER_EDGE: 
+  case INTRA_CLUSTER_EDGE: {
     /* Check out all the output_edges belonging to the same physical mode */
+    int cur_edge = 0; 
     for (iedge = 0; iedge < cur_pb_graph_pin->num_output_edges; iedge++) {
       check_pb_graph_edge(*(cur_pb_graph_pin->output_edges[iedge]));
-      if (phy_mode_index == cur_pb_graph_pin->output_edges[iedge]->interconnect->parent_mode_index) {
-        local_rr_graph->rr_node[cur_rr_node_index].edges[iedge] = cur_pb_graph_pin->output_edges[iedge]->output_pins[0]->rr_node_index_physical_pb;   
-        local_rr_graph->rr_node[cur_rr_node_index].switches[iedge] = local_rr_graph->delayless_switch_index;   
+      /* Bypass fan-outs that are not in the physical mode */
+      if (phy_mode_index != cur_pb_graph_pin->output_edges[iedge]->interconnect->parent_mode_index) {
+        continue;
       }
+      assert ( cur_edge < local_rr_graph->rr_node[cur_rr_node_index].num_edges);
+      local_rr_graph->rr_node[cur_rr_node_index].edges[cur_edge] = cur_pb_graph_pin->output_edges[iedge]->output_pins[0]->rr_node_index_physical_pb;   
+      local_rr_graph->rr_node[cur_rr_node_index].switches[cur_edge] = local_rr_graph->delayless_switch_index;   
+      cur_edge++;
     }
     break;
+  }
   case SOURCE:
     /* Connect the SOURCE nodes to the rr_node of cur_pb_graph_pin */
     assert (0 == local_rr_graph->rr_node[cur_rr_node_index].fan_in);

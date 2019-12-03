@@ -3,31 +3,35 @@
 source .travis/common.sh
 set -e
 
-$SPACER
-
 start_section "OpenFPGA.build" "${GREEN}Building..${NC}"
+mkdir build
+cd build
+
 if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
-  #make
-  mkdir build
-  cd build
-  cmake .. -DCMAKE_BUILD_TYPE=debug -DENABLE_VPR_GRAPHICS=off 
-  make -j2
-else 
-# For linux, we enable full package compilation
-  #make
-  mkdir build
-  cd build
-  cmake --version
+  cmake .. -DCMAKE_BUILD_TYPE=debug -DENABLE_VPR_GRAPHICS=off
+else
   cmake .. -DCMAKE_BUILD_TYPE=debug
-  make -j16
 fi
+ make -j16
 end_section "OpenFPGA.build"
 
-$SPACER
 
+start_section "OpenFPGA.TaskTun" "${GREEN}..Running_Regression..${NC}"
 cd -
-./.travis/regression.sh
+echo -e "Testing single-mode architectures";
+python3 openfpga_flow/scripts/run_fpga_task.py single_mode --debug --show_thread_logs
+#python3 openfpga_flow/scripts/run_fpga_task.py s298 
 
-#cd fpga_flow
-#./regression_fpga_flow.sh
-#cd -
+echo -e "Testing multi-mode architectures";
+python3 openfpga_flow/scripts/run_fpga_task.py multi_mode --maxthreads 4 --debug --show_thread_logs
+
+echo -e "Testing compact routing techniques";
+python3 openfpga_flow/scripts/run_fpga_task.py compact_routing --debug --show_thread_logs
+
+echo -e "Testing tileable architectures";
+python3 openfpga_flow/scripts/run_fpga_task.py tileable_routing --debug --show_thread_logs
+
+echo -e "Testing Verilog generation with explicit port mapping ";
+python3 openfpga_flow/scripts/run_fpga_task.py explicit_verilog --debug --show_thread_logs
+
+end_section "OpenFPGA.TaskTun"

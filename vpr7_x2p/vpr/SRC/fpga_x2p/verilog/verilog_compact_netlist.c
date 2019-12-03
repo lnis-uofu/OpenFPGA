@@ -12,6 +12,7 @@
 #include <unistd.h>
 
 /* Include vpr structs*/
+#include "vtr_assert.h"
 #include "util.h"
 #include "physical_types.h"
 #include "vpr_types.h"
@@ -29,13 +30,16 @@
 #include "fpga_x2p_bitstream_utils.h"
 #include "spice_mux.h"
 #include "fpga_x2p_globals.h"
+#include "fpga_x2p_naming.h"
 
 /* Include Synthesizable Verilog headers */
 #include "verilog_global.h"
 #include "verilog_utils.h"
 #include "verilog_primitives.h"
 #include "verilog_pbtypes.h"
+#include "verilog_grid.h"
 #include "verilog_routing.h"
+#include "verilog_writer_utils.h"
 #include "verilog_top_netlist_utils.h"
 
 #include "verilog_compact_netlist.h"
@@ -79,7 +83,7 @@ char* generate_compact_verilog_grid_module_name(t_type_ptr phy_block_type,
 
 /* ONLY for compact Verilog netlists:
  * Update the grid_index_low and grid_index_high for each spice_models 
- * Currently, we focus on three spice_models: SRAMs/SCFFs/IOPADs
+ * Currently, we focus on three spice_models: SRAMs/CCFFs/IOPADs
  */
 static 
 void compact_verilog_update_one_spice_model_grid_index(t_type_ptr phy_block_type,
@@ -102,7 +106,7 @@ void compact_verilog_update_one_spice_model_grid_index(t_type_ptr phy_block_type
     case SPICE_MODEL_HARDLOGIC:
     case SPICE_MODEL_GATE:
       break;
-    case SPICE_MODEL_SCFF:
+    case SPICE_MODEL_CCFF:
     case SPICE_MODEL_SRAM:
       stamped_cnt = spice_model[i].cnt;
       spice_model[i].grid_index_low[grid_x][grid_y] = stamped_cnt; 
@@ -158,7 +162,7 @@ void compact_verilog_update_sram_orgz_info_grid_index(t_sram_orgz_info* cur_sram
 
 /* ONLY for compact Verilog netlists:
  * Update the grid_index_low and grid_index_high for each spice_models
- * Currently, we focus on three spice_models: SRAMs/SCFFs/IOPADs
+ * Currently, we focus on three spice_models: SRAMs/CCFFs/IOPADs
  * IMPORTANT: The sequence of for loop should be consistent with 
  * 1. bitstream logic block 
  * 2. verilog pbtypes logic block 
@@ -511,30 +515,26 @@ void dump_compact_verilog_one_physical_block(t_sram_orgz_info* cur_sram_orgz_inf
  * 2. Only one module for each CLB (FILL_TYPE)
  * 3. Only one module for each heterogeneous block
  */
-void dump_compact_verilog_logic_blocks(t_sram_orgz_info* cur_sram_orgz_info,
-                                       char* verilog_dir,
-                                       char* subckt_dir,
-                                       t_arch* arch,
-                                       bool is_explicit_mapping) {
-  int itype, iside, num_sides;
-  int* stamped_spice_model_cnt = NULL;
-  t_sram_orgz_info* stamped_sram_orgz_info = NULL;
-
+void print_compact_verilog_logic_blocks(t_sram_orgz_info* cur_sram_orgz_info,
+                                        char* verilog_dir,
+                                        char* subckt_dir,
+                                        t_arch& arch,
+                                        const bool& is_explicit_mapping) {
   /* Create a snapshot on spice_model counter */
-  stamped_spice_model_cnt = snapshot_spice_model_counter(arch->spice->num_spice_model, 
-                                                         arch->spice->spice_models);
+  int* stamped_spice_model_cnt = snapshot_spice_model_counter(arch.spice->num_spice_model, 
+                                                         arch.spice->spice_models);
   /* Create a snapshot on sram_orgz_info */
-  stamped_sram_orgz_info = snapshot_sram_orgz_info(cur_sram_orgz_info);
+  t_sram_orgz_info* stamped_sram_orgz_info = snapshot_sram_orgz_info(cur_sram_orgz_info);
  
   /* Enumerate the types, dump one Verilog module for each */
-  for (itype = 0; itype < num_types; itype++) {
+  for (int itype = 0; itype < num_types; itype++) {
     if (EMPTY_TYPE == &type_descriptors[itype]) {
     /* Bypass empty type or NULL */
       continue;
     } else if (IO_TYPE == &type_descriptors[itype]) {
-      num_sides = 4;
-    /* Special for I/O block, generate one module for each border side */
-      for (iside = 0; iside < num_sides; iside++) {
+      /* Special for I/O block, generate one module for each border side */
+      for (int iside = 0; iside < NUM_SIDES; iside++) {
+        Side side_manager(iside);
         dump_compact_verilog_one_physical_block(cur_sram_orgz_info, 
                                                 verilog_dir, subckt_dir, 
                                                 &type_descriptors[itype], iside,
@@ -542,32 +542,30 @@ void dump_compact_verilog_logic_blocks(t_sram_orgz_info* cur_sram_orgz_info,
       } 
       continue;
     } else if (FILL_TYPE == &type_descriptors[itype]) {
-    /* For CLB */
+      /* For CLB */
       dump_compact_verilog_one_physical_block(cur_sram_orgz_info,  
                                               verilog_dir, subckt_dir, 
                                               &type_descriptors[itype], -1,
                                               is_explicit_mapping);
       continue;
     } else {
-    /* For heterogenenous blocks */
+      /* For heterogenenous blocks */
       dump_compact_verilog_one_physical_block(cur_sram_orgz_info,  
                                               verilog_dir, subckt_dir, 
                                               &type_descriptors[itype], -1,
                                               is_explicit_mapping);
-
     }
   }
 
   /* Output a header file for all the logic blocks */
-  vpr_printf(TIO_MESSAGE_INFO,"Generating header file for grid submodules...\n");
+  vpr_printf(TIO_MESSAGE_INFO, "Generating header file for grid submodules...\n");
   dump_verilog_subckt_header_file(grid_verilog_subckt_file_path_head,
                                   subckt_dir,
                                   logic_block_verilog_file_name);
 
-
   /* Recover spice_model counter */
-  set_spice_model_counter(arch->spice->num_spice_model, 
-                          arch->spice->spice_models,
+  set_spice_model_counter(arch.spice->num_spice_model, 
+                          arch.spice->spice_models,
                           stamped_spice_model_cnt);
 
   /* Restore sram_orgz_info to the base */ 
@@ -577,8 +575,8 @@ void dump_compact_verilog_logic_blocks(t_sram_orgz_info* cur_sram_orgz_info,
    * THIS FUNCTION MUST GO AFTER OUTPUTING PHYSICAL LOGIC BLOCKS!!!
    */
   compact_verilog_update_grid_spice_model_and_sram_orgz_info(cur_sram_orgz_info,
-                                                             arch->spice->num_spice_model, 
-                                                             arch->spice->spice_models);
+                                                             arch.spice->num_spice_model, 
+                                                             arch.spice->spice_models);
   /* Free */
   free_sram_orgz_info(stamped_sram_orgz_info, stamped_sram_orgz_info->type);
   my_free (stamped_spice_model_cnt); 
@@ -653,7 +651,7 @@ void dump_compact_verilog_defined_one_grid(t_sram_orgz_info* cur_sram_orgz_info,
   }
 
   /* Dump ports only visible during formal verification*/
-  if (0 < (cur_sram_orgz_info->grid_conf_bits_msb[ix][iy] - 1
+  if (0 < (cur_sram_orgz_info->grid_conf_bits_msb[ix][iy] 
            - cur_sram_orgz_info->grid_conf_bits_lsb[ix][iy])) {
     fprintf(fp, "\n");
     fprintf(fp, "`ifdef %s\n", verilog_formal_verification_preproc_flag);
@@ -789,23 +787,24 @@ void dump_compact_verilog_defined_one_switch_box(t_sram_orgz_info* cur_sram_orgz
   for (size_t side = 0; side < rr_sb.get_num_sides(); ++side) {
     Side side_manager(side);
     DeviceCoordinator chan_coordinator = rr_sb.get_side_block_coordinator(side_manager.get_side()); 
+    DeviceCoordinator unique_chan_coordinator = unique_mirror.get_side_block_coordinator(side_manager.get_side()); 
 
     fprintf(fp, "//----- %s side channel ports-----\n", side_manager.c_str());
     for (size_t itrack = 0; itrack < rr_sb.get_chan_width(side_manager.get_side()); ++itrack) {
       if (true == is_explicit_mapping) {
         fprintf(fp, ".%s(",
-              gen_verilog_routing_channel_one_pin_name(rr_sb.get_chan_node(side_manager.get_side(), itrack),
-                                                       chan_coordinator.get_x(), chan_coordinator.get_y(), itrack, 
-                                                       rr_sb.get_chan_node_direction(side_manager.get_side(), itrack)));
+              gen_verilog_routing_channel_one_pin_name(unique_mirror.get_chan_node(side_manager.get_side(), itrack),
+                                                       unique_chan_coordinator.get_x(), unique_chan_coordinator.get_y(), itrack, 
+                                                       unique_mirror.get_chan_node_direction(side_manager.get_side(), itrack)));
       }
       fprintf(fp, "%s",
               gen_verilog_routing_channel_one_pin_name(rr_sb.get_chan_node(side_manager.get_side(), itrack),
                                                        chan_coordinator.get_x(), chan_coordinator.get_y(), itrack, 
                                                        rr_sb.get_chan_node_direction(side_manager.get_side(), itrack)));
       if (true == is_explicit_mapping) {
-        fprintf(fp, ")",itrack);
+        fprintf(fp, ")");
       }
-      fprintf(fp, ",\n",itrack);
+      fprintf(fp, ",\n");
     }
     fprintf(fp, "//----- %s side inputs: CLB output pins -----\n", convert_side_index_to_string(side));
     /* Dump OPINs of adjacent CLBs */
@@ -815,6 +814,8 @@ void dump_compact_verilog_defined_one_switch_box(t_sram_orgz_info* cur_sram_orgz
                                                   rr_sb.get_opin_node_grid_side(side_manager.get_side(), inode),
                                                   rr_sb.get_opin_node(side_manager.get_side(), inode)->xlow,
                                                   rr_sb.get_opin_node(side_manager.get_side(), inode)->ylow,
+                                                  unique_mirror.get_opin_node(side_manager.get_side(), inode)->xlow,
+                                                  unique_mirror.get_opin_node(side_manager.get_side(), inode)->ylow,
                                                   FALSE, is_explicit_mapping); /* Do not specify the direction of port */ 
       fprintf(fp, ",\n");
     } 
@@ -947,16 +948,19 @@ void dump_compact_verilog_defined_one_connection_box(t_sram_orgz_info* cur_sram_
             side_manager.c_str());
     for (size_t inode = 0; inode < rr_gsb.get_num_ipin_nodes(cb_ipin_side); ++inode) {
       t_rr_node* cur_ipin_node = rr_gsb.get_ipin_node(cb_ipin_side, inode);
+      t_rr_node* uni_ipin_node = unique_mirror.get_ipin_node(cb_ipin_side, inode);
       /* Print each INPUT Pins of a grid */
     if (true == is_explicit_mapping) {
       if (RIGHT == side_manager.get_side()) {
-        fprintf(fp, ".grid_%d__%d__pin_%d__%d__%d_ (", unique_mirror.get_sb_coordinator().get_x() + 1, unique_mirror.get_sb_coordinator().get_y() + 1, get_grid_pin_height(cur_ipin_node->xlow, cur_ipin_node->ylow,cur_ipin_node->ptc_num), rr_gsb.get_ipin_node_grid_side(cb_ipin_side,inode), cur_ipin_node->ptc_num);
+        fprintf(fp, ".grid_%d__%d__pin_%d__%d__%d_ (", unique_mirror.get_sb_coordinator().get_x() + 1, unique_mirror.get_sb_coordinator().get_y() + 1 -(grid[rr_gsb.get_grid_coordinator().get_x()][rr_gsb.get_grid_coordinator().get_y()].offset), 
+get_grid_pin_height(uni_ipin_node->xlow, uni_ipin_node->ylow,uni_ipin_node->ptc_num), rr_gsb.get_ipin_node_grid_side(cb_ipin_side,inode), 
+uni_ipin_node->ptc_num);
       } else if (TOP == side_manager.get_side()) {
-        fprintf(fp, ".grid_%d__%d__pin_%d__%d__%d_ (", unique_mirror.get_sb_coordinator().get_x(), unique_mirror.get_sb_coordinator().get_y() + 1, get_grid_pin_height(cur_ipin_node->xlow, cur_ipin_node->ylow,cur_ipin_node->ptc_num), rr_gsb.get_ipin_node_grid_side(cb_ipin_side,inode), cur_ipin_node->ptc_num);
+        fprintf(fp, ".grid_%d__%d__pin_%d__%d__%d_ (", unique_mirror.get_sb_coordinator().get_x(), unique_mirror.get_sb_coordinator().get_y() + 1, get_grid_pin_height(uni_ipin_node->xlow, uni_ipin_node->ylow,uni_ipin_node->ptc_num), rr_gsb.get_ipin_node_grid_side(cb_ipin_side,inode), uni_ipin_node->ptc_num);
       } else if (LEFT == side_manager.get_side()) {
-      fprintf(fp, ".grid_%d__%d__pin_%d__%d__%d_ (", unique_mirror.get_sb_coordinator().get_x(), unique_mirror.get_sb_coordinator().get_y() + 1, get_grid_pin_height(cur_ipin_node->xlow, cur_ipin_node->ylow,cur_ipin_node->ptc_num), rr_gsb.get_ipin_node_grid_side(cb_ipin_side,inode), cur_ipin_node->ptc_num);
+      fprintf(fp, ".grid_%d__%d__pin_%d__%d__%d_ (", unique_mirror.get_sb_coordinator().get_x(), unique_mirror.get_sb_coordinator().get_y() + 1 -(grid[rr_gsb.get_grid_coordinator().get_x()][rr_gsb.get_grid_coordinator().get_y()].offset), get_grid_pin_height(uni_ipin_node->xlow, uni_ipin_node->ylow,uni_ipin_node->ptc_num), rr_gsb.get_ipin_node_grid_side(cb_ipin_side,inode), uni_ipin_node->ptc_num);
       } else if (BOTTOM == side_manager.get_side()) {
-      fprintf(fp, ".grid_%d__%d__pin_%d__%d__%d_ (", unique_mirror.get_sb_coordinator().get_x(), unique_mirror.get_sb_coordinator().get_y(), get_grid_pin_height(cur_ipin_node->xlow, cur_ipin_node->ylow,cur_ipin_node->ptc_num), rr_gsb.get_ipin_node_grid_side(cb_ipin_side,inode), cur_ipin_node->ptc_num);
+      fprintf(fp, ".grid_%d__%d__pin_%d__%d__%d_ (", unique_mirror.get_sb_coordinator().get_x(), unique_mirror.get_sb_coordinator().get_y() -(grid[rr_gsb.get_grid_coordinator().get_x()][rr_gsb.get_grid_coordinator().get_y()-1].offset), get_grid_pin_height(uni_ipin_node->xlow, uni_ipin_node->ylow,uni_ipin_node->ptc_num), rr_gsb.get_ipin_node_grid_side(cb_ipin_side,inode), uni_ipin_node->ptc_num);
       }
     }
       dump_verilog_grid_side_pin_with_given_index(fp, OPIN,
@@ -964,6 +968,8 @@ void dump_compact_verilog_defined_one_connection_box(t_sram_orgz_info* cur_sram_
                                                   rr_gsb.get_ipin_node_grid_side(cb_ipin_side, inode),
                                                   cur_ipin_node->xlow,
                                                   cur_ipin_node->ylow, 
+                                                  0, /*explicit mapping is false*/
+                                                  0, /*explicit mapping is false*/
                                                   FALSE, false); /* Do not specify direction of port */
     if (true == is_explicit_mapping) {
       fprintf(fp, ")");
@@ -1092,9 +1098,11 @@ void dump_compact_verilog_defined_one_channel(FILE* fp,
   fprintf(fp, "(");
   fprintf(fp, "\n");
   /* dump global ports */
+  /*
   if (0 < dump_verilog_global_ports(fp, global_ports_head, FALSE, is_explicit_mapping)) {
     fprintf(fp, ",\n");
   }
+  */
 
   /* LEFT/BOTTOM side port of CHANX/CHANY */
   /* We apply an opposite port naming rule than function: fprint_routing_chan_subckt 
@@ -1105,27 +1113,27 @@ void dump_compact_verilog_defined_one_channel(FILE* fp,
   for (size_t itrack = 0; itrack < rr_chan.get_chan_width(); ++itrack) {
     switch (rr_chan.get_node(itrack)->direction) {
     case INC_DIRECTION:
-    if (true == is_explicit_mapping) {
-      fprintf(fp, ".in%d (",itrack);
-    }
+      if (true == is_explicit_mapping) {
+        fprintf(fp, ".in%d (",itrack);
+      }
       fprintf(fp, "%s",
               gen_verilog_routing_channel_one_pin_name(rr_chan.get_node(itrack),
                                                        x, y, itrack, OUT_PORT));
-    if (true == is_explicit_mapping) {
-      fprintf(fp, ")");
-    }
+      if (true == is_explicit_mapping) {
+        fprintf(fp, ")");
+      }
       fprintf(fp, ",\n");
       break;
     case DEC_DIRECTION:
-    if (true == is_explicit_mapping) {
-      fprintf(fp, ".out%d (",itrack);
-    }
+      if (true == is_explicit_mapping) {
+        fprintf(fp, ".out%d (",itrack);
+      }
       fprintf(fp, "%s",
               gen_verilog_routing_channel_one_pin_name(rr_chan.get_node(itrack),
                                                        x, y, itrack, IN_PORT));
-    if (true == is_explicit_mapping) {
-      fprintf(fp, ")");
-    }
+      if (true == is_explicit_mapping) {
+        fprintf(fp, ")");
+      }
       fprintf(fp, ",\n");
       break;
     default:
@@ -1145,27 +1153,27 @@ void dump_compact_verilog_defined_one_channel(FILE* fp,
   for (size_t itrack = 0; itrack < rr_chan.get_chan_width(); ++itrack) {
     switch (rr_chan.get_node(itrack)->direction) {
     case INC_DIRECTION:
-    if (true == is_explicit_mapping) {
-      fprintf(fp, ".out%d (",itrack);
-    }
+      if (true == is_explicit_mapping) {
+        fprintf(fp, ".out%d (",itrack);
+      }
       fprintf(fp, "%s",
               gen_verilog_routing_channel_one_pin_name(rr_chan.get_node(itrack),
                                                        x, y, itrack, IN_PORT));
-    if (true == is_explicit_mapping) {
-      fprintf(fp, ")");
-    }
+      if (true == is_explicit_mapping) {
+        fprintf(fp, ")");
+      }
       fprintf(fp, ",\n");
       break;
     case DEC_DIRECTION:
-    if (true == is_explicit_mapping) {
-      fprintf(fp, ".in%d (",itrack);
-    }
+      if (true == is_explicit_mapping) {
+        fprintf(fp, ".in%d (",itrack);
+      }
       fprintf(fp, "%s",
               gen_verilog_routing_channel_one_pin_name(rr_chan.get_node(itrack),
                                                        x, y, itrack, OUT_PORT));
-    if (true == is_explicit_mapping) {
-      fprintf(fp, ")");
-    }
+      if (true == is_explicit_mapping) {
+        fprintf(fp, ")");
+      }
       fprintf(fp, ",\n");
       break;
     default:

@@ -14,9 +14,11 @@ DeviceRRChan build_device_rr_chan(int LL_num_rr_nodes, t_rr_node* LL_rr_node,
  * Each switch block in the FPGA fabric will be an instance of these modules.
  * We maintain a map from each instance to each module
  */
-DeviceRRGSB build_device_rr_gsb(boolean output_sb_xml, char* sb_xml_dir,
-                                int LL_num_rr_nodes, t_rr_node* LL_rr_node, 
-                                t_ivec*** LL_rr_node_indices, int num_segments,
+DeviceRRGSB build_device_rr_gsb(const bool& output_sb_xml, 
+                                const bool& compact_routing_hierarchy,
+                                char* sb_xml_dir,
+                                const int& LL_num_rr_nodes, t_rr_node* LL_rr_node, 
+                                t_ivec*** LL_rr_node_indices, const int& num_segments,
                                 t_rr_indexed_data* LL_rr_indexed_data);
 
 /* Rotatable will be done in the next step 

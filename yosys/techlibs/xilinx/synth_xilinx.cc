@@ -42,8 +42,9 @@ struct SynthXilinxPass : public ScriptPass
 		log("    -top <module>\n");
 		log("        use the specified module as top module\n");
 		log("\n");
-		log("    -arch {xcup|xcu|xc7|xc6s}\n");
+		log("    -family {xcup|xcu|xc7|xc6s}\n");
 		log("        run synthesis for the specified Xilinx architecture\n");
+		log("        generate the synthesis netlist for the specified family.\n");
 		log("        default: xc7\n");
 		log("\n");
 		log("    -edif <file>\n");
@@ -67,6 +68,12 @@ struct SynthXilinxPass : public ScriptPass
 		log("    -nosrl\n");
 		log("        disable inference of shift registers\n");
 		log("\n");
+		log("    -nocarry\n");
+		log("        do not use XORCY/MUXCY/CARRY4 cells in output netlist\n");
+		log("\n");
+		log("    -nowidelut\n");
+		log("        do not use MUXF[78] resources to implement LUTs larger than LUT6s\n");
+		log("\n");
 		log("    -run <from_label>:<to_label>\n");
 		log("        only run the commands between the labels (see below). an empty\n");
 		log("        from label is synonymous to 'begin', and empty to label is\n");
@@ -84,8 +91,8 @@ struct SynthXilinxPass : public ScriptPass
 		log("\n");
 	}
 
-	std::string top_opt, edif_file, blif_file, arch;
-	bool flatten, retime, vpr, nobram, nodram, nosrl;
+	std::string top_opt, edif_file, blif_file, family;
+	bool flatten, retime, vpr, nobram, nodram, nosrl, nocarry, nowidelut;
 
 	void clear_flags() YS_OVERRIDE
 	{
@@ -98,7 +105,9 @@ struct SynthXilinxPass : public ScriptPass
 		nobram = false;
 		nodram = false;
 		nosrl = false;
-		arch = "xc7";
+		nocarry = false;
+		nowidelut = false;
+		family = "xc7";
 	}
 
 	void execute(std::vector<std::string> args, RTLIL::Design *design) YS_OVERRIDE
@@ -113,8 +122,8 @@ struct SynthXilinxPass : public ScriptPass
 				top_opt = "-top " + args[++argidx];
 				continue;
 			}
-			if (args[argidx] == "-arch" && argidx+1 < args.size()) {
-				arch = args[++argidx];
+			if ((args[argidx] == "-family" || args[argidx] == "-arch") && argidx+1 < args.size()) {
+				family = args[++argidx];
 				continue;
 			}
 			if (args[argidx] == "-edif" && argidx+1 < args.size()) {
@@ -141,6 +150,14 @@ struct SynthXilinxPass : public ScriptPass
 				retime = true;
 				continue;
 			}
+			if (args[argidx] == "-nocarry") {
+				nocarry = true;
+				continue;
+			}
+			if (args[argidx] == "-nowidelut") {
+				nowidelut = true;
+				continue;
+			}
 			if (args[argidx] == "-vpr") {
 				vpr = true;
 				continue;
@@ -161,8 +178,8 @@ struct SynthXilinxPass : public ScriptPass
 		}
 		extra_args(args, argidx, design);
 
-		if (arch != "xcup" && arch != "xcu" && arch != "xc7" && arch != "xc6s")
-			log_cmd_error("Invalid Xilinx -arch setting: %s\n", arch.c_str());
+		if (family != "xcup" && family != "xcu" && family != "xc7" && family != "xc6s")
+			log_cmd_error("Invalid Xilinx -family setting: %s\n", family.c_str());
 
 		if (!design->full_selection())
 			log_cmd_error("This command only operates on fully selected designs!\n");
@@ -229,11 +246,6 @@ struct SynthXilinxPass : public ScriptPass
 			run("dff2dffe");
 			run("opt -full");
 
-			if (!vpr || help_mode)
-				run("techmap -map +/xilinx/arith_map.v");
-			else
-				run("techmap -map +/xilinx/arith_map.v -D _EXPLICIT_CARRY");
-
 			if (!nosrl || help_mode) {
 				// shregmap operates on bit-level flops, not word-level,
 				//   so break those down here
@@ -242,7 +254,15 @@ struct SynthXilinxPass : public ScriptPass
 				run("shregmap -tech xilinx -minlen 3", "(skip if '-nosrl')");
 			}
 
-			run("techmap");
+			if (help_mode)
+				run("techmap -map +/techmap.v [-map +/xilinx/arith_map.v]", "(skip if '-nocarry')");
+			else if (!nocarry) {
+				if (!vpr)
+					run("techmap -map +/techmap.v -map +/xilinx/arith_map.v");
+				else
+					run("techmap -map +/techmap.v -map +/xilinx/arith_map.v -D _EXPLICIT_CARRY");
+			}
+
 			run("opt -fast");
 		}
 
@@ -253,7 +273,9 @@ struct SynthXilinxPass : public ScriptPass
 
 		if (check_label("map_luts")) {
 			if (help_mode)
-				run("abc -luts 2:2,3,6:5,10,20 [-dff]");
+				run("abc -luts 2:2,3,6:5[,10,20] [-dff]", "(skip if 'nowidelut', only for '-retime')");
+			else if (nowidelut)
+				run("abc -luts 2:2,3,6:5" + string(retime ? " -dff" : ""));
 			else
 				run("abc -luts 2:2,3,6:5,10,20" + string(retime ? " -dff" : ""));
 			run("clean");

@@ -1119,6 +1119,22 @@ RRGSB build_rr_gsb(DeviceCoordinator& device_range,
     if (0 == rr_gsb.get_chan_width(chan_side)) {
       continue;
     }
+    /* For bottom side: Skip IPIN collection if the offset of the grid is not zero! 
+     * (it means this CB is in the middle of a grid (whose height > 1)
+     *                              
+     *        |            |         |           |
+     *        |            |         |           |
+     *        |    Grid    |         |   Grid    |
+     *        +------------+         |           |
+     *          IPIN nodes             IPIN nodes
+     *            exist               do NOT exist
+     */
+    if ((BOTTOM == ipin_rr_node_grid_side) && (0 < grid[ix][iy].offset)) {
+      continue;
+    }
+    if ((TOP == ipin_rr_node_grid_side) && (grid[ix][iy].offset != grid[ix][iy].type->height - 1)) {
+      continue;
+    }
     /* Collect IPIN rr_nodes*/ 
     temp_ipin_rr_node = get_grid_side_pin_rr_nodes(&(num_temp_ipin_rr_nodes), 
                                                    IPIN, ix, iy, ipin_rr_node_grid_side,
@@ -1318,9 +1334,11 @@ void sort_rr_gsb_drive_rr_nodes(const RRGSB& rr_gsb) {
  * Each switch block in the FPGA fabric will be an instance of these modules.
  * We maintain a map from each instance to each module
  */
-DeviceRRGSB build_device_rr_gsb(boolean output_sb_xml, char* sb_xml_dir,
-                                int LL_num_rr_nodes, t_rr_node* LL_rr_node, 
-                                t_ivec*** LL_rr_node_indices, int num_segments,
+DeviceRRGSB build_device_rr_gsb(const bool& output_sb_xml, 
+                                const bool& compact_routing_hierarchy,
+                                char* sb_xml_dir,
+                                const int& LL_num_rr_nodes, t_rr_node* LL_rr_node, 
+                                t_ivec*** LL_rr_node_indices, const int& num_segments,
                                 t_rr_indexed_data* LL_rr_indexed_data) {
   /* Timer */
   clock_t t_start;
@@ -1382,9 +1400,7 @@ DeviceRRGSB build_device_rr_gsb(boolean output_sb_xml, char* sb_xml_dir,
   vpr_printf(TIO_MESSAGE_INFO, "Edge sorting for Switch Block took %g seconds\n", run_time_sec_profiling);  
   vpr_printf(TIO_MESSAGE_INFO, "Backannotation of Switch Block took %g seconds\n\n", run_time_sec);  
 
-
-
-  if (TRUE == output_sb_xml) {
+  if (true == output_sb_xml) {
     create_dir_path(sb_xml_dir);
     write_device_rr_gsb_to_xml(sb_xml_dir, LL_device_rr_gsb);
 
@@ -1397,42 +1413,44 @@ DeviceRRGSB build_device_rr_gsb(boolean output_sb_xml, char* sb_xml_dir,
 
   /* Build a list of unique modules for each Switch Block */
   /* Build a list of unique modules for each side of each Switch Block */
-  LL_device_rr_gsb.build_unique_module();
+  if (true == compact_routing_hierarchy) {
+    LL_device_rr_gsb.build_unique_module();
 
-  vpr_printf(TIO_MESSAGE_INFO, 
-             "Detect %lu routing segments used by switch blocks.\n",
-             LL_device_rr_gsb.get_num_segments());
+    vpr_printf(TIO_MESSAGE_INFO, 
+               "Detect %lu routing segments used by switch blocks.\n",
+               LL_device_rr_gsb.get_num_segments());
+  
+    /* Report number of unique CB Modules */
+    vpr_printf(TIO_MESSAGE_INFO, 
+               "Detect %d unique connection blocks from %d X-channel connection blocks.\n",
+               LL_device_rr_gsb.get_num_cb_unique_module(CHANX), (nx + 0) * (ny + 1) );
+  
+    vpr_printf(TIO_MESSAGE_INFO, 
+               "Detect %d unique connection blocks from %d Y-channel connection blocks.\n",
+               LL_device_rr_gsb.get_num_cb_unique_module(CHANY), (nx + 1) * (ny + 0) );
+  
+  
+    /* Report number of unique SB modules */
+    vpr_printf(TIO_MESSAGE_INFO, 
+               "Detect %d unique switch blocks from %d switch blocks.\n",
+               LL_device_rr_gsb.get_num_sb_unique_module(), (nx + 1) * (ny + 1) );
+  
+    /* Report number of unique GSB modules */
+    vpr_printf(TIO_MESSAGE_INFO, 
+               "Detect %d unique GSBs from %d GSBs.\n",
+               LL_device_rr_gsb.get_num_sb_unique_module(), (nx + 1) * (ny + 1) );
 
-  /* Report number of unique CB Modules */
-  vpr_printf(TIO_MESSAGE_INFO, 
-             "Detect %d unique connection blocks from %d X-channel connection blocks.\n",
-             LL_device_rr_gsb.get_num_cb_unique_module(CHANX), (nx + 0) * (ny + 1) );
-
-  vpr_printf(TIO_MESSAGE_INFO, 
-             "Detect %d unique connection blocks from %d Y-channel connection blocks.\n",
-             LL_device_rr_gsb.get_num_cb_unique_module(CHANY), (nx + 1) * (ny + 0) );
-
-
-  /* Report number of unique SB modules */
-  vpr_printf(TIO_MESSAGE_INFO, 
-             "Detect %d unique switch blocks from %d switch blocks.\n",
-             LL_device_rr_gsb.get_num_sb_unique_module(), (nx + 1) * (ny + 1) );
-
-  /* Report number of unique GSB modules */
-  vpr_printf(TIO_MESSAGE_INFO, 
-             "Detect %d unique GSBs from %d GSBs.\n",
-             LL_device_rr_gsb.get_num_sb_unique_module(), (nx + 1) * (ny + 1) );
-
-  /* Report number of unique mirrors */
-  for (size_t side = 0; side < LL_device_rr_gsb.get_max_num_sides(); ++side) {
-    Side side_manager(side); 
-    /* get segment ids */
-    for (size_t iseg = 0; iseg < LL_device_rr_gsb.get_num_segments(); ++iseg) { 
-      vpr_printf(TIO_MESSAGE_INFO, 
-                 "For side %s, segment id %lu: Detect %d independent switch blocks from %d switch blocks.\n",
-                 side_manager.c_str(), LL_device_rr_gsb.get_segment_id(iseg), 
-                 LL_device_rr_gsb.get_num_sb_unique_submodule(side_manager.get_side(), iseg), 
-                 (nx + 1) * (ny + 1) );
+    /* Report number of unique mirrors */
+    for (size_t side = 0; side < LL_device_rr_gsb.get_max_num_sides(); ++side) {
+      Side side_manager(side); 
+      /* get segment ids */
+      for (size_t iseg = 0; iseg < LL_device_rr_gsb.get_num_segments(); ++iseg) { 
+        vpr_printf(TIO_MESSAGE_INFO, 
+                   "For side %s, segment id %lu: Detect %d independent switch blocks from %d switch blocks.\n",
+                   side_manager.c_str(), LL_device_rr_gsb.get_segment_id(iseg), 
+                   LL_device_rr_gsb.get_num_sb_unique_submodule(side_manager.get_side(), iseg), 
+                   (nx + 1) * (ny + 1) );
+      }
     }
   }
 
@@ -1440,7 +1458,7 @@ DeviceRRGSB build_device_rr_gsb(boolean output_sb_xml, char* sb_xml_dir,
   t_end = clock();
  
   run_time_sec = (float)(t_end - t_start) / CLOCKS_PER_SEC;
-  vpr_printf(TIO_MESSAGE_INFO, "Routing architecture uniqifying took %g seconds\n\n", run_time_sec);  
+  vpr_printf(TIO_MESSAGE_INFO, "Routing architecture uniquifying took %g seconds\n\n", run_time_sec);  
 
   return LL_device_rr_gsb;
 }

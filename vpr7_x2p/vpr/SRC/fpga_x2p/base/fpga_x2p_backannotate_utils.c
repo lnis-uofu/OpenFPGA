@@ -1480,6 +1480,10 @@ void update_one_grid_pack_net_num(int x, int y) {
   assert ((NULL != type) 
        && (EMPTY_TYPE != type) 
        && (IO_TYPE != type));
+  /* Bypass grids whose offset is larger than 0 ! They have been processed! */
+  if (0 < grid[x][y].offset) {
+    return;
+  }
  
   for (iblk = 0; iblk < grid[x][y].usage; iblk++) {
     blk_id = grid[x][y].blocks[iblk];

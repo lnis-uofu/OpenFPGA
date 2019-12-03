@@ -100,6 +100,8 @@ struct s_TokenPair OptionBaseTokenList[] = {
         { "fpga_verilog_report_timing_rpt_path", OT_FPGA_VERILOG_SYN_REPORT_TIMING_RPT_PATH }, /* Specify the simulator path for Verilog netlists */
         { "fpga_verilog_print_sdc_pnr", OT_FPGA_VERILOG_SYN_PRINT_SDC_PNR }, /* Specify the simulator path for Verilog netlists */
         { "fpga_verilog_print_sdc_analysis", OT_FPGA_VERILOG_SYN_PRINT_SDC_ANALYSIS }, /* Specify the simulator path for Verilog netlists */
+        { "fpga_verilog_print_simulation_ini", OT_FPGA_VERILOG_SYN_PRINT_SIMULATION_INI }, /* Specify the simulator path for Verilog netlists */
+        { "fpga_verilog_simulation_ini_file", OT_FPGA_VERILOG_SYN_SIMULATION_INI_FILE }, /* Specify the simulator path for Verilog netlists */
         /* Xifan Tang: Bitstream generator */
         { "fpga_bitstream_generator", OT_FPGA_BITSTREAM_GENERATOR }, /* turn on bitstream generator, and specify the output file */
  //       { "fpga_bitstream_output_file", OT_FPGA_BITSTREAM_OUTPUT_FILE }, /* turn on bitstream generator, and specify the output file */ // AA: temporarily deprecated

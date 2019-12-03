@@ -63,6 +63,7 @@ char* logic_block_verilog_file_name = "logic_blocks.v";
 char* luts_verilog_file_name = "luts.v";
 char* routing_verilog_file_name = "routing.v";
 char* muxes_verilog_file_name = "muxes.v";
+char* local_encoder_verilog_file_name = "local_encoder.v";
 char* memories_verilog_file_name = "memories.v";
 char* wires_verilog_file_name = "wires.v";
 char* essentials_verilog_file_name = "inv_buf_passgate.v";
@@ -130,7 +131,7 @@ char* top_netlist_normal_bl_port_postfix = "_bl";
 char* top_netlist_normal_wl_port_postfix = "_wl";
 char* top_netlist_normal_blb_port_postfix = "_blb";
 char* top_netlist_normal_wlb_port_postfix = "_wlb";
-char* top_netlist_scan_chain_head_prefix = "sc_in";
+char* top_netlist_scan_chain_head_prefix = "cc_in";
 
 char* top_tb_reset_port_name = "greset";
 char* top_tb_set_port_name = "gset";

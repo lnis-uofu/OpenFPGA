@@ -10,6 +10,8 @@
 #include <assert.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <vector>
+#include <algorithm>
 
 /* Include vpr structs*/
 #include "util.h"
@@ -20,13 +22,18 @@
 #include "vpr_utils.h"
 #include "path_delay.h"
 #include "stats.h"
+#include "vtr_assert.h"
 
 /* Include FPGA-SPICE utils */
 #include "linkedlist.h"
 #include "fpga_x2p_utils.h"
+#include "fpga_x2p_naming.h"
 #include "fpga_x2p_globals.h"
 #include "fpga_x2p_mux_utils.h"
 #include "fpga_x2p_bitstream_utils.h"
+#include "mux_library.h"
+#include "module_manager.h"
+#include "module_manager_utils.h"
 
 /* Include verilog utils */
 #include "verilog_global.h"
@@ -34,8 +41,20 @@
 #include "verilog_pbtypes.h"
 #include "verilog_decoder.h"
 
+#include "mux_utils.h"
+#include "verilog_writer_utils.h"
+#include "verilog_mux.h"
+#include "verilog_essential_gates.h"
+#include "verilog_decoders.h"
+#include "verilog_lut.h"
+#include "verilog_memory.h"
+#include "verilog_wire.h"
+
+#include "verilog_submodules.h"
+
 /***** Subroutines *****/
 
+static 
 void dump_verilog_submodule_timing(FILE* fp,
                                    t_spice_model* cur_spice_model) {
   int iport, ipin, iedge;
@@ -85,6 +104,7 @@ void dump_verilog_submodule_timing(FILE* fp,
   return;
 }
 
+static 
 void dump_verilog_submodule_signal_init(FILE* fp,
                                         t_spice_model* cur_spice_model) {
   int iport;
@@ -122,500 +142,8 @@ void dump_verilog_submodule_signal_init(FILE* fp,
   return;
 }
 
-
-/* Dump a module of inverter or buffer or tapered buffer */
-void dump_verilog_invbuf_module(FILE* fp,
-                                t_spice_model* invbuf_spice_model) {
-  int ipin, iport, port_cnt;
-  int num_input_port = 0;
-  int num_output_port = 0;
-  int num_powergate_port = 0;
-  t_spice_model_port** input_port = NULL;
-  t_spice_model_port** output_port = NULL;
-  t_spice_model_port** powergate_port = NULL;
-
-  /* Ensure a valid file handler*/
-  if (NULL == fp) {
-    vpr_printf(TIO_MESSAGE_ERROR,"(FILE:%s,LINE[%d])Invalid File handler.\n",
-               __FILE__, __LINE__); 
-    exit(1);
-  }
-
-  fprintf(fp, "//----- Verilog module for %s -----\n",
-          invbuf_spice_model->name);
-
-  /* Find the input port, output port*/
-  input_port = find_spice_model_ports(invbuf_spice_model, SPICE_MODEL_PORT_INPUT, &num_input_port, TRUE);
-  output_port = find_spice_model_ports(invbuf_spice_model, SPICE_MODEL_PORT_OUTPUT, &num_output_port, TRUE);
-  powergate_port = find_spice_model_config_done_ports(invbuf_spice_model, SPICE_MODEL_PORT_INPUT, &num_powergate_port, FALSE);
-
-  /* Make sure:
-   * There is only 1 input port and 1 output port, 
-   * each size of which is 1
-   */
-  assert(1 == num_input_port);
-  assert(1 == input_port[0]->size);
-  assert(1 == num_output_port);
-  assert(1 == output_port[0]->size);
-
-  /* If power-gated, we need to find enable signals */
-  if (TRUE == invbuf_spice_model->design_tech_info.power_gated) {
-    if (0 ==  num_powergate_port) {
-      vpr_printf(TIO_MESSAGE_ERROR,"(FILE:%s,LINE[%d])Inverter, buffer SPICE model is power-gated, but cannot find any power-gate port!\n",
-                 __FILE__, __LINE__); 
-      exit(1);
-    }
-    assert ( 0 < num_powergate_port);
-  }
-
-  /* dump module body */
-  fprintf(fp, "module %s (\n",
-          invbuf_spice_model->name);
-  /* Dump global ports */
-  if  (0 < rec_dump_verilog_spice_model_lib_global_ports(fp, invbuf_spice_model, TRUE, FALSE, FALSE)) {
-    fprintf(fp, ",\n");
-  }
-  /* Dump ports */
-  fprintf(fp, "input [0:0] %s,\n", input_port[0]->lib_name);
-  fprintf(fp, "output [0:0] %s\n", output_port[0]->lib_name);
-  fprintf(fp, ");\n");
-  /* Finish dumping ports */
-
-  /* Assign logics : depending on topology */
-  switch (invbuf_spice_model->design_tech_info.buffer_info->type) {
-  case SPICE_MODEL_BUF_INV:
-    if (TRUE == invbuf_spice_model->design_tech_info.power_gated) {
-      /* Create a sensitive list */
-      fprintf(fp, "reg %s_reg;\n", output_port[0]->lib_name);
-      fprintf(fp, "always @(");
-      /* Power-gate port first*/
-      for (iport = 0; iport < num_powergate_port; iport++) {
-        fprintf(fp, "%s,", powergate_port[iport]->lib_name);
-      }
-      fprintf(fp, "%s) begin\n", 
-                  input_port[0]->lib_name); 
-      /* Dump the case of power-gated */
-      fprintf(fp, "  if (");
-      port_cnt = 0; /* Initialize the counter: decide if we need to put down '&&' */
-      for (iport = 0; iport < num_powergate_port; iport++) {
-        if (0 == powergate_port[iport]->default_val) {
-          for (ipin = 0; ipin < powergate_port[iport]->size; ipin++) {
-            if ( 0 < port_cnt ) {
-              fprintf(fp, "\n\t&&");
-            }
-            /* Power-gated signal are disable during operating, enabled during configuration,
-             * Therefore, we need to reverse them here   
-             */
-            fprintf(fp, "(~%s[%d])", 
-                         powergate_port[iport]->lib_name,
-                         ipin);
-            port_cnt++; /* Update port counter*/
-          }
-        } else {
-          assert (1 == powergate_port[iport]->default_val);
-          for (ipin = 0; ipin < powergate_port[iport]->size; ipin++) {
-            if ( 0 < port_cnt ) {
-              fprintf(fp, "\n\t&&");
-            }
-            /* Power-gated signal are disable during operating, enabled during configuration,
-             * Therefore, we need to reverse them here   
-             */
-            fprintf(fp, "(%s[%d])", 
-                        powergate_port[iport]->lib_name,
-                        ipin);
-            port_cnt++; /* Update port counter*/
-          }
-        }
-      }
-      fprintf(fp, ") begin\n");
-      fprintf(fp, "\t\tassign %s_reg = ~%s;\n",
-                  output_port[0]->lib_name,
-                  input_port[0]->lib_name);
-      fprintf(fp, "\tend else begin\n");
-      fprintf(fp, "\t\tassign %s_reg = 1'bz;\n",
-                  output_port[0]->lib_name);
-      fprintf(fp, "\tend\n");
-      fprintf(fp, "end\n");
-      fprintf(fp, "assign %s = %s_reg;\n",
-                  output_port[0]->lib_name,
-                  output_port[0]->lib_name);
-    } else {
-      fprintf(fp, "assign %s = (%s === 1'bz)? $random : ~%s;\n",
-                  output_port[0]->lib_name,
-                  input_port[0]->lib_name,
-                  input_port[0]->lib_name);
-    }
-    break;
-  case SPICE_MODEL_BUF_BUF:
-    if (TRUE == invbuf_spice_model->design_tech_info.power_gated) {
-      /* Create a sensitive list */
-      fprintf(fp, "reg %s_reg;\n", output_port[0]->lib_name);
-      fprintf(fp, "always @(");
-      /* Power-gate port first*/
-      for (iport = 0; iport < num_powergate_port; iport++) {
-        fprintf(fp, "%s,", powergate_port[iport]->lib_name);
-      }
-      fprintf(fp, "%s) begin\n", 
-                  input_port[0]->lib_name);
-      /* Dump the case of power-gated */
-      fprintf(fp, "  if (");
-      port_cnt = 0; /* Initialize the counter: decide if we need to put down '&&' */
-      for (iport = 0; iport < num_powergate_port; iport++) {
-        if (0 == powergate_port[iport]->default_val) {
-          for (ipin = 0; ipin < powergate_port[iport]->size; ipin++) {
-            if ( 0 < port_cnt ) {
-              fprintf(fp, "\n\t&&");
-            }
-            /* Power-gated signal are disable during operating, enabled during configuration,
-             * Therefore, we need to reverse them here   
-             */
-            fprintf(fp, "(~%s[%d])", 
-                         powergate_port[iport]->lib_name,
-                         ipin);
-            port_cnt++; /* Update port counter*/
-          }
-        } else {
-          assert (1 == powergate_port[iport]->default_val);
-          for (ipin = 0; ipin < powergate_port[iport]->size; ipin++) {
-            if ( 0 < port_cnt ) {
-              fprintf(fp, "\n\t&&");
-            }
-            /* Power-gated signal are disable during operating, enabled during configuration,
-             * Therefore, we need to reverse them here   
-             */
-            fprintf(fp, "(%s[%d])", 
-                        powergate_port[iport]->lib_name,
-                        ipin);
-            port_cnt++; /* Update port counter*/
-          }
-        }
-      }
-      fprintf(fp, ") begin\n");
-      fprintf(fp, "\t\tassign %s_reg = %s;\n",
-                  output_port[0]->lib_name,
-                  input_port[0]->lib_name);
-      fprintf(fp, "\tend else begin\n");
-      fprintf(fp, "\t\tassign %s_reg = 1'bz;\n",
-                  output_port[0]->lib_name);
-      fprintf(fp, "\tend\n");
-      fprintf(fp, "end\n");
-      fprintf(fp, "assign %s = %s_reg;\n",
-                  output_port[0]->lib_name,
-                  output_port[0]->lib_name);
-
-    } else if (FALSE == invbuf_spice_model->design_tech_info.buffer_info->tapered_buf) {
-      fprintf(fp, "assign %s = (%s === 1'bz)? $random : %s;\n",
-                  output_port[0]->lib_name,
-                  input_port[0]->lib_name,
-                  input_port[0]->lib_name);
-    } else {
-      assert (TRUE == invbuf_spice_model->design_tech_info.buffer_info->tapered_buf);
-      fprintf(fp, "assign %s = (%s === 1'bz)? $random : ",
-                  output_port[0]->lib_name,
-                  input_port[0]->lib_name);
-      /* depend on the stage, we may invert the output */
-      if (1 == invbuf_spice_model->design_tech_info.buffer_info->tap_buf_level % 2) {
-        fprintf(fp, "~");
-      }
-      fprintf(fp, "%s;\n",
-                  input_port[0]->lib_name);
-    }
-    break;
-  default:
-    vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid topology for spice model (%s)!\n",
-               __FILE__, __LINE__, invbuf_spice_model->name);
-    exit(1);
-  }
-
-  /* Print timing info */
-  dump_verilog_submodule_timing(fp, invbuf_spice_model);
-
-  dump_verilog_submodule_signal_init(fp, invbuf_spice_model);
-
-  fprintf(fp, "endmodule\n");
-
-  fprintf(fp, "\n");
-
-  /* Free */
-  my_free(input_port);
-  my_free(output_port);
-
-  return;
-}
-
-/* Dump a module of pass-gate logic */
-void dump_verilog_passgate_module(FILE* fp,
-                                  t_spice_model* passgate_spice_model) {
-  int iport;
-  int num_input_port = 0;
-  int num_output_port = 0;
-  t_spice_model_port** input_port = NULL;
-  t_spice_model_port** output_port = NULL;
-
-  /* Ensure a valid file handler*/
-  if (NULL == fp) {
-    vpr_printf(TIO_MESSAGE_ERROR,"(FILE:%s,LINE[%d])Invalid File handler.\n",
-               __FILE__, __LINE__); 
-    exit(1);
-  }
-
-  /* Find the input port, output port*/
-  input_port = find_spice_model_ports(passgate_spice_model, SPICE_MODEL_PORT_INPUT, &num_input_port, TRUE);
-  output_port = find_spice_model_ports(passgate_spice_model, SPICE_MODEL_PORT_OUTPUT, &num_output_port, TRUE);
-
-  /* Make sure:
-   * There is only 1 output port, 
-   * each size of which is 1
-   */
-  assert(1 == num_output_port);
-  assert(1 == output_port[0]->size);
-
-  fprintf(fp, "//----- Verilog module for %s -----\n",
-          passgate_spice_model->name);
-
-  /* dump module body */
-  fprintf(fp, "module %s (\n",
-          passgate_spice_model->name);
-
-  /* Dump global ports */
-  if  (0 < rec_dump_verilog_spice_model_lib_global_ports(fp, passgate_spice_model, TRUE, FALSE, FALSE)) {
-    fprintf(fp, ",\n");
-  }
-
-  /* Assign ports : depending on topology */
-  switch (passgate_spice_model->design_tech_info.pass_gate_info->type) {
-  case SPICE_MODEL_PASS_GATE_TRANSMISSION:
-    /* Make sure:
-     * There is only 3 input port (in, sel, selb), 
-     * each size of which is 1
-     */
-    assert(3 == num_input_port);
-    for (iport = 0; iport < num_input_port; iport++) {
-      assert(1 == input_port[iport]->size);
-    }
-    /* Dump ports */
-    fprintf(fp, "input [0:0] %s,\n", input_port[0]->lib_name);
-    fprintf(fp, "input [0:0] %s,\n", input_port[1]->lib_name);
-    fprintf(fp, "input [0:0] %s,\n", input_port[2]->lib_name);
-    fprintf(fp, "output [0:0] %s\n", output_port[0]->lib_name);
-    fprintf(fp, ");\n");
-    /* Finish dumping ports */
-
-    break;
-  case SPICE_MODEL_PASS_GATE_TRANSISTOR:
-    /* Make sure:
-     * There is only 2 input port (in, sel), 
-     * each size of which is 1
-     */
-    assert(2 == num_input_port);
-    for (iport = 0; iport < num_input_port; iport++) {
-      assert(1 == input_port[iport]->size);
-    }
-    /* Dump ports */
-    fprintf(fp, "input [0:0] %s,\n", input_port[0]->lib_name);
-    fprintf(fp, "input [0:0] %s,\n", input_port[1]->lib_name);
-    fprintf(fp, "output [0:0] %s\n", output_port[0]->lib_name);
-    fprintf(fp, ");\n");
-    /* Finish dumping ports */
-    break;
-  default:
-    vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid topology for spice model (%s)!\n",
-               __FILE__, __LINE__, passgate_spice_model->name);
-    exit(1);
-  }
-
-  /* Dump logics */
-  fprintf(fp, "assign %s = %s? %s : 1'bz;\n",
-              output_port[0]->lib_name,
-              input_port[1]->lib_name,
-              input_port[0]->lib_name);
-
-  /* Print timing info */
-  dump_verilog_submodule_timing(fp, passgate_spice_model);
-
-  /* Print signal initialization */
-  dump_verilog_submodule_signal_init(fp, passgate_spice_model);
-
-  fprintf(fp, "endmodule\n");
-
-  fprintf(fp, "\n");
-
-  /* Free */
-  my_free(input_port);
-  my_free(output_port);
-
-  return;
-}
-
-/* Dump a module of pass-gate logic */
-void dump_verilog_gate_module(FILE* fp,
-                              t_spice_model* gate_spice_model) {
-  int iport, ipin, jport, jpin;
-  int num_input_port = 0;
-  int num_output_port = 0;
-  t_spice_model_port** input_port = NULL;
-  t_spice_model_port** output_port = NULL;
-
-  /* Ensure a valid file handler*/
-  if (NULL == fp) {
-    vpr_printf(TIO_MESSAGE_ERROR,"(FILE:%s,LINE[%d])Invalid File handler.\n",
-               __FILE__, __LINE__); 
-    exit(1);
-  }
-
-  /* Find the input port, output port*/
-  input_port = find_spice_model_ports(gate_spice_model, SPICE_MODEL_PORT_INPUT, &num_input_port, TRUE);
-  output_port = find_spice_model_ports(gate_spice_model, SPICE_MODEL_PORT_OUTPUT, &num_output_port, TRUE);
-
-  /* Make sure:
-   * There is only 1 output port, 
-   * each size of which is 1
-   */
-  assert(1 == num_output_port);
-  assert(1 == output_port[0]->size);
-
-  assert(0 < num_input_port);
-
-  fprintf(fp, "//----- Verilog module for %s -----\n",
-          gate_spice_model->name);
-
-  /* dump module body */
-  fprintf(fp, "module %s (\n",
-          gate_spice_model->name);
-
-  /* Dump global ports */
-  if  (0 < rec_dump_verilog_spice_model_lib_global_ports(fp, gate_spice_model, TRUE, FALSE, FALSE)) {
-    fprintf(fp, ",\n");
-  }
-
-  /* Dump ports */
-  for (iport = 0; iport < num_input_port; iport++) {
-    fprintf(fp, "input [0:%d] %s,\n", 
-            input_port[iport]->size - 1, input_port[iport]->lib_name);
-  }
-  for (iport = 0; iport < num_output_port; iport++) {
-    fprintf(fp, "output [0:%d] %s\n", 
-            output_port[iport]->size - 1, output_port[iport]->lib_name);
-  }
-  fprintf(fp, ");\n");
-
-  /* Dump logics */
-  switch (gate_spice_model->design_tech_info.gate_info->type) {
-  case SPICE_MODEL_GATE_AND:
-    for (iport = 0; iport < num_output_port; iport++) {
-      for (ipin = 0; ipin < output_port[iport]->size; ipin++) {
-        fprintf(fp, "assign %s[%d] = ",
-                    output_port[iport]->lib_name, ipin);
-        for (jport = 0; jport < num_input_port; jport++) {
-          for (jpin = 0; jpin < input_port[jport]->size; jpin++) {
-            fprintf(fp, "%s[%d]",
-                      input_port[jport]->lib_name, jpin);
-            if ((jport == num_input_port - 1) && (jpin == input_port[jport]->size - 1)) {
-              continue; /* Stop output AND sign for the last element in the loop */
-            }
-            fprintf(fp, " & ");
-          }
-        }
-        fprintf(fp, ";\n");
-      }
-    }
-    break;
-  case SPICE_MODEL_GATE_OR:
-    for (iport = 0; iport < num_output_port; iport++) {
-      for (ipin = 0; ipin < output_port[iport]->size; ipin++) {
-        fprintf(fp, "assign %s[%d] = ",
-                    output_port[iport]->lib_name, ipin);
-        for (jport = 0; jport < num_input_port; jport++) {
-          for (jpin = 0; jpin < input_port[jport]->size; jpin++) {
-            fprintf(fp, "%s[%d]",
-                      input_port[jport]->lib_name, jpin);
-            if ((jport == num_input_port - 1) && (jpin == input_port[jport]->size - 1)) {
-              continue; /* Stop output AND sign for the last element in the loop */
-            }
-            fprintf(fp, " | ");
-          }
-        }
-        fprintf(fp, ";\n");
-      }
-    }
-
-    break;
-  default:
-    vpr_printf(TIO_MESSAGE_ERROR,"(File:%s,[LINE%d])Invalid topology for spice model (%s)!\n",
-               __FILE__, __LINE__, gate_spice_model->name);
-    exit(1);
-  }
-
-
-  /* Print timing info */
-  dump_verilog_submodule_timing(fp, gate_spice_model);
-
-  /* Print signal initialization */
-  dump_verilog_submodule_signal_init(fp, gate_spice_model);
-
-  fprintf(fp, "endmodule\n");
-
-  fprintf(fp, "\n");
-
-  /* Free */
-  my_free(input_port);
-  my_free(output_port);
-
-  return;
-}
-
-/* Dump Essential modules: 
- * 1. inverters
- * 2. buffers
- * 3. pass-gate logics */
-void dump_verilog_submodule_essentials(char* verilog_dir, char* submodule_dir,
-                                       int num_spice_model,
-                                       t_spice_model* spice_models,
-                                       t_syn_verilog_opts fpga_verilog_opts) {
-  int imodel; 
-  char* verilog_name = my_strcat(submodule_dir, essentials_verilog_file_name);
-  FILE* fp = NULL;
-
-  /* Create file */
-  fp = fopen(verilog_name, "w");
-  if (NULL == fp) {
-    vpr_printf(TIO_MESSAGE_ERROR,"(FILE:%s,LINE[%d])Failure in create Verilog netlist %s",
-                                 __FILE__, __LINE__, essentials_verilog_file_name); 
-    exit(1);
-  } 
-  dump_verilog_file_header(fp,"Essential gates"); 
-
-  verilog_include_defines_preproc_file(fp, verilog_dir);
-
-  /* Output essential models*/
-  for (imodel = 0; imodel < num_spice_model; imodel++) {
-    /* By pass user-defined modules */
-    if (NULL != spice_models[imodel].verilog_netlist) {
-      continue;
-    }
-    if (SPICE_MODEL_INVBUF == spice_models[imodel].type) {
-      dump_verilog_invbuf_module(fp, &(spice_models[imodel]));
-    }
-    if (SPICE_MODEL_PASSGATE == spice_models[imodel].type) {
-      dump_verilog_passgate_module(fp, &(spice_models[imodel]));
-    }
-    if (SPICE_MODEL_GATE == spice_models[imodel].type) {
-      dump_verilog_gate_module(fp, &(spice_models[imodel]));
-    }
-  }
-
-  /* Close file handler*/
-  fclose(fp);
-
-  /* Add fname to the linked list */
-  submodule_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(submodule_verilog_subckt_file_path_head, verilog_name);  
-
-  /* Free */
-  
-  return;
-}
-
 /* Dump a CMOS MUX basis module */
+static 
 void dump_verilog_cmos_mux_one_basis_module(FILE* fp, 
                                             char* mux_basis_subckt_name, 
                                             int mux_size, 
@@ -642,7 +170,7 @@ void dump_verilog_cmos_mux_one_basis_module(FILE* fp,
   /* Print the port list and definition */
   fprintf(fp, "module %s (\n", mux_basis_subckt_name);
   /* Dump global ports */
-  if  (0 < rec_dump_verilog_spice_model_global_ports(fp, cur_spice_model, TRUE, FALSE, FALSE)) {
+  if  (0 < rec_dump_verilog_spice_model_global_ports(fp, cur_spice_model, TRUE, FALSE, FALSE, TRUE)) {
     fprintf(fp, ",\n");
   }
   /* Port list */
@@ -760,7 +288,7 @@ void dump_verilog_cmos_mux_one_basis_module_structural(FILE* fp,
   /* Print the port list and definition */
   fprintf(fp, "module %s (\n", mux_basis_subckt_name);
   /* Dump global ports */
-  if  (0 < rec_dump_verilog_spice_model_global_ports(fp, cur_spice_model, TRUE, FALSE, FALSE)) {
+  if  (0 < rec_dump_verilog_spice_model_global_ports(fp, cur_spice_model, TRUE, FALSE, FALSE, TRUE)) {
     fprintf(fp, ",\n");
   }
   /* Port list */
@@ -863,7 +391,7 @@ void dump_verilog_rram_mux_one_basis_module_structural(FILE* fp,
   /* Print the port list and definition */
   fprintf(fp, "module %s (\n", mux_basis_subckt_name);
   /* Dump global ports */
-  if  (0 < rec_dump_verilog_spice_model_global_ports(fp, cur_spice_model, TRUE, FALSE, FALSE)) {
+  if  (0 < rec_dump_verilog_spice_model_global_ports(fp, cur_spice_model, TRUE, FALSE, FALSE, TRUE)) {
     fprintf(fp, ",\n");
   }
   /* Port list */
@@ -906,6 +434,7 @@ void dump_verilog_rram_mux_one_basis_module_structural(FILE* fp,
 
 
 /* Dump a RRAM MUX basis module */
+static 
 void dump_verilog_rram_mux_one_basis_module(FILE* fp, 
                                             char* mux_basis_subckt_name, 
                                             int num_input_basis_subckt, 
@@ -928,7 +457,7 @@ void dump_verilog_rram_mux_one_basis_module(FILE* fp,
   /* Print the port list and definition */
   fprintf(fp, "module %s (\n", mux_basis_subckt_name);
   /* Dump global ports */
-  if  (0 < rec_dump_verilog_spice_model_global_ports(fp, cur_spice_model, TRUE, FALSE, FALSE)) {
+  if  (0 < rec_dump_verilog_spice_model_global_ports(fp, cur_spice_model, TRUE, FALSE, FALSE, TRUE)) {
     fprintf(fp, ",\n");
   }
   /* Port list */
@@ -1021,6 +550,7 @@ void dump_verilog_rram_mux_one_basis_module(FILE* fp,
 }
 
 /* Print a basis submodule */
+static 
 void dump_verilog_mux_one_basis_module(FILE* fp, 
                                        char* mux_basis_subckt_name, 
                                        int mux_size,
@@ -1073,6 +603,7 @@ void dump_verilog_mux_one_basis_module(FILE* fp,
 /**
  * Dump a verilog module for the basis circuit of a MUX
  */
+static 
 void dump_verilog_mux_basis_module(FILE* fp, 
                                    t_spice_mux_model* spice_mux_model) {
   /** Act depends on the structure of MUX
@@ -1165,6 +696,7 @@ void dump_verilog_mux_basis_module(FILE* fp,
   return;
 }
 
+static 
 void dump_verilog_cmos_mux_tree_structure(FILE* fp, 
                                           char* mux_basis_subckt_name,
                                           t_spice_model spice_model,
@@ -1194,8 +726,9 @@ void dump_verilog_cmos_mux_tree_structure(FILE* fp,
   for (i = 0; i < spice_mux_arch.num_level + 1; i++) {
     inter_buf_loc[i] = FALSE;
   }
-  if (NULL != spice_model.lut_intermediate_buffer->location_map) {
-    assert (spice_mux_arch.num_level - 1 == strlen(spice_model.lut_intermediate_buffer->location_map));
+  if ( (TRUE == spice_model.lut_intermediate_buffer->exist) 
+    && (NULL != spice_model.lut_intermediate_buffer->location_map) ) {
+    assert ((size_t)spice_mux_arch.num_level - 1 == strlen(spice_model.lut_intermediate_buffer->location_map));
     /* For intermediate buffers */ 
     for (i = 0; i < spice_mux_arch.num_level - 1; i++) {
       if ('1' == spice_model.lut_intermediate_buffer->location_map[i]) {
@@ -1264,7 +797,7 @@ void dump_verilog_cmos_mux_tree_structure(FILE* fp,
         }
       
         /* Dump global ports */
-        if  (0 < rec_dump_verilog_spice_model_global_ports(fp, tgate_spice_model, FALSE, FALSE, my_bool_to_boolean(use_explicit_port_map))) {
+        if  (0 < rec_dump_verilog_spice_model_global_ports(fp, tgate_spice_model, FALSE, FALSE, my_bool_to_boolean(use_explicit_port_map), TRUE)) {
           fprintf(fp, ",\n");
         }
         if (true == use_explicit_port_map) {
@@ -1307,7 +840,7 @@ void dump_verilog_cmos_mux_tree_structure(FILE* fp,
       } else {
         assert (SPICE_MODEL_PASSGATE == tgate_spice_model->type); 
         /* Dump global ports */
-        if  (0 < rec_dump_verilog_spice_model_global_ports(fp, &spice_model, FALSE, FALSE, my_bool_to_boolean(is_explicit_mapping))) {
+        if  (0 < rec_dump_verilog_spice_model_global_ports(fp, &spice_model, FALSE, FALSE, my_bool_to_boolean(is_explicit_mapping), TRUE)) {
           fprintf(fp, ",\n");
         }
         if (true == is_explicit_mapping) {
@@ -1361,7 +894,7 @@ void dump_verilog_cmos_mux_tree_structure(FILE* fp,
                 spice_model.lut_intermediate_buffer->spice_model_name, 
                 nextlevel, out_idx); /* Given name*/
         /* Dump global ports */
-        if  (0 < rec_dump_verilog_spice_model_global_ports(fp, spice_model.lut_intermediate_buffer->spice_model, FALSE, FALSE, spice_model.lut_intermediate_buffer->spice_model->dump_explicit_port_map)) {
+        if  (0 < rec_dump_verilog_spice_model_global_ports(fp, spice_model.lut_intermediate_buffer->spice_model, FALSE, FALSE, spice_model.lut_intermediate_buffer->spice_model->dump_explicit_port_map, TRUE)) {
           fprintf(fp, ",\n");
         }
         /* Dump explicit port map if required */
@@ -1404,6 +937,7 @@ void dump_verilog_cmos_mux_tree_structure(FILE* fp,
   return;
 }
 
+static 
 void dump_verilog_cmos_mux_multilevel_structure(FILE* fp, 
                                                 char* mux_basis_subckt_name,
                                                 char* mux_special_basis_subckt_name,
@@ -1437,6 +971,16 @@ void dump_verilog_cmos_mux_multilevel_structure(FILE* fp,
   }
   fprintf(fp, "wire [%d:%d] mux2_l%d_in; \n",
           0, 0, 0);
+
+  if (TRUE == spice_model.design_tech_info.mux_info->local_encoder) {
+    /* Print local wires for local encoders */
+    fprintf(fp, "wire [0:%d] %s_data;\n", 
+            spice_mux_arch.num_level * spice_mux_arch.num_input_basis - 1,
+            sram_port[0]->prefix);
+    fprintf(fp, "wire [0:%d] %s_data_inv;\n", 
+            spice_mux_arch.num_level * spice_mux_arch.num_input_basis - 1,
+            sram_port[0]->prefix);
+  }
  
   for (i = 0; i < spice_mux_arch.num_level; i++) {
     level = spice_mux_arch.num_level - i;
@@ -1444,6 +988,30 @@ void dump_verilog_cmos_mux_multilevel_structure(FILE* fp,
     sram_idx = nextlevel * spice_mux_arch.num_input_basis;
     /* Check */
     assert(nextlevel > -1);
+    /* Determine the number of input of this basis */
+    cur_num_input_basis = spice_mux_arch.num_input_basis;
+    /* Instanciate local encoder circuit here */
+    if (TRUE == spice_model.design_tech_info.mux_info->local_encoder) {
+      /* Get the number of inputs */
+      int num_outputs = cur_num_input_basis;
+      int num_inputs = determine_mux_local_encoder_num_inputs(num_outputs);
+      /* Find the decoder name */
+      fprintf(fp, "%s %s_%d_ (", 
+              generate_verilog_decoder_subckt_name(num_inputs, num_outputs),
+              generate_verilog_decoder_subckt_name(num_inputs, num_outputs),
+              i);
+      if (true == is_explicit_mapping) {
+        fprintf(fp, ".addr(%s[%d:%d]), .data(%s_data[%d:%d]), .data_inv(%s_data_inv[%d:%d]) );\n", 
+                sram_port[0]->prefix, nextlevel * num_inputs, (nextlevel + 1) * num_inputs - 1,
+                sram_port[0]->prefix, sram_idx, sram_idx + cur_num_input_basis - 1,
+                sram_port[0]->prefix, sram_idx, sram_idx + cur_num_input_basis - 1);
+      } else {
+        fprintf(fp, "%s[%d:%d], %s_data[%d:%d], %s_data_inv[%d:%d]);\n", 
+                sram_port[0]->prefix, nextlevel * num_inputs, (nextlevel + 1) * num_inputs - 1,
+                sram_port[0]->prefix, sram_idx, sram_idx + cur_num_input_basis - 1,
+                sram_port[0]->prefix, sram_idx, sram_idx + cur_num_input_basis - 1);
+      }
+    }
     /* Print basis muxQto1 for each level*/
     for (j = 0; j < spice_mux_arch.num_input_per_level[nextlevel]; j = j + cur_num_input_basis) {
       /* output index */
@@ -1456,7 +1024,7 @@ void dump_verilog_cmos_mux_multilevel_structure(FILE* fp,
           /* Print the special basis */
           fprintf(fp, "%s special_basis(", mux_special_basis_subckt_name);
           /* Dump global ports */
-          if  (0 < rec_dump_verilog_spice_model_global_ports(fp, &spice_model, FALSE, FALSE, my_bool_to_boolean(is_explicit_mapping))) {
+          if  (0 < rec_dump_verilog_spice_model_global_ports(fp, &spice_model, FALSE, FALSE, my_bool_to_boolean(is_explicit_mapping), TRUE)) {
             fprintf(fp, ",\n");
           }
           if (true == is_explicit_mapping) {
@@ -1474,15 +1042,25 @@ void dump_verilog_cmos_mux_multilevel_structure(FILE* fp,
           } else {
             fprintf(fp, ", ");
           }
-          fprintf(fp, "%s[%d:%d]", 
-          sram_port[0]->prefix, sram_idx, sram_idx + cur_num_input_basis -1);
+          if (TRUE == spice_model.design_tech_info.mux_info->local_encoder) {
+            fprintf(fp, "%s_data[%d:%d]", 
+                    sram_port[0]->prefix, sram_idx, sram_idx + cur_num_input_basis -1);
+          } else {
+            fprintf(fp, "%s[%d:%d]", 
+                    sram_port[0]->prefix, sram_idx, sram_idx + cur_num_input_basis -1);
+          }
           if (true == is_explicit_mapping) {
             fprintf(fp, "), .mem_inv(");
           } else {
             fprintf(fp, ", ");
           }
-          fprintf(fp, "%s_inv[%d:%d]", 
-          sram_port[0]->prefix, sram_idx, sram_idx + cur_num_input_basis -1);
+          if (TRUE == spice_model.design_tech_info.mux_info->local_encoder) {
+            fprintf(fp, "%s_data_inv[%d:%d]", 
+                    sram_port[0]->prefix, sram_idx, sram_idx + cur_num_input_basis -1);
+          } else {
+            fprintf(fp, "%s_inv[%d:%d]", 
+                    sram_port[0]->prefix, sram_idx, sram_idx + cur_num_input_basis -1);
+          }
           if (true == is_explicit_mapping) {
             fprintf(fp, ")");
           }
@@ -1495,7 +1073,7 @@ void dump_verilog_cmos_mux_multilevel_structure(FILE* fp,
       fprintf(fp, "%s ", mux_basis_subckt_name); /* subckt_name */
       fprintf(fp, "mux_basis_no%d (", mux_basis_cnt); /* given_name */
       /* Dump global ports */
-      if  (0 < rec_dump_verilog_spice_model_global_ports(fp, &spice_model, FALSE, FALSE, my_bool_to_boolean(is_explicit_mapping))) {
+      if  (0 < rec_dump_verilog_spice_model_global_ports(fp, &spice_model, FALSE, FALSE, my_bool_to_boolean(is_explicit_mapping), TRUE)) {
         fprintf(fp, ",\n");
       }
       if (true == is_explicit_mapping) {
@@ -1514,15 +1092,25 @@ void dump_verilog_cmos_mux_multilevel_structure(FILE* fp,
       } else {
         fprintf(fp, ", ");
       }
-      fprintf(fp, "%s[%d:%d]", 
-      sram_port[0]->prefix, sram_idx, sram_idx + cur_num_input_basis -1);
+      if (TRUE == spice_model.design_tech_info.mux_info->local_encoder) {
+        fprintf(fp, "%s_data[%d:%d]", 
+                sram_port[0]->prefix, sram_idx, sram_idx + cur_num_input_basis -1);
+      } else {
+        fprintf(fp, "%s[%d:%d]", 
+                sram_port[0]->prefix, sram_idx, sram_idx + cur_num_input_basis -1);
+      }
       if (true == is_explicit_mapping) {
         fprintf(fp, "), .mem_inv(");
       } else {
         fprintf(fp, ", ");
       }
-      fprintf(fp, "%s_inv[%d:%d]", 
-      sram_port[0]->prefix, sram_idx, sram_idx + cur_num_input_basis -1);
+      if (TRUE == spice_model.design_tech_info.mux_info->local_encoder) {
+        fprintf(fp, "%s_data_inv[%d:%d]", 
+                sram_port[0]->prefix, sram_idx, sram_idx + cur_num_input_basis -1);
+      } else {
+        fprintf(fp, "%s_inv[%d:%d]", 
+                sram_port[0]->prefix, sram_idx, sram_idx + cur_num_input_basis -1);
+      }
       if (true == is_explicit_mapping) {
         fprintf(fp, ")");
       }
@@ -1541,6 +1129,7 @@ void dump_verilog_cmos_mux_multilevel_structure(FILE* fp,
   return;
 }
 
+static 
 void dump_verilog_cmos_mux_onelevel_structure(FILE* fp, 
                                               char* mux_basis_subckt_name,
                                               t_spice_model spice_model,
@@ -1558,10 +1147,41 @@ void dump_verilog_cmos_mux_onelevel_structure(FILE* fp,
   fprintf(fp, "wire [0:%d] mux2_l%d_in; \n", spice_mux_arch.num_input - 1, 1); /* input0  */
   fprintf(fp, "wire [0:%d] mux2_l%d_in; \n", 0, 0); /* output */
 
+  /* Instanciate local encoder circuit here */
+  if ( (TRUE == spice_model.design_tech_info.mux_info->local_encoder)
+    && ( 2 < spice_mux_arch.num_input) ) {
+    /* Get the number of inputs */
+    int num_outputs = spice_mux_arch.num_input;
+    int num_inputs = determine_mux_local_encoder_num_inputs(num_outputs);
+
+    /* Print local wires for local encoders */
+    fprintf(fp, "wire [0:%d] %s_data;\n", 
+            spice_mux_arch.num_input - 1,
+            sram_port[0]->prefix);
+    fprintf(fp, "wire [0:%d] %s_data_inv;\n", 
+            spice_mux_arch.num_input - 1,
+            sram_port[0]->prefix);
+    /* Find the decoder name */
+    fprintf(fp, "%s %s_0_ (", 
+            generate_verilog_decoder_subckt_name(num_inputs, num_outputs),
+            generate_verilog_decoder_subckt_name(num_inputs, num_outputs));
+    if (true == is_explicit_mapping) {
+      fprintf(fp, ".addr(%s), .data(%s_data), .data_inv(%s_data_inv) );\n", 
+              sram_port[0]->prefix,
+              sram_port[0]->prefix,
+              sram_port[0]->prefix);
+    } else {
+      fprintf(fp, "%s, %s_data, %s_data_inv);\n", 
+              sram_port[0]->prefix,
+              sram_port[0]->prefix,
+              sram_port[0]->prefix);
+    }
+  } 
+
   fprintf(fp, "%s mux_basis (\n", mux_basis_subckt_name); /* given_name */
   /* Dump global ports */
   if  (0 < rec_dump_verilog_spice_model_global_ports(fp, &spice_model, FALSE, FALSE, 
-                                                     my_bool_to_boolean(is_explicit_mapping))) {
+                                                     my_bool_to_boolean(is_explicit_mapping), TRUE)) {
     fprintf(fp, ",\n");
   }
   fprintf(fp, "//----- MUX inputs -----\n");
@@ -1603,15 +1223,25 @@ void dump_verilog_cmos_mux_onelevel_structure(FILE* fp,
     if (true == is_explicit_mapping) {
       fprintf(fp, ".mem(");
     }
-    fprintf(fp, "%s[0:%d]", 
-    sram_port[0]->prefix, spice_mux_arch.num_input - 1); /* sram */
+    if (TRUE == spice_model.design_tech_info.mux_info->local_encoder) {
+      fprintf(fp, "%s_data[0:%d]", 
+              sram_port[0]->prefix, spice_mux_arch.num_input - 1); /* sram */
+    } else {
+      fprintf(fp, "%s[0:%d]", 
+              sram_port[0]->prefix, spice_mux_arch.num_input - 1); /* sram */
+    }
     if (true == is_explicit_mapping) {
       fprintf(fp, "), .mem_inv(");
     } else {
       fprintf(fp, ", ");
     }
-    fprintf(fp, "%s_inv[0:%d]", 
-    sram_port[0]->prefix, spice_mux_arch.num_input - 1); /* sram_inv */
+    if (TRUE == spice_model.design_tech_info.mux_info->local_encoder) {
+      fprintf(fp, "%s_data_inv[0:%d]", 
+              sram_port[0]->prefix, spice_mux_arch.num_input - 1); /* sram_inv */
+    } else {
+      fprintf(fp, "%s_inv[0:%d]", 
+              sram_port[0]->prefix, spice_mux_arch.num_input - 1); /* sram_inv */
+    }
     if (true == is_explicit_mapping) {
       fprintf(fp, ")");
     }
@@ -1622,6 +1252,7 @@ void dump_verilog_cmos_mux_onelevel_structure(FILE* fp,
   return;
 }
 
+static 
 void dump_verilog_cmos_mux_submodule(FILE* fp,
                                      int mux_size,
                                      t_spice_model spice_model,
@@ -1715,7 +1346,7 @@ void dump_verilog_cmos_mux_submodule(FILE* fp,
             spice_model.name, mux_size);
     fprintf(fp, "module %s_mux(\n", spice_model.name);
     /* Dump global ports */
-    if  (0 < rec_dump_verilog_spice_model_global_ports(fp, &spice_model, TRUE, FALSE, FALSE)) {
+    if  (0 < rec_dump_verilog_spice_model_global_ports(fp, &spice_model, TRUE, FALSE, FALSE, TRUE)) {
       fprintf(fp, ",\n");
     }
     /* Print input ports*/
@@ -1755,7 +1386,7 @@ void dump_verilog_cmos_mux_submodule(FILE* fp,
   if (2 == spice_mux_arch.num_input) {
     cur_mux_structure = SPICE_MODEL_STRUCTURE_ONELEVEL;
   }
-  
+
   /* Print internal architecture*/ 
   switch (cur_mux_structure) {
   case SPICE_MODEL_STRUCTURE_TREE:
@@ -1797,7 +1428,7 @@ void dump_verilog_cmos_mux_submodule(FILE* fp,
               spice_model.input_buffer->spice_model_name,
               spice_model.input_buffer->spice_model_name, i); /* Given name*/
       /* Dump global ports */
-      if  (0 < rec_dump_verilog_spice_model_global_ports(fp, spice_model.input_buffer->spice_model, FALSE, FALSE, TRUE)) {
+      if  (0 < rec_dump_verilog_spice_model_global_ports(fp, spice_model.input_buffer->spice_model, FALSE, FALSE, TRUE, TRUE)) {
         fprintf(fp, ",\n");
       }
       /* Dump explicit port map if required */
@@ -1863,7 +1494,7 @@ void dump_verilog_cmos_mux_submodule(FILE* fp,
                 spice_model.output_buffer->spice_model_name,
                 iport, ipin); /* subckt name */
         /* Dump global ports */
-        if  (0 < rec_dump_verilog_spice_model_global_ports(fp, spice_model.output_buffer->spice_model, FALSE, FALSE, TRUE)) {
+        if  (0 < rec_dump_verilog_spice_model_global_ports(fp, spice_model.output_buffer->spice_model, FALSE, FALSE, TRUE, TRUE)) {
           fprintf(fp, ",\n");
         }
         /* check */
@@ -1906,7 +1537,6 @@ void dump_verilog_cmos_mux_submodule(FILE* fp,
     }
   }
 
-   
   fprintf(fp, "endmodule\n");
   fprintf(fp, "//----- END CMOS MUX info: spice_model_name=%s, size=%d -----\n\n", spice_model.name, mux_size);
   fprintf(fp, "\n");
@@ -1927,6 +1557,7 @@ void dump_verilog_cmos_mux_submodule(FILE* fp,
  * However I use another function, because in future the internal structure may change.
  * We will suffer less software problems.
  */
+static 
 void dump_verilog_rram_mux_tree_structure(FILE* fp, 
                                           char* mux_basis_subckt_name,
                                           t_spice_model spice_model,
@@ -1973,7 +1604,7 @@ void dump_verilog_rram_mux_tree_structure(FILE* fp,
       /* Each basis mux2to1: <given_name> <input0> <input1> <output> <sram> <sram_inv> svdd sgnd <subckt_name> */
       fprintf(fp, "%s mux_basis_no%d (", mux_basis_subckt_name, mux_basis_cnt); /* given_name */
       /* Dump global ports */
-      if  (0 < rec_dump_verilog_spice_model_global_ports(fp, &spice_model, FALSE, FALSE, FALSE)) {
+      if  (0 < rec_dump_verilog_spice_model_global_ports(fp, &spice_model, FALSE, FALSE, FALSE, TRUE)) {
         fprintf(fp, ",\n");
       }
       fprintf(fp, "mux2_l%d_in[%d:%d], ", level, j, nextj); /* input0 input1 */
@@ -1995,6 +1626,7 @@ void dump_verilog_rram_mux_tree_structure(FILE* fp,
   return;
 }
 
+static 
 void dump_verilog_rram_mux_multilevel_structure(FILE* fp, 
                                                 char* mux_basis_subckt_name,
                                                 char* mux_special_basis_subckt_name,
@@ -2052,7 +1684,7 @@ void dump_verilog_rram_mux_multilevel_structure(FILE* fp,
           /* Print the special basis */
           fprintf(fp, "%s special_basis(\n", mux_special_basis_subckt_name);
           /* Dump global ports */
-          if  (0 < rec_dump_verilog_spice_model_global_ports(fp, &spice_model, FALSE, FALSE, FALSE)) {
+          if  (0 < rec_dump_verilog_spice_model_global_ports(fp, &spice_model, FALSE, FALSE, FALSE, TRUE)) {
             fprintf(fp, ",\n");
           }
           fprintf(fp, "mux2_l%d_in[%d:%d], ", level, j, j + cur_num_input_basis - 1); /* inputs */
@@ -2070,7 +1702,7 @@ void dump_verilog_rram_mux_multilevel_structure(FILE* fp,
       fprintf(fp, "%s ", mux_basis_subckt_name); /* subckt_name */
       fprintf(fp, "mux_basis_no%d (", mux_basis_cnt); /* given_name */
       /* Dump global ports */
-      if  (0 < rec_dump_verilog_spice_model_global_ports(fp, &spice_model, FALSE, FALSE, FALSE)) {
+      if  (0 < rec_dump_verilog_spice_model_global_ports(fp, &spice_model, FALSE, FALSE, FALSE, TRUE)) {
         fprintf(fp, ",\n");
       }
       fprintf(fp, "mux2_l%d_in[%d:%d], ", level, j, j + cur_num_input_basis - 1); /* input0 input1 */
@@ -2095,6 +1727,7 @@ void dump_verilog_rram_mux_multilevel_structure(FILE* fp,
   return;
 }
 
+static 
 void dump_verilog_rram_mux_onelevel_structure(FILE* fp, 
                                               char* mux_basis_subckt_name,
                                               t_spice_model spice_model,
@@ -2115,7 +1748,7 @@ void dump_verilog_rram_mux_onelevel_structure(FILE* fp,
 
   fprintf(fp, "%s mux_basis (\n", mux_basis_subckt_name); /* given_name */
   /* Dump global ports */
-  if  (0 < rec_dump_verilog_spice_model_global_ports(fp, &spice_model, FALSE, FALSE, FALSE)) {
+  if  (0 < rec_dump_verilog_spice_model_global_ports(fp, &spice_model, FALSE, FALSE, FALSE, TRUE)) {
     fprintf(fp, ",\n");
   }
   fprintf(fp, "//----- MUX inputs -----\n");
@@ -2133,6 +1766,7 @@ void dump_verilog_rram_mux_onelevel_structure(FILE* fp,
   return;
 }
 
+static 
 void dump_verilog_rram_mux_submodule(FILE* fp,
                                      int mux_size,
                                      t_spice_model spice_model,
@@ -2199,7 +1833,7 @@ void dump_verilog_rram_mux_submodule(FILE* fp,
             gen_verilog_one_mux_module_name(&spice_model, mux_size));
   }
   /* Dump global ports */
-  if  (0 < rec_dump_verilog_spice_model_global_ports(fp, &spice_model, TRUE, FALSE, FALSE)) {
+  if  (0 < rec_dump_verilog_spice_model_global_ports(fp, &spice_model, TRUE, FALSE, FALSE, TRUE)) {
     fprintf(fp, ",\n");
   }
   /* Print input ports*/
@@ -2255,7 +1889,7 @@ void dump_verilog_rram_mux_submodule(FILE* fp,
                   spice_model.input_buffer->spice_model_name, 
                   spice_model.input_buffer->spice_model_name, i); /* Given name*/
       /* Dump global ports */
-      if  (0 < rec_dump_verilog_spice_model_global_ports(fp, spice_model.input_buffer->spice_model, FALSE, FALSE, TRUE)) {
+      if  (0 < rec_dump_verilog_spice_model_global_ports(fp, spice_model.input_buffer->spice_model, FALSE, FALSE, TRUE, TRUE)) {
         fprintf(fp, ",\n");
       }
       /* Dump explicit port map if required */
@@ -2318,7 +1952,7 @@ void dump_verilog_rram_mux_submodule(FILE* fp,
             spice_model.output_buffer->spice_model_name,
             spice_model.output_buffer->spice_model_name); /* subckt name */
     /* Dump global ports */
-    if  (0 < rec_dump_verilog_spice_model_global_ports(fp, spice_model.output_buffer->spice_model, FALSE, FALSE, TRUE)) {
+    if  (0 < rec_dump_verilog_spice_model_global_ports(fp, spice_model.output_buffer->spice_model, FALSE, FALSE, TRUE, TRUE)) {
       fprintf(fp, ",\n");
     }
     /* Dump explicit port map if required */
@@ -2366,6 +2000,7 @@ void dump_verilog_rram_mux_submodule(FILE* fp,
 }
 
 /* Dump a memory submodule for the MUX */
+static 
 void dump_verilog_cmos_mux_mem_submodule(FILE* fp,
                                          int mux_size,
                                          t_spice_model spice_model,
@@ -2406,7 +2041,7 @@ void dump_verilog_cmos_mux_mem_submodule(FILE* fp,
   /* Asserts*/
   assert ((1 == num_sram_port) && (NULL != sram_port));
   assert (NULL != sram_port[0]->spice_model);
-  assert ((SPICE_MODEL_SCFF == sram_port[0]->spice_model->type) 
+  assert ((SPICE_MODEL_CCFF == sram_port[0]->spice_model->type) 
        || (SPICE_MODEL_SRAM == sram_port[0]->spice_model->type));
 
   /* Get the memory model */
@@ -2428,6 +2063,7 @@ void dump_verilog_cmos_mux_mem_submodule(FILE* fp,
    * 3. output ports 
    * 4. bl/wl ports 
    */
+  /* Local Encoding support */
   dump_verilog_mem_module_port_map(fp, mem_model, TRUE, 0, num_conf_bits, my_bool_to_boolean(is_explicit_mapping)); 
   fprintf(fp, ");\n");
 
@@ -2453,6 +2089,7 @@ void dump_verilog_cmos_mux_mem_submodule(FILE* fp,
  * We always dump a basis submodule for a MUX
  * whatever structure it is: one-level, two-level or multi-level
  */
+static 
 void dump_verilog_mux_mem_module(FILE* fp, 
                                  t_spice_mux_model* spice_mux_model,
                                  bool is_explicit_mapping) {
@@ -2506,6 +2143,7 @@ void dump_verilog_mux_mem_module(FILE* fp,
  * We always dump a basis submodule for a MUX
  * whatever structure it is: one-level, two-level or multi-level
  */
+static 
 void dump_verilog_mux_module(FILE* fp, 
                              t_spice_mux_model* spice_mux_model,
                              bool is_explicit_mapping) {
@@ -2568,7 +2206,7 @@ void dump_verilog_mux_module(FILE* fp,
 /*** Top-level function *****/
 
 /* We should count how many multiplexers with different sizes are needed */
-
+static 
 void dump_verilog_submodule_muxes(t_sram_orgz_info* cur_sram_orgz_info,
                                   char* verilog_dir,
                                   char* submodule_dir,
@@ -2605,7 +2243,9 @@ void dump_verilog_submodule_muxes(t_sram_orgz_info* cur_sram_orgz_info,
   /* Print the muxes netlist*/
   fp = fopen(verilog_name, "w");
   if (NULL == fp) {
-    vpr_printf(TIO_MESSAGE_ERROR,"(FILE:%s,LINE[%d])Failure in create subckt SPICE netlist %s",__FILE__, __LINE__, verilog_name); 
+    vpr_printf(TIO_MESSAGE_ERROR, 
+               "(FILE:%s,LINE[%d])Failure in create subckt SPICE netlist %s",
+               __FILE__, __LINE__, verilog_name); 
     exit(1);
   } 
   /* Generate the descriptions*/
@@ -2729,7 +2369,7 @@ void dump_verilog_wire_module(FILE* fp,
     /* Add an output at middle point for connecting CB inputs */
     fprintf(fp, "module %s (\n", wire_subckt_name);
     /* Dump global ports */
-    if  (0 < rec_dump_verilog_spice_model_global_ports(fp, &verilog_model, TRUE, FALSE, FALSE)) {
+    if  (0 < rec_dump_verilog_spice_model_global_ports(fp, &verilog_model, TRUE, FALSE, FALSE, TRUE)) {
       fprintf(fp, ",\n");
     }
     fprintf(fp, "input wire %s, output wire %s, output wire mid_out);\n",
@@ -2742,7 +2382,7 @@ void dump_verilog_wire_module(FILE* fp,
     fprintf(fp, "module %s (\n",
             wire_subckt_name);
     /* Dump global ports */
-    if  (0 < rec_dump_verilog_spice_model_global_ports(fp, &verilog_model, TRUE, FALSE, FALSE)) {
+    if  (0 < rec_dump_verilog_spice_model_global_ports(fp, &verilog_model, TRUE, FALSE, FALSE, TRUE)) {
       fprintf(fp, ",\n");
     }
     fprintf(fp, "input wire %s, output wire %s);\n",
@@ -2765,6 +2405,7 @@ void dump_verilog_wire_module(FILE* fp,
 }
 
 /* Dump one module of a LUT */
+static 
 void dump_verilog_submodule_one_lut(FILE* fp, 
                                     t_spice_model* verilog_model,
                                     bool is_explicit_mapping) {
@@ -2807,7 +2448,7 @@ void dump_verilog_submodule_one_lut(FILE* fp,
   fprintf(fp, "//-----LUT module, verilog_model_name=%s -----\n", verilog_model->name);  
   fprintf(fp, "module %s (", verilog_model->name);
   /* Dump global ports */
-  if  (0 < rec_dump_verilog_spice_model_global_ports(fp, verilog_model, TRUE, FALSE, FALSE)) {
+  if  (0 < rec_dump_verilog_spice_model_global_ports(fp, verilog_model, TRUE, FALSE, FALSE, TRUE)) {
     fprintf(fp, ",\n");
   }
   /* Print module port list */
@@ -3058,7 +2699,7 @@ void dump_verilog_submodule_one_lut(FILE* fp,
           verilog_model->lut_input_buffer->spice_model->name,
           input_port[0]->prefix, ipin);
     /* Dump global ports */
-    if  (0 < rec_dump_verilog_spice_model_global_ports(fp, verilog_model->lut_input_buffer->spice_model, FALSE, FALSE, TRUE)) {
+    if  (0 < rec_dump_verilog_spice_model_global_ports(fp, verilog_model->lut_input_buffer->spice_model, FALSE, FALSE, TRUE, TRUE)) {
       fprintf(fp, ",\n");
     }
     /* Dump explicit port map if required */
@@ -3102,7 +2743,7 @@ void dump_verilog_submodule_one_lut(FILE* fp,
           verilog_model->lut_input_inverter->spice_model->name,
           input_port[0]->prefix, ipin);
     /* Dump global ports */
-    if  (0 < rec_dump_verilog_spice_model_global_ports(fp, verilog_model->lut_input_inverter->spice_model, FALSE, FALSE, TRUE)) {
+    if  (0 < rec_dump_verilog_spice_model_global_ports(fp, verilog_model->lut_input_inverter->spice_model, FALSE, FALSE, TRUE, TRUE)) {
       fprintf(fp, ",\n");
     }
     /* Dump explicit port map if required */
@@ -3203,6 +2844,7 @@ void dump_verilog_submodule_one_lut(FILE* fp,
 }
 
 /* Dump one module of a LUT */
+static 
 void dump_verilog_submodule_one_mem(FILE* fp, 
                                     t_spice_model* verilog_model) {
   int iport, ipin, pin_index;
@@ -3275,6 +2917,7 @@ void dump_verilog_submodule_one_mem(FILE* fp,
 }
 
 /* Dump verilog top-level module for LUTs */
+static 
 void dump_verilog_submodule_luts(char* verilog_dir,
                                  char* submodule_dir,
                                  int num_spice_model,
@@ -3316,151 +2959,7 @@ void dump_verilog_submodule_luts(char* verilog_dir,
   return;
 }
 
-/* Dump a submodule which is a constant vdd */
-void dump_verilog_hard_wired_vdd(FILE* fp, 
-                                 t_spice_model verilog_model) {
-  int num_output_port = 0;
-  t_spice_model_port** output_port = NULL;
-
-  /* Find the input port, output port*/
-  output_port = find_spice_model_ports(&verilog_model, SPICE_MODEL_PORT_OUTPUT, &num_output_port, TRUE);
-
-  /* Asserts*/
-  assert(1 == num_output_port);
-  assert(1 == output_port[0]->size);
-
-  /* Ensure a valid file handler*/
-  if (NULL == fp) {
-    vpr_printf(TIO_MESSAGE_ERROR,"(FILE:%s,LINE[%d])Invalid File handler.\n",
-               __FILE__, __LINE__); 
-    exit(1);
-  }
-
-  /* print the spice model*/
-  fprintf(fp, "//-----Hard-wired VDD module, verilog_model_name=%s -----\n", verilog_model.name);  
-  fprintf(fp, "module %s(output wire %s);\n", verilog_model.name, output_port[0]->prefix);
-  /* Constant logic 1*/
-  fprintf(fp, "assign %s = 1\'b1;\n", output_port[0]->prefix);
-  /* Finish*/ 
-  fprintf(fp, "endmodule\n");
-  fprintf(fp, "//-----END VDD module, verilog_model_name=%s -----\n", verilog_model.name);  
-  fprintf(fp, "\n");
-  return;
-}
-
-/* Dump a submodule which is a constant vdd */
-void dump_verilog_hard_wired_gnd(FILE* fp, 
-                                 t_spice_model verilog_model) {
-  int num_output_port = 0;
-  t_spice_model_port** output_port = NULL;
-
-  /* Find the input port, output port*/
-  output_port = find_spice_model_ports(&verilog_model, SPICE_MODEL_PORT_OUTPUT, &num_output_port, TRUE);
-
-  /* Asserts*/
-  assert(1 == num_output_port);
-  assert(1 == output_port[0]->size);
-
-  /* Ensure a valid file handler*/
-  if (NULL == fp) {
-    vpr_printf(TIO_MESSAGE_ERROR,"(FILE:%s,LINE[%d])Invalid File handler.\n",
-               __FILE__, __LINE__); 
-    exit(1);
-  }
-
-  /* print the spice model*/
-  fprintf(fp, "//-----Hard-wired GND module, verilog_model_name=%s -----\n", verilog_model.name);  
-  fprintf(fp, "module %s(output wire %s);\n", verilog_model.name, output_port[0]->prefix);
-  /* Constant logic 1*/
-  fprintf(fp, "assign %s = 1\'b0;\n", output_port[0]->prefix);
-  /* Finish*/ 
-  fprintf(fp, "endmodule\n");
-  fprintf(fp, "//-----END GND module, verilog_model_name=%s -----\n", verilog_model.name);  
-  fprintf(fp, "\n");
-  return;
-}
-
-void dump_verilog_submodule_wires(char* verilog_dir,
-                                  char* subckt_dir, 
-                                  int num_segments,
-                                  t_segment_inf* segments,
-                                  int num_spice_model,
-                                  t_spice_model* spice_models) {
-  FILE* fp = NULL;
-  char* verilog_name = my_strcat(subckt_dir, wires_verilog_file_name);
-  char* seg_wire_subckt_name = NULL;
-  char* seg_index_str = NULL;
-  int iseg, imodel, len_seg_subckt_name;
- 
-  fp = fopen(verilog_name, "w");
-  if (NULL == fp) {
-    vpr_printf(TIO_MESSAGE_ERROR,"(FILE:%s,LINE[%d])Failure in create Verilog netlist %s",__FILE__, __LINE__, wires_verilog_file_name); 
-    exit(1);
-  } 
-  dump_verilog_file_header(fp,"Wires");
-
-  verilog_include_defines_preproc_file(fp, verilog_dir);
-
-  /* Output wire models*/
-  for (imodel = 0; imodel < num_spice_model; imodel++) {
-    /* Bypass user-defined spice models */
-    if (NULL != spice_models[imodel].verilog_netlist) {
-      continue;
-    }
-    if (SPICE_MODEL_WIRE == spice_models[imodel].type) {
-      assert(NULL != spice_models[imodel].wire_param);
-      dump_verilog_wire_module(fp, spice_models[imodel].name,
-                              spice_models[imodel]);
-    }
-  }
- 
-  /* Create wire models for routing segments*/
-  fprintf(fp,"//----- Wire models for segments in routing -----\n");
-  for (iseg = 0; iseg < num_segments; iseg++) {
-    assert(NULL != segments[iseg].spice_model);
-    assert(SPICE_MODEL_CHAN_WIRE == segments[iseg].spice_model->type);
-    assert(NULL != segments[iseg].spice_model->wire_param);
-    /* Give a unique name for subckt of wire_model of segment, 
-     * spice_model name is unique, and segment name is unique as well
-     */
-    seg_index_str = my_itoa(iseg);
-    len_seg_subckt_name = strlen(segments[iseg].spice_model->name)
-                        + 4 + strlen(seg_index_str) + 1; /* '\0'*/
-    seg_wire_subckt_name = (char*)my_malloc(sizeof(char)*len_seg_subckt_name);
-    sprintf(seg_wire_subckt_name,"%s_seg%s",
-            segments[iseg].spice_model->name, seg_index_str);
-    /* Bypass user-defined spice models */
-    if (NULL != segments[iseg].spice_model->verilog_netlist) {
-      continue;
-    }
-    dump_verilog_wire_module(fp, seg_wire_subckt_name,
-                            *(segments[iseg].spice_model));
-  }
-
-  /* Create module for hard-wired VDD and GND */
-  /*
-  for (imodel = 0; imodel < num_spice_model; imodel++) {
-    if (SPICE_MODEL_VDD == spice_models[imodel].type) {
-      dump_verilog_hard_wired_vdd(fp, spice_models[imodel]);
-    } else if (SPICE_MODEL_GND == spice_models[imodel].type) {
-      dump_verilog_hard_wired_gnd(fp, spice_models[imodel]);
-    }
-  }
-  */
-  
-  /* Close the file handler */
-  fclose(fp);
-
-  /* Add fname to the linked list */
-  submodule_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(submodule_verilog_subckt_file_path_head, verilog_name);  
-
-  /*Free*/
-  my_free(seg_index_str);
-  my_free(seg_wire_subckt_name);
-
-  return;
-}
-
+static 
 void dump_verilog_submodule_memories(t_sram_orgz_info* cur_sram_orgz_info,
                                      char* verilog_dir,
                                      char* submodule_dir,
@@ -3579,148 +3078,160 @@ void dump_verilog_submodule_memories(t_sram_orgz_info* cur_sram_orgz_info,
   return;
 }
 
-
-/* Print a non-global port for the template */
-void dump_one_verilog_template_module_one_port(FILE* fp, int* cnt,
-                                              t_spice_model* cur_spice_model,
-                                              enum e_spice_model_port_type port_type) {
-  int iport;
-  int num_port_to_dump= 0;
-  t_spice_model_port** port_to_dump = NULL;
-
-  port_to_dump = find_spice_model_ports(cur_spice_model, port_type, &num_port_to_dump, TRUE);
-  for (iport = 0; iport < num_port_to_dump; iport++) {
-    if (0 < *cnt) { 
-      fprintf(fp, ",\n");
-    }
-    dump_verilog_generic_port(fp, 
-                              convert_spice_model_port_type_to_verilog_port_type(port_to_dump[iport]->type),
-                              port_to_dump[iport]->lib_name, 
-                              port_to_dump[iport]->size - 1, 0); 
-   (*cnt)++;
-  }
-
-  /* Free */
-  my_free(port_to_dump);
-
-  return;
-}
-
-/* Give a template for a user-defined module */
-void dump_one_verilog_template_module(FILE* fp,
-                                      t_spice_model* cur_spice_model) {
-  int iport;
-  int cnt = 0;
-
-  /* Ensure a valid file handler*/
-  if (NULL == fp) {
-    vpr_printf(TIO_MESSAGE_ERROR,"(FILE:%s,LINE[%d])Invalid File handler.\n",
-               __FILE__, __LINE__); 
-    exit(1);
-  }
-
-  fprintf(fp, "//----- Template Verilog module for %s -----\n",
-          cur_spice_model->name);
-
-  /* dump module body */
-  fprintf(fp, "module %s (\n",
-          cur_spice_model->name);
-
-  /* Dump ports */
-  for (iport = 0; iport < cur_spice_model->num_port; iport++) {
-    if (0 < cnt) {
-      fprintf(fp, ",\n"); 
-    }
-    dump_verilog_generic_port(fp, 
-                              convert_spice_model_port_type_to_verilog_port_type(cur_spice_model->ports[iport].type),
-                              cur_spice_model->ports[iport].lib_name, 
-                              cur_spice_model->ports[iport].size - 1, 0); 
-    cnt++;
-    /* if there is an inv_prefix, we will dump the paired port */
-    if (NULL == cur_spice_model->ports[iport].inv_prefix) {
+/*********************************************************************
+ * Register all the user-defined modules in the module manager
+ * Walk through the circuit library and add user-defined circuit models
+ * to the module_manager
+ ********************************************************************/
+static 
+void add_user_defined_verilog_modules(ModuleManager& module_manager, 
+                                      const CircuitLibrary& circuit_lib) {
+  /* Iterate over Verilog modules */
+  for (const auto& model : circuit_lib.models()) {
+    /* We only care about user-defined models */
+    if (true == circuit_lib.model_verilog_netlist(model).empty()) {
       continue;
-    } 
-    if (0 < cnt) {
-      fprintf(fp, ",\n"); 
     }
-    dump_verilog_generic_port(fp, 
-                              convert_spice_model_port_type_to_verilog_port_type(cur_spice_model->ports[iport].type),
-                              cur_spice_model->ports[iport].inv_prefix, 
-                              cur_spice_model->ports[iport].size - 1, 0); 
-    cnt++;
+    /* Skip Routing channel wire models because they need a different name. Do it later */
+    if (SPICE_MODEL_CHAN_WIRE == circuit_lib.model_type(model)) {
+      continue;
+    }
+    /* Reach here, the model requires a user-defined Verilog netlist, 
+     * Try to find it in the module manager 
+     * If not found, register it in the module_manager  
+     */
+    ModuleId module_id = module_manager.find_module(circuit_lib.model_name(model));
+    if (ModuleId::INVALID() == module_id) {
+      add_circuit_model_to_module_manager(module_manager, circuit_lib, model);
+    }
   }
-
-  fprintf(fp, ");\n");
-
-  fprintf(fp, "\n//------ User-defined Verilog netlist model should start from here! -----\n");
-
-
-  fprintf(fp, "endmodule\n");
-
-  fprintf(fp, "\n");
-
-  return;
 }
 
-/* Give a template of all the submodules that are user-defined */
-void dump_verilog_submodule_templates(t_sram_orgz_info* cur_sram_orgz_info, 
-                                      char* verilog_dir,
-                                      char* submodule_dir,
-                                      int num_spice_model,
-                                      t_spice_model* spice_models) {
-  int imodel;
-  char* verilog_name = my_strcat(submodule_dir, user_defined_template_verilog_file_name);
-  FILE* fp = NULL;
+/* Print a template for a user-defined circuit model
+ * The template will include just the port declaration of the Verilog module
+ * The template aims to help user to write Verilog codes with a guaranteed
+ * module definition, which can be correctly instanciated (with correct
+ * port mapping) in the FPGA fabric
+ */
+static 
+void print_one_verilog_template_module(const ModuleManager& module_manager,
+                                       std::fstream& fp,
+                                       const std::string& module_name) {
+  /* Ensure a valid file handler*/
+  check_file_handler(fp);
 
-  /* Create file */
-  fp = fopen(verilog_name, "w");
-  if (NULL == fp) {
-    vpr_printf(TIO_MESSAGE_ERROR,"(FILE:%s,LINE[%d])Failure in create Verilog netlist %s",
-                                 __FILE__, __LINE__, user_defined_template_verilog_file_name); 
-    exit(1);
-  } 
-  dump_verilog_file_header(fp,"User-defined netlists template"); 
+  print_verilog_comment(fp, std::string("----- Template Verilog module for " + module_name + " -----"));
+
+  /* Find the module in module manager, which should be already registered */
+  /* TODO: routing channel wire model may have a different name! */
+  ModuleId template_module = module_manager.find_module(module_name);
+  VTR_ASSERT(ModuleId::INVALID() != template_module);
+
+  /* dump module definition + ports */
+  print_verilog_module_declaration(fp, module_manager, template_module);
+  /* Finish dumping ports */
+
+  print_verilog_comment(fp, std::string("----- Internal logic should start here -----"));
+
+  /* Add some empty lines as placeholders for the internal logic*/
+  fp << std::endl << std::endl;
+ 
+  print_verilog_comment(fp, std::string("----- Internal logic should end here -----"));
+
+  /* Put an end to the Verilog module */
+  print_verilog_module_end(fp, module_name);
+
+  /* Add an empty line as a splitter */
+  fp << std::endl;
+}
+
+/* Print a template of all the submodules that are user-defined
+ * The template will include just the port declaration of the submodule
+ * The template aims to help user to write Verilog codes with a guaranteed
+ * module definition, which can be correctly instanciated (with correct
+ * port mapping) in the FPGA fabric
+ */
+static 
+void print_verilog_submodule_templates(const ModuleManager& module_manager,
+                                       const CircuitLibrary& circuit_lib,
+                                       const std::string& verilog_dir,
+                                       const std::string& submodule_dir) {
+  std::string verilog_fname(submodule_dir + user_defined_template_verilog_file_name);
+
+  /* Create the file stream */
+  std::fstream fp;
+  fp.open(verilog_fname, std::fstream::out | std::fstream::trunc);
+
+  check_file_handler(fp);
+
+  /* Print out debugging information for if the file is not opened/created properly */
+  vpr_printf(TIO_MESSAGE_INFO,
+             "Creating template for user-defined Verilog modules (%s)...\n",
+             verilog_fname.c_str()); 
+
+  print_verilog_file_header(fp, "Template for user-defined Verilog modules"); 
+
+  print_verilog_include_defines_preproc_file(fp, verilog_dir);
 
   /* Output essential models*/
-  for (imodel = 0; imodel < num_spice_model; imodel++) {
-    /* Focus on user-defined modules */
-    if (NULL == spice_models[imodel].verilog_netlist) {
+  for (const auto& model : circuit_lib.models()) {
+    /* Focus on user-defined modules, which must have a Verilog netlist defined */
+    if (circuit_lib.model_verilog_netlist(model).empty()) {
       continue;
     }
-    /* Create the port template */
-    dump_one_verilog_template_module(fp, &spice_models[imodel]); 
+    /* Skip Routing channel wire models because they need a different name. Do it later */
+    if (SPICE_MODEL_CHAN_WIRE == circuit_lib.model_type(model)) {
+      continue;
+    }
+    /* Print a Verilog template for the circuit model */
+    print_one_verilog_template_module(module_manager, fp, circuit_lib.model_name(model)); 
   }
 
-  /* close file */
-  fclose(fp);
-
-  /* Free */
-  my_free(verilog_name);
+  /* close file stream */
+  fp.close();
  
-  return;
+  /* No need to add the template to the subckt include files! */
 }
 
-/* Dump verilog files of submodules to be used in FPGA components :
+/*********************************************************************
+ * Dump verilog files of submodules to be used in FPGA components :
  * 1. MUXes
- */
-void dump_verilog_submodules(t_sram_orgz_info* cur_sram_orgz_info,
+ ********************************************************************/
+void dump_verilog_submodules(ModuleManager& module_manager, 
+                             const MuxLibrary& mux_lib,
+                             t_sram_orgz_info* cur_sram_orgz_info,
                              char* verilog_dir, 
                              char* submodule_dir, 
                              t_arch Arch, 
                              t_det_routing_arch* routing_arch,
                              t_syn_verilog_opts fpga_verilog_opts) {
 
-  /* 0. basic units: inverter, buffers and pass-gate logics, */
-  vpr_printf(TIO_MESSAGE_INFO, "Generating essential modules...\n");
-  dump_verilog_submodule_essentials(verilog_dir, submodule_dir,
-                                    Arch.spice->num_spice_model, 
-                                    Arch.spice->spice_models,
-                                    fpga_verilog_opts);
+  /* TODO: Register all the user-defined modules in the module manager
+   * This should be done prior to other steps in this function, 
+   * because they will be instanciated by other primitive modules 
+   */
+  vpr_printf(TIO_MESSAGE_INFO, "Registering user-defined modules...\n");
+  add_user_defined_verilog_modules(module_manager, Arch.spice->circuit_lib);
+
+  print_verilog_submodule_essentials(module_manager, 
+                                     std::string(verilog_dir), 
+                                     std::string(submodule_dir),
+                                     Arch.spice->circuit_lib);
 
   /* 1. MUXes */
   vpr_printf(TIO_MESSAGE_INFO, "Generating modules of multiplexers...\n");
   dump_verilog_submodule_muxes(cur_sram_orgz_info, verilog_dir, submodule_dir, routing_arch->num_switch, 
                                switch_inf, Arch.spice, routing_arch, fpga_verilog_opts.dump_explicit_verilog);
+
+  /* NOTE: local decoders generation must go before the MUX generation!!! 
+   *       because local decoders modules will be instanciated in the MUX modules 
+   */
+  print_verilog_submodule_mux_local_decoders(module_manager, mux_lib, Arch.spice->circuit_lib, 
+                                             std::string(verilog_dir), std::string(submodule_dir));
+  print_verilog_submodule_muxes(module_manager, mux_lib, Arch.spice->circuit_lib, cur_sram_orgz_info, 
+                                std::string(verilog_dir), std::string(submodule_dir),
+                                fpga_verilog_opts.dump_explicit_verilog);
+
  
   /* 2. LUTes */
   vpr_printf(TIO_MESSAGE_INFO, "Generating modules of LUTs...\n");
@@ -3729,27 +3240,23 @@ void dump_verilog_submodules(t_sram_orgz_info* cur_sram_orgz_info,
                               fpga_verilog_opts.include_timing, 
                               fpga_verilog_opts.include_signal_init,
                               fpga_verilog_opts.dump_explicit_verilog);
+  print_verilog_submodule_luts(module_manager, Arch.spice->circuit_lib, std::string(verilog_dir), std::string(submodule_dir),
+                               fpga_verilog_opts.dump_explicit_verilog);
 
   /* 3. Hardwires */
-  vpr_printf(TIO_MESSAGE_INFO, "Generating modules of hardwires...\n");
-  dump_verilog_submodule_wires(verilog_dir, submodule_dir, Arch.num_segments, Arch.Segments,
-                               Arch.spice->num_spice_model, Arch.spice->spice_models);
+  print_verilog_submodule_wires(module_manager, Arch.spice->circuit_lib, std::string(verilog_dir), std::string(submodule_dir));
 
   /* 4. Memories */
   vpr_printf(TIO_MESSAGE_INFO, "Generating modules of memories...\n");
   dump_verilog_submodule_memories(cur_sram_orgz_info, verilog_dir, submodule_dir, routing_arch->num_switch, 
                                   switch_inf, Arch.spice, routing_arch, fpga_verilog_opts.dump_explicit_verilog);
+  print_verilog_submodule_memories(module_manager, mux_lib, Arch.spice->circuit_lib, 
+                                   std::string(verilog_dir), std::string(submodule_dir),
+                                   fpga_verilog_opts.dump_explicit_verilog);
 
-  /* 5. Dump decoder modules only when memory bank is required */
-  dump_verilog_config_peripherals(cur_sram_orgz_info, verilog_dir, submodule_dir);
-
-  /* 6. Dump template for all the modules */
+  /* 5. Dump template for all the modules */
   if (TRUE == fpga_verilog_opts.print_user_defined_template) { 
-    dump_verilog_submodule_templates(cur_sram_orgz_info, 
-                                     verilog_dir,
-                                     submodule_dir,
-                                     Arch.spice->num_spice_model, 
-                                     Arch.spice->spice_models);
+    print_verilog_submodule_templates(module_manager, Arch.spice->circuit_lib, std::string(verilog_dir), std::string(submodule_dir));
   }
 
   /* Create a header file to include all the subckts */

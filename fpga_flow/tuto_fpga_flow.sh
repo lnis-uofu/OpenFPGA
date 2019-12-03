@@ -27,8 +27,7 @@ perl rewrite_path_in_file.pl -i $config_file	# Replace OPENFPGAPATHKEYWORD in th
 perl rewrite_path_in_file.pl -i $architecture_template -o $architecture_generated	# Replace OPENFPGAPATHKEYWORD in the architecture file
 perl rewrite_path_in_file.pl -i $architecture_generated -k $ff_keyword $ff_path	# Set the ff path in the architecture file
 echo "perl rewrite_path_in_file.pl -i $ff_path -k $dir_keyword $verilog_path"
-perl rewrite_path_in_file.pl -i $ff_template_path -o $ff_path -k $dir_keyword $verilog_path	# Set the define path in the ff.v file
-
+perl rewrite_path_in_file.pl -i ${ff_template_path} -o ${ff_path} -k $dir_keyword $verilog_path	# Set the define path in the ff.v file
 
 # SRAM FPGA
 # TT case 

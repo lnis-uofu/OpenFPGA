@@ -12,8 +12,10 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <algorithm>
 
 /* Include vpr structs*/
+#include "vtr_assert.h"
 #include "util.h"
 #include "physical_types.h"
 #include "vpr_types.h"
@@ -62,6 +64,7 @@ char* my_gettime() {
   /* Return it*/
   return c_time_string;
 }
+
 
 char* format_dir_path(char* dir_path) {
   int len = strlen(dir_path); /* String length without the last "\0"*/
@@ -153,6 +156,7 @@ int create_dir_path(char* dir_path) {
      exit(1);
      return 0;
    }
+   return 0;
 }
 
 /* Cat string2 to the end of string1 */
@@ -169,8 +173,8 @@ char* my_strcat(const char* str1,
 }
 
 /* Split the path and program name*/
-int split_path_prog_name(char* prog_path,
-                         char  split_token,
+int split_path_prog_name(const char* prog_path,
+                         const char  split_token,
                          char** ret_path,
                          char** ret_prog_name) {
   int i;
@@ -226,7 +230,6 @@ char* chomp_file_name_postfix(char* file_name) {
 
   return ret;
 }
-
 
 /* Print SRAM bits, typically in a comment line */
 void fprint_commented_sram_bits(FILE* fp,
@@ -576,6 +579,49 @@ t_spice_transistor_type* find_mosfet_tech_lib(t_spice_tech_lib tech_lib,
   return ret; 
 }
 
+/* Convert an integer to an one-hot encoding integer array */
+char* my_ito1hot(int in_int, int bin_len) {
+  char* ret = (char*) my_calloc (bin_len + 1, sizeof(char));
+
+  /* Make sure we do not have any overflow! */
+  if (! ( (-1 < in_int) && (in_int <= bin_len) ) )
+  assert ( (-1 < in_int) && (in_int <= bin_len) );
+
+  /* Initialize */
+  for (int i = 0; i < bin_len - 1; i++) {
+    ret[i] = '0';
+  }
+  sprintf(ret + bin_len - 1, "%s", "0");
+
+  if (bin_len == in_int) {
+    return ret; /* all zero case */
+  }
+  ret[in_int] = '1'; /* Keep a good sequence of bits */
+ 
+  return ret;
+}
+
+
+/* Converter an integer to a binary string */
+int* my_itobin_int(int in_int, int bin_len) {
+  int* ret = (int*) my_calloc (bin_len, sizeof(int));
+  int i, temp;
+
+  /* Make sure we do not have any overflow! */
+  if (! ( (-1 < in_int) && (in_int < pow(2., bin_len)) ) )
+  assert ( (-1 < in_int) && (in_int < pow(2., bin_len)) );
+  
+  temp = in_int;
+  for (i = 0; i < bin_len; i++) {
+    if (1 == temp % 2) { 
+      ret[i] = 1; /* Keep a good sequence of bits */
+    }
+    temp = temp / 2;
+  }
+ 
+  return ret;
+}
+
 /* Converter an integer to a binary string */
 char* my_itobin(int in_int, int bin_len) {
   char* ret = (char*) my_calloc (bin_len + 1, sizeof(char));
@@ -600,6 +646,7 @@ char* my_itobin(int in_int, int bin_len) {
  
   return ret;
 }
+
 
 /* Convert a integer to a string*/
 char* my_itoa(int input) {
@@ -982,7 +1029,7 @@ char* generate_string_spice_model_type(enum e_spice_model_type spice_model_type)
   case SPICE_MODEL_IOPAD:
     ret = "iopad";
     break;
-  case SPICE_MODEL_SCFF:
+  case SPICE_MODEL_CCFF:
     ret = "Scan-chain Flip-flop";
     break;
   default:
@@ -2108,7 +2155,7 @@ void check_sram_spice_model_ports(t_spice_model* cur_spice_model,
 }
 
 void check_ff_spice_model_ports(t_spice_model* cur_spice_model,
-                                boolean is_scff) {
+                                boolean is_ccff) {
   int iport;
   int num_input_ports;
   t_spice_model_port** input_ports = NULL;
@@ -2120,22 +2167,22 @@ void check_ff_spice_model_ports(t_spice_model* cur_spice_model,
   int num_err = 0;
 
   /* Check the type of SPICE model */
-  if (FALSE == is_scff) {
+  if (FALSE == is_ccff) {
     assert(SPICE_MODEL_FF == cur_spice_model->type);
   } else {
-    assert(SPICE_MODEL_SCFF == cur_spice_model->type);
+    assert(SPICE_MODEL_CCFF == cur_spice_model->type);
   }
   /* Check if we have D, Set and Reset */
   input_ports = find_spice_model_ports(cur_spice_model, SPICE_MODEL_PORT_INPUT, &num_input_ports, FALSE);
-  if (TRUE == is_scff) {
+  if (TRUE == is_ccff) {
    if (1 > num_input_ports) {
-      vpr_printf(TIO_MESSAGE_ERROR, "(File:%s,[LINE%d]) SCFF SPICE MODEL should at least have an input port!\n",
+      vpr_printf(TIO_MESSAGE_ERROR, "(File:%s,[LINE%d]) CCFF SPICE MODEL should at least have an input port!\n",
                  __FILE__, __LINE__);
       num_err++;
     }
     for (iport = 0; iport < num_input_ports; iport++) { 
       if (1 != input_ports[iport]->size) { 
-        vpr_printf(TIO_MESSAGE_ERROR, "(File:%s,[LINE%d]) SCFF SPICE MODEL: each input port with size 1!\n",
+        vpr_printf(TIO_MESSAGE_ERROR, "(File:%s,[LINE%d]) CCFF SPICE MODEL: each input port with size 1!\n",
                  __FILE__, __LINE__);
         num_err++;
       }
@@ -2157,20 +2204,20 @@ void check_ff_spice_model_ports(t_spice_model* cur_spice_model,
   /* Check if we have clock */
   clock_ports = find_spice_model_ports(cur_spice_model, SPICE_MODEL_PORT_CLOCK, &num_clock_ports, FALSE);
   if (1 > num_clock_ports) {
-    vpr_printf(TIO_MESSAGE_ERROR, "(File:%s,[LINE%d]) [FF|SCFF] SPICE MODEL should have at least 1 clock port!\n",
+    vpr_printf(TIO_MESSAGE_ERROR, "(File:%s,[LINE%d]) [FF|CCFF] SPICE MODEL should have at least 1 clock port!\n",
                __FILE__, __LINE__);
     num_err++;
   }
   for (iport = 0; iport < num_clock_ports; iport++) { 
     if (1 != clock_ports[iport]->size) {
-      vpr_printf(TIO_MESSAGE_ERROR, "(File:%s,[LINE%d]) [FF|SCFF] SPICE MODEL: 1 clock port with size 1!\n",
+      vpr_printf(TIO_MESSAGE_ERROR, "(File:%s,[LINE%d]) [FF|CCFF] SPICE MODEL: 1 clock port with size 1!\n",
                  __FILE__, __LINE__);
       num_err++;
     }
   }
   /* Check if we have output */
   output_ports = find_spice_model_ports(cur_spice_model, SPICE_MODEL_PORT_OUTPUT, &num_output_ports, TRUE);
-  if (FALSE == is_scff) {
+  if (FALSE == is_ccff) {
     if (1 != output_ports[0]->size) {
       vpr_printf(TIO_MESSAGE_ERROR, "(File:%s,[LINE%d]) FF SPICE MODEL: each output port with size 1!\n",
                  __FILE__, __LINE__);
@@ -2178,12 +2225,12 @@ void check_ff_spice_model_ports(t_spice_model* cur_spice_model,
     }
   } else {
     if (2 != num_output_ports) {
-      vpr_printf(TIO_MESSAGE_ERROR, "(File:%s,[LINE%d]) SCFF SPICE MODEL should have 2 output ports!\n",
+      vpr_printf(TIO_MESSAGE_ERROR, "(File:%s,[LINE%d]) CCFF SPICE MODEL should have 2 output ports!\n",
                __FILE__, __LINE__);
       num_err++;
       for (iport = 0; iport < num_output_ports; iport++) { 
         if (1 != output_ports[iport]->size) {
-          vpr_printf(TIO_MESSAGE_ERROR, "(File:%s,[LINE%d]) SCFF SPICE MODEL: the output port (%s) should have a size of 1!\n",
+          vpr_printf(TIO_MESSAGE_ERROR, "(File:%s,[LINE%d]) CCFF SPICE MODEL: the output port (%s) should have a size of 1!\n",
                      __FILE__, __LINE__, output_ports[iport]->prefix);
           num_err++;
         }
@@ -2350,11 +2397,11 @@ void free_one_mem_bank_info(t_mem_bank_info* mem_bank_info) {
   return; 
 }
 
-t_scff_info* alloc_one_scff_info() {
-  return (t_scff_info*)my_malloc(sizeof(t_scff_info));
+t_ccff_info* alloc_one_ccff_info() {
+  return (t_ccff_info*)my_malloc(sizeof(t_ccff_info));
 }
 
-void free_one_scff_info(t_scff_info* scff_info) {
+void free_one_ccff_info(t_ccff_info* ccff_info) {
   return;
 }
 
@@ -2389,23 +2436,23 @@ void update_mem_bank_info_num_mem_bit(t_mem_bank_info* cur_mem_bank_info,
   return;
 }
 
-void init_scff_info(t_scff_info* cur_scff_info,
+void init_ccff_info(t_ccff_info* cur_ccff_info,
                     t_spice_model* cur_mem_model) {
-  assert(NULL != cur_scff_info); 
+  assert(NULL != cur_ccff_info); 
   assert(NULL != cur_mem_model);
 
-  cur_scff_info->mem_model = cur_mem_model;
-  cur_scff_info->num_mem_bit = 0; 
-  cur_scff_info->num_scff = 0; 
+  cur_ccff_info->mem_model = cur_mem_model;
+  cur_ccff_info->num_mem_bit = 0; 
+  cur_ccff_info->num_ccff = 0; 
   
   return;
 }
 
-void update_scff_info_num_mem_bit(t_scff_info* cur_scff_info,
+void update_ccff_info_num_mem_bit(t_ccff_info* cur_ccff_info,
                                   int num_mem_bit) {
-  assert(NULL != cur_scff_info); 
+  assert(NULL != cur_ccff_info); 
 
-  cur_scff_info->num_mem_bit = num_mem_bit; 
+  cur_ccff_info->num_mem_bit = num_mem_bit; 
 
   return;
 }
@@ -2461,8 +2508,8 @@ void init_sram_orgz_info(t_sram_orgz_info* cur_sram_orgz_info,
                                             num_bl_per_sram, num_wl_per_sram);
     break;
   case SPICE_SRAM_SCAN_CHAIN:
-    cur_sram_orgz_info->scff_info = alloc_one_scff_info();
-    init_scff_info(cur_sram_orgz_info->scff_info, cur_mem_model);
+    cur_sram_orgz_info->ccff_info = alloc_one_ccff_info();
+    init_ccff_info(cur_sram_orgz_info->ccff_info, cur_mem_model);
     break;
   case SPICE_SRAM_STANDALONE:
     cur_sram_orgz_info->standalone_sram_info = alloc_one_standalone_sram_info();
@@ -2512,7 +2559,7 @@ void free_sram_orgz_info(t_sram_orgz_info* cur_sram_orgz_info,
     free_one_mem_bank_info(cur_sram_orgz_info->mem_bank_info);
     break;
   case SPICE_SRAM_SCAN_CHAIN:
-    free_one_scff_info(cur_sram_orgz_info->scff_info);
+    free_one_ccff_info(cur_sram_orgz_info->ccff_info);
     break;
   case SPICE_SRAM_STANDALONE:
     free_one_standalone_sram_info(cur_sram_orgz_info->standalone_sram_info);
@@ -2719,7 +2766,7 @@ int get_sram_orgz_info_num_mem_bit(t_sram_orgz_info* cur_sram_orgz_info) {
   case SPICE_SRAM_STANDALONE:
     return cur_sram_orgz_info->standalone_sram_info->num_mem_bit; 
   case SPICE_SRAM_SCAN_CHAIN:
-    return cur_sram_orgz_info->scff_info->num_mem_bit; 
+    return cur_sram_orgz_info->ccff_info->num_mem_bit; 
   case SPICE_SRAM_MEMORY_BANK:
     return cur_sram_orgz_info->mem_bank_info->num_mem_bit; 
   default:
@@ -2742,7 +2789,7 @@ void update_sram_orgz_info_num_mem_bit(t_sram_orgz_info* cur_sram_orgz_info,
     update_standalone_sram_info_num_mem_bit(cur_sram_orgz_info->standalone_sram_info, new_num_mem_bit); 
     break;
   case SPICE_SRAM_SCAN_CHAIN:
-    update_scff_info_num_mem_bit(cur_sram_orgz_info->scff_info, new_num_mem_bit); 
+    update_ccff_info_num_mem_bit(cur_sram_orgz_info->ccff_info, new_num_mem_bit); 
     break;
   case SPICE_SRAM_MEMORY_BANK:
     update_mem_bank_info_num_mem_bit(cur_sram_orgz_info->mem_bank_info, new_num_mem_bit); 
@@ -2791,7 +2838,7 @@ void get_sram_orgz_info_mem_model(t_sram_orgz_info* cur_sram_orgz_info,
     (*mem_model_ptr) = cur_sram_orgz_info->standalone_sram_info->mem_model;
     break;
   case SPICE_SRAM_SCAN_CHAIN:
-    (*mem_model_ptr) = cur_sram_orgz_info->scff_info->mem_model;
+    (*mem_model_ptr) = cur_sram_orgz_info->ccff_info->mem_model;
     break;
   case SPICE_SRAM_MEMORY_BANK:
     (*mem_model_ptr) = cur_sram_orgz_info->mem_bank_info->mem_model;
@@ -2817,7 +2864,7 @@ void update_sram_orgz_info_mem_model(t_sram_orgz_info* cur_sram_orgz_info,
     cur_sram_orgz_info->standalone_sram_info->mem_model = cur_mem_model;
     break;
   case SPICE_SRAM_SCAN_CHAIN:
-    cur_sram_orgz_info->scff_info->mem_model = cur_mem_model;
+    cur_sram_orgz_info->ccff_info->mem_model = cur_mem_model;
     break;
   case SPICE_SRAM_MEMORY_BANK:
     cur_sram_orgz_info->mem_bank_info->mem_model = cur_mem_model;
@@ -3036,6 +3083,43 @@ void config_spice_models_sram_port_spice_model(int num_spice_model,
   return;
 }
 
+/********************************************************************
+ * Link the circuit model of SRAM ports of each circuit model
+ * to a default SRAM circuit model.
+ * This function aims to ease the XML writing, allowing users to skip
+ * the circuit model definition for SRAM ports that are used by default
+ * TODO: Maybe deprecated as we prefer strict definition 
+ *******************************************************************/
+void config_circuit_models_sram_port_to_default_sram_model(CircuitLibrary& circuit_lib,
+                                                           const CircuitModelId& default_sram_model) {
+  for (const auto& model : circuit_lib.models()) {
+    for (const auto& port : circuit_lib.model_ports(model)) {
+      /* Bypass non SRAM ports */
+      if (SPICE_MODEL_PORT_SRAM != circuit_lib.port_type(port)) {
+        continue;
+      }
+      /* Write for the default SRAM SPICE model! */
+      circuit_lib.set_port_tri_state_model_id(port, default_sram_model);
+      /* Only show warning when we try to override the given spice_model_name ! */ 
+      if (circuit_lib.port_tri_state_model_name(port).empty()) { 
+        continue;
+      }
+      /* Give a warning !!! */
+      if (0 != circuit_lib.model_name(default_sram_model).compare(circuit_lib.port_tri_state_model_name(port))) {
+        vpr_printf(TIO_MESSAGE_WARNING, 
+                   "Overwrite SRAM circuit model for circuit model port (name:%s, port:%s) to be the correct one (name:%s)!\n",
+                   circuit_lib.model_name(model).c_str(),
+                   circuit_lib.port_prefix(port).c_str(),
+                   circuit_lib.model_name(default_sram_model).c_str());
+      }
+    }
+  }
+  /* TODO: this should be done right after XML parsing!!!
+   * Rebuild the submodels for circuit_library, because we have created links for ports 
+   */
+  circuit_lib.build_model_links();
+}
+
 void determine_sb_port_coordinator(t_sb cur_sb_info, int side, 
                                    int* port_x, int* port_y) {
    /* Check */
@@ -3173,7 +3257,7 @@ int count_cb_info_num_ipin_rr_nodes(t_cb cur_cb_info) {
 
 /* Add a subckt file name to a linked list */
 t_llist* add_one_subckt_file_name_to_llist(t_llist* cur_head, 
-                                            char* subckt_file_path) {
+                                           const char* subckt_file_path) {
   t_llist* new_head = NULL;
 
   if (NULL == cur_head) {

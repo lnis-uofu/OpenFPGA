@@ -1,6 +1,7 @@
 #ifndef FPGA_X2P_TYPES_H
 #define FPGA_X2P_TYPES_H
 
+#include "vpr_types.h"
 #include "route_common.h"
 
 /* Define the basic data structures used for FPGA-SPICE */

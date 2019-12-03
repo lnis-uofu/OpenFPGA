@@ -351,10 +351,10 @@ void fprint_spice_sram_one_outport(FILE* fp,
     break;
   case SPICE_SRAM_SCAN_CHAIN:
     if (0 == port_type_index) {
-      port_name = "scff_out";
+      port_name = "ccff_out";
     } else {
       assert(1 == port_type_index);
-      port_name = "scff_outb";
+      port_name = "ccff_outb";
     }
     break;
   case SPICE_SRAM_MEMORY_BANK:
@@ -696,7 +696,7 @@ void fprint_global_pad_ports_spice_model(FILE* fp,
     case SPICE_MODEL_LUT:
     case SPICE_MODEL_FF:
     case SPICE_MODEL_HARDLOGIC:
-    case SPICE_MODEL_SCFF:
+    case SPICE_MODEL_CCFF:
     case SPICE_MODEL_INVBUF:
     case SPICE_MODEL_PASSGATE: 
     case SPICE_MODEL_GATE: 

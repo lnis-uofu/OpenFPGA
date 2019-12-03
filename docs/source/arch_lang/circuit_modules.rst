@@ -1,10 +1,10 @@
 Define Circuit-level Modules
 ============================
 
-To support FPGA SPICE, Verily and Bitstream Generator, physical modules containing gate-level and transistor-level features are required for FPGA primitive blocks.
+To support FPGA Verilog/SPICE, Verily and Bitstream Generator, physical modules containing gate-level and transistor-level features are required for FPGA primitive blocks.
 The physical modules are defined in XML syntax, similar to the original VPR FPGA architecture description language.
 
-For each module that appears in the FPGA architecture, a circuit model should be defined. In the definition of a circuit model, the user can specify if the SPICE netlist of the module is either auto-generated or user-defined.
+For each module that appears in the FPGA architecture, a circuit model should be defined. In the definition of a circuit model, the user can specify if the Verilog/SPICE netlist of the module is either auto-generated or user-defined.
 
 Define circuit_models
 ---------------------
@@ -13,34 +13,34 @@ Define circuit_models
 
   <module_circuit_models>
     <circuit_model type="string" name="string" prefix="string" is_default="int" 
-    spice_netlist="string" verilog_netlist="string" dump_structural_verilog="string">
+    circuit_netlist="string" verilog_netlist="string" dump_structural_verilog="string">
       <transistor-level circuit_design_features="developped_further" />
     </circuit_model>
   </module_circuit_models>
 
-* **module_circuit_models**: the father node for all the spice models. All the spice models should be defined under this XML node.
+* **module_circuit_models**: the father node for all the circuit models. All the circuit models should be defined under this XML node.
 
     * **circuit_model**: the child node defining transistor-level modeling parameters.
 
-        * **type**: can be [ inv_buf | pass_gate | mux | wire | chan_wire | sram | lut | ff | scff | hard_logic | iopad ]. Specify the type of circuit model. The provided types cover all the modules in FPGAs. For the circuit models in the type of mux/wire/chan_wire/lut, FPGA-SPICE can auto-generate SPICE netlists. For the rest, FPGA-SPICE requires a user-defined SPICE netlist.
+        * **type**: can be [ ``inv_buf`` | ``pass_gate`` | ``gate`` | ``mux`` | ``wire`` | ``chan_wire`` | ``sram`` | ``lut`` | ``ff`` | ``scff`` | ``hard_logic`` | ``iopad`` ]. Specify the type of circuit model. The provided types cover all the modules in FPGAs. For the circuit models in the type of mux/wire/chan_wire/lut, FPGA-Verilog/SPICE can auto-generate Verilog/SPICE netlists. For the rest, FPGA-Verilog/SPICE requires a user-defined Verilog/SPICE netlist.
 
-        * **name**: define the name of this circuit model. The name should be unique and will be used to create the sub-circuit of the circuit model in SPICE netlists. Note that for a customized SPICE netlist, the name defined here should be the name of the top-level sub-circuit in the customized SPICE netlist. FPGA-SPICE will check if the given name is conflicted with any reserved words.
+        * **name**: define the name of this circuit model. The name should be unique and will be used to create the sub-circuit of the circuit model in Verilog/SPICE netlists. Note that for a customized Verilog/SPICE netlist, the name defined here should be the name of the top-level sub-circuit in the customized Verilog/SPICE netlist. FPGA-Verilog/SPICE will check if the given name is conflicted with any reserved words.
 
-        * **prefix**: specify the name of the circuit_model to shown in the auto-generated SPICE netlists. The prefix can be the same as the name defined above. And again, the prefix should be unique.
+        * **prefix**: specify the name of the circuit_model to shown in the auto-generated Verilog/SPICE netlists. The prefix can be the same as the name defined above. And again, the prefix should be unique.
 
-        * **is_default**: can be [1|0], corresponding to [true|false] respectively. Specify this circuit model is the default one for some modules, such as multiplexers. If a module is not linked to any spice model by users, FPGA-SPICE will find the default spice model defined in the same type and link.  For a spice model type, only one spice model can be set as default.
+        * **is_default**: can be [``1`` | ``0``], corresponding to [``true`` | ``false``] respectively. Specify this circuit model is the default one for some modules, such as multiplexers. If a module is not linked to any circuit model by users, FPGA-Verilog/SPICE will find the default circuit model defined in the same type and link.  For a circuit model type, only one circuit model can be set as default.
 
-        * **spice_netlist**: specify the path and file name of a customized SPICE netlist. For some modules such as SRAMs, FFs, inpads, and outpads, FPGA-SPICE does not support auto-generation of the transistor-level sub-circuits because their circuit design is highly dependent on the technology nodes. These circuit designs should be specified by users. For the other modules that can be auto-generated by FPGA-SPICE, the user can also define a custom netlist. Multiplexers cannot be user-defined.
+        * **circuit_netlist**: specify the path and file name of a customized Verilog/SPICE netlist. For some modules such as SRAMs, FFs, inpads, and outpads, FPGA-Verilog/SPICE does not support auto-generation of the transistor-level sub-circuits because their circuit design is highly dependent on the technology nodes. These circuit designs should be specified by users. For the other modules that can be auto-generated by FPGA-Verilog/SPICE, the user can also define a custom netlist. Multiplexers cannot be user-defined.
 
-        * **verilog_netlist**: specify the path and file name of a customized Verilog netlist. For some modules such as SRAMs, FFs, inpad and outpads, FPGA-SPICE does not support auto-generation of the transistor-level sub-circuits because their circuit design is highly dependent on the technology nodes. These circuit designs should be specified by users. For the other modules that can be auto-generated by FPGA-SPICE, the user can also define a custom netlist. Multiplexers cannot be user-defined.
+        * **verilog_netlist**: specify the path and file name of a customized Verilog netlist. For some modules such as SRAMs, FFs, inpad and outpads, FPGA-Verilog/SPICE does not support auto-generation of the transistor-level sub-circuits because their circuit design is highly dependent on the technology nodes. These circuit designs should be specified by users. For the other modules that can be auto-generated by FPGA-Verilog/SPICE, the user can also define a custom netlist. Multiplexers cannot be user-defined.
 
         * **dump_structural_verilog**: when the value of this keyword is set to be true, Verilog generator will output gate-level netlists of this module, instead of behavior-level. Gate-level netlists bring more opportunities in layout-level optimization while behavior-level is more suitable for high-speed formal verification and easier in debugging with HDL simulators.
 
-.. note:: If netlist is not specified, FPGA-SPICE auto-generates the SPICE netlists for multiplexers, wires, and LUTs.
+.. note:: If netlist is not specified, FPGA-Verilog/SPICE auto-generates the Verilog/SPICE netlists for multiplexers, wires, and LUTs.
 
 .. note:: The user-defined netlists, such as LUTs, the decoding methodology should comply with the auto-generated LUTs (See Section 4.5)
 
-.. note:: Under the XML node circuit_model, the features of transistor-level designs can be defined. In the following table, we show the common features supported for all the modules.  Then, we will introduce unique features supported only for some spice models types.
+.. note:: Under the XML node circuit_model, the features of transistor-level designs can be defined. In the following table, we show the common features supported for all the modules.  Then, we will introduce unique features supported only for some circuit models types.
 
 
 Transistor level
@@ -67,19 +67,19 @@ Transistor level
 
 * input_buffer and output_buffer:
     
-    * **exist:** [on|off]. Define the existence of the input_buffer or output_buffer. Note that the existence is valid for all the inputs and outputs. Note that if users want only part of the inputs (or outputs) to be buffered, this is not supported here. A solution can be building a user-defined SPICE netlist.
+    * **exist:** [on|off]. Define the existence of the input_buffer or output_buffer. Note that the existence is valid for all the inputs and outputs. Note that if users want only part of the inputs (or outputs) to be buffered, this is not supported here. A solution can be building a user-defined Verilog/SPICE netlist.
 
     * **circuit_model_name:** Specify the name of circuit model which is used to implement input/output buffer, the type of specified circuit model should be inv_buf.
 
 * pass_gate_logic: defined the parameters in pass-gates, which are used in building multiplexers and LUTs.
 
-    * **circuit_model_name:** Specify the name of the circuit model which is used to implement transmission gate, the type of specified spice model should be pass_gate.
+    * **circuit_model_name:** Specify the name of the circuit model which is used to implement transmission gate, the type of specified circuit model should be pass_gate.
 
 * port: define the port list of a circuit model.
 
     * **type:** can be [input|output|sram|clock]. For programmable modules, such as multiplexers and LUTs, SRAM ports should be defined. For registers, such as FFs and memory banks, clock ports should be defined.
 
-    * **prefix:** the name of the port. Each port will be shown as <prefix>[i], 0≤i<size in SPICE netlists.
+    * **prefix:** the name of the port. Each port will be shown as ``<prefix>[i]`` in Verilog/SPICE netlists.
 
     * **size:** bandwidth of the port.
 
@@ -87,12 +87,14 @@ Transistor level
 
     * **circuit_model_name:** only valid when the type of port is sram. Specify the name of the circuit model which is connected to this port.
 
-    * **mode_select:** can be either true or false. Specify if this port controls the mode switching in a configurable logic block. Only valid when the type of this port is sram. (A configurable logic block can operate in different modes, which is controlled by SRAM bits.)
+    * **mode_select:** can be either ``true`` or ``false``. Specify if this port controls the mode switching in a configurable logic block. Only valid when the type of this port is sram. (A configurable logic block can operate in different modes, which is controlled by SRAM bits.)
 
-    * **is_global:** can be either true or false. Specify if this port is a global port, which will be routed globally. Note that when multiple global ports are defined with the same name, these global ports will be short-wired together.
+    * **is_global:** can be either ``true`` or ``false``. Specify if this port is a global port, which will be routed globally. Note that when multiple global ports are defined with the same name, these global ports will be short-wired together.
 
-    * **is_set:** can be either true or false. Specify if this port controls a set signal. Only valid when is_global is true. All the set ports are connected to global set voltage stimuli in testbenches.
+    * **is_set:** can be either ``true`` or ``false``. Specify if this port controls a set signal. Only valid when ``is_global`` is true. All the set ports are connected to global set voltage stimuli in testbenches.
 
-    * **is_reset:** can be either true or false. Specify if this port controls a reset signal. Only valid when is_global is true. All the reset ports are connected to a global reset voltage stimuli in testbenches.
+    * **is_reset:** can be either ``true`` or ``false``. Specify if this port controls a reset signal. Only valid when ``is_global`` is true. All the reset ports are connected to a global reset voltage stimuli in testbenches.
 
-    * **is_config_enable:** can be either true or false. Only valid when is_global is true. Specify if this port controls a configuration-enable signal. This port is only enabled during FPGA configuration, and always disabled during FPGA operation. All the config_enable ports are connected to global configuration-enable voltage stimuli in testbenches.
+    * **is_config_enable:** can be either ``true`` or ``false``. Only valid when ``is_global`` is true. Specify if this port controls a configuration-enable signal. This port is only enabled during FPGA configuration, and always disabled during FPGA operation. All the ``config_enable`` ports are connected to global configuration-enable voltage stimuli in testbenches.
+
+.. note::  Different types of ``circuit_model`` have different XML syntax, with which users can highly customize their circuit topologies. See refer to examples of ``circuit_model`` for more details.

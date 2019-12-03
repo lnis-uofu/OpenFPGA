@@ -15,6 +15,7 @@ export -f travis_time_start
 export -f travis_time_finish
 
 function start_section() {
+  $SPACER
 	travis_fold start "$1"
 	travis_time_start
 	echo -e "${PURPLE}OpenFPGA${NC}: - $2${NC}"
@@ -25,6 +26,7 @@ function end_section() {
 	echo -e "${GRAY}-------------------------------------------------------------------${NC}"
 	travis_time_finish
 	travis_fold end "$1"
+  $SPACER
 }
 
 # For Mac OS, we use g++ and gcc as default compilers
@@ -34,10 +36,11 @@ if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
   # export PATH="/usr/local/opt/bison/bin:/usr/local/bin:$PATH"
   # export PATH="/usr/local/opt/qt/bin:$PATH"
   # Install header files in Mojave, if not gcc-4.9 cannot spot stdio.h
-  sudo installer -pkg /Library/Developer/CommandLineTools/Packages/macOS_SDK_headers_for_macOS_10.14.pkg -target /
-else 
+  sudo installer -pkg /Library/Developer/CommandLineTools/Packages/macOS_SDK_headers_for_macOS_10.14.pkg -target / -allowUntrusted
+else
   # For linux, we use g++-8 and gcc-8 as default compilers
   export CC=gcc-8
   export CXX=g++-8
 fi
+
 

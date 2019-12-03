@@ -8,6 +8,8 @@ Extended Architecture Description Language
    :maxdepth: 2
 
    generality
+
+   interconnect
    
    spice_sim_setting
 
@@ -18,7 +20,5 @@ Extended Architecture Description Language
    circuit_model_examples
   
    link_circuit_modules
-
-   .. multimode_support
 
    

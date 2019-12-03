@@ -638,6 +638,8 @@ void verilog_generate_sdc_constrain_one_cb_path(FILE* fp,
                                               des_rr_node_grid_side,
                                               des_rr_node->xlow,
                                               des_rr_node->ylow,
+                                              0, /*explicit mapping is false*/
+                                              0, /*explicit mapping is false*/
                                               FALSE, false); 
 
   /* If src_node == des_node, this is a metal wire */
@@ -723,6 +725,8 @@ void verilog_generate_sdc_constrain_one_cb_path(FILE* fp,
                                               des_rr_node_grid_side,
                                               mirror_ipin_node->xlow,
                                               mirror_ipin_node->ylow,
+                                              0, /*explicit mapping is false*/
+                                              0, /*explicit mapping is false*/
                                               FALSE, false); 
 
   /* If src_node == des_node, this is a metal wire */
@@ -1769,6 +1773,8 @@ void verilog_generate_sdc_disable_one_unused_cb(FILE* fp,
                                                   rr_gsb.get_ipin_node_grid_side(cb_ipin_side, inode),
                                                   ipin_node->xlow,
                                                   ipin_node->ylow,
+                                                  0, /*explicit mapping is false*/
+                                                  0, /*explicit mapping is false*/
                                                   FALSE, false); /* Do not specify direction of port */
       fprintf(fp, "\n");
     }
@@ -1827,6 +1833,8 @@ void verilog_generate_sdc_disable_one_unused_cb(FILE* fp,
                                                   cur_cb_info->ipin_rr_node_grid_side[side][inode],
                                                   cur_cb_info->ipin_rr_node[side][inode]->xlow,
                                                   cur_cb_info->ipin_rr_node[side][inode]->ylow,
+                                                  0, /*explicit mapping is false*/
+                                                  0, /*explicit mapping is false*/
                                                   FALSE, false); /* Do not specify direction of port */
       fprintf(fp, "\n");
     }

@@ -10,8 +10,11 @@
 #include <assert.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <vector>
 
 /* Include vpr structs*/
+#include "vtr_assert.h"
+#include "vtr_geometry.h"
 #include "util.h"
 #include "physical_types.h"
 #include "vpr_types.h"
@@ -32,23 +35,34 @@
 #include "fpga_x2p_globals.h"
 #include "fpga_bitstream.h"
 
+#include "module_manager.h"
+#include "mux_library.h"
+#include "mux_library_builder.h"
+#include "circuit_library_utils.h"
+
 /* Include SynVerilog headers */
 #include "verilog_global.h"
 #include "verilog_utils.h"
 #include "verilog_submodules.h"
+#include "verilog_decoder.h"
+#include "verilog_decoders.h"
 #include "verilog_pbtypes.h"
+#include "verilog_grid.h"
 #include "verilog_routing.h"
+#include "verilog_top_module.h"
 #include "verilog_compact_netlist.h"
 #include "verilog_top_testbench.h"
 #include "verilog_autocheck_top_testbench.h"
 #include "verilog_formal_random_top_testbench.h"
+#include "verilog_preconfig_top_module.h"
 #include "verilog_verification_top_netlist.h"
 #include "verilog_modelsim_autodeck.h"
 #include "verilog_report_timing.h"
 #include "verilog_sdc.h"
 #include "verilog_formality_autodeck.h"
 #include "verilog_sdc_pb_types.h"
-#include "verilog_include_netlists.h"
+#include "verilog_auxiliary_netlists.h"
+#include "simulation_info_writer.h"
 
 #include "verilog_api.h"
 
@@ -107,7 +121,15 @@ void free_global_routing_conf_bits() {
 }
  
 /* Top-level function*/
-void vpr_fpga_verilog(t_vpr_setup vpr_setup,
+void vpr_fpga_verilog(ModuleManager& module_manager,
+                      const BitstreamManager& bitstream_manager,
+                      const std::vector<ConfigBitId>& fabric_bitstream,
+                      const MuxLibrary& mux_lib,
+                      const std::vector<t_logical_block>& L_logical_blocks,
+                      const vtr::Point<size_t>& device_size,
+                      const std::vector<std::vector<t_grid_tile>>& L_grids, 
+                      const std::vector<t_block>& L_blocks,
+                      t_vpr_setup vpr_setup,
                       t_arch Arch,
                       char* circuit_name) {
   /* Timer */
@@ -130,24 +152,17 @@ void vpr_fpga_verilog(t_vpr_setup vpr_setup,
   char* fm_dir_path = NULL;
   char* top_netlist_file = NULL;
   char* top_netlist_path = NULL;
-  char* top_testbench_file_name = NULL;
-  char* top_testbench_file_path = NULL;
   char* blif_testbench_file_name = NULL;
   char* blif_testbench_file_path = NULL;
   char* bitstream_file_name = NULL;
   char* bitstream_file_path = NULL;
-  char* formal_verification_top_netlist_file_name = NULL;
-  char* formal_verification_top_netlist_file_path = NULL;
-  char* autocheck_top_testbench_file_name = NULL;
-  char* autocheck_top_testbench_file_path = NULL;
-  char* random_top_testbench_file_name = NULL;
-  char* random_top_testbench_file_path = NULL;
 
   char* chomped_parent_dir = NULL;
   char* chomped_circuit_name = NULL;
  
   t_sram_orgz_info* sram_verilog_orgz_info = NULL;
 
+  /* 0. basic units: inverter, buffers and pass-gate logics, */
   /* Check if the routing architecture we support*/
   if (UNI_DIRECTIONAL != vpr_setup.RoutingArch.directionality) {
     vpr_printf(TIO_MESSAGE_ERROR, "FPGA synthesizable Verilog dumping only support uni-directional routing architecture!\n");
@@ -225,6 +240,7 @@ void vpr_fpga_verilog(t_vpr_setup vpr_setup,
   config_spice_models_sram_port_spice_model(Arch.spice->num_spice_model, 
                                             Arch.spice->spice_models,
                                             Arch.sram_inf.verilog_sram_inf_orgz->spice_model);
+  config_circuit_models_sram_port_to_default_sram_model(Arch.spice->circuit_lib, Arch.sram_inf.verilog_sram_inf_orgz->circuit_model); 
 
   /* Assign global variables of input and output pads */
   iopad_verilog_model = find_iopad_spice_model(Arch.spice->num_spice_model, Arch.spice->spice_models);
@@ -242,36 +258,86 @@ void vpr_fpga_verilog(t_vpr_setup vpr_setup,
   /* Initialize the number of configuration bits of all the grids */
   vpr_printf(TIO_MESSAGE_INFO, "Count the number of configuration bits, IO pads in each logic block...\n");
   /* init_grids_num_conf_bits(sram_verilog_orgz_type); */
-  init_grids_num_conf_bits(sram_verilog_orgz_info);
-  init_grids_num_iopads();
+  //init_grids_num_conf_bits(sram_verilog_orgz_info);
+  init_pb_types_num_conf_bits(sram_verilog_orgz_info);
+  //init_grids_num_iopads();
+  init_pb_types_num_iopads();
   /* init_grids_num_mode_bits(); */
 
-  dump_verilog_defines_preproc(src_dir_path,
-                               vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts);
+  /* Print Verilog files containing preprocessing flags */
+  print_verilog_preprocessing_flags_netlist(std::string(src_dir_path),
+                                            vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts);
 
+  print_verilog_simulation_preprocessing_flags(std::string(src_dir_path),
+                                               vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts);
+  /*
   dump_verilog_simulation_preproc(src_dir_path,
                                vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts);
+   */
+
+  /* Generate primitive Verilog modules, which are corner stones of FPGA fabric 
+   * Note that this function MUST be called before Verilog generation of
+   * core logic (i.e., logic blocks and routing resources) !!!
+   * This is because that this function will add the primitive Verilog modules to 
+   * the module manager.
+   * Without the modules in the module manager, core logic generation is not possible!!!
+   */
+  dump_verilog_submodules(module_manager, mux_lib, sram_verilog_orgz_info, src_dir_path, submodule_dir_path, 
+                          Arch, &vpr_setup.RoutingArch, 
+                          vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts);
 
   /* Dump routing resources: switch blocks, connection blocks and channel tracks */
-  dump_verilog_routing_resources(sram_verilog_orgz_info, src_dir_path, rr_dir_path, Arch, &vpr_setup.RoutingArch,
-                                 num_rr_nodes, rr_node, rr_node_indices, rr_indexed_data,
-                                 vpr_setup.FPGA_SPICE_Opts);
+  print_verilog_routing_resources(module_manager, sram_verilog_orgz_info, 
+                                  src_dir_path, rr_dir_path, Arch, vpr_setup.RoutingArch,
+                                  num_rr_nodes, rr_node, rr_node_indices, rr_indexed_data,
+                                  vpr_setup.FPGA_SPICE_Opts);
+
+  if (TRUE == vpr_setup.FPGA_SPICE_Opts.compact_routing_hierarchy) {
+    print_verilog_unique_routing_modules(module_manager, device_rr_gsb,  
+                                         vpr_setup.RoutingArch,
+                                         std::string(src_dir_path), std::string(rr_dir_path),
+                                         TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.dump_explicit_verilog);
+  } else {
+    VTR_ASSERT(FALSE == vpr_setup.FPGA_SPICE_Opts.compact_routing_hierarchy);
+    print_verilog_flatten_routing_modules(module_manager, device_rr_gsb, 
+                                          vpr_setup.RoutingArch,
+                                          std::string(src_dir_path), std::string(rr_dir_path),
+                                          TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.dump_explicit_verilog);
+  }
+
 
   /* Dump logic blocks 
    * Branches to go: 
    * 1. a compact output
    * 2. a full-size output
    */
-  dump_compact_verilog_logic_blocks(sram_verilog_orgz_info, src_dir_path, 
-                                    lb_dir_path, &Arch,
-                                    vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.dump_explicit_verilog);
+  print_compact_verilog_logic_blocks(sram_verilog_orgz_info, src_dir_path, 
+                                     lb_dir_path, Arch,
+                                     vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.dump_explicit_verilog);
 
-  /* Dump internal structures of submodules */
-  dump_verilog_submodules(sram_verilog_orgz_info, src_dir_path, submodule_dir_path, 
-                          Arch, &vpr_setup.RoutingArch, 
-                          vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts);
+  print_verilog_grids(module_manager, 
+                      std::string(src_dir_path), std::string(lb_dir_path),
+                      TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.dump_explicit_verilog);
 
-  /* Dump top-level verilog */
+  /* Generate the Verilog module of the configuration peripheral protocol 
+   * which loads bitstream to FPGA fabric
+   * TODO: generate the BL/WL decoders!!!!
+   * 
+   * IMPORTANT: this function should be called after Verilog generation of
+   * core logic (i.e., logic blocks and routing resources) !!!
+   * This is due to the configuration protocol requires the total
+   * number of memory cells across the FPGA fabric 
+   */
+  print_verilog_config_peripherals(module_manager, sram_verilog_orgz_info, std::string(src_dir_path), std::string(submodule_dir_path));
+  /* TODO: This is the old function, which will be deprecated when refactoring is done */
+  dump_verilog_config_peripherals(sram_verilog_orgz_info, src_dir_path, submodule_dir_path);
+
+  print_verilog_top_module(module_manager, 
+                           std::string(vpr_setup.FileNameOpts.ArchFile), 
+                           std::string(src_dir_path),
+                           TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.dump_explicit_verilog);
+  
+  /* TODO: This is the old function, which will be deprecated when refactoring is done */
   dump_compact_verilog_top_netlist(sram_verilog_orgz_info, chomped_circuit_name, 
                                    top_netlist_path, src_dir_path, submodule_dir_path, lb_dir_path, rr_dir_path, 
                                    num_rr_nodes, rr_node, rr_node_indices, 
@@ -308,7 +374,10 @@ void vpr_fpga_verilog(t_vpr_setup vpr_setup,
                       sram_verilog_orgz_info->type);
 
   /* Force enable bitstream generator when we need to output Verilog top testbench*/  
-  if (TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.print_top_testbench) {
+  if ((TRUE == vpr_setup.FPGA_SPICE_Opts.BitstreamGenOpts.gen_bitstream)
+    || (TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.print_top_testbench)
+    || (TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.print_autocheck_top_testbench)
+    || (TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.print_formal_verification_top_netlist)) {
     vpr_setup.FPGA_SPICE_Opts.BitstreamGenOpts.gen_bitstream = TRUE;
   }
 
@@ -322,47 +391,86 @@ void vpr_fpga_verilog(t_vpr_setup vpr_setup,
     my_free(bitstream_file_path);
   }
 
+  /* Collect global ports from the circuit library
+   * TODO: move outside this function 
+   */
+  std::vector<CircuitPortId> global_ports = find_circuit_library_global_ports(Arch.spice->circuit_lib);
+
   /* dump verilog testbench only for top-level: ONLY valid when bitstream is generated! */
   if (TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.print_top_testbench) {
-    top_testbench_file_name = my_strcat(chomped_circuit_name, top_testbench_verilog_file_postfix);
-    top_testbench_file_path = my_strcat(src_dir_path, top_testbench_file_name);
-    dump_verilog_top_testbench(sram_verilog_orgz_info, chomped_circuit_name, top_testbench_file_path,
+    std::string top_testbench_file_path = std::string(src_dir_path) 
+                                        + std::string(chomped_circuit_name)
+                                        + std::string(top_testbench_verilog_file_postfix);
+    /* TODO: this is an old function, to be shadowed */
+    dump_verilog_top_testbench(sram_verilog_orgz_info, chomped_circuit_name, top_testbench_file_path.c_str(),
                                src_dir_path, *(Arch.spice));
-    /* Free */
-    my_free(top_testbench_file_name);
-    my_free(top_testbench_file_path);
   }
-
+  
   if (TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.print_formal_verification_top_netlist) {
-    formal_verification_top_netlist_file_name = my_strcat(chomped_circuit_name, formal_verification_verilog_file_postfix);
-    formal_verification_top_netlist_file_path = my_strcat(src_dir_path, formal_verification_top_netlist_file_name);
+    std::string formal_verification_top_netlist_file_path = std::string(src_dir_path) 
+                                                          + std::string(chomped_circuit_name) 
+                                                          + std::string(formal_verification_verilog_file_postfix);
+    /* TODO: this is an old function, to be shadowed */
     dump_verilog_formal_verification_top_netlist(sram_verilog_orgz_info, chomped_circuit_name, 
-                                                 formal_verification_top_netlist_file_path, src_dir_path);
+                                                 std::string(formal_verification_top_netlist_file_path + std::string(".bak")).c_str(), src_dir_path);
+    /* TODO: new function: to be tested */
+    print_verilog_preconfig_top_module(module_manager, bitstream_manager,
+                                       Arch.spice->circuit_lib, global_ports, L_logical_blocks,
+                                       device_size, L_grids, L_blocks,
+                                       std::string(chomped_circuit_name), formal_verification_top_netlist_file_path,
+                                       std::string(src_dir_path));
+
     /* Output script for formality */
     write_formality_script(vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts,
                            fm_dir_path,
                            src_dir_path,
                            chomped_circuit_name,
                            *(Arch.spice));
-    random_top_testbench_file_name = my_strcat(chomped_circuit_name, random_top_testbench_verilog_file_postfix);
-    random_top_testbench_file_path = my_strcat(src_dir_path, random_top_testbench_file_name);
-	dump_verilog_random_top_testbench(sram_verilog_orgz_info, chomped_circuit_name, 
-                                      random_top_testbench_file_path, src_dir_path,
-                                      vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts, *(Arch.spice));
-    /* Free */
-    my_free(formal_verification_top_netlist_file_name);
-    my_free(formal_verification_top_netlist_file_path);
+
+    /* Print out top-level testbench using random vectors */
+    std::string random_top_testbench_file_path = std::string(src_dir_path) 
+                                               + std::string(chomped_circuit_name) 
+                                               + std::string(random_top_testbench_verilog_file_postfix);
+    print_verilog_random_top_testbench(std::string(chomped_circuit_name), random_top_testbench_file_path, 
+                                       std::string(src_dir_path), L_logical_blocks,  
+                                       vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts, Arch.spice->spice_params);
+  }
+ 
+  if (TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.print_simulation_ini) {
+    /* Print exchangeable files which contains simulation settings */
+    std::string simulation_ini_file_name;
+    if (NULL != vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.simulation_ini_path) {
+      simulation_ini_file_name = std::string(vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.simulation_ini_path);
+    }
+    print_verilog_simulation_info(simulation_ini_file_name,
+                                  std::string(format_dir_path(chomped_parent_dir)),
+                                  std::string(chomped_circuit_name),
+                                  std::string(src_dir_path),
+                                  bitstream_manager.bits().size(),
+                                  Arch.spice->spice_params.meas_params.sim_num_clock_cycle,
+                                  Arch.spice->spice_params.stimulate_params.prog_clock_freq,
+                                  Arch.spice->spice_params.stimulate_params.op_clock_freq);
   }
 
   if (TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.print_autocheck_top_testbench) {
-    autocheck_top_testbench_file_name = my_strcat(chomped_circuit_name, autocheck_top_testbench_verilog_file_postfix);
-    autocheck_top_testbench_file_path = my_strcat(src_dir_path, autocheck_top_testbench_file_name);
+    std::string autocheck_top_testbench_file_path = std::string(src_dir_path)
+                                                  + std::string(chomped_circuit_name) 
+                                                  + std::string(autocheck_top_testbench_verilog_file_postfix);
+    /* TODO: this is an old function, to be shadowed */
+    /*
     dump_verilog_autocheck_top_testbench(sram_verilog_orgz_info, chomped_circuit_name, 
-                                         autocheck_top_testbench_file_path, src_dir_path, 
+                                         autocheck_top_testbench_file_path.c_str(), src_dir_path, 
                                          vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts, *(Arch.spice));
-    /* Free */
-    my_free(autocheck_top_testbench_file_name);
-    my_free(autocheck_top_testbench_file_path);
+     */
+    /* TODO: new function: to be tested */
+    print_verilog_top_testbench(module_manager, bitstream_manager, fabric_bitstream,
+                                sram_verilog_orgz_info->type,
+                                Arch.spice->circuit_lib, global_ports,
+                                L_logical_blocks, device_size, L_grids, L_blocks,
+                                std::string(chomped_circuit_name),
+                                autocheck_top_testbench_file_path,
+                                std::string(src_dir_path),
+                                Arch.spice->spice_params);
   }
 
   /* Output Modelsim Autodeck scripts */
@@ -406,9 +514,17 @@ void vpr_fpga_verilog(t_vpr_setup vpr_setup,
                         sram_verilog_orgz_info->type);
   }
 
-  write_include_netlists(src_dir_path,
-                         chomped_circuit_name,
-                         *(Arch.spice) );
+  /* Print a Verilog file including all the netlists that have been generated */
+  std::string ref_verilog_benchmark_file_name;
+  if (NULL != vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.reference_verilog_benchmark_file) {
+    ref_verilog_benchmark_file_name = std::string(vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.reference_verilog_benchmark_file);
+  }
+  print_include_netlists(std::string(src_dir_path),
+                         std::string(chomped_circuit_name),
+                         ref_verilog_benchmark_file_name,
+                         Arch.spice->circuit_lib);
+
+  vpr_printf(TIO_MESSAGE_INFO, "Outputted %lu Verilog modules in total.\n", module_manager.num_modules());  
 
   /* End time count */
   t_end = clock();

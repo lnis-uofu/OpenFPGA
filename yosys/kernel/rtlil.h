@@ -601,6 +601,7 @@ struct RTLIL::SigChunk
 	RTLIL::SigChunk &operator =(const RTLIL::SigChunk &other) = default;
 
 	RTLIL::SigChunk extract(int offset, int length) const;
+	inline int size() const { return width; }
 
 	bool operator <(const RTLIL::SigChunk &other) const;
 	bool operator ==(const RTLIL::SigChunk &other) const;
@@ -1314,7 +1315,7 @@ public:
 #endif
 };
 
-struct RTLIL::CaseRule
+struct RTLIL::CaseRule : public RTLIL::AttrObject
 {
 	std::vector<RTLIL::SigSpec> compare;
 	std::vector<RTLIL::SigSig> actions;
