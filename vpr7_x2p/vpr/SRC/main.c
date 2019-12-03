@@ -61,7 +61,9 @@ int main(int argc, char **argv) {
   }
 
   /* Run FPGA-SPICE tool suites*/
-  vpr_fpga_x2p_tool_suites(vpr_setup, Arch);
+  if (TRUE == vpr_setup.FPGA_SPICE_Opts.do_fpga_spice) {
+    vpr_fpga_x2p_tool_suites(vpr_setup, Arch);
+  }
 
   entire_flow_end = clock();
   

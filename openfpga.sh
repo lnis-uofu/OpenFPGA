@@ -19,6 +19,12 @@ check_execution_path (){
     fi
 }
 
+run-task-with-modelsim () {
+	echo "Script as to be run as \"run-task-with-modelsim task_name --maxthreads nb_threads other_run-modelsim_options\""
+    $PYTHON_EXEC $OPENFPGA_SCRIPT_PATH/run_fpga_task.py $1 $2 $3
+    $PYTHON_EXEC $OPENFPGA_SCRIPT_PATH/run_modelsim.py "$@"
+}
+
 run-task () {
     $PYTHON_EXEC $OPENFPGA_SCRIPT_PATH/run_fpga_task.py "$@"
 }
