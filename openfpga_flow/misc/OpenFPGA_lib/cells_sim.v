@@ -1,18 +1,11 @@
-//-----------------------------------------------------
-// Design Name : dual_port_ram
-// File Name   : dpram.v
-// Function    : Dual port RAM 32x1024 
-// Coder       : Aurelien
-//-----------------------------------------------------
-
 module dpram (
 	input clk,
 	input wen,
 	input ren,
-	input[0:9] waddr,
-	input[0:9] raddr,
-	input[0:31] d_in,
-	output[0:31] d_out );
+	input[9:0] waddr,
+	input[9:0] raddr,
+	input[31:0] d_in,
+	output[31:0] d_out );
 
 		dual_port_sram memory_0 (
 			.wclk		(clk),
@@ -29,15 +22,15 @@ endmodule
 module dual_port_sram (
 	input wclk,
 	input wen,
-	input[0:9] waddr,
-	input[0:31] data_in,
+	input[9:0] waddr,
+	input[31:0] data_in,
 	input rclk,
 	input ren,
-	input[0:9] raddr,
-	output[0:31] d_out );
+	input[9:0] raddr,
+	output[31:0] d_out );
 
-	reg[0:31] ram[0:1023];
-	reg[0:31] internal;
+	reg[31:0] ram[1023:0];
+	reg[31:0] internal;
 
 	assign d_out = internal;
 
@@ -52,5 +45,18 @@ module dual_port_sram (
 			internal <= ram[raddr];
 		end
 	end
+
+endmodule
+
+module adder(
+	input cin,
+	input a,
+	input b,
+	output cout,
+	output sumout );
+
+
+	assign sumout = a ^ b ^ cin;
+	assign cout = (a & b) | ((a | b) & cin);
 
 endmodule
