@@ -187,8 +187,7 @@ void print_verilog_submodule_memories(ModuleManager& module_manager,
   /* Close the file stream */
   fp.close();
 
-  /* Add fname to the linked list
+  /* Add fname to the linked list */
   submodule_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(submodule_verilog_subckt_file_path_head, verilog_fname.c_str());  
-   */
 }
 

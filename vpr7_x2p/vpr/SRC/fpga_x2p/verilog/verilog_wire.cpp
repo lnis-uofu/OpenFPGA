@@ -128,9 +128,5 @@ void print_verilog_submodule_wires(ModuleManager& module_manager,
   fp.close();
 
   /* Add fname to the linked list */
-  /* Uncomment this when it is ready to be plugged in
-   */
   submodule_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(submodule_verilog_subckt_file_path_head, verilog_fname.c_str());  
-
-  return;
 }

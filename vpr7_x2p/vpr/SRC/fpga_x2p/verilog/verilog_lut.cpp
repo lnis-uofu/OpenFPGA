@@ -71,10 +71,6 @@ void print_verilog_submodule_luts(ModuleManager& module_manager,
   fp.close();
 
   /* Add fname to the linked list */
-  /* Add it when the Verilog generation is refactored
   submodule_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(submodule_verilog_subckt_file_path_head, verilog_fname.c_str());  
-   */
-
-  return;
 }
 

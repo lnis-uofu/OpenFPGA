@@ -5,6 +5,7 @@
 #include "vtr_geometry.h"
 #include "vpr_types.h"
 #include "mux_library.h"
+#include "rr_blocks.h"
 #include "module_manager.h"
 #include "bitstream_manager.h"
 
@@ -45,6 +46,8 @@ struct s_shell_env {
   vtr::Point<size_t> device_size;
   std::vector<std::vector<t_grid_tile>> grids; 
   std::vector<t_block> blocks;
+  DeviceRRGSB device_rr_gsb;
+  t_sram_orgz_info sram_orgz_info;
   t_arch arch;
   t_vpr_setup vpr_setup;
   t_shell_cmd* cmd;

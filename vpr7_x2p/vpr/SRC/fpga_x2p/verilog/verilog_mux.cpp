@@ -1279,9 +1279,7 @@ void print_verilog_submodule_muxes(ModuleManager& module_manager,
   try_update_sram_orgz_info_reserved_blwl(cur_sram_orgz_info, 
                                           mux_lib.max_mux_size(), mux_lib.max_mux_size());
 
-  /* TODO: Add fname to the linked list when debugging is finished */
-  /*
+  /* Add fname to the linked list when debugging is finished */
   submodule_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(submodule_verilog_subckt_file_path_head, verilog_fname.c_str());  
-   */
 }
 
