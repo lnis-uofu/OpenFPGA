@@ -138,11 +138,6 @@ void vpr_fpga_x2p_tool_suites(t_vpr_setup vpr_setup,
 
   /* Xifan TANG: Synthesizable verilog dumping */
   if (TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.dump_syn_verilog) {
-    /* Old function to deprecatd 
-    vpr_fpga_verilog(module_manager, bitstream_manager, fabric_bitstream, mux_lib, 
-                     L_logical_blocks, device_size, grids, L_blocks,
-                     vpr_setup, Arch, vpr_setup.FileNameOpts.CircuitName);
-     */
     /* Create a local SRAM organization info
      * TODO: This should be deprecated in future */
     VTR_ASSERT(NULL != Arch.sram_inf.verilog_sram_inf_orgz); /* Check !*/

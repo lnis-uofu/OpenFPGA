@@ -50,11 +50,12 @@ void shell_execute_fpga_verilog(t_shell_env* env, t_opt_info* opts) {
   if (FALSE == shell_setup_fpga_verilog(env, opts)) {
     return;
   }
-  
+
   vpr_fpga_verilog(env->module_manager, env->bitstream_manager, env->fabric_bitstream,
                    env->mux_lib, env->logical_blocks, env->device_size, env->grids, env->blocks,
+                   env->device_rr_gsb,
                    env->vpr_setup, env->arch,
-                   env->vpr_setup.FileNameOpts.CircuitName);
+                   std::string(env->vpr_setup.FileNameOpts.CircuitName), &(env->sram_orgz_info));
 
   return;
 }
