@@ -14,6 +14,7 @@
 
 /* FPGA-X2P context header files */
 #include "fpga_x2p_utils.h"
+#include "module_manager_utils.h"
 
 /* FPGA-Verilog context header files */
 #include "verilog_global.h"
@@ -119,3 +120,117 @@ void print_verilog_submodule_signal_init(std::fstream& fp,
   fp << "`endif" << std::endl;
 }
 
+/*********************************************************************
+ * Register all the user-defined modules in the module manager
+ * Walk through the circuit library and add user-defined circuit models
+ * to the module_manager
+ ********************************************************************/
+void add_user_defined_verilog_modules(ModuleManager& module_manager, 
+                                      const CircuitLibrary& circuit_lib) {
+  /* Iterate over Verilog modules */
+  for (const auto& model : circuit_lib.models()) {
+    /* We only care about user-defined models */
+    if (true == circuit_lib.model_verilog_netlist(model).empty()) {
+      continue;
+    }
+    /* Skip Routing channel wire models because they need a different name. Do it later */
+    if (SPICE_MODEL_CHAN_WIRE == circuit_lib.model_type(model)) {
+      continue;
+    }
+    /* Reach here, the model requires a user-defined Verilog netlist, 
+     * Try to find it in the module manager 
+     * If not found, register it in the module_manager  
+     */
+    ModuleId module_id = module_manager.find_module(circuit_lib.model_name(model));
+    if (ModuleId::INVALID() == module_id) {
+      add_circuit_model_to_module_manager(module_manager, circuit_lib, model);
+    }
+  }
+}
+
+/*********************************************************************
+ * Print a template for a user-defined circuit model
+ * The template will include just the port declaration of the Verilog module
+ * The template aims to help user to write Verilog codes with a guaranteed
+ * module definition, which can be correctly instanciated (with correct
+ * port mapping) in the FPGA fabric
+ ********************************************************************/
+static 
+void print_one_verilog_template_module(const ModuleManager& module_manager,
+                                       std::fstream& fp,
+                                       const std::string& module_name) {
+  /* Ensure a valid file handler*/
+  check_file_handler(fp);
+
+  print_verilog_comment(fp, std::string("----- Template Verilog module for " + module_name + " -----"));
+
+  /* Find the module in module manager, which should be already registered */
+  /* TODO: routing channel wire model may have a different name! */
+  ModuleId template_module = module_manager.find_module(module_name);
+  VTR_ASSERT(ModuleId::INVALID() != template_module);
+
+  /* dump module definition + ports */
+  print_verilog_module_declaration(fp, module_manager, template_module);
+  /* Finish dumping ports */
+
+  print_verilog_comment(fp, std::string("----- Internal logic should start here -----"));
+
+  /* Add some empty lines as placeholders for the internal logic*/
+  fp << std::endl << std::endl;
+ 
+  print_verilog_comment(fp, std::string("----- Internal logic should end here -----"));
+
+  /* Put an end to the Verilog module */
+  print_verilog_module_end(fp, module_name);
+
+  /* Add an empty line as a splitter */
+  fp << std::endl;
+}
+
+/*********************************************************************
+ * Print a template of all the submodules that are user-defined
+ * The template will include just the port declaration of the submodule
+ * The template aims to help user to write Verilog codes with a guaranteed
+ * module definition, which can be correctly instanciated (with correct
+ * port mapping) in the FPGA fabric
+ ********************************************************************/
+void print_verilog_submodule_templates(const ModuleManager& module_manager,
+                                       const CircuitLibrary& circuit_lib,
+                                       const std::string& verilog_dir,
+                                       const std::string& submodule_dir) {
+  std::string verilog_fname(submodule_dir + user_defined_template_verilog_file_name);
+
+  /* Create the file stream */
+  std::fstream fp;
+  fp.open(verilog_fname, std::fstream::out | std::fstream::trunc);
+
+  check_file_handler(fp);
+
+  /* Print out debugging information for if the file is not opened/created properly */
+  vpr_printf(TIO_MESSAGE_INFO,
+             "Creating template for user-defined Verilog modules (%s)...\n",
+             verilog_fname.c_str()); 
+
+  print_verilog_file_header(fp, "Template for user-defined Verilog modules"); 
+
+  print_verilog_include_defines_preproc_file(fp, verilog_dir);
+
+  /* Output essential models*/
+  for (const auto& model : circuit_lib.models()) {
+    /* Focus on user-defined modules, which must have a Verilog netlist defined */
+    if (circuit_lib.model_verilog_netlist(model).empty()) {
+      continue;
+    }
+    /* Skip Routing channel wire models because they need a different name. Do it later */
+    if (SPICE_MODEL_CHAN_WIRE == circuit_lib.model_type(model)) {
+      continue;
+    }
+    /* Print a Verilog template for the circuit model */
+    print_one_verilog_template_module(module_manager, fp, circuit_lib.model_name(model)); 
+  }
+
+  /* close file stream */
+  fp.close();
+ 
+  /* No need to add the template to the subckt include files! */
+}

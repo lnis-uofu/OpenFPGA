@@ -1,6 +1,7 @@
 /********************************************************************
  * Most utilized functions in FPGA X2P framework
  *******************************************************************/
+#include <sys/stat.h>
 #include <string>
 #include <algorithm>
 
@@ -54,8 +55,8 @@ std::string find_path_file_name(const std::string& file_name) {
   if (found != std::string::npos) {
     return file_name.substr(found + 1);
   }
-  /* Not found, return an empty string */
-  return std::string();
+  /* Not found. The input is the file name! Return the original string */
+  return file_name;
 }
 
 /******************************************************************** 
@@ -131,5 +132,45 @@ std::vector<size_t> my_itobin_vec(const size_t& in_int, const size_t& bin_len) {
   }
  
   return ret;
+}
+
+/******************************************************************** 
+ * Create a directory with a given path
+ ********************************************************************/
+bool create_dir_path(const char* dir_path) {
+   /* Give up if the path is empty */
+   if (NULL == dir_path) {
+     vpr_printf(TIO_MESSAGE_INFO,
+                "dir_path is empty and nothing is created.\n");
+     return false;
+   }
+
+   /* Try to create a directory */
+   int ret = mkdir(dir_path, S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH);
+
+   /* Analyze the return flag and output status */
+   switch (ret) {
+   case 0:
+     vpr_printf(TIO_MESSAGE_INFO,
+                "Create directory(%s)...successfully.\n",
+                dir_path);
+     return true;
+   case -1:
+     if (EEXIST == errno) {
+       vpr_printf(TIO_MESSAGE_WARNING,
+                  "Directory(%s) already exists. Will overwrite contents\n",
+                  dir_path);
+       return true;
+     }
+     break;
+   default:
+     vpr_printf(TIO_MESSAGE_ERROR,
+                "Create directory(%s)...Failed!\n",
+                dir_path);
+     exit(1);
+     return false;
+  }
+
+  return false;
 }
 

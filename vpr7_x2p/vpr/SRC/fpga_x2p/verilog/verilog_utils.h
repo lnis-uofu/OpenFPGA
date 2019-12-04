@@ -1,6 +1,8 @@
 #ifndef VERILOG_UTILS_H
 #define VERILOG_UTILS_H
 
+#include "vpr_types.h"
+
 void init_list_include_verilog_netlists(t_spice* spice);
 
 void init_include_user_defined_verilog_netlists(t_spice spice);
