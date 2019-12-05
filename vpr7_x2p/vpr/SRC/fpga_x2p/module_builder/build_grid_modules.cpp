@@ -27,7 +27,6 @@
 
 /* Header files for Verilog generator */
 #include "verilog_global.h"
-#include "verilog_utils.h"
 #include "build_grid_modules.h"
 
 /********************************************************************

@@ -15,6 +15,7 @@
 #include "module_manager.h"
 
 void print_verilog_submodule_wires(ModuleManager& module_manager,
+                                   std::vector<std::string>& netlist_names,
                                    const CircuitLibrary& circuit_lib,
                                    const std::string& verilog_dir,
                                    const std::string& submodule_dir);

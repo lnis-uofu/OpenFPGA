@@ -93,6 +93,7 @@ void print_verilog_wire_module(ModuleManager& module_manager,
  * Top-level function to print wire modules
  *******************************************************************/
 void print_verilog_submodule_wires(ModuleManager& module_manager,
+                                   std::vector<std::string>& netlist_names,
                                    const CircuitLibrary& circuit_lib,
                                    const std::string& verilog_dir,
                                    const std::string& submodule_dir) {
@@ -127,6 +128,6 @@ void print_verilog_submodule_wires(ModuleManager& module_manager,
   /* Close the file stream */
   fp.close();
 
-  /* Add fname to the linked list */
-  submodule_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(submodule_verilog_subckt_file_path_head, verilog_fname.c_str());  
+  /* Add fname to the netlist name list */
+  netlist_names.push_back(verilog_fname);
 }

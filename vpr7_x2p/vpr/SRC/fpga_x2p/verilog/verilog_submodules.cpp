@@ -8,8 +8,6 @@
 #include "util.h"
 
 /* FPGA-Verilog header files */
-#include "verilog_global.h"
-#include "verilog_utils.h"
 #include "verilog_submodule_utils.h"
 #include "verilog_essential_gates.h"
 #include "verilog_decoders.h"
@@ -17,6 +15,7 @@
 #include "verilog_lut.h"
 #include "verilog_wire.h"
 #include "verilog_memory.h"
+#include "verilog_writer_utils.h"
 
 /* Header file for this source file */
 #include "verilog_submodules.h"
@@ -45,9 +44,13 @@ void print_verilog_submodules(ModuleManager& module_manager,
   vpr_printf(TIO_MESSAGE_INFO, 
              "Registering user-defined modules...\n");
 
+  /* Create a vector to contain all the Verilog netlist names that have been generated in this function */
+  std::vector<std::string> netlist_names;
+
   add_user_defined_verilog_modules(module_manager, Arch.spice->circuit_lib);
 
   print_verilog_submodule_essentials(module_manager, 
+                                     netlist_names,
                                      std::string(verilog_dir), 
                                      std::string(submodule_dir),
                                      Arch.spice->circuit_lib);
@@ -59,9 +62,10 @@ void print_verilog_submodules(ModuleManager& module_manager,
   /* NOTE: local decoders generation must go before the MUX generation!!! 
    *       because local decoders modules will be instanciated in the MUX modules 
    */
-  print_verilog_submodule_mux_local_decoders(module_manager, mux_lib, Arch.spice->circuit_lib, 
+  print_verilog_submodule_mux_local_decoders(module_manager, netlist_names, 
+                                             mux_lib, Arch.spice->circuit_lib, 
                                              std::string(verilog_dir), std::string(submodule_dir));
-  print_verilog_submodule_muxes(module_manager, mux_lib, Arch.spice->circuit_lib, cur_sram_orgz_info, 
+  print_verilog_submodule_muxes(module_manager, netlist_names, mux_lib, Arch.spice->circuit_lib, cur_sram_orgz_info, 
                                 std::string(verilog_dir), std::string(submodule_dir),
                                 fpga_verilog_opts.dump_explicit_verilog);
 
@@ -69,16 +73,17 @@ void print_verilog_submodules(ModuleManager& module_manager,
   /* LUTes */
   vpr_printf(TIO_MESSAGE_INFO, 
              "Generating modules for LUTs...\n");
-  print_verilog_submodule_luts(module_manager, Arch.spice->circuit_lib, std::string(verilog_dir), std::string(submodule_dir),
+  print_verilog_submodule_luts(module_manager, netlist_names, Arch.spice->circuit_lib, std::string(verilog_dir), std::string(submodule_dir),
                                fpga_verilog_opts.dump_explicit_verilog);
 
   /* Hard wires */
-  print_verilog_submodule_wires(module_manager, Arch.spice->circuit_lib, std::string(verilog_dir), std::string(submodule_dir));
+  print_verilog_submodule_wires(module_manager, netlist_names, Arch.spice->circuit_lib, std::string(verilog_dir), std::string(submodule_dir));
 
   /* 4. Memories */
   vpr_printf(TIO_MESSAGE_INFO, 
              "Generating modules for configuration memory blocks...\n");
-  print_verilog_submodule_memories(module_manager, mux_lib, Arch.spice->circuit_lib, 
+  print_verilog_submodule_memories(module_manager, netlist_names,
+                                   mux_lib, Arch.spice->circuit_lib, 
                                    std::string(verilog_dir), std::string(submodule_dir),
                                    fpga_verilog_opts.dump_explicit_verilog);
 
@@ -89,9 +94,9 @@ void print_verilog_submodules(ModuleManager& module_manager,
 
   /* Create a header file to include all the subckts */
   vpr_printf(TIO_MESSAGE_INFO,
-             "Generating header file for basic submodules...\n");
-  dump_verilog_subckt_header_file(submodule_verilog_subckt_file_path_head,
-                                  submodule_dir,
-                                  submodule_verilog_file_name);
+             "Generating header file for primitive modules...\n");
+  print_verilog_netlist_include_header_file(netlist_names,
+                                            submodule_dir,
+                                            submodule_verilog_file_name);
 }
 

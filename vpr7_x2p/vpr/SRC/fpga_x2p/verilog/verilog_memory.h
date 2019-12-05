@@ -14,6 +14,7 @@
 #include "module_manager.h"
 
 void print_verilog_submodule_memories(ModuleManager& module_manager,
+                                      std::vector<std::string>& netlist_names,
                                       const MuxLibrary& mux_lib,
                                       const CircuitLibrary& circuit_lib,
                                       const std::string& verilog_dir,
