@@ -97,6 +97,7 @@ void print_verilog_mux_memory_module(ModuleManager& module_manager,
  * memory-bank organization for the memories.
  ********************************************************************/
 void print_verilog_submodule_memories(ModuleManager& module_manager,
+                                      std::vector<std::string>& netlist_names,
                                       const MuxLibrary& mux_lib,
                                       const CircuitLibrary& circuit_lib,
                                       const std::string& verilog_dir,
@@ -104,7 +105,6 @@ void print_verilog_submodule_memories(ModuleManager& module_manager,
                                       const bool& use_explicit_port_map) {
   /* Plug in with the mux subckt */
   std::string verilog_fname(submodule_dir + memories_verilog_file_name);
-  //verilog_fname += ".bak";
 
   /* Create the file stream */
   std::fstream fp;
@@ -187,7 +187,7 @@ void print_verilog_submodule_memories(ModuleManager& module_manager,
   /* Close the file stream */
   fp.close();
 
-  /* Add fname to the linked list */
-  submodule_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(submodule_verilog_subckt_file_path_head, verilog_fname.c_str());  
+  /* Add fname to the netlist name list */
+  netlist_names.push_back(verilog_fname);
 }
 

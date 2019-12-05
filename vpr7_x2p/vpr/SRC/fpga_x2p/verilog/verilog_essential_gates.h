@@ -13,6 +13,7 @@
 #include "circuit_library.h"
 
 void print_verilog_submodule_essentials(ModuleManager& module_manager, 
+                                        std::vector<std::string>& netlist_names,
                                         const std::string& verilog_dir, 
                                         const std::string& submodule_dir,
                                         const CircuitLibrary& circuit_lib);

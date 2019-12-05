@@ -72,6 +72,7 @@
  ********************************************************************/
 static 
 void print_verilog_routing_connection_box_unique_module(ModuleManager& module_manager, 
+                                                        std::vector<std::string>& netlist_names,
                                                         const std::string& verilog_dir, 
                                                         const std::string& subckt_dir, 
                                                         const RRGSB& rr_gsb,
@@ -107,8 +108,8 @@ void print_verilog_routing_connection_box_unique_module(ModuleManager& module_ma
   /* Close file handler */
   fp.close();
 
-  /* Add fname to the linked list */
-  routing_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(routing_verilog_subckt_file_path_head, verilog_fname.c_str());  
+  /* Add fname to the netlist name list */
+  netlist_names.push_back(verilog_fname);
 }
 
 /*********************************************************************
@@ -176,6 +177,7 @@ void print_verilog_routing_connection_box_unique_module(ModuleManager& module_ma
  ********************************************************************/
 static 
 void print_verilog_routing_switch_box_unique_module(ModuleManager& module_manager, 
+                                                    std::vector<std::string>& netlist_names,
                                                     const std::string& verilog_dir, 
                                                     const std::string& subckt_dir, 
                                                     const RRGSB& rr_gsb,
@@ -207,12 +209,9 @@ void print_verilog_routing_switch_box_unique_module(ModuleManager& module_manage
   /* Close file handler */
   fp.close();
 
-  /* Add fname to the linked list */
-  routing_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(routing_verilog_subckt_file_path_head, verilog_fname.c_str());  
-
-  return;
+  /* Add fname to the netlist name list */
+  netlist_names.push_back(verilog_fname);
 }
-
 
 /********************************************************************
  * Iterate over all the connection blocks in a device
@@ -220,6 +219,7 @@ void print_verilog_routing_switch_box_unique_module(ModuleManager& module_manage
  *******************************************************************/
 static 
 void print_verilog_flatten_connection_block_modules(ModuleManager& module_manager, 
+                                                    std::vector<std::string>& netlist_names,
                                                     const DeviceRRGSB& L_device_rr_gsb,
                                                     const std::string& verilog_dir,
                                                     const std::string& subckt_dir,
@@ -239,7 +239,7 @@ void print_verilog_flatten_connection_block_modules(ModuleManager& module_manage
         || (true != rr_gsb.is_cb_exist(cb_type))) {
         continue;
       }
-      print_verilog_routing_connection_box_unique_module(module_manager, 
+      print_verilog_routing_connection_box_unique_module(module_manager, netlist_names, 
                                                          verilog_dir,
                                                          subckt_dir, 
                                                          rr_gsb, cb_type,  
@@ -266,6 +266,9 @@ void print_verilog_flatten_routing_modules(ModuleManager& module_manager,
   /* We only support uni-directional routing architecture now */
   VTR_ASSERT (UNI_DIRECTIONAL == routing_arch.directionality);
 
+  /* Create a vector to contain all the Verilog netlist names that have been generated in this function */
+  std::vector<std::string> netlist_names;
+
   /* TODO: deprecate DeviceCoordinator, use vtr::Point<size_t> only! */
   DeviceCoordinator sb_range = L_device_rr_gsb.get_gsb_range();
 
@@ -273,7 +276,7 @@ void print_verilog_flatten_routing_modules(ModuleManager& module_manager,
   for (size_t ix = 0; ix < sb_range.get_x(); ++ix) {
     for (size_t iy = 0; iy < sb_range.get_y(); ++iy) {
       const RRGSB& rr_gsb = L_device_rr_gsb.get_gsb(ix, iy);
-      print_verilog_routing_switch_box_unique_module(module_manager, 
+      print_verilog_routing_switch_box_unique_module(module_manager, netlist_names, 
                                                      verilog_dir,
                                                      subckt_dir, 
                                                      rr_gsb, 
@@ -281,14 +284,14 @@ void print_verilog_flatten_routing_modules(ModuleManager& module_manager,
     }
   }
 
-  print_verilog_flatten_connection_block_modules(module_manager, L_device_rr_gsb, verilog_dir, subckt_dir, CHANX, use_explicit_port_map);
+  print_verilog_flatten_connection_block_modules(module_manager, netlist_names, L_device_rr_gsb, verilog_dir, subckt_dir, CHANX, use_explicit_port_map);
 
-  print_verilog_flatten_connection_block_modules(module_manager, L_device_rr_gsb, verilog_dir, subckt_dir, CHANY, use_explicit_port_map);
+  print_verilog_flatten_connection_block_modules(module_manager, netlist_names, L_device_rr_gsb, verilog_dir, subckt_dir, CHANY, use_explicit_port_map);
 
   vpr_printf(TIO_MESSAGE_INFO,"Generating header file for routing submodules...\n");
-  dump_verilog_subckt_header_file(routing_verilog_subckt_file_path_head,
-                                  subckt_dir.c_str(),
-                                  routing_verilog_file_name);
+  print_verilog_netlist_include_header_file(netlist_names,
+                                            subckt_dir.c_str(),
+                                            routing_verilog_file_name);
 }
 
 
@@ -311,10 +314,13 @@ void print_verilog_unique_routing_modules(ModuleManager& module_manager,
   /* We only support uni-directional routing architecture now */
   VTR_ASSERT (UNI_DIRECTIONAL == routing_arch.directionality);
 
+  /* Create a vector to contain all the Verilog netlist names that have been generated in this function */
+  std::vector<std::string> netlist_names;
+
   /* Build unique switch block modules */
   for (size_t isb = 0; isb < L_device_rr_gsb.get_num_sb_unique_module(); ++isb) {
     const RRGSB& unique_mirror = L_device_rr_gsb.get_sb_unique_module(isb);
-    print_verilog_routing_switch_box_unique_module(module_manager, 
+    print_verilog_routing_switch_box_unique_module(module_manager, netlist_names,
                                                    verilog_dir,
                                                    subckt_dir, 
                                                    unique_mirror, 
@@ -325,7 +331,7 @@ void print_verilog_unique_routing_modules(ModuleManager& module_manager,
   for (size_t icb = 0; icb < L_device_rr_gsb.get_num_cb_unique_module(CHANX); ++icb) {
     const RRGSB& unique_mirror = L_device_rr_gsb.get_cb_unique_module(CHANX, icb);
 
-    print_verilog_routing_connection_box_unique_module(module_manager, 
+    print_verilog_routing_connection_box_unique_module(module_manager, netlist_names,
                                                        verilog_dir,
                                                        subckt_dir, 
                                                        unique_mirror, CHANX,  
@@ -336,7 +342,7 @@ void print_verilog_unique_routing_modules(ModuleManager& module_manager,
   for (size_t icb = 0; icb < L_device_rr_gsb.get_num_cb_unique_module(CHANY); ++icb) {
     const RRGSB& unique_mirror = L_device_rr_gsb.get_cb_unique_module(CHANY, icb);
 
-    print_verilog_routing_connection_box_unique_module(module_manager, 
+    print_verilog_routing_connection_box_unique_module(module_manager, netlist_names, 
                                                        verilog_dir,
                                                        subckt_dir, 
                                                        unique_mirror, CHANY,  
@@ -344,8 +350,7 @@ void print_verilog_unique_routing_modules(ModuleManager& module_manager,
   }
 
   vpr_printf(TIO_MESSAGE_INFO,"Generating header file for routing submodules...\n");
-  dump_verilog_subckt_header_file(routing_verilog_subckt_file_path_head,
-                                  subckt_dir.c_str(),
-                                  routing_verilog_file_name);
-
+  print_verilog_netlist_include_header_file(netlist_names,
+                                            subckt_dir.c_str(),
+                                            routing_verilog_file_name);
 }

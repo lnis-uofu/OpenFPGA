@@ -162,6 +162,7 @@ void print_verilog_mux_local_decoder_module(std::fstream& fp,
  *    See more details in the function print_verilog_mux_local_decoder() for more details
  ***************************************************************************************/
 void print_verilog_submodule_mux_local_decoders(ModuleManager& module_manager,
+                                                std::vector<std::string>& netlist_names,
                                                 const MuxLibrary& mux_lib,
                                                 const CircuitLibrary& circuit_lib,
                                                 const std::string& verilog_dir,
@@ -222,8 +223,9 @@ void print_verilog_submodule_mux_local_decoders(ModuleManager& module_manager,
   /* Close the file stream */
   fp.close();
 
-  /* Add fname to the linked list when debugging is finished */
-  submodule_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(submodule_verilog_subckt_file_path_head, verilog_fname.c_str());  
+
+  /* Add fname to the netlist name list */
+  netlist_names.push_back(verilog_fname);
 }
 
 /***************************************************************************************

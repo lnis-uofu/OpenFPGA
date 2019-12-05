@@ -168,4 +168,8 @@ void print_verilog_clock_stimuli(std::fstream& fp,
                                  const float& pulse_width,
                                  const std::string& wait_condition);
 
+void print_verilog_netlist_include_header_file(const std::vector<std::string>& netlists_to_be_included,
+                                               const char* subckt_dir,
+                                               const char* header_file_name);
+
 #endif
