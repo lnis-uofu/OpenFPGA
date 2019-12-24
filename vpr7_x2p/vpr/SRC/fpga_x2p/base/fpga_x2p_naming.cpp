@@ -384,9 +384,9 @@ std::string generate_connection_block_module_name(const t_rr_type& cb_type,
 }
 
 /*********************************************************************
- * Generate the port name for a Grid
- * TODO: add more comments about why we need different names for 
- * top and non-top netlists
+ * Generate the port name for a grid in top-level netlists, i.e., full FPGA fabric
+ * This function will generate a full port name including coordinates
+ * so that each pin in top-level netlists is unique!
  *********************************************************************/
 std::string generate_grid_port_name(const vtr::Point<size_t>& coordinate,
                                     const size_t& height, 
@@ -420,6 +420,26 @@ std::string generate_grid_port_name(const vtr::Point<size_t>& coordinate,
 }
 
 /*********************************************************************
+ * Generate the port name for a grid in the context of a module
+ * To keep a short and simple name, this function will not 
+ * include any grid coorindate information!
+ *********************************************************************/
+std::string generate_grid_module_port_name(const size_t& height, 
+                                           const e_side& side, 
+                                           const size_t& pin_id) {
+  /* For non-top netlist */
+  Side side_manager(side);
+  std::string port_name = std::string("grid_");
+  port_name += std::string(side_manager.to_string());
+  port_name += std::string("_height_");
+  port_name += std::to_string(height);
+  port_name += std::string("__pin_");
+  port_name += std::to_string(pin_id);
+  port_name += std::string("_");
+  return port_name;
+}
+
+/*********************************************************************
  * Generate the port name for a Grid
  * This is a wrapper function for generate_port_name()
  * which can automatically decode the port name by the pin side and height
@@ -439,6 +459,27 @@ std::string generate_grid_side_port_name(const std::vector<std::vector<t_grid_ti
     exit(1);
   } 
   return generate_grid_port_name(coordinate, height, side, pin_id, true);
+}
+
+/*********************************************************************
+ * Generate the port name of a grid pin for a routing module,
+ * which could be a switch block or a connection block
+ *********************************************************************/
+std::string generate_routing_module_grid_port_name(const std::vector<std::vector<t_grid_tile>>& grids,
+                                                   const vtr::Point<size_t>& coordinate,
+                                                   const e_side& side, 
+                                                   const size_t& pin_id) {
+  /* Output the pins on the side*/ 
+  size_t height = find_grid_pin_height(grids, coordinate, pin_id);
+  if (1 != grids[coordinate.x()][coordinate.y()].type->pinloc[height][side][pin_id]) {
+    Side side_manager(side);
+    vpr_printf(TIO_MESSAGE_ERROR, 
+               "(File:%s, [LINE%d])Fail to generate a grid pin (x=%lu, y=%lu, height=%lu, side=%s, index=%d)\n",
+               __FILE__, __LINE__, 
+               coordinate.x(), coordinate.y(), height, side_manager.c_str(), pin_id);
+    exit(1);
+  } 
+  return generate_grid_module_port_name(height, side, pin_id);
 }
 
 /*********************************************************************
