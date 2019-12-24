@@ -244,6 +244,8 @@ std::string generate_routing_channel_module_name(const t_rr_type& chan_type,
 /*********************************************************************
  * Generate the port name for a routing track with a given coordinate
  * and port direction
+ * This function is mainly used in naming routing tracks in the top-level netlists
+ * where we do need unique names (with coordinates) for each routing tracks
  *********************************************************************/
 std::string generate_routing_track_port_name(const t_rr_type& chan_type, 
                                              const vtr::Point<size_t>& coordinate,
@@ -260,6 +262,49 @@ std::string generate_routing_track_port_name(const t_rr_type& chan_type,
 
   std::string port_name = module_prefix_map[chan_type]; 
   port_name += std::string("_" + std::to_string(coordinate.x()) + std::string("__") + std::to_string(coordinate.y()) + std::string("__"));
+
+  switch (port_direction) {
+  case OUT_PORT:
+    port_name += std::string("out_"); 
+    break;
+  case IN_PORT:
+    port_name += std::string("in_"); 
+    break;
+  default:
+    vpr_printf(TIO_MESSAGE_ERROR, 
+               "(File: %s [LINE%d]) Invalid direction of chan_rr_node!\n",
+               __FILE__, __LINE__);
+    exit(1);
+  }
+
+  /* Add the track id to the port name */
+  port_name += std::to_string(track_id) + std::string("_");
+
+  return port_name;
+}
+
+/*********************************************************************
+ * Generate the port name for a routing track in a module
+ * This function is created to ease the PnR for each unique routing module
+ * So it is mainly used when creating non-top-level modules!
+ * Note that this function does not include any port coordinate
+ * so that each module can be instanciated across the fabric
+ * Even though, port direction must be provided!
+ *********************************************************************/
+std::string generate_routing_module_track_port_name(const t_rr_type& chan_type, 
+                                                    const size_t& track_id,
+                                                    const PORTS& port_direction) {
+  /* Channel must be either CHANX or CHANY */
+  VTR_ASSERT( (CHANX == chan_type) || (CHANY == chan_type) );
+
+  /* Create a map between chan_type and module_prefix */
+  std::map<t_rr_type, std::string> module_prefix_map;
+  /* TODO: use a constexpr string to replace the fixed name? */
+  module_prefix_map[CHANX] = std::string("chanx");
+  module_prefix_map[CHANY] = std::string("chany");
+
+  std::string port_name = module_prefix_map[chan_type]; 
+  port_name += std::string("_");
 
   switch (port_direction) {
   case OUT_PORT:
