@@ -428,9 +428,9 @@ void add_top_module_nets_connect_grids_and_sb(ModuleManager& module_manager,
       /* Collect sink-related information */
       vtr::Point<size_t> sink_sb_port_coord(module_sb.get_opin_node(side_manager.get_side(), inode)->xlow,
                                             module_sb.get_opin_node(side_manager.get_side(), inode)->ylow);
-      std::string sink_sb_port_name = generate_grid_side_port_name(grids, sink_sb_port_coord,
-                                                                   module_sb.get_opin_node_grid_side(side_manager.get_side(), inode),
-                                                                   src_grid_pin_index); 
+      std::string sink_sb_port_name = generate_sb_module_grid_port_name(side_manager.get_side(),
+                                                                        module_sb.get_opin_node_grid_side(side_manager.get_side(), inode),
+                                                                        src_grid_pin_index); 
       ModulePortId sink_sb_port_id = module_manager.find_module_port(sink_sb_module, sink_sb_port_name);
       VTR_ASSERT(true == module_manager.valid_module_port_id(sink_sb_module, sink_sb_port_id));
       BasicPort sink_sb_port =  module_manager.module_port(sink_sb_module, sink_sb_port_id); 
@@ -557,9 +557,8 @@ void add_top_module_nets_connect_grids_and_cb(ModuleManager& module_manager,
       /* Collect source-related information */
       t_rr_node* module_ipin_node = module_cb.get_ipin_node(cb_ipin_side, inode);
       vtr::Point<size_t> cb_src_port_coord(module_ipin_node->xlow, module_ipin_node->ylow);
-      std::string src_cb_port_name = generate_grid_side_port_name(grids, cb_src_port_coord,
-                                                                  module_cb.get_ipin_node_grid_side(cb_ipin_side, inode),
-                                                                  module_ipin_node->ptc_num); 
+      std::string src_cb_port_name = generate_cb_module_grid_port_name(cb_ipin_side,
+                                                                       module_ipin_node->ptc_num); 
       ModulePortId src_cb_port_id = module_manager.find_module_port(src_cb_module, src_cb_port_name);
       VTR_ASSERT(true == module_manager.valid_module_port_id(src_cb_module, src_cb_port_id));
       BasicPort src_cb_port = module_manager.module_port(src_cb_module, src_cb_port_id); 
@@ -716,10 +715,9 @@ void add_top_module_nets_connect_sb_and_cb(ModuleManager& module_manager,
     size_t cb_instance = cb_instance_ids.at(cb_type)[instance_cb_coordinate.x()][instance_cb_coordinate.y()];
  
     for (size_t itrack = 0; itrack < module_sb.get_chan_width(side_manager.get_side()); ++itrack) {
-      vtr::Point<size_t> sb_port_coord(port_coordinator.get_x(), port_coordinator.get_y());
-      std::string sb_port_name = generate_routing_track_port_name(module_sb.get_chan_node(side_manager.get_side(), itrack)->type,
-                                                                  sb_port_coord, itrack,  
-                                                                  module_sb.get_chan_node_direction(side_manager.get_side(), itrack));
+      std::string sb_port_name = generate_sb_module_track_port_name(module_sb.get_chan_node(side_manager.get_side(), itrack)->type,
+                                                                    side_manager.get_side(), itrack,  
+                                                                    module_sb.get_chan_node_direction(side_manager.get_side(), itrack));
       /* Prepare SB-related port information */
       ModulePortId sb_port_id = module_manager.find_module_port(sb_module_id, sb_port_name); 
       VTR_ASSERT(true == module_manager.valid_module_port_id(sb_module_id, sb_port_id));
@@ -733,10 +731,9 @@ void add_top_module_nets_connect_sb_and_cb(ModuleManager& module_manager,
       } else {
         VTR_ASSERT(IN_PORT == module_sb.get_chan_node_direction(side_manager.get_side(), itrack));
       }  
-      vtr::Point<size_t> cb_port_coord(module_cb.get_cb_x(cb_type), module_cb.get_cb_y(cb_type));
-      std::string cb_port_name = generate_routing_track_port_name(cb_type,
-                                                                  cb_port_coord, itrack,  
-                                                                  cb_port_direction);
+      std::string cb_port_name = generate_cb_module_track_port_name(cb_type,
+                                                                    itrack,  
+                                                                    cb_port_direction);
       ModulePortId cb_port_id = module_manager.find_module_port(cb_module_id, cb_port_name); 
       VTR_ASSERT(true == module_manager.valid_module_port_id(cb_module_id, cb_port_id));
       BasicPort cb_port = module_manager.module_port(cb_module_id, cb_port_id);

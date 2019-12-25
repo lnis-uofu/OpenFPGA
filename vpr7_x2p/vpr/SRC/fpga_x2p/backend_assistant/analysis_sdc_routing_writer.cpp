@@ -77,9 +77,9 @@ void print_analysis_sdc_disable_cb_unused_resources(std::fstream& fp,
       port_coord.set_x(unique_mirror.get_cb_x(cb_type));
       port_coord.set_y(unique_mirror.get_cb_y(cb_type));
     }
-    std::string port_name = generate_routing_track_port_name(cb_type,
-                                                             port_coord, itrack,  
-                                                             IN_PORT);
+    std::string port_name = generate_cb_module_track_port_name(cb_type,
+                                                               itrack,  
+                                                               IN_PORT);
 
     /* Ensure we have this port in the module! */
     ModulePortId module_port = module_manager.find_module_port(cb_module, port_name);
@@ -108,9 +108,9 @@ void print_analysis_sdc_disable_cb_unused_resources(std::fstream& fp,
       port_coord.set_x(unique_mirror.get_cb_x(cb_type));
       port_coord.set_y(unique_mirror.get_cb_y(cb_type));
     }
-    std::string port_name = generate_routing_track_port_name(cb_type,
-                                                             port_coord, itrack,  
-                                                             OUT_PORT);
+    std::string port_name = generate_cb_module_track_port_name(cb_type,
+                                                               itrack,  
+                                                               OUT_PORT);
 
     /* Ensure we have this port in the module! */
     ModulePortId module_port = module_manager.find_module_port(cb_module, port_name);
@@ -145,10 +145,8 @@ void print_analysis_sdc_disable_cb_unused_resources(std::fstream& fp,
       }
 
       vtr::Point<size_t> port_coord(ipin_node->xlow, ipin_node->ylow);
-      std::string port_name = generate_grid_side_port_name(grids,
-                                                           port_coord,
-                                                           rr_gsb.get_ipin_node_grid_side(cb_ipin_side, inode),
-                                                           ipin_node->ptc_num); 
+      std::string port_name = generate_cb_module_grid_port_name(cb_ipin_side,
+                                                                ipin_node->ptc_num); 
 
       /* Find the port in unique mirror! */
       if (true == compact_routing_hierarchy) {
@@ -158,10 +156,8 @@ void print_analysis_sdc_disable_cb_unused_resources(std::fstream& fp,
         t_rr_node* unique_mirror_ipin_node = unique_mirror.get_ipin_node(cb_ipin_side, inode);
         port_coord.set_x(unique_mirror_ipin_node->xlow);
         port_coord.set_y(unique_mirror_ipin_node->ylow);
-        port_name = generate_grid_side_port_name(grids,
-                                                 port_coord,
-                                                 unique_mirror.get_ipin_node_grid_side(cb_ipin_side, inode),
-                                                 unique_mirror_ipin_node->ptc_num); 
+        port_name = generate_cb_module_grid_port_name(cb_ipin_side, 
+                                                      unique_mirror_ipin_node->ptc_num); 
       }
 
       /* Ensure we have this port in the module! */
@@ -204,9 +200,9 @@ void print_analysis_sdc_disable_cb_unused_resources(std::fstream& fp,
       port_coord.set_x(unique_mirror.get_cb_x(cb_type));
       port_coord.set_y(unique_mirror.get_cb_y(cb_type));
     }
-    std::string port_name = generate_routing_track_port_name(cb_type,
-                                                             port_coord, itrack,  
-                                                             OUT_PORT);
+    std::string port_name = generate_cb_module_track_port_name(cb_type,
+                                                               itrack,  
+                                                               OUT_PORT);
 
     /* Ensure we have this port in the module! */
     ModulePortId module_port = module_manager.find_module_port(cb_module, port_name);
@@ -327,9 +323,9 @@ void print_analysis_sdc_disable_sb_unused_resources(std::fstream& fp,
       t_rr_node* chan_node = rr_gsb.get_chan_node(side_manager.get_side(), itrack);
 
       vtr::Point<size_t> port_coord(port_coordinate.get_x(), port_coordinate.get_y());
-      std::string port_name = generate_routing_track_port_name(rr_gsb.get_chan_node(side_manager.get_side(), itrack)->type,
-                                                               port_coord, itrack,  
-                                                               rr_gsb.get_chan_node_direction(side_manager.get_side(), itrack));
+      std::string port_name = generate_sb_module_track_port_name(rr_gsb.get_chan_node(side_manager.get_side(), itrack)->type,
+                                                                 side_manager.get_side(), itrack,  
+                                                                 rr_gsb.get_chan_node_direction(side_manager.get_side(), itrack));
 
       if (true == compact_routing_hierarchy) {
         /* Note: use GSB coordinate when inquire for unique modules!!! */
@@ -338,9 +334,9 @@ void print_analysis_sdc_disable_sb_unused_resources(std::fstream& fp,
         DeviceCoordinator unique_port_coordinate = unique_mirror.get_side_block_coordinator(side_manager.get_side()); 
         port_coord.set_x(unique_port_coordinate.get_x());
         port_coord.set_y(unique_port_coordinate.get_y());
-        port_name = generate_routing_track_port_name(unique_mirror.get_chan_node(side_manager.get_side(), itrack)->type,
-                                                     port_coord, itrack,  
-                                                     unique_mirror.get_chan_node_direction(side_manager.get_side(), itrack));
+        port_name = generate_sb_module_track_port_name(unique_mirror.get_chan_node(side_manager.get_side(), itrack)->type,
+                                                       side_manager.get_side(), itrack,  
+                                                       unique_mirror.get_chan_node_direction(side_manager.get_side(), itrack));
       }
 
       /* Ensure we have this port in the module! */
@@ -375,9 +371,9 @@ void print_analysis_sdc_disable_sb_unused_resources(std::fstream& fp,
       vtr::Point<size_t> port_coord(rr_gsb.get_opin_node(side_manager.get_side(), inode)->xlow,
                                     rr_gsb.get_opin_node(side_manager.get_side(), inode)->ylow);
 
-      std::string port_name = generate_grid_side_port_name(grids, port_coord,
-                                                           rr_gsb.get_opin_node_grid_side(side_manager.get_side(), inode),
-                                                           opin_node->ptc_num); 
+      std::string port_name = generate_sb_module_grid_port_name(side_manager.get_side(), 
+                                                                rr_gsb.get_opin_node_grid_side(side_manager.get_side(), inode),
+                                                                opin_node->ptc_num); 
 
       if (true == compact_routing_hierarchy) {
         /* Note: use GSB coordinate when inquire for unique modules!!! */
@@ -386,9 +382,9 @@ void print_analysis_sdc_disable_sb_unused_resources(std::fstream& fp,
         port_coord.set_x(unique_mirror.get_opin_node(side_manager.get_side(), inode)->xlow);
         port_coord.set_y(unique_mirror.get_opin_node(side_manager.get_side(), inode)->ylow);
 
-        port_name = generate_grid_side_port_name(grids, port_coord,
-                                                 unique_mirror.get_opin_node_grid_side(side_manager.get_side(), inode),
-                                                 unique_mirror.get_opin_node(side_manager.get_side(), inode)->ptc_num); 
+        port_name = generate_sb_module_grid_port_name(side_manager.get_side(),
+                                                      unique_mirror.get_opin_node_grid_side(side_manager.get_side(), inode),
+                                                      unique_mirror.get_opin_node(side_manager.get_side(), inode)->ptc_num); 
       }
 
 
@@ -440,9 +436,9 @@ void print_analysis_sdc_disable_sb_unused_resources(std::fstream& fp,
       vtr::Point<size_t> port_coord(rr_gsb.get_opin_node(side_manager.get_side(), inode)->xlow,
                                     rr_gsb.get_opin_node(side_manager.get_side(), inode)->ylow);
 
-      std::string port_name = generate_grid_side_port_name(grids, port_coord,
-                                                           rr_gsb.get_opin_node_grid_side(side_manager.get_side(), inode),
-                                                           opin_node->ptc_num); 
+      std::string port_name = generate_sb_module_grid_port_name(side_manager.get_side(),
+                                                                rr_gsb.get_opin_node_grid_side(side_manager.get_side(), inode),
+                                                                opin_node->ptc_num); 
 
       if (true == compact_routing_hierarchy) {
         /* Note: use GSB coordinate when inquire for unique modules!!! */
@@ -451,9 +447,9 @@ void print_analysis_sdc_disable_sb_unused_resources(std::fstream& fp,
         port_coord.set_x(unique_mirror.get_opin_node(side_manager.get_side(), inode)->xlow);
         port_coord.set_y(unique_mirror.get_opin_node(side_manager.get_side(), inode)->ylow);
 
-        port_name = generate_grid_side_port_name(grids, port_coord,
-                                                 unique_mirror.get_opin_node_grid_side(side_manager.get_side(), inode),
-                                                 unique_mirror.get_opin_node(side_manager.get_side(), inode)->ptc_num); 
+        port_name = generate_sb_module_grid_port_name(side_manager.get_side(),
+                                                      unique_mirror.get_opin_node_grid_side(side_manager.get_side(), inode),
+                                                      unique_mirror.get_opin_node(side_manager.get_side(), inode)->ptc_num); 
       }
 
 
@@ -484,9 +480,9 @@ void print_analysis_sdc_disable_sb_unused_resources(std::fstream& fp,
       t_rr_node* chan_node = rr_gsb.get_chan_node(side_manager.get_side(), itrack);
 
       vtr::Point<size_t> port_coord(port_coordinate.get_x(), port_coordinate.get_y());
-      std::string port_name = generate_routing_track_port_name(rr_gsb.get_chan_node(side_manager.get_side(), itrack)->type,
-                                                               port_coord, itrack,  
-                                                               rr_gsb.get_chan_node_direction(side_manager.get_side(), itrack));
+      std::string port_name = generate_sb_module_track_port_name(rr_gsb.get_chan_node(side_manager.get_side(), itrack)->type,
+                                                                 side_manager.get_side(), itrack,  
+                                                                 rr_gsb.get_chan_node_direction(side_manager.get_side(), itrack));
 
       if (true == compact_routing_hierarchy) {
         /* Note: use GSB coordinate when inquire for unique modules!!! */
@@ -496,9 +492,9 @@ void print_analysis_sdc_disable_sb_unused_resources(std::fstream& fp,
         port_coord.set_x(unique_port_coordinate.get_x());
         port_coord.set_y(unique_port_coordinate.get_y());
 
-        port_name = generate_routing_track_port_name(unique_mirror.get_chan_node(side_manager.get_side(), itrack)->type,
-                                                     port_coord, itrack,  
-                                                     unique_mirror.get_chan_node_direction(side_manager.get_side(), itrack));
+        port_name = generate_sb_module_track_port_name(unique_mirror.get_chan_node(side_manager.get_side(), itrack)->type,
+                                                       side_manager.get_side(), itrack,  
+                                                       unique_mirror.get_chan_node_direction(side_manager.get_side(), itrack));
       }
 
 

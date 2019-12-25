@@ -47,12 +47,14 @@ void build_switch_block_module_short_interc(ModuleManager& module_manager,
   /* Find the name of output port */
   ModulePortId output_port_id = find_switch_block_module_chan_port(module_manager, sb_module, rr_gsb, chan_side, cur_rr_node, OUT_PORT);
   enum e_side input_pin_side = chan_side;
+  int index = -1;
 
   /* Generate the input port object */
   switch (drive_rr_node->type) {
-  case OPIN: 
-    input_pin_side = rr_gsb.get_opin_node_grid_side(drive_rr_node);
+  case OPIN: { 
+    rr_gsb.get_node_side_and_index(drive_rr_node, IN_PORT, &input_pin_side, &index);
     break;
+  }
   case CHANX:
   case CHANY: {
     /* This should be an input in the data structure of RRGSB */
@@ -64,7 +66,6 @@ void build_switch_block_module_short_interc(ModuleManager& module_manager,
       input_pin_side = side_manager.get_opposite(); 
     } else {
       /* The input could be at any side of the switch block, find it */
-      int index = -1;
       rr_gsb.get_node_side_and_index(drive_rr_node, IN_PORT, &input_pin_side, &index);
     }
     break;
@@ -341,9 +342,9 @@ void build_switch_block_module(ModuleManager& module_manager,
 
     for (size_t itrack = 0; itrack < rr_gsb.get_chan_width(side_manager.get_side()); ++itrack) {
       vtr::Point<size_t> port_coord(port_coordinator.get_x(), port_coordinator.get_y());
-      std::string port_name = generate_routing_track_port_name(rr_gsb.get_chan_node(side_manager.get_side(), itrack)->type,
-                                                               port_coord, itrack,  
-                                                               rr_gsb.get_chan_node_direction(side_manager.get_side(), itrack));
+      std::string port_name = generate_sb_module_track_port_name(rr_gsb.get_chan_node(side_manager.get_side(), itrack)->type,
+                                                                 side_manager.get_side(), itrack,  
+                                                                 rr_gsb.get_chan_node_direction(side_manager.get_side(), itrack));
       BasicPort module_port(port_name, 1); /* Every track has a port size of 1 */
 
       switch (rr_gsb.get_chan_node_direction(side_manager.get_side(), itrack)) {
@@ -369,9 +370,9 @@ void build_switch_block_module(ModuleManager& module_manager,
     for (size_t inode = 0; inode < rr_gsb.get_num_opin_nodes(side_manager.get_side()); ++inode) {
       vtr::Point<size_t> port_coord(rr_gsb.get_opin_node(side_manager.get_side(), inode)->xlow,
                                     rr_gsb.get_opin_node(side_manager.get_side(), inode)->ylow);
-      std::string port_name = generate_grid_side_port_name(grids, port_coord,
-                                                           rr_gsb.get_opin_node_grid_side(side_manager.get_side(), inode),
-                                                           rr_gsb.get_opin_node(side_manager.get_side(), inode)->ptc_num); 
+      std::string port_name = generate_sb_module_grid_port_name(side_manager.get_side(),
+                                                                rr_gsb.get_opin_node_grid_side(side_manager.get_side(), inode),
+                                                                rr_gsb.get_opin_node(side_manager.get_side(), inode)->ptc_num); 
       BasicPort module_port(port_name, 1); /* Every grid output has a port size of 1 */
       /* Grid outputs are inputs of switch blocks */
       ModulePortId input_port_id = module_manager.add_port(sb_module, module_port, ModuleManager::MODULE_INPUT_PORT);
@@ -702,17 +703,17 @@ void build_connection_block_module(ModuleManager& module_manager,
    */
   for (size_t itrack = 0; itrack < rr_gsb.get_cb_chan_width(cb_type); ++itrack) {
     vtr::Point<size_t> port_coord(rr_gsb.get_cb_x(cb_type), rr_gsb.get_cb_y(cb_type));
-    std::string port_name = generate_routing_track_port_name(cb_type,
-                                                             port_coord, itrack,  
-                                                             IN_PORT);
+    std::string port_name = generate_cb_module_track_port_name(cb_type,
+                                                               itrack,  
+                                                               IN_PORT);
     BasicPort module_port(port_name, 1); /* Every track has a port size of 1 */
     module_manager.add_port(cb_module, module_port, ModuleManager::MODULE_INPUT_PORT);
   }
   for (size_t itrack = 0; itrack < rr_gsb.get_cb_chan_width(cb_type); ++itrack) {
     vtr::Point<size_t> port_coord(rr_gsb.get_cb_x(cb_type), rr_gsb.get_cb_y(cb_type));
-    std::string port_name = generate_routing_track_port_name(cb_type,
-                                                             port_coord, itrack,  
-                                                             OUT_PORT);
+    std::string port_name = generate_cb_module_track_port_name(cb_type,
+                                                               itrack,  
+                                                               OUT_PORT);
     BasicPort module_port(port_name, 1); /* Every track has a port size of 1 */
     module_manager.add_port(cb_module, module_port, ModuleManager::MODULE_OUTPUT_PORT);
   }
@@ -724,10 +725,8 @@ void build_connection_block_module(ModuleManager& module_manager,
     for (size_t inode = 0; inode < rr_gsb.get_num_ipin_nodes(cb_ipin_side); ++inode) {
       t_rr_node* ipin_node = rr_gsb.get_ipin_node(cb_ipin_side, inode);
       vtr::Point<size_t> port_coord(ipin_node->xlow, ipin_node->ylow);
-      std::string port_name = generate_grid_side_port_name(grids,
-                                                           port_coord,
-                                                           rr_gsb.get_ipin_node_grid_side(cb_ipin_side, inode),
-                                                           ipin_node->ptc_num); 
+      std::string port_name = generate_cb_module_grid_port_name(cb_ipin_side,
+                                                                ipin_node->ptc_num); 
       BasicPort module_port(port_name, 1); /* Every grid output has a port size of 1 */
       /* Grid outputs are inputs of switch blocks */
       module_manager.add_port(cb_module, module_port, ModuleManager::MODULE_OUTPUT_PORT);
@@ -747,16 +746,16 @@ void build_connection_block_module(ModuleManager& module_manager,
   for (size_t itrack = 0; itrack < rr_gsb.get_cb_chan_width(cb_type); ++itrack) {
     vtr::Point<size_t> port_coord(rr_gsb.get_cb_x(cb_type), rr_gsb.get_cb_y(cb_type));
     /* Create a port description for the input */
-    std::string input_port_name = generate_routing_track_port_name(cb_type,
-                                                                   port_coord, itrack,  
-                                                                   IN_PORT);
+    std::string input_port_name = generate_cb_module_track_port_name(cb_type,
+                                                                     itrack,  
+                                                                     IN_PORT);
     ModulePortId input_port_id = module_manager.find_module_port(cb_module, input_port_name);
     BasicPort input_port = module_manager.module_port(cb_module, input_port_id);
 
     /* Create a port description for the output */
-    std::string output_port_name = generate_routing_track_port_name(cb_type,
-                                                                    port_coord, itrack,  
-                                                                    OUT_PORT);
+    std::string output_port_name = generate_cb_module_track_port_name(cb_type,
+                                                                      itrack,  
+                                                                      OUT_PORT);
     ModulePortId output_port_id = module_manager.find_module_port(cb_module, output_port_name);
     BasicPort output_port = module_manager.module_port(cb_module, output_port_id);
 
