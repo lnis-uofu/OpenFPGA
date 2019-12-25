@@ -27,7 +27,6 @@
  *******************************************************************/
 static 
 void print_analysis_sdc_disable_cb_unused_resources(std::fstream& fp, 
-                                                    const std::vector<std::vector<t_grid_tile>>& grids,
                                                     const ModuleManager& module_manager, 
                                                     const DeviceRRGSB& L_device_rr_gsb,
                                                     const RRGSB& rr_gsb, 
@@ -223,7 +222,6 @@ void print_analysis_sdc_disable_cb_unused_resources(std::fstream& fp,
  *******************************************************************/
 static 
 void print_analysis_sdc_disable_unused_cb_ports(std::fstream& fp,
-                                                const std::vector<std::vector<t_grid_tile>>& grids,
                                                 const ModuleManager& module_manager, 
                                                 const DeviceRRGSB& L_device_rr_gsb,
                                                 const t_rr_type& cb_type,
@@ -242,7 +240,7 @@ void print_analysis_sdc_disable_unused_cb_ports(std::fstream& fp,
         continue;
       }
 
-      print_analysis_sdc_disable_cb_unused_resources(fp, grids, 
+      print_analysis_sdc_disable_cb_unused_resources(fp, 
                                                      module_manager, 
                                                      L_device_rr_gsb, 
                                                      rr_gsb, 
@@ -257,16 +255,15 @@ void print_analysis_sdc_disable_unused_cb_ports(std::fstream& fp,
  * and disable unused ports for each of them 
  *******************************************************************/
 void print_analysis_sdc_disable_unused_cbs(std::fstream& fp,
-                                           const std::vector<std::vector<t_grid_tile>>& grids,
                                            const ModuleManager& module_manager, 
                                            const DeviceRRGSB& L_device_rr_gsb,
                                            const bool& compact_routing_hierarchy) {
 
-  print_analysis_sdc_disable_unused_cb_ports(fp, grids, module_manager, 
+  print_analysis_sdc_disable_unused_cb_ports(fp, module_manager, 
                                              L_device_rr_gsb,
                                              CHANX, compact_routing_hierarchy);
 
-  print_analysis_sdc_disable_unused_cb_ports(fp, grids, module_manager, 
+  print_analysis_sdc_disable_unused_cb_ports(fp, module_manager, 
                                              L_device_rr_gsb,
                                              CHANY, compact_routing_hierarchy);
 }
@@ -279,7 +276,6 @@ void print_analysis_sdc_disable_unused_cbs(std::fstream& fp,
  *******************************************************************/
 static 
 void print_analysis_sdc_disable_sb_unused_resources(std::fstream& fp, 
-                                                    const std::vector<std::vector<t_grid_tile>>& grids,
                                                     const ModuleManager& module_manager, 
                                                     const DeviceRRGSB& L_device_rr_gsb,
                                                     const RRGSB& rr_gsb, 
@@ -518,7 +514,6 @@ void print_analysis_sdc_disable_sb_unused_resources(std::fstream& fp,
  * and disable unused ports for each of them 
  *******************************************************************/
 void print_analysis_sdc_disable_unused_sbs(std::fstream& fp,
-                                           const std::vector<std::vector<t_grid_tile>>& grids,
                                            const ModuleManager& module_manager, 
                                            const DeviceRRGSB& L_device_rr_gsb,
                                            const bool& compact_routing_hierarchy) {
@@ -534,7 +529,7 @@ void print_analysis_sdc_disable_unused_sbs(std::fstream& fp,
        */
       const RRGSB& rr_gsb = L_device_rr_gsb.get_gsb(ix, iy);
 
-      print_analysis_sdc_disable_sb_unused_resources(fp, grids, 
+      print_analysis_sdc_disable_sb_unused_resources(fp,
                                                      module_manager, 
                                                      L_device_rr_gsb, 
                                                      rr_gsb, 

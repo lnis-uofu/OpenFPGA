@@ -62,7 +62,6 @@ ModulePortId find_switch_block_module_chan_port(const ModuleManager& module_mana
 ModulePortId find_switch_block_module_input_port(const ModuleManager& module_manager,
                                                  const ModuleId& sb_module, 
                                                  const RRGSB& rr_gsb, 
-                                                 const std::vector<std::vector<t_grid_tile>>& grids,
                                                  const e_side& input_side,
                                                  t_rr_node* input_rr_node) {
   /* Deposit an invalid value */
@@ -108,7 +107,6 @@ ModulePortId find_switch_block_module_input_port(const ModuleManager& module_man
 std::vector<ModulePortId> find_switch_block_module_input_ports(const ModuleManager& module_manager,
                                                                const ModuleId& sb_module, 
                                                                const RRGSB& rr_gsb, 
-                                                               const std::vector<std::vector<t_grid_tile>>& grids,
                                                                const std::vector<t_rr_node*>& input_rr_nodes) {
   std::vector<ModulePortId> input_ports;
 
@@ -121,7 +119,7 @@ std::vector<ModulePortId> find_switch_block_module_input_ports(const ModuleManag
     VTR_ASSERT(NUM_SIDES != input_pin_side);
     VTR_ASSERT(-1 != index);
 
-    input_ports.push_back(find_switch_block_module_input_port(module_manager, sb_module, rr_gsb, grids, input_pin_side, input_rr_node));
+    input_ports.push_back(find_switch_block_module_input_port(module_manager, sb_module, rr_gsb, input_pin_side, input_rr_node));
   }
 
   return input_ports;
@@ -169,7 +167,6 @@ ModulePortId find_connection_block_module_chan_port(const ModuleManager& module_
 ModulePortId find_connection_block_module_ipin_port(const ModuleManager& module_manager,
                                                     const ModuleId& cb_module, 
                                                     const RRGSB& rr_gsb, 
-                                                    const std::vector<std::vector<t_grid_tile>>& grids,
                                                     t_rr_node* src_rr_node) {
 
   /* Ensure the src_rr_node is an input pin of a CLB */

@@ -42,7 +42,6 @@ void build_switch_block_module_short_interc(ModuleManager& module_manager,
                                             const e_side& chan_side,
                                             t_rr_node* cur_rr_node,
                                             t_rr_node* drive_rr_node,
-                                            const std::vector<std::vector<t_grid_tile>>& grids,
                                             const std::map<ModulePortId, ModuleNetId>& input_port_to_module_nets) {
   /* Find the name of output port */
   ModulePortId output_port_id = find_switch_block_module_chan_port(module_manager, sb_module, rr_gsb, chan_side, cur_rr_node, OUT_PORT);
@@ -77,7 +76,7 @@ void build_switch_block_module_short_interc(ModuleManager& module_manager,
     exit(1);
   }
   /* Find the name of input port */
-  ModulePortId input_port_id = find_switch_block_module_input_port(module_manager, sb_module, rr_gsb, grids, input_pin_side, drive_rr_node);
+  ModulePortId input_port_id = find_switch_block_module_input_port(module_manager, sb_module, rr_gsb, input_pin_side, drive_rr_node);
 
   /* The input port and output port must match in size */
   BasicPort input_port = module_manager.module_port(sb_module, input_port_id);
@@ -102,7 +101,6 @@ void build_switch_block_mux_module(ModuleManager& module_manager,
                                    const ModuleId& sb_module, 
                                    const RRGSB& rr_gsb, 
                                    const CircuitLibrary& circuit_lib,
-                                   const std::vector<std::vector<t_grid_tile>>& grids,
                                    const std::vector<t_switch_inf>& rr_switches,
                                    const e_side& chan_side,
                                    const size_t& chan_node_id,
@@ -136,7 +134,7 @@ void build_switch_block_mux_module(ModuleManager& module_manager,
   module_manager.set_child_instance_name(sb_module, mux_module, mux_instance_id, mux_instance_name);
 
   /* Generate input ports that are wired to the input bus of the routing multiplexer */
-  std::vector<ModulePortId> sb_input_port_ids = find_switch_block_module_input_ports(module_manager, sb_module, rr_gsb, grids, drive_rr_nodes);
+  std::vector<ModulePortId> sb_input_port_ids = find_switch_block_module_input_ports(module_manager, sb_module, rr_gsb, drive_rr_nodes);
 
   /* Link input bus port to Switch Block inputs */
   std::vector<CircuitPortId> mux_model_input_ports = circuit_lib.model_ports_by_type(mux_model, SPICE_MODEL_PORT_INPUT, true);
@@ -210,7 +208,6 @@ void build_switch_block_interc_modules(ModuleManager& module_manager,
                                        const ModuleId& sb_module, 
                                        const RRGSB& rr_gsb,
                                        const CircuitLibrary& circuit_lib,
-                                       const std::vector<std::vector<t_grid_tile>>& grids,
                                        const std::vector<t_switch_inf>& rr_switches,
                                        const e_side& chan_side,
                                        const size_t& chan_node_id,
@@ -235,20 +232,19 @@ void build_switch_block_interc_modules(ModuleManager& module_manager,
     /* Print a special direct connection*/
     build_switch_block_module_short_interc(module_manager, sb_module,
                                            rr_gsb, chan_side, cur_rr_node, 
-                                           cur_rr_node, grids,  
+                                           cur_rr_node,
                                            input_port_to_module_nets);
   } else if (1 == drive_rr_nodes.size()) {
     /* Print a direct connection*/
     build_switch_block_module_short_interc(module_manager, sb_module,
                                            rr_gsb, chan_side, cur_rr_node, 
                                            drive_rr_nodes[DEFAULT_SWITCH_ID],
-                                           grids,
                                            input_port_to_module_nets);
   } else if (1 < drive_rr_nodes.size()) {
     /* Print the multiplexer, fan_in >= 2 */
     build_switch_block_mux_module(module_manager, 
                                   sb_module, rr_gsb, circuit_lib, 
-                                  grids, rr_switches, chan_side, chan_node_id, cur_rr_node,  
+                                  rr_switches, chan_side, chan_node_id, cur_rr_node,  
                                   drive_rr_nodes, 
                                   cur_rr_node->drive_switches[DEFAULT_SWITCH_ID],
                                   input_port_to_module_nets);
@@ -323,7 +319,6 @@ void build_switch_block_interc_modules(ModuleManager& module_manager,
 static 
 void build_switch_block_module(ModuleManager& module_manager, 
                                const CircuitLibrary& circuit_lib,
-                               const std::vector<std::vector<t_grid_tile>>& grids,
                                const std::vector<t_switch_inf>& rr_switches,
                                const e_sram_orgz& sram_orgz_type,
                                const CircuitModelId& sram_model,
@@ -392,7 +387,7 @@ void build_switch_block_module(ModuleManager& module_manager,
       if (OUT_PORT == rr_gsb.get_chan_node_direction(side_manager.get_side(), itrack)) {
         build_switch_block_interc_modules(module_manager, 
                                           sb_module, rr_gsb,
-                                          circuit_lib, grids, rr_switches, 
+                                          circuit_lib, rr_switches, 
                                           side_manager.get_side(), 
                                           itrack, 
                                           input_port_to_module_nets);
@@ -441,7 +436,6 @@ void build_connection_block_module_short_interc(ModuleManager& module_manager,
                                                 const ModuleId& cb_module,
                                                 const RRGSB& rr_gsb,
                                                 const t_rr_type& cb_type,
-                                                const std::vector<std::vector<t_grid_tile>>& grids,
                                                 t_rr_node* src_rr_node,
                                                 const std::map<ModulePortId, ModuleNetId>& input_port_to_module_nets) {
   /* Ensure we have only one 1 driver node */
@@ -464,7 +458,7 @@ void build_connection_block_module_short_interc(ModuleManager& module_manager,
   ModulePortId input_port_id = find_connection_block_module_chan_port(module_manager, cb_module, rr_gsb, cb_type, drive_rr_node);
 
   /* Create port description for input pin of a CLB */
-  ModulePortId ipin_port_id = find_connection_block_module_ipin_port(module_manager, cb_module, rr_gsb, grids, src_rr_node);
+  ModulePortId ipin_port_id = find_connection_block_module_ipin_port(module_manager, cb_module, rr_gsb, src_rr_node);
 
   /* The input port and output port must match in size */
   BasicPort input_port = module_manager.module_port(cb_module, input_port_id);
@@ -490,7 +484,6 @@ void build_connection_block_mux_module(ModuleManager& module_manager,
                                        const RRGSB& rr_gsb, 
                                        const t_rr_type& cb_type, 
                                        const CircuitLibrary& circuit_lib,
-                                       const std::vector<std::vector<t_grid_tile>>& grids,
                                        const std::vector<t_switch_inf>& rr_switches,
                                        const e_side& cb_ipin_side,
                                        const size_t& ipin_index,
@@ -557,7 +550,7 @@ void build_connection_block_mux_module(ModuleManager& module_manager,
   ModulePortId mux_output_port_id = module_manager.find_module_port(mux_module, circuit_lib.port_prefix(mux_model_output_ports[0])); 
   VTR_ASSERT(true == module_manager.valid_module_port_id(mux_module, mux_output_port_id));
   BasicPort mux_output_port = module_manager.module_port(mux_module, mux_output_port_id);
-  ModulePortId cb_output_port_id = find_connection_block_module_ipin_port(module_manager, cb_module, rr_gsb, grids, cur_rr_node);
+  ModulePortId cb_output_port_id = find_connection_block_module_ipin_port(module_manager, cb_module, rr_gsb, cur_rr_node);
   BasicPort cb_output_port = module_manager.module_port(cb_module, cb_output_port_id);
 
   /* Check port size should match */
@@ -607,7 +600,6 @@ void build_connection_block_interc_modules(ModuleManager& module_manager,
                                            const RRGSB& rr_gsb,
                                            const t_rr_type& cb_type,
                                            const CircuitLibrary& circuit_lib,
-                                           const std::vector<std::vector<t_grid_tile>>& grids,
                                            const std::vector<t_switch_inf>& rr_switches,
                                            const e_side& cb_ipin_side,
                                            const size_t& ipin_index,
@@ -617,13 +609,13 @@ void build_connection_block_interc_modules(ModuleManager& module_manager,
     return; /* This port has no driver, skip it */
   } else if (1 == src_rr_node->fan_in) {
     /* Print a direct connection */
-    build_connection_block_module_short_interc(module_manager, cb_module, rr_gsb, cb_type, grids, src_rr_node, input_port_to_module_nets);
+    build_connection_block_module_short_interc(module_manager, cb_module, rr_gsb, cb_type, src_rr_node, input_port_to_module_nets);
 
   } else if (1 < src_rr_node->fan_in) {
     /* Print the multiplexer, fan_in >= 2 */
     build_connection_block_mux_module(module_manager, 
                                       cb_module, rr_gsb, cb_type, 
-                                      circuit_lib, grids, rr_switches, 
+                                      circuit_lib, rr_switches, 
                                       cb_ipin_side, ipin_index, 
                                       input_port_to_module_nets); 
   } /*Nothing should be done else*/ 
@@ -686,7 +678,6 @@ void build_connection_block_interc_modules(ModuleManager& module_manager,
 static 
 void build_connection_block_module(ModuleManager& module_manager, 
                                    const CircuitLibrary& circuit_lib, 
-                                   const std::vector<std::vector<t_grid_tile>>& grids,
                                    const std::vector<t_switch_inf>& rr_switches,
                                    const e_sram_orgz& sram_orgz_type, 
                                    const CircuitModelId& sram_model, 
@@ -781,7 +772,7 @@ void build_connection_block_module(ModuleManager& module_manager,
     for (size_t inode = 0; inode < rr_gsb.get_num_ipin_nodes(cb_ipin_side); ++inode) {
       build_connection_block_interc_modules(module_manager,  
                                             cb_module, rr_gsb, cb_type, 
-                                            circuit_lib, grids, rr_switches, 
+                                            circuit_lib, rr_switches, 
                                             cb_ipin_side, inode,
                                             input_port_to_module_nets);
     }
@@ -829,7 +820,6 @@ static
 void build_flatten_connection_block_modules(ModuleManager& module_manager, 
                                             const DeviceRRGSB& L_device_rr_gsb,
                                             const CircuitLibrary& circuit_lib,
-                                            const std::vector<std::vector<t_grid_tile>>& grids,
                                             const std::vector<t_switch_inf>& rr_switches,
                                             const e_sram_orgz& sram_orgz_type,
                                             const CircuitModelId& sram_model,
@@ -849,7 +839,7 @@ void build_flatten_connection_block_modules(ModuleManager& module_manager,
       }
       build_connection_block_module(module_manager, 
                                     circuit_lib, 
-                                    grids, rr_switches,
+                                    rr_switches,
                                     sram_orgz_type, sram_model, 
                                     rr_gsb, cb_type);
     }
@@ -870,7 +860,6 @@ void build_flatten_routing_modules(ModuleManager& module_manager,
                                    const CircuitLibrary& circuit_lib,
                                    const e_sram_orgz& sram_orgz_type,
                                    const CircuitModelId& sram_model,
-                                   const std::vector<std::vector<t_grid_tile>>& grids,
                                    const t_det_routing_arch& routing_arch,
                                    const std::vector<t_switch_inf>& rr_switches) {
   /* Start time count */
@@ -890,7 +879,7 @@ void build_flatten_routing_modules(ModuleManager& module_manager,
     for (size_t iy = 0; iy < sb_range.get_y(); ++iy) {
       const RRGSB& rr_gsb = L_device_rr_gsb.get_gsb(ix, iy);
       build_switch_block_module(module_manager, circuit_lib, 
-                                grids, rr_switches,
+                                rr_switches,
                                 sram_orgz_type, sram_model, 
                                 rr_gsb);
     }
@@ -898,13 +887,13 @@ void build_flatten_routing_modules(ModuleManager& module_manager,
 
   build_flatten_connection_block_modules(module_manager, L_device_rr_gsb, 
                                          circuit_lib, 
-                                         grids, rr_switches,
+                                         rr_switches,
                                          sram_orgz_type, sram_model, 
                                          CHANX);
 
   build_flatten_connection_block_modules(module_manager, L_device_rr_gsb, 
                                          circuit_lib,
-                                         grids, rr_switches,
+                                         rr_switches,
                                          sram_orgz_type, sram_model, 
                                          CHANY);
 
@@ -933,7 +922,6 @@ void build_unique_routing_modules(ModuleManager& module_manager,
                                   const CircuitLibrary& circuit_lib,
                                   const e_sram_orgz& sram_orgz_type,
                                   const CircuitModelId& sram_model,
-                                  const std::vector<std::vector<t_grid_tile>>& grids,
                                   const t_det_routing_arch& routing_arch,
                                   const std::vector<t_switch_inf>& rr_switches) {
   /* Start time count */
@@ -949,7 +937,7 @@ void build_unique_routing_modules(ModuleManager& module_manager,
   for (size_t isb = 0; isb < L_device_rr_gsb.get_num_sb_unique_module(); ++isb) {
     const RRGSB& unique_mirror = L_device_rr_gsb.get_sb_unique_module(isb);
     build_switch_block_module(module_manager, circuit_lib, 
-                              grids, rr_switches,
+                              rr_switches,
                               sram_orgz_type, sram_model, 
                               unique_mirror);
   }
@@ -960,7 +948,7 @@ void build_unique_routing_modules(ModuleManager& module_manager,
 
     build_connection_block_module(module_manager, 
                                   circuit_lib,  
-                                  grids, rr_switches,
+                                  rr_switches,
                                   sram_orgz_type, sram_model, 
                                   unique_mirror, CHANX);
   }
@@ -971,7 +959,7 @@ void build_unique_routing_modules(ModuleManager& module_manager,
 
     build_connection_block_module(module_manager, 
                                   circuit_lib, 
-                                  grids, rr_switches,
+                                  rr_switches,
                                   sram_orgz_type, sram_model, 
                                   unique_mirror, CHANY);
   }

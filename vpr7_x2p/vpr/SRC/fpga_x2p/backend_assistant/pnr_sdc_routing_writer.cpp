@@ -43,7 +43,6 @@ void print_pnr_sdc_constrain_sb_mux_timing(std::fstream& fp,
                                            const ModuleManager& module_manager,
                                            const ModuleId& sb_module, 
                                            const RRGSB& rr_gsb,
-                                           const std::vector<std::vector<t_grid_tile>>& grids,
                                            const std::vector<t_switch_inf>& switches,
                                            const e_side& output_node_side,
                                            t_rr_node* output_rr_node) {
@@ -70,7 +69,6 @@ void print_pnr_sdc_constrain_sb_mux_timing(std::fstream& fp,
   std::vector<ModulePortId> module_input_ports = find_switch_block_module_input_ports(module_manager,
                                                                                       sb_module, 
                                                                                       rr_gsb, 
-                                                                                      grids,
                                                                                       input_rr_nodes);
 
   /* Find timing constraints for each path (edge) */
@@ -103,7 +101,6 @@ void print_pnr_sdc_constrain_sb_mux_timing(std::fstream& fp,
 static 
 void print_pnr_sdc_constrain_sb_timing(const std::string& sdc_dir,
                                        const ModuleManager& module_manager,
-                                       const std::vector<std::vector<t_grid_tile>>& grids,
                                        const std::vector<t_switch_inf>& switches,
                                        const RRGSB& rr_gsb) {
 
@@ -141,7 +138,7 @@ void print_pnr_sdc_constrain_sb_timing(const std::string& sdc_dir,
       print_pnr_sdc_constrain_sb_mux_timing(fp,
                                             module_manager, sb_module, 
                                             rr_gsb,
-                                            grids, switches,
+                                            switches,
                                             side_manager.get_side(),
                                             chan_rr_node);
     }
@@ -157,7 +154,6 @@ void print_pnr_sdc_constrain_sb_timing(const std::string& sdc_dir,
  *******************************************************************/
 void print_pnr_sdc_flatten_routing_constrain_sb_timing(const std::string& sdc_dir,
                                                        const ModuleManager& module_manager,
-                                                       const std::vector<std::vector<t_grid_tile>>& grids,
                                                        const std::vector<t_switch_inf>& switches,
                                                        const DeviceRRGSB& L_device_rr_gsb) {
   vpr_printf(TIO_MESSAGE_INFO, 
@@ -174,7 +170,7 @@ void print_pnr_sdc_flatten_routing_constrain_sb_timing(const std::string& sdc_di
       const RRGSB& rr_gsb = L_device_rr_gsb.get_gsb(ix, iy);
       print_pnr_sdc_constrain_sb_timing(sdc_dir,
                                         module_manager,
-                                        grids, switches,
+                                        switches,
                                         rr_gsb);
     }
   }
@@ -194,7 +190,6 @@ void print_pnr_sdc_flatten_routing_constrain_sb_timing(const std::string& sdc_di
  *******************************************************************/
 void print_pnr_sdc_compact_routing_constrain_sb_timing(const std::string& sdc_dir,
                                                        const ModuleManager& module_manager,
-                                                       const std::vector<std::vector<t_grid_tile>>& grids,
                                                        const std::vector<t_switch_inf>& switches,
                                                        const DeviceRRGSB& L_device_rr_gsb) {
   vpr_printf(TIO_MESSAGE_INFO, 
@@ -207,7 +202,7 @@ void print_pnr_sdc_compact_routing_constrain_sb_timing(const std::string& sdc_di
     const RRGSB& rr_gsb = L_device_rr_gsb.get_sb_unique_module(isb);
     print_pnr_sdc_constrain_sb_timing(sdc_dir,
                                       module_manager,
-                                      grids, switches,
+                                      switches,
                                       rr_gsb);
   }
   
@@ -230,7 +225,6 @@ void print_pnr_sdc_constrain_cb_mux_timing(std::fstream& fp,
                                            const ModuleId& cb_module, 
                                            const RRGSB& rr_gsb,
                                            const t_rr_type& cb_type,
-                                           const std::vector<std::vector<t_grid_tile>>& grids,
                                            const std::vector<t_switch_inf>& switches,
                                            t_rr_node* output_rr_node) {
   /* Validate file stream */
@@ -251,7 +245,7 @@ void print_pnr_sdc_constrain_cb_mux_timing(std::fstream& fp,
   ModulePortId module_output_port = find_connection_block_module_ipin_port(module_manager, 
                                                                            cb_module,
                                                                            rr_gsb, 
-                                                                           grids, output_rr_node);
+                                                                           output_rr_node);
 
   /* Find the module port corresponding to the fan-in rr_nodes of the output rr_node */
   std::vector<t_rr_node*> input_rr_nodes;
@@ -295,7 +289,6 @@ void print_pnr_sdc_constrain_cb_timing(const std::string& sdc_dir,
                                        const ModuleManager& module_manager,
                                        const RRGSB& rr_gsb, 
                                        const t_rr_type& cb_type,
-                                       const std::vector<std::vector<t_grid_tile>>& grids,
                                        const std::vector<t_switch_inf>& switches) {
   /* Create the netlist */
   vtr::Point<size_t> gsb_coordinate(rr_gsb.get_cb_x(cb_type), rr_gsb.get_cb_y(cb_type));
@@ -327,7 +320,7 @@ void print_pnr_sdc_constrain_cb_timing(const std::string& sdc_dir,
       print_pnr_sdc_constrain_cb_mux_timing(fp,
                                             module_manager, cb_module, 
                                             rr_gsb, cb_type,
-                                            grids, switches,
+                                            switches,
                                             ipin_rr_node);
     }
   }
@@ -344,7 +337,6 @@ static
 void print_pnr_sdc_flatten_routing_constrain_cb_timing(const std::string& sdc_dir,
                                                        const ModuleManager& module_manager, 
                                                        const DeviceRRGSB& L_device_rr_gsb,
-                                                       const std::vector<std::vector<t_grid_tile>>& grids,
                                                        const std::vector<t_switch_inf>& switches,
                                                        const t_rr_type& cb_type) {
   /* Build unique X-direction connection block modules */
@@ -364,7 +356,7 @@ void print_pnr_sdc_flatten_routing_constrain_cb_timing(const std::string& sdc_di
                                         module_manager,
                                         rr_gsb, 
                                         cb_type,
-                                        grids, switches);
+                                        switches);
 
     }
   }
@@ -377,7 +369,6 @@ void print_pnr_sdc_flatten_routing_constrain_cb_timing(const std::string& sdc_di
 void print_pnr_sdc_flatten_routing_constrain_cb_timing(const std::string& sdc_dir,
                                                        const ModuleManager& module_manager, 
                                                        const DeviceRRGSB& L_device_rr_gsb,
-                                                       const std::vector<std::vector<t_grid_tile>>& grids,
                                                        const std::vector<t_switch_inf>& switches) {
   vpr_printf(TIO_MESSAGE_INFO, 
              "Generating SDC for constrain Connection Block timing for P&R flow...");
@@ -387,13 +378,11 @@ void print_pnr_sdc_flatten_routing_constrain_cb_timing(const std::string& sdc_di
 
   print_pnr_sdc_flatten_routing_constrain_cb_timing(sdc_dir, module_manager, 
                                                     L_device_rr_gsb,
-                                                    grids,
                                                     switches,
                                                     CHANX);
 
   print_pnr_sdc_flatten_routing_constrain_cb_timing(sdc_dir, module_manager, 
                                                     L_device_rr_gsb,
-                                                    grids,
                                                     switches,
                                                     CHANY);
 
@@ -412,7 +401,6 @@ void print_pnr_sdc_flatten_routing_constrain_cb_timing(const std::string& sdc_di
  *******************************************************************/
 void print_pnr_sdc_compact_routing_constrain_cb_timing(const std::string& sdc_dir,
                                                        const ModuleManager& module_manager,
-                                                       const std::vector<std::vector<t_grid_tile>>& grids,
                                                        const std::vector<t_switch_inf>& switches,
                                                        const DeviceRRGSB& L_device_rr_gsb) {
   vpr_printf(TIO_MESSAGE_INFO, 
@@ -428,7 +416,7 @@ void print_pnr_sdc_compact_routing_constrain_cb_timing(const std::string& sdc_di
                                       module_manager,
                                       unique_mirror, 
                                       CHANX,
-                                      grids, switches);
+                                      switches);
   }
 
   /* Print SDC for unique Y-direction connection block modules */
@@ -438,7 +426,7 @@ void print_pnr_sdc_compact_routing_constrain_cb_timing(const std::string& sdc_di
                                       module_manager,
                                       unique_mirror, 
                                       CHANY,
-                                      grids, switches);
+                                      switches);
   }
 
   /* End time count */
