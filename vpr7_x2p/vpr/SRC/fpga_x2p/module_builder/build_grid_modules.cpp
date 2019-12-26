@@ -27,6 +27,7 @@
 
 /* Header files for Verilog generator */
 #include "verilog_global.h"
+#include "build_grid_module_duplicated_pins.h"
 #include "build_grid_modules.h"
 
 /********************************************************************
@@ -1003,7 +1004,8 @@ void build_grid_module(ModuleManager& module_manager,
                        const e_sram_orgz& sram_orgz_type,
                        const CircuitModelId& sram_model,
                        t_type_ptr phy_block_type,
-                       const e_side& border_side) {
+                       const e_side& border_side,
+                       const bool& duplicate_grid_pin) {
   /* Check code: if this is an IO block, the border side MUST be valid */
   if (IO_TYPE == phy_block_type) {
     VTR_ASSERT(NUM_SIDES != border_side);
@@ -1053,14 +1055,28 @@ void build_grid_module(ModuleManager& module_manager,
   }
 
   /* Add grid ports(pins) to the module */
-  add_grid_module_pb_type_ports(module_manager, grid_module,
-                                phy_block_type, border_side);
-
-  /* Add module nets to connect the pb_type ports to sub modules */
-  for (const size_t& child_instance : module_manager.child_module_instances(grid_module, pb_module)) {
-    add_grid_module_nets_connect_pb_type_ports(module_manager, grid_module,
-                                               pb_module, child_instance,
-                                               phy_block_type, border_side);
+  if (false == duplicate_grid_pin) {
+    /* Default way to add these ports by following the definition in pb_types */
+    add_grid_module_pb_type_ports(module_manager, grid_module,
+                                  phy_block_type, border_side);
+    /* Add module nets to connect the pb_type ports to sub modules */
+    for (const size_t& child_instance : module_manager.child_module_instances(grid_module, pb_module)) {
+      add_grid_module_nets_connect_pb_type_ports(module_manager, grid_module,
+                                                 pb_module, child_instance,
+                                                 phy_block_type, border_side);
+    }
+  } else {
+    VTR_ASSERT_SAFE(true == duplicate_grid_pin);
+    /* TODO: Add these ports with duplication */
+    add_grid_module_duplicated_pb_type_ports(module_manager, grid_module,
+                                             phy_block_type, border_side);
+    
+    /* TODO: Add module nets to connect the duplicated pb_type ports to sub modules */
+    for (const size_t& child_instance : module_manager.child_module_instances(grid_module, pb_module)) {
+      add_grid_module_nets_connect_duplicated_pb_type_ports(module_manager, grid_module,
+                                                            pb_module, child_instance,
+                                                            phy_block_type, border_side);
+    }
   }
 
   /* Add global ports to the pb_module:
@@ -1112,7 +1128,8 @@ void build_grid_modules(ModuleManager& module_manager,
                         const CircuitLibrary& circuit_lib,
                         const MuxLibrary& mux_lib,
                         const e_sram_orgz& sram_orgz_type,
-                        const CircuitModelId& sram_model) {
+                        const CircuitModelId& sram_model,
+                        const bool& duplicate_grid_pin) {
   /* Start time count */
   clock_t t_start = clock();
 
@@ -1131,7 +1148,8 @@ void build_grid_modules(ModuleManager& module_manager,
         build_grid_module(module_manager, mux_lib, circuit_lib,
                           sram_orgz_type, sram_model,
                           &type_descriptors[itype],
-                          side_manager.get_side());
+                          side_manager.get_side(),
+                          duplicate_grid_pin);
       } 
       continue;
     } else if (FILL_TYPE == &type_descriptors[itype]) {
@@ -1139,14 +1157,16 @@ void build_grid_modules(ModuleManager& module_manager,
       build_grid_module(module_manager, mux_lib, circuit_lib,
                         sram_orgz_type, sram_model,
                         &type_descriptors[itype],
-                        NUM_SIDES);
+                        NUM_SIDES,
+                        duplicate_grid_pin);
       continue;
     } else {
       /* For heterogenenous blocks */
       build_grid_module(module_manager, mux_lib, circuit_lib,
                         sram_orgz_type, sram_model,
                         &type_descriptors[itype],
-                        NUM_SIDES);
+                        NUM_SIDES,
+                        duplicate_grid_pin);
     }
   }
 

@@ -105,7 +105,8 @@ ModuleManager build_device_module_graph(const t_vpr_setup& vpr_setup,
 
   /* Build grid and programmable block modules */
   build_grid_modules(module_manager, arch.spice->circuit_lib, mux_lib,  
-                     arch.sram_inf.verilog_sram_inf_orgz->type, sram_model);
+                     arch.sram_inf.verilog_sram_inf_orgz->type, sram_model,
+                     TRUE == vpr_setup.FPGA_SPICE_Opts.duplicate_grid_pin);
 
   if (TRUE == vpr_setup.FPGA_SPICE_Opts.compact_routing_hierarchy) {
     build_unique_routing_modules(module_manager, L_device_rr_gsb, arch.spice->circuit_lib, 
