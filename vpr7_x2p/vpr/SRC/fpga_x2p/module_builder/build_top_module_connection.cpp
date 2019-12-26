@@ -27,23 +27,24 @@
  *    |            |                |            |
  *    |    Grid    |                |    Grid    |
  *    |  [x][y+1]  |                | [x+1][y+1] |
- *    |            |                |            |
- *    +------------+                +------------+
- *           |                           |
+ *    |            |----+      +----|            |
+ *    +------------+    |      |    +------------+
+ *           |          v      v         |
  *           |       +------------+      |
  *           +------>|            |<-----+
  *                   |   Switch   |
  *                   |   Block    |
  *           +------>|   [x][y]   |<-----+
  *           |       +------------+      |
- *           |                           |
- *           |                           |
- *    +------------+                +------------+
- *    |            |                |            |
+ *           |          ^     ^          |
+ *           |          |     |          |
+ *    +------------+    |     |     +------------+
+ *    |            |----+     +-----|            |
  *    |    Grid    |                |    Grid    |
  *    |   [x][y]   |                |  [x+1][y]  |
  *    |            |                |            |
  *    +------------+                +------------+
+
  *
  *******************************************************************/
 static 
@@ -132,25 +133,27 @@ void add_top_module_nets_connect_grids_and_sb(ModuleManager& module_manager,
  *
  * In particular, this function considers the duplicated output pins of grids
  * when creating the connecting nets.
+ * The follow figure shows the different pin postfix to be considered when
+ * connecting the grid pins to SB inputs
  *    
  *    +------------+                +------------+
  *    |            |                |            |
  *    |    Grid    |                |    Grid    |
- *    |  [x][y+1]  |                | [x+1][y+1] |
- *    |            |                |            |
- *    +------------+                +------------+
- *           |                           |
+ *    |  [x][y+1]  |lower      lower| [x+1][y+1] |
+ *    |            |----+      +----|            |
+ *    +------------+    |      |    +------------+
+ *           |lower     v      v         |upper
  *           |       +------------+      |
  *           +------>|            |<-----+
  *                   |   Switch   |
  *                   |   Block    |
  *           +------>|   [x][y]   |<-----+
  *           |       +------------+      |
- *           |                           |
- *           |                           |
- *    +------------+                +------------+
- *    |            |                |            |
- *    |    Grid    |                |    Grid    |
+ *           |          ^     ^          |
+ *           |lower     |     |          |upper
+ *    +------------+    |     |     +------------+
+ *    |            |----+     +-----|            |
+ *    |    Grid    |upper     upper |    Grid    |
  *    |   [x][y]   |                |  [x+1][y]  |
  *    |            |                |            |
  *    +------------+                +------------+
@@ -189,6 +192,16 @@ void add_top_module_nets_connect_grids_and_sb_with_duplicated_pins(ModuleManager
   VTR_ASSERT(true == module_manager.valid_module_id(sink_sb_module));
   size_t sink_sb_instance = sb_instance_ids[instance_sb_coordinate.x()][instance_sb_coordinate.y()];
 
+  /* Create a truth table for the postfix to be used regarding to the different side of switch blocks */
+  std::map<e_side, bool> sb_side2postfix_map;
+  /* Boolean variable "true" indicates the upper postfix in naming functions 
+   * Boolean variable "false" indicates the lower postfix in naming functions 
+   */
+  sb_side2postfix_map[TOP] = false;
+  sb_side2postfix_map[RIGHT] = true;
+  sb_side2postfix_map[BOTTOM] = true;
+  sb_side2postfix_map[LEFT] = false;
+
   /* Connect grid output pins (OPIN) to switch block grid pins */
   for (size_t side = 0; side < module_sb.get_num_sides(); ++side) {
     Side side_manager(side);
@@ -202,7 +215,7 @@ void add_top_module_nets_connect_grids_and_sb_with_duplicated_pins(ModuleManager
       size_t src_grid_instance = grid_instance_ids[grid_coordinate.x()][grid_coordinate.y()];
       size_t src_grid_pin_index = rr_gsb.get_opin_node(side_manager.get_side(), inode)->ptc_num;
       size_t src_grid_pin_height = find_grid_pin_height(grids, grid_coordinate, src_grid_pin_index);
-      std::string src_grid_port_name = generate_grid_port_name(grid_coordinate, src_grid_pin_height, rr_gsb.get_opin_node_grid_side(side_manager.get_side(), inode), src_grid_pin_index, false);
+      std::string src_grid_port_name = generate_grid_duplicated_port_name(src_grid_pin_height, rr_gsb.get_opin_node_grid_side(side_manager.get_side(), inode), src_grid_pin_index, sb_side2postfix_map[side_manager.get_side()]);
       ModulePortId src_grid_port_id = module_manager.find_module_port(src_grid_module, src_grid_port_name);
       VTR_ASSERT(true == module_manager.valid_module_port_id(src_grid_module, src_grid_port_id));
       BasicPort src_grid_port = module_manager.module_port(src_grid_module, src_grid_port_id); 
