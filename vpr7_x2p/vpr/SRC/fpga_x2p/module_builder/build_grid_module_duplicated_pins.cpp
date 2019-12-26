@@ -100,7 +100,7 @@ void add_grid_module_duplicated_pb_type_ports(ModuleManager& module_manager,
           module_manager.add_port(grid_module, grid_upper_port, pin_type2type_map[pin_class_type]);
 
           std::string lower_port_name = generate_grid_duplicated_port_name(iheight, side, ipin, false);
-          BasicPort grid_lower_port(upper_port_name, 0, 0);
+          BasicPort grid_lower_port(lower_port_name, 0, 0);
           /* Add the port to the module */
           module_manager.add_port(grid_module, grid_lower_port, pin_type2type_map[pin_class_type]);
         }
