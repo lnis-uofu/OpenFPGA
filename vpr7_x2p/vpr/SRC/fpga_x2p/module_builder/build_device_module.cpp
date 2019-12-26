@@ -125,7 +125,8 @@ ModuleManager build_device_module_graph(const t_vpr_setup& vpr_setup,
                    device_size, grids, L_device_rr_gsb, 
                    clb2clb_directs, 
                    arch.sram_inf.verilog_sram_inf_orgz->type, sram_model, 
-                   TRUE == vpr_setup.FPGA_SPICE_Opts.compact_routing_hierarchy);
+                   TRUE == vpr_setup.FPGA_SPICE_Opts.compact_routing_hierarchy,
+                   TRUE == vpr_setup.FPGA_SPICE_Opts.duplicate_grid_pin);
 
   /* Now a critical correction has to be done!
    * In the module construction, we always use prefix of ports because they are binded
