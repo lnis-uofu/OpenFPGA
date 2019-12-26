@@ -470,6 +470,36 @@ std::string generate_grid_port_name(const vtr::Point<size_t>& coordinate,
 }
 
 /*********************************************************************
+ * Generate the port name for a grid with duplication 
+ * This function will generate two types of port names.
+ * One with a postfix of "upper"
+ * The other with a postfix of "lower"
+ *********************************************************************/
+std::string generate_grid_duplicated_port_name(const size_t& height, 
+                                               const e_side& side, 
+                                               const size_t& pin_id,
+                                               const bool& upper_port) {
+  /* For non-top netlist */
+  Side side_manager(side);
+  std::string port_name = std::string(side_manager.to_string());
+  port_name += std::string("_height_");
+  port_name += std::to_string(height);
+  port_name += std::string("_pin_");
+  port_name += std::to_string(pin_id);
+  port_name += std::string("_");
+
+  if (true == upper_port) {
+    port_name += std::string("upper");
+  } else {
+    VTR_ASSERT_SAFE(false == upper_port);
+    port_name += std::string("lower");
+  }  
+
+  return port_name;
+}
+
+
+/*********************************************************************
  * Generate the port name for a grid in the context of a module
  * To keep a short and simple name, this function will not 
  * include any grid coorindate information!
