@@ -131,10 +131,12 @@ X2PParse.add_argument('--vpr_fpga_x2p_sim_window_size', type=float,
                       help="specify the sim_window_size of VPR FPGA SPICE")
 X2PParse.add_argument('--vpr_fpga_x2p_compact_routing_hierarchy',
                       action="store_true", help="Compact_routing_hierarchy")
+X2PParse.add_argument('--vpr_fpga_x2p_duplicate_grid_pin', action="store_true",
+                      help="Added duplicated grid pin")
 
 # VPR - FPGA-SPICE Extension
 SPParse = parser.add_argument_group('FPGA-SPICE Extension')
-SPParse.add_argument('--vpr_fpga_spice', type=str,
+SPParse.add_argument('--vpr_fpga_spice', action='store_true',
                      help="Print SPICE netlists in VPR")
 SPParse.add_argument('--vpr_fpga_spice_sim_mt_num', type=int,
                      help="Specify the option sim_mt_num of VPR FPGA SPICE")
@@ -142,7 +144,7 @@ SPParse.add_argument('--vpr_fpga_spice_print_component_tb', action='store_true',
                      help="Output component-level testbench")
 SPParse.add_argument('--vpr_fpga_spice_print_grid_tb', action='store_true',
                      help="Output grid-level testbench")
-SPParse.add_argument('--vpr_fpga_spice_print_top_tb', action='store_true',
+SPParse.add_argument('--vpr_fpga_spice_print_top_testbench', action='store_true',
                      help="Output full-chip-level testbench")
 SPParse.add_argument('--vpr_fpga_spice_leakage_only', action='store_true',
                      help="Turn on leakage_only mode in VPR FPGA SPICE")
@@ -663,7 +665,7 @@ def run_standard_vpr(bench_blif, fixed_chan_width, logfile, route_only=False):
         command += ["--fpga_x2p_compact_routing_hierarchy"]
 
     # FPGA_Spice Options
-    if (args.power and args.vpr_fpga_spice):
+    if (args.vpr_fpga_spice):
         command += ["--fpga_spice"]
         if args.vpr_fpga_x2p_signal_density_weight:
             command += ["--fpga_x2p_signal_density_weight",
@@ -690,7 +692,7 @@ def run_standard_vpr(bench_blif, fixed_chan_width, logfile, route_only=False):
                         "--fpga_spice_print_cb_testbench",
                         "--fpga_spice_print_sb_testbench"
                         ]
-        if args.vpr_fpga_spice_print_top_tb:
+        if args.vpr_fpga_spice_print_top_testbench:
             command += ["--fpga_spice_print_top_testbench"]
         if args.vpr_fpga_spice_leakage_only:
             command += ["--fpga_spice_leakage_only"]
@@ -716,6 +718,8 @@ def run_standard_vpr(bench_blif, fixed_chan_width, logfile, route_only=False):
             command += ["--fpga_verilog_include_timing"]
         if args.vpr_fpga_verilog_explicit_mapping:
             command += ["--fpga_verilog_explicit_mapping"]
+        if args.vpr_fpga_x2p_duplicate_grid_pin:
+            command += ["--fpga_x2p_duplicate_grid_pin"]
         if args.vpr_fpga_verilog_include_signal_init:
             command += ["--fpga_verilog_include_signal_init"]
         if args.vpr_fpga_verilog_formal_verification_top_netlist:
