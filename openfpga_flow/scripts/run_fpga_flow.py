@@ -131,6 +131,8 @@ X2PParse.add_argument('--vpr_fpga_x2p_sim_window_size', type=float,
                       help="specify the sim_window_size of VPR FPGA SPICE")
 X2PParse.add_argument('--vpr_fpga_x2p_compact_routing_hierarchy',
                       action="store_true", help="Compact_routing_hierarchy")
+X2PParse.add_argument('--vpr_fpga_x2p_duplicate_grid_pin', action="store_true",
+                      help="Added duplicated grid pin")
 
 # VPR - FPGA-SPICE Extension
 SPParse = parser.add_argument_group('FPGA-SPICE Extension')
@@ -716,6 +718,8 @@ def run_standard_vpr(bench_blif, fixed_chan_width, logfile, route_only=False):
             command += ["--fpga_verilog_include_timing"]
         if args.vpr_fpga_verilog_explicit_mapping:
             command += ["--fpga_verilog_explicit_mapping"]
+        if args.vpr_fpga_x2p_duplicate_grid_pin:
+            command += ["--fpga_x2p_duplicate_grid_pin"]
         if args.vpr_fpga_verilog_include_signal_init:
             command += ["--fpga_verilog_include_signal_init"]
         if args.vpr_fpga_verilog_formal_verification_top_netlist:
