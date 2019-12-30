@@ -491,6 +491,8 @@ ProcessOption(INP char **Args, INOUTP t_options * Options) {
     case OT_FPGA_X2P_OUTPUT_SB_XML: 
       /* Read the file prefix to output SB XML files */
       return ReadString(Args, &Options->sb_xml_dir);
+    case OT_FPGA_X2P_DUPLICATE_GRID_PIN:
+      return Args;
     /* Xifan TANG: FPGA SPICE Model Options*/
     case OT_FPGA_SPICE:
       return Args;

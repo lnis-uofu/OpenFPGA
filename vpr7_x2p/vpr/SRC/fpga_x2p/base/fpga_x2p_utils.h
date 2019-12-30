@@ -20,6 +20,8 @@ std::string find_path_file_name(const std::string& file_name);
 
 std::vector<size_t> my_itobin_vec(const size_t& in_int, const size_t& bin_len);
 
+bool create_dir_path(const char* dir_path);
+
 /* Old functions */
 
 char* my_gettime();

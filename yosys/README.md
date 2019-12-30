@@ -1,7 +1,7 @@
 ```
 yosys -- Yosys Open SYnthesis Suite
 
-Copyright (C) 2012 - 2018  Clifford Wolf <clifford@clifford.at>
+Copyright (C) 2012 - 2019  Clifford Wolf <clifford@clifford.at>
 
 Permission to use, copy, modify, and/or distribute this software for any
 purpose with or without fee is hereby granted, provided that the above
@@ -69,11 +69,14 @@ prerequisites for building yosys:
 		graphviz xdot pkg-config python3 libboost-system-dev \
 		libboost-python-dev libboost-filesystem-dev
 
-Similarily, on Mac OS X MacPorts or Homebrew can be used to install dependencies:
+Similarily, on Mac OS X Homebrew can be used to install dependencies:
 
 	$ brew tap Homebrew/bundle && brew bundle
+
+or MacPorts:
+
 	$ sudo port install bison flex readline gawk libffi \
-		git graphviz pkgconfig python36 boost
+		git graphviz pkgconfig python36 boost tcl
 
 On FreeBSD use the following command to install all prerequisites:
 
@@ -257,7 +260,7 @@ for them:
 - Non-synthesizable language features as defined in
 	IEC 62142(E):2005 / IEEE Std. 1364.1(E):2002
 
-- The ``tri``, ``triand``, ``trior``, ``wand`` and ``wor`` net types
+- The ``tri``, ``triand`` and ``trior`` net types
 
 - The ``config`` and ``disable`` keywords and library map files
 
@@ -350,6 +353,14 @@ Verilog Attributes and non-standard features
   through the synthesis. When entities are combined, a new |-separated
   string is created that contains all the string from the original entities.
 
+- The ``defaultvalue`` attribute is used to store default values for
+  module inputs. The attribute is attached to the input wire by the HDL
+  front-end when the input is declared with a default value.
+
+- The ``parameter`` and ``localparam`` attributes are used to mark wires
+  that represent module parameters or localparams (when the HDL front-end
+  is run in -pwires mode).
+
 - In addition to the ``(* ... *)`` attribute syntax, Yosys supports
   the non-standard ``{* ... *}`` attribute syntax to set default attributes
   for everything that comes after the ``{* ... *}`` statement. (Reset
@@ -413,7 +424,7 @@ Verilog Attributes and non-standard features
       $ yosys -p 'plugin -a foo -i /lib/libm.so; read_verilog dpitest.v'
 
 - Sized constants (the syntax ``<size>'s?[bodh]<value>``) support constant
-  expressions as <size>. If the expression is not a simple identifier, it
+  expressions as ``<size>``. If the expression is not a simple identifier, it
   must be put in parentheses. Examples: ``WIDTH'd42``, ``(4+2)'b101010``
 
 - The system tasks ``$finish``, ``$stop`` and ``$display`` are supported in

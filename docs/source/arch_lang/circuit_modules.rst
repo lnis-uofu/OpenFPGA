@@ -98,3 +98,5 @@ Transistor level
     * **is_config_enable:** can be either ``true`` or ``false``. Only valid when ``is_global`` is true. Specify if this port controls a configuration-enable signal. This port is only enabled during FPGA configuration, and always disabled during FPGA operation. All the ``config_enable`` ports are connected to global configuration-enable voltage stimuli in testbenches.
 
 .. note::  Different types of ``circuit_model`` have different XML syntax, with which users can highly customize their circuit topologies. See refer to examples of ``circuit_model`` for more details.
+
+.. note:: Note that we have a list of reserved port names, which indicate the usage of these ports when building FPGA fabrics. Please do not use ``mem_out``, ``mem_inv``, ``bl``, ``wl``, ``blb``, ``wlb``, ``ccff_head`` and ``ccff_tail``.

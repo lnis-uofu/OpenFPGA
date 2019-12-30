@@ -1,0 +1,41 @@
+# Yosys synthesis script for alu4
+# read Verilog 
+read_verilog /full_path/design.v	#can be repeated if project has many files
+read_verilog -lib /full_path/cells_sim.v	# file we provide
+
+hierarchy -check -top top_module
+proc
+
+flatten
+tribuf -logic
+ 
+synth -run coarse
+opt -fast
+
+memory -nomap
+opt_clean
+
+
+memory_bram -rules /full_OpenFPGA_path/openfpga_flow/misc/OpenFPGA_lib/brams.txt
+techmap -map /full_OpenFPGA_path/openfpga_flow/misc/OpenFPGA_lib/brams_map.v
+opt -fast -mux_undef -undriven -fine
+memory_map
+
+# Technology mapping
+#proc
+techmap -D NO_LUT -map /full_OpenFPGA_path/openfpga_flow/misc/OpenFPGA_lib/fpga_techmap.v -map +/adff2dff.v
+
+# Synthesis
+synth -top top_module -flatten -run fine
+clean
+
+# LUT mapping 
+abc -lut 6
+
+# Check 
+synth -run check
+
+# Clean and output blif 
+opt_clean -purge
+write_blif design.blif
+write_verilog design.v

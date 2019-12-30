@@ -26,7 +26,7 @@ This motivates us to generate the Verilog code of the architecture to enable a s
 
 In this manual, we present FPGA-Verilog. This extension enables the generation of a fully functional Verilog code enabling a deeper understanding of the architectures of the FPGAs. We introduce different options to this module to do the verification of the system. This will be presented in more depth in the FPGA-Bitstream section.
 
-The technical details can be found in our TVLSI'19 paper :cite:`XTang_TVLSI_2019`.
+The technical details can be found in our TVLSI'19 paper :cite:`XTang_TVLSI_2019` and FPL'19 paper :cite:`XTang_FPL_2019`.
 
 FPGA-Bitstream
 --------------
@@ -34,3 +34,5 @@ FPGA-Bitstream
 To have the right functionality on top of the FPGA generated, it is necessary to have a Bitstream generation which programs the FPGA. For this reason, we generate a Bitstream and some testbenches in parallel which allow the user to do some functional verification of the system to make sure that the functionality is respected. This includes three different testbenches. First, the FPGA is configured then the clock runs with random patterns are generated to test the functionality. Secondly, the FPGA can be configured in parallel to the testbench itself to do a comparison of the signals and check the validity. Finally, the configuration can be skipped to directly have access to the functioning of the system and reduce the processing time.
 
 This will be explained in more depth in the FPGA-Bitstream section.
+
+The technical details can be found in our TVLSI'19 paper :cite:`XTang_TVLSI_2019` and FPL'19 paper :cite:`XTang_FPL_2019`.

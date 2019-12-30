@@ -29,13 +29,12 @@
  * in the circuit library
  ********************************************************************/
 void print_verilog_submodule_luts(ModuleManager& module_manager,
+                                  std::vector<std::string>& netlist_names,
                                   const CircuitLibrary& circuit_lib,
                                   const std::string& verilog_dir,
                                   const std::string& submodule_dir,
                                   const bool& use_explicit_port_map) {
-  /* TODO: remove .bak when this part is completed and tested */
   std::string verilog_fname = submodule_dir + luts_verilog_file_name;
-  //verilog_fname +=".bak";
 
   std::fstream fp;
 
@@ -70,11 +69,7 @@ void print_verilog_submodule_luts(ModuleManager& module_manager,
   /* Close the file handler */
   fp.close();
 
-  /* Add fname to the linked list */
-  /* Add it when the Verilog generation is refactored
-  submodule_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(submodule_verilog_subckt_file_path_head, verilog_fname.c_str());  
-   */
-
-  return;
+  /* Add fname to the netlist name list */
+  netlist_names.push_back(verilog_fname);
 }
 

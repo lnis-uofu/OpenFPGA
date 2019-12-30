@@ -17,14 +17,12 @@ ModulePortId find_switch_block_module_chan_port(const ModuleManager& module_mana
 ModulePortId find_switch_block_module_input_port(const ModuleManager& module_manager,
                                                  const ModuleId& sb_module, 
                                                  const RRGSB& rr_gsb, 
-                                                 const std::vector<std::vector<t_grid_tile>>& grids,
                                                  const e_side& input_side,
                                                  t_rr_node* input_rr_node);
 
 std::vector<ModulePortId> find_switch_block_module_input_ports(const ModuleManager& module_manager,
                                                                const ModuleId& sb_module, 
                                                                const RRGSB& rr_gsb, 
-                                                               const std::vector<std::vector<t_grid_tile>>& grids,
                                                                const std::vector<t_rr_node*>& input_rr_nodes);
 
 ModulePortId find_connection_block_module_chan_port(const ModuleManager& module_manager, 
@@ -36,7 +34,6 @@ ModulePortId find_connection_block_module_chan_port(const ModuleManager& module_
 ModulePortId find_connection_block_module_ipin_port(const ModuleManager& module_manager,
                                                     const ModuleId& cb_module, 
                                                     const RRGSB& rr_gsb, 
-                                                    const std::vector<std::vector<t_grid_tile>>& grids,
                                                     t_rr_node* src_rr_node);
 
 std::vector<ModulePortId> find_connection_block_module_input_ports(const ModuleManager& module_manager,

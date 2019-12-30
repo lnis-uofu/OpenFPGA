@@ -26,7 +26,6 @@
 
 /* Header files for Verilog generator */
 #include "verilog_global.h"
-#include "verilog_utils.h"
 #include "verilog_writer_utils.h"
 #include "verilog_module_writer.h"
 #include "verilog_grid.h"
@@ -183,6 +182,7 @@ void print_verilog_physical_blocks_rec(std::fstream& fp,
  *****************************************************************************/
 static 
 void print_verilog_grid(ModuleManager& module_manager,
+                        std::vector<std::string>& netlist_names,
                         const std::string& verilog_dir,
                         const std::string& subckt_dir,
                         t_type_ptr phy_block_type,
@@ -261,10 +261,8 @@ void print_verilog_grid(ModuleManager& module_manager,
   /* Close file handler */
   fp.close();
 
-  /* Add fname to the linked list */
-  /* TODO: add it when it is ready
-  grid_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(grid_verilog_subckt_file_path_head, verilog_fname.c_str());  
-   */
+  /* Add fname to the netlist name list */
+  netlist_names.push_back(verilog_fname);
 }
 
 /*****************************************************************************
@@ -277,6 +275,9 @@ void print_verilog_grids(ModuleManager& module_manager,
                          const std::string& verilog_dir,
                          const std::string& subckt_dir,
                          const bool& use_explicit_mapping) {
+  /* Create a vector to contain all the Verilog netlist names that have been generated in this function */
+  std::vector<std::string> netlist_names;
+
   /* Enumerate the types, dump one Verilog module for each */
   for (int itype = 0; itype < num_types; itype++) {
     if (EMPTY_TYPE == &type_descriptors[itype]) {
@@ -286,7 +287,7 @@ void print_verilog_grids(ModuleManager& module_manager,
       /* Special for I/O block, generate one module for each border side */
       for (int iside = 0; iside < NUM_SIDES; iside++) {
         Side side_manager(iside);
-        print_verilog_grid(module_manager, 
+        print_verilog_grid(module_manager, netlist_names,
                            verilog_dir, subckt_dir, 
                            &type_descriptors[itype],
                            side_manager.get_side(),
@@ -295,7 +296,7 @@ void print_verilog_grids(ModuleManager& module_manager,
       continue;
     } else if (FILL_TYPE == &type_descriptors[itype]) {
       /* For CLB */
-      print_verilog_grid(module_manager, 
+      print_verilog_grid(module_manager, netlist_names, 
                          verilog_dir, subckt_dir, 
                          &type_descriptors[itype],
                          NUM_SIDES,
@@ -303,7 +304,7 @@ void print_verilog_grids(ModuleManager& module_manager,
       continue;
     } else {
       /* For heterogenenous blocks */
-      print_verilog_grid(module_manager, 
+      print_verilog_grid(module_manager, netlist_names,
                          verilog_dir, subckt_dir, 
                          &type_descriptors[itype],
                          NUM_SIDES,
@@ -314,10 +315,8 @@ void print_verilog_grids(ModuleManager& module_manager,
   /* Output a header file for all the logic blocks */
   vpr_printf(TIO_MESSAGE_INFO, "Generating header file for grid Verilog modules...\n");
   std::string grid_verilog_fname(logic_block_verilog_file_name);
-  /* TODO: remove .bak when it is ready */
-  //grid_verilog_fname += ".bak";
-  dump_verilog_subckt_header_file(grid_verilog_subckt_file_path_head,
-                                  subckt_dir.c_str(),
-                                  grid_verilog_fname.c_str());
+  print_verilog_netlist_include_header_file(netlist_names,
+                                            subckt_dir.c_str(),
+                                            grid_verilog_fname.c_str());
 }
 

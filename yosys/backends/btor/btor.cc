@@ -17,6 +17,11 @@
  *
  */
 
+// [[CITE]] Btor2 , BtorMC and Boolector 3.0
+// Aina Niemetz, Mathias Preiner, Clifford Wolf, Armin Biere
+// Computer Aided Verification - 30th International Conference, CAV 2018
+// https://cs.stanford.edu/people/niemetz/publication/2018/niemetzpreinerwolfbiere-cav18/
+
 #include "kernel/rtlil.h"
 #include "kernel/register.h"
 #include "kernel/sigtools.h"
@@ -129,7 +134,13 @@ struct BtorWorker
 
 	void export_cell(Cell *cell)
 	{
-		log_assert(cell_recursion_guard.count(cell) == 0);
+		if (cell_recursion_guard.count(cell)) {
+			string cell_list;
+			for (auto c : cell_recursion_guard)
+				cell_list += stringf("\n    %s", log_id(c));
+			log_error("Found topological loop while processing cell %s. Active cells:%s\n", log_id(cell), cell_list.c_str());
+		}
+
 		cell_recursion_guard.insert(cell);
 		btorf_push(log_id(cell));
 
@@ -869,9 +880,28 @@ struct BtorWorker
 					else
 					{
 						if (bit_cell.count(bit) == 0)
-							log_error("No driver for signal bit %s.\n", log_signal(bit));
-						export_cell(bit_cell.at(bit));
-						log_assert(bit_nid.count(bit));
+						{
+							SigSpec s = bit;
+
+							while (i+GetSize(s) < GetSize(sig) && sig[i+GetSize(s)].wire != nullptr &&
+									bit_cell.count(sig[i+GetSize(s)]) == 0)
+								s.append(sig[i+GetSize(s)]);
+
+							log_warning("No driver for signal %s.\n", log_signal(s));
+
+							int sid = get_bv_sid(GetSize(s));
+							int nid = next_nid++;
+							btorf("%d input %d %s\n", nid, sid);
+							nid_width[nid] = GetSize(s);
+
+							i += GetSize(s)-1;
+							continue;
+						}
+						else
+						{
+							export_cell(bit_cell.at(bit));
+							log_assert(bit_nid.count(bit));
+						}
 					}
 				}
 

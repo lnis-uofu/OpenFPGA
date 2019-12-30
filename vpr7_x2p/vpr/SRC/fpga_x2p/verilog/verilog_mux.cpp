@@ -1218,6 +1218,7 @@ void generate_verilog_mux_module(ModuleManager& module_manager,
  * multiplexers in the FPGA device
  **********************************************/
 void print_verilog_submodule_muxes(ModuleManager& module_manager,
+                                   std::vector<std::string>& netlist_names,
                                    const MuxLibrary& mux_lib,
                                    const CircuitLibrary& circuit_lib,
                                    t_sram_orgz_info* cur_sram_orgz_info,
@@ -1279,9 +1280,7 @@ void print_verilog_submodule_muxes(ModuleManager& module_manager,
   try_update_sram_orgz_info_reserved_blwl(cur_sram_orgz_info, 
                                           mux_lib.max_mux_size(), mux_lib.max_mux_size());
 
-  /* TODO: Add fname to the linked list when debugging is finished */
-  /*
-  submodule_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(submodule_verilog_subckt_file_path_head, verilog_fname.c_str());  
-   */
+  /* Add fname to the netlist name list */
+  netlist_names.push_back(verilog_fname);
 }
 

@@ -525,6 +525,7 @@ void print_verilog_constant_generator_module(const ModuleManager& module_manager
  * etc.
  ***********************************************/
 void print_verilog_submodule_essentials(ModuleManager& module_manager, 
+                                        std::vector<std::string>& netlist_names,
                                         const std::string& verilog_dir, 
                                         const std::string& submodule_dir,
                                         const CircuitLibrary& circuit_lib) {
@@ -575,8 +576,6 @@ void print_verilog_submodule_essentials(ModuleManager& module_manager,
   /* Close file handler*/
   fp.close();
 
-  /* Add fname to the linked list */
-  submodule_verilog_subckt_file_path_head = add_one_subckt_file_name_to_llist(submodule_verilog_subckt_file_path_head, verilog_fname.c_str());  
-
-  return;
+  /* Add fname to the netlist name list */
+  netlist_names.push_back(verilog_fname);
 }

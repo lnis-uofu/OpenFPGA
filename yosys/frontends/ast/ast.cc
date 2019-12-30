@@ -46,7 +46,7 @@ namespace AST {
 // instantiate global variables (private API)
 namespace AST_INTERNAL {
 	bool flag_dump_ast1, flag_dump_ast2, flag_no_dump_ptr, flag_dump_vlog1, flag_dump_vlog2, flag_dump_rtlil, flag_nolatches, flag_nomeminit;
-	bool flag_nomem2reg, flag_mem2reg, flag_noblackbox, flag_lib, flag_nowb, flag_noopt, flag_icells, flag_autowire;
+	bool flag_nomem2reg, flag_mem2reg, flag_noblackbox, flag_lib, flag_nowb, flag_noopt, flag_icells, flag_pwires, flag_autowire;
 	AstNode *current_ast, *current_ast_mod;
 	std::map<std::string, AstNode*> current_scope;
 	const dict<RTLIL::SigBit, RTLIL::SigBit> *genRTLIL_subst_ptr = NULL;
@@ -154,6 +154,7 @@ std::string AST::type2str(AstNodeType type)
 	X(AST_GENIF)
 	X(AST_GENCASE)
 	X(AST_GENBLOCK)
+	X(AST_TECALL)
 	X(AST_POSEDGE)
 	X(AST_NEGEDGE)
 	X(AST_EDGE)
@@ -194,6 +195,9 @@ AstNode::AstNode(AstNodeType type, AstNode *child1, AstNode *child2, AstNode *ch
 	is_logic = false;
 	is_signed = false;
 	is_string = false;
+	is_wand = false;
+	is_wor = false;
+	is_unsized = false;
 	was_checked = false;
 	range_valid = false;
 	range_swapped = false;
@@ -722,7 +726,7 @@ AstNode *AstNode::mkconst_int(uint32_t v, bool is_signed, int width)
 }
 
 // create an AST node for a constant (using a bit vector as value)
-AstNode *AstNode::mkconst_bits(const std::vector<RTLIL::State> &v, bool is_signed)
+AstNode *AstNode::mkconst_bits(const std::vector<RTLIL::State> &v, bool is_signed, bool is_unsized)
 {
 	AstNode *node = new AstNode(AST_CONSTANT);
 	node->is_signed = is_signed;
@@ -736,7 +740,13 @@ AstNode *AstNode::mkconst_bits(const std::vector<RTLIL::State> &v, bool is_signe
 	node->range_valid = true;
 	node->range_left = node->bits.size()-1;
 	node->range_right = 0;
+	node->is_unsized = is_unsized;
 	return node;
+}
+
+AstNode *AstNode::mkconst_bits(const std::vector<RTLIL::State> &v, bool is_signed)
+{
+	return mkconst_bits(v, is_signed, false);
 }
 
 // create an AST node for a constant (using a string in bit vector form as value)
@@ -773,6 +783,14 @@ bool AstNode::bits_only_01() const
 		if (bit != RTLIL::S0 && bit != RTLIL::S1)
 			return false;
 	return true;
+}
+
+RTLIL::Const AstNode::bitsAsUnsizedConst(int width)
+{
+	RTLIL::State extbit = bits.back();
+	while (width > int(bits.size()))
+		bits.push_back(extbit);
+	return RTLIL::Const(bits);
 }
 
 RTLIL::Const AstNode::bitsAsConst(int width, bool is_signed)
@@ -1094,6 +1112,7 @@ static AstModule* process_module(AstNode *ast, bool defer, AstNode *original_ast
 	current_module->nowb = flag_nowb;
 	current_module->noopt = flag_noopt;
 	current_module->icells = flag_icells;
+	current_module->pwires = flag_pwires;
 	current_module->autowire = flag_autowire;
 	current_module->fixup_ports();
 
@@ -1108,7 +1127,7 @@ static AstModule* process_module(AstNode *ast, bool defer, AstNode *original_ast
 
 // create AstModule instances for all modules in the AST tree and add them to 'design'
 void AST::process(RTLIL::Design *design, AstNode *ast, bool dump_ast1, bool dump_ast2, bool no_dump_ptr, bool dump_vlog1, bool dump_vlog2, bool dump_rtlil,
-		bool nolatches, bool nomeminit, bool nomem2reg, bool mem2reg, bool noblackbox, bool lib, bool nowb, bool noopt, bool icells, bool nooverwrite, bool overwrite, bool defer, bool autowire)
+		bool nolatches, bool nomeminit, bool nomem2reg, bool mem2reg, bool noblackbox, bool lib, bool nowb, bool noopt, bool icells, bool pwires, bool nooverwrite, bool overwrite, bool defer, bool autowire)
 {
 	current_ast = ast;
 	flag_dump_ast1 = dump_ast1;
@@ -1126,6 +1145,7 @@ void AST::process(RTLIL::Design *design, AstNode *ast, bool dump_ast1, bool dump
 	flag_nowb = nowb;
 	flag_noopt = noopt;
 	flag_icells = icells;
+	flag_pwires = pwires;
 	flag_autowire = autowire;
 
 	log_assert(current_ast->type == AST_DESIGN);
@@ -1462,6 +1482,7 @@ std::string AstModule::derive_common(RTLIL::Design *design, dict<RTLIL::IdString
 	flag_nowb = nowb;
 	flag_noopt = noopt;
 	flag_icells = icells;
+	flag_pwires = pwires;
 	flag_autowire = autowire;
 	use_internal_line_num();
 
@@ -1533,6 +1554,7 @@ RTLIL::Module *AstModule::clone() const
 	new_mod->lib = lib;
 	new_mod->noopt = noopt;
 	new_mod->icells = icells;
+	new_mod->pwires = pwires;
 	new_mod->autowire = autowire;
 
 	return new_mod;

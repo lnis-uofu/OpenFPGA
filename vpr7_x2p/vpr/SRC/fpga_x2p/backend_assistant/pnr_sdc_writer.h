@@ -12,7 +12,6 @@
 
 void print_pnr_sdc(const SdcOption& sdc_options,
                    const float& critical_path_delay,
-                   const std::vector<std::vector<t_grid_tile>>& grids,
                    const std::vector<t_switch_inf>& switches,
                    const DeviceRRGSB& L_device_rr_gsb,
                    const ModuleManager& module_manager,

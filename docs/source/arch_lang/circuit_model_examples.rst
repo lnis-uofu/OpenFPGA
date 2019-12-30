@@ -231,7 +231,7 @@ SRAMs
 .. note:: The support SRAM modules should have a BL and a WL when the memory-bank-style configuration circuit is declared. Note that the WL should be the write/read enable signal, while BL is the data input.
 
 Logic gates
------
+-----------
 
 .. code-block:: xml
 

@@ -13,6 +13,7 @@ void build_grid_modules(ModuleManager& module_manager,
                         const CircuitLibrary& circuit_lib,
                         const MuxLibrary& mux_lib,
                         const e_sram_orgz& sram_orgz_type,
-                        const CircuitModelId& sram_model);
+                        const CircuitModelId& sram_model,
+                        const bool& duplicate_grid_pin);
 
 #endif

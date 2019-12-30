@@ -13,6 +13,7 @@
 #include <vector>
 
 /* Include vpr structs*/
+#include "vtr_assert.h"
 #include "util.h"
 #include "physical_types.h"
 #include "vpr_types.h"
@@ -137,9 +138,17 @@ void vpr_fpga_x2p_tool_suites(t_vpr_setup vpr_setup,
 
   /* Xifan TANG: Synthesizable verilog dumping */
   if (TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.dump_syn_verilog) {
+    /* Create a local SRAM organization info
+     * TODO: This should be deprecated in future */
+    VTR_ASSERT(NULL != Arch.sram_inf.verilog_sram_inf_orgz); /* Check !*/
+    t_spice_model* sram_verilog_model = Arch.sram_inf.verilog_sram_inf_orgz->spice_model;
+    /* initialize the SRAM organization information struct */
+    t_sram_orgz_info* sram_verilog_orgz_info = alloc_one_sram_orgz_info();
+    init_sram_orgz_info(sram_verilog_orgz_info, Arch.sram_inf.verilog_sram_inf_orgz->type, sram_verilog_model, nx + 2, ny + 2);
+
     vpr_fpga_verilog(module_manager, bitstream_manager, fabric_bitstream, mux_lib, 
-                     L_logical_blocks, device_size, grids, L_blocks,
-                     vpr_setup, Arch, vpr_setup.FileNameOpts.CircuitName);
+                     L_logical_blocks, device_size, grids, L_blocks, device_rr_gsb,
+                     vpr_setup, Arch, std::string(vpr_setup.FileNameOpts.CircuitName), sram_verilog_orgz_info);
   }	
 
 
@@ -154,12 +163,15 @@ void vpr_fpga_x2p_tool_suites(t_vpr_setup vpr_setup,
   sdc_options.set_generate_sdc_pnr(TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.print_sdc_pnr);
   sdc_options.set_generate_sdc_analysis(TRUE == vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts.print_sdc_analysis);
 
+  /* Create directory to contain the SDC files */
+  create_dir_path(sdc_options.sdc_dir().c_str());
+
   if (true == sdc_options.generate_sdc()) {
     std::vector<CircuitPortId> global_ports = find_circuit_library_global_ports(Arch.spice->circuit_lib);
     /* TODO: the critical path delay unit should be explicit! */
     fpga_sdc_generator(sdc_options, 
                        Arch.spice->spice_params.stimulate_params.vpr_crit_path_delay / 1e-9,
-                       grids, rr_switches, device_rr_gsb, 
+                       rr_switches, device_rr_gsb, 
                        L_logical_blocks, device_size, grids, L_blocks, 
                        module_manager, mux_lib, 
                        Arch.spice->circuit_lib, global_ports,

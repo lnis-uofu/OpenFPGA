@@ -9,13 +9,16 @@
 /* Include other header files which are dependency on the function declared below */
 #include <fstream>
 #include <string>
+#include <vector>
 
+#include "vpr_types.h"
 #include "circuit_library.h"
 #include "mux_graph.h"
 #include "mux_library.h"
 #include "module_manager.h"
 
 void print_verilog_submodule_mux_local_decoders(ModuleManager& module_manager,
+                                                std::vector<std::string>& netlist_names,
                                                 const MuxLibrary& mux_lib,
                                                 const CircuitLibrary& circuit_lib,
                                                 const std::string& verilog_dir,

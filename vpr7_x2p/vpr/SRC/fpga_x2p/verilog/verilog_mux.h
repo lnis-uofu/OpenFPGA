@@ -7,6 +7,7 @@
 
 /* Include other header files which are dependency on the function declared below */
 #include <fstream>
+#include <vector>
 
 #include "circuit_library.h"
 #include "mux_graph.h"
@@ -14,6 +15,7 @@
 #include "module_manager.h"
 
 void print_verilog_submodule_muxes(ModuleManager& module_manager,
+                                   std::vector<std::string>& netlist_names,
                                    const MuxLibrary& mux_lib,
                                    const CircuitLibrary& circuit_lib,
                                    t_sram_orgz_info* cur_sram_orgz_info,

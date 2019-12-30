@@ -244,13 +244,13 @@ void print_analysis_sdc(const std::string& sdc_dir,
 
 
   /* Disable timing for unused routing resources in connection blocks */
-  print_analysis_sdc_disable_unused_cbs(fp, L_grids, 
+  print_analysis_sdc_disable_unused_cbs(fp, 
                                         module_manager,
                                         L_device_rr_gsb, 
                                         compact_routing_hierarchy);
 
   /* Disable timing for unused routing resources in switch blocks */
-  print_analysis_sdc_disable_unused_sbs(fp, L_grids, 
+  print_analysis_sdc_disable_unused_sbs(fp, 
                                         module_manager,
                                         L_device_rr_gsb, 
                                         compact_routing_hierarchy);

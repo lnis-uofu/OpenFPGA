@@ -20,6 +20,7 @@ void build_top_module(ModuleManager& module_manager,
                       const std::vector<t_clb_to_clb_directs>& clb2clb_directs,
                       const e_sram_orgz& sram_orgz_type,
                       const CircuitModelId& sram_model,
-                      const bool& compact_routing_hierarchy);
+                      const bool& compact_routing_hierarchy,
+                      const bool& duplicate_grid_pin);
 
 #endif

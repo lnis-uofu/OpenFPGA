@@ -129,7 +129,7 @@ void yosys_banner()
 	log(" |                                                                            |\n");
 	log(" |  yosys -- Yosys Open SYnthesis Suite                                       |\n");
 	log(" |                                                                            |\n");
-	log(" |  Copyright (C) 2012 - 2018  Clifford Wolf <clifford@clifford.at>           |\n");
+	log(" |  Copyright (C) 2012 - 2019  Clifford Wolf <clifford@clifford.at>           |\n");
 	log(" |                                                                            |\n");
 	log(" |  Permission to use, copy, modify, and/or distribute this software for any  |\n");
 	log(" |  purpose with or without fee is hereby granted, provided that the above    |\n");
@@ -651,6 +651,10 @@ void rewrite_filename(std::string &filename)
 		filename = filename.substr(1, GetSize(filename)-2);
 	if (filename.substr(0, 2) == "+/")
 		filename = proc_share_dirname() + filename.substr(2);
+#ifndef _WIN32
+	if (filename.substr(0, 2) == "~/")
+		filename = filename.replace(0, 1, getenv("HOME"));
+#endif
 }
 
 #ifdef YOSYS_ENABLE_TCL

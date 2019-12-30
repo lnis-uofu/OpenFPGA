@@ -1275,6 +1275,12 @@ static void SetupFpgaSpiceOpts(t_options Options,
     fpga_spice_opts->sb_xml_dir = Options.sb_xml_dir;
   }
 
+  /* Check if user wants to duplicate the pin at each side of grids */
+  fpga_spice_opts->duplicate_grid_pin = FALSE;
+  if (Options.Count[OT_FPGA_X2P_DUPLICATE_GRID_PIN]) { 
+    fpga_spice_opts->duplicate_grid_pin = TRUE;
+  }
+
   /* Decide if we need to do FPGA-SPICE */
   fpga_spice_opts->do_fpga_spice = FALSE;
   if (( TRUE == fpga_spice_opts->SpiceOpts.do_spice)

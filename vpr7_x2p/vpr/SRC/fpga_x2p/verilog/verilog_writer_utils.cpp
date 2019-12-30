@@ -1367,3 +1367,29 @@ void print_verilog_clock_stimuli(std::fstream& fp,
   fp << std::endl;
 }
 
+/********************************************************************
+ * Output a header file that includes a number of Verilog netlists
+ * so that it can be easily included in a top-level netlist
+ ********************************************************************/
+void print_verilog_netlist_include_header_file(const std::vector<std::string>& netlists_to_be_included,
+                                               const char* subckt_dir,
+                                               const char* header_file_name) {
+  std::string verilog_fname(std::string(subckt_dir) + std::string(header_file_name));
+
+  /* Create the file stream */
+  std::fstream fp;
+  fp.open(verilog_fname, std::fstream::out | std::fstream::trunc);
+
+  check_file_handler(fp);
+
+  /* Generate the descriptions*/
+  print_verilog_file_header(fp, "Header file to include other Verilog netlists"); 
+
+  /* Output file names */
+  for (const std::string& netlist_name : netlists_to_be_included) {
+    fp << "`include \"" << netlist_name << "\"" << std::endl;
+  }
+
+  /* close file stream */
+  fp.close();
+}
