@@ -145,6 +145,7 @@ add_subdirectory(yosys)
 add_subdirectory(abc)
 add_subdirectory(ace2)
 add_subdirectory(vpr7_x2p)
+add_subdirectory(vpr)
 
 # run make to extract compiler options, linker options and list of source files
 #add_custom_target(
