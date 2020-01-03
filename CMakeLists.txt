@@ -140,10 +140,10 @@ enable_testing()
 # Sub-projects
 #
 #add_subdirectory(iverilog)
+add_subdirectory(libs)
 add_subdirectory(yosys)
 add_subdirectory(abc)
 add_subdirectory(ace2)
-add_subdirectory(libs)
 add_subdirectory(vpr7_x2p)
 
 # run make to extract compiler options, linker options and list of source files
@@ -182,25 +182,11 @@ set_target_properties(libace ace
   LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/ace2"
   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/ace2")
 
-# Set output locations to be in the main source tree under the relevant folder
-set_target_properties(libini
+set_target_properties(libarchfpgavpr7 read_arch_vpr7
   PROPERTIES
-  ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/libs/external/libini"
-  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/libs/external/libini"
-  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/libs/external/libini")
-
-# Set output locations to be in the main source tree under the relevant folder
-set_target_properties(libvtrutil
-  PROPERTIES
-  ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/libs/libvtrutil"
-  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/libs/libvtrutil"
-  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/libs/libvtrutil")
-
-set_target_properties(libarchfpga read_arch
-  PROPERTIES
-  ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr7_x2p/libarchfpga"
-  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr7_x2p/libarchfpga"
-  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr7_x2p/libarchfpga")
+  ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr7_x2p/libarchfpgavpr7"
+  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr7_x2p/libarchfpgavpr7"
+  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr7_x2p/libarchfpgavpr7")
 
 set_target_properties(libpcre pcredemo
   PROPERTIES
