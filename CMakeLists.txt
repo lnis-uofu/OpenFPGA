@@ -23,12 +23,28 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 
+if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
+    message("CMAKE_SOURCE_DIR: ${CMAKE_SOURCE_DIR}")
+    message("CMAKE_BINARY_DIR: ${CMAKE_BINARY_DIR}")
+    message(FATAL_ERROR "In-source builds not allowed. Use the Makefile wrapper (e.g. make), or create a new build directory and call cmake manually from there (e.g. mkdir -p build && cd build && cmake .. && make). You may need to 'rm -rf CMakeCache.txt CMakeFiles' first.")
+endif()
+
+#We install to the source directory by default
+if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set (CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}" CACHE PATH "default install path" FORCE)
+endif()
+
+#Allow the user to configure how much assertion checking should occur
+set(VTR_ASSERT_LEVEL "2" CACHE STRING "VTR assertion checking level. 0: no assertions, 1: fast assertions, 2: regular assertions, 3: additional assertions with noticable run-time overhead, 4: all assertions (including those with significant run-time cost)")
+set_property(CACHE VTR_ASSERT_LEVEL PROPERTY STRINGS 0 1 2 3 4)
+
 #Create the project 
 project("OPENFPGA" C CXX)
 
 # Options
 # Option to enable/disable graphic in compilation
 option(ENABLE_VPR_GRAPHICS "Enables VPR graphics" ON)
+option(ENABLE_VPR_GRAPHICS "Enables build with librtlnumber" OFF)
 
 # Version number
 set(OPENFPGA_VERSION_MAJOR 1)
@@ -40,6 +56,8 @@ set(OPENFPGA_VERSION_PRERELEASE "dev")
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules)
 include(FilesToDirs)
 
+# Set the assertion level
+add_definitions("-DVTR_ASSERT_LEVEL=${VTR_ASSERT_LEVEL}")
 
 # compiler flag configuration checks
 include(CheckCXXCompilerFlag)
@@ -213,8 +231,8 @@ set_target_properties(libvpr vpr_shell
   LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr7_x2p/vpr"
   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr7_x2p/vpr")
 
-set_target_properties(libvpr8 vpr8
-  PROPERTIES
-  ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr"
-  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr"
-  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr")
+#set_target_properties(libvpr8 vpr8
+#  PROPERTIES
+#  ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr"
+#  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr"
+#  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr")
