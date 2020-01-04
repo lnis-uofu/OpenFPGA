@@ -30,6 +30,7 @@ matrix:
           sources:
           - ubuntu-toolchain-r-test # For newer GCC
           - george-edison55-precise-backports # For cmake
+          - llvm_toolchain-trusty-7
           packages:
           - autoconf
           - automake
@@ -58,11 +59,13 @@ matrix:
           - libxml++2.6-dev
           - perl
           - python
+          - python-lxml
           - texinfo
           - time
           - valgrind
           - zip
           - qt5-default
+          - clang-format-7
 #    - os: osx
 #      osx_image: xcode10.2 # we target latest MacOS Mojave
 #      sudo: true
