@@ -76,9 +76,9 @@ endmodule //End Of Module static_dff
 //-----------------------------------------------------
 module sc_dff_compact (
 /* Global ports go first */
-input reset, // Reset input 
+input pReset, // Reset input 
 //input set,     // set input
-input clk, // Clock Input
+input prog_clk, // Clock Input
 /* Local ports follow */
 input D, // Data Input
 output Q, // Q output 
@@ -88,8 +88,8 @@ output Qb // Q output
 reg q_reg;
 
 //-------------Code Starts Here---------
-always @ ( posedge clk or posedge reset /*or posedge set*/)
-if (reset) begin
+always @ ( posedge prog_clk or posedge pReset /*or posedge set*/)
+if (pReset) begin
   q_reg <= 1'b0;
 //end else if (set) begin
 //  q_reg <= 1'b1;
