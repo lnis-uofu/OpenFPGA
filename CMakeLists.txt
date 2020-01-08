@@ -23,12 +23,28 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 
+if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
+    message("CMAKE_SOURCE_DIR: ${CMAKE_SOURCE_DIR}")
+    message("CMAKE_BINARY_DIR: ${CMAKE_BINARY_DIR}")
+    message(FATAL_ERROR "In-source builds not allowed. Use the Makefile wrapper (e.g. make), or create a new build directory and call cmake manually from there (e.g. mkdir -p build && cd build && cmake .. && make). You may need to 'rm -rf CMakeCache.txt CMakeFiles' first.")
+endif()
+
+#We install to the source directory by default
+if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set (CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}" CACHE PATH "default install path" FORCE)
+endif()
+
+#Allow the user to configure how much assertion checking should occur
+set(VTR_ASSERT_LEVEL "2" CACHE STRING "VTR assertion checking level. 0: no assertions, 1: fast assertions, 2: regular assertions, 3: additional assertions with noticable run-time overhead, 4: all assertions (including those with significant run-time cost)")
+set_property(CACHE VTR_ASSERT_LEVEL PROPERTY STRINGS 0 1 2 3 4)
+
 #Create the project 
 project("OPENFPGA" C CXX)
 
 # Options
 # Option to enable/disable graphic in compilation
 option(ENABLE_VPR_GRAPHICS "Enables VPR graphics" ON)
+option(ENABLE_VPR_GRAPHICS "Enables build with librtlnumber" OFF)
 
 # Version number
 set(OPENFPGA_VERSION_MAJOR 1)
@@ -40,6 +56,8 @@ set(OPENFPGA_VERSION_PRERELEASE "dev")
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules)
 include(FilesToDirs)
 
+# Set the assertion level
+add_definitions("-DVTR_ASSERT_LEVEL=${VTR_ASSERT_LEVEL}")
 
 # compiler flag configuration checks
 include(CheckCXXCompilerFlag)
@@ -140,11 +158,12 @@ enable_testing()
 # Sub-projects
 #
 #add_subdirectory(iverilog)
+add_subdirectory(libs)
 add_subdirectory(yosys)
 add_subdirectory(abc)
 add_subdirectory(ace2)
-add_subdirectory(libs)
 add_subdirectory(vpr7_x2p)
+add_subdirectory(vpr)
 
 # run make to extract compiler options, linker options and list of source files
 #add_custom_target(
@@ -182,25 +201,11 @@ set_target_properties(libace ace
   LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/ace2"
   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/ace2")
 
-# Set output locations to be in the main source tree under the relevant folder
-set_target_properties(libini
+set_target_properties(libarchfpgavpr7 read_arch_vpr7
   PROPERTIES
-  ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/libs/external/libini"
-  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/libs/external/libini"
-  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/libs/external/libini")
-
-# Set output locations to be in the main source tree under the relevant folder
-set_target_properties(libvtrutil
-  PROPERTIES
-  ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/libs/libvtrutil"
-  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/libs/libvtrutil"
-  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/libs/libvtrutil")
-
-set_target_properties(libarchfpga read_arch
-  PROPERTIES
-  ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr7_x2p/libarchfpga"
-  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr7_x2p/libarchfpga"
-  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr7_x2p/libarchfpga")
+  ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr7_x2p/libarchfpgavpr7"
+  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr7_x2p/libarchfpgavpr7"
+  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr7_x2p/libarchfpgavpr7")
 
 set_target_properties(libpcre pcredemo
   PROPERTIES
@@ -226,6 +231,8 @@ set_target_properties(libvpr vpr_shell
   LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr7_x2p/vpr"
   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr7_x2p/vpr")
 
-
-
-
+set_target_properties(libvpr8 vpr8
+  PROPERTIES
+  ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr"
+  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr"
+  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr")

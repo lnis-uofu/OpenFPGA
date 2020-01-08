@@ -5,7 +5,7 @@
 .DS_Store
 
 # ctags
-tags
+vpr7_x2p/vpr/src/tags
 
 # log files
 **/logs

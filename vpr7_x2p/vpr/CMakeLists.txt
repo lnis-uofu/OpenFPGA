@@ -62,14 +62,14 @@ set_target_properties(libvpr PROPERTIES PREFIX "") #Avoid extra 'lib' prefix#Cre
 #Specify link-time dependancies
 if (ENABLE_VPR_GRAPHIC_CXX_FLAG)
   target_link_libraries(libvpr
-                        libarchfpga
+                        libarchfpgavpr7
                         X11
                         libvtrutil
                         libini
                         readline) 
 else ()
   target_link_libraries(libvpr
-                        libarchfpga
+                        libarchfpgavpr7
                         libvtrutil
                         libini
                         readline)

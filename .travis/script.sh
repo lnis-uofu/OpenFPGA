@@ -34,4 +34,7 @@ python3 openfpga_flow/scripts/run_fpga_task.py tileable_routing --debug --show_t
 echo -e "Testing Verilog generation with explicit port mapping ";
 python3 openfpga_flow/scripts/run_fpga_task.py explicit_verilog --debug --show_thread_logs
 
+echo -e "Testing Verilog generation with grid pin duplication ";
+python3 openfpga_flow/scripts/run_fpga_task.py duplicate_grid_pin --debug --show_thread_logs
+
 end_section "OpenFPGA.TaskTun"

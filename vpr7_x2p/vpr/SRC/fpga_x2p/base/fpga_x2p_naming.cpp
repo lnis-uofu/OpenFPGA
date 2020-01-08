@@ -244,6 +244,8 @@ std::string generate_routing_channel_module_name(const t_rr_type& chan_type,
 /*********************************************************************
  * Generate the port name for a routing track with a given coordinate
  * and port direction
+ * This function is mainly used in naming routing tracks in the top-level netlists
+ * where we do need unique names (with coordinates) for each routing tracks
  *********************************************************************/
 std::string generate_routing_track_port_name(const t_rr_type& chan_type, 
                                              const vtr::Point<size_t>& coordinate,
@@ -260,6 +262,99 @@ std::string generate_routing_track_port_name(const t_rr_type& chan_type,
 
   std::string port_name = module_prefix_map[chan_type]; 
   port_name += std::string("_" + std::to_string(coordinate.x()) + std::string("__") + std::to_string(coordinate.y()) + std::string("__"));
+
+  switch (port_direction) {
+  case OUT_PORT:
+    port_name += std::string("out_"); 
+    break;
+  case IN_PORT:
+    port_name += std::string("in_"); 
+    break;
+  default:
+    vpr_printf(TIO_MESSAGE_ERROR, 
+               "(File: %s [LINE%d]) Invalid direction of chan_rr_node!\n",
+               __FILE__, __LINE__);
+    exit(1);
+  }
+
+  /* Add the track id to the port name */
+  port_name += std::to_string(track_id) + std::string("_");
+
+  return port_name;
+}
+
+/*********************************************************************
+ * Generate the port name for a routing track in a Switch Block module
+ * This function is created to ease the PnR for each unique routing module
+ * So it is mainly used when creating non-top-level modules!
+ * Note that this function does not include any port coordinate
+ * Instead, we use the relative location of the pins in the context of routing modules
+ * so that each module can be instanciated across the fabric
+ * Even though, port direction must be provided!
+ *********************************************************************/
+std::string generate_sb_module_track_port_name(const t_rr_type& chan_type, 
+                                               const e_side& module_side,
+                                               const size_t& track_id,
+                                               const PORTS& port_direction) {
+  /* Channel must be either CHANX or CHANY */
+  VTR_ASSERT( (CHANX == chan_type) || (CHANY == chan_type) );
+
+  /* Create a map between chan_type and module_prefix */
+  std::map<t_rr_type, std::string> module_prefix_map;
+  /* TODO: use a constexpr string to replace the fixed name? */
+  module_prefix_map[CHANX] = std::string("chanx");
+  module_prefix_map[CHANY] = std::string("chany");
+
+  std::string port_name = module_prefix_map[chan_type]; 
+  port_name += std::string("_");
+
+  Side side_manager(module_side);
+  port_name += std::string(side_manager.to_string());
+  port_name += std::string("_");
+
+  switch (port_direction) {
+  case OUT_PORT:
+    port_name += std::string("out_"); 
+    break;
+  case IN_PORT:
+    port_name += std::string("in_"); 
+    break;
+  default:
+    vpr_printf(TIO_MESSAGE_ERROR, 
+               "(File: %s [LINE%d]) Invalid direction of chan_rr_node!\n",
+               __FILE__, __LINE__);
+    exit(1);
+  }
+
+  /* Add the track id to the port name */
+  port_name += std::to_string(track_id) + std::string("_");
+
+  return port_name;
+}
+
+/*********************************************************************
+ * Generate the port name for a routing track in a Connection Block module
+ * This function is created to ease the PnR for each unique routing module
+ * So it is mainly used when creating non-top-level modules!
+ * Note that this function does not include any port coordinate
+ * Instead, we use the relative location of the pins in the context of routing modules
+ * so that each module can be instanciated across the fabric
+ * Even though, port direction must be provided!
+ *********************************************************************/
+std::string generate_cb_module_track_port_name(const t_rr_type& chan_type, 
+                                               const size_t& track_id,
+                                               const PORTS& port_direction) {
+  /* Channel must be either CHANX or CHANY */
+  VTR_ASSERT( (CHANX == chan_type) || (CHANY == chan_type) );
+
+  /* Create a map between chan_type and module_prefix */
+  std::map<t_rr_type, std::string> module_prefix_map;
+  /* TODO: use a constexpr string to replace the fixed name? */
+  module_prefix_map[CHANX] = std::string("chanx");
+  module_prefix_map[CHANY] = std::string("chany");
+
+  std::string port_name = module_prefix_map[chan_type]; 
+  port_name += std::string("_");
 
   switch (port_direction) {
   case OUT_PORT:
@@ -339,9 +434,9 @@ std::string generate_connection_block_module_name(const t_rr_type& cb_type,
 }
 
 /*********************************************************************
- * Generate the port name for a Grid
- * TODO: add more comments about why we need different names for 
- * top and non-top netlists
+ * Generate the port name for a grid in top-level netlists, i.e., full FPGA fabric
+ * This function will generate a full port name including coordinates
+ * so that each pin in top-level netlists is unique!
  *********************************************************************/
 std::string generate_grid_port_name(const vtr::Point<size_t>& coordinate,
                                     const size_t& height, 
@@ -375,6 +470,50 @@ std::string generate_grid_port_name(const vtr::Point<size_t>& coordinate,
 }
 
 /*********************************************************************
+ * Generate the port name for a grid with duplication 
+ * This function will generate two types of port names.
+ * One with a postfix of "upper"
+ * The other with a postfix of "lower"
+ *********************************************************************/
+std::string generate_grid_duplicated_port_name(const size_t& height, 
+                                               const e_side& side, 
+                                               const size_t& pin_id,
+                                               const bool& upper_port) {
+  /* For non-top netlist */
+  Side side_manager(side);
+  std::string port_name = std::string(side_manager.to_string());
+  port_name += std::string("_height_");
+  port_name += std::to_string(height);
+  port_name += std::string("_pin_");
+  port_name += std::to_string(pin_id);
+  port_name += std::string("_");
+
+  if (true == upper_port) {
+    port_name += std::string("upper");
+  } else {
+    VTR_ASSERT_SAFE(false == upper_port);
+    port_name += std::string("lower");
+  }  
+
+  return port_name;
+}
+
+
+/*********************************************************************
+ * Generate the port name for a grid in the context of a module
+ * To keep a short and simple name, this function will not 
+ * include any grid coorindate information!
+ *********************************************************************/
+std::string generate_grid_module_port_name(const size_t& pin_id) {
+  /* For non-top netlist */
+  std::string port_name = std::string("grid_");
+  port_name += std::string("pin_");
+  port_name += std::to_string(pin_id);
+  port_name += std::string("_");
+  return port_name;
+}
+
+/*********************************************************************
  * Generate the port name for a Grid
  * This is a wrapper function for generate_port_name()
  * which can automatically decode the port name by the pin side and height
@@ -394,6 +533,72 @@ std::string generate_grid_side_port_name(const std::vector<std::vector<t_grid_ti
     exit(1);
   } 
   return generate_grid_port_name(coordinate, height, side, pin_id, true);
+}
+
+/*********************************************************************
+ * Generate the port name of a grid pin for a routing module,
+ * which could be a switch block or a connection block
+ * Note that to ensure unique grid port name in the context of a routing module,
+ * we need a prefix which denotes the relative location of the port in the routing module
+ *
+ * The prefix is created by considering the the grid coordinate 
+ * and switch block coordinate
+ * Detailed rules in conversion is as follows:
+ *
+ *             top_left         top_right
+ *             +------------------------+
+ *    left_top |                        | right_top
+ *             |      Switch Block      |
+ *             |         [x][y]         |
+ *             |                        |
+ *             |                        |
+ *  left_right |                        | right_bottom
+ *             +------------------------+
+ *              bottom_left  bottom_right
+ *
+ *  +--------------------------------------------------------
+ *  | Grid Coordinate | Pin side of grid | module side 
+ *  +--------------------------------------------------------
+ *  | [x][y+1]        | right            | top_left
+ *  +--------------------------------------------------------
+ *  | [x][y+1]        | bottom           | left_top
+ *  +--------------------------------------------------------
+ *  | [x+1][y+1]      | left             | top_right
+ *  +--------------------------------------------------------
+ *  | [x+1][y+1]      | bottom           | right_top
+ *  +--------------------------------------------------------
+ *  | [x][y]          | top              | left_right
+ *  +--------------------------------------------------------
+ *  | [x][y]          | right            | bottom_left
+ *  +--------------------------------------------------------
+ *  | [x+1][y]        | top              | right_bottom
+ *  +--------------------------------------------------------
+ *  | [x+1][y]        | left             | bottom_right
+ *  +--------------------------------------------------------
+ *
+ *********************************************************************/
+std::string generate_sb_module_grid_port_name(const e_side& sb_side,
+                                              const e_side& grid_side, 
+                                              const size_t& pin_id) {
+  Side sb_side_manager(sb_side);
+  Side grid_side_manager(grid_side);
+  /* Relative location is opposite to the side in grid context */
+  grid_side_manager.set_opposite();
+  std::string prefix = sb_side_manager.to_string() + std::string("_") + grid_side_manager.to_string();
+  return prefix + std::string("_") + generate_grid_module_port_name(pin_id);
+}
+
+/*********************************************************************
+ * Generate the port name of a grid pin for a routing module,
+ * which could be a switch block or a connection block
+ * Note that to ensure unique grid port name in the context of a routing module,
+ * we need a prefix which denotes the relative location of the port in the routing module
+ *********************************************************************/
+std::string generate_cb_module_grid_port_name(const e_side& cb_side, 
+                                              const size_t& pin_id) {
+  Side side_manager(cb_side);
+  std::string prefix = side_manager.to_string();
+  return prefix + std::string("_") + generate_grid_module_port_name(pin_id);
 }
 
 /*********************************************************************

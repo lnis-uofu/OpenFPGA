@@ -387,7 +387,6 @@ void print_pnr_sdc_compact_routing_disable_switch_block_outputs(const std::strin
  *******************************************************************/
 void print_pnr_sdc(const SdcOption& sdc_options,
                    const float& critical_path_delay,
-                   const std::vector<std::vector<t_grid_tile>>& grids,
                    const std::vector<t_switch_inf>& switches,
                    const DeviceRRGSB& L_device_rr_gsb,
                    const ModuleManager& module_manager,
@@ -426,8 +425,8 @@ void print_pnr_sdc(const SdcOption& sdc_options,
     } else {
       VTR_ASSERT_SAFE (false == compact_routing_hierarchy);
       print_pnr_sdc_flatten_routing_disable_switch_block_outputs(sdc_options.sdc_dir(),
-                                                                module_manager,
-                                                                L_device_rr_gsb);
+                                                                 module_manager,
+                                                                 L_device_rr_gsb);
     }
   }
 
@@ -436,13 +435,13 @@ void print_pnr_sdc(const SdcOption& sdc_options,
     if (true == compact_routing_hierarchy) {
       print_pnr_sdc_compact_routing_constrain_sb_timing(sdc_options.sdc_dir(),
                                                         module_manager,
-                                                        grids, switches,
+                                                        switches,
                                                         L_device_rr_gsb);
     } else {
 	  VTR_ASSERT_SAFE (false == compact_routing_hierarchy);
       print_pnr_sdc_flatten_routing_constrain_sb_timing(sdc_options.sdc_dir(),
                                                         module_manager,
-                                                        grids, switches,
+                                                        switches,
                                                         L_device_rr_gsb);
     }
   }
@@ -452,7 +451,6 @@ void print_pnr_sdc(const SdcOption& sdc_options,
     if (true == compact_routing_hierarchy) {
       print_pnr_sdc_compact_routing_constrain_cb_timing(sdc_options.sdc_dir(),
                                                         module_manager,
-                                                        grids,
                                                         switches,
                                                         L_device_rr_gsb);
     } else {
@@ -460,7 +458,6 @@ void print_pnr_sdc(const SdcOption& sdc_options,
       print_pnr_sdc_flatten_routing_constrain_cb_timing(sdc_options.sdc_dir(),
                                                         module_manager, 
                                                         L_device_rr_gsb,
-                                                        grids,
                                                         switches);
     }
   }

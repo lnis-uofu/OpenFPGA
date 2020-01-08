@@ -1302,6 +1302,7 @@ struct s_fpga_spice_opts {
   t_bitstream_gen_opts BitstreamGenOpts; /* Xifan Bitsteam Generator */
 
   boolean compact_routing_hierarchy; /* use compact routing hierarchy */
+  boolean duplicate_grid_pin; /* Duplicate pins at each side of the grid */
 
   /* Signal Density */
   float signal_density_weight;

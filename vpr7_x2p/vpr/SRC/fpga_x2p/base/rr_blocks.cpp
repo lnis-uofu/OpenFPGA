@@ -843,6 +843,7 @@ int RRGSB::get_node_index(t_rr_node* node,
         &&(node_direction == chan_node_direction_[side_manager.to_size_t()][inode])) {
         cnt++;
         ret = inode;
+        break;
       }
     }
     break;
@@ -851,6 +852,7 @@ int RRGSB::get_node_index(t_rr_node* node,
       if (node == ipin_node_[side_manager.to_size_t()][inode]) {
         cnt++;
         ret = inode;
+        break;
       }
     }
     break;
@@ -859,11 +861,14 @@ int RRGSB::get_node_index(t_rr_node* node,
       if (node == opin_node_[side_manager.to_size_t()][inode]) {
         cnt++;
         ret = inode;
+        break;
       }
     }
     break;
   default:
-    vpr_printf(TIO_MESSAGE_ERROR, "(File:%s, [LINE%d])Invalid cur_rr_node type! Should be [CHANX|CHANY|IPIN|OPIN]\n", __FILE__, __LINE__);
+    vpr_printf(TIO_MESSAGE_ERROR, 
+               "(File:%s, [LINE%d])Invalid cur_rr_node type! Should be [CHANX|CHANY|IPIN|OPIN]\n", 
+               __FILE__, __LINE__);
     exit(1);
   }
 
