@@ -580,7 +580,15 @@ def collect_files_for_vpr():
 
 def run_vpr():
     ExecTime["VPRStart"] = time.time()
-
+    # Format the BLIF File
+    cmd = r"mv %s.blif %s.blif.bak && cat %s.blif.bak" % (
+                                args.top_module,
+                                args.top_module,
+                                args.top_module)
+    cmd += r"| sed 's/$/./' | fold -s -w80 "
+    cmd += r"| sed 's/[^.]$/ \\/' | sed 's/[.]$/ /'"
+    cmd += " > %s.blif" % args.top_module
+    os.system(cmd)
     if not args.fix_route_chan_width:
         # Run Standard VPR Flow
         min_channel_width = run_standard_vpr(
