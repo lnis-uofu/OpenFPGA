@@ -149,8 +149,10 @@ void build_switch_block_mux_module(ModuleManager& module_manager,
   for (size_t pin_id = 0; pin_id < sb_input_port_ids.size(); ++pin_id) {
     /* Use the exising net */
     ModuleNetId net = input_port_to_module_nets.at(sb_input_port_ids[pin_id]);
-    /* Configure the net source */
-    module_manager.add_module_net_source(sb_module, net, sb_module, 0, sb_input_port_ids[pin_id], 0);
+    /* Configure the net source only if it is not yet in the source list */
+    if (false == module_manager.net_source_exist(sb_module, net, sb_module, 0, sb_input_port_ids[pin_id], 0)) {
+      module_manager.add_module_net_source(sb_module, net, sb_module, 0, sb_input_port_ids[pin_id], 0);
+    }
     /* Configure the net sink */
     module_manager.add_module_net_sink(sb_module, net, mux_module, mux_instance_id, mux_input_port_id, mux_input_port.pins()[pin_id]);
   }
@@ -537,8 +539,7 @@ void build_connection_block_mux_module(ModuleManager& module_manager,
   for (size_t pin_id = 0; pin_id < cb_input_port_ids.size(); ++pin_id) {
     /* Use the exising net */
     ModuleNetId net = input_port_to_module_nets.at(cb_input_port_ids[pin_id]);
-    /* Configure the net source */
-    module_manager.add_module_net_source(cb_module, net, cb_module, 0, cb_input_port_ids[pin_id], 0);
+    /* No need to configure the net source since it is already done before */
     /* Configure the net sink */
     module_manager.add_module_net_sink(cb_module, net, mux_module, mux_instance_id, mux_input_port_id, mux_input_port.pins()[pin_id]);
   }
