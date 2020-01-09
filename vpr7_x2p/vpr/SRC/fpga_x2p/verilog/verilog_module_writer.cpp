@@ -242,6 +242,7 @@ void print_verilog_module_local_short_connection(std::fstream& fp,
       continue;
     }
     /* Find the source port and pin information */
+    print_verilog_comment(fp, std::string("----- Net source id " + std::to_string(size_t(net_src)) + " -----"));
     ModulePortId src_port_id = module_manager.net_source_ports(module_id, module_net)[net_src];
     size_t src_pin = module_manager.net_source_pins(module_id, module_net)[net_src];
     BasicPort src_port(module_manager.module_port(module_id, src_port_id).get_name(), src_pin, src_pin);
@@ -254,6 +255,7 @@ void print_verilog_module_local_short_connection(std::fstream& fp,
       }
 
       /* Find the sink port and pin information */
+      print_verilog_comment(fp, std::string("----- Net sink id " + std::to_string(size_t(net_sink)) + " -----"));
       ModulePortId sink_port_id = module_manager.net_sink_ports(module_id, module_net)[net_sink];
       size_t sink_pin = module_manager.net_sink_pins(module_id, module_net)[net_sink];
       BasicPort sink_port(module_manager.module_port(module_id, sink_port_id).get_name(), sink_pin, sink_pin);
@@ -290,6 +292,7 @@ void print_verilog_module_local_short_connections(std::fstream& fp,
     if (false == module_net_include_local_short_connection(module_manager, module_id, module_net)) {
       continue;
     }
+    print_verilog_comment(fp, std::string("----- Local connection due to Wire " + std::to_string(size_t(module_net)) + " -----"));
     print_verilog_module_local_short_connection(fp, module_manager, module_id, module_net); 
   }
 }
@@ -455,10 +458,14 @@ void write_verilog_module_to_file(std::fstream& fp,
   fp << std::endl;
 
   /* Print local connection (from module inputs to output! */
+  print_verilog_comment(fp, std::string("----- BEGIN Local short connections -----"));
   print_verilog_module_local_short_connections(fp, module_manager, module_id);
+  print_verilog_comment(fp, std::string("----- END Local short connections -----"));
 
+  print_verilog_comment(fp, std::string("----- BEGIN Local output short connections -----"));
   print_verilog_module_output_short_connections(fp, module_manager, module_id);
  
+  print_verilog_comment(fp, std::string("----- END Local output short connections -----"));
   /* Print an empty line as splitter */
   fp << std::endl;
 

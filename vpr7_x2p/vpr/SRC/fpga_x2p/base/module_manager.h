@@ -110,6 +110,10 @@ class ModuleManager {
     vtr::vector<ModuleNetSrcId, ModulePortId> net_source_ports(const ModuleId& module, const ModuleNetId& net) const;
     /* Find the source pin indices of a net */
     vtr::vector<ModuleNetSrcId, size_t> net_source_pins(const ModuleId& module, const ModuleNetId& net) const;
+    /* Identify if a pin of a port in a module already exists in the net source list*/
+    bool net_source_exist(const ModuleId& module, const ModuleNetId& net,
+                          const ModuleId& src_module, const size_t& instance_id,
+                          const ModulePortId& src_port, const size_t& src_pin);
 
     /* Find the sink modules of a net */
     vtr::vector<ModuleNetSinkId, ModuleId> net_sink_modules(const ModuleId& module, const ModuleNetId& net) const;
@@ -119,6 +123,11 @@ class ModuleManager {
     vtr::vector<ModuleNetSinkId, ModulePortId> net_sink_ports(const ModuleId& module, const ModuleNetId& net) const;
     /* Find the sink pin indices of a net */
     vtr::vector<ModuleNetSinkId, size_t> net_sink_pins(const ModuleId& module, const ModuleNetId& net) const;
+    /* Identify if a pin of a port in a module already exists in the net sink list*/
+    bool net_sink_exist(const ModuleId& module, const ModuleNetId& net,
+                        const ModuleId& sink_module, const size_t& instance_id,
+                        const ModulePortId& sink_port, const size_t& sink_pin);
+
   private: /* Private accessors */
     size_t find_child_module_index_in_parent_module(const ModuleId& parent_module, const ModuleId& child_module) const;
   public: /* Public mutators */

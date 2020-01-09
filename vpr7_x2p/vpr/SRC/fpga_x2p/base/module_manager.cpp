@@ -326,6 +326,30 @@ vtr::vector<ModuleNetSrcId, size_t> ModuleManager::net_source_pins(const ModuleI
   return net_src_pin_ids_[module][net];
 }
 
+/* Identify if a pin of a port in a module already exists in the net source list*/
+bool ModuleManager::net_source_exist(const ModuleId& module, const ModuleNetId& net,
+                                     const ModuleId& src_module, const size_t& instance_id,
+                                     const ModulePortId& src_port, const size_t& src_pin) {
+  /* Validate module net */
+  VTR_ASSERT(valid_module_net_id(module, net));
+
+  /* Iterate over each source of the net.
+   * If a net source has the same src_module, instance_id, src_port and src_pin,
+   * we can say that the source has already been added to this net!
+   */
+  for (const ModuleNetSrcId& net_src : module_net_sources(module, net)) {
+    if ( (src_module == net_source_modules(module, net)[net_src]) 
+      && (instance_id == net_source_instances(module, net)[net_src])   
+      && (src_port == net_source_ports(module, net)[net_src])   
+      && (src_pin == net_source_pins(module, net)[net_src]) ) {
+      return true;
+    }
+  }
+
+  /* Reach here, it means nothing has been found. Return false */
+  return false;
+}
+
 /* Find the sink modules of a net */
 vtr::vector<ModuleNetSinkId, ModuleId> ModuleManager::net_sink_modules(const ModuleId& module, const ModuleNetId& net) const {
   /* Validate module net */
@@ -356,6 +380,30 @@ vtr::vector<ModuleNetSinkId, size_t> ModuleManager::net_sink_pins(const ModuleId
   VTR_ASSERT(valid_module_net_id(module, net));
 
   return net_sink_pin_ids_[module][net];
+}
+
+/* Identify if a pin of a port in a module already exists in the net sink list*/
+bool ModuleManager::net_sink_exist(const ModuleId& module, const ModuleNetId& net,
+                                     const ModuleId& sink_module, const size_t& instance_id,
+                                     const ModulePortId& sink_port, const size_t& sink_pin) {
+  /* Validate module net */
+  VTR_ASSERT(valid_module_net_id(module, net));
+
+  /* Iterate over each sink of the net.
+   * If a net sink has the same sink_module, instance_id, sink_port and sink_pin,
+   * we can say that the sink has already been added to this net!
+   */
+  for (const ModuleNetSinkId& net_sink : module_net_sinks(module, net)) {
+    if ( (sink_module == net_sink_modules(module, net)[net_sink]) 
+      && (instance_id == net_sink_instances(module, net)[net_sink])   
+      && (sink_port == net_sink_ports(module, net)[net_sink])   
+      && (sink_pin == net_sink_pins(module, net)[net_sink]) ) {
+      return true;
+    }
+  }
+
+  /* Reach here, it means nothing has been found. Return false */
+  return false;
 }
 
 /******************************************************************************
