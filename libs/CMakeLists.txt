@@ -1,9 +1,6 @@
 #Externally developed libraries
 add_subdirectory(EXTERNAL)
 
-# OpenFPGA-related libraries
-add_subdirectory(libini)
-
 # VTR developed libraries
 #  Only add warn flags for VPR internal libraries.
 #add_compile_options(${WARN_FLAGS})

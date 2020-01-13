@@ -159,6 +159,7 @@ enable_testing()
 #
 #add_subdirectory(iverilog)
 add_subdirectory(libs)
+add_subdirectory(libopenfpga)
 add_subdirectory(yosys)
 add_subdirectory(abc)
 add_subdirectory(ace2)
