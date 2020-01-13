@@ -87,22 +87,26 @@ CircuitLibrary read_xml_circuit_models(pugi::xml_node& Node,
     if (model_xml.name() != std::string("circuit_model")) {
       bad_tag(model_xml, loc_data, Node, {"circuit_model"});
     }
-    /* Add a new circuit model to circuit library */
-    /* Process the XML attributes under the <circuit_model> tag */
-    for (pugi::xml_attribute attr : model_xml.attributes()) {
-      /* Find the type of the circuit model */
-      if (attr.name() == std::string("type")) {
-        /* Translate the type of circuit model to enumerate */
-        e_circuit_model_type model_type = string_to_circuit_model_type(attr.value());
-        if (NUM_CIRCUIT_MODEL_TYPES == model_type) {
-          archfpga_throw(loc_data.filename_c_str(), loc_data.line(Node),
-                         "Invalid 'type' attribute '%s'\n",
-                         attr.value());
-        }
+ 
+    /* Find the type of the circuit model
+     * so that we can add a new circuit model to circuit library 
+     */
+    const char* type_attr = get_attribute(model_xml, "type", loc_data).value();
 
-        CircuitModelId model = circuit_lib.add_model(model_type);
-      }
+    /* Translate the type of circuit model to enumerate */
+    e_circuit_model_type model_type = string_to_circuit_model_type(std::string(type_attr));
+
+    if (NUM_CIRCUIT_MODEL_TYPES == model_type) {
+      archfpga_throw(loc_data.filename_c_str(), loc_data.line(Node),
+                     "Invalid 'type' attribute '%s'\n",
+                     type_attr);
     }
+
+    CircuitModelId model = circuit_lib.add_model(model_type);
+
+    /* Find the name of the circuit model */
+    const char* name_attr = get_attribute(model_xml, "name", loc_data).value();
+    circuit_lib.set_model_name(model, std::string(name_attr));
   } 
 
   return circuit_lib;
