@@ -20,6 +20,7 @@ set_target_properties(libarchopenfpga PROPERTIES PREFIX "") #Avoid extra 'lib' p
 #Specify link-time dependancies
 target_link_libraries(libarchopenfpga
                       libvtrutil
+                      libarchfpga
                       libpugixml
                       libpugiutil)
 
