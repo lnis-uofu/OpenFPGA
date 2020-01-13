@@ -3,8 +3,8 @@
 
 #include <string>
 #include "circuit_library.h"
+#include "circuit_settings.h"
 
-void read_xml_openfpga_arch(const char* arch_file_name,
-                            CircuitLibrary& circuit_lib);
+CircuitSettings read_xml_openfpga_arch(const char* arch_file_name);
 
 #endif

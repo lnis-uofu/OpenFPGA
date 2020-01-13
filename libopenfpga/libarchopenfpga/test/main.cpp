@@ -3,14 +3,11 @@
  * 1. parser of data structures
  * 2. writer of data structures
  *******************************************************************/
-#include "circuit_library.h"
-#include "check_circuit_library.h"
-#include "technology_library.h"
-#include "simulation_setting.h"
-#include "direct_types.h"
+#include "read_openfpga_xml.h"
 
 int main(int argc, const char** argv) {
   /* Parse the circuit library from an XML file */
+  const CircuitSettings& circuit_setting = read_xml_openfpga_arch(argv[1]); 
 
   /* Check the circuit library */
   
