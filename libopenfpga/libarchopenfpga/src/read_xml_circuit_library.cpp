@@ -98,6 +98,25 @@ void read_xml_circuit_model(pugi::xml_node& model_xml,
   /* Find the name of the circuit model */
   const char* name_attr = get_attribute(model_xml, "name", loc_data).value();
   circuit_lib.set_model_name(model, std::string(name_attr));
+
+  /* TODO: This attribute is going to be DEPRECATED 
+   * Find the prefix of the circuit model
+   */
+  const char* prefix_attr = get_attribute(model_xml, "prefix", loc_data).value();
+  circuit_lib.set_model_prefix(model, std::string(prefix_attr));
+
+  /* Find a SPICE netlist which is an optional attribute*/
+  const char* spice_netlist_attr = get_attribute(model_xml, "spice_netlist", loc_data, pugiutil::ReqOpt::OPTIONAL).as_string(nullptr);
+  if (spice_netlist_attr) {
+    circuit_lib.set_model_circuit_netlist(model, std::string(spice_netlist_attr));
+  }
+
+  /* Find a Verilog netlist which is an optional attribute*/
+  const char* verilog_netlist_attr = get_attribute(model_xml, "verilog_netlist", loc_data, pugiutil::ReqOpt::OPTIONAL).as_string(nullptr);
+  if (verilog_netlist_attr) {
+    circuit_lib.set_model_verilog_netlist(model, std::string(verilog_netlist_attr));
+  }
+
 }
 
 /********************************************************************
