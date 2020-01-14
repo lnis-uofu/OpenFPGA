@@ -60,7 +60,7 @@ e_circuit_model_type string_to_circuit_model_type(const std::string& type_string
     return CIRCUIT_MODEL_INVBUF;
   }
 
-  if (std::string("passgate") == type_string) {
+  if (std::string("pass_gate") == type_string) {
     return CIRCUIT_MODEL_PASSGATE;
   }
 
