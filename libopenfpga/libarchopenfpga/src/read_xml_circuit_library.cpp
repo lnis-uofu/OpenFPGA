@@ -89,6 +89,38 @@ e_circuit_model_design_tech string_to_design_tech_type(const std::string& type_s
 }
 
 /********************************************************************
+ * Convert string to the enumerate of buffer type
+ *******************************************************************/
+static 
+e_circuit_model_buffer_type string_to_buffer_type(const std::string& type_string) {
+  if (std::string("inverter") == type_string) {
+    return CIRCUIT_MODEL_BUF_INV;
+  }
+
+  if (std::string("buffer") == type_string) {
+    return CIRCUIT_MODEL_BUF_BUF;
+  }
+
+  return NUM_CIRCUIT_MODEL_BUF_TYPES;
+}
+
+/********************************************************************
+ * Convert string to the enumerate of pass-gate-logic type
+ *******************************************************************/
+static 
+e_circuit_model_pass_gate_logic_type string_to_passgate_type(const std::string& type_string) {
+  if (std::string("transmission_gate") == type_string) {
+    return CIRCUIT_MODEL_PASS_GATE_TRANSMISSION;
+  }
+
+  if (std::string("pass_transistor") == type_string) {
+    return CIRCUIT_MODEL_PASS_GATE_TRANSISTOR;
+  }
+
+  return NUM_CIRCUIT_MODEL_PASS_GATE_TYPES;
+}
+
+/********************************************************************
  * Parse XML codes of design technology of a circuit model to circuit library
  *******************************************************************/
 static 
@@ -115,7 +147,52 @@ void read_xml_model_design_technology(pugi::xml_node& xml_model,
   circuit_lib.set_model_design_tech_type(model, design_tech_type);
    
   /* Parse exclusive attributes for inverters and buffers */
+  if (CIRCUIT_MODEL_INVBUF == circuit_lib.model_type(model)) {
+    /* Identify the topology of the buffer */
+    const char* topology_attr = get_attribute(xml_design_tech, "topology", loc_data).value();
+    /* Translate the type of buffer to enumerate */
+    e_circuit_model_buffer_type buf_type = string_to_buffer_type(std::string(topology_attr));
+
+    if (NUM_CIRCUIT_MODEL_BUF_TYPES == buf_type) {
+      archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_design_tech),
+                     "Invalid 'topology' attribute '%s'\n",
+                     topology_attr);
+    }  
+
+    circuit_lib.set_buffer_type(model, buf_type);
+
+    /* Parse the others options: 
+     * 1. size of buffer in the first stage 
+     * 2. number of levels 
+     * 3. driving strength per stage
+     */
+    circuit_lib.set_buffer_size(model, get_attribute(xml_design_tech, "size", loc_data).as_float(0.));
+    circuit_lib.set_buffer_num_levels(model, get_attribute(xml_design_tech, "tap_drive_level", loc_data, pugiutil::ReqOpt::OPTIONAL).as_int(0));
+    circuit_lib.set_buffer_f_per_stage(model, get_attribute(xml_design_tech, "f_per_stage", loc_data, pugiutil::ReqOpt::OPTIONAL).as_int(4));
+  }
   
+  /* Parse exclusive attributes for pass-gate logics */
+  if (CIRCUIT_MODEL_PASSGATE == circuit_lib.model_type(model)) {
+    /* Identify the topology of the pass-gate logic */
+    const char* topology_attr = get_attribute(xml_design_tech, "topology", loc_data).value();
+    /* Translate the type of pass-gate logic to enumerate */
+    e_circuit_model_pass_gate_logic_type passgate_type = string_to_passgate_type(std::string(topology_attr));
+
+    if (NUM_CIRCUIT_MODEL_PASS_GATE_TYPES == passgate_type) {
+      archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_design_tech),
+                     "Invalid 'topology' attribute '%s'\n",
+                     topology_attr);
+    }  
+
+    circuit_lib.set_pass_gate_logic_type(model, passgate_type);
+    /* Parse the others options: 
+     * 1. pmos size to be used in the pass gate logic 
+     * 2. nmos size to be used in the pass gate logic 
+     */
+    circuit_lib.set_pass_gate_logic_pmos_size(model, get_attribute(xml_design_tech, "pmos_size", loc_data).as_float(0.));
+    circuit_lib.set_pass_gate_logic_nmos_size(model, get_attribute(xml_design_tech, "nmos_size", loc_data).as_float(0.));
+  }
+
 }
 
 /********************************************************************
