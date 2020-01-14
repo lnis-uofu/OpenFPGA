@@ -43,7 +43,7 @@
     <io_pmos model_name="pch_25" chan_length="270e-9" min_width="320e-9"/>
   </transistors>
   <circuit_library>
-    <circuit_model type="inv_buf" name="INVTX1" prefix="INVTX1" is_default="1">
+    <circuit_model type="inv_buf" name="INVTX1" prefix="INVTX1" is_default="true">
       <design_technology type="cmos" topology="inverter" size="1" tapered="off"/>
       <port type="input" prefix="in" size="1"/>
       <port type="output" prefix="out" size="1"/>
@@ -54,7 +54,7 @@
         10e-12
       </delay_matrix>
     </circuit_model>
-    <circuit_model type="inv_buf" name="buf4" prefix="buf4" is_default="0">
+    <circuit_model type="inv_buf" name="buf4" prefix="buf4" is_default="false">
       <design_technology type="cmos" topology="buffer" size="1" tapered="on" tap_drive_level="2" f_per_stage="4"/>
       <port type="input" prefix="in" size="1"/>
       <port type="output" prefix="out" size="1"/>
@@ -65,7 +65,7 @@
         10e-12
       </delay_matrix>
     </circuit_model>
-    <circuit_model type="inv_buf" name="tap_buf4" prefix="tap_buf4" is_default="0">
+    <circuit_model type="inv_buf" name="tap_buf4" prefix="tap_buf4" is_default="false">
       <design_technology type="cmos" topology="buffer" size="1" tapered="on" tap_drive_level="3" f_per_stage="4"/>
       <port type="input" prefix="in" size="1"/>
       <port type="output" prefix="out" size="1"/>
@@ -76,7 +76,7 @@
         10e-12
       </delay_matrix>
     </circuit_model>
-    <circuit_model type="pass_gate" name="TGATE" prefix="TGATE" is_default="1">
+    <circuit_model type="pass_gate" name="TGATE" prefix="TGATE" is_default="true">
       <design_technology type="cmos" topology="transmission_gate" nmos_size="1" pmos_size="2"/>
       <input_buffer exist="off"/>
       <output_buffer exist="off"/>
@@ -91,7 +91,7 @@
         10e-12 5e-12 5e-12
       </delay_matrix>
     </circuit_model>
-    <circuit_model type="gate" name="OR2" prefix="OR2" is_default="1">
+    <circuit_model type="gate" name="OR2" prefix="OR2" is_default="true">
       <design_technology type="cmos" topology="OR"/>
       <input_buffer exist="off"/>
       <output_buffer exist="off"/>
@@ -105,7 +105,7 @@
         10e-12 10e-12
       </delay_matrix>
     </circuit_model>
-    <circuit_model type="chan_wire" name="chan_segment" prefix="track_seg" is_default="1">
+    <circuit_model type="chan_wire" name="chan_segment" prefix="track_seg" is_default="true">
       <design_technology type="cmos"/>
       <input_buffer exist="off"/>
       <output_buffer exist="off"/>
@@ -113,7 +113,7 @@
       <port type="output" prefix="out" size="1"/>
       <wire_param model_type="pie" res_val="101" cap_val="22.5e-15" level="1"/> <!-- model_type could be T, res_val and cap_val DON'T CARE -->
     </circuit_model>
-    <circuit_model type="wire" name="direct_interc" prefix="direct_interc" is_default="1">
+    <circuit_model type="wire" name="direct_interc" prefix="direct_interc" is_default="true">
       <design_technology type="cmos"/>
       <input_buffer exist="off"/>
       <output_buffer exist="off"/>
@@ -141,7 +141,7 @@
       <port type="output" prefix="out" size="1"/>
       <port type="sram" prefix="sram" size="1"/>
     </circuit_model>
-    <circuit_model type="mux" name="mux_1level_tapbuf" prefix="mux_1level_tapbuf" is_default="1" dump_structural_verilog="true">
+    <circuit_model type="mux" name="mux_1level_tapbuf" prefix="mux_1level_tapbuf" is_default="true" dump_structural_verilog="true">
       <design_technology type="cmos" structure="one-level" add_const_input="true" const_input_val="1"/>
       <input_buffer exist="on" circuit_model_name="INVTX1"/>
       <output_buffer exist="on" circuit_model_name="tap_buf4"/>
