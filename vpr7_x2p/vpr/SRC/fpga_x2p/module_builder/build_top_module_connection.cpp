@@ -215,7 +215,18 @@ void add_top_module_nets_connect_grids_and_sb_with_duplicated_pins(ModuleManager
       size_t src_grid_instance = grid_instance_ids[grid_coordinate.x()][grid_coordinate.y()];
       size_t src_grid_pin_index = rr_gsb.get_opin_node(side_manager.get_side(), inode)->ptc_num;
       size_t src_grid_pin_height = find_grid_pin_height(grids, grid_coordinate, src_grid_pin_index);
-      std::string src_grid_port_name = generate_grid_duplicated_port_name(src_grid_pin_height, rr_gsb.get_opin_node_grid_side(side_manager.get_side(), inode), src_grid_pin_index, sb_side2postfix_map[side_manager.get_side()]);
+
+      /* Pins for direct connection are NOT duplicated.
+       * Follow the traditional recipe when adding nets!  
+       * Xifan: I assume that each direct connection pin must have Fc=0. 
+       * For other duplicated pins, we follow the new naming
+       */
+      std::string src_grid_port_name;
+      if (0. == grids[grid_coordinate.x()][grid_coordinate.y()].type->Fc[src_grid_pin_index]) {
+        src_grid_port_name = generate_grid_port_name(grid_coordinate, src_grid_pin_height, rr_gsb.get_opin_node_grid_side(side_manager.get_side(), inode), src_grid_pin_index, false);
+      } else {
+       src_grid_port_name = generate_grid_duplicated_port_name(src_grid_pin_height, rr_gsb.get_opin_node_grid_side(side_manager.get_side(), inode), src_grid_pin_index, sb_side2postfix_map[side_manager.get_side()]);
+      }
       ModulePortId src_grid_port_id = module_manager.find_module_port(src_grid_module, src_grid_port_name);
       VTR_ASSERT(true == module_manager.valid_module_port_id(src_grid_module, src_grid_port_id));
       BasicPort src_grid_port = module_manager.module_port(src_grid_module, src_grid_port_id); 
