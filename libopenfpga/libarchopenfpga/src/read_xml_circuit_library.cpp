@@ -13,7 +13,7 @@
 #include "arch_error.h"
 #include "read_xml_util.h"
 
-#include "read_openfpga_xml.h"
+#include "read_xml_circuit_library.h"
 
 /********************************************************************
  * Convert string to the enumerate of model type
@@ -103,10 +103,10 @@ void read_xml_circuit_model(pugi::xml_node& model_xml,
 /********************************************************************
  * Parse XML codes about circuit models to circuit library
  *******************************************************************/
-static 
-CircuitLibrary read_xml_module_circuit_models(pugi::xml_node& Node,
-                                              const pugiutil::loc_data& loc_data) {
+CircuitLibrary read_xml_circuit_library(pugi::xml_node& Node,
+                                        const pugiutil::loc_data& loc_data) {
   CircuitLibrary circuit_lib;
+
   /* Iterate over the children under this node,
    * each child should be named after circuit_model
    */
@@ -121,35 +121,3 @@ CircuitLibrary read_xml_module_circuit_models(pugi::xml_node& Node,
   return circuit_lib;
 }
 
-/********************************************************************
- * Top-level function to parse an XML file and load data to :
- * 1. circuit library
- *******************************************************************/
-CircuitSettings read_xml_openfpga_arch(const char* arch_file_name) {
-  CircuitSettings circuit_settings;
-
-  pugi::xml_node Next;
-
-  /* Parse the file */
-  pugi::xml_document doc;
-  pugiutil::loc_data loc_data;
-
-  try {
-    loc_data = pugiutil::load_xml(doc, arch_file_name);
-
-    /* Root node should be <circuit_settings> */
-    auto xml_circuit_settings = get_single_child(doc, "circuit_settings", loc_data); 
-
-    /* Parse circuit_models to circuit library 
-     * under the node <module_circuit_models> 
-     */
-    auto xml_module_circuit_models = get_single_child(xml_circuit_settings, "module_circuit_models", loc_data);
-    circuit_settings.circuit_lib = read_xml_module_circuit_models(xml_module_circuit_models, loc_data);
-
-  } catch (pugiutil::XmlError& e) {
-    archfpga_throw(arch_file_name, e.line(),
-                   "%s", e.what());
-  }
-
-  return circuit_settings;
-}

@@ -42,7 +42,7 @@
     <io_nmos model_name="nch_25" chan_length="270e-9" min_width="320e-9"/>
     <io_pmos model_name="pch_25" chan_length="270e-9" min_width="320e-9"/>
   </transistors>
-  <module_circuit_models>
+  <circuit_library>
     <circuit_model type="inv_buf" name="INVTX1" prefix="INVTX1" is_default="1">
       <design_technology type="cmos" topology="inverter" size="1" tapered="off"/>
       <port type="input" prefix="in" size="1"/>
@@ -256,5 +256,5 @@
        <port type="output" prefix="cout" size="1"/>
        <port type="output" prefix="sumout" size="1"/>
     </circuit_model>
-  </module_circuit_models>
+  </circuit_library>
 </circuit_settings>
