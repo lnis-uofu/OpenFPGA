@@ -9,6 +9,9 @@
 #include "pugixml.hpp"
 #include "pugixml_util.hpp"
 
+/* Headers from vtr util library */
+#include "vtr_assert.h"
+
 /* Headers from libarchfpga */
 #include "arch_error.h"
 #include "read_xml_util.h"
@@ -121,6 +124,46 @@ e_circuit_model_pass_gate_logic_type string_to_passgate_type(const std::string& 
 }
 
 /********************************************************************
+ * Convert string to the enumerate of multiplexer structure
+ *******************************************************************/
+static 
+e_circuit_model_structure string_to_mux_structure_type(const std::string& type_string) {
+  if (std::string("tree") == type_string) {
+    return CIRCUIT_MODEL_STRUCTURE_TREE;
+  }
+
+  if (std::string("one-level") == type_string) {
+    return CIRCUIT_MODEL_STRUCTURE_ONELEVEL;
+  }
+
+  if (std::string("multi-level") == type_string) {
+    return CIRCUIT_MODEL_STRUCTURE_MULTILEVEL;
+  }
+
+  return NUM_CIRCUIT_MODEL_STRUCTURE_TYPES;
+}
+
+/********************************************************************
+ * Convert string to the enumerate of logic gate type
+ *******************************************************************/
+static 
+e_circuit_model_gate_type string_to_gate_type(const std::string& type_string) {
+  if (std::string("AND") == type_string) {
+    return CIRCUIT_MODEL_GATE_AND;
+  }
+
+  if (std::string("OR") == type_string) {
+    return CIRCUIT_MODEL_GATE_OR;
+  }
+
+  if (std::string("MUX2") == type_string) {
+    return CIRCUIT_MODEL_GATE_MUX2;
+  }
+
+  return NUM_CIRCUIT_MODEL_GATE_TYPES;
+}
+
+/********************************************************************
  * Parse XML codes of design technology of a circuit model to circuit library
  *******************************************************************/
 static 
@@ -191,6 +234,80 @@ void read_xml_model_design_technology(pugi::xml_node& xml_model,
      */
     circuit_lib.set_pass_gate_logic_pmos_size(model, get_attribute(xml_design_tech, "pmos_size", loc_data).as_float(0.));
     circuit_lib.set_pass_gate_logic_nmos_size(model, get_attribute(xml_design_tech, "nmos_size", loc_data).as_float(0.));
+  }
+
+  /* Parse exclusive attributes for Look-Up Tables (LUTs) */
+  if (CIRCUIT_MODEL_LUT == circuit_lib.model_type(model)) {
+    /* Identify if this is a fracturable LUT */
+    circuit_lib.set_lut_is_fracturable(model, get_attribute(xml_design_tech, "fracturable_lut", loc_data, pugiutil::ReqOpt::OPTIONAL).as_bool(false));
+    /* Set default MUX-relate attributes as LUT contains a tree-like MUX */
+    circuit_lib.set_mux_structure(model, CIRCUIT_MODEL_STRUCTURE_TREE);
+    circuit_lib.set_mux_use_local_encoder(model, false);
+    circuit_lib.set_mux_use_advanced_rram_design(model, false);
+  }
+
+  /* Parse exclusive attributes for multiplexers */
+  if (CIRCUIT_MODEL_MUX == circuit_lib.model_type(model)) {
+    /* Set default values for multiplexer structure */
+    if (CIRCUIT_MODEL_DESIGN_CMOS == circuit_lib.design_tech_type(model)) {
+      circuit_lib.set_mux_structure(model, CIRCUIT_MODEL_STRUCTURE_TREE);
+    } else {
+      VTR_ASSERT_SAFE(CIRCUIT_MODEL_DESIGN_RRAM == circuit_lib.design_tech_type(model));
+      circuit_lib.set_mux_structure(model, CIRCUIT_MODEL_STRUCTURE_ONELEVEL);
+    }
+    /* Identify the topology of the multiplexer structure */
+    const char* structure_attr = get_attribute(xml_design_tech, "structure", loc_data).value();
+    /* Translate the type of multiplexer structure to enumerate */
+    e_circuit_model_structure mux_structure = string_to_mux_structure_type(std::string(structure_attr));
+  
+    if (NUM_CIRCUIT_MODEL_STRUCTURE_TYPES == mux_structure) {
+      archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_design_tech),
+                     "Invalid 'structure' attribute '%s'\n",
+                     structure_attr);
+    }  
+
+    circuit_lib.set_mux_structure(model, mux_structure);
+
+    /* Parse the others options: 
+     * 1. constant input values
+     * 2. number of levels if multi-level multiplexer structure is selected
+     * 3. if advanced ReRAM design is used
+     * 4. if local encoder is to be used 
+     */
+    if (true == get_attribute(xml_design_tech, "add_const_input", loc_data, pugiutil::ReqOpt::OPTIONAL).as_bool(false)) {
+      circuit_lib.set_mux_const_input_value(model, get_attribute(xml_design_tech, "const_input_val", loc_data).as_int(0));
+    }
+    if (CIRCUIT_MODEL_STRUCTURE_MULTILEVEL == circuit_lib.mux_structure(model)) {
+      circuit_lib.set_mux_num_levels(model, get_attribute(xml_design_tech, "num_level", loc_data).as_int(1));
+    }
+    circuit_lib.set_mux_use_advanced_rram_design(model, get_attribute(xml_design_tech, "advanced_rram_design", loc_data, pugiutil::ReqOpt::OPTIONAL).as_bool(false));
+    circuit_lib.set_mux_use_local_encoder(model, get_attribute(xml_design_tech, "local_encoder", loc_data, pugiutil::ReqOpt::OPTIONAL).as_bool(false));
+  }
+
+  /* Parse exclusive attributes for logic gates */
+  if (CIRCUIT_MODEL_GATE == circuit_lib.model_type(model)) {
+    /* Identify the topology of the logic gate */
+    const char* topology_attr = get_attribute(xml_design_tech, "topology", loc_data).value();
+    /* Translate the type of logic gate to enumerate */
+    e_circuit_model_gate_type gate_type = string_to_gate_type(std::string(topology_attr));
+
+    if (NUM_CIRCUIT_MODEL_GATE_TYPES == gate_type) {
+      archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_design_tech),
+                     "Invalid 'topology' attribute '%s'\n",
+                     topology_attr);
+    }  
+
+    circuit_lib.set_gate_type(model, gate_type);
+  }
+
+  /* Parse exclusive attributes for RRAM */
+  if (CIRCUIT_MODEL_DESIGN_RRAM == circuit_lib.design_tech_type(model)) {
+    circuit_lib.set_rram_rlrs(model, get_attribute(xml_design_tech, "ron", loc_data).as_float(0.));
+    circuit_lib.set_rram_rhrs(model, get_attribute(xml_design_tech, "roff", loc_data).as_float(0.));
+    circuit_lib.set_rram_wprog_set_pmos(model, get_attribute(xml_design_tech, "wprog_set_pmos", loc_data).as_float(0.));
+    circuit_lib.set_rram_wprog_set_nmos(model, get_attribute(xml_design_tech, "wprog_set_nmos", loc_data).as_float(0.));
+    circuit_lib.set_rram_wprog_reset_pmos(model, get_attribute(xml_design_tech, "wprog_reset_pmos", loc_data).as_float(0.));
+    circuit_lib.set_rram_wprog_reset_nmos(model, get_attribute(xml_design_tech, "wprog_reset_nmos", loc_data).as_float(0.));
   }
 
 }
