@@ -80,9 +80,12 @@ void add_grid_module_duplicated_pb_type_ports(ModuleManager& module_manager,
         /* Reach here, it means this pin is on this side */
         int class_id = grid_type_descriptor->pin_class[ipin];
         e_pin_type pin_class_type = grid_type_descriptor->class_inf[class_id].type;
-        /* Generate the pin name */
-        if (RECEIVER == pin_class_type) {
-          /* For each RECEIVER PIN, we do not duplicate */
+        /* Generate the pin name 
+         * For each RECEIVER PIN or DRIVER PIN for direct connection, 
+         * we do not duplicate in these cases */
+        if ( (RECEIVER == pin_class_type)
+          /* Xifan: I assume that each direct connection pin must have Fc=0. */
+          || ( (DRIVER == pin_class_type) && (0. == grid_type_descriptor->Fc[ipin]) ) ) {
           vtr::Point<size_t> dummy_coordinate;
           std::string port_name = generate_grid_port_name(dummy_coordinate, iheight, side, ipin, false);
           BasicPort grid_port(port_name, 0, 0);
@@ -153,6 +156,36 @@ void add_grid_module_net_connect_duplicated_pb_graph_pin(ModuleManager& module_m
   int pin_height = grid_type_descriptor->pin_height[grid_pin_index];
   for (const e_side& side : grid_pin_sides) {
     if (1 != grid_type_descriptor->pinloc[pin_height][side][grid_pin_index]) {
+      continue;
+    }
+
+    /* Pins for direct connection are NOT duplicated.
+     * Follow the traditional recipe when adding nets!  
+     * Xifan: I assume that each direct connection pin must have Fc=0. 
+     */
+    if (0. == grid_type_descriptor->Fc[grid_pin_index]) {
+      /* Create a net to connect the grid pin to child module pin */
+      ModuleNetId net = module_manager.create_module_net(grid_module);
+      /* Find the port in grid_module */
+      vtr::Point<size_t> dummy_coordinate;
+      std::string grid_port_name = generate_grid_port_name(dummy_coordinate, pin_height, side, grid_pin_index, false);
+      ModulePortId grid_module_port_id = module_manager.find_module_port(grid_module, grid_port_name);
+      VTR_ASSERT(true == module_manager.valid_module_port_id(grid_module, grid_module_port_id));
+
+      /* Grid port always has only 1 pin, it is assumed when adding these ports to the module
+       * if you need a change, please also change the port adding codes  
+       */
+      size_t grid_module_pin_id = 0;
+      /* Find the port in child module */
+      std::string child_module_port_name = generate_pb_type_port_name(pb_graph_pin->port);
+      ModulePortId child_module_port_id = module_manager.find_module_port(child_module, child_module_port_name);
+      VTR_ASSERT(true == module_manager.valid_module_port_id(child_module, child_module_port_id));
+      size_t child_module_pin_id = pb_graph_pin->pin_number;
+      /* Add net sources and sinks:
+       * For output-to-output connection, net_source is pb_graph_pin, while net_sink is grid pin   
+       */
+      module_manager.add_module_net_source(grid_module, net, child_module, child_instance, child_module_port_id, child_module_pin_id);
+      module_manager.add_module_net_sink(grid_module, net, grid_module, 0, grid_module_port_id, grid_module_pin_id);
       continue;
     }
     /* Reach here, it means this pin is on this side */
