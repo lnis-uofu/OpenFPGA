@@ -427,6 +427,13 @@ void read_xml_circuit_model(pugi::xml_node& xml_model,
                                         true != output_buffer_circuit_model_name.empty(), 
                                         output_buffer_circuit_model_name);
   }
+
+  /* Pass-gate-logic attributes, required by LUT and MUX */
+  if ( (CIRCUIT_MODEL_LUT == circuit_lib.model_type(model)) 
+    || (CIRCUIT_MODEL_MUX == circuit_lib.model_type(model)) ) {
+    auto xml_pass_gate_logic = get_single_child(xml_model, "pass_gate_logic", loc_data); 
+    circuit_lib.set_model_pass_gate_logic(model, get_attribute(xml_pass_gate_logic, "circuit_model_name", loc_data).as_string());
+  } 
 }
 
 /********************************************************************
