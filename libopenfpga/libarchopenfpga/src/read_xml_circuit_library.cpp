@@ -309,7 +309,26 @@ void read_xml_model_design_technology(pugi::xml_node& xml_model,
     circuit_lib.set_rram_wprog_reset_pmos(model, get_attribute(xml_design_tech, "wprog_reset_pmos", loc_data).as_float(0.));
     circuit_lib.set_rram_wprog_reset_nmos(model, get_attribute(xml_design_tech, "wprog_reset_nmos", loc_data).as_float(0.));
   }
+}
 
+/********************************************************************
+ * This is a generic function to parse XML codes that describe
+ * a buffer of a circuit model to circuit library
+ * This function will return a string with the circuit model name 
+ * linked to the buffer
+ * If the return is empty, it means that buffer does NOT exist
+  *******************************************************************/
+static 
+std::string read_xml_buffer(pugi::xml_node& xml_buffer,
+                            const pugiutil::loc_data& loc_data) {
+  bool buffer_existence = get_attribute(xml_buffer, "exist", loc_data).as_bool(false);
+  std::string buffer_circuit_model_name("");
+   
+  if (true == buffer_existence) { 
+    buffer_circuit_model_name = get_attribute(xml_buffer, "circuit_model_name", loc_data).as_string();
+  }
+
+  return buffer_circuit_model_name;
 }
 
 /********************************************************************
@@ -361,6 +380,53 @@ void read_xml_circuit_model(pugi::xml_node& xml_model,
   /* Design technology -related attributes */
   read_xml_model_design_technology(xml_model, loc_data, circuit_lib, model);
   
+  /* Parse special buffer attributes required by LUTs only */
+  if (CIRCUIT_MODEL_LUT == circuit_lib.model_type(model)) { 
+    /* Input buffer of LUTs */
+    auto xml_input_buffer = get_single_child(xml_model, "lut_input_buffer", loc_data); 
+    std::string input_buffer_circuit_model_name = read_xml_buffer(xml_input_buffer, loc_data);
+    circuit_lib.set_model_lut_input_buffer(model, 
+                                           true != input_buffer_circuit_model_name.empty(), 
+                                           input_buffer_circuit_model_name);
+
+    /* Input inverter of LUTs */
+    auto xml_input_inverter = get_single_child(xml_model, "lut_input_inverter", loc_data); 
+    std::string input_inverter_circuit_model_name = read_xml_buffer(xml_input_inverter, loc_data);
+    circuit_lib.set_model_lut_input_inverter(model, 
+                                             true != input_inverter_circuit_model_name.empty(), 
+                                             input_inverter_circuit_model_name);
+
+    /* Intermediate buffer of LUTs */
+    auto xml_intermediate_buffer = get_single_child(xml_model, "lut_intermediate_buffer", loc_data, pugiutil::ReqOpt::OPTIONAL); 
+    if (xml_intermediate_buffer) {
+      std::string intermediate_buffer_circuit_model_name = read_xml_buffer(xml_intermediate_buffer, loc_data);
+      circuit_lib.set_model_lut_intermediate_buffer(model, 
+                                                    true != intermediate_buffer_circuit_model_name.empty(), 
+                                                    intermediate_buffer_circuit_model_name);
+      /* If intermediate buffer is defined, try to find the location map */
+      if (true != intermediate_buffer_circuit_model_name.empty()) { 
+        circuit_lib.set_model_lut_intermediate_buffer_location_map(model, get_attribute(xml_intermediate_buffer, "location_map", loc_data).as_string());
+      }
+    }
+  }
+
+  /* Input buffer attributes, NOT required for circuit models which are inverters or buffers */
+  if (CIRCUIT_MODEL_INVBUF != circuit_lib.model_type(model)) {
+    auto xml_input_buffer = get_single_child(xml_model, "input_buffer", loc_data); 
+    std::string input_buffer_circuit_model_name = read_xml_buffer(xml_input_buffer, loc_data);
+    circuit_lib.set_model_input_buffer(model, 
+                                       true != input_buffer_circuit_model_name.empty(), 
+                                       input_buffer_circuit_model_name);
+  }
+
+  /* Output buffer attributes, NOT required for circuit models which are inverters or buffers */
+  if (CIRCUIT_MODEL_INVBUF != circuit_lib.model_type(model)) {
+    auto xml_output_buffer = get_single_child(xml_model, "output_buffer", loc_data); 
+    std::string output_buffer_circuit_model_name = read_xml_buffer(xml_output_buffer, loc_data);
+    circuit_lib.set_model_output_buffer(model, 
+                                        true != output_buffer_circuit_model_name.empty(), 
+                                        output_buffer_circuit_model_name);
+  }
 }
 
 /********************************************************************

@@ -78,8 +78,8 @@
     </circuit_model>
     <circuit_model type="pass_gate" name="TGATE" prefix="TGATE" is_default="true">
       <design_technology type="cmos" topology="transmission_gate" nmos_size="1" pmos_size="2"/>
-      <input_buffer exist="off"/>
-      <output_buffer exist="off"/>
+      <input_buffer exist="false"/>
+      <output_buffer exist="false"/>
       <port type="input" prefix="in" size="1"/>
       <port type="input" prefix="sel" size="1"/>
       <port type="input" prefix="selb" size="1"/>
@@ -93,8 +93,8 @@
     </circuit_model>
     <circuit_model type="gate" name="OR2" prefix="OR2" is_default="true">
       <design_technology type="cmos" topology="OR"/>
-      <input_buffer exist="off"/>
-      <output_buffer exist="off"/>
+      <input_buffer exist="false"/>
+      <output_buffer exist="false"/>
       <port type="input" prefix="a" size="1"/>
       <port type="input" prefix="b" size="1"/>
       <port type="output" prefix="out" size="1"/>
@@ -107,24 +107,24 @@
     </circuit_model>
     <circuit_model type="chan_wire" name="chan_segment" prefix="track_seg" is_default="true">
       <design_technology type="cmos"/>
-      <input_buffer exist="off"/>
-      <output_buffer exist="off"/>
+      <input_buffer exist="false"/>
+      <output_buffer exist="false"/>
       <port type="input" prefix="in" size="1"/>
       <port type="output" prefix="out" size="1"/>
       <wire_param model_type="pie" res_val="101" cap_val="22.5e-15" level="1"/> <!-- model_type could be T, res_val and cap_val DON'T CARE -->
     </circuit_model>
     <circuit_model type="wire" name="direct_interc" prefix="direct_interc" is_default="true">
       <design_technology type="cmos"/>
-      <input_buffer exist="off"/>
-      <output_buffer exist="off"/>
+      <input_buffer exist="false"/>
+      <output_buffer exist="false"/>
       <port type="input" prefix="in" size="1"/>
       <port type="output" prefix="out" size="1"/>
       <wire_param model_type="pie" res_val="0" cap_val="0" level="1"/> <!-- model_type could be T, res_val cap_val should be defined -->
     </circuit_model>
     <circuit_model type="mux" name="mux_2level" prefix="mux_2level" dump_structural_verilog="true">
       <design_technology type="cmos" structure="multi-level" num_level="2" add_const_input="true" const_input_val="1"/>
-      <input_buffer exist="on" circuit_model_name="INVTX1"/>
-      <output_buffer exist="on" circuit_model_name="INVTX1"/>
+      <input_buffer exist="true" circuit_model_name="INVTX1"/>
+      <output_buffer exist="true" circuit_model_name="INVTX1"/>
       <!--mux2to1 subckt_name="mux2to1"/-->
       <pass_gate_logic circuit_model_name="TGATE"/>
       <port type="input" prefix="in" size="1"/>
@@ -133,8 +133,8 @@
     </circuit_model>
     <circuit_model type="mux" name="mux_2level_tapbuf" prefix="mux_2level_tapbuf" dump_structural_verilog="true">
       <design_technology type="cmos" structure="multi-level" num_level="2" add_const_input="true" const_input_val="1"/>
-      <input_buffer exist="on" circuit_model_name="INVTX1"/>
-      <output_buffer exist="on" circuit_model_name="tap_buf4"/>
+      <input_buffer exist="true" circuit_model_name="INVTX1"/>
+      <output_buffer exist="true" circuit_model_name="tap_buf4"/>
       <!--mux2to1 subckt_name="mux2to1"/-->
       <pass_gate_logic circuit_model_name="TGATE"/>
       <port type="input" prefix="in" size="1"/>
@@ -143,8 +143,8 @@
     </circuit_model>
     <circuit_model type="mux" name="mux_1level_tapbuf" prefix="mux_1level_tapbuf" is_default="true" dump_structural_verilog="true">
       <design_technology type="cmos" structure="one-level" add_const_input="true" const_input_val="1"/>
-      <input_buffer exist="on" circuit_model_name="INVTX1"/>
-      <output_buffer exist="on" circuit_model_name="tap_buf4"/>
+      <input_buffer exist="true" circuit_model_name="INVTX1"/>
+      <output_buffer exist="true" circuit_model_name="tap_buf4"/>
       <!--mux2to1 subckt_name="mux2to1"/-->
       <pass_gate_logic circuit_model_name="TGATE"/>
       <port type="input" prefix="in" size="1"/>
@@ -154,8 +154,8 @@
     <!--DFF subckt ports should be defined as <D> <Q> <CLK> <RESET> <SET>  -->
     <circuit_model type="ff" name="static_dff" prefix="dff" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/ff.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/ff.v">
        <design_technology type="cmos"/>
-       <input_buffer exist="on" circuit_model_name="INVTX1"/>
-       <output_buffer exist="on" circuit_model_name="INVTX1"/>
+       <input_buffer exist="true" circuit_model_name="INVTX1"/>
+       <output_buffer exist="true" circuit_model_name="INVTX1"/>
        <pass_gate_logic circuit_model_name="TGATE"/>
        <port type="input" prefix="D" size="1"/>
        <port type="input" prefix="set" size="1" is_global="true" default_val="0" is_set="true"/>
@@ -165,10 +165,10 @@
     </circuit_model>
     <circuit_model type="lut" name="lut5" prefix="lut5" dump_structural_verilog="true">
       <design_technology type="cmos"/>
-      <input_buffer exist="on" circuit_model_name="INVTX1"/>
-      <output_buffer exist="on" circuit_model_name="INVTX1"/>
-      <lut_input_inverter exist="on" circuit_model_name="INVTX1"/>
-      <lut_input_buffer exist="on" circuit_model_name="buf4"/>
+      <input_buffer exist="true" circuit_model_name="INVTX1"/>
+      <output_buffer exist="true" circuit_model_name="INVTX1"/>
+      <lut_input_inverter exist="true" circuit_model_name="INVTX1"/>
+      <lut_input_buffer exist="true" circuit_model_name="buf4"/>
       <pass_gate_logic circuit_model_name="TGATE"/>
       <port type="input" prefix="in" size="5"/>
       <port type="output" prefix="out" size="1"/>
@@ -176,11 +176,11 @@
     </circuit_model>
     <circuit_model type="lut" name="frac_lut6" prefix="frac_lut6" dump_structural_verilog="true">
       <design_technology type="cmos" fracturable_lut="true"/>
-      <input_buffer exist="on" circuit_model_name="INVTX1"/>
-      <output_buffer exist="on" circuit_model_name="INVTX1"/>
-      <lut_input_inverter exist="on" circuit_model_name="INVTX1"/>
-      <lut_input_buffer exist="on" circuit_model_name="buf4"/>
-  	<lut_intermediate_buffer exist="on" circuit_model_name="buf4" location_map="-1-1-"/>
+      <input_buffer exist="true" circuit_model_name="INVTX1"/>
+      <output_buffer exist="true" circuit_model_name="INVTX1"/>
+      <lut_input_inverter exist="true" circuit_model_name="INVTX1"/>
+      <lut_input_buffer exist="true" circuit_model_name="buf4"/>
+  	  <lut_intermediate_buffer exist="true" circuit_model_name="buf4" location_map="-1-1-"/>
       <pass_gate_logic circuit_model_name="TGATE"/>
       <port type="input" prefix="in" size="6" tri_state_map="----11" circuit_model_name="OR2"/>
       <port type="output" prefix="lut4_out" size="4" lut_frac_level="4" lut_output_mask="0,1,2,3"/>
@@ -191,11 +191,11 @@
     </circuit_model>
     <circuit_model type="lut" name="frac_lut4" prefix="frac_lut4" dump_structural_verilog="true">
       <design_technology type="cmos" fracturable_lut="true"/>
-      <input_buffer exist="on" circuit_model_name="INVTX1"/>
-      <output_buffer exist="on" circuit_model_name="INVTX1"/>
-      <lut_input_inverter exist="on" circuit_model_name="INVTX1"/>
-      <lut_input_buffer exist="on" circuit_model_name="buf4"/>
-  	<lut_intermediate_buffer exist="on" circuit_model_name="buf4" location_map="-1-"/>
+      <input_buffer exist="true" circuit_model_name="INVTX1"/>
+      <output_buffer exist="true" circuit_model_name="INVTX1"/>
+      <lut_input_inverter exist="true" circuit_model_name="INVTX1"/>
+      <lut_input_buffer exist="true" circuit_model_name="buf4"/>
+  	  <lut_intermediate_buffer exist="true" circuit_model_name="buf4" location_map="-1-"/>
       <pass_gate_logic circuit_model_name="TGATE"/>
       <port type="input" prefix="in" size="4" tri_state_map="--11" circuit_model_name="OR2"/>
       <port type="output" prefix="lut2_out" size="4" lut_frac_level="2" lut_output_mask="0,1,2,3"/>
@@ -206,16 +206,16 @@
     </circuit_model>
     <circuit_model type="sram" name="sram6T" prefix="sram" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/sram.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/sram.v" >
       <design_technology type="cmos"/>
-      <input_buffer exist="on" circuit_model_name="INVTX1"/>
-      <output_buffer exist="on" circuit_model_name="INVTX1"/>
+      <input_buffer exist="true" circuit_model_name="INVTX1"/>
+      <output_buffer exist="true" circuit_model_name="INVTX1"/>
       <pass_gate_logic circuit_model_name="TGATE"/>
       <port type="input" prefix="in" size="1"/>
       <port type="output" prefix="out" size="2"/>
     </circuit_model>
     <circuit_model type="sram" name="sram6T_blwl" prefix="sram_blwl" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/sram.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/sram.v">
       <design_technology type="cmos"/>
-      <input_buffer exist="on" circuit_model_name="INVTX1"/>
-      <output_buffer exist="on" circuit_model_name="INVTX1"/>
+      <input_buffer exist="true" circuit_model_name="INVTX1"/>
+      <output_buffer exist="true" circuit_model_name="INVTX1"/>
       <pass_gate_logic circuit_model_name="TGATE"/>
       <port type="input" prefix="in" size="1"/>
       <port type="output" prefix="out" size="2"/>
@@ -226,8 +226,8 @@
     <!--Scan-chain DFF subckt ports should be defined as <D> <Q> <Qb> <CLK> <RESET> <SET>  -->
     <circuit_model type="ccff" name="sc_dff_compact" prefix="scff" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/ff.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/ff.v">
        <design_technology type="cmos"/>
-       <input_buffer exist="on" circuit_model_name="INVTX1"/>
-       <output_buffer exist="on" circuit_model_name="INVTX1"/>
+       <input_buffer exist="true" circuit_model_name="INVTX1"/>
+       <output_buffer exist="true" circuit_model_name="INVTX1"/>
        <pass_gate_logic circuit_model_name="TGATE"/>
        <port type="input" prefix="pReset" size="1" is_global="true" default_val="0" is_reset="true" is_prog="true"/>
        <port type="input" prefix="D" size="1"/>
@@ -237,8 +237,8 @@
     </circuit_model>
     <circuit_model type="iopad" name="iopad" prefix="iopad" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/io.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/io.v">
       <design_technology type="cmos"/>
-      <input_buffer exist="on" circuit_model_name="INVTX1"/>
-      <output_buffer exist="on" circuit_model_name="INVTX1"/>
+      <input_buffer exist="true" circuit_model_name="INVTX1"/>
+      <output_buffer exist="true" circuit_model_name="INVTX1"/>
       <pass_gate_logic circuit_model_name="TGATE"/>
       <port type="inout" prefix="pad" size="1"/>
       <port type="sram" prefix="en" size="1" mode_select="true" circuit_model_name="sc_dff_compact" default_val="1"/>
@@ -248,8 +248,8 @@
     <!-- Hard logic definition for heterogenous blocks -->
     <circuit_model type="hard_logic" name="adder" prefix="adder" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/adder.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/adder.v">
        <design_technology type="cmos"/>
-       <input_buffer exist="on" circuit_model_name="INVTX1"/>
-       <output_buffer exist="on" circuit_model_name="INVTX1"/>
+       <input_buffer exist="true" circuit_model_name="INVTX1"/>
+       <output_buffer exist="true" circuit_model_name="INVTX1"/>
        <port type="input" prefix="a" size="1"/>
        <port type="input" prefix="b" size="1"/>
        <port type="input" prefix="cin" size="1"/>
