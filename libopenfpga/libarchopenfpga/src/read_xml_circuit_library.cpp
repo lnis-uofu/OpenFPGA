@@ -16,6 +16,9 @@
 #include "arch_error.h"
 #include "read_xml_util.h"
 
+/* Headers from openfpga_utils*/
+#include "string_token.h"
+
 #include "read_xml_circuit_library.h"
 
 /********************************************************************
@@ -161,6 +164,50 @@ e_circuit_model_gate_type string_to_gate_type(const std::string& type_string) {
   }
 
   return NUM_CIRCUIT_MODEL_GATE_TYPES;
+}
+
+/********************************************************************
+ * Convert string to the enumerate of circuit model port type
+ *******************************************************************/
+static 
+e_circuit_model_port_type string_to_circuit_model_port_type(const std::string& type_string) {
+  if (std::string("input") == type_string) {
+    return CIRCUIT_MODEL_PORT_INPUT;
+  }
+
+  if (std::string("output") == type_string) {
+    return CIRCUIT_MODEL_PORT_OUTPUT;
+  }
+
+  if (std::string("clock") == type_string) {
+    return CIRCUIT_MODEL_PORT_CLOCK;
+  }
+
+  if (std::string("sram") == type_string) {
+    return CIRCUIT_MODEL_PORT_SRAM;
+  }
+
+  if (std::string("bl") == type_string) {
+    return CIRCUIT_MODEL_PORT_BL;
+  }
+
+  if (std::string("wl") == type_string) {
+    return CIRCUIT_MODEL_PORT_WL;
+  }
+
+  if (std::string("blb") == type_string) {
+    return CIRCUIT_MODEL_PORT_BLB;
+  }
+
+  if (std::string("wlb") == type_string) {
+    return CIRCUIT_MODEL_PORT_WLB;
+  }
+
+  if (std::string("inout") == type_string) {
+    return CIRCUIT_MODEL_PORT_INOUT;
+  }
+
+  return NUM_CIRCUIT_MODEL_PORT_TYPES;
 }
 
 /********************************************************************
@@ -332,6 +379,141 @@ std::string read_xml_buffer(pugi::xml_node& xml_buffer,
 }
 
 /********************************************************************
+ * Identify the output mask of the port in LUTs, 
+ * by default it will be applied to each pin of this port
+ * This is only applicable to output ports of a LUT
+ *******************************************************************/
+static 
+void read_xml_output_mask(pugi::xml_node& xml_port,
+                          const pugiutil::loc_data& loc_data,
+                          CircuitLibrary& circuit_lib, const CircuitPortId& port) {
+  const char* output_mask_attr = get_attribute(xml_port, "lut_output_mask", loc_data, pugiutil::ReqOpt::OPTIONAL).value();
+  std::vector<size_t> mask_vector;
+  if (nullptr != output_mask_attr) {
+    /* Split the string with token ',' */
+    StringToken string_tokenizer(get_attribute(xml_port, "lut_output_mask", loc_data, pugiutil::ReqOpt::OPTIONAL).as_string(nullptr));
+    for (const std::string& mask_token : string_tokenizer.split(',')) {
+      mask_vector.push_back(std::atoi(mask_token.c_str()));
+    }
+    /* Make sure that the size of mask fits the port size */
+    if (circuit_lib.port_size(port) != mask_vector.size()) {
+      archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_port),
+                     "Invalid lut_output_mask attribute '%s'! It must match the port size (=%lu)\n",
+                     output_mask_attr, circuit_lib.port_size(port));
+    } 
+  } else {
+    /* By default, we give a mask vector covering each pin of the port */
+    mask_vector.resize(circuit_lib.port_size(port));
+    std::iota(mask_vector.begin(), mask_vector.end(), 0);
+  }
+  circuit_lib.set_port_lut_output_mask(port, mask_vector);
+}
+
+/********************************************************************
+ * This is a generic function to parse XML codes that describe
+ * a port of a circuit model to circuit library
+  *******************************************************************/
+static 
+void read_xml_circuit_port(pugi::xml_node& xml_port,
+                           const pugiutil::loc_data& loc_data,
+                           CircuitLibrary& circuit_lib, const CircuitModelId& model) {
+  /* Find the type of the circuit port
+   * so that we can add a new circuit port to circuit library 
+   */
+  const char* type_attr = get_attribute(xml_port, "type", loc_data).value();
+
+  /* Translate the type of circuit model to enumerate */
+  e_circuit_model_port_type port_type = string_to_circuit_model_port_type(std::string(type_attr));
+
+  if (NUM_CIRCUIT_MODEL_PORT_TYPES == port_type) {
+    archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_port),
+                   "Invalid 'type' attribute '%s'\n",
+                   type_attr);
+  }
+
+  CircuitPortId port = circuit_lib.add_model_port(model, port_type);
+
+  /* Parse the name of the port */
+  circuit_lib.set_port_prefix(port, get_attribute(xml_port, "prefix", loc_data).as_string());
+
+  /* Parse the name of the port in cell library. By default, the lib_name is the same as port name */
+  const char* lib_name_attr = get_attribute(xml_port, "lib_name", loc_data, pugiutil::ReqOpt::OPTIONAL).as_string(nullptr);
+  if (nullptr != lib_name_attr) {
+    circuit_lib.set_port_lib_name(port, get_attribute(xml_port, "lib_name", loc_data).as_string());
+  } else {
+    circuit_lib.set_port_lib_name(port, circuit_lib.port_prefix(port));
+  }
+
+  /* Parse the port size, by default it will be 1 */
+  circuit_lib.set_port_size(port, get_attribute(xml_port, "size", loc_data).as_int(1));
+
+  /* Identify if the port is for mode selection, this is only applicable to SRAM ports.
+   * By default, it will NOT be a mode selection port
+   */
+  if (CIRCUIT_MODEL_PORT_SRAM == circuit_lib.port_type(port)) {
+    circuit_lib.set_port_is_mode_select(port, get_attribute(xml_port, "mode_select", loc_data, pugiutil::ReqOpt::OPTIONAL).as_bool(false));
+  } 
+
+  /* Identify the default value of the port, by default it will be 0 */
+  circuit_lib.set_port_default_value(port, get_attribute(xml_port, "default_val", loc_data, pugiutil::ReqOpt::OPTIONAL).as_int(0));
+
+  /* Identify the tri-state map of the port, by default it will be nullptr 
+   * This is only applicable to input ports of a LUT
+   */
+  if ( (CIRCUIT_MODEL_LUT == circuit_lib.model_type(model))
+    && (CIRCUIT_MODEL_PORT_INPUT == circuit_lib.port_type(port)) ) {
+    const char* tri_state_map_attr = get_attribute(xml_port, "tri_state_map", loc_data, pugiutil::ReqOpt::OPTIONAL).value();
+    if (nullptr != tri_state_map_attr) {
+      circuit_lib.set_port_tri_state_map(port, get_attribute(xml_port, "tri_state_map", loc_data, pugiutil::ReqOpt::OPTIONAL).as_string());
+    }
+  }
+
+  /* Identify the fracturable-level of the port in LUTs, by default it will be -1
+   * This is only applicable to output ports of a LUT
+   */
+  if ( (CIRCUIT_MODEL_LUT == circuit_lib.model_type(model))
+    && (CIRCUIT_MODEL_PORT_OUTPUT == circuit_lib.port_type(port)) ) {
+    circuit_lib.set_port_lut_frac_level(port, get_attribute(xml_port, "lut_frac_level", loc_data, pugiutil::ReqOpt::OPTIONAL).as_int(-1));
+  }
+
+  /* Identify the output mask of the port in LUTs, by default it will be applied to each pin of this port
+   * This is only applicable to output ports of a LUT
+   */
+  if ( (CIRCUIT_MODEL_LUT == circuit_lib.model_type(model))
+    && (CIRCUIT_MODEL_PORT_OUTPUT == circuit_lib.port_type(port)) ) {
+    read_xml_output_mask(xml_port, loc_data, circuit_lib, port);
+  }
+
+  /* Identify if the port is a global port, by default it is NOT */
+  circuit_lib.set_port_is_global(port, get_attribute(xml_port, "is_global", loc_data, pugiutil::ReqOpt::OPTIONAL).as_bool(false));
+
+  /* Identify if the port is a reset port, by default it is NOT */
+  circuit_lib.set_port_is_reset(port, get_attribute(xml_port, "is_reset", loc_data, pugiutil::ReqOpt::OPTIONAL).as_bool(false));
+
+  /* Identify if the port is a set port, by default it is NOT */
+  circuit_lib.set_port_is_set(port, get_attribute(xml_port, "is_set", loc_data, pugiutil::ReqOpt::OPTIONAL).as_bool(false));
+
+  /* Identify if the port is in programming purpose, by default it is NOT */
+  circuit_lib.set_port_is_prog(port, get_attribute(xml_port, "is_prog", loc_data, pugiutil::ReqOpt::OPTIONAL).as_bool(false));
+
+  /* Identify if the port is to enable programming for FPGAs, by default it is NOT */
+  circuit_lib.set_port_is_config_enable(port, get_attribute(xml_port, "is_config_enable", loc_data, pugiutil::ReqOpt::OPTIONAL).as_bool(false));
+
+  /* Find the name of circuit model that this port is linked to */
+  circuit_lib.set_port_tri_state_model_name(port, get_attribute(xml_port, "circuit_model_name", loc_data, pugiutil::ReqOpt::OPTIONAL).as_string());
+
+  /* Find the name of circuit model that port is used for inversion of signals,
+   * This is only applicable to BL/WL/BLB/WLB ports
+   */
+  if (  (CIRCUIT_MODEL_PORT_BL  == circuit_lib.port_type(port))
+     || (CIRCUIT_MODEL_PORT_WL  == circuit_lib.port_type(port))
+     || (CIRCUIT_MODEL_PORT_BLB == circuit_lib.port_type(port))
+     || (CIRCUIT_MODEL_PORT_WLB == circuit_lib.port_type(port)) ) {
+    circuit_lib.set_port_inv_model_name(port, get_attribute(xml_port, "inv_circuit_model_name", loc_data, pugiutil::ReqOpt::OPTIONAL).as_string(nullptr));
+  }
+}
+
+/********************************************************************
  * Parse XML codes of a circuit model to circuit library
  *******************************************************************/
 static 
@@ -434,6 +616,15 @@ void read_xml_circuit_model(pugi::xml_node& xml_model,
     auto xml_pass_gate_logic = get_single_child(xml_model, "pass_gate_logic", loc_data); 
     circuit_lib.set_model_pass_gate_logic(model, get_attribute(xml_pass_gate_logic, "circuit_model_name", loc_data).as_string());
   } 
+
+  /* Parse all the ports belonging to this circuit model
+   * We count the number of ports in total and then add one by one 
+   */
+  size_t num_ports = count_children(xml_model, "port", loc_data, pugiutil::ReqOpt::OPTIONAL);
+  for (size_t iport = 0; iport < num_ports; ++iport) {
+    auto xml_port = get_first_child(xml_model, "port", loc_data);
+    read_xml_circuit_port(xml_port, loc_data, circuit_lib, model);
+  }
 }
 
 /********************************************************************
