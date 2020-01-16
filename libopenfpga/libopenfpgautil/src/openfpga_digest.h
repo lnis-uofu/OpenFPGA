@@ -1,15 +1,22 @@
-#ifndef READ_XML_OPENFPGA_ARCH_H
-#define READ_XML_OPENFPGA_ARCH_H
+#ifndef OPENFPGA_DIGEST_H
+#define OPENFPGA_DIGEST_H
 
 /********************************************************************
  * Include header files that are required by function declaration
  *******************************************************************/
-#include <string>
-#include "openfpga_arch.h"
+#include <fstream>
 
 /********************************************************************
  * Function declaration
  *******************************************************************/
-OpenFPGAArch read_xml_openfpga_arch(const char* arch_file_name);
+/* namespace openfpga begins */
+namespace openfpga {
+
+bool valid_file_stream(std::fstream& fp);
+
+void check_file_stream(const char* fname, 
+                       std::fstream& fp);
+
+} /* namespace openfpga ends */
 
 #endif

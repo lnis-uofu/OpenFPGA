@@ -1,5 +1,5 @@
-#ifndef READ_XML_OPENFPGA_ARCH_H
-#define READ_XML_OPENFPGA_ARCH_H
+#ifndef WRITE_XML_OPENFPGA_ARCH_H
+#define WRITE_XML_OPENFPGA_ARCH_H
 
 /********************************************************************
  * Include header files that are required by function declaration
@@ -10,6 +10,7 @@
 /********************************************************************
  * Function declaration
  *******************************************************************/
-OpenFPGAArch read_xml_openfpga_arch(const char* arch_file_name);
+void write_xml_openfpga_arch(const char* xml_fname, 
+                             const OpenFPGAArch& openfpga_arch);
 
 #endif

@@ -1,15 +1,17 @@
-#ifndef READ_XML_OPENFPGA_ARCH_H
-#define READ_XML_OPENFPGA_ARCH_H
+#ifndef WRITE_XML_UTILS_H
+#define WRITE_XML_UTILS_H
 
 /********************************************************************
  * Include header files that are required by function declaration
  *******************************************************************/
-#include <string>
-#include "openfpga_arch.h"
+#include <fstream>
+#include "circuit_library.h"
 
 /********************************************************************
  * Function declaration
  *******************************************************************/
-OpenFPGAArch read_xml_openfpga_arch(const char* arch_file_name);
+void write_xml_attribute(std::fstream& fp, 
+                         const char* attr,
+                         const char* value);
 
 #endif
