@@ -7,7 +7,7 @@
      3. circuit models, where we define circuit-level details for
         each primitives in FPGA architecture
   -->
-<circuit_settings>
+<openfpga_architecture>
   <simulation_parameters>
     <options sim_temp="25" post="off" captab="off" fast="on"/>
     <monte_carlo mc_sim="off" num_mc_points="2" cmos_variation="off" rram_variation="off">
@@ -257,4 +257,4 @@
        <port type="output" prefix="sumout" size="1"/>
     </circuit_model>
   </circuit_library>
-</circuit_settings>
+</openfpga_architecture>
