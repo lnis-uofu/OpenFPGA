@@ -1,47 +1,15 @@
-/**********************************************************
- * MIT License
- *
- * Copyright (c) 2018 LNIS - The University of Utah
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- ***********************************************************************/
-
-/************************************************************************
- * Filename:    string_token.cpp
- * Created by:   Xifan Tang
- * Change history:
- * +-------------------------------------+
- * |  Date       |    Author   | Notes
- * +-------------------------------------+
- * | 2019/08/09  |  Xifan Tang | Created 
- * +-------------------------------------+
- ***********************************************************************/
-
 /************************************************************************
  * Member functions for StringToken class 
  ***********************************************************************/
+#include <cstring>
 
-#include "string.h"
-
+/* Headers from vtrutil library */
 #include "vtr_assert.h"
 
-#include "string_token.h"
+#include "openfpga_tokenizer.h"
+
+/* namespace openfpga begins */
+namespace openfpga {
 
 /************************************************************************
  * Constructors
@@ -68,13 +36,13 @@ std::vector<std::string> StringToken::split(const std::string& delims) const {
   std::copy(data_.begin(), data_.end(), tmp);
   tmp[data_.size()] = '\0';
   /* Split using strtok */
-  char* result = strtok(tmp, delims.c_str());
+  char* result = std::strtok(tmp, delims.c_str());
   while (NULL != result) {
     std::string result_str(result);
     /* Store the token */
     ret.push_back(result_str);
     /* Got to next */
-    result = strtok(NULL, delims.c_str());
+    result = std::strtok(NULL, delims.c_str());
   }
 
   /* Free the tmp */
@@ -168,7 +136,4 @@ void StringToken::add_default_delim() {
   return;
 }
 
-/************************************************************************
- * End of file : string_token.cpp
- ***********************************************************************/
-
+} /* namespace openfpga ends */

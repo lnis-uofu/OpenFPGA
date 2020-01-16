@@ -2,7 +2,7 @@
  * This file includes functions that handles the file outputting
  * in OpenFPGA framework
  *******************************************************************/
-/* Headers from vtr util library */
+/* Headers from vtrutil library */
 #include "vtr_log.h"
 
 /* Headers from openfpgautil library */

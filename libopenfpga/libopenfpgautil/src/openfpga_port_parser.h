@@ -1,31 +1,26 @@
-/* IMPORTANT:
- * The following preprocessing flags are added to 
- * avoid compilation error when this headers are included in more than 1 times 
- */
-#ifndef PORT_PARSER_H
-#define PORT_PARSER_H
+#ifndef OPENFPGA_PORT_PARSER_H
+#define OPENFPGA_PORT_PARSER_H
 
-/*
- * Notes in include header files in a head file 
- * Only include the neccessary header files 
- * that is required by the data types in the function/class declarations!
- */
-/* Header files should be included in a sequence */
-/* Standard header files required go first */
+/********************************************************************
+ * Include header files that are required by data structure declaration
+ *******************************************************************/
 #include <string>
 #include <vector>
 
 #include "vtr_ndmatrix.h"
 #include "vtr_geometry.h"
 
-#include "device_port.h"
-#include "string_token.h"
+#include "openfpga_port.h"
+#include "openfpga_tokenizer.h"
 
 /************************************************************************
  * This file includes parsers for port definition in the architecture XML
  * language. Note that it is also compatiable to Verilog syntax.
  * It means we may reuse this for constructing a structural Verilog parser
  ***********************************************************************/
+
+/* namespace openfpga begins */
+namespace openfpga {
 
 /************************************************************************
  * Class PortParser: single port parser
@@ -103,10 +98,7 @@ class PortDelayParser {
     vtr::Matrix<float> delay_matrix_;
 };
 
+} /* namespace openfpga ends */
 
 #endif
-
-/************************************************************************
- * End of file : port_parser.h
- ***********************************************************************/
 

@@ -1,12 +1,14 @@
-/* IMPORTANT:
- * The following preprocessing flags are added to 
- * avoid compilation error when this headers are included in more than 1 times 
- */
-#ifndef DEVICE_PORT_H
-#define DEVICE_PORT_H
+#ifndef OPENFPGA_PORT_H
+#define OPENFPGA_PORT_H
 
+/********************************************************************
+ * Include header files that are required by data structure declaration
+ *******************************************************************/
 #include <string>
 #include <vector>
+
+/* namespace openfpga begins */
+namespace openfpga {
 
 /* A basic port */
 class BasicPort {
@@ -84,6 +86,8 @@ class ConfPorts {
 };
 
 /* TODO: create a class for BL and WL ports */
+
+} /* namespace openfpga ends */
 
 #endif
 

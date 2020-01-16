@@ -16,8 +16,8 @@
 #include "arch_error.h"
 #include "read_xml_util.h"
 
-/* Headers from openfpga_utils*/
-#include "string_token.h"
+/* Headers from openfpgautil library */
+#include "openfpga_tokenizer.h"
 
 #include "read_xml_circuit_library.h"
 
@@ -423,7 +423,7 @@ void read_xml_output_mask(pugi::xml_node& xml_port,
   std::vector<size_t> mask_vector;
   if (nullptr != output_mask_attr) {
     /* Split the string with token ',' */
-    StringToken string_tokenizer(get_attribute(xml_port, "lut_output_mask", loc_data, pugiutil::ReqOpt::OPTIONAL).as_string(nullptr));
+    openfpga::StringToken string_tokenizer(get_attribute(xml_port, "lut_output_mask", loc_data, pugiutil::ReqOpt::OPTIONAL).as_string(nullptr));
     for (const std::string& mask_token : string_tokenizer.split(',')) {
       mask_vector.push_back(std::atoi(mask_token.c_str()));
     }

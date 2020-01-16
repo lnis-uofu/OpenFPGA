@@ -1,44 +1,9 @@
-/**********************************************************
- * MIT License
- *
- * Copyright (c) 2018 LNIS - The University of Utah
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- ***********************************************************************/
-
-/************************************************************************
- * Filename:    circuit_library.cpp
- * Created by:   Xifan Tang
- * Change history:
- * +-------------------------------------+
- * |  Date       |    Author   | Notes
- * +-------------------------------------+
- * | 2019/08/07  |  Xifan Tang | Created 
- * +-------------------------------------+
- ***********************************************************************/
-
 #include <numeric>
 #include <algorithm>
 
 #include "vtr_assert.h"
 
-#include "port_parser.h"
+#include "openfpga_port_parser.h"
 #include "circuit_library.h"
 
 /************************************************************************
@@ -2015,8 +1980,8 @@ void CircuitLibrary::set_timing_graph_delays(const CircuitModelId& model_id) {
      */
 
     /* Parse the string for inputs */
-    MultiPortParser input_port_parser(delay_in_port_names_[model_id][size_t(delay_type)]);
-    std::vector<BasicPort> input_ports = input_port_parser.ports();
+    openfpga::MultiPortParser input_port_parser(delay_in_port_names_[model_id][size_t(delay_type)]);
+    std::vector<openfpga::BasicPort> input_ports = input_port_parser.ports();
     std::vector<CircuitPortId> input_port_ids;
     std::vector<size_t> input_pin_ids;
     /* Check each element */
@@ -2044,8 +2009,8 @@ void CircuitLibrary::set_timing_graph_delays(const CircuitModelId& model_id) {
     }
 
     /* Parse the string for outputs */
-    MultiPortParser output_port_parser(delay_out_port_names_[model_id][size_t(delay_type)]);
-    std::vector<BasicPort> output_ports = output_port_parser.ports();
+    openfpga::MultiPortParser output_port_parser(delay_out_port_names_[model_id][size_t(delay_type)]);
+    std::vector<openfpga::BasicPort> output_ports = output_port_parser.ports();
     std::vector<CircuitPortId> output_port_ids;
     std::vector<size_t> output_pin_ids;
     /* Check each element */
@@ -2073,7 +2038,7 @@ void CircuitLibrary::set_timing_graph_delays(const CircuitModelId& model_id) {
     }
 
     /* Parse the delay matrix */
-    PortDelayParser port_delay_parser(delay_values_[model_id][size_t(delay_type)]);
+    openfpga::PortDelayParser port_delay_parser(delay_values_[model_id][size_t(delay_type)]);
 
     /* Make sure the delay matrix size matches */
     VTR_ASSERT(port_delay_parser.height() == output_port_ids.size());

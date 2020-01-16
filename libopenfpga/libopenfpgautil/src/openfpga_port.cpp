@@ -2,12 +2,21 @@
 #include <algorithm>
 #include <limits>
 
+/* Headers from vtrutil library */
 #include "vtr_assert.h"
 
-#include "device_port.h"
+#include "openfpga_port.h"
 
-/* Basic Port member functions */
-/* Constructor */
+/* namespace openfpga begins */
+namespace openfpga {
+
+/************************************************************************
+ * Member functions for BasicPort class 
+ ***********************************************************************/
+
+/************************************************************************
+ * Constructors
+ ***********************************************************************/
 /* Default constructor */
 BasicPort::BasicPort() {
   /* By default we set an invalid port, which size is 0 */
@@ -41,7 +50,9 @@ BasicPort::BasicPort(const BasicPort& basic_port) {
   set(basic_port);
 } 
 
-/* Accessors */
+/************************************************************************
+ * Accessors 
+ ***********************************************************************/
 /* get the port width */
 size_t BasicPort::get_width() const {
   if (true == is_valid()) {
@@ -96,7 +107,9 @@ bool BasicPort::contained(const BasicPort& portA) const {
   return ( lsb_ <= portA.get_lsb() && portA.get_msb() <= msb_ );
 }
 
-/* Overloaded operators */
+/************************************************************************
+ * Overloaded operators 
+ ***********************************************************************/
 /* Two ports are the same only when: 
  * 1. port names are the same
  * 2. LSBs are the same
@@ -111,7 +124,9 @@ bool BasicPort::operator== (const BasicPort& portA) const {
   return false;
 }
 
-/* Mutators */
+/************************************************************************
+ * Mutators 
+ ***********************************************************************/
 /* copy */
 void BasicPort::set(const BasicPort& basic_port) {
   name_ = basic_port.get_name();
@@ -287,8 +302,13 @@ bool BasicPort::is_valid() const {
   return true;
 } 
 
-/* ConfPorts member functions */
-/* Constructor */
+/************************************************************************
+ * ConfPorts member functions 
+ ***********************************************************************/
+
+/************************************************************************
+ * Constructor 
+ ***********************************************************************/
 /* Default constructor */
 ConfPorts::ConfPorts() { 
   /* default port */
@@ -301,7 +321,9 @@ ConfPorts::ConfPorts(const ConfPorts& conf_ports) {
   set(conf_ports);
 }
 
-/* Accessors */
+/************************************************************************
+ * Accessors
+ ***********************************************************************/
 size_t ConfPorts::get_reserved_port_width() const {
   return reserved_.get_width();
 }
@@ -326,7 +348,9 @@ size_t ConfPorts::get_regular_port_msb() const {
   return regular_.get_msb();
 }
 
-/* Mutators */
+/************************************************************************
+ * Mutators 
+ ***********************************************************************/
 void ConfPorts::set(const ConfPorts& conf_ports) {
   set_reserved_port(conf_ports.get_reserved_port_width());
   set_regular_port(conf_ports.get_regular_port_lsb(), conf_ports.get_regular_port_msb());
@@ -393,5 +417,4 @@ void ConfPorts::reset() {
   return;
 } 
 
-
-
+} /* namespace openfpga ends */
