@@ -111,7 +111,7 @@
       <output_buffer exist="false"/>
       <port type="input" prefix="in" size="1"/>
       <port type="output" prefix="out" size="1"/>
-      <wire_param model_type="pie" res_val="101" cap_val="22.5e-15" level="1"/> <!-- model_type could be T, res_val and cap_val DON'T CARE -->
+      <wire_param model_type="pi" R="101" C="22.5e-15" num_level="1"/> <!-- model_type could be T, res_val and cap_val DON'T CARE -->
     </circuit_model>
     <circuit_model type="wire" name="direct_interc" prefix="direct_interc" is_default="true">
       <design_technology type="cmos"/>
@@ -119,7 +119,7 @@
       <output_buffer exist="false"/>
       <port type="input" prefix="in" size="1"/>
       <port type="output" prefix="out" size="1"/>
-      <wire_param model_type="pie" res_val="0" cap_val="0" level="1"/> <!-- model_type could be T, res_val cap_val should be defined -->
+      <wire_param model_type="pi" R="0" C="0" num_level="1"/> <!-- model_type could be T, res_val cap_val should be defined -->
     </circuit_model>
     <circuit_model type="mux" name="mux_2level" prefix="mux_2level" dump_structural_verilog="true">
       <design_technology type="cmos" structure="multi-level" num_level="2" add_const_input="true" const_input_val="1"/>

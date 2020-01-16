@@ -79,7 +79,7 @@ enum e_circuit_model_gate_type {
 };
 
 enum e_wire_model_type {
-  WIRE_MODEL_PIE,
+  WIRE_MODEL_PI,
   WIRE_MODEL_T,
   NUM_WIRE_MODEL_TYPES
 };

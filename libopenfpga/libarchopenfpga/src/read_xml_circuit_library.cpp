@@ -211,6 +211,22 @@ e_circuit_model_port_type string_to_circuit_model_port_type(const std::string& t
 }
 
 /********************************************************************
+ * Convert string to the enumerate of wire model type
+ *******************************************************************/
+static 
+e_wire_model_type string_to_wire_model_type(const std::string& type_string) {
+  if (std::string("pi") == type_string) {
+    return WIRE_MODEL_PI;
+  }
+
+  if (std::string("t") == type_string) {
+    return WIRE_MODEL_T;
+  }
+
+  return NUM_WIRE_MODEL_TYPES;
+}
+
+/********************************************************************
  * Parse XML codes of design technology of a circuit model to circuit library
  *******************************************************************/
 static 
@@ -514,6 +530,36 @@ void read_xml_circuit_port(pugi::xml_node& xml_port,
 }
 
 /********************************************************************
+ * This is a generic function to parse XML codes that describe
+ * RC parasitics for wire circuit model to circuit library
+  *******************************************************************/
+static 
+void read_xml_wire_param(pugi::xml_node& xml_wire_param,
+                         const pugiutil::loc_data& loc_data,
+                         CircuitLibrary& circuit_lib, const CircuitModelId& model) {
+  /* Find the type of the wire model */
+  const char* type_attr = get_attribute(xml_wire_param, "model_type", loc_data).value();
+
+  /* Translate the type of circuit model to enumerate */
+  e_wire_model_type wire_model_type = string_to_wire_model_type(std::string(type_attr));
+
+  if (NUM_WIRE_MODEL_TYPES == wire_model_type) {
+    archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_wire_param),
+                   "Invalid 'type' attribute '%s'\n",
+                   type_attr);
+  }
+
+  circuit_lib.set_wire_type(model, wire_model_type);
+
+  /* Parse the R and C values */
+  circuit_lib.set_wire_r(model, get_attribute(xml_wire_param, "R", loc_data).as_float(0.));
+  circuit_lib.set_wire_c(model, get_attribute(xml_wire_param, "C", loc_data).as_float(0.));
+
+  /* Parse the number of levels for the wire model */
+  circuit_lib.set_wire_num_levels(model, get_attribute(xml_wire_param, "num_level", loc_data).as_int(0));
+}
+
+/********************************************************************
  * Parse XML codes of a circuit model to circuit library
  *******************************************************************/
 static 
@@ -625,6 +671,15 @@ void read_xml_circuit_model(pugi::xml_node& xml_model,
     auto xml_port = get_first_child(xml_model, "port", loc_data);
     read_xml_circuit_port(xml_port, loc_data, circuit_lib, model);
   }
+
+  /* Parse the parasitics of wires */
+  if ( (CIRCUIT_MODEL_WIRE == circuit_lib.model_type(model))
+    || (CIRCUIT_MODEL_CHAN_WIRE == circuit_lib.model_type(model)) ) {
+    auto xml_wire_param = get_single_child(xml_model, "wire_param", loc_data); 
+    read_xml_wire_param(xml_wire_param, loc_data, circuit_lib, model);
+  }
+
+  /* Parse the delay matrix if defined */
 }
 
 /********************************************************************
