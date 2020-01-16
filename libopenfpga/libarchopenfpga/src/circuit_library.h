@@ -266,7 +266,7 @@ class CircuitLibrary {
     size_t timing_edge_src_pin(const CircuitEdgeId& edge) const;
     CircuitPortId timing_edge_sink_port(const CircuitEdgeId& edge) const;
     size_t timing_edge_sink_pin(const CircuitEdgeId& edge) const;
-    float timing_edge_delay(const CircuitEdgeId& edge, const enum circuit_model_delay_type& delay_type) const;
+    float timing_edge_delay(const CircuitEdgeId& edge, const enum e_circuit_model_delay_type& delay_type) const;
   public: /* Public Accessors: Methods to find circuit model */
     CircuitModelId model(const char* name) const;
     CircuitModelId model(const std::string& name) const;
@@ -346,15 +346,15 @@ class CircuitLibrary {
                             const enum e_sram_orgz& sram_orgz);
     /* Delay information */
     void add_delay_info(const CircuitModelId& model_id,
-                        const enum circuit_model_delay_type& delay_type);
+                        const enum e_circuit_model_delay_type& delay_type);
     void set_delay_in_port_names(const CircuitModelId& model_id,
-                                 const enum circuit_model_delay_type& delay_type,
+                                 const enum e_circuit_model_delay_type& delay_type,
                                  const std::string& in_port_names);
     void set_delay_out_port_names(const CircuitModelId& model_id,
-                                  const enum circuit_model_delay_type& delay_type,
+                                  const enum e_circuit_model_delay_type& delay_type,
                                   const std::string& out_port_names);
     void set_delay_values(const CircuitModelId& model_id,
-                          const enum circuit_model_delay_type& delay_type,
+                          const enum e_circuit_model_delay_type& delay_type,
                           const std::string& delay_values);
     /* Buffer/Inverter-related parameters */
     void set_buffer_type(const CircuitModelId& model_id,
@@ -429,7 +429,7 @@ class CircuitLibrary {
                   const CircuitPortId& to_port, const size_t& to_pin);
     void set_edge_delay(const CircuitModelId& model_id, 
                         const CircuitEdgeId& circuit_edge_id, 
-                        const enum circuit_model_delay_type& delay_type, 
+                        const enum e_circuit_model_delay_type& delay_type, 
                         const float& delay_value);
     /* validate the circuit_edge_id */
     void set_timing_graph_delays(const CircuitModelId& model_id);
@@ -443,7 +443,7 @@ class CircuitLibrary {
   private: /* Internal invalidators/validators */
     /* Validators */
     bool valid_edge_id(const CircuitEdgeId& edge_id) const;
-    bool valid_delay_type(const CircuitModelId& model_id, const enum circuit_model_delay_type& delay_type) const;
+    bool valid_delay_type(const CircuitModelId& model_id, const enum e_circuit_model_delay_type& delay_type) const;
     bool valid_circuit_edge_id(const CircuitEdgeId& circuit_edge_id) const;
     bool valid_mux_const_input_value(const size_t& const_input_value) const;
     /* Invalidators */
@@ -526,7 +526,7 @@ class CircuitLibrary {
     vtr::vector<CircuitEdgeId, std::vector<float>> edge_timing_info_; /* x0 => trise, x1 => tfall */
 
     /* Delay information */
-    vtr::vector<CircuitModelId, std::vector<enum circuit_model_delay_type>> delay_types_;
+    vtr::vector<CircuitModelId, std::vector<enum e_circuit_model_delay_type>> delay_types_;
     vtr::vector<CircuitModelId, std::vector<std::string>> delay_in_port_names_;
     vtr::vector<CircuitModelId, std::vector<std::string>> delay_out_port_names_;
     vtr::vector<CircuitModelId, std::vector<std::string>> delay_values_;

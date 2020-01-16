@@ -227,6 +227,22 @@ e_wire_model_type string_to_wire_model_type(const std::string& type_string) {
 }
 
 /********************************************************************
+ * Convert string to the enumerate of delay model type
+ *******************************************************************/
+static 
+e_circuit_model_delay_type string_to_circuit_model_delay_type(const std::string& type_string) {
+  if (std::string("rise") == type_string) {
+    return CIRCUIT_MODEL_DELAY_RISE;
+  }
+
+  if (std::string("fall") == type_string) {
+    return CIRCUIT_MODEL_DELAY_FALL;
+  }
+
+  return NUM_CIRCUIT_MODEL_DELAY_TYPES;
+}
+
+/********************************************************************
  * Parse XML codes of design technology of a circuit model to circuit library
  *******************************************************************/
 static 
@@ -560,6 +576,38 @@ void read_xml_wire_param(pugi::xml_node& xml_wire_param,
 }
 
 /********************************************************************
+ * This is a generic function to parse XML codes that describe
+ * a delay matrix for a circuit model to circuit library
+  *******************************************************************/
+static 
+void read_xml_delay_matrix(pugi::xml_node& xml_delay_matrix,
+                           const pugiutil::loc_data& loc_data,
+                           CircuitLibrary& circuit_lib, const CircuitModelId& model) {
+  /* Find the type of the delay model, so that we can add to circuit library */
+  const char* type_attr = get_attribute(xml_delay_matrix, "type", loc_data).value();
+
+  /* Translate the type of delay matrix for a circuit model to enumerate */
+  e_circuit_model_delay_type delay_type = string_to_circuit_model_delay_type(std::string(type_attr));
+
+  if (NUM_CIRCUIT_MODEL_DELAY_TYPES == delay_type) {
+    archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_delay_matrix),
+                   "Invalid 'type' attribute '%s'\n",
+                   type_attr);
+  }
+
+  circuit_lib.add_delay_info(model, delay_type);
+
+  /* Parse the input ports */
+  circuit_lib.set_delay_in_port_names(model, delay_type, get_attribute(xml_delay_matrix, "in_port", loc_data).as_string());
+
+  /* Parse the output ports */
+  circuit_lib.set_delay_out_port_names(model, delay_type, get_attribute(xml_delay_matrix, "out_port", loc_data).as_string());
+
+  /* Parse the delay values */
+  circuit_lib.set_delay_values(model, delay_type, std::string(xml_delay_matrix.child_value())); 
+}
+
+/********************************************************************
  * Parse XML codes of a circuit model to circuit library
  *******************************************************************/
 static 
@@ -679,7 +727,12 @@ void read_xml_circuit_model(pugi::xml_node& xml_model,
     read_xml_wire_param(xml_wire_param, loc_data, circuit_lib, model);
   }
 
-  /* Parse the delay matrix if defined */
+  /* Parse all the delay matrix if defined */
+  size_t num_delay_matrix = count_children(xml_model, "delay_matrix", loc_data, pugiutil::ReqOpt::OPTIONAL);
+  for (size_t idelay_matrix = 0; idelay_matrix < num_delay_matrix; ++idelay_matrix) {
+    auto xml_delay_matrix = get_first_child(xml_model, "delay_matrix", loc_data);
+    read_xml_delay_matrix(xml_delay_matrix, loc_data, circuit_lib, model);
+  }
 }
 
 /********************************************************************

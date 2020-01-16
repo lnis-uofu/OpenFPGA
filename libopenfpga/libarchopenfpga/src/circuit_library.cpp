@@ -904,7 +904,7 @@ size_t CircuitLibrary::timing_edge_sink_pin(const CircuitEdgeId& edge) const {
   return edge_sink_pin_ids_[edge];
 }
 
-float CircuitLibrary::timing_edge_delay(const CircuitEdgeId& edge, const enum circuit_model_delay_type& delay_type) const {
+float CircuitLibrary::timing_edge_delay(const CircuitEdgeId& edge, const enum e_circuit_model_delay_type& delay_type) const {
   /* Validate the edge id */
   VTR_ASSERT_SAFE(valid_edge_id(edge));
   return edge_timing_info_[edge][delay_type];
@@ -1421,7 +1421,7 @@ void CircuitLibrary::set_port_sram_orgz(const CircuitPortId& circuit_port_id,
  * if no, resize and assign values
  */
 void CircuitLibrary::add_delay_info(const CircuitModelId& model_id,
-                                    const enum circuit_model_delay_type& delay_type) {
+                                    const enum e_circuit_model_delay_type& delay_type) {
   /* validate the model_id */
   VTR_ASSERT(valid_model_id(model_id));
   /* Check the range of vector */
@@ -1437,7 +1437,7 @@ void CircuitLibrary::add_delay_info(const CircuitModelId& model_id,
 }
 
 void CircuitLibrary::set_delay_in_port_names(const CircuitModelId& model_id,
-                                             const enum circuit_model_delay_type& delay_type,
+                                             const enum e_circuit_model_delay_type& delay_type,
                                              const std::string& in_port_names) {
   /* validate the model_id */
   VTR_ASSERT(valid_model_id(model_id));
@@ -1448,7 +1448,7 @@ void CircuitLibrary::set_delay_in_port_names(const CircuitModelId& model_id,
 }
 
 void CircuitLibrary::set_delay_out_port_names(const CircuitModelId& model_id,
-                                             const enum circuit_model_delay_type& delay_type,
+                                             const enum e_circuit_model_delay_type& delay_type,
                                              const std::string& out_port_names) {
   /* validate the model_id */
   VTR_ASSERT(valid_model_id(model_id));
@@ -1459,7 +1459,7 @@ void CircuitLibrary::set_delay_out_port_names(const CircuitModelId& model_id,
 }
 
 void CircuitLibrary::set_delay_values(const CircuitModelId& model_id,
-                                      const enum circuit_model_delay_type& delay_type,
+                                      const enum e_circuit_model_delay_type& delay_type,
                                       const std::string& delay_values) {
   /* validate the model_id */
   VTR_ASSERT(valid_model_id(model_id));
@@ -1992,7 +1992,7 @@ void CircuitLibrary::add_edge(const CircuitModelId& model_id,
 
 void CircuitLibrary::set_edge_delay(const CircuitModelId& model_id, 
                                     const CircuitEdgeId& circuit_edge_id, 
-                                    const enum circuit_model_delay_type& delay_type, 
+                                    const enum e_circuit_model_delay_type& delay_type, 
                                     const float& delay_value) {
   /* validate the circuit_edge_id */
   VTR_ASSERT(valid_circuit_edge_id(circuit_edge_id));
@@ -2174,7 +2174,7 @@ bool CircuitLibrary::valid_edge_id(const CircuitEdgeId& edge_id) const {
   return ( size_t(edge_id) < edge_ids_.size() ) && ( edge_id == edge_ids_[edge_id] ); 
 }
 
-bool CircuitLibrary::valid_delay_type(const CircuitModelId& model_id, const enum circuit_model_delay_type& delay_type) const { 
+bool CircuitLibrary::valid_delay_type(const CircuitModelId& model_id, const enum e_circuit_model_delay_type& delay_type) const { 
   /* validate the model_id */
   VTR_ASSERT(valid_model_id(model_id));
   return ( size_t(delay_type) < delay_types_[model_id].size() ) && ( delay_type == delay_types_[model_id][size_t(delay_type)] ); 

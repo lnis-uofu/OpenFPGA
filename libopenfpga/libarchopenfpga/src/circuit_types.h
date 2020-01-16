@@ -16,7 +16,7 @@
 /* Header files should be included in a sequence */
 /* Standard header files required go first */
 
-enum circuit_model_delay_type {
+enum e_circuit_model_delay_type {
   CIRCUIT_MODEL_DELAY_RISE, 
   CIRCUIT_MODEL_DELAY_FALL,
   NUM_CIRCUIT_MODEL_DELAY_TYPES
