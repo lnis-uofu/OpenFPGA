@@ -135,11 +135,11 @@ e_circuit_model_structure string_to_mux_structure_type(const std::string& type_s
     return CIRCUIT_MODEL_STRUCTURE_TREE;
   }
 
-  if (std::string("one-level") == type_string) {
+  if (std::string("one_level") == type_string) {
     return CIRCUIT_MODEL_STRUCTURE_ONELEVEL;
   }
 
-  if (std::string("multi-level") == type_string) {
+  if (std::string("multi_level") == type_string) {
     return CIRCUIT_MODEL_STRUCTURE_MULTILEVEL;
   }
 
@@ -289,7 +289,7 @@ void read_xml_model_design_technology(pugi::xml_node& xml_model,
      * 3. driving strength per stage
      */
     circuit_lib.set_buffer_size(model, get_attribute(xml_design_tech, "size", loc_data).as_float(0.));
-    circuit_lib.set_buffer_num_levels(model, get_attribute(xml_design_tech, "tap_drive_level", loc_data, pugiutil::ReqOpt::OPTIONAL).as_int(0));
+    circuit_lib.set_buffer_num_levels(model, get_attribute(xml_design_tech, "num_level", loc_data, pugiutil::ReqOpt::OPTIONAL).as_int(1));
     circuit_lib.set_buffer_f_per_stage(model, get_attribute(xml_design_tech, "f_per_stage", loc_data, pugiutil::ReqOpt::OPTIONAL).as_int(4));
   }
   
@@ -358,6 +358,13 @@ void read_xml_model_design_technology(pugi::xml_node& xml_model,
     }
     if (CIRCUIT_MODEL_STRUCTURE_MULTILEVEL == circuit_lib.mux_structure(model)) {
       circuit_lib.set_mux_num_levels(model, get_attribute(xml_design_tech, "num_level", loc_data).as_int(1));
+      /* Correction on the mux structure: 
+       * if the number of level is set to 1 in a multi-level multiplexer,
+       * we change the mux structure to one-level
+       */
+      if (1 == circuit_lib.mux_num_levels(model)) {
+        circuit_lib.set_mux_structure(model, CIRCUIT_MODEL_STRUCTURE_ONELEVEL);
+      }
     }
     circuit_lib.set_mux_use_advanced_rram_design(model, get_attribute(xml_design_tech, "advanced_rram_design", loc_data, pugiutil::ReqOpt::OPTIONAL).as_bool(false));
     circuit_lib.set_mux_use_local_encoder(model, get_attribute(xml_design_tech, "local_encoder", loc_data, pugiutil::ReqOpt::OPTIONAL).as_bool(false));

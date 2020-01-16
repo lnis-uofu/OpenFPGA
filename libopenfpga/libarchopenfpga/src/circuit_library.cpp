@@ -244,6 +244,24 @@ enum e_circuit_model_pass_gate_logic_type CircuitLibrary::pass_gate_logic_type(c
   return pass_gate_logic_types_[model_id];
 }
 
+/* Return the pmos size of a pass gate logic module, only applicable to circuit model whose type is pass-gate logic */
+float CircuitLibrary::pass_gate_logic_pmos_size(const CircuitModelId& model_id) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  /* validate that the type of this model should be PASSGATE */
+  VTR_ASSERT(CIRCUIT_MODEL_PASSGATE == model_type(model_id));
+  return pass_gate_logic_sizes_[model_id].y(); 
+}
+
+/* Return the nmos size of a pass gate logic module, only applicable to circuit model whose type is pass-gate logic */
+float CircuitLibrary::pass_gate_logic_nmos_size(const CircuitModelId& model_id) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  /* validate that the type of this model should be PASSGATE */
+  VTR_ASSERT(CIRCUIT_MODEL_PASSGATE == model_type(model_id));
+  return pass_gate_logic_sizes_[model_id].x(); 
+}
+
 /* Return the type of multiplexing structure of a circuit model */
 enum e_circuit_model_structure CircuitLibrary::mux_structure(const CircuitModelId& model_id) const {
   /* validate the model_id */
@@ -305,6 +323,18 @@ bool CircuitLibrary::mux_use_local_encoder(const CircuitModelId& model_id) const
   return mux_use_local_encoder_[model_id];
 }
 
+/* Return if circuit model uses advanced RRAM design
+ * Only applicable for MUX/LUT circuit model 
+ */
+bool CircuitLibrary::mux_use_advanced_rram_design(const CircuitModelId& model_id) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  /* validate the circuit model type is MUX */
+  VTR_ASSERT( (CIRCUIT_MODEL_MUX == model_type(model_id))
+           || (CIRCUIT_MODEL_LUT == model_type(model_id)) );
+  return mux_use_advanced_rram_design_[model_id];
+}
+
 /* Return the type of gate for a circuit model 
  * Only applicable for GATE circuit model 
  */
@@ -327,6 +357,17 @@ enum e_circuit_model_buffer_type CircuitLibrary::buffer_type(const CircuitModelI
   return buffer_types_[model_id];
 }
 
+/* Return the size of buffer for a circuit model 
+ * Only applicable for BUF/INV circuit model 
+ */
+size_t CircuitLibrary::buffer_size(const CircuitModelId& model_id) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  /* validate the circuit model type is MUX */
+  VTR_ASSERT(CIRCUIT_MODEL_INVBUF == model_type(model_id));
+  return buffer_sizes_[model_id];
+}
+
 /* Return the number of levels of buffer for a circuit model 
  * Only applicable for BUF/INV circuit model 
  */
@@ -336,6 +377,17 @@ size_t CircuitLibrary::buffer_num_levels(const CircuitModelId& model_id) const {
   /* validate the circuit model type is BUF */
   VTR_ASSERT(CIRCUIT_MODEL_INVBUF == model_type(model_id));
   return buffer_num_levels_[model_id];
+}
+
+/* Return the driving strength per level of buffer for a circuit model 
+ * Only applicable for BUF/INV circuit model 
+ */
+size_t CircuitLibrary::buffer_f_per_stage(const CircuitModelId& model_id) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  /* validate the circuit model type is BUF */
+  VTR_ASSERT(CIRCUIT_MODEL_INVBUF == model_type(model_id));
+  return buffer_f_per_stage_[model_id];
 }
 
 /* Find the circuit model id of the input buffer of a circuit model */
@@ -367,6 +419,57 @@ size_t CircuitLibrary::num_delay_info(const CircuitModelId& model_id) const {
   /* validate the model_id */
   VTR_ASSERT(valid_model_id(model_id));
   return delay_types_[model_id].size();
+}
+
+/* Return the Low Resistance State Resistance of a RRAM model */
+float CircuitLibrary::rram_rlrs(const CircuitModelId& model_id) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  /* validate that the design_tech of this model should be RRAM */
+  VTR_ASSERT(CIRCUIT_MODEL_DESIGN_RRAM == design_tech_type(model_id));
+  return rram_res_[model_id].x(); 
+}
+
+/* Return the High Resistance State Resistance of a RRAM model */
+float CircuitLibrary::rram_rhrs(const CircuitModelId& model_id) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  /* validate that the design_tech of this model should be RRAM */
+  VTR_ASSERT(CIRCUIT_MODEL_DESIGN_RRAM == design_tech_type(model_id));
+  return rram_res_[model_id].y(); 
+}
+
+/* Return the size of PMOS transistor to set a RRAM model */
+float CircuitLibrary::rram_wprog_set_pmos(const CircuitModelId& model_id) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  /* validate that the design_tech of this model should be RRAM */
+  VTR_ASSERT(CIRCUIT_MODEL_DESIGN_RRAM == design_tech_type(model_id));
+  return wprog_set_[model_id].y(); 
+}
+
+float CircuitLibrary::rram_wprog_set_nmos(const CircuitModelId& model_id) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  /* validate that the design_tech of this model should be RRAM */
+  VTR_ASSERT(CIRCUIT_MODEL_DESIGN_RRAM == design_tech_type(model_id));
+  return wprog_set_[model_id].x(); 
+}
+
+float CircuitLibrary::rram_wprog_reset_pmos(const CircuitModelId& model_id) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  /* validate that the design_tech of this model should be RRAM */
+  VTR_ASSERT(CIRCUIT_MODEL_DESIGN_RRAM == design_tech_type(model_id));
+  return wprog_reset_[model_id].y(); 
+}
+
+float CircuitLibrary::rram_wprog_reset_nmos(const CircuitModelId& model_id) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  /* validate that the design_tech of this model should be RRAM */
+  VTR_ASSERT(CIRCUIT_MODEL_DESIGN_RRAM == design_tech_type(model_id));
+  return wprog_reset_[model_id].x(); 
 }
 
 /************************************************************************

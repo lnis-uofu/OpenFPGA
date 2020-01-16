@@ -22,4 +22,3 @@ void write_xml_attribute(std::fstream& fp,
 
   fp << " " << attr << "=\"" << value << "\""; 
 }
-

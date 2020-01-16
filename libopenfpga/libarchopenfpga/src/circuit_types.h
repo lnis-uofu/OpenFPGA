@@ -16,12 +16,6 @@
 /* Header files should be included in a sequence */
 /* Standard header files required go first */
 
-enum e_circuit_model_delay_type {
-  CIRCUIT_MODEL_DELAY_RISE, 
-  CIRCUIT_MODEL_DELAY_FALL,
-  NUM_CIRCUIT_MODEL_DELAY_TYPES
-};
-
 /*Struct for a CIRCUIT model of a module*/
 enum e_circuit_model_type {
   CIRCUIT_MODEL_CHAN_WIRE, 
@@ -46,6 +40,8 @@ enum e_circuit_model_design_tech {
   CIRCUIT_MODEL_DESIGN_RRAM,
   NUM_CIRCUIT_MODEL_DESIGN_TECH_TYPES
 };
+/* Strings correspond to each design technology type */
+constexpr std::array<const char*, NUM_CIRCUIT_MODEL_DESIGN_TECH_TYPES> CIRCUIT_MODEL_DESIGN_TECH_TYPE_STRING = {{"cmos", "rram"}};
 
 enum e_circuit_model_structure {
   CIRCUIT_MODEL_STRUCTURE_TREE, 
@@ -55,13 +51,15 @@ enum e_circuit_model_structure {
   NUM_CIRCUIT_MODEL_STRUCTURE_TYPES
 };
 /* Strings correspond to each type of mux structure */
-constexpr std::array<const char*, NUM_CIRCUIT_MODEL_STRUCTURE_TYPES> CIRCUIT_MODEL_STRUCTURE_TYPE_STRING = {{"TREE-LIKE", "ONE-LEVEL", "MULTI-LEVEL", "CROSSBAR"}};
+constexpr std::array<const char*, NUM_CIRCUIT_MODEL_STRUCTURE_TYPES> CIRCUIT_MODEL_STRUCTURE_TYPE_STRING = {{"tree", "one_level", "multi_level", "crossbar"}};
 
 enum e_circuit_model_buffer_type {
   CIRCUIT_MODEL_BUF_INV, 
   CIRCUIT_MODEL_BUF_BUF,
   NUM_CIRCUIT_MODEL_BUF_TYPES
 };
+/* Strings correspond to each type of buffer */
+constexpr std::array<const char*, NUM_CIRCUIT_MODEL_BUF_TYPES> CIRCUIT_MODEL_BUFFER_TYPE_STRING = {{"inverter", "buffer"}};
 
 enum e_circuit_model_pass_gate_logic_type {
   CIRCUIT_MODEL_PASS_GATE_TRANSMISSION, 
@@ -70,6 +68,8 @@ enum e_circuit_model_pass_gate_logic_type {
   CIRCUIT_MODEL_PASS_GATE_STDCELL,         /* Standard cell as a special type of pass-gate logic */
   NUM_CIRCUIT_MODEL_PASS_GATE_TYPES
 };
+/* Strings correspond to each type of buffer */
+constexpr std::array<const char*, NUM_CIRCUIT_MODEL_PASS_GATE_TYPES> CIRCUIT_MODEL_PASSGATE_TYPE_STRING = {{"transmission_gate", "pass_transistor", "rram", "standard_cell"}};
 
 enum e_circuit_model_gate_type {
   CIRCUIT_MODEL_GATE_AND, 
@@ -77,6 +77,8 @@ enum e_circuit_model_gate_type {
   CIRCUIT_MODEL_GATE_MUX2,
   NUM_CIRCUIT_MODEL_GATE_TYPES
 };
+/* Strings correspond to each type of logic gate */
+constexpr std::array<const char*, NUM_CIRCUIT_MODEL_GATE_TYPES> CIRCUIT_MODEL_GATE_TYPE_STRING = {{"AND", "OR", "MUX2"}};
 
 enum e_wire_model_type {
   WIRE_MODEL_PI,
@@ -97,7 +99,13 @@ enum e_circuit_model_port_type {
   NUM_CIRCUIT_MODEL_PORT_TYPES
 };
 /* Strings correspond to each port type */
-constexpr std::array<const char*, NUM_CIRCUIT_MODEL_PORT_TYPES> CIRCUIT_MODEL_PORT_TYPE_STRING = {{"INPUT", "OUTPUT", "INOUT", "CLOCK", "SRAM", "BL", "BLB", "WL", "WLB"}};
+constexpr std::array<const char*, NUM_CIRCUIT_MODEL_PORT_TYPES> CIRCUIT_MODEL_PORT_TYPE_STRING = {{"input", "output", "inout", "clock", "sram", "bl", "blb", "wl", "wlb"}};
+
+enum e_circuit_model_delay_type {
+  CIRCUIT_MODEL_DELAY_RISE, 
+  CIRCUIT_MODEL_DELAY_FALL,
+  NUM_CIRCUIT_MODEL_DELAY_TYPES
+};
 
 /* For SRAM */
 enum e_sram_orgz {
@@ -108,6 +116,6 @@ enum e_sram_orgz {
   NUM_CIRCUIT_MODEL_SRAM_ORGZ_TYPES
 };
 
-constexpr std::array<const char*, NUM_CIRCUIT_MODEL_SRAM_ORGZ_TYPES> CIRCUIT_MODEL_SRAM_ORGZ_TYPE_STRING = {{"STANDALONE", "SCAN-CHAIN", "MEMORY_BANK", "LOCAL_ENCODER"}};
+constexpr std::array<const char*, NUM_CIRCUIT_MODEL_SRAM_ORGZ_TYPES> CIRCUIT_MODEL_SRAM_ORGZ_TYPE_STRING = {{"standalone", "scan_chain", "memory_bank", "local_encoder"}};
 
 #endif

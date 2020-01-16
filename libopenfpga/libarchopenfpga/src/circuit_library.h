@@ -198,21 +198,33 @@ class CircuitLibrary {
     /* Pass-gate-logic information */
     CircuitModelId pass_gate_logic_model(const CircuitModelId& model_id) const;
     enum e_circuit_model_pass_gate_logic_type pass_gate_logic_type(const CircuitModelId& model_id) const;
+    float pass_gate_logic_pmos_size(const CircuitModelId& model_id) const;
+    float pass_gate_logic_nmos_size(const CircuitModelId& model_id) const;
     /* Multiplexer information */
     enum e_circuit_model_structure mux_structure(const CircuitModelId& model_id) const;
     size_t mux_num_levels(const CircuitModelId& model_id) const;
     bool mux_add_const_input(const CircuitModelId& model_id) const;
     size_t mux_const_input_value(const CircuitModelId& model_id) const;
     bool mux_use_local_encoder(const CircuitModelId& model_id) const;
+    bool mux_use_advanced_rram_design(const CircuitModelId& model_id) const;
     /* Gate information */
     enum e_circuit_model_gate_type gate_type(const CircuitModelId& model_id) const;
     /* Buffer information */
     enum e_circuit_model_buffer_type buffer_type(const CircuitModelId& model_id) const;
+    size_t buffer_size(const CircuitModelId& model_id) const;
     size_t buffer_num_levels(const CircuitModelId& model_id) const;
+    size_t buffer_f_per_stage(const CircuitModelId& model_id) const;
     CircuitModelId input_buffer_model(const CircuitModelId& model_id) const;
     CircuitModelId output_buffer_model(const CircuitModelId& model_id) const;
     /* Delay information */
     size_t num_delay_info(const CircuitModelId& model_id) const;
+    /* RRAM information */
+    float rram_rlrs(const CircuitModelId& model_id) const;
+    float rram_rhrs(const CircuitModelId& model_id) const;
+    float rram_wprog_set_pmos(const CircuitModelId& model_id) const;
+    float rram_wprog_set_nmos(const CircuitModelId& model_id) const;
+    float rram_wprog_reset_pmos(const CircuitModelId& model_id) const;
+    float rram_wprog_reset_nmos(const CircuitModelId& model_id) const;
   public: /* Public Accessors: Basic data query on cirucit models' Circuit Ports*/
     CircuitPortId model_port(const CircuitModelId& model_id, const std::string& name) const;
     size_t num_model_ports(const CircuitModelId& model_id) const;

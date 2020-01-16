@@ -8,43 +8,18 @@
         each primitives in FPGA architecture
   -->
 <openfpga_architecture>
-  <simulation_parameters>
-    <options sim_temp="25" post="off" captab="off" fast="on"/>
-    <monte_carlo mc_sim="off" num_mc_points="2" cmos_variation="off" rram_variation="off">
-      <cmos abs_variation="0.1" num_sigma="3"/>
-      <rram abs_variation="0.1" num_sigma="3"/>
-    </monte_carlo>
-    <measure sim_num_clock_cycle="auto" accuracy="1e-13" accuracy_type="abs">
-      <slew>
-        <rise upper_thres_pct="0.95" lower_thres_pct="0.05"/>
-        <fall upper_thres_pct="0.05" lower_thres_pct="0.95"/>
-      </slew>
-      <delay>
-        <rise input_thres_pct="0.5" output_thres_pct="0.5"/>
-        <fall input_thres_pct="0.5" output_thres_pct="0.5"/>
-      </delay>
-    </measure>
-    <stimuli>
-      <clock op_freq="200e6" sim_slack="0.2" prog_freq="10e6">
-        <rise slew_time="20e-12" slew_type="abs"/>
-        <fall slew_time="20e-12" slew_type="abs"/>
-      </clock>
-      <input>
-        <rise slew_time="25e-12" slew_type="abs"/>
-        <fall slew_time="25e-12" slew_type="abs"/>
-      </input>
-    </stimuli>
-  </simulation_parameters>
-  <tech_lib lib_type="academia" transistor_type="TOP_TT" lib_path="OPENFPGAPATHKEYWORD/fpga_flow/tech/PTM_45nm/45nm.pm" nominal_vdd="1.0" io_vdd="2.5"/>
-  <transistors pn_ratio="2" model_ref="M">
-    <nmos model_name="nch" chan_length="40e-9" min_width="140e-9"/>
-    <pmos model_name="pch" chan_length="40e-9" min_width="140e-9"/>
-    <io_nmos model_name="nch_25" chan_length="270e-9" min_width="320e-9"/>
-    <io_pmos model_name="pch_25" chan_length="270e-9" min_width="320e-9"/>
-  </transistors>
+  <technology>
+    <library lib_type="academia" transistor_type="TOP_TT" lib_path="OPENFPGAPATHKEYWORD/fpga_flow/tech/PTM_45nm/45nm.pm" nominal_vdd="1.0" io_vdd="2.5"/>
+    <transistors pn_ratio="2" model_ref="M">
+      <nmos model_name="nch" chan_length="40e-9" min_width="140e-9"/>
+      <pmos model_name="pch" chan_length="40e-9" min_width="140e-9"/>
+      <io_nmos model_name="nch_25" chan_length="270e-9" min_width="320e-9"/>
+      <io_pmos model_name="pch_25" chan_length="270e-9" min_width="320e-9"/>
+    </transistors>
+  </technology>
   <circuit_library>
     <circuit_model type="inv_buf" name="INVTX1" prefix="INVTX1" is_default="true">
-      <design_technology type="cmos" topology="inverter" size="1" tapered="false"/>
+      <design_technology type="cmos" topology="inverter" size="1"/>
       <port type="input" prefix="in" size="1"/>
       <port type="output" prefix="out" size="1"/>
       <delay_matrix type="rise" in_port="in" out_port="out">
@@ -55,7 +30,7 @@
       </delay_matrix>
     </circuit_model>
     <circuit_model type="inv_buf" name="buf4" prefix="buf4" is_default="false">
-      <design_technology type="cmos" topology="buffer" size="1" tapered="true" tap_drive_level="2" f_per_stage="4"/>
+      <design_technology type="cmos" topology="buffer" size="1" num_level="2" f_per_stage="4"/>
       <port type="input" prefix="in" size="1"/>
       <port type="output" prefix="out" size="1"/>
       <delay_matrix type="rise" in_port="in" out_port="out">
@@ -66,7 +41,7 @@
       </delay_matrix>
     </circuit_model>
     <circuit_model type="inv_buf" name="tap_buf4" prefix="tap_buf4" is_default="false">
-      <design_technology type="cmos" topology="buffer" size="1" tapered="true" tap_drive_level="3" f_per_stage="4"/>
+      <design_technology type="cmos" topology="buffer" size="1" num_level="3" f_per_stage="4"/>
       <port type="input" prefix="in" size="1"/>
       <port type="output" prefix="out" size="1"/>
       <delay_matrix type="rise" in_port="in" out_port="out">
@@ -122,7 +97,7 @@
       <wire_param model_type="pi" R="0" C="0" num_level="1"/> <!-- model_type could be T, res_val cap_val should be defined -->
     </circuit_model>
     <circuit_model type="mux" name="mux_2level" prefix="mux_2level" dump_structural_verilog="true">
-      <design_technology type="cmos" structure="multi-level" num_level="2" add_const_input="true" const_input_val="1"/>
+      <design_technology type="cmos" structure="multi_level" num_level="2" add_const_input="true" const_input_val="1"/>
       <input_buffer exist="true" circuit_model_name="INVTX1"/>
       <output_buffer exist="true" circuit_model_name="INVTX1"/>
       <!--mux2to1 subckt_name="mux2to1"/-->
@@ -132,7 +107,7 @@
       <port type="sram" prefix="sram" size="1"/>
     </circuit_model>
     <circuit_model type="mux" name="mux_2level_tapbuf" prefix="mux_2level_tapbuf" dump_structural_verilog="true">
-      <design_technology type="cmos" structure="multi-level" num_level="2" add_const_input="true" const_input_val="1"/>
+      <design_technology type="cmos" structure="multi_level" num_level="2" add_const_input="true" const_input_val="1"/>
       <input_buffer exist="true" circuit_model_name="INVTX1"/>
       <output_buffer exist="true" circuit_model_name="tap_buf4"/>
       <!--mux2to1 subckt_name="mux2to1"/-->
@@ -142,7 +117,7 @@
       <port type="sram" prefix="sram" size="1"/>
     </circuit_model>
     <circuit_model type="mux" name="mux_1level_tapbuf" prefix="mux_1level_tapbuf" is_default="true" dump_structural_verilog="true">
-      <design_technology type="cmos" structure="one-level" add_const_input="true" const_input_val="1"/>
+      <design_technology type="cmos" structure="one_level" add_const_input="true" const_input_val="1"/>
       <input_buffer exist="true" circuit_model_name="INVTX1"/>
       <output_buffer exist="true" circuit_model_name="tap_buf4"/>
       <!--mux2to1 subckt_name="mux2to1"/-->
@@ -258,3 +233,32 @@
     </circuit_model>
   </circuit_library>
 </openfpga_architecture>
+<openfpga_verification>
+  <simulation_parameters>
+    <options sim_temp="25" post="off" captab="off" fast="on"/>
+    <monte_carlo mc_sim="off" num_mc_points="2" cmos_variation="off" rram_variation="off">
+      <cmos abs_variation="0.1" num_sigma="3"/>
+      <rram abs_variation="0.1" num_sigma="3"/>
+    </monte_carlo>
+    <measure sim_num_clock_cycle="auto" accuracy="1e-13" accuracy_type="abs">
+      <slew>
+        <rise upper_thres_pct="0.95" lower_thres_pct="0.05"/>
+        <fall upper_thres_pct="0.05" lower_thres_pct="0.95"/>
+      </slew>
+      <delay>
+        <rise input_thres_pct="0.5" output_thres_pct="0.5"/>
+        <fall input_thres_pct="0.5" output_thres_pct="0.5"/>
+      </delay>
+    </measure>
+    <stimuli>
+      <clock op_freq="200e6" sim_slack="0.2" prog_freq="10e6">
+        <rise slew_time="20e-12" slew_type="abs"/>
+        <fall slew_time="20e-12" slew_type="abs"/>
+      </clock>
+      <input>
+        <rise slew_time="25e-12" slew_type="abs"/>
+        <fall slew_time="25e-12" slew_type="abs"/>
+      </input>
+    </stimuli>
+  </simulation_parameters>
+</openfpga_verification>
