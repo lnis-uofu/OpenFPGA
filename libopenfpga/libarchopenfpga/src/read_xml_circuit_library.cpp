@@ -426,9 +426,9 @@ static
 void read_xml_output_mask(pugi::xml_node& xml_port,
                           const pugiutil::loc_data& loc_data,
                           CircuitLibrary& circuit_lib, const CircuitPortId& port) {
-  const char* output_mask_attr = get_attribute(xml_port, "lut_output_mask", loc_data, pugiutil::ReqOpt::OPTIONAL).value();
+  std::string output_mask_attr = get_attribute(xml_port, "lut_output_mask", loc_data, pugiutil::ReqOpt::OPTIONAL).as_string();
   std::vector<size_t> mask_vector;
-  if (nullptr != output_mask_attr) {
+  if (!output_mask_attr.empty()) {
     /* Split the string with token ',' */
     openfpga::StringToken string_tokenizer(get_attribute(xml_port, "lut_output_mask", loc_data, pugiutil::ReqOpt::OPTIONAL).as_string(nullptr));
     for (const std::string& mask_token : string_tokenizer.split(',')) {
@@ -722,9 +722,12 @@ void read_xml_circuit_model(pugi::xml_node& xml_model,
    * We count the number of ports in total and then add one by one 
    */
   size_t num_ports = count_children(xml_model, "port", loc_data, pugiutil::ReqOpt::OPTIONAL);
-  for (size_t iport = 0; iport < num_ports; ++iport) {
-    auto xml_port = get_first_child(xml_model, "port", loc_data);
-    read_xml_circuit_port(xml_port, loc_data, circuit_lib, model);
+  if (0 < num_ports) {
+    pugi::xml_node xml_port = get_first_child(xml_model, "port", loc_data);
+    while (xml_port) {
+      read_xml_circuit_port(xml_port, loc_data, circuit_lib, model);
+      xml_port = xml_port.next_sibling(xml_port.name());
+    } 
   }
 
   /* Parse the parasitics of wires */
@@ -736,9 +739,12 @@ void read_xml_circuit_model(pugi::xml_node& xml_model,
 
   /* Parse all the delay matrix if defined */
   size_t num_delay_matrix = count_children(xml_model, "delay_matrix", loc_data, pugiutil::ReqOpt::OPTIONAL);
-  for (size_t idelay_matrix = 0; idelay_matrix < num_delay_matrix; ++idelay_matrix) {
-    auto xml_delay_matrix = get_first_child(xml_model, "delay_matrix", loc_data);
-    read_xml_delay_matrix(xml_delay_matrix, loc_data, circuit_lib, model);
+  if (0 < num_delay_matrix) {
+    pugi::xml_node xml_delay_matrix = get_first_child(xml_model, "delay_matrix", loc_data);
+    while (xml_delay_matrix) {
+      read_xml_delay_matrix(xml_delay_matrix, loc_data, circuit_lib, model);
+      xml_delay_matrix = xml_delay_matrix.next_sibling(xml_delay_matrix.name());
+    }
   }
 }
 

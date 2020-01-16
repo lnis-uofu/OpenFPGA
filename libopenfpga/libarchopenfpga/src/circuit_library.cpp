@@ -886,7 +886,7 @@ size_t CircuitLibrary::port_lut_frac_level(const CircuitPortId& circuit_port_id)
 }
 
 /* Return indices of internal nodes in a LUT multiplexing structure to which the output port is wired to */
-std::vector<size_t> CircuitLibrary::port_lut_output_masks(const CircuitPortId& circuit_port_id) const {
+std::vector<size_t> CircuitLibrary::port_lut_output_mask(const CircuitPortId& circuit_port_id) const {
   /* validate the circuit_port_id */
   VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
   return port_lut_output_masks_[circuit_port_id];
@@ -925,6 +925,13 @@ std::string CircuitLibrary::model_name(const CircuitPortId& port_id) const {
   /* validate the circuit_port_id */
   VTR_ASSERT(valid_circuit_port_id(port_id));
   return model_names_[port_parent_model(port_id)];
+}
+
+/* Return the name of inverter circuit model linked to a circuit port */
+std::string CircuitLibrary::port_inv_model_name(const CircuitPortId& circuit_port_id) const {
+  /* validate the circuit_port_id */
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
+  return port_inv_model_names_[circuit_port_id];
 }
 
 /************************************************************************

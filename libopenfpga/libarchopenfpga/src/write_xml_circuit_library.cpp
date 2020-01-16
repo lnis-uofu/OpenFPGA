@@ -89,7 +89,123 @@ void write_xml_design_technology(std::fstream& fp,
 
   /* Finish all the attributes, we can return here */
   fp << "/>" << "\n";
-  return;
+}
+
+/********************************************************************
+ * A writer to output a circuit port to XML format
+ *******************************************************************/
+static 
+void write_xml_circuit_port(std::fstream& fp,
+                            const char* fname,
+                            const CircuitLibrary& circuit_lib,
+                            const CircuitPortId& port) {
+  /* Validate the file stream */
+  openfpga::check_file_stream(fname, fp);
+
+  /* Get the parent circuit model for this port */
+  const CircuitModelId& model = circuit_lib.port_parent_model(port);
+
+  /* Generic information about a port */
+  fp << "\t\t\t" << "<port";
+  write_xml_attribute(fp, "type", CIRCUIT_MODEL_PORT_TYPE_STRING[circuit_lib.port_type(port)]); 
+  write_xml_attribute(fp, "prefix", circuit_lib.port_prefix(port).c_str()); 
+ 
+  /* Output the lib_name when it is different than prefix */
+  if (circuit_lib.port_prefix(port) != circuit_lib.port_lib_name(port)) {
+    write_xml_attribute(fp, "lib_name", circuit_lib.port_lib_name(port).c_str()); 
+  } 
+
+  write_xml_attribute(fp, "size", std::to_string(circuit_lib.port_size(port)).c_str()); 
+
+  /* Output the default value only when this is a global port */
+  if (true == circuit_lib.port_is_global(port)) {
+    write_xml_attribute(fp, "default_val", std::to_string(circuit_lib.port_default_value(port)).c_str()); 
+  }
+
+  /* SRAM port may be for mode selection. Output it only when it is true */
+  if (CIRCUIT_MODEL_PORT_SRAM == circuit_lib.port_type(port)) {
+    if (true == circuit_lib.port_is_mode_select(port)) {
+      write_xml_attribute(fp, "mode_select", "true"); 
+    }
+  }
+
+  /* Output the tri-state map of the port 
+   * This is only applicable to input ports of a LUT
+   */
+  if ( (CIRCUIT_MODEL_LUT == circuit_lib.model_type(model))
+    && (CIRCUIT_MODEL_PORT_INPUT == circuit_lib.port_type(port)) ) {
+    if (!circuit_lib.port_tri_state_map(port).empty()) {
+      write_xml_attribute(fp, "tri_state_map", circuit_lib.port_tri_state_map(port).c_str()); 
+    }
+  }
+
+  /* Identify the fracturable-level of the port in LUTs, by default it will be -1
+   * This is only applicable to output ports of a LUT
+   */
+  if ( (CIRCUIT_MODEL_LUT == circuit_lib.model_type(model))
+    && (CIRCUIT_MODEL_PORT_OUTPUT == circuit_lib.port_type(port)) ) {
+    if (size_t(-1) != circuit_lib.port_lut_frac_level(port)) {
+      write_xml_attribute(fp, "lut_frac_level", std::to_string(circuit_lib.port_lut_frac_level(port)).c_str()); 
+    }
+  }
+
+  /* Output the output mask of the port 
+   * This is only applicable to output ports of a LUT
+   */
+  if ( (CIRCUIT_MODEL_LUT == circuit_lib.model_type(model))
+    && (CIRCUIT_MODEL_PORT_OUTPUT == circuit_lib.port_type(port)) ) {
+    std::string output_mask_string;
+    for (const size_t& mask : circuit_lib.port_lut_output_mask(port)) {
+      if (!output_mask_string.empty()) {
+        output_mask_string += std::string(",");
+      }
+      output_mask_string += std::to_string(mask);
+    }
+    if (!output_mask_string.empty()) {
+      write_xml_attribute(fp, "lut_output_mask", output_mask_string.c_str()); 
+    }
+  }
+
+  /* Global, reset, set port attributes */
+  if (true == circuit_lib.port_is_global(port)) {
+    write_xml_attribute(fp, "is_global", "true"); 
+  }
+
+  if (true == circuit_lib.port_is_reset(port)) {
+    write_xml_attribute(fp, "is_reset", "true"); 
+  }
+
+  if (true == circuit_lib.port_is_set(port)) {
+    write_xml_attribute(fp, "is_set", "true"); 
+  }
+
+  if (true == circuit_lib.port_is_prog(port)) {
+    write_xml_attribute(fp, "is_prog", "true"); 
+  }
+
+  if (true == circuit_lib.port_is_config_enable(port)) {
+    write_xml_attribute(fp, "is_config_enable", "true"); 
+  }
+
+  /* Output the name of circuit model that this port is linked to */
+  if (!circuit_lib.port_tri_state_model_name(port).empty()) {
+    write_xml_attribute(fp, "circuit_model_name", circuit_lib.port_tri_state_model_name(port).c_str());
+  }
+
+  /* Find the name of circuit model that port is used for inversion of signals,
+   * This is only applicable to BL/WL/BLB/WLB ports
+   */
+  if (  (CIRCUIT_MODEL_PORT_BL  == circuit_lib.port_type(port))
+     || (CIRCUIT_MODEL_PORT_WL  == circuit_lib.port_type(port))
+     || (CIRCUIT_MODEL_PORT_BLB == circuit_lib.port_type(port))
+     || (CIRCUIT_MODEL_PORT_WLB == circuit_lib.port_type(port)) ) {
+    if (!circuit_lib.port_inv_model_name(port).empty()) {
+      write_xml_attribute(fp, "inv_circuit_model_name", circuit_lib.port_inv_model_name(port).c_str());
+    }
+  }
+
+  /* Finish all the attributes, we can return here */
+  fp << "/>" << "\n";
 }
 
 /********************************************************************
@@ -125,7 +241,18 @@ void write_xml_circuit_model(std::fstream& fp,
   /* Write the design technology of circuit model */
   write_xml_design_technology(fp, fname, circuit_lib, model);
 
-  /* TODO: Write the ports of circuit model */
+  /* TODO: Write the input buffer information of circuit model */
+  /* TODO: Write the output buffer information of circuit model */
+  /* TODO: Write the lut input buffer information of circuit model */
+  /* TODO: Write the lut input inverter information of circuit model */
+  /* TODO: Write the lut intermediate buffer information of circuit model */
+
+  /* TODO: Write the pass-gate-logic information of circuit model */
+
+  /* Write the ports of circuit model */
+  for (const CircuitPortId& port : circuit_lib.model_ports(model)) {
+    write_xml_circuit_port(fp, fname, circuit_lib, port);
+  }
 
   /* TODO: Write the wire parasticis of circuit model */
 

@@ -265,12 +265,13 @@ class CircuitLibrary {
     bool port_is_config_enable(const CircuitPortId& circuit_port_id) const;
     bool port_is_prog(const CircuitPortId& circuit_port_id) const;
     size_t port_lut_frac_level(const CircuitPortId& circuit_port_id) const;
-    std::vector<size_t> port_lut_output_masks(const CircuitPortId& circuit_port_id) const;
+    std::vector<size_t> port_lut_output_mask(const CircuitPortId& circuit_port_id) const;
     std::string port_tri_state_map(const CircuitPortId& circuit_port_id) const;
     CircuitModelId port_tri_state_model(const CircuitPortId& circuit_port_id) const;
     std::string port_tri_state_model_name(const CircuitPortId& circuit_port_id) const;
     CircuitModelId port_parent_model(const CircuitPortId& circuit_port_id) const;
     std::string model_name(const CircuitPortId& port_id) const;
+    std::string port_inv_model_name(const CircuitPortId& circuit_port_id) const;
   public: /* Public Accessors: Timing graph */
     /* Get source/sink nodes and delay of edges */
     std::vector<CircuitEdgeId> timing_edges_by_model(const CircuitModelId& model_id) const;
