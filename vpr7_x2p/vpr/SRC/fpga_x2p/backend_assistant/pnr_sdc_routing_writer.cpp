@@ -82,11 +82,11 @@ void print_pnr_sdc_constrain_sb_mux_timing(std::fstream& fp,
   /* Find the starting points */
   for (const ModulePortId& module_input_port : module_input_ports) {
     /* Constrain a path */
-    print_pnr_sdc_constrain_module_port2port_timing(fp,
-                                                    module_manager, 
-                                                    sb_module, module_input_port, 
-                                                    sb_module, module_output_port,
-                                                    switch_delays[module_input_port]);
+    print_pnr_sdc_constrain_port2port_timing(fp,
+                                             module_manager, 
+                                             sb_module, module_input_port, 
+                                             sb_module, module_output_port,
+                                             switch_delays[module_input_port]);
   }
 }
 
@@ -271,11 +271,11 @@ void print_pnr_sdc_constrain_cb_mux_timing(std::fstream& fp,
   /* Find the starting points */
   for (const ModulePortId& module_input_port : module_input_ports) {
     /* Constrain a path */
-    print_pnr_sdc_constrain_module_port2port_timing(fp,
-                                                    module_manager, 
-                                                    cb_module, module_input_port, 
-                                                    cb_module, module_output_port,
-                                                    switch_delays[module_input_port]);
+    print_pnr_sdc_constrain_port2port_timing(fp,
+                                             module_manager, 
+                                             cb_module, module_input_port, 
+                                             cb_module, module_output_port,
+                                             switch_delays[module_input_port]);
   }
 }
 
