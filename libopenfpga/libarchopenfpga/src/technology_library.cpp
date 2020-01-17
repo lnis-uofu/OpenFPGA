@@ -48,8 +48,16 @@ std::string TechnologyLibrary::device_name(const TechnologyDeviceId& device_id) 
   return device_names_[device_id]; 
 }
 
-/* Access the id of a technology device by name */
+/* Access the id of a technology device by name,
+ * If the name is valid, we return a valid id
+ * Otherwise, return an invalid id
+ */
 TechnologyDeviceId TechnologyLibrary::device(const std::string& name) const {
+  std::map<std::string, TechnologyDeviceId>::const_iterator it = device_name2ids_.find(name);
+  if (it != device_name2ids_.end()) {
+    return TechnologyDeviceId::INVALID();
+  }
+
   return device_name2ids_.at(name); 
 }
 
@@ -207,8 +215,16 @@ std::string TechnologyLibrary::variation_name(const TechnologyVariationId& varia
   return variation_names_[variation_id]; 
 }
 
-/* Access the id of a technology variation by name */
+/* Access the id of a technology variation by name
+ * If the name is valid, we return a valid id
+ * Otherwise, return an invalid id
+ */
 TechnologyVariationId TechnologyLibrary::variation(const std::string& name) const {
+  std::map<std::string, TechnologyVariationId>::const_iterator it = variation_name2ids_.find(name);
+  if (it != variation_name2ids_.end()) {
+    return TechnologyVariationId::INVALID();
+  }
+
   return variation_name2ids_.at(name); 
 }
 
@@ -469,6 +485,38 @@ void TechnologyLibrary::set_variation_num_sigma(const TechnologyVariationId& var
   VTR_ASSERT(valid_variation_id(variation_id));
   variation_num_sigmas_[variation_id] = num_sigma;
   return;
+}
+
+/************************************************************************
+ * Public mutators: linkers
+ ***********************************************************************/
+/* This function builds the links between devices and variations,
+ * which have been defined in the technology library
+ */
+void TechnologyLibrary::link_devices_to_variations() {
+  for (const TechnologyDeviceId& device : devices()) {
+    /* For transistors, find the variation name for each model and build a link */
+    if (TECH_LIB_DEVICE_TRANSISTOR == device_type(device)) {
+      /* PMOS transistor, if a variation name is specified, we try to build a link
+       * Otherwise, we assign any invalid id */
+      const std::string& pmos_var_name = transistor_model_variation_names_[device][TECH_LIB_TRANSISTOR_PMOS];
+      transistor_model_variation_ids_[device][TECH_LIB_TRANSISTOR_PMOS] = variation(pmos_var_name);
+
+      /* NMOS transistor, if a variation name is specified, we try to build a link
+       * Otherwise, we assign any invalid id 
+       */
+      const std::string& nmos_var_name = transistor_model_variation_names_[device][TECH_LIB_TRANSISTOR_NMOS];
+      transistor_model_variation_ids_[device][TECH_LIB_TRANSISTOR_NMOS] = variation(nmos_var_name);
+      /* Finish for transistors, go to the next */
+      continue;
+    } 
+
+    /* Reach here it means an RRAM device, we find the variation name and try to build a link */ 
+    VTR_ASSERT(TECH_LIB_DEVICE_RRAM == device_type(device));
+    const std::string& rram_var_name = rram_variation_names_[device];
+    rram_variation_ids_[device] = variation(rram_var_name);
+    /* Finish for RRAMs, go to the next */
+  }
 }
 
 /************************************************************************

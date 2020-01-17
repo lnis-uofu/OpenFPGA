@@ -52,12 +52,12 @@ constexpr std::array<const char*, NUM_TECH_LIB_DEVICE_TYPES> TECH_LIB_DEVICE_TYP
  * 2. PMOS transistor 
  *******************************************************************/
 enum e_tech_lib_trans_type {
-  TECH_LIB_TRANS_PMOS, 
-  TECH_LIB_TRANS_NMOS, 
-  NUM_TECH_LIB_TRANS_TYPES
+  TECH_LIB_TRANSISTOR_PMOS, 
+  TECH_LIB_TRANSISTOR_NMOS, 
+  NUM_TECH_LIB_TRANSISTOR_TYPES
 };
 /* Strings correspond to transistor type */
-constexpr std::array<const char*, NUM_TECH_LIB_TRANS_TYPES> TECH_LIB_TRANS_TYPE_STRING = {{"pmos", "nmos"}};
+constexpr std::array<const char*, NUM_TECH_LIB_TRANSISTOR_TYPES> TECH_LIB_TRANSISTOR_TYPE_STRING = {{"pmos", "nmos"}};
 
 /********************************************************************
  * Process corners supported 
@@ -155,6 +155,8 @@ class TechnologyLibrary {
     TechnologyVariationId add_variation(const std::string& name);
     void set_variation_abs_value(const TechnologyVariationId& variation_id, const float& abs_value);
     void set_variation_num_sigma(const TechnologyVariationId& variation_id, const size_t& num_sigma);
+  public: /* Public Mutators: linkers */
+    void link_devices_to_variations();
   public: /* Public invalidators/validators */
     bool valid_device_id(const TechnologyDeviceId& device_id) const;
     bool valid_variation_id(const TechnologyVariationId& variation_id) const;
