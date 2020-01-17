@@ -8,6 +8,7 @@
 #include "vtr_log.h"
 
 /* Headers from readarchopenfpga */
+#include "check_circuit_library.h"
 #include "read_xml_openfpga_arch.h"
 #include "write_xml_openfpga_arch.h"
 
@@ -20,7 +21,8 @@ int main(int argc, const char** argv) {
   VTR_LOG("Parsed %lu circuit models from XML into circuit library.\n",
           openfpga_arch.circuit_lib.num_models());
 
-  /* TODO: Check the circuit library */
+  /* Check the circuit library */
+  check_circuit_library(openfpga_arch.circuit_lib);
   
   /* Output the circuit library to an XML file
    * This is optional only used when there is a second argument
