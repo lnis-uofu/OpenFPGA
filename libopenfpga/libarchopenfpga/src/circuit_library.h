@@ -228,6 +228,11 @@ class CircuitLibrary {
     CircuitModelId output_buffer_model(const CircuitModelId& model_id) const;
     /* Delay information */
     size_t num_delay_info(const CircuitModelId& model_id) const;
+    /* Wire parameters */
+    e_wire_model_type wire_type(const CircuitModelId& model_id) const;
+    float wire_r(const CircuitModelId& model_id) const;
+    float wire_c(const CircuitModelId& model_id) const;
+    size_t wire_num_level(const CircuitModelId& model_id) const;
     /* RRAM information */
     float rram_rlrs(const CircuitModelId& model_id) const;
     float rram_rhrs(const CircuitModelId& model_id) const;
@@ -432,8 +437,8 @@ class CircuitLibrary {
                     const float& r_val);
     void set_wire_c(const CircuitModelId& model_id,
                     const float& c_val);
-    void set_wire_num_levels(const CircuitModelId& model_id,
-                             const size_t& num_level);
+    void set_wire_num_level(const CircuitModelId& model_id,
+                            const size_t& num_level);
   private: /* Private Mutators: builders */
     void set_model_buffer(const CircuitModelId& model_id, const enum e_buffer_type buffer_type, const bool& existence, const std::string& model_name);
     void link_port_tri_state_model();      

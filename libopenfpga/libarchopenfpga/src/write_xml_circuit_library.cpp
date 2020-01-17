@@ -3,6 +3,7 @@
  *******************************************************************/
 /* Headers from system goes first */
 #include <string>
+#include <algorithm>
 
 /* Headers from vtr util library */
 #include "vtr_log.h"
@@ -209,6 +210,165 @@ void write_xml_circuit_port(std::fstream& fp,
 }
 
 /********************************************************************
+ * A writer to output wire parasitics of a circuit model to XML format
+ *******************************************************************/
+static 
+void write_xml_wire_param(std::fstream& fp,
+                          const char* fname,
+                          const CircuitLibrary& circuit_lib,
+                          const CircuitModelId& model) {
+  /* Validate the file stream */
+  openfpga::check_file_stream(fname, fp);
+
+  fp << "\t\t\t" << "<wire_param"; 
+
+  write_xml_attribute(fp, "model_type", WIRE_MODEL_TYPE_STRING[circuit_lib.wire_type(model)]); 
+  write_xml_attribute(fp, "R", std::to_string(circuit_lib.wire_r(model)).c_str()); 
+  write_xml_attribute(fp, "C", std::to_string(circuit_lib.wire_c(model)).c_str()); 
+  write_xml_attribute(fp, "num_level", std::to_string(circuit_lib.wire_num_level(model)).c_str()); 
+
+  /* Finish all the attributes, we can return here */
+  fp << "/>" << "\n";
+}
+
+/********************************************************************
+ * A writer to output delay matrices of a circuit model to XML format
+ *******************************************************************/
+static 
+void write_xml_delay_matrix(std::fstream& fp,
+                            const char* fname,
+                            const CircuitLibrary& circuit_lib,
+                            const CircuitModelId& model) {
+  /* Validate the file stream */
+  openfpga::check_file_stream(fname, fp);
+
+  std::vector<CircuitPortId> in_ports;
+  std::vector<CircuitPortId> out_ports;
+  /* Collect the input ports and output ports */
+  for (const auto& timing_edge : circuit_lib.timing_edges_by_model(model)) {
+     /* For each input port of each edge, build a list of unique ports */
+     CircuitPortId src_port = circuit_lib.timing_edge_src_port(timing_edge);
+     if (in_ports.end() == std::find(in_ports.begin(), in_ports.end(), src_port)) {
+       in_ports.push_back(src_port);
+     }
+
+     /* For each input port of each edge, build a list of unique ports */
+     CircuitPortId sink_port = circuit_lib.timing_edge_sink_port(timing_edge);
+     if (out_ports.end() == std::find(out_ports.begin(), out_ports.end(), sink_port)) {
+       out_ports.push_back(sink_port);
+     }
+  }
+
+  /* Build the string of in_port list */
+  std::string in_port_string;
+  for (const CircuitPortId& in_port : in_ports) {
+    if (!in_port_string.empty()) {
+      in_port_string += std::string(" ");
+    }
+    in_port_string += circuit_lib.port_prefix(in_port);
+  } 
+
+  /* Build the string of out_port list */
+  std::string out_port_string;
+  for (const CircuitPortId& out_port : out_ports) {
+    if (!out_port_string.empty()) {
+      out_port_string += std::string(" ");
+    }
+    out_port_string += circuit_lib.port_prefix(out_port);
+  } 
+
+  /* Output rising edges */
+  fp << "\t\t\t";
+  fp << "<delay_matrix";
+  write_xml_attribute(fp, "type", CIRCUIT_MODEL_DELAY_TYPE_STRING[CIRCUIT_MODEL_DELAY_RISE]); 
+  write_xml_attribute(fp, "in_port", in_port_string.c_str()); 
+  write_xml_attribute(fp, "out_port", out_port_string.c_str()); 
+  fp << ">\n";
+  
+  for (const CircuitPortId& out_port : out_ports) {
+    for (const size_t& out_pin : circuit_lib.pins(out_port)) {
+      fp << "\t\t\t\t";
+      size_t counter = 0; /* Count the numbers of delays in one line */ 
+      for (const CircuitPortId& in_port : in_ports) {
+        for (const size_t& in_pin : circuit_lib.pins(in_port)) {
+          for (const auto& timing_edge : circuit_lib.timing_edges_by_model(model)) {
+            CircuitPortId src_port = circuit_lib.timing_edge_src_port(timing_edge);
+            size_t src_pin = circuit_lib.timing_edge_src_pin(timing_edge);
+
+            CircuitPortId sink_port = circuit_lib.timing_edge_sink_port(timing_edge);
+            size_t sink_pin = circuit_lib.timing_edge_sink_pin(timing_edge);
+
+            /* Bypass unwanted edges */
+            if ( (src_port != in_port)
+              || (src_pin != in_pin)
+              || (sink_port != out_port)
+              || (sink_pin != out_pin) ) {
+              continue;
+            }
+            /* This is the edge we want, output the rise delay */
+            if (0 < counter) {
+              fp << std::string(" ");
+            }
+            fp << std::scientific << circuit_lib.timing_edge_delay(timing_edge, CIRCUIT_MODEL_DELAY_RISE);
+            counter++;
+          }
+        }
+      }
+      /* One line of delay matrix finished here, output to the file */
+      fp << "\n";
+    }
+  }
+
+  fp << "\t\t\t";
+  fp << "</delay_matrix>" << "\n";
+
+  /* Output falling edges */
+  fp << "\t\t\t";
+  fp << "<delay_matrix";
+  write_xml_attribute(fp, "type", CIRCUIT_MODEL_DELAY_TYPE_STRING[CIRCUIT_MODEL_DELAY_FALL]); 
+  write_xml_attribute(fp, "in_port", in_port_string.c_str()); 
+  write_xml_attribute(fp, "out_port", out_port_string.c_str()); 
+  fp << ">\n";
+  
+  for (const CircuitPortId& out_port : out_ports) {
+    for (const size_t& out_pin : circuit_lib.pins(out_port)) {
+      fp << "\t\t\t\t";
+      size_t counter = 0; /* Count the numbers of delays in one line */ 
+      for (const CircuitPortId& in_port : in_ports) {
+        for (const size_t& in_pin : circuit_lib.pins(in_port)) {
+          for (const auto& timing_edge : circuit_lib.timing_edges_by_model(model)) {
+            CircuitPortId src_port = circuit_lib.timing_edge_src_port(timing_edge);
+            size_t src_pin = circuit_lib.timing_edge_src_pin(timing_edge);
+
+            CircuitPortId sink_port = circuit_lib.timing_edge_sink_port(timing_edge);
+            size_t sink_pin = circuit_lib.timing_edge_sink_pin(timing_edge);
+
+            /* Bypass unwanted edges */
+            if ( (src_port != in_port)
+              || (src_pin != in_pin)
+              || (sink_port != out_port)
+              || (sink_pin != out_pin) ) {
+              continue;
+            }
+            /* This is the edge we want, output the rise delay */
+            if (0 < counter) {
+              fp << std::string(" ");
+            }
+            fp << std::scientific << circuit_lib.timing_edge_delay(timing_edge, CIRCUIT_MODEL_DELAY_FALL);
+            counter++;
+          }
+        }
+      }
+      /* One line of delay matrix finished here, output to the file */
+      fp << "\n";
+    }
+  }
+
+  fp << "\t\t\t";
+  fp << "</delay_matrix>" << "\n";
+}
+
+/********************************************************************
  * A writer to output a circuit model to XML format
  *******************************************************************/
 static 
@@ -305,9 +465,18 @@ void write_xml_circuit_model(std::fstream& fp,
     write_xml_circuit_port(fp, fname, circuit_lib, port);
   }
 
-  /* TODO: Write the wire parasticis of circuit model */
+  /* Write the wire parasticis of circuit model */
+  if ( (CIRCUIT_MODEL_WIRE == circuit_lib.model_type(model))
+    || (CIRCUIT_MODEL_CHAN_WIRE == circuit_lib.model_type(model)) ) {
+    write_xml_wire_param(fp, fname, circuit_lib, model);
+  }
 
-  /* TODO: Write the delay matrix of circuit model */
+  /* Write the delay matrix of circuit model
+   * Skip circuit models without delay matrices 
+   */
+  if (0 < circuit_lib.num_delay_info(model)) {
+    write_xml_delay_matrix(fp, fname, circuit_lib, model);
+  }
 
   /* Put an end to the XML definition of this circuit model */
   fp << "\t\t" << "</circuit_model>\n";

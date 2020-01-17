@@ -439,6 +439,45 @@ size_t CircuitLibrary::num_delay_info(const CircuitModelId& model_id) const {
   return delay_types_[model_id].size();
 }
 
+/* Return the type of a wire model, this is ONLY applicable to wires and channel wires */
+e_wire_model_type CircuitLibrary::wire_type(const CircuitModelId& model_id) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  VTR_ASSERT( (CIRCUIT_MODEL_WIRE == model_type(model_id))
+           || (CIRCUIT_MODEL_CHAN_WIRE == model_type(model_id)) );
+  return wire_types_[model_id];
+}
+
+/* Return the resistance value of a wire model, 
+ * this is ONLY applicable to wires and channel wires 
+ */
+float CircuitLibrary::wire_r(const CircuitModelId& model_id) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  /* validate that the type of this model should be WIRE or CHAN_WIRE */
+  VTR_ASSERT( (CIRCUIT_MODEL_WIRE      == model_type(model_id))
+           || (CIRCUIT_MODEL_CHAN_WIRE == model_type(model_id)) );
+  return wire_rc_[model_id].x(); 
+}
+
+float CircuitLibrary::wire_c(const CircuitModelId& model_id) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  /* validate that the type of this model should be WIRE or CHAN_WIRE */
+  VTR_ASSERT( (CIRCUIT_MODEL_WIRE      == model_type(model_id))
+           || (CIRCUIT_MODEL_CHAN_WIRE == model_type(model_id)) );
+  return wire_rc_[model_id].y(); 
+}
+
+size_t CircuitLibrary::wire_num_level(const CircuitModelId& model_id) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  /* validate that the type of this model should be WIRE or CHAN_WIRE */
+  VTR_ASSERT( (CIRCUIT_MODEL_WIRE      == model_type(model_id))
+           || (CIRCUIT_MODEL_CHAN_WIRE == model_type(model_id)) );
+  return wire_num_levels_[model_id]; 
+}
+
 /* Return the Low Resistance State Resistance of a RRAM model */
 float CircuitLibrary::rram_rlrs(const CircuitModelId& model_id) const {
   /* validate the model_id */
@@ -1810,8 +1849,8 @@ void CircuitLibrary::set_wire_c(const CircuitModelId& model_id,
   return;
 }
 
-void CircuitLibrary::set_wire_num_levels(const CircuitModelId& model_id,
-                                         const size_t& num_level) {
+void CircuitLibrary::set_wire_num_level(const CircuitModelId& model_id,
+                                        const size_t& num_level) {
   /* validate the model_id */
   VTR_ASSERT(valid_model_id(model_id));
   /* validate that the type of this model should be WIRE or CHAN_WIRE */

@@ -85,6 +85,8 @@ enum e_wire_model_type {
   WIRE_MODEL_T,
   NUM_WIRE_MODEL_TYPES
 };
+/* Strings correspond to each type of logic gate */
+constexpr std::array<const char*, NUM_WIRE_MODEL_TYPES> WIRE_MODEL_TYPE_STRING = {{"pi", "t"}};
 
 enum e_circuit_model_port_type {
   CIRCUIT_MODEL_PORT_INPUT, 
@@ -106,6 +108,8 @@ enum e_circuit_model_delay_type {
   CIRCUIT_MODEL_DELAY_FALL,
   NUM_CIRCUIT_MODEL_DELAY_TYPES
 };
+/* Strings correspond to each delay type */
+constexpr std::array<const char*, NUM_CIRCUIT_MODEL_DELAY_TYPES> CIRCUIT_MODEL_DELAY_TYPE_STRING = {{"rise", "fall"}};
 
 /* For SRAM */
 enum e_sram_orgz {

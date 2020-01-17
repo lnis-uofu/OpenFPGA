@@ -579,7 +579,7 @@ void read_xml_wire_param(pugi::xml_node& xml_wire_param,
   circuit_lib.set_wire_c(model, get_attribute(xml_wire_param, "C", loc_data).as_float(0.));
 
   /* Parse the number of levels for the wire model */
-  circuit_lib.set_wire_num_levels(model, get_attribute(xml_wire_param, "num_level", loc_data).as_int(0));
+  circuit_lib.set_wire_num_level(model, get_attribute(xml_wire_param, "num_level", loc_data).as_int(0));
 }
 
 /********************************************************************
