@@ -67,12 +67,16 @@ void print_pnr_sdc_constrain_max_delay(std::fstream& fp,
   fp << "set_max_delay";
 
   fp << " -from ";
-  fp << src_instance_name << "/";
+  if (!src_instance_name.empty()) {
+    fp << src_instance_name << "/";
+  }
   fp << src_port_name;
 
   fp << " -to ";
  
-  fp << des_instance_name << "/";
+  if (!des_instance_name.empty()) {
+    fp << des_instance_name << "/";
+  }
   fp << des_port_name;
 
   fp << " " << std::setprecision(10) << delay;
@@ -95,6 +99,27 @@ void print_pnr_sdc_constrain_module_port2port_timing(std::fstream& fp,
                                     module_manager.module_name(input_parent_module_id),
                                     generate_sdc_port(module_manager.module_port(input_parent_module_id, module_input_port_id)),
                                     module_manager.module_name(output_parent_module_id),
+                                    generate_sdc_port(module_manager.module_port(output_parent_module_id, module_output_port_id)),
+                                    tmax);
+
+}
+
+/********************************************************************
+ * Constrain a path between two ports of a module with a given timing value
+ * This function will NOT output the module name
+ * Note: this function uses set_max_delay !!!
+ *******************************************************************/
+void print_pnr_sdc_constrain_port2port_timing(std::fstream& fp,
+                                              const ModuleManager& module_manager,
+                                              const ModuleId& input_parent_module_id, 
+                                              const ModulePortId& module_input_port_id, 
+                                              const ModuleId& output_parent_module_id, 
+                                              const ModulePortId& module_output_port_id, 
+                                              const float& tmax) {
+  print_pnr_sdc_constrain_max_delay(fp,
+                                    std::string(),
+                                    generate_sdc_port(module_manager.module_port(input_parent_module_id, module_input_port_id)),
+                                    std::string(),
                                     generate_sdc_port(module_manager.module_port(output_parent_module_id, module_output_port_id)),
                                     tmax);
 
