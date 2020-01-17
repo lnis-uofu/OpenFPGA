@@ -115,6 +115,46 @@ class TechnologyLibrary {
     TechnologyVariationId variation(const std::string& name) const;
     float variation_abs_value(const TechnologyVariationId& variation_id) const;
     size_t variation_num_sigma(const TechnologyVariationId& variation_id) const;
+  public: /* Public Mutators: device-related */
+    TechnologyDeviceId add_device(const std::string& name);
+    void set_device_type(const TechnologyDeviceId& device_id, 
+                         const e_tech_lib_device_type& type);
+    void set_device_model_type(const TechnologyDeviceId& device_id, 
+                               const e_tech_lib_model_type& model_type);
+    void set_device_corner(const TechnologyDeviceId& device_id, 
+                           const std::string& corner);
+    void set_device_model_ref(const TechnologyDeviceId& device_id, 
+                              const std::string& model_ref);
+    void set_device_lib_path(const TechnologyDeviceId& device_id, 
+                             const std::string& lib_path);
+    void set_device_vdd(const TechnologyDeviceId& device_id, 
+                        const float& vdd);
+    void set_device_pn_ratio(const TechnologyDeviceId& device_id, 
+                             const float& pn_ratio);
+  public: /* Public Mutators: transistor-related */
+    void set_transistor_model_name(const TechnologyDeviceId& device_id, 
+                                   const e_tech_lib_trans_type& transistor_type,
+                                   const std::string& model_name);
+    void set_transistor_model_chan_length(const TechnologyDeviceId& device_id, 
+                                          const e_tech_lib_trans_type& transistor_type,
+                                          const float& chan_length);
+    void set_transistor_model_min_width(const TechnologyDeviceId& device_id, 
+                                        const e_tech_lib_trans_type& transistor_type,
+                                        const float& min_width);
+    void set_transistor_model_variation_name(const TechnologyDeviceId& device_id, 
+                                             const e_tech_lib_trans_type& transistor_type,
+                                             const std::string& variation_name);
+  public: /* Public Mutators: RRAM-related */
+    void set_rram_rlrs(const TechnologyDeviceId& device_id, 
+                       const float& rlrs);
+    void set_rram_rhrs(const TechnologyDeviceId& device_id, 
+                       const float& rhrs);
+    void set_rram_variation_name(const TechnologyDeviceId& device_id, 
+                                 const std::string& variation_name);
+  public: /* Public Mutators: variation-related */
+    TechnologyVariationId add_variation(const std::string& name);
+    void set_variation_abs_value(const TechnologyVariationId& variation_id, const float& abs_value);
+    void set_variation_num_sigma(const TechnologyVariationId& variation_id, const size_t& num_sigma);
   public: /* Public invalidators/validators */
     bool valid_device_id(const TechnologyDeviceId& device_id) const;
     bool valid_variation_id(const TechnologyVariationId& variation_id) const;
@@ -135,11 +175,11 @@ class TechnologyLibrary {
     vtr::vector<TechnologyDeviceId, std::array<float, 2>> transistor_model_chan_lengths_;
     vtr::vector<TechnologyDeviceId, std::array<float, 2>> transistor_model_min_widths_;
     vtr::vector<TechnologyDeviceId, std::array<std::string, 2>> transistor_model_variation_names_;
-    vtr::vector<TechnologyDeviceId, std::array<TechnologyVariationId,2 >> transistor_model_variation_ids_;
+    vtr::vector<TechnologyDeviceId, std::array<TechnologyVariationId, 2>> transistor_model_variation_ids_;
 
     /* ReRAM-related fundamental information: LRS -> x(); HRS -> y() */
     vtr::vector<TechnologyDeviceId, vtr::Point<float>> rram_resistances_;
-    vtr::vector<TechnologyDeviceId, float> rram_variation_names_;
+    vtr::vector<TechnologyDeviceId, std::string> rram_variation_names_;
     vtr::vector<TechnologyDeviceId, TechnologyVariationId> rram_variation_ids_;
     
     /* Variation-related fundamental information */
