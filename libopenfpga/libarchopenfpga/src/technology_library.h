@@ -18,23 +18,36 @@
  *******************************************************************/
 enum e_tech_lib_type {
   TECH_LIB_INDUSTRY,
-  TECH_LIB_ACADEMIA
+  TECH_LIB_ACADEMIA,
+  NUM_TECH_LIB_TYPES
 };
+/* Strings correspond to each technology library type */
+constexpr std::array<const char*, NUM_TECH_LIB_TYPES> TECH_LIB_TYPE_STRING = {{"industry", "academia"}};
 
 /********************************************************************
- * Types of transistors which may be defined in a technology library
+ * Types of transistor groups which may be defined in a technology library
  * We categorize the transistors in terms of their usage in FPGA architecture
- * 1. NMOS transistor used in datapath logic
- * 2. PMOS transistor used in datapath logic
- * 3. NMOS transistor used in the I/O blocks
- * 3. PMOS transistor used in the I/O blocks
+ * 1. NMOS transistor 
+ * 2. PMOS transistor 
  *******************************************************************/
 enum e_tech_lib_trans_type {
   TECH_LIB_TRANS_NMOS, 
   TECH_LIB_TRANS_PMOS, 
-  TECH_LIB_TRANS_IO_NMOS, 
-  TECH_LIB_TRANS_IO_PMOS
 };
+/* Strings correspond to transistor type type */
+constexpr std::array<const char*, NUM_TECH_LIB_TYPES> TECH_LIB_TRANS_TYPE_STRING = {{"industry", "academia"}};
+
+/********************************************************************
+ * Types of transistors which may be defined in a technology library
+ * 1. NMOS transistor 
+ * 2. PMOS transistor 
+ *******************************************************************/
+enum e_tech_lib_trans_type {
+  TECH_LIB_TRANS_NMOS, 
+  TECH_LIB_TRANS_PMOS, 
+};
+/* Strings correspond to transistor type type */
+constexpr std::array<const char*, NUM_TECH_LIB_TYPES> TECH_LIB_TRANS_TYPE_STRING = {{"industry", "academia"}};
 
 /********************************************************************
  * Process corners supported 
