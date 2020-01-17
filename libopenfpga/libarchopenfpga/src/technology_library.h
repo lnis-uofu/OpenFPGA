@@ -73,6 +73,15 @@ constexpr std::array<const char*, NUM_TECH_LIB_CORNER_TYPES> TECH_LIB_CORNER_TYP
 
 /********************************************************************
  * A data structure to describe technology library
+ *
+ * Typical usage:
+ * --------------
+ *   // Create an empty technology library
+ *   TechnologyLibrary tech_lib;
+ *   // call your builder for technology library
+ *   // Build the internal links for the technology library
+ *   tech_lib.link_device_to_variation();
+ *
  *******************************************************************/
 class TechnologyLibrary {
   public: /* Types */
@@ -162,31 +171,106 @@ class TechnologyLibrary {
     bool valid_variation_id(const TechnologyVariationId& variation_id) const;
   private: /* Internal data */
     /* Transistor-related fundamental information */
+    /* Unique identifier for each device
+     * A device could be either transistors (1 pair of PMOS and NMOS) or RRAMs  
+     */
     vtr::vector<TechnologyDeviceId, TechnologyDeviceId> device_ids_;
+
+    /* Unique name for each device. This is defined by XML file */
     vtr::vector<TechnologyDeviceId, std::string> device_names_;
+
+    /* Type of each device, either transistors or RRAMs */
     vtr::vector<TechnologyDeviceId, e_tech_lib_device_type> device_types_;
+
+    /* Type of models of each device, either industry or academia
+     * This will lead to different ways when include these models
+     * For industry models, we use .lib to include library
+     * For academia models, we use .include to include library
+     */
     vtr::vector<TechnologyDeviceId, e_tech_lib_model_type> device_model_types_;
+
+    /* Name of process corner to be used for each device
+     * Users can define any string for the process corner they are going to use
+     * But the corner name should be consistent with their library files
+     * When this is enabled, the corner name will be added when 
+     * include the models 
+     * For example, for a industry model, .lib <lib_path> <corner_name>
+     */
     vtr::vector<TechnologyDeviceId, std::string> device_corners_;
+
+    /* The string used to instanciate the device models
+     * This will really depend on the type of models
+     * For most industry models, we can use 'M' to instanciate a transisitor
+     * For some academia models, we have to use 'X' to do so
+     */
     vtr::vector<TechnologyDeviceId, std::string> device_model_refs_;
+
+    /* The path to the transistor models
+     * This is going to be the <lib_path> when include the library files
+     * See the example in the comments about process corner
+     */
     vtr::vector<TechnologyDeviceId, std::string> device_lib_paths_;
+
+    /* Operating voltage for the devices. Unit: [V] */
     vtr::vector<TechnologyDeviceId, float> device_vdds_;
+
+    /* The width ratio between PMOS and NMOS for a device group
+     * This really depend the transistor technology
+     * We recommend users to characterize driving strengths of
+     * PMOS and NMOS using SPICE simulators 
+     */
     vtr::vector<TechnologyDeviceId, float> device_pn_ratios_;
 
-    /* Transistor models stored in vtr::Point data structure */
+    /* The model name is the name that is defined in your library file.
+     * For example, your NMOS transistor may be defined as 
+     * .model nch
+     * in some BSIM models. In this case, nch will be the model name
+     * 
+     * In the rest of these transistor-level parameters, we follow the same organization:
+     * PMOS data will be stored in the first element of the array
+     * NMOS data will be stored in the second element of the array
+     */
     vtr::vector<TechnologyDeviceId, std::array<std::string, 2>> transistor_model_names_;
+
+    /* The channel length of a transistor.
+     * This should be defined by your technology vendor
+     * For example, a 22nm technology, the channel length is around 22nm
+     */
     vtr::vector<TechnologyDeviceId, std::array<float, 2>> transistor_model_chan_lengths_;
+
+    /* The minimum width of a transistor.
+     * This should be defined by your technology vendor
+     */
     vtr::vector<TechnologyDeviceId, std::array<float, 2>> transistor_model_min_widths_;
+
+    /* The variation name and id binded to PMOS and NMOS transistor
+     * We expect users to provide the exact name of variation defined in this technology library
+     * the name and id will be automatically matched by using function link_device_to_variation()
+     */
     vtr::vector<TechnologyDeviceId, std::array<std::string, 2>> transistor_model_variation_names_;
     vtr::vector<TechnologyDeviceId, std::array<TechnologyVariationId, 2>> transistor_model_variation_ids_;
 
-    /* ReRAM-related fundamental information: LRS -> x(); HRS -> y() */
+    /* ReRAM-related fundamental information: 
+     * Low Resistance State (LRS) resistance will be stored in the x() part of vtr::Point
+     * High Resistance State (HRS) resistance will be stored in the y() part of vtr::Point 
+     */
     vtr::vector<TechnologyDeviceId, vtr::Point<float>> rram_resistances_;
+
+    /* The variation name and id binded to this RRAM
+     * We expect users to provide the exact name of variation defined in this technology library
+     * the name and id will be automatically matched by using function link_device_to_variation()
+     */
     vtr::vector<TechnologyDeviceId, std::string> rram_variation_names_;
     vtr::vector<TechnologyDeviceId, TechnologyVariationId> rram_variation_ids_;
     
-    /* Variation-related fundamental information */
+	/* Unique identifier for each process variation */
     vtr::vector<TechnologyVariationId, TechnologyVariationId> variation_ids_;
     vtr::vector<TechnologyVariationId, std::string> variation_names_;
+    
+    /* Absoluate and standard deviation of a process variation 
+     * These are used to apply manual process variations 
+     * in case your technology vender does not provide any
+     */
     vtr::vector<TechnologyVariationId, float> variation_abs_values_;
     vtr::vector<TechnologyVariationId, size_t> variation_num_sigmas_;
 

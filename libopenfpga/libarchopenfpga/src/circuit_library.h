@@ -28,6 +28,7 @@
  * It stores all the circuit-level details from XML architecture file
  *
  * Typical usage:
+ * --------------
  *   // Create an empty circuit library
  *   CircuitLibrary circuit_lib;
  *   // call your builder for circuit library
@@ -38,7 +39,8 @@
  *
  * It includes the following data:
  *
- *  ------ Fundamental Information -----
+ * Fundamental Information 
+ * -----------------------
  * 1. model_ids_ : unique identifier to find a circuit model
  *                         Use a strong id for search, to avoid illegal type casting
  * 2. model_types_: types of the circuit model, see details in the definition of enum e_circuit_model_type
