@@ -32,7 +32,7 @@ openfpga::Arch read_xml_openfpga_arch(const char* arch_file_name) {
   try {
     loc_data = pugiutil::load_xml(doc, arch_file_name);
 
-    /* Root node should be <circuit_settings> */
+    /* First node should be <openfpga_architecture> */
     auto xml_circuit_settings = get_single_child(doc, "openfpga_architecture", loc_data); 
 
     /* Parse circuit_models to circuit library 
@@ -46,6 +46,11 @@ openfpga::Arch read_xml_openfpga_arch(const char* arch_file_name) {
   
     /* Build the timing graph inside the circuit library */
     openfpga_arch.circuit_lib.build_timing_graphs();
+
+    /* Second node should be <openfpga_simulation_setting> */
+    auto xml_simulation_settings = get_single_child(doc, "openfpga_simulation_setting", loc_data); 
+
+    /* Parse simulation settings to data structure */
 
   } catch (pugiutil::XmlError& e) {
     archfpga_throw(arch_file_name, e.line(),
