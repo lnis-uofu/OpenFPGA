@@ -20,7 +20,7 @@ int main(int argc, const char** argv) {
   VTR_LOG("Parsed %lu circuit models from XML into circuit library.\n",
           openfpga_arch.circuit_lib.num_models());
 
-  /* Check the circuit library */
+  /* TODO: Check the circuit library */
   
   /* Output the circuit library to an XML file
    * This is optional only used when there is a second argument

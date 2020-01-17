@@ -41,6 +41,12 @@ OpenFPGAArch read_xml_openfpga_arch(const char* arch_file_name) {
     auto xml_circuit_models = get_single_child(xml_circuit_settings, "circuit_library", loc_data);
     openfpga_arch.circuit_lib = read_xml_circuit_library(xml_circuit_models, loc_data);
 
+    /* Build the internal links for the circuit library */
+    openfpga_arch.circuit_lib.build_model_links();
+  
+    /* Build the timing graph inside the circuit library */
+    openfpga_arch.circuit_lib.build_timing_graphs();
+
   } catch (pugiutil::XmlError& e) {
     archfpga_throw(arch_file_name, e.line(),
                    "%s", e.what());

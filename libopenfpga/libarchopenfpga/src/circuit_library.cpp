@@ -235,6 +235,24 @@ CircuitModelId CircuitLibrary::pass_gate_logic_model(const CircuitModelId& model
   return pgl_model_id;
 }
 
+/* Find the name of pass-gate circuit model 
+ * Two cases to be considered:
+ * 1. this is a pass-gate circuit model, just find the data and return
+ * 2. this circuit model includes a pass-gate, find the link to pass-gate circuit model and go recursively
+ */
+std::string CircuitLibrary::pass_gate_logic_model_name(const CircuitModelId& model_id) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  
+  /* Return the data if this is a pass-gate circuit model */
+  if (CIRCUIT_MODEL_PASSGATE == model_type(model_id)) {
+    return model_names_[model_id];
+  }
+
+  /* Otherwise, we need to make sure this circuit model contains a pass-gate */
+  return pass_gate_logic_model_names_[model_id];
+}
+
 /* Return the type of pass gate logic module, only applicable to circuit model whose type is pass-gate logic */
 enum e_circuit_model_pass_gate_logic_type CircuitLibrary::pass_gate_logic_type(const CircuitModelId& model_id) const {
   /* validate the model_id */

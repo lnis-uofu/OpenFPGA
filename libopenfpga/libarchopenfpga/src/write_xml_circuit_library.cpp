@@ -241,13 +241,64 @@ void write_xml_circuit_model(std::fstream& fp,
   /* Write the design technology of circuit model */
   write_xml_design_technology(fp, fname, circuit_lib, model);
 
-  /* TODO: Write the input buffer information of circuit model */
-  /* TODO: Write the output buffer information of circuit model */
-  /* TODO: Write the lut input buffer information of circuit model */
-  /* TODO: Write the lut input inverter information of circuit model */
-  /* TODO: Write the lut intermediate buffer information of circuit model */
+  /* Write the input buffer information of circuit model, 
+   * only applicable when this circuit model is neither inverter nor buffer
+   */
+  if (CIRCUIT_MODEL_INVBUF != circuit_lib.model_type(model)) {
+    if (true == circuit_lib.is_input_buffered(model)) {
+      fp << "\t\t\t" << "<input_buffer";
+      write_xml_attribute(fp, "exist", circuit_lib.is_input_buffered(model)); 
+      write_xml_attribute(fp, "circuit_model_name", circuit_lib.model_name(circuit_lib.input_buffer_model(model)).c_str()); 
+      fp << "/>" << "\n";
+    }
+  }
 
-  /* TODO: Write the pass-gate-logic information of circuit model */
+  /* Write the output buffer information of circuit model */
+  if (CIRCUIT_MODEL_INVBUF != circuit_lib.model_type(model)) {
+    if (true == circuit_lib.is_output_buffered(model)) {
+      fp << "\t\t\t" << "<output_buffer";
+      write_xml_attribute(fp, "exist", circuit_lib.is_input_buffered(model)); 
+      write_xml_attribute(fp, "circuit_model_name", circuit_lib.model_name(circuit_lib.output_buffer_model(model)).c_str()); 
+      fp << "/>" << "\n";
+    }
+  }
+
+  if (CIRCUIT_MODEL_LUT == circuit_lib.model_type(model)) {
+    /* Write the lut input buffer information of circuit model
+     * This is a mandatory attribute for LUT, so it must exist 
+     */
+    fp << "\t\t\t" << "<lut_input_buffer";
+    write_xml_attribute(fp, "exist", true); 
+    write_xml_attribute(fp, "circuit_model_name", circuit_lib.model_name(circuit_lib.lut_input_buffer_model(model)).c_str()); 
+    fp << "/>" << "\n";
+
+    /* Write the lut input inverter information of circuit model
+     * This is a mandatory attribute for LUT, so it must exist 
+     */
+    fp << "\t\t\t" << "<lut_input_inverter";
+    write_xml_attribute(fp, "exist", true); 
+    write_xml_attribute(fp, "circuit_model_name", circuit_lib.model_name(circuit_lib.lut_input_inverter_model(model)).c_str()); 
+    fp << "/>" << "\n";
+
+    /* Write the lut intermediate buffer information of circuit model */
+    if (true == circuit_lib.is_lut_intermediate_buffered(model)) {
+      fp << "\t\t\t" << "<lut_intermediate_buffer";
+      write_xml_attribute(fp, "exist", circuit_lib.is_lut_intermediate_buffered(model)); 
+      write_xml_attribute(fp, "circuit_model_name", circuit_lib.model_name(circuit_lib.lut_intermediate_buffer_model(model)).c_str()); 
+      if (!circuit_lib.lut_intermediate_buffer_location_map(model).empty()) {
+        write_xml_attribute(fp, "location_map", circuit_lib.lut_intermediate_buffer_location_map(model).c_str());
+      }
+      fp << "/>" << "\n";
+    }
+  }
+
+  /* Write the pass-gate-logic information of circuit model */
+  if ( (CIRCUIT_MODEL_LUT == circuit_lib.model_type(model)) 
+    || (CIRCUIT_MODEL_MUX == circuit_lib.model_type(model)) ) {
+    fp << "\t\t\t" << "<pass_gate_logic";
+    write_xml_attribute(fp, "circuit_model_name", circuit_lib.model_name(circuit_lib.pass_gate_logic_model(model)).c_str()); 
+    fp << "/>" << "\n";
+  }
 
   /* Write the ports of circuit model */
   for (const CircuitPortId& port : circuit_lib.model_ports(model)) {
@@ -264,6 +315,11 @@ void write_xml_circuit_model(std::fstream& fp,
 
 /********************************************************************
  * A writer to output a circuit library to XML format
+ * Note: 
+ * This function should be run after that the following methods of 
+ * CircuitLibrary are executed 
+ * 1. build_model_links();
+ * 2. build_timing_graph();
  *******************************************************************/
 void write_xml_circuit_library(std::fstream& fp,
                                const char* fname,

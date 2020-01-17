@@ -5,6 +5,9 @@
 #include <fstream> 
 #include <string> 
 
+/* Headers from vtrutil library */
+#include "vtr_assert.h" 
+
 /* Headers from openfpgautil library */
 #include "openfpga_digest.h" 
 
@@ -21,4 +24,24 @@ void write_xml_attribute(std::fstream& fp,
   openfpga::valid_file_stream(fp);
 
   fp << " " << attr << "=\"" << value << "\""; 
+}
+
+/********************************************************************
+ * A most utilized function to write an XML attribute to file
+ * This accepts the value as a boolean 
+ *******************************************************************/
+void write_xml_attribute(std::fstream& fp, 
+                         const char* attr,
+                         const bool& value) {
+  /* Validate the file stream */
+  openfpga::valid_file_stream(fp);
+
+  fp << " " << attr << "=\"";
+  if (true == value) {
+    fp << "true"; 
+  } else {
+    VTR_ASSERT_SAFE(false == value);
+    fp << "false"; 
+  }
+  fp << "\""; 
 }

@@ -27,6 +27,15 @@
  * The class CircuitLibrary is a critical data structure for OpenFPGA
  * It stores all the circuit-level details from XML architecture file
  *
+ * Typical usage:
+ *   // Create an empty circuit library
+ *   CircuitLibrary circuit_lib;
+ *   // call your builder for circuit library
+ *   // Build the internal links for the circuit library
+ *   circuit_lib.build_model_links();
+ *   // Build the timing graph inside the circuit library
+ *   circuit_lib.build_timing_graphs();
+ *
  * It includes the following data:
  *
  *  ------ Fundamental Information -----
@@ -197,6 +206,7 @@ class CircuitLibrary {
     std::string lut_intermediate_buffer_location_map(const CircuitModelId& model_id) const;
     /* Pass-gate-logic information */
     CircuitModelId pass_gate_logic_model(const CircuitModelId& model_id) const;
+    std::string pass_gate_logic_model_name(const CircuitModelId& model_id) const;
     enum e_circuit_model_pass_gate_logic_type pass_gate_logic_type(const CircuitModelId& model_id) const;
     float pass_gate_logic_pmos_size(const CircuitModelId& model_id) const;
     float pass_gate_logic_nmos_size(const CircuitModelId& model_id) const;
