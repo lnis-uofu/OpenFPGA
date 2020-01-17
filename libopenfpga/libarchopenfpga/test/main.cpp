@@ -16,7 +16,7 @@ int main(int argc, const char** argv) {
   VTR_ASSERT((2 == argc) || (3 == argc));
 
   /* Parse the circuit library from an XML file */
-  const OpenFPGAArch& openfpga_arch = read_xml_openfpga_arch(argv[1]); 
+  const openfpga::Arch& openfpga_arch = read_xml_openfpga_arch(argv[1]); 
   VTR_LOG("Parsed %lu circuit models from XML into circuit library.\n",
           openfpga_arch.circuit_lib.num_models());
 

@@ -15,7 +15,7 @@
  * A writer to output an OpenFPGAArch to XML format
  *******************************************************************/
 void write_xml_openfpga_arch(const char* fname, 
-                             const OpenFPGAArch& openfpga_arch) {
+                             const openfpga::Arch& openfpga_arch) {
   /* Create a file handler */
   std::fstream fp;
   /* Open the file stream */

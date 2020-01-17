@@ -10,6 +10,6 @@
 /********************************************************************
  * Function declaration
  *******************************************************************/
-OpenFPGAArch read_xml_openfpga_arch(const char* arch_file_name);
+openfpga::Arch read_xml_openfpga_arch(const char* arch_file_name);
 
 #endif

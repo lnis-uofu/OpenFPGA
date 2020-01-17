@@ -3,11 +3,16 @@
 
 #include "circuit_library.h"
 
+/* namespace openfpga begins */
+namespace openfpga {
+
 /* A unified data structure to store circuit-level settings,
  * including circuit library, technology library and simulation parameters
  */
-struct OpenFPGAArch {
+struct Arch {
   CircuitLibrary circuit_lib;
 };
+
+} /* namespace openfpga ends */
 
 #endif

@@ -20,8 +20,8 @@
  * Top-level function to parse an XML file and load data to :
  * 1. circuit library
  *******************************************************************/
-OpenFPGAArch read_xml_openfpga_arch(const char* arch_file_name) {
-  OpenFPGAArch openfpga_arch;
+openfpga::Arch read_xml_openfpga_arch(const char* arch_file_name) {
+  openfpga::Arch openfpga_arch;
 
   pugi::xml_node Next;
 

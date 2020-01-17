@@ -11,6 +11,6 @@
  * Function declaration
  *******************************************************************/
 void write_xml_openfpga_arch(const char* xml_fname, 
-                             const OpenFPGAArch& openfpga_arch);
+                             const openfpga::Arch& openfpga_arch);
 
 #endif
