@@ -2,6 +2,7 @@
 #define OPENFPGA_ARCH_H
 
 #include "circuit_library.h"
+#include "technology_library.h"
 
 /* namespace openfpga begins */
 namespace openfpga {
@@ -11,6 +12,7 @@ namespace openfpga {
  */
 struct Arch {
   CircuitLibrary circuit_lib;
+  TechnologyLibrary tech_lib;
 };
 
 } /* namespace openfpga ends */

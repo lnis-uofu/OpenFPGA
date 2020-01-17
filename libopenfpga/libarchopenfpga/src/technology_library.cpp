@@ -16,20 +16,20 @@ TechnologyLibrary::TechnologyLibrary() {
 /************************************************************************
  * Public Accessors : aggregates
  ***********************************************************************/
-TechnologyLibrary::technology_device_range TechnologyLibrary::devices() const {
-  return vtr::make_range(device_ids_.begin(), device_ids_.end());
+TechnologyLibrary::technology_model_range TechnologyLibrary::models() const {
+  return vtr::make_range(model_ids_.begin(), model_ids_.end());
 }
 
 TechnologyLibrary::technology_variation_range TechnologyLibrary::variations() const {
   return vtr::make_range(variation_ids_.begin(), variation_ids_.end());
 }
 
-/* Find technology devices in the same type (defined by users) and return a list of ids */
-std::vector<TechnologyDeviceId> TechnologyLibrary::devices_by_type(const enum e_tech_lib_device_type& type) const {
-  std::vector<TechnologyDeviceId> type_ids;
-  for (auto id : devices()) {
+/* Find technology models in the same type (defined by users) and return a list of ids */
+std::vector<TechnologyModelId> TechnologyLibrary::models_by_type(const enum e_tech_lib_model_type& type) const {
+  std::vector<TechnologyModelId> type_ids;
+  for (auto id : models()) {
     /* Skip unmatched types */
-    if (type != device_type(id)) {
+    if (type != model_type(id)) {
       continue;
     }
     /* Matched type, update the vector */
@@ -39,170 +39,170 @@ std::vector<TechnologyDeviceId> TechnologyLibrary::devices_by_type(const enum e_
 }
 
 /************************************************************************
- * Public Accessors : Basic data query on technology devices
+ * Public Accessors : Basic data query on technology models
  ***********************************************************************/
-/* Access the name of a technology device */
-std::string TechnologyLibrary::device_name(const TechnologyDeviceId& device_id) const {
-  /* validate the device_id */
-  VTR_ASSERT(valid_device_id(device_id));
-  return device_names_[device_id]; 
+/* Access the name of a technology model */
+std::string TechnologyLibrary::model_name(const TechnologyModelId& model_id) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  return model_names_[model_id]; 
 }
 
-/* Access the id of a technology device by name,
+/* Access the id of a technology model by name,
  * If the name is valid, we return a valid id
  * Otherwise, return an invalid id
  */
-TechnologyDeviceId TechnologyLibrary::device(const std::string& name) const {
-  std::map<std::string, TechnologyDeviceId>::const_iterator it = device_name2ids_.find(name);
-  if (it != device_name2ids_.end()) {
-    return TechnologyDeviceId::INVALID();
+TechnologyModelId TechnologyLibrary::model(const std::string& name) const {
+  std::map<std::string, TechnologyModelId>::const_iterator it = model_name2ids_.find(name);
+  if (it != model_name2ids_.end()) {
+    return TechnologyModelId::INVALID();
   }
 
-  return device_name2ids_.at(name); 
+  return model_name2ids_.at(name); 
 }
 
-/* Access the type of a technology device */
-enum e_tech_lib_device_type TechnologyLibrary::device_type(const TechnologyDeviceId& device_id) const {
-  /* validate the device_id */
-  VTR_ASSERT(valid_device_id(device_id));
-  return device_types_[device_id]; 
+/* Access the type of a technology model */
+enum e_tech_lib_model_type TechnologyLibrary::model_type(const TechnologyModelId& model_id) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  return model_types_[model_id]; 
 }
 
-/* Access the model type of a technology device */
-enum e_tech_lib_model_type TechnologyLibrary::device_model_type(const TechnologyDeviceId& device_id) const {
-  /* validate the device_id */
-  VTR_ASSERT(valid_device_id(device_id));
-  return device_model_types_[device_id]; 
+/* Access the model type of a technology model */
+enum e_tech_lib_type TechnologyLibrary::model_lib_type(const TechnologyModelId& model_id) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  return model_lib_types_[model_id]; 
 }
 
-/* Access the process corner name of a technology device */
-std::string TechnologyLibrary::device_corner(const TechnologyDeviceId& device_id) const {
-  /* validate the device_id */
-  VTR_ASSERT(valid_device_id(device_id));
-  return device_corners_[device_id]; 
+/* Access the process corner name of a technology model */
+std::string TechnologyLibrary::model_corner(const TechnologyModelId& model_id) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  return model_corners_[model_id]; 
 }
 
-/* Access the model reference name of a technology device */
-std::string TechnologyLibrary::device_model_ref(const TechnologyDeviceId& device_id) const {
-  /* validate the device_id */
-  VTR_ASSERT(valid_device_id(device_id));
-  return device_model_refs_[device_id]; 
+/* Access the model reference name of a technology model */
+std::string TechnologyLibrary::model_ref(const TechnologyModelId& model_id) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  return model_refs_[model_id]; 
 }
 
-/* Access the path of library for a technology device */
-std::string TechnologyLibrary::device_lib_path(const TechnologyDeviceId& device_id) const {
-  /* validate the device_id */
-  VTR_ASSERT(valid_device_id(device_id));
-  return device_lib_paths_[device_id]; 
+/* Access the path of library for a technology model */
+std::string TechnologyLibrary::model_lib_path(const TechnologyModelId& model_id) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  return model_lib_paths_[model_id]; 
 }
 
-/* Access the VDD of a technology device
- * Note: This is ONLY applicable to transistor device 
+/* Access the VDD of a technology model
+ * Note: This is ONLY applicable to transistor model 
  */
-float TechnologyLibrary::device_vdd(const TechnologyDeviceId& device_id) const {
-  /* validate the device_id */
-  VTR_ASSERT(valid_device_id(device_id));
-  /* This is only applicable to transistor device */
-  VTR_ASSERT(TECH_LIB_DEVICE_TRANSISTOR == device_type(device_id));
-  return device_vdds_[device_id]; 
+float TechnologyLibrary::model_vdd(const TechnologyModelId& model_id) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  /* This is only applicable to transistor model */
+  VTR_ASSERT(TECH_LIB_MODEL_TRANSISTOR == model_type(model_id));
+  return model_vdds_[model_id]; 
 }
 
-/* Access the width ratio between PMOS and NMOS for a technology device
- * Note: This is ONLY applicable to transistor device 
+/* Access the width ratio between PMOS and NMOS for a technology model
+ * Note: This is ONLY applicable to transistor model 
  */
-float TechnologyLibrary::device_pn_ratio(const TechnologyDeviceId& device_id) const {
-  /* validate the device_id */
-  VTR_ASSERT(valid_device_id(device_id));
-  /* This is only applicable to transistor device */
-  VTR_ASSERT(TECH_LIB_DEVICE_TRANSISTOR == device_type(device_id));
-  return device_pn_ratios_[device_id]; 
+float TechnologyLibrary::model_pn_ratio(const TechnologyModelId& model_id) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  /* This is only applicable to transistor model */
+  VTR_ASSERT(TECH_LIB_MODEL_TRANSISTOR == model_type(model_id));
+  return model_pn_ratios_[model_id]; 
 }
 
 /************************************************************************
  * Public Accessors : Basic data query on transistors
  ***********************************************************************/
-/* Access the model name of a transistor (either PMOS or NMOS) for a technology device
- * Note: This is ONLY applicable to transistor device 
+/* Access the model name of a transistor (either PMOS or NMOS) for a technology model
+ * Note: This is ONLY applicable to transistor model 
  */
-std::string TechnologyLibrary::transistor_model_name(const TechnologyDeviceId& device_id,
-                                                     const e_tech_lib_trans_type& transistor_type) const {
-  /* validate the device_id */
-  VTR_ASSERT(valid_device_id(device_id));
-  /* This is only applicable to transistor device */
-  VTR_ASSERT(TECH_LIB_DEVICE_TRANSISTOR == device_type(device_id));
-  return transistor_model_names_[device_id][transistor_type]; 
+std::string TechnologyLibrary::transistor_model_name(const TechnologyModelId& model_id,
+                                                     const e_tech_lib_transistor_type& transistor_type) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  /* This is only applicable to transistor model */
+  VTR_ASSERT(TECH_LIB_MODEL_TRANSISTOR == model_type(model_id));
+  return transistor_model_names_[model_id][transistor_type]; 
 }
 
-/* Access the channel length of a transistor (either PMOS or NMOS) for a technology device
- * Note: This is ONLY applicable to transistor device 
+/* Access the channel length of a transistor (either PMOS or NMOS) for a technology model
+ * Note: This is ONLY applicable to transistor model 
  */
-float TechnologyLibrary::transistor_model_chan_length(const TechnologyDeviceId& device_id,
-                                                      const e_tech_lib_trans_type& transistor_type) const {
-  /* validate the device_id */
-  VTR_ASSERT(valid_device_id(device_id));
-  /* This is only applicable to transistor device */
-  VTR_ASSERT(TECH_LIB_DEVICE_TRANSISTOR == device_type(device_id));
-  return transistor_model_chan_lengths_[device_id][transistor_type]; 
+float TechnologyLibrary::transistor_model_chan_length(const TechnologyModelId& model_id,
+                                                      const e_tech_lib_transistor_type& transistor_type) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  /* This is only applicable to transistor model */
+  VTR_ASSERT(TECH_LIB_MODEL_TRANSISTOR == model_type(model_id));
+  return transistor_model_chan_lengths_[model_id][transistor_type]; 
 }
 
-/* Access the minimum width of a transistor (either PMOS or NMOS) for a technology device
- * Note: This is ONLY applicable to transistor device 
+/* Access the minimum width of a transistor (either PMOS or NMOS) for a technology model
+ * Note: This is ONLY applicable to transistor model 
  */
-float TechnologyLibrary::transistor_model_min_width(const TechnologyDeviceId& device_id,
-                                                    const e_tech_lib_trans_type& transistor_type) const {
-  /* validate the device_id */
-  VTR_ASSERT(valid_device_id(device_id));
-  /* This is only applicable to transistor device */
-  VTR_ASSERT(TECH_LIB_DEVICE_TRANSISTOR == device_type(device_id));
-  return transistor_model_min_widths_[device_id][transistor_type]; 
+float TechnologyLibrary::transistor_model_min_width(const TechnologyModelId& model_id,
+                                                    const e_tech_lib_transistor_type& transistor_type) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  /* This is only applicable to transistor model */
+  VTR_ASSERT(TECH_LIB_MODEL_TRANSISTOR == model_type(model_id));
+  return transistor_model_min_widths_[model_id][transistor_type]; 
 }
 
-/* Access the minimum width of a transistor (either PMOS or NMOS) for a technology device
- * Note: This is ONLY applicable to transistor device 
+/* Access the minimum width of a transistor (either PMOS or NMOS) for a technology model
+ * Note: This is ONLY applicable to transistor model 
  */
-TechnologyVariationId TechnologyLibrary::transistor_model_variation(const TechnologyDeviceId& device_id,
-                                                                    const e_tech_lib_trans_type& transistor_type) const {
-  /* validate the device_id */
-  VTR_ASSERT(valid_device_id(device_id));
-  /* This is only applicable to transistor device */
-  VTR_ASSERT(TECH_LIB_DEVICE_TRANSISTOR == device_type(device_id));
-  return transistor_model_variation_ids_[device_id][transistor_type]; 
+TechnologyVariationId TechnologyLibrary::transistor_model_variation(const TechnologyModelId& model_id,
+                                                                    const e_tech_lib_transistor_type& transistor_type) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  /* This is only applicable to transistor model */
+  VTR_ASSERT(TECH_LIB_MODEL_TRANSISTOR == model_type(model_id));
+  return transistor_model_variation_ids_[model_id][transistor_type]; 
 }
 
 /************************************************************************
- * Public Accessors : Basic data query on RRAM devices
+ * Public Accessors : Basic data query on RRAM models
  ***********************************************************************/
-/* Access the Low Resistence of a RRAM for a technology device
- * Note: This is ONLY applicable to RRAM device 
+/* Access the Low Resistence of a RRAM for a technology model
+ * Note: This is ONLY applicable to RRAM model 
  */
-float TechnologyLibrary::rram_rlrs(const TechnologyDeviceId& device_id) const {
-  /* validate the device_id */
-  VTR_ASSERT(valid_device_id(device_id));
-  /* This is only applicable to transistor device */
-  VTR_ASSERT(TECH_LIB_DEVICE_RRAM == device_type(device_id));
-  return rram_resistances_[device_id].x(); 
+float TechnologyLibrary::rram_rlrs(const TechnologyModelId& model_id) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  /* This is only applicable to transistor model */
+  VTR_ASSERT(TECH_LIB_MODEL_RRAM == model_type(model_id));
+  return rram_resistances_[model_id].x(); 
 }
 
-/* Access the High Resistence of a RRAM for a technology device
- * Note: This is ONLY applicable to RRAM device 
+/* Access the High Resistence of a RRAM for a technology model
+ * Note: This is ONLY applicable to RRAM model 
  */
-float TechnologyLibrary::rram_rhrs(const TechnologyDeviceId& device_id) const {
-  /* validate the device_id */
-  VTR_ASSERT(valid_device_id(device_id));
-  /* This is only applicable to transistor device */
-  VTR_ASSERT(TECH_LIB_DEVICE_RRAM == device_type(device_id));
-  return rram_resistances_[device_id].y(); 
+float TechnologyLibrary::rram_rhrs(const TechnologyModelId& model_id) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  /* This is only applicable to transistor model */
+  VTR_ASSERT(TECH_LIB_MODEL_RRAM == model_type(model_id));
+  return rram_resistances_[model_id].y(); 
 }
 
-/* Access the Variation id of a RRAM for a technology device
- * Note: This is ONLY applicable to RRAM device 
+/* Access the Variation id of a RRAM for a technology model
+ * Note: This is ONLY applicable to RRAM model 
  */
-TechnologyVariationId TechnologyLibrary::rram_variation(const TechnologyDeviceId& device_id) const {
-  /* validate the device_id */
-  VTR_ASSERT(valid_device_id(device_id));
-  /* This is only applicable to RRAM device */
-  VTR_ASSERT(TECH_LIB_DEVICE_RRAM == device_type(device_id));
-  return rram_variation_ids_[device_id]; 
+TechnologyVariationId TechnologyLibrary::rram_variation(const TechnologyModelId& model_id) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  /* This is only applicable to RRAM model */
+  VTR_ASSERT(TECH_LIB_MODEL_RRAM == model_type(model_id));
+  return rram_variation_ids_[model_id]; 
 }
 
 /************************************************************************
@@ -243,29 +243,29 @@ size_t TechnologyLibrary::variation_num_sigma(const TechnologyVariationId& varia
 }
 
 /************************************************************************
- * Public Mutators: device-related
+ * Public Mutators: model-related
  ***********************************************************************/
-/* Add a new device to the library, return an id 
+/* Add a new model to the library, return an id 
  * This function will check if the name has already been used inside the data structure.
  * If used, it will return an invalid id 
  */
-TechnologyDeviceId TechnologyLibrary::add_device(const std::string& name) {
-  std::map<std::string, TechnologyDeviceId>::iterator it = device_name2ids_.find(name);
-  if (it != device_name2ids_.end()) {
-    return TechnologyDeviceId::INVALID();
+TechnologyModelId TechnologyLibrary::add_model(const std::string& name) {
+  std::map<std::string, TechnologyModelId>::iterator it = model_name2ids_.find(name);
+  if (it != model_name2ids_.end()) {
+    return TechnologyModelId::INVALID();
   }
 
   /* This is a legal name. we can create a new id */
-  TechnologyDeviceId device = TechnologyDeviceId(device_ids_.size());
-  device_ids_.push_back(device);
-  device_names_.push_back(name);
-  device_types_.emplace_back(NUM_TECH_LIB_DEVICE_TYPES);
-  device_model_types_.emplace_back(NUM_TECH_LIB_MODEL_TYPES);
-  device_corners_.emplace_back();
-  device_model_refs_.emplace_back();
-  device_lib_paths_.emplace_back();
-  device_vdds_.push_back(-1);
-  device_pn_ratios_.push_back(-1);
+  TechnologyModelId model = TechnologyModelId(model_ids_.size());
+  model_ids_.push_back(model);
+  model_names_.push_back(name);
+  model_types_.emplace_back(NUM_TECH_LIB_MODEL_TYPES);
+  model_lib_types_.emplace_back(NUM_TECH_LIB_TYPES);
+  model_corners_.emplace_back();
+  model_refs_.emplace_back();
+  model_lib_paths_.emplace_back();
+  model_vdds_.push_back(-1);
+  model_pn_ratios_.push_back(-1);
 
   transistor_model_names_.emplace_back();
   transistor_model_chan_lengths_.emplace_back();
@@ -278,171 +278,171 @@ TechnologyDeviceId TechnologyLibrary::add_device(const std::string& name) {
   rram_variation_ids_.emplace_back();
 
   /* Register in the name-to-id map */
-  device_name2ids_[name] = device;
+  model_name2ids_[name] = model;
   
-  return device;
+  return model;
 }
 
-/* Set the device type of a device in the library */
-void TechnologyLibrary::set_device_type(const TechnologyDeviceId& device_id, 
-                                        const e_tech_lib_device_type& type) {
-  /* validate the device_id */
-  VTR_ASSERT(valid_device_id(device_id));
-  device_types_[device_id] = type;
+/* Set the model type of a model in the library */
+void TechnologyLibrary::set_model_type(const TechnologyModelId& model_id, 
+                                        const e_tech_lib_model_type& type) {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  model_types_[model_id] = type;
   return;
 }
 
-/* Set the model type of a device in the library */
-void TechnologyLibrary::set_device_model_type(const TechnologyDeviceId& device_id, 
-                                              const e_tech_lib_model_type& model_type) {
-  /* validate the device_id */
-  VTR_ASSERT(valid_device_id(device_id));
-  device_model_types_[device_id] = model_type;
+/* Set the model type of a device model in the library */
+void TechnologyLibrary::set_model_lib_type(const TechnologyModelId& model_id, 
+                                           const e_tech_lib_type& model_lib_type) {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  model_lib_types_[model_id] = model_lib_type;
   return;
 }
 
-/* Set the process corner of a device in the library */
-void TechnologyLibrary::set_device_corner(const TechnologyDeviceId& device_id, 
+/* Set the process corner of a model in the library */
+void TechnologyLibrary::set_model_corner(const TechnologyModelId& model_id, 
                                           const std::string& corner) {
-  /* validate the device_id */
-  VTR_ASSERT(valid_device_id(device_id));
-  device_corners_[device_id] = corner;
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  model_corners_[model_id] = corner;
   return;
 }
 
-/* Set the string used to model reference of a device in the library */
-void TechnologyLibrary::set_device_model_ref(const TechnologyDeviceId& device_id, 
-                                             const std::string& model_ref) {
-  /* validate the device_id */
-  VTR_ASSERT(valid_device_id(device_id));
-  device_model_refs_[device_id] = model_ref;
+/* Set the string used to model reference of a model in the library */
+void TechnologyLibrary::set_model_ref(const TechnologyModelId& model_id, 
+                                      const std::string& model_ref) {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  model_refs_[model_id] = model_ref;
   return;
 }
 
-/* Set the library file path of a device in the library */
-void TechnologyLibrary::set_device_lib_path(const TechnologyDeviceId& device_id, 
+/* Set the library file path of a model in the library */
+void TechnologyLibrary::set_model_lib_path(const TechnologyModelId& model_id, 
                                             const std::string& lib_path) {
-  /* validate the device_id */
-  VTR_ASSERT(valid_device_id(device_id));
-  device_lib_paths_[device_id] = lib_path;
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  model_lib_paths_[model_id] = lib_path;
   return;
 }
 
-/* Set the operating voltage of a device in the library 
+/* Set the operating voltage of a model in the library 
  * This is ONLY applicable to transistors
  */
-void TechnologyLibrary::set_device_vdd(const TechnologyDeviceId& device_id, 
+void TechnologyLibrary::set_model_vdd(const TechnologyModelId& model_id, 
                                        const float& vdd) {
-  /* validate the device_id */
-  VTR_ASSERT(valid_device_id(device_id));
-  VTR_ASSERT(TECH_LIB_DEVICE_TRANSISTOR == device_type(device_id));
-  device_vdds_[device_id] = vdd;
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  VTR_ASSERT(TECH_LIB_MODEL_TRANSISTOR == model_type(model_id));
+  model_vdds_[model_id] = vdd;
   return;
 }
 
-/* Set the width ratio between PMOS and NMOS of a device in the library 
+/* Set the width ratio between PMOS and NMOS of a model in the library 
  * This is ONLY applicable to transistors
  */
-void TechnologyLibrary::set_device_pn_ratio(const TechnologyDeviceId& device_id, 
+void TechnologyLibrary::set_model_pn_ratio(const TechnologyModelId& model_id, 
                                             const float& pn_ratio) {
-  /* validate the device_id */
-  VTR_ASSERT(valid_device_id(device_id));
-  VTR_ASSERT(TECH_LIB_DEVICE_TRANSISTOR == device_type(device_id));
-  device_pn_ratios_[device_id] = pn_ratio;
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  VTR_ASSERT(TECH_LIB_MODEL_TRANSISTOR == model_type(model_id));
+  model_pn_ratios_[model_id] = pn_ratio;
   return;
 }
 
 /************************************************************************
  * Public Mutators: transistor-related
  ***********************************************************************/
-/* Set the model name for either PMOS or NMOS of a device in the library 
+/* Set the model name for either PMOS or NMOS of a model in the library 
  * This is ONLY applicable to transistors
  */
-void TechnologyLibrary::set_transistor_model_name(const TechnologyDeviceId& device_id, 
-                                                  const e_tech_lib_trans_type& transistor_type,
+void TechnologyLibrary::set_transistor_model_name(const TechnologyModelId& model_id, 
+                                                  const e_tech_lib_transistor_type& transistor_type,
                                                   const std::string& model_name) {
-  /* validate the device_id */
-  VTR_ASSERT(valid_device_id(device_id));
-  VTR_ASSERT(TECH_LIB_DEVICE_TRANSISTOR == device_type(device_id));
-  transistor_model_names_[device_id][transistor_type] = model_name;
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  VTR_ASSERT(TECH_LIB_MODEL_TRANSISTOR == model_type(model_id));
+  transistor_model_names_[model_id][transistor_type] = model_name;
   return;
 }
 
-/* Set the channel length for either PMOS or NMOS of a device in the library 
+/* Set the channel length for either PMOS or NMOS of a model in the library 
  * This is ONLY applicable to transistors
  */
-void TechnologyLibrary::set_transistor_model_chan_length(const TechnologyDeviceId& device_id, 
-                                                         const e_tech_lib_trans_type& transistor_type,
+void TechnologyLibrary::set_transistor_model_chan_length(const TechnologyModelId& model_id, 
+                                                         const e_tech_lib_transistor_type& transistor_type,
                                                          const float& chan_length) {
-  /* validate the device_id */
-  VTR_ASSERT(valid_device_id(device_id));
-  VTR_ASSERT(TECH_LIB_DEVICE_TRANSISTOR == device_type(device_id));
-  transistor_model_chan_lengths_[device_id][transistor_type] = chan_length;
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  VTR_ASSERT(TECH_LIB_MODEL_TRANSISTOR == model_type(model_id));
+  transistor_model_chan_lengths_[model_id][transistor_type] = chan_length;
   return;
 }
 
-/* Set the minimum width for either PMOS or NMOS of a device in the library 
+/* Set the minimum width for either PMOS or NMOS of a model in the library 
  * This is ONLY applicable to transistors
  */
-void TechnologyLibrary::set_transistor_model_min_width(const TechnologyDeviceId& device_id, 
-                                                       const e_tech_lib_trans_type& transistor_type,
+void TechnologyLibrary::set_transistor_model_min_width(const TechnologyModelId& model_id, 
+                                                       const e_tech_lib_transistor_type& transistor_type,
                                                        const float& min_width) {
-  /* validate the device_id */
-  VTR_ASSERT(valid_device_id(device_id));
-  VTR_ASSERT(TECH_LIB_DEVICE_TRANSISTOR == device_type(device_id));
-  transistor_model_min_widths_[device_id][transistor_type] = min_width;
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  VTR_ASSERT(TECH_LIB_MODEL_TRANSISTOR == model_type(model_id));
+  transistor_model_min_widths_[model_id][transistor_type] = min_width;
   return;
 }
 
-/* Set the variation name for either PMOS or NMOS of a device in the library 
+/* Set the variation name for either PMOS or NMOS of a model in the library 
  * This is ONLY applicable to transistors
  */
-void TechnologyLibrary::set_transistor_model_variation_name(const TechnologyDeviceId& device_id, 
-                                                            const e_tech_lib_trans_type& transistor_type,
+void TechnologyLibrary::set_transistor_model_variation_name(const TechnologyModelId& model_id, 
+                                                            const e_tech_lib_transistor_type& transistor_type,
                                                             const std::string& variation_name) {
-  /* validate the device_id */
-  VTR_ASSERT(valid_device_id(device_id));
-  VTR_ASSERT(TECH_LIB_DEVICE_TRANSISTOR == device_type(device_id));
-  transistor_model_variation_names_[device_id][transistor_type] = variation_name;
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  VTR_ASSERT(TECH_LIB_MODEL_TRANSISTOR == model_type(model_id));
+  transistor_model_variation_names_[model_id][transistor_type] = variation_name;
   return;
 }
 
 /************************************************************************
  * Public Mutators: RRAM-related
  ***********************************************************************/
-/* Set the Low Resistance State (LRS) resistance for a RRAM device in the library 
- * This is ONLY applicable to RRAM devices
+/* Set the Low Resistance State (LRS) resistance for a RRAM model in the library 
+ * This is ONLY applicable to RRAM models
  */
-void TechnologyLibrary::set_rram_rlrs(const TechnologyDeviceId& device_id, 
+void TechnologyLibrary::set_rram_rlrs(const TechnologyModelId& model_id, 
                                       const float& rlrs) {
-  /* validate the device_id */
-  VTR_ASSERT(valid_device_id(device_id));
-  VTR_ASSERT(TECH_LIB_DEVICE_RRAM == device_type(device_id));
-  rram_resistances_[device_id].set_x(rlrs);
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  VTR_ASSERT(TECH_LIB_MODEL_RRAM == model_type(model_id));
+  rram_resistances_[model_id].set_x(rlrs);
   return;
 }
 
-/* Set the High Resistance State (HRS) resistance for a RRAM device in the library 
- * This is ONLY applicable to RRAM devices
+/* Set the High Resistance State (HRS) resistance for a RRAM model in the library 
+ * This is ONLY applicable to RRAM models
  */
-void TechnologyLibrary::set_rram_rhrs(const TechnologyDeviceId& device_id, 
+void TechnologyLibrary::set_rram_rhrs(const TechnologyModelId& model_id, 
                                       const float& rhrs) {
-  /* validate the device_id */
-  VTR_ASSERT(valid_device_id(device_id));
-  VTR_ASSERT(TECH_LIB_DEVICE_RRAM == device_type(device_id));
-  rram_resistances_[device_id].set_y(rhrs);
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  VTR_ASSERT(TECH_LIB_MODEL_RRAM == model_type(model_id));
+  rram_resistances_[model_id].set_y(rhrs);
   return;
 }
 
-/* Set the variation name for a RRAM device in the library 
- * This is ONLY applicable to RRAM devices
+/* Set the variation name for a RRAM model in the library 
+ * This is ONLY applicable to RRAM models
  */
-void TechnologyLibrary::set_rram_variation_name(const TechnologyDeviceId& device_id, 
+void TechnologyLibrary::set_rram_variation_name(const TechnologyModelId& model_id, 
                                                 const std::string& variation_name) {
-  /* validate the device_id */
-  VTR_ASSERT(valid_device_id(device_id));
-  VTR_ASSERT(TECH_LIB_DEVICE_RRAM == device_type(device_id));
-  rram_variation_names_[device_id] = variation_name;
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  VTR_ASSERT(TECH_LIB_MODEL_RRAM == model_type(model_id));
+  rram_variation_names_[model_id] = variation_name;
   return;
 }
 
@@ -490,31 +490,31 @@ void TechnologyLibrary::set_variation_num_sigma(const TechnologyVariationId& var
 /************************************************************************
  * Public mutators: linkers
  ***********************************************************************/
-/* This function builds the links between devices and variations,
+/* This function builds the links between models and variations,
  * which have been defined in the technology library
  */
-void TechnologyLibrary::link_devices_to_variations() {
-  for (const TechnologyDeviceId& device : devices()) {
+void TechnologyLibrary::link_models_to_variations() {
+  for (const TechnologyModelId& model : models()) {
     /* For transistors, find the variation name for each model and build a link */
-    if (TECH_LIB_DEVICE_TRANSISTOR == device_type(device)) {
+    if (TECH_LIB_MODEL_TRANSISTOR == model_type(model)) {
       /* PMOS transistor, if a variation name is specified, we try to build a link
        * Otherwise, we assign any invalid id */
-      const std::string& pmos_var_name = transistor_model_variation_names_[device][TECH_LIB_TRANSISTOR_PMOS];
-      transistor_model_variation_ids_[device][TECH_LIB_TRANSISTOR_PMOS] = variation(pmos_var_name);
+      const std::string& pmos_var_name = transistor_model_variation_names_[model][TECH_LIB_TRANSISTOR_PMOS];
+      transistor_model_variation_ids_[model][TECH_LIB_TRANSISTOR_PMOS] = variation(pmos_var_name);
 
       /* NMOS transistor, if a variation name is specified, we try to build a link
        * Otherwise, we assign any invalid id 
        */
-      const std::string& nmos_var_name = transistor_model_variation_names_[device][TECH_LIB_TRANSISTOR_NMOS];
-      transistor_model_variation_ids_[device][TECH_LIB_TRANSISTOR_NMOS] = variation(nmos_var_name);
+      const std::string& nmos_var_name = transistor_model_variation_names_[model][TECH_LIB_TRANSISTOR_NMOS];
+      transistor_model_variation_ids_[model][TECH_LIB_TRANSISTOR_NMOS] = variation(nmos_var_name);
       /* Finish for transistors, go to the next */
       continue;
     } 
 
-    /* Reach here it means an RRAM device, we find the variation name and try to build a link */ 
-    VTR_ASSERT(TECH_LIB_DEVICE_RRAM == device_type(device));
-    const std::string& rram_var_name = rram_variation_names_[device];
-    rram_variation_ids_[device] = variation(rram_var_name);
+    /* Reach here it means an RRAM model, we find the variation name and try to build a link */ 
+    VTR_ASSERT(TECH_LIB_MODEL_RRAM == model_type(model));
+    const std::string& rram_var_name = rram_variation_names_[model];
+    rram_variation_ids_[model] = variation(rram_var_name);
     /* Finish for RRAMs, go to the next */
   }
 }
@@ -523,8 +523,8 @@ void TechnologyLibrary::link_devices_to_variations() {
  * Internal invalidators/validators 
  ***********************************************************************/
 /* Validators */
-bool TechnologyLibrary::valid_device_id(const TechnologyDeviceId& device_id) const {
-  return ( size_t(device_id) < device_ids_.size() ) && ( device_id == device_ids_[device_id] ); 
+bool TechnologyLibrary::valid_model_id(const TechnologyModelId& model_id) const {
+  return ( size_t(model_id) < model_ids_.size() ) && ( model_id == model_ids_[model_id] ); 
 }
 
 bool TechnologyLibrary::valid_variation_id(const TechnologyVariationId& variation_id) const {

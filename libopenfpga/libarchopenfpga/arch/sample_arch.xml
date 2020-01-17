@@ -9,32 +9,34 @@
   -->
 <openfpga_architecture>
   <technology_library>
-    <device name="logic" type="transistor">
-      <model type="academia" corner="TOP_TT" ref="M" path="${OPENFPGA_PATH}/openfpga_flow/tech/PTM_45nm/45nm.pm"/>
-      <design vdd="0.9" pn_ratio="2"/>
-      <nmos name="nch" chan_length="40e-9" min_width="140e-9" variation="logic_transistor_var"/>
-      <pmos name="pch" chan_length="40e-9" min_width="140e-9" variation="logic_transistor_var"/>
-    </device>
-    <device name="io" type="transistor"/>
-      <model type="academia" corner="TT" ref="M" path="${OPENFPGA_PATH}/openfpga_flow/tech/PTM_45nm/45nm.pm"/>
-      <design vdd="2.5" pn_ratio="3"/>
-      <nmos name="nch_25" chan_length="270e-9" min_width="320e-9" variation="io_transistor_var"/>
-      <pmos name="pch_25" chan_length="270e-9" min_width="320e-9" variation="io_transistor_var"/>
-    </device>
-    <device name="mem_rram" type="rram"> 
-      <model type="academia" ref="X" path="${OPENFPGA_PATH}/openfpga_flow/tech/PTM_45nm/rram.pm"/>
-      <rram rlrs="1e4" rhrs="1e5" variation="mem_rram_var"/> 
-    </device>
-    <device name="logic_rram" type="rram">
-      <model type="academia" ref="X" path="${OPENFPGA_PATH}/openfpga_flow/tech/PTM_45nm/rram.pm"/>
-      <rram rlrs="5e3" rhrs="20e6" variation="logic_rram_var"/> 
-    </device>
-    <device_variation>
+    <device_library>
+      <device_model name="logic" type="transistor">
+        <lib type="academia" corner="TOP_TT" ref="M" path="${OPENFPGA_PATH}/openfpga_flow/tech/PTM_45nm/45nm.pm"/>
+        <design vdd="0.9" pn_ratio="2"/>
+        <nmos name="nch" chan_length="40e-9" min_width="140e-9" variation="logic_transistor_var"/>
+        <pmos name="pch" chan_length="40e-9" min_width="140e-9" variation="logic_transistor_var"/>
+      </device_model>
+      <device_model name="io" type="transistor"/>
+        <lib type="academia" corner="TT" ref="M" path="${OPENFPGA_PATH}/openfpga_flow/tech/PTM_45nm/45nm.pm"/>
+        <design vdd="2.5" pn_ratio="3"/>
+        <nmos name="nch_25" chan_length="270e-9" min_width="320e-9" variation="io_transistor_var"/>
+        <pmos name="pch_25" chan_length="270e-9" min_width="320e-9" variation="io_transistor_var"/>
+      </device_model>
+      <device_model name="mem_rram" type="rram"> 
+        <lib type="academia" ref="X" path="${OPENFPGA_PATH}/openfpga_flow/tech/PTM_45nm/rram.pm"/>
+        <rram rlrs="1e4" rhrs="1e5" variation="mem_rram_var"/> 
+      </device_model>
+      <device_model name="logic_rram" type="rram">
+        <lib type="academia" ref="X" path="${OPENFPGA_PATH}/openfpga_flow/tech/PTM_45nm/rram.pm"/>
+        <rram rlrs="5e3" rhrs="20e6" variation="logic_rram_var"/> 
+      </device_model>
+    </device_library>
+    <variation_library>
       <variation name="logic_transistor_var" abs_variation="0.1" num_sigma="3"/>
       <variation name="io_transistor_var" abs_variation="0.1" num_sigma="3"/>
       <variation name="mem_rram_var" abs_variation="0.1" num_sigma="3"/>
       <variation name="logic_rram_var" abs_variation="0.1" num_sigma="3"/>
-    </device_variation>
+    </variation_library>
   </technology_library>
   <circuit_library>
     <circuit_model type="inv_buf" name="INVTX1" prefix="INVTX1" is_default="true">
