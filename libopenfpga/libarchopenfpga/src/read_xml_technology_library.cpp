@@ -51,7 +51,8 @@ e_tech_lib_type string_to_tech_lib_type(const std::string& type_string) {
 }
 
 /********************************************************************
- * Parse XML codes of a <device> to an object of technology library
+ * Parse XML codes of a <lib> under a device model definiton 
+ * to an object of technology library
  *******************************************************************/
 static 
 void read_xml_device_model_lib_settings(pugi::xml_node& xml_device_model_lib,
@@ -84,6 +85,22 @@ void read_xml_device_model_lib_settings(pugi::xml_node& xml_device_model_lib,
 }
 
 /********************************************************************
+ * Parse XML codes of design parameters under a device model
+ * to an object of technology library
+ *******************************************************************/
+static 
+void read_xml_device_model_design_settings(pugi::xml_node& xml_device_model_design,
+                                           const pugiutil::loc_data& loc_data,
+                                           TechnologyLibrary& tech_lib,
+                                           TechnologyModelId& device_model) {
+  /* Parse the vdd to be used in circuit design */
+  tech_lib.set_model_vdd(device_model, get_attribute(xml_device_model_design, "vdd", loc_data).as_float(0.));
+
+  /* Parse the width ratio between PMOS and NMOS transistor */
+  tech_lib.set_model_pn_ratio(device_model, get_attribute(xml_device_model_design, "pn_ratio", loc_data).as_float(0.));
+}
+
+/********************************************************************
  * Parse XML codes of a <device> to an object of technology library
  *******************************************************************/
 static 
@@ -109,7 +126,12 @@ void read_xml_device_model(pugi::xml_node& xml_device_model,
   /* Model library -relate attributes */
   auto xml_device_model_lib = get_single_child(xml_device_model, "lib", loc_data); 
   read_xml_device_model_lib_settings(xml_device_model_lib, loc_data, tech_lib, device_model);
-  
+
+  /* Model design -relate attributes, this is ONLY applicable to transistor models */
+  if (TECH_LIB_MODEL_TRANSISTOR == tech_lib.model_type(device_model)) {
+    auto xml_device_model_design = get_single_child(xml_device_model, "design", loc_data); 
+    read_xml_device_model_design_settings(xml_device_model_design, loc_data, tech_lib, device_model);
+  }
 }
 
 /********************************************************************
