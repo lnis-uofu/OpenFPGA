@@ -277,13 +277,13 @@
     </delay>
   </measurement_setting>
   <stimulus>
-    <port type="clock">
+    <clock>
       <rise slew_time="20e-12" slew_type="abs"/>
       <fall slew_time="20e-12" slew_type="abs"/>
-    </port>
-    <port type="input">
+    </clock>
+    <input>
       <rise slew_time="25e-12" slew_type="abs"/>
       <fall slew_time="25e-12" slew_type="abs"/>
-    </port>
+    </input>
   </stimulus>
 </openfpga_simulation_setting>

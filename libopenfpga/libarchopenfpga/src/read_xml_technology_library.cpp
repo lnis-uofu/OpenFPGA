@@ -277,4 +277,3 @@ TechnologyLibrary read_xml_technology_library(pugi::xml_node& Node,
 
   return tech_lib;
 }
-

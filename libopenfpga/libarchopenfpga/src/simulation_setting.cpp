@@ -16,11 +16,11 @@ SimulationSetting::SimulationSetting() {
 /************************************************************************
  * Public Accessors
  ***********************************************************************/
-float SimulationSetting::operating_clock_freqency() const {
+float SimulationSetting::operating_clock_frequency() const {
   return clock_frequencies_.x();
 }
 
-float SimulationSetting::programming_clock_freqency() const {
+float SimulationSetting::programming_clock_frequency() const {
   return clock_frequencies_.y();
 }
 
@@ -119,11 +119,11 @@ float SimulationSetting::stimuli_input_slew(const e_sim_signal_type& signal_type
 /************************************************************************
  * Public Mutators
  ***********************************************************************/
-void SimulationSetting::set_operating_clock_freqency(const float& clock_freq) {
+void SimulationSetting::set_operating_clock_frequency(const float& clock_freq) {
   clock_frequencies_.set_x(clock_freq);
 }
 
-void SimulationSetting::set_programming_clock_freqency(const float& clock_freq) {
+void SimulationSetting::set_programming_clock_frequency(const float& clock_freq) {
   clock_frequencies_.set_y(clock_freq);
 }
 

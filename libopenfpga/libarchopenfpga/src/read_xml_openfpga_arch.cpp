@@ -15,6 +15,7 @@
 
 #include "read_xml_technology_library.h"
 #include "read_xml_circuit_library.h"
+#include "read_xml_simulation_setting.h"
 #include "read_xml_openfpga_arch.h"
 
 /********************************************************************
@@ -58,6 +59,7 @@ openfpga::Arch read_xml_openfpga_arch(const char* arch_file_name) {
     auto xml_simulation_settings = get_single_child(doc, "openfpga_simulation_setting", loc_data); 
 
     /* Parse simulation settings to data structure */
+    openfpga_arch.sim_setting = read_xml_simulation_setting(xml_simulation_settings, loc_data);
 
   } catch (pugiutil::XmlError& e) {
     archfpga_throw(arch_file_name, e.line(),

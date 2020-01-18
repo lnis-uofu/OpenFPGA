@@ -48,8 +48,8 @@ class SimulationSetting {
   public:  /* Constructors */
     SimulationSetting();
   public: /* Public Accessors */
-    float operating_clock_freqency() const;
-    float programming_clock_freqency() const;
+    float operating_clock_frequency() const;
+    float programming_clock_frequency() const;
     bool auto_select_num_clock_cycles() const;
     size_t num_clock_cycles() const;
     float operating_clock_frequency_slack() const;
@@ -70,8 +70,8 @@ class SimulationSetting {
     e_sim_accuracy_type stimuli_input_slew_type(const e_sim_signal_type& signal_type) const;
     float stimuli_input_slew(const e_sim_signal_type& signal_type) const;
   public: /* Public Mutators */
-    void set_operating_clock_freqency(const float& clock_freq);
-    void set_programming_clock_freqency(const float& clock_freq);
+    void set_operating_clock_frequency(const float& clock_freq);
+    void set_programming_clock_frequency(const float& clock_freq);
     void set_num_clock_cycles(const size_t& num_clk_cycles);
     void set_operating_clock_frequency_slack(const float& op_clk_freq_slack);
     void set_simulation_temperature(const float& sim_temp);
