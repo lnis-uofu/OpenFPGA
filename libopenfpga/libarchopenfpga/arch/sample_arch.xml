@@ -13,14 +13,14 @@
       <device_model name="logic" type="transistor">
         <lib type="industry" corner="TOP_TT" ref="M" path="${OPENFPGA_PATH}/openfpga_flow/tech/PTM_45nm/45nm.pm"/>
         <design vdd="0.9" pn_ratio="2"/>
-        <nmos name="nch" chan_length="40e-9" min_width="140e-9" variation="logic_transistor_var"/>
         <pmos name="pch" chan_length="40e-9" min_width="140e-9" variation="logic_transistor_var"/>
+        <nmos name="nch" chan_length="40e-9" min_width="140e-9" variation="logic_transistor_var"/>
       </device_model>
       <device_model name="io" type="transistor">
         <lib type="academia" ref="M" path="${OPENFPGA_PATH}/openfpga_flow/tech/PTM_45nm/45nm.pm"/>
         <design vdd="2.5" pn_ratio="3"/>
-        <nmos name="nch_25" chan_length="270e-9" min_width="320e-9" variation="io_transistor_var"/>
         <pmos name="pch_25" chan_length="270e-9" min_width="320e-9" variation="io_transistor_var"/>
+        <nmos name="nch_25" chan_length="270e-9" min_width="320e-9" variation="io_transistor_var"/>
       </device_model>
       <device_model name="mem_rram" type="rram"> 
         <lib type="academia" ref="X" path="${OPENFPGA_PATH}/openfpga_flow/tech/PTM_45nm/rram.pm"/>

@@ -271,11 +271,11 @@ TechnologyModelId TechnologyLibrary::add_model(const std::string& name) {
   transistor_model_chan_lengths_.emplace_back();
   transistor_model_min_widths_.emplace_back();
   transistor_model_variation_names_.emplace_back();
-  transistor_model_variation_ids_.emplace_back();
+  transistor_model_variation_ids_.push_back(std::array<TechnologyVariationId, 2>{TechnologyVariationId::INVALID(), TechnologyVariationId::INVALID()});
 
   rram_resistances_.emplace_back();
   rram_variation_names_.emplace_back();
-  rram_variation_ids_.emplace_back();
+  rram_variation_ids_.push_back(TechnologyVariationId::INVALID());
 
   /* Register in the name-to-id map */
   model_name2ids_[name] = model;

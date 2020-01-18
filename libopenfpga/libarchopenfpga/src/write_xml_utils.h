@@ -18,4 +18,8 @@ void write_xml_attribute(std::fstream& fp,
                          const char* attr,
                          const bool& value);
 
+void write_xml_attribute(std::fstream& fp, 
+                         const char* attr,
+                         const float& value);
+
 #endif

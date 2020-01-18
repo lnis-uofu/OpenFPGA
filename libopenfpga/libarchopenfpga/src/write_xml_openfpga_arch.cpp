@@ -9,6 +9,7 @@
 
 /* Headers from readarchopenfpga library */
 #include "write_xml_circuit_library.h"
+#include "write_xml_technology_library.h"
 #include "write_xml_openfpga_arch.h"
 
 /********************************************************************
@@ -26,6 +27,9 @@ void write_xml_openfpga_arch(const char* fname,
 
   /* Write the root node for openfpga_arch */
   fp << "<openfpga_architecture>" << "\n";
+
+  /* Write the technology library */
+  write_xml_technology_library(fp, fname, openfpga_arch.tech_lib);
 
   /* Write the circuit library */
   write_xml_circuit_library(fp, fname, openfpga_arch.circuit_lib);

@@ -45,3 +45,18 @@ void write_xml_attribute(std::fstream& fp,
   }
   fp << "\""; 
 }
+
+/********************************************************************
+ * A most utilized function to write an XML attribute to file
+ * This accepts the value as a float
+ *******************************************************************/
+void write_xml_attribute(std::fstream& fp, 
+                         const char* attr,
+                         const float& value) {
+  /* Validate the file stream */
+  openfpga::valid_file_stream(fp);
+
+  fp << " " << attr << "=\"";
+  fp << std::scientific << value;
+  fp << "\""; 
+}
