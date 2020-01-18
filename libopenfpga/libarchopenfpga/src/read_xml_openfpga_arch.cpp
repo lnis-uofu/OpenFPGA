@@ -13,6 +13,7 @@
 #include "arch_error.h"
 #include "read_xml_util.h"
 
+#include "read_xml_technology_library.h"
 #include "read_xml_circuit_library.h"
 #include "read_xml_openfpga_arch.h"
 
@@ -33,12 +34,12 @@ openfpga::Arch read_xml_openfpga_arch(const char* arch_file_name) {
     loc_data = pugiutil::load_xml(doc, arch_file_name);
 
     /* First node should be <openfpga_architecture> */
-    auto xml_circuit_settings = get_single_child(doc, "openfpga_architecture", loc_data); 
+    auto xml_openfpga_arch = get_single_child(doc, "openfpga_architecture", loc_data); 
 
     /* Parse circuit_models to circuit library 
      * under the node <module_circuit_models> 
      */
-    auto xml_circuit_models = get_single_child(xml_circuit_settings, "circuit_library", loc_data);
+    auto xml_circuit_models = get_single_child(xml_openfpga_arch, "circuit_library", loc_data);
     openfpga_arch.circuit_lib = read_xml_circuit_library(xml_circuit_models, loc_data);
 
     /* Build the internal links for the circuit library */
@@ -46,6 +47,12 @@ openfpga::Arch read_xml_openfpga_arch(const char* arch_file_name) {
   
     /* Build the timing graph inside the circuit library */
     openfpga_arch.circuit_lib.build_timing_graphs();
+
+    /* Parse technology library */
+    auto xml_tech_lib = get_single_child(xml_openfpga_arch, "technology_library", loc_data); 
+    openfpga_arch.tech_lib = read_xml_technology_library(xml_tech_lib, loc_data);
+    /* Build the internal link for technology library */
+    openfpga_arch.tech_lib.link_models_to_variations();
 
     /* Second node should be <openfpga_simulation_setting> */
     auto xml_simulation_settings = get_single_child(doc, "openfpga_simulation_setting", loc_data); 
