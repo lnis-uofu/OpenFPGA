@@ -26,8 +26,8 @@
  * State University (ASU). Available at ptm.asu.edu
  *******************************************************************/
 enum e_tech_lib_type {
-  TECH_LIB_MODEL_INDUSTRY,
-  TECH_LIB_MODEL_ACADEMIA,
+  TECH_LIB_INDUSTRY,
+  TECH_LIB_ACADEMIA,
   NUM_TECH_LIB_TYPES
 };
 /* Strings correspond to each technology library type */

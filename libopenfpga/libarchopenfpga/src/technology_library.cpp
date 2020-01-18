@@ -321,7 +321,7 @@ void TechnologyLibrary::set_model_ref(const TechnologyModelId& model_id,
 
 /* Set the library file path of a model in the library */
 void TechnologyLibrary::set_model_lib_path(const TechnologyModelId& model_id, 
-                                            const std::string& lib_path) {
+                                           const std::string& lib_path) {
   /* validate the model_id */
   VTR_ASSERT(valid_model_id(model_id));
   model_lib_paths_[model_id] = lib_path;
