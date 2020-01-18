@@ -52,7 +52,7 @@ class SimulationSetting {
     float programming_clock_freqency() const;
     bool auto_select_num_clock_cycles() const;
     size_t num_clock_cycles() const;
-    size_t operating_clock_frequency_slack() const;
+    float operating_clock_frequency_slack() const;
     float simulation_temperature() const;
     bool verbose_output() const;
     bool capacitance_output() const;
@@ -70,6 +70,33 @@ class SimulationSetting {
     e_sim_accuracy_type stimuli_input_slew_type(const e_sim_signal_type& signal_type) const;
     float stimuli_input_slew(const e_sim_signal_type& signal_type) const;
   public: /* Public Mutators */
+    void set_operating_clock_freqency(const float& clock_freq);
+    void set_programming_clock_freqency(const float& clock_freq);
+    void set_num_clock_cycles(const size_t& num_clk_cycles);
+    void set_operating_clock_frequency_slack(const float& op_clk_freq_slack);
+    void set_simulation_temperature(const float& sim_temp);
+    void set_verbose_output(const bool& verbose_output);
+    void set_capacitance_output(const bool& cap_output);
+    void set_simulation_accuracy_type(const e_sim_accuracy_type& type);
+    void set_simulation_accuracy(const float& accuracy);
+    void set_fast_simulation(const bool& fast_sim);
+    void set_monte_carlo_simulation_points(const size_t& num_mc_points);
+    void set_measure_slew_upper_threshold(const e_sim_signal_type& signal_type,
+                                          const float& upper_thres);
+    void set_measure_slew_lower_threshold(const e_sim_signal_type& signal_type,
+                                          const float& lower_thres);
+    void set_measure_delay_input_threshold(const e_sim_signal_type& signal_type,
+                                           const float& input_thres);
+    void set_measure_delay_output_threshold(const e_sim_signal_type& signal_type,
+                                            const float& output_thres);
+    void set_stimuli_clock_slew_type(const e_sim_signal_type& signal_type,
+                                     const e_sim_accuracy_type& slew_type);
+    void set_stimuli_clock_slew(const e_sim_signal_type& signal_type,
+                                const float& clock_slew);
+    void set_stimuli_input_slew_type(const e_sim_signal_type& signal_type,
+                                     const e_sim_accuracy_type& slew_type);
+    void set_stimuli_input_slew(const e_sim_signal_type& signal_type,
+                                const float& input_slew);
   public: /* Public Validators */
     bool valid_signal_threshold(const float& threshold) const;
   private: /* Internal data */
@@ -132,8 +159,8 @@ class SimulationSetting {
      * Thresholds related to rising edge will be stored in the first element 
      * Thresholds related to falling edge will be stored in the second element
      */
-    std::array<float, 2> slew_upper_thresholds_;
-    std::array<float, 2> slew_lower_thresholds_;
+    std::array<float, NUM_SIM_SIGNAL_TYPES> slew_upper_thresholds_;
+    std::array<float, NUM_SIM_SIGNAL_TYPES> slew_lower_thresholds_;
 
     /* The thresholds (in percentage) to be used in the measuring signal delays
      * Thresholds related to rising edge will be stored in the first element
@@ -163,8 +190,8 @@ class SimulationSetting {
      *                             v
      *                50% of full swing of output signal 
      */
-    std::array<float, 2> delay_input_thresholds_;
-    std::array<float, 2> delay_output_thresholds_;
+    std::array<float, NUM_SIM_SIGNAL_TYPES> delay_input_thresholds_;
+    std::array<float, NUM_SIM_SIGNAL_TYPES> delay_output_thresholds_;
 
     /* Stimulus to be given to each type of port.
      * We support two types of ports:
@@ -178,10 +205,10 @@ class SimulationSetting {
      *                  Fractional accuracy will be determined by the clock frequency 
      *                  to be defined by user in the clock_setting
      */
-    std::array<e_sim_accuracy_type, 2> clock_slew_types_;
-    std::array<float, 2> clock_slews_;
-    std::array<e_sim_accuracy_type, 2> input_slew_types_;
-    std::array<float, 2> input_slews_;
+    std::array<e_sim_accuracy_type, NUM_SIM_ACCURACY_TYPES> clock_slew_types_;
+    std::array<float, NUM_SIM_ACCURACY_TYPES> clock_slews_;
+    std::array<e_sim_accuracy_type, NUM_SIM_ACCURACY_TYPES> input_slew_types_;
+    std::array<float, NUM_SIM_ACCURACY_TYPES> input_slews_;
 };
 
 #endif
