@@ -261,7 +261,7 @@
   </clock_setting>
   <simulator_option>
     <operating_condition temperature="25"/>
-    <output_log post="false" captab="false"/>
+    <output_log verbose="false" captab="false"/>
     <accuracy type="abs" value="1e-13"/>
     <runtime fast_simulation="true"/>
   </simulator_option>
@@ -277,13 +277,13 @@
     </delay>
   </measurement_setting>
   <stimulus>
-    <stimuli type="clock">
+    <port type="clock">
       <rise slew_time="20e-12" slew_type="abs"/>
       <fall slew_time="20e-12" slew_type="abs"/>
-    </stimuli>
-    <stimuli type="input">
+    </port>
+    <port type="input">
       <rise slew_time="25e-12" slew_type="abs"/>
       <fall slew_time="25e-12" slew_type="abs"/>
-    </stimuli>
+    </port>
   </stimulus>
 </openfpga_simulation_setting>

@@ -3,6 +3,7 @@
 
 #include "circuit_library.h"
 #include "technology_library.h"
+#include "simulation_setting.h"
 
 /* namespace openfpga begins */
 namespace openfpga {
@@ -13,6 +14,7 @@ namespace openfpga {
 struct Arch {
   CircuitLibrary circuit_lib;
   TechnologyLibrary tech_lib;
+  SimulationSetting sim_setting;
 };
 
 } /* namespace openfpga ends */
