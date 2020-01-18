@@ -32,10 +32,10 @@
       </device_model>
     </device_library>
     <variation_library>
-      <variation name="logic_transistor_var" abs_variation="0.1" num_sigma="3"/>
-      <variation name="io_transistor_var" abs_variation="0.1" num_sigma="3"/>
-      <variation name="mem_rram_var" abs_variation="0.1" num_sigma="3"/>
-      <variation name="logic_rram_var" abs_variation="0.1" num_sigma="3"/>
+      <variation name="logic_transistor_var" abs_deviation="0.1" num_sigma="3"/>
+      <variation name="io_transistor_var" abs_deviation="0.1" num_sigma="3"/>
+      <variation name="mem_rram_var" abs_deviation="0.1" num_sigma="3"/>
+      <variation name="logic_rram_var" abs_deviation="0.1" num_sigma="3"/>
     </variation_library>
   </technology_library>
   <circuit_library>

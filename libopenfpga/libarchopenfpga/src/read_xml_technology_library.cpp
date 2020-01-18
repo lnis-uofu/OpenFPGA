@@ -194,6 +194,20 @@ void read_xml_device_model(pugi::xml_node& xml_device_model,
 }
 
 /********************************************************************
+ * Parse XML codes of a <variation> to an object of technology library
+ *******************************************************************/
+static 
+void read_xml_device_variation(pugi::xml_node& xml_device_variation,
+                               const pugiutil::loc_data& loc_data,
+                               TechnologyLibrary& tech_lib) {
+  /* Get the name of this variation and add it to the technology library */
+  TechnologyVariationId variation = tech_lib.add_variation(get_attribute(xml_device_variation, "name", loc_data).as_string());
+
+  tech_lib.set_variation_abs_value(variation, get_attribute(xml_device_variation, "abs_deviation", loc_data).as_float(0.));
+  tech_lib.set_variation_num_sigma(variation, get_attribute(xml_device_variation, "num_sigma", loc_data).as_int(0.));
+}
+
+/********************************************************************
  * Parse XML codes of a <device_library> to an object of technology library
  *******************************************************************/
 static 
@@ -209,6 +223,25 @@ void read_xml_device_lib(pugi::xml_node& xml_device_lib,
       bad_tag(xml_device_model, loc_data, xml_device_lib, {"device_model"});
     }
     read_xml_device_model(xml_device_model, loc_data, tech_lib);
+  } 
+}
+
+/********************************************************************
+ * Parse XML codes of a <variation_library> to an object of technology library
+ *******************************************************************/
+static 
+void read_xml_variation_lib(pugi::xml_node& xml_variation_lib,
+                            const pugiutil::loc_data& loc_data,
+                            TechnologyLibrary& tech_lib) {
+  /* Iterate over the children under this node,
+   * each child should be named after <variation>
+   */
+  for (pugi::xml_node xml_device_variation : xml_variation_lib.children()) {
+    /* Error out if the XML child has an invalid name! */
+    if (xml_device_variation.name() != std::string("variation")) {
+      bad_tag(xml_device_variation, loc_data, xml_variation_lib, {"variation"});
+    }
+    read_xml_device_variation(xml_device_variation, loc_data, tech_lib);
   } 
 }
 
@@ -240,6 +273,7 @@ TechnologyLibrary read_xml_technology_library(pugi::xml_node& Node,
   }
 
   pugi::xml_node xml_variation_lib = get_first_child(Node, "variation_library", loc_data);
+  read_xml_variation_lib(xml_variation_lib, loc_data, tech_lib);
 
   return tech_lib;
 }

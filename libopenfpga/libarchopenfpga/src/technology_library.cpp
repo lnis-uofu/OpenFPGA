@@ -461,6 +461,7 @@ TechnologyVariationId TechnologyLibrary::add_variation(const std::string& name) 
 
   /* This is a legal name. we can create a new id */
   TechnologyVariationId variation = TechnologyVariationId(variation_ids_.size());
+  variation_ids_.push_back(variation);
   variation_names_.push_back(name);
   variation_abs_values_.push_back(0.);
   variation_num_sigmas_.push_back(size_t(-1));

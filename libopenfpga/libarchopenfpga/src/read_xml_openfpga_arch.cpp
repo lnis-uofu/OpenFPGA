@@ -51,6 +51,8 @@ openfpga::Arch read_xml_openfpga_arch(const char* arch_file_name) {
     /* Parse technology library */
     auto xml_tech_lib = get_single_child(xml_openfpga_arch, "technology_library", loc_data); 
     openfpga_arch.tech_lib = read_xml_technology_library(xml_tech_lib, loc_data);
+    /* Build the internal link for technology library */
+    openfpga_arch.tech_lib.link_models_to_variations();
 
     /* Second node should be <openfpga_simulation_setting> */
     auto xml_simulation_settings = get_single_child(doc, "openfpga_simulation_setting", loc_data); 
