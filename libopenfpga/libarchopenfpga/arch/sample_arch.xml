@@ -278,12 +278,12 @@
   </measurement_setting>
   <stimulus>
     <clock>
-      <rise slew_time="20e-12" slew_type="abs"/>
-      <fall slew_time="20e-12" slew_type="abs"/>
+      <rise slew_type="abs" slew_time="20e-12" />
+      <fall slew_type="abs" slew_time="20e-12" />
     </clock>
     <input>
-      <rise slew_time="25e-12" slew_type="abs"/>
-      <fall slew_time="25e-12" slew_type="abs"/>
+      <rise slew_type="abs" slew_time="25e-12" />
+      <fall slew_type="abs" slew_time="25e-12" />
     </input>
   </stimulus>
 </openfpga_simulation_setting>

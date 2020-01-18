@@ -10,6 +10,7 @@
 /* Headers from readarchopenfpga library */
 #include "write_xml_circuit_library.h"
 #include "write_xml_technology_library.h"
+#include "write_xml_simulation_setting.h"
 #include "write_xml_openfpga_arch.h"
 
 /********************************************************************
@@ -33,6 +34,9 @@ void write_xml_openfpga_arch(const char* fname,
 
   /* Write the circuit library */
   write_xml_circuit_library(fp, fname, openfpga_arch.circuit_lib);
+
+  /* Write the simulation */
+  write_xml_simulation_setting(fp, fname, openfpga_arch.sim_setting);
 
   fp << "</openfpga_architecture>" << "\n";
 }

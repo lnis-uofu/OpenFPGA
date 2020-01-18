@@ -32,7 +32,7 @@ enum e_sim_accuracy_type {
   NUM_SIM_ACCURACY_TYPES
 };
 /* Strings correspond to each accuracy type */
-constexpr std::array<const char*, NUM_SIM_ACCURACY_TYPES> SIM_ACCUARCY_TYPE_STRING = {{"frac", "abs"}};
+constexpr std::array<const char*, NUM_SIM_ACCURACY_TYPES> SIM_ACCURACY_TYPE_STRING = {{"frac", "abs"}};
 
 /********************************************************************
  * A data structure to describe simulation settings

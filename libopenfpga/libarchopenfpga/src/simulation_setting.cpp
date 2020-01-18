@@ -53,10 +53,6 @@ e_sim_accuracy_type SimulationSetting::simulation_accuracy_type() const {
 }
 
 float SimulationSetting::simulation_accuracy() const {
-  /* If fractional accuracy is selected, we give a zero accuracy */
-  if (SIM_ACCURACY_FRAC == simulation_accuracy_type()) {
-    return 0.;
-  }
   return simulation_accuracy_;
 }
 
@@ -97,10 +93,6 @@ e_sim_accuracy_type SimulationSetting::stimuli_clock_slew_type(const e_sim_signa
 }
 
 float SimulationSetting::stimuli_clock_slew(const e_sim_signal_type& signal_type) const {
-  /* If fractional accuracy is selected, we give a zero accuracy */
-  if (SIM_ACCURACY_FRAC == stimuli_clock_slew_type(signal_type)) {
-    return 0.;
-  }
   return clock_slews_[signal_type];
 }
 
@@ -109,10 +101,6 @@ e_sim_accuracy_type SimulationSetting::stimuli_input_slew_type(const e_sim_signa
 }
 
 float SimulationSetting::stimuli_input_slew(const e_sim_signal_type& signal_type) const {
-  /* If fractional accuracy is selected, we give a zero accuracy */
-  if (SIM_ACCURACY_FRAC == stimuli_input_slew_type(signal_type)) {
-    return 0.;
-  }
   return input_slews_[signal_type];
 }
 
@@ -153,10 +141,6 @@ void SimulationSetting::set_simulation_accuracy_type(const e_sim_accuracy_type& 
 }
 
 void SimulationSetting::set_simulation_accuracy(const float& accuracy) {
-  /* If fractional accuracy is selected, we do nothing */
-  if (SIM_ACCURACY_FRAC == simulation_accuracy_type()) {
-    return;
-  }
   simulation_accuracy_ = accuracy;
 }
 
@@ -204,10 +188,6 @@ void SimulationSetting::set_stimuli_clock_slew_type(const e_sim_signal_type& sig
 
 void SimulationSetting::set_stimuli_clock_slew(const e_sim_signal_type& signal_type,
                                                const float& clock_slew) {
-  /* If fractional accuracy is selected, we do nothing */
-  if (SIM_ACCURACY_FRAC == stimuli_clock_slew_type(signal_type)) {
-    return;
-  }
   clock_slews_[signal_type] = clock_slew;
 }
 
@@ -219,10 +199,6 @@ void SimulationSetting::set_stimuli_input_slew_type(const e_sim_signal_type& sig
 
 void SimulationSetting::set_stimuli_input_slew(const e_sim_signal_type& signal_type,
                                                const float& input_slew) {
-  /* If fractional accuracy is selected, we do nothing */
-  if (SIM_ACCURACY_FRAC == stimuli_input_slew_type(signal_type)) {
-    return;
-  }
   input_slews_[signal_type] = input_slew;
 }
 
