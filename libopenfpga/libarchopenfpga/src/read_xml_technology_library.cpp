@@ -101,6 +101,50 @@ void read_xml_device_model_design_settings(pugi::xml_node& xml_device_model_desi
 }
 
 /********************************************************************
+ * Parse XML codes of transistor models under a device model
+ * to an object of technology library
+ *******************************************************************/
+static 
+void read_xml_device_transistor(pugi::xml_node& xml_device_transistor,
+                                const pugiutil::loc_data& loc_data,
+                                TechnologyLibrary& tech_lib,
+                                TechnologyModelId& device_model,
+                                const e_tech_lib_transistor_type& transistor_type) {
+  /* Parse the transistor model name */
+  tech_lib.set_transistor_model_name(device_model, transistor_type, 
+                                     get_attribute(xml_device_transistor, "name", loc_data).as_string());
+
+  /* Parse the transistor channel length */
+  tech_lib.set_transistor_model_chan_length(device_model, transistor_type, 
+                                            get_attribute(xml_device_transistor, "chan_length", loc_data).as_float(0.));
+
+  /* Parse the transistor minimum width */
+  tech_lib.set_transistor_model_min_width(device_model, transistor_type, 
+                                          get_attribute(xml_device_transistor, "min_width", loc_data).as_float(0.));
+
+  /* Parse the transistor variation name */
+  tech_lib.set_transistor_model_variation_name(device_model, transistor_type, 
+                                               get_attribute(xml_device_transistor, "variation", loc_data).as_string());
+}
+
+/********************************************************************
+ * Parse XML codes of RRAM models under a device model
+ * to an object of technology library
+ *******************************************************************/
+static 
+void read_xml_device_rram(pugi::xml_node& xml_device_rram,
+                          const pugiutil::loc_data& loc_data,
+                          TechnologyLibrary& tech_lib,
+                          TechnologyModelId& device_model) {
+  /* Parse the LRS and HRS resistance */
+  tech_lib.set_rram_rlrs(device_model, get_attribute(xml_device_rram, "rlrs", loc_data).as_float(0.));
+  tech_lib.set_rram_rhrs(device_model, get_attribute(xml_device_rram, "rhrs", loc_data).as_float(0.));
+
+  /* Parse the RRAM variation name */
+  tech_lib.set_rram_variation_name(device_model, get_attribute(xml_device_rram, "variation", loc_data).as_string());
+}
+
+/********************************************************************
  * Parse XML codes of a <device> to an object of technology library
  *******************************************************************/
 static 
@@ -131,6 +175,21 @@ void read_xml_device_model(pugi::xml_node& xml_device_model,
   if (TECH_LIB_MODEL_TRANSISTOR == tech_lib.model_type(device_model)) {
     auto xml_device_model_design = get_single_child(xml_device_model, "design", loc_data); 
     read_xml_device_model_design_settings(xml_device_model_design, loc_data, tech_lib, device_model);
+  }
+
+  /* Transistor -relate attributes, this is ONLY applicable to transistor models */
+  if (TECH_LIB_MODEL_TRANSISTOR == tech_lib.model_type(device_model)) {
+    auto xml_device_model_pmos = get_single_child(xml_device_model, "pmos", loc_data); 
+    read_xml_device_transistor(xml_device_model_pmos, loc_data, tech_lib, device_model, TECH_LIB_TRANSISTOR_PMOS);
+
+    auto xml_device_model_nmos = get_single_child(xml_device_model, "nmos", loc_data); 
+    read_xml_device_transistor(xml_device_model_nmos, loc_data, tech_lib, device_model, TECH_LIB_TRANSISTOR_NMOS);
+  }
+
+  /* RRAM -relate attributes, this is ONLY applicable to RRAM models */
+  if (TECH_LIB_MODEL_RRAM == tech_lib.model_type(device_model)) {
+    auto xml_device_rram = get_single_child(xml_device_model, "rram", loc_data); 
+    read_xml_device_rram(xml_device_rram, loc_data, tech_lib, device_model);
   }
 }
 
