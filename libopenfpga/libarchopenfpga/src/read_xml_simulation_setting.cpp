@@ -268,4 +268,3 @@ SimulationSetting read_xml_simulation_setting(pugi::xml_node& Node,
 
   return sim_setting;
 }
-

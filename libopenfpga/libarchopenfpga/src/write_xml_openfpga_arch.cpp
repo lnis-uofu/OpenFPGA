@@ -12,6 +12,7 @@
 #include "write_xml_technology_library.h"
 #include "write_xml_simulation_setting.h"
 #include "write_xml_config_protocol.h"
+#include "write_xml_routing_circuit.h"
 #include "write_xml_openfpga_arch.h"
 
 /********************************************************************
@@ -38,6 +39,15 @@ void write_xml_openfpga_arch(const char* fname,
 
   /* Write the configuration protocol */
   write_xml_config_protocol(fp, fname, openfpga_arch.config_protocol, openfpga_arch.circuit_lib);
+
+  /* Write the connection block circuit definition */
+  write_xml_cb_switch_circuit(fp, fname, openfpga_arch.circuit_lib, openfpga_arch.cb_switch2circuit);
+
+  /* Write the switch block circuit definition */
+  write_xml_sb_switch_circuit(fp, fname, openfpga_arch.circuit_lib, openfpga_arch.sb_switch2circuit);
+
+  /* Write the routing segment circuit definition */
+  write_xml_routing_segment_circuit(fp, fname, openfpga_arch.circuit_lib, openfpga_arch.routing_seg2circuit);
 
   fp << "</openfpga_architecture>" << "\n";
 

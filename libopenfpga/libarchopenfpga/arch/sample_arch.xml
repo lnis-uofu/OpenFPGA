@@ -262,9 +262,9 @@
   <switch_block>
     <switch name="sb_mux_L4" circuit_model_name="mux_2level_tapbuf"/>
   </switch_block>
-  <routing_segement>
-    <switch name="L4" circuit_model_name="chan_segment"/>
-  </routing_segement>
+  <routing_segment>
+    <segment name="L4" circuit_model_name="chan_segment"/>
+  </routing_segment>
   <complex_blocks>
     <pb_type name="io" idle_mode_name="inpad" physical_mode_name="io_phy"/>
     <mode name="io[io_phy]" disable_in_packing="true"/>

@@ -17,6 +17,7 @@
 #include "read_xml_circuit_library.h"
 #include "read_xml_simulation_setting.h"
 #include "read_xml_config_protocol.h"
+#include "read_xml_routing_circuit.h"
 #include "read_xml_openfpga_arch.h"
 #include "openfpga_arch_linker.h"
 
@@ -62,6 +63,22 @@ openfpga::Arch read_xml_openfpga_arch(const char* arch_file_name) {
 
     /* Build the internal link between configuration protocol and circuit library */
     link_config_protocol_to_circuit_library(openfpga_arch);
+
+    /* Parse the connection block circuit definition */
+    openfpga_arch.cb_switch2circuit = read_xml_cb_switch_circuit(xml_openfpga_arch, loc_data,
+                                                                 openfpga_arch.circuit_lib);
+
+    /* Parse the connection block circuit definition */
+    openfpga_arch.cb_switch2circuit = read_xml_cb_switch_circuit(xml_openfpga_arch, loc_data,
+                                                                 openfpga_arch.circuit_lib);
+
+    /* Parse the switch block circuit definition */
+    openfpga_arch.sb_switch2circuit = read_xml_sb_switch_circuit(xml_openfpga_arch, loc_data,
+                                                                 openfpga_arch.circuit_lib);
+
+    /* Parse the routing segment circuit definition */
+    openfpga_arch.routing_seg2circuit = read_xml_routing_segment_circuit(xml_openfpga_arch, loc_data,
+                                                                         openfpga_arch.circuit_lib);
 
     /* Second node should be <openfpga_simulation_setting> */
     auto xml_simulation_settings = get_single_child(doc, "openfpga_simulation_setting", loc_data); 
