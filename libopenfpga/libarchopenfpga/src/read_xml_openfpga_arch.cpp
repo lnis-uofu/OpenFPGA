@@ -80,6 +80,10 @@ openfpga::Arch read_xml_openfpga_arch(const char* arch_file_name) {
     openfpga_arch.routing_seg2circuit = read_xml_routing_segment_circuit(xml_openfpga_arch, loc_data,
                                                                          openfpga_arch.circuit_lib);
 
+    /* Parse the routing segment circuit definition */
+    openfpga_arch.direct2circuit = read_xml_direct_circuit(xml_openfpga_arch, loc_data,
+                                                           openfpga_arch.circuit_lib);
+
     /* Second node should be <openfpga_simulation_setting> */
     auto xml_simulation_settings = get_single_child(doc, "openfpga_simulation_setting", loc_data); 
 

@@ -28,4 +28,9 @@ void write_xml_routing_segment_circuit(std::fstream& fp,
                                        const CircuitLibrary& circuit_lib,
                                        const std::map<std::string, CircuitModelId>& seg2circuit);
 
+void write_xml_direct_circuit(std::fstream& fp,
+                              const char* fname,
+                              const CircuitLibrary& circuit_lib,
+                              const std::map<std::string, CircuitModelId>& direct2circuit);
+
 #endif

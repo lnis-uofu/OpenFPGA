@@ -184,3 +184,52 @@ std::map<std::string, CircuitModelId> read_xml_routing_segment_circuit(pugi::xml
 
   return seg2circuit;
 }
+
+/********************************************************************
+ * Parse XML codes about <direct_connection> to an object of name-to-circuit mapping
+ * Note: this function should be called AFTER the parsing of circuit library!!!
+ *******************************************************************/
+std::map<std::string, CircuitModelId> read_xml_direct_circuit(pugi::xml_node& Node,
+                                                              const pugiutil::loc_data& loc_data,
+                                                              const CircuitLibrary& circuit_lib) {
+  std::map<std::string, CircuitModelId> direct2circuit;
+
+  /* Parse direct list, this is optional. May not be used */
+  pugi::xml_node xml_directs= get_single_child(Node, "direct_connection", loc_data, pugiutil::ReqOpt::OPTIONAL);
+  /* Not found, we can return */
+  if (!xml_directs) {
+    return direct2circuit;
+  }
+
+  /* Iterate over the children under this node,
+   * each child should be named after switch
+   */
+  for (pugi::xml_node xml_direct : xml_directs.children()) {
+    /* Error out if the XML child has an invalid name! */
+    if (xml_direct.name() != std::string("direct")) {
+      bad_tag(xml_direct, loc_data, xml_directs, {"direct"});
+    }
+    /* Get the switch name */ 
+    std::string direct_name = get_attribute(xml_direct, "name", loc_data).as_string();
+
+    /* Get the routing segment circuit model name */ 
+    std::string direct_model_name = get_attribute(xml_direct, "circuit_model_name", loc_data).as_string();
+
+    CircuitModelId direct_model = find_routing_circuit_model(xml_direct, loc_data,
+                                                             circuit_lib, direct_model_name,
+                                                             CIRCUIT_MODEL_WIRE);
+  
+    /* Ensure that there is no duplicated seg names defined here */
+    std::map<std::string, CircuitModelId>::const_iterator it = direct2circuit.find(direct_name);
+    if (it != direct2circuit.end()) {
+      archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_direct),
+                     "Direct name '%s' has been defined more than once!\n",
+                     direct_name.c_str());
+    }
+
+    /* Pass all the check, we can add it to the map */
+    direct2circuit[direct_name] = direct_model; 
+  } 
+
+  return direct2circuit;
+}

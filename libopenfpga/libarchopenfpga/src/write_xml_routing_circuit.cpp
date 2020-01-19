@@ -97,3 +97,28 @@ void write_xml_routing_segment_circuit(std::fstream& fp,
   /* Finish writing the root node */
   fp << "\t" << "</routing_segment>" << "\n";
 }
+
+/********************************************************************
+ * Write direction connection circuit models in XML format
+ *******************************************************************/
+void write_xml_direct_circuit(std::fstream& fp,
+                              const char* fname,
+                              const CircuitLibrary& circuit_lib,
+                              const std::map<std::string, CircuitModelId>& direct2circuit) {
+  /* If the direct2circuit is empty, we do not output XML */
+  if (direct2circuit.empty()) {
+    return;
+  }
+
+  /* Validate the file stream */
+  openfpga::check_file_stream(fname, fp);
+  
+  /* Write the root node */
+  fp << "\t" << "<direct_connection>" << "\n";
+
+  /* Write each direct connection circuit definition */ 
+  write_xml_routing_component_circuit(fp, fname, std::string("direct"), circuit_lib, direct2circuit);
+
+  /* Finish writing the root node */
+  fp << "\t" << "</direct_connection>" << "\n";
+}

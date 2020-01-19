@@ -49,6 +49,9 @@ void write_xml_openfpga_arch(const char* fname,
   /* Write the routing segment circuit definition */
   write_xml_routing_segment_circuit(fp, fname, openfpga_arch.circuit_lib, openfpga_arch.routing_seg2circuit);
 
+  /* Write the direct connection circuit definition */
+  write_xml_direct_circuit(fp, fname, openfpga_arch.circuit_lib, openfpga_arch.direct2circuit);
+
   fp << "</openfpga_architecture>" << "\n";
 
   /* Write the simulation */

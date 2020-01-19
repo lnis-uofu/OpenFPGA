@@ -42,6 +42,11 @@ struct Arch {
    * to circuit models in circuit library 
    */
   std::map<std::string, CircuitModelId> routing_seg2circuit;
+
+  /* Mapping from the names of direct connection
+   * to circuit models in circuit library 
+   */
+  std::map<std::string, CircuitModelId> direct2circuit;
 };
 
 } /* namespace openfpga ends */

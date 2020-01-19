@@ -265,6 +265,9 @@
   <routing_segment>
     <segment name="L4" circuit_model_name="chan_segment"/>
   </routing_segment>
+  <!--direct_connection>
+    <direct name="adder" circuit_model_name="direct_interc"/>
+  </direct_connection-->
   <complex_blocks>
     <pb_type name="io" idle_mode_name="inpad" physical_mode_name="io_phy"/>
     <mode name="io[io_phy]" disable_in_packing="true"/>
