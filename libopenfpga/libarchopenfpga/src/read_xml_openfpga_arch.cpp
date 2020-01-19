@@ -16,7 +16,9 @@
 #include "read_xml_technology_library.h"
 #include "read_xml_circuit_library.h"
 #include "read_xml_simulation_setting.h"
+#include "read_xml_config_protocol.h"
 #include "read_xml_openfpga_arch.h"
+#include "openfpga_arch_linker.h"
 
 /********************************************************************
  * Top-level function to parse an XML file and load data to :
@@ -54,6 +56,12 @@ openfpga::Arch read_xml_openfpga_arch(const char* arch_file_name) {
     openfpga_arch.tech_lib = read_xml_technology_library(xml_tech_lib, loc_data);
     /* Build the internal link for technology library */
     openfpga_arch.tech_lib.link_models_to_variations();
+
+    /* Parse configuration protocol to data structure */
+    openfpga_arch.config_protocol = read_xml_config_protocol(xml_openfpga_arch, loc_data);
+
+    /* Build the internal link between configuration protocol and circuit library */
+    link_config_protocol_to_circuit_library(openfpga_arch);
 
     /* Second node should be <openfpga_simulation_setting> */
     auto xml_simulation_settings = get_single_child(doc, "openfpga_simulation_setting", loc_data); 

@@ -5,6 +5,9 @@
 #ifndef CIRCUIT_TYPES_H
 #define CIRCUIT_TYPES_H
 
+#include <string>
+#include <array>
+
 /************************************************************************
  * This file includes basic enumeration types for circuit models
  ***********************************************************************/
@@ -111,15 +114,21 @@ enum e_circuit_model_delay_type {
 /* Strings correspond to each delay type */
 constexpr std::array<const char*, NUM_CIRCUIT_MODEL_DELAY_TYPES> CIRCUIT_MODEL_DELAY_TYPE_STRING = {{"rise", "fall"}};
 
-/* For SRAM */
-enum e_sram_orgz {
-  CIRCUIT_SRAM_STANDALONE,   /* SRAMs are organized and accessed as standalone elements */
-  CIRCUIT_SRAM_SCAN_CHAIN,   /* SRAMs are organized and accessed by a scan-chain */
-  CIRCUIT_SRAM_MEMORY_BANK,  /* SRAMs are organized and accessed by memory bank */
-  CIRCUIT_SRAM_LOCAL_ENCODER,  /* SRAMs are organized and accessed by a local encoder */
-  NUM_CIRCUIT_MODEL_SRAM_ORGZ_TYPES
+/********************************************************************
+ * Types of configuration protocol
+ * 1. configurable memories are organized and accessed as standalone elements 
+ * 2. configurable memories are organized and accessed by a scan-chain
+ * 3. configurable memories are organized and accessed by memory bank 
+ * 4. configurable memories are organized and accessed by a local encoder 
+ */
+enum e_config_protocol_type {
+  CONFIG_MEM_STANDALONE,   
+  CONFIG_MEM_SCAN_CHAIN,   
+  CONFIG_MEM_MEMORY_BANK,  
+  CONFIG_MEM_LOCAL_ENCODER,  
+  NUM_CONFIG_PROTOCOL_TYPES
 };
 
-constexpr std::array<const char*, NUM_CIRCUIT_MODEL_SRAM_ORGZ_TYPES> CIRCUIT_MODEL_SRAM_ORGZ_TYPE_STRING = {{"standalone", "scan_chain", "memory_bank", "local_encoder"}};
+constexpr std::array<const char*, NUM_CONFIG_PROTOCOL_TYPES> CONFIG_PROTOCOL_TYPE_STRING = {{"standalone", "scan_chain", "memory_bank", "local_encoder"}};
 
 #endif

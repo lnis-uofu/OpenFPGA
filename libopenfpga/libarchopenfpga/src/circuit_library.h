@@ -373,7 +373,7 @@ class CircuitLibrary {
     void set_port_lut_output_mask(const CircuitPortId& circuit_port_id, 
                                   const std::vector<size_t>& lut_output_masks);
     void set_port_sram_orgz(const CircuitPortId& circuit_port_id, 
-                            const enum e_sram_orgz& sram_orgz);
+                            const enum e_config_protocol_type& sram_orgz);
     /* Delay information */
     void add_delay_info(const CircuitModelId& model_id,
                         const enum e_circuit_model_delay_type& delay_type);
@@ -542,7 +542,7 @@ class CircuitLibrary {
     vtr::vector<CircuitPortId, std::string> port_tri_state_maps_;
     vtr::vector<CircuitPortId, size_t> port_lut_frac_level_;
     vtr::vector<CircuitPortId, std::vector<size_t>> port_lut_output_masks_;
-    vtr::vector<CircuitPortId, enum e_sram_orgz> port_sram_orgz_;
+    vtr::vector<CircuitPortId, enum e_config_protocol_type> port_sram_orgz_;
 
     /* Timing graphs */
     vtr::vector<CircuitEdgeId, CircuitEdgeId> edge_ids_;

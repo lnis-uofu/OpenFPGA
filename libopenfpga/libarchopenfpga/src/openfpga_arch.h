@@ -4,6 +4,7 @@
 #include "circuit_library.h"
 #include "technology_library.h"
 #include "simulation_setting.h"
+#include "config_protocol.h"
 
 /* namespace openfpga begins */
 namespace openfpga {
@@ -15,6 +16,7 @@ struct Arch {
   CircuitLibrary circuit_lib;
   TechnologyLibrary tech_lib;
   SimulationSetting sim_setting;
+  ConfigProtocol config_protocol;
 };
 
 } /* namespace openfpga ends */

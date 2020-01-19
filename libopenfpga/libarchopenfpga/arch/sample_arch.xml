@@ -253,6 +253,25 @@
        <port type="output" prefix="sumout" size="1"/>
     </circuit_model>
   </circuit_library>
+  <configuration_protocol>
+    <organization type="scan_chain" circuit_model_name="sc_dff_compact"/>
+  </configuration_protocol>
+  <connection_block>
+    <switch name="cb_mux" circuit_model_name="mux_2level_tapbuf"/>
+  </connection_block>
+  <switch_block>
+    <switch name="sb_mux_L4" circuit_model_name="mux_2level_tapbuf"/>
+  </switch_block>
+  <routing_segement>
+    <switch name="L4" circuit_model_name="chan_segment"/>
+  </routing_segement>
+  <complex_blocks>
+    <pb_type name="io" idle_mode_name="inpad" physical_mode_name="io_phy"/>
+    <mode name="io[io_phy]" disable_in_packing="true"/>
+    <pb_type name="io[io_phy].iopad" circuit_model_name="iopad" mode_bits="1"/> 
+    <pb_type name="io[io_phy].inpad" physical_pb_type_name="iopad" mode_bits="1"/> 
+    <pb_type name="io[io_phy].outpad" physical_pb_type_name="iopad" mode_bits="0"/> 
+  </complex_blocks>
 </openfpga_architecture>
 <openfpga_simulation_setting>
   <clock_setting>
