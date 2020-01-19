@@ -1357,7 +1357,7 @@ CircuitPortId CircuitLibrary::add_model_port(const CircuitModelId& model_id,
   port_tri_state_maps_.emplace_back();
   port_lut_frac_level_.push_back(-1);
   port_lut_output_masks_.emplace_back();
-  port_sram_orgz_.push_back(NUM_CIRCUIT_MODEL_SRAM_ORGZ_TYPES);
+  port_sram_orgz_.push_back(NUM_CONFIG_PROTOCOL_TYPES);
 
   /* For timing graphs */
   port_in_edge_ids_.emplace_back();
@@ -1537,7 +1537,7 @@ void CircuitLibrary::set_port_lut_output_mask(const CircuitPortId& circuit_port_
 
 /* Set the SRAM organization for a port of a circuit model, only applicable to SRAM ports */
 void CircuitLibrary::set_port_sram_orgz(const CircuitPortId& circuit_port_id, 
-                                        const enum e_sram_orgz& sram_orgz) {
+                                        const enum e_config_protocol_type& sram_orgz) {
   /* validate the circuit_port_id */
   VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
   /* Make sure this is a SRAM port */

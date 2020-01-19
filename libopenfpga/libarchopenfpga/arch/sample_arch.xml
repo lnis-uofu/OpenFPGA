@@ -253,11 +253,42 @@
        <port type="output" prefix="sumout" size="1"/>
     </circuit_model>
   </circuit_library>
+  <configuration_protocol>
+    <organization type="scan_chain" circuit_model_name="sc_dff_compact"/>
+  </configuration_protocol>
+  <connection_block>
+    <switch name="cb_mux" circuit_model_name="mux_2level_tapbuf"/>
+  </connection_block>
+  <switch_block>
+    <switch name="sb_mux_L4" circuit_model_name="mux_2level_tapbuf"/>
+  </switch_block>
+  <routing_segment>
+    <segment name="L4" circuit_model_name="chan_segment"/>
+  </routing_segment>
+  <!--direct_connection>
+    <direct name="adder" circuit_model_name="direct_interc"/>
+  </direct_connection-->
+  <complex_blocks>
+    <pb_type name="io" idle_mode_name="inpad" physical_mode_name="io_phy"/>
+    <mode name="io[io_phy]" disable_in_packing="true"/>
+    <pb_type name="io[io_phy].iopad" circuit_model_name="iopad" mode_bits="1"/> 
+    <pb_type name="io[io_phy].inpad" physical_pb_type_name="iopad" mode_bits="1"/> 
+    <pb_type name="io[io_phy].outpad" physical_pb_type_name="iopad" mode_bits="0"/> 
+  </complex_blocks>
 </openfpga_architecture>
 <openfpga_simulation_setting>
-  <general sim_temp="25" post="false" captab="false" fast="true"/>
-  <monte_carlo mc_sim="false" num_mc_points="2"/>
-  <measure sim_num_clock_cycle="auto" accuracy="1e-13" accuracy_type="abs">
+  <clock_setting>
+    <operating frequency="200e6" num_cycles="auto" slack="0.2"/>
+    <programming frequency="10e6"/>
+  </clock_setting>
+  <simulator_option>
+    <operating_condition temperature="25"/>
+    <output_log verbose="false" captab="false"/>
+    <accuracy type="abs" value="1e-13"/>
+    <runtime fast_simulation="true"/>
+  </simulator_option>
+  <monte_carlo num_simulation_points="2"/>
+  <measurement_setting>
     <slew>
       <rise upper_thres_pct="0.95" lower_thres_pct="0.05"/>
       <fall upper_thres_pct="0.05" lower_thres_pct="0.95"/>
@@ -266,15 +297,15 @@
       <rise input_thres_pct="0.5" output_thres_pct="0.5"/>
       <fall input_thres_pct="0.5" output_thres_pct="0.5"/>
     </delay>
-  </measure>
-  <stimuli>
-    <clock op_freq="200e6" sim_slack="0.2" prog_freq="10e6">
-      <rise slew_time="20e-12" slew_type="abs"/>
-      <fall slew_time="20e-12" slew_type="abs"/>
+  </measurement_setting>
+  <stimulus>
+    <clock>
+      <rise slew_type="abs" slew_time="20e-12" />
+      <fall slew_type="abs" slew_time="20e-12" />
     </clock>
     <input>
-      <rise slew_time="25e-12" slew_type="abs"/>
-      <fall slew_time="25e-12" slew_type="abs"/>
+      <rise slew_type="abs" slew_time="25e-12" />
+      <fall slew_type="abs" slew_time="25e-12" />
     </input>
-  </stimuli>
+  </stimulus>
 </openfpga_simulation_setting>
