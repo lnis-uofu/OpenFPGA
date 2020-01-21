@@ -42,6 +42,39 @@ enum e_option_value_type {
  * This data structure should NOT contain any parsing results!
  * It should be a read-only once created!
  *
+ * An exampe of how to use
+ * -----------------------
+ * // Create a new command with a name of 'read_file'
+ * // This command can be called as 
+ * //   read_file --file <file_name>
+ * //   read_file -f <file_name>
+ * //   read_file --help
+ * //   read_file -h
+ * Command cmd("read_file");
+ *
+ * // Add a mandatory option 'file' to the command
+ * CommandOptionId opt_file = cmd.add_option("file", true, "Input file path");
+ * // Add a short name 'f' for 'file' option
+ * cmd.set_option_short_name(opt_file, "f");
+ * // The option require a string value which is the file path
+ * cmd.set_option_require_value(opt_file, OPT_STRING);
+ *
+ * // Add an non-mandatory option 'help' to the command
+ * // which does not require a value
+ * CommandOptionId opt_help = cmd.add_option("help", false, "Show help desk");
+ * // Add a short name 'h' for 'help' option
+ * cmd.set_option_short_name(opt_help, "h");
+ *
+ * // Run a command parser and store the results in CommandContext
+ * CommandContext cmd_context(cmd);
+ * if (false == parse_command(cmd_opts, cmd, cmd_context)) {
+ * // Parse failed. Print the help desk
+ *   print_command_options(cmd);
+ * } else {
+ * // Parse succeed. Let user to confirm selected options
+ *   print_command_context(cmd, cmd_context);
+ * }
+ *
  * Note:
  * When adding an option name, please do NOT add any dash at the beginning!!!
  ********************************************************************/
