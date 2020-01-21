@@ -23,7 +23,7 @@ CommandOptionId parse_option(const std::string& argv,
   CommandOptionId option_id = cmd.option(argv);
   /* Not found, error out */
   if (CommandOptionId::INVALID() == option_id) {
-    VTR_LOG("Detect unknown option '%s'!\n",
+    VTR_LOG("Detect unknown option '--%s'!\n",
             argv.c_str());
   }
   /* Found, update the CommandContext */
@@ -43,7 +43,7 @@ CommandOptionId parse_short_option(const std::string& argv,
   CommandOptionId option_id = cmd.short_option(argv);
   /* Not found, error out */
   if (CommandOptionId::INVALID() == option_id) {
-    VTR_LOG("Detect unknown option '%s'!\n",
+    VTR_LOG("Detect unknown short option '-%s'!\n",
             argv.c_str());
   }
   /* Found, update the CommandContext */
@@ -63,8 +63,8 @@ bool parse_command(const std::vector<std::string>& argv,
   VTR_ASSERT(1 <= argv.size());
 
   /* Validate that the command name matches argv[0] */
-  if (argv[0] == cmd.name()) { 
-    VTR_LOG("Unexpected command name '%s'!",
+  if (argv[0] != cmd.name()) { 
+    VTR_LOG("Unexpected command name '%s'!\n",
             argv[0]);
     return false;
   }
@@ -73,7 +73,7 @@ bool parse_command(const std::vector<std::string>& argv,
   for (size_t iarg = 1; iarg < argv.size(); ++iarg) {
     /* Option must start with dash */
     if (0 != strncmp("-", argv[iarg].c_str(), 1)) {
-      VTR_LOG("Invalid option '%s'!",
+      VTR_LOG("Invalid option '%s'!\n",
               argv[iarg].c_str());
       return false;
     }
@@ -136,19 +136,25 @@ bool parse_command(const std::vector<std::string>& argv,
   std::vector<CommandOptionId> missing_options = cmd_context.check_required_options(cmd);
   if (!missing_options.empty()) {
     for (const CommandOptionId& missing_opt : missing_options) {
-      VTR_LOG("Required option '%s' is missing!",
-              cmd.option_name(missing_opt));
+      VTR_LOG("Required option '%s' is missing!\n",
+              cmd.option_name(missing_opt).c_str());
     }
     return false;
   }
 
   std::vector<CommandOptionId> missing_value_options = cmd_context.check_required_option_values(cmd);
   if (!missing_value_options.empty()) {
+    bool parse_fail = false;
     for (const CommandOptionId& missing_opt : missing_value_options) {
-      VTR_LOG("Require value for option '%s' is missing!",
-              cmd.option_name(missing_opt));
+      /* If the missing option is not enabled, we can skip this option */
+      if (false == cmd_context.option_enable(cmd, missing_opt)) {
+        continue;
+      }
+      VTR_LOG("Require value for option '%s' is missing!\n",
+              cmd.option_name(missing_opt).c_str());
+      parse_fail = true;
     }
-    return false;
+    return !parse_fail;
   }
 
   return true;

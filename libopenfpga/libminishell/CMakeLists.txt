@@ -2,13 +2,13 @@ cmake_minimum_required(VERSION 3.9)
 
 project("libminishell")
 
-#file(GLOB_RECURSE EXEC_SOURCES test/main.cpp)
+file(GLOB_RECURSE EXEC_SOURCES test/test_command_parser.cpp)
 file(GLOB_RECURSE LIB_SOURCES src/*.cpp)
 file(GLOB_RECURSE LIB_HEADERS src/*.h)
 files_to_dirs(LIB_HEADERS LIB_INCLUDE_DIRS)
 
 #Remove test executable from library
-#list(REMOVE_ITEM LIB_SOURCES ${EXEC_SOURCES})
+list(REMOVE_ITEM LIB_SOURCES ${EXEC_SOURCES})
 
 #Create the library
 add_library(libminishell STATIC
@@ -22,8 +22,8 @@ target_link_libraries(libminishell
                       libvtrutil)
 
 #Create the test executable
-#add_executable(read_arch_openfpga ${EXEC_SOURCES})
-#target_link_libraries(read_arch_openfpga libarchopenfpga)
+add_executable(test_command_parser ${EXEC_SOURCES})
+target_link_libraries(test_command_parser libminishell)
 
 #Supress IPO link warnings if IPO is enabled
 #get_target_property(READ_ARCH_USES_IPO read_arch_openfpga INTERPROCEDURAL_OPTIMIZATION)

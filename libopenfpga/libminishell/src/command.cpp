@@ -10,8 +10,8 @@ namespace minishell {
 /*********************************************************************
  * Public constructors
  ********************************************************************/
-Command::Command(const std::string& name) {
-  name_ = name;
+Command::Command(const char* name) {
+  name_ = std::string(name);
 }
 
 /************************************************************************
@@ -48,7 +48,7 @@ std::vector<CommandOptionId> Command::require_value_options() const {
 CommandOptionId Command::option(const std::string& name) const {
   /* Ensure that the name is unique in the option list */
   std::map<std::string, CommandOptionId>::const_iterator name_it = option_name2ids_.find(name);
-  if (name_it != option_name2ids_.end()) {
+  if (name_it == option_name2ids_.end()) {
     return CommandOptionId::INVALID();
   }
   return option_name2ids_.at(name);
@@ -57,7 +57,7 @@ CommandOptionId Command::option(const std::string& name) const {
 CommandOptionId Command::short_option(const std::string& name) const {
   /* Ensure that the name is unique in the option list */
   std::map<std::string, CommandOptionId>::const_iterator name_it = option_short_name2ids_.find(name);
-  if (name_it != option_short_name2ids_.end()) {
+  if (name_it == option_short_name2ids_.end()) {
     return CommandOptionId::INVALID();
   }
   return option_short_name2ids_.at(name);
@@ -104,11 +104,11 @@ std::string Command::option_description(const CommandOptionId& option_id) const 
  ***********************************************************************/
 
 /* Add an option without required values */
-CommandOptionId Command::add_option(const std::string& name,
+CommandOptionId Command::add_option(const char* name,
                                     const bool& option_required, 
-                                    const std::string& description) {
+                                    const char* description) {
   /* Ensure that the name is unique in the option list */
-  std::map<std::string, CommandOptionId>::const_iterator name_it = option_name2ids_.find(name);
+  std::map<std::string, CommandOptionId>::const_iterator name_it = option_name2ids_.find(std::string(name));
   if (name_it != option_name2ids_.end()) {
     return CommandOptionId::INVALID();
   }
@@ -116,40 +116,40 @@ CommandOptionId Command::add_option(const std::string& name,
   /* This is a legal name. we can create a new id */
   CommandOptionId option = CommandOptionId(option_ids_.size());
   option_ids_.push_back(option);
-  option_names_.push_back(name);
+  option_names_.push_back(std::string(name));
   option_short_names_.emplace_back();
   option_required_.push_back(option_required);
   option_require_value_types_.push_back(NUM_OPT_VALUE_TYPES);
-  option_description_.push_back(description);
+  option_description_.push_back(std::string(description));
 
   /* Register the name and short name in the name2id map */
-  option_name2ids_[name] = option;
+  option_name2ids_[std::string(name)] = option;
 
   return option;
 } 
 
 /* Add a short name to an option */
 bool Command::set_option_short_name(const CommandOptionId& option_id, 
-                                    const std::string& short_name) {
+                                    const char* short_name) {
   /* Validate the option id */
   VTR_ASSERT(true == valid_option_id(option_id));
 
   /* Short name is optional, so do the following only when it is not empty
    * Ensure that the short name is unique in the option list 
    */
-  if (true == short_name.empty()) {
+  if (true == std::string(short_name).empty()) {
     return false;
   }
 
-  std::map<std::string, CommandOptionId>::const_iterator short_name_it = option_short_name2ids_.find(short_name);
+  std::map<std::string, CommandOptionId>::const_iterator short_name_it = option_short_name2ids_.find(std::string(short_name));
   if (short_name_it != option_short_name2ids_.end()) {
     return false;
   }
 
-  option_short_names_[option_id] = short_name;
+  option_short_names_[option_id] = std::string(short_name);
 
   /* Short name is optional, so register it only when it is not empty */
-  option_short_name2ids_[short_name] = option_id;
+  option_short_name2ids_[std::string(short_name)] = option_id;
 
   return true;
 } 

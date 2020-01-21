@@ -51,7 +51,7 @@ class Command {
     /* Create range */
     typedef vtr::Range<command_option_iterator> command_option_range;
   public: /* Constructor */
-    Command(const std::string& name);
+    Command(const char* name);
   public: /* Public accessors */
     std::string name() const;
     command_option_range options() const;
@@ -68,10 +68,10 @@ class Command {
     e_option_value_type option_require_value_type(const CommandOptionId& option_id) const;
     std::string option_description(const CommandOptionId& option_id) const;
   public: /* Public mutators */
-    CommandOptionId add_option(const std::string& name,
+    CommandOptionId add_option(const char* name,
                                const bool& option_required,
-                               const std::string& description); 
-    bool set_option_short_name(const CommandOptionId& option_id, const std::string& short_name);
+                               const char* description); 
+    bool set_option_short_name(const CommandOptionId& option_id, const char* short_name);
     void set_option_require_value(const CommandOptionId& option_id,
                                   const e_option_value_type& option_require_value_type);
   public: /* Public validators */
