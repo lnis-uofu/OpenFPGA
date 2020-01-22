@@ -57,15 +57,41 @@ class Shell {
     Shell<T>(const char* name);
   public: /* Public accessors */
     std::string name() const;
+    std::string title() const;
     shell_command_range commands() const;
     ShellCommandId command(const std::string& name) const;
+    std::string command_description(const ShellCommandId& cmd_id) const;
+    /* We force a read-only return objects for command and command context
+     * because users should NOT modify any of them!
+     */
+    const Command& command(const ShellCommandId& cmd_id) const;
+    const CommandContext& command_context(const ShellCommandId& cmd_id) const;
+    std::vector<ShellCommandId> command_dependency(const ShellCommandId& cmd_id) const;
   public: /* Public mutators */
+    void set_title(const char* title);
     ShellCommandId add_command(const Command& cmd, const char* descr);
+    void add_command_execute_function(const ShellCommandId& cmd_id,
+                                      std::function<void(T, const CommandContext&)> exec_func);
+    void add_command_dependency(const ShellCommandId& cmd_id,
+                                const std::vector<ShellCommandId> cmd_dependency);
   public: /* Public validators */
     bool valid_command_id(const ShellCommandId& cmd_id) const;
+  public: /* Public executors */
+    /* Start the interactive mode, where users will type-in command by command */
+    void run_interactive_mode(T& context);
+    /* Start the script mode, where users provide a file which includes all the commands to run */
+    void run_script_mode(const char* script_file_name, T& context);
+  private: /* Private executors */
+    /* Execute a command, the command line is the user's input to launch a command
+     * The common_context is the data structure to exchange data between commands
+     */
+    void execute_command(const char* cmd_line, T& common_context);
   private: /* Internal data */ 
-    /* The name of the shell*/
+    /* Name of the shell, this will appear in the interactive mode */
     std::string name_;
+
+    /* Title of the shell, this will appear in the interactive mode as an introduction */
+    std::string title_;
 
     /* Unique ids for each command */
     vtr::vector<ShellCommandId, ShellCommandId> command_ids_;  
