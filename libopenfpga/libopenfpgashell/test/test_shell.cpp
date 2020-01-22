@@ -12,23 +12,6 @@ using namespace minishell;
 class ShellContext {
 };
 
-static 
-void shell_cmd_help_executor(ShellContext& context, 
-                             const Command& cmd,
-                             const CommandContext& cmd_context) {
-  VTR_LOG("Help desk:\n");
-  VTR_LOG("Available commands:\n");
-  VTR_LOG("help\texit\n");
-}
-
-static 
-void shell_cmd_exit_executor(ShellContext& context, 
-                             const Command& cmd,
-                             const CommandContext& cmd_context) {
-  VTR_LOG("Thank you for using!\n");
-  exit(1);
-}
-
 int main(int argc, char** argv) {
   /* Create the command to launch shell in different modes */
   Command start_cmd("test_shell");
@@ -52,15 +35,45 @@ int main(int argc, char** argv) {
    * 2. exit
    */
   Shell<ShellContext> shell("test_shell");
-  shell.add_title("This is a simple test shell\nAuthor: Xifan Tang\n");
+  std::string shell_title;
 
-  Command shell_cmd_help("help");
-  ShellCommandId shell_cmd_help_id = shell.add_command(shell_cmd_help, "Launch help desk");
-  shell.set_command_execute_function(shell_cmd_help_id, shell_cmd_help_executor);
+  shell_title += std::string("The MIT License\n");
+  shell_title += std::string("\n");
+  shell_title += std::string("Copyright (c) 2018 LNIS - The University of Utah\n");
+  shell_title += std::string("\n");
+  shell_title += std::string("Permission is hereby granted, free of charge, to any person obtaining a copy\n");
+  shell_title += std::string("of this software and associated documentation files (the \"Software\"), to deal\n");
+  shell_title += std::string("in the Software without restriction, including without limitation the rights\n");
+  shell_title += std::string("to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n");
+  shell_title += std::string("copies of the Software, and to permit persons to whom the Software is\n");
+  shell_title += std::string("furnished to do so, subject to the following conditions:\n");
+  shell_title += std::string("\n");
+  shell_title += std::string("The above copyright notice and this permission notice shall be included in\n");
+  shell_title += std::string("all copies or substantial portions of the Software.\n");
+  shell_title += std::string("\n");
+  shell_title += std::string("THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n");
+  shell_title += std::string("IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n");
+  shell_title += std::string("FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n");
+  shell_title += std::string("AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n");
+  shell_title += std::string("LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n");
+  shell_title += std::string("OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n");
+  shell_title += std::string("THE SOFTWARE.\n");
+
+  shell.add_title(shell_title.c_str());
+
+  /* Add a new class of commands */
+  ShellCommandClassId basic_cmd_class = shell.add_command_class("Basic");
 
   Command shell_cmd_exit("exit");
   ShellCommandId shell_cmd_exit_id = shell.add_command(shell_cmd_exit, "Exit the shell");
-  shell.set_command_execute_function(shell_cmd_exit_id, shell_cmd_exit_executor);
+  shell.set_command_class(shell_cmd_exit_id, basic_cmd_class);
+  shell.set_command_execute_function(shell_cmd_exit_id, [shell](){shell.exit();});
+
+  /* Note: help must be the last to add because the linking to execute function will do a snapshot on the shell */
+  Command shell_cmd_help("help");
+  ShellCommandId shell_cmd_help_id = shell.add_command(shell_cmd_help, "Launch help desk");
+  shell.set_command_class(shell_cmd_help_id, basic_cmd_class);
+  shell.set_command_execute_function(shell_cmd_help_id, [shell](){shell.print_commands();});
 
   /* Create the data base for the shell */
   ShellContext shell_context;
@@ -88,6 +101,8 @@ int main(int argc, char** argv) {
                             shell_context);
       return 0;
     }
+    /* Reach here there is something wrong, show the help desk */
+    print_command_options(start_cmd);
   }
 
   return 0;
