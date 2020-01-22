@@ -17,7 +17,6 @@
 /* Headers from openfpgashell library */
 #include "command_parser.h"
 #include "command_echo.h"
-#include "shell.h"
 
 /* Begin namespace minishell */
 namespace minishell {
@@ -86,7 +85,7 @@ std::vector<ShellCommandId> Shell<T>::command_dependency(const ShellCommandId& c
  * Public mutators
  ***********************************************************************/
 template<class T>
-void Shell<T>::set_title(const char* title) {
+void Shell<T>::add_title(const char* title) {
   title_ = std::string(title);
 }
 
@@ -109,20 +108,20 @@ ShellCommandId Shell<T>::add_command(const Command& cmd, const char* descr) {
   command_dependencies_.emplace_back();
 
   /* Register the name in the name2id map */
-  command_name2ids_[std::string(name)] = cmd.name();
+  command_name2ids_[cmd.name()] = shell_cmd;
 
   return shell_cmd;
 } 
 
 template<class T>
-void Shell<T>::add_command_execute_function(const ShellCommandId& cmd_id, 
-                                            std::function<void(T, const CommandContext&)> exec_func) {
+void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id, 
+                                            std::function<void(T&, const Command&, const CommandContext&)> exec_func) {
   VTR_ASSERT(true == valid_command_id(cmd_id));
   command_execute_functions_[cmd_id] = exec_func;
 }
 
 template<class T>
-void Shell<T>::add_command_dependency(const ShellCommandId& cmd_id,
+void Shell<T>::set_command_dependency(const ShellCommandId& cmd_id,
                                       const std::vector<ShellCommandId> dependent_cmds) {
   /* Validate the command id as well as each of the command dependency */
   VTR_ASSERT(true == valid_command_id(cmd_id));
@@ -142,7 +141,7 @@ void Shell<T>::run_interactive_mode(T& context) {
 
   /* Print the title of the shell */
   if (!title().empty()) {
-    VTR_LOG("%s\n", title());
+    VTR_LOG("%s\n", title().c_str());
   }
 
   /* Wait for users input and execute the command */
@@ -169,7 +168,7 @@ void Shell<T>::run_script_mode(const char* script_file_name, T& context) {
 
   /* Print the title of the shell */
   if (!title().empty()) {
-    VTR_LOG("%s\n", title());
+    VTR_LOG("%s\n", title().c_str());
   } 
 
   std::string line;
@@ -232,7 +231,7 @@ void Shell<T>::execute_command(const char* cmd_line,
   print_command_context(commands_[cmd_id], command_contexts_[cmd_id]);
   
   /* Execute the command! */ 
-  command_execute_functions_[cmd_id](common_context, command_contexts_[cmd_id]);
+  command_execute_functions_[cmd_id](common_context, commands_[cmd_id], command_contexts_[cmd_id]);
 }
 
 /************************************************************************

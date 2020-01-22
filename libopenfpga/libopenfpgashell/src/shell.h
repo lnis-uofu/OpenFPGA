@@ -68,11 +68,11 @@ class Shell {
     const CommandContext& command_context(const ShellCommandId& cmd_id) const;
     std::vector<ShellCommandId> command_dependency(const ShellCommandId& cmd_id) const;
   public: /* Public mutators */
-    void set_title(const char* title);
+    void add_title(const char* title);
     ShellCommandId add_command(const Command& cmd, const char* descr);
-    void add_command_execute_function(const ShellCommandId& cmd_id,
-                                      std::function<void(T, const CommandContext&)> exec_func);
-    void add_command_dependency(const ShellCommandId& cmd_id,
+    void set_command_execute_function(const ShellCommandId& cmd_id,
+                                      std::function<void(T&, const Command&, const CommandContext&)> exec_func);
+    void set_command_dependency(const ShellCommandId& cmd_id,
                                 const std::vector<ShellCommandId> cmd_dependency);
   public: /* Public validators */
     bool valid_command_id(const ShellCommandId& cmd_id) const;
@@ -106,7 +106,7 @@ class Shell {
     vtr::vector<ShellCommandId, std::string> command_description_;  
 
     /* Function pointers to execute each command */
-    vtr::vector<ShellCommandId, std::function<void(T, const CommandContext&)>> command_execute_functions_;  
+    vtr::vector<ShellCommandId, std::function<void(T&, const Command&, const CommandContext&)>> command_execute_functions_;  
 
     /* Dependency graph for different commands,
      * This helps the shell interface to check if a command need other commands to be run before its execution  
@@ -118,5 +118,8 @@ class Shell {
 };
 
 } /* End namespace minshell */
+
+/* Include the implementation functions in the header file */
+#include "shell.tpp"
 
 #endif
