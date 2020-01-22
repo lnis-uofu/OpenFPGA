@@ -42,7 +42,7 @@ enum e_option_value_type {
  * This data structure should NOT contain any parsing results!
  * It should be a read-only once created!
  *
- * An exampe of how to use
+ * An example of how to use
  * -----------------------
  * // Create a new command with a name of 'read_file'
  * // This command can be called as 
