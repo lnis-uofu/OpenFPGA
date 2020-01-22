@@ -4,7 +4,7 @@
 #include "command_parser.h"
 #include "command_echo.h"
 
-using namespace minishell;
+using namespace openfpga;
 
 int main(int argc, char** argv) {
   /* Create a new command */

@@ -4,8 +4,8 @@
 #include "vtr_assert.h"
 #include "command_context.h"
 
-/* Begin namespace minishell */
-namespace minishell {
+/* Begin namespace openfpga */
+namespace openfpga {
 
 /*********************************************************************
  * Public constructor
@@ -66,4 +66,4 @@ void CommandContext::set_option_value(const Command& command,
   option_values_[option_id] = value;
 }
 
-} /* End namespace minshell */
+} /* End namespace openfpga */

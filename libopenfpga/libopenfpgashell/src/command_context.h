@@ -6,8 +6,8 @@
 #include "command_fwd.h"
 #include "command.h"
 
-/* Begin namespace minishell */
-namespace minishell {
+/* Begin namespace openfpga */
+namespace openfpga {
 
 /*********************************************************************
  * Data structure to stores parsing results for a command
@@ -54,6 +54,6 @@ class CommandContext {
     vtr::vector<CommandOptionId, std::string> option_values_;  
 };
 
-} /* End namespace minshell */
+} /* End namespace openfpga */
 
 #endif

@@ -12,13 +12,13 @@
  * Function declaration
  *******************************************************************/
 
-/* Begin namespace minishell */
-namespace minishell {
+/* Begin namespace openfpga */
+namespace openfpga {
 
 bool parse_command(const std::vector<std::string>& argv,
                    const Command& cmd,
                    CommandContext& cmd_context);
 
-} /* End namespace minshell */
+} /* End namespace openfpga */
 
 #endif

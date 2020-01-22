@@ -19,8 +19,8 @@
 #include "command_parser.h"
 #include "command_echo.h"
 
-/* Begin namespace minishell */
-namespace minishell {
+/* Begin namespace openfpga */
+namespace openfpga {
 
 /*********************************************************************
  * Public constructors
@@ -380,4 +380,4 @@ bool Shell<T>::valid_command_class_id(const ShellCommandClassId& cmd_class_id) c
   return ( size_t(cmd_class_id) < command_class_ids_.size() ) && ( cmd_class_id == command_class_ids_[cmd_class_id] ); 
 }
 
-} /* End namespace minshell */
+} /* End namespace openfpga */

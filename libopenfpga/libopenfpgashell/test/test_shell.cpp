@@ -7,10 +7,25 @@
 #include "command_echo.h"
 #include "shell.h"
 
-using namespace minishell;
+using namespace openfpga;
 
 class ShellContext {
+  public:
+    int a;
 };
+
+static
+void shell_execute_set(ShellContext& context, 
+                       const Command& cmd, const CommandContext& cmd_context) {
+  CommandOptionId opt_id = cmd.option("value");
+  /* Get the value of a in the command context */
+  context.a = std::atoi(cmd_context.option_value(cmd, opt_id).c_str());
+}
+
+static
+void shell_execute_print(ShellContext& context) {
+  VTR_LOG("a=%d\n", context.a);
+}
 
 int main(int argc, char** argv) {
   /* Create the command to launch shell in different modes */
@@ -60,6 +75,27 @@ int main(int argc, char** argv) {
   shell_title += std::string("THE SOFTWARE.\n");
 
   shell.add_title(shell_title.c_str());
+
+  /* Add a new class of commands */
+  ShellCommandClassId arith_cmd_class = shell.add_command_class("Arithmetic");
+
+  /* Create a command of 'set' with a required option 'value' with a value 
+   * This function sets a value to an internal variable of ShellContext 
+   */
+  Command shell_cmd_set("set");
+  CommandOptionId set_opt_value = shell_cmd_set.add_option("value", true, "value of variable");
+  shell_cmd_set.set_option_require_value(set_opt_value, OPT_STRING);
+  ShellCommandId shell_cmd_set_id = shell.add_command(shell_cmd_set, "Set a value to internal variable 'a'");
+  shell.set_command_class(shell_cmd_set_id, arith_cmd_class);
+  shell.set_command_execute_function(shell_cmd_set_id, shell_execute_set);
+
+  /* Create a command of 'print' 
+   * This function will print the value of an internal variable of ShellContext 
+   */
+  Command shell_cmd_print("print");
+  ShellCommandId shell_cmd_print_id = shell.add_command(shell_cmd_print, "Print the value of internal variable 'a'");
+  shell.set_command_class(shell_cmd_print_id, arith_cmd_class);
+  shell.set_command_execute_function(shell_cmd_print_id, shell_execute_print);
 
   /* Add a new class of commands */
   ShellCommandClassId basic_cmd_class = shell.add_command_class("Basic");

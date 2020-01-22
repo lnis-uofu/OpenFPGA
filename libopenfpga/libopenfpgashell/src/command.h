@@ -23,8 +23,8 @@
 #include "vtr_range.h"
 #include "command_fwd.h"
 
-/* Begin namespace minishell */
-namespace minishell {
+/* Begin namespace openfpga */
+namespace openfpga {
 
 /*********************************************************************
  * Supported date types of value which is followed by a command-line option
@@ -139,6 +139,6 @@ class Command {
     std::map<std::string, CommandOptionId> option_short_name2ids_;
 };
 
-} /* End namespace minshell */
+} /* End namespace openfpga */
 
 #endif

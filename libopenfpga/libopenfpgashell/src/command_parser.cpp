@@ -10,8 +10,8 @@
 #include "vtr_log.h"
 #include "command_parser.h"
 
-/* Begin namespace minishell */
-namespace minishell {
+/* Begin namespace openfpga */
+namespace openfpga {
 
 /********************************************************************
  * Try to find an option in the command and update the CommandContext if needed
@@ -25,6 +25,7 @@ CommandOptionId parse_option(const std::string& argv,
   if (CommandOptionId::INVALID() == option_id) {
     VTR_LOG("Detect unknown option '--%s'!\n",
             argv.c_str());
+    return CommandOptionId::INVALID();
   }
   /* Found, update the CommandContext */
   cmd_context.set_option(cmd, option_id, true);
@@ -45,6 +46,7 @@ CommandOptionId parse_short_option(const std::string& argv,
   if (CommandOptionId::INVALID() == option_id) {
     VTR_LOG("Detect unknown short option '-%s'!\n",
             argv.c_str());
+    return CommandOptionId::INVALID();
   }
   /* Found, update the CommandContext */
   cmd_context.set_option(cmd, option_id, true);
@@ -160,4 +162,4 @@ bool parse_command(const std::vector<std::string>& argv,
   return true;
 }
 
-} /* End namespace minshell */
+} /* End namespace openfpga */

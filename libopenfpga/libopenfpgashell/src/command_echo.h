@@ -11,14 +11,14 @@
  * Function declaration
  *******************************************************************/
 
-/* Begin namespace minishell */
-namespace minishell {
+/* Begin namespace openfpga */
+namespace openfpga {
 
 void print_command_options(const Command& cmd);
 
 void print_command_context(const Command& cmd, 
                            const CommandContext& cmd_context);
 
-} /* End namespace minshell */
+} /* End namespace openfpga */
 
 #endif

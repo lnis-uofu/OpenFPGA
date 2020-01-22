@@ -6,18 +6,18 @@
 #include "vtr_log.h"
 #include "command_echo.h"
 
-/* Begin namespace minishell */
-namespace minishell {
+/* Begin namespace openfpga */
+namespace openfpga {
 
 /*********************************************************************
  * Print all the options that are defined in an object Command
  * This function is mainly used to create help desk for a command
  ********************************************************************/
 void print_command_options(const Command& cmd) {
-  VTR_LOG("Command '%s' usage:\n",
-          cmd.name().c_str());
+  VTR_LOG("Command '%s' usage:\n%lu options available\n",
+          cmd.name().c_str(), cmd.options().size());
   for (const CommandOptionId& opt : cmd.options()) {
-    VTR_LOG("--%s, -%s : %s\n",
+    VTR_LOG("\t--%s, -%s : %s\n",
             cmd.option_name(opt).c_str(),
             cmd.option_short_name(opt).c_str(),
             cmd.option_description(opt).c_str());

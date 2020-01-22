@@ -12,8 +12,8 @@
 #include "command_context.h"
 #include "shell_fwd.h"
 
-/* Begin namespace minishell */
-namespace minishell {
+/* Begin namespace openfpga */
+namespace openfpga {
 
 /*********************************************************************
  * Data structure to define a working environment of a mini shell
@@ -171,7 +171,7 @@ class Shell {
     vtr::vector<ShellCommandClassId, std::vector<ShellCommandId>> commands_by_classes_;  
 };
 
-} /* End namespace minshell */
+} /* End namespace openfpga */
 
 /* Include the template implementation functions in the header file */
 #include "shell.tpp"

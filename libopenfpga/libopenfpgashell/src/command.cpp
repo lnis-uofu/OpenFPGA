@@ -4,8 +4,8 @@
 #include "vtr_assert.h"
 #include "command.h"
 
-/* Begin namespace minishell */
-namespace minishell {
+/* Begin namespace openfpga */
+namespace openfpga {
 
 /*********************************************************************
  * Public constructors
@@ -169,4 +169,4 @@ bool Command::valid_option_id(const CommandOptionId& option_id) const {
   return ( size_t(option_id) < option_ids_.size() ) && ( option_id == option_ids_[option_id] ); 
 }
 
-} /* End namespace minshell */
+} /* End namespace openfpga */
