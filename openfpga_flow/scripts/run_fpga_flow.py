@@ -80,6 +80,8 @@ parser.add_argument('--run_dir', type=str,
                     help="Directory to store intermidiate file & final results")
 parser.add_argument('--yosys_tmpl', type=str,
                     help="Alternate yosys template, generates top_module.blif")
+parser.add_argument('--disp', action="store_true",
+                    help="Open display while running VPR")
 parser.add_argument('--debug', action="store_true",
                     help="Run script in debug mode")
 
@@ -582,9 +584,9 @@ def run_vpr():
     ExecTime["VPRStart"] = time.time()
     # Format the BLIF File
     cmd = r"mv %s.blif %s.blif.bak && cat %s.blif.bak" % (
-                                args.top_module,
-                                args.top_module,
-                                args.top_module)
+        args.top_module,
+        args.top_module,
+        args.top_module)
     cmd += r"| sed 's/$/./' | fold -s -w80 "
     cmd += r"| sed 's/[^.]$/ \\/' | sed 's/[.]$/ /'"
     cmd += " > %s.blif" % args.top_module
@@ -651,9 +653,11 @@ def run_standard_vpr(bench_blif, fixed_chan_width, logfile, route_only=False):
                "--net_file", args.top_module+"_vpr.net",
                "--place_file", args.top_module+"_vpr.place",
                "--route_file", args.top_module+"_vpr.route",
-               "--full_stats", "--nodisp",
+               "--full_stats",
                "--activity_file", args.top_module+"_ace_out.act",
                ]
+    if not args.disp:
+        command += ["--nodisp"]
     if route_only:
         command += ["--route"]
     # Power options
