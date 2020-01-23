@@ -11,7 +11,7 @@ my ($fname,$frpt);
 
 sub print_usage()
 {
-  print "VPR accepts a certain format of blif so this script checks the latches and corrects them if needed\n"
+  print "VPR accepts a certain format of blif so this script checks the latches and corrects them if needed\n";
   print "Usage:\n";
   print "      perl <script_name.pl> [-options]\n";
   print "      Options:(Mandatory!)\n";

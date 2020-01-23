@@ -16,9 +16,10 @@ mkdir build && cd build            # Create a folder named build in the OpenPFGA
 cmake ..  -DCMAKE_BUILD_TYPE=debug # Create a Makefile in this folder using cmake
 make                               # Compile the tool and its dependencies
 ```
+*cmake3.12 is required to use graphical interface*
 
 We currently target OpenFPGA for:
- 1. Ubuntu 16.04
+ 1. Ubuntu 18.04
  2. Red Hat 7.5
  3. MacOS Mojave 10.14.4
 
