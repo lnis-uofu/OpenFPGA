@@ -176,7 +176,7 @@ void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id,
 
 template<class T>
 void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id, 
-                                            std::function<void(int, char**)> exec_func) {
+                                            std::function<int(int, const char**)> exec_func) {
   VTR_ASSERT(true == valid_command_id(cmd_id));
   command_execute_function_types_[cmd_id] = MACRO;
   command_macro_execute_functions_[cmd_id] = exec_func;
@@ -358,7 +358,7 @@ void Shell<T>::execute_command(const char* cmd_line,
       strcpy(argv[itok], tokens[itok].c_str());
     }
     /* Execute the marco function */
-    command_macro_execute_functions_[cmd_id](tokens.size(), argv);
+    command_macro_execute_functions_[cmd_id](tokens.size(), (const char**)argv);
     /* Free the argv */
     for (size_t itok = 0; itok < tokens.size(); ++itok) {
       free(argv[itok]);
