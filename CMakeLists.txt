@@ -165,6 +165,7 @@ add_subdirectory(abc)
 add_subdirectory(ace2)
 add_subdirectory(vpr7_x2p)
 add_subdirectory(vpr)
+add_subdirectory(openfpga)
 
 # run make to extract compiler options, linker options and list of source files
 #add_custom_target(
@@ -243,3 +244,9 @@ set_target_properties(libvpr8 vpr8
   ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr"
   LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr"
   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr")
+
+set_target_properties(libopenfpga openfpga
+  PROPERTIES
+  ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/openfpga"
+  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/openfpga"
+  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/openfpga")

@@ -1,11 +1,12 @@
 /********************************************************************
- * Test the shell interface by pre-defining simple commands
- * like exit() and help()
+ * Build the OpenFPGA shell interface 
  *******************************************************************/
 #include "vtr_log.h"
 #include "command_parser.h"
 #include "command_echo.h"
 #include "shell.h"
+
+#include "vpr_main.h"
 
 using namespace openfpga;
 
@@ -27,28 +28,17 @@ void shell_execute_print(ShellContext& context) {
   VTR_LOG("a=%d\n", context.a);
 }
 
-static
-int shell_execute_print_macro(int argc, const char** argv) {
-  VTR_LOG("Number of arguments: %d\n", argc);
-  VTR_LOG("Detailed arguments:\n");
-  for (int iarg = 0; iarg < argc; ++iarg) {
-    VTR_LOG("\t[%d]: %s\n", iarg, argv[iarg]);
-  }
-
-  return 0;
-}
-
 int main(int argc, char** argv) {
   /* Create the command to launch shell in different modes */
-  Command start_cmd("test_shell");
+  Command start_cmd("OpenFPGA");
   /* Add two options:
    * '--interactive', -i': launch the interactive mode 
    * '--file', -f': launch the script mode 
    */
-  CommandOptionId opt_interactive = start_cmd.add_option("interactive", false, "Launch the shell in interactive mode");
+  CommandOptionId opt_interactive = start_cmd.add_option("interactive", false, "Launch OpenFPGA in interactive mode");
   start_cmd.set_option_short_name(opt_interactive, "i");
 
-  CommandOptionId opt_script_mode = start_cmd.add_option("file", false, "Launch the shell in script mode");
+  CommandOptionId opt_script_mode = start_cmd.add_option("file", false, "Launch OpenFPGA in script mode");
   start_cmd.set_option_require_value(opt_script_mode, OPT_STRING);
   start_cmd.set_option_short_name(opt_script_mode, "f");
 
@@ -60,9 +50,10 @@ int main(int argc, char** argv) {
    * 1. help
    * 2. exit
    */
-  Shell<ShellContext> shell("test_shell");
+  Shell<ShellContext> shell("OpenFPGA");
   std::string shell_title;
 
+  shell_title += std::string("Author: Xifan Tang\n");
   shell_title += std::string("The MIT License\n");
   shell_title += std::string("\n");
   shell_title += std::string("Copyright (c) 2018 LNIS - The University of Utah\n");
@@ -108,13 +99,12 @@ int main(int argc, char** argv) {
   shell.set_command_class(shell_cmd_print_id, arith_cmd_class);
   shell.set_command_execute_function(shell_cmd_print_id, shell_execute_print);
 
-  /* Create a macro command of 'print_macro' 
-   * This function will print the value of an internal variable of ShellContext 
+  /* Create a macro command of 'vpr' which will call the main engine of vpr 
    */
-  Command shell_cmd_print_macro("print_macro");
-  ShellCommandId shell_cmd_print_macro_id = shell.add_command(shell_cmd_print_macro, "A macro function to print arguments");
-  shell.set_command_class(shell_cmd_print_macro_id, arith_cmd_class);
-  shell.set_command_execute_function(shell_cmd_print_macro_id, shell_execute_print_macro);
+  Command shell_cmd_vpr("vpr");
+  ShellCommandId shell_cmd_vpr_id = shell.add_command(shell_cmd_vpr, "A macro function to print arguments");
+  shell.set_command_class(shell_cmd_vpr_id, arith_cmd_class);
+  shell.set_command_execute_function(shell_cmd_vpr_id, vpr::vpr);
 
 
   /* Add a new class of commands */
