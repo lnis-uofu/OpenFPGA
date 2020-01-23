@@ -16,9 +16,20 @@ mkdir build && cd build            # Create a folder named build in the OpenPFGA
 cmake ..  -DCMAKE_BUILD_TYPE=debug # Create a Makefile in this folder using cmake
 make                               # Compile the tool and its dependencies
 ```
+*cmake3.12 is recommended to compile OpenFPGA with GUI*
 
+**Quick Compilation Verification**
+To quickly verify the tool is well compiled, user can run the following command from OpenFPGA root repository.
+```bash
+python3 openfpga_flow/scripts/run_fpga_task.py compilation_verification --debug --show_thread_logs
+```
+
+*Python3 and iVerilog v10.1+ are required. GUI will pop-up if enabled during compilation.*
+
+
+**Supported Operating Systems**
 We currently target OpenFPGA for:
- 1. Ubuntu 16.04
+ 1. Ubuntu 18.04
  2. Red Hat 7.5
  3. MacOS Mojave 10.14.4
 

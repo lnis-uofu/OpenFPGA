@@ -7,7 +7,7 @@ OpenFPGA requires all the following dependencies:
 - bash
 - bison
 - build-essential
-- cmake (version 3.X at least)
+- cmake (version 3.12 for graphical interface or at least 3.X)
 - ctags
 - curl
 - doxygen
