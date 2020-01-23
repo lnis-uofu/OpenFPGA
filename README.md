@@ -18,6 +18,16 @@ make                               # Compile the tool and its dependencies
 ```
 *cmake3.12 is required to use graphical interface*
 
+**Quick Compilation Verification**
+To quickly verify the tool is well compiled, user can run:
+```bash
+python3 openfpga_flow/scripts/run_fpga_task.py single_mode --debug --show_thread_logs
+```
+
+*Python3 and iVerilog are required. Graphical interface is not used.*
+
+
+**Supported Operating Systems**
 We currently target OpenFPGA for:
  1. Ubuntu 18.04
  2. Red Hat 7.5
