@@ -21,10 +21,10 @@ make                               # Compile the tool and its dependencies
 **Quick Compilation Verification**
 To quickly verify the tool is well compiled, user can run:
 ```bash
-python3 openfpga_flow/scripts/run_fpga_task.py single_mode --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py compilation_verification --debug --show_thread_logs
 ```
 
-*Python3 and iVerilog are required. Graphical interface is not used.*
+*Python3 and iVerilog are required. Graphical interface is used if built with cmake3.12.*
 
 
 **Supported Operating Systems**
