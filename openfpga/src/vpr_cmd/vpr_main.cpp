@@ -19,6 +19,8 @@
 #include "vpr_signal_handler.h"
 #include "vpr_tatum_error.h"
 
+#include "vpr_main.h"
+
 #include "globals.h"
 
 namespace vpr {
