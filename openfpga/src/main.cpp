@@ -53,7 +53,11 @@ int main(int argc, char** argv) {
   Shell<ShellContext> shell("OpenFPGA");
   std::string shell_title;
 
-  shell_title += std::string("Author: Xifan Tang\n");
+  shell_title += std::string("\n");
+  shell_title += std::string("               OpenFPGA: An Open-source FPGA IP Generator\n");
+  shell_title += std::string("\n");
+  shell_title += std::string("Contributors: Xifan Tang\tAurelien Alacchi\tBaudouin Chauviere\n");
+  shell_title += std::string("\n");
   shell_title += std::string("The MIT License\n");
   shell_title += std::string("\n");
   shell_title += std::string("Copyright (c) 2018 LNIS - The University of Utah\n");
