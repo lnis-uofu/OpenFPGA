@@ -1,0 +1,9 @@
+# Call the help desk
+help
+
+# Set a value to the internal variable
+set --value 5
+
+print # Print out the value
+
+exit # Finish
