@@ -128,6 +128,7 @@ ShellCommandId Shell<T>::add_command(const Command& cmd, const char* descr) {
   command_standard_execute_functions_.emplace_back();
   command_short_execute_functions_.emplace_back();
   command_builtin_execute_functions_.emplace_back();
+  command_macro_execute_functions_.emplace_back();
   command_dependencies_.emplace_back();
 
   /* Register the name in the name2id map */
@@ -171,6 +172,14 @@ void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id,
   VTR_ASSERT(true == valid_command_id(cmd_id));
   command_execute_function_types_[cmd_id] = BUILTIN;
   command_builtin_execute_functions_[cmd_id] = exec_func;
+}
+
+template<class T>
+void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id, 
+                                            std::function<void(int, char**)> exec_func) {
+  VTR_ASSERT(true == valid_command_id(cmd_id));
+  command_execute_function_types_[cmd_id] = MACRO;
+  command_macro_execute_functions_[cmd_id] = exec_func;
 }
 
 template<class T>
@@ -337,7 +346,28 @@ void Shell<T>::execute_command(const char* cmd_line,
 
   /* TODO: Check the dependency graph to see if all the prequistics have been met */
 
-  /* Find the command! Parse the options */
+  /* Find the command! Parse the options 
+   * Note:
+   * Macro command will not be parsed! It will be directly executed
+   */
+  if (MACRO == command_execute_function_types_[cmd_id]) {
+    /* Convert the tokens from string to char */
+    char** argv = (char**)malloc(tokens.size() * sizeof(char*));
+    for (size_t itok = 0; itok < tokens.size(); ++itok) {
+      argv[itok] = (char*)malloc((tokens[itok].length() + 1) * sizeof(char));
+      strcpy(argv[itok], tokens[itok].c_str());
+    }
+    /* Execute the marco function */
+    command_macro_execute_functions_[cmd_id](tokens.size(), argv);
+    /* Free the argv */
+    for (size_t itok = 0; itok < tokens.size(); ++itok) {
+      free(argv[itok]);
+    }
+    free(argv);
+    /* Finish for macro command, return */
+    return;
+  }
+ 
   if (false == parse_command(tokens, commands_[cmd_id], command_contexts_[cmd_id])) {
     /* Echo the command */
     print_command_options(commands_[cmd_id]);
@@ -358,6 +388,7 @@ void Shell<T>::execute_command(const char* cmd_line,
   case BUILTIN:
     command_builtin_execute_functions_[cmd_id]();
     break;
+  /* MACRO should be executed eariler in this function. It should not appear here */
   default:
     /* This is not allowed! Error out */
     VTR_LOG("Invalid type of execute function for command '%s'!\n",

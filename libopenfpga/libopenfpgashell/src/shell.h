@@ -61,6 +61,7 @@ class Shell {
       STANDARD,
       SHORT,
       BUILTIN,
+      MACRO,
       NUM_EXEC_FUNC_TYPES
     };
   public: /* Constructor */
@@ -89,6 +90,7 @@ class Shell {
      * 1. Standard function, including the data exchange <T> and commands
      * 2. Short function, including only the data exchange <T>
      * 3. Built-in function, including only the shell envoriment variables
+     * 4. Marco function, which directly call a macro function without command parsing
      * Users just need to specify the function object and its type will be automatically inferred
      */
     void set_command_execute_function(const ShellCommandId& cmd_id,
@@ -97,6 +99,8 @@ class Shell {
                                       std::function<void(T&)> exec_func);
     void set_command_execute_function(const ShellCommandId& cmd_id,
                                       std::function<void()> exec_func);
+    void set_command_execute_function(const ShellCommandId& cmd_id,
+                                      std::function<void(int, char**)> exec_func);
     void set_command_dependency(const ShellCommandId& cmd_id,
                                 const std::vector<ShellCommandId> cmd_dependency);
     ShellCommandClassId add_command_class(const char* name);
@@ -150,10 +154,12 @@ class Shell {
      * 1. Standard function, including the data exchange <T> and commands
      * 2. Short function, including only the data exchange <T>
      * 3. Built-in function, including only the shell envoriment variables
+     * 4. Marco function, which directly call a macro function without command parsing
      */
     vtr::vector<ShellCommandId, std::function<void(T&, const Command&, const CommandContext&)>> command_standard_execute_functions_;  
     vtr::vector<ShellCommandId, std::function<void(T&)>> command_short_execute_functions_;  
     vtr::vector<ShellCommandId, std::function<void()>> command_builtin_execute_functions_;  
+    vtr::vector<ShellCommandId, std::function<void(int, char**)>> command_macro_execute_functions_;  
 
     /* Type of execute functions for each command.
      * This is supposed to be an internal data ONLY 
