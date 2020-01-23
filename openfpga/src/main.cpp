@@ -10,7 +10,8 @@
 #include "shell.h"
 
 /* Header file from openfpga */
-#include "vpr_main.h"
+#include "shell_vpr_cmd.h"
+#include "shell_basic_cmd.h"
 
 #include "openfpga_title.h"
 #include "openfpga_context.h"
@@ -21,21 +22,20 @@ using namespace openfpga;
  * Main function to start OpenFPGA shell interface
  *******************************************************************/
 int main(int argc, char** argv) {
-
   /* Create the command to launch shell in different modes */
   Command start_cmd("OpenFPGA");
   /* Add two options:
    * '--interactive', -i': launch the interactive mode 
    * '--file', -f': launch the script mode 
    */
-  CommandOptionId opt_interactive = start_cmd.add_option("interactive", false, "Launch OpenFPGA in interactive mode");
+  openfpga::CommandOptionId opt_interactive = start_cmd.add_option("interactive", false, "Launch OpenFPGA in interactive mode");
   start_cmd.set_option_short_name(opt_interactive, "i");
 
-  CommandOptionId opt_script_mode = start_cmd.add_option("file", false, "Launch OpenFPGA in script mode");
-  start_cmd.set_option_require_value(opt_script_mode, OPT_STRING);
+  openfpga::CommandOptionId opt_script_mode = start_cmd.add_option("file", false, "Launch OpenFPGA in script mode");
+  start_cmd.set_option_require_value(opt_script_mode, openfpga::OPT_STRING);
   start_cmd.set_option_short_name(opt_script_mode, "f");
 
-  CommandOptionId opt_help = start_cmd.add_option("help", false, "Help desk"); 
+  openfpga::CommandOptionId opt_help = start_cmd.add_option("help", false, "Help desk"); 
   start_cmd.set_option_short_name(opt_help, "h");
 
   /* Create a shell object
@@ -47,29 +47,14 @@ int main(int argc, char** argv) {
 
   shell.add_title(create_openfpga_title());
 
-  /* Add a new class of commands */
-  ShellCommandClassId arith_cmd_class = shell.add_command_class("VPR");
+  /* Add vpr commands */
+  add_vpr_commands(shell);
 
-  /* Create a macro command of 'vpr' which will call the main engine of vpr 
+  /* Add basic commands: exit, help, etc. 
+   * Note:
+   * This MUST be the last command group to be added! 
    */
-  Command shell_cmd_vpr("vpr");
-  ShellCommandId shell_cmd_vpr_id = shell.add_command(shell_cmd_vpr, "Start VPR core engine to pack, place and route a BLIF design on a FPGA architecture");
-  shell.set_command_class(shell_cmd_vpr_id, arith_cmd_class);
-  shell.set_command_execute_function(shell_cmd_vpr_id, vpr::vpr);
-
-  /* Add a new class of commands */
-  ShellCommandClassId basic_cmd_class = shell.add_command_class("Basic");
-
-  Command shell_cmd_exit("exit");
-  ShellCommandId shell_cmd_exit_id = shell.add_command(shell_cmd_exit, "Exit the shell");
-  shell.set_command_class(shell_cmd_exit_id, basic_cmd_class);
-  shell.set_command_execute_function(shell_cmd_exit_id, [shell](){shell.exit();});
-
-  /* Note: help must be the last to add because the linking to execute function will do a snapshot on the shell */
-  Command shell_cmd_help("help");
-  ShellCommandId shell_cmd_help_id = shell.add_command(shell_cmd_help, "Launch help desk");
-  shell.set_command_class(shell_cmd_help_id, basic_cmd_class);
-  shell.set_command_execute_function(shell_cmd_help_id, [shell](){shell.print_commands();});
+  add_basic_commands(shell);
 
   /* Create the data base for the shell */
   OpenfpgaContext openfpga_context;
