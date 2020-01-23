@@ -16,7 +16,7 @@ mkdir build && cd build            # Create a folder named build in the OpenPFGA
 cmake ..  -DCMAKE_BUILD_TYPE=debug # Create a Makefile in this folder using cmake
 make                               # Compile the tool and its dependencies
 ```
-*cmake3.12 is required to use graphical interface*
+*cmake3.12 is recomeanded to compile OpenFPGA with GUI*
 
 **Quick Compilation Verification**
 To quickly verify the tool is well compiled, user can run:
@@ -24,7 +24,7 @@ To quickly verify the tool is well compiled, user can run:
 python3 openfpga_flow/scripts/run_fpga_task.py compilation_verification --debug --show_thread_logs
 ```
 
-*Python3 and iVerilog are required. Graphical interface is used if built with cmake3.12.*
+*Python3 and iVerilog v10.1+ are required. GUI will pop-up if enable during compilation.*
 
 
 **Supported Operating Systems**
