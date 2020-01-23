@@ -37,7 +37,7 @@ namespace vpr {
  * 3.  Place-and-route and timing analysis
  * 4.  Clean up
  */
-int vpr(int argc, const char** argv) {
+int vpr(int argc, char** argv) {
     vtr::ScopedFinishTimer t("The entire flow of VPR");
 
     t_options Options = t_options();
@@ -48,7 +48,7 @@ int vpr(int argc, const char** argv) {
         vpr_install_signal_handler();
 
         /* Read options, architecture, and circuit netlist */
-        vpr_init(argc, argv, &Options, &vpr_setup, &Arch);
+        vpr_init(argc, (const char**)argv, &Options, &vpr_setup, &Arch);
 
         if (Options.show_version) {
             return SUCCESS_EXIT_CODE;

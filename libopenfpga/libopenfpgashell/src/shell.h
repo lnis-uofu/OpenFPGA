@@ -106,7 +106,7 @@ class Shell {
     void set_command_execute_function(const ShellCommandId& cmd_id,
                                       std::function<void()> exec_func);
     void set_command_execute_function(const ShellCommandId& cmd_id,
-                                      std::function<int(int, const char**)> exec_func);
+                                      std::function<int(int, char**)> exec_func);
     void set_command_dependency(const ShellCommandId& cmd_id,
                                 const std::vector<ShellCommandId> cmd_dependency);
     ShellCommandClassId add_command_class(const char* name);
@@ -167,7 +167,7 @@ class Shell {
     vtr::vector<ShellCommandId, std::function<void(const T&)>> command_short_const_execute_functions_; 
     vtr::vector<ShellCommandId, std::function<void(T&)>> command_short_execute_functions_; 
     vtr::vector<ShellCommandId, std::function<void()>> command_builtin_execute_functions_;  
-    vtr::vector<ShellCommandId, std::function<int(int, const char**)>> command_macro_execute_functions_;  
+    vtr::vector<ShellCommandId, std::function<int(int, char**)>> command_macro_execute_functions_;  
 
     /* Type of execute functions for each command.
      * This is supposed to be an internal data ONLY 

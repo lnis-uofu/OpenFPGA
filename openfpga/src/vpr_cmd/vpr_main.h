@@ -4,7 +4,7 @@
 /* Begin namespace vpr */
 namespace vpr {
 
-int vpr(int argc, const char** argv);
+int vpr(int argc, char** argv);
 
 } /* End namespace vpr */
 

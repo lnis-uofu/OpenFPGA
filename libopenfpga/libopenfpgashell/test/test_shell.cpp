@@ -28,7 +28,7 @@ void shell_execute_print(ShellContext& context) {
 }
 
 static
-int shell_execute_print_macro(int argc, const char** argv) {
+int shell_execute_print_macro(int argc, char** argv) {
   VTR_LOG("Number of arguments: %d\n", argc);
   VTR_LOG("Detailed arguments:\n");
   for (int iarg = 0; iarg < argc; ++iarg) {
@@ -115,7 +115,6 @@ int main(int argc, char** argv) {
   ShellCommandId shell_cmd_print_macro_id = shell.add_command(shell_cmd_print_macro, "A macro function to print arguments");
   shell.set_command_class(shell_cmd_print_macro_id, arith_cmd_class);
   shell.set_command_execute_function(shell_cmd_print_macro_id, shell_execute_print_macro);
-
 
   /* Add a new class of commands */
   ShellCommandClassId basic_cmd_class = shell.add_command_class("Basic");
