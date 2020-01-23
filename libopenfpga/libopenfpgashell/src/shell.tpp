@@ -312,7 +312,7 @@ void Shell<T>::print_commands() const {
 
 template <class T>
 void Shell<T>::exit() const {
-  VTR_LOG("Thank you for using %s!\n",
+  VTR_LOG("\nThank you for using %s!\n",
           name().c_str());
   std::exit(0);
 }
