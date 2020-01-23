@@ -58,7 +58,9 @@ class Shell {
      * Built-in commands have their own execute functions inside the shell
      */
     enum e_exec_func_type {
+      CONST_STANDARD,
       STANDARD,
+      CONST_SHORT,
       SHORT,
       BUILTIN,
       MACRO,
@@ -94,7 +96,11 @@ class Shell {
      * Users just need to specify the function object and its type will be automatically inferred
      */
     void set_command_execute_function(const ShellCommandId& cmd_id,
+                                      std::function<void(const T&, const Command&, const CommandContext&)> exec_func);
+    void set_command_execute_function(const ShellCommandId& cmd_id,
                                       std::function<void(T&, const Command&, const CommandContext&)> exec_func);
+    void set_command_execute_function(const ShellCommandId& cmd_id,
+                                      std::function<void(const T&)> exec_func);
     void set_command_execute_function(const ShellCommandId& cmd_id,
                                       std::function<void(T&)> exec_func);
     void set_command_execute_function(const ShellCommandId& cmd_id,
@@ -156,8 +162,10 @@ class Shell {
      * 3. Built-in function, including only the shell envoriment variables
      * 4. Marco function, which directly call a macro function without command parsing
      */
+    vtr::vector<ShellCommandId, std::function<void(const T&, const Command&, const CommandContext&)>> command_const_execute_functions_;  
     vtr::vector<ShellCommandId, std::function<void(T&, const Command&, const CommandContext&)>> command_standard_execute_functions_;  
-    vtr::vector<ShellCommandId, std::function<void(T&)>> command_short_execute_functions_;  
+    vtr::vector<ShellCommandId, std::function<void(const T&)>> command_short_const_execute_functions_; 
+    vtr::vector<ShellCommandId, std::function<void(T&)>> command_short_execute_functions_; 
     vtr::vector<ShellCommandId, std::function<void()>> command_builtin_execute_functions_;  
     vtr::vector<ShellCommandId, std::function<int(int, const char**)>> command_macro_execute_functions_;  
 

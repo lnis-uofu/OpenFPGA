@@ -125,7 +125,9 @@ ShellCommandId Shell<T>::add_command(const Command& cmd, const char* descr) {
   command_description_.push_back(descr);
   command_classes_.push_back(ShellCommandClassId::INVALID());
   command_execute_function_types_.emplace_back();
+  command_const_execute_functions_.emplace_back();
   command_standard_execute_functions_.emplace_back();
+  command_short_const_execute_functions_.emplace_back();
   command_short_execute_functions_.emplace_back();
   command_builtin_execute_functions_.emplace_back();
   command_macro_execute_functions_.emplace_back();
@@ -152,10 +154,26 @@ void Shell<T>::set_command_class(const ShellCommandId& cmd_id, const ShellComman
 
 template<class T>
 void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id, 
+                                            std::function<void(const T&, const Command&, const CommandContext&)> exec_func) {
+  VTR_ASSERT(true == valid_command_id(cmd_id));
+  command_execute_function_types_[cmd_id] = CONST_STANDARD;
+  command_standard_execute_functions_[cmd_id] = exec_func;
+}
+
+template<class T>
+void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id, 
                                             std::function<void(T&, const Command&, const CommandContext&)> exec_func) {
   VTR_ASSERT(true == valid_command_id(cmd_id));
   command_execute_function_types_[cmd_id] = STANDARD;
   command_standard_execute_functions_[cmd_id] = exec_func;
+}
+
+template<class T>
+void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id, 
+                                            std::function<void(const T&)> exec_func) {
+  VTR_ASSERT(true == valid_command_id(cmd_id));
+  command_execute_function_types_[cmd_id] = CONST_SHORT;
+  command_short_execute_functions_[cmd_id] = exec_func;
 }
 
 template<class T>
@@ -379,8 +397,14 @@ void Shell<T>::execute_command(const char* cmd_line,
   
   /* Execute the command depending on the type of function ! */ 
   switch (command_execute_function_types_[cmd_id]) {
+  case CONST_STANDARD:
+    command_const_execute_functions_[cmd_id](common_context, commands_[cmd_id], command_contexts_[cmd_id]);
+    break;
   case STANDARD:
     command_standard_execute_functions_[cmd_id](common_context, commands_[cmd_id], command_contexts_[cmd_id]);
+    break;
+  case CONST_SHORT:
+    command_short_const_execute_functions_[cmd_id](common_context);
     break;
   case SHORT:
     command_short_execute_functions_[cmd_id](common_context);
