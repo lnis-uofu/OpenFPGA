@@ -27,6 +27,15 @@ void shell_execute_print(ShellContext& context) {
   VTR_LOG("a=%d\n", context.a);
 }
 
+static
+void shell_execute_print_macro(int argc, char** argv) {
+  VTR_LOG("Number of arguments: %d\n", argc);
+  VTR_LOG("Detailed arguments:\n");
+  for (int iarg = 0; iarg < argc; ++iarg) {
+    VTR_LOG("\t[%d]: %s\n", iarg, argv[iarg]);
+  }
+}
+
 int main(int argc, char** argv) {
   /* Create the command to launch shell in different modes */
   Command start_cmd("test_shell");
@@ -96,6 +105,15 @@ int main(int argc, char** argv) {
   ShellCommandId shell_cmd_print_id = shell.add_command(shell_cmd_print, "Print the value of internal variable 'a'");
   shell.set_command_class(shell_cmd_print_id, arith_cmd_class);
   shell.set_command_execute_function(shell_cmd_print_id, shell_execute_print);
+
+  /* Create a macro command of 'print_macro' 
+   * This function will print the value of an internal variable of ShellContext 
+   */
+  Command shell_cmd_print_macro("print_macro");
+  ShellCommandId shell_cmd_print_macro_id = shell.add_command(shell_cmd_print_macro, "A macro function to print arguments");
+  shell.set_command_class(shell_cmd_print_macro_id, arith_cmd_class);
+  shell.set_command_execute_function(shell_cmd_print_macro_id, shell_execute_print_macro);
+
 
   /* Add a new class of commands */
   ShellCommandClassId basic_cmd_class = shell.add_command_class("Basic");

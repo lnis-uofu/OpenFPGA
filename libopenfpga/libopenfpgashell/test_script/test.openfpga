@@ -6,4 +6,7 @@ set --value 5
 
 print # Print out the value
 
+# Test macro arguments
+print_macro arch blif
+
 exit # Finish
