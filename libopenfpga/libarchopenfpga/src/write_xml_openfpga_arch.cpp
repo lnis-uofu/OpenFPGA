@@ -4,6 +4,9 @@
  *******************************************************************/
 #include <fstream>
 
+/* Headers from vtrutil library */
+#include "vtr_time.h"
+
 /* Headers from openfpgautil library */
 #include "openfpga_digest.h"
 
@@ -20,6 +23,8 @@
  *******************************************************************/
 void write_xml_openfpga_arch(const char* fname, 
                              const openfpga::Arch& openfpga_arch) {
+  vtr::ScopedStartFinishTimer timer("Write OpenFPGA architecture");
+
   /* Create a file handler */
   std::fstream fp;
   /* Open the file stream */

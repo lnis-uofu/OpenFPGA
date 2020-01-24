@@ -95,12 +95,12 @@ class Shell {
      * 4. Marco function, which directly call a macro function without command parsing
      * Users just need to specify the function object and its type will be automatically inferred
      */
-    void set_command_execute_function(const ShellCommandId& cmd_id,
+    void set_command_const_execute_function(const ShellCommandId& cmd_id,
                                       std::function<void(const T&, const Command&, const CommandContext&)> exec_func);
     void set_command_execute_function(const ShellCommandId& cmd_id,
                                       std::function<void(T&, const Command&, const CommandContext&)> exec_func);
-    void set_command_execute_function(const ShellCommandId& cmd_id,
-                                      std::function<void(const T&)> exec_func);
+    void set_command_const_execute_function(const ShellCommandId& cmd_id,
+                                            std::function<void(const T&)> exec_func);
     void set_command_execute_function(const ShellCommandId& cmd_id,
                                       std::function<void(T&)> exec_func);
     void set_command_execute_function(const ShellCommandId& cmd_id,

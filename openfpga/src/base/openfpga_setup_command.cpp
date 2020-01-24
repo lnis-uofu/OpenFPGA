@@ -20,9 +20,22 @@ void add_openfpga_setup_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   shell_cmd_read_arch.set_option_short_name(read_arch_opt_file, "f");
   shell_cmd_read_arch.set_option_require_value(read_arch_opt_file, openfpga::OPT_STRING);
   
+  /* Add command 'read_openfpga_arch' to the Shell */
   ShellCommandId shell_cmd_read_arch_id = shell.add_command(shell_cmd_read_arch, "read OpenFPGA architecture file");
   shell.set_command_class(shell_cmd_read_arch_id, openfpga_setup_cmd_class);
   shell.set_command_execute_function(shell_cmd_read_arch_id, read_arch);
+
+  /* Command 'write_openfpga_arch' */
+  Command shell_cmd_write_arch("write_openfpga_arch");
+  /* Add an option '--file' in short '-f'*/
+  CommandOptionId write_arch_opt_file = shell_cmd_write_arch.add_option("file", true, "file path to the architecture XML");
+  shell_cmd_write_arch.set_option_short_name(write_arch_opt_file, "f");
+  shell_cmd_write_arch.set_option_require_value(write_arch_opt_file, openfpga::OPT_STRING);
+
+  /* Add command 'write_openfpga_arch' to the Shell */
+  ShellCommandId shell_cmd_write_arch_id = shell.add_command(shell_cmd_write_arch, "write OpenFPGA architecture file");
+  shell.set_command_class(shell_cmd_write_arch_id, openfpga_setup_cmd_class);
+  shell.set_command_const_execute_function(shell_cmd_write_arch_id, write_arch);
 } 
 
 } /* end namespace openfpga */

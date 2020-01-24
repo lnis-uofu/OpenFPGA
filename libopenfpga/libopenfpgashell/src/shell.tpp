@@ -153,11 +153,11 @@ void Shell<T>::set_command_class(const ShellCommandId& cmd_id, const ShellComman
 }
 
 template<class T>
-void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id, 
-                                            std::function<void(const T&, const Command&, const CommandContext&)> exec_func) {
+void Shell<T>::set_command_const_execute_function(const ShellCommandId& cmd_id, 
+                                                  std::function<void(const T&, const Command&, const CommandContext&)> exec_func) {
   VTR_ASSERT(true == valid_command_id(cmd_id));
   command_execute_function_types_[cmd_id] = CONST_STANDARD;
-  command_standard_execute_functions_[cmd_id] = exec_func;
+  command_const_execute_functions_[cmd_id] = exec_func;
 }
 
 template<class T>
@@ -169,11 +169,11 @@ void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id,
 }
 
 template<class T>
-void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id, 
-                                            std::function<void(const T&)> exec_func) {
+void Shell<T>::set_command_const_execute_function(const ShellCommandId& cmd_id, 
+                                                  std::function<void(const T&)> exec_func) {
   VTR_ASSERT(true == valid_command_id(cmd_id));
   command_execute_function_types_[cmd_id] = CONST_SHORT;
-  command_short_execute_functions_[cmd_id] = exec_func;
+  command_short_const_execute_functions_[cmd_id] = exec_func;
 }
 
 template<class T>
