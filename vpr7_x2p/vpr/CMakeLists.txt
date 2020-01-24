@@ -17,7 +17,7 @@ message(STATUS "Checking VPR graphics option ${ENABLE_VPR_GRAPHICS}")
 if (ENABLE_VPR_GRAPHICS)
   # check for dependencies
   message(STATUS "VPR graphics is turned on, searching for dependencies")
-  find_package(X11 COMPONENTS X11 Xft)
+  find_package(X11)
 
   if (NOT X11_FOUND)
     message(WARNING "Failed to find required X11 library (on debian/ubuntu try 'sudo apt-get install libx11-dev' to install)")
