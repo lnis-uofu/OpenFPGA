@@ -3,7 +3,7 @@
  * - exit
  * - help
  *******************************************************************/
-#include "shell_basic_cmd.h"
+#include "basic_command.h"
 
 /* begin namespace openfpga */
 namespace openfpga {

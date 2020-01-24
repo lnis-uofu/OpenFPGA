@@ -1,5 +1,5 @@
-#ifndef SHELL_VPR_CMD_H
-#define SHELL_VPR_CMD_H
+#ifndef VPR_COMMAND_H
+#define VPR_COMMAND_H
 
 /********************************************************************
  * Include header files that are required by function declaration

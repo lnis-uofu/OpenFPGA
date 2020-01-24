@@ -274,12 +274,12 @@
     <pb_type name="io[io_phy].iopad" circuit_model_name="iopad" mode_bits="1"/> 
     <pb_type name="io[io_phy].inpad" physical_pb_type_name="iopad" mode_bits="1"/> 
     <pb_type name="io[io_phy].outpad" physical_pb_type_name="iopad" mode_bits="0"/> 
-    <pb_type name="clb.fle" physical_mode_name="fle_phy" idle_mode_name="n2_lut5">
-    <pb_type name="clb.fle[fle_phy].frac_logic.frac_lut6" mode_bits="11" circuit_model_name="frac_lut6">
-    <pb_type name="clb.fle[fle_phy].frac_logic.adder_phy" circuit_model_name="adder">
-    <pb_type name="clb.fle[fle_phy].frac_logic.ff_phy" circuit_model_name="static_dff">
-    <mode name="fle_phy" disabled_in_packing="true">
-    <pb_type name="lut5" mode_bits="01" physical_pb_type_name="frac_lut6" physical_pb_type_index_factor="0.5">
+    <pb_type name="clb.fle" physical_mode_name="fle_phy" idle_mode_name="n2_lut5"/>
+    <pb_type name="clb.fle[fle_phy].frac_logic.frac_lut6" mode_bits="11" circuit_model_name="frac_lut6"/>
+    <pb_type name="clb.fle[fle_phy].frac_logic.adder_phy" circuit_model_name="adder"/>
+    <pb_type name="clb.fle[fle_phy].frac_logic.ff_phy" circuit_model_name="static_dff"/>
+    <mode name="fle_phy" disabled_in_packing="true"/>
+    <pb_type name="lut5" mode_bits="01" physical_pb_type_name="frac_lut6" physical_pb_type_index_factor="0.5"/>
     <input name="in" physical_mode_pin="in[5:0]"/>
     <output name="out" physical_mode_pin="lut5_out" physical_mode_pin_rotate_offset="1"/>
   </complex_blocks>

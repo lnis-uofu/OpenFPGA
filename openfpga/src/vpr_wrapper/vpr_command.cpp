@@ -3,7 +3,7 @@
  *******************************************************************/
 #include "vpr_main.h"
 
-#include "shell_vpr_cmd.h"
+#include "vpr_command.h"
 
 /* begin namespace openfpga */
 namespace openfpga {

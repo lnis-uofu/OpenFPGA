@@ -10,20 +10,19 @@
 #include "shell.h"
 
 /* Header file from openfpga */
-#include "shell_vpr_cmd.h"
-#include "shell_basic_cmd.h"
+#include "vpr_command.h"
+#include "openfpga_setup_command.h"
+#include "basic_command.h"
 
 #include "openfpga_title.h"
 #include "openfpga_context.h"
-
-using namespace openfpga;
 
 /********************************************************************
  * Main function to start OpenFPGA shell interface
  *******************************************************************/
 int main(int argc, char** argv) {
   /* Create the command to launch shell in different modes */
-  Command start_cmd("OpenFPGA");
+  openfpga::Command start_cmd("OpenFPGA");
   /* Add two options:
    * '--interactive', -i': launch the interactive mode 
    * '--file', -f': launch the script mode 
@@ -43,18 +42,21 @@ int main(int argc, char** argv) {
    * 1. exit
    * 2. help. This must the last to add
    */
-  Shell<OpenfpgaContext> shell("OpenFPGA");
+  openfpga::Shell<OpenfpgaContext> shell("OpenFPGA");
 
   shell.add_title(create_openfpga_title());
 
   /* Add vpr commands */
-  add_vpr_commands(shell);
+  openfpga::add_vpr_commands(shell);
+
+  /* Add openfpga setup commands */
+  openfpga::add_openfpga_setup_commands(shell);
 
   /* Add basic commands: exit, help, etc. 
    * Note:
    * This MUST be the last command group to be added! 
    */
-  add_basic_commands(shell);
+  openfpga::add_basic_commands(shell);
 
   /* Create the data base for the shell */
   OpenfpgaContext openfpga_context;
@@ -66,10 +68,10 @@ int main(int argc, char** argv) {
     cmd_opts.push_back(std::string(argv[iarg]));
   }
 
-  CommandContext start_cmd_context(start_cmd);
+  openfpga::CommandContext start_cmd_context(start_cmd);
   if (false == parse_command(cmd_opts, start_cmd, start_cmd_context)) {
     /* Parse fail: Echo the command */
-    print_command_options(start_cmd);
+    openfpga::print_command_options(start_cmd);
   } else {
     /* Parse succeed. Start a shell */ 
     if (true == start_cmd_context.option_enable(start_cmd, opt_interactive)) {
@@ -83,7 +85,7 @@ int main(int argc, char** argv) {
       return 0;
     }
     /* Reach here there is something wrong, show the help desk */
-    print_command_options(start_cmd);
+    openfpga::print_command_options(start_cmd);
   }
 
   return 0;

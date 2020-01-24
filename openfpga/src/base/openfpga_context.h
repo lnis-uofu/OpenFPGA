@@ -1,6 +1,7 @@
 #ifndef OPENFPGA_CONTEXT_H
 #define OPENFPGA_CONTEXT_H
 
+#include "vpr_context.h"
 #include "openfpga_arch.h"
 
 /********************************************************************
@@ -25,9 +26,17 @@
  *      OpenfpgaContext&
  * 3. Please keep the definition of OpenfpgaContext short
  *    Do put ONLY well-modularized data structure under this root.
+ * 4. We build this data structure based on the Context from VPR
+ *    which does NOT allow users to copy the internal members
+ *    This is due to that the data structures in the OpenFPGA context
+ *    are typically big in terms of memory
  *******************************************************************/
-class OpenfpgaContext {
-  private:
+class OpenfpgaContext : public Context  {
+  public:  /* Public accessors */
+    const openfpga::Arch& arch() const { return arch_; }
+  public:  /* Public mutators */
+    openfpga::Arch& mutable_arch() { return arch_; }
+  private: /* Internal data */
     /* Data structure to store information from read_openfpga_arch library */
     openfpga::Arch arch_;
 };
