@@ -6,10 +6,10 @@
  * 3. if nay circuit model miss mandatory ports 
  ***********************************************************************/
 
-/* Header files should be included in a sequence */
-/* Standard header files required go first */
+/* Headers from vtrutil library */
 #include "vtr_assert.h"
 #include "vtr_log.h"
+#include "vtr_time.h"
 
 #include "check_circuit_library.h"
 
@@ -437,7 +437,7 @@ size_t check_circuit_library_ports(const CircuitLibrary& circuit_lib) {
 void check_circuit_library(const CircuitLibrary& circuit_lib) {
   size_t num_err = 0;
 
-  VTR_LOG("Checking circuit models...\n");
+  vtr::ScopedStartFinishTimer timer("Check circuit library");
 
   /* 1. Circuit models have unique names  
    * For each circuit model, we always make sure it does not share any name with any circuit model locating after it

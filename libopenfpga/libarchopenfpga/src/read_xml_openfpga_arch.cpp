@@ -9,6 +9,9 @@
 #include "pugixml.hpp"
 #include "pugixml_util.hpp"
 
+/* Headers from vtrutil library */
+#include "vtr_time.h"
+
 /* Headers from libarchfpga */
 #include "arch_error.h"
 #include "read_xml_util.h"
@@ -26,6 +29,8 @@
  * 1. circuit library
  *******************************************************************/
 openfpga::Arch read_xml_openfpga_arch(const char* arch_file_name) {
+  vtr::ScopedStartFinishTimer timer("Read OpenFPGA architecture");
+
   openfpga::Arch openfpga_arch;
 
   pugi::xml_node Next;

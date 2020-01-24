@@ -32,7 +32,7 @@ void read_arch(OpenfpgaContext& openfpga_context,
   VTR_ASSERT(false == cmd_context.option_value(cmd, opt_file).empty());
 
   std::string arch_file_name = cmd_context.option_value(cmd, opt_file);
-  
+
   VTR_LOG("Reading XML architecture '%s'...\n",
           arch_file_name.c_str());
   openfpga_context.mutable_arch() = read_xml_openfpga_arch(arch_file_name.c_str());
