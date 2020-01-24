@@ -36,6 +36,8 @@ void add_openfpga_setup_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   ShellCommandId shell_cmd_write_arch_id = shell.add_command(shell_cmd_write_arch, "write OpenFPGA architecture file");
   shell.set_command_class(shell_cmd_write_arch_id, openfpga_setup_cmd_class);
   shell.set_command_const_execute_function(shell_cmd_write_arch_id, write_arch);
+  /* The 'write_openfpga_arch' command should be executed before 'read_openfpga_arch' */
+  shell.set_command_dependency(shell_cmd_write_arch_id, std::vector<ShellCommandId>(1, shell_cmd_read_arch_id));
 } 
 
 } /* end namespace openfpga */
