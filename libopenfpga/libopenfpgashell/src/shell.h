@@ -108,7 +108,7 @@ class Shell {
     void set_command_execute_function(const ShellCommandId& cmd_id,
                                       std::function<int(int, char**)> exec_func);
     void set_command_dependency(const ShellCommandId& cmd_id,
-                                const std::vector<ShellCommandId> cmd_dependency);
+                                const std::vector<ShellCommandId>& cmd_dependency);
     ShellCommandClassId add_command_class(const char* name);
   public: /* Public validators */
     bool valid_command_id(const ShellCommandId& cmd_id) const;
@@ -173,6 +173,9 @@ class Shell {
      * This is supposed to be an internal data ONLY 
      */
     vtr::vector<ShellCommandId, e_exec_func_type> command_execute_function_types_;  
+
+    /* A flag to indicate if the command has been executed */  
+    vtr::vector<ShellCommandId, bool> command_status_;  
 
     /* Dependency graph for different commands,
      * This helps the shell interface to check if a command need other commands to be run before its execution  
