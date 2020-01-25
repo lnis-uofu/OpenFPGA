@@ -13,6 +13,11 @@ const char* create_openfpga_title() {
 
   title += std::string("\n");
   title += std::string("               OpenFPGA: An Open-source FPGA IP Generator\n");
+  title += std::string("                     Versatile Place and Route (VPR)\n");
+  title += std::string("                           FPGA-Verilog\n");
+  title += std::string("                           FPGA-SPICE\n");
+  title += std::string("                           FPGA-SDC\n");
+  title += std::string("                           FPGA-Bitstream\n");
   title += std::string("\n");
   title += std::string("             This is a free software under the MIT License\n");
   title += std::string("\n");
