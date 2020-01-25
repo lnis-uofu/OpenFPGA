@@ -131,6 +131,7 @@ ShellCommandId Shell<T>::add_command(const Command& cmd, const char* descr) {
   command_short_execute_functions_.emplace_back();
   command_builtin_execute_functions_.emplace_back();
   command_macro_execute_functions_.emplace_back();
+  command_status_.push_back(false); /* By default, the command should be marked as never executed */
   command_dependencies_.emplace_back();
 
   /* Register the name in the name2id map */
@@ -202,7 +203,7 @@ void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id,
 
 template<class T>
 void Shell<T>::set_command_dependency(const ShellCommandId& cmd_id,
-                                      const std::vector<ShellCommandId> dependent_cmds) {
+                                      const std::vector<ShellCommandId>& dependent_cmds) {
   /* Validate the command id as well as each of the command dependency */
   VTR_ASSERT(true == valid_command_id(cmd_id));
   for (ShellCommandId dependent_cmd : dependent_cmds) {
@@ -362,7 +363,14 @@ void Shell<T>::execute_command(const char* cmd_line,
     return;
   }
 
-  /* TODO: Check the dependency graph to see if all the prequistics have been met */
+  /* Check the dependency graph to see if all the prequistics have been met */
+  for (const ShellCommandId& dep_cmd : command_dependencies_[cmd_id]) {
+    if (false == command_status_[dep_cmd]) {
+      VTR_LOG("Command '%s' is required to be executed before command '%s'!\n",
+              commands_[dep_cmd].name().c_str(), commands_[cmd_id].name().c_str());
+      return;
+    } 
+  }
 
   /* Find the command! Parse the options 
    * Note:
@@ -391,10 +399,10 @@ void Shell<T>::execute_command(const char* cmd_line,
     print_command_options(commands_[cmd_id]);
     return;
   }
-    
+ 
   /* Parse succeed. Let user to confirm selected options */ 
   print_command_context(commands_[cmd_id], command_contexts_[cmd_id]);
-  
+
   /* Execute the command depending on the type of function ! */ 
   switch (command_execute_function_types_[cmd_id]) {
   case CONST_STANDARD:
@@ -420,6 +428,9 @@ void Shell<T>::execute_command(const char* cmd_line,
     /* Exit the shell using the exit() function inside this class! */
     exit();
   }
+
+  /* Change the status of the command */
+  command_status_[cmd_id] = true;
 }
 
 /************************************************************************

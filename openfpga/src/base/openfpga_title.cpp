@@ -13,12 +13,15 @@ const char* create_openfpga_title() {
 
   title += std::string("\n");
   title += std::string("               OpenFPGA: An Open-source FPGA IP Generator\n");
+  title += std::string("                     Versatile Place and Route (VPR)\n");
+  title += std::string("                           FPGA-Verilog\n");
+  title += std::string("                           FPGA-SPICE\n");
+  title += std::string("                           FPGA-SDC\n");
+  title += std::string("                           FPGA-Bitstream\n");
   title += std::string("\n");
-  title += std::string("Contributors: Xifan Tang\tAurelien Alacchi\tBaudouin Chauviere\n");
+  title += std::string("             This is a free software under the MIT License\n");
   title += std::string("\n");
-  title += std::string("The MIT License\n");
-  title += std::string("\n");
-  title += std::string("Copyright (c) 2018 LNIS - The University of Utah\n");
+  title += std::string("             Copyright (c) 2018 LNIS - The University of Utah\n");
   title += std::string("\n");
   title += std::string("Permission is hereby granted, free of charge, to any person obtaining a copy\n");
   title += std::string("of this software and associated documentation files (the \"Software\"), to deal\n");

@@ -102,11 +102,13 @@ int main(int argc, char** argv) {
 
   /* Create a command of 'print' 
    * This function will print the value of an internal variable of ShellContext 
+   * We set a dependency to this command as it MUST be executed after 'set'
    */
   Command shell_cmd_print("print");
   ShellCommandId shell_cmd_print_id = shell.add_command(shell_cmd_print, "Print the value of internal variable 'a'");
   shell.set_command_class(shell_cmd_print_id, arith_cmd_class);
   shell.set_command_execute_function(shell_cmd_print_id, shell_execute_print);
+  shell.set_command_dependency(shell_cmd_print_id, std::vector<ShellCommandId>(1, shell_cmd_set_id));
 
   /* Create a macro command of 'print_macro' 
    * This function will print the value of an internal variable of ShellContext 
