@@ -1,11 +1,14 @@
-#ifndef PB_PHYSICAL_ANNOTATION_H
-#ifndef PB_PHYSICAL_ANNOTATION_H
+#ifndef PB_TYPE_ANNOTATION_H
+#ifndef PB_TYPE_ANNOTATION_H
 
 /********************************************************************
  * Include header files required by the data structure definition
  *******************************************************************/
 #include <vector>
 #include <map>
+
+/* namespace openfpga begins */
+namespace openfpga {
 
 /********************************************************************
  * This file include the declaration of data structures
@@ -47,6 +50,8 @@ class PhysicalPbAnnotation {
     /* Link between the interconnects under this pb_type and circuit model names */
     std::vector<std:map<std::string, std::string>> interconnect_circuit_model_names_;
 };
+
+} /* namespace openfpga ends */
 
 #endif
 
