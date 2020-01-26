@@ -265,14 +265,18 @@
   <routing_segment>
     <segment name="L4" circuit_model_name="chan_segment"/>
   </routing_segment>
-  <!--direct_connection>
+  <direct_connection>
     <direct name="adder" circuit_model_name="direct_interc"/>
-  </direct_connection-->
+  </direct_connection>
   <complex_blocks>
+    <!-- physical pb_type binding in complex block IO -->
     <pb_type name="io" physical_mode_name="io_phy"/>
     <pb_type name="io[io_phy].iopad" circuit_model_name="iopad" mode_bits="1"/> 
     <pb_type name="io[inpad].inpad" physical_pb_type_name="iopad" mode_bits="1"/> 
     <pb_type name="io[outpad].outpad" physical_pb_type_name="iopad" mode_bits="0"/> 
+    <!-- End physical pb_type binding in complex block IO -->
+
+    <!-- physical pb_type binding in complex block CLB -->
     <pb_type name="clb.fle" physical_mode_name="fle_phy" idle_mode_name="n2_lut5"/>
     <pb_type name="clb.fle[fle_phy].frac_logic.frac_lut6" mode_bits="11" circuit_model_name="frac_lut6"/>
     <pb_type name="clb.fle[fle_phy].frac_logic.adder_phy" circuit_model_name="adder"/>
@@ -297,12 +301,14 @@
     </pb_type>
     <pb_type name="clb.fle[n1_lut6].ble6.ff" physical_pb_type_name="clb.fle[fle_phy].frac_logic.ff_phy" physical_pb_type_index_factor="2" physical_pb_type_index_offset="1"/>
     <pb_type name="clb.fle[shift_register].ble6_shift.ff" physical_pb_type_name="clb.fle[fle_phy].frac_logic.ff_phy"/>
+    <!-- Binding interconnect to circuit models as their physical implementation, if not defined, we use the default model -->
     <interconnect name="clb.crossbar0" circuit_model_name="mux_2level"/>
     <interconnect name="clb.crossbar1" circuit_model_name="mux_2level"/>
     <interconnect name="clb.crossbar2" circuit_model_name="mux_2level"/>
     <interconnect name="clb.crossbar3" circuit_model_name="mux_2level"/>
     <interconnect name="clb.crossbar4" circuit_model_name="mux_2level"/>
     <interconnect name="clb.crossbar5" circuit_model_name="mux_2level"/>
+    <!-- End physical pb_type binding in complex block IO -->
   </complex_blocks>
 </openfpga_architecture>
 <openfpga_simulation_setting>
