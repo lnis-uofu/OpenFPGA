@@ -61,8 +61,8 @@ class PbTypeAnnotation {
     void set_idle_mode_name(const std::string& name);
     void set_mode_bits(const std::string& mode_bits);
     void set_circuit_model_name(const std::string& name);
-    void physical_pb_type_index_factor(const int& value);
-    void physical_pb_type_index_offset(const int& value);
+    void set_physical_pb_type_index_factor(const int& value);
+    void set_physical_pb_type_index_offset(const int& value);
     void add_pb_type_port_pair(const std::string& operating_pb_port_name,
                                const BasicPort& physical_pb_port);
     void set_physical_pin_rotate_offset(const std::string& operating_pb_port_name,

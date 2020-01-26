@@ -293,21 +293,21 @@
     <pb_type name="clb.fle[fle_phy].frac_logic.ff_phy" circuit_model_name="static_dff"/>
     <pb_type name="clb.fle[n2_lut5].lut5_inter.ble5[blut5].flut5.lut5" mode_bits="01" physical_pb_type_name="clb.fle[fle_phy].frac_logic.frac_lut6" physical_pb_type_index_factor="0.5">
       <!-- If not specified, we by default assume the physical mode pin share the same name -->
-      <port name="in" physical_mode_pin="in[4:0]"/>
-      <port name="out" physical_mode_pin="lut5_out" physical_mode_pin_rotate_offset="1"/>
+      <port name="in" physical_mode_port="in[4:0]"/>
+      <port name="out" physical_mode_port="lut5_out" physical_mode_pin_rotate_offset="1"/>
     </pb_type>
     <pb_type name="clb.fle[n2_lut5].lut5_inter.ble5[blut5].flut5.ff" physical_pb_type_name="clb.fle[fle_phy].frac_logic.ff_phy"/>
     <pb_type name="clb.fle[n2_lut5].lut5_inter.ble5[arithmetic].arithemetic.lut4" mode_bits="11" physical_pb_type_name="clb.fle[fle_phy].frac_logic.frac_lut6">
       <!-- If not specified, we by default assume the physical mode pin share the same name -->
-      <port name="in" physical_mode_pin="in[3:0]"/>
-      <port name="out" physical_mode_pin="lut4_out" physical_mode_pin_rotate_offset="1"/>
+      <port name="in" physical_mode_port="in[3:0]"/>
+      <port name="out" physical_mode_port="lut4_out" physical_mode_pin_rotate_offset="1"/>
     </pb_type>
     <pb_type name="clb.fle[n2_lut5].lut5_inter.ble5[arithmetic].arithemetic.adder" physical_pb_type_name="clb.fle[fle_phy].frac_logic.adder_phy"/>
     <pb_type name="clb.fle[n2_lut5].lut5_inter.ble5[arithmetic].arithemetic.ff" physical_pb_type_name="clb.fle[fle_phy].frac_logic.ff_phy"/>
     <pb_type name="clb.fle[n1_lut6].ble6.lut6" mode_bits="00" physical_pb_type_name="clb.fle[fle_phy].frac_logic.frac_lut6">
       <!-- If not specified, we by default assume the physical mode pin share the same name -->
-      <port name="in" physical_mode_pin="in[5:0]"/>
-      <port name="out" physical_mode_pin="lut6_out"/>
+      <port name="in" physical_mode_port="in[5:0]"/>
+      <port name="out" physical_mode_port="lut6_out"/>
     </pb_type>
     <pb_type name="clb.fle[n1_lut6].ble6.ff" physical_pb_type_name="clb.fle[fle_phy].frac_logic.ff_phy" physical_pb_type_index_factor="2" physical_pb_type_index_offset="1"/>
     <pb_type name="clb.fle[shift_register].ble6_shift.ff" physical_pb_type_name="clb.fle[fle_phy].frac_logic.ff_phy"/>
