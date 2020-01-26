@@ -14,6 +14,7 @@
 
 /* Headers from openfpga util library */
 #include "openfpga_port_parser.h"
+#include "openfpga_pb_parser.h"
 
 /* Headers from libarchfpga */
 #include "arch_error.h"
@@ -80,14 +81,36 @@ void read_xml_pb_type_annotation(pugi::xml_node& xml_pb_type,
   if ( (false == name_attr.empty()) 
     && (false == physical_name_attr.empty()) ) {
     /* Parse the attributes for operating pb_type */
-    pb_type_annotation.set_operating_pb_type_name(name_attr);
-    pb_type_annotation.set_physical_pb_type_name(physical_name_attr);
+    openfpga::PbParser operating_pb_parser(name_attr);
+    pb_type_annotation.set_operating_pb_type_name(operating_pb_parser.leaf());
+    if (0 < operating_pb_parser.parents().size()) {
+      pb_type_annotation.set_operating_parent_pb_type_names(operating_pb_parser.parents());
+    }
+    if (0 < operating_pb_parser.modes().size()) {
+      pb_type_annotation.set_operating_parent_mode_names(operating_pb_parser.modes());
+    }
+
+    openfpga::PbParser physical_pb_parser(physical_name_attr);
+    pb_type_annotation.set_physical_pb_type_name(physical_pb_parser.leaf());
+    if (0 < physical_pb_parser.parents().size()) {
+      pb_type_annotation.set_physical_parent_pb_type_names(physical_pb_parser.parents());
+    }
+    if (0 < physical_pb_parser.modes().size()) {
+      pb_type_annotation.set_physical_parent_mode_names(physical_pb_parser.modes());
+    }
   } 
 
   /* If there is only a name, this is a physical pb_type */
   if ( (false == name_attr.empty()) 
     && (true == physical_name_attr.empty()) ) {
-    pb_type_annotation.set_physical_pb_type_name(name_attr);
+    openfpga::PbParser physical_pb_parser(name_attr);
+    pb_type_annotation.set_physical_pb_type_name(physical_pb_parser.leaf());
+    if (0 < physical_pb_parser.parents().size()) {
+      pb_type_annotation.set_physical_parent_pb_type_names(physical_pb_parser.parents());
+    }
+    if (0 < physical_pb_parser.modes().size()) {
+      pb_type_annotation.set_physical_parent_mode_names(physical_pb_parser.modes());
+    }
   }
 
   /* Parse physical mode name which are applied to both pb_types */
