@@ -51,6 +51,14 @@ bool PbTypeAnnotation::is_physical_pb_type() const {
   return true == physical_pb_type_name_.empty();
 }
 
+std::string PbTypeAnnotation::physical_mode_name() const {
+  return physical_mode_name_;
+}
+
+std::string PbTypeAnnotation::idle_mode_name() const {
+  return idle_mode_name_;
+}
+
 std::string PbTypeAnnotation::mode_bits() const {
   return mode_bits_;
 }
@@ -119,6 +127,14 @@ void PbTypeAnnotation::set_physical_parent_pb_type_names(const std::vector<std::
 
 void PbTypeAnnotation::set_physical_parent_mode_names(const std::vector<std::string>& names) {
   physical_parent_mode_names_ = names;
+}
+
+void PbTypeAnnotation::set_physical_mode_name(const std::string& name) {
+  physical_mode_name_ = name;
+}
+
+void PbTypeAnnotation::set_idle_mode_name(const std::string& name) {
+  idle_mode_name_ = name;
 }
 
 void PbTypeAnnotation::set_mode_bits(const std::string& mode_bits) {

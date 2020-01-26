@@ -41,6 +41,8 @@ class PbTypeAnnotation {
     std::vector<std::string> physical_parent_pb_type_names() const;
     std::vector<std::string> physical_parent_mode_names() const;
     bool is_physical_pb_type() const;
+    std::string physical_mode_name() const;
+    std::string idle_mode_name() const;
     std::string mode_bits() const;
     std::string circuit_model_name() const;
     int physical_pb_type_index_factor() const;
@@ -55,6 +57,8 @@ class PbTypeAnnotation {
     void set_physical_pb_type_name(const std::string& name);
     void set_physical_parent_pb_type_names(const std::vector<std::string>& names);
     void set_physical_parent_mode_names(const std::vector<std::string>& names);
+    void set_physical_mode_name(const std::string& name);
+    void set_idle_mode_name(const std::string& name);
     void set_mode_bits(const std::string& mode_bits);
     void set_circuit_model_name(const std::string& name);
     void physical_pb_type_index_factor(const int& value);
@@ -88,6 +92,12 @@ class PbTypeAnnotation {
     std::string physical_pb_type_name_;
     std::vector<std::string> physical_parent_pb_type_names_;
     std::vector<std::string> physical_parent_mode_names_;
+
+    /* Identify which mode is the physical implementation of an operating pb_type */
+    std::string physical_mode_name_;
+
+    /* Identify in which mode is the pb_type will operate when it is not used */
+    std::string idle_mode_name_;
 
     /* Configuration bits to select an operting mode for the circuit mode name */
     std::string mode_bits_;

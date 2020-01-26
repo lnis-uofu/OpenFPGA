@@ -30,6 +30,7 @@ void read_xml_pb_type_annotation(pugi::xml_node& xml_pb_type,
   /* Find the name of pb_type */
   const std::string& name_attr = get_attribute(xml_pb_type, "name", loc_data).as_string();
   const std::string& physical_name_attr = get_attribute(xml_pb_type, "physical_pb_type_name", loc_data, pugiutil::ReqOpt::OPTIONAL).as_string();
+  const std::string& physical_mode_name_attr = get_attribute(xml_pb_type, "physical_mode_name", loc_data, pugiutil::ReqOpt::OPTIONAL).as_string();
 
   /* If both names are not empty, this is a operating pb_type */
   if ( (false == name_attr.empty()) 
@@ -43,6 +44,20 @@ void read_xml_pb_type_annotation(pugi::xml_node& xml_pb_type,
   if ( (false == name_attr.empty()) 
     && (true == physical_name_attr.empty()) ) {
     pb_type_annotation.set_physical_pb_type_name(name_attr);
+  }
+
+  /* Parse physical mode name which are applied to both pb_types */
+  pb_type_annotation.set_physical_mode_name(get_attribute(xml_pb_type, "physical_mode_name", loc_data, pugiutil::ReqOpt::OPTIONAL).as_string());
+
+  /* Parse idle mode name which are applied to both pb_types */
+  pb_type_annotation.set_idle_mode_name(get_attribute(xml_pb_type, "idle_mode_name", loc_data, pugiutil::ReqOpt::OPTIONAL).as_string());
+
+  /* Parse mode bits which are applied to both pb_types */
+  pb_type_annotation.set_mode_bits(get_attribute(xml_pb_type, "mode_bits", loc_data, pugiutil::ReqOpt::OPTIONAL).as_string());
+
+  /* If this is a physical pb_type, circuit model name is a mandatory attribute */
+  if (true == pb_type_annotation.is_physical_pb_type()) {
+    pb_type_annotation.set_circuit_model_name(get_attribute(xml_pb_type, "circuit_model_name", loc_data).as_string());
   }
 
   /* Finish parsing and add it to the vector */ 
