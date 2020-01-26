@@ -277,6 +277,16 @@
     <!-- End physical pb_type binding in complex block IO -->
 
     <!-- physical pb_type binding in complex block CLB -->
+    <!-- physical mode will be the default mode if not specified -->
+    <pb_type name="clb">
+      <!-- Binding interconnect to circuit models as their physical implementation, if not defined, we use the default model -->
+      <interconnect name="crossbar0" circuit_model_name="mux_2level"/>
+      <interconnect name="crossbar1" circuit_model_name="mux_2level"/>
+      <interconnect name="crossbar2" circuit_model_name="mux_2level"/>
+      <interconnect name="crossbar3" circuit_model_name="mux_2level"/>
+      <interconnect name="crossbar4" circuit_model_name="mux_2level"/>
+      <interconnect name="crossbar5" circuit_model_name="mux_2level"/>
+    </pb_type>
     <pb_type name="clb.fle" physical_mode_name="fle_phy" idle_mode_name="n2_lut5"/>
     <pb_type name="clb.fle[fle_phy].frac_logic.frac_lut6" mode_bits="11" circuit_model_name="frac_lut6"/>
     <pb_type name="clb.fle[fle_phy].frac_logic.adder_phy" circuit_model_name="adder"/>
@@ -301,13 +311,6 @@
     </pb_type>
     <pb_type name="clb.fle[n1_lut6].ble6.ff" physical_pb_type_name="clb.fle[fle_phy].frac_logic.ff_phy" physical_pb_type_index_factor="2" physical_pb_type_index_offset="1"/>
     <pb_type name="clb.fle[shift_register].ble6_shift.ff" physical_pb_type_name="clb.fle[fle_phy].frac_logic.ff_phy"/>
-    <!-- Binding interconnect to circuit models as their physical implementation, if not defined, we use the default model -->
-    <interconnect name="clb.crossbar0" circuit_model_name="mux_2level"/>
-    <interconnect name="clb.crossbar1" circuit_model_name="mux_2level"/>
-    <interconnect name="clb.crossbar2" circuit_model_name="mux_2level"/>
-    <interconnect name="clb.crossbar3" circuit_model_name="mux_2level"/>
-    <interconnect name="clb.crossbar4" circuit_model_name="mux_2level"/>
-    <interconnect name="clb.crossbar5" circuit_model_name="mux_2level"/>
     <!-- End physical pb_type binding in complex block IO -->
   </complex_blocks>
 </openfpga_architecture>
