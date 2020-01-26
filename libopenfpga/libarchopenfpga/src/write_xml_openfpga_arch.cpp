@@ -16,6 +16,7 @@
 #include "write_xml_simulation_setting.h"
 #include "write_xml_config_protocol.h"
 #include "write_xml_routing_circuit.h"
+#include "write_xml_pb_type_annotation.h"
 #include "write_xml_openfpga_arch.h"
 
 /********************************************************************
@@ -56,6 +57,10 @@ void write_xml_openfpga_arch(const char* fname,
 
   /* Write the direct connection circuit definition */
   write_xml_direct_circuit(fp, fname, openfpga_arch.circuit_lib, openfpga_arch.direct2circuit);
+
+
+  /* Write the pb_type annotations */
+  openfpga::write_xml_pb_type_annotations(fp, fname, openfpga_arch. pb_type_annotations);
 
   fp << "</openfpga_architecture>" << "\n";
 

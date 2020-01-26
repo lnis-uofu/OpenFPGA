@@ -1,12 +1,14 @@
 #ifndef OPENFPGA_ARCH_H
 #define OPENFPGA_ARCH_H
 
+#include <vector>
 #include <map>
 
 #include "circuit_library.h"
 #include "technology_library.h"
 #include "simulation_setting.h"
 #include "config_protocol.h"
+#include "pb_type_annotation.h"
 
 /* namespace openfpga begins */
 namespace openfpga {
@@ -47,6 +49,12 @@ struct Arch {
    * to circuit models in circuit library 
    */
   std::map<std::string, CircuitModelId> direct2circuit;
+
+  /* Pb type annotations 
+   * Bind from operating to physical
+   * Bind from physical to circuit model
+   */
+  std::vector<PbTypeAnnotation> pb_type_annotations;
 };
 
 } /* namespace openfpga ends */
