@@ -31,7 +31,8 @@ std::vector<std::string> PbTypeAnnotation::operating_parent_mode_names() const {
 }
 
 bool PbTypeAnnotation::is_operating_pb_type() const {
-  return true == operating_pb_type_name_.empty();
+  return (false == operating_pb_type_name_.empty())
+      && (false == physical_pb_type_name_.empty());
 }
 
 
@@ -48,7 +49,8 @@ std::vector<std::string> PbTypeAnnotation::physical_parent_mode_names() const {
 }
 
 bool PbTypeAnnotation::is_physical_pb_type() const {
-  return true == physical_pb_type_name_.empty();
+  return (true == operating_pb_type_name_.empty())
+      && (false == physical_pb_type_name_.empty());
 }
 
 std::string PbTypeAnnotation::physical_mode_name() const {
@@ -75,7 +77,15 @@ int PbTypeAnnotation::physical_pb_type_index_offset() const {
   return physical_pb_type_index_offset_;
 }
 
-BasicPort PbTypeAnnotation::physical_pb_type_ports(const std::string& port_name) const {
+std::vector<std::string> PbTypeAnnotation::port_names() const {
+  std::vector<std::string> keys;
+  for (auto const& element : operating_pb_type_ports_) {
+    keys.push_back(element.first);
+  }
+  return keys;
+}
+
+BasicPort PbTypeAnnotation::physical_pb_type_port(const std::string& port_name) const {
   std::map<std::string, BasicPort>::const_iterator it = operating_pb_type_ports_.find(port_name);
   if (it == operating_pb_type_ports_.end()) {
     /* Return an empty port */
@@ -84,13 +94,21 @@ BasicPort PbTypeAnnotation::physical_pb_type_ports(const std::string& port_name)
   return operating_pb_type_ports_.at(port_name);
 }
 
-int PbTypeAnnotation::physical_pin_rotate_offsets(const std::string& port_name) const {
+int PbTypeAnnotation::physical_pin_rotate_offset(const std::string& port_name) const {
   std::map<std::string, int>::const_iterator it = physical_pin_rotate_offsets_.find(port_name);
   if (it == physical_pin_rotate_offsets_.end()) {
     /* Return a zero offset which is default */
     return 0;
   }
   return physical_pin_rotate_offsets_.at(port_name);
+}
+
+std::vector<std::string> PbTypeAnnotation::interconnect_names() const {
+  std::vector<std::string> keys;
+  for (auto const& element : interconnect_circuit_model_names_) {
+    keys.push_back(element.first);
+  }
+  return keys;
 }
 
 std::string PbTypeAnnotation::interconnect_circuit_model_name(const std::string& interc_name) const {

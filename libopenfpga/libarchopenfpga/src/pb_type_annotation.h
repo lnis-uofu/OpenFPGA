@@ -47,8 +47,10 @@ class PbTypeAnnotation {
     std::string circuit_model_name() const;
     int physical_pb_type_index_factor() const;
     int physical_pb_type_index_offset() const;
-    BasicPort physical_pb_type_ports(const std::string& port_name) const;
-    int physical_pin_rotate_offsets(const std::string& port_name) const;
+    std::vector<std::string> port_names() const;
+    BasicPort physical_pb_type_port(const std::string& port_name) const;
+    int physical_pin_rotate_offset(const std::string& port_name) const;
+    std::vector<std::string> interconnect_names() const;
     std::string interconnect_circuit_model_name(const std::string& interc_name) const;
   public: /* Public mutators */
     void set_operating_pb_type_name(const std::string& name);

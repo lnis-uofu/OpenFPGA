@@ -67,6 +67,7 @@ void PbParser::parse() {
   /* The last pb is the leaf node.
    * It should NOT be empty and should NOT contain any brackets!  
    */
+  VTR_ASSERT(0 < pb_tokens.size());
   VTR_ASSERT(false == pb_tokens.back().empty());
   VTR_ASSERT(pb_tokens.back().find(bracket_.x()) == std::string::npos);
   VTR_ASSERT(pb_tokens.back().find(bracket_.y()) == std::string::npos);
