@@ -270,18 +270,39 @@
   </direct_connection-->
   <complex_blocks>
     <pb_type name="io" physical_mode_name="io_phy"/>
-    <mode name="io[io_phy]" disable_in_packing="true"/>
     <pb_type name="io[io_phy].iopad" circuit_model_name="iopad" mode_bits="1"/> 
-    <pb_type name="io[io_phy].inpad" physical_pb_type_name="iopad" mode_bits="1"/> 
-    <pb_type name="io[io_phy].outpad" physical_pb_type_name="iopad" mode_bits="0"/> 
+    <pb_type name="io[inpad].inpad" physical_pb_type_name="iopad" mode_bits="1"/> 
+    <pb_type name="io[outpad].outpad" physical_pb_type_name="iopad" mode_bits="0"/> 
     <pb_type name="clb.fle" physical_mode_name="fle_phy" idle_mode_name="n2_lut5"/>
     <pb_type name="clb.fle[fle_phy].frac_logic.frac_lut6" mode_bits="11" circuit_model_name="frac_lut6"/>
     <pb_type name="clb.fle[fle_phy].frac_logic.adder_phy" circuit_model_name="adder"/>
     <pb_type name="clb.fle[fle_phy].frac_logic.ff_phy" circuit_model_name="static_dff"/>
-    <mode name="fle_phy" disabled_in_packing="true"/>
-    <pb_type name="lut5" mode_bits="01" physical_pb_type_name="frac_lut6" physical_pb_type_index_factor="0.5"/>
-    <input name="in" physical_mode_pin="in[5:0]"/>
-    <output name="out" physical_mode_pin="lut5_out" physical_mode_pin_rotate_offset="1"/>
+    <pb_type name="clb.fle[n2_lut5].lut5_inter.ble5[blut5].flut5.lut5" mode_bits="01" physical_pb_type_name="clb.fle[fle_phy].frac_logic.frac_lut6" physical_pb_type_index_factor="0.5">
+      <!-- If not specified, we by default assume the physical mode pin share the same name -->
+      <input name="in" physical_mode_pin="in[4:0]"/>
+      <output name="out" physical_mode_pin="lut5_out" physical_mode_pin_rotate_offset="1"/>
+    </pb_type>
+    <pb_type name="clb.fle[n2_lut5].lut5_inter.ble5[blut5].flut5.ff" physical_pb_type_name="clb.fle[fle_phy].frac_logic.ff_phy"/>
+    <pb_type name="clb.fle[n2_lut5].lut5_inter.ble5[arithmetic].arithemetic.lut4" mode_bits="11" physical_pb_type_name="clb.fle[fle_phy].frac_logic.frac_lut6">
+      <!-- If not specified, we by default assume the physical mode pin share the same name -->
+      <input name="in" physical_mode_pin="in[3:0]"/>
+      <output name="out" physical_mode_pin="lut4_out" physical_mode_pin_rotate_offset="1"/>
+    </pb_type>
+    <pb_type name="clb.fle[n2_lut5].lut5_inter.ble5[arithmetic].arithemetic.adder" physical_pb_type_name="clb.fle[fle_phy].frac_logic.adder_phy"/>
+    <pb_type name="clb.fle[n2_lut5].lut5_inter.ble5[arithmetic].arithemetic.ff" physical_pb_type_name="clb.fle[fle_phy].frac_logic.ff_phy"/>
+    <pb_type name="clb.fle[n1_lut6].ble6.lut6" mode_bits="00" physical_pb_type_name="clb.fle[fle_phy].frac_logic.frac_lut6">
+      <!-- If not specified, we by default assume the physical mode pin share the same name -->
+      <input name="in" physical_mode_pin="in[5:0]"/>
+      <output name="out" physical_mode_pin="lut6_out"/>
+    </pb_type>
+    <pb_type name="clb.fle[n1_lut6].ble6.ff" physical_pb_type_name="clb.fle[fle_phy].frac_logic.ff_phy" physical_pb_type_index_factor="2" physical_pb_type_index_offset="1"/>
+    <pb_type name="clb.fle[shift_register].ble6_shift.ff" physical_pb_type_name="clb.fle[fle_phy].frac_logic.ff_phy"/>
+    <interconnect name="clb.crossbar0" circuit_model_name="mux_2level"/>
+    <interconnect name="clb.crossbar1" circuit_model_name="mux_2level"/>
+    <interconnect name="clb.crossbar2" circuit_model_name="mux_2level"/>
+    <interconnect name="clb.crossbar3" circuit_model_name="mux_2level"/>
+    <interconnect name="clb.crossbar4" circuit_model_name="mux_2level"/>
+    <interconnect name="clb.crossbar5" circuit_model_name="mux_2level"/>
   </complex_blocks>
 </openfpga_architecture>
 <openfpga_simulation_setting>
