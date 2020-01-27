@@ -789,6 +789,22 @@ struct t_pb_type {
     t_pin_to_pin_annotation* annotations = nullptr; /* [0..num_annotations-1] */
     int num_annotations = 0;
 
+    /************************************************************************ 
+     * Xifan Tang: Add useful methods for pb_type 
+     * - A pb_type is considered to be primitive when it has zero modes
+     *   However, this not always true. An exception is the LUT_CLASS
+     *   VPR added two modes by default to a LUT pb_type. Therefore,   
+     *   for LUT_CLASS, it is a primitive when it is binded to a blif model
+     * - A pb_type is the root pb_type when it has no parent mode
+     ************************************************************************/
+    bool is_primitive() const {
+        if (LUT_CLASS == class_type) {
+          return nullptr != blif_model; 
+        }
+        return 0 == num_modes;
+    }
+    bool is_root() const { return parent_mode == nullptr; }
+
     /* Power related members */
     t_pb_type_power* pb_type_power = nullptr;
 
