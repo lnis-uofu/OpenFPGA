@@ -1,2 +1,0 @@
-# Run VPR for the RISC-V core
-vpr ./test_arch/k6_frac_N10_frac_chain_depop50_mem32K_40nm.xml ./test_blif/riscv_core_lut6.blif
