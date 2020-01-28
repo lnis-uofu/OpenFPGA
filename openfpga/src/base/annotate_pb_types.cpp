@@ -499,6 +499,92 @@ void build_vpr_physical_pb_type_implicit_annotation(const DeviceContext& vpr_dev
 }
 
 /********************************************************************
+ * This function will check 
+ * - if a primitive pb_type has been mapped to a physical pb_type 
+ * - if every port of the pb_type have been linked a port of a physical pb_type
+ *******************************************************************/
+static 
+void check_vpr_physical_primitive_pb_type_annotation(t_pb_type* cur_pb_type,
+                                                     const VprPbTypeAnnotation& vpr_pb_type_annotation,
+                                                     size_t& num_err) {
+  if (nullptr == vpr_pb_type_annotation.physical_pb_type(cur_pb_type)) {
+    VTR_LOG_ERROR("Find a pb_type '%s' which has not been mapped to any physical pb_type!\n",
+                  cur_pb_type->name);
+    VTR_LOG_ERROR("Please specify in the OpenFPGA architecture\n");
+    num_err++;  
+    return;
+  }
+
+  /* Now we need to check each port of the pb_type */ 
+  for (t_port* pb_port : pb_type_ports(cur_pb_type)) {
+    if (nullptr == vpr_pb_type_annotation.physical_pb_port(pb_port)) {
+      VTR_LOG_ERROR("Find a port '%s' of pb_type '%s' which has not been mapped to any physical port!\n",
+                    pb_port->name, cur_pb_type->name);
+      VTR_LOG_ERROR("Please specify in the OpenFPGA architecture\n");
+      num_err++;
+    }
+  }
+
+  return;
+}
+
+/********************************************************************
+ * This function will recursively traverse pb_type graph to ensure
+ * 1. there is only a physical mode under each pb_type
+ * 2. physical mode appears only when its parent is a physical mode.
+ *******************************************************************/
+static 
+void rec_check_vpr_physical_pb_type_annotation(t_pb_type* cur_pb_type,
+                                               const VprPbTypeAnnotation& vpr_pb_type_annotation,
+                                               size_t& num_err) {
+  /* Primitive pb_type should always been binded to a physical pb_type */
+  if (true == is_primitive_pb_type(cur_pb_type)) {
+    check_vpr_physical_primitive_pb_type_annotation(cur_pb_type, vpr_pb_type_annotation, num_err);
+    return;
+  }
+
+  /* Traverse all the modes
+   * - for pb_type children under a physical mode, we expect an physical mode 
+   * - for pb_type children under non-physical mode, we expect no physical mode 
+   */
+  for (int imode = 0; imode < cur_pb_type->num_modes; ++imode) {
+    for (int ichild = 0; ichild < cur_pb_type->modes[imode].num_pb_type_children; ++ichild) { 
+      rec_check_vpr_physical_pb_type_annotation(&(cur_pb_type->modes[imode].pb_type_children[ichild]),
+                                                vpr_pb_type_annotation,
+                                                num_err);
+    }
+  }
+}
+
+/********************************************************************
+ * This function will check the physical pb_type annotation for
+ * each pb_type in the device
+ * Every pb_type should have been linked to a physical pb_type
+ * and every port of the pb_type have been linked a port of a physical pb_type
+ *******************************************************************/
+static 
+void check_vpr_physical_pb_type_annotation(const DeviceContext& vpr_device_ctx, 
+                                           const VprPbTypeAnnotation& vpr_pb_type_annotation) {
+  size_t num_err = 0;
+
+  for (const t_logical_block_type& lb_type : vpr_device_ctx.logical_block_types) {
+    /* By pass nullptr for pb_type head */
+    if (nullptr == lb_type.pb_type) {
+      continue;
+    }
+    /* Top pb_type should always has a physical mode! */
+    rec_check_vpr_physical_pb_type_annotation(lb_type.pb_type, vpr_pb_type_annotation, num_err);
+  }
+  if (0 == num_err) {
+    VTR_LOG("Check physical pb_type annotation for pb_types passed.\n");
+  } else {
+    VTR_LOG("Check physical pb_type annotation for pb_types failed with %ld errors!\n",
+            num_err);
+  }
+}
+
+
+/********************************************************************
  * Top-level function to link openfpga architecture to VPR, including:
  * - physical pb_type
  * - circuit models for pb_type, pb interconnect
@@ -522,6 +608,9 @@ void annotate_pb_types(const DeviceContext& vpr_device_ctx,
 
   build_vpr_physical_pb_type_implicit_annotation(vpr_device_ctx,
                                                  vpr_pb_type_annotation);
+
+  check_vpr_physical_pb_type_annotation(vpr_device_ctx, 
+                                        const_cast<const VprPbTypeAnnotation&>(vpr_pb_type_annotation));
 
   /* Link physical pb_type to circuit model */
 
