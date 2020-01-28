@@ -16,8 +16,18 @@ VprPbTypeAnnotation::VprPbTypeAnnotation() {
 }
 
 /************************************************************************
- * Public mutators
+ * Public accessors
  ***********************************************************************/
+bool VprPbTypeAnnotation::is_physical_pb_type(t_pb_type* pb_type) const {
+  /* Ensure that the pb_type is in the list */
+  std::map<t_pb_type*, t_pb_type*>::const_iterator it = physical_pb_types_.find(pb_type);
+  if (it == physical_pb_types_.end()) {
+    return false;
+  }
+  /* A physical pb_type should be mapped to itself! Otherwise, it is an operating pb_type */
+  return pb_type == physical_pb_types_.at(pb_type);
+}
+
 t_mode* VprPbTypeAnnotation::physical_mode(t_pb_type* pb_type) const {
   /* Ensure that the pb_type is in the list */
   std::map<t_pb_type*, t_mode*>::const_iterator it = physical_pb_modes_.find(pb_type);
@@ -53,6 +63,16 @@ BasicPort VprPbTypeAnnotation::physical_pb_port_range(t_port* pb_port) const {
     return BasicPort();
   }
   return physical_pb_port_ranges_.at(pb_port);
+}
+
+CircuitModelId VprPbTypeAnnotation::pb_type_circuit_model(t_pb_type* physical_pb_type) const {
+  /* Ensure that the pb_type is in the list */
+  std::map<t_pb_type*, CircuitModelId>::const_iterator it = pb_type_circuit_models_.find(physical_pb_type);
+  if (it == pb_type_circuit_models_.end()) {
+    /* Return an invalid port. As such the port width will be 0, which is an invalid value */
+    return CircuitModelId::INVALID();
+  }
+  return pb_type_circuit_models_.at(physical_pb_type);
 }
 
 /************************************************************************
@@ -103,6 +123,17 @@ void VprPbTypeAnnotation::add_physical_pb_port_range(t_port* operating_pb_port, 
   }
 
   physical_pb_port_ranges_[operating_pb_port] = port_range;
+}
+
+void VprPbTypeAnnotation::add_pb_type_circuit_model(t_pb_type* physical_pb_type, const CircuitModelId& circuit_model) {
+  /* Warn any override attempt */
+  std::map<t_pb_type*, CircuitModelId>::const_iterator it = pb_type_circuit_models_.find(physical_pb_type);
+  if (it != pb_type_circuit_models_.end()) {
+    VTR_LOG_WARN("Override the circuit model for physical pb_type '%s'!\n",
+                 physical_pb_type->name);
+  }
+
+  pb_type_circuit_models_[physical_pb_type] = circuit_model;
 }
 
 } /* End namespace openfpga*/

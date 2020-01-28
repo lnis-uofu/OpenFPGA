@@ -29,19 +29,19 @@ class VprPbTypeAnnotation {
   public:  /* Constructor */
     VprPbTypeAnnotation();
   public:  /* Public accessors */
+    bool is_physical_pb_type(t_pb_type* pb_type) const;
     t_mode* physical_mode(t_pb_type* pb_type) const;
     t_pb_type* physical_pb_type(t_pb_type* pb_type) const;
     t_port* physical_pb_port(t_port* pb_port) const;
     BasicPort physical_pb_port_range(t_port* pb_port) const;
+    CircuitModelId pb_type_circuit_model(t_pb_type* physical_pb_type) const;
   public:  /* Public mutators */
     void add_pb_type_physical_mode(t_pb_type* pb_type, t_mode* physical_mode);
     void add_physical_pb_type(t_pb_type* operating_pb_type, t_pb_type* physical_pb_type);
     void add_physical_pb_port(t_port* operating_pb_port, t_port* physical_pb_port);
     void add_physical_pb_port_range(t_port* operating_pb_port, const BasicPort& port_range);
+    void add_pb_type_circuit_model(t_pb_type* physical_pb_type, const CircuitModelId& circuit_model);
   private: /* Internal data */
-    /* Flag about if a pb_type is a physical pb_type */
-    std::map<t_pb_type*, bool> is_physical_pb_types_;
-
     /* Pair a regular pb_type to its physical pb_type */
     std::map<t_pb_type*, t_pb_type*> physical_pb_types_;
 
