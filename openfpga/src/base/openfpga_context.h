@@ -3,6 +3,7 @@
 
 #include "vpr_context.h"
 #include "openfpga_arch.h"
+#include "vpr_pb_type_annotation.h"
 
 /********************************************************************
  * This file includes the declaration of the date structure 
@@ -34,11 +35,15 @@
 class OpenfpgaContext : public Context  {
   public:  /* Public accessors */
     const openfpga::Arch& arch() const { return arch_; }
+    const openfpga::VprPbTypeAnnotation& vpr_pb_type_annotation() const { return vpr_pb_type_annotation_; }
   public:  /* Public mutators */
     openfpga::Arch& mutable_arch() { return arch_; }
+    openfpga::VprPbTypeAnnotation& mutable_vpr_pb_type_annotation() { return vpr_pb_type_annotation_; }
   private: /* Internal data */
     /* Data structure to store information from read_openfpga_arch library */
     openfpga::Arch arch_;
+    /* Annotation to pb_type of VPR */
+    openfpga::VprPbTypeAnnotation vpr_pb_type_annotation_;
 };
 
 #endif

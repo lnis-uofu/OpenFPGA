@@ -4,6 +4,7 @@
  * - read_openfpga_arch : read OpenFPGA architecture file
  *******************************************************************/
 #include "openfpga_read_arch.h"
+#include "openfpga_link_arch.h"
 #include "openfpga_setup_command.h"
 
 /* begin namespace openfpga */
@@ -36,8 +37,23 @@ void add_openfpga_setup_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   ShellCommandId shell_cmd_write_arch_id = shell.add_command(shell_cmd_write_arch, "write OpenFPGA architecture file");
   shell.set_command_class(shell_cmd_write_arch_id, openfpga_setup_cmd_class);
   shell.set_command_const_execute_function(shell_cmd_write_arch_id, write_arch);
-  /* The 'write_openfpga_arch' command should be executed before 'read_openfpga_arch' */
+  /* The 'write_openfpga_arch' command should NOT be executed before 'read_openfpga_arch' */
   shell.set_command_dependency(shell_cmd_write_arch_id, std::vector<ShellCommandId>(1, shell_cmd_read_arch_id));
+
+  /* Command 'link_openfpga_arch' */
+  Command shell_cmd_link_openfpga_arch("link_openfpga_arch");
+  
+  /* Add command 'link_openfpga_arch' to the Shell */
+  ShellCommandId shell_cmd_link_openfpga_arch_id = shell.add_command(shell_cmd_link_openfpga_arch, "Bind OpenFPGA architecture to VPR");
+  shell.set_command_class(shell_cmd_link_openfpga_arch_id, openfpga_setup_cmd_class);
+  shell.set_command_execute_function(shell_cmd_link_openfpga_arch_id, link_arch);
+  /* The 'link_openfpga_arch' command should NOT be executed before 'read_openfpga_arch' and 'vpr' */
+  const ShellCommandId& shell_cmd_vpr_id = shell.command(std::string("vpr"));
+  std::vector<ShellCommandId> cmd_dependency_link_openfpga_arch;
+  cmd_dependency_link_openfpga_arch.push_back(shell_cmd_read_arch_id);
+  cmd_dependency_link_openfpga_arch.push_back(shell_cmd_vpr_id);
+  shell.set_command_dependency(shell_cmd_link_openfpga_arch_id, cmd_dependency_link_openfpga_arch);
+
 } 
 
 } /* end namespace openfpga */
