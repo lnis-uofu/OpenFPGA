@@ -3,6 +3,7 @@
  * and pb_graph_node data structure in the OpenFPGA context
  *******************************************************************/
 /* Headers from vtrutil library */
+#include "vtr_assert.h"
 #include "vtr_log.h"
 
 #include "pb_type_utils.h"
@@ -15,10 +16,17 @@ namespace openfpga {
  * However, this not always true. An exception is the LUT_CLASS
  * VPR added two modes by default to a LUT pb_type. Therefore,   
  * for LUT_CLASS, it is a primitive when it is binded to a blif model
+ *
+ * Note: 
+ * - if VPR changes its mode organization for LUT pb_type
+ *   this code should be adapted as well!
  ************************************************************************/
 bool is_primitive_pb_type(t_pb_type* pb_type) {
   if (LUT_CLASS == pb_type->class_type) {
-    return nullptr != pb_type->blif_model; 
+    /* The first mode of LUT is wire, the second is the regular LUT */
+    VTR_ASSERT(std::string("wire") == std::string(pb_type->modes[0].name)); 
+    VTR_ASSERT(std::string(pb_type->name) == std::string(pb_type->modes[1].name)); 
+    return true;
   }
   return 0 == pb_type->num_modes;
 }

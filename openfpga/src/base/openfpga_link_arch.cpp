@@ -3,6 +3,7 @@
  * which are built on the libarchopenfpga library
  *******************************************************************/
 /* Headers from vtrutil library */
+#include "vtr_time.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
 
@@ -68,40 +69,14 @@ t_pb_type* try_find_pb_type_with_given_path(t_pb_type* top_pb_type,
 }
 
 /********************************************************************
- * This function will recursively traverse pb_type graph to ensure
- * 1. there is only a physical mode under each pb_type
- * 2. physical mode appears only when its parent is a physical mode.
+ * This function will identify the physical pb_type for each multi-mode 
+ * pb_type in VPR pb_type graph by following the explicit definition 
+ * in OpenFPGA architecture XML
  *******************************************************************/
 static 
-void rec_check_pb_type_physical_mode(t_pb_type* cur_pb_type) {
-  /* We do not check any primitive pb_type */
-  if (true == is_primitive_pb_type(cur_pb_type)) {
-    return;
-  }
-
-  /* For non-primitive pb_type: we should iterate over each mode 
-   * Ensure there is only one physical mode
-   */
-
-  /* Traverse all the modes for identifying idle mode */
-  for (int imode = 0; cur_pb_type->num_modes; ++imode) {
-    /* Check each pb_type_child */
-    for (int ichild = 0; ichild < cur_pb_type->modes[imode].num_pb_type_children; ++ichild) { 
-      rec_check_pb_type_physical_mode(&(cur_pb_type->modes[imode].pb_type_children[ichild]));
-    }
-  }
-}
-
-/********************************************************************
- * This function will 
- * - identify the physical pb_type for each multi-mode pb_type in 
- *   VPR pb_type graph
- * - identify the physical pb_type for operating pb_types in VPR 
- *******************************************************************/
-static 
-void build_vpr_physical_pb_type_annotation(const DeviceContext& vpr_device_ctx, 
-                                           const Arch& openfpga_arch,
-                                           VprPbTypeAnnotation& vpr_pb_type_annotation) {
+void build_vpr_physical_pb_mode_explicit_annotation(const DeviceContext& vpr_device_ctx, 
+                                                    const Arch& openfpga_arch,
+                                                    VprPbTypeAnnotation& vpr_pb_type_annotation) {
   /* Walk through the pb_type annotation stored in the openfpga arch */
   for (const PbTypeAnnotation& pb_type_annotation : openfpga_arch.pb_type_annotations) {
     /* Since our target is to annotate the physical mode name, 
@@ -132,9 +107,6 @@ void build_vpr_physical_pb_type_annotation(const DeviceContext& vpr_device_ctx,
 
     /* We must have at least one pb_type in the list */
     VTR_ASSERT_SAFE(0 < target_pb_type_names.size());
-
-    VTR_LOG("Trying to link pb_type '%s' to vpr architecture\n",
-            target_pb_type_names.back().c_str());
 
     /* Pb type information are located at the logic_block_types in the device context of VPR
      * We iterate over the vectors and find the pb_type matches the parent_pb_type_name
@@ -179,6 +151,112 @@ void build_vpr_physical_pb_type_annotation(const DeviceContext& vpr_device_ctx,
 }
 
 /********************************************************************
+ * This function will recursively visit all the pb_type from the top
+ * pb_type in the graph and 
+ * infer the physical pb_type for each multi-mode 
+ * pb_type in VPR pb_type graph without OpenFPGA architecture XML
+ *
+ * The following rule is applied:
+ * if there is only 1 mode under a pb_type, it will be the default 
+ * physical mode for this pb_type
+ *******************************************************************/
+static 
+void rec_infer_vpr_physical_pb_mode_annotation(t_pb_type* cur_pb_type, 
+                                               VprPbTypeAnnotation& vpr_pb_type_annotation) {
+  /* We do not check any primitive pb_type */
+  if (true == is_primitive_pb_type(cur_pb_type)) {
+    return;
+  }
+
+  /* For non-primitive pb_type:
+   * - if there is only one mode, it will be the physical mode
+   *   we just need to make sure that we do not repeatedly annotate this
+   * - if there are multiple modes, we should be able to find a physical mode
+   *   and then go recursively 
+   */
+  t_mode* physical_mode = nullptr;
+
+  if (1 == cur_pb_type->num_modes) {
+    if (nullptr == vpr_pb_type_annotation.physical_mode(cur_pb_type)) {
+      /* Not assigned by explicit annotation, we should infer here */
+      vpr_pb_type_annotation.add_pb_type_physical_mode(cur_pb_type, &(cur_pb_type->modes[0]));
+      VTR_LOG("Implicitly infer physical mode '%s' for pb_type '%s'\n",
+              cur_pb_type->modes[0].name, cur_pb_type->name);
+    }
+  } else {
+    VTR_ASSERT(1 < cur_pb_type->num_modes);
+    if (nullptr == vpr_pb_type_annotation.physical_mode(cur_pb_type)) {
+      /* Not assigned by explicit annotation, we should infer here */
+      vpr_pb_type_annotation.add_pb_type_physical_mode(cur_pb_type, &(cur_pb_type->modes[0]));
+      VTR_LOG_ERROR("Unable to find a physical mode for a multi-mode pb_type '%s'!\n",
+                    cur_pb_type->name);
+      VTR_LOG_ERROR("Please specify in the OpenFPGA architecture\n");
+      return;
+    }
+  }
+
+  /* Get the physical mode from annotation */ 
+  physical_mode = vpr_pb_type_annotation.physical_mode(cur_pb_type);
+
+  VTR_ASSERT(nullptr != physical_mode);
+
+  /* Traverse the pb_type children under the physical mode */
+  for (int ichild = 0; ichild < physical_mode->num_pb_type_children; ++ichild) { 
+    rec_infer_vpr_physical_pb_mode_annotation(&(physical_mode->pb_type_children[ichild]),
+                                              vpr_pb_type_annotation);
+  }
+}
+
+/********************************************************************
+ * This function will infer the physical pb_type for each multi-mode 
+ * pb_type in VPR pb_type graph without OpenFPGA architecture XML
+ *
+ * The following rule is applied:
+ * if there is only 1 mode under a pb_type, it will be the default 
+ * physical mode for this pb_type
+ *
+ * Note: 
+ * This function must be executed AFTER the function
+ *   build_vpr_physical_pb_mode_explicit_annotation()
+ *******************************************************************/
+static 
+void build_vpr_physical_pb_mode_implicit_annotation(const DeviceContext& vpr_device_ctx, 
+                                                    VprPbTypeAnnotation& vpr_pb_type_annotation) {
+  for (const t_logical_block_type& lb_type : vpr_device_ctx.logical_block_types) {
+    /* By pass nullptr for pb_type head */
+    if (nullptr == lb_type.pb_type) {
+      continue;
+    }
+    rec_infer_vpr_physical_pb_mode_annotation(lb_type.pb_type, vpr_pb_type_annotation); 
+  }
+}
+
+/********************************************************************
+ * This function will recursively traverse pb_type graph to ensure
+ * 1. there is only a physical mode under each pb_type
+ * 2. physical mode appears only when its parent is a physical mode.
+ *******************************************************************/
+static 
+void rec_check_pb_type_physical_mode(t_pb_type* cur_pb_type) {
+  /* We do not check any primitive pb_type */
+  if (true == is_primitive_pb_type(cur_pb_type)) {
+    return;
+  }
+
+  /* For non-primitive pb_type: we should iterate over each mode 
+   * Ensure there is only one physical mode
+   */
+
+  /* Traverse all the modes for identifying idle mode */
+  for (int imode = 0; cur_pb_type->num_modes; ++imode) {
+    /* Check each pb_type_child */
+    for (int ichild = 0; ichild < cur_pb_type->modes[imode].num_pb_type_children; ++ichild) { 
+      rec_check_pb_type_physical_mode(&(cur_pb_type->modes[imode].pb_type_children[ichild]));
+    }
+  }
+}
+
+/********************************************************************
  * Top-level function to link openfpga architecture to VPR, including:
  * - physical pb_type
  * - idle pb_type 
@@ -186,9 +264,13 @@ void build_vpr_physical_pb_type_annotation(const DeviceContext& vpr_device_ctx,
  *******************************************************************/
 void link_arch(OpenfpgaContext& openfpga_context) {
 
+  vtr::ScopedStartFinishTimer timer("Link OpenFPGA architecture to VPR architecture");
+
   /* Annotate physical pb_type in the VPR pb_type graph */
-  build_vpr_physical_pb_type_annotation(g_vpr_ctx.device(), openfpga_context.arch(),
-                                        openfpga_context.mutable_vpr_pb_type_annotation());
+  build_vpr_physical_pb_mode_explicit_annotation(g_vpr_ctx.device(), openfpga_context.arch(),
+                                                 openfpga_context.mutable_vpr_pb_type_annotation());
+  build_vpr_physical_pb_mode_implicit_annotation(g_vpr_ctx.device(), 
+                                                 openfpga_context.mutable_vpr_pb_type_annotation());
 
   /* Annotate idle pb_type in the VPR pb_type graph */
 
