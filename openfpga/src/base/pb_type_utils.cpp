@@ -88,4 +88,54 @@ t_port* find_pb_type_port(t_pb_type* pb_type, const std::string& port_name) {
   return nullptr;
 }
 
+/********************************************************************
+ * This function will traverse pb_type graph from its top to find
+ * a pb_type with a given name as well as its hierarchy 
+ *******************************************************************/
+t_pb_type* try_find_pb_type_with_given_path(t_pb_type* top_pb_type, 
+                                            const std::vector<std::string>& target_pb_type_names, 
+                                            const std::vector<std::string>& target_pb_mode_names) {
+  /* Ensure that number of parent names and modes matches */
+  VTR_ASSERT_SAFE(target_pb_type_names.size() == target_pb_mode_names.size() + 1);
+
+  t_pb_type* cur_pb_type = top_pb_type;
+
+  /* If the top pb_type is what we want, we can return here */
+  if (1 == target_pb_type_names.size()) {
+    if (target_pb_type_names[0] == std::string(top_pb_type->name)) {
+      return top_pb_type;
+    }
+    /* Not match, return null pointer */
+    return nullptr;
+  }
+
+  /* We start from the first element of the parent names and parent modes.
+   * If the pb_type does not match in name, we fail 
+   * If we cannot find a mode match the name, we fail 
+   */
+  for (size_t i = 0; i < target_pb_type_names.size() - 1; ++i) {
+    /* If this level does not match, search fail */
+    if (target_pb_type_names[i] != std::string(cur_pb_type->name)) {
+      return nullptr;
+    }
+    /* Find if the mode matches */
+    t_mode* cur_mode = find_pb_type_mode(cur_pb_type, target_pb_mode_names[i].c_str()); 
+    if (nullptr == cur_mode) {
+      return nullptr;
+    }
+    /* Go to the next level of pb_type */
+    cur_pb_type = find_mode_child_pb_type(cur_mode, target_pb_type_names[i + 1].c_str());
+    if (nullptr == cur_pb_type) {
+      return nullptr;
+    }
+    /* If this is already the last pb_type in the list, this is what we want */
+    if (i + 1 == target_pb_type_names.size() - 1) {
+      return cur_pb_type;
+    }
+  }
+
+  /* Reach here, it means we find nothing */
+  return nullptr;
+}
+
 } /* end namespace openfpga */
