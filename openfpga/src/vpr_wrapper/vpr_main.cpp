@@ -48,7 +48,7 @@ int vpr(int argc, char** argv) {
         vpr_install_signal_handler();
 
         /* Read options, architecture, and circuit netlist */
-        vpr_init(argc, (const char**)argv, &Options, &vpr_setup, &Arch);
+        vpr_init(argc, const_cast<const char**>(argv), &Options, &vpr_setup, &Arch);
 
         if (Options.show_version) {
             return SUCCESS_EXIT_CODE;
@@ -70,8 +70,10 @@ int vpr(int argc, char** argv) {
                 timing_ctx.stats.num_full_hold_updates,
                 timing_ctx.stats.num_full_setup_hold_updates);
 
-        /* free data structures */
-        vpr_free_all(Arch, vpr_setup);
+        /* TODO: move this to the end of flow 
+         * free data structures 
+         */
+        /* vpr_free_all(Arch, vpr_setup); */
 
         VTR_LOG("VPR suceeded\n");
 

@@ -29,6 +29,15 @@ t_pb_type* try_find_pb_type_with_given_path(t_pb_type* top_pb_type,
 
   t_pb_type* cur_pb_type = top_pb_type;
 
+  /* If the top pb_type is what we want, we can return here */
+  if (1 == target_pb_type_names.size()) {
+    if (target_pb_type_names[0] == std::string(top_pb_type->name)) {
+      return top_pb_type;
+    }
+    /* Not match, return null pointer */
+    return nullptr;
+  }
+
   /* We start from the first element of the parent names and parent modes.
    * If the pb_type does not match in name, we fail 
    * If we cannot find a mode match the name, we fail 
@@ -124,9 +133,14 @@ void build_vpr_physical_pb_type_annotation(const DeviceContext& vpr_device_ctx,
     /* We must have at least one pb_type in the list */
     VTR_ASSERT_SAFE(0 < target_pb_type_names.size());
 
+    VTR_LOG("Trying to link pb_type '%s' to vpr architecture\n",
+            target_pb_type_names.back().c_str());
+
     /* Pb type information are located at the logic_block_types in the device context of VPR
      * We iterate over the vectors and find the pb_type matches the parent_pb_type_name
      */
+    bool link_success = false;
+
     for (const t_logical_block_type& lb_type : vpr_device_ctx.logical_block_types) {
       /* By pass nullptr for pb_type head */
       if (nullptr == lb_type.pb_type) {
@@ -140,10 +154,7 @@ void build_vpr_physical_pb_type_annotation(const DeviceContext& vpr_device_ctx,
       t_pb_type* target_pb_type = try_find_pb_type_with_given_path(lb_type.pb_type, target_pb_type_names, 
                                                                    target_pb_mode_names);
       if (nullptr == target_pb_type) {
-        /* Not found, error out! */
-        VTR_LOG_ERROR("Unable to find the pb_type '%s' in VPR architecture definition!\n",
-                      target_pb_type_names.back().c_str());
-        break;
+        continue;
       }
 
       /* Found, we update the annotation by assigning the physical mode */
@@ -153,6 +164,16 @@ void build_vpr_physical_pb_type_annotation(const DeviceContext& vpr_device_ctx,
       /* Give a message */
       VTR_LOG("Annotate pb_type '%s' with physical mode '%s'\n",
               target_pb_type->name, physical_mode->name);
+
+      link_success = true;
+      break;
+    }
+
+    if (false == link_success) {
+      /* Not found, error out! */
+      VTR_LOG_ERROR("Unable to find the pb_type '%s' in VPR architecture definition!\n",
+                    target_pb_type_names.back().c_str());
+      return;
     }
   } 
 }
