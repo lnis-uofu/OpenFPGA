@@ -115,7 +115,7 @@ class Shell {
     bool valid_command_class_id(const ShellCommandClassId& cmd_class_id) const;
   public: /* Public executors */
     /* Start the interactive mode, where users will type-in command by command */
-    void run_interactive_mode(T& context);
+    void run_interactive_mode(T& context, const bool& quiet_mode = false);
     /* Start the script mode, where users provide a file which includes all the commands to run */
     void run_script_mode(const char* script_file_name, T& context);
     /* Print all the commands by their classes. This is actually the help desk */

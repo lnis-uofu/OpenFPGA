@@ -239,13 +239,15 @@ ShellCommandClassId Shell<T>::add_command_class(const char* name) {
  * Public executors
  ***********************************************************************/
 template <class T>
-void Shell<T>::run_interactive_mode(T& context) {
-  VTR_LOG("Start interactive mode of %s...\n",
-          name().c_str());
+void Shell<T>::run_interactive_mode(T& context, const bool& quiet_mode) {
+  if (false == quiet_mode) {
+    VTR_LOG("Start interactive mode of %s...\n",
+            name().c_str());
 
-  /* Print the title of the shell */
-  if (!title().empty()) {
-    VTR_LOG("%s\n", title().c_str());
+    /* Print the title of the shell */
+    if (!title().empty()) {
+      VTR_LOG("%s\n", title().c_str());
+    }
   }
 
   /* Wait for users input and execute the command */
@@ -306,6 +308,9 @@ void Shell<T>::run_script_mode(const char* script_file_name, T& context) {
     }
   }
   fp.close();
+
+  /* Return to interactive mode, stay tuned */
+  run_interactive_mode(context, true); 
 }
 
 template <class T>

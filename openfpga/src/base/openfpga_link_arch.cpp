@@ -143,6 +143,7 @@ void build_vpr_physical_pb_type_annotation(const DeviceContext& vpr_device_ctx,
         /* Not found, error out! */
         VTR_LOG_ERROR("Unable to find the pb_type '%s' in VPR architecture definition!\n",
                       target_pb_type_names.back().c_str());
+        break;
       }
 
       /* Found, we update the annotation by assigning the physical mode */
