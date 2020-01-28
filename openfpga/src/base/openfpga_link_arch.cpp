@@ -378,9 +378,9 @@ bool pair_operating_and_physical_pb_types(t_pb_type* operating_pb_type,
  *   annotation is completed
  *******************************************************************/
 static 
-void build_vpr_physical_pb_type_annotation(const DeviceContext& vpr_device_ctx, 
-                                           const Arch& openfpga_arch,
-                                           VprPbTypeAnnotation& vpr_pb_type_annotation) {
+void build_vpr_physical_pb_type_explicit_annotation(const DeviceContext& vpr_device_ctx, 
+                                                    const Arch& openfpga_arch,
+                                                    VprPbTypeAnnotation& vpr_pb_type_annotation) {
   /* Walk through the pb_type annotation stored in the openfpga arch */
   for (const PbTypeAnnotation& pb_type_annotation : openfpga_arch.pb_type_annotations) {
     /* Since our target is to annotate the operating pb_type tp physical pb_type 
@@ -465,6 +465,92 @@ void build_vpr_physical_pb_type_annotation(const DeviceContext& vpr_device_ctx,
   } 
 }
 
+/********************************************************************
+ * This function aims to pair a physical pb_type to itself
+ *******************************************************************/
+static 
+bool self_pair_physical_pb_types(t_pb_type* physical_pb_type, 
+                                 VprPbTypeAnnotation& vpr_pb_type_annotation) {
+  /* Reach here, we should have valid physical pb_types */
+  VTR_ASSERT(nullptr != physical_pb_type);
+  
+  /* Iterate over the ports under the operating pb_type 
+   * For each pin, we will try to find its physical port in the pb_type_annotation
+   * if not found, we assume that the physical port is the same as the operating pb_port
+   */
+  for (t_port* physical_pb_port : pb_type_ports(physical_pb_type)) {
+    BasicPort physical_port_range(physical_pb_port->name, physical_pb_port->num_pins);
+    vpr_pb_type_annotation.add_physical_pb_port(physical_pb_port, physical_pb_port);
+    vpr_pb_type_annotation.add_physical_pb_port_range(physical_pb_port, physical_port_range);
+  }
+
+  /* Now, pb_type mapping should succeed, we update the vpr_pb_type_annotation */
+  vpr_pb_type_annotation.add_physical_pb_type(physical_pb_type, physical_pb_type);
+
+  return true;
+}
+
+/********************************************************************
+ * This function will recursively visit all the pb_type from the top
+ * pb_type in the graph (only in the physical mode) and infer the 
+ * physical pb_type 
+ * This is mainly applied to single-mode pb_type graphs, where the 
+ * physical pb_type should be pb_type itself
+ * We can infer this and save the explicit annotation required by users
+ *******************************************************************/
+static 
+void rec_infer_vpr_physical_pb_type_annotation(t_pb_type* cur_pb_type, 
+                                               VprPbTypeAnnotation& vpr_pb_type_annotation) {
+  /* Physical pb_type is mainly for the primitive pb_type */
+  if (true == is_primitive_pb_type(cur_pb_type)) {
+    /* If the physical pb_type has been mapped, we can skip it */
+    if (nullptr != vpr_pb_type_annotation.physical_pb_type(cur_pb_type)) {
+      return;
+    }
+    /* Create the pair here */
+    if (true == self_pair_physical_pb_types(cur_pb_type, vpr_pb_type_annotation)) {
+      /* Give a message */
+      VTR_LOG("Implicitly infer the physical pb_type for pb_type '%s' itself\n",
+              cur_pb_type->name);
+    } else {
+      VTR_LOG_ERROR("Unable to infer the physical pb_type for pb_type '%s' itself!\n",
+                    cur_pb_type->name);
+    }
+    return;
+  }
+
+  /* Get the physical mode from annotation */ 
+  t_mode* physical_mode = vpr_pb_type_annotation.physical_mode(cur_pb_type);
+
+  VTR_ASSERT(nullptr != physical_mode);
+
+  /* Traverse the pb_type children under the physical mode */
+  for (int ichild = 0; ichild < physical_mode->num_pb_type_children; ++ichild) { 
+    rec_infer_vpr_physical_pb_type_annotation(&(physical_mode->pb_type_children[ichild]),
+                                              vpr_pb_type_annotation);
+  }
+}
+
+/********************************************************************
+ * This function will infer the physical pb_type for each operating 
+ * pb_type in VPR pb_type graph which have not been explicitedly defined
+ * in OpenFPGA architecture XML
+ *
+ * Note:
+ * - This function should be executed only AFTER the physical mode 
+ *   annotation is completed
+ *******************************************************************/
+static 
+void build_vpr_physical_pb_type_implicit_annotation(const DeviceContext& vpr_device_ctx, 
+                                                    VprPbTypeAnnotation& vpr_pb_type_annotation) {
+  for (const t_logical_block_type& lb_type : vpr_device_ctx.logical_block_types) {
+    /* By pass nullptr for pb_type head */
+    if (nullptr == lb_type.pb_type) {
+      continue;
+    }
+    rec_infer_vpr_physical_pb_type_annotation(lb_type.pb_type, vpr_pb_type_annotation); 
+  }
+}
 
 /********************************************************************
  * Top-level function to link openfpga architecture to VPR, including:
@@ -486,8 +572,11 @@ void link_arch(OpenfpgaContext& openfpga_context) {
                                         openfpga_context.vpr_pb_type_annotation());
 
   /* Annotate physical pb_types to operating pb_type in the VPR pb_type graph */
-  build_vpr_physical_pb_type_annotation(g_vpr_ctx.device(), openfpga_context.arch(),
-                                        openfpga_context.mutable_vpr_pb_type_annotation());
+  build_vpr_physical_pb_type_explicit_annotation(g_vpr_ctx.device(), openfpga_context.arch(),
+                                                 openfpga_context.mutable_vpr_pb_type_annotation());
+
+  build_vpr_physical_pb_type_implicit_annotation(g_vpr_ctx.device(),
+                                                 openfpga_context.mutable_vpr_pb_type_annotation());
 
   /* Link physical pb_type to circuit model */
 
