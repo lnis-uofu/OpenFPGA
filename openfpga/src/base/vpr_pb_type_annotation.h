@@ -27,6 +27,10 @@ namespace openfpga {
 class VprPbTypeAnnotation {
   public:  /* Constructor */
     VprPbTypeAnnotation();
+  public:  /* Public accessors */
+    t_mode* physical_mode(t_pb_type* pb_type) const;
+  public:  /* Public mutators */
+    void add_pb_type_physical_mode(t_pb_type* pb_type, t_mode* physical_mode);
   private: /* Internal data */
     std::map<t_pb_type*, bool> is_physical_pb_types_;
     std::map<t_pb_type*, t_pb_type*> physical_pb_types_;

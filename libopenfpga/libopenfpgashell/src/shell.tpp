@@ -390,6 +390,10 @@ void Shell<T>::execute_command(const char* cmd_line,
       free(argv[itok]);
     }
     free(argv);
+
+    /* Change the status of the command */
+    command_status_[cmd_id] = true;
+
     /* Finish for macro command, return */
     return;
   }
