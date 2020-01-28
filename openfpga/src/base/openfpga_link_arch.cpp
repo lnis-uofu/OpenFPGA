@@ -237,22 +237,79 @@ void build_vpr_physical_pb_mode_implicit_annotation(const DeviceContext& vpr_dev
  * 2. physical mode appears only when its parent is a physical mode.
  *******************************************************************/
 static 
-void rec_check_pb_type_physical_mode(t_pb_type* cur_pb_type) {
+void rec_check_vpr_physical_pb_mode_annotation(t_pb_type* cur_pb_type,
+                                               const bool& expect_physical_mode,
+                                               const VprPbTypeAnnotation& vpr_pb_type_annotation,
+                                               size_t& num_err) {
   /* We do not check any primitive pb_type */
   if (true == is_primitive_pb_type(cur_pb_type)) {
     return;
   }
 
-  /* For non-primitive pb_type: we should iterate over each mode 
-   * Ensure there is only one physical mode
+  /* For non-primitive pb_type:
+   * - If we expect a physical mode to exist under this pb_type
+   *   we should be able to find one in the annoation 
+   * - If we do NOT expect a physical mode, make sure we find 
+   *   nothing in the annotation
    */
-
-  /* Traverse all the modes for identifying idle mode */
-  for (int imode = 0; cur_pb_type->num_modes; ++imode) {
-    /* Check each pb_type_child */
-    for (int ichild = 0; ichild < cur_pb_type->modes[imode].num_pb_type_children; ++ichild) { 
-      rec_check_pb_type_physical_mode(&(cur_pb_type->modes[imode].pb_type_children[ichild]));
+  if (true == expect_physical_mode) {
+    if (nullptr == vpr_pb_type_annotation.physical_mode(cur_pb_type)) {
+      VTR_LOG_ERROR("Unable to find a physical mode for a multi-mode pb_type '%s'!\n",
+                    cur_pb_type->name);
+      VTR_LOG_ERROR("Please specify in the OpenFPGA architecture\n");
+      num_err++;
+      return;
     }
+  } else {
+    VTR_ASSERT_SAFE(false == expect_physical_mode);
+    if (nullptr != vpr_pb_type_annotation.physical_mode(cur_pb_type)) {
+      VTR_LOG_ERROR("Find a physical mode '%s' for pb_type '%s' which is not under any physical mode!\n",
+                    vpr_pb_type_annotation.physical_mode(cur_pb_type)->name,
+                    cur_pb_type->name);
+      num_err++;
+      return;
+    }
+  }
+
+  /* Traverse all the modes
+   * - for pb_type children under a physical mode, we expect an physical mode 
+   * - for pb_type children under non-physical mode, we expect no physical mode 
+   */
+  for (int imode = 0; imode < cur_pb_type->num_modes; ++imode) {
+    bool expect_child_physical_mode = false;
+    if (&(cur_pb_type->modes[imode]) == vpr_pb_type_annotation.physical_mode(cur_pb_type)) {
+      expect_child_physical_mode = true && expect_physical_mode; 
+    }
+    for (int ichild = 0; ichild < cur_pb_type->modes[imode].num_pb_type_children; ++ichild) { 
+      rec_check_vpr_physical_pb_mode_annotation(&(cur_pb_type->modes[imode].pb_type_children[ichild]),
+                                                expect_child_physical_mode, vpr_pb_type_annotation,
+                                                num_err);
+    }
+  }
+}
+
+/********************************************************************
+ * This function will check the physical mode annotation for
+ * each pb_type in the device
+ *******************************************************************/
+static 
+void check_vpr_physical_pb_mode_annotation(const DeviceContext& vpr_device_ctx, 
+                                           const VprPbTypeAnnotation& vpr_pb_type_annotation) {
+  size_t num_err = 0;
+
+  for (const t_logical_block_type& lb_type : vpr_device_ctx.logical_block_types) {
+    /* By pass nullptr for pb_type head */
+    if (nullptr == lb_type.pb_type) {
+      continue;
+    }
+    /* Top pb_type should always has a physical mode! */
+    rec_check_vpr_physical_pb_mode_annotation(lb_type.pb_type, true, vpr_pb_type_annotation, num_err);
+  }
+  if (0 == num_err) {
+    VTR_LOG("Check physical mode annotation for pb_types passed.\n");
+  } else {
+    VTR_LOG("Check physical mode annotation for pb_types failed with %ld errors!\n",
+            num_err);
   }
 }
 
@@ -271,6 +328,9 @@ void link_arch(OpenfpgaContext& openfpga_context) {
                                                  openfpga_context.mutable_vpr_pb_type_annotation());
   build_vpr_physical_pb_mode_implicit_annotation(g_vpr_ctx.device(), 
                                                  openfpga_context.mutable_vpr_pb_type_annotation());
+
+  check_vpr_physical_pb_mode_annotation(g_vpr_ctx.device(), 
+                                        openfpga_context.vpr_pb_type_annotation());
 
   /* Annotate idle pb_type in the VPR pb_type graph */
 
