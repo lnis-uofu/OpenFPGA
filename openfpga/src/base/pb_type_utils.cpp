@@ -64,4 +64,28 @@ t_pb_type* find_mode_child_pb_type(t_mode* mode, const char* child_name) {
   return nullptr;
 }
 
+/************************************************************************ 
+ * With a given pb_type, provide a list of its ports
+ ************************************************************************/
+std::vector<t_port*> pb_type_ports(t_pb_type* pb_type) {
+  std::vector<t_port*> ports;
+  for (int i = 0; i < pb_type->num_ports; ++i) {
+    ports.push_back(&(pb_type->ports[i]));
+  }
+  return ports;
+}
+
+/************************************************************************ 
+ * Find a port for a pb_type with a given name
+ * If not found, return null pointer
+ ************************************************************************/
+t_port* find_pb_type_port(t_pb_type* pb_type, const std::string& port_name) {
+  for (int i = 0; i < pb_type->num_ports; ++i) {
+    if (port_name == std::string(pb_type->ports[i].name)) {
+      return &(pb_type->ports[i]);
+    }
+  }
+  return nullptr;
+}
+
 } /* end namespace openfpga */
