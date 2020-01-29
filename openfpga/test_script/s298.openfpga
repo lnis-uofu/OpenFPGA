@@ -6,3 +6,6 @@ read_openfpga_arch -f ./test_openfpga_arch/k6_N10_40nm_openfpga.xml
 
 # Annotate the OpenFPGA architecture to VPR data base
 link_openfpga_arch
+
+# Finish and exit OpenFPGA
+exit

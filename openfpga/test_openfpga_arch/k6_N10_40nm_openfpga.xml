@@ -134,16 +134,16 @@
        <port type="output" prefix="Q" size="1"/>
        <port type="clock" prefix="clk" size="1" is_global="true" default_val="0" />
     </circuit_model>
-    <circuit_model type="lut" name="lut5" prefix="lut5" dump_structural_verilog="true">
+    <circuit_model type="lut" name="lut6" prefix="lut6" dump_structural_verilog="true">
       <design_technology type="cmos"/>
       <input_buffer exist="true" circuit_model_name="INVTX1"/>
       <output_buffer exist="true" circuit_model_name="INVTX1"/>
       <lut_input_inverter exist="true" circuit_model_name="INVTX1"/>
       <lut_input_buffer exist="true" circuit_model_name="buf4"/>
       <pass_gate_logic circuit_model_name="TGATE"/>
-      <port type="input" prefix="in" size="5"/>
+      <port type="input" prefix="in" size="6"/>
       <port type="output" prefix="out" size="1"/>
-      <port type="sram" prefix="sram" size="32"/>
+      <port type="sram" prefix="sram" size="64"/>
     </circuit_model>
     <!--Scan-chain DFF subckt ports should be defined as <D> <Q> <Qb> <CLK> <RESET> <SET>  -->
     <circuit_model type="ccff" name="sc_dff_compact" prefix="scff" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/ff.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/ff.v">
