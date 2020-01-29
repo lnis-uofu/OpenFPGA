@@ -1019,6 +1019,8 @@ void annotate_pb_types(const DeviceContext& vpr_device_ctx,
   VTR_LOG("Building annotation between physical pb_types and mode selection bits...\n");
   link_vpr_pb_type_to_mode_bits_explicit_annotation(vpr_device_ctx, openfpga_arch,
                                                     vpr_pb_type_annotation);
+  check_vpr_pb_type_mode_bits_annotation(vpr_device_ctx, openfpga_arch.circuit_lib,
+                                         const_cast<const VprPbTypeAnnotation&>(vpr_pb_type_annotation));
 
 } 
 

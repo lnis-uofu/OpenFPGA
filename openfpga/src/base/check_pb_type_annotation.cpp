@@ -8,6 +8,7 @@
 #include "vtr_log.h"
 
 #include "pb_type_utils.h"
+#include "circuit_library_utils.h"
 #include "check_pb_type_annotation.h"
 
 /* begin namespace openfpga */
@@ -89,8 +90,8 @@ void check_vpr_physical_pb_mode_annotation(const DeviceContext& vpr_device_ctx,
   if (0 == num_err) {
     VTR_LOG("Check physical mode annotation for pb_types passed.\n");
   } else {
-    VTR_LOG("Check physical mode annotation for pb_types failed with %ld errors!\n",
-            num_err);
+    VTR_LOG_ERROR("Check physical mode annotation for pb_types failed with %ld errors!\n",
+                  num_err);
   }
 }
 
@@ -139,10 +140,7 @@ void rec_check_vpr_physical_pb_type_annotation(t_pb_type* cur_pb_type,
     return;
   }
 
-  /* Traverse all the modes
-   * - for pb_type children under a physical mode, we expect an physical mode 
-   * - for pb_type children under non-physical mode, we expect no physical mode 
-   */
+  /* Traverse all the modes */
   for (int imode = 0; imode < cur_pb_type->num_modes; ++imode) {
     for (int ichild = 0; ichild < cur_pb_type->modes[imode].num_pb_type_children; ++ichild) { 
       rec_check_vpr_physical_pb_type_annotation(&(cur_pb_type->modes[imode].pb_type_children[ichild]),
@@ -173,8 +171,8 @@ void check_vpr_physical_pb_type_annotation(const DeviceContext& vpr_device_ctx,
   if (0 == num_err) {
     VTR_LOG("Check physical pb_type annotation for pb_types passed.\n");
   } else {
-    VTR_LOG("Check physical pb_type annotation for pb_types failed with %ld errors!\n",
-            num_err);
+    VTR_LOG_ERROR("Check physical pb_type annotation for pb_types failed with %ld errors!\n",
+                  num_err);
   }
 }
 
@@ -270,6 +268,112 @@ void check_vpr_pb_type_circuit_model_annotation(const DeviceContext& vpr_device_
     VTR_LOG("Check physical pb_type annotation for circuit model passed.\n");
   } else {
     VTR_LOG_ERROR("Check physical pb_type annotation for circuit model failed with %ld errors!\n",
+                  num_err);
+  }
+}
+
+/********************************************************************
+ * This function will recursively traverse all the primitive pb_types 
+ * in the graph to ensure
+ *  - If a primitive pb_type has mode bits, it must have been linked to a physical pb_type
+ *    and the circuit model must have a port for mode selection. 
+ *    And the port size must match the length of mode bits
+ *******************************************************************/
+static 
+void rec_check_vpr_pb_type_mode_bits_annotation(t_pb_type* cur_pb_type,
+                                                const CircuitLibrary& circuit_lib,
+                                                const VprPbTypeAnnotation& vpr_pb_type_annotation,
+                                                size_t& num_err) {
+  /* Primitive pb_type should always been binded to a physical pb_type */
+  if (true == is_primitive_pb_type(cur_pb_type)) {
+    /* Find the physical pb_type
+     * If the physical pb_type has mode selection bits, this pb_type must have as well!
+     */
+    t_pb_type* physical_pb_type = vpr_pb_type_annotation.physical_pb_type(cur_pb_type);
+
+    if (nullptr == physical_pb_type) {
+      VTR_LOG_ERROR("Find a pb_type '%s' which has not been mapped to any physical pb_type!\n",
+                    cur_pb_type->name);
+      VTR_LOG_ERROR("Please specify in the OpenFPGA architecture\n");
+      num_err++;
+      return;
+    }
+
+    if (vpr_pb_type_annotation.pb_type_mode_bits(cur_pb_type).size() != vpr_pb_type_annotation.pb_type_mode_bits(physical_pb_type).size()) {
+      VTR_LOG_ERROR("Found different sizes of mode_bits for pb_type '%s' and its physical pb_type '%s'\n",
+                    cur_pb_type->name,
+                    physical_pb_type->name);
+      num_err++;
+      return;
+    }
+  
+    /* Try to find a mode selection port for the circuit model linked to the circuit model */
+    CircuitModelId circuit_model = vpr_pb_type_annotation.pb_type_circuit_model(physical_pb_type);
+    if (CircuitModelId::INVALID() == vpr_pb_type_annotation.pb_type_circuit_model(physical_pb_type)) {
+      VTR_LOG_ERROR("Found a physical pb_type '%s' missing circuit model binding!\n",
+                    physical_pb_type->name);
+      num_err++;
+      return; /* Invalid id already, further check is not applicable */
+    }
+    
+    if (0 == vpr_pb_type_annotation.pb_type_mode_bits(cur_pb_type).size()) {
+      /* No mode bits to be checked! */
+      return;
+    }
+    /* Search the ports of this circuit model and we must have a mode selection port */
+    std::vector<CircuitPortId> mode_select_ports = find_circuit_mode_select_sram_ports(circuit_lib, circuit_model);
+    size_t port_num_mode_bits = 0;
+    for (const CircuitPortId& mode_select_port : mode_select_ports) {
+      port_num_mode_bits += circuit_lib.port_size(mode_select_port);
+    }
+    if (port_num_mode_bits != vpr_pb_type_annotation.pb_type_mode_bits(cur_pb_type).size()) {
+      VTR_LOG_ERROR("Length of mode bits of pb_type '%s' does not match the size(%ld) of mode selection ports of circuit model '%s'!\n",
+                    cur_pb_type->name,
+                    port_num_mode_bits,
+                    circuit_lib.model_name(circuit_model).c_str());
+      num_err++;
+    }
+
+    return;
+  }
+
+  /* Traverse all the modes */
+  for (int imode = 0; imode < cur_pb_type->num_modes; ++imode) {
+    for (int ichild = 0; ichild < cur_pb_type->modes[imode].num_pb_type_children; ++ichild) { 
+      rec_check_vpr_pb_type_mode_bits_annotation(&(cur_pb_type->modes[imode].pb_type_children[ichild]),
+                                                 circuit_lib, vpr_pb_type_annotation,
+                                                 num_err);
+    }
+  }
+}
+
+/********************************************************************
+ * This function will check the mode_bits annotation for each pb_type 
+ *  - If a primitive pb_type has mode bits, it must have been linked to a physical pb_type
+ *  - If a primitive pb_type has mode bits, the circuit model must have 
+ *    a port for mode selection. And the port size must match the length of mode bits
+ *
+ * Note:
+ *  - This function should be run after circuit mode and mode bits annotation 
+ *    is completed 
+ *******************************************************************/
+void check_vpr_pb_type_mode_bits_annotation(const DeviceContext& vpr_device_ctx, 
+                                            const CircuitLibrary& circuit_lib,
+                                            const VprPbTypeAnnotation& vpr_pb_type_annotation) {
+  size_t num_err = 0;
+
+  for (const t_logical_block_type& lb_type : vpr_device_ctx.logical_block_types) {
+    /* By pass nullptr for pb_type head */
+    if (nullptr == lb_type.pb_type) {
+      continue;
+    }
+    /* Top pb_type should always has a physical mode! */
+    rec_check_vpr_pb_type_mode_bits_annotation(lb_type.pb_type, circuit_lib, vpr_pb_type_annotation, num_err);
+  }
+  if (0 == num_err) {
+    VTR_LOG("Check pb_type annotation for mode selection bits passed.\n");
+  } else {
+    VTR_LOG_ERROR("Check physical pb_type annotation for mode selection bits failed with %ld errors!\n",
                   num_err);
   }
 }

@@ -25,6 +25,10 @@ void check_vpr_pb_type_circuit_model_annotation(const DeviceContext& vpr_device_
                                                 const CircuitLibrary& circuit_lib,
                                                 const VprPbTypeAnnotation& vpr_pb_type_annotation);
 
+void check_vpr_pb_type_mode_bits_annotation(const DeviceContext& vpr_device_ctx, 
+                                            const CircuitLibrary& circuit_lib,
+                                            const VprPbTypeAnnotation& vpr_pb_type_annotation);
+
 } /* end namespace openfpga */
 
 #endif
