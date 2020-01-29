@@ -7,5 +7,8 @@ read_openfpga_arch -f ./test_openfpga_arch/k6_N10_40nm_openfpga.xml
 # Annotate the OpenFPGA architecture to VPR data base
 link_openfpga_arch
 
+# Check and correct any naming conflicts in the BLIF netlist
+check_netlist_naming_conflict --correction --report ./netlist_renaming.rpt
+
 # Finish and exit OpenFPGA
 exit
