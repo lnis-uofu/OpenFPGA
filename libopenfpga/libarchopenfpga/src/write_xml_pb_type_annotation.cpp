@@ -159,7 +159,12 @@ void write_xml_pb_type_annotation(std::fstream& fp,
 
   /* Output mode_bits */
   if (!pb_type_annotation.mode_bits().empty()) { 
-    write_xml_attribute(fp, "mode_bits", pb_type_annotation.mode_bits().c_str());
+    /* Convert the vector of integer to string */
+    std::string mode_bits_str;
+    for (const size_t& bit : pb_type_annotation.mode_bits()) {
+      mode_bits_str += std::to_string(bit);
+    }
+    write_xml_attribute(fp, "mode_bits", mode_bits_str.c_str());
   }
 
   /* Output circuit model name */

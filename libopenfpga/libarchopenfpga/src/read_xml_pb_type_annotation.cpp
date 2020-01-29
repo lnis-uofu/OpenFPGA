@@ -64,6 +64,31 @@ void read_xml_pb_port_annotation(pugi::xml_node& xml_port,
 }
 
 /********************************************************************
+ * Parse mode_bits: convert from string to array of digits
+ * We only allow the bit to either '0' or '1'
+ *******************************************************************/
+static 
+std::vector<size_t> parse_mode_bits(pugi::xml_node& xml_mode_bits,
+                                    const pugiutil::loc_data& loc_data,
+                                    const std::string& mode_bit_str) {
+  std::vector<size_t> mode_bits;
+
+  for (const char& bit_char : mode_bit_str) {
+    if ('0' == bit_char) {
+      mode_bits.push_back(0);
+    } else if ('1' == bit_char) {
+      mode_bits.push_back(1);
+    } else {
+      archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_mode_bits),
+                     "Unexpected '%c' character found in the mode bit '%s'! Only allow either '0' or '1'\n",
+                     bit_char, mode_bit_str.c_str());
+    }
+  } 
+
+  return mode_bits;
+}
+
+/********************************************************************
  * Parse XML description for a pb_type annotation under a <pb_type> XML node
  *******************************************************************/
 static 
@@ -119,7 +144,8 @@ void read_xml_pb_type_annotation(pugi::xml_node& xml_pb_type,
   pb_type_annotation.set_idle_mode_name(get_attribute(xml_pb_type, "idle_mode_name", loc_data, pugiutil::ReqOpt::OPTIONAL).as_string());
 
   /* Parse mode bits which are applied to both pb_types */
-  pb_type_annotation.set_mode_bits(get_attribute(xml_pb_type, "mode_bits", loc_data, pugiutil::ReqOpt::OPTIONAL).as_string());
+  std::vector<size_t> mode_bit_data = parse_mode_bits(xml_pb_type, loc_data, get_attribute(xml_pb_type, "mode_bits", loc_data, pugiutil::ReqOpt::OPTIONAL).as_string());
+  pb_type_annotation.set_mode_bits(mode_bit_data);
 
   /* If this is a physical pb_type, circuit model name is an optional attribute, 
    * which is applicable to leaf pb_type in the hierarchy 
