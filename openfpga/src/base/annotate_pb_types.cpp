@@ -1012,6 +1012,118 @@ void link_vpr_pb_interconnect_to_circuit_model_implicit_annotation(const DeviceC
 }
 
 /********************************************************************
+ * This function will bind mode selection bits to a primitive pb_type
+ * in the vpr_pb_type_annotation
+ *******************************************************************/
+static 
+bool link_primitive_pb_type_to_mode_bits(t_pb_type* primitive_pb_type, 
+                                         const PbTypeAnnotation& pb_type_annotation,
+                                         VprPbTypeAnnotation& vpr_pb_type_annotation) {
+  /* Error out if this is not a primitive pb_type */
+  if (false == is_primitive_pb_type(primitive_pb_type)) {
+    VTR_LOG_ERROR("Mode selection is only applicable to primitive pb_type while pb_type '%s' is not primitve !\n",
+                  primitive_pb_type->name);
+    return false;
+  }
+
+  /* Update the annotation */
+  vpr_pb_type_annotation.add_pb_type_mode_bits(primitive_pb_type, pb_type_annotation.mode_bits());
+
+  return true;
+}
+
+/********************************************************************
+ * This function will link 
+ * - pb_type to mode bits by following 
+ *   the explicit definition in OpenFPGA architecture XML
+ *
+ * Note:
+ * - This function should be executed only AFTER 
+ *   the physical mode and physical pb_type annotation is completed
+ *   the physical pb_type circuit model annotation is completed
+ *******************************************************************/
+static 
+void link_vpr_pb_type_to_mode_bits_explicit_annotation(const DeviceContext& vpr_device_ctx, 
+                                                       const Arch& openfpga_arch,
+                                                       VprPbTypeAnnotation& vpr_pb_type_annotation) {
+  /* Walk through the pb_type annotation stored in the openfpga arch */
+  for (const PbTypeAnnotation& pb_type_annotation : openfpga_arch.pb_type_annotations) {
+    if (true == pb_type_annotation.mode_bits().empty()) {
+      continue;
+    }
+
+    /* Convert the vector of integer to string */
+    std::string mode_bits_str;
+    for (const size_t& bit : pb_type_annotation.mode_bits()) {
+      mode_bits_str += std::to_string(bit);
+    }
+
+    /* Collect the information about the full hierarchy of physical pb_type to be annotated */
+    std::vector<std::string> target_pb_type_names;
+    std::vector<std::string> target_pb_mode_names;
+
+    if (true == pb_type_annotation.is_operating_pb_type()) {
+      target_pb_type_names = pb_type_annotation.operating_parent_pb_type_names();
+      target_pb_type_names.push_back(pb_type_annotation.operating_pb_type_name());
+      target_pb_mode_names = pb_type_annotation.operating_parent_mode_names();
+    }
+
+    if (true == pb_type_annotation.is_physical_pb_type()) {
+      target_pb_type_names = pb_type_annotation.physical_parent_pb_type_names();
+      target_pb_type_names.push_back(pb_type_annotation.physical_pb_type_name());
+      target_pb_mode_names = pb_type_annotation.physical_parent_mode_names();
+    }
+
+    /* We must have at least one pb_type in the list */
+    VTR_ASSERT_SAFE(0 < target_pb_type_names.size());
+
+    /* Pb type information are located at the logic_block_types in the device context of VPR
+     * We iterate over the vectors and find the pb_type matches the parent_pb_type_name
+     */
+    bool link_success = false;
+
+    for (const t_logical_block_type& lb_type : vpr_device_ctx.logical_block_types) {
+      /* By pass nullptr for pb_type head */
+      if (nullptr == lb_type.pb_type) {
+        continue;
+      }
+      /* Check the name of the top-level pb_type, if it does not match, we can bypass */
+      if (target_pb_type_names[0] != std::string(lb_type.pb_type->name)) {
+        continue;
+      }
+      /* Match the name in the top-level, we go further to search the operating as well as
+       * physical pb_types in the graph */
+      t_pb_type* target_pb_type = try_find_pb_type_with_given_path(lb_type.pb_type, target_pb_type_names, 
+                                                                   target_pb_mode_names);
+      if (nullptr == target_pb_type) {
+        continue;
+      }
+
+      /* Only try to bind pb_type to circuit model when it is defined by users */
+      if (true == link_primitive_pb_type_to_mode_bits(target_pb_type,
+                                                      pb_type_annotation, vpr_pb_type_annotation)) {
+        /* Give a message */
+        VTR_LOG("Bind physical pb_type '%s' to mode selection bits '%s'\n",
+                target_pb_type->name,
+                mode_bits_str.c_str());
+
+        link_success = true;
+        break;
+      }
+    }
+
+    if (false == link_success) {
+      /* Not found, error out! */
+      VTR_LOG_ERROR("Unable to bind pb_type '%s' to mode_selection bits '%s'!\n",
+                    target_pb_type_names.back().c_str(),
+                    mode_bits_str.c_str());
+      return;
+    }
+  } 
+}
+
+
+/********************************************************************
  * Top-level function to link openfpga architecture to VPR, including:
  * - physical pb_type
  * - circuit models for pb_type, pb interconnect
@@ -1069,6 +1181,10 @@ void annotate_pb_types(const DeviceContext& vpr_device_ctx,
   /* TODO: check the circuit model annotation */
 
   /* Link physical pb_type to mode_bits */
+  VTR_LOG("\n");
+  VTR_LOG("Building annotation between physical pb_types and mode selection bits...\n");
+  link_vpr_pb_type_to_mode_bits_explicit_annotation(vpr_device_ctx, openfpga_arch,
+                                                    vpr_pb_type_annotation);
 
 } 
 

@@ -105,6 +105,15 @@ CircuitPortId VprPbTypeAnnotation::pb_circuit_port(t_port* pb_port) const {
   return pb_circuit_ports_.at(pb_port);
 }
 
+std::vector<size_t> VprPbTypeAnnotation::pb_type_mode_bits(t_pb_type* pb_type) const {
+  /* Ensure that the pb_type is in the list */
+  std::map<t_pb_type*, std::vector<size_t>>::const_iterator it = pb_type_mode_bits_.find(pb_type);
+  if (it == pb_type_mode_bits_.end()) {
+    /* Return an empty vector */
+    return std::vector<size_t>();
+  }
+  return pb_type_mode_bits_.at(pb_type);
+}
 
 /************************************************************************
  * Public mutators
@@ -199,6 +208,17 @@ void VprPbTypeAnnotation::add_pb_circuit_port(t_port* pb_port, const CircuitPort
   }
 
   pb_circuit_ports_[pb_port] = circuit_port;
+}
+
+void VprPbTypeAnnotation::add_pb_type_mode_bits(t_pb_type* pb_type, const std::vector<size_t>& mode_bits) {
+  /* Warn any override attempt */
+  std::map<t_pb_type*, std::vector<size_t>>::const_iterator it = pb_type_mode_bits_.find(pb_type);
+  if (it != pb_type_mode_bits_.end()) {
+    VTR_LOG_WARN("Override the mode bits mapping for pb_type '%s'!\n",
+                 pb_type->name);
+  }
+
+  pb_type_mode_bits_[pb_type] = mode_bits;
 }
 
 } /* End namespace openfpga*/
