@@ -9,6 +9,7 @@
 
 #include "vpr_pb_type_annotation.h"
 #include "pb_type_utils.h"
+#include "annotate_pb_graph.h"
 #include "annotate_pb_types.h"
 
 /* begin namespace openfpga */
@@ -844,6 +845,92 @@ void link_vpr_pb_interconnect_to_circuit_model_explicit_annotation(const DeviceC
 }
 
 /********************************************************************
+ * This function will recursively visit all the pb_type from the top
+ * pb_type in the graph and infer the circuit model for physical mode 
+ * of pb_types in VPR pb_type graph without OpenFPGA architecture XML
+ *
+ * Because only the interconnect in physical modes need circuit model
+ * annotation, we will skip all the operating modes here
+ *
+ * Note: 
+ *   - This function will automatically infer the type of circuit model
+ *     that is required and find the default circuit model in the type
+ *   - Interconnect type to Circuit mode type assumption:
+ *     - MUX_INTERC -> CIRCUIT_MODEL_MUX
+ *     - DIRECT_INTERC -> CIRCUIT_MODEL_WIRE
+ *     - COMPLETE_INTERC (single input) -> CIRCUIT_MODEL_WIRE
+ *     - COMPLETE_INTERC (multiple input pins) -> CIRCUIT_MODEL_MUX
+ *******************************************************************/
+static 
+void rec_infer_vpr_pb_interconnect_circuit_model_annotation(t_pb_type* cur_pb_type, 
+                                                            const CircuitLibrary& circuit_lib,
+                                                            VprPbTypeAnnotation& vpr_pb_type_annotation) {
+  /* We do not check any primitive pb_type */
+  if (true == is_primitive_pb_type(cur_pb_type)) {
+    return;
+  }
+
+  /* Get the physical mode from annotation */ 
+  t_mode* physical_mode = vpr_pb_type_annotation.physical_mode(cur_pb_type);
+
+  VTR_ASSERT(nullptr != physical_mode);
+
+  /* Annotate the circuit model for each interconnect under this physical mode */
+  for (t_interconnect* pb_interc : pb_mode_interconnects(physical_mode)) {
+    /* If the interconnect has been annotated, we skip it */
+    if (CircuitModelId::INVALID() != vpr_pb_type_annotation.interconnect_circuit_model(pb_interc)) {
+      continue;
+    }
+    /* Infer the circuit model type for a given interconnect */
+    e_circuit_model_type circuit_model_type = pb_interconnect_require_circuit_model_type(vpr_pb_type_annotation.interconnect_physical_type(pb_interc));
+    /* Try to find a default circuit model from the circuit library */
+    CircuitModelId default_circuit_model = circuit_lib.default_model(circuit_model_type);
+    /* Update the annotation if the model id is valid */
+    if (CircuitModelId::INVALID() == default_circuit_model) {
+      VTR_LOG_ERROR("Unable to infer a circuit model for interconnect '%s' under physical mode '%s' of pb_type '%s'!\n",
+                    pb_interc->name,
+                    physical_mode->name, 
+                    cur_pb_type->name);
+    }
+    vpr_pb_type_annotation.add_interconnect_circuit_model(pb_interc, default_circuit_model); 
+    VTR_LOG("Implicitly infer a circuit model '%s' for interconnect '%s' under physical mode '%s' of pb_type '%s'\n",
+            circuit_lib.model_name(default_circuit_model).c_str(),
+            pb_interc->name,
+            physical_mode->name, 
+            cur_pb_type->name);
+  }
+
+  /* Traverse the pb_type children under the physical mode */
+  for (int ichild = 0; ichild < physical_mode->num_pb_type_children; ++ichild) { 
+    rec_infer_vpr_pb_interconnect_circuit_model_annotation(&(physical_mode->pb_type_children[ichild]),
+                                                           circuit_lib, vpr_pb_type_annotation);
+  }
+}
+
+/********************************************************************
+ * This function will infer the circuit model for each interconnect
+ * under a physical mode of a pb_type in VPR pb_type graph without 
+ * OpenFPGA architecture XML
+ *
+ * Note: 
+ * This function must be executed AFTER the function
+ *   build_vpr_physical_pb_mode_explicit_annotation()
+ *   build_vpr_physical_pb_mode_implicit_annotation()
+ *******************************************************************/
+static 
+void link_vpr_pb_interconnect_to_circuit_model_implicit_annotation(const DeviceContext& vpr_device_ctx,
+                                                                   const CircuitLibrary& circuit_lib,
+                                                                   VprPbTypeAnnotation& vpr_pb_type_annotation) {
+  for (const t_logical_block_type& lb_type : vpr_device_ctx.logical_block_types) {
+    /* By pass nullptr for pb_type head */
+    if (nullptr == lb_type.pb_type) {
+      continue;
+    }
+    rec_infer_vpr_pb_interconnect_circuit_model_annotation(lb_type.pb_type, circuit_lib, vpr_pb_type_annotation); 
+  }
+}
+
+/********************************************************************
  * Top-level function to link openfpga architecture to VPR, including:
  * - physical pb_type
  * - circuit models for pb_type, pb interconnect
@@ -862,6 +949,13 @@ void annotate_pb_types(const DeviceContext& vpr_device_ctx,
   check_vpr_physical_pb_mode_annotation(vpr_device_ctx, 
                                         const_cast<const VprPbTypeAnnotation&>(vpr_pb_type_annotation));
 
+  /* Annotate the physical type for each interconnect under physical modes
+   * Must run AFTER physical mode annotation is done and 
+   * BEFORE inferring the circuit model for interconnect
+   */
+  annotate_pb_graph_interconnect_physical_type(vpr_device_ctx, 
+                                               vpr_pb_type_annotation);
+
   /* Annotate physical pb_types to operating pb_type in the VPR pb_type graph */
   build_vpr_physical_pb_type_explicit_annotation(vpr_device_ctx, openfpga_arch,
                                                  vpr_pb_type_annotation);
@@ -876,9 +970,12 @@ void annotate_pb_types(const DeviceContext& vpr_device_ctx,
    * - physical pb_type to circuit model
    * - interconnect of physical pb_type to circuit model 
    */
+  /* TODO: link the pb_type port to circuit model port here! */
   link_vpr_pb_type_to_circuit_model_explicit_annotation(vpr_device_ctx, openfpga_arch,
                                                         vpr_pb_type_annotation);
   link_vpr_pb_interconnect_to_circuit_model_explicit_annotation(vpr_device_ctx, openfpga_arch,
+                                                                vpr_pb_type_annotation);
+  link_vpr_pb_interconnect_to_circuit_model_implicit_annotation(vpr_device_ctx, openfpga_arch.circuit_lib,
                                                                 vpr_pb_type_annotation);
 
   /* Link physical pb_type to mode_bits */

@@ -85,6 +85,16 @@ CircuitModelId VprPbTypeAnnotation::interconnect_circuit_model(t_interconnect* p
   return interconnect_circuit_models_.at(pb_interconnect);
 }
 
+e_interconnect VprPbTypeAnnotation::interconnect_physical_type(t_interconnect* pb_interconnect) const {
+  /* Ensure that the pb_type is in the list */
+  std::map<t_interconnect*, e_interconnect>::const_iterator it = interconnect_physical_types_.find(pb_interconnect);
+  if (it == interconnect_physical_types_.end()) {
+    /* Return an invalid circuit model id */
+    return NUM_INTERC_TYPES;
+  }
+  return interconnect_physical_types_.at(pb_interconnect);
+}
+
 /************************************************************************
  * Public mutators
  ***********************************************************************/
@@ -155,6 +165,18 @@ void VprPbTypeAnnotation::add_interconnect_circuit_model(t_interconnect* pb_inte
   }
 
   interconnect_circuit_models_[pb_interconnect] = circuit_model;
+}
+
+void VprPbTypeAnnotation::add_interconnect_physical_type(t_interconnect* pb_interconnect,
+                                                         const e_interconnect& physical_type) {
+  /* Warn any override attempt */
+  std::map<t_interconnect*, e_interconnect>::const_iterator it = interconnect_physical_types_.find(pb_interconnect);
+  if (it != interconnect_physical_types_.end()) {
+    VTR_LOG_WARN("Override the physical interconnect for interconnect '%s'!\n",
+                 pb_interconnect->name);
+  }
+
+  interconnect_physical_types_[pb_interconnect] = physical_type;
 }
 
 } /* End namespace openfpga*/

@@ -1,7 +1,9 @@
 /********************************************************************
- * This file includes most utilized functions for the pb_type
- * and pb_graph_node data structure in the OpenFPGA context
+ * This file includes most utilized functions for the t_pb_type,
+ * t_mode and t_port data structure in the OpenFPGA context
  *******************************************************************/
+#include <map>
+
 /* Headers from vtrutil library */
 #include "vtr_assert.h"
 #include "vtr_log.h"
@@ -139,6 +141,18 @@ t_pb_type* try_find_pb_type_with_given_path(t_pb_type* top_pb_type,
 }
 
 /********************************************************************
+ * This function will return all the interconnects defined under a mode
+ * of pb_type
+ *******************************************************************/
+std::vector<t_interconnect*> pb_mode_interconnects(t_mode* pb_mode) {
+  std::vector<t_interconnect*> interc;
+  for (int i = 0; i < pb_mode->num_interconnect; ++i) {
+    interc.push_back(&(pb_mode->interconnect[i]));
+  }
+  return interc;
+}
+
+/********************************************************************
  * This function will try to find an interconnect defined under a mode
  * of pb_type with a given name.
  * If not found, return null pointer
@@ -152,6 +166,66 @@ t_interconnect* find_pb_mode_interconnect(t_mode* pb_mode, const char* interc_na
 
   /* Reach here, it means we find nothing */
   return nullptr;
+}
+
+/********************************************************************
+ * This function will automatically infer the actual type of an interconnect
+ * that will be used to implement the physical design:
+ * - MUX_INTERC -> MUX_INTERC
+ * - DIRECT_INTERC -> DIRECT_INTERC
+ * - COMPLETE_INTERC (single input) -> DIRECT_INTERC
+ * - COMPLETE_INTERC (multiple input pins) -> MUX_INTERC
+ *******************************************************************/
+e_interconnect pb_interconnect_physical_type(t_interconnect* pb_interc,
+                                             const size_t& num_inputs) {
+  /* Check */
+  VTR_ASSERT(nullptr != pb_interc); 
+
+  /* Initialize the interconnection type that will be implemented in SPICE netlist*/
+  switch (pb_interc->type) {
+  case DIRECT_INTERC:
+    return DIRECT_INTERC;
+    break;
+  case COMPLETE_INTERC:
+    if (1 == num_inputs) {
+      return DIRECT_INTERC;
+    } else {
+      VTR_ASSERT(1 < num_inputs);
+      return MUX_INTERC;
+    }
+    break;
+  case MUX_INTERC:
+    return MUX_INTERC;
+    break;
+  default:
+    VTR_LOG_ERROR("Invalid type for interconnection '%s'!\n",
+                   pb_interc->name);
+    exit(1);
+  }
+
+  return NUM_INTERC_TYPES;
+}
+
+/********************************************************************
+ * This function will automatically infer the actual type of an interconnect
+ * that will be used to implement the physical design:
+ * - MUX_INTERC -> CIRCUIT_MODEL_MUX
+ * - DIRECT_INTERC -> CIRCUIT_MODEL_WIRE
+ * 
+ * Note: 
+ *   - COMPLETE_INTERC should not appear here!
+ *   - We assume the interconnect type is the physical type
+ *     after interconnect physical type annotation is done! 
+ *******************************************************************/
+e_circuit_model_type pb_interconnect_require_circuit_model_type(const e_interconnect& pb_interc_type) {
+  /* A map from interconnect type to circuit model type */
+  std::map<e_interconnect, e_circuit_model_type> type_mapping;
+  type_mapping[MUX_INTERC] = CIRCUIT_MODEL_MUX;
+  type_mapping[DIRECT_INTERC] = CIRCUIT_MODEL_WIRE;
+
+  VTR_ASSERT((MUX_INTERC == pb_interc_type) || (DIRECT_INTERC == pb_interc_type));
+ 
+  return type_mapping.at(pb_interc_type); 
 }
 
 } /* end namespace openfpga */

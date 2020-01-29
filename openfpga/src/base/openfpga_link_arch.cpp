@@ -10,6 +10,7 @@
 #include "vpr_pb_type_annotation.h"
 #include "pb_type_utils.h"
 #include "annotate_pb_types.h"
+#include "annotate_pb_graph.h"
 #include "openfpga_link_arch.h"
 
 /* Include global variables of VPR */
