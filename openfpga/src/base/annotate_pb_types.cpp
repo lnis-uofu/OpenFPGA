@@ -1021,6 +1021,8 @@ void annotate_pb_types(const DeviceContext& vpr_device_ctx,
                        VprPbTypeAnnotation& vpr_pb_type_annotation) {
 
   /* Annotate physical mode to pb_type in the VPR pb_type graph */
+  VTR_LOG("\n");
+  VTR_LOG("Building annotation for physical modes in pb_type...\n");
   build_vpr_physical_pb_mode_explicit_annotation(vpr_device_ctx, openfpga_arch,
                                                  vpr_pb_type_annotation);
 
@@ -1034,10 +1036,15 @@ void annotate_pb_types(const DeviceContext& vpr_device_ctx,
    * Must run AFTER physical mode annotation is done and 
    * BEFORE inferring the circuit model for interconnect
    */
+  VTR_LOG("\n");
+  VTR_LOG("Building annotation about physical types for pb_type interconnection...");
   annotate_pb_graph_interconnect_physical_type(vpr_device_ctx, 
                                                vpr_pb_type_annotation);
+  VTR_LOG("Done\n");
 
   /* Annotate physical pb_types to operating pb_type in the VPR pb_type graph */
+  VTR_LOG("\n");
+  VTR_LOG("Building annotation between operating and physical pb_types...\n");
   build_vpr_physical_pb_type_explicit_annotation(vpr_device_ctx, openfpga_arch,
                                                  vpr_pb_type_annotation);
 
@@ -1051,7 +1058,8 @@ void annotate_pb_types(const DeviceContext& vpr_device_ctx,
    * - physical pb_type to circuit model
    * - interconnect of physical pb_type to circuit model 
    */
-  /* TODO: link the pb_type port to circuit model port here! */
+  VTR_LOG("\n");
+  VTR_LOG("Building annotation between physical pb_types and circuit models...\n");
   link_vpr_pb_type_to_circuit_model_explicit_annotation(vpr_device_ctx, openfpga_arch,
                                                         vpr_pb_type_annotation);
   link_vpr_pb_interconnect_to_circuit_model_explicit_annotation(vpr_device_ctx, openfpga_arch,
