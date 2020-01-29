@@ -41,6 +41,8 @@ e_interconnect pb_interconnect_physical_type(t_interconnect* pb_interc,
 
 e_circuit_model_type pb_interconnect_require_circuit_model_type(const e_interconnect& pb_interc_type);
 
+enum PORTS circuit_port_require_pb_port_type(const e_circuit_model_port_type& circuit_port_type);
+
 } /* end namespace openfpga */
 
 #endif

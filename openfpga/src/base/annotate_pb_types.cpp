@@ -585,6 +585,69 @@ void check_vpr_physical_pb_type_annotation(const DeviceContext& vpr_device_ctx,
 }
 
 /********************************************************************
+ * This function aims to link all the ports defined under a physical 
+ * pb_type to the ports of circuit model in the circuit library
+ * The binding assumes that pb_type port should be defined with the same name
+ * as the circuit port
+ *******************************************************************/
+static 
+bool link_physical_pb_port_to_circuit_port(t_pb_type* physical_pb_type, 
+                                           const CircuitLibrary& circuit_lib,
+                                           const CircuitModelId& circuit_model,
+                                           VprPbTypeAnnotation& vpr_pb_type_annotation) {
+  bool link_success = true;
+  /* Iterate over the pb_ports
+   * Note: 
+   *   - Not every port defined in the circuit model will appear under the pb_type
+   *     Some circuit ports are just for physical implementation
+   */
+  for (t_port* pb_port : pb_type_ports(physical_pb_type)) {
+    CircuitPortId circuit_port = circuit_lib.model_port(circuit_model, std::string(pb_port->name));
+
+    /* If we cannot find a port with the same name, error out */
+    if (CircuitPortId::INVALID() == circuit_port) {
+      VTR_LOG_ERROR("Pb type port '%s' is not found in any port of circuit model '%s'!\n",
+                    pb_port->name, circuit_lib.model_name(circuit_model).c_str());
+      link_success = false;
+      continue;
+    }
+
+    /* If the port width does not match, error out */
+    if ((size_t)(pb_port->num_pins) != circuit_lib.port_size(circuit_port)) {
+      VTR_LOG_ERROR("Pb type port '%s[%d:%d]' does not match the port '%s[%d:%d]' of circuit model '%s' in size!\n",
+                    pb_port->name, 
+                    0, pb_port->num_pins - 1,
+                    circuit_lib.port_prefix(circuit_port).c_str(),
+                    0, circuit_lib.port_size(circuit_port) - 1,
+                    circuit_lib.model_name(circuit_model).c_str());
+      link_success = false;
+      continue;
+    }
+
+    /* If the port type does not match, error out */
+    if (ERR_PORT == circuit_port_require_pb_port_type(circuit_lib.port_type(circuit_port))) {
+      VTR_LOG_ERROR("Pb type port '%s' type does not match the port type '%s' of circuit model '%s'!\n",
+                    pb_port->name, 
+                    circuit_lib.port_prefix(circuit_port).c_str(),
+                    circuit_lib.model_name(circuit_model).c_str());
+
+      link_success = false;
+      continue;
+    }
+
+    /* Reach here, it means that mapping should be ok, update the vpr_pb_type_annotation */
+    vpr_pb_type_annotation.add_pb_circuit_port(pb_port, circuit_port);
+    VTR_LOG("Bind pb type '%s' port '%s' to circuit model '%s' port '%s'\n",
+            physical_pb_type->name,
+            pb_port->name,
+            circuit_lib.model_name(circuit_model).c_str(),
+            circuit_lib.port_prefix(circuit_port).c_str());
+  }
+
+  return link_success;
+}
+
+/********************************************************************
  * This function aims to link a physical pb_type to a valid circuit model
  * in the circuit library
  *******************************************************************/
@@ -613,7 +676,10 @@ bool link_physical_pb_type_to_circuit_model(t_pb_type* physical_pb_type,
     return false;
   }
 
-  /* TODO: Ensure that the pb_type ports can be matched in the circuit model ports */
+  /* Ensure that the pb_type ports can be matched in the circuit model ports */
+  if (false == link_physical_pb_port_to_circuit_port(physical_pb_type, circuit_lib, circuit_model_id, vpr_pb_type_annotation)) {
+    return false;
+  }
 
   /* Now the circuit model is valid, update the vpr_pb_type_annotation */
   vpr_pb_type_annotation.add_pb_type_circuit_model(physical_pb_type, circuit_model_id);
