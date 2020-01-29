@@ -1012,6 +1012,103 @@ void link_vpr_pb_interconnect_to_circuit_model_implicit_annotation(const DeviceC
 }
 
 /********************************************************************
+ * This function will recursively traverse only the physical mode
+ * and physical pb_types in the graph to ensure
+ *  - Every physical pb_type should be linked to a valid circuit model
+ *  - Every port of the pb_type have been linked to a valid port of a circuit model
+ *  - Every interconnect has been linked to a valid circuit model
+ *    in a correct type
+ *******************************************************************/
+static 
+void rec_check_vpr_pb_type_circuit_model_annotation(t_pb_type* cur_pb_type,
+                                                    const CircuitLibrary& circuit_lib,
+                                                    const VprPbTypeAnnotation& vpr_pb_type_annotation,
+                                                    size_t& num_err) {
+  /* Primitive pb_type should always been binded to a physical pb_type */
+  if (true == is_primitive_pb_type(cur_pb_type)) {
+    /* Every physical pb_type should be linked to a valid circuit model */
+    if (CircuitModelId::INVALID() == vpr_pb_type_annotation.pb_type_circuit_model(cur_pb_type)) {
+      VTR_LOG_ERROR("Found a physical pb_type '%s' missing circuit model binding!\n",
+                    cur_pb_type->name);
+      num_err++;
+      return; /* Invalid id already, further check is not applicable */
+    }
+    /* Every port of the pb_type have been linked to a valid port of a circuit model */
+    for (t_port* port : pb_type_ports(cur_pb_type)) {
+      if (CircuitPortId::INVALID() == vpr_pb_type_annotation.pb_circuit_port(port)) {
+        VTR_LOG_ERROR("Found a port '%s' of physical pb_type '%s' missing circuit port binding!\n",
+                      port->name, cur_pb_type->name);
+        num_err++;
+      }
+    }
+    return;
+  }
+
+  /* Every interconnect in the physical mode has been linked to a valid circuit model in a correct type */
+  t_mode* physical_mode = vpr_pb_type_annotation.physical_mode(cur_pb_type);
+  for (t_interconnect* interc : pb_mode_interconnects(physical_mode)) {
+    CircuitModelId interc_circuit_model = vpr_pb_type_annotation.interconnect_circuit_model(interc);
+    if (CircuitModelId::INVALID() == interc_circuit_model) {
+      VTR_LOG_ERROR("Found an interconnect '%s' under physical mode '%s' of pb_type '%s' missing circuit model binding!\n",
+                    interc->name,
+                    physical_mode->name,
+                    cur_pb_type->name);
+      num_err++;
+      continue;
+    }
+    e_circuit_model_type required_circuit_model_type = pb_interconnect_require_circuit_model_type(vpr_pb_type_annotation.interconnect_physical_type(interc));
+    if (circuit_lib.model_type(interc_circuit_model) != required_circuit_model_type) {
+      VTR_LOG_ERROR("Found an interconnect '%s' under physical mode '%s' of pb_type '%s' linked to a circuit model '%s' with a wrong type!\nExpect: '%s' Linked: '%s'\n",
+                    interc->name,
+                    physical_mode->name, 
+                    cur_pb_type->name,
+                    circuit_lib.model_name(interc_circuit_model).c_str(),
+                    CIRCUIT_MODEL_TYPE_STRING[circuit_lib.model_type(interc_circuit_model)],
+                    CIRCUIT_MODEL_TYPE_STRING[required_circuit_model_type]);
+      num_err++;
+    }
+  } 
+
+  /* Traverse only the physical mode */
+  for (int ichild = 0; ichild < physical_mode->num_pb_type_children; ++ichild) { 
+    rec_check_vpr_pb_type_circuit_model_annotation(&(physical_mode->pb_type_children[ichild]),
+                                                   circuit_lib,
+                                                   vpr_pb_type_annotation,
+                                                   num_err);
+  }
+}
+
+/********************************************************************
+ * This function will check the circuit model annotation for
+ * each physical pb_type in the device
+ *  - Every physical pb_type should be linked to a valid circuit model
+ *  - Every port of the pb_type have been linked a valid port of a circuit model
+ *  - Every interconnect has been linked to a valid circuit model
+ *    in a correct type
+ *******************************************************************/
+static 
+void check_vpr_pb_type_circuit_model_annotation(const DeviceContext& vpr_device_ctx, 
+                                                const CircuitLibrary& circuit_lib,
+                                                const VprPbTypeAnnotation& vpr_pb_type_annotation) {
+  size_t num_err = 0;
+
+  for (const t_logical_block_type& lb_type : vpr_device_ctx.logical_block_types) {
+    /* By pass nullptr for pb_type head */
+    if (nullptr == lb_type.pb_type) {
+      continue;
+    }
+    /* Top pb_type should always has a physical mode! */
+    rec_check_vpr_pb_type_circuit_model_annotation(lb_type.pb_type, circuit_lib, vpr_pb_type_annotation, num_err);
+  }
+  if (0 == num_err) {
+    VTR_LOG("Check physical pb_type annotation for circuit model passed.\n");
+  } else {
+    VTR_LOG_ERROR("Check physical pb_type annotation for circuit model failed with %ld errors!\n",
+                  num_err);
+  }
+}
+
+/********************************************************************
  * This function will bind mode selection bits to a primitive pb_type
  * in the vpr_pb_type_annotation
  *******************************************************************/
@@ -1178,7 +1275,8 @@ void annotate_pb_types(const DeviceContext& vpr_device_ctx,
                                                                 vpr_pb_type_annotation);
   link_vpr_pb_interconnect_to_circuit_model_implicit_annotation(vpr_device_ctx, openfpga_arch.circuit_lib,
                                                                 vpr_pb_type_annotation);
-  /* TODO: check the circuit model annotation */
+  check_vpr_pb_type_circuit_model_annotation(vpr_device_ctx, openfpga_arch.circuit_lib,
+                                             const_cast<const VprPbTypeAnnotation&>(vpr_pb_type_annotation));
 
   /* Link physical pb_type to mode_bits */
   VTR_LOG("\n");
