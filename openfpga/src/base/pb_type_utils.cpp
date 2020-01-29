@@ -138,4 +138,20 @@ t_pb_type* try_find_pb_type_with_given_path(t_pb_type* top_pb_type,
   return nullptr;
 }
 
+/********************************************************************
+ * This function will try to find an interconnect defined under a mode
+ * of pb_type with a given name.
+ * If not found, return null pointer
+ *******************************************************************/
+t_interconnect* find_pb_mode_interconnect(t_mode* pb_mode, const char* interc_name) {
+  for (int i = 0; i < pb_mode->num_interconnect; ++i) {
+    if (std::string(interc_name) == std::string(pb_mode->interconnect[i].name)) {
+      return &(pb_mode->interconnect[i]);
+    }
+  } 
+
+  /* Reach here, it means we find nothing */
+  return nullptr;
+}
+
 } /* end namespace openfpga */

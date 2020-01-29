@@ -606,6 +606,9 @@ bool link_physical_pb_type_to_circuit_model(t_pb_type* physical_pb_type,
   CircuitModelId circuit_model_id = circuit_lib.model(pb_type_circuit_model_name);
 
   if (CircuitModelId::INVALID() == circuit_model_id) {
+    VTR_LOG_ERROR("Unable to find a circuit model '%s' for physical pb_type '%s'!\n",
+                  pb_type_circuit_model_name.c_str(),
+                  physical_pb_type->name); 
     return false;
   }
 
@@ -615,10 +618,66 @@ bool link_physical_pb_type_to_circuit_model(t_pb_type* physical_pb_type,
 }
 
 /********************************************************************
+ * This function aims to link an interconnect of a physical mode of 
+ * a pb_type to a valid circuit model in the circuit library
+ *******************************************************************/
+static 
+bool link_physical_pb_interconnect_to_circuit_model(t_pb_type* physical_pb_type, 
+                                                    const std::string& interconnect_name,
+                                                    const CircuitLibrary& circuit_lib,
+                                                    const PbTypeAnnotation& pb_type_annotation,
+                                                    VprPbTypeAnnotation& vpr_pb_type_annotation) {
+  /* The physical pb_type should NOT be a primitive, otherwise it should never contain any interconnect */
+  if (true == is_primitive_pb_type(physical_pb_type)) {
+    VTR_LOG_ERROR("Link interconnect to circuit model is not allowed for a primitive pb_type '%s'!\n",
+                  physical_pb_type->name);
+    return false;
+  }
+
+  /* Get the physical mode from annotation */ 
+  t_mode* physical_mode = vpr_pb_type_annotation.physical_mode(physical_pb_type);
+
+  VTR_ASSERT(nullptr != physical_mode);
+
+  /* Find the interconnect name under the physical mode of a physical pb_type */
+  t_interconnect* pb_interc = find_pb_mode_interconnect(physical_mode, interconnect_name.c_str());
+
+  if (nullptr == pb_interc) {
+    VTR_LOG_ERROR("Unable to find interconnect '%s' under physical mode '%s' of pb_type '%s'!\n",
+                  interconnect_name.c_str(), 
+                  physical_mode->name, 
+                  physical_pb_type->name);
+    return false;
+  }
+
+  /* Try to find the circuit model name */
+  std::string pb_type_circuit_model_name = pb_type_annotation.interconnect_circuit_model_name(interconnect_name);
+  CircuitModelId circuit_model_id = circuit_lib.model(pb_type_circuit_model_name);
+
+  if (CircuitModelId::INVALID() == circuit_model_id) {
+    VTR_LOG_ERROR("Unable to find a circuit model '%s' for interconnect '%s' under physical mode '%s' of pb_type '%s'!\n",
+                  pb_type_circuit_model_name.c_str(),
+                  interconnect_name.c_str(), 
+                  physical_mode->name, 
+                  physical_pb_type->name);
+    return false;
+  }
+
+  /* Now the circuit model is valid, update the vpr_pb_type_annotation */
+  vpr_pb_type_annotation.add_interconnect_circuit_model(pb_interc, circuit_model_id);
+
+  VTR_LOG("Bind pb_type '%s' physical mode '%s' interconnect '%s' to circuit model '%s'\n",
+           physical_pb_type->name,
+           physical_mode->name,
+           pb_interc->name,
+           circuit_lib.model_name(circuit_model_id).c_str());
+
+  return true;
+}
+
+/********************************************************************
  * This function will link 
  * - pb_type to circuit models in circuit library by following 
- *   the explicit definition in OpenFPGA architecture XML
- * - interconnect of pb_type to circuit models in circuit library by following 
  *   the explicit definition in OpenFPGA architecture XML
  *
  * Note:
@@ -638,7 +697,6 @@ void link_vpr_pb_type_to_circuit_model_explicit_annotation(const DeviceContext& 
       continue;
     }
 
-    /* Bypass those who have no circuit model defined */
     if (true == pb_type_annotation.circuit_model_name().empty()) {
       continue;
     }
@@ -678,9 +736,7 @@ void link_vpr_pb_type_to_circuit_model_explicit_annotation(const DeviceContext& 
         continue;
       }
 
-      /* Both operating and physical pb_type have been found, 
-       * we update the annotation by assigning the physical mode 
-       */
+      /* Only try to bind pb_type to circuit model when it is defined by users */
       if (true == link_physical_pb_type_to_circuit_model(target_phy_pb_type, openfpga_arch.circuit_lib,
                                                          pb_type_annotation, vpr_pb_type_annotation)) {
         /* Give a message */
@@ -696,6 +752,90 @@ void link_vpr_pb_type_to_circuit_model_explicit_annotation(const DeviceContext& 
     if (false == link_success) {
       /* Not found, error out! */
       VTR_LOG_ERROR("Unable to bind physical pb_type '%s' to circuit model '%s'!\n",
+                    target_phy_pb_type_names.back().c_str(),
+                    pb_type_annotation.circuit_model_name().c_str());
+      return;
+    }
+  } 
+}
+
+/********************************************************************
+ * This function will link 
+ * - interconnect of pb_type to circuit models in circuit library by following 
+ *   the explicit definition in OpenFPGA architecture XML
+ *
+ * Note:
+ * - This function should be executed only AFTER the physical mode and
+ *   physical pb_type annotation is completed
+ *******************************************************************/
+static 
+void link_vpr_pb_interconnect_to_circuit_model_explicit_annotation(const DeviceContext& vpr_device_ctx, 
+                                                                   const Arch& openfpga_arch,
+                                                                   VprPbTypeAnnotation& vpr_pb_type_annotation) {
+  /* Walk through the pb_type annotation stored in the openfpga arch */
+  for (const PbTypeAnnotation& pb_type_annotation : openfpga_arch.pb_type_annotations) {
+    /* Since our target is to annotate the circuti model for physical pb_type 
+     * we can skip those annotation only for operating pb_type
+     */
+    if (true == pb_type_annotation.is_operating_pb_type()) {
+      continue;
+    }
+
+    if (0 == pb_type_annotation.interconnect_names().size()) {
+      continue;
+    }
+
+    VTR_ASSERT(true == pb_type_annotation.is_physical_pb_type());
+
+    /* Collect the information about the full hierarchy of physical pb_type to be annotated */
+    std::vector<std::string> target_phy_pb_type_names;
+    std::vector<std::string> target_phy_pb_mode_names;
+
+    target_phy_pb_type_names = pb_type_annotation.physical_parent_pb_type_names();
+    target_phy_pb_type_names.push_back(pb_type_annotation.physical_pb_type_name());
+    target_phy_pb_mode_names = pb_type_annotation.physical_parent_mode_names();
+
+    /* We must have at least one pb_type in the list */
+    VTR_ASSERT_SAFE(0 < target_phy_pb_type_names.size());
+
+    /* Pb type information are located at the logic_block_types in the device context of VPR
+     * We iterate over the vectors and find the pb_type matches the parent_pb_type_name
+     */
+    bool link_success = true;
+
+    for (const t_logical_block_type& lb_type : vpr_device_ctx.logical_block_types) {
+      /* By pass nullptr for pb_type head */
+      if (nullptr == lb_type.pb_type) {
+        continue;
+      }
+      /* Check the name of the top-level pb_type, if it does not match, we can bypass */
+      if (target_phy_pb_type_names[0] != std::string(lb_type.pb_type->name)) {
+        continue;
+      }
+      /* Match the name in the top-level, we go further to search the operating as well as
+       * physical pb_types in the graph */
+      t_pb_type* target_phy_pb_type = try_find_pb_type_with_given_path(lb_type.pb_type, target_phy_pb_type_names, 
+                                                                       target_phy_pb_mode_names);
+      if (nullptr == target_phy_pb_type) {
+        continue;
+      }
+
+      /* Only try to bind interconnect to circuit model when it is defined by users */
+      for (const std::string& interc_name : pb_type_annotation.interconnect_names()) {
+        if (false == link_physical_pb_interconnect_to_circuit_model(target_phy_pb_type, interc_name, openfpga_arch.circuit_lib,
+                                                                    pb_type_annotation, vpr_pb_type_annotation)) {
+           VTR_LOG_ERROR("Unable to bind pb_type '%s' interconnect '%s' to circuit model '%s'!\n",
+                          target_phy_pb_type_names.back().c_str(),
+                          interc_name.c_str(),
+                          pb_type_annotation.circuit_model_name().c_str());
+           link_success = false;
+        } 
+      }
+    }
+
+    if (false == link_success) {
+      /* Not found, error out! */
+      VTR_LOG_ERROR("Unable to bind interconnects of physical pb_type '%s' to circuit model '%s'!\n",
                     target_phy_pb_type_names.back().c_str(),
                     pb_type_annotation.circuit_model_name().c_str());
       return;
@@ -738,6 +878,8 @@ void annotate_pb_types(const DeviceContext& vpr_device_ctx,
    */
   link_vpr_pb_type_to_circuit_model_explicit_annotation(vpr_device_ctx, openfpga_arch,
                                                         vpr_pb_type_annotation);
+  link_vpr_pb_interconnect_to_circuit_model_explicit_annotation(vpr_device_ctx, openfpga_arch,
+                                                                vpr_pb_type_annotation);
 
   /* Link physical pb_type to mode_bits */
 

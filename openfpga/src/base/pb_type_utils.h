@@ -31,6 +31,8 @@ t_pb_type* try_find_pb_type_with_given_path(t_pb_type* top_pb_type,
                                             const std::vector<std::string>& target_pb_type_names, 
                                             const std::vector<std::string>& target_pb_mode_names);
 
+t_interconnect* find_pb_mode_interconnect(t_mode* pb_mode, const char* interc_name);
+
 } /* end namespace openfpga */
 
 #endif

@@ -69,10 +69,20 @@ CircuitModelId VprPbTypeAnnotation::pb_type_circuit_model(t_pb_type* physical_pb
   /* Ensure that the pb_type is in the list */
   std::map<t_pb_type*, CircuitModelId>::const_iterator it = pb_type_circuit_models_.find(physical_pb_type);
   if (it == pb_type_circuit_models_.end()) {
-    /* Return an invalid port. As such the port width will be 0, which is an invalid value */
+    /* Return an invalid circuit model id */
     return CircuitModelId::INVALID();
   }
   return pb_type_circuit_models_.at(physical_pb_type);
+}
+
+CircuitModelId VprPbTypeAnnotation::interconnect_circuit_model(t_interconnect* pb_interconnect) const {
+  /* Ensure that the pb_type is in the list */
+  std::map<t_interconnect*, CircuitModelId>::const_iterator it = interconnect_circuit_models_.find(pb_interconnect);
+  if (it == interconnect_circuit_models_.end()) {
+    /* Return an invalid circuit model id */
+    return CircuitModelId::INVALID();
+  }
+  return interconnect_circuit_models_.at(pb_interconnect);
 }
 
 /************************************************************************
@@ -134,6 +144,17 @@ void VprPbTypeAnnotation::add_pb_type_circuit_model(t_pb_type* physical_pb_type,
   }
 
   pb_type_circuit_models_[physical_pb_type] = circuit_model;
+}
+
+void VprPbTypeAnnotation::add_interconnect_circuit_model(t_interconnect* pb_interconnect, const CircuitModelId& circuit_model) {
+  /* Warn any override attempt */
+  std::map<t_interconnect*, CircuitModelId>::const_iterator it = interconnect_circuit_models_.find(pb_interconnect);
+  if (it != interconnect_circuit_models_.end()) {
+    VTR_LOG_WARN("Override the circuit model for interconnect '%s'!\n",
+                 pb_interconnect->name);
+  }
+
+  interconnect_circuit_models_[pb_interconnect] = circuit_model;
 }
 
 } /* End namespace openfpga*/
