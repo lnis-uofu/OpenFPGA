@@ -613,6 +613,8 @@ bool link_physical_pb_type_to_circuit_model(t_pb_type* physical_pb_type,
     return false;
   }
 
+  /* TODO: Ensure that the pb_type ports can be matched in the circuit model ports */
+
   /* Now the circuit model is valid, update the vpr_pb_type_annotation */
   vpr_pb_type_annotation.add_pb_type_circuit_model(physical_pb_type, circuit_model_id);
   return true;
@@ -659,6 +661,19 @@ bool link_physical_pb_interconnect_to_circuit_model(t_pb_type* physical_pb_type,
     VTR_LOG_ERROR("Unable to find a circuit model '%s' for interconnect '%s' under physical mode '%s' of pb_type '%s'!\n",
                   pb_type_circuit_model_name.c_str(),
                   interconnect_name.c_str(), 
+                  physical_mode->name, 
+                  physical_pb_type->name);
+    return false;
+  }
+  
+  /* Double check the type of circuit model, it should be the same as required physical type */
+  e_circuit_model_type required_circuit_model_type = pb_interconnect_require_circuit_model_type(vpr_pb_type_annotation.interconnect_physical_type(pb_interc));
+  if (circuit_lib.model_type(circuit_model_id) != required_circuit_model_type) {
+    VTR_LOG_ERROR("Circuit model '%s' type '%s' does not match required type '%s' for interconnect '%s' under physical mode '%s' of pb_type '%s'!\n",
+                  circuit_lib.model_name(circuit_model_id).c_str(),
+                  CIRCUIT_MODEL_TYPE_STRING[circuit_lib.model_type(circuit_model_id)],
+                  CIRCUIT_MODEL_TYPE_STRING[required_circuit_model_type],
+                  pb_interc->name,
                   physical_mode->name, 
                   physical_pb_type->name);
     return false;
@@ -977,6 +992,7 @@ void annotate_pb_types(const DeviceContext& vpr_device_ctx,
                                                                 vpr_pb_type_annotation);
   link_vpr_pb_interconnect_to_circuit_model_implicit_annotation(vpr_device_ctx, openfpga_arch.circuit_lib,
                                                                 vpr_pb_type_annotation);
+  /* TODO: check the circuit model annotation */
 
   /* Link physical pb_type to mode_bits */
 
