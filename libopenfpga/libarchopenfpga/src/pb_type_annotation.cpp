@@ -61,7 +61,7 @@ std::string PbTypeAnnotation::idle_mode_name() const {
   return idle_mode_name_;
 }
 
-std::string PbTypeAnnotation::mode_bits() const {
+std::vector<size_t> PbTypeAnnotation::mode_bits() const {
   return mode_bits_;
 }
 
@@ -155,7 +155,7 @@ void PbTypeAnnotation::set_idle_mode_name(const std::string& name) {
   idle_mode_name_ = name;
 }
 
-void PbTypeAnnotation::set_mode_bits(const std::string& mode_bits) {
+void PbTypeAnnotation::set_mode_bits(const std::vector<size_t>& mode_bits) {
   mode_bits_ = mode_bits;
 }
 

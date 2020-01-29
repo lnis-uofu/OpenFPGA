@@ -89,10 +89,30 @@ e_interconnect VprPbTypeAnnotation::interconnect_physical_type(t_interconnect* p
   /* Ensure that the pb_type is in the list */
   std::map<t_interconnect*, e_interconnect>::const_iterator it = interconnect_physical_types_.find(pb_interconnect);
   if (it == interconnect_physical_types_.end()) {
-    /* Return an invalid circuit model id */
+    /* Return an invalid interconnect type */
     return NUM_INTERC_TYPES;
   }
   return interconnect_physical_types_.at(pb_interconnect);
+}
+
+CircuitPortId VprPbTypeAnnotation::pb_circuit_port(t_port* pb_port) const {
+  /* Ensure that the pb_type is in the list */
+  std::map<t_port*, CircuitPortId>::const_iterator it = pb_circuit_ports_.find(pb_port);
+  if (it == pb_circuit_ports_.end()) {
+    /* Return an invalid circuit port id */
+    return CircuitPortId::INVALID();
+  }
+  return pb_circuit_ports_.at(pb_port);
+}
+
+std::vector<size_t> VprPbTypeAnnotation::pb_type_mode_bits(t_pb_type* pb_type) const {
+  /* Ensure that the pb_type is in the list */
+  std::map<t_pb_type*, std::vector<size_t>>::const_iterator it = pb_type_mode_bits_.find(pb_type);
+  if (it == pb_type_mode_bits_.end()) {
+    /* Return an empty vector */
+    return std::vector<size_t>();
+  }
+  return pb_type_mode_bits_.at(pb_type);
 }
 
 /************************************************************************
@@ -177,6 +197,28 @@ void VprPbTypeAnnotation::add_interconnect_physical_type(t_interconnect* pb_inte
   }
 
   interconnect_physical_types_[pb_interconnect] = physical_type;
+}
+
+void VprPbTypeAnnotation::add_pb_circuit_port(t_port* pb_port, const CircuitPortId& circuit_port) {
+  /* Warn any override attempt */
+  std::map<t_port*, CircuitPortId>::const_iterator it = pb_circuit_ports_.find(pb_port);
+  if (it != pb_circuit_ports_.end()) {
+    VTR_LOG_WARN("Override the circuit port mapping for pb_type port '%s'!\n",
+                 pb_port->name);
+  }
+
+  pb_circuit_ports_[pb_port] = circuit_port;
+}
+
+void VprPbTypeAnnotation::add_pb_type_mode_bits(t_pb_type* pb_type, const std::vector<size_t>& mode_bits) {
+  /* Warn any override attempt */
+  std::map<t_pb_type*, std::vector<size_t>>::const_iterator it = pb_type_mode_bits_.find(pb_type);
+  if (it != pb_type_mode_bits_.end()) {
+    VTR_LOG_WARN("Override the mode bits mapping for pb_type '%s'!\n",
+                 pb_type->name);
+  }
+
+  pb_type_mode_bits_[pb_type] = mode_bits;
 }
 
 } /* End namespace openfpga*/

@@ -228,4 +228,30 @@ e_circuit_model_type pb_interconnect_require_circuit_model_type(const e_intercon
   return type_mapping.at(pb_interc_type); 
 }
 
+/********************************************************************
+ * This function aims to find the required type for a pb_port
+ * when it is linked to a port of a circuit model
+ * We start from the view of a circuit port here.
+ * This is due to circuit port has more types than a pb_type port
+ * as it is designed for physical implementation
+ * As such, a few types of circuit port may be directed the same type of pb_type port
+ * This is done to make the mapping much simpler than doing in the opposite direction
+ *******************************************************************/
+enum PORTS circuit_port_require_pb_port_type(const e_circuit_model_port_type& circuit_port_type) {
+  std::map<e_circuit_model_port_type, enum PORTS> type_mapping;
+
+  /* These circuit model ports may be founed in the pb_type ports */
+  type_mapping[CIRCUIT_MODEL_PORT_INPUT] = IN_PORT;
+  type_mapping[CIRCUIT_MODEL_PORT_OUTPUT] = OUT_PORT;
+  type_mapping[CIRCUIT_MODEL_PORT_INOUT] = INOUT_PORT;
+  type_mapping[CIRCUIT_MODEL_PORT_CLOCK] = IN_PORT;
+
+  /* Other circuit model ports should not be found when mapping to the pb_type ports */
+  if (type_mapping.end() == type_mapping.find(circuit_port_type)) {
+    return ERR_PORT;
+  }
+  
+  return type_mapping.at(circuit_port_type);
+}
+
 } /* end namespace openfpga */

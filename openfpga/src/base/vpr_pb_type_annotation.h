@@ -37,6 +37,8 @@ class VprPbTypeAnnotation {
     CircuitModelId pb_type_circuit_model(t_pb_type* physical_pb_type) const;
     CircuitModelId interconnect_circuit_model(t_interconnect* pb_interconnect) const;
     e_interconnect interconnect_physical_type(t_interconnect* pb_interconnect) const;
+    CircuitPortId pb_circuit_port(t_port* pb_port) const;
+    std::vector<size_t> pb_type_mode_bits(t_pb_type* pb_type) const;
   public:  /* Public mutators */
     void add_pb_type_physical_mode(t_pb_type* pb_type, t_mode* physical_mode);
     void add_physical_pb_type(t_pb_type* operating_pb_type, t_pb_type* physical_pb_type);
@@ -45,6 +47,8 @@ class VprPbTypeAnnotation {
     void add_pb_type_circuit_model(t_pb_type* physical_pb_type, const CircuitModelId& circuit_model);
     void add_interconnect_circuit_model(t_interconnect* pb_interconnect, const CircuitModelId& circuit_model);
     void add_interconnect_physical_type(t_interconnect* pb_interconnect, const e_interconnect& physical_type);
+    void add_pb_circuit_port(t_port* pb_port, const CircuitPortId& circuit_port);
+    void add_pb_type_mode_bits(t_pb_type* pb_type, const std::vector<size_t>& mode_bits);
   private: /* Internal data */
     /* Pair a regular pb_type to its physical pb_type */
     std::map<t_pb_type*, t_pb_type*> physical_pb_types_;
@@ -80,7 +84,7 @@ class VprPbTypeAnnotation {
      * - if the pb_type is an operating pb_type, the mode bits will be applied
      *   when the operating pb_type is used by packer
      */
-    std::map<t_pb_type*, std::vector<bool>> pb_type_mode_bits_;
+    std::map<t_pb_type*, std::vector<size_t>> pb_type_mode_bits_;
 
     /* Pair a pb_port to its physical pb_port 
      * Note:
@@ -93,6 +97,12 @@ class VprPbTypeAnnotation {
      * - the LSB and MSB MUST be in range of the physical pb_port
      */
     std::map<t_port*, BasicPort> physical_pb_port_ranges_;
+
+    /* Pair a pb_port to a circuit port in circuit model
+     * Note:
+     * - the parent of physical pb_port MUST be a physical pb_type
+     */
+    std::map<t_port*, CircuitPortId> pb_circuit_ports_;
 
     /* Pair a pb_graph_node to a physical pb_graph_node
      * Note:
