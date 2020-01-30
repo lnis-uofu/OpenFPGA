@@ -4,11 +4,18 @@
  * fabric generator, i.e., Verilog generator and SPICE generator
  *******************************************************************/
 #include <string>
+#include <fstream>
 
 /* Headers from vtrutil library */
 #include "vtr_time.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
+
+/* Headers from archopenfpga library */
+#include "write_xml_utils.h" 
+
+/* Headers from openfpgautil library */
+#include "openfpga_digest.h"
 
 #include "check_netlist_naming_conflict.h"
 
@@ -111,10 +118,10 @@ size_t detect_netlist_naming_conflict(const AtomNetlist& atom_netlist,
  *   any sensitive character
  *******************************************************************/
 static 
-void correct_netlist_naming_conflict(const AtomNetlist& atom_netlist,
-                                     const std::string& sensitive_chars,
-                                     const std::string& fix_chars,
-                                     VprNetlistAnnotation& vpr_netlist_annotation) {
+void fix_netlist_naming_conflict(const AtomNetlist& atom_netlist,
+                                 const std::string& sensitive_chars,
+                                 const std::string& fix_chars,
+                                 VprNetlistAnnotation& vpr_netlist_annotation) {
   size_t num_fixes = 0;
 
   /* Walk through blocks in the netlist */
@@ -144,7 +151,62 @@ void correct_netlist_naming_conflict(const AtomNetlist& atom_netlist,
     VTR_LOG("Fixed %ld naming conflicts in the netlist.\n",
             num_fixes);
   }
+}
 
+/********************************************************************
+ * Report all the fix-up in the naming of netlist components,
+ * i.e., blocks, nets
+ *******************************************************************/
+static 
+void print_netlist_naming_fix_report(const std::string& fname,
+                                     const AtomNetlist& atom_netlist,
+                                     const VprNetlistAnnotation& vpr_netlist_annotation) {
+  /* Create a file handler */
+  std::fstream fp;
+  /* Open the file stream */
+  fp.open(fname, std::fstream::out | std::fstream::trunc);
+
+  /* Validate the file stream */
+  openfpga::check_file_stream(fname.c_str(), fp);
+
+  fp << "<!-- Netlist naming fix-up report --> " << "\n";
+  fp << "<netlist>" << "\n";
+
+  fp << "\t" << "<blocks>" << "\n";
+  
+  for (const auto& block : atom_netlist.blocks()) {
+    const std::string& block_name = atom_netlist.block_name(block);
+    if (false == vpr_netlist_annotation.is_block_renamed(block)) {
+      continue;
+    }
+    fp << "\t\t" << "<block";
+    write_xml_attribute(fp, "previous", block_name.c_str());
+    write_xml_attribute(fp, "current", vpr_netlist_annotation.block_name(block).c_str());
+    fp << "/>" << "\n";
+  }
+
+  fp << "\t" << "</blocks>" << "\n";
+
+  fp << "\t" << "<nets>" << "\n";
+  
+  for (const auto& net : atom_netlist.nets()) {
+    const std::string& net_name = atom_netlist.net_name(net);
+    if (false == vpr_netlist_annotation.is_net_renamed(net)) {
+      continue;
+    }
+    fp << "\t\t" << "<net";
+    write_xml_attribute(fp, "previous", net_name.c_str());
+    write_xml_attribute(fp, "current", vpr_netlist_annotation.net_name(net).c_str());
+    fp << "/>" << "\n";
+  }
+
+  fp << "\t" << "</nets>" << "\n";
+
+
+  fp << "</netlist>" << "\n";
+
+  /* Close the file stream */
+  fp.close();
 }
 
 /********************************************************************
@@ -154,6 +216,8 @@ void correct_netlist_naming_conflict(const AtomNetlist& atom_netlist,
  *******************************************************************/
 void check_netlist_naming_conflict(OpenfpgaContext& openfpga_context,
                                    const Command& cmd, const CommandContext& cmd_context) {
+  vtr::ScopedStartFinishTimer timer("Check naming violations of netlist blocks and nets");
+
   /* By default, we replace all the illegal characters with '_' */
   const std::string& sensitive_chars(".,:;\'\"+-<>()[]{}!@#$%^&*~`?/");
   const std::string&       fix_chars("____________________________");
@@ -161,18 +225,27 @@ void check_netlist_naming_conflict(OpenfpgaContext& openfpga_context,
   CommandOptionId opt_fix = cmd.option("fix");
 
   /* Do the main job first: detect any naming in the BLIF netlist that violates the syntax */
-  size_t num_conflicts = detect_netlist_naming_conflict(g_vpr_ctx.atom().nlist, sensitive_chars); 
-  VTR_LOGV_ERROR((0 < num_conflicts && (false == cmd_context.option_enable(cmd, opt_fix))),
-                "Found %ld naming conflicts in the netlist. Please correct so as to use any fabric generators.\n",
-                num_conflicts);
-  VTR_LOGV(0 == num_conflicts, 
-          "Check naming conflicts in the netlist passed.\n");
-
+  if (false == cmd_context.option_enable(cmd, opt_fix)) {
+    size_t num_conflicts = detect_netlist_naming_conflict(g_vpr_ctx.atom().nlist, sensitive_chars); 
+    VTR_LOGV_ERROR((0 < num_conflicts && (false == cmd_context.option_enable(cmd, opt_fix))),
+                  "Found %ld naming conflicts in the netlist. Please correct so as to use any fabric generators.\n",
+                  num_conflicts);
+    VTR_LOGV(0 == num_conflicts, 
+             "Check naming conflicts in the netlist passed.\n");
+    return;
+  }
 
   /* If the auto correction is enabled, we apply a fix */
   if (true == cmd_context.option_enable(cmd, opt_fix)) {
-    correct_netlist_naming_conflict(g_vpr_ctx.atom().nlist, sensitive_chars,
-                                    fix_chars, openfpga_context.mutable_vpr_netlist_annotation());
+    fix_netlist_naming_conflict(g_vpr_ctx.atom().nlist, sensitive_chars,
+                                fix_chars, openfpga_context.mutable_vpr_netlist_annotation());
+
+    CommandOptionId opt_report = cmd.option("report");
+    if (true == cmd_context.option_enable(cmd, opt_report)) {
+      print_netlist_naming_fix_report(cmd_context.option_value(cmd, opt_report),
+                                      g_vpr_ctx.atom().nlist, 
+                                      openfpga_context.vpr_netlist_annotation());
+    }
   } 
 } 
 
