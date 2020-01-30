@@ -202,7 +202,6 @@ void print_netlist_naming_fix_report(const std::string& fname,
 
   fp << "\t" << "</nets>" << "\n";
 
-
   fp << "</netlist>" << "\n";
 
   /* Close the file stream */
@@ -245,6 +244,8 @@ void check_netlist_naming_conflict(OpenfpgaContext& openfpga_context,
       print_netlist_naming_fix_report(cmd_context.option_value(cmd, opt_report),
                                       g_vpr_ctx.atom().nlist, 
                                       openfpga_context.vpr_netlist_annotation());
+      VTR_LOG("Naming fix-up report is generated to file '%s'\n",
+              cmd_context.option_value(cmd, opt_report).c_str());
     }
   } 
 } 
