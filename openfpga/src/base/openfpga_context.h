@@ -3,6 +3,7 @@
 
 #include "vpr_context.h"
 #include "openfpga_arch.h"
+#include "vpr_netlist_annotation.h"
 #include "vpr_pb_type_annotation.h"
 
 /********************************************************************
@@ -36,14 +37,18 @@ class OpenfpgaContext : public Context  {
   public:  /* Public accessors */
     const openfpga::Arch& arch() const { return arch_; }
     const openfpga::VprPbTypeAnnotation& vpr_pb_type_annotation() const { return vpr_pb_type_annotation_; }
+    const openfpga::VprNetlistAnnotation& vpr_netlist_annotation() const { return vpr_netlist_annotation_; }
   public:  /* Public mutators */
     openfpga::Arch& mutable_arch() { return arch_; }
     openfpga::VprPbTypeAnnotation& mutable_vpr_pb_type_annotation() { return vpr_pb_type_annotation_; }
+    openfpga::VprNetlistAnnotation& mutable_vpr_netlist_annotation() { return vpr_netlist_annotation_; }
   private: /* Internal data */
     /* Data structure to store information from read_openfpga_arch library */
     openfpga::Arch arch_;
     /* Annotation to pb_type of VPR */
     openfpga::VprPbTypeAnnotation vpr_pb_type_annotation_;
+    /* Naming fix to netlist */
+    openfpga::VprNetlistAnnotation vpr_netlist_annotation_;
 };
 
 #endif

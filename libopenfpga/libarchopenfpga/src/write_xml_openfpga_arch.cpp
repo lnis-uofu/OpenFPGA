@@ -66,4 +66,7 @@ void write_xml_openfpga_arch(const char* fname,
 
   /* Write the simulation */
   write_xml_simulation_setting(fp, fname, openfpga_arch.sim_setting);
+
+  /* Close the file stream */
+  fp.close();
 }
