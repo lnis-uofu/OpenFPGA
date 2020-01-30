@@ -1,6 +1,8 @@
 /************************************************************************
  * Member functions for class VprPbTypeAnnotation
  ***********************************************************************/
+#include <algorithm>
+
 #include "vtr_log.h"
 #include "vtr_assert.h"
 #include "vpr_pb_type_annotation.h"
@@ -115,6 +117,84 @@ std::vector<size_t> VprPbTypeAnnotation::pb_type_mode_bits(t_pb_type* pb_type) c
   return pb_type_mode_bits_.at(pb_type);
 }
 
+PbGraphNodeId VprPbTypeAnnotation::pb_graph_node_unique_index(t_pb_graph_node* pb_graph_node) const {
+  /* Ensure that the pb_type is in the list */
+  std::map<t_pb_type*, std::vector<t_pb_graph_node*>>::const_iterator it = pb_graph_node_unique_index_.find(pb_graph_node->pb_type);
+  if (it == pb_graph_node_unique_index_.end()) {
+    /* Invalid pb_type, return a null pointer */
+    return PbGraphNodeId::INVALID();
+  }
+
+  /* Try to find the pb_graph_node in the vector */
+  std::vector<t_pb_graph_node*>::const_iterator it_node = std::find(pb_graph_node_unique_index_.at(pb_graph_node->pb_type).begin(),
+                                                                    pb_graph_node_unique_index_.at(pb_graph_node->pb_type).end(),
+                                                                    pb_graph_node);
+  /* If it exists, return the index
+   * Otherwise, return an invalid id
+   */
+  if (it_node == pb_graph_node_unique_index_.at(pb_graph_node->pb_type).end()) {
+    return PbGraphNodeId::INVALID();
+  }
+  return PbGraphNodeId(it_node - pb_graph_node_unique_index_.at(pb_graph_node->pb_type).begin());
+}
+
+t_pb_graph_node* VprPbTypeAnnotation::pb_graph_node(t_pb_type* pb_type, const PbGraphNodeId& unique_index) const {
+  /* Ensure that the pb_type is in the list */
+  std::map<t_pb_type*, std::vector<t_pb_graph_node*>>::const_iterator it = pb_graph_node_unique_index_.find(pb_type);
+  if (it == pb_graph_node_unique_index_.end()) {
+    /* Invalid pb_type, return a null pointer */
+    return nullptr;
+  }
+  /* Check if the unique index is in the range:
+   *  - Out of range: return a null pointer
+   *  - In range: return the pointer
+   */
+  if ((size_t)unique_index > pb_graph_node_unique_index_.at(pb_type).size() - 1) {
+    return nullptr;
+  }
+
+  return pb_graph_node_unique_index_.at(pb_type)[size_t(unique_index)];
+}
+
+t_pb_graph_node* VprPbTypeAnnotation::physical_pb_graph_node(t_pb_graph_node* pb_graph_node) const {
+  /* Ensure that the pb_graph_node is in the list */
+  std::map<t_pb_graph_node*, t_pb_graph_node*>::const_iterator it = physical_pb_graph_nodes_.find(pb_graph_node);
+  if (it == physical_pb_graph_nodes_.end()) {
+    return nullptr;
+  }
+  return physical_pb_graph_nodes_.at(pb_graph_node);
+}
+
+int VprPbTypeAnnotation::physical_pb_type_index_factor(t_pb_type* pb_type) const {
+  /* Ensure that the pb_type is in the list */
+  std::map<t_pb_type*, int>::const_iterator it = physical_pb_type_index_factors_.find(pb_type);
+  if (it == physical_pb_type_index_factors_.end()) {
+    /* Default value is 1 */
+    return 1;
+  }
+  return physical_pb_type_index_factors_.at(pb_type);
+}
+
+int VprPbTypeAnnotation::physical_pb_type_index_offset(t_pb_type* pb_type) const {
+  /* Ensure that the pb_type is in the list */
+  std::map<t_pb_type*, int>::const_iterator it = physical_pb_type_index_offsets_.find(pb_type);
+  if (it == physical_pb_type_index_offsets_.end()) {
+    /* Default value is 0 */
+    return 0;
+  }
+  return physical_pb_type_index_offsets_.at(pb_type);
+}
+
+int VprPbTypeAnnotation::physical_pb_pin_rotate_offset(t_port* pb_port) const {
+  /* Ensure that the pb_type is in the list */
+  std::map<t_port*, int>::const_iterator it = physical_pb_pin_rotate_offsets_.find(pb_port);
+  if (it == physical_pb_pin_rotate_offsets_.end()) {
+    /* Default value is 0 */
+    return 0;
+  }
+  return physical_pb_pin_rotate_offsets_.at(pb_port);
+}
+
 /************************************************************************
  * Public mutators
  ***********************************************************************/
@@ -219,6 +299,58 @@ void VprPbTypeAnnotation::add_pb_type_mode_bits(t_pb_type* pb_type, const std::v
   }
 
   pb_type_mode_bits_[pb_type] = mode_bits;
+}
+
+void VprPbTypeAnnotation::add_pb_graph_node_unique_index(t_pb_graph_node* pb_graph_node) {
+  pb_graph_node_unique_index_[pb_graph_node->pb_type].push_back(pb_graph_node);
+}
+
+void VprPbTypeAnnotation::add_physical_pb_graph_node(t_pb_graph_node* operating_pb_graph_node, 
+                                                     t_pb_graph_node* physical_pb_graph_node) {
+  /* Warn any override attempt */
+  std::map<t_pb_graph_node*, t_pb_graph_node*>::const_iterator it = physical_pb_graph_nodes_.find(operating_pb_graph_node);
+  if (it != physical_pb_graph_nodes_.end()) {
+    VTR_LOG_WARN("Override the annotation between operating pb_graph_node '%s[%d]' and it physical pb_graph_node '%s[%d]'!\n",
+                 operating_pb_graph_node->pb_type->name, 
+                 operating_pb_graph_node->placement_index,
+                 physical_pb_graph_node->pb_type->name, 
+                 physical_pb_graph_node->placement_index);
+  }
+
+  physical_pb_graph_nodes_[operating_pb_graph_node] = physical_pb_graph_node;
+}
+
+void VprPbTypeAnnotation::add_physical_pb_type_index_factor(t_pb_type* pb_type, const int& factor) {
+  /* Warn any override attempt */
+  std::map<t_pb_type*, int>::const_iterator it = physical_pb_type_index_factors_.find(pb_type);
+  if (it != physical_pb_type_index_factors_.end()) {
+    VTR_LOG_WARN("Override the annotation between operating pb_type '%s' and it physical pb_type index factor '%d'!\n",
+                 pb_type->name, factor);
+  }
+
+  physical_pb_type_index_factors_[pb_type] = factor;
+}
+
+void VprPbTypeAnnotation::add_physical_pb_type_index_offset(t_pb_type* pb_type, const int& offset) {
+  /* Warn any override attempt */
+  std::map<t_pb_type*, int>::const_iterator it = physical_pb_type_index_offsets_.find(pb_type);
+  if (it != physical_pb_type_index_offsets_.end()) {
+    VTR_LOG_WARN("Override the annotation between operating pb_type '%s' and it physical pb_type index offset '%d'!\n",
+                 pb_type->name, offset);
+  }
+
+  physical_pb_type_index_offsets_[pb_type] = offset;
+}
+
+void VprPbTypeAnnotation::add_physical_pb_pin_rotate_offset(t_port* pb_port, const int& offset) {
+  /* Warn any override attempt */
+  std::map<t_port*, int>::const_iterator it = physical_pb_pin_rotate_offsets_.find(pb_port);
+  if (it != physical_pb_pin_rotate_offsets_.end()) {
+    VTR_LOG_WARN("Override the annotation between operating pb_port '%s' and it physical pb_port pin rotate offset '%d'!\n",
+                 pb_port->name, offset);
+  }
+
+  physical_pb_pin_rotate_offsets_[pb_port] = offset;
 }
 
 } /* End namespace openfpga*/

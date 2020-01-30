@@ -118,5 +118,150 @@ void annotate_pb_graph_interconnect_physical_type(const DeviceContext& vpr_devic
   }
 }
 
+/********************************************************************
+ * This function will recursively walk through all the pb_graph nodes
+ * starting from a top node.
+ * It aims to give an unique index to each pb_graph node 
+ *
+ * Therefore, the sequence in visiting the nodes is critical
+ * Here, we will follow the strategy where primitive nodes are visited first 
+ *******************************************************************/
+static 
+void rec_build_vpr_primitive_pb_graph_node_unique_index(t_pb_graph_node* pb_graph_node, 
+                                                        VprPbTypeAnnotation& vpr_pb_type_annotation) {
+  /* Go recursive first until we touch the primitive node */
+  if (false == is_primitive_pb_type(pb_graph_node->pb_type)) {
+    for (int imode = 0; imode < pb_graph_node->pb_type->num_modes; ++imode) {
+      for (int ipb = 0; ipb < pb_graph_node->pb_type->modes[imode].num_pb_type_children; ++ipb) {
+        /* Each child may exist multiple times in the hierarchy*/
+        for (int jpb = 0; jpb < pb_graph_node->pb_type->modes[imode].pb_type_children[ipb].num_pb; ++jpb) {
+          rec_build_vpr_primitive_pb_graph_node_unique_index(&(pb_graph_node->child_pb_graph_nodes[imode][ipb][jpb]), 
+                                                             vpr_pb_type_annotation);
+        }
+      }
+    }
+    return;
+  }
+
+  /* Give a unique index to the pb_graph_node */
+  vpr_pb_type_annotation.add_pb_graph_node_unique_index(pb_graph_node);
+}
+
+/********************************************************************
+ * This function aims to assign an unique index to each 
+ * primitive pb_graph_node by following a recursive way in walking
+ * through the pb_graph
+ *
+ * Note: 
+ * - The unique index is different from the placement_index in VPR's 
+ *   pb_graph_node data structure. The placement index is only unique
+ *   for a node under its parent node. If the parent node is duplicated 
+ *   across the graph, the placement index is not unique.
+ *   For example, a CLB contains 10 LEs and each of LE contains 2 LUTs
+ *   Inside each LE, the placement index of the LUTs are 0 and 1 respectively.
+ *   But these indices are not unique in the graph, as there are 20 LUTs in total
+ *******************************************************************/
+static 
+void annotate_primitive_pb_graph_node_unique_index(const DeviceContext& vpr_device_ctx, 
+                                                   VprPbTypeAnnotation& vpr_pb_type_annotation) {
+  for (const t_logical_block_type& lb_type : vpr_device_ctx.logical_block_types) {
+    /* By pass nullptr for pb_graph head */
+    if (nullptr == lb_type.pb_graph_head) {
+      continue;
+    }
+    rec_build_vpr_primitive_pb_graph_node_unique_index(lb_type.pb_graph_head, vpr_pb_type_annotation); 
+  }
+}
+
+/********************************************************************
+ * This function will recursively walk through all the pb_graph nodes
+ * starting from a top node.
+ * It aims to give an unique index to each pb_graph node 
+ *
+ * Therefore, the sequence in visiting the nodes is critical
+ * Here, we will follow the strategy where primitive nodes are visited first 
+ *******************************************************************/
+static 
+void rec_build_vpr_physical_pb_graph_node_annotation(t_pb_graph_node* pb_graph_node, 
+                                                     VprPbTypeAnnotation& vpr_pb_type_annotation) {
+  /* Go recursive first until we touch the primitive node */
+  if (false == is_primitive_pb_type(pb_graph_node->pb_type)) {
+    for (int imode = 0; imode < pb_graph_node->pb_type->num_modes; ++imode) {
+      for (int ipb = 0; ipb < pb_graph_node->pb_type->modes[imode].num_pb_type_children; ++ipb) {
+        /* Each child may exist multiple times in the hierarchy*/
+        for (int jpb = 0; jpb < pb_graph_node->pb_type->modes[imode].pb_type_children[ipb].num_pb; ++jpb) {
+          rec_build_vpr_physical_pb_graph_node_annotation(&(pb_graph_node->child_pb_graph_nodes[imode][ipb][jpb]), 
+                                                          vpr_pb_type_annotation);
+        }
+      }
+    }
+    return;
+  }
+
+  /* To bind operating pb_graph_node to their physical pb_graph_node:
+   *  - Get the physical pb_type that this type of pb_graph_node should be mapped to 
+   *  - Calculate the unique index of physical pb_graph_node to which
+   *    this pb_graph_node should be binded
+   *  - Find the physical pb_graph_node with the given index 
+   * To bind pins from operating pb_graph_node to their physical pb_graph_node pins
+   */
+  t_pb_type* physical_pb_type = vpr_pb_type_annotation.physical_pb_type(pb_graph_node->pb_type); 
+  VTR_ASSERT(nullptr != physical_pb_type);
+
+  /* Index inference:
+   * physical_pb_graph_node_unique_index = operating_pb_graph_node_unique_index * factor + offset
+   * where factor and offset are provided by users
+   */
+  PbGraphNodeId physical_pb_graph_node_id = PbGraphNodeId(
+                                            vpr_pb_type_annotation.physical_pb_type_index_factor(pb_graph_node->pb_type)
+                                          * (size_t)vpr_pb_type_annotation.pb_graph_node_unique_index(pb_graph_node)
+                                          + vpr_pb_type_annotation.physical_pb_type_index_offset(pb_graph_node->pb_type)
+                                            );
+  t_pb_graph_node* physical_pb_graph_node = vpr_pb_type_annotation.pb_graph_node(pb_graph_node->pb_type, physical_pb_graph_node_id);
+  VTR_ASSERT(nullptr != physical_pb_graph_node);
+  vpr_pb_type_annotation.add_physical_pb_graph_node(pb_graph_node, physical_pb_graph_node);
+
+  VTR_LOG("Bind operating pb_graph_node '%s' to physical pb_graph_node '%s'\n",
+          pb_graph_node->hierarchical_type_name().c_str(),
+          physical_pb_graph_node->hierarchical_type_name().c_str());
+
+  /* Try to bind each pins under this pb_graph_node to physical_pb_graph_node */
+}
+
+/********************************************************************
+ * Find the physical pb_graph_node for  each primitive pb_graph_node
+ * - Bind operating pb_graph_node to their physical pb_graph_node
+ * - Bind pins from operating pb_graph_node to their physical pb_graph_node pins
+ *******************************************************************/
+static 
+void annotate_physical_pb_graph_node(const DeviceContext& vpr_device_ctx, 
+                                     VprPbTypeAnnotation& vpr_pb_type_annotation) {
+  for (const t_logical_block_type& lb_type : vpr_device_ctx.logical_block_types) {
+    /* By pass nullptr for pb_graph head */
+    if (nullptr == lb_type.pb_graph_head) {
+      continue;
+    }
+    rec_build_vpr_physical_pb_graph_node_annotation(lb_type.pb_graph_head, vpr_pb_type_annotation); 
+  }
+}
+
+/********************************************************************
+ * Top-level function to annotate all the pb_graph nodes and pins
+ * - Give unique index to each primitive node in the same type
+ * - Bind operating pb_graph_node to their physical pb_graph_node
+ * - Bind pins from operating pb_graph_node to their physical pb_graph_node pins
+ *******************************************************************/
+void annotate_pb_graph(const DeviceContext& vpr_device_ctx, 
+                       VprPbTypeAnnotation& vpr_pb_type_annotation) {
+
+  VTR_LOG("Assigning unique indices for primitive pb_graph nodes...");
+  annotate_primitive_pb_graph_node_unique_index(vpr_device_ctx, vpr_pb_type_annotation);
+  VTR_LOG("Done\n");
+
+  VTR_LOG("Binding operating pb_graph nodes/pins to physical pb_graph nodes/pins...\n");
+  annotate_physical_pb_graph_node(vpr_device_ctx, vpr_pb_type_annotation);
+  VTR_LOG("Done\n");
+}
+
 } /* end namespace openfpga */
 
