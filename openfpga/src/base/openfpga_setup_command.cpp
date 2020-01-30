@@ -68,7 +68,7 @@ void add_openfpga_setup_commands(openfpga::Shell<OpenfpgaContext>& shell) {
    */ 
   Command shell_cmd_check_netlist_naming_conflict("check_netlist_naming_conflict");
   /* Add an option '--correction' */
-  shell_cmd_check_netlist_naming_conflict.add_option("correction", false, "Apply correction to any conflicts found");
+  shell_cmd_check_netlist_naming_conflict.add_option("fix", false, "Apply correction to any conflicts found");
   /* Add an option '--report' */
   CommandOptionId check_netlist_opt_rpt = shell_cmd_check_netlist_naming_conflict.add_option("report", false, "Output a report file about what any correction applied");
   shell_cmd_check_netlist_naming_conflict.set_option_require_value(check_netlist_opt_rpt, openfpga::OPT_STRING);

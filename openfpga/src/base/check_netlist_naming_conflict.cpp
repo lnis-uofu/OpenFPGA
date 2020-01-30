@@ -21,18 +21,47 @@ namespace openfpga {
 /********************************************************************
  * This function aims to check if the name contains any of the 
  * sensitive characters in the list
+ * Return a string of sensitive characters which are contained
+ * in the name
  *******************************************************************/
 static 
-bool name_contain_sensitive_chars(const std::string& name, 
-                                  const std::string& sensitive_chars) {
+std::string name_contain_sensitive_chars(const std::string& name, 
+                                         const std::string& sensitive_chars) {
+  std::string violation;
+
   for (const char& sensitive_char : sensitive_chars) {
     /* Return true since we find a characters */
     if (std::string::npos != name.find(sensitive_char)) {
-      return true;
+      violation.push_back(sensitive_char);
     }
   }
 
-  return false;
+  return violation;
+}
+
+/********************************************************************
+ * This function aims to fix up a name that contains any of the 
+ * sensitive characters in the list
+ * Return a string the fixed name
+ *******************************************************************/
+static 
+std::string fix_name_contain_sensitive_chars(const std::string& name, 
+                                             const std::string& sensitive_chars,
+                                             const std::string& fix_chars) {
+  std::string fixed_name = name;
+
+  VTR_ASSERT(sensitive_chars.length() == fix_chars.length());
+
+  for (size_t ichar = 0; ichar < sensitive_chars.length(); ++ichar) {
+    /* Keep fixing the characters until we cannot find anymore */
+    std::string::size_type pos = 0u;
+    while (std::string::npos != (pos = fixed_name.find(sensitive_chars[ichar], pos))) {
+      fixed_name.replace(pos, 1, std::string(1, fix_chars[ichar]));
+      pos += 1;
+    }
+  }
+
+  return fixed_name;
 }
 
 /********************************************************************
@@ -44,16 +73,17 @@ bool name_contain_sensitive_chars(const std::string& name,
  *   any sensitive character
  *******************************************************************/
 static 
-void detect_netlist_naming_conflict(const AtomNetlist& atom_netlist,
+size_t detect_netlist_naming_conflict(const AtomNetlist& atom_netlist,
                                     const std::string& sensitive_chars) {
   size_t num_conflicts = 0;
 
   /* Walk through blocks in the netlist */
   for (const auto& block : atom_netlist.blocks()) {
     const std::string& block_name = atom_netlist.block_name(block);
-    if (true == name_contain_sensitive_chars(block_name, sensitive_chars)) {
-      VTR_LOG("Block '%s' violates the syntax requirement by OpenFPGA!\n",
-              block_name.c_str());
+    const std::string& violation = name_contain_sensitive_chars(block_name, sensitive_chars);
+    if (false == violation.empty()) {
+      VTR_LOG("Block '%s' contains illegal characters '%s'\n",
+              block_name.c_str(), violation.c_str());
       num_conflicts++;
     }
   }
@@ -61,18 +91,61 @@ void detect_netlist_naming_conflict(const AtomNetlist& atom_netlist,
   /* Walk through nets in the netlist */
   for (const auto& net : atom_netlist.nets()) {
     const std::string& net_name = atom_netlist.net_name(net);
-    if (true == name_contain_sensitive_chars(net_name, sensitive_chars)) {
-      VTR_LOG("Net '%s' violates the syntax requirement by OpenFPGA!\n",
-              net_name.c_str());
+    const std::string& violation = name_contain_sensitive_chars(net_name, sensitive_chars);
+    if (false == violation.empty()) {
+      VTR_LOG("Net '%s' contains illegal characters '%s'\n",
+              net_name.c_str(), violation.c_str());
       num_conflicts++;
     }
   }
 
-  if (0 < num_conflicts) {
-    VTR_LOG("Found %ld naming conflicts in the netlist. Please correct so as to use any fabric generators.\n",
-            num_conflicts);
-  }
+  return num_conflicts;
 } 
+
+/********************************************************************
+ * Correct and report any naming conflict by checking a list of 
+ * sensitive characters
+ * - Iterate over all the blocks and correct any block name that contains 
+ *   any sensitive character
+ * - Iterate over all the nets and correct any net name that contains
+ *   any sensitive character
+ *******************************************************************/
+static 
+void correct_netlist_naming_conflict(const AtomNetlist& atom_netlist,
+                                     const std::string& sensitive_chars,
+                                     const std::string& fix_chars,
+                                     VprNetlistAnnotation& vpr_netlist_annotation) {
+  size_t num_fixes = 0;
+
+  /* Walk through blocks in the netlist */
+  for (const auto& block : atom_netlist.blocks()) {
+    const std::string& block_name = atom_netlist.block_name(block);
+    const std::string& violation = name_contain_sensitive_chars(block_name, sensitive_chars);
+
+    if (false == violation.empty()) {
+      /* Apply fix-up here */
+      vpr_netlist_annotation.rename_block(block, fix_name_contain_sensitive_chars(block_name, sensitive_chars, fix_chars)); 
+      num_fixes++;
+    }
+  }
+
+  /* Walk through nets in the netlist */
+  for (const auto& net : atom_netlist.nets()) {
+    const std::string& net_name = atom_netlist.net_name(net);
+    const std::string& violation = name_contain_sensitive_chars(net_name, sensitive_chars);
+    if (false == violation.empty()) {
+      /* Apply fix-up here */
+      vpr_netlist_annotation.rename_net(net, fix_name_contain_sensitive_chars(net_name, sensitive_chars, fix_chars)); 
+      num_fixes++;
+    }
+  }
+
+  if (0 < num_fixes) {
+    VTR_LOG("Fixed %ld naming conflicts in the netlist.\n",
+            num_fixes);
+  }
+
+}
 
 /********************************************************************
  * Top-level function to detect and correct any naming
@@ -81,11 +154,26 @@ void detect_netlist_naming_conflict(const AtomNetlist& atom_netlist,
  *******************************************************************/
 void check_netlist_naming_conflict(OpenfpgaContext& openfpga_context,
                                    const Command& cmd, const CommandContext& cmd_context) {
+  /* By default, we replace all the illegal characters with '_' */
   const std::string& sensitive_chars(".,:;\'\"+-<>()[]{}!@#$%^&*~`?/");
+  const std::string&       fix_chars("____________________________");
+
+  CommandOptionId opt_fix = cmd.option("fix");
 
   /* Do the main job first: detect any naming in the BLIF netlist that violates the syntax */
-  detect_netlist_naming_conflict(g_vpr_ctx.atom().nlist, sensitive_chars); 
-  
+  size_t num_conflicts = detect_netlist_naming_conflict(g_vpr_ctx.atom().nlist, sensitive_chars); 
+  VTR_LOGV_ERROR((0 < num_conflicts && (false == cmd_context.option_enable(cmd, opt_fix))),
+                "Found %ld naming conflicts in the netlist. Please correct so as to use any fabric generators.\n",
+                num_conflicts);
+  VTR_LOGV(0 == num_conflicts, 
+          "Check naming conflicts in the netlist passed.\n");
+
+
+  /* If the auto correction is enabled, we apply a fix */
+  if (true == cmd_context.option_enable(cmd, opt_fix)) {
+    correct_netlist_naming_conflict(g_vpr_ctx.atom().nlist, sensitive_chars,
+                                    fix_chars, openfpga_context.mutable_vpr_netlist_annotation());
+  } 
 } 
 
 } /* end namespace openfpga */
