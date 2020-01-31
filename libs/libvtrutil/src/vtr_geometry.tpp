@@ -80,6 +80,12 @@ Rect<T>::Rect(Point<T> bottom_left_val, Point<T> top_right_val)
 }
 
 template<class T>
+Rect<T>::Rect() {
+    //pass
+}
+
+
+template<class T>
 T Rect<T>::xmin() const {
     return bottom_left_.x();
 }
