@@ -73,6 +73,13 @@ void rec_build_vpr_pb_graph_interconnect_physical_type_annotation(t_pb_graph_nod
 
     /* For each interconnect that has more than 1 input, we can infer the physical type */
     for (t_interconnect* interc : pb_mode_interconnects(child_physical_mode)) {
+      /* If the number inputs for an interconnect is zero, this is a 0-driver pin
+       * we just set 1 to use direct wires
+       */
+      if (0 == interc_num_inputs[interc]) {
+        interc_num_inputs[interc] = 1;
+      }
+      
       e_interconnect interc_physical_type = pb_interconnect_physical_type(interc, interc_num_inputs[interc]);
       if (interc_physical_type == vpr_pb_type_annotation.interconnect_physical_type(interc)) {
         /* Skip annotation if we have already done! */
@@ -383,7 +390,7 @@ void rec_build_vpr_physical_pb_graph_node_annotation(t_pb_graph_node* pb_graph_n
                                           * (size_t)vpr_pb_type_annotation.pb_graph_node_unique_index(pb_graph_node)
                                           + vpr_pb_type_annotation.physical_pb_type_index_offset(pb_graph_node->pb_type)
                                             );
-  t_pb_graph_node* physical_pb_graph_node = vpr_pb_type_annotation.pb_graph_node(pb_graph_node->pb_type, physical_pb_graph_node_id);
+  t_pb_graph_node* physical_pb_graph_node = vpr_pb_type_annotation.pb_graph_node(physical_pb_type, physical_pb_graph_node_id);
   VTR_ASSERT(nullptr != physical_pb_graph_node);
   vpr_pb_type_annotation.add_physical_pb_graph_node(pb_graph_node, physical_pb_graph_node);
 
