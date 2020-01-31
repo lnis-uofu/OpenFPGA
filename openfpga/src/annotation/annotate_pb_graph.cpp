@@ -10,6 +10,7 @@
 #include "pb_graph_utils.h"
 
 #include "annotate_pb_graph.h"
+#include "check_pb_graph_annotation.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -435,6 +436,9 @@ void annotate_pb_graph(const DeviceContext& vpr_device_ctx,
   VTR_LOG("Binding operating pb_graph nodes/pins to physical pb_graph nodes/pins...\n");
   annotate_physical_pb_graph_node(vpr_device_ctx, vpr_pb_type_annotation);
   VTR_LOG("Done\n");
+
+  /* Check each primitive pb_graph_node and pin has been binded to a physical node and pin */
+  check_physical_pb_graph_node_annotation(vpr_device_ctx, const_cast<const VprPbTypeAnnotation&>(vpr_pb_type_annotation));
 }
 
 } /* end namespace openfpga */
