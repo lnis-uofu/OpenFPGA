@@ -27,9 +27,12 @@ namespace openfpga {
  * - physical pb_graph nodes and pb_graph pins
  * - circuit models for global routing architecture
  *******************************************************************/
-void link_arch(OpenfpgaContext& openfpga_context) {
+void link_arch(OpenfpgaContext& openfpga_context,
+               const Command& cmd, const CommandContext& cmd_context) { 
 
   vtr::ScopedStartFinishTimer timer("Link OpenFPGA architecture to VPR architecture");
+
+  CommandOptionId opt_verbose = cmd.option("verbose");
 
   /* Annotate pb_type graphs
    * - physical pb_type
@@ -37,7 +40,8 @@ void link_arch(OpenfpgaContext& openfpga_context) {
    * - circuit models for pb_type and pb interconnect
    */
   annotate_pb_types(g_vpr_ctx.device(), openfpga_context.arch(),
-                    openfpga_context.mutable_vpr_pb_type_annotation());
+                    openfpga_context.mutable_vpr_pb_type_annotation(),
+                    cmd_context.option_enable(cmd, opt_verbose));
 
   /* Annotate pb_graph_nodes
    * - Give unique index to each node in the same type
@@ -45,7 +49,8 @@ void link_arch(OpenfpgaContext& openfpga_context) {
    * - Bind pins from operating pb_graph_node to their physical pb_graph_node pins
    */
   annotate_pb_graph(g_vpr_ctx.device(),
-                    openfpga_context.mutable_vpr_pb_type_annotation());
+                    openfpga_context.mutable_vpr_pb_type_annotation(),
+                    cmd_context.option_enable(cmd, opt_verbose));
 } 
 
 } /* end namespace openfpga */
