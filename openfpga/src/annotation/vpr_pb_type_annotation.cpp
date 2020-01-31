@@ -195,6 +195,26 @@ int VprPbTypeAnnotation::physical_pb_pin_rotate_offset(t_port* pb_port) const {
   return physical_pb_pin_rotate_offsets_.at(pb_port);
 }
 
+int VprPbTypeAnnotation::physical_pb_pin_offset(t_port* pb_port) const {
+  /* Ensure that the pb_type is in the list */
+  std::map<t_port*, int>::const_iterator it = physical_pb_pin_offsets_.find(pb_port);
+  if (it == physical_pb_pin_offsets_.end()) {
+    /* Default value is 0 */
+    return 0;
+  }
+  return physical_pb_pin_offsets_.at(pb_port);
+}
+
+
+t_pb_graph_pin* VprPbTypeAnnotation::physical_pb_graph_pin(t_pb_graph_pin* pb_graph_pin) const {
+  /* Ensure that the pb_type is in the list */
+  std::map<t_pb_graph_pin*, t_pb_graph_pin*>::const_iterator it = physical_pb_graph_pins_.find(pb_graph_pin);
+  if (it == physical_pb_graph_pins_.end()) {
+    return nullptr;
+  }
+  return physical_pb_graph_pins_.at(pb_graph_pin);
+}
+
 /************************************************************************
  * Public mutators
  ***********************************************************************/
@@ -351,6 +371,45 @@ void VprPbTypeAnnotation::add_physical_pb_pin_rotate_offset(t_port* pb_port, con
   }
 
   physical_pb_pin_rotate_offsets_[pb_port] = offset;
+  /* We initialize the accumulated offset to 0 */
+  physical_pb_pin_offsets_[pb_port] = 0;
+}
+
+void VprPbTypeAnnotation::add_physical_pb_graph_pin(t_pb_graph_pin* operating_pb_graph_pin, 
+                                                    t_pb_graph_pin* physical_pb_graph_pin) {
+  /* Warn any override attempt */
+  std::map<t_pb_graph_pin*, t_pb_graph_pin*>::const_iterator it = physical_pb_graph_pins_.find(operating_pb_graph_pin);
+  if (it != physical_pb_graph_pins_.end()) {
+    VTR_LOG_WARN("Override the annotation between operating pb_graph_pin '%s' and it physical pb_graph_pin '%s'!\n",
+                 operating_pb_graph_pin->port->name, physical_pb_graph_pin->port->name);
+  }
+
+  physical_pb_graph_pins_[operating_pb_graph_pin] = physical_pb_graph_pin;
+
+  /* Update the accumulated offsets for the operating port 
+   * Each time we pair two pins, we update the offset by the pin rotate offset
+   * When the accumulated offset exceeds the MSB of the port range of physical port
+   * we reset it to 0
+   *                                             operating port         physical port
+   *                      LSB  port_range.lsb()    pin_number              pin_number      MSB
+   *                                 |                  |                     |
+   *    Operating port     |         |                  +------               |
+   *                                 |                        |<----offset--->|
+   *    Physical port      |         +                        +               +
+   *
+   */
+  if (0 == physical_pb_pin_rotate_offset(operating_pb_graph_pin->port)) {
+    return;
+  }
+
+  physical_pb_pin_offsets_[operating_pb_graph_pin->port] += physical_pb_pin_rotate_offset(operating_pb_graph_pin->port);
+
+  if (physical_pb_port_range(operating_pb_graph_pin->port).get_msb() 
+    < operating_pb_graph_pin->pin_number
+    + physical_pb_port_range(operating_pb_graph_pin->port).get_lsb() 
+    + physical_pb_pin_offset(operating_pb_graph_pin->port)) {
+    physical_pb_pin_offsets_[operating_pb_graph_pin->port] = 0;
+  }
 }
 
 } /* End namespace openfpga*/

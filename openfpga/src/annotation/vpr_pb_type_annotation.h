@@ -54,7 +54,18 @@ class VprPbTypeAnnotation {
     t_pb_graph_node* physical_pb_graph_node(t_pb_graph_node* pb_graph_node) const;
     int physical_pb_type_index_factor(t_pb_type* pb_type) const;
     int physical_pb_type_index_offset(t_pb_type* pb_type) const;
+
     int physical_pb_pin_rotate_offset(t_port* pb_port) const;
+
+    /**This function returns an accumulated offset. Note that the
+     * accumulated offset is NOT the pin rotate offset specified by users
+     * It is an aggregation of the offset during pin pairing
+     * Each time, we manage to pair two pins, the accumulated offset will be incremented
+     * by the pin rotate offset value
+     * The accumulated offset will be reset to 0 when it exceeds the msb() of the physical port
+     */
+    int physical_pb_pin_offset(t_port* pb_port) const;
+    t_pb_graph_pin* physical_pb_graph_pin(t_pb_graph_pin* pb_graph_pin) const;
   public:  /* Public mutators */
     void add_pb_type_physical_mode(t_pb_type* pb_type, t_mode* physical_mode);
     void add_physical_pb_type(t_pb_type* operating_pb_type, t_pb_type* physical_pb_type);
@@ -71,6 +82,7 @@ class VprPbTypeAnnotation {
     void add_physical_pb_type_index_factor(t_pb_type* pb_type, const int& factor);
     void add_physical_pb_type_index_offset(t_pb_type* pb_type, const int& offset);
     void add_physical_pb_pin_rotate_offset(t_port* pb_port, const int& offset);
+    void add_physical_pb_graph_pin(t_pb_graph_pin* operating_pb_graph_pin, t_pb_graph_pin* physical_pb_graph_pin);
   private: /* Internal data */
     /* Pair a regular pb_type to its physical pb_type */
     std::map<t_pb_type*, t_pb_type*> physical_pb_types_;
@@ -116,6 +128,9 @@ class VprPbTypeAnnotation {
      */
     std::map<t_port*, t_port*> physical_pb_ports_;
     std::map<t_port*, int> physical_pb_pin_rotate_offsets_;
+
+    /* Accumulated offsets for a physical pb_type port, just for internal usage */
+    std::map<t_port*, int> physical_pb_pin_offsets_;
 
     /* Pair a pb_port to its LSB and MSB of a physical pb_port 
      * Note:

@@ -174,6 +174,172 @@ void annotate_primitive_pb_graph_node_unique_index(const DeviceContext& vpr_devi
 }
 
 /********************************************************************
+ * Evaluate if the two pb_graph pins are matched by
+ *  - pb_type port annotation 
+ *  - LSB/MSB and pin offset
+ *******************************************************************/
+static 
+bool try_match_pb_graph_pin(t_pb_graph_pin* operating_pb_graph_pin, 
+                            t_pb_graph_pin* physical_pb_graph_pin,
+                            const VprPbTypeAnnotation& vpr_pb_type_annotation) {
+  /* If the parent ports of the two pins are not paired, fail */
+  if (physical_pb_graph_pin->port != vpr_pb_type_annotation.physical_pb_port(operating_pb_graph_pin->port)) {
+    return false;
+  }
+  /* Check the pin number of physical pb_graph_pin matches the pin number of 
+   * operating pb_graph_pin plus a rotation offset 
+   *                                              operating port         physical port
+   *                      LSB  port_range.lsb()    pin_number              pin_number      MSB
+   *                                 |                  |                     |
+   *    Operating port     |         |                  +------               |
+   *                                 |                        |<----offset--->|
+   *    Physical port      |         +                        +               +
+   *
+   * Note: 
+   *   - accumulated offset is NOT the pin rotate offset specified by users
+   *     It is an aggregation of the offset during pin pairing
+   *     Each time, we manage to pair two pins, the accumulated offset will be incremented
+   *     by the pin rotate offset value
+   *     The accumulated offset will be reset to 0 when it exceeds the msb() of the physical port
+   */
+  int acc_offset = vpr_pb_type_annotation.physical_pb_pin_offset(operating_pb_graph_pin->port);
+  const BasicPort& physical_port_range = vpr_pb_type_annotation.physical_pb_port_range(operating_pb_graph_pin->port);
+  if (physical_pb_graph_pin->pin_number != operating_pb_graph_pin->pin_number
+                                         + (int)physical_port_range.get_lsb() 
+                                         + acc_offset) {
+    return false;
+  }
+
+  /* Reach here, it means all the requirements have been met */
+  return true;
+}
+
+/********************************************************************
+ * Bind a pb_graph_pin from an operating pb_graph_node to 
+ * a pb_graph_pin from a physical pb_graph_node
+ * - the name matching rules are already defined in the vpr_pb_type_annotation
+ *******************************************************************/
+static 
+void annotate_physical_pb_graph_pin(t_pb_graph_pin* operating_pb_graph_pin, 
+                                    t_pb_graph_node* physical_pb_graph_node, 
+                                    VprPbTypeAnnotation& vpr_pb_type_annotation) {
+  /* Iterate over every port and pin of the operating pb_graph_node 
+   * and find the physical pins 
+   */
+  for (int iport = 0; iport < physical_pb_graph_node->num_input_ports; ++iport) {
+    for (int ipin = 0; ipin < physical_pb_graph_node->num_input_pins[iport]; ++ipin) {
+      if (false == try_match_pb_graph_pin(operating_pb_graph_pin, 
+                                          &(physical_pb_graph_node->input_pins[iport][ipin]),
+                                          vpr_pb_type_annotation)) {
+        continue;
+      }
+      /* Reach here, it means the pins are matched by the annotation requirements 
+       * We can pair the pin and return  
+       */
+      vpr_pb_type_annotation.add_physical_pb_graph_pin(operating_pb_graph_pin, &(physical_pb_graph_node->input_pins[iport][ipin]));
+      VTR_LOG("Bind a pb_graph_node '%s[%d]' pin '%s[%d]' to a pb_graph_node '%s[%d]' pin '%s[%d]'!\n",
+              operating_pb_graph_pin->parent_node->pb_type->name,
+              operating_pb_graph_pin->parent_node->placement_index,
+              operating_pb_graph_pin->port->name,
+              operating_pb_graph_pin->pin_number,
+              physical_pb_graph_node->pb_type->name,
+              physical_pb_graph_node->placement_index,
+              physical_pb_graph_node->input_pins[iport][ipin].port->name,
+              physical_pb_graph_node->input_pins[iport][ipin].pin_number);
+      return;
+    }
+  }
+
+  for (int iport = 0; iport < physical_pb_graph_node->num_output_ports; ++iport) {
+    for (int ipin = 0; ipin < physical_pb_graph_node->num_output_pins[iport]; ++ipin) {
+      if (false == try_match_pb_graph_pin(operating_pb_graph_pin, 
+                                          &(physical_pb_graph_node->output_pins[iport][ipin]),
+                                          vpr_pb_type_annotation)) {
+        continue;
+      }
+      /* Reach here, it means the pins are matched by the annotation requirements 
+       * We can pair the pin and return  
+       */
+      vpr_pb_type_annotation.add_physical_pb_graph_pin(operating_pb_graph_pin, &(physical_pb_graph_node->output_pins[iport][ipin]));
+      VTR_LOG("Bind a pb_graph_node '%s[%d]' pin '%s[%d]' to a pb_graph_node '%s[%d]' pin '%s[%d]'!\n",
+              operating_pb_graph_pin->parent_node->pb_type->name,
+              operating_pb_graph_pin->parent_node->placement_index,
+              operating_pb_graph_pin->port->name,
+              operating_pb_graph_pin->pin_number,
+              physical_pb_graph_node->pb_type->name,
+              physical_pb_graph_node->placement_index,
+              physical_pb_graph_node->output_pins[iport][ipin].port->name,
+              physical_pb_graph_node->output_pins[iport][ipin].pin_number);
+      return;
+    }
+  }
+
+  for (int iport = 0; iport < physical_pb_graph_node->num_clock_ports; ++iport) {
+    for (int ipin = 0; ipin < physical_pb_graph_node->num_clock_pins[iport]; ++ipin) {
+      if (false == try_match_pb_graph_pin(operating_pb_graph_pin, 
+                                          &(physical_pb_graph_node->clock_pins[iport][ipin]),
+                                          vpr_pb_type_annotation)) {
+        continue;
+      }
+      /* Reach here, it means the pins are matched by the annotation requirements 
+       * We can pair the pin and return  
+       */
+      vpr_pb_type_annotation.add_physical_pb_graph_pin(operating_pb_graph_pin, &(physical_pb_graph_node->clock_pins[iport][ipin]));
+      VTR_LOG("Bind a pb_graph_node '%s[%d]' pin '%s[%d]' to a pb_graph_node '%s[%d]' pin '%s[%d]'!\n",
+              operating_pb_graph_pin->parent_node->pb_type->name,
+              operating_pb_graph_pin->parent_node->placement_index,
+              operating_pb_graph_pin->port->name,
+              operating_pb_graph_pin->pin_number,
+              physical_pb_graph_node->pb_type->name,
+              physical_pb_graph_node->placement_index,
+              physical_pb_graph_node->clock_pins[iport][ipin].port->name,
+              physical_pb_graph_node->clock_pins[iport][ipin].pin_number);
+      return;
+    }
+  }
+
+  /* If we reach here, it means that pin pairing fails, error out! */
+  VTR_LOG_ERROR("Fail to match a physical pin for '%s' from pb_graph_node '%s'!\n",
+                operating_pb_graph_pin->port->name,
+                physical_pb_graph_node->hierarchical_type_name().c_str());
+}
+
+/********************************************************************
+ * This function will try bind each pin of the operating pb_graph_node
+ * to a pin of the physical pb_graph_node by following the annotation
+ * available in vpr_pb_type_annotation
+ * It will add the pin bindings to the vpr_pb_type_annotation
+ *******************************************************************/
+static 
+void annotate_physical_pb_graph_node_pins(t_pb_graph_node* operating_pb_graph_node, 
+                                          t_pb_graph_node* physical_pb_graph_node, 
+                                          VprPbTypeAnnotation& vpr_pb_type_annotation) {
+  /* Iterate over every port and pin of the operating pb_graph_node 
+   * and find the physical pins 
+   */
+  for (int iport = 0; iport < operating_pb_graph_node->num_input_ports; ++iport) {
+    for (int ipin = 0; ipin < operating_pb_graph_node->num_input_pins[iport]; ++ipin) {
+      annotate_physical_pb_graph_pin(&(operating_pb_graph_node->input_pins[iport][ipin]),
+                                     physical_pb_graph_node, vpr_pb_type_annotation);
+    }
+  }
+
+  for (int iport = 0; iport < operating_pb_graph_node->num_output_ports; ++iport) {
+    for (int ipin = 0; ipin < operating_pb_graph_node->num_output_pins[iport]; ++ipin) {
+      annotate_physical_pb_graph_pin(&(operating_pb_graph_node->output_pins[iport][ipin]),
+                                     physical_pb_graph_node, vpr_pb_type_annotation);
+    }
+  }
+
+  for (int iport = 0; iport < operating_pb_graph_node->num_clock_ports; ++iport) {
+    for (int ipin = 0; ipin < operating_pb_graph_node->num_clock_pins[iport]; ++ipin) {
+      annotate_physical_pb_graph_pin(&(operating_pb_graph_node->clock_pins[iport][ipin]),
+                                     physical_pb_graph_node, vpr_pb_type_annotation);
+    }
+  }
+}
+
+/********************************************************************
  * This function will recursively walk through all the pb_graph nodes
  * starting from a top node.
  * It aims to give an unique index to each pb_graph node 
@@ -226,6 +392,7 @@ void rec_build_vpr_physical_pb_graph_node_annotation(t_pb_graph_node* pb_graph_n
           physical_pb_graph_node->hierarchical_type_name().c_str());
 
   /* Try to bind each pins under this pb_graph_node to physical_pb_graph_node */
+  annotate_physical_pb_graph_node_pins(pb_graph_node, physical_pb_graph_node, vpr_pb_type_annotation);
 }
 
 /********************************************************************
