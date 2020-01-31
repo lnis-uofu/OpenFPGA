@@ -36,6 +36,9 @@
 
 #include "rr_types.h"
 
+#include "create_rr_graph.h"
+#include "write_xml_rr_graph_obj.h"
+
 //#define VERBOSE
 
 struct t_mux {
@@ -331,6 +334,9 @@ void create_rr_graph(const t_graph_type graph_type,
                          base_cost_type,
                          &det_routing_arch->wire_to_rr_ipin_switch,
                          det_routing_arch->read_rr_graph_filename.c_str());
+
+            /* Xifan Tang - Create rr_graph object: load rr_nodes to the object */
+            convert_rr_graph(segment_inf);
         }
     } else {
         if (channel_widths_unchanged(device_ctx.chan_width, nodes_per_chan) && !device_ctx.rr_nodes.empty()) {
@@ -369,6 +375,9 @@ void create_rr_graph(const t_graph_type graph_type,
                                                                   det_routing_arch->wire_to_rr_ipin_switch,
                                                                   base_cost_type);
         }
+
+        /* Xifan Tang - Create rr_graph object: load rr_nodes to the object */
+        convert_rr_graph(segment_inf);
     }
 
     process_non_config_sets();
@@ -378,6 +387,11 @@ void create_rr_graph(const t_graph_type graph_type,
     //Write out rr graph file if needed
     if (!det_routing_arch->write_rr_graph_filename.empty()) {
         write_rr_graph(det_routing_arch->write_rr_graph_filename.c_str(), segment_inf);
+
+        /* Just to test the writer of rr_graph_obj, give a filename in a fixed style*/
+        std::string rr_graph_obj_filename(det_routing_arch->write_rr_graph_filename);
+        rr_graph_obj_filename += std::string(".obj");
+        write_xml_rr_graph_obj(rr_graph_obj_filename.c_str(), device_ctx.rr_graph);
     }
 }
 
@@ -1391,6 +1405,9 @@ void free_rr_graph() {
     device_ctx.rr_edge_metadata.clear();
 
     invalidate_router_lookahead_cache();
+
+    /* Xifan Tang - Clear the rr_graph object */
+    device_ctx.rr_graph.clear();
 }
 
 static void build_rr_sinks_sources(const int i,
