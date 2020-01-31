@@ -223,6 +223,24 @@ bool try_match_pb_graph_pin(t_pb_graph_pin* operating_pb_graph_pin,
 }
 
 /********************************************************************
+ * A function to print message to log file/screen when physical pb_graph_pin
+ * binding succeed
+ *******************************************************************/
+static 
+void print_success_bind_pb_graph_pin(t_pb_graph_pin* operating_pb_graph_pin,
+                                     t_pb_graph_pin* physical_pb_graph_pin) {
+  VTR_LOG("Bind a pb_graph_node '%s[%d]' pin '%s[%d]' to a pb_graph_node '%s[%d]' pin '%s[%d]'!\n",
+          operating_pb_graph_pin->parent_node->pb_type->name,
+          operating_pb_graph_pin->parent_node->placement_index,
+          operating_pb_graph_pin->port->name,
+          operating_pb_graph_pin->pin_number,
+          physical_pb_graph_pin->parent_node->pb_type->name,
+          physical_pb_graph_pin->parent_node->placement_index,
+          physical_pb_graph_pin->port->name,
+          physical_pb_graph_pin->pin_number);
+}
+
+/********************************************************************
  * Bind a pb_graph_pin from an operating pb_graph_node to 
  * a pb_graph_pin from a physical pb_graph_node
  * - the name matching rules are already defined in the vpr_pb_type_annotation
@@ -245,15 +263,7 @@ void annotate_physical_pb_graph_pin(t_pb_graph_pin* operating_pb_graph_pin,
        * We can pair the pin and return  
        */
       vpr_pb_type_annotation.add_physical_pb_graph_pin(operating_pb_graph_pin, &(physical_pb_graph_node->input_pins[iport][ipin]));
-      VTR_LOG("Bind a pb_graph_node '%s[%d]' pin '%s[%d]' to a pb_graph_node '%s[%d]' pin '%s[%d]'!\n",
-              operating_pb_graph_pin->parent_node->pb_type->name,
-              operating_pb_graph_pin->parent_node->placement_index,
-              operating_pb_graph_pin->port->name,
-              operating_pb_graph_pin->pin_number,
-              physical_pb_graph_node->pb_type->name,
-              physical_pb_graph_node->placement_index,
-              physical_pb_graph_node->input_pins[iport][ipin].port->name,
-              physical_pb_graph_node->input_pins[iport][ipin].pin_number);
+      print_success_bind_pb_graph_pin(operating_pb_graph_pin, vpr_pb_type_annotation.physical_pb_graph_pin(operating_pb_graph_pin)); 
       return;
     }
   }
@@ -269,15 +279,7 @@ void annotate_physical_pb_graph_pin(t_pb_graph_pin* operating_pb_graph_pin,
        * We can pair the pin and return  
        */
       vpr_pb_type_annotation.add_physical_pb_graph_pin(operating_pb_graph_pin, &(physical_pb_graph_node->output_pins[iport][ipin]));
-      VTR_LOG("Bind a pb_graph_node '%s[%d]' pin '%s[%d]' to a pb_graph_node '%s[%d]' pin '%s[%d]'!\n",
-              operating_pb_graph_pin->parent_node->pb_type->name,
-              operating_pb_graph_pin->parent_node->placement_index,
-              operating_pb_graph_pin->port->name,
-              operating_pb_graph_pin->pin_number,
-              physical_pb_graph_node->pb_type->name,
-              physical_pb_graph_node->placement_index,
-              physical_pb_graph_node->output_pins[iport][ipin].port->name,
-              physical_pb_graph_node->output_pins[iport][ipin].pin_number);
+      print_success_bind_pb_graph_pin(operating_pb_graph_pin, vpr_pb_type_annotation.physical_pb_graph_pin(operating_pb_graph_pin)); 
       return;
     }
   }
@@ -293,15 +295,7 @@ void annotate_physical_pb_graph_pin(t_pb_graph_pin* operating_pb_graph_pin,
        * We can pair the pin and return  
        */
       vpr_pb_type_annotation.add_physical_pb_graph_pin(operating_pb_graph_pin, &(physical_pb_graph_node->clock_pins[iport][ipin]));
-      VTR_LOG("Bind a pb_graph_node '%s[%d]' pin '%s[%d]' to a pb_graph_node '%s[%d]' pin '%s[%d]'!\n",
-              operating_pb_graph_pin->parent_node->pb_type->name,
-              operating_pb_graph_pin->parent_node->placement_index,
-              operating_pb_graph_pin->port->name,
-              operating_pb_graph_pin->pin_number,
-              physical_pb_graph_node->pb_type->name,
-              physical_pb_graph_node->placement_index,
-              physical_pb_graph_node->clock_pins[iport][ipin].port->name,
-              physical_pb_graph_node->clock_pins[iport][ipin].pin_number);
+      print_success_bind_pb_graph_pin(operating_pb_graph_pin, vpr_pb_type_annotation.physical_pb_graph_pin(operating_pb_graph_pin)); 
       return;
     }
   }
