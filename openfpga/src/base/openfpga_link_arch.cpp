@@ -39,7 +39,13 @@ void link_arch(OpenfpgaContext& openfpga_context) {
   annotate_pb_types(g_vpr_ctx.device(), openfpga_context.arch(),
                     openfpga_context.mutable_vpr_pb_type_annotation());
 
-  /* Link routing architecture to circuit model */
+  /* Annotate pb_graph_nodes
+   * - Give unique index to each node in the same type
+   * - Bind operating pb_graph_node to their physical pb_graph_node
+   * - Bind pins from operating pb_graph_node to their physical pb_graph_node pins
+   */
+  annotate_pb_graph(g_vpr_ctx.device(),
+                    openfpga_context.mutable_vpr_pb_type_annotation());
 } 
 
 } /* end namespace openfpga */

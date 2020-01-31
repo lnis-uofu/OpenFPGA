@@ -223,13 +223,24 @@ bool pair_operating_and_physical_pb_types(t_pb_type* operating_pb_type,
     if (false == expected_physical_pb_port.contained(BasicPort(physical_pb_port->name, physical_pb_port->num_pins))) {
       return false;
     }
-    /* Now, port mapping should succeed, we update the vpr_pb_type_annotation */
+    /* Now, port mapping should succeed, we update the vpr_pb_type_annotation 
+     * - port binding
+     * - port range
+     * - port pin rotate offset
+     */
     vpr_pb_type_annotation.add_physical_pb_port(operating_pb_port, physical_pb_port);
     vpr_pb_type_annotation.add_physical_pb_port_range(operating_pb_port, expected_physical_pb_port);
+    vpr_pb_type_annotation.add_physical_pb_pin_rotate_offset(operating_pb_port, pb_type_annotation.physical_pin_rotate_offset(std::string(operating_pb_port->name)));
   }
 
-  /* Now, pb_type mapping should succeed, we update the vpr_pb_type_annotation */
+  /* Now, pb_type mapping should succeed, we update the vpr_pb_type_annotation
+   *   - pb_type binding
+   *   - physical_pb_type_index_factor
+   *   - physical_pb_type_index_offset
+   */
   vpr_pb_type_annotation.add_physical_pb_type(operating_pb_type, physical_pb_type);
+  vpr_pb_type_annotation.add_physical_pb_type_index_factor(operating_pb_type, pb_type_annotation.physical_pb_type_index_factor());
+  vpr_pb_type_annotation.add_physical_pb_type_index_offset(operating_pb_type, pb_type_annotation.physical_pb_type_index_offset());
 
   return true;
 }
@@ -987,7 +998,12 @@ void annotate_pb_types(const DeviceContext& vpr_device_ctx,
                                                vpr_pb_type_annotation);
   VTR_LOG("Done\n");
 
-  /* Annotate physical pb_types to operating pb_type in the VPR pb_type graph */
+  /* Annotate physical pb_types to operating pb_type in the VPR pb_type graph 
+   * This function will also annotate
+   * - pb_type_index_factor 
+   * - pb_type_index_offset
+   * - physical_pin_rotate_offset
+   */
   VTR_LOG("\n");
   VTR_LOG("Building annotation between operating and physical pb_types...\n");
   build_vpr_physical_pb_type_explicit_annotation(vpr_device_ctx, openfpga_arch,

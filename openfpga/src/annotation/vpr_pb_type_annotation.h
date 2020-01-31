@@ -6,6 +6,9 @@
  *******************************************************************/
 #include <map> 
 
+/* Header from vtrutil library */
+#include "vtr_strong_id.h"
+
 /* Header from archfpga library */
 #include "physical_types.h"
 
@@ -15,6 +18,11 @@
 
 /* Begin namespace openfpga */
 namespace openfpga {
+
+/* Unique index for pb_graph node */
+struct pb_graph_node_id_tag;
+
+typedef vtr::StrongId<pb_graph_node_id_tag> PbGraphNodeId;
 
 /********************************************************************
  * This is the critical data structure to link the pb_type in VPR
@@ -39,6 +47,25 @@ class VprPbTypeAnnotation {
     e_interconnect interconnect_physical_type(t_interconnect* pb_interconnect) const;
     CircuitPortId pb_circuit_port(t_port* pb_port) const;
     std::vector<size_t> pb_type_mode_bits(t_pb_type* pb_type) const;
+    /* Get the unique index of a pb_graph_node */
+    PbGraphNodeId pb_graph_node_unique_index(t_pb_graph_node* pb_graph_node) const;
+    /* Get the pointer to a pb_graph node using an unique index */
+    t_pb_graph_node* pb_graph_node(t_pb_type* pb_type, const PbGraphNodeId& unique_index) const;
+    t_pb_graph_node* physical_pb_graph_node(t_pb_graph_node* pb_graph_node) const;
+    int physical_pb_type_index_factor(t_pb_type* pb_type) const;
+    int physical_pb_type_index_offset(t_pb_type* pb_type) const;
+
+    int physical_pb_pin_rotate_offset(t_port* pb_port) const;
+
+    /**This function returns an accumulated offset. Note that the
+     * accumulated offset is NOT the pin rotate offset specified by users
+     * It is an aggregation of the offset during pin pairing
+     * Each time, we manage to pair two pins, the accumulated offset will be incremented
+     * by the pin rotate offset value
+     * The accumulated offset will be reset to 0 when it exceeds the msb() of the physical port
+     */
+    int physical_pb_pin_offset(t_port* pb_port) const;
+    t_pb_graph_pin* physical_pb_graph_pin(t_pb_graph_pin* pb_graph_pin) const;
   public:  /* Public mutators */
     void add_pb_type_physical_mode(t_pb_type* pb_type, t_mode* physical_mode);
     void add_physical_pb_type(t_pb_type* operating_pb_type, t_pb_type* physical_pb_type);
@@ -49,9 +76,18 @@ class VprPbTypeAnnotation {
     void add_interconnect_physical_type(t_interconnect* pb_interconnect, const e_interconnect& physical_type);
     void add_pb_circuit_port(t_port* pb_port, const CircuitPortId& circuit_port);
     void add_pb_type_mode_bits(t_pb_type* pb_type, const std::vector<size_t>& mode_bits);
+    void add_pb_graph_node_unique_index(t_pb_graph_node* pb_graph_node);
+    void add_physical_pb_graph_node(t_pb_graph_node* operating_pb_graph_node, 
+                                    t_pb_graph_node* physical_pb_graph_node);
+    void add_physical_pb_type_index_factor(t_pb_type* pb_type, const int& factor);
+    void add_physical_pb_type_index_offset(t_pb_type* pb_type, const int& offset);
+    void add_physical_pb_pin_rotate_offset(t_port* pb_port, const int& offset);
+    void add_physical_pb_graph_pin(t_pb_graph_pin* operating_pb_graph_pin, t_pb_graph_pin* physical_pb_graph_pin);
   private: /* Internal data */
     /* Pair a regular pb_type to its physical pb_type */
     std::map<t_pb_type*, t_pb_type*> physical_pb_types_;
+    std::map<t_pb_type*, int> physical_pb_type_index_factors_;
+    std::map<t_pb_type*, int> physical_pb_type_index_offsets_;
 
     /* Pair a physical mode for a pb_type
      * Note:
@@ -91,6 +127,10 @@ class VprPbTypeAnnotation {
      * - the parent of physical pb_port MUST be a physical pb_type
      */
     std::map<t_port*, t_port*> physical_pb_ports_;
+    std::map<t_port*, int> physical_pb_pin_rotate_offsets_;
+
+    /* Accumulated offsets for a physical pb_type port, just for internal usage */
+    std::map<t_port*, int> physical_pb_pin_offsets_;
 
     /* Pair a pb_port to its LSB and MSB of a physical pb_port 
      * Note:
@@ -104,11 +144,19 @@ class VprPbTypeAnnotation {
      */
     std::map<t_port*, CircuitPortId> pb_circuit_ports_;
 
+    /* Pair each pb_graph_node to an unique index in the graph
+     * The unique index if the index in the array of t_pb_graph_node*
+     */ 
+    std::map<t_pb_type*, std::vector<t_pb_graph_node*>> pb_graph_node_unique_index_;
+
     /* Pair a pb_graph_node to a physical pb_graph_node
      * Note:
      * - the pb_type of physical pb_graph_node must be a physical pb_type
      */
     std::map<t_pb_graph_node*, t_pb_graph_node*> physical_pb_graph_nodes_;
+
+    /* Pair a pb_graph_pin to a physical pb_graph_pin */
+    std::map<t_pb_graph_pin*, t_pb_graph_pin*> physical_pb_graph_pins_;
 };
 
 } /* End namespace openfpga*/
