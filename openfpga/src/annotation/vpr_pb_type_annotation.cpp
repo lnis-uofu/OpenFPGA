@@ -404,10 +404,10 @@ void VprPbTypeAnnotation::add_physical_pb_graph_pin(t_pb_graph_pin* operating_pb
 
   physical_pb_pin_offsets_[operating_pb_graph_pin->port] += physical_pb_pin_rotate_offset(operating_pb_graph_pin->port);
 
-  if (physical_pb_port_range(operating_pb_graph_pin->port).get_msb() 
+  if ((size_t)physical_pb_port(operating_pb_graph_pin->port)->num_pins - 1 
     < operating_pb_graph_pin->pin_number
     + physical_pb_port_range(operating_pb_graph_pin->port).get_lsb() 
-    + physical_pb_pin_offset(operating_pb_graph_pin->port)) {
+    + physical_pb_pin_offsets_[operating_pb_graph_pin->port]) {
     physical_pb_pin_offsets_[operating_pb_graph_pin->port] = 0;
   }
 }
