@@ -16,10 +16,12 @@
 namespace openfpga {
 
 void annotate_pb_graph_interconnect_physical_type(const DeviceContext& vpr_device_ctx, 
-                                                  VprPbTypeAnnotation& vpr_pb_type_annotation);
+                                                  VprPbTypeAnnotation& vpr_pb_type_annotation,
+                                                  const bool& verbose_output);
 
 void annotate_pb_graph(const DeviceContext& vpr_device_ctx, 
-                       VprPbTypeAnnotation& vpr_pb_type_annotation);
+                       VprPbTypeAnnotation& vpr_pb_type_annotation,
+                       const bool& verbose_output);
 
 } /* end namespace openfpga */
 

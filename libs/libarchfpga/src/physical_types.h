@@ -165,6 +165,7 @@ enum e_interconnect {
     MUX_INTERC = 3,
     NUM_INTERC_TYPES
 };
+constexpr std::array<const char*, NUM_INTERC_TYPES> INTERCONNECT_TYPE_STRING = {{"complete", "direct", "mux"}}; //String versions of interconnection type
 
 /* Orientations. */
 enum e_side : unsigned char {

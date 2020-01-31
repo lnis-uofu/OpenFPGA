@@ -52,6 +52,8 @@ void add_openfpga_setup_commands(openfpga::Shell<OpenfpgaContext>& shell) {
    * Command 'link_openfpga_arch' 
    */
   Command shell_cmd_link_openfpga_arch("link_openfpga_arch");
+  /* Add an option '--verbose' */
+  shell_cmd_link_openfpga_arch.add_option("verbose", false, "Show verbose outputs");
   
   /* Add command 'link_openfpga_arch' to the Shell */
   ShellCommandId shell_cmd_link_openfpga_arch_id = shell.add_command(shell_cmd_link_openfpga_arch, "Bind OpenFPGA architecture to VPR");
@@ -67,7 +69,7 @@ void add_openfpga_setup_commands(openfpga::Shell<OpenfpgaContext>& shell) {
    * Command 'check_netlist_naming_conflict'
    */ 
   Command shell_cmd_check_netlist_naming_conflict("check_netlist_naming_conflict");
-  /* Add an option '--correction' */
+  /* Add an option '--fix' */
   shell_cmd_check_netlist_naming_conflict.add_option("fix", false, "Apply correction to any conflicts found");
   /* Add an option '--report' */
   CommandOptionId check_netlist_opt_rpt = shell_cmd_check_netlist_naming_conflict.add_option("report", false, "Output a report file about what any correction applied");

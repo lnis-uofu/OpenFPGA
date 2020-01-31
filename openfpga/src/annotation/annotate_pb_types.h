@@ -17,7 +17,8 @@ namespace openfpga {
 
 void annotate_pb_types(const DeviceContext& vpr_device_ctx, 
                        const Arch& openfpga_arch,
-                       VprPbTypeAnnotation& vpr_pb_type_annotation);
+                       VprPbTypeAnnotation& vpr_pb_type_annotation,
+                       const bool& verbose_output);
 
 } /* end namespace openfpga */
 

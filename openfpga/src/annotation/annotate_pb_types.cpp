@@ -24,7 +24,8 @@ namespace openfpga {
 static 
 void build_vpr_physical_pb_mode_explicit_annotation(const DeviceContext& vpr_device_ctx, 
                                                     const Arch& openfpga_arch,
-                                                    VprPbTypeAnnotation& vpr_pb_type_annotation) {
+                                                    VprPbTypeAnnotation& vpr_pb_type_annotation,
+                                                    const bool& verbose_output) {
   /* Walk through the pb_type annotation stored in the openfpga arch */
   for (const PbTypeAnnotation& pb_type_annotation : openfpga_arch.pb_type_annotations) {
     /* Since our target is to annotate the physical mode name, 
@@ -82,8 +83,9 @@ void build_vpr_physical_pb_mode_explicit_annotation(const DeviceContext& vpr_dev
       vpr_pb_type_annotation.add_pb_type_physical_mode(target_pb_type, physical_mode);
       
       /* Give a message */
-      VTR_LOG("Annotate pb_type '%s' with physical mode '%s'\n",
-              target_pb_type->name, physical_mode->name);
+      VTR_LOGV(verbose_output,
+               "Annotate pb_type '%s' with physical mode '%s'\n",
+               target_pb_type->name, physical_mode->name);
 
       link_success = true;
       break;
@@ -110,7 +112,8 @@ void build_vpr_physical_pb_mode_explicit_annotation(const DeviceContext& vpr_dev
  *******************************************************************/
 static 
 void rec_infer_vpr_physical_pb_mode_annotation(t_pb_type* cur_pb_type, 
-                                               VprPbTypeAnnotation& vpr_pb_type_annotation) {
+                                               VprPbTypeAnnotation& vpr_pb_type_annotation,
+                                               const bool& verbose_output) {
   /* We do not check any primitive pb_type */
   if (true == is_primitive_pb_type(cur_pb_type)) {
     return;
@@ -128,8 +131,9 @@ void rec_infer_vpr_physical_pb_mode_annotation(t_pb_type* cur_pb_type,
     if (nullptr == vpr_pb_type_annotation.physical_mode(cur_pb_type)) {
       /* Not assigned by explicit annotation, we should infer here */
       vpr_pb_type_annotation.add_pb_type_physical_mode(cur_pb_type, &(cur_pb_type->modes[0]));
-      VTR_LOG("Implicitly infer physical mode '%s' for pb_type '%s'\n",
-              cur_pb_type->modes[0].name, cur_pb_type->name);
+      VTR_LOGV(verbose_output,
+               "Implicitly infer physical mode '%s' for pb_type '%s'\n",
+               cur_pb_type->modes[0].name, cur_pb_type->name);
     }
   } else {
     VTR_ASSERT(1 < cur_pb_type->num_modes);
@@ -151,7 +155,8 @@ void rec_infer_vpr_physical_pb_mode_annotation(t_pb_type* cur_pb_type,
   /* Traverse the pb_type children under the physical mode */
   for (int ichild = 0; ichild < physical_mode->num_pb_type_children; ++ichild) { 
     rec_infer_vpr_physical_pb_mode_annotation(&(physical_mode->pb_type_children[ichild]),
-                                              vpr_pb_type_annotation);
+                                              vpr_pb_type_annotation,
+                                              verbose_output);
   }
 }
 
@@ -169,13 +174,14 @@ void rec_infer_vpr_physical_pb_mode_annotation(t_pb_type* cur_pb_type,
  *******************************************************************/
 static 
 void build_vpr_physical_pb_mode_implicit_annotation(const DeviceContext& vpr_device_ctx, 
-                                                    VprPbTypeAnnotation& vpr_pb_type_annotation) {
+                                                    VprPbTypeAnnotation& vpr_pb_type_annotation,
+                                                    const bool& verbose_output) {
   for (const t_logical_block_type& lb_type : vpr_device_ctx.logical_block_types) {
     /* By pass nullptr for pb_type head */
     if (nullptr == lb_type.pb_type) {
       continue;
     }
-    rec_infer_vpr_physical_pb_mode_annotation(lb_type.pb_type, vpr_pb_type_annotation); 
+    rec_infer_vpr_physical_pb_mode_annotation(lb_type.pb_type, vpr_pb_type_annotation, verbose_output); 
   }
 }
 
@@ -257,7 +263,8 @@ bool pair_operating_and_physical_pb_types(t_pb_type* operating_pb_type,
 static 
 void build_vpr_physical_pb_type_explicit_annotation(const DeviceContext& vpr_device_ctx, 
                                                     const Arch& openfpga_arch,
-                                                    VprPbTypeAnnotation& vpr_pb_type_annotation) {
+                                                    VprPbTypeAnnotation& vpr_pb_type_annotation,
+                                                    const bool& verbose_output) {
   /* Walk through the pb_type annotation stored in the openfpga arch */
   for (const PbTypeAnnotation& pb_type_annotation : openfpga_arch.pb_type_annotations) {
     /* Since our target is to annotate the operating pb_type tp physical pb_type 
@@ -324,8 +331,9 @@ void build_vpr_physical_pb_type_explicit_annotation(const DeviceContext& vpr_dev
                                                        pb_type_annotation, vpr_pb_type_annotation)) {
       
         /* Give a message */
-        VTR_LOG("Annotate operating pb_type '%s' to its physical pb_type '%s'\n",
-                target_op_pb_type->name, target_phy_pb_type->name);
+        VTR_LOGV(verbose_output,
+                 "Annotate operating pb_type '%s' to its physical pb_type '%s'\n",
+                 target_op_pb_type->name, target_phy_pb_type->name);
 
         link_success = true;
         break;
@@ -376,7 +384,8 @@ bool self_pair_physical_pb_types(t_pb_type* physical_pb_type,
  *******************************************************************/
 static 
 void rec_infer_vpr_physical_pb_type_annotation(t_pb_type* cur_pb_type, 
-                                               VprPbTypeAnnotation& vpr_pb_type_annotation) {
+                                               VprPbTypeAnnotation& vpr_pb_type_annotation,
+                                               const bool& verbose_output) {
   /* Physical pb_type is mainly for the primitive pb_type */
   if (true == is_primitive_pb_type(cur_pb_type)) {
     /* If the physical pb_type has been mapped, we can skip it */
@@ -386,8 +395,9 @@ void rec_infer_vpr_physical_pb_type_annotation(t_pb_type* cur_pb_type,
     /* Create the pair here */
     if (true == self_pair_physical_pb_types(cur_pb_type, vpr_pb_type_annotation)) {
       /* Give a message */
-      VTR_LOG("Implicitly infer the physical pb_type for pb_type '%s' itself\n",
-              cur_pb_type->name);
+      VTR_LOGV(verbose_output,
+               "Implicitly infer the physical pb_type for pb_type '%s' itself\n",
+               cur_pb_type->name);
     } else {
       VTR_LOG_ERROR("Unable to infer the physical pb_type for pb_type '%s' itself!\n",
                     cur_pb_type->name);
@@ -403,7 +413,8 @@ void rec_infer_vpr_physical_pb_type_annotation(t_pb_type* cur_pb_type,
   /* Traverse the pb_type children under the physical mode */
   for (int ichild = 0; ichild < physical_mode->num_pb_type_children; ++ichild) { 
     rec_infer_vpr_physical_pb_type_annotation(&(physical_mode->pb_type_children[ichild]),
-                                              vpr_pb_type_annotation);
+                                              vpr_pb_type_annotation, 
+                                              verbose_output);
   }
 }
 
@@ -418,13 +429,14 @@ void rec_infer_vpr_physical_pb_type_annotation(t_pb_type* cur_pb_type,
  *******************************************************************/
 static 
 void build_vpr_physical_pb_type_implicit_annotation(const DeviceContext& vpr_device_ctx, 
-                                                    VprPbTypeAnnotation& vpr_pb_type_annotation) {
+                                                    VprPbTypeAnnotation& vpr_pb_type_annotation,
+                                                    const bool& verbose_output) {
   for (const t_logical_block_type& lb_type : vpr_device_ctx.logical_block_types) {
     /* By pass nullptr for pb_type head */
     if (nullptr == lb_type.pb_type) {
       continue;
     }
-    rec_infer_vpr_physical_pb_type_annotation(lb_type.pb_type, vpr_pb_type_annotation); 
+    rec_infer_vpr_physical_pb_type_annotation(lb_type.pb_type, vpr_pb_type_annotation, verbose_output); 
   }
 }
 
@@ -438,7 +450,8 @@ static
 bool link_physical_pb_port_to_circuit_port(t_pb_type* physical_pb_type, 
                                            const CircuitLibrary& circuit_lib,
                                            const CircuitModelId& circuit_model,
-                                           VprPbTypeAnnotation& vpr_pb_type_annotation) {
+                                           VprPbTypeAnnotation& vpr_pb_type_annotation,
+                                           const bool& verbose_output) {
   bool link_success = true;
   /* Iterate over the pb_ports
    * Note: 
@@ -481,11 +494,12 @@ bool link_physical_pb_port_to_circuit_port(t_pb_type* physical_pb_type,
 
     /* Reach here, it means that mapping should be ok, update the vpr_pb_type_annotation */
     vpr_pb_type_annotation.add_pb_circuit_port(pb_port, circuit_port);
-    VTR_LOG("Bind pb type '%s' port '%s' to circuit model '%s' port '%s'\n",
-            physical_pb_type->name,
-            pb_port->name,
-            circuit_lib.model_name(circuit_model).c_str(),
-            circuit_lib.port_prefix(circuit_port).c_str());
+    VTR_LOGV(verbose_output,
+             "Bind pb type '%s' port '%s' to circuit model '%s' port '%s'\n",
+             physical_pb_type->name,
+             pb_port->name,
+             circuit_lib.model_name(circuit_model).c_str(),
+             circuit_lib.port_prefix(circuit_port).c_str());
   }
 
   return link_success;
@@ -499,7 +513,8 @@ static
 bool link_physical_pb_type_to_circuit_model(t_pb_type* physical_pb_type, 
                                             const CircuitLibrary& circuit_lib,
                                             const PbTypeAnnotation& pb_type_annotation,
-                                            VprPbTypeAnnotation& vpr_pb_type_annotation) {
+                                            VprPbTypeAnnotation& vpr_pb_type_annotation,
+                                            const bool& verbose_output) {
   /* Reach here, we should have valid operating and physical pb_types */
   VTR_ASSERT(nullptr != physical_pb_type);
 
@@ -521,7 +536,8 @@ bool link_physical_pb_type_to_circuit_model(t_pb_type* physical_pb_type,
   }
 
   /* Ensure that the pb_type ports can be matched in the circuit model ports */
-  if (false == link_physical_pb_port_to_circuit_port(physical_pb_type, circuit_lib, circuit_model_id, vpr_pb_type_annotation)) {
+  if (false == link_physical_pb_port_to_circuit_port(physical_pb_type, circuit_lib, circuit_model_id, 
+                                                     vpr_pb_type_annotation, verbose_output)) {
     return false;
   }
 
@@ -539,7 +555,8 @@ bool link_physical_pb_interconnect_to_circuit_model(t_pb_type* physical_pb_type,
                                                     const std::string& interconnect_name,
                                                     const CircuitLibrary& circuit_lib,
                                                     const PbTypeAnnotation& pb_type_annotation,
-                                                    VprPbTypeAnnotation& vpr_pb_type_annotation) {
+                                                    VprPbTypeAnnotation& vpr_pb_type_annotation,
+                                                    const bool& verbose_output) {
   /* The physical pb_type should NOT be a primitive, otherwise it should never contain any interconnect */
   if (true == is_primitive_pb_type(physical_pb_type)) {
     VTR_LOG_ERROR("Link interconnect to circuit model is not allowed for a primitive pb_type '%s'!\n",
@@ -592,7 +609,8 @@ bool link_physical_pb_interconnect_to_circuit_model(t_pb_type* physical_pb_type,
   /* Now the circuit model is valid, update the vpr_pb_type_annotation */
   vpr_pb_type_annotation.add_interconnect_circuit_model(pb_interc, circuit_model_id);
 
-  VTR_LOG("Bind pb_type '%s' physical mode '%s' interconnect '%s' to circuit model '%s'\n",
+  VTR_LOGV(verbose_output,
+           "Bind pb_type '%s' physical mode '%s' interconnect '%s' to circuit model '%s'\n",
            physical_pb_type->name,
            physical_mode->name,
            pb_interc->name,
@@ -613,7 +631,8 @@ bool link_physical_pb_interconnect_to_circuit_model(t_pb_type* physical_pb_type,
 static 
 void link_vpr_pb_type_to_circuit_model_explicit_annotation(const DeviceContext& vpr_device_ctx, 
                                                            const Arch& openfpga_arch,
-                                                           VprPbTypeAnnotation& vpr_pb_type_annotation) {
+                                                           VprPbTypeAnnotation& vpr_pb_type_annotation,
+                                                           const bool& verbose_output) {
   /* Walk through the pb_type annotation stored in the openfpga arch */
   for (const PbTypeAnnotation& pb_type_annotation : openfpga_arch.pb_type_annotations) {
     /* Since our target is to annotate the circuti model for physical pb_type 
@@ -664,11 +683,13 @@ void link_vpr_pb_type_to_circuit_model_explicit_annotation(const DeviceContext& 
 
       /* Only try to bind pb_type to circuit model when it is defined by users */
       if (true == link_physical_pb_type_to_circuit_model(target_phy_pb_type, openfpga_arch.circuit_lib,
-                                                         pb_type_annotation, vpr_pb_type_annotation)) {
+                                                         pb_type_annotation, vpr_pb_type_annotation, 
+                                                         verbose_output)) {
         /* Give a message */
-        VTR_LOG("Bind physical pb_type '%s' to its circuit model '%s'\n",
-                target_phy_pb_type->name,
-                openfpga_arch.circuit_lib.model_name(vpr_pb_type_annotation.pb_type_circuit_model(target_phy_pb_type)).c_str());
+        VTR_LOGV(verbose_output,
+                 "Bind physical pb_type '%s' to its circuit model '%s'\n",
+                 target_phy_pb_type->name,
+                 openfpga_arch.circuit_lib.model_name(vpr_pb_type_annotation.pb_type_circuit_model(target_phy_pb_type)).c_str());
 
         link_success = true;
         break;
@@ -697,7 +718,8 @@ void link_vpr_pb_type_to_circuit_model_explicit_annotation(const DeviceContext& 
 static 
 void link_vpr_pb_interconnect_to_circuit_model_explicit_annotation(const DeviceContext& vpr_device_ctx, 
                                                                    const Arch& openfpga_arch,
-                                                                   VprPbTypeAnnotation& vpr_pb_type_annotation) {
+                                                                   VprPbTypeAnnotation& vpr_pb_type_annotation,
+                                                                   const bool& verbose_output) {
   /* Walk through the pb_type annotation stored in the openfpga arch */
   for (const PbTypeAnnotation& pb_type_annotation : openfpga_arch.pb_type_annotations) {
     /* Since our target is to annotate the circuti model for physical pb_type 
@@ -749,7 +771,8 @@ void link_vpr_pb_interconnect_to_circuit_model_explicit_annotation(const DeviceC
       /* Only try to bind interconnect to circuit model when it is defined by users */
       for (const std::string& interc_name : pb_type_annotation.interconnect_names()) {
         if (false == link_physical_pb_interconnect_to_circuit_model(target_phy_pb_type, interc_name, openfpga_arch.circuit_lib,
-                                                                    pb_type_annotation, vpr_pb_type_annotation)) {
+                                                                    pb_type_annotation, vpr_pb_type_annotation,
+                                                                    verbose_output)) {
            VTR_LOG_ERROR("Unable to bind pb_type '%s' interconnect '%s' to circuit model '%s'!\n",
                           target_phy_pb_type_names.back().c_str(),
                           interc_name.c_str(),
@@ -789,7 +812,8 @@ void link_vpr_pb_interconnect_to_circuit_model_explicit_annotation(const DeviceC
 static 
 void rec_infer_vpr_pb_interconnect_circuit_model_annotation(t_pb_type* cur_pb_type, 
                                                             const CircuitLibrary& circuit_lib,
-                                                            VprPbTypeAnnotation& vpr_pb_type_annotation) {
+                                                            VprPbTypeAnnotation& vpr_pb_type_annotation,
+                                                            const bool& verbose_output) {
   /* We do not check any primitive pb_type */
   if (true == is_primitive_pb_type(cur_pb_type)) {
     return;
@@ -818,17 +842,19 @@ void rec_infer_vpr_pb_interconnect_circuit_model_annotation(t_pb_type* cur_pb_ty
                     cur_pb_type->name);
     }
     vpr_pb_type_annotation.add_interconnect_circuit_model(pb_interc, default_circuit_model); 
-    VTR_LOG("Implicitly infer a circuit model '%s' for interconnect '%s' under physical mode '%s' of pb_type '%s'\n",
-            circuit_lib.model_name(default_circuit_model).c_str(),
-            pb_interc->name,
-            physical_mode->name, 
-            cur_pb_type->name);
+    VTR_LOGV(verbose_output,
+             "Implicitly infer a circuit model '%s' for interconnect '%s' under physical mode '%s' of pb_type '%s'\n",
+             circuit_lib.model_name(default_circuit_model).c_str(),
+             pb_interc->name,
+             physical_mode->name, 
+             cur_pb_type->name);
   }
 
   /* Traverse the pb_type children under the physical mode */
   for (int ichild = 0; ichild < physical_mode->num_pb_type_children; ++ichild) { 
     rec_infer_vpr_pb_interconnect_circuit_model_annotation(&(physical_mode->pb_type_children[ichild]),
-                                                           circuit_lib, vpr_pb_type_annotation);
+                                                           circuit_lib, vpr_pb_type_annotation,
+                                                           verbose_output);
   }
 }
 
@@ -845,13 +871,14 @@ void rec_infer_vpr_pb_interconnect_circuit_model_annotation(t_pb_type* cur_pb_ty
 static 
 void link_vpr_pb_interconnect_to_circuit_model_implicit_annotation(const DeviceContext& vpr_device_ctx,
                                                                    const CircuitLibrary& circuit_lib,
-                                                                   VprPbTypeAnnotation& vpr_pb_type_annotation) {
+                                                                   VprPbTypeAnnotation& vpr_pb_type_annotation,
+                                                                   const bool& verbose_output) {
   for (const t_logical_block_type& lb_type : vpr_device_ctx.logical_block_types) {
     /* By pass nullptr for pb_type head */
     if (nullptr == lb_type.pb_type) {
       continue;
     }
-    rec_infer_vpr_pb_interconnect_circuit_model_annotation(lb_type.pb_type, circuit_lib, vpr_pb_type_annotation); 
+    rec_infer_vpr_pb_interconnect_circuit_model_annotation(lb_type.pb_type, circuit_lib, vpr_pb_type_annotation, verbose_output); 
   }
 }
 
@@ -889,7 +916,8 @@ bool link_primitive_pb_type_to_mode_bits(t_pb_type* primitive_pb_type,
 static 
 void link_vpr_pb_type_to_mode_bits_explicit_annotation(const DeviceContext& vpr_device_ctx, 
                                                        const Arch& openfpga_arch,
-                                                       VprPbTypeAnnotation& vpr_pb_type_annotation) {
+                                                       VprPbTypeAnnotation& vpr_pb_type_annotation,
+                                                       const bool& verbose_output) {
   /* Walk through the pb_type annotation stored in the openfpga arch */
   for (const PbTypeAnnotation& pb_type_annotation : openfpga_arch.pb_type_annotations) {
     if (true == pb_type_annotation.mode_bits().empty()) {
@@ -947,9 +975,10 @@ void link_vpr_pb_type_to_mode_bits_explicit_annotation(const DeviceContext& vpr_
       if (true == link_primitive_pb_type_to_mode_bits(target_pb_type,
                                                       pb_type_annotation, vpr_pb_type_annotation)) {
         /* Give a message */
-        VTR_LOG("Bind physical pb_type '%s' to mode selection bits '%s'\n",
-                target_pb_type->name,
-                mode_bits_str.c_str());
+        VTR_LOGV(verbose_output,
+                 "Bind physical pb_type '%s' to mode selection bits '%s'\n",
+                 target_pb_type->name,
+                 mode_bits_str.c_str());
 
         link_success = true;
         break;
@@ -973,16 +1002,21 @@ void link_vpr_pb_type_to_mode_bits_explicit_annotation(const DeviceContext& vpr_
  *******************************************************************/
 void annotate_pb_types(const DeviceContext& vpr_device_ctx, 
                        const Arch& openfpga_arch,
-                       VprPbTypeAnnotation& vpr_pb_type_annotation) {
+                       VprPbTypeAnnotation& vpr_pb_type_annotation,
+                       const bool& verbose_output) {
 
   /* Annotate physical mode to pb_type in the VPR pb_type graph */
   VTR_LOG("\n");
-  VTR_LOG("Building annotation for physical modes in pb_type...\n");
+  VTR_LOG("Building annotation for physical modes in pb_type...");
+  VTR_LOGV(verbose_output, "\n");
   build_vpr_physical_pb_mode_explicit_annotation(vpr_device_ctx, openfpga_arch,
-                                                 vpr_pb_type_annotation);
+                                                 vpr_pb_type_annotation,
+                                                 verbose_output);
 
   build_vpr_physical_pb_mode_implicit_annotation(vpr_device_ctx,
-                                                 vpr_pb_type_annotation);
+                                                 vpr_pb_type_annotation,
+                                                 verbose_output);
+  VTR_LOG("Done\n");
 
   check_vpr_physical_pb_mode_annotation(vpr_device_ctx, 
                                         const_cast<const VprPbTypeAnnotation&>(vpr_pb_type_annotation));
@@ -993,8 +1027,10 @@ void annotate_pb_types(const DeviceContext& vpr_device_ctx,
    */
   VTR_LOG("\n");
   VTR_LOG("Building annotation about physical types for pb_type interconnection...");
+  VTR_LOGV(verbose_output, "\n");
   annotate_pb_graph_interconnect_physical_type(vpr_device_ctx, 
-                                               vpr_pb_type_annotation);
+                                               vpr_pb_type_annotation,
+                                               verbose_output);
   VTR_LOG("Done\n");
 
   /* Annotate physical pb_types to operating pb_type in the VPR pb_type graph 
@@ -1004,12 +1040,16 @@ void annotate_pb_types(const DeviceContext& vpr_device_ctx,
    * - physical_pin_rotate_offset
    */
   VTR_LOG("\n");
-  VTR_LOG("Building annotation between operating and physical pb_types...\n");
+  VTR_LOG("Building annotation between operating and physical pb_types...");
+  VTR_LOGV(verbose_output, "\n");
   build_vpr_physical_pb_type_explicit_annotation(vpr_device_ctx, openfpga_arch,
-                                                 vpr_pb_type_annotation);
+                                                 vpr_pb_type_annotation,
+                                                 verbose_output);
 
   build_vpr_physical_pb_type_implicit_annotation(vpr_device_ctx,
-                                                 vpr_pb_type_annotation);
+                                                 vpr_pb_type_annotation,
+                                                 verbose_output);
+  VTR_LOG("Done\n");
 
   check_vpr_physical_pb_type_annotation(vpr_device_ctx, 
                                         const_cast<const VprPbTypeAnnotation&>(vpr_pb_type_annotation));
@@ -1019,21 +1059,33 @@ void annotate_pb_types(const DeviceContext& vpr_device_ctx,
    * - interconnect of physical pb_type to circuit model 
    */
   VTR_LOG("\n");
-  VTR_LOG("Building annotation between physical pb_types and circuit models...\n");
+  VTR_LOG("Building annotation between physical pb_types and circuit models...");
+  VTR_LOGV(verbose_output, "\n");
   link_vpr_pb_type_to_circuit_model_explicit_annotation(vpr_device_ctx, openfpga_arch,
-                                                        vpr_pb_type_annotation);
+                                                        vpr_pb_type_annotation,
+                                                        verbose_output);
+
   link_vpr_pb_interconnect_to_circuit_model_explicit_annotation(vpr_device_ctx, openfpga_arch,
-                                                                vpr_pb_type_annotation);
+                                                                vpr_pb_type_annotation,
+                                                                verbose_output);
+
   link_vpr_pb_interconnect_to_circuit_model_implicit_annotation(vpr_device_ctx, openfpga_arch.circuit_lib,
-                                                                vpr_pb_type_annotation);
+                                                                vpr_pb_type_annotation,
+                                                                verbose_output);
+  VTR_LOG("Done\n");
+
   check_vpr_pb_type_circuit_model_annotation(vpr_device_ctx, openfpga_arch.circuit_lib,
                                              const_cast<const VprPbTypeAnnotation&>(vpr_pb_type_annotation));
 
   /* Link physical pb_type to mode_bits */
   VTR_LOG("\n");
-  VTR_LOG("Building annotation between physical pb_types and mode selection bits...\n");
+  VTR_LOG("Building annotation between physical pb_types and mode selection bits...");
+  VTR_LOGV(verbose_output, "\n");
   link_vpr_pb_type_to_mode_bits_explicit_annotation(vpr_device_ctx, openfpga_arch,
-                                                    vpr_pb_type_annotation);
+                                                    vpr_pb_type_annotation,
+                                                    verbose_output);
+  VTR_LOG("Done\n");
+
   check_vpr_pb_type_mode_bits_annotation(vpr_device_ctx, openfpga_arch.circuit_lib,
                                          const_cast<const VprPbTypeAnnotation&>(vpr_pb_type_annotation));
 
