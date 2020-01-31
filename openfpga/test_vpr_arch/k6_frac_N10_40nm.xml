@@ -24,6 +24,25 @@
        that describe them.
   -->
   <models>
+    <!-- A virtual model for I/O to be used in the physical mode of io block -->
+    <model name="io">
+      <input_ports>
+        <port name="outpad"/>
+      </input_ports>
+      <output_ports>
+        <port name="inpad"/>
+      </output_ports>
+    </model>
+    <!-- A virtual model for I/O to be used in the physical mode of io block -->
+    <model name="frac_lut6">
+      <input_ports>
+        <port name="in"/>
+      </input_ports>
+      <output_ports>
+        <port name="lut5_out"/>
+        <port name="lut6_out"/>
+      </output_ports>
+    </model>
   </models>
   <tiles>
     <tile name="io" capacity="8" area="0">
@@ -127,6 +146,24 @@
       <input name="outpad" num_pins="1"/>
       <output name="inpad" num_pins="1"/>
       <clock name="clock" num_pins="1"/>
+      <!-- A mode denotes the physical implementation of an I/O 
+           This mode will be not packable but is mainly used for fabric verilog generation   
+        -->
+      <mode name="physical" disabled_in_pack="true">
+        <pb_type name="iopad" blif_model=".subckt io" num_pb="1">
+          <input name="outpad" num_pins="1"/>
+          <output name="inpad" num_pins="1"/>
+        </pb_type>
+        <interconnect>
+          <direct name="outpad" input="io.outpad" output="iopad.outpad">
+            <delay_constant max="1.394e-11" in_port="io.outpad" out_port="iopad.outpad"/>
+          </direct>
+          <direct name="inpad" input="iopad.inpad" output="io.inpad">
+            <delay_constant max="4.243e-11" in_port="iopad.inpad" out_port="io.inpad"/>
+          </direct>
+        </interconnect>
+      </mode>
+
       <!-- IOs can operate as either inputs or outputs.
 	     Delays below come from Ian Kuon. They are small, so they should be interpreted as
 	     the delays to and from registers in the I/O (and generally I/Os are registered 
@@ -183,6 +220,56 @@
         <input name="in" num_pins="6"/>
         <output name="out" num_pins="2"/>
         <clock name="clk" num_pins="1"/>
+        <!-- Physical mode definition begin (physical implementation of the fle) -->
+        <mode name="physical">
+          <pb_type name="fabric" num_pb="1">
+            <input name="in" num_pins="6"/>
+            <output name="out" num_pins="2"/>
+            <clock name="clk" num_pins="1"/>
+            <pb_type name="frac_logic" num_pb="1">
+              <input name="in" num_pins="6"/>
+              <output name="out" num_pins="2"/>
+              <!-- Define LUT -->
+              <pb_type name="frac_lut6" blif_model=".subckt frac_lut6" num_pb="1">
+                <input name="in" num_pins="6"/>
+                <output name="lut5_out" num_pins="2"/>
+                <output name="lut6_out" num_pins="1"/>
+              </pb_type>
+              <interconnect>
+                <direct name="direct1" input="frac_lut6.lut5_out[0]" output="frac_logic.out[0]"/>
+                <mux name="mux1" input="frac_lut6.lut6_out frac_lut6.lut5_out[1]" output="frac_logic.out[1]"/>
+              </interconnect>
+            </pb_type>
+            <!-- Define flip-flop -->
+            <pb_type name="ff" blif_model=".latch" num_pb="2" class="flipflop">
+              <input name="D" num_pins="1" port_class="D"/>
+              <output name="Q" num_pins="1" port_class="Q"/>
+              <clock name="clk" num_pins="1" port_class="clock"/>
+              <T_setup value="66e-12" port="ff.D" clock="clk"/>
+              <T_clock_to_Q max="124e-12" port="ff.Q" clock="clk"/>
+            </pb_type>
+            <interconnect>
+              <direct name="direct1" input="fabric.in" output="frac_logic.in"/>
+              <complete name="direct3" input="fabric.clk" output="ff[1:0].clk"/>
+              <mux name="mux1" input="ff[0].Q frac_logic.out[0]" output="fabric.out[0]">
+                <!-- LUT to output is faster than FF to output on a Stratix IV -->
+                <delay_constant max="25e-12" in_port="frac_logic.out[0]" out_port="fabric.out[0]"/>
+                <delay_constant max="45e-12" in_port="ff[0].Q" out_port="fabric.out[0]"/>
+              </mux>
+              <mux name="mux2" input="ff[1].Q frac_logic.out[1]" output="fabric.out[1]">
+                <!-- LUT to output is faster than FF to output on a Stratix IV -->
+                <delay_constant max="25e-12" in_port="frac_logic.out[1]" out_port="fabric.out[1]"/>
+                <delay_constant max="45e-12" in_port="ff[1].Q" out_port="fabric.out[1]"/>
+              </mux>
+            </interconnect>
+          </pb_type>
+          <interconnect>
+            <direct name="direct1" input="fle.in" output="fabric.in"/>
+            <direct name="direct2" input="fabric.out" output="fle.out"/>
+            <direct name="direct3" input="fle.clk" output="fabric.clk"/>
+          </interconnect>
+        </mode>
+        <!-- Physical mode definition end (physical implementation of the fle) -->
         <!-- Dual 5-LUT mode definition begin -->
         <mode name="n2_lut5">
           <pb_type name="lut5inter" num_pb="1">

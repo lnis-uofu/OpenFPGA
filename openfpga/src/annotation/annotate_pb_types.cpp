@@ -220,7 +220,7 @@ bool pair_operating_and_physical_pb_types(t_pb_type* operating_pb_type,
       return false;
     }
     /* If the port range does not match, mapping fails */
-    if (false == expected_physical_pb_port.contained(BasicPort(physical_pb_port->name, physical_pb_port->num_pins))) {
+    if (false == BasicPort(physical_pb_port->name, physical_pb_port->num_pins).contained(expected_physical_pb_port)) {
       return false;
     }
     /* Now, port mapping should succeed, we update the vpr_pb_type_annotation 
@@ -337,7 +337,6 @@ void build_vpr_physical_pb_type_explicit_annotation(const DeviceContext& vpr_dev
       VTR_LOG_ERROR("Unable to pair the operating pb_type '%s' to its physical pb_type '%s'!\n",
                     target_op_pb_type_names.back().c_str(),
                     target_phy_pb_type_names.back().c_str());
-      return;
     }
   } 
 }
