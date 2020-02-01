@@ -14,7 +14,7 @@ static bool rr_node_is_global_clb_ipin(int inode);
 
 static void check_unbuffered_edges(int from_node);
 
-static bool has_adjacent_channel(const t_rr_node& node, const DeviceGrid& grid);
+static bool has_adjacent_channel(const RRGraph& rr_graph, const RRNodeId& node, const DeviceGrid& grid);
 
 static void check_rr_edge(int from_node, int from_edge, int to_node);
 
@@ -220,7 +220,7 @@ static bool rr_node_is_global_clb_ipin(int inode) {
     return type->is_ignored_pin[ipin];
 }
 
-void check_rr_node(int inode, enum e_route_type route_type, const DeviceContext& device_ctx) {
+void check_rr_node(const RRNodeId& inode, enum e_route_type route_type, const DeviceContext& device_ctx) {
     /* This routine checks that the rr_node is inside the grid and has a valid
      * pin number, etc.
      */
@@ -231,14 +231,14 @@ void check_rr_node(int inode, enum e_route_type route_type, const DeviceContext&
     int nodes_per_chan, tracks_per_node, num_edges, cost_index;
     float C, R;
 
-    rr_type = device_ctx.rr_nodes[inode].type();
-    xlow = device_ctx.rr_nodes[inode].xlow();
-    xhigh = device_ctx.rr_nodes[inode].xhigh();
-    ylow = device_ctx.rr_nodes[inode].ylow();
-    yhigh = device_ctx.rr_nodes[inode].yhigh();
-    ptc_num = device_ctx.rr_nodes[inode].ptc_num();
-    capacity = device_ctx.rr_nodes[inode].capacity();
-    cost_index = device_ctx.rr_nodes[inode].cost_index();
+    rr_type = device_ctx.rr_graph.node_type(inode);
+    xlow = device_ctx.rr_graph.node_xlow(inode);
+    xhigh = device_ctx.rr_graph.node_xhigh(inode);
+    ylow = device_ctx.rr_graph.node_ylow(inode);
+    yhigh = device_ctx.rr_graph.node_yhigh(inode);
+    ptc_num = device_ctx.rr_graph.node_ptc_num(inode);
+    capacity = device_ctx.rr_graph.node_capacity(inode);
+    cost_index = device_ctx.rr_graph.node_cost_index(inode);
     type = nullptr;
 
     const auto& grid = device_ctx.grid;
@@ -413,7 +413,7 @@ void check_rr_node(int inode, enum e_route_type route_type, const DeviceContext&
     }
 
     /* Check that the number of (out) edges is reasonable. */
-    num_edges = device_ctx.rr_nodes[inode].num_edges();
+    num_edges = device_ctx.rr_graph.node_out_edges(inode).size();
 
     if (rr_type != SINK && rr_type != IPIN) {
         if (num_edges <= 0) {
@@ -424,7 +424,7 @@ void check_rr_node(int inode, enum e_route_type route_type, const DeviceContext&
             //Don't worry about disconnect PINs which have no adjacent channels (i.e. on the device perimeter)
             bool check_for_out_edges = true;
             if (rr_type == IPIN || rr_type == OPIN) {
-                if (!has_adjacent_channel(device_ctx.rr_nodes[inode], device_ctx.grid)) {
+                if (!has_adjacent_channel(device_ctx.rr_graph, inode, device_ctx.grid)) {
                     check_for_out_edges = false;
                 }
             }
@@ -437,23 +437,23 @@ void check_rr_node(int inode, enum e_route_type route_type, const DeviceContext&
     } else if (rr_type == SINK) { /* SINK -- remove this check if feedthroughs allowed */
         if (num_edges != 0) {
             VPR_FATAL_ERROR(VPR_ERROR_ROUTE,
-                            "in check_rr_node: node %d is a sink, but has %d edges.\n", inode, num_edges);
+                            "in check_rr_node: node %d is a sink, but has %d edges.\n", size_t(inode), num_edges);
         }
     }
 
     /* Check that the capacitance and resistance are reasonable. */
-    C = device_ctx.rr_nodes[inode].C();
-    R = device_ctx.rr_nodes[inode].R();
+    C = device_ctx.rr_graph.node_C(inode);
+    R = device_ctx.rr_graph.node_R(inode);
 
     if (rr_type == CHANX || rr_type == CHANY) {
         if (C < 0. || R < 0.) {
             VPR_ERROR(VPR_ERROR_ROUTE,
-                      "in check_rr_node: node %d of type %d has R = %g and C = %g.\n", inode, rr_type, R, C);
+                      "in check_rr_node: node %d of type %d has R = %g and C = %g.\n", size_t(inode), rr_type, R, C);
         }
     } else {
         if (C != 0. || R != 0.) {
             VPR_ERROR(VPR_ERROR_ROUTE,
-                      "in check_rr_node: node %d of type %d has R = %g and C = %g.\n", inode, rr_type, R, C);
+                      "in check_rr_node: node %d of type %d has R = %g and C = %g.\n", size_t(inode), rr_type, R, C);
         }
     }
 }
@@ -513,13 +513,13 @@ static void check_unbuffered_edges(int from_node) {
     } /* End for all from_node edges */
 }
 
-static bool has_adjacent_channel(const t_rr_node& node, const DeviceGrid& grid) {
-    VTR_ASSERT(node.type() == IPIN || node.type() == OPIN);
+static bool has_adjacent_channel(const RRGraph& rr_graph, const RRNodeId& node, const DeviceGrid& grid) {
+    VTR_ASSERT(rr_graph.node_type(node) == IPIN || rr_graph.node_type(node) == OPIN);
 
-    if ((node.xlow() == 0 && node.side() != RIGHT)                          //left device edge connects only along block's right side
-        || (node.ylow() == int(grid.height() - 1) && node.side() != BOTTOM) //top device edge connects only along block's bottom side
-        || (node.xlow() == int(grid.width() - 1) && node.side() != LEFT)    //right deivce edge connects only along block's left side
-        || (node.ylow() == 0 && node.side() != TOP)                         //bottom deivce edge connects only along block's top side
+    if ((rr_graph.node_xlow(node) == 0 && rr_graph.node_side(node) != RIGHT)                          //left device edge connects only along block's right side
+        || (rr_graph.node_ylow(node) == int(grid.height() - 1) && rr_graph.node_side(node) != BOTTOM) //top device edge connects only along block's bottom side
+        || (rr_graph.node_xlow(node) == int(grid.width() - 1) && rr_graph.node_side(node) != LEFT)    //right deivce edge connects only along block's left side
+        || (rr_graph.node_ylow(node) == 0 && rr_graph.node_side(node) != TOP)                         //bottom deivce edge connects only along block's top side
     ) {
         return false;
     }

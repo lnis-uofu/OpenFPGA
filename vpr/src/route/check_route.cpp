@@ -17,13 +17,13 @@
 #include "route_tree_timing.h"
 
 /******************** Subroutines local to this module **********************/
-static void check_node_and_range(int inode, enum e_route_type route_type);
-static void check_source(int inode, ClusterNetId net_id);
-static void check_sink(int inode, ClusterNetId net_id, bool* pin_done);
+static void check_node_and_range(const RRNodeId& inode, enum e_route_type route_type);
+static void check_source(const RRNodeId& inode, ClusterNetId net_id);
+static void check_sink(const RRNodeId& inode, ClusterNetId net_id, bool* pin_done);
 static void check_switch(t_trace* tptr, int num_switch);
-static bool check_adjacent(int from_node, int to_node);
-static int chanx_chany_adjacent(int chanx_node, int chany_node);
-static void reset_flags(ClusterNetId inet, bool* connected_to_route);
+static bool check_adjacent(const RRNodeId& from_node, const RRNodeId& to_node);
+static int chanx_chany_adjacent(const RRNodeId& chanx_node, const RRNodeId& chany_node);
+static void reset_flags(ClusterNetId inet, vtr::vector<RRNodeId, bool>& connected_to_route);
 static void check_locally_used_clb_opins(const t_clb_opins_used& clb_opins_used_locally,
                                          enum e_route_type route_type);
 
@@ -39,10 +39,11 @@ void check_route(enum e_route_type route_type) {
      * oversubscribed (the occupancy of everything is recomputed from        *
      * scratch).                                                             */
 
-    int max_pins, inode, prev_node;
+    int max_pins;
+    RRNodeId inode, prev_node;
     unsigned int ipin;
     bool valid, connects;
-    bool* connected_to_route; /* [0 .. device_ctx.rr_nodes.size()-1] */
+    vtr::vector<RRNodeId, bool> connected_to_route; /* [0 .. device_ctx.rr_nodes.size()-1] */
     t_trace* tptr;
     bool* pin_done;
 
@@ -70,7 +71,7 @@ void check_route(enum e_route_type route_type) {
 
     auto non_configurable_rr_sets = identify_non_configurable_rr_sets();
 
-    connected_to_route = (bool*)vtr::calloc(device_ctx.rr_nodes.size(), sizeof(bool));
+    connected_to_route.resize(device_ctx.rr_graph.nodes().size(), false);
 
     max_pins = 0;
     for (auto net_id : cluster_ctx.clb_nlist.nets())
@@ -115,7 +116,7 @@ void check_route(enum e_route_type route_type) {
             if (prev_switch == OPEN) { //Start of a new branch
                 if (connected_to_route[inode] == false) {
                     VPR_ERROR(VPR_ERROR_ROUTE,
-                              "in check_route: node %d does not link into existing routing for net %d.\n", inode, size_t(net_id));
+                              "in check_route: node %d does not link into existing routing for net %d.\n", size_t(inode), size_t(net_id));
                 }
             } else { //Continuing along existing branch
                 connects = check_adjacent(prev_node, inode);
@@ -131,7 +132,7 @@ void check_route(enum e_route_type route_type) {
 
                 connected_to_route[inode] = true; /* Mark as in path. */
 
-                if (device_ctx.rr_nodes[inode].type() == SINK) {
+                if (device_ctx.rr_graph.node_type(inode) == SINK) {
                     check_sink(inode, net_id, pin_done);
                     num_sinks += 1;
                 }
@@ -165,24 +166,24 @@ void check_route(enum e_route_type route_type) {
     } /* End for each net */
 
     free(pin_done);
-    free(connected_to_route);
+    connected_to_route.clear();
     VTR_LOG("Completed routing consistency check successfully.\n");
     VTR_LOG("\n");
 }
 
 /* Checks that this SINK node is one of the terminals of inet, and marks   *
  * the appropriate pin as being reached.                                   */
-static void check_sink(int inode, ClusterNetId net_id, bool* pin_done) {
+static void check_sink(const RRNodeId& inode, ClusterNetId net_id, bool* pin_done) {
     auto& device_ctx = g_vpr_ctx.device();
     auto& cluster_ctx = g_vpr_ctx.clustering();
     auto& place_ctx = g_vpr_ctx.placement();
 
-    VTR_ASSERT(device_ctx.rr_nodes[inode].type() == SINK);
-    int i = device_ctx.rr_nodes[inode].xlow();
-    int j = device_ctx.rr_nodes[inode].ylow();
+    VTR_ASSERT(device_ctx.rr_graph.node_type(inode) == SINK);
+    int i = device_ctx.rr_graph.node_xlow(inode);
+    int j = device_ctx.rr_graph.node_ylow(inode);
     auto type = device_ctx.grid[i][j].type;
     /* For sinks, ptc_num is the class */
-    int ptc_num = device_ctx.rr_nodes[inode].ptc_num();
+    int ptc_num = device_ctx.rr_graph.node_ptc_num(inode);
     int ifound = 0;
 
     for (int iblk = 0; iblk < type->capacity; iblk++) {
@@ -215,26 +216,26 @@ static void check_sink(int inode, ClusterNetId net_id, bool* pin_done) {
                         "in check_sink: node %d does not connect to any terminal of net %s #%lu.\n"
                         "This error is usually caused by incorrectly specified logical equivalence in your architecture file.\n"
                         "You should try to respecify what pins are equivalent or turn logical equivalence off.\n",
-                        inode, cluster_ctx.clb_nlist.net_name(net_id).c_str(), size_t(net_id));
+                        size_t(inode), cluster_ctx.clb_nlist.net_name(net_id).c_str(), size_t(net_id));
     }
 }
 
 /* Checks that the node passed in is a valid source for this net. */
-static void check_source(int inode, ClusterNetId net_id) {
+static void check_source(const RRNodeId& inode, ClusterNetId net_id) {
     auto& device_ctx = g_vpr_ctx.device();
     auto& cluster_ctx = g_vpr_ctx.clustering();
     auto& place_ctx = g_vpr_ctx.placement();
 
-    t_rr_type rr_type = device_ctx.rr_nodes[inode].type();
+    t_rr_type rr_type = device_ctx.rr_graph.node_type(inode);
     if (rr_type != SOURCE) {
         VPR_FATAL_ERROR(VPR_ERROR_ROUTE,
                         "in check_source: net %d begins with a node of type %d.\n", size_t(net_id), rr_type);
     }
 
-    int i = device_ctx.rr_nodes[inode].xlow();
-    int j = device_ctx.rr_nodes[inode].ylow();
+    int i = device_ctx.rr_graph.node_xlow(inode);
+    int j = device_ctx.rr_graph.node_ylow(inode);
     /* for sinks and sources, ptc_num is class */
-    int ptc_num = device_ctx.rr_nodes[inode].ptc_num();
+    int ptc_num = device_ctx.rr_graph.node_ptc_num(inode);
     /* First node_block for net is the source */
     ClusterBlockId blk_id = cluster_ctx.clb_nlist.net_driver_block(net_id);
     auto type = device_ctx.grid[i][j].type;
@@ -259,7 +260,7 @@ static void check_switch(t_trace* tptr, int num_switch) {
     /* Checks that the switch leading from this traceback element to the next *
      * one is a legal switch type.                                            */
 
-    int inode;
+    RRNodeId inode;
     short switch_type;
 
     auto& device_ctx = g_vpr_ctx.device();
@@ -267,12 +268,12 @@ static void check_switch(t_trace* tptr, int num_switch) {
     inode = tptr->index;
     switch_type = tptr->iswitch;
 
-    if (device_ctx.rr_nodes[inode].type() != SINK) {
+    if (device_ctx.rr_graph.node_type(inode) != SINK) {
         if (switch_type >= num_switch) {
             VPR_FATAL_ERROR(VPR_ERROR_ROUTE,
                             "in check_switch: rr_node %d left via switch type %d.\n"
                             "\tSwitch type is out of range.\n",
-                            inode, switch_type);
+                            size_t(inode), switch_type);
         }
     }
 
@@ -283,19 +284,19 @@ static void check_switch(t_trace* tptr, int num_switch) {
 
         if (switch_type != OPEN) {
             VPR_FATAL_ERROR(VPR_ERROR_ROUTE,
-                            "in check_switch: rr_node %d is a SINK, but attempts to use a switch of type %d.\n", inode, switch_type);
+                            "in check_switch: rr_node %d is a SINK, but attempts to use a switch of type %d.\n", size_t(inode), switch_type);
         }
     }
 }
 
-static void reset_flags(ClusterNetId inet, bool* connected_to_route) {
+static void reset_flags(ClusterNetId inet, vtr::vector<RRNodeId, bool>& connected_to_route) {
     /* This routine resets the flags of all the channel segments contained *
      * in the traceback of net inet to 0.  This allows us to check the     *
      * next net for connectivity (and the default state of the flags       *
      * should always be zero after they have been used).                   */
 
     t_trace* tptr;
-    int inode;
+    RRNodeId inode;
 
     auto& route_ctx = g_vpr_ctx.routing();
 
@@ -308,7 +309,7 @@ static void reset_flags(ClusterNetId inet, bool* connected_to_route) {
     }
 }
 
-static bool check_adjacent(int from_node, int to_node) {
+static bool check_adjacent(const RRNodeId& from_node, const RRNodeId& to_node) {
     /* This routine checks if the rr_node to_node is reachable from from_node.   *
      * It returns true if is reachable and false if it is not.  Check_node has   *
      * already been used to verify that both nodes are valid rr_nodes, so only   *
@@ -327,8 +328,8 @@ static bool check_adjacent(int from_node, int to_node) {
 
     reached = false;
 
-    for (t_edge_size iconn = 0; iconn < device_ctx.rr_nodes[from_node].num_edges(); iconn++) {
-        if (device_ctx.rr_nodes[from_node].edge_sink_node(iconn) == to_node) {
+    for (const RREdgeId& iconn : device_ctx.rr_graph.node_out_edges(from_node)) {
+        if (device_ctx.rr_graph.edge_sink_node(iconn) == to_node) {
             reached = true;
             break;
         }
@@ -343,18 +344,18 @@ static bool check_adjacent(int from_node, int to_node) {
 
     num_adj = 0;
 
-    from_type = device_ctx.rr_nodes[from_node].type();
-    from_xlow = device_ctx.rr_nodes[from_node].xlow();
-    from_ylow = device_ctx.rr_nodes[from_node].ylow();
-    from_xhigh = device_ctx.rr_nodes[from_node].xhigh();
-    from_yhigh = device_ctx.rr_nodes[from_node].yhigh();
-    from_ptc = device_ctx.rr_nodes[from_node].ptc_num();
-    to_type = device_ctx.rr_nodes[to_node].type();
-    to_xlow = device_ctx.rr_nodes[to_node].xlow();
-    to_ylow = device_ctx.rr_nodes[to_node].ylow();
-    to_xhigh = device_ctx.rr_nodes[to_node].xhigh();
-    to_yhigh = device_ctx.rr_nodes[to_node].yhigh();
-    to_ptc = device_ctx.rr_nodes[to_node].ptc_num();
+    from_type = device_ctx.rr_graph.node_type(from_node);
+    from_xlow = device_ctx.rr_graph.node_xlow(from_node);
+    from_ylow = device_ctx.rr_graph.node_ylow(from_node);
+    from_xhigh = device_ctx.rr_graph.node_xhigh(from_node);
+    from_yhigh = device_ctx.rr_graph.node_yhigh(from_node);
+    from_ptc = device_ctx.rr_graph.node_ptc_num(from_node);
+    to_type = device_ctx.rr_graph.node_type(to_node);
+    to_xlow = device_ctx.rr_graph.node_xlow(to_node);
+    to_ylow = device_ctx.rr_graph.node_ylow(to_node);
+    to_xhigh = device_ctx.rr_graph.node_xhigh(to_node);
+    to_yhigh = device_ctx.rr_graph.node_yhigh(to_node);
+    to_ptc = device_ctx.rr_graph.node_ptc_num(to_node);
 
     switch (from_type) {
         case SOURCE:
@@ -411,8 +412,8 @@ static bool check_adjacent(int from_node, int to_node) {
             if (to_type == IPIN) {
                 num_adj += 1; //adjacent
             } else if (to_type == CHANX) {
-                from_xhigh = device_ctx.rr_nodes[from_node].xhigh();
-                to_xhigh = device_ctx.rr_nodes[to_node].xhigh();
+                from_xhigh = device_ctx.rr_graph.node_xhigh(from_node);
+                to_xhigh = device_ctx.rr_graph.node_xhigh(to_node);
                 if (from_ylow == to_ylow) {
                     /* UDSD Modification by WMF Begin */
                     /*For Fs > 3, can connect to overlapping wire segment */
@@ -436,7 +437,7 @@ static bool check_adjacent(int from_node, int to_node) {
                 num_adj += chanx_chany_adjacent(from_node, to_node);
             } else {
                 VPR_FATAL_ERROR(VPR_ERROR_ROUTE,
-                                "in check_adjacent: %d and %d are not adjacent", from_node, to_node);
+                                "in check_adjacent: %d and %d are not adjacent", size_t(from_node), size_t(to_node));
             }
             break;
 
@@ -444,8 +445,8 @@ static bool check_adjacent(int from_node, int to_node) {
             if (to_type == IPIN) {
                 num_adj += 1; //adjacent
             } else if (to_type == CHANY) {
-                from_yhigh = device_ctx.rr_nodes[from_node].yhigh();
-                to_yhigh = device_ctx.rr_nodes[to_node].yhigh();
+                from_yhigh = device_ctx.rr_graph.node_yhigh(from_node);
+                to_yhigh = device_ctx.rr_graph.node_yhigh(to_node);
                 if (from_xlow == to_xlow) {
                     /* UDSD Modification by WMF Begin */
                     if (to_yhigh == from_ylow - 1 || from_yhigh == to_ylow - 1) {
@@ -468,7 +469,7 @@ static bool check_adjacent(int from_node, int to_node) {
                 num_adj += chanx_chany_adjacent(to_node, from_node);
             } else {
                 VPR_FATAL_ERROR(VPR_ERROR_ROUTE,
-                                "in check_adjacent: %d and %d are not adjacent", from_node, to_node);
+                                "in check_adjacent: %d and %d are not adjacent", size_t(from_node), size_t(to_node));
             }
             break;
 
@@ -486,7 +487,7 @@ static bool check_adjacent(int from_node, int to_node) {
     return false; //Should not reach here once thrown
 }
 
-static int chanx_chany_adjacent(int chanx_node, int chany_node) {
+static int chanx_chany_adjacent(const RRNodeId& chanx_node, const RRNodeId& chany_node) {
     /* Returns 1 if the specified CHANX and CHANY nodes are adjacent, 0         *
      * otherwise.                                                               */
 
@@ -495,13 +496,13 @@ static int chanx_chany_adjacent(int chanx_node, int chany_node) {
 
     auto& device_ctx = g_vpr_ctx.device();
 
-    chanx_y = device_ctx.rr_nodes[chanx_node].ylow();
-    chanx_xlow = device_ctx.rr_nodes[chanx_node].xlow();
-    chanx_xhigh = device_ctx.rr_nodes[chanx_node].xhigh();
+    chanx_y =     device_ctx.rr_graph.node_ylow(chanx_node);
+    chanx_xlow =  device_ctx.rr_graph.node_xlow(chanx_node);
+    chanx_xhigh = device_ctx.rr_graph.node_xhigh(chanx_node);
 
-    chany_x = device_ctx.rr_nodes[chany_node].xlow();
-    chany_ylow = device_ctx.rr_nodes[chany_node].ylow();
-    chany_yhigh = device_ctx.rr_nodes[chany_node].yhigh();
+    chany_x =     device_ctx.rr_graph.node_xlow(chany_node);
+    chany_ylow =  device_ctx.rr_graph.node_ylow(chany_node);
+    chany_yhigh = device_ctx.rr_graph.node_yhigh(chany_node);
 
     if (chany_ylow > chanx_y + 1 || chany_yhigh < chanx_y)
         return (0);
@@ -519,7 +520,8 @@ void recompute_occupancy_from_scratch() {
      * brute force recompute from scratch that is useful for sanity checking.
      */
 
-    int inode, iclass, ipin, num_local_opins;
+    int iclass, ipin, num_local_opins;
+    RRNodeId inode;
     t_trace* tptr;
 
     auto& route_ctx = g_vpr_ctx.mutable_routing();
@@ -528,8 +530,9 @@ void recompute_occupancy_from_scratch() {
 
     /* First set the occupancy of everything to zero. */
 
-    for (size_t inode_idx = 0; inode_idx < device_ctx.rr_nodes.size(); inode_idx++)
+    for (const RRNodeId& inode_idx : device_ctx.rr_graph.nodes()) {
         route_ctx.rr_node_route_inf[inode_idx].set_occ(0);
+    }
 
     /* Now go through each net and count the tracks and pins used everywhere */
 
@@ -575,7 +578,8 @@ static void check_locally_used_clb_opins(const t_clb_opins_used& clb_opins_used_
     /* Checks that enough OPINs on CLBs have been set aside (used up) to make a *
      * legal routing if subblocks connect to OPINs directly.                    */
 
-    int iclass, num_local_opins, inode, ipin;
+    int iclass, num_local_opins, ipin;
+    RRNodeId inode;
     t_rr_type rr_type;
 
     auto& cluster_ctx = g_vpr_ctx.clustering();
@@ -592,35 +596,35 @@ static void check_locally_used_clb_opins(const t_clb_opins_used& clb_opins_used_
 
                 /* Now check that node is an OPIN of the right type. */
 
-                rr_type = device_ctx.rr_nodes[inode].type();
+                rr_type = device_ctx.rr_graph.node_type(inode);
                 if (rr_type != OPIN) {
                     VPR_FATAL_ERROR(VPR_ERROR_ROUTE,
                                     "in check_locally_used_opins: block #%lu (%s)\n"
                                     "\tClass %d local OPIN is wrong rr_type -- rr_node #%d of type %d.\n",
-                                    size_t(blk_id), cluster_ctx.clb_nlist.block_name(blk_id).c_str(), iclass, inode, rr_type);
+                                    size_t(blk_id), cluster_ctx.clb_nlist.block_name(blk_id).c_str(), iclass, size_t(inode), rr_type);
                 }
 
-                ipin = device_ctx.rr_nodes[inode].ptc_num();
+                ipin = device_ctx.rr_graph.node_ptc_num(inode);
                 if (physical_tile_type(blk_id)->pin_class[ipin] != iclass) {
                     VPR_FATAL_ERROR(VPR_ERROR_ROUTE,
                                     "in check_locally_used_opins: block #%lu (%s):\n"
                                     "\tExpected class %d local OPIN has class %d -- rr_node #: %d.\n",
-                                    size_t(blk_id), cluster_ctx.clb_nlist.block_name(blk_id).c_str(), iclass, physical_tile_type(blk_id)->pin_class[ipin], inode);
+                                    size_t(blk_id), cluster_ctx.clb_nlist.block_name(blk_id).c_str(), iclass, physical_tile_type(blk_id)->pin_class[ipin], size_t(inode));
                 }
             }
         }
     }
 }
 
-static void check_node_and_range(int inode, enum e_route_type route_type) {
+static void check_node_and_range(const RRNodeId& inode, enum e_route_type route_type) {
     /* Checks that inode is within the legal range, then calls check_node to    *
      * check that everything else about the node is OK.                         */
 
     auto& device_ctx = g_vpr_ctx.device();
 
-    if (inode < 0 || inode >= (int)device_ctx.rr_nodes.size()) {
+    if (false == device_ctx.rr_graph.valid_node_id(inode)) {
         VPR_FATAL_ERROR(VPR_ERROR_ROUTE,
-                        "in check_node_and_range: rr_node #%d is out of legal, range (0 to %d).\n", inode, device_ctx.rr_nodes.size() - 1);
+                        "in check_node_and_range: rr_node #%d is out of legal, range (0 to %d).\n", size_t(inode), device_ctx.rr_graph.nodes().size() - 1);
     }
     check_rr_node(inode, route_type, device_ctx);
 }
@@ -637,16 +641,16 @@ static bool check_non_configurable_edges(ClusterNetId net, const t_non_configura
 
     //Collect all the edges used by this net's routing
     std::set<t_node_edge> routing_edges;
-    std::set<int> routing_nodes;
+    std::set<RRNodeId> routing_nodes;
     for (t_trace* trace = head; trace != nullptr; trace = trace->next) {
-        int inode = trace->index;
+        RRNodeId inode = trace->index;
 
         routing_nodes.insert(inode);
 
         if (trace->iswitch == OPEN) {
             continue; //End of branch
         } else if (trace->next) {
-            int inode_next = trace->next->index;
+            RRNodeId inode_next = trace->next->index;
 
             t_node_edge edge = {inode, inode_next};
 
@@ -668,7 +672,7 @@ static bool check_non_configurable_edges(ClusterNetId net, const t_non_configura
     //within a set is used by the routing
     for (const auto& rr_nodes : non_configurable_rr_sets.node_sets) {
         //Compute the intersection of the routing and current non-configurable nodes set
-        std::vector<int> intersection;
+        std::vector<RRNodeId> intersection;
         std::set_intersection(routing_nodes.begin(), routing_nodes.end(),
                               rr_nodes.begin(), rr_nodes.end(),
                               std::back_inserter(intersection));
@@ -683,7 +687,7 @@ static bool check_non_configurable_edges(ClusterNetId net, const t_non_configura
                 //Compute the difference to identify the missing nodes
                 //for detailed error reporting -- the nodes
                 //which are in rr_nodes but not in routing_nodes.
-                std::vector<int> difference;
+                std::vector<RRNodeId> difference;
                 std::set_difference(rr_nodes.begin(), rr_nodes.end(),
                                     routing_nodes.begin(), routing_nodes.end(),
                                     std::back_inserter(difference));
@@ -762,7 +766,7 @@ static bool check_non_configurable_edges(ClusterNetId net, const t_non_configura
 
                 for (t_node_edge missing_edge : dedupped_difference) {
                     msg += vtr::string_fmt("  Expected RR Node: %d and RR Node: %d to be non-configurably connected, but edge missing from routing:\n",
-                                           missing_edge.from_node, missing_edge.to_node);
+                                           size_t(missing_edge.from_node), size_t(missing_edge.to_node));
                     msg += vtr::string_fmt("    %s\n", describe_rr_node(missing_edge.from_node).c_str());
                     msg += vtr::string_fmt("    %s\n", describe_rr_node(missing_edge.to_node).c_str());
                 }
@@ -786,7 +790,7 @@ class StubFinder {
     bool CheckNet(ClusterNetId net);
 
     // Returns set of stub nodes.
-    const std::set<int>& stub_nodes() {
+    const std::set<RRNodeId>& stub_nodes() {
         return stub_nodes_;
     }
 
@@ -796,7 +800,7 @@ class StubFinder {
     // Set of stub nodes
     // Note this is an ordered set so that node output is sorted by node
     // id.
-    std::set<int> stub_nodes_;
+    std::set<RRNodeId> stub_nodes_;
 };
 
 //Cheks for stubs in a net's routing.
@@ -813,7 +817,7 @@ void check_net_for_stubs(ClusterNetId net) {
         auto& cluster_ctx = g_vpr_ctx.clustering();
         std::string msg = vtr::string_fmt("Route tree for net '%s' (#%zu) contains stub branches rooted at:\n",
                                           cluster_ctx.clb_nlist.net_name(net).c_str(), size_t(net));
-        for (int inode : stub_finder.stub_nodes()) {
+        for (const RRNodeId& inode : stub_finder.stub_nodes()) {
             msg += vtr::string_fmt("    %s\n", describe_rr_node(inode).c_str());
         }
 
@@ -837,7 +841,7 @@ bool StubFinder::RecurseTree(t_rt_node* rt_root) {
 
     if (rt_root->u.child_list == nullptr) {
         //If a leaf of the route tree is not a SINK, then it is a stub
-        if (device_ctx.rr_nodes[rt_root->inode].type() != SINK) {
+        if (device_ctx.rr_graph.node_type(rt_root->inode) != SINK) {
             return true; //It is the current root of this stub
         } else {
             return false;
