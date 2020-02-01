@@ -40,6 +40,9 @@
 #include "vtr_flat_map.h"
 #include "vtr_cache.h"
 
+/* Header for rr_graph related definition */
+#include "rr_graph_types.h"
+
 /*******************************************************************************
  * Global data types and constants
  ******************************************************************************/
@@ -1011,15 +1014,6 @@ struct t_det_routing_arch {
     std::string write_rr_graph_filename;
 };
 
-enum e_direction : unsigned char {
-    INC_DIRECTION = 0,
-    DEC_DIRECTION = 1,
-    BI_DIRECTION = 2,
-    NO_DIRECTION = 3,
-    NUM_DIRECTIONS
-};
-
-constexpr std::array<const char*, NUM_DIRECTIONS> DIRECTION_STRING = {{"INC_DIRECTION", "DEC_DIRECTION", "BI_DIRECTION", "NO_DIRECTION"}};
 
 /* Lists detailed information about segmentation.  [0 .. W-1].              *
  * length:  length of segment.                                              *
@@ -1131,26 +1125,6 @@ struct t_linked_f_pointer {
 };
 
 typedef std::vector<std::vector<std::vector<std::vector<std::vector<int>>>>> t_rr_node_indices; //[0..num_rr_types-1][0..grid_width-1][0..grid_height-1][0..NUM_SIDES-1][0..max_ptc-1]
-
-/* Type of a routing resource node.  x-directed channel segment,   *
- * y-directed channel segment, input pin to a clb to pad, output   *
- * from a clb or pad (i.e. output pin of a net) and:               *
- * SOURCE:  A dummy node that is a logical output within a block   *
- *          -- i.e., the gate that generates a signal.             *
- * SINK:    A dummy node that is a logical input within a block    *
- *          -- i.e. the gate that needs a signal.                  */
-typedef enum e_rr_type : unsigned char {
-    SOURCE = 0,
-    SINK,
-    IPIN,
-    OPIN,
-    CHANX,
-    CHANY,
-    NUM_RR_TYPES
-} t_rr_type;
-
-constexpr std::array<t_rr_type, NUM_RR_TYPES> RR_TYPES = {{SOURCE, SINK, IPIN, OPIN, CHANX, CHANY}};
-constexpr std::array<const char*, NUM_RR_TYPES> rr_node_typename{{"SOURCE", "SINK", "IPIN", "OPIN", "CHANX", "CHANY"}};
 
 /* Basic element used to store the traceback (routing) of each net.        *
  * index:   Array index (ID) of this routing resource node.                *

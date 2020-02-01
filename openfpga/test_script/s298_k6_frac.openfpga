@@ -1,5 +1,5 @@
 # Run VPR for the s298 design
-vpr ./test_vpr_arch/k6_frac_N10_40nm.xml ./test_blif/s298.blif
+vpr ./test_vpr_arch/k6_frac_N10_40nm.xml ./test_blif/s298.blif --write_rr_graph example_rr_graph.xml
 
 # Read OpenFPGA architecture definition
 read_openfpga_arch -f ./test_openfpga_arch/k6_frac_N10_40nm_openfpga.xml
