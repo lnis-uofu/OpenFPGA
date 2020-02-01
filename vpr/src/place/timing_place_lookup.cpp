@@ -34,6 +34,8 @@
 #include "router_delay_profiling.h"
 #include "place_delay_model.h"
 
+#include "rr_graph_obj_util.h"
+
 /*To compute delay between blocks we calculate the delay between */
 /*different nodes in the FPGA.  From this procedure we generate
  * a lookup table which tells us the delay between different locations in*/
@@ -113,8 +115,8 @@ static bool find_direct_connect_sample_locations(const t_direct_inf* direct,
                                                  t_physical_tile_type_ptr to_type,
                                                  int to_pin,
                                                  int to_pin_class,
-                                                 int* src_rr,
-                                                 int* sink_rr);
+                                                 RRNodeId& src_rr,
+                                                 RRNodeId& sink_rr);
 
 static bool verify_delta_delays(const vtr::Matrix<float>& delta_delays);
 
@@ -741,8 +743,8 @@ static bool find_direct_connect_sample_locations(const t_direct_inf* direct,
                                                  t_physical_tile_type_ptr to_type,
                                                  int to_pin,
                                                  int to_pin_class,
-                                                 int* src_rr,
-                                                 int* sink_rr) {
+                                                 RRNodeId& src_rr,
+                                                 RRNodeId& sink_rr) {
     VTR_ASSERT(from_type != nullptr);
     VTR_ASSERT(to_type != nullptr);
 
@@ -765,10 +767,10 @@ static bool find_direct_connect_sample_locations(const t_direct_inf* direct,
             //(with multi-width/height blocks pins may not exist at all locations)
             bool from_pin_found = false;
             if (direct->from_side != NUM_SIDES) {
-                int from_pin_rr = get_rr_node_index(device_ctx.rr_node_indices, from_x, from_y, OPIN, from_pin, direct->from_side);
-                from_pin_found = (from_pin_rr != OPEN);
+                RRNodeId from_pin_rr = device_ctx.rr_graph.find_node(from_x, from_y, OPIN, from_pin, direct->from_side);
+                from_pin_found = (from_pin_rr != RRNodeId::INVALID());
             } else {
-                std::vector<int> from_pin_rrs = get_rr_node_indices(device_ctx.rr_node_indices, from_x, from_y, OPIN, from_pin);
+                std::vector<RRNodeId> from_pin_rrs = find_rr_graph_nodes(device_ctx.rr_graph, from_x, from_y, OPIN, from_pin);
                 from_pin_found = !from_pin_rrs.empty();
             }
             if (!from_pin_found) continue;
@@ -782,10 +784,10 @@ static bool find_direct_connect_sample_locations(const t_direct_inf* direct,
             //(with multi-width/height blocks pins may not exist at all locations)
             bool to_pin_found = false;
             if (direct->to_side != NUM_SIDES) {
-                int to_pin_rr = get_rr_node_index(device_ctx.rr_node_indices, to_x, to_y, IPIN, to_pin, direct->to_side);
-                to_pin_found = (to_pin_rr != OPEN);
+                RRNodeId to_pin_rr = device_ctx.rr_graph.find_node(to_x, to_y, IPIN, to_pin, direct->to_side);
+                to_pin_found = (to_pin_rr != RRNodeId::INVALID());
             } else {
-                std::vector<int> to_pin_rrs = get_rr_node_indices(device_ctx.rr_node_indices, to_x, to_y, IPIN, to_pin);
+                std::vector<RRNodeId> to_pin_rrs = find_rr_graph_nodes(device_ctx.rr_graph, to_x, to_y, IPIN, to_pin);
                 to_pin_found = !to_pin_rrs.empty();
             }
             if (!to_pin_found) continue;
@@ -822,14 +824,14 @@ static bool find_direct_connect_sample_locations(const t_direct_inf* direct,
     //Find a source/sink RR node associated with the pins of the direct
     //
 
-    auto source_rr_nodes = get_rr_node_indices(device_ctx.rr_node_indices, from_x, from_y, SOURCE, from_pin_class);
+    std::vector<RRNodeId> source_rr_nodes = find_rr_graph_nodes(device_ctx.rr_graph, from_x, from_y, SOURCE, from_pin_class);
     VTR_ASSERT(source_rr_nodes.size() > 0);
 
-    auto sink_rr_nodes = get_rr_node_indices(device_ctx.rr_node_indices, to_x, to_y, SINK, to_pin_class);
+    std::vector<RRNodeId> sink_rr_nodes = find_rr_graph_nodes(device_ctx.rr_graph, to_x, to_y, SINK, to_pin_class);
     VTR_ASSERT(sink_rr_nodes.size() > 0);
 
-    *src_rr = source_rr_nodes[0];
-    *sink_rr = sink_rr_nodes[0];
+    src_rr = source_rr_nodes[0];
+    sink_rr = sink_rr_nodes[0];
 
     return true;
 }
@@ -884,7 +886,7 @@ void OverrideDelayModel::compute_override_delay_model(
         //sampled_rr_pairs and skipping them if they occur multiple times.
         int missing_instances = 0;
         int missing_paths = 0;
-        std::set<std::pair<int, int>> sampled_rr_pairs;
+        std::set<std::pair<RRNodeId, RRNodeId>> sampled_rr_pairs;
         for (int iconn = 0; iconn < num_conns; ++iconn) {
             //Find the associated pins
             int from_pin = find_pin(from_type, from_port.port_name(), from_port.port_low_index() + iconn);
@@ -899,9 +901,9 @@ void OverrideDelayModel::compute_override_delay_model(
             int to_pin_class = find_pin_class(to_type, to_port.port_name(), to_port.port_low_index() + iconn, RECEIVER);
             VTR_ASSERT(to_pin_class != OPEN);
 
-            int src_rr = OPEN;
-            int sink_rr = OPEN;
-            bool found_sample_points = find_direct_connect_sample_locations(direct, from_type, from_pin, from_pin_class, to_type, to_pin, to_pin_class, &src_rr, &sink_rr);
+            RRNodeId src_rr = RRNodeId::INVALID();
+            RRNodeId sink_rr = RRNodeId::INVALID();
+            bool found_sample_points = find_direct_connect_sample_locations(direct, from_type, from_pin, from_pin_class, to_type, to_pin, to_pin_class, src_rr, sink_rr);
 
             if (!found_sample_points) {
                 ++missing_instances;
@@ -912,8 +914,8 @@ void OverrideDelayModel::compute_override_delay_model(
             //sampled the associated source/sink pair and don't need to do so again
             if (sampled_rr_pairs.count({src_rr, sink_rr})) continue;
 
-            VTR_ASSERT(src_rr != OPEN);
-            VTR_ASSERT(sink_rr != OPEN);
+            VTR_ASSERT(src_rr != RRNodeId::INVALID());
+            VTR_ASSERT(sink_rr != RRNodeId::INVALID());
 
             float direct_connect_delay = std::numeric_limits<float>::quiet_NaN();
             bool found_routing_path = route_profiler.calculate_delay(src_rr, sink_rr, router_opts2, &direct_connect_delay);

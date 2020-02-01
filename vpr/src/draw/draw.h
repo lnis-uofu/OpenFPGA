@@ -60,8 +60,8 @@ void draw_screen();
 ezgl::rectangle draw_get_rr_chan_bbox(const RRNodeId& inode);
 void draw_highlight_blocks_color(t_logical_block_type_ptr type, ClusterBlockId blk_id);
 void highlight_nets(char* message, const RRNodeId& hit_node);
-void draw_highlight_fan_in_fan_out(const std::set<int>& nodes);
-std::set<int> draw_expand_non_configurable_rr_nodes(int hit_node);
+void draw_highlight_fan_in_fan_out(const std::set<RRNodeId>& nodes);
+std::set<RRNodeId> draw_expand_non_configurable_rr_nodes(const RRNodeId& hit_node);
 void deselect_all();
 
 // toggle functions

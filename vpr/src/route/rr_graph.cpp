@@ -2526,53 +2526,53 @@ static vtr::NdMatrix<std::vector<int>, 4> alloc_and_load_track_to_pin_lookup(vtr
     return track_to_pin_lookup;
 }
 
-std::string describe_rr_node(int inode) {
+std::string describe_rr_node(const RRNodeId& inode) {
     auto& device_ctx = g_vpr_ctx.device();
 
-    std::string msg = vtr::string_fmt("RR node: %d", inode);
+    std::string msg = vtr::string_fmt("RR node: %ld", size_t(inode));
 
-    const auto& rr_node = device_ctx.rr_nodes[inode];
+    const RRGraph& rr_graph = device_ctx.rr_graph;
 
-    msg += vtr::string_fmt(" type: %s", rr_node.type_string());
+    msg += vtr::string_fmt(" type: %s", rr_node_typename[rr_graph.node_type(inode)]);
 
-    msg += vtr::string_fmt(" location: (%d,%d)", rr_node.xlow(), rr_node.ylow());
-    if (rr_node.xlow() != rr_node.xhigh() || rr_node.ylow() != rr_node.yhigh()) {
-        msg += vtr::string_fmt(" <-> (%d,%d)", rr_node.xhigh(), rr_node.yhigh());
+    msg += vtr::string_fmt(" location: (%d,%d)", rr_graph.node_xlow(inode), rr_graph.node_ylow(inode));
+    if (rr_graph.node_xlow(inode) != rr_graph.node_xhigh(inode) || rr_graph.node_ylow(inode) != rr_graph.node_yhigh(inode)) {
+        msg += vtr::string_fmt(" <-> (%d,%d)", rr_graph.node_xhigh(inode), rr_graph.node_yhigh(inode));
     }
 
-    if (rr_node.type() == CHANX || rr_node.type() == CHANY) {
-        int cost_index = rr_node.cost_index();
+    if (rr_graph.node_type(inode) == CHANX || rr_graph.node_type(inode) == CHANY) {
+        int cost_index = rr_graph.node_cost_index(inode);
 
         int seg_index = device_ctx.rr_indexed_data[cost_index].seg_index;
 
         if (seg_index < (int)device_ctx.arch->Segments.size()) {
             msg += vtr::string_fmt(" track: %d len: %d longline: %d seg_type: %s dir: %s",
-                                   rr_node.track_num(),
-                                   rr_node.length(),
+                                   rr_graph.node_track_num(inode),
+                                   rr_graph.node_length(inode),
                                    device_ctx.arch->Segments[seg_index].longline,
                                    device_ctx.arch->Segments[seg_index].name.c_str(),
-                                   rr_node.direction_string());
+                                   DIRECTION_STRING_WRITE_XML[rr_graph.node_direction(inode)]);
         } else {
             msg += vtr::string_fmt(" track: %d len: %d seg_type: ILLEGAL_SEG_INDEX %d dir: %s",
-                                   rr_node.track_num(),
-                                   rr_node.length(),
+                                   rr_graph.node_track_num(inode),
+                                   rr_graph.node_length(inode),
                                    seg_index,
-                                   rr_node.direction_string());
+                                   DIRECTION_STRING_WRITE_XML[rr_graph.node_direction(inode)]);
         }
-    } else if (rr_node.type() == IPIN || rr_node.type() == OPIN) {
-        auto type = device_ctx.grid[rr_node.xlow()][rr_node.ylow()].type;
-        std::string pin_name = block_type_pin_index_to_name(type, rr_node.pin_num());
+    } else if (rr_graph.node_type(inode) == IPIN || rr_graph.node_type(inode) == OPIN) {
+        auto type = device_ctx.grid[rr_graph.node_xlow(inode)][rr_graph.node_ylow(inode)].type;
+        std::string pin_name = block_type_pin_index_to_name(type, rr_graph.node_pin_num(inode));
 
         msg += vtr::string_fmt(" pin: %d pin_name: %s",
-                               rr_node.pin_num(),
+                               rr_graph.node_pin_num(inode),
                                pin_name.c_str());
     } else {
-        VTR_ASSERT(rr_node.type() == SOURCE || rr_node.type() == SINK);
+        VTR_ASSERT(rr_graph.node_type(inode) == SOURCE || rr_graph.node_type(inode) == SINK);
 
-        msg += vtr::string_fmt(" class: %d", rr_node.class_num());
+        msg += vtr::string_fmt(" class: %d", rr_graph.node_class_num(inode));
     }
 
-    msg += vtr::string_fmt(" capacity: %d", rr_node.capacity());
+    msg += vtr::string_fmt(" capacity: %d", rr_graph.node_capacity(inode));
 
     return msg;
 }

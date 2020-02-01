@@ -346,14 +346,14 @@ bool feasible_routing() {
 }
 
 //Returns all RR nodes in the current routing which are congested
-std::vector<int> collect_congested_rr_nodes() {
+std::vector<RRNodeId> collect_congested_rr_nodes() {
     auto& device_ctx = g_vpr_ctx.device();
     auto& route_ctx = g_vpr_ctx.routing();
 
-    std::vector<int> congested_rr_nodes;
-    for (size_t inode = 0; inode < device_ctx.rr_graph.nodes().size(); inode++) {
+    std::vector<RRNodeId> congested_rr_nodes;
+    for (const RRNodeId& inode : device_ctx.rr_graph.nodes()) {
         short occ = route_ctx.rr_node_route_inf[inode].occ();
-        short capacity = device_ctx.rr_nodes[inode].capacity();
+        short capacity = device_ctx.rr_graph.node_capacity(inode);
 
         if (occ > capacity) {
             congested_rr_nodes.push_back(inode);
@@ -364,16 +364,16 @@ std::vector<int> collect_congested_rr_nodes() {
 
 /* Returns a vector from [0..device_ctx.rr_graph.nodes().size()-1] containing the set
  * of nets using each RR node */
-std::vector<std::set<ClusterNetId>> collect_rr_node_nets() {
+vtr::vector<RRNodeId, std::set<ClusterNetId>> collect_rr_node_nets() {
     auto& device_ctx = g_vpr_ctx.device();
     auto& route_ctx = g_vpr_ctx.routing();
     auto& cluster_ctx = g_vpr_ctx.clustering();
 
-    std::vector<std::set<ClusterNetId>> rr_node_nets(device_ctx.rr_graph.nodes().size());
+    vtr::vector<RRNodeId, std::set<ClusterNetId>> rr_node_nets(device_ctx.rr_graph.nodes().size());
     for (ClusterNetId inet : cluster_ctx.clb_nlist.nets()) {
         t_trace* trace_elem = route_ctx.trace[inet].head;
         while (trace_elem) {
-            int rr_node = trace_elem->index;
+            const RRNodeId& rr_node = trace_elem->index;
 
             rr_node_nets[rr_node].insert(inet);
 

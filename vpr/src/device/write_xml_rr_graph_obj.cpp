@@ -55,8 +55,6 @@ void write_rr_graph_node(fstream &fp, const RRGraph& rr_graph) {
   /* TODO: we should make it function full independent from device_ctx !!! */
   auto& device_ctx = g_vpr_ctx.device();
 
-  std::array<const char*, NUM_DIRECTIONS> DIRECTION_STRING_WRITE_XML = {{"INC_DIR", "DEC_DIR", "BI_DIR", "NO_DIR"}};
-
   fp << "\t<rr_nodes>" << endl;
 
   for (auto node : rr_graph.nodes()) {

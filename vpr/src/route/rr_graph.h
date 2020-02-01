@@ -43,7 +43,7 @@ void create_rr_graph(const t_graph_type graph_type,
 void free_rr_graph();
 
 //Returns a brief one-line summary of an RR node
-std::string describe_rr_node(int inode);
+std::string describe_rr_node(const RRNodeId& inode);
 
 void init_fan_in(std::vector<t_rr_node>& L_rr_node, const int num_rr_nodes);
 

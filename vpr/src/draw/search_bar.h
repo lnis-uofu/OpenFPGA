@@ -11,8 +11,8 @@
 #    include "draw_color.h"
 
 void search_and_highlight(GtkWidget* /*widget*/, ezgl::application* app);
-bool highlight_rr_nodes(int hit_node);
-void auto_zoom_rr_node(int rr_node_id);
+bool highlight_rr_nodes(const RRNodeId& hit_node);
+void auto_zoom_rr_node(const RRNodeId& rr_node_id);
 void highlight_blocks(ClusterBlockId clb_index);
 void highlight_nets(ClusterNetId net_id);
 void highlight_nets(std::string net_name);

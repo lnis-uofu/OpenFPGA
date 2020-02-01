@@ -286,6 +286,7 @@ struct RoutingContext : public Context {
     vtr::vector<ClusterNetId, t_traceback> trace;
     vtr::vector<ClusterNetId, std::unordered_set<int>> trace_nodes;
 
+    /* Xifan Tang: this should adopt RRNodeId as well */
     vtr::vector<ClusterNetId, std::vector<int>> net_rr_terminals; /* [0..num_nets-1][0..num_pins-1] */
 
     vtr::vector<ClusterBlockId, std::vector<int>> rr_blk_source; /* [0..num_blocks-1][0..num_class-1] */
