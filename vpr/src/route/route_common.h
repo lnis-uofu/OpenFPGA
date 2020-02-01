@@ -66,7 +66,7 @@ void pathfinder_update_cost(float pres_fac, float acc_fac);
 
 t_trace* update_traceback(t_heap* hptr, ClusterNetId net_id);
 
-void reset_path_costs(const std::vector<int>& visited_rr_nodes);
+void reset_path_costs(const std::vector<RRNodeId>& visited_rr_nodes);
 
 float get_rr_cong_cost(const RRNodeId& inode);
 
@@ -75,7 +75,7 @@ void mark_remaining_ends(const std::vector<int>& remaining_sinks);
 
 void add_to_heap(t_heap* hptr);
 t_heap* alloc_heap_data();
-void node_to_heap(int inode, float cost, int prev_node, int prev_edge, float backward_path_cost, float R_upstream);
+void node_to_heap(const RRNodeId& inode, float cost, const RRNodeId& prev_node, const RREdgeId& prev_edge, float backward_path_cost, float R_upstream);
 
 bool is_empty_heap();
 
@@ -83,7 +83,7 @@ void free_traceback(ClusterNetId net_id);
 void drop_traceback_tail(ClusterNetId net_id);
 void free_traceback(t_trace* tptr);
 
-void add_to_mod_list(int inode, std::vector<int>& modified_rr_node_inf);
+void add_to_mod_list(const RRNodeId& inode, std::vector<RRNodeId>& modified_rr_node_inf);
 
 namespace heap_ {
 void build_heap();
@@ -103,7 +103,7 @@ void empty_heap();
 
 void free_heap_data(t_heap* hptr);
 
-void invalidate_heap_entries(int sink_node, int ipin_node);
+void invalidate_heap_entries(const RRNodeId& sink_node, const RRNodeId& ipin_node);
 
 void init_route_structs(int bb_factor);
 

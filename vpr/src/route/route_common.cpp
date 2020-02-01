@@ -104,7 +104,7 @@ static void adjust_one_rr_occ_and_apcost(int inode, int add_or_sub, float pres_f
 
 bool validate_traceback_recurr(t_trace* trace, std::set<int>& seen_rr_nodes);
 static bool validate_trace_nodes(t_trace* head, const std::unordered_set<int>& trace_nodes);
-static float get_single_rr_cong_cost(int inode);
+static float get_single_rr_cong_cost(const RRNodeId& inode);
 
 /************************** Subroutine definitions ***************************/
 
@@ -774,7 +774,7 @@ void mark_remaining_ends(const std::vector<int>& remaining_sinks) {
         ++route_ctx.rr_node_route_inf[sink_node].target_flag;
 }
 
-void node_to_heap(int inode, float total_cost, int prev_node, int prev_edge, float backward_path_cost, float R_upstream) {
+void node_to_heap(const RRNodeId& inode, float total_cost, const RRNodeId& prev_node, const RREdgeId& prev_edge, float backward_path_cost, float R_upstream) {
     /* Puts an rr_node on the heap, if the new cost given is lower than the     *
      * current path_cost to this channel segment.  The index of its predecessor *
      * is stored to make traceback easy.  The index of the edge used to get     *
@@ -790,8 +790,8 @@ void node_to_heap(int inode, float total_cost, int prev_node, int prev_edge, flo
     t_heap* hptr = alloc_heap_data();
     hptr->index = inode;
     hptr->cost = total_cost;
-    VTR_ASSERT_SAFE(hptr->u.prev.node == NO_PREVIOUS);
-    VTR_ASSERT_SAFE(hptr->u.prev.edge == NO_PREVIOUS);
+    VTR_ASSERT_SAFE(hptr->u.prev.node == RRNodeId::INVALID());
+    VTR_ASSERT_SAFE(hptr->u.prev.edge == RREdgeId::INVALID());
     hptr->u.prev.node = prev_node;
     hptr->u.prev.edge = prev_edge;
     hptr->backward_path_cost = backward_path_cost;
@@ -1193,7 +1193,7 @@ t_bb load_net_route_bb(ClusterNetId net_id, int bb_factor) {
     return bb;
 }
 
-void add_to_mod_list(int inode, std::vector<int>& modified_rr_node_inf) {
+void add_to_mod_list(const RRNodeId& inode, std::vector<RRNodeId>& modified_rr_node_inf) {
     auto& route_ctx = g_vpr_ctx.routing();
 
     if (std::isinf(route_ctx.rr_node_route_inf[inode].path_cost)) {
@@ -1413,7 +1413,7 @@ void free_heap_data(t_heap* hptr) {
     num_heap_allocated--;
 }
 
-void invalidate_heap_entries(int sink_node, int ipin_node) {
+void invalidate_heap_entries(const RRNodeId& sink_node, const RRNodeId& ipin_node) {
     /* Marks all the heap entries consisting of sink_node, where it was reached *
      * via ipin_node, as invalid (OPEN).  Used only by the breadth_first router *
      * and even then only in rare circumstances.                                */
@@ -1421,7 +1421,7 @@ void invalidate_heap_entries(int sink_node, int ipin_node) {
     for (int i = 1; i < heap_tail; i++) {
         if (heap[i]->index == sink_node) {
             if (heap[i]->u.prev.node == ipin_node) {
-                heap[i]->index = OPEN; /* Invalid. */
+                heap[i]->index = RRNodeId::INVALID(); /* Invalid. */
                 break;
             }
         }
@@ -1816,7 +1816,7 @@ void print_invalid_routing_info() {
     auto& route_ctx = g_vpr_ctx.routing();
 
     //Build a look-up of nets using each RR node
-    std::multimap<int, ClusterNetId> rr_node_nets;
+    std::multimap<RRNodeId, ClusterNetId> rr_node_nets;
 
     for (auto net_id : cluster_ctx.clb_nlist.nets()) {
         t_trace* tptr = route_ctx.trace[net_id].head;
@@ -1827,9 +1827,9 @@ void print_invalid_routing_info() {
         }
     }
 
-    for (size_t inode = 0; inode < device_ctx.rr_graph.nodes().size(); inode++) {
+    for (const RRNodeId& inode : device_ctx.rr_graph.nodes()) {
         int occ = route_ctx.rr_node_route_inf[inode].occ();
-        int cap = device_ctx.rr_nodes[inode].capacity();
+        int cap = device_ctx.rr_graph.node_capacity(inode);
         if (occ > cap) {
             VTR_LOG("  %s is overused (occ=%d capacity=%d)\n", describe_rr_node(inode).c_str(), occ, cap);
 
