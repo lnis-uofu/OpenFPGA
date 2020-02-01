@@ -25,6 +25,7 @@
 #include "vtr_memory.h"
 #include "vtr_log.h"
 #include "vtr_color_map.h"
+#include "vtr_vector.h"
 
 #include "vpr_utils.h"
 #include "vpr_error.h"
@@ -88,20 +89,20 @@ void act_on_mouse_press(ezgl::application* app, GdkEventButton* event, double x,
 void act_on_mouse_move(ezgl::application* app, GdkEventButton* event, double x, double y);
 
 static void draw_routed_net(ClusterNetId net, ezgl::renderer* g);
-void draw_partial_route(const std::vector<int>& rr_nodes_to_draw, ezgl::renderer* g);
+void draw_partial_route(const std::vector<RRNodeId>& rr_nodes_to_draw, ezgl::renderer* g);
 static void draw_rr(ezgl::renderer* g);
-static void draw_rr_edges(int from_node, ezgl::renderer* g);
-static void draw_rr_pin(int inode, const ezgl::color& color, ezgl::renderer* g);
-static void draw_rr_chan(int inode, const ezgl::color color, ezgl::renderer* g);
-static void draw_rr_src_sink(int inode, ezgl::color color, ezgl::renderer* g);
-static void draw_pin_to_chan_edge(int pin_node, int chan_node, ezgl::renderer* g);
+static void draw_rr_edges(const RRNodeId& from_node, ezgl::renderer* g);
+static void draw_rr_pin(const RRNodeId& inode, const ezgl::color& color, ezgl::renderer* g);
+static void draw_rr_chan(const RRNodeId& inode, const ezgl::color color, ezgl::renderer* g);
+static void draw_rr_src_sink(const RRNodeId& inode, ezgl::color color, ezgl::renderer* g);
+static void draw_pin_to_chan_edge(const RRNodeId& pin_node, const RRNodeId& chan_node, ezgl::renderer* g);
 static void draw_x(float x, float y, float size, ezgl::renderer* g);
-static void draw_pin_to_pin(int opin, int ipin, ezgl::renderer* g);
+static void draw_pin_to_pin(const RRNodeId& opin, const RRNodeId& ipin, ezgl::renderer* g);
 static void draw_rr_switch(float from_x, float from_y, float to_x, float to_y, bool buffered, bool switch_configurable, ezgl::renderer* g);
-static void draw_chany_to_chany_edge(int from_node, int to_node, int to_track, short switch_type, ezgl::renderer* g);
-static void draw_chanx_to_chanx_edge(int from_node, int to_node, int to_track, short switch_type, ezgl::renderer* g);
-static void draw_chanx_to_chany_edge(int chanx_node, int chanx_track, int chany_node, int chany_track, enum e_edge_dir edge_dir, short switch_type, ezgl::renderer* g);
-static int get_track_num(int inode, const vtr::OffsetMatrix<int>& chanx_track, const vtr::OffsetMatrix<int>& chany_track);
+static void draw_chany_to_chany_edge(const RRNodeId& from_node, const RRNodeId& to_node, int to_track, short switch_type, ezgl::renderer* g);
+static void draw_chanx_to_chanx_edge(const RRNodeId& from_node, const RRNodeId& to_node, int to_track, short switch_type, ezgl::renderer* g);
+static void draw_chanx_to_chany_edge(const RRNodeId& chanx_node, int chanx_track, const RRNodeId& chany_node, int chany_track, enum e_edge_dir edge_dir, short switch_type, ezgl::renderer* g);
+static int get_track_num(const RRNodeId& inode, const vtr::OffsetMatrix<int>& chanx_track, const vtr::OffsetMatrix<int>& chany_track);
 static bool draw_if_net_highlighted(ClusterNetId inet);
 static int draw_check_rr_node_hit(float click_x, float click_y);
 
@@ -131,7 +132,7 @@ static void draw_block_pin_util();
 static float get_router_rr_cost(const t_rr_node_route_inf node_inf, e_draw_router_rr_cost draw_router_rr_cost);
 static void draw_router_rr_costs(ezgl::renderer* g);
 
-static void draw_rr_costs(ezgl::renderer* g, const std::vector<float>& rr_costs, bool lowest_cost_first = true);
+static void draw_rr_costs(ezgl::renderer* g, const vtr::vector<RRNodeId, float>& rr_costs, bool lowest_cost_first = true);
 
 void draw_main_canvas(ezgl::renderer* g);
 void initial_setup_NO_PICTURE_to_PLACEMENT(ezgl::application* app, bool is_new_window);
@@ -830,8 +831,7 @@ void alloc_draw_structs(const t_arch* arch) {
 
     /* Space is allocated for draw_rr_node but not initialized because we do *
      * not yet know information about the routing resources.				  */
-    draw_state->draw_rr_node = (t_draw_rr_node*)vtr::malloc(
-        device_ctx.rr_nodes.size() * sizeof(t_draw_rr_node));
+    draw_state->draw_rr_node.resize(device_ctx.rr_graph.nodes().size());
 
     draw_state->arch_info = arch;
 
@@ -860,7 +860,7 @@ void free_draw_structs() {
 
     if (draw_state != nullptr) {
         free(draw_state->draw_rr_node);
-        draw_state->draw_rr_node = nullptr;
+        draw_state->draw_rr_node.clear();
     }
 #else
     ;
@@ -881,11 +881,10 @@ void init_draw_coords(float width_val) {
     /* Each time routing is on screen, need to reallocate the color of each *
      * rr_node, as the number of rr_nodes may change.						*/
     if (device_ctx.rr_graph.nodes().size() != 0) {
-        draw_state->draw_rr_node = (t_draw_rr_node*)vtr::realloc(draw_state->draw_rr_node,
-                                                                 (device_ctx.rr_graph.nodes().size()) * sizeof(t_draw_rr_node));
-        for (size_t i = 0; i < device_ctx.rr_graph.nodes().size(); i++) {
-            draw_state->draw_rr_node[i].color = DEFAULT_RR_NODE_COLOR;
-            draw_state->draw_rr_node[i].node_highlighted = false;
+        draw_state->draw_rr_node.resize(device_ctx.rr_graph.nodes().size());
+        for (const RRNodeId& inode :  device_ctx.rr_graph.nodes()) {
+            draw_state->draw_rr_node[inode].color = DEFAULT_RR_NODE_COLOR;
+            draw_state->draw_rr_node[inode].node_highlighted = false;
         }
     }
     draw_coords->tile_width = width_val;
@@ -1160,8 +1159,8 @@ static void draw_routing_costs(ezgl::renderer* g) {
 
     float min_cost = std::numeric_limits<float>::infinity();
     float max_cost = -min_cost;
-    std::vector<float> rr_node_costs(device_ctx.rr_nodes.size(), 0.);
-    for (size_t inode = 0; inode < device_ctx.rr_nodes.size(); inode++) {
+    std::vector<float> rr_node_costs(device_ctx.rr_graph.nodes().size(), 0.);
+    for (size_t inode = 0; inode < device_ctx.rr_graph.nodes().size(); inode++) {
         float cost = 0.;
         if (draw_state->show_routing_costs == DRAW_TOTAL_ROUTING_COSTS
             || draw_state->show_routing_costs == DRAW_LOG_TOTAL_ROUTING_COSTS) {
@@ -1195,7 +1194,7 @@ static void draw_routing_costs(ezgl::renderer* g) {
     }
 
     //Hide min value, draw_rr_costs() ignores NaN's
-    for (size_t inode = 0; inode < device_ctx.rr_nodes.size(); inode++) {
+    for (size_t inode = 0; inode < device_ctx.rr_graph.nodes().size(); inode++) {
         if (rr_node_costs[inode] == min_cost) {
             rr_node_costs[inode] = NAN;
         }
@@ -1293,7 +1292,7 @@ void draw_rr(ezgl::renderer* g) {
 
     g->set_line_dash(ezgl::line_dash::none);
 
-    for (size_t inode = 0; inode < device_ctx.rr_nodes.size(); inode++) {
+    for (size_t inode = 0; inode < device_ctx.rr_graph.nodes().size(); inode++) {
         if (!draw_state->draw_rr_node[inode].node_highlighted) {
             /* If not highlighted node, assign color based on type. */
             switch (device_ctx.rr_nodes[inode].type()) {
@@ -1346,15 +1345,15 @@ void draw_rr(ezgl::renderer* g) {
     drawroute(HIGHLIGHTED, g);
 }
 
-static void draw_rr_chan(int inode, const ezgl::color color, ezgl::renderer* g) {
+static void draw_rr_chan(const RRNodeId& inode, const ezgl::color color, ezgl::renderer* g) {
     auto& device_ctx = g_vpr_ctx.device();
 
-    t_rr_type type = device_ctx.rr_nodes[inode].type();
+    t_rr_type type = device_ctx.rr_graph.node_type(inode);
 
     VTR_ASSERT(type == CHANX || type == CHANY);
 
     ezgl::rectangle bound_box = draw_get_rr_chan_bbox(inode);
-    e_direction dir = device_ctx.rr_nodes[inode].direction();
+    e_direction dir = device_ctx.rr_graph.node_direction(inode);
 
     //We assume increasing direction, and swap if needed
     ezgl::point2d start = bound_box.bottom_left();
@@ -1380,8 +1379,8 @@ static void draw_rr_chan(int inode, const ezgl::color color, ezgl::renderer* g) 
     int coord_min = -1;
     int coord_max = -1;
     if (type == CHANX) {
-        coord_min = device_ctx.rr_nodes[inode].xlow();
-        coord_max = device_ctx.rr_nodes[inode].xhigh();
+        coord_min = device_ctx.rr_graph.node_xlow(inode);
+        coord_max = device_ctx.rr_graph.node_xhigh(inode);
         if (dir == INC_DIRECTION) {
             mux_dir = RIGHT;
         } else {
@@ -1389,8 +1388,8 @@ static void draw_rr_chan(int inode, const ezgl::color color, ezgl::renderer* g) 
         }
     } else {
         VTR_ASSERT(type == CHANY);
-        coord_min = device_ctx.rr_nodes[inode].ylow();
-        coord_max = device_ctx.rr_nodes[inode].yhigh();
+        coord_min = device_ctx.rr_graph.node_ylow(inode);
+        coord_max = device_ctx.rr_graph.node_yhigh(inode);
         if (dir == INC_DIRECTION) {
             mux_dir = TOP;
         } else {
@@ -1461,7 +1460,7 @@ static void draw_rr_chan(int inode, const ezgl::color color, ezgl::renderer* g) 
         if (switchpoint_max == 0) {
             if (dir != BI_DIRECTION) {
                 //Draw a mux at the start of each wire, labelled with it's size (#inputs)
-                draw_mux_with_size(start, mux_dir, WIRE_DRAWING_WIDTH, device_ctx.rr_nodes[inode].fan_in(), g);
+                draw_mux_with_size(start, mux_dir, WIRE_DRAWING_WIDTH, device_ctx.rr_graph.node_in_edges(inode).size(), g);
             }
         } else {
             //Draw arrows and label with switch point
@@ -1487,30 +1486,31 @@ static void draw_rr_chan(int inode, const ezgl::color color, ezgl::renderer* g) 
     g->set_color(color); //Ensure color is still set correctly if we drew any arrows/text
 }
 
-static void draw_rr_edges(int inode, ezgl::renderer* g) {
+static void draw_rr_edges(const RRNodeId& inode, ezgl::renderer* g) {
     /* Draws all the edges that the user wants shown between inode and what it *
      * connects to.  inode is assumed to be a CHANX, CHANY, or IPIN.           */
     t_draw_state* draw_state = get_draw_state_vars();
     auto& device_ctx = g_vpr_ctx.device();
 
     t_rr_type from_type, to_type;
-    int to_node, from_ptc_num, to_ptc_num;
+    RRNodeId to_node;
+    int from_ptc_num, to_ptc_num;
     short switch_type;
 
-    from_type = device_ctx.rr_nodes[inode].type();
+    from_type = device_ctx.rr_graph.node_type(inode);
 
     if ((draw_state->draw_rr_toggle == DRAW_NODES_RR)
         || (draw_state->draw_rr_toggle == DRAW_NODES_AND_SBOX_RR && from_type == OPIN)) {
         return; /* Nothing to draw. */
     }
 
-    from_ptc_num = device_ctx.rr_nodes[inode].ptc_num();
+    from_ptc_num = device_ctx.rr_graph.node_ptc_num(inode);
 
-    for (t_edge_size iedge = 0, l = device_ctx.rr_nodes[inode].num_edges(); iedge < l; iedge++) {
-        to_node = device_ctx.rr_nodes[inode].edge_sink_node(iedge);
-        to_type = device_ctx.rr_nodes[to_node].type();
-        to_ptc_num = device_ctx.rr_nodes[to_node].ptc_num();
-        bool edge_configurable = device_ctx.rr_nodes[inode].edge_is_configurable(iedge);
+    for (const RREdgeId& iedge : device_ctx.rr_graph.node_out_edges(inode)) {
+        to_node = device_ctx.rr_graph.edge_sink_node(iedge);
+        to_type = device_ctx.rr_graph.node_type(to_node);
+        to_ptc_num = device_ctx.rr_graph.node_ptc_num(to_node);
+        bool edge_configurable = device_ctx.rr_graph.edge_is_configurable(iedge);
 
         switch (from_type) {
             case OPIN:
@@ -1707,7 +1707,7 @@ static void draw_x(float x, float y, float size, ezgl::renderer* g) {
     g->draw_line({x - size, y - size}, {x + size, y + size});
 }
 
-static void draw_chanx_to_chany_edge(int chanx_node, int chanx_track, int chany_node, int chany_track, enum e_edge_dir edge_dir, short switch_type, ezgl::renderer* g) {
+static void draw_chanx_to_chany_edge(const RRNodeId& chanx_node, int chanx_track, const RRNodeId& chany_node, int chany_track, enum e_edge_dir edge_dir, short switch_type, ezgl::renderer* g) {
     t_draw_state* draw_state = get_draw_state_vars();
     t_draw_coords* draw_coords = get_draw_coords_vars();
     auto& device_ctx = g_vpr_ctx.device();
@@ -1729,16 +1729,16 @@ static void draw_chanx_to_chany_edge(int chanx_node, int chanx_track, int chany_
     y1 = chanx_bbox.bottom();
     x2 = chany_bbox.left();
 
-    chanx_xlow = device_ctx.rr_nodes[chanx_node].xlow();
-    chanx_y = device_ctx.rr_nodes[chanx_node].ylow();
-    chany_x = device_ctx.rr_nodes[chany_node].xlow();
-    chany_ylow = device_ctx.rr_nodes[chany_node].ylow();
+    chanx_xlow = device_ctx.rr_graph.node_xlow(chanx_node);
+    chanx_y = device_ctx.rr_graph.node_ylow(chanx_node);
+    chany_x = device_ctx.rr_graph.node_xlow(chany_node);
+    chany_ylow = device_ctx.rr_graph.node_ylow(chany_node);
 
     if (chanx_xlow <= chany_x) { /* Can draw connection going right */
         /* Connection not at end of the CHANX segment. */
         x1 = draw_coords->tile_x[chany_x] + draw_coords->get_tile_width();
 
-        if (device_ctx.rr_nodes[chanx_node].direction() != BI_DIRECTION) {
+        if (device_ctx.rr_graph.node_direction(chanx_node) != BI_DIRECTION) {
             if (edge_dir == FROM_X_TO_Y) {
                 if ((chanx_track % 2) == 1) { /* If dec wire, then going left */
                     x1 = draw_coords->tile_x[chany_x + 1];
@@ -1754,7 +1754,7 @@ static void draw_chanx_to_chany_edge(int chanx_node, int chanx_track, int chany_
         /* Connection not at end of the CHANY segment. */
         y2 = draw_coords->tile_y[chanx_y] + draw_coords->get_tile_width();
 
-        if (device_ctx.rr_nodes[chany_node].direction() != BI_DIRECTION) {
+        if (device_ctx.rr_graph.node_direction(chany_node) != BI_DIRECTION) {
             if (edge_dir == FROM_Y_TO_X) {
                 if ((chany_track % 2) == 1) { /* If dec wire, then going down */
                     y2 = draw_coords->tile_y[chanx_y + 1];
@@ -1777,7 +1777,7 @@ static void draw_chanx_to_chany_edge(int chanx_node, int chanx_track, int chany_
     }
 }
 
-static void draw_chanx_to_chanx_edge(int from_node, int to_node, int to_track, short switch_type, ezgl::renderer* g) {
+static void draw_chanx_to_chanx_edge(const RRNodeId& from_node, const RRNodeId& to_node, int to_track, short switch_type, ezgl::renderer* g) {
     /* Draws a connection between two x-channel segments.  Passing in the track *
      * numbers allows this routine to be used for both rr_graph and routing     *
      * drawing->                                                                 */
@@ -1800,10 +1800,10 @@ static void draw_chanx_to_chanx_edge(int from_node, int to_node, int to_track, s
     y1 = from_chan.bottom();
     y2 = to_chan.bottom();
 
-    from_xlow = device_ctx.rr_nodes[from_node].xlow();
-    from_xhigh = device_ctx.rr_nodes[from_node].xhigh();
-    to_xlow = device_ctx.rr_nodes[to_node].xlow();
-    to_xhigh = device_ctx.rr_nodes[to_node].xhigh();
+    from_xlow = device_ctx.rr_graph.node_xlow(from_node);
+    from_xhigh = device_ctx.rr_graph.node_xhigh(from_node);
+    to_xlow = device_ctx.rr_graph.node_xlow(to_node);
+    to_xhigh = device_ctx.rr_graph.node_xhigh(to_node);
     if (to_xhigh < from_xlow) { /* From right to left */
         /* UDSD Note by WMF: could never happen for INC wires, unless U-turn. For DEC
          * wires this handles well */
@@ -1821,7 +1821,7 @@ static void draw_chanx_to_chanx_edge(int from_node, int to_node, int to_track, s
      * will be drawn on top of each other for bidirectional connections.        */
 
     else {
-        if (device_ctx.rr_nodes[to_node].direction() != BI_DIRECTION) {
+        if (device_ctx.rr_graph.node_direction(to_node) != BI_DIRECTION) {
             /* must connect to to_node's wire beginning at x2 */
             if (to_track % 2 == 0) { /* INC wire starts at leftmost edge */
                 VTR_ASSERT(from_xlow < to_xlow);
@@ -1862,7 +1862,7 @@ static void draw_chanx_to_chanx_edge(int from_node, int to_node, int to_track, s
     }
 }
 
-static void draw_chany_to_chany_edge(int from_node, int to_node, int to_track, short switch_type, ezgl::renderer* g) {
+static void draw_chany_to_chany_edge(const RRNodeId& from_node, const RRNodeId& to_node, int to_track, short switch_type, ezgl::renderer* g) {
     t_draw_state* draw_state = get_draw_state_vars();
     t_draw_coords* draw_coords = get_draw_coords_vars();
     auto& device_ctx = g_vpr_ctx.device();
@@ -1882,10 +1882,10 @@ static void draw_chany_to_chany_edge(int from_node, int to_node, int to_track, s
 
     // from_x = device_ctx.rr_nodes[from_node].xlow();
     // to_x = device_ctx.rr_nodes[to_node].xlow();
-    from_ylow = device_ctx.rr_nodes[from_node].ylow();
-    from_yhigh = device_ctx.rr_nodes[from_node].yhigh();
-    to_ylow = device_ctx.rr_nodes[to_node].ylow();
-    to_yhigh = device_ctx.rr_nodes[to_node].yhigh();
+    from_ylow = device_ctx.rr_graph.node_ylow(from_node);
+    from_yhigh = device_ctx.rr_graph.node_yhigh(from_node);
+    to_ylow = device_ctx.rr_graph.node_ylow(to_node);
+    to_yhigh = device_ctx.rr_graph.node_yhigh(to_node);
 
     /* (x1, y1) point on from_node, (x2, y2) point on to_node. */
 
@@ -1906,7 +1906,7 @@ static void draw_chany_to_chany_edge(int from_node, int to_node, int to_track, s
 
     /* UDSD Modification by WMF Begin */
     else {
-        if (device_ctx.rr_nodes[to_node].direction() != BI_DIRECTION) {
+        if (device_ctx.rr_graph.node_direction(to_node) != BI_DIRECTION) {
             if (to_track % 2 == 0) { /* INC wire starts at bottom edge */
 
                 y2 = to_chan.bottom();
@@ -1950,32 +1950,32 @@ static void draw_chany_to_chany_edge(int from_node, int to_node, int to_track, s
  * wire has been clicked on by the user.
  * TODO: Fix this for global routing, currently for detailed only.
  */
-ezgl::rectangle draw_get_rr_chan_bbox(int inode) {
+ezgl::rectangle draw_get_rr_chan_bbox(const RRNodeId& inode) {
     double left = 0, right = 0, top = 0, bottom = 0;
     t_draw_coords* draw_coords = get_draw_coords_vars();
     auto& device_ctx = g_vpr_ctx.device();
 
     switch (device_ctx.rr_nodes[inode].type()) {
         case CHANX:
-            left = draw_coords->tile_x[device_ctx.rr_nodes[inode].xlow()];
-            right = draw_coords->tile_x[device_ctx.rr_nodes[inode].xhigh()]
+            left = draw_coords->tile_x[device_ctx.rr_graph.node_xlow(inode)];
+            right = draw_coords->tile_x[device_ctx.rr_graph.node_xhigh(inode)]
                     + draw_coords->get_tile_width();
-            bottom = draw_coords->tile_y[device_ctx.rr_nodes[inode].ylow()]
+            bottom = draw_coords->tile_y[device_ctx.rr_graph.node_ylow(inode)]
                      + draw_coords->get_tile_width()
-                     + (1. + device_ctx.rr_nodes[inode].ptc_num());
-            top = draw_coords->tile_y[device_ctx.rr_nodes[inode].ylow()]
+                     + (1. + device_ctx.rr_graph.node_ptc_num(inode));
+            top = draw_coords->tile_y[device_ctx.rr_graph.node_ylow(inode)]
                   + draw_coords->get_tile_width()
-                  + (1. + device_ctx.rr_nodes[inode].ptc_num());
+                  + (1. + device_ctx.rr_graph.node_ptc_num(inode));
             break;
         case CHANY:
-            left = draw_coords->tile_x[device_ctx.rr_nodes[inode].xlow()]
+            left = draw_coords->tile_x[device_ctx.rr_graph.node_xlow(inode)]
                    + draw_coords->get_tile_width()
-                   + (1. + device_ctx.rr_nodes[inode].ptc_num());
-            right = draw_coords->tile_x[device_ctx.rr_nodes[inode].xlow()]
+                   + (1. + device_ctx.rr_graph.node_ptc_num(inode));
+            right = draw_coords->tile_x[device_ctx.rr_graph.node_xlow(inode)]
                     + draw_coords->get_tile_width()
-                    + (1. + device_ctx.rr_nodes[inode].ptc_num());
-            bottom = draw_coords->tile_y[device_ctx.rr_nodes[inode].ylow()];
-            top = draw_coords->tile_y[device_ctx.rr_nodes[inode].yhigh()]
+                    + (1. + device_ctx.rr_graph.node_ptc_num(inode));
+            bottom = draw_coords->tile_y[device_ctx.rr_graph.node_ylow(inode)];
+            top = draw_coords->tile_y[device_ctx.rr_graph.node_yhigh(inode)]
                   + draw_coords->get_tile_width();
             break;
         default:
@@ -2012,7 +2012,7 @@ static void draw_rr_switch(float from_x, float from_y, float to_x, float to_y, b
     }
 }
 
-static void draw_rr_pin(int inode, const ezgl::color& color, ezgl::renderer* g) {
+static void draw_rr_pin(RRNodeId& inode, const ezgl::color& color, ezgl::renderer* g) {
     /* Draws an IPIN or OPIN rr_node.  Note that the pin can appear on more    *
      * than one side of a clb.  Also note that this routine can change the     *
      * current color to BLACK.                                                 */
@@ -2023,7 +2023,7 @@ static void draw_rr_pin(int inode, const ezgl::color& color, ezgl::renderer* g) 
     char str[vtr::bufsize];
     auto& device_ctx = g_vpr_ctx.device();
 
-    int ipin = device_ctx.rr_nodes[inode].ptc_num();
+    int ipin = device_ctx.rr_graph.node_ptc_num(inode);
 
     g->set_color(color);
 
@@ -2040,26 +2040,21 @@ static void draw_rr_pin(int inode, const ezgl::color& color, ezgl::renderer* g) 
 /* Returns the coordinates at which the center of this pin should be drawn. *
  * inode gives the node number, and iside gives the side of the clb or pad  *
  * the physical pin is on.                                                  */
-void draw_get_rr_pin_coords(int inode, float* xcen, float* ycen) {
+void draw_get_rr_pin_coords(const RRNodeId& inode, float* xcen, float* ycen) {
     auto& device_ctx = g_vpr_ctx.device();
-    draw_get_rr_pin_coords(&device_ctx.rr_nodes[inode], xcen, ycen);
-}
-
-void draw_get_rr_pin_coords(const t_rr_node* node, float* xcen, float* ycen) {
     t_draw_coords* draw_coords = get_draw_coords_vars();
 
     int i, j, k, ipin, pins_per_sub_tile;
     float offset, xc, yc, step;
     t_physical_tile_type_ptr type;
-    auto& device_ctx = g_vpr_ctx.device();
 
-    i = node->xlow();
-    j = node->ylow();
+    i = device_ctx.rr_graph.node_xlow(inode);
+    j = device_ctx.rr_graph.node_ylow(inode);
 
     xc = draw_coords->tile_x[i];
     yc = draw_coords->tile_y[j];
 
-    ipin = node->ptc_num();
+    ipin = device_ctx.rr_graph.node_ptc_num(inode);
     type = device_ctx.grid[i][j].type;
     pins_per_sub_tile = type->num_pins / type->capacity;
     k = ipin / pins_per_sub_tile;
@@ -2100,15 +2095,15 @@ void draw_get_rr_pin_coords(const t_rr_node* node, float* xcen, float* ycen) {
     *ycen = yc;
 }
 
-static void draw_rr_src_sink(int inode, ezgl::color color, ezgl::renderer* g) {
+static void draw_rr_src_sink(const RRNodeId& inode, ezgl::color color, ezgl::renderer* g) {
     t_draw_coords* draw_coords = get_draw_coords_vars();
 
     auto& device_ctx = g_vpr_ctx.device();
 
-    int xlow = device_ctx.rr_nodes[inode].xlow();
-    int ylow = device_ctx.rr_nodes[inode].ylow();
-    int xhigh = device_ctx.rr_nodes[inode].xhigh();
-    int yhigh = device_ctx.rr_nodes[inode].yhigh();
+    int xlow = device_ctx.rr_graph.node_xlow(inode);
+    int ylow = device_ctx.rr_graph.node_ylow(inode);
+    int xhigh = device_ctx.rr_graph.node_xhigh(inode);
+    int yhigh = device_ctx.rr_graph.node_yhigh(inode);
 
     g->set_color(color);
 
@@ -2152,9 +2147,9 @@ static void draw_routed_net(ClusterNetId net_id, ezgl::renderer* g) {
         return;                                  /* partially complete routes).            */
 
     t_trace* tptr = route_ctx.trace[net_id].head; /* SOURCE to start */
-    int inode = tptr->index;
+    RRNodeId inode = tptr->index;
 
-    std::vector<int> rr_nodes_to_draw;
+    std::vector<RRNodeId> rr_nodes_to_draw;
     rr_nodes_to_draw.push_back(inode);
     for (;;) {
         tptr = tptr->next;
@@ -2190,7 +2185,7 @@ static void draw_routed_net(ClusterNetId net_id, ezgl::renderer* g) {
 }
 
 //Draws the set of rr_nodes specified, using the colors set in draw_state
-void draw_partial_route(const std::vector<int>& rr_nodes_to_draw, ezgl::renderer* g) {
+void draw_partial_route(const std::vector<RRNodeId>& rr_nodes_to_draw, ezgl::renderer* g) {
     t_draw_state* draw_state = get_draw_state_vars();
     auto& device_ctx = g_vpr_ctx.device();
 
@@ -2218,14 +2213,15 @@ void draw_partial_route(const std::vector<int>& rr_nodes_to_draw, ezgl::renderer
     }
 
     for (size_t i = 1; i < rr_nodes_to_draw.size(); ++i) {
-        int inode = rr_nodes_to_draw[i];
-        auto rr_type = device_ctx.rr_nodes[inode].type();
+        RRNodeId inode = rr_nodes_to_draw[i];
+        auto rr_type = device_ctx.rr_graph.node_type(inode);
 
-        int prev_node = rr_nodes_to_draw[i - 1];
-        auto prev_type = device_ctx.rr_nodes[prev_node].type();
+        RRNodeId prev_node = rr_nodes_to_draw[i - 1];
+        auto prev_type = device_ctx.rr_graph.node_type(prev_node);
 
-        auto iedge = find_edge(prev_node, inode);
-        auto switch_type = device_ctx.rr_nodes[prev_node].edge_switch(iedge);
+        std::vector<RREdgeId> edges = device_ctx.rr_graph.find_edges(prev_node, inode);
+        VTR_ASSERT(1 == edges.size());
+        auto switch_type = device_ctx.rr_graph.edge_switch(edges[0]);
 
         switch (rr_type) {
             case OPIN: {
@@ -2277,7 +2273,7 @@ void draw_partial_route(const std::vector<int>& rr_nodes_to_draw, ezgl::renderer
             }
             case CHANY: {
                 if (draw_state->draw_route_type == GLOBAL)
-                    chany_track[device_ctx.rr_nodes[inode].xlow()][device_ctx.rr_nodes[inode].ylow()]++;
+                    chany_track[device_ctx.rr_graph.node_xlow(inode)][device_ctx.rr_graph.node_ylow(inode)]++;
 
                 int itrack = get_track_num(inode, chanx_track, chany_track);
                 draw_rr_chan(inode, draw_state->draw_rr_node[inode].color, g);
@@ -2316,7 +2312,7 @@ void draw_partial_route(const std::vector<int>& rr_nodes_to_draw, ezgl::renderer
     }
 }
 
-static int get_track_num(int inode, const vtr::OffsetMatrix<int>& chanx_track, const vtr::OffsetMatrix<int>& chany_track) {
+static int get_track_num(const RRNodeId& inode, const vtr::OffsetMatrix<int>& chanx_track, const vtr::OffsetMatrix<int>& chany_track) {
     /* Returns the track number of this routing resource node.   */
 
     int i, j;
@@ -2324,13 +2320,13 @@ static int get_track_num(int inode, const vtr::OffsetMatrix<int>& chanx_track, c
     auto& device_ctx = g_vpr_ctx.device();
 
     if (get_draw_state_vars()->draw_route_type == DETAILED)
-        return (device_ctx.rr_nodes[inode].ptc_num());
+        return (device_ctx.rr_graph.node_ptc_num(inode));
 
     /* GLOBAL route stuff below. */
 
-    rr_type = device_ctx.rr_nodes[inode].type();
-    i = device_ctx.rr_nodes[inode].xlow(); /* NB: Global rr graphs must have only unit */
-    j = device_ctx.rr_nodes[inode].ylow(); /* length channel segments.                 */
+    rr_type = device_ctx.rr_graph.node_type(inode);
+    i = device_ctx.rr_graph.node_xlow(inode); /* NB: Global rr graphs must have only unit */
+    j = device_ctx.rr_graph.node_ylow(inode); /* length channel segments.                 */
 
     switch (rr_type) {
         case CHANX:
@@ -2341,7 +2337,7 @@ static int get_track_num(int inode, const vtr::OffsetMatrix<int>& chanx_track, c
 
         default:
             vpr_throw(VPR_ERROR_OTHER, __FILE__, __LINE__,
-                      "in get_track_num: Unexpected node type %d for node %d.\n", rr_type, inode);
+                      "in get_track_num: Unexpected node type %d for node %ld.\n", rr_type, size_t(inode));
             return OPEN;
     }
 }
@@ -2363,7 +2359,7 @@ static bool draw_if_net_highlighted(ClusterNetId inet) {
 /* If an rr_node has been clicked on, it will be highlighted in MAGENTA.
  * If so, and toggle nets is selected, highlight the whole net in that colour.
  */
-void highlight_nets(char* message, int hit_node) {
+void highlight_nets(char* message, const RRNodeId& hit_node) {
     t_trace* tptr;
     auto& cluster_ctx = g_vpr_ctx.clustering();
     auto& route_ctx = g_vpr_ctx.routing();
@@ -2415,7 +2411,7 @@ void draw_highlight_fan_in_fan_out(const std::set<int>& nodes) {
         }
 
         /* Highlight the nodes that can fanin to this node in blue. */
-        for (size_t inode = 0; inode < device_ctx.rr_nodes.size(); inode++) {
+        for (size_t inode = 0; inode < device_ctx.rr_graph.nodes().size(); inode++) {
             for (t_edge_size iedge = 0, l = device_ctx.rr_nodes[inode].num_edges(); iedge < l; iedge++) {
                 int fanout_node = device_ctx.rr_nodes[inode].edge_sink_node(iedge);
                 if (fanout_node == node) {
@@ -2447,16 +2443,16 @@ static int draw_check_rr_node_hit(float click_x, float click_y) {
     t_draw_coords* draw_coords = get_draw_coords_vars();
     auto& device_ctx = g_vpr_ctx.device();
 
-    for (size_t inode = 0; inode < device_ctx.rr_nodes.size(); inode++) {
-        switch (device_ctx.rr_nodes[inode].type()) {
+    for (const RRNodeId& inode : device_ctx.rr_graph.nodes()) {
+        switch (device_ctx.rr_graph.node_type(inode)) {
             case IPIN:
             case OPIN: {
-                int i = device_ctx.rr_nodes[inode].xlow();
-                int j = device_ctx.rr_nodes[inode].ylow();
+                int i = device_ctx.rr_graph.node_xlow(inode);
+                int j = device_ctx.rr_graph.node_ylow(inode);
                 t_physical_tile_type_ptr type = device_ctx.grid[i][j].type;
                 int width_offset = device_ctx.grid[i][j].width_offset;
                 int height_offset = device_ctx.grid[i][j].height_offset;
-                int ipin = device_ctx.rr_nodes[inode].ptc_num();
+                int ipin = device_ctx.rr_graph.node_ptc_num(inode);
                 float xcen, ycen;
                 int iside;
                 for (iside = 0; iside < 4; iside++) {
@@ -2727,7 +2723,7 @@ void deselect_all() {
     for (auto net_id : cluster_ctx.clb_nlist.nets())
         draw_state->net_color[net_id] = ezgl::BLACK;
 
-    for (size_t i = 0; i < device_ctx.rr_nodes.size(); i++) {
+    for (size_t i = 0; i < device_ctx.rr_graph.nodes().size(); i++) {
         draw_state->draw_rr_node[i].color = DEFAULT_RR_NODE_COLOR;
         draw_state->draw_rr_node[i].node_highlighted = false;
     }
@@ -2800,7 +2796,7 @@ void draw_triangle_along_line(ezgl::renderer* g, float xend, float yend, float x
     g->fill_poly(poly);
 }
 
-static void draw_pin_to_chan_edge(int pin_node, int chan_node, ezgl::renderer* g) {
+static void draw_pin_to_chan_edge(const RRNodeId& pin_node, const RRNodeId& chan_node, ezgl::renderer* g) {
     /* This routine draws an edge from the pin_node to the chan_node (CHANX or   *
      * CHANY).  The connection is made to the nearest end of the track instead   *
      * of perpendicular to the track to symbolize a single-drive connection.     */
@@ -2810,19 +2806,18 @@ static void draw_pin_to_chan_edge(int pin_node, int chan_node, ezgl::renderer* g
     t_draw_coords* draw_coords = get_draw_coords_vars();
     auto& device_ctx = g_vpr_ctx.device();
 
-    const t_rr_node& pin_rr = device_ctx.rr_nodes[pin_node];
-    const t_rr_node& chan_rr = device_ctx.rr_nodes[chan_node];
+    const RRGraph& rr_graph = device_ctx.rr_graph;
 
-    const t_grid_tile& grid_tile = device_ctx.grid[pin_rr.xlow()][pin_rr.ylow()];
+    const t_grid_tile& grid_tile = device_ctx.grid[rr_graph.node_xlow(pin_node)][rr_graph.node_ylow(pin_node)];
     t_physical_tile_type_ptr grid_type = grid_tile.type;
-    VTR_ASSERT_MSG(grid_type->pinloc[grid_tile.width_offset][grid_tile.height_offset][pin_rr.side()][pin_rr.pin_num()],
+    VTR_ASSERT_MSG(grid_type->pinloc[grid_tile.width_offset][grid_tile.height_offset][rr_graph.node_side(pin_node)][rr_graph.node_pin_num(pin_node)],
                    "Pin coordinates should match block type pin locations");
 
     float draw_pin_offset;
-    if (pin_rr.side() == TOP || pin_rr.side() == RIGHT) {
+    if (rr_graph.node_side(pin_node) == TOP || rr_graph.node_side(pin_node) == RIGHT) {
         draw_pin_offset = draw_coords->pin_size;
     } else {
-        VTR_ASSERT(pin_rr.side() == BOTTOM || pin_rr.side() == LEFT);
+        VTR_ASSERT(rr_graph.node_side(pin_node) == BOTTOM || rr_graph.node_side(pin_node) == LEFT);
         draw_pin_offset = -draw_coords->pin_size;
     }
 
@@ -2837,10 +2832,10 @@ static void draw_pin_to_chan_edge(int pin_node, int chan_node, ezgl::renderer* g
             y1 += draw_pin_offset;
             y2 = chan_bbox.bottom();
             x2 = x1;
-            if (is_opin(pin_rr.pin_num(), grid_type)) {
-                if (chan_rr.direction() == INC_DIRECTION) {
+            if (is_opin(rr_graph.node_pin_num(pin_node), grid_type)) {
+                if (rr_graph.node_direction(chan_node) == INC_DIRECTION) {
                     x2 = chan_bbox.left();
-                } else if (chan_rr.direction() == DEC_DIRECTION) {
+                } else if (rr_graph.node_direction(chan_node) == DEC_DIRECTION) {
                     x2 = chan_bbox.right();
                 }
             }
@@ -2850,10 +2845,10 @@ static void draw_pin_to_chan_edge(int pin_node, int chan_node, ezgl::renderer* g
             x1 += draw_pin_offset;
             x2 = chan_bbox.left();
             y2 = y1;
-            if (is_opin(pin_rr.pin_num(), grid_type)) {
-                if (chan_rr.direction() == INC_DIRECTION) {
+            if (is_opin(rr_graph.node_pin_num(pin_node), grid_type)) {
+                if (rr_graph.node_direction(chan_node) == INC_DIRECTION) {
                     y2 = chan_bbox.bottom();
-                } else if (chan_rr.direction() == DEC_DIRECTION) {
+                } else if (rr_graph.node_direction(chan_node) == DEC_DIRECTION) {
                     y2 = chan_bbox.top();
                 }
             }
@@ -2861,13 +2856,13 @@ static void draw_pin_to_chan_edge(int pin_node, int chan_node, ezgl::renderer* g
         }
         default: {
             vpr_throw(VPR_ERROR_OTHER, __FILE__, __LINE__,
-                      "in draw_pin_to_chan_edge: Invalid channel node %d.\n", chan_node);
+                      "in draw_pin_to_chan_edge: Invalid channel node %ld.\n", size_t(chan_node));
         }
     }
     g->draw_line({x1, y1}, {x2, y2});
 
     //don't draw the ex, or triangle unless zoomed in really far
-    if (chan_rr.direction() == BI_DIRECTION || !is_opin(pin_rr.pin_num(), grid_type)) {
+    if (rr_graph.node_direction(chan_node) == BI_DIRECTION || !is_opin(rr_graph.node_pin_num(pin_node), grid_type)) {
         draw_x(x2, y2, 0.7 * draw_coords->pin_size, g);
     } else {
         float xend = x2 + (x1 - x2) / 10.;
@@ -2876,11 +2871,11 @@ static void draw_pin_to_chan_edge(int pin_node, int chan_node, ezgl::renderer* g
     }
 }
 
-static void draw_pin_to_pin(int opin_node, int ipin_node, ezgl::renderer* g) {
+static void draw_pin_to_pin(const RRNodeId& opin_node, const RRNodeId& ipin_node, ezgl::renderer* g) {
     /* This routine draws an edge from the opin rr node to the ipin rr node */
     auto& device_ctx = g_vpr_ctx.device();
-    VTR_ASSERT(device_ctx.rr_nodes[opin_node].type() == OPIN);
-    VTR_ASSERT(device_ctx.rr_nodes[ipin_node].type() == IPIN);
+    VTR_ASSERT(device_ctx.rr_graph.node_type(opin_node) == OPIN);
+    VTR_ASSERT(device_ctx.rr_graph.node_type(ipin_node) == IPIN);
 
     float x1 = 0, y1 = 0;
     draw_get_rr_pin_coords(opin_node, &x1, &y1);
@@ -3499,15 +3494,15 @@ static void draw_router_rr_costs(ezgl::renderer* g) {
     auto& device_ctx = g_vpr_ctx.device();
     auto& routing_ctx = g_vpr_ctx.routing();
 
-    std::vector<float> rr_costs(device_ctx.rr_nodes.size());
+    vtr::vector<RRNodeId, float> rr_costs(device_ctx.rr_graph.nodes().size());
 
-    for (size_t inode = 0; inode < device_ctx.rr_nodes.size(); ++inode) {
+    for (const RRNodeId& inode : device_ctx.rr_graph.nodes()) {
         float cost = get_router_rr_cost(routing_ctx.rr_node_route_inf[inode], draw_state->show_router_rr_cost);
         rr_costs[inode] = cost;
     }
 
     bool all_nan = true;
-    for (size_t inode = 0; inode < device_ctx.rr_nodes.size(); ++inode) {
+    for (const RRNodeId& inode : device_ctx.rr_graph.nodes()) {
         if (std::isinf(rr_costs[inode])) {
             rr_costs[inode] = NAN;
         } else {
@@ -3528,7 +3523,7 @@ static void draw_router_rr_costs(ezgl::renderer* g) {
     }
 }
 
-static void draw_rr_costs(ezgl::renderer* g, const std::vector<float>& rr_costs, bool lowest_cost_first) {
+static void draw_rr_costs(ezgl::renderer* g, const vtr::vector<RRNodeId, float>& rr_costs, bool lowest_cost_first) {
     t_draw_state* draw_state = get_draw_state_vars();
 
     /* Draws routing costs */
@@ -3537,11 +3532,11 @@ static void draw_rr_costs(ezgl::renderer* g, const std::vector<float>& rr_costs,
 
     g->set_line_width(0);
 
-    VTR_ASSERT(rr_costs.size() == device_ctx.rr_nodes.size());
+    VTR_ASSERT(rr_costs.size() == device_ctx.rr_graph.nodes().size());
 
     float min_cost = std::numeric_limits<float>::infinity();
     float max_cost = -min_cost;
-    for (size_t inode = 0; inode < device_ctx.rr_nodes.size(); inode++) {
+    for (const RRNodeId& inode : device_ctx.rr_graph.nodes()) {
         if (std::isnan(rr_costs[inode])) continue;
 
         min_cost = std::min(min_cost, rr_costs[inode]);
@@ -3553,9 +3548,8 @@ static void draw_rr_costs(ezgl::renderer* g, const std::vector<float>& rr_costs,
 
     //Draw the nodes in ascending order of value, this ensures high valued nodes
     //are not overdrawn by lower value ones (e.g-> when zoomed-out far)
-    std::vector<int> nodes(device_ctx.rr_nodes.size());
-    std::iota(nodes.begin(), nodes.end(), 0);
-    auto cmp_ascending_cost = [&](int lhs_node, int rhs_node) {
+    std::vector<RRNodeId> nodes = device_ctx.rr_graph.nodes();
+    auto cmp_ascending_cost = [&](const RRNodeId& lhs_node, const RRNodeId& rhs_node) {
         if (lowest_cost_first) {
             return rr_costs[lhs_node] > rr_costs[rhs_node];
         }
@@ -3563,13 +3557,13 @@ static void draw_rr_costs(ezgl::renderer* g, const std::vector<float>& rr_costs,
     };
     std::sort(nodes.begin(), nodes.end(), cmp_ascending_cost);
 
-    for (int inode : nodes) {
+    for (const RRNodeId& inode : nodes) {
         float cost = rr_costs[inode];
         if (std::isnan(cost)) continue;
 
         ezgl::color color = to_ezgl_color(cmap->color(cost));
 
-        switch (device_ctx.rr_nodes[inode].type()) {
+        switch (device_ctx.rr_graph.node_type(inode)) {
             case CHANX: //fallthrough
             case CHANY:
                 draw_rr_chan(inode, color, g);

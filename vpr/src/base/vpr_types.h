@@ -1136,12 +1136,8 @@ typedef std::vector<std::vector<std::vector<std::vector<std::vector<int>>>>> t_r
  * next:    Pointer to the next traceback element in this route.           */
 struct t_trace {
     t_trace* next;
-    int index;
+    RRNodeId index;
     short iswitch;
-
-    /* Xifan Tang - RRGraph unique ids */
-    RRNodeId node_id;
-    RRSwitchId switch_id; 
 };
 
 /* Extra information about each rr_node needed only during routing (i.e.    *
