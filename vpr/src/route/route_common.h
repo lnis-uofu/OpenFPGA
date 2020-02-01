@@ -3,6 +3,7 @@
 #include <vector>
 #include "clustered_netlist.h"
 #include "vtr_vector.h"
+#include "rr_graph_obj.h"
 
 /* Used by the heap as its fundamental data structure.
  * Each heap element represents a partial route.
@@ -37,11 +38,11 @@ struct t_heap {
     float backward_path_cost = 0.;
     float R_upstream = 0.;
 
-    int index = OPEN;
+    RRNodeId index = RRNodeId::INVALID();
 
     struct t_prev {
-        int node;
-        int edge;
+        RRNodeId& node;
+        RREdgeId& edge;
     };
 
     union {
@@ -67,7 +68,7 @@ t_trace* update_traceback(t_heap* hptr, ClusterNetId net_id);
 
 void reset_path_costs(const std::vector<int>& visited_rr_nodes);
 
-float get_rr_cong_cost(int inode);
+float get_rr_cong_cost(const RRNodeId& inode);
 
 void mark_ends(ClusterNetId net_id);
 void mark_remaining_ends(const std::vector<int>& remaining_sinks);
@@ -89,7 +90,7 @@ void build_heap();
 void sift_down(size_t hole);
 void sift_up(size_t tail, t_heap* const hptr);
 void push_back(t_heap* const hptr);
-void push_back_node(int inode, float total_cost, int prev_node, int prev_edge, float backward_path_cost, float R_upstream);
+void push_back_node(const RRNodeId& inode, float total_cost, const RRNodeId& prev_node, const RREdgeId& prev_edge, float backward_path_cost, float R_upstream);
 bool is_valid();
 void pop_heap();
 void print_heap();

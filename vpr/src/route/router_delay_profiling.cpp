@@ -13,7 +13,7 @@ RouterDelayProfiler::RouterDelayProfiler(
     const RouterLookahead* lookahead)
     : router_lookahead_(lookahead) {}
 
-bool RouterDelayProfiler::calculate_delay(int source_node, int sink_node, const t_router_opts& router_opts, float* net_delay) const {
+bool RouterDelayProfiler::calculate_delay(const RRNodeId& source_node, const RRNodeId& sink_node, const t_router_opts& router_opts, float* net_delay) const {
     /* Returns true as long as found some way to hook up this net, even if that *
      * way resulted in overuse of resources (congestion).  If there is no way   *
      * to route this net, even ignoring congestion, it returns false.  In this  *
@@ -22,7 +22,8 @@ bool RouterDelayProfiler::calculate_delay(int source_node, int sink_node, const 
     auto& route_ctx = g_vpr_ctx.routing();
 
     t_rt_node* rt_root = setup_routing_resources_no_net(source_node);
-    enable_router_debug(router_opts, ClusterNetId(), sink_node);
+    /* TODO: This should be changed to RRNodeId */
+    enable_router_debug(router_opts, ClusterNetId(), size_t(sink_node));
 
     /* Update base costs according to fanout and criticality rules */
     update_rr_base_costs(1);
@@ -59,7 +60,7 @@ bool RouterDelayProfiler::calculate_delay(int source_node, int sink_node, const 
         //find delay
         *net_delay = rt_node_of_sink->Tdel;
 
-        VTR_ASSERT_MSG(route_ctx.rr_node_route_inf[rt_root->inode].occ() <= device_ctx.rr_nodes[rt_root->inode].capacity(), "SOURCE should never be congested");
+        VTR_ASSERT_MSG(route_ctx.rr_node_route_inf[rt_root->inode].occ() <= device_ctx.rr_graph.node_capacity(rt_root->inode_id), "SOURCE should never be congested");
         free_route_tree(rt_root);
     }
 

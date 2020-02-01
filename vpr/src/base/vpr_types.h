@@ -1164,11 +1164,9 @@ struct t_trace {
  *               Number of times this node must be reached to fully route.  *
  * occ:        The current occupancy of the associated rr node              */
 struct t_rr_node_route_inf {
-    int prev_node;
     /* Xifan Tang - prev_node for RRGraph object */
-    RRNodeId prev_node_id;
-
-    t_edge_size prev_edge;
+    RRNodeId prev_node;
+    RREdgeId prev_edge;
 
     float pres_cost;
     float acc_cost;

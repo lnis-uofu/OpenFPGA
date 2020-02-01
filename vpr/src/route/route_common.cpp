@@ -706,26 +706,26 @@ static std::pair<t_trace*, t_trace*> add_trace_non_configurable_recurr(int node,
 
 /* The routine sets the path_cost to HUGE_POSITIVE_FLOAT for  *
  * all channel segments touched by previous routing phases.    */
-void reset_path_costs(const std::vector<int>& visited_rr_nodes) {
+void reset_path_costs(const std::vector<RRNodeId>& visited_rr_nodes) {
     auto& route_ctx = g_vpr_ctx.mutable_routing();
 
     for (auto node : visited_rr_nodes) {
         route_ctx.rr_node_route_inf[node].path_cost = std::numeric_limits<float>::infinity();
         route_ctx.rr_node_route_inf[node].backward_path_cost = std::numeric_limits<float>::infinity();
-        route_ctx.rr_node_route_inf[node].prev_node = NO_PREVIOUS;
-        route_ctx.rr_node_route_inf[node].prev_edge = NO_PREVIOUS;
+        route_ctx.rr_node_route_inf[node].prev_node = RRNodeId::INVALID();
+        route_ctx.rr_node_route_inf[node].prev_edge = RREdgeId::INVALID();
     }
 }
 
 /* Returns the *congestion* cost of using this rr_node. */
-float get_rr_cong_cost(int inode) {
+float get_rr_cong_cost(const RRNodeId& inode) {
     auto& device_ctx = g_vpr_ctx.device();
 
     float cost = get_single_rr_cong_cost(inode);
 
     auto itr = device_ctx.rr_node_to_non_config_node_set.find(inode);
     if (itr != device_ctx.rr_node_to_non_config_node_set.end()) {
-        for (int node : device_ctx.rr_non_config_node_sets[itr->second]) {
+        for (const RRNodeId& node : device_ctx.rr_non_config_node_sets[itr->second]) {
             if (node == inode) {
                 continue; //Already included above
             }
@@ -738,11 +738,11 @@ float get_rr_cong_cost(int inode) {
 
 /* Returns the congestion cost of using this rr_node, *ignoring*
  * non-configurable edges */
-static float get_single_rr_cong_cost(int inode) {
+static float get_single_rr_cong_cost(const RRNodeId& inode) {
     auto& device_ctx = g_vpr_ctx.device();
     auto& route_ctx = g_vpr_ctx.routing();
 
-    auto cost_index = device_ctx.rr_nodes[inode].cost_index();
+    auto cost_index = device_ctx.rr_graph.node_cost_index(inode);
     float cost = device_ctx.rr_indexed_data[cost_index].base_cost
                  * route_ctx.rr_node_route_inf[inode].acc_cost
                  * route_ctx.rr_node_route_inf[inode].pres_cost;
@@ -1265,17 +1265,17 @@ void push_back(t_heap* const hptr) {
     ++heap_tail;
 }
 
-void push_back_node(int inode, float total_cost, int prev_node, int prev_edge, float backward_path_cost, float R_upstream) {
+void push_back_node(const RRNodeId& inode, float total_cost, const RRNodeId& prev_node, const RREdgeId& prev_edge, float backward_path_cost, float R_upstream) {
     /* Puts an rr_node on the heap with the same condition as node_to_heap,
      * but do not fix heap property yet as that is more efficiently done from
      * bottom up with build_heap    */
 
     auto& route_ctx = g_vpr_ctx.routing();
-    if (total_cost >= route_ctx.rr_node_route_inf[inode].path_cost)
+    if (total_cost >= route_ctx.rr_node_route_inf[size_t(inode)].path_cost)
         return;
 
     t_heap* hptr = alloc_heap_data();
-    hptr->index = inode;
+    hptr->index = size_t(inode);
     hptr->cost = total_cost;
     hptr->u.prev.node = prev_node;
     hptr->u.prev.edge = prev_edge;

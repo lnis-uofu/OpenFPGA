@@ -9,7 +9,7 @@
 class RouterDelayProfiler {
   public:
     RouterDelayProfiler(const RouterLookahead* lookahead);
-    bool calculate_delay(int source_node, int sink_node, const t_router_opts& router_opts, float* net_delay) const;
+    bool calculate_delay(const RRNodeId& source_node, const RRNodeId& sink_node, const t_router_opts& router_opts, float* net_delay) const;
 
   private:
     const RouterLookahead* router_lookahead_;

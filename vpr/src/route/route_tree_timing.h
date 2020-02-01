@@ -4,6 +4,7 @@
 #include "connection_based_routing.h"
 #include "route_common.h"
 #include "spatial_route_tree_lookup.h"
+#include "rr_graph_obj.h"
 
 /**************** Subroutines exported by route_tree_timing.c ***************/
 
@@ -30,7 +31,7 @@ void update_remaining_net_delays_from_route_tree(float* net_delay,
 void load_route_tree_Tdel(t_rt_node* rt_root, float Tarrival);
 void load_route_tree_rr_route_inf(t_rt_node* root);
 
-t_rt_node* init_route_tree_to_source_no_net(int inode);
+t_rt_node* init_route_tree_to_source_no_net(const RRNodeId& inode);
 
 void add_route_tree_to_rr_node_lookup(t_rt_node* node);
 

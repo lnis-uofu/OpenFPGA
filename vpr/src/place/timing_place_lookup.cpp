@@ -322,7 +322,7 @@ static float route_connection_delay(
 
             {
                 successfully_routed = route_profiler.calculate_delay(
-                    size_t(source_rr_node), size_t(sink_rr_node),
+                    source_rr_node, sink_rr_node,
                     router_opts,
                     &net_delay_value);
             }

@@ -235,22 +235,22 @@ std::vector<std::string> block_type_class_index_to_pin_names(t_physical_tile_typ
     return pin_names;
 }
 
-std::string rr_node_arch_name(int inode) {
+std::string rr_node_arch_name(const RRNodeId& inode) {
     auto& device_ctx = g_vpr_ctx.device();
 
-    const t_rr_node& rr_node = device_ctx.rr_nodes[inode];
+    const RRGraph& rr_graph = device_ctx.rr_graph;
 
     std::string rr_node_arch_name;
-    if (rr_node.type() == OPIN || rr_node.type() == IPIN) {
+    if (rr_graph.node_type(inode) == OPIN || rr_graph.node_type(inode) == IPIN) {
         //Pin names
-        auto type = device_ctx.grid[rr_node.xlow()][rr_node.ylow()].type;
-        rr_node_arch_name += block_type_pin_index_to_name(type, rr_node.ptc_num());
-    } else if (rr_node.type() == SOURCE || rr_node.type() == SINK) {
+        auto type = device_ctx.grid[rr_graph.node_xlow(inode)][rr_graph.node_ylow(inode)].type;
+        rr_node_arch_name += block_type_pin_index_to_name(type, rr_graph.node_ptc_num(inode));
+    } else if (rr_graph.node_type(inode) == SOURCE || rr_graph.node_type(inode) == SINK) {
         //Set of pins associated with SOURCE/SINK
-        auto type = device_ctx.grid[rr_node.xlow()][rr_node.ylow()].type;
-        auto pin_names = block_type_class_index_to_pin_names(type, rr_node.ptc_num());
+        auto type = device_ctx.grid[rr_graph.node_xlow(inode)][rr_graph.node_ylow(inode)].type;
+        auto pin_names = block_type_class_index_to_pin_names(type, rr_graph.node_ptc_num(inode));
         if (pin_names.size() > 1) {
-            rr_node_arch_name += rr_node.type_string();
+            rr_node_arch_name += rr_node_typename[rr_graph.node_type(inode)];
             rr_node_arch_name += " connected to ";
             rr_node_arch_name += "{";
             rr_node_arch_name += vtr::join(pin_names, ", ");
@@ -259,9 +259,9 @@ std::string rr_node_arch_name(int inode) {
             rr_node_arch_name += pin_names[0];
         }
     } else {
-        VTR_ASSERT(rr_node.type() == CHANX || rr_node.type() == CHANY);
+        VTR_ASSERT(rr_graph.node_type(inode) == CHANX || rr_graph.node_type(inode) == CHANY);
         //Wire segment name
-        auto cost_index = rr_node.cost_index();
+        auto cost_index = rr_graph.node_cost_index(inode);
         int seg_index = device_ctx.rr_indexed_data[cost_index].seg_index;
 
         rr_node_arch_name += device_ctx.arch->Segments[seg_index].name;

@@ -51,10 +51,8 @@ struct t_rt_node {
     RRSwitchId parent_switch_id;
 
     bool re_expand;
-    int inode;
-
     /* Xifan Tang - RRGraph node */
-    RRNodeId inode_id;
+    RRNodeId inode;
 
     float C_downstream;
     float R_upstream;

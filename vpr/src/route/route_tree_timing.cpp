@@ -536,7 +536,7 @@ void load_route_tree_Tdel(t_rt_node* subtree_rt_root, float Tarrival) {
      * must be correct before this routine is called.  Tarrival is the time at
      * at which the signal arrives at this node's *input*.                      */
 
-    int inode;
+    RRNodeId inode;
     short iswitch;
     t_rt_node* child_node;
     t_linked_rt_edge* linked_rt_edge;
@@ -550,7 +550,7 @@ void load_route_tree_Tdel(t_rt_node* subtree_rt_root, float Tarrival) {
      * along a wire segment's length.  See discussion in net_delay.c if you want
      * to change this.                                                           */
 
-    Tdel = Tarrival + 0.5 * subtree_rt_root->C_downstream * device_ctx.rr_nodes[inode].R();
+    Tdel = Tarrival + 0.5 * subtree_rt_root->C_downstream * device_ctx.rr_graph.node_R(inode);
     subtree_rt_root->Tdel = Tdel;
 
     /* Now expand the children of this node to load their Tdel values (depth-
@@ -1415,7 +1415,7 @@ bool is_uncongested_route_tree(const t_rt_node* root) {
 }
 
 t_rt_node*
-init_route_tree_to_source_no_net(int inode) {
+init_route_tree_to_source_no_net(const RRNodeId& inode) {
     /* Initializes the routing tree to just the net source, and returns the root
      * node of the rt_tree (which is just the net source).                       */
 
@@ -1428,11 +1428,14 @@ init_route_tree_to_source_no_net(int inode) {
     rt_root->parent_node = nullptr;
     rt_root->parent_switch = OPEN;
     rt_root->re_expand = true;
-    rt_root->inode = inode;
-    rt_root->C_downstream = device_ctx.rr_nodes[inode].C();
-    rt_root->R_upstream = device_ctx.rr_nodes[inode].R();
-    rt_root->Tdel = 0.5 * device_ctx.rr_nodes[inode].R() * device_ctx.rr_nodes[inode].C();
-    rr_node_to_rt_node[inode] = rt_root;
+    rt_root->inode = size_t(inode);
+
+    rt_root->inode_id = inode;
+
+    rt_root->C_downstream = device_ctx.rr_graph.node_C(inode);
+    rt_root->R_upstream = device_ctx.rr_graph.node_R(inode);
+    rt_root->Tdel = 0.5 * device_ctx.rr_graph.node_R(inode) * device_ctx.rr_graph.node_C(inode);
+    rr_node_to_rt_node[size_t(inode)] = rt_root;
 
     return (rt_root);
 }

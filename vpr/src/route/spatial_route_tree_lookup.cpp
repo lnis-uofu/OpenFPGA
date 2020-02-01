@@ -32,12 +32,10 @@ SpatialRouteTreeLookup build_route_tree_spatial_lookup(ClusterNetId net, t_rt_no
 void update_route_tree_spatial_lookup_recur(t_rt_node* rt_node, SpatialRouteTreeLookup& spatial_lookup) {
     auto& device_ctx = g_vpr_ctx.device();
 
-    auto& rr_node = device_ctx.rr_nodes[rt_node->inode];
-
-    int bin_xlow = grid_to_bin_x(rr_node.xlow(), spatial_lookup);
-    int bin_ylow = grid_to_bin_y(rr_node.ylow(), spatial_lookup);
-    int bin_xhigh = grid_to_bin_x(rr_node.xhigh(), spatial_lookup);
-    int bin_yhigh = grid_to_bin_y(rr_node.yhigh(), spatial_lookup);
+    int bin_xlow =  grid_to_bin_x(device_ctx.rr_graph.node_xlow(rt_node->inode), spatial_lookup);
+    int bin_ylow =  grid_to_bin_y(device_ctx.rr_graph.node_ylow(rt_node->inode), spatial_lookup);
+    int bin_xhigh = grid_to_bin_x(device_ctx.rr_graph.node_xhigh(rt_node->inode), spatial_lookup);
+    int bin_yhigh = grid_to_bin_y(device_ctx.rr_graph.node_yhigh(rt_node->inode), spatial_lookup);
 
     spatial_lookup[bin_xlow][bin_ylow].push_back(rt_node);
 

@@ -160,7 +160,7 @@ struct DeviceContext : public Context {
     std::vector<std::vector<int>> rr_non_config_node_sets;
 
     //Reverse look-up from RR node to non-configurably connected node set (index into rr_nonconf_node_sets)
-    std::unordered_map<int, int> rr_node_to_non_config_node_set;
+    std::unordered_map<RRNodeId, RRNodeId> rr_node_to_non_config_node_set;
 
     //The indicies of rr nodes of a given type at a specific x,y grid location
     t_rr_node_indices rr_node_indices; //[0..NUM_RR_TYPES-1][0..grid.width()-1][0..grid.width()-1][0..size-1]
@@ -290,7 +290,7 @@ struct RoutingContext : public Context {
 
     vtr::vector<ClusterBlockId, std::vector<int>> rr_blk_source; /* [0..num_blocks-1][0..num_class-1] */
 
-    std::vector<t_rr_node_route_inf> rr_node_route_inf; /* [0..device_ctx.num_rr_nodes-1] */
+    vtr::vector<RRNodeId, t_rr_node_route_inf> rr_node_route_inf; /* [0..device_ctx.num_rr_nodes-1] */
 
     //Information about current routing status of each net
     vtr::vector<ClusterNetId, t_net_routing_status> net_status; //[0..cluster_ctx.clb_nlist.nets().size()-1]
