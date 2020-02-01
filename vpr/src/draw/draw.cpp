@@ -880,10 +880,10 @@ void init_draw_coords(float width_val) {
         return; //do not initialize only if --disp off and --save_graphics off
     /* Each time routing is on screen, need to reallocate the color of each *
      * rr_node, as the number of rr_nodes may change.						*/
-    if (device_ctx.rr_nodes.size() != 0) {
+    if (device_ctx.rr_graph.nodes().size() != 0) {
         draw_state->draw_rr_node = (t_draw_rr_node*)vtr::realloc(draw_state->draw_rr_node,
-                                                                 (device_ctx.rr_nodes.size()) * sizeof(t_draw_rr_node));
-        for (size_t i = 0; i < device_ctx.rr_nodes.size(); i++) {
+                                                                 (device_ctx.rr_graph.nodes().size()) * sizeof(t_draw_rr_node));
+        for (size_t i = 0; i < device_ctx.rr_graph.nodes().size(); i++) {
             draw_state->draw_rr_node[i].color = DEFAULT_RR_NODE_COLOR;
             draw_state->draw_rr_node[i].node_highlighted = false;
         }

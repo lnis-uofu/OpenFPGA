@@ -1,4 +1,5 @@
 #pragma once
+#include "rr_graph_obj.h"
 
 /************** Types and defines exported by route_tree_timing.c ************/
 struct t_rt_node;
@@ -11,6 +12,10 @@ struct t_rt_node;
 struct t_linked_rt_edge {
     t_rt_node* child;
     short iswitch;
+
+    /* Xifan Tang - RRGraph switch*/
+    RRSwitchId iswitch_id;
+
     t_linked_rt_edge* next;
 };
 
@@ -41,8 +46,16 @@ struct t_rt_node {
     } u;
     t_rt_node* parent_node;
     short parent_switch;
+   
+    /* Xifan Tang - RRGraph switch*/
+    RRSwitchId parent_switch_id;
+
     bool re_expand;
     int inode;
+
+    /* Xifan Tang - RRGraph node */
+    RRNodeId inode_id;
+
     float C_downstream;
     float R_upstream;
     float Tdel;

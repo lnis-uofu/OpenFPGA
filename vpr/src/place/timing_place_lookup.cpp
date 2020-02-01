@@ -304,16 +304,16 @@ static float route_connection_delay(
     for (int driver_ptc : best_driver_ptcs) {
         VTR_ASSERT(driver_ptc != OPEN);
 
-        int source_rr_node = get_rr_node_index(device_ctx.rr_node_indices, source_x, source_y, SOURCE, driver_ptc);
+        RRNodeId source_rr_node = device_ctx.rr_graph.find_node(source_x, source_y, SOURCE, driver_ptc);
 
-        VTR_ASSERT(source_rr_node != OPEN);
+        VTR_ASSERT(source_rr_node != RRNodeId::INVALID());
 
         for (int sink_ptc : best_sink_ptcs) {
             VTR_ASSERT(sink_ptc != OPEN);
 
-            int sink_rr_node = get_rr_node_index(device_ctx.rr_node_indices, sink_x, sink_y, SINK, sink_ptc);
+            RRNodeId sink_rr_node = device_ctx.rr_graph.find_node(sink_x, sink_y, SINK, sink_ptc);
 
-            VTR_ASSERT(sink_rr_node != OPEN);
+            VTR_ASSERT(sink_rr_node != RRNodeId::INVALID());
 
             if (!measure_directconnect && directconnect_exists(source_rr_node, sink_rr_node)) {
                 //Skip if we shouldn't measure direct connects and a direct connect exists
@@ -322,7 +322,7 @@ static float route_connection_delay(
 
             {
                 successfully_routed = route_profiler.calculate_delay(
-                    source_rr_node, sink_rr_node,
+                    size_t(source_rr_node), size_t(sink_rr_node),
                     router_opts,
                     &net_delay_value);
             }
@@ -933,29 +933,29 @@ void OverrideDelayModel::compute_override_delay_model(
     }
 }
 
-bool directconnect_exists(int src_rr_node, int sink_rr_node) {
+bool directconnect_exists(RRNodeId src_rr_node, RRNodeId sink_rr_node) {
     //Returns true if there is a directconnect between the two RR nodes
     //
     //This is checked by looking for a SOURCE -> OPIN -> IPIN -> SINK path
     //which starts at src_rr_node and ends at sink_rr_node
     auto& device_ctx = g_vpr_ctx.device();
-    auto& rr_nodes = device_ctx.rr_nodes;
+    auto& rr_graph = device_ctx.rr_graph;
 
-    VTR_ASSERT(rr_nodes[src_rr_node].type() == SOURCE && rr_nodes[sink_rr_node].type() == SINK);
+    VTR_ASSERT(rr_graph.node_type(src_rr_node) == SOURCE && rr_graph.node_type(sink_rr_node) == SINK);
 
     //TODO: This is a constant depth search, but still may be too slow
-    for (t_edge_size i_src_edge = 0; i_src_edge < rr_nodes[src_rr_node].num_edges(); ++i_src_edge) {
-        int opin_rr_node = rr_nodes[src_rr_node].edge_sink_node(i_src_edge);
+    for (const RREdgeId& src_edge : rr_graph.node_out_edges(src_rr_node)) {
+        RRNodeId opin_rr_node = rr_graph.edge_sink_node(src_edge);
 
-        if (rr_nodes[opin_rr_node].type() != OPIN) continue;
+        if (rr_graph.node_type(opin_rr_node) != OPIN) continue;
 
-        for (t_edge_size i_opin_edge = 0; i_opin_edge < rr_nodes[opin_rr_node].num_edges(); ++i_opin_edge) {
-            int ipin_rr_node = rr_nodes[opin_rr_node].edge_sink_node(i_opin_edge);
+        for (const RREdgeId& opin_edge : rr_graph.node_out_edges(opin_rr_node)) {
+            RRNodeId ipin_rr_node = rr_graph.edge_sink_node(opin_edge);
 
-            if (rr_nodes[ipin_rr_node].type() != IPIN) continue;
+            if (rr_graph.node_type(ipin_rr_node) != IPIN) continue;
 
-            for (t_edge_size i_ipin_edge = 0; i_ipin_edge < rr_nodes[ipin_rr_node].num_edges(); ++i_ipin_edge) {
-                if (sink_rr_node == rr_nodes[ipin_rr_node].edge_sink_node(i_ipin_edge)) {
+            for (const RREdgeId& ipin_edge : rr_graph.node_out_edges(ipin_rr_node)) {
+                if (sink_rr_node == rr_graph.edge_sink_node(ipin_edge)) {
                     return true;
                 }
             }

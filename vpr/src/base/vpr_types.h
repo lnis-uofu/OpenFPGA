@@ -40,8 +40,9 @@
 #include "vtr_flat_map.h"
 #include "vtr_cache.h"
 
-/* Header for rr_graph related definition */
+/* Xifan Tang - Header for rr_graph related definition */
 #include "rr_graph_types.h"
+#include "rr_graph_obj.h"
 
 /*******************************************************************************
  * Global data types and constants
@@ -1137,6 +1138,10 @@ struct t_trace {
     t_trace* next;
     int index;
     short iswitch;
+
+    /* Xifan Tang - RRGraph unique ids */
+    RRNodeId node_id;
+    RRSwitchId switch_id; 
 };
 
 /* Extra information about each rr_node needed only during routing (i.e.    *
@@ -1160,6 +1165,9 @@ struct t_trace {
  * occ:        The current occupancy of the associated rr node              */
 struct t_rr_node_route_inf {
     int prev_node;
+    /* Xifan Tang - prev_node for RRGraph object */
+    RRNodeId prev_node_id;
+
     t_edge_size prev_edge;
 
     float pres_cost;
