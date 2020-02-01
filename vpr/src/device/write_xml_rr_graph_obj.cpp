@@ -172,6 +172,8 @@ void write_rr_graph_edges(fstream &fp, const RRGraph& rr_graph) {
   fp << "\t<rr_edges>" << endl;
 
   for (auto node : rr_graph.nodes()) {
+    /* Sort the edges by the ids of sink nodes */
+    std::vector<RREdgeId> sorted_out_edge_ids;
     for (auto edge: rr_graph.node_out_edges(node)) {
       fp << "\t\t<edge src_node=\"" << rr_graph.node_index(node) <<
             "\" sink_node=\"" << rr_graph.node_index(rr_graph.edge_sink_node(edge)) <<

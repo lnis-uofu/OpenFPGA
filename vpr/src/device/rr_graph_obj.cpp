@@ -1120,19 +1120,23 @@ void RRGraph::rebuild_node_edges() {
         auto is_incoming_edge = [&](const RREdgeId edge) {
             return edge_sink_node(edge) == node;
         };
-        std::partition(node_edges_[node].get(),
-                       node_edges_[node].get() + node_num_in_edges_[node] + node_num_out_edges_[node],
-                       is_incoming_edge);
+        /* Use stable_partition to keep the relative order,
+         * This is mainly for comparing the RRGraph write with rr_node writer 
+         * so that it is easy to check consistency
+         */
+        std::stable_partition(node_edges_[node].get(),
+                              node_edges_[node].get() + node_num_in_edges_[node] + node_num_out_edges_[node],
+                              is_incoming_edge);
 
         //Partition incoming by configurable/non-configurable
-        std::partition(node_edges_[node].get(),
-                       node_edges_[node].get() + node_num_in_edges_[node],
-                       is_configurable_edge);
+        std::stable_partition(node_edges_[node].get(),
+                              node_edges_[node].get() + node_num_in_edges_[node],
+                              is_configurable_edge);
 
         //Partition outgoing by configurable/non-configurable
-        std::partition(node_edges_[node].get() + node_num_in_edges_[node],
-                       node_edges_[node].get() + node_num_in_edges_[node] + node_num_out_edges_[node],
-                       is_configurable_edge);
+        std::stable_partition(node_edges_[node].get() + node_num_in_edges_[node],
+                              node_edges_[node].get() + node_num_in_edges_[node] + node_num_out_edges_[node],
+                              is_configurable_edge);
 
 #if 0
         //TODO: Sanity check remove!
