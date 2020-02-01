@@ -41,11 +41,18 @@ struct t_heap {
     RRNodeId index = RRNodeId::INVALID();
 
     struct t_prev {
-        RRNodeId& node;
-        RREdgeId& edge;
+        RRNodeId node;
+        RREdgeId edge;
     };
 
-    union {
+    /* Xifan Tang - type union was used here, 
+     * but it causes an error in vtr_memory.h
+     * when allocating the data structure.
+     * I change to struct here.
+     * TODO: investigate the source of errors
+     * and see if this will cause memory overhead
+     */
+    struct {
         t_heap* next;
         t_prev prev;
     } u;
@@ -60,7 +67,7 @@ t_bb load_net_route_bb(ClusterNetId net_id, int bb_factor);
 void pathfinder_update_path_cost(t_trace* route_segment_start,
                                  int add_or_sub,
                                  float pres_fac);
-void pathfinder_update_single_node_cost(int inode, int add_or_sub, float pres_fac);
+void pathfinder_update_single_node_cost(const RRNodeId& inode, int add_or_sub, float pres_fac);
 
 void pathfinder_update_cost(float pres_fac, float acc_fac);
 
@@ -71,7 +78,7 @@ void reset_path_costs(const std::vector<RRNodeId>& visited_rr_nodes);
 float get_rr_cong_cost(const RRNodeId& inode);
 
 void mark_ends(ClusterNetId net_id);
-void mark_remaining_ends(const std::vector<int>& remaining_sinks);
+void mark_remaining_ends(const std::vector<RRNodeId>& remaining_sinks);
 
 void add_to_heap(t_heap* hptr);
 t_heap* alloc_heap_data();
