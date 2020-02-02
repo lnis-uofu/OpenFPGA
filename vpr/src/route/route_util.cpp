@@ -11,13 +11,13 @@ vtr::Matrix<float> calculate_routing_usage(t_rr_type rr_type) {
     vtr::Matrix<float> usage({{device_ctx.grid.width(), device_ctx.grid.height()}}, 0.);
 
     //Collect all the in-use RR nodes
-    std::set<int> rr_nodes;
+    std::set<RRNodeId> rr_nodes;
     for (auto net : cluster_ctx.clb_nlist.nets()) {
         t_trace* tptr = route_ctx.trace[net].head;
         while (tptr != nullptr) {
-            int inode = tptr->index;
+            RRNodeId inode = tptr->index;
 
-            if (device_ctx.rr_nodes[inode].type() == rr_type) {
+            if (device_ctx.rr_graph.node_type(inode) == rr_type) {
                 rr_nodes.insert(inode);
             }
             tptr = tptr->next;
@@ -25,24 +25,22 @@ vtr::Matrix<float> calculate_routing_usage(t_rr_type rr_type) {
     }
 
     //Record number of used resources in each x/y channel
-    for (int inode : rr_nodes) {
-        auto& rr_node = device_ctx.rr_nodes[inode];
-
+    for (const RRNodeId& inode : rr_nodes) {
         if (rr_type == CHANX) {
-            VTR_ASSERT(rr_node.type() == CHANX);
-            VTR_ASSERT(rr_node.ylow() == rr_node.yhigh());
+            VTR_ASSERT(device_ctx.rr_graph.node_type(inode) == CHANX);
+            VTR_ASSERT(device_ctx.rr_graph.node_ylow(inode) == device_ctx.rr_graph.node_yhigh(inode));
 
-            int y = rr_node.ylow();
-            for (int x = rr_node.xlow(); x <= rr_node.xhigh(); ++x) {
+            int y = device_ctx.rr_graph.node_ylow(inode);
+            for (int x = device_ctx.rr_graph.node_xlow(inode); x <= device_ctx.rr_graph.node_xhigh(inode); ++x) {
                 usage[x][y] += route_ctx.rr_node_route_inf[inode].occ();
             }
         } else {
             VTR_ASSERT(rr_type == CHANY);
-            VTR_ASSERT(rr_node.type() == CHANY);
-            VTR_ASSERT(rr_node.xlow() == rr_node.xhigh());
+            VTR_ASSERT(device_ctx.rr_graph.node_type(inode) == CHANY);
+            VTR_ASSERT(device_ctx.rr_graph.node_xlow(inode) == device_ctx.rr_graph.node_xhigh(inode));
 
-            int x = rr_node.xlow();
-            for (int y = rr_node.ylow(); y <= rr_node.yhigh(); ++y) {
+            int x = device_ctx.rr_graph.node_xlow(inode);
+            for (int y = device_ctx.rr_graph.node_ylow(inode); y <= device_ctx.rr_graph.node_yhigh(inode); ++y) {
                 usage[x][y] += route_ctx.rr_node_route_inf[inode].occ();
             }
         }
