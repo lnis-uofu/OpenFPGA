@@ -3093,7 +3093,7 @@ class EdgeGroups {
     // Adds non-configurable edge to be group.
     //
     // Returns true if this is a new edge.
-    bool add_non_config_edge(int from_node, int to_node) {
+    bool add_non_config_edge(const RRNodeId& from_node, const RRNodeId& to_node) {
         auto result = node_edges_.insert(std::make_pair(from_node, to_node));
         return result.second;
     }
@@ -3108,13 +3108,13 @@ class EdgeGroups {
         std::vector<std::pair<int, int>> merges;
 
         VTR_ASSERT(node_count_ != std::numeric_limits<size_t>::max());
-        std::vector<int> node_to_node_set(node_count_, OPEN);
+        vtr::vector<RRNodeId, int> node_to_node_set(node_count_, OPEN);
 
         // First nievely make node groups.  When an edge joins two groups,
         // mark it for cleanup latter.
         for (const auto& edge : node_edges_) {
-            VTR_ASSERT(edge.first >= 0 && static_cast<size_t>(edge.first) < node_count_);
-            VTR_ASSERT(edge.second >= 0 && static_cast<size_t>(edge.second) < node_count_);
+            VTR_ASSERT(size_t(edge.first) < node_count_);
+            VTR_ASSERT(size_t(edge.second) < node_count_);
 
             int& from_set = node_to_node_set[edge.first];
             int& to_set = node_to_node_set[edge.second];
@@ -3175,8 +3175,8 @@ class EdgeGroups {
 
         // Create compact set of sets.
         for (size_t inode = 0; inode < node_to_node_set.size(); ++inode) {
-            if (node_to_node_set[inode] != OPEN) {
-                rr_non_config_node_sets_map_[node_to_node_set[inode]].push_back(inode);
+            if (node_to_node_set[RRNodeId(inode)] != OPEN) {
+                rr_non_config_node_sets_map_[node_to_node_set[RRNodeId(inode)]].push_back(RRNodeId(inode));
             }
         }
     }
@@ -3185,7 +3185,7 @@ class EdgeGroups {
     t_non_configurable_rr_sets output_sets() {
         t_non_configurable_rr_sets sets;
         for (auto& item : rr_non_config_node_sets_map_) {
-            std::set<RREdgeId> edge_set;
+            std::set<t_node_edge> edge_set;
             std::set<RRNodeId> node_set(item.second.begin(), item.second.end());
 
             for (const auto& edge : node_edges_) {
@@ -3203,12 +3203,12 @@ class EdgeGroups {
 
     // Set device context structures for non-configurable node sets.
     void set_device_context() {
-        std::vector<std::vector<int>> rr_non_config_node_sets;
+        std::vector<std::vector<RRNodeId>> rr_non_config_node_sets;
         for (auto& item : rr_non_config_node_sets_map_) {
             rr_non_config_node_sets.emplace_back(std::move(item.second));
         }
 
-        std::unordered_map<int, int> rr_node_to_non_config_node_set;
+        std::unordered_map<RRNodeId, int> rr_node_to_non_config_node_set;
         for (size_t set = 0; set < rr_non_config_node_sets.size(); ++set) {
             for (const auto inode : rr_non_config_node_sets[set]) {
                 rr_node_to_non_config_node_set.insert(
@@ -3244,22 +3244,22 @@ class EdgeGroups {
     size_t node_count_;
 
     // Set of non-configurable edges.
-    std::set<std::pair<int, int>> node_edges_;
+    std::set<std::pair<RRNodeId, RRNodeId>> node_edges_;
 
     // Compact set of node sets. Map key is arbitrary.
-    std::map<int, std::vector<int>> rr_non_config_node_sets_map_;
+    std::map<int, std::vector<RRNodeId>> rr_non_config_node_sets_map_;
 };
 
-static void expand_non_configurable(int inode, EdgeGroups* groups);
+static void expand_non_configurable(const RRNodeId& inode, EdgeGroups* groups);
 
 //Collects the sets of connected non-configurable edges in the RR graph
 static void create_edge_groups(EdgeGroups* groups) {
     //Walk through the RR graph and recursively expand non-configurable edges
     //to collect the sets of non-configurably connected nodes
     auto& device_ctx = g_vpr_ctx.device();
-    groups->set_node_count(device_ctx.rr_nodes.size());
+    groups->set_node_count(device_ctx.rr_graph.nodes().size());
 
-    for (size_t inode = 0; inode < device_ctx.rr_nodes.size(); ++inode) {
+    for (const RRNodeId& inode : device_ctx.rr_graph.nodes()) {
         expand_non_configurable(inode, groups);
     }
 
@@ -3267,14 +3267,14 @@ static void create_edge_groups(EdgeGroups* groups) {
 }
 
 //Builds a set of non-configurably connected RR graph edges
-static void expand_non_configurable(int inode, EdgeGroups* groups) {
+static void expand_non_configurable(const RRNodeId& inode, EdgeGroups* groups) {
     auto& device_ctx = g_vpr_ctx.device();
 
-    for (t_edge_size iedge = 0; iedge < device_ctx.rr_nodes[inode].num_edges(); ++iedge) {
-        bool edge_non_configurable = !device_ctx.rr_nodes[inode].edge_is_configurable(iedge);
+    for (const RREdgeId& iedge : device_ctx.rr_graph.node_out_edges(inode)) {
+        bool edge_non_configurable = !device_ctx.rr_graph.edge_is_configurable(iedge);
 
         if (edge_non_configurable) {
-            int to_node = device_ctx.rr_nodes[inode].edge_sink_node(iedge);
+            const RRNodeId& to_node = device_ctx.rr_graph.edge_sink_node(iedge);
 
             if (groups->add_non_config_edge(inode, to_node)) {
                 expand_non_configurable(to_node, groups);

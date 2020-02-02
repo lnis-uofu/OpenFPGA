@@ -308,7 +308,8 @@ void count_unidir_routing_transistors(std::vector<t_segment_inf>& /*segment_inf*
     /* corresponding to IPINs will be 0.           */
 
     t_rr_type from_rr_type, to_rr_type;
-    int i, j, iseg, to_node, iedge, num_edges, maxlen;
+    int i, j, iseg, iedge, num_edges, maxlen;
+    RRNodeId to_node;
     int max_inputs_to_cblock;
     float input_cblock_trans;
 
@@ -318,7 +319,7 @@ void count_unidir_routing_transistors(std::vector<t_segment_inf>& /*segment_inf*
      * switches of all rr nodes. Thus we keep track of which muxes we have already
      * counted via the variable below. */
     bool* chan_node_switch_done;
-    chan_node_switch_done = (bool*)vtr::calloc(device_ctx.rr_nodes.size(), sizeof(bool));
+    chan_node_switch_done = (bool*)vtr::calloc(device_ctx.rr_graph.nodes().size(), sizeof(bool));
 
     /* The variable below is an accumulator variable that will add up all the   *
      * transistors in the routing.  Make double so that it doesn't stop         *
@@ -348,28 +349,26 @@ void count_unidir_routing_transistors(std::vector<t_segment_inf>& /*segment_inf*
         trans_track_to_cblock_buf = 0;
     }
 
-    num_inputs_to_cblock = (int*)vtr::calloc(device_ctx.rr_nodes.size(), sizeof(int));
+    num_inputs_to_cblock = (int*)vtr::calloc(device_ctx.rr_graph.nodes().size(), sizeof(int));
     maxlen = std::max(device_ctx.grid.width(), device_ctx.grid.height());
     cblock_counted = (bool*)vtr::calloc(maxlen, sizeof(bool));
 
     ntrans = 0;
-    for (size_t from_node = 0; from_node < device_ctx.rr_nodes.size(); from_node++) {
-        from_rr_type = device_ctx.rr_nodes[from_node].type();
+    for (const RRNodeId& from_node : device_ctx.rr_graph.nodes()) {
+        from_rr_type = device_ctx.rr_graph.node_type(from_node);
 
         switch (from_rr_type) {
             case CHANX:
             case CHANY:
-                num_edges = device_ctx.rr_nodes[from_node].num_edges();
-
                 /* Increment number of inputs per cblock if IPIN */
-                for (iedge = 0; iedge < num_edges; iedge++) {
-                    to_node = device_ctx.rr_nodes[from_node].edge_sink_node(iedge);
-                    to_rr_type = device_ctx.rr_nodes[to_node].type();
+                for (const RREdgeId& iedge : device_ctx.rr_graph.node_out_edges(from_node)) {
+                    RRNodeId to_node = device_ctx.rr_graph.edge_sink_node(iedge);
+                    to_rr_type = device_ctx.rr_graph.node_type(to_node);
 
                     /* Ignore any uninitialized rr_graph nodes */
-                    if ((device_ctx.rr_nodes[to_node].type() == SOURCE)
-                        && (device_ctx.rr_nodes[to_node].xlow() == 0) && (device_ctx.rr_nodes[to_node].ylow() == 0)
-                        && (device_ctx.rr_nodes[to_node].xhigh() == 0) && (device_ctx.rr_nodes[to_node].yhigh() == 0)) {
+                    if ((device_ctx.rr_graph.node_type(to_node) == SOURCE)
+                        && (device_ctx.rr_graph.node_xlow(to_node) == 0) && (device_ctx.rr_graph.node_ylow(to_node) == 0)
+                        && (device_ctx.rr_graph.node_xhigh(to_node) == 0) && (device_ctx.rr_graph.node_yhigh(to_node) == 0)) {
                         continue;
                     }
 
