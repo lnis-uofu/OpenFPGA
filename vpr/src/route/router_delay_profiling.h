@@ -15,7 +15,7 @@ class RouterDelayProfiler {
     const RouterLookahead* router_lookahead_;
 };
 
-std::vector<float> calculate_all_path_delays_from_rr_node(int src_rr_node, const t_router_opts& router_opts);
+vtr::vector<RRNodeId, float> calculate_all_path_delays_from_rr_node(int src_rr_node, const t_router_opts& router_opts);
 
 void alloc_routing_structs(t_chan_width chan_width,
                            const t_router_opts& router_opts,

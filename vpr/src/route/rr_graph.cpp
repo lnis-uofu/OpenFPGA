@@ -3185,8 +3185,8 @@ class EdgeGroups {
     t_non_configurable_rr_sets output_sets() {
         t_non_configurable_rr_sets sets;
         for (auto& item : rr_non_config_node_sets_map_) {
-            std::set<t_node_edge> edge_set;
-            std::set<int> node_set(item.second.begin(), item.second.end());
+            std::set<RREdgeId> edge_set;
+            std::set<RRNodeId> node_set(item.second.begin(), item.second.end());
 
             for (const auto& edge : node_edges_) {
                 if (node_set.find(edge.first) != node_set.end()) {
