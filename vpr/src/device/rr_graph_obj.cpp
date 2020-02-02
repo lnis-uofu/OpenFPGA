@@ -194,6 +194,11 @@ float RRGraph::node_C(const RRNodeId& node) const {
     return node_Cs_[node];
 }
 
+short RRGraph::node_rc_data_index(const RRNodeId& node) const {
+    VTR_ASSERT_SAFE(valid_node_id(node));
+    return node_rc_data_indices_[node];
+}
+
 /*
  * Get a segment id of a node in rr_graph 
  */
@@ -769,6 +774,7 @@ void RRGraph::reserve_nodes(const unsigned long& num_nodes) {
     this->node_sides_.reserve(num_nodes);
     this->node_Rs_.reserve(num_nodes);
     this->node_Cs_.reserve(num_nodes);
+    this->node_rc_data_indices_.reserve(num_nodes);
     this->node_segments_.reserve(num_nodes);
 
     /* Edge-related vectors */
@@ -818,6 +824,7 @@ RRNodeId RRGraph::create_node(const t_rr_type& type) {
     node_sides_.push_back(NUM_SIDES);
     node_Rs_.push_back(0.);
     node_Cs_.push_back(0.);
+    node_rc_data_indices_.push_back(-1);
     node_segments_.push_back(RRSegmentId::INVALID());
 
     node_edges_.emplace_back(); //Initially empty
@@ -1026,6 +1033,12 @@ void RRGraph::set_node_C(const RRNodeId& node, const float& C) {
     VTR_ASSERT(valid_node_id(node));
 
     node_Cs_[node] = C;
+}
+
+void RRGraph::set_node_rc_data_index(const RRNodeId& node, const short& rc_data_index) {
+    VTR_ASSERT(valid_node_id(node));
+
+    node_rc_data_indices_[node] = rc_data_index;
 }
 
 /*

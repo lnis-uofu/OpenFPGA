@@ -454,6 +454,13 @@ class RRGraph {
     /* Get capacitance of a node, used to built RC tree for timing analysis */
     float node_C(const RRNodeId& node) const;
 
+    /* Get the index of rc data in the list of rc_data data structure
+     * It contains the RC parasitics for different nodes in the RRGraph
+     * when used in evaluate different routing paths
+     * See cross-reference section in this header file for more details
+     */
+    short node_rc_data_index(const RRNodeId& node) const;
+
     /* Get segment id of a node, containing the information of the routing
      * segment that the node represents. See more details in the data structure t_segment_inf
      */
@@ -694,6 +701,10 @@ class RRGraph {
     void set_node_R(const RRNodeId& node, const float& R);
     void set_node_C(const RRNodeId& node, const float& C);
 
+    /* Set the flyweight RC data index for node, see node_rc_data_index() for details */
+    /* TODO: the cost index should be changed to a StrongId!!! */
+    void set_node_rc_data_index(const RRNodeId& node, const short& rc_data_index);
+
     /* Set the routing segment linked to a node, only applicable to CHANX and CHANY */
     void set_node_segment(const RRNodeId& node, const RRSegmentId& segment_index);
 
@@ -841,6 +852,7 @@ class RRGraph {
     vtr::vector<RRNodeId, e_side> node_sides_;
     vtr::vector<RRNodeId, float> node_Rs_;
     vtr::vector<RRNodeId, float> node_Cs_;
+    vtr::vector<RRNodeId, short> node_rc_data_indices_;
     vtr::vector<RRNodeId, RRSegmentId> node_segments_; /* Segment ids for each node */
 
     /*
