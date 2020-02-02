@@ -767,11 +767,11 @@ void mark_ends(ClusterNetId net_id) {
     }
 }
 
-void mark_remaining_ends(const std::vector<RRNodeId>& remaining_sinks) {
+void mark_remaining_ends(const std::vector<int>& remaining_sinks) {
     // like mark_ends, but only performs it for the remaining sinks of a net
     auto& route_ctx = g_vpr_ctx.mutable_routing();
-    for (const RRNodeId& sink_node : remaining_sinks)
-        ++route_ctx.rr_node_route_inf[sink_node].target_flag;
+    for (const int& sink_node : remaining_sinks)
+        ++route_ctx.rr_node_route_inf[RRNodeId(sink_node)].target_flag;
 }
 
 void node_to_heap(const RRNodeId& inode, float total_cost, const RRNodeId& prev_node, const RREdgeId& prev_edge, float backward_path_cost, float R_upstream) {

@@ -87,10 +87,10 @@ t_heap* timing_driven_route_connection_from_route_tree(t_rt_node* rt_root,
                                                        std::vector<RRNodeId>& modified_rr_node_inf,
                                                        RouterStats& router_stats);
 
-std::vector<t_heap> timing_driven_find_all_shortest_paths_from_route_tree(t_rt_node* rt_root,
+vtr::vector<RRNodeId, t_heap> timing_driven_find_all_shortest_paths_from_route_tree(t_rt_node* rt_root,
                                                                           const t_conn_cost_params cost_params,
                                                                           t_bb bounding_box,
-                                                                          std::vector<int>& modified_rr_node_inf,
+                                                                          std::vector<RRNodeId>& modified_rr_node_inf,
                                                                           RouterStats& router_stats);
 
 struct timing_driven_route_structs {

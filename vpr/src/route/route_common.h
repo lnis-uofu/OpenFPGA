@@ -78,7 +78,7 @@ void reset_path_costs(const std::vector<RRNodeId>& visited_rr_nodes);
 float get_rr_cong_cost(const RRNodeId& inode);
 
 void mark_ends(ClusterNetId net_id);
-void mark_remaining_ends(const std::vector<RRNodeId>& remaining_sinks);
+void mark_remaining_ends(const std::vector<int>& remaining_sinks);
 
 void add_to_heap(t_heap* hptr);
 t_heap* alloc_heap_data();
