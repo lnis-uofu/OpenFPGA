@@ -377,7 +377,7 @@ void create_rr_graph(const t_graph_type graph_type,
         }
 
         /* Xifan Tang - Create rr_graph object: load rr_nodes to the object */
-        convert_rr_graph(segment_inf);
+        //convert_rr_graph(segment_inf);
     }
 
     process_non_config_sets();
@@ -596,6 +596,14 @@ static void build_rr_graph(const t_graph_type graph_type,
      */
     device_ctx.rr_graph = alloc_and_load_rr_node_indices(max_chan_width, grid,
                                                          &num_rr_nodes, chan_details_x, chan_details_y);
+
+    /* The number of segments are in general small, reserve segments may not bring
+     * significant memory efficiency */
+    device_ctx.rr_graph.reserve_segments(segment_inf.size());
+    // Create the segments
+    for (size_t iseg = 0; iseg < segment_inf.size(); ++iseg) {
+        device_ctx.rr_graph.create_segment(segment_inf[iseg]);
+    }
 
     /* These are data structures used by the the unidir opin mapping. They are used
      * to spread connections evenly for each segment type among the available

@@ -137,7 +137,7 @@ void ClockToClockConneciton::set_fc_val(float fc_val) {
 void ClockToClockConneciton::create_switches(const ClockRRGraphBuilder& clock_graph) {
     auto& device_ctx = g_vpr_ctx.mutable_device();
     auto& grid = device_ctx.grid;
-    auto& rr_nodes = device_ctx.rr_nodes;
+    auto& rr_graph = device_ctx.rr_graph;
 
     auto to_locations = clock_graph.get_switch_locations(to_clock, to_switch);
 

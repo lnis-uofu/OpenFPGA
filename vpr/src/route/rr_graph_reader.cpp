@@ -281,17 +281,17 @@ void process_seg_id(pugi::xml_node parent, const pugiutil::loc_data& loc_data) {
 
     while (rr_node) {
         id = get_attribute(rr_node, "id", loc_data).as_int();
-        auto& node = device_ctx.rr_nodes[id];
+        auto& node = RRNodeId(id);
 
         segmentSubnode = get_single_child(rr_node, "segment", loc_data, pugiutil::OPTIONAL);
         if (segmentSubnode) {
             attribute = get_attribute(segmentSubnode, "segment_id", loc_data, pugiutil::OPTIONAL);
             if (attribute) {
                 int seg_id = get_attribute(segmentSubnode, "segment_id", loc_data).as_int(0);
-                device_ctx.rr_indexed_data[node.cost_index()].seg_index = seg_id;
+                device_ctx.rr_indexed_data[device_ctx.rr_graph.node_cost_index(node)].seg_index = seg_id;
             } else {
                 //-1 for non chanx or chany nodes
-                device_ctx.rr_indexed_data[node.cost_index()].seg_index = -1;
+                device_ctx.rr_indexed_data[device_ctx.rr_graph.node_cost_index(node)].seg_index = -1;
             }
         }
         rr_node = rr_node.next_sibling(rr_node.name());
