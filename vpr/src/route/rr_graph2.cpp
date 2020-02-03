@@ -1343,29 +1343,29 @@ int get_rr_node_index(const t_rr_node_indices& L_rr_node_indices,
     return ((unsigned)ptc < lookup.size() ? lookup[ptc] : -1);
 }
 
-int find_average_rr_node_index(int device_width,
-                               int device_height,
-                               t_rr_type rr_type,
-                               int ptc,
-                               const t_rr_node_indices& L_rr_node_indices) {
+RRNodeId find_average_rr_node_index(int device_width,
+                                    int device_height,
+                                    t_rr_type rr_type,
+                                    int ptc,
+                                    const RRGraph& rr_graph) {
     /* Find and return the index to a rr_node that is located at the "center" *
      * of the current grid array, if possible.  In the event the "center" of  *
      * the grid array is an EMPTY or IO node, then retry alterate locations.  *
      * Worst case, this function will simply return the 1st non-EMPTY and     *
      * non-IO node.                                                           */
 
-    int inode = get_rr_node_index(L_rr_node_indices, (device_width) / 2, (device_height) / 2,
-                                  rr_type, ptc);
+    RRNodeId inode = rr_graph.find_node((device_width) / 2, (device_height) / 2,
+                                        rr_type, ptc);
 
-    if (inode == OPEN) {
-        inode = get_rr_node_index(L_rr_node_indices, (device_width) / 4, (device_height) / 4,
-                                  rr_type, ptc);
+    if (inode == RRNodeId::INVALID()) {
+        inode = rr_graph.find_node((device_width) / 4, (device_height) / 4,
+                                   rr_type, ptc);
     }
-    if (inode == OPEN) {
-        inode = get_rr_node_index(L_rr_node_indices, (device_width) / 4 * 3, (device_height) / 4 * 3,
-                                  rr_type, ptc);
+    if (inode == RRNodeId::INVALID()) {
+        inode = rr_graph.find_node((device_width) / 4 * 3, (device_height) / 4 * 3,
+                                   rr_type, ptc);
     }
-    if (inode == OPEN) {
+    if (inode == RRNodeId::INVALID()) {
         auto& device_ctx = g_vpr_ctx.device();
 
         for (int x = 0; x < device_width; ++x) {
@@ -1375,11 +1375,11 @@ int find_average_rr_node_index(int device_width,
                 if (is_io_type(device_ctx.grid[x][y].type))
                     continue;
 
-                inode = get_rr_node_index(L_rr_node_indices, x, y, rr_type, ptc);
-                if (inode != OPEN)
+                inode = rr_graph.find_node(x, y, rr_type, ptc);
+                if (inode != RRNodeId::INVALID())
                     break;
             }
-            if (inode != OPEN)
+            if (inode != RRNodeId::INVALID())
                 break;
         }
     }

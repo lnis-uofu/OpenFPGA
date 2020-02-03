@@ -73,11 +73,11 @@ int get_rr_node_index(const t_rr_node_indices& L_rr_node_indices,
                       int ptc,
                       e_side side = NUM_SIDES);
 
-int find_average_rr_node_index(int device_width,
-                               int device_height,
-                               t_rr_type rr_type,
-                               int ptc,
-                               const t_rr_node_indices& L_rr_node_indices);
+RRNodeId find_average_rr_node_index(int device_width,
+                                    int device_height,
+                                    t_rr_type rr_type,
+                                    int ptc,
+                                    const RRGraph& rr_graph);
 
 t_seg_details* alloc_and_load_seg_details(int* max_chan_width,
                                           const int max_len,
