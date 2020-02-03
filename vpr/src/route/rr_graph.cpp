@@ -591,13 +591,11 @@ static void build_rr_graph(const t_graph_type graph_type,
     /* Alloc node lookups, count nodes, alloc rr nodes */
     int num_rr_nodes = 0;
 
-    /* Xifan Tang - Keep the node indices here since it counts the number of rr_nodes 
-     * We will simplify this function as indices will be built inside the RRGraph object
+    /* Xifan Tang - 
+     * We create all the nodes in the RRGraph object here
      */
-    device_ctx.rr_node_indices = alloc_and_load_rr_node_indices(max_chan_width, grid,
-                                                                &num_rr_nodes, chan_details_x, chan_details_y);
-    /* Reserve the node for the RRGraph object */
-    device_ctx.rr_graph.reserve_node(num_rr_nodes);
+    device_ctx.rr_graph = alloc_and_load_rr_node_indices(max_chan_width, grid,
+                                                         &num_rr_nodes, chan_details_x, chan_details_y);
 
     /* These are data structures used by the the unidir opin mapping. They are used
      * to spread connections evenly for each segment type among the available

@@ -39,11 +39,11 @@ typedef vtr::NdMatrix<short, 6> t_sblock_pattern;
 
 /******************* Subroutines exported by rr_graph2.c *********************/
 
-t_rr_node_indices alloc_and_load_rr_node_indices(const int max_chan_width,
-                                                 const DeviceGrid& grid,
-                                                 int* index,
-                                                 const t_chan_details& chan_details_x,
-                                                 const t_chan_details& chan_details_y);
+RRGraph alloc_and_load_rr_node_indices(const int max_chan_width,
+                                       const DeviceGrid& grid,
+                                       int* index,
+                                       const t_chan_details& chan_details_x,
+                                       const t_chan_details& chan_details_y);
 
 int get_rr_node_index(int x,
                       int y,
