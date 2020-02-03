@@ -15,21 +15,21 @@ enum e_seg_details_type {
 };
 
 struct t_rr_edge_info {
-    t_rr_edge_info(int from, int to, short type) noexcept
+    t_rr_edge_info(const RRNodeId& from, const RRNodeId& to, const short& type) noexcept
         : from_node(from)
         , to_node(to)
         , switch_type(type) {}
 
-    int from_node = OPEN;
-    int to_node = OPEN;
+    RRNodeId from_node = RRNodeId::INVALID();
+    RRNodeId to_node = RRNodeId::INVALID();
     short switch_type = OPEN;
 
     friend bool operator<(const t_rr_edge_info& lhs, const t_rr_edge_info& rhs) {
-        return std::tie(lhs.from_node, lhs.to_node, lhs.switch_type) < std::tie(rhs.from_node, rhs.to_node, rhs.switch_type);
+        return std::tie(size_t(lhs.from_node), size_t(lhs.to_node), lhs.switch_type) < std::tie(size_t(rhs.from_node), size_t(rhs.to_node), rhs.switch_type);
     }
 
     friend bool operator==(const t_rr_edge_info& lhs, const t_rr_edge_info& rhs) {
-        return std::tie(lhs.from_node, lhs.to_node, lhs.switch_type) == std::tie(rhs.from_node, rhs.to_node, rhs.switch_type);
+        return std::tie(size_t(lhs.from_node), size_t(lhs.to_node), lhs.switch_type) == std::tie(size_t(rhs.from_node), size_t(rhs.to_node), rhs.switch_type);
     }
 };
 
@@ -158,21 +158,21 @@ int get_unidir_opin_connections(const int chan,
                                 const int seg_type_index,
                                 const t_rr_type chan_type,
                                 const t_chan_seg_details* seg_details,
-                                const int from_rr_node,
+                                const RRNodeId& from_rr_node,
                                 t_rr_edge_info_set& rr_edges_to_create,
                                 vtr::NdMatrix<int, 3>& Fc_ofs,
                                 const int max_len,
                                 const int max_chan_width,
-                                const t_rr_node_indices& L_rr_node_indices,
+                                const RRGraph& rr_graph,
                                 bool* Fc_clipped);
 
 int get_track_to_pins(int seg,
                       int chan,
                       int track,
                       int tracks_per_chan,
-                      int from_rr_node,
+                      const RRNodeId& from_rr_node,
                       t_rr_edge_info_set& rr_edges_to_create,
-                      const t_rr_node_indices& L_rr_node_indices,
+                      const RRGraph& rr_graph,
                       const t_track_to_pin_lookup& track_to_pin_lookup,
                       const t_chan_seg_details* seg_details,
                       enum e_rr_type chan_type,
@@ -191,13 +191,13 @@ int get_track_to_tracks(const int from_chan,
                         const DeviceGrid& grid,
                         const int Fs_per_side,
                         t_sblock_pattern& sblock_pattern,
-                        const int from_rr_node,
+                        const RRNodeId& from_rr_node,
                         t_rr_edge_info_set& rr_edges_to_create,
                         const t_chan_seg_details* from_seg_details,
                         const t_chan_seg_details* to_seg_details,
                         const t_chan_details& to_chan_details,
                         const enum e_directionality directionality,
-                        const t_rr_node_indices& L_rr_node_indices,
+                        const RRGraph& rr_graph,
                         const vtr::NdMatrix<std::vector<int>, 3>& switch_block_conn,
                         t_sb_connection_map* sb_conn_map);
 

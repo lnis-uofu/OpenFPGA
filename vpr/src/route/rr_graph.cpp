@@ -108,7 +108,7 @@ static void build_bidir_rr_opins(const int i,
                                  const int j,
                                  const e_side side,
                                  const t_rr_node_indices& L_rr_node_indices,
-                                 const std::vector<t_rr_node>& rr_nodes,
+                                 const RRGraph& rr_nodes,
                                  const t_pin_to_track_lookup& opin_to_track_map,
                                  const std::vector<vtr::Matrix<int>>& Fc_out,
                                  t_rr_edge_info_set& created_rr_edges,
@@ -139,20 +139,20 @@ static void build_unidir_rr_opins(const int i,
                                   const t_clb_to_clb_directs* clb_to_clb_directs,
                                   const int num_seg_types);
 
-static int get_opin_direct_connecions(int x,
-                                      int y,
-                                      e_side side,
-                                      int opin,
-                                      int from_rr_node,
-                                      t_rr_edge_info_set& rr_edges_to_create,
-                                      const t_rr_node_indices& L_rr_node_indices,
-                                      const std::vector<t_rr_node>& rr_nodes,
-                                      const t_direct_inf* directs,
-                                      const int num_directs,
-                                      const t_clb_to_clb_directs* clb_to_clb_directs);
+static int get_opin_direct_connections(int x,
+                                       int y,
+                                       e_side side,
+                                       int opin,
+                                       const RRNodeId& from_rr_node,
+                                       t_rr_edge_info_set& rr_edges_to_create,
+                                       const t_rr_node_indices& L_rr_node_indices,
+                                       const RRGraph& rr_nodes,
+                                       const t_direct_inf* directs,
+                                       const int num_directs,
+                                       const t_clb_to_clb_directs* clb_to_clb_directs);
 
 static void alloc_and_load_rr_graph(const int num_nodes,
-                                    std::vector<t_rr_node>& L_rr_node,
+                                    RRGraph& rr_graph,
                                     const int num_seg_types,
                                     const t_chan_details& chan_details_x,
                                     const t_chan_details& chan_details_y,
@@ -212,7 +212,7 @@ static std::vector<std::vector<bool>> alloc_and_load_perturb_ipins(const int L_n
 
 static void build_rr_sinks_sources(const int i,
                                    const int j,
-                                   std::vector<t_rr_node>& L_rr_node,
+                                   RRGraph& rr_graph,
                                    t_rr_edge_info_set& rr_edges_to_create,
                                    const t_rr_node_indices& L_rr_node_indices,
                                    const int delayless_switch,
@@ -234,13 +234,13 @@ static void build_rr_chan(const int i,
                           const t_chan_details& chan_details_y,
                           const t_rr_node_indices& L_rr_node_indices,
                           t_rr_edge_info_set& created_rr_edges,
-                          std::vector<t_rr_node>& L_rr_node,
+                          RRGraph& rr_graph,
                           const int wire_to_ipin_switch,
                           const enum e_directionality directionality);
 
 void uniquify_edges(t_rr_edge_info_set& rr_edges_to_create);
 
-void alloc_and_load_edges(std::vector<t_rr_node>& L_rr_node,
+void alloc_and_load_edges(RRGraph& rr_graph,
                           const t_rr_edge_info_set& rr_edges_to_create);
 
 static void alloc_and_load_rr_switch_inf(const int num_arch_switches,
@@ -278,9 +278,9 @@ static std::vector<vtr::Matrix<int>> alloc_and_load_actual_fc(const std::vector<
                                                               const enum e_directionality directionality,
                                                               bool* Fc_clipped);
 
-static int pick_best_direct_connect_target_rr_node(const std::vector<t_rr_node>& rr_nodes,
-                                                   int from_rr,
-                                                   const std::vector<int>& candidate_rr_nodes);
+static RRNodeId pick_best_direct_connect_target_rr_node(const RRGraph& rr_graph,
+                                                        const RRNodeId& from_rr,
+                                                        const std::vector<RRNodeId>& candidate_rr_nodes);
 
 static void process_non_config_sets();
 
@@ -336,7 +336,7 @@ void create_rr_graph(const t_graph_type graph_type,
                          det_routing_arch->read_rr_graph_filename.c_str());
 
             /* Xifan Tang - Create rr_graph object: load rr_nodes to the object */
-            convert_rr_graph(segment_inf);
+            //convert_rr_graph(segment_inf);
         }
     } else {
         if (channel_widths_unchanged(device_ctx.chan_width, nodes_per_chan) && !device_ctx.rr_nodes.empty()) {
@@ -591,9 +591,13 @@ static void build_rr_graph(const t_graph_type graph_type,
     /* Alloc node lookups, count nodes, alloc rr nodes */
     int num_rr_nodes = 0;
 
+    /* Xifan Tang - Keep the node indices here since it counts the number of rr_nodes 
+     * We will simplify this function as indices will be built inside the RRGraph object
+     */
     device_ctx.rr_node_indices = alloc_and_load_rr_node_indices(max_chan_width, grid,
                                                                 &num_rr_nodes, chan_details_x, chan_details_y);
-    device_ctx.rr_nodes.resize(num_rr_nodes);
+    /* Reserve the node for the RRGraph object */
+    device_ctx.rr_graph.reserve_node(num_rr_nodes);
 
     /* These are data structures used by the the unidir opin mapping. They are used
      * to spread connections evenly for each segment type among the available
@@ -692,7 +696,7 @@ static void build_rr_graph(const t_graph_type graph_type,
     /* END OPIN MAP */
 
     bool Fc_clipped = false;
-    alloc_and_load_rr_graph(device_ctx.rr_nodes.size(), device_ctx.rr_nodes, segment_inf.size(),
+    alloc_and_load_rr_graph(device_ctx.rr_graph.nodes().size(), device_ctx.rr_graph, segment_inf.size(),
                             chan_details_x, chan_details_y,
                             track_to_pin_lookup, opin_to_track_map,
                             switch_block_conn, sb_conn_map, grid, Fs, unidir_sb_pattern,
@@ -708,14 +712,14 @@ static void build_rr_graph(const t_graph_type graph_type,
 
     /* Update rr_nodes capacities if global routing */
     if (graph_type == GRAPH_GLOBAL) {
-        for (size_t i = 0; i < device_ctx.rr_nodes.size(); i++) {
-            if (device_ctx.rr_nodes[i].type() == CHANX) {
-                int ylow = device_ctx.rr_nodes[i].ylow();
-                device_ctx.rr_nodes[i].set_capacity(nodes_per_chan.x_list[ylow]);
+        for (const RRNodeId& inode : device_ctx.rr_graph.nodes()) {
+            if (device_ctx.rr_graph.node_type(inode) == CHANX) {
+                int ylow = device_ctx.rr_graph.node_ylow(inode);
+                device_ctx.rr_graph.set_node_capacity(inode, nodes_per_chan.x_list[ylow]);
             }
-            if (device_ctx.rr_nodes[i].type() == CHANY) {
-                int xlow = device_ctx.rr_nodes[i].xlow();
-                device_ctx.rr_nodes[i].set_capacity(nodes_per_chan.y_list[xlow]);
+            if (device_ctx.rr_graph.node_type(inode) == CHANY) {
+                int xlow = device_ctx.rr_graph.node_xlow(inode);
+                device_ctx.rr_graph.set_node_capacity(inode, nodes_per_chan.y_list[xlow]);
             }
         }
     }
@@ -726,7 +730,16 @@ static void build_rr_graph(const t_graph_type graph_type,
 
     //Partition the rr graph edges for efficient access to configurable/non-configurable
     //edge subsets. Must be done after RR switches have been allocated
-    partition_rr_graph_edges(device_ctx);
+    device_ctx.rr_graph.rebuild_node_edges();
+
+    /* Essential check for rr_graph, build look-up and  */
+    if (false == device_ctx.rr_graph.validate()) {
+        /* Error out if built-in validator of rr_graph fails */
+        vpr_throw(VPR_ERROR_ROUTE,
+                  __FILE__,
+                  __LINE__,
+                  "Fundamental errors occurred when validating rr_graph object!\n");
+    }
 
     //Save the channel widths for the newly constructed graph
     device_ctx.chan_width = nodes_per_chan;
@@ -735,6 +748,14 @@ static void build_rr_graph(const t_graph_type graph_type,
                        *wire_to_rr_ipin_switch, base_cost_type);
 
     check_rr_graph(graph_type, grid, types);
+    /* Error out if advanced checker of rr_graph fails */
+    if (false == check_rr_graph(device_ctx.rr_graph)) {
+        vpr_throw(VPR_ERROR_ROUTE,
+                  __FILE__,
+                  __LINE__,
+                  "Advanced checking rr_graph object fails! Routing may still work "
+                  "but not smooth\n");
+    }
 
     /* Free all temp structs */
     if (seg_details) {
@@ -829,11 +850,11 @@ static void alloc_rr_switch_inf(t_arch_switch_fanin& arch_switch_fanins) {
         //
         //Note that since we don't store backward edge info in the RR graph we need to walk
         //the whole graph to get the per-switch-type fanin info
-        std::vector<vtr::flat_map<int, int>> inward_switch_inf(device_ctx.rr_nodes.size()); //[to_node][arch_switch] -> fanin
-        for (size_t inode = 0; inode < device_ctx.rr_nodes.size(); ++inode) {
-            for (auto iedge : device_ctx.rr_nodes[inode].edges()) {
-                int iswitch = device_ctx.rr_nodes[inode].edge_switch(iedge);
-                int to_node = device_ctx.rr_nodes[inode].edge_sink_node(iedge);
+        std::vector<vtr::flat_map<RRNodeId, int>> inward_switch_inf(device_ctx.rr_graph.nodes().size()); //[to_node][arch_switch] -> fanin
+        for (const RRNodeId& inode : device_ctx.rr_graph.nodes()) {
+            for (const RREdgeId& iedge : device_ctx.rr_graph.node_out_edges(inode)) {
+                int iswitch = device_ctx.rr_graph.edge_switch(iedge);
+                const RRNodeId& to_node = device_ctx.rr_graph.edge_sink_node(iedge);
 
                 if (inward_switch_inf[to_node].count(iswitch) == 0) {
                     inward_switch_inf[to_node][iswitch] = 0;
@@ -843,7 +864,7 @@ static void alloc_rr_switch_inf(t_arch_switch_fanin& arch_switch_fanins) {
         }
 
         //Record the unique switch type/fanin combinations
-        for (size_t inode = 0; inode < device_ctx.rr_nodes.size(); ++inode) {
+        for (const RRNodeId& inode : device_ctx.rr_graph.nodes()) {
             for (auto& switch_fanin : inward_switch_inf[inode]) {
                 int iswitch, fanin;
                 std::tie(iswitch, fanin) = switch_fanin;
@@ -891,6 +912,14 @@ static void load_rr_switch_inf(const int num_arch_switches, const float R_minW_n
             load_rr_switch_from_arch_switch(i_arch_switch, i_rr_switch, fanin, R_minW_nmos, R_minW_pmos);
         }
     }
+  
+    /* Create switches as internal data of RRGraph object */
+    device_ctx.rr_graph.reserve_switches(device_ctx.rr_switch_inf.size());
+    // Create the switches
+    for (size_t iswitch = 0; iswitch < device_ctx.rr_switch_inf.size(); ++iswitch) {
+        device_ctx.rr_graph.create_switch(device_ctx.rr_switch_inf[iswitch]);
+    }
+
 }
 
 void load_rr_switch_from_arch_switch(int arch_switch_idx,
@@ -931,14 +960,13 @@ void load_rr_switch_from_arch_switch(int arch_switch_idx,
 static void remap_rr_node_switch_indices(const t_arch_switch_fanin& switch_fanin) {
     auto& device_ctx = g_vpr_ctx.mutable_device();
 
-    for (size_t inode = 0; inode < device_ctx.rr_nodes.size(); inode++) {
-        auto& from_node = device_ctx.rr_nodes[inode];
-        int num_edges = from_node.num_edges();
-        for (int iedge = 0; iedge < num_edges; iedge++) {
-            const t_rr_node& to_node = device_ctx.rr_nodes[from_node.edge_sink_node(iedge)];
+    for (const RRNodeId& inode : device_ctx.rr_graph.nodes()) {
+        const RRNodeId& from_node = inode;
+        for (const RREdgeId& iedge : device_ctx.rr_graph.node_out_edges(from_node)) {
+            const RRNodeId& to_node = device_ctx.rr_graph.edge_sink_node(iedge);
             /* get the switch which this edge uses and its fanin */
-            int switch_index = from_node.edge_switch(iedge);
-            int fanin = to_node.fan_in();
+            int switch_index = device_ctx.rr_graph.edge_switch(iedge);
+            int fanin = device_ctx.rr_graph.node_in_edges(to_node).size();
 
             if (switch_fanin[switch_index].count(UNDEFINED) == 1) {
                 fanin = UNDEFINED;
@@ -949,7 +977,7 @@ static void remap_rr_node_switch_indices(const t_arch_switch_fanin& switch_fanin
 
             int rr_switch_index = itr->second;
 
-            from_node.set_edge_switch(iedge, rr_switch_index);
+            device_ctx.rr_graph.set_edge_switch(iedge, rr_switch_index);
         }
     }
 }
@@ -961,7 +989,7 @@ static void rr_graph_externals(const std::vector<t_segment_inf>& segment_inf,
     auto& device_ctx = g_vpr_ctx.device();
 
     add_rr_graph_C_from_switches(device_ctx.rr_switch_inf[wire_to_rr_ipin_switch].Cin);
-    alloc_and_load_rr_indexed_data(segment_inf, device_ctx.rr_node_indices,
+    alloc_and_load_rr_indexed_data(segment_inf, device_ctx.rr_graph,
                                    max_chan_width, wire_to_rr_ipin_switch, base_cost_type);
     load_rr_index_segments(segment_inf.size());
 }
@@ -1187,7 +1215,7 @@ static void free_type_track_to_pin_map(t_track_to_pin_lookup& track_to_pin_map,
 /* Does the actual work of allocating the rr_graph and filling all the *
  * appropriate values.  Everything up to this was just a prelude!      */
 static void alloc_and_load_rr_graph(const int num_nodes,
-                                    std::vector<t_rr_node>& L_rr_node,
+                                    RRGraph& rr_graph,
                                     const int num_seg_types,
                                     const t_chan_details& chan_details_x,
                                     const t_chan_details& chan_details_y,
@@ -1233,12 +1261,12 @@ static void alloc_and_load_rr_graph(const int num_nodes,
     /* Connection SINKS and SOURCES to their pins. */
     for (size_t i = 0; i < grid.width(); ++i) {
         for (size_t j = 0; j < grid.height(); ++j) {
-            build_rr_sinks_sources(i, j, L_rr_node, rr_edges_to_create, L_rr_node_indices,
+            build_rr_sinks_sources(i, j, rr_graph, rr_edges_to_create, L_rr_node_indices,
                                    delayless_switch, grid);
 
             //Create the actual SOURCE->OPIN, IPIN->SINK edges
             uniquify_edges(rr_edges_to_create);
-            alloc_and_load_edges(L_rr_node, rr_edges_to_create);
+            alloc_and_load_edges(rr_graph, rr_edges_to_create);
             rr_edges_to_create.clear();
         }
     }
@@ -1248,7 +1276,7 @@ static void alloc_and_load_rr_graph(const int num_nodes,
         for (size_t j = 0; j < grid.height(); ++j) {
             for (e_side side : SIDES) {
                 if (BI_DIRECTIONAL == directionality) {
-                    build_bidir_rr_opins(i, j, side, L_rr_node_indices, L_rr_node,
+                    build_bidir_rr_opins(i, j, side, L_rr_node_indices, rr_graph,
                                          opin_to_track_map, Fc_out, rr_edges_to_create, chan_details_x, chan_details_y,
                                          grid,
                                          directs, num_directs, clb_to_clb_directs, num_seg_types);
@@ -1266,7 +1294,7 @@ static void alloc_and_load_rr_graph(const int num_nodes,
 
                 //Create the actual OPIN->CHANX/CHANY edges
                 uniquify_edges(rr_edges_to_create);
-                alloc_and_load_edges(L_rr_node, rr_edges_to_create);
+                alloc_and_load_edges(rr_graph, rr_edges_to_create);
                 rr_edges_to_create.clear();
             }
         }
@@ -1282,13 +1310,13 @@ static void alloc_and_load_rr_graph(const int num_nodes,
                               CHANX_COST_INDEX_START,
                               max_chan_width, grid, tracks_per_chan,
                               sblock_pattern, Fs / 3, chan_details_x, chan_details_y,
-                              L_rr_node_indices, rr_edges_to_create, L_rr_node,
+                              L_rr_node_indices, rr_edges_to_create, rr_graph,
                               wire_to_ipin_switch,
                               directionality);
 
                 //Create the actual CHAN->CHAN edges
                 uniquify_edges(rr_edges_to_create);
-                alloc_and_load_edges(L_rr_node, rr_edges_to_create);
+                alloc_and_load_edges(rr_graph, rr_edges_to_create);
                 rr_edges_to_create.clear();
             }
             if (j > 0) {
@@ -1297,26 +1325,25 @@ static void alloc_and_load_rr_graph(const int num_nodes,
                               CHANX_COST_INDEX_START + num_seg_types,
                               max_chan_width, grid, tracks_per_chan,
                               sblock_pattern, Fs / 3, chan_details_x, chan_details_y,
-                              L_rr_node_indices, rr_edges_to_create, L_rr_node,
+                              L_rr_node_indices, rr_edges_to_create, rr_graph,
                               wire_to_ipin_switch,
                               directionality);
 
                 //Create the actual CHAN->CHAN edges
                 uniquify_edges(rr_edges_to_create);
-                alloc_and_load_edges(L_rr_node, rr_edges_to_create);
+                alloc_and_load_edges(rr_graph, rr_edges_to_create);
                 rr_edges_to_create.clear();
             }
         }
     }
 
-    init_fan_in(L_rr_node, num_nodes);
 }
 
 static void build_bidir_rr_opins(const int i,
                                  const int j,
                                  const e_side side,
                                  const t_rr_node_indices& L_rr_node_indices,
-                                 const std::vector<t_rr_node>& rr_nodes,
+                                 const RRGraph& rr_graph,
                                  const t_pin_to_track_lookup& opin_to_track_map,
                                  const std::vector<vtr::Matrix<int>>& Fc_out,
                                  t_rr_edge_info_set& rr_edges_to_create,
@@ -1358,20 +1385,20 @@ static void build_bidir_rr_opins(const int i,
             total_pin_Fc += Fc[pin_index][iseg];
         }
 
-        int node_index = get_rr_node_index(L_rr_node_indices, i, j, OPIN, pin_index, side);
+        RRNodeId node_index = rr_graph.find_node(i, j, OPIN, pin_index, side);
         VTR_ASSERT(node_index >= 0);
 
         if (total_pin_Fc > 0) {
             get_bidir_opin_connections(i, j, pin_index,
-                                       node_index, rr_edges_to_create, opin_to_track_map, L_rr_node_indices,
+                                       node_index, rr_edges_to_create, opin_to_track_map, rr_graph,
                                        chan_details_x,
                                        chan_details_y);
         }
 
         /* Add in direct connections */
-        get_opin_direct_connecions(i, j, side, pin_index,
-                                   node_index, rr_edges_to_create, L_rr_node_indices, rr_nodes,
-                                   directs, num_directs, clb_to_clb_directs);
+        get_opin_direct_connections(i, j, side, pin_index,
+                                    node_index, rr_edges_to_create, L_rr_node_indices, rr_nodes,
+                                    directs, num_directs, clb_to_clb_directs);
     }
 }
 
@@ -1412,7 +1439,7 @@ void free_rr_graph() {
 
 static void build_rr_sinks_sources(const int i,
                                    const int j,
-                                   std::vector<t_rr_node>& L_rr_node,
+                                   RRGraph& rr_graph,
                                    t_rr_edge_info_set& rr_edges_to_create,
                                    const t_rr_node_indices& L_rr_node_indices,
                                    const int delayless_switch,
@@ -1433,18 +1460,18 @@ static void build_rr_sinks_sources(const int i,
 
     /* SINK and SOURCE-to-OPIN edges */
     for (int iclass = 0; iclass < num_class; ++iclass) {
-        int inode = 0;
+        RRNodeId inode = 0;
         if (class_inf[iclass].type == DRIVER) { /* SOURCE */
-            inode = get_rr_node_index(L_rr_node_indices, i, j, SOURCE, iclass);
+            inode = rr_graph.find_node(i, j, SOURCE, iclass);
 
             //Retrieve all the physical OPINs associated with this source, this includes
             //those at different grid tiles of this block
-            std::vector<int> opin_nodes;
+            std::vector<RRNodeId> opin_nodes;
             for (int width_offset = 0; width_offset < type->width; ++width_offset) {
                 for (int height_offset = 0; height_offset < type->height; ++height_offset) {
                     for (int ipin = 0; ipin < class_inf[iclass].num_pins; ++ipin) {
                         int pin_num = class_inf[iclass].pinlist[ipin];
-                        auto physical_pins = get_rr_node_indices(L_rr_node_indices, i + width_offset, j + height_offset, OPIN, pin_num);
+                        auto physical_pins = find_rr_graph_nodes(rr_graph, i + width_offset, j + height_offset, OPIN, pin_num);
                         opin_nodes.insert(opin_nodes.end(), physical_pins.begin(), physical_pins.end());
                     }
                 }
@@ -1455,11 +1482,10 @@ static void build_rr_sinks_sources(const int i,
                 rr_edges_to_create.emplace_back(inode, opin_nodes[iedge], delayless_switch);
             }
 
-            L_rr_node[inode].set_cost_index(SOURCE_COST_INDEX);
-            L_rr_node[inode].set_type(SOURCE);
+            rr_graph.set_node_cost_index(inode, SOURCE_COST_INDEX);
         } else { /* SINK */
             VTR_ASSERT(class_inf[iclass].type == RECEIVER);
-            inode = get_rr_node_index(L_rr_node_indices, i, j, SINK, iclass);
+            inode = rr_graph.find_node(L_rr_node_indices, i, j, SINK, iclass);
 
             /* NOTE:  To allow route throughs through clbs, change the lines below to  *
              * make an edge from the input SINK to the output SOURCE.  Do for just the *
@@ -1468,19 +1494,16 @@ static void build_rr_sinks_sources(const int i,
              * base cost of OPINs and/or SOURCES so they aren't used excessively.      */
 
             /* Initialize to unconnected */
-            L_rr_node[inode].set_num_edges(0);
-
-            L_rr_node[inode].set_cost_index(SINK_COST_INDEX);
-            L_rr_node[inode].set_type(SINK);
+            rr_graph.set_node_cost_index(RRNodeId(inode), SINK_COST_INDEX);
         }
 
         /* Things common to both SOURCEs and SINKs.   */
-        L_rr_node[inode].set_capacity(class_inf[iclass].num_pins);
-        L_rr_node[inode].set_coordinates(i, j, i + type->width - 1, j + type->height - 1);
+        rr_graph.set_node_capacity(inode, class_inf[iclass].num_pins);
+        rr_graph.set_node_bounding_box(inode, vtr::Rect<short>(i, j, i + type->width - 1, j + type->height - 1));
         float R = 0.;
         float C = 0.;
-        L_rr_node[inode].set_rc_index(find_create_rr_rc_data(R, C));
-        L_rr_node[inode].set_ptc_num(iclass);
+        rr_graph.set_node_rc_index(inode, find_create_rr_rc_data(R, C));
+        rr_graph.set_node_ptc_num(inode, iclass);
     }
 
     /* Connect IPINS to SINKS and initialize OPINS */
@@ -1496,40 +1519,38 @@ static void build_rr_sinks_sources(const int i,
 
                         if (class_inf[iclass].type == RECEIVER) {
                             //Connect the input pin to the sink
-                            inode = get_rr_node_index(L_rr_node_indices, i + width_offset, j + height_offset, IPIN, ipin, side);
+                            inode = rr_graph.find_node(i + width_offset, j + height_offset, IPIN, ipin, side);
 
-                            int to_node = get_rr_node_index(L_rr_node_indices, i, j, SINK, iclass);
+                            RRNodeId to_node = rr_graph.find_node(i, j, SINK, iclass);
 
                             //Add info about the edge to be created
                             rr_edges_to_create.emplace_back(inode, to_node, delayless_switch);
 
                             VTR_ASSERT(inode >= 0);
-                            L_rr_node[inode].set_cost_index(IPIN_COST_INDEX);
-                            L_rr_node[inode].set_type(IPIN);
+                            rr_graph.set_node_cost_index(IPIN_COST_INDEX);
 
                         } else {
                             VTR_ASSERT(class_inf[iclass].type == DRIVER);
                             //Initialize the output pin
                             // Note that we leave it's out-going edges unconnected (they will be hooked up to global routing later)
-                            inode = get_rr_node_index(L_rr_node_indices, i + width_offset, j + height_offset, OPIN, ipin, side);
+                            inode = rr_graph.find_node(i + width_offset, j + height_offset, OPIN, ipin, side);
 
                             //Initially left unconnected
 
-                            L_rr_node[inode].set_cost_index(OPIN_COST_INDEX);
-                            L_rr_node[inode].set_type(OPIN);
+                            rr_graph.set_node_cost_index(inode, OPIN_COST_INDEX);
                         }
 
                         /* Common to both DRIVERs and RECEIVERs */
-                        L_rr_node[inode].set_capacity(1);
+                        rr_graph.set_node_capacity(inode, 1);
                         float R = 0.;
                         float C = 0.;
-                        L_rr_node[inode].set_rc_index(find_create_rr_rc_data(R, C));
-                        L_rr_node[inode].set_ptc_num(ipin);
+                        rr_graph.set_node_rc_index(inode, find_create_rr_rc_data(R, C));
+                        rr_graph.set_node_ptc_num(inode, ipin);
 
                         //Note that we store the grid tile location and side where the pin is located,
                         //which greatly simplifies the drawing code
-                        L_rr_node[inode].set_coordinates(i + width_offset, j + height_offset, i + width_offset, j + height_offset);
-                        L_rr_node[inode].set_side(side);
+                        rr_graph.set_node_bounding_box(inode, vtr::Rect<short>(i + width_offset, j + height_offset, i + width_offset, j + height_offset));
+                        rr_graph.set_node_side(inode, side);
 
                         VTR_ASSERT(type->pinloc[width_offset][height_offset][L_rr_node[inode].side()][L_rr_node[inode].pin_num()]);
                     }
@@ -1577,7 +1598,7 @@ static void build_rr_chan(const int x_coord,
                           const t_chan_details& chan_details_y,
                           const t_rr_node_indices& L_rr_node_indices,
                           t_rr_edge_info_set& rr_edges_to_create,
-                          std::vector<t_rr_node>& L_rr_node,
+                          RRGraph& rr_graph,
                           const int wire_to_ipin_switch,
                           const enum e_directionality directionality) {
     /* this function builds both x and y-directed channel segments, so set up our
@@ -1632,16 +1653,16 @@ static void build_rr_chan(const int x_coord,
             from_seg_details = chan_details_x[start][y_coord].data();
         }
 
-        int node = get_rr_node_index(L_rr_node_indices, x_coord, y_coord, chan_type, track);
+        RRNodeId node = rr_graph.find_node(x_coord, y_coord, chan_type, track);
 
-        if (node == OPEN) {
+        if (node == RRNodeId::INVALID()) {
             continue;
         }
 
         /* Add the edges from this track to all it's connected pins into the list */
         int num_edges = 0;
         num_edges += get_track_to_pins(start, chan_coord, track, tracks_per_chan, node, rr_edges_to_create,
-                                       L_rr_node_indices, track_to_pin_lookup, seg_details, chan_type, seg_dimension,
+                                       rr_graph, track_to_pin_lookup, seg_details, chan_type, seg_dimension,
                                        wire_to_ipin_switch, directionality);
 
         /* get edges going from the current track into channel segments which are perpendicular to it */
@@ -1659,7 +1680,7 @@ static void build_rr_chan(const int x_coord,
                                                  Fs_per_side, sblock_pattern, node, rr_edges_to_create,
                                                  from_seg_details, to_seg_details, opposite_chan_details,
                                                  directionality,
-                                                 L_rr_node_indices,
+                                                 rr_graph,
                                                  switch_block_conn, sb_conn_map);
             }
         }
@@ -1677,7 +1698,7 @@ static void build_rr_chan(const int x_coord,
                                                  Fs_per_side, sblock_pattern, node, rr_edges_to_create,
                                                  from_seg_details, to_seg_details, opposite_chan_details,
                                                  directionality,
-                                                 L_rr_node_indices,
+                                                 rr_graph,
                                                  switch_block_conn, sb_conn_map);
             }
         }
@@ -1707,31 +1728,32 @@ static void build_rr_chan(const int x_coord,
                                                      Fs_per_side, sblock_pattern, node, rr_edges_to_create,
                                                      from_seg_details, to_seg_details, from_chan_details,
                                                      directionality,
-                                                     L_rr_node_indices,
+                                                     rr_graph,
                                                      switch_block_conn, sb_conn_map);
                 }
             }
         }
 
         /* Edge arrays have now been built up.  Do everything else.  */
-        L_rr_node[node].set_cost_index(cost_index_offset + seg_details[track].index());
-        L_rr_node[node].set_capacity(1); /* GLOBAL routing handled elsewhere */
+        rr_graph.node[node].set_node_cost_index(node, cost_index_offset + seg_details[track].index());
+        rr_graph.set_node_capacity(node, 1); /* GLOBAL routing handled elsewhere */
 
         if (chan_type == CHANX) {
-            L_rr_node[node].set_coordinates(start, y_coord, end, y_coord);
+            rr_graph.set_node_bounding_box(node, vtr::Rect<short>(start, y_coord, end, y_coord));
         } else {
             VTR_ASSERT(chan_type == CHANY);
             L_rr_node[node].set_coordinates(x_coord, start, x_coord, end);
+            rr_graph.set_node_bounding_box(node, vtr::Rect<short>(x_coord, start, x_coord, end));
         }
 
         int length = end - start + 1;
         float R = length * seg_details[track].Rmetal();
         float C = length * seg_details[track].Cmetal();
-        L_rr_node[node].set_rc_index(find_create_rr_rc_data(R, C));
+        rr_graph.set_node_rc_index(node, find_create_rr_rc_data(R, C));
 
-        L_rr_node[node].set_ptc_num(track);
-        L_rr_node[node].set_type(chan_type);
-        L_rr_node[node].set_direction(seg_details[track].direction());
+        rr_graph.set_node_ptc_num(node, track);
+        rr_graph.set_node_type(node, chan_type);
+        rr_graph.set_node_direction(node, seg_details[track].direction());
     }
 }
 
@@ -1740,53 +1762,50 @@ void uniquify_edges(t_rr_edge_info_set& rr_edges_to_create) {
     rr_edges_to_create.erase(std::unique(rr_edges_to_create.begin(), rr_edges_to_create.end()), rr_edges_to_create.end());
 }
 
-void alloc_and_load_edges(std::vector<t_rr_node>& L_rr_node,
+void alloc_and_load_edges(RRGraph& rr_graph,
                           const t_rr_edge_info_set& rr_edges_to_create) {
     /* Sets up all the edge related information for rr_node */
 
     struct compare_from_node {
-        auto operator()(const t_rr_edge_info& lhs, const int from_node) {
-            return lhs.from_node < from_node;
+        auto operator()(const t_rr_edge_info& lhs, const RRNodeId& from_node) {
+            return size_t(lhs.from_node) < size_t(from_node);
         }
-        auto operator()(const int from_node, const t_rr_edge_info& rhs) {
-            return from_node < rhs.from_node;
+        auto operator()(const RRNodeId& from_node, const t_rr_edge_info& rhs) {
+            return size_t(from_node) < size_t(rhs.from_node);
         }
     };
 
-    std::set<int> from_nodes;
+    std::set<RRNodeId> from_nodes;
     for (auto& edge : rr_edges_to_create) {
         from_nodes.insert(edge.from_node);
     }
 
     VTR_ASSERT_SAFE(std::is_sorted(rr_edges_to_create.begin(), rr_edges_to_create.end()));
 
-    for (int inode : from_nodes) {
+    for (RRNodeId inode : from_nodes) {
         auto edge_range = std::equal_range(rr_edges_to_create.begin(), rr_edges_to_create.end(), inode, compare_from_node());
 
         size_t edge_count = std::distance(edge_range.first, edge_range.second);
 
-        if (L_rr_node[inode].num_edges() == 0) {
+        if (rr_graph.node_out_edges(inode).size() == 0) {
             //Create initial edges
             //
             //Note that we do this in bulk instead of via add_edge() to reduce
             //memory fragmentation
 
-            L_rr_node[inode].set_num_edges(edge_count);
+            rr_graph.reserve_edges(edge_count + rr_graph.edges().size());
 
-            int iedge = 0;
             for (auto itr = edge_range.first; itr != edge_range.second; ++itr) {
                 VTR_ASSERT(itr->from_node == inode);
 
-                L_rr_node[inode].set_edge_sink_node(iedge, itr->to_node);
-                L_rr_node[inode].set_edge_switch(iedge, itr->switch_type);
-                ++iedge;
+                rr_graph.create_edge(inode, itr->to_node, itr->switch_type);
             }
         } else {
             //Add new edge incrementally
             //
             //This should occur relatively rarely (e.g. a backward bidir edge) so memory fragmentation shouldn't be a big problem
             for (auto itr = edge_range.first; itr != edge_range.second; ++itr) {
-                L_rr_node[inode].add_edge(itr->to_node, itr->switch_type);
+                rr_graph.create_edge(inode, itr->to_node, itr->switch_type);
             }
         }
     }
@@ -2576,7 +2595,7 @@ std::string describe_rr_node(const RRNodeId& inode) {
 
     return msg;
 }
-static void build_unidir_rr_opins(const int i, const int j, const e_side side, const DeviceGrid& grid, const std::vector<vtr::Matrix<int>>& Fc_out, const int max_chan_width, const t_chan_details& chan_details_x, const t_chan_details& chan_details_y, vtr::NdMatrix<int, 3>& Fc_xofs, vtr::NdMatrix<int, 3>& Fc_yofs, t_rr_edge_info_set& rr_edges_to_create, bool* Fc_clipped, const t_rr_node_indices& L_rr_node_indices, const std::vector<t_rr_node>& rr_nodes, const t_direct_inf* directs, const int num_directs, const t_clb_to_clb_directs* clb_to_clb_directs, const int num_seg_types) {
+static void build_unidir_rr_opins(const int i, const int j, const e_side side, const DeviceGrid& grid, const std::vector<vtr::Matrix<int>>& Fc_out, const int max_chan_width, const t_chan_details& chan_details_x, const t_chan_details& chan_details_y, vtr::NdMatrix<int, 3>& Fc_xofs, vtr::NdMatrix<int, 3>& Fc_yofs, t_rr_edge_info_set& rr_edges_to_create, bool* Fc_clipped, const t_rr_node_indices& L_rr_node_indices, const RRGraph& rr_graph, const t_direct_inf* directs, const int num_directs, const t_clb_to_clb_directs* clb_to_clb_directs, const int num_seg_types) {
     /*
      * This routine adds the edges from opins to channels at the specified
      * grid location (i,j) and grid tile side
@@ -2599,8 +2618,8 @@ static void build_unidir_rr_opins(const int i, const int j, const e_side side, c
             continue;
         }
 
-        int opin_node_index = get_rr_node_index(L_rr_node_indices, i, j, OPIN, pin_index, side);
-        if (opin_node_index < 0) continue; //No valid from node
+        RRNodeId opin_node_index = rr_graph.find_node(i, j, OPIN, pin_index, side);
+        if (false == rr_graph.valid_node_id(opin_node_index)) continue; //No valid from node
 
         for (int iseg = 0; iseg < num_seg_types; iseg++) {
             /* get Fc for this segment type */
@@ -2653,15 +2672,15 @@ static void build_unidir_rr_opins(const int i, const int j, const e_side side, c
                                         opin_node_index,
                                         rr_edges_to_create,
                                         Fc_ofs, max_len, max_chan_width,
-                                        L_rr_node_indices, &clipped);
+                                        rr_graph, &clipped);
             if (clipped) {
                 *Fc_clipped = true;
             }
         }
 
         /* Add in direct connections */
-        get_opin_direct_connecions(i, j, side, pin_index, opin_node_index, rr_edges_to_create, L_rr_node_indices, rr_nodes,
-                                   directs, num_directs, clb_to_clb_directs);
+        get_opin_direct_connections(i, j, side, pin_index, opin_node_index, rr_edges_to_create, L_rr_node_indices, rr_graph,
+                                    directs, num_directs, clb_to_clb_directs);
     }
 }
 
@@ -2804,17 +2823,17 @@ static t_clb_to_clb_directs* alloc_and_load_clb_to_clb_directs(const t_direct_in
  *
  * The current opin is located at (x,y) along the specified side
  */
-static int get_opin_direct_connecions(int x,
-                                      int y,
-                                      e_side side,
-                                      int opin,
-                                      int from_rr_node,
-                                      t_rr_edge_info_set& rr_edges_to_create,
-                                      const t_rr_node_indices& L_rr_node_indices,
-                                      const std::vector<t_rr_node>& rr_nodes,
-                                      const t_direct_inf* directs,
-                                      const int num_directs,
-                                      const t_clb_to_clb_directs* clb_to_clb_directs) {
+static int get_opin_direct_connections(int x,
+                                       int y,
+                                       e_side side,
+                                       int opin,
+                                       const RRNodeId& from_rr_node,
+                                       t_rr_edge_info_set& rr_edges_to_create,
+                                       const t_rr_node_indices& L_rr_node_indices,
+                                       const RRGraph& rr_nodes,
+                                       const t_direct_inf* directs,
+                                       const int num_directs,
+                                       const t_clb_to_clb_directs* clb_to_clb_directs) {
     auto& device_ctx = g_vpr_ctx.device();
 
     t_physical_tile_type_ptr curr_type = device_ctx.grid[x][y].type;
@@ -2889,18 +2908,18 @@ static int get_opin_direct_connecions(int x,
                         //if (ipin > target_type->num_pins) continue; //Invalid z-offset
 
                         /* Add new ipin edge to list of edges */
-                        std::vector<int> inodes;
+                        std::vector<RRNodeId> inodes;
 
                         if (directs[i].to_side != NUM_SIDES) {
                             //Explicit side specified, only create if pin exists on that side
-                            int inode = get_rr_node_index(L_rr_node_indices, x + directs[i].x_offset, y + directs[i].y_offset,
+                            RRNodeId inode = rr_graph.find_node(x + directs[i].x_offset, y + directs[i].y_offset,
                                                           IPIN, ipin, directs[i].to_side);
-                            if (inode != OPEN) {
+                            if (inode != RRNodeId::INVALID()) {
                                 inodes.push_back(inode);
                             }
                         } else {
                             //No side specified, get all candidates
-                            inodes = get_rr_node_indices(L_rr_node_indices, x + directs[i].x_offset, y + directs[i].y_offset,
+                            inodes = rr_graph.find_node(x + directs[i].x_offset, y + directs[i].y_offset,
                                                          IPIN, ipin);
                         }
 
@@ -2909,7 +2928,7 @@ static int get_opin_direct_connecions(int x,
                             //target ipin. We only need to connect to one of them (since the physical pins
                             //are logically equivalent). This also ensures the graphics look reasonable and map
                             //back fairly directly to the architecture file in the case of pin equivalence
-                            int inode = pick_best_direct_connect_target_rr_node(rr_nodes, from_rr_node, inodes);
+                            RRNodeId inode = pick_best_direct_connect_target_rr_node(rr_graph, from_rr_node, inodes);
 
                             rr_edges_to_create.emplace_back(from_rr_node, inode, clb_to_clb_directs[i].switch_index);
                             ++num_pins;
@@ -3023,9 +3042,9 @@ static std::vector<bool> alloc_and_load_perturb_opins(const t_physical_tile_type
     return perturb_opins;
 }
 
-static int pick_best_direct_connect_target_rr_node(const std::vector<t_rr_node>& rr_nodes,
-                                                   int from_rr,
-                                                   const std::vector<int>& candidate_rr_nodes) {
+static RRNodeId pick_best_direct_connect_target_rr_node(const RRGraph& rr_nodes,
+                                                        const RRNodeId& from_rr,
+                                                        const std::vector<RRNodeId>& candidate_rr_nodes) {
     //With physically equivalent pins there may be multiple candidate rr nodes (which are equivalent)
     //to connect the direct edge to.
     //As a result it does not matter (from a correctness standpoint) which is picked.
@@ -3035,18 +3054,18 @@ static int pick_best_direct_connect_target_rr_node(const std::vector<t_rr_node>&
     //
     //This function attempts to pick the 'best/closest' of the candidates.
 
-    VTR_ASSERT(rr_nodes[from_rr].type() == OPIN);
-    e_side from_side = rr_nodes[from_rr].side();
+    VTR_ASSERT(rr_graph.node_type(from_rr) == OPIN);
+    e_side from_side = rr_graph.node_side(from_rr);
 
     float best_dist = std::numeric_limits<float>::infinity();
-    int best_rr = OPEN;
+    RRNodeId best_rr = RRNodeId::INVALID();
 
     for (int to_rr : candidate_rr_nodes) {
-        VTR_ASSERT(rr_nodes[to_rr].type() == IPIN);
-        float to_dist = std::abs(rr_nodes[from_rr].xlow() - rr_nodes[to_rr].xlow())
-                        + std::abs(rr_nodes[from_rr].ylow() - rr_nodes[to_rr].ylow());
+        VTR_ASSERT(rr_graph.node_type(to_rr) == IPIN);
+        float to_dist = std::abs(rr_graph.node_xlow(from_rr) - rr_graph.node_xlow(to_rr))
+                        + std::abs(rr_graph.node_ylow(from_rr) - rr_graph.node_ylow(to_rr));
 
-        e_side to_side = rr_nodes[to_rr].side();
+        e_side to_side = rr_graph.node_side(to_rr);
 
         //Include a partial unit of distance based on side alignment to ensure
         //we preferr facing sides
@@ -3072,7 +3091,7 @@ static int pick_best_direct_connect_target_rr_node(const std::vector<t_rr_node>&
         }
     }
 
-    VTR_ASSERT(best_rr != OPEN);
+    VTR_ASSERT(best_rr != RRNodeId::INVALID());
 
     return best_rr;
 }
