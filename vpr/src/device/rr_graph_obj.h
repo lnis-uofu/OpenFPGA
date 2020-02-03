@@ -890,8 +890,11 @@ class RRGraph {
     vtr::vector<RRNodeId, std::unique_ptr<RREdgeId[]>> node_edges_;
 
     /* Edge related data */
-    size_t num_edges_;                              /* Range of edge ids */
-    std::unordered_set<RREdgeId> invalid_edge_ids_; /* Invalid edge ids */
+    /* Range of edge ids, use the unsigned long as 
+     * the number of edges could be >10 times larger than the number of nodes! 
+     */
+    unsigned long num_edges_;                         
+    std::unordered_set<RREdgeId> invalid_edge_ids_;   /* Invalid edge ids */
     vtr::vector<RREdgeId, RRNodeId> edge_src_nodes_;
     vtr::vector<RREdgeId, RRNodeId> edge_sink_nodes_;
     vtr::vector<RREdgeId, RRSwitchId> edge_switches_;
