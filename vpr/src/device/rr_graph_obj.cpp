@@ -65,24 +65,10 @@ short RRGraph::node_ylow(const RRNodeId& node) const {
 }
 
 short RRGraph::node_xhigh(const RRNodeId& node) const {
-    /* Special for SOURCE and SINK node, we always return the xlow 
-     * This is due to the convention in creating RRGraph 
-     * so that we can guarantee unique SOURCE/SINK nodes searching 
-    if (  (SOURCE == node_type(node))
-       || (SINK == node_type(node)) ) {
-      return node_bounding_box(node).xmin();
-    }
-     */
     return node_bounding_box(node).xmax();
 }
 
 short RRGraph::node_yhigh(const RRNodeId& node) const {
-    /*
-    if (  (SOURCE == node_type(node))
-       || (SINK == node_type(node)) ) {
-      return node_bounding_box(node).ymin();
-    }
-     */
     return node_bounding_box(node).ymax();
 }
 
@@ -966,6 +952,12 @@ void RRGraph::remove_edge(const RREdgeId& edge) {
     set_dirty();
 }
 
+void RRGraph::set_node_type(const RRNodeId& node, const t_rr_type& type) {
+    VTR_ASSERT(valid_node_id(node));
+
+    node_types_[node] = type;
+}
+
 void RRGraph::set_node_xlow(const RRNodeId& node, const short& xlow) {
     VTR_ASSERT(valid_node_id(node));
 
@@ -1228,52 +1220,29 @@ void RRGraph::build_fast_node_lookup() const {
         /* Special for SOURCE and SINK, we should annotate in the look-up 
          * for all the (x,y) upto (xhigh, yhigh)
          */
-        std::vector<size_t> xlows;
-        std::vector<size_t> ylows;
+        size_t x = node_xlow(node);
+        size_t y = node_ylow(node);
 
-        /*
-        if ( (SOURCE == node_type(node))
-          || (SINK == node_type(node)) 
-          || (CHANX == node_type(node))
-          || (CHANY == node_type(node)) ) {
-            xlows.resize(node_bounding_boxes_[node].xmax() - node_bounding_boxes_[node].xmin() + 1);
-            ylows.resize(node_bounding_boxes_[node].ymax() - node_bounding_boxes_[node].ymin() + 1);
-            std::iota(xlows.begin(), xlows.end(), node_xlow(node));
-            std::iota(ylows.begin(), ylows.end(), node_ylow(node));
-            VTR_ASSERT(size_t(node_bounding_boxes_[node].xmax()) == xlows.back());
-            VTR_ASSERT(size_t(node_bounding_boxes_[node].ymax()) == ylows.back());
+        size_t itype = node_type(node);
+
+        size_t ptc = node_ptc_num(node);
+        if (ptc >= node_lookup_[x][y][itype].size()) {
+            node_lookup_[x][y][itype].resize(ptc + 1);
+        }
+
+        size_t iside = -1;
+        if (node_type(node) == OPIN || node_type(node) == IPIN) {
+            iside = node_side(node);
         } else {
-        */ 
-            xlows.push_back(node_xlow(node));
-            ylows.push_back(node_ylow(node));
-        /*
+            iside = NUM_SIDES;
         }
-         */
 
-        for (size_t x : xlows) {
-            for (size_t y : ylows) {
-                size_t itype = node_type(node);
-
-                size_t ptc = node_ptc_num(node);
-                if (ptc >= node_lookup_[x][y][itype].size()) {
-                    node_lookup_[x][y][itype].resize(ptc + 1);
-                }
-
-                size_t iside = -1;
-                if (node_type(node) == OPIN || node_type(node) == IPIN) {
-                    iside = node_side(node);
-                } else {
-                    iside = NUM_SIDES;
-                }
-
-                if (iside >= node_lookup_[x][y][itype][ptc].size()) {
-                    node_lookup_[x][y][itype][ptc].resize(iside + 1);
-                }
-
-                //Save node in lookup
-                node_lookup_[x][y][itype][ptc][iside] = node;
-            }
+        if (iside >= node_lookup_[x][y][itype][ptc].size()) {
+            node_lookup_[x][y][itype][ptc].resize(iside + 1);
         }
+
+        //Save node in lookup
+        node_lookup_[x][y][itype][ptc][iside] = node;
     }
 }
 

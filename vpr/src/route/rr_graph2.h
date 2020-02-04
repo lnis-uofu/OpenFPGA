@@ -47,11 +47,11 @@ typedef vtr::NdMatrix<short, 6> t_sblock_pattern;
 
 /******************* Subroutines exported by rr_graph2.c *********************/
 
-RRGraph alloc_and_load_rr_node_indices(const int max_chan_width,
-                                       const DeviceGrid& grid,
-                                       int* index,
-                                       const t_chan_details& chan_details_x,
-                                       const t_chan_details& chan_details_y);
+t_rr_node_indices alloc_and_load_rr_node_indices(const int max_chan_width,
+                                                 const DeviceGrid& grid,
+                                                 int* index,
+                                                 const t_chan_details& chan_details_x,
+                                                 const t_chan_details& chan_details_y);
 
 int get_rr_node_index(int x,
                       int y,
@@ -59,7 +59,14 @@ int get_rr_node_index(int x,
                       int ptc,
                       const t_rr_node_indices& L_rr_node_indices);
 
+
 //Returns all the rr nodes associated with the specified coordinate (i.e. accross sides)
+std::vector<RRNodeId> get_rr_graph_node_indices(const t_rr_node_indices& L_rr_node_indices,
+                                                int x,
+                                                int y,
+                                                t_rr_type rr_type,
+                                                int ptc);
+
 std::vector<int> get_rr_node_indices(const t_rr_node_indices& L_rr_node_indices,
                                      int x,
                                      int y,
@@ -74,6 +81,13 @@ std::vector<int> get_rr_node_chan_wires_at_location(const t_rr_node_indices& L_r
 
 //Return the first rr node of the specified type and coordinates
 // For non-IPIN/OPIN types 'side' is ignored
+RRNodeId get_rr_graph_node_index(const t_rr_node_indices& L_rr_node_indices,
+                                 int x,
+                                 int y,
+                                 t_rr_type rr_type,
+                                 int ptc,
+                                 e_side side = NUM_SIDES);
+
 int get_rr_node_index(const t_rr_node_indices& L_rr_node_indices,
                       int x,
                       int y,
@@ -156,7 +170,7 @@ int get_bidir_opin_connections(const int i,
                                const RRNodeId& from_rr_node,
                                t_rr_edge_info_set& rr_edges_to_create,
                                const t_pin_to_track_lookup& opin_to_track_map,
-                               const RRGraph& rr_graph,
+                               const t_rr_node_indices& L_rr_node_indices,
                                const t_chan_details& chan_details_x,
                                const t_chan_details& chan_details_y);
 
@@ -171,7 +185,7 @@ int get_unidir_opin_connections(const int chan,
                                 vtr::NdMatrix<int, 3>& Fc_ofs,
                                 const int max_len,
                                 const int max_chan_width,
-                                const RRGraph& rr_graph,
+                                const t_rr_node_indices& L_rr_node_indices,
                                 bool* Fc_clipped);
 
 int get_track_to_pins(int seg,
@@ -180,6 +194,7 @@ int get_track_to_pins(int seg,
                       int tracks_per_chan,
                       const RRNodeId& from_rr_node,
                       t_rr_edge_info_set& rr_edges_to_create,
+                      const t_rr_node_indices& L_rr_node_indices,
                       const RRGraph& rr_graph,
                       const t_track_to_pin_lookup& track_to_pin_lookup,
                       const t_chan_seg_details* seg_details,
@@ -205,6 +220,7 @@ int get_track_to_tracks(const int from_chan,
                         const t_chan_seg_details* to_seg_details,
                         const t_chan_details& to_chan_details,
                         const enum e_directionality directionality,
+                        const t_rr_node_indices& L_rr_node_indices,
                         const RRGraph& rr_graph,
                         const vtr::NdMatrix<std::vector<int>, 3>& switch_block_conn,
                         t_sb_connection_map* sb_conn_map);

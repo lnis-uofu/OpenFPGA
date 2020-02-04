@@ -646,6 +646,8 @@ class RRGraph {
     void remove_edge(const RREdgeId& edge);
 
     /* Set node-level information */
+    void set_node_type(const RRNodeId& node, const t_rr_type& type);
+
     void set_node_xlow(const RRNodeId& node, const short& xlow);
     void set_node_ylow(const RRNodeId& node, const short& ylow);
     void set_node_xhigh(const RRNodeId& node, const short& xhigh);
