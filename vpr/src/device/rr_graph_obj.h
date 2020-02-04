@@ -615,6 +615,7 @@ class RRGraph {
      * configure the nodes and edges in connection   
      */
     RREdgeId create_edge(const RRNodeId& source, const RRNodeId& sink, const RRSwitchId& switch_id);
+    void set_edge_switch(const RREdgeId& edge, const RRSwitchId& switch_id);
     RRSwitchId create_switch(const t_rr_switch_inf& switch_info);
     RRSegmentId create_segment(const t_segment_inf& segment_info);
 

@@ -347,7 +347,7 @@ static void load_rr_indexed_data_T_values(int index_start,
             RRNodeId to_node_index = device_ctx.rr_graph.edge_sink_node(iedge);
             /* want to get C/R/Tdel/Cinternal of switches that connect this track segment to other track segments */
             if (device_ctx.rr_graph.node_type(to_node_index) == CHANX || device_ctx.rr_graph.node_type(to_node_index) == CHANY) {
-                int switch_index = device_ctx.rr_graph.edge_switch(iedge);
+                int switch_index = (int)size_t(device_ctx.rr_graph.edge_switch(iedge));
                 avg_switch_R += device_ctx.rr_switch_inf[switch_index].R;
                 avg_switch_T += device_ctx.rr_switch_inf[switch_index].Tdel;
                 avg_switch_Cinternal += device_ctx.rr_switch_inf[switch_index].Cinternal;

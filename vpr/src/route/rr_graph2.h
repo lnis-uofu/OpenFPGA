@@ -15,7 +15,7 @@ enum e_seg_details_type {
 };
 
 struct t_rr_edge_info {
-    t_rr_edge_info(const RRNodeId& from, const RRNodeId& to, const short& type) noexcept
+    t_rr_edge_info(RRNodeId from, RRNodeId to, short type) noexcept
         : from_node(from)
         , to_node(to)
         , switch_type(type) {}
@@ -25,11 +25,19 @@ struct t_rr_edge_info {
     short switch_type = OPEN;
 
     friend bool operator<(const t_rr_edge_info& lhs, const t_rr_edge_info& rhs) {
-        return std::tie(size_t(lhs.from_node), size_t(lhs.to_node), lhs.switch_type) < std::tie(size_t(rhs.from_node), size_t(rhs.to_node), rhs.switch_type);
+        size_t lhs_from_node = size_t(lhs.from_node);
+        size_t lhs_to_node = size_t(lhs.to_node);
+        size_t rhs_from_node = size_t(rhs.from_node);
+        size_t rhs_to_node = size_t(rhs.to_node);
+        return std::tie(lhs_from_node, lhs_to_node, lhs.switch_type) < std::tie(rhs_from_node, rhs_to_node, rhs.switch_type);
     }
 
     friend bool operator==(const t_rr_edge_info& lhs, const t_rr_edge_info& rhs) {
-        return std::tie(size_t(lhs.from_node), size_t(lhs.to_node), lhs.switch_type) == std::tie(size_t(rhs.from_node), size_t(rhs.to_node), rhs.switch_type);
+        size_t lhs_from_node = size_t(lhs.from_node);
+        size_t lhs_to_node = size_t(lhs.to_node);
+        size_t rhs_from_node = size_t(rhs.from_node);
+        size_t rhs_to_node = size_t(rhs.to_node);
+        return std::tie(lhs_from_node, lhs_to_node, lhs.switch_type) == std::tie(rhs_from_node, rhs_to_node, rhs.switch_type);
     }
 };
 
@@ -145,10 +153,10 @@ bool is_sblock(const int chan,
 int get_bidir_opin_connections(const int i,
                                const int j,
                                const int ipin,
-                               const int from_rr_node,
+                               const RRNodeId& from_rr_node,
                                t_rr_edge_info_set& rr_edges_to_create,
                                const t_pin_to_track_lookup& opin_to_track_map,
-                               const t_rr_node_indices& L_rr_node_indices,
+                               const RRGraph& rr_graph,
                                const t_chan_details& chan_details_x,
                                const t_chan_details& chan_details_y);
 

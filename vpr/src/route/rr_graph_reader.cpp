@@ -44,6 +44,9 @@
 #include "vpr_utils.h"
 #include "vpr_error.h"
 
+#include "rr_graph_obj.h"
+#include "check_rr_graph_obj.h"
+
 #include "rr_graph_reader.h"
 
 /*********************** Subroutines local to this module *******************/
@@ -281,7 +284,7 @@ void process_seg_id(pugi::xml_node parent, const pugiutil::loc_data& loc_data) {
 
     while (rr_node) {
         id = get_attribute(rr_node, "id", loc_data).as_int();
-        auto& node = RRNodeId(id);
+        RRNodeId node = RRNodeId(id);
 
         segmentSubnode = get_single_child(rr_node, "segment", loc_data, pugiutil::OPTIONAL);
         if (segmentSubnode) {
@@ -310,18 +313,18 @@ void process_nodes(pugi::xml_node parent, const pugiutil::loc_data& loc_data) {
         int inode = get_attribute(rr_node, "id", loc_data).as_int();
         t_rr_type node_type = NUM_RR_TYPES;
 
-        const char* node_type = get_attribute(rr_node, "type", loc_data).as_string();
-        if (strcmp(node_type, "CHANX") == 0) {
+        const char* node_type_str = get_attribute(rr_node, "type", loc_data).as_string();
+        if (strcmp(node_type_str, "CHANX") == 0) {
             node_type = CHANX;
-        } else if (strcmp(node_type, "CHANY") == 0) {
+        } else if (strcmp(node_type_str, "CHANY") == 0) {
             node_type = CHANY;
-        } else if (strcmp(node_type, "SOURCE") == 0) {
+        } else if (strcmp(node_type_str, "SOURCE") == 0) {
             node_type = SOURCE;
-        } else if (strcmp(node_type, "SINK") == 0) {
+        } else if (strcmp(node_type_str, "SINK") == 0) {
             node_type = SINK;
-        } else if (strcmp(node_type, "OPIN") == 0) {
+        } else if (strcmp(node_type_str, "OPIN") == 0) {
             node_type = OPIN;
-        } else if (strcmp(node_type, "IPIN") == 0) {
+        } else if (strcmp(node_type_str, "IPIN") == 0) {
             node_type = IPIN;
         } else {
             VPR_FATAL_ERROR(VPR_ERROR_OTHER,
@@ -371,7 +374,7 @@ void process_nodes(pugi::xml_node parent, const pugiutil::loc_data& loc_data) {
             device_ctx.rr_graph.set_node_side(node, side);
         }
 
-        device_ctx.rr_graph.set_node_bouding_box(node, vtr::Rect<short>(x1, y1, x2, y2)); 
+        device_ctx.rr_graph.set_node_bounding_box(node, vtr::Rect<short>(x1, y1, x2, y2)); 
         device_ctx.rr_graph.set_node_ptc_num(node, get_attribute(locSubnode, "ptc", loc_data).as_int());
 
         //-------
@@ -495,7 +498,7 @@ void process_edges(pugi::xml_node parent, const pugiutil::loc_data& loc_data, in
             while (edges_meta) {
                 auto key = get_attribute(edges_meta, "name", loc_data).as_string();
 
-                vpr::add_rr_edge_metadata(source_node, sink_node, switch_id,
+                vpr::add_rr_edge_metadata(size_t(source_node), size_t(sink_node), switch_id,
                                           key, edges_meta.child_value());
 
                 edges_meta = edges_meta.next_sibling(edges_meta.name());
@@ -899,7 +902,7 @@ void set_cost_indices(pugi::xml_node parent, const pugiutil::loc_data& loc_data,
             if (attribute) {
                 int seg_id = get_attribute(segmentSubnode, "segment_id", loc_data).as_int(0);
                 if (is_global_graph) {
-                    device_ctx.rr_graph.set_node_cost_index(0);
+                    device_ctx.rr_graph.set_node_cost_index(inode, 0);
                 } else if (device_ctx.rr_graph.node_type(inode) == CHANX) {
                     device_ctx.rr_graph.set_node_cost_index(inode, CHANX_COST_INDEX_START + seg_id);
                 } else if (device_ctx.rr_graph.node_type(inode) == CHANY) {

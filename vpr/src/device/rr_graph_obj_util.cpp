@@ -63,3 +63,21 @@ std::vector<RRNodeId> find_rr_graph_nodes(const RRGraph& rr_graph,
     return indices;
 }
 
+std::vector<RRNodeId> find_rr_graph_chan_nodes(const RRGraph& rr_graph,
+                                               const int& x,
+                                               const int& y,
+                                               const t_rr_type& rr_type) {
+    std::vector<RRNodeId> indices;
+
+    VTR_ASSERT(rr_type == CHANX || rr_type == CHANY);
+
+    for (short track = 0; track < rr_graph.chan_num_tracks(x, y, rr_type); ++track) {
+        RRNodeId rr_node_index = rr_graph.find_node(x, y, rr_type, track);
+
+        if (rr_node_index != RRNodeId::INVALID()) {
+            indices.push_back(rr_node_index);
+        }
+    }
+
+    return indices;
+}

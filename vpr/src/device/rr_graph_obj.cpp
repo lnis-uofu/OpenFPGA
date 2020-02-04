@@ -69,16 +69,16 @@ short RRGraph::node_xhigh(const RRNodeId& node) const {
      * This is due to the convention in creating RRGraph 
      * so that we can guarantee unique SOURCE/SINK nodes searching 
      */
-    if (  (SOURCE == node_type(node)
-       || (SINK == node_type(node)) {
+    if (  (SOURCE == node_type(node))
+       || (SINK == node_type(node)) ) {
       return node_bounding_box(node).xmin();
     }
     return node_bounding_box(node).xmax();
 }
 
 short RRGraph::node_yhigh(const RRNodeId& node) const {
-    if (  (SOURCE == node_type(node)
-       || (SINK == node_type(node)) {
+    if (  (SOURCE == node_type(node))
+       || (SINK == node_type(node)) ) {
       return node_bounding_box(node).ymin();
     }
     return node_bounding_box(node).ymax();
@@ -391,7 +391,8 @@ RRNodeId RRGraph::find_node(const short& x, const short& y, const t_rr_type& typ
 
     /* Check if x, y, type and ptc, side is valid */
     if ((ptc < 0)                                                 /* See if ptc is smaller than the index of first element */
-        || (size_t(ptc) > node_lookup_[x][y][type].size() - 1)) { /* See if ptc is large than the index of last element */
+        || (size_t(ptc) > node_lookup_[x][y][type].size() - 1) /* See if ptc is large than the index of last element */
+        || (0 == node_lookup_[x][y][type].size())) { /* See if ptc is large than the index of last element */
         /* Return a zero range! */
         return RRNodeId::INVALID();
     }
@@ -856,7 +857,7 @@ RRNodeId RRGraph::create_node(const t_rr_type& type) {
 RREdgeId RRGraph::create_edge(const RRNodeId& source, const RRNodeId& sink, const RRSwitchId& switch_id) {
     VTR_ASSERT(valid_node_id(source));
     VTR_ASSERT(valid_node_id(sink));
-    VTR_ASSERT(valid_switch_id(switch_id));
+    //VTR_ASSERT(valid_switch_id(switch_id));
 
     /* Allocate an ID */
     RREdgeId edge_id = RREdgeId(num_edges_);
@@ -876,6 +877,11 @@ RREdgeId RRGraph::create_edge(const RRNodeId& source, const RRNodeId& sink, cons
     VTR_ASSERT(validate_sizes());
 
     return edge_id;
+}
+
+void RRGraph::set_edge_switch(const RREdgeId& edge, const RRSwitchId& switch_id) {
+    VTR_ASSERT(valid_edge_id(edge));
+    edge_switches_[edge] = switch_id;
 }
 
 RRSwitchId RRGraph::create_switch(const t_rr_switch_inf& switch_info) {
@@ -1200,8 +1206,8 @@ void RRGraph::build_fast_node_lookup() const {
             /* Skip this id */
             continue;
         }
-        max_coord.set_x(std::max(max_coord.x(), node_xlow(RRNodeId(id))));
-        max_coord.set_y(std::max(max_coord.y(), node_ylow(RRNodeId(id))));
+        max_coord.set_x(std::max(max_coord.x(), std::max(node_bounding_boxes_[RRNodeId(id)].xmax(), node_bounding_boxes_[RRNodeId(id)].xmin())));
+        max_coord.set_y(std::max(max_coord.y(), std::max(node_bounding_boxes_[RRNodeId(id)].ymax(), node_bounding_boxes_[RRNodeId(id)].ymin())));
     }
     node_lookup_.resize({(size_t)max_coord.x() + 1, (size_t)max_coord.y() + 1, NUM_RR_TYPES + 1});
 
@@ -1218,15 +1224,17 @@ void RRGraph::build_fast_node_lookup() const {
         std::vector<size_t> xlows;
         std::vector<size_t> ylows;
 
-        if ( (SOURCE == node_type(node)
-          || (SINK == node_type(node)) {
+        if ( (SOURCE == node_type(node))
+          || (SINK == node_type(node)) 
+          || (CHANX == node_type(node))
+          || (CHANY == node_type(node)) ) {
             xlows.resize(node_bounding_boxes_[node].xmax() - node_bounding_boxes_[node].xmin() + 1);
             ylows.resize(node_bounding_boxes_[node].ymax() - node_bounding_boxes_[node].ymin() + 1);
             std::iota(xlows.begin(), xlows.end(), node_xlow(node));
             std::iota(ylows.begin(), ylows.end(), node_ylow(node));
             /* Sanity check */
-            VTR_ASSERT(node_bounding_boxes_[node].xmax() == xlows.back());
-            VTR_ASSERT(node_bounding_boxes_[node].ymax() == ylows.back());
+            VTR_ASSERT(size_t(node_bounding_boxes_[node].xmax()) == xlows.back());
+            VTR_ASSERT(size_t(node_bounding_boxes_[node].ymax()) == ylows.back());
         } else { 
             xlows.push_back(node_xlow(node));
             ylows.push_back(node_ylow(node));

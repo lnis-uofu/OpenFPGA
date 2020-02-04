@@ -18,4 +18,10 @@ std::vector<RRNodeId> find_rr_graph_nodes(const RRGraph& rr_graph,
                                           const t_rr_type& rr_type,
                                           const int& ptc);
 
+std::vector<RRNodeId> find_rr_graph_chan_nodes(const RRGraph& rr_graph,
+                                               const int& x,
+                                               const int& y,
+                                               const t_rr_type& rr_type);
+
+
 #endif

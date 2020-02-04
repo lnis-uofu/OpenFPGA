@@ -67,7 +67,7 @@ static int get_unidir_track_to_chan_seg(const int from_track,
                                         const RRGraph& rr_graph,
                                         const t_chan_seg_details* seg_details,
                                         bool* Fs_clipped,
-                                        const int from_rr_node,
+                                        const RRNodeId& from_rr_node,
                                         t_rr_edge_info_set& rr_edges_to_create);
 
 static int get_track_to_chan_seg(const int from_track,
@@ -765,7 +765,7 @@ int get_unidir_opin_connections(const int chan,
     int* inc_muxes = nullptr;
     int* dec_muxes = nullptr;
     int num_inc_muxes, num_dec_muxes, iconn;
-    int inc_inode_index, dec_inode_index;
+    RRNodeId inc_inode_index, dec_inode_index;
     int inc_mux, dec_mux;
     int inc_track, dec_track;
     int x, y;
@@ -809,8 +809,8 @@ int get_unidir_opin_connections(const int chan,
         dec_track = dec_muxes[dec_mux];
 
         /* Figure the inodes of those muxes */
-        inc_inode_index = rr_graph.find_node(x, y, chan_type, inc_track);
-        dec_inode_index = rr_graph.find_node(x, y, chan_type, dec_track);
+        inc_inode_index = rr_graph.find_node(chan, seg, chan_type, inc_track);
+        dec_inode_index = rr_graph.find_node(chan, seg, chan_type, dec_track);
 
         if (inc_inode_index == RRNodeId::INVALID() || dec_inode_index == RRNodeId::INVALID()) {
             continue;
@@ -1069,24 +1069,24 @@ static void load_chan_rr_indices(const int max_chan_width,
             int y = (type == CHANX ? chan : seg);
             const t_chan_seg_details* seg_details = chan_details[x][y].data();
 
-            for (unsigned track = 0; track < num_chans - 1; ++track) {
+            for (int track = 0; track < num_chans - 1; ++track) {
                 if (seg_details[track].length() <= 0)
                     continue;
 
                 int start = get_seg_start(seg_details, track, chan, seg);
                  
-                /* If this segment does not start from the current position, we do not allocate any nodes */
-                if (start != seg) {
-                    continue;
+                /* We give a fake coordinator here, to ease the downstream builder */
+                short xlow = chan;
+                short ylow = start;
+                RRNodeId node = rr_graph.find_node(xlow, ylow, type, track);
+                if (false == rr_graph.valid_node_id(node)) {
+  
+                    RRNodeId new_node = rr_graph.create_node(type);
+                    rr_graph.set_node_bounding_box(new_node, vtr::Rect<short>(xlow, ylow, xlow, ylow));
+                    rr_graph.set_node_track_num(new_node, track);
+ 
+                    (*index)++;
                 }
-
-                RRNodeId node = rr_graph.create_node(type);
-                short xlow = x;
-                short ylow = y;
-                short xhigh = (type == CHANX ? xlow + seg_details[track].length() - 1 : xlow);
-                short yhigh = (type == CHANY ? ylow + seg_details[track].length() - 1 : ylow);
-                rr_graph.set_node_bounding_box(node, vtr::Rect<short>(xlow, ylow, xhigh, yhigh));
-                rr_graph.set_node_track_num(node, track);
             }
         }
     }
@@ -1108,13 +1108,13 @@ static void load_block_rr_indices(const DeviceGrid& grid,
                     auto class_type = type->class_inf[iclass].type;
                     if (class_type == DRIVER) {
                         RRNodeId node = rr_graph.create_node(SOURCE);
-                        rr_graph.set_node_bounding_box(node, vtr::Rect<size_t>(x, y, x, y));
-                        rr_graph.set_node_class_num(iclass);
+                        rr_graph.set_node_bounding_box(node, vtr::Rect<short>(x, y, x, y));
+                        rr_graph.set_node_class_num(node, iclass);
                     } else {
                         VTR_ASSERT(class_type == RECEIVER);
                         RRNodeId node = rr_graph.create_node(SINK);
-                        rr_graph.set_node_bounding_box(node, vtr::Rect<size_t>(x, y, x, y));
-                        rr_graph.set_node_class_num(iclass);
+                        rr_graph.set_node_bounding_box(node, vtr::Rect<short>(x, y, x, y));
+                        rr_graph.set_node_class_num(node, iclass);
                     }
                     ++(*index);
                 }
@@ -1132,15 +1132,15 @@ static void load_block_rr_indices(const DeviceGrid& grid,
 
                                     if (class_type == DRIVER) {
                                         RRNodeId node = rr_graph.create_node(OPIN);
-                                        rr_graph.set_node_bounding_box(node, vtr::Rect<size_t>(xtile, ytile, xtile, ytile));
-                                        rr_graph.set_node_pin_num(ipin);
-                                        rr_graph.set_node_side(side);
+                                        rr_graph.set_node_bounding_box(node, vtr::Rect<short>(x_tile, y_tile, x_tile, y_tile));
+                                        rr_graph.set_node_pin_num(node, ipin);
+                                        rr_graph.set_node_side(node, side);
                                     } else {
                                         VTR_ASSERT(class_type == RECEIVER);
                                         RRNodeId node = rr_graph.create_node(IPIN);
-                                        rr_graph.set_node_bounding_box(node, vtr::Rect<size_t>(xtile, ytile, xtile, ytile));
-                                        rr_graph.set_node_pin_num(ipin);
-                                        rr_graph.set_node_side(side);
+                                        rr_graph.set_node_bounding_box(node, vtr::Rect<short>(x_tile, y_tile, x_tile, y_tile));
+                                        rr_graph.set_node_pin_num(node, ipin);
+                                        rr_graph.set_node_side(node, side);
                                     }
                                     ++(*index);
                                 }
@@ -1162,7 +1162,7 @@ static void load_block_rr_indices(const DeviceGrid& grid,
              * this can avoid runtime cost to rebuild the fast look-up inside RRGraph object
              */
             if ( (grid[x][y].type->height == height_offset && grid[x][y].type->width == width_offset)
-              && (0 != height_offset && 0 != width_offset) ) {
+              && (0 != height_offset || 0 != width_offset) ) {
                 int root_x = x - width_offset;
                 int root_y = y - height_offset;
 
@@ -1176,12 +1176,12 @@ static void load_block_rr_indices(const DeviceGrid& grid,
                     if (class_type == DRIVER) {
                         RRNodeId node = rr_graph.find_node(root_x, root_y, SOURCE, iclass);
                         /* Update the internal look-up so that we can find the SOURCE/SINK node using their offset coordinates */
-                        rr_graph.set_node_bounding_box(node, vtr::Rect<size_t>(root_x, root_y, x, y));
+                        rr_graph.set_node_bounding_box(node, vtr::Rect<short>(root_x, root_y, x, y));
                     } else {
                         VTR_ASSERT(class_type == RECEIVER);
                         RRNodeId node = rr_graph.find_node(root_x, root_y, SINK, iclass);
                         /* Update the internal look-up so that we can find the SOURCE/SINK node using their offset coordinates */
-                        rr_graph.set_node_bounding_box(node, vtr::Rect<size_t>(root_x, root_y, x, y));
+                        rr_graph.set_node_bounding_box(node, vtr::Rect<short>(root_x, root_y, x, y));
                     }
                 }
             }
@@ -1454,7 +1454,7 @@ int get_track_to_pins(int seg,
                     /* Check there is a connection and Fc map isn't wrong */
                     /*int to_node = get_rr_node_index(L_rr_node_indices, x + width_offset, y + height_offset, IPIN, ipin, side);*/
                     RRNodeId to_node = rr_graph.find_node(x, y, IPIN, ipin, side);
-                    if (to_node >= 0) {
+                    if (rr_graph.valid_node_id(to_node)) {
                         rr_edges_to_create.emplace_back(from_rr_node, to_node, wire_to_ipin_switch);
                         ++num_conn;
                     }
