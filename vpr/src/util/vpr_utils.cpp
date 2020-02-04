@@ -1951,13 +1951,11 @@ void print_switch_usage() {
     switch_fanin_delay = new std::map<int, float>[device_ctx.num_arch_switches];
     // a node can have multiple inward switches, so
     // map key: switch index; map value: count (fanin)
-    std::map<int, int>* inward_switch_inf = new std::map<int, int>[device_ctx.rr_nodes.size()];
-    for (size_t inode = 0; inode < device_ctx.rr_nodes.size(); inode++) {
-        const t_rr_node& from_node = device_ctx.rr_nodes[inode];
-        int num_edges = from_node.num_edges();
-        for (int iedge = 0; iedge < num_edges; iedge++) {
-            int switch_index = from_node.edge_switch(iedge);
-            int to_node_index = from_node.edge_sink_node(iedge);
+    vtr::vector<RRNodeId, std::map<int, int>> inward_switch_inf(device_ctx.rr_graph.nodes().size());
+    for (const RRNodeId& from_node : device_ctx.rr_graph.nodes()) {
+        for (const RREdgeId& iedge : device_ctx.rr_graph.node_out_edges(from_node)) {
+            int switch_index = (int)size_t(device_ctx.rr_graph.edge_switch(iedge));
+            const RRNodeId& to_node_index = device_ctx.rr_graph.edge_sink_node(iedge);
             // Assumption: suppose for a L4 wire (bi-directional): ----+----+----+----, it can be driven from any point (0, 1, 2, 3).
             //             physically, the switch driving from point 1 & 3 should be the same. But we will assign then different switch
             //             index; or there is no way to differentiate them after abstracting a 2D wire into a 1D node
@@ -1967,7 +1965,7 @@ void print_switch_usage() {
             inward_switch_inf[to_node_index][switch_index]++;
         }
     }
-    for (size_t inode = 0; inode < device_ctx.rr_nodes.size(); inode++) {
+    for (const RRNodeId& inode : device_ctx.rr_graph.nodes()) {
         std::map<int, int>::iterator itr;
         for (itr = inward_switch_inf[inode].begin(); itr != inward_switch_inf[inode].end(); itr++) {
             int switch_index = itr->first;
@@ -1977,7 +1975,7 @@ void print_switch_usage() {
             if (status == -1) {
                 delete[] switch_fanin_count;
                 delete[] switch_fanin_delay;
-                delete[] inward_switch_inf;
+                inward_switch_inf.clear();
                 return;
             }
             if (switch_fanin_count[switch_index].count(fanin) == 0) {
@@ -2003,7 +2001,7 @@ void print_switch_usage() {
     VTR_LOG("\n==================================================\n\n");
     delete[] switch_fanin_count;
     delete[] switch_fanin_delay;
-    delete[] inward_switch_inf;
+    inward_switch_inf.clear();
 }
 
 /*

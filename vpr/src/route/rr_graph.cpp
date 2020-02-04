@@ -1874,8 +1874,6 @@ void alloc_and_load_edges(RRGraph& rr_graph,
     for (RRNodeId inode : from_nodes) {
         auto edge_range = std::equal_range(rr_edges_to_create.begin(), rr_edges_to_create.end(), inode, compare_from_node());
 
-        size_t edge_count = std::distance(edge_range.first, edge_range.second);
-
         //Create initial edges
         //
         //Note that we do this in bulk instead of via add_edge() to reduce
