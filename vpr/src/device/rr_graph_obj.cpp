@@ -885,6 +885,7 @@ RREdgeId RRGraph::create_edge(const RRNodeId& source, const RRNodeId& sink, cons
 
 void RRGraph::set_edge_switch(const RREdgeId& edge, const RRSwitchId& switch_id) {
     VTR_ASSERT(valid_edge_id(edge));
+    VTR_ASSERT(valid_switch_id(switch_id));
     edge_switches_[edge] = switch_id;
 }
 
