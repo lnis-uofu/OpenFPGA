@@ -404,13 +404,8 @@ void create_rr_graph(const t_graph_type graph_type,
 void print_rr_graph_stats() {
     auto& device_ctx = g_vpr_ctx.device();
 
-    size_t num_rr_edges = 0;
-    for (auto& rr_node : device_ctx.rr_nodes) {
-        num_rr_edges += rr_node.edges().size();
-    }
-
-    VTR_LOG("  RR Graph Nodes: %zu\n", device_ctx.rr_nodes.size());
-    VTR_LOG("  RR Graph Edges: %zu\n", num_rr_edges);
+    VTR_LOG("  RR Graph Nodes: %zu\n", device_ctx.rr_graph.nodes().size());
+    VTR_LOG("  RR Graph Edges: %zu\n", device_ctx.rr_graph.edges().size());
 }
 
 bool channel_widths_unchanged(const t_chan_width& current, const t_chan_width& proposed) {
