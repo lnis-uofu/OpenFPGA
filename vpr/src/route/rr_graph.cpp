@@ -251,6 +251,11 @@ static void alloc_and_load_rr_switch_inf(const int num_arch_switches,
                                          const int wire_to_arch_ipin_switch,
                                          int* wire_to_rr_ipin_switch);
 
+static 
+t_rr_switch_inf create_rr_switch_from_arch_switch(int arch_switch_idx,
+                                                  const float R_minW_nmos,
+                                                  const float R_minW_pmos);
+
 static void remap_rr_node_switch_indices(const t_arch_switch_fanin& switch_fanin);
 
 static void load_rr_switch_inf(const int num_arch_switches, const float R_minW_nmos, const float R_minW_pmos, const t_arch_switch_fanin& switch_fanin);
@@ -704,6 +709,20 @@ static void build_rr_graph(const t_graph_type graph_type,
     /* END OPIN MAP */
 
     bool Fc_clipped = false;
+
+    /* Draft the switches as internal data of RRGraph object
+     * These are temporary switches copied from arch switches
+     * We use them to build the edges 
+     * We will reset all the switches in the function 
+     *   alloc_and_load_rr_switch_inf()
+     */
+    device_ctx.rr_graph.reserve_switches(device_ctx.num_arch_switches);
+    // Create the switches
+    for (size_t iswitch = 0; iswitch < device_ctx.num_arch_switches; ++iswitch) {
+        const t_rr_switch_inf& temp_rr_switch = create_rr_switch_from_arch_switch(iswitch, R_minW_nmos, R_minW_pmos);
+        device_ctx.rr_graph.create_switch(temp_rr_switch);
+    }
+
     alloc_and_load_rr_graph(device_ctx.rr_graph.nodes().size(), device_ctx.rr_graph, segment_inf.size(),
                             chan_details_x, chan_details_y,
                             track_to_pin_lookup, opin_to_track_map,
@@ -732,13 +751,34 @@ static void build_rr_graph(const t_graph_type graph_type,
         }
     }
 
+    /* First time to build edges so that we can remap the architecture switch to rr_switch
+     * This is a must-do before function alloc_and_load_rr_switch_inf() 
+     */
+    device_ctx.rr_graph.rebuild_node_edges();
+
     /* Allocate and load routing resource switches, which are derived from the switches from the architecture file,
      * based on their fanin in the rr graph. This routine also adjusts the rr nodes to point to these new rr switches */
     alloc_and_load_rr_switch_inf(num_arch_switches, R_minW_nmos, R_minW_pmos, wire_to_arch_ipin_switch, wire_to_rr_ipin_switch);
 
-    //Partition the rr graph edges for efficient access to configurable/non-configurable
-    //edge subsets. Must be done after RR switches have been allocated
-    device_ctx.rr_graph.rebuild_node_edges();
+    //Save the channel widths for the newly constructed graph
+    device_ctx.chan_width = nodes_per_chan;
+
+    rr_graph_externals(segment_inf, max_chan_width,
+                       *wire_to_rr_ipin_switch, base_cost_type);
+
+    /* Rebuild the link between RRGraph node and segments 
+     * Should be called only AFTER the function
+     * rr_graph_externals()
+     */
+    for (const RRNodeId& inode : device_ctx.rr_graph.nodes()) {
+        if ( (CHANX != device_ctx.rr_graph.node_type(inode))
+          && (CHANY != device_ctx.rr_graph.node_type(inode)) ) {
+            continue;
+        }
+        short irc_data = device_ctx.rr_graph.node_cost_index(inode);
+        short iseg = device_ctx.rr_indexed_data[irc_data].seg_index;
+        device_ctx.rr_graph.set_node_segment(inode, RRSegmentId(iseg));
+    }
 
     /* Essential check for rr_graph, build look-up and  */
     if (false == device_ctx.rr_graph.validate()) {
@@ -748,12 +788,6 @@ static void build_rr_graph(const t_graph_type graph_type,
                   __LINE__,
                   "Fundamental errors occurred when validating rr_graph object!\n");
     }
-
-    //Save the channel widths for the newly constructed graph
-    device_ctx.chan_width = nodes_per_chan;
-
-    rr_graph_externals(segment_inf, max_chan_width,
-                       *wire_to_rr_ipin_switch, base_cost_type);
 
     check_rr_graph(graph_type, grid, types);
     /* Error out if advanced checker of rr_graph fails */
@@ -922,6 +956,7 @@ static void load_rr_switch_inf(const int num_arch_switches, const float R_minW_n
     }
   
     /* Create switches as internal data of RRGraph object */
+    device_ctx.rr_graph.clear_switches();
     device_ctx.rr_graph.reserve_switches(device_ctx.rr_switch_inf.size());
     // Create the switches
     for (size_t iswitch = 0; iswitch < device_ctx.rr_switch_inf.size(); ++iswitch) {
@@ -929,6 +964,41 @@ static void load_rr_switch_inf(const int num_arch_switches, const float R_minW_n
     }
 
 }
+
+static 
+t_rr_switch_inf create_rr_switch_from_arch_switch(int arch_switch_idx,
+                                                  const float R_minW_nmos,
+                                                  const float R_minW_pmos) {
+    auto& device_ctx = g_vpr_ctx.mutable_device();
+    t_rr_switch_inf rr_switch_inf;
+
+    /* figure out, by looking at the arch switch's Tdel map, what the delay of the new
+     * rr switch should be */
+    double rr_switch_Tdel = device_ctx.arch_switch_inf[arch_switch_idx].Tdel(0);
+
+    /* copy over the arch switch to rr_switch_inf[rr_switch_idx], but with the changed Tdel value */
+    rr_switch_inf.set_type(device_ctx.arch_switch_inf[arch_switch_idx].type());
+    rr_switch_inf.R = device_ctx.arch_switch_inf[arch_switch_idx].R;
+    rr_switch_inf.Cin = device_ctx.arch_switch_inf[arch_switch_idx].Cin;
+    rr_switch_inf.Cinternal = device_ctx.arch_switch_inf[arch_switch_idx].Cinternal;
+    rr_switch_inf.Cout = device_ctx.arch_switch_inf[arch_switch_idx].Cout;
+    rr_switch_inf.Tdel = rr_switch_Tdel;
+    rr_switch_inf.mux_trans_size = device_ctx.arch_switch_inf[arch_switch_idx].mux_trans_size;
+    if (device_ctx.arch_switch_inf[arch_switch_idx].buf_size_type == BufferSize::AUTO) {
+        //Size based on resistance
+        rr_switch_inf.buf_size = trans_per_buf(device_ctx.arch_switch_inf[arch_switch_idx].R, R_minW_nmos, R_minW_pmos);
+    } else {
+        VTR_ASSERT(device_ctx.arch_switch_inf[arch_switch_idx].buf_size_type == BufferSize::ABSOLUTE);
+        //Use the specified size
+        rr_switch_inf.buf_size = device_ctx.arch_switch_inf[arch_switch_idx].buf_size;
+    }
+    rr_switch_inf.name = device_ctx.arch_switch_inf[arch_switch_idx].name;
+    rr_switch_inf.power_buffer_type = device_ctx.arch_switch_inf[arch_switch_idx].power_buffer_type;
+    rr_switch_inf.power_buffer_size = device_ctx.arch_switch_inf[arch_switch_idx].power_buffer_size;
+
+    return rr_switch_inf;
+}
+
 
 void load_rr_switch_from_arch_switch(int arch_switch_idx,
                                      int rr_switch_idx,

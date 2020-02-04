@@ -370,21 +370,24 @@ RRNodeId RRGraph::find_node(const short& x, const short& y, const t_rr_type& typ
 
     /* Check if x, y, type and ptc, side is valid */
     if ((x < 0)                                          /* See if x is smaller than the index of first element */
-        || (size_t(x) > node_lookup_.dim_size(0) - 1)) { /* See if x is large than the index of last element */
+        || (size_t(x) > node_lookup_.dim_size(0) - 1) /* See if x is large than the index of last element */
+        || (0 == node_lookup_.dim_size(0))) { /* See if x is large than the index of last element */
         /* Return a zero range! */
         return RRNodeId::INVALID();
     }
 
     /* Check if x, y, type and ptc, side is valid */
     if ((y < 0)                                          /* See if y is smaller than the index of first element */
-        || (size_t(y) > node_lookup_.dim_size(1) - 1)) { /* See if y is large than the index of last element */
+        || (size_t(y) > node_lookup_.dim_size(1) - 1)  /* See if y is large than the index of last element */
+        || (0 == node_lookup_.dim_size(1))) { /* See if y is large than the index of last element */
         /* Return a zero range! */
         return RRNodeId::INVALID();
     }
 
     /* Check if x, y, type and ptc, side is valid */
     /* itype is always larger than -1, we can skip checking */
-    if (itype > node_lookup_.dim_size(2) - 1) { /* See if type is large than the index of last element */
+    if ( (itype > node_lookup_.dim_size(2) - 1)  /* See if type is large than the index of last element */
+      || (0 == node_lookup_.dim_size(2))) { /* See if type is large than the index of last element */
         /* Return a zero range! */
         return RRNodeId::INVALID();
     }
@@ -399,7 +402,8 @@ RRNodeId RRGraph::find_node(const short& x, const short& y, const t_rr_type& typ
 
     /* Check if x, y, type and ptc, side is valid */
     /* iside is always larger than -1, we can skip checking */
-    if (iside > node_lookup_[x][y][type][ptc].size() - 1) { /* See if side is large than the index of last element */
+    if ((iside > node_lookup_[x][y][type][ptc].size() - 1) /* See if side is large than the index of last element */
+       || (0 == node_lookup_[x][y][type][ptc].size()) ) { /* See if side is large than the index of last element */
         /* Return a zero range! */
         return RRNodeId::INVALID();
     }
@@ -857,7 +861,7 @@ RRNodeId RRGraph::create_node(const t_rr_type& type) {
 RREdgeId RRGraph::create_edge(const RRNodeId& source, const RRNodeId& sink, const RRSwitchId& switch_id) {
     VTR_ASSERT(valid_node_id(source));
     VTR_ASSERT(valid_node_id(sink));
-    //VTR_ASSERT(valid_switch_id(switch_id));
+    VTR_ASSERT(valid_switch_id(switch_id));
 
     /* Allocate an ID */
     RREdgeId edge_id = RREdgeId(num_edges_);

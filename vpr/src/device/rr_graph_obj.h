@@ -725,6 +725,9 @@ class RRGraph {
 
     /* top-level function to free, should be called when to delete a RRGraph */
     void clear();
+    
+    /* Due to the rr_graph builder, we have to make this method public!!!! */
+    void clear_switches();
 
   public: /* Type implementations */
     /*
@@ -776,7 +779,6 @@ class RRGraph {
   private: /* Internal free functions */
     void clear_nodes();
     void clear_edges();
-    void clear_switches();
     void clear_segments();
 
   private: /* Graph Compression related */
