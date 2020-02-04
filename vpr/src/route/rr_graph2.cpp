@@ -809,8 +809,8 @@ int get_unidir_opin_connections(const int chan,
         dec_track = dec_muxes[dec_mux];
 
         /* Figure the inodes of those muxes */
-        inc_inode_index = rr_graph.find_node(chan, seg, chan_type, inc_track);
-        dec_inode_index = rr_graph.find_node(chan, seg, chan_type, dec_track);
+        inc_inode_index = rr_graph.find_node(x, y, chan_type, inc_track);
+        dec_inode_index = rr_graph.find_node(x, y, chan_type, dec_track);
 
         if (inc_inode_index == RRNodeId::INVALID() || dec_inode_index == RRNodeId::INVALID()) {
             continue;
@@ -1078,6 +1078,9 @@ static void load_chan_rr_indices(const int max_chan_width,
                 /* We give a fake coordinator here, to ease the downstream builder */
                 short xlow = chan;
                 short ylow = start;
+                if (CHANX == type) {
+                    std::swap(xlow, ylow);
+                }
                 RRNodeId node = rr_graph.find_node(xlow, ylow, type, track);
                 if (false == rr_graph.valid_node_id(node)) {
   

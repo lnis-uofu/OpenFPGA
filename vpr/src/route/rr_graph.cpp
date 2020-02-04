@@ -718,7 +718,7 @@ static void build_rr_graph(const t_graph_type graph_type,
      */
     device_ctx.rr_graph.reserve_switches(device_ctx.num_arch_switches);
     // Create the switches
-    for (size_t iswitch = 0; iswitch < device_ctx.num_arch_switches; ++iswitch) {
+    for (int iswitch = 0; iswitch < device_ctx.num_arch_switches; ++iswitch) {
         const t_rr_switch_inf& temp_rr_switch = create_rr_switch_from_arch_switch(iswitch, R_minW_nmos, R_minW_pmos);
         device_ctx.rr_graph.create_switch(temp_rr_switch);
     }
@@ -1864,26 +1864,17 @@ void alloc_and_load_edges(RRGraph& rr_graph,
 
         size_t edge_count = std::distance(edge_range.first, edge_range.second);
 
-        if (rr_graph.node_out_edges(inode).size() == 0) {
-            //Create initial edges
-            //
-            //Note that we do this in bulk instead of via add_edge() to reduce
-            //memory fragmentation
+        //Create initial edges
+        //
+        //Note that we do this in bulk instead of via add_edge() to reduce
+        //memory fragmentation
 
-            rr_graph.reserve_edges(edge_count + rr_graph.edges().size());
+        rr_graph.reserve_edges(edge_count + rr_graph.edges().size());
 
-            for (auto itr = edge_range.first; itr != edge_range.second; ++itr) {
-                VTR_ASSERT(itr->from_node == inode);
+        for (auto itr = edge_range.first; itr != edge_range.second; ++itr) {
+            VTR_ASSERT(itr->from_node == inode);
 
-                rr_graph.create_edge(inode, itr->to_node, RRSwitchId(itr->switch_type));
-            }
-        } else {
-            //Add new edge incrementally
-            //
-            //This should occur relatively rarely (e.g. a backward bidir edge) so memory fragmentation shouldn't be a big problem
-            for (auto itr = edge_range.first; itr != edge_range.second; ++itr) {
-                rr_graph.create_edge(inode, itr->to_node, RRSwitchId(itr->switch_type));
-            }
+            rr_graph.create_edge(inode, itr->to_node, RRSwitchId(itr->switch_type));
         }
     }
 }
@@ -2672,7 +2663,23 @@ std::string describe_rr_node(const RRNodeId& inode) {
 
     return msg;
 }
-static void build_unidir_rr_opins(const int i, const int j, const e_side side, const DeviceGrid& grid, const std::vector<vtr::Matrix<int>>& Fc_out, const int max_chan_width, const t_chan_details& chan_details_x, const t_chan_details& chan_details_y, vtr::NdMatrix<int, 3>& Fc_xofs, vtr::NdMatrix<int, 3>& Fc_yofs, t_rr_edge_info_set& rr_edges_to_create, bool* Fc_clipped, const t_rr_node_indices& L_rr_node_indices, const RRGraph& rr_graph, const t_direct_inf* directs, const int num_directs, const t_clb_to_clb_directs* clb_to_clb_directs, const int num_seg_types) {
+static void build_unidir_rr_opins(const int i, const int j, 
+                                  const e_side side, 
+                                  const DeviceGrid& grid, 
+                                  const std::vector<vtr::Matrix<int>>& Fc_out, 
+                                  const int max_chan_width, 
+                                  const t_chan_details& chan_details_x, 
+                                  const t_chan_details& chan_details_y, 
+                                  vtr::NdMatrix<int, 3>& Fc_xofs, 
+                                  vtr::NdMatrix<int, 3>& Fc_yofs, 
+                                  t_rr_edge_info_set& rr_edges_to_create, 
+                                  bool* Fc_clipped, 
+                                  const t_rr_node_indices& L_rr_node_indices, 
+                                  const RRGraph& rr_graph, 
+                                  const t_direct_inf* directs, 
+                                  const int num_directs, 
+                                  const t_clb_to_clb_directs* clb_to_clb_directs, 
+                                  const int num_seg_types) {
     /*
      * This routine adds the edges from opins to channels at the specified
      * grid location (i,j) and grid tile side
@@ -2696,7 +2703,11 @@ static void build_unidir_rr_opins(const int i, const int j, const e_side side, c
         }
 
         RRNodeId opin_node_index = rr_graph.find_node(i, j, OPIN, pin_index, side);
-        if (false == rr_graph.valid_node_id(opin_node_index)) continue; //No valid from node
+        //if (false == rr_graph.valid_node_id(opin_node_index)) continue; //No valid from node
+
+        if (1 == type->pinloc[width_offset][height_offset][side][pin_index]) {
+            VTR_ASSERT(true == rr_graph.valid_node_id(opin_node_index));
+        }
 
         for (int iseg = 0; iseg < num_seg_types; iseg++) {
             /* get Fc for this segment type */
