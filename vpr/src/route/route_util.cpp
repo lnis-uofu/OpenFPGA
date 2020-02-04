@@ -55,24 +55,23 @@ vtr::Matrix<float> calculate_routing_avail(t_rr_type rr_type) {
     auto& device_ctx = g_vpr_ctx.device();
 
     vtr::Matrix<float> avail({{device_ctx.grid.width(), device_ctx.grid.height()}}, 0.);
-    for (size_t inode = 0; inode < device_ctx.rr_nodes.size(); ++inode) {
-        auto& rr_node = device_ctx.rr_nodes[inode];
+    for (const RRNodeId& inode : device_ctx.rr_graph.nodes()) {
 
-        if (rr_node.type() == CHANX && rr_type == CHANX) {
-            VTR_ASSERT(rr_node.type() == CHANX);
-            VTR_ASSERT(rr_node.ylow() == rr_node.yhigh());
+        if (device_ctx.rr_graph.node_type(inode) == CHANX && rr_type == CHANX) {
+            VTR_ASSERT(device_ctx.rr_graph.node_type(inode) == CHANX);
+            VTR_ASSERT(device_ctx.rr_graph.node_ylow(inode) == device_ctx.rr_graph.node_yhigh(inode));
 
-            int y = rr_node.ylow();
-            for (int x = rr_node.xlow(); x <= rr_node.xhigh(); ++x) {
-                avail[x][y] += rr_node.capacity();
+            int y = device_ctx.rr_graph.node_ylow(inode);
+            for (int x = device_ctx.rr_graph.node_xlow(inode); x <= device_ctx.rr_graph.node_xhigh(inode); ++x) {
+                avail[x][y] += device_ctx.rr_graph.node_capacity(inode);
             }
-        } else if (rr_node.type() == CHANY && rr_type == CHANY) {
-            VTR_ASSERT(rr_node.type() == CHANY);
-            VTR_ASSERT(rr_node.xlow() == rr_node.xhigh());
+        } else if (device_ctx.rr_graph.node_type(inode) == CHANY && rr_type == CHANY) {
+            VTR_ASSERT(device_ctx.rr_graph.node_type(inode) == CHANY);
+            VTR_ASSERT(device_ctx.rr_graph.node_xlow(inode) == device_ctx.rr_graph.node_xhigh(inode));
 
-            int x = rr_node.xlow();
-            for (int y = rr_node.ylow(); y <= rr_node.yhigh(); ++y) {
-                avail[x][y] += rr_node.capacity();
+            int x = device_ctx.rr_graph.node_xlow(inode);
+            for (int y = device_ctx.rr_graph.node_ylow(inode); y <= device_ctx.rr_graph.node_yhigh(inode); ++y) {
+                avail[x][y] += device_ctx.rr_graph.node_capacity(inode);
             }
         }
     }

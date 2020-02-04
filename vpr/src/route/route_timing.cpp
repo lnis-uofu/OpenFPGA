@@ -2598,19 +2598,19 @@ static OveruseInfo calculate_overuse_info() {
         }
     }
 
-    return OveruseInfo(device_ctx.rr_nodes.size(), overused_nodes, total_overuse, worst_overuse);
+    return OveruseInfo(device_ctx.rr_graph.nodes().size(), overused_nodes, total_overuse, worst_overuse);
 }
 
 static size_t calculate_wirelength_available() {
     auto& device_ctx = g_vpr_ctx.device();
 
     size_t available_wirelength = 0;
-    for (size_t i = 0; i < device_ctx.rr_nodes.size(); ++i) {
-        if (device_ctx.rr_nodes[i].type() == CHANX || device_ctx.rr_nodes[i].type() == CHANY) {
-            size_t length_x = device_ctx.rr_nodes[i].xhigh() - device_ctx.rr_nodes[i].xlow();
-            size_t length_y = device_ctx.rr_nodes[i].yhigh() - device_ctx.rr_nodes[i].ylow();
+    for (const RRNodeId& node : device_ctx.rr_graph.nodes()) {
+        if (device_ctx.rr_graph.node_type(node) == CHANX || device_ctx.rr_graph.node_type(node) == CHANY) {
+            size_t length_x = device_ctx.rr_graph.node_xhigh(node) - device_ctx.rr_graph.node_xlow(node);
+            size_t length_y = device_ctx.rr_graph.node_yhigh(node) - device_ctx.rr_graph.node_ylow(node);
 
-            available_wirelength += device_ctx.rr_nodes[i].capacity() * (length_x + length_y + 1);
+            available_wirelength += device_ctx.rr_graph.node_capacity(node) * (length_x + length_y + 1);
         }
     }
     return available_wirelength;
