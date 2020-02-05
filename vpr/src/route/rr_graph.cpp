@@ -3006,14 +3006,14 @@ static int get_opin_direct_connections(int x,
 
                         if (directs[i].to_side != NUM_SIDES) {
                             //Explicit side specified, only create if pin exists on that side
-                            RRNodeId inode = rr_graph.find_node(x + directs[i].x_offset, y + directs[i].y_offset,
+                            RRNodeId inode = get_rr_graph_node_index(L_rr_node_indices, x + directs[i].x_offset - width_offset, y + directs[i].y_offset - height_offset,
                                                           IPIN, ipin, directs[i].to_side);
                             if (inode != RRNodeId::INVALID()) {
                                 inodes.push_back(inode);
                             }
                         } else {
                             //No side specified, get all candidates
-                            inodes = get_rr_graph_node_indices(L_rr_node_indices, x + directs[i].x_offset, y + directs[i].y_offset,
+                            inodes = get_rr_graph_node_indices(L_rr_node_indices, x + directs[i].x_offset - width_offset, y + directs[i].y_offset - height_offset,
                                                                IPIN, ipin);
                         }
 
