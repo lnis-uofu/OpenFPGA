@@ -846,10 +846,12 @@ RRNodeId RRGraph::create_node(const t_rr_type& type) {
     return node_id;
 }
 
-RREdgeId RRGraph::create_edge(const RRNodeId& source, const RRNodeId& sink, const RRSwitchId& switch_id) {
+RREdgeId RRGraph::create_edge(const RRNodeId& source, const RRNodeId& sink, const RRSwitchId& switch_id, const bool& fake_switch) {
     VTR_ASSERT(valid_node_id(source));
     VTR_ASSERT(valid_node_id(sink));
-    VTR_ASSERT(valid_switch_id(switch_id));
+    if (false == fake_switch) {
+      VTR_ASSERT(valid_switch_id(switch_id));
+    }
 
     /* Allocate an ID */
     RREdgeId edge_id = RREdgeId(num_edges_);
