@@ -302,18 +302,24 @@ static float route_connection_delay(
     //Get the rr nodes to route between
     auto best_driver_ptcs = get_best_classes(DRIVER, device_ctx.grid[source_x][source_y].type);
     auto best_sink_ptcs = get_best_classes(RECEIVER, device_ctx.grid[sink_x][sink_y].type);
+ 
+    int src_width_offset = device_ctx.grid[source_x][source_y].width_offset;
+    int src_height_offset = device_ctx.grid[source_x][source_y].height_offset;
+
+    int sink_width_offset = device_ctx.grid[sink_x][sink_y].width_offset;
+    int sink_height_offset = device_ctx.grid[sink_x][sink_y].height_offset;
 
     for (int driver_ptc : best_driver_ptcs) {
         VTR_ASSERT(driver_ptc != OPEN);
 
-        RRNodeId source_rr_node = device_ctx.rr_graph.find_node(source_x, source_y, SOURCE, driver_ptc);
+        RRNodeId source_rr_node = device_ctx.rr_graph.find_node(source_x - src_width_offset, source_y - src_height_offset, SOURCE, driver_ptc);
 
         VTR_ASSERT(source_rr_node != RRNodeId::INVALID());
 
         for (int sink_ptc : best_sink_ptcs) {
             VTR_ASSERT(sink_ptc != OPEN);
 
-            RRNodeId sink_rr_node = device_ctx.rr_graph.find_node(sink_x, sink_y, SINK, sink_ptc);
+            RRNodeId sink_rr_node = device_ctx.rr_graph.find_node(sink_x - sink_width_offset, sink_y - sink_height_offset, SINK, sink_ptc);
 
             VTR_ASSERT(sink_rr_node != RRNodeId::INVALID());
 
