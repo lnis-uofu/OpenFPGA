@@ -98,6 +98,11 @@ RRNodeId RoutingToClockConnection::create_virtual_clock_network_sink_node(
     float C = 0.;
     rr_graph.set_node_rc_data_index(node_index, find_create_rr_rc_data(R, C));
 
+    /* Set a ptc_num here as RRGraph object does need it to build fast look-up
+     * Legacy codes fail to do this!
+     */
+    rr_graph.set_node_ptc_num(node_index, device_ctx.grid[x][y].type->num_class);
+
     return node_index;
 }
 
