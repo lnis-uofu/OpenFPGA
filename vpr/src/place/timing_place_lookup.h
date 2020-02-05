@@ -1,6 +1,7 @@
 #ifndef TIMING_PLACE_LOOKUP_H
 #define TIMING_PLACE_LOOKUP_H
 #include "place_delay_model.h"
+#include "rr_graph_obj.h"
 
 std::unique_ptr<PlaceDelayModel> compute_place_delay_model(const t_placer_opts& placer_opts,
                                                            const t_router_opts& router_opts,
@@ -11,6 +12,6 @@ std::unique_ptr<PlaceDelayModel> compute_place_delay_model(const t_placer_opts& 
                                                            const int num_directs);
 
 std::vector<int> get_best_classes(enum e_pin_type pintype, t_physical_tile_type_ptr type);
-bool directconnect_exists(int src_rr_node, int sink_rr_node);
+bool directconnect_exists(RRNodeId src_rr_node, RRNodeId sink_rr_node);
 
 #endif

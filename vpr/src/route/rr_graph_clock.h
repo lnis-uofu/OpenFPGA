@@ -13,6 +13,8 @@
 #include "clock_network_builders.h"
 #include "clock_connection_builders.h"
 
+#include "rr_graph_fwd.h"
+
 class ClockNetwork;
 class ClockConnection;
 
@@ -23,18 +25,18 @@ class SwitchPoint {
      * Examples of SwitchPoint(s) are rib-to-spine, driver-to-spine. */
   public:
     // [grid_width][grid_height][0..nodes_at_this_location-1]
-    std::vector<std::vector<std::vector<int>>> rr_node_indices;
+    std::vector<std::vector<std::vector<RRNodeId>>> rr_node_indices;
     // Set of all the locations for this switch point. Used to quickly find
     // if the switch point exists at a certian location.
     std::set<std::pair<int, int>> locations; // x,y
   public:
     /** Getters **/
-    std::vector<int> get_rr_node_indices_at_location(int x, int y) const;
+    std::vector<RRNodeId> get_rr_node_indices_at_location(int x, int y) const;
 
     std::set<std::pair<int, int>> get_switch_locations() const;
 
     /** Setters **/
-    void insert_node_idx(int x, int y, int node_idx);
+    void insert_node_idx(int x, int y, const RRNodeId& node_idx);
 };
 
 class SwitchPoints {
@@ -50,14 +52,14 @@ class SwitchPoints {
     /* Example: x,y = middle of the chip, switch_point_name == name of main drive
      * of global clock spine, returns the rr_nodes of all the clock spines that
      * start the newtork there*/
-    std::vector<int> get_rr_node_indices_at_location(std::string switch_point_name,
+    std::vector<RRNodeId> get_rr_node_indices_at_location(std::string switch_point_name,
                                                      int x,
                                                      int y) const;
 
     std::set<std::pair<int, int>> get_switch_locations(std::string switch_point_name) const;
 
     /** Setters **/
-    void insert_switch_node_idx(std::string switch_point_name, int x, int y, int node_idx);
+    void insert_switch_node_idx(std::string switch_point_name, int x, int y, const RRNodeId& node_idx);
 };
 
 class ClockRRGraphBuilder {
@@ -78,10 +80,10 @@ class ClockRRGraphBuilder {
                              std::string switch_point_name,
                              int x,
                              int y,
-                             int node_index);
+                             const RRNodeId& node_index);
 
     /* Returns the rr_node idx of the switch at location {x, y} */
-    std::vector<int> get_rr_node_indices_at_switch_location(std::string clock_name,
+    std::vector<RRNodeId> get_rr_node_indices_at_switch_location(std::string clock_name,
                                                             std::string switch_point_name,
                                                             int x,
                                                             int y) const;

@@ -31,8 +31,7 @@ void free_draw_structs();
 
 #ifndef NO_GRAPHICS
 
-void draw_get_rr_pin_coords(int inode, float* xcen, float* ycen);
-void draw_get_rr_pin_coords(const t_rr_node* node, float* xcen, float* ycen);
+void draw_get_rr_pin_coords(const RRNodeId& inode, float* xcen, float* ycen);
 
 void draw_triangle_along_line(ezgl::renderer* g, ezgl::point2d start, ezgl::point2d end, float relative_position = 1., float arrow_size = DEFAULT_ARROW_SIZE);
 void draw_triangle_along_line(ezgl::renderer* g, ezgl::point2d loc, ezgl::point2d start, ezgl::point2d end, float arrow_size = DEFAULT_ARROW_SIZE);
@@ -58,11 +57,11 @@ ezgl::color to_ezgl_color(vtr::Color<float> color);
 void draw_screen();
 
 // search bar related functions
-ezgl::rectangle draw_get_rr_chan_bbox(int inode);
+ezgl::rectangle draw_get_rr_chan_bbox(const RRNodeId& inode);
 void draw_highlight_blocks_color(t_logical_block_type_ptr type, ClusterBlockId blk_id);
-void highlight_nets(char* message, int hit_node);
-void draw_highlight_fan_in_fan_out(const std::set<int>& nodes);
-std::set<int> draw_expand_non_configurable_rr_nodes(int hit_node);
+void highlight_nets(char* message, const RRNodeId& hit_node);
+void draw_highlight_fan_in_fan_out(const std::set<RRNodeId>& nodes);
+std::set<RRNodeId> draw_expand_non_configurable_rr_nodes(const RRNodeId& hit_node);
 void deselect_all();
 
 // toggle functions

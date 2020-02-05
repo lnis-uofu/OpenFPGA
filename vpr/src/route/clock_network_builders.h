@@ -155,17 +155,17 @@ class ClockRib : public ClockNetwork {
     void create_segments(std::vector<t_segment_inf>& segment_inf);
     void create_rr_nodes_and_internal_edges_for_one_instance(ClockRRGraphBuilder& clock_graph,
                                                              int num_segments);
-    int create_chanx_wire(int x_start,
-                          int x_end,
-                          int y,
-                          int ptc_num,
-                          e_direction direction,
-                          std::vector<t_rr_node>& rr_nodes);
+    RRNodeId create_chanx_wire(int x_start,
+                               int x_end,
+                               int y,
+                               int ptc_num,
+                               e_direction direction,
+                               RRGraph& rr_graph);
     void record_tap_locations(unsigned x_start,
                               unsigned x_end,
                               unsigned y,
-                              int left_rr_node_idx,
-                              int right_rr_node_idx,
+                              const RRNodeId& left_rr_node_idx,
+                              const RRNodeId& right_rr_node_idx,
                               ClockRRGraphBuilder& clock_graph);
 };
 
@@ -211,18 +211,18 @@ class ClockSpine : public ClockNetwork {
     void create_segments(std::vector<t_segment_inf>& segment_inf);
     void create_rr_nodes_and_internal_edges_for_one_instance(ClockRRGraphBuilder& clock_graph,
                                                              int num_segments);
-    int create_chany_wire(int y_start,
-                          int y_end,
-                          int x,
-                          int ptc_num,
-                          e_direction direction,
-                          std::vector<t_rr_node>& rr_nodes,
-                          int num_segments);
+    RRNodeId create_chany_wire(int y_start,
+                               int y_end,
+                               int x,
+                               int ptc_num,
+                               e_direction direction,
+                               RRGraph& rr_graph,
+                               int num_segments);
     void record_tap_locations(unsigned y_start,
                               unsigned y_end,
                               unsigned x,
-                              int left_node_idx,
-                              int right_node_idx,
+                              const RRNodeId& left_node_idx,
+                              const RRNodeId& right_node_idx,
                               ClockRRGraphBuilder& clock_graph);
 };
 

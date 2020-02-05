@@ -454,6 +454,13 @@ class RRGraph {
     /* Get capacitance of a node, used to built RC tree for timing analysis */
     float node_C(const RRNodeId& node) const;
 
+    /* Get the index of rc data in the list of rc_data data structure
+     * It contains the RC parasitics for different nodes in the RRGraph
+     * when used in evaluate different routing paths
+     * See cross-reference section in this header file for more details
+     */
+    short node_rc_data_index(const RRNodeId& node) const;
+
     /* Get segment id of a node, containing the information of the routing
      * segment that the node represents. See more details in the data structure t_segment_inf
      */
@@ -607,7 +614,8 @@ class RRGraph {
      * This function will automatically create a node and
      * configure the nodes and edges in connection   
      */
-    RREdgeId create_edge(const RRNodeId& source, const RRNodeId& sink, const RRSwitchId& switch_id);
+    RREdgeId create_edge(const RRNodeId& source, const RRNodeId& sink, const RRSwitchId& switch_id, const bool& fake_switch=false);
+    void set_edge_switch(const RREdgeId& edge, const RRSwitchId& switch_id);
     RRSwitchId create_switch(const t_rr_switch_inf& switch_info);
     RRSegmentId create_segment(const t_segment_inf& segment_info);
 
@@ -638,6 +646,8 @@ class RRGraph {
     void remove_edge(const RREdgeId& edge);
 
     /* Set node-level information */
+    void set_node_type(const RRNodeId& node, const t_rr_type& type);
+
     void set_node_xlow(const RRNodeId& node, const short& xlow);
     void set_node_ylow(const RRNodeId& node, const short& ylow);
     void set_node_xhigh(const RRNodeId& node, const short& xhigh);
@@ -694,6 +704,10 @@ class RRGraph {
     void set_node_R(const RRNodeId& node, const float& R);
     void set_node_C(const RRNodeId& node, const float& C);
 
+    /* Set the flyweight RC data index for node, see node_rc_data_index() for details */
+    /* TODO: the cost index should be changed to a StrongId!!! */
+    void set_node_rc_data_index(const RRNodeId& node, const short& rc_data_index);
+
     /* Set the routing segment linked to a node, only applicable to CHANX and CHANY */
     void set_node_segment(const RRNodeId& node, const RRSegmentId& segment_index);
 
@@ -713,6 +727,9 @@ class RRGraph {
 
     /* top-level function to free, should be called when to delete a RRGraph */
     void clear();
+    
+    /* Due to the rr_graph builder, we have to make this method public!!!! */
+    void clear_switches();
 
   public: /* Type implementations */
     /*
@@ -764,7 +781,6 @@ class RRGraph {
   private: /* Internal free functions */
     void clear_nodes();
     void clear_edges();
-    void clear_switches();
     void clear_segments();
 
   private: /* Graph Compression related */
@@ -841,6 +857,7 @@ class RRGraph {
     vtr::vector<RRNodeId, e_side> node_sides_;
     vtr::vector<RRNodeId, float> node_Rs_;
     vtr::vector<RRNodeId, float> node_Cs_;
+    vtr::vector<RRNodeId, short> node_rc_data_indices_;
     vtr::vector<RRNodeId, RRSegmentId> node_segments_; /* Segment ids for each node */
 
     /*
@@ -878,8 +895,11 @@ class RRGraph {
     vtr::vector<RRNodeId, std::unique_ptr<RREdgeId[]>> node_edges_;
 
     /* Edge related data */
-    size_t num_edges_;                              /* Range of edge ids */
-    std::unordered_set<RREdgeId> invalid_edge_ids_; /* Invalid edge ids */
+    /* Range of edge ids, use the unsigned long as 
+     * the number of edges could be >10 times larger than the number of nodes! 
+     */
+    unsigned long num_edges_;                         
+    std::unordered_set<RREdgeId> invalid_edge_ids_;   /* Invalid edge ids */
     vtr::vector<RREdgeId, RRNodeId> edge_src_nodes_;
     vtr::vector<RREdgeId, RRNodeId> edge_sink_nodes_;
     vtr::vector<RREdgeId, RRSwitchId> edge_switches_;

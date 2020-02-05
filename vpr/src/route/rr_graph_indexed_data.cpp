@@ -16,17 +16,17 @@
 /******************* Subroutines local to this module ************************/
 
 static void load_rr_indexed_data_base_costs(int nodes_per_chan,
-                                            const t_rr_node_indices& L_rr_node_indices,
+                                            const RRGraph& rr_graph,
                                             enum e_base_cost_type base_cost_type);
 
 static float get_delay_normalization_fac(int nodes_per_chan,
-                                         const t_rr_node_indices& L_rr_node_indices);
+                                         const RRGraph& rr_graph);
 
 static void load_rr_indexed_data_T_values(int index_start,
                                           int num_indices_to_load,
                                           t_rr_type rr_type,
                                           int nodes_per_chan,
-                                          const t_rr_node_indices& L_rr_node_indices);
+                                          const RRGraph& rr_graph);
 
 static void fixup_rr_indexed_data_T_values(size_t num_segment);
 
@@ -48,7 +48,7 @@ static std::vector<size_t> count_rr_segment_types();
  * x-channel its own cost_index, and each segment type in a y-channel its    *
  * own cost_index.                                                           */
 void alloc_and_load_rr_indexed_data(const std::vector<t_segment_inf>& segment_inf,
-                                    const t_rr_node_indices& L_rr_node_indices,
+                                    const RRGraph& rr_graph,
                                     const int nodes_per_chan,
                                     int wire_to_ipin_switch,
                                     enum e_base_cost_type base_cost_type) {
@@ -93,7 +93,7 @@ void alloc_and_load_rr_indexed_data(const std::vector<t_segment_inf>& segment_in
         device_ctx.rr_indexed_data[index].seg_index = iseg;
     }
     load_rr_indexed_data_T_values(CHANX_COST_INDEX_START, num_segment, CHANX,
-                                  nodes_per_chan, L_rr_node_indices);
+                                  nodes_per_chan, rr_graph);
 
     /* Y-directed segments. */
     for (iseg = 0; iseg < num_segment; iseg++) {
@@ -114,11 +114,11 @@ void alloc_and_load_rr_indexed_data(const std::vector<t_segment_inf>& segment_in
         device_ctx.rr_indexed_data[index].seg_index = iseg;
     }
     load_rr_indexed_data_T_values((CHANX_COST_INDEX_START + num_segment),
-                                  num_segment, CHANY, nodes_per_chan, L_rr_node_indices);
+                                  num_segment, CHANY, nodes_per_chan, rr_graph);
 
     fixup_rr_indexed_data_T_values(num_segment);
 
-    load_rr_indexed_data_base_costs(nodes_per_chan, L_rr_node_indices,
+    load_rr_indexed_data_base_costs(nodes_per_chan, rr_graph,
                                     base_cost_type);
 }
 
@@ -143,7 +143,7 @@ void load_rr_index_segments(const int num_segment) {
 }
 
 static void load_rr_indexed_data_base_costs(int nodes_per_chan,
-                                            const t_rr_node_indices& L_rr_node_indices,
+                                            const RRGraph& rr_graph,
                                             enum e_base_cost_type base_cost_type) {
     /* Loads the base_cost member of device_ctx.rr_indexed_data according to the specified *
      * base_cost_type.                                                          */
@@ -156,7 +156,7 @@ static void load_rr_indexed_data_base_costs(int nodes_per_chan,
     if (base_cost_type == DEMAND_ONLY || base_cost_type == DEMAND_ONLY_NORMALIZED_LENGTH) {
         delay_normalization_fac = 1.;
     } else {
-        delay_normalization_fac = get_delay_normalization_fac(nodes_per_chan, L_rr_node_indices);
+        delay_normalization_fac = get_delay_normalization_fac(nodes_per_chan, rr_graph);
     }
 
     device_ctx.rr_indexed_data[SOURCE_COST_INDEX].base_cost = delay_normalization_fac;
@@ -219,10 +219,10 @@ static std::vector<size_t> count_rr_segment_types() {
 
     auto& device_ctx = g_vpr_ctx.device();
 
-    for (size_t inode = 0; inode < device_ctx.rr_nodes.size(); ++inode) {
-        if (device_ctx.rr_nodes[inode].type() != CHANX && device_ctx.rr_nodes[inode].type() != CHANY) continue;
+    for (const RRNodeId& inode : device_ctx.rr_graph.nodes()) {
+        if (device_ctx.rr_graph.node_type(inode) != CHANX && device_ctx.rr_graph.node_type(inode) != CHANY) continue;
 
-        int cost_index = device_ctx.rr_nodes[inode].cost_index();
+        int cost_index = device_ctx.rr_graph.node_cost_index(inode);
 
         int seg_index = device_ctx.rr_indexed_data[cost_index].seg_index;
 
@@ -240,12 +240,13 @@ static std::vector<size_t> count_rr_segment_types() {
 }
 
 static float get_delay_normalization_fac(int nodes_per_chan,
-                                         const t_rr_node_indices& L_rr_node_indices) {
+                                         const RRGraph& rr_graph) {
     /* Returns the average delay to go 1 CLB distance along a wire.  */
 
     const int clb_dist = 3; /* Number of CLBs I think the average conn. goes. */
 
-    int inode, itrack, cost_index;
+    RRNodeId inode;
+    int itrack, cost_index;
     float Tdel, Tdel_sum, frac_num_seg;
 
     auto& device_ctx = g_vpr_ctx.device();
@@ -254,10 +255,10 @@ static float get_delay_normalization_fac(int nodes_per_chan,
 
     for (itrack = 0; itrack < nodes_per_chan; itrack++) {
         inode = find_average_rr_node_index(device_ctx.grid.width(), device_ctx.grid.height(), CHANX, itrack,
-                                           L_rr_node_indices);
-        if (inode == -1)
+                                           rr_graph);
+        if (inode == RRNodeId::INVALID())
             continue;
-        cost_index = device_ctx.rr_nodes[inode].cost_index();
+        cost_index = device_ctx.rr_graph.node_cost_index(inode);
         frac_num_seg = clb_dist * device_ctx.rr_indexed_data[cost_index].inv_length;
         Tdel = frac_num_seg * device_ctx.rr_indexed_data[cost_index].T_linear
                + frac_num_seg * frac_num_seg
@@ -267,10 +268,10 @@ static float get_delay_normalization_fac(int nodes_per_chan,
 
     for (itrack = 0; itrack < nodes_per_chan; itrack++) {
         inode = find_average_rr_node_index(device_ctx.grid.width(), device_ctx.grid.height(), CHANY, itrack,
-                                           L_rr_node_indices);
-        if (inode == -1)
+                                           rr_graph);
+        if (inode == RRNodeId::INVALID())
             continue;
-        cost_index = device_ctx.rr_nodes[inode].cost_index();
+        cost_index = device_ctx.rr_graph.node_cost_index(inode);
         frac_num_seg = clb_dist * device_ctx.rr_indexed_data[cost_index].inv_length;
         Tdel = frac_num_seg * device_ctx.rr_indexed_data[cost_index].T_linear
                + frac_num_seg * frac_num_seg
@@ -285,7 +286,7 @@ static void load_rr_indexed_data_T_values(int index_start,
                                           int num_indices_to_load,
                                           t_rr_type rr_type,
                                           int nodes_per_chan,
-                                          const t_rr_node_indices& L_rr_node_indices) {
+                                          const RRGraph& rr_graph) {
     /* Loads the average propagation times through segments of each index type   *
      * for either all CHANX segment types or all CHANY segment types.  It does   *
      * this by looking at all the segments in one channel in the middle of the   *
@@ -293,7 +294,8 @@ static void load_rr_indexed_data_T_values(int index_start,
      * same type and using them to compute average delay values for this type of *
      * segment. */
 
-    int itrack, inode, cost_index;
+    int itrack, cost_index;
+    RRNodeId inode;
     float *C_total, *R_total;                                         /* [0..device_ctx.rr_indexed_data.size() - 1] */
     double *switch_R_total, *switch_T_total, *switch_Cinternal_total; /* [0..device_ctx.rr_indexed_data.size() - 1] */
     short* switches_buffered;
@@ -327,26 +329,25 @@ static void load_rr_indexed_data_T_values(int index_start,
 
     for (itrack = 0; itrack < nodes_per_chan; itrack++) {
         inode = find_average_rr_node_index(device_ctx.grid.width(), device_ctx.grid.height(), rr_type, itrack,
-                                           L_rr_node_indices);
-        if (inode == -1)
+                                           rr_graph);
+        if (inode == RRNodeId::INVALID())
             continue;
-        cost_index = device_ctx.rr_nodes[inode].cost_index();
+        cost_index = rr_graph.node_cost_index(inode);
         num_nodes_of_index[cost_index]++;
-        C_total[cost_index] += device_ctx.rr_nodes[inode].C();
-        R_total[cost_index] += device_ctx.rr_nodes[inode].R();
+        C_total[cost_index] += rr_graph.node_C(inode);
+        R_total[cost_index] += rr_graph.node_R(inode);
 
         /* get average switch parameters */
-        int num_edges = device_ctx.rr_nodes[inode].num_edges();
         double avg_switch_R = 0;
         double avg_switch_T = 0;
         double avg_switch_Cinternal = 0;
         int num_switches = 0;
         short buffered = UNDEFINED;
-        for (int iedge = 0; iedge < num_edges; iedge++) {
-            int to_node_index = device_ctx.rr_nodes[inode].edge_sink_node(iedge);
+        for (const RREdgeId& iedge : rr_graph.node_out_edges(inode)) {
+            RRNodeId to_node_index = device_ctx.rr_graph.edge_sink_node(iedge);
             /* want to get C/R/Tdel/Cinternal of switches that connect this track segment to other track segments */
-            if (device_ctx.rr_nodes[to_node_index].type() == CHANX || device_ctx.rr_nodes[to_node_index].type() == CHANY) {
-                int switch_index = device_ctx.rr_nodes[inode].edge_switch(iedge);
+            if (device_ctx.rr_graph.node_type(to_node_index) == CHANX || device_ctx.rr_graph.node_type(to_node_index) == CHANY) {
+                int switch_index = (int)size_t(device_ctx.rr_graph.edge_switch(iedge));
                 avg_switch_R += device_ctx.rr_switch_inf[switch_index].R;
                 avg_switch_T += device_ctx.rr_switch_inf[switch_index].Tdel;
                 avg_switch_Cinternal += device_ctx.rr_switch_inf[switch_index].Cinternal;

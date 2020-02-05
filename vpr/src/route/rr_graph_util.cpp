@@ -6,20 +6,20 @@
 #include "globals.h"
 #include "rr_graph_util.h"
 
-int seg_index_of_cblock(t_rr_type from_rr_type, int to_node) {
+int seg_index_of_cblock(t_rr_type from_rr_type, const RRNodeId& to_node) {
     /* Returns the segment number (distance along the channel) of the connection *
      * box from from_rr_type (CHANX or CHANY) to to_node (IPIN).                 */
 
     auto& device_ctx = g_vpr_ctx.device();
 
     if (from_rr_type == CHANX)
-        return (device_ctx.rr_nodes[to_node].xlow());
+        return (device_ctx.rr_graph.node_xlow(to_node));
     else
         /* CHANY */
-        return (device_ctx.rr_nodes[to_node].ylow());
+        return (device_ctx.rr_graph.node_ylow(to_node));
 }
 
-int seg_index_of_sblock(int from_node, int to_node) {
+int seg_index_of_sblock(const RRNodeId& from_node, const RRNodeId& to_node) {
     /* Returns the segment number (distance along the channel) of the switch box *
      * box from from_node (CHANX or CHANY) to to_node (CHANX or CHANY).  The     *
      * switch box on the left side of a CHANX segment at (i,j) has seg_index =   *
@@ -31,47 +31,47 @@ int seg_index_of_sblock(int from_node, int to_node) {
 
     auto& device_ctx = g_vpr_ctx.device();
 
-    from_rr_type = device_ctx.rr_nodes[from_node].type();
-    to_rr_type = device_ctx.rr_nodes[to_node].type();
+    from_rr_type = device_ctx.rr_graph.node_type(from_node);
+    to_rr_type = device_ctx.rr_graph.node_type(to_node);
 
     if (from_rr_type == CHANX) {
         if (to_rr_type == CHANY) {
-            return (device_ctx.rr_nodes[to_node].xlow());
+            return (device_ctx.rr_graph.node_xlow(to_node));
         } else if (to_rr_type == CHANX) {
-            if (device_ctx.rr_nodes[to_node].xlow() > device_ctx.rr_nodes[from_node].xlow()) { /* Going right */
-                return (device_ctx.rr_nodes[from_node].xhigh());
+            if (device_ctx.rr_graph.node_xlow(to_node) > device_ctx.rr_graph.node_xlow(from_node)) { /* Going right */
+                return (device_ctx.rr_graph.node_xhigh(from_node));
             } else { /* Going left */
-                return (device_ctx.rr_nodes[to_node].xhigh());
+                return (device_ctx.rr_graph.node_xhigh(to_node));
             }
         } else {
             VPR_FATAL_ERROR(VPR_ERROR_ROUTE,
-                            "in seg_index_of_sblock: to_node %d is of type %d.\n",
-                            to_node, to_rr_type);
+                            "in seg_index_of_sblock: to_node %ld is of type %d.\n",
+                            size_t(to_node), to_rr_type);
             return OPEN; //Should not reach here once thrown
         }
     }
     /* End from_rr_type is CHANX */
     else if (from_rr_type == CHANY) {
         if (to_rr_type == CHANX) {
-            return (device_ctx.rr_nodes[to_node].ylow());
+            return (device_ctx.rr_graph.node_ylow(to_node));
         } else if (to_rr_type == CHANY) {
-            if (device_ctx.rr_nodes[to_node].ylow() > device_ctx.rr_nodes[from_node].ylow()) { /* Going up */
-                return (device_ctx.rr_nodes[from_node].yhigh());
+            if (device_ctx.rr_graph.node_ylow(to_node) > device_ctx.rr_graph.node_ylow(from_node)) { /* Going up */
+                return (device_ctx.rr_graph.node_yhigh(from_node));
             } else { /* Going down */
-                return (device_ctx.rr_nodes[to_node].yhigh());
+                return (device_ctx.rr_graph.node_yhigh(to_node));
             }
         } else {
             VPR_FATAL_ERROR(VPR_ERROR_ROUTE,
-                            "in seg_index_of_sblock: to_node %d is of type %d.\n",
-                            to_node, to_rr_type);
+                            "in seg_index_of_sblock: to_node %ld is of type %d.\n",
+                            size_t(to_node), to_rr_type);
             return OPEN; //Should not reach here once thrown
         }
     }
     /* End from_rr_type is CHANY */
     else {
         VPR_FATAL_ERROR(VPR_ERROR_ROUTE,
-                        "in seg_index_of_sblock: from_node %d is of type %d.\n",
-                        from_node, from_rr_type);
+                        "in seg_index_of_sblock: from_node %ld is of type %d.\n",
+                        size_t(from_node), from_rr_type);
         return OPEN; //Should not reach here once thrown
     }
 }

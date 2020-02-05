@@ -231,7 +231,7 @@ static void process_nodes(std::ifstream& fp, ClusterNetId inet, const char* file
         } else if (tokens[0] == "Node:") {
             /*An actual line, go through each node and add it to the route tree*/
             inode = atoi(tokens[1].c_str());
-            auto& node = device_ctx.rr_nodes[inode];
+            const RRNodeId& node = RRNodeId(inode);
 
             /*First node needs to be source. It is isolated to correctly set heap head.*/
             if (node_count == 0 && tokens[2] != "SOURCE") {
@@ -240,7 +240,7 @@ static void process_nodes(std::ifstream& fp, ClusterNetId inet, const char* file
             }
 
             /*Check node types if match rr graph*/
-            if (tokens[2] != node.type_string()) {
+            if (tokens[2] != rr_node_typename[device_ctx.rr_graph.node_type(node)]) {
                 vpr_throw(VPR_ERROR_ROUTE, filename, lineno,
                           "Node %d has a type that does not match the RR graph", inode);
             }
@@ -249,13 +249,19 @@ static void process_nodes(std::ifstream& fp, ClusterNetId inet, const char* file
 
             if (tokens[4] == "to") {
                 format_coordinates(x2, y2, tokens[5], inet, filename, lineno);
-                if (node.xlow() != x || node.xhigh() != x2 || node.yhigh() != y2 || node.ylow() != y) {
+                if (device_ctx.rr_graph.node_xlow(node) != x 
+                 || device_ctx.rr_graph.node_xhigh(node) != x2 
+                 || device_ctx.rr_graph.node_yhigh(node) != y2 
+                 || device_ctx.rr_graph.node_ylow(node) != y) {
                     vpr_throw(VPR_ERROR_ROUTE, filename, lineno,
                               "The coordinates of node %d does not match the rr graph", inode);
                 }
                 offset = 2;
             } else {
-                if (node.xlow() != x || node.xhigh() != x || node.yhigh() != y || node.ylow() != y) {
+                if (device_ctx.rr_graph.node_xlow(node) != x 
+                 || device_ctx.rr_graph.node_xhigh(node) != x 
+                 || device_ctx.rr_graph.node_yhigh(node) != y 
+                 || device_ctx.rr_graph.node_ylow(node) != y) {
                     vpr_throw(VPR_ERROR_ROUTE, filename, lineno,
                               "The coordinates of node %d does not match the rr graph", inode);
                 }
@@ -276,7 +282,7 @@ static void process_nodes(std::ifstream& fp, ClusterNetId inet, const char* file
             }
 
             ptc = atoi(tokens[5 + offset].c_str());
-            if (node.ptc_num() != ptc) {
+            if (device_ctx.rr_graph.node_ptc_num(node) != ptc) {
                 vpr_throw(VPR_ERROR_ROUTE, filename, lineno,
                           "The ptc num of node %d does not match the rr graph", inode);
             }
@@ -285,7 +291,7 @@ static void process_nodes(std::ifstream& fp, ClusterNetId inet, const char* file
             if (tokens[6 + offset] != "Switch:") {
                 /*This is an opin or ipin, process its pin nums*/
                 if (!is_io_type(device_ctx.grid[x][y].type) && (tokens[2] == "IPIN" || tokens[2] == "OPIN")) {
-                    int pin_num = device_ctx.rr_nodes[inode].ptc_num();
+                    int pin_num = device_ctx.rr_graph.node_ptc_num(node);
                     int height_offset = device_ctx.grid[x][y].height_offset;
                     ClusterBlockId iblock = place_ctx.grid_blocks[x][y - height_offset].blocks[0];
                     t_pb_graph_pin* pb_pin = get_pb_graph_node_pin_from_block_pin(iblock, pin_num);
@@ -312,7 +318,7 @@ static void process_nodes(std::ifstream& fp, ClusterNetId inet, const char* file
             /* Allocate and load correct values to trace.head*/
             if (node_count == 0) {
                 route_ctx.trace[inet].head = alloc_trace_data();
-                route_ctx.trace[inet].head->index = inode;
+                route_ctx.trace[inet].head->index = node;
                 route_ctx.trace[inet].head->iswitch = switch_id;
                 route_ctx.trace[inet].head->next = nullptr;
                 tptr = route_ctx.trace[inet].head;
@@ -320,7 +326,7 @@ static void process_nodes(std::ifstream& fp, ClusterNetId inet, const char* file
             } else {
                 tptr->next = alloc_trace_data();
                 tptr = tptr->next;
-                tptr->index = inode;
+                tptr->index = node;
                 tptr->iswitch = switch_id;
                 tptr->next = nullptr;
                 node_count++;

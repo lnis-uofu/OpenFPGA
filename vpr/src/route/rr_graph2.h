@@ -15,21 +15,29 @@ enum e_seg_details_type {
 };
 
 struct t_rr_edge_info {
-    t_rr_edge_info(int from, int to, short type) noexcept
+    t_rr_edge_info(RRNodeId from, RRNodeId to, short type) noexcept
         : from_node(from)
         , to_node(to)
         , switch_type(type) {}
 
-    int from_node = OPEN;
-    int to_node = OPEN;
+    RRNodeId from_node = RRNodeId::INVALID();
+    RRNodeId to_node = RRNodeId::INVALID();
     short switch_type = OPEN;
 
     friend bool operator<(const t_rr_edge_info& lhs, const t_rr_edge_info& rhs) {
-        return std::tie(lhs.from_node, lhs.to_node, lhs.switch_type) < std::tie(rhs.from_node, rhs.to_node, rhs.switch_type);
+        size_t lhs_from_node = size_t(lhs.from_node);
+        size_t lhs_to_node = size_t(lhs.to_node);
+        size_t rhs_from_node = size_t(rhs.from_node);
+        size_t rhs_to_node = size_t(rhs.to_node);
+        return std::tie(lhs_from_node, lhs_to_node, lhs.switch_type) < std::tie(rhs_from_node, rhs_to_node, rhs.switch_type);
     }
 
     friend bool operator==(const t_rr_edge_info& lhs, const t_rr_edge_info& rhs) {
-        return std::tie(lhs.from_node, lhs.to_node, lhs.switch_type) == std::tie(rhs.from_node, rhs.to_node, rhs.switch_type);
+        size_t lhs_from_node = size_t(lhs.from_node);
+        size_t lhs_to_node = size_t(lhs.to_node);
+        size_t rhs_from_node = size_t(rhs.from_node);
+        size_t rhs_to_node = size_t(rhs.to_node);
+        return std::tie(lhs_from_node, lhs_to_node, lhs.switch_type) == std::tie(rhs_from_node, rhs_to_node, rhs.switch_type);
     }
 };
 
@@ -51,7 +59,14 @@ int get_rr_node_index(int x,
                       int ptc,
                       const t_rr_node_indices& L_rr_node_indices);
 
+
 //Returns all the rr nodes associated with the specified coordinate (i.e. accross sides)
+std::vector<RRNodeId> get_rr_graph_node_indices(const t_rr_node_indices& L_rr_node_indices,
+                                                int x,
+                                                int y,
+                                                t_rr_type rr_type,
+                                                int ptc);
+
 std::vector<int> get_rr_node_indices(const t_rr_node_indices& L_rr_node_indices,
                                      int x,
                                      int y,
@@ -66,6 +81,13 @@ std::vector<int> get_rr_node_chan_wires_at_location(const t_rr_node_indices& L_r
 
 //Return the first rr node of the specified type and coordinates
 // For non-IPIN/OPIN types 'side' is ignored
+RRNodeId get_rr_graph_node_index(const t_rr_node_indices& L_rr_node_indices,
+                                 int x,
+                                 int y,
+                                 t_rr_type rr_type,
+                                 int ptc,
+                                 e_side side = NUM_SIDES);
+
 int get_rr_node_index(const t_rr_node_indices& L_rr_node_indices,
                       int x,
                       int y,
@@ -73,11 +95,11 @@ int get_rr_node_index(const t_rr_node_indices& L_rr_node_indices,
                       int ptc,
                       e_side side = NUM_SIDES);
 
-int find_average_rr_node_index(int device_width,
-                               int device_height,
-                               t_rr_type rr_type,
-                               int ptc,
-                               const t_rr_node_indices& L_rr_node_indices);
+RRNodeId find_average_rr_node_index(int device_width,
+                                    int device_height,
+                                    t_rr_type rr_type,
+                                    int ptc,
+                                    const RRGraph& rr_graph);
 
 t_seg_details* alloc_and_load_seg_details(int* max_chan_width,
                                           const int max_len,
@@ -145,7 +167,7 @@ bool is_sblock(const int chan,
 int get_bidir_opin_connections(const int i,
                                const int j,
                                const int ipin,
-                               const int from_rr_node,
+                               const RRNodeId& from_rr_node,
                                t_rr_edge_info_set& rr_edges_to_create,
                                const t_pin_to_track_lookup& opin_to_track_map,
                                const t_rr_node_indices& L_rr_node_indices,
@@ -158,7 +180,7 @@ int get_unidir_opin_connections(const int chan,
                                 const int seg_type_index,
                                 const t_rr_type chan_type,
                                 const t_chan_seg_details* seg_details,
-                                const int from_rr_node,
+                                const RRNodeId& from_rr_node,
                                 t_rr_edge_info_set& rr_edges_to_create,
                                 vtr::NdMatrix<int, 3>& Fc_ofs,
                                 const int max_len,
@@ -170,9 +192,10 @@ int get_track_to_pins(int seg,
                       int chan,
                       int track,
                       int tracks_per_chan,
-                      int from_rr_node,
+                      const RRNodeId& from_rr_node,
                       t_rr_edge_info_set& rr_edges_to_create,
                       const t_rr_node_indices& L_rr_node_indices,
+                      const RRGraph& rr_graph,
                       const t_track_to_pin_lookup& track_to_pin_lookup,
                       const t_chan_seg_details* seg_details,
                       enum e_rr_type chan_type,
@@ -191,13 +214,14 @@ int get_track_to_tracks(const int from_chan,
                         const DeviceGrid& grid,
                         const int Fs_per_side,
                         t_sblock_pattern& sblock_pattern,
-                        const int from_rr_node,
+                        const RRNodeId& from_rr_node,
                         t_rr_edge_info_set& rr_edges_to_create,
                         const t_chan_seg_details* from_seg_details,
                         const t_chan_seg_details* to_seg_details,
                         const t_chan_details& to_chan_details,
                         const enum e_directionality directionality,
                         const t_rr_node_indices& L_rr_node_indices,
+                        const RRGraph& rr_graph,
                         const vtr::NdMatrix<std::vector<int>, 3>& switch_block_conn,
                         t_sb_connection_map* sb_conn_map);
 

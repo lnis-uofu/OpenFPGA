@@ -56,7 +56,7 @@ void alloc_timing_driven_route_structs(float** pin_criticality_ptr,
                                        t_rt_node*** rt_node_of_sink_ptr);
 void free_timing_driven_route_structs(float* pin_criticality, int* sink_order, t_rt_node** rt_node_of_sink);
 
-void enable_router_debug(const t_router_opts& router_opts, ClusterNetId net, int sink_rr);
+void enable_router_debug(const t_router_opts& router_opts, ClusterNetId net, const RRNodeId& sink_rr);
 
 //Delay budget information for a specific connection
 struct t_conn_delay_budget {
@@ -80,17 +80,17 @@ struct t_conn_cost_params {
 };
 
 t_heap* timing_driven_route_connection_from_route_tree(t_rt_node* rt_root,
-                                                       int sink_node,
+                                                       const RRNodeId& sink_node,
                                                        const t_conn_cost_params cost_params,
                                                        t_bb bounding_box,
                                                        const RouterLookahead& router_lookahead,
-                                                       std::vector<int>& modified_rr_node_inf,
+                                                       std::vector<RRNodeId>& modified_rr_node_inf,
                                                        RouterStats& router_stats);
 
-std::vector<t_heap> timing_driven_find_all_shortest_paths_from_route_tree(t_rt_node* rt_root,
+vtr::vector<RRNodeId, t_heap> timing_driven_find_all_shortest_paths_from_route_tree(t_rt_node* rt_root,
                                                                           const t_conn_cost_params cost_params,
                                                                           t_bb bounding_box,
-                                                                          std::vector<int>& modified_rr_node_inf,
+                                                                          std::vector<RRNodeId>& modified_rr_node_inf,
                                                                           RouterStats& router_stats);
 
 struct timing_driven_route_structs {

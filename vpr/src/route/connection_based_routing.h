@@ -34,7 +34,7 @@ class Connection_based_routing_resources {
     Connection_based_routing_resources();
     // adding to the resources when they are reached during pruning
     // mark rr sink node as something that still needs to be reached
-    void toreach_rr_sink(int rr_sink_node) { remaining_targets.push_back(rr_sink_node); }
+    void toreach_rr_sink(const int& rr_sink_node) { remaining_targets.push_back(rr_sink_node); }
     // mark rt sink node as something that has been legally reached
     void reached_rt_sink(t_rt_node* rt_sink) { reached_rt_sinks.push_back(rt_sink); }
 

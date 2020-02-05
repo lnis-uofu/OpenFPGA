@@ -17,13 +17,13 @@ static bool breadth_first_route_net(ClusterNetId net_id, float bend_cost);
 
 static void breadth_first_expand_trace_segment(t_trace* start_ptr,
                                                int remaining_connections_to_sink,
-                                               std::vector<int>& modified_rr_node_inf);
+                                               std::vector<RRNodeId>& modified_rr_node_inf);
 
-static void breadth_first_expand_neighbours(int inode, float pcost, ClusterNetId net_id, float bend_cost);
+static void breadth_first_expand_neighbours(const RRNodeId& inode, float pcost, ClusterNetId net_id, float bend_cost);
 
-static void breadth_first_add_to_heap(const float path_cost, const float bend_cost, const int from_node, const int to_node, const int iconn);
+static void breadth_first_add_to_heap(const float path_cost, const float bend_cost, const RRNodeId& from_node, const RRNodeId& to_node, const RREdgeId& iconn);
 
-static float evaluate_node_cost(const float prev_path_cost, const float bend_cost, const int from_node, const int to_node);
+static float evaluate_node_cost(const float prev_path_cost, const float bend_cost, const RRNodeId& from_node, const RRNodeId& to_node);
 
 static void breadth_first_add_source_to_heap(ClusterNetId net_id);
 
@@ -156,7 +156,8 @@ static bool breadth_first_route_net(ClusterNetId net_id, float bend_cost) {
      * lack of potential paths, rather than congestion), it returns false, as    *
      * routing is impossible on this architecture.  Otherwise it returns true.   */
 
-    int inode, remaining_connections_to_sink;
+    int remaining_connections_to_sink;
+    RRNodeId inode;
     float pcost, new_pcost;
     t_heap* current;
     t_trace* tptr;
@@ -178,7 +179,7 @@ static bool breadth_first_route_net(ClusterNetId net_id, float bend_cost) {
 
     auto src_pin_id = cluster_ctx.clb_nlist.net_driver(net_id);
 
-    std::vector<int> modified_rr_node_inf; //RR node indicies with modified rr_node_route_inf
+    std::vector<RRNodeId> modified_rr_node_inf; //RR node indicies with modified rr_node_route_inf
 
     for (auto pin_id : cluster_ctx.clb_nlist.net_sinks(net_id)) { /* Need n-1 wires to connect n pins */
 
@@ -197,7 +198,7 @@ static bool breadth_first_route_net(ClusterNetId net_id, float bend_cost) {
         inode = current->index;
 
 #ifdef ROUTER_DEBUG
-        VTR_LOG("  Popped node %d\n", inode);
+        VTR_LOG("  Popped node %d\n", size_t(inode));
 #endif
 
         while (route_ctx.rr_node_route_inf[inode].target_flag == 0) {
@@ -269,7 +270,7 @@ static bool breadth_first_route_net(ClusterNetId net_id, float bend_cost) {
 
 static void breadth_first_expand_trace_segment(t_trace* start_ptr,
                                                int remaining_connections_to_sink,
-                                               std::vector<int>& modified_rr_node_inf) {
+                                               std::vector<RRNodeId>& modified_rr_node_inf) {
     /* Adds all the rr_nodes in the traceback segment starting at tptr (and     *
      * continuing to the end of the traceback) to the heap with a cost of zero. *
      * This allows expansion to begin from the existing wiring.  The            *
@@ -287,13 +288,13 @@ static void breadth_first_expand_trace_segment(t_trace* start_ptr,
      * this means two connections to the same SINK.                             */
 
     t_trace *tptr, *next_ptr;
-    int inode, sink_node, last_ipin_node;
+    RRNodeId inode, sink_node, last_ipin_node;
 
     auto& device_ctx = g_vpr_ctx.device();
     auto& route_ctx = g_vpr_ctx.mutable_routing();
 
     tptr = start_ptr;
-    if (tptr != nullptr && device_ctx.rr_nodes[tptr->index].type() == SINK) {
+    if (tptr != nullptr && device_ctx.rr_graph.node_type(tptr->index) == SINK) {
         /* During logical equivalence case, only use one opin */
         tptr = tptr->next;
     }
@@ -301,9 +302,9 @@ static void breadth_first_expand_trace_segment(t_trace* start_ptr,
     if (remaining_connections_to_sink == 0) { /* Usual case. */
         while (tptr != nullptr) {
 #ifdef ROUTER_DEBUG
-            VTR_LOG("  Adding previous routing node %d to heap\n", tptr->index);
+            VTR_LOG("  Adding previous routing node %d to heap\n", size_t(tptr->index));
 #endif
-            node_to_heap(tptr->index, 0., NO_PREVIOUS, NO_PREVIOUS, OPEN, OPEN);
+            node_to_heap(tptr->index, 0., RRNodeId::INVALID(), RREdgeId::INVALID(), OPEN, OPEN);
             tptr = tptr->next;
         }
     } else { /* This case never executes for most logic blocks. */
@@ -318,7 +319,7 @@ static void breadth_first_expand_trace_segment(t_trace* start_ptr,
             return; /* No route yet */
 
         next_ptr = tptr->next;
-        last_ipin_node = OPEN; /* Stops compiler from complaining. */
+        last_ipin_node = RRNodeId::INVALID(); /* Stops compiler from complaining. */
 
         /* Can't put last SINK on heap with NO_PREVIOUS, etc, since that won't let  *
          * us reach it again.  Instead, leave the last traceback element (SINK) off *
@@ -327,17 +328,17 @@ static void breadth_first_expand_trace_segment(t_trace* start_ptr,
         while (next_ptr != nullptr) {
             inode = tptr->index;
 #ifdef ROUTER_DEBUG
-            VTR_LOG("  Adding previous routing node %d to heap*\n", tptr->index);
+            VTR_LOG("  Adding previous routing node %d to heap*\n", size_t(tptr->index));
 #endif
-            node_to_heap(inode, 0., NO_PREVIOUS, NO_PREVIOUS, OPEN, OPEN);
+            node_to_heap(inode, 0., RRNodeId::INVALID(), RREdgeId::INVALID(), OPEN, OPEN);
 
-            if (device_ctx.rr_nodes[inode].type() == IPIN)
+            if (device_ctx.rr_graph.node_type(inode) == IPIN)
                 last_ipin_node = inode;
 
             tptr = next_ptr;
             next_ptr = tptr->next;
         }
-        VTR_ASSERT(last_ipin_node >= 0);
+        VTR_ASSERT(true == device_ctx.rr_graph.valid_node_id(last_ipin_node));
 
         /* This will stop the IPIN node used to get to this SINK from being         *
          * reexpanded for the remainder of this net's routing.  This will make us   *
@@ -363,24 +364,21 @@ static void breadth_first_expand_trace_segment(t_trace* start_ptr,
     }
 }
 
-static void breadth_first_expand_neighbours(int inode, float pcost, ClusterNetId net_id, float bend_cost) {
+static void breadth_first_expand_neighbours(const RRNodeId& inode, float pcost, ClusterNetId net_id, float bend_cost) {
     /* Puts all the rr_nodes adjacent to inode on the heap.  rr_nodes outside   *
      * the expanded bounding box specified in route_bb are not added to the     *
      * heap.  pcost is the path_cost to get to inode.                           */
 
-    int iconn, to_node, num_edges;
-
     auto& device_ctx = g_vpr_ctx.device();
     auto& route_ctx = g_vpr_ctx.routing();
 
-    num_edges = device_ctx.rr_nodes[inode].num_edges();
-    for (iconn = 0; iconn < num_edges; iconn++) {
-        to_node = device_ctx.rr_nodes[inode].edge_sink_node(iconn);
+    for (const RREdgeId& iconn : device_ctx.rr_graph.node_out_edges(inode)) {
+        const RRNodeId& to_node = device_ctx.rr_graph.edge_sink_node(iconn);
 
-        if (device_ctx.rr_nodes[to_node].xhigh() < route_ctx.route_bb[net_id].xmin
-            || device_ctx.rr_nodes[to_node].xlow() > route_ctx.route_bb[net_id].xmax
-            || device_ctx.rr_nodes[to_node].yhigh() < route_ctx.route_bb[net_id].ymin
-            || device_ctx.rr_nodes[to_node].ylow() > route_ctx.route_bb[net_id].ymax)
+        if (device_ctx.rr_graph.node_xhigh(to_node) < route_ctx.route_bb[net_id].xmin
+            || device_ctx.rr_graph.node_xlow(to_node) > route_ctx.route_bb[net_id].xmax
+            || device_ctx.rr_graph.node_yhigh(to_node) < route_ctx.route_bb[net_id].ymin
+            || device_ctx.rr_graph.node_ylow(to_node) > route_ctx.route_bb[net_id].ymax)
             continue; /* Node is outside (expanded) bounding box. */
 
         breadth_first_add_to_heap(pcost, bend_cost, inode, to_node, iconn);
@@ -388,9 +386,9 @@ static void breadth_first_expand_neighbours(int inode, float pcost, ClusterNetId
 }
 
 //Add to_node to the heap, and also add any nodes which are connected by non-configurable edges
-static void breadth_first_add_to_heap(const float path_cost, const float bend_cost, const int from_node, const int to_node, const int iconn) {
+static void breadth_first_add_to_heap(const float path_cost, const float bend_cost, const RRNodeId& from_node, const RRNodeId& to_node, const RREdgeId& iconn) {
 #ifdef ROUTER_DEBUG
-    VTR_LOG("      Expanding node %d\n", to_node);
+    VTR_LOG("      Expanding node %d\n", size_t(to_node));
 #endif
 
     //Create a heap element to represent this node (and any non-configurably connected nodes)
@@ -413,14 +411,14 @@ static void breadth_first_add_to_heap(const float path_cost, const float bend_co
     add_to_heap(next);
 }
 
-static float evaluate_node_cost(const float prev_path_cost, const float bend_cost, const int from_node, const int to_node) {
+static float evaluate_node_cost(const float prev_path_cost, const float bend_cost, const RRNodeId& from_node, const RRNodeId& to_node) {
     auto& device_ctx = g_vpr_ctx.device();
 
     float tot_cost = prev_path_cost + get_rr_cong_cost(to_node);
 
     if (bend_cost != 0.) {
-        t_rr_type from_type = device_ctx.rr_nodes[from_node].type();
-        t_rr_type to_type = device_ctx.rr_nodes[to_node].type();
+        t_rr_type from_type = device_ctx.rr_graph.node_type(from_node);
+        t_rr_type to_type = device_ctx.rr_graph.node_type(to_node);
         if ((from_type == CHANX && to_type == CHANY)
             || (from_type == CHANY && to_type == CHANX))
             tot_cost += bend_cost;
@@ -432,7 +430,7 @@ static float evaluate_node_cost(const float prev_path_cost, const float bend_cos
 static void breadth_first_add_source_to_heap(ClusterNetId net_id) {
     /* Adds the SOURCE of this net to the heap.  Used to start a net's routing. */
 
-    int inode;
+    RRNodeId inode;
     float cost;
 
     auto& route_ctx = g_vpr_ctx.routing();
@@ -444,5 +442,5 @@ static void breadth_first_add_source_to_heap(ClusterNetId net_id) {
     VTR_LOG("  Adding Source node %d to heap\n", inode);
 #endif
 
-    node_to_heap(inode, cost, NO_PREVIOUS, NO_PREVIOUS, OPEN, OPEN);
+    node_to_heap(inode, cost, RRNodeId::INVALID(), RREdgeId::INVALID(), OPEN, OPEN);
 }

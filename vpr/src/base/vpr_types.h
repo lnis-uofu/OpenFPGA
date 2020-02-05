@@ -40,8 +40,9 @@
 #include "vtr_flat_map.h"
 #include "vtr_cache.h"
 
-/* Header for rr_graph related definition */
+/* Xifan Tang - Header for rr_graph related definition */
 #include "rr_graph_types.h"
+#include "rr_graph_obj.h"
 
 /*******************************************************************************
  * Global data types and constants
@@ -1135,7 +1136,7 @@ typedef std::vector<std::vector<std::vector<std::vector<std::vector<int>>>>> t_r
  * next:    Pointer to the next traceback element in this route.           */
 struct t_trace {
     t_trace* next;
-    int index;
+    RRNodeId index;
     short iswitch;
 };
 
@@ -1159,8 +1160,9 @@ struct t_trace {
  *               Number of times this node must be reached to fully route.  *
  * occ:        The current occupancy of the associated rr node              */
 struct t_rr_node_route_inf {
-    int prev_node;
-    t_edge_size prev_edge;
+    /* Xifan Tang - prev_node for RRGraph object */
+    RRNodeId prev_node;
+    RREdgeId prev_edge;
 
     float pres_cost;
     float acc_cost;
@@ -1186,13 +1188,13 @@ struct t_net_routing_status {
 };
 
 struct t_node_edge {
-    t_node_edge(int fnode, int tnode) {
+    t_node_edge(const RRNodeId& fnode, const RRNodeId& tnode) {
         from_node = fnode;
         to_node = tnode;
     }
 
-    int from_node;
-    int to_node;
+    RRNodeId from_node;
+    RRNodeId to_node;
 
     //For std::set
     friend bool operator<(const t_node_edge& lhs, const t_node_edge& rhs) {
@@ -1202,7 +1204,7 @@ struct t_node_edge {
 
 //Non-configurably connected nodes and edges in the RR graph
 struct t_non_configurable_rr_sets {
-    std::set<std::set<int>> node_sets;
+    std::set<std::set<RRNodeId>> node_sets;
     std::set<std::set<t_node_edge>> edge_sets;
 };
 
@@ -1288,6 +1290,6 @@ class RouteStatus {
     int chan_width_ = -1;
 };
 
-typedef vtr::vector<ClusterBlockId, std::vector<std::vector<int>>> t_clb_opins_used; //[0..num_blocks-1][0..class-1][0..used_pins-1]
+typedef vtr::vector<ClusterBlockId, std::vector<std::vector<RRNodeId>>> t_clb_opins_used; //[0..num_blocks-1][0..class-1][0..used_pins-1]
 
 #endif

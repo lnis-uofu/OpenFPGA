@@ -29,7 +29,7 @@
  * associated with that node. The map will be used to store delays while     *
  * traversing the nodes of the route tree in load_one_net_delay_recurr.      */
 
-static std::unordered_map<int, float> inode_to_Tdel_map;
+static std::unordered_map<RRNodeId, float> inode_to_Tdel_map;
 
 /*********************** Subroutines local to this module ********************/
 
@@ -107,7 +107,7 @@ static void load_one_net_delay(vtr::vector<ClusterNetId, float*>& net_delay, Clu
     }
 
     auto& cluster_ctx = g_vpr_ctx.clustering();
-    int inode;
+    RRNodeId inode;
 
     t_rt_node* rt_root = traceback_to_route_tree(net_id); // obtain the root of the tree constructed from the traceback
     load_new_subtree_R_upstream(rt_root);                 // load in the resistance values for the route tree
