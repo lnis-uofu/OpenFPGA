@@ -25,6 +25,7 @@
 #include "vtr_log.h"
 #include "vtr_assert.h"
 #include "vtr_time.h"
+#include "rr_graph_obj_util.h"
 #include "router_lookahead_map.h"
 
 /* the cost map is computed by running a Dijkstra search from channel segment rr nodes at the specified reference coordinate */
@@ -310,10 +311,7 @@ static RRNodeId get_start_node_ind(int start_x, int start_y, int target_x, int t
      * we can get the number of tracks for a 
      * routing channel and then get the node one by one 
      */
-    short num_tracks = device_ctx.rr_graph.chan_num_tracks(start_x, start_y, rr_type); 
-    for (short i = 0; i < num_tracks; ++i) {
-      channel_node_list.push_back(device_ctx.rr_graph.find_node(start_x, start_y, rr_type, i));
-    }
+    channel_node_list = find_rr_graph_chan_nodes(device_ctx.rr_graph, start_x, start_y, rr_type);
 
     /* find first node in channel that has specified segment index and goes in the desired direction */
     for (const RRNodeId& node_ind : channel_node_list) {
