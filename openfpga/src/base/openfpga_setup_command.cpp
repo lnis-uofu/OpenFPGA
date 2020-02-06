@@ -5,6 +5,7 @@
  *******************************************************************/
 #include "openfpga_read_arch.h"
 #include "openfpga_link_arch.h"
+#include "openfpga_pb_pin_fixup.h"
 #include "check_netlist_naming_conflict.h"
 #include "openfpga_setup_command.h"
 
@@ -79,9 +80,26 @@ void add_openfpga_setup_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   ShellCommandId shell_cmd_check_netlist_naming_conflict_id = shell.add_command(shell_cmd_check_netlist_naming_conflict, "Check any block/net naming in users' BLIF netlist violates the syntax of fabric generator");
   shell.set_command_class(shell_cmd_check_netlist_naming_conflict_id, openfpga_setup_cmd_class);
   shell.set_command_execute_function(shell_cmd_check_netlist_naming_conflict_id, check_netlist_naming_conflict);
-  /* The 'link_openfpga_arch' command should NOT be executed before 'read_openfpga_arch' and 'vpr' */
+  /* The 'link_openfpga_arch' command should NOT be executed before 'vpr' */
   std::vector<ShellCommandId> cmd_dependency_check_netlist_naming_conflict(1, shell_cmd_vpr_id);
   shell.set_command_dependency(shell_cmd_link_openfpga_arch_id, cmd_dependency_check_netlist_naming_conflict);
+
+  /******************************** 
+   * Command 'pb_pin_fixup' 
+   */
+  Command shell_cmd_pb_pin_fixup("pb_pin_fixup");
+  /* Add an option '--verbose' */
+  shell_cmd_pb_pin_fixup.add_option("verbose", false, "Show verbose outputs");
+
+  /* Add command 'pb_pin_fixup' to the Shell */
+  ShellCommandId shell_cmd_pb_pin_fixup_id = shell.add_command(shell_cmd_pb_pin_fixup, "Fix up the packing results due to pin swapping during routing stage");
+  shell.set_command_class(shell_cmd_pb_pin_fixup_id, openfpga_setup_cmd_class);
+  shell.set_command_execute_function(shell_cmd_pb_pin_fixup_id, pb_pin_fixup);
+  /* The 'pb_pin_fixup' command should NOT be executed before 'read_openfpga_arch' and 'vpr' */
+  std::vector<ShellCommandId> cmd_dependency_pb_pin_fixup;
+  cmd_dependency_pb_pin_fixup.push_back(shell_cmd_read_arch_id);
+  cmd_dependency_pb_pin_fixup.push_back(shell_cmd_vpr_id);
+  shell.set_command_dependency(shell_cmd_pb_pin_fixup_id, cmd_dependency_pb_pin_fixup);
 } 
 
 } /* end namespace openfpga */

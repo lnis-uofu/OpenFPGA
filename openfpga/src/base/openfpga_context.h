@@ -5,6 +5,8 @@
 #include "openfpga_arch.h"
 #include "vpr_netlist_annotation.h"
 #include "vpr_pb_type_annotation.h"
+#include "vpr_clustering_annotation.h"
+#include "vpr_routing_annotation.h"
 
 /********************************************************************
  * This file includes the declaration of the date structure 
@@ -38,10 +40,14 @@ class OpenfpgaContext : public Context  {
     const openfpga::Arch& arch() const { return arch_; }
     const openfpga::VprPbTypeAnnotation& vpr_pb_type_annotation() const { return vpr_pb_type_annotation_; }
     const openfpga::VprNetlistAnnotation& vpr_netlist_annotation() const { return vpr_netlist_annotation_; }
+    const openfpga::VprClusteringAnnotation& vpr_clustering_annotation() const { return vpr_clustering_annotation_; }
+    const openfpga::VprRoutingAnnotation& vpr_routing_annotation() const { return vpr_routing_annotation_; }
   public:  /* Public mutators */
     openfpga::Arch& mutable_arch() { return arch_; }
     openfpga::VprPbTypeAnnotation& mutable_vpr_pb_type_annotation() { return vpr_pb_type_annotation_; }
     openfpga::VprNetlistAnnotation& mutable_vpr_netlist_annotation() { return vpr_netlist_annotation_; }
+    openfpga::VprClusteringAnnotation& mutable_vpr_clustering_annotation() { return vpr_clustering_annotation_; }
+    openfpga::VprRoutingAnnotation& mutable_vpr_routing_annotation() { return vpr_routing_annotation_; }
   private: /* Internal data */
     /* Data structure to store information from read_openfpga_arch library */
     openfpga::Arch arch_;
@@ -49,6 +55,9 @@ class OpenfpgaContext : public Context  {
     openfpga::VprPbTypeAnnotation vpr_pb_type_annotation_;
     /* Naming fix to netlist */
     openfpga::VprNetlistAnnotation vpr_netlist_annotation_;
+    /* TODO: Pin net fix to cluster results */
+    openfpga::VprClusteringAnnotation vpr_clustering_annotation_;
+    openfpga::VprRoutingAnnotation vpr_routing_annotation_;
 };
 
 #endif
