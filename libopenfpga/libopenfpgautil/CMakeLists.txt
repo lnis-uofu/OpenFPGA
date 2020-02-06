@@ -19,6 +19,7 @@ set_target_properties(libopenfpgautil PROPERTIES PREFIX "") #Avoid extra 'lib' p
 
 #Specify link-time dependancies
 target_link_libraries(libopenfpgautil
+                      libarchfpga
                       libvtrutil)
 
 #Create the test executable

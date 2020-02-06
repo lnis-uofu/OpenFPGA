@@ -57,8 +57,9 @@ void link_arch(OpenfpgaContext& openfpga_context,
    */
   openfpga_context.mutable_vpr_routing_annotation().init(g_vpr_ctx.device().rr_graph);
 
-  annotate_rr_node_nets(g_vpr_ctx.clustering(), g_vpr_ctx.routing(), 
-                        openfpga_context.mutable_vpr_routing_annotation());
+  annotate_rr_node_nets(g_vpr_ctx.device(), g_vpr_ctx.clustering(), g_vpr_ctx.routing(), 
+                        openfpga_context.mutable_vpr_routing_annotation(),
+                        cmd_context.option_enable(cmd, opt_verbose));
 } 
 
 } /* end namespace openfpga */

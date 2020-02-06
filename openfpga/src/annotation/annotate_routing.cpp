@@ -16,26 +16,33 @@ namespace openfpga {
  * based on VPR routing results
  * - Unmapped rr_node will use invalid ids 
  *******************************************************************/
-void annotate_rr_node_nets(const ClusteringContext& vpr_clustering_ctx,
-                           const RoutingContext& vpr_routing_ctx,
-                           VprRoutingAnnotation& vpr_routing_annotation) {
+void annotate_rr_node_nets(const DeviceContext& device_ctx,
+                           const ClusteringContext& clustering_ctx,
+                           const RoutingContext& routing_ctx,
+                           VprRoutingAnnotation& vpr_routing_annotation,
+                           const bool& verbose) {
   size_t counter = 0;
   VTR_LOG("Annotating rr_node with routed nets...");
+  VTR_LOGV(verbose, "\n");
    
-  for (auto net_id : vpr_clustering_ctx.clb_nlist.nets()) {
+  for (auto net_id : clustering_ctx.clb_nlist.nets()) {
     /* Ignore nets that are not routed */
-    if (true == vpr_clustering_ctx.clb_nlist.net_is_ignored(net_id)) {
+    if (true == clustering_ctx.clb_nlist.net_is_ignored(net_id)) {
       continue;
     }
     /* Ignore used in local cluster only, reserved one CLB pin */
-    if (false == vpr_clustering_ctx.clb_nlist.net_sinks(net_id).size()) {
+    if (false == clustering_ctx.clb_nlist.net_sinks(net_id).size()) {
       continue;
     }
-    t_trace* tptr = vpr_routing_ctx.trace[net_id].head;
+    t_trace* tptr = routing_ctx.trace[net_id].head;
     while (tptr != nullptr) {
       RRNodeId rr_node = tptr->index;
-      vpr_routing_annotation.set_rr_node_net(rr_node, net_id);
-      counter++;
+      /* Ignore source and sink nodes, they are the common node multiple starting and ending points */
+      if ( (SOURCE != device_ctx.rr_graph.node_type(rr_node)) 
+        && (SINK != device_ctx.rr_graph.node_type(rr_node)) ) {
+        vpr_routing_annotation.set_rr_node_net(rr_node, net_id);
+        counter++;
+      }
       tptr = tptr->next;
     }
   }

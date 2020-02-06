@@ -10,6 +10,9 @@
 /* Headers from vpr library */
 #include "vpr_utils.h"
 
+/* Headers from openfpgautil library */
+#include "openfpga_side_manager.h"
+
 #include "pb_type_utils.h"
 #include "openfpga_pb_pin_fixup.h"
 
@@ -56,6 +59,7 @@ void update_cluster_pin_with_post_routing_results(const DeviceContext& device_ct
                                                   VprClusteringAnnotation& vpr_clustering_annotation,
                                                   const vtr::Point<size_t>& grid_coord,
                                                   const ClusterBlockId& blk_id,
+                                                  const e_side& border_side,
                                                   const bool& verbose) {
   /* Handle each pin */
   auto logical_block = clustering_ctx.clb_nlist.block_type(blk_id);
@@ -66,6 +70,7 @@ void update_cluster_pin_with_post_routing_results(const DeviceContext& device_ct
     int physical_pin = get_physical_pin(physical_tile, logical_block, j);
     auto pin_class = physical_tile->pin_class[physical_pin];
     auto class_inf = physical_tile->class_inf[pin_class];
+
     t_rr_type rr_node_type;
     if (class_inf.type == DRIVER) {
       rr_node_type = OPIN;
@@ -74,49 +79,74 @@ void update_cluster_pin_with_post_routing_results(const DeviceContext& device_ct
       rr_node_type = IPIN;
     }
     std::vector<e_side> pin_sides = find_logic_tile_pin_side(physical_tile, physical_pin);
-    /* As some grid go across columns or rows, we may not have the pin on any side */
+    /* As some grid has height/width offset, we may not have the pin on any side */
     if (0 == pin_sides.size()) {
       continue;
     }
 
-    for (const e_side& pin_side : pin_sides) {
-      /* Find the net mapped to this pin in routing results */
-      const RRNodeId& rr_node = device_ctx.rr_graph.find_node(grid_coord.x(), grid_coord.y(), rr_node_type, physical_pin, pin_side); 
-      if (false == device_ctx.rr_graph.valid_node_id(rr_node)) {
-        continue;
-      }
-      /* Get the cluster net id which has been mapped to this net */
-      ClusterNetId routing_net_id = vpr_routing_annotation.rr_node_net(rr_node);
-
-      /* Find the net mapped to this pin in clustering results*/
-      ClusterNetId cluster_net_id = clustering_ctx.clb_nlist.block_net(blk_id, j);
-
-      /* If matched, we finish here */
-      if (routing_net_id == cluster_net_id) {
-         continue;
-      }
-      /* Add to net modification */
-      vpr_clustering_annotation.rename_net(blk_id, j, routing_net_id);
- 
-      std::string routing_net_name("unmapped");
-      if (ClusterNetId::INVALID() != routing_net_id) {
-        routing_net_name = clustering_ctx.clb_nlist.net_name(routing_net_id);
-      }
-
-      std::string cluster_net_name("unmapped");
-      if (ClusterNetId::INVALID() != cluster_net_id) {
-        cluster_net_name = clustering_ctx.clb_nlist.net_name(cluster_net_id);
-      }
-
-      VTR_LOGV(verbose,
-               "Fixed up net '%s' mapping mismatch at clustered block '%s' pin '%s[%d]' (was net '%s')\n",
-               routing_net_name.c_str(),
-               clustering_ctx.clb_nlist.block_pb(blk_id)->name,
-               get_pb_graph_node_pin_from_block_pin(blk_id, physical_pin)->port->name,
-               get_pb_graph_node_pin_from_block_pin(blk_id, physical_pin)->pin_number,
-               cluster_net_name.c_str()
-               );
+    /* For regular grid, we should have pin only one side!
+     * I/O grids: VPR creates the grid with duplicated pins on every side 
+     * but the expected side (only used side) will be opposite side of the border side!
+     */
+    e_side pin_side = NUM_SIDES;
+    if (NUM_SIDES == border_side) {
+      VTR_ASSERT(1 == pin_sides.size());
+      pin_side = pin_sides[0];
+    } else {
+      SideManager side_manager(border_side);
+      VTR_ASSERT(pin_sides.end() != std::find(pin_sides.begin(), pin_sides.end(), side_manager.get_opposite()));
+      pin_side = side_manager.get_opposite();
     }
+
+    /* Find the net mapped to this pin in routing results */
+    const RRNodeId& rr_node = device_ctx.rr_graph.find_node(grid_coord.x(), grid_coord.y(), rr_node_type, physical_pin, pin_side); 
+    if (false == device_ctx.rr_graph.valid_node_id(rr_node)) {
+      continue;
+    }
+    /* Get the cluster net id which has been mapped to this net */
+    ClusterNetId routing_net_id = vpr_routing_annotation.rr_node_net(rr_node);
+
+    /* Find the net mapped to this pin in clustering results*/
+    ClusterNetId cluster_net_id = clustering_ctx.clb_nlist.block_net(blk_id, j);
+
+    /* Ignore those net have never been routed */
+    if ( (ClusterNetId::INVALID() != cluster_net_id)
+      && (true == clustering_ctx.clb_nlist.net_is_ignored(cluster_net_id))) {
+      continue;
+    }
+
+    /* Ignore used in local cluster only, reserved one CLB pin */
+    if (false == clustering_ctx.clb_nlist.net_sinks(cluster_net_id).size()) {
+      continue;
+    }
+
+    /* If matched, we finish here */
+    if (routing_net_id == cluster_net_id) {
+       continue;
+    }
+    /* Add to net modification */
+    vpr_clustering_annotation.rename_net(blk_id, j, routing_net_id);
+ 
+    std::string routing_net_name("unmapped");
+    if (ClusterNetId::INVALID() != routing_net_id) {
+      routing_net_name = clustering_ctx.clb_nlist.net_name(routing_net_id);
+    }
+
+    std::string cluster_net_name("unmapped");
+    if (ClusterNetId::INVALID() != cluster_net_id) {
+      cluster_net_name = clustering_ctx.clb_nlist.net_name(cluster_net_id);
+    }
+
+    VTR_LOGV(verbose,
+             "Fixed up net '%s' mapping mismatch at clustered block '%s' pin 'grid[%ld][%ld].%s.%s[%d]' (was net '%s')\n",
+             routing_net_name.c_str(),
+             clustering_ctx.clb_nlist.block_pb(blk_id)->name,
+             grid_coord.x(), grid_coord.y(),
+             clustering_ctx.clb_nlist.block_pb(blk_id)->pb_graph_node->pb_type->name,
+             get_pb_graph_node_pin_from_block_pin(blk_id, physical_pin)->port->name,
+             get_pb_graph_node_pin_from_block_pin(blk_id, physical_pin)->pin_number,
+             cluster_net_name.c_str()
+             );
   }
 }
 
@@ -131,12 +161,15 @@ void update_pb_pin_with_post_routing_results(const DeviceContext& device_ctx,
                                              const VprRoutingAnnotation& vpr_routing_annotation,
                                              VprClusteringAnnotation& vpr_clustering_annotation,
                                              const bool& verbose) {
-  for (size_t x = 0; x < device_ctx.grid.width(); ++x) {
-    for (size_t y = 0; y < device_ctx.grid.height(); ++y) {
+  /* Update the core logic (center blocks of the FPGA) */
+  for (size_t x = 1; x < device_ctx.grid.width() - 1; ++x) {
+    for (size_t y = 1; y < device_ctx.grid.height() - 1; ++y) {
       /* Bypass the EMPTY tiles */
-      if (device_ctx.EMPTY_PHYSICAL_TILE_TYPE == device_ctx.grid[x][y].type) {
+      if (true == is_empty_type(device_ctx.grid[x][y].type)) {
         continue;
       }
+      /* We must have an regular (non-I/O) type here */
+      VTR_ASSERT(false == is_io_type(device_ctx.grid[x][y].type));
       /* Get the mapped blocks to this grid */
       for (const ClusterBlockId& cluster_blk_id : placement_ctx.grid_blocks[x][y].blocks) {
         /* Skip invalid ids */ 
@@ -147,9 +180,57 @@ void update_pb_pin_with_post_routing_results(const DeviceContext& device_ctx,
         vtr::Point<size_t> grid_coord(x, y);
         update_cluster_pin_with_post_routing_results(device_ctx, clustering_ctx, 
                                                      vpr_routing_annotation, vpr_clustering_annotation,
-                                                     grid_coord, cluster_blk_id,
+                                                     grid_coord, cluster_blk_id, NUM_SIDES,
                                                      verbose);
       } 
+    }
+  }
+
+  /* Update the periperal I/O blocks at fours sides of FPGA */
+  std::vector<e_side> io_sides{TOP, RIGHT, BOTTOM, LEFT};
+  std::map<e_side, std::vector<vtr::Point<size_t>>> io_coords;
+
+  /* TOP side */
+  for (size_t x = 1; x < device_ctx.grid.width() - 1; ++x) {
+    io_coords[TOP].push_back(vtr::Point<size_t>(x, device_ctx.grid.height() -1));
+  } 
+
+  /* RIGHT side */
+  for (size_t y = 1; y < device_ctx.grid.height() - 1; ++y) {
+    io_coords[RIGHT].push_back(vtr::Point<size_t>(device_ctx.grid.width() -1, y));
+  } 
+
+  /* BOTTOM side */
+  for (size_t x = 1; x < device_ctx.grid.width() - 1; ++x) {
+    io_coords[BOTTOM].push_back(vtr::Point<size_t>(x, 0));
+  } 
+
+  /* LEFT side */
+  for (size_t y = 1; y < device_ctx.grid.height() - 1; ++y) {
+    io_coords[LEFT].push_back(vtr::Point<size_t>(0, y));
+  } 
+
+  /* Walk through io grid on by one */
+  for (const e_side& io_side : io_sides) {
+    for (const vtr::Point<size_t>& io_coord : io_coords[io_side]) {
+      /* Bypass EMPTY grid */
+      if (true == is_empty_type(device_ctx.grid[io_coord.x()][io_coord.y()].type)) {
+        continue;
+      }
+      /* We must have an I/O type here */
+      VTR_ASSERT(true == is_io_type(device_ctx.grid[io_coord.x()][io_coord.y()].type));
+      /* Get the mapped blocks to this grid */
+      for (const ClusterBlockId& cluster_blk_id : placement_ctx.grid_blocks[io_coord.x()][io_coord.y()].blocks) {
+        /* Skip invalid ids */ 
+        if (ClusterBlockId::INVALID() == cluster_blk_id) {
+          continue;
+        }
+        /* Update on I/O grid */
+        update_cluster_pin_with_post_routing_results(device_ctx, clustering_ctx, 
+                                                     vpr_routing_annotation, vpr_clustering_annotation,
+                                                     io_coord, cluster_blk_id, io_side,
+                                                     verbose);
+      }
     }
   }
 }

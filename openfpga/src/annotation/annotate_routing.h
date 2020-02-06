@@ -15,9 +15,11 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void annotate_rr_node_nets(const ClusteringContext& vpr_clustering_ctx,
-                           const RoutingContext& vpr_routing_ctx,
-                           VprRoutingAnnotation& vpr_routing_annotation);
+void annotate_rr_node_nets(const DeviceContext& device_ctx,
+                           const ClusteringContext& clustering_ctx,
+                           const RoutingContext& routing_ctx,
+                           VprRoutingAnnotation& vpr_routing_annotation,
+                           const bool& verbose);
 
 } /* end namespace openfpga */
 
