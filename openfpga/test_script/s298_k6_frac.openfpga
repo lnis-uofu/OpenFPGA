@@ -13,5 +13,8 @@ check_netlist_naming_conflict --fix --report ./netlist_renaming.xml
 # Apply fix-up to clustering nets based on routing results
 pb_pin_fixup --verbose
 
+# Apply fix-up to Look-Up Table truth tables based on packing results
+lut_truth_table_fixup --verbose
+
 # Finish and exit OpenFPGA
 exit

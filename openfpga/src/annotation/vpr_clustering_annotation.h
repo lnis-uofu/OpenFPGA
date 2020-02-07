@@ -25,14 +25,22 @@ class VprClusteringAnnotation {
   public:  /* Constructor */
     VprClusteringAnnotation();
   public:  /* Public accessors */
+    /* Xifan Tang: I created two functions for each data query in purpose!
+     * As this is an annotation, some net/block may be changed to invalid id
+     * In this case, return an invalid value does not mean that a net is not renamed
+     */
     bool is_net_renamed(const ClusterBlockId& block_id, const int& pin_index) const;
     ClusterNetId net(const ClusterBlockId& block_id, const int& pin_index) const;
+    bool is_truth_table_adapted(t_pb* pb) const;
+    AtomNetlist::TruthTable truth_table(t_pb* pb) const;
   public:  /* Public mutators */
     void rename_net(const ClusterBlockId& block_id, const int& pin_index,
                     const ClusterNetId& net_id);
+    void adapt_truth_table(t_pb* pb, const AtomNetlist::TruthTable& tt);
   private: /* Internal data */
     /* Pair a regular pb_type to its physical pb_type */
     std::map<ClusterBlockId, std::map<int, ClusterNetId>> net_names_;
+    std::map<t_pb*, AtomNetlist::TruthTable> block_truth_tables_;
 };
 
 } /* End namespace openfpga*/

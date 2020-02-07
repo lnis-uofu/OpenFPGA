@@ -6,6 +6,7 @@
 #include "openfpga_read_arch.h"
 #include "openfpga_link_arch.h"
 #include "openfpga_pb_pin_fixup.h"
+#include "openfpga_lut_truth_table_fixup.h"
 #include "check_netlist_naming_conflict.h"
 #include "openfpga_setup_command.h"
 
@@ -100,6 +101,23 @@ void add_openfpga_setup_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   cmd_dependency_pb_pin_fixup.push_back(shell_cmd_read_arch_id);
   cmd_dependency_pb_pin_fixup.push_back(shell_cmd_vpr_id);
   shell.set_command_dependency(shell_cmd_pb_pin_fixup_id, cmd_dependency_pb_pin_fixup);
+
+  /******************************** 
+   * Command 'lut_truth_table_fixup' 
+   */
+  Command shell_cmd_lut_truth_table_fixup("lut_truth_table_fixup");
+  /* Add an option '--verbose' */
+  shell_cmd_lut_truth_table_fixup.add_option("verbose", false, "Show verbose outputs");
+
+  /* Add command 'lut_truth_table_fixup' to the Shell */
+  ShellCommandId shell_cmd_lut_truth_table_fixup_id = shell.add_command(shell_cmd_lut_truth_table_fixup, "Fix up the truth table of Look-Up Tables due to pin swapping during packing stage");
+  shell.set_command_class(shell_cmd_lut_truth_table_fixup_id, openfpga_setup_cmd_class);
+  shell.set_command_execute_function(shell_cmd_lut_truth_table_fixup_id, lut_truth_table_fixup);
+  /* The 'pb_pin_fixup' command should NOT be executed before 'read_openfpga_arch' and 'vpr' */
+  std::vector<ShellCommandId> cmd_dependency_lut_truth_table_fixup;
+  cmd_dependency_lut_truth_table_fixup.push_back(shell_cmd_read_arch_id);
+  cmd_dependency_lut_truth_table_fixup.push_back(shell_cmd_vpr_id);
+  shell.set_command_dependency(shell_cmd_lut_truth_table_fixup_id, cmd_dependency_lut_truth_table_fixup);
 } 
 
 } /* end namespace openfpga */
