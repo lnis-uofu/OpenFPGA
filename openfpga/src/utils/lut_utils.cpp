@@ -35,11 +35,11 @@ AtomNetlist::TruthTable lut_truth_table_adaption(const AtomNetlist::TruthTable& 
   AtomNetlist::TruthTable tt;
 
   for (auto row : orig_tt) {
-    VTR_ASSERT(row.size() - 1 == rotated_pin_map.size());
+    VTR_ASSERT(row.size() - 1 <= rotated_pin_map.size());
 
     std::vector<vtr::LogicValue> tt_line;
     /* We do not care about the last digit, which is the output value */
-    for (size_t i = 0; i < row.size() - 1; ++i) {
+    for (size_t i = 0; i < rotated_pin_map.size(); ++i) {
       if (-1 == rotated_pin_map[i]) {
         tt_line.push_back(vtr::LogicValue::DONT_CARE);
       } else { 

@@ -52,7 +52,7 @@ void fix_up_lut_atom_block_truth_table(const AtomContext& atom_ctx,
 
     /* Port exists (some LUTs may have no input and hence no port in the atom netlist) */
     AtomPortId atom_port = atom_ctx.nlist.find_atom_port(atom_blk, pb_type->ports[iport].model_port);
-    if (atom_port) { 
+    if (!atom_port) { 
       continue;
     }
 
@@ -90,12 +90,31 @@ void fix_up_lut_atom_block_truth_table(const AtomContext& atom_ctx,
 
     /* Print info is in the verbose mode */
     VTR_LOGV(verbose, "Original truth table\n");
+    VTR_LOGV(verbose, "Index: ");
+    for (size_t i = 0; i < rotated_pin_map.size(); ++i) {
+      if (0 < i) {
+        VTR_LOGV(verbose, ",");
+      }
+      VTR_LOGV(verbose, "%lu", i);
+    }
+    VTR_LOGV(verbose, "\n");
     for (const std::string& tt_line : truth_table_to_string(orig_tt)) {
       VTR_LOGV(verbose, "\t%s\n", tt_line.c_str());
     }
     VTR_LOGV(verbose, "\n");
+    VTR_LOGV(verbose, "Pin rotation map: ");
+    for (size_t i = 0; i < rotated_pin_map.size(); ++i) {
+      if (0 < i) {
+        VTR_LOGV(verbose, ",");
+      }
+      if (-1 == rotated_pin_map[i]) {
+        VTR_LOGV(verbose, "open");
+      } else {
+        VTR_LOGV(verbose, "%lu", rotated_pin_map[i]);
+      }
+    }
+    VTR_LOGV(verbose, "\n");
     VTR_LOGV(verbose, "Adapt truth table\n");
-    VTR_LOGV(verbose, "-----------------\n");
     for (const std::string& tt_line : truth_table_to_string(adapt_tt)) {
       VTR_LOGV(verbose, "\t%s\n", tt_line.c_str());
     }
@@ -120,8 +139,15 @@ void rec_adapt_lut_pb_tt(const AtomContext& atom_ctx,
   /* If we reach a primitive pb_graph node, we return */
   if (true == is_primitive_pb_type(pb_graph_node->pb_type)) {
     if (LUT_CLASS == pb_graph_node->pb_type->class_type) {
-      /* Do fix-up here */
-      fix_up_lut_atom_block_truth_table(atom_ctx, pb, pb_route, vpr_clustering_annotation, verbose);
+      /* Do fix-up here.
+       * Note that LUTs have two modes, 
+       * For wire modes, we should skip the truth table adaption
+       * mode 0 is reserved for wire, see read_xml_arch_file.cpp
+       * mode 1 is the regular mode
+       */
+      if (1 == pb->mode) {
+        fix_up_lut_atom_block_truth_table(atom_ctx, pb->child_pbs[0], pb_route, vpr_clustering_annotation, verbose);
+      }
     }
     return;
   }
