@@ -24,7 +24,9 @@ RRChan::RRChan() {
   node_segments_.resize(0);
 }
 
-/* Accessors */
+/************************************************************************
+ * Accessors
+ ***********************************************************************/
 t_rr_type RRChan::get_type() const {
   return type_;
 }
@@ -142,7 +144,9 @@ std::vector<RRNodeId> RRChan::get_node_ids_by_segment_ids(const RRSegmentId& seg
   return node_list;
 } 
 
-/* Mutators */
+/************************************************************************
+ * Mutators
+ ***********************************************************************/
 void RRChan::set(const RRChan& rr_chan) {
   /* Ensure a clean start */
   this->clear();
@@ -186,7 +190,7 @@ void RRChan::clear() {
 }
 
 /************************************************************************
- * Internal functions
+ * Internal validators
  ***********************************************************************/
 /* for type, only valid type is CHANX and CHANY */
 bool RRChan::valid_type(const t_rr_type& type) const {

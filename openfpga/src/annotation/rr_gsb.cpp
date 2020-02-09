@@ -661,8 +661,10 @@ vtr::Point<size_t> RRGSB::get_grid_coordinate() const {
 
   return ret;
 }
-/* Public mutators */
 
+/************************************************************************
+ * Public Mutators
+ ***********************************************************************/
 /* get a copy from a source */
 void RRGSB::set(const RRGSB& src) { 
   /* Copy coordinate */
@@ -740,6 +742,9 @@ void RRGSB::add_opin_node(const RRNodeId& node, const e_side& node_side) {
   opin_node_[size_t(node_side)].push_back(node);
 } 
 
+/************************************************************************
+ * Public Mutators: clean-up functions
+ ***********************************************************************/
 /* Reset the RRGSB to pristine state */
 void RRGSB::clear() {
   /* Clean all the vectors */
@@ -786,7 +791,9 @@ void RRGSB::clear_one_side(const e_side& node_side) {
   clear_opin_nodes(node_side);
 } 
 
-/* Internal functions for validation */
+/************************************************************************
+ * Internal Accessors: identify mirrors
+ ***********************************************************************/
 
 /* check if two rr_nodes have a similar set of drive_rr_nodes 
  * for each drive_rr_node:
@@ -944,6 +951,10 @@ size_t RRGSB::get_track_id_first_short_connection(const RRGraph& rr_graph, const
   return size_t(-1);
 }
 
+
+/************************************************************************
+ * Internal validators
+ ***********************************************************************/
 /* Validate if the number of sides are consistent among internal data arrays ! */
 bool RRGSB::validate_num_sides() const {
   size_t num_sides = chan_node_direction_.size();
