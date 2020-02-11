@@ -12,6 +12,7 @@
 #include "annotate_pb_types.h"
 #include "annotate_pb_graph.h"
 #include "annotate_routing.h"
+#include "annotate_rr_gsb.h"
 #include "openfpga_link_arch.h"
 
 /* Include global variables of VPR */
@@ -60,6 +61,14 @@ void link_arch(OpenfpgaContext& openfpga_context,
   annotate_rr_node_nets(g_vpr_ctx.device(), g_vpr_ctx.clustering(), g_vpr_ctx.routing(), 
                         openfpga_context.mutable_vpr_routing_annotation(),
                         cmd_context.option_enable(cmd, opt_verbose));
+
+  /* Build the routing graph annotation
+   * - RRGSB
+   * - DeviceRRGSB 
+   */
+  annotate_device_rr_gsb(g_vpr_ctx.device(),
+                         openfpga_context.mutable_device_rr_gsb(),
+                         cmd_context.option_enable(cmd, opt_verbose));
 } 
 
 } /* end namespace openfpga */
