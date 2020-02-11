@@ -1219,32 +1219,45 @@ void RRGraph::build_fast_node_lookup() const {
             continue;
         }
         RRNodeId node = RRNodeId(id);
-        /* Special for SOURCE and SINK, we should annotate in the look-up 
+        /* Special for CHANX and CHANY, we should annotate in the look-up 
          * for all the (x,y) upto (xhigh, yhigh)
          */
-        size_t x = node_xlow(node);
-        size_t y = node_ylow(node);
+        size_t x_start = std::min(node_xlow(node), node_xhigh(node));
+        size_t y_start = std::min(node_ylow(node), node_yhigh(node));
+        std::vector<size_t> node_x(std::abs(node_xlow(node) - node_xhigh(node)) + 1);
+        std::vector<size_t> node_y(std::abs(node_ylow(node) - node_yhigh(node)) + 1);
+        
+        std::iota(node_x.begin(), node_x.end(), x_start);
+        std::iota(node_y.begin(), node_y.end(), y_start);
+        
+        VTR_ASSERT(size_t(std::max(node_xlow(node), node_xhigh(node))) == node_x.back());
+        VTR_ASSERT(size_t(std::max(node_ylow(node), node_yhigh(node))) == node_y.back());
 
         size_t itype = node_type(node);
 
         size_t ptc = node_ptc_num(node);
-        if (ptc >= node_lookup_[x][y][itype].size()) {
-            node_lookup_[x][y][itype].resize(ptc + 1);
-        }
 
-        size_t iside = -1;
-        if (node_type(node) == OPIN || node_type(node) == IPIN) {
-            iside = node_side(node);
-        } else {
-            iside = NUM_SIDES;
-        }
+        for (const size_t& x : node_x) {
+            for (const size_t& y : node_y) {
+                if (ptc >= node_lookup_[x][y][itype].size()) {
+                    node_lookup_[x][y][itype].resize(ptc + 1);
+                }
 
-        if (iside >= node_lookup_[x][y][itype][ptc].size()) {
-            node_lookup_[x][y][itype][ptc].resize(iside + 1);
-        }
+                size_t iside = -1;
+                if (node_type(node) == OPIN || node_type(node) == IPIN) {
+                    iside = node_side(node);
+                } else {
+                    iside = NUM_SIDES;
+                }
 
-        //Save node in lookup
-        node_lookup_[x][y][itype][ptc][iside] = node;
+                if (iside >= node_lookup_[x][y][itype][ptc].size()) {
+                    node_lookup_[x][y][itype][ptc].resize(iside + 1);
+                }
+
+                //Save node in lookup
+                node_lookup_[x][y][itype][ptc][iside] = node;
+            }
+       }
     }
 }
 
