@@ -1,12 +1,12 @@
-#ifndef PB_GRAPH_UTILS_H
-#define PB_GRAPH_UTILS_H
+#ifndef MUX_LIBRARY_BUILDER_H
+#define MUX_LIBRARY_BUILDER_H
 
 /********************************************************************
  * Include header files that are required by function declaration
  *******************************************************************/
-#include <string>
-#include <vector>
-#include "physical_types.h"
+#include "vpr_context.h"
+#include "openfpga_context.h"
+#include "mux_library.h"
 
 /********************************************************************
  * Function declaration
@@ -15,11 +15,8 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-std::vector<t_pb_graph_pin*> pb_graph_pin_inputs(t_pb_graph_pin* pb_graph_pin,
-                                                 t_interconnect* selected_interconnect); 
-
-t_interconnect* pb_graph_pin_interc(t_pb_graph_pin* pb_graph_pin, 
-                                    t_mode* selected_mode); 
+MuxLibrary build_device_mux_library(const DeviceContext& vpr_device_ctx,
+                                    const OpenfpgaContext& openfpga_ctx);
 
 } /* end namespace openfpga */
 

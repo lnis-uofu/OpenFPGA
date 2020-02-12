@@ -23,6 +23,9 @@ vtr::Point<size_t> get_track_rr_node_start_coordinate(const RRGraph& rr_graph,
 vtr::Point<size_t> get_track_rr_node_end_coordinate(const RRGraph& rr_graph,
                                                     const RRNodeId& track_rr_node);
 
+std::vector<RRSwitchId> get_rr_graph_driver_switches(const RRGraph& rr_graph,
+                                                     const RRNodeId& node);
+
 } /* end namespace openfpga */
 
 #endif

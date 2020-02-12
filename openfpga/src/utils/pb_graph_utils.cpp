@@ -38,4 +38,29 @@ std::vector<t_pb_graph_pin*> pb_graph_pin_inputs(t_pb_graph_pin* pb_graph_pin,
   return inputs;
 }
 
+/********************************************************************
+ * This function aims to find out the interconnect that drives
+ * a given pb_graph pin when operating in a select mode
+ *******************************************************************/
+t_interconnect* pb_graph_pin_interc(t_pb_graph_pin* pb_graph_pin, 
+                                    t_mode* selected_mode) {
+  t_interconnect* interc = nullptr;
+
+  /* Search the input edges only, stats on the size of MUX we may need (fan-in) */
+  for (int iedge = 0; iedge < pb_graph_pin->num_input_edges; ++iedge) {
+    /* We care the only edges in the selected mode */
+    if (selected_mode != pb_graph_pin->input_edges[iedge]->interconnect->parent_mode) {
+      continue;
+    }
+    /* There should be one unique interconnect to be found! */
+    if (nullptr != interc) {
+      VTR_ASSERT(interc == pb_graph_pin->input_edges[iedge]->interconnect);
+    } else {
+      interc = pb_graph_pin->input_edges[iedge]->interconnect;
+    }
+  }
+  
+  return interc; 
+} 
+
 } /* end namespace openfpga */

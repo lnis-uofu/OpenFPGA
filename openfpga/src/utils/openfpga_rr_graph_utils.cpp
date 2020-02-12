@@ -2,6 +2,8 @@
  * This file includes most utilized functions for the rr_graph
  * data structure in the OpenFPGA context
  *******************************************************************/
+#include <algorithm>
+
 /* Headers from vtrutil library */
 #include "vtr_assert.h"
 #include "vtr_log.h"
@@ -61,6 +63,22 @@ vtr::Point<size_t> get_track_rr_node_end_coordinate(const RRGraph& rr_graph,
   }
 
   return end_coordinator;
+}
+
+/************************************************************************
+ * Find the driver switches for a node in the rr_graph
+ * This function only return unique driver switches
+ ***********************************************************************/
+std::vector<RRSwitchId> get_rr_graph_driver_switches(const RRGraph& rr_graph,
+                                                     const RRNodeId& node) {
+  std::vector<RRSwitchId> driver_switches;
+  for (const RREdgeId& edge : rr_graph.node_in_edges(node)) {
+    if (driver_switches.end() == std::find(driver_switches.begin(), driver_switches.end(), rr_graph.edge_switch(edge))) {
+      driver_switches.push_back(rr_graph.edge_switch(edge));
+    }
+  }
+
+  return driver_switches;
 }
 
 } /* end namespace openfpga */

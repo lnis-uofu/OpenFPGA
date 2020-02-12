@@ -7,6 +7,7 @@
 #include "vpr_device_annotation.h"
 #include "vpr_clustering_annotation.h"
 #include "vpr_routing_annotation.h"
+#include "mux_library.h"
 #include "device_rr_gsb.h"
 
 /********************************************************************
@@ -44,6 +45,7 @@ class OpenfpgaContext : public Context  {
     const openfpga::VprClusteringAnnotation& vpr_clustering_annotation() const { return vpr_clustering_annotation_; }
     const openfpga::VprRoutingAnnotation& vpr_routing_annotation() const { return vpr_routing_annotation_; }
     const openfpga::DeviceRRGSB& device_rr_gsb() const { return device_rr_gsb_; }
+    const openfpga::MuxLibrary& mux_lib() const { return mux_lib_; }
   public:  /* Public mutators */
     openfpga::Arch& mutable_arch() { return arch_; }
     openfpga::VprDeviceAnnotation& mutable_vpr_device_annotation() { return vpr_device_annotation_; }
@@ -51,6 +53,7 @@ class OpenfpgaContext : public Context  {
     openfpga::VprClusteringAnnotation& mutable_vpr_clustering_annotation() { return vpr_clustering_annotation_; }
     openfpga::VprRoutingAnnotation& mutable_vpr_routing_annotation() { return vpr_routing_annotation_; }
     openfpga::DeviceRRGSB& mutable_device_rr_gsb() { return device_rr_gsb_; }
+    openfpga::MuxLibrary& mutable_mux_lib() { return mux_lib_; }
   private: /* Internal data */
     /* Data structure to store information from read_openfpga_arch library */
     openfpga::Arch arch_;
@@ -69,6 +72,9 @@ class OpenfpgaContext : public Context  {
 
     /* Device-level annotation */
     openfpga::DeviceRRGSB device_rr_gsb_;
+    
+    /* Library of physical implmentation of routing multiplexers */
+    openfpga::MuxLibrary mux_lib_;
 };
 
 #endif
