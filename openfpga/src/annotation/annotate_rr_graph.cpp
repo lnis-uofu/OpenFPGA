@@ -439,6 +439,14 @@ void annotate_rr_switch_circuit_models(const DeviceContext& vpr_device_ctx,
                     switch_name.c_str());
       exit(1);
     }
+
+    /* Check the circuit model type */
+    if (CIRCUIT_MODEL_MUX != openfpga_arch.circuit_lib.model_type(circuit_model)) {
+      VTR_LOG_ERROR("Require circuit model type '%s' for a routing resource graph switch '%s'!\nPlease check your OpenFPGA architecture XML!\n",
+                    CIRCUIT_MODEL_TYPE_STRING[CIRCUIT_MODEL_MUX],
+                    switch_name.c_str());
+      exit(1);
+    }
   
     /* Now update the device annotation */
     vpr_device_annotation.add_rr_switch_circuit_model(RRSwitchId(iswitch), circuit_model);
@@ -480,6 +488,14 @@ void annotate_rr_segment_circuit_models(const DeviceContext& vpr_device_ctx,
                     segment_name.c_str());
       exit(1);
     }
+
+    /* Check the circuit model type */
+    if (CIRCUIT_MODEL_CHAN_WIRE != openfpga_arch.circuit_lib.model_type(circuit_model)) {
+      VTR_LOG_ERROR("Require circuit model type '%s' for a routing segment '%s'!\nPlease check your OpenFPGA architecture XML!\n",
+                    CIRCUIT_MODEL_TYPE_STRING[CIRCUIT_MODEL_CHAN_WIRE],
+                    segment_name.c_str());
+      exit(1);
+    }
   
     /* Now update the device annotation */
     vpr_device_annotation.add_rr_segment_circuit_model(RRSegmentId(iseg), circuit_model);
@@ -495,8 +511,60 @@ void annotate_rr_segment_circuit_models(const DeviceContext& vpr_device_ctx,
 }
 
 /********************************************************************
- * Build the link between rr_graph switches and segments to their
- * physical circuit models 
+ * Build the link between rr_graph direct connection to their physical circuit models 
+ * The binding is done based on the name of directs defined in the
+ * OpenFPGA arch XML
+ *******************************************************************/
+static 
+void annotate_direct_circuit_models(const DeviceContext& vpr_device_ctx, 
+                                    const Arch& openfpga_arch,
+                                    VprDeviceAnnotation& vpr_device_annotation,
+                                    const bool& verbose_output) {
+  size_t count = 0;
+
+  for (int idirect = 0; idirect < vpr_device_ctx.arch->num_directs; ++idirect) {
+    std::string direct_name = vpr_device_ctx.arch->Directs[idirect].name; 
+    CircuitModelId circuit_model = CircuitModelId::INVALID();
+    /* The name-to-circuit mapping is stored in either cb_switch-to-circuit or sb_switch-to-circuit,
+     * Try to find one and update the device annotation
+     */ 
+    if (0 < openfpga_arch.direct2circuit.count(direct_name)) {
+      circuit_model = openfpga_arch.direct2circuit.at(direct_name); 
+    }
+    /* Cannot find a circuit model, error out! */
+    if (CircuitModelId::INVALID() == circuit_model) {
+      VTR_LOG_ERROR("Fail to find a circuit model for a direct connection '%s'!\nPlease check your OpenFPGA architecture XML!\n",
+                    direct_name.c_str());
+      exit(1);
+    }
+
+    /* Check the circuit model type */
+    if (CIRCUIT_MODEL_WIRE != openfpga_arch.circuit_lib.model_type(circuit_model)) {
+      VTR_LOG_ERROR("Require circuit model type '%s' for a direct connection '%s'!\nPlease check your OpenFPGA architecture XML!\n",
+                    CIRCUIT_MODEL_TYPE_STRING[CIRCUIT_MODEL_WIRE],
+                    direct_name.c_str());
+      exit(1);
+    }
+  
+    /* Now update the device annotation */
+    vpr_device_annotation.add_direct_circuit_model(idirect, circuit_model);
+    VTR_LOGV(verbose_output, 
+             "Binded a direct connection '%s' to circuit model '%s'\n",
+             direct_name.c_str(),
+             openfpga_arch.circuit_lib.model_name(circuit_model).c_str());
+    count++;
+  }
+  
+  VTR_LOG("Binded %lu direct connections to circuit models\n",
+          count);
+}
+
+/********************************************************************
+ * Build the link between 
+ * - rr_graph switches
+ * - rr_graph segments 
+ * - directlist
+ * to their physical circuit models 
  *******************************************************************/
 void annotate_rr_graph_circuit_models(const DeviceContext& vpr_device_ctx, 
                                       const Arch& openfpga_arch,
@@ -507,6 +575,9 @@ void annotate_rr_graph_circuit_models(const DeviceContext& vpr_device_ctx,
 
   /* Iterate over each rr_segment in the device context and bind with names */
   annotate_rr_segment_circuit_models(vpr_device_ctx, openfpga_arch, vpr_device_annotation, verbose_output);
+
+  /* Iterate over each direct connection in the device context and bind with names */
+  annotate_direct_circuit_models(vpr_device_ctx, openfpga_arch, vpr_device_annotation, verbose_output);
 }
 
 } /* end namespace openfpga */
