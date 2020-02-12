@@ -6,7 +6,7 @@
  *******************************************************************/
 #include "vpr_context.h"
 #include "openfpga_context.h"
-#include "vpr_pb_type_annotation.h"
+#include "vpr_device_annotation.h"
 
 /********************************************************************
  * Function declaration
@@ -17,7 +17,7 @@ namespace openfpga {
 
 void annotate_pb_types(const DeviceContext& vpr_device_ctx, 
                        const Arch& openfpga_arch,
-                       VprPbTypeAnnotation& vpr_pb_type_annotation,
+                       VprDeviceAnnotation& vpr_device_annotation,
                        const bool& verbose_output);
 
 } /* end namespace openfpga */

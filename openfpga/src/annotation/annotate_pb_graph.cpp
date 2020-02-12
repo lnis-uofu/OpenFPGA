@@ -28,7 +28,7 @@ namespace openfpga {
  *******************************************************************/
 static 
 void rec_build_vpr_pb_graph_interconnect_physical_type_annotation(t_pb_graph_node* pb_graph_node, 
-                                                                  VprPbTypeAnnotation& vpr_pb_type_annotation,
+                                                                  VprDeviceAnnotation& vpr_device_annotation,
                                                                   const bool& verbose_output) {
   /* Skip the root node because we start from the inputs of child pb_graph node 
    *  
@@ -45,7 +45,7 @@ void rec_build_vpr_pb_graph_interconnect_physical_type_annotation(t_pb_graph_nod
    */
   if (false == pb_graph_node->is_root()) {
     /* We only care the physical modes! But we have to find it through the parent node */
-    t_mode* child_physical_mode = vpr_pb_type_annotation.physical_mode(pb_graph_node->parent_pb_graph_node->pb_type);
+    t_mode* child_physical_mode = vpr_device_annotation.physical_mode(pb_graph_node->parent_pb_graph_node->pb_type);
     VTR_ASSERT(nullptr != child_physical_mode);
 
     std::map<t_interconnect*, size_t> interc_num_inputs;
@@ -83,14 +83,14 @@ void rec_build_vpr_pb_graph_interconnect_physical_type_annotation(t_pb_graph_nod
       }
       
       e_interconnect interc_physical_type = pb_interconnect_physical_type(interc, interc_num_inputs[interc]);
-      if (interc_physical_type == vpr_pb_type_annotation.interconnect_physical_type(interc)) {
+      if (interc_physical_type == vpr_device_annotation.interconnect_physical_type(interc)) {
         /* Skip annotation if we have already done! */
         continue;
       }
       VTR_LOGV(verbose_output,
                "Infer physical type '%s' of interconnect '%s' (was '%s')\n",
                INTERCONNECT_TYPE_STRING[interc_physical_type], interc->name, INTERCONNECT_TYPE_STRING[interc->type]);
-      vpr_pb_type_annotation.add_interconnect_physical_type(interc, interc_physical_type);
+      vpr_device_annotation.add_interconnect_physical_type(interc, interc_physical_type);
     }
   }
 
@@ -100,13 +100,13 @@ void rec_build_vpr_pb_graph_interconnect_physical_type_annotation(t_pb_graph_nod
   }
 
   /* Recursively visit all the child pb_graph_nodes */
-  t_mode* physical_mode = vpr_pb_type_annotation.physical_mode(pb_graph_node->pb_type);
+  t_mode* physical_mode = vpr_device_annotation.physical_mode(pb_graph_node->pb_type);
   VTR_ASSERT(nullptr != physical_mode);
   for (int ipb = 0; ipb < physical_mode->num_pb_type_children; ++ipb) {
     /* Each child may exist multiple times in the hierarchy*/
     for (int jpb = 0; jpb < physical_mode->pb_type_children[ipb].num_pb; ++jpb) {
       rec_build_vpr_pb_graph_interconnect_physical_type_annotation(&(pb_graph_node->child_pb_graph_nodes[physical_mode->index][ipb][jpb]),
-                                                                   vpr_pb_type_annotation,
+                                                                   vpr_device_annotation,
                                                                    verbose_output);
     }
   }
@@ -122,14 +122,14 @@ void rec_build_vpr_pb_graph_interconnect_physical_type_annotation(t_pb_graph_nod
  *       build_vpr_physical_pb_mode_implicit_annotation() 
  *******************************************************************/
 void annotate_pb_graph_interconnect_physical_type(const DeviceContext& vpr_device_ctx, 
-                                                  VprPbTypeAnnotation& vpr_pb_type_annotation,
+                                                  VprDeviceAnnotation& vpr_device_annotation,
                                                   const bool& verbose_output) {
   for (const t_logical_block_type& lb_type : vpr_device_ctx.logical_block_types) {
     /* By pass nullptr for pb_graph head */
     if (nullptr == lb_type.pb_graph_head) {
       continue;
     }
-    rec_build_vpr_pb_graph_interconnect_physical_type_annotation(lb_type.pb_graph_head, vpr_pb_type_annotation, verbose_output); 
+    rec_build_vpr_pb_graph_interconnect_physical_type_annotation(lb_type.pb_graph_head, vpr_device_annotation, verbose_output); 
   }
 }
 
@@ -143,7 +143,7 @@ void annotate_pb_graph_interconnect_physical_type(const DeviceContext& vpr_devic
  *******************************************************************/
 static 
 void rec_build_vpr_primitive_pb_graph_node_unique_index(t_pb_graph_node* pb_graph_node, 
-                                                        VprPbTypeAnnotation& vpr_pb_type_annotation) {
+                                                        VprDeviceAnnotation& vpr_device_annotation) {
   /* Go recursive first until we touch the primitive node */
   if (false == is_primitive_pb_type(pb_graph_node->pb_type)) {
     for (int imode = 0; imode < pb_graph_node->pb_type->num_modes; ++imode) {
@@ -151,7 +151,7 @@ void rec_build_vpr_primitive_pb_graph_node_unique_index(t_pb_graph_node* pb_grap
         /* Each child may exist multiple times in the hierarchy*/
         for (int jpb = 0; jpb < pb_graph_node->pb_type->modes[imode].pb_type_children[ipb].num_pb; ++jpb) {
           rec_build_vpr_primitive_pb_graph_node_unique_index(&(pb_graph_node->child_pb_graph_nodes[imode][ipb][jpb]), 
-                                                             vpr_pb_type_annotation);
+                                                             vpr_device_annotation);
         }
       }
     }
@@ -159,7 +159,7 @@ void rec_build_vpr_primitive_pb_graph_node_unique_index(t_pb_graph_node* pb_grap
   }
 
   /* Give a unique index to the pb_graph_node */
-  vpr_pb_type_annotation.add_pb_graph_node_unique_index(pb_graph_node);
+  vpr_device_annotation.add_pb_graph_node_unique_index(pb_graph_node);
 }
 
 /********************************************************************
@@ -178,13 +178,13 @@ void rec_build_vpr_primitive_pb_graph_node_unique_index(t_pb_graph_node* pb_grap
  *******************************************************************/
 static 
 void annotate_primitive_pb_graph_node_unique_index(const DeviceContext& vpr_device_ctx, 
-                                                   VprPbTypeAnnotation& vpr_pb_type_annotation) {
+                                                   VprDeviceAnnotation& vpr_device_annotation) {
   for (const t_logical_block_type& lb_type : vpr_device_ctx.logical_block_types) {
     /* By pass nullptr for pb_graph head */
     if (nullptr == lb_type.pb_graph_head) {
       continue;
     }
-    rec_build_vpr_primitive_pb_graph_node_unique_index(lb_type.pb_graph_head, vpr_pb_type_annotation); 
+    rec_build_vpr_primitive_pb_graph_node_unique_index(lb_type.pb_graph_head, vpr_device_annotation); 
   }
 }
 
@@ -196,9 +196,9 @@ void annotate_primitive_pb_graph_node_unique_index(const DeviceContext& vpr_devi
 static 
 bool try_match_pb_graph_pin(t_pb_graph_pin* operating_pb_graph_pin, 
                             t_pb_graph_pin* physical_pb_graph_pin,
-                            const VprPbTypeAnnotation& vpr_pb_type_annotation) {
+                            const VprDeviceAnnotation& vpr_device_annotation) {
   /* If the parent ports of the two pins are not paired, fail */
-  if (physical_pb_graph_pin->port != vpr_pb_type_annotation.physical_pb_port(operating_pb_graph_pin->port)) {
+  if (physical_pb_graph_pin->port != vpr_device_annotation.physical_pb_port(operating_pb_graph_pin->port)) {
     return false;
   }
   /* Check the pin number of physical pb_graph_pin matches the pin number of 
@@ -217,8 +217,8 @@ bool try_match_pb_graph_pin(t_pb_graph_pin* operating_pb_graph_pin,
    *     by the pin rotate offset value
    *     The accumulated offset will be reset to 0 when it exceeds the msb() of the physical port
    */
-  int acc_offset = vpr_pb_type_annotation.physical_pb_pin_offset(operating_pb_graph_pin->port);
-  const BasicPort& physical_port_range = vpr_pb_type_annotation.physical_pb_port_range(operating_pb_graph_pin->port);
+  int acc_offset = vpr_device_annotation.physical_pb_pin_offset(operating_pb_graph_pin->port);
+  const BasicPort& physical_port_range = vpr_device_annotation.physical_pb_port_range(operating_pb_graph_pin->port);
   if (physical_pb_graph_pin->pin_number != operating_pb_graph_pin->pin_number
                                          + (int)physical_port_range.get_lsb() 
                                          + acc_offset) {
@@ -250,12 +250,12 @@ void print_success_bind_pb_graph_pin(t_pb_graph_pin* operating_pb_graph_pin,
 /********************************************************************
  * Bind a pb_graph_pin from an operating pb_graph_node to 
  * a pb_graph_pin from a physical pb_graph_node
- * - the name matching rules are already defined in the vpr_pb_type_annotation
+ * - the name matching rules are already defined in the vpr_device_annotation
  *******************************************************************/
 static 
 void annotate_physical_pb_graph_pin(t_pb_graph_pin* operating_pb_graph_pin, 
                                     t_pb_graph_node* physical_pb_graph_node, 
-                                    VprPbTypeAnnotation& vpr_pb_type_annotation,
+                                    VprDeviceAnnotation& vpr_device_annotation,
                                     const bool& verbose_output) {
   /* Iterate over every port and pin of the operating pb_graph_node 
    * and find the physical pins 
@@ -264,15 +264,15 @@ void annotate_physical_pb_graph_pin(t_pb_graph_pin* operating_pb_graph_pin,
     for (int ipin = 0; ipin < physical_pb_graph_node->num_input_pins[iport]; ++ipin) {
       if (false == try_match_pb_graph_pin(operating_pb_graph_pin, 
                                           &(physical_pb_graph_node->input_pins[iport][ipin]),
-                                          vpr_pb_type_annotation)) {
+                                          vpr_device_annotation)) {
         continue;
       }
       /* Reach here, it means the pins are matched by the annotation requirements 
        * We can pair the pin and return  
        */
-      vpr_pb_type_annotation.add_physical_pb_graph_pin(operating_pb_graph_pin, &(physical_pb_graph_node->input_pins[iport][ipin]));
+      vpr_device_annotation.add_physical_pb_graph_pin(operating_pb_graph_pin, &(physical_pb_graph_node->input_pins[iport][ipin]));
       if (true == verbose_output) {
-        print_success_bind_pb_graph_pin(operating_pb_graph_pin, vpr_pb_type_annotation.physical_pb_graph_pin(operating_pb_graph_pin)); 
+        print_success_bind_pb_graph_pin(operating_pb_graph_pin, vpr_device_annotation.physical_pb_graph_pin(operating_pb_graph_pin)); 
       }
       return;
     }
@@ -282,15 +282,15 @@ void annotate_physical_pb_graph_pin(t_pb_graph_pin* operating_pb_graph_pin,
     for (int ipin = 0; ipin < physical_pb_graph_node->num_output_pins[iport]; ++ipin) {
       if (false == try_match_pb_graph_pin(operating_pb_graph_pin, 
                                           &(physical_pb_graph_node->output_pins[iport][ipin]),
-                                          vpr_pb_type_annotation)) {
+                                          vpr_device_annotation)) {
         continue;
       }
       /* Reach here, it means the pins are matched by the annotation requirements 
        * We can pair the pin and return  
        */
-      vpr_pb_type_annotation.add_physical_pb_graph_pin(operating_pb_graph_pin, &(physical_pb_graph_node->output_pins[iport][ipin]));
+      vpr_device_annotation.add_physical_pb_graph_pin(operating_pb_graph_pin, &(physical_pb_graph_node->output_pins[iport][ipin]));
       if (true == verbose_output) {
-        print_success_bind_pb_graph_pin(operating_pb_graph_pin, vpr_pb_type_annotation.physical_pb_graph_pin(operating_pb_graph_pin)); 
+        print_success_bind_pb_graph_pin(operating_pb_graph_pin, vpr_device_annotation.physical_pb_graph_pin(operating_pb_graph_pin)); 
       }
       return;
     }
@@ -300,15 +300,15 @@ void annotate_physical_pb_graph_pin(t_pb_graph_pin* operating_pb_graph_pin,
     for (int ipin = 0; ipin < physical_pb_graph_node->num_clock_pins[iport]; ++ipin) {
       if (false == try_match_pb_graph_pin(operating_pb_graph_pin, 
                                           &(physical_pb_graph_node->clock_pins[iport][ipin]),
-                                          vpr_pb_type_annotation)) {
+                                          vpr_device_annotation)) {
         continue;
       }
       /* Reach here, it means the pins are matched by the annotation requirements 
        * We can pair the pin and return  
        */
-      vpr_pb_type_annotation.add_physical_pb_graph_pin(operating_pb_graph_pin, &(physical_pb_graph_node->clock_pins[iport][ipin]));
+      vpr_device_annotation.add_physical_pb_graph_pin(operating_pb_graph_pin, &(physical_pb_graph_node->clock_pins[iport][ipin]));
       if (true == verbose_output) {
-        print_success_bind_pb_graph_pin(operating_pb_graph_pin, vpr_pb_type_annotation.physical_pb_graph_pin(operating_pb_graph_pin)); 
+        print_success_bind_pb_graph_pin(operating_pb_graph_pin, vpr_device_annotation.physical_pb_graph_pin(operating_pb_graph_pin)); 
       }
       return;
     }
@@ -323,13 +323,13 @@ void annotate_physical_pb_graph_pin(t_pb_graph_pin* operating_pb_graph_pin,
 /********************************************************************
  * This function will try bind each pin of the operating pb_graph_node
  * to a pin of the physical pb_graph_node by following the annotation
- * available in vpr_pb_type_annotation
- * It will add the pin bindings to the vpr_pb_type_annotation
+ * available in vpr_device_annotation
+ * It will add the pin bindings to the vpr_device_annotation
  *******************************************************************/
 static 
 void annotate_physical_pb_graph_node_pins(t_pb_graph_node* operating_pb_graph_node, 
                                           t_pb_graph_node* physical_pb_graph_node, 
-                                          VprPbTypeAnnotation& vpr_pb_type_annotation,
+                                          VprDeviceAnnotation& vpr_device_annotation,
                                           const bool& verbose_output) {
   /* Iterate over every port and pin of the operating pb_graph_node 
    * and find the physical pins 
@@ -337,7 +337,7 @@ void annotate_physical_pb_graph_node_pins(t_pb_graph_node* operating_pb_graph_no
   for (int iport = 0; iport < operating_pb_graph_node->num_input_ports; ++iport) {
     for (int ipin = 0; ipin < operating_pb_graph_node->num_input_pins[iport]; ++ipin) {
       annotate_physical_pb_graph_pin(&(operating_pb_graph_node->input_pins[iport][ipin]),
-                                     physical_pb_graph_node, vpr_pb_type_annotation,
+                                     physical_pb_graph_node, vpr_device_annotation,
                                      verbose_output);
     }
   }
@@ -345,7 +345,7 @@ void annotate_physical_pb_graph_node_pins(t_pb_graph_node* operating_pb_graph_no
   for (int iport = 0; iport < operating_pb_graph_node->num_output_ports; ++iport) {
     for (int ipin = 0; ipin < operating_pb_graph_node->num_output_pins[iport]; ++ipin) {
       annotate_physical_pb_graph_pin(&(operating_pb_graph_node->output_pins[iport][ipin]),
-                                     physical_pb_graph_node, vpr_pb_type_annotation,
+                                     physical_pb_graph_node, vpr_device_annotation,
                                      verbose_output);
     }
   }
@@ -353,7 +353,7 @@ void annotate_physical_pb_graph_node_pins(t_pb_graph_node* operating_pb_graph_no
   for (int iport = 0; iport < operating_pb_graph_node->num_clock_ports; ++iport) {
     for (int ipin = 0; ipin < operating_pb_graph_node->num_clock_pins[iport]; ++ipin) {
       annotate_physical_pb_graph_pin(&(operating_pb_graph_node->clock_pins[iport][ipin]),
-                                     physical_pb_graph_node, vpr_pb_type_annotation,
+                                     physical_pb_graph_node, vpr_device_annotation,
                                      verbose_output);
     }
   }
@@ -369,7 +369,7 @@ void annotate_physical_pb_graph_node_pins(t_pb_graph_node* operating_pb_graph_no
  *******************************************************************/
 static 
 void rec_build_vpr_physical_pb_graph_node_annotation(t_pb_graph_node* pb_graph_node, 
-                                                     VprPbTypeAnnotation& vpr_pb_type_annotation,
+                                                     VprDeviceAnnotation& vpr_device_annotation,
                                                      const bool& verbose_output) {
   /* Go recursive first until we touch the primitive node */
   if (false == is_primitive_pb_type(pb_graph_node->pb_type)) {
@@ -378,7 +378,7 @@ void rec_build_vpr_physical_pb_graph_node_annotation(t_pb_graph_node* pb_graph_n
         /* Each child may exist multiple times in the hierarchy*/
         for (int jpb = 0; jpb < pb_graph_node->pb_type->modes[imode].pb_type_children[ipb].num_pb; ++jpb) {
           rec_build_vpr_physical_pb_graph_node_annotation(&(pb_graph_node->child_pb_graph_nodes[imode][ipb][jpb]), 
-                                                          vpr_pb_type_annotation,
+                                                          vpr_device_annotation,
                                                           verbose_output);
         }
       }
@@ -393,7 +393,7 @@ void rec_build_vpr_physical_pb_graph_node_annotation(t_pb_graph_node* pb_graph_n
    *  - Find the physical pb_graph_node with the given index 
    * To bind pins from operating pb_graph_node to their physical pb_graph_node pins
    */
-  t_pb_type* physical_pb_type = vpr_pb_type_annotation.physical_pb_type(pb_graph_node->pb_type); 
+  t_pb_type* physical_pb_type = vpr_device_annotation.physical_pb_type(pb_graph_node->pb_type); 
   VTR_ASSERT(nullptr != physical_pb_type);
 
   /* Index inference:
@@ -401,13 +401,13 @@ void rec_build_vpr_physical_pb_graph_node_annotation(t_pb_graph_node* pb_graph_n
    * where factor and offset are provided by users
    */
   PbGraphNodeId physical_pb_graph_node_id = PbGraphNodeId(
-                                            vpr_pb_type_annotation.physical_pb_type_index_factor(pb_graph_node->pb_type)
-                                          * (size_t)vpr_pb_type_annotation.pb_graph_node_unique_index(pb_graph_node)
-                                          + vpr_pb_type_annotation.physical_pb_type_index_offset(pb_graph_node->pb_type)
+                                            vpr_device_annotation.physical_pb_type_index_factor(pb_graph_node->pb_type)
+                                          * (size_t)vpr_device_annotation.pb_graph_node_unique_index(pb_graph_node)
+                                          + vpr_device_annotation.physical_pb_type_index_offset(pb_graph_node->pb_type)
                                             );
-  t_pb_graph_node* physical_pb_graph_node = vpr_pb_type_annotation.pb_graph_node(physical_pb_type, physical_pb_graph_node_id);
+  t_pb_graph_node* physical_pb_graph_node = vpr_device_annotation.pb_graph_node(physical_pb_type, physical_pb_graph_node_id);
   VTR_ASSERT(nullptr != physical_pb_graph_node);
-  vpr_pb_type_annotation.add_physical_pb_graph_node(pb_graph_node, physical_pb_graph_node);
+  vpr_device_annotation.add_physical_pb_graph_node(pb_graph_node, physical_pb_graph_node);
 
   VTR_LOGV(verbose_output,
            "Bind operating pb_graph_node '%s' to physical pb_graph_node '%s'\n",
@@ -415,7 +415,7 @@ void rec_build_vpr_physical_pb_graph_node_annotation(t_pb_graph_node* pb_graph_n
            physical_pb_graph_node->hierarchical_type_name().c_str());
 
   /* Try to bind each pins under this pb_graph_node to physical_pb_graph_node */
-  annotate_physical_pb_graph_node_pins(pb_graph_node, physical_pb_graph_node, vpr_pb_type_annotation, verbose_output);
+  annotate_physical_pb_graph_node_pins(pb_graph_node, physical_pb_graph_node, vpr_device_annotation, verbose_output);
 }
 
 /********************************************************************
@@ -425,14 +425,14 @@ void rec_build_vpr_physical_pb_graph_node_annotation(t_pb_graph_node* pb_graph_n
  *******************************************************************/
 static 
 void annotate_physical_pb_graph_node(const DeviceContext& vpr_device_ctx, 
-                                     VprPbTypeAnnotation& vpr_pb_type_annotation,
+                                     VprDeviceAnnotation& vpr_device_annotation,
                                      const bool& verbose_output) {
   for (const t_logical_block_type& lb_type : vpr_device_ctx.logical_block_types) {
     /* By pass nullptr for pb_graph head */
     if (nullptr == lb_type.pb_graph_head) {
       continue;
     }
-    rec_build_vpr_physical_pb_graph_node_annotation(lb_type.pb_graph_head, vpr_pb_type_annotation, verbose_output); 
+    rec_build_vpr_physical_pb_graph_node_annotation(lb_type.pb_graph_head, vpr_device_annotation, verbose_output); 
   }
 }
 
@@ -443,21 +443,21 @@ void annotate_physical_pb_graph_node(const DeviceContext& vpr_device_ctx,
  * - Bind pins from operating pb_graph_node to their physical pb_graph_node pins
  *******************************************************************/
 void annotate_pb_graph(const DeviceContext& vpr_device_ctx, 
-                       VprPbTypeAnnotation& vpr_pb_type_annotation,
+                       VprDeviceAnnotation& vpr_device_annotation,
                        const bool& verbose_output) {
 
   VTR_LOG("Assigning unique indices for primitive pb_graph nodes...");
   VTR_LOGV(verbose_output, "\n");
-  annotate_primitive_pb_graph_node_unique_index(vpr_device_ctx, vpr_pb_type_annotation);
+  annotate_primitive_pb_graph_node_unique_index(vpr_device_ctx, vpr_device_annotation);
   VTR_LOG("Done\n");
 
   VTR_LOG("Binding operating pb_graph nodes/pins to physical pb_graph nodes/pins...");
   VTR_LOGV(verbose_output, "\n");
-  annotate_physical_pb_graph_node(vpr_device_ctx, vpr_pb_type_annotation, verbose_output);
+  annotate_physical_pb_graph_node(vpr_device_ctx, vpr_device_annotation, verbose_output);
   VTR_LOG("Done\n");
 
   /* Check each primitive pb_graph_node and pin has been binded to a physical node and pin */
-  check_physical_pb_graph_node_annotation(vpr_device_ctx, const_cast<const VprPbTypeAnnotation&>(vpr_pb_type_annotation));
+  check_physical_pb_graph_node_annotation(vpr_device_ctx, const_cast<const VprDeviceAnnotation&>(vpr_device_annotation));
 }
 
 } /* end namespace openfpga */

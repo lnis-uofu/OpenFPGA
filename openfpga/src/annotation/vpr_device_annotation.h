@@ -1,5 +1,5 @@
-#ifndef VPR_PB_TYPE_ANNOTATION_H
-#define VPR_PB_TYPE_ANNOTATION_H
+#ifndef VPR_DEVICE_ANNOTATION_H
+#define VPR_DEVICE_ANNOTATION_H
 
 /********************************************************************
  * Include header files required by the data structure definition
@@ -33,9 +33,9 @@ typedef vtr::StrongId<pb_graph_node_id_tag> PbGraphNodeId;
  * 3. what is the physical pb_type for an operating pb_type
  * 4. what is the mode pointer that represents the physical mode for a pb_type
  *******************************************************************/
-class VprPbTypeAnnotation {
+class VprDeviceAnnotation {
   public:  /* Constructor */
-    VprPbTypeAnnotation();
+    VprDeviceAnnotation();
   public:  /* Public accessors */
     bool is_physical_pb_type(t_pb_type* pb_type) const;
     t_mode* physical_mode(t_pb_type* pb_type) const;

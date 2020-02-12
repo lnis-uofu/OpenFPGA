@@ -7,7 +7,7 @@
 #include "vtr_assert.h"
 #include "vtr_log.h"
 
-#include "vpr_pb_type_annotation.h"
+#include "vpr_device_annotation.h"
 #include "pb_type_utils.h"
 #include "annotate_pb_types.h"
 #include "annotate_pb_graph.h"
@@ -42,7 +42,7 @@ void link_arch(OpenfpgaContext& openfpga_context,
    * - circuit models for pb_type and pb interconnect
    */
   annotate_pb_types(g_vpr_ctx.device(), openfpga_context.arch(),
-                    openfpga_context.mutable_vpr_pb_type_annotation(),
+                    openfpga_context.mutable_vpr_device_annotation(),
                     cmd_context.option_enable(cmd, opt_verbose));
 
   /* Annotate pb_graph_nodes
@@ -51,7 +51,7 @@ void link_arch(OpenfpgaContext& openfpga_context,
    * - Bind pins from operating pb_graph_node to their physical pb_graph_node pins
    */
   annotate_pb_graph(g_vpr_ctx.device(),
-                    openfpga_context.mutable_vpr_pb_type_annotation(),
+                    openfpga_context.mutable_vpr_device_annotation(),
                     cmd_context.option_enable(cmd, opt_verbose));
 
   /* Annotate net mapping to each rr_node 

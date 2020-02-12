@@ -19,8 +19,8 @@ namespace openfpga {
  *******************************************************************/
 static 
 bool check_physical_pb_graph_pin(t_pb_graph_pin* pb_graph_pin,
-                                 const VprPbTypeAnnotation& vpr_pb_type_annotation) {
-  if (nullptr == vpr_pb_type_annotation.physical_pb_graph_pin(pb_graph_pin)) {
+                                 const VprDeviceAnnotation& vpr_device_annotation) {
+  if (nullptr == vpr_device_annotation.physical_pb_graph_pin(pb_graph_pin)) {
     VTR_LOG_ERROR("Found a pb_graph_pin '%s' missing physical pb_graph_pin binding!\n",
                   pb_graph_pin->port->name);
     return false;
@@ -40,7 +40,7 @@ bool check_physical_pb_graph_pin(t_pb_graph_pin* pb_graph_pin,
  *******************************************************************/
 static 
 void rec_check_vpr_physical_pb_graph_node_annotation(t_pb_graph_node* pb_graph_node, 
-                                                     const VprPbTypeAnnotation& vpr_pb_type_annotation,
+                                                     const VprDeviceAnnotation& vpr_device_annotation,
                                                      size_t& num_err) {
   /* Go recursive first until we touch the primitive node */
   if (false == is_primitive_pb_type(pb_graph_node->pb_type)) {
@@ -49,7 +49,7 @@ void rec_check_vpr_physical_pb_graph_node_annotation(t_pb_graph_node* pb_graph_n
         /* Each child may exist multiple times in the hierarchy*/
         for (int jpb = 0; jpb < pb_graph_node->pb_type->modes[imode].pb_type_children[ipb].num_pb; ++jpb) {
           rec_check_vpr_physical_pb_graph_node_annotation(&(pb_graph_node->child_pb_graph_nodes[imode][ipb][jpb]), 
-                                                          vpr_pb_type_annotation, num_err);
+                                                          vpr_device_annotation, num_err);
         }
       }
     }
@@ -57,7 +57,7 @@ void rec_check_vpr_physical_pb_graph_node_annotation(t_pb_graph_node* pb_graph_n
   }
 
   /* Ensure that the pb_graph_node has been mapped to a physical node */
-  t_pb_graph_node* physical_pb_graph_node = vpr_pb_type_annotation.physical_pb_graph_node(pb_graph_node);
+  t_pb_graph_node* physical_pb_graph_node = vpr_device_annotation.physical_pb_graph_node(pb_graph_node);
   if (nullptr == physical_pb_graph_node) { 
     VTR_LOG_ERROR("Found a pb_graph_node '%s' missing physical pb_graph_node binding!\n",
                   physical_pb_graph_node->pb_type->name);
@@ -71,7 +71,7 @@ void rec_check_vpr_physical_pb_graph_node_annotation(t_pb_graph_node* pb_graph_n
   for (int iport = 0; iport < physical_pb_graph_node->num_input_ports; ++iport) {
     for (int ipin = 0; ipin < physical_pb_graph_node->num_input_pins[iport]; ++ipin) {
       if (false == check_physical_pb_graph_pin(&(physical_pb_graph_node->input_pins[iport][ipin]),
-                                               vpr_pb_type_annotation)) {
+                                               vpr_device_annotation)) {
         num_err++;
       }
     } 
@@ -80,7 +80,7 @@ void rec_check_vpr_physical_pb_graph_node_annotation(t_pb_graph_node* pb_graph_n
   for (int iport = 0; iport < physical_pb_graph_node->num_output_ports; ++iport) {
     for (int ipin = 0; ipin < physical_pb_graph_node->num_output_pins[iport]; ++ipin) {
       if (false == check_physical_pb_graph_pin(&(physical_pb_graph_node->output_pins[iport][ipin]),
-                                               vpr_pb_type_annotation)) {
+                                               vpr_device_annotation)) {
         num_err++;
       }
     } 
@@ -89,7 +89,7 @@ void rec_check_vpr_physical_pb_graph_node_annotation(t_pb_graph_node* pb_graph_n
   for (int iport = 0; iport < physical_pb_graph_node->num_clock_ports; ++iport) {
     for (int ipin = 0; ipin < physical_pb_graph_node->num_clock_pins[iport]; ++ipin) {
       if (false == check_physical_pb_graph_pin(&(physical_pb_graph_node->clock_pins[iport][ipin]),
-                                               vpr_pb_type_annotation)) {
+                                               vpr_device_annotation)) {
         num_err++;
       }
     } 
@@ -102,7 +102,7 @@ void rec_check_vpr_physical_pb_graph_node_annotation(t_pb_graph_node* pb_graph_n
  * - Each pin has been binded to a physical pb_graph_node pin
  *******************************************************************/
 void check_physical_pb_graph_node_annotation(const DeviceContext& vpr_device_ctx, 
-                                             const VprPbTypeAnnotation& vpr_pb_type_annotation) {
+                                             const VprDeviceAnnotation& vpr_device_annotation) {
   size_t num_err = 0;
  
   for (const t_logical_block_type& lb_type : vpr_device_ctx.logical_block_types) {
@@ -110,7 +110,7 @@ void check_physical_pb_graph_node_annotation(const DeviceContext& vpr_device_ctx
     if (nullptr == lb_type.pb_graph_head) {
       continue;
     }
-    rec_check_vpr_physical_pb_graph_node_annotation(lb_type.pb_graph_head, vpr_pb_type_annotation, num_err); 
+    rec_check_vpr_physical_pb_graph_node_annotation(lb_type.pb_graph_head, vpr_device_annotation, num_err); 
   }
 
   if (0 == num_err) {
