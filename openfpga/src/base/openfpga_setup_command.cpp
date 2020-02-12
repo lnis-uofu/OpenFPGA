@@ -8,6 +8,8 @@
 #include "openfpga_pb_pin_fixup.h"
 #include "openfpga_lut_truth_table_fixup.h"
 #include "check_netlist_naming_conflict.h"
+#include "annotate_rr_gsb.h"
+#include "compact_routing_hierarchy.h"
 #include "openfpga_setup_command.h"
 
 /* begin namespace openfpga */
@@ -113,11 +115,27 @@ void add_openfpga_setup_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   ShellCommandId shell_cmd_lut_truth_table_fixup_id = shell.add_command(shell_cmd_lut_truth_table_fixup, "Fix up the truth table of Look-Up Tables due to pin swapping during packing stage");
   shell.set_command_class(shell_cmd_lut_truth_table_fixup_id, openfpga_setup_cmd_class);
   shell.set_command_execute_function(shell_cmd_lut_truth_table_fixup_id, lut_truth_table_fixup);
-  /* The 'pb_pin_fixup' command should NOT be executed before 'read_openfpga_arch' and 'vpr' */
+  /* The 'lut_truth_table_fixup' command should NOT be executed before 'read_openfpga_arch' and 'vpr' */
   std::vector<ShellCommandId> cmd_dependency_lut_truth_table_fixup;
   cmd_dependency_lut_truth_table_fixup.push_back(shell_cmd_read_arch_id);
   cmd_dependency_lut_truth_table_fixup.push_back(shell_cmd_vpr_id);
   shell.set_command_dependency(shell_cmd_lut_truth_table_fixup_id, cmd_dependency_lut_truth_table_fixup);
+
+  /******************************** 
+   * Command 'compact_routing_hierarchy' 
+   */
+  Command shell_cmd_compact_routing_hierarchy("compact_routing_hierarchy");
+  /* Add an option '--verbose' */
+  shell_cmd_compact_routing_hierarchy.add_option("verbose", false, "Show verbose outputs");
+
+  /* Add command 'compact_routing_hierarchy' to the Shell */
+  ShellCommandId shell_cmd_compact_routing_hierarchy_id = shell.add_command(shell_cmd_compact_routing_hierarchy, "Identify the unique GSBs in the routing architecture so that the routing hierarchy of fabric can be compressed");
+  shell.set_command_class(shell_cmd_compact_routing_hierarchy_id, openfpga_setup_cmd_class);
+  shell.set_command_execute_function(shell_cmd_compact_routing_hierarchy_id, compact_routing_hierarchy);
+  /* The 'compact_routing_hierarchy' command should NOT be executed before 'link_openfpga_arch' */
+  std::vector<ShellCommandId> cmd_dependency_compact_routing_hierarchy;
+  cmd_dependency_lut_truth_table_fixup.push_back(shell_cmd_link_openfpga_arch_id);
+  shell.set_command_dependency(shell_cmd_compact_routing_hierarchy_id, cmd_dependency_compact_routing_hierarchy);
 } 
 
 } /* end namespace openfpga */

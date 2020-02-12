@@ -53,6 +53,29 @@ size_t DeviceRRGSB::get_num_cb_unique_module(const t_rr_type& cb_type) const {
   }
 } 
 
+/* Identify if a GSB actually exists at a location */
+bool DeviceRRGSB::is_gsb_exist(const vtr::Point<size_t> coord) const {
+  /* Out of range, does not exist */
+  if (false == validate_coordinate(coord)) {
+    return false;
+  }
+
+  /* If the GSB is empty, it does not exist */
+  if (true == get_gsb(coord).is_cb_exist(CHANX)) {
+    return true;
+  }
+
+  if (true == get_gsb(coord).is_cb_exist(CHANY)) {
+    return true;
+  }
+
+  if (true == get_gsb(coord).is_sb_exist()) {
+    return true;
+  }
+
+  return false;
+}
+
 /* get the number of unique mirrors of switch blocks */
 size_t DeviceRRGSB::get_num_sb_unique_module() const {
   return sb_unique_module_.size();

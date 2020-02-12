@@ -37,6 +37,7 @@ class DeviceRRGSB {
     const RRGSB& get_cb_unique_module(const t_rr_type& cb_type, const size_t& index) const; /* Get a rr switch block which a unique mirror */ 
     const RRGSB& get_cb_unique_module(const t_rr_type& cb_type, const vtr::Point<size_t>& coordinate) const;
     size_t get_num_cb_unique_module(const t_rr_type& cb_type) const; /* get the number of unique mirrors of CBs */
+    bool is_gsb_exist(const vtr::Point<size_t> coord) const;
   public: /* Mutators */ 
     void reserve(const vtr::Point<size_t>& coordinate); /* Pre-allocate the rr_switch_block array that the device requires */ 
     void reserve_sb_unique_submodule_id(const vtr::Point<size_t>& coordinate); /* Pre-allocate the rr_sb_unique_module_id matrix that the device requires */ 

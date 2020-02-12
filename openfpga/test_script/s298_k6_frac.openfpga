@@ -16,5 +16,8 @@ pb_pin_fixup --verbose
 # Apply fix-up to Look-Up Table truth tables based on packing results
 lut_truth_table_fixup --verbose
 
+# Compress the routing hierarchy
+compact_routing_hierarchy --verbose
+
 # Finish and exit OpenFPGA
 exit

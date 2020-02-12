@@ -348,6 +348,21 @@ bool RRGSB::is_cb_exist(const t_rr_type& cb_type) const {
   return (0 != get_cb_chan_width(cb_type));
 } 
 
+/* check if the SB exist in this GSB */
+bool RRGSB::is_sb_exist() const {
+  /* if all the channel width is zero and number of OPINs are zero, there is no SB */
+  for (size_t side = 0; side < get_num_sides(); ++side) {
+    SideManager side_manager(side);
+    if (0 != get_chan_width(side_manager.get_side())) {
+      return true;
+    }
+    if (0 != get_num_opin_nodes(side_manager.get_side())) {
+      return true;
+    }
+  }
+
+  return false;
+} 
 
 /************************************************************************
  * Check if the node indicates a passing wire across the Switch Block part of the GSB 

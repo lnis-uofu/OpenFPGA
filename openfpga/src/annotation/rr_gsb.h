@@ -114,8 +114,11 @@ class RRGSB {
     /* check if the candidate SB is a mirror of the current one */
     bool is_cb_mirror(const RRGraph& rr_graph, const RRGSB& cand, const t_rr_type& cb_type) const; 
 
-    /* check if the candidate SB is a mirror of the current one */
+    /* check if the connect block exists in the GSB */
     bool is_cb_exist(const t_rr_type& cb_type) const;
+
+    /* check if the switch block exists in the GSB */
+    bool is_sb_exist() const;
 
     /* Check if the node imply a short connection inside the SB, which happens to long wires across a FPGA fabric */
     bool is_sb_node_passing_wire(const RRGraph& rr_graph, const e_side& node_side, const size_t& track_id) const; 

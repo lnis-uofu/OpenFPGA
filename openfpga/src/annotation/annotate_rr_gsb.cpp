@@ -374,7 +374,7 @@ void annotate_device_rr_gsb(const DeviceContext& vpr_device_ctx,
       const RRGSB& rr_gsb = build_rr_gsb(vpr_device_ctx, 
                                          vtr::Point<size_t>(vpr_device_ctx.grid.width() - 2, vpr_device_ctx.grid.height() - 2), 
                                          vtr::Point<size_t>(ix, iy));
-      /* TODO: sort drive_rr_nodes should be done when building the tileable rr_graph? */
+      /* TODO: sort drive_rr_nodes should be done when building the tileable rr_graph */
       //sort_rr_gsb_drive_rr_nodes(rr_gsb);
  
       /* Add to device_rr_gsb */
