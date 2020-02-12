@@ -8,7 +8,7 @@
 #include "openfpga_pb_pin_fixup.h"
 #include "openfpga_lut_truth_table_fixup.h"
 #include "check_netlist_naming_conflict.h"
-#include "compact_routing_hierarchy.h"
+#include "openfpga_build_fabric.h"
 #include "openfpga_setup_command.h"
 
 /* begin namespace openfpga */
@@ -121,20 +121,22 @@ void add_openfpga_setup_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   shell.set_command_dependency(shell_cmd_lut_truth_table_fixup_id, cmd_dependency_lut_truth_table_fixup);
 
   /******************************** 
-   * Command 'compact_routing_hierarchy' 
+   * Command 'build_fabric' 
    */
-  Command shell_cmd_compact_routing_hierarchy("compact_routing_hierarchy");
+  Command shell_cmd_build_fabric("build_fabric");
   /* Add an option '--verbose' */
-  shell_cmd_compact_routing_hierarchy.add_option("verbose", false, "Show verbose outputs");
+  shell_cmd_build_fabric.add_option("compress_routing", false, "Compress the number of unique routing modules by identifying the unique GSBs");
+  shell_cmd_build_fabric.add_option("duplicate_grid_pin", false, "Duplicate the pins on the same side of a grid");
+  shell_cmd_build_fabric.add_option("verbose", false, "Show verbose outputs");
 
   /* Add command 'compact_routing_hierarchy' to the Shell */
-  ShellCommandId shell_cmd_compact_routing_hierarchy_id = shell.add_command(shell_cmd_compact_routing_hierarchy, "Identify the unique GSBs in the routing architecture so that the routing hierarchy of fabric can be compressed");
-  shell.set_command_class(shell_cmd_compact_routing_hierarchy_id, openfpga_setup_cmd_class);
-  shell.set_command_execute_function(shell_cmd_compact_routing_hierarchy_id, compact_routing_hierarchy);
-  /* The 'compact_routing_hierarchy' command should NOT be executed before 'link_openfpga_arch' */
-  std::vector<ShellCommandId> cmd_dependency_compact_routing_hierarchy;
+  ShellCommandId shell_cmd_build_fabric_id = shell.add_command(shell_cmd_build_fabric, "Build the FPGA fabric in a graph of modules");
+  shell.set_command_class(shell_cmd_build_fabric_id, openfpga_setup_cmd_class);
+  shell.set_command_execute_function(shell_cmd_build_fabric_id, build_fabric);
+  /* The 'build_fabric' command should NOT be executed before 'link_openfpga_arch' */
+  std::vector<ShellCommandId> cmd_dependency_build_fabric;
   cmd_dependency_lut_truth_table_fixup.push_back(shell_cmd_link_openfpga_arch_id);
-  shell.set_command_dependency(shell_cmd_compact_routing_hierarchy_id, cmd_dependency_compact_routing_hierarchy);
+  shell.set_command_dependency(shell_cmd_build_fabric_id, cmd_dependency_build_fabric);
 } 
 
 } /* end namespace openfpga */

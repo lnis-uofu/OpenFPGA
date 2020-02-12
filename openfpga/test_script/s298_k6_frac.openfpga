@@ -11,13 +11,15 @@ link_openfpga_arch
 check_netlist_naming_conflict --fix --report ./netlist_renaming.xml
 
 # Apply fix-up to clustering nets based on routing results
-pb_pin_fixup --verbose
+pb_pin_fixup #--verbose
 
 # Apply fix-up to Look-Up Table truth tables based on packing results
-lut_truth_table_fixup --verbose
+lut_truth_table_fixup #--verbose
 
-# Compress the routing hierarchy
-compact_routing_hierarchy --verbose
+# Build the module graph 
+#  - Enabled compression on routing architecture modules
+#  - Enable pin duplication on grid modules 
+build_fabric --compress_routing --duplicate_grid_pin --verbose
 
 # Finish and exit OpenFPGA
 exit

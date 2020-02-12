@@ -7,7 +7,8 @@
 
 #include "device_rr_gsb.h"
 #include "device_rr_gsb_utils.h"
-#include "compact_routing_hierarchy.h"
+//#include "build_device_module.h"
+#include "openfpga_build_fabric.h"
 
 /* Include global variables of VPR */
 #include "globals.h"
@@ -19,16 +20,13 @@ namespace openfpga {
  * Identify the unique GSBs from the Device RR GSB arrays
  * This function should only be called after the GSB builder is done
  *******************************************************************/
-void compact_routing_hierarchy(OpenfpgaContext& openfpga_context,
-                               const Command& cmd, const CommandContext& cmd_context) { 
+static 
+void compress_routing_hierarchy(OpenfpgaContext& openfpga_context,
+                                const bool& verbose_output) {
   vtr::ScopedStartFinishTimer timer("Identify unique General Switch Blocks (GSBs)");
-
-  CommandOptionId opt_verbose = cmd.option("verbose");
 
   /* Build unique module lists */
   openfpga_context.mutable_device_rr_gsb().build_unique_module(g_vpr_ctx.device().rr_graph);
-
-  bool verbose_output = cmd_context.option_enable(cmd, opt_verbose);
 
   /* Report the stats */
   VTR_LOGV(verbose_output, 
@@ -54,7 +52,24 @@ void compact_routing_hierarchy(OpenfpgaContext& openfpga_context,
            openfpga_context.device_rr_gsb().get_num_gsb_unique_module(),
            find_device_rr_gsb_num_gsb_modules(openfpga_context.device_rr_gsb()),
            100 * (openfpga_context.device_rr_gsb().get_num_gsb_unique_module() / find_device_rr_gsb_num_gsb_modules(openfpga_context.device_rr_gsb()) - 1));
+}
 
+/********************************************************************
+ * Build the module graph for FPGA device
+ *******************************************************************/
+void build_fabric(OpenfpgaContext& openfpga_context,
+                  const Command& cmd, const CommandContext& cmd_context) { 
+
+  CommandOptionId opt_compress_routing = cmd.option("compress_routing");
+  CommandOptionId opt_verbose = cmd.option("verbose");
+  
+  if (true == cmd_context.option_enable(cmd, opt_compress_routing)) {
+    compress_routing_hierarchy(openfpga_context, cmd_context.option_enable(cmd, opt_verbose));
+  }
+
+  /*
+  openfpga_context.mutable_module_graph() = build_device_module_graph();
+   */
 } 
 
 } /* end namespace openfpga */

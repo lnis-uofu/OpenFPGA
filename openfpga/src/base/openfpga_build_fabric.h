@@ -1,5 +1,5 @@
-#ifndef COMPACT_ROUTING_HIERARCHY_H
-#define COMPACT_ROUTING_HIERARCHY_H
+#ifndef OPENFPGA_BUILD_FABRIC_H
+#define OPENFPGA_BUILD_FABRIC_H
 
 /********************************************************************
  * Include header files that are required by function declaration
@@ -15,8 +15,8 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void compact_routing_hierarchy(OpenfpgaContext& openfpga_context,
-                               const Command& cmd, const CommandContext& cmd_context); 
+void build_fabric(OpenfpgaContext& openfpga_context,
+                  const Command& cmd, const CommandContext& cmd_context); 
 
 } /* end namespace openfpga */
 
