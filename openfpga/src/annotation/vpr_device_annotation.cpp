@@ -215,6 +215,24 @@ t_pb_graph_pin* VprDeviceAnnotation::physical_pb_graph_pin(t_pb_graph_pin* pb_gr
   return physical_pb_graph_pins_.at(pb_graph_pin);
 }
 
+CircuitModelId VprDeviceAnnotation::rr_switch_circuit_model(const RRSwitchId& rr_switch) const {
+  /* Ensure that the rr_switch is in the list */
+  std::map<RRSwitchId, CircuitModelId>::const_iterator it = rr_switch_circuit_models_.find(rr_switch);
+  if (it == rr_switch_circuit_models_.end()) {
+    return CircuitModelId::INVALID();
+  }
+  return rr_switch_circuit_models_.at(rr_switch);
+}
+
+CircuitModelId VprDeviceAnnotation::rr_segment_circuit_model(const RRSegmentId& rr_segment) const {
+  /* Ensure that the rr_switch is in the list */
+  std::map<RRSegmentId, CircuitModelId>::const_iterator it = rr_segment_circuit_models_.find(rr_segment);
+  if (it == rr_segment_circuit_models_.end()) {
+    return CircuitModelId::INVALID();
+  }
+  return rr_segment_circuit_models_.at(rr_segment);
+}
+
 /************************************************************************
  * Public mutators
  ***********************************************************************/
@@ -410,6 +428,28 @@ void VprDeviceAnnotation::add_physical_pb_graph_pin(t_pb_graph_pin* operating_pb
     + physical_pb_pin_offsets_[operating_pb_graph_pin->port]) {
     physical_pb_pin_offsets_[operating_pb_graph_pin->port] = 0;
   }
+}
+
+void VprDeviceAnnotation::add_rr_switch_circuit_model(const RRSwitchId& rr_switch, const CircuitModelId& circuit_model) {
+  /* Warn any override attempt */
+  std::map<RRSwitchId, CircuitModelId>::const_iterator it = rr_switch_circuit_models_.find(rr_switch);
+  if (it != rr_switch_circuit_models_.end()) {
+    VTR_LOG_WARN("Override the annotation between rr_switch '%ld' and its circuit_model '%ld'!\n",
+                 size_t(rr_switch), size_t(circuit_model));
+  }
+
+  rr_switch_circuit_models_[rr_switch] = circuit_model;
+}
+
+void VprDeviceAnnotation::add_rr_segment_circuit_model(const RRSegmentId& rr_segment, const CircuitModelId& circuit_model) {
+  /* Warn any override attempt */
+  std::map<RRSegmentId, CircuitModelId>::const_iterator it = rr_segment_circuit_models_.find(rr_segment);
+  if (it != rr_segment_circuit_models_.end()) {
+    VTR_LOG_WARN("Override the annotation between rr_segment '%ld' and its circuit_model '%ld'!\n",
+                 size_t(rr_segment), size_t(circuit_model));
+  }
+
+  rr_segment_circuit_models_[rr_segment] = circuit_model;
 }
 
 } /* End namespace openfpga*/
