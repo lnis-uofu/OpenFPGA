@@ -8,7 +8,6 @@
 #include "openfpga_pb_pin_fixup.h"
 #include "openfpga_lut_truth_table_fixup.h"
 #include "check_netlist_naming_conflict.h"
-#include "annotate_rr_gsb.h"
 #include "compact_routing_hierarchy.h"
 #include "openfpga_setup_command.h"
 

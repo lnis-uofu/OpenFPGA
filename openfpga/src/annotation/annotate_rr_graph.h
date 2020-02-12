@@ -1,5 +1,5 @@
-#ifndef ANNOTATE_RR_GSB_H
-#define ANNOTATE_RR_GSB_H
+#ifndef ANNOTATE_RR_GRAPH_H
+#define ANNOTATE_RR_GRAPH_H
 
 /********************************************************************
  * Include header files that are required by function declaration
@@ -18,6 +18,11 @@ namespace openfpga {
 void annotate_device_rr_gsb(const DeviceContext& vpr_device_ctx, 
                             DeviceRRGSB& device_rr_gsb,
                             const bool& verbose_output);
+
+void annotate_rr_graph_circuit_models(const DeviceContext& vpr_device_ctx, 
+                                      const Arch& openfpga_arch,
+                                      VprDeviceAnnotation& vpr_device_annotation,
+                                      const bool& verbose_output);
 
 } /* end namespace openfpga */
 
