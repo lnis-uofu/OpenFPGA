@@ -175,7 +175,8 @@ void build_primitive_block_module(ModuleManager& module_manager,
                                   const CircuitLibrary& circuit_lib,
                                   const e_config_protocol_type& sram_orgz_type,
                                   const CircuitModelId& sram_model,
-                                  t_pb_graph_node* primitive_pb_graph_node) {
+                                  t_pb_graph_node* primitive_pb_graph_node,
+                                  const bool& verbose) {
   /* Ensure a valid pb_graph_node */ 
   VTR_ASSERT(nullptr != primitive_pb_graph_node);
 
@@ -184,6 +185,10 @@ void build_primitive_block_module(ModuleManager& module_manager,
 
   /* Generate the module name for this primitive pb_graph_node*/
   std::string primitive_module_name = generate_physical_block_module_name(primitive_pb_graph_node->pb_type);
+
+  VTR_LOGV(verbose,
+           "Building module '%s'...",
+           primitive_module_name.c_str());
 
   /* Create a module of the primitive LUT and register it to module manager */
   ModuleId primitive_module = module_manager.add_module(primitive_module_name);
@@ -289,6 +294,8 @@ void build_primitive_block_module(ModuleManager& module_manager,
       }
     }
   }
+
+  VTR_LOGV(verbose, "Done\n");
 }
 
 /********************************************************************
@@ -732,7 +739,8 @@ void rec_build_logical_tile_modules(ModuleManager& module_manager,
                                     const MuxLibrary& mux_lib,
                                     const e_config_protocol_type& sram_orgz_type,
                                     const CircuitModelId& sram_model,
-                                    t_pb_graph_node* physical_pb_graph_node) {
+                                    t_pb_graph_node* physical_pb_graph_node,
+                                    const bool& verbose) {
   /* Check cur_pb_graph_node*/
   VTR_ASSERT(nullptr != physical_pb_graph_node);
 
@@ -751,7 +759,8 @@ void rec_build_logical_tile_modules(ModuleManager& module_manager,
       rec_build_logical_tile_modules(module_manager, device_annotation,
                                      circuit_lib, mux_lib, 
                                      sram_orgz_type, sram_model, 
-                                     &(physical_pb_graph_node->child_pb_graph_nodes[physical_mode->index][ipb][0]));
+                                     &(physical_pb_graph_node->child_pb_graph_nodes[physical_mode->index][ipb][0]),
+                                     verbose);
     }
   }
 
@@ -760,13 +769,18 @@ void rec_build_logical_tile_modules(ModuleManager& module_manager,
     build_primitive_block_module(module_manager, device_annotation,
                                  circuit_lib,
                                  sram_orgz_type, sram_model, 
-                                 physical_pb_graph_node); 
+                                 physical_pb_graph_node,
+                                 verbose); 
     /* Finish for primitive node, return */
     return;
   }
 
   /* Generate the name of the Verilog module for this pb_type */
   std::string pb_module_name = generate_physical_block_module_name(physical_pb_type);
+
+  VTR_LOGV(verbose,
+           "Building module '%s'...",
+           pb_module_name.c_str());
 
   /* Register the Verilog module in module manager */
   ModuleId pb_module = module_manager.add_module(pb_module_name);
@@ -862,6 +876,8 @@ void rec_build_logical_tile_modules(ModuleManager& module_manager,
     add_module_nets_memory_config_bus(module_manager, pb_module, 
                                       sram_orgz_type, circuit_lib.design_tech_type(sram_model));
   }
+
+  VTR_LOGV(verbose, "Done\n");
 }
 
 /*****************************************************************************
@@ -879,7 +895,8 @@ void build_physical_tile_module(ModuleManager& module_manager,
                                 const CircuitModelId& sram_model,
                                 t_physical_tile_type_ptr phy_block_type,
                                 const e_side& border_side,
-                                const bool& duplicate_grid_pin) {
+                                const bool& duplicate_grid_pin,
+                                const bool& verbose) {
   /* Check code: if this is an IO block, the border side MUST be valid */
   if (true == is_io_type(phy_block_type)) {
     VTR_ASSERT(NUM_SIDES != border_side);
@@ -890,6 +907,10 @@ void build_physical_tile_module(ModuleManager& module_manager,
                                                                  std::string(phy_block_type->name),
                                                                  is_io_type(phy_block_type),
                                                                  border_side);
+  VTR_LOGV(verbose, 
+           "Building physical tile '%s'...",
+           grid_module_name.c_str());
+
   ModuleId grid_module = module_manager.add_module(grid_module_name); 
   VTR_ASSERT(true == module_manager.valid_module_id(grid_module));
 
@@ -1031,6 +1052,8 @@ void build_physical_tile_module(ModuleManager& module_manager,
     add_module_nets_memory_config_bus(module_manager, grid_module, 
                                       sram_orgz_type, circuit_lib.design_tech_type(sram_model));
   }
+
+  VTR_LOG("Done\n");
 }
 
 /*****************************************************************************
@@ -1052,7 +1075,8 @@ void build_grid_modules(ModuleManager& module_manager,
                         const MuxLibrary& mux_lib,
                         const e_config_protocol_type& sram_orgz_type,
                         const CircuitModelId& sram_model,
-                        const bool& duplicate_grid_pin) {
+                        const bool& duplicate_grid_pin,
+                        const bool& verbose) {
   /* Start time count */
   vtr::ScopedStartFinishTimer timer("Build grid modules");
 
@@ -1064,6 +1088,8 @@ void build_grid_modules(ModuleManager& module_manager,
    * to its parent in module manager  
    */
   /* Build modules starting from the top-level pb_type/pb_graph_node, and traverse the graph in a recursive way */
+  VTR_LOG("Building logical tiles...");
+  VTR_LOGV(verbose, "\n");
   for (const t_logical_block_type& logical_tile : device_ctx.logical_block_types) {
     /* Bypass empty pb_graph */
     if (nullptr == logical_tile.pb_graph_head) {
@@ -1072,12 +1098,16 @@ void build_grid_modules(ModuleManager& module_manager,
     rec_build_logical_tile_modules(module_manager, device_annotation,
                                    circuit_lib, mux_lib, 
                                    sram_orgz_type, sram_model, 
-                                   logical_tile.pb_graph_head);
+                                   logical_tile.pb_graph_head,
+                                   verbose);
   }
+  VTR_LOG("Done\n");
 
   /* Enumerate the types of physical tiles
    * Use the logical tile module to build the physical tiles
    */
+  VTR_LOG("Building physical tiles...");
+  VTR_LOGV(verbose, "\n");
   for (const t_physical_tile_type& physical_tile : device_ctx.physical_tile_types) {
     /* Bypass empty type or nullptr */
     if (true == is_empty_type(&physical_tile)) {
@@ -1090,7 +1120,8 @@ void build_grid_modules(ModuleManager& module_manager,
                                    sram_orgz_type, sram_model,
                                    &physical_tile,
                                    side_manager.get_side(),
-                                   duplicate_grid_pin);
+                                   duplicate_grid_pin,
+                                   verbose);
       } 
       continue;
     } else {
@@ -1099,9 +1130,11 @@ void build_grid_modules(ModuleManager& module_manager,
                                  sram_orgz_type, sram_model,
                                  &physical_tile,
                                  NUM_SIDES,
-                                 duplicate_grid_pin);
+                                 duplicate_grid_pin,
+                                 verbose);
     }
   }
+  VTR_LOG("Done\n");
 }
 
 } /* end namespace openfpga */

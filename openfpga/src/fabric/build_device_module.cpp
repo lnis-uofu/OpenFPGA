@@ -28,7 +28,8 @@ namespace openfpga {
  *******************************************************************/
 ModuleManager build_device_module_graph(const DeviceContext& vpr_device_ctx,
                                         const OpenfpgaContext& openfpga_ctx,
-                                        const bool& duplicate_grid_pin) {
+                                        const bool& duplicate_grid_pin,
+                                        const bool& verbose) {
   vtr::ScopedStartFinishTimer timer("Build fabric module graph");
 
   /* Module manager to be built */
@@ -73,7 +74,7 @@ ModuleManager build_device_module_graph(const DeviceContext& vpr_device_ctx,
                      openfpga_ctx.arch().circuit_lib,
                      openfpga_ctx.mux_lib(),
                      openfpga_ctx.arch().config_protocol.type(),
-                     sram_model, duplicate_grid_pin);
+                     sram_model, duplicate_grid_pin, verbose);
 
   //if (TRUE == vpr_setup.FPGA_SPICE_Opts.compact_routing_hierarchy) {
   //  build_unique_routing_modules(module_manager, L_device_rr_gsb, arch.spice->circuit_lib, 
