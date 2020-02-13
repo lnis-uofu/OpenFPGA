@@ -12,7 +12,7 @@
 #include "build_decoder_modules.h"
 #include "build_mux_modules.h"
 #include "build_lut_modules.h"
-//#include "build_wire_modules.h"
+#include "build_wire_modules.h"
 //#include "build_memory_modules.h"
 //#include "build_grid_modules.h"
 //#include "build_routing_modules.h"
@@ -59,7 +59,7 @@ ModuleManager build_device_module_graph(const DeviceContext& vpr_device_ctx,
   build_lut_modules(module_manager, openfpga_ctx.arch().circuit_lib);
 
   /* Build wire modules */
-  //build_wire_modules(module_manager, arch.spice->circuit_lib);
+  build_wire_modules(module_manager, openfpga_ctx.arch().circuit_lib);
 
   /* Build memory modules */
   //build_memory_modules(module_manager, mux_lib, arch.spice->circuit_lib,
