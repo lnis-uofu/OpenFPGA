@@ -149,14 +149,14 @@
        <port type="clock" prefix="clk" size="1" is_global="true" default_val="0" />
     </circuit_model>
     <circuit_model type="lut" name="frac_lut6" prefix="frac_lut6" dump_structural_verilog="true">
-      <design_technology type="cmos"/>
+      <design_technology type="cmos" fracturable_lut="true"/>
       <input_buffer exist="true" circuit_model_name="INVTX1"/>
       <output_buffer exist="true" circuit_model_name="INVTX1"/>
       <lut_input_inverter exist="true" circuit_model_name="INVTX1"/>
       <lut_input_buffer exist="true" circuit_model_name="buf4"/>
       <lut_intermediate_buffer exist="true" circuit_model_name="buf4" location_map="-1-1-"/>
       <pass_gate_logic circuit_model_name="TGATE"/>
-      <port type="input" prefix="in" size="6" tri_state_map="----11" circuit_model_name="OR2"/>
+      <port type="input" prefix="in" size="6" tri_state_map="-----1" circuit_model_name="OR2"/>
       <port type="output" prefix="lut5_out" size="2" lut_frac_level="5" lut_output_mask="0,1"/>
       <port type="output" prefix="lut6_out" size="1" lut_output_mask="0"/>
       <port type="sram" prefix="sram" size="64"/>

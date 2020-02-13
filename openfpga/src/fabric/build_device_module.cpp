@@ -9,11 +9,11 @@
 #include "vtr_time.h"
 
 #include "build_essential_modules.h"
-//#include "build_decoder_modules.h"
-//#include "build_mux_modules.h"
-//#include "build_lut_modules.h"
-//#include "build_wire_modules.h"
-//#include "build_memory_modules.h"
+#include "build_decoder_modules.h"
+#include "build_mux_modules.h"
+#include "build_lut_modules.h"
+#include "build_wire_modules.h"
+#include "build_memory_modules.h"
 //#include "build_grid_modules.h"
 //#include "build_routing_modules.h"
 //#include "build_top_module.h"
@@ -49,20 +49,22 @@ ModuleManager build_device_module_graph(const DeviceContext& vpr_device_ctx,
   build_essential_modules(module_manager, openfpga_ctx.arch().circuit_lib);
 
   /* Build local encoders for multiplexers, this MUST be called before multiplexer building */
-  //build_mux_local_decoder_modules(module_manager, mux_lib, arch.spice->circuit_lib);
+  build_mux_local_decoder_modules(module_manager, openfpga_ctx.mux_lib(), 
+                                  openfpga_ctx.arch().circuit_lib);
 
   /* Build multiplexer modules */
-  //build_mux_modules(module_manager, mux_lib, arch.spice->circuit_lib);
+  build_mux_modules(module_manager, openfpga_ctx.mux_lib(), openfpga_ctx.arch().circuit_lib);
 
   /* Build LUT modules */
-  //build_lut_modules(module_manager, arch.spice->circuit_lib);
+  build_lut_modules(module_manager, openfpga_ctx.arch().circuit_lib);
 
   /* Build wire modules */
-  //build_wire_modules(module_manager, arch.spice->circuit_lib);
+  build_wire_modules(module_manager, openfpga_ctx.arch().circuit_lib);
 
   /* Build memory modules */
-  //build_memory_modules(module_manager, mux_lib, arch.spice->circuit_lib,
-  //                     arch.sram_inf.verilog_sram_inf_orgz->type);
+  build_memory_modules(module_manager, openfpga_ctx.mux_lib(), 
+                       openfpga_ctx.arch().circuit_lib,
+                       openfpga_ctx.arch().config_protocol.type());
 
   /* Build grid and programmable block modules */
   //build_grid_modules(module_manager, arch.spice->circuit_lib, mux_lib,  
