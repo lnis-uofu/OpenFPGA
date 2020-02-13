@@ -102,7 +102,7 @@ void add_grid_module_net_connect_pb_graph_pin(ModuleManager& module_manager,
       module_manager.add_module_net_sink(grid_module, net, grid_module, 0, grid_module_port_id, grid_module_pin_id);
       break;
     default:
-      VTR_LOG_ERROR("Invalid pin-to-pin interconnection type!\n");
+      VTR_LOGF_ERROR(__FILE__, __LINE__, "Invalid pin-to-pin interconnection type!\n");
       exit(1);
     }
   }

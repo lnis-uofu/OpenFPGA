@@ -52,7 +52,7 @@ void build_invbuf_module(ModuleManager& module_manager,
     }
     /* Report errors if there are any */
     if (0 < num_err) {
-      VTR_LOG_ERROR("Inverter/buffer circuit model '%s' is power-gated. At least one config-enable global port is required!\n",
+      VTR_LOGF_ERROR(__FILE__, __LINE__, "Inverter/buffer circuit model '%s' is power-gated. At least one config-enable global port is required!\n",
                  circuit_lib.model_name(circuit_model).c_str()); 
       exit(1);
     }
@@ -98,7 +98,7 @@ void build_passgate_module(ModuleManager& module_manager,
     }
     break;
   default:
-    VTR_LOG_ERROR("Invalid topology for circuit model '%s'!\n",
+    VTR_LOGF_ERROR(__FILE__, __LINE__, "Invalid topology for circuit model '%s'!\n",
                   circuit_lib.model_name(circuit_model).c_str());
     exit(1);
   }
