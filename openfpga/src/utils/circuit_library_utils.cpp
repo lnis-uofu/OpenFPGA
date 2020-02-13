@@ -4,9 +4,10 @@
  * They are made to ease the development in some specific purposes
  * Please classify such functions in this file
  ***********************************************************************/
+
 #include <algorithm>
 
-/* Headers from vtr util library */
+/* Headers from vtrutil library */
 #include "vtr_assert.h"
 #include "vtr_log.h"
 
@@ -83,11 +84,11 @@ std::vector<CircuitPortId> find_circuit_mode_select_sram_ports(const CircuitLibr
 static 
 size_t find_rram_circuit_num_shared_config_bits(const CircuitLibrary& circuit_lib,
                                                 const CircuitModelId& rram_model,
-                                                const e_config_protocol_type& config_protocol_type) {
+                                                const e_config_protocol_type& sram_orgz_type) {
   size_t num_shared_config_bits = 0;
 
   /* Branch on the organization of configuration protocol */ 
-  switch (config_protocol_type) {
+  switch (sram_orgz_type) {
   case CONFIG_MEM_STANDALONE:
   case CONFIG_MEM_SCAN_CHAIN:
     break;
@@ -100,7 +101,7 @@ size_t find_rram_circuit_num_shared_config_bits(const CircuitLibrary& circuit_li
     break;
   }    
   default:
-    VTR_LOG_ERROR("Invalid type of configuration protocol!\n");
+    VTR_LOG_ERROR("Invalid type of SRAM organization!\n");
     exit(1);
   }
 
@@ -123,7 +124,7 @@ size_t find_rram_circuit_num_shared_config_bits(const CircuitLibrary& circuit_li
  *******************************************************************/
 size_t find_circuit_num_shared_config_bits(const CircuitLibrary& circuit_lib,
                                            const CircuitModelId& circuit_model,
-                                           const e_config_protocol_type& config_protocol_type) {
+                                           const e_config_protocol_type& sram_orgz_type) {
   size_t num_shared_config_bits = 0;
 
   std::vector<CircuitPortId> sram_ports = circuit_lib.model_ports_by_type(circuit_model, CIRCUIT_MODEL_PORT_SRAM);
@@ -138,11 +139,10 @@ size_t find_circuit_num_shared_config_bits(const CircuitLibrary& circuit_lib,
       break;
     case CIRCUIT_MODEL_DESIGN_RRAM: 
        /* RRAM circuit do need shared configuration bits, but it is subjected to the largest one among different SRAM models */
-       num_shared_config_bits = std::max((int)num_shared_config_bits, (int)find_rram_circuit_num_shared_config_bits(circuit_lib, sram_model, config_protocol_type));
+       num_shared_config_bits = std::max((int)num_shared_config_bits, (int)find_rram_circuit_num_shared_config_bits(circuit_lib, sram_model, sram_orgz_type));
        break;
     default:
-      VTR_LOG_ERROR("Invalid design technology for SRAM circuit model!\n",
-                    circuit_lib.model_name(circuit_model).c_str());
+      VTR_LOG_ERROR("Invalid design technology for SRAM model!\n");
       exit(1);
     }
   } 

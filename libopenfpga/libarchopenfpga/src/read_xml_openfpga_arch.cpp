@@ -70,6 +70,13 @@ openfpga::Arch read_xml_openfpga_arch(const char* arch_file_name) {
     /* Build the internal link between configuration protocol and circuit library */
     link_config_protocol_to_circuit_library(openfpga_arch);
 
+    /* Now, we can know the default configurable memory model 
+     * Apply it to all the SRAM ports of circuit models
+     */
+    config_circuit_models_sram_port_to_default_sram_model(openfpga_arch.circuit_lib,
+                                                          openfpga_arch.config_protocol.memory_model());
+    
+
     /* Parse the connection block circuit definition */
     openfpga_arch.cb_switch2circuit = read_xml_cb_switch_circuit(xml_openfpga_arch, loc_data,
                                                                  openfpga_arch.circuit_lib);

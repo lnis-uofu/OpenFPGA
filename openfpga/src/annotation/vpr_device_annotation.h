@@ -1,5 +1,5 @@
-#ifndef VPR_PB_TYPE_ANNOTATION_H
-#define VPR_PB_TYPE_ANNOTATION_H
+#ifndef VPR_DEVICE_ANNOTATION_H
+#define VPR_DEVICE_ANNOTATION_H
 
 /********************************************************************
  * Include header files required by the data structure definition
@@ -11,6 +11,9 @@
 
 /* Header from archfpga library */
 #include "physical_types.h"
+
+/* Header from vpr library */
+#include "rr_graph_obj.h"
 
 /* Header from openfpgautil library */
 #include "openfpga_port.h"
@@ -33,9 +36,9 @@ typedef vtr::StrongId<pb_graph_node_id_tag> PbGraphNodeId;
  * 3. what is the physical pb_type for an operating pb_type
  * 4. what is the mode pointer that represents the physical mode for a pb_type
  *******************************************************************/
-class VprPbTypeAnnotation {
+class VprDeviceAnnotation {
   public:  /* Constructor */
-    VprPbTypeAnnotation();
+    VprDeviceAnnotation();
   public:  /* Public accessors */
     bool is_physical_pb_type(t_pb_type* pb_type) const;
     t_mode* physical_mode(t_pb_type* pb_type) const;
@@ -66,6 +69,9 @@ class VprPbTypeAnnotation {
      */
     int physical_pb_pin_offset(t_port* pb_port) const;
     t_pb_graph_pin* physical_pb_graph_pin(t_pb_graph_pin* pb_graph_pin) const;
+    CircuitModelId rr_switch_circuit_model(const RRSwitchId& rr_switch) const;
+    CircuitModelId rr_segment_circuit_model(const RRSegmentId& rr_segment) const;
+    CircuitModelId direct_circuit_model(const size_t& direct) const;
   public:  /* Public mutators */
     void add_pb_type_physical_mode(t_pb_type* pb_type, t_mode* physical_mode);
     void add_physical_pb_type(t_pb_type* operating_pb_type, t_pb_type* physical_pb_type);
@@ -83,6 +89,9 @@ class VprPbTypeAnnotation {
     void add_physical_pb_type_index_offset(t_pb_type* pb_type, const int& offset);
     void add_physical_pb_pin_rotate_offset(t_port* pb_port, const int& offset);
     void add_physical_pb_graph_pin(t_pb_graph_pin* operating_pb_graph_pin, t_pb_graph_pin* physical_pb_graph_pin);
+    void add_rr_switch_circuit_model(const RRSwitchId& rr_switch, const CircuitModelId& circuit_model);
+    void add_rr_segment_circuit_model(const RRSegmentId& rr_segment, const CircuitModelId& circuit_model);
+    void add_direct_circuit_model(const size_t& direct, const CircuitModelId& circuit_model);
   private: /* Internal data */
     /* Pair a regular pb_type to its physical pb_type */
     std::map<t_pb_type*, t_pb_type*> physical_pb_types_;
@@ -157,6 +166,15 @@ class VprPbTypeAnnotation {
 
     /* Pair a pb_graph_pin to a physical pb_graph_pin */
     std::map<t_pb_graph_pin*, t_pb_graph_pin*> physical_pb_graph_pins_;
+
+    /* Pair a Routing Resource Switch (rr_switch) to a circuit model */
+    std::map<RRSwitchId, CircuitModelId> rr_switch_circuit_models_;
+
+    /* Pair a Routing Segment (rr_segment) to a circuit model */
+    std::map<RRSegmentId, CircuitModelId> rr_segment_circuit_models_;
+
+    /* Pair a direct connection (direct) to a circuit model */
+    std::map<size_t, CircuitModelId> direct_circuit_models_;
 };
 
 } /* End namespace openfpga*/

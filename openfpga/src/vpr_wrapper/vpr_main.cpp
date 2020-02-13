@@ -41,20 +41,21 @@ int vpr(int argc, char** argv) {
     vtr::ScopedFinishTimer t("The entire flow of VPR");
 
     t_options Options = t_options();
-    t_arch Arch = t_arch();
+    /* Arch should NOT be freed once this function is done */
+    t_arch* Arch = new t_arch;
     t_vpr_setup vpr_setup = t_vpr_setup();
 
     try {
         vpr_install_signal_handler();
 
         /* Read options, architecture, and circuit netlist */
-        vpr_init(argc, const_cast<const char**>(argv), &Options, &vpr_setup, &Arch);
+        vpr_init(argc, const_cast<const char**>(argv), &Options, &vpr_setup, Arch);
 
         if (Options.show_version) {
             return SUCCESS_EXIT_CODE;
         }
 
-        bool flow_succeeded = vpr_flow(vpr_setup, Arch);
+        bool flow_succeeded = vpr_flow(vpr_setup, *Arch);
         if (!flow_succeeded) {
             VTR_LOG("VPR failed to implement circuit\n");
             return UNIMPLEMENTABLE_EXIT_CODE;

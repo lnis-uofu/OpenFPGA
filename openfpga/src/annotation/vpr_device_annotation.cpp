@@ -1,11 +1,11 @@
 /************************************************************************
- * Member functions for class VprPbTypeAnnotation
+ * Member functions for class VprDeviceAnnotation
  ***********************************************************************/
 #include <algorithm>
 
 #include "vtr_log.h"
 #include "vtr_assert.h"
-#include "vpr_pb_type_annotation.h"
+#include "vpr_device_annotation.h"
 
 /* namespace openfpga begins */
 namespace openfpga {
@@ -13,14 +13,14 @@ namespace openfpga {
 /************************************************************************
  * Constructors
  ***********************************************************************/
-VprPbTypeAnnotation::VprPbTypeAnnotation() {
+VprDeviceAnnotation::VprDeviceAnnotation() {
   return;
 }
 
 /************************************************************************
  * Public accessors
  ***********************************************************************/
-bool VprPbTypeAnnotation::is_physical_pb_type(t_pb_type* pb_type) const {
+bool VprDeviceAnnotation::is_physical_pb_type(t_pb_type* pb_type) const {
   /* Ensure that the pb_type is in the list */
   std::map<t_pb_type*, t_pb_type*>::const_iterator it = physical_pb_types_.find(pb_type);
   if (it == physical_pb_types_.end()) {
@@ -30,7 +30,7 @@ bool VprPbTypeAnnotation::is_physical_pb_type(t_pb_type* pb_type) const {
   return pb_type == physical_pb_types_.at(pb_type);
 }
 
-t_mode* VprPbTypeAnnotation::physical_mode(t_pb_type* pb_type) const {
+t_mode* VprDeviceAnnotation::physical_mode(t_pb_type* pb_type) const {
   /* Ensure that the pb_type is in the list */
   std::map<t_pb_type*, t_mode*>::const_iterator it = physical_pb_modes_.find(pb_type);
   if (it == physical_pb_modes_.end()) {
@@ -39,7 +39,7 @@ t_mode* VprPbTypeAnnotation::physical_mode(t_pb_type* pb_type) const {
   return physical_pb_modes_.at(pb_type);
 }
 
-t_pb_type* VprPbTypeAnnotation::physical_pb_type(t_pb_type* pb_type) const {
+t_pb_type* VprDeviceAnnotation::physical_pb_type(t_pb_type* pb_type) const {
   /* Ensure that the pb_type is in the list */
   std::map<t_pb_type*, t_pb_type*>::const_iterator it = physical_pb_types_.find(pb_type);
   if (it == physical_pb_types_.end()) {
@@ -48,7 +48,7 @@ t_pb_type* VprPbTypeAnnotation::physical_pb_type(t_pb_type* pb_type) const {
   return physical_pb_types_.at(pb_type);
 }
 
-t_port* VprPbTypeAnnotation::physical_pb_port(t_port* pb_port) const {
+t_port* VprDeviceAnnotation::physical_pb_port(t_port* pb_port) const {
   /* Ensure that the pb_type is in the list */
   std::map<t_port*, t_port*>::const_iterator it = physical_pb_ports_.find(pb_port);
   if (it == physical_pb_ports_.end()) {
@@ -57,7 +57,7 @@ t_port* VprPbTypeAnnotation::physical_pb_port(t_port* pb_port) const {
   return physical_pb_ports_.at(pb_port);
 }
 
-BasicPort VprPbTypeAnnotation::physical_pb_port_range(t_port* pb_port) const {
+BasicPort VprDeviceAnnotation::physical_pb_port_range(t_port* pb_port) const {
   /* Ensure that the pb_type is in the list */
   std::map<t_port*, BasicPort>::const_iterator it = physical_pb_port_ranges_.find(pb_port);
   if (it == physical_pb_port_ranges_.end()) {
@@ -67,7 +67,7 @@ BasicPort VprPbTypeAnnotation::physical_pb_port_range(t_port* pb_port) const {
   return physical_pb_port_ranges_.at(pb_port);
 }
 
-CircuitModelId VprPbTypeAnnotation::pb_type_circuit_model(t_pb_type* physical_pb_type) const {
+CircuitModelId VprDeviceAnnotation::pb_type_circuit_model(t_pb_type* physical_pb_type) const {
   /* Ensure that the pb_type is in the list */
   std::map<t_pb_type*, CircuitModelId>::const_iterator it = pb_type_circuit_models_.find(physical_pb_type);
   if (it == pb_type_circuit_models_.end()) {
@@ -77,7 +77,7 @@ CircuitModelId VprPbTypeAnnotation::pb_type_circuit_model(t_pb_type* physical_pb
   return pb_type_circuit_models_.at(physical_pb_type);
 }
 
-CircuitModelId VprPbTypeAnnotation::interconnect_circuit_model(t_interconnect* pb_interconnect) const {
+CircuitModelId VprDeviceAnnotation::interconnect_circuit_model(t_interconnect* pb_interconnect) const {
   /* Ensure that the pb_type is in the list */
   std::map<t_interconnect*, CircuitModelId>::const_iterator it = interconnect_circuit_models_.find(pb_interconnect);
   if (it == interconnect_circuit_models_.end()) {
@@ -87,7 +87,7 @@ CircuitModelId VprPbTypeAnnotation::interconnect_circuit_model(t_interconnect* p
   return interconnect_circuit_models_.at(pb_interconnect);
 }
 
-e_interconnect VprPbTypeAnnotation::interconnect_physical_type(t_interconnect* pb_interconnect) const {
+e_interconnect VprDeviceAnnotation::interconnect_physical_type(t_interconnect* pb_interconnect) const {
   /* Ensure that the pb_type is in the list */
   std::map<t_interconnect*, e_interconnect>::const_iterator it = interconnect_physical_types_.find(pb_interconnect);
   if (it == interconnect_physical_types_.end()) {
@@ -97,7 +97,7 @@ e_interconnect VprPbTypeAnnotation::interconnect_physical_type(t_interconnect* p
   return interconnect_physical_types_.at(pb_interconnect);
 }
 
-CircuitPortId VprPbTypeAnnotation::pb_circuit_port(t_port* pb_port) const {
+CircuitPortId VprDeviceAnnotation::pb_circuit_port(t_port* pb_port) const {
   /* Ensure that the pb_type is in the list */
   std::map<t_port*, CircuitPortId>::const_iterator it = pb_circuit_ports_.find(pb_port);
   if (it == pb_circuit_ports_.end()) {
@@ -107,7 +107,7 @@ CircuitPortId VprPbTypeAnnotation::pb_circuit_port(t_port* pb_port) const {
   return pb_circuit_ports_.at(pb_port);
 }
 
-std::vector<size_t> VprPbTypeAnnotation::pb_type_mode_bits(t_pb_type* pb_type) const {
+std::vector<size_t> VprDeviceAnnotation::pb_type_mode_bits(t_pb_type* pb_type) const {
   /* Ensure that the pb_type is in the list */
   std::map<t_pb_type*, std::vector<size_t>>::const_iterator it = pb_type_mode_bits_.find(pb_type);
   if (it == pb_type_mode_bits_.end()) {
@@ -117,7 +117,7 @@ std::vector<size_t> VprPbTypeAnnotation::pb_type_mode_bits(t_pb_type* pb_type) c
   return pb_type_mode_bits_.at(pb_type);
 }
 
-PbGraphNodeId VprPbTypeAnnotation::pb_graph_node_unique_index(t_pb_graph_node* pb_graph_node) const {
+PbGraphNodeId VprDeviceAnnotation::pb_graph_node_unique_index(t_pb_graph_node* pb_graph_node) const {
   /* Ensure that the pb_type is in the list */
   std::map<t_pb_type*, std::vector<t_pb_graph_node*>>::const_iterator it = pb_graph_node_unique_index_.find(pb_graph_node->pb_type);
   if (it == pb_graph_node_unique_index_.end()) {
@@ -138,7 +138,7 @@ PbGraphNodeId VprPbTypeAnnotation::pb_graph_node_unique_index(t_pb_graph_node* p
   return PbGraphNodeId(it_node - pb_graph_node_unique_index_.at(pb_graph_node->pb_type).begin());
 }
 
-t_pb_graph_node* VprPbTypeAnnotation::pb_graph_node(t_pb_type* pb_type, const PbGraphNodeId& unique_index) const {
+t_pb_graph_node* VprDeviceAnnotation::pb_graph_node(t_pb_type* pb_type, const PbGraphNodeId& unique_index) const {
   /* Ensure that the pb_type is in the list */
   std::map<t_pb_type*, std::vector<t_pb_graph_node*>>::const_iterator it = pb_graph_node_unique_index_.find(pb_type);
   if (it == pb_graph_node_unique_index_.end()) {
@@ -156,7 +156,7 @@ t_pb_graph_node* VprPbTypeAnnotation::pb_graph_node(t_pb_type* pb_type, const Pb
   return pb_graph_node_unique_index_.at(pb_type)[size_t(unique_index)];
 }
 
-t_pb_graph_node* VprPbTypeAnnotation::physical_pb_graph_node(t_pb_graph_node* pb_graph_node) const {
+t_pb_graph_node* VprDeviceAnnotation::physical_pb_graph_node(t_pb_graph_node* pb_graph_node) const {
   /* Ensure that the pb_graph_node is in the list */
   std::map<t_pb_graph_node*, t_pb_graph_node*>::const_iterator it = physical_pb_graph_nodes_.find(pb_graph_node);
   if (it == physical_pb_graph_nodes_.end()) {
@@ -165,7 +165,7 @@ t_pb_graph_node* VprPbTypeAnnotation::physical_pb_graph_node(t_pb_graph_node* pb
   return physical_pb_graph_nodes_.at(pb_graph_node);
 }
 
-int VprPbTypeAnnotation::physical_pb_type_index_factor(t_pb_type* pb_type) const {
+int VprDeviceAnnotation::physical_pb_type_index_factor(t_pb_type* pb_type) const {
   /* Ensure that the pb_type is in the list */
   std::map<t_pb_type*, int>::const_iterator it = physical_pb_type_index_factors_.find(pb_type);
   if (it == physical_pb_type_index_factors_.end()) {
@@ -175,7 +175,7 @@ int VprPbTypeAnnotation::physical_pb_type_index_factor(t_pb_type* pb_type) const
   return physical_pb_type_index_factors_.at(pb_type);
 }
 
-int VprPbTypeAnnotation::physical_pb_type_index_offset(t_pb_type* pb_type) const {
+int VprDeviceAnnotation::physical_pb_type_index_offset(t_pb_type* pb_type) const {
   /* Ensure that the pb_type is in the list */
   std::map<t_pb_type*, int>::const_iterator it = physical_pb_type_index_offsets_.find(pb_type);
   if (it == physical_pb_type_index_offsets_.end()) {
@@ -185,7 +185,7 @@ int VprPbTypeAnnotation::physical_pb_type_index_offset(t_pb_type* pb_type) const
   return physical_pb_type_index_offsets_.at(pb_type);
 }
 
-int VprPbTypeAnnotation::physical_pb_pin_rotate_offset(t_port* pb_port) const {
+int VprDeviceAnnotation::physical_pb_pin_rotate_offset(t_port* pb_port) const {
   /* Ensure that the pb_type is in the list */
   std::map<t_port*, int>::const_iterator it = physical_pb_pin_rotate_offsets_.find(pb_port);
   if (it == physical_pb_pin_rotate_offsets_.end()) {
@@ -195,7 +195,7 @@ int VprPbTypeAnnotation::physical_pb_pin_rotate_offset(t_port* pb_port) const {
   return physical_pb_pin_rotate_offsets_.at(pb_port);
 }
 
-int VprPbTypeAnnotation::physical_pb_pin_offset(t_port* pb_port) const {
+int VprDeviceAnnotation::physical_pb_pin_offset(t_port* pb_port) const {
   /* Ensure that the pb_type is in the list */
   std::map<t_port*, int>::const_iterator it = physical_pb_pin_offsets_.find(pb_port);
   if (it == physical_pb_pin_offsets_.end()) {
@@ -206,7 +206,7 @@ int VprPbTypeAnnotation::physical_pb_pin_offset(t_port* pb_port) const {
 }
 
 
-t_pb_graph_pin* VprPbTypeAnnotation::physical_pb_graph_pin(t_pb_graph_pin* pb_graph_pin) const {
+t_pb_graph_pin* VprDeviceAnnotation::physical_pb_graph_pin(t_pb_graph_pin* pb_graph_pin) const {
   /* Ensure that the pb_type is in the list */
   std::map<t_pb_graph_pin*, t_pb_graph_pin*>::const_iterator it = physical_pb_graph_pins_.find(pb_graph_pin);
   if (it == physical_pb_graph_pins_.end()) {
@@ -215,10 +215,37 @@ t_pb_graph_pin* VprPbTypeAnnotation::physical_pb_graph_pin(t_pb_graph_pin* pb_gr
   return physical_pb_graph_pins_.at(pb_graph_pin);
 }
 
+CircuitModelId VprDeviceAnnotation::rr_switch_circuit_model(const RRSwitchId& rr_switch) const {
+  /* Ensure that the rr_switch is in the list */
+  std::map<RRSwitchId, CircuitModelId>::const_iterator it = rr_switch_circuit_models_.find(rr_switch);
+  if (it == rr_switch_circuit_models_.end()) {
+    return CircuitModelId::INVALID();
+  }
+  return rr_switch_circuit_models_.at(rr_switch);
+}
+
+CircuitModelId VprDeviceAnnotation::rr_segment_circuit_model(const RRSegmentId& rr_segment) const {
+  /* Ensure that the rr_switch is in the list */
+  std::map<RRSegmentId, CircuitModelId>::const_iterator it = rr_segment_circuit_models_.find(rr_segment);
+  if (it == rr_segment_circuit_models_.end()) {
+    return CircuitModelId::INVALID();
+  }
+  return rr_segment_circuit_models_.at(rr_segment);
+}
+
+CircuitModelId VprDeviceAnnotation::direct_circuit_model(const size_t& direct) const {
+  /* Ensure that the rr_switch is in the list */
+  std::map<size_t, CircuitModelId>::const_iterator it = direct_circuit_models_.find(direct);
+  if (it == direct_circuit_models_.end()) {
+    return CircuitModelId::INVALID();
+  }
+  return direct_circuit_models_.at(direct);
+}
+
 /************************************************************************
  * Public mutators
  ***********************************************************************/
-void VprPbTypeAnnotation::add_pb_type_physical_mode(t_pb_type* pb_type, t_mode* physical_mode) {
+void VprDeviceAnnotation::add_pb_type_physical_mode(t_pb_type* pb_type, t_mode* physical_mode) {
   /* Warn any override attempt */
   std::map<t_pb_type*, t_mode*>::const_iterator it = physical_pb_modes_.find(pb_type);
   if (it != physical_pb_modes_.end()) {
@@ -229,7 +256,7 @@ void VprPbTypeAnnotation::add_pb_type_physical_mode(t_pb_type* pb_type, t_mode* 
   physical_pb_modes_[pb_type] = physical_mode;
 }
 
-void VprPbTypeAnnotation::add_physical_pb_type(t_pb_type* operating_pb_type, t_pb_type* physical_pb_type) {
+void VprDeviceAnnotation::add_physical_pb_type(t_pb_type* operating_pb_type, t_pb_type* physical_pb_type) {
   /* Warn any override attempt */
   std::map<t_pb_type*, t_pb_type*>::const_iterator it = physical_pb_types_.find(operating_pb_type);
   if (it != physical_pb_types_.end()) {
@@ -240,7 +267,7 @@ void VprPbTypeAnnotation::add_physical_pb_type(t_pb_type* operating_pb_type, t_p
   physical_pb_types_[operating_pb_type] = physical_pb_type;
 }
 
-void VprPbTypeAnnotation::add_physical_pb_port(t_port* operating_pb_port, t_port* physical_pb_port) {
+void VprDeviceAnnotation::add_physical_pb_port(t_port* operating_pb_port, t_port* physical_pb_port) {
   /* Warn any override attempt */
   std::map<t_port*, t_port*>::const_iterator it = physical_pb_ports_.find(operating_pb_port);
   if (it != physical_pb_ports_.end()) {
@@ -251,7 +278,7 @@ void VprPbTypeAnnotation::add_physical_pb_port(t_port* operating_pb_port, t_port
   physical_pb_ports_[operating_pb_port] = physical_pb_port;
 }
 
-void VprPbTypeAnnotation::add_physical_pb_port_range(t_port* operating_pb_port, const BasicPort& port_range) {
+void VprDeviceAnnotation::add_physical_pb_port_range(t_port* operating_pb_port, const BasicPort& port_range) {
   /* The port range must satify the port width*/
   VTR_ASSERT((size_t)operating_pb_port->num_pins == port_range.get_width());
 
@@ -265,7 +292,7 @@ void VprPbTypeAnnotation::add_physical_pb_port_range(t_port* operating_pb_port, 
   physical_pb_port_ranges_[operating_pb_port] = port_range;
 }
 
-void VprPbTypeAnnotation::add_pb_type_circuit_model(t_pb_type* physical_pb_type, const CircuitModelId& circuit_model) {
+void VprDeviceAnnotation::add_pb_type_circuit_model(t_pb_type* physical_pb_type, const CircuitModelId& circuit_model) {
   /* Warn any override attempt */
   std::map<t_pb_type*, CircuitModelId>::const_iterator it = pb_type_circuit_models_.find(physical_pb_type);
   if (it != pb_type_circuit_models_.end()) {
@@ -276,7 +303,7 @@ void VprPbTypeAnnotation::add_pb_type_circuit_model(t_pb_type* physical_pb_type,
   pb_type_circuit_models_[physical_pb_type] = circuit_model;
 }
 
-void VprPbTypeAnnotation::add_interconnect_circuit_model(t_interconnect* pb_interconnect, const CircuitModelId& circuit_model) {
+void VprDeviceAnnotation::add_interconnect_circuit_model(t_interconnect* pb_interconnect, const CircuitModelId& circuit_model) {
   /* Warn any override attempt */
   std::map<t_interconnect*, CircuitModelId>::const_iterator it = interconnect_circuit_models_.find(pb_interconnect);
   if (it != interconnect_circuit_models_.end()) {
@@ -287,7 +314,7 @@ void VprPbTypeAnnotation::add_interconnect_circuit_model(t_interconnect* pb_inte
   interconnect_circuit_models_[pb_interconnect] = circuit_model;
 }
 
-void VprPbTypeAnnotation::add_interconnect_physical_type(t_interconnect* pb_interconnect,
+void VprDeviceAnnotation::add_interconnect_physical_type(t_interconnect* pb_interconnect,
                                                          const e_interconnect& physical_type) {
   /* Warn any override attempt */
   std::map<t_interconnect*, e_interconnect>::const_iterator it = interconnect_physical_types_.find(pb_interconnect);
@@ -299,7 +326,7 @@ void VprPbTypeAnnotation::add_interconnect_physical_type(t_interconnect* pb_inte
   interconnect_physical_types_[pb_interconnect] = physical_type;
 }
 
-void VprPbTypeAnnotation::add_pb_circuit_port(t_port* pb_port, const CircuitPortId& circuit_port) {
+void VprDeviceAnnotation::add_pb_circuit_port(t_port* pb_port, const CircuitPortId& circuit_port) {
   /* Warn any override attempt */
   std::map<t_port*, CircuitPortId>::const_iterator it = pb_circuit_ports_.find(pb_port);
   if (it != pb_circuit_ports_.end()) {
@@ -310,7 +337,7 @@ void VprPbTypeAnnotation::add_pb_circuit_port(t_port* pb_port, const CircuitPort
   pb_circuit_ports_[pb_port] = circuit_port;
 }
 
-void VprPbTypeAnnotation::add_pb_type_mode_bits(t_pb_type* pb_type, const std::vector<size_t>& mode_bits) {
+void VprDeviceAnnotation::add_pb_type_mode_bits(t_pb_type* pb_type, const std::vector<size_t>& mode_bits) {
   /* Warn any override attempt */
   std::map<t_pb_type*, std::vector<size_t>>::const_iterator it = pb_type_mode_bits_.find(pb_type);
   if (it != pb_type_mode_bits_.end()) {
@@ -321,11 +348,11 @@ void VprPbTypeAnnotation::add_pb_type_mode_bits(t_pb_type* pb_type, const std::v
   pb_type_mode_bits_[pb_type] = mode_bits;
 }
 
-void VprPbTypeAnnotation::add_pb_graph_node_unique_index(t_pb_graph_node* pb_graph_node) {
+void VprDeviceAnnotation::add_pb_graph_node_unique_index(t_pb_graph_node* pb_graph_node) {
   pb_graph_node_unique_index_[pb_graph_node->pb_type].push_back(pb_graph_node);
 }
 
-void VprPbTypeAnnotation::add_physical_pb_graph_node(t_pb_graph_node* operating_pb_graph_node, 
+void VprDeviceAnnotation::add_physical_pb_graph_node(t_pb_graph_node* operating_pb_graph_node, 
                                                      t_pb_graph_node* physical_pb_graph_node) {
   /* Warn any override attempt */
   std::map<t_pb_graph_node*, t_pb_graph_node*>::const_iterator it = physical_pb_graph_nodes_.find(operating_pb_graph_node);
@@ -340,7 +367,7 @@ void VprPbTypeAnnotation::add_physical_pb_graph_node(t_pb_graph_node* operating_
   physical_pb_graph_nodes_[operating_pb_graph_node] = physical_pb_graph_node;
 }
 
-void VprPbTypeAnnotation::add_physical_pb_type_index_factor(t_pb_type* pb_type, const int& factor) {
+void VprDeviceAnnotation::add_physical_pb_type_index_factor(t_pb_type* pb_type, const int& factor) {
   /* Warn any override attempt */
   std::map<t_pb_type*, int>::const_iterator it = physical_pb_type_index_factors_.find(pb_type);
   if (it != physical_pb_type_index_factors_.end()) {
@@ -351,7 +378,7 @@ void VprPbTypeAnnotation::add_physical_pb_type_index_factor(t_pb_type* pb_type, 
   physical_pb_type_index_factors_[pb_type] = factor;
 }
 
-void VprPbTypeAnnotation::add_physical_pb_type_index_offset(t_pb_type* pb_type, const int& offset) {
+void VprDeviceAnnotation::add_physical_pb_type_index_offset(t_pb_type* pb_type, const int& offset) {
   /* Warn any override attempt */
   std::map<t_pb_type*, int>::const_iterator it = physical_pb_type_index_offsets_.find(pb_type);
   if (it != physical_pb_type_index_offsets_.end()) {
@@ -362,7 +389,7 @@ void VprPbTypeAnnotation::add_physical_pb_type_index_offset(t_pb_type* pb_type, 
   physical_pb_type_index_offsets_[pb_type] = offset;
 }
 
-void VprPbTypeAnnotation::add_physical_pb_pin_rotate_offset(t_port* pb_port, const int& offset) {
+void VprDeviceAnnotation::add_physical_pb_pin_rotate_offset(t_port* pb_port, const int& offset) {
   /* Warn any override attempt */
   std::map<t_port*, int>::const_iterator it = physical_pb_pin_rotate_offsets_.find(pb_port);
   if (it != physical_pb_pin_rotate_offsets_.end()) {
@@ -375,7 +402,7 @@ void VprPbTypeAnnotation::add_physical_pb_pin_rotate_offset(t_port* pb_port, con
   physical_pb_pin_offsets_[pb_port] = 0;
 }
 
-void VprPbTypeAnnotation::add_physical_pb_graph_pin(t_pb_graph_pin* operating_pb_graph_pin, 
+void VprDeviceAnnotation::add_physical_pb_graph_pin(t_pb_graph_pin* operating_pb_graph_pin, 
                                                     t_pb_graph_pin* physical_pb_graph_pin) {
   /* Warn any override attempt */
   std::map<t_pb_graph_pin*, t_pb_graph_pin*>::const_iterator it = physical_pb_graph_pins_.find(operating_pb_graph_pin);
@@ -410,6 +437,39 @@ void VprPbTypeAnnotation::add_physical_pb_graph_pin(t_pb_graph_pin* operating_pb
     + physical_pb_pin_offsets_[operating_pb_graph_pin->port]) {
     physical_pb_pin_offsets_[operating_pb_graph_pin->port] = 0;
   }
+}
+
+void VprDeviceAnnotation::add_rr_switch_circuit_model(const RRSwitchId& rr_switch, const CircuitModelId& circuit_model) {
+  /* Warn any override attempt */
+  std::map<RRSwitchId, CircuitModelId>::const_iterator it = rr_switch_circuit_models_.find(rr_switch);
+  if (it != rr_switch_circuit_models_.end()) {
+    VTR_LOG_WARN("Override the annotation between rr_switch '%ld' and its circuit_model '%ld'!\n",
+                 size_t(rr_switch), size_t(circuit_model));
+  }
+
+  rr_switch_circuit_models_[rr_switch] = circuit_model;
+}
+
+void VprDeviceAnnotation::add_rr_segment_circuit_model(const RRSegmentId& rr_segment, const CircuitModelId& circuit_model) {
+  /* Warn any override attempt */
+  std::map<RRSegmentId, CircuitModelId>::const_iterator it = rr_segment_circuit_models_.find(rr_segment);
+  if (it != rr_segment_circuit_models_.end()) {
+    VTR_LOG_WARN("Override the annotation between rr_segment '%ld' and its circuit_model '%ld'!\n",
+                 size_t(rr_segment), size_t(circuit_model));
+  }
+
+  rr_segment_circuit_models_[rr_segment] = circuit_model;
+}
+
+void VprDeviceAnnotation::add_direct_circuit_model(const size_t& direct, const CircuitModelId& circuit_model) {
+  /* Warn any override attempt */
+  std::map<size_t, CircuitModelId>::const_iterator it = direct_circuit_models_.find(direct);
+  if (it != direct_circuit_models_.end()) {
+    VTR_LOG_WARN("Override the annotation between direct '%ld' and its circuit_model '%ld'!\n",
+                 size_t(direct), size_t(circuit_model));
+  }
+
+  direct_circuit_models_[direct] = circuit_model;
 }
 
 } /* End namespace openfpga*/

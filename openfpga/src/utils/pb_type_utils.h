@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 #include "physical_types.h"
+#include "vpr_device_annotation.h"
 #include "circuit_library.h"
 
 /********************************************************************
@@ -42,6 +43,10 @@ e_interconnect pb_interconnect_physical_type(t_interconnect* pb_interc,
 e_circuit_model_type pb_interconnect_require_circuit_model_type(const e_interconnect& pb_interc_type);
 
 enum PORTS circuit_port_require_pb_port_type(const e_circuit_model_port_type& circuit_port_type);
+
+std::vector<t_port*> find_pb_type_ports_match_circuit_model_port_type(t_pb_type* pb_type,
+                                                                      const e_circuit_model_port_type& port_type,
+                                                                      const VprDeviceAnnotation& vpr_device_annotation);
 
 } /* end namespace openfpga */
 

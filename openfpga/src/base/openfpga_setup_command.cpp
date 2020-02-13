@@ -5,7 +5,10 @@
  *******************************************************************/
 #include "openfpga_read_arch.h"
 #include "openfpga_link_arch.h"
+#include "openfpga_pb_pin_fixup.h"
+#include "openfpga_lut_truth_table_fixup.h"
 #include "check_netlist_naming_conflict.h"
+#include "openfpga_build_fabric.h"
 #include "openfpga_setup_command.h"
 
 /* begin namespace openfpga */
@@ -79,9 +82,61 @@ void add_openfpga_setup_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   ShellCommandId shell_cmd_check_netlist_naming_conflict_id = shell.add_command(shell_cmd_check_netlist_naming_conflict, "Check any block/net naming in users' BLIF netlist violates the syntax of fabric generator");
   shell.set_command_class(shell_cmd_check_netlist_naming_conflict_id, openfpga_setup_cmd_class);
   shell.set_command_execute_function(shell_cmd_check_netlist_naming_conflict_id, check_netlist_naming_conflict);
-  /* The 'link_openfpga_arch' command should NOT be executed before 'read_openfpga_arch' and 'vpr' */
+  /* The 'link_openfpga_arch' command should NOT be executed before 'vpr' */
   std::vector<ShellCommandId> cmd_dependency_check_netlist_naming_conflict(1, shell_cmd_vpr_id);
   shell.set_command_dependency(shell_cmd_link_openfpga_arch_id, cmd_dependency_check_netlist_naming_conflict);
+
+  /******************************** 
+   * Command 'pb_pin_fixup' 
+   */
+  Command shell_cmd_pb_pin_fixup("pb_pin_fixup");
+  /* Add an option '--verbose' */
+  shell_cmd_pb_pin_fixup.add_option("verbose", false, "Show verbose outputs");
+
+  /* Add command 'pb_pin_fixup' to the Shell */
+  ShellCommandId shell_cmd_pb_pin_fixup_id = shell.add_command(shell_cmd_pb_pin_fixup, "Fix up the packing results due to pin swapping during routing stage");
+  shell.set_command_class(shell_cmd_pb_pin_fixup_id, openfpga_setup_cmd_class);
+  shell.set_command_execute_function(shell_cmd_pb_pin_fixup_id, pb_pin_fixup);
+  /* The 'pb_pin_fixup' command should NOT be executed before 'read_openfpga_arch' and 'vpr' */
+  std::vector<ShellCommandId> cmd_dependency_pb_pin_fixup;
+  cmd_dependency_pb_pin_fixup.push_back(shell_cmd_read_arch_id);
+  cmd_dependency_pb_pin_fixup.push_back(shell_cmd_vpr_id);
+  shell.set_command_dependency(shell_cmd_pb_pin_fixup_id, cmd_dependency_pb_pin_fixup);
+
+  /******************************** 
+   * Command 'lut_truth_table_fixup' 
+   */
+  Command shell_cmd_lut_truth_table_fixup("lut_truth_table_fixup");
+  /* Add an option '--verbose' */
+  shell_cmd_lut_truth_table_fixup.add_option("verbose", false, "Show verbose outputs");
+
+  /* Add command 'lut_truth_table_fixup' to the Shell */
+  ShellCommandId shell_cmd_lut_truth_table_fixup_id = shell.add_command(shell_cmd_lut_truth_table_fixup, "Fix up the truth table of Look-Up Tables due to pin swapping during packing stage");
+  shell.set_command_class(shell_cmd_lut_truth_table_fixup_id, openfpga_setup_cmd_class);
+  shell.set_command_execute_function(shell_cmd_lut_truth_table_fixup_id, lut_truth_table_fixup);
+  /* The 'lut_truth_table_fixup' command should NOT be executed before 'read_openfpga_arch' and 'vpr' */
+  std::vector<ShellCommandId> cmd_dependency_lut_truth_table_fixup;
+  cmd_dependency_lut_truth_table_fixup.push_back(shell_cmd_read_arch_id);
+  cmd_dependency_lut_truth_table_fixup.push_back(shell_cmd_vpr_id);
+  shell.set_command_dependency(shell_cmd_lut_truth_table_fixup_id, cmd_dependency_lut_truth_table_fixup);
+
+  /******************************** 
+   * Command 'build_fabric' 
+   */
+  Command shell_cmd_build_fabric("build_fabric");
+  /* Add an option '--verbose' */
+  shell_cmd_build_fabric.add_option("compress_routing", false, "Compress the number of unique routing modules by identifying the unique GSBs");
+  shell_cmd_build_fabric.add_option("duplicate_grid_pin", false, "Duplicate the pins on the same side of a grid");
+  shell_cmd_build_fabric.add_option("verbose", false, "Show verbose outputs");
+
+  /* Add command 'compact_routing_hierarchy' to the Shell */
+  ShellCommandId shell_cmd_build_fabric_id = shell.add_command(shell_cmd_build_fabric, "Build the FPGA fabric in a graph of modules");
+  shell.set_command_class(shell_cmd_build_fabric_id, openfpga_setup_cmd_class);
+  shell.set_command_execute_function(shell_cmd_build_fabric_id, build_fabric);
+  /* The 'build_fabric' command should NOT be executed before 'link_openfpga_arch' */
+  std::vector<ShellCommandId> cmd_dependency_build_fabric;
+  cmd_dependency_lut_truth_table_fixup.push_back(shell_cmd_link_openfpga_arch_id);
+  shell.set_command_dependency(shell_cmd_build_fabric_id, cmd_dependency_build_fabric);
 } 
 
 } /* end namespace openfpga */

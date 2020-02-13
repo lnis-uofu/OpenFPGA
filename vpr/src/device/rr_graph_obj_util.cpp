@@ -32,7 +32,7 @@ std::vector<RRSwitchId> find_rr_graph_switches(const RRGraph& rr_graph,
 /*********************************************************************
  * Like the RRGraph.find_node() but returns all matching nodes,
  * rather than just the first. This is particularly useful for getting all instances
- * of a specific IPIN/OPIN at a specific gird tile (x,y) location.
+ * of a specific IPIN/OPIN at a specific grid tile (x,y) location.
  **********************************************************************/
 std::vector<RRNodeId> find_rr_graph_nodes(const RRGraph& rr_graph,
                                           const int& x,
@@ -63,6 +63,9 @@ std::vector<RRNodeId> find_rr_graph_nodes(const RRGraph& rr_graph,
     return indices;
 }
 
+/*********************************************************************
+ * Find a list of rr nodes in a routing channel at (x,y)
+ **********************************************************************/
 std::vector<RRNodeId> find_rr_graph_chan_nodes(const RRGraph& rr_graph,
                                                const int& x,
                                                const int& y,
@@ -81,3 +84,46 @@ std::vector<RRNodeId> find_rr_graph_chan_nodes(const RRGraph& rr_graph,
 
     return indices;
 }
+
+/*********************************************************************
+ * Find a list of rr_nodes that locate at a side of a grid
+ **********************************************************************/
+std::vector<RRNodeId> find_rr_graph_grid_nodes(const RRGraph& rr_graph,
+                                               const DeviceGrid& device_grid,
+                                               const int& x,
+                                               const int& y,
+                                               const t_rr_type& rr_type,
+                                               const e_side& side) {
+    std::vector<RRNodeId> indices;
+
+    VTR_ASSERT(rr_type == IPIN || rr_type == OPIN);
+    
+    /* Ensure that (x, y) is a valid location in grids */ 
+    VTR_ASSERT(size_t(x) <= device_grid.width() && size_t(y) <= device_grid.height());
+
+    /* Ensure we have a valid side */
+    VTR_ASSERT(side != NUM_SIDES);
+    
+    /* Find all the pins on the side of the grid */ 
+    int width_offset = device_grid[x][y].width_offset;
+    int height_offset = device_grid[x][y].height_offset;
+    for (int pin = 0; pin < device_grid[x][y].type->num_pins; ++pin) {
+        /* Skip those pins have been ignored during rr_graph build-up */
+        if (true == device_grid[x][y].type->is_ignored_pin[pin]) {
+            continue;
+        }
+        if (false == device_grid[x][y].type->pinloc[width_offset][height_offset][side][pin]) {
+            /* Not the pin on this side, we skip */
+            continue;
+        }
+        /* Try to find the rr node */
+        RRNodeId rr_node_index = rr_graph.find_node(x, y, rr_type, pin, side);
+        if (rr_node_index != RRNodeId::INVALID()) {
+            indices.push_back(rr_node_index);
+        }
+    }
+
+
+    return indices;
+}
+
