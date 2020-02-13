@@ -14,7 +14,7 @@
 #include "build_lut_modules.h"
 #include "build_wire_modules.h"
 #include "build_memory_modules.h"
-//#include "build_grid_modules.h"
+#include "build_grid_modules.h"
 //#include "build_routing_modules.h"
 //#include "build_top_module.h"
 #include "build_device_module.h"
@@ -27,7 +27,8 @@ namespace openfpga {
  * for a FPGA fabric
  *******************************************************************/
 ModuleManager build_device_module_graph(const DeviceContext& vpr_device_ctx,
-                                        const OpenfpgaContext& openfpga_ctx) {
+                                        const OpenfpgaContext& openfpga_ctx,
+                                        const bool& duplicate_grid_pin) {
   vtr::ScopedStartFinishTimer timer("Build fabric module graph");
 
   /* Module manager to be built */
@@ -67,9 +68,12 @@ ModuleManager build_device_module_graph(const DeviceContext& vpr_device_ctx,
                        openfpga_ctx.arch().config_protocol.type());
 
   /* Build grid and programmable block modules */
-  //build_grid_modules(module_manager, arch.spice->circuit_lib, mux_lib,  
-  //                   arch.sram_inf.verilog_sram_inf_orgz->type, sram_model,
-  //                   TRUE == vpr_setup.FPGA_SPICE_Opts.duplicate_grid_pin);
+  build_grid_modules(module_manager, vpr_device_ctx,
+                     openfpga_ctx.vpr_device_annotation(),
+                     openfpga_ctx.arch().circuit_lib,
+                     openfpga_ctx.mux_lib(),
+                     openfpga_ctx.arch().config_protocol.type(),
+                     sram_model, duplicate_grid_pin);
 
   //if (TRUE == vpr_setup.FPGA_SPICE_Opts.compact_routing_hierarchy) {
   //  build_unique_routing_modules(module_manager, L_device_rr_gsb, arch.spice->circuit_lib, 

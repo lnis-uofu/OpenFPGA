@@ -10,9 +10,13 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
+/* IO PORT */
+/* Prefix of global input, output and inout ports of FPGA fabric */
+constexpr char* GIO_INOUT_PREFIX = "gfpga_pad_";
 
 /* Grid naming constant strings */
 constexpr char* GRID_MODULE_NAME_PREFIX = "grid_"; 
+constexpr char* LOGICAL_MODULE_NAME_PREFIX = "logical_tile_"; 
 
 /* Memory naming constant strings */
 constexpr char* GRID_MEM_INSTANCE_PREFIX = "mem_"; 

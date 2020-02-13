@@ -61,6 +61,7 @@ void build_fabric(OpenfpgaContext& openfpga_context,
                   const Command& cmd, const CommandContext& cmd_context) { 
 
   CommandOptionId opt_compress_routing = cmd.option("compress_routing");
+  CommandOptionId opt_duplicate_grid_pin = cmd.option("duplicate_grid_pin");
   CommandOptionId opt_verbose = cmd.option("verbose");
   
   if (true == cmd_context.option_enable(cmd, opt_compress_routing)) {
@@ -70,7 +71,8 @@ void build_fabric(OpenfpgaContext& openfpga_context,
   VTR_LOG("\n");
 
   openfpga_context.mutable_module_graph() = build_device_module_graph(g_vpr_ctx.device(),
-                                                                      const_cast<const OpenfpgaContext&>(openfpga_context));
+                                                                      const_cast<const OpenfpgaContext&>(openfpga_context),
+                                                                      cmd_context.option_enable(cmd, opt_duplicate_grid_pin));
 } 
 
 } /* end namespace openfpga */
