@@ -150,7 +150,7 @@ void build_gate_module(ModuleManager& module_manager,
  ***********************************************/
 void build_essential_modules(ModuleManager& module_manager, 
                              const CircuitLibrary& circuit_lib) {
-  vtr::ScopedStartFinishTimer timer("Build essential (inverter/buffer/logic gate) modules...");
+  vtr::ScopedStartFinishTimer timer("Build essential (inverter/buffer/logic gate) modules");
 
   for (const auto& circuit_model : circuit_lib.models()) {
     /* Add essential modules upon on demand: only when it is not yet in the module library */

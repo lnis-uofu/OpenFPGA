@@ -9,7 +9,7 @@
 #include "vtr_time.h"
 
 #include "build_essential_modules.h"
-//#include "build_decoder_modules.h"
+#include "build_decoder_modules.h"
 //#include "build_mux_modules.h"
 //#include "build_lut_modules.h"
 //#include "build_wire_modules.h"
@@ -49,7 +49,8 @@ ModuleManager build_device_module_graph(const DeviceContext& vpr_device_ctx,
   build_essential_modules(module_manager, openfpga_ctx.arch().circuit_lib);
 
   /* Build local encoders for multiplexers, this MUST be called before multiplexer building */
-  //build_mux_local_decoder_modules(module_manager, mux_lib, arch.spice->circuit_lib);
+  build_mux_local_decoder_modules(module_manager, openfpga_ctx.mux_lib(), 
+                                  openfpga_ctx.arch().circuit_lib);
 
   /* Build multiplexer modules */
   //build_mux_modules(module_manager, mux_lib, arch.spice->circuit_lib);
