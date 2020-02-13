@@ -7,7 +7,7 @@
 
 #include "device_rr_gsb.h"
 #include "device_rr_gsb_utils.h"
-//#include "build_device_module.h"
+#include "build_device_module.h"
 #include "openfpga_build_fabric.h"
 
 /* Include global variables of VPR */
@@ -67,9 +67,10 @@ void build_fabric(OpenfpgaContext& openfpga_context,
     compress_routing_hierarchy(openfpga_context, cmd_context.option_enable(cmd, opt_verbose));
   }
 
-  /*
-  openfpga_context.mutable_module_graph() = build_device_module_graph();
-   */
+  VTR_LOG("\n");
+
+  openfpga_context.mutable_module_graph() = build_device_module_graph(g_vpr_ctx.device(),
+                                                                      const_cast<const OpenfpgaContext&>(openfpga_context));
 } 
 
 } /* end namespace openfpga */

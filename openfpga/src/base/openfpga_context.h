@@ -8,6 +8,7 @@
 #include "vpr_clustering_annotation.h"
 #include "vpr_routing_annotation.h"
 #include "mux_library.h"
+#include "module_manager.h"
 #include "device_rr_gsb.h"
 
 /********************************************************************
@@ -46,6 +47,7 @@ class OpenfpgaContext : public Context  {
     const openfpga::VprRoutingAnnotation& vpr_routing_annotation() const { return vpr_routing_annotation_; }
     const openfpga::DeviceRRGSB& device_rr_gsb() const { return device_rr_gsb_; }
     const openfpga::MuxLibrary& mux_lib() const { return mux_lib_; }
+    const openfpga::ModuleManager& module_graph() const { return module_graph_; }
   public:  /* Public mutators */
     openfpga::Arch& mutable_arch() { return arch_; }
     openfpga::VprDeviceAnnotation& mutable_vpr_device_annotation() { return vpr_device_annotation_; }
@@ -54,6 +56,7 @@ class OpenfpgaContext : public Context  {
     openfpga::VprRoutingAnnotation& mutable_vpr_routing_annotation() { return vpr_routing_annotation_; }
     openfpga::DeviceRRGSB& mutable_device_rr_gsb() { return device_rr_gsb_; }
     openfpga::MuxLibrary& mutable_mux_lib() { return mux_lib_; }
+    openfpga::ModuleManager& mutable_module_graph() { return module_graph_; }
   private: /* Internal data */
     /* Data structure to store information from read_openfpga_arch library */
     openfpga::Arch arch_;
@@ -75,6 +78,9 @@ class OpenfpgaContext : public Context  {
     
     /* Library of physical implmentation of routing multiplexers */
     openfpga::MuxLibrary mux_lib_;
+
+    /* Fabric module graph */
+    openfpga::ModuleManager module_graph_;
 };
 
 #endif

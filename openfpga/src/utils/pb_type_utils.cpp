@@ -254,4 +254,52 @@ enum PORTS circuit_port_require_pb_port_type(const e_circuit_model_port_type& ci
   return type_mapping.at(circuit_port_type);
 }
 
+/********************************************************************
+ * Return a list of ports of a pb_type which matches the ports defined
+ * in its linked circuit model 
+ * This function will only care if the port type matches  
+ *******************************************************************/
+std::vector<t_port*> find_pb_type_ports_match_circuit_model_port_type(t_pb_type* pb_type,
+                                                                      const e_circuit_model_port_type& port_type,
+                                                                      const VprDeviceAnnotation& vpr_device_annotation) {
+  std::vector<t_port*> ports;
+
+  for (int iport = 0; iport < pb_type->num_ports; ++iport) {
+    /* Check the circuit_port id of the port ? */
+    VTR_ASSERT(CircuitPortId::INVALID() != vpr_device_annotation.pb_circuit_port(&(pb_type->ports[iport])));
+    switch (port_type) {
+    case CIRCUIT_MODEL_PORT_INPUT:
+      if ( (IN_PORT == pb_type->ports[iport].type)
+        && (0 == pb_type->ports[iport].is_clock) ) {
+        ports.push_back(&pb_type->ports[iport]);
+      }
+      break;
+    case CIRCUIT_MODEL_PORT_OUTPUT: 
+      if ( (OUT_PORT == pb_type->ports[iport].type)
+        && (0 == pb_type->ports[iport].is_clock) ) {
+        ports.push_back(&pb_type->ports[iport]);
+      }
+      break;
+    case CIRCUIT_MODEL_PORT_INOUT: 
+      if ( (INOUT_PORT == pb_type->ports[iport].type)
+        && (0 == pb_type->ports[iport].is_clock) ) {
+        ports.push_back(&pb_type->ports[iport]);
+      }
+      break;
+    case CIRCUIT_MODEL_PORT_CLOCK: 
+      if ( (IN_PORT == pb_type->ports[iport].type)
+        && (1 == pb_type->ports[iport].is_clock) ) {
+        ports.push_back(&pb_type->ports[iport]);
+      }
+      break;
+    /* Configuration ports are not in pb_type definition */
+    default:
+      VTR_LOG_ERROR("Invalid type for port!\n");
+      exit(1);
+    }
+  }
+ 
+  return ports;
+}
+
 } /* end namespace openfpga */
