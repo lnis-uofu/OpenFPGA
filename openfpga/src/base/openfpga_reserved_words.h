@@ -7,6 +7,10 @@
 #ifndef OPENFPGA_RESERVED_WORDS_H
 #define OPENFPGA_RESERVED_WORDS_H
 
+/* begin namespace openfpga */
+namespace openfpga {
+
+
 /* Grid naming constant strings */
 constexpr char* GRID_MODULE_NAME_PREFIX = "grid_"; 
 
@@ -24,5 +28,7 @@ constexpr char* CONNECTION_BLOCK_MUX_INSTANCE_PREFIX = "mux_";
 
 /* Bitstream file strings */
 constexpr char* BITSTREAM_XML_FILE_NAME_POSTFIX = "_bitstream.xml";
+
+} /* end namespace openfpga */
 
 #endif
