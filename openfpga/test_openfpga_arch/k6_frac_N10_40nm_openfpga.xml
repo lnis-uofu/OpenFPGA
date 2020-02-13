@@ -156,7 +156,7 @@
       <lut_input_buffer exist="true" circuit_model_name="buf4"/>
       <lut_intermediate_buffer exist="true" circuit_model_name="buf4" location_map="-1-1-"/>
       <pass_gate_logic circuit_model_name="TGATE"/>
-      <port type="input" prefix="in" size="6" tri_state_map="----11" circuit_model_name="OR2"/>
+      <port type="input" prefix="in" size="6" tri_state_map="-----1" circuit_model_name="OR2"/>
       <port type="output" prefix="lut5_out" size="2" lut_frac_level="5" lut_output_mask="0,1"/>
       <port type="output" prefix="lut6_out" size="1" lut_output_mask="0"/>
       <port type="sram" prefix="sram" size="64"/>
