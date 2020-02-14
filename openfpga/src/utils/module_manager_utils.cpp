@@ -10,6 +10,9 @@
 #include "vtr_log.h"
 #include "vtr_assert.h"
 
+/* Headers from openfpgautil library */
+#include "openfpga_port.h"
+
 #include "openfpga_naming.h"
 #include "memory_utils.h"
 #include "pb_type_utils.h"
