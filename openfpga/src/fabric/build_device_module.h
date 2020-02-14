@@ -15,7 +15,10 @@
 namespace openfpga {
 
 ModuleManager build_device_module_graph(const DeviceContext& vpr_device_ctx,
-                                        const OpenfpgaContext& openfpga_ctx);
+                                        const OpenfpgaContext& openfpga_ctx,
+                                        const bool& compress_routing,
+                                        const bool& duplicate_grid_pin,
+                                        const bool& verbose);
 
 } /* end namespace openfpga */
 

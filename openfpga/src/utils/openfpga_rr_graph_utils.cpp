@@ -81,4 +81,51 @@ std::vector<RRSwitchId> get_rr_graph_driver_switches(const RRGraph& rr_graph,
   return driver_switches;
 }
 
+/************************************************************************
+ * Find the driver nodes for a node in the rr_graph
+ ***********************************************************************/
+std::vector<RRNodeId> get_rr_graph_driver_nodes(const RRGraph& rr_graph,
+                                                const RRNodeId& node) {
+  std::vector<RRNodeId> driver_nodes;
+  for (const RREdgeId& edge : rr_graph.node_in_edges(node)) {
+    driver_nodes.push_back(rr_graph.edge_src_node(edge));
+  }
+
+  return driver_nodes;
+}
+
+/************************************************************************
+ * Find the configurable driver nodes for a node in the rr_graph
+ ***********************************************************************/
+std::vector<RRNodeId> get_rr_graph_configurable_driver_nodes(const RRGraph& rr_graph,
+                                                             const RRNodeId& node) {
+  std::vector<RRNodeId> driver_nodes;
+  for (const RREdgeId& edge : rr_graph.node_in_edges(node)) {
+    /* Bypass non-configurable edges */
+    if (false == rr_graph.edge_is_configurable(edge)) {
+      continue;
+    } 
+    driver_nodes.push_back(rr_graph.edge_src_node(edge));
+  }
+
+  return driver_nodes;
+}
+
+/************************************************************************
+ * Find the configurable driver nodes for a node in the rr_graph
+ ***********************************************************************/
+std::vector<RRNodeId> get_rr_graph_non_configurable_driver_nodes(const RRGraph& rr_graph,
+                                                                 const RRNodeId& node) {
+  std::vector<RRNodeId> driver_nodes;
+  for (const RREdgeId& edge : rr_graph.node_in_edges(node)) {
+    /* Bypass configurable edges */
+    if (true == rr_graph.edge_is_configurable(edge)) {
+      continue;
+    } 
+    driver_nodes.push_back(rr_graph.edge_src_node(edge));
+  }
+
+  return driver_nodes;
+}
+
 } /* end namespace openfpga */

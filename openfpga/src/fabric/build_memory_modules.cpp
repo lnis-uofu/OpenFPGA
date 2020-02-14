@@ -585,7 +585,7 @@ void build_memory_module(ModuleManager& module_manager,
                              module_name, sram_model, num_mems);
     break;
   default:
-    VTR_LOG_ERROR("Invalid SRAM organization!\n");
+    VTR_LOGF_ERROR(__FILE__, __LINE__, "Invalid SRAM organization!\n");
     exit(1);
   }
 }
@@ -636,7 +636,7 @@ void build_mux_memory_module(ModuleManager& module_manager,
      */ 
     break;
   default:
-    VTR_LOG_ERROR("Invalid design technology of multiplexer '%s'\n",
+    VTR_LOGF_ERROR(__FILE__, __LINE__, "Invalid design technology of multiplexer '%s'\n",
                   circuit_lib.model_name(mux_model).c_str()); 
     exit(1);
   }

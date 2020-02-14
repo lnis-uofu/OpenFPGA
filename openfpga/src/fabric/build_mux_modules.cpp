@@ -346,7 +346,7 @@ void build_mux_branch_module(ModuleManager& module_manager,
     build_rram_mux_branch_module(module_manager, circuit_lib, mux_model, module_name, mux_graph);
     break;
   default:
-    VTR_LOG_ERROR("Invalid design technology of multiplexer '%s'\n",
+    VTR_LOGF_ERROR(__FILE__, __LINE__, "Invalid design technology of multiplexer '%s'\n",
                   circuit_lib.model_name(mux_model).c_str()); 
     exit(1);
   }
@@ -1262,7 +1262,7 @@ void build_rram_mux_module(ModuleManager& module_manager,
   /* Error out for the conditions where we are not yet supported! */
   if (CIRCUIT_MODEL_LUT == circuit_lib.model_type(circuit_model)) {
     /* RRAM LUT is not supported now... */
-    VTR_LOG_ERROR("RRAM-based LUT is not supported for circuit model '%s')!\n",
+    VTR_LOGF_ERROR(__FILE__, __LINE__, "RRAM-based LUT is not supported for circuit model '%s')!\n",
                   circuit_lib.model_name(circuit_model).c_str());
     exit(1);
   }
@@ -1367,7 +1367,7 @@ void build_mux_module(ModuleManager& module_manager,
     build_rram_mux_module(module_manager, circuit_lib, circuit_model, module_name, mux_graph);
     break;
   default:
-    VTR_LOG_ERROR("Invalid design technology of multiplexer '%s'\n",
+    VTR_LOGF_ERROR(__FILE__, __LINE__, "Invalid design technology of multiplexer '%s'\n",
                  circuit_lib.model_name(circuit_model).c_str()); 
     exit(1);
   }
