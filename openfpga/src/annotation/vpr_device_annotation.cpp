@@ -233,13 +233,12 @@ CircuitModelId VprDeviceAnnotation::rr_segment_circuit_model(const RRSegmentId& 
   return rr_segment_circuit_models_.at(rr_segment);
 }
 
-CircuitModelId VprDeviceAnnotation::direct_circuit_model(const size_t& direct) const {
+ArchDirectId VprDeviceAnnotation::direct_annotation(const size_t& direct) const {
   /* Ensure that the rr_switch is in the list */
-  std::map<size_t, CircuitModelId>::const_iterator it = direct_circuit_models_.find(direct);
-  if (it == direct_circuit_models_.end()) {
-    return CircuitModelId::INVALID();
+  if (0 == direct_annotations_.count(direct)) {
+    return ArchDirectId::INVALID();
   }
-  return direct_circuit_models_.at(direct);
+  return direct_annotations_.at(direct);
 }
 
 /************************************************************************
@@ -461,15 +460,14 @@ void VprDeviceAnnotation::add_rr_segment_circuit_model(const RRSegmentId& rr_seg
   rr_segment_circuit_models_[rr_segment] = circuit_model;
 }
 
-void VprDeviceAnnotation::add_direct_circuit_model(const size_t& direct, const CircuitModelId& circuit_model) {
+void VprDeviceAnnotation::add_direct_annotation(const size_t& direct, const ArchDirectId& arch_direct_id) {
   /* Warn any override attempt */
-  std::map<size_t, CircuitModelId>::const_iterator it = direct_circuit_models_.find(direct);
-  if (it != direct_circuit_models_.end()) {
-    VTR_LOG_WARN("Override the annotation between direct '%ld' and its circuit_model '%ld'!\n",
-                 size_t(direct), size_t(circuit_model));
+  if (0 < direct_annotations_.count(direct)) {
+    VTR_LOG_WARN("Override the annotation between direct '%ld' and its annotation '%ld'!\n",
+                 size_t(direct), size_t(arch_direct_id));
   }
 
-  direct_circuit_models_[direct] = circuit_model;
+  direct_annotations_[direct] = arch_direct_id;
 }
 
 } /* End namespace openfpga*/

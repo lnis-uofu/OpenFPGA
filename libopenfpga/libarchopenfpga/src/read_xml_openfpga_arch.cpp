@@ -94,8 +94,8 @@ openfpga::Arch read_xml_openfpga_arch(const char* arch_file_name) {
                                                                          openfpga_arch.circuit_lib);
 
     /* Parse the direct circuit definition */
-    openfpga_arch.direct2circuit = read_xml_direct_circuit(xml_openfpga_arch, loc_data,
-                                                           openfpga_arch.circuit_lib);
+    openfpga_arch.arch_direct = read_xml_direct_circuit(xml_openfpga_arch, loc_data,
+                                                        openfpga_arch.circuit_lib);
 
     /* Parse the pb_type annotation */
     openfpga_arch.pb_type_annotations = read_xml_pb_type_annotations(xml_openfpga_arch, loc_data);
