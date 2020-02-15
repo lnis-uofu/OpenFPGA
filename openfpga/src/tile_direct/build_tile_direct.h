@@ -17,8 +17,7 @@
 namespace openfpga {
 
 TileDirect build_device_tile_direct(const DeviceContext& device_ctx,
-                                    const ArchDirect& arch_direct,
-                                    const CircuitLibrary& circuit_lib);
+                                    const ArchDirect& arch_direct);
 
 } /* end namespace openfpga */
 
