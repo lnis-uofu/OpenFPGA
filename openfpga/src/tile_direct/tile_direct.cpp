@@ -63,6 +63,12 @@ e_side TileDirect::to_tile_side(const TileDirectId& direct_id) const {
   return to_tile_sides_[direct_id];
 }
 
+ArchDirectId TileDirect::arch_direct(const TileDirectId& direct_id) const {
+  /* Validate the direct_id */
+  VTR_ASSERT(valid_direct_id(direct_id));
+  return arch_directs_[direct_id];
+}
+
 /******************************************************************************
  * Private Mutators
  ******************************************************************************/
@@ -89,7 +95,16 @@ TileDirectId TileDirect::add_direct(t_physical_tile_type_ptr from_tile,
   to_tile_sides_.push_back(to_tile_side);
   to_tile_pins_.push_back(to_tile_pin);
 
+  arch_directs_.emplace_back(ArchDirectId::INVALID());
+
   return direct;
+}
+
+void TileDirect::set_arch_direct_id(const TileDirectId& tile_direct_id, 
+                                    const ArchDirectId& arch_direct_id) {
+  /* Validate the direct_id */
+  VTR_ASSERT(valid_direct_id(tile_direct_id));
+  arch_directs_[tile_direct_id] = arch_direct_id;
 }
 
 /******************************************************************************

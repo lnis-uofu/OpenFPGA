@@ -11,6 +11,9 @@
 /* Headers from readarch library */
 #include "physical_types.h"
 
+/* Headers from readarchopenfpga library */
+#include "arch_direct.h"
+
 #include "tile_direct_fwd.h"
 
 /* Begin namespace openfpga */
@@ -38,6 +41,7 @@ class TileDirect {
     vtr::Point<size_t> to_tile_coordinate(const TileDirectId& direct_id) const;
     e_side to_tile_side(const TileDirectId& direct_id) const;
     size_t to_tile_pin(const TileDirectId& direct_id) const;
+    ArchDirectId arch_direct(const TileDirectId& direct_id) const;
   public: /* Public mutators */
     TileDirectId add_direct(t_physical_tile_type_ptr from_tile,
                             const vtr::Point<size_t>& from_tile_coord,
@@ -47,6 +51,8 @@ class TileDirect {
                             const vtr::Point<size_t>& to_tile_coord,
                             const e_side& to_tile_side,
                             const size_t& to_tile_pin);
+    void set_arch_direct_id(const TileDirectId& tile_direct_id, 
+                            const ArchDirectId& arch_direct_id);
   public: /* Public validators/invalidators */
     bool valid_direct_id(const TileDirectId& direct_id) const;
   private: /* Internal Data */
@@ -71,6 +77,8 @@ class TileDirect {
     vtr::vector<TileDirectId, vtr::Point<size_t>> to_tile_coords_;
     vtr::vector<TileDirectId, e_side> to_tile_sides_;
     vtr::vector<TileDirectId, size_t> to_tile_pins_;
+
+    vtr::vector<TileDirectId, ArchDirectId> arch_directs_;
 };
 
 } /* End namespace openfpga*/

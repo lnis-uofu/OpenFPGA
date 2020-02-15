@@ -14,6 +14,7 @@
 #include "annotate_routing.h"
 #include "annotate_rr_graph.h"
 #include "mux_library_builder.h"
+#include "build_tile_direct.h"
 #include "openfpga_link_arch.h"
 
 /* Include global variables of VPR */
@@ -106,6 +107,12 @@ void link_arch(OpenfpgaContext& openfpga_context,
   /* Build multiplexer library */
   openfpga_context.mutable_mux_lib() = build_device_mux_library(g_vpr_ctx.device(),
                                                                 const_cast<const OpenfpgaContext&>(openfpga_context)); 
+
+  /* Build tile direct annotation */
+  openfpga_context.mutable_tile_direct() =  build_device_tile_direct(g_vpr_ctx.device(),
+                                                                     openfpga_context.arch().arch_direct,
+                                                                     openfpga_context.arch().circuit_lib);
+
 } 
 
 } /* end namespace openfpga */
