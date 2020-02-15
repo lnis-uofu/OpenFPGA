@@ -33,21 +33,17 @@ class TileDirect {
     typedef vtr::Range<tile_direct_iterator> tile_direct_range;
   public: /* Public aggregators */
     tile_direct_range directs() const;
-    t_physical_tile_type_ptr from_tile(const TileDirectId& direct_id) const;
     vtr::Point<size_t> from_tile_coordinate(const TileDirectId& direct_id) const;
     e_side from_tile_side(const TileDirectId& direct_id) const;
     size_t from_tile_pin(const TileDirectId& direct_id) const;
-    t_physical_tile_type_ptr to_tile(const TileDirectId& direct_id) const;
     vtr::Point<size_t> to_tile_coordinate(const TileDirectId& direct_id) const;
     e_side to_tile_side(const TileDirectId& direct_id) const;
     size_t to_tile_pin(const TileDirectId& direct_id) const;
     ArchDirectId arch_direct(const TileDirectId& direct_id) const;
   public: /* Public mutators */
-    TileDirectId add_direct(t_physical_tile_type_ptr from_tile,
-                            const vtr::Point<size_t>& from_tile_coord,
+    TileDirectId add_direct(const vtr::Point<size_t>& from_tile_coord,
                             const e_side& from_tile_side,
                             const size_t& from_tile_pin,
-                            t_physical_tile_type_ptr to_tile,
                             const vtr::Point<size_t>& to_tile_coord,
                             const e_side& to_tile_side,
                             const size_t& to_tile_pin);
@@ -63,7 +59,6 @@ class TileDirect {
      * - tile coordinate
      * - tile pin id
      */
-    vtr::vector<TileDirectId, t_physical_tile_type_ptr> from_tiles_;
     vtr::vector<TileDirectId, vtr::Point<size_t>> from_tile_coords_;
     vtr::vector<TileDirectId, e_side> from_tile_sides_;
     vtr::vector<TileDirectId, size_t> from_tile_pins_;
@@ -73,7 +68,6 @@ class TileDirect {
      * - tile coordinate
      * - tile pin id
      */
-    vtr::vector<TileDirectId, t_physical_tile_type_ptr> to_tiles_;
     vtr::vector<TileDirectId, vtr::Point<size_t>> to_tile_coords_;
     vtr::vector<TileDirectId, e_side> to_tile_sides_;
     vtr::vector<TileDirectId, size_t> to_tile_pins_;

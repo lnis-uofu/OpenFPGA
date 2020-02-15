@@ -16,7 +16,7 @@
 #include "build_memory_modules.h"
 #include "build_grid_modules.h"
 #include "build_routing_modules.h"
-//#include "build_top_module.h"
+#include "build_top_module.h"
 #include "build_device_module.h"
 
 /* begin namespace openfpga */
@@ -97,12 +97,15 @@ ModuleManager build_device_module_graph(const DeviceContext& vpr_device_ctx,
   }
 
   /* Build FPGA fabric top-level module */
-  //build_top_module(module_manager, arch.spice->circuit_lib, 
-  //                 device_size, grids, L_device_rr_gsb, 
-  //                 clb2clb_directs, 
-  //                 arch.sram_inf.verilog_sram_inf_orgz->type, sram_model, 
-  //                 TRUE == vpr_setup.FPGA_SPICE_Opts.compact_routing_hierarchy,
-  //                 TRUE == vpr_setup.FPGA_SPICE_Opts.duplicate_grid_pin);
+  build_top_module(module_manager, openfpga_ctx.arch().circuit_lib, 
+                   vpr_device_ctx.grid,
+                   vpr_device_ctx.rr_graph,
+                   openfpga_ctx.device_rr_gsb(), 
+                   openfpga_ctx.tile_direct(), 
+                   openfpga_ctx.arch().arch_direct, 
+                   openfpga_ctx.arch().config_protocol.type(),
+                   sram_model,
+                   compress_routing, duplicate_grid_pin);
 
   /* Now a critical correction has to be done!
    * In the module construction, we always use prefix of ports because they are binded
@@ -111,7 +114,7 @@ ModuleManager build_device_module_graph(const DeviceContext& vpr_device_ctx,
    * rename the ports of primitive modules using lib_name instead of prefix
    * (which have no children and are probably linked to a standard cell!)
    */
-  //rename_primitive_module_port_names(module_manager, arch.spice->circuit_lib);
+  rename_primitive_module_port_names(module_manager, openfpga_ctx.arch().circuit_lib);
 
   return module_manager;
 }

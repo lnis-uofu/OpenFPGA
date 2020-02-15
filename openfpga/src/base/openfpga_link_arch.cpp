@@ -53,7 +53,7 @@ bool is_vpr_rr_graph_supported(const RRGraph& rr_graph) {
  * - physical pb_graph nodes and pb_graph pins
  * - circuit models for global routing architecture
  *******************************************************************/
-void link_arch(OpenfpgaContext& openfpga_context,
+void link_arch(OpenfpgaContext& openfpga_ctx,
                const Command& cmd, const CommandContext& cmd_context) { 
 
   vtr::ScopedStartFinishTimer timer("Link OpenFPGA architecture to VPR architecture");
@@ -65,8 +65,8 @@ void link_arch(OpenfpgaContext& openfpga_context,
    * - mode selection bits for pb_type and pb interconnect
    * - circuit models for pb_type and pb interconnect
    */
-  annotate_pb_types(g_vpr_ctx.device(), openfpga_context.arch(),
-                    openfpga_context.mutable_vpr_device_annotation(),
+  annotate_pb_types(g_vpr_ctx.device(), openfpga_ctx.arch(),
+                    openfpga_ctx.mutable_vpr_device_annotation(),
                     cmd_context.option_enable(cmd, opt_verbose));
 
   /* Annotate pb_graph_nodes
@@ -75,21 +75,21 @@ void link_arch(OpenfpgaContext& openfpga_context,
    * - Bind pins from operating pb_graph_node to their physical pb_graph_node pins
    */
   annotate_pb_graph(g_vpr_ctx.device(),
-                    openfpga_context.mutable_vpr_device_annotation(),
+                    openfpga_ctx.mutable_vpr_device_annotation(),
                     cmd_context.option_enable(cmd, opt_verbose));
 
   /* Annotate routing architecture to circuit library */
   annotate_rr_graph_circuit_models(g_vpr_ctx.device(),
-                                   openfpga_context.arch(),
-                                   openfpga_context.mutable_vpr_device_annotation(),
+                                   openfpga_ctx.arch(),
+                                   openfpga_ctx.mutable_vpr_device_annotation(),
                                    cmd_context.option_enable(cmd, opt_verbose));
 
   /* Annotate net mapping to each rr_node 
    */
-  openfpga_context.mutable_vpr_routing_annotation().init(g_vpr_ctx.device().rr_graph);
+  openfpga_ctx.mutable_vpr_routing_annotation().init(g_vpr_ctx.device().rr_graph);
 
   annotate_rr_node_nets(g_vpr_ctx.device(), g_vpr_ctx.clustering(), g_vpr_ctx.routing(), 
-                        openfpga_context.mutable_vpr_routing_annotation(),
+                        openfpga_ctx.mutable_vpr_routing_annotation(),
                         cmd_context.option_enable(cmd, opt_verbose));
 
   /* Build the routing graph annotation
@@ -101,17 +101,16 @@ void link_arch(OpenfpgaContext& openfpga_context,
   }
 
   annotate_device_rr_gsb(g_vpr_ctx.device(),
-                         openfpga_context.mutable_device_rr_gsb(),
+                         openfpga_ctx.mutable_device_rr_gsb(),
                          cmd_context.option_enable(cmd, opt_verbose));
 
   /* Build multiplexer library */
-  openfpga_context.mutable_mux_lib() = build_device_mux_library(g_vpr_ctx.device(),
-                                                                const_cast<const OpenfpgaContext&>(openfpga_context)); 
+  openfpga_ctx.mutable_mux_lib() = build_device_mux_library(g_vpr_ctx.device(),
+                                                            const_cast<const OpenfpgaContext&>(openfpga_ctx)); 
 
   /* Build tile direct annotation */
-  openfpga_context.mutable_tile_direct() =  build_device_tile_direct(g_vpr_ctx.device(),
-                                                                     openfpga_context.arch().arch_direct,
-                                                                     openfpga_context.arch().circuit_lib);
+  openfpga_ctx.mutable_tile_direct() =  build_device_tile_direct(g_vpr_ctx.device(),
+                                                                 openfpga_ctx.arch().arch_direct);
 
 } 
 
