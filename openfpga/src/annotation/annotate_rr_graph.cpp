@@ -524,13 +524,16 @@ void annotate_direct_circuit_models(const DeviceContext& vpr_device_ctx,
 
   for (int idirect = 0; idirect < vpr_device_ctx.arch->num_directs; ++idirect) {
     std::string direct_name = vpr_device_ctx.arch->Directs[idirect].name; 
-    CircuitModelId circuit_model = CircuitModelId::INVALID();
     /* The name-to-circuit mapping is stored in either cb_switch-to-circuit or sb_switch-to-circuit,
      * Try to find one and update the device annotation
      */ 
-    if (0 < openfpga_arch.direct2circuit.count(direct_name)) {
-      circuit_model = openfpga_arch.direct2circuit.at(direct_name); 
+    ArchDirectId direct_id = openfpga_arch.arch_direct.direct(direct_name);
+    /* Cannot find a direct, no annotation needed for this direct */
+    if (ArchDirectId::INVALID() == direct_id) {
+      continue;
     }
+
+    CircuitModelId circuit_model = openfpga_arch.arch_direct.circuit_model(direct_id); 
     /* Cannot find a circuit model, error out! */
     if (CircuitModelId::INVALID() == circuit_model) {
       VTR_LOG_ERROR("Fail to find a circuit model for a direct connection '%s'!\nPlease check your OpenFPGA architecture XML!\n",
@@ -547,7 +550,7 @@ void annotate_direct_circuit_models(const DeviceContext& vpr_device_ctx,
     }
   
     /* Now update the device annotation */
-    vpr_device_annotation.add_direct_circuit_model(idirect, circuit_model);
+    vpr_device_annotation.add_direct_annotation(idirect, direct_id);
     VTR_LOGV(verbose_output, 
              "Binded a direct connection '%s' to circuit model '%s'\n",
              direct_name.c_str(),

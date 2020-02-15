@@ -8,6 +8,7 @@
 #include "technology_library.h"
 #include "simulation_setting.h"
 #include "config_protocol.h"
+#include "arch_direct.h"
 #include "pb_type_annotation.h"
 
 /* namespace openfpga begins */
@@ -48,7 +49,7 @@ struct Arch {
   /* Mapping from the names of direct connection
    * to circuit models in circuit library 
    */
-  std::map<std::string, CircuitModelId> direct2circuit;
+  ArchDirect arch_direct;
 
   /* Pb type annotations 
    * Bind from operating to physical

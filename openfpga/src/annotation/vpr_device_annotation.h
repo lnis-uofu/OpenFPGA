@@ -18,6 +18,7 @@
 /* Header from openfpgautil library */
 #include "openfpga_port.h"
 #include "circuit_library.h"
+#include "arch_direct.h"
 
 /* Begin namespace openfpga */
 namespace openfpga {
@@ -71,7 +72,7 @@ class VprDeviceAnnotation {
     t_pb_graph_pin* physical_pb_graph_pin(t_pb_graph_pin* pb_graph_pin) const;
     CircuitModelId rr_switch_circuit_model(const RRSwitchId& rr_switch) const;
     CircuitModelId rr_segment_circuit_model(const RRSegmentId& rr_segment) const;
-    CircuitModelId direct_circuit_model(const size_t& direct) const;
+    ArchDirectId direct_annotation(const size_t& direct) const;
   public:  /* Public mutators */
     void add_pb_type_physical_mode(t_pb_type* pb_type, t_mode* physical_mode);
     void add_physical_pb_type(t_pb_type* operating_pb_type, t_pb_type* physical_pb_type);
@@ -91,7 +92,7 @@ class VprDeviceAnnotation {
     void add_physical_pb_graph_pin(t_pb_graph_pin* operating_pb_graph_pin, t_pb_graph_pin* physical_pb_graph_pin);
     void add_rr_switch_circuit_model(const RRSwitchId& rr_switch, const CircuitModelId& circuit_model);
     void add_rr_segment_circuit_model(const RRSegmentId& rr_segment, const CircuitModelId& circuit_model);
-    void add_direct_circuit_model(const size_t& direct, const CircuitModelId& circuit_model);
+    void add_direct_annotation(const size_t& direct, const ArchDirectId& arch_direct_id);
   private: /* Internal data */
     /* Pair a regular pb_type to its physical pb_type */
     std::map<t_pb_type*, t_pb_type*> physical_pb_types_;
@@ -173,8 +174,8 @@ class VprDeviceAnnotation {
     /* Pair a Routing Segment (rr_segment) to a circuit model */
     std::map<RRSegmentId, CircuitModelId> rr_segment_circuit_models_;
 
-    /* Pair a direct connection (direct) to a circuit model */
-    std::map<size_t, CircuitModelId> direct_circuit_models_;
+    /* Pair a direct connection (direct) to a annotation which contains circuit model id */
+    std::map<size_t, ArchDirectId> direct_annotations_;
 };
 
 } /* End namespace openfpga*/
