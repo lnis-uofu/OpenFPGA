@@ -12,6 +12,7 @@
 /* Header file from openfpga */
 #include "vpr_command.h"
 #include "openfpga_setup_command.h"
+#include "openfpga_verilog_command.h"
 #include "basic_command.h"
 
 #include "openfpga_title.h"
@@ -51,6 +52,9 @@ int main(int argc, char** argv) {
 
   /* Add openfpga setup commands */
   openfpga::add_openfpga_setup_commands(shell);
+
+  /* Add openfpga verilog commands */
+  openfpga::add_openfpga_verilog_commands(shell);
 
   /* Add basic commands: exit, help, etc. 
    * Note:

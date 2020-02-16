@@ -21,5 +21,9 @@ lut_truth_table_fixup #--verbose
 #  - Enable pin duplication on grid modules 
 build_fabric --compress_routing --duplicate_grid_pin --verbose
 
+# Write the Verilog netlit for FPGA fabric
+#  - Enable the use of explicit port mapping in Verilog netlist
+write_fabric_verilog --file /var/tmp/xtang/openfpga_test_src --explicit_port_mapping --include_timing --include_signal_init --support_icarus_simulator --verbose
+
 # Finish and exit OpenFPGA
 exit
