@@ -15,12 +15,10 @@
 #include "device_rr_gsb.h"
 #include "verilog_constants.h"
 #include "verilog_auxiliary_netlists.h"
-//#include "verilog_submodules.h"
-//#include "verilog_routing.h"
-//#include "verilog_submodules.h"
-//#include "verilog_grid.h"
-//#include "verilog_routing.h"
-//#include "verilog_top_module.h"
+#include "verilog_submodule.h"
+#include "verilog_routing.h"
+#include "verilog_grid.h"
+#include "verilog_top_module.h"
 
 /* Header file for this source file */
 #include "verilog_api.h"
@@ -40,11 +38,17 @@ namespace openfpga {
  * 6. Testbench, where a FPGA module is configured with a bitstream and then driven by input vectors
  * 7. Pre-configured testbench, which can skip the configuration phase and pre-configure the FPGA module. This testbench is created for quick verification and formal verification purpose.
  * 8. Verilog netlist including preprocessing flags and all the Verilog netlists that have been generated
+ *
+ * TODO: We should use module manager as a constant here. 
+ * All the modification should be done before this writer!
+ * The only exception now is the user-defined modules.
+ * We should think clearly about how to handle them for both Verilog and SPICE generators!
  ********************************************************************/
-void fpga_fabric_verilog(const ModuleManager& module_manager,
+void fpga_fabric_verilog(ModuleManager& module_manager,
                          const CircuitLibrary& circuit_lib,
                          const MuxLibrary& mux_lib,
-                         const DeviceGrid& grids, 
+                         const DeviceContext& device_ctx, 
+                         const VprDeviceAnnotation& device_annotation, 
                          const DeviceRRGSB& device_rr_gsb,
                          const FabricVerilogOption& options) {
 
@@ -81,35 +85,39 @@ void fpga_fabric_verilog(const ModuleManager& module_manager,
    * the module manager.
    * Without the modules in the module manager, core logic generation is not possible!!!
    */
-  //print_verilog_submodules(module_manager, mux_lib, sram_verilog_orgz_info, src_dir_path.c_str(), submodule_dir_path.c_str(), 
-  //                         Arch, vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts);
+  print_verilog_submodule(module_manager, mux_lib, circuit_lib,
+                          src_dir_path, submodule_dir_path, 
+                          options);
 
   /* Generate routing blocks */
-  //if (true == compress_routing) {
-  //  print_verilog_unique_routing_modules(module_manager, device_rr_gsb,  
-  //                                       src_dir_path, rr_dir_path,
-  //                                       dump_explicit_verilog);
-  //} else {
-  //  VTR_ASSERT(false == compress_routing);
-  //  print_verilog_flatten_routing_modules(module_manager, device_rr_gsb, 
-  //                                        src_dir_path, rr_dir_path,
-  //                                        dump_explicit_verilog);
-  //}
+  if (true == options.compress_routing()) {
+    print_verilog_unique_routing_modules(const_cast<const ModuleManager&>(module_manager),
+                                         device_rr_gsb,  
+                                         src_dir_path, rr_dir_path,
+                                         options.explicit_port_mapping());
+  } else {
+    VTR_ASSERT(false == options.compress_routing());
+    print_verilog_flatten_routing_modules(const_cast<const ModuleManager&>(module_manager),
+                                          device_rr_gsb, 
+                                          src_dir_path, rr_dir_path,
+                                          options.explicit_port_mapping());
+  }
 
   /* Generate grids */
-  //print_verilog_grids(module_manager, 
-  //                    src_dir_path, lb_dir_path,
-  //                    dump_explicit_verilog);
+  print_verilog_grids(const_cast<const ModuleManager&>(module_manager),
+                      device_ctx, device_annotation, 
+                      src_dir_path, lb_dir_path,
+                      options.explicit_port_mapping(),
+                      options.verbose_output());
 
   /* Generate FPGA fabric */
-  //print_verilog_top_module(module_manager, 
-  //                         std::string(vpr_setup.FileNameOpts.ArchFile), 
-  //                         src_dir_path,
-  //                         dump_explicit_verilog);
+  print_verilog_top_module(const_cast<const ModuleManager&>(module_manager), 
+                           src_dir_path,
+                           options.explicit_port_mapping());
 
   /* Given a brief stats on how many Verilog modules have been written to files */
   VTR_LOGV(options.verbose_output(), 
-           "Outputted %lu Verilog modules in total\n", 
+           "Written %lu Verilog modules in total\n", 
            module_manager.num_modules());  
 }
 

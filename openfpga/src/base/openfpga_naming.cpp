@@ -906,6 +906,22 @@ std::string generate_mux_sram_port_name(const CircuitLibrary& circuit_lib,
 }
 
 /*********************************************************************
+ * Generate the netlist name of a logical tile
+ **********************************************************************/
+std::string generate_logical_tile_netlist_name(const std::string& prefix,
+                                               const t_pb_graph_node* pb_graph_head,
+                                               const std::string& postfix) {
+  /* This must be the root node */
+  VTR_ASSERT(true == pb_graph_head->is_root());
+  /* Add the name of physical block */
+  std::string module_name = prefix + std::string(pb_graph_head->pb_type->name);
+
+  module_name += postfix;
+
+  return module_name;
+}
+
+/*********************************************************************
  * Generate the prefix for naming a grid block netlist or a grid module
  * This function will consider the io side and add it to the prefix 
  **********************************************************************/

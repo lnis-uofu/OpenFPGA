@@ -34,6 +34,15 @@ void add_openfpga_verilog_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   shell_cmd_write_fabric_verilog.add_option("include_signal_init", false, "Initialize all the signals in Verilog netlists");
   /* Add an option '--support_icarus_simulator' */
   shell_cmd_write_fabric_verilog.add_option("support_icarus_simulator", false, "Fine-tune Verilog netlists to support icarus simulator");
+  /* Add an option '--print_user_defined_template' */
+  shell_cmd_write_fabric_verilog.add_option("print_user_defined_template", false, "Generate a template Verilog files for user-defined circuit models");
+  /* Add an option '--print_top_testbench' */
+  shell_cmd_write_fabric_verilog.add_option("print_top_testbench", false, "Generate a testbench for top-level fabric module");
+  /* Add an option '--print_formal_verification_top_netlist' */
+  shell_cmd_write_fabric_verilog.add_option("print_formal_verification_top_netlist", false, "Generate a top-level module which can be used in formal verification");
+  /* Add an option '--print_autocheck_top_testbench' */
+  CommandOptionId fabric_verilog_autocheck_tb_opt = shell_cmd_write_fabric_verilog.add_option("print_autocheck_top_testbench", false, "Generate a testbench for top-level fabric module with autocheck capability");
+  shell_cmd_write_fabric_verilog.set_option_require_value(fabric_verilog_autocheck_tb_opt, openfpga::OPT_STRING);
   /* Add an option '--verbose' */
   shell_cmd_write_fabric_verilog.add_option("verbose", false, "Enable verbose output");
   

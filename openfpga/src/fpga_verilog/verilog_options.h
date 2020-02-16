@@ -17,6 +17,9 @@ namespace openfpga {
  *
  *******************************************************************/
 class FabricVerilogOption {
+  public: /* Public constructor */
+    /* Set default options */
+    FabricVerilogOption();
   public: /* Public accessors */
     std::string output_directory() const;
     bool support_icarus_simulator() const;
@@ -28,6 +31,7 @@ class FabricVerilogOption {
     bool print_formal_verification_top_netlist() const;
     bool print_autocheck_top_testbench() const;
     std::string reference_verilog_file_path() const;
+    bool print_user_defined_template() const;
     bool verbose_output() const;
   public: /* Public mutators */
     void set_output_directory(const std::string& output_dir);
@@ -39,6 +43,7 @@ class FabricVerilogOption {
     void set_print_top_testbench(const bool& enabled);
     void set_print_formal_verification_top_netlist(const bool& enabled);
     void set_print_autocheck_top_testbench(const std::string& reference_verilog_file_path);
+    void set_print_user_defined_template(const bool& enabled);
     void set_verbose_output(const bool& enabled);
   private: /* Internal Data */
     std::string output_directory_;
@@ -51,6 +56,7 @@ class FabricVerilogOption {
     bool print_formal_verification_top_netlist_;
     /* print_autocheck_top_testbench will be enabled when reference file path is not empty */
     std::string reference_verilog_file_path_;
+    bool print_user_defined_template_;
     bool verbose_output_;
 };
 
