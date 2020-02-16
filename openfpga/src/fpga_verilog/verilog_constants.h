@@ -41,4 +41,6 @@ constexpr char* ESSENTIALS_VERILOG_FILE_NAME = "inv_buf_passgate.v";
 constexpr char* CONFIG_PERIPHERAL_VERILOG_FILE_NAME = "config_peripherals.v";
 constexpr char* USER_DEFINED_TEMPLATE_VERILOG_FILE_NAME = "user_defined_templates.v";
 
+constexpr char* VERILOG_MUX_BASIS_POSTFIX = "_basis";
+
 #endif
