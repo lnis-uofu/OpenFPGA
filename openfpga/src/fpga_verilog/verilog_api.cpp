@@ -40,17 +40,17 @@ namespace openfpga {
  * 7. Pre-configured testbench, which can skip the configuration phase and pre-configure the FPGA module. This testbench is created for quick verification and formal verification purpose.
  * 8. Verilog netlist including preprocessing flags and all the Verilog netlists that have been generated
  ********************************************************************/
-void fabric_verilog(ModuleManager& module_manager,
-                    const CircuitLibrary& circuit_lib,
-                    const MuxLibrary& mux_lib,
-                    const DeviceGrid& grids, 
-                    const DeviceRRGSB& device_rr_gsb,
-                    const std::string& output_directory,
-                    const bool& compress_routing,
-                    const bool& dump_explict_verilog,
-                    const bool& verbose) {
+void fpga_fabric_verilog(const ModuleManager& module_manager,
+                         const CircuitLibrary& circuit_lib,
+                         const MuxLibrary& mux_lib,
+                         const DeviceGrid& grids, 
+                         const DeviceRRGSB& device_rr_gsb,
+                         const std::string& output_directory,
+                         const bool& compress_routing,
+                         const bool& dump_explict_verilog,
+                         const bool& verbose) {
 
-  vtr::ScopedStartFinishTimer timer("Generate Verilog netlists for FPGA fabric\n");
+  vtr::ScopedStartFinishTimer timer("Write Verilog netlists for FPGA fabric\n");
 
   std::string src_dir_path = format_dir_path(output_directory);
 

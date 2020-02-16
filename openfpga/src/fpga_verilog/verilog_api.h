@@ -21,15 +21,15 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void fabric_verilog(ModuleManager& module_manager,
-                    const CircuitLibrary& circuit_lib,
-                    const MuxLibrary& mux_lib,
-                    const DeviceGrid& grids, 
-                    const DeviceRRGSB& device_rr_gsb,
-                    const std::string& output_directory,
-                    const bool& compress_routing,
-                    const bool& dump_explict_verilog,
-                    const bool& verbose);
+void fpga_fabric_verilog(const ModuleManager& module_manager,
+                         const CircuitLibrary& circuit_lib,
+                         const MuxLibrary& mux_lib,
+                         const DeviceGrid& grids, 
+                         const DeviceRRGSB& device_rr_gsb,
+                         const std::string& output_directory,
+                         const bool& compress_routing,
+                         const bool& dump_explict_verilog,
+                         const bool& verbose);
 
 } /* end namespace openfpga */
 

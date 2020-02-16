@@ -135,7 +135,7 @@ void add_openfpga_setup_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   shell.set_command_execute_function(shell_cmd_build_fabric_id, build_fabric);
   /* The 'build_fabric' command should NOT be executed before 'link_openfpga_arch' */
   std::vector<ShellCommandId> cmd_dependency_build_fabric;
-  cmd_dependency_lut_truth_table_fixup.push_back(shell_cmd_link_openfpga_arch_id);
+  cmd_dependency_build_fabric.push_back(shell_cmd_link_openfpga_arch_id);
   shell.set_command_dependency(shell_cmd_build_fabric_id, cmd_dependency_build_fabric);
 } 
 
