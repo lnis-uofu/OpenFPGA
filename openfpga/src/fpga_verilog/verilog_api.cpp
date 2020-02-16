@@ -16,7 +16,7 @@
 #include "verilog_constants.h"
 #include "verilog_auxiliary_netlists.h"
 #include "verilog_submodule.h"
-//#include "verilog_routing.h"
+#include "verilog_routing.h"
 //#include "verilog_grid.h"
 //#include "verilog_top_module.h"
 
@@ -89,16 +89,18 @@ void fpga_fabric_verilog(ModuleManager& module_manager,
                           options);
 
   /* Generate routing blocks */
-  //if (true == compress_routing) {
-  //  print_verilog_unique_routing_modules(module_manager, device_rr_gsb,  
-  //                                       src_dir_path, rr_dir_path,
-  //                                       dump_explicit_verilog);
-  //} else {
-  //  VTR_ASSERT(false == compress_routing);
-  //  print_verilog_flatten_routing_modules(module_manager, device_rr_gsb, 
-  //                                        src_dir_path, rr_dir_path,
-  //                                        dump_explicit_verilog);
-  //}
+  if (true == options.compress_routing()) {
+    print_verilog_unique_routing_modules(const_cast<const ModuleManager&>(module_manager),
+                                         device_rr_gsb,  
+                                         src_dir_path, rr_dir_path,
+                                         options.explicit_port_mapping());
+  } else {
+    VTR_ASSERT(false == options.compress_routing());
+    print_verilog_flatten_routing_modules(const_cast<const ModuleManager&>(module_manager),
+                                          device_rr_gsb, 
+                                          src_dir_path, rr_dir_path,
+                                          options.explicit_port_mapping());
+  }
 
   /* Generate grids */
   //print_verilog_grids(module_manager, 

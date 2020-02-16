@@ -44,4 +44,6 @@ constexpr char* USER_DEFINED_TEMPLATE_VERILOG_FILE_NAME = "user_defined_template
 constexpr char* VERILOG_MUX_BASIS_POSTFIX = "_basis";
 constexpr char* VERILOG_MEM_POSTFIX = "_mem";
 
+constexpr char* SB_VERILOG_FILE_NAME_PREFIX = "sb_";
+
 #endif
