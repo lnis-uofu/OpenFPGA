@@ -17,7 +17,7 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void print_verilog_submodule_wires(ModuleManager& module_manager,
+void print_verilog_submodule_wires(const ModuleManager& module_manager,
                                    std::vector<std::string>& netlist_names,
                                    const CircuitLibrary& circuit_lib,
                                    const std::string& verilog_dir,

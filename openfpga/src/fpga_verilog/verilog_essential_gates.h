@@ -14,7 +14,7 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void print_verilog_submodule_essentials(ModuleManager& module_manager, 
+void print_verilog_submodule_essentials(const ModuleManager& module_manager, 
                                         std::vector<std::string>& netlist_names,
                                         const std::string& verilog_dir, 
                                         const std::string& submodule_dir,

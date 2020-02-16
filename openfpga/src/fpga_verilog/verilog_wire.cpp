@@ -35,7 +35,7 @@ namespace openfpga {
  *
  *******************************************************************/
 static 
-void print_verilog_wire_module(ModuleManager& module_manager, 
+void print_verilog_wire_module(const ModuleManager& module_manager, 
                                const CircuitLibrary& circuit_lib,
                                std::fstream& fp,
                                const CircuitModelId& wire_model) {
@@ -92,7 +92,7 @@ void print_verilog_wire_module(ModuleManager& module_manager,
 /********************************************************************
  * Top-level function to print wire modules
  *******************************************************************/
-void print_verilog_submodule_wires(ModuleManager& module_manager,
+void print_verilog_submodule_wires(const ModuleManager& module_manager,
                                    std::vector<std::string>& netlist_names,
                                    const CircuitLibrary& circuit_lib,
                                    const std::string& verilog_dir,

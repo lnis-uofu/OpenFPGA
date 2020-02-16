@@ -142,7 +142,7 @@ void print_verilog_invbuf_body(std::fstream& fp,
  * or tapered buffer to a file 
  ***********************************************/
 static 
-void print_verilog_invbuf_module(ModuleManager& module_manager, 
+void print_verilog_invbuf_module(const ModuleManager& module_manager, 
                                  std::fstream& fp,
                                  const CircuitLibrary& circuit_lib,
                                  const CircuitModelId& circuit_model) {
@@ -226,7 +226,7 @@ void print_verilog_invbuf_module(ModuleManager& module_manager,
  * either transmission-gate or pass-transistor
  ***********************************************/
 static 
-void print_verilog_passgate_module(ModuleManager& module_manager, 
+void print_verilog_passgate_module(const ModuleManager& module_manager, 
                                    std::fstream& fp,
                                    const CircuitLibrary& circuit_lib,
                                    const CircuitModelId& circuit_model) {
@@ -438,7 +438,7 @@ void print_verilog_mux2_gate_body(std::fstream& fp,
  * 3. 2-input MUX
  ***********************************************/
 static 
-void print_verilog_gate_module(ModuleManager& module_manager, 
+void print_verilog_gate_module(const ModuleManager& module_manager, 
                                std::fstream& fp,
                                const CircuitLibrary& circuit_lib,
                                const CircuitModelId& circuit_model) {
@@ -525,7 +525,7 @@ void print_verilog_constant_generator_module(const ModuleManager& module_manager
  * include inverters, buffers, transmission-gates,
  * etc.
  ***********************************************/
-void print_verilog_submodule_essentials(ModuleManager& module_manager, 
+void print_verilog_submodule_essentials(const ModuleManager& module_manager, 
                                         std::vector<std::string>& netlist_names,
                                         const std::string& verilog_dir, 
                                         const std::string& submodule_dir,

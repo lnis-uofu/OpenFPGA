@@ -29,7 +29,7 @@ namespace openfpga {
  * Print Verilog modules for the Look-Up Tables (LUTs) 
  * in the circuit library
  ********************************************************************/
-void print_verilog_submodule_luts(ModuleManager& module_manager,
+void print_verilog_submodule_luts(const ModuleManager& module_manager,
                                   std::vector<std::string>& netlist_names,
                                   const CircuitLibrary& circuit_lib,
                                   const std::string& verilog_dir,

@@ -44,7 +44,7 @@ namespace openfpga {
  ***************************************************************************************/
 static 
 void print_verilog_mux_local_decoder_module(std::fstream& fp, 
-                                            ModuleManager& module_manager,
+                                            const ModuleManager& module_manager,
                                             const DecoderLibrary& decoder_lib,
                                             const DecoderId& decoder) {
   /* Get the number of inputs */
@@ -161,7 +161,7 @@ void print_verilog_mux_local_decoder_module(std::fstream& fp,
  *    before running the back-end flow for FPGA fabric 
  *    See more details in the function print_verilog_mux_local_decoder() for more details
  ***************************************************************************************/
-void print_verilog_submodule_mux_local_decoders(ModuleManager& module_manager,
+void print_verilog_submodule_mux_local_decoders(const ModuleManager& module_manager,
                                                 std::vector<std::string>& netlist_names,
                                                 const MuxLibrary& mux_lib,
                                                 const CircuitLibrary& circuit_lib,

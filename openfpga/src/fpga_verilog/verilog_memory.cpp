@@ -42,7 +42,7 @@ namespace openfpga {
  *          +---------------------+
  ********************************************************************/
 static 
-void print_verilog_mux_memory_module(ModuleManager& module_manager,
+void print_verilog_mux_memory_module(const ModuleManager& module_manager,
                                      const CircuitLibrary& circuit_lib,
                                      std::fstream& fp,
                                      const CircuitModelId& mux_model,
@@ -96,7 +96,7 @@ void print_verilog_mux_memory_module(ModuleManager& module_manager,
  * Take another example, the memory circuit can implement the scan-chain or 
  * memory-bank organization for the memories.
  ********************************************************************/
-void print_verilog_submodule_memories(ModuleManager& module_manager,
+void print_verilog_submodule_memories(const ModuleManager& module_manager,
                                       std::vector<std::string>& netlist_names,
                                       const MuxLibrary& mux_lib,
                                       const CircuitLibrary& circuit_lib,

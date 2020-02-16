@@ -18,7 +18,7 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void print_verilog_submodule_memories(ModuleManager& module_manager,
+void print_verilog_submodule_memories(const ModuleManager& module_manager,
                                       std::vector<std::string>& netlist_names,
                                       const MuxLibrary& mux_lib,
                                       const CircuitLibrary& circuit_lib,
