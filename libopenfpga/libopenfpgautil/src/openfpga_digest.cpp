@@ -135,7 +135,7 @@ bool create_dir_path(const char* dir_path) {
      return true;
    case -1:
      if (EEXIST == errno) {
-       VTR_LOG_ERROR("Directory '%s' already exists. Will overwrite contents\n",
+       VTR_LOG_WARN("Directory '%s' already exists. Will overwrite contents\n",
                      dir_path);
        return true;
      }

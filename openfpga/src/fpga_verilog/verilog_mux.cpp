@@ -1240,7 +1240,7 @@ void print_verilog_submodule_muxes(ModuleManager& module_manager,
   check_file_stream(verilog_fname.c_str(), fp);
 
   /* Print out debugging information for if the file is not opened/created properly */
-  VTR_LOG("Writing Verilog netlist for Multiplexers '%s' ...\n",
+  VTR_LOG("Writing Verilog netlist for Multiplexers '%s' ...",
           verilog_fname.c_str()); 
 
   print_verilog_file_header(fp, "Multiplexers"); 

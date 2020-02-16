@@ -9,6 +9,23 @@
 namespace openfpga {
 
 /**************************************************
+ * Public Constructors
+ *************************************************/
+FabricVerilogOption::FabricVerilogOption() {
+  output_directory_.clear();
+  support_icarus_simulator_ = false;
+  include_signal_init_ = false;
+  include_timing_ = false;
+  explicit_port_mapping_ = false;
+  compress_routing_ = false;
+  print_top_testbench_ = false;
+  print_formal_verification_top_netlist_ = false;
+  reference_verilog_file_path_.clear();
+  print_user_defined_template_ = false;
+  verbose_output_ = false;
+}
+
+/**************************************************
  * Public Accessors 
  *************************************************/
 std::string FabricVerilogOption::output_directory() const {
@@ -49,6 +66,10 @@ bool FabricVerilogOption::print_autocheck_top_testbench() const {
 
 std::string FabricVerilogOption::reference_verilog_file_path() const {
   return reference_verilog_file_path_;
+}
+
+bool FabricVerilogOption::print_user_defined_template() const {
+  return print_user_defined_template_;
 }
 
 bool FabricVerilogOption::verbose_output() const {
@@ -92,6 +113,10 @@ void FabricVerilogOption::set_print_formal_verification_top_netlist(const bool& 
 
 void FabricVerilogOption::set_print_autocheck_top_testbench(const std::string& reference_verilog_file_path) {
   reference_verilog_file_path_ = reference_verilog_file_path;
+}
+
+void FabricVerilogOption::set_print_user_defined_template(const bool& enabled) {
+  print_user_defined_template_ = enabled;
 }
 
 void FabricVerilogOption::set_verbose_output(const bool& enabled) {

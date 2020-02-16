@@ -22,7 +22,7 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void fpga_fabric_verilog(const ModuleManager& module_manager,
+void fpga_fabric_verilog(ModuleManager& module_manager,
                          const CircuitLibrary& circuit_lib,
                          const MuxLibrary& mux_lib,
                          const DeviceGrid& grids, 

@@ -132,6 +132,8 @@ void print_verilog_submodule_signal_init(std::fstream& fp,
  ********************************************************************/
 void add_user_defined_verilog_modules(ModuleManager& module_manager, 
                                       const CircuitLibrary& circuit_lib) {
+  VTR_LOG("Registering user-defined modules...");
+
   /* Iterate over Verilog modules */
   for (const auto& model : circuit_lib.models()) {
     /* We only care about user-defined models */
@@ -149,8 +151,12 @@ void add_user_defined_verilog_modules(ModuleManager& module_manager,
     ModuleId module_id = module_manager.find_module(circuit_lib.model_name(model));
     if (ModuleId::INVALID() == module_id) {
       add_circuit_model_to_module_manager(module_manager, circuit_lib, model);
+      VTR_LOG("Registered user-defined circuit model '%s'\n",
+              circuit_lib.model_name(model).c_str());
     }
   }
+
+  VTR_LOG("Done\n");
 }
 
 /*********************************************************************

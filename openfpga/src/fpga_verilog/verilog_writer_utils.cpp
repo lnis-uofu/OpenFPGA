@@ -1374,7 +1374,11 @@ void print_verilog_clock_stimuli(std::fstream& fp,
 void print_verilog_netlist_include_header_file(const std::vector<std::string>& netlists_to_be_included,
                                                const char* subckt_dir,
                                                const char* header_file_name) {
+
   std::string verilog_fname(std::string(subckt_dir) + std::string(header_file_name));
+
+  VTR_LOG("Writing header file for primitive modules '%s' ...",
+          verilog_fname.c_str());
 
   /* Create the file stream */
   std::fstream fp;
@@ -1392,6 +1396,8 @@ void print_verilog_netlist_include_header_file(const std::vector<std::string>& n
 
   /* close file stream */
   fp.close();
+
+  VTR_LOG("Done\n");
 }
 
 } /* end namespace openfpga */

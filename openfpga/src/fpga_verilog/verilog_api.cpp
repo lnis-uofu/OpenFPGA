@@ -15,11 +15,9 @@
 #include "device_rr_gsb.h"
 #include "verilog_constants.h"
 #include "verilog_auxiliary_netlists.h"
-//#include "verilog_submodules.h"
+#include "verilog_submodule.h"
 //#include "verilog_routing.h"
-//#include "verilog_submodules.h"
 //#include "verilog_grid.h"
-//#include "verilog_routing.h"
 //#include "verilog_top_module.h"
 
 /* Header file for this source file */
@@ -40,8 +38,13 @@ namespace openfpga {
  * 6. Testbench, where a FPGA module is configured with a bitstream and then driven by input vectors
  * 7. Pre-configured testbench, which can skip the configuration phase and pre-configure the FPGA module. This testbench is created for quick verification and formal verification purpose.
  * 8. Verilog netlist including preprocessing flags and all the Verilog netlists that have been generated
+ *
+ * TODO: We should use module manager as a constant here. 
+ * All the modification should be done before this writer!
+ * The only exception now is the user-defined modules.
+ * We should think clearly about how to handle them for both Verilog and SPICE generators!
  ********************************************************************/
-void fpga_fabric_verilog(const ModuleManager& module_manager,
+void fpga_fabric_verilog(ModuleManager& module_manager,
                          const CircuitLibrary& circuit_lib,
                          const MuxLibrary& mux_lib,
                          const DeviceGrid& grids, 
@@ -81,8 +84,9 @@ void fpga_fabric_verilog(const ModuleManager& module_manager,
    * the module manager.
    * Without the modules in the module manager, core logic generation is not possible!!!
    */
-  //print_verilog_submodules(module_manager, mux_lib, sram_verilog_orgz_info, src_dir_path.c_str(), submodule_dir_path.c_str(), 
-  //                         Arch, vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts);
+  print_verilog_submodule(module_manager, mux_lib, circuit_lib,
+                          src_dir_path, submodule_dir_path, 
+                          options);
 
   /* Generate routing blocks */
   //if (true == compress_routing) {

@@ -23,7 +23,7 @@ build_fabric --compress_routing --duplicate_grid_pin --verbose
 
 # Write the Verilog netlit for FPGA fabric
 #  - Enable the use of explicit port mapping in Verilog netlist
-write_fabric_verilog --file /var/tmp/xtang/openfpga_test_src --explicit_port_mapping --include_timing --include_signal_init --support_icarus_simulator --verbose
+write_fabric_verilog --file /var/tmp/xtang/openfpga_test_src --explicit_port_mapping --include_timing --include_signal_init --support_icarus_simulator --print_user_defined_template --verbose
 
 # Finish and exit OpenFPGA
 exit
