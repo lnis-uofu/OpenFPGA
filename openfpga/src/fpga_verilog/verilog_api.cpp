@@ -18,7 +18,7 @@
 #include "verilog_submodule.h"
 #include "verilog_routing.h"
 #include "verilog_grid.h"
-//#include "verilog_top_module.h"
+#include "verilog_top_module.h"
 
 /* Header file for this source file */
 #include "verilog_api.h"
@@ -111,14 +111,13 @@ void fpga_fabric_verilog(ModuleManager& module_manager,
                       options.verbose_output());
 
   /* Generate FPGA fabric */
-  //print_verilog_top_module(module_manager, 
-  //                         std::string(vpr_setup.FileNameOpts.ArchFile), 
-  //                         src_dir_path,
-  //                         dump_explicit_verilog);
+  print_verilog_top_module(const_cast<const ModuleManager&>(module_manager), 
+                           src_dir_path,
+                           options.explicit_port_mapping());
 
   /* Given a brief stats on how many Verilog modules have been written to files */
   VTR_LOGV(options.verbose_output(), 
-           "Outputted %lu Verilog modules in total\n", 
+           "Written %lu Verilog modules in total\n", 
            module_manager.num_modules());  
 }
 
