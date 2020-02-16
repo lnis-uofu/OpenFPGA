@@ -35,6 +35,22 @@ bool FabricVerilogOption::compress_routing() const {
   return compress_routing_;
 }
 
+bool FabricVerilogOption::print_top_testbench() const {
+  return print_top_testbench_;
+}
+
+bool FabricVerilogOption::print_formal_verification_top_netlist() const {
+  return print_formal_verification_top_netlist_;
+}
+
+bool FabricVerilogOption::print_autocheck_top_testbench() const {
+  return false == reference_verilog_file_path_.empty();
+}
+
+std::string FabricVerilogOption::reference_verilog_file_path() const {
+  return reference_verilog_file_path_;
+}
+
 bool FabricVerilogOption::verbose_output() const {
   return verbose_output_;
 }
@@ -64,6 +80,18 @@ void FabricVerilogOption::set_explicit_port_mapping(const bool& enabled) {
 
 void FabricVerilogOption::set_compress_routing(const bool& enabled) {
   compress_routing_ = enabled;
+}
+
+void FabricVerilogOption::set_print_top_testbench(const bool& enabled) {
+  print_top_testbench_ = enabled;
+}
+
+void FabricVerilogOption::set_print_formal_verification_top_netlist(const bool& enabled) {
+  print_formal_verification_top_netlist_ = enabled;
+}
+
+void FabricVerilogOption::set_print_autocheck_top_testbench(const std::string& reference_verilog_file_path) {
+  reference_verilog_file_path_ = reference_verilog_file_path;
 }
 
 void FabricVerilogOption::set_verbose_output(const bool& enabled) {

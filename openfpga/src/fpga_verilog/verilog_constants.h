@@ -8,7 +8,7 @@ constexpr float VERILOG_SIM_TIMESCALE = 1e-9; // Verilog Simulation time scale (
 
 constexpr char* VERILOG_TIMING_PREPROC_FLAG = "ENABLE_TIMING"; // the flag to enable timing definition during compilation
 constexpr char* VERILOG_SIGNAL_INIT_PREPROC_FLAG = "ENABLE_SIGNAL_INITIALIZATION"; // the flag to enable signal initialization during compilation
-constexpr char* VERILOG_FORMAL_VERIFICATGION_PREPROC_FLAG = "ENABLE_FORMAL_VERIFICATION"; // the flag to enable formal verification during compilation
+constexpr char* VERILOG_FORMAL_VERIFICATION_PREPROC_FLAG = "ENABLE_FORMAL_VERIFICATION"; // the flag to enable formal verification during compilation
 constexpr char* INITIAL_SIMULATION_FLAG = "INITIAL_SIMULATION"; // the flag to enable initial functional verification
 constexpr char* AUTOCHECKED_SIMULATION_FLAG = "AUTOCHECKED_SIMULATION"; // the flag to enable autochecked functional verification
 constexpr char* FORMAL_SIMULATION_FLAG = "FORMAL_SIMULATION"; // the flag to enable formal functional verification
@@ -19,10 +19,14 @@ constexpr char* DEFAULT_SUBMODULE_DIR_NAME = "sub_module/";
 constexpr char* MODELSIM_SIMULATION_TIME_UNIT = "ms";
 
 // Icarus variables and flag
-constexpr char* ICARUS_SIMULATION_FLAG = "ICARUS_SIMULATOR"; // the flag to enable specific Verilog code in testbenches
+constexpr char* ICARUS_SIMULATOR_FLAG = "ICARUS_SIMULATOR"; // the flag to enable specific Verilog code in testbenches
 // End of Icarus variables and flag
 
 constexpr char* VERILOG_TOP_POSTFIX = "_top.v";
+constexpr char* FORMAL_VERIFICATION_VERILOG_FILE_POSTFIX = "_top_formal_verification.v"; 
+constexpr char* TOP_TESTBENCH_VERILOG_FILE_POSTFIX = "_top_tb.v"; /* !!! must be consist with the modelsim_testbench_module_postfix */ 
+constexpr char* AUTOCHECK_TOP_TESTBENCH_VERILOG_FILE_POSTFIX = "_autocheck_top_tb.v"; /* !!! must be consist with the modelsim_autocheck_testbench_module_postfix */ 
+constexpr char* RANDOM_TOP_TESTBENCH_VERILOG_FILE_POSTFIX = "_formal_random_top_tb.v"; 
 constexpr char* DEFINES_VERILOG_FILE_NAME = "fpga_defines.v";
 constexpr char* DEFINES_VERILOG_SIMULATION_FILE_NAME = "define_simulation.v";
 constexpr char* SUBMODULE_VERILOG_FILE_NAME = "sub_module.v";

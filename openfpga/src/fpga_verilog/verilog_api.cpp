@@ -14,6 +14,7 @@
 
 #include "device_rr_gsb.h"
 #include "verilog_constants.h"
+#include "verilog_auxiliary_netlists.h"
 //#include "verilog_submodules.h"
 //#include "verilog_routing.h"
 //#include "verilog_submodules.h"
@@ -67,11 +68,11 @@ void fpga_fabric_verilog(const ModuleManager& module_manager,
   create_dir_path(rr_dir_path.c_str());
 
   /* Print Verilog files containing preprocessing flags */
-  //print_verilog_preprocessing_flags_netlist(std::string(src_dir_path),
-  //                                          vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts);
+  print_verilog_preprocessing_flags_netlist(std::string(src_dir_path),
+                                            options);
 
-  //print_verilog_simulation_preprocessing_flags(std::string(src_dir_path),
-  //                                             vpr_setup.FPGA_SPICE_Opts.SynVerilogOpts);
+  print_verilog_simulation_preprocessing_flags(std::string(src_dir_path),
+                                               options);
 
   /* Generate primitive Verilog modules, which are corner stones of FPGA fabric
    * Note that this function MUST be called before Verilog generation of
