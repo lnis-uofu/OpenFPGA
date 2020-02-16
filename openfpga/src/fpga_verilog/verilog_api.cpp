@@ -45,14 +45,11 @@ void fpga_fabric_verilog(const ModuleManager& module_manager,
                          const MuxLibrary& mux_lib,
                          const DeviceGrid& grids, 
                          const DeviceRRGSB& device_rr_gsb,
-                         const std::string& output_directory,
-                         const bool& compress_routing,
-                         const bool& dump_explict_verilog,
-                         const bool& verbose) {
+                         const FabricVerilogOption& options) {
 
   vtr::ScopedStartFinishTimer timer("Write Verilog netlists for FPGA fabric\n");
 
-  std::string src_dir_path = format_dir_path(output_directory);
+  std::string src_dir_path = format_dir_path(options.output_directory());
 
   /* Create directories */
   create_dir_path(src_dir_path.c_str());
@@ -110,7 +107,7 @@ void fpga_fabric_verilog(const ModuleManager& module_manager,
   //                         dump_explicit_verilog);
 
   /* Given a brief stats on how many Verilog modules have been written to files */
-  VTR_LOGV(verbose, 
+  VTR_LOGV(options.verbose_output(), 
            "Outputted %lu Verilog modules in total\n", 
            module_manager.num_modules());  
 }

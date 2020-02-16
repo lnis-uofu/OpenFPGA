@@ -22,17 +22,29 @@ void write_fabric_verilog(OpenfpgaContext& openfpga_ctx,
 
   CommandOptionId opt_output_dir = cmd.option("file");
   CommandOptionId opt_explicit_port_mapping = cmd.option("explicit_port_mapping");
+  CommandOptionId opt_include_timing = cmd.option("include_timing");
+  CommandOptionId opt_include_signal_init = cmd.option("include_signal_init");
+  CommandOptionId opt_support_icarus_simulator = cmd.option("support_icarus_simulator");
   CommandOptionId opt_verbose = cmd.option("verbose");
+
+  /* This is an intermediate data structure which is designed to modularize the FPGA-Verilog
+   * Keep it independent from any other outside data structures
+   */
+  FabricVerilogOption options;
+  options.set_output_directory(cmd_context.option_value(cmd, opt_output_dir));
+  options.set_explicit_port_mapping(cmd_context.option_enable(cmd, opt_explicit_port_mapping));
+  options.set_include_timing(cmd_context.option_enable(cmd, opt_include_timing));
+  options.set_include_signal_init(cmd_context.option_enable(cmd, opt_include_signal_init));
+  options.set_support_icarus_simulator(cmd_context.option_enable(cmd, opt_support_icarus_simulator));
+  options.set_verbose_output(cmd_context.option_enable(cmd, opt_verbose));
+  options.set_compress_routing(openfpga_ctx.flow_manager().compress_routing());
   
   fpga_fabric_verilog(openfpga_ctx.module_graph(),
                       openfpga_ctx.arch().circuit_lib,
                       openfpga_ctx.mux_lib(),
                       g_vpr_ctx.device().grid,
                       openfpga_ctx.device_rr_gsb(),
-                      cmd_context.option_value(cmd, opt_output_dir),
-                      openfpga_ctx.flow_manager().compress_routing(),
-                      cmd_context.option_enable(cmd, opt_explicit_port_mapping),
-                      cmd_context.option_enable(cmd, opt_verbose));
+                      options);
 } 
 
 } /* end namespace openfpga */

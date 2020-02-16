@@ -13,6 +13,7 @@
 #include "device_grid.h"
 #include "device_rr_gsb.h"
 #include "module_manager.h"
+#include "verilog_options.h"
 
 /********************************************************************
  * Function declaration
@@ -26,10 +27,7 @@ void fpga_fabric_verilog(const ModuleManager& module_manager,
                          const MuxLibrary& mux_lib,
                          const DeviceGrid& grids, 
                          const DeviceRRGSB& device_rr_gsb,
-                         const std::string& output_directory,
-                         const bool& compress_routing,
-                         const bool& dump_explict_verilog,
-                         const bool& verbose);
+                         const FabricVerilogOption& options);
 
 } /* end namespace openfpga */
 
