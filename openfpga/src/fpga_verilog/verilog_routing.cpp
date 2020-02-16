@@ -291,6 +291,7 @@ void print_verilog_flatten_routing_modules(const ModuleManager& module_manager,
                                             subckt_dir.c_str(),
                                             ROUTING_VERILOG_FILE_NAME);
   VTR_LOG("Done\n");
+  VTR_LOG("\n");
 }
 
 
@@ -350,6 +351,7 @@ void print_verilog_unique_routing_modules(const ModuleManager& module_manager,
                                             subckt_dir.c_str(),
                                             ROUTING_VERILOG_FILE_NAME);
   VTR_LOG("Done\n");
+  VTR_LOG("\n");
 }
 
 } /* end namespace openfpga */

@@ -10,7 +10,8 @@
 #include "vpr_types.h"
 #include "mux_library.h"
 #include "circuit_library.h"
-#include "device_grid.h"
+#include "vpr_context.h"
+#include "vpr_device_annotation.h"
 #include "device_rr_gsb.h"
 #include "module_manager.h"
 #include "verilog_options.h"
@@ -25,7 +26,8 @@ namespace openfpga {
 void fpga_fabric_verilog(ModuleManager& module_manager,
                          const CircuitLibrary& circuit_lib,
                          const MuxLibrary& mux_lib,
-                         const DeviceGrid& grids, 
+                         const DeviceContext& device_ctx, 
+                         const VprDeviceAnnotation& device_annotation, 
                          const DeviceRRGSB& device_rr_gsb,
                          const FabricVerilogOption& options);
 

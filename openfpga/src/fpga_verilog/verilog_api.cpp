@@ -17,7 +17,7 @@
 #include "verilog_auxiliary_netlists.h"
 #include "verilog_submodule.h"
 #include "verilog_routing.h"
-//#include "verilog_grid.h"
+#include "verilog_grid.h"
 //#include "verilog_top_module.h"
 
 /* Header file for this source file */
@@ -47,7 +47,8 @@ namespace openfpga {
 void fpga_fabric_verilog(ModuleManager& module_manager,
                          const CircuitLibrary& circuit_lib,
                          const MuxLibrary& mux_lib,
-                         const DeviceGrid& grids, 
+                         const DeviceContext& device_ctx, 
+                         const VprDeviceAnnotation& device_annotation, 
                          const DeviceRRGSB& device_rr_gsb,
                          const FabricVerilogOption& options) {
 
@@ -103,9 +104,11 @@ void fpga_fabric_verilog(ModuleManager& module_manager,
   }
 
   /* Generate grids */
-  //print_verilog_grids(module_manager, 
-  //                    src_dir_path, lb_dir_path,
-  //                    dump_explicit_verilog);
+  print_verilog_grids(const_cast<const ModuleManager&>(module_manager),
+                      device_ctx, device_annotation, 
+                      src_dir_path, lb_dir_path,
+                      options.explicit_port_mapping(),
+                      options.verbose_output());
 
   /* Generate FPGA fabric */
   //print_verilog_top_module(module_manager, 

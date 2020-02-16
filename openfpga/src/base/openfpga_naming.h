@@ -200,6 +200,10 @@ std::string generate_mux_sram_port_name(const CircuitLibrary& circuit_lib,
                                         const size_t& mux_instance_id,
                                         const e_circuit_model_port_type& port_type);
 
+std::string generate_logical_tile_netlist_name(const std::string& prefix,
+                                               const t_pb_graph_node* pb_graph_head,
+                                               const std::string& postfix);
+
 std::string generate_grid_block_prefix(const std::string& prefix,
                                        const e_side& io_side);
 

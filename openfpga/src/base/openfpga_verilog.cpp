@@ -50,7 +50,8 @@ void write_fabric_verilog(OpenfpgaContext& openfpga_ctx,
   fpga_fabric_verilog(openfpga_ctx.mutable_module_graph(),
                       openfpga_ctx.arch().circuit_lib,
                       openfpga_ctx.mux_lib(),
-                      g_vpr_ctx.device().grid,
+                      g_vpr_ctx.device(),
+                      openfpga_ctx.vpr_device_annotation(),
                       openfpga_ctx.device_rr_gsb(),
                       options);
 } 
