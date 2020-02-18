@@ -11,6 +11,7 @@
 #include "tile_direct.h"
 #include "module_manager.h"
 #include "openfpga_flow_manager.h"
+#include "lb_rr_graph.h"
 #include "device_rr_gsb.h"
 
 /********************************************************************
