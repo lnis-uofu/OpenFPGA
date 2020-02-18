@@ -241,6 +241,14 @@ ArchDirectId VprDeviceAnnotation::direct_annotation(const size_t& direct) const 
   return direct_annotations_.at(direct);
 }
 
+LbRRGraph VprDeviceAnnotation::physical_lb_rr_graph(t_pb_graph_node* pb_graph_head) const {
+  /* Ensure that the rr_switch is in the list */
+  if (0 == physical_lb_rr_graphs_.count(pb_graph_head)) {
+    return LbRRGraph();
+  }
+  return physical_lb_rr_graphs_.at(pb_graph_head);
+}
+
 /************************************************************************
  * Public mutators
  ***********************************************************************/
@@ -468,6 +476,16 @@ void VprDeviceAnnotation::add_direct_annotation(const size_t& direct, const Arch
   }
 
   direct_annotations_[direct] = arch_direct_id;
+}
+
+void VprDeviceAnnotation::add_physical_lb_rr_graph(t_pb_graph_node* pb_graph_head, const LbRRGraph& lb_rr_graph) {
+  /* Warn any override attempt */
+  if (0 < physical_lb_rr_graphs_.count(pb_graph_head)) {
+    VTR_LOG_WARN("Override the physical lb_rr_graph for pb_graph_head '%s'!\n",
+                 pb_graph_head->pb_type->name);
+  }
+
+  physical_lb_rr_graphs_[pb_graph_head] = lb_rr_graph;
 }
 
 } /* End namespace openfpga*/

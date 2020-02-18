@@ -13,19 +13,11 @@
 #include "arch_types.h"
 #include "atom_netlist_fwd.h"
 
+#include "lb_rr_graph_types.h"
+
 /**************************************************************************
  * Packing Algorithm Enumerations
  ***************************************************************************/
-
-/* Describes different types of intra-logic cluster_ctx.blocks routing resource nodes */
-enum e_lb_rr_type {
-    LB_SOURCE = 0,
-    LB_SINK,
-    LB_INTERMEDIATE,
-    NUM_LB_RR_TYPES
-};
-const std::vector<const char*> lb_rr_type_str{
-    "LB_SOURCE", "LB_SINK", "LB_INTERMEDIATE", "INVALID"};
 
 /**************************************************************************
  * Packing Algorithm Data Structures

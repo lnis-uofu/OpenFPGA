@@ -15,6 +15,7 @@
 #include "annotate_rr_graph.h"
 #include "mux_library_builder.h"
 #include "build_tile_direct.h"
+#include "build_physical_lb_rr_graph.h"
 #include "openfpga_link_arch.h"
 
 /* Include global variables of VPR */
@@ -112,6 +113,10 @@ void link_arch(OpenfpgaContext& openfpga_ctx,
   openfpga_ctx.mutable_tile_direct() =  build_device_tile_direct(g_vpr_ctx.device(),
                                                                  openfpga_ctx.arch().arch_direct);
 
+
+  build_physical_lb_rr_graphs(g_vpr_ctx.device(),
+                              openfpga_ctx.mutable_vpr_device_annotation(),
+                              cmd_context.option_enable(cmd, opt_verbose));
 } 
 
 } /* end namespace openfpga */
