@@ -168,6 +168,9 @@ class LbRRGraph {
     typedef vtr::Range<node_iterator> node_range;
     typedef vtr::Range<edge_iterator> edge_range;
 
+  public: /* Constructors */
+    LbRRGraph();
+
   public: /* Accessors */
     /* Aggregates: create range-based loops for nodes/edges/switches/segments
      * To iterate over the nodes/edges/switches/segments in a RRGraph, 
@@ -195,13 +198,20 @@ class LbRRGraph {
     float node_intrinsic_cost(const LbRRNodeId& node) const;
 
     /* Get a list of edge ids, which are incoming edges to a node */
+    std::vector<LbRREdgeId> node_in_edges(const LbRRNodeId& node) const;
     std::vector<LbRREdgeId> node_in_edges(const LbRRNodeId& node, t_mode* mode) const;
 
     /* Get a list of edge ids, which are outgoing edges from a node */
     std::vector<LbRREdgeId> node_out_edges(const LbRRNodeId& node, t_mode* mode) const;
 
+    /* General method to look up a node with type and only pb_graph_pin information */
     LbRRNodeId find_node(const e_lb_rr_type& type, t_pb_graph_pin* pb_graph_pin) const;
+    /* Method to find special node */
+    LbRRNodeId ext_source_node() const;
+    LbRRNodeId ext_sink_node() const;
 
+    /* General method to look up a edge with source and sink nodes */
+    std::vector<LbRREdgeId> find_edge(const LbRRNodeId& src_node, const LbRRNodeId& sink_node) const;
     /* Get the source node which drives a edge */
     LbRRNodeId edge_src_node(const LbRREdgeId& edge) const;
     /* Get the sink node which a edge ends to */
@@ -234,6 +244,10 @@ class LbRRGraph {
      *   set_node_xlow(node, 0);
      */
     LbRRNodeId create_node(const e_lb_rr_type& type);
+  
+    /* Create special nodes */
+    LbRRNodeId create_ext_source_node(const e_lb_rr_type& type);
+    LbRRNodeId create_ext_sink_node(const e_lb_rr_type& type);
 
     /* Set node-level information */
     void set_node_type(const LbRRNodeId& node, const e_lb_rr_type& type);
@@ -289,6 +303,10 @@ class LbRRGraph {
      */
     typedef std::vector<std::map<t_pb_graph_pin*, LbRRNodeId>> NodeLookup;
     mutable NodeLookup node_lookup_;
+
+    /* Special node look-up */
+    LbRRNodeId ext_source_node_;
+    LbRRNodeId ext_sink_node_;
 };
 
 } /* end namespace openfpga */

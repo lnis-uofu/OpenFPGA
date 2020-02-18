@@ -10,6 +10,14 @@
 namespace openfpga {
 
 /**************************************************
+ * Public Constructors
+ *************************************************/
+LbRRGraph::LbRRGraph() {
+  ext_source_node_ = LbRRNodeId::INVALID();
+  ext_sink_node_ = LbRRNodeId::INVALID();
+}
+
+/**************************************************
  * Public Accessors: Aggregates 
  *************************************************/
 LbRRGraph::node_range LbRRGraph::nodes() const {
@@ -41,6 +49,11 @@ t_pb_graph_pin* LbRRGraph::node_pb_graph_pin(const LbRRNodeId& node) const {
 float LbRRGraph::node_intrinsic_cost(const LbRRNodeId& node) const {
   VTR_ASSERT(true == valid_node_id(node));
   return node_intrinsic_costs_[node];
+}
+
+std::vector<LbRREdgeId> LbRRGraph::node_in_edges(const LbRRNodeId& node) const {
+  VTR_ASSERT(true == valid_node_id(node));
+  return node_in_edges_[node];
 }
 
 std::vector<LbRREdgeId> LbRRGraph::node_in_edges(const LbRRNodeId& node, t_mode* mode) const {
@@ -79,6 +92,24 @@ LbRRNodeId LbRRGraph::find_node(const e_lb_rr_type& type, t_pb_graph_pin* pb_gra
   }
   
   return node_lookup_[size_t(type)].at(pb_graph_pin);
+}
+
+LbRRNodeId ext_source_node() const {
+  return ext_source_node_;
+}
+
+LbRRNodeId ext_sink_node() const {
+  return ext_sink_node_;
+}
+
+std::vector<LbRREdgeId> find_edge(const LbRRNodeId& src_node, const LbRRNodeId& sink_node) const {
+  std::vector<LbRREdgeId> edges;
+  for (const LbRREdgeId& edge : node_out_edges_[src_node]) {
+    if (sink_node == edge_sink_node(edge)) {
+      edges.push_back(edge);
+    }
+  }
+  return edges;
 }
 
 LbRRNodeId LbRRGraph::edge_src_node(const LbRREdgeId& edge) const {
@@ -139,6 +170,16 @@ LbRRNodeId LbRRGraph::create_node(const e_lb_rr_type& type) {
   node_out_edges_.emplace_back();
 
   return node;
+}
+
+LbRRNodeId LbRRGraph::create_ext_source_node(const e_lb_rr_type& type) {
+  LbRRNodeId ext_source_node = create_node(type); 
+  ext_source_node_ = ext_source_node;
+}
+
+LbRRNodeId LbRRGraph::create_ext_sink_node(const e_lb_rr_type& type) {
+  LbRRNodeId ext_sink_node = create_node(type); 
+  ext_sink_node_ = ext_sink_node;
 }
 
 void LbRRGraph::set_node_type(const LbRRNodeId& node, const e_lb_rr_type& type) {
