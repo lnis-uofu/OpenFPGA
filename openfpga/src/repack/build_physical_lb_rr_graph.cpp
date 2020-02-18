@@ -369,7 +369,7 @@ LbRRGraph build_lb_type_physical_lb_rr_graph(t_pb_graph_node* pb_graph_head,
            lb_rr_graph.nodes().size());
 
   VTR_LOGV(verbose,
-           "\n\tNumber of edges: %lu\n",
+           "\tNumber of edges: %lu\n",
            lb_rr_graph.edges().size());
 
   return lb_rr_graph;
