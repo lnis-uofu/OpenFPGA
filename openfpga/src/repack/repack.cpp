@@ -23,7 +23,7 @@ namespace openfpga {
  *  - store the packing results to clustering annotation
  ***************************************************************************************/
 void pack_physical_pbs(const DeviceContext& device_ctx,
-                       VprDeviceAnnotation& device_annotation,
+                       const VprDeviceAnnotation& device_annotation,
                        VprClusteringAnnotation& clustering_annotation,
                        const VprRoutingAnnotation& routing_annotation,
                        const bool& verbose) {

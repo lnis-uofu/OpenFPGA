@@ -24,7 +24,7 @@ void repack(OpenfpgaContext& openfpga_ctx,
   CommandOptionId opt_verbose = cmd.option("verbose");
 
   pack_physical_pbs(g_vpr_ctx.device(),
-                    openfpga_ctx.mutable_vpr_device_annotation(),
+                    openfpga_ctx.vpr_device_annotation(),
                     openfpga_ctx.mutable_vpr_clustering_annotation(),
                     openfpga_ctx.vpr_routing_annotation(),
                     cmd_context.option_enable(cmd, opt_verbose));

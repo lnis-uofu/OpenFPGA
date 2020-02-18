@@ -1,13 +1,11 @@
-#ifndef REPACK_H
-#define REPACK_H
+#ifndef BUILD_PHYSICAL_LB_RR_GRAPH_H
+#define BUILD_PHYSICAL_LB_RR_GRAPH_H
 
 /********************************************************************
  * Include header files that are required by function declaration
  *******************************************************************/
 #include "vpr_context.h"
 #include "vpr_device_annotation.h"
-#include "vpr_clustering_annotation.h"
-#include "vpr_routing_annotation.h"
 
 /********************************************************************
  * Function declaration
@@ -16,11 +14,9 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void pack_physical_pbs(const DeviceContext& device_ctx,
-                       const VprDeviceAnnotation& device_annotation,
-                       VprClusteringAnnotation& clustering_annotation,
-                       const VprRoutingAnnotation& routing_annotation,
-                       const bool& verbose);
+void build_physical_lb_rr_graphs(const DeviceContext& device_ctx,
+                                 VprDeviceAnnotation& device_annotation,
+                                 const bool& verbose);
 
 } /* end namespace openfpga */
 
