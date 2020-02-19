@@ -170,10 +170,19 @@ class LbRouter {
     /* Show if a valid routing solution has been founded or not */
     bool is_routed() const;
 
+    /**
+     * Get the routing results for a Net 
+     */
+    std::vector<LbRRNodeId> net_routed_nodes(const NetId& net) const;
+
   public : /* Public mutators */
     /**
      * Add net to be routed
      */ 
+    NetId create_net_to_route(const LbRRNodeId& source, const std::vector<LbRRNodeId>& terminals);
+    void add_net_atom_net_id(const NetId& net, const AtomNetId& atom_net);
+    void add_net_atom_pins(const NetId& net, const AtomPinId& src_pin, const std::vector<AtomPinId>& terminal_pins);
+    void set_net_fix_terminal(const NetId& net, const LbRRNodeId& terminal, const bool& fix);
 
     /**
      * Perform routing algorithm on a given logical tile routing resource graph
@@ -196,6 +205,9 @@ class LbRouter {
     t_trace* find_node_in_rt(t_trace* rt, const LbRRNodeId& rt_index);
 
     bool route_has_conflict(const LbRRGraph& lb_rr_graph, t_trace* rt) const;
+
+    /* Recursively find all the nodes in the trace */
+    void rec_collect_trace_nodes(const t_trace* trace, std::vector<LbRRNodeId>& routed_nodes) const;
 
   private : /* Private mutators */
     /*It is possible that a net may connect multiple times to a logically equivalent set of primitive pins.
@@ -249,6 +261,8 @@ class LbRouter {
      */
     bool matched_lb_rr_graph(const LbRRGraph& lb_rr_graph) const;
 
+    bool valid_net_id(const NetId& net_id) const;
+
   private :  /* Private initializer and cleaner */
     void reset_explored_node_tb();
     void reset_net_rt();
@@ -265,7 +279,6 @@ class LbRouter {
     vtr::vector<NetId, AtomNetId> lb_net_atom_net_ids_;             /* index of atom net this intra_lb_net represents */
     vtr::vector<NetId, std::vector<AtomPinId>> lb_net_atom_pins_;  /* AtomPin's associated with each terminal */
     vtr::vector<NetId, std::vector<LbRRNodeId>> lb_net_terminals_; /* endpoints of the intra_lb_net, 0th position is the source, all others are sinks */
-    vtr::vector<NetId, std::vector<bool>> lb_net_fixed_terminals_; /* Marks a terminal as having a fixed target (i.e. a pin not a sink) */
     vtr::vector<NetId, t_trace*> lb_net_rt_trees_;               /* Route tree head */
 
     /* Logical-to-physical mapping info */

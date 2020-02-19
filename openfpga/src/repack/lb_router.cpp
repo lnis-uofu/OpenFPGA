@@ -59,6 +59,22 @@ bool LbRouter::is_routed() const {
   return is_routed_;
 }
 
+std::vector<LbRRNodeId> LbRouter::net_routed_nodes(const NetId& net) const {
+  VTR_ASSERT(true == is_routed());
+  VTR_ASSERT(true == valid_net_id(net));
+
+  std::vector<LbRRNodeId> routed_nodes;
+
+  t_trace* rt_tree = lb_net_rt_trees_[net];
+  if (nullptr == rt_tree) {
+    return routed_nodes;
+  }
+  /* Walk through the routing tree of the net */
+  rec_collect_trace_nodes(rt_tree, routed_nodes);  
+
+  return routed_nodes;  
+}
+
 /**************************************************
  * Private accessors
  *************************************************/
@@ -108,9 +124,47 @@ bool LbRouter::route_has_conflict(const LbRRGraph& lb_rr_graph, t_trace* rt) con
   return false;
 }
 
+void LbRouter::rec_collect_trace_nodes(const t_trace* trace, std::vector<LbRRNodeId>& routed_nodes) const {
+  if (routed_nodes.end() == std::find(routed_nodes.begin(), routed_nodes.end(), trace->current_node)) {
+    routed_nodes.push_back(trace->current_node);
+  }
+
+  for (const t_trace& next : trace->next_nodes) {
+    rec_collect_trace_nodes(&next, routed_nodes);
+  }
+}
+
 /**************************************************
  * Public mutators
  *************************************************/
+LbRouter::NetId LbRouter::create_net_to_route(const LbRRNodeId& source, const std::vector<LbRRNodeId>& terminals) {
+  /* Create an new id */
+  NetId net = NetId(lb_net_ids_.size());
+  lb_net_ids_.push_back(net);
+
+  /* Allocate other attributes */
+  lb_net_atom_net_ids_.push_back(AtomNetId::INVALID());
+  lb_net_atom_pins_.emplace_back();
+  
+  std::vector<LbRRNodeId> net_terminals = terminals;
+  net_terminals.insert(net_terminals.begin(), source);
+
+  lb_net_terminals_.push_back(net_terminals);
+
+  return net;
+}
+
+void LbRouter::add_net_atom_net_id(const NetId& net, const AtomNetId& atom_net) {
+  VTR_ASSERT(true == valid_net_id(net));
+  lb_net_atom_net_ids_[net] = atom_net;
+}
+
+void LbRouter::add_net_atom_pins(const NetId& net, const AtomPinId& src_pin, const std::vector<AtomPinId>& terminal_pins) {
+  VTR_ASSERT(true == valid_net_id(net));
+  lb_net_atom_pins_[net] = terminal_pins;
+  lb_net_atom_pins_[net].insert(lb_net_atom_pins_[net].begin(), src_pin);
+}
+
 bool LbRouter::try_route(const LbRRGraph& lb_rr_graph,
                          const AtomNetlist& atom_nlist,
                          const int& verbosity) {
@@ -644,6 +698,10 @@ bool LbRouter::matched_lb_rr_graph(const LbRRGraph& lb_rr_graph) const {
         && (explored_node_tb_.size() == lb_rr_graph.nodes().size()) );
 }
 
+bool LbRouter::valid_net_id(const NetId& net_id) const {
+  return ( size_t(net_id) < lb_net_ids_.size() ) && ( net_id == lb_net_ids_[net_id] ); 
+}
+
 /**************************************************
  * Private Initializer and cleaner
  *************************************************/
@@ -679,7 +737,6 @@ void LbRouter::clear_nets() {
   lb_net_atom_net_ids_.clear();
   lb_net_atom_pins_.clear();
   lb_net_terminals_.clear();
-  lb_net_fixed_terminals_.clear();
   lb_net_rt_trees_.clear();
 }
 
