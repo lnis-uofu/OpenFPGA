@@ -10,8 +10,7 @@
 
 #include "vtr_vector.h"
 
-#include "arch_types.h"
-#include "vpr_types.h"
+#include "physical_types.h"
 #include "atom_netlist_fwd.h"
 
 #include "lb_rr_graph.h"
@@ -41,7 +40,7 @@ class LbRouter {
      * Describes the status of a logic cluster_ctx.blocks routing resource node 
      * for a given logic cluster_ctx.blocks instance
      ***************************************************************************/
-    struct t_routing_stats {
+    struct t_routing_status {
       int occ;  /* Number of nets currently using this lb_rr_node */
       t_mode* mode; /* Mode that this rr_node is set to */
     
@@ -160,10 +159,11 @@ class LbRouter {
     std::map<AtomBlockId, bool> atoms_added_; /* map that records which atoms are added to cluster router */
 
     /* Logical-to-physical mapping info */
-    vtr::vector<LbRRNodeId, t_routing_stats> lb_rr_node_stats_; /* [0..lb_type_graph->size()-1] Stats for each logic cluster_ctx.blocks rr node instance */
+    vtr::vector<LbRRNodeId, t_routing_status> routing_status_; /* [0..lb_type_graph->size()-1] Stats for each logic cluster_ctx.blocks rr node instance */
 
     /* Stores state info during Pathfinder iterative routing */
     vtr::vector<LbRRNodeId, t_explored_node_stats> explored_node_tb_; /* [0..lb_type_graph->size()-1] Stores mode exploration and traceback info for nodes */
+
     int explore_id_index_;                 /* used in conjunction with node_traceback to determine whether or not a location has been explored.  By using a unique identifier every route, I don't have to clear the previous route exploration */
 
     /* Current type */

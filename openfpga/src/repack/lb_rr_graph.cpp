@@ -94,15 +94,15 @@ LbRRNodeId LbRRGraph::find_node(const e_lb_rr_type& type, t_pb_graph_pin* pb_gra
   return node_lookup_[size_t(type)].at(pb_graph_pin);
 }
 
-LbRRNodeId ext_source_node() const {
+LbRRNodeId LbRRGraph::ext_source_node() const {
   return ext_source_node_;
 }
 
-LbRRNodeId ext_sink_node() const {
+LbRRNodeId LbRRGraph::ext_sink_node() const {
   return ext_sink_node_;
 }
 
-std::vector<LbRREdgeId> find_edge(const LbRRNodeId& src_node, const LbRRNodeId& sink_node) const {
+std::vector<LbRREdgeId> LbRRGraph::find_edge(const LbRRNodeId& src_node, const LbRRNodeId& sink_node) const {
   std::vector<LbRREdgeId> edges;
   for (const LbRREdgeId& edge : node_out_edges_[src_node]) {
     if (sink_node == edge_sink_node(edge)) {

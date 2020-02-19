@@ -5,6 +5,7 @@
 /* Headers from vtrutil library */
 #include "vtr_log.h"
 #include "vtr_assert.h"
+#include "vtr_util.h"
 
 #include "lb_rr_graph_utils.h"
 
@@ -26,7 +27,7 @@ std::string describe_lb_rr_node(const LbRRGraph& lb_rr_graph,
   } else if (inode == lb_rr_graph.ext_source_node()) {
     VTR_ASSERT(LB_SOURCE == lb_rr_graph.node_type(inode));
     description = "cluster-external source (LB_SOURCE)";
-  } else if (inode == lb_rr_graph.ext_sink_index()) {
+  } else if (inode == lb_rr_graph.ext_sink_node()) {
     VTR_ASSERT(LB_SINK == lb_rr_graph.node_type(inode));
     description = "cluster-external sink (LB_SINK)";
   } else if (LB_SINK == lb_rr_graph.node_type(inode)) {
