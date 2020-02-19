@@ -29,18 +29,6 @@ class LbRouter {
     typedef vtr::StrongId<net_id_tag> NetId;
   public: /* Intra-Logic Block Routing Data Structures (by instance) */
     /**************************************************************************
-     * A routing traceback data structure, provides a logic cluster_ctx.blocks 
-     * instance specific trace lookup directly from the t_lb_type_rr_node array index
-     * After packing, routing info for each CLB will have an array of t_lb_traceback 
-     * to store routing info within the CLB
-     ***************************************************************************/
-    struct t_traceback {
-      int net;             /* net of flat, technology-mapped, netlist using this node */
-      LbRRNodeId prev_lb_rr_node; /* index of previous node that drives current node */
-      LbRREdgeId prev_edge;       /* index of previous edge that drives current node */
-    };
-
-    /**************************************************************************
      * Describes the status of a logic cluster_ctx.blocks routing resource node 
      * for a given logic cluster_ctx.blocks instance
      ***************************************************************************/
@@ -66,23 +54,6 @@ class LbRouter {
     struct t_trace {
       LbRRNodeId current_node;            /* current t_lb_type_rr_node used by net */
       std::vector<t_trace> next_nodes; /* index of previous edge that drives current node */
-    };
-
-    /**************************************************************************
-     * Represents a net used inside a logic cluster_ctx.blocks and the 
-     * physical nodes used by the net
-     ***************************************************************************/
-    struct t_net {
-      AtomNetId atom_net_id;             /* index of atom net this intra_lb_net represents */
-      std::vector<LbRRNodeId> terminals; /* endpoints of the intra_lb_net, 0th position is the source, all others are sinks */
-      std::vector<AtomPinId> atom_pins;  /* AtomPin's associated with each terminal */
-      std::vector<bool> fixed_terminals; /* Marks a terminal as having a fixed target (i.e. a pin not a sink) */
-      t_trace* rt_tree;               /* Route tree head */
-    
-      t_net() {
-          atom_net_id = AtomNetId::INVALID();
-          rt_tree = nullptr;
-      }
     };
 
     /**************************************************************************
@@ -199,6 +170,19 @@ class LbRouter {
     /* Show if a valid routing solution has been founded or not */
     bool is_routed() const;
 
+  public : /* Public mutators */
+    /**
+     * Add net to be routed
+     */ 
+
+    /**
+     * Perform routing algorithm on a given logical tile routing resource graph
+     * Note: the lb_rr_graph must be the same as you initilized the router!!!
+     */
+    bool try_route(const LbRRGraph& lb_rr_graph,
+                   const AtomNetlist& atom_nlist,
+                   const int& verbosity);
+
   private :  /* Private accessors */
     /**
      * Report if the routing is successfully done on a logical block routing resource graph
@@ -212,15 +196,6 @@ class LbRouter {
     t_trace* find_node_in_rt(t_trace* rt, const LbRRNodeId& rt_index);
 
     bool route_has_conflict(const LbRRGraph& lb_rr_graph, t_trace* rt) const;
-
-  public : /* Public mutators */
-    /**
-     * Perform routing algorithm on a given logical tile routing resource graph
-     * Note: the lb_rr_graph must be the same as you initilized the router!!!
-     */
-    bool try_route(const LbRRGraph& lb_rr_graph,
-                   const AtomNetlist& atom_nlist,
-                   const int& verbosity);
 
   private : /* Private mutators */
     /*It is possible that a net may connect multiple times to a logically equivalent set of primitive pins.
@@ -262,7 +237,7 @@ class LbRouter {
                                const int& net_fanout);
     bool try_expand_nodes(const AtomNetlist& atom_nlist,
                           const LbRRGraph& lb_rr_graph,
-                          const t_net& lb_net,
+                          const NetId& lb_net,
                           t_expansion_node& exp_node,
                           const int& itarget,
                           const bool& try_other_modes,
@@ -286,7 +261,12 @@ class LbRouter {
 
   private : /* Stores all data needed by intra-logic cluster_ctx.blocks router */
     /* Logical Netlist Info */
-    vtr::vector<NetId, t_net> lb_nets_; /* Pointer to vector of intra logic cluster_ctx.blocks nets and their connections */
+    vtr::vector<NetId, NetId> lb_net_ids_; /* Pointer to vector of intra logic cluster_ctx.blocks nets and their connections */
+    vtr::vector<NetId, AtomNetId> lb_net_atom_net_ids_;             /* index of atom net this intra_lb_net represents */
+    vtr::vector<NetId, std::vector<AtomPinId>> lb_net_atom_pins_;  /* AtomPin's associated with each terminal */
+    vtr::vector<NetId, std::vector<LbRRNodeId>> lb_net_terminals_; /* endpoints of the intra_lb_net, 0th position is the source, all others are sinks */
+    vtr::vector<NetId, std::vector<bool>> lb_net_fixed_terminals_; /* Marks a terminal as having a fixed target (i.e. a pin not a sink) */
+    vtr::vector<NetId, t_trace*> lb_net_rt_trees_;               /* Route tree head */
 
     /* Logical-to-physical mapping info */
     vtr::vector<LbRRNodeId, t_routing_status> routing_status_; /* [0..lb_type_graph->size()-1] Stats for each logic cluster_ctx.blocks rr node instance */
