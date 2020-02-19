@@ -46,7 +46,7 @@ class LbRouter {
     
       int historical_usage; /* Historical usage of using this node */
     
-      t_lb_rr_graph_stats() {
+      t_routing_status() {
         occ = 0;
         mode = nullptr;
         historical_usage = 0;
@@ -61,7 +61,7 @@ class LbRouter {
      ***************************************************************************/
     struct t_trace {
       LbRRNodeId current_node;            /* current t_lb_type_rr_node used by net */
-      std::vector<t_lb_trace> next_nodes; /* index of previous edge that drives current node */
+      std::vector<t_trace> next_nodes; /* index of previous edge that drives current node */
     };
 
     /**************************************************************************
@@ -73,9 +73,9 @@ class LbRouter {
       std::vector<LbRRNodeId> terminals; /* endpoints of the intra_lb_net, 0th position is the source, all others are sinks */
       std::vector<AtomPinId> atom_pins;  /* AtomPin's associated with each terminal */
       std::vector<bool> fixed_terminals; /* Marks a terminal as having a fixed target (i.e. a pin not a sink) */
-      t_lb_trace* rt_tree;               /* Route tree head */
+      t_trace* rt_tree;               /* Route tree head */
     
-      t_lb_rr_net() {
+      t_net() {
           atom_net_id = AtomNetId::INVALID();
           rt_tree = nullptr;
       }
@@ -148,6 +148,13 @@ class LbRouter {
         return is_mode_conflict || try_expand_all_modes;
       }
     };
+  
+  public :  /* Public accessors */
+    /**
+     * Find all the routing resource nodes that is congested, which they are used more than their capacity
+     * This function is call to collect the nodes and router can reroute these net
+     */   
+    std::vector<LbRRNodeId> find_congested_rr_nodes(const LbRRGraph& lb_rr_graph) const;
 
   private : /* Stores all data needed by intra-logic cluster_ctx.blocks router */
     /* Logical Netlist Info */
