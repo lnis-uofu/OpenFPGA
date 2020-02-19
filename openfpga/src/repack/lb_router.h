@@ -192,12 +192,15 @@ class LbRouter {
      */   
     std::vector<LbRRNodeId> find_congested_rr_nodes(const LbRRGraph& lb_rr_graph) const;
 
+    /* Show if a valid routing solution has been founded or not */
+    bool is_routed() const;
+
+  private :  /* Private accessors */
     /**
      * Report if the routing is successfully done on a logical block routing resource graph
      */  
     bool is_route_success(const LbRRGraph& lb_rr_graph) const;
 
-  private :  /* Private accessors */
     /**
      * Try to find a node in the routing traces recursively
      * If not found, will return an empty pointer
@@ -271,6 +274,7 @@ class LbRouter {
     void reset_explored_node_tb();
     void reset_net_rt();
     void reset_routing_status();
+    void reset_illegal_modes();
 
     void clear_nets();
     void free_net_rt(t_trace* lb_trace);
@@ -300,13 +304,16 @@ class LbRouter {
     t_option params_;
 
     /* Stores whether or not the current logical-to-physical mapping has a routed solution */
-    bool is_routed_;
+    bool is_routed_; 
 
     /* Stores the mode selection status when expanding the edges */
     t_mode_selection_status mode_status_;
 
     /* Stores state info of the priority queue in expanding edges during route */
     reservable_pq<t_expansion_node, std::vector<t_expansion_node>, compare_expansion_node> pq_;
+
+    /* Store the illegal modes for each pb_graph_node that is involved in the routing resource graph */
+    std::map<const t_pb_graph_node*, std::vector<const t_mode*>> illegal_modes_;
 
     /* current congestion factor */
     float pres_con_fac_;

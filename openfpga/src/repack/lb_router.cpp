@@ -31,6 +31,8 @@ LbRouter::LbRouter(const LbRRGraph& lb_rr_graph, t_logical_block_type_ptr lb_typ
   params_.pres_fac = 1;
   params_.pres_fac_mult = 2;
   params_.hist_fac = 0.3;
+
+  is_routed_ = false;
  
   pres_con_fac_ = 1;
 }
@@ -53,6 +55,13 @@ std::vector<LbRRNodeId> LbRouter::find_congested_rr_nodes(const LbRRGraph& lb_rr
   return congested_rr_nodes;
 }
 
+bool LbRouter::is_routed() const {
+  return is_routed_;
+}
+
+/**************************************************
+ * Private accessors
+ *************************************************/
 bool LbRouter::is_route_success(const LbRRGraph& lb_rr_graph) const {
   /* Validate if the rr_graph is the one we used to initialize the router */
   VTR_ASSERT(true == matched_lb_rr_graph(lb_rr_graph));
@@ -66,9 +75,6 @@ bool LbRouter::is_route_success(const LbRRGraph& lb_rr_graph) const {
   return true;
 }
 
-/**************************************************
- * Private accessors
- *************************************************/
 LbRouter::t_trace* LbRouter::find_node_in_rt(t_trace* rt, const LbRRNodeId& rt_index) {
   t_trace* cur;
   if (rt->current_node == rt_index) {
@@ -111,7 +117,7 @@ bool LbRouter::try_route(const LbRRGraph& lb_rr_graph,
   /* Validate if the rr_graph is the one we used to initialize the router */
   VTR_ASSERT(true == matched_lb_rr_graph(lb_rr_graph));
 
-  bool is_routed = false;
+  is_routed_ = false;
   bool is_impossible = false;
 
   mode_status_.is_mode_conflict = false;
@@ -130,7 +136,7 @@ bool LbRouter::try_route(const LbRRGraph& lb_rr_graph,
   /* Iteratively remove congestion until a successful route is found.
    * Cap the total number of iterations tried so that if a solution does not exist, then the router won't run indefinitely */
   pres_con_fac_ = params_.pres_fac;
-  for (int iter = 0; iter < params_.max_iterations && !is_routed && !is_impossible; iter++) {
+  for (int iter = 0; iter < params_.max_iterations && !is_routed_ && !is_impossible; iter++) {
     unsigned int inet;
     /* Iterate across all nets internal to logic block */
     for (inet = 0; inet < lb_nets_.size() && !is_impossible; inet++) {
@@ -295,13 +301,18 @@ bool LbRouter::check_edge_for_route_conflicts(std::unordered_map<const t_pb_grap
               edge->interconnect->name);
       // The illegal mode is added to the pb_graph_node as it resulted in a conflict during atom-to-atom routing. This mode cannot be used in the consequent cluster
       // generation try.
-      if (std::find(pb_graph_node->illegal_modes.begin(), pb_graph_node->illegal_modes.end(), result.first->second->index) == pb_graph_node->illegal_modes.end()) {
-        pb_graph_node->illegal_modes.push_back(result.first->second->index);
+      auto it = illegal_modes_.find(pb_graph_node);
+      if (it == illegal_modes_.end()) {
+        illegal_modes_[pb_graph_node].push_back(result.first->second);
+      } else {
+        if (std::find(illegal_modes_.at(pb_graph_node).begin(), illegal_modes_.at(pb_graph_node).end(), result.first->second) == illegal_modes_.at(pb_graph_node).end()) {
+          it->second.push_back(result.first->second);
+        }
       }
 
       // If the number of illegal modes equals the number of available mode for a specific pb_graph_node it means that no cluster can be generated. This resuts
       // in a fatal error.
-      if ((int)pb_graph_node->illegal_modes.size() >= pb_graph_node->pb_type->num_modes) {
+      if ((int)illegal_modes_.at(pb_graph_node).size() >= pb_graph_node->pb_type->num_modes) {
         VPR_FATAL_ERROR(VPR_ERROR_PACK, "There are no more available modes to be used. Routing Failed!");
       }
 
@@ -551,8 +562,11 @@ void LbRouter::expand_node_all_modes(const LbRRGraph& lb_rr_graph,
     bool is_illegal = false;
     if (pin != nullptr) {
       auto* pb_graph_node = pin->parent_node;
-      for (auto illegal_mode : pb_graph_node->illegal_modes) {
-        if (mode->index == illegal_mode) {
+      if (0 == illegal_modes_.count(pb_graph_node)) {
+        continue;
+      }
+      for (auto illegal_mode : illegal_modes_.at(pb_graph_node)) {
+        if (mode == illegal_mode) {
           is_illegal = true;
           break;
         }
@@ -683,5 +697,10 @@ void LbRouter::free_lb_trace(t_trace* lb_trace) {
     lb_trace->next_nodes.clear();
   }
 }
+
+void LbRouter::reset_illegal_modes() {
+  illegal_modes_.clear();
+}
+
 
 } /* end namespace openfpga */
