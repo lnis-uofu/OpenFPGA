@@ -6,6 +6,11 @@
 #include "vtr_assert.h"
 #include "vtr_log.h"
 
+#include "physical_types.h"
+#include "pb_type_graph.h"
+#include "vpr_error.h"
+
+#include "lb_rr_graph_utils.h"
 #include "lb_router.h"
 
 /* begin namespace openfpga */
@@ -77,9 +82,172 @@ LbRouter::t_trace* LbRouter::find_node_in_rt(t_trace* rt, const LbRRNodeId& rt_i
   return nullptr;
 }
 
+bool LbRouter::route_has_conflict(const LbRRGraph& lb_rr_graph, t_trace* rt) const {
+  t_mode* cur_mode = nullptr;
+  for (unsigned int i = 0; i < rt->next_nodes.size(); i++) {
+    std::vector<LbRREdgeId> edges = lb_rr_graph.find_edge(rt->current_node, rt->next_nodes[i].current_node);
+    VTR_ASSERT(0 == edges.size());
+    t_mode* new_mode = lb_rr_graph.edge_mode(edges[0]);
+    if (cur_mode != nullptr && cur_mode != new_mode) {
+      return true;
+    }
+    if (route_has_conflict(lb_rr_graph, &rt->next_nodes[i]) == true) {
+      return true;
+    }
+    cur_mode = new_mode;
+  }
+
+  return false;
+}
+
 /**************************************************
  * Private mutators
  *************************************************/
+void LbRouter::fix_duplicate_equivalent_pins(const AtomContext& atom_ctx,
+                                             const LbRRGraph& lb_rr_graph) {
+  for (size_t ilb_net = 0; ilb_net < lb_nets_.size(); ++ilb_net) {
+    //Collect all the sink terminals indicies which target a particular node
+    std::map<LbRRNodeId, std::vector<int>> duplicate_terminals;
+    for (size_t iterm = 1; iterm < lb_nets_[ilb_net].terminals.size(); ++iterm) {
+      LbRRNodeId node = lb_nets_[ilb_net].terminals[iterm];
+
+      duplicate_terminals[node].push_back(iterm);
+    }
+
+    for (auto kv : duplicate_terminals) {
+      if (kv.second.size() < 2) continue; //Only process duplicates
+
+      //Remap all the duplicate terminals so they target the pin instead of the sink
+      for (size_t idup_term = 0; idup_term < kv.second.size(); ++idup_term) {
+        int iterm = kv.second[idup_term]; //The index in terminals which is duplicated
+
+        VTR_ASSERT(lb_nets_[ilb_net].atom_pins.size() == lb_nets_[ilb_net].terminals.size());
+        AtomPinId atom_pin = lb_nets_[ilb_net].atom_pins[iterm];
+        VTR_ASSERT(atom_pin);
+
+        const t_pb_graph_pin* pb_graph_pin = find_pb_graph_pin(atom_ctx.nlist, atom_ctx.lookup, atom_pin);
+        VTR_ASSERT(pb_graph_pin);
+
+        if (pb_graph_pin->port->equivalent == PortEquivalence::NONE) continue; //Only need to remap equivalent ports
+
+        //Remap this terminal to an explicit pin instead of the common sink
+        LbRRNodeId pin_index = lb_rr_graph.find_node(LB_INTERMEDIATE, pb_graph_pin);
+        VTR_ASSERT(true == lb_rr_graph.valid_node_id(pin_index));
+
+        VTR_LOG_WARN(
+            "Found duplicate nets connected to logically equivalent pins. "
+            "Remapping intra lb net %d (atom net %zu '%s') from common sink "
+            "pb_route %d to fixed pin pb_route %d\n",
+            ilb_net, size_t(lb_nets_[ilb_net].atom_net_id), atom_ctx.nlist.net_name(lb_nets_[ilb_net].atom_net_id).c_str(),
+            kv.first, size_t(pin_index));
+
+        VTR_ASSERT(1 == lb_rr_graph.node_out_edges(pin_index, &(pb_graph_pin->parent_node->pb_type->modes[0])).size());
+        LbRRNodeId sink_index = lb_rr_graph.edge_sink_node(lb_rr_graph.node_out_edges(pin_index, &(pb_graph_pin->parent_node->pb_type->modes[0]))[0]);
+        VTR_ASSERT(LB_SINK == lb_rr_graph.node_type(sink_index));
+        VTR_ASSERT_MSG(sink_index == lb_nets_[ilb_net].terminals[iterm], "Remapped pin must be connected to original sink");
+
+        //Change the target
+        lb_nets_[ilb_net].terminals[iterm] = pin_index;
+      }
+    }
+  }
+}
+
+// Check one edge for mode conflict.
+bool LbRouter::check_edge_for_route_conflicts(std::unordered_map<const t_pb_graph_node*, const t_mode*>& mode_map,
+                                              const t_pb_graph_pin* driver_pin,
+                                              const t_pb_graph_pin* pin) {
+  if (driver_pin == nullptr) {
+    return false;
+  }
+
+  // Only check pins that are OUT_PORTs.
+  if (pin == nullptr || pin->port == nullptr || pin->port->type != OUT_PORT) {
+    return false;
+  }
+  VTR_ASSERT(!pin->port->is_clock);
+
+  auto* pb_graph_node = pin->parent_node;
+  VTR_ASSERT(pb_graph_node->pb_type == pin->port->parent_pb_type);
+
+  const t_pb_graph_edge* edge = get_edge_between_pins(driver_pin, pin);
+  VTR_ASSERT(edge != nullptr);
+
+  auto mode_of_edge = edge->interconnect->parent_mode_index;
+  auto* mode = &pb_graph_node->pb_type->modes[mode_of_edge];
+
+  auto result = mode_map.insert(std::make_pair(pb_graph_node, mode));
+  if (!result.second) {
+    if (result.first->second != mode) {
+      VTR_LOG("Differing modes for block. Got %s mode, while previously was %s for interconnect %s.\n",
+              mode->name, result.first->second->name,
+              edge->interconnect->name);
+      // The illegal mode is added to the pb_graph_node as it resulted in a conflict during atom-to-atom routing. This mode cannot be used in the consequent cluster
+      // generation try.
+      if (std::find(pb_graph_node->illegal_modes.begin(), pb_graph_node->illegal_modes.end(), result.first->second->index) == pb_graph_node->illegal_modes.end()) {
+        pb_graph_node->illegal_modes.push_back(result.first->second->index);
+      }
+
+      // If the number of illegal modes equals the number of available mode for a specific pb_graph_node it means that no cluster can be generated. This resuts
+      // in a fatal error.
+      if ((int)pb_graph_node->illegal_modes.size() >= pb_graph_node->pb_type->num_modes) {
+        VPR_FATAL_ERROR(VPR_ERROR_PACK, "There are no more available modes to be used. Routing Failed!");
+      }
+
+      return true;
+    }
+  }
+
+  return false;
+}
+
+void LbRouter::commit_remove_rt(const LbRRGraph& lb_rr_graph,
+                                t_trace* rt,
+                                const e_commit_remove& op,
+                                std::unordered_map<const t_pb_graph_node*, const t_mode*>& mode_map,
+                                t_mode_selection_status& mode_status) {
+  int incr;
+
+  if (nullptr == rt) {
+    return;
+  }
+
+  LbRRNodeId inode = rt->current_node;
+
+  /* Determine if node is being used or removed */
+  if (op == RT_COMMIT) {
+    incr = 1;
+    if (routing_status_[inode].occ >= lb_rr_graph.node_capacity(inode)) {
+      routing_status_[inode].historical_usage += (routing_status_[inode].occ - lb_rr_graph.node_capacity(inode) + 1); /* store historical overuse */
+    }
+  } else {
+    incr = -1;
+    explored_node_tb_[inode].inet = OPEN;
+  }
+
+  routing_status_[inode].occ += incr;
+  VTR_ASSERT(routing_status_[inode].occ >= 0);
+
+  t_pb_graph_pin* driver_pin = lb_rr_graph.node_pb_graph_pin(inode);
+
+  /* Recursively update route tree */
+  for (unsigned int i = 0; i < rt->next_nodes.size(); i++) {
+    // Check to see if there is no mode conflict between previous nets.
+    // A conflict is present if there are differing modes between a pb_graph_node
+    // and its children.
+    if (op == RT_COMMIT && mode_status.try_expand_all_modes) {
+      const LbRRNodeId& node = rt->next_nodes[i].current_node;
+      t_pb_graph_pin* pin = lb_rr_graph.node_pb_graph_pin(node);
+
+      if (check_edge_for_route_conflicts(mode_map, driver_pin, pin)) {
+        mode_status.is_mode_conflict = true;
+      }
+    }
+
+    commit_remove_rt(lb_rr_graph, &rt->next_nodes[i], op, mode_map, mode_status);
+  }
+}
+
 bool LbRouter::is_skip_route_net(const LbRRGraph& lb_rr_graph,
                                  t_trace* rt) {
   /* Validate if the rr_graph is the one we used to initialize the router */
@@ -293,6 +461,63 @@ void LbRouter::expand_node_all_modes(const LbRRGraph& lb_rr_graph,
   }
 }
 
+bool LbRouter::try_expand_nodes(const AtomNetlist& atom_nlist,
+                                const LbRRGraph& lb_rr_graph,
+                                const t_net& lb_net,
+                                t_expansion_node& exp_node,
+                                reservable_pq<t_expansion_node, std::vector<t_expansion_node>, compare_expansion_node>& pq,
+                                const int& itarget,
+                                const bool& try_other_modes,
+                                const int& verbosity) {
+  bool is_impossible = false;
+
+  do {
+    if (pq.empty()) {
+      /* No connection possible */
+      is_impossible = true;
+
+      if (verbosity > 3) {
+        //Print detailed debug info
+        AtomNetId net_id = lb_net.atom_net_id;
+        AtomPinId driver_pin = lb_net.atom_pins[0];
+        AtomPinId sink_pin = lb_net.atom_pins[itarget];
+        LbRRNodeId driver_rr_node = lb_net.terminals[0];
+        LbRRNodeId sink_rr_node = lb_net.terminals[itarget];
+
+        VTR_LOG("\t\t\tNo possible routing path from %s to %s: needed for net '%s' from net pin '%s'",
+                describe_lb_rr_node(lb_rr_graph, driver_rr_node).c_str(),
+                describe_lb_rr_node(lb_rr_graph, sink_rr_node).c_str(),
+                atom_nlist.net_name(net_id).c_str(),
+                atom_nlist.pin_name(driver_pin).c_str());
+        VTR_LOGV(sink_pin, " to net pin '%s'", atom_nlist.pin_name(sink_pin).c_str());
+        VTR_LOG("\n");
+      }
+    } else {
+      exp_node = pq.top();
+      pq.pop();
+      LbRRNodeId exp_inode = exp_node.node_index;
+
+      if (explored_node_tb_[exp_inode].explored_id != explore_id_index_) {
+        /* First time node is popped implies path to this node is the lowest cost.
+         * If the node is popped a second time, then the path to that node is higher 
+         * than this path so ignore.
+         */
+        explored_node_tb_[exp_inode].explored_id = explore_id_index_;
+        explored_node_tb_[exp_inode].prev_index = exp_node.prev_index;
+        if (exp_inode != lb_net.terminals[itarget]) {
+          if (!try_other_modes) {
+            expand_node(lb_rr_graph, exp_node, pq, lb_net.terminals.size() - 1);
+          } else {
+            expand_node_all_modes(lb_rr_graph, exp_node, pq, lb_net.terminals.size() - 1);
+          }
+        }
+      }
+    }
+  } while (exp_node.node_index != lb_net.terminals[itarget] && !is_impossible);
+
+  return is_impossible;
+}
+
 /**************************************************
  * Private validators
  *************************************************/
@@ -313,6 +538,5 @@ void LbRouter::reset_explored_node_tb() {
     explored_node.enqueue_cost = 0;
   }
 }
-
 
 } /* end namespace openfpga */

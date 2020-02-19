@@ -87,7 +87,7 @@ std::vector<LbRREdgeId> LbRRGraph::node_out_edges(const LbRRNodeId& node, t_mode
   return out_edges;
 }
 
-LbRRNodeId LbRRGraph::find_node(const e_lb_rr_type& type, t_pb_graph_pin* pb_graph_pin) const {
+LbRRNodeId LbRRGraph::find_node(const e_lb_rr_type& type, const t_pb_graph_pin* pb_graph_pin) const {
   if (size_t(type) >= node_lookup_.size()) {
     return LbRRNodeId::INVALID();
   }

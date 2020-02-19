@@ -11,7 +11,7 @@
 #include "vtr_vector.h"
 
 #include "physical_types.h"
-#include "atom_netlist_fwd.h"
+#include "vpr_context.h"
 
 #include "lb_rr_graph.h"
 
@@ -176,6 +176,11 @@ class LbRouter {
       private:
         size_type cur_cap;
     };
+ 
+    enum e_commit_remove {
+      RT_COMMIT,
+      RT_REMOVE
+    };
 
   public :  /* Public constructors */
     LbRouter(const LbRRGraph& lb_rr_graph);
@@ -199,7 +204,27 @@ class LbRouter {
      */
     t_trace* find_node_in_rt(t_trace* rt, const LbRRNodeId& rt_index);
 
+    bool route_has_conflict(const LbRRGraph& lb_rr_graph, t_trace* rt) const;
+
   private : /* Private mutators */
+    /*It is possible that a net may connect multiple times to a logically equivalent set of primitive pins.
+     *The cluster router will only route one connection for a particular net to the common sink of the
+     *equivalent pins.
+     *
+     *To work around this, we fix all but one of these duplicate connections to route to specific pins,
+     *(instead of the common sink). This ensures a legal routing is produced and that the duplicate pins
+     *are not 'missing' in the clustered netlist.
+     */
+    void fix_duplicate_equivalent_pins(const AtomContext& atom_ctx,
+                                       const LbRRGraph& lb_rr_graph);
+    bool check_edge_for_route_conflicts(std::unordered_map<const t_pb_graph_node*, const t_mode*>& mode_map,
+                                        const t_pb_graph_pin* driver_pin,
+                                        const t_pb_graph_pin* pin);
+    void commit_remove_rt(const LbRRGraph& lb_rr_graph,
+                          t_trace* rt,
+                          const e_commit_remove& op,
+                          std::unordered_map<const t_pb_graph_node*, const t_mode*>& mode_map,
+                          t_mode_selection_status& mode_status);
     bool is_skip_route_net(const LbRRGraph& lb_rr_graph, t_trace* rt);
     bool add_to_rt(t_trace* rt, const LbRRNodeId& node_index, const int& irt_net);
     void add_source_to_rt(const int& inet);
@@ -225,6 +250,15 @@ class LbRouter {
                                const t_expansion_node& exp_node,
                                reservable_pq<t_expansion_node, std::vector<t_expansion_node>, compare_expansion_node>& pq, 
                                const int& net_fanout);
+    bool try_expand_nodes(const AtomNetlist& atom_nlist,
+                          const LbRRGraph& lb_rr_graph,
+                          const t_net& lb_net,
+                          t_expansion_node& exp_node,
+                          reservable_pq<t_expansion_node, std::vector<t_expansion_node>, compare_expansion_node>& pq,
+                          const int& itarget,
+                          const bool& try_other_modes,
+                          const int& verbosity);
+
 
   private :  /* Private validators */
     /** 

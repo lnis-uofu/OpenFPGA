@@ -206,7 +206,7 @@ class LbRRGraph {
     std::vector<LbRREdgeId> node_out_edges(const LbRRNodeId& node, t_mode* mode) const;
 
     /* General method to look up a node with type and only pb_graph_pin information */
-    LbRRNodeId find_node(const e_lb_rr_type& type, t_pb_graph_pin* pb_graph_pin) const;
+    LbRRNodeId find_node(const e_lb_rr_type& type, const t_pb_graph_pin* pb_graph_pin) const;
     /* Method to find special node */
     LbRRNodeId ext_source_node() const;
     LbRRNodeId ext_sink_node() const;
@@ -302,7 +302,7 @@ class LbRRGraph {
     /* Fast look-up to search a node by its type, coordinator and ptc_num 
      * Indexing of fast look-up: [0..NUM_TYPES-1][t_pb_graph_pin*] 
      */
-    typedef std::vector<std::map<t_pb_graph_pin*, LbRRNodeId>> NodeLookup;
+    typedef std::vector<std::map<const t_pb_graph_pin*, LbRRNodeId>> NodeLookup;
     mutable NodeLookup node_lookup_;
 
     /* Special node look-up */
