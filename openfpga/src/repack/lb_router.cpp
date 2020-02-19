@@ -19,10 +19,12 @@ namespace openfpga {
 /**************************************************
  * Public Constructors
  *************************************************/
-LbRouter::LbRouter(const LbRRGraph& lb_rr_graph) {
+LbRouter::LbRouter(const LbRRGraph& lb_rr_graph, t_logical_block_type_ptr lb_type) {
   routing_status_.resize(lb_rr_graph.nodes().size());
   explored_node_tb_.resize(lb_rr_graph.nodes().size());
   explore_id_index_ = 1;
+
+  lb_type_ = lb_type;
 
   /* Default routing parameters */
   params_.max_iterations = 50;
@@ -98,6 +100,115 @@ bool LbRouter::route_has_conflict(const LbRRGraph& lb_rr_graph, t_trace* rt) con
   }
 
   return false;
+}
+
+/**************************************************
+ * Public mutators
+ *************************************************/
+bool LbRouter::try_route(const LbRRGraph& lb_rr_graph,
+                         const AtomNetlist& atom_nlist,
+                         const int& verbosity) {
+  /* Validate if the rr_graph is the one we used to initialize the router */
+  VTR_ASSERT(true == matched_lb_rr_graph(lb_rr_graph));
+
+  bool is_routed = false;
+  bool is_impossible = false;
+
+  mode_status_.is_mode_conflict = false;
+  mode_status_.try_expand_all_modes = false;
+
+  t_expansion_node exp_node;
+
+  reset_explored_node_tb();
+
+  /* Reset current routing */
+  reset_net_rt();
+  reset_routing_status();
+
+  std::unordered_map<const t_pb_graph_node*, const t_mode*> mode_map;
+
+  /* Iteratively remove congestion until a successful route is found.
+   * Cap the total number of iterations tried so that if a solution does not exist, then the router won't run indefinitely */
+  pres_con_fac_ = params_.pres_fac;
+  for (int iter = 0; iter < params_.max_iterations && !is_routed && !is_impossible; iter++) {
+    unsigned int inet;
+    /* Iterate across all nets internal to logic block */
+    for (inet = 0; inet < lb_nets_.size() && !is_impossible; inet++) {
+      int idx = inet;
+      if (is_skip_route_net(lb_rr_graph, lb_nets_[idx].rt_tree)) {
+        continue;
+      }
+      commit_remove_rt(lb_rr_graph, lb_nets_[idx].rt_tree, RT_REMOVE, mode_map);
+      free_net_rt(lb_nets_[idx].rt_tree);
+      lb_nets_[idx].rt_tree = nullptr;
+      add_source_to_rt(idx);
+
+      /* Route each sink of net */
+      for (unsigned int itarget = 1; itarget < lb_nets_[idx].terminals.size() && !is_impossible; itarget++) {
+        pq_.clear();
+        /* Get lowest cost next node, repeat until a path is found or if it is impossible to route */
+
+        expand_rt(idx, idx);
+
+        is_impossible = try_expand_nodes(atom_nlist, lb_rr_graph, lb_nets_[idx], exp_node, itarget, mode_status_.expand_all_modes, verbosity);
+
+        if (is_impossible && !mode_status_.expand_all_modes) {
+          mode_status_.try_expand_all_modes = true;
+          mode_status_.expand_all_modes = true;
+          break;
+        }
+
+        if (exp_node.node_index == lb_nets_[idx].terminals[itarget]) {
+          /* Net terminal is routed, add this to the route tree, clear data structures, and keep going */
+          is_impossible = add_to_rt(lb_nets_[idx].rt_tree, exp_node.node_index, idx);
+        }
+
+        if (is_impossible) {
+          VTR_LOG("Routing was impossible!\n");
+        } else if (mode_status_.expand_all_modes) {
+          is_impossible = route_has_conflict(lb_rr_graph, lb_nets_[idx].rt_tree);
+          if (is_impossible) {
+            VTR_LOG("Routing was impossible due to modes!\n");
+          }
+        }
+
+        explore_id_index_++;
+        if (explore_id_index_ > 2000000000) {
+          /* overflow protection */
+          for (const LbRRNodeId& id : lb_rr_graph.nodes()) {
+            explored_node_tb_[id].explored_id = OPEN;
+            explored_node_tb_[id].enqueue_id = OPEN;
+            explore_id_index_ = 1;
+          }
+        }
+      }
+
+      if (!is_impossible) {
+        commit_remove_rt(lb_rr_graph, lb_nets_[idx].rt_tree, RT_COMMIT, mode_map);
+        if (mode_status_.is_mode_conflict) {
+          is_impossible = true;
+        }
+      }
+    }
+
+    if (!is_impossible) {
+      is_routed_ = is_route_success(lb_rr_graph);
+    } else {
+      --inet;
+      VTR_LOGV(verbosity < 3, "Net '%s' is impossible to route within proposed %s cluster\n",
+               atom_nlist.net_name(lb_nets_[inet].atom_net_id).c_str(), lb_type_->name);
+      is_routed_ = false;
+    }
+    pres_con_fac_ *= params_.pres_fac_mult;
+  }
+
+  /* TODO: 
+   * Let user to decide to how proceed upon the routing results: 
+   * - route success: save the results through public accessors to lb_nets_
+   *                  print the route results to files
+   * - route fail: report all the congestion nodes 
+   */
+  return is_routed_;
 }
 
 /**************************************************
@@ -204,8 +315,7 @@ bool LbRouter::check_edge_for_route_conflicts(std::unordered_map<const t_pb_grap
 void LbRouter::commit_remove_rt(const LbRRGraph& lb_rr_graph,
                                 t_trace* rt,
                                 const e_commit_remove& op,
-                                std::unordered_map<const t_pb_graph_node*, const t_mode*>& mode_map,
-                                t_mode_selection_status& mode_status) {
+                                std::unordered_map<const t_pb_graph_node*, const t_mode*>& mode_map) {
   int incr;
 
   if (nullptr == rt) {
@@ -235,16 +345,16 @@ void LbRouter::commit_remove_rt(const LbRRGraph& lb_rr_graph,
     // Check to see if there is no mode conflict between previous nets.
     // A conflict is present if there are differing modes between a pb_graph_node
     // and its children.
-    if (op == RT_COMMIT && mode_status.try_expand_all_modes) {
+    if (op == RT_COMMIT && mode_status_.try_expand_all_modes) {
       const LbRRNodeId& node = rt->next_nodes[i].current_node;
       t_pb_graph_pin* pin = lb_rr_graph.node_pb_graph_pin(node);
 
       if (check_edge_for_route_conflicts(mode_map, driver_pin, pin)) {
-        mode_status.is_mode_conflict = true;
+        mode_status_.is_mode_conflict = true;
       }
     }
 
-    commit_remove_rt(lb_rr_graph, &rt->next_nodes[i], op, mode_map, mode_status);
+    commit_remove_rt(lb_rr_graph, &rt->next_nodes[i], op, mode_map);
   }
 }
 
@@ -318,7 +428,6 @@ void LbRouter::add_source_to_rt(const int& inet) {
 
 void LbRouter::expand_rt_rec(t_trace* rt,
                              const LbRRNodeId& prev_index, 
-                             reservable_pq<t_expansion_node, std::vector<t_expansion_node>, compare_expansion_node>& pq,
                              const int& irt_net,
                              const int& explore_id_index) {
   t_expansion_node enode;
@@ -327,7 +436,7 @@ void LbRouter::expand_rt_rec(t_trace* rt,
   enode.cost = 0;
   enode.node_index = rt->current_node;
   enode.prev_index = prev_index;
-  pq.push(enode);
+  pq_.push(enode);
   explored_node_tb_[enode.node_index].inet = irt_net;
   explored_node_tb_[enode.node_index].explored_id = OPEN;
   explored_node_tb_[enode.node_index].enqueue_id = explore_id_index;
@@ -335,24 +444,22 @@ void LbRouter::expand_rt_rec(t_trace* rt,
   explored_node_tb_[enode.node_index].prev_index = prev_index;
 
   for (unsigned int i = 0; i < rt->next_nodes.size(); i++) {
-    expand_rt_rec(&rt->next_nodes[i], rt->current_node, pq, irt_net, explore_id_index);
+    expand_rt_rec(&rt->next_nodes[i], rt->current_node, irt_net, explore_id_index);
   }
 }
 
 void LbRouter::expand_rt(const int& inet,
-                         reservable_pq<t_expansion_node, std::vector<t_expansion_node>, compare_expansion_node>& pq,
                          const int& irt_net) {
-  VTR_ASSERT(pq.empty());
+  VTR_ASSERT(pq_.empty());
 
-  expand_rt_rec(lb_nets_[inet].rt_tree, LbRRNodeId::INVALID(), pq, irt_net, explore_id_index_);
+  expand_rt_rec(lb_nets_[inet].rt_tree, LbRRNodeId::INVALID(), irt_net, explore_id_index_);
 }
 
 void LbRouter::expand_edges(const LbRRGraph& lb_rr_graph,
                             t_mode* mode,
                             const LbRRNodeId& cur_inode,
                             float cur_cost,
-                            int net_fanout,
-                            reservable_pq<t_expansion_node, std::vector<t_expansion_node>, compare_expansion_node>& pq) {
+                            int net_fanout) {
   /* Validate if the rr_graph is the one we used to initialize the router */
   VTR_ASSERT(true == matched_lb_rr_graph(lb_rr_graph));
 
@@ -394,19 +501,18 @@ void LbRouter::expand_edges(const LbRRGraph& lb_rr_graph,
     /* Add to queue if cost is lower than lowest cost path to this enode */
     if (explored_node_tb_[enode.node_index].enqueue_id == explore_id_index_) {
       if (enode.cost < explored_node_tb_[enode.node_index].enqueue_cost) {
-        pq.push(enode);
+        pq_.push(enode);
       }
     } else {
       explored_node_tb_[enode.node_index].enqueue_id = explore_id_index_;
       explored_node_tb_[enode.node_index].enqueue_cost = enode.cost;
-      pq.push(enode);
+      pq_.push(enode);
     }
   }
 }
 
 void LbRouter::expand_node(const LbRRGraph& lb_rr_graph,
                            const t_expansion_node& exp_node,
-                           reservable_pq<t_expansion_node, std::vector<t_expansion_node>, compare_expansion_node>& pq,
                            const int& net_fanout) {
   /* Validate if the rr_graph is the one we used to initialize the router */
   VTR_ASSERT(true == matched_lb_rr_graph(lb_rr_graph));
@@ -420,12 +526,11 @@ void LbRouter::expand_node(const LbRRGraph& lb_rr_graph,
     mode = &(lb_rr_graph.node_pb_graph_pin(cur_node)->parent_node->pb_type->modes[0]);
   }
 
-  expand_edges(lb_rr_graph, mode, cur_node, cur_cost, net_fanout, pq);
+  expand_edges(lb_rr_graph, mode, cur_node, cur_cost, net_fanout);
 }
 
 void LbRouter::expand_node_all_modes(const LbRRGraph& lb_rr_graph,
                                      const t_expansion_node& exp_node,
-                                     reservable_pq<t_expansion_node, std::vector<t_expansion_node>, compare_expansion_node>& pq, 
                                      const int& net_fanout) {
   /* Validate if the rr_graph is the one we used to initialize the router */
   VTR_ASSERT(true == matched_lb_rr_graph(lb_rr_graph));
@@ -457,7 +562,7 @@ void LbRouter::expand_node_all_modes(const LbRRGraph& lb_rr_graph,
     if (is_illegal == true) {
       continue;
     }
-    expand_edges(lb_rr_graph, mode, cur_inode, cur_cost, net_fanout, pq);
+    expand_edges(lb_rr_graph, mode, cur_inode, cur_cost, net_fanout);
   }
 }
 
@@ -465,14 +570,13 @@ bool LbRouter::try_expand_nodes(const AtomNetlist& atom_nlist,
                                 const LbRRGraph& lb_rr_graph,
                                 const t_net& lb_net,
                                 t_expansion_node& exp_node,
-                                reservable_pq<t_expansion_node, std::vector<t_expansion_node>, compare_expansion_node>& pq,
                                 const int& itarget,
                                 const bool& try_other_modes,
                                 const int& verbosity) {
   bool is_impossible = false;
 
   do {
-    if (pq.empty()) {
+    if (pq_.empty()) {
       /* No connection possible */
       is_impossible = true;
 
@@ -493,8 +597,8 @@ bool LbRouter::try_expand_nodes(const AtomNetlist& atom_nlist,
         VTR_LOG("\n");
       }
     } else {
-      exp_node = pq.top();
-      pq.pop();
+      exp_node = pq_.top();
+      pq_.pop();
       LbRRNodeId exp_inode = exp_node.node_index;
 
       if (explored_node_tb_[exp_inode].explored_id != explore_id_index_) {
@@ -506,9 +610,9 @@ bool LbRouter::try_expand_nodes(const AtomNetlist& atom_nlist,
         explored_node_tb_[exp_inode].prev_index = exp_node.prev_index;
         if (exp_inode != lb_net.terminals[itarget]) {
           if (!try_other_modes) {
-            expand_node(lb_rr_graph, exp_node, pq, lb_net.terminals.size() - 1);
+            expand_node(lb_rr_graph, exp_node, lb_net.terminals.size() - 1);
           } else {
-            expand_node_all_modes(lb_rr_graph, exp_node, pq, lb_net.terminals.size() - 1);
+            expand_node_all_modes(lb_rr_graph, exp_node, lb_net.terminals.size() - 1);
           }
         }
       }
@@ -536,6 +640,47 @@ void LbRouter::reset_explored_node_tb() {
     explored_node.inet = OPEN;
     explored_node.enqueue_id = OPEN;
     explored_node.enqueue_cost = 0;
+  }
+}
+
+void LbRouter::reset_net_rt() {
+  for (unsigned int inet = 0; inet < lb_nets_.size(); inet++) {
+    free_net_rt(lb_nets_[inet].rt_tree);
+    lb_nets_[inet].rt_tree = nullptr;
+  }
+}
+
+void LbRouter::reset_routing_status() {
+  for (t_routing_status& status : routing_status_) {
+    status.historical_usage = 0;
+    status.occ = 0;
+  }
+}
+
+void LbRouter::clear_nets() {
+  reset_net_rt();
+  for (unsigned int i = 0; i < lb_nets_.size(); i++) {
+    lb_nets_[i].terminals.clear();
+  }
+  lb_nets_.clear();
+}
+
+void LbRouter::free_net_rt(t_trace* lb_trace) {
+  if (lb_trace != nullptr) {
+    for (unsigned int i = 0; i < lb_trace->next_nodes.size(); i++) {
+      free_lb_trace(&lb_trace->next_nodes[i]);
+    }
+    lb_trace->next_nodes.clear();
+    delete lb_trace;
+  }
+}
+
+void LbRouter::free_lb_trace(t_trace* lb_trace) {
+  if (lb_trace != nullptr) {
+    for (unsigned int i = 0; i < lb_trace->next_nodes.size(); i++) {
+      free_lb_trace(&lb_trace->next_nodes[i]);
+    }
+    lb_trace->next_nodes.clear();
   }
 }
 
