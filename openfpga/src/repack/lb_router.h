@@ -148,17 +148,42 @@ class LbRouter {
         return is_mode_conflict || try_expand_all_modes;
       }
     };
+
+  public :  /* Public constructors */
+    LbRouter(const LbRRGraph& lb_rr_graph);
   
   public :  /* Public accessors */
     /**
-     * Find all the routing resource nodes that is congested, which they are used more than their capacity
+     * Find all the routing resource nodes that are over-used, which they are used more than their capacity
      * This function is call to collect the nodes and router can reroute these net
      */   
     std::vector<LbRRNodeId> find_congested_rr_nodes(const LbRRGraph& lb_rr_graph) const;
 
+    /**
+     * Report if the routing is successfully done on a logical block routing resource graph
+     */  
+    bool is_route_success(const LbRRGraph& lb_rr_graph) const;
+
+  private :  /* Private accessors */
+    /**
+     * Try to find a node in the routing traces recursively
+     * If not found, will return an empty pointer
+     */
+    t_trace* find_node_in_rt(t_trace* rt, const LbRRNodeId& rt_index);
+
+  private : /* Private mutators */
+    void reset_explored_node_tb();
+    bool add_to_rt(t_trace* rt, const LbRRNodeId& node_index, const int& irt_net);
+
+  private :  /* Private validators */
+    /** 
+     * Validate if the rr_graph is the one we used to initialize the router 
+     */
+    bool matched_lb_rr_graph(const LbRRGraph& lb_rr_graph) const;
+
   private : /* Stores all data needed by intra-logic cluster_ctx.blocks router */
     /* Logical Netlist Info */
-    std::vector<t_net> intra_lb_nets_; /* Pointer to vector of intra logic cluster_ctx.blocks nets and their connections */
+    std::vector<t_net> lb_nets_; /* Pointer to vector of intra logic cluster_ctx.blocks nets and their connections */
 
     /* Saved nets */
     std::vector<t_net> saved_lb_nets_; /* Save vector of intra logic cluster_ctx.blocks nets and their connections */
@@ -177,7 +202,7 @@ class LbRouter {
     t_logical_block_type_ptr lb_type_;
 
     /* Parameters used by router */
-    t_option options_;
+    t_option params_;
 
     bool is_routed_;                       /* Stores whether or not the current logical-to-physical mapping has a routed solution */
 
