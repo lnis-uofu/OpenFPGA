@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "vtr_vector.h"
+#include "vtr_strong_id.h"
 
 #include "physical_types.h"
 #include "vpr_context.h"
@@ -23,6 +24,9 @@
 namespace openfpga {
 
 class LbRouter {
+  public: /* Strong ids */
+    struct net_id_tag;
+    typedef vtr::StrongId<net_id_tag> NetId;
   public: /* Intra-Logic Block Routing Data Structures (by instance) */
     /**************************************************************************
      * A routing traceback data structure, provides a logic cluster_ctx.blocks 
@@ -123,7 +127,7 @@ class LbRouter {
     struct t_explored_node_stats {
       LbRRNodeId prev_index;     /* Prevous node that drives this one */
       int explored_id;    /* ID used to determine if this node has been explored */
-      int inet;           /* net index of route tree */
+      NetId inet;           /* net index of route tree */
       int enqueue_id;     /* ID used ot determine if this node has been pushed on exploration priority queue */
       float enqueue_cost; /* cost of node pused on exploration priority queue */
     
@@ -131,7 +135,7 @@ class LbRouter {
         prev_index = LbRRNodeId::INVALID();
         explored_id = OPEN;
         enqueue_id = OPEN;
-        inet = OPEN;
+        inet = NetId::INVALID();
         enqueue_cost = 0;
       }
     };
@@ -237,14 +241,14 @@ class LbRouter {
                           const e_commit_remove& op,
                           std::unordered_map<const t_pb_graph_node*, const t_mode*>& mode_map);
     bool is_skip_route_net(const LbRRGraph& lb_rr_graph, t_trace* rt);
-    bool add_to_rt(t_trace* rt, const LbRRNodeId& node_index, const int& irt_net);
-    void add_source_to_rt(const int& inet);
+    bool add_to_rt(t_trace* rt, const LbRRNodeId& node_index, const NetId& irt_net);
+    void add_source_to_rt(const NetId& inet);
     void expand_rt_rec(t_trace* rt,
                        const LbRRNodeId& prev_index, 
-                       const int& irt_net,
+                       const NetId& irt_net,
                        const int& explore_id_index);
-    void expand_rt(const int& inet,
-                   const int& irt_net);
+    void expand_rt(const NetId& inet,
+                   const NetId& irt_net);
     void expand_edges(const LbRRGraph& lb_rr_graph,
                       t_mode* mode,
                       const LbRRNodeId& cur_inode,
@@ -282,12 +286,7 @@ class LbRouter {
 
   private : /* Stores all data needed by intra-logic cluster_ctx.blocks router */
     /* Logical Netlist Info */
-    std::vector<t_net> lb_nets_; /* Pointer to vector of intra logic cluster_ctx.blocks nets and their connections */
-
-    /* Saved nets */
-    std::vector<t_net> saved_lb_nets_; /* Save vector of intra logic cluster_ctx.blocks nets and their connections */
-
-    std::map<AtomBlockId, bool> atoms_added_; /* map that records which atoms are added to cluster router */
+    vtr::vector<NetId, t_net> lb_nets_; /* Pointer to vector of intra logic cluster_ctx.blocks nets and their connections */
 
     /* Logical-to-physical mapping info */
     vtr::vector<LbRRNodeId, t_routing_status> routing_status_; /* [0..lb_type_graph->size()-1] Stats for each logic cluster_ctx.blocks rr node instance */

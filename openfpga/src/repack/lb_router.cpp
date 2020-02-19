@@ -140,7 +140,7 @@ bool LbRouter::try_route(const LbRRGraph& lb_rr_graph,
     unsigned int inet;
     /* Iterate across all nets internal to logic block */
     for (inet = 0; inet < lb_nets_.size() && !is_impossible; inet++) {
-      int idx = inet;
+      NetId idx = NetId(inet);
       if (is_skip_route_net(lb_rr_graph, lb_nets_[idx].rt_tree)) {
         continue;
       }
@@ -202,7 +202,7 @@ bool LbRouter::try_route(const LbRRGraph& lb_rr_graph,
     } else {
       --inet;
       VTR_LOGV(verbosity < 3, "Net '%s' is impossible to route within proposed %s cluster\n",
-               atom_nlist.net_name(lb_nets_[inet].atom_net_id).c_str(), lb_type_->name);
+               atom_nlist.net_name(lb_nets_[NetId(inet)].atom_net_id).c_str(), lb_type_->name);
       is_routed_ = false;
     }
     pres_con_fac_ *= params_.pres_fac_mult;
@@ -225,8 +225,8 @@ void LbRouter::fix_duplicate_equivalent_pins(const AtomContext& atom_ctx,
   for (size_t ilb_net = 0; ilb_net < lb_nets_.size(); ++ilb_net) {
     //Collect all the sink terminals indicies which target a particular node
     std::map<LbRRNodeId, std::vector<int>> duplicate_terminals;
-    for (size_t iterm = 1; iterm < lb_nets_[ilb_net].terminals.size(); ++iterm) {
-      LbRRNodeId node = lb_nets_[ilb_net].terminals[iterm];
+    for (size_t iterm = 1; iterm < lb_nets_[NetId(ilb_net)].terminals.size(); ++iterm) {
+      LbRRNodeId node = lb_nets_[NetId(ilb_net)].terminals[iterm];
 
       duplicate_terminals[node].push_back(iterm);
     }
@@ -238,8 +238,8 @@ void LbRouter::fix_duplicate_equivalent_pins(const AtomContext& atom_ctx,
       for (size_t idup_term = 0; idup_term < kv.second.size(); ++idup_term) {
         int iterm = kv.second[idup_term]; //The index in terminals which is duplicated
 
-        VTR_ASSERT(lb_nets_[ilb_net].atom_pins.size() == lb_nets_[ilb_net].terminals.size());
-        AtomPinId atom_pin = lb_nets_[ilb_net].atom_pins[iterm];
+        VTR_ASSERT(lb_nets_[NetId(ilb_net)].atom_pins.size() == lb_nets_[NetId(ilb_net)].terminals.size());
+        AtomPinId atom_pin = lb_nets_[NetId(ilb_net)].atom_pins[iterm];
         VTR_ASSERT(atom_pin);
 
         const t_pb_graph_pin* pb_graph_pin = find_pb_graph_pin(atom_ctx.nlist, atom_ctx.lookup, atom_pin);
@@ -255,16 +255,16 @@ void LbRouter::fix_duplicate_equivalent_pins(const AtomContext& atom_ctx,
             "Found duplicate nets connected to logically equivalent pins. "
             "Remapping intra lb net %d (atom net %zu '%s') from common sink "
             "pb_route %d to fixed pin pb_route %d\n",
-            ilb_net, size_t(lb_nets_[ilb_net].atom_net_id), atom_ctx.nlist.net_name(lb_nets_[ilb_net].atom_net_id).c_str(),
+            ilb_net, size_t(lb_nets_[NetId(ilb_net)].atom_net_id), atom_ctx.nlist.net_name(lb_nets_[NetId(ilb_net)].atom_net_id).c_str(),
             kv.first, size_t(pin_index));
 
         VTR_ASSERT(1 == lb_rr_graph.node_out_edges(pin_index, &(pb_graph_pin->parent_node->pb_type->modes[0])).size());
         LbRRNodeId sink_index = lb_rr_graph.edge_sink_node(lb_rr_graph.node_out_edges(pin_index, &(pb_graph_pin->parent_node->pb_type->modes[0]))[0]);
         VTR_ASSERT(LB_SINK == lb_rr_graph.node_type(sink_index));
-        VTR_ASSERT_MSG(sink_index == lb_nets_[ilb_net].terminals[iterm], "Remapped pin must be connected to original sink");
+        VTR_ASSERT_MSG(sink_index == lb_nets_[NetId(ilb_net)].terminals[iterm], "Remapped pin must be connected to original sink");
 
         //Change the target
-        lb_nets_[ilb_net].terminals[iterm] = pin_index;
+        lb_nets_[NetId(ilb_net)].terminals[iterm] = pin_index;
       }
     }
   }
@@ -343,7 +343,7 @@ void LbRouter::commit_remove_rt(const LbRRGraph& lb_rr_graph,
     }
   } else {
     incr = -1;
-    explored_node_tb_[inode].inet = OPEN;
+    explored_node_tb_[inode].inet = NetId::INVALID();
   }
 
   routing_status_[inode].occ += incr;
@@ -397,7 +397,7 @@ bool LbRouter::is_skip_route_net(const LbRRGraph& lb_rr_graph,
   return true;
 }
 
-bool LbRouter::add_to_rt(t_trace* rt, const LbRRNodeId& node_index, const int& irt_net) {
+bool LbRouter::add_to_rt(t_trace* rt, const LbRRNodeId& node_index, const NetId& irt_net) {
   std::vector<LbRRNodeId> trace_forward;
   t_trace* link_node;
   t_trace curr_node;
@@ -430,7 +430,7 @@ bool LbRouter::add_to_rt(t_trace* rt, const LbRRNodeId& node_index, const int& i
   return false;
 }
 
-void LbRouter::add_source_to_rt(const int& inet) {
+void LbRouter::add_source_to_rt(const NetId& inet) {
   /* TODO: Validate net id */
   VTR_ASSERT(nullptr == lb_nets_[inet].rt_tree);
   lb_nets_[inet].rt_tree = new t_trace;
@@ -439,7 +439,7 @@ void LbRouter::add_source_to_rt(const int& inet) {
 
 void LbRouter::expand_rt_rec(t_trace* rt,
                              const LbRRNodeId& prev_index, 
-                             const int& irt_net,
+                             const NetId& irt_net,
                              const int& explore_id_index) {
   t_expansion_node enode;
 
@@ -459,8 +459,8 @@ void LbRouter::expand_rt_rec(t_trace* rt,
   }
 }
 
-void LbRouter::expand_rt(const int& inet,
-                         const int& irt_net) {
+void LbRouter::expand_rt(const NetId& inet,
+                         const NetId& irt_net) {
   VTR_ASSERT(pq_.empty());
 
   expand_rt_rec(lb_nets_[inet].rt_tree, LbRRNodeId::INVALID(), irt_net, explore_id_index_);
@@ -651,7 +651,7 @@ void LbRouter::reset_explored_node_tb() {
   for (t_explored_node_stats& explored_node : explored_node_tb_) {
     explored_node.prev_index = LbRRNodeId::INVALID();
     explored_node.explored_id = OPEN;
-    explored_node.inet = OPEN;
+    explored_node.inet = NetId::INVALID();
     explored_node.enqueue_id = OPEN;
     explored_node.enqueue_cost = 0;
   }
@@ -659,8 +659,8 @@ void LbRouter::reset_explored_node_tb() {
 
 void LbRouter::reset_net_rt() {
   for (unsigned int inet = 0; inet < lb_nets_.size(); inet++) {
-    free_net_rt(lb_nets_[inet].rt_tree);
-    lb_nets_[inet].rt_tree = nullptr;
+    free_net_rt(lb_nets_[NetId(inet)].rt_tree);
+    lb_nets_[NetId(inet)].rt_tree = nullptr;
   }
 }
 
@@ -674,7 +674,7 @@ void LbRouter::reset_routing_status() {
 void LbRouter::clear_nets() {
   reset_net_rt();
   for (unsigned int i = 0; i < lb_nets_.size(); i++) {
-    lb_nets_[i].terminals.clear();
+    lb_nets_[NetId(i)].terminals.clear();
   }
   lb_nets_.clear();
 }
