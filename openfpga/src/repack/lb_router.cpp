@@ -80,14 +80,32 @@ LbRouter::t_trace* LbRouter::find_node_in_rt(t_trace* rt, const LbRRNodeId& rt_i
 /**************************************************
  * Private mutators
  *************************************************/
-void LbRouter::reset_explored_node_tb() {
-  for (t_explored_node_stats& explored_node : explored_node_tb_) {
-    explored_node.prev_index = LbRRNodeId::INVALID();
-    explored_node.explored_id = OPEN;
-    explored_node.inet = OPEN;
-    explored_node.enqueue_id = OPEN;
-    explored_node.enqueue_cost = 0;
+bool LbRouter::is_skip_route_net(const LbRRGraph& lb_rr_graph,
+                                 t_trace* rt) {
+  /* Validate if the rr_graph is the one we used to initialize the router */
+  VTR_ASSERT(true == matched_lb_rr_graph(lb_rr_graph));
+
+  if (rt == nullptr) {
+    return false; /* Net is not routed, therefore must route net */
   }
+
+  LbRRNodeId inode = rt->current_node;
+
+  /* Determine if node is overused */
+  if (routing_status_[inode].occ > lb_rr_graph.node_capacity(inode)) {
+    /* Conflict between this net and another net at this node, reroute net */
+    return false;
+  }
+
+  /* Recursively check that rest of route tree does not have a conflict */
+  for (unsigned int i = 0; i < rt->next_nodes.size(); i++) {
+    if (!is_skip_route_net(lb_rr_graph, &rt->next_nodes[i])) {
+      return false;
+    }
+  }
+
+  /* No conflict, this net's current route is legal, skip routing this net */
+  return true;
 }
 
 bool LbRouter::add_to_rt(t_trace* rt, const LbRRNodeId& node_index, const int& irt_net) {
@@ -121,6 +139,13 @@ bool LbRouter::add_to_rt(t_trace* rt, const LbRRNodeId& node_index, const int& i
   }
 
   return false;
+}
+
+void LbRouter::add_source_to_rt(const int& inet) {
+  /* TODO: Validate net id */
+  VTR_ASSERT(nullptr == lb_nets_[inet].rt_tree);
+  lb_nets_[inet].rt_tree = new t_trace;
+  lb_nets_[inet].rt_tree->current_node = lb_nets_[inet].terminals[0];
 }
 
 void LbRouter::expand_rt_rec(t_trace* rt,
@@ -275,5 +300,19 @@ bool LbRouter::matched_lb_rr_graph(const LbRRGraph& lb_rr_graph) const {
   return ( (routing_status_.size() == lb_rr_graph.nodes().size())
         && (explored_node_tb_.size() == lb_rr_graph.nodes().size()) );
 }
+
+/**************************************************
+ * Private Initializer and cleaner
+ *************************************************/
+void LbRouter::reset_explored_node_tb() {
+  for (t_explored_node_stats& explored_node : explored_node_tb_) {
+    explored_node.prev_index = LbRRNodeId::INVALID();
+    explored_node.explored_id = OPEN;
+    explored_node.inet = OPEN;
+    explored_node.enqueue_id = OPEN;
+    explored_node.enqueue_cost = 0;
+  }
+}
+
 
 } /* end namespace openfpga */

@@ -200,8 +200,9 @@ class LbRouter {
     t_trace* find_node_in_rt(t_trace* rt, const LbRRNodeId& rt_index);
 
   private : /* Private mutators */
-    void reset_explored_node_tb();
+    bool is_skip_route_net(const LbRRGraph& lb_rr_graph, t_trace* rt);
     bool add_to_rt(t_trace* rt, const LbRRNodeId& node_index, const int& irt_net);
+    void add_source_to_rt(const int& inet);
     void expand_rt_rec(t_trace* rt,
                        const LbRRNodeId& prev_index, 
                        reservable_pq<t_expansion_node, std::vector<t_expansion_node>, compare_expansion_node>& pq,
@@ -230,6 +231,9 @@ class LbRouter {
      * Validate if the rr_graph is the one we used to initialize the router 
      */
     bool matched_lb_rr_graph(const LbRRGraph& lb_rr_graph) const;
+
+  private :  /* Private initializer and cleaner */
+    void reset_explored_node_tb();
 
   private : /* Stores all data needed by intra-logic cluster_ctx.blocks router */
     /* Logical Netlist Info */
