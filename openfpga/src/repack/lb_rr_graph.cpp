@@ -69,6 +69,11 @@ std::vector<LbRREdgeId> LbRRGraph::node_in_edges(const LbRRNodeId& node, t_mode*
   return in_edges;
 }
 
+std::vector<LbRREdgeId> LbRRGraph::node_out_edges(const LbRRNodeId& node) const {
+  VTR_ASSERT(true == valid_node_id(node));
+  return node_out_edges_[node];
+}
+
 std::vector<LbRREdgeId> LbRRGraph::node_out_edges(const LbRRNodeId& node, t_mode* mode) const {
   std::vector<LbRREdgeId> out_edges;
 
@@ -175,11 +180,15 @@ LbRRNodeId LbRRGraph::create_node(const e_lb_rr_type& type) {
 LbRRNodeId LbRRGraph::create_ext_source_node(const e_lb_rr_type& type) {
   LbRRNodeId ext_source_node = create_node(type); 
   ext_source_node_ = ext_source_node;
+
+  return ext_source_node;
 }
 
 LbRRNodeId LbRRGraph::create_ext_sink_node(const e_lb_rr_type& type) {
   LbRRNodeId ext_sink_node = create_node(type); 
   ext_sink_node_ = ext_sink_node;
+
+  return ext_sink_node;
 }
 
 void LbRRGraph::set_node_type(const LbRRNodeId& node, const e_lb_rr_type& type) {

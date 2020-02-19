@@ -149,6 +149,34 @@ class LbRouter {
       }
     };
 
+    // TODO: check if this hacky class memory reserve thing is still necessary, if not, then delete
+    /* Packing uses a priority queue that requires a large number of elements.  
+     * This backdoor
+     * allows me to use a priority queue where I can pre-allocate the # of elements 
+     * in the underlying container
+     * for efficiency reasons.  Note: Must use vector with this
+     */
+    template<class T, class U, class V>
+    class reservable_pq : public std::priority_queue<T, U, V> {
+      public:
+        typedef typename std::priority_queue<T>::size_type size_type;
+        reservable_pq(size_type capacity = 0) {
+            reserve(capacity);
+            cur_cap = capacity;
+        }
+        void reserve(size_type capacity) {
+            this->c.reserve(capacity);
+            cur_cap = capacity;
+        }
+        void clear() {
+            this->c.clear();
+            this->c.reserve(cur_cap);
+        }
+
+      private:
+        size_type cur_cap;
+    };
+
   public :  /* Public constructors */
     LbRouter(const LbRRGraph& lb_rr_graph);
   
@@ -174,6 +202,20 @@ class LbRouter {
   private : /* Private mutators */
     void reset_explored_node_tb();
     bool add_to_rt(t_trace* rt, const LbRRNodeId& node_index, const int& irt_net);
+    void expand_edges(const LbRRGraph& lb_rr_graph,
+                      t_mode* mode,
+                      const LbRRNodeId& cur_inode,
+                      float cur_cost,
+                      int net_fanout,
+                      reservable_pq<t_expansion_node, std::vector<t_expansion_node>, compare_expansion_node>& pq);
+    void expand_node(const LbRRGraph& lb_rr_graph,
+                     const t_expansion_node& exp_node,
+                     reservable_pq<t_expansion_node, std::vector<t_expansion_node>, compare_expansion_node>& pq,
+                     const int& net_fanout);
+    void expand_node_all_modes(const LbRRGraph& lb_rr_graph,
+                               const t_expansion_node& exp_node,
+                               reservable_pq<t_expansion_node, std::vector<t_expansion_node>, compare_expansion_node>& pq, 
+                               const int& net_fanout);
 
   private :  /* Private validators */
     /** 

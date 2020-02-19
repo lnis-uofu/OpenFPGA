@@ -202,6 +202,7 @@ class LbRRGraph {
     std::vector<LbRREdgeId> node_in_edges(const LbRRNodeId& node, t_mode* mode) const;
 
     /* Get a list of edge ids, which are outgoing edges from a node */
+    std::vector<LbRREdgeId> node_out_edges(const LbRRNodeId& node) const;
     std::vector<LbRREdgeId> node_out_edges(const LbRRNodeId& node, t_mode* mode) const;
 
     /* General method to look up a node with type and only pb_graph_pin information */

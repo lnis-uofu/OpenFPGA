@@ -1,6 +1,8 @@
 /******************************************************************************
  * Memember functions for data structure LbRouter
  ******************************************************************************/
+#include <queue>
+
 #include "vtr_assert.h"
 #include "vtr_log.h"
 
@@ -119,6 +121,120 @@ bool LbRouter::add_to_rt(t_trace* rt, const LbRRNodeId& node_index, const int& i
   }
 
   return false;
+}
+
+void LbRouter::expand_edges(const LbRRGraph& lb_rr_graph,
+                            t_mode* mode,
+                            const LbRRNodeId& cur_inode,
+                            float cur_cost,
+                            int net_fanout,
+                            reservable_pq<t_expansion_node, std::vector<t_expansion_node>, compare_expansion_node>& pq) {
+  /* Validate if the rr_graph is the one we used to initialize the router */
+  VTR_ASSERT(true == matched_lb_rr_graph(lb_rr_graph));
+
+  t_expansion_node enode;
+  int usage;
+  float incr_cost;
+
+  for (const LbRREdgeId& iedge : lb_rr_graph.node_out_edges(cur_inode, mode)) {
+    /* Init new expansion node */
+    enode.prev_index = cur_inode;
+    enode.node_index = lb_rr_graph.edge_sink_node(iedge);
+    enode.cost = cur_cost;
+
+    /* Determine incremental cost of using expansion node */
+    usage = routing_status_[enode.node_index].occ + 1 - lb_rr_graph.node_capacity(enode.node_index);
+    incr_cost = lb_rr_graph.node_intrinsic_cost(enode.node_index);
+    incr_cost += lb_rr_graph.edge_intrinsic_cost(iedge);
+    incr_cost += params_.hist_fac * routing_status_[enode.node_index].historical_usage;
+    if (usage > 0) {
+      incr_cost *= (usage * pres_con_fac_);
+    }
+
+    /* Adjust cost so that higher fanout nets prefer higher fanout routing nodes while lower fanout nets prefer lower fanout routing nodes */
+    float fanout_factor = 1.0;
+    t_mode* next_mode = routing_status_[enode.node_index].mode;
+    /* Assume first mode if a mode hasn't been forced. */
+    if (nullptr == next_mode) {
+      next_mode = &(lb_rr_graph.node_pb_graph_pin(enode.node_index)->parent_node->pb_type->modes[0]);
+    }
+    if (lb_rr_graph.node_out_edges(enode.node_index, next_mode).size() > 1) {
+      fanout_factor = 0.85 + (0.25 / net_fanout);
+    } else {
+      fanout_factor = 1.15 - (0.25 / net_fanout);
+    }
+
+    incr_cost *= fanout_factor;
+    enode.cost = cur_cost + incr_cost;
+
+    /* Add to queue if cost is lower than lowest cost path to this enode */
+    if (explored_node_tb_[enode.node_index].enqueue_id == explore_id_index_) {
+      if (enode.cost < explored_node_tb_[enode.node_index].enqueue_cost) {
+        pq.push(enode);
+      }
+    } else {
+      explored_node_tb_[enode.node_index].enqueue_id = explore_id_index_;
+      explored_node_tb_[enode.node_index].enqueue_cost = enode.cost;
+      pq.push(enode);
+    }
+  }
+}
+
+void LbRouter::expand_node(const LbRRGraph& lb_rr_graph,
+                           const t_expansion_node& exp_node,
+                           reservable_pq<t_expansion_node, std::vector<t_expansion_node>, compare_expansion_node>& pq,
+                           const int& net_fanout) {
+  /* Validate if the rr_graph is the one we used to initialize the router */
+  VTR_ASSERT(true == matched_lb_rr_graph(lb_rr_graph));
+
+  t_expansion_node enode;
+
+  LbRRNodeId cur_node = exp_node.node_index;
+  float cur_cost = exp_node.cost;
+  t_mode* mode = routing_status_[cur_node].mode;
+  if (nullptr == mode) {
+    mode = &(lb_rr_graph.node_pb_graph_pin(cur_node)->parent_node->pb_type->modes[0]);
+  }
+
+  expand_edges(lb_rr_graph, mode, cur_node, cur_cost, net_fanout, pq);
+}
+
+void LbRouter::expand_node_all_modes(const LbRRGraph& lb_rr_graph,
+                                     const t_expansion_node& exp_node,
+                                     reservable_pq<t_expansion_node, std::vector<t_expansion_node>, compare_expansion_node>& pq, 
+                                     const int& net_fanout) {
+  /* Validate if the rr_graph is the one we used to initialize the router */
+  VTR_ASSERT(true == matched_lb_rr_graph(lb_rr_graph));
+
+  LbRRNodeId cur_inode = exp_node.node_index;
+  float cur_cost = exp_node.cost;
+  t_mode* cur_mode = routing_status_[cur_inode].mode;
+  auto* pin = lb_rr_graph.node_pb_graph_pin(cur_inode);
+
+  for (const LbRREdgeId& edge : lb_rr_graph.node_out_edges(cur_inode)) {
+    t_mode* mode = lb_rr_graph.edge_mode(edge);
+    /* If a mode has been forced, only add edges from that mode, otherwise add edges from all modes. */
+    if (cur_mode != nullptr && mode != cur_mode) {
+      continue;
+    }
+
+    /* Check whether a mode is illegal. If it is then the node will not be expanded */
+    bool is_illegal = false;
+    if (pin != nullptr) {
+      auto* pb_graph_node = pin->parent_node;
+      for (auto illegal_mode : pb_graph_node->illegal_modes) {
+        if (mode->index == illegal_mode) {
+          is_illegal = true;
+          break;
+        }
+      }
+    }
+
+    if (is_illegal == true) {
+      continue;
+    }
+    expand_edges(lb_rr_graph, mode, cur_inode, cur_cost, net_fanout, pq);
+  }
 }
 
 /**************************************************
