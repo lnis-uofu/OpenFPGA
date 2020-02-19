@@ -123,6 +123,37 @@ bool LbRouter::add_to_rt(t_trace* rt, const LbRRNodeId& node_index, const int& i
   return false;
 }
 
+void LbRouter::expand_rt_rec(t_trace* rt,
+                             const LbRRNodeId& prev_index, 
+                             reservable_pq<t_expansion_node, std::vector<t_expansion_node>, compare_expansion_node>& pq,
+                             const int& irt_net,
+                             const int& explore_id_index) {
+  t_expansion_node enode;
+
+  /* Perhaps should use a cost other than zero */
+  enode.cost = 0;
+  enode.node_index = rt->current_node;
+  enode.prev_index = prev_index;
+  pq.push(enode);
+  explored_node_tb_[enode.node_index].inet = irt_net;
+  explored_node_tb_[enode.node_index].explored_id = OPEN;
+  explored_node_tb_[enode.node_index].enqueue_id = explore_id_index;
+  explored_node_tb_[enode.node_index].enqueue_cost = 0;
+  explored_node_tb_[enode.node_index].prev_index = prev_index;
+
+  for (unsigned int i = 0; i < rt->next_nodes.size(); i++) {
+    expand_rt_rec(&rt->next_nodes[i], rt->current_node, pq, irt_net, explore_id_index);
+  }
+}
+
+void LbRouter::expand_rt(const int& inet,
+                         reservable_pq<t_expansion_node, std::vector<t_expansion_node>, compare_expansion_node>& pq,
+                         const int& irt_net) {
+  VTR_ASSERT(pq.empty());
+
+  expand_rt_rec(lb_nets_[inet].rt_tree, LbRRNodeId::INVALID(), pq, irt_net, explore_id_index_);
+}
+
 void LbRouter::expand_edges(const LbRRGraph& lb_rr_graph,
                             t_mode* mode,
                             const LbRRNodeId& cur_inode,

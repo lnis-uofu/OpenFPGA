@@ -202,6 +202,14 @@ class LbRouter {
   private : /* Private mutators */
     void reset_explored_node_tb();
     bool add_to_rt(t_trace* rt, const LbRRNodeId& node_index, const int& irt_net);
+    void expand_rt_rec(t_trace* rt,
+                       const LbRRNodeId& prev_index, 
+                       reservable_pq<t_expansion_node, std::vector<t_expansion_node>, compare_expansion_node>& pq,
+                       const int& irt_net,
+                       const int& explore_id_index);
+    void expand_rt(const int& inet,
+                   reservable_pq<t_expansion_node, std::vector<t_expansion_node>, compare_expansion_node>& pq,
+                   const int& irt_net);
     void expand_edges(const LbRRGraph& lb_rr_graph,
                       t_mode* mode,
                       const LbRRNodeId& cur_inode,
