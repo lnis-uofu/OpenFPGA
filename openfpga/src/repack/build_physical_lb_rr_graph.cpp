@@ -10,6 +10,7 @@
 #include "pb_type_utils.h"
 
 #include "build_physical_lb_rr_graph.h"
+#include "check_lb_rr_graph.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -397,6 +398,9 @@ void build_physical_lb_rr_graphs(const DeviceContext& device_ctx,
     const LbRRGraph& lb_rr_graph = build_lb_type_physical_lb_rr_graph(lb_type.pb_graph_head, const_cast<const VprDeviceAnnotation&>(device_annotation), verbose); 
     /* Check the rr_graph */
     if (false == lb_rr_graph.validate()) {
+      exit(1);
+    }
+    if (false == check_lb_rr_graph(lb_rr_graph)) {
       exit(1);
     }
     VTR_LOGV(verbose, 

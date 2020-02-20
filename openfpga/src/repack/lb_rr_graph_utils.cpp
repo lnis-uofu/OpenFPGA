@@ -57,4 +57,17 @@ std::string describe_lb_rr_node(const LbRRGraph& lb_rr_graph,
   return description;
 }
 
+/* This function aims to print basic information about a node */
+void print_lb_rr_node(const LbRRGraph& lb_rr_graph,
+                      const LbRRNodeId& node) {
+    VTR_LOG("Node id: %d\n", size_t(node));
+    VTR_LOG("Node type: %s\n", lb_rr_type_str[lb_rr_graph.node_type(node)]);
+    VTR_LOG("Node capacity: %d\n", lb_rr_graph.node_capacity(node));
+    VTR_LOG("Node pb_graph_pin: %s\n", lb_rr_graph.node_pb_graph_pin(node)->to_string().c_str());
+    VTR_LOG("Node intrinsic_cost: %f\n", lb_rr_graph.node_intrinsic_cost(node));
+    VTR_LOG("Node num in_edges: %ld\n", lb_rr_graph.node_in_edges(node).size());
+    VTR_LOG("Node num out_edges: %ld\n", lb_rr_graph.node_out_edges(node).size());
+}
+
+
 } /* end namespace openfpga */
