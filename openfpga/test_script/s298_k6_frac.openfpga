@@ -21,6 +21,11 @@ lut_truth_table_fixup #--verbose
 #  - Enable pin duplication on grid modules 
 build_fabric --compress_routing --duplicate_grid_pin --verbose
 
+# Repack the netlist to physical pbs
+# This must be done before bitstream generator and testbench generation
+# Strongly recommend it is done after all the fix-up have been applied
+repack --verbose
+
 # Write the Verilog netlit for FPGA fabric
 #  - Enable the use of explicit port mapping in Verilog netlist
 write_fabric_verilog --file /var/tmp/xtang/openfpga_test_src --explicit_port_mapping --include_timing --include_signal_init --support_icarus_simulator --print_user_defined_template --verbose

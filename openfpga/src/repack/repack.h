@@ -17,7 +17,7 @@
 namespace openfpga {
 
 void pack_physical_pbs(const DeviceContext& device_ctx,
-                       const VprDeviceAnnotation& device_annotation,
+                       VprDeviceAnnotation& device_annotation,
                        VprClusteringAnnotation& clustering_annotation,
                        const VprRoutingAnnotation& routing_annotation,
                        const bool& verbose);
