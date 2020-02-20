@@ -263,6 +263,14 @@ class LbRouter {
 
     bool valid_net_id(const NetId& net_id) const;
 
+    /* Validate that all the nets have 
+     * - valid source, terminal nodes in lb routing resource graph
+     * - valid atom net and pin ids in atom netlist
+     */
+    bool check_net(const LbRRGraph& lb_rr_graph,
+                   const AtomNetlist& atom_nlist,
+                   const NetId& net) const;
+
   private :  /* Private initializer and cleaner */
     void reset_explored_node_tb();
     void reset_net_rt();

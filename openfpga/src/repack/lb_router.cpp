@@ -171,7 +171,13 @@ bool LbRouter::try_route(const LbRRGraph& lb_rr_graph,
   /* Validate if the rr_graph is the one we used to initialize the router */
   VTR_ASSERT(true == matched_lb_rr_graph(lb_rr_graph));
 
+  /* Ensure each net to be routed is valid */
+  for (const NetId& net : lb_net_ids_) {
+    VTR_ASSERT(true == check_net(lb_rr_graph, atom_nlist, net));
+  }
+
   is_routed_ = false;
+
   bool is_impossible = false;
 
   mode_status_.is_mode_conflict = false;
@@ -198,6 +204,7 @@ bool LbRouter::try_route(const LbRRGraph& lb_rr_graph,
       if (is_skip_route_net(lb_rr_graph, lb_net_rt_trees_[idx])) {
         continue;
       }
+
       commit_remove_rt(lb_rr_graph, lb_net_rt_trees_[idx], RT_REMOVE, mode_map);
       free_net_rt(lb_net_rt_trees_[idx]);
       lb_net_rt_trees_[idx] = nullptr;
@@ -700,6 +707,35 @@ bool LbRouter::matched_lb_rr_graph(const LbRRGraph& lb_rr_graph) const {
 
 bool LbRouter::valid_net_id(const NetId& net_id) const {
   return ( size_t(net_id) < lb_net_ids_.size() ) && ( net_id == lb_net_ids_[net_id] ); 
+}
+
+bool LbRouter::check_net(const LbRRGraph& lb_rr_graph,
+                         const AtomNetlist& atom_nlist,
+                         const NetId& net) const {
+  if (false == atom_nlist.valid_net_id(lb_net_atom_net_ids_[net])) {
+    return false;
+  }
+  if (lb_net_atom_pins_[net].size() != lb_net_terminals_[net].size()) {
+    return false;
+  }
+  /* We must have 1 source and >1 terminal */
+  if (2 > lb_net_terminals_[net].size()) {
+    return false;
+  } 
+  /* Each node must be valid */
+  for (const LbRRNodeId& node : lb_net_terminals_[net]) {
+    if (false == lb_rr_graph.valid_node_id(node)) {
+      return false;
+    }
+  }
+  /* Each atom pin must be valid */
+  for (const AtomPinId& pin : lb_net_atom_pins_[net]) {
+    if (false == atom_nlist.valid_pin_id(pin)) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 /**************************************************
