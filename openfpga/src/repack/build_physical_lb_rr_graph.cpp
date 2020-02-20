@@ -395,6 +395,13 @@ void build_physical_lb_rr_graphs(const DeviceContext& device_ctx,
              lb_type.pb_graph_head->pb_type->name);
 
     const LbRRGraph& lb_rr_graph = build_lb_type_physical_lb_rr_graph(lb_type.pb_graph_head, const_cast<const VprDeviceAnnotation&>(device_annotation), verbose); 
+    /* Check the rr_graph */
+    if (false == lb_rr_graph.validate()) {
+      exit(1);
+    }
+    VTR_LOGV(verbose, 
+             "Check routing resource graph for logical tile passed\n");
+
     device_annotation.add_physical_lb_rr_graph(lb_type.pb_graph_head, lb_rr_graph);
   }
 

@@ -266,12 +266,26 @@ class LbRRGraph {
     LbRREdgeId create_edge(const LbRRNodeId& source, const LbRRNodeId& sink, t_mode* mode);
     void set_edge_intrinsic_cost(const LbRREdgeId& edge, const float& cost);
 
-  public: /* Validators */
+  public: /* Public validators */
     /* Validate is the node id does exist in the RRGraph */
     bool valid_node_id(const LbRRNodeId& node) const;
 
     /* Validate is the edge id does exist in the RRGraph */
     bool valid_edge_id(const LbRREdgeId& edge) const;
+
+    bool validate() const;
+
+  private: /* Private Validators */
+    bool validate_node_sizes() const;
+    bool validate_edge_sizes() const;
+    bool validate_sizes() const;
+    bool validate_node_is_edge_src(const LbRRNodeId& node, const LbRREdgeId& edge) const;
+    bool validate_node_is_edge_sink(const LbRRNodeId& node, const LbRREdgeId& edge) const;
+    bool validate_node_in_edges(const LbRRNodeId& node) const;
+    bool validate_node_out_edges(const LbRRNodeId& node) const;
+    bool validate_nodes_in_edges() const;
+    bool validate_nodes_out_edges() const;
+    bool validate_nodes_edges() const;
 
   private: /* Internal Data */
     /* Node related data */
