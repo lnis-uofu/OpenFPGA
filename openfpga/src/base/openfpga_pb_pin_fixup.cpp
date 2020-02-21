@@ -122,7 +122,7 @@ void update_cluster_pin_with_post_routing_results(const DeviceContext& device_ct
 
     /* If matched, we finish here */
     if (routing_net_id == cluster_net_id) {
-       continue;
+      continue;
     }
     /* Add to net modification */
     vpr_clustering_annotation.rename_net(blk_id, j, routing_net_id);

@@ -7,6 +7,7 @@
 #include <map>
 #include <unordered_map>
 #include <vector>
+#include <queue>
 
 #include "vtr_vector.h"
 #include "vtr_strong_id.h"
@@ -182,7 +183,6 @@ class LbRouter {
     NetId create_net_to_route(const LbRRNodeId& source, const std::vector<LbRRNodeId>& terminals);
     void add_net_atom_net_id(const NetId& net, const AtomNetId& atom_net);
     void add_net_atom_pins(const NetId& net, const AtomPinId& src_pin, const std::vector<AtomPinId>& terminal_pins);
-    void set_net_fix_terminal(const NetId& net, const LbRRNodeId& terminal, const bool& fix);
 
     /**
      * Perform routing algorithm on a given logical tile routing resource graph

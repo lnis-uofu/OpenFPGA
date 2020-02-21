@@ -291,6 +291,10 @@ bool LbRRGraph::validate() const {
   return (0 == num_err);
 }
 
+bool LbRRGraph::empty() const {
+  return (0 == nodes().size()) && (0 == edges().size());
+}
+
 /******************************************************************************
  * Private validators/invalidators
  ******************************************************************************/

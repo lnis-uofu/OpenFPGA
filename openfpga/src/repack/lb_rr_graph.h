@@ -275,6 +275,8 @@ class LbRRGraph {
 
     bool validate() const;
 
+    bool empty() const;
+
   private: /* Private Validators */
     bool validate_node_sizes() const;
     bool validate_edge_sizes() const;

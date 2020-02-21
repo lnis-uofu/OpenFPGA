@@ -1,8 +1,6 @@
 /******************************************************************************
  * Memember functions for data structure LbRouter
  ******************************************************************************/
-#include <queue>
-
 #include "vtr_assert.h"
 #include "vtr_log.h"
 
