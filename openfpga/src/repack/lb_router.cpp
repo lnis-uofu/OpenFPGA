@@ -8,6 +8,7 @@
 #include "pb_type_graph.h"
 #include "vpr_error.h"
 
+#include "pb_type_utils.h"
 #include "lb_rr_graph_utils.h"
 #include "lb_router.h"
 
@@ -148,6 +149,7 @@ LbRouter::NetId LbRouter::create_net_to_route(const LbRRNodeId& source, const st
   net_terminals.insert(net_terminals.begin(), source);
 
   lb_net_terminals_.push_back(net_terminals);
+  lb_net_rt_trees_.push_back(nullptr);
 
   return net;
 }
@@ -260,8 +262,22 @@ bool LbRouter::try_route(const LbRRGraph& lb_rr_graph,
       is_routed_ = is_route_success(lb_rr_graph);
     } else {
       --inet;
-      VTR_LOGV(verbosity < 3, "Net '%s' is impossible to route within proposed %s cluster\n",
+      VTR_LOGV(verbosity < 3,
+               "Net '%s' is impossible to route within proposed %s cluster\n",
                atom_nlist.net_name(lb_net_atom_net_ids_[NetId(inet)]).c_str(), lb_type_->name);
+      VTR_LOGV(verbosity < 3,
+               "\tNet source pin '%s'\n",
+               lb_rr_graph.node_pb_graph_pin(lb_net_terminals_[NetId(inet)][0])->to_string().c_str()); 
+      VTR_LOGV(verbosity < 3,
+               "\tNet sink pins:\n");
+      for (size_t isink = 1; isink < lb_net_terminals_[NetId(inet)].size(); ++isink) {
+        VTR_LOGV(verbosity < 3,
+                 "\t\t%s\n",
+                 lb_rr_graph.node_pb_graph_pin(lb_net_terminals_[NetId(inet)][isink])->to_string().c_str()); 
+      }
+      VTR_LOGV(verbosity < 3,
+               "Please check your architecture XML to see if it is routable\n");
+      
       is_routed_ = false;
     }
     pres_con_fac_ *= params_.pres_fac_mult;
@@ -557,7 +573,12 @@ void LbRouter::expand_edges(const LbRRGraph& lb_rr_graph,
     t_mode* next_mode = routing_status_[enode.node_index].mode;
     /* Assume first mode if a mode hasn't been forced. */
     if (nullptr == next_mode) {
-      next_mode = &(lb_rr_graph.node_pb_graph_pin(enode.node_index)->parent_node->pb_type->modes[0]);
+      /* For primitive node, we give nullptr as default */
+      if (true == is_primitive_pb_type(lb_rr_graph.node_pb_graph_pin(enode.node_index)->parent_node->pb_type)) {
+        next_mode = nullptr;
+      } else {
+        next_mode = &(lb_rr_graph.node_pb_graph_pin(enode.node_index)->parent_node->pb_type->modes[0]);
+      }
     }
     if (lb_rr_graph.node_out_edges(enode.node_index, next_mode).size() > 1) {
       fanout_factor = 0.85 + (0.25 / net_fanout);
@@ -714,21 +735,33 @@ bool LbRouter::check_net(const LbRRGraph& lb_rr_graph,
     return false;
   }
   if (lb_net_atom_pins_[net].size() != lb_net_terminals_[net].size()) {
+    VTR_LOGF_ERROR(__FILE__, __LINE__,
+                   "Net '%lu' has unmatched atom pins and terminals.\n",
+                   size_t(net));
     return false;
   }
   /* We must have 1 source and >1 terminal */
   if (2 > lb_net_terminals_[net].size()) {
+    VTR_LOGF_ERROR(__FILE__, __LINE__,
+                   "Net '%lu' has only %lu terminal.\n",
+                   size_t(net), lb_net_terminals_[net].size());
     return false;
   } 
   /* Each node must be valid */
   for (const LbRRNodeId& node : lb_net_terminals_[net]) {
     if (false == lb_rr_graph.valid_node_id(node)) {
+      VTR_LOGF_ERROR(__FILE__, __LINE__,
+                     "Net '%lu' has invalid terminal node in lb_rr_graph.\n",
+                     size_t(net));
       return false;
     }
   }
   /* Each atom pin must be valid */
   for (const AtomPinId& pin : lb_net_atom_pins_[net]) {
     if (false == atom_nlist.valid_pin_id(pin)) {
+      VTR_LOGF_ERROR(__FILE__, __LINE__,
+                     "Net '%lu' has invalid atom pin.\n",
+                     size_t(net));
       return false;
     }
   }

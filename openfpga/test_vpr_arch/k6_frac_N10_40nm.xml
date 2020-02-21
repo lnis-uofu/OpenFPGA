@@ -236,7 +236,8 @@
                 <output name="lut6_out" num_pins="1"/>
               </pb_type>
               <interconnect>
-                <direct name="direct1" input="frac_lut6.lut5_out[0]" output="frac_logic.out[0]"/>
+                <direct name="direct1" input="frac_logic.in" output="frac_lut6.in"/>
+                <direct name="direct2" input="frac_lut6.lut5_out[0]" output="frac_logic.out[0]"/>
                 <mux name="mux1" input="frac_lut6.lut6_out frac_lut6.lut5_out[1]" output="frac_logic.out[1]"/>
               </interconnect>
             </pb_type>

@@ -169,9 +169,9 @@ void add_lb_router_nets(LbRouter& lb_router,
     VTR_ASSERT(sink_lb_rr_nodes.size() == sink_pb_graph_pins.size());
 
     /* Add the net */
-    add_lb_router_net_to_route(lb_router,
+    add_lb_router_net_to_route(lb_router, lb_rr_graph,
                                source_lb_rr_node, sink_lb_rr_nodes,
-                               atom_ctx.nlist, atom_net_id);
+                               atom_ctx, atom_net_id);
     net_counter++;
   }
 
@@ -216,9 +216,9 @@ void add_lb_router_nets(LbRouter& lb_router,
     VTR_ASSERT(sink_lb_rr_nodes.size() == sink_pb_graph_pins.size());
 
     /* Add the net */
-    add_lb_router_net_to_route(lb_router,
+    add_lb_router_net_to_route(lb_router, lb_rr_graph,
                                source_lb_rr_node, sink_lb_rr_nodes,
-                               atom_ctx.nlist, atom_net_id);
+                               atom_ctx, atom_net_id);
     net_counter++;
   } 
 
@@ -268,6 +268,16 @@ void repack_cluster(const DeviceContext& device_ctx,
   add_lb_router_nets(lb_router, lb_type, lb_rr_graph, atom_ctx, device_annotation,
                      clustering_ctx, const_cast<const VprClusteringAnnotation&>(clustering_annotation),
                      block_id, verbose);
+
+  /* Run the router */
+  bool route_success = lb_router.try_route(lb_rr_graph, atom_ctx.nlist, verbose);
+
+  if (true == route_success) {
+    VTR_LOGV(verbose, "Reroute failed\n");
+    exit(1);
+  }
+  VTR_ASSERT(true == route_success);
+  VTR_LOGV(verbose, "Reroute succeed\n");
 
   VTR_LOG("Done\n");
 }

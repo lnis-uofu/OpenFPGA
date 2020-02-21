@@ -16,9 +16,10 @@
 namespace openfpga {
 
 LbRouter::NetId add_lb_router_net_to_route(LbRouter& lb_router,
+                                           const LbRRGraph& lb_rr_graph,
                                            const LbRRNodeId& source_node,
                                            const std::vector<LbRRNodeId>& sink_nodes,
-                                           const AtomNetlist& atom_nlist,
+                                           const AtomContext& atom_ctx,
                                            const AtomNetId& atom_net_id);
 
 } /* end namespace openfpga */
