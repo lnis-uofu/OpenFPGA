@@ -269,6 +269,11 @@ void repack_cluster(const DeviceContext& device_ctx,
                      clustering_ctx, const_cast<const VprClusteringAnnotation&>(clustering_annotation),
                      block_id, verbose);
 
+  /* Initialize the modes to expand routing trees with the physical modes in device annotation
+   * This is a must-do before running the routeri in the purpose of repacking!!!
+   */
+  lb_router.set_physical_pb_modes(lb_rr_graph, device_annotation); 
+
   /* Run the router */
   bool route_success = lb_router.try_route(lb_rr_graph, atom_ctx.nlist, verbose);
 

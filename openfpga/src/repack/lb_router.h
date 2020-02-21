@@ -15,6 +15,7 @@
 #include "physical_types.h"
 #include "vpr_context.h"
 
+#include "vpr_device_annotation.h"
 #include "lb_rr_graph.h"
 
 /********************************************************************
@@ -183,6 +184,17 @@ class LbRouter {
     NetId create_net_to_route(const LbRRNodeId& source, const std::vector<LbRRNodeId>& terminals);
     void add_net_atom_net_id(const NetId& net, const AtomNetId& atom_net);
     void add_net_atom_pins(const NetId& net, const AtomPinId& src_pin, const std::vector<AtomPinId>& terminal_pins);
+
+    /* TODO: Initialize all the modes in routing status with the mode set in pb
+     * This is function used for general purpose packing
+     */
+
+    /* Set all the modes in routing status with the physical mode defined in device annotation
+     * This method is used only in repacking for physical logical blocks
+     * Do NOT use it during the general purpose packing
+     */ 
+    void set_physical_pb_modes(const LbRRGraph& lb_rr_graph,
+                               const VprDeviceAnnotation& device_annotation);
 
     /**
      * Perform routing algorithm on a given logical tile routing resource graph

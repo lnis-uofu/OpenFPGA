@@ -109,7 +109,7 @@ bool LbRouter::route_has_conflict(const LbRRGraph& lb_rr_graph, t_trace* rt) con
   t_mode* cur_mode = nullptr;
   for (unsigned int i = 0; i < rt->next_nodes.size(); i++) {
     std::vector<LbRREdgeId> edges = lb_rr_graph.find_edge(rt->current_node, rt->next_nodes[i].current_node);
-    VTR_ASSERT(0 == edges.size());
+    VTR_ASSERT(1 == edges.size());
     t_mode* new_mode = lb_rr_graph.edge_mode(edges[0]);
     if (cur_mode != nullptr && cur_mode != new_mode) {
       return true;
@@ -163,6 +163,34 @@ void LbRouter::add_net_atom_pins(const NetId& net, const AtomPinId& src_pin, con
   VTR_ASSERT(true == valid_net_id(net));
   lb_net_atom_pins_[net] = terminal_pins;
   lb_net_atom_pins_[net].insert(lb_net_atom_pins_[net].begin(), src_pin);
+}
+
+void LbRouter::set_physical_pb_modes(const LbRRGraph& lb_rr_graph,
+                                     const VprDeviceAnnotation& device_annotation) {
+  /* Go through each node in the routing resource graph
+   * Find the physical mode of each pb_graph_pin that is binded to the node
+   * For input pins, the physical mode is a mode of its parent pb_type
+   * For output pins, the physical mode is a mode of the parent pb_type of its parent
+   */
+  for (const LbRRNodeId& node : lb_rr_graph.nodes()) {
+    t_pb_graph_pin* pb_pin = lb_rr_graph.node_pb_graph_pin(node);
+    if (nullptr == pb_pin) {
+      routing_status_[node].mode = nullptr;
+    } else {
+      if (IN_PORT == pb_pin->port->type) {
+        routing_status_[node].mode = device_annotation.physical_mode(pb_pin->parent_node->pb_type);
+      } else {
+        VTR_ASSERT(OUT_PORT == pb_pin->port->type);
+        /* For top-level pb_graph node, the physical mode is nullptr */
+        if (true == pb_pin->parent_node->is_root()) {
+          routing_status_[node].mode = nullptr;
+        } else { 
+          routing_status_[node].mode = device_annotation.physical_mode(pb_pin->parent_node->parent_pb_graph_node->pb_type);
+          /* TODO: need to think about how to handle INOUT ports !!! */
+        }
+      }
+    }
+  }
 }
 
 bool LbRouter::try_route(const LbRRGraph& lb_rr_graph,
@@ -263,8 +291,10 @@ bool LbRouter::try_route(const LbRRGraph& lb_rr_graph,
     } else {
       --inet;
       VTR_LOGV(verbosity < 3,
-               "Net '%s' is impossible to route within proposed %s cluster\n",
-               atom_nlist.net_name(lb_net_atom_net_ids_[NetId(inet)]).c_str(), lb_type_->name);
+               "Net %lu '%s' is impossible to route within proposed %s cluster\n",
+               inet,
+               atom_nlist.net_name(lb_net_atom_net_ids_[NetId(inet)]).c_str(),
+               lb_type_->name);
       VTR_LOGV(verbosity < 3,
                "\tNet source pin '%s'\n",
                lb_rr_graph.node_pb_graph_pin(lb_net_terminals_[NetId(inet)][0])->to_string().c_str()); 
@@ -573,8 +603,11 @@ void LbRouter::expand_edges(const LbRRGraph& lb_rr_graph,
     t_mode* next_mode = routing_status_[enode.node_index].mode;
     /* Assume first mode if a mode hasn't been forced. */
     if (nullptr == next_mode) {
+      /* If the node is mapped to a nullptr pb_graph_pin, this is a special SINK. Use nullptr mode */
+      if (nullptr == lb_rr_graph.node_pb_graph_pin(enode.node_index)) {
+        next_mode = nullptr;
+      } else if (true == is_primitive_pb_type(lb_rr_graph.node_pb_graph_pin(enode.node_index)->parent_node->pb_type)) {
       /* For primitive node, we give nullptr as default */
-      if (true == is_primitive_pb_type(lb_rr_graph.node_pb_graph_pin(enode.node_index)->parent_node->pb_type)) {
         next_mode = nullptr;
       } else {
         next_mode = &(lb_rr_graph.node_pb_graph_pin(enode.node_index)->parent_node->pb_type->modes[0]);
@@ -614,7 +647,13 @@ void LbRouter::expand_node(const LbRRGraph& lb_rr_graph,
   float cur_cost = exp_node.cost;
   t_mode* mode = routing_status_[cur_node].mode;
   if (nullptr == mode) {
-    mode = &(lb_rr_graph.node_pb_graph_pin(cur_node)->parent_node->pb_type->modes[0]);
+    if (nullptr == lb_rr_graph.node_pb_graph_pin(cur_node)) {
+      mode = nullptr;
+    } else if (true == is_primitive_pb_type(lb_rr_graph.node_pb_graph_pin(cur_node)->parent_node->pb_type)) {
+      mode = nullptr;
+    } else {
+      mode = &(lb_rr_graph.node_pb_graph_pin(cur_node)->parent_node->pb_type->modes[0]);
+    }
   }
 
   expand_edges(lb_rr_graph, mode, cur_node, cur_cost, net_fanout);
