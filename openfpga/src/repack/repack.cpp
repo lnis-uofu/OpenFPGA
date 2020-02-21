@@ -277,7 +277,7 @@ void repack_cluster(const DeviceContext& device_ctx,
   /* Run the router */
   bool route_success = lb_router.try_route(lb_rr_graph, atom_ctx.nlist, verbose);
 
-  if (true == route_success) {
+  if (false == route_success) {
     VTR_LOGV(verbose, "Reroute failed\n");
     exit(1);
   }

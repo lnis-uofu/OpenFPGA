@@ -57,7 +57,7 @@ class VprDeviceAnnotation {
     /* Get the pointer to a pb_graph node using an unique index */
     t_pb_graph_node* pb_graph_node(t_pb_type* pb_type, const PbGraphNodeId& unique_index) const;
     t_pb_graph_node* physical_pb_graph_node(t_pb_graph_node* pb_graph_node) const;
-    int physical_pb_type_index_factor(t_pb_type* pb_type) const;
+    float physical_pb_type_index_factor(t_pb_type* pb_type) const;
     int physical_pb_type_index_offset(t_pb_type* pb_type) const;
 
     int physical_pb_pin_rotate_offset(t_port* pb_port) const;
@@ -88,7 +88,7 @@ class VprDeviceAnnotation {
     void add_pb_graph_node_unique_index(t_pb_graph_node* pb_graph_node);
     void add_physical_pb_graph_node(t_pb_graph_node* operating_pb_graph_node, 
                                     t_pb_graph_node* physical_pb_graph_node);
-    void add_physical_pb_type_index_factor(t_pb_type* pb_type, const int& factor);
+    void add_physical_pb_type_index_factor(t_pb_type* pb_type, const float& factor);
     void add_physical_pb_type_index_offset(t_pb_type* pb_type, const int& offset);
     void add_physical_pb_pin_rotate_offset(t_port* pb_port, const int& offset);
     void add_physical_pb_graph_pin(t_pb_graph_pin* operating_pb_graph_pin, t_pb_graph_pin* physical_pb_graph_pin);
@@ -99,7 +99,7 @@ class VprDeviceAnnotation {
   private: /* Internal data */
     /* Pair a regular pb_type to its physical pb_type */
     std::map<t_pb_type*, t_pb_type*> physical_pb_types_;
-    std::map<t_pb_type*, int> physical_pb_type_index_factors_;
+    std::map<t_pb_type*, float> physical_pb_type_index_factors_;
     std::map<t_pb_type*, int> physical_pb_type_index_offsets_;
 
     /* Pair a physical mode for a pb_type

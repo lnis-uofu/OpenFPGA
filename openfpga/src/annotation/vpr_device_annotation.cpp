@@ -165,12 +165,12 @@ t_pb_graph_node* VprDeviceAnnotation::physical_pb_graph_node(t_pb_graph_node* pb
   return physical_pb_graph_nodes_.at(pb_graph_node);
 }
 
-int VprDeviceAnnotation::physical_pb_type_index_factor(t_pb_type* pb_type) const {
+float VprDeviceAnnotation::physical_pb_type_index_factor(t_pb_type* pb_type) const {
   /* Ensure that the pb_type is in the list */
-  std::map<t_pb_type*, int>::const_iterator it = physical_pb_type_index_factors_.find(pb_type);
+  std::map<t_pb_type*, float>::const_iterator it = physical_pb_type_index_factors_.find(pb_type);
   if (it == physical_pb_type_index_factors_.end()) {
     /* Default value is 1 */
-    return 1;
+    return 1.;
   }
   return physical_pb_type_index_factors_.at(pb_type);
 }
@@ -374,11 +374,11 @@ void VprDeviceAnnotation::add_physical_pb_graph_node(t_pb_graph_node* operating_
   physical_pb_graph_nodes_[operating_pb_graph_node] = physical_pb_graph_node;
 }
 
-void VprDeviceAnnotation::add_physical_pb_type_index_factor(t_pb_type* pb_type, const int& factor) {
+void VprDeviceAnnotation::add_physical_pb_type_index_factor(t_pb_type* pb_type, const float& factor) {
   /* Warn any override attempt */
-  std::map<t_pb_type*, int>::const_iterator it = physical_pb_type_index_factors_.find(pb_type);
+  std::map<t_pb_type*, float>::const_iterator it = physical_pb_type_index_factors_.find(pb_type);
   if (it != physical_pb_type_index_factors_.end()) {
-    VTR_LOG_WARN("Override the annotation between operating pb_type '%s' and it physical pb_type index factor '%d'!\n",
+    VTR_LOG_WARN("Override the annotation between operating pb_type '%s' and it physical pb_type index factor '%f'!\n",
                  pb_type->name, factor);
   }
 
