@@ -60,14 +60,19 @@ void update_cluster_pin_with_post_routing_results(const DeviceContext& device_ct
                                                   const vtr::Point<size_t>& grid_coord,
                                                   const ClusterBlockId& blk_id,
                                                   const e_side& border_side,
+                                                  const size_t& z,
                                                   const bool& verbose) {
   /* Handle each pin */
   auto logical_block = clustering_ctx.clb_nlist.block_type(blk_id);
   auto physical_tile = pick_best_physical_type(logical_block);
 
   for (int j = 0; j < logical_block->pb_type->num_pins; j++) {
-    /* Get the ptc num for the pin in rr_graph */
-    int physical_pin = get_physical_pin(physical_tile, logical_block, j);
+    /* Get the ptc num for the pin in rr_graph, we need t consider the z offset here
+     * z offset is the location in the multiple-logic-tile tile
+     * Get physical pin does not consider THIS!!!!
+     */
+    int physical_pin = z * logical_block->pb_type->num_pins 
+                     + get_physical_pin(physical_tile, logical_block, j);
     auto pin_class = physical_tile->pin_class[physical_pin];
     auto class_inf = physical_tile->class_inf[pin_class];
 
@@ -179,8 +184,10 @@ void update_pb_pin_with_post_routing_results(const DeviceContext& device_ctx,
         /* We know the entrance to grid info and mapping results, do the fix-up for this block */
         vtr::Point<size_t> grid_coord(x, y);
         update_cluster_pin_with_post_routing_results(device_ctx, clustering_ctx, 
-                                                     vpr_routing_annotation, vpr_clustering_annotation,
+                                                     vpr_routing_annotation,
+                                                     vpr_clustering_annotation,
                                                      grid_coord, cluster_blk_id, NUM_SIDES,
+                                                     placement_ctx.block_locs[cluster_blk_id].loc.z,
                                                      verbose);
       } 
     }
@@ -227,8 +234,10 @@ void update_pb_pin_with_post_routing_results(const DeviceContext& device_ctx,
         }
         /* Update on I/O grid */
         update_cluster_pin_with_post_routing_results(device_ctx, clustering_ctx, 
-                                                     vpr_routing_annotation, vpr_clustering_annotation,
+                                                     vpr_routing_annotation,
+                                                     vpr_clustering_annotation,
                                                      io_coord, cluster_blk_id, io_side,
+                                                     placement_ctx.block_locs[cluster_blk_id].loc.z,
                                                      verbose);
       }
     }
