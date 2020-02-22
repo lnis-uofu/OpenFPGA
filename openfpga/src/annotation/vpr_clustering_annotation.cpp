@@ -41,6 +41,14 @@ AtomNetlist::TruthTable VprClusteringAnnotation::truth_table(t_pb* pb) const {
   return block_truth_tables_.at(pb);
 }
 
+PhysicalPb VprClusteringAnnotation::physical_pb(const ClusterBlockId& block_id) const {
+  if (physical_pbs_.end() == physical_pbs_.find(block_id)) {
+    return PhysicalPb();
+  }
+
+  return physical_pbs_.at(block_id);
+}
+
 /************************************************************************
  * Public mutators
  ***********************************************************************/
@@ -66,5 +74,17 @@ void VprClusteringAnnotation::adapt_truth_table(t_pb* pb,
 
   block_truth_tables_[pb] = tt;
 }
+
+void VprClusteringAnnotation::add_physical_pb(const ClusterBlockId& block_id,
+                                              const PhysicalPb& physical_pb) {
+  /* Warn any override attempt */
+  if (physical_pbs_.end() != physical_pbs_.find(block_id)) {
+    VTR_LOG_WARN("Override the physical pb for clustered block %lu in clustering context annotation!\n",
+                 size_t(block_id));
+  }
+
+  physical_pbs_[block_id] = physical_pb;
+}
+
 
 } /* End namespace openfpga*/

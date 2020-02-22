@@ -14,6 +14,7 @@
 #include "build_physical_lb_rr_graph.h"
 #include "lb_router.h"
 #include "lb_router_utils.h"
+#include "physical_pb_utils.h"
 #include "repack.h"
 
 /* begin namespace openfpga */
@@ -283,6 +284,14 @@ void repack_cluster(const DeviceContext& device_ctx,
   }
   VTR_ASSERT(true == route_success);
   VTR_LOGV(verbose, "Reroute succeed\n");
+
+  /* Annotate routing results to physical pb */
+  PhysicalPb phy_pb;
+  alloc_physical_pb_from_pb_graph(phy_pb, pb_graph_head, device_annotation);
+  rec_update_physical_pb_from_operating_pb(phy_pb, clustering_ctx.clb_nlist.block_pb(block_id));
+
+  /* Add the pb to clustering context */
+  clustering_annotation.add_physical_pb(block_id, phy_pb);
 
   VTR_LOG("Done\n");
 }
