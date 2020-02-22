@@ -70,7 +70,7 @@ class VprDeviceAnnotation {
      * The accumulated offset will be reset to 0 when it exceeds the msb() of the physical port
      */
     int physical_pb_pin_offset(t_port* pb_port) const;
-    t_pb_graph_pin* physical_pb_graph_pin(t_pb_graph_pin* pb_graph_pin) const;
+    t_pb_graph_pin* physical_pb_graph_pin(const t_pb_graph_pin* pb_graph_pin) const;
     CircuitModelId rr_switch_circuit_model(const RRSwitchId& rr_switch) const;
     CircuitModelId rr_segment_circuit_model(const RRSegmentId& rr_segment) const;
     ArchDirectId direct_annotation(const size_t& direct) const;
@@ -91,7 +91,7 @@ class VprDeviceAnnotation {
     void add_physical_pb_type_index_factor(t_pb_type* pb_type, const float& factor);
     void add_physical_pb_type_index_offset(t_pb_type* pb_type, const int& offset);
     void add_physical_pb_pin_rotate_offset(t_port* pb_port, const int& offset);
-    void add_physical_pb_graph_pin(t_pb_graph_pin* operating_pb_graph_pin, t_pb_graph_pin* physical_pb_graph_pin);
+    void add_physical_pb_graph_pin(const t_pb_graph_pin* operating_pb_graph_pin, t_pb_graph_pin* physical_pb_graph_pin);
     void add_rr_switch_circuit_model(const RRSwitchId& rr_switch, const CircuitModelId& circuit_model);
     void add_rr_segment_circuit_model(const RRSegmentId& rr_segment, const CircuitModelId& circuit_model);
     void add_direct_annotation(const size_t& direct, const ArchDirectId& arch_direct_id);
@@ -169,7 +169,7 @@ class VprDeviceAnnotation {
     std::map<t_pb_graph_node*, t_pb_graph_node*> physical_pb_graph_nodes_;
 
     /* Pair a pb_graph_pin to a physical pb_graph_pin */
-    std::map<t_pb_graph_pin*, t_pb_graph_pin*> physical_pb_graph_pins_;
+    std::map<const t_pb_graph_pin*, t_pb_graph_pin*> physical_pb_graph_pins_;
 
     /* Pair a Routing Resource Switch (rr_switch) to a circuit model */
     std::map<RRSwitchId, CircuitModelId> rr_switch_circuit_models_;

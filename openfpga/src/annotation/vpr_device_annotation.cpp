@@ -206,9 +206,9 @@ int VprDeviceAnnotation::physical_pb_pin_offset(t_port* pb_port) const {
 }
 
 
-t_pb_graph_pin* VprDeviceAnnotation::physical_pb_graph_pin(t_pb_graph_pin* pb_graph_pin) const {
+t_pb_graph_pin* VprDeviceAnnotation::physical_pb_graph_pin(const t_pb_graph_pin* pb_graph_pin) const {
   /* Ensure that the pb_type is in the list */
-  std::map<t_pb_graph_pin*, t_pb_graph_pin*>::const_iterator it = physical_pb_graph_pins_.find(pb_graph_pin);
+  std::map<const t_pb_graph_pin*, t_pb_graph_pin*>::const_iterator it = physical_pb_graph_pins_.find(pb_graph_pin);
   if (it == physical_pb_graph_pins_.end()) {
     return nullptr;
   }
@@ -409,10 +409,10 @@ void VprDeviceAnnotation::add_physical_pb_pin_rotate_offset(t_port* pb_port, con
   physical_pb_pin_offsets_[pb_port] = 0;
 }
 
-void VprDeviceAnnotation::add_physical_pb_graph_pin(t_pb_graph_pin* operating_pb_graph_pin, 
+void VprDeviceAnnotation::add_physical_pb_graph_pin(const t_pb_graph_pin* operating_pb_graph_pin, 
                                                     t_pb_graph_pin* physical_pb_graph_pin) {
   /* Warn any override attempt */
-  std::map<t_pb_graph_pin*, t_pb_graph_pin*>::const_iterator it = physical_pb_graph_pins_.find(operating_pb_graph_pin);
+  std::map<const t_pb_graph_pin*, t_pb_graph_pin*>::const_iterator it = physical_pb_graph_pins_.find(operating_pb_graph_pin);
   if (it != physical_pb_graph_pins_.end()) {
     VTR_LOG_WARN("Override the annotation between operating pb_graph_pin '%s' and it physical pb_graph_pin '%s'!\n",
                  operating_pb_graph_pin->port->name, physical_pb_graph_pin->port->name);

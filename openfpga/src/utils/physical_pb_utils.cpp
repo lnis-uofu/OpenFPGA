@@ -127,7 +127,7 @@ void update_primitive_physical_pb_pin_atom_net(PhysicalPb& phy_pb,
     VTR_ASSERT(atom_net);
    
     /* Find the physical pb_graph_pin */
-    t_pb_graph_pin* physical_pb_graph_pin = device_annotation.physical_pb_graph_pin((t_pb_graph_pin*)pb_graph_pin);
+    t_pb_graph_pin* physical_pb_graph_pin = device_annotation.physical_pb_graph_pin(pb_graph_pin);
     VTR_ASSERT(nullptr != physical_pb_graph_pin);
 
     /* Check if the pin has been mapped to a net.
