@@ -36,6 +36,17 @@ PhysicalPbId PhysicalPb::parent(const PhysicalPbId& pb) const {
   return parent_pbs_[pb];
 }
 
+AtomNetId PhysicalPb::pb_graph_pin_atom_net(const PhysicalPbId& pb,
+                                            const t_pb_graph_pin* pb_graph_pin) const {
+  VTR_ASSERT(true == valid_pb_id(pb));
+  if (pin_atom_nets_[pb].find(pb_graph_pin) != pin_atom_nets_[pb].end()) {
+    /* Find it, return the id */
+    return pin_atom_nets_[pb].at(pb_graph_pin); 
+  }
+  /* Not found, return an invalid id */
+  return AtomNetId::INVALID();
+}
+
 /******************************************************************************
  * Private Mutators
  ******************************************************************************/
@@ -53,9 +64,12 @@ PhysicalPbId PhysicalPb::create_pb(const t_pb_graph_node* pb_graph_node) {
   /* Allocate other attributes */
   names_.emplace_back();
   pb_graph_nodes_.push_back(pb_graph_node);
-  mapped_atoms_.emplace_back();
+  atom_blocks_.emplace_back();
+  pin_atom_nets_.emplace_back();
+
   child_pbs_.emplace_back();
   parent_pbs_.emplace_back();
+
   mode_bits_.emplace_back();
 
   /* Register in the name2id map */
@@ -80,6 +94,34 @@ void PhysicalPb::add_child(const PhysicalPbId& parent,
                   pb_graph_nodes_[parent]->hierarchical_type_name().c_str());
   }
   parent_pbs_[child] = parent;
+}
+
+void PhysicalPb::set_mode_bits(const PhysicalPbId& pb,
+                               const std::vector<size_t>& mode_bits) {
+  VTR_ASSERT(true == valid_pb_id(pb)); 
+   
+  mode_bits_[pb] = mode_bits;
+}
+
+void PhysicalPb::add_atom_block(const PhysicalPbId& pb,
+                                const AtomBlockId& atom_block) {
+  VTR_ASSERT(true == valid_pb_id(pb)); 
+   
+  atom_blocks_[pb].push_back(atom_block);
+}
+
+void PhysicalPb::set_pb_graph_pin_atom_net(const PhysicalPbId& pb,
+                                           const t_pb_graph_pin* pb_graph_pin,
+                                           const AtomNetId& atom_net) {
+  VTR_ASSERT(true == valid_pb_id(pb)); 
+  if (pin_atom_nets_[pb].end() != pin_atom_nets_[pb].find(pb_graph_pin)) {
+    VTR_LOG_WARN("Overwrite pb_graph_pin '%s[%d]' atom net '%lu' with '%lu'\n",
+                 pb_graph_pin->port->name, pb_graph_pin->pin_number,
+                 size_t(pin_atom_nets_[pb][pb_graph_pin]),
+                 size_t(atom_net));
+  }
+
+  pin_atom_nets_[pb][pb_graph_pin] = atom_net;
 }
 
 /******************************************************************************

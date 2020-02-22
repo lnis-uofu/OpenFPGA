@@ -42,11 +42,20 @@ class PhysicalPb {
     std::string name(const PhysicalPbId& pb) const;
     PhysicalPbId find_pb(const t_pb_graph_node* name) const;
     PhysicalPbId parent(const PhysicalPbId& pb) const;
+    AtomNetId pb_graph_pin_atom_net(const PhysicalPbId& pb,
+                                    const t_pb_graph_pin* pb_graph_pin) const;
   public: /* Public mutators */
     PhysicalPbId create_pb(const t_pb_graph_node* pb_graph_node);
     void add_child(const PhysicalPbId& parent,
                    const PhysicalPbId& child,
                    const t_pb_type* child_type);
+    void add_atom_block(const PhysicalPbId& pb,
+                        const AtomBlockId& atom_block);
+    void set_mode_bits(const PhysicalPbId& pb,
+                       const std::vector<size_t>& mode_bits);
+    void set_pb_graph_pin_atom_net(const PhysicalPbId& pb,
+                                   const t_pb_graph_pin* pb_graph_pin,
+                                   const AtomNetId& atom_net);
   public: /* Public validators/invalidators */
     bool valid_pb_id(const PhysicalPbId& pb_id) const;
     bool empty() const;
@@ -54,7 +63,8 @@ class PhysicalPb {
     vtr::vector<PhysicalPbId, PhysicalPbId> pb_ids_;
     vtr::vector<PhysicalPbId, const t_pb_graph_node*> pb_graph_nodes_;
     vtr::vector<PhysicalPbId, std::string> names_;
-    vtr::vector<PhysicalPbId, std::vector<AtomBlockId>> mapped_atoms_;
+    vtr::vector<PhysicalPbId, std::vector<AtomBlockId>> atom_blocks_;
+    vtr::vector<PhysicalPbId, std::map<const t_pb_graph_pin*, AtomNetId>> pin_atom_nets_;
 
     /* Child pbs are organized as [0..num_child_pb_types-1][0..child_pb_type->num_pb-1] */
     vtr::vector<PhysicalPbId, std::map<const t_pb_type*, std::vector<PhysicalPbId>>> child_pbs_;
