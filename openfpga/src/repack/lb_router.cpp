@@ -39,6 +39,15 @@ LbRouter::LbRouter(const LbRRGraph& lb_rr_graph, t_logical_block_type_ptr lb_typ
 /**************************************************
  * Public Accessors 
  *************************************************/
+LbRouter::net_range LbRouter::nets() const {
+  return vtr::make_range(lb_net_ids_.begin(), lb_net_ids_.end());
+}
+
+AtomNetId LbRouter::net_atom_net_id(const NetId& net) const {
+  VTR_ASSERT(true == valid_net_id(net));
+  return lb_net_atom_net_ids_[net]; 
+}
+
 std::vector<LbRRNodeId> LbRouter::find_congested_rr_nodes(const LbRRGraph& lb_rr_graph) const {
   /* Validate if the rr_graph is the one we used to initialize the router */
   VTR_ASSERT(true == matched_lb_rr_graph(lb_rr_graph));
