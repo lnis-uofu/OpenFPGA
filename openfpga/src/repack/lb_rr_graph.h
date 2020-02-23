@@ -168,6 +168,9 @@ class LbRRGraph {
     typedef vtr::Range<node_iterator> node_range;
     typedef vtr::Range<edge_iterator> edge_range;
 
+  public: /* Constructors */
+    LbRRGraph();
+
   public: /* Accessors */
     /* Aggregates: create range-based loops for nodes/edges/switches/segments
      * To iterate over the nodes/edges/switches/segments in a RRGraph, 
@@ -195,13 +198,21 @@ class LbRRGraph {
     float node_intrinsic_cost(const LbRRNodeId& node) const;
 
     /* Get a list of edge ids, which are incoming edges to a node */
+    std::vector<LbRREdgeId> node_in_edges(const LbRRNodeId& node) const;
     std::vector<LbRREdgeId> node_in_edges(const LbRRNodeId& node, t_mode* mode) const;
 
     /* Get a list of edge ids, which are outgoing edges from a node */
+    std::vector<LbRREdgeId> node_out_edges(const LbRRNodeId& node) const;
     std::vector<LbRREdgeId> node_out_edges(const LbRRNodeId& node, t_mode* mode) const;
 
-    LbRRNodeId find_node(const e_lb_rr_type& type, t_pb_graph_pin* pb_graph_pin) const;
+    /* General method to look up a node with type and only pb_graph_pin information */
+    LbRRNodeId find_node(const e_lb_rr_type& type, const t_pb_graph_pin* pb_graph_pin) const;
+    /* Method to find special node */
+    LbRRNodeId ext_source_node() const;
+    LbRRNodeId ext_sink_node() const;
 
+    /* General method to look up a edge with source and sink nodes */
+    std::vector<LbRREdgeId> find_edge(const LbRRNodeId& src_node, const LbRRNodeId& sink_node) const;
     /* Get the source node which drives a edge */
     LbRRNodeId edge_src_node(const LbRREdgeId& edge) const;
     /* Get the sink node which a edge ends to */
@@ -234,6 +245,10 @@ class LbRRGraph {
      *   set_node_xlow(node, 0);
      */
     LbRRNodeId create_node(const e_lb_rr_type& type);
+  
+    /* Create special nodes */
+    LbRRNodeId create_ext_source_node(const e_lb_rr_type& type);
+    LbRRNodeId create_ext_sink_node(const e_lb_rr_type& type);
 
     /* Set node-level information */
     void set_node_type(const LbRRNodeId& node, const e_lb_rr_type& type);
@@ -251,12 +266,28 @@ class LbRRGraph {
     LbRREdgeId create_edge(const LbRRNodeId& source, const LbRRNodeId& sink, t_mode* mode);
     void set_edge_intrinsic_cost(const LbRREdgeId& edge, const float& cost);
 
-  public: /* Validators */
+  public: /* Public validators */
     /* Validate is the node id does exist in the RRGraph */
     bool valid_node_id(const LbRRNodeId& node) const;
 
     /* Validate is the edge id does exist in the RRGraph */
     bool valid_edge_id(const LbRREdgeId& edge) const;
+
+    bool validate() const;
+
+    bool empty() const;
+
+  private: /* Private Validators */
+    bool validate_node_sizes() const;
+    bool validate_edge_sizes() const;
+    bool validate_sizes() const;
+    bool validate_node_is_edge_src(const LbRRNodeId& node, const LbRREdgeId& edge) const;
+    bool validate_node_is_edge_sink(const LbRRNodeId& node, const LbRREdgeId& edge) const;
+    bool validate_node_in_edges(const LbRRNodeId& node) const;
+    bool validate_node_out_edges(const LbRRNodeId& node) const;
+    bool validate_nodes_in_edges() const;
+    bool validate_nodes_out_edges() const;
+    bool validate_nodes_edges() const;
 
   private: /* Internal Data */
     /* Node related data */
@@ -287,8 +318,12 @@ class LbRRGraph {
     /* Fast look-up to search a node by its type, coordinator and ptc_num 
      * Indexing of fast look-up: [0..NUM_TYPES-1][t_pb_graph_pin*] 
      */
-    typedef std::vector<std::map<t_pb_graph_pin*, LbRRNodeId>> NodeLookup;
+    typedef std::vector<std::map<const t_pb_graph_pin*, LbRRNodeId>> NodeLookup;
     mutable NodeLookup node_lookup_;
+
+    /* Special node look-up */
+    LbRRNodeId ext_source_node_;
+    LbRRNodeId ext_sink_node_;
 };
 
 } /* end namespace openfpga */

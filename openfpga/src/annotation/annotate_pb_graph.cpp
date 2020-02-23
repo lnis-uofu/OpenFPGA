@@ -405,6 +405,7 @@ void rec_build_vpr_physical_pb_graph_node_annotation(t_pb_graph_node* pb_graph_n
                                           * (size_t)vpr_device_annotation.pb_graph_node_unique_index(pb_graph_node)
                                           + vpr_device_annotation.physical_pb_type_index_offset(pb_graph_node->pb_type)
                                             );
+
   t_pb_graph_node* physical_pb_graph_node = vpr_device_annotation.pb_graph_node(physical_pb_type, physical_pb_graph_node_id);
   VTR_ASSERT(nullptr != physical_pb_graph_node);
   vpr_device_annotation.add_physical_pb_graph_node(pb_graph_node, physical_pb_graph_node);

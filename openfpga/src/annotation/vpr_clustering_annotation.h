@@ -9,6 +9,8 @@
 /* Header from vpr library */
 #include "clustered_netlist.h"
 
+#include "physical_pb.h"
+
 /* Begin namespace openfpga */
 namespace openfpga {
 
@@ -33,14 +35,19 @@ class VprClusteringAnnotation {
     ClusterNetId net(const ClusterBlockId& block_id, const int& pin_index) const;
     bool is_truth_table_adapted(t_pb* pb) const;
     AtomNetlist::TruthTable truth_table(t_pb* pb) const;
+    PhysicalPb physical_pb(const ClusterBlockId& block_id) const;
   public:  /* Public mutators */
     void rename_net(const ClusterBlockId& block_id, const int& pin_index,
                     const ClusterNetId& net_id);
     void adapt_truth_table(t_pb* pb, const AtomNetlist::TruthTable& tt);
+    void add_physical_pb(const ClusterBlockId& block_id, const PhysicalPb& physical_pb);
   private: /* Internal data */
     /* Pair a regular pb_type to its physical pb_type */
     std::map<ClusterBlockId, std::map<int, ClusterNetId>> net_names_;
     std::map<t_pb*, AtomNetlist::TruthTable> block_truth_tables_;
+
+    /* Link clustered blocks to physical pb (mapping results) */
+    std::map<ClusterBlockId, PhysicalPb> physical_pbs_;
 };
 
 } /* End namespace openfpga*/

@@ -10,6 +10,14 @@
 namespace openfpga {
 
 /**************************************************
+ * Public Constructors
+ *************************************************/
+LbRRGraph::LbRRGraph() {
+  ext_source_node_ = LbRRNodeId::INVALID();
+  ext_sink_node_ = LbRRNodeId::INVALID();
+}
+
+/**************************************************
  * Public Accessors: Aggregates 
  *************************************************/
 LbRRGraph::node_range LbRRGraph::nodes() const {
@@ -43,6 +51,11 @@ float LbRRGraph::node_intrinsic_cost(const LbRRNodeId& node) const {
   return node_intrinsic_costs_[node];
 }
 
+std::vector<LbRREdgeId> LbRRGraph::node_in_edges(const LbRRNodeId& node) const {
+  VTR_ASSERT(true == valid_node_id(node));
+  return node_in_edges_[node];
+}
+
 std::vector<LbRREdgeId> LbRRGraph::node_in_edges(const LbRRNodeId& node, t_mode* mode) const {
   std::vector<LbRREdgeId> in_edges;
 
@@ -54,6 +67,11 @@ std::vector<LbRREdgeId> LbRRGraph::node_in_edges(const LbRRNodeId& node, t_mode*
   }
 
   return in_edges;
+}
+
+std::vector<LbRREdgeId> LbRRGraph::node_out_edges(const LbRRNodeId& node) const {
+  VTR_ASSERT(true == valid_node_id(node));
+  return node_out_edges_[node];
 }
 
 std::vector<LbRREdgeId> LbRRGraph::node_out_edges(const LbRRNodeId& node, t_mode* mode) const {
@@ -69,7 +87,7 @@ std::vector<LbRREdgeId> LbRRGraph::node_out_edges(const LbRRNodeId& node, t_mode
   return out_edges;
 }
 
-LbRRNodeId LbRRGraph::find_node(const e_lb_rr_type& type, t_pb_graph_pin* pb_graph_pin) const {
+LbRRNodeId LbRRGraph::find_node(const e_lb_rr_type& type, const t_pb_graph_pin* pb_graph_pin) const {
   if (size_t(type) >= node_lookup_.size()) {
     return LbRRNodeId::INVALID();
   }
@@ -79,6 +97,24 @@ LbRRNodeId LbRRGraph::find_node(const e_lb_rr_type& type, t_pb_graph_pin* pb_gra
   }
   
   return node_lookup_[size_t(type)].at(pb_graph_pin);
+}
+
+LbRRNodeId LbRRGraph::ext_source_node() const {
+  return ext_source_node_;
+}
+
+LbRRNodeId LbRRGraph::ext_sink_node() const {
+  return ext_sink_node_;
+}
+
+std::vector<LbRREdgeId> LbRRGraph::find_edge(const LbRRNodeId& src_node, const LbRRNodeId& sink_node) const {
+  std::vector<LbRREdgeId> edges;
+  for (const LbRREdgeId& edge : node_out_edges_[src_node]) {
+    if (sink_node == edge_sink_node(edge)) {
+      edges.push_back(edge);
+    }
+  }
+  return edges;
 }
 
 LbRRNodeId LbRRGraph::edge_src_node(const LbRREdgeId& edge) const {
@@ -139,6 +175,20 @@ LbRRNodeId LbRRGraph::create_node(const e_lb_rr_type& type) {
   node_out_edges_.emplace_back();
 
   return node;
+}
+
+LbRRNodeId LbRRGraph::create_ext_source_node(const e_lb_rr_type& type) {
+  LbRRNodeId ext_source_node = create_node(type); 
+  ext_source_node_ = ext_source_node;
+
+  return ext_source_node;
+}
+
+LbRRNodeId LbRRGraph::create_ext_sink_node(const e_lb_rr_type& type) {
+  LbRRNodeId ext_sink_node = create_node(type); 
+  ext_sink_node_ = ext_sink_node;
+
+  return ext_sink_node;
 }
 
 void LbRRGraph::set_node_type(const LbRRNodeId& node, const e_lb_rr_type& type) {
@@ -210,6 +260,201 @@ bool LbRRGraph::valid_node_id(const LbRRNodeId& node_id) const {
 
 bool LbRRGraph::valid_edge_id(const LbRREdgeId& edge_id) const {
   return ( size_t(edge_id) < edge_ids_.size() ) && ( edge_id == edge_ids_[edge_id] ); 
+}
+
+/* This function run fundamental checks on internal data 
+ * Errors are thrown if fundamental checking fails
+ */
+bool LbRRGraph::validate() const {
+  size_t num_err = 0;
+
+  /* Validate the sizes of nodes and node-related vectors 
+   * Validate the sizes of edges and edge-related vectors 
+   */
+  if (false == validate_sizes()) {
+    VTR_LOG_WARN("Fail in validating node and edges sizes!\n");
+    num_err++;
+  }
+
+  /* Fundamental check */
+  if (false == validate_nodes_edges()) {
+    VTR_LOG_WARN("Fail in validating edges connected to each node!\n");
+    num_err++;
+  }
+
+  /* Error out if there is any fatal errors found */
+  if (0 < num_err) {
+    VTR_LOG_ERROR("Logical tile Routing Resource graph is not valid due to %d fatal errors !\n",
+                  num_err);
+  }
+
+  return (0 == num_err);
+}
+
+bool LbRRGraph::empty() const {
+  return (0 == nodes().size()) && (0 == edges().size());
+}
+
+/******************************************************************************
+ * Private validators/invalidators
+ ******************************************************************************/
+bool LbRRGraph::validate_node_sizes() const {
+  size_t num_nodes = node_ids_.size();
+  return node_ids_.size() == num_nodes
+         && node_types_.size() == num_nodes
+         && node_capacities_.size() == num_nodes
+         && node_pb_graph_pins_.size() == num_nodes
+         && node_intrinsic_costs_.size() == num_nodes
+         && node_in_edges_.size() == num_nodes
+         && node_out_edges_.size() == num_nodes;
+}
+
+bool LbRRGraph::validate_edge_sizes() const {
+  size_t num_edges = edge_ids_.size();
+  return edge_src_nodes_.size() == num_edges
+         && edge_sink_nodes_.size() == num_edges
+         && edge_intrinsic_costs_.size() == num_edges
+         && edge_modes_.size() == num_edges;
+}
+
+bool LbRRGraph::validate_sizes() const {
+  return validate_node_sizes() && validate_edge_sizes(); 
+}
+
+/* Check if a node is in the list of source_nodes of a edge */
+bool LbRRGraph::validate_node_is_edge_src(const LbRRNodeId& node, const LbRREdgeId& edge) const {
+  /* Assure a valid node id */
+  VTR_ASSERT_SAFE(valid_node_id(node));
+  /* assure a valid edge id */
+  VTR_ASSERT_SAFE(valid_edge_id(edge));
+  /* find if the node is the src */
+  if (node == edge_src_node(edge)) {
+    return true; /* confirmed source node*/
+  } else {
+    return false; /* not a source */
+  }
+}
+
+/* Check if a node is in the list of sink_nodes of a edge */
+bool LbRRGraph::validate_node_is_edge_sink(const LbRRNodeId& node, const LbRREdgeId& edge) const {
+  /* Assure a valid node id */
+  VTR_ASSERT_SAFE(valid_node_id(node));
+  /* assure a valid edge id */
+  VTR_ASSERT_SAFE(valid_edge_id(edge));
+  /* find if the node is the sink */
+  if (node == edge_sink_node(edge)) {
+    return true; /* confirmed source node*/
+  } else {
+    return false; /* not a source */
+  }
+}
+/* This function will check if a node has valid input edges
+ * 1. Check the edge ids are valid
+ * 2. Check the node is in the list of edge_sink_node
+ */
+bool LbRRGraph::validate_node_in_edges(const LbRRNodeId& node) const {
+  bool all_valid = true;
+  /* Assure a valid node id */
+  VTR_ASSERT_SAFE(valid_node_id(node));
+  /* Check each edge */
+  for (auto edge : node_in_edges(node)) {
+      /* assure a valid edge id */
+      VTR_ASSERT_SAFE(valid_edge_id(edge));
+      /* check the node is in the list of edge_sink_node */
+      if (true == validate_node_is_edge_sink(node, edge)) {
+        continue;
+    }
+    /* Reach here, it means there is something wrong! 
+     * Print a warning  
+     */
+    VTR_LOG_WARN("Edge %d is in the input edge list of node %d while the node is not in edge's sink node list!\n",
+                  size_t(edge), size_t(node));
+    all_valid = false;
+  }
+
+  return all_valid;
+}
+
+/* This function will check if a node has valid output edges
+ * 1. Check the edge ids are valid
+ * 2. Check the node is in the list of edge_source_node
+ */
+bool LbRRGraph::validate_node_out_edges(const LbRRNodeId& node) const {
+  bool all_valid = true;
+  /* Assure a valid node id */
+  VTR_ASSERT_SAFE(valid_node_id(node));
+  /* Check each edge */
+  for (auto edge : node_out_edges(node)) {
+    /* assure a valid edge id */
+    VTR_ASSERT_SAFE(valid_edge_id(edge));
+    /* check the node is in the list of edge_sink_node */
+    if (true == validate_node_is_edge_src(node, edge)) {
+      continue;
+    }
+    /* Reach here, it means there is something wrong! 
+     * Print a warning  
+     */
+    VTR_LOG_WARN("Edge %d is in the output edge list of node %d while the node is not in edge's source node list!\n",
+                 size_t(edge), size_t(node));
+    all_valid = false;
+  }
+
+  return all_valid;
+}
+
+
+/* check if all the nodes' input edges are valid */
+bool LbRRGraph::validate_nodes_in_edges() const {
+  bool all_valid = true;
+  for (const LbRRNodeId& id : nodes()) {
+    /* Try to find if this is an invalid id or not */
+    if (!valid_node_id(id)) {
+      /* Skip this id */
+      continue;
+    }
+    if (true == validate_node_in_edges(id)) {
+      continue;
+    }
+    /* Reach here, it means there is something wrong! 
+     * Print a warning  
+     */
+    all_valid = false;
+  }
+  return all_valid;
+}
+
+/* check if all the nodes' output edges are valid */
+bool LbRRGraph::validate_nodes_out_edges() const {
+  bool all_valid = true;
+  for (const LbRRNodeId& id : nodes()) {
+    /* Try to find if this is an invalid id or not */
+    if (!valid_node_id(id)) {
+      /* Skip this id */
+      continue;
+    }
+    if (true == validate_node_out_edges(id)) {
+      continue;
+    }
+    /* Reach here, it means there is something wrong! 
+     * Print a warning  
+     */
+    all_valid = false;
+  }
+  return all_valid;
+}
+
+/* check all the edges of every node */
+bool LbRRGraph::validate_nodes_edges() const {
+  bool all_valid = true;
+
+  if (false == validate_nodes_in_edges()) {
+    all_valid = false;
+  }
+  if (false == validate_nodes_out_edges()) {
+    all_valid = false;
+  }
+
+  return all_valid;
 }
 
 } /* end namespace openfpga */

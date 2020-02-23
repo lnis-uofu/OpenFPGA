@@ -69,7 +69,7 @@ std::string PbTypeAnnotation::circuit_model_name() const {
   return circuit_model_name_;
 }
 
-int PbTypeAnnotation::physical_pb_type_index_factor() const {
+float PbTypeAnnotation::physical_pb_type_index_factor() const {
   return physical_pb_type_index_factor_;
 }
 
@@ -164,7 +164,7 @@ void PbTypeAnnotation::set_circuit_model_name(const std::string& name) {
   circuit_model_name_ = name;
 }
 
-void PbTypeAnnotation::set_physical_pb_type_index_factor(const int& value) {
+void PbTypeAnnotation::set_physical_pb_type_index_factor(const float& value) {
   VTR_ASSERT(true == is_operating_pb_type());
   physical_pb_type_index_factor_ = value;
 }

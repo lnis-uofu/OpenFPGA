@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "arch_types.h"
+#include "vpr_types.h"
 #include "atom_netlist_fwd.h"
 
 #include "lb_rr_graph_types.h"

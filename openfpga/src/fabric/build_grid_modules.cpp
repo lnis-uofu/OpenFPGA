@@ -1053,7 +1053,7 @@ void build_physical_tile_module(ModuleManager& module_manager,
                                       sram_orgz_type, circuit_lib.design_tech_type(sram_model));
   }
 
-  VTR_LOG("Done\n");
+  VTR_LOGV(verbose, "Done\n");
 }
 
 /*****************************************************************************

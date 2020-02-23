@@ -25,9 +25,17 @@ namespace openfpga {
  ************************************************************************/
 bool is_primitive_pb_type(t_pb_type* pb_type) {
   if (LUT_CLASS == pb_type->class_type) {
-    /* The first mode of LUT is wire, the second is the regular LUT */
-    VTR_ASSERT(std::string("wire") == std::string(pb_type->modes[0].name)); 
-    VTR_ASSERT(std::string(pb_type->name) == std::string(pb_type->modes[1].name)); 
+    /* The only primitive LUT we recognize is the one which have 
+     * a first mode of LUT is wire, the second is the regular LUT
+     * VPR contructed two modes under a regular LUT, and these children
+     * are labelled as LUT_CLASS as well. OpenFPGA does not consider
+     * them as primitive as they are for CAD usage only
+     */
+    if (0 == pb_type->num_modes) {
+      return false;
+    }
+    VTR_ASSERT( (std::string("wire") == std::string(pb_type->modes[0].name))
+             && (std::string(pb_type->name) == std::string(pb_type->modes[1].name)));
     return true;
   }
   return 0 == pb_type->num_modes;

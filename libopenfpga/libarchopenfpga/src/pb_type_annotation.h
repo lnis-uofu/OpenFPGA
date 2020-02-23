@@ -45,7 +45,7 @@ class PbTypeAnnotation {
     std::string idle_mode_name() const;
     std::vector<size_t> mode_bits() const;
     std::string circuit_model_name() const;
-    int physical_pb_type_index_factor() const;
+    float physical_pb_type_index_factor() const;
     int physical_pb_type_index_offset() const;
     std::vector<std::string> port_names() const;
     BasicPort physical_pb_type_port(const std::string& port_name) const;
@@ -63,7 +63,7 @@ class PbTypeAnnotation {
     void set_idle_mode_name(const std::string& name);
     void set_mode_bits(const std::vector<size_t>& mode_bits);
     void set_circuit_model_name(const std::string& name);
-    void set_physical_pb_type_index_factor(const int& value);
+    void set_physical_pb_type_index_factor(const float& value);
     void set_physical_pb_type_index_offset(const int& value);
     void add_pb_type_port_pair(const std::string& operating_pb_port_name,
                                const BasicPort& physical_pb_port);
@@ -119,7 +119,7 @@ class PbTypeAnnotation {
      * operating pb_type adder[5] with a full path clb.fle[arith].adder[5]
      * to physical pb_type adder[10] with a full path clb.fle[physical].adder[10]
      */
-    int physical_pb_type_index_factor_;
+    float physical_pb_type_index_factor_;
 
     /* The offset aims to align the indices for pb_type between operating and physical modes, 
      * especially when an operating mode contains multiple pb_type (num_pb>1) 

@@ -156,7 +156,7 @@ void read_xml_pb_type_annotation(pugi::xml_node& xml_pb_type,
 
   /* If this is an operating pb_type, index factor and offset may be optional needed */
   if (true == pb_type_annotation.is_operating_pb_type()) {
-    pb_type_annotation.set_physical_pb_type_index_factor(get_attribute(xml_pb_type, "physical_pb_type_index_factor", loc_data, pugiutil::ReqOpt::OPTIONAL).as_int(1));
+    pb_type_annotation.set_physical_pb_type_index_factor(get_attribute(xml_pb_type, "physical_pb_type_index_factor", loc_data, pugiutil::ReqOpt::OPTIONAL).as_float(1.));
     pb_type_annotation.set_physical_pb_type_index_offset(get_attribute(xml_pb_type, "physical_pb_type_index_offset", loc_data, pugiutil::ReqOpt::OPTIONAL).as_int(0));
   }
 
