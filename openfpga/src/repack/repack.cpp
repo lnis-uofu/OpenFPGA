@@ -293,6 +293,7 @@ void repack_cluster(const AtomContext& atom_ctx,
                                            atom_ctx,
                                            device_annotation);
   /* TODO: save routing results */
+  save_lb_router_results_to_physical_pb(phy_pb, lb_router, lb_rr_graph);
   VTR_LOGV(verbose, "Saved results in physical pb\n");
 
   /* Add the pb to clustering context */

@@ -66,4 +66,34 @@ LbRouter::NetId add_lb_router_net_to_route(LbRouter& lb_router,
   return lb_net;
 }
 
+/***************************************************************************************
+ * Load the routing results (routing tree) from lb router to 
+ * a physical pb data structure
+ ***************************************************************************************/
+void save_lb_router_results_to_physical_pb(PhysicalPb& phy_pb,
+                                           const LbRouter& lb_router,
+                                           const LbRRGraph& lb_rr_graph) {
+  /* Get mapping routing nodes per net */
+  for (const LbRouter::NetId& net : lb_router.nets()) {
+    std::vector<LbRRNodeId> routed_nodes = lb_router.net_routed_nodes(net);
+    for (const LbRRNodeId& node : routed_nodes) {
+      t_pb_graph_pin* pb_graph_pin = lb_rr_graph.node_pb_graph_pin(node);
+      if (nullptr == pb_graph_pin) {
+        continue;
+      }
+      /* Find the pb id */
+      const PhysicalPbId& pb_id = phy_pb.find_pb(pb_graph_pin->parent_node);
+      VTR_ASSERT(true == phy_pb.valid_pb_id(pb_id));
+
+      const AtomNetId& atom_net = lb_router.net_atom_net_id(net);
+      
+      if (AtomNetId::INVALID() == phy_pb.pb_graph_pin_atom_net(pb_id, pb_graph_pin)) {
+        phy_pb.set_pb_graph_pin_atom_net(pb_id, pb_graph_pin, atom_net);
+      } else {
+        VTR_ASSERT(atom_net == phy_pb.pb_graph_pin_atom_net(pb_id, pb_graph_pin));
+      }
+    }
+  }
+}
+
 } /* end namespace openfpga */

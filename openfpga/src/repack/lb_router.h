@@ -29,6 +29,9 @@ class LbRouter {
   public: /* Strong ids */
     struct net_id_tag;
     typedef vtr::StrongId<net_id_tag> NetId;
+  public: /* Types and ranges */
+    typedef vtr::vector<NetId, NetId>::const_iterator net_iterator;
+    typedef vtr::Range<net_iterator> net_range;
   public: /* Intra-Logic Block Routing Data Structures (by instance) */
     /**************************************************************************
      * Describes the status of a logic cluster_ctx.blocks routing resource node 
@@ -163,6 +166,12 @@ class LbRouter {
     LbRouter(const LbRRGraph& lb_rr_graph, t_logical_block_type_ptr lb_type);
   
   public :  /* Public accessors */
+    /* Return the ids for all the nets to be routed */ 
+    net_range nets() const;
+
+    /* Return the atom net id for a net to be routed */
+    AtomNetId net_atom_net_id(const NetId& net) const;    
+
     /**
      * Find all the routing resource nodes that are over-used, which they are used more than their capacity
      * This function is call to collect the nodes and router can reroute these net
