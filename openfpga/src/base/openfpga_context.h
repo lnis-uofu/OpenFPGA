@@ -11,6 +11,7 @@
 #include "tile_direct.h"
 #include "module_manager.h"
 #include "openfpga_flow_manager.h"
+#include "bitstream_manager.h"
 #include "device_rr_gsb.h"
 
 /********************************************************************
@@ -52,6 +53,7 @@ class OpenfpgaContext : public Context  {
     const openfpga::TileDirect& tile_direct() const { return tile_direct_; }
     const openfpga::ModuleManager& module_graph() const { return module_graph_; }
     const openfpga::FlowManager& flow_manager() const { return flow_manager_; }
+    const openfpga::BitstreamManager& bitstream_manager() const { return bitstream_manager_; }
   public:  /* Public mutators */
     openfpga::Arch& mutable_arch() { return arch_; }
     openfpga::VprDeviceAnnotation& mutable_vpr_device_annotation() { return vpr_device_annotation_; }
@@ -63,6 +65,7 @@ class OpenfpgaContext : public Context  {
     openfpga::TileDirect& mutable_tile_direct() { return tile_direct_; }
     openfpga::ModuleManager& mutable_module_graph() { return module_graph_; }
     openfpga::FlowManager& mutable_flow_manager() { return flow_manager_; }
+    openfpga::BitstreamManager& mutable_bitstream_manager() { return bitstream_manager_; }
   private: /* Internal data */
     /* Data structure to store information from read_openfpga_arch library */
     openfpga::Arch arch_;
@@ -90,6 +93,9 @@ class OpenfpgaContext : public Context  {
 
     /* Fabric module graph */
     openfpga::ModuleManager module_graph_;
+
+    /* Bitstream database */
+    openfpga::BitstreamManager bitstream_manager_;
  
     /* Flow status */
     openfpga::FlowManager flow_manager_;
