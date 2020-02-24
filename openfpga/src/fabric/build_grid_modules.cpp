@@ -914,35 +914,15 @@ void build_physical_tile_module(ModuleManager& module_manager,
   ModuleId grid_module = module_manager.add_module(grid_module_name); 
   VTR_ASSERT(true == module_manager.valid_module_id(grid_module));
 
-  /* Now each physical tile may have a number of diffrent logical blocks
-   * We assume the following organization:
-   *     
-   *    Physical tile
-   *    +----------------------- 
-   *    |
-   *    |   pb_typeA[0] - from equivalent site[A]
-   *    |   +--------------------
-   *    |   |
-   *    |   +--------------------
-   *    |
-   *    |   pb_typeB[0] - from equivalent site[B] 
-   *    |   +--------------------
-   *    |   |
-   *    |   +--------------------
-   *   ...           ...
-   *    |   pb_typeA[capacity - 1] - from equivalent site[A]
-   *    |   +--------------------
-   *    |   |
-   *    |   +--------------------
-   *    |
-   *    |   pb_typeB[capacity - 1] - from equivalent site[B] 
-   *    |   +--------------------
-   *    |   |
-   *    |   +--------------------
-   *    | 
-   *    +----------------------- 
+  /* Now each physical tile may have a number of logical blocks
+   * OpenFPGA only considers the physical implementation of the tiles.
+   * So, we do not allow multiple equivalent sites to be defined 
+   * under a physical tile type. 
+   * If you need different equivalent sites, you can always define 
+   * it as a mode under a <pb_type>
    */
   for (int iz = 0; iz < phy_block_type->capacity; ++iz) {
+    VTR_ASSERT(1 == phy_block_type->equivalent_sites.size());
     for (t_logical_block_type_ptr lb_type : phy_block_type->equivalent_sites) {
       /* Bypass empty pb_graph */
       if (nullptr == lb_type->pb_graph_head) {

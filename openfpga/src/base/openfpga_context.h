@@ -6,6 +6,7 @@
 #include "vpr_netlist_annotation.h"
 #include "vpr_device_annotation.h"
 #include "vpr_clustering_annotation.h"
+#include "vpr_placement_annotation.h"
 #include "vpr_routing_annotation.h"
 #include "mux_library.h"
 #include "tile_direct.h"
@@ -47,6 +48,7 @@ class OpenfpgaContext : public Context  {
     const openfpga::VprDeviceAnnotation& vpr_device_annotation() const { return vpr_device_annotation_; }
     const openfpga::VprNetlistAnnotation& vpr_netlist_annotation() const { return vpr_netlist_annotation_; }
     const openfpga::VprClusteringAnnotation& vpr_clustering_annotation() const { return vpr_clustering_annotation_; }
+    const openfpga::VprPlacementAnnotation& vpr_placement_annotation() const { return vpr_placement_annotation_; }
     const openfpga::VprRoutingAnnotation& vpr_routing_annotation() const { return vpr_routing_annotation_; }
     const openfpga::DeviceRRGSB& device_rr_gsb() const { return device_rr_gsb_; }
     const openfpga::MuxLibrary& mux_lib() const { return mux_lib_; }
@@ -59,6 +61,7 @@ class OpenfpgaContext : public Context  {
     openfpga::VprDeviceAnnotation& mutable_vpr_device_annotation() { return vpr_device_annotation_; }
     openfpga::VprNetlistAnnotation& mutable_vpr_netlist_annotation() { return vpr_netlist_annotation_; }
     openfpga::VprClusteringAnnotation& mutable_vpr_clustering_annotation() { return vpr_clustering_annotation_; }
+    openfpga::VprPlacementAnnotation& mutable_vpr_placement_annotation() { return vpr_placement_annotation_; }
     openfpga::VprRoutingAnnotation& mutable_vpr_routing_annotation() { return vpr_routing_annotation_; }
     openfpga::DeviceRRGSB& mutable_device_rr_gsb() { return device_rr_gsb_; }
     openfpga::MuxLibrary& mutable_mux_lib() { return mux_lib_; }
@@ -78,6 +81,9 @@ class OpenfpgaContext : public Context  {
 
     /* Pin net fix to cluster results */
     openfpga::VprClusteringAnnotation vpr_clustering_annotation_;
+
+    /* Placement results */
+    openfpga::VprPlacementAnnotation vpr_placement_annotation_;
 
     /* Routing results annotation */ 
     openfpga::VprRoutingAnnotation vpr_routing_annotation_;
