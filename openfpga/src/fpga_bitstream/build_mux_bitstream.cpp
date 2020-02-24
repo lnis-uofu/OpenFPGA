@@ -13,16 +13,11 @@
 #include "mux_utils.h"
 #include "decoder_library_utils.h"
 
+#include "mux_bitstream_constants.h"
 #include "build_mux_bitstream.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
-
-/* Default path ID of a unused multiplexer */
-#define DEFAULT_PATH_ID -1
-
-/* Default path ID of a unused multiplexer when there are no constant inputs*/
-#define DEFAULT_MUX_PATH_ID 0
 
 /********************************************************************
  * Find the default path id of a MUX

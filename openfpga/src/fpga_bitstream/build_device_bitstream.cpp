@@ -14,7 +14,7 @@
 #include "openfpga_naming.h"
 
 //#include "build_grid_bitstream.h"
-//#include "build_routing_bitstream.h"
+#include "build_routing_bitstream.h"
 #include "build_device_bitstream.h"
 
 /* begin namespace openfpga */
@@ -60,8 +60,17 @@ BitstreamManager build_device_bitstream(const VprContext& vpr_ctx,
 
   /* Create bitstream from routing architectures */
   VTR_LOGV(verbose, "Building routing bitstream...\n");
-  //build_routing_bitstream(bitstream_manager, top_block, module_manager, circuit_lib, mux_lib, rr_switches, L_rr_node, L_device_rr_gsb);
+  build_routing_bitstream(bitstream_manager, top_block, 
+                          openfpga_ctx.module_graph(),
+                          openfpga_ctx.arch().circuit_lib,
+                          openfpga_ctx.mux_lib(),
+                          openfpga_ctx.vpr_device_annotation(),
+                          openfpga_ctx.vpr_routing_annotation(),
+                          vpr_ctx.device().rr_graph,
+                          openfpga_ctx.device_rr_gsb());
   VTR_LOGV(verbose, "Done\n");
+
+  VTR_LOGV(verbose, "Decoded %lu configuration bits\n", bitstream_manager.bits().size());
 
   return bitstream_manager;
 }
