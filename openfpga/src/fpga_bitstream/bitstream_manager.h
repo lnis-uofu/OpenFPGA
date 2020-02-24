@@ -128,6 +128,6 @@ class BitstreamManager {
     vtr::vector<ConfigBitId, std::vector<bool>> shared_config_bit_values_;
 };
 
-#endif
-
 } /* end namespace openfpga */
+
+#endif
