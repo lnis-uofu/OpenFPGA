@@ -42,8 +42,13 @@ class PhysicalPb {
     std::string name(const PhysicalPbId& pb) const;
     PhysicalPbId find_pb(const t_pb_graph_node* name) const;
     PhysicalPbId parent(const PhysicalPbId& pb) const;
+    PhysicalPbId child(const PhysicalPbId& pb,
+                       const t_pb_type* pb_type, 
+                       const size_t& index) const;
+    std::vector<AtomBlockId> atom_blocks(const PhysicalPbId& pb) const;
     AtomNetId pb_graph_pin_atom_net(const PhysicalPbId& pb,
                                     const t_pb_graph_pin* pb_graph_pin) const;
+    std::vector<size_t> mode_bits(const PhysicalPbId& pb) const;
   public: /* Public mutators */
     PhysicalPbId create_pb(const t_pb_graph_node* pb_graph_node);
     void add_child(const PhysicalPbId& parent,

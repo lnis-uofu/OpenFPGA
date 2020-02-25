@@ -36,6 +36,23 @@ PhysicalPbId PhysicalPb::parent(const PhysicalPbId& pb) const {
   return parent_pbs_[pb];
 }
 
+PhysicalPbId PhysicalPb::child(const PhysicalPbId& pb,
+                               const t_pb_type* pb_type, 
+                               const size_t& index) const {
+  VTR_ASSERT(true == valid_pb_id(pb));
+  if (0 < child_pbs_[pb].count(pb_type)) {
+    if (index < child_pbs_[pb].at(pb_type).size()) {
+      return child_pbs_[pb].at(pb_type)[index]; 
+    }
+  }
+  return PhysicalPbId::INVALID();
+}
+
+std::vector<AtomBlockId> PhysicalPb::atom_blocks(const PhysicalPbId& pb) const {
+  VTR_ASSERT(true == valid_pb_id(pb));
+  return atom_blocks_[pb];
+}
+
 AtomNetId PhysicalPb::pb_graph_pin_atom_net(const PhysicalPbId& pb,
                                             const t_pb_graph_pin* pb_graph_pin) const {
   VTR_ASSERT(true == valid_pb_id(pb));
@@ -45,6 +62,11 @@ AtomNetId PhysicalPb::pb_graph_pin_atom_net(const PhysicalPbId& pb,
   }
   /* Not found, return an invalid id */
   return AtomNetId::INVALID();
+}
+
+std::vector<size_t> PhysicalPb::mode_bits(const PhysicalPbId& pb) const {
+  VTR_ASSERT(true == valid_pb_id(pb));
+  return mode_bits_[pb];
 }
 
 /******************************************************************************
