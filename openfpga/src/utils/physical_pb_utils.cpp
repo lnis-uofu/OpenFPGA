@@ -244,7 +244,7 @@ void rec_update_physical_pb_from_operating_pb(PhysicalPb& phy_pb,
 
     phy_pb.add_atom_block(physical_pb, atom_blk);
 
-    /* TODO: Iterate over ports and annotate the atom pins */
+    /* Iterate over ports and annotate the atom pins */
     synchronize_primitive_physical_pb_atom_nets(phy_pb, physical_pb,
                                                 pb_graph_node, 
                                                 pb_route,

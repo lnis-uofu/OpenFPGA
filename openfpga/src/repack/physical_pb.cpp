@@ -50,6 +50,7 @@ PhysicalPbId PhysicalPb::child(const PhysicalPbId& pb,
 
 std::vector<AtomBlockId> PhysicalPb::atom_blocks(const PhysicalPbId& pb) const {
   VTR_ASSERT(true == valid_pb_id(pb));
+  
   return atom_blocks_[pb];
 }
 
@@ -62,6 +63,11 @@ AtomNetId PhysicalPb::pb_graph_pin_atom_net(const PhysicalPbId& pb,
   }
   /* Not found, return an invalid id */
   return AtomNetId::INVALID();
+}
+
+AtomNetlist::TruthTable PhysicalPb::truth_table(const PhysicalPbId& pb) const {
+  VTR_ASSERT(true == valid_pb_id(pb));
+  return truth_tables_[pb];
 }
 
 std::vector<size_t> PhysicalPb::mode_bits(const PhysicalPbId& pb) const {
@@ -118,6 +124,13 @@ void PhysicalPb::add_child(const PhysicalPbId& parent,
   parent_pbs_[child] = parent;
 }
 
+void PhysicalPb::set_truth_table(const PhysicalPbId& pb,
+                                 const AtomNetlist::TruthTable& truth_table) {
+  VTR_ASSERT(true == valid_pb_id(pb)); 
+   
+  truth_tables_[pb] = truth_table;
+}
+
 void PhysicalPb::set_mode_bits(const PhysicalPbId& pb,
                                const std::vector<size_t>& mode_bits) {
   VTR_ASSERT(true == valid_pb_id(pb)); 
@@ -128,7 +141,7 @@ void PhysicalPb::set_mode_bits(const PhysicalPbId& pb,
 void PhysicalPb::add_atom_block(const PhysicalPbId& pb,
                                 const AtomBlockId& atom_block) {
   VTR_ASSERT(true == valid_pb_id(pb)); 
-   
+  
   atom_blocks_[pb].push_back(atom_block);
 }
 

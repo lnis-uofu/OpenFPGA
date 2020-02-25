@@ -36,7 +36,7 @@ bool lut_truth_table_use_on_set(const AtomNetlist::TruthTable& truth_table);
 std::vector<bool> build_frac_lut_bitstream(const CircuitLibrary& circuit_lib,
                                            const MuxGraph& lut_mux_graph, 
                                            const VprDeviceAnnotation& device_annotation, 
-                                           const std::map<t_pb_graph_pin*, AtomNetlist::TruthTable>& truth_tables,
+                                           const std::map<const t_pb_graph_pin*, AtomNetlist::TruthTable>& truth_tables,
                                            const size_t& default_sram_bit_value);
 
 } /* end namespace openfpga */

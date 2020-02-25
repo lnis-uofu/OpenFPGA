@@ -446,12 +446,12 @@ std::vector<bool> build_single_output_lut_bitstream(const AtomNetlist::TruthTabl
 std::vector<bool> build_frac_lut_bitstream(const CircuitLibrary& circuit_lib,
                                            const MuxGraph& lut_mux_graph, 
                                            const VprDeviceAnnotation& device_annotation, 
-                                           const std::map<t_pb_graph_pin*, AtomNetlist::TruthTable>& truth_tables,
+                                           const std::map<const t_pb_graph_pin*, AtomNetlist::TruthTable>& truth_tables,
                                            const size_t& default_sram_bit_value) {
   /* Initialization */
   std::vector<bool> lut_bitstream(lut_mux_graph.num_inputs(), default_sram_bit_value);
 
-  for (const std::pair<t_pb_graph_pin*, AtomNetlist::TruthTable>& element : truth_tables) {
+  for (const std::pair<const t_pb_graph_pin*, AtomNetlist::TruthTable>& element : truth_tables) {
     /* Find the corresponding circuit model output port and assoicated lut_output_mask */
     CircuitPortId lut_model_output_port = device_annotation.pb_circuit_port(element.first->port);
     size_t lut_frac_level = circuit_lib.port_lut_frac_level(lut_model_output_port);
