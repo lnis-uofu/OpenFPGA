@@ -12,10 +12,12 @@
 /* Headers from vpr library */
 #include "vpr_utils.h"
 
+#include "pb_graph_utils.h"
 #include "mux_utils.h"
 
 #include "circuit_library_utils.h"
 
+#include "openfpga_interconnect_types.h"
 #include "openfpga_reserved_words.h"
 #include "openfpga_naming.h"
 #include "mux_bitstream_constants.h"
@@ -111,6 +113,229 @@ void build_primitive_bitstream(BitstreamManager& bitstream_manager,
 }
 
 /********************************************************************
+ * This function generates bitstream for a programmable routing
+ * multiplexer which drives an output pin of physical_pb_graph_node and its the input_edges
+ *
+ *   src_pb_graph_node.[in|out]_pins -----------------> des_pb_graph_node.[in|out]pins
+ *                                        /|\
+ *                                         |
+ *                         input_pins,   edges,       output_pins
+ *******************************************************************/
+static 
+void build_physical_block_pin_interc_bitstream(BitstreamManager& bitstream_manager,
+                                               const ConfigBlockId& parent_configurable_block,
+                                               const ModuleManager& module_manager,
+                                               const CircuitLibrary& circuit_lib,
+                                               const MuxLibrary& mux_lib,
+                                               const VprDeviceAnnotation& device_annotation,
+                                               const PhysicalPb& physical_pb,
+                                               t_pb_graph_pin* des_pb_graph_pin,
+                                               t_mode* physical_mode) {
+  /* Identify the number of fan-in (Consider interconnection edges of only selected mode) */
+  t_interconnect* cur_interc = pb_graph_pin_interc(des_pb_graph_pin, physical_mode);
+  size_t fan_in = pb_graph_pin_inputs(des_pb_graph_pin, cur_interc).size();
+
+  if ((nullptr == cur_interc) || (0 == fan_in)) { 
+    /* No interconnection matched */
+    return;
+  }
+
+  /* Identify pin interconnection type */
+  enum e_interconnect interc_type = device_annotation.interconnect_physical_type(cur_interc);
+  switch (interc_type) {
+  case DIRECT_INTERC:
+    /* Nothing to do, return */
+    break;
+  case COMPLETE_INTERC:
+  case MUX_INTERC: {
+    /* Find the circuit model id of the mux, we need its design technology which matters the bitstream generation */
+    CircuitModelId mux_model = device_annotation.interconnect_circuit_model(cur_interc);
+    VTR_ASSERT(CIRCUIT_MODEL_MUX == circuit_lib.model_type(mux_model));
+
+    /* Find the input size of the implementation of a routing multiplexer */
+    size_t datapath_mux_size = fan_in;
+    VTR_ASSERT(true == valid_mux_implementation_num_inputs(datapath_mux_size));
+
+    /* Find the path id:
+     * - if des pb is not valid, this is an unmapped pb, we can set a default path_id
+     */
+    const PhysicalPbId& des_pb_id = physical_pb.find_pb(des_pb_graph_pin->parent_node);
+    size_t mux_input_pin_id = 0;
+    if (true != physical_pb.valid_pb_id(des_pb_id)) {
+      mux_input_pin_id = DEFAULT_PATH_ID;
+    } else { 
+      for (t_pb_graph_pin* src_pb_graph_pin : pb_graph_pin_inputs(des_pb_graph_pin, cur_interc)) {
+        const PhysicalPbId& src_pb_id = physical_pb.find_pb(src_pb_graph_pin->parent_node);
+        /* If the src pb id is not valid, we bypass it */
+        if ( (true != physical_pb.valid_pb_id(src_pb_id))
+          && (physical_pb.pb_graph_pin_atom_net(src_pb_id, src_pb_graph_pin) == physical_pb.pb_graph_pin_atom_net(des_pb_id, des_pb_graph_pin))) {
+          break;
+        }
+        mux_input_pin_id++;
+      }
+      VTR_ASSERT (mux_input_pin_id <= fan_in);
+      /* Unmapped pin, use default path id */
+      if (fan_in == mux_input_pin_id) {
+        mux_input_pin_id = DEFAULT_PATH_ID;
+      }
+    }
+
+    /* Generate bitstream depend on both technology and structure of this MUX */
+    std::vector<bool> mux_bitstream = build_mux_bitstream(circuit_lib, mux_model, mux_lib, datapath_mux_size, mux_input_pin_id); 
+
+    /* Create the block denoting the memory instances that drives this node in physical_block */
+    std::string mem_block_name = generate_pb_memory_instance_name(GRID_MEM_INSTANCE_PREFIX, des_pb_graph_pin, std::string(""));
+    ConfigBlockId mux_mem_block = bitstream_manager.add_block(mem_block_name);
+    bitstream_manager.add_child_block(parent_configurable_block, mux_mem_block);
+  
+    /* Find the module in module manager and ensure the bitstream size matches! */
+    std::string mem_module_name = generate_mux_subckt_name(circuit_lib, mux_model, datapath_mux_size, std::string(MEMORY_MODULE_POSTFIX)); 
+    ModuleId mux_mem_module = module_manager.find_module(mem_module_name); 
+    VTR_ASSERT (true == module_manager.valid_module_id(mux_mem_module));
+    ModulePortId mux_mem_out_port_id = module_manager.find_module_port(mux_mem_module, generate_configuration_chain_data_out_name());
+    VTR_ASSERT(mux_bitstream.size() == module_manager.module_port(mux_mem_module, mux_mem_out_port_id).get_width());
+  
+    /* Add the bistream to the bitstream manager */
+    for (const bool& bit : mux_bitstream) {
+      ConfigBitId config_bit = bitstream_manager.add_bit(bit);
+      /* Link the memory bits to the mux mem block */
+      bitstream_manager.add_bit_to_block(mux_mem_block, config_bit);
+    }
+    break;
+  }
+  default:
+    VTR_LOGF_ERROR(__FILE__, __LINE__,
+                   "Invalid interconnection type for %s (Arch[LINE%d])!\n",
+                   cur_interc->name, cur_interc->line_num);
+    exit(1);
+  }
+}
+
+/********************************************************************
+ * This function generates bitstream for the programmable routing
+ * multiplexers in a pb_graph node 
+ *******************************************************************/
+static 
+void build_physical_block_interc_port_bitstream(BitstreamManager& bitstream_manager,
+                                                const ConfigBlockId& parent_configurable_block,
+                                                const ModuleManager& module_manager,
+                                                const CircuitLibrary& circuit_lib,
+                                                const MuxLibrary& mux_lib,
+                                                const VprDeviceAnnotation& device_annotation,
+                                                t_pb_graph_node* physical_pb_graph_node,
+                                                const PhysicalPb& physical_pb,
+                                                const e_circuit_pb_port_type& pb_port_type,
+                                                t_mode* physical_mode) {
+  switch (pb_port_type) {
+  case CIRCUIT_PB_PORT_INPUT:
+    for (int iport = 0; iport < physical_pb_graph_node->num_input_ports; ++iport) {
+      for (int ipin = 0; ipin < physical_pb_graph_node->num_input_pins[iport]; ++ipin) {
+        build_physical_block_pin_interc_bitstream(bitstream_manager, parent_configurable_block,
+                                                  module_manager, circuit_lib, mux_lib,
+                                                  device_annotation,
+                                                  physical_pb,
+                                                  &(physical_pb_graph_node->input_pins[iport][ipin]),
+                                                  physical_mode);
+      }
+    }
+    break;
+  case CIRCUIT_PB_PORT_OUTPUT:
+    for (int iport = 0; iport < physical_pb_graph_node->num_output_ports; ++iport) {
+      for (int ipin = 0; ipin < physical_pb_graph_node->num_output_pins[iport]; ++ipin) {
+        build_physical_block_pin_interc_bitstream(bitstream_manager, parent_configurable_block,
+                                                  module_manager, circuit_lib, mux_lib,
+                                                  device_annotation,
+                                                  physical_pb,
+                                                  &(physical_pb_graph_node->output_pins[iport][ipin]),
+                                                  physical_mode);
+      }
+    }
+    break;
+  case CIRCUIT_PB_PORT_CLOCK:
+    for (int iport = 0; iport < physical_pb_graph_node->num_clock_ports; ++iport) {
+      for (int ipin = 0; ipin < physical_pb_graph_node->num_clock_pins[iport]; ++ipin) {
+        build_physical_block_pin_interc_bitstream(bitstream_manager, parent_configurable_block,
+                                                  module_manager, circuit_lib, mux_lib,
+                                                  device_annotation,
+                                                  physical_pb,
+                                                  &(physical_pb_graph_node->clock_pins[iport][ipin]),
+                                                  physical_mode);
+
+      }
+    }
+    break;
+  default:
+    VTR_LOGF_ERROR(__FILE__, __LINE__,
+                   "Invalid pb port type!\n");
+    exit(1);
+  }
+}
+
+/********************************************************************
+ * This function generates bitstream for the programmable routing
+ * multiplexers in a pb_graph node 
+ *******************************************************************/
+static 
+void build_physical_block_interc_bitstream(BitstreamManager& bitstream_manager,
+                                           const ConfigBlockId& parent_configurable_block,
+                                           const ModuleManager& module_manager,
+                                           const CircuitLibrary& circuit_lib,
+                                           const MuxLibrary& mux_lib,
+                                           const VprDeviceAnnotation& device_annotation,
+                                           t_pb_graph_node* physical_pb_graph_node,
+                                           const PhysicalPb& physical_pb,
+                                           t_mode* physical_mode) {
+  /* Check if the pb_graph node is valid or not */
+  if (nullptr == physical_pb_graph_node) {
+    VTR_LOGF_ERROR(__FILE__, __LINE__,
+                   "Invalid physical_pb_graph_node.\n"); 
+    exit(1);
+  }
+
+  /* We check output_pins of physical_pb_graph_node and its the input_edges
+   * Iterate over the interconnections between outputs of physical_pb_graph_node 
+   * and outputs of child_pb_graph_node
+   *   child_pb_graph_node.output_pins -----------------> physical_pb_graph_node.outpins
+   *                                        /|\
+   *                                         |
+   *                         input_pins,   edges,       output_pins
+   * Note: it is not applied to primitive pb_type!
+   */ 
+  build_physical_block_interc_port_bitstream(bitstream_manager, parent_configurable_block,
+                                             module_manager, circuit_lib, mux_lib, 
+                                             device_annotation, 
+                                             physical_pb_graph_node, physical_pb,  
+                                             CIRCUIT_PB_PORT_OUTPUT, physical_mode);
+ 
+  /* We check input_pins of child_pb_graph_node and its the input_edges
+   * Iterate over the interconnections between inputs of physical_pb_graph_node 
+   * and inputs of child_pb_graph_node
+   *   physical_pb_graph_node.input_pins -----------------> child_pb_graph_node.input_pins
+   *                                        /|\
+   *                                         |
+   *                         input_pins,   edges,       output_pins
+   */ 
+  for (int ipb = 0; ipb < physical_mode->num_pb_type_children; ipb++) {
+    for (int jpb = 0; jpb < physical_mode->pb_type_children[ipb].num_pb; jpb++) {
+      t_pb_graph_node* child_pb_graph_node = &(physical_pb_graph_node->child_pb_graph_nodes[physical_mode->index][ipb][jpb]);
+
+      /* For each child_pb_graph_node input pins*/
+      build_physical_block_interc_port_bitstream(bitstream_manager, parent_configurable_block,
+                                                 module_manager, circuit_lib, mux_lib, 
+                                                 device_annotation, 
+                                                 child_pb_graph_node, physical_pb,  
+                                                 CIRCUIT_PB_PORT_INPUT, physical_mode);
+      /* For clock pins, we should do the same work */
+      build_physical_block_interc_port_bitstream(bitstream_manager, parent_configurable_block,
+                                                 module_manager, circuit_lib, mux_lib, 
+                                                 device_annotation, 
+                                                 child_pb_graph_node, physical_pb,  
+                                                 CIRCUIT_PB_PORT_CLOCK, physical_mode);
+    }
+  }
+}
+
+/********************************************************************
  * This function generates bitstream for a physical block, which is 
  * a child block of a grid 
  * This function will follow a recursive way in generating bitstreams
@@ -168,8 +393,10 @@ void rec_build_physical_block_bitstream(BitstreamManager& bitstream_manager,
 
   /* Check if this has defined a circuit_model*/
   if (true == is_primitive_pb_type(physical_pb_type)) { 
-    switch (physical_pb_type->class_type) {
-    case LUT_CLASS: 
+    CircuitModelId primitive_circuit_model = device_annotation.pb_type_circuit_model(physical_pb_type);
+    VTR_ASSERT(CircuitModelId::INVALID() != primitive_circuit_model);
+    switch (circuit_lib.model_type(primitive_circuit_model)) {
+    case CIRCUIT_MODEL_LUT: 
       /* Special case for LUT !!!
        * Mapped logical block information is stored in child_pbs of this pb!!!
        */
@@ -177,9 +404,9 @@ void rec_build_physical_block_bitstream(BitstreamManager& bitstream_manager,
       //                    module_manager, circuit_lib, mux_lib, 
       //                    physical_pb, pb_id, physical_pb_type);
       break;
-    case LATCH_CLASS:
-    case UNKNOWN_CLASS:
-    case MEMORY_CLASS:
+    case CIRCUIT_MODEL_FF:
+    case CIRCUIT_MODEL_HARDLOGIC:
+    case CIRCUIT_MODEL_IOPAD:
       /* For other types of blocks, we can apply a generic therapy */
       build_primitive_bitstream(bitstream_manager, pb_configurable_block,
                                 module_manager, circuit_lib, device_annotation, 
@@ -187,7 +414,7 @@ void rec_build_physical_block_bitstream(BitstreamManager& bitstream_manager,
       break;  
     default:
       VTR_LOGF_ERROR(__FILE__, __LINE__, 
-                     "Unknown class type of pb_type '%s'!\n",
+                     "Unknown circuit model type of pb_type '%s'!\n",
                      physical_pb_type->name);
       exit(1);
     }
@@ -196,10 +423,11 @@ void rec_build_physical_block_bitstream(BitstreamManager& bitstream_manager,
   }
 
   /* Generate the bitstream for the interconnection in this physical block */
-  //build_physical_block_interc_bitstream(bitstream_manager, pb_configurable_block,
-  //                                      module_manager, circuit_lib, mux_lib,
-  //                                      physical_pb_graph_node, physical_pb,
-  //                                      pb_id, physical_mode_index);
+  build_physical_block_interc_bitstream(bitstream_manager, pb_configurable_block,
+                                        module_manager, circuit_lib, mux_lib,
+                                        device_annotation,
+                                        physical_pb_graph_node, physical_pb,
+                                        physical_mode);
 }
 
 /********************************************************************

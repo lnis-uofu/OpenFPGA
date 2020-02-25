@@ -435,7 +435,7 @@ void build_routing_bitstream(BitstreamManager& bitstream_manager,
                                     device_annotation, routing_annotation,
                                     rr_graph,
                                     device_rr_gsb, CHANY);
-  VTR_LOG("Done");
+  VTR_LOG("Done\n");
 
 }
 
