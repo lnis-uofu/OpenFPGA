@@ -111,7 +111,12 @@ void rec_write_block_bitstream_to_xml_file(std::fstream& fp,
  *******************************************************************/
 void write_arch_independent_bitstream_to_xml_file(const BitstreamManager& bitstream_manager,
                                                   const std::string& fname) {
-  std::string timer_message = std::string("Writing ") + std::to_string(bitstream_manager.bits().size()) + std::string(" architecture independent bitstream into XML file '") + fname + std::string("'\n");
+  /* Ensure that we have a valid file name */
+  if (true == fname.empty()) {
+    VTR_LOG_ERROR("Received empty file name to output bitstream!\n\tPlease specify a valid file name.\n");
+  }
+
+  std::string timer_message = std::string("Write ") + std::to_string(bitstream_manager.bits().size()) + std::string(" architecture independent bitstream into XML file '") + fname + std::string("'");
   vtr::ScopedStartFinishTimer timer(timer_message);
 
   /* Create the file stream */

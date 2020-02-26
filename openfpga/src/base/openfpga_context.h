@@ -1,6 +1,7 @@
 #ifndef OPENFPGA_CONTEXT_H
 #define OPENFPGA_CONTEXT_H
 
+#include <vector>
 #include "vpr_context.h"
 #include "openfpga_arch.h"
 #include "vpr_netlist_annotation.h"
@@ -56,6 +57,7 @@ class OpenfpgaContext : public Context  {
     const openfpga::ModuleManager& module_graph() const { return module_graph_; }
     const openfpga::FlowManager& flow_manager() const { return flow_manager_; }
     const openfpga::BitstreamManager& bitstream_manager() const { return bitstream_manager_; }
+    const std::vector<openfpga::ConfigBitId>& fabric_bitstream() const { return fabric_bitstream_; }
   public:  /* Public mutators */
     openfpga::Arch& mutable_arch() { return arch_; }
     openfpga::VprDeviceAnnotation& mutable_vpr_device_annotation() { return vpr_device_annotation_; }
@@ -69,6 +71,7 @@ class OpenfpgaContext : public Context  {
     openfpga::ModuleManager& mutable_module_graph() { return module_graph_; }
     openfpga::FlowManager& mutable_flow_manager() { return flow_manager_; }
     openfpga::BitstreamManager& mutable_bitstream_manager() { return bitstream_manager_; }
+    std::vector<openfpga::ConfigBitId>& mutable_fabric_bitstream() { return fabric_bitstream_; }
   private: /* Internal data */
     /* Data structure to store information from read_openfpga_arch library */
     openfpga::Arch arch_;
@@ -102,6 +105,7 @@ class OpenfpgaContext : public Context  {
 
     /* Bitstream database */
     openfpga::BitstreamManager bitstream_manager_;
+    std::vector<openfpga::ConfigBitId> fabric_bitstream_;
  
     /* Flow status */
     openfpga::FlowManager flow_manager_;

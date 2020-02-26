@@ -83,7 +83,8 @@ void rec_build_module_fabric_dependent_bitstream(const BitstreamManager& bitstre
  * It was done in the function build_device_bitstream() 
  *******************************************************************/
 std::vector<ConfigBitId> build_fabric_dependent_bitstream(const BitstreamManager& bitstream_manager,
-                                                          const ModuleManager& module_manager) {
+                                                          const ModuleManager& module_manager,
+                                                          const bool& verbose) {
   std::vector<ConfigBitId> fabric_bitstream; 
 
   vtr::ScopedStartFinishTimer timer("\nBuild fabric dependent bitstream\n");
@@ -124,6 +125,10 @@ std::vector<ConfigBitId> build_fabric_dependent_bitstream(const BitstreamManager
 
   /* Ensure our fabric bitstream is in the same size as device bistream */
   VTR_ASSERT(bitstream_manager.bits().size() == fabric_bitstream.size());
+
+  VTR_LOGV(verbose,
+           "Built %lu configuration bits for fabric\n",
+           fabric_bitstream.size());
 
   return fabric_bitstream;
 }

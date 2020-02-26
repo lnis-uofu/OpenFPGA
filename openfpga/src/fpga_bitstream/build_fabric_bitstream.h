@@ -16,7 +16,8 @@
 namespace openfpga {
 
 std::vector<ConfigBitId> build_fabric_dependent_bitstream(const BitstreamManager& bitstream_manager,
-                                                          const ModuleManager& module_manager);
+                                                          const ModuleManager& module_manager,
+                                                          const bool& verbose);
 
 } /* end namespace openfpga */
 

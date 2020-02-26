@@ -39,8 +39,12 @@ void add_openfpga_bitstream_commands(openfpga::Shell<OpenfpgaContext>& shell) {
    * Command 'fpga_bitstream' 
    */
   Command shell_cmd_fpga_bitstream("fpga_bitstream");
+
+  /* Add an option '--file' in short '-f'*/
+  CommandOptionId fpga_bitstream_opt_file = shell_cmd_fpga_bitstream.add_option("file", true, "file path to output the bitstream database");
+  shell_cmd_fpga_bitstream.set_option_short_name(fpga_bitstream_opt_file, "f");
+  shell_cmd_fpga_bitstream.set_option_require_value(fpga_bitstream_opt_file, openfpga::OPT_STRING);
   /* Add an option '--verbose' */
-  shell_cmd_fpga_bitstream.add_option("fabric_dependent", false, "Enable the bitstream construction for the FPGA fabric");
   shell_cmd_fpga_bitstream.add_option("verbose", false, "Enable verbose output");
   
   /* Add command 'fpga_bitstream' to the Shell */
@@ -53,6 +57,22 @@ void add_openfpga_bitstream_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   cmd_dependency_fpga_bitstream.push_back(shell_cmd_repack_id);
   shell.set_command_dependency(shell_cmd_fpga_bitstream_id, cmd_dependency_fpga_bitstream);
 
+  /******************************** 
+   * Command 'build_fabric_bitstream' 
+   */
+  Command shell_cmd_fabric_bitstream("build_fabric_bitstream");
+  /* Add an option '--verbose' */
+  shell_cmd_fabric_bitstream.add_option("verbose", false, "Enable verbose output");
+
+  /* Add command 'fabric_bitstream' to the Shell */
+  ShellCommandId shell_cmd_fabric_bitstream_id = shell.add_command(shell_cmd_fabric_bitstream, "Reorganize the fabric-independent bitstream for the FPGA fabric created by FPGA-Verilog");
+  shell.set_command_class(shell_cmd_fabric_bitstream_id, openfpga_bitstream_cmd_class);
+  shell.set_command_execute_function(shell_cmd_fabric_bitstream_id, build_fabric_bitstream);
+
+  /* The 'fabric_bitstream' command should NOT be executed before 'fpga_bitstream' */
+  std::vector<ShellCommandId> cmd_dependency_fabric_bitstream;
+  cmd_dependency_fabric_bitstream.push_back(shell_cmd_fpga_bitstream_id);
+  shell.set_command_dependency(shell_cmd_fabric_bitstream_id, cmd_dependency_fabric_bitstream);
 } 
 
 } /* end namespace openfpga */

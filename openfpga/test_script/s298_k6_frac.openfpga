@@ -30,7 +30,8 @@ build_fabric --compress_routing --duplicate_grid_pin #--verbose
 repack --verbose
 
 # Build the bitstream 
-fpga_bitstream --verbose
+#  - Output the fabric-independent bitstream to a file
+fpga_bitstream --verbose --file /var/tmp/xtang/openfpga_test_src/fabric_indepenent_bitstream.xml
 
 # Write the Verilog netlit for FPGA fabric
 #  - Enable the use of explicit port mapping in Verilog netlist
