@@ -2,6 +2,7 @@
  * This file includes functions that are used for building bitstreams
  * for grids (CLBs, heterogenerous blocks, I/Os, etc.)
  *******************************************************************/
+#include <cmath>
 #include <string>
 
 /* Headers from vtrutil library */
@@ -22,9 +23,9 @@
 #include "openfpga_naming.h"
 #include "mux_bitstream_constants.h"
 #include "pb_type_utils.h"
+#include "lut_utils.h"
 
 #include "build_mux_bitstream.h"
-//#include "build_lut_bitstream.h"
 #include "build_grid_bitstream.h"
 
 /* begin namespace openfpga */
@@ -336,6 +337,112 @@ void build_physical_block_interc_bitstream(BitstreamManager& bitstream_manager,
 }
 
 /********************************************************************
+ * Generate bitstream for a LUT and add it to bitstream manager
+ * This function supports both single-output and fracturable LUTs
+ *******************************************************************/
+static 
+void build_lut_bitstream(BitstreamManager& bitstream_manager,
+                         const ConfigBlockId& parent_configurable_block,
+                         const VprDeviceAnnotation& device_annotation,
+                         const ModuleManager& module_manager,
+                         const CircuitLibrary& circuit_lib,
+                         const MuxLibrary& mux_lib,
+                         const PhysicalPb& physical_pb,
+                         const PhysicalPbId& lut_pb_id,
+                         t_pb_type* lut_pb_type) {
+
+  /* Ensure a valid physical pritimive pb */ 
+  if (nullptr == lut_pb_type) {
+    VTR_LOGF_ERROR(__FILE__, __LINE__,
+                   "Invalid lut_pb_type!\n");
+    exit(1);
+  }
+
+  CircuitModelId lut_model = device_annotation.pb_type_circuit_model(lut_pb_type);
+  VTR_ASSERT(CircuitModelId::INVALID() != lut_model);
+  VTR_ASSERT(CIRCUIT_MODEL_LUT == circuit_lib.model_type(lut_model));
+
+  /* Find the input ports for LUT size, this is used to decode the LUT memory bits! */
+  std::vector<CircuitPortId> model_input_ports = circuit_lib.model_ports_by_type(lut_model, CIRCUIT_MODEL_PORT_INPUT, true);
+  VTR_ASSERT(1 == model_input_ports.size());
+  size_t lut_size = circuit_lib.port_size(model_input_ports[0]);
+
+  /* Find SRAM ports for truth tables and mode-selection */
+  std::vector<CircuitPortId> lut_regular_sram_ports = find_circuit_regular_sram_ports(circuit_lib, lut_model);
+  std::vector<CircuitPortId> lut_mode_select_ports = find_circuit_mode_select_sram_ports(circuit_lib, lut_model);
+  /* We should always 1 regular sram port, where truth table is loaded to */
+  VTR_ASSERT(1 == lut_regular_sram_ports.size());
+  /* We may have a port for mode select or not. This depends on if the LUT is fracturable or not */
+  VTR_ASSERT( (0 == lut_mode_select_ports.size())
+           || (1 == lut_mode_select_ports.size()) );
+
+  std::vector<bool> lut_bitstream;
+  /* Generate bitstream for the LUT */ 
+  if (false == physical_pb.valid_pb_id(lut_pb_id)) {
+    /* An empty pb means that this is an unused LUT, 
+     * we give an empty truth table, which are full of default values (defined by users) 
+     */
+    for (size_t i = 0; i < circuit_lib.port_size(lut_regular_sram_ports[0]); ++i) {
+      VTR_ASSERT( (0 == circuit_lib.port_default_value(lut_regular_sram_ports[0]))
+               || (1 == circuit_lib.port_default_value(lut_regular_sram_ports[0])) );
+      lut_bitstream.push_back(1 == circuit_lib.port_default_value(lut_regular_sram_ports[0]));
+    }
+  } else { 
+    VTR_ASSERT(true == physical_pb.valid_pb_id(lut_pb_id));
+
+    /* Find MUX graph correlated to the LUT */
+    MuxId lut_mux_id = mux_lib.mux_graph(lut_model, (size_t)pow(2., lut_size)); 
+    const MuxGraph& mux_graph = mux_lib.mux_graph(lut_mux_id);
+    /* Ensure the LUT MUX has the expected input and SRAM port sizes */
+    VTR_ASSERT(mux_graph.num_memory_bits() == lut_size);
+    VTR_ASSERT(mux_graph.num_inputs() == (size_t)pow(2., lut_size));
+    /* Generate LUT bitstream */
+    lut_bitstream = build_frac_lut_bitstream(circuit_lib, mux_graph,
+                                             device_annotation,
+                                             physical_pb.truth_tables(lut_pb_id),
+                                             circuit_lib.port_default_value(lut_regular_sram_ports[0]));
+  }
+  
+  /* Generate bitstream for mode-select ports */
+  if (0 != lut_mode_select_ports.size()) {
+    std::vector<bool> mode_select_bitstream;
+    /* TODO: Xifan Tang: find out why some lut_pb has no mode bits!!!
+     * I suspect that wire LUTs are not mapped to any pb
+     */
+    if ( (true == physical_pb.valid_pb_id(lut_pb_id))
+      && (0 != physical_pb.mode_bits(lut_pb_id).size()) ) {
+      mode_select_bitstream = generate_mode_select_bitstream(physical_pb.mode_bits(lut_pb_id));
+    } else { /* get default mode_bits */
+      mode_select_bitstream = generate_mode_select_bitstream(device_annotation.pb_type_mode_bits(lut_pb_type));
+    }
+    /* Conjunct the mode-select bitstream to the lut bitstream */
+    for (const bool& bit : mode_select_bitstream) {
+      lut_bitstream.push_back(bit);
+    }
+  }
+
+  /* Ensure the length of bitstream matches the side of memory circuits */
+  std::vector<CircuitModelId> sram_models = find_circuit_sram_models(circuit_lib, lut_model);
+  VTR_ASSERT(1 == sram_models.size());
+  std::string mem_block_name = generate_memory_module_name(circuit_lib, lut_model, sram_models[0], std::string(MEMORY_MODULE_POSTFIX));
+  ModuleId mem_module = module_manager.find_module(mem_block_name);
+  VTR_ASSERT (true == module_manager.valid_module_id(mem_module));
+  ModulePortId mem_out_port_id = module_manager.find_module_port(mem_module, generate_configuration_chain_data_out_name());
+  VTR_ASSERT(lut_bitstream.size() == module_manager.module_port(mem_module, mem_out_port_id).get_width());
+
+  /* Create a block for the bitstream which corresponds to the memory module associated to the LUT */
+  ConfigBlockId mem_block = bitstream_manager.add_block(mem_block_name);
+  bitstream_manager.add_child_block(parent_configurable_block, mem_block);
+
+  /* Add the bitstream to the bitstream manager */
+  for (const bool& bit : lut_bitstream) {
+    ConfigBitId config_bit = bitstream_manager.add_bit(bit);
+    /* Link the memory bits to the mux mem block */
+    bitstream_manager.add_bit_to_block(mem_block, config_bit);
+  }
+}
+
+/********************************************************************
  * This function generates bitstream for a physical block, which is 
  * a child block of a grid 
  * This function will follow a recursive way in generating bitstreams
@@ -400,9 +507,10 @@ void rec_build_physical_block_bitstream(BitstreamManager& bitstream_manager,
       /* Special case for LUT !!!
        * Mapped logical block information is stored in child_pbs of this pb!!!
        */
-      //build_lut_bitstream(bitstream_manager, pb_configurable_block,
-      //                    module_manager, circuit_lib, mux_lib, 
-      //                    physical_pb, pb_id, physical_pb_type);
+      build_lut_bitstream(bitstream_manager, pb_configurable_block,
+                          device_annotation, 
+                          module_manager, circuit_lib, mux_lib, 
+                          physical_pb, pb_id, physical_pb_type);
       break;
     case CIRCUIT_MODEL_FF:
     case CIRCUIT_MODEL_HARDLOGIC:
