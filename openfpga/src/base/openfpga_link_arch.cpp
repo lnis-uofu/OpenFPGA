@@ -15,6 +15,7 @@
 #include "annotate_rr_graph.h"
 #include "mux_library_builder.h"
 #include "build_tile_direct.h"
+#include "annotate_placement.h"
 #include "openfpga_link_arch.h"
 
 /* Include global variables of VPR */
@@ -109,8 +110,14 @@ void link_arch(OpenfpgaContext& openfpga_ctx,
                                                             const_cast<const OpenfpgaContext&>(openfpga_ctx)); 
 
   /* Build tile direct annotation */
-  openfpga_ctx.mutable_tile_direct() =  build_device_tile_direct(g_vpr_ctx.device(),
-                                                                 openfpga_ctx.arch().arch_direct);
+  openfpga_ctx.mutable_tile_direct() = build_device_tile_direct(g_vpr_ctx.device(),
+                                                                openfpga_ctx.arch().arch_direct);
+
+  /* Annotate placement results */
+  annotate_mapped_blocks(g_vpr_ctx.device(), 
+                         g_vpr_ctx.clustering(),
+                         g_vpr_ctx.placement(),
+                         openfpga_ctx.mutable_vpr_placement_annotation());
 } 
 
 } /* end namespace openfpga */

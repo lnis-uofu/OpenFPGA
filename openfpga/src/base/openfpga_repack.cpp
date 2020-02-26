@@ -5,7 +5,7 @@
 #include "vtr_time.h"
 #include "vtr_log.h"
 
-#include "verilog_api.h"
+#include "build_physical_truth_table.h"
 #include "repack.h"
 #include "openfpga_repack.h"
 
@@ -29,6 +29,12 @@ void repack(OpenfpgaContext& openfpga_ctx,
                     openfpga_ctx.mutable_vpr_device_annotation(),
                     openfpga_ctx.mutable_vpr_clustering_annotation(),
                     cmd_context.option_enable(cmd, opt_verbose));
+
+  build_physical_lut_truth_tables(openfpga_ctx.mutable_vpr_clustering_annotation(),
+                                  g_vpr_ctx.atom(),
+                                  g_vpr_ctx.clustering(),
+                                  openfpga_ctx.vpr_device_annotation(),
+                                  openfpga_ctx.arch().circuit_lib); 
 } 
 
 } /* end namespace openfpga */

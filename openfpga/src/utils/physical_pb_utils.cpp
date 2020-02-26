@@ -32,6 +32,8 @@ void rec_alloc_physical_pb_from_pb_graph(PhysicalPb& phy_pb,
 
   /* Finish for primitive node */
   if (true == is_primitive_pb_type(pb_type)) {
+    /* Deposite mode bits here */
+    phy_pb.set_mode_bits(cur_phy_pb_id, device_annotation.pb_type_mode_bits(pb_type));
     return;
   } 
 
@@ -236,7 +238,7 @@ void rec_update_physical_pb_from_operating_pb(PhysicalPb& phy_pb,
     VTR_ASSERT(true == phy_pb.valid_pb_id(physical_pb));
 
     /* Set the mode bits */
-    phy_pb.set_mode_bits(physical_pb, device_annotation.pb_type_mode_bits(physical_pb_graph_node->pb_type));
+    phy_pb.set_mode_bits(physical_pb, device_annotation.pb_type_mode_bits(pb_type));
 
     /* Find mapped atom block and add to this physical pb */
     AtomBlockId atom_blk = atom_ctx.nlist.find_block(op_pb->name);
@@ -244,7 +246,7 @@ void rec_update_physical_pb_from_operating_pb(PhysicalPb& phy_pb,
 
     phy_pb.add_atom_block(physical_pb, atom_blk);
 
-    /* TODO: Iterate over ports and annotate the atom pins */
+    /* Iterate over ports and annotate the atom pins */
     synchronize_primitive_physical_pb_atom_nets(phy_pb, physical_pb,
                                                 pb_graph_node, 
                                                 pb_route,

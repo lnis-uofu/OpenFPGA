@@ -16,9 +16,25 @@ PhysicalPb::physical_pb_range PhysicalPb::pbs() const {
   return vtr::make_range(pb_ids_.begin(), pb_ids_.end());
 }
 
+std::vector<PhysicalPbId> PhysicalPb::primitive_pbs() const {
+  std::vector<PhysicalPbId> results; 
+  /* The primitive pbs are those without any children */
+  for (auto pb : pbs()) {
+    if (true == child_pbs_[pb].empty()) {
+      results.push_back(pb);
+    } 
+  }
+  return results;
+}
+
 std::string PhysicalPb::name(const PhysicalPbId& pb) const {
   VTR_ASSERT(true == valid_pb_id(pb));
   return names_[pb];
+}
+
+const t_pb_graph_node* PhysicalPb::pb_graph_node(const PhysicalPbId& pb) const {
+  VTR_ASSERT(true == valid_pb_id(pb));
+  return pb_graph_nodes_[pb];
 }
 
 /* Find the module id by a given name, return invalid if not found */
@@ -36,6 +52,24 @@ PhysicalPbId PhysicalPb::parent(const PhysicalPbId& pb) const {
   return parent_pbs_[pb];
 }
 
+PhysicalPbId PhysicalPb::child(const PhysicalPbId& pb,
+                               const t_pb_type* pb_type, 
+                               const size_t& index) const {
+  VTR_ASSERT(true == valid_pb_id(pb));
+  if (0 < child_pbs_[pb].count(pb_type)) {
+    if (index < child_pbs_[pb].at(pb_type).size()) {
+      return child_pbs_[pb].at(pb_type)[index]; 
+    }
+  }
+  return PhysicalPbId::INVALID();
+}
+
+std::vector<AtomBlockId> PhysicalPb::atom_blocks(const PhysicalPbId& pb) const {
+  VTR_ASSERT(true == valid_pb_id(pb));
+  
+  return atom_blocks_[pb];
+}
+
 AtomNetId PhysicalPb::pb_graph_pin_atom_net(const PhysicalPbId& pb,
                                             const t_pb_graph_pin* pb_graph_pin) const {
   VTR_ASSERT(true == valid_pb_id(pb));
@@ -45,6 +79,16 @@ AtomNetId PhysicalPb::pb_graph_pin_atom_net(const PhysicalPbId& pb,
   }
   /* Not found, return an invalid id */
   return AtomNetId::INVALID();
+}
+
+std::map<const t_pb_graph_pin*, AtomNetlist::TruthTable> PhysicalPb::truth_tables(const PhysicalPbId& pb) const {
+  VTR_ASSERT(true == valid_pb_id(pb));
+  return truth_tables_[pb];
+}
+
+std::vector<size_t> PhysicalPb::mode_bits(const PhysicalPbId& pb) const {
+  VTR_ASSERT(true == valid_pb_id(pb));
+  return mode_bits_[pb];
 }
 
 /******************************************************************************
@@ -70,6 +114,7 @@ PhysicalPbId PhysicalPb::create_pb(const t_pb_graph_node* pb_graph_node) {
   child_pbs_.emplace_back();
   parent_pbs_.emplace_back();
 
+  truth_tables_.emplace_back();
   mode_bits_.emplace_back();
 
   /* Register in the name2id map */
@@ -96,6 +141,19 @@ void PhysicalPb::add_child(const PhysicalPbId& parent,
   parent_pbs_[child] = parent;
 }
 
+void PhysicalPb::set_truth_table(const PhysicalPbId& pb,
+                                 const t_pb_graph_pin* pb_graph_pin,
+                                 const AtomNetlist::TruthTable& truth_table) {
+  VTR_ASSERT(true == valid_pb_id(pb)); 
+
+  if (0 < truth_tables_[pb].count(pb_graph_pin)) {
+    VTR_LOG_WARN("Overwrite truth tables mapped to pb_graph_pin '%s[%ld]!\n",
+                  pb_graph_pin->port->name, pb_graph_pin->pin_number);
+  }
+   
+  truth_tables_[pb][pb_graph_pin] = truth_table;
+}
+
 void PhysicalPb::set_mode_bits(const PhysicalPbId& pb,
                                const std::vector<size_t>& mode_bits) {
   VTR_ASSERT(true == valid_pb_id(pb)); 
@@ -106,7 +164,7 @@ void PhysicalPb::set_mode_bits(const PhysicalPbId& pb,
 void PhysicalPb::add_atom_block(const PhysicalPbId& pb,
                                 const AtomBlockId& atom_block) {
   VTR_ASSERT(true == valid_pb_id(pb)); 
-   
+  
   atom_blocks_[pb].push_back(atom_block);
 }
 

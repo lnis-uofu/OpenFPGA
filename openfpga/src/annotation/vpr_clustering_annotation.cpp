@@ -86,5 +86,10 @@ void VprClusteringAnnotation::add_physical_pb(const ClusterBlockId& block_id,
   physical_pbs_[block_id] = physical_pb;
 }
 
+PhysicalPb& VprClusteringAnnotation::mutable_physical_pb(const ClusterBlockId& block_id) {
+  VTR_ASSERT(physical_pbs_.end() != physical_pbs_.find(block_id));
+
+  return physical_pbs_.at(block_id);
+}
 
 } /* End namespace openfpga*/

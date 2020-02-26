@@ -8,7 +8,7 @@ read_openfpga_arch -f ./test_openfpga_arch/k6_frac_N10_40nm_openfpga.xml
 #write_openfpga_arch -f ./arch_echo.xml
 
 # Annotate the OpenFPGA architecture to VPR data base
-link_openfpga_arch --verbose
+link_openfpga_arch #--verbose
 
 # Check and correct any naming conflicts in the BLIF netlist
 check_netlist_naming_conflict --fix --report ./netlist_renaming.xml
@@ -28,6 +28,10 @@ build_fabric --compress_routing --duplicate_grid_pin #--verbose
 # This must be done before bitstream generator and testbench generation
 # Strongly recommend it is done after all the fix-up have been applied
 repack --verbose
+
+# Build the bitstream 
+#  - Output the fabric-independent bitstream to a file
+fpga_bitstream --verbose --file /var/tmp/xtang/openfpga_test_src/fabric_indepenent_bitstream.xml
 
 # Write the Verilog netlit for FPGA fabric
 #  - Enable the use of explicit port mapping in Verilog netlist
