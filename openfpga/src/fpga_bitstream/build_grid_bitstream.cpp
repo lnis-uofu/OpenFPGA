@@ -409,8 +409,7 @@ void build_lut_bitstream(BitstreamManager& bitstream_manager,
     /* TODO: Xifan Tang: find out why some lut_pb has no mode bits!!!
      * I suspect that wire LUTs are not mapped to any pb
      */
-    if ( (true == physical_pb.valid_pb_id(lut_pb_id))
-      && (0 != physical_pb.mode_bits(lut_pb_id).size()) ) {
+    if (true == physical_pb.valid_pb_id(lut_pb_id)) {
       mode_select_bitstream = generate_mode_select_bitstream(physical_pb.mode_bits(lut_pb_id));
     } else { /* get default mode_bits */
       mode_select_bitstream = generate_mode_select_bitstream(device_annotation.pb_type_mode_bits(lut_pb_type));

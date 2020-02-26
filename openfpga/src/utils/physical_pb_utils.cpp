@@ -32,6 +32,8 @@ void rec_alloc_physical_pb_from_pb_graph(PhysicalPb& phy_pb,
 
   /* Finish for primitive node */
   if (true == is_primitive_pb_type(pb_type)) {
+    /* Deposite mode bits here */
+    phy_pb.set_mode_bits(cur_phy_pb_id, device_annotation.pb_type_mode_bits(pb_type));
     return;
   } 
 
