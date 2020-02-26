@@ -98,10 +98,9 @@ void build_physical_pb_lut_truth_tables(PhysicalPb& physical_pb,
     input_nets.push_back(physical_pb.pb_graph_pin_atom_net(lut_pb_id, &(pb_graph_node->input_pins[0][ipin]))); 
   }
 
-
   /* Find all the nets mapped to each outputs */
-  for (int iport = 0; iport < pb_graph_node->num_input_ports; ++iport) {
-    for (int ipin = 0; ipin < pb_graph_node->num_input_pins[iport]; ++ipin) {
+  for (int iport = 0; iport < pb_graph_node->num_output_ports; ++iport) {
+    for (int ipin = 0; ipin < pb_graph_node->num_output_pins[iport]; ++ipin) {
       const t_pb_graph_pin* output_pin = &(pb_graph_node->output_pins[iport][ipin]);
       AtomNetId output_net = physical_pb.pb_graph_pin_atom_net(lut_pb_id, output_pin); 
       /* Bypass unmapped pins */

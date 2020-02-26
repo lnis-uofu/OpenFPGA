@@ -406,9 +406,6 @@ void build_lut_bitstream(BitstreamManager& bitstream_manager,
   /* Generate bitstream for mode-select ports */
   if (0 != lut_mode_select_ports.size()) {
     std::vector<bool> mode_select_bitstream;
-    /* TODO: Xifan Tang: find out why some lut_pb has no mode bits!!!
-     * I suspect that wire LUTs are not mapped to any pb
-     */
     if (true == physical_pb.valid_pb_id(lut_pb_id)) {
       mode_select_bitstream = generate_mode_select_bitstream(physical_pb.mode_bits(lut_pb_id));
     } else { /* get default mode_bits */
