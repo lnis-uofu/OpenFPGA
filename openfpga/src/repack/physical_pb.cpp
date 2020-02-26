@@ -16,6 +16,17 @@ PhysicalPb::physical_pb_range PhysicalPb::pbs() const {
   return vtr::make_range(pb_ids_.begin(), pb_ids_.end());
 }
 
+std::vector<PhysicalPbId> PhysicalPb::primitive_pbs() const {
+  std::vector<PhysicalPbId> results; 
+  /* The primitive pbs are those without any children */
+  for (auto pb : pbs()) {
+    if (true == child_pbs_[pb].empty()) {
+      results.push_back(pb);
+    } 
+  }
+  return results;
+}
+
 std::string PhysicalPb::name(const PhysicalPbId& pb) const {
   VTR_ASSERT(true == valid_pb_id(pb));
   return names_[pb];

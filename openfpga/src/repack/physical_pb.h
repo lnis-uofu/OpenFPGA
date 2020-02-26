@@ -39,6 +39,7 @@ class PhysicalPb {
     typedef vtr::Range<physical_pb_iterator> physical_pb_range;
   public: /* Public aggregators */
     physical_pb_range pbs() const;
+    std::vector<PhysicalPbId> primitive_pbs() const;
     std::string name(const PhysicalPbId& pb) const;
     PhysicalPbId find_pb(const t_pb_graph_node* name) const;
     PhysicalPbId parent(const PhysicalPbId& pb) const;
