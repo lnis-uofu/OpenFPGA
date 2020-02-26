@@ -24,8 +24,8 @@ AtomNetlist::TruthTable lut_truth_table_adaption(const AtomNetlist::TruthTable& 
 
 std::vector<std::string> truth_table_to_string(const AtomNetlist::TruthTable& tt);
 
-AtomNetlist::TruthTable build_post_routing_wired_lut_truth_table(const size_t& lut_size, 
-                                                                 const size_t& wire_input_id);
+AtomNetlist::TruthTable build_wired_lut_truth_table(const size_t& lut_size, 
+                                                    const size_t& wire_input_id);
 
 AtomNetlist::TruthTable adapt_truth_table_for_frac_lut(const size_t& lut_frac_level,
                                                        const size_t& lut_output_mask,

@@ -32,6 +32,11 @@ std::string PhysicalPb::name(const PhysicalPbId& pb) const {
   return names_[pb];
 }
 
+const t_pb_graph_node* PhysicalPb::pb_graph_node(const PhysicalPbId& pb) const {
+  VTR_ASSERT(true == valid_pb_id(pb));
+  return pb_graph_nodes_[pb];
+}
+
 /* Find the module id by a given name, return invalid if not found */
 PhysicalPbId PhysicalPb::find_pb(const t_pb_graph_node* pb_graph_node) const {
   if (type2id_map_.find(pb_graph_node) != type2id_map_.end()) {
@@ -76,7 +81,7 @@ AtomNetId PhysicalPb::pb_graph_pin_atom_net(const PhysicalPbId& pb,
   return AtomNetId::INVALID();
 }
 
-AtomNetlist::TruthTable PhysicalPb::truth_table(const PhysicalPbId& pb) const {
+std::map<const t_pb_graph_pin*, AtomNetlist::TruthTable> PhysicalPb::truth_tables(const PhysicalPbId& pb) const {
   VTR_ASSERT(true == valid_pb_id(pb));
   return truth_tables_[pb];
 }
@@ -109,6 +114,7 @@ PhysicalPbId PhysicalPb::create_pb(const t_pb_graph_node* pb_graph_node) {
   child_pbs_.emplace_back();
   parent_pbs_.emplace_back();
 
+  truth_tables_.emplace_back();
   mode_bits_.emplace_back();
 
   /* Register in the name2id map */
@@ -136,10 +142,16 @@ void PhysicalPb::add_child(const PhysicalPbId& parent,
 }
 
 void PhysicalPb::set_truth_table(const PhysicalPbId& pb,
+                                 const t_pb_graph_pin* pb_graph_pin,
                                  const AtomNetlist::TruthTable& truth_table) {
   VTR_ASSERT(true == valid_pb_id(pb)); 
+
+  if (0 < truth_tables_[pb].count(pb_graph_pin)) {
+    VTR_LOG_WARN("Overwrite truth tables mapped to pb_graph_pin '%s[%ld]!\n",
+                  pb_graph_pin->port->name, pb_graph_pin->pin_number);
+  }
    
-  truth_tables_[pb] = truth_table;
+  truth_tables_[pb][pb_graph_pin] = truth_table;
 }
 
 void PhysicalPb::set_mode_bits(const PhysicalPbId& pb,

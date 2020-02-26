@@ -131,8 +131,8 @@ std::vector<std::string> truth_table_to_string(const AtomNetlist::TruthTable& tt
  *    --1- 1
  * 
  ********************************************************************/
-AtomNetlist::TruthTable build_post_routing_wired_lut_truth_table(const size_t& lut_size, 
-                                                                 const size_t& wire_input_id) {
+AtomNetlist::TruthTable build_wired_lut_truth_table(const size_t& lut_size, 
+                                                    const size_t& wire_input_id) {
   AtomNetlist::TruthTable tt;
   
   /* There is always only one line in this truth table */
