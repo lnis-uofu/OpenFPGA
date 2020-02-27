@@ -27,7 +27,7 @@ build_fabric --compress_routing --duplicate_grid_pin #--verbose
 # Repack the netlist to physical pbs
 # This must be done before bitstream generator and testbench generation
 # Strongly recommend it is done after all the fix-up have been applied
-repack --verbose
+repack #--verbose
 
 # Build the bitstream 
 #  - Output the fabric-independent bitstream to a file
