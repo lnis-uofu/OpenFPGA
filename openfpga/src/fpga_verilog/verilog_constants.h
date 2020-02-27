@@ -48,4 +48,10 @@ constexpr char* SB_VERILOG_FILE_NAME_PREFIX = "sb_";
 constexpr char* LOGICAL_MODULE_VERILOG_FILE_NAME_PREFIX = "logical_tile_";
 constexpr char* GRID_VERILOG_FILE_NAME_PREFIX = "grid_";
 
+constexpr char* FORMAL_VERIFICATION_TOP_MODULE_POSTFIX = "_top_formal_verification";
+constexpr char* FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX = "_fm";
+constexpr char* FORMAL_VERIFICATION_TOP_MODULE_UUT_NAME = "U0_formal_verification";
+
+#define VERILOG_DEFAULT_SIGNAL_INIT_VALUE 0
+
 #endif
