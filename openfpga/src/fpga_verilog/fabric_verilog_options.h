@@ -1,5 +1,5 @@
-#ifndef VERILOG_OPTIONS_H
-#define VERILOG_OPTIONS_H
+#ifndef FABRIC_VERILOG_OPTIONS_H
+#define FABRIC_VERILOG_OPTIONS_H
 
 /********************************************************************
  * Include header files required by the data structure definition
@@ -10,11 +10,7 @@
 namespace openfpga {
 
 /********************************************************************
- * FlowManager aims to resolve the dependency between OpenFPGA functional
- * code blocks
- * It can provide flags for downstream modules about if the data structures
- * they require have already been constructed
- *
+ * Options for Fabric Verilog generator
  *******************************************************************/
 class FabricVerilogOption {
   public: /* Public constructor */

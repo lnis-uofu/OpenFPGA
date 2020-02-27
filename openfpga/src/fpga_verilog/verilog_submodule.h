@@ -6,7 +6,7 @@
  *******************************************************************/
 #include "module_manager.h"
 #include "mux_library.h"
-#include "verilog_options.h"
+#include "fabric_verilog_options.h"
 
 /********************************************************************
  * Function declaration

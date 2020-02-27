@@ -6,10 +6,11 @@
  *******************************************************************/
 #include <vector>
 #include <string>
-#include "circuit_types.h" 
-#include "vpr_types.h" 
+#include "circuit_library.h" 
+#include "vpr_context.h" 
 #include "module_manager.h" 
 #include "bitstream_manager.h" 
+#include "io_location_map.h" 
 
 /********************************************************************
  * Function declaration
