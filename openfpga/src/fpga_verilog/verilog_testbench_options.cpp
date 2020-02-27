@@ -2,6 +2,7 @@
  * Memember functions for data structure VerilogTestbenchOption
  ******************************************************************************/
 #include "vtr_assert.h"
+#include "vtr_log.h"
 
 #include "verilog_testbench_options.h"
 
@@ -81,7 +82,10 @@ void VerilogTestbenchOption::set_print_preconfig_top_testbench(const bool& enabl
                                  && (!reference_benchmark_file_path_.empty());
   /* Enable print formal verification top_netlist if this is enabled */
   if (true == print_preconfig_top_testbench_) {
-    print_formal_verification_top_netlist_ = true;
+    if (false == print_formal_verification_top_netlist_) { 
+      VTR_LOG_WARN("Forcely enable to print top-level Verilog netlist in formal verification purpose as print pre-configured top-level Verilog testbench is enabled\n");
+      print_formal_verification_top_netlist_ = true;
+    }
   }
 }
 
