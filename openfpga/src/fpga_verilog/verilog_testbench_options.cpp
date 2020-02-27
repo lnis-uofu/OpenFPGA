@@ -13,7 +13,7 @@ namespace openfpga {
  *************************************************/
 VerilogTestbenchOption::VerilogTestbenchOption() {
   output_directory_.clear();
-  reference_verilog_file_path_.clear();
+  reference_benchmark_file_path_.clear();
   print_preconfig_top_testbench_ = false;
   print_formal_verification_top_netlist_ = false;
   print_top_testbench_ = false;
@@ -28,8 +28,8 @@ std::string VerilogTestbenchOption::output_directory() const {
   return output_directory_;
 }
 
-std::string VerilogTestbenchOption::reference_verilog_file_path() const {
-  return reference_verilog_file_path_;
+std::string VerilogTestbenchOption::reference_benchmark_file_path() const {
+  return reference_benchmark_file_path_;
 }
 
 bool VerilogTestbenchOption::print_formal_verification_top_netlist() const {
@@ -63,8 +63,8 @@ void VerilogTestbenchOption::set_output_directory(const std::string& output_dir)
   output_directory_ = output_dir;
 }
 
-void VerilogTestbenchOption::set_reference_verilog_file_path(const std::string& reference_verilog_file_path) {
-  reference_verilog_file_path_ = reference_verilog_file_path;
+void VerilogTestbenchOption::set_reference_benchmark_file_path(const std::string& reference_benchmark_file_path) {
+  reference_benchmark_file_path_ = reference_benchmark_file_path;
   /* Chain effect on other options: 
    * Enable/disable the print_preconfig_top_testbench and print_top_testbench
    */
@@ -78,12 +78,15 @@ void VerilogTestbenchOption::set_print_formal_verification_top_netlist(const boo
 
 void VerilogTestbenchOption::set_print_preconfig_top_testbench(const bool& enabled) {
   print_preconfig_top_testbench_ = enabled
-                                 && print_formal_verification_top_netlist_
-                                 && (!reference_verilog_file_path_.empty());
+                                 && (!reference_benchmark_file_path_.empty());
+  /* Enable print formal verification top_netlist if this is enabled */
+  if (true == print_preconfig_top_testbench_) {
+    print_formal_verification_top_netlist_ = true;
+  }
 }
 
 void VerilogTestbenchOption::set_print_top_testbench(const bool& enabled) {
-  print_top_testbench_ = enabled && (!reference_verilog_file_path_.empty());
+  print_top_testbench_ = enabled && (!reference_benchmark_file_path_.empty());
 }
 
 void VerilogTestbenchOption::set_print_simulation_ini(const std::string& simulation_ini_path) {

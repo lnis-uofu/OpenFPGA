@@ -33,9 +33,12 @@ repack #--verbose
 #  - Output the fabric-independent bitstream to a file
 fpga_bitstream --verbose --file /var/tmp/xtang/openfpga_test_src/fabric_indepenent_bitstream.xml
 
-# Write the Verilog netlit for FPGA fabric
+# Write the Verilog netlist for FPGA fabric
 #  - Enable the use of explicit port mapping in Verilog netlist
 write_fabric_verilog --file /var/tmp/xtang/openfpga_test_src --explicit_port_mapping --include_timing --include_signal_init --support_icarus_simulator --print_user_defined_template --verbose
+
+# Write the Verilog testbench for FPGA fabric
+write_verilog_testbench --file /var/tmp/xtang/openfpga_test_src --reference_benchmark_file_path /var/tmp/xtang/s298.v --print_top_testbench --print_preconfig_top_testbench
 
 # Finish and exit OpenFPGA
 exit

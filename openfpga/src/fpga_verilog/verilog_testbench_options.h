@@ -23,7 +23,7 @@ class VerilogTestbenchOption {
     VerilogTestbenchOption();
   public: /* Public accessors */
     std::string output_directory() const;
-    std::string reference_verilog_file_path() const;
+    std::string reference_benchmark_file_path() const;
     bool print_formal_verification_top_netlist() const;
     bool print_preconfig_top_testbench() const;
     bool print_top_testbench() const;
@@ -39,7 +39,7 @@ class VerilogTestbenchOption {
      *  - print_top_testbench
      * If the file path is empty, the above testbench generation will not be enabled 
      */
-    void set_reference_verilog_file_path(const std::string& reference_verilog_file_path);
+    void set_reference_benchmark_file_path(const std::string& reference_benchmark_file_path);
     void set_print_formal_verification_top_netlist(const bool& enabled);
     /* The preconfig top testbench generation can be enabled only when formal verification top netlist is enabled */
     void set_print_preconfig_top_testbench(const bool& enabled);
@@ -48,7 +48,7 @@ class VerilogTestbenchOption {
     void set_verbose_output(const bool& enabled);
   private: /* Internal Data */
     std::string output_directory_;
-    std::string reference_verilog_file_path_;
+    std::string reference_benchmark_file_path_;
     bool print_formal_verification_top_netlist_;
     bool print_preconfig_top_testbench_;
     bool print_top_testbench_;

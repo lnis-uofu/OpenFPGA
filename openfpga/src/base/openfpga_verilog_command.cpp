@@ -48,7 +48,7 @@ void add_openfpga_write_fabric_verilog_command(openfpga::Shell<OpenfpgaContext>&
   /* Add command 'write_fabric_verilog' to the Shell */
   ShellCommandId shell_cmd_id = shell.add_command(shell_cmd, "generate Verilog netlists modeling full FPGA fabric");
   shell.set_command_class(shell_cmd_id, cmd_class_id);
-  shell.set_command_execute_function(shell_cmd_id, write_verilog_testbench);
+  shell.set_command_execute_function(shell_cmd_id, write_fabric_verilog);
 
   /* The 'build_fabric' command should NOT be executed before 'link_openfpga_arch' */
   std::vector<ShellCommandId> cmd_dependency;
@@ -83,8 +83,7 @@ void add_openfpga_write_verilog_testbench_command(openfpga::Shell<OpenfpgaContex
   shell_cmd.add_option("print_formal_verification_top_netlist", false, "Generate a top-level module which can be used in formal verification");
 
   /* Add an option '--print_preconfig_top_testbench' */
-  CommandOptionId preconfig_tb_opt = shell_cmd.add_option("print_preconfig_top_testbench", false, "Generate a pre-configured testbench for top-level fabric module with autocheck capability");
-  shell_cmd.set_option_require_value(preconfig_tb_opt, openfpga::OPT_STRING);
+  shell_cmd.add_option("print_preconfig_top_testbench", false, "Generate a pre-configured testbench for top-level fabric module with autocheck capability");
 
   /* Add an option '--print_simulation_ini' */
   CommandOptionId sim_ini_opt = shell_cmd.add_option("print_simulation_ini", false, "Generate a .ini file as an exchangeable file to enable HDL simulations");
@@ -96,7 +95,7 @@ void add_openfpga_write_verilog_testbench_command(openfpga::Shell<OpenfpgaContex
   /* Add command to the Shell */
   ShellCommandId shell_cmd_id = shell.add_command(shell_cmd, "generate Verilog testbenches for full FPGA fabric");
   shell.set_command_class(shell_cmd_id, cmd_class_id);
-  shell.set_command_execute_function(shell_cmd_id, write_fabric_verilog);
+  shell.set_command_execute_function(shell_cmd_id, write_verilog_testbench);
 
   /* The command should NOT be executed before 'build_fabric' */
   std::vector<ShellCommandId> cmd_dependency;
