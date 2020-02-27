@@ -534,6 +534,7 @@ void print_verilog_testbench_random_stimuli(std::fstream& fp,
 void print_verilog_testbench_shared_ports(std::fstream& fp,
                                           const AtomContext& atom_ctx,
                                           const VprNetlistAnnotation& netlist_annotation,
+                                          const std::vector<std::string>& clock_port_names,
                                           const std::string& benchmark_output_port_postfix,
                                           const std::string& fpga_output_port_postfix,
                                           const std::string& check_flag_port_postfix,
@@ -556,6 +557,9 @@ void print_verilog_testbench_shared_ports(std::fstream& fp,
     } 
 
     /* TODO: Skip clocks because they are handled in another function */
+    if (clock_port_names.end() != std::find(clock_port_names.begin(), clock_port_names.end(), block_name)) {
+      continue;
+    }
    
     /* Each logical block assumes a single-width port */
     BasicPort input_port(block_name, 1); 

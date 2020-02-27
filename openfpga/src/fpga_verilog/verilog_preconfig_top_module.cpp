@@ -423,7 +423,7 @@ void print_verilog_preconfig_top_module(const ModuleManager& module_manager,
                                         std::string(FORMAL_VERIFICATION_TOP_MODULE_UUT_NAME)); 
 
   /* Find clock ports in benchmark */
-  std::vector<std::string> benchmark_clock_port_names = find_atom_netlist_clock_port_names(atom_ctx.nlist);
+  std::vector<std::string> benchmark_clock_port_names = find_atom_netlist_clock_port_names(atom_ctx.nlist, netlist_annotation);
 
   /* Connect FPGA top module global ports to constant or benchmark global signals! */
   print_verilog_preconfig_top_module_connect_global_ports(fp, module_manager, top_module,

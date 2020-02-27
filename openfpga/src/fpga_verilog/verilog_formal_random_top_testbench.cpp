@@ -74,6 +74,7 @@ void print_verilog_top_random_testbench_ports(std::fstream& fp,
   fp << std::endl;
 
   print_verilog_testbench_shared_ports(fp, atom_ctx, netlist_annotation,
+                                       clock_port_names,
                                        std::string(BENCHMARK_PORT_POSTFIX),
                                        std::string(FPGA_PORT_POSTFIX),
                                        std::string(CHECKFLAG_PORT_POSTFIX),
@@ -209,7 +210,7 @@ void print_verilog_random_top_testbench(const std::string& circuit_name,
   print_verilog_include_netlist(fp, std::string(verilog_dir + std::string(DEFINES_VERILOG_SIMULATION_FILE_NAME)));  
 
   /* Preparation: find all the clock ports */
-  std::vector<std::string> clock_port_names = find_atom_netlist_clock_port_names(atom_ctx.nlist);
+  std::vector<std::string> clock_port_names = find_atom_netlist_clock_port_names(atom_ctx.nlist, netlist_annotation);
 
   /* Start of testbench */
   print_verilog_top_random_testbench_ports(fp, circuit_name, clock_port_names, atom_ctx, netlist_annotation);

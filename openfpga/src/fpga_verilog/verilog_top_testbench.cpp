@@ -399,6 +399,7 @@ void print_verilog_top_testbench_ports(std::fstream& fp,
   }
 
   print_verilog_testbench_shared_ports(fp, atom_ctx, netlist_annotation,
+                                       clock_port_names,
                                        std::string(TOP_TESTBENCH_REFERENCE_OUTPUT_POSTFIX),
                                        std::string(TOP_TESTBENCH_FPGA_OUTPUT_POSTFIX),
                                        std::string(TOP_TESTBENCH_CHECKFLAG_PORT_POSTFIX),
@@ -798,7 +799,7 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
   VTR_ASSERT(true == module_manager.valid_module_id(top_module));
 
   /* Preparation: find all the clock ports */
-  std::vector<std::string> clock_port_names = find_atom_netlist_clock_port_names(atom_ctx.nlist);
+  std::vector<std::string> clock_port_names = find_atom_netlist_clock_port_names(atom_ctx.nlist, netlist_annotation);
 
   /* Start of testbench */
   print_verilog_top_testbench_ports(fp, module_manager, top_module, 
