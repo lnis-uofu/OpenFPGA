@@ -307,6 +307,7 @@ void print_verilog_top_testbench_ports(std::fstream& fp,
                                        const ModuleManager& module_manager,
                                        const ModuleId& top_module,
                                        const AtomContext& atom_ctx,
+                                       const VprNetlistAnnotation& netlist_annotation,
                                        const std::vector<std::string>& clock_port_names,
                                        const e_config_protocol_type& sram_orgz_type,
                                        const std::string& circuit_name){
@@ -397,7 +398,7 @@ void print_verilog_top_testbench_ports(std::fstream& fp,
     print_verilog_wire_connection(fp, clock_port, op_clock_port, false);
   }
 
-  print_verilog_testbench_shared_ports(fp, atom_ctx,
+  print_verilog_testbench_shared_ports(fp, atom_ctx, netlist_annotation,
                                        std::string(TOP_TESTBENCH_REFERENCE_OUTPUT_POSTFIX),
                                        std::string(TOP_TESTBENCH_FPGA_OUTPUT_POSTFIX),
                                        std::string(TOP_TESTBENCH_CHECKFLAG_PORT_POSTFIX),
@@ -416,7 +417,8 @@ void print_verilog_top_testbench_ports(std::fstream& fp,
 static
 void print_verilog_top_testbench_benchmark_instance(std::fstream& fp, 
                                                     const std::string& reference_verilog_top_name,
-                                                    const AtomContext& atom_ctx) {
+                                                    const AtomContext& atom_ctx,
+                                                    const VprNetlistAnnotation& netlist_annotation) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -433,7 +435,7 @@ void print_verilog_top_testbench_benchmark_instance(std::fstream& fp,
                                              std::string(),
                                              std::string(),
                                              std::string(TOP_TESTBENCH_REFERENCE_OUTPUT_POSTFIX),
-                                             atom_ctx,
+                                             atom_ctx, netlist_annotation,
                                              false);
 
   print_verilog_comment(fp, std::string("----- End reference Benchmark Instanication -------"));
@@ -766,6 +768,7 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
                                  const AtomContext& atom_ctx,
                                  const PlacementContext& place_ctx, 
                                  const IoLocationMap& io_location_map,
+                                 const VprNetlistAnnotation& netlist_annotation,
                                  const std::string& circuit_name,
                                  const std::string& verilog_fname,
                                  const std::string& verilog_dir,
@@ -799,7 +802,7 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
 
   /* Start of testbench */
   print_verilog_top_testbench_ports(fp, module_manager, top_module, 
-                                    atom_ctx, clock_port_names,
+                                    atom_ctx, netlist_annotation, clock_port_names,
                                     sram_orgz_type, circuit_name);
 
   /* Find the clock period */
@@ -829,7 +832,8 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
   
   /* Connect I/Os to benchmark I/Os or constant driver */
   print_verilog_testbench_connect_fpga_ios(fp, module_manager, top_module,
-                                           atom_ctx, place_ctx, io_location_map, 
+                                           atom_ctx, place_ctx, io_location_map,
+                                           netlist_annotation, 
                                            std::string(), 
                                            std::string(TOP_TESTBENCH_FPGA_OUTPUT_POSTFIX), 
                                            (size_t)VERILOG_DEFAULT_SIGNAL_INIT_VALUE);
@@ -837,7 +841,8 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
   /* Instanciate input benchmark */
   print_verilog_top_testbench_benchmark_instance(fp, 
                                                  circuit_name,
-                                                 atom_ctx);
+                                                 atom_ctx,
+                                                 netlist_annotation);
 
   /* Print tasks used for loading bitstreams */
   print_verilog_top_testbench_load_bitstream_task(fp, sram_orgz_type);
@@ -848,6 +853,7 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
 
   /* Add stimuli for reset, set, clock and iopad signals */
   print_verilog_testbench_random_stimuli(fp, atom_ctx, 
+                                         netlist_annotation, 
                                          std::string(TOP_TESTBENCH_CHECKFLAG_PORT_POSTFIX),
                                          BasicPort(std::string(TOP_TB_OP_CLOCK_PORT_NAME), 1));
 
@@ -859,7 +865,10 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
                                 std::string(TOP_TESTBENCH_FPGA_OUTPUT_POSTFIX),
                                 std::string(TOP_TESTBENCH_CHECKFLAG_PORT_POSTFIX),
                                 std::string(TOP_TESTBENCH_ERROR_COUNTER),
-                                atom_ctx, clock_port_names, std::string(TOP_TB_OP_CLOCK_PORT_NAME));
+                                atom_ctx,
+                                netlist_annotation, 
+                                clock_port_names,
+                                std::string(TOP_TB_OP_CLOCK_PORT_NAME));
 
   /* Find simulation time */
   float simulation_time = find_simulation_time_period(VERILOG_SIM_TIMESCALE,

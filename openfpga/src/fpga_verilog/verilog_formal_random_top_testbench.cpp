@@ -55,7 +55,8 @@ static
 void print_verilog_top_random_testbench_ports(std::fstream& fp,
                                               const std::string& circuit_name,
                                               const std::vector<std::string>& clock_port_names,
-                                              const AtomContext& atom_ctx) {
+                                              const AtomContext& atom_ctx,
+                                              const VprNetlistAnnotation& netlist_annotation) {
   /* Validate the file stream */
   valid_file_stream(fp);
  
@@ -72,7 +73,7 @@ void print_verilog_top_random_testbench_ports(std::fstream& fp,
   /* Add an empty line as splitter */
   fp << std::endl;
 
-  print_verilog_testbench_shared_ports(fp, atom_ctx,
+  print_verilog_testbench_shared_ports(fp, atom_ctx, netlist_annotation,
                                        std::string(BENCHMARK_PORT_POSTFIX),
                                        std::string(FPGA_PORT_POSTFIX),
                                        std::string(CHECKFLAG_PORT_POSTFIX),
@@ -94,7 +95,8 @@ void print_verilog_top_random_testbench_ports(std::fstream& fp,
 static
 void print_verilog_top_random_testbench_benchmark_instance(std::fstream& fp, 
                                                            const std::string& reference_verilog_top_name,
-                                                           const AtomContext& atom_ctx) {
+                                                           const AtomContext& atom_ctx,
+                                                           const VprNetlistAnnotation& netlist_annotation) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -111,7 +113,7 @@ void print_verilog_top_random_testbench_benchmark_instance(std::fstream& fp,
                                              std::string(),
                                              std::string(),
                                              std::string(BENCHMARK_PORT_POSTFIX),
-                                             atom_ctx,
+                                             atom_ctx, netlist_annotation,
                                              false);
 
   print_verilog_comment(fp, std::string("----- End reference Benchmark Instanication -------"));
@@ -132,7 +134,8 @@ void print_verilog_top_random_testbench_benchmark_instance(std::fstream& fp,
 static
 void print_verilog_random_testbench_fpga_instance(std::fstream& fp,
                                                   const std::string& circuit_name,
-                                                  const AtomContext& atom_ctx) {
+                                                  const AtomContext& atom_ctx,
+                                                  const VprNetlistAnnotation& netlist_annotation) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -144,7 +147,7 @@ void print_verilog_random_testbench_fpga_instance(std::fstream& fp,
                                              std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX),
                                              std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX),
                                              std::string(FPGA_PORT_POSTFIX),
-                                             atom_ctx,
+                                             atom_ctx, netlist_annotation,
                                              true);
 
   print_verilog_comment(fp, std::string("----- End FPGA Fabric Instanication -------"));
@@ -182,6 +185,7 @@ void print_verilog_random_top_testbench(const std::string& circuit_name,
                                         const std::string& verilog_fname,
                                         const std::string& verilog_dir,
                                         const AtomContext& atom_ctx,
+                                        const VprNetlistAnnotation& netlist_annotation,
                                         const SimulationSetting& simulation_parameters) {
   std::string timer_message = std::string("Write configuration-skip testbench for FPGA top-level Verilog netlist implemented by '") + circuit_name.c_str() + std::string("'");
 
@@ -208,13 +212,13 @@ void print_verilog_random_top_testbench(const std::string& circuit_name,
   std::vector<std::string> clock_port_names = find_atom_netlist_clock_port_names(atom_ctx.nlist);
 
   /* Start of testbench */
-  print_verilog_top_random_testbench_ports(fp, circuit_name, clock_port_names, atom_ctx);
+  print_verilog_top_random_testbench_ports(fp, circuit_name, clock_port_names, atom_ctx, netlist_annotation);
 
   /* Call defined top-level module */
-  print_verilog_random_testbench_fpga_instance(fp, circuit_name, atom_ctx);
+  print_verilog_random_testbench_fpga_instance(fp, circuit_name, atom_ctx, netlist_annotation);
 
   /* Call defined benchmark */
-  print_verilog_top_random_testbench_benchmark_instance(fp, circuit_name, atom_ctx);
+  print_verilog_top_random_testbench_benchmark_instance(fp, circuit_name, atom_ctx, netlist_annotation);
 
   /* Find clock port to be used */
   BasicPort clock_port = generate_verilog_testbench_clock_port(clock_port_names, std::string(DEFAULT_CLOCK_NAME));
@@ -222,8 +226,10 @@ void print_verilog_random_top_testbench(const std::string& circuit_name,
   /* Add stimuli for reset, set, clock and iopad signals */
   print_verilog_testbench_clock_stimuli(fp, simulation_parameters, 
                                         clock_port);
-  print_verilog_testbench_random_stimuli(fp, atom_ctx, 
-                                         std::string(CHECKFLAG_PORT_POSTFIX), clock_port);
+  print_verilog_testbench_random_stimuli(fp, atom_ctx,
+                                         netlist_annotation, 
+                                         std::string(CHECKFLAG_PORT_POSTFIX),
+                                         clock_port);
 
   print_verilog_testbench_check(fp, 
                                 std::string(AUTOCHECKED_SIMULATION_FLAG),
@@ -233,7 +239,9 @@ void print_verilog_random_top_testbench(const std::string& circuit_name,
                                 std::string(CHECKFLAG_PORT_POSTFIX),
                                 std::string(ERROR_COUNTER),
                                 atom_ctx,
-                                clock_port_names, std::string(DEFAULT_CLOCK_NAME));
+                                netlist_annotation, 
+                                clock_port_names,
+                                std::string(DEFAULT_CLOCK_NAME));
 
   int simulation_time = find_operating_phase_simulation_time(MAGIC_NUMBER_FOR_SIMULATION_TIME,
                                                              simulation_parameters.num_clock_cycles(),

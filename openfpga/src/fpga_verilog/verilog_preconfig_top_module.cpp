@@ -34,7 +34,8 @@ namespace openfpga {
 static 
 void print_verilog_preconfig_top_module_ports(std::fstream& fp, 
                                               const std::string& circuit_name,
-                                              const AtomContext& atom_ctx) {
+                                              const AtomContext& atom_ctx,
+                                              const VprNetlistAnnotation& netlist_annotation) {
 
   /* Validate the file stream */
   valid_file_stream(fp);
@@ -58,11 +59,18 @@ void print_verilog_preconfig_top_module_ports(std::fstream& fp,
       && (AtomBlockType::OUTPAD != atom_ctx.nlist.block_type(atom_blk)) ) {
       continue;
     }
+
+    /* The block may be renamed as it contains special characters which violate Verilog syntax */
+    std::string block_name = atom_ctx.nlist.block_name(atom_blk);
+    if (true == netlist_annotation.is_block_renamed(atom_blk)) {
+      block_name = netlist_annotation.block_name(atom_blk);
+    } 
+
     if (0 < port_counter) { 
       fp << "," << std::endl;
     }
     /* Both input and output ports have only size of 1 */
-    BasicPort module_port(std::string(atom_ctx.nlist.block_name(atom_blk) + std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX)), 1); 
+    BasicPort module_port(std::string(block_name + std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX)), 1); 
     fp << generate_verilog_port(port_type2type_map[atom_ctx.nlist.block_type(atom_blk)], module_port);  
 
     /* Update port counter */
@@ -375,6 +383,7 @@ void print_verilog_preconfig_top_module(const ModuleManager& module_manager,
                                         const AtomContext& atom_ctx,
                                         const PlacementContext& place_ctx,
                                         const IoLocationMap& io_location_map,
+                                        const VprNetlistAnnotation& netlist_annotation, 
                                         const std::string& circuit_name,
                                         const std::string& verilog_fname,
                                         const std::string& verilog_dir) {
@@ -400,7 +409,7 @@ void print_verilog_preconfig_top_module(const ModuleManager& module_manager,
   print_verilog_include_netlist(fp, std::string(verilog_dir + std::string(DEFINES_VERILOG_SIMULATION_FILE_NAME)));  
 
   /* Print module declaration and ports */
-  print_verilog_preconfig_top_module_ports(fp, circuit_name, atom_ctx);
+  print_verilog_preconfig_top_module_ports(fp, circuit_name, atom_ctx, netlist_annotation);
 
   /* Find the top_module */
   ModuleId top_module = module_manager.find_module(generate_fpga_top_module_name());
@@ -423,7 +432,8 @@ void print_verilog_preconfig_top_module(const ModuleManager& module_manager,
 
   /* Connect I/Os to benchmark I/Os or constant driver */
   print_verilog_testbench_connect_fpga_ios(fp, module_manager, top_module,
-                                           atom_ctx, place_ctx, io_location_map, 
+                                           atom_ctx, place_ctx, io_location_map,
+                                           netlist_annotation, 
                                            std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX), 
                                            std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX), 
                                            (size_t)VERILOG_DEFAULT_SIGNAL_INIT_VALUE);
