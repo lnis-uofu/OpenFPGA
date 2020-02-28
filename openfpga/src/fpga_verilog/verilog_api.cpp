@@ -20,6 +20,11 @@
 #include "verilog_grid.h"
 #include "verilog_top_module.h"
 
+#include "verilog_preconfig_top_module.h"
+#include "verilog_formal_random_top_testbench.h"
+#include "verilog_top_testbench.h"
+#include "simulation_info_writer.h"
+
 /* Header file for this source file */
 #include "verilog_api.h"
 
@@ -27,17 +32,18 @@
 namespace openfpga {
 
 /********************************************************************
- * Top-level function of FPGA-Verilog
+ * A top-level function of FPGA-Verilog which focuses on fabric Verilog generation
  * This function will generate
- * 1. primitive modules required by the full fabric
- *    which are LUTs, routing multiplexer, logic gates, transmission-gates etc.
- * 2. Routing modules, which are Switch Blocks (SBs) and Connection Blocks (CBs)
- * 3. Logic block modules, which are Configuration Logic Blocks (CLBs)
- * 4. FPGA module, which are the full FPGA fabric with configuration protocol
- * 5. A wrapper module, which encapsulate the FPGA module in a Verilog module which have the same port as the input benchmark 
- * 6. Testbench, where a FPGA module is configured with a bitstream and then driven by input vectors
- * 7. Pre-configured testbench, which can skip the configuration phase and pre-configure the FPGA module. This testbench is created for quick verification and formal verification purpose.
- * 8. Verilog netlist including preprocessing flags and all the Verilog netlists that have been generated
+ *  - primitive modules required by the full fabric
+ *  - which are LUTs, routing multiplexer, logic gates, transmission-gates etc.
+ *  - Routing modules, which are Switch Blocks (SBs) and Connection Blocks (CBs)
+ *  - Logic block modules, which are Configuration Logic Blocks (CLBs)
+ *  - FPGA module, which are the full FPGA fabric with configuration protocol
+ *
+ * Note: 
+ *  - Please do NOT include ANY testbench generation in this function!!!
+ *    It is about the fabric itself, independent from any implementation
+ *    All the testbench generation should be in the function fpga_testbench_verilog()
  *
  * TODO: We should use module manager as a constant here. 
  * All the modification should be done before this writer!
@@ -74,9 +80,6 @@ void fpga_fabric_verilog(ModuleManager& module_manager,
   /* Print Verilog files containing preprocessing flags */
   print_verilog_preprocessing_flags_netlist(std::string(src_dir_path),
                                             options);
-
-  print_verilog_simulation_preprocessing_flags(std::string(src_dir_path),
-                                               options);
 
   /* Generate primitive Verilog modules, which are corner stones of FPGA fabric
    * Note that this function MUST be called before Verilog generation of
@@ -119,6 +122,108 @@ void fpga_fabric_verilog(ModuleManager& module_manager,
   VTR_LOGV(options.verbose_output(), 
            "Written %lu Verilog modules in total\n", 
            module_manager.num_modules());  
+}
+
+
+/********************************************************************
+ * A top-level function of FPGA-Verilog which focuses on fabric Verilog generation
+ * This function will generate
+ *  - A wrapper module, which encapsulate the FPGA module in a Verilog module which have the same port as the input benchmark 
+ *  - Testbench, where a FPGA module is configured with a bitstream and then driven by input vectors
+ *  - Pre-configured testbench, which can skip the configuration phase and pre-configure the FPGA module.
+ *    This testbench is created for quick verification and formal verification purpose.
+ *  - Verilog netlist including preprocessing flags and all the Verilog netlists that have been generated
+ ********************************************************************/
+void fpga_verilog_testbench(const ModuleManager& module_manager,
+                            const BitstreamManager& bitstream_manager, 
+                            const std::vector<ConfigBitId>& fabric_bitstream, 
+                            const AtomContext& atom_ctx, 
+                            const PlacementContext& place_ctx, 
+                            const IoLocationMap& io_location_map,
+                            const VprNetlistAnnotation& netlist_annotation, 
+                            const CircuitLibrary& circuit_lib,
+                            const SimulationSetting& simulation_setting,
+                            const e_config_protocol_type& config_protocol_type,
+                            const VerilogTestbenchOption& options) {
+
+  vtr::ScopedStartFinishTimer timer("Write Verilog testbenches for FPGA fabric\n");
+
+  std::string src_dir_path = format_dir_path(options.output_directory());
+
+  std::string netlist_name = atom_ctx.nlist.netlist_name();
+
+  /* Create directories */
+  create_dir_path(src_dir_path.c_str());
+
+  /* TODO: check if this works here. This function was in fabric generator */
+  print_verilog_simulation_preprocessing_flags(std::string(src_dir_path),
+                                               options);
+
+  /* Collect global ports from the circuit library:
+   * TODO: should we place this in the OpenFPGA context?
+   */
+  std::vector<CircuitPortId> global_ports = find_circuit_library_global_ports(circuit_lib);
+
+  /* Generate wrapper module for FPGA fabric (mapped by the input benchmark and pre-configured testbench for verification */
+  if (true == options.print_formal_verification_top_netlist()) {
+    std::string formal_verification_top_netlist_file_path = src_dir_path + netlist_name 
+                                                          + std::string(FORMAL_VERIFICATION_VERILOG_FILE_POSTFIX);
+    print_verilog_preconfig_top_module(module_manager, bitstream_manager,
+                                       circuit_lib, global_ports,
+                                       atom_ctx, place_ctx, io_location_map,
+                                       netlist_annotation,
+                                       netlist_name,
+                                       formal_verification_top_netlist_file_path,
+                                       src_dir_path);
+  }
+
+  if (true == options.print_preconfig_top_testbench()) {
+    /* Generate top-level testbench using random vectors */
+    std::string random_top_testbench_file_path = src_dir_path + netlist_name 
+                                               + std::string(RANDOM_TOP_TESTBENCH_VERILOG_FILE_POSTFIX);
+    print_verilog_random_top_testbench(netlist_name,
+                                       random_top_testbench_file_path, 
+                                       src_dir_path,
+                                       atom_ctx,  
+                                       netlist_annotation,
+                                       simulation_setting);
+  }
+
+  /* Generate full testbench for verification, including configuration phase and operating phase */
+  if (true == options.print_top_testbench()) {
+    std::string top_testbench_file_path = src_dir_path + netlist_name
+                                        + std::string(AUTOCHECK_TOP_TESTBENCH_VERILOG_FILE_POSTFIX);
+    print_verilog_top_testbench(module_manager,
+                                bitstream_manager, fabric_bitstream,
+                                config_protocol_type,
+                                circuit_lib, global_ports,
+                                atom_ctx, place_ctx, io_location_map,
+                                netlist_annotation,
+                                netlist_name,
+                                top_testbench_file_path,
+                                src_dir_path,
+                                simulation_setting);
+  }
+ 
+  /* Generate exchangeable files which contains simulation settings */
+  if (true == options.print_simulation_ini()) {
+    std::string simulation_ini_file_name = options.simulation_ini_path();
+    VTR_ASSERT(true != options.simulation_ini_path().empty());
+    print_verilog_simulation_info(simulation_ini_file_name,
+                                  netlist_name,
+                                  src_dir_path,
+                                  bitstream_manager.bits().size(),
+                                  simulation_setting.num_clock_cycles(),
+                                  simulation_setting.programming_clock_frequency(),
+                                  simulation_setting.operating_clock_frequency());
+  }
+
+  /* Generate a Verilog file including all the netlists that have been generated */
+  print_include_netlists(src_dir_path,
+                         netlist_name,
+                         options.reference_benchmark_file_path(),
+                         circuit_lib);
+
 }
 
 } /* end namespace openfpga */

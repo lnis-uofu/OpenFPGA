@@ -7,14 +7,21 @@
  *******************************************************************/
 #include <iomanip>
 
+/* Headers from vtrutil library */
 #include "vtr_assert.h"
-#include "device_port.h"
 
-#include "fpga_x2p_utils.h"
-#include "fpga_x2p_benchmark_utils.h"
+/* Headers from openfpgautil library */
+#include "openfpga_port.h"
+#include "openfpga_digest.h"
 
+#include "verilog_port_types.h"
+
+#include "verilog_constants.h"
 #include "verilog_writer_utils.h"
 #include "verilog_testbench_utils.h"
+
+/* begin namespace openfpga */
+namespace openfpga {
 
 /********************************************************************
  * Print an instance of the FPGA top-level module
@@ -24,7 +31,7 @@ void print_verilog_testbench_fpga_instance(std::fstream& fp,
                                            const ModuleId& top_module,
                                            const std::string& top_instance_name) {
   /* Validate the file stream */
-  check_file_handler(fp);
+  valid_file_stream(fp);
 
   /* Include defined top-level module */
   print_verilog_comment(fp, std::string("----- FPGA top-level module to be capsulated -----"));
@@ -50,40 +57,49 @@ void print_verilog_testbench_benchmark_instance(std::fstream& fp,
                                                 const std::string& module_input_port_postfix,
                                                 const std::string& module_output_port_postfix,
                                                 const std::string& output_port_postfix,
-                                                const std::vector<t_logical_block>& L_logical_blocks,
+                                                const AtomContext& atom_ctx,
+                                                const VprNetlistAnnotation& netlist_annotation,
                                                 const bool& use_explicit_port_map) {
   /* Validate the file stream */
-  check_file_handler(fp);
+  valid_file_stream(fp);
 
   fp << "\t" << module_name << " " << instance_name << "(" << std::endl;
 
   size_t port_counter = 0;
-  for (const t_logical_block& lb : L_logical_blocks) {
-    /* Bypass non-I/O logical blocks ! */
-    if ( (VPACK_INPAD != lb.type) && (VPACK_OUTPAD != lb.type) ) {
+  for (const AtomBlockId& atom_blk : atom_ctx.nlist.blocks()) {
+    /* Bypass non-I/O atom blocks ! */
+    if ( (AtomBlockType::INPAD != atom_ctx.nlist.block_type(atom_blk))
+      && (AtomBlockType::OUTPAD != atom_ctx.nlist.block_type(atom_blk)) ) {
       continue;
     }
+
+    /* The block may be renamed as it contains special characters which violate Verilog syntax */
+    std::string block_name = atom_ctx.nlist.block_name(atom_blk);
+    if (true == netlist_annotation.is_block_renamed(atom_blk)) {
+      block_name = netlist_annotation.block_name(atom_blk);
+    } 
+
     /* The first port does not need a comma */
     if(0 < port_counter){
       fp << "," << std::endl;
     }
     /* Input port follows the logical block name while output port requires a special postfix */
-    if (VPACK_INPAD == lb.type){
+    if (AtomBlockType::INPAD == atom_ctx.nlist.block_type(atom_blk)) {
       fp << "\t\t";
       if (true == use_explicit_port_map) {
-        fp << "." << std::string(lb.name) << module_input_port_postfix << "(";
+        fp << "." << block_name << module_input_port_postfix << "(";
       }
-      fp << std::string(lb.name);
+      fp << block_name;
       if (true == use_explicit_port_map) {
         fp << ")";
       }
     } else {
-      VTR_ASSERT_SAFE(VPACK_OUTPAD == lb.type);
+      VTR_ASSERT_SAFE(AtomBlockType::OUTPAD == atom_ctx.nlist.block_type(atom_blk));
       fp << "\t\t";
       if (true == use_explicit_port_map) {
-        fp << "." << std::string(lb.name) << module_output_port_postfix << "(";
+        fp << "." << block_name << module_output_port_postfix << "(";
       }
-      fp << std::string(lb.name) << output_port_postfix;
+      fp << block_name << output_port_postfix;
       if (true == use_explicit_port_map) {
         fp << ")";
       }
@@ -104,15 +120,15 @@ void print_verilog_testbench_benchmark_instance(std::fstream& fp,
 void print_verilog_testbench_connect_fpga_ios(std::fstream& fp,
                                               const ModuleManager& module_manager,
                                               const ModuleId& top_module,
-                                              const std::vector<t_logical_block>& L_logical_blocks,
-                                              const vtr::Point<size_t>& device_size,
-                                              const std::vector<std::vector<t_grid_tile>>& L_grids, 
-                                              const std::vector<t_block>& L_blocks,
+                                              const AtomContext& atom_ctx,
+                                              const PlacementContext& place_ctx,
+                                              const IoLocationMap& io_location_map,
+                                              const VprNetlistAnnotation& netlist_annotation,
                                               const std::string& io_input_port_name_postfix,
                                               const std::string& io_output_port_name_postfix,
                                               const size_t& unused_io_value) {
   /* Validate the file stream */
-  check_file_handler(fp);
+  valid_file_stream(fp);
 
   /* In this function, we support only 1 type of I/Os */
   VTR_ASSERT(1 == module_manager.module_ports_by_type(top_module, ModuleManager::MODULE_GPIO_PORT).size());
@@ -126,14 +142,18 @@ void print_verilog_testbench_connect_fpga_ios(std::fstream& fp,
    * This brings convenience to checking functionality  
    */
   print_verilog_comment(fp, std::string("----- Link BLIF Benchmark I/Os to FPGA I/Os -----"));
-  for (const t_logical_block& io_lb : L_logical_blocks) {
-    /* We only care I/O logical blocks !*/
-    if ( (VPACK_INPAD != io_lb.type) && (VPACK_OUTPAD != io_lb.type) ) {
+
+  for (const AtomBlockId& atom_blk : atom_ctx.nlist.blocks()) {
+    /* Bypass non-I/O atom blocks ! */
+    if ( (AtomBlockType::INPAD != atom_ctx.nlist.block_type(atom_blk))
+      && (AtomBlockType::OUTPAD != atom_ctx.nlist.block_type(atom_blk)) ) {
       continue;
     }
 
     /* Find the index of the mapped GPIO in top-level FPGA fabric */
-    size_t io_index = find_benchmark_io_index(io_lb, device_size, L_grids, L_blocks);
+    size_t io_index = io_location_map.io_index(place_ctx.block_locs[atom_ctx.lookup.atom_clb(atom_blk)].loc.x,
+                                               place_ctx.block_locs[atom_ctx.lookup.atom_clb(atom_blk)].loc.y,
+                                               place_ctx.block_locs[atom_ctx.lookup.atom_clb(atom_blk)].loc.z);
 
     /* Ensure that IO index is in range */
     BasicPort module_mapped_io_port = module_io_port; 
@@ -141,21 +161,27 @@ void print_verilog_testbench_connect_fpga_ios(std::fstream& fp,
     VTR_ASSERT(io_index < module_mapped_io_port.get_width());
     module_mapped_io_port.set_width(io_index, io_index);
 
+    /* The block may be renamed as it contains special characters which violate Verilog syntax */
+    std::string block_name = atom_ctx.nlist.block_name(atom_blk);
+    if (true == netlist_annotation.is_block_renamed(atom_blk)) {
+      block_name = netlist_annotation.block_name(atom_blk);
+    } 
+
     /* Create the port for benchmark I/O, due to BLIF benchmark, each I/O always has a size of 1 
      * In addition, the input and output ports may have different postfix in naming
      * due to verification context! Here, we give full customization on naming 
      */
     BasicPort benchmark_io_port;
-    if (VPACK_INPAD == io_lb.type) {
-      benchmark_io_port.set_name(std::string(std::string(io_lb.name) + io_input_port_name_postfix)); 
+    if (AtomBlockType::INPAD == atom_ctx.nlist.block_type(atom_blk)) {
+      benchmark_io_port.set_name(std::string(block_name + io_input_port_name_postfix)); 
       benchmark_io_port.set_width(1);
-      print_verilog_comment(fp, std::string("----- Blif Benchmark input " + std::string(io_lb.name) + " is mapped to FPGA IOPAD " + module_mapped_io_port.get_name() + "[" + std::to_string(io_index) + "] -----"));
+      print_verilog_comment(fp, std::string("----- Blif Benchmark input " + block_name + " is mapped to FPGA IOPAD " + module_mapped_io_port.get_name() + "[" + std::to_string(io_index) + "] -----"));
       print_verilog_wire_connection(fp, module_mapped_io_port, benchmark_io_port, false);
     } else {
-      VTR_ASSERT(VPACK_OUTPAD == io_lb.type);
-      benchmark_io_port.set_name(std::string(std::string(io_lb.name) + io_output_port_name_postfix)); 
+      VTR_ASSERT(AtomBlockType::OUTPAD == atom_ctx.nlist.block_type(atom_blk));
+      benchmark_io_port.set_name(std::string(block_name + io_output_port_name_postfix)); 
       benchmark_io_port.set_width(1);
-      print_verilog_comment(fp, std::string("----- Blif Benchmark output " + std::string(io_lb.name) + " is mapped to FPGA IOPAD " + module_mapped_io_port.get_name() + "[" + std::to_string(io_index) + "] -----"));
+      print_verilog_comment(fp, std::string("----- Blif Benchmark output " + block_name + " is mapped to FPGA IOPAD " + module_mapped_io_port.get_name() + "[" + std::to_string(io_index) + "] -----"));
       print_verilog_wire_connection(fp, benchmark_io_port, module_mapped_io_port, false);
     }
 
@@ -201,7 +227,7 @@ void print_verilog_timeout_and_vcd(std::fstream& fp,
                                    const std::string& error_counter_name,
                                    const int& simulation_time) {
   /* Validate the file stream */
-  check_file_handler(fp);
+  valid_file_stream(fp);
 
   /* The following verilog codes are tuned for Icarus */
   print_verilog_preprocessing_flag(fp, icarus_preprocessing_flag); 
@@ -269,12 +295,13 @@ void print_verilog_testbench_check(std::fstream& fp,
                                    const std::string& fpga_port_postfix,
                                    const std::string& check_flag_port_postfix,
                                    const std::string& error_counter_name,
-                                   const std::vector<t_logical_block>& L_logical_blocks,
+                                   const AtomContext& atom_ctx,
+                                   const VprNetlistAnnotation& netlist_annotation,
                                    const std::vector<std::string>& clock_port_names,
                                    const std::string& default_clock_name) {
 
   /* Validate the file stream */
-  check_file_handler(fp);
+  valid_file_stream(fp);
 
   /* Add output autocheck conditionally: only when a preprocessing flag is enable */
   print_verilog_preprocessing_flag(fp, autochecked_preprocessing_flag); 
@@ -296,20 +323,27 @@ void print_verilog_testbench_check(std::fstream& fp,
   print_verilog_register_connection(fp, sim_start_port, sim_start_port, true);
   fp << "\t\tend else begin" << std::endl;
 
-  for (const t_logical_block& lb : L_logical_blocks) {
-    /* Bypass non-I/O logical blocks ! */
-    if ( (VPACK_INPAD != lb.type) && (VPACK_OUTPAD != lb.type) ) {
+  for (const AtomBlockId& atom_blk : atom_ctx.nlist.blocks()) {
+    /* Bypass non-I/O atom blocks ! */
+    if ( (AtomBlockType::INPAD != atom_ctx.nlist.block_type(atom_blk))
+      && (AtomBlockType::OUTPAD != atom_ctx.nlist.block_type(atom_blk)) ) {
       continue;
     }
 
-    if (VPACK_OUTPAD == lb.type){
-     fp << "\t\t\tif(!(" << std::string(lb.name) << fpga_port_postfix;
-     fp << " === " << std::string(lb.name) << benchmark_port_postfix;
-     fp << ") && !(" << std::string(lb.name) << benchmark_port_postfix;
+    /* The block may be renamed as it contains special characters which violate Verilog syntax */
+    std::string block_name = atom_ctx.nlist.block_name(atom_blk);
+    if (true == netlist_annotation.is_block_renamed(atom_blk)) {
+      block_name = netlist_annotation.block_name(atom_blk);
+    } 
+
+    if (AtomBlockType::OUTPAD == atom_ctx.nlist.block_type(atom_blk)) {
+     fp << "\t\t\tif(!(" << block_name << fpga_port_postfix;
+     fp << " === " << block_name << benchmark_port_postfix;
+     fp << ") && !(" << block_name << benchmark_port_postfix;
      fp << " === 1'bx)) begin" << std::endl;
-     fp << "\t\t\t\t" << std::string(lb.name) << check_flag_port_postfix << " <= 1'b1;" << std::endl;
+     fp << "\t\t\t\t" << block_name << check_flag_port_postfix << " <= 1'b1;" << std::endl;
      fp << "\t\t\tend else begin" << std::endl;
-     fp << "\t\t\t\t" << std::string(lb.name) << check_flag_port_postfix << "<= 1'b0;" << std::endl;
+     fp << "\t\t\t\t" << block_name << check_flag_port_postfix << "<= 1'b0;" << std::endl;
      fp << "\t\t\tend" << std::endl; 
     }
   } 
@@ -319,16 +353,22 @@ void print_verilog_testbench_check(std::fstream& fp,
   /* Add an empty line as splitter */
   fp << std::endl;
 
-  for (const t_logical_block& lb : L_logical_blocks) {
-    /* Bypass non-I/O logical blocks ! */
-    if (VPACK_OUTPAD != lb.type) {
+  for (const AtomBlockId& atom_blk : atom_ctx.nlist.blocks()) {
+    /* Only care about output atom blocks ! */
+    if (AtomBlockType::OUTPAD != atom_ctx.nlist.block_type(atom_blk)) {
       continue;
     }
 
-    fp << "\talways@(posedge " << std::string(lb.name) << check_flag_port_postfix << ") begin" << std::endl;
-    fp << "\t\tif(" << std::string(lb.name) << check_flag_port_postfix << ") begin" << std::endl;
+    /* The block may be renamed as it contains special characters which violate Verilog syntax */
+    std::string block_name = atom_ctx.nlist.block_name(atom_blk);
+    if (true == netlist_annotation.is_block_renamed(atom_blk)) {
+      block_name = netlist_annotation.block_name(atom_blk);
+    } 
+
+    fp << "\talways@(posedge " << block_name << check_flag_port_postfix << ") begin" << std::endl;
+    fp << "\t\tif(" << block_name << check_flag_port_postfix << ") begin" << std::endl;
     fp << "\t\t\t" << error_counter_name << " = " << error_counter_name << " + 1;" << std::endl;
-    fp << "\t\t\t$display(\"Mismatch on " << std::string(lb.name) << fpga_port_postfix << " at time = " << std::string("%t") << "\", $realtime);" << std::endl;
+    fp << "\t\t\t$display(\"Mismatch on " << block_name << fpga_port_postfix << " at time = " << std::string("%t") << "\", $realtime);" << std::endl;
     fp << "\t\tend" << std::endl;
     fp << "\tend" << std::endl;
 
@@ -351,10 +391,10 @@ void print_verilog_testbench_check(std::fstream& fp,
  * but be only used as a synchronizer in verification
  *******************************************************************/
 void print_verilog_testbench_clock_stimuli(std::fstream& fp,
-                                           const t_spice_params& simulation_parameters,
+                                           const SimulationSetting& simulation_parameters,
                                            const BasicPort& clock_port) {
   /* Validate the file stream */
-  check_file_handler(fp);
+  valid_file_stream(fp);
 
   print_verilog_comment(fp, std::string("----- Clock Initialization -------"));
 
@@ -362,7 +402,7 @@ void print_verilog_testbench_clock_stimuli(std::fstream& fp,
   /* Create clock stimuli */
   fp << "\t\t" << generate_verilog_port(VERILOG_PORT_CONKT, clock_port) << " <= 1'b0;" << std::endl;
   fp << "\t\twhile(1) begin" << std::endl;
-  fp << "\t\t\t#" << std::setprecision(10) << ((0.5/simulation_parameters.stimulate_params.op_clock_freq)/verilog_sim_timescale) << std::endl;
+  fp << "\t\t\t#" << std::setprecision(10) << ((0.5/simulation_parameters.operating_clock_frequency())/VERILOG_SIM_TIMESCALE) << std::endl;
   fp << "\t\t\t" << generate_verilog_port(VERILOG_PORT_CONKT, clock_port);
   fp << " <= !";
   fp << generate_verilog_port(VERILOG_PORT_CONKT, clock_port);
@@ -380,25 +420,33 @@ void print_verilog_testbench_clock_stimuli(std::fstream& fp,
  * For clock signals, please use print_verilog_testbench_clock_stimuli
  *******************************************************************/
 void print_verilog_testbench_random_stimuli(std::fstream& fp,
-                                            const std::vector<t_logical_block>& L_logical_blocks,
+                                            const AtomContext& atom_ctx,
+                                            const VprNetlistAnnotation& netlist_annotation,
                                             const std::string& check_flag_port_postfix,
                                             const BasicPort& clock_port) {
   /* Validate the file stream */
-  check_file_handler(fp);
+  valid_file_stream(fp);
 
   print_verilog_comment(fp, std::string("----- Input Initialization -------"));
 
   fp << "\tinitial begin" << std::endl;
 
-  for (const t_logical_block& lb : L_logical_blocks) {
-    /* Bypass non-I/O logical blocks ! */
-    if ( (VPACK_INPAD != lb.type) && (VPACK_OUTPAD != lb.type) ) {
+  for (const AtomBlockId& atom_blk : atom_ctx.nlist.blocks()) {
+    /* Bypass non-I/O atom blocks ! */
+    if ( (AtomBlockType::INPAD != atom_ctx.nlist.block_type(atom_blk))
+      && (AtomBlockType::OUTPAD != atom_ctx.nlist.block_type(atom_blk)) ) {
       continue;
     }
 
-    /* Clock ports will be initialized later */
-    if ( (VPACK_INPAD == lb.type) && (FALSE == lb.is_clock) ) {
-      fp << "\t\t" << std::string(lb.name) << " <= 1'b0;" << std::endl;
+    /* The block may be renamed as it contains special characters which violate Verilog syntax */
+    std::string block_name = atom_ctx.nlist.block_name(atom_blk);
+    if (true == netlist_annotation.is_block_renamed(atom_blk)) {
+      block_name = netlist_annotation.block_name(atom_blk);
+    } 
+
+    /* TODO: find the clock inputs will be initialized later */
+    if (AtomBlockType::INPAD == atom_ctx.nlist.block_type(atom_blk)) {
+      fp << "\t\t" << block_name << " <= 1'b0;" << std::endl;
     }
   }
 
@@ -406,14 +454,20 @@ void print_verilog_testbench_random_stimuli(std::fstream& fp,
   fp << std::endl;
   
   /* Set 0 to registers for checking flags */
-  for (const t_logical_block& lb : L_logical_blocks) {
-    /* We care only those logic blocks which are input I/Os */
-    if (VPACK_OUTPAD != lb.type) { 
+  for (const AtomBlockId& atom_blk : atom_ctx.nlist.blocks()) {
+    /* Bypass non-I/O atom blocks ! */
+    if (AtomBlockType::OUTPAD != atom_ctx.nlist.block_type(atom_blk)) {
       continue;
     }
 
+    /* The block may be renamed as it contains special characters which violate Verilog syntax */
+    std::string block_name = atom_ctx.nlist.block_name(atom_blk);
+    if (true == netlist_annotation.is_block_renamed(atom_blk)) {
+      block_name = netlist_annotation.block_name(atom_blk);
+    } 
+
     /* Each logical block assumes a single-width port */
-    BasicPort output_port(std::string(std::string(lb.name) + check_flag_port_postfix), 1); 
+    BasicPort output_port(std::string(block_name + check_flag_port_postfix), 1); 
     fp << "\t\t" << generate_verilog_port(VERILOG_PORT_CONKT, output_port) << " <= 1'b0;" << std::endl;
   }
 
@@ -443,15 +497,22 @@ void print_verilog_testbench_random_stimuli(std::fstream& fp,
   print_verilog_comment(fp, std::string("----- Input Stimulus -------"));
   fp << "\talways@(negedge " << generate_verilog_port(VERILOG_PORT_CONKT, clock_port) << ") begin" << std::endl;
 
-  for (const t_logical_block& lb : L_logical_blocks) {
-    /* Bypass non-I/O logical blocks ! */
-    if ( (VPACK_INPAD != lb.type) && (VPACK_OUTPAD != lb.type) ) {
+  for (const AtomBlockId& atom_blk : atom_ctx.nlist.blocks()) {
+    /* Bypass non-I/O atom blocks ! */
+    if ( (AtomBlockType::INPAD != atom_ctx.nlist.block_type(atom_blk))
+      && (AtomBlockType::OUTPAD != atom_ctx.nlist.block_type(atom_blk)) ) {
       continue;
     }
 
-    /* Clock ports will be initialized later */
-    if ( (VPACK_INPAD == lb.type) && (FALSE == lb.is_clock) ) {
-      fp << "\t\t" << std::string(lb.name) << " <= $random;" << std::endl;
+    /* The block may be renamed as it contains special characters which violate Verilog syntax */
+    std::string block_name = atom_ctx.nlist.block_name(atom_blk);
+    if (true == netlist_annotation.is_block_renamed(atom_blk)) {
+      block_name = netlist_annotation.block_name(atom_blk);
+    } 
+
+    /* TODO: find the clock inputs will be initialized later */
+    if (AtomBlockType::INPAD != atom_ctx.nlist.block_type(atom_blk)) {
+      fp << "\t\t" << block_name << " <= $random;" << std::endl;
     }
   }
 
@@ -471,29 +532,37 @@ void print_verilog_testbench_random_stimuli(std::fstream& fp,
  *    same input vectors
  *******************************************************************/
 void print_verilog_testbench_shared_ports(std::fstream& fp,
-                                          const std::vector<t_logical_block>& L_logical_blocks,
+                                          const AtomContext& atom_ctx,
+                                          const VprNetlistAnnotation& netlist_annotation,
+                                          const std::vector<std::string>& clock_port_names,
                                           const std::string& benchmark_output_port_postfix,
                                           const std::string& fpga_output_port_postfix,
                                           const std::string& check_flag_port_postfix,
                                           const std::string& autocheck_preprocessing_flag) {
   /* Validate the file stream */
-  check_file_handler(fp);
+  valid_file_stream(fp);
 
   /* Instantiate register for inputs stimulis */
   print_verilog_comment(fp, std::string("----- Shared inputs -------"));
-  for (const t_logical_block& lb : L_logical_blocks) {
+  for (const AtomBlockId& atom_blk : atom_ctx.nlist.blocks()) {
     /* We care only those logic blocks which are input I/Os */
-    if (VPACK_INPAD != lb.type) { 
+    if (AtomBlockType::INPAD != atom_ctx.nlist.block_type(atom_blk)) {
       continue;
     }
 
-    /* Skip clocks because they are handled in another function */
-    if (TRUE == lb.is_clock) {
-      continue;
+    /* The block may be renamed as it contains special characters which violate Verilog syntax */
+    std::string block_name = atom_ctx.nlist.block_name(atom_blk);
+    if (true == netlist_annotation.is_block_renamed(atom_blk)) {
+      block_name = netlist_annotation.block_name(atom_blk);
     } 
+
+    /* TODO: Skip clocks because they are handled in another function */
+    if (clock_port_names.end() != std::find(clock_port_names.begin(), clock_port_names.end(), block_name)) {
+      continue;
+    }
    
     /* Each logical block assumes a single-width port */
-    BasicPort input_port(std::string(lb.name), 1); 
+    BasicPort input_port(block_name, 1); 
     fp << "\t" << generate_verilog_port(VERILOG_PORT_REG, input_port) << ";" << std::endl;
   }
 
@@ -503,14 +572,20 @@ void print_verilog_testbench_shared_ports(std::fstream& fp,
   /* Instantiate wires for FPGA fabric outputs */
   print_verilog_comment(fp, std::string("----- FPGA fabric outputs -------"));
 
-  for (const t_logical_block& lb : L_logical_blocks) {
-    /* We care only those logic blocks which are input I/Os */
-    if (VPACK_OUTPAD != lb.type) { 
+  for (const AtomBlockId& atom_blk : atom_ctx.nlist.blocks()) {
+    /* We care only those logic blocks which are output I/Os */
+    if (AtomBlockType::OUTPAD != atom_ctx.nlist.block_type(atom_blk)) {
       continue;
     }
 
+    /* The block may be renamed as it contains special characters which violate Verilog syntax */
+    std::string block_name = atom_ctx.nlist.block_name(atom_blk);
+    if (true == netlist_annotation.is_block_renamed(atom_blk)) {
+      block_name = netlist_annotation.block_name(atom_blk);
+    } 
+
     /* Each logical block assumes a single-width port */
-    BasicPort output_port(std::string(std::string(lb.name) + fpga_output_port_postfix), 1); 
+    BasicPort output_port(std::string(block_name + fpga_output_port_postfix), 1); 
     fp << "\t" << generate_verilog_port(VERILOG_PORT_WIRE, output_port) << ";" << std::endl;
   }
 
@@ -525,14 +600,20 @@ void print_verilog_testbench_shared_ports(std::fstream& fp,
 
   /* Instantiate wire for benchmark output */
   print_verilog_comment(fp, std::string("----- Benchmark outputs -------"));
-  for (const t_logical_block& lb : L_logical_blocks) {
-    /* We care only those logic blocks which are input I/Os */
-    if (VPACK_OUTPAD != lb.type) { 
+  for (const AtomBlockId& atom_blk : atom_ctx.nlist.blocks()) {
+    /* We care only those logic blocks which are output I/Os */
+    if (AtomBlockType::OUTPAD != atom_ctx.nlist.block_type(atom_blk)) {
       continue;
     }
 
+    /* The block may be renamed as it contains special characters which violate Verilog syntax */
+    std::string block_name = atom_ctx.nlist.block_name(atom_blk);
+    if (true == netlist_annotation.is_block_renamed(atom_blk)) {
+      block_name = netlist_annotation.block_name(atom_blk);
+    } 
+
     /* Each logical block assumes a single-width port */
-    BasicPort output_port(std::string(std::string(lb.name) + benchmark_output_port_postfix), 1); 
+    BasicPort output_port(std::string(block_name + benchmark_output_port_postfix), 1); 
     fp << "\t" << generate_verilog_port(VERILOG_PORT_WIRE, output_port) << ";" << std::endl;
   }
 
@@ -541,14 +622,20 @@ void print_verilog_testbench_shared_ports(std::fstream& fp,
 
   /* Instantiate register for output comparison */
   print_verilog_comment(fp, std::string("----- Output vectors checking flags -------"));
-  for (const t_logical_block& lb : L_logical_blocks) {
-    /* We care only those logic blocks which are input I/Os */
-    if (VPACK_OUTPAD != lb.type) { 
+  for (const AtomBlockId& atom_blk : atom_ctx.nlist.blocks()) {
+    /* We care only those logic blocks which are output I/Os */
+    if (AtomBlockType::OUTPAD != atom_ctx.nlist.block_type(atom_blk)) {
       continue;
     }
 
+    /* The block may be renamed as it contains special characters which violate Verilog syntax */
+    std::string block_name = atom_ctx.nlist.block_name(atom_blk);
+    if (true == netlist_annotation.is_block_renamed(atom_blk)) {
+      block_name = netlist_annotation.block_name(atom_blk);
+    } 
+
     /* Each logical block assumes a single-width port */
-    BasicPort output_port(std::string(std::string(lb.name) + check_flag_port_postfix), 1); 
+    BasicPort output_port(std::string(block_name + check_flag_port_postfix), 1); 
     fp << "\t" << generate_verilog_port(VERILOG_PORT_REG, output_port) << ";" << std::endl;
   }
 
@@ -561,3 +648,5 @@ void print_verilog_testbench_shared_ports(std::fstream& fp,
   /* Add an empty line as splitter */
   fp << std::endl;
 }
+
+} /* end namespace openfpga */

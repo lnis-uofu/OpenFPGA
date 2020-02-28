@@ -6,7 +6,8 @@
  *******************************************************************/
 #include <string>
 #include "circuit_library.h"
-#include "verilog_options.h"
+#include "fabric_verilog_options.h"
+#include "verilog_testbench_options.h"
 
 /********************************************************************
  * Function declaration
@@ -21,10 +22,10 @@ void print_include_netlists(const std::string& src_dir,
                             const CircuitLibrary& circuit_lib);
 
 void print_verilog_preprocessing_flags_netlist(const std::string& src_dir,
-                                               const FabricVerilogOption& fpga_verilog_opts);
+                                               const FabricVerilogOption& fabric_verilog_opts);
 
 void print_verilog_simulation_preprocessing_flags(const std::string& src_dir,
-                                                  const FabricVerilogOption& fpga_verilog_opts);
+                                                  const VerilogTestbenchOption& verilog_testbench_opts);
 
 } /* end namespace openfpga */
 

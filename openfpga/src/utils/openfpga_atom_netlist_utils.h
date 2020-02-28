@@ -1,12 +1,13 @@
-#ifndef OPENFPGA_BUILD_FABRIC_H
-#define OPENFPGA_BUILD_FABRIC_H
+#ifndef OPENFPGA_ATOM_NETLIST_UTILS_H
+#define OPENFPGA_ATOM_NETLIST_UTILS_H
 
 /********************************************************************
  * Include header files that are required by function declaration
  *******************************************************************/
-#include "command.h"
-#include "command_context.h"
-#include "openfpga_context.h"
+#include <vector>
+#include <string>
+#include "atom_netlist.h"
+#include "vpr_netlist_annotation.h"
 
 /********************************************************************
  * Function declaration
@@ -15,8 +16,8 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void build_fabric(OpenfpgaContext& openfpga_ctx,
-                  const Command& cmd, const CommandContext& cmd_context); 
+std::vector<std::string> find_atom_netlist_clock_port_names(const AtomNetlist& atom_nlist,
+                                                            const VprNetlistAnnotation& netlist_annotation);
 
 } /* end namespace openfpga */
 
