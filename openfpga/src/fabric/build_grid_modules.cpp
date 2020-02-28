@@ -1103,7 +1103,6 @@ void build_grid_modules(ModuleManager& module_manager,
                                    duplicate_grid_pin,
                                    verbose);
       } 
-      continue;
     } else {
       /* For CLB and heterogenenous blocks */
       build_physical_tile_module(module_manager, circuit_lib,
