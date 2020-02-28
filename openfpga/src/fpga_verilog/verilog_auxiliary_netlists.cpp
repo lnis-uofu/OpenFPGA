@@ -183,6 +183,12 @@ void print_verilog_simulation_preprocessing_flags(const std::string& src_dir,
 
   /* To enable pre-configured FPGA simulation */
   if (true == verilog_testbench_opts.print_formal_verification_top_netlist()) {
+    print_verilog_define_flag(fp, std::string(VERILOG_FORMAL_VERIFICATION_PREPROC_FLAG), 1);
+    fp << std::endl;
+  } 
+
+  /* To enable pre-configured FPGA simulation */
+  if (true == verilog_testbench_opts.print_preconfig_top_testbench()) {
     print_verilog_define_flag(fp, std::string(FORMAL_SIMULATION_FLAG), 1);
     fp << std::endl;
   } 

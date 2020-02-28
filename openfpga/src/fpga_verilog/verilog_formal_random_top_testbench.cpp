@@ -228,6 +228,7 @@ void print_verilog_random_top_testbench(const std::string& circuit_name,
                                         clock_port);
   print_verilog_testbench_random_stimuli(fp, atom_ctx,
                                          netlist_annotation, 
+                                         clock_port_names, 
                                          std::string(CHECKFLAG_PORT_POSTFIX),
                                          clock_port);
 

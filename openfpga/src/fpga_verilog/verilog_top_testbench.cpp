@@ -855,6 +855,7 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
   /* Add stimuli for reset, set, clock and iopad signals */
   print_verilog_testbench_random_stimuli(fp, atom_ctx, 
                                          netlist_annotation, 
+                                         clock_port_names, 
                                          std::string(TOP_TESTBENCH_CHECKFLAG_PORT_POSTFIX),
                                          BasicPort(std::string(TOP_TB_OP_CLOCK_PORT_NAME), 1));
 

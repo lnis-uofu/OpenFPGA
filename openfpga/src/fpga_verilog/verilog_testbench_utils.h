@@ -76,6 +76,7 @@ void print_verilog_testbench_clock_stimuli(std::fstream& fp,
 void print_verilog_testbench_random_stimuli(std::fstream& fp,
                                             const AtomContext& atom_ctx,
                                             const VprNetlistAnnotation& netlist_annotation,
+                                            const std::vector<std::string>& clock_port_names,
                                             const std::string& check_flag_port_postfix,
                                             const BasicPort& clock_port);
 
