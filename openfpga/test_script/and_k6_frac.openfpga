@@ -1,5 +1,5 @@
 # Run VPR for the s298 design
-vpr ./test_vpr_arch/k6_frac_N10_40nm.xml ./test_blif/s298.blif --clock_modeling route #--write_rr_graph example_rr_graph.xml
+vpr ./test_vpr_arch/k6_frac_N10_40nm.xml ./test_blif/and.blif --clock_modeling route #--write_rr_graph example_rr_graph.xml
 
 # Read OpenFPGA architecture definition
 read_openfpga_arch -f ./test_openfpga_arch/k6_frac_N10_40nm_openfpga.xml
@@ -43,7 +43,7 @@ write_fabric_verilog --file /var/tmp/xtang/openfpga_test_src/SRC --explicit_port
 #  - Enable top-level testbench which is a full verification including programming circuit and core logic of FPGA
 #  - Enable pre-configured top-level testbench which is a fast verification skipping programming phase
 #  - Simulation ini file is optional and is needed only when you need to interface different HDL simulators using openfpga flow-run scripts
-write_verilog_testbench --file /var/tmp/xtang/openfpga_test_src/SRC --reference_benchmark_file_path /var/tmp/xtang/s298.v --print_top_testbench --print_preconfig_top_testbench --print_simulation_ini /var/tmp/xtang/openfpga_test_src/simulation_deck.ini
+write_verilog_testbench --file /var/tmp/xtang/openfpga_test_src/SRC --reference_benchmark_file_path /var/tmp/xtang/and.v --print_top_testbench --print_preconfig_top_testbench --print_simulation_ini /var/tmp/xtang/openfpga_test_src/simulation_deck.ini
 
 # Write the SDC files for PnR backend
 #  - Turn on every options here 
