@@ -323,7 +323,7 @@ void print_pnr_sdc_constrain_grid_timing(const std::string& sdc_dir,
                                          const ModuleManager& module_manager) {
 
   /* Start time count */
-  vtr::ScopedStartFinishTimer timer("Generating SDC for constraining grid timing for P&R flow");
+  vtr::ScopedStartFinishTimer timer("Write SDC for constraining grid timing for P&R flow");
 
   for (const t_physical_tile_type& physical_tile : device_ctx.physical_tile_types) {
     /* Bypass empty type or nullptr */

@@ -166,7 +166,7 @@ void print_pnr_sdc_flatten_routing_constrain_sb_timing(const std::string& sdc_di
                                                        const DeviceRRGSB& device_rr_gsb) {
 
   /* Start time count */
-  vtr::ScopedStartFinishTimer timer("Generating SDC for constrain Switch Block timing for P&R flow");
+  vtr::ScopedStartFinishTimer timer("Write SDC for constrain Switch Block timing for P&R flow");
 
   /* Get the range of SB array */
   vtr::Point<size_t> sb_range = device_rr_gsb.get_gsb_range();
@@ -195,7 +195,7 @@ void print_pnr_sdc_compact_routing_constrain_sb_timing(const std::string& sdc_di
                                                        const DeviceRRGSB& device_rr_gsb) {
 
   /* Start time count */
-  vtr::ScopedStartFinishTimer timer("Generating SDC for constrain Switch Block timing for P&R flow");
+  vtr::ScopedStartFinishTimer timer("Write SDC for constrain Switch Block timing for P&R flow");
 
   for (size_t isb = 0; isb < device_rr_gsb.get_num_sb_unique_module(); ++isb) {
     const RRGSB& rr_gsb = device_rr_gsb.get_sb_unique_module(isb);
@@ -362,7 +362,7 @@ void print_pnr_sdc_flatten_routing_constrain_cb_timing(const std::string& sdc_di
                                                        const DeviceRRGSB& device_rr_gsb) {
 
   /* Start time count */
-  vtr::ScopedStartFinishTimer timer("Generating SDC for constrain Connection Block timing for P&R flow");
+  vtr::ScopedStartFinishTimer timer("Write SDC for constrain Connection Block timing for P&R flow");
 
   print_pnr_sdc_flatten_routing_constrain_cb_timing(sdc_dir, module_manager, 
                                                     rr_graph,
@@ -385,7 +385,7 @@ void print_pnr_sdc_compact_routing_constrain_cb_timing(const std::string& sdc_di
                                                        const DeviceRRGSB& device_rr_gsb) {
 
   /* Start time count */
-  vtr::ScopedStartFinishTimer timer("Generating SDC for constrain Connection Block timing for P&R flow");
+  vtr::ScopedStartFinishTimer timer("Write SDC for constrain Connection Block timing for P&R flow");
 
   /* Print SDC for unique X-direction connection block modules */
   for (size_t icb = 0; icb < device_rr_gsb.get_num_cb_unique_module(CHANX); ++icb) {

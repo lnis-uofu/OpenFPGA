@@ -58,7 +58,7 @@ void print_pnr_sdc_global_ports(const std::string& sdc_dir,
   std::string sdc_fname(sdc_dir + std::string(SDC_GLOBAL_PORTS_FILE_NAME));
 
   /* Start time count */
-  std::string timer_message = std::string("Generating SDC for constraining clocks for P&R flow '") + sdc_fname + std::string("'");
+  std::string timer_message = std::string("Write SDC for constraining clocks for P&R flow '") + sdc_fname + std::string("'");
   vtr::ScopedStartFinishTimer timer(timer_message);
 
   /* Create the file stream */
@@ -153,7 +153,7 @@ void print_pnr_sdc_constrain_configurable_memory_outputs(const std::string& sdc_
   std::string sdc_fname(sdc_dir + std::string(SDC_DISABLE_CONFIG_MEM_OUTPUTS_FILE_NAME));
 
   /* Start time count */
-  std::string timer_message = std::string("Generating SDC to disable configurable memory outputs for P&R flow '") + sdc_fname + std::string("'");
+  std::string timer_message = std::string("Write SDC to disable configurable memory outputs for P&R flow '") + sdc_fname + std::string("'");
   vtr::ScopedStartFinishTimer timer(timer_message);
 
   /* Create the file stream */
@@ -187,7 +187,7 @@ void print_sdc_disable_routing_multiplexer_outputs(const std::string& sdc_dir,
   std::string sdc_fname(sdc_dir + std::string(SDC_DISABLE_MUX_OUTPUTS_FILE_NAME));
 
   /* Start time count */
-  std::string timer_message = std::string("Generating SDC to disable routing multiplexer outputs for P&R flow '") + sdc_fname + std::string("'");
+  std::string timer_message = std::string("Write SDC to disable routing multiplexer outputs for P&R flow '") + sdc_fname + std::string("'");
   vtr::ScopedStartFinishTimer timer(timer_message);
 
   /* Create the file stream */
@@ -242,7 +242,7 @@ void print_pnr_sdc_flatten_routing_disable_switch_block_outputs(const std::strin
   std::string sdc_fname(sdc_dir + std::string(SDC_DISABLE_SB_OUTPUTS_FILE_NAME));
 
   /* Start time count */
-  std::string timer_message = std::string("Generating SDC to disable switch block outputs for P&R flow '") + sdc_fname + std::string("'");
+  std::string timer_message = std::string("Write SDC to disable switch block outputs for P&R flow '") + sdc_fname + std::string("'");
   vtr::ScopedStartFinishTimer timer(timer_message);
 
   /* Create the file stream */
@@ -298,7 +298,7 @@ void print_pnr_sdc_compact_routing_disable_switch_block_outputs(const std::strin
   std::string sdc_fname(sdc_dir + std::string(SDC_DISABLE_SB_OUTPUTS_FILE_NAME));
 
   /* Start time count */
-  std::string timer_message = std::string("Generating SDC to disable switch block outputs for P&R flow '") + sdc_fname + std::string("'");
+  std::string timer_message = std::string("Write SDC to disable switch block outputs for P&R flow '") + sdc_fname + std::string("'");
   vtr::ScopedStartFinishTimer timer(timer_message);
 
   /* Create the file stream */

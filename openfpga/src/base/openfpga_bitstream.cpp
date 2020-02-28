@@ -5,6 +5,9 @@
 #include "vtr_time.h"
 #include "vtr_log.h"
 
+/* Headers from openfpgautil library */
+#include "openfpga_digest.h"
+
 #include "build_device_bitstream.h"
 #include "bitstream_writer.h"
 #include "build_fabric_bitstream.h"
@@ -30,6 +33,11 @@ void fpga_bitstream(OpenfpgaContext& openfpga_ctx,
                                                                     cmd_context.option_enable(cmd, opt_verbose));
 
   if (true == cmd_context.option_enable(cmd, opt_file)) {
+    std::string src_dir_path = find_path_dir_name(cmd_context.option_value(cmd, opt_file));
+
+    /* Create directories */
+    create_dir_path(src_dir_path.c_str());
+
     write_arch_independent_bitstream_to_xml_file(openfpga_ctx.bitstream_manager(),
                                                  cmd_context.option_value(cmd, opt_file));
   }
