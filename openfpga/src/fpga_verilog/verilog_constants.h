@@ -22,6 +22,7 @@ constexpr char* MODELSIM_SIMULATION_TIME_UNIT = "ms";
 constexpr char* ICARUS_SIMULATOR_FLAG = "ICARUS_SIMULATOR"; // the flag to enable specific Verilog code in testbenches
 // End of Icarus variables and flag
 
+constexpr char* TOP_INCLUDE_NETLIST_FILE_NAME_POSTFIX = "_include_netlists.v";
 constexpr char* VERILOG_TOP_POSTFIX = "_top.v";
 constexpr char* FORMAL_VERIFICATION_VERILOG_FILE_POSTFIX = "_top_formal_verification.v"; 
 constexpr char* TOP_TESTBENCH_VERILOG_FILE_POSTFIX = "_top_tb.v"; /* !!! must be consist with the modelsim_testbench_module_postfix */ 
@@ -51,6 +52,8 @@ constexpr char* GRID_VERILOG_FILE_NAME_PREFIX = "grid_";
 constexpr char* FORMAL_VERIFICATION_TOP_MODULE_POSTFIX = "_top_formal_verification";
 constexpr char* FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX = "_fm";
 constexpr char* FORMAL_VERIFICATION_TOP_MODULE_UUT_NAME = "U0_formal_verification";
+
+constexpr char* FORMAL_RANDOM_TOP_TESTBENCH_POSTFIX = "_top_formal_verification_random_tb";
 
 #define VERILOG_DEFAULT_SIGNAL_INIT_VALUE 0
 

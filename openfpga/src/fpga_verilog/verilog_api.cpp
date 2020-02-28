@@ -23,6 +23,7 @@
 #include "verilog_preconfig_top_module.h"
 #include "verilog_formal_random_top_testbench.h"
 #include "verilog_top_testbench.h"
+#include "simulation_info_writer.h"
 
 /* Header file for this source file */
 #include "verilog_api.h"
@@ -204,22 +205,18 @@ void fpga_verilog_testbench(const ModuleManager& module_manager,
                                 simulation_setting);
   }
  
-  /* TODO: Generate exchangeable files which contains simulation settings 
+  /* Generate exchangeable files which contains simulation settings */
   if (true == options.print_simulation_ini()) {
-    std::string simulation_ini_file_name;
-    if (true != options.simulation_ini_path()) {
-      simulation_ini_file_name = options.simulation_ini_path();
-    }
+    std::string simulation_ini_file_name = options.simulation_ini_path();
+    VTR_ASSERT(true != options.simulation_ini_path().empty());
     print_verilog_simulation_info(simulation_ini_file_name,
-                                  format_dir_path(chomped_parent_dir),
                                   netlist_name,
                                   src_dir_path,
                                   bitstream_manager.bits().size(),
-                                  simulation_setting.num_clock_cycle(),
+                                  simulation_setting.num_clock_cycles(),
                                   simulation_setting.programming_clock_frequency(),
                                   simulation_setting.operating_clock_frequency());
   }
-  */
 
   /* Generate a Verilog file including all the netlists that have been generated */
   print_include_netlists(src_dir_path,

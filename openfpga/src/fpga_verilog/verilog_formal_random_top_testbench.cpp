@@ -31,7 +31,6 @@ namespace openfpga {
 /********************************************************************
  * Local variables used only in this file
  *******************************************************************/
-constexpr char* FORMAL_RANDOM_TOP_TESTBENCH_POSTFIX = "_top_formal_verification_random_tb";
 constexpr char* FPGA_PORT_POSTFIX = "_gfpga";
 constexpr char* BENCHMARK_PORT_POSTFIX = "_bench";
 constexpr char* CHECKFLAG_PORT_POSTFIX = "_flag";

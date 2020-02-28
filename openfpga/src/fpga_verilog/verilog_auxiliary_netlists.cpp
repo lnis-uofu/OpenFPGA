@@ -23,7 +23,6 @@ namespace openfpga {
 /********************************************************************
  * Local constant variables
  *******************************************************************/
-constexpr char* TOP_INCLUDE_NETLIST_FILE_NAME_POSTFIX = "_include_netlists.v";
 
 /********************************************************************
  * Print a file that includes all the netlists that have been generated
