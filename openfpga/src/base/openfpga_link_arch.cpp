@@ -7,6 +7,11 @@
 #include "vtr_assert.h"
 #include "vtr_log.h"
 
+/* Headers from vpr library */
+#include "timing_info.h"
+#include "AnalysisDelayCalculator.h"
+#include "net_delay.h"
+
 #include "vpr_device_annotation.h"
 #include "pb_type_utils.h"
 #include "annotate_pb_types.h"
@@ -44,6 +49,47 @@ bool is_vpr_rr_graph_supported(const RRGraph& rr_graph) {
   }
  
   return true;
+}
+
+/********************************************************************
+ * Annotate simulation setting based on VPR results
+ *  - If the operating clock frequency is set to follow the vpr timing results,
+ *    we will set a new operating clock frequency here
+ *  - If the number of clock cycles in simulation is set to be automatically determined,
+ *    we will infer the number based on the average signal density
+ *******************************************************************/
+static 
+void annotate_simulation_setting(const AtomContext& atom_ctx, 
+                                 SimulationSetting& sim_setting) {
+
+  /* Find if the operating frequency is binded to vpr results */
+  if (0. == sim_setting.operating_clock_frequency()) {
+    VTR_LOG("User specified the operating clock frequency to use VPR results\n");
+    /* Run timing analysis and collect critical path delay
+     * This code is copied from function vpr_analysis() in vpr_api.h 
+     * Should keep updated to latest VPR code base
+     * Note:
+     *   - MUST mention in documentation that VPR should be run in timing enabled mode
+     */
+    vtr::vector<ClusterNetId, float*> net_delay;
+    vtr::t_chunk net_delay_ch;
+    /* Load the net delays */
+    net_delay = alloc_net_delay(&net_delay_ch);
+    load_net_delay_from_routing(net_delay);
+
+    /* Do final timing analysis */
+    auto analysis_delay_calc = std::make_shared<AnalysisDelayCalculator>(atom_ctx.nlist, atom_ctx.lookup, net_delay);
+    auto timing_info = make_setup_hold_timing_info(analysis_delay_calc);
+    timing_info->update();
+
+    /* Get critical path delay. Update simulation settings */
+    float T_crit = timing_info->least_slack_critical_path().delay() * (1. + sim_setting.operating_clock_frequency_slack());
+    sim_setting.set_operating_clock_frequency(1 / T_crit); 
+    VTR_LOG("Use VPR critical path delay %g [ns] with a %g [%] slack in OpenFPGA.\n",
+            T_crit / 1e9, sim_setting.operating_clock_frequency_slack() * 100);
+  }
+  VTR_LOG("Will apply operating clock frequency %g [MHz] to simulations\n",
+          sim_setting.operating_clock_frequency() / 1e6);
 }
 
 /********************************************************************
@@ -118,6 +164,10 @@ void link_arch(OpenfpgaContext& openfpga_ctx,
                          g_vpr_ctx.clustering(),
                          g_vpr_ctx.placement(),
                          openfpga_ctx.mutable_vpr_placement_annotation());
+
+  /* TODO: Annotate the number of clock cycles and clock frequency by following VPR results */
+  annotate_simulation_setting(g_vpr_ctx.atom(),
+                              openfpga_ctx.mutable_arch().sim_setting);
 } 
 
 } /* end namespace openfpga */
