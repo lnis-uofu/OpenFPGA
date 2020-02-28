@@ -64,8 +64,8 @@ void write_pnr_sdc(OpenfpgaContext& openfpga_ctx,
   /* Execute only when sdc is enabled */
   if (true == options.generate_sdc_pnr()) { 
     print_pnr_sdc(options,
-                  0, /* TODO: add critical path stats to OpenFPGA context */
-                  //openfpga_ctx.vpr_timing_annotation().critical_path_delay();
+                  1./openfpga_ctx.arch().sim_setting.programming_clock_frequency(),
+                  1./openfpga_ctx.arch().sim_setting.operating_clock_frequency(),
                   g_vpr_ctx.device(),
                   openfpga_ctx.vpr_device_annotation(),
                   openfpga_ctx.device_rr_gsb(),

@@ -36,12 +36,6 @@
 namespace openfpga {
 
 /********************************************************************
- * Local variables
- *******************************************************************/
-constexpr float SDC_FIXED_PROG_CLOCK_PERIOD = 100;
-constexpr float SDC_FIXED_CLOCK_PERIOD = 10;
-
-/********************************************************************
  * Print a SDC file to constrain the global ports of FPGA fabric
  * in particular clock ports
  * 
@@ -50,7 +44,8 @@ constexpr float SDC_FIXED_CLOCK_PERIOD = 10;
  *******************************************************************/
 static 
 void print_pnr_sdc_global_ports(const std::string& sdc_dir, 
-                                const float& critical_path_delay,
+                                const float& programming_critical_path_delay,
+                                const float& operating_critical_path_delay,
                                 const CircuitLibrary& circuit_lib,
                                 const std::vector<CircuitPortId>& global_ports) {
 
@@ -76,11 +71,11 @@ void print_pnr_sdc_global_ports(const std::string& sdc_dir,
       continue;
     }
     /* Reach here, it means a clock port and we need print constraints */
-    float clock_period = critical_path_delay; 
+    float clock_period = operating_critical_path_delay; 
 
     /* For programming clock, we give a fixed period */
     if (true == circuit_lib.port_is_prog(clock_port)) {
-      clock_period = SDC_FIXED_PROG_CLOCK_PERIOD;
+      clock_period = programming_critical_path_delay;
       /* Print comments */
       fp << "##################################################" << std::endl; 
       fp << "# Create programmable clock                       " << std::endl;
@@ -118,7 +113,7 @@ void print_pnr_sdc_global_ports(const std::string& sdc_dir,
     fp << "##################################################" << std::endl; 
 
     /* Reach here, it means a non-clock global port and we need print constraints */
-    float clock_period = SDC_FIXED_CLOCK_PERIOD; 
+    float clock_period = operating_critical_path_delay; 
     for (const size_t& pin : circuit_lib.pins(global_port)) {
       BasicPort port_to_constrain(circuit_lib.port_prefix(global_port), pin, pin);
       fp << "create_clock ";
@@ -343,7 +338,8 @@ void print_pnr_sdc_compact_routing_disable_switch_block_outputs(const std::strin
  * 4. Design constraints for breaking the combinational loops in FPGA fabric
  *******************************************************************/
 void print_pnr_sdc(const PnrSdcOption& sdc_options,
-                   const float& critical_path_delay,
+                   const float& programming_critical_path_delay,
+                   const float& operating_critical_path_delay,
                    const DeviceContext& device_ctx,
                    const VprDeviceAnnotation& device_annotation,
                    const DeviceRRGSB& device_rr_gsb,
@@ -355,7 +351,10 @@ void print_pnr_sdc(const PnrSdcOption& sdc_options,
   
   /* Constrain global ports */
   if (true == sdc_options.constrain_global_port()) {
-    print_pnr_sdc_global_ports(sdc_options.sdc_dir(), critical_path_delay, circuit_lib, global_ports);
+    print_pnr_sdc_global_ports(sdc_options.sdc_dir(),
+                               programming_critical_path_delay,
+                               operating_critical_path_delay,
+                               circuit_lib, global_ports);
   }
 
   std::string top_module_name = generate_fpga_top_module_name();

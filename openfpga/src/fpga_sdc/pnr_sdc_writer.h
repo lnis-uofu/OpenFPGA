@@ -22,7 +22,8 @@
 namespace openfpga {
 
 void print_pnr_sdc(const PnrSdcOption& sdc_options,
-                   const float& critical_path_delay,
+                   const float& programming_critical_path_delay,
+                   const float& operating_critical_path_delay,
                    const DeviceContext& device_ctx,
                    const VprDeviceAnnotation& device_annotation,
                    const DeviceRRGSB& device_rr_gsb,
