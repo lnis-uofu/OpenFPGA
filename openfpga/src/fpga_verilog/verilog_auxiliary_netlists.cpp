@@ -23,7 +23,6 @@ namespace openfpga {
 /********************************************************************
  * Local constant variables
  *******************************************************************/
-constexpr char* TOP_INCLUDE_NETLIST_FILE_NAME_POSTFIX = "_include_netlists.v";
 
 /********************************************************************
  * Print a file that includes all the netlists that have been generated
@@ -115,7 +114,7 @@ void print_include_netlists(const std::string& src_dir,
  * which are used enable/disable some features in FPGA Verilog modules
  *******************************************************************/
 void print_verilog_preprocessing_flags_netlist(const std::string& src_dir,
-                                               const FabricVerilogOption& fpga_verilog_opts) {
+                                               const FabricVerilogOption& fabric_verilog_opts) {
 
   std::string verilog_fname = src_dir + std::string(DEFINES_VERILOG_FILE_NAME);
 
@@ -130,25 +129,19 @@ void print_verilog_preprocessing_flags_netlist(const std::string& src_dir,
   print_verilog_file_header(fp, std::string("Preprocessing flags to enable/disable features in FPGA Verilog modules")); 
 
   /* To enable timing */
-  if (true == fpga_verilog_opts.include_timing()) {
+  if (true == fabric_verilog_opts.include_timing()) {
     print_verilog_define_flag(fp, std::string(VERILOG_TIMING_PREPROC_FLAG), 1);
     fp << std::endl;
   } 
 
   /* To enable timing */
-  if (true == fpga_verilog_opts.include_signal_init()) {
+  if (true == fabric_verilog_opts.include_signal_init()) {
     print_verilog_define_flag(fp, std::string(VERILOG_SIGNAL_INIT_PREPROC_FLAG), 1);
     fp << std::endl;
   } 
 
-  /* To enable formal verfication flag */
-  if (true == fpga_verilog_opts.print_formal_verification_top_netlist()) {
-    print_verilog_define_flag(fp, std::string(VERILOG_FORMAL_VERIFICATION_PREPROC_FLAG), 1);
-    fp << std::endl;
-  } 
-
   /* To enable functional verfication with Icarus */
-  if (true == fpga_verilog_opts.support_icarus_simulator()) {
+  if (true == fabric_verilog_opts.support_icarus_simulator()) {
     print_verilog_define_flag(fp, std::string(ICARUS_SIMULATOR_FLAG), 1);
     fp << std::endl;
   } 
@@ -161,7 +154,7 @@ void print_verilog_preprocessing_flags_netlist(const std::string& src_dir,
  * Print a Verilog file containing simulation-related preprocessing flags
  *******************************************************************/
 void print_verilog_simulation_preprocessing_flags(const std::string& src_dir,
-                                                  const FabricVerilogOption& fpga_verilog_opts) {
+                                                  const VerilogTestbenchOption& verilog_testbench_opts) {
 
   std::string verilog_fname = src_dir + std::string(DEFINES_VERILOG_SIMULATION_FILE_NAME);
 
@@ -176,19 +169,26 @@ void print_verilog_simulation_preprocessing_flags(const std::string& src_dir,
   print_verilog_file_header(fp, std::string("Preprocessing flags to enable/disable simulation features")); 
 
   /* To enable manualy checked simulation */
-  if (true == fpga_verilog_opts.print_top_testbench()) {
+  if (true == verilog_testbench_opts.print_top_testbench()) {
     print_verilog_define_flag(fp, std::string(INITIAL_SIMULATION_FLAG), 1);
     fp << std::endl;
   } 
 
   /* To enable auto-checked simulation */
-  if (true == fpga_verilog_opts.print_autocheck_top_testbench()) {
+  if ( (true == verilog_testbench_opts.print_preconfig_top_testbench())
+    || (true == verilog_testbench_opts.print_top_testbench()) ) {
     print_verilog_define_flag(fp, std::string(AUTOCHECKED_SIMULATION_FLAG), 1);
     fp << std::endl;
   } 
 
   /* To enable pre-configured FPGA simulation */
-  if (true == fpga_verilog_opts.print_formal_verification_top_netlist()) {
+  if (true == verilog_testbench_opts.print_formal_verification_top_netlist()) {
+    print_verilog_define_flag(fp, std::string(VERILOG_FORMAL_VERIFICATION_PREPROC_FLAG), 1);
+    fp << std::endl;
+  } 
+
+  /* To enable pre-configured FPGA simulation */
+  if (true == verilog_testbench_opts.print_preconfig_top_testbench()) {
     print_verilog_define_flag(fp, std::string(FORMAL_SIMULATION_FLAG), 1);
     fp << std::endl;
   } 

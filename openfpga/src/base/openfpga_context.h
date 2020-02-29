@@ -15,6 +15,7 @@
 #include "openfpga_flow_manager.h"
 #include "bitstream_manager.h"
 #include "device_rr_gsb.h"
+#include "io_location_map.h"
 
 /********************************************************************
  * This file includes the declaration of the date structure 
@@ -58,6 +59,8 @@ class OpenfpgaContext : public Context  {
     const openfpga::FlowManager& flow_manager() const { return flow_manager_; }
     const openfpga::BitstreamManager& bitstream_manager() const { return bitstream_manager_; }
     const std::vector<openfpga::ConfigBitId>& fabric_bitstream() const { return fabric_bitstream_; }
+    const openfpga::IoLocationMap& io_location_map() { return io_location_map_; }
+    const std::unordered_map<AtomNetId, t_net_power>& net_activity() { return net_activity_; }
   public:  /* Public mutators */
     openfpga::Arch& mutable_arch() { return arch_; }
     openfpga::VprDeviceAnnotation& mutable_vpr_device_annotation() { return vpr_device_annotation_; }
@@ -72,6 +75,8 @@ class OpenfpgaContext : public Context  {
     openfpga::FlowManager& mutable_flow_manager() { return flow_manager_; }
     openfpga::BitstreamManager& mutable_bitstream_manager() { return bitstream_manager_; }
     std::vector<openfpga::ConfigBitId>& mutable_fabric_bitstream() { return fabric_bitstream_; }
+    openfpga::IoLocationMap& mutable_io_location_map() { return io_location_map_; }
+    std::unordered_map<AtomNetId, t_net_power>& mutable_net_activity() { return net_activity_; }
   private: /* Internal data */
     /* Data structure to store information from read_openfpga_arch library */
     openfpga::Arch arch_;
@@ -102,10 +107,14 @@ class OpenfpgaContext : public Context  {
 
     /* Fabric module graph */
     openfpga::ModuleManager module_graph_;
+    openfpga::IoLocationMap io_location_map_;
 
     /* Bitstream database */
     openfpga::BitstreamManager bitstream_manager_;
     std::vector<openfpga::ConfigBitId> fabric_bitstream_;
+
+    /* Net activities of users' implementation */
+    std::unordered_map<AtomNetId, t_net_power> net_activity_; 
  
     /* Flow status */
     openfpga::FlowManager flow_manager_;

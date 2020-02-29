@@ -14,6 +14,7 @@
 #include "tile_direct.h"
 #include "arch_direct.h"
 #include "module_manager.h"
+#include "io_location_map.h"
 
 /********************************************************************
  * Function declaration
@@ -23,6 +24,7 @@
 namespace openfpga {
 
 void build_top_module(ModuleManager& module_manager,
+                      IoLocationMap& io_location_map,
                       const CircuitLibrary& circuit_lib,
                       const DeviceGrid& grids,
                       const RRGraph& rr_graph,

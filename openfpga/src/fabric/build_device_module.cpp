@@ -26,7 +26,8 @@ namespace openfpga {
  * The main function to be called for building module graphs 
  * for a FPGA fabric
  *******************************************************************/
-ModuleManager build_device_module_graph(const DeviceContext& vpr_device_ctx,
+ModuleManager build_device_module_graph(IoLocationMap& io_location_map,
+                                        const DeviceContext& vpr_device_ctx,
                                         const OpenfpgaContext& openfpga_ctx,
                                         const bool& compress_routing,
                                         const bool& duplicate_grid_pin,
@@ -97,7 +98,8 @@ ModuleManager build_device_module_graph(const DeviceContext& vpr_device_ctx,
   }
 
   /* Build FPGA fabric top-level module */
-  build_top_module(module_manager, openfpga_ctx.arch().circuit_lib, 
+  build_top_module(module_manager, io_location_map,
+                   openfpga_ctx.arch().circuit_lib, 
                    vpr_device_ctx.grid,
                    vpr_device_ctx.rr_graph,
                    openfpga_ctx.device_rr_gsb(), 

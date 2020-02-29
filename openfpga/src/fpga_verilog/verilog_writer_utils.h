@@ -14,6 +14,7 @@
 #include <string>
 #include "openfpga_port.h"
 #include "verilog_port_types.h"
+#include "circuit_library.h"
 #include "module_manager.h"
 
 /********************************************************************
