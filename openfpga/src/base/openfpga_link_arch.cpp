@@ -2,6 +2,9 @@
  * This file includes functions to read an OpenFPGA architecture file
  * which are built on the libarchopenfpga library
  *******************************************************************/
+#include <cmath>
+#include <iterator>
+
 /* Headers from vtrutil library */
 #include "vtr_time.h"
 #include "vtr_assert.h"
@@ -11,6 +14,7 @@
 #include "timing_info.h"
 #include "AnalysisDelayCalculator.h"
 #include "net_delay.h"
+#include "read_activity.h"
 
 #include "vpr_device_annotation.h"
 #include "pb_type_utils.h"
@@ -52,6 +56,108 @@ bool is_vpr_rr_graph_supported(const RRGraph& rr_graph) {
 }
 
 /********************************************************************
+ * Find the number of clock cycles in simulation based on the average signal density
+ *******************************************************************/
+static 
+size_t recommend_num_sim_clock_cycle(const AtomContext& atom_ctx,
+                                     const std::unordered_map<AtomNetId, t_net_power>& net_activity, 
+                                     const float& sim_window_size) {
+  size_t recmd_num_sim_clock_cycle = 0;
+
+  float avg_density = 0.;
+  size_t net_cnt = 0;
+
+  float weighted_avg_density = 0.;
+  size_t weighted_net_cnt = 0;
+
+  /* get the average density of all the nets */
+  for (const AtomNetId& atom_net : atom_ctx.nlist.nets()) {
+    /* Skip the nets without any activity annotation */
+    if (0 == net_activity.count(atom_net)) {
+      continue;
+    }
+
+    /* Only care non-zero density nets */
+    if (0. == net_activity.at(atom_net).density) {
+      continue;
+    }
+
+    avg_density += net_activity.at(atom_net).density; 
+    net_cnt++;
+
+    /* Consider the weight of fan-out */
+    size_t net_weight; 
+    if (0 == std::distance(atom_ctx.nlist.net_sinks(atom_net).begin(), atom_ctx.nlist.net_sinks(atom_net).end())) {
+      net_weight = 1;
+    } else {
+      VTR_ASSERT(0 < std::distance(atom_ctx.nlist.net_sinks(atom_net).begin(), atom_ctx.nlist.net_sinks(atom_net).end()));
+      net_weight = std::distance(atom_ctx.nlist.net_sinks(atom_net).begin(), atom_ctx.nlist.net_sinks(atom_net).end());
+    }
+    weighted_avg_density += net_activity.at(atom_net).density* net_weight;
+    weighted_net_cnt += net_weight;
+  }
+  avg_density = avg_density / net_cnt; 
+  weighted_avg_density = weighted_avg_density / weighted_net_cnt; 
+
+  /* Sort the net density */
+  std::vector<float> net_densities;
+  net_densities.reserve(net_cnt);
+  for (const AtomNetId& atom_net : atom_ctx.nlist.nets()) {
+    /* Skip the nets without any activity annotation */
+    if (0 == net_activity.count(atom_net)) {
+      continue;
+    }
+
+    /* Only care non-zero density nets */
+    if (0. == net_activity.at(atom_net).density) {
+      continue;
+    }
+
+    net_densities.push_back(net_activity.at(atom_net).density);
+  }
+  std::sort(net_densities.begin(), net_densities.end());
+  /* Get the median */
+  float median_density = 0.;
+  /* check for even case */
+  if (net_cnt % 2 != 0) { 
+    median_density = net_densities[size_t(net_cnt / 2)];
+  } else {              
+    median_density = 0.5 * (net_densities[size_t((net_cnt - 1) / 2)] + net_densities[size_t((net_cnt - 1) / 2)]);
+  }
+
+  /* It may be more reasonable to use median 
+   * But, if median density is 0, we use average density
+  */
+  if ((0. == median_density) && (0. == avg_density)) {
+    recmd_num_sim_clock_cycle = 1;
+    VTR_LOG_WARN("All the signal density is zero!\nNumber of clock cycles in simulations are set to be %ld!\n",
+                 recmd_num_sim_clock_cycle);
+  } else if (0. == avg_density) {
+      recmd_num_sim_clock_cycle = (int)round(1 / median_density); 
+  } else if (0. == median_density) {
+      recmd_num_sim_clock_cycle = (int)round(1 / avg_density);
+  } else {
+    /* add a sim window size to balance the weight of average density and median density
+     * In practice, we find that there could be huge difference between avereage and median values 
+     * For a reasonable number of simulation clock cycles, we do this window size.
+     */
+    recmd_num_sim_clock_cycle = (int)round(1 / (sim_window_size * avg_density + (1 - sim_window_size) * median_density ));
+  }
+  
+  VTR_ASSERT(0 < recmd_num_sim_clock_cycle);
+
+  VTR_LOG("Average net density: %.2f\n", avg_density);
+  VTR_LOG("Median net density: %.2f\n", median_density);
+  VTR_LOG("Average net density after weighting: %.2f\n", weighted_avg_density);
+  VTR_LOG("Window size set for Simulation: %.2f\n", sim_window_size);
+  VTR_LOG("Net density after Window size : %.2f\n", 
+          (sim_window_size * avg_density + (1 - sim_window_size) * median_density));
+  VTR_LOG("Recommend no. of clock cycles: %ld\n", recmd_num_sim_clock_cycle);
+
+  return recmd_num_sim_clock_cycle; 
+}
+
+/********************************************************************
  * Annotate simulation setting based on VPR results
  *  - If the operating clock frequency is set to follow the vpr timing results,
  *    we will set a new operating clock frequency here
@@ -60,6 +166,7 @@ bool is_vpr_rr_graph_supported(const RRGraph& rr_graph) {
  *******************************************************************/
 static 
 void annotate_simulation_setting(const AtomContext& atom_ctx, 
+                                 const std::unordered_map<AtomNetId, t_net_power>& net_activity, 
                                  SimulationSetting& sim_setting) {
 
   /* Find if the operating frequency is binded to vpr results */
@@ -90,6 +197,19 @@ void annotate_simulation_setting(const AtomContext& atom_ctx,
   }
   VTR_LOG("Will apply operating clock frequency %g [MHz] to simulations\n",
           sim_setting.operating_clock_frequency() / 1e6);
+
+  if (0. == sim_setting.num_clock_cycles()) {
+    /* Find the number of clock cycles to be used in simulation by average over the signal activity */
+
+    VTR_LOG("User specified the number of operating clock cycles to be inferred from signal activities\n");
+    size_t num_clock_cycles = recommend_num_sim_clock_cycle(atom_ctx,
+                                                            net_activity, 
+                                                            0.5);
+    sim_setting.set_num_clock_cycles(num_clock_cycles);
+
+    VTR_LOG("Will apply %lu operating clock cycles to simulations\n",
+            sim_setting.num_clock_cycles());
+  }
 }
 
 /********************************************************************
@@ -105,6 +225,7 @@ void link_arch(OpenfpgaContext& openfpga_ctx,
 
   vtr::ScopedStartFinishTimer timer("Link OpenFPGA architecture to VPR architecture");
 
+  CommandOptionId opt_activity_file = cmd.option("activity_file");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
   /* Annotate pb_type graphs
@@ -165,8 +286,20 @@ void link_arch(OpenfpgaContext& openfpga_ctx,
                          g_vpr_ctx.placement(),
                          openfpga_ctx.mutable_vpr_placement_annotation());
 
-  /* TODO: Annotate the number of clock cycles and clock frequency by following VPR results */
+  /* Read activity file is manadatory in the following flow-run settings
+   * - When users specify that number of clock cycles 
+   *   should be inferred from FPGA implmentation
+   * - When FPGA-SPICE is enabled
+   */
+  openfpga_ctx.mutable_net_activity() = read_activity(g_vpr_ctx.atom().nlist,
+                                                      cmd_context.option_value(cmd, opt_activity_file).c_str());
+
+  /* TODO: Annotate the number of clock cycles and clock frequency by following VPR results
+   * We SHOULD create a new simulation setting for OpenFPGA use only
+   * Avoid overwrite the raw data achieved when parsing!!!
+   */
   annotate_simulation_setting(g_vpr_ctx.atom(),
+                              openfpga_ctx.net_activity(),
                               openfpga_ctx.mutable_arch().sim_setting);
 } 
 
