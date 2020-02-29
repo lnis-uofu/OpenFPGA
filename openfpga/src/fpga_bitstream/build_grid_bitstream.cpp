@@ -168,7 +168,8 @@ void build_physical_block_pin_interc_bitstream(BitstreamManager& bitstream_manag
       for (t_pb_graph_pin* src_pb_graph_pin : pb_graph_pin_inputs(des_pb_graph_pin, cur_interc)) {
         const PhysicalPbId& src_pb_id = physical_pb.find_pb(src_pb_graph_pin->parent_node);
         /* If the src pb id is not valid, we bypass it */
-        if ( (true != physical_pb.valid_pb_id(src_pb_id))
+        if ( (true == physical_pb.valid_pb_id(src_pb_id))
+          && (AtomNetId::INVALID() != physical_pb.pb_graph_pin_atom_net(des_pb_id, des_pb_graph_pin))
           && (physical_pb.pb_graph_pin_atom_net(src_pb_id, src_pb_graph_pin) == physical_pb.pb_graph_pin_atom_net(des_pb_id, des_pb_graph_pin))) {
           break;
         }

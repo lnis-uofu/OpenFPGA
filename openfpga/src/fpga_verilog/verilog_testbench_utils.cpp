@@ -5,6 +5,7 @@
  * Note: please try to avoid using global variables in this file
  * so that we can make it free to use anywhere
  *******************************************************************/
+#include <algorithm>
 #include <iomanip>
 
 /* Headers from vtrutil library */
@@ -422,6 +423,7 @@ void print_verilog_testbench_clock_stimuli(std::fstream& fp,
 void print_verilog_testbench_random_stimuli(std::fstream& fp,
                                             const AtomContext& atom_ctx,
                                             const VprNetlistAnnotation& netlist_annotation,
+                                            const std::vector<std::string>& clock_port_names,
                                             const std::string& check_flag_port_postfix,
                                             const BasicPort& clock_port) {
   /* Validate the file stream */
@@ -443,6 +445,11 @@ void print_verilog_testbench_random_stimuli(std::fstream& fp,
     if (true == netlist_annotation.is_block_renamed(atom_blk)) {
       block_name = netlist_annotation.block_name(atom_blk);
     } 
+
+    /* Bypass clock ports */
+    if (clock_port_names.end() != std::find(clock_port_names.begin(), clock_port_names.end(), block_name)) {
+      continue;
+    }
 
     /* TODO: find the clock inputs will be initialized later */
     if (AtomBlockType::INPAD == atom_ctx.nlist.block_type(atom_blk)) {
@@ -510,8 +517,13 @@ void print_verilog_testbench_random_stimuli(std::fstream& fp,
       block_name = netlist_annotation.block_name(atom_blk);
     } 
 
+    /* Bypass clock ports */
+    if (clock_port_names.end() != std::find(clock_port_names.begin(), clock_port_names.end(), block_name)) {
+      continue;
+    }
+
     /* TODO: find the clock inputs will be initialized later */
-    if (AtomBlockType::INPAD != atom_ctx.nlist.block_type(atom_blk)) {
+    if (AtomBlockType::INPAD == atom_ctx.nlist.block_type(atom_blk)) {
       fp << "\t\t" << block_name << " <= $random;" << std::endl;
     }
   }

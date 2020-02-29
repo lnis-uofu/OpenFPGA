@@ -1,5 +1,5 @@
 # Run VPR for the s298 design
-vpr ./test_vpr_arch/k6_frac_N10_40nm.xml ./test_blif/s298.blif --write_rr_graph example_rr_graph.xml
+vpr ./test_vpr_arch/k6_frac_N10_40nm.xml ./test_blif/and.blif --clock_modeling route #--write_rr_graph example_rr_graph.xml
 
 # Read OpenFPGA architecture definition
 read_openfpga_arch -f ./test_openfpga_arch/k6_frac_N10_40nm_openfpga.xml
@@ -8,7 +8,7 @@ read_openfpga_arch -f ./test_openfpga_arch/k6_frac_N10_40nm_openfpga.xml
 #write_openfpga_arch -f ./arch_echo.xml
 
 # Annotate the OpenFPGA architecture to VPR data base
-link_openfpga_arch #--verbose
+link_openfpga_arch --activity_file ./test_blif/and.act #--verbose
 
 # Check and correct any naming conflicts in the BLIF netlist
 check_netlist_naming_conflict --fix --report ./netlist_renaming.xml
@@ -35,10 +35,19 @@ fpga_bitstream --verbose --file /var/tmp/xtang/openfpga_test_src/fabric_indepene
 
 # Write the Verilog netlist for FPGA fabric
 #  - Enable the use of explicit port mapping in Verilog netlist
-write_fabric_verilog --file /var/tmp/xtang/openfpga_test_src --explicit_port_mapping --include_timing --include_signal_init --support_icarus_simulator --print_user_defined_template --verbose
+write_fabric_verilog --file /var/tmp/xtang/openfpga_test_src/SRC --explicit_port_mapping --include_timing --include_signal_init --support_icarus_simulator --print_user_defined_template --verbose
 
 # Write the Verilog testbench for FPGA fabric
-write_verilog_testbench --file /var/tmp/xtang/openfpga_test_src --reference_benchmark_file_path /var/tmp/xtang/s298.v --print_top_testbench --print_preconfig_top_testbench --print_simulation_ini /var/tmp/xtang/openfpga_test_src/simulation_deck.ini
+#  - We suggest the use of same output directory as fabric Verilog netlists
+#  - Must specify the reference benchmark file if you want to output any testbenches
+#  - Enable top-level testbench which is a full verification including programming circuit and core logic of FPGA
+#  - Enable pre-configured top-level testbench which is a fast verification skipping programming phase
+#  - Simulation ini file is optional and is needed only when you need to interface different HDL simulators using openfpga flow-run scripts
+write_verilog_testbench --file /var/tmp/xtang/openfpga_test_src/SRC --reference_benchmark_file_path /var/tmp/xtang/and.v --print_top_testbench --print_preconfig_top_testbench --print_simulation_ini /var/tmp/xtang/openfpga_test_src/simulation_deck.ini
+
+# Write the SDC files for PnR backend
+#  - Turn on every options here 
+write_pnr_sdc --file /var/tmp/xtang/openfpga_test_src/SDC 
 
 # Finish and exit OpenFPGA
 exit

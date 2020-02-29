@@ -45,19 +45,22 @@
     </model>
   </models>
   <tiles>
+    <!-- Do NOT add clock pins to I/O here!!! VPR does not build clock network in the way that OpenFPGA can support
+         If you need to register the I/O, define clocks in the circuit models
+         These clocks can be handled in back-end
+     -->
     <tile name="io" capacity="8" area="0">
       <equivalent_sites>
         <site pb_type="io"/>
       </equivalent_sites>
       <input name="outpad" num_pins="1"/>
       <output name="inpad" num_pins="1"/>
-      <clock name="clock" num_pins="1"/>
       <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
       <pinlocations pattern="custom">
-        <loc side="left">io.outpad io.inpad io.clock</loc>
-        <loc side="top">io.outpad io.inpad io.clock</loc>
-        <loc side="right">io.outpad io.inpad io.clock</loc>
-        <loc side="bottom">io.outpad io.inpad io.clock</loc>
+        <loc side="left">io.outpad io.inpad</loc>
+        <loc side="top">io.outpad io.inpad</loc>
+        <loc side="right">io.outpad io.inpad</loc>
+        <loc side="bottom">io.outpad io.inpad</loc>
       </pinlocations>
     </tile>
     <tile name="clb" area="53894">
@@ -145,7 +148,10 @@
     <pb_type name="io">
       <input name="outpad" num_pins="1"/>
       <output name="inpad" num_pins="1"/>
-      <clock name="clock" num_pins="1"/>
+      <!-- Do NOT add clock pins to I/O here!!! VPR does not build clock network in the way that OpenFPGA can support
+           If you need to register the I/O, define clocks in the circuit models
+           These clocks can be handled in back-end
+       -->
       <!-- A mode denotes the physical implementation of an I/O 
            This mode will be not packable but is mainly used for fabric verilog generation   
         -->

@@ -172,8 +172,8 @@ vtr::Matrix<size_t> add_top_module_grid_instances(ModuleManager& module_manager,
        */
       for (int z = 0; z < grids[io_coordinate.x()][io_coordinate.y()].type->capacity; ++z) {
         io_location_map.set_io_index(io_coordinate.x(), io_coordinate.y(), z, io_counter);
+        io_counter++;
       }
-      io_counter++;
     }
   }
 
