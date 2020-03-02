@@ -57,7 +57,7 @@ ShellCommandId add_openfpga_write_arch_command(openfpga::Shell<OpenfpgaContext>&
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_const_execute_function(shell_cmd_id, write_arch);
 
-  /* The 'write_openfpga_arch' command should NOT be executed before 'read_openfpga_arch' */
+  /* Add command dependency to the Shell */
   shell.set_command_dependency(shell_cmd_id, dependent_cmds);
 
   return shell_cmd_id;
@@ -86,7 +86,7 @@ ShellCommandId add_openfpga_link_arch_command(openfpga::Shell<OpenfpgaContext>& 
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_execute_function(shell_cmd_id, link_arch);
 
-  /* The 'link_openfpga_arch' command should NOT be executed before 'read_openfpga_arch' and 'vpr' */
+  /* Add command dependency to the Shell */
   shell.set_command_dependency(shell_cmd_id, dependent_cmds);
 
   return shell_cmd_id;
@@ -116,7 +116,7 @@ ShellCommandId add_openfpga_check_netlist_naming_conflict_command(openfpga::Shel
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_execute_function(shell_cmd_id, check_netlist_naming_conflict);
 
-  /* The 'link_openfpga_arch' command should NOT be executed before 'vpr' */
+  /* Add command dependency to the Shell */
   shell.set_command_dependency(shell_cmd_id, dependent_cmds);
 
   return shell_cmd_id;
@@ -133,6 +133,7 @@ ShellCommandId add_openfpga_pb_pin_fixup_command(openfpga::Shell<OpenfpgaContext
                                                  const std::vector<ShellCommandId>& dependent_cmds) {
 
   Command shell_cmd("pb_pin_fixup");
+
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Show verbose outputs");
 
@@ -141,7 +142,7 @@ ShellCommandId add_openfpga_pb_pin_fixup_command(openfpga::Shell<OpenfpgaContext
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_execute_function(shell_cmd_id, pb_pin_fixup);
 
-  /* The 'pb_pin_fixup' command should NOT be executed before 'read_openfpga_arch' and 'vpr' */
+  /* Add command dependency to the Shell */
   shell.set_command_dependency(shell_cmd_id, dependent_cmds);
 
   return shell_cmd_id;
@@ -166,7 +167,7 @@ ShellCommandId add_openfpga_lut_truth_table_fixup_command(openfpga::Shell<Openfp
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_execute_function(shell_cmd_id, lut_truth_table_fixup);
 
-  /* The 'lut_truth_table_fixup' command should NOT be executed before 'read_openfpga_arch' and 'vpr' */
+  /* Add command dependency to the Shell */
   shell.set_command_dependency(shell_cmd_id, dependent_cmds);
 
   return shell_cmd_id;
@@ -198,7 +199,7 @@ ShellCommandId add_openfpga_build_fabric_command(openfpga::Shell<OpenfpgaContext
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_execute_function(shell_cmd_id, build_fabric);
 
-  /* The 'build_fabric' command should NOT be executed before 'link_openfpga_arch' */
+  /* Add command dependency to the Shell */
   shell.set_command_dependency(shell_cmd_id, dependent_cmds);
 
   return shell_cmd_id;
@@ -220,6 +221,7 @@ void add_openfpga_setup_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   /******************************** 
    * Command 'write_openfpga_arch' 
    */
+  /* The 'write_openfpga_arch' command should NOT be executed before 'read_openfpga_arch' */
   std::vector<ShellCommandId> write_arch_dependent_cmds(1, read_arch_cmd_id);
   add_openfpga_write_arch_command(shell,
                                   openfpga_setup_cmd_class,
@@ -228,6 +230,7 @@ void add_openfpga_setup_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   /******************************** 
    * Command 'link_openfpga_arch' 
    */
+  /* The 'link_openfpga_arch' command should NOT be executed before 'vpr' */
   std::vector<ShellCommandId> link_arch_dependent_cmds;
   link_arch_dependent_cmds.push_back(read_arch_cmd_id);
   link_arch_dependent_cmds.push_back(vpr_cmd_id);
@@ -237,6 +240,7 @@ void add_openfpga_setup_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   /******************************************* 
    * Command 'check_netlist_naming_conflict'
    */ 
+  /* The 'check_netlist_naming_conflict' command should NOT be executed before 'vpr' */
   std::vector<ShellCommandId> nlist_naming_dependent_cmds;
   nlist_naming_dependent_cmds.push_back(vpr_cmd_id);
   add_openfpga_check_netlist_naming_conflict_command(shell,
@@ -246,6 +250,7 @@ void add_openfpga_setup_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   /******************************** 
    * Command 'pb_pin_fixup' 
    */
+  /* The 'pb_pin_fixup' command should NOT be executed before 'read_openfpga_arch' and 'vpr' */
   std::vector<ShellCommandId> pb_pin_fixup_dependent_cmds;
   pb_pin_fixup_dependent_cmds.push_back(read_arch_cmd_id);
   pb_pin_fixup_dependent_cmds.push_back(vpr_cmd_id);
@@ -256,6 +261,7 @@ void add_openfpga_setup_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   /******************************** 
    * Command 'lut_truth_table_fixup' 
    */
+  /* The 'lut_truth_table_fixup' command should NOT be executed before 'read_openfpga_arch' and 'vpr' */
   std::vector<ShellCommandId> lut_tt_fixup_dependent_cmds;
   lut_tt_fixup_dependent_cmds.push_back(read_arch_cmd_id);
   lut_tt_fixup_dependent_cmds.push_back(vpr_cmd_id);
@@ -265,6 +271,7 @@ void add_openfpga_setup_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   /******************************** 
    * Command 'build_fabric' 
    */
+  /* The 'build_fabric' command should NOT be executed before 'link_openfpga_arch' */
   std::vector<ShellCommandId> build_fabric_dependent_cmds;
   build_fabric_dependent_cmds.push_back(link_arch_cmd_id);
   add_openfpga_build_fabric_command(shell,
