@@ -16,9 +16,9 @@ namespace openfpga {
  * - Add command dependency
  *******************************************************************/
 static 
-void add_openfpga_write_pnr_sdc_command(openfpga::Shell<OpenfpgaContext>& shell,
-                                        const ShellCommandClassId& cmd_class_id,
-                                        const ShellCommandId& shell_cmd_build_fabric_id) {
+ShellCommandId add_openfpga_write_pnr_sdc_command(openfpga::Shell<OpenfpgaContext>& shell,
+                                                  const ShellCommandClassId& cmd_class_id,
+                                                  const std::vector<ShellCommandId>& dependent_cmds) {
   Command shell_cmd("write_pnr_sdc");
 
   /* Add an option '--file' in short '-f'*/
@@ -55,25 +55,28 @@ void add_openfpga_write_pnr_sdc_command(openfpga::Shell<OpenfpgaContext>& shell,
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_execute_function(shell_cmd_id, write_pnr_sdc);
 
-  /* The 'build_fabric' command should NOT be executed before 'link_openfpga_arch' */
-  std::vector<ShellCommandId> cmd_dependency;
-  cmd_dependency.push_back(shell_cmd_build_fabric_id);
-  shell.set_command_dependency(shell_cmd_id, cmd_dependency);
+  /* Add command dependency to the Shell */
+  shell.set_command_dependency(shell_cmd_id, dependent_cmds);
+
+  return shell_cmd_id;
 }
 
 void add_openfpga_sdc_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   /* Get the unique id of 'build_fabric' command which is to be used in creating the dependency graph */
-  const ShellCommandId& shell_cmd_build_fabric_id = shell.command(std::string("build_fabric"));
+  const ShellCommandId& build_fabric_id = shell.command(std::string("build_fabric"));
 
   /* Add a new class of commands */
   ShellCommandClassId openfpga_sdc_cmd_class = shell.add_command_class("FPGA-SDC");
 
   /******************************** 
-   * Command 'write_fabric_verilog' 
+   * Command 'write_pnr_sdc' 
    */
+  /* The 'write_pnr_sdc' command should NOT be executed before 'build_fabric' */
+  std::vector<ShellCommandId> pnr_sdc_cmd_dependency;
+  pnr_sdc_cmd_dependency.push_back(build_fabric_id);
   add_openfpga_write_pnr_sdc_command(shell,
                                      openfpga_sdc_cmd_class,
-                                     shell_cmd_build_fabric_id);
+                                     pnr_sdc_cmd_dependency);
 } 
 
 } /* end namespace openfpga */

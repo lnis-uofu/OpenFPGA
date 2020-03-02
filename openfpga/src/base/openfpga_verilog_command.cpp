@@ -17,9 +17,9 @@ namespace openfpga {
  * - Add command dependency
  *******************************************************************/
 static 
-void add_openfpga_write_fabric_verilog_command(openfpga::Shell<OpenfpgaContext>& shell,
-                                               const ShellCommandClassId& cmd_class_id,
-                                               const ShellCommandId& shell_cmd_build_fabric_id) {
+ShellCommandId add_openfpga_write_fabric_verilog_command(openfpga::Shell<OpenfpgaContext>& shell,
+                                                         const ShellCommandClassId& cmd_class_id,
+                                                         const std::vector<ShellCommandId>& dependent_cmds) {
   Command shell_cmd("write_fabric_verilog");
 
   /* Add an option '--file' in short '-f'*/
@@ -50,10 +50,10 @@ void add_openfpga_write_fabric_verilog_command(openfpga::Shell<OpenfpgaContext>&
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_execute_function(shell_cmd_id, write_fabric_verilog);
 
-  /* The 'build_fabric' command should NOT be executed before 'link_openfpga_arch' */
-  std::vector<ShellCommandId> cmd_dependency;
-  cmd_dependency.push_back(shell_cmd_build_fabric_id);
-  shell.set_command_dependency(shell_cmd_id, cmd_dependency);
+  /* Add command dependency to the Shell */
+  shell.set_command_dependency(shell_cmd_id, dependent_cmds);
+
+  return shell_cmd_id;
 }
 
 /********************************************************************
@@ -62,9 +62,9 @@ void add_openfpga_write_fabric_verilog_command(openfpga::Shell<OpenfpgaContext>&
  * - Add command dependency
  *******************************************************************/
 static 
-void add_openfpga_write_verilog_testbench_command(openfpga::Shell<OpenfpgaContext>& shell,
-                                                  const ShellCommandClassId& cmd_class_id,
-                                                  const ShellCommandId& shell_cmd_build_fabric_id) {
+ShellCommandId add_openfpga_write_verilog_testbench_command(openfpga::Shell<OpenfpgaContext>& shell,
+                                                            const ShellCommandClassId& cmd_class_id,
+                                                            const std::vector<ShellCommandId>& dependent_cmds) {
   Command shell_cmd("write_verilog_testbench");
 
   /* Add an option '--file' in short '-f'*/
@@ -97,15 +97,15 @@ void add_openfpga_write_verilog_testbench_command(openfpga::Shell<OpenfpgaContex
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_execute_function(shell_cmd_id, write_verilog_testbench);
 
-  /* The command should NOT be executed before 'build_fabric' */
-  std::vector<ShellCommandId> cmd_dependency;
-  cmd_dependency.push_back(shell_cmd_build_fabric_id);
-  shell.set_command_dependency(shell_cmd_id, cmd_dependency);
+  /* Add command dependency to the Shell */
+  shell.set_command_dependency(shell_cmd_id, dependent_cmds);
+
+  return shell_cmd_id;
 }
 
 void add_openfpga_verilog_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   /* Get the unique id of 'build_fabric' command which is to be used in creating the dependency graph */
-  const ShellCommandId& shell_cmd_build_fabric_id = shell.command(std::string("build_fabric"));
+  const ShellCommandId& build_fabric_cmd_id = shell.command(std::string("build_fabric"));
 
   /* Add a new class of commands */
   ShellCommandClassId openfpga_verilog_cmd_class = shell.add_command_class("FPGA-Verilog");
@@ -113,16 +113,22 @@ void add_openfpga_verilog_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   /******************************** 
    * Command 'write_fabric_verilog' 
    */
+  /* The 'write_fabric_verilog' command should NOT be executed before 'build_fabric' */
+  std::vector<ShellCommandId> fabric_verilog_dependent_cmds;
+  fabric_verilog_dependent_cmds.push_back(build_fabric_cmd_id);
   add_openfpga_write_fabric_verilog_command(shell,
                                             openfpga_verilog_cmd_class,
-                                            shell_cmd_build_fabric_id);
+                                            fabric_verilog_dependent_cmds);
 
   /******************************** 
    * Command 'write_verilog_testbench' 
    */
+  /* The command 'write_verilog_testbench' should NOT be executed before 'build_fabric' */
+  std::vector<ShellCommandId> verilog_testbench_dependent_cmds;
+  verilog_testbench_dependent_cmds.push_back(build_fabric_cmd_id);
   add_openfpga_write_verilog_testbench_command(shell,
                                                openfpga_verilog_cmd_class,
-                                               shell_cmd_build_fabric_id);
+                                               verilog_testbench_dependent_cmds);
 } 
 
 } /* end namespace openfpga */
