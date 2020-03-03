@@ -47,6 +47,10 @@ void rec_print_analysis_sdc_disable_unused_pb_graph_nodes(std::fstream& fp,
   /* Disable all the ports of current module (parent_module)!
    * Hierarchy name already includes the instance name of parent_module 
    */
+  fp << "#######################################" << std::endl; 
+  fp << "# Disable all the ports for pb_graph_node " << physical_pb_graph_node->pb_type->name << "[" << physical_pb_graph_node->placement_index << "]" << std::endl;
+  fp << "#######################################" << std::endl; 
+
   fp << "set_disable_timing ";
   fp << hierarchy_name; 
   fp << "*";
@@ -76,7 +80,7 @@ void rec_print_analysis_sdc_disable_unused_pb_graph_nodes(std::fstream& fp,
 
       std::string updated_hierarchy_name = hierarchy_name + child_instance_name + std::string("/");
 
-      rec_print_analysis_sdc_disable_unused_pb_graph_nodes(fp, device_annotation, module_manager, child_module, hierarchy_name, 
+      rec_print_analysis_sdc_disable_unused_pb_graph_nodes(fp, device_annotation, module_manager, child_module, updated_hierarchy_name, 
                                                            &(physical_pb_graph_node->child_pb_graph_nodes[physical_mode->index][ichild][inst])); 
     }
   }
@@ -135,6 +139,10 @@ void disable_pb_graph_node_unused_pins(std::fstream& fp,
   const PhysicalPbId& pb_id = physical_pb.find_pb(physical_pb_graph_node);
   VTR_ASSERT(true == physical_pb.valid_pb_id(pb_id));
 
+  fp << "#######################################" << std::endl; 
+  fp << "# Disable unused pins for pb_graph_node " << physical_pb_graph_node->pb_type->name << "[" << physical_pb_graph_node->placement_index << "]" << std::endl;
+  fp << "#######################################" << std::endl; 
+
   /* Disable unused input pins */
   for (int iport = 0; iport < physical_pb_graph_node->num_input_ports; ++iport) {
     for (int ipin = 0; ipin < physical_pb_graph_node->num_input_pins[iport]; ++ipin) {
@@ -179,6 +187,10 @@ void disable_pb_graph_node_unused_mux_inputs(std::fstream& fp,
                                              const std::string& hierarchy_name,
                                              t_pb_graph_node* physical_pb_graph_node,
                                              const PhysicalPb& physical_pb) {
+
+  fp << "#######################################" << std::endl; 
+  fp << "# Disable unused mux_inputs for pb_graph_node " << physical_pb_graph_node->pb_type->name << "[" << physical_pb_graph_node->placement_index << "]" << std::endl;
+  fp << "#######################################" << std::endl; 
 
   t_pb_type* physical_pb_type = physical_pb_graph_node->pb_type;
 
@@ -409,7 +421,7 @@ void rec_print_analysis_sdc_disable_pb_graph_node_unused_resources(std::fstream&
       std::string updated_hierarchy_name = hierarchy_name + child_instance_name + std::string("/");
 
       rec_print_analysis_sdc_disable_pb_graph_node_unused_resources(fp, device_annotation,
-                                                                    module_manager, child_module, hierarchy_name, 
+                                                                    module_manager, child_module, updated_hierarchy_name, 
                                                                     &(physical_pb_graph_node->child_pb_graph_nodes[physical_mode->index][ichild][inst]), 
                                                                     physical_pb); 
     }

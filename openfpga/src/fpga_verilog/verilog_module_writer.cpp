@@ -16,6 +16,8 @@
 #include "openfpga_port.h"
 #include "openfpga_digest.h"
 
+#include "openfpga_naming.h"
+
 #include "module_manager_utils.h"
 #include "verilog_port_types.h"
 #include "verilog_writer_utils.h"
@@ -371,7 +373,7 @@ void write_verilog_instance_to_file(std::fstream& fp,
    * if not, we use a default name <name>_<num_instance_in_parent_module> 
    */
   if (true == module_manager.instance_name(parent_module, child_module, instance_id).empty()) {
-    fp << module_manager.module_name(child_module) << "_" << instance_id << "_" << " (" << std::endl;
+    fp << generate_instance_name(module_manager.module_name(child_module), instance_id) << " (" << std::endl;
   } else {
     fp << module_manager.instance_name(parent_module, child_module, instance_id) << " (" << std::endl;
   }

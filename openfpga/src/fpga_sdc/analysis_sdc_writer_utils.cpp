@@ -98,6 +98,8 @@ void disable_analysis_module_input_pin_net_sinks(std::fstream& fp,
     BasicPort sink_port = module_manager.module_port(sink_module, module_manager.net_sink_ports(parent_module, module_net)[sink_id]);
     sink_port.set_width(module_manager.net_sink_pins(parent_module, module_net)[sink_id],
                         module_manager.net_sink_pins(parent_module, module_net)[sink_id]);
+
+    VTR_ASSERT(!sink_instance_name.empty());
     /* Get the input id that is used! Disable the unused inputs! */
     fp << "set_disable_timing ";
     fp << parent_instance_name;
@@ -221,6 +223,8 @@ void disable_analysis_module_output_pin_net_sinks(std::fstream& fp,
     BasicPort sink_port = module_manager.module_port(sink_module, module_manager.net_sink_ports(parent_module, module_net)[sink_id]);
     sink_port.set_width(module_manager.net_sink_pins(parent_module, module_net)[sink_id],
                         module_manager.net_sink_pins(parent_module, module_net)[sink_id]);
+
+    VTR_ASSERT(!sink_instance_name.empty());
     /* Get the input id that is used! Disable the unused inputs! */
     fp << "set_disable_timing ";
     fp << parent_instance_name;
