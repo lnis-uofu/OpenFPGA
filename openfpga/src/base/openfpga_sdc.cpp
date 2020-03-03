@@ -10,6 +10,7 @@
 
 #include "circuit_library_utils.h"
 #include "pnr_sdc_writer.h"
+#include "analysis_sdc_writer.h"
 #include "openfpga_sdc.h"
 
 /* Include global variables of VPR */
@@ -76,5 +77,39 @@ void write_pnr_sdc(OpenfpgaContext& openfpga_ctx,
                   openfpga_ctx.flow_manager().compress_routing());
   }
 } 
+
+/********************************************************************
+ * A wrapper function to call the analysis SDC generator of FPGA-SDC
+ *******************************************************************/
+void write_analysis_sdc(OpenfpgaContext& openfpga_ctx,
+                        const Command& cmd, const CommandContext& cmd_context) {
+
+  CommandOptionId opt_output_dir = cmd.option("file");
+
+  /* This is an intermediate data structure which is designed to modularize the FPGA-SDC
+   * Keep it independent from any other outside data structures
+   */
+  std::string sdc_dir_path = format_dir_path(cmd_context.option_value(cmd, opt_output_dir));
+
+  /* Create directories */
+  create_dir_path(sdc_dir_path.c_str());
+
+  AnalysisSdcOption options(sdc_dir_path);
+  options.set_generate_sdc_analysis(true);
+
+  /* Collect global ports from the circuit library:
+   * TODO: should we place this in the OpenFPGA context?
+   */
+  std::vector<CircuitPortId> global_ports = find_circuit_library_global_ports(openfpga_ctx.arch().circuit_lib);
+
+  if (true == options.generate_sdc_analysis()) {
+    print_analysis_sdc(options,
+                       1./openfpga_ctx.arch().sim_setting.operating_clock_frequency(),
+                       g_vpr_ctx, 
+                       openfpga_ctx,
+                       global_ports,
+                       openfpga_ctx.flow_manager().compress_routing());
+  }
+}
 
 } /* end namespace openfpga */

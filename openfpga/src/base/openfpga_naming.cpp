@@ -18,6 +18,19 @@
 namespace openfpga {
 
 /************************************************
+ * A generic function to generate the instance name
+ * in the following format:
+ * <instance_name>_<id>_
+ * This is mainly used by module manager to give a default
+ * name for each instance when outputting the module
+ * in Verilog/SPICE format
+ ***********************************************/
+std::string generate_instance_name(const std::string& instance_name,
+                                   const size_t& instance_id) {
+  return instance_name + std::string("_") + std::to_string(instance_id) + std::string("_");
+}
+
+/************************************************
  * Generate the node name for a multiplexing structure 
  * Case 1 : If there is an intermediate buffer followed by,
  *          the node name will be mux_l<node_level>_in_buf

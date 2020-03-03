@@ -52,5 +52,8 @@ write_verilog_testbench --file /var/tmp/xtang/openfpga_test_src/SRC --reference_
 #  - Turn on every options here 
 write_pnr_sdc --file /var/tmp/xtang/openfpga_test_src/SDC 
 
+# Write the SDC to run timing analysis for a mapped FPGA fabric
+write_analysis_sdc --file /var/tmp/xtang/openfpga_test_src/SDC_analysis
+
 # Finish and exit OpenFPGA
 exit

@@ -428,6 +428,12 @@ void add_module_pb_graph_pin_interc(ModuleManager& module_manager,
     size_t wire_instance = module_manager.num_instance(pb_module, wire_module);
     module_manager.add_child_module(pb_module, wire_module);
 
+    /* Give an instance name: this name should be consistent with the block name given in SDC generator,
+     * If you want to bind the SDC generation to modules
+     */
+    std::string wire_instance_name = generate_instance_name(module_manager.module_name(wire_module), wire_instance);
+    module_manager.set_child_instance_name(pb_module, wire_module, wire_instance, wire_instance_name);
+
     /* Ensure input and output ports of the wire model has only 1 pin respectively */
     VTR_ASSERT(1 == circuit_lib.port_size(interc_model_inputs[0]));
     VTR_ASSERT(1 == circuit_lib.port_size(interc_model_outputs[0]));
