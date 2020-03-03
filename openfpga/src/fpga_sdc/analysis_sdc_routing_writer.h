@@ -9,6 +9,7 @@
 #include "vpr_context.h"
 #include "module_manager.h"
 #include "device_rr_gsb.h"
+#include "vpr_routing_annotation.h"
 
 /********************************************************************
  * Function declaration
