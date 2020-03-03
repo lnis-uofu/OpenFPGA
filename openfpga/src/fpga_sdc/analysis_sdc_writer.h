@@ -8,6 +8,7 @@
 #include <vector>
 #include "vpr_context.h"
 #include "openfpga_context.h"
+#include "analysis_sdc_option.h"
 
 /********************************************************************
  * Function declaration
@@ -16,7 +17,7 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void print_analysis_sdc(const std::string& sdc_dir,
+void print_analysis_sdc(const AnalysisSdcOption& option,
                         const float& critical_path_delay,
                         const VprContext& vpr_ctx, 
                         const OpenfpgaContext& openfpga_ctx,

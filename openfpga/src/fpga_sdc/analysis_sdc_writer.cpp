@@ -202,14 +202,14 @@ void print_analysis_sdc_disable_global_ports(std::fstream& fp,
  * Top-level function outputs a SDC file
  * that constrain a FPGA fabric (P&Red netlist) using a benchmark 
  *******************************************************************/
-void print_analysis_sdc(const std::string& sdc_dir,
+void print_analysis_sdc(const AnalysisSdcOption& option,
                         const float& critical_path_delay,
                         const VprContext& vpr_ctx, 
                         const OpenfpgaContext& openfpga_ctx,
                         const std::vector<CircuitPortId>& global_ports,
                         const bool& compact_routing_hierarchy) {
   /* Create the file name for Verilog netlist */
-  std::string sdc_fname(sdc_dir + std::string(SDC_ANALYSIS_FILE_NAME));
+  std::string sdc_fname(option.sdc_dir() + std::string(SDC_ANALYSIS_FILE_NAME));
 
   std::string timer_message = std::string("Generating SDC for Timing/Power analysis on the mapped FPGA '")
                             + sdc_fname

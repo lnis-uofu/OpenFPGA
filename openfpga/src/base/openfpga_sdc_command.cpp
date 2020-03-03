@@ -61,6 +61,36 @@ ShellCommandId add_openfpga_write_pnr_sdc_command(openfpga::Shell<OpenfpgaContex
   return shell_cmd_id;
 }
 
+/********************************************************************
+ * - Add a command to Shell environment: generate PnR SDC 
+ * - Add associated options 
+ * - Add command dependency
+ *******************************************************************/
+static 
+ShellCommandId add_openfpga_write_analysis_sdc_command(openfpga::Shell<OpenfpgaContext>& shell,
+                                                       const ShellCommandClassId& cmd_class_id,
+                                                       const std::vector<ShellCommandId>& dependent_cmds) {
+  Command shell_cmd("write_analysis_sdc");
+
+  /* Add an option '--file' in short '-f'*/
+  CommandOptionId output_opt = shell_cmd.add_option("file", true, "Specify the output directory for SDC files");
+  shell_cmd.set_option_short_name(output_opt, "f");
+  shell_cmd.set_option_require_value(output_opt, openfpga::OPT_STRING);
+
+  /* Add an option '--verbose' */
+  shell_cmd.add_option("verbose", false, "Enable verbose output");
+  
+  /* Add command 'write_fabric_verilog' to the Shell */
+  ShellCommandId shell_cmd_id = shell.add_command(shell_cmd, "generate SDC files for timing analysis a PnRed FPGA fabric mapped by a benchmark");
+  shell.set_command_class(shell_cmd_id, cmd_class_id);
+  shell.set_command_execute_function(shell_cmd_id, write_analysis_sdc);
+
+  /* Add command dependency to the Shell */
+  shell.set_command_dependency(shell_cmd_id, dependent_cmds);
+
+  return shell_cmd_id;
+}
+
 void add_openfpga_sdc_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   /* Get the unique id of 'build_fabric' command which is to be used in creating the dependency graph */
   const ShellCommandId& build_fabric_id = shell.command(std::string("build_fabric"));
@@ -77,6 +107,17 @@ void add_openfpga_sdc_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   add_openfpga_write_pnr_sdc_command(shell,
                                      openfpga_sdc_cmd_class,
                                      pnr_sdc_cmd_dependency);
+
+  /******************************** 
+   * Command 'write_analysis_sdc' 
+   */
+  /* The 'write_analysis_sdc' command should NOT be executed before 'build_fabric' */
+  std::vector<ShellCommandId> analysis_sdc_cmd_dependency;
+  analysis_sdc_cmd_dependency.push_back(build_fabric_id);
+  add_openfpga_write_analysis_sdc_command(shell,
+                                          openfpga_sdc_cmd_class,
+                                          analysis_sdc_cmd_dependency);
+
 } 
 
 } /* end namespace openfpga */

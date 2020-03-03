@@ -49,7 +49,7 @@ void rec_print_analysis_sdc_disable_unused_pb_graph_nodes(std::fstream& fp,
    */
   fp << "set_disable_timing ";
   fp << hierarchy_name; 
-  fp << "/*";
+  fp << "*";
   fp << std::endl;
 
   /* Return if this is the primitive pb_type */
@@ -74,7 +74,7 @@ void rec_print_analysis_sdc_disable_unused_pb_graph_nodes(std::fstream& fp,
       /* Must have a valid instance name!!! */
       VTR_ASSERT(false == child_instance_name.empty()); 
 
-      std::string updated_hierarchy_name = hierarchy_name + std::string("/") + child_instance_name + std::string("/");
+      std::string updated_hierarchy_name = hierarchy_name + child_instance_name + std::string("/");
 
       rec_print_analysis_sdc_disable_unused_pb_graph_nodes(fp, device_annotation, module_manager, child_module, hierarchy_name, 
                                                            &(physical_pb_graph_node->child_pb_graph_nodes[physical_mode->index][ichild][inst])); 
@@ -114,7 +114,6 @@ void disable_pb_graph_node_unused_pin(std::fstream& fp,
 
   fp << "set_disable_timing ";
   fp << hierarchy_name; 
-  fp << "/";
   fp << generate_sdc_port(port_to_disable);
   fp << std::endl;
 }
@@ -407,7 +406,7 @@ void rec_print_analysis_sdc_disable_pb_graph_node_unused_resources(std::fstream&
       /* Must have a valid instance name!!! */
       VTR_ASSERT(false == child_instance_name.empty()); 
 
-      std::string updated_hierarchy_name = hierarchy_name + std::string("/") + child_instance_name + std::string("/");
+      std::string updated_hierarchy_name = hierarchy_name + child_instance_name + std::string("/");
 
       rec_print_analysis_sdc_disable_pb_graph_node_unused_resources(fp, device_annotation,
                                                                     module_manager, child_module, hierarchy_name, 
@@ -591,7 +590,7 @@ void print_analysis_sdc_disable_unused_grids(std::fstream& fp,
   for (size_t ix = 1; ix < grids.width() - 1; ++ix) {
     for (size_t iy = 1; iy < grids.height() - 1; ++iy) {
       /* We should not meet any I/O grid */
-      VTR_ASSERT(false != is_io_type(grids[ix][iy].type));
+      VTR_ASSERT(false == is_io_type(grids[ix][iy].type));
 
       print_analysis_sdc_disable_unused_grid(fp, vtr::Point<size_t>(ix, iy),
                                              grids, device_annotation, cluster_annotation, place_annotation,
