@@ -6,6 +6,7 @@
  *******************************************************************/
 #include <fstream>
 #include <vector>
+#include "vpr_context.h"
 #include "module_manager.h"
 #include "device_rr_gsb.h"
 
@@ -17,6 +18,7 @@
 namespace openfpga {
 
 void print_analysis_sdc_disable_unused_cbs(std::fstream& fp,
+                                           const AtomContext& atom_ctx, 
                                            const ModuleManager& module_manager, 
                                            const RRGraph& rr_graph, 
                                            const VprRoutingAnnotation& routing_annotation, 
@@ -24,6 +26,7 @@ void print_analysis_sdc_disable_unused_cbs(std::fstream& fp,
                                            const bool& compact_routing_hierarchy);
 
 void print_analysis_sdc_disable_unused_sbs(std::fstream& fp,
+                                           const AtomContext& atom_ctx, 
                                            const ModuleManager& module_manager, 
                                            const RRGraph& rr_graph, 
                                            const VprRoutingAnnotation& routing_annotation, 

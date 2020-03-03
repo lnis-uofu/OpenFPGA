@@ -53,9 +53,8 @@ void disable_analysis_module_input_pin_net_sinks(std::fstream& fp,
                                                  const std::string& parent_instance_name,
                                                  const ModulePortId& module_input_port,
                                                  const size_t& module_input_pin,
-                                                 const VprRoutingAnnotation& routing_annotation,
-                                                 const RRNodeId& input_rr_node,
-                                                 const std::map<std::string, ClusterNetId> mux_instance_to_net_map) {
+                                                 const AtomNetId& mapped_net,
+                                                 const std::map<std::string, AtomNetId> mux_instance_to_net_map) {
   /* Validate file stream */
   valid_file_stream(fp);
 
@@ -78,14 +77,14 @@ void disable_analysis_module_input_pin_net_sinks(std::fstream& fp,
     std::string sink_instance_name = module_manager.instance_name(parent_module, sink_module, sink_instance);
     bool disable_timing = false;
     /* Check if this node is used by benchmark  */
-    if (true == is_rr_node_to_be_disable_for_analysis(routing_annotation, input_rr_node)) {
+    if (AtomNetId::INVALID() == mapped_net) {
       /* Disable all the sinks! */
       disable_timing = true;
     } else {
-      std::map<std::string, ClusterNetId>::const_iterator it = mux_instance_to_net_map.find(sink_instance_name);
+      std::map<std::string, AtomNetId>::const_iterator it = mux_instance_to_net_map.find(sink_instance_name);
       if (it != mux_instance_to_net_map.end()) {
         /* See if the net id matches. If does not match, we should disable! */
-        if (routing_annotation.rr_node_net(input_rr_node) != mux_instance_to_net_map.at(sink_instance_name)) {
+        if (mapped_net != mux_instance_to_net_map.at(sink_instance_name)) {
           disable_timing = true;
         }
       }
@@ -132,9 +131,8 @@ void disable_analysis_module_input_port_net_sinks(std::fstream& fp,
                                                   const ModuleId& parent_module,
                                                   const std::string& parent_instance_name,
                                                   const ModulePortId& module_input_port,
-                                                  const VprRoutingAnnotation& routing_annotation,
-                                                  const RRNodeId& input_rr_node,
-                                                  const std::map<std::string, ClusterNetId> mux_instance_to_net_map) {
+                                                  const AtomNetId& mapped_net,
+                                                  const std::map<std::string, AtomNetId> mux_instance_to_net_map) {
   /* Validate file stream */
   valid_file_stream(fp);
 
@@ -143,7 +141,7 @@ void disable_analysis_module_input_port_net_sinks(std::fstream& fp,
     disable_analysis_module_input_pin_net_sinks(fp, module_manager, parent_module,
                                                 parent_instance_name,
                                                 module_input_port, pin,
-                                                routing_annotation, input_rr_node,
+                                                mapped_net,
                                                 mux_instance_to_net_map);
   }
 }
@@ -178,9 +176,8 @@ void disable_analysis_module_output_pin_net_sinks(std::fstream& fp,
                                                   const size_t& child_instance,
                                                   const ModulePortId& child_module_port,
                                                   const size_t& child_module_pin,
-                                                  const VprRoutingAnnotation& routing_annotation,
-                                                  const RRNodeId& output_rr_node,
-                                                  const std::map<std::string, ClusterNetId> mux_instance_to_net_map) {
+                                                  const AtomNetId& mapped_net,
+                                                  const std::map<std::string, AtomNetId> mux_instance_to_net_map) {
   /* Validate file stream */
   valid_file_stream(fp);
 
@@ -203,14 +200,14 @@ void disable_analysis_module_output_pin_net_sinks(std::fstream& fp,
     std::string sink_instance_name = module_manager.instance_name(parent_module, sink_module, sink_instance);
     bool disable_timing = false;
     /* Check if this node is used by benchmark  */
-    if (true == is_rr_node_to_be_disable_for_analysis(routing_annotation, output_rr_node)) {
+    if (AtomNetId::INVALID() == mapped_net) {
       /* Disable all the sinks! */
       disable_timing = true;
     } else {
-      std::map<std::string, ClusterNetId>::const_iterator it = mux_instance_to_net_map.find(sink_instance_name);
+      std::map<std::string, AtomNetId>::const_iterator it = mux_instance_to_net_map.find(sink_instance_name);
       if (it != mux_instance_to_net_map.end()) {
         /* See if the net id matches. If does not match, we should disable! */
-        if (routing_annotation.rr_node_net(output_rr_node) != mux_instance_to_net_map.at(sink_instance_name)) {
+        if (mapped_net != mux_instance_to_net_map.at(sink_instance_name)) {
           disable_timing = true;
         }
       }

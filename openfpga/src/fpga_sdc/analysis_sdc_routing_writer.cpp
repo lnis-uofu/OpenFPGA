@@ -31,6 +31,7 @@ namespace openfpga {
  *******************************************************************/
 static 
 void print_analysis_sdc_disable_cb_unused_resources(std::fstream& fp, 
+                                                    const AtomContext& atom_ctx, 
                                                     const ModuleManager& module_manager, 
                                                     const RRGraph& rr_graph, 
                                                     const VprRoutingAnnotation& routing_annotation, 
@@ -112,7 +113,7 @@ void print_analysis_sdc_disable_cb_unused_resources(std::fstream& fp,
   }
 
   /* Build a map between mux_instance name and net_num */
-  std::map<std::string, ClusterNetId> mux_instance_to_net_map;
+  std::map<std::string, AtomNetId> mux_instance_to_net_map;
 
   /* Disable all the output port (grid input pins), which are not used by benchmark */
   std::vector<enum e_side> cb_sides = rr_gsb.get_cb_ipin_sides(cb_type);
@@ -124,7 +125,7 @@ void print_analysis_sdc_disable_cb_unused_resources(std::fstream& fp,
 
       /* Find the MUX instance that drives the IPIN! */
       std::string mux_instance_name = generate_cb_mux_instance_name(CONNECTION_BLOCK_MUX_INSTANCE_PREFIX, rr_graph.node_side(ipin_node), inode, std::string(""));
-      mux_instance_to_net_map[mux_instance_name] = routing_annotation.rr_node_net(ipin_node);  
+      mux_instance_to_net_map[mux_instance_name] = atom_ctx.lookup.atom_net(routing_annotation.rr_node_net(ipin_node));  
 
       if (false == is_rr_node_to_be_disable_for_analysis(routing_annotation, ipin_node)) {
         continue;
@@ -187,12 +188,13 @@ void print_analysis_sdc_disable_cb_unused_resources(std::fstream& fp,
     ModulePortId module_port = module_manager.find_module_port(cb_module, port_name);
     VTR_ASSERT(true == module_manager.valid_module_port_id(cb_module, module_port));
 
+    AtomNetId mapped_atom_net = atom_ctx.lookup.atom_net(routing_annotation.rr_node_net(chan_node)); 
+
     disable_analysis_module_input_port_net_sinks(fp, 
                                                  module_manager, cb_module,
                                                  cb_instance_name,
                                                  module_port,
-                                                 routing_annotation,
-                                                 chan_node,
+                                                 mapped_atom_net,
                                                  mux_instance_to_net_map);
   }
 }
@@ -203,6 +205,7 @@ void print_analysis_sdc_disable_cb_unused_resources(std::fstream& fp,
  *******************************************************************/
 static 
 void print_analysis_sdc_disable_unused_cb_ports(std::fstream& fp,
+                                                const AtomContext& atom_ctx, 
                                                 const ModuleManager& module_manager, 
                                                 const RRGraph& rr_graph, 
                                                 const VprRoutingAnnotation& routing_annotation, 
@@ -224,6 +227,7 @@ void print_analysis_sdc_disable_unused_cb_ports(std::fstream& fp,
       }
 
       print_analysis_sdc_disable_cb_unused_resources(fp, 
+                                                     atom_ctx, 
                                                      module_manager, 
                                                      rr_graph, 
                                                      routing_annotation, 
@@ -240,19 +244,22 @@ void print_analysis_sdc_disable_unused_cb_ports(std::fstream& fp,
  * and disable unused ports for each of them 
  *******************************************************************/
 void print_analysis_sdc_disable_unused_cbs(std::fstream& fp,
+                                           const AtomContext& atom_ctx, 
                                            const ModuleManager& module_manager, 
                                            const RRGraph& rr_graph, 
                                            const VprRoutingAnnotation& routing_annotation, 
                                            const DeviceRRGSB& device_rr_gsb,
                                            const bool& compact_routing_hierarchy) {
 
-  print_analysis_sdc_disable_unused_cb_ports(fp, module_manager, 
+  print_analysis_sdc_disable_unused_cb_ports(fp, atom_ctx,
+                                             module_manager, 
                                              rr_graph, 
                                              routing_annotation,
                                              device_rr_gsb,
                                              CHANX, compact_routing_hierarchy);
 
-  print_analysis_sdc_disable_unused_cb_ports(fp, module_manager, 
+  print_analysis_sdc_disable_unused_cb_ports(fp, atom_ctx,
+                                             module_manager, 
                                              rr_graph, 
                                              routing_annotation,
                                              device_rr_gsb,
@@ -267,6 +274,7 @@ void print_analysis_sdc_disable_unused_cbs(std::fstream& fp,
  *******************************************************************/
 static 
 void print_analysis_sdc_disable_sb_unused_resources(std::fstream& fp, 
+                                                    const AtomContext& atom_ctx, 
                                                     const ModuleManager& module_manager, 
                                                     const RRGraph& rr_graph, 
                                                     const VprRoutingAnnotation& routing_annotation, 
@@ -301,7 +309,7 @@ void print_analysis_sdc_disable_sb_unused_resources(std::fstream& fp,
   fp << "##################################################" << std::endl; 
 
   /* Build a map between mux_instance name and net_num */
-  std::map<std::string, ClusterNetId> mux_instance_to_net_map;
+  std::map<std::string, AtomNetId> mux_instance_to_net_map;
 
   /* Disable all the input/output port (routing tracks), which are not used by benchmark */
   for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
@@ -331,7 +339,7 @@ void print_analysis_sdc_disable_sb_unused_resources(std::fstream& fp,
       if (OUT_PORT == rr_gsb.get_chan_node_direction(side_manager.get_side(), itrack)) {
         /* Generate the name of mux instance related to this output node */
         std::string mux_instance_name = generate_sb_memory_instance_name(SWITCH_BLOCK_MUX_INSTANCE_PREFIX, side_manager.get_side(), itrack, std::string(""));
-        mux_instance_to_net_map[mux_instance_name] = routing_annotation.rr_node_net(chan_node);
+        mux_instance_to_net_map[mux_instance_name] = atom_ctx.lookup.atom_net(routing_annotation.rr_node_net(chan_node));
       }
 
       /* Check if this node is used by benchmark  */
@@ -435,12 +443,13 @@ void print_analysis_sdc_disable_sb_unused_resources(std::fstream& fp,
       ModulePortId module_port = module_manager.find_module_port(sb_module, port_name);
       VTR_ASSERT(true == module_manager.valid_module_port_id(sb_module, module_port));
 
+      AtomNetId mapped_atom_net = atom_ctx.lookup.atom_net(routing_annotation.rr_node_net(opin_node));
+
       disable_analysis_module_input_port_net_sinks(fp, module_manager,
                                                    sb_module,
                                                    sb_instance_name,
                                                    module_port,
-                                                   routing_annotation,
-                                                   opin_node,
+                                                   mapped_atom_net,
                                                    mux_instance_to_net_map);
     }
   }
@@ -477,12 +486,13 @@ void print_analysis_sdc_disable_sb_unused_resources(std::fstream& fp,
       ModulePortId module_port = module_manager.find_module_port(sb_module, port_name);
       VTR_ASSERT(true == module_manager.valid_module_port_id(sb_module, module_port));
 
+      AtomNetId mapped_atom_net = atom_ctx.lookup.atom_net(routing_annotation.rr_node_net(chan_node));
+
       disable_analysis_module_input_port_net_sinks(fp, module_manager,
                                                    sb_module,
                                                    sb_instance_name,
                                                    module_port,
-                                                   routing_annotation,
-                                                   chan_node,
+                                                   mapped_atom_net,
                                                    mux_instance_to_net_map);
     }
   }
@@ -494,6 +504,7 @@ void print_analysis_sdc_disable_sb_unused_resources(std::fstream& fp,
  * and disable unused ports for each of them 
  *******************************************************************/
 void print_analysis_sdc_disable_unused_sbs(std::fstream& fp,
+                                           const AtomContext& atom_ctx, 
                                            const ModuleManager& module_manager, 
                                            const RRGraph& rr_graph, 
                                            const VprRoutingAnnotation& routing_annotation, 
@@ -515,6 +526,7 @@ void print_analysis_sdc_disable_unused_sbs(std::fstream& fp,
       }
 
       print_analysis_sdc_disable_sb_unused_resources(fp,
+                                                     atom_ctx, 
                                                      module_manager, 
                                                      rr_graph, 
                                                      routing_annotation, 
