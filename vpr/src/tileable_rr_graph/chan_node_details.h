@@ -1,3 +1,12 @@
+#ifndef CHAN_NODE_DETAILS_H
+#define CHAN_NODE_DETAILS_H
+
+/********************************************************************
+ * Include header files that are required by function declaration
+ *******************************************************************/
+#include <vector>
+#include "vpr_types.h"
+
 /************************************************************************
  *  This file contains a class to model the details of routing node
  *  in a channel:
@@ -7,22 +16,8 @@
  *  4. potentail track_id(ptc_num) of each segment
  ***********************************************************************/
 
-/* IMPORTANT:
- * The following preprocessing flags are added to 
- * avoid compilation error when this headers are included in more than 1 times 
- */
-#ifndef CHAN_NODE_DETAILS_H
-#define CHAN_NODE_DETAILS_H
-
-/*
- * Notes in include header files in a head file 
- * Only include the neccessary header files 
- * that is required by the data types in the function/class declarations!
- */
-/* Header files should be included in a sequence */
-/* Standard header files required go first */
-#include <vector>
-#include "vpr_types.h"
+/* begin namespace openfpga */
+namespace openfpga {
 
 /************************************************************************
  *  ChanNodeDetails records segment length, directionality and starting of routing tracks
@@ -32,7 +27,6 @@
  *    |   0   | --------> |   Yes       |
  *    +---------------------------------+
  ***********************************************************************/
-
 
 class ChanNodeDetails {
   public : /* Constructor */
@@ -76,5 +70,6 @@ class ChanNodeDetails {
     std::vector<bool>   track_end_; /* flag to identify if this is the ending point of the track */
 };
 
-#endif 
+} /* end namespace openfpga */
 
+#endif 

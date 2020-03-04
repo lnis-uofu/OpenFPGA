@@ -5,6 +5,9 @@
 #include <algorithm>
 #include "chan_node_details.h"
 
+/* begin namespace openfpga */
+namespace openfpga {
+
 /************************************************************************
  *  Constructors 
  ***********************************************************************/
@@ -290,3 +293,4 @@ bool ChanNodeDetails::validate_track_id(const size_t& track_id) const {
   return false;
 }
 
+} /* end namespace openfpga */
