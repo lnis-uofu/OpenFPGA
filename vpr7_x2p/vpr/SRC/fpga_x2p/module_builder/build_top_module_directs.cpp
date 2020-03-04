@@ -285,9 +285,9 @@ vtr::Point<size_t> find_intra_direct_destination_coordinate(const vtr::Point<siz
      *  +------+  
      *  | Grid | ny
      *  +------+
+     *     ^     .
      *     |     .
      *     |     .
-     *     v     .
      *  +------+
      *  | Grid | 1
      *  +------+
@@ -301,14 +301,14 @@ vtr::Point<size_t> find_intra_direct_destination_coordinate(const vtr::Point<siz
      *  +------+  
      *  | Grid | ny
      *  +------+
-     *     ^     .
      *     |     .
      *     |     .
+     *     v     .
      *  +------+
      *  | Grid | 1
      *  +------+
      */
-    if (NEGATIVE_DIR == direct.y_dir) {
+    if (POSITIVE_DIR == direct.y_dir) {
       std::reverse(second_search_space.begin(), second_search_space.end());
     }
   }
@@ -361,7 +361,7 @@ vtr::Point<size_t> find_intra_direct_destination_coordinate(const vtr::Point<siz
      *
      *     1      ...     nx
      *  +------+       +------+
-     *  | Grid |------>| Grid |
+     *  | Grid |<------| Grid |
      *  +------+       +------+
      */
     for (size_t ix = 1 ; ix < device_size.x() - 1; ++ix) {
@@ -373,10 +373,10 @@ vtr::Point<size_t> find_intra_direct_destination_coordinate(const vtr::Point<siz
      *
      *     1      ...     nx
      *  +------+       +------+
-     *  | Grid |<------| Grid |
+     *  | Grid |------>| Grid |
      *  +------+       +------+
      */
-    if (NEGATIVE_DIR == direct.x_dir) {
+    if (POSITIVE_DIR == direct.x_dir) {
       std::reverse(second_search_space.begin(), second_search_space.end());
     }
   }
@@ -472,7 +472,7 @@ void add_top_module_nets_inter_clb2clb_direct_connections(ModuleManager& module_
           next_col_src_grid_coords.push_back(vtr::Point<size_t>(ix, iy));
         }
         /* For positive y- direction, we should start from y = 1 */
-        if (POSITIVE_DIR == direct.y_dir) {
+        if (NEGATIVE_DIR == direct.y_dir) {
           std::reverse(next_col_src_grid_coords.begin(), next_col_src_grid_coords.end());
         }
         vtr::Point<size_t> src_clb_coord = find_grid_coordinate_given_type(device_size, grids, next_col_src_grid_coords, direct.from_clb_type); 
