@@ -19,11 +19,11 @@ namespace openfpga {
  * 2. A X-direction Connection block locates at the left side of the switch block
  * 2. A Y-direction Connection block locates at the top side of the switch block
  *
- *                               +---------------------------------+
- *                               |          Y-direction CB         |
- *                               |              [x][y + 1]         |
- *                               +---------------------------------+
- *                  
+ *  +-------------+              +---------------------------------+
+ *  |             |              |          Y-direction CB         |
+ *  |    Grid     |              |              [x][y + 1]         |
+ *  |  [x][y+1]   |              +---------------------------------+
+ *  +-------------+ 
  *                                          TOP SIDE
  *  +-------------+              +---------------------------------+
  *  |             |              | OPIN_NODE CHAN_NODES OPIN_NODES |

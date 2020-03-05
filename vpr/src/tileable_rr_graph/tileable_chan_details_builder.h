@@ -17,8 +17,10 @@ namespace openfpga {
 
 int adapt_to_tileable_route_chan_width(const int& chan_width, const std::vector<t_segment_inf>& segment_inf);
 
-ChanNodeDetails build_unidir_chan_node_details(const size_t& chan_width, const size_t& max_seg_length,
-                                               const e_side& device_side, 
+ChanNodeDetails build_unidir_chan_node_details(const size_t& chan_width,
+                                               const size_t& max_seg_length,
+                                               const bool& force_start, 
+                                               const bool& force_end, 
                                                const std::vector<t_segment_inf>& segment_inf);
 
 } /* end namespace openfpga */

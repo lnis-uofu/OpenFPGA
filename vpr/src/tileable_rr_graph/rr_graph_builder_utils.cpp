@@ -118,6 +118,196 @@ size_t get_grid_num_classes(const t_grid_tile& cur_grid,
 }
 
 /************************************************************************
+ * Idenfity if a X-direction routing channel exist in the fabric
+ * This could be entirely possible that a routig channel
+ * is in the middle of a multi-width and multi-height grid
+ *
+ * As the chanx always locates on top of a grid with the same coord
+ *
+ *     +----------+
+ *     |   CHANX  |
+ *     |  [x][y]  |
+ *     +----------+
+ *
+ *     +----------+
+ *     |   Grid   |   height_offset = height - 1
+ *     |  [x][y]  |
+ *     +----------+
+ *
+ *     +----------+
+ *     |  Grid    |   height_offset = height - 2
+ *     | [x][y-1] |
+ *     +----------+
+ *  If the CHANX is in the middle of a multi-width and multi-height grid
+ *  it should locate at a grid whose height_offset is lower than the its height defined in physical_tile
+ *  When height_offset == height - 1, it means that the grid is at the top side of this multi-width and multi-height block
+ ***********************************************************************/
+bool is_chanx_exist(const DeviceGrid& grids,
+                    const vtr::Point<size_t>& chanx_coord) {
+  return (grids[chanx_coord.x()][chanx_coord.y()].height_offset == grids[chanx_coord.x()][chanx_coord.y()].type->height - 1);
+}
+
+/************************************************************************
+ * Idenfity if a Y-direction routing channel exist in the fabric
+ * This could be entirely possible that a routig channel
+ * is in the middle of a multi-width and multi-height grid
+ *
+ * As the chany always locates on right of a grid with the same coord
+ *
+ * +-----------+  +---------+  +--------+
+ * |   Grid    |  |  Grid   |  |  CHANY |
+ * | [x-1][y]  |  | [x][y]  |  | [x][y] |
+ * +-----------+  +---------+  +--------+
+ *  width_offset   width_offset
+ *  = width - 2   = width -1
+ *  If the CHANY is in the middle of a multi-width and multi-height grid
+ *  it should locate at a grid whose width_offset is lower than the its width defined in physical_tile
+ *  When height_offset == height - 1, it means that the grid is at the top side of this multi-width and multi-height block
+ ***********************************************************************/
+bool is_chany_exist(const DeviceGrid& grids,
+                    const vtr::Point<size_t>& chany_coord) {
+  return (grids[chany_coord.x()][chany_coord.y()].width_offset == grids[chany_coord.y()][chany_coord.y()].type->width - 1);
+}
+
+/************************************************************************
+ * Identify if a X-direction routing channel is at the right side of a 
+ * multi-height grid
+ *
+ *     +-----------------+
+ *     |                 |
+ *     |                 |  +-------------+
+ *     |      Grid       |  |   CHANX     |
+ *     |    [x-1][y]     |  |   [x][y]    |
+ *     |                 |  +-------------+
+ *     |                 |
+ *     +-----------------+
+ ***********************************************************************/
+bool is_chanx_right_to_multi_height_grid(const DeviceGrid& grids,
+                                         const vtr::Point<size_t>& chanx_coord) {
+  VTR_ASSERT(0 < chanx_coord.x());
+  if (1 == chanx_coord.x()) {
+    /* This is already the LEFT side of FPGA fabric,
+     * it is the same results as chanx is right to a multi-height grid
+     */
+    return true;
+  }
+  
+  /* We check the left neighbor of chanx, if it does not exist, the chanx is left to a multi-height grid */
+  vtr::Point<size_t> left_chanx_coord(chanx_coord.x() - 1, chanx_coord.y());
+  if (false == is_chanx_exist(grids, left_chanx_coord)) {
+    return true;
+  }
+
+  return false;
+}
+
+/************************************************************************
+ * Identify if a X-direction routing channel is at the left side of a 
+ * multi-height grid
+ *
+ *                            +-----------------+
+ *                            |                 |
+ *        +---------------+   |                 | 
+ *        |    CHANX      |   |      Grid       | 
+ *        |    [x][y]     |   |    [x+1][y]     | 
+ *        +---------------+   |                 |
+ *                            |                 |
+ *                            +-----------------+
+ ***********************************************************************/
+bool is_chanx_left_to_multi_height_grid(const DeviceGrid& grids,
+                                        const vtr::Point<size_t>& chanx_coord) {
+  VTR_ASSERT(chanx_coord.x() < grids.width() - 1);
+  if (grids.width() - 2 == chanx_coord.x()) {
+    /* This is already the RIGHT side of FPGA fabric,
+     * it is the same results as chanx is right to a multi-height grid
+     */
+    return true;
+  }
+  
+  /* We check the right neighbor of chanx, if it does not exist, the chanx is left to a multi-height grid */
+  vtr::Point<size_t> right_chanx_coord(chanx_coord.x() + 1, chanx_coord.y());
+  if (false == is_chanx_exist(grids, right_chanx_coord)) {
+    return true;
+  }
+
+  return false;
+}
+
+/************************************************************************
+ * Identify if a Y-direction routing channel is at the top side of a 
+ * multi-width grid
+ * 
+ *          +--------+
+ *          | CHANY  |
+ *          | [x][y] | 
+ *          +--------+
+ *
+ *     +-----------------+
+ *     |                 |
+ *     |                 | 
+ *     |      Grid       | 
+ *     |    [x-1][y]     | 
+ *     |                 | 
+ *     |                 |
+ *     +-----------------+
+ ***********************************************************************/
+bool is_chany_top_to_multi_width_grid(const DeviceGrid& grids,
+                                      const vtr::Point<size_t>& chany_coord) {
+  VTR_ASSERT(0 < chany_coord.y());
+  if (1 == chany_coord.y()) {
+    /* This is already the BOTTOM side of FPGA fabric,
+     * it is the same results as chany is at the top of a multi-width grid
+     */
+    return true;
+  }
+  
+  /* We check the bottom neighbor of chany, if it does not exist, the chany is left to a multi-height grid */
+  vtr::Point<size_t> bottom_chany_coord(chany_coord.x(), chany_coord.y() - 1);
+  if (false == is_chany_exist(grids, bottom_chany_coord)) {
+    return true;
+  }
+
+  return false;
+}
+
+/************************************************************************
+ * Identify if a Y-direction routing channel is at the bottom side of a 
+ * multi-width grid
+ * 
+ *     +-----------------+
+ *     |                 |
+ *     |                 | 
+ *     |      Grid       | 
+ *     |    [x+1][y]     | 
+ *     |                 | 
+ *     |                 |
+ *     +-----------------+
+ *          +--------+
+ *          | CHANY  |
+ *          | [x][y] | 
+ *          +--------+
+ *
+ ***********************************************************************/
+bool is_chany_bottom_to_multi_width_grid(const DeviceGrid& grids,
+                                         const vtr::Point<size_t>& chany_coord) {
+  VTR_ASSERT(chany_coord.y() < grids.height() - 1);
+  if (grids.height() - 2 == chany_coord.y()) {
+    /* This is already the TOP side of FPGA fabric,
+     * it is the same results as chany is at the bottom of a multi-width grid
+     */
+    return true;
+  }
+  
+  /* We check the top neighbor of chany, if it does not exist, the chany is left to a multi-height grid */
+  vtr::Point<size_t> top_chany_coord(chany_coord.x(), chany_coord.y() + 1);
+  if (false == is_chany_exist(grids, top_chany_coord)) {
+    return true;
+  }
+
+  return false;
+}
+
+/************************************************************************
  * Get the track_id of a routing track w.r.t its coordinator 
  * In tileable routing architecture, the track_id changes SB by SB.
  * Therefore the track_ids are stored in a vector, indexed by the relative coordinator

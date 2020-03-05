@@ -34,6 +34,24 @@ size_t get_grid_num_pins(const t_grid_tile& cur_grid,
 size_t get_grid_num_classes(const t_grid_tile& cur_grid, 
                             const e_pin_type& pin_type);
 
+bool is_chanx_exist(const DeviceGrid& grids,
+                    const vtr::Point<size_t>& chanx_coord);
+
+bool is_chany_exist(const DeviceGrid& grids,
+                    const vtr::Point<size_t>& chany_coord);
+
+bool is_chanx_right_to_multi_height_grid(const DeviceGrid& grids,
+                                         const vtr::Point<size_t>& chanx_coord);
+
+bool is_chanx_left_to_multi_height_grid(const DeviceGrid& grids,
+                                        const vtr::Point<size_t>& chanx_coord);
+
+bool is_chany_top_to_multi_width_grid(const DeviceGrid& grids,
+                                      const vtr::Point<size_t>& chany_coord);
+
+bool is_chany_bottom_to_multi_width_grid(const DeviceGrid& grids,
+                                         const vtr::Point<size_t>& chany_coord);
+
 short get_rr_node_actual_track_id(const RRGraph& rr_graph,
                                   const RRNodeId& track_rr_node,
                                   const vtr::Point<size_t>& coord,

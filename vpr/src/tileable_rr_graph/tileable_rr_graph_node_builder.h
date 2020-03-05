@@ -1,0 +1,31 @@
+#ifndef TILEABLE_RR_GRAPH_NODE_BUILDER_H
+#define TILEABLE_RR_GRAPH_NODE_BUILDER_H
+
+/********************************************************************
+ * Include header files that are required by function declaration
+ *******************************************************************/
+/* Headers from vtrutil library */
+#include "vtr_geometry.h"
+
+/* Headers from readarch library */
+#include "physical_types.h"
+
+/* Headers from vpr library */
+#include "rr_graph_obj.h"
+#include "device_grid.h"
+
+/********************************************************************
+ * Function declaration
+ *******************************************************************/
+
+/* begin namespace openfpga */
+namespace openfpga {
+
+void alloc_rr_graph_nodes(RRGraph& rr_graph,
+                          const DeviceGrid& grids,
+                          const vtr::Point<size_t>& chan_width,
+                          const std::vector<t_segment_inf>& segment_infs);
+
+} /* end namespace openfpga */
+
+#endif

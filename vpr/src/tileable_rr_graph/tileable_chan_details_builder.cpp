@@ -161,8 +161,10 @@ int adapt_to_tileable_route_chan_width(const int& chan_width,
  *    in X-direction and Y-direction channels!!!
  *    So we will load segment details for different channels 
  ***********************************************************************/
-ChanNodeDetails build_unidir_chan_node_details(const size_t& chan_width, const size_t& max_seg_length,
-                                               const enum e_side& device_side, 
+ChanNodeDetails build_unidir_chan_node_details(const size_t& chan_width,
+                                               const size_t& max_seg_length,
+                                               const bool& force_start, 
+                                               const bool& force_end, 
                                                const std::vector<t_segment_inf>& segment_inf) {
   ChanNodeDetails chan_node_details;
   size_t actual_chan_width = chan_width;
@@ -180,7 +182,7 @@ ChanNodeDetails build_unidir_chan_node_details(const size_t& chan_width, const s
   }
 
   /* Find the number of segments required by each group */
-  std::vector<size_t> num_tracks = get_num_tracks_per_seg_type(actual_chan_width/2, segment_inf, false);  
+  std::vector<size_t> num_tracks = get_num_tracks_per_seg_type(actual_chan_width / 2, segment_inf, false);  
 
   /* Add node to ChanNodeDetails */
   size_t cur_track = 0;
@@ -188,7 +190,7 @@ ChanNodeDetails build_unidir_chan_node_details(const size_t& chan_width, const s
     /* segment length will be set to maxium segment length if this is a longwire */
     size_t seg_len = segment_inf[iseg].length;
     if (true == segment_inf[iseg].longline) {
-       seg_len = max_seg_length;
+      seg_len = max_seg_length;
     } 
     for (size_t itrack = 0; itrack < num_tracks[iseg]; ++itrack) {
       bool seg_start = false;
@@ -213,29 +215,21 @@ ChanNodeDetails build_unidir_chan_node_details(const size_t& chan_width, const s
   }
   /* Check if all the tracks have been satisified */ 
   VTR_ASSERT(cur_track == actual_chan_width);
-
-  /* If this is on the border of a device, segments should start */
-  switch (device_side) {
-  case TOP:
-  case RIGHT:
-    /* INC_DIRECTION should all end */
-    chan_node_details.set_tracks_end(INC_DIRECTION);
-    /* DEC_DIRECTION should all start */
-    chan_node_details.set_tracks_start(DEC_DIRECTION);
-    break;
-  case BOTTOM:
-  case LEFT:
+  
+  /* If this is on the border of a device/heterogeneous blocks, segments should start/end */
+  if (true == force_start) {
     /* INC_DIRECTION should all start */
     chan_node_details.set_tracks_start(INC_DIRECTION);
     /* DEC_DIRECTION should all end */
     chan_node_details.set_tracks_end(DEC_DIRECTION);
-    break;
-  case NUM_SIDES:
-    break;
-  default:
-    VTR_LOGF_ERROR(__FILE__, __LINE__,
-                   "Invalid device_side!\n");
-    exit(1);
+  }
+
+  /* If this is on the border of a device/heterogeneous blocks, segments should start/end */
+  if (true == force_end) {
+    /* INC_DIRECTION should all end */
+    chan_node_details.set_tracks_end(INC_DIRECTION);
+    /* DEC_DIRECTION should all start */
+    chan_node_details.set_tracks_start(DEC_DIRECTION);
   }
 
   return chan_node_details; 

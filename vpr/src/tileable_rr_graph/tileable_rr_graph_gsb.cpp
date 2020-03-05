@@ -651,9 +651,9 @@ RRGSB build_one_tileable_rr_gsb(const DeviceGrid& grids,
      * We do not care starting and ending points here, so set chan_side as NUM_SIDES 
      */
     ChanNodeDetails chanx_details = build_unidir_chan_node_details(device_chan_width[0], grids.width() - 1, 
-                                                                   NUM_SIDES, segment_inf); 
+                                                                   false, false, segment_inf); 
     ChanNodeDetails chany_details = build_unidir_chan_node_details(device_chan_width[1], grids.height() - 1, 
-                                                                   NUM_SIDES, segment_inf); 
+                                                                   false, false, segment_inf); 
 
     switch (side) {
     case TOP: /* TOP = 0 */
