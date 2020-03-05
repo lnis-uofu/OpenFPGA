@@ -54,7 +54,7 @@ class RRChan {
     RRSegmentId get_node_segment(const size_t& track_num) const;
     bool is_mirror(const RRGraph& rr_graph, const RRChan& cand) const; /* evaluate if two RR_chan is mirror to each other */
     std::vector<RRSegmentId> get_segment_ids() const; /* Get a list of segments used in this routing channel */
-    std::vector<RRNodeId> get_node_ids_by_segment_ids(const RRSegmentId& seg_id) const; /* Get a list of segments used in this routing channel */
+    std::vector<size_t> get_node_ids_by_segment_ids(const RRSegmentId& seg_id) const; /* Get a list of segments used in this routing channel */
   public: /* Mutators */
     /* copy */
     void set(const RRChan&); 

@@ -117,7 +117,7 @@ std::vector<RRSegmentId> RRGSB::get_chan_segment_ids(const e_side& side) const {
 }
 
 /* Get a list of rr_nodes whose sed_id is specified */
-std::vector<RRNodeId> RRGSB::get_chan_node_ids_by_segment_ids(const e_side& side,
+std::vector<size_t> RRGSB::get_chan_node_ids_by_segment_ids(const e_side& side,
                                                               const RRSegmentId& seg_id) const {
   return chan_node_[size_t(side)].get_node_ids_by_segment_ids(seg_id);
 } 

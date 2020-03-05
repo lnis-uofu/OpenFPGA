@@ -41,6 +41,8 @@
 #include "rr_graph_obj_util.h"
 #include "check_rr_graph_obj.h"
 
+#include "clb2clb_directs.h"
+
 //#define VERBOSE
 
 struct t_mux {
@@ -53,16 +55,6 @@ struct t_mux_size_distribution {
     int max_index;
     int* distr;
     t_mux_size_distribution* next;
-};
-
-struct t_clb_to_clb_directs {
-    t_physical_tile_type_ptr from_clb_type;
-    int from_clb_pin_start_index;
-    int from_clb_pin_end_index;
-    t_physical_tile_type_ptr to_clb_type;
-    int to_clb_pin_start_index;
-    int to_clb_pin_end_index;
-    int switch_index; //The switch type used by this direct connection
 };
 
 struct t_pin_loc {
