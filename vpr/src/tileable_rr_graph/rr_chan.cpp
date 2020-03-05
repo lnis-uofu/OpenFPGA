@@ -127,8 +127,8 @@ std::vector<RRSegmentId> RRChan::get_segment_ids() const {
 }
 
 /* Get a list of nodes whose segment_id is specified  */
-std::vector<RRNodeId> RRChan::get_node_ids_by_segment_ids(const RRSegmentId& seg_id) const {
-  std::vector<RRNodeId> node_list;
+std::vector<size_t> RRChan::get_node_ids_by_segment_ids(const RRSegmentId& seg_id) const {
+  std::vector<size_t> node_list;
 
   /* make sure a clean start */
   node_list.clear();
@@ -137,7 +137,7 @@ std::vector<RRNodeId> RRChan::get_node_ids_by_segment_ids(const RRSegmentId& seg
   for (size_t inode = 0; inode < get_chan_width(); ++inode) {
     /* Try to find the node_segment id in the list */
     if ( seg_id == node_segments_[inode] ) {
-      node_list.push_back(nodes_[inode]);
+      node_list.push_back(inode);
     }
   }
 

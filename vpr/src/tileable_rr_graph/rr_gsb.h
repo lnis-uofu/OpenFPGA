@@ -77,8 +77,8 @@ class RRGSB {
     std::vector<RRSegmentId> get_chan_segment_ids(const e_side& side) const; 
 
     /* Get a list of segments used in this routing channel */
-    std::vector<RRNodeId> get_chan_node_ids_by_segment_ids(const e_side& side,
-                                                           const RRSegmentId& seg_id) const; 
+    std::vector<size_t> get_chan_node_ids_by_segment_ids(const e_side& side,
+                                                         const RRSegmentId& seg_id) const; 
 
     /* get a rr_node at a given side and track_id */
     RRNodeId get_chan_node(const e_side& side, const size_t& track_id) const; 
