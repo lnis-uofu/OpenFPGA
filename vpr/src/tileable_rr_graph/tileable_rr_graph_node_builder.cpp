@@ -739,11 +739,221 @@ void load_one_chan_rr_nodes_basic_info(RRGraph& rr_graph,
 } 
 
 /************************************************************************
+ * Initialize the basic information of X-channel rr_nodes:
+ * coordinates: xlow, ylow, xhigh, yhigh, 
+ * features: capacity, track_ids, ptc_num, direction 
+ * grid_info : pb_graph_pin
+ ***********************************************************************/
+static 
+void load_chanx_rr_nodes_basic_info(RRGraph& rr_graph, 
+                                    vtr::vector<RRNodeId, RRSwitchId>& rr_node_driver_switches, 
+                                    std::map<RRNodeId, std::vector<size_t>>& rr_node_track_ids,
+                                    const DeviceGrid& grids,
+                                    const size_t& chan_width,
+                                    const std::vector<t_segment_inf>& segment_infs) {
+
+  /* For X-direction Channel: CHANX */
+  for (size_t iy = 0; iy < grids.height() - 1; ++iy) { 
+    /* Keep a vector of node_ids for the channels, because we will rotate them when walking through ix */
+    std::vector<size_t> track_node_ids;
+
+    for (size_t ix = 1; ix < grids.width() - 1; ++ix) {
+      vtr::Point<size_t> chanx_coord(ix, iy);
+
+      /* Bypass if the routing channel does not exist */
+      if (false == is_chanx_exist(grids, chanx_coord)) {
+        continue;
+      }
+
+      bool force_start = false;
+      bool force_end = false;
+
+      /* All the tracks have to start when 
+       *  - the routing channel touch the RIGHT side a heterogeneous block
+       *  - the routing channel touch the LEFT side of FPGA
+       */
+      if (true == is_chanx_right_to_multi_height_grid(grids, chanx_coord)) {
+        force_start = true;
+      }
+
+      /* All the tracks have to end when 
+       *  - the routing channel touch the LEFT side a heterogeneous block
+       *  - the routing channel touch the RIGHT side of FPGA
+       */
+      if (true == is_chanx_left_to_multi_height_grid(grids, chanx_coord)) {
+        force_end = true;
+      }
+
+      ChanNodeDetails chanx_details = build_unidir_chan_node_details(chan_width, grids.width() - 2, 
+                                                                     force_start, force_end, segment_infs); 
+      /* Force node_ids from the previous chanx */
+      if (0 < track_node_ids.size()) {
+        /* Rotate should be done based on a typical case of routing tracks.
+         * Tracks on the borders are not regularly started and ended, 
+         * which causes the node_rotation malfunction  
+         */
+        ChanNodeDetails chanx_details_tt = build_unidir_chan_node_details(chan_width, grids.width() - 2,
+                                                                          false, false, segment_infs); 
+        chanx_details_tt.set_track_node_ids(track_node_ids);
+
+        /* Rotate the chanx_details by an offset of ix - 1, the distance to the most left channel */
+        /* For INC_DIRECTION, we use clockwise rotation 
+         * node_id A ---->   -----> node_id D
+         * node_id B ---->  / ----> node_id A
+         * node_id C ----> /  ----> node_id B
+         * node_id D ---->    ----> node_id C 
+         */
+        chanx_details_tt.rotate_track_node_id(1, INC_DIRECTION, true);
+        /* For DEC_DIRECTION, we use clockwise rotation 
+         * node_id A <-----    <----- node_id B
+         * node_id B <----- \  <----- node_id C
+         * node_id C <-----  \ <----- node_id D
+         * node_id D <-----    <----- node_id A 
+         */
+        chanx_details_tt.rotate_track_node_id(1, DEC_DIRECTION, false);
+
+        track_node_ids = chanx_details_tt.get_track_node_ids();
+        chanx_details.set_track_node_ids(track_node_ids);
+      }
+
+      /* Configure CHANX in this channel */
+      load_one_chan_rr_nodes_basic_info(rr_graph,
+                                        rr_node_driver_switches,
+                                        rr_node_track_ids,
+                                        chanx_coord, CHANX, 
+                                        chanx_details, 
+                                        segment_infs, 
+                                        CHANX_COST_INDEX_START);
+      /* Get a copy of node_ids */
+      track_node_ids = chanx_details.get_track_node_ids();
+    }
+  }
+}
+
+/************************************************************************
+ * Initialize the basic information of Y-channel rr_nodes:
+ * coordinates: xlow, ylow, xhigh, yhigh, 
+ * features: capacity, track_ids, ptc_num, direction 
+ ***********************************************************************/
+static 
+void load_chany_rr_nodes_basic_info(RRGraph& rr_graph, 
+                                    vtr::vector<RRNodeId, RRSwitchId>& rr_node_driver_switches, 
+                                    std::map<RRNodeId, std::vector<size_t>>& rr_node_track_ids,
+                                    const DeviceGrid& grids,
+                                    const size_t& chan_width,
+                                    const std::vector<t_segment_inf>& segment_infs) {
+
+  /* For Y-direction Channel: CHANY */
+  for (size_t ix = 0; ix < grids.width() - 1; ++ix) {
+    /* Keep a vector of node_ids for the channels, because we will rotate them when walking through ix */
+    std::vector<size_t> track_node_ids;
+
+    for (size_t iy = 1; iy < grids.height() - 1; ++iy) { 
+      vtr::Point<size_t> chany_coord(ix, iy);
+
+      /* Bypass if the routing channel does not exist */
+      if (false == is_chany_exist(grids, chany_coord)) {
+        continue;
+      }
+
+      bool force_start = false;
+      bool force_end = false;
+
+      /* All the tracks have to start when 
+       *  - the routing channel touch the TOP side a heterogeneous block
+       *  - the routing channel touch the BOTTOM side of FPGA
+       */
+      if (true == is_chany_top_to_multi_width_grid(grids, chany_coord)) {
+        force_start = true;
+      }
+
+      /* All the tracks have to end when 
+       *  - the routing channel touch the BOTTOM side a heterogeneous block
+       *  - the routing channel touch the TOP side of FPGA
+       */
+      if (true == is_chany_bottom_to_multi_width_grid(grids, chany_coord)) {
+        force_end = true;
+      }
+
+      ChanNodeDetails chany_details = build_unidir_chan_node_details(chan_width, grids.height() - 2,
+                                                                     force_start, force_end, segment_infs); 
+      /* Force node_ids from the previous chanx */
+      if (0 < track_node_ids.size()) {
+        /* Rotate should be done based on a typical case of routing tracks.
+         * Tracks on the borders are not regularly started and ended, 
+         * which causes the node_rotation malfunction  
+         */
+        ChanNodeDetails chany_details_tt = build_unidir_chan_node_details(chan_width, grids.height() - 2,
+                                                                          false, false, segment_infs); 
+
+        chany_details_tt.set_track_node_ids(track_node_ids);
+        /* Rotate the chany_details by an offset of 1*/
+        /* For INC_DIRECTION, we use clockwise rotation 
+         * node_id A ---->   -----> node_id D
+         * node_id B ---->  / ----> node_id A
+         * node_id C ----> /  ----> node_id B
+         * node_id D ---->    ----> node_id C 
+         */
+        chany_details_tt.rotate_track_node_id(1, INC_DIRECTION, true);
+        /* For DEC_DIRECTION, we use clockwise rotation 
+         * node_id A <-----    <----- node_id B
+         * node_id B <----- \  <----- node_id C
+         * node_id C <-----  \ <----- node_id D
+         * node_id D <-----    <----- node_id A 
+         */
+        chany_details_tt.rotate_track_node_id(1, DEC_DIRECTION, false);
+
+        track_node_ids = chany_details_tt.get_track_node_ids();
+        chany_details.set_track_node_ids(track_node_ids);
+      }
+      /* Configure CHANX in this channel */
+      load_one_chan_rr_nodes_basic_info(rr_graph,
+                                        rr_node_driver_switches, 
+                                        rr_node_track_ids, 
+                                        chany_coord, CHANY, 
+                                        chany_details, 
+                                        segment_infs, 
+                                        CHANX_COST_INDEX_START + segment_infs.size());
+      /* Get a copy of node_ids */
+      track_node_ids = chany_details.get_track_node_ids();
+    }
+  }
+}
+
+/************************************************************************
+ * Reverse the track_ids of CHANX and CHANY nodes in DEC_DIRECTION
+ * This is required as the track ids are allocated in the sequence
+ * of incrementing x and y
+ * However, DEC direction routing tracks should have a reversed sequence in 
+ * track ids 
+ ***********************************************************************/
+static 
+void reverse_dec_chan_rr_node_track_ids(const RRGraph& rr_graph, 
+                                        std::map<RRNodeId, std::vector<size_t>>& rr_node_track_ids) {
+  for (const RRNodeId& node : rr_graph.nodes()) {
+    /* Bypass condition: only focus on CHANX and CHANY in DEC_DIRECTION */
+    if ( (CHANX != rr_graph.node_type(node))
+      && (CHANY != rr_graph.node_type(node)) ) {
+      continue;
+    }
+    /* Reach here, we must have a node of CHANX or CHANY */
+    if (DEC_DIRECTION != rr_graph.node_direction(node)) {
+      continue;
+    }
+    std::reverse(rr_node_track_ids[node].begin(),
+                 rr_node_track_ids[node].end() );
+  }
+}
+
+/************************************************************************
  * Create all the rr_nodes covering both grids and routing channels
  ***********************************************************************/
 void create_tileable_rr_graph_nodes(RRGraph& rr_graph,
                                     vtr::vector<RRNodeId, RRSwitchId>& rr_node_driver_switches, 
+                                    std::map<RRNodeId, std::vector<size_t>>& rr_node_track_ids,
                                     const DeviceGrid& grids, 
+                                    const vtr::Point<size_t>& chan_width, 
+                                    const std::vector<t_segment_inf>& segment_infs,
                                     const RRSwitchId& wire_to_ipin_switch,
                                     const RRSwitchId& delayless_switch) {
   load_grid_nodes_basic_info(rr_graph,
@@ -751,6 +961,23 @@ void create_tileable_rr_graph_nodes(RRGraph& rr_graph,
                              grids, 
                              wire_to_ipin_switch,
                              delayless_switch);
+
+  load_chanx_rr_nodes_basic_info(rr_graph, 
+                                 rr_node_driver_switches, 
+                                 rr_node_track_ids, 
+                                 grids,
+                                 chan_width.x(),
+                                 segment_infs);
+
+  load_chany_rr_nodes_basic_info(rr_graph, 
+                                 rr_node_driver_switches, 
+                                 rr_node_track_ids, 
+                                 grids,
+                                 chan_width.y(),
+                                 segment_infs);
+
+  reverse_dec_chan_rr_node_track_ids(rr_graph, 
+                                     rr_node_track_ids);
 
 }
 
