@@ -26,7 +26,6 @@ namespace openfpga {
  * therefore, we assign tracks one by one until we meet the frequency requirement
  * In this way, we can assign the number of tracks with repect to frequency 
  ***********************************************************************/
-static 
 std::vector<size_t> get_num_tracks_per_seg_type(const size_t& chan_width, 
                                                 const std::vector<t_segment_inf>& segment_inf, 
                                                 const bool& use_full_seg_groups) {
