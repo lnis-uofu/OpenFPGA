@@ -7,6 +7,7 @@
 #include <vector>
 
 /* Headers from vtrutil library */
+#include "vtr_ndmatrix.h"
 #include "vtr_geometry.h"
 
 #include "physical_types.h"
@@ -26,7 +27,8 @@ void build_rr_graph_edges(RRGraph& rr_graph,
                           const DeviceGrid& grids,
                           const vtr::Point<size_t>& device_chan_width, 
                           const std::vector<t_segment_inf>& segment_inf,
-                          int** Fc_in, int** Fc_out,
+                          const std::vector<vtr::Matrix<int>>& Fc_in,
+                          const std::vector<vtr::Matrix<int>>& Fc_out,
                           const e_switch_block_type& sb_type, const int& Fs,
                           const e_switch_block_type& sb_subtype, const int& subFs,
                           const bool& wire_opposite_side);

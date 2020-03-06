@@ -59,13 +59,13 @@ t_track2pin_map build_gsb_track_to_ipin_map(const RRGraph& rr_graph,
                                             const RRGSB& rr_gsb, 
                                             const DeviceGrid& grids, 
                                             const std::vector<t_segment_inf>& segment_inf, 
-                                            int** Fc_in);
+                                            const std::vector<vtr::Matrix<int>>& Fc_in);
 
 t_pin2track_map build_gsb_opin_to_track_map(const RRGraph& rr_graph,
                                             const RRGSB& rr_gsb, 
                                             const DeviceGrid& grids, 
                                             const std::vector<t_segment_inf>& segment_inf, 
-                                            int** Fc_out);
+                                            const std::vector<vtr::Matrix<int>>& Fc_out);
 
 void build_direct_connections_for_one_gsb(RRGraph& rr_graph,
                                           const DeviceGrid& grids,
