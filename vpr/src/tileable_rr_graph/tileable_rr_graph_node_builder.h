@@ -21,10 +21,17 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void alloc_rr_graph_nodes(RRGraph& rr_graph,
-                          const DeviceGrid& grids,
-                          const vtr::Point<size_t>& chan_width,
-                          const std::vector<t_segment_inf>& segment_infs);
+void alloc_tileable_rr_graph_nodes(RRGraph& rr_graph,
+                                   vtr::vector<RRNodeId, RRSwitchId>& driver_switches, 
+                                   const DeviceGrid& grids,
+                                   const vtr::Point<size_t>& chan_width,
+                                   const std::vector<t_segment_inf>& segment_infs);
+
+void create_tileable_rr_graph_nodes(RRGraph& rr_graph,
+                                    vtr::vector<RRNodeId, RRSwitchId>& rr_node_driver_switches, 
+                                    const DeviceGrid& grids, 
+                                    const RRSwitchId& wire_to_ipin_switch,
+                                    const RRSwitchId& delayless_switch);
 
 } /* end namespace openfpga */
 

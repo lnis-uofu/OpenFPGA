@@ -7,7 +7,13 @@
 #include "vtr_log.h"
 #include "vtr_geometry.h"
 
+/* Headers from openfpgautil library */
+#include "openfpga_side_manager.h"
+
+#include "vpr_types.h"
 #include "vpr_utils.h"
+
+#include "rr_node.h"
 
 #include "rr_graph_builder_utils.h"
 #include "tileable_chan_details_builder.h"
@@ -311,10 +317,11 @@ std::vector<size_t> estimate_num_rr_nodes(const DeviceGrid& grids,
  *
  * Note: ensure that there are NO nodes in the rr_graph
  ***********************************************************************/
-void alloc_rr_graph_nodes(RRGraph& rr_graph,
-                          const DeviceGrid& grids,
-                          const vtr::Point<size_t>& chan_width,
-                          const std::vector<t_segment_inf>& segment_infs) {
+void alloc_tileable_rr_graph_nodes(RRGraph& rr_graph,
+                                   vtr::vector<RRNodeId, RRSwitchId>& rr_node_driver_switches, 
+                                   const DeviceGrid& grids,
+                                   const vtr::Point<size_t>& chan_width,
+                                   const std::vector<t_segment_inf>& segment_infs) {
   VTR_ASSERT(0 == rr_graph.nodes().size());
 
   std::vector<size_t> num_rr_nodes_per_type = estimate_num_rr_nodes(grids, chan_width, segment_infs);
@@ -327,14 +334,319 @@ void alloc_rr_graph_nodes(RRGraph& rr_graph,
 
   rr_graph.reserve_nodes(num_nodes);
 
-  /* Add nodes by types */
-  for (const t_rr_type& node_type : {SOURCE, SINK, IPIN, OPIN, CHANX, CHANY}) {
-    for (size_t inode = 0; inode < num_rr_nodes_per_type[size_t(node_type)]; ++inode) {
-      rr_graph.create_node(node_type);
+  rr_node_driver_switches.reserve(num_nodes); 
+}
+
+/************************************************************************
+ * Configure OPIN rr_nodes for this grid 
+ * coordinates: xlow, ylow, xhigh, yhigh, 
+ * features: capacity, ptc_num (pin_num),
+ *
+ * Note: this function should be applied ONLY to grid with 0 width offset and 0 height offset!!!
+ ***********************************************************************/
+static 
+void load_one_grid_opin_nodes_basic_info(RRGraph& rr_graph,
+                                         vtr::vector<RRNodeId, RRSwitchId>& rr_node_driver_switches, 
+                                         const vtr::Point<size_t>& grid_coordinate, 
+                                         const t_grid_tile& cur_grid, 
+                                         const e_side& io_side, 
+                                         const RRSwitchId& delayless_switch) {
+  SideManager io_side_manager(io_side);
+
+  /* Walk through the width height of each grid,
+   * get pins and configure the rr_nodes
+   */
+  for (int width = 0; width < cur_grid.type->width; ++width) {
+    for (int height = 0; height < cur_grid.type->height; ++height) {
+      /* Walk through sides */
+      for (size_t side = 0; side < NUM_SIDES; ++side) {
+        SideManager side_manager(side);
+        /* skip unwanted sides */
+        if ( (true == is_io_type(cur_grid.type))
+          && (side != io_side_manager.to_size_t()) ) { 
+          continue;
+        }
+        /* Find OPINs */
+        /* Configure pins by pins */
+        std::vector<int> opin_list = get_grid_side_pins(cur_grid, DRIVER, side_manager.get_side(),
+                                                        width, height);
+        for (const int& pin_num : opin_list) {
+          /* Create a new node and fill information */
+          const RRNodeId& node = rr_graph.create_node(OPIN);
+ 
+          /* node bounding box */
+          rr_graph.set_node_bounding_box(node, vtr::Rect<short>(grid_coordinate.x() + width,
+                                                                grid_coordinate.x() + width,
+                                                                grid_coordinate.y() + height,
+                                                                grid_coordinate.y() + height));
+          rr_graph.set_node_side(node, side_manager.get_side());  
+          rr_graph.set_node_pin_num(node, pin_num);  
+
+          rr_graph.set_node_capacity(node, 1);
+
+          /* cost index is a FIXED value for OPIN */
+          rr_graph.set_node_cost_index(node, OPIN_COST_INDEX); 
+
+          /* Switch info */
+          VTR_ASSERT(size_t(node) == rr_node_driver_switches.size());
+          rr_node_driver_switches.push_back(delayless_switch); 
+
+          /* RC data */
+          rr_graph.set_node_rc_data_index(node, find_create_rr_rc_data(0., 0.));
+
+        } /* End of loading OPIN rr_nodes */
+      } /* End of side enumeration */
+    } /* End of height enumeration */
+  } /* End of width enumeration */
+}
+
+/************************************************************************
+ * Configure IPIN rr_nodes for this grid 
+ * coordinates: xlow, ylow, xhigh, yhigh, 
+ * features: capacity, ptc_num (pin_num),
+ *
+ * Note: this function should be applied ONLY to grid with 0 width offset and 0 height offset!!!
+ ***********************************************************************/
+static 
+void load_one_grid_ipin_nodes_basic_info(RRGraph& rr_graph,
+                                         vtr::vector<RRNodeId, RRSwitchId>& rr_node_driver_switches, 
+                                         const vtr::Point<size_t>& grid_coordinate, 
+                                         const t_grid_tile& cur_grid, 
+                                         const e_side& io_side, 
+                                         const RRSwitchId& wire_to_ipin_switch) {
+  SideManager io_side_manager(io_side);
+
+  /* Walk through the width and height of each grid,
+   * get pins and configure the rr_nodes
+   */
+  for (int width = 0; width < cur_grid.type->width; ++width) {
+    for (int height = 0; height < cur_grid.type->height; ++height) {
+      /* Walk through sides */
+      for (size_t side = 0; side < NUM_SIDES; ++side) {
+        SideManager side_manager(side);
+        /* skip unwanted sides */
+        if ( (true == is_io_type(cur_grid.type))
+          && (side != io_side_manager.to_size_t()) ) { 
+          continue;
+        }
+
+        /* Find IPINs */
+        /* Configure pins by pins */
+        std::vector<int> ipin_list = get_grid_side_pins(cur_grid, RECEIVER, side_manager.get_side(), width, height);
+        for (const int& pin_num : ipin_list) {
+          /* Create a new node and fill information */
+          const RRNodeId& node = rr_graph.create_node(IPIN);
+ 
+          /* node bounding box */
+          rr_graph.set_node_bounding_box(node, vtr::Rect<short>(grid_coordinate.x() + width,
+                                                                grid_coordinate.x() + width,
+                                                                grid_coordinate.y() + height,
+                                                                grid_coordinate.y() + height));
+          rr_graph.set_node_side(node, side_manager.get_side());  
+          rr_graph.set_node_pin_num(node, pin_num);  
+
+          rr_graph.set_node_capacity(node, 1);
+
+          /* cost index is a FIXED value for OPIN */
+          rr_graph.set_node_cost_index(node, IPIN_COST_INDEX); 
+
+          /* Switch info */
+          VTR_ASSERT(size_t(node) == rr_node_driver_switches.size());
+          rr_node_driver_switches.push_back(wire_to_ipin_switch); 
+
+          /* RC data */
+          rr_graph.set_node_rc_data_index(node, find_create_rr_rc_data(0., 0.));
+
+        } /* End of loading IPIN rr_nodes */
+      } /* End of side enumeration */
+    } /* End of height enumeration */
+  } /* End of width enumeration */
+}
+
+/************************************************************************
+ * Configure SOURCE rr_nodes for this grid 
+ * coordinates: xlow, ylow, xhigh, yhigh, 
+ * features: capacity, ptc_num (pin_num),
+ *
+ * Note: this function should be applied ONLY to grid with 0 width offset and 0 height offset!!!
+ ***********************************************************************/
+static 
+void load_one_grid_source_nodes_basic_info(RRGraph& rr_graph,
+                                           vtr::vector<RRNodeId, RRSwitchId>& rr_node_driver_switches, 
+                                           const vtr::Point<size_t>& grid_coordinate, 
+                                           const t_grid_tile& cur_grid, 
+                                           const e_side& io_side, 
+                                           const RRSwitchId& delayless_switch) {
+  SideManager io_side_manager(io_side);
+
+  /* Set a SOURCE rr_node for each DRIVER class */
+  for (int iclass = 0; iclass < cur_grid.type->num_class; ++iclass) {
+    /* Set a SINK rr_node for the OPIN */
+    if (DRIVER != cur_grid.type->class_inf[iclass].type) {
+      continue; 
+    } 
+
+    /* Create a new node and fill information */
+    const RRNodeId& node = rr_graph.create_node(SOURCE);
+
+    /* node bounding box */
+    rr_graph.set_node_bounding_box(node, vtr::Rect<short>(grid_coordinate.x(),
+                                                          grid_coordinate.x(),
+                                                          grid_coordinate.y(),
+                                                          grid_coordinate.y()));
+    rr_graph.set_node_class_num(node, iclass);  
+
+    rr_graph.set_node_capacity(node, 1);
+
+    /* The capacity should be the number of pins in this class*/ 
+    rr_graph.set_node_capacity(node, cur_grid.type->class_inf[iclass].num_pins); 
+
+    /* cost index is a FIXED value for SOURCE */
+    rr_graph.set_node_cost_index(node, SOURCE_COST_INDEX); 
+
+    /* Switch info */
+    VTR_ASSERT(size_t(node) == rr_node_driver_switches.size());
+    rr_node_driver_switches.push_back(delayless_switch); 
+
+    /* RC data */
+    rr_graph.set_node_rc_data_index(node, find_create_rr_rc_data(0., 0.));
+
+  } /* End of class enumeration */
+}
+
+/************************************************************************
+ * Configure SINK rr_nodes for this grid 
+ * coordinates: xlow, ylow, xhigh, yhigh, 
+ * features: capacity, ptc_num (pin_num),
+ *
+ * Note: this function should be applied ONLY to grid with 0 width offset and 0 height offset!!!
+ ***********************************************************************/
+static 
+void load_one_grid_sink_nodes_basic_info(RRGraph& rr_graph,
+                                         vtr::vector<RRNodeId, RRSwitchId>& rr_node_driver_switches, 
+                                         const vtr::Point<size_t>& grid_coordinate, 
+                                         const t_grid_tile& cur_grid, 
+                                         const e_side& io_side, 
+                                         const RRSwitchId& delayless_switch) {
+  SideManager io_side_manager(io_side);
+
+  /* Set a SINK rr_node for each RECEIVER class */
+  for (int iclass = 0; iclass < cur_grid.type->num_class; ++iclass) {
+    /* Set a SINK rr_node for the OPIN */
+    if (RECEIVER != cur_grid.type->class_inf[iclass].type) {
+      continue; 
+    }
+
+    /* Create a new node and fill information */
+    const RRNodeId& node = rr_graph.create_node(SINK);
+
+    /* node bounding box */
+    rr_graph.set_node_bounding_box(node, vtr::Rect<short>(grid_coordinate.x(),
+                                                          grid_coordinate.x(),
+                                                          grid_coordinate.y(),
+                                                          grid_coordinate.y()));
+    rr_graph.set_node_class_num(node, iclass);  
+
+    rr_graph.set_node_capacity(node, 1);
+
+    /* The capacity should be the number of pins in this class*/ 
+    rr_graph.set_node_capacity(node, cur_grid.type->class_inf[iclass].num_pins); 
+
+    /* cost index is a FIXED value for SINK */
+    rr_graph.set_node_cost_index(node, SINK_COST_INDEX); 
+
+    /* Switch info */
+    VTR_ASSERT(size_t(node) == rr_node_driver_switches.size());
+    rr_node_driver_switches.push_back(delayless_switch); 
+
+    /* RC data */
+    rr_graph.set_node_rc_data_index(node, find_create_rr_rc_data(0., 0.));
+
+  } /* End of class enumeration */
+}
+
+/************************************************************************
+ * Create all the rr_nodes for grids
+ ***********************************************************************/
+static 
+void load_grid_nodes_basic_info(RRGraph& rr_graph,
+                                vtr::vector<RRNodeId, RRSwitchId>& rr_node_driver_switches, 
+                                const DeviceGrid& grids, 
+                                const RRSwitchId& wire_to_ipin_switch,
+                                const RRSwitchId& delayless_switch) {
+
+  for (size_t iy = 0; iy < grids.height(); ++iy) { 
+    for (size_t ix = 0; ix < grids.width(); ++ix) {
+      /* Skip EMPTY tiles */
+      if (true == is_empty_type(grids[ix][iy].type)) {
+        continue;
+      }
+
+      /* We only build rr_nodes for grids with width_offset = 0 and height_offset = 0 */
+      if ( (0 < grids[ix][iy].width_offset)
+        || (0 < grids[ix][iy].height_offset) ) {
+        continue;
+      }
+
+      vtr::Point<size_t> grid_coordinate(ix, iy);
+      enum e_side io_side = NUM_SIDES;
+
+      /* If this is the block on borders, we consider IO side */
+      if (true == is_io_type(grids[ix][iy].type)) {
+        vtr::Point<size_t> io_device_size(grids.width() - 1, grids.height() - 1);
+        io_side = determine_io_grid_pin_side(io_device_size, grid_coordinate);
+      }
+
+      /* Configure source rr_nodes for this grid */
+      load_one_grid_source_nodes_basic_info(rr_graph,
+                                            rr_node_driver_switches, 
+                                            grid_coordinate, 
+                                            grids[ix][iy], 
+                                            io_side, 
+                                            delayless_switch);
+
+      /* Configure sink rr_nodes for this grid */
+      load_one_grid_sink_nodes_basic_info(rr_graph,
+                                          rr_node_driver_switches, 
+                                          grid_coordinate, 
+                                          grids[ix][iy], 
+                                          io_side, 
+                                          delayless_switch);
+
+      /* Configure opin rr_nodes for this grid */
+      load_one_grid_opin_nodes_basic_info(rr_graph,
+                                            rr_node_driver_switches, 
+                                            grid_coordinate, 
+                                            grids[ix][iy], 
+                                            io_side, 
+                                            delayless_switch);
+
+      /* Configure ipin rr_nodes for this grid */
+      load_one_grid_ipin_nodes_basic_info(rr_graph,
+                                          rr_node_driver_switches, 
+                                          grid_coordinate, 
+                                          grids[ix][iy], 
+                                          io_side, 
+                                          wire_to_ipin_switch);
+
     }
   }
+}
 
-  VTR_ASSERT(num_nodes == rr_graph.nodes().size());
+/************************************************************************
+ * Create all the rr_nodes covering both grids and routing channels
+ ***********************************************************************/
+void create_tileable_rr_graph_nodes(RRGraph& rr_graph,
+                                    vtr::vector<RRNodeId, RRSwitchId>& rr_node_driver_switches, 
+                                    const DeviceGrid& grids, 
+                                    const RRSwitchId& wire_to_ipin_switch,
+                                    const RRSwitchId& delayless_switch) {
+  load_grid_nodes_basic_info(rr_graph,
+                             rr_node_driver_switches, 
+                             grids, 
+                             wire_to_ipin_switch,
+                             delayless_switch);
+
 }
 
 } /* end namespace openfpga */
