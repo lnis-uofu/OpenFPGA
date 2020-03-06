@@ -11,6 +11,7 @@
 #include "vtr_assert.h"
 #include "vtr_log.h"
 
+#include "rr_graph_builder_utils.h"
 #include "tileable_chan_details_builder.h"
 
 /* begin namespace openfpga */
@@ -167,11 +168,7 @@ ChanNodeDetails build_unidir_chan_node_details(const size_t& chan_width,
                                                const bool& force_end, 
                                                const std::vector<t_segment_inf>& segment_inf) {
   ChanNodeDetails chan_node_details;
-  size_t actual_chan_width = chan_width;
-  /* Correct the chan_width: it should be an even number */
-  if (0 != actual_chan_width % 2) {
-    actual_chan_width++; /* increment it to be even */
-  }
+  size_t actual_chan_width = find_unidir_routing_channel_width(chan_width);
   VTR_ASSERT(0 == actual_chan_width % 2);
   
   /* Reserve channel width */

@@ -16,6 +16,21 @@
 namespace openfpga {
 
 /************************************************************************
+ * Correct number of routing channel width to be compatible to 
+ * uni-directional routing architecture
+ ***********************************************************************/
+size_t find_unidir_routing_channel_width(const size_t& chan_width) {
+  size_t actual_chan_width = chan_width;
+  /* Correct the chan_width: it should be an even number */
+  if (0 != actual_chan_width % 2) {
+    actual_chan_width++; /* increment it to be even */
+  }
+  VTR_ASSERT(0 == actual_chan_width % 2);
+
+  return actual_chan_width;
+}
+
+/************************************************************************
  * Get the class index of a grid pin 
  ***********************************************************************/
 int get_grid_pin_class_index(const t_grid_tile& cur_grid,
