@@ -44,7 +44,7 @@ t_track2track_map build_gsb_track_to_track_map(const RRGraph& rr_graph,
 
 RRGSB build_one_tileable_rr_gsb(const DeviceGrid& grids, 
                                 const RRGraph& rr_graph,
-                                const std::vector<size_t>& device_chan_width, 
+                                const vtr::Point<size_t>& device_chan_width, 
                                 const std::vector<t_segment_inf>& segment_inf,
                                 const vtr::Point<size_t>& gsb_coordinate);
 
@@ -53,7 +53,7 @@ void build_edges_for_one_tileable_rr_gsb(RRGraph& rr_graph,
                                          const t_track2pin_map& track2ipin_map,
                                          const t_pin2track_map& opin2track_map,
                                          const t_track2track_map& track2track_map,
-                                         const vtr::vector<RRNodeId, RRSwitchId> rr_node_driver_switches);
+                                         const vtr::vector<RRNodeId, RRSwitchId>& rr_node_driver_switches);
 
 t_track2pin_map build_gsb_track_to_ipin_map(const RRGraph& rr_graph,
                                             const RRGSB& rr_gsb, 

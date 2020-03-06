@@ -620,7 +620,7 @@ RRChan build_one_tileable_rr_chan(const vtr::Point<size_t>& chan_coordinate,
  ***********************************************************************/
 RRGSB build_one_tileable_rr_gsb(const DeviceGrid& grids, 
                                 const RRGraph& rr_graph,
-                                const std::vector<size_t>& device_chan_width, 
+                                const vtr::Point<size_t>& device_chan_width, 
                                 const std::vector<t_segment_inf>& segment_inf,
                                 const vtr::Point<size_t>& gsb_coordinate) {
   /* Create an object to return */
@@ -650,9 +650,9 @@ RRGSB build_one_tileable_rr_gsb(const DeviceGrid& grids,
     /* Build a segment details, where we need the segment ids for building rr_chan  
      * We do not care starting and ending points here, so set chan_side as NUM_SIDES 
      */
-    ChanNodeDetails chanx_details = build_unidir_chan_node_details(device_chan_width[0], grids.width() - 1, 
+    ChanNodeDetails chanx_details = build_unidir_chan_node_details(device_chan_width.x(), grids.width() - 1, 
                                                                    false, false, segment_inf); 
-    ChanNodeDetails chany_details = build_unidir_chan_node_details(device_chan_width[1], grids.height() - 1, 
+    ChanNodeDetails chany_details = build_unidir_chan_node_details(device_chan_width.y(), grids.height() - 1, 
                                                                    false, false, segment_inf); 
 
     switch (side) {
@@ -907,7 +907,7 @@ void build_edges_for_one_tileable_rr_gsb(RRGraph& rr_graph,
                                          const t_track2pin_map& track2ipin_map,
                                          const t_pin2track_map& opin2track_map,
                                          const t_track2track_map& track2track_map,
-                                         const vtr::vector<RRNodeId, RRSwitchId> rr_node_driver_switches) {
+                                         const vtr::vector<RRNodeId, RRSwitchId>& rr_node_driver_switches) {
   
   /* Walk through each sides */ 
   for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
