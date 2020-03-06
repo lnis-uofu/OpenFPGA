@@ -266,6 +266,9 @@ void build_tileable_unidir_rr_graph(const std::vector<t_physical_tile_type>& typ
   /* Save the channel widths for the newly constructed graph */
   device_ctx.chan_width = chan_width;
 
+  /* Save the track ids for tileable routing resource graph */
+  device_ctx.rr_node_track_ids = rr_node_track_ids;
+
   /************************************************************************
    * Allocate external data structures
    *  a. cost_index
