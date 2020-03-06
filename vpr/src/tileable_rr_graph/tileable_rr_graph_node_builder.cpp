@@ -634,6 +634,111 @@ void load_grid_nodes_basic_info(RRGraph& rr_graph,
 }
 
 /************************************************************************
+ * Initialize the basic information of routing track rr_nodes
+ * coordinates: xlow, ylow, xhigh, yhigh, 
+ * features: capacity, track_ids, ptc_num, direction 
+ ***********************************************************************/
+static 
+void load_one_chan_rr_nodes_basic_info(RRGraph& rr_graph,
+                                       vtr::vector<RRNodeId, RRSwitchId>& rr_node_driver_switches, 
+                                       std::map<RRNodeId, std::vector<size_t>>& rr_node_track_ids,
+                                       const vtr::Point<size_t>& chan_coordinate, 
+                                       const t_rr_type& chan_type,
+                                       ChanNodeDetails& chan_details,
+                                       const std::vector<t_segment_inf>& segment_infs,
+                                       const int& cost_index_offset) {
+  /* Check each node_id(potential ptc_num) in the channel :
+   * If this is a starting point, we set a new rr_node with xlow/ylow, ptc_num
+   * If this is a ending point, we set xhigh/yhigh and track_ids
+   * For other nodes, we set changes in track_ids
+   */
+  for (size_t itrack = 0; itrack < chan_details.get_chan_width(); ++itrack) {
+    /* For INC direction, a starting point requires a new chan rr_node  */
+    if ( ( (true == chan_details.is_track_start(itrack))
+        && (INC_DIRECTION == chan_details.get_track_direction(itrack)) ) 
+    /* For DEC direction, an ending point requires a new chan rr_node  */
+      ||
+       ( (true == chan_details.is_track_end(itrack))
+      && (DEC_DIRECTION == chan_details.get_track_direction(itrack)) ) ) {
+
+      /* Create a new chan rr_node  */
+      const RRNodeId& node = rr_graph.create_node(chan_type);
+    
+      rr_graph.set_node_xlow(node, chan_coordinate.x());
+      rr_graph.set_node_ylow(node, chan_coordinate.y());
+
+      rr_graph.set_node_direction(node, chan_details.get_track_direction(itrack)); 
+      rr_graph.set_node_track_num(node, itrack);
+      rr_node_track_ids[node].push_back(itrack);
+
+      rr_graph.set_node_capacity(node, 1); 
+
+      /* assign switch id */
+      size_t seg_id = chan_details.get_track_segment_id(itrack);
+      VTR_ASSERT(size_t(node) == rr_node_driver_switches.size());
+      rr_node_driver_switches.push_back(RRSwitchId(segment_infs[seg_id].arch_opin_switch)); 
+
+      /* Update chan_details with node_id */
+      chan_details.set_track_node_id(itrack, size_t(node));
+
+      /* cost index depends on the segment index */
+      rr_graph.set_node_cost_index(node, cost_index_offset + seg_id); 
+      /* Finish here, go to next */
+    }
+
+    /* For INC direction, an ending point requires an update on xhigh and yhigh  */
+    if (   ( (true == chan_details.is_track_end(itrack))
+          && (INC_DIRECTION == chan_details.get_track_direction(itrack)) ) 
+       ||
+       /* For DEC direction, an starting point requires an update on xlow and ylow  */
+           ( (true == chan_details.is_track_start(itrack))
+          && (DEC_DIRECTION == chan_details.get_track_direction(itrack)) ) ) {
+
+      /* Get the node_id */
+      const RRNodeId& rr_node_id = RRNodeId(chan_details.get_track_node_id(itrack));
+
+      /* Do a quick check, make sure we do not mistakenly modify other nodes */
+      VTR_ASSERT(chan_type == rr_graph.node_type(rr_node_id));
+      VTR_ASSERT(chan_details.get_track_direction(itrack) == rr_graph.node_direction(rr_node_id));
+
+      /* set xhigh/yhigh and push changes to track_ids */
+      rr_graph.set_node_xhigh(rr_node_id, chan_coordinate.x());
+      rr_graph.set_node_yhigh(rr_node_id, chan_coordinate.y());
+
+      /* Do not update track_ids for length-1 wires, they should have only 1 track_id */
+      if ( (rr_graph.node_xhigh(rr_node_id) > rr_graph.node_xlow(rr_node_id))
+        || (rr_graph.node_yhigh(rr_node_id) > rr_graph.node_ylow(rr_node_id)) ) {
+        rr_node_track_ids[rr_node_id].push_back(itrack);
+      }
+      /* Finish here, go to next */
+    }
+
+    /* Finish processing starting and ending tracks */
+    if ( (true == chan_details.is_track_start(itrack))
+      || (true == chan_details.is_track_end(itrack)) ) {
+      /* Finish here, go to next */
+      continue;
+    }
+
+    /* For other nodes, we get the node_id and just update track_ids */
+    /* Ensure those nodes are neither starting nor ending points */
+    VTR_ASSERT( (false == chan_details.is_track_start(itrack))
+             && (false == chan_details.is_track_end(itrack)) );
+
+    /* Get the node_id */
+    const RRNodeId& rr_node_id = RRNodeId(chan_details.get_track_node_id(itrack));
+
+    /* Do a quick check, make sure we do not mistakenly modify other nodes */
+    VTR_ASSERT(chan_type == rr_graph.node_type(rr_node_id));
+    VTR_ASSERT(chan_details.get_track_direction(itrack) == rr_graph.node_direction(rr_node_id));
+
+    /* Update track_ids */
+    rr_node_track_ids[rr_node_id].push_back(itrack);
+    /* Finish here, go to next */
+  }
+} 
+
+/************************************************************************
  * Create all the rr_nodes covering both grids and routing channels
  ***********************************************************************/
 void create_tileable_rr_graph_nodes(RRGraph& rr_graph,

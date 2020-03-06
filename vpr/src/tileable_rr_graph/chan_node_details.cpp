@@ -1,8 +1,11 @@
 /************************************************************************
  *  This file contains member functions for class ChanNodeDetails
  ***********************************************************************/
-#include <cassert>
 #include <algorithm>
+
+/* Headers from vtrutil library */
+#include "vtr_assert.h"
+
 #include "chan_node_details.h"
 
 /* begin namespace openfpga */
@@ -33,12 +36,12 @@ ChanNodeDetails::ChanNodeDetails() {
  *  Accessors
  ***********************************************************************/
 size_t ChanNodeDetails::get_chan_width() const {
-  assert(validate_chan_width());
+  VTR_ASSERT(validate_chan_width());
   return track_node_ids_.size();
 }
 
 size_t ChanNodeDetails::get_track_node_id(const size_t& track_id) const {
-  assert(validate_track_id(track_id));
+  VTR_ASSERT(validate_track_id(track_id));
   return track_node_ids_[track_id];
 }
 
@@ -52,27 +55,27 @@ std::vector<size_t> ChanNodeDetails::get_track_node_ids() const {
 }
 
 e_direction ChanNodeDetails::get_track_direction(const size_t& track_id) const {
-  assert(validate_track_id(track_id));
+  VTR_ASSERT(validate_track_id(track_id));
   return track_direction_[track_id];
 }
 
 size_t ChanNodeDetails::get_track_segment_length(const size_t& track_id) const {
-  assert(validate_track_id(track_id));
+  VTR_ASSERT(validate_track_id(track_id));
   return seg_length_[track_id];
 }
 
 size_t ChanNodeDetails::get_track_segment_id(const size_t& track_id) const {
-  assert(validate_track_id(track_id));
+  VTR_ASSERT(validate_track_id(track_id));
   return seg_ids_[track_id];
 }
 
 bool   ChanNodeDetails::is_track_start(const size_t& track_id) const {
-  assert(validate_track_id(track_id));
+  VTR_ASSERT(validate_track_id(track_id));
   return track_start_[track_id];
 }
 
 bool   ChanNodeDetails::is_track_end(const size_t& track_id) const {
-  assert(validate_track_id(track_id));
+  VTR_ASSERT(validate_track_id(track_id));
   return track_end_[track_id];
 }
 
@@ -81,9 +84,9 @@ bool   ChanNodeDetails::is_track_end(const size_t& track_id) const {
  * A group size is the number of such nodes between the starting points (include the 1st starting point) 
  */
 std::vector<size_t> ChanNodeDetails::get_seg_group(const size_t& track_id) const {
-  assert(validate_chan_width());
-  assert(validate_track_id(track_id));
-  assert(is_track_start(track_id));
+  VTR_ASSERT(validate_chan_width());
+  VTR_ASSERT(validate_track_id(track_id));
+  VTR_ASSERT(is_track_start(track_id));
   
   std::vector<size_t> group;
   /* Make sure a clean start */
@@ -115,7 +118,7 @@ std::vector<size_t> ChanNodeDetails::get_seg_group_node_id(const std::vector<siz
   group.clear();
 
   for (size_t id = 0; id < seg_group.size(); ++id) {
-    assert(validate_track_id(seg_group[id]));
+    VTR_ASSERT(validate_track_id(seg_group[id]));
     group.push_back(get_track_node_id(seg_group[id]));
   }
 
@@ -182,14 +185,14 @@ void ChanNodeDetails::add_track(const size_t& track_node_id, const e_direction& 
 
 /* Update the node_id of a given track */
 void ChanNodeDetails::set_track_node_id(const size_t& track_index, const size_t& track_node_id) {
-  assert(validate_track_id(track_index));
+  VTR_ASSERT(validate_track_id(track_index));
   track_node_ids_[track_index] = track_node_id; 
 }
 
 /* Update the node_ids from a vector */
 void ChanNodeDetails::set_track_node_ids(const std::vector<size_t>& track_node_ids) {
   /* the size of vector should match chan_width */
-  assert ( get_chan_width() == track_node_ids.size() );
+  VTR_ASSERT ( get_chan_width() == track_node_ids.size() );
   for (size_t inode = 0; inode < track_node_ids.size(); ++inode) {
     track_node_ids_[inode] = track_node_ids[inode]; 
   }
@@ -227,7 +230,7 @@ void ChanNodeDetails::rotate_track_node_id(const size_t& offset, const e_directi
   /* Rotate the node_ids by groups
    * A group begins from a track_start and ends before another track_start  
    */
-  assert(validate_chan_width());
+  VTR_ASSERT(validate_chan_width());
   for (size_t itrack = 0; itrack < get_chan_width(); ++itrack) { 
     /* Bypass non-start segment */
     if (false == is_track_start(itrack) ) {
