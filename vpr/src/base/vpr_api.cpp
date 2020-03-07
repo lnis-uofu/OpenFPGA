@@ -829,6 +829,11 @@ void vpr_create_rr_graph(t_vpr_setup& vpr_setup, const t_arch& arch, int chan_wi
         graph_type = GRAPH_GLOBAL;
     } else {
         graph_type = (det_routing_arch->directionality == BI_DIRECTIONAL ? GRAPH_BIDIR : GRAPH_UNIDIR);
+        /* Branch on tileable routing */
+        if ( (UNI_DIRECTIONAL == det_routing_arch->directionality)
+          && (true == arch.tileable) ) {
+            graph_type = GRAPH_UNIDIR_TILEABLE;
+        }
     }
 
     int warnings = 0;

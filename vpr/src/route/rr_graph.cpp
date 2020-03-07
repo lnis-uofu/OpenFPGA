@@ -1504,6 +1504,7 @@ void free_rr_graph() {
 
     /* Xifan Tang - Clear the rr_graph object */
     device_ctx.rr_graph.clear();
+    device_ctx.rr_node_track_ids.clear();
 }
 
 static void build_rr_sinks_sources(const int i,
