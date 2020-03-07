@@ -966,7 +966,7 @@ void build_gsb_one_ipin_track2pin_map(const RRGraph& rr_graph,
                                       const RRGSB& rr_gsb, 
                                       const enum e_side& ipin_side, 
                                       const size_t& ipin_node_id, 
-                                      const size_t& Fc, 
+                                      const std::vector<int>& Fc, 
                                       const size_t& offset, 
                                       const std::vector<t_segment_inf>& segment_inf, 
                                       t_track2pin_map& track2ipin_map) {
@@ -995,7 +995,7 @@ void build_gsb_one_ipin_track2pin_map(const RRGraph& rr_graph,
     VTR_ASSERT(0 == actual_track_list.size() % 2);
    
     /* Scale Fc  */
-    int actual_Fc = std::ceil((float)Fc * (float)actual_track_list.size() / (float)chan_width); 
+    int actual_Fc = std::ceil((float)Fc[iseg] * (float)actual_track_list.size() / (float)chan_width); 
     /* Minimum Fc should be 2 : ensure we will connect to a pair of routing tracks */
     actual_Fc = std::max(1, actual_Fc);
     /* Compute the step between two connection from this IPIN to tracks: 
@@ -1060,7 +1060,7 @@ void build_gsb_one_opin_pin2track_map(const RRGraph& rr_graph,
                                       const RRGSB& rr_gsb, 
                                       const enum e_side& opin_side, 
                                       const size_t& opin_node_id, 
-                                      const size_t& Fc, 
+                                      const std::vector<int>& Fc,
                                       const size_t& offset, 
                                       const std::vector<t_segment_inf>& segment_inf, 
                                       t_pin2track_map& opin2track_map) {
@@ -1094,7 +1094,7 @@ void build_gsb_one_opin_pin2track_map(const RRGraph& rr_graph,
     }
    
     /* Scale Fc  */
-    int actual_Fc = std::ceil((float)Fc * (float)actual_track_list.size() / (float)chan_width); 
+    int actual_Fc = std::ceil((float)Fc[iseg] * (float)actual_track_list.size() / (float)chan_width); 
     /* Minimum Fc should be 1 : ensure we will drive 1 routing track */
     actual_Fc = std::max(1, actual_Fc);
     /* Compute the step between two connection from this IPIN to tracks: 
@@ -1144,8 +1144,6 @@ void build_gsb_one_opin_pin2track_map(const RRGraph& rr_graph,
     }
     */
   }
-  
-  return;
 }
 
 
@@ -1163,7 +1161,7 @@ t_track2pin_map build_gsb_track_to_ipin_map(const RRGraph& rr_graph,
                                             const RRGSB& rr_gsb, 
                                             const DeviceGrid& grids, 
                                             const std::vector<t_segment_inf>& segment_inf, 
-                                            int** Fc_in) {
+                                            const std::vector<vtr::Matrix<int>>& Fc_in) {
   t_track2pin_map track2ipin_map;
   /* Resize the matrix */ 
   track2ipin_map.resize(rr_gsb.get_num_sides());
@@ -1202,16 +1200,29 @@ t_track2pin_map build_gsb_track_to_ipin_map(const RRGraph& rr_graph,
       if (true == is_empty_type(grids[rr_graph.node_xlow(ipin_node)][rr_graph.node_ylow(ipin_node)].type)) {
         continue;
       }
+
       int grid_type_index = grids[rr_graph.node_xlow(ipin_node)][rr_graph.node_ylow(ipin_node)].type->index; 
       /* Get Fc of the ipin */
-      int ipin_Fc = Fc_in[grid_type_index][rr_graph.node_pin_num(ipin_node)];
-      /* skip Fc = 0 */
-      if ( (-1 == ipin_Fc)
-        || (0 == ipin_Fc) ) { 
+      /* skip Fc = 0 or unintialized, those pins are in the <directlist> */
+      bool skip_conn2track = true; 
+      std::vector<int> ipin_Fc_out;
+      for (size_t iseg = 0; iseg < segment_inf.size(); ++iseg) {
+        int ipin_Fc = Fc_in[grid_type_index][rr_graph.node_pin_num(ipin_node)][iseg];
+        ipin_Fc_out.push_back(ipin_Fc);
+        if (0 != ipin_Fc) { 
+          skip_conn2track = false;
+          break;
+        }
+      }
+
+      if (true == skip_conn2track) {
         continue;
       }
+
+      VTR_ASSERT(ipin_Fc_out.size() == segment_inf.size());
+
       /* Build track2ipin_map for this IPIN */
-      build_gsb_one_ipin_track2pin_map(rr_graph, rr_gsb, ipin_side, inode, ipin_Fc, 
+      build_gsb_one_ipin_track2pin_map(rr_graph, rr_gsb, ipin_side, inode, ipin_Fc_out, 
                                        /* Give an offset for the first track that this ipin will connect to */
                                        offset[chan_side_manager.to_size_t()], 
                                        segment_inf, track2ipin_map);
@@ -1240,7 +1251,7 @@ t_pin2track_map build_gsb_opin_to_track_map(const RRGraph& rr_graph,
                                             const RRGSB& rr_gsb, 
                                             const DeviceGrid& grids, 
                                             const std::vector<t_segment_inf>& segment_inf, 
-                                            int** Fc_out) {
+                                            const std::vector<vtr::Matrix<int>>& Fc_out) {
   t_pin2track_map opin2track_map;
   /* Resize the matrix */ 
   opin2track_map.resize(rr_gsb.get_num_sides());
@@ -1269,15 +1280,27 @@ t_pin2track_map build_gsb_opin_to_track_map(const RRGraph& rr_graph,
         continue;
       }
       int grid_type_index = grids[rr_graph.node_xlow(opin_node)][rr_graph.node_ylow(opin_node)].type->index; 
+
       /* Get Fc of the ipin */
-      int opin_Fc = Fc_out[grid_type_index][rr_graph.node_pin_num(opin_node)];
       /* skip Fc = 0 or unintialized, those pins are in the <directlist> */
-      if ( (-1 == opin_Fc)
-        || (0 == opin_Fc) ) { 
+      bool skip_conn2track = true; 
+      std::vector<int> opin_Fc_out;
+      for (size_t iseg = 0; iseg < segment_inf.size(); ++iseg) {
+        int opin_Fc = Fc_out[grid_type_index][rr_graph.node_pin_num(opin_node)][iseg];
+        opin_Fc_out.push_back(opin_Fc);
+        if (0 != opin_Fc) { 
+          skip_conn2track = false;
+          break;
+        }
+      }
+
+      if (true == skip_conn2track) {
         continue;
       }
+      VTR_ASSERT(opin_Fc_out.size() == segment_inf.size());
+
       /* Build track2ipin_map for this IPIN */
-      build_gsb_one_opin_pin2track_map(rr_graph, rr_gsb, opin_side, inode, opin_Fc, 
+      build_gsb_one_opin_pin2track_map(rr_graph, rr_gsb, opin_side, inode, opin_Fc_out, 
                                        /* Give an offset for the first track that this ipin will connect to */
                                        offset[side_manager.to_size_t()], 
                                        segment_inf, opin2track_map);
@@ -1292,5 +1315,95 @@ t_pin2track_map build_gsb_opin_to_track_map(const RRGraph& rr_graph,
 
   return opin2track_map;
 }
+
+/************************************************************************
+ * Add all direct clb-pin-to-clb-pin edges to given opin  
+ ***********************************************************************/
+void build_direct_connections_for_one_gsb(RRGraph& rr_graph,
+                                          const DeviceGrid& grids,
+                                          const vtr::Point<size_t>& from_grid_coordinate,
+                                          const RRSwitchId& delayless_switch, 
+                                          const std::vector<t_direct_inf>& directs, 
+                                          const std::vector<t_clb_to_clb_directs>& clb_to_clb_directs) {
+  VTR_ASSERT(directs.size() == clb_to_clb_directs.size());
+
+  const t_grid_tile& from_grid = grids[from_grid_coordinate.x()][from_grid_coordinate.y()];
+  t_physical_tile_type_ptr grid_type = from_grid.type;
+
+  /* Iterate through all direct connections */
+  for (size_t i = 0; i < directs.size(); ++i) {
+    /* Bypass unmatched direct clb-to-clb connections */
+    if (grid_type != clb_to_clb_directs[i].from_clb_type) {
+      continue;
+    }
+
+    /* This opin is specified to connect directly to an ipin, 
+     * now compute which ipin to connect to 
+     */
+    vtr::Point<size_t> to_grid_coordinate(from_grid_coordinate.x() + directs[i].x_offset, 
+                                          from_grid_coordinate.y() + directs[i].y_offset);
+
+    /* Bypass unmatched direct clb-to-clb connections */
+    t_physical_tile_type_ptr to_grid_type = grids[to_grid_coordinate.x()][to_grid_coordinate.y()].type;
+    /* Check if to_grid if the same grid */
+    if (to_grid_type != clb_to_clb_directs[i].to_clb_type) {
+      continue;
+    }
+
+    bool swap;
+    int max_index, min_index;
+    /* Compute index of opin with regards to given pins */ 
+    if ( clb_to_clb_directs[i].from_clb_pin_start_index 
+        > clb_to_clb_directs[i].from_clb_pin_end_index) {
+      swap = true;
+      max_index = clb_to_clb_directs[i].from_clb_pin_start_index;
+      min_index = clb_to_clb_directs[i].from_clb_pin_end_index;
+    } else {
+      swap = false;
+      min_index = clb_to_clb_directs[i].from_clb_pin_start_index;
+      max_index = clb_to_clb_directs[i].from_clb_pin_end_index;
+    }
+
+    /* get every opin in the range */
+    for (int opin = min_index; opin <= max_index; ++opin) {
+      int offset = opin - min_index;
+
+      if (  (to_grid_coordinate.x() < grids.width() - 1) 
+         && (to_grid_coordinate.y() < grids.height() - 1) ) { 
+        int ipin = OPEN;
+        if ( clb_to_clb_directs[i].to_clb_pin_start_index 
+          > clb_to_clb_directs[i].to_clb_pin_end_index) {
+          if (true == swap) {
+            ipin = clb_to_clb_directs[i].to_clb_pin_end_index + offset;
+          } else {
+            ipin = clb_to_clb_directs[i].to_clb_pin_start_index - offset;
+          }
+        } else {
+          if(true == swap) {
+            ipin = clb_to_clb_directs[i].to_clb_pin_end_index - offset;
+          } else {
+            ipin = clb_to_clb_directs[i].to_clb_pin_start_index + offset;
+          }
+        }
+
+        /* Get the pin index in the rr_graph */
+        int from_grid_width_ofs = from_grid.width_offset;
+        int from_grid_height_ofs = from_grid.height_offset;
+        int to_grid_width_ofs = grids[to_grid_coordinate.x()][to_grid_coordinate.y()].width_offset;
+        int to_grid_height_ofs = grids[to_grid_coordinate.x()][to_grid_coordinate.y()].height_offset;
+        const RRNodeId& opin_node_id = rr_graph.find_node(from_grid_coordinate.x() - from_grid_width_ofs, 
+                                                          from_grid_coordinate.y() - from_grid_height_ofs, 
+                                                          OPIN, opin);
+        const RRNodeId& ipin_node_id = rr_graph.find_node(to_grid_coordinate.x() - to_grid_width_ofs, 
+                                                          to_grid_coordinate.y() - to_grid_height_ofs, 
+                                                          IPIN, ipin);
+        /* add edges to the opin_node */
+        rr_graph.create_edge(opin_node_id, ipin_node_id,
+                             delayless_switch);
+      }
+    }
+  }
+}
+
 
 } /* end namespace openfpga */

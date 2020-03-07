@@ -76,7 +76,7 @@
   </tiles>
   <!-- ODIN II specific config ends -->
   <!-- Physical descriptions begin -->
-  <layout>
+  <layout tileable="true">
     <auto_layout aspect_ratio="1.0">
       <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
       <perimeter type="io" priority="100"/>
@@ -110,7 +110,7 @@
       <x distr="uniform" peak="1.000000"/>
       <y distr="uniform" peak="1.000000"/>
     </chan_width_distr>
-    <switch_block type="wilton" fs="3"/>
+    <switch_block type="wilton" fs="3" sub_type="subset" sub_fs="3"/>
     <connection_block input_switch_name="ipin_cblock"/>
   </device>
   <switchlist>

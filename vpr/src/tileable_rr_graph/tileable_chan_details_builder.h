@@ -15,6 +15,10 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
+std::vector<size_t> get_num_tracks_per_seg_type(const size_t& chan_width, 
+                                                const std::vector<t_segment_inf>& segment_inf, 
+                                                const bool& use_full_seg_groups);
+
 int adapt_to_tileable_route_chan_width(const int& chan_width, const std::vector<t_segment_inf>& segment_inf);
 
 ChanNodeDetails build_unidir_chan_node_details(const size_t& chan_width,

@@ -15,6 +15,8 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
+size_t find_unidir_routing_channel_width(const size_t& chan_width);
+
 int get_grid_pin_class_index(const t_grid_tile& cur_grid,
                              const int pin_index);
 

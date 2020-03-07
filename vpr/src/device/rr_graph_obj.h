@@ -583,6 +583,12 @@ class RRGraph {
     /* Validate is the edge id does exist in the RRGraph */
     bool valid_edge_id(const RREdgeId& edge) const;
 
+    /* Validate switch list */
+    bool valid_switch_id(const RRSwitchId& switch_id) const;
+
+    /* Validate segment list */
+    bool valid_segment_id(const RRSegmentId& segment_id) const;
+
   public: /* Mutators */
     /* Reserve the lists of nodes, edges, switches etc. to be memory efficient. 
      * This function is mainly used to reserve memory space inside RRGraph,
@@ -834,12 +840,6 @@ class RRGraph {
     bool validate_edge_switches() const;
     bool validate_edge_src_nodes() const;
     bool validate_edge_sink_nodes() const;
-
-    /* Validate switch list */
-    bool valid_switch_id(const RRSwitchId& switch_id) const;
-
-    /* Validate segment list */
-    bool valid_segment_id(const RRSegmentId& segment_id) const;
 
   private: /* Internal Data */
     /* Node related data */
