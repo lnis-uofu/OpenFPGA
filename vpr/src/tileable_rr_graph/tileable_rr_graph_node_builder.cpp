@@ -376,8 +376,8 @@ void load_one_grid_opin_nodes_basic_info(RRGraph& rr_graph,
  
           /* node bounding box */
           rr_graph.set_node_bounding_box(node, vtr::Rect<short>(grid_coordinate.x() + width,
-                                                                grid_coordinate.x() + width,
                                                                 grid_coordinate.y() + height,
+                                                                grid_coordinate.x() + width,
                                                                 grid_coordinate.y() + height));
           rr_graph.set_node_side(node, side_manager.get_side());  
           rr_graph.set_node_pin_num(node, pin_num);  
@@ -439,8 +439,8 @@ void load_one_grid_ipin_nodes_basic_info(RRGraph& rr_graph,
  
           /* node bounding box */
           rr_graph.set_node_bounding_box(node, vtr::Rect<short>(grid_coordinate.x() + width,
-                                                                grid_coordinate.x() + width,
                                                                 grid_coordinate.y() + height,
+                                                                grid_coordinate.x() + width,
                                                                 grid_coordinate.y() + height));
           rr_graph.set_node_side(node, side_manager.get_side());  
           rr_graph.set_node_pin_num(node, pin_num);  
@@ -491,8 +491,8 @@ void load_one_grid_source_nodes_basic_info(RRGraph& rr_graph,
 
     /* node bounding box */
     rr_graph.set_node_bounding_box(node, vtr::Rect<short>(grid_coordinate.x(),
-                                                          grid_coordinate.x(),
                                                           grid_coordinate.y(),
+                                                          grid_coordinate.x(),
                                                           grid_coordinate.y()));
     rr_graph.set_node_class_num(node, iclass);  
 
@@ -542,8 +542,8 @@ void load_one_grid_sink_nodes_basic_info(RRGraph& rr_graph,
 
     /* node bounding box */
     rr_graph.set_node_bounding_box(node, vtr::Rect<short>(grid_coordinate.x(),
-                                                          grid_coordinate.x(),
                                                           grid_coordinate.y(),
+                                                          grid_coordinate.x(),
                                                           grid_coordinate.y()));
     rr_graph.set_node_class_num(node, iclass);  
 
