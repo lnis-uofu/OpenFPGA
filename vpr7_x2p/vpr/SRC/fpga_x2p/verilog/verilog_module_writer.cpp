@@ -20,9 +20,21 @@
  *******************************************************************/
 static 
 std::string generate_verilog_undriven_local_wire_name(const ModuleManager& module_manager, 
-                                                      const ModuleId& module, 
-                                                      const ModulePortId& module_port_id) {
-  return module_manager.module_port(module, module_port_id).get_name();
+                                                      const ModuleId& parent, 
+                                                      const ModuleId& child, 
+                                                      const size_t& instance_id, 
+                                                      const ModulePortId& child_port_id) {
+  std::string wire_name;
+  if (!module_manager.instance_name(parent, child, instance_id).empty()) {
+    wire_name = module_manager.instance_name(parent, child, instance_id);
+  } else {
+    wire_name = module_manager.module_name(parent) + std::string("_") + std::to_string(instance_id); 
+    wire_name += std::string("_");
+  }
+  
+  wire_name += module_manager.module_port(child, child_port_id).get_name();
+  
+  return wire_name;
 }
 
 /********************************************************************
@@ -164,7 +176,7 @@ std::map<std::string, std::vector<BasicPort>> find_verilog_module_local_wires(co
         }
         /* Reach here, we need a local wire, we will create a port only for the undriven pins of the port! */
         BasicPort instance_port;
-        instance_port.set_name(generate_verilog_undriven_local_wire_name(module_manager, child, child_port_id));
+        instance_port.set_name(generate_verilog_undriven_local_wire_name(module_manager, module_id, child, instance, child_port_id));
         /* We give the same port name as child module, this case happens to global ports */
         instance_port.set_width(*std::min_element(undriven_pins.begin(), undriven_pins.end()),
                                 *std::max_element(undriven_pins.begin(), undriven_pins.end())); 
@@ -401,7 +413,7 @@ void write_verilog_instance_to_file(std::fstream& fp,
         BasicPort instance_port;
         if (ModuleNetId::INVALID() == net) {
           /* We give the same port name as child module, this case happens to global ports */
-          instance_port.set_name(generate_verilog_undriven_local_wire_name(module_manager, child_module, child_port_id));
+          instance_port.set_name(generate_verilog_undriven_local_wire_name(module_manager, parent_module, child_module, instance_id, child_port_id));
           instance_port.set_width(child_pin, child_pin); 
         } else {
           /* Find the name for this child port */
