@@ -257,10 +257,25 @@ RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
     /* Fill opin_rr_nodes */
     /* Copy from temp_opin_rr_node to opin_rr_node */
     for (const RRNodeId& inode : temp_opin_rr_nodes[0]) {
+      /* Skip those has no configurable outgoing, they should NOT appear in the GSB connection
+       * This is for those grid output pins used by direct connections
+       */
+      if (0 == std::distance(vpr_device_ctx.rr_graph.node_configurable_out_edges(inode).begin(),
+                             vpr_device_ctx.rr_graph.node_configurable_out_edges(inode).end())) {
+        continue;
+      }
       /* Grid[x+1][y+1] Bottom side outputs pins */
       rr_gsb.add_opin_node(inode, side_manager.get_side());
     }
     for (const RRNodeId& inode : temp_opin_rr_nodes[1]) {
+      /* Skip those has no configurable outgoing, they should NOT appear in the GSB connection
+       * This is for those grid output pins used by direct connections
+       */
+      if (0 == std::distance(vpr_device_ctx.rr_graph.node_configurable_out_edges(inode).begin(),
+                             vpr_device_ctx.rr_graph.node_configurable_out_edges(inode).end())) {
+        continue;
+      }
+
       /* Grid[x+1][y] TOP side outputs pins */
       rr_gsb.add_opin_node(inode, side_manager.get_side());
     }

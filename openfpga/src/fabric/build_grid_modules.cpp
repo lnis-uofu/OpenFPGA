@@ -263,7 +263,7 @@ void build_primitive_block_module(ModuleManager& module_manager,
   /* Add all the nets to connect configuration ports from memory module to primitive modules
    * This is a one-shot addition that covers all the memory modules in this primitive module!
    */
-  if (false == memory_modules.empty()) {
+  if (0 < module_manager.configurable_children(primitive_module).size()) {
     add_module_nets_memory_config_bus(module_manager, primitive_module, 
                                       sram_orgz_type, circuit_lib.design_tech_type(sram_model));
   }
@@ -878,7 +878,7 @@ void rec_build_logical_tile_modules(ModuleManager& module_manager,
   /* Add module nets to connect memory cells inside
    * This is a one-shot addition that covers all the memory modules in this pb module!
    */
-  if (false == memory_modules.empty()) {
+  if (0 < module_manager.configurable_children(pb_module).size()) {
     add_module_nets_memory_config_bus(module_manager, pb_module, 
                                       sram_orgz_type, circuit_lib.design_tech_type(sram_model));
   }
