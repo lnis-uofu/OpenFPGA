@@ -484,7 +484,7 @@ std::string generate_grid_duplicated_port_name(const size_t& height,
   std::string port_name = std::string(side_manager.to_string());
   port_name += std::string("_height_");
   port_name += std::to_string(height);
-  port_name += std::string("_pin_");
+  port_name += std::string("__pin_");
   port_name += std::to_string(pin_id);
   port_name += std::string("_");
 

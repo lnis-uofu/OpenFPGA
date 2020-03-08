@@ -203,9 +203,9 @@ vtr::Point<size_t> find_inter_direct_destination_coordinate(const DeviceGrid& gr
      *  +------+  
      *  | Grid | ny
      *  +------+
+     *     ^     .
      *     |     .
      *     |     .
-     *     v     .
      *  +------+
      *  | Grid | 1
      *  +------+
@@ -219,14 +219,14 @@ vtr::Point<size_t> find_inter_direct_destination_coordinate(const DeviceGrid& gr
      *  +------+  
      *  | Grid | ny
      *  +------+
-     *     ^     .
      *     |     .
      *     |     .
+     *     v     .
      *  +------+
      *  | Grid | 1
      *  +------+
      */
-    if (NEGATIVE_DIR == arch_direct.y_dir(arch_direct_id)) {
+    if (POSITIVE_DIR == arch_direct.y_dir(arch_direct_id)) {
       std::reverse(second_search_space.begin(), second_search_space.end());
     }
   }
@@ -279,7 +279,7 @@ vtr::Point<size_t> find_inter_direct_destination_coordinate(const DeviceGrid& gr
      *
      *     1      ...     nx
      *  +------+       +------+
-     *  | Grid |------>| Grid |
+     *  | Grid |<------| Grid |
      *  +------+       +------+
      */
     for (size_t ix = 1 ; ix < grids.width() - 1; ++ix) {
@@ -291,10 +291,10 @@ vtr::Point<size_t> find_inter_direct_destination_coordinate(const DeviceGrid& gr
      *
      *     1      ...     nx
      *  +------+       +------+
-     *  | Grid |<------| Grid |
+     *  | Grid |------>| Grid |
      *  +------+       +------+
      */
-    if (NEGATIVE_DIR == arch_direct.x_dir(arch_direct_id)) {
+    if (POSITIVE_DIR == arch_direct.x_dir(arch_direct_id)) {
       std::reverse(second_search_space.begin(), second_search_space.end());
     }
   }
@@ -515,7 +515,7 @@ void build_inter_column_row_tile_direct(TileDirect& tile_direct,
         next_col_src_grid_coords.push_back(vtr::Point<size_t>(ix, iy));
       }
       /* For positive y- direction, we should start from y = 1 */
-      if (POSITIVE_DIR == arch_direct.y_dir(arch_direct_id)) {
+      if (NEGATIVE_DIR == arch_direct.y_dir(arch_direct_id)) {
         std::reverse(next_col_src_grid_coords.begin(), next_col_src_grid_coords.end());
       }
 
