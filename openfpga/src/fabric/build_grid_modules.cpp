@@ -238,12 +238,6 @@ void build_primitive_block_module(ModuleManager& module_manager,
   std::string memory_module_name = generate_memory_module_name(circuit_lib, primitive_model, sram_model, std::string(MEMORY_MODULE_POSTFIX));
   ModuleId memory_module = module_manager.find_module(memory_module_name);
 
-  /* Vectors to record all the memory modules have been added
-   * They are used to add module nets of configuration bus
-   */
-  std::vector<ModuleId> memory_modules;
-  std::vector<size_t> memory_instances;
-
   /* If there is no memory module required, we can skip the assocated net addition */
   if (ModuleId::INVALID() != memory_module) {
     size_t memory_instance_id = module_manager.num_instance(primitive_module, memory_module); 
