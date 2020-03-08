@@ -173,12 +173,35 @@ class RRGSB {
     vtr::Point<size_t> get_side_block_coordinate(const e_side& side) const;
     vtr::Point<size_t> get_grid_coordinate() const;
   public: /* Mutators */
-    void set(const RRGSB& src); /* get a copy from a source */
+    /* get a copy from a source */
+    void set(const RRGSB& src);
     void set_coordinate(const size_t& x, const size_t& y);
-    void init_num_sides(const size_t& num_sides); /* Allocate the vectors with the given number of sides */
-    void add_chan_node(const e_side& node_side, RRChan& rr_chan, const std::vector<enum PORTS>& rr_chan_dir); /* Add a node to the chan_rr_node_ list and also assign its direction in chan_rr_node_direction_ */
-    void add_ipin_node(const RRNodeId& node, const e_side& node_side); /* Add a node to the chan_rr_node_ list and also assign its direction in chan_rr_node_direction_ */
-    void add_opin_node(const RRNodeId& node, const e_side& node_side); /* Add a node to the chan_rr_node_ list and also assign its direction in chan_rr_node_direction_ */
+
+    /* Allocate the vectors with the given number of sides */
+    void init_num_sides(const size_t& num_sides);
+
+    /* Add a node to the chan_rr_node_ list and also
+     * assign its direction in chan_rr_node_direction_
+     */
+    void add_chan_node(const e_side& node_side,
+                       const RRChan& rr_chan,
+                       const std::vector<enum PORTS>& rr_chan_dir);
+
+    /* Add a node to the chan_rr_node_ list and also 
+     * assign its direction in chan_rr_node_direction_
+     */
+    void add_ipin_node(const RRNodeId& node,
+                       const e_side& node_side);
+
+    /* Add a node to the chan_rr_node_ list and also 
+     * assign its direction in chan_rr_node_direction_
+     */
+    void add_opin_node(const RRNodeId& node,
+                       const e_side& node_side);
+
+    /* Sort all the incoming edges for routing channel rr_node */
+    void sort_chan_node_in_edges(const RRGraph& rr_graph);
+
   public: /* Mutators: cleaners */
     void clear();
 
@@ -193,6 +216,13 @@ class RRGSB {
 
     /* Clean chan/opin/ipin nodes at one side */
     void clear_one_side(const e_side& node_side); 
+
+  private: /* Private Mutators: edge sorting */
+    /* Sort all the incoming edges for one channel rr_node */
+    void sort_chan_node_in_edges(const RRGraph& rr_graph,
+                                 const e_side& chan_side,
+                                 const size_t& track_id);
+
   private: /* internal functions */
     bool is_sb_node_mirror(const RRGraph& rr_graph,
                            const RRGSB& cand,
@@ -217,9 +247,28 @@ class RRGSB {
   private: /* Internal Data */
     /* Coordinator */
     vtr::Point<size_t> coordinate_;
-    /* Routing channel data */
+
+    /* Routing channel data
+     * Each GSB may have four sides of routing track nodes
+     */
+    /* Node id in rr_graph denoting each routing track */
     std::vector<RRChan>  chan_node_;
+
+    /* Direction of a port when the channel node appear in the GSB module */
     std::vector<std::vector<PORTS>>  chan_node_direction_; 
+
+    /* Sequence of edge ids for each routing channel node,
+     * this is sorted by the location of edge source nodes in the context of GSB 
+     * The edge sorting is critical to uniquify the routing modules in OpenFPGA
+     * This is due to that VPR allocate and sort edges randomly when building the rr_graph
+     * As a result, previous nodes of a chan node may be the same in different GSBs 
+     * but their sequence is not. This will cause graph comparison to fail when uniquifying 
+     * the routing modules. Therefore, edge sorting can be done inside the GSB 
+     *
+     * Storage organization:
+     *   [chan_side][chan_node][edge_id_in_gsb_context]
+     */ 
+    std::vector<std::vector<std::vector<RREdgeId>>> chan_node_in_edges_;
 
     /* Logic Block Inputs data */
     std::vector<std::vector<RRNodeId>>  ipin_node_;
