@@ -17,6 +17,11 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
+std::vector<RRNodeId> get_rr_gsb_chan_node_configurable_driver_nodes(const RRGraph& rr_graph,
+                                                                     const RRGSB& rr_gsb,
+                                                                     const e_side& chan_side,
+                                                                     const size_t& track_id);
+
 ModulePortId find_switch_block_module_chan_port(const ModuleManager& module_manager, 
                                                 const ModuleId& sb_module,
                                                 const RRGraph& rr_graph,
