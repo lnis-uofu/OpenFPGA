@@ -1032,10 +1032,18 @@ RRGSB build_rr_gsb(DeviceCoordinator& device_range,
     /* Fill opin_rr_nodes */
     /* Copy from temp_opin_rr_node to opin_rr_node */
     for (int inode = 0; inode < temp_num_opin_rr_nodes[0]; ++inode) {
+      /* Skip Fc = 0  pins, they should NOT appear in the GSB connection */
+      if (0. == grid[temp_opin_rr_node[0][inode]->xlow][temp_opin_rr_node[0][inode]->ylow].type->Fc[temp_opin_rr_node[0][inode]->ptc_num]) {
+        continue;
+      }
       /* Grid[x+1][y+1] Bottom side outputs pins */
       rr_gsb.add_opin_node(temp_opin_rr_node[0][inode], side_manager.get_side(), opin_grid_side[0]);
     }
     for (int inode = 0; inode < temp_num_opin_rr_nodes[1]; ++inode) {
+      /* Skip Fc = 0  pins, they should NOT appear in the GSB connection */
+      if (0. == grid[temp_opin_rr_node[1][inode]->xlow][temp_opin_rr_node[1][inode]->ylow].type->Fc[temp_opin_rr_node[1][inode]->ptc_num]) {
+        continue;
+      }
       /* Grid[x+1][y] TOP side outputs pins */
       rr_gsb.add_opin_node(temp_opin_rr_node[1][inode], side_manager.get_side(), opin_grid_side[1]);
     }

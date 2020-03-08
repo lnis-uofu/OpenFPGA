@@ -141,6 +141,36 @@ RRNodeId RRGSB::get_chan_node(const e_side& side, const size_t& track_id) const 
   return chan_node_[side_manager.to_size_t()].get_node(track_id); 
 } 
 
+std::vector<RREdgeId> RRGSB::get_chan_node_in_edges(const RRGraph& rr_graph, 
+                                                    const e_side& side,
+                                                    const size_t& track_id) const {
+  SideManager side_manager(side);
+  VTR_ASSERT(side_manager.validate());
+ 
+  /* Ensure the side is valid in the context of this switch block */ 
+  VTR_ASSERT( validate_side(side) );
+
+  /* Ensure the track is valid in the context of this switch block at a specific side */ 
+  VTR_ASSERT( validate_track_id(side, track_id) );
+
+  /* The chan node must be an output port for the GSB, we allow users to access input edges*/
+  VTR_ASSERT(OUT_PORT == get_chan_node_direction(side, track_id));
+
+  /* if sorted, we give sorted edges
+   * if not sorted, we give the empty vector
+   */
+  if (0 == chan_node_in_edges_.size()) {
+    std::vector<RREdgeId> unsorted_edges;
+    for (const RREdgeId& edge : rr_graph.node_in_edges(get_chan_node(side, track_id))) {
+      unsorted_edges.push_back(edge);
+    }
+
+    return unsorted_edges;
+  } 
+
+  return chan_node_in_edges_[side_manager.to_size_t()][track_id];
+}
+
 /* get the segment id of a channel rr_node */
 RRSegmentId RRGSB::get_chan_node_segment(const e_side& side, const size_t& track_id) const {
   SideManager side_manager(side);
@@ -929,15 +959,9 @@ bool RRGSB::is_sb_node_mirror(const RRGraph& rr_graph,
     return false;
   }
 
-  std::vector<RREdgeId> node_in_edges;
-  for (const RREdgeId& edge : rr_graph.node_in_edges(node)) {
-    node_in_edges.push_back(edge);
-  }
-
-  std::vector<RREdgeId> cand_node_in_edges;
-  for (const RREdgeId& edge : rr_graph.node_in_edges(cand_node)) {
-    cand_node_in_edges.push_back(edge);
-  }
+  /* Use unsorted/sorted edges */
+  std::vector<RREdgeId> node_in_edges = get_chan_node_in_edges(rr_graph, node_side, track_id);
+  std::vector<RREdgeId> cand_node_in_edges = cand. get_chan_node_in_edges(rr_graph, node_side, track_id);
   VTR_ASSERT(node_in_edges.size() == cand_node_in_edges.size());
 
   for (size_t iedge = 0; iedge < node_in_edges.size(); ++iedge) {

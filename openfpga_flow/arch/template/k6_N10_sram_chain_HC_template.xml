@@ -499,6 +499,11 @@
       <cb type="pattern">1 1 1 1</cb>
     </segment>
   </segmentlist>
+
+  <directlist>
+    <direct name="adder_carry" from_pin="clb.cout" to_pin="clb.cin" x_offset="0" y_offset="-1" z_offset="0"/>
+  </directlist>
+
   <!--switch_segment_patterns>
     <pattern type="unbuf_sb" seg_length="1" seg_type="unidir" pattern_length="2">
       <unbuf_mux name="1"/>

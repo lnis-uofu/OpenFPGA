@@ -19,6 +19,7 @@
 #include "openfpga_reserved_words.h"
 #include "openfpga_naming.h"
 
+#include "rr_gsb_utils.h"
 #include "openfpga_rr_graph_utils.h"
 #include "module_manager_utils.h"
 #include "build_module_graph_utils.h"
@@ -227,7 +228,7 @@ void build_switch_block_interc_modules(ModuleManager& module_manager,
 
   /* Determine if the interc lies inside a channel wire, that is interc between segments */
   if (false == rr_gsb.is_sb_node_passing_wire(rr_graph, chan_side, chan_node_id)) {
-    driver_rr_nodes = get_rr_graph_configurable_driver_nodes(rr_graph, cur_rr_node);
+    driver_rr_nodes = get_rr_gsb_chan_node_configurable_driver_nodes(rr_graph, rr_gsb, chan_side, chan_node_id);
     /* Special: if there are zero-driver nodes. We skip here */
     if (0 == driver_rr_nodes.size()) {
       return; 

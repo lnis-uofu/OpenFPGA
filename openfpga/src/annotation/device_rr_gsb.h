@@ -28,12 +28,12 @@ class DeviceRRGSB {
   public: /* Contructors */
   public: /* Accessors */
     vtr::Point<size_t> get_gsb_range() const; /* get the max coordinate of the switch block array */
-    const RRGSB get_gsb(const vtr::Point<size_t>& coordinate) const; /* Get a rr switch block in the array with a coordinate */
-    const RRGSB get_gsb(const size_t& x, const size_t& y) const; /* Get a rr switch block in the array with a coordinate */
+    const RRGSB& get_gsb(const vtr::Point<size_t>& coordinate) const; /* Get a rr switch block in the array with a coordinate */
+    const RRGSB& get_gsb(const size_t& x, const size_t& y) const; /* Get a rr switch block in the array with a coordinate */
     size_t get_num_gsb_unique_module() const; /* get the number of unique mirrors of GSB */
     size_t get_num_sb_unique_module() const; /* get the number of unique mirrors of switch blocks */
-    const RRGSB get_sb_unique_module(const size_t& index) const; /* Get a rr switch block which a unique mirror */ 
-    const RRGSB get_sb_unique_module(const vtr::Point<size_t>& coordinate) const; /* Get a rr switch block which a unique mirror */ 
+    const RRGSB& get_sb_unique_module(const size_t& index) const; /* Get a rr switch block which a unique mirror */ 
+    const RRGSB& get_sb_unique_module(const vtr::Point<size_t>& coordinate) const; /* Get a rr switch block which a unique mirror */ 
     const RRGSB& get_cb_unique_module(const t_rr_type& cb_type, const size_t& index) const; /* Get a rr switch block which a unique mirror */ 
     const RRGSB& get_cb_unique_module(const t_rr_type& cb_type, const vtr::Point<size_t>& coordinate) const;
     size_t get_num_cb_unique_module(const t_rr_type& cb_type) const; /* get the number of unique mirrors of CBs */
@@ -43,6 +43,8 @@ class DeviceRRGSB {
     void reserve_sb_unique_submodule_id(const vtr::Point<size_t>& coordinate); /* Pre-allocate the rr_sb_unique_module_id matrix that the device requires */ 
     void resize_upon_need(const vtr::Point<size_t>& coordinate); /* Resize the rr_switch_block array if needed */ 
     void add_rr_gsb(const vtr::Point<size_t>& coordinate, const RRGSB& rr_gsb); /* Add a switch block to the array, which will automatically identify and update the lists of unique mirrors and rotatable mirrors */
+    RRGSB& get_mutable_gsb(const vtr::Point<size_t>& coordinate); /* Get a rr switch block in the array with a coordinate */
+    RRGSB& get_mutable_gsb(const size_t& x, const size_t& y); /* Get a rr switch block in the array with a coordinate */
     void build_unique_module(const RRGraph& rr_graph); /* Add a switch block to the array, which will automatically identify and update the lists of unique mirrors and rotatable mirrors */
     void clear(); /* clean the content */
   private: /* Internal cleaners */
