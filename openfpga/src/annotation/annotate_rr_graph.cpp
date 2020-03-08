@@ -387,12 +387,12 @@ void annotate_device_rr_gsb(const DeviceContext& vpr_device_ctx,
   /* For each switch block, determine the size of array */
   for (size_t ix = 0; ix < gsb_range.x(); ++ix) {
     for (size_t iy = 0; iy < gsb_range.y(); ++iy) {
-      /* Here we give the builder the fringe coordinates so that it can handle the GSBs at the borderside correctly */
+      /* Here we give the builder the fringe coordinates so that it can handle the GSBs at the borderside correctly
+       * sort drive_rr_nodes should be called if required by users
+       */
       const RRGSB& rr_gsb = build_rr_gsb(vpr_device_ctx, 
                                          vtr::Point<size_t>(vpr_device_ctx.grid.width() - 2, vpr_device_ctx.grid.height() - 2), 
                                          vtr::Point<size_t>(ix, iy));
-      /* TODO: sort drive_rr_nodes should be done when building the tileable rr_graph */
-      //sort_rr_gsb_drive_rr_nodes(rr_gsb);
  
       /* Add to device_rr_gsb */
       vtr::Point<size_t> gsb_coordinate = rr_gsb.get_sb_coordinate();
@@ -407,6 +407,27 @@ void annotate_device_rr_gsb(const DeviceContext& vpr_device_ctx,
   /* Report number of unique mirrors */
   VTR_LOG("Backannotated %d General Switch Blocks (GSBs).\n",
           gsb_range.x() * gsb_range.y());
+}
+
+/********************************************************************
+ * Sort all the incoming edges for each channel node which are
+ * output ports of the GSB
+ *******************************************************************/
+void sort_device_rr_gsb_chan_node_in_edges(const RRGraph& rr_graph,
+                                           DeviceRRGSB& device_rr_gsb) {
+  vtr::ScopedStartFinishTimer timer("Sort incoming edges for each routing track output node of General Switch Block(GSB)");
+
+  /* Note that the GSB array is smaller than the grids by 1 column and 1 row!!! */
+  vtr::Point<size_t> gsb_range = device_rr_gsb.get_gsb_range();
+
+  /* For each switch block, determine the size of array */
+  for (size_t ix = 0; ix < gsb_range.x(); ++ix) {
+    for (size_t iy = 0; iy < gsb_range.y(); ++iy) {
+      vtr::Point<size_t> gsb_coordinate(ix, iy);
+      RRGSB& rr_gsb = device_rr_gsb.get_mutable_gsb(gsb_coordinate);
+      rr_gsb.sort_chan_node_in_edges(rr_graph);
+    } 
+  }
 }
 
 /********************************************************************

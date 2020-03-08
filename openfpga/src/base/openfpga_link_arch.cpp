@@ -65,6 +65,7 @@ void link_arch(OpenfpgaContext& openfpga_ctx,
   vtr::ScopedStartFinishTimer timer("Link OpenFPGA architecture to VPR architecture");
 
   CommandOptionId opt_activity_file = cmd.option("activity_file");
+  CommandOptionId opt_sort_edge = cmd.option("sort_gsb_chan_node_in_edges");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
   /* Annotate pb_type graphs
@@ -110,6 +111,11 @@ void link_arch(OpenfpgaContext& openfpga_ctx,
   annotate_device_rr_gsb(g_vpr_ctx.device(),
                          openfpga_ctx.mutable_device_rr_gsb(),
                          cmd_context.option_enable(cmd, opt_verbose));
+
+  if (true == cmd_context.option_enable(cmd, opt_sort_edge)) {
+    sort_device_rr_gsb_chan_node_in_edges(g_vpr_ctx.device().rr_graph,
+                                          openfpga_ctx.mutable_device_rr_gsb());
+  } 
 
   /* Build multiplexer library */
   openfpga_ctx.mutable_mux_lib() = build_device_mux_library(g_vpr_ctx.device(),

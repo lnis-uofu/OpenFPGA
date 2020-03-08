@@ -78,6 +78,9 @@ ShellCommandId add_openfpga_link_arch_command(openfpga::Shell<OpenfpgaContext>& 
   CommandOptionId opt_act_file = shell_cmd.add_option("activity_file", true, "file path to the signal activity");
   shell_cmd.set_option_require_value(opt_act_file, openfpga::OPT_STRING);
 
+  /* Add an option '--sort_gsb_chan_node_in_edges'*/
+  shell_cmd.add_option("sort_gsb_chan_node_in_edges", false, "Sort all the incoming edges for each routing track output node in General Switch Blocks (GSBs)");
+
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Show verbose outputs");
   
