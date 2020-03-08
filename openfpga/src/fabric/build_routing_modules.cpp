@@ -19,6 +19,7 @@
 #include "openfpga_reserved_words.h"
 #include "openfpga_naming.h"
 
+#include "rr_gsb_utils.h"
 #include "openfpga_rr_graph_utils.h"
 #include "module_manager_utils.h"
 #include "build_module_graph_utils.h"

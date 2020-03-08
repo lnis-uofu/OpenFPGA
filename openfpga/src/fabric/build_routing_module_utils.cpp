@@ -17,25 +17,6 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-/************************************************************************
- * Find the configurable driver nodes for a node in the rr_graph
- ***********************************************************************/
-std::vector<RRNodeId> get_rr_gsb_chan_node_configurable_driver_nodes(const RRGraph& rr_graph,
-                                                                     const RRGSB& rr_gsb,
-                                                                     const e_side& chan_side,
-                                                                     const size_t& track_id) {
-  std::vector<RRNodeId> driver_nodes;
-  for (const RREdgeId& edge : rr_gsb.get_chan_node_in_edges(rr_graph, chan_side, track_id)) {
-    /* Bypass non-configurable edges */
-    if (false == rr_graph.edge_is_configurable(edge)) {
-      continue;
-    } 
-    driver_nodes.push_back(rr_graph.edge_src_node(edge));
-  }
-
-  return driver_nodes;
-}
-
 /*********************************************************************
  * Generate a port for a routing track of a swtich block
  ********************************************************************/
