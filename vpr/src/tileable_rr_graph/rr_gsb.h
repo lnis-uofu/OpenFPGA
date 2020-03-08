@@ -83,6 +83,11 @@ class RRGSB {
     /* get a rr_node at a given side and track_id */
     RRNodeId get_chan_node(const e_side& side, const size_t& track_id) const; 
 
+    /* get all the sorted incoming edges for a rr_node at a given side and track_id */
+    std::vector<RREdgeId> get_chan_node_in_edges(const RRGraph& rr_graph, 
+                                                 const e_side& side,
+                                                 const size_t& track_id) const; 
+
     /* get the segment id of a channel rr_node */
     RRSegmentId get_chan_node_segment(const e_side& side, const size_t& track_id) const; 
 
