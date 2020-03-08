@@ -22,8 +22,13 @@ namespace openfpga {
 RRGSB::RRGSB() {
   /* Set a clean start! */
   coordinate_.set(0, 0);
+
+  chan_node_.clear();
   chan_node_direction_.clear();
+  chan_node_in_edges_.clear();
+
   ipin_node_.clear();
+
   opin_node_.clear();
 }
 
@@ -184,10 +189,10 @@ RRNodeId RRGSB::get_opin_node(const e_side& side, const size_t& node_id) const {
   VTR_ASSERT(side_manager.validate());
  
   /* Ensure the side is valid in the context of this switch block */ 
-  VTR_ASSERT( validate_side(side) );
+  VTR_ASSERT(validate_side(side) );
 
   /* Ensure the track is valid in the context of this switch block at a specific side */ 
-  VTR_ASSERT( validate_opin_node_id(side, node_id) );
+  VTR_ASSERT(validate_opin_node_id(side, node_id) );
   
   return opin_node_[side_manager.to_size_t()][node_id]; 
 } 
@@ -731,7 +736,9 @@ void RRGSB::init_num_sides(const size_t& num_sides) {
 }
 
 /* Add a node to the chan_node_ list and also assign its direction in chan_node_direction_ */
-void RRGSB::add_chan_node(const e_side& node_side, RRChan& rr_chan, const std::vector<enum PORTS>& rr_chan_dir) {
+void RRGSB::add_chan_node(const e_side& node_side,
+                          const RRChan& rr_chan,
+                          const std::vector<enum PORTS>& rr_chan_dir) {
   /* Validate: 1. side is valid, the type of node is valid */
   VTR_ASSERT(validate_side(node_side));
 
@@ -756,6 +763,86 @@ void RRGSB::add_opin_node(const RRNodeId& node, const e_side& node_side) {
   /* push pack the dedicated element in the vector */
   opin_node_[size_t(node_side)].push_back(node);
 } 
+
+void RRGSB::sort_chan_node_in_edges(const RRGraph& rr_graph,
+                                    const e_side& chan_side,
+                                    const size_t& track_id) {
+  std::map<size_t, std::map<size_t, RREdgeId>> from_grid_edge_map;
+  std::map<size_t, std::map<size_t, RREdgeId>> from_track_edge_map;
+
+  const RRNodeId& chan_node = chan_node_[size_t(chan_side)].get_node(track_id); 
+  
+  /* Count the edges and ensure every of them has been sorted */
+  size_t edge_counter = 0;
+
+  /* For each incoming edge, find the node side and index in this GSB.
+   * and cache these. Then we will use the data to sort the edge in the 
+   * following sequence:
+   *  0----------------------------------------------------------------> num_in_edges()
+   *  |<--TOP side-->|<--RIGHT side-->|<--BOTTOM side-->|<--LEFT side-->|
+   *  For each side, the edge will be sorted by the node index starting from 0 
+   *  For each side, the edge from grid pins will be the 1st part
+   *  while the edge from routing tracks will be the 2nd part
+   */
+  for (const RREdgeId& edge : rr_graph.node_in_edges(chan_node)) {
+    /* We care the source node of this edge, and it should be an input of the GSB!!! */
+    const RRNodeId& src_node = rr_graph.edge_src_node(edge);
+    e_side side = NUM_SIDES;
+    int index = 0;
+    get_node_side_and_index(rr_graph, src_node, IN_PORT, side, index);
+
+    /* Must have valid side and index */
+    VTR_ASSERT(NUM_SIDES != side);
+    VTR_ASSERT(OPEN != index);
+
+    if (OPIN == rr_graph.node_type(src_node)) {
+      from_grid_edge_map[side][index] = edge;
+    } else {
+      VTR_ASSERT( (CHANX == rr_graph.node_type(src_node))
+               || (CHANY == rr_graph.node_type(src_node)) );
+      from_track_edge_map[side][index] = edge;
+    }
+    
+    edge_counter++;
+  }
+
+  /* Store the sorted edge */
+  for (size_t side = 0; side < get_num_sides(); ++side) {
+    /* Edges from grid outputs are the 1st part */
+    for (size_t opin_id = 0; opin_id < opin_node_[side].size(); ++opin_id) {
+      if ( (0 < from_grid_edge_map.count(side))
+        && (0 < from_grid_edge_map.at(side).count(opin_id)) ) {
+        chan_node_in_edges_[size_t(chan_side)][track_id].push_back(from_grid_edge_map[side][opin_id]);
+      }
+    }
+ 
+    /* Edges from routing tracks are the 2nd part */
+    for (size_t itrack = 0; itrack < chan_node_[side].get_chan_width(); ++itrack) {
+      if ( (0 < from_track_edge_map.count(side))
+        && (0 < from_track_edge_map.at(side).count(itrack)) ) {
+        chan_node_in_edges_[size_t(chan_side)][track_id].push_back(from_track_edge_map[side][itrack]);
+      }
+    }
+  }
+
+  VTR_ASSERT(edge_counter == chan_node_in_edges_[size_t(chan_side)][track_id].size());
+} 
+
+void RRGSB::sort_chan_node_in_edges(const RRGraph& rr_graph) {
+  /* Allocate here, as sort edge is optional, we do not allocate when adding nodes */
+  chan_node_in_edges_.resize(get_num_sides());
+
+  for (size_t side = 0; side < get_num_sides(); ++side) {
+    SideManager side_manager(side);
+    chan_node_in_edges_[side].resize(chan_node_[side].get_chan_width());
+    for (size_t track_id = 0; track_id < chan_node_[side].get_chan_width(); ++track_id) {
+      /* Only sort the output nodes */
+      if (OUT_PORT == chan_node_direction_[side][track_id]) { 
+        sort_chan_node_in_edges(rr_graph, side_manager.get_side(), track_id); 
+      }
+    }
+  }
+}
 
 /************************************************************************
  * Public Mutators: clean-up functions
