@@ -65,10 +65,4 @@ FPGA-SPICE aims at generating SPICE netlists and testbenches for the FPGA archit
 
 SPICE modeling for FPGA architectures requires detailed transistor-level modeling for all the circuit elements within the considered FPGA architecture. However, current VPR architectural description language :cite:`JLuu_FPGA_2011` does not offer enough transistor-level parameters to model the most common circuit modules, such as multiplexers and LUTs. Therefore, we develop an extension on the VPR architectural description language to model the transistor-level circuit designs.
 
-In this manual, we will introduce how to use FPGA-SPICE to conduct an accurate power analysis. First, we give an overview of the design flow of FPGA-SPICE-based tool suites. Then, we show the command-line options of FPGA-SPICE. Afterward, we introduce the extension of architectural language and the transistor-level design supports. Finally, we present how to simulate the generated SPICE netlists and testbenches. 
-
-In the appendix, we introduce the hierarchy of the generated SPICE netlists and testbenches, to help you customize the SPICE netlists. We also attach an example of an architecture XML file for your interest.
-
 The technical details can be found in our ICCD’15 paper :cite:`XTang_ICCD_2015` and TVLSI'19 paper :cite:`XTang_TVLSI_2019`.
-
-
