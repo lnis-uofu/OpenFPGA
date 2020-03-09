@@ -1,9 +1,11 @@
+.. _circuit_model_examples:
+
 Circuit model examples
-======================
+----------------------
 The next subsections are dedicated to detailed examples of each circuit model type. Through these examples, we give a global overview of the different implementations which are available for the user.
 
 Inverters and Buffers
----------------------
+~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: xml
 
@@ -131,7 +133,7 @@ This example shows:
 
 
 Pass-gate Logic
----------------
+~~~~~~~~~~~~~~~
 
 .. code-block:: xml
 
@@ -212,7 +214,7 @@ This example shows:
 
 
 SRAMs
------
+~~~~~
 
 .. code-block:: xml
 
@@ -231,7 +233,7 @@ SRAMs
 .. note:: The support SRAM modules should have a BL and a WL when the memory-bank-style configuration circuit is declared. Note that the WL should be the write/read enable signal, while BL is the data input.
 
 Logic gates
------------
+~~~~~~~~~~~
 
 .. code-block:: xml
 
@@ -250,7 +252,7 @@ Logic gates
 .. note:: It may happen that the port sequence in generated Verilog netlists has conflicts with the port sequence in standard and customized cells. To avoid this, users can set the XML keyword ``dump_explicit_port_map`` to be true, which enables explicit port mapping are dumped. Users can specify the pin/port name in the standard cell library using the XML keyword ``lib_name``.
 
 Multiplexers
-------------
+~~~~~~~~~~~~
 
 .. code-block:: xml
 
@@ -353,7 +355,7 @@ If we arbitrarily fix the number of Mux entries at 4, the following code could i
 	* The number of entries parametrized by ``size`` in input port-type.
 
 Look-Up Tables
---------------
+~~~~~~~~~~~~~~
 
 .. code-block:: xml
 
@@ -425,7 +427,7 @@ The code describing this LUT is:
 	* How each blocks is defined
 
 Flip-Flops
-----------
+~~~~~~~~~~
 
 .. code-block:: xml
 
@@ -509,7 +511,7 @@ The code describing this FF is:
 	* 1 port, ``clk``, defined as global
 
 Hard Logics
------------
+~~~~~~~~~~~
 
 .. code-block:: xml
 
@@ -533,7 +535,7 @@ Instructions of defining design parameters:
 * **port:** two types of ports (``input`` and ``output``) should be defined. If the user provides a user-defined Verilog/SPICE netlist, the bandwidth of ports should be defined to the same as the Verilog/SPICE netlist.
 
 Routing Wire Segments
----------------------
+~~~~~~~~~~~~~~~~~~~~~
 
 FPGA-Verilog/SPICE provides two types of Verilog/SPICE models for the wire segments in FPGA architecture:
 
@@ -596,7 +598,7 @@ The code describing this wire is:
 	* How to use this circuit_model to auto-generate the Verilog/SPICE netlist
 
 I/O pads
---------
+~~~~~~~~
 
 .. code-block:: xml
 

@@ -1,8 +1,10 @@
-How to Compile
-==============
+.. _compile:
 
-General Compilation Guidelines
-------------------------------
+How to Compile
+--------------
+
+General Guidelines
+~~~~~~~~~~~~~~~~~~
 OpenFPGA uses CMake to generate the Makefile scripts
 In general, please follow the steps to compile
 
@@ -29,7 +31,7 @@ To quickly verify the tool is well compiled, user can run the following command 
   python3 openfpga_flow/scripts/run_fpga_task.py compilation_verification --debug --show_thread_logs
 
 Dependencies
-------------
+~~~~~~~~~~~~
 Full list of dependencies can be found at travis_setup_link_
 In particular, OpenFPGA requires specific versions for the following dependencies:
 
@@ -42,7 +44,7 @@ In particular, OpenFPGA requires specific versions for the following dependencie
 .. _travis_setup_link: https://github.com/LNIS-Projects/OpenFPGA/blob/0cfb88a49f152aab0a06f309ff160f222bb51ed7/.travis.yml#L34
 
 Docker
-------
+~~~~~~
 If some of these dependencies are not installed on your machine, you can choose to use a Docker (the Docker tool needs to be installed).
 For the ease of the customer first experience, a Dockerfile is provided in the OpenFPGA folder. A container ready to use can be created with the following command
 

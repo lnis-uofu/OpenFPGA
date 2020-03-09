@@ -1,7 +1,7 @@
 .. _contact:
 
 Contact
-=======
+~~~~~~~
    
 General questions:
 

@@ -1,9 +1,11 @@
-Link circuit modules
---------------------
+.. _annotate_vpr_arch:
+
+Bind circuit modules to VPR architecture 
+----------------------------------------
 Each defined circuit model should be linked to an FPGA module defined in the original part of architecture descriptions. It helps FPGA-circuit creating the circuit netlists for logic/routing blocks. Since the original part lacks such support, we create a few XML properties to link to Circuit models.
 
 SRAM
-====
+~~~~
 
 To link the defined circuit model of SRAM into the FPGA architecture description, a new line in XML format should be added under the XML node device. The new XML node is named as sram, which defines the area of an SRAM and the name of the circuit model to be linked. An example is shown as follows:
 
@@ -42,7 +44,7 @@ Here is an example.
 
 
 Switch Boxes
-=============
+~~~~~~~~~~~~
 
 Original VPR architecture description contains an XML node called switchlist under which all the multiplexers of switch blocks are described.
 To link a defined circuit model to a multiplexer in the switch blocks, a new XML property circuit_model_name should be added to the descriptions.
@@ -59,7 +61,7 @@ Here is an example:
 
 
 Connection Blocks
-==================
+~~~~~~~~~~~~~~~~~
 
 To link the defined circuit model of the multiplexer to the Connection Blocks, a circuit_model_name should be added to the definition of Connection Blocks switches.  However, the original architecture descriptions do not offer a switch description for connection boxes as they do for the switch blocks.
 Therefore, FPGA-circuit requires a new XML node called **cblock** under the root XML node architecture, where a switch for connection blocks can be defined.
@@ -75,7 +77,7 @@ Here is the example:
 * **circuit_model_name:** should match a circuit model whose type is mux defined under module_circuit_models.
 
 Channel Wire Segments
-=====================
+~~~~~~~~~~~~~~~~~~~~~
 
 Similar to the Switch Boxes and Connection Blocks, the channel wire segments in the original architecture descriptions can be adapted to provide a link to the defined circuit model.
 
@@ -88,7 +90,7 @@ Similar to the Switch Boxes and Connection Blocks, the channel wire segments in 
 * circuit_model_name: should match a circuit model whose type is chan_wire defined under module_circuit_models.
 
 Primitive Blocks inside Multi-mode Configurable Logic Blocks
-=============================================================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The architecture description employs a hierarchy of ``pb_types`` to depict the sub-modules and complex interconnections inside logic blocks. Each leaf node and interconnection in the pb_type hierarchy should be linked to a circuit model.
 Each primitive block, i.e., the leaf ``pb_types``, should be linked to a valid circuit model, using the XML syntax ``circuit_model_name``.

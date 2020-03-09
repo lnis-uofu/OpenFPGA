@@ -1,13 +1,15 @@
-Define Circuit-level Modules
-============================
+.. _circuit_library:
+
+Circuit Library
+---------------
 
 To support FPGA Verilog/SPICE, Verily and Bitstream Generator, physical modules containing gate-level and transistor-level features are required for FPGA primitive blocks.
 The physical modules are defined in XML syntax, similar to the original VPR FPGA architecture description language.
 
 For each module that appears in the FPGA architecture, a circuit model should be defined. In the definition of a circuit model, the user can specify if the Verilog/SPICE netlist of the module is either auto-generated or user-defined.
 
-Define circuit_models
----------------------
+Circuit Model Attributes
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: xml
 
@@ -43,8 +45,8 @@ Define circuit_models
 .. note:: Under the XML node circuit_model, the features of transistor-level designs can be defined. In the following table, we show the common features supported for all the modules.  Then, we will introduce unique features supported only for some circuit models types.
 
 
-Transistor level
-----------------
+Design Technology-related Attributes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: xml
 
@@ -64,6 +66,14 @@ Transistor level
     * **type:** [cmos|rram]. Specify the type of design technology of the circuit_model.
 
 .. note:: Currently, the RRAM-based designs are only supported for multiplexers.
+
+
+Input/Output Buffer
+~~~~~~~~~~~~~~~~~~~
+
+Circuit Port Attributes
+~~~~~~~~~~~~~~~~~~~~~~~
+
 
 * input_buffer and output_buffer:
     

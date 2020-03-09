@@ -1,8 +1,5 @@
-FPGA-Bitstream
-==============
-
 .. _fpga_bitstream:
-   User Manual for FPGA Bitstream Generator
+   FPGA-Bitstream
  
 .. toctree::
    :maxdepth: 2

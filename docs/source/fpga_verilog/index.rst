@@ -1,8 +1,5 @@
-FPGA-Verilog: Verilog Auto-Generation
--------------------------------------
-
 .. _fpga_verilog:
-   User Manual for FPGA Verilog Generator 
+   FPGA-Verilog
  
 .. toctree::
    :maxdepth: 2

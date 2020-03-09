@@ -1,5 +1,7 @@
-Technology library Declaration
-==============================
+.. _technology_library_syntax:
+
+Technology library
+------------------
 
 .. code-block:: xml
 

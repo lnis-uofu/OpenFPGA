@@ -1,5 +1,7 @@
-EDA flow
-========
+.. _eda_flow:
+
+Supported EDA flows in OpenFPGA
+-------------------------------
 
 As illustrated in :numref:`fig_eda_flow`, FPGA-SPICE creates a modified VTR flow. All the input files for VPR do not need modifications except the architecture description XML. As simulation-based power analysis requires the transistor-level netlists, we extend the architecture description language to support transistor-level modeling (See details in "Tools Guide>Extended Architecture Description Language"). FPGA-SPICE, embedded in VPR, outputs the SPICE netlists and testbenches according to placement and routing results when enabled by command-line options. (See each "FPGA-*Branch*" about command-line options available) Besides automatically generating all the SPICE netlists, FPGA-SPICE supports user-defined SPICE netlists for modules. We believe the support on user-defined SPICE netlists allows FPGA-SPICE to be general enough to support novel circuit designs and even technologies. (See "FPGA-SPICE... > Create Customized SPICE Modules" for guidelines in customizing your FPGA-SPICE compatible SPICE netlists.) With the dumped SPICE netlists and testbenches, a SPICE simulator, i.e., HSPICE, can be called to conduct a power analysis. FPGA-SPICE automatically generates a shell script, which brings convenience for users to run all the simulations (See "FPGA-SPICE... > Run SPICE simulation").
 

@@ -1,6 +1,3 @@
-Extended Architecture Description Language
-==========================================
-
 .. _arch_lang:
    Extended FPGA Architecture Description Language
  
@@ -9,16 +6,18 @@ Extended Architecture Description Language
 
    generality
 
-   interconnect
-   
-   spice_sim_setting
+   addon_vpr_syntax
 
-   tech_lib
+   direct_interconnect 
+   
+   simulation_setting
+
+   technology_library
   
-   circuit_modules
+   circuit_library
   
    circuit_model_examples
   
-   link_circuit_modules
+   annotate_vpr_arch
 
    

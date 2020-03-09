@@ -1,5 +1,11 @@
-Parameters for SPICE simulation settings
-========================================
+.. _simulation_setting:
+
+Simulation settings
+-------------------
+
+For OpenFPGA using VPR7
+~~~~~~~~~~~~~~~~~~~~~~~
+
 All the parameters that need to be defined in the HSPICE simulations are located under a child node called <parameters>, which is under its father node <spice_settings>. 
 The parameters are divided into three categories and can be defined in three XML nodes, <options>, <measure> and <stimulate>, respectively. 
 
@@ -130,5 +136,149 @@ Define the starting and ending point in measuring the delay between two signals 
 * **input_thres_pct:** the starting point in measuring the delay of a falling edge. It is expressed as a percentage of the maximum voltage of a signal. For example, upper_thres_pct=0.5 is depicted in :numref:`fig_meas_edge`. 
     
 * **output_thres_pct:** the ending point in measuring the delay of a falling edge. It is expressed as a percentage of the maximum voltage of a signal. For example, lower_thres_pct=0. 5 is depicted in :numref:`fig_meas_edge`.
+
+
+For OpenFPGA using VPR8
+~~~~~~~~~~~~~~~~~~~~~~~
+
+All the simulation settings are stored under the XML node ``<openfpga_simulation_setting>``
+General organization is as follows
+
+.. code-block:: xml
+
+    <openfpga_simulation_setting>
+      <clock_setting>
+        <operating frequency="<int>|<string>" num_cycles="<int>|<string>" slack="<float>"/>
+        <programming frequency="<int>"/>
+      </clock_setting>
+      <simulator_option>
+        <operating_condition temperature="<int>"/>
+        <output_log verbose="<bool>" captab="<bool>"/>
+        <accuracy type="<string>" value="<float>"/>
+        <runtime fast_simulation="<bool>"/>
+      </simulator_option>
+      <monte_carlo num_simulation_points="<int>"/>
+      <measurement_setting>
+        <slew>
+          <rise upper_thres_pct="<float>" lower_thres_pct="<float>"/>
+          <fall upper_thres_pct="<float>" lower_thres_pct="<float>"/>
+        </slew>
+        <delay>
+          <rise input_thres_pct="<float>" output_thres_pct="<float>"/>
+          <fall input_thres_pct="<float>" output_thres_pct="<float>"/>
+        </delay>
+      </measurement_setting>
+      <stimulus>
+        <clock>
+          <rise slew_type="<string>" slew_time="<float>"/>
+          <fall slew_type="<string>" slew_time="<float>"/>
+        </clock>
+        <input>
+          <rise slew_type="<string>" slew_time="<float>"/>
+          <fall slew_type="<string>" slew_time="<float>"/>
+        </input>
+      </stimulus>
+    </openfpga_simulation_setting>
+
+Clock Setting
+^^^^^^^^^^^^^
+Clock setting focuses on defining the clock periods to applied on FPGA fabrics
+As a programmable device, an FPGA has two types of clocks. 
+The first is the operating clock, which is applied by users' implementations.
+The second is the programming clock, which is applied on the configuration protocol to load users' implementation to FPGA fabric.
+OpenFPGA allows users to freely define these clocks as well as the number of clock cycles.
+We should the full syntax in the code block below and then provide details on each of them.
+
+.. code-block:: xml
+
+  <clock_setting>
+    <operating frequency="<float>|<string>" num_cycles="<int>|<string>" slack="<float>"/>
+    <programming frequency="<float>"/>
+  </clock_setting>
+
+Operating clock setting
+```````````````````````
+Operating clocks are defined under the XML node ``<operating>``
+
+- ``frequency="<float|string>``
+  Specify frequency of the operating clock. OpenFPGA allows users to specify an absolute value in the unit of ``[Hz]`` 
+  Alternatively, users can bind the frequency to the maximum clock frequency analyzed by VPR STA engine.
+  This is very useful to validate the maximum operating frequency for users' implementations
+  In such case, the value of this attribute should be a reserved word ``auto``.
+
+- ``num_cycles="<int>|<string>"``
+  can be either ``auto`` or an integer. When set to ``auto``, OpenFPGA will infer the number of clock cycles from the average/median of all the signal activities.
+  When set to an integer, OpenFPGA will use the given number of clock cycles in HDL and SPICE simulations.
+
+- ``slack="<float>"``
+  add a margin to the critical path delay in the HDL and SPICE simulations.
+  This parameter is applied to the critical path delay provided by VPR STA engine.
+  So it is only valid when option ``frequency`` is set to ``auto``.
+  This aims to compensate any inaccuracy in STA results.
+  Typically, the slack value is between ``0`` and ``1``. 
+  For example, ``slack=0.2`` implies that the actual clock period in simulations is 120% of the critical path delay reported by VPR. 
+
+.. note:: Only valid when option ``frequency`` is set to ``auto``
+
+.. warning:: Avoid to use a negative slack! This may cause your simulation to fail!
+
+Programming clock setting
+`````````````````````````
+Programming clocks are defined under the XML node ``<programming>``
+
+- ``frequency="<float>"``
+  Specify the frequency of the programming clock using an absolute value in the unit of ``[Hz]`` 
+  This frequency is used in testbenches for programming phase simulation.
+
+.. note:: Programming clock frequency is typically much slower than the operating clock and strongly depends on the process technology. Suggest to characterize the speed of your configuration protocols before specifying a value!
+
+Simulator Option
+^^^^^^^^^^^^^^^^
+This XML node includes universal options available in both HDL and SPICE simulators.
+
+.. note:: This is mainly used by FPGA-SPICE
+
+``<operating_condition temperature="<int>"/>``
+  Specify the temperature which will be defined in SPICE netlists. In the top SPICE netlists, it will show as 
+
+.. code-block:: python
+
+    .temp <int>
+
+``<output_log verbose="<bool>" captab="<bool>"/>``
+  Specify the options in outputting simulation results to log files
+
+- ``verbose="true|false"``
+
+  Specify if the simulation waveforms should be printed out after SPICE simulations. If turned on, it will show in all the SPICE netlists
+
+.. code-block:: python
+  
+  .option POST
+
+.. note:: when the SPICE netlists are large or a long simulation duration is defined, the post option is recommended to be off. If not, huge disk space will be occupied by the waveform files.
+
+- ``captab="true|false"``
+  Specify if the capacitances of all the nodes in the SPICE netlists will be printed out. If turned on, it will show inn the top-level SPICE netlists
+
+.. code-block:: python
+
+  .option CAPTAB 
+
+.. note:: When turned on, the SPICE simulation runtime may increase.
+
+``<accuracy type="<string>" value="<float>"/>``
+  Specify the simulation steps (accuracy) to be used
+
+- ``type="abs|frac"``
+
+  Specify the type of transient step in SPICE simulation. 
+
+    * When ``abs`` is selected, the accuracy should be the absolute value, such as ``1e-12``. 
+
+    * When ``frac`` is selected, the accuracy is the number of simulation points in a clock cycle period, for example, 100.
     
+- ``value="<float>"``
+
+  Specify the transient step in SPICE simulation. Typically, the smaller the step is, the higher the accuracy that can be reached while the long simulation runtime is. The recommended accuracy is between 0.1ps and 0.01ps, which generates good accuracy and runtime is not significantly long. 
     
