@@ -373,6 +373,8 @@ void Shell<T>::execute_command(const char* cmd_line,
     if (false == command_status_[dep_cmd]) {
       VTR_LOG("Command '%s' is required to be executed before command '%s'!\n",
               commands_[dep_cmd].name().c_str(), commands_[cmd_id].name().c_str());
+      /* Echo the command help desk */
+      print_command_options(commands_[cmd_id]);
       return;
     } 
   }
