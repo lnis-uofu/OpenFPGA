@@ -7,6 +7,6 @@ The point of the verification step is to check that the FPGA reproduces the righ
 
 .. _fig_ModelSim:
 
-.. figure:: ./figures/Verification_step.pdf
-   :scale: 100%
+.. figure:: figures/verification_step.png
+   :scale: 50%
    :alt: Functional Verification using ModelSim
