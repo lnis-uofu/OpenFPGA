@@ -1,5 +1,5 @@
-Command-line Options for FPGA Bitstream Generator
-=================================================
+Command-line Options
+~~~~~~~~~~~~~~~~~~~~
 
 All the command line options of FPGA-Bitstream can be shown by calling the help menu of VPR. Here are all the FPGA-Verilog-related options that you can find:
 

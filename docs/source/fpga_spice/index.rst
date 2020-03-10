@@ -1,7 +1,10 @@
+FPGA-SPICE
+----------
 .. _fpga_spice:
    FPGA-SPICE
  
 .. toctree::
+   :maxdepth: 2
   
    command_line_usage
 
