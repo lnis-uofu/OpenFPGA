@@ -1,4 +1,4 @@
-.. _technology_library_syntax:
+.. _technology_library:
 
 Technology library
 ------------------

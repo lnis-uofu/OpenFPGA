@@ -200,6 +200,8 @@ Operating clock setting
 ```````````````````````
 Operating clocks are defined under the XML node ``<operating>``
 
+.. option:: <operating frequency="<float>|<string>" num_cycles="<int>|<string>" slack="<float>"/>
+
 - ``frequency="<float|string>``
   Specify frequency of the operating clock. OpenFPGA allows users to specify an absolute value in the unit of ``[Hz]`` 
   Alternatively, users can bind the frequency to the maximum clock frequency analyzed by VPR STA engine.
@@ -226,6 +228,8 @@ Programming clock setting
 `````````````````````````
 Programming clocks are defined under the XML node ``<programming>``
 
+.. option:: <programming frequency="<float>"/>
+
 - ``frequency="<float>"``
   Specify the frequency of the programming clock using an absolute value in the unit of ``[Hz]`` 
   This frequency is used in testbenches for programming phase simulation.
@@ -238,14 +242,23 @@ This XML node includes universal options available in both HDL and SPICE simulat
 
 .. note:: This is mainly used by FPGA-SPICE
 
-``<operating_condition temperature="<int>"/>``
+Operating condition
+```````````````````
+
+.. option:: <operating_condition temperature="<int>"/>``
+
+- ``temperature="<int>"``
   Specify the temperature which will be defined in SPICE netlists. In the top SPICE netlists, it will show as 
 
 .. code-block:: python
 
     .temp <int>
 
-``<output_log verbose="<bool>" captab="<bool>"/>``
+Output logs
+```````````
+
+.. option:: <output_log verbose="<bool>" captab="<bool>"/>``
+
   Specify the options in outputting simulation results to log files
 
 - ``verbose="true|false"``
@@ -259,7 +272,7 @@ This XML node includes universal options available in both HDL and SPICE simulat
 .. note:: when the SPICE netlists are large or a long simulation duration is defined, the post option is recommended to be off. If not, huge disk space will be occupied by the waveform files.
 
 - ``captab="true|false"``
-  Specify if the capacitances of all the nodes in the SPICE netlists will be printed out. If turned on, it will show inn the top-level SPICE netlists
+  Specify if the capacitances of all the nodes in the SPICE netlists will be printed out. If turned on, it will show in the top-level SPICE netlists
 
 .. code-block:: python
 
@@ -267,7 +280,11 @@ This XML node includes universal options available in both HDL and SPICE simulat
 
 .. note:: When turned on, the SPICE simulation runtime may increase.
 
-``<accuracy type="<string>" value="<float>"/>``
+Simulation Accuracy
+```````````````````
+
+.. option:: <accuracy type="<string>" value="<float>"/>``
+
   Specify the simulation steps (accuracy) to be used
 
 - ``type="abs|frac"``
@@ -281,4 +298,77 @@ This XML node includes universal options available in both HDL and SPICE simulat
 - ``value="<float>"``
 
   Specify the transient step in SPICE simulation. Typically, the smaller the step is, the higher the accuracy that can be reached while the long simulation runtime is. The recommended accuracy is between 0.1ps and 0.01ps, which generates good accuracy and runtime is not significantly long. 
+
+Simulation Speed
+````````````````
     
+.. option:: <runtime fast_simulation="<bool>"/>
+
+  Specify if any runtime optimization will be applied to the simulator.  
+
+- ``fast_simulation="true|false"``
+
+  Specify if fast simulation is turned on for the simulator.  
+
+   If turned on, it will show in the top-level SPICE netlists
+
+.. code-block:: python
+
+  .option fast 
+
+Monte Carlo Simulation
+``````````````````````
+
+.. option:: <monte_carlo num_simulation_points="<int>"/>
+   
+   Run SPICE simulations in monte carlo mode.
+   This is mainly for FPGA-SPICE
+   When turned on, FPGA-SPICE will apply the device variation defined in :ref:`technology_library` to monte carlo simulation
+
+- ``num_simulation_points="<int>"``
+
+  Specify the number of simulation points to be considered in monte carlo.
+  The larger the number is, the longer simulation time will be but more accurate the results will be.
+
+Measurement Setting
+```````````````````
+- Users can define the parameters in measuring the slew of signals, under XML node ``<slew>``
+
+- Users can define the parameters in measuring the delay of signals, under XML node ``<delay>``
+
+Both delay and slew measurement share the same syntax in defining the upper and lower voltage thresholds.
+
+.. option:: <rise|fall upper_thres_pct="<float>" lower_thres_pct="<float>"/>
+
+  Define the starting and ending point in measuring the slew of a rising or a falling edge of a signal.
+    
+  - ``upper_thres_pct="<float>"`` the ending point in measuring the slew of a rising edge. It is expressed as a percentage of the maximum voltage of a signal. For example, the meaning of upper_thres_pct=0.95 is depicted in :numref:`fig_measure_edge`. 
+    
+  - ``lower_thres_pct="<float>"`` the starting point in measuring the slew of a rising edge. It is expressed as a percentage of the maximum voltage of a signal. For example, the meaning of lower_thres_pct=0.05 is depicted in :numref:`fig_measure_edge`.
+
+.. _fig_measure_edge:
+
+.. figure:: figures/meas_edge.png 
+   :scale: 80%
+   :alt: map to buried traesure
+  
+   An illustrative example on measuring the slew and delay of signals
+
+Stimulus Setting
+````````````````
+Users can define the slew time of input and clock signals to be applied to FPGA I/Os in testbenches under XML node ``<clock>`` and ``<input>`` respectively.
+This is used by FPGA-SPICE in generating testbenches
+
+.. option:: <rise|fall slew_type="<string>" slew_time="<float>"/>
+
+  Specify the slew rate of an input or clock signal at rising or falling edge 
+
+  - ``slew_type="[abs|frac]"`` specify the type of slew time definition at the rising or falling edge of a lock/input port.
+
+    * The type of ``abs`` implies that the slew time is the absolute value. For example, ``slew_type="abs" slew_time="20e-12"`` means that the slew of a clock signal is 20ps. 
+    * The type of ``frac`` means that the slew time is related to the period (frequency) of the clock signal. For example, ``slew_type="frac" slew_time="0.05"`` means that the slew of a clock signal takes 5% of the period of the clock.
+
+  - ``slew_time="<float>"`` specify the slew rate of an input or clock signal at the rising/falling edge. 
+ 
+  :numref:`fig_measure_edge` depicts the definition of the slew and delays of signals and the parameters that can be supported by FPGA-SPICE.
+
