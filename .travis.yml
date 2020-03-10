@@ -29,7 +29,6 @@ matrix:
         apt:
           sources:
           - ubuntu-toolchain-r-test # For newer GCC
-          - george-edison55-precise-backports # For cmake
           - llvm_toolchain-trusty-7
           packages:
           - autoconf
