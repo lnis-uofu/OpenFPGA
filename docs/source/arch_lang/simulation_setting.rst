@@ -371,4 +371,3 @@ This is used by FPGA-SPICE in generating testbenches
   - ``slew_time="<float>"`` specify the slew rate of an input or clock signal at the rising/falling edge. 
  
   :numref:`fig_measure_edge` depicts the definition of the slew and delays of signals and the parameters that can be supported by FPGA-SPICE.
-

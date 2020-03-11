@@ -1,5 +1,5 @@
-Command-line Options for FPGA SPICE Generator
-=================================================
+Command-line Options
+~~~~~~~~~~~~~~~~~~~~
 All the command line options of FPGA-SPICE can be shown by calling the help menu of VPR. Here are all the FPGA-SPICE-related options that you can find:
 
 FPGA-SPICE Supported Options::

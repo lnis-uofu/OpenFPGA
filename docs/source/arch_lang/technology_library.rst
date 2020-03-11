@@ -78,6 +78,7 @@ A device model represents a transistor/RRAM model available in users' technology
 .. note:: the name of ``<device_model>`` may not be the name in users' technology library.
 
 .. option:: <lib type="<string>" corner="<string>" ref="<string>" path="<string>"/>
+
   Specify the technology library that defines the device model
 
   - ``type="academia|industry"``  For the industry library, FPGA-SPICE will use ``.lib <lib_file_path>`` to include the library file in SPICE netlists. For academia library, FPGA-SPICE will use ``.include <lib_file_path>`` to include the library file in SPICE netlists

@@ -1,5 +1,5 @@
 Perform Functionality Verification
-==================================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If the --fpga_verilog_print_modelsim_autodeck option is selected, it is possible to directly generate scripts for Modelsim. Inside of the Verilog directory specified with --fpga_verilog_dir can be found name_runsim.tcl scripts which perform the functional verification onto the FPGA generated. 
 

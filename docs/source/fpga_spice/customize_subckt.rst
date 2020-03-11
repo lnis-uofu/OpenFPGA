@@ -1,5 +1,5 @@
 Create Customized SPICE Modules
-===============================
+-------------------------------
 To make sure the customized SPICE netlists can be correctly included in FPGA-SPICE, the following rules should be fully respected:
 
 1.    The customized SPICE netlists could contain multiple sub-circuits but the names of these sub-circuits should not be conflicted with any reserved words.. Here is an example of defining a sub-circuit in SPICE netlists. The <subckt_name> should be a unique one, which should not be conflicted with any reserved words.
