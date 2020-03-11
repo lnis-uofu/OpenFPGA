@@ -27,6 +27,8 @@ Welcome to OpenFPGA's documentation!
    :maxdepth: 2
    :caption: OpenFPGA Tools
 
+   openfpga_shell/index
+
    fpga_spice/index
 
    fpga_verilog/index
