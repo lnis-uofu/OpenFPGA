@@ -1,5 +1,5 @@
-# Run VPR for the 'and' design
-vpr ./test_vpr_arch/k6_frac_N10_40nm.xml ./test_blif/and.blif --clock_modeling route #--write_rr_graph example_rr_graph.xml
+# Run VPR for the 'and_latch' design
+vpr ./test_vpr_arch/k6_frac_N10_40nm.xml ./test_blif/and_latch.blif --clock_modeling route #--write_rr_graph example_rr_graph.xml
 
 # Read OpenFPGA architecture definition
 read_openfpga_arch -f ./test_openfpga_arch/k6_frac_N10_40nm_openfpga.xml
@@ -8,7 +8,7 @@ read_openfpga_arch -f ./test_openfpga_arch/k6_frac_N10_40nm_openfpga.xml
 #write_openfpga_arch -f ./arch_echo.xml
 
 # Annotate the OpenFPGA architecture to VPR data base
-link_openfpga_arch --activity_file ./test_blif/and.act --sort_gsb_chan_node_in_edges #--verbose
+link_openfpga_arch --activity_file ./test_blif/and_latch.act --sort_gsb_chan_node_in_edges #--verbose
 
 # Check and correct any naming conflicts in the BLIF netlist
 check_netlist_naming_conflict --fix --report ./netlist_renaming.xml
