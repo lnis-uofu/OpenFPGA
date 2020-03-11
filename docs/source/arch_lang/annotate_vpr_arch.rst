@@ -13,7 +13,7 @@ Configuration Protocol
     <organization type="<string>" circuit_model_name="<string>"/>
   </configuration_protocol>
 
- - ``type="scan_chain|memory_bank|standalone"`` Specify the type of configuration circuits.
+- ``type="scan_chain|memory_bank|standalone"`` Specify the type of configuration circuits.
 
 :numref:`fig_sram` illustrates an example where a memory organization using memory decoders and 6-transistor SRAMs.
 
@@ -43,7 +43,7 @@ Here is an example:
     <switch type="mux" name="<string>" circuit_model_name="<string>"/>
   </switch_block>
 
- - ``circuit_model_name="<string>"`` should match a circuit model whose type is ``mux`` defined in :ref:`circuit_library`.
+- ``circuit_model_name="<string>"`` should match a circuit model whose type is ``mux`` defined in :ref:`circuit_library`.
 
 
 Connection Blocks
@@ -59,7 +59,7 @@ Here is the example:
     <switch type="ipin_cblock" name="<string>" circuit_model_name="<string>"/>
   </connection_block>
 
- - ``circuit_model_name="<string>"`` should match a circuit model whose type is ``mux`` defined in :ref:`circuit_library`.
+- ``circuit_model_name="<string>"`` should match a circuit model whose type is ``mux`` defined in :ref:`circuit_library`.
 
 Channel Wire Segments
 ~~~~~~~~~~~~~~~~~~~~~
@@ -72,7 +72,7 @@ Similar to the Switch Boxes and Connection Blocks, the channel wire segments in 
     <segment name="<string>" circuit_model_name="<string>"/>
   </segmentlist>
 
- - ``circuit_model_name="<string>"`` should match a circuit model whose type is ``chan_wire`` defined in :ref:`circuit_library`.
+- ``circuit_model_name="<string>"`` should match a circuit model whose type is ``chan_wire`` defined in :ref:`circuit_library`.
 
 Primitive Blocks inside Multi-mode Configurable Logic Blocks
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

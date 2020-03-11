@@ -57,7 +57,7 @@ Setup OpenFPGA
   Check and correct any naming conflicts in the BLIF netlist
   This is strongly recommended. Otherwise, the outputted Verilog netlists may not be compiled successfully.
 
-  .. note:: This command may be deprecated in future when merged to VPR upstream
+  .. warning:: This command may be deprecated in future when it is merged to VPR upstream
   
   - ``--fix`` Apply fix-up to the names that violate the syntax
 
@@ -68,7 +68,7 @@ Setup OpenFPGA
   Apply fix-up to clustering nets based on routing results
   This is strongly recommended. Otherwise, the bitstream generation may be wrong
 
-  .. note:: This command may be deprecated in future when merged to VPR upstream
+  .. warning:: This command may be deprecated in future when it is merged to VPR upstream
   
   - ``--verbose`` Show verbose log
    
@@ -76,19 +76,22 @@ Setup OpenFPGA
 
   Apply fix-up to Look-Up Table truth tables based on packing results
 
-  .. note:: This command may be deprecated in future when merged to VPR upstream
+  .. warning:: This command may be deprecated in future when it is merged to VPR upstream
 
   - ``--verbose`` Show verbose log
   
 .. option:: build_fabric
 
-  Build the module graph. This is a must-run command before launching FPGA-Verilog, FPGA-Bitstream, FPGA-SDC and FPGA-SPICE
+  Build the module graph.
 
   - ``--compress_routing`` Enable compression on routing architecture modules. Strongly recommend this as it will minimize the number of routing modules to be outputted. It can reduce the netlist size significantly.
   
   - ``--duplicate_grid_pin`` Enable pin duplication on grid modules. This is optional unless ultra-dense layout generation is needed
 
   - ``--verbose`` Show verbose log
+
+  .. note:: This is a must-run command before launching FPGA-Verilog, FPGA-Bitstream, FPGA-SDC and FPGA-SPICE
+
   
 FPGA-Bitstream
 ~~~~~~~~~~~~~~
