@@ -248,13 +248,13 @@ bool LbRouter::try_route(const LbRRGraph& lb_rr_graph,
       add_source_to_rt(net_idx);
 
       /* Route each sink of net */
-      for (unsigned int itarget = 1; itarget < lb_net_terminals_[net_idx].size() && !is_impossible; itarget++) {
+      for (unsigned int isink = 1; isink < lb_net_terminals_[net_idx].size() && !is_impossible; isink++) {
         pq_.clear();
         /* Get lowest cost next node, repeat until a path is found or if it is impossible to route */
 
         expand_rt(net_idx, net_idx);
 
-        is_impossible = try_expand_nodes(atom_nlist, lb_rr_graph, net_idx, exp_node, itarget, mode_status_.expand_all_modes, verbosity);
+        is_impossible = try_expand_nodes(atom_nlist, lb_rr_graph, net_idx, exp_node, isink, mode_status_.expand_all_modes, verbosity);
 
         if (is_impossible && !mode_status_.expand_all_modes) {
           mode_status_.try_expand_all_modes = true;
@@ -262,7 +262,7 @@ bool LbRouter::try_route(const LbRRGraph& lb_rr_graph,
           break;
         }
 
-        if (exp_node.node_index == lb_net_terminals_[net_idx][itarget]) {
+        if (exp_node.node_index == lb_net_terminals_[net_idx][isink]) {
           /* Net terminal is routed, add this to the route tree, clear data structures, and keep going */
           is_impossible = add_to_rt(lb_net_rt_trees_[net_idx], exp_node.node_index, net_idx);
         }
