@@ -320,6 +320,13 @@ class LbRouter {
                           const bool& try_other_modes,
                           const int& verbosity);
 
+    bool try_route_net(const LbRRGraph& lb_rr_graph,
+                       const AtomNetlist& atom_nlist,
+                       const NetId& net_idx,
+                       t_expansion_node& exp_node,
+                       std::unordered_map<const t_pb_graph_node*, const t_mode*>& mode_map,
+                       const int& verbosity);
+
   private :  /* Private validators */
     /** 
      * Validate if the rr_graph is the one we used to initialize the router 

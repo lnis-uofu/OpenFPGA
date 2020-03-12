@@ -202,6 +202,80 @@ void LbRouter::set_physical_pb_modes(const LbRRGraph& lb_rr_graph,
   }
 }
 
+bool LbRouter::try_route_net(const LbRRGraph& lb_rr_graph,
+                             const AtomNetlist& atom_nlist,
+                             const NetId& net_idx,
+                             t_expansion_node& exp_node,
+                             std::unordered_map<const t_pb_graph_node*, const t_mode*>& mode_map,
+                             const int& verbosity) {
+
+  bool is_impossible = false;
+
+  if (is_skip_route_net(lb_rr_graph, lb_net_rt_trees_[net_idx])) {
+    return true;
+  }
+
+  commit_remove_rt(lb_rr_graph, lb_net_rt_trees_[net_idx], RT_REMOVE, mode_map);
+  free_net_rt(lb_net_rt_trees_[net_idx]);
+  lb_net_rt_trees_[net_idx] = nullptr;
+  add_source_to_rt(net_idx);
+
+  /* Route each sink of net */
+  for (size_t isink = 1; isink < lb_net_terminals_[net_idx].size() && !is_impossible; ++isink) {
+    pq_.clear();
+    /* Get lowest cost next node, repeat until a path is found or if it is impossible to route */
+
+    expand_rt(net_idx, net_idx);
+
+    is_impossible = try_expand_nodes(atom_nlist, lb_rr_graph, net_idx, exp_node, isink, mode_status_.expand_all_modes, verbosity);
+
+    if (is_impossible && !mode_status_.expand_all_modes) {
+      mode_status_.try_expand_all_modes = true;
+      mode_status_.expand_all_modes = true;
+      break;
+    }
+
+    if (exp_node.node_index == lb_net_terminals_[net_idx][isink]) {
+      /* Net terminal is routed, add this to the route tree, clear data structures, and keep going */
+      is_impossible = add_to_rt(lb_net_rt_trees_[net_idx], exp_node.node_index, net_idx);
+    }
+
+    if (is_impossible) {
+      VTR_LOG("Routing was impossible!\n");
+    } else if (mode_status_.expand_all_modes) {
+      is_impossible = route_has_conflict(lb_rr_graph, lb_net_rt_trees_[net_idx]);
+      if (is_impossible) {
+        VTR_LOG("Routing was impossible due to modes!\n");
+      }
+    }
+
+    explore_id_index_++;
+    if (explore_id_index_ > 2000000000) {
+      /* overflow protection */
+      for (const LbRRNodeId& id : lb_rr_graph.nodes()) {
+        explored_node_tb_[id].explored_id = OPEN;
+        explored_node_tb_[id].enqueue_id = OPEN;
+        explore_id_index_ = 1;
+      }
+    }
+  }
+
+  /* If routing succeed so far, we will try to save(commit) results
+   * to route tree.
+   * During this process, we will check if there is any 
+   * nodes using different modes under the same pb_type
+   * If so, we have conflicts and routing is considered to be failure
+   */
+  if (!is_impossible) {
+    commit_remove_rt(lb_rr_graph, lb_net_rt_trees_[net_idx], RT_COMMIT, mode_map);
+    if (mode_status_.is_mode_conflict) {
+      is_impossible = true;
+    }
+  }
+
+  return !is_impossible;
+}
+
 bool LbRouter::try_route(const LbRRGraph& lb_rr_graph,
                          const AtomNetlist& atom_nlist,
                          const int& verbosity) {
@@ -238,60 +312,9 @@ bool LbRouter::try_route(const LbRRGraph& lb_rr_graph,
     /* Iterate across all nets internal to logic block */
     for (inet = 0; inet < lb_net_ids_.size() && !is_impossible; inet++) {
       NetId net_idx = NetId(inet);
-      if (is_skip_route_net(lb_rr_graph, lb_net_rt_trees_[net_idx])) {
-        continue;
-      }
 
-      commit_remove_rt(lb_rr_graph, lb_net_rt_trees_[net_idx], RT_REMOVE, mode_map);
-      free_net_rt(lb_net_rt_trees_[net_idx]);
-      lb_net_rt_trees_[net_idx] = nullptr;
-      add_source_to_rt(net_idx);
-
-      /* Route each sink of net */
-      for (unsigned int isink = 1; isink < lb_net_terminals_[net_idx].size() && !is_impossible; isink++) {
-        pq_.clear();
-        /* Get lowest cost next node, repeat until a path is found or if it is impossible to route */
-
-        expand_rt(net_idx, net_idx);
-
-        is_impossible = try_expand_nodes(atom_nlist, lb_rr_graph, net_idx, exp_node, isink, mode_status_.expand_all_modes, verbosity);
-
-        if (is_impossible && !mode_status_.expand_all_modes) {
-          mode_status_.try_expand_all_modes = true;
-          mode_status_.expand_all_modes = true;
-          break;
-        }
-
-        if (exp_node.node_index == lb_net_terminals_[net_idx][isink]) {
-          /* Net terminal is routed, add this to the route tree, clear data structures, and keep going */
-          is_impossible = add_to_rt(lb_net_rt_trees_[net_idx], exp_node.node_index, net_idx);
-        }
-
-        if (is_impossible) {
-          VTR_LOG("Routing was impossible!\n");
-        } else if (mode_status_.expand_all_modes) {
-          is_impossible = route_has_conflict(lb_rr_graph, lb_net_rt_trees_[net_idx]);
-          if (is_impossible) {
-            VTR_LOG("Routing was impossible due to modes!\n");
-          }
-        }
-
-        explore_id_index_++;
-        if (explore_id_index_ > 2000000000) {
-          /* overflow protection */
-          for (const LbRRNodeId& id : lb_rr_graph.nodes()) {
-            explored_node_tb_[id].explored_id = OPEN;
-            explored_node_tb_[id].enqueue_id = OPEN;
-            explore_id_index_ = 1;
-          }
-        }
-      }
-
-      if (!is_impossible) {
-        commit_remove_rt(lb_rr_graph, lb_net_rt_trees_[net_idx], RT_COMMIT, mode_map);
-        if (mode_status_.is_mode_conflict) {
-          is_impossible = true;
-        }
+      if (false == try_route_net(lb_rr_graph, atom_nlist, net_idx, exp_node, mode_map, verbosity)) {
+        is_impossible = true;
       }
     }
 
