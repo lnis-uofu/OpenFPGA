@@ -243,7 +243,7 @@ bool LbRouter::try_route_net(const LbRRGraph& lb_rr_graph,
      */
     sink_routed[isink] = !try_expand_nodes(atom_nlist, lb_rr_graph, net_idx, exp_node, isink, mode_status_.expand_all_modes, verbosity);
 
-    if (false == sink_routed[isink] && !mode_status_.expand_all_modes) {
+    if (false == sink_routed[isink] && false == mode_status_.expand_all_modes) {
       mode_status_.try_expand_all_modes = true;
       mode_status_.expand_all_modes = true;
       break;
@@ -291,7 +291,7 @@ bool LbRouter::try_route_net(const LbRRGraph& lb_rr_graph,
    */
   if (true == route_succeed) {
     commit_remove_rt(lb_rr_graph, lb_net_rt_trees_[net_idx], RT_COMMIT, mode_map);
-    if (mode_status_.is_mode_conflict) {
+    if (true == mode_status_.is_mode_conflict) {
       route_succeed = false;
     }
   }
