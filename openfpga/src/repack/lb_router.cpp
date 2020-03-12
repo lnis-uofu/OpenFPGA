@@ -212,7 +212,7 @@ bool LbRouter::try_route_net(const LbRRGraph& lb_rr_graph,
   std::vector<bool> sink_routed(lb_net_terminals_[net_idx].size(), false);
   sink_routed[0] = true; /* Deposite true for source node */
 
-  if (is_skip_route_net(lb_rr_graph, lb_net_rt_trees_[net_idx])) {
+  if (true == is_skip_route_net(lb_rr_graph, lb_net_rt_trees_[net_idx])) {
     return true;
   }
 
