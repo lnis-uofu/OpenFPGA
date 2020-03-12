@@ -73,12 +73,14 @@ std::vector<LbRRNodeId> LbRouter::net_routed_nodes(const NetId& net) const {
 
   std::vector<LbRRNodeId> routed_nodes;
 
-  t_trace* rt_tree = lb_net_rt_trees_[net];
-  if (nullptr == rt_tree) {
-    return routed_nodes;
+  for (size_t isrc = 0; isrc < lb_net_sources_[net].size(); ++isrc) { 
+    t_trace* rt_tree = lb_net_rt_trees_[net][isrc];
+    if (nullptr == rt_tree) {
+      return routed_nodes;
+    }
+    /* Walk through the routing tree of the net */
+    rec_collect_trace_nodes(rt_tree, routed_nodes);  
   }
-  /* Walk through the routing tree of the net */
-  rec_collect_trace_nodes(rt_tree, routed_nodes);  
 
   return routed_nodes;  
 }
@@ -152,13 +154,12 @@ LbRouter::NetId LbRouter::create_net_to_route(const LbRRNodeId& source, const st
 
   /* Allocate other attributes */
   lb_net_atom_net_ids_.push_back(AtomNetId::INVALID());
-  lb_net_atom_pins_.emplace_back();
+  lb_net_atom_source_pins_.emplace_back();
+  lb_net_atom_sink_pins_.emplace_back();
   
-  std::vector<LbRRNodeId> net_terminals = terminals;
-  net_terminals.insert(net_terminals.begin(), source);
-
-  lb_net_terminals_.push_back(net_terminals);
-  lb_net_rt_trees_.push_back(nullptr);
+  lb_net_sources_.push_back(std::vector<LbRRNodeId>(1, source));
+  lb_net_sinks_.push_back(terminals);
+  lb_net_rt_trees_.push_back(std::vector<t_trace*>(1, nullptr));
 
   return net;
 }
@@ -170,8 +171,8 @@ void LbRouter::add_net_atom_net_id(const NetId& net, const AtomNetId& atom_net) 
 
 void LbRouter::add_net_atom_pins(const NetId& net, const AtomPinId& src_pin, const std::vector<AtomPinId>& terminal_pins) {
   VTR_ASSERT(true == valid_net_id(net));
-  lb_net_atom_pins_[net] = terminal_pins;
-  lb_net_atom_pins_[net].insert(lb_net_atom_pins_[net].begin(), src_pin);
+  lb_net_atom_sink_pins_[net] = terminal_pins;
+  lb_net_atom_source_pins_[net] = std::vector<AtomPinId>(1, src_pin);
 }
 
 void LbRouter::set_physical_pb_modes(const LbRRGraph& lb_rr_graph,
@@ -209,67 +210,69 @@ bool LbRouter::try_route_net(const LbRRGraph& lb_rr_graph,
                              std::unordered_map<const t_pb_graph_node*, const t_mode*>& mode_map,
                              const int& verbosity) {
 
-  std::vector<bool> sink_routed(lb_net_terminals_[net_idx].size(), false);
-  sink_routed[0] = true; /* Deposite true for source node */
+  std::vector<bool> sink_routed(lb_net_sinks_[net_idx].size(), false);
 
-  if (true == is_skip_route_net(lb_rr_graph, lb_net_rt_trees_[net_idx])) {
-    return true;
-  }
+  for (size_t isrc = 0; isrc < lb_net_sources_[net_idx].size(); ++isrc) {
 
-  commit_remove_rt(lb_rr_graph, lb_net_rt_trees_[net_idx], RT_REMOVE, mode_map);
-  free_net_rt(lb_net_rt_trees_[net_idx]);
-  lb_net_rt_trees_[net_idx] = nullptr;
-  add_source_to_rt(net_idx);
+    if (true == is_skip_route_net(lb_rr_graph, lb_net_rt_trees_[net_idx][isrc])) {
+      return true;
+    }
 
-  /* Route each sink of net */
-  for (size_t isink = 1; isink < lb_net_terminals_[net_idx].size(); ++isink) {
-    /* Check if last sink failed in routing
-     * If failed, the routing is not possible for this net
-     */
-    if (1 < isink) {
-      if (false == sink_routed[isink - 1]) {
+    commit_remove_rt(lb_rr_graph, lb_net_rt_trees_[net_idx][isrc], RT_REMOVE, mode_map);
+    free_net_rt(lb_net_rt_trees_[net_idx][isrc]);
+    lb_net_rt_trees_[net_idx][isrc] = nullptr;
+    add_source_to_rt(net_idx, isrc);
+
+    /* Route each sink of net */
+    for (size_t isink = 0; isink < lb_net_sinks_[net_idx].size(); ++isink) {
+      /* Check if last sink failed in routing
+       * If failed, the routing is not possible for this net
+       */
+      if (0 < isink) {
+        if (false == sink_routed[isink - 1]) {
+          break;
+        }
+      }
+
+      pq_.clear();
+      /* Get lowest cost next node, repeat until a path is found or if it is impossible to route */
+
+      expand_rt(net_idx, net_idx, isrc);
+
+      /* If we managed to expand the nodes to the sink, routing for this sink is done.
+       * If not, we failed in routing.
+       * Therefore, the output of try_expand_nodes() is inverted
+       */
+      sink_routed[isink] = !try_expand_nodes(atom_nlist, lb_rr_graph, net_idx, exp_node, isrc, isink, mode_status_.expand_all_modes, verbosity);
+
+      if (false == sink_routed[isink] && false == mode_status_.expand_all_modes) {
+        mode_status_.try_expand_all_modes = true;
+        mode_status_.expand_all_modes = true;
         break;
       }
-    }
 
-    pq_.clear();
-    /* Get lowest cost next node, repeat until a path is found or if it is impossible to route */
-
-    expand_rt(net_idx, net_idx);
-
-    /* If we managed to expand the nodes to the sink, routing for this sink is done.
-     * If not, we failed in routing.
-     * Therefore, the output of try_expand_nodes() is inverted
-     */
-    sink_routed[isink] = !try_expand_nodes(atom_nlist, lb_rr_graph, net_idx, exp_node, isink, mode_status_.expand_all_modes, verbosity);
-
-    if (false == sink_routed[isink] && false == mode_status_.expand_all_modes) {
-      mode_status_.try_expand_all_modes = true;
-      mode_status_.expand_all_modes = true;
-      break;
-    }
-
-    if (exp_node.node_index == lb_net_terminals_[net_idx][isink]) {
-      /* Net terminal is routed, add this to the route tree, clear data structures, and keep going */
-      sink_routed[isink] = !add_to_rt(lb_net_rt_trees_[net_idx], exp_node.node_index, net_idx);
-    }
-
-    if (false == sink_routed[isink]) {
-      VTR_LOG("Routing was impossible!\n");
-    } else if (mode_status_.expand_all_modes) {
-      sink_routed[isink] = !route_has_conflict(lb_rr_graph, lb_net_rt_trees_[net_idx]);
-      if (false == sink_routed[isink]) {
-        VTR_LOG("Routing was impossible due to modes!\n");
+      if (exp_node.node_index == lb_net_sinks_[net_idx][isink]) {
+        /* Net terminal is routed, add this to the route tree, clear data structures, and keep going */
+        sink_routed[isink] = !add_to_rt(lb_net_rt_trees_[net_idx][isrc], exp_node.node_index, net_idx);
       }
-    }
 
-    explore_id_index_++;
-    if (explore_id_index_ > 2000000000) {
-      /* overflow protection */
-      for (const LbRRNodeId& id : lb_rr_graph.nodes()) {
-        explored_node_tb_[id].explored_id = OPEN;
-        explored_node_tb_[id].enqueue_id = OPEN;
-        explore_id_index_ = 1;
+      if (false == sink_routed[isink]) {
+        VTR_LOG("Routing was impossible!\n");
+      } else if (mode_status_.expand_all_modes) {
+        sink_routed[isink] = !route_has_conflict(lb_rr_graph, lb_net_rt_trees_[net_idx][isrc]);
+        if (false == sink_routed[isink]) {
+          VTR_LOG("Routing was impossible due to modes!\n");
+        }
+      }
+
+      explore_id_index_++;
+      if (explore_id_index_ > 2000000000) {
+        /* overflow protection */
+        for (const LbRRNodeId& id : lb_rr_graph.nodes()) {
+          explored_node_tb_[id].explored_id = OPEN;
+          explored_node_tb_[id].enqueue_id = OPEN;
+          explore_id_index_ = 1;
+        }
       }
     }
   }
@@ -290,9 +293,11 @@ bool LbRouter::try_route_net(const LbRRGraph& lb_rr_graph,
    * If so, we have conflicts and routing is considered to be failure
    */
   if (true == route_succeed) {
-    commit_remove_rt(lb_rr_graph, lb_net_rt_trees_[net_idx], RT_COMMIT, mode_map);
-    if (true == mode_status_.is_mode_conflict) {
-      route_succeed = false;
+    for (size_t isrc = 1; isrc < lb_net_sources_[net_idx].size(); ++isrc) {
+      commit_remove_rt(lb_rr_graph, lb_net_rt_trees_[net_idx][isrc], RT_COMMIT, mode_map);
+      if (true == mode_status_.is_mode_conflict) {
+        route_succeed = false;
+      }
     }
   }
 
@@ -351,14 +356,18 @@ bool LbRouter::try_route(const LbRRGraph& lb_rr_graph,
                atom_nlist.net_name(lb_net_atom_net_ids_[NetId(inet)]).c_str(),
                lb_type_->name);
       VTR_LOGV(verbosity < 3,
-               "\tNet source pin '%s'\n",
-               lb_rr_graph.node_pb_graph_pin(lb_net_terminals_[NetId(inet)][0])->to_string().c_str()); 
-      VTR_LOGV(verbosity < 3,
-               "\tNet sink pins:\n");
-      for (size_t isink = 1; isink < lb_net_terminals_[NetId(inet)].size(); ++isink) {
+               "\tNet source pin:\n"); 
+      for (size_t isrc = 0; isrc < lb_net_sources_[NetId(inet)].size(); ++isrc) {
         VTR_LOGV(verbosity < 3,
                  "\t\t%s\n",
-                 lb_rr_graph.node_pb_graph_pin(lb_net_terminals_[NetId(inet)][isink])->to_string().c_str()); 
+                 lb_rr_graph.node_pb_graph_pin(lb_net_sources_[NetId(inet)][isrc])->to_string().c_str()); 
+      }
+      VTR_LOGV(verbosity < 3,
+               "\tNet sink pins:\n");
+      for (size_t isink = 0; isink < lb_net_sinks_[NetId(inet)].size(); ++isink) {
+        VTR_LOGV(verbosity < 3,
+                 "\t\t%s\n",
+                 lb_rr_graph.node_pb_graph_pin(lb_net_sinks_[NetId(inet)][isink])->to_string().c_str()); 
       }
       VTR_LOGV(verbosity < 3,
                "Please check your architecture XML to see if it is routable\n");
@@ -385,8 +394,8 @@ void LbRouter::fix_duplicate_equivalent_pins(const AtomContext& atom_ctx,
   for (const NetId& ilb_net : lb_net_ids_) {
     //Collect all the sink terminals indicies which target a particular node
     std::map<LbRRNodeId, std::vector<int>> duplicate_terminals;
-    for (size_t iterm = 1; iterm < lb_net_terminals_[ilb_net].size(); ++iterm) {
-      LbRRNodeId node = lb_net_terminals_[ilb_net][iterm];
+    for (size_t iterm = 0; iterm < lb_net_sinks_[ilb_net].size(); ++iterm) {
+      LbRRNodeId node = lb_net_sinks_[ilb_net][iterm];
 
       duplicate_terminals[node].push_back(iterm);
     }
@@ -398,8 +407,8 @@ void LbRouter::fix_duplicate_equivalent_pins(const AtomContext& atom_ctx,
       for (size_t idup_term = 0; idup_term < kv.second.size(); ++idup_term) {
         int iterm = kv.second[idup_term]; //The index in terminals which is duplicated
 
-        VTR_ASSERT(lb_net_atom_pins_[ilb_net].size() == lb_net_terminals_[ilb_net].size());
-        AtomPinId atom_pin = lb_net_atom_pins_[ilb_net][iterm];
+        VTR_ASSERT(lb_net_atom_sink_pins_[ilb_net].size() == lb_net_sinks_[ilb_net].size());
+        AtomPinId atom_pin = lb_net_atom_sink_pins_[ilb_net][iterm];
         VTR_ASSERT(atom_pin);
 
         const t_pb_graph_pin* pb_graph_pin = find_pb_graph_pin(atom_ctx.nlist, atom_ctx.lookup, atom_pin);
@@ -421,10 +430,10 @@ void LbRouter::fix_duplicate_equivalent_pins(const AtomContext& atom_ctx,
         VTR_ASSERT(1 == lb_rr_graph.node_out_edges(pin_index, &(pb_graph_pin->parent_node->pb_type->modes[0])).size());
         LbRRNodeId sink_index = lb_rr_graph.edge_sink_node(lb_rr_graph.node_out_edges(pin_index, &(pb_graph_pin->parent_node->pb_type->modes[0]))[0]);
         VTR_ASSERT(LB_SINK == lb_rr_graph.node_type(sink_index));
-        VTR_ASSERT_MSG(sink_index == lb_net_terminals_[ilb_net][iterm], "Remapped pin must be connected to original sink");
+        VTR_ASSERT_MSG(sink_index == lb_net_sinks_[ilb_net][iterm], "Remapped pin must be connected to original sink");
 
         //Change the target
-        lb_net_terminals_[ilb_net][iterm] = pin_index;
+        lb_net_sinks_[ilb_net][iterm] = pin_index;
       }
     }
   }
@@ -590,11 +599,11 @@ bool LbRouter::add_to_rt(t_trace* rt, const LbRRNodeId& node_index, const NetId&
   return false;
 }
 
-void LbRouter::add_source_to_rt(const NetId& inet) {
+void LbRouter::add_source_to_rt(const NetId& inet, const size_t& isrc) {
   /* TODO: Validate net id */
-  VTR_ASSERT(nullptr == lb_net_rt_trees_[inet]);
-  lb_net_rt_trees_[inet] = new t_trace;
-  lb_net_rt_trees_[inet]->current_node = lb_net_terminals_[inet][0];
+  VTR_ASSERT(nullptr == lb_net_rt_trees_[inet][isrc]);
+  lb_net_rt_trees_[inet][isrc] = new t_trace;
+  lb_net_rt_trees_[inet][isrc]->current_node = lb_net_sources_[inet][isrc];
 }
 
 void LbRouter::expand_rt_rec(t_trace* rt,
@@ -620,10 +629,11 @@ void LbRouter::expand_rt_rec(t_trace* rt,
 }
 
 void LbRouter::expand_rt(const NetId& inet,
-                         const NetId& irt_net) {
+                         const NetId& irt_net,
+                         const size_t& isrc) {
   VTR_ASSERT(pq_.empty());
 
-  expand_rt_rec(lb_net_rt_trees_[inet], LbRRNodeId::INVALID(), irt_net, explore_id_index_);
+  expand_rt_rec(lb_net_rt_trees_[inet][isrc], LbRRNodeId::INVALID(), irt_net, explore_id_index_);
 }
 
 void LbRouter::expand_edges(const LbRRGraph& lb_rr_graph,
@@ -758,6 +768,7 @@ bool LbRouter::try_expand_nodes(const AtomNetlist& atom_nlist,
                                 const LbRRGraph& lb_rr_graph,
                                 const NetId& lb_net,
                                 t_expansion_node& exp_node,
+                                const int& isrc,
                                 const int& itarget,
                                 const bool& try_other_modes,
                                 const int& verbosity) {
@@ -771,10 +782,10 @@ bool LbRouter::try_expand_nodes(const AtomNetlist& atom_nlist,
       if (verbosity > 3) {
         //Print detailed debug info
         AtomNetId net_id = lb_net_atom_net_ids_[lb_net];
-        AtomPinId driver_pin = lb_net_atom_pins_[lb_net][0];
-        AtomPinId sink_pin = lb_net_atom_pins_[lb_net][itarget];
-        LbRRNodeId driver_rr_node = lb_net_terminals_[lb_net][0];
-        LbRRNodeId sink_rr_node = lb_net_terminals_[lb_net][itarget];
+        AtomPinId driver_pin = lb_net_atom_source_pins_[lb_net][isrc];
+        AtomPinId sink_pin = lb_net_atom_sink_pins_[lb_net][itarget];
+        LbRRNodeId driver_rr_node = lb_net_sources_[lb_net][isrc];
+        LbRRNodeId sink_rr_node = lb_net_sinks_[lb_net][itarget];
 
         VTR_LOG("\t\t\tNo possible routing path from %s to %s: needed for net '%s' from net pin '%s'",
                 describe_lb_rr_node(lb_rr_graph, driver_rr_node).c_str(),
@@ -796,16 +807,16 @@ bool LbRouter::try_expand_nodes(const AtomNetlist& atom_nlist,
          */
         explored_node_tb_[exp_inode].explored_id = explore_id_index_;
         explored_node_tb_[exp_inode].prev_index = exp_node.prev_index;
-        if (exp_inode != lb_net_terminals_[lb_net][itarget]) {
+        if (exp_inode != lb_net_sinks_[lb_net][itarget]) {
           if (!try_other_modes) {
-            expand_node(lb_rr_graph, exp_node, lb_net_terminals_[lb_net].size() - 1);
+            expand_node(lb_rr_graph, exp_node, lb_net_sinks_[lb_net].size());
           } else {
-            expand_node_all_modes(lb_rr_graph, exp_node, lb_net_terminals_[lb_net].size() - 1);
+            expand_node_all_modes(lb_rr_graph, exp_node, lb_net_sinks_[lb_net].size());
           }
         }
       }
     }
-  } while (exp_node.node_index != lb_net_terminals_[lb_net][itarget] && !is_impossible);
+  } while (exp_node.node_index != lb_net_sinks_[lb_net][itarget] && !is_impossible);
 
   return is_impossible;
 }
@@ -828,37 +839,62 @@ bool LbRouter::check_net(const LbRRGraph& lb_rr_graph,
   if (false == atom_nlist.valid_net_id(lb_net_atom_net_ids_[net])) {
     return false;
   }
-  if (lb_net_atom_pins_[net].size() != lb_net_terminals_[net].size()) {
+  if (lb_net_atom_sink_pins_[net].size() != lb_net_sinks_[net].size()) {
     VTR_LOGF_ERROR(__FILE__, __LINE__,
                    "Net '%lu' has unmatched atom pins and terminals.\n",
                    size_t(net));
     return false;
   }
   /* We must have 1 source and >1 terminal */
-  if (2 > lb_net_terminals_[net].size()) {
+  if (1 > lb_net_sources_[net].size()) {
     VTR_LOGF_ERROR(__FILE__, __LINE__,
-                   "Net '%lu' has only %lu terminal.\n",
-                   size_t(net), lb_net_terminals_[net].size());
+                   "Net '%lu' has only %lu sources.\n",
+                   size_t(net), lb_net_sources_[net].size());
+    return false;
+  } 
+
+  if (1 > lb_net_sinks_[net].size()) {
+    VTR_LOGF_ERROR(__FILE__, __LINE__,
+                   "Net '%lu' has only %lu sinks.\n",
+                   size_t(net), lb_net_sinks_[net].size());
     return false;
   } 
   /* Each node must be valid */
-  for (const LbRRNodeId& node : lb_net_terminals_[net]) {
+  for (const LbRRNodeId& node : lb_net_sources_[net]) {
     if (false == lb_rr_graph.valid_node_id(node)) {
       VTR_LOGF_ERROR(__FILE__, __LINE__,
-                     "Net '%lu' has invalid terminal node in lb_rr_graph.\n",
+                     "Net '%lu' has invalid sink node in lb_rr_graph.\n",
                      size_t(net));
       return false;
     }
   }
+  for (const LbRRNodeId& node : lb_net_sinks_[net]) {
+    if (false == lb_rr_graph.valid_node_id(node)) {
+      VTR_LOGF_ERROR(__FILE__, __LINE__,
+                     "Net '%lu' has invalid sink node in lb_rr_graph.\n",
+                     size_t(net));
+      return false;
+    }
+  }
+
   /* Each atom pin must be valid */
-  for (const AtomPinId& pin : lb_net_atom_pins_[net]) {
+  for (const AtomPinId& pin : lb_net_atom_source_pins_[net]) {
     if (false == atom_nlist.valid_pin_id(pin)) {
       VTR_LOGF_ERROR(__FILE__, __LINE__,
-                     "Net '%lu' has invalid atom pin.\n",
+                     "Net '%lu' has invalid source atom pin.\n",
                      size_t(net));
       return false;
     }
   }
+  for (const AtomPinId& pin : lb_net_atom_sink_pins_[net]) {
+    if (false == atom_nlist.valid_pin_id(pin)) {
+      VTR_LOGF_ERROR(__FILE__, __LINE__,
+                     "Net '%lu' has invalid sink_ atom pin.\n",
+                     size_t(net));
+      return false;
+    }
+  }
+
 
   return true;
 }
@@ -878,8 +914,10 @@ void LbRouter::reset_explored_node_tb() {
 
 void LbRouter::reset_net_rt() {
   for (const NetId& inet : lb_net_ids_) {
-    free_net_rt(lb_net_rt_trees_[inet]);
-    lb_net_rt_trees_[inet] = nullptr;
+    for (size_t isrc = 0; isrc < lb_net_sources_[inet].size(); ++isrc) {
+      free_net_rt(lb_net_rt_trees_[inet][isrc]);
+      lb_net_rt_trees_[inet][isrc] = nullptr;
+    }
   }
 }
 
@@ -896,8 +934,10 @@ void LbRouter::clear_nets() {
 
   lb_net_ids_.clear();
   lb_net_atom_net_ids_.clear();
-  lb_net_atom_pins_.clear();
-  lb_net_terminals_.clear();
+  lb_net_atom_source_pins_.clear();
+  lb_net_atom_sink_pins_.clear();
+  lb_net_sources_.clear();
+  lb_net_sinks_.clear();
   lb_net_rt_trees_.clear();
 }
 
