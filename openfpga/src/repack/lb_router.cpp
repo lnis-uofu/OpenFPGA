@@ -209,7 +209,8 @@ bool LbRouter::try_route_net(const LbRRGraph& lb_rr_graph,
                              std::unordered_map<const t_pb_graph_node*, const t_mode*>& mode_map,
                              const int& verbosity) {
 
-  bool is_impossible = false;
+  std::vector<bool> sink_routed(lb_net_terminals_[net_idx].size(), false);
+  sink_routed[0] = true; /* Deposite true for source node */
 
   if (is_skip_route_net(lb_rr_graph, lb_net_rt_trees_[net_idx])) {
     return true;
@@ -221,15 +222,28 @@ bool LbRouter::try_route_net(const LbRRGraph& lb_rr_graph,
   add_source_to_rt(net_idx);
 
   /* Route each sink of net */
-  for (size_t isink = 1; isink < lb_net_terminals_[net_idx].size() && !is_impossible; ++isink) {
+  for (size_t isink = 1; isink < lb_net_terminals_[net_idx].size(); ++isink) {
+    /* Check if last sink failed in routing
+     * If failed, the routing is not possible for this net
+     */
+    if (1 < isink) {
+      if (false == sink_routed[isink - 1]) {
+        break;
+      }
+    }
+
     pq_.clear();
     /* Get lowest cost next node, repeat until a path is found or if it is impossible to route */
 
     expand_rt(net_idx, net_idx);
 
-    is_impossible = try_expand_nodes(atom_nlist, lb_rr_graph, net_idx, exp_node, isink, mode_status_.expand_all_modes, verbosity);
+    /* If we managed to expand the nodes to the sink, routing for this sink is done.
+     * If not, we failed in routing.
+     * Therefore, the output of try_expand_nodes() is inverted
+     */
+    sink_routed[isink] = !try_expand_nodes(atom_nlist, lb_rr_graph, net_idx, exp_node, isink, mode_status_.expand_all_modes, verbosity);
 
-    if (is_impossible && !mode_status_.expand_all_modes) {
+    if (false == sink_routed[isink] && !mode_status_.expand_all_modes) {
       mode_status_.try_expand_all_modes = true;
       mode_status_.expand_all_modes = true;
       break;
@@ -237,14 +251,14 @@ bool LbRouter::try_route_net(const LbRRGraph& lb_rr_graph,
 
     if (exp_node.node_index == lb_net_terminals_[net_idx][isink]) {
       /* Net terminal is routed, add this to the route tree, clear data structures, and keep going */
-      is_impossible = add_to_rt(lb_net_rt_trees_[net_idx], exp_node.node_index, net_idx);
+      sink_routed[isink] = !add_to_rt(lb_net_rt_trees_[net_idx], exp_node.node_index, net_idx);
     }
 
-    if (is_impossible) {
+    if (false == sink_routed[isink]) {
       VTR_LOG("Routing was impossible!\n");
     } else if (mode_status_.expand_all_modes) {
-      is_impossible = route_has_conflict(lb_rr_graph, lb_net_rt_trees_[net_idx]);
-      if (is_impossible) {
+      sink_routed[isink] = !route_has_conflict(lb_rr_graph, lb_net_rt_trees_[net_idx]);
+      if (false == sink_routed[isink]) {
         VTR_LOG("Routing was impossible due to modes!\n");
       }
     }
@@ -260,20 +274,29 @@ bool LbRouter::try_route_net(const LbRRGraph& lb_rr_graph,
     }
   }
 
+  /* Check the routing status for all the sinks */
+  bool route_succeed = true;
+  for (const bool& sink_status : sink_routed) {
+    if (false == sink_status) {
+      route_succeed = false;
+      break;
+    }
+  }
+
   /* If routing succeed so far, we will try to save(commit) results
    * to route tree.
    * During this process, we will check if there is any 
    * nodes using different modes under the same pb_type
    * If so, we have conflicts and routing is considered to be failure
    */
-  if (!is_impossible) {
+  if (true == route_succeed) {
     commit_remove_rt(lb_rr_graph, lb_net_rt_trees_[net_idx], RT_COMMIT, mode_map);
     if (mode_status_.is_mode_conflict) {
-      is_impossible = true;
+      route_succeed = false;
     }
   }
 
-  return !is_impossible;
+  return route_succeed;
 }
 
 bool LbRouter::try_route(const LbRRGraph& lb_rr_graph,
