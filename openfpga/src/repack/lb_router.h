@@ -25,6 +25,50 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
+/********************************************************************
+ * A connection-driven router for programmable logic blocks
+ * The router supports routing multiple nets on a LbRRGraph object
+ * which models the routing resources in a programmable logic block
+ *
+ * Note: 
+ *   - This router will not build/allocate a LbRRGraph object
+ *     Users must do it OUTSIDE this object!!!
+ *   - This router supports multiple sources for single net
+ *     which is more capable the original VPR lb_router
+ *
+ * How to use the router:
+ *
+ *  // Create your own routing resource graph 
+ *  LbRRGraph lb_rr_graph = <your_lb_rr_graph_builder>();
+ *
+ *  // Create a router object
+ *  LbRouter lb_router(lb_rr_graph);
+ *
+ *  // Add nets to be routed 
+ *  std::vector<LbRRNodeId> source_nodes = <find_your_source_node_in_your_lb_rr_graph>();
+ *  std::vector<LbRRNodeId> sink_nodes = <find_your_sink_node_in_your_lb_rr_graph>();
+ *  LbNetId net = lb_router.create_net_to_route(source_nodes, sink_nodes);
+ *  // Add more nets
+ *
+ *  // Initialize the modes to expand routing
+ *  // This is a must-do before running the router in the purpose of repacking!!!
+ *  lb_router.set_physical_pb_modes(lb_rr_graph, device_annotation); 
+ *
+ *  // Run the router 
+ *  bool route_success = lb_router.try_route(lb_rr_graph, atom_ctx.nlist, verbose);
+ *
+ *  // Check routing status 
+ *  if (true == route_success) {
+ *    // Succeed
+ *  }
+ *
+ *  // Read out routing results
+ *  // Here is an example to check which nodes are mapped to the 'net' created before
+ *  std::vector<LbRRNodeId> routed_nodes = lb_router.net_routed_nodes(net);
+ *
+ *******************************************************************/
+
+
 class LbRouter {
   public: /* Strong ids */
     struct net_id_tag;
