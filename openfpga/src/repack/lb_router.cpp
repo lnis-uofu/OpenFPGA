@@ -237,24 +237,24 @@ bool LbRouter::try_route(const LbRRGraph& lb_rr_graph,
     unsigned int inet;
     /* Iterate across all nets internal to logic block */
     for (inet = 0; inet < lb_net_ids_.size() && !is_impossible; inet++) {
-      NetId idx = NetId(inet);
-      if (is_skip_route_net(lb_rr_graph, lb_net_rt_trees_[idx])) {
+      NetId net_idx = NetId(inet);
+      if (is_skip_route_net(lb_rr_graph, lb_net_rt_trees_[net_idx])) {
         continue;
       }
 
-      commit_remove_rt(lb_rr_graph, lb_net_rt_trees_[idx], RT_REMOVE, mode_map);
-      free_net_rt(lb_net_rt_trees_[idx]);
-      lb_net_rt_trees_[idx] = nullptr;
-      add_source_to_rt(idx);
+      commit_remove_rt(lb_rr_graph, lb_net_rt_trees_[net_idx], RT_REMOVE, mode_map);
+      free_net_rt(lb_net_rt_trees_[net_idx]);
+      lb_net_rt_trees_[net_idx] = nullptr;
+      add_source_to_rt(net_idx);
 
       /* Route each sink of net */
-      for (unsigned int itarget = 1; itarget < lb_net_terminals_[idx].size() && !is_impossible; itarget++) {
+      for (unsigned int itarget = 1; itarget < lb_net_terminals_[net_idx].size() && !is_impossible; itarget++) {
         pq_.clear();
         /* Get lowest cost next node, repeat until a path is found or if it is impossible to route */
 
-        expand_rt(idx, idx);
+        expand_rt(net_idx, net_idx);
 
-        is_impossible = try_expand_nodes(atom_nlist, lb_rr_graph, idx, exp_node, itarget, mode_status_.expand_all_modes, verbosity);
+        is_impossible = try_expand_nodes(atom_nlist, lb_rr_graph, net_idx, exp_node, itarget, mode_status_.expand_all_modes, verbosity);
 
         if (is_impossible && !mode_status_.expand_all_modes) {
           mode_status_.try_expand_all_modes = true;
@@ -262,15 +262,15 @@ bool LbRouter::try_route(const LbRRGraph& lb_rr_graph,
           break;
         }
 
-        if (exp_node.node_index == lb_net_terminals_[idx][itarget]) {
+        if (exp_node.node_index == lb_net_terminals_[net_idx][itarget]) {
           /* Net terminal is routed, add this to the route tree, clear data structures, and keep going */
-          is_impossible = add_to_rt(lb_net_rt_trees_[idx], exp_node.node_index, idx);
+          is_impossible = add_to_rt(lb_net_rt_trees_[net_idx], exp_node.node_index, net_idx);
         }
 
         if (is_impossible) {
           VTR_LOG("Routing was impossible!\n");
         } else if (mode_status_.expand_all_modes) {
-          is_impossible = route_has_conflict(lb_rr_graph, lb_net_rt_trees_[idx]);
+          is_impossible = route_has_conflict(lb_rr_graph, lb_net_rt_trees_[net_idx]);
           if (is_impossible) {
             VTR_LOG("Routing was impossible due to modes!\n");
           }
@@ -288,7 +288,7 @@ bool LbRouter::try_route(const LbRRGraph& lb_rr_graph,
       }
 
       if (!is_impossible) {
-        commit_remove_rt(lb_rr_graph, lb_net_rt_trees_[idx], RT_COMMIT, mode_map);
+        commit_remove_rt(lb_rr_graph, lb_net_rt_trees_[net_idx], RT_COMMIT, mode_map);
         if (mode_status_.is_mode_conflict) {
           is_impossible = true;
         }

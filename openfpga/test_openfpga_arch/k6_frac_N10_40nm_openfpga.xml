@@ -218,7 +218,7 @@
     <pb_type name="clb.fle[n2_lut5].lut5inter.ble5.lut5" physical_pb_type_name="clb.fle[physical].fabric.frac_logic.frac_lut6" mode_bits="1" physical_pb_type_index_factor="0.5">
       <!-- Binding the lut5 to the first 5 inputs of fracturable lut6 -->
       <port name="in" physical_mode_port="in[0:4]"/>
-      <port name="out" physical_mode_port="lut5_out" physical_mode_pin_rotate_offset="1"/>
+      <port name="out" physical_mode_port="lut5_out[0:0]" physical_mode_pin_rotate_offset="1"/>
     </pb_type>
     <pb_type name="clb.fle[n2_lut5].lut5inter.ble5.ff" physical_pb_type_name="clb.fle[physical].fabric.ff"/>
     <pb_type name="clb.fle[n1_lut6].ble6.lut6" physical_pb_type_name="clb.fle[physical].fabric.frac_logic.frac_lut6" mode_bits="0">
