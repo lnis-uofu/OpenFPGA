@@ -147,7 +147,8 @@ void LbRouter::rec_collect_trace_nodes(const t_trace* trace, std::vector<LbRRNod
 /**************************************************
  * Public mutators
  *************************************************/
-LbRouter::NetId LbRouter::create_net_to_route(const LbRRNodeId& source, const std::vector<LbRRNodeId>& terminals) {
+LbRouter::NetId LbRouter::create_net_to_route(const std::vector<LbRRNodeId>& sources,
+                                              const std::vector<LbRRNodeId>& terminals) {
   /* Create an new id */
   NetId net = NetId(lb_net_ids_.size());
   lb_net_ids_.push_back(net);
@@ -157,9 +158,9 @@ LbRouter::NetId LbRouter::create_net_to_route(const LbRRNodeId& source, const st
   lb_net_atom_source_pins_.emplace_back();
   lb_net_atom_sink_pins_.emplace_back();
   
-  lb_net_sources_.push_back(std::vector<LbRRNodeId>(1, source));
+  lb_net_sources_.push_back(sources);
   lb_net_sinks_.push_back(terminals);
-  lb_net_rt_trees_.push_back(std::vector<t_trace*>(1, nullptr));
+  lb_net_rt_trees_.push_back(std::vector<t_trace*>(sources.size(), nullptr));
 
   return net;
 }

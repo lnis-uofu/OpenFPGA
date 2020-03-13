@@ -17,13 +17,13 @@ namespace openfpga {
  ***************************************************************************************/
 LbRouter::NetId add_lb_router_net_to_route(LbRouter& lb_router,
                                            const LbRRGraph& lb_rr_graph,
-                                           const LbRRNodeId& source_node,
+                                           const std::vector<LbRRNodeId>& source_nodes,
                                            const std::vector<LbRRNodeId>& sink_nodes,
                                            const AtomContext& atom_ctx,
                                            const AtomNetId& atom_net_id) {
   VTR_ASSERT(0 < sink_nodes.size());
 
-  LbRouter::NetId lb_net = lb_router.create_net_to_route(source_node, sink_nodes);
+  LbRouter::NetId lb_net = lb_router.create_net_to_route(source_nodes, sink_nodes);
 
   VTR_ASSERT(AtomNetId::INVALID() != atom_net_id);
   lb_router.add_net_atom_net_id(lb_net, atom_net_id);

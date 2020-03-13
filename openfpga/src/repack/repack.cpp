@@ -86,16 +86,30 @@ std::vector<LbRRNodeId> find_lb_net_physical_sink_lb_rr_nodes(const LbRRGraph& l
 
     /* if this is the root node, the physical pin is its self */
     if (nullptr == physical_sink_pin) {
-      VTR_LOG("Fail to find a physical pin for operating pin '%s'!\n",
-              sink_pin->to_string().c_str());
-    }
+      VTR_LOGF_ERROR(__FILE__, __LINE__,
+                     "Fail to find a physical pin for operating pin '%s'!\n",
+                     sink_pin->to_string().c_str());
+    } 
     VTR_ASSERT(nullptr != physical_sink_pin);
+
+    /* Sink nodes should NOT be any output pin of primitive pb_graph_node,
+     * warn that we will not include it in the sink nodes
+     */
+    if ( (true == is_primitive_pb_type(physical_sink_pin->parent_node->pb_type))
+      && (OUT_PORT == physical_sink_pin->port->type)) {
+      VTR_LOGF_ERROR(__FILE__, __LINE__,
+                     "Sink pin '%s' should NOT be an output from a primitive pb_type!\n",
+                     sink_pin->to_string().c_str());
+    }
+
     LbRRNodeId sink_lb_rr_node = lb_rr_graph.find_node(LB_INTERMEDIATE, physical_sink_pin);
     if (true != lb_rr_graph.valid_node_id(sink_lb_rr_node)) {
-      VTR_LOG("Try to find the lb_rr_node for pb_graph_pin '%s'\n",
-              physical_sink_pin->to_string().c_str());
+      VTR_LOGF_ERROR(__FILE__, __LINE__,
+                     "Fail to find the lb_rr_node for pb_graph_pin '%s'\n",
+                     physical_sink_pin->to_string().c_str());
     }
     VTR_ASSERT(true == lb_rr_graph.valid_node_id(sink_lb_rr_node));
+
     sink_nodes.push_back(sink_lb_rr_node);
   }
 
@@ -134,6 +148,12 @@ void add_lb_router_nets(LbRouter& lb_router,
   /* Build the fast look-up between pb_pin_id and pb_graph_pin pointer */
   t_pb_graph_pin** pb_graph_pin_lookup_from_index = alloc_and_load_pb_graph_pin_lookup_from_index(lb_type);
 
+  /* Cache all the source nodes and sinks node for each net
+   * net_terminal[net][0] is the list of source nodes 
+   * net_terminal[net][1] is the list of sink nodes 
+   */
+  std::map<AtomNetId, std::array<std::vector<LbRRNodeId>, 2>> net_terminals;
+
   /* Find the source nodes for the nets mapped to inputs of a clustered block */
   for (int j = 0; j < lb_type->pb_type->num_pins; j++) {
     /* Find the net mapped to this pin in clustering results*/
@@ -150,6 +170,7 @@ void add_lb_router_nets(LbRouter& lb_router,
     /* Get the source pb_graph pin and find the rr_node in logical block routing resource graph */
     const t_pb_graph_pin* source_pb_pin = get_pb_graph_node_pin_from_block_pin(block_id, j);
     VTR_ASSERT(source_pb_pin->parent_node == pb->pb_graph_node);
+
     /* Bypass output pins */
     if (OUT_PORT == source_pb_pin->port->type) {
       continue;
@@ -169,11 +190,26 @@ void add_lb_router_nets(LbRouter& lb_router,
     std::vector<LbRRNodeId> sink_lb_rr_nodes = find_lb_net_physical_sink_lb_rr_nodes(lb_rr_graph, sink_pb_graph_pins, device_annotation);
     VTR_ASSERT(sink_lb_rr_nodes.size() == sink_pb_graph_pins.size());
 
-    /* Add the net */
-    add_lb_router_net_to_route(lb_router, lb_rr_graph,
-                               source_lb_rr_node, sink_lb_rr_nodes,
-                               atom_ctx, atom_net_id);
-    net_counter++;
+    /* Cache the net */
+    if (0 < net_terminals.count(atom_net_id)) {
+      if (net_terminals[atom_net_id][0].end() == std::find(net_terminals[atom_net_id][0].begin(), 
+                                                           net_terminals[atom_net_id][0].end(),
+                                                           source_lb_rr_node)) {
+        net_terminals[atom_net_id][0].push_back(source_lb_rr_node);
+      }
+
+      for (const LbRRNodeId& sink_lb_rr_node : sink_lb_rr_nodes) {
+        if (net_terminals[atom_net_id][1].end() == std::find(net_terminals[atom_net_id][1].begin(),
+                                                             net_terminals[atom_net_id][1].end(),
+                                                             sink_lb_rr_node)) {
+          net_terminals[atom_net_id][1].push_back(sink_lb_rr_node);
+        }
+      }
+    } else {
+      net_terminals[atom_net_id][0].push_back(source_lb_rr_node);
+      net_terminals[atom_net_id][1] = sink_lb_rr_nodes;
+      net_counter++;
+    }
   }
 
   /* Find the source nodes for the nets mapped to outputs of primitive pb_graph_node */
@@ -216,15 +252,53 @@ void add_lb_router_nets(LbRouter& lb_router,
     std::vector<LbRRNodeId> sink_lb_rr_nodes = find_lb_net_physical_sink_lb_rr_nodes(lb_rr_graph, sink_pb_graph_pins, device_annotation);
     VTR_ASSERT(sink_lb_rr_nodes.size() == sink_pb_graph_pins.size());
 
-    /* Add the net */
-    add_lb_router_net_to_route(lb_router, lb_rr_graph,
-                               source_lb_rr_node, sink_lb_rr_nodes,
-                               atom_ctx, atom_net_id);
-    net_counter++;
+    /* Cache the net */
+    if (0 < net_terminals.count(atom_net_id)) {
+      if (net_terminals[atom_net_id][0].end() == std::find(net_terminals[atom_net_id][0].begin(), 
+                                                           net_terminals[atom_net_id][0].end(),
+                                                           source_lb_rr_node)) {
+        net_terminals[atom_net_id][0].push_back(source_lb_rr_node);
+      }
+
+      for (const LbRRNodeId& sink_lb_rr_node : sink_lb_rr_nodes) {
+        if (net_terminals[atom_net_id][1].end() == std::find(net_terminals[atom_net_id][1].begin(),
+                                                             net_terminals[atom_net_id][1].end(),
+                                                             sink_lb_rr_node)) {
+          net_terminals[atom_net_id][1].push_back(sink_lb_rr_node);
+        }
+      }
+    } else {
+      net_terminals[atom_net_id][0].push_back(source_lb_rr_node);
+      net_terminals[atom_net_id][1] = sink_lb_rr_nodes;
+      net_counter++;
+    }
   } 
 
   /* Free */
   free_pb_graph_pin_lookup_from_index(pb_graph_pin_lookup_from_index);
+
+  /* Add all the nets */
+  for (std::pair<AtomNetId, std::array<std::vector<LbRRNodeId>, 2>> net_terminal_pair : net_terminals) {
+    const AtomNetId& atom_net_id = net_terminal_pair.first;
+
+    /* MUST have >1 source nodes and >1 sinks nodes */
+    if (0 == net_terminal_pair.second[0].size()) {
+      VTR_LOGF_ERROR(__FILE__, __LINE__,
+                     "Net '%s' has 0 source nodes!",
+                     atom_ctx.nlist.net_name(atom_net_id).c_str());
+    }
+
+    if (0 == net_terminal_pair.second[1].size()) {
+      VTR_LOGF_ERROR(__FILE__, __LINE__,
+                     "Net '%s' has 0 sink nodes!",
+                     atom_ctx.nlist.net_name(atom_net_id).c_str());
+    }
+
+    /* Add the net */
+    add_lb_router_net_to_route(lb_router, lb_rr_graph,
+                               net_terminal_pair.second[0], net_terminal_pair.second[1],
+                               atom_ctx, atom_net_id);
+  }
 
   VTR_LOGV(verbose,
            "Added %lu nets to be routed.\n",

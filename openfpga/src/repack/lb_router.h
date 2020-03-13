@@ -234,7 +234,8 @@ class LbRouter {
     /**
      * Add net to be routed
      */ 
-    NetId create_net_to_route(const LbRRNodeId& source, const std::vector<LbRRNodeId>& terminals);
+    NetId create_net_to_route(const std::vector<LbRRNodeId>& sources,
+                              const std::vector<LbRRNodeId>& terminals);
     void add_net_atom_net_id(const NetId& net, const AtomNetId& atom_net);
     void add_net_atom_pins(const NetId& net, const AtomPinId& src_pin, const std::vector<AtomPinId>& terminal_pins);
 
