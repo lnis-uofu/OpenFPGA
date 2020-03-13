@@ -21,15 +21,100 @@
 namespace openfpga {
 
 /***************************************************************************************
- * Try find the pin id which is mapped to a given atom net id in the context of pb route
+ * Try find all the sink pins which is mapped to a routing trace in the context of pb route
+ * This function uses a recursive walk-through over the pb_route
+ * We will always start from the pb_route of the source pin 
+ * For each sink, 
+ * - if it is the end point of a routing tree, we add it to the sink list
+ *   - An output of top-level pb_graph_node
+ *   - An input of a primitive pb_graph_node
+ * - if it is not the end point of a routing tree, we visit the pb_route 
+ *   corresponds to the sink pin
+ *
+ * Note: when you call this function at the top-level, please provide an empty vector
+ *       of sink_pb_pins!!!
+ ***************************************************************************************/
+static 
+void rec_find_routed_sink_pb_graph_pins(const t_pb* pb,
+                                        const t_pb_graph_pin* source_pb_pin,
+                                        const AtomNetId& atom_net_id,
+                                        t_pb_graph_pin** pb_graph_pin_lookup_from_index,
+                                        std::vector<t_pb_graph_pin*>& sink_pb_pins) {
+
+  /* Bypass unused pins */
+  if (0 == pb->pb_route.count(source_pb_pin->pin_count_in_cluster)) {
+    return;
+  }
+
+  /* Get the driver pb pin id, it must be valid */
+  if (atom_net_id != pb->pb_route[source_pb_pin->pin_count_in_cluster].atom_net_id) {
+    return;
+  }
+
+  /* Check each sink nodes, if pin belongs to an input of a primitive pb_graph_node, it is what we want */
+  std::vector<t_pb_graph_pin*> sink_pb_pins_to_search;
+  for (const int& sink_pb_pin_id : pb->pb_route[source_pb_pin->pin_count_in_cluster].sink_pb_pin_ids) {
+    t_pb_graph_pin* sink_pb_pin = pb_graph_pin_lookup_from_index[sink_pb_pin_id];
+    VTR_ASSERT(nullptr != sink_pb_pin);
+
+    /* We will update sink node list only
+     * - input pins of primitive nodes
+     * - output pins of top node 
+     */ 
+    if ( (true == is_primitive_pb_type(sink_pb_pin->parent_node->pb_type))
+      && (IN_PORT == sink_pb_pin->port->type)) {
+      sink_pb_pins.push_back(sink_pb_pin);
+      continue;
+    }
+
+    if ( (true == sink_pb_pin->parent_node->is_root())
+      && (OUT_PORT == sink_pb_pin->port->type)) {
+      sink_pb_pins.push_back(sink_pb_pin);
+      continue;
+    }
+
+    /* We should find the pb_route recursively */
+    sink_pb_pins_to_search.push_back(sink_pb_pin);
+  }
+
+  for (t_pb_graph_pin* sink_pb_pin : sink_pb_pins_to_search) {
+    rec_find_routed_sink_pb_graph_pins(pb, sink_pb_pin, atom_net_id, pb_graph_pin_lookup_from_index, sink_pb_pins);
+  }
+}
+
+/***************************************************************************************
+ * A wrapper for the recursive function rec_find_route_sink_pb_graph_pins(), 
+ * we ensure that we provide a clear sink node lists 
  ***************************************************************************************/
 static 
 std::vector<t_pb_graph_pin*> find_routed_pb_graph_pins_atom_net(const t_pb* pb,
+                                                                const t_pb_graph_pin* source_pb_pin,
                                                                 const AtomNetId& atom_net_id,
                                                                 t_pb_graph_pin** pb_graph_pin_lookup_from_index) {
   std::vector<t_pb_graph_pin*> sink_pb_pins;  
 
-  /* Find the sink nodes from top-level node */
+  rec_find_routed_sink_pb_graph_pins(pb, source_pb_pin, atom_net_id, pb_graph_pin_lookup_from_index, sink_pb_pins);
+
+  return sink_pb_pins; 
+}
+
+/***************************************************************************************
+ * This function will find the actual source_pb_pin that is mapped by packed in the pb route
+ * As the inputs of clustered block may be renamed during routing,
+ * our pb_route results may lose consistency.
+ * It is possible that the source pb_pin may not be mapped during packing but
+ * be mapped during routing
+ *
+ * Note: this is ONLY applicable to the pb_pin of top-level pb_graph_node 
+ ***************************************************************************************/
+static 
+int find_pb_route_remapped_source_pb_pin(const t_pb* pb,
+                                         const t_pb_graph_pin* source_pb_pin,
+                                         const AtomNetId& atom_net_id) {
+  VTR_ASSERT(true == source_pb_pin->parent_node->is_root()); 
+
+  std::vector<int> pb_route_indices;
+
   for (int pin = 0; pin < pb->pb_graph_node->total_pb_pins; ++pin) {
     /* Bypass unused pins */
     if ((0 == pb->pb_route.count(pin)) || (AtomNetId::INVALID() == pb->pb_route[pin].atom_net_id)) {
@@ -39,27 +124,15 @@ std::vector<t_pb_graph_pin*> find_routed_pb_graph_pins_atom_net(const t_pb* pb,
     if (atom_net_id != pb->pb_route[pin].atom_net_id) {
       continue;
     }
-    /* Check each sink nodes, if pin belongs to an input of a primitive pb_graph_node, it is what we want */
-    for (const int& sink_pb_pin_id : pb->pb_route[pin].sink_pb_pin_ids) {
-      t_pb_graph_pin* sink_pb_pin = pb_graph_pin_lookup_from_index[sink_pb_pin_id];
-      VTR_ASSERT(nullptr != sink_pb_pin);
-      /* We care only
-       * - input pins of primitive nodes
-       * - output pins of top node 
-       */ 
-      if ( (true == is_primitive_pb_type(sink_pb_pin->parent_node->pb_type))
-        && (IN_PORT == sink_pb_pin->port->type)) {
-        sink_pb_pins.push_back(sink_pb_pin);
-      }
-
-      if ( (true == sink_pb_pin->parent_node->is_root())
-        && (OUT_PORT == sink_pb_pin->port->type)) {
-        sink_pb_pins.push_back(sink_pb_pin);
-      }
-    }
+    /* Only care the pin that shares the same parent_node as source_pb_pin */
+    if (source_pb_pin->parent_node == pb->pb_route[pin].pb_graph_pin->parent_node) {
+      pb_route_indices.push_back(pin);
+    } 
   }
 
-  return sink_pb_pins;
+  VTR_ASSERT(1 == pb_route_indices.size());
+
+  return pb_route_indices[0];
 }
 
 /***************************************************************************************
@@ -154,6 +227,9 @@ void add_lb_router_nets(LbRouter& lb_router,
    */
   std::map<AtomNetId, std::array<std::vector<LbRRNodeId>, 2>> net_terminals;
 
+  /* A list showing that some sinks should be touched by some sources in a multi-source net */
+  std::map<AtomNetId, std::map<LbRRNodeId, std::vector<LbRRNodeId>>> invisible_sinks;
+
   /* Find the source nodes for the nets mapped to inputs of a clustered block */
   for (int j = 0; j < lb_type->pb_type->num_pins; j++) {
     /* Find the net mapped to this pin in clustering results*/
@@ -185,31 +261,36 @@ void add_lb_router_nets(LbRouter& lb_router,
     AtomNetId atom_net_id = atom_ctx.lookup.atom_net(cluster_net_id);
     VTR_ASSERT(AtomNetId::INVALID() != atom_net_id);
 
+
+    int pb_route_index = find_pb_route_remapped_source_pb_pin(pb, source_pb_pin, atom_net_id);
+    t_pb_graph_pin* packing_source_pb_pin = get_pb_graph_node_pin_from_block_pin(block_id, pb_route_index);
+    VTR_ASSERT(nullptr != packing_source_pb_pin);
+
     /* Find all the sink pins in the pb_route, we walk through the input pins and find the pin  */
-    std::vector<t_pb_graph_pin*> sink_pb_graph_pins = find_routed_pb_graph_pins_atom_net(pb, atom_net_id, pb_graph_pin_lookup_from_index);
+    std::vector<t_pb_graph_pin*> sink_pb_graph_pins = find_routed_pb_graph_pins_atom_net(pb, packing_source_pb_pin, atom_net_id, pb_graph_pin_lookup_from_index);
     std::vector<LbRRNodeId> sink_lb_rr_nodes = find_lb_net_physical_sink_lb_rr_nodes(lb_rr_graph, sink_pb_graph_pins, device_annotation);
     VTR_ASSERT(sink_lb_rr_nodes.size() == sink_pb_graph_pins.size());
 
-    /* Cache the net */
-    if (0 < net_terminals.count(atom_net_id)) {
-      if (net_terminals[atom_net_id][0].end() == std::find(net_terminals[atom_net_id][0].begin(), 
-                                                           net_terminals[atom_net_id][0].end(),
-                                                           source_lb_rr_node)) {
-        net_terminals[atom_net_id][0].push_back(source_lb_rr_node);
-      }
-
-      for (const LbRRNodeId& sink_lb_rr_node : sink_lb_rr_nodes) {
-        if (net_terminals[atom_net_id][1].end() == std::find(net_terminals[atom_net_id][1].begin(),
-                                                             net_terminals[atom_net_id][1].end(),
-                                                             sink_lb_rr_node)) {
-          net_terminals[atom_net_id][1].push_back(sink_lb_rr_node);
-        }
-      }
-    } else {
-      net_terminals[atom_net_id][0].push_back(source_lb_rr_node);
-      net_terminals[atom_net_id][1] = sink_lb_rr_nodes;
-      net_counter++;
+    /* Printf for debugging only, may be enabled if verbose is enabled
+    VTR_LOG("Pb route for Net %s:\n", 
+            atom_ctx.nlist.net_name(atom_net_id).c_str());
+    VTR_LOG("Source node:\n\t%s -> %s\n",
+            source_pb_pin->to_string().c_str(),
+            source_pb_pin->to_string().c_str());
+    VTR_LOG("Sink nodes:\n");
+    for (t_pb_graph_pin* sink_pb_pin : sink_pb_graph_pins) {
+      VTR_LOG("\t%s\n",
+              sink_pb_pin->to_string().c_str());
     }
+     */
+
+    /* Add the net */
+    add_lb_router_net_to_route(lb_router, lb_rr_graph,
+                               std::vector<LbRRNodeId>(1, source_lb_rr_node),
+                               sink_lb_rr_nodes,
+                               atom_ctx, atom_net_id);
+
+    net_counter++;
   }
 
   /* Find the source nodes for the nets mapped to outputs of primitive pb_graph_node */
@@ -248,57 +329,34 @@ void add_lb_router_nets(LbRouter& lb_router,
     VTR_ASSERT(AtomNetId::INVALID() != atom_net_id);
 
     /* Find all the sink pins in the pb_route */
-    std::vector<t_pb_graph_pin*> sink_pb_graph_pins = find_routed_pb_graph_pins_atom_net(pb, atom_net_id, pb_graph_pin_lookup_from_index);
+    std::vector<t_pb_graph_pin*> sink_pb_graph_pins = find_routed_pb_graph_pins_atom_net(pb, source_pb_pin, atom_net_id, pb_graph_pin_lookup_from_index);
+
     std::vector<LbRRNodeId> sink_lb_rr_nodes = find_lb_net_physical_sink_lb_rr_nodes(lb_rr_graph, sink_pb_graph_pins, device_annotation);
     VTR_ASSERT(sink_lb_rr_nodes.size() == sink_pb_graph_pins.size());
 
-    /* Cache the net */
-    if (0 < net_terminals.count(atom_net_id)) {
-      if (net_terminals[atom_net_id][0].end() == std::find(net_terminals[atom_net_id][0].begin(), 
-                                                           net_terminals[atom_net_id][0].end(),
-                                                           source_lb_rr_node)) {
-        net_terminals[atom_net_id][0].push_back(source_lb_rr_node);
-      }
-
-      for (const LbRRNodeId& sink_lb_rr_node : sink_lb_rr_nodes) {
-        if (net_terminals[atom_net_id][1].end() == std::find(net_terminals[atom_net_id][1].begin(),
-                                                             net_terminals[atom_net_id][1].end(),
-                                                             sink_lb_rr_node)) {
-          net_terminals[atom_net_id][1].push_back(sink_lb_rr_node);
-        }
-      }
-    } else {
-      net_terminals[atom_net_id][0].push_back(source_lb_rr_node);
-      net_terminals[atom_net_id][1] = sink_lb_rr_nodes;
-      net_counter++;
+    /* Printf for debugging only, may be enabled if verbose is enabled
+    VTR_LOG("Pb route for Net %s:\n", 
+            atom_ctx.nlist.net_name(atom_net_id).c_str());
+    VTR_LOG("Source node:\n\t%s -> %s\n",
+            source_pb_pin->to_string().c_str(),
+            physical_source_pb_pin->to_string().c_str());
+    VTR_LOG("Sink nodes:\n");
+    for (t_pb_graph_pin* sink_pb_pin : sink_pb_graph_pins) {
+      VTR_LOG("\t%s\n",
+              sink_pb_pin->to_string().c_str());
     }
+     */
+
+    /* Add the net */
+    add_lb_router_net_to_route(lb_router, lb_rr_graph,
+                               std::vector<LbRRNodeId>(1, source_lb_rr_node),
+                               sink_lb_rr_nodes,
+                               atom_ctx, atom_net_id);
+    net_counter++;
   } 
 
   /* Free */
   free_pb_graph_pin_lookup_from_index(pb_graph_pin_lookup_from_index);
-
-  /* Add all the nets */
-  for (std::pair<AtomNetId, std::array<std::vector<LbRRNodeId>, 2>> net_terminal_pair : net_terminals) {
-    const AtomNetId& atom_net_id = net_terminal_pair.first;
-
-    /* MUST have >1 source nodes and >1 sinks nodes */
-    if (0 == net_terminal_pair.second[0].size()) {
-      VTR_LOGF_ERROR(__FILE__, __LINE__,
-                     "Net '%s' has 0 source nodes!",
-                     atom_ctx.nlist.net_name(atom_net_id).c_str());
-    }
-
-    if (0 == net_terminal_pair.second[1].size()) {
-      VTR_LOGF_ERROR(__FILE__, __LINE__,
-                     "Net '%s' has 0 sink nodes!",
-                     atom_ctx.nlist.net_name(atom_net_id).c_str());
-    }
-
-    /* Add the net */
-    add_lb_router_net_to_route(lb_router, lb_rr_graph,
-                               net_terminal_pair.second[0], net_terminal_pair.second[1],
-                               atom_ctx, atom_net_id);
-  }
 
   VTR_LOGV(verbose,
            "Added %lu nets to be routed.\n",

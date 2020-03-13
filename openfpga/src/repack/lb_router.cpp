@@ -244,17 +244,6 @@ bool LbRouter::try_route_net(const LbRRGraph& lb_rr_graph,
     /* Route each sink of net */
     for (size_t isink = 0; isink < lb_net_sinks_[net_idx].size(); ++isink) {
 
-      /* Do not route the sink if it share the same pb_type as source
-       * This is actually forbidden! This will definitely create a combinational loop
-       */
-      if ( (nullptr != lb_rr_graph.node_pb_graph_pin(lb_net_sinks_[net_idx][isink]))
-        && (nullptr != lb_rr_graph.node_pb_graph_pin(lb_net_sources_[net_idx][isrc])) ) {
-        if (lb_rr_graph.node_pb_graph_pin(lb_net_sinks_[net_idx][isink])->parent_node
-         == lb_rr_graph.node_pb_graph_pin(lb_net_sources_[net_idx][isrc])->parent_node) {
-          continue;
-        }
-      }
-
       /* Skip routed nets */
       if (true == sink_routed[isink]) {
         continue;
@@ -585,11 +574,6 @@ void LbRouter::commit_remove_rt(const LbRRGraph& lb_rr_graph,
     explored_node_tb_[inode].inet = NetId::INVALID();
   }
 
-  if (op == RT_COMMIT) {
-    VTR_LOGV(lb_rr_graph.node_pb_graph_pin(inode),
-             "Commit node '%s' to routing tree\n",
-             lb_rr_graph.node_pb_graph_pin(inode)->to_string().c_str());
-  }
   routing_status_[inode].occ += incr;
   VTR_ASSERT(routing_status_[inode].occ >= 0);
 
