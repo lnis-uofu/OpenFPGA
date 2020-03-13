@@ -94,6 +94,11 @@ bool LbRouter::is_route_success(const LbRRGraph& lb_rr_graph) const {
 
   for (const LbRRNodeId& inode : lb_rr_graph.nodes()) {
     if (routing_status_[inode].occ > lb_rr_graph.node_capacity(inode)) {
+      VTR_LOGV(lb_rr_graph.node_pb_graph_pin(inode),
+               "Route failed due to overuse pin '%s': occupancy '%ld' > capacity '%ld'!\n",
+               lb_rr_graph.node_pb_graph_pin(inode)->to_string().c_str(),
+               routing_status_[inode].occ,
+               lb_rr_graph.node_capacity(inode));
       return false;
     }
   }
@@ -243,18 +248,22 @@ bool LbRouter::try_route_net(const LbRRGraph& lb_rr_graph,
        */
       sink_routed[isink] = !try_expand_nodes(atom_nlist, lb_rr_graph, net_idx, exp_node, isrc, isink, mode_status_.expand_all_modes, verbosity);
 
+      /* TODO: Debug codes, to be removed
       if (true == sink_routed[isink]) {
         VTR_LOGV(verbosity,
                  "Succeed to expand routing tree from source pin '%s' to sink pin '%s'!\n",
                  lb_rr_graph.node_pb_graph_pin(lb_net_sources_[net_idx][isrc])->to_string().c_str(),
                  lb_rr_graph.node_pb_graph_pin(lb_net_sinks_[net_idx][isink])->to_string().c_str());
       }
+       */
 
+      /* IMPORTANT: We do not need expand all the modes for physical repack
       if (false == sink_routed[isink] && false == mode_status_.expand_all_modes) {
         mode_status_.try_expand_all_modes = true;
         mode_status_.expand_all_modes = true;
         continue;
       }
+       */
 
       if (exp_node.node_index == lb_net_sinks_[net_idx][isink]) {
         /* Net terminal is routed, add this to the route tree, clear data structures, and keep going */
@@ -274,33 +283,60 @@ bool LbRouter::try_route_net(const LbRRGraph& lb_rr_graph,
         }
       }
 
+      /*
       if (true == sink_routed[isink]) {
         VTR_LOGV(verbosity,
                  "Routing succeeded from source pin '%s' to sink pin '%s'!\n",
                  lb_rr_graph.node_pb_graph_pin(lb_net_sources_[net_idx][isrc])->to_string().c_str(),
                  lb_rr_graph.node_pb_graph_pin(lb_net_sinks_[net_idx][isink])->to_string().c_str());
       }
+       */
 
-      explore_id_index_++;
-      if (explore_id_index_ > 2000000000) {
-        /* overflow protection */
+      /* Increment explored node indices only when routing is successful */
+      if (true == sink_routed[isink]) {
+        explore_id_index_++;
+        if (explore_id_index_ > 2000000000) {
+          /* overflow protection */
+          for (const LbRRNodeId& id : lb_rr_graph.nodes()) {
+            explored_node_tb_[id].explored_id = OPEN;
+            explored_node_tb_[id].enqueue_id = OPEN;
+            explore_id_index_ = 1;
+          }
+        }
+      } else {
+        /* Route failed, reset the explore id index */
+        reset_explored_node_tb();
         for (const LbRRNodeId& id : lb_rr_graph.nodes()) {
           explored_node_tb_[id].explored_id = OPEN;
           explored_node_tb_[id].enqueue_id = OPEN;
           explore_id_index_ = 1;
         }
       }
+    }
 
-      /* If routing succeed so far, we will try to save(commit) results
-       * to route tree.
-       * During this process, we will check if there is any 
-       * nodes using different modes under the same pb_type
-       * If so, we have conflicts and routing is considered to be failure
-       */
+    /* If any sinks are managed to be routed, we will try to save(commit) results
+     * to route tree.
+     * During this process, we will check if there is any 
+     * nodes using different modes under the same pb_type
+     * If so, we have conflicts and routing is considered to be failure
+     */
+    bool any_sink_routed = false;
+    for (size_t isink = 0; isink < sink_routed.size(); ++isink) {
       if (true == sink_routed[isink]) {
-        commit_remove_rt(lb_rr_graph, lb_net_rt_trees_[net_idx][isrc], RT_COMMIT, mode_map);
-        if (true == mode_status_.is_mode_conflict) {
-          sink_routed[isink] = false;
+        any_sink_routed = true;
+        break;
+      }
+    }
+    if (true == any_sink_routed) {
+      commit_remove_rt(lb_rr_graph, lb_net_rt_trees_[net_idx][isrc], RT_COMMIT, mode_map);
+      if (true == mode_status_.is_mode_conflict) {
+        VTR_LOGV(verbosity,
+                 "Route fail due to mode conflicts when commiting the routing tree!\n");
+        for (size_t isink = 0; isink < sink_routed.size(); ++isink) {
+          /* Change routed sinks to failure */
+          if (true == sink_routed[isink]) {
+            sink_routed[isink] = false;
+          }
         }
       }
     }
@@ -526,6 +562,11 @@ void LbRouter::commit_remove_rt(const LbRRGraph& lb_rr_graph,
     explored_node_tb_[inode].inet = NetId::INVALID();
   }
 
+  if (op == RT_COMMIT) {
+    VTR_LOGV(lb_rr_graph.node_pb_graph_pin(inode),
+             "Commit node '%s' to routing tree\n",
+             lb_rr_graph.node_pb_graph_pin(inode)->to_string().c_str());
+  }
   routing_status_[inode].occ += incr;
   VTR_ASSERT(routing_status_[inode].occ >= 0);
 
@@ -702,11 +743,23 @@ void LbRouter::expand_edges(const LbRRGraph& lb_rr_graph,
     if (explored_node_tb_[enode.node_index].enqueue_id == explore_id_index_) {
       if (enode.cost < explored_node_tb_[enode.node_index].enqueue_cost) {
         pq_.push(enode);
+        /*
+        if (nullptr != lb_rr_graph.node_pb_graph_pin(enode.node_index)) {
+          VTR_LOG("Added node '%s' to priority queue\n",
+                  lb_rr_graph.node_pb_graph_pin(enode.node_index)->to_string().c_str());
+        }
+         */
       }
     } else {
       explored_node_tb_[enode.node_index].enqueue_id = explore_id_index_;
       explored_node_tb_[enode.node_index].enqueue_cost = enode.cost;
       pq_.push(enode);
+      /*
+      if (nullptr != lb_rr_graph.node_pb_graph_pin(enode.node_index)) {
+        VTR_LOG("Added node '%s' to priority queue\n",
+                lb_rr_graph.node_pb_graph_pin(enode.node_index)->to_string().c_str());
+      }
+       */
     }
   }
 }
@@ -732,6 +785,14 @@ void LbRouter::expand_node(const LbRRGraph& lb_rr_graph,
     }
   }
 
+  /*
+  if (nullptr != mode) {
+    VTR_LOGV(lb_rr_graph.node_pb_graph_pin(cur_node),
+             "Expand node '%s' by considering mode '%s'\n",
+             lb_rr_graph.node_pb_graph_pin(cur_node)->to_string().c_str(),
+             mode->name);
+  }
+   */
   expand_edges(lb_rr_graph, mode, cur_node, cur_cost, net_fanout);
 }
 
@@ -782,7 +843,7 @@ bool LbRouter::try_expand_nodes(const AtomNetlist& atom_nlist,
                                 const int& isrc,
                                 const int& itarget,
                                 const bool& try_other_modes,
-                                const int& verbosity) {
+                                const bool& verbosity) {
   bool is_impossible = false;
 
   do {
@@ -790,7 +851,7 @@ bool LbRouter::try_expand_nodes(const AtomNetlist& atom_nlist,
       /* No connection possible */
       is_impossible = true;
 
-      if (verbosity > 3) {
+      if (true == verbosity) {
         //Print detailed debug info
         AtomNetId net_id = lb_net_atom_net_ids_[lb_net];
         AtomPinId driver_pin = lb_net_atom_source_pins_[lb_net][isrc];

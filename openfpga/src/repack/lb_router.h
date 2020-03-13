@@ -321,7 +321,7 @@ class LbRouter {
                           const int& isrc,
                           const int& itarget,
                           const bool& try_other_modes,
-                          const int& verbosity);
+                          const bool& verbosity);
 
     bool try_route_net(const LbRRGraph& lb_rr_graph,
                        const AtomNetlist& atom_nlist,
