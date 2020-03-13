@@ -216,12 +216,24 @@ bool LbRouter::try_route_net(const LbRRGraph& lb_rr_graph,
                              std::unordered_map<const t_pb_graph_node*, const t_mode*>& mode_map,
                              const bool& verbosity) {
 
+  /* Quick check: if all the net can be skipped, we return route succeed */
+  bool skip_route = true;
+  for (size_t isrc = 0; isrc < lb_net_sources_[net_idx].size(); ++isrc) {
+    if (false == is_skip_route_net(lb_rr_graph, lb_net_rt_trees_[net_idx][isrc])) {
+      skip_route = false;
+      break;
+    }
+  }
+  if (true == skip_route) {
+    return true;
+  }
+
   std::vector<bool> sink_routed(lb_net_sinks_[net_idx].size(), false);
 
   for (size_t isrc = 0; isrc < lb_net_sources_[net_idx].size(); ++isrc) {
 
     if (true == is_skip_route_net(lb_rr_graph, lb_net_rt_trees_[net_idx][isrc])) {
-      return true;
+      continue;
     }
 
     commit_remove_rt(lb_rr_graph, lb_net_rt_trees_[net_idx][isrc], RT_REMOVE, mode_map);
@@ -231,6 +243,17 @@ bool LbRouter::try_route_net(const LbRRGraph& lb_rr_graph,
 
     /* Route each sink of net */
     for (size_t isink = 0; isink < lb_net_sinks_[net_idx].size(); ++isink) {
+
+      /* Do not route the sink if it share the same pb_type as source
+       * This is actually forbidden! This will definitely create a combinational loop
+       */
+      if ( (nullptr != lb_rr_graph.node_pb_graph_pin(lb_net_sinks_[net_idx][isink]))
+        && (nullptr != lb_rr_graph.node_pb_graph_pin(lb_net_sources_[net_idx][isrc])) ) {
+        if (lb_rr_graph.node_pb_graph_pin(lb_net_sinks_[net_idx][isink])->parent_node
+         == lb_rr_graph.node_pb_graph_pin(lb_net_sources_[net_idx][isrc])->parent_node) {
+          continue;
+        }
+      }
 
       /* Skip routed nets */
       if (true == sink_routed[isink]) {
