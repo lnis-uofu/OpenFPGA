@@ -209,7 +209,7 @@ bool LbRouter::try_route_net(const LbRRGraph& lb_rr_graph,
                              const NetId& net_idx,
                              t_expansion_node& exp_node,
                              std::unordered_map<const t_pb_graph_node*, const t_mode*>& mode_map,
-                             const int& verbosity) {
+                             const bool& verbosity) {
 
   std::vector<bool> sink_routed(lb_net_sinks_[net_idx].size(), false);
 
@@ -226,18 +226,15 @@ bool LbRouter::try_route_net(const LbRRGraph& lb_rr_graph,
 
     /* Route each sink of net */
     for (size_t isink = 0; isink < lb_net_sinks_[net_idx].size(); ++isink) {
-      /* Check if last sink failed in routing
-       * If failed, the routing is not possible for this net
-       */
-      if (0 < isink) {
-        if (false == sink_routed[isink - 1]) {
-          break;
-        }
+
+      /* Skip routed nets */
+      if (true == sink_routed[isink]) {
+        continue;
       }
 
       pq_.clear();
-      /* Get lowest cost next node, repeat until a path is found or if it is impossible to route */
 
+      /* Get lowest cost next node, repeat until a path is found or if it is impossible to route */
       expand_rt(net_idx, net_idx, isrc);
 
       /* If we managed to expand the nodes to the sink, routing for this sink is done.
@@ -246,10 +243,17 @@ bool LbRouter::try_route_net(const LbRRGraph& lb_rr_graph,
        */
       sink_routed[isink] = !try_expand_nodes(atom_nlist, lb_rr_graph, net_idx, exp_node, isrc, isink, mode_status_.expand_all_modes, verbosity);
 
+      if (true == sink_routed[isink]) {
+        VTR_LOGV(verbosity,
+                 "Succeed to expand routing tree from source pin '%s' to sink pin '%s'!\n",
+                 lb_rr_graph.node_pb_graph_pin(lb_net_sources_[net_idx][isrc])->to_string().c_str(),
+                 lb_rr_graph.node_pb_graph_pin(lb_net_sinks_[net_idx][isink])->to_string().c_str());
+      }
+
       if (false == sink_routed[isink] && false == mode_status_.expand_all_modes) {
         mode_status_.try_expand_all_modes = true;
         mode_status_.expand_all_modes = true;
-        break;
+        continue;
       }
 
       if (exp_node.node_index == lb_net_sinks_[net_idx][isink]) {
@@ -258,12 +262,23 @@ bool LbRouter::try_route_net(const LbRRGraph& lb_rr_graph,
       }
 
       if (false == sink_routed[isink]) {
-        VTR_LOG("Routing was impossible!\n");
+        VTR_LOGV(verbosity,
+                 "Routing was impossible from source pin '%s' to sink pin '%s'!\n",
+                 lb_rr_graph.node_pb_graph_pin(lb_net_sources_[net_idx][isrc])->to_string().c_str(),
+                 lb_rr_graph.node_pb_graph_pin(lb_net_sinks_[net_idx][isink])->to_string().c_str());
       } else if (mode_status_.expand_all_modes) {
         sink_routed[isink] = !route_has_conflict(lb_rr_graph, lb_net_rt_trees_[net_idx][isrc]);
         if (false == sink_routed[isink]) {
-          VTR_LOG("Routing was impossible due to modes!\n");
+          VTR_LOGV(verbosity,
+                   "Routing was impossible due to modes!\n");
         }
+      }
+
+      if (true == sink_routed[isink]) {
+        VTR_LOGV(verbosity,
+                 "Routing succeeded from source pin '%s' to sink pin '%s'!\n",
+                 lb_rr_graph.node_pb_graph_pin(lb_net_sources_[net_idx][isrc])->to_string().c_str(),
+                 lb_rr_graph.node_pb_graph_pin(lb_net_sinks_[net_idx][isink])->to_string().c_str());
       }
 
       explore_id_index_++;
@@ -275,30 +290,31 @@ bool LbRouter::try_route_net(const LbRRGraph& lb_rr_graph,
           explore_id_index_ = 1;
         }
       }
+
+      /* If routing succeed so far, we will try to save(commit) results
+       * to route tree.
+       * During this process, we will check if there is any 
+       * nodes using different modes under the same pb_type
+       * If so, we have conflicts and routing is considered to be failure
+       */
+      if (true == sink_routed[isink]) {
+        commit_remove_rt(lb_rr_graph, lb_net_rt_trees_[net_idx][isrc], RT_COMMIT, mode_map);
+        if (true == mode_status_.is_mode_conflict) {
+          sink_routed[isink] = false;
+        }
+      }
     }
   }
 
   /* Check the routing status for all the sinks */
   bool route_succeed = true;
-  for (const bool& sink_status : sink_routed) {
-    if (false == sink_status) {
+  for (size_t isink = 0; isink < sink_routed.size(); ++isink) {
+    if (false == sink_routed[isink]) {
       route_succeed = false;
+      VTR_LOGV(verbosity,
+               "Routing failed for sink pin '%s'!\n",
+               lb_rr_graph.node_pb_graph_pin(lb_net_sinks_[net_idx][isink])->to_string().c_str());
       break;
-    }
-  }
-
-  /* If routing succeed so far, we will try to save(commit) results
-   * to route tree.
-   * During this process, we will check if there is any 
-   * nodes using different modes under the same pb_type
-   * If so, we have conflicts and routing is considered to be failure
-   */
-  if (true == route_succeed) {
-    for (size_t isrc = 1; isrc < lb_net_sources_[net_idx].size(); ++isrc) {
-      commit_remove_rt(lb_rr_graph, lb_net_rt_trees_[net_idx][isrc], RT_COMMIT, mode_map);
-      if (true == mode_status_.is_mode_conflict) {
-        route_succeed = false;
-      }
     }
   }
 
@@ -307,7 +323,7 @@ bool LbRouter::try_route_net(const LbRRGraph& lb_rr_graph,
 
 bool LbRouter::try_route(const LbRRGraph& lb_rr_graph,
                          const AtomNetlist& atom_nlist,
-                         const int& verbosity) {
+                         const bool& verbosity) {
   /* Validate if the rr_graph is the one we used to initialize the router */
   VTR_ASSERT(true == matched_lb_rr_graph(lb_rr_graph));
 
@@ -351,27 +367,21 @@ bool LbRouter::try_route(const LbRRGraph& lb_rr_graph,
       is_routed_ = is_route_success(lb_rr_graph);
     } else {
       --inet;
-      VTR_LOGV(verbosity < 3,
-               "Net %lu '%s' is impossible to route within proposed %s cluster\n",
-               inet,
-               atom_nlist.net_name(lb_net_atom_net_ids_[NetId(inet)]).c_str(),
-               lb_type_->name);
-      VTR_LOGV(verbosity < 3,
-               "\tNet source pin:\n"); 
+      VTR_LOG("Net %lu '%s' is impossible to route within proposed %s cluster\n",
+              inet,
+              atom_nlist.net_name(lb_net_atom_net_ids_[NetId(inet)]).c_str(),
+              lb_type_->name);
+      VTR_LOG("\tNet source pin:\n"); 
       for (size_t isrc = 0; isrc < lb_net_sources_[NetId(inet)].size(); ++isrc) {
-        VTR_LOGV(verbosity < 3,
-                 "\t\t%s\n",
-                 lb_rr_graph.node_pb_graph_pin(lb_net_sources_[NetId(inet)][isrc])->to_string().c_str()); 
+        VTR_LOG("\t\t%s\n",
+                lb_rr_graph.node_pb_graph_pin(lb_net_sources_[NetId(inet)][isrc])->to_string().c_str()); 
       }
-      VTR_LOGV(verbosity < 3,
-               "\tNet sink pins:\n");
+      VTR_LOG("\tNet sink pins:\n");
       for (size_t isink = 0; isink < lb_net_sinks_[NetId(inet)].size(); ++isink) {
-        VTR_LOGV(verbosity < 3,
-                 "\t\t%s\n",
-                 lb_rr_graph.node_pb_graph_pin(lb_net_sinks_[NetId(inet)][isink])->to_string().c_str()); 
+        VTR_LOG("\t\t%s\n",
+                lb_rr_graph.node_pb_graph_pin(lb_net_sinks_[NetId(inet)][isink])->to_string().c_str()); 
       }
-      VTR_LOGV(verbosity < 3,
-               "Please check your architecture XML to see if it is routable\n");
+      VTR_LOG("Please check your architecture XML to see if it is routable\n");
       
       is_routed_ = false;
     }

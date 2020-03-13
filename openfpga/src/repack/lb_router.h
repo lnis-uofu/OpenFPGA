@@ -256,7 +256,7 @@ class LbRouter {
      */
     bool try_route(const LbRRGraph& lb_rr_graph,
                    const AtomNetlist& atom_nlist,
-                   const int& verbosity);
+                   const bool& verbosity);
 
   private :  /* Private accessors */
     /**
@@ -328,7 +328,7 @@ class LbRouter {
                        const NetId& net_idx,
                        t_expansion_node& exp_node,
                        std::unordered_map<const t_pb_graph_node*, const t_mode*>& mode_map,
-                       const int& verbosity);
+                       const bool& verbosity);
 
   private :  /* Private validators */
     /** 
