@@ -471,6 +471,18 @@ void build_connection_block_module_short_interc(ModuleManager& module_manager,
   VTR_ASSERT_SAFE(1 == driver_rr_nodes.size());
   const RRNodeId& driver_rr_node = driver_rr_nodes[0]; 
 
+  /* Xifan Tang: VPR considers delayless switch to be configurable
+   * As a result, the direct connection is considered to be configurable...
+   * Here, I simply kick out OPINs in CB connection because they should be built
+   * in the top mopdule.
+   * 
+   * Note: this MUST BE reconsidered if we do have OPIN connected to IPINs 
+   * through a programmable multiplexer!!!
+   */
+  if (OPIN == rr_graph.node_type(driver_rr_node)) {
+    return;
+  }
+
   VTR_ASSERT((CHANX == rr_graph.node_type(driver_rr_node)) || (CHANY == rr_graph.node_type(driver_rr_node)));
 
   /* Create port description for the routing track middle output */
