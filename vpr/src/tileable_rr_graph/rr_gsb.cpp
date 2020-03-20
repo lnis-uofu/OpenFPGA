@@ -874,8 +874,9 @@ void RRGSB::sort_chan_node_in_edges(const RRGraph& rr_graph) {
     SideManager side_manager(side);
     chan_node_in_edges_[side].resize(chan_node_[side].get_chan_width());
     for (size_t track_id = 0; track_id < chan_node_[side].get_chan_width(); ++track_id) {
-      /* Only sort the output nodes */
-      if (OUT_PORT == chan_node_direction_[side][track_id]) { 
+      /* Only sort the output nodes and bypass passing wires */
+      if ( (OUT_PORT == chan_node_direction_[side][track_id])
+        && (false == is_sb_node_passing_wire(rr_graph, side_manager.get_side(), track_id)) ) {  
         sort_chan_node_in_edges(rr_graph, side_manager.get_side(), track_id); 
       }
     }
