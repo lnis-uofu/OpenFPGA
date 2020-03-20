@@ -656,7 +656,11 @@ TileDirect build_device_tile_direct(const DeviceContext& device_ctx,
   /* Walk through each direct definition in the VPR arch */
   for (int idirect = 0; idirect < device_ctx.arch->num_directs; ++idirect) {
     ArchDirectId arch_direct_id = arch_direct.direct(std::string(device_ctx.arch->Directs[idirect].name));
-    VTR_ASSERT(ArchDirectId::INVALID() != arch_direct_id);
+    if (ArchDirectId::INVALID() == arch_direct_id) {
+      VTR_LOG_ERROR("Unable to find an annotation in openfpga architecture XML for <direct> '%s'!\n",
+                    device_ctx.arch->Directs[idirect].name);
+      exit(1);
+    }
     /* Build from original VPR arch definition */
     build_inner_column_row_tile_direct(tile_direct,
                                        device_ctx.arch->Directs[idirect],

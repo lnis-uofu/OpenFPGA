@@ -209,6 +209,9 @@
   <routing_segment>
     <segment name="L4" circuit_model_name="chan_segment"/>
   </routing_segment>
+  <direct_connection>
+    <direct name="adder" circuit_model_name="direct_interc" type="column" x_dir="positive" y_dir="positive"/>
+  </direct_connection>
   <pb_type_annotations>
     <!-- physical pb_type binding in complex block IO -->
     <pb_type name="io" physical_mode_name="physical" idle_mode_name="inpad"/>
