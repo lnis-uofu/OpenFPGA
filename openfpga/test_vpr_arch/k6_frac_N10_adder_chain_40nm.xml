@@ -147,7 +147,14 @@
         <fc_override port_name="cin" fc_type="frac" fc_val="0"/>
         <fc_override port_name="cout" fc_type="frac" fc_val="0"/>
       </fc>
-      <pinlocations pattern="spread"/>
+      <!--  Highly recommand to customize pin location when direct connection is used!!! -->
+      <!--pinlocations pattern="spread"/-->
+      <pinlocations pattern="custom">
+        <loc side="left">clb.clk</loc>
+        <loc side="top">clb.cin</loc>
+        <loc side="right">clb.O[9:0] clb.I[19:0]</loc>
+        <loc side="bottom">clb.cout clb.O[19:10] clb.I[39:20]</loc>
+      </pinlocations>
     </tile>
   </tiles>
   <!-- ODIN II specific config ends -->
