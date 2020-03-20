@@ -615,11 +615,11 @@ void load_grid_nodes_basic_info(RRGraph& rr_graph,
 
       /* Configure opin rr_nodes for this grid */
       load_one_grid_opin_nodes_basic_info(rr_graph,
-                                            rr_node_driver_switches, 
-                                            grid_coordinate, 
-                                            grids[ix][iy], 
-                                            io_side, 
-                                            delayless_switch);
+                                          rr_node_driver_switches, 
+                                          grid_coordinate, 
+                                          grids[ix][iy], 
+                                          io_side, 
+                                          delayless_switch);
 
       /* Configure ipin rr_nodes for this grid */
       load_one_grid_ipin_nodes_basic_info(rr_graph,
