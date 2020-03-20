@@ -320,19 +320,11 @@ void Shell<T>::print_commands() const {
     /* Print the class name */
     VTR_LOG("%s:\n", command_class_names_[cmd_class].c_str());
 
-    size_t cnt = 0;
     for (const ShellCommandId& cmd : commands_by_classes_[cmd_class]) {
       /* Print the command names in this class
        * but limited4 command per line for a clean layout
        */
-      VTR_LOG("%s", commands_[cmd].name().c_str());
-      cnt++;
-      if (4 == cnt) {
-        VTR_LOG("\n");
-        cnt = 0;
-      } else {
-        VTR_LOG("\t");
-      } 
+      VTR_LOG("\t%s\n", commands_[cmd].name().c_str());
     }
 
     /* Put a new line in the end as a splitter */
