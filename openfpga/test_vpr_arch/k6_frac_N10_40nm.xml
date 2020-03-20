@@ -135,6 +135,7 @@
     <!--- VB & JL: using ITRS metal stack data, 96 nm half pitch wires, which are intermediate metal width/space.  
 			     With the 96 nm half pitch, such wires would take 60 um of height, vs. a 90 nm high (approximated as square) Stratix IV tile so this seems
 			     reasonable. Using a tile length of 90 nm, corresponding to the length of a Stratix IV tile if it were square. -->
+    <!-- GIVE a specific name for the segment! OpenFPGA appreciate that! -->
     <segment name="L4" freq="1.000000" length="4" type="unidir" Rmetal="101" Cmetal="22.5e-15">
       <mux name="0"/>
       <sb type="pattern">1 1 1 1 1</sb>
@@ -227,7 +228,7 @@
         <output name="out" num_pins="2"/>
         <clock name="clk" num_pins="1"/>
         <!-- Physical mode definition begin (physical implementation of the fle) -->
-        <mode name="physical">
+        <mode name="physical" disabled_in_pack="true">
           <pb_type name="fabric" num_pb="1">
             <input name="in" num_pins="6"/>
             <output name="out" num_pins="2"/>

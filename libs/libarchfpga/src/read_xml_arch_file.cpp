@@ -2900,21 +2900,26 @@ static void ProcessDevice(pugi::xml_node Node, t_arch* arch, t_default_fc_spec& 
                        "Unknown property %s for switch block type x\n", Prop);
     }
 
-    Prop = get_attribute(Cur, "sub_type", loc_data, BoolToReqOpt(false)).value();
-    if (strcmp(Prop, "wilton") == 0) {
-        arch->SBSubType = WILTON;
-    } else if (strcmp(Prop, "universal") == 0) {
-        arch->SBSubType = UNIVERSAL;
-    } else if (strcmp(Prop, "subset") == 0) {
-        arch->SBSubType = SUBSET;
+    std::string sub_type_str = get_attribute(Cur, "sub_type", loc_data, BoolToReqOpt(false)).as_string("");
+    /* If not specified, we set the same value as 'type' */
+    if (!sub_type_str.empty()) {
+        if (sub_type_str == std::string("wilton")) {
+            arch->SBSubType = WILTON;
+        } else if (sub_type_str == std::string("universal")) {
+            arch->SBSubType = UNIVERSAL;
+        } else if (sub_type_str == std::string("subset")) {
+            arch->SBSubType = SUBSET;
+        } else {
+            archfpga_throw(loc_data.filename_c_str(), loc_data.line(Cur),
+                           "Unknown property %s for switch block subtype x\n", Prop);
+        }
     } else {
-        archfpga_throw(loc_data.filename_c_str(), loc_data.line(Cur),
-                       "Unknown property %s for switch block subtype x\n", Prop);
+        arch->SBSubType = arch->SBType;
     }
 
     ReqOpt CUSTOM_SWITCHBLOCK_REQD = BoolToReqOpt(!custom_switch_block);
     arch->Fs = get_attribute(Cur, "fs", loc_data, CUSTOM_SWITCHBLOCK_REQD).as_int(3);
-    arch->subFs = get_attribute(Cur, "sub_fs", loc_data,  BoolToReqOpt(false)).as_int(3);
+    arch->subFs = get_attribute(Cur, "sub_fs", loc_data,  BoolToReqOpt(false)).as_int(arch->Fs);
 
     Cur = get_single_child(Node, "default_fc", loc_data, ReqOpt::OPTIONAL);
     if (Cur) {
