@@ -269,6 +269,11 @@ bool try_route(int width_fac,
         graph_type = GRAPH_GLOBAL;
     } else {
         graph_type = (det_routing_arch->directionality == BI_DIRECTIONAL ? GRAPH_BIDIR : GRAPH_UNIDIR);
+        /* Branch on tileable routing */
+        if ( (UNI_DIRECTIONAL == det_routing_arch->directionality)
+          && (true == det_routing_arch->tileable) ) {
+            graph_type = GRAPH_UNIDIR_TILEABLE;
+        }
     }
 
     /* Set the channel widths */

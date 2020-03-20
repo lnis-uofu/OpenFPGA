@@ -1391,12 +1391,32 @@ void build_direct_connections_for_one_gsb(RRGraph& rr_graph,
         int from_grid_height_ofs = from_grid.height_offset;
         int to_grid_width_ofs = grids[to_grid_coordinate.x()][to_grid_coordinate.y()].width_offset;
         int to_grid_height_ofs = grids[to_grid_coordinate.x()][to_grid_coordinate.y()].height_offset;
+ 
+        /* Find the side of grid pins, the pin location should be unique!
+         * Pin location is required by searching a node in rr_graph 
+         */
+        std::vector<e_side> opin_grid_side = find_grid_pin_sides(from_grid, opin); 
+        VTR_ASSERT(1 == opin_grid_side.size());
+
+        std::vector<e_side> ipin_grid_side = find_grid_pin_sides(grids[to_grid_coordinate.x()][to_grid_coordinate.y()], ipin); 
+        VTR_ASSERT(1 == ipin_grid_side.size());
+
         const RRNodeId& opin_node_id = rr_graph.find_node(from_grid_coordinate.x() - from_grid_width_ofs, 
                                                           from_grid_coordinate.y() - from_grid_height_ofs, 
-                                                          OPIN, opin);
+                                                          OPIN, opin, opin_grid_side[0]);
         const RRNodeId& ipin_node_id = rr_graph.find_node(to_grid_coordinate.x() - to_grid_width_ofs, 
                                                           to_grid_coordinate.y() - to_grid_height_ofs, 
-                                                          IPIN, ipin);
+                                                          IPIN, ipin, ipin_grid_side[0]);
+        /*
+        VTR_LOG("Direct connection: from grid[%lu][%lu].pin[%lu] at side %s to grid[%lu][%lu].pin[%lu] at side %s\n",
+                from_grid_coordinate.x() - from_grid_width_ofs,
+                from_grid_coordinate.y() - from_grid_height_ofs,
+                opin, SIDE_STRING[opin_grid_side[0]],
+                to_grid_coordinate.x() - to_grid_width_ofs,
+                to_grid_coordinate.y() - to_grid_height_ofs,
+                ipin, SIDE_STRING[ipin_grid_side[0]]);
+         */
+     
         /* add edges to the opin_node */
         rr_graph.create_edge(opin_node_id, ipin_node_id,
                              delayless_switch);

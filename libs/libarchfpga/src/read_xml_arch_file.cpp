@@ -2536,7 +2536,7 @@ static void ProcessLayout(pugi::xml_node layout_tag, t_arch* arch, const pugiuti
     //Expect only tileable attributes on <layout>
     //expect_only_attributes(layout_tag, {"tileable"}, loc_data);
 
-    arch->tileable = get_attribute(layout_tag, "tileable", loc_data).as_bool();
+    arch->tileable = get_attribute(layout_tag, "tileable", loc_data).as_bool(false);
 
     //Count the number of <auto_layout> or <fixed_layout> tags
     size_t auto_layout_cnt = 0;

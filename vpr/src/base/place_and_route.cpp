@@ -88,6 +88,11 @@ int binary_search_place_and_route(const t_placer_opts& placer_opts_ref,
         graph_type = GRAPH_GLOBAL;
     } else {
         graph_type = (det_routing_arch->directionality == BI_DIRECTIONAL ? GRAPH_BIDIR : GRAPH_UNIDIR);
+        /* Branch on tileable routing */
+        if ( (UNI_DIRECTIONAL == det_routing_arch->directionality)
+          && (true == det_routing_arch->tileable) ) {
+            graph_type = GRAPH_UNIDIR_TILEABLE;
+        }
     }
 
     best_routing = alloc_saved_routing();

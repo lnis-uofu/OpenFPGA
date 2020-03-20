@@ -59,6 +59,20 @@ e_side determine_io_grid_pin_side(const vtr::Point<size_t>& device_size,
   }
 }
 
+/* Deteremine the side of a pin of a grid */
+std::vector<e_side> find_grid_pin_sides(const t_grid_tile& grid, 
+                                        const size_t& pin_id) {
+  std::vector<e_side> pin_sides;
+
+  for (const e_side& side : {TOP, RIGHT, BOTTOM, LEFT} ) {
+    if (true == grid.type->pinloc[grid.width_offset][grid.height_offset][size_t(side)][pin_id]) {
+      pin_sides.push_back(side);
+    }
+  }
+
+  return pin_sides;
+}
+
 /************************************************************************
  * Get a list of pin_index for a grid (either OPIN or IPIN)
  * For IO_TYPE, only one side will be used, we consider one side of pins 

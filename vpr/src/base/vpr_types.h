@@ -1009,6 +1009,9 @@ struct t_det_routing_arch {
      */
     int subFs;
     enum e_switch_block_type switch_block_subtype;
+    
+    /* Xifan Tang: tileable routing */
+    bool tileable;
 
     short global_route_switch;
     short delayless_switch;

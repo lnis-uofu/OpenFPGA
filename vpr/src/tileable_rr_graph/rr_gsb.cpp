@@ -822,6 +822,14 @@ void RRGSB::sort_chan_node_in_edges(const RRGraph& rr_graph,
     get_node_side_and_index(rr_graph, src_node, IN_PORT, side, index);
 
     /* Must have valid side and index */
+    if (NUM_SIDES == side) {
+      VTR_LOG("GSB[%lu][%lu]:\n", get_x(), get_y());
+      VTR_LOG("SRC node:\n");
+      rr_graph.print_node(src_node);
+      VTR_LOG("Channel node:\n");
+      rr_graph.print_node(chan_node);
+    }
+
     VTR_ASSERT(NUM_SIDES != side);
     VTR_ASSERT(OPEN != index);
 

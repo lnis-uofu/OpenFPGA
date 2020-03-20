@@ -20,6 +20,9 @@ size_t find_unidir_routing_channel_width(const size_t& chan_width);
 int get_grid_pin_class_index(const t_grid_tile& cur_grid,
                              const int pin_index);
 
+std::vector<e_side> find_grid_pin_sides(const t_grid_tile& grid, 
+                                        const size_t& pin_id);
+
 e_side determine_io_grid_pin_side(const vtr::Point<size_t>& device_size, 
                                   const vtr::Point<size_t>& grid_coordinate);
 
