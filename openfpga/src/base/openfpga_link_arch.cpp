@@ -123,7 +123,8 @@ void link_arch(OpenfpgaContext& openfpga_ctx,
 
   /* Build tile direct annotation */
   openfpga_ctx.mutable_tile_direct() = build_device_tile_direct(g_vpr_ctx.device(),
-                                                                openfpga_ctx.arch().arch_direct);
+                                                                openfpga_ctx.arch().arch_direct,
+                                                                cmd_context.option_enable(cmd, opt_verbose));
 
   /* Annotate placement results */
   annotate_mapped_blocks(g_vpr_ctx.device(), 
