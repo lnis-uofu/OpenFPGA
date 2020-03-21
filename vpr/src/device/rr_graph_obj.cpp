@@ -145,7 +145,7 @@ short RRGraph::node_capacity(const RRNodeId& node) const {
 
 short RRGraph::node_ptc_num(const RRNodeId& node) const {
     VTR_ASSERT_SAFE(valid_node_id(node));
-    return node_ptc_nums_[node];
+    return node_ptc_nums_[node][0];
 }
 
 short RRGraph::node_pin_num(const RRNodeId& node) const {
@@ -163,6 +163,13 @@ short RRGraph::node_track_num(const RRNodeId& node) const {
 short RRGraph::node_class_num(const RRNodeId& node) const {
     VTR_ASSERT_MSG(node_type(node) == SOURCE || node_type(node) == SINK, "Class number valid only for SOURCE/SINK RR nodes");
     return node_ptc_num(node);
+}
+
+std::vector<short> RRGraph::node_track_ids(const RRNodeId& node) const {
+    VTR_ASSERT_MSG(node_type(node) == CHANX || node_type(node) == CHANY,
+                   "Track number valid only for CHANX/CHANY RR nodes");
+    VTR_ASSERT_SAFE(valid_node_id(node));
+    return node_ptc_nums_[node];
 }
 
 short RRGraph::node_cost_index(const RRNodeId& node) const {
@@ -823,7 +830,7 @@ RRNodeId RRGraph::create_node(const t_rr_type& type) {
     node_bounding_boxes_.emplace_back(-1, -1, -1, -1);
 
     node_capacities_.push_back(-1);
-    node_ptc_nums_.push_back(-1);
+    node_ptc_nums_.push_back(std::vector<short>(1, -1));
     node_cost_indices_.push_back(-1);
     node_directions_.push_back(NO_DIRECTION);
     node_sides_.push_back(NUM_SIDES);
@@ -999,7 +1006,18 @@ void RRGraph::set_node_capacity(const RRNodeId& node, const short& capacity) {
 void RRGraph::set_node_ptc_num(const RRNodeId& node, const short& ptc) {
     VTR_ASSERT(valid_node_id(node));
 
-    node_ptc_nums_[node] = ptc;
+    /* For CHANX and CHANY, we will resize the ptc num to length of the node
+     * For other nodes, we will always assign the first element
+     */
+    if ((CHANX == node_type(node)) || (CHANY == node_type(node))) {
+        if ((size_t)node_length(node) + 1 != node_ptc_nums_[node].size()) {
+            node_ptc_nums_[node].resize(node_length(node) + 1);
+        }
+        std::fill(node_ptc_nums_[node].begin(), node_ptc_nums_[node].end(), ptc);
+    } else {
+        VTR_ASSERT(1 == node_ptc_nums_[node].size());
+        node_ptc_nums_[node][0] = ptc;
+    }
 }
 
 void RRGraph::set_node_pin_num(const RRNodeId& node, const short& pin_id) {
@@ -1021,6 +1039,22 @@ void RRGraph::set_node_class_num(const RRNodeId& node, const short& class_id) {
     VTR_ASSERT_MSG(node_type(node) == SOURCE || node_type(node) == SINK, "Class number valid only for SOURCE/SINK RR nodes");
 
     set_node_ptc_num(node, class_id);
+}
+
+void RRGraph::add_node_track_num(const RRNodeId& node,
+                                 const vtr::Point<size_t>& node_offset,
+                                 const short& track_id) {
+    VTR_ASSERT(valid_node_id(node));
+    VTR_ASSERT_MSG(node_type(node) == CHANX || node_type(node) == CHANY, "Track number valid only for CHANX/CHANY RR nodes");
+
+    if ((size_t)node_length(node) + 1 != node_ptc_nums_[node].size()) {
+        node_ptc_nums_[node].resize(node_length(node) + 1);
+    }
+
+    size_t offset = node_offset.x() - node_xlow(node) + node_offset.y() - node_ylow(node);
+    VTR_ASSERT(offset < node_ptc_nums_[node].size());
+
+    node_ptc_nums_[node][offset] = track_id;
 }
 
 void RRGraph::set_node_cost_index(const RRNodeId& node, const short& cost_index) {
@@ -1235,10 +1269,18 @@ void RRGraph::build_fast_node_lookup() const {
 
         size_t itype = node_type(node);
 
-        size_t ptc = node_ptc_num(node);
-
         for (const size_t& x : node_x) {
             for (const size_t& y : node_y) {
+                size_t ptc = node_ptc_num(node);
+                /* Routing channel nodes may have different ptc num 
+                 * Find the track ids using the x/y offset  
+                 */
+                if (CHANX == node_type(node)) {
+                    ptc = node_track_ids(node)[x - node_xlow(node)];
+                } else if (CHANY == node_type(node)) {
+                    ptc = node_track_ids(node)[y - node_ylow(node)];
+                }
+
                 if (ptc >= node_lookup_[x][y][itype].size()) {
                     node_lookup_[x][y][itype].resize(ptc + 1);
                 }

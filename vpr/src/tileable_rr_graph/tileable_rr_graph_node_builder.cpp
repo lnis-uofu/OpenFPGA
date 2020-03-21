@@ -666,6 +666,12 @@ void load_one_chan_rr_nodes_basic_info(RRGraph& rr_graph,
     
       rr_graph.set_node_xlow(node, chan_coordinate.x());
       rr_graph.set_node_ylow(node, chan_coordinate.y());
+     
+      /* Deposit xhigh and yhigh as the same value as xlow and ylow
+       * We will update when this track ends
+       */
+      rr_graph.set_node_xhigh(node, chan_coordinate.x());
+      rr_graph.set_node_yhigh(node, chan_coordinate.y());
 
       rr_graph.set_node_direction(node, chan_details.get_track_direction(itrack)); 
       rr_graph.set_node_track_num(node, itrack);
@@ -709,6 +715,7 @@ void load_one_chan_rr_nodes_basic_info(RRGraph& rr_graph,
       if ( (rr_graph.node_xhigh(rr_node_id) > rr_graph.node_xlow(rr_node_id))
         || (rr_graph.node_yhigh(rr_node_id) > rr_graph.node_ylow(rr_node_id)) ) {
         rr_node_track_ids[rr_node_id].push_back(itrack);
+        rr_graph.add_node_track_num(rr_node_id, chan_coordinate, itrack);
       }
       /* Finish here, go to next */
     }
@@ -734,6 +741,7 @@ void load_one_chan_rr_nodes_basic_info(RRGraph& rr_graph,
 
     /* Update track_ids */
     rr_node_track_ids[rr_node_id].push_back(itrack);
+    rr_graph.add_node_track_num(rr_node_id, chan_coordinate, itrack);
     /* Finish here, go to next */
   }
 } 

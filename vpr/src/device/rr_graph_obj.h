@@ -413,11 +413,24 @@ class RRGraph {
      * node_class_num() is designed for routing source and sinks, which are SOURCE and SINK nodes
      *
      * Due to a useful identifier, ptc_num is used in building fast look-up 
+     *
+     * Note: routing channels CHANX and CHANY may have multiple ptc_num due to 
+     *       tileable routing architecture, where a routing track may bend 
+     *       when passing each SB
+     *       By default, we always return the first ptc_num and track_num for
+     *       these nodee, while the other ptc num is accessible through fast look-up
+     *       when searching for a routing track in a channel
+     *
+     *       For CHANX, the track id vector is the same as yhigh - ylow + 1
+     *       For CHANY, the track id vector is the same as xhigh - xlow + 1
+     *       The first track id is always the track id at (xlow, ylow)
+     *       The last track id is always the track id at (xhigh, yhigh)
      */
     short node_ptc_num(const RRNodeId& node) const;
     short node_pin_num(const RRNodeId& node) const;
     short node_track_num(const RRNodeId& node) const;
     short node_class_num(const RRNodeId& node) const;
+    std::vector<short> node_track_ids(const RRNodeId& node) const;
 
     /* Get the index of cost data in the list of cost_indexed_data data structure
      * It contains the routing cost for different nodes in the RRGraph
@@ -696,6 +709,14 @@ class RRGraph {
      */
     void set_node_class_num(const RRNodeId& node, const short& class_id);
 
+    /* Add track id for a CHANX or a CHANY node.
+     * This is mainly used by tileable rr_graph where rr_node may
+     * have different track id in different channels
+     */
+    void add_node_track_num(const RRNodeId& node,
+                            const vtr::Point<size_t>& node_offset,
+                            const short& track_id);
+
     /* Set the routing cost index for node, see node_cost_index() for details */
     /* TODO: the cost index should be changed to a StrongId!!! */
     void set_node_cost_index(const RRNodeId& node, const short& cost_index);
@@ -851,7 +872,8 @@ class RRGraph {
     vtr::vector<RRNodeId, vtr::Rect<short>> node_bounding_boxes_;
 
     vtr::vector<RRNodeId, short> node_capacities_;
-    vtr::vector<RRNodeId, short> node_ptc_nums_;
+
+    vtr::vector<RRNodeId, std::vector<short>> node_ptc_nums_;
     vtr::vector<RRNodeId, short> node_cost_indices_;
     vtr::vector<RRNodeId, e_direction> node_directions_;
     vtr::vector<RRNodeId, e_side> node_sides_;
