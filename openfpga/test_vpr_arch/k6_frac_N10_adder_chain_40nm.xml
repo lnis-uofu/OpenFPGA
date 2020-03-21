@@ -159,9 +159,9 @@
   </tiles>
   <!-- ODIN II specific config ends -->
   <!-- Physical descriptions begin -->
-  <layout tileable="false">
+  <layout tileable="true">
     <!--auto_layout aspect_ratio="1.0"-->
-    <fixed_layout name="2x2" width="3" height="4">
+    <fixed_layout name="2x2" width="4" height="4">
       <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
       <perimeter type="io" priority="100"/>
       <corners type="EMPTY" priority="101"/>
