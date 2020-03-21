@@ -244,8 +244,7 @@ void print_pnr_sdc_constrain_cb_mux_timing(std::fstream& fp,
    * Note: this MUST BE reconsidered if we do have OPIN connected to IPINs 
    * through a programmable multiplexer!!!
    */
-  if ( (1 == input_rr_nodes.size())
-    && (OPIN == rr_graph.node_type(input_rr_nodes[0])) ) {
+  if (true == is_ipin_direct_connected_opin(rr_graph, output_rr_node)) {
     return;
   }
 
