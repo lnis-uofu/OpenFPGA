@@ -674,6 +674,9 @@ TileDirect build_device_tile_direct(const DeviceContext& device_ctx,
                                        arch_direct_id);
   } 
 
+  VTR_LOG("Built %lu tile-to-tile direct connections\n",
+          std::distance(tile_direct.directs().begin(), tile_direct.directs().end()));
+
   return tile_direct;
 }
 

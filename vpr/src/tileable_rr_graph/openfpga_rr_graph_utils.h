@@ -35,6 +35,12 @@ std::vector<RRNodeId> get_rr_graph_configurable_driver_nodes(const RRGraph& rr_g
 std::vector<RRNodeId> get_rr_graph_non_configurable_driver_nodes(const RRGraph& rr_graph,
                                                                  const RRNodeId& node);
 
+bool is_opin_direct_connected_ipin(const RRGraph& rr_graph,
+                                   const RRNodeId& node);
+
+bool is_ipin_direct_connected_opin(const RRGraph& rr_graph,
+                                   const RRNodeId& node);
+
 } /* end namespace openfpga */
 
 #endif

@@ -445,7 +445,8 @@ bool RRGSB::is_sb_node_passing_wire(const RRGraph& rr_graph,
    * we should be able to find the node on the opposite side of the GSB!
    */
   if (true != is_sb_node_exist_opposite_side(rr_graph, track_node, node_side)) {
-    VTR_LOG("GSB[%lu][%lu] track node:\n", get_x(), get_y());
+    VTR_LOG("GSB[%lu][%lu] track node[%lu] at %s:\n",
+            get_x(), get_y(), track_id, SIDE_STRING[node_side]);
     rr_graph.print_node(track_node);
   }
   VTR_ASSERT (true == is_sb_node_exist_opposite_side(rr_graph, track_node, node_side));

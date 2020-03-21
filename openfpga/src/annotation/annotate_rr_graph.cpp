@@ -12,6 +12,7 @@
 
 /* Headers from vpr library */
 #include "rr_graph_obj_util.h"
+#include "openfpga_rr_graph_utils.h"
 
 #include "annotate_rr_graph.h"
 
@@ -264,15 +265,31 @@ RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
                              vpr_device_ctx.rr_graph.node_configurable_out_edges(inode).end())) {
         continue;
       }
+
+      /* Do not consider OPINs that directly drive an IPIN
+       * they are supposed to be handled by direct connection
+       */
+      if (true == is_opin_direct_connected_ipin(vpr_device_ctx.rr_graph, inode)) { 
+        continue;
+      }
+
       /* Grid[x+1][y+1] Bottom side outputs pins */
       rr_gsb.add_opin_node(inode, side_manager.get_side());
     }
+
     for (const RRNodeId& inode : temp_opin_rr_nodes[1]) {
       /* Skip those has no configurable outgoing, they should NOT appear in the GSB connection
        * This is for those grid output pins used by direct connections
        */
       if (0 == std::distance(vpr_device_ctx.rr_graph.node_configurable_out_edges(inode).begin(),
                              vpr_device_ctx.rr_graph.node_configurable_out_edges(inode).end())) {
+        continue;
+      }
+
+      /* Do not consider OPINs that directly drive an IPIN
+       * they are supposed to be handled by direct connection
+       */
+      if (true == is_opin_direct_connected_ipin(vpr_device_ctx.rr_graph, inode)) { 
         continue;
       }
 
@@ -356,6 +373,13 @@ RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
                                                   ix, iy, IPIN, ipin_rr_node_grid_side);
     /* Fill the ipin nodes of RRGSB */ 
     for (const RRNodeId& inode : temp_ipin_rr_nodes) {
+      /* Do not consider IPINs that are directly connected by an OPIN
+       * they are supposed to be handled by direct connection
+       */
+      if (true == is_ipin_direct_connected_opin(vpr_device_ctx.rr_graph, inode)) { 
+        continue;
+      }
+ 
       rr_gsb.add_ipin_node(inode, side_manager.get_side());
     }
     /* Clear the temp data */
