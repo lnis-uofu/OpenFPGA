@@ -230,7 +230,22 @@ void print_pnr_sdc_constrain_cb_mux_timing(std::fstream& fp,
    * These connections should be handled by other functions in the compact_netlist.c 
    * So we just return here for OPINs 
    */
-  if (0 == get_rr_graph_configurable_driver_nodes(rr_graph, output_rr_node).size()) {
+  std::vector<RRNodeId> input_rr_nodes = get_rr_graph_configurable_driver_nodes(rr_graph, output_rr_node);
+
+  if (0 == input_rr_nodes.size()) {
+    return;
+  }
+
+  /* Xifan Tang: VPR considers delayless switch to be configurable
+   * As a result, the direct connection is considered to be configurable...
+   * Here, I simply kick out OPINs in CB connection because they should be built
+   * in the top mopdule.
+   * 
+   * Note: this MUST BE reconsidered if we do have OPIN connected to IPINs 
+   * through a programmable multiplexer!!!
+   */
+  if ( (1 == input_rr_nodes.size())
+    && (OPIN == rr_graph.node_type(input_rr_nodes[0])) ) {
     return;
   }
 
@@ -247,7 +262,7 @@ void print_pnr_sdc_constrain_cb_mux_timing(std::fstream& fp,
                                                                                           rr_graph, 
                                                                                           rr_gsb, 
                                                                                           cb_type,
-                                                                                          get_rr_graph_configurable_driver_nodes(rr_graph, output_rr_node));
+                                                                                          input_rr_nodes);
 
   /* Find timing constraints for each path (edge) */
   std::map<ModulePortId, float> switch_delays;
