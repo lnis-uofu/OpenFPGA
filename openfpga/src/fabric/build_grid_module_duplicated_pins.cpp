@@ -8,6 +8,8 @@
  *
  * Please follow this rules when creating new features!
  *******************************************************************/
+#include <algorithm>
+
 /* Headers from vtrutil library */
 #include "vtr_assert.h"
 
@@ -16,6 +18,8 @@
 
 #include "openfpga_naming.h"
 #include "openfpga_interconnect_types.h"
+
+#include "openfpga_physical_tile_utils.h"
 
 #include "build_grid_module_utils.h"
 #include "build_grid_module_duplicated_pins.h"
@@ -88,7 +92,8 @@ void add_grid_module_duplicated_pb_type_ports(ModuleManager& module_manager,
            * we do not duplicate in these cases */
           if ( (RECEIVER == pin_class_type)
             /* Xifan: I assume that each direct connection pin must have Fc=0. */
-            || ( (DRIVER == pin_class_type) && (0. == grid_type_descriptor->fc_specs[ipin].fc_value) ) ) {
+            || ( (DRIVER == pin_class_type)
+              && (0. == find_physical_tile_pin_Fc(grid_type_descriptor, ipin)) ) ) {
             vtr::Point<size_t> dummy_coordinate;
             std::string port_name = generate_grid_port_name(dummy_coordinate, iwidth, iheight, side, ipin, false);
             BasicPort grid_port(port_name, 0, 0);
@@ -169,7 +174,7 @@ void add_grid_module_net_connect_duplicated_pb_graph_pin(ModuleManager& module_m
      * Follow the traditional recipe when adding nets!  
      * Xifan: I assume that each direct connection pin must have Fc=0. 
      */
-    if (0. == grid_type_descriptor->fc_specs[grid_pin_index].fc_value) {
+    if (0. == find_physical_tile_pin_Fc(grid_type_descriptor, grid_pin_index)) {
       /* Create a net to connect the grid pin to child module pin */
       ModuleNetId net = module_manager.create_module_net(grid_module);
       /* Find the port in grid_module */

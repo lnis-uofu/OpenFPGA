@@ -12,6 +12,7 @@
 #include "openfpga_naming.h"
 #include "pb_type_utils.h"
 #include "rr_gsb_utils.h"
+#include "openfpga_physical_tile_utils.h"
 
 #include "build_top_module_utils.h"
 #include "build_top_module_connection.h"
@@ -232,7 +233,7 @@ void add_top_module_nets_connect_grids_and_sb_with_duplicated_pins(ModuleManager
        * For other duplicated pins, we follow the new naming
        */
       std::string src_grid_port_name;
-      if (0. == grids[grid_coordinate.x()][grid_coordinate.y()].type->fc_specs[src_grid_pin_index].fc_value) {
+      if (0. == find_physical_tile_pin_Fc(grids[grid_coordinate.x()][grid_coordinate.y()].type, src_grid_pin_index)) {
         src_grid_port_name = generate_grid_port_name(grid_coordinate, src_grid_pin_width, src_grid_pin_height, 
                                                      rr_graph.node_side(rr_gsb.get_opin_node(side_manager.get_side(), inode)),
                                                      src_grid_pin_index, false);

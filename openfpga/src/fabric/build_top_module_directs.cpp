@@ -96,8 +96,8 @@ void add_module_nets_tile_direct_connection(ModuleManager& module_manager,
   std::string src_port_name = generate_grid_port_name(src_clb_coord, src_pin_width, src_pin_height, src_pin_grid_side, src_tile_pin, false);
   ModulePortId src_port_id = module_manager.find_module_port(src_grid_module, src_port_name); 
   if (true != module_manager.valid_module_port_id(src_grid_module, src_port_id)) {
-    VTR_LOG_ERROR("Fail to find port '%s.%s'\n",
-                  src_module_name.c_str(),
+    VTR_LOG_ERROR("Fail to find port '%s[%lu][%lu].%s'\n",
+                  src_module_name.c_str(), src_clb_coord.x(), src_clb_coord.y(),
                   src_port_name.c_str());
   }
   VTR_ASSERT(true == module_manager.valid_module_port_id(src_grid_module, src_port_id));
