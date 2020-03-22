@@ -1,9 +1,12 @@
-Bistream Output File Format
+Bitstream Output File Format
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 FPGA-Bitstream can generate two types of bitstreams:
+
 * Generic bitstreams, where configuration bits are organized out-of-order in a database. We output the generic bitstream to a XML format, which is easy to debug. As shown in the following XML code, configuration bits are organized block by block, where each block could be a LUT, a routing multiplexer `etc`. Each ``bitstream_block`` includes two sets of information: 
+
   - ``hierarchy`` represents the location of this block in FPGA fabric.
+
   - ``bitstream`` represents the configuration bits affiliated to this block.
 
 .. code-block:: xml
