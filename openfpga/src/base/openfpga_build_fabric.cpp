@@ -45,7 +45,7 @@ void compress_routing_hierarchy(OpenfpgaContext& openfpga_ctx,
            "Detected %lu unique switch blocks from a total of %d (compression rate=%.2f%)\n",
            openfpga_ctx.device_rr_gsb().get_num_sb_unique_module(),
            find_device_rr_gsb_num_sb_modules(openfpga_ctx.device_rr_gsb()),
-           100. * (find_device_rr_gsb_num_sb_modules(openfpga_ctx.device_rr_gsb()) / openfpga_ctx.device_rr_gsb().get_num_sb_unique_module() - 1));
+           100. * (find_device_rr_gsb_num_sb_modules(openfpga_ctx.device_rr_gsb()) / openfpga_ctx.device_rr_gsb().get_num_sb_unique_module() - 1.));
 
   VTR_LOG("Detected %lu unique general switch blocks from a total of %d (compression rate=%.2f%)\n",
           openfpga_ctx.device_rr_gsb().get_num_gsb_unique_module(),

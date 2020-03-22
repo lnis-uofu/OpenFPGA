@@ -267,6 +267,7 @@ void DeviceRRGSB::build_sb_unique_module(const RRGraph& rr_graph) {
           break;
         }
       }
+
       /* Add to list if this is a unique mirror*/
       if (true == is_unique_module) {
         sb_unique_module_.push_back(sb_coordinate);

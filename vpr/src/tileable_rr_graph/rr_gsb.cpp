@@ -952,8 +952,6 @@ bool RRGSB::is_sb_node_mirror(const RRGraph& rr_graph,
                               const e_side& node_side, 
                               const size_t& track_id) const {
   /* Ensure rr_nodes are either the output of short-connection or multiplexer  */
-  RRNodeId node = this->get_chan_node(node_side, track_id);
-  RRNodeId cand_node = cand.get_chan_node(node_side, track_id);
   bool is_short_conkt = this->is_sb_node_passing_wire(rr_graph, node_side, track_id);
 
   if (is_short_conkt != cand.is_sb_node_passing_wire(rr_graph, node_side, track_id)) {
@@ -968,14 +966,15 @@ bool RRGSB::is_sb_node_mirror(const RRGraph& rr_graph,
     return true;
   }
 
-  /* For non-passing wires, check driving rr_nodes */
-  if (rr_graph.node_in_edges(node).size() != rr_graph.node_in_edges(cand_node).size()) {
-    return false;
-  }
-
   /* Use unsorted/sorted edges */
   std::vector<RREdgeId> node_in_edges = get_chan_node_in_edges(rr_graph, node_side, track_id);
   std::vector<RREdgeId> cand_node_in_edges = cand.get_chan_node_in_edges(rr_graph, node_side, track_id);
+
+  /* For non-passing wires, check driving rr_nodes */
+  if (node_in_edges.size() != cand_node_in_edges.size()) {
+    return false;
+  }
+
   VTR_ASSERT(node_in_edges.size() == cand_node_in_edges.size());
 
   for (size_t iedge = 0; iedge < node_in_edges.size(); ++iedge) {
@@ -984,7 +983,7 @@ bool RRGSB::is_sb_node_mirror(const RRGraph& rr_graph,
     RRNodeId src_node = rr_graph.edge_src_node(src_edge);
     RRNodeId src_cand_node = rr_graph.edge_src_node(src_cand_edge);
     /* node type should be the same  */
-    if (rr_graph.node_type(src_node) != rr_graph.node_type(cand_node)) {
+    if (rr_graph.node_type(src_node) != rr_graph.node_type(src_cand_node)) {
       return false;
     }
     /* switch type should be the same  */
