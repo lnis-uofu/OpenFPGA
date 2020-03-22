@@ -103,26 +103,26 @@ void write_rr_switch_block_to_xml(const std::string fname_prefix,
       }
       /* Output drivers */
       const RRNodeId& cur_rr_node = rr_gsb.get_chan_node(gsb_side, inode);
-      std::vector<RRNodeId> driver_rr_nodes = get_rr_graph_configurable_driver_nodes(rr_graph, cur_rr_node);
+      std::vector<RREdgeId> driver_rr_edges = rr_gsb.get_chan_node_in_edges(rr_graph, gsb_side, inode);
 
       /* Output node information: location, index, side */
       const RRSegmentId& src_segment_id = rr_gsb.get_chan_node_segment(gsb_side, inode);
 
       /* Check if this node is directly connected to the node on the opposite side */
       if (true == rr_gsb.is_sb_node_passing_wire(rr_graph, gsb_side, inode)) {
-        driver_rr_nodes.clear();
+        driver_rr_edges.clear();
       }
 
       fp << "\t<" << rr_node_typename[rr_graph.node_type(cur_rr_node)]
          << " side=\"" << gsb_side_manager.to_string() 
          << "\" index=\"" << inode 
          << "\" segment_id=\"" << size_t(src_segment_id)
-         << "\" mux_size=\"" << driver_rr_nodes.size()
+         << "\" mux_size=\"" << driver_rr_edges.size()
          << "\">" 
          << std::endl; 
 
       /* Direct connection: output the node on the opposite side */
-      if (0 == driver_rr_nodes.size()) {
+      if (0 == driver_rr_edges.size()) {
         SideManager oppo_side =  gsb_side_manager.get_opposite();
         fp << "\t\t<driver_node type=\"" << rr_node_typename[rr_graph.node_type(cur_rr_node)]
            << "\" side=\"" << oppo_side.to_string() 
@@ -131,7 +131,8 @@ void write_rr_switch_block_to_xml(const std::string fname_prefix,
            << "\"/>" 
            << std::endl; 
       } else {
-        for (const RRNodeId& driver_rr_node : driver_rr_nodes) {
+        for (const RREdgeId& driver_rr_edge : driver_rr_edges) {
+          const RRNodeId& driver_rr_node = rr_graph.edge_src_node(driver_rr_edge);
           e_side driver_node_side = NUM_SIDES;
           int driver_node_index = -1;
           rr_gsb.get_node_side_and_index(rr_graph, driver_rr_node, IN_PORT, driver_node_side, driver_node_index);
