@@ -739,6 +739,12 @@ void load_one_chan_rr_nodes_basic_info(RRGraph& rr_graph,
     VTR_ASSERT(chan_type == rr_graph.node_type(rr_node_id));
     VTR_ASSERT(chan_details.get_track_direction(itrack) == rr_graph.node_direction(rr_node_id));
 
+    /* Deposit xhigh and yhigh using the current chan_coordinate
+     * We will update when this track ends
+     */
+    rr_graph.set_node_xhigh(rr_node_id, chan_coordinate.x());
+    rr_graph.set_node_yhigh(rr_node_id, chan_coordinate.y());
+
     /* Update track_ids */
     rr_node_track_ids[rr_node_id].push_back(itrack);
     rr_graph.add_node_track_num(rr_node_id, chan_coordinate, itrack);
