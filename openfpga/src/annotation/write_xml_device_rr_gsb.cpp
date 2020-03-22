@@ -24,14 +24,17 @@ namespace openfpga {
 static 
 void write_rr_switch_block_to_xml(const std::string fname_prefix,
                                   const RRGraph& rr_graph,
-                                  const RRGSB& rr_gsb) {
+                                  const RRGSB& rr_gsb,
+                                  const bool& verbose) {
   /* Prepare file name */
   std::string fname(fname_prefix);
   vtr::Point<size_t> gsb_coordinate(rr_gsb.get_sb_x(), rr_gsb.get_sb_y());
   fname += generate_switch_block_module_name(gsb_coordinate);
   fname += ".xml";
 
-  VTR_LOG("Output internal structure of Switch Block to '%s'\r", fname.c_str());
+  VTR_LOGV(verbose,
+           "Output internal structure of Switch Block to '%s'\n",
+           fname.c_str());
 
   /* Create a file handler*/
   std::fstream fp;
@@ -173,18 +176,29 @@ void write_rr_switch_block_to_xml(const std::string fname_prefix,
  ***************************************************************************************/
 void write_device_rr_gsb_to_xml(const char* sb_xml_dir, 
                                 const RRGraph& rr_graph,
-                                const DeviceRRGSB& device_rr_gsb) {
-  std::string fname_prefix = format_dir_path(std::string(sb_xml_dir));
+                                const DeviceRRGSB& device_rr_gsb,
+                                const bool& verbose) {
+  std::string xml_dir_name = format_dir_path(std::string(sb_xml_dir));
+
+  /* Create directories */
+  create_dir_path(xml_dir_name.c_str());
 
   vtr::Point<size_t> sb_range = device_rr_gsb.get_gsb_range();
+
+  size_t gsb_counter = 0;
 
   /* For each switch block, an XML file will be outputted */
   for (size_t ix = 0; ix < sb_range.x(); ++ix) {
     for (size_t iy = 0; iy < sb_range.y(); ++iy) {
       const RRGSB& rr_gsb = device_rr_gsb.get_gsb(ix, iy);
-      write_rr_switch_block_to_xml(fname_prefix, rr_graph, rr_gsb);
+      write_rr_switch_block_to_xml(xml_dir_name, rr_graph, rr_gsb, verbose);
+      gsb_counter++;
     }
   }
+
+  VTR_LOG("Output %lu XML files to directory '%s'\n",
+          gsb_counter,
+          xml_dir_name.c_str());
 }
 
 } /* end namespace openfpga */
