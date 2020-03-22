@@ -52,6 +52,16 @@ Setup OpenFPGA
 
   - ``--verbose`` Show verbose log
 
+.. option:: write_gsb_to_xml
+
+  Write the internal structure of General Switch Blocks (GSBs) across a FPGA fabric, including the interconnection between the nodes and node-level details, to XML files
+
+  - ``--file`` or ``-f`` Specify the output directory of the XML files. Each GSB will be written to an indepedent XML file
+
+  - ``--verbose`` Show verbose log
+
+  .. note:: This command is used to help users to study the difference between GSBs
+
 .. option:: check_netlist_naming_conflict 
 
   Check and correct any naming conflicts in the BLIF netlist
