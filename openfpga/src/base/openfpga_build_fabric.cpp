@@ -65,6 +65,8 @@ void build_fabric(OpenfpgaContext& openfpga_ctx,
   
   if (true == cmd_context.option_enable(cmd, opt_compress_routing)) {
     compress_routing_hierarchy(openfpga_ctx, cmd_context.option_enable(cmd, opt_verbose));
+    /* Update flow manager to enable compress routing */
+    openfpga_ctx.mutable_flow_manager().set_compress_routing(true);
   }
 
   VTR_LOG("\n");

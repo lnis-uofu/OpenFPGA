@@ -25,7 +25,7 @@ lut_truth_table_fixup #--verbose
 # Build the module graph 
 #  - Enabled compression on routing architecture modules
 #  - Enable pin duplication on grid modules 
-build_fabric --compress_routing --duplicate_grid_pin #--verbose
+build_fabric --compress_routing --duplicate_grid_pin --verbose
 
 # Repack the netlist to physical pbs
 # This must be done before bitstream generator and testbench generation

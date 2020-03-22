@@ -9,6 +9,14 @@
 namespace openfpga {
 
 /**************************************************
+ * Public Constructor
+ *************************************************/
+FlowManager::FlowManager() {
+  /* Turn off compress_routing as default */
+  compress_routing_ = false;
+}
+
+/**************************************************
  * Public Accessors 
  *************************************************/
 bool FlowManager::compress_routing() const {

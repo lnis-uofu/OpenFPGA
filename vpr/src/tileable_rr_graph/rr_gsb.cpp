@@ -975,7 +975,7 @@ bool RRGSB::is_sb_node_mirror(const RRGraph& rr_graph,
 
   /* Use unsorted/sorted edges */
   std::vector<RREdgeId> node_in_edges = get_chan_node_in_edges(rr_graph, node_side, track_id);
-  std::vector<RREdgeId> cand_node_in_edges = cand. get_chan_node_in_edges(rr_graph, node_side, track_id);
+  std::vector<RREdgeId> cand_node_in_edges = cand.get_chan_node_in_edges(rr_graph, node_side, track_id);
   VTR_ASSERT(node_in_edges.size() == cand_node_in_edges.size());
 
   for (size_t iedge = 0; iedge < node_in_edges.size(); ++iedge) {

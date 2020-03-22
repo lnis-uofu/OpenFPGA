@@ -15,6 +15,8 @@ namespace openfpga {
  *
  *******************************************************************/
 class FlowManager {
+  public: /* Public constructor */
+    FlowManager();
   public: /* Public accessors */
     bool compress_routing() const;
   public: /* Public mutators */
