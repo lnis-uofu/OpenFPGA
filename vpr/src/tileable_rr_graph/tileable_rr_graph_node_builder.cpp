@@ -492,8 +492,8 @@ void load_one_grid_source_nodes_basic_info(RRGraph& rr_graph,
     /* node bounding box */
     rr_graph.set_node_bounding_box(node, vtr::Rect<short>(grid_coordinate.x(),
                                                           grid_coordinate.y(),
-                                                          grid_coordinate.x(),
-                                                          grid_coordinate.y()));
+                                                          grid_coordinate.x() + cur_grid.type->width - 1,
+                                                          grid_coordinate.y() + cur_grid.type->height - 1));
     rr_graph.set_node_class_num(node, iclass);  
 
     rr_graph.set_node_capacity(node, 1);
@@ -543,8 +543,8 @@ void load_one_grid_sink_nodes_basic_info(RRGraph& rr_graph,
     /* node bounding box */
     rr_graph.set_node_bounding_box(node, vtr::Rect<short>(grid_coordinate.x(),
                                                           grid_coordinate.y(),
-                                                          grid_coordinate.x(),
-                                                          grid_coordinate.y()));
+                                                          grid_coordinate.x() + cur_grid.type->width - 1,
+                                                          grid_coordinate.y() + cur_grid.type->height - 1));
     rr_graph.set_node_class_num(node, iclass);  
 
     rr_graph.set_node_capacity(node, 1);
