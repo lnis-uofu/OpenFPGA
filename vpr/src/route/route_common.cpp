@@ -236,7 +236,8 @@ void try_graph(int width_fac, const t_router_opts& router_opts, t_det_routing_ar
                     segment_inf,
                     router_opts.base_cost_type,
                     router_opts.trim_empty_channels,
-                    router_opts.trim_obs_channels,
+                    /* Xifan tang: The trimming on obstacle(through) channel inside multi-height and multi-width grids are not open to command-line options. OpenFPGA opens this options through an XML syntax */
+                    router_opts.trim_obs_channels || det_routing_arch->through_channel,
                     router_opts.clock_modeling,
                     directs, num_directs,
                     &warning_count);

@@ -324,6 +324,7 @@ static void SetupRoutingArch(const t_arch& Arch,
 
     /* Copy the tileable routing setting */
     RoutingArch->tileable = Arch.tileable;
+    RoutingArch->through_channel = Arch.through_channel;
 }
 
 static void SetupRouterOpts(const t_options& Options, t_router_opts* RouterOpts) {

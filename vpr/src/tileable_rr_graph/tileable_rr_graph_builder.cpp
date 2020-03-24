@@ -83,6 +83,7 @@ void build_tileable_unidir_rr_graph(const std::vector<t_physical_tile_type>& typ
                                     const t_direct_inf *directs, 
                                     const int& num_directs,
                                     int* wire_to_rr_ipin_switch,
+                                    const bool& through_channel,
                                     const bool& wire_opposite_side,
                                     int *Warnings) { 
 
@@ -149,7 +150,8 @@ void build_tileable_unidir_rr_graph(const std::vector<t_physical_tile_type>& typ
                                 rr_node_driver_switches,
                                 grids,
                                 device_chan_width,
-                                segment_inf);
+                                segment_inf,
+                                through_channel);
 
   /************************
    * Create all the rr_nodes 
@@ -161,7 +163,8 @@ void build_tileable_unidir_rr_graph(const std::vector<t_physical_tile_type>& typ
                                  device_chan_width,
                                  segment_inf,
                                  wire_to_ipin_rr_switch,
-                                 delayless_rr_switch); 
+                                 delayless_rr_switch,
+                                 through_channel);
 
   /************************************************************************
    * Create the connectivity of OPINs

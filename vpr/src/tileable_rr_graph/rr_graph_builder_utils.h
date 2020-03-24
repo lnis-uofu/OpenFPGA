@@ -46,16 +46,20 @@ bool is_chany_exist(const DeviceGrid& grids,
                     const vtr::Point<size_t>& chany_coord);
 
 bool is_chanx_right_to_multi_height_grid(const DeviceGrid& grids,
-                                         const vtr::Point<size_t>& chanx_coord);
+                                         const vtr::Point<size_t>& chanx_coord,
+                                         const bool& through_channel);
 
 bool is_chanx_left_to_multi_height_grid(const DeviceGrid& grids,
-                                        const vtr::Point<size_t>& chanx_coord);
+                                        const vtr::Point<size_t>& chanx_coord,
+                                        const bool& through_channel);
 
 bool is_chany_top_to_multi_width_grid(const DeviceGrid& grids,
-                                      const vtr::Point<size_t>& chany_coord);
+                                      const vtr::Point<size_t>& chany_coord,
+                                      const bool& through_channel);
 
 bool is_chany_bottom_to_multi_width_grid(const DeviceGrid& grids,
-                                         const vtr::Point<size_t>& chany_coord);
+                                         const vtr::Point<size_t>& chany_coord,
+                                         const bool& through_channel);
 
 short get_rr_node_actual_track_id(const RRGraph& rr_graph,
                                   const RRNodeId& track_rr_node,

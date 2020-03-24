@@ -359,7 +359,8 @@ int binary_search_place_and_route(const t_placer_opts& placer_opts_ref,
                     segment_inf,
                     router_opts.base_cost_type,
                     router_opts.trim_empty_channels,
-                    router_opts.trim_obs_channels,
+                    /* Xifan tang: The trimming on obstacle(through) channel inside multi-height and multi-width grids are not open to command-line options. OpenFPGA opens this options through an XML syntax */
+                    router_opts.trim_obs_channels || det_routing_arch->through_channel,
                     router_opts.clock_modeling,
                     arch->Directs, arch->num_directs,
                     &warnings);

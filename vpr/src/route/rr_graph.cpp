@@ -366,6 +366,7 @@ void create_rr_graph(const t_graph_type graph_type,
                                                     base_cost_type,
                                                     directs, num_directs,
                                                     &det_routing_arch->wire_to_rr_ipin_switch,
+                                                    trim_obs_channels, /* Allow/Prohibit through tracks across multi-height and multi-width grids */
                                                     false, /* Do not allow passing tracks to be wired to the same routing channels */
                                                     Warnings);
         }

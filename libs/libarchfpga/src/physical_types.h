@@ -1590,7 +1590,9 @@ struct t_clock_arch_spec {
 struct t_arch {
     char* architecture_id; //Secure hash digest of the architecture file to uniquely identify this architecture
     
+    /* Xifan Tang: options for tileable routing architectures */
     bool tileable;
+    bool through_channel;
 
     t_chan_width_dist Chans;
     enum e_switch_block_type SBType;

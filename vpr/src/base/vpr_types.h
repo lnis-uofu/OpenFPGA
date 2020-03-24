@@ -1012,6 +1012,7 @@ struct t_det_routing_arch {
     
     /* Xifan Tang: tileable routing */
     bool tileable;
+    bool through_channel;
 
     short global_route_switch;
     short delayless_switch;
