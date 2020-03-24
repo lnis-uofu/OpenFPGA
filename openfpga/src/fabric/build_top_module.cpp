@@ -105,6 +105,13 @@ vtr::Matrix<size_t> add_top_module_grid_instances(ModuleManager& module_manager,
       /* Skip width or height > 1 tiles (mostly heterogeneous blocks) */
       if ( (0 < grids[ix][iy].width_offset)
         || (0 < grids[ix][iy].height_offset)) {
+        /* Find the root of this grid, the instance id should be valid. 
+         * We just copy it here
+         */
+        vtr::Point<size_t> root_grid_coord(ix - grids[ix][iy].width_offset,
+                                           iy - grids[ix][iy].height_offset);
+        VTR_ASSERT(size_t(-1) != grid_instance_ids[root_grid_coord.x()][root_grid_coord.y()]);
+        grid_instance_ids[ix][iy] = grid_instance_ids[root_grid_coord.x()][root_grid_coord.y()];
         continue;
       }
       /* We should not meet any I/O grid */
@@ -153,6 +160,13 @@ vtr::Matrix<size_t> add_top_module_grid_instances(ModuleManager& module_manager,
       /* Skip width, height > 1 tiles (mostly heterogeneous blocks) */
       if ( (0 < grids[io_coordinate.x()][io_coordinate.y()].width_offset)
         || (0 < grids[io_coordinate.x()][io_coordinate.y()].height_offset)) {
+        /* Find the root of this grid, the instance id should be valid. 
+         * We just copy it here
+         */
+        vtr::Point<size_t> root_grid_coord(io_coordinate.x() - grids[io_coordinate.x()][io_coordinate.y()].width_offset,
+                                           io_coordinate.y() - grids[io_coordinate.x()][io_coordinate.y()].height_offset);
+        VTR_ASSERT(size_t(-1) != grid_instance_ids[root_grid_coord.x()][root_grid_coord.y()]);
+        grid_instance_ids[io_coordinate.x()][io_coordinate.y()] = grid_instance_ids[root_grid_coord.x()][root_grid_coord.y()];
         continue;
       }
       /* We should not meet any I/O grid */

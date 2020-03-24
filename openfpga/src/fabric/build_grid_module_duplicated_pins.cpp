@@ -163,7 +163,7 @@ void add_grid_module_net_connect_duplicated_pb_graph_pin(ModuleManager& module_m
   size_t grid_pin_index = pb_graph_pin->pin_count_in_cluster 
                         + child_instance * grid_type_descriptor->num_pins / grid_type_descriptor->capacity;
 
-  int pin_width = grid_type_descriptor->pin_height_offset[grid_pin_index];
+  int pin_width = grid_type_descriptor->pin_width_offset[grid_pin_index];
   int pin_height = grid_type_descriptor->pin_height_offset[grid_pin_index];
   for (const e_side& side : grid_pin_sides) {
     if (true != grid_type_descriptor->pinloc[pin_width][pin_height][side][grid_pin_index]) {

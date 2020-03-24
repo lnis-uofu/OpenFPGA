@@ -63,6 +63,11 @@ void add_top_module_nets_connect_grids_and_sb(ModuleManager& module_manager,
                                               const vtr::Matrix<size_t>& sb_instance_ids,
                                               const bool& compact_routing_hierarchy) {
 
+  /* Skip those Switch blocks that do not exist */
+  if (false == rr_gsb.is_sb_exist()) {
+    return;
+  }
+
   /* We could have two different coordinators, one is the instance, the other is the module */
   vtr::Point<size_t> instance_sb_coordinate(rr_gsb.get_sb_x(), rr_gsb.get_sb_y());
   vtr::Point<size_t> module_gsb_coordinate(rr_gsb.get_x(), rr_gsb.get_y());
@@ -178,6 +183,11 @@ void add_top_module_nets_connect_grids_and_sb_with_duplicated_pins(ModuleManager
                                                                    const RRGSB& rr_gsb, 
                                                                    const vtr::Matrix<size_t>& sb_instance_ids,
                                                                    const bool& compact_routing_hierarchy) {
+
+  /* Skip those Switch blocks that do not exist */
+  if (false == rr_gsb.is_sb_exist()) {
+    return;
+  }
 
   /* We could have two different coordinators, one is the instance, the other is the module */
   vtr::Point<size_t> instance_sb_coordinate(rr_gsb.get_sb_x(), rr_gsb.get_sb_y());
@@ -642,6 +652,7 @@ void add_top_module_nets_connect_grids_and_gsbs(ModuleManager& module_manager,
     for (size_t iy = 0; iy < gsb_range.y(); ++iy) {
       vtr::Point<size_t> gsb_coordinate(ix, iy);
       const RRGSB& rr_gsb = device_rr_gsb.get_gsb(ix, iy);
+
       /* Connect the grid pins of the GSB to adjacent grids */
       if (false == duplicate_grid_pin) {
         add_top_module_nets_connect_grids_and_sb(module_manager, top_module, 
