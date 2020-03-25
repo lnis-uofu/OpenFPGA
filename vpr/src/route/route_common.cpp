@@ -1490,13 +1490,36 @@ void print_route(FILE* fp, const vtr::vector<ClusterNetId, t_traceback>& traceba
                             } else { /* IO Pad. */
                                 fprintf(fp, " Pin: ");
                             }
+                            fprintf(fp, "%d  ", device_ctx.rr_graph.node_pin_num(inode));
                             break;
 
                         case CHANX:
                         case CHANY:
                             fprintf(fp, " Track: ");
+                            /* Xifan Tang:
+                             * The routing track id depends on the direction
+                             * A routing track may have multiple track ids
+                             * The track id is the starting point of a routing track
+                             *   - INC_DIRECTION: the first track id in the list
+                             *   - DEC_DIRECTION: the last track id in the list
+                             * 
+                             * This is because (xlow, ylow) is always < (xhigh, yhigh)
+                             * which is even true for DEC_DIRECTION routing tracks
+                             */
+                            if (1 < device_ctx.rr_graph.node_track_ids(inode).size()) {
+                                fprintf(fp, "(");
+                                for (size_t itrack = 0; itrack < device_ctx.rr_graph.node_track_ids(inode).size(); ++itrack) {
+                                    if (0 < itrack) {
+                                      fprintf(fp, ", ");
+                                    }
+                                    fprintf(fp, "%d", device_ctx.rr_graph.node_track_ids(inode)[itrack]);
+                                }
+                                fprintf(fp, ")  ");
+                            } else {
+                                VTR_ASSERT(1 == device_ctx.rr_graph.node_track_ids(inode).size());
+                                fprintf(fp, "%d  ", device_ctx.rr_graph.node_track_num(inode));
+                            }
                             break;
-
                         case SOURCE:
                         case SINK:
                             if (is_io_type(device_ctx.grid[ilow][jlow].type)) {
@@ -1504,6 +1527,7 @@ void print_route(FILE* fp, const vtr::vector<ClusterNetId, t_traceback>& traceba
                             } else { /* IO Pad. */
                                 fprintf(fp, " Class: ");
                             }
+                            fprintf(fp, "%d  ", device_ctx.rr_graph.node_class_num(inode));
                             break;
 
                         default:
@@ -1513,7 +1537,7 @@ void print_route(FILE* fp, const vtr::vector<ClusterNetId, t_traceback>& traceba
                             break;
                     }
 
-                    fprintf(fp, "%d  ", device_ctx.rr_graph.node_ptc_num(inode));
+                    //fprintf(fp, "%d  ", device_ctx.rr_graph.node_ptc_num(inode));
 
                     if (!is_io_type(device_ctx.grid[ilow][jlow].type) && (rr_type == IPIN || rr_type == OPIN)) {
                         int pin_num = device_ctx.rr_graph.node_ptc_num(inode);
