@@ -29,6 +29,9 @@ ShellCommandId add_openfpga_write_pnr_sdc_command(openfpga::Shell<OpenfpgaContex
   /* Add an option '--constrain_global_port' */
   shell_cmd.add_option("constrain_global_port", false, "Constrain all the global ports of FPGA fabric");
 
+  /* Add an option '--constrain_non_clock_global_port' */
+  shell_cmd.add_option("constrain_non_clock_global_port", false, "Constrain all the non-clock global ports as clock ports of FPGA fabric");
+
   /* Add an option '--constrain_grid' */
   shell_cmd.add_option("constrain_grid", false, "Constrain all the grids of FPGA fabric");
 

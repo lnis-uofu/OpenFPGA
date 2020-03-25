@@ -27,6 +27,7 @@ void write_pnr_sdc(OpenfpgaContext& openfpga_ctx,
 
   CommandOptionId opt_output_dir = cmd.option("file");
   CommandOptionId opt_constrain_global_port = cmd.option("constrain_global_port");
+  CommandOptionId opt_constrain_non_clock_global_port = cmd.option("constrain_non_clock_global_port");
   CommandOptionId opt_constrain_grid = cmd.option("constrain_grid");
   CommandOptionId opt_constrain_sb = cmd.option("constrain_sb");
   CommandOptionId opt_constrain_cb = cmd.option("constrain_cb");
@@ -45,6 +46,7 @@ void write_pnr_sdc(OpenfpgaContext& openfpga_ctx,
   PnrSdcOption options(sdc_dir_path);
 
   options.set_constrain_global_port(cmd_context.option_enable(cmd, opt_constrain_global_port));
+  options.set_constrain_non_clock_global_port(cmd_context.option_enable(cmd, opt_constrain_non_clock_global_port));
   options.set_constrain_grid(cmd_context.option_enable(cmd, opt_constrain_grid));
   options.set_constrain_sb(cmd_context.option_enable(cmd, opt_constrain_sb));
   options.set_constrain_cb(cmd_context.option_enable(cmd, opt_constrain_cb));

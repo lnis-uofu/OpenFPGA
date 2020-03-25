@@ -12,6 +12,7 @@ namespace openfpga {
 PnrSdcOption::PnrSdcOption(const std::string& sdc_dir) {
   sdc_dir_ = sdc_dir;
   constrain_global_port_ = false;
+  constrain_non_clock_global_port_ = false;
   constrain_grid_ = false;
   constrain_sb_ = false;
   constrain_cb_ = false;
@@ -39,6 +40,10 @@ bool PnrSdcOption::generate_sdc_pnr() const {
 
 bool PnrSdcOption::constrain_global_port() const {
   return constrain_global_port_;
+}
+
+bool PnrSdcOption::constrain_non_clock_global_port() const {
+  return constrain_non_clock_global_port_;
 }
 
 bool PnrSdcOption::constrain_grid() const {
@@ -84,6 +89,10 @@ void PnrSdcOption::set_generate_sdc_pnr(const bool& generate_sdc_pnr) {
 
 void PnrSdcOption::set_constrain_global_port(const bool& constrain_global_port) {
   constrain_global_port_ = constrain_global_port;
+}
+
+void PnrSdcOption::set_constrain_non_clock_global_port(const bool& constrain_non_clock_global_port) {
+  constrain_non_clock_global_port_ = constrain_non_clock_global_port;
 }
 
 void PnrSdcOption::set_constrain_grid(const bool& constrain_grid) {
