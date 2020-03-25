@@ -174,11 +174,15 @@ FPGA-SDC
   
   - ``--file`` or ``-f`` Specify the output directory for SDC files
 
-  - ``--constrain_global_port`` Constrain all the global ports of FPGA fabric
+  - ``--constrain_global_port`` Constrain all the global ports of FPGA fabric.
+
+  - ``--constrain_non_clock_global_port`` Constrain all the non-clock global ports as clocks ports of FPGA fabric
+
+    .. note:: ``constrain_global_port`` will treat these global ports in Clock Tree Synthesis (CTS), in purpose of balancing the delay to each sink. Be carefull to enable ``constrain_non_clock_global_port``, this may significanly increase the runtime of CTS as it is supposed to be routed before any other nets. This may cause routing congestion as well.
 
   - ``--constrain_grid`` Constrain all the grids of FPGA fabric
 
-  - `--constrain_sb`` Constrain all the switch blocks of FPGA fabric
+  - ``--constrain_sb`` Constrain all the switch blocks of FPGA fabric
 
   - ``--constrain_cb`` Constrain all the connection blocks of FPGA fabric
 
