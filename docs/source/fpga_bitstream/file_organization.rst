@@ -1,5 +1,5 @@
 Bitstream Output File Format
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 FPGA-Bitstream can generate two types of bitstreams:
 

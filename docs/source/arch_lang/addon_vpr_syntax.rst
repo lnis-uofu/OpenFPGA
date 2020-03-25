@@ -14,7 +14,28 @@ Each ``<pb_type>`` should contain a ``<mode>`` that describe the physical implem
 
 .. option:: tileable="<bool>"
 
-  Turn on/off tileable routing resource graph generator
+  Turn ``on``/``off`` tileable routing resource graph generator.
+  
+  Tileable routing architecture can minimize the number of unique modules in FPGA fabric to be physically implemented.
+
+  Technical details can be found in :cite:`XTang_FPT_2019`. 
+
+  .. note:: Strongly recommend to enable the tileable routing architecture when you want to PnR large FPGA fabrics, which can effectively reduce the runtime.
+
+.. option:: through_channel="<bool>"
+  
+  Allow routing channels to pass through multi-width and multi-height programable blocks. This is mainly used in heterogeneous FPGAs to increase routability, as illustrated in :numref:`fig_thru_channel`.
+  By default, it is ``off``.
+
+  .. _fig_thru_channel:
+  
+  .. figure:: ./figures/thru_channel.png
+     :scale: 80%
+     :alt: Impact of through channel
+  
+     Impact on routing architecture when through channel in multi-width and multi-height programmable blocks: (a) disabled; (b) enabled.
+
+  .. warning:: Do NOT enable if you are not using the tileable routing resource graph generator!
 
 ``<switch_block>`` may include addition syntax to enable different connectivity for pass tracks
 
