@@ -46,7 +46,7 @@ void print_pnr_sdc_clock_port(std::fstream& fp,
   fp << " -name " << generate_sdc_port(port_to_constrain);
   fp << " -period " << std::setprecision(10) << clock_period;
   fp << " -waveform {0 " << std::setprecision(10) << clock_period / 2 << "}";
-  fp << " [get_ports{" << generate_sdc_port(port_to_constrain) << "}]";
+  fp << " [get_ports {" << generate_sdc_port(port_to_constrain) << "}]";
   fp << std::endl;
 }        
 
