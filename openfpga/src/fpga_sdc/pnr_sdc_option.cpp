@@ -19,6 +19,7 @@ PnrSdcOption::PnrSdcOption(const std::string& sdc_dir) {
   constrain_configurable_memory_outputs_ = false;
   constrain_routing_multiplexer_outputs_ = false;
   constrain_switch_block_outputs_ = false;
+  constrain_zero_delay_paths_ = false;
 }
 
 /********************************************************************
@@ -70,6 +71,10 @@ bool PnrSdcOption::constrain_switch_block_outputs() const {
   return constrain_switch_block_outputs_;
 }
 
+bool PnrSdcOption::constrain_zero_delay_paths() const {
+  return constrain_zero_delay_paths_;
+}
+
 /********************************************************************
  * Public mutators
  ********************************************************************/
@@ -117,6 +122,10 @@ void PnrSdcOption::set_constrain_routing_multiplexer_outputs(const bool& constra
 
 void PnrSdcOption::set_constrain_switch_block_outputs(const bool& constrain_sb_outputs) {
   constrain_switch_block_outputs_ = constrain_sb_outputs;
+}
+
+void PnrSdcOption::set_constrain_zero_delay_paths(const bool& constrain_zero_delay_paths) {
+  constrain_zero_delay_paths_ = constrain_zero_delay_paths;
 }
 
 } /* end namespace openfpga */

@@ -296,13 +296,15 @@ void print_pnr_sdc(const PnrSdcOption& sdc_options,
       print_pnr_sdc_compact_routing_constrain_sb_timing(sdc_options.sdc_dir(),
                                                         module_manager,
                                                         device_ctx.rr_graph,
-                                                        device_rr_gsb);
+                                                        device_rr_gsb,
+                                                        sdc_options.constrain_zero_delay_paths());
     } else {
 	  VTR_ASSERT_SAFE (false == compact_routing_hierarchy);
       print_pnr_sdc_flatten_routing_constrain_sb_timing(sdc_options.sdc_dir(),
                                                         module_manager,
                                                         device_ctx.rr_graph,
-                                                        device_rr_gsb);
+                                                        device_rr_gsb,
+                                                        sdc_options.constrain_zero_delay_paths());
     }
   }
 
@@ -312,13 +314,15 @@ void print_pnr_sdc(const PnrSdcOption& sdc_options,
       print_pnr_sdc_compact_routing_constrain_cb_timing(sdc_options.sdc_dir(),
                                                         module_manager,
                                                         device_ctx.rr_graph,
-                                                        device_rr_gsb);
+                                                        device_rr_gsb,
+                                                        sdc_options.constrain_zero_delay_paths());
     } else {
 	  VTR_ASSERT_SAFE (false == compact_routing_hierarchy);
       print_pnr_sdc_flatten_routing_constrain_cb_timing(sdc_options.sdc_dir(),
                                                         module_manager, 
                                                         device_ctx.rr_graph,
-                                                        device_rr_gsb);
+                                                        device_rr_gsb,
+                                                        sdc_options.constrain_zero_delay_paths());
     }
   }
 
@@ -327,7 +331,8 @@ void print_pnr_sdc(const PnrSdcOption& sdc_options,
     print_pnr_sdc_constrain_grid_timing(sdc_options.sdc_dir(),
                                         device_ctx,
                                         device_annotation,
-                                        module_manager);
+                                        module_manager,
+                                        sdc_options.constrain_zero_delay_paths());
   }
 }
 

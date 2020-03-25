@@ -34,6 +34,7 @@ void write_pnr_sdc(OpenfpgaContext& openfpga_ctx,
   CommandOptionId opt_constrain_configurable_memory_outputs = cmd.option("constrain_configurable_memory_outputs");
   CommandOptionId opt_constrain_routing_multiplexer_outputs = cmd.option("constrain_routing_multiplexer_outputs");
   CommandOptionId opt_constrain_switch_block_outputs = cmd.option("constrain_switch_block_outputs");
+  CommandOptionId opt_constrain_zero_delay_paths = cmd.option("constrain_zero_delay_paths");
 
   /* This is an intermediate data structure which is designed to modularize the FPGA-SDC
    * Keep it independent from any other outside data structures
@@ -53,6 +54,7 @@ void write_pnr_sdc(OpenfpgaContext& openfpga_ctx,
   options.set_constrain_configurable_memory_outputs(cmd_context.option_enable(cmd, opt_constrain_configurable_memory_outputs));
   options.set_constrain_routing_multiplexer_outputs(cmd_context.option_enable(cmd, opt_constrain_routing_multiplexer_outputs));
   options.set_constrain_switch_block_outputs(cmd_context.option_enable(cmd, opt_constrain_switch_block_outputs));
+  options.set_constrain_zero_delay_paths(cmd_context.option_enable(cmd, opt_constrain_zero_delay_paths));
 
   /* We first turn on default sdc option and then disable part of them by following users' options */
   if (false == options.generate_sdc_pnr()) {

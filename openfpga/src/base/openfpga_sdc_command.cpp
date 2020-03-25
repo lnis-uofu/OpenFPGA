@@ -50,6 +50,9 @@ ShellCommandId add_openfpga_write_pnr_sdc_command(openfpga::Shell<OpenfpgaContex
   /* Add an option '--constrain_switch_block_outputs' */
   shell_cmd.add_option("constrain_switch_block_outputs", false, "Constrain all the outputs of switch blocks of FPGA fabric");
 
+  /* Add an option '--constrain_zero_delay_paths' */
+  shell_cmd.add_option("constrain_zero_delay_paths", false, "Constrain zero-delay paths in FPGA fabric");
+
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Enable verbose output");
   

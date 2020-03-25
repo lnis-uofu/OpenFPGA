@@ -46,7 +46,8 @@ void print_pnr_sdc_constrain_pb_pin_interc_timing(std::fstream& fp,
                                                   const ModuleManager& module_manager,
                                                   const ModuleId& parent_module,
                                                   t_pb_graph_pin* des_pb_graph_pin,
-                                                  t_mode* physical_mode) {
+                                                  t_mode* physical_mode,
+                                                  const bool& constrain_zero_delay_paths) {
 
   /* Validate file stream */ 
   valid_file_stream(fp);
@@ -138,6 +139,12 @@ void print_pnr_sdc_constrain_pb_pin_interc_timing(std::fstream& fp,
     BasicPort des_port = module_manager.module_port(des_module, des_module_port_id);
     des_port.set_width(des_pb_graph_pin->pin_number, des_pb_graph_pin->pin_number);
 
+    /* If we have a zero-delay path to contrain, we will skip unless users want so */
+    if ( (false == constrain_zero_delay_paths)
+      && (0. == des_pb_graph_pin->input_edges[iedge]->delay_max) ) {
+      continue;
+    }
+
     /* Print a SDC timing constraint */
     print_pnr_sdc_constrain_max_delay(fp, 
                                       src_instance_name, 
@@ -158,7 +165,8 @@ void print_pnr_sdc_constrain_pb_interc_timing(std::fstream& fp,
                                               const ModuleId& parent_module,
                                               t_pb_graph_node* des_pb_graph_node,
                                               const e_circuit_pb_port_type& pb_port_type,
-                                              t_mode* physical_mode) {
+                                              t_mode* physical_mode,
+                                              const bool& constrain_zero_delay_paths) {
   /* Validate file stream */ 
   valid_file_stream(fp);
 
@@ -171,7 +179,8 @@ void print_pnr_sdc_constrain_pb_interc_timing(std::fstream& fp,
         print_pnr_sdc_constrain_pb_pin_interc_timing(fp, 
                                                      module_manager, parent_module, 
                                                      &(des_pb_graph_node->input_pins[iport][ipin]),
-                                                     physical_mode);
+                                                     physical_mode,
+                                                     constrain_zero_delay_paths);
       }
     }
     break;
@@ -182,7 +191,8 @@ void print_pnr_sdc_constrain_pb_interc_timing(std::fstream& fp,
         print_pnr_sdc_constrain_pb_pin_interc_timing(fp,
                                                      module_manager, parent_module, 
                                                      &(des_pb_graph_node->output_pins[iport][ipin]),
-                                                     physical_mode);
+                                                     physical_mode,
+                                                     constrain_zero_delay_paths);
       }
     }
     break;
@@ -209,7 +219,8 @@ static
 void print_pnr_sdc_constrain_pb_graph_node_timing(const std::string& sdc_dir,
                                                   const ModuleManager& module_manager,
                                                   t_pb_graph_node* parent_pb_graph_node,
-                                                  t_mode* physical_mode) {
+                                                  t_mode* physical_mode,
+                                                  const bool& constrain_zero_delay_paths) {
 
   /* Get the pb_type definition related to the node */
   t_pb_type* physical_pb_type = parent_pb_graph_node->pb_type; 
@@ -242,7 +253,8 @@ void print_pnr_sdc_constrain_pb_graph_node_timing(const std::string& sdc_dir,
                                            module_manager, pb_module,
                                            parent_pb_graph_node, 
                                            CIRCUIT_PB_PORT_OUTPUT,
-                                           physical_mode);
+                                           physical_mode,
+                                           constrain_zero_delay_paths);
   
   /* We check input_pins of child_pb_graph_node and its the input_edges
    * Built the interconnections between inputs of cur_pb_graph_node and inputs of child_pb_graph_node
@@ -259,7 +271,8 @@ void print_pnr_sdc_constrain_pb_graph_node_timing(const std::string& sdc_dir,
                                                module_manager, pb_module,
                                                child_pb_graph_node, 
                                                CIRCUIT_PB_PORT_INPUT,
-                                               physical_mode);
+                                               physical_mode,
+                                               constrain_zero_delay_paths);
       /* Do NOT constrain clock here, it should be handled by Clock Tree Synthesis */
     }
   }
@@ -277,7 +290,8 @@ static
 void rec_print_pnr_sdc_constrain_pb_graph_timing(const std::string& sdc_dir,
                                                  const ModuleManager& module_manager,
                                                  const VprDeviceAnnotation& device_annotation,
-                                                 t_pb_graph_node* parent_pb_graph_node) {
+                                                 t_pb_graph_node* parent_pb_graph_node,
+                                                 const bool& constrain_zero_delay_paths) {
   /* Validate pb_graph node */
   if (nullptr == parent_pb_graph_node) {
     VTR_LOGF_ERROR(__FILE__, __LINE__,
@@ -302,7 +316,8 @@ void rec_print_pnr_sdc_constrain_pb_graph_timing(const std::string& sdc_dir,
   print_pnr_sdc_constrain_pb_graph_node_timing(sdc_dir,
                                                module_manager,
                                                parent_pb_graph_node,
-                                               physical_mode);
+                                               physical_mode,
+                                               constrain_zero_delay_paths);
 
   /* Go recursively to the lower level in the pb_graph
    * Note that we assume a full hierarchical P&R, we will only visit pb_graph_node of unique pb_type 
@@ -310,7 +325,8 @@ void rec_print_pnr_sdc_constrain_pb_graph_timing(const std::string& sdc_dir,
   for (int ipb = 0; ipb < physical_mode->num_pb_type_children; ++ipb) {
     rec_print_pnr_sdc_constrain_pb_graph_timing(sdc_dir, module_manager, 
                                                 device_annotation,
-                                                &(parent_pb_graph_node->child_pb_graph_nodes[physical_mode->index][ipb][0]));
+                                                &(parent_pb_graph_node->child_pb_graph_nodes[physical_mode->index][ipb][0]),
+                                                constrain_zero_delay_paths);
   }
 }
 
@@ -320,7 +336,8 @@ void rec_print_pnr_sdc_constrain_pb_graph_timing(const std::string& sdc_dir,
 void print_pnr_sdc_constrain_grid_timing(const std::string& sdc_dir,
                                          const DeviceContext& device_ctx,
                                          const VprDeviceAnnotation& device_annotation,
-                                         const ModuleManager& module_manager) {
+                                         const ModuleManager& module_manager,
+                                         const bool& constrain_zero_delay_paths) {
 
   /* Start time count */
   vtr::ScopedStartFinishTimer timer("Write SDC for constraining grid timing for P&R flow");
@@ -338,7 +355,8 @@ void print_pnr_sdc_constrain_grid_timing(const std::string& sdc_dir,
       /* Special for I/O block, generate one module for each border side */
       rec_print_pnr_sdc_constrain_pb_graph_timing(sdc_dir, module_manager, 
                                                   device_annotation,
-                                                  pb_graph_head);
+                                                  pb_graph_head,
+                                                  constrain_zero_delay_paths);
     }
   }
 }
