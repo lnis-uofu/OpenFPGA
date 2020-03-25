@@ -191,6 +191,10 @@ FPGA-SDC
   - ``--constrain_routing_multiplexer_outputs`` Constrain all the outputs of routing multiplexer of FPGA fabric
 
   - ``--constrain_switch_block_outputs`` Constrain all the outputs of switch blocks of FPGA fabric
+
+  - ``--constrain_zero_delay_paths`` Constrain all the zero-delay paths in FPGA fabric
+
+  .. note:: Zero-delay path may cause errors in some PnR tools as it is considered illegal
   
   - ``--verbose`` Enable verbose output
 
