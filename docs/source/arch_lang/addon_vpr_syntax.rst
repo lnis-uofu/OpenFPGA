@@ -37,6 +37,8 @@ Each ``<pb_type>`` should contain a ``<mode>`` that describe the physical implem
 
   .. warning:: Do NOT enable if you are not using the tileable routing resource graph generator!
 
+  .. warning:: Current through channel supports only a fixed routing channel!
+
 ``<switch_block>`` may include addition syntax to enable different connectivity for pass tracks
 
 .. option:: sub_type="<string>"
