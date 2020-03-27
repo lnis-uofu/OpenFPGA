@@ -118,26 +118,6 @@
         <port name="lut6_out"/>
       </output_ports>
     </model>
-    <model name="dual_port_ram">
-      <input_ports>
-        <!-- write address lines -->
-        <port name="waddr" clock="clk"/>
-        <!-- read address lines -->
-        <port name="raddr" clock="clk"/>
-        <!-- data lines can be broken down into smaller bit widths minimum size 1 -->
-        <port name="d_in" clock="clk"/>
-        <!-- write enable -->
-        <port name="wen" clock="clk"/>
-        <!-- read enable -->
-        <port name="ren" clock="clk"/>
-        <!-- memories are often clocked -->
-        <port name="clk" is_clock="1"/>
-      </input_ports>
-      <output_ports>
-        <!-- output can be broken down into smaller bit widths minimum size 1 -->
-        <port name="d_out" clock="clk"/>
-      </output_ports>
-    </model>
   </models>
   <tiles>
     <tile name="io" capacity="8" area="0">
@@ -176,34 +156,17 @@
         <loc side="bottom">clb.cout clb.O[19:10] clb.I[39:20]</loc>
       </pinlocations>
     </tile>
-    <tile name="memory" height="2" area="548000">
-      <equivalent_sites>
-        <site pb_type="memory"/>
-      </equivalent_sites>
-      <input name="waddr" num_pins="10"/>
-      <input name="raddr" num_pins="10"/>
-      <input name="d_in" num_pins="32"/>
-      <input name="wen" num_pins="1"/>
-      <input name="ren" num_pins="1"/>
-      <output name="d_out" num_pins="32"/>
-      <clock name="clk" num_pins="1"/>
-      <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
-      <pinlocations pattern="spread"/>
-    </tile>
   </tiles>
   <!-- ODIN II specific config ends -->
   <!-- Physical descriptions begin -->
-  <layout tileable="false">
+  <layout tileable="true">
     <!--auto_layout aspect_ratio="1.0"-->
-    <fixed_layout name="4x4" width="5" height="4">
+    <fixed_layout name="4x4" width="6" height="6">
       <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
       <perimeter type="io" priority="100"/>
       <corners type="EMPTY" priority="101"/>
       <!--Fill with 'clb'-->
       <fill type="clb" priority="10"/>
-      <!--Column of 'memory' with 'EMPTY' blocks wherever a 'memory' does not fit. Vertical offset by 1 for perimeter.-->
-      <col type="memory" startx="2" starty="1" repeatx="8" priority="20"/>
-      <col type="EMPTY" startx="2" repeatx="8" starty="1" priority="19"/>
     </fixed_layout>
     <!-- /auto_layout -->
   </layout>
@@ -672,63 +635,5 @@
       </interconnect>
     </pb_type>
     <!-- Define general purpose logic block (CLB) ends -->
-    <!-- Define single-mode dual-port memory begin -->
-    <pb_type name="memory">
-      <input name="waddr" num_pins="10"/>
-      <input name="raddr" num_pins="10"/>
-      <input name="d_in" num_pins="32"/>
-      <input name="wen" num_pins="1"/>
-      <input name="ren" num_pins="1"/>
-      <output name="d_out" num_pins="32"/>
-      <clock name="clk" num_pins="1"/>
-      <!-- Specify the 512x32=16Kbit memory block
-           Note: the delay numbers are extracted from VPR flagship XML without modification
-                 Should align to the process technology we using to create the 16K dual-port RAM
-        -->
-      <mode name="mem_512x32_dp">
-        <pb_type name="mem_512x32_dp" blif_model=".subckt dual_port_ram" class="memory" num_pb="1">
-          <input name="waddr" num_pins="10" port_class="address"/>
-          <input name="raddr" num_pins="10" port_class="address"/>
-          <input name="d_in" num_pins="32" port_class="data_in"/>
-          <input name="wen" num_pins="1" port_class="write_en"/>
-          <input name="ren" num_pins="1" port_class="write_en"/>
-          <output name="d_out" num_pins="32" port_class="data_out"/>
-          <clock name="clk" num_pins="1" port_class="clock"/>
-          <T_setup value="509e-12" port="mem_512x32_dp.waddr" clock="clk"/>
-          <T_setup value="509e-12" port="mem_512x32_dp.raddr" clock="clk"/>
-          <T_setup value="509e-12" port="mem_512x32_dp.d_in" clock="clk"/>
-          <T_setup value="509e-12" port="mem_512x32_dp.wen" clock="clk"/>
-          <T_setup value="509e-12" port="mem_512x32_dp.ren" clock="clk"/>
-          <T_clock_to_Q max="1.234e-9" port="mem_512x32_dp.d_out" clock="clk"/>
-          <power method="pin-toggle">
-            <port name="clk" energy_per_toggle="17.9e-12"/>
-            <static_power power_per_instance="0.0"/>
-          </power>
-        </pb_type>
-        <interconnect>
-          <direct name="waddress" input="memory.waddr" output="mem_512x32_dp.waddr">
-            <delay_constant max="132e-12" in_port="memory.waddr" out_port="mem_512x32_dp.waddr"/>
-          </direct>
-          <direct name="raddress" input="memory.raddr" output="mem_512x32_dp.raddr">
-            <delay_constant max="132e-12" in_port="memory.raddr" out_port="mem_512x32_dp.raddr"/>
-          </direct>
-          <direct name="data_input" input="memory.d_in" output="mem_512x32_dp.d_in">
-            <delay_constant max="132e-12" in_port="memory.d_in" out_port="mem_512x32_dp.d_in"/>
-          </direct>
-          <direct name="writeen" input="memory.wen" output="mem_512x32_dp.wen">
-            <delay_constant max="132e-12" in_port="memory.wen" out_port="mem_512x32_dp.wen"/>
-          </direct>
-          <direct name="readen" input="memory.ren" output="mem_512x32_dp.ren">
-            <delay_constant max="132e-12" in_port="memory.ren" out_port="mem_512x32_dp.ren"/>
-          </direct>
-          <direct name="dataout" input="mem_512x32_dp.d_out" output="memory.d_out">
-            <delay_constant max="40e-12" in_port="mem_512x32_dp.d_out" out_port="memory.d_out"/>
-          </direct>
-          <direct name="clk" input="memory.clk" output="mem_512x32_dp.clk">
-          </direct>
-        </interconnect>
-      </mode>
-    </pb_type>
-    <!-- Define single-mode dual-port memory end -->
   </complexblocklist>
 </architecture>
