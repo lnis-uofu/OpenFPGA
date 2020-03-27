@@ -23,6 +23,7 @@
 
 #include "openfpga_reserved_words.h"
 #include "openfpga_naming.h"
+#include "openfpga_physical_tile_utils.h"
 #include "pb_type_utils.h"
 #include "circuit_library_utils.h"
 #include "module_manager_utils.h"
@@ -375,13 +376,21 @@ void print_verilog_grids(const ModuleManager& module_manager,
     if (true == is_empty_type(&physical_tile)) {
       continue;
     } else if (true == is_io_type(&physical_tile)) {
-      /* Special for I/O block, generate one module for each border side */
-      for (int iside = 0; iside < NUM_SIDES; iside++) {
-        SideManager side_manager(iside);
+      /* Special for I/O block:
+       * We will search the grids and see where the I/O blocks are located:
+       * - If a I/O block locates on border sides of FPGA fabric:
+       *   i.e., one or more from {TOP, RIGHT, BOTTOM, LEFT},
+       *   we will generate one module for each border side 
+       * - If a I/O block locates in the center of FPGA fabric:
+       *   we will generate one module with NUM_SIDES (same treatment as regular grids) 
+       */
+      std::set<e_side> io_type_sides = find_physical_io_tile_located_sides(device_ctx.grid,
+                                                                           &physical_tile);
+      for (const e_side& io_type_side : io_type_sides) {
         print_verilog_physical_tile_netlist(module_manager, netlist_names,
                                             verilog_dir, subckt_dir, 
                                             &physical_tile,
-                                            side_manager.get_side(),
+                                            io_type_side,
                                             use_explicit_mapping);
       } 
       continue;
