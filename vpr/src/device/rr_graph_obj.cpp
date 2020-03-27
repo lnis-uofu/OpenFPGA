@@ -1500,6 +1500,7 @@ void RRGraph::clear_nodes() {
     node_sides_.clear();
     node_Rs_.clear();
     node_Cs_.clear();
+    node_rc_data_indices_.clear();
     node_segments_.clear();
 
     node_num_in_edges_.clear();
