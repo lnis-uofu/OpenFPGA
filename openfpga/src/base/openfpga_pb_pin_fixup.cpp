@@ -64,7 +64,7 @@ void update_cluster_pin_with_post_routing_results(const DeviceContext& device_ct
                                                   const bool& verbose) {
   /* Handle each pin */
   auto logical_block = clustering_ctx.clb_nlist.block_type(blk_id);
-  auto physical_tile = pick_best_physical_type(logical_block);
+  auto physical_tile = device_ctx.grid[grid_coord.x()][grid_coord.y()].type;
 
   for (int j = 0; j < logical_block->pb_type->num_pins; j++) {
     /* Get the ptc num for the pin in rr_graph, we need t consider the z offset here
