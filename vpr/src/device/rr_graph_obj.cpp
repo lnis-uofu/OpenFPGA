@@ -1011,7 +1011,7 @@ void RRGraph::set_node_ptc_num(const RRNodeId& node, const short& ptc) {
      */
     if ((CHANX == node_type(node)) || (CHANY == node_type(node))) {
         if ((size_t)node_length(node) + 1 != node_ptc_nums_[node].size()) {
-            node_ptc_nums_[node].resize(node_length(node) + 1);
+            node_ptc_nums_[node].resize((size_t)node_length(node) + 1);
         }
         std::fill(node_ptc_nums_[node].begin(), node_ptc_nums_[node].end(), ptc);
     } else {
@@ -1048,7 +1048,7 @@ void RRGraph::add_node_track_num(const RRNodeId& node,
     VTR_ASSERT_MSG(node_type(node) == CHANX || node_type(node) == CHANY, "Track number valid only for CHANX/CHANY RR nodes");
 
     if ((size_t)node_length(node) + 1 != node_ptc_nums_[node].size()) {
-        node_ptc_nums_[node].resize(node_length(node) + 1);
+        node_ptc_nums_[node].resize((size_t)node_length(node) + 1);
     }
 
     size_t offset = node_offset.x() - node_xlow(node) + node_offset.y() - node_ylow(node);
@@ -1540,4 +1540,14 @@ void RRGraph::clear() {
     clear_edges();
     clear_switches();
     clear_segments();
+
+    invalidate_fast_node_lookup();
+
+    /* Clear invalid node list */
+    invalid_node_ids_.clear();
+
+    /* Clear invalid edge list */
+    invalid_edge_ids_.clear();
+
+    clear_dirty();
 }
