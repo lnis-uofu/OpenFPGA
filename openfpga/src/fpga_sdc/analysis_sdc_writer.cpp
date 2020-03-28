@@ -88,83 +88,84 @@ void print_analysis_sdc_io_delays(std::fstream& fp,
   VTR_ASSERT(1 == operating_clock_ports.size());
 
   /* In this function, we support only 1 type of I/Os */
-  VTR_ASSERT(1 == module_manager.module_ports_by_type(top_module, ModuleManager::MODULE_GPIO_PORT).size());
-  BasicPort module_io_port = module_manager.module_ports_by_type(top_module, ModuleManager::MODULE_GPIO_PORT)[0];
+  std::vector<BasicPort> module_io_ports = module_manager.module_ports_by_type(top_module, ModuleManager::MODULE_GPIO_PORT);
 
-  /* Keep tracking which I/Os have been used */
-  std::vector<bool> io_used(module_io_port.get_width(), false);
+  for (const BasicPort& module_io_port : module_io_ports) {
+    /* Keep tracking which I/Os have been used */
+    std::vector<bool> io_used(module_io_port.get_width(), false);
 
-  /* Find clock ports in benchmark */
-  std::vector<std::string> benchmark_clock_port_names = find_atom_netlist_clock_port_names(atom_ctx.nlist, netlist_annotation);
+    /* Find clock ports in benchmark */
+    std::vector<std::string> benchmark_clock_port_names = find_atom_netlist_clock_port_names(atom_ctx.nlist, netlist_annotation);
 
-  /* Print comments */
-  fp << "##################################################" << std::endl; 
-  fp << "# Create input and output delays for used I/Os    " << std::endl;
-  fp << "##################################################" << std::endl; 
+    /* Print comments */
+    fp << "##################################################" << std::endl; 
+    fp << "# Create input and output delays for used I/Os    " << std::endl;
+    fp << "##################################################" << std::endl; 
 
-  for (const AtomBlockId& atom_blk : atom_ctx.nlist.blocks()) {
-    /* Bypass non-I/O atom blocks ! */
-    if ( (AtomBlockType::INPAD != atom_ctx.nlist.block_type(atom_blk))
-      && (AtomBlockType::OUTPAD != atom_ctx.nlist.block_type(atom_blk)) ) {
-      continue;
+    for (const AtomBlockId& atom_blk : atom_ctx.nlist.blocks()) {
+      /* Bypass non-I/O atom blocks ! */
+      if ( (AtomBlockType::INPAD != atom_ctx.nlist.block_type(atom_blk))
+        && (AtomBlockType::OUTPAD != atom_ctx.nlist.block_type(atom_blk)) ) {
+        continue;
+      }
+
+      /* clock net or constant generator should be disabled in timing analysis */
+      if (benchmark_clock_port_names.end() != std::find(benchmark_clock_port_names.begin(), benchmark_clock_port_names.end(), atom_ctx.nlist.block_name(atom_blk))) {
+        continue;
+      }
+
+      /* Find the index of the mapped GPIO in top-level FPGA fabric */
+      size_t io_index = io_location_map.io_index(place_ctx.block_locs[atom_ctx.lookup.atom_clb(atom_blk)].loc.x,
+                                                 place_ctx.block_locs[atom_ctx.lookup.atom_clb(atom_blk)].loc.y,
+                                                 place_ctx.block_locs[atom_ctx.lookup.atom_clb(atom_blk)].loc.z);
+
+      /* Ensure that IO index is in range */
+      BasicPort module_mapped_io_port = module_io_port; 
+      /* Set the port pin index */ 
+      VTR_ASSERT(io_index < module_mapped_io_port.get_width());
+      module_mapped_io_port.set_width(io_index, io_index);
+
+      /* For input I/O, we set an input delay constraint correlated to the operating clock
+       * For output I/O, we set an output delay constraint correlated to the operating clock
+       */
+      if (AtomBlockType::INPAD == atom_ctx.nlist.block_type(atom_blk)) {
+        print_sdc_set_port_input_delay(fp, module_mapped_io_port,
+                                       operating_clock_ports[0], critical_path_delay);
+      } else {
+        VTR_ASSERT(AtomBlockType::OUTPAD == atom_ctx.nlist.block_type(atom_blk));
+        print_sdc_set_port_output_delay(fp, module_mapped_io_port,
+                                        operating_clock_ports[0], critical_path_delay);
+      }
+
+      /* Mark this I/O has been used/wired */
+      io_used[io_index] = true;
     }
 
-    /* clock net or constant generator should be disabled in timing analysis */
-    if (benchmark_clock_port_names.end() != std::find(benchmark_clock_port_names.begin(), benchmark_clock_port_names.end(), atom_ctx.nlist.block_name(atom_blk))) {
-      continue;
+    /* Add an empty line as a splitter */
+    fp << std::endl;
+
+    /* Print comments */
+    fp << "##################################################" << std::endl; 
+    fp << "# Disable timing for unused I/Os    " << std::endl;
+    fp << "##################################################" << std::endl; 
+
+    /* Wire the unused iopads to a constant */
+    for (size_t io_index = 0; io_index < io_used.size(); ++io_index) {
+      /* Bypass used iopads */
+      if (true == io_used[io_index]) {
+        continue;
+      }
+
+      /* Wire to a contant */
+      BasicPort module_unused_io_port = module_io_port; 
+      /* Set the port pin index */ 
+      module_unused_io_port.set_width(io_index, io_index);
+      print_sdc_disable_port_timing(fp, module_unused_io_port);
     }
 
-    /* Find the index of the mapped GPIO in top-level FPGA fabric */
-    size_t io_index = io_location_map.io_index(place_ctx.block_locs[atom_ctx.lookup.atom_clb(atom_blk)].loc.x,
-                                               place_ctx.block_locs[atom_ctx.lookup.atom_clb(atom_blk)].loc.y,
-                                               place_ctx.block_locs[atom_ctx.lookup.atom_clb(atom_blk)].loc.z);
-
-    /* Ensure that IO index is in range */
-    BasicPort module_mapped_io_port = module_io_port; 
-    /* Set the port pin index */ 
-    VTR_ASSERT(io_index < module_mapped_io_port.get_width());
-    module_mapped_io_port.set_width(io_index, io_index);
-
-    /* For input I/O, we set an input delay constraint correlated to the operating clock
-     * For output I/O, we set an output delay constraint correlated to the operating clock
-     */
-    if (AtomBlockType::INPAD == atom_ctx.nlist.block_type(atom_blk)) {
-      print_sdc_set_port_input_delay(fp, module_mapped_io_port,
-                                     operating_clock_ports[0], critical_path_delay);
-    } else {
-      VTR_ASSERT(AtomBlockType::OUTPAD == atom_ctx.nlist.block_type(atom_blk));
-      print_sdc_set_port_output_delay(fp, module_mapped_io_port,
-                                      operating_clock_ports[0], critical_path_delay);
-    }
-
-    /* Mark this I/O has been used/wired */
-    io_used[io_index] = true;
+    /* Add an empty line as a splitter */
+    fp << std::endl;
   }
-
-  /* Add an empty line as a splitter */
-  fp << std::endl;
-
-  /* Print comments */
-  fp << "##################################################" << std::endl; 
-  fp << "# Disable timing for unused I/Os    " << std::endl;
-  fp << "##################################################" << std::endl; 
-
-  /* Wire the unused iopads to a constant */
-  for (size_t io_index = 0; io_index < io_used.size(); ++io_index) {
-    /* Bypass used iopads */
-    if (true == io_used[io_index]) {
-      continue;
-    }
-
-    /* Wire to a contant */
-    BasicPort module_unused_io_port = module_io_port; 
-    /* Set the port pin index */ 
-    module_unused_io_port.set_width(io_index, io_index);
-    print_sdc_disable_port_timing(fp, module_unused_io_port);
-  }
-
-  /* Add an empty line as a splitter */
-  fp << std::endl;
 }
 
 /********************************************************************

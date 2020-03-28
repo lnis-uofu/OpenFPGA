@@ -209,7 +209,7 @@
       <port type="output" prefix="d_out" size="32"/>
       <port type="clock" prefix="clk" size="1" is_global="true" default_val="0"/>
     </circuit_model>
-    <circuit_model type="hard_logic" name="aib" prefix="aib" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/aib.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/aib.v">
+    <circuit_model type="iopad" name="aib" prefix="aib" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/aib.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/aib.v">
       <design_technology type="cmos"/>
       <input_buffer exist="true" circuit_model_name="INVTX1"/>
       <output_buffer exist="true" circuit_model_name="INVTX1"/>
@@ -218,6 +218,7 @@
       <port type="output" prefix="rx_data" size="80"/>
       <port type="clock" prefix="tx_clk" size="1" default_val="0"/>
       <port type="clock" prefix="rx_clk" size="1" default_val="0"/>
+      <port type="inout" prefix="pad" size="80"/>
     </circuit_model>
   </circuit_library>
   <configuration_protocol>

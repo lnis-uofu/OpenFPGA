@@ -462,7 +462,9 @@ void check_circuit_library(const CircuitLibrary& circuit_lib) {
   iopad_port_types_required.push_back(CIRCUIT_MODEL_PORT_INPUT);
   iopad_port_types_required.push_back(CIRCUIT_MODEL_PORT_OUTPUT);
   iopad_port_types_required.push_back(CIRCUIT_MODEL_PORT_INOUT);
-  iopad_port_types_required.push_back(CIRCUIT_MODEL_PORT_SRAM);
+  /* Some I/Os may not have SRAM port, such as AIB interface
+   * iopad_port_types_required.push_back(CIRCUIT_MODEL_PORT_SRAM);
+   */
 
   num_err += check_circuit_model_port_required(circuit_lib, CIRCUIT_MODEL_IOPAD, iopad_port_types_required);
 
