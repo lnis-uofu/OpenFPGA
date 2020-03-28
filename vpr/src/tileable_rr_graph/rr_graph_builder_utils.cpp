@@ -195,7 +195,7 @@ bool is_chanx_exist(const DeviceGrid& grids,
  ***********************************************************************/
 bool is_chany_exist(const DeviceGrid& grids,
                     const vtr::Point<size_t>& chany_coord) {
-  return (grids[chany_coord.x()][chany_coord.y()].width_offset == grids[chany_coord.y()][chany_coord.y()].type->width - 1);
+  return (grids[chany_coord.x()][chany_coord.y()].width_offset == grids[chany_coord.x()][chany_coord.y()].type->width - 1);
 }
 
 /************************************************************************
@@ -299,7 +299,7 @@ bool is_chany_top_to_multi_width_grid(const DeviceGrid& grids,
   }
   
   if (false == through_channel) {
-    /* We check the bottom neighbor of chany, if it does not exist, the chany is left to a multi-height grid */
+    /* We check the bottom neighbor of chany, if it does not exist, the chany is top to a multi-height grid */
     vtr::Point<size_t> bottom_chany_coord(chany_coord.x(), chany_coord.y() - 1);
     if (false == is_chany_exist(grids, bottom_chany_coord)) {
       return true;
@@ -317,7 +317,7 @@ bool is_chany_top_to_multi_width_grid(const DeviceGrid& grids,
  *     |                 |
  *     |                 | 
  *     |      Grid       | 
- *     |    [x+1][y]     | 
+ *     |    [x][y+1]     | 
  *     |                 | 
  *     |                 |
  *     +-----------------+
