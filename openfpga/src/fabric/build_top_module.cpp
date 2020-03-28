@@ -169,8 +169,7 @@ vtr::Matrix<size_t> add_top_module_grid_instances(ModuleManager& module_manager,
         grid_instance_ids[io_coordinate.x()][io_coordinate.y()] = grid_instance_ids[root_grid_coord.x()][root_grid_coord.y()];
         continue;
       }
-      /* We should not meet any I/O grid */
-      VTR_ASSERT(true == is_io_type(grids[io_coordinate.x()][io_coordinate.y()].type));
+
       /* Add a grid module to top_module*/
       grid_instance_ids[io_coordinate.x()][io_coordinate.y()] = add_top_module_grid_instance(module_manager, top_module, grids[io_coordinate.x()][io_coordinate.y()].type, io_side, io_coordinate);
 
