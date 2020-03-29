@@ -1149,6 +1149,11 @@ RRGSB build_rr_gsb(DeviceCoordinator& device_range,
                                                    LL_num_rr_nodes, LL_rr_node, LL_rr_node_indices);
     /* Fill the ipin nodes of RRGSB */ 
     for (int inode = 0; inode < num_temp_ipin_rr_nodes; ++inode) {
+      /* Skip Fc = 0  pins, they should NOT appear in the GSB connection */
+      if (0. == grid[temp_ipin_rr_node[inode]->xlow][temp_ipin_rr_node[inode]->ylow].type->Fc[temp_ipin_rr_node[inode]->ptc_num]) {
+        continue;
+      }
+
       rr_gsb.add_ipin_node(temp_ipin_rr_node[inode], side_manager.get_side(), ipin_rr_node_grid_side);
     }
     /* Free */
