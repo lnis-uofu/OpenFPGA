@@ -734,7 +734,7 @@ The code describing this wire is:
 
 This example shows
   - A routing track wire has 1 input and output 
-  - The routing wire will be modelled as a 1-level π-type RC wire model with a total resistance of 103.84Ohm and a total capacitance of 13.89fF
+  - The routing wire will be modelled as a 1-level π-type RC wire model with a total resistance of :math:`103.84\Omega` and a total capacitance of :math:`13.89fF`
 
 I/O pads
 ~~~~~~~~
@@ -790,4 +790,4 @@ This example shows
   - A general purpose I/O cell defined in Verilog netlist ``io.sp`` and SPICE netlist ``io.sp`` 
   - The I/O cell has an ``inout`` port as the bi-directional port
   - The directionality of I/O can be controlled by a configuration-chain flip-flop defined in circuit model ``ccff``
-  - If unused, the I/O cell have be configured to '1'
+  - If unused, the I/O cell will be configured to ``1``
