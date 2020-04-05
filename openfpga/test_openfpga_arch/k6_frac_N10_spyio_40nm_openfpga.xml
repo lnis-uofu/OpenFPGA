@@ -181,6 +181,8 @@
       <pass_gate_logic circuit_model_name="TGATE"/>
       <port type="inout" prefix="pad" size="1"/>
       <!-- A spypad for the direction port of the I/O pad, which can be visible in the fpga_top -->
+      <port type="input" prefix="din" size="1" is_global="true" is_io="true" default_value="0"/>
+      <port type="output" prefix="dout" size="1" is_global="true"/>
       <port type="output" prefix="dir" size="1" is_global="true"/>
       <port type="sram" prefix="en" size="1" mode_select="true" circuit_model_name="sc_dff_compact" default_val="1"/>
       <port type="input" prefix="outpad" size="1"/>
