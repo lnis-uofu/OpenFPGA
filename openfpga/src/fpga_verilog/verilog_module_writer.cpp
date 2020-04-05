@@ -396,6 +396,7 @@ void write_verilog_instance_to_file(std::fstream& fp,
   /* port type2type mapping */
   std::map<ModuleManager::e_module_port_type, enum e_dump_verilog_port_type> port_type2type_map;
   port_type2type_map[ModuleManager::MODULE_GLOBAL_PORT] = VERILOG_PORT_CONKT;
+  port_type2type_map[ModuleManager::MODULE_SPY_PORT] = VERILOG_PORT_CONKT;
   port_type2type_map[ModuleManager::MODULE_GPIO_PORT] = VERILOG_PORT_CONKT;
   port_type2type_map[ModuleManager::MODULE_INOUT_PORT] = VERILOG_PORT_CONKT;
   port_type2type_map[ModuleManager::MODULE_INPUT_PORT] = VERILOG_PORT_CONKT;
