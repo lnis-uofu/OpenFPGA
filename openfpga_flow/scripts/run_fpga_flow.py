@@ -646,6 +646,88 @@ def run_vpr():
     ExecTime["VPREnd"] = time.time()
 
 
+def run_openfpga_shell(bench_blif, fixed_chan_width, logfile, route_only=False):
+    runfile = open("run.openfpga", 'w+'):
+    command = ["vpr",
+               args.arch_file,
+               bench_blif,
+               "--net_file", args.top_module+"_vpr.net",
+               "--place_file", args.top_module+"_vpr.place",
+               "--route_file", args.top_module+"_vpr.route",
+               "--full_stats",
+               "--activity_file", args.top_module+"_ace_out.act"]
+    # Other VPR options
+    if args.vpr_place_clb_pin_remap:
+        command += ["--place_clb_pin_remap"]
+    if args.vpr_route_breadthfirst:
+        command += ["--router_algorithm", "breadth_first"]
+    if args.vpr_max_router_iteration:
+        command += ["--max_router_iterations", args.vpr_max_router_iteration]
+    runfile.write(" ".join(command)+os.linesep)
+
+    command = ["read_openfpga_arch", "-f", args.arch_file]
+    runfile.write(" ".join(command)+os.linesep)
+
+    command = ["link_openfpga_arch", "--activity_file",
+               args.top_module+"_ace_out.act"]
+    runfile.write(" ".join(command)+os.linesep)
+
+    command = ["check_netlist_naming_conflict",
+               "--fix", "--report",
+               (args.arch_file).replace(".xml", "_renaming.xml")]
+    runfile.write(" ".join(command)+os.linesep)
+
+    runfile.write(" ".join(["pb_pin_fixup", "--verbose"])+os.linesep)
+    runfile.write(" ".join(["lut_truth_table_fixup"])+os.linesep)
+
+    command = ["build_fabric", "--compress_routing", "--duplicate_grid_pin"]
+    runfile.write(" ".join(command)+os.linesep)
+
+    runfile.write(" ".join(["repack"])+os.linesep)
+
+    if args.vpr_fpga_verilog:
+        command += ["write_verilog_testbench", "--fpga_verilog"]
+        if args.vpr_fpga_verilog_dir:
+            command += ["--fpga_verilog_dir", args.vpr_fpga_verilog_dir]
+        if args.vpr_fpga_verilog_print_top_tb:
+            command += ["--fpga_verilog_print_top_testbench"]
+        if args.vpr_fpga_verilog_print_input_blif_tb:
+            command += ["--fpga_verilog_print_input_blif_testbench"]
+        if args.vpr_fpga_verilog_print_autocheck_top_testbench:
+            command += ["--fpga_verilog_print_autocheck_top_testbench",
+                        os.path.join(args.run_dir, args.top_module+"_output_verilog.v")]
+        if args.vpr_fpga_verilog_include_timing:
+            command += ["--fpga_verilog_include_timing"]
+        if args.vpr_fpga_verilog_explicit_mapping:
+            command += ["--fpga_verilog_explicit_mapping"]
+        if args.vpr_fpga_x2p_duplicate_grid_pin:
+            command += ["--fpga_x2p_duplicate_grid_pin"]
+        if args.vpr_fpga_verilog_include_signal_init:
+            command += ["--fpga_verilog_include_signal_init"]
+        if args.vpr_fpga_verilog_formal_verification_top_netlist:
+            command += ["--fpga_verilog_print_formal_verification_top_netlist"]
+        if args.vpr_fpga_verilog_print_simulation_ini:
+            command += ["--fpga_verilog_print_simulation_ini"]
+        if args.vpr_fpga_verilog_include_icarus_simulator:
+            command += ["--fpga_verilog_include_icarus_simulator"]
+        if args.vpr_fpga_verilog_print_report_timing_tcl:
+            command += ["--fpga_verilog_print_report_timing_tcl"]
+        if args.vpr_fpga_verilog_report_timing_rpt_path:
+            command += ["--fpga_verilog_report_timing_rpt_path",
+                        args.vpr_fpga_verilog_report_timing_rpt_path]
+        if args.vpr_fpga_verilog_print_sdc_pnr:
+            command += ["--fpga_verilog_print_sdc_pnr"]
+        if args.vpr_fpga_verilog_print_user_defined_template:
+            command += ["--fpga_verilog_print_user_defined_template"]
+        if args.vpr_fpga_verilog_print_sdc_analysis:
+            command += ["--fpga_verilog_print_sdc_analysis"]
+        runfile.write(" ".join(command)+os.linesep)
+
+        if args.vpr_fpga_verilog_print_sdc_analysis:
+            command = ["write_pnr_sdc", "--fpga_bitstream_generator"]
+            runfile.write(" ".join(command)+os.linesep)
+
+
 def run_standard_vpr(bench_blif, fixed_chan_width, logfile, route_only=False):
     command = [cad_tools["vpr_path"],
                args.arch_file,
