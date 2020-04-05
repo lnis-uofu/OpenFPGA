@@ -192,6 +192,17 @@ void print_analysis_sdc_disable_global_ports(std::fstream& fp,
       continue;
     }
 
+    /* Skip any gpio port here! */
+    if ( (CIRCUIT_MODEL_PORT_INPUT == circuit_lib.port_type(global_port)) 
+      && (true == circuit_lib.port_is_io(global_port)) ) {
+      continue;
+    }
+
+    /* Skip any gpio port here! */
+    if (CIRCUIT_MODEL_PORT_OUTPUT == circuit_lib.port_type(global_port)) {
+      continue;
+    }
+
     ModulePortId module_port = module_manager.find_module_port(top_module, circuit_lib.port_prefix(global_port)); 
     BasicPort port_to_disable = module_manager.module_port(top_module, module_port);
 

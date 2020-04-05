@@ -18,6 +18,7 @@
 
 #include "bitstream_manager_utils.h"
 
+#include "openfpga_reserved_words.h"
 #include "openfpga_naming.h"
 #include "simulation_utils.h"
 #include "openfpga_atom_netlist_utils.h"
@@ -272,9 +273,23 @@ void print_verilog_top_testbench_global_ports_stimuli(std::fstream& fp,
       continue;
     }
 
+    /* Bypass gp output signals, they do not need any drivers */
+    if (CIRCUIT_MODEL_PORT_OUTPUT == circuit_lib.port_type(model_global_port)) {
+      continue;
+    }
+
+    /* Find the port name, gpio port has special names */
+    std::string port_name;
+    if (true == circuit_lib.port_is_io(model_global_port)) {
+      port_name = generate_fpga_global_io_port_name(std::string(GIO_INOUT_PREFIX), circuit_lib, circuit_lib.port_parent_model(model_global_port), model_global_port);
+    } else {
+      VTR_ASSERT_SAFE(false == circuit_lib.port_is_io(model_global_port));
+      port_name = circuit_lib.port_prefix(model_global_port);
+    }
+
     /* Reach here, it means we have a port to deal with */
     /* Find the module port and wire it to constant values */
-    ModulePortId module_global_port = module_manager.find_module_port(top_module, circuit_lib.port_prefix(model_global_port));
+    ModulePortId module_global_port = module_manager.find_module_port(top_module, port_name);
     VTR_ASSERT(true == module_manager.valid_module_port_id(top_module, module_global_port));
 
     BasicPort module_port = module_manager.module_port(top_module, module_global_port);
