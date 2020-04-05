@@ -1127,6 +1127,7 @@ void add_module_global_input_ports_from_child_modules(ModuleManager& module_mana
 void add_module_global_output_ports_from_child_modules(ModuleManager& module_manager, 
                                                        const ModuleId& module_id) {
   std::vector<BasicPort> global_ports_to_add;
+  std::vector<std::string> global_port_names;
 
   /* Iterate over the child modules */
   for (const ModuleId& child : module_manager.child_modules(module_id)) {
@@ -1135,14 +1136,15 @@ void add_module_global_output_ports_from_child_modules(ModuleManager& module_man
       /* Find all the global ports, whose port type is special */
       for (BasicPort global_port : module_manager.module_ports_by_type(child, ModuleManager::MODULE_SPY_PORT)) {
         /* Search in the global port list to be added, if this is unique, we update the list */
-        std::vector<BasicPort>::iterator it = std::find(global_ports_to_add.begin(), global_ports_to_add.end(), global_port);
-        if (it != global_ports_to_add.end()) {
+        std::vector<std::string>::iterator it = std::find(global_port_names.begin(), global_port_names.end(), global_port.get_name());
+        if (it != global_port_names.end()) {
           /* Found in the global port with the same name, increase the port size */
-          it->expand(global_port.get_width());
+          global_ports_to_add[it - global_port_names.begin()].expand(global_port.get_width());
           continue; /* Finish for the port already in the list */
         }
         /* Reach here, this is an unique global port, update the list */
         global_ports_to_add.push_back(global_port);
+        global_port_names.push_back(global_port.get_name());
       }
     }
   } 
@@ -1168,19 +1170,19 @@ void add_module_global_output_ports_from_child_modules(ModuleManager& module_man
         /* Find the global port from the child module */
         BasicPort child_global_port = module_manager.module_port(child, child_global_port_id);
         /* Search in the global port list to be added, find the port id */
-        std::vector<BasicPort>::iterator it = std::find(global_ports_to_add.begin(), global_ports_to_add.end(), child_global_port);
-        VTR_ASSERT(it != global_ports_to_add.end());
+        std::vector<std::string>::iterator it = std::find(global_port_names.begin(), global_port_names.end(), child_global_port.get_name());
+        VTR_ASSERT(it != global_port_names.end());
 
         /* Find the global port from the parent module */
-        size_t module_global_port_offset = it - global_ports_to_add.begin();
+        size_t module_global_port_offset = it - global_port_names.begin();
         ModulePortId module_global_port_id = global_port_ids[module_global_port_offset];
         BasicPort module_global_port = module_manager.module_port(module_id, module_global_port_id);
         /* Current LSB should be in range */
         VTR_ASSERT(module_global_port.get_width() > global_port_lsbs[module_global_port_offset]);
         /* Set the global port from the parent module as the LSB recorded */
-        module_global_port.set_width(global_port_lsbs[module_global_port_offset], global_port_lsbs[module_global_port_offset]);
+        module_global_port.set_width(global_port_lsbs[module_global_port_offset], global_port_lsbs[module_global_port_offset] + child_global_port.get_width() - 1);
         /* Update the LSB */
-        global_port_lsbs[module_global_port_offset]++;
+        global_port_lsbs[module_global_port_offset] += child_global_port.get_width();
 
         /* The global ports should match in size */
         VTR_ASSERT(module_global_port.get_width() == child_global_port.get_width());
@@ -1199,6 +1201,7 @@ void add_module_global_output_ports_from_child_modules(ModuleManager& module_man
   /* Find check: all the LSBs of global ports should match the MSB */
   for (size_t iport = 0; iport < global_port_ids.size(); ++iport) {
     BasicPort module_global_port = module_manager.module_port(module_id, global_port_ids[iport]);
+    if (module_global_port.get_width() != global_port_lsbs[iport]) 
     VTR_ASSERT(module_global_port.get_width() == global_port_lsbs[iport]); 
   }
 }
