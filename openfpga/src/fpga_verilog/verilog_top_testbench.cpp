@@ -353,6 +353,18 @@ void print_verilog_top_testbench_ports(std::fstream& fp,
   /* Add an empty line as a splitter */
   fp << std::endl;
 
+  for (const BasicPort& module_port : module_manager.module_ports_by_type(top_module, ModuleManager::MODULE_GPIN_PORT)) {
+    fp << generate_verilog_port(VERILOG_PORT_WIRE, module_port) << ";" << std::endl;
+  }
+  /* Add an empty line as a splitter */
+  fp << std::endl;
+
+  for (const BasicPort& module_port : module_manager.module_ports_by_type(top_module, ModuleManager::MODULE_GPOUT_PORT)) {
+    fp << generate_verilog_port(VERILOG_PORT_WIRE, module_port) << ";" << std::endl;
+  }
+  /* Add an empty line as a splitter */
+  fp << std::endl;
+
   /* Add local wires/registers that drive stimulus
    * We create these general purpose ports here,
    * and then wire them to the ports of FPGA fabric depending on their usage 
