@@ -48,7 +48,7 @@ ModuleId add_circuit_model_to_module_manager(ModuleManager& module_manager,
     } else if (CIRCUIT_MODEL_PORT_CLOCK == circuit_lib.port_type(port)) {
       module_manager.add_port(module, port_info, ModuleManager::MODULE_GLOBAL_PORT);  
     } else if ( (CIRCUIT_MODEL_PORT_INPUT == circuit_lib.port_type(port))
-             && (false == circuit_lib.port_is_io(port)) ) {
+             && (true == circuit_lib.port_is_io(port)) ) {
       module_manager.add_port(module, port_info, ModuleManager::MODULE_GPIN_PORT);  
     } else {
       VTR_ASSERT(CIRCUIT_MODEL_PORT_OUTPUT == circuit_lib.port_type(port));

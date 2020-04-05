@@ -1339,10 +1339,13 @@ std::string generate_pb_type_port_name(t_port* pb_type_port) {
  ********************************************************************/
 std::string generate_fpga_global_io_port_name(const std::string& prefix, 
                                               const CircuitLibrary& circuit_lib,
-                                              const CircuitModelId& circuit_model) {
+                                              const CircuitModelId& circuit_model,
+                                              const CircuitPortId& circuit_port) {
   std::string port_name(prefix);
   
   port_name += circuit_lib.model_name(circuit_model);
+  port_name += std::string("_");
+  port_name += circuit_lib.port_prefix(circuit_port);
    
   return port_name;
 }
