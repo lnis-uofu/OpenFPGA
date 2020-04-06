@@ -47,6 +47,7 @@ task_script_dir = os.path.dirname(os.path.abspath(__file__))
 script_env_vars = ({"PATH": {
     "OPENFPGA_FLOW_PATH": task_script_dir,
     "ARCH_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "arch"),
+    "OPENFPGA_SHELLSCRIPT_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "OpenFPGAShellScripts"),
     "BENCH_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "benchmarks"),
     "TECH_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "tech"),
     "SPICENETLIST_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "SpiceNetlists"),
@@ -78,6 +79,13 @@ parser.add_argument('--flow_config', type=str,
 parser.add_argument('--run_dir', type=str,
                     default=os.path.join(openfpga_base_dir,  'tmp'),
                     help="Directory to store intermidiate file & final results")
+parser.add_argument('--openfpga_shell_template', type=str,
+                    default=os.path.join(openfpga_base_dir, 'openfpga_flow',
+                                         'OpenFPGAShellScripts',
+                                         'example_script.openfpga'),
+                    help="Sample openfpga shell script")
+parser.add_argument('--openfpga_arch_file', type=str,
+                    help="Openfpga architecture file for shell")
 parser.add_argument('--yosys_tmpl', type=str,
                     help="Alternate yosys template, generates top_module.blif")
 parser.add_argument('--disp', action="store_true",
@@ -249,7 +257,10 @@ def main():
     #     run_abc_vtr()
     # if (args.fpga_flow == "vtr_standard"):
     #     run_abc_for_standarad()
-    run_vpr()
+    if args.openfpga_shell_template:
+        run_openfpga_shell()
+    else:
+        run_vpr()
     if args.end_flow_with_test:
         run_netlists_verification()
 
@@ -323,10 +334,10 @@ def validate_command_line_arguments():
                     clean_up_and_exit("'%s' argument depends on (%s) argumets" %
                                       (eacharg, ", ".join(dependent).replace("|", " or ")))
 
-    # Filter provided architecrue files
+    # Filter provided architecture files
     args.arch_file = os.path.abspath(args.arch_file)
     if not os.path.isfile(args.arch_file):
-        clean_up_and_exit("Architecure file not found. -%s", args.arch_file)
+        clean_up_and_exit("Architecture file not found. -%s", args.arch_file)
 
     # Filter provided benchmark files
     for index, everyinput in enumerate(args.benchmark_files):
@@ -579,6 +590,15 @@ def collect_files_for_vpr():
         clean_up_and_exit("Provided base_verilog file not found")
     shutil.copy(args.base_verilog, args.top_module+"_output_verilog.v")
 
+    # Sanitize provided openshell template, if provided
+    if not os.path.isfile(args.openfpga_shell_template or ""):
+        logger.error("Openfpga shell file - %s" % args.openfpga_shell_template)
+        clean_up_and_exit("Provided openfpga_shell_template" +
+                          f" {args.openfpga_shell_template} file not found")
+    else:
+        shutil.copy(args.openfpga_shell_template,
+                    args.top_module+"_template.openfpga")
+
 
 def run_vpr():
     ExecTime["VPRStart"] = time.time()
@@ -646,86 +666,23 @@ def run_vpr():
     ExecTime["VPREnd"] = time.time()
 
 
-def run_openfpga_shell(bench_blif, fixed_chan_width, logfile, route_only=False):
-    runfile = open("run.openfpga", 'w+'):
-    command = ["vpr",
-               args.arch_file,
-               bench_blif,
-               "--net_file", args.top_module+"_vpr.net",
-               "--place_file", args.top_module+"_vpr.place",
-               "--route_file", args.top_module+"_vpr.route",
-               "--full_stats",
-               "--activity_file", args.top_module+"_ace_out.act"]
-    # Other VPR options
-    if args.vpr_place_clb_pin_remap:
-        command += ["--place_clb_pin_remap"]
-    if args.vpr_route_breadthfirst:
-        command += ["--router_algorithm", "breadth_first"]
-    if args.vpr_max_router_iteration:
-        command += ["--max_router_iterations", args.vpr_max_router_iteration]
-    runfile.write(" ".join(command)+os.linesep)
+def run_openfpga_shell():
+    # bench_blif, fixed_chan_width, logfile, route_only=False
+    tmpl = Template(open(args.top_module+"_template.openfpga",
+                         encoding='utf-8').read())
 
-    command = ["read_openfpga_arch", "-f", args.arch_file]
-    runfile.write(" ".join(command)+os.linesep)
-
-    command = ["link_openfpga_arch", "--activity_file",
-               args.top_module+"_ace_out.act"]
-    runfile.write(" ".join(command)+os.linesep)
-
-    command = ["check_netlist_naming_conflict",
-               "--fix", "--report",
-               (args.arch_file).replace(".xml", "_renaming.xml")]
-    runfile.write(" ".join(command)+os.linesep)
-
-    runfile.write(" ".join(["pb_pin_fixup", "--verbose"])+os.linesep)
-    runfile.write(" ".join(["lut_truth_table_fixup"])+os.linesep)
-
-    command = ["build_fabric", "--compress_routing", "--duplicate_grid_pin"]
-    runfile.write(" ".join(command)+os.linesep)
-
-    runfile.write(" ".join(["repack"])+os.linesep)
-
-    if args.vpr_fpga_verilog:
-        command += ["write_verilog_testbench", "--fpga_verilog"]
-        if args.vpr_fpga_verilog_dir:
-            command += ["--fpga_verilog_dir", args.vpr_fpga_verilog_dir]
-        if args.vpr_fpga_verilog_print_top_tb:
-            command += ["--fpga_verilog_print_top_testbench"]
-        if args.vpr_fpga_verilog_print_input_blif_tb:
-            command += ["--fpga_verilog_print_input_blif_testbench"]
-        if args.vpr_fpga_verilog_print_autocheck_top_testbench:
-            command += ["--fpga_verilog_print_autocheck_top_testbench",
-                        os.path.join(args.run_dir, args.top_module+"_output_verilog.v")]
-        if args.vpr_fpga_verilog_include_timing:
-            command += ["--fpga_verilog_include_timing"]
-        if args.vpr_fpga_verilog_explicit_mapping:
-            command += ["--fpga_verilog_explicit_mapping"]
-        if args.vpr_fpga_x2p_duplicate_grid_pin:
-            command += ["--fpga_x2p_duplicate_grid_pin"]
-        if args.vpr_fpga_verilog_include_signal_init:
-            command += ["--fpga_verilog_include_signal_init"]
-        if args.vpr_fpga_verilog_formal_verification_top_netlist:
-            command += ["--fpga_verilog_print_formal_verification_top_netlist"]
-        if args.vpr_fpga_verilog_print_simulation_ini:
-            command += ["--fpga_verilog_print_simulation_ini"]
-        if args.vpr_fpga_verilog_include_icarus_simulator:
-            command += ["--fpga_verilog_include_icarus_simulator"]
-        if args.vpr_fpga_verilog_print_report_timing_tcl:
-            command += ["--fpga_verilog_print_report_timing_tcl"]
-        if args.vpr_fpga_verilog_report_timing_rpt_path:
-            command += ["--fpga_verilog_report_timing_rpt_path",
-                        args.vpr_fpga_verilog_report_timing_rpt_path]
-        if args.vpr_fpga_verilog_print_sdc_pnr:
-            command += ["--fpga_verilog_print_sdc_pnr"]
-        if args.vpr_fpga_verilog_print_user_defined_template:
-            command += ["--fpga_verilog_print_user_defined_template"]
-        if args.vpr_fpga_verilog_print_sdc_analysis:
-            command += ["--fpga_verilog_print_sdc_analysis"]
-        runfile.write(" ".join(command)+os.linesep)
-
-        if args.vpr_fpga_verilog_print_sdc_analysis:
-            command = ["write_pnr_sdc", "--fpga_bitstream_generator"]
-            runfile.write(" ".join(command)+os.linesep)
+    path_variables = script_env_vars["PATH"]
+    path_variables["VPR_ARCH_FILE"] = args.arch_file
+    path_variables["OPENFPGA_ARCH_FILE"] = args.openfpga_arch_file
+    path_variables["VPR_TESTBENCH_BLIF"] = args.top_module+".blif"
+    path_variables["ACTIVITY_FILE"] = args.top_module+"_ace_out.act"
+    path_variables["REFERENCE_VERILOG_TESTBENCH"] = args.top_module + \
+        "_output_verilog.v"
+    with open(args.top_module+"_run.openfpga", 'w', encoding='utf-8') as archfile:
+        archfile.write(tmpl.substitute(path_variables))
+    command = [cad_tools["openfpga_shell_path"], "-f",
+               args.top_module+"_run.openfpga"]
+    run_command("OpenFPGA Shell Run", "openfpgashell.log", command)
 
 
 def run_standard_vpr(bench_blif, fixed_chan_width, logfile, route_only=False):
