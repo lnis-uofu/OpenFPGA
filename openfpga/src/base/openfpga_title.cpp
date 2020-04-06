@@ -12,6 +12,13 @@ const char* create_openfpga_title() {
   std::string title;
 
   title += std::string("\n");
+  title += std::string("            ___                   _____ ____   ____    _     \n"); 
+  title += std::string("           / _ \\ _ __   ___ _ __ |  ___|  _ \\ / ___|  / \\    \n"); 
+  title += std::string("          | | | | '_ \\ / _ \\ '_ \\| |_  | |_) | |  _  / _ \\   \n"); 
+  title += std::string("          | |_| | |_) |  __/ | | |  _| |  __/| |_| |/ ___ \\  \n"); 
+  title += std::string("           \\___/| .__/ \\___|_| |_|_|   |_|    \\____/_/   \\_\\ \n"); 
+  title += std::string("                |_|                                          \n"); 
+  title += std::string("\n");
   title += std::string("               OpenFPGA: An Open-source FPGA IP Generator\n");
   title += std::string("                     Versatile Place and Route (VPR)\n");
   title += std::string("                           FPGA-Verilog\n");

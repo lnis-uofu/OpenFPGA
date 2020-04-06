@@ -12,12 +12,14 @@ namespace openfpga {
 PnrSdcOption::PnrSdcOption(const std::string& sdc_dir) {
   sdc_dir_ = sdc_dir;
   constrain_global_port_ = false;
+  constrain_non_clock_global_port_ = false;
   constrain_grid_ = false;
   constrain_sb_ = false;
   constrain_cb_ = false;
   constrain_configurable_memory_outputs_ = false;
   constrain_routing_multiplexer_outputs_ = false;
   constrain_switch_block_outputs_ = false;
+  constrain_zero_delay_paths_ = false;
 }
 
 /********************************************************************
@@ -39,6 +41,10 @@ bool PnrSdcOption::generate_sdc_pnr() const {
 
 bool PnrSdcOption::constrain_global_port() const {
   return constrain_global_port_;
+}
+
+bool PnrSdcOption::constrain_non_clock_global_port() const {
+  return constrain_non_clock_global_port_;
 }
 
 bool PnrSdcOption::constrain_grid() const {
@@ -65,6 +71,10 @@ bool PnrSdcOption::constrain_switch_block_outputs() const {
   return constrain_switch_block_outputs_;
 }
 
+bool PnrSdcOption::constrain_zero_delay_paths() const {
+  return constrain_zero_delay_paths_;
+}
+
 /********************************************************************
  * Public mutators
  ********************************************************************/
@@ -84,6 +94,10 @@ void PnrSdcOption::set_generate_sdc_pnr(const bool& generate_sdc_pnr) {
 
 void PnrSdcOption::set_constrain_global_port(const bool& constrain_global_port) {
   constrain_global_port_ = constrain_global_port;
+}
+
+void PnrSdcOption::set_constrain_non_clock_global_port(const bool& constrain_non_clock_global_port) {
+  constrain_non_clock_global_port_ = constrain_non_clock_global_port;
 }
 
 void PnrSdcOption::set_constrain_grid(const bool& constrain_grid) {
@@ -108,6 +122,10 @@ void PnrSdcOption::set_constrain_routing_multiplexer_outputs(const bool& constra
 
 void PnrSdcOption::set_constrain_switch_block_outputs(const bool& constrain_sb_outputs) {
   constrain_switch_block_outputs_ = constrain_sb_outputs;
+}
+
+void PnrSdcOption::set_constrain_zero_delay_paths(const bool& constrain_zero_delay_paths) {
+  constrain_zero_delay_paths_ = constrain_zero_delay_paths;
 }
 
 } /* end namespace openfpga */

@@ -54,7 +54,8 @@ void print_pnr_sdc_constrain_sb_mux_timing(std::fstream& fp,
                                            const RRGraph& rr_graph,
                                            const RRGSB& rr_gsb,
                                            const e_side& output_node_side,
-                                           const RRNodeId& output_rr_node) {
+                                           const RRNodeId& output_rr_node,
+                                           const bool& constrain_zero_delay_paths) {
   /* Validate file stream */
   valid_file_stream(fp);
 
@@ -89,6 +90,11 @@ void print_pnr_sdc_constrain_sb_mux_timing(std::fstream& fp,
 
   /* Find the starting points */
   for (const ModulePortId& module_input_port : module_input_ports) {
+    /* If we have a zero-delay path to contrain, we will skip unless users want so */
+    if ( (false == constrain_zero_delay_paths)
+      && (0. == switch_delays[module_input_port]) ) {
+      continue;
+    }
     /* Constrain a path */
     print_pnr_sdc_constrain_port2port_timing(fp,
                                              module_manager, 
@@ -110,7 +116,8 @@ static
 void print_pnr_sdc_constrain_sb_timing(const std::string& sdc_dir,
                                        const ModuleManager& module_manager,
                                        const RRGraph& rr_graph,
-                                       const RRGSB& rr_gsb) {
+                                       const RRGSB& rr_gsb,
+                                       const bool& constrain_zero_delay_paths) {
 
   /* Create the file name for Verilog netlist */
   vtr::Point<size_t> gsb_coordinate(rr_gsb.get_sb_x(), rr_gsb.get_sb_y());
@@ -148,7 +155,8 @@ void print_pnr_sdc_constrain_sb_timing(const std::string& sdc_dir,
                                             rr_graph,
                                             rr_gsb,
                                             side_manager.get_side(),
-                                            chan_rr_node);
+                                            chan_rr_node,
+                                            constrain_zero_delay_paths);
     }
   }
 
@@ -163,7 +171,8 @@ void print_pnr_sdc_constrain_sb_timing(const std::string& sdc_dir,
 void print_pnr_sdc_flatten_routing_constrain_sb_timing(const std::string& sdc_dir,
                                                        const ModuleManager& module_manager,
                                                        const RRGraph& rr_graph,
-                                                       const DeviceRRGSB& device_rr_gsb) {
+                                                       const DeviceRRGSB& device_rr_gsb,
+                                                       const bool& constrain_zero_delay_paths) {
 
   /* Start time count */
   vtr::ScopedStartFinishTimer timer("Write SDC for constrain Switch Block timing for P&R flow");
@@ -180,7 +189,8 @@ void print_pnr_sdc_flatten_routing_constrain_sb_timing(const std::string& sdc_di
       print_pnr_sdc_constrain_sb_timing(sdc_dir,
                                         module_manager,
                                         rr_graph,
-                                        rr_gsb);
+                                        rr_gsb,
+                                        constrain_zero_delay_paths);
     }
   }
 }
@@ -192,7 +202,8 @@ void print_pnr_sdc_flatten_routing_constrain_sb_timing(const std::string& sdc_di
 void print_pnr_sdc_compact_routing_constrain_sb_timing(const std::string& sdc_dir,
                                                        const ModuleManager& module_manager,
                                                        const RRGraph& rr_graph,
-                                                       const DeviceRRGSB& device_rr_gsb) {
+                                                       const DeviceRRGSB& device_rr_gsb,
+                                                       const bool& constrain_zero_delay_paths) {
 
   /* Start time count */
   vtr::ScopedStartFinishTimer timer("Write SDC for constrain Switch Block timing for P&R flow");
@@ -205,7 +216,8 @@ void print_pnr_sdc_compact_routing_constrain_sb_timing(const std::string& sdc_di
     print_pnr_sdc_constrain_sb_timing(sdc_dir,
                                       module_manager,
                                       rr_graph,
-                                      rr_gsb);
+                                      rr_gsb,
+                                      constrain_zero_delay_paths);
   }
 }
 
@@ -220,7 +232,8 @@ void print_pnr_sdc_constrain_cb_mux_timing(std::fstream& fp,
                                            const RRGraph& rr_graph,
                                            const RRGSB& rr_gsb,
                                            const t_rr_type& cb_type,
-                                           const RRNodeId& output_rr_node) {
+                                           const RRNodeId& output_rr_node,
+                                           const bool& constrain_zero_delay_paths) {
   /* Validate file stream */
   valid_file_stream(fp);
 
@@ -230,7 +243,21 @@ void print_pnr_sdc_constrain_cb_mux_timing(std::fstream& fp,
    * These connections should be handled by other functions in the compact_netlist.c 
    * So we just return here for OPINs 
    */
-  if (0 == get_rr_graph_configurable_driver_nodes(rr_graph, output_rr_node).size()) {
+  std::vector<RRNodeId> input_rr_nodes = get_rr_graph_configurable_driver_nodes(rr_graph, output_rr_node);
+
+  if (0 == input_rr_nodes.size()) {
+    return;
+  }
+
+  /* Xifan Tang: VPR considers delayless switch to be configurable
+   * As a result, the direct connection is considered to be configurable...
+   * Here, I simply kick out OPINs in CB connection because they should be built
+   * in the top mopdule.
+   * 
+   * Note: this MUST BE reconsidered if we do have OPIN connected to IPINs 
+   * through a programmable multiplexer!!!
+   */
+  if (true == is_ipin_direct_connected_opin(rr_graph, output_rr_node)) {
     return;
   }
 
@@ -247,7 +274,7 @@ void print_pnr_sdc_constrain_cb_mux_timing(std::fstream& fp,
                                                                                           rr_graph, 
                                                                                           rr_gsb, 
                                                                                           cb_type,
-                                                                                          get_rr_graph_configurable_driver_nodes(rr_graph, output_rr_node));
+                                                                                          input_rr_nodes);
 
   /* Find timing constraints for each path (edge) */
   std::map<ModulePortId, float> switch_delays;
@@ -261,6 +288,12 @@ void print_pnr_sdc_constrain_cb_mux_timing(std::fstream& fp,
 
   /* Find the starting points */
   for (const ModulePortId& module_input_port : module_input_ports) {
+    /* If we have a zero-delay path to contrain, we will skip unless users want so */
+    if ( (false == constrain_zero_delay_paths)
+      && (0. == switch_delays[module_input_port]) ) {
+      continue;
+    }
+
     /* Constrain a path */
     print_pnr_sdc_constrain_port2port_timing(fp,
                                              module_manager, 
@@ -269,7 +302,6 @@ void print_pnr_sdc_constrain_cb_mux_timing(std::fstream& fp,
                                              switch_delays[module_input_port]);
   }
 }
-
 
 /********************************************************************
  * Print SDC timing constraints for a Connection block 
@@ -280,7 +312,8 @@ void print_pnr_sdc_constrain_cb_timing(const std::string& sdc_dir,
                                        const ModuleManager& module_manager,
                                        const RRGraph& rr_graph,
                                        const RRGSB& rr_gsb, 
-                                       const t_rr_type& cb_type) {
+                                       const t_rr_type& cb_type,
+                                       const bool& constrain_zero_delay_paths) {
   /* Create the netlist */
   vtr::Point<size_t> gsb_coordinate(rr_gsb.get_cb_x(cb_type), rr_gsb.get_cb_y(cb_type));
 
@@ -311,7 +344,8 @@ void print_pnr_sdc_constrain_cb_timing(const std::string& sdc_dir,
       print_pnr_sdc_constrain_cb_mux_timing(fp,
                                             module_manager, cb_module, 
                                             rr_graph, rr_gsb, cb_type,
-                                            ipin_rr_node);
+                                            ipin_rr_node,
+                                            constrain_zero_delay_paths);
     }
   }
 
@@ -328,7 +362,8 @@ void print_pnr_sdc_flatten_routing_constrain_cb_timing(const std::string& sdc_di
                                                        const ModuleManager& module_manager, 
                                                        const RRGraph& rr_graph,
                                                        const DeviceRRGSB& device_rr_gsb,
-                                                       const t_rr_type& cb_type) {
+                                                       const t_rr_type& cb_type,
+                                                       const bool& constrain_zero_delay_paths) {
   /* Build unique X-direction connection block modules */
   vtr::Point<size_t> cb_range = device_rr_gsb.get_gsb_range();
 
@@ -346,7 +381,8 @@ void print_pnr_sdc_flatten_routing_constrain_cb_timing(const std::string& sdc_di
                                         module_manager,
                                         rr_graph, 
                                         rr_gsb, 
-                                        cb_type);
+                                        cb_type,
+                                        constrain_zero_delay_paths);
 
     }
   }
@@ -359,7 +395,8 @@ void print_pnr_sdc_flatten_routing_constrain_cb_timing(const std::string& sdc_di
 void print_pnr_sdc_flatten_routing_constrain_cb_timing(const std::string& sdc_dir,
                                                        const ModuleManager& module_manager, 
                                                        const RRGraph& rr_graph,
-                                                       const DeviceRRGSB& device_rr_gsb) {
+                                                       const DeviceRRGSB& device_rr_gsb,
+                                                       const bool& constrain_zero_delay_paths) {
 
   /* Start time count */
   vtr::ScopedStartFinishTimer timer("Write SDC for constrain Connection Block timing for P&R flow");
@@ -367,12 +404,14 @@ void print_pnr_sdc_flatten_routing_constrain_cb_timing(const std::string& sdc_di
   print_pnr_sdc_flatten_routing_constrain_cb_timing(sdc_dir, module_manager, 
                                                     rr_graph,
                                                     device_rr_gsb,
-                                                    CHANX);
+                                                    CHANX,
+                                                    constrain_zero_delay_paths);
 
   print_pnr_sdc_flatten_routing_constrain_cb_timing(sdc_dir, module_manager, 
                                                     rr_graph,
                                                     device_rr_gsb,
-                                                    CHANY);
+                                                    CHANY,
+                                                    constrain_zero_delay_paths);
 }
 
 /********************************************************************
@@ -382,7 +421,8 @@ void print_pnr_sdc_flatten_routing_constrain_cb_timing(const std::string& sdc_di
 void print_pnr_sdc_compact_routing_constrain_cb_timing(const std::string& sdc_dir,
                                                        const ModuleManager& module_manager,
                                                        const RRGraph& rr_graph,
-                                                       const DeviceRRGSB& device_rr_gsb) {
+                                                       const DeviceRRGSB& device_rr_gsb,
+                                                       const bool& constrain_zero_delay_paths) {
 
   /* Start time count */
   vtr::ScopedStartFinishTimer timer("Write SDC for constrain Connection Block timing for P&R flow");
@@ -394,7 +434,8 @@ void print_pnr_sdc_compact_routing_constrain_cb_timing(const std::string& sdc_di
                                       module_manager,
                                       rr_graph, 
                                       unique_mirror, 
-                                      CHANX);
+                                      CHANX,
+                                      constrain_zero_delay_paths);
   }
 
   /* Print SDC for unique Y-direction connection block modules */
@@ -404,7 +445,8 @@ void print_pnr_sdc_compact_routing_constrain_cb_timing(const std::string& sdc_di
                                       module_manager,
                                       rr_graph, 
                                       unique_mirror, 
-                                      CHANY);
+                                      CHANY,
+                                      constrain_zero_delay_paths);
   }
 }
 

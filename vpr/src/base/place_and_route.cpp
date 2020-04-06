@@ -88,6 +88,11 @@ int binary_search_place_and_route(const t_placer_opts& placer_opts_ref,
         graph_type = GRAPH_GLOBAL;
     } else {
         graph_type = (det_routing_arch->directionality == BI_DIRECTIONAL ? GRAPH_BIDIR : GRAPH_UNIDIR);
+        /* Branch on tileable routing */
+        if ( (UNI_DIRECTIONAL == det_routing_arch->directionality)
+          && (true == det_routing_arch->tileable) ) {
+            graph_type = GRAPH_UNIDIR_TILEABLE;
+        }
     }
 
     best_routing = alloc_saved_routing();
@@ -354,7 +359,8 @@ int binary_search_place_and_route(const t_placer_opts& placer_opts_ref,
                     segment_inf,
                     router_opts.base_cost_type,
                     router_opts.trim_empty_channels,
-                    router_opts.trim_obs_channels,
+                    /* Xifan tang: The trimming on obstacle(through) channel inside multi-height and multi-width grids are not open to command-line options. OpenFPGA opens this options through an XML syntax */
+                    router_opts.trim_obs_channels || det_routing_arch->through_channel,
                     router_opts.clock_modeling,
                     arch->Directs, arch->num_directs,
                     &warnings);

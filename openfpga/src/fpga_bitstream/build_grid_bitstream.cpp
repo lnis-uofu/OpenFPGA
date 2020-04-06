@@ -685,8 +685,6 @@ void build_grid_bitstream(BitstreamManager& bitstream_manager,
         || (0 < grids[io_coordinate.x()][io_coordinate.y()].height_offset) ) {
         continue;
       }
-      /* We should not meet any I/O grid */
-      VTR_ASSERT(true == is_io_type(grids[io_coordinate.x()][io_coordinate.y()].type));
       build_physical_block_bitstream(bitstream_manager, top_block, module_manager,
                                      circuit_lib, mux_lib,
                                      device_annotation, cluster_annotation, 

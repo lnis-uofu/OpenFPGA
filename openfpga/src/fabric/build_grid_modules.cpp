@@ -18,6 +18,7 @@
 #include "openfpga_reserved_words.h"
 #include "openfpga_naming.h"
 #include "openfpga_interconnect_types.h"
+#include "openfpga_physical_tile_utils.h"
 #include "pb_type_utils.h"
 #include "pb_graph_utils.h"
 #include "module_manager_utils.h"
@@ -144,6 +145,38 @@ void add_grid_module_nets_connect_pb_type_ports(ModuleManager& module_manager,
 }
 
 /********************************************************************
+ *******************************************************************/
+static 
+void add_primitive_module_fpga_global_io_port(ModuleManager& module_manager,
+                                              const ModuleId& primitive_module,
+                                              const ModuleId& logic_module,
+                                              const size_t& logic_instance_id,
+                                              const ModuleManager::e_module_port_type& module_io_port_type,
+                                              const CircuitLibrary& circuit_lib,
+                                              const CircuitModelId& primitive_model,
+                                              const CircuitPortId& circuit_port) {
+  BasicPort module_port(generate_fpga_global_io_port_name(std::string(GIO_INOUT_PREFIX), circuit_lib, primitive_model, circuit_port), circuit_lib.port_size(circuit_port));
+  ModulePortId primitive_io_port_id = module_manager.add_port(primitive_module, module_port, module_io_port_type);
+  ModulePortId logic_io_port_id = module_manager.find_module_port(logic_module, circuit_lib.port_prefix(circuit_port));
+  BasicPort logic_io_port = module_manager.module_port(logic_module, logic_io_port_id);
+  VTR_ASSERT(logic_io_port.get_width() == module_port.get_width());
+
+  /* Wire the GPIO port form primitive_module to the logic module!*/
+  for (size_t pin_id = 0; pin_id < module_port.pins().size(); ++pin_id) {      
+    ModuleNetId net = module_manager.create_module_net(primitive_module);
+    if ( (ModuleManager::MODULE_GPIO_PORT == module_io_port_type)
+      || (ModuleManager::MODULE_GPIN_PORT == module_io_port_type) ) {
+      module_manager.add_module_net_source(primitive_module, net, primitive_module, 0, primitive_io_port_id, module_port.pins()[pin_id]);
+      module_manager.add_module_net_sink(primitive_module, net, logic_module, logic_instance_id, logic_io_port_id, logic_io_port.pins()[pin_id]);
+    } else {
+      VTR_ASSERT(ModuleManager::MODULE_GPOUT_PORT == module_io_port_type);
+      module_manager.add_module_net_source(primitive_module, net, logic_module, logic_instance_id, logic_io_port_id, logic_io_port.pins()[pin_id]);
+      module_manager.add_module_net_sink(primitive_module, net, primitive_module, 0, primitive_io_port_id, module_port.pins()[pin_id]);
+    }
+  }
+}
+
+/********************************************************************
  * Print Verilog modules of a primitive node in the pb_graph_node graph
  * This generic function can support all the different types of primitive nodes
  * i.e., Look-Up Tables (LUTs), Flip-flops (FFs) and hard logic blocks such as adders.
@@ -238,12 +271,6 @@ void build_primitive_block_module(ModuleManager& module_manager,
   std::string memory_module_name = generate_memory_module_name(circuit_lib, primitive_model, sram_model, std::string(MEMORY_MODULE_POSTFIX));
   ModuleId memory_module = module_manager.find_module(memory_module_name);
 
-  /* Vectors to record all the memory modules have been added
-   * They are used to add module nets of configuration bus
-   */
-  std::vector<ModuleId> memory_modules;
-  std::vector<size_t> memory_instances;
-
   /* If there is no memory module required, we can skip the assocated net addition */
   if (ModuleId::INVALID() != memory_module) {
     size_t memory_instance_id = module_manager.num_instance(primitive_module, memory_module); 
@@ -263,7 +290,7 @@ void build_primitive_block_module(ModuleManager& module_manager,
   /* Add all the nets to connect configuration ports from memory module to primitive modules
    * This is a one-shot addition that covers all the memory modules in this primitive module!
    */
-  if (false == memory_modules.empty()) {
+  if (0 < module_manager.configurable_children(primitive_module).size()) {
     add_module_nets_memory_config_bus(module_manager, primitive_module, 
                                       sram_orgz_type, circuit_lib.design_tech_type(sram_model));
   }
@@ -280,18 +307,32 @@ void build_primitive_block_module(ModuleManager& module_manager,
   if (CIRCUIT_MODEL_IOPAD == circuit_lib.model_type(primitive_model)) {
     std::vector<CircuitPortId> primitive_model_inout_ports = circuit_lib.model_ports_by_type(primitive_model, CIRCUIT_MODEL_PORT_INOUT);
     for (auto port : primitive_model_inout_ports) {
-      BasicPort module_port(generate_fpga_global_io_port_name(std::string(GIO_INOUT_PREFIX), circuit_lib, primitive_model), circuit_lib.port_size(port));
-      ModulePortId primitive_gpio_port_id = module_manager.add_port(primitive_module, module_port, ModuleManager::MODULE_GPIO_PORT);
-      ModulePortId logic_gpio_port_id = module_manager.find_module_port(logic_module, circuit_lib.port_prefix(port));
-      BasicPort logic_gpio_port = module_manager.module_port(logic_module, logic_gpio_port_id);
-      VTR_ASSERT(logic_gpio_port.get_width() == module_port.get_width());
+      add_primitive_module_fpga_global_io_port(module_manager, primitive_module,
+                                               logic_module, logic_instance_id,
+                                               ModuleManager::MODULE_GPIO_PORT,
+                                               circuit_lib,
+                                               primitive_model,
+                                               port);
+    }
+  }
 
-      /* Wire the GPIO port form primitive_module to the logic module!*/
-      for (size_t pin_id = 0; pin_id < module_port.pins().size(); ++pin_id) {      
-        ModuleNetId net = module_manager.create_module_net(primitive_module);
-        module_manager.add_module_net_source(primitive_module, net, primitive_module, 0, primitive_gpio_port_id, module_port.pins()[pin_id]);
-        module_manager.add_module_net_sink(primitive_module, net, logic_module, logic_instance_id, logic_gpio_port_id, logic_gpio_port.pins()[pin_id]);
-      }
+  /* Find the other i/o ports required by the primitive node, and add them to the module */
+  for (const auto& port : circuit_lib.model_global_ports(primitive_model, false)) {
+    if ( (CIRCUIT_MODEL_PORT_INPUT == circuit_lib.port_type(port))
+      && (true == circuit_lib.port_is_io(port)) ) {
+      add_primitive_module_fpga_global_io_port(module_manager, primitive_module,
+                                               logic_module, logic_instance_id,
+                                               ModuleManager::MODULE_GPIN_PORT,
+                                               circuit_lib,
+                                               primitive_model,
+                                               port);
+    } else if (CIRCUIT_MODEL_PORT_OUTPUT == circuit_lib.port_type(port)) {
+      add_primitive_module_fpga_global_io_port(module_manager, primitive_module,
+                                               logic_module, logic_instance_id,
+                                               ModuleManager::MODULE_GPOUT_PORT,
+                                               circuit_lib,
+                                               primitive_model,
+                                               port);
     }
   }
 
@@ -427,6 +468,12 @@ void add_module_pb_graph_pin_interc(ModuleManager& module_manager,
     /* Get the instance id and add an instance of wire */
     size_t wire_instance = module_manager.num_instance(pb_module, wire_module);
     module_manager.add_child_module(pb_module, wire_module);
+
+    /* Give an instance name: this name should be consistent with the block name given in SDC generator,
+     * If you want to bind the SDC generation to modules
+     */
+    std::string wire_instance_name = generate_instance_name(module_manager.module_name(wire_module), wire_instance);
+    module_manager.set_child_instance_name(pb_module, wire_module, wire_instance, wire_instance_name);
 
     /* Ensure input and output ports of the wire model has only 1 pin respectively */
     VTR_ASSERT(1 == circuit_lib.port_size(interc_model_inputs[0]));
@@ -872,7 +919,7 @@ void rec_build_logical_tile_modules(ModuleManager& module_manager,
   /* Add module nets to connect memory cells inside
    * This is a one-shot addition that covers all the memory modules in this pb module!
    */
-  if (false == memory_modules.empty()) {
+  if (0 < module_manager.configurable_children(pb_module).size()) {
     add_module_nets_memory_config_bus(module_manager, pb_module, 
                                       sram_orgz_type, circuit_lib.design_tech_type(sram_model));
   }
@@ -1093,13 +1140,21 @@ void build_grid_modules(ModuleManager& module_manager,
     if (true == is_empty_type(&physical_tile)) {
       continue;
     } else if (true == is_io_type(&physical_tile)) {
-      /* Special for I/O block, generate one module for each border side */
-      for (int iside = 0; iside < NUM_SIDES; iside++) {
-        SideManager side_manager(iside);
+      /* Special for I/O block:
+       * We will search the grids and see where the I/O blocks are located:
+       * - If a I/O block locates on border sides of FPGA fabric:
+       *   i.e., one or more from {TOP, RIGHT, BOTTOM, LEFT},
+       *   we will generate one module for each border side 
+       * - If a I/O block locates in the center of FPGA fabric:
+       *   we will generate one module with NUM_SIDES (same treatment as regular grids) 
+       */
+      std::set<e_side> io_type_sides = find_physical_io_tile_located_sides(device_ctx.grid,
+                                                                           &physical_tile);
+      for (const e_side& io_type_side : io_type_sides) {
         build_physical_tile_module(module_manager, circuit_lib,
                                    sram_orgz_type, sram_model,
                                    &physical_tile,
-                                   side_manager.get_side(),
+                                   io_type_side,
                                    duplicate_grid_pin,
                                    verbose);
       } 

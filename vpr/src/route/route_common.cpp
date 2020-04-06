@@ -236,7 +236,8 @@ void try_graph(int width_fac, const t_router_opts& router_opts, t_det_routing_ar
                     segment_inf,
                     router_opts.base_cost_type,
                     router_opts.trim_empty_channels,
-                    router_opts.trim_obs_channels,
+                    /* Xifan tang: The trimming on obstacle(through) channel inside multi-height and multi-width grids are not open to command-line options. OpenFPGA opens this options through an XML syntax */
+                    router_opts.trim_obs_channels || det_routing_arch->through_channel,
                     router_opts.clock_modeling,
                     directs, num_directs,
                     &warning_count);
@@ -269,6 +270,11 @@ bool try_route(int width_fac,
         graph_type = GRAPH_GLOBAL;
     } else {
         graph_type = (det_routing_arch->directionality == BI_DIRECTIONAL ? GRAPH_BIDIR : GRAPH_UNIDIR);
+        /* Branch on tileable routing */
+        if ( (UNI_DIRECTIONAL == det_routing_arch->directionality)
+          && (true == det_routing_arch->tileable) ) {
+            graph_type = GRAPH_UNIDIR_TILEABLE;
+        }
     }
 
     /* Set the channel widths */
@@ -1484,13 +1490,36 @@ void print_route(FILE* fp, const vtr::vector<ClusterNetId, t_traceback>& traceba
                             } else { /* IO Pad. */
                                 fprintf(fp, " Pin: ");
                             }
+                            fprintf(fp, "%d  ", device_ctx.rr_graph.node_pin_num(inode));
                             break;
 
                         case CHANX:
                         case CHANY:
                             fprintf(fp, " Track: ");
+                            /* Xifan Tang:
+                             * The routing track id depends on the direction
+                             * A routing track may have multiple track ids
+                             * The track id is the starting point of a routing track
+                             *   - INC_DIRECTION: the first track id in the list
+                             *   - DEC_DIRECTION: the last track id in the list
+                             * 
+                             * This is because (xlow, ylow) is always < (xhigh, yhigh)
+                             * which is even true for DEC_DIRECTION routing tracks
+                             */
+                            if (1 < device_ctx.rr_graph.node_track_ids(inode).size()) {
+                                fprintf(fp, "(");
+                                for (size_t itrack = 0; itrack < device_ctx.rr_graph.node_track_ids(inode).size(); ++itrack) {
+                                    if (0 < itrack) {
+                                      fprintf(fp, ", ");
+                                    }
+                                    fprintf(fp, "%d", device_ctx.rr_graph.node_track_ids(inode)[itrack]);
+                                }
+                                fprintf(fp, ")  ");
+                            } else {
+                                VTR_ASSERT(1 == device_ctx.rr_graph.node_track_ids(inode).size());
+                                fprintf(fp, "%d  ", device_ctx.rr_graph.node_track_num(inode));
+                            }
                             break;
-
                         case SOURCE:
                         case SINK:
                             if (is_io_type(device_ctx.grid[ilow][jlow].type)) {
@@ -1498,6 +1527,7 @@ void print_route(FILE* fp, const vtr::vector<ClusterNetId, t_traceback>& traceba
                             } else { /* IO Pad. */
                                 fprintf(fp, " Class: ");
                             }
+                            fprintf(fp, "%d  ", device_ctx.rr_graph.node_class_num(inode));
                             break;
 
                         default:
@@ -1507,7 +1537,7 @@ void print_route(FILE* fp, const vtr::vector<ClusterNetId, t_traceback>& traceba
                             break;
                     }
 
-                    fprintf(fp, "%d  ", device_ctx.rr_graph.node_ptc_num(inode));
+                    //fprintf(fp, "%d  ", device_ctx.rr_graph.node_ptc_num(inode));
 
                     if (!is_io_type(device_ctx.grid[ilow][jlow].type) && (rr_type == IPIN || rr_type == OPIN)) {
                         int pin_num = device_ctx.rr_graph.node_ptc_num(inode);

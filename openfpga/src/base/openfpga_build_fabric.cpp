@@ -30,28 +30,27 @@ void compress_routing_hierarchy(OpenfpgaContext& openfpga_ctx,
 
   /* Report the stats */
   VTR_LOGV(verbose_output, 
-           "Detected %lu unique X-direction connection blocks from a total of %d (compression rate=%d%)\n",
+           "Detected %lu unique X-direction connection blocks from a total of %d (compression rate=%.2f%)\n",
            openfpga_ctx.device_rr_gsb().get_num_cb_unique_module(CHANX),
            find_device_rr_gsb_num_cb_modules(openfpga_ctx.device_rr_gsb(), CHANX),
-           100 * (openfpga_ctx.device_rr_gsb().get_num_cb_unique_module(CHANX) / find_device_rr_gsb_num_cb_modules(openfpga_ctx.device_rr_gsb(), CHANX) - 1));
+           100. * ((float)find_device_rr_gsb_num_cb_modules(openfpga_ctx.device_rr_gsb(), CHANX) / (float)openfpga_ctx.device_rr_gsb().get_num_cb_unique_module(CHANX) - 1.));
 
   VTR_LOGV(verbose_output,
-           "Detected %lu unique Y-direction connection blocks from a total of %d (compression rate=%d%)\n",
+           "Detected %lu unique Y-direction connection blocks from a total of %d (compression rate=%.2f%)\n",
            openfpga_ctx.device_rr_gsb().get_num_cb_unique_module(CHANY),
            find_device_rr_gsb_num_cb_modules(openfpga_ctx.device_rr_gsb(), CHANY),
-           100 * (openfpga_ctx.device_rr_gsb().get_num_cb_unique_module(CHANY) / find_device_rr_gsb_num_cb_modules(openfpga_ctx.device_rr_gsb(), CHANY) - 1));
+           100. * ((float)find_device_rr_gsb_num_cb_modules(openfpga_ctx.device_rr_gsb(), CHANY) / (float)openfpga_ctx.device_rr_gsb().get_num_cb_unique_module(CHANY) - 1.));
 
   VTR_LOGV(verbose_output,
-           "Detected %lu unique switch blocks from a total of %d (compression rate=%d%)\n",
+           "Detected %lu unique switch blocks from a total of %d (compression rate=%.2f%)\n",
            openfpga_ctx.device_rr_gsb().get_num_sb_unique_module(),
            find_device_rr_gsb_num_sb_modules(openfpga_ctx.device_rr_gsb()),
-           100 * (openfpga_ctx.device_rr_gsb().get_num_sb_unique_module() / find_device_rr_gsb_num_sb_modules(openfpga_ctx.device_rr_gsb()) - 1));
+           100. * ((float)find_device_rr_gsb_num_sb_modules(openfpga_ctx.device_rr_gsb()) / (float)openfpga_ctx.device_rr_gsb().get_num_sb_unique_module() - 1.));
 
-  VTR_LOGV(verbose_output,
-           "Detected %lu unique general switch blocks from a total of %d (compression rate=%d%)\n",
-           openfpga_ctx.device_rr_gsb().get_num_gsb_unique_module(),
-           find_device_rr_gsb_num_gsb_modules(openfpga_ctx.device_rr_gsb()),
-           100 * (openfpga_ctx.device_rr_gsb().get_num_gsb_unique_module() / find_device_rr_gsb_num_gsb_modules(openfpga_ctx.device_rr_gsb()) - 1));
+  VTR_LOG("Detected %lu unique general switch blocks from a total of %d (compression rate=%.2f%)\n",
+          openfpga_ctx.device_rr_gsb().get_num_gsb_unique_module(),
+          find_device_rr_gsb_num_gsb_modules(openfpga_ctx.device_rr_gsb()),
+          100. * ((float)find_device_rr_gsb_num_gsb_modules(openfpga_ctx.device_rr_gsb()) / (float)openfpga_ctx.device_rr_gsb().get_num_gsb_unique_module() - 1.));
 }
 
 /********************************************************************
@@ -66,6 +65,8 @@ void build_fabric(OpenfpgaContext& openfpga_ctx,
   
   if (true == cmd_context.option_enable(cmd, opt_compress_routing)) {
     compress_routing_hierarchy(openfpga_ctx, cmd_context.option_enable(cmd, opt_verbose));
+    /* Update flow manager to enable compress routing */
+    openfpga_ctx.mutable_flow_manager().set_compress_routing(true);
   }
 
   VTR_LOG("\n");

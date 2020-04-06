@@ -1004,6 +1004,16 @@ struct t_det_routing_arch {
     enum e_switch_block_type switch_block_type;
     std::vector<t_switchblock_inf> switchblocks;
 
+    /* Xifan Tang: subtype of switch blocks.
+     * Sub type and Fs are applied to pass tracks
+     */
+    int subFs;
+    enum e_switch_block_type switch_block_subtype;
+    
+    /* Xifan Tang: tileable routing */
+    bool tileable;
+    bool through_channel;
+
     short global_route_switch;
     short delayless_switch;
     int wire_to_arch_ipin_switch;

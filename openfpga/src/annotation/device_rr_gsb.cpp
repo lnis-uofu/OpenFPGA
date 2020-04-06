@@ -28,13 +28,13 @@ vtr::Point<size_t> DeviceRRGSB::get_gsb_range() const {
 } 
 
 /* Get a rr switch block in the array with a coordinate */
-const RRGSB DeviceRRGSB::get_gsb(const vtr::Point<size_t>& coordinate) const {
+const RRGSB& DeviceRRGSB::get_gsb(const vtr::Point<size_t>& coordinate) const {
   VTR_ASSERT(validate_coordinate(coordinate));
   return rr_gsb_[coordinate.x()][coordinate.y()];
 } 
 
 /* Get a rr switch block in the array with a coordinate */
-const RRGSB DeviceRRGSB::get_gsb(const size_t& x, const size_t& y) const { 
+const RRGSB& DeviceRRGSB::get_gsb(const size_t& x, const size_t& y) const { 
   vtr::Point<size_t> coordinate(x, y);  
   return get_gsb(coordinate);
 }
@@ -87,7 +87,7 @@ size_t DeviceRRGSB::get_num_gsb_unique_module() const {
 } 
 
 /* Get a rr switch block which a unique mirror */ 
-const RRGSB DeviceRRGSB::get_sb_unique_module(const size_t& index) const {
+const RRGSB& DeviceRRGSB::get_sb_unique_module(const size_t& index) const {
   VTR_ASSERT (validate_sb_unique_module_index(index));
   
   return rr_gsb_[sb_unique_module_[index].x()][sb_unique_module_[index].y()];
@@ -130,7 +130,7 @@ const RRGSB& DeviceRRGSB::get_cb_unique_module(const t_rr_type& cb_type, const v
 } 
 
 /* Give a coordinate of a rr switch block, and return its unique mirror */ 
-const RRGSB DeviceRRGSB::get_sb_unique_module(const vtr::Point<size_t>& coordinate) const {
+const RRGSB& DeviceRRGSB::get_sb_unique_module(const vtr::Point<size_t>& coordinate) const {
   VTR_ASSERT(validate_coordinate(coordinate));
   size_t sb_unique_module_id = sb_unique_module_id_[coordinate.x()][coordinate.y()];  
   return get_sb_unique_module(sb_unique_module_id);
@@ -191,6 +191,18 @@ void DeviceRRGSB::add_rr_gsb(const vtr::Point<size_t>& coordinate,
 
   /* Add the switch block into array */
   rr_gsb_[coordinate.x()][coordinate.y()] = rr_gsb; 
+}
+
+/* Get a rr switch block in the array with a coordinate */
+RRGSB& DeviceRRGSB::get_mutable_gsb(const vtr::Point<size_t>& coordinate) {
+  VTR_ASSERT(validate_coordinate(coordinate));
+  return rr_gsb_[coordinate.x()][coordinate.y()];
+} 
+
+/* Get a rr switch block in the array with a coordinate */
+RRGSB& DeviceRRGSB::get_mutable_gsb(const size_t& x, const size_t& y) { 
+  vtr::Point<size_t> coordinate(x, y);  
+  return get_mutable_gsb(coordinate);
 }
 
 /* Add a switch block to the array, which will automatically identify and update the lists of unique mirrors and rotatable mirrors */
@@ -255,6 +267,7 @@ void DeviceRRGSB::build_sb_unique_module(const RRGraph& rr_graph) {
           break;
         }
       }
+
       /* Add to list if this is a unique mirror*/
       if (true == is_unique_module) {
         sb_unique_module_.push_back(sb_coordinate);

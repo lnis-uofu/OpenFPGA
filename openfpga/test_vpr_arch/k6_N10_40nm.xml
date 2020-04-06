@@ -63,7 +63,7 @@
   </tiles>
   <!-- ODIN II specific config ends -->
   <!-- Physical descriptions begin -->
-  <layout>
+  <layout tileable="false">
     <auto_layout aspect_ratio="1.0">
       <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
       <perimeter type="io" priority="100"/>
@@ -296,13 +296,4 @@
     </pb_type>
     <!-- Define general purpose logic block (CLB) ends -->
   </complexblocklist>
-  <power>
-    <local_interconnect C_wire="2.5e-10"/>
-    <mux_transistor_size mux_transistor_size="3"/>
-    <FF_size FF_size="4"/>
-    <LUT_transistor_size LUT_transistor_size="4"/>
-  </power>
-  <clocks>
-    <clock buffer_size="auto" C_wire="2.5e-10"/>
-  </clocks>
 </architecture>

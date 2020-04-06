@@ -28,111 +28,13 @@
 #include "sdc_writer_naming.h"
 #include "sdc_writer_utils.h"
 #include "sdc_memory_utils.h"
+#include "pnr_sdc_global_port.h"
 #include "pnr_sdc_routing_writer.h"
 #include "pnr_sdc_grid_writer.h"
 #include "pnr_sdc_writer.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
-
-/********************************************************************
- * Print a SDC file to constrain the global ports of FPGA fabric
- * in particular clock ports
- * 
- * For programming clock, we give a fixed period, while for operating
- * clock, we constrain with critical path delay 
- *******************************************************************/
-static 
-void print_pnr_sdc_global_ports(const std::string& sdc_dir, 
-                                const float& programming_critical_path_delay,
-                                const float& operating_critical_path_delay,
-                                const CircuitLibrary& circuit_lib,
-                                const std::vector<CircuitPortId>& global_ports) {
-
-  /* Create the file name for Verilog netlist */
-  std::string sdc_fname(sdc_dir + std::string(SDC_GLOBAL_PORTS_FILE_NAME));
-
-  /* Start time count */
-  std::string timer_message = std::string("Write SDC for constraining clocks for P&R flow '") + sdc_fname + std::string("'");
-  vtr::ScopedStartFinishTimer timer(timer_message);
-
-  /* Create the file stream */
-  std::fstream fp;
-  fp.open(sdc_fname, std::fstream::out | std::fstream::trunc);
-
-  check_file_stream(sdc_fname.c_str(), fp);
-
-  /* Generate the descriptions*/
-  print_sdc_file_header(fp, std::string("Clock contraints for PnR"));
-
-  /* Get clock port from the global port */
-  for (const CircuitPortId& clock_port : global_ports) {
-    if (CIRCUIT_MODEL_PORT_CLOCK != circuit_lib.port_type(clock_port)) {
-      continue;
-    }
-    /* Reach here, it means a clock port and we need print constraints */
-    float clock_period = operating_critical_path_delay; 
-
-    /* For programming clock, we give a fixed period */
-    if (true == circuit_lib.port_is_prog(clock_port)) {
-      clock_period = programming_critical_path_delay;
-      /* Print comments */
-      fp << "##################################################" << std::endl; 
-      fp << "# Create programmable clock                       " << std::endl;
-      fp << "##################################################" << std::endl; 
-    } else {
-      /* Print comments */
-      fp << "##################################################" << std::endl; 
-      fp << "# Create clock                                    " << std::endl;
-      fp << "##################################################" << std::endl; 
-    }
-
-    for (const size_t& pin : circuit_lib.pins(clock_port)) {
-      BasicPort port_to_constrain(circuit_lib.port_prefix(clock_port), pin, pin);
-
-      fp << "create_clock ";
-      fp << generate_sdc_port(port_to_constrain) << "-period ";
-      fp << std::setprecision(10) << clock_period;
-      fp << " -waveform {0 ";
-      fp << std::setprecision(10) << clock_period / 2;
-      fp << "}" << std::endl;
-
-      fp << std::endl;
-    }
-  }
-
-  /* For non-clock port from the global port: give a fixed period */
-  for (const CircuitPortId& global_port : global_ports) {
-    if (CIRCUIT_MODEL_PORT_CLOCK == circuit_lib.port_type(global_port)) {
-      continue;
-    }
-
-    /* Print comments */
-    fp << "##################################################" << std::endl; 
-    fp << "# Constrain other global ports                    " << std::endl;
-    fp << "##################################################" << std::endl; 
-
-    /* Reach here, it means a non-clock global port and we need print constraints */
-    float clock_period = operating_critical_path_delay; 
-    for (const size_t& pin : circuit_lib.pins(global_port)) {
-      BasicPort port_to_constrain(circuit_lib.port_prefix(global_port), pin, pin);
-      fp << "create_clock ";
-      fp << generate_sdc_port(port_to_constrain) << "-period ";
-      fp << std::setprecision(10) << clock_period;
-      fp << " -waveform {0 ";
-      fp << std::setprecision(10) << clock_period / 2;
-      fp << "} ";
-      fp << "[list [get_ports { " << generate_sdc_port(port_to_constrain) << "}]]" << std::endl;
-
-      fp << "set_drive 0 " << generate_sdc_port(port_to_constrain) << std::endl;
-     
-      fp << std::endl;
-    }
-  }
-
-  /* Close file handler */
-  fp.close();
-}
 
 /********************************************************************
  * Break combinational loops in FPGA fabric, which mainly come from
@@ -354,7 +256,8 @@ void print_pnr_sdc(const PnrSdcOption& sdc_options,
     print_pnr_sdc_global_ports(sdc_options.sdc_dir(),
                                programming_critical_path_delay,
                                operating_critical_path_delay,
-                               circuit_lib, global_ports);
+                               circuit_lib, global_ports,
+                               sdc_options.constrain_non_clock_global_port());
   }
 
   std::string top_module_name = generate_fpga_top_module_name();
@@ -393,13 +296,15 @@ void print_pnr_sdc(const PnrSdcOption& sdc_options,
       print_pnr_sdc_compact_routing_constrain_sb_timing(sdc_options.sdc_dir(),
                                                         module_manager,
                                                         device_ctx.rr_graph,
-                                                        device_rr_gsb);
+                                                        device_rr_gsb,
+                                                        sdc_options.constrain_zero_delay_paths());
     } else {
 	  VTR_ASSERT_SAFE (false == compact_routing_hierarchy);
       print_pnr_sdc_flatten_routing_constrain_sb_timing(sdc_options.sdc_dir(),
                                                         module_manager,
                                                         device_ctx.rr_graph,
-                                                        device_rr_gsb);
+                                                        device_rr_gsb,
+                                                        sdc_options.constrain_zero_delay_paths());
     }
   }
 
@@ -409,13 +314,15 @@ void print_pnr_sdc(const PnrSdcOption& sdc_options,
       print_pnr_sdc_compact_routing_constrain_cb_timing(sdc_options.sdc_dir(),
                                                         module_manager,
                                                         device_ctx.rr_graph,
-                                                        device_rr_gsb);
+                                                        device_rr_gsb,
+                                                        sdc_options.constrain_zero_delay_paths());
     } else {
 	  VTR_ASSERT_SAFE (false == compact_routing_hierarchy);
       print_pnr_sdc_flatten_routing_constrain_cb_timing(sdc_options.sdc_dir(),
                                                         module_manager, 
                                                         device_ctx.rr_graph,
-                                                        device_rr_gsb);
+                                                        device_rr_gsb,
+                                                        sdc_options.constrain_zero_delay_paths());
     }
   }
 
@@ -424,7 +331,8 @@ void print_pnr_sdc(const PnrSdcOption& sdc_options,
     print_pnr_sdc_constrain_grid_timing(sdc_options.sdc_dir(),
                                         device_ctx,
                                         device_annotation,
-                                        module_manager);
+                                        module_manager,
+                                        sdc_options.constrain_zero_delay_paths());
   }
 }
 

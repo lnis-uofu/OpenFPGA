@@ -2533,8 +2533,11 @@ static void ProcessModelPorts(pugi::xml_node port_group, t_model* model, std::se
 static void ProcessLayout(pugi::xml_node layout_tag, t_arch* arch, const pugiutil::loc_data& loc_data) {
     VTR_ASSERT(layout_tag.name() == std::string("layout"));
 
-    //Expect no attributes on <layout>
-    expect_only_attributes(layout_tag, {}, loc_data);
+    //Expect only tileable attributes on <layout>
+    //expect_only_attributes(layout_tag, {"tileable"}, loc_data);
+
+    arch->tileable = get_attribute(layout_tag, "tileable", loc_data, ReqOpt::OPTIONAL).as_bool(false);
+    arch->through_channel = get_attribute(layout_tag, "through_channel", loc_data, ReqOpt::OPTIONAL).as_bool(false);
 
     //Count the number of <auto_layout> or <fixed_layout> tags
     size_t auto_layout_cnt = 0;
@@ -2882,7 +2885,7 @@ static void ProcessDevice(pugi::xml_node Node, t_arch* arch, t_default_fc_spec& 
 
     //<switch_block> tag
     Cur = get_single_child(Node, "switch_block", loc_data);
-    expect_only_attributes(Cur, {"type", "fs"}, loc_data);
+    //expect_only_attributes(Cur, {"type", "fs", "sub_type", "sub_fs"}, loc_data);
     Prop = get_attribute(Cur, "type", loc_data).value();
     if (strcmp(Prop, "wilton") == 0) {
         arch->SBType = WILTON;
@@ -2898,8 +2901,26 @@ static void ProcessDevice(pugi::xml_node Node, t_arch* arch, t_default_fc_spec& 
                        "Unknown property %s for switch block type x\n", Prop);
     }
 
+    std::string sub_type_str = get_attribute(Cur, "sub_type", loc_data, BoolToReqOpt(false)).as_string("");
+    /* If not specified, we set the same value as 'type' */
+    if (!sub_type_str.empty()) {
+        if (sub_type_str == std::string("wilton")) {
+            arch->SBSubType = WILTON;
+        } else if (sub_type_str == std::string("universal")) {
+            arch->SBSubType = UNIVERSAL;
+        } else if (sub_type_str == std::string("subset")) {
+            arch->SBSubType = SUBSET;
+        } else {
+            archfpga_throw(loc_data.filename_c_str(), loc_data.line(Cur),
+                           "Unknown property %s for switch block subtype x\n", Prop);
+        }
+    } else {
+        arch->SBSubType = arch->SBType;
+    }
+
     ReqOpt CUSTOM_SWITCHBLOCK_REQD = BoolToReqOpt(!custom_switch_block);
     arch->Fs = get_attribute(Cur, "fs", loc_data, CUSTOM_SWITCHBLOCK_REQD).as_int(3);
+    arch->subFs = get_attribute(Cur, "sub_fs", loc_data,  BoolToReqOpt(false)).as_int(arch->Fs);
 
     Cur = get_single_child(Node, "default_fc", loc_data, ReqOpt::OPTIONAL);
     if (Cur) {

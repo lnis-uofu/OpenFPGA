@@ -53,6 +53,13 @@ void build_routing_arch_mux_library(const DeviceContext& vpr_device_ctx,
       VTR_ASSERT(1 == driver_switches.size());
       const CircuitModelId& rr_switch_circuit_model = vpr_device_annotation.rr_switch_circuit_model(driver_switches[0]);
       /* we should select a circuit model for the routing resource switch */
+      if (CircuitModelId::INVALID() == rr_switch_circuit_model) {
+        VTR_LOG_ERROR("Unable to find the circuit mode for rr_switch '%s'!\n",
+                      vpr_device_ctx.rr_graph.get_switch(driver_switches[0]).name);
+        vpr_device_ctx.rr_graph.print_node(node);
+        exit(1);
+      }
+     
       VTR_ASSERT(CircuitModelId::INVALID() != rr_switch_circuit_model);
       /* Add the mux to mux_library */
       mux_lib.add_mux(circuit_lib, rr_switch_circuit_model, vpr_device_ctx.rr_graph.node_in_edges(node).size()); 

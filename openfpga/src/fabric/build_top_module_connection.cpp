@@ -12,6 +12,7 @@
 #include "openfpga_naming.h"
 #include "pb_type_utils.h"
 #include "rr_gsb_utils.h"
+#include "openfpga_physical_tile_utils.h"
 
 #include "build_top_module_utils.h"
 #include "build_top_module_connection.h"
@@ -62,6 +63,11 @@ void add_top_module_nets_connect_grids_and_sb(ModuleManager& module_manager,
                                               const vtr::Matrix<size_t>& sb_instance_ids,
                                               const bool& compact_routing_hierarchy) {
 
+  /* Skip those Switch blocks that do not exist */
+  if (false == rr_gsb.is_sb_exist()) {
+    return;
+  }
+
   /* We could have two different coordinators, one is the instance, the other is the module */
   vtr::Point<size_t> instance_sb_coordinate(rr_gsb.get_sb_x(), rr_gsb.get_sb_y());
   vtr::Point<size_t> module_gsb_coordinate(rr_gsb.get_x(), rr_gsb.get_y());
@@ -109,9 +115,10 @@ void add_top_module_nets_connect_grids_and_sb(ModuleManager& module_manager,
       /* Collect sink-related information */
       vtr::Point<size_t> sink_sb_port_coord(rr_graph.node_xlow(module_sb.get_opin_node(side_manager.get_side(), inode)),
                                             rr_graph.node_ylow(module_sb.get_opin_node(side_manager.get_side(), inode)));
+      size_t sink_grid_pin_index = rr_graph.node_pin_num(module_sb.get_opin_node(side_manager.get_side(), inode));
       std::string sink_sb_port_name = generate_sb_module_grid_port_name(side_manager.get_side(),
                                                                         rr_graph.node_side(module_sb.get_opin_node(side_manager.get_side(), inode)),
-                                                                        src_grid_pin_index); 
+                                                                        sink_grid_pin_index); 
       ModulePortId sink_sb_port_id = module_manager.find_module_port(sink_sb_module, sink_sb_port_name);
       VTR_ASSERT(true == module_manager.valid_module_port_id(sink_sb_module, sink_sb_port_id));
       BasicPort sink_sb_port =  module_manager.module_port(sink_sb_module, sink_sb_port_id); 
@@ -178,6 +185,11 @@ void add_top_module_nets_connect_grids_and_sb_with_duplicated_pins(ModuleManager
                                                                    const vtr::Matrix<size_t>& sb_instance_ids,
                                                                    const bool& compact_routing_hierarchy) {
 
+  /* Skip those Switch blocks that do not exist */
+  if (false == rr_gsb.is_sb_exist()) {
+    return;
+  }
+
   /* We could have two different coordinators, one is the instance, the other is the module */
   vtr::Point<size_t> instance_sb_coordinate(rr_gsb.get_sb_x(), rr_gsb.get_sb_y());
   vtr::Point<size_t> module_gsb_coordinate(rr_gsb.get_x(), rr_gsb.get_y());
@@ -232,7 +244,7 @@ void add_top_module_nets_connect_grids_and_sb_with_duplicated_pins(ModuleManager
        * For other duplicated pins, we follow the new naming
        */
       std::string src_grid_port_name;
-      if (0. == grids[grid_coordinate.x()][grid_coordinate.y()].type->fc_specs[src_grid_pin_index].fc_value) {
+      if (0. == find_physical_tile_pin_Fc(grids[grid_coordinate.x()][grid_coordinate.y()].type, src_grid_pin_index)) {
         src_grid_port_name = generate_grid_port_name(grid_coordinate, src_grid_pin_width, src_grid_pin_height, 
                                                      rr_graph.node_side(rr_gsb.get_opin_node(side_manager.get_side(), inode)),
                                                      src_grid_pin_index, false);
@@ -248,9 +260,10 @@ void add_top_module_nets_connect_grids_and_sb_with_duplicated_pins(ModuleManager
       /* Collect sink-related information */
       vtr::Point<size_t> sink_sb_port_coord(rr_graph.node_xlow(module_sb.get_opin_node(side_manager.get_side(), inode)),
                                             rr_graph.node_ylow(module_sb.get_opin_node(side_manager.get_side(), inode)));
+      size_t sink_grid_pin_index = rr_graph.node_pin_num(module_sb.get_opin_node(side_manager.get_side(), inode));
       std::string sink_sb_port_name = generate_sb_module_grid_port_name(side_manager.get_side(),
                                                                         rr_graph.node_side(module_sb.get_opin_node(side_manager.get_side(), inode)),
-                                                                        src_grid_pin_index); 
+                                                                        sink_grid_pin_index); 
       ModulePortId sink_sb_port_id = module_manager.find_module_port(sink_sb_module, sink_sb_port_name);
       VTR_ASSERT(true == module_manager.valid_module_port_id(sink_sb_module, sink_sb_port_id));
       BasicPort sink_sb_port =  module_manager.module_port(sink_sb_module, sink_sb_port_id); 
@@ -641,6 +654,7 @@ void add_top_module_nets_connect_grids_and_gsbs(ModuleManager& module_manager,
     for (size_t iy = 0; iy < gsb_range.y(); ++iy) {
       vtr::Point<size_t> gsb_coordinate(ix, iy);
       const RRGSB& rr_gsb = device_rr_gsb.get_gsb(ix, iy);
+
       /* Connect the grid pins of the GSB to adjacent grids */
       if (false == duplicate_grid_pin) {
         add_top_module_nets_connect_grids_and_sb(module_manager, top_module, 

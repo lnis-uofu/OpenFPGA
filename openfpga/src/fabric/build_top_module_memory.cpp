@@ -177,7 +177,29 @@ void organize_top_module_tile_memory_modules(ModuleManager& module_manager,
  * the sequence of memory_modules and memory_instances will follow
  * a chain of tiles considering their physical location
  *
- * Inter tile connection:
+ * Inter-tile connection:
+ *
+ * Inter-tile connection always start from the I/O peripherals 
+ * and the core tiles (CLBs and heterogeneous blocks).
+ * The sequence of configuration memory will be organized as follows:
+ *   - I/O peripherals
+ *     - BOTTOM side (From left to right)
+ *     - RIGHT side (From bottom to top)
+ *     - TOP side (From left to right)
+ *     - LEFT side (From top to bottom)
+ *   - Core tiles
+ *     - Tiles at the bottom row, i.e., Tile[0..i] (From left to right)
+ *     - One row upper, i.e. Tile[i+1 .. j] (From right to left)
+ *     - Repeat until we finish all the rows
+ *
+ *   Note: the tail may not always be on the top-right corner as shown in the figure.
+ *         It may exit at the top-left corner.
+ *         This really depends on the number of rows your have in the core tile array.
+ *
+ *   Note: the organization of inter-tile aims to reduce the wire length
+ *         to connect between tiles. Therefore, it is organized as a snake
+ *         where we can avoid long wires between rows and columns
+ *
  *    +--------------------------------------------------------+
  *    |              +------+------+-----+------+              |
  *    |              | I/O  | I/O  | ... | I/O  |              |
@@ -210,7 +232,20 @@ void organize_top_module_tile_memory_modules(ModuleManager& module_manager,
  *                   +------+------+-----+------+              |
  *        head >-----------------------------------------------+
  *
- * Inner tile connection
+ * Inner tile connection:
+ *
+ *   Inside each tile, the configuration memory will be organized
+ *   in the following sequence:
+ *     - Switch Block (SB)
+ *     - X-directional Connection Block (CBX)
+ *     - Y-directional Connection Block (CBY)
+ *     - Configurable Logic Block (CLB), which could also be heterogeneous blocks
+ *
+ *   Note:
+ *     Due to multi-column and multi-width hetergeoenous blocks,
+ *     each tile may not have one or more of SB, CBX, CBY, CLB
+ *     In such case, the sequence will be respected.
+ *     The missing block will just be skipped when organizing the configuration memories.
  *
  *       Tile
  *     +---------------+----------+

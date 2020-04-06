@@ -1,14 +1,14 @@
 FPGA-Bitstream
-==============
+--------------
+
+FPGA-Bitstream can generate two types of bitstreams:
 
 .. _fpga_bitstream:
-   User Manual for FPGA Bitstream Generator
+   FPGA-Bitstream
  
 .. toctree::
    :maxdepth: 2
   
-   command_line_usage
+   generic_bitstream
 
-   file_organization
- 
-   
+   fabric_dependent_bitstream

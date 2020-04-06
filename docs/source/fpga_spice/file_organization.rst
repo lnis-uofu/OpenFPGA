@@ -1,5 +1,5 @@
 Hierarchy of SPICE Output Files
-===============================
+-------------------------------
 
 All the generated SPICE netlists are located in the <spice_dir> as you specify in the command-line options.
 Under the <spice_dir>, FPGA-SPICE creates a number of folders:  include, subckt, lut_tb, dff_tb, grid_tb, pb_mux_tb, cb_mux_tb, sb_mux_tb, top_tb, results. Under the <spice_dir>, FPGA-SPICE also creates a shell script called run_hspice_sim.sh, which run all the simulations for all the testbenches.

@@ -18,6 +18,9 @@ namespace openfpga {
 void write_pnr_sdc(OpenfpgaContext& openfpga_ctx,
                    const Command& cmd, const CommandContext& cmd_context); 
 
+void write_analysis_sdc(OpenfpgaContext& openfpga_ctx,
+                        const Command& cmd, const CommandContext& cmd_context);
+
 } /* end namespace openfpga */
 
 #endif

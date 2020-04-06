@@ -37,6 +37,20 @@ bool is_primitive_pb_type(t_pb_type* pb_type) {
     VTR_ASSERT( (std::string("wire") == std::string(pb_type->modes[0].name))
              && (std::string(pb_type->name) == std::string(pb_type->modes[1].name)));
     return true;
+  } else if (MEMORY_CLASS == pb_type->class_type) {
+    /* The only primitive memory we recognize is the one which has a mode
+     * either named after 'memory_slice' or 'memory_slice_1bit'
+     * VPR contructed 1 default mode under a regular memory, and these children
+     * are labelled as LUT_CLASS as well. OpenFPGA does not consider
+     * them as primitive as they are for CAD usage only
+     */
+    if (0 == pb_type->num_modes) {
+      return false;
+    }
+    VTR_ASSERT( (std::string("memory_slice") == std::string(pb_type->modes[0].name))
+             || (std::string("memory_slice_1bit") == std::string(pb_type->modes[0].name)));
+    return true;
+
   }
   return 0 == pb_type->num_modes;
 }

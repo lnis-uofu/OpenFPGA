@@ -56,13 +56,14 @@ set_target_properties(libvpr8 PROPERTIES PREFIX "") #Avoid extra 'lib' prefix
 
 #Specify link-time dependancies
 target_link_libraries(libvpr8
-                        libvtrutil
-                        libarchfpga
-                        libsdcparse
-                        libblifparse
-                        libtatum
-                        libargparse
-                        libpugixml)
+                      libvtrutil
+                      libopenfpgautil
+                      libarchfpga
+                      libsdcparse
+                      libblifparse
+                      libtatum
+                      libargparse
+                      libpugixml)
 
 #link graphics library only when graphics set to on
 if (VPR_USE_EZGL STREQUAL "on")

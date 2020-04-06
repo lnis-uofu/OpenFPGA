@@ -1,14 +1,12 @@
-FPGA-Verilog: Verilog Auto-Generation
--------------------------------------
+FPGA-Verilog
+------------
 
 .. _fpga_verilog:
-   User Manual for FPGA Verilog Generator 
+   FPGA-Verilog
  
 .. toctree::
    :maxdepth: 2
   
-   command_line_usage
-
    file_organization
  
    func_verify

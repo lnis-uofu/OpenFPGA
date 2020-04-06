@@ -20,7 +20,8 @@ namespace openfpga {
 void print_pnr_sdc_constrain_grid_timing(const std::string& sdc_dir,
                                          const DeviceContext& device_ctx,
                                          const VprDeviceAnnotation& device_annotation,
-                                         const ModuleManager& module_manager);
+                                         const ModuleManager& module_manager,
+                                         const bool& constrain_zero_delay_paths);
 
 } /* end namespace openfpga */
 

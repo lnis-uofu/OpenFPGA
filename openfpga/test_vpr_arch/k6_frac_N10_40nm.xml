@@ -76,14 +76,16 @@
   </tiles>
   <!-- ODIN II specific config ends -->
   <!-- Physical descriptions begin -->
-  <layout>
-    <auto_layout aspect_ratio="1.0">
+  <layout tileable="false">
+    <!--auto_layout aspect_ratio="1.0"-->
+    <fixed_layout name="2x2" width="4" height="4">
       <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
       <perimeter type="io" priority="100"/>
       <corners type="EMPTY" priority="101"/>
       <!--Fill with 'clb'-->
       <fill type="clb" priority="10"/>
-    </auto_layout>
+    </fixed_layout>
+    <!-- /auto_layout -->
   </layout>
   <device>
     <!-- VB & JL: Using Ian Kuon's transistor sizing and drive strength data for routing, at 40 nm. Ian used BPTM 
@@ -110,7 +112,7 @@
       <x distr="uniform" peak="1.000000"/>
       <y distr="uniform" peak="1.000000"/>
     </chan_width_distr>
-    <switch_block type="wilton" fs="3"/>
+    <switch_block type="wilton" fs="3" sub_type="subset" sub_fs="3"/>
     <connection_block input_switch_name="ipin_cblock"/>
   </device>
   <switchlist>
@@ -135,6 +137,7 @@
     <!--- VB & JL: using ITRS metal stack data, 96 nm half pitch wires, which are intermediate metal width/space.  
 			     With the 96 nm half pitch, such wires would take 60 um of height, vs. a 90 nm high (approximated as square) Stratix IV tile so this seems
 			     reasonable. Using a tile length of 90 nm, corresponding to the length of a Stratix IV tile if it were square. -->
+    <!-- GIVE a specific name for the segment! OpenFPGA appreciate that! -->
     <segment name="L4" freq="1.000000" length="4" type="unidir" Rmetal="101" Cmetal="22.5e-15">
       <mux name="0"/>
       <sb type="pattern">1 1 1 1 1</sb>
@@ -227,7 +230,7 @@
         <output name="out" num_pins="2"/>
         <clock name="clk" num_pins="1"/>
         <!-- Physical mode definition begin (physical implementation of the fle) -->
-        <mode name="physical">
+        <mode name="physical" disabled_in_pack="true">
           <pb_type name="fabric" num_pb="1">
             <input name="in" num_pins="6"/>
             <output name="out" num_pins="2"/>
@@ -435,13 +438,4 @@
     </pb_type>
     <!-- Define general purpose logic block (CLB) ends -->
   </complexblocklist>
-  <power>
-    <local_interconnect C_wire="2.5e-10"/>
-    <mux_transistor_size mux_transistor_size="3"/>
-    <FF_size FF_size="4"/>
-    <LUT_transistor_size LUT_transistor_size="4"/>
-  </power>
-  <clocks>
-    <clock buffer_size="auto" C_wire="2.5e-10"/>
-  </clocks>
 </architecture>

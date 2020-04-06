@@ -308,8 +308,9 @@ size_t check_circuit_library_ports(const CircuitLibrary& circuit_lib) {
   /* Check global ports: make sure all the global ports are input ports */
   for (const auto& port : circuit_lib.ports()) {
     if ( (circuit_lib.port_is_global(port)) 
-      && (!circuit_lib.is_input_port(port)) ) {
-      VTR_LOG_ERROR("Circuit port (type=%s) of model (name=%s) is defined as global but not an input port!\n",
+      && (!circuit_lib.is_input_port(port)) 
+      && (!circuit_lib.is_output_port(port)) ) {
+      VTR_LOG_ERROR("Circuit port (type=%s) of model (name=%s) is defined as global but not an input/output port!\n",
                     CIRCUIT_MODEL_PORT_TYPE_STRING[size_t(circuit_lib.port_type(port))],
                     circuit_lib.model_name(port).c_str());
       num_err++;
@@ -322,7 +323,7 @@ size_t check_circuit_library_ports(const CircuitLibrary& circuit_lib) {
         || (circuit_lib.port_is_reset(port)) 
         || (circuit_lib.port_is_config_enable(port)) )
       && (!circuit_lib.port_is_global(port)) ) {
-      VTR_LOG_ERROR("Circuit port (type=%s) of model (name=%s) is defined as a set/reset/config_enable port but  it is not global!\n",
+      VTR_LOG_ERROR("Circuit port (type=%s) of model (name=%s) is defined as a set/reset/config_enable port but it is not global!\n",
                     CIRCUIT_MODEL_PORT_TYPE_STRING[size_t(circuit_lib.port_type(port))],
                     circuit_lib.model_name(port).c_str());
       num_err++;
@@ -462,7 +463,9 @@ void check_circuit_library(const CircuitLibrary& circuit_lib) {
   iopad_port_types_required.push_back(CIRCUIT_MODEL_PORT_INPUT);
   iopad_port_types_required.push_back(CIRCUIT_MODEL_PORT_OUTPUT);
   iopad_port_types_required.push_back(CIRCUIT_MODEL_PORT_INOUT);
-  iopad_port_types_required.push_back(CIRCUIT_MODEL_PORT_SRAM);
+  /* Some I/Os may not have SRAM port, such as AIB interface
+   * iopad_port_types_required.push_back(CIRCUIT_MODEL_PORT_SRAM);
+   */
 
   num_err += check_circuit_model_port_required(circuit_lib, CIRCUIT_MODEL_IOPAD, iopad_port_types_required);
 

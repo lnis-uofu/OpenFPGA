@@ -1,5 +1,5 @@
 Run SPICE simulation
-====================
+--------------------
 
 * Simulation results 
 

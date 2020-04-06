@@ -1,5 +1,5 @@
 Hierarchy of Verilog Output Files
-============================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 All the generated Verilog Netlists are located in the <verilog_dir>/SRC as you specify in the command-line options. Under the <verilog_dir>/SRC, FPGA-Verilog creates the top file name_top.v and some folders: lb (logic blocks), routing and sub_modules. 
 

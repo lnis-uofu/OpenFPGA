@@ -1589,13 +1589,19 @@ struct t_clock_arch_spec {
 /*   Detailed routing architecture */
 struct t_arch {
     char* architecture_id; //Secure hash digest of the architecture file to uniquely identify this architecture
+    
+    /* Xifan Tang: options for tileable routing architectures */
+    bool tileable;
+    bool through_channel;
 
     t_chan_width_dist Chans;
     enum e_switch_block_type SBType;
+    enum e_switch_block_type SBSubType;
     std::vector<t_switchblock_inf> switchblocks;
     float R_minW_nmos;
     float R_minW_pmos;
     int Fs;
+    int subFs;
     float grid_logic_tile_area;
     std::vector<t_segment_inf> Segments;
     t_arch_switch_inf* Switches = nullptr;

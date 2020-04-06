@@ -18,6 +18,19 @@
 namespace openfpga {
 
 /************************************************
+ * A generic function to generate the instance name
+ * in the following format:
+ * <instance_name>_<id>_
+ * This is mainly used by module manager to give a default
+ * name for each instance when outputting the module
+ * in Verilog/SPICE format
+ ***********************************************/
+std::string generate_instance_name(const std::string& instance_name,
+                                   const size_t& instance_id) {
+  return instance_name + std::string("_") + std::to_string(instance_id) + std::string("_");
+}
+
+/************************************************
  * Generate the node name for a multiplexing structure 
  * Case 1 : If there is an intermediate buffer followed by,
  *          the node name will be mux_l<node_level>_in_buf
@@ -483,7 +496,7 @@ std::string generate_grid_duplicated_port_name(const size_t& width,
   port_name += std::to_string(width);
   port_name += std::string("_height_");
   port_name += std::to_string(height);
-  port_name += std::string("_pin_");
+  port_name += std::string("__pin_");
   port_name += std::to_string(pin_id);
   port_name += std::string("_");
 
@@ -1326,10 +1339,13 @@ std::string generate_pb_type_port_name(t_port* pb_type_port) {
  ********************************************************************/
 std::string generate_fpga_global_io_port_name(const std::string& prefix, 
                                               const CircuitLibrary& circuit_lib,
-                                              const CircuitModelId& circuit_model) {
+                                              const CircuitModelId& circuit_model,
+                                              const CircuitPortId& circuit_port) {
   std::string port_name(prefix);
   
   port_name += circuit_lib.model_name(circuit_model);
+  port_name += std::string("_");
+  port_name += circuit_lib.port_prefix(circuit_port);
    
   return port_name;
 }

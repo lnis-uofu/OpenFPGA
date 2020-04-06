@@ -309,9 +309,11 @@ static void SetupSwitches(const t_arch& Arch,
 static void SetupRoutingArch(const t_arch& Arch,
                              t_det_routing_arch* RoutingArch) {
     RoutingArch->switch_block_type = Arch.SBType;
+    RoutingArch->switch_block_subtype = Arch.SBSubType;
     RoutingArch->R_minW_nmos = Arch.R_minW_nmos;
     RoutingArch->R_minW_pmos = Arch.R_minW_pmos;
     RoutingArch->Fs = Arch.Fs;
+    RoutingArch->subFs = Arch.subFs;
     RoutingArch->directionality = BI_DIRECTIONAL;
     if (Arch.Segments.size()) {
         RoutingArch->directionality = Arch.Segments[0].directionality;
@@ -319,6 +321,10 @@ static void SetupRoutingArch(const t_arch& Arch,
 
     /* copy over the switch block information */
     RoutingArch->switchblocks = Arch.switchblocks;
+
+    /* Copy the tileable routing setting */
+    RoutingArch->tileable = Arch.tileable;
+    RoutingArch->through_channel = Arch.through_channel;
 }
 
 static void SetupRouterOpts(const t_options& Options, t_router_opts* RouterOpts) {

@@ -25,6 +25,50 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
+/********************************************************************
+ * A connection-driven router for programmable logic blocks
+ * The router supports routing multiple nets on a LbRRGraph object
+ * which models the routing resources in a programmable logic block
+ *
+ * Note: 
+ *   - This router will not build/allocate a LbRRGraph object
+ *     Users must do it OUTSIDE this object!!!
+ *   - This router supports multiple sources for single net
+ *     which is more capable the original VPR lb_router
+ *
+ * How to use the router:
+ *
+ *  // Create your own routing resource graph 
+ *  LbRRGraph lb_rr_graph = <your_lb_rr_graph_builder>();
+ *
+ *  // Create a router object
+ *  LbRouter lb_router(lb_rr_graph);
+ *
+ *  // Add nets to be routed 
+ *  std::vector<LbRRNodeId> source_nodes = <find_your_source_node_in_your_lb_rr_graph>();
+ *  std::vector<LbRRNodeId> sink_nodes = <find_your_sink_node_in_your_lb_rr_graph>();
+ *  LbNetId net = lb_router.create_net_to_route(source_nodes, sink_nodes);
+ *  // Add more nets
+ *
+ *  // Initialize the modes to expand routing
+ *  // This is a must-do before running the router in the purpose of repacking!!!
+ *  lb_router.set_physical_pb_modes(lb_rr_graph, device_annotation); 
+ *
+ *  // Run the router 
+ *  bool route_success = lb_router.try_route(lb_rr_graph, atom_ctx.nlist, verbose);
+ *
+ *  // Check routing status 
+ *  if (true == route_success) {
+ *    // Succeed
+ *  }
+ *
+ *  // Read out routing results
+ *  // Here is an example to check which nodes are mapped to the 'net' created before
+ *  std::vector<LbRRNodeId> routed_nodes = lb_router.net_routed_nodes(net);
+ *
+ *******************************************************************/
+
+
 class LbRouter {
   public: /* Strong ids */
     struct net_id_tag;
@@ -190,7 +234,8 @@ class LbRouter {
     /**
      * Add net to be routed
      */ 
-    NetId create_net_to_route(const LbRRNodeId& source, const std::vector<LbRRNodeId>& terminals);
+    NetId create_net_to_route(const std::vector<LbRRNodeId>& sources,
+                              const std::vector<LbRRNodeId>& terminals);
     void add_net_atom_net_id(const NetId& net, const AtomNetId& atom_net);
     void add_net_atom_pins(const NetId& net, const AtomPinId& src_pin, const std::vector<AtomPinId>& terminal_pins);
 
@@ -211,7 +256,7 @@ class LbRouter {
      */
     bool try_route(const LbRRGraph& lb_rr_graph,
                    const AtomNetlist& atom_nlist,
-                   const int& verbosity);
+                   const bool& verbosity);
 
   private :  /* Private accessors */
     /**
@@ -250,13 +295,14 @@ class LbRouter {
                           std::unordered_map<const t_pb_graph_node*, const t_mode*>& mode_map);
     bool is_skip_route_net(const LbRRGraph& lb_rr_graph, t_trace* rt);
     bool add_to_rt(t_trace* rt, const LbRRNodeId& node_index, const NetId& irt_net);
-    void add_source_to_rt(const NetId& inet);
+    void add_source_to_rt(const NetId& inet, const size_t& isrc);
     void expand_rt_rec(t_trace* rt,
                        const LbRRNodeId& prev_index, 
                        const NetId& irt_net,
                        const int& explore_id_index);
     void expand_rt(const NetId& inet,
-                   const NetId& irt_net);
+                   const NetId& irt_net,
+                   const size_t& isrc);
     void expand_edges(const LbRRGraph& lb_rr_graph,
                       t_mode* mode,
                       const LbRRNodeId& cur_inode,
@@ -272,9 +318,17 @@ class LbRouter {
                           const LbRRGraph& lb_rr_graph,
                           const NetId& lb_net,
                           t_expansion_node& exp_node,
+                          const int& isrc,
                           const int& itarget,
                           const bool& try_other_modes,
-                          const int& verbosity);
+                          const bool& verbosity);
+
+    bool try_route_net(const LbRRGraph& lb_rr_graph,
+                       const AtomNetlist& atom_nlist,
+                       const NetId& net_idx,
+                       t_expansion_node& exp_node,
+                       std::unordered_map<const t_pb_graph_node*, const t_mode*>& mode_map,
+                       const bool& verbosity);
 
   private :  /* Private validators */
     /** 
@@ -304,11 +358,26 @@ class LbRouter {
 
   private : /* Stores all data needed by intra-logic cluster_ctx.blocks router */
     /* Logical Netlist Info */
-    vtr::vector<NetId, NetId> lb_net_ids_; /* Pointer to vector of intra logic cluster_ctx.blocks nets and their connections */
-    vtr::vector<NetId, AtomNetId> lb_net_atom_net_ids_;             /* index of atom net this intra_lb_net represents */
-    vtr::vector<NetId, std::vector<AtomPinId>> lb_net_atom_pins_;  /* AtomPin's associated with each terminal */
-    vtr::vector<NetId, std::vector<LbRRNodeId>> lb_net_terminals_; /* endpoints of the intra_lb_net, 0th position is the source, all others are sinks */
-    vtr::vector<NetId, t_trace*> lb_net_rt_trees_;               /* Route tree head */
+    /* Pointer to vector of intra logic cluster_ctx.blocks nets and their connections */
+    vtr::vector<NetId, NetId> lb_net_ids_;
+
+    /* index of atom net this intra_lb_net represents */
+    vtr::vector<NetId, AtomNetId> lb_net_atom_net_ids_;             
+
+    /* AtomPin's associated with each source nodes */
+    vtr::vector<NetId, std::vector<AtomPinId>> lb_net_atom_source_pins_;
+
+    /* AtomPin's associated with each sink nodes */
+    vtr::vector<NetId, std::vector<AtomPinId>> lb_net_atom_sink_pins_;
+
+    /* starting points of the intra_lb_net */
+    vtr::vector<NetId, std::vector<LbRRNodeId>> lb_net_sources_;
+
+    /* end points of the intra_lb_net */
+    vtr::vector<NetId, std::vector<LbRRNodeId>> lb_net_sinks_;
+
+    /* Route tree head for each source of each net */
+    vtr::vector<NetId, std::vector<t_trace*>> lb_net_rt_trees_;
 
     /* Logical-to-physical mapping info */
     vtr::vector<LbRRNodeId, t_routing_status> routing_status_; /* [0..lb_type_graph->size()-1] Stats for each logic cluster_ctx.blocks rr node instance */

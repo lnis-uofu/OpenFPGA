@@ -2,6 +2,7 @@
  * Build the OpenFPGA shell interface 
  *******************************************************************/
 /* Header file from vtrutil library */
+#include "vtr_time.h"
 #include "vtr_log.h"
 
 /* Header file from libopenfpgashell library */
@@ -87,11 +88,14 @@ int main(int argc, char** argv) {
   } else {
     /* Parse succeed. Start a shell */ 
     if (true == start_cmd_context.option_enable(start_cmd, opt_interactive)) {
+
+      vtr::ScopedStartFinishTimer timer("OpenFPGA operating");
       shell.run_interactive_mode(openfpga_context);
       return 0;
     } 
 
     if (true == start_cmd_context.option_enable(start_cmd, opt_script_mode)) {
+      vtr::ScopedStartFinishTimer timer("OpenFPGA operating");
       shell.run_script_mode(start_cmd_context.option_value(start_cmd, opt_script_mode).c_str(),
                             openfpga_context);
       return 0;

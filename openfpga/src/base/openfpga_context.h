@@ -59,8 +59,8 @@ class OpenfpgaContext : public Context  {
     const openfpga::FlowManager& flow_manager() const { return flow_manager_; }
     const openfpga::BitstreamManager& bitstream_manager() const { return bitstream_manager_; }
     const std::vector<openfpga::ConfigBitId>& fabric_bitstream() const { return fabric_bitstream_; }
-    const openfpga::IoLocationMap& io_location_map() { return io_location_map_; }
-    const std::unordered_map<AtomNetId, t_net_power>& net_activity() { return net_activity_; }
+    const openfpga::IoLocationMap& io_location_map() const { return io_location_map_; }
+    const std::unordered_map<AtomNetId, t_net_power>& net_activity() const { return net_activity_; }
   public:  /* Public mutators */
     openfpga::Arch& mutable_arch() { return arch_; }
     openfpga::VprDeviceAnnotation& mutable_vpr_device_annotation() { return vpr_device_annotation_; }

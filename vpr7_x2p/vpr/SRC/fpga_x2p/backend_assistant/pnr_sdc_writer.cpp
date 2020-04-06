@@ -45,7 +45,8 @@ static
 void print_pnr_sdc_global_ports(const std::string& sdc_dir, 
                                 const float& critical_path_delay,
                                 const CircuitLibrary& circuit_lib,
-                                const std::vector<CircuitPortId>& global_ports) {
+                                const std::vector<CircuitPortId>& global_ports,
+                                const bool& constrain_non_clock_ports) {
 
   /* Create the file name for Verilog netlist */
   std::string sdc_fname(sdc_dir + std::string(SDC_GLOBAL_PORTS_FILE_NAME));
@@ -91,43 +92,45 @@ void print_pnr_sdc_global_ports(const std::string& sdc_dir,
     for (const size_t& pin : circuit_lib.pins(clock_port)) {
       BasicPort port_to_constrain(circuit_lib.port_prefix(clock_port), pin, pin);
 
-      fp << "create_clock ";
-      fp << generate_sdc_port(port_to_constrain) << "-period ";
+      fp << "create_clock -name ";
+      fp << generate_sdc_port(port_to_constrain) << " -period ";
       fp << std::setprecision(10) << clock_period;
       fp << " -waveform {0 ";
       fp << std::setprecision(10) << clock_period / 2;
-      fp << "}" << std::endl;
+      fp << "}";
+      fp << "{get_ports {" << generate_sdc_port(port_to_constrain) << "}]";
+      fp << std::endl;
 
       fp << std::endl;
     }
   }
 
-  /* For non-clock port from the global port: give a fixed period */
-  for (const CircuitPortId& global_port : global_ports) {
-    if (SPICE_MODEL_PORT_CLOCK == circuit_lib.port_type(global_port)) {
-      continue;
-    }
+  if (true == constrain_non_clock_ports) {
+    /* For non-clock port from the global port: give a fixed period */
+    for (const CircuitPortId& global_port : global_ports) {
+      if (SPICE_MODEL_PORT_CLOCK == circuit_lib.port_type(global_port)) {
+        continue;
+      }
 
-    /* Print comments */
-    fp << "##################################################" << std::endl; 
-    fp << "# Constrain other global ports                    " << std::endl;
-    fp << "##################################################" << std::endl; 
+      /* Print comments */
+      fp << "##################################################" << std::endl; 
+      fp << "# Constrain other global ports                    " << std::endl;
+      fp << "##################################################" << std::endl; 
 
-    /* Reach here, it means a non-clock global port and we need print constraints */
-    float clock_period = SDC_FIXED_CLOCK_PERIOD; 
-    for (const size_t& pin : circuit_lib.pins(global_port)) {
-      BasicPort port_to_constrain(circuit_lib.port_prefix(global_port), pin, pin);
-      fp << "create_clock ";
-      fp << generate_sdc_port(port_to_constrain) << "-period ";
-      fp << std::setprecision(10) << clock_period;
-      fp << " -waveform {0 ";
-      fp << std::setprecision(10) << clock_period / 2;
-      fp << "} ";
-      fp << "[list [get_ports { " << generate_sdc_port(port_to_constrain) << "}]]" << std::endl;
+      /* Reach here, it means a non-clock global port and we need print constraints */
+      float clock_period = SDC_FIXED_CLOCK_PERIOD; 
+      for (const size_t& pin : circuit_lib.pins(global_port)) {
+        BasicPort port_to_constrain(circuit_lib.port_prefix(global_port), pin, pin);
+        fp << "create_clock -name ";
+        fp << generate_sdc_port(port_to_constrain) << " -period ";
+        fp << std::setprecision(10) << clock_period;
+        fp << " -waveform {0 ";
+        fp << std::setprecision(10) << clock_period / 2;
+        fp << "} ";
+        fp << "[get_ports { " << generate_sdc_port(port_to_constrain) << "}]" << std::endl;
 
-      fp << "set_drive 0 " << generate_sdc_port(port_to_constrain) << std::endl;
-     
-      fp << std::endl;
+        fp << std::endl;
+      }
     }
   }
 
@@ -397,7 +400,7 @@ void print_pnr_sdc(const SdcOption& sdc_options,
   
   /* Constrain global ports */
   if (true == sdc_options.constrain_global_port()) {
-    print_pnr_sdc_global_ports(sdc_options.sdc_dir(), critical_path_delay, circuit_lib, global_ports);
+    print_pnr_sdc_global_ports(sdc_options.sdc_dir(), critical_path_delay, circuit_lib, global_ports, false);
   }
 
   std::string top_module_name = generate_fpga_top_module_name();
