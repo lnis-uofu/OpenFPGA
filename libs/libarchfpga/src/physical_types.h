@@ -822,6 +822,9 @@ struct t_mode {
     t_pb_type* parent_pb_type = nullptr;
     int index = 0;
 
+    /* Xifan Tang: Specify if the mode is packable or not */
+    bool packable = true;
+
     /* Power related members */
     t_mode_power* mode_power = nullptr;
 

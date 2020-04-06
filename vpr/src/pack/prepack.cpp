@@ -791,6 +791,13 @@ t_pack_molecule* alloc_and_load_pack_molecules(t_pack_patterns* list_of_pack_pat
      * TODO: Need to investigate better mapping strategies than first-fit
      */
     for (i = 0; i < num_packing_patterns; i++) {
+
+        /* Xifan Tang: skip patterns that belong to unpackable modes */
+        if ( (nullptr != list_of_pack_patterns[i].root_block->pb_type->parent_mode)
+          && (false == list_of_pack_patterns[i].root_block->pb_type->parent_mode->packable) ) {
+            continue;
+        }
+
         best_pattern = 0;
         for (j = 1; j < num_packing_patterns; j++) {
             if (is_used[best_pattern]) {
@@ -799,7 +806,7 @@ t_pack_molecule* alloc_and_load_pack_molecules(t_pack_patterns* list_of_pack_pat
                 best_pattern = j;
             }
         }
-        VTR_ASSERT(is_used[best_pattern] == false);
+        VTR_ASSERT(is_used[best_pattern] == false); 
         is_used[best_pattern] = true;
 
         auto blocks = atom_ctx.nlist.blocks();
@@ -1213,6 +1220,11 @@ static t_pb_graph_node* get_expected_lowest_cost_primitive_for_atom_block_in_pb_
         }
     } else {
         for (i = 0; i < curr_pb_graph_node->pb_type->num_modes; i++) {
+            /* Xifan Tang: early fail if this primitive in a unpackable mode */
+            if (false == curr_pb_graph_node->pb_type->modes[i].packable) {
+                continue;
+            }
+
             for (j = 0; j < curr_pb_graph_node->pb_type->modes[i].num_pb_type_children; j++) {
                 *cost = UNDEFINED;
                 cur = get_expected_lowest_cost_primitive_for_atom_block_in_pb_graph_node(blk_id, &curr_pb_graph_node->child_pb_graph_nodes[i][j][0], cost);
