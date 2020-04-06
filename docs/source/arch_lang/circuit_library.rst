@@ -270,11 +270,20 @@ A circuit model may consist of a number of ports. The port list is mandatory in 
 
     .. note:: ``circuit_model_name`` is only valid when the type of this port is ``sram``.
 
+  - ``io="true|false"`` Specify if this port should be treated as an I/O port of an FPGA fabric. When this is enabled, this port of each circuit model instanciated in FPGA will be added as an I/O of an FPGA.
+
+    .. note:: ``io`` is only valid for ``input`` ports
+
   - ``mode_select="true|false"`` Specify if this port controls the mode switching in a configurable logic block. This is due to that a configurable logic block can operate in different modes, which is controlled by SRAM bits.
 
     .. note:: ``mode_select`` is only valid when the type of this port is ``sram``.
 
-  - ``is_global="true|false"`` can be either ``true`` or ``false``. Specify if this port is a global port, which will be routed globally. Note that when multiple global ports are defined with the same name, these global ports will be short-wired together.
+  - ``is_global="true|false"`` can be either ``true`` or ``false``. Specify if this port is a global port, which will be routed globally.
+
+    .. note:: For input ports, when multiple global input ports are defined with the same name, by default, these global ports will be short-wired together. When ``io`` is turned on for this port, these global ports will be independent in the FPGA fabric.
+
+    .. note:: For output ports, the global ports will be independent in the FPGA fabric 
+
 
   - ``is_set="true|false"`` Specify if this port controls a set signal. All the set ports are connected to global set voltage stimuli in testbenches.
 
