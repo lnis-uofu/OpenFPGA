@@ -767,6 +767,12 @@ size_t CircuitLibrary::port_default_value(const CircuitPortId& circuit_port_id) 
   return port_default_values_[circuit_port_id];
 }
 
+/* Return a flag if the port is used in mode-selection purpuse of a circuit model */
+bool CircuitLibrary::port_is_io(const CircuitPortId& circuit_port_id) const {
+  /* validate the circuit_port_id */
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
+  return port_is_io_[circuit_port_id];
+}
 
 /* Return a flag if the port is used in mode-selection purpuse of a circuit model */
 bool CircuitLibrary::port_is_mode_select(const CircuitPortId& circuit_port_id) const {
@@ -1212,6 +1218,7 @@ CircuitPortId CircuitLibrary::add_model_port(const CircuitModelId& model_id,
   port_lib_names_.emplace_back();
   port_inv_prefix_.emplace_back();
   port_default_values_.push_back(-1);
+  port_is_io_.push_back(false);
   port_is_mode_select_.push_back(false);
   port_is_global_.push_back(false);
   port_is_reset_.push_back(false);
@@ -1279,6 +1286,15 @@ void CircuitLibrary::set_port_default_value(const CircuitPortId& circuit_port_id
   /* validate the circuit_port_id */
   VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
   port_default_values_[circuit_port_id] = default_value;
+  return;
+}
+
+/* Set the is_mode_select for a port of a circuit model */
+void CircuitLibrary::set_port_is_io(const CircuitPortId& circuit_port_id, 
+                                    const bool& is_io) {
+  /* validate the circuit_port_id */
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
+  port_is_io_[circuit_port_id] = is_io;
   return;
 }
 

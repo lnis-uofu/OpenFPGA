@@ -352,9 +352,10 @@ size_t check_circuit_library_ports(const CircuitLibrary& circuit_lib) {
   /* Check global ports: make sure all the global ports are input ports */
   for (const auto& port : circuit_lib.ports()) {
     if ( (circuit_lib.port_is_global(port)) 
-      && (!circuit_lib.is_input_port(port)) ) {
+      && (!circuit_lib.is_input_port(port)) 
+      && (!circuit_lib.is_output_port(port)) ) {
       vpr_printf(TIO_MESSAGE_ERROR,
-                 "Circuit port (type=%s) of model (name=%s) is defined as global but not an input port!\n",
+                 "Circuit port (type=%s) of model (name=%s) is defined as global but not an input/output port!\n",
                  CIRCUIT_MODEL_PORT_TYPE_STRING[size_t(circuit_lib.port_type(port))],
                  circuit_lib.model_name(port).c_str());
       num_err++;

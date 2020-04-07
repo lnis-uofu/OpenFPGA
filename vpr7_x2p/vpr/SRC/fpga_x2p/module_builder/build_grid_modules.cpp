@@ -141,6 +141,41 @@ void add_grid_module_nets_connect_pb_type_ports(ModuleManager& module_manager,
 }
 
 /********************************************************************
+ * Add module nets between primitive module and its internal circuit module
+ * This is only applicable to the primitive module of a grid
+ *******************************************************************/
+static 
+void add_primitive_module_fpga_global_io_port(ModuleManager& module_manager,
+                                              const ModuleId& primitive_module,
+                                              const ModuleId& logic_module,
+                                              const size_t& logic_instance_id,
+                                              const ModuleManager::e_module_port_type& module_io_port_type,
+                                              const CircuitLibrary& circuit_lib,
+                                              const CircuitModelId& primitive_model,
+                                              const CircuitPortId& circuit_port) {
+  BasicPort module_port(generate_fpga_global_io_port_name(std::string(gio_inout_prefix), circuit_lib, primitive_model, circuit_port), circuit_lib.port_size(circuit_port));
+  ModulePortId primitive_io_port_id = module_manager.add_port(primitive_module, module_port, module_io_port_type);
+  ModulePortId logic_io_port_id = module_manager.find_module_port(logic_module, circuit_lib.port_prefix(circuit_port));
+  BasicPort logic_io_port = module_manager.module_port(logic_module, logic_io_port_id);
+  VTR_ASSERT(logic_io_port.get_width() == module_port.get_width());
+
+  /* Wire the GPIO port form primitive_module to the logic module!*/
+  for (size_t pin_id = 0; pin_id < module_port.pins().size(); ++pin_id) {      
+    ModuleNetId net = module_manager.create_module_net(primitive_module);
+    if ( (ModuleManager::MODULE_GPIO_PORT == module_io_port_type)
+      || (ModuleManager::MODULE_GPIN_PORT == module_io_port_type) ) {
+      module_manager.add_module_net_source(primitive_module, net, primitive_module, 0, primitive_io_port_id, module_port.pins()[pin_id]);
+      module_manager.add_module_net_sink(primitive_module, net, logic_module, logic_instance_id, logic_io_port_id, logic_io_port.pins()[pin_id]);
+    } else {
+      VTR_ASSERT(ModuleManager::MODULE_GPOUT_PORT == module_io_port_type);
+      module_manager.add_module_net_source(primitive_module, net, logic_module, logic_instance_id, logic_io_port_id, logic_io_port.pins()[pin_id]);
+      module_manager.add_module_net_sink(primitive_module, net, primitive_module, 0, primitive_io_port_id, module_port.pins()[pin_id]);
+    }
+  }
+}
+
+
+/********************************************************************
  * Print Verilog modules of a primitive node in the pb_graph_node graph
  * This generic function can support all the different types of primitive nodes
  * i.e., Look-Up Tables (LUTs), Flip-flops (FFs) and hard logic blocks such as adders.
@@ -274,18 +309,32 @@ void build_primitive_block_module(ModuleManager& module_manager,
   if (SPICE_MODEL_IOPAD == circuit_lib.model_type(primitive_model)) {
     std::vector<CircuitPortId> primitive_model_inout_ports = circuit_lib.model_ports_by_type(primitive_model, SPICE_MODEL_PORT_INOUT);
     for (auto port : primitive_model_inout_ports) {
-      BasicPort module_port(generate_fpga_global_io_port_name(std::string(gio_inout_prefix), circuit_lib, primitive_model), circuit_lib.port_size(port));
-      ModulePortId primitive_gpio_port_id = module_manager.add_port(primitive_module, module_port, ModuleManager::MODULE_GPIO_PORT);
-      ModulePortId logic_gpio_port_id = module_manager.find_module_port(logic_module, circuit_lib.port_prefix(port));
-      BasicPort logic_gpio_port = module_manager.module_port(logic_module, logic_gpio_port_id);
-      VTR_ASSERT(logic_gpio_port.get_width() == module_port.get_width());
+      add_primitive_module_fpga_global_io_port(module_manager, primitive_module,
+                                               logic_module, logic_instance_id,
+                                               ModuleManager::MODULE_GPIO_PORT,
+                                               circuit_lib,
+                                               primitive_model,
+                                               port);
+    }
+  }
 
-      /* Wire the GPIO port form primitive_module to the logic module!*/
-      for (size_t pin_id = 0; pin_id < module_port.pins().size(); ++pin_id) {      
-        ModuleNetId net = module_manager.create_module_net(primitive_module);
-        module_manager.add_module_net_source(primitive_module, net, primitive_module, 0, primitive_gpio_port_id, module_port.pins()[pin_id]);
-        module_manager.add_module_net_sink(primitive_module, net, logic_module, logic_instance_id, logic_gpio_port_id, logic_gpio_port.pins()[pin_id]);
-      }
+  /* Find the other i/o ports required by the primitive node, and add them to the module */
+  for (const auto& port : circuit_lib.model_global_ports(primitive_model, false)) {
+    if ( (SPICE_MODEL_PORT_INPUT == circuit_lib.port_type(port))
+      && (true == circuit_lib.port_is_io(port)) ) {
+      add_primitive_module_fpga_global_io_port(module_manager, primitive_module,
+                                               logic_module, logic_instance_id,
+                                               ModuleManager::MODULE_GPIN_PORT,
+                                               circuit_lib,
+                                               primitive_model,
+                                               port);
+    } else if (SPICE_MODEL_PORT_OUTPUT == circuit_lib.port_type(port)) {
+      add_primitive_module_fpga_global_io_port(module_manager, primitive_module,
+                                               logic_module, logic_instance_id,
+                                               ModuleManager::MODULE_GPOUT_PORT,
+                                               circuit_lib,
+                                               primitive_model,
+                                               port);
     }
   }
 }

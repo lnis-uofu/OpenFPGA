@@ -145,6 +145,8 @@ void add_grid_module_nets_connect_pb_type_ports(ModuleManager& module_manager,
 }
 
 /********************************************************************
+ * Add module nets between primitive module and its internal circuit module
+ * This is only applicable to the primitive module of a grid
  *******************************************************************/
 static 
 void add_primitive_module_fpga_global_io_port(ModuleManager& module_manager,
