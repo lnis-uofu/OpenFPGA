@@ -418,6 +418,7 @@
               <direct name="direct6" input="frac_logic.lut4_out[1:1]" output="adder[0:0].b"/>
               <direct name="direct7" input="frac_logic.lut4_out[2:2]" output="adder[1:1].a"/>
               <direct name="direct8" input="frac_logic.lut4_out[3:3]" output="adder[1:1].b"/>
+              <complete name="complete1" input="fabric.clk" output="ff[1:0].clk"/>
               <mux name="mux1" input="adder[0].sumout frac_logic.out[0]" output="ff[0].D">
                 <delay_constant max="25e-12" in_port="adder[0].sumout frac_logic.out[0]" out_port="ff[0].D"/>
               </mux>
