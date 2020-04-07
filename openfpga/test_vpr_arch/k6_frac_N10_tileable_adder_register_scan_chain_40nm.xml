@@ -720,13 +720,10 @@
         <direct name="scan_chain_in" input="clb.scin" output="fle[0:0].scin">
           <!-- Put all inter-block carry chain delay on this one edge -->
           <delay_constant max="0.16e-9" in_port="clb.scin" out_port="fle[0:0].scin"/>
-          <pack_pattern name="chain" in_port="clb.scin" out_port="fle[0:0].scin"/>
         </direct>
         <direct name="scan_chain_out" input="fle[9:9].scout" output="clb.scout">
-          <pack_pattern name="chain" in_port="fle[9:9].scout" out_port="clb.scout"/>
         </direct>
         <direct name="scan_chain_link" input="fle[8:0].scout" output="fle[9:1].scin">
-          <pack_pattern name="chain" in_port="fle[8:0].scout" out_port="fle[9:1].scin"/>
         </direct>
       </interconnect>
     </pb_type>

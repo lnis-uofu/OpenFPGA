@@ -1557,6 +1557,13 @@ static t_pb_graph_pin* get_connected_primitive_pin(const t_pb_graph_pin* cluster
  *  will be only one pin connected to the very first adder in the cluster.
  */
 static void get_all_connected_primitive_pins(const t_pb_graph_pin* cluster_input_pin, std::vector<t_pb_graph_pin*>& connected_primitive_pins) {
+
+    /* Xifan Tang: Skip pins belong to unpackable modes */
+    if ( (nullptr != cluster_input_pin->parent_node->pb_type->parent_mode)
+       && (false == cluster_input_pin->parent_node->pb_type->parent_mode->packable) ) {
+        return;
+    }
+
     for (int iedge = 0; iedge < cluster_input_pin->num_output_edges; iedge++) {
         const auto& output_edge = cluster_input_pin->output_edges[iedge];
         for (int ipin = 0; ipin < output_edge->num_output_pins; ipin++) {
