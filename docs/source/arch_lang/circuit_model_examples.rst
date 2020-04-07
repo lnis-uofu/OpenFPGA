@@ -260,7 +260,6 @@ Template
     <port type="output" prefix="<string>" lib_name="<string>" size="<int>"/>
   </circuit_model>
 
-
 .. option:: <design_technology type="cmos" topology="<string>"/>
   
   - ``topology="AND|OR|MUX2"`` Specify the logic functionality of a gate. As for standard cells, the size of each port is limited to 1. Currently, only 2-input and single-output logic gates are supported.
@@ -289,6 +288,29 @@ This example shows:
   - A 2-input OR gate without any input and output buffers
   - Propagation delay from input ``a`` to ``out`` is 10ps in rising edge and and 8ps in falling edge
   - Propagation delay from input ``b`` to ``out`` is 10ps in rising edge and 7ps in falling edge
+
+MUX2 Gate Example
+```````````````````````
+
+.. code-block:: xml
+
+    <circuit_model type="gate" name="MUX2" prefix="MUX2" is_default="true" verilog_netlist="sc_mux.v">
+      <design_technology type="cmos" topology="MUX2"/>
+      <input_buffer exist="false"/>
+      <output_buffer exist="false"/>
+      <port type="input" prefix="in0" lib_name="B" size="1"/>
+      <port type="input" prefix="in1" lib_name="A" size="1"/>
+      <port type="input" prefix="sel" lib_name="S" size="1"/>
+      <port type="output" prefix="out" lib_name="Y" size="1"/>
+    </circuit_model>
+
+This example shows:
+  - A 2-input MUX gate with two inputs ``in0`` and ``in1``, a select port ``sel`` and an output port ``out``
+  - The Verilog of MUX2 gate is provided by the user in the netlist ``sc_mux.v``
+  - The use of ``lib_name`` to bind to a Verilog module with different port names.
+  - When binding to the Verilog module, the inputs will be swapped. In other words, ``in0`` of the circuit model will be wired to the input ``B`` of the MUX2 cell, while ``in1`` of the circuit model will be wired to the input ``A`` of the MUX2 cell.
+
+.. note:: OpenFPGA requires a fixed truth table for the ``MUX2`` gate. When the select signal sel is enabled, the first input, i.e., ``in0``, will be propagated to the output, i.e., ``out``. If your standard cell provider does not offer the exact truth table, you can simply swap the inputs as shown in the example.
 
 Multiplexers
 ~~~~~~~~~~~~
@@ -329,6 +351,8 @@ Template
 .. note:: A multiplexer should have only three types of ports, ``input``, ``output`` and ``sram``, which are all mandatory. 
 
 .. note:: For tree-like multiplexers, they can be built with standard cell MUX2. To enable this, users should define a ``circuit_model``, which describes a 2-input multiplexer (See details and examples in how to define a logic gate using ``circuit_model``. In this case, the ``circuit_model_name`` in the ``pass_gate_logic`` should be the name of MUX2 ``circuit_model``.
+
+.. note:: When multiplexers are not provided by users, the size of ports do not have to be consistent with actual numbers in the architecture.
 
 One-level Mux Example
 `````````````````````
@@ -396,6 +420,26 @@ This example shows:
   - All the inputs will be buffered using the circuit model ``inv1x``
   - All the outputs will be buffered using the circuit model ``tapbuf4``
   - The multiplexer will be built by transmission gate using the circuit model ``tgate``
+  - The multiplexer will have 4 inputs and 3 SRAMs to control which datapath to propagate
+
+Standard Cell Multiplexer Example
+`````````````````````````````````
+.. code-block:: xml
+
+  <circuit_model type="mux" name="mux_stdcell" prefix="mux_stdcell">
+    <design_technology type="cmos" structure="tree"/>
+    <input_buffer exist="on" circuit_model_name="inv1x"/>
+    <output_buffer exist="on" circuit_model_name="tapdrive4"/>
+    <pass_gate_logic circuit_model_name="MUX2"/>
+    <port type="input" prefix="in" size="4"/>
+    <port type="output" prefix="out" size="1"/>
+    <port type="sram" prefix="sram" size="3"/>
+  </circuit_model>
+
+This example shows:
+  - A tree-like 4-input CMOS multiplexer built by the standard cell ``MUX2``
+  - All the inputs will be buffered using the circuit model ``inv1x``
+  - All the outputs will be buffered using the circuit model ``tapbuf4``
   - The multiplexer will have 4 inputs and 3 SRAMs to control which datapath to propagate
 
 Look-Up Tables
