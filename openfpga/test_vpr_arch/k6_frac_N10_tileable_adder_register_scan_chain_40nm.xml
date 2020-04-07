@@ -439,10 +439,12 @@
             <direct name="direct1" input="fle.in" output="fabric.in"/>
             <direct name="direct2" input="fle.cin" output="fabric.cin"/>
             <direct name="direct3" input="fle.regin" output="fabric.regin"/>
-            <direct name="direct4" input="fabric.out" output="fle.out"/>
-            <direct name="direct5" input="fabric.cout" output="fle.cout"/>
-            <direct name="direct6" input="fabric.regout" output="fle.regout"/>
-            <direct name="direct7" input="fle.clk" output="fabric.clk"/>
+            <direct name="direct4" input="fle.scin" output="fabric.scin"/>
+            <direct name="direct5" input="fabric.out" output="fle.out"/>
+            <direct name="direct6" input="fabric.cout" output="fle.cout"/>
+            <direct name="direct7" input="fabric.regout" output="fle.regout"/>
+            <direct name="direct8" input="fabric.scout" output="fle.scout"/>
+            <direct name="direct9" input="fle.clk" output="fabric.clk"/>
           </interconnect>
         </mode>
         <!-- Physical mode definition end (physical implementation of the fle) -->
