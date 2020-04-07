@@ -48,7 +48,7 @@ int main(int argc, char** argv) {
    */
   openfpga::Shell<OpenfpgaContext> shell("OpenFPGA");
 
-  shell.add_title(create_openfpga_title());
+  shell.add_title(create_openfpga_title().c_str());
 
   /* Add vpr commands */
   openfpga::add_vpr_commands(shell);

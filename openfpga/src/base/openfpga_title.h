@@ -9,6 +9,6 @@
 /********************************************************************
  * Function declaration
  *******************************************************************/
-const char* create_openfpga_title();
+std::string create_openfpga_title();
 
 #endif

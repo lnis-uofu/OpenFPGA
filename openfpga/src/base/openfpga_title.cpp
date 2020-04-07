@@ -8,7 +8,7 @@
  * Generate a string of openfpga title introduction
  * This is mainly used when launching OpenFPGA shell 
  *******************************************************************/
-const char* create_openfpga_title() {
+std::string create_openfpga_title() {
   std::string title;
 
   title += std::string("\n");
@@ -49,5 +49,5 @@ const char* create_openfpga_title() {
   title += std::string("THE SOFTWARE.\n");
   title += std::string("\n");
 
-  return title.c_str();
+  return title;
 }
