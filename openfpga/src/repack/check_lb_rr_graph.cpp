@@ -79,8 +79,8 @@ static bool check_lb_rr_graph_dangling_nodes(const LbRRGraph& lb_rr_graph) {
     if ((0 == lb_rr_graph.node_in_edges(node).size())
       && (0 == lb_rr_graph.node_out_edges(node).size())) {
       /* Print a warning! */
-      VTR_LOG_WARN("Node %s is dangling (zero fan-in and zero fan-out)!\n",
-             node);
+      VTR_LOG_WARN("Node %lu is dangling (zero fan-in and zero fan-out)!\n",
+                   size_t(node));
       VTR_LOG_WARN("Node details for debugging:\n");
       print_lb_rr_node(lb_rr_graph, node);
       no_dangling = false;
