@@ -107,7 +107,7 @@
         <port name="inpad"/>
       </output_ports>
     </model>
-    <!-- A virtual model for I/O to be used in the physical mode of io block -->
+    <!-- A virtual model for fractruable LUT to be used in the physical mode of LUT -->
     <model name="frac_lut6">
       <input_ports>
         <port name="in"/>
@@ -118,24 +118,15 @@
         <port name="lut6_out"/>
       </output_ports>
     </model>
-    <model name="dual_port_ram">
+    <!-- A virtual model for scan-chain flip-flop to be used in the physical mode of FF -->
+    <model name="scff">
       <input_ports>
-        <!-- write address lines -->
-        <port name="waddr" clock="clk"/>
-        <!-- read address lines -->
-        <port name="raddr" clock="clk"/>
-        <!-- data lines can be broken down into smaller bit widths minimum size 1 -->
-        <port name="d_in" clock="clk"/>
-        <!-- write enable -->
-        <port name="wen" clock="clk"/>
-        <!-- read enable -->
-        <port name="ren" clock="clk"/>
-        <!-- memories are often clocked -->
+        <port name="D" clock="clk"/>
+        <port name="DI" clock="clk"/>
         <port name="clk" is_clock="1"/>
       </input_ports>
       <output_ports>
-        <!-- output can be broken down into smaller bit widths minimum size 1 -->
-        <port name="d_out" clock="clk"/>
+        <port name="Q" clock="clk"/>
       </output_ports>
     </model>
   </models>
@@ -160,40 +151,34 @@
       </equivalent_sites>
       <input name="I" num_pins="40" equivalent="full"/>
       <input name="cin" num_pins="1"/>
+      <input name="regin" num_pins="1"/>
+      <input name="scin" num_pins="1"/>
       <output name="O" num_pins="20" equivalent="none"/>
       <output name="cout" num_pins="1"/>
+      <output name="regout" num_pins="1"/>
+      <output name="scout" num_pins="1"/>
       <clock name="clk" num_pins="1"/>
       <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10">
         <fc_override port_name="cin" fc_type="frac" fc_val="0"/>
         <fc_override port_name="cout" fc_type="frac" fc_val="0"/>
+        <fc_override port_name="regin" fc_type="frac" fc_val="0"/>
+        <fc_override port_name="regout" fc_type="frac" fc_val="0"/>
+        <fc_override port_name="scin" fc_type="frac" fc_val="0"/>
+        <fc_override port_name="scout" fc_type="frac" fc_val="0"/>
       </fc>
       <!--  Highly recommand to customize pin location when direct connection is used!!! -->
       <!--pinlocations pattern="spread"/-->
       <pinlocations pattern="custom">
         <loc side="left">clb.clk</loc>
-        <loc side="top">clb.cin</loc>
+        <loc side="top">clb.cin clb.regin clb.scin</loc>
         <loc side="right">clb.O[9:0] clb.I[19:0]</loc>
-        <loc side="bottom">clb.cout clb.O[19:10] clb.I[39:20]</loc>
+        <loc side="bottom">clb.cout clb.regout clb.scout clb.O[19:10] clb.I[39:20]</loc>
       </pinlocations>
-    </tile>
-    <tile name="memory" width="2" height="2" area="548000">
-      <equivalent_sites>
-        <site pb_type="memory"/>
-      </equivalent_sites>
-      <input name="waddr" num_pins="10"/>
-      <input name="raddr" num_pins="10"/>
-      <input name="d_in" num_pins="32"/>
-      <input name="wen" num_pins="1"/>
-      <input name="ren" num_pins="1"/>
-      <output name="d_out" num_pins="32"/>
-      <clock name="clk" num_pins="1"/>
-      <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
-      <pinlocations pattern="spread"/>
     </tile>
   </tiles>
   <!-- ODIN II specific config ends -->
   <!-- Physical descriptions begin -->
-  <layout tileable="true" through_channel="false">
+  <layout tileable="true">
     <!--auto_layout aspect_ratio="1.0"-->
     <fixed_layout name="4x4" width="6" height="6">
       <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
@@ -201,9 +186,6 @@
       <corners type="EMPTY" priority="101"/>
       <!--Fill with 'clb'-->
       <fill type="clb" priority="10"/>
-      <!--Column of 'memory' with 'EMPTY' blocks wherever a 'memory' does not fit. Vertical offset by 1 for perimeter.-->
-      <col type="memory" startx="2" starty="1" repeatx="8" priority="20"/>
-      <col type="EMPTY" startx="2" repeatx="8" starty="1" priority="19"/>
     </fixed_layout>
     <!-- /auto_layout -->
   </layout>
@@ -266,6 +248,8 @@
   </segmentlist>
   <directlist>
     <direct name="adder_carry" from_pin="clb.cout" to_pin="clb.cin" x_offset="0" y_offset="-1" z_offset="0"/>
+    <direct name="shift_register" from_pin="clb.regout" to_pin="clb.regin" x_offset="0" y_offset="-1" z_offset="0"/>
+    <direct name="scan_chain" from_pin="clb.scout" to_pin="clb.scin" x_offset="0" y_offset="-1" z_offset="0"/>
   </directlist>
   <complexblocklist>
     <!-- Define I/O pads begin -->
@@ -344,8 +328,12 @@
     <pb_type name="clb">
       <input name="I" num_pins="40" equivalent="full"/>
       <input name="cin" num_pins="1"/>
+      <input name="regin" num_pins="1"/>
+      <input name="scin" num_pins="1"/>
       <output name="O" num_pins="20" equivalent="none"/>
       <output name="cout" num_pins="1"/>
+      <output name="regout" num_pins="1"/>
+      <output name="scout" num_pins="1"/>
       <clock name="clk" num_pins="1"/>
       <!-- Describe fracturable logic element.  
              Each fracturable logic element has a 6-LUT that can alternatively operate as two 5-LUTs with shared inputs. 
@@ -354,16 +342,24 @@
       <pb_type name="fle" num_pb="10">
         <input name="in" num_pins="6"/>
         <input name="cin" num_pins="1"/>
+        <input name="regin" num_pins="1"/>
+        <input name="scin" num_pins="1"/>
         <output name="out" num_pins="2"/>
         <output name="cout" num_pins="1"/>
+        <output name="regout" num_pins="1"/>
+        <output name="scout" num_pins="1"/>
         <clock name="clk" num_pins="1"/>
         <!-- Physical mode definition begin (physical implementation of the fle) -->
         <mode name="physical" packable="false">
           <pb_type name="fabric" num_pb="1">
             <input name="in" num_pins="6"/>
             <input name="cin" num_pins="1"/>
+            <input name="regin" num_pins="1"/>
+            <input name="scin" num_pins="1"/>
             <output name="out" num_pins="2"/>
             <output name="cout" num_pins="1"/>
+            <output name="regout" num_pins="1"/>
+            <output name="scout" num_pins="1"/>
             <clock name="clk" num_pins="1"/>
             <pb_type name="frac_logic" num_pb="1">
               <input name="in" num_pins="6"/>
@@ -384,12 +380,14 @@
                 <mux name="mux1" input="frac_lut6.lut6_out frac_lut6.lut5_out[0]" output="frac_logic.out[0]"/>
               </interconnect>
             </pb_type>
-            <!-- Define flip-flop -->
-            <pb_type name="ff" blif_model=".latch" num_pb="2" class="flipflop">
-              <input name="D" num_pins="1" port_class="D"/>
-              <output name="Q" num_pins="1" port_class="Q"/>
-              <clock name="clk" num_pins="1" port_class="clock"/>
+            <!-- Define flip-flop with scan-chain capability, DI is the scan-chain data input -->
+            <pb_type name="ff" blif_model=".subckt scff" num_pb="2">
+              <input name="D" num_pins="1"/>
+              <input name="DI" num_pins="1"/>
+              <output name="Q" num_pins="1"/>
+              <clock name="clk" num_pins="1"/>
               <T_setup value="66e-12" port="ff.D" clock="clk"/>
+              <T_setup value="66e-12" port="ff.DI" clock="clk"/>
               <T_clock_to_Q max="124e-12" port="ff.Q" clock="clk"/>
             </pb_type>         
             <!-- Define adders -->
@@ -415,12 +413,15 @@
               <direct name="direct6" input="frac_logic.lut4_out[1:1]" output="adder[0:0].b"/>
               <direct name="direct7" input="frac_logic.lut4_out[2:2]" output="adder[1:1].a"/>
               <direct name="direct8" input="frac_logic.lut4_out[3:3]" output="adder[1:1].b"/>
+              <direct name="direct9" input="fabric.scin" output="ff[0].DI"/>
+              <direct name="direct10" input="ff[0].Q" output="ff[1].DI"/>
+              <direct name="direct11" input="ff[1].Q" output="fabric.scout"/>
               <complete name="complete1" input="fabric.clk" output="ff[1:0].clk"/>
-              <mux name="mux1" input="adder[0].sumout frac_logic.out[0]" output="ff[0].D">
-                <delay_constant max="25e-12" in_port="adder[0].sumout frac_logic.out[0]" out_port="ff[0].D"/>
+              <mux name="mux1" input="adder[0].sumout frac_logic.out[0] fabric.regin" output="ff[0].D">
+                <delay_constant max="25e-12" in_port="adder[0].sumout frac_logic.out[0] fabric.regin" out_port="ff[0].D"/>
               </mux>
-              <mux name="mux2" input="adder[1].sumout frac_logic.out[1]" output="ff[1].D">
-                <delay_constant max="25e-12" in_port="adder[1].sumout frac_logic.out[1]" out_port="ff[1].D"/>
+              <mux name="mux2" input="adder[1].sumout frac_logic.out[1] ff[0].Q" output="ff[1].D">
+                <delay_constant max="25e-12" in_port="adder[1].sumout frac_logic.out[1] ff[0].Q" out_port="ff[1].D"/>
               </mux>
               <mux name="mux3" input="adder[0].sumout ff[0].Q frac_logic.out[0]" output="fabric.out[0]">
                 <!-- LUT to output is faster than FF to output on a Stratix IV -->
@@ -437,9 +438,13 @@
           <interconnect>
             <direct name="direct1" input="fle.in" output="fabric.in"/>
             <direct name="direct2" input="fle.cin" output="fabric.cin"/>
-            <direct name="direct3" input="fabric.out" output="fle.out"/>
-            <direct name="direct4" input="fabric.cout" output="fle.cout"/>
-            <direct name="direct5" input="fle.clk" output="fabric.clk"/>
+            <direct name="direct3" input="fle.regin" output="fabric.regin"/>
+            <direct name="direct4" input="fle.scin" output="fabric.scin"/>
+            <direct name="direct5" input="fabric.out" output="fle.out"/>
+            <direct name="direct6" input="fabric.cout" output="fle.cout"/>
+            <direct name="direct7" input="fabric.regout" output="fle.regout"/>
+            <direct name="direct8" input="fabric.scout" output="fle.scout"/>
+            <direct name="direct9" input="fle.clk" output="fabric.clk"/>
           </interconnect>
         </mode>
         <!-- Physical mode definition end (physical implementation of the fle) -->
@@ -636,7 +641,34 @@
             <direct name="direct3" input="fle.clk" output="ble6.clk"/>
           </interconnect>
         </mode>
-        <!-- n1_lut6 -->
+        <!-- Define n1_lut6 end -->
+        <!-- Define shift register begin -->
+        <mode name="shift_register">
+          <pb_type name="shift_reg" num_pb="1">
+            <input name="regin" num_pins="1"/>
+            <output name="regout" num_pins="1"/>
+            <clock name="clk" num_pins="1"/>
+            <pb_type name="ff" blif_model=".latch" num_pb="2" class="flipflop">
+              <input name="D" num_pins="1" port_class="D"/>
+              <output name="Q" num_pins="1" port_class="Q"/>
+              <clock name="clk" num_pins="1" port_class="clock"/>
+              <T_setup value="66e-12" port="ff.D" clock="clk"/>
+              <T_clock_to_Q max="124e-12" port="ff.Q" clock="clk"/>
+            </pb_type>
+            <interconnect>
+              <direct name="direct1" input="shift_reg.regin" output="ff[0].D"/>
+              <direct name="direct2" input="ff[0].Q" output="ff[1].D"/>
+              <direct name="direct3" input="ff[1].Q" output="shift_reg.regout"/>
+              <complete name="complete1" input="shift_reg.clk" output="ff.clk"/>
+            </interconnect>
+          </pb_type>
+          <interconnect>
+            <direct name="direct1" input="fle.regin" output="shift_reg.regin"/>
+            <direct name="direct2" input="shift_reg.regout" output="fle.regout"/>
+            <direct name="direct3" input="fle.clk" output="shift_reg.clk"/>
+          </interconnect>
+        </mode>
+        <!-- Define shift register end --> 
       </pb_type>
       <interconnect>
         <!-- We use a 50% depop crossbar built using small full xbars to get sets of logically equivalent pins at inputs of CLB 
@@ -674,66 +706,29 @@
         <direct name="carry_link" input="fle[8:0].cout" output="fle[9:1].cin">
           <pack_pattern name="chain" in_port="fle[8:0].cout" out_port="fle[9:1].cin"/>
         </direct>
+        <!-- Shift register chain links -->
+        <direct name="shift_register_in" input="clb.regin" output="fle[0:0].regin">
+          <!-- Put all inter-block carry chain delay on this one edge -->
+          <delay_constant max="0.16e-9" in_port="clb.regin" out_port="fle[0:0].regin"/>
+          <pack_pattern name="chain" in_port="clb.regin" out_port="fle[0:0].regin"/>
+        </direct>
+        <direct name="shift_register_out" input="fle[9:9].regout" output="clb.regout">
+          <pack_pattern name="chain" in_port="fle[9:9].regout" out_port="clb.regout"/>
+        </direct>
+        <direct name="shift_register_link" input="fle[8:0].regout" output="fle[9:1].regin">
+          <pack_pattern name="chain" in_port="fle[8:0].regout" out_port="fle[9:1].regin"/>
+        </direct>
+        <!-- Scan chain links -->
+        <direct name="scan_chain_in" input="clb.scin" output="fle[0:0].scin">
+          <!-- Put all inter-block carry chain delay on this one edge -->
+          <delay_constant max="0.16e-9" in_port="clb.scin" out_port="fle[0:0].scin"/>
+        </direct>
+        <direct name="scan_chain_out" input="fle[9:9].scout" output="clb.scout">
+        </direct>
+        <direct name="scan_chain_link" input="fle[8:0].scout" output="fle[9:1].scin">
+        </direct>
       </interconnect>
     </pb_type>
     <!-- Define general purpose logic block (CLB) ends -->
-    <!-- Define single-mode dual-port memory begin -->
-    <pb_type name="memory">
-      <input name="waddr" num_pins="10"/>
-      <input name="raddr" num_pins="10"/>
-      <input name="d_in" num_pins="32"/>
-      <input name="wen" num_pins="1"/>
-      <input name="ren" num_pins="1"/>
-      <output name="d_out" num_pins="32"/>
-      <clock name="clk" num_pins="1"/>
-      <!-- Specify the 512x32=16Kbit memory block
-           Note: the delay numbers are extracted from VPR flagship XML without modification
-                 Should align to the process technology we using to create the 16K dual-port RAM
-        -->
-      <mode name="mem_512x32_dp">
-        <pb_type name="mem_512x32_dp" blif_model=".subckt dual_port_ram" class="memory" num_pb="1">
-          <input name="waddr" num_pins="10" port_class="address"/>
-          <input name="raddr" num_pins="10" port_class="address"/>
-          <input name="d_in" num_pins="32" port_class="data_in"/>
-          <input name="wen" num_pins="1" port_class="write_en"/>
-          <input name="ren" num_pins="1" port_class="write_en"/>
-          <output name="d_out" num_pins="32" port_class="data_out"/>
-          <clock name="clk" num_pins="1" port_class="clock"/>
-          <T_setup value="509e-12" port="mem_512x32_dp.waddr" clock="clk"/>
-          <T_setup value="509e-12" port="mem_512x32_dp.raddr" clock="clk"/>
-          <T_setup value="509e-12" port="mem_512x32_dp.d_in" clock="clk"/>
-          <T_setup value="509e-12" port="mem_512x32_dp.wen" clock="clk"/>
-          <T_setup value="509e-12" port="mem_512x32_dp.ren" clock="clk"/>
-          <T_clock_to_Q max="1.234e-9" port="mem_512x32_dp.d_out" clock="clk"/>
-          <power method="pin-toggle">
-            <port name="clk" energy_per_toggle="17.9e-12"/>
-            <static_power power_per_instance="0.0"/>
-          </power>
-        </pb_type>
-        <interconnect>
-          <direct name="waddress" input="memory.waddr" output="mem_512x32_dp.waddr">
-            <delay_constant max="132e-12" in_port="memory.waddr" out_port="mem_512x32_dp.waddr"/>
-          </direct>
-          <direct name="raddress" input="memory.raddr" output="mem_512x32_dp.raddr">
-            <delay_constant max="132e-12" in_port="memory.raddr" out_port="mem_512x32_dp.raddr"/>
-          </direct>
-          <direct name="data_input" input="memory.d_in" output="mem_512x32_dp.d_in">
-            <delay_constant max="132e-12" in_port="memory.d_in" out_port="mem_512x32_dp.d_in"/>
-          </direct>
-          <direct name="writeen" input="memory.wen" output="mem_512x32_dp.wen">
-            <delay_constant max="132e-12" in_port="memory.wen" out_port="mem_512x32_dp.wen"/>
-          </direct>
-          <direct name="readen" input="memory.ren" output="mem_512x32_dp.ren">
-            <delay_constant max="132e-12" in_port="memory.ren" out_port="mem_512x32_dp.ren"/>
-          </direct>
-          <direct name="dataout" input="mem_512x32_dp.d_out" output="memory.d_out">
-            <delay_constant max="40e-12" in_port="mem_512x32_dp.d_out" out_port="memory.d_out"/>
-          </direct>
-          <direct name="clk" input="memory.clk" output="mem_512x32_dp.clk">
-          </direct>
-        </interconnect>
-      </mode>
-    </pb_type>
-    <!-- Define single-mode dual-port memory end -->
   </complexblocklist>
 </architecture>

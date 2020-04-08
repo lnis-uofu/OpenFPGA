@@ -289,6 +289,11 @@ void Shell<T>::run_script_mode(const char* script_file_name, T& context) {
     return; 
   }
 
+  /* Consider that each line may not end due to the continued line charactor 
+   * Use cmd_line to conjunct multiple lines 
+   */
+  std::string cmd_line;
+
   /* Read line by line */
   while (getline(fp, line)) {
     /* If the line that starts with '#', it is commented, we can skip */ 
@@ -302,9 +307,43 @@ void Shell<T>::run_script_mode(const char* script_file_name, T& context) {
     if (cmd_end_pos != std::string::npos) {
       cmd_part = line.substr(0, cmd_end_pos);
     }
-    /* Process the command only when the line is not empty */
-    if (!cmd_part.empty()) {
-      execute_command(cmd_part.c_str(), context);
+
+    /* Remove the space at the end of the line
+     * So that we can check easily if there is a continued line in the end  
+     */
+    cmd_part.erase(std::find_if(cmd_part.rbegin(), cmd_part.rend(), [](int ch) {
+      return !std::isspace(ch);
+    }).base(), cmd_part.end());
+
+    /* If the line ends with '\', this is a continued line, parse the next until it ends */
+    if ('\\' == cmd_part.back()) {
+      /* Pop up the last charactor and conjunct to cmd_line */
+      cmd_part.pop_back();
+ 
+      if (!cmd_part.empty()) {
+        cmd_line += cmd_part; 
+      }
+      /* Not finished yet. Parse the next line */
+      continue;
+    } else {
+      /* End of this line, if cmd_line is empty, 
+       * there is no previous lines, cache the part we have
+       * and then execute the command 
+       */
+      cmd_line += cmd_part;
+    }
+
+    /* Remove the space at the beginning of the line */
+    cmd_line.erase(cmd_line.begin(), std::find_if(cmd_line.begin(), cmd_line.end(), [](int ch) {
+      return !std::isspace(ch);
+    }));
+
+    /* Process the command only when the full command line in ended */
+    if (!cmd_line.empty()) {
+      VTR_LOG("\nCommand line to execute: %s\n", cmd_line.c_str());
+      execute_command(cmd_line.c_str(), context);
+      /* Empty the line ready to start a new line */
+      cmd_line.clear();
     }
   }
   fp.close();

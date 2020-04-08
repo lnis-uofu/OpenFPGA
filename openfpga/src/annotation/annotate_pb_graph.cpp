@@ -49,17 +49,48 @@ void rec_build_vpr_pb_graph_interconnect_physical_type_annotation(t_pb_graph_nod
     VTR_ASSERT(nullptr != child_physical_mode);
 
     std::map<t_interconnect*, size_t> interc_num_inputs;
-    /* Initialize the counter */
-    for (t_interconnect* interc : pb_mode_interconnects(child_physical_mode)) {
-      interc_num_inputs[interc] = 0;
+
+    /* Find all the interconnects sourced from the input and clock pins */
+    for (int iport = 0; iport < pb_graph_node->num_input_ports; ++iport) {
+      for (int ipin = 0; ipin < pb_graph_node->num_input_pins[iport]; ++ipin) {
+        for (int iedge = 0; iedge < pb_graph_node->input_pins[iport][ipin].num_input_edges; ++iedge) {
+          t_interconnect* interc = pb_graph_node->input_pins[iport][ipin].input_edges[iedge]->interconnect;
+          /* Ensure that the interconnect is unique in the list */
+          if (0 < interc_num_inputs.count(interc)) {
+            continue;
+          }
+          /* Unique interconnect, initialize the counter to be zero */ 
+          interc_num_inputs[interc] = 0;
+        }
+      }
+    }
+
+    for (int iport = 0; iport < pb_graph_node->num_clock_ports; ++iport) {
+      for (int ipin = 0; ipin < pb_graph_node->num_clock_pins[iport]; ++ipin) {
+        for (int iedge = 0; iedge < pb_graph_node->clock_pins[iport][ipin].num_input_edges; ++iedge) {
+          t_interconnect* interc = pb_graph_node->clock_pins[iport][ipin].input_edges[iedge]->interconnect;
+          /* Ensure that the interconnect is unique in the list */
+          if (0 < interc_num_inputs.count(interc)) {
+            continue;
+          }
+          /* Unique interconnect, initialize the counter to be zero */ 
+          interc_num_inputs[interc] = 0;
+        }
+      }
+    }
+
+    /* Check: all the element should be initialized to 0 */
+    for (const auto& pair : interc_num_inputs) {
+      VTR_ASSERT(nullptr != pair.first);
+      VTR_ASSERT(0 == pair.second);
     }
 
     /* We only care input and clock pins */
     for (int iport = 0; iport < pb_graph_node->num_input_ports; ++iport) {
       for (int ipin = 0; ipin < pb_graph_node->num_input_pins[iport]; ++ipin) {
         /* For each interconnect, we count the total number of inputs */
-        for (t_interconnect* interc : pb_mode_interconnects(child_physical_mode)) {
-          interc_num_inputs[interc] += pb_graph_pin_inputs(&(pb_graph_node->input_pins[iport][ipin]), interc).size(); 
+        for (const auto& pair : interc_num_inputs) {
+          interc_num_inputs[pair.first] += pb_graph_pin_inputs(&(pb_graph_node->input_pins[iport][ipin]), pair.first).size(); 
         }
       }
     }
@@ -67,29 +98,33 @@ void rec_build_vpr_pb_graph_interconnect_physical_type_annotation(t_pb_graph_nod
     for (int iport = 0; iport < pb_graph_node->num_clock_ports; ++iport) {
       for (int ipin = 0; ipin < pb_graph_node->num_clock_pins[iport]; ++ipin) {
         /* For each interconnect, we count the total number of inputs */
-        for (t_interconnect* interc : pb_mode_interconnects(child_physical_mode)) {
-          interc_num_inputs[interc] += pb_graph_pin_inputs(&(pb_graph_node->clock_pins[iport][ipin]), interc).size(); 
+        for (const auto& pair : interc_num_inputs) {
+          interc_num_inputs[pair.first] += pb_graph_pin_inputs(&(pb_graph_node->clock_pins[iport][ipin]), pair.first).size(); 
         }
       }
     }
 
     /* For each interconnect that has more than 1 input, we can infer the physical type */
-    for (t_interconnect* interc : pb_mode_interconnects(child_physical_mode)) {
+    for (const auto& pair : interc_num_inputs) {
+      t_interconnect* interc = pair.first;
+      size_t actual_interc_num_inputs = pair.second;
       /* If the number inputs for an interconnect is zero, this is a 0-driver pin
        * we just set 1 to use direct wires
        */
-      if (0 == interc_num_inputs[interc]) {
-        interc_num_inputs[interc] = 1;
+      if (0 == actual_interc_num_inputs) {
+        actual_interc_num_inputs = 1;
       }
       
-      e_interconnect interc_physical_type = pb_interconnect_physical_type(interc, interc_num_inputs[interc]);
+      e_interconnect interc_physical_type = pb_interconnect_physical_type(interc, actual_interc_num_inputs);
       if (interc_physical_type == vpr_device_annotation.interconnect_physical_type(interc)) {
         /* Skip annotation if we have already done! */
         continue;
       }
       VTR_LOGV(verbose_output,
                "Infer physical type '%s' of interconnect '%s' (was '%s')\n",
-               INTERCONNECT_TYPE_STRING[interc_physical_type], interc->name, INTERCONNECT_TYPE_STRING[interc->type]);
+               INTERCONNECT_TYPE_STRING[interc_physical_type],
+               interc->name,
+               INTERCONNECT_TYPE_STRING[interc->type]);
       vpr_device_annotation.add_interconnect_physical_type(interc, interc_physical_type);
     }
   }
@@ -99,9 +134,82 @@ void rec_build_vpr_pb_graph_interconnect_physical_type_annotation(t_pb_graph_nod
     return;
   }
 
-  /* Recursively visit all the child pb_graph_nodes */
+  /* Find the physical mode of current pb_graph node  */
   t_mode* physical_mode = vpr_device_annotation.physical_mode(pb_graph_node->pb_type);
   VTR_ASSERT(nullptr != physical_mode);
+
+  /* Before going recursive, we should check the interconnect between output pins
+   * Note that this is NOT applicable to primitive pb_graph nodes!!!
+   *
+   *    pb_graph_node
+   *    -------------------------------+
+   *                                   |
+   *    child_pb_graph_node            |
+   *    -------------------+           |
+   *                       |           |
+   *            output_pin +<----------+ output_pin
+   *                       |           |
+   *    -------------------+           |
+   *
+   */
+  { /* Use a code block to use local variables freely */
+    std::map<t_interconnect*, size_t> interc_num_inputs;
+    /* Find all the interconnects sourced from the output pins */
+    for (int iport = 0; iport < pb_graph_node->num_output_ports; ++iport) {
+      for (int ipin = 0; ipin < pb_graph_node->num_output_pins[iport]; ++ipin) {
+        for (int iedge = 0; iedge < pb_graph_node->output_pins[iport][ipin].num_input_edges; ++iedge) {
+          t_interconnect* interc = pb_graph_node->output_pins[iport][ipin].input_edges[iedge]->interconnect;
+          /* Ensure that the interconnect is unique in the list */
+          if (0 < interc_num_inputs.count(interc)) {
+            continue;
+          }
+          /* Unique interconnect, initialize the counter to be zero */ 
+          interc_num_inputs[interc] = 0;
+        }
+      }
+    }
+
+    /* Check: all the element should be initialized to 0 */
+    for (const auto& pair : interc_num_inputs) {
+      VTR_ASSERT(nullptr != pair.first);
+      VTR_ASSERT(0 == pair.second);
+    }
+
+    /* We only care input and clock pins */
+    for (int iport = 0; iport < pb_graph_node->num_output_ports; ++iport) {
+      for (int ipin = 0; ipin < pb_graph_node->num_output_pins[iport]; ++ipin) {
+        /* For each interconnect, we count the total number of inputs */
+        for (const auto& pair : interc_num_inputs) {
+          interc_num_inputs[pair.first] += pb_graph_pin_inputs(&(pb_graph_node->output_pins[iport][ipin]), pair.first).size(); 
+        }
+      }
+    }
+    /* For each interconnect that has more than 1 input, we can infer the physical type */
+    for (const auto& pair : interc_num_inputs) {
+      t_interconnect* interc = pair.first;
+      size_t actual_interc_num_inputs = pair.second;
+      /* If the number inputs for an interconnect is zero, this is a 0-driver pin
+       * we just set 1 to use direct wires
+       */
+      if (0 == actual_interc_num_inputs) {
+        actual_interc_num_inputs = 1;
+      }
+      
+      e_interconnect interc_physical_type = pb_interconnect_physical_type(interc, actual_interc_num_inputs);
+      if (interc_physical_type == vpr_device_annotation.interconnect_physical_type(interc)) {
+        /* Skip annotation if we have already done! */
+        continue;
+      }
+      VTR_LOGV(verbose_output,
+               "Infer physical type '%s' of interconnect '%s' (was '%s')\n",
+               INTERCONNECT_TYPE_STRING[interc_physical_type],
+               interc->name,
+               INTERCONNECT_TYPE_STRING[interc->type]);
+      vpr_device_annotation.add_interconnect_physical_type(interc, interc_physical_type);
+    }
+  }
+
+  /* Recursively visit all the child pb_graph_nodes */
   for (int ipb = 0; ipb < physical_mode->num_pb_type_children; ++ipb) {
     /* Each child may exist multiple times in the hierarchy*/
     for (int jpb = 0; jpb < physical_mode->pb_type_children[ipb].num_pb; ++jpb) {

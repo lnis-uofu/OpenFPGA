@@ -166,7 +166,7 @@ enum e_interconnect {
     NUM_INTERC_TYPES /* Xifan Tang - Invalid types for interconnect */
 };
 /* Xifan Tang - String versions of interconnection type */
-constexpr std::array<const char*, NUM_INTERC_TYPES> INTERCONNECT_TYPE_STRING = {{"complete", "direct", "mux"}}; 
+constexpr std::array<const char*, NUM_INTERC_TYPES> INTERCONNECT_TYPE_STRING = {{"unknown", "complete", "direct", "mux"}}; 
 
 /* Orientations. */
 enum e_side : unsigned char {
@@ -821,6 +821,9 @@ struct t_mode {
     int num_interconnect = 0;
     t_pb_type* parent_pb_type = nullptr;
     int index = 0;
+
+    /* Xifan Tang: Specify if the mode is packable or not */
+    bool packable = true;
 
     /* Power related members */
     t_mode_power* mode_power = nullptr;

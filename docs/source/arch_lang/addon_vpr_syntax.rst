@@ -10,9 +10,17 @@ Models, Complex blocks and Physical Tiles
   
 Each ``<pb_type>`` should contain a ``<mode>`` that describe the physical implementation of the ``<pb_type>``. Note that this is fully compatible to the VPR architecture XML syntax.
   
-``<model>`` should include the models that describe the primitive ``<pb_type>`` in physical mode.
-  
+.. note:: ``<model>`` should include the models that describe the primitive ``<pb_type>`` in physical mode.
+
 .. note:: Currently, OpenFPGA only supports 1 ``<equivalent_sites>`` to be defined under each ``<tile>``
+
+.. option:: <mode packable="<bool">/>
+
+  OpenFPGA allows users to define it a mode is packable for VPR.
+  By default, the packable is set to ``true``. 
+  This is mainly used for the mode that describes the physical implementation, which is typically not packable. Disable it in the packing and signficantly accelerate the packing runtime.
+
+  .. note:: Once a mode is set to unpackable, its child modes will be unpackable as well.
 
 Layout
 ~~~~~~

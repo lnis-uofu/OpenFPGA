@@ -1458,6 +1458,11 @@ static enum e_block_pack_status try_place_atom_block_rec(const t_pb_graph_node* 
     }
     pb_type = pb_graph_node->pb_type;
 
+    /* Xifan Tang: bypass unpackable modes */
+    if (false == pb_type->parent_mode->packable) {
+        return BLK_FAILED_FEASIBLE;
+    }
+
     is_primitive = (pb_type->num_modes == 0);
 
     if (is_primitive) {

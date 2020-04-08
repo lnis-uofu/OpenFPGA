@@ -285,7 +285,7 @@
       <!-- A mode denotes the physical implementation of an I/O 
            This mode will be not packable but is mainly used for fabric verilog generation   
         -->
-      <mode name="physical" disabled_in_pack="true">
+      <mode name="physical" packable="false">
         <pb_type name="iopad" blif_model=".subckt io" num_pb="1">
           <input name="outpad" num_pins="1"/>
           <output name="inpad" num_pins="1"/>
@@ -361,7 +361,7 @@
         <output name="cout" num_pins="1"/>
         <clock name="clk" num_pins="1"/>
         <!-- Physical mode definition begin (physical implementation of the fle) -->
-        <mode name="physical" disabled_in_pack="true">
+        <mode name="physical" packable="false">
           <pb_type name="fabric" num_pb="1">
             <input name="in" num_pins="6"/>
             <input name="cin" num_pins="1"/>
@@ -411,21 +411,26 @@
             </pb_type>
             <interconnect>
               <direct name="direct1" input="fabric.in" output="frac_logic.in"/>
-              <direct name="direct2" input="frac_logic.out[1:0]" output="ff[1:0].D"/>
-              <direct name="direct3" input="fabric.cin" output="adder[0:0].cin"/>
-              <direct name="direct4" input="adder[0:0].cout" output="adder[1:1].cin"/>
-              <direct name="direct5" input="adder[1:1].cout" output="fabric.cout"/>
-              <direct name="direct6" input="frac_logic.lut4_out[0:0]" output="adder[0:0].a"/>
-              <direct name="direct7" input="frac_logic.lut4_out[1:1]" output="adder[0:0].b"/>
-              <direct name="direct8" input="frac_logic.lut4_out[2:2]" output="adder[1:1].a"/>
-              <direct name="direct9" input="frac_logic.lut4_out[3:3]" output="adder[1:1].b"/>
-              <complete name="direct10" input="fabric.clk" output="ff[1:0].clk"/>
-              <mux name="mux1" input="adder[0].sumout ff[0].Q frac_logic.out[0]" output="fabric.out[0]">
+              <direct name="direct2" input="fabric.cin" output="adder[0:0].cin"/>
+              <direct name="direct3" input="adder[0:0].cout" output="adder[1:1].cin"/>
+              <direct name="direct4" input="adder[1:1].cout" output="fabric.cout"/>
+              <direct name="direct5" input="frac_logic.lut4_out[0:0]" output="adder[0:0].a"/>
+              <direct name="direct6" input="frac_logic.lut4_out[1:1]" output="adder[0:0].b"/>
+              <direct name="direct7" input="frac_logic.lut4_out[2:2]" output="adder[1:1].a"/>
+              <direct name="direct8" input="frac_logic.lut4_out[3:3]" output="adder[1:1].b"/>
+              <complete name="complete1" input="fabric.clk" output="ff[1:0].clk"/>
+              <mux name="mux1" input="adder[0].sumout frac_logic.out[0]" output="ff[0].D">
+                <delay_constant max="25e-12" in_port="adder[0].sumout frac_logic.out[0]" out_port="ff[0].D"/>
+              </mux>
+              <mux name="mux2" input="adder[1].sumout frac_logic.out[1]" output="ff[1].D">
+                <delay_constant max="25e-12" in_port="adder[1].sumout frac_logic.out[1]" out_port="ff[1].D"/>
+              </mux>
+              <mux name="mux3" input="adder[0].sumout ff[0].Q frac_logic.out[0]" output="fabric.out[0]">
                 <!-- LUT to output is faster than FF to output on a Stratix IV -->
                 <delay_constant max="25e-12" in_port="frac_logic.out[0]" out_port="fabric.out[0]"/>
                 <delay_constant max="45e-12" in_port="ff[0].Q" out_port="fabric.out[0]"/>
               </mux>
-              <mux name="mux2" input="adder[1].sumout ff[1].Q frac_logic.out[1]" output="fabric.out[1]">
+              <mux name="mux4" input="adder[1].sumout ff[1].Q frac_logic.out[1]" output="fabric.out[1]">
                 <!-- LUT to output is faster than FF to output on a Stratix IV -->
                 <delay_constant max="25e-12" in_port="frac_logic.out[1]" out_port="fabric.out[1]"/>
                 <delay_constant max="45e-12" in_port="ff[1].Q" out_port="fabric.out[1]"/>

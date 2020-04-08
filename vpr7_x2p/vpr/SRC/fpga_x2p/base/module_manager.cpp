@@ -117,7 +117,7 @@ std::string ModuleManager::module_name(const ModuleId& module_id) const {
 
 /* Get the string of a module port type */
 std::string ModuleManager::module_port_type_str(const enum e_module_port_type& port_type) const {
-  std::array<const char*, NUM_MODULE_PORT_TYPES> MODULE_PORT_TYPE_STRING = {{"GLOBAL PORTS", "GPIO PORTS", "INOUT PORTS", "INPUT PORTS", "OUTPUT PORTS", "CLOCK PORTS"}};
+  std::array<const char*, NUM_MODULE_PORT_TYPES> MODULE_PORT_TYPE_STRING = {{"GLOBAL PORTS", "GPIN PORTS", "GPOUT PORTS", "GPIO PORTS", "INOUT PORTS", "INPUT PORTS", "OUTPUT PORTS", "CLOCK PORTS"}};
   return MODULE_PORT_TYPE_STRING[port_type];
 }
 

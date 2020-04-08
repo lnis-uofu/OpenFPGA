@@ -164,6 +164,7 @@ struct s_spice_model_port {
   boolean mode_select;
   int default_val;
   /* Global port properties */
+  boolean is_io;
   boolean is_global;
   boolean is_reset;
   boolean is_set;

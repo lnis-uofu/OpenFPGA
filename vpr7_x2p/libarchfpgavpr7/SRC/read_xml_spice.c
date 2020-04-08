@@ -783,6 +783,11 @@ static void ProcessSpiceModelPort(ezxml_t Node,
   /* Output mast of a fracturable LUT, which is to identify which intermediate LUT output will be connected to outputs */
   ProcessSpiceModelPortLutOutputMask(Node, port);
 
+  if (SPICE_MODEL_PORT_INPUT == port->type) {
+    port->is_io = GetBooleanProperty(Node, "io", FALSE, FALSE);
+    ezxml_set_attr(Node, "io", NULL);
+  }
+
   /* See if this is a global signal 
    * We assume that global signals are shared by all the SPICE Model/blocks.
    * We need to check if other SPICE model has the same port name
@@ -1748,6 +1753,7 @@ CircuitLibrary build_circuit_library(int num_spice_model, t_spice_model* spice_m
 
       circuit_lib.set_port_default_value(port_id, spice_models[imodel].ports[iport].default_val);
 
+      circuit_lib.set_port_is_io(port_id, TRUE == spice_models[imodel].ports[iport].is_io);
       circuit_lib.set_port_is_mode_select(port_id, TRUE == spice_models[imodel].ports[iport].mode_select);
       circuit_lib.set_port_is_global(port_id, TRUE == spice_models[imodel].ports[iport].is_global);
       circuit_lib.set_port_is_reset(port_id, TRUE == spice_models[imodel].ports[iport].is_reset);

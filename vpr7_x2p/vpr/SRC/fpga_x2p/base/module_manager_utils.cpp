@@ -37,7 +37,18 @@ ModuleId add_circuit_model_to_module_manager(ModuleManager& module_manager,
   /* Find global ports and add one by one */
   for (const auto& port : circuit_lib.model_global_ports(circuit_model, false)) {
     BasicPort port_info(circuit_lib.port_prefix(port), circuit_lib.port_size(port));
-    module_manager.add_port(module, port_info, ModuleManager::MODULE_GLOBAL_PORT);  
+    if ( (SPICE_MODEL_PORT_INPUT == circuit_lib.port_type(port))
+      && (false == circuit_lib.port_is_io(port)) ) {
+      module_manager.add_port(module, port_info, ModuleManager::MODULE_GLOBAL_PORT);  
+    } else if (SPICE_MODEL_PORT_CLOCK == circuit_lib.port_type(port)) {
+      module_manager.add_port(module, port_info, ModuleManager::MODULE_GLOBAL_PORT);  
+    } else if ( (SPICE_MODEL_PORT_INPUT == circuit_lib.port_type(port))
+             && (true == circuit_lib.port_is_io(port)) ) {
+      module_manager.add_port(module, port_info, ModuleManager::MODULE_GPIN_PORT);  
+    } else {
+      VTR_ASSERT(SPICE_MODEL_PORT_OUTPUT == circuit_lib.port_type(port));
+      module_manager.add_port(module, port_info, ModuleManager::MODULE_GPOUT_PORT);  
+    }
   }
 
   /* Find other ports and add one by one */
@@ -925,19 +936,35 @@ size_t find_module_num_config_bits(const ModuleManager& module_manager,
 }
 
 /********************************************************************
- * Add GPIO ports to the module:
+ * Add General purpose I/O ports to the module:
  * In this function, the following tasks are done: 
- * 1. find all the GPIO ports from the child modules and build a list of it,
- * 2. Merge all the GPIO ports with the same name
+ * 1. find all the I/O ports from the child modules and build a list of it,
+ * 2. Merge all the I/O ports with the same name
  * 3. add the ports to the pb_module
  * 4. add module nets to connect to the GPIO ports of each sub module 
+ *
+ *   Module
+ *   ----------------------+
+ *                         |
+ *   child[0]              |
+ *   -----------+          |
+ *              |----------+----> outputA[0]
+ *   -----------+          |
+ *                         |
+ *   child[1]              |
+ *   -----------+          |
+ *              |----------+----> outputA[1]
+ *   -----------+          |
+
  *
  * Note: This function should be call ONLY after all the sub modules (instances)
  * have been added to the pb_module!
  * Otherwise, some GPIO ports of the sub modules may be missed!
  *******************************************************************/
-void add_module_gpio_ports_from_child_modules(ModuleManager& module_manager, 
-                                              const ModuleId& module_id) {
+static 
+void add_module_io_ports_from_child_modules(ModuleManager& module_manager, 
+                                            const ModuleId& module_id,
+                                            const ModuleManager::e_module_port_type& module_port_type) {
   std::vector<BasicPort> gpio_ports_to_add;
 
   /* Iterate over the child modules */
@@ -945,7 +972,7 @@ void add_module_gpio_ports_from_child_modules(ModuleManager& module_manager,
     /* Iterate over the child instances */
     for (size_t i = 0; i < module_manager.num_instance(module_id, child); ++i) {
       /* Find all the global ports, whose port type is special */
-      for (BasicPort gpio_port : module_manager.module_ports_by_type(child, ModuleManager::MODULE_GPIO_PORT)) {
+      for (BasicPort gpio_port : module_manager.module_ports_by_type(child, module_port_type)) {
         /* If this port is not mergeable, we update the list */
         bool is_mergeable = false;
         for (BasicPort& gpio_port_to_add : gpio_ports_to_add) {
@@ -973,7 +1000,7 @@ void add_module_gpio_ports_from_child_modules(ModuleManager& module_manager,
   std::vector<ModulePortId> gpio_port_ids;
   /* Add the gpio ports for the module */
   for (const BasicPort& gpio_port_to_add : gpio_ports_to_add) {
-    ModulePortId port_id = module_manager.add_port(module_id, gpio_port_to_add, ModuleManager::MODULE_GPIO_PORT);
+    ModulePortId port_id = module_manager.add_port(module_id, gpio_port_to_add, module_port_type);
     gpio_port_ids.push_back(port_id);
   } 
 
@@ -984,7 +1011,7 @@ void add_module_gpio_ports_from_child_modules(ModuleManager& module_manager,
     /* Iterate over the child instances */
     for (const size_t& child_instance : module_manager.child_module_instances(module_id, child)) {
       /* Find all the global ports, whose port type is special */
-      for (ModulePortId child_gpio_port_id : module_manager.module_port_ids_by_type(child, ModuleManager::MODULE_GPIO_PORT)) {
+      for (ModulePortId child_gpio_port_id : module_manager.module_port_ids_by_type(child, module_port_type)) {
         BasicPort child_gpio_port = module_manager.module_port(child, child_gpio_port_id);
         /* Find the port with the same name! */
         for (size_t iport = 0; iport < gpio_ports_to_add.size(); ++iport) {
@@ -995,8 +1022,22 @@ void add_module_gpio_ports_from_child_modules(ModuleManager& module_manager,
           for (const size_t& pin_id : child_gpio_port.pins()) {
             /* Reach here, it means this is the port we want, create a net and configure its source and sink */
             ModuleNetId net = module_manager.create_module_net(module_id);
-            module_manager.add_module_net_source(module_id, net, module_id, 0, gpio_port_ids[iport], gpio_port_lsb[iport]); 
-            module_manager.add_module_net_sink(module_id, net, child, child_instance, child_gpio_port_id, pin_id); 
+            /* - For GPIO and GPIN ports
+             *   the source of the net is the current module 
+             *   the sink of the net is the child module
+             * - For GPOUT ports
+             *   the source of the net is the child module
+             *   the sink of the net is the current module 
+             */
+            if ( (ModuleManager::MODULE_GPIO_PORT == module_port_type)
+              || (ModuleManager::MODULE_GPIN_PORT == module_port_type) ) {
+              module_manager.add_module_net_source(module_id, net, module_id, 0, gpio_port_ids[iport], gpio_port_lsb[iport]); 
+              module_manager.add_module_net_sink(module_id, net, child, child_instance, child_gpio_port_id, pin_id); 
+            } else {
+              VTR_ASSERT(ModuleManager::MODULE_GPOUT_PORT == module_port_type);
+              module_manager.add_module_net_sink(module_id, net, module_id, 0, gpio_port_ids[iport], gpio_port_lsb[iport]); 
+              module_manager.add_module_net_source(module_id, net, child, child_instance, child_gpio_port_id, pin_id); 
+            }
             /* Update the LSB counter */
             gpio_port_lsb[iport]++;
           }
@@ -1012,6 +1053,27 @@ void add_module_gpio_ports_from_child_modules(ModuleManager& module_manager,
     if (gpio_ports_to_add[iport].get_width() != gpio_port_lsb[iport]) 
     VTR_ASSERT(gpio_ports_to_add[iport].get_width() == gpio_port_lsb[iport]);
   }
+}
+
+/********************************************************************
+ * Add GPIO ports to the module:
+ * In this function, the following tasks are done: 
+ * 1. find all the GPIO ports from the child modules and build a list of it,
+ * 2. Merge all the GPIO ports with the same name
+ * 3. add the ports to the pb_module
+ * 4. add module nets to connect to the GPIO ports of each sub module 
+ *
+ * Note: This function should be call ONLY after all the sub modules (instances)
+ * have been added to the pb_module!
+ * Otherwise, some GPIO ports of the sub modules may be missed!
+ *******************************************************************/
+void add_module_gpio_ports_from_child_modules(ModuleManager& module_manager, 
+                                              const ModuleId& module_id) {
+  add_module_io_ports_from_child_modules(module_manager, module_id, ModuleManager::MODULE_GPIO_PORT);
+
+  add_module_io_ports_from_child_modules(module_manager, module_id, ModuleManager::MODULE_GPIN_PORT);
+
+  add_module_io_ports_from_child_modules(module_manager, module_id, ModuleManager::MODULE_GPOUT_PORT);
 }
 
 /********************************************************************

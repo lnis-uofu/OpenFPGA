@@ -121,7 +121,8 @@ void update_cluster_pin_with_post_routing_results(const DeviceContext& device_ct
     }
 
     /* Ignore used in local cluster only, reserved one CLB pin */
-    if (false == clustering_ctx.clb_nlist.net_sinks(cluster_net_id).size()) {
+    if ( (ClusterNetId::INVALID() != cluster_net_id)
+      && (0 == clustering_ctx.clb_nlist.net_sinks(cluster_net_id).size())) {
       continue;
     }
 

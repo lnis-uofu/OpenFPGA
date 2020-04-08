@@ -262,7 +262,12 @@ ArchDirect read_xml_direct_circuit(pugi::xml_node& Node,
     arch_direct.set_circuit_model(direct, direct_model);
 
     /* Add more information*/
-    std::string direct_type_name = get_attribute(xml_direct, "type", loc_data).as_string();
+    std::string direct_type_name = get_attribute(xml_direct, "type", loc_data, pugiutil::ReqOpt::OPTIONAL).as_string("none");
+    /* If not defined, we go to the next */
+    if (std::string("none") == direct_type_name) {
+      continue;
+    }
+
     e_direct_type direct_type = string_to_direct_type(direct_type_name);
 
     if (NUM_DIRECT_TYPES == direct_type) {
