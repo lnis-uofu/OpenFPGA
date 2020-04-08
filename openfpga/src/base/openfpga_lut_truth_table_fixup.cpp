@@ -7,6 +7,9 @@
 #include "vtr_assert.h"
 #include "vtr_log.h"
 
+/* Headers from openfpgashell library */
+#include "command_exit_codes.h"
+
 /* Headers from vpr library */
 #include "vpr_utils.h"
 
@@ -182,7 +185,6 @@ void update_lut_tt_with_post_packing_results(const AtomContext& atom_ctx,
   }
 }
 
-
 /********************************************************************
  * Top-level function to fix up the lut truth table results after packing is done
  * The problem comes from a mismatch between the packing results and 
@@ -194,8 +196,8 @@ void update_lut_tt_with_post_packing_results(const AtomContext& atom_ctx,
  * This function aims to fix the mess after packing so that the truth table
  * can be synchronized
  *******************************************************************/
-void lut_truth_table_fixup(OpenfpgaContext& openfpga_context,
-                           const Command& cmd, const CommandContext& cmd_context) { 
+int lut_truth_table_fixup(OpenfpgaContext& openfpga_context,
+                          const Command& cmd, const CommandContext& cmd_context) { 
 
   vtr::ScopedStartFinishTimer timer("Fix up LUT truth tables after packing optimization");
 
@@ -206,6 +208,9 @@ void lut_truth_table_fixup(OpenfpgaContext& openfpga_context,
                                           g_vpr_ctx.clustering(),
                                           openfpga_context.mutable_vpr_clustering_annotation(),
                                           cmd_context.option_enable(cmd, opt_verbose));
+
+  /* TODO: should identify the error code from internal function execution */
+  return CMD_EXEC_SUCCESS;
 } 
 
 } /* end namespace openfpga */

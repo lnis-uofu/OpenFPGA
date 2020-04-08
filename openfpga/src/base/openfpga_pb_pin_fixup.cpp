@@ -7,6 +7,9 @@
 #include "vtr_assert.h"
 #include "vtr_log.h"
 
+/* Headers from openfpgashell library */
+#include "command_exit_codes.h"
+
 /* Headers from vpr library */
 #include "vpr_utils.h"
 
@@ -254,8 +257,8 @@ void update_pb_pin_with_post_routing_results(const DeviceContext& device_ctx,
  * This function aims to fix the mess after routing so that the net mapping
  * can be synchronized
  *******************************************************************/
-void pb_pin_fixup(OpenfpgaContext& openfpga_context,
-                  const Command& cmd, const CommandContext& cmd_context) { 
+int pb_pin_fixup(OpenfpgaContext& openfpga_context,
+                 const Command& cmd, const CommandContext& cmd_context) { 
 
   vtr::ScopedStartFinishTimer timer("Fix up pb pin mapping results after routing optimization");
 
@@ -268,6 +271,9 @@ void pb_pin_fixup(OpenfpgaContext& openfpga_context,
                                           openfpga_context.vpr_routing_annotation(),
                                           openfpga_context.mutable_vpr_clustering_annotation(),
                                           cmd_context.option_enable(cmd, opt_verbose));
+
+  /* TODO: should identify the error code from internal function execution */
+  return CMD_EXEC_SUCCESS;
 } 
 
 } /* end namespace openfpga */

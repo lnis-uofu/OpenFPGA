@@ -15,8 +15,8 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void check_netlist_naming_conflict(OpenfpgaContext& openfpga_context,
-                                   const Command& cmd, const CommandContext& cmd_context); 
+int check_netlist_naming_conflict(OpenfpgaContext& openfpga_context,
+                                  const Command& cmd, const CommandContext& cmd_context); 
 
 } /* end namespace openfpga */
 

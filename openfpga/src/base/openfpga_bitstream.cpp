@@ -5,6 +5,9 @@
 #include "vtr_time.h"
 #include "vtr_log.h"
 
+/* Headers from openfpgashell library */
+#include "command_exit_codes.h"
+
 /* Headers from openfpgautil library */
 #include "openfpga_digest.h"
 
@@ -22,8 +25,8 @@ namespace openfpga {
 /********************************************************************
  * A wrapper function to call the build_device_bitstream() in FPGA bitstream
  *******************************************************************/
-void fpga_bitstream(OpenfpgaContext& openfpga_ctx,
-                    const Command& cmd, const CommandContext& cmd_context) {
+int fpga_bitstream(OpenfpgaContext& openfpga_ctx,
+                   const Command& cmd, const CommandContext& cmd_context) {
 
   CommandOptionId opt_verbose = cmd.option("verbose");
   CommandOptionId opt_file = cmd.option("file");
@@ -41,19 +44,25 @@ void fpga_bitstream(OpenfpgaContext& openfpga_ctx,
     write_arch_independent_bitstream_to_xml_file(openfpga_ctx.bitstream_manager(),
                                                  cmd_context.option_value(cmd, opt_file));
   }
+
+  /* TODO: should identify the error code from internal function execution */
+  return CMD_EXEC_SUCCESS;
 }
 
 /********************************************************************
  * A wrapper function to call the build_fabric_bitstream() in FPGA bitstream
  *******************************************************************/
-void build_fabric_bitstream(OpenfpgaContext& openfpga_ctx,
-                            const Command& cmd, const CommandContext& cmd_context) {
+int build_fabric_bitstream(OpenfpgaContext& openfpga_ctx,
+                           const Command& cmd, const CommandContext& cmd_context) {
 
   CommandOptionId opt_verbose = cmd.option("verbose");
 
   openfpga_ctx.mutable_fabric_bitstream() = build_fabric_dependent_bitstream(openfpga_ctx.bitstream_manager(),
                                                                              openfpga_ctx.module_graph(),
                                                                              cmd_context.option_enable(cmd, opt_verbose));
+  
+  /* TODO: should identify the error code from internal function execution */
+  return CMD_EXEC_SUCCESS;
 } 
 
 } /* end namespace openfpga */

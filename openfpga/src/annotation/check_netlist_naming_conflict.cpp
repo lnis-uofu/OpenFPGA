@@ -11,6 +11,9 @@
 #include "vtr_assert.h"
 #include "vtr_log.h"
 
+/* Headers from openfpgashell library */
+#include "command_exit_codes.h"
+
 /* Headers from archopenfpga library */
 #include "write_xml_utils.h" 
 
@@ -213,8 +216,8 @@ void print_netlist_naming_fix_report(const std::string& fname,
  * in the users' BLIF netlist that violates the syntax of OpenFPGA
  * fabric generator, i.e., Verilog generator and SPICE generator
  *******************************************************************/
-void check_netlist_naming_conflict(OpenfpgaContext& openfpga_context,
-                                   const Command& cmd, const CommandContext& cmd_context) {
+int check_netlist_naming_conflict(OpenfpgaContext& openfpga_context,
+                                  const Command& cmd, const CommandContext& cmd_context) {
   vtr::ScopedStartFinishTimer timer("Check naming violations of netlist blocks and nets");
 
   /* By default, we replace all the illegal characters with '_' */
@@ -231,7 +234,15 @@ void check_netlist_naming_conflict(OpenfpgaContext& openfpga_context,
                   num_conflicts);
     VTR_LOGV(0 == num_conflicts, 
              "Check naming conflicts in the netlist passed.\n");
-    return;
+
+    /* If we see conflicts, report minor error */
+    if (0 < num_conflicts) {
+      return CMD_EXEC_MINOR_ERROR;
+    }
+
+    /* Otherwise, we should see zero conflicts */
+    VTR_ASSERT(0 == num_conflicts);
+    return CMD_EXEC_SUCCESS;
   }
 
   /* If the auto correction is enabled, we apply a fix */
@@ -248,6 +259,9 @@ void check_netlist_naming_conflict(OpenfpgaContext& openfpga_context,
               cmd_context.option_value(cmd, opt_report).c_str());
     }
   } 
+
+  /* TODO: should identify the error code from internal function execution */
+  return CMD_EXEC_SUCCESS;
 } 
 
 } /* end namespace openfpga */

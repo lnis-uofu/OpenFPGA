@@ -15,8 +15,8 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void pb_pin_fixup(OpenfpgaContext& openfpga_context, 
-                  const Command& cmd, const CommandContext& cmd_context); 
+int pb_pin_fixup(OpenfpgaContext& openfpga_context, 
+                 const Command& cmd, const CommandContext& cmd_context); 
 
 } /* end namespace openfpga */
 

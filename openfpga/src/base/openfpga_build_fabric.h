@@ -15,8 +15,8 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void build_fabric(OpenfpgaContext& openfpga_ctx,
-                  const Command& cmd, const CommandContext& cmd_context); 
+int build_fabric(OpenfpgaContext& openfpga_ctx,
+                 const Command& cmd, const CommandContext& cmd_context); 
 
 } /* end namespace openfpga */
 

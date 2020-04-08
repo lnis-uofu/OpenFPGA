@@ -5,6 +5,9 @@
 #include "vtr_time.h"
 #include "vtr_log.h"
 
+/* Headers from openfpgashell library */
+#include "command_exit_codes.h"
+
 #include "device_rr_gsb.h"
 #include "device_rr_gsb_utils.h"
 #include "build_device_module.h"
@@ -56,8 +59,8 @@ void compress_routing_hierarchy(OpenfpgaContext& openfpga_ctx,
 /********************************************************************
  * Build the module graph for FPGA device
  *******************************************************************/
-void build_fabric(OpenfpgaContext& openfpga_ctx,
-                  const Command& cmd, const CommandContext& cmd_context) { 
+int build_fabric(OpenfpgaContext& openfpga_ctx,
+                 const Command& cmd, const CommandContext& cmd_context) { 
 
   CommandOptionId opt_compress_routing = cmd.option("compress_routing");
   CommandOptionId opt_duplicate_grid_pin = cmd.option("duplicate_grid_pin");
@@ -77,6 +80,9 @@ void build_fabric(OpenfpgaContext& openfpga_ctx,
                                                                   cmd_context.option_enable(cmd, opt_compress_routing),
                                                                   cmd_context.option_enable(cmd, opt_duplicate_grid_pin),
                                                                   cmd_context.option_enable(cmd, opt_verbose));
+
+  /* TODO: should identify the error code from internal function execution */
+  return CMD_EXEC_SUCCESS;
 } 
 
 } /* end namespace openfpga */

@@ -15,11 +15,11 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void write_fabric_verilog(OpenfpgaContext& openfpga_ctx,
-                          const Command& cmd, const CommandContext& cmd_context); 
+int write_fabric_verilog(OpenfpgaContext& openfpga_ctx,
+                         const Command& cmd, const CommandContext& cmd_context); 
 
-void write_verilog_testbench(OpenfpgaContext& openfpga_ctx,
-                             const Command& cmd, const CommandContext& cmd_context); 
+int write_verilog_testbench(OpenfpgaContext& openfpga_ctx,
+                            const Command& cmd, const CommandContext& cmd_context); 
 
 } /* end namespace openfpga */
 

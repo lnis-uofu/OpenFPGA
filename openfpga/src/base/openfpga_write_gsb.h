@@ -15,8 +15,8 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void write_gsb(const OpenfpgaContext& openfpga_ctx,
-               const Command& cmd, const CommandContext& cmd_context); 
+int write_gsb(const OpenfpgaContext& openfpga_ctx,
+              const Command& cmd, const CommandContext& cmd_context); 
 
 } /* end namespace openfpga */
 
