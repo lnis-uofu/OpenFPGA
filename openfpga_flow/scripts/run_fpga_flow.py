@@ -47,6 +47,7 @@ task_script_dir = os.path.dirname(os.path.abspath(__file__))
 script_env_vars = ({"PATH": {
     "OPENFPGA_FLOW_PATH": task_script_dir,
     "ARCH_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "arch"),
+    "OPENFPGA_SHELLSCRIPT_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "OpenFPGAShellScripts"),
     "BENCH_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "benchmarks"),
     "TECH_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "tech"),
     "SPICENETLIST_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "SpiceNetlists"),
@@ -78,6 +79,13 @@ parser.add_argument('--flow_config', type=str,
 parser.add_argument('--run_dir', type=str,
                     default=os.path.join(openfpga_base_dir,  'tmp'),
                     help="Directory to store intermidiate file & final results")
+parser.add_argument('--openfpga_shell_template', type=str,
+                    default=os.path.join(openfpga_base_dir, 'openfpga_flow',
+                                         'OpenFPGAShellScripts',
+                                         'example_script.openfpga'),
+                    help="Sample openfpga shell script")
+parser.add_argument('--openfpga_arch_file', type=str,
+                    help="Openfpga architecture file for shell")
 parser.add_argument('--yosys_tmpl', type=str,
                     help="Alternate yosys template, generates top_module.blif")
 parser.add_argument('--disp', action="store_true",
@@ -249,7 +257,10 @@ def main():
     #     run_abc_vtr()
     # if (args.fpga_flow == "vtr_standard"):
     #     run_abc_for_standarad()
-    run_vpr()
+    if args.openfpga_shell_template:
+        run_openfpga_shell()
+    else:
+        run_vpr()
     if args.end_flow_with_test:
         run_netlists_verification()
 
@@ -323,10 +334,10 @@ def validate_command_line_arguments():
                     clean_up_and_exit("'%s' argument depends on (%s) argumets" %
                                       (eacharg, ", ".join(dependent).replace("|", " or ")))
 
-    # Filter provided architecrue files
+    # Filter provided architecture files
     args.arch_file = os.path.abspath(args.arch_file)
     if not os.path.isfile(args.arch_file):
-        clean_up_and_exit("Architecure file not found. -%s", args.arch_file)
+        clean_up_and_exit("Architecture file not found. -%s", args.arch_file)
 
     # Filter provided benchmark files
     for index, everyinput in enumerate(args.benchmark_files):
@@ -579,6 +590,15 @@ def collect_files_for_vpr():
         clean_up_and_exit("Provided base_verilog file not found")
     shutil.copy(args.base_verilog, args.top_module+"_output_verilog.v")
 
+    # Sanitize provided openshell template, if provided
+    if not os.path.isfile(args.openfpga_shell_template or ""):
+        logger.error("Openfpga shell file - %s" % args.openfpga_shell_template)
+        clean_up_and_exit("Provided openfpga_shell_template" +
+                          f" {args.openfpga_shell_template} file not found")
+    else:
+        shutil.copy(args.openfpga_shell_template,
+                    args.top_module+"_template.openfpga")
+
 
 def run_vpr():
     ExecTime["VPRStart"] = time.time()
@@ -644,6 +664,25 @@ def run_vpr():
                           r_filename="vpr_power_stat",
                           parse_section="power")
     ExecTime["VPREnd"] = time.time()
+
+
+def run_openfpga_shell():
+    # bench_blif, fixed_chan_width, logfile, route_only=False
+    tmpl = Template(open(args.top_module+"_template.openfpga",
+                         encoding='utf-8').read())
+
+    path_variables = script_env_vars["PATH"]
+    path_variables["VPR_ARCH_FILE"] = args.arch_file
+    path_variables["OPENFPGA_ARCH_FILE"] = args.openfpga_arch_file
+    path_variables["VPR_TESTBENCH_BLIF"] = args.top_module+".blif"
+    path_variables["ACTIVITY_FILE"] = args.top_module+"_ace_out.act"
+    path_variables["REFERENCE_VERILOG_TESTBENCH"] = args.top_module + \
+        "_output_verilog.v"
+    with open(args.top_module+"_run.openfpga", 'w', encoding='utf-8') as archfile:
+        archfile.write(tmpl.substitute(path_variables))
+    command = [cad_tools["openfpga_shell_path"], "-f",
+               args.top_module+"_run.openfpga"]
+    run_command("OpenFPGA Shell Run", "openfpgashell.log", command)
 
 
 def run_standard_vpr(bench_blif, fixed_chan_width, logfile, route_only=False):
