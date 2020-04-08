@@ -302,6 +302,14 @@ void Shell<T>::run_script_mode(const char* script_file_name, T& context) {
     if (cmd_end_pos != std::string::npos) {
       cmd_part = line.substr(0, cmd_end_pos);
     }
+    /* Remove the space at the beginning of the line */
+    cmd_part.erase(cmd_part.begin(), std::find_if(cmd_part.begin(), cmd_part.end(), [](int ch) {
+      return !std::isspace(ch);
+    }));
+    /* Remove the space at the end of the line */
+    cmd_part.erase(std::find_if(cmd_part.rbegin(), cmd_part.rend(), [](int ch) {
+      return !std::isspace(ch);
+    }).base(), cmd_part.end());
     /* Process the command only when the line is not empty */
     if (!cmd_part.empty()) {
       execute_command(cmd_part.c_str(), context);

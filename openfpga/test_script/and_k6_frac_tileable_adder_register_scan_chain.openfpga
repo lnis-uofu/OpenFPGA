@@ -28,8 +28,8 @@ lut_truth_table_fixup #--verbose
 build_fabric --compress_routing --duplicate_grid_pin --verbose
 
 # Repack the netlist to physical pbs
-# This must be done before bitstream generator and testbench generation
-# Strongly recommend it is done after all the fix-up have been applied
+  # This must be done before bitstream generator and testbench generation
+  # Strongly recommend it is done after all the fix-up have been applied
 repack #--verbose
 
 # Build the bitstream 
