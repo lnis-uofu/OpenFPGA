@@ -28,8 +28,8 @@ lut_truth_table_fixup #--verbose
 build_fabric --compress_routing --duplicate_grid_pin --verbose
 
 # Repack the netlist to physical pbs
-  # This must be done before bitstream generator and testbench generation
-  # Strongly recommend it is done after all the fix-up have been applied
+# This must be done before bitstream generator and testbench generation
+# Strongly recommend it is done after all the fix-up have been applied
 repack #--verbose
 
 # Build the bitstream 
@@ -56,7 +56,8 @@ write_verilog_testbench --file /var/tmp/xtang/openfpga_test_src/SRC --reference_
 write_pnr_sdc --file /var/tmp/xtang/openfpga_test_src/SDC 
 
 # Write the SDC to run timing analysis for a mapped FPGA fabric
-write_analysis_sdc --file /var/tmp/xtang/openfpga_test_src/SDC_analysis
+write_analysis_sdc \
+ --file /var/tmp/xtang/openfpga_test_src/SDC_analysis
 
 # Finish and exit OpenFPGA
 exit
