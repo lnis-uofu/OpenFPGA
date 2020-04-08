@@ -182,7 +182,7 @@ void write_device_rr_gsb_to_xml(const char* sb_xml_dir,
   std::string xml_dir_name = format_dir_path(std::string(sb_xml_dir));
 
   /* Create directories */
-  create_dir_path(xml_dir_name.c_str());
+  create_directory(xml_dir_name);
 
   vtr::Point<size_t> sb_range = device_rr_gsb.get_gsb_range();
 

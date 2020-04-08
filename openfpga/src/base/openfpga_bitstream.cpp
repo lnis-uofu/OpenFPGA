@@ -36,7 +36,7 @@ void fpga_bitstream(OpenfpgaContext& openfpga_ctx,
     std::string src_dir_path = find_path_dir_name(cmd_context.option_value(cmd, opt_file));
 
     /* Create directories */
-    create_dir_path(src_dir_path.c_str());
+    create_directory(src_dir_path);
 
     write_arch_independent_bitstream_to_xml_file(openfpga_ctx.bitstream_manager(),
                                                  cmd_context.option_value(cmd, opt_file));

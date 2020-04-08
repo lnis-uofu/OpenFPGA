@@ -42,7 +42,7 @@ void write_pnr_sdc(OpenfpgaContext& openfpga_ctx,
   std::string sdc_dir_path = format_dir_path(cmd_context.option_value(cmd, opt_output_dir));
 
   /* Create directories */
-  create_dir_path(sdc_dir_path.c_str());
+  create_directory(sdc_dir_path);
 
   PnrSdcOption options(sdc_dir_path);
 
@@ -96,7 +96,7 @@ void write_analysis_sdc(OpenfpgaContext& openfpga_ctx,
   std::string sdc_dir_path = format_dir_path(cmd_context.option_value(cmd, opt_output_dir));
 
   /* Create directories */
-  create_dir_path(sdc_dir_path.c_str());
+  create_directory(sdc_dir_path);
 
   AnalysisSdcOption options(sdc_dir_path);
   options.set_generate_sdc_analysis(true);
