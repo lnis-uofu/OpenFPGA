@@ -174,7 +174,7 @@
       <design_technology type="cmos"/>
       <input_buffer exist="true" circuit_model_name="INVTX1"/>
       <output_buffer exist="true" circuit_model_name="INVTX1"/>
-      <port type="inout" prefix="pad" size="1"/>
+      <port type="inout" prefix="pad" size="1" is_global="true" is_io="true"/>
       <port type="sram" prefix="en" size="1" mode_select="true" circuit_model_name="sc_dff_compact" default_val="1"/>
       <port type="input" prefix="outpad" size="1"/>
       <port type="output" prefix="inpad" size="1"/>
@@ -209,7 +209,7 @@
       <port type="output" prefix="rx_data" size="80"/>
       <port type="clock" prefix="tx_clk" size="1" default_val="0"/>
       <port type="clock" prefix="rx_clk" size="1" default_val="0"/>
-      <port type="inout" prefix="pad" size="80"/>
+      <port type="inout" prefix="pad" size="80" is_global="true" is_io="true"/>
     </circuit_model>
   </circuit_library>
   <configuration_protocol>
