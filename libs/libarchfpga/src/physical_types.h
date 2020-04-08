@@ -166,7 +166,7 @@ enum e_interconnect {
     NUM_INTERC_TYPES /* Xifan Tang - Invalid types for interconnect */
 };
 /* Xifan Tang - String versions of interconnection type */
-constexpr std::array<const char*, NUM_INTERC_TYPES> INTERCONNECT_TYPE_STRING = {{"complete", "direct", "mux"}}; 
+constexpr std::array<const char*, NUM_INTERC_TYPES> INTERCONNECT_TYPE_STRING = {{"unknown", "complete", "direct", "mux"}}; 
 
 /* Orientations. */
 enum e_side : unsigned char {
