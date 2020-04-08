@@ -80,9 +80,6 @@ parser.add_argument('--run_dir', type=str,
                     default=os.path.join(openfpga_base_dir,  'tmp'),
                     help="Directory to store intermidiate file & final results")
 parser.add_argument('--openfpga_shell_template', type=str,
-                    default=os.path.join(openfpga_base_dir, 'openfpga_flow',
-                                         'OpenFPGAShellScripts',
-                                         'example_script.openfpga'),
                     help="Sample openfpga shell script")
 parser.add_argument('--openfpga_arch_file', type=str,
                     help="Openfpga architecture file for shell")
@@ -258,6 +255,7 @@ def main():
     # if (args.fpga_flow == "vtr_standard"):
     #     run_abc_for_standarad()
     if args.openfpga_shell_template:
+        logger.info("Runing OpenFPGA Shell Engine ")
         run_openfpga_shell()
     else:
         run_vpr()
@@ -591,13 +589,15 @@ def collect_files_for_vpr():
     shutil.copy(args.base_verilog, args.top_module+"_output_verilog.v")
 
     # Sanitize provided openshell template, if provided
-    if not os.path.isfile(args.openfpga_shell_template or ""):
-        logger.error("Openfpga shell file - %s" % args.openfpga_shell_template)
-        clean_up_and_exit("Provided openfpga_shell_template" +
-                          f" {args.openfpga_shell_template} file not found")
-    else:
-        shutil.copy(args.openfpga_shell_template,
-                    args.top_module+"_template.openfpga")
+    if (args.openfpga_shell_template):
+        if not os.path.isfile(args.openfpga_shell_template or ""):
+            logger.error("Openfpga shell file - %s" %
+                         args.openfpga_shell_template)
+            clean_up_and_exit("Provided openfpga_shell_template" +
+                              f" {args.openfpga_shell_template} file not found")
+        else:
+            shutil.copy(args.openfpga_shell_template,
+                        args.top_module+"_template.openfpga")
 
 
 def run_vpr():
