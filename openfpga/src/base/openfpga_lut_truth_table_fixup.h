@@ -15,8 +15,8 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void lut_truth_table_fixup(OpenfpgaContext& openfpga_context, 
-                           const Command& cmd, const CommandContext& cmd_context); 
+int lut_truth_table_fixup(OpenfpgaContext& openfpga_context, 
+                          const Command& cmd, const CommandContext& cmd_context); 
 
 } /* end namespace openfpga */
 

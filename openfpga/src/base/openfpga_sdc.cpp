@@ -5,6 +5,9 @@
 #include "vtr_time.h"
 #include "vtr_log.h"
 
+/* Headers from openfpgashell library */
+#include "command_exit_codes.h"
+
 /* Headers from openfpgautil library */
 #include "openfpga_digest.h"
 
@@ -22,8 +25,8 @@ namespace openfpga {
 /********************************************************************
  * A wrapper function to call the PnR SDC generator of FPGA-SDC
  *******************************************************************/
-void write_pnr_sdc(OpenfpgaContext& openfpga_ctx,
-                   const Command& cmd, const CommandContext& cmd_context) {
+int write_pnr_sdc(OpenfpgaContext& openfpga_ctx,
+                  const Command& cmd, const CommandContext& cmd_context) {
 
   CommandOptionId opt_output_dir = cmd.option("file");
   CommandOptionId opt_constrain_global_port = cmd.option("constrain_global_port");
@@ -42,7 +45,7 @@ void write_pnr_sdc(OpenfpgaContext& openfpga_ctx,
   std::string sdc_dir_path = format_dir_path(cmd_context.option_value(cmd, opt_output_dir));
 
   /* Create directories */
-  create_dir_path(sdc_dir_path.c_str());
+  create_directory(sdc_dir_path);
 
   PnrSdcOption options(sdc_dir_path);
 
@@ -80,13 +83,16 @@ void write_pnr_sdc(OpenfpgaContext& openfpga_ctx,
                   global_ports,
                   openfpga_ctx.flow_manager().compress_routing());
   }
+
+  /* TODO: should identify the error code from internal function execution */
+  return CMD_EXEC_SUCCESS;
 } 
 
 /********************************************************************
  * A wrapper function to call the analysis SDC generator of FPGA-SDC
  *******************************************************************/
-void write_analysis_sdc(OpenfpgaContext& openfpga_ctx,
-                        const Command& cmd, const CommandContext& cmd_context) {
+int write_analysis_sdc(OpenfpgaContext& openfpga_ctx,
+                       const Command& cmd, const CommandContext& cmd_context) {
 
   CommandOptionId opt_output_dir = cmd.option("file");
 
@@ -96,7 +102,7 @@ void write_analysis_sdc(OpenfpgaContext& openfpga_ctx,
   std::string sdc_dir_path = format_dir_path(cmd_context.option_value(cmd, opt_output_dir));
 
   /* Create directories */
-  create_dir_path(sdc_dir_path.c_str());
+  create_directory(sdc_dir_path);
 
   AnalysisSdcOption options(sdc_dir_path);
   options.set_generate_sdc_analysis(true);
@@ -114,6 +120,9 @@ void write_analysis_sdc(OpenfpgaContext& openfpga_ctx,
                        global_ports,
                        openfpga_ctx.flow_manager().compress_routing());
   }
+
+  /* TODO: should identify the error code from internal function execution */
+  return CMD_EXEC_SUCCESS;
 }
 
 } /* end namespace openfpga */

@@ -63,19 +63,19 @@ void fpga_fabric_verilog(ModuleManager& module_manager,
   std::string src_dir_path = format_dir_path(options.output_directory());
 
   /* Create directories */
-  create_dir_path(src_dir_path.c_str());
+  create_directory(src_dir_path);
 
   /* Sub directory under SRC directory to contain all the primitive block netlists */
   std::string submodule_dir_path = src_dir_path + std::string(DEFAULT_SUBMODULE_DIR_NAME);
-  create_dir_path(submodule_dir_path.c_str());
+  create_directory(submodule_dir_path);
 
   /* Sub directory under SRC directory to contain all the logic block netlists */
   std::string lb_dir_path = src_dir_path + std::string(DEFAULT_LB_DIR_NAME);
-  create_dir_path(lb_dir_path.c_str());
+  create_directory(lb_dir_path);
 
   /* Sub directory under SRC directory to contain all the routing block netlists */
   std::string rr_dir_path = src_dir_path + std::string(DEFAULT_RR_DIR_NAME);
-  create_dir_path(rr_dir_path.c_str());
+  create_directory(rr_dir_path);
 
   /* Print Verilog files containing preprocessing flags */
   print_verilog_preprocessing_flags_netlist(std::string(src_dir_path),
@@ -153,7 +153,7 @@ void fpga_verilog_testbench(const ModuleManager& module_manager,
   std::string netlist_name = atom_ctx.nlist.netlist_name();
 
   /* Create directories */
-  create_dir_path(src_dir_path.c_str());
+  create_directory(src_dir_path);
 
   /* TODO: check if this works here. This function was in fabric generator */
   print_verilog_simulation_preprocessing_flags(std::string(src_dir_path),

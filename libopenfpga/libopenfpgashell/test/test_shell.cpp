@@ -15,16 +15,20 @@ class ShellContext {
 };
 
 static
-void shell_execute_set(ShellContext& context, 
+int shell_execute_set(ShellContext& context, 
                        const Command& cmd, const CommandContext& cmd_context) {
   CommandOptionId opt_id = cmd.option("value");
   /* Get the value of a in the command context */
   context.a = std::atoi(cmd_context.option_value(cmd, opt_id).c_str());
+
+  return CMD_EXEC_SUCCESS; 
 }
 
 static
-void shell_execute_print(ShellContext& context) {
+int shell_execute_print(ShellContext& context) {
   VTR_LOG("a=%d\n", context.a);
+
+  return CMD_EXEC_SUCCESS; 
 }
 
 static
@@ -35,7 +39,7 @@ int shell_execute_print_macro(int argc, char** argv) {
     VTR_LOG("\t[%d]: %s\n", iarg, argv[iarg]);
   }
 
-  return 0;
+  return CMD_EXEC_SUCCESS; 
 }
 
 int main(int argc, char** argv) {

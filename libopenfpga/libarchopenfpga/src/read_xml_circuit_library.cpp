@@ -489,9 +489,7 @@ void read_xml_circuit_port(pugi::xml_node& xml_port,
   /* Identify if the port is for io, this is only applicable to INPUT ports.
    * By default, it will NOT be a mode selection port
    */
-  if (CIRCUIT_MODEL_PORT_INPUT == circuit_lib.port_type(port)) {
-    circuit_lib.set_port_is_io(port, get_attribute(xml_port, "io", loc_data, pugiutil::ReqOpt::OPTIONAL).as_bool(false));
-  } 
+  circuit_lib.set_port_is_io(port, get_attribute(xml_port, "is_io", loc_data, pugiutil::ReqOpt::OPTIONAL).as_bool(false));
 
   /* Identify if the port is for mode selection, this is only applicable to SRAM ports.
    * By default, it will NOT be a mode selection port

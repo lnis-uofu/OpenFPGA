@@ -8,6 +8,9 @@
 #include "vtr_assert.h"
 #include "vtr_log.h"
 
+/* Headers from openfpgashell library */
+#include "command_exit_codes.h"
+
 /* Headers from vpr library */
 #include "read_activity.h"
 
@@ -59,8 +62,8 @@ bool is_vpr_rr_graph_supported(const RRGraph& rr_graph) {
  * - physical pb_graph nodes and pb_graph pins
  * - circuit models for global routing architecture
  *******************************************************************/
-void link_arch(OpenfpgaContext& openfpga_ctx,
-               const Command& cmd, const CommandContext& cmd_context) { 
+int link_arch(OpenfpgaContext& openfpga_ctx,
+              const Command& cmd, const CommandContext& cmd_context) { 
 
   vtr::ScopedStartFinishTimer timer("Link OpenFPGA architecture to VPR architecture");
 
@@ -105,7 +108,7 @@ void link_arch(OpenfpgaContext& openfpga_ctx,
    * - DeviceRRGSB 
    */
   if (false == is_vpr_rr_graph_supported(g_vpr_ctx.device().rr_graph)) {
-    return;
+    return CMD_EXEC_FATAL_ERROR;
   }
 
   annotate_device_rr_gsb(g_vpr_ctx.device(),
@@ -147,6 +150,9 @@ void link_arch(OpenfpgaContext& openfpga_ctx,
   annotate_simulation_setting(g_vpr_ctx.atom(),
                               openfpga_ctx.net_activity(),
                               openfpga_ctx.mutable_arch().sim_setting);
+
+  /* TODO: should identify the error code from internal function execution */
+  return CMD_EXEC_SUCCESS;
 } 
 
 } /* end namespace openfpga */

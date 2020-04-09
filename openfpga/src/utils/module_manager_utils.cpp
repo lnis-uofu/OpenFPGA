@@ -37,8 +37,9 @@ ModuleId add_circuit_model_to_module_manager(ModuleManager& module_manager,
 
   /* Add ports */
   /* Find global ports and add one by one 
-   * Global input ports will be considered as global port in the context of module manager
-   * Global output ports will be considered as spy port in the context of module manager
+   * Non-I/O Global input ports will be considered as global port to be shorted wired in the context of module manager
+   * I/O Global output ports will be considered as general purpose output port in the context of module manager
+   * I/O Global inout ports will be considered as general purpose i/o port in the context of module manager
    */
   for (const auto& port : circuit_lib.model_global_ports(circuit_model, false)) {
     BasicPort port_info(circuit_lib.port_prefix(port), circuit_lib.port_size(port));
@@ -50,9 +51,12 @@ ModuleId add_circuit_model_to_module_manager(ModuleManager& module_manager,
     } else if ( (CIRCUIT_MODEL_PORT_INPUT == circuit_lib.port_type(port))
              && (true == circuit_lib.port_is_io(port)) ) {
       module_manager.add_port(module, port_info, ModuleManager::MODULE_GPIN_PORT);  
-    } else {
-      VTR_ASSERT(CIRCUIT_MODEL_PORT_OUTPUT == circuit_lib.port_type(port));
+    } else if (CIRCUIT_MODEL_PORT_OUTPUT == circuit_lib.port_type(port)) {
+      VTR_ASSERT(true == circuit_lib.port_is_io(port));
       module_manager.add_port(module, port_info, ModuleManager::MODULE_GPOUT_PORT);  
+    } else if ( (CIRCUIT_MODEL_PORT_INOUT == circuit_lib.port_type(port)) 
+             && (true == circuit_lib.port_is_io(port)) ) {
+      module_manager.add_port(module, port_info, ModuleManager::MODULE_GPIO_PORT);  
     }
   }
 

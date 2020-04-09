@@ -194,7 +194,7 @@ FPGA-SDC
 
   - ``--constrain_zero_delay_paths`` Constrain all the zero-delay paths in FPGA fabric
 
-  .. note:: Zero-delay path may cause errors in some PnR tools as it is considered illegal
+    .. note:: Zero-delay path may cause errors in some PnR tools as it is considered illegal
   
   - ``--verbose`` Enable verbose output
 

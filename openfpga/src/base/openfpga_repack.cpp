@@ -5,6 +5,9 @@
 #include "vtr_time.h"
 #include "vtr_log.h"
 
+/* Headers from openfpgashell library */
+#include "command_exit_codes.h"
+
 #include "build_physical_truth_table.h"
 #include "repack.h"
 #include "openfpga_repack.h"
@@ -18,8 +21,8 @@ namespace openfpga {
 /********************************************************************
  * A wrapper function to call the fabric_verilog function of FPGA-Verilog 
  *******************************************************************/
-void repack(OpenfpgaContext& openfpga_ctx,
-            const Command& cmd, const CommandContext& cmd_context) {
+int repack(OpenfpgaContext& openfpga_ctx,
+           const Command& cmd, const CommandContext& cmd_context) {
 
   CommandOptionId opt_verbose = cmd.option("verbose");
 
@@ -35,6 +38,9 @@ void repack(OpenfpgaContext& openfpga_ctx,
                                   g_vpr_ctx.clustering(),
                                   openfpga_ctx.vpr_device_annotation(),
                                   openfpga_ctx.arch().circuit_lib); 
+
+  /* TODO: should identify the error code from internal function execution */
+  return CMD_EXEC_SUCCESS;
 } 
 
 } /* end namespace openfpga */

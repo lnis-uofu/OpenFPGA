@@ -5,6 +5,9 @@
 #include "vtr_time.h"
 #include "vtr_log.h"
 
+/* Headers from openfpgashell library */
+#include "command_exit_codes.h"
+
 #include "verilog_api.h"
 #include "openfpga_verilog.h"
 
@@ -17,8 +20,8 @@ namespace openfpga {
 /********************************************************************
  * A wrapper function to call the fabric Verilog generator of FPGA-Verilog 
  *******************************************************************/
-void write_fabric_verilog(OpenfpgaContext& openfpga_ctx,
-                          const Command& cmd, const CommandContext& cmd_context) {
+int write_fabric_verilog(OpenfpgaContext& openfpga_ctx,
+                         const Command& cmd, const CommandContext& cmd_context) {
 
   CommandOptionId opt_output_dir = cmd.option("file");
   CommandOptionId opt_explicit_port_mapping = cmd.option("explicit_port_mapping");
@@ -48,13 +51,16 @@ void write_fabric_verilog(OpenfpgaContext& openfpga_ctx,
                       openfpga_ctx.vpr_device_annotation(),
                       openfpga_ctx.device_rr_gsb(),
                       options);
+
+  /* TODO: should identify the error code from internal function execution */
+  return CMD_EXEC_SUCCESS;
 } 
 
 /********************************************************************
  * A wrapper function to call the Verilog testbench generator of FPGA-Verilog 
  *******************************************************************/
-void write_verilog_testbench(OpenfpgaContext& openfpga_ctx,
-                             const Command& cmd, const CommandContext& cmd_context) {
+int write_verilog_testbench(OpenfpgaContext& openfpga_ctx,
+                            const Command& cmd, const CommandContext& cmd_context) {
 
   CommandOptionId opt_output_dir = cmd.option("file");
   CommandOptionId opt_reference_benchmark = cmd.option("reference_benchmark_file_path");
@@ -87,6 +93,9 @@ void write_verilog_testbench(OpenfpgaContext& openfpga_ctx,
                          openfpga_ctx.arch().sim_setting,
                          openfpga_ctx.arch().config_protocol.type(),
                          options);
+
+  /* TODO: should identify the error code from internal function execution */
+  return CMD_EXEC_SUCCESS;
 } 
 
 } /* end namespace openfpga */

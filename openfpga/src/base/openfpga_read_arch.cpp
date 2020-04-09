@@ -5,6 +5,9 @@
 /* Headers from vtrutil library */
 #include "vtr_log.h"
 
+/* Headers from openfpgashell library */
+#include "command_exit_codes.h"
+
 /* Headers from archopenfpga library */
 #include "read_xml_openfpga_arch.h"
 #include "check_circuit_library.h"
@@ -22,8 +25,8 @@ namespace openfpga {
  * The command will accept an option '--file' which is the architecture
  * file provided by users  
  *******************************************************************/
-void read_arch(OpenfpgaContext& openfpga_context,
-               const Command& cmd, const CommandContext& cmd_context) {
+int read_arch(OpenfpgaContext& openfpga_context,
+              const Command& cmd, const CommandContext& cmd_context) {
   /* Check the option '--file' is enabled or not 
    * Actually, it must be enabled as the shell interface will check 
    * before reaching this fuction
@@ -44,6 +47,9 @@ void read_arch(OpenfpgaContext& openfpga_context,
    * 3. Simulation settings (TODO)
    */
   check_circuit_library(openfpga_context.arch().circuit_lib);
+
+  /* TODO: should identify the error code from internal function execution */
+  return CMD_EXEC_SUCCESS;
 } 
 
 /********************************************************************
@@ -53,8 +59,8 @@ void read_arch(OpenfpgaContext& openfpga_context,
  * The command will accept an option '--file' which is the architecture
  * file provided by users  
  *******************************************************************/
-void write_arch(const OpenfpgaContext& openfpga_context,
-                const Command& cmd, const CommandContext& cmd_context) {
+int write_arch(const OpenfpgaContext& openfpga_context,
+               const Command& cmd, const CommandContext& cmd_context) {
   /* Check the option '--file' is enabled or not 
    * Actually, it must be enabled as the shell interface will check 
    * before reaching this fuction
@@ -68,6 +74,9 @@ void write_arch(const OpenfpgaContext& openfpga_context,
   VTR_LOG("Writing XML architecture to '%s'...\n",
           arch_file_name.c_str());
   write_xml_openfpga_arch(arch_file_name.c_str(), openfpga_context.arch());
+
+  /* TODO: should identify the error code from internal function execution */
+  return CMD_EXEC_SUCCESS;
 } 
 
 } /* end namespace openfpga */

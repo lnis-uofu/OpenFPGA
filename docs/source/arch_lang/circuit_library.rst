@@ -272,7 +272,7 @@ A circuit model may consist of a number of ports. The port list is mandatory in 
 
   - ``io="true|false"`` Specify if this port should be treated as an I/O port of an FPGA fabric. When this is enabled, this port of each circuit model instanciated in FPGA will be added as an I/O of an FPGA.
 
-    .. note:: ``io`` is only valid for ``input`` ports
+    .. note:: global ``output`` ports must be ``io`` ports
 
   - ``mode_select="true|false"`` Specify if this port controls the mode switching in a configurable logic block. This is due to that a configurable logic block can operate in different modes, which is controlled by SRAM bits.
 
@@ -296,3 +296,113 @@ A circuit model may consist of a number of ports. The port list is mandatory in 
 .. note::  Different types of ``circuit_model`` have different XML syntax, with which users can highly customize their circuit topologies. See refer to examples of :ref:``circuit_model_example`` for more details.
 
 .. note:: Note that we have a list of reserved port names, which indicate the usage of these ports when building FPGA fabrics. Please do not use ``mem_out``, ``mem_inv``, ``bl``, ``wl``, ``blb``, ``wlb``, ``ccff_head`` and ``ccff_tail``.
+
+FPGA I/O Port 
+^^^^^^^^^^^^^
+
+The ``circuit_model`` support not only highly customizable circuit-level modeling but also flexible I/O connection in the FPGA fabric.
+Typically, circuit ports appear in the primitive modules of a FPGA fabric.
+However, it is also very common that some circuit ports should be I/O of a FPGA fabric.
+Using syntax ``is_global`` and ``is_io``, users can freely define how these ports are connected as FPGA I/Os.
+
+In principle, when ``is_global`` is set ``true``, the port will appear as an FPGA I/O.
+The syntax ``is_io`` is applicable when ``is_global`` is ``true``.
+When ``is_io`` is ``true``, the port from different instances will be treated as independent I/Os.
+When ``is_io`` is ``false``, the port from different instances will be treated as the same I/Os, which are short-wired.
+
+To beef up, the following examples will explain how to use ``is_global`` and ``is_io`` to achieve different types of connections to FPGA I/Os.
+
+.. option:: Global short-wired inputs
+
+.. code-block:: xml
+
+  <port type="input" is_global="true" is_io="false"/>
+
+The global inputs are short wired across different instances. 
+These inputs are widely seen in FPGAs, such as clock ports, which are shared between sequential elements. 
+
+:numref:`fig_global_input_ports` shows an example on how the global inputs are wired inside FPGA fabric.
+
+.. _fig_global_input_ports:
+
+.. figure:: ./figures/global_input_ports.png
+   :scale: 100%
+   :alt: classical inverter 1x symbol
+
+   Short-wired global inputs as an FPGA I/O
+
+.. option:: Global short-wired inouts
+
+.. code-block:: xml
+
+  <port type="inout" is_global="true" is_io="false"/>
+
+The global inouts are short wired across different instances. 
+
+:numref:`fig_global_ioput_ports` shows an example on how the global inouts are wired inside FPGA fabric.
+
+.. _fig_global_inout_ports:
+
+.. figure:: ./figures/global_inout_ports.png
+   :scale: 100%
+   :alt: classical inverter 1x symbol
+
+   Short-wired global inouts as an FPGA I/O
+
+.. option:: General-purpose inputs
+
+.. code-block:: xml
+
+  <port type="input" is_global="true" is_io="true"/>
+
+The general-purpose inputs are independent wired from different instances to separated FPGA I/Os.
+For example, power-gating signals can be applied to each tile of a FPGA.
+
+:numref:`fig_gpin_ports` shows an example on how the general-purpose inputs are wired inside FPGA fabric.
+
+.. _fig_gpin_ports:
+
+.. figure:: ./figures/gpin_ports.png
+   :scale: 100%
+   :alt: classical inverter 1x symbol
+
+   General-purpose inputs as separated FPGA I/Os
+
+.. option:: General-purpose I/O
+
+.. code-block:: xml
+
+  <port type="inout" is_global="true" is_io="true"/>
+
+The general-purpose I/O are independent wired from different instances to separated FPGA I/Os.
+In practice, inout of GPIO cell is typically wired like this.
+
+:numref:`fig_gpin_ports` shows an example on how the general-purpose inouts are wired inside FPGA fabric.
+
+.. _fig_gpio_ports:
+
+.. figure:: ./figures/gpio_ports.png
+   :scale: 100%
+   :alt: classical inverter 1x symbol
+
+   General-purpose inouts as separated FPGA I/Os
+
+.. option:: General-purpose outputs
+
+.. code-block:: xml
+
+  <port type="output" is_global="true" is_io="true"/>
+
+The general-purpose outputs are independent wired from different instances to separated FPGA outputs.
+In practice, these outputs are typically spypads to probe internal signals of a FPGA.
+
+:numref:`fig_gpout_ports` shows an example on how the general-purpose outputs are wired inside FPGA fabric.
+
+.. _fig_gpout_ports:
+
+.. figure:: ./figures/gpout_ports.png
+   :scale: 100%
+   :alt: classical inverter 1x symbol
+
+   General-purpose outputs as separated FPGA I/Os
+

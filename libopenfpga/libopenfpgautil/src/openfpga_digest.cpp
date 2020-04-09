@@ -3,6 +3,7 @@
  * in OpenFPGA framework
  *******************************************************************/
 #include <sys/stat.h>
+#include <vector>
 #include <algorithm>
 
 /* Headers from vtrutil library */
@@ -117,37 +118,121 @@ std::string find_path_dir_name(const std::string& file_name) {
 /******************************************************************** 
  * Create a directory with a given path
  ********************************************************************/
-bool create_dir_path(const char* dir_path) {
-   /* Give up if the path is empty */
-   if (nullptr == dir_path) {
-     VTR_LOG_ERROR("dir_path is empty and nothing is created.\n");
-     return false;
-   }
+static 
+bool create_dir_path(const std::string& dir_path,
+                     const bool& verbose) {
+  /* Give up if the path is empty */
+  if (true == dir_path.empty()) {
+    VTR_LOG_ERROR("Directory path is empty and nothing will be created.\n");
+    return false;
+  }
 
-   /* Try to create a directory */
-   int ret = mkdir(dir_path, S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH);
+  /* Try to create a directory */
+  int ret = mkdir(dir_path.c_str(), S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH);
 
-   /* Analyze the return flag and output status */
-   switch (ret) {
-   case 0:
-     VTR_LOG("Succeed to create directory '%s'\n",
-             dir_path);
-     return true;
-   case -1:
-     if (EEXIST == errno) {
-       VTR_LOG_WARN("Directory '%s' already exists. Will overwrite contents\n",
-                     dir_path);
-       return true;
-     }
-     break;
-   default:
-     VTR_LOG_ERROR("Create directory '%s'...Failed!\n",
-                 dir_path);
-     exit(1);
-     return false;
+  /* Analyze the return flag and output status */
+  switch (ret) {
+  case 0:
+    VTR_LOGV(verbose,
+             "Succeed to create directory '%s'\n",
+             dir_path.c_str());
+    return true;
+  case -1:
+    if (EEXIST == errno) {
+      VTR_LOGV_WARN(verbose,
+                    "Directory '%s' already exists. Will overwrite contents\n",
+                    dir_path.c_str());
+      return true;
+    }
+    VTR_LOG_ERROR("Create directory '%s'...Failed!\n",
+                  dir_path.c_str());
+    exit(1);
+    break;
+  default:
+    VTR_LOG_ERROR("Create directory '%s'...Failed!\n",
+                  dir_path.c_str());
+    exit(1);
+    return false;
   }
 
   return false;
+}
+
+/******************************************************************** 
+ * Recursively create a directory with a given path
+ * The create_dir_path() function will only try to create a directory
+ * in the last level. If any parent directory is not created, it will
+ * always fail.
+ * This function will try to create all the parent directory before 
+ * creating the last level. 
+ ********************************************************************/
+static 
+bool rec_create_dir_path(const std::string& dir_path) {
+  /* Give up if the path is empty */
+  if (true == dir_path.empty()) {
+    VTR_LOG_ERROR("Directory path is empty and nothing will be created.\n");
+    return false;
+  }
+
+  /* Try to find the positions of all the slashes
+   * which are the splitter between directories
+   */
+  char back_slash = '/';
+
+#ifdef _WIN32
+/* For windows OS, replace any '/' with '\' */
+  char back_slash = '\\';
+#endif 
+
+  std::vector<size_t> slash_pos; 
+ 
+  /* Keep searching until we reach the end of the string */
+  for (size_t pos = 0; pos < dir_path.size(); ++pos) {
+    /* Skip the pos = 0, we should avoid creating any root directory */
+    if ( (back_slash == dir_path.at(pos))
+      && (0 != pos))  {
+      slash_pos.push_back(pos);
+    }
+  }
+
+  /* Create directory by following the position of back slash
+   * For each back slash, create a sub string from the beginning 
+   * and try to create directory
+   */
+  for (const size_t& pos : slash_pos) {
+    std::string sub_dir = dir_path.substr(0, pos);
+
+    /* Turn on verbose output only for the last position: the leaf directory */
+    if (false == create_dir_path(sub_dir, &pos == &slash_pos.back())) {
+      return false;
+    } 
+  }
+
+  return true;
+}
+
+/******************************************************************** 
+ * Top function to create a directory with a given path
+ * Allow users to select if use the recursive way or not
+ *
+ * Strongly recommend to use the recursive way, as it can maximum
+ * guarantee the success in creation of directories
+ ********************************************************************/
+void create_directory(const std::string& dir_path, const bool& recursive) { 
+  std::string formatted_dir_path = format_dir_path(dir_path);
+  bool status = false;
+
+  if (true == recursive) {
+    status = rec_create_dir_path(formatted_dir_path); 
+  } else {
+    status = create_dir_path(formatted_dir_path, true);
+  }
+
+  if (false == status) {
+    VTR_LOG_ERROR("Fail to create directory '%s'\n",
+                  formatted_dir_path.c_str());
+    exit(1);
+  }
 }
 
 } /* namespace openfpga ends */

@@ -23,7 +23,7 @@ std::string find_path_file_name(const std::string& file_name);
 
 std::string find_path_dir_name(const std::string& file_name);
 
-bool create_dir_path(const char* dir_path);
+void create_directory(const std::string& dir_path, const bool& recursive = true); 
 
 } /* namespace openfpga ends */
 

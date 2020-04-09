@@ -15,11 +15,11 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void read_arch(OpenfpgaContext& openfpga_context,
-               const Command& cmd, const CommandContext& cmd_context); 
+int read_arch(OpenfpgaContext& openfpga_context,
+              const Command& cmd, const CommandContext& cmd_context); 
 
-void write_arch(const OpenfpgaContext& openfpga_context,
-                const Command& cmd, const CommandContext& cmd_context);
+int write_arch(const OpenfpgaContext& openfpga_context,
+               const Command& cmd, const CommandContext& cmd_context);
 
 } /* end namespace openfpga */
 

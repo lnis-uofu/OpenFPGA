@@ -5,6 +5,9 @@
 #include "vtr_time.h"
 #include "vtr_log.h"
 
+/* Headers from openfpgashell library */
+#include "command_exit_codes.h"
+
 #include "write_xml_device_rr_gsb.h"
 
 #include "openfpga_write_gsb.h"
@@ -19,8 +22,8 @@ namespace openfpga {
  * Write internal structrure of all the General Switch Blocks (GSBs)
  * to an XML file 
  *******************************************************************/
-void write_gsb(const OpenfpgaContext& openfpga_ctx,
-               const Command& cmd, const CommandContext& cmd_context) { 
+int write_gsb(const OpenfpgaContext& openfpga_ctx,
+              const Command& cmd, const CommandContext& cmd_context) { 
 
   /* Check the option '--file' is enabled or not 
    * Actually, it must be enabled as the shell interface will check 
@@ -38,6 +41,9 @@ void write_gsb(const OpenfpgaContext& openfpga_ctx,
                              g_vpr_ctx.device().rr_graph,
                              openfpga_ctx.device_rr_gsb(),
                              cmd_context.option_enable(cmd, opt_verbose));
+
+  /* TODO: should identify the error code from internal function execution */
+  return CMD_EXEC_SUCCESS;
 } 
 
 } /* end namespace openfpga */

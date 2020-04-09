@@ -306,22 +306,17 @@ void build_primitive_block_module(ModuleManager& module_manager,
   /* Find the inout ports required by the primitive node, and add them to the module
    * This is mainly due to the I/O blocks, which have inout ports for the top-level fabric
    */
-  if (CIRCUIT_MODEL_IOPAD == circuit_lib.model_type(primitive_model)) {
-    std::vector<CircuitPortId> primitive_model_inout_ports = circuit_lib.model_ports_by_type(primitive_model, CIRCUIT_MODEL_PORT_INOUT);
-    for (auto port : primitive_model_inout_ports) {
+  for (const auto& port : circuit_lib.model_global_ports(primitive_model, false)) {
+    if ( (CIRCUIT_MODEL_PORT_INOUT == circuit_lib.port_type(port))
+      && (true == circuit_lib.port_is_io(port)) ) {
       add_primitive_module_fpga_global_io_port(module_manager, primitive_module,
                                                logic_module, logic_instance_id,
                                                ModuleManager::MODULE_GPIO_PORT,
                                                circuit_lib,
                                                primitive_model,
                                                port);
-    }
-  }
-
-  /* Find the other i/o ports required by the primitive node, and add them to the module */
-  for (const auto& port : circuit_lib.model_global_ports(primitive_model, false)) {
-    if ( (CIRCUIT_MODEL_PORT_INPUT == circuit_lib.port_type(port))
-      && (true == circuit_lib.port_is_io(port)) ) {
+    } else if ( (CIRCUIT_MODEL_PORT_INPUT == circuit_lib.port_type(port))
+             && (true == circuit_lib.port_is_io(port)) ) {
       add_primitive_module_fpga_global_io_port(module_manager, primitive_module,
                                                logic_module, logic_instance_id,
                                                ModuleManager::MODULE_GPIN_PORT,
