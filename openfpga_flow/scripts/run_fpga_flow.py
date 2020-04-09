@@ -667,6 +667,7 @@ def run_vpr():
 
 
 def run_openfpga_shell():
+    ExecTime["VPRStart"] = time.time()
     # bench_blif, fixed_chan_width, logfile, route_only=False
     tmpl = Template(open(args.top_module+"_template.openfpga",
                          encoding='utf-8').read())
@@ -683,6 +684,8 @@ def run_openfpga_shell():
     command = [cad_tools["openfpga_shell_path"], "-f",
                args.top_module+"_run.openfpga"]
     run_command("OpenFPGA Shell Run", "openfpgashell.log", command)
+    ExecTime["VPREnd"] = time.time()
+    extract_vpr_stats("vpr_stdout.log")
 
 
 def run_standard_vpr(bench_blif, fixed_chan_width, logfile, route_only=False):
