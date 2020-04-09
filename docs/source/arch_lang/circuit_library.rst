@@ -406,3 +406,7 @@ In practice, these outputs are typically spypads to probe internal signals of a 
 
    General-purpose outputs as separated FPGA I/Os
 
+
+.. warning:: The general-purpose inputs/inouts/outputs are not applicable to routing multiplexer outputs
+
+
