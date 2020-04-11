@@ -398,7 +398,7 @@ def prepare_run_directory(run_dir):
     # Clean run_dir is created change working directory
     os.chdir(run_dir)
 
-    # Create arch dir in run_dir and copy flattern architecrture file
+    # Create arch dir in run_dir and copy flattened architecture file
     os.mkdir("arch")
     tmpl = Template(
         open(args.arch_file, encoding='utf-8').read())
@@ -407,7 +407,15 @@ def prepare_run_directory(run_dir):
     with open(args.arch_file, 'w', encoding='utf-8') as archfile:
         archfile.write(tmpl.substitute(script_env_vars["PATH"]))
 
-    # Create benchmark dir in run_dir and copy flattern architecrture file
+    if (args.openfpga_arch_file):
+        tmpl = Template(
+            open(args.openfpga_arch_file, encoding='utf-8').read())
+        arch_filename = os.path.basename(args.openfpga_arch_file)
+        args.openfpga_arch_file = os.path.join(run_dir, "arch", arch_filename)
+        with open(args.openfpga_arch_file, 'w', encoding='utf-8') as archfile:
+            archfile.write(tmpl.substitute(script_env_vars["PATH"]))
+
+    # Create benchmark dir in run_dir and copy flattern architecture file
     os.mkdir("benchmark")
     try:
         for index, eachfile in enumerate(args.benchmark_files):
