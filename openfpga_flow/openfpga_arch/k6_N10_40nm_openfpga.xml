@@ -96,7 +96,6 @@
       <design_technology type="cmos" structure="multi_level" num_level="2" add_const_input="true" const_input_val="1"/>
       <input_buffer exist="true" circuit_model_name="INVTX1"/>
       <output_buffer exist="true" circuit_model_name="INVTX1"/>
-      <!--mux2to1 subckt_name="mux2to1"/-->
       <pass_gate_logic circuit_model_name="TGATE"/>
       <port type="input" prefix="in" size="1"/>
       <port type="output" prefix="out" size="1"/>
@@ -106,7 +105,6 @@
       <design_technology type="cmos" structure="multi_level" num_level="2" add_const_input="true" const_input_val="1"/>
       <input_buffer exist="true" circuit_model_name="INVTX1"/>
       <output_buffer exist="true" circuit_model_name="tap_buf4"/>
-      <!--mux2to1 subckt_name="mux2to1"/-->
       <pass_gate_logic circuit_model_name="TGATE"/>
       <port type="input" prefix="in" size="1"/>
       <port type="output" prefix="out" size="1"/>
@@ -116,7 +114,6 @@
       <design_technology type="cmos" structure="one_level" add_const_input="true" const_input_val="1"/>
       <input_buffer exist="true" circuit_model_name="INVTX1"/>
       <output_buffer exist="true" circuit_model_name="tap_buf4"/>
-      <!--mux2to1 subckt_name="mux2to1"/-->
       <pass_gate_logic circuit_model_name="TGATE"/>
       <port type="input" prefix="in" size="1"/>
       <port type="output" prefix="out" size="1"/>
@@ -127,7 +124,6 @@
        <design_technology type="cmos"/>
        <input_buffer exist="true" circuit_model_name="INVTX1"/>
        <output_buffer exist="true" circuit_model_name="INVTX1"/>
-       <pass_gate_logic circuit_model_name="TGATE"/>
        <port type="input" prefix="D" size="1"/>
        <port type="input" prefix="set" size="1" is_global="true" default_val="0" is_set="true"/>
        <port type="input" prefix="reset" size="1" is_global="true" default_val="0" is_reset="true"/>
@@ -150,7 +146,6 @@
        <design_technology type="cmos"/>
        <input_buffer exist="true" circuit_model_name="INVTX1"/>
        <output_buffer exist="true" circuit_model_name="INVTX1"/>
-       <pass_gate_logic circuit_model_name="TGATE"/>
        <port type="input" prefix="pReset" size="1" is_global="true" default_val="0" is_reset="true" is_prog="true"/>
        <port type="input" prefix="D" size="1"/>
        <port type="output" prefix="Q" size="1"/>
@@ -161,8 +156,7 @@
       <design_technology type="cmos"/>
       <input_buffer exist="true" circuit_model_name="INVTX1"/>
       <output_buffer exist="true" circuit_model_name="INVTX1"/>
-      <pass_gate_logic circuit_model_name="TGATE"/>
-      <port type="inout" prefix="pad" size="1"/>
+      <port type="inout" prefix="pad" size="1" is_global="true" is_io="true"/>
       <port type="sram" prefix="en" size="1" mode_select="true" circuit_model_name="sc_dff_compact" default_val="1"/>
       <port type="input" prefix="outpad" size="1"/>
       <port type="output" prefix="inpad" size="1"/>
