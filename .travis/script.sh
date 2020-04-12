@@ -18,6 +18,11 @@ end_section "OpenFPGA.build"
 
 start_section "OpenFPGA.TaskTun" "${GREEN}..Running_Regression..${NC}"
 cd -
+
+###############################################
+# OpenFPGA with VPR7
+# TO BE DEPRECATED
+##############################################
 echo -e "Testing single-mode architectures";
 python3 openfpga_flow/scripts/run_fpga_task.py single_mode --debug --show_thread_logs
 #python3 openfpga_flow/scripts/run_fpga_task.py s298 
@@ -36,5 +41,14 @@ python3 openfpga_flow/scripts/run_fpga_task.py explicit_verilog --debug --show_t
 
 echo -e "Testing Verilog generation with grid pin duplication ";
 python3 openfpga_flow/scripts/run_fpga_task.py duplicate_grid_pin --debug --show_thread_logs
+
+###############################################
+# OpenFPGA Shell with VPR8
+# (Will replace all the old tests)
+##############################################
+echo -e "Testing OpenFPGA Shell";
+
+echo -e "Testing Verilog generation with simple fracturable LUT6 ";
+python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/frac_lut --debug --show_thread_logs
 
 end_section "OpenFPGA.TaskTun"
