@@ -51,4 +51,7 @@ echo -e "Testing OpenFPGA Shell";
 echo -e "Testing Verilog generation with simple fracturable LUT6 ";
 python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/frac_lut --debug --show_thread_logs
 
+echo -e "Testing Verilog generation with VPR's untileable routing architecture ";
+python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/untileable --debug --show_thread_logs
+
 end_section "OpenFPGA.TaskTun"
