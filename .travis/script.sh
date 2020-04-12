@@ -75,4 +75,10 @@ python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/fabric_chain/regis
 echo -e "Testing Verilog generation with scan chain across an FPGA";
 python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/fabric_chain/scan_chain --debug --show_thread_logs
 
+echo -e "Testing Verilog generation with routing mutliplexers implemented by tree structure";
+python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/mux_design/tree_structure --debug --show_thread_logs
+
+echo -e "Testing Verilog generation with routing mutliplexers implemented by standard cell MUX2";
+python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/mux_design/stdcell_mux2 --debug --show_thread_logs
+
 end_section "OpenFPGA.TaskTun"
