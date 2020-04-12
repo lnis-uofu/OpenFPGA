@@ -54,4 +54,10 @@ python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/frac_lut --debug -
 echo -e "Testing Verilog generation with VPR's untileable routing architecture ";
 python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/untileable --debug --show_thread_logs
 
+echo -e "Testing Verilog generation with hard adder chain in CLBs ";
+python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/hard_adder --debug --show_thread_logs
+
+echo -e "Testing Verilog generation with 16k block RAMs ";
+python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/bram --debug --show_thread_logs
+
 end_section "OpenFPGA.TaskTun"
