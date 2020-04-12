@@ -69,4 +69,10 @@ python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/io/multi_io_capaci
 echo -e "Testing Verilog generation with I/Os only on left and right sides of an FPGA ";
 python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/io/reduced_io --debug --show_thread_logs
 
+echo -e "Testing Verilog generation with shift register chain across an FPGA";
+python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/fabric_chain/register_chain --debug --show_thread_logs
+
+echo -e "Testing Verilog generation with scan chain across an FPGA";
+python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/fabric_chain/scan_chain --debug --show_thread_logs
+
 end_section "OpenFPGA.TaskTun"
