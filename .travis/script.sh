@@ -60,4 +60,7 @@ python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/hard_adder --debug
 echo -e "Testing Verilog generation with 16k block RAMs ";
 python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/bram/dpram16k --debug --show_thread_logs
 
+echo -e "Testing Verilog generation with 16k block RAMs spanning two columns ";
+python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/bram/wide_dpram16k --debug --show_thread_logs
+
 end_section "OpenFPGA.TaskTun"
