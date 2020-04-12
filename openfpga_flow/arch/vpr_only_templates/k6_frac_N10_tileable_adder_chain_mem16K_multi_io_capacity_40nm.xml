@@ -226,7 +226,7 @@
   <!-- Physical descriptions begin -->
   <layout tileable="true" through_channel="false">
     <!--auto_layout aspect_ratio="1.0"-->
-    <fixed_layout name="4x4" width="5" height="4">
+    <fixed_layout name="3x2" width="5" height="4">
       <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
       <row type="io_top" starty="H-1" priority="100"/>
       <row type="io_bottom" starty="0" priority="100"/>

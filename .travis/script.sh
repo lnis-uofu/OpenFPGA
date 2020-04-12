@@ -63,4 +63,10 @@ python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/bram/dpram16k --de
 echo -e "Testing Verilog generation with 16k block RAMs spanning two columns ";
 python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/bram/wide_dpram16k --debug --show_thread_logs
 
+echo -e "Testing Verilog generation with different I/O capacities on each side of an FPGA ";
+python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/io/multi_io_capacity --debug --show_thread_logs
+
+echo -e "Testing Verilog generation with I/Os only on left and right sides of an FPGA ";
+python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/io/reduced_io --debug --show_thread_logs
+
 end_section "OpenFPGA.TaskTun"
