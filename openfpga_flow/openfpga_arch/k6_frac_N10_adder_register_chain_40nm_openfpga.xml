@@ -152,11 +152,12 @@
       <lut_input_buffer exist="true" circuit_model_name="buf4"/>
       <lut_intermediate_buffer exist="true" circuit_model_name="buf4" location_map="-1-1-"/>
       <pass_gate_logic circuit_model_name="TGATE"/>
-      <port type="input" prefix="in" size="6" tri_state_map="-----1" circuit_model_name="OR2"/>
+      <port type="input" prefix="in" size="6" tri_state_map="----11" circuit_model_name="OR2"/>
+      <port type="output" prefix="lut4_out" size="4" lut_frac_level="4" lut_output_mask="0,1,2,3"/>
       <port type="output" prefix="lut5_out" size="2" lut_frac_level="5" lut_output_mask="0,1"/>
       <port type="output" prefix="lut6_out" size="1" lut_output_mask="0"/>
       <port type="sram" prefix="sram" size="64"/>
-      <port type="sram" prefix="mode" size="1" mode_select="true" circuit_model_name="sc_dff_compact" default_val="1"/>
+      <port type="sram" prefix="mode" size="2" mode_select="true" circuit_model_name="sc_dff_compact" default_val="1"/>
     </circuit_model>
     <!--Scan-chain DFF subckt ports should be defined as <D> <Q> <Qb> <CLK> <RESET> <SET>  -->
     <circuit_model type="ccff" name="sc_dff_compact" prefix="scff" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/ff.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/ff.v">
@@ -173,14 +174,20 @@
       <design_technology type="cmos"/>
       <input_buffer exist="true" circuit_model_name="INVTX1"/>
       <output_buffer exist="true" circuit_model_name="INVTX1"/>
-      <port type="inout" prefix="pad" size="1" is_global="true" is_io="true" />
-      <!-- A spypad for the direction port of the I/O pad, which can be visible in the fpga_top -->
-      <port type="input" prefix="din" size="1" is_global="true" is_io="true" default_value="0"/>
-      <port type="output" prefix="dout" size="1" is_global="true" is_io="true"/>
-      <port type="output" prefix="dir" size="1" is_global="true" is_io="true"/>
+      <port type="inout" prefix="pad" size="1" is_global="true" is_io="true"/>
       <port type="sram" prefix="en" size="1" mode_select="true" circuit_model_name="sc_dff_compact" default_val="1"/>
       <port type="input" prefix="outpad" size="1"/>
       <port type="output" prefix="inpad" size="1"/>
+    </circuit_model>
+    <circuit_model type="hard_logic" name="adder" prefix="adder" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/adder.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/adder.v">
+      <design_technology type="cmos"/>
+      <input_buffer exist="true" circuit_model_name="INVTX1"/>
+      <output_buffer exist="true" circuit_model_name="INVTX1"/>
+      <port type="input" prefix="a" size="1"/>
+      <port type="input" prefix="b" size="1"/>
+      <port type="input" prefix="cin" size="1"/>
+      <port type="output" prefix="sumout" size="1"/>
+      <port type="output" prefix="cout" size="1"/>
     </circuit_model>
   </circuit_library>
   <configuration_protocol>
@@ -195,6 +202,10 @@
   <routing_segment>
     <segment name="L4" circuit_model_name="chan_segment"/>
   </routing_segment>
+  <direct_connection>
+    <direct name="adder_carry" circuit_model_name="direct_interc" type="column" x_dir="positive" y_dir="positive"/>
+    <direct name="shift_register" circuit_model_name="direct_interc" type="column" x_dir="positive" y_dir="positive"/>
+  </direct_connection>
   <pb_type_annotations>
     <!-- physical pb_type binding in complex block IO -->
     <pb_type name="io" physical_mode_name="physical" idle_mode_name="inpad"/>
@@ -210,21 +221,34 @@
       <interconnect name="crossbar" circuit_model_name="mux_2level"/>
     </pb_type>
     <pb_type name="clb.fle" physical_mode_name="physical"/>
-    <pb_type name="clb.fle[physical].fabric.frac_logic.frac_lut6" circuit_model_name="frac_lut6" mode_bits="0"/>
+    <pb_type name="clb.fle[physical].fabric.frac_logic.frac_lut6" circuit_model_name="frac_lut6" mode_bits="11"/>
     <pb_type name="clb.fle[physical].fabric.ff" circuit_model_name="static_dff"/>
+    <pb_type name="clb.fle[physical].fabric.adder" circuit_model_name="adder"/>
     <!-- Binding operating pb_type to physical pb_type -->
-    <pb_type name="clb.fle[n2_lut5].lut5inter.ble5.lut5" physical_pb_type_name="clb.fle[physical].fabric.frac_logic.frac_lut6" mode_bits="1" physical_pb_type_index_factor="0.5">
+    <!-- Binding operating pb_types in mode 'n2_lut5' -->
+    <pb_type name="clb.fle[n2_lut5].ble5.lut5" physical_pb_type_name="clb.fle[physical].fabric.frac_logic.frac_lut6" mode_bits="01" physical_pb_type_index_factor="0.5">
       <!-- Binding the lut5 to the first 5 inputs of fracturable lut6 -->
       <port name="in" physical_mode_port="in[0:4]"/>
       <port name="out" physical_mode_port="lut5_out[0:0]" physical_mode_pin_rotate_offset="1"/>
     </pb_type>
-    <pb_type name="clb.fle[n2_lut5].lut5inter.ble5.ff" physical_pb_type_name="clb.fle[physical].fabric.ff"/>
-    <pb_type name="clb.fle[n1_lut6].ble6.lut6" physical_pb_type_name="clb.fle[physical].fabric.frac_logic.frac_lut6" mode_bits="0">
+    <pb_type name="clb.fle[n2_lut5].ble5.ff" physical_pb_type_name="clb.fle[physical].fabric.ff"/>
+    <!-- Binding operating pb_types in mode 'arithmetic' -->
+    <pb_type name="clb.fle[arithmetic].arithmetic.lut4" physical_pb_type_name="clb.fle[physical].fabric.frac_logic.frac_lut6" mode_bits="11" physical_pb_type_index_factor="0.25">
+      <!-- Binding the lut4 to the first 4 inputs of fracturable lut6 -->
+      <port name="in" physical_mode_port="in[0:3]"/>
+      <port name="out" physical_mode_port="lut4_out[0:0]" physical_mode_pin_rotate_offset="1"/>
+    </pb_type>
+    <pb_type name="clb.fle[arithmetic].arithmetic.adder" physical_pb_type_name="clb.fle[physical].fabric.adder"/>
+    <pb_type name="clb.fle[arithmetic].arithmetic.ff" physical_pb_type_name="clb.fle[physical].fabric.ff"/>
+    <!-- Binding operating pb_types in mode 'ble6' -->
+    <pb_type name="clb.fle[n1_lut6].ble6.lut6" physical_pb_type_name="clb.fle[physical].fabric.frac_logic.frac_lut6" mode_bits="00">
       <!-- Binding the lut6 to the first 6 inputs of fracturable lut6 -->
       <port name="in" physical_mode_port="in[0:5]"/>
       <port name="out" physical_mode_port="lut6_out"/>
     </pb_type>
     <pb_type name="clb.fle[n1_lut6].ble6.ff" physical_pb_type_name="clb.fle[physical].fabric.ff" physical_pb_type_index_factor="2" physical_pb_type_index_offset="0"/>
+    <!-- Binding operating pb_types in mode 'shift_register' -->
+    <pb_type name="clb.fle[shift_register].shift_reg.ff" physical_pb_type_name="clb.fle[physical].fabric.ff"/>
     <!-- End physical pb_type binding in complex block IO -->
   </pb_type_annotations>
 </openfpga_architecture>
