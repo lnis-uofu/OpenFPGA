@@ -87,4 +87,7 @@ python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/mux_design/stdcell
 echo -e "Testing Verilog generation with behavioral description";
 python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/behavioral_verilog --debug --show_thread_logs
 
+echo -e "Testing implicit Verilog generation";
+python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/implicit_verilog --debug --show_thread_logs
+
 end_section "OpenFPGA.TaskTun"
