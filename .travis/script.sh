@@ -90,4 +90,7 @@ python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/behavioral_verilog
 echo -e "Testing implicit Verilog generation";
 python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/implicit_verilog --debug --show_thread_logs
 
+echo -e "Testing Verilog generation with flatten routing modules";
+python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/flatten_routing --debug --show_thread_logs
+
 end_section "OpenFPGA.TaskTun"
