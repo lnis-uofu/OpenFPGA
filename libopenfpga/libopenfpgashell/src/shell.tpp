@@ -311,9 +311,9 @@ void Shell<T>::run_script_mode(const char* script_file_name, T& context) {
     /* Remove the space at the end of the line
      * So that we can check easily if there is a continued line in the end  
      */
-    cmd_part.erase(std::find_if(cmd_part.rbegin(), cmd_part.rend(), [](int ch) {
-      return !std::isspace(ch);
-    }).base(), cmd_part.end());
+    StringToken cmd_part_tokenizer(cmd_part);
+    cmd_part_tokenizer.rtrim(std::string(" "));
+    cmd_part = cmd_part_tokenizer.data();
 
     /* If the line ends with '\', this is a continued line, parse the next until it ends */
     if ('\\' == cmd_part.back()) {
@@ -334,9 +334,9 @@ void Shell<T>::run_script_mode(const char* script_file_name, T& context) {
     }
 
     /* Remove the space at the beginning of the line */
-    cmd_line.erase(cmd_line.begin(), std::find_if(cmd_line.begin(), cmd_line.end(), [](int ch) {
-      return !std::isspace(ch);
-    }));
+    StringToken cmd_line_tokenizer(cmd_line);
+    cmd_line_tokenizer.ltrim(std::string(" "));
+    cmd_line = cmd_line_tokenizer.data();
 
     /* Process the command only when the full command line in ended */
     if (!cmd_line.empty()) {
