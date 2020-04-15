@@ -189,7 +189,7 @@
       <port type="output" prefix="sumout" size="1"/>
       <port type="output" prefix="cout" size="1"/>
     </circuit_model>
-    <circuit_model type="hard_logic" name="dpram_512x32" prefix="dpram_512x32" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/dpram.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/dpsram.v">
+    <circuit_model type="hard_logic" name="dpram_512x32" prefix="dpram_512x32" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/dpram.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/dpram16k.v">
       <design_technology type="cmos"/>
       <input_buffer exist="true" circuit_model_name="INVTX1"/>
       <output_buffer exist="true" circuit_model_name="INVTX1"/>

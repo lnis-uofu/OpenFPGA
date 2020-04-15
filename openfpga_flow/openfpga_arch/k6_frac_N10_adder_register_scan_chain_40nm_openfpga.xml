@@ -137,7 +137,7 @@
         This is flip-flop with scan-chain feature.
         When the TESTEN is enabled, the data will be propagated form DI instead of D
       -->
-    <circuit_model type="ff" name="static_dff" prefix="dff" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/ff.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/ff.v">
+    <circuit_model type="ff" name="scan_chain_ff" prefix="scan_chain_ff" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/ff.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/ff.v">
        <design_technology type="cmos"/>
        <input_buffer exist="true" circuit_model_name="INVTX1"/>
        <output_buffer exist="true" circuit_model_name="INVTX1"/>
@@ -228,7 +228,7 @@
     </pb_type>
     <pb_type name="clb.fle" physical_mode_name="physical"/>
     <pb_type name="clb.fle[physical].fabric.frac_logic.frac_lut6" circuit_model_name="frac_lut6" mode_bits="11"/>
-    <pb_type name="clb.fle[physical].fabric.ff" circuit_model_name="static_dff"/>
+    <pb_type name="clb.fle[physical].fabric.ff" circuit_model_name="scan_chain_ff"/>
     <pb_type name="clb.fle[physical].fabric.adder" circuit_model_name="adder"/>
     <!-- Binding operating pb_type to physical pb_type -->
     <!-- Binding operating pb_types in mode 'n2_lut5' -->

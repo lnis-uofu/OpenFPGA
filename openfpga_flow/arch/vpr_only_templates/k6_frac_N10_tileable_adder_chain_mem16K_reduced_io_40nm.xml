@@ -195,7 +195,7 @@
   <!-- Physical descriptions begin -->
   <layout tileable="true" through_channel="false">
     <!--auto_layout aspect_ratio="1.0"-->
-    <fixed_layout name="4x4" width="7" height="6">
+    <fixed_layout name="3x2" width="5" height="4">
       <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
       <perimeter type="io" priority="10"/>
       <corners type="EMPTY" priority="101"/>

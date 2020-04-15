@@ -33,6 +33,38 @@ assign Q = q_reg;
 
 endmodule //End Of Module static_dff
 
+module scan_chain_ff (
+/* Global ports go first */
+input set,     // set input
+input reset, // Reset input
+input clk, // Clock Input
+input TESTEN, // Clock Input
+/* Local ports follow */
+input D, // Data Input
+input DI, // Scan Chain Data Input
+output Q // Q output
+);
+//------------Internal Variables--------
+reg q_reg;
+
+//-------------Code Starts Here---------
+always @ ( posedge clk or posedge reset or posedge set)
+if (reset) begin
+  q_reg <= 1'b0;
+end else if (set) begin
+  q_reg <= 1'b1;
+end else if (TESTEN) begin
+  q_reg <= DI;
+end else begin
+  q_reg <= D;
+end
+
+// Wire q_reg to Q
+assign Q = q_reg;
+
+endmodule //End Of Module static_dff
+
+
 //-----------------------------------------------------
 // Design Name : scan_chain_dff
 // File Name   : ff.v
