@@ -17,6 +17,9 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
+/* Mode 1 is the lut mode while mode 0 is the wire mode */
+constexpr int VPR_PB_TYPE_LUT_MODE = 1;
+
 /***************************************************************************************
  * Identify if LUT is used as wiring 
  * In this case, LUT functions as a buffer
@@ -56,9 +59,23 @@ std::vector<int> generate_lut_rotated_input_pin_map(const std::vector<AtomNetId>
   std::vector<int> rotated_pin_map(input_nets.size(), -1);
 
   VTR_ASSERT(1 == pb_graph_node->num_input_ports);
+
   for (int ipin = 0; ipin < pb_graph_node->num_input_pins[0]; ++ipin) {
+    /* The lut pb_graph_node may not be the primitive node 
+     * because VPR adds two default modes to its LUT pb_type
+     * If so, we will use the LUT mode of the pb_graph node
+     */
+    t_port* lut_pb_type_in_port = pb_graph_node->input_pins[0][ipin].port; 
+    if (0 != pb_graph_node->pb_type->num_modes) {
+      VTR_ASSERT(2 == pb_graph_node->pb_type->num_modes);
+      VTR_ASSERT(1 == pb_graph_node->pb_type->modes[VPR_PB_TYPE_LUT_MODE].num_pb_type_children);
+      lut_pb_type_in_port = &(pb_graph_node->pb_type->modes[VPR_PB_TYPE_LUT_MODE].pb_type_children[0].ports[0]);
+      VTR_ASSERT(std::string(lut_pb_type_in_port->name) == std::string(pb_graph_node->input_pins[0][ipin].port->name));
+      VTR_ASSERT(lut_pb_type_in_port->num_pins == pb_graph_node->input_pins[0][ipin].port->num_pins);
+    }
+
     /* Port exists (some LUTs may have no input and hence no port in the atom netlist) */
-    AtomPortId atom_port = atom_ctx.nlist.find_atom_port(atom_blk, pb_graph_node->input_pins[0][ipin].port->model_port);
+    AtomPortId atom_port = atom_ctx.nlist.find_atom_port(atom_blk, lut_pb_type_in_port->model_port);
     if (!atom_port) { 
       continue;
     }

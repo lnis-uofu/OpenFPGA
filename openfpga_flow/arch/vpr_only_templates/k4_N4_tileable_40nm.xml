@@ -3,7 +3,7 @@
 
   - 40 nm technology
   - General purpose logic block: 
-    K = 6, N = 10
+    K = 4, N = 4
   - Routing architecture: L = 4, fc_in = 0.15, Fc_out = 0.1
 
   Details on Modelling:
@@ -53,8 +53,8 @@
       <equivalent_sites>
         <site pb_type="clb"/>
       </equivalent_sites>
-      <input name="I" num_pins="40" equivalent="full"/>
-      <output name="O" num_pins="10" equivalent="instance"/>
+      <input name="I" num_pins="10" equivalent="full"/>
+      <output name="O" num_pins="4" equivalent="none"/>
       <clock name="clk" num_pins="1"/>
       <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
       <pinlocations pattern="spread"/>
@@ -62,14 +62,16 @@
   </tiles>
   <!-- ODIN II specific config ends -->
   <!-- Physical descriptions begin -->
-  <layout tileable="false">
-    <auto_layout aspect_ratio="1.0">
+  <layout tileable="true">
+    <!--auto_layout aspect_ratio="1.0"-->
+    <fixed_layout name="2x2" width="4" height="4">
       <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
       <perimeter type="io" priority="100"/>
       <corners type="EMPTY" priority="101"/>
       <!--Fill with 'clb'-->
       <fill type="clb" priority="10"/>
-    </auto_layout>
+    </fixed_layout>
+    <!--/auto_layout-->
   </layout>
   <device>
     <!-- VB & JL: Using Ian Kuon's transistor sizing and drive strength data for routing, at 40 nm. Ian used BPTM 
@@ -137,7 +139,7 @@
       <!-- A mode denotes the physical implementation of an I/O 
            This mode will be not packable but is mainly used for fabric verilog generation   
         -->
-      <mode name="physical" disabled_in_pack="true">
+      <mode name="physical" packable="false">
         <pb_type name="iopad" blif_model=".subckt io" num_pb="1">
           <input name="outpad" num_pins="1"/>
           <output name="inpad" num_pins="1"/>
@@ -196,40 +198,29 @@
 	   routing area up significantly, we estimate into the ~70% range. 
 	   -->
     <pb_type name="clb">
-      <input name="I" num_pins="40" equivalent="full"/>
-      <output name="O" num_pins="10" equivalent="instance"/>
+      <input name="I" num_pins="10" equivalent="full"/>
+      <output name="O" num_pins="4" equivalent="none"/>
       <clock name="clk" num_pins="1"/>
       <!-- Describe basic logic element.  
-             Each basic logic element has a 6-LUT that can be optionally registered
+             Each basic logic element has a 4-LUT that can be optionally registered
         -->
-      <pb_type name="fle" num_pb="10">
-        <input name="in" num_pins="6"/>
+      <pb_type name="fle" num_pb="4">
+        <input name="in" num_pins="4"/>
         <output name="out" num_pins="1"/>
         <clock name="clk" num_pins="1"/>
-        <!-- 6-LUT mode definition begin -->
-        <mode name="n1_lut6">
-          <!-- Define 6-LUT mode -->
-          <pb_type name="ble6" num_pb="1">
-            <input name="in" num_pins="6"/>
+        <!-- 4-LUT mode definition begin -->
+        <mode name="n1_lut4">
+          <!-- Define 4-LUT mode -->
+          <pb_type name="ble4" num_pb="1">
+            <input name="in" num_pins="4"/>
             <output name="out" num_pins="1"/>
             <clock name="clk" num_pins="1"/>
             <!-- Define LUT -->
-            <pb_type name="lut6" blif_model=".names" num_pb="1" class="lut">
-              <input name="in" num_pins="6" port_class="lut_in"/>
+            <pb_type name="lut4" blif_model=".names" num_pb="1" class="lut">
+              <input name="in" num_pins="4" port_class="lut_in"/>
               <output name="out" num_pins="1" port_class="lut_out"/>
               <!-- LUT timing using delay matrix -->
-              <!-- These are the physical delay inputs on a Stratix IV LUT but because VPR cannot do LUT rebalancing,
-                       we instead take the average of these numbers to get more stable results
-                  82e-12
-                  173e-12
-                  261e-12
-                  263e-12
-                  398e-12
-                  397e-12
-                  -->
-              <delay_matrix type="max" in_port="lut6.in" out_port="lut6.out">
-                261e-12
-                261e-12
+              <delay_matrix type="max" in_port="lut4.in" out_port="lut4.out">
                 261e-12
                 261e-12
                 261e-12
@@ -245,23 +236,23 @@
               <T_clock_to_Q max="124e-12" port="ff.Q" clock="clk"/>
             </pb_type>
             <interconnect>
-              <direct name="direct1" input="ble6.in" output="lut6[0:0].in"/>
-              <direct name="direct2" input="lut6.out" output="ff.D">
+              <direct name="direct1" input="ble4.in" output="lut4[0:0].in"/>
+              <direct name="direct2" input="lut4.out" output="ff.D">
                 <!-- Advanced user option that tells CAD tool to find LUT+FF pairs in netlist -->
-                <pack_pattern name="ble6" in_port="lut6.out" out_port="ff.D"/>
+                <pack_pattern name="ble4" in_port="lut4.out" out_port="ff.D"/>
               </direct>
-              <direct name="direct3" input="ble6.clk" output="ff.clk"/>
-              <mux name="mux1" input="ff.Q lut6.out" output="ble6.out">
+              <direct name="direct3" input="ble4.clk" output="ff.clk"/>
+              <mux name="mux1" input="ff.Q lut4.out" output="ble4.out">
                 <!-- LUT to output is faster than FF to output on a Stratix IV -->
-                <delay_constant max="25e-12" in_port="lut6.out" out_port="ble6.out"/>
-                <delay_constant max="45e-12" in_port="ff.Q" out_port="ble6.out"/>
+                <delay_constant max="25e-12" in_port="lut4.out" out_port="ble4.out"/>
+                <delay_constant max="45e-12" in_port="ff.Q" out_port="ble4.out"/>
               </mux>
             </interconnect>
           </pb_type>
           <interconnect>
-            <direct name="direct1" input="fle.in" output="ble6.in"/>
-            <direct name="direct2" input="ble6.out" output="fle.out[0:0]"/>
-            <direct name="direct3" input="fle.clk" output="ble6.clk"/>
+            <direct name="direct1" input="fle.in" output="ble4.in"/>
+            <direct name="direct2" input="ble4.out" output="fle.out[0:0]"/>
+            <direct name="direct3" input="fle.clk" output="ble4.clk"/>
           </interconnect>
         </mode>
         <!-- 6-LUT mode definition end -->
@@ -276,18 +267,18 @@
 		     Since all our outputs LUT outputs go to a BLE output, and have a delay of 
 		     25 ps to do so, we subtract 25 ps from the 100 ps delay of a feedback
 		     to get the part that should be marked on the crossbar.	 -->
-        <complete name="crossbar" input="clb.I fle[9:0].out" output="fle[9:0].in">
-          <delay_constant max="95e-12" in_port="clb.I" out_port="fle[9:0].in"/>
-          <delay_constant max="75e-12" in_port="fle[9:0].out" out_port="fle[9:0].in"/>
+        <complete name="crossbar" input="clb.I fle[3:0].out" output="fle[3:0].in">
+          <delay_constant max="95e-12" in_port="clb.I" out_port="fle[3:0].in"/>
+          <delay_constant max="75e-12" in_port="fle[3:0].out" out_port="fle[3:0].in"/>
         </complete>
-        <complete name="clks" input="clb.clk" output="fle[9:0].clk">
+        <complete name="clks" input="clb.clk" output="fle[3:0].clk">
         </complete>
         <!-- This way of specifying direct connection to clb outputs is important because this architecture uses automatic spreading of opins.  
                By grouping to output pins in this fashion, if a logic block is completely filled by 6-LUTs, 
                then the outputs those 6-LUTs take get evenly distributed across all four sides of the CLB instead of clumped on two sides (which is what happens with a more
                naive specification).
           -->
-        <direct name="clbouts1" input="fle[9:0].out" output="clb.O"/>
+        <direct name="clbouts1" input="fle[3:0].out" output="clb.O"/>
       </interconnect>
       <!-- Every input pin is driven by 15% of the tracks in a channel, every output pin is driven by 10% of the tracks in a channel -->
       <!-- Place this general purpose logic block in any unspecified column -->

@@ -41,13 +41,12 @@
       </equivalent_sites>
       <input name="outpad" num_pins="1"/>
       <output name="inpad" num_pins="1"/>
-      <clock name="clock" num_pins="1"/>
       <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
       <pinlocations pattern="custom">
-        <loc side="left">io.outpad io.inpad io.clock</loc>
-        <loc side="top">io.outpad io.inpad io.clock</loc>
-        <loc side="right">io.outpad io.inpad io.clock</loc>
-        <loc side="bottom">io.outpad io.inpad io.clock</loc>
+        <loc side="left">io.outpad io.inpad</loc>
+        <loc side="top">io.outpad io.inpad</loc>
+        <loc side="right">io.outpad io.inpad</loc>
+        <loc side="bottom">io.outpad io.inpad</loc>
       </pinlocations>
     </tile>
     <tile name="clb" area="53894">
@@ -135,7 +134,6 @@
     <pb_type name="io">
       <input name="outpad" num_pins="1"/>
       <output name="inpad" num_pins="1"/>
-      <clock name="clock" num_pins="1"/>
       <!-- A mode denotes the physical implementation of an I/O 
            This mode will be not packable but is mainly used for fabric verilog generation   
         -->
