@@ -911,8 +911,8 @@ def run_netlists_verification(exit_if_fail=True):
 
     command = [cad_tools["iverilog_path"]]
     command += ["-o", compiled_file]
-    fpga_define_file = "./SRC/fpga_defines.v"
-    fpga_define_file_bk = "./SRC/fpga_defines.v.bak"
+    fpga_define_file = "./SRC/define_simulation.v"
+    fpga_define_file_bk = "./SRC/define_simulation.v.bak"
     shutil.copy(fpga_define_file, fpga_define_file_bk)
     with open(fpga_define_file, "r") as fp:
         fpga_defines = fp.readlines()
