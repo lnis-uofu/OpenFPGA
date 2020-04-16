@@ -289,6 +289,7 @@ void build_primitive_block_module(ModuleManager& module_manager,
     /* Record memory-related information */
     module_manager.add_configurable_child(primitive_module, memory_module, memory_instance_id);
   }
+
   /* Add all the nets to connect configuration ports from memory module to primitive modules
    * This is a one-shot addition that covers all the memory modules in this primitive module!
    */

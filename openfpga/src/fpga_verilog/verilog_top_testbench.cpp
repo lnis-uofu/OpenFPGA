@@ -273,8 +273,8 @@ void print_verilog_top_testbench_global_ports_stimuli(std::fstream& fp,
       continue;
     }
 
-    /* Bypass gp output signals, they do not need any drivers */
-    if (CIRCUIT_MODEL_PORT_OUTPUT == circuit_lib.port_type(model_global_port)) {
+    /* Bypass io signals, they do not need any drivers */
+    if (true == circuit_lib.port_is_io(model_global_port)) {
       continue;
     }
 

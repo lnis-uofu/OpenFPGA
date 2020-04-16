@@ -18,6 +18,11 @@ end_section "OpenFPGA.build"
 
 start_section "OpenFPGA.TaskTun" "${GREEN}..Running_Regression..${NC}"
 cd -
+
+###############################################
+# OpenFPGA with VPR7
+# TO BE DEPRECATED
+##############################################
 echo -e "Testing single-mode architectures";
 python3 openfpga_flow/scripts/run_fpga_task.py single_mode --debug --show_thread_logs
 #python3 openfpga_flow/scripts/run_fpga_task.py s298 
@@ -36,5 +41,62 @@ python3 openfpga_flow/scripts/run_fpga_task.py explicit_verilog --debug --show_t
 
 echo -e "Testing Verilog generation with grid pin duplication ";
 python3 openfpga_flow/scripts/run_fpga_task.py duplicate_grid_pin --debug --show_thread_logs
+
+###############################################
+# OpenFPGA Shell with VPR8
+# (Will replace all the old tests)
+##############################################
+echo -e "Testing OpenFPGA Shell";
+
+echo -e "Testing configuration chain of a K4N4 FPGA";
+python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/configuration_chain --debug --show_thread_logs
+
+echo -e "Testing Verilog generation with simple fracturable LUT6 ";
+python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/frac_lut --debug --show_thread_logs
+
+echo -e "Testing Verilog generation with VPR's untileable routing architecture ";
+python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/untileable --debug --show_thread_logs
+
+echo -e "Testing Verilog generation with hard adder chain in CLBs ";
+python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/hard_adder --debug --show_thread_logs
+
+echo -e "Testing Verilog generation with 16k block RAMs ";
+python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/bram/dpram16k --debug --show_thread_logs
+
+echo -e "Testing Verilog generation with 16k block RAMs spanning two columns ";
+python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/bram/wide_dpram16k --debug --show_thread_logs
+
+echo -e "Testing Verilog generation with different I/O capacities on each side of an FPGA ";
+python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/io/multi_io_capacity --debug --show_thread_logs
+
+echo -e "Testing Verilog generation with I/Os only on left and right sides of an FPGA ";
+python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/io/reduced_io --debug --show_thread_logs
+
+echo -e "Testing Verilog generation with adder chain across an FPGA";
+python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/fabric_chain/adder_chain --debug --show_thread_logs
+
+echo -e "Testing Verilog generation with shift register chain across an FPGA";
+python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/fabric_chain/register_chain --debug --show_thread_logs
+
+echo -e "Testing Verilog generation with scan chain across an FPGA";
+python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/fabric_chain/scan_chain --debug --show_thread_logs
+
+echo -e "Testing Verilog generation with routing mutliplexers implemented by tree structure";
+python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/mux_design/tree_structure --debug --show_thread_logs
+
+echo -e "Testing Verilog generation with routing mutliplexers implemented by standard cell MUX2";
+python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/mux_design/stdcell_mux2 --debug --show_thread_logs
+
+echo -e "Testing Verilog generation with behavioral description";
+python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/behavioral_verilog --debug --show_thread_logs
+
+echo -e "Testing implicit Verilog generation";
+python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/implicit_verilog --debug --show_thread_logs
+
+echo -e "Testing Verilog generation with flatten routing modules";
+python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/flatten_routing --debug --show_thread_logs
+
+echo -e "Testing Verilog generation with duplicated grid output pins";
+python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/duplicated_grid_pin --debug --show_thread_logs
 
 end_section "OpenFPGA.TaskTun"

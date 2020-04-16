@@ -60,6 +60,7 @@ void disable_analysis_module_input_pin_net_sinks(std::fstream& fp,
 
   /* Find the module net which sources from this port! */
   ModuleNetId module_net = module_manager.module_instance_port_net(parent_module, parent_module, 0, module_input_port, module_input_pin); 
+  if (true != module_manager.valid_module_net_id(parent_module, module_net))
   VTR_ASSERT(true == module_manager.valid_module_net_id(parent_module, module_net));
 
   /* Touch each sink of the net! */

@@ -225,7 +225,7 @@
   <!-- Physical descriptions begin -->
   <layout tileable="true" through_channel="false">
     <!--auto_layout aspect_ratio="1.0"-->
-    <fixed_layout name="4x4" width="7" height="6">
+    <fixed_layout name="3x4" width="5" height="6">
       <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
       <perimeter type="io" priority="10"/>
       <corners type="EMPTY" priority="101"/>
@@ -235,7 +235,7 @@
       <col type="memory" startx="2" starty="1" repeatx="8" priority="20"/>
       <col type="EMPTY" startx="2" repeatx="8" starty="1" priority="19"/>
       <!-- Single instance of an AIB interface -->
-      <single type="aib" x="6" y="1" priority="20"/>
+      <single type="aib" x="4" y="1" priority="20"/>
     </fixed_layout>
     <!-- /auto_layout -->
   </layout>
