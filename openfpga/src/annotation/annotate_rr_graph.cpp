@@ -373,6 +373,14 @@ RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
                                                   ix, iy, IPIN, ipin_rr_node_grid_side);
     /* Fill the ipin nodes of RRGSB */ 
     for (const RRNodeId& inode : temp_ipin_rr_nodes) {
+      /* Skip those has no configurable outgoing, they should NOT appear in the GSB connection
+       * This is for those grid output pins used by direct connections
+       */
+      if (0 == std::distance(vpr_device_ctx.rr_graph.node_configurable_in_edges(inode).begin(),
+                             vpr_device_ctx.rr_graph.node_configurable_in_edges(inode).end())) {
+        continue;
+      }
+
       /* Do not consider IPINs that are directly connected by an OPIN
        * they are supposed to be handled by direct connection
        */
