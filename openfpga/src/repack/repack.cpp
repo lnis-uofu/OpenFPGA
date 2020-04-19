@@ -117,15 +117,21 @@ int find_pb_route_remapped_source_pb_pin(const t_pb* pb,
 
   for (int pin = 0; pin < pb->pb_graph_node->total_pb_pins; ++pin) {
     /* Bypass unused pins */
-    if ((0 == pb->pb_route.count(pin)) || (AtomNetId::INVALID() == pb->pb_route[pin].atom_net_id)) {
+    if ((0 == pb->pb_route.count(pin)) || (AtomNetId::INVALID() == pb->pb_route.at(pin).atom_net_id)) {
       continue;
     }
     /* Get the driver pb pin id, it must be valid */
-    if (atom_net_id != pb->pb_route[pin].atom_net_id) {
+    if (atom_net_id != pb->pb_route.at(pin).atom_net_id) {
       continue;
     }
-    /* Only care the pin that shares the same parent_node as source_pb_pin */
-    if (source_pb_pin->parent_node == pb->pb_route[pin].pb_graph_pin->parent_node) {
+    /* Only care the pin has the same parent port as source_pb_pin 
+     * Due to that the source_pb_pin may be swapped during routing
+     * the pb_route is out-of-date
+     * TODO: should update pb_route by post routing results
+     * On the other side, the swapping can only happen between equivalent pins
+     * in a port. So the port must match here!
+     */
+    if (source_pb_pin->port == pb->pb_route.at(pin).pb_graph_pin->port) {
       pb_route_indices.push_back(pin);
     } 
   }
