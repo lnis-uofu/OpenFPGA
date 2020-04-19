@@ -1,8 +1,11 @@
-<!-- Homogeneous FPGA Architecture with Carry Chain for VPR8
+<!-- Heterogeneous FPGA Architecture with Carry Chain for VPR8
 
-  - The chip layout is organized with a 2x2 array of Configurable Logic Blocks (CLBs)
+  - The chip layout is organized with a 32x32 array of Configurable Logic Blocks (CLBs)
     surrounded by a ring of I/Os
-  - [TODO] Delay numbers are extracted from a 12 nm technology
+  - A column of BRAM locates at the 16th column of the 32x32 array
+  - Delay numbers are extracted from a 12 nm technology
+    Process corner: TT 0.8V
+  
   Author: Xifan Tang, Aurelien Alacchi and Ganesh Gore
 -->
 <architecture>
@@ -216,8 +219,8 @@
     <connection_block input_switch_name="ipin_cblock"/>
   </device>
   <switchlist>
-    <switch type="mux" name="0" R="0" Cin="0" Cout="0" Tdel="160e-12" mux_trans_size="2.630740" buf_size="27.645901"/>
-    <switch type="mux" name="ipin_cblock" R="0." Cout="0." Cin="0" Tdel="207e-12" mux_trans_size="1.222260" buf_size="auto"/>
+    <switch type="mux" name="0" R="0" Cin="0" Cout="0" Tdel="200e-12" mux_trans_size="2.630740" buf_size="27.645901"/>
+    <switch type="mux" name="ipin_cblock" R="0." Cout="0." Cin="0" Tdel="210e-12" mux_trans_size="1.222260" buf_size="auto"/>
   </switchlist>
   <segmentlist>
     <!-- GIVE a specific name for the segment! OpenFPGA appreciate that! -->
@@ -337,6 +340,9 @@
         <clock name="clk" num_pins="1"/>
 
         <!-- Describe physical mode begins -->
+        <!-- Timing annotation is not require for unpackable mode
+             It will not be used by timing analyzer
+          -->
         <mode name="physical" packable="false">
           <pb_type name="frac_logic" num_pb="1">
             <input name="in" num_pins="6"/>
@@ -485,6 +491,9 @@
                         161e-12
                     </delay_matrix>
                   </pb_type>
+                  <!-- Delay extracted from standard cell lib file
+                       Consider the minimum slew and minimum load
+                   -->
                   <pb_type name="adder" blif_model=".subckt adder" num_pb="1">
                     <input name="a" num_pins="1"/>
                     <input name="b" num_pins="1"/>
@@ -498,6 +507,9 @@
                     <delay_constant max="26e-12" in_port="adder.b" out_port="adder.cout"/>
                     <delay_constant max="26e-12" in_port="adder.cin" out_port="adder.cout"/>
                   </pb_type>
+                  <!-- Delay extracted from standard cell lib file
+                       Consider the minimum slew and minimum load
+                   -->
                   <pb_type name="ff" blif_model=".latch" num_pb="1" class="flipflop">
                     <input name="D" num_pins="1" port_class="D"/>
                     <output name="Q" num_pins="1" port_class="Q"/>
@@ -522,6 +534,12 @@
                     <direct name="carry_out" input="adder.cout" output="arithmetic.cout">
                       <pack_pattern name="chain" in_port="adder.cout" out_port="arithmetic.cout"/>
                     </direct>
+                    <!-- Timing is extracted from the physical implementation 
+                         The path from ff.Q to arithmetic.out consists of a routing multiplexer
+                         The path from adder.sumout to arithmetic.out consists of two routing multiplexers
+                         One multiplexer connects from adder to ff.D 
+                         Another connects from the ff.D to arithmetic.out
+                      -->
                     <mux name="sumout" input="ff.Q adder.sumout" output="arithmetic.out">
                       <delay_constant max="112e-12" in_port="adder.sumout" out_port="arithmetic.out"/>
                       <delay_constant max="48e-12" in_port="ff.Q" out_port="arithmetic.out" />
@@ -532,10 +550,8 @@
                 <interconnect>
                   <direct name="direct1" input="ble5.in[3:0]" output="arithmetic.in"/>
                   <direct name="carry_in" input="ble5.cin" output="arithmetic.cin">
-                    <!--pack_pattern name="chain" in_port="ble5.cin" out_port="arithmetic.cin"/-->
                   </direct>
                   <direct name="carry_out" input="arithmetic.cout" output="ble5.cout">
-                    <!--pack_pattern name="chain" in_port="arithmetic.cout" out_port="ble5.cout"/-->
                   </direct>
                   <direct name="direct2" input="ble5.clk" output="arithmetic.clk"/>
                   <direct name="direct3" input="arithmetic.out" output="ble5.out"/>
@@ -547,13 +563,10 @@
               <direct name="direct2" input="lut5inter.in" output="ble5[1:1].in"/>
               <direct name="direct3" input="ble5[1:0].out" output="lut5inter.out"/>
               <direct name="carry_in" input="lut5inter.cin" output="ble5[0:0].cin">
-                <!--pack_pattern name="chain" in_port="lut5inter.cin" out_port="ble5[0:0].cin"/-->
               </direct>
               <direct name="carry_out" input="ble5[1:1].cout" output="lut5inter.cout">
-                <!--pack_pattern name="chain" in_port="ble5[1:1].cout" out_port="lut5inter.cout"/-->
               </direct>
               <direct name="carry_link" input="ble5[0:0].cout" output="ble5[1:1].cin">
-                <!--pack_pattern name="chain" in_port="ble5[0:0].cout" out_port="ble5[1:1].cout"/-->
               </direct>
               <complete name="complete1" input="lut5inter.clk" output="ble5[1:0].clk"/>
             </interconnect>
@@ -563,10 +576,8 @@
             <direct name="direct2" input="lut5inter.out" output="fle.out"/>
             <direct name="direct3" input="fle.clk" output="lut5inter.clk"/>
             <direct name="carry_in" input="fle.cin" output="lut5inter.cin">
-              <!--pack_pattern name="chain" in_port="fle.cin" out_port="lut5inter.cin"/-->
             </direct>
             <direct name="carry_out" input="lut5inter.cout" output="fle.cout">
-              <!--pack_pattern name="chain" in_port="lut5inter.cout" out_port="fle.cout"/-->
             </direct>
           </interconnect>
         </mode>
@@ -589,6 +600,9 @@
                   230e-12
               </delay_matrix>
             </pb_type>
+            <!-- Delay extracted from standard cell lib file
+                 Consider the minimum slew and minimum load
+             -->
             <pb_type name="ff" blif_model=".latch" num_pb="1" class="flipflop">
               <input name="D" num_pins="1" port_class="D"/>
               <output name="Q" num_pins="1" port_class="Q"/>
@@ -746,6 +760,7 @@
           <input name="ren" num_pins="1" port_class="write_en"/>
           <output name="d_out" num_pins="32" port_class="data_out"/>
           <clock name="clk" num_pins="1" port_class="clock"/>
+          <!-- TODO the setup time and clk2Q delay should be extracted from BRAM LIB -->
           <T_setup value="509e-12" port="mem_512x32_dp.waddr" clock="clk"/>
           <T_setup value="509e-12" port="mem_512x32_dp.raddr" clock="clk"/>
           <T_setup value="509e-12" port="mem_512x32_dp.d_in" clock="clk"/>
