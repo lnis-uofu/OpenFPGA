@@ -73,7 +73,7 @@
          make it physically equivalent on all sides so that only one definition of I/Os is needed.
          If I do not make a physically equivalent definition, then I need to define 4 different I/Os, one for each side of the FPGA
       -->
-    <tile name="io" capacity="1" area="0">
+    <tile name="io" capacity="8" area="0">
       <equivalent_sites>
         <site pb_type="io"/>
       </equivalent_sites>
