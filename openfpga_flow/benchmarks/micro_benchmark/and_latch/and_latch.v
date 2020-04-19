@@ -1,9 +1,9 @@
 `timescale 1ns / 1ps
 
 module top(
-  clk,
   a,
   b,
+  clk,
   c,
   d);
 
