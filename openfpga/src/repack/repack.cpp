@@ -278,17 +278,20 @@ void add_lb_router_nets(LbRouter& lb_router,
     VTR_ASSERT(sink_lb_rr_nodes.size() == sink_pb_graph_pins.size());
 
     /* Printf for debugging only, may be enabled if verbose is enabled
-    VTR_LOG("Pb route for Net %s:\n", 
-            atom_ctx.nlist.net_name(atom_net_id).c_str());
-    VTR_LOG("Source node:\n\t%s -> %s\n",
-            source_pb_pin->to_string().c_str(),
-            source_pb_pin->to_string().c_str());
-    VTR_LOG("Sink nodes:\n");
-    for (t_pb_graph_pin* sink_pb_pin : sink_pb_graph_pins) {
-      VTR_LOG("\t%s\n",
-              sink_pb_pin->to_string().c_str());
-    }
      */
+    VTR_LOGV(verbose,
+             "Pb route for Net %s:\n", 
+             atom_ctx.nlist.net_name(atom_net_id).c_str());
+    VTR_LOGV(verbose,
+             "Source node:\n\t%s -> %s\n",
+             source_pb_pin->to_string().c_str(),
+             source_pb_pin->to_string().c_str());
+    VTR_LOGV(verbose, "Sink nodes:\n");
+    for (t_pb_graph_pin* sink_pb_pin : sink_pb_graph_pins) {
+      VTR_LOGV(verbose,
+               "\t%s\n",
+               sink_pb_pin->to_string().c_str());
+    }
 
     /* Add the net */
     add_lb_router_net_to_route(lb_router, lb_rr_graph,
@@ -341,17 +344,20 @@ void add_lb_router_nets(LbRouter& lb_router,
     VTR_ASSERT(sink_lb_rr_nodes.size() == sink_pb_graph_pins.size());
 
     /* Printf for debugging only, may be enabled if verbose is enabled
-    VTR_LOG("Pb route for Net %s:\n", 
-            atom_ctx.nlist.net_name(atom_net_id).c_str());
-    VTR_LOG("Source node:\n\t%s -> %s\n",
-            source_pb_pin->to_string().c_str(),
-            physical_source_pb_pin->to_string().c_str());
-    VTR_LOG("Sink nodes:\n");
-    for (t_pb_graph_pin* sink_pb_pin : sink_pb_graph_pins) {
-      VTR_LOG("\t%s\n",
-              sink_pb_pin->to_string().c_str());
-    }
      */
+    VTR_LOGV(verbose,
+             "Pb route for Net %s:\n", 
+             atom_ctx.nlist.net_name(atom_net_id).c_str());
+    VTR_LOGV(verbose,
+             "Source node:\n\t%s -> %s\n",
+             source_pb_pin->to_string().c_str(),
+             physical_source_pb_pin->to_string().c_str());
+    VTR_LOGV(verbose, "Sink nodes:\n");
+    for (t_pb_graph_pin* sink_pb_pin : sink_pb_graph_pins) {
+      VTR_LOGV(verbose,
+               "\t%s\n",
+               sink_pb_pin->to_string().c_str());
+    }
 
     /* Add the net */
     add_lb_router_net_to_route(lb_router, lb_rr_graph,
@@ -429,7 +435,8 @@ void repack_cluster(const AtomContext& atom_ctx,
                                            clustering_ctx.clb_nlist.block_pb(block_id),
                                            clustering_ctx.clb_nlist.block_pb(block_id)->pb_route,
                                            atom_ctx,
-                                           device_annotation);
+                                           device_annotation,
+                                           verbose);
   /* Save routing results */
   save_lb_router_results_to_physical_pb(phy_pb, lb_router, lb_rr_graph);
   VTR_LOGV(verbose, "Saved results in physical pb\n");

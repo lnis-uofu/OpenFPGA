@@ -17,6 +17,15 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
+/* Constants */
+
+/* Mode index of a LUT pb_type
+ * Mode 0 is the wire mode
+ * Mode 1 is the lut mode
+ */
+constexpr int VPR_PB_TYPE_WIRE_MODE = 0;
+constexpr int VPR_PB_TYPE_LUT_MODE = 1;
+
 bool is_primitive_pb_type(t_pb_type* pb_type); 
 
 bool is_root_pb_type(t_pb_type* pb_type);
