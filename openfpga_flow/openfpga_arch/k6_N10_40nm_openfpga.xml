@@ -146,11 +146,11 @@
        <design_technology type="cmos"/>
        <input_buffer exist="true" circuit_model_name="INVTX1"/>
        <output_buffer exist="true" circuit_model_name="INVTX1"/>
-       <port type="input" prefix="pReset" size="1" is_global="true" default_val="0" is_reset="true" is_prog="true"/>
+       <port type="input" prefix="pReset" lib_name="reset" size="1" is_global="true" default_val="0" is_reset="true" is_prog="true"/>
        <port type="input" prefix="D" size="1"/>
        <port type="output" prefix="Q" size="1"/>
        <port type="output" prefix="Qb" size="1"/>
-       <port type="clock" prefix="prog_clk" size="1" is_global="true" default_val="0" is_prog="true"/>
+       <port type="clock" prefix="prog_clk" lib_name="clk" size="1" is_global="true" default_val="0" is_prog="true"/>
     </circuit_model>
     <circuit_model type="iopad" name="iopad" prefix="iopad" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/io.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/io.v">
       <design_technology type="cmos"/>
