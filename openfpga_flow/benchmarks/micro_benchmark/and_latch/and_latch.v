@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-module top(
+module and_latch(
   a,
   b,
   clk,
