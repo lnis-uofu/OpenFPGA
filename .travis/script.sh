@@ -51,6 +51,9 @@ echo -e "Testing OpenFPGA Shell";
 echo -e "Testing configuration chain of a K4N4 FPGA";
 python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/configuration_chain --debug --show_thread_logs
 
+echo -e "Testing Verilog generation for a single mode LUT6 FPGA using micro benchmarks";
+python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/single_mode --debug --show_thread_logs
+
 echo -e "Testing Verilog generation with simple fracturable LUT6 ";
 python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/frac_lut --debug --show_thread_logs
 
