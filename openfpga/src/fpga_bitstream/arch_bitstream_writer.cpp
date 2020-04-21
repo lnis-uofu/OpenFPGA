@@ -17,7 +17,7 @@
 #include "openfpga_naming.h"
 
 #include "bitstream_manager_utils.h"
-#include "bitstream_writer.h"
+#include "arch_bitstream_writer.h"
 
 /* begin namespace openfpga */
 namespace openfpga {

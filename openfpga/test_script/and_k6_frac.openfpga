@@ -34,7 +34,7 @@ repack #--verbose
 build_architecture_bitstream --verbose --file /var/tmp/xtang/openfpga_test_src/fabric_indepenent_bitstream.xml
 
 # Build fabric-dependent bitstream
-build_fabric_bitstream --verbose
+build_fabric_bitstream --verbose --file /var/tmp/xtang/openfpga_test_src/and.bitstream
 
 # Write the Verilog netlist for FPGA fabric
 #  - Enable the use of explicit port mapping in Verilog netlist
