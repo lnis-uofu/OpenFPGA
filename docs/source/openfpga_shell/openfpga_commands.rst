@@ -124,7 +124,9 @@ FPGA-Bitstream
 
 .. option:: build_fabric_bitstream
 
-  Reorganize the bitstream database for a specific FPGA fabric
+  Build a sequence for every configuration bits in the bitstream database for a specific FPGA fabric
+
+  - ``--file`` or ``-f`` Output the fabric bitstream to an plain text file (only 0 or 1)
 
   - ``--verbose`` Show verbose log
   
