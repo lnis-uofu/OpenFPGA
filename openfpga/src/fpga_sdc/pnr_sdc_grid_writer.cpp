@@ -282,6 +282,114 @@ void print_pnr_sdc_constrain_pb_graph_node_timing(const std::string& sdc_dir,
 }
 
 /********************************************************************
+ * Print SDC timing constraints for a primitive pb_type
+ * This function will generate SDC to constrain pin-to-pin timing
+ * if it is defined in XML
+ *
+ * This is designed for LUT, adder or other hard IPs
+ * When PnR the modules, we want to minimize the interconnect delay
+ *******************************************************************/
+static 
+void print_pnr_sdc_constrain_primitive_pb_graph_node(const std::string& sdc_dir,
+                                                     const ModuleManager& module_manager,
+                                                     t_pb_graph_node* primitive_pb_graph_node,
+                                                     const bool& constrain_zero_delay_paths) {
+  /* Validate pb_graph node */
+  if (nullptr == primitive_pb_graph_node) {
+    VTR_LOGF_ERROR(__FILE__, __LINE__,
+                   "Invalid primitive_pb_graph_node.\n");
+    exit(1);
+  }
+
+  /* Get the pb_type */
+  t_pb_type* primitive_pb_type = primitive_pb_graph_node->pb_type;
+
+  /* We can directly return if there is no timing annotation defined */
+  if (0 == primitive_pb_type->num_annotations) {
+    return;
+  } 
+
+  /* Get the pb_type definition related to the node */
+  t_pb_type* physical_pb_type = primitive_pb_graph_node->pb_type; 
+  std::string pb_module_name = generate_physical_block_module_name(physical_pb_type);
+
+  /* Find the pb module in module manager */
+  ModuleId pb_module = module_manager.find_module(pb_module_name);
+  VTR_ASSERT(true == module_manager.valid_module_id(pb_module));
+
+  /* Create the file name for SDC */
+  std::string sdc_fname(sdc_dir + pb_module_name + std::string(SDC_FILE_NAME_POSTFIX));
+
+  /* Create the file stream */
+  std::fstream fp;
+  fp.open(sdc_fname, std::fstream::out | std::fstream::trunc);
+
+  check_file_stream(sdc_fname.c_str(), fp);
+
+  /* Generate the descriptions*/
+  print_sdc_file_header(fp, std::string("Timing constraints for Grid " + pb_module_name + " in PnR"));
+
+  /* We traverse the pb_graph pins where we can find pin-to-pin timing annotation
+   * We walk through output pins here, build timing constraints by pair each output to input
+   * Clock pins are not walked through because they will be handled by clock tree synthesis
+   */
+  for (int iport = 0; iport < primitive_pb_graph_node->num_output_ports; ++iport) {
+    for (int ipin = 0; ipin < primitive_pb_graph_node->num_output_pins[iport]; ++ipin) {
+       t_pb_graph_pin* sink_pin = &(primitive_pb_graph_node->output_pins[iport][ipin]);
+
+       /* Port must exist in the module graph */
+       ModulePortId sink_module_port_id = module_manager.find_module_port(pb_module, generate_pb_type_port_name(sink_pin->port));
+       VTR_ASSERT(true == module_manager.valid_module_port_id(pb_module, sink_module_port_id));
+       BasicPort sink_port = module_manager.module_port(pb_module, sink_module_port_id);
+       /* Set the correct pin number of the port */
+       sink_port.set_width(sink_pin->pin_number, sink_pin->pin_number);
+
+       /* Find all the sink pin from this source pb_graph_pin */
+       for (int iedge = 0; iedge < sink_pin->num_input_edges; ++iedge) {
+         VTR_ASSERT(1 == sink_pin->input_edges[iedge]->num_input_pins);
+         t_pb_graph_pin* src_pin = sink_pin->input_edges[iedge]->input_pins[0];
+
+         /* Port must exist in the module graph */
+         ModulePortId src_module_port_id = module_manager.find_module_port(pb_module, generate_pb_type_port_name(src_pin->port));
+         VTR_ASSERT(true == module_manager.valid_module_port_id(pb_module, src_module_port_id));
+         BasicPort src_port = module_manager.module_port(pb_module, src_module_port_id);
+         /* Set the correct pin number of the port */
+         src_port.set_width(src_pin->pin_number, src_pin->pin_number);
+
+         /* Find max delay between src and sink pin */
+         float tmax = sink_pin->input_edges[iedge]->delay_max;
+         /* If the delay is zero, constrain only when user wants it */
+         if ( (true == constrain_zero_delay_paths)
+           || (0. == tmax) ) {
+           print_pnr_sdc_constrain_max_delay(fp, 
+                                             pb_module_name, 
+                                             generate_sdc_port(src_port),
+                                             pb_module_name, 
+                                             generate_sdc_port(sink_port),
+                                             tmax);
+         }
+
+         /* Find min delay between src and sink pin */
+         float tmin = sink_pin->input_edges[iedge]->delay_min;
+         /* If the delay is zero, constrain only when user wants it */
+         if ( (true == constrain_zero_delay_paths)
+           || (0. == tmin) ) {
+           print_pnr_sdc_constrain_min_delay(fp, 
+                                             pb_module_name, 
+                                             generate_sdc_port(src_port),
+                                             pb_module_name, 
+                                             generate_sdc_port(sink_port),
+                                             tmin);
+        } 
+      }
+    }
+  }
+
+  /* Close file handler */
+  fp.close();
+}
+
+/********************************************************************
  * Recursively print SDC timing constraints for a pb_type
  * This function will generate a SDC file for each pb_type,
  * constraining the pin-to-pin timing
@@ -302,8 +410,11 @@ void rec_print_pnr_sdc_constrain_pb_graph_timing(const std::string& sdc_dir,
   /* Get the pb_type */
   t_pb_type* parent_pb_type = parent_pb_graph_node->pb_type;
 
-  /* No need to constrain the primitive node */
+  /* Constrain the primitive node if a timing matrix is defined */
   if (true == is_primitive_pb_type(parent_pb_type)) {
+    print_pnr_sdc_constrain_primitive_pb_graph_node(sdc_dir, module_manager,
+                                                    parent_pb_graph_node,
+                                                    constrain_zero_delay_paths);
     return;
   }
 
