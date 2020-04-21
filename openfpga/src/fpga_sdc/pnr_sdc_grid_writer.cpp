@@ -301,8 +301,26 @@ void print_pnr_sdc_constrain_primitive_pb_graph_node(const std::string& sdc_dir,
     exit(1);
   }
 
-  /* Get the pb_type */
+  t_pb_graph_node* logical_primitive_pb_graph_node = primitive_pb_graph_node;
+
+  /* Get the pb_type where the timing annotations are stored
+   * Note that some primitive pb_type has child modes
+   *   - Look-Up Table
+   *   - Memory
+   * For those pb_type, timing annotations are stored in the child pb_type
+   */
   t_pb_type* primitive_pb_type = primitive_pb_graph_node->pb_type;
+  if (LUT_CLASS == primitive_pb_type->class_type) {
+    primitive_pb_type = find_mode_child_pb_type(&(primitive_pb_type->modes[VPR_PB_TYPE_LUT_MODE]),
+                                                primitive_pb_type->name);
+    VTR_ASSERT(nullptr != primitive_pb_type);
+    logical_primitive_pb_graph_node = primitive_pb_graph_node->child_pb_graph_nodes[VPR_PB_TYPE_LUT_MODE][0];
+  } else if (MEMORY_CLASS == primitive_pb_type->class_type) {
+    VTR_ASSERT(1 == primitive_pb_type->num_modes);
+    VTR_ASSERT(1 == primitive_pb_type->modes[0].num_pb_type_children);
+    primitive_pb_type = &(primitive_pb_type->modes[0].pb_type_children[0]);
+    logical_primitive_pb_graph_node = primitive_pb_graph_node->child_pb_graph_nodes[0][0];
+  }
 
   /* We can directly return if there is no timing annotation defined */
   if (0 == primitive_pb_type->num_annotations) {
@@ -333,12 +351,12 @@ void print_pnr_sdc_constrain_primitive_pb_graph_node(const std::string& sdc_dir,
    * We walk through output pins here, build timing constraints by pair each output to input
    * Clock pins are not walked through because they will be handled by clock tree synthesis
    */
-  for (int iport = 0; iport < primitive_pb_graph_node->num_output_ports; ++iport) {
-    for (int ipin = 0; ipin < primitive_pb_graph_node->num_output_pins[iport]; ++ipin) {
-       t_pb_graph_pin* sink_pin = &(primitive_pb_graph_node->output_pins[iport][ipin]);
+  for (int iport = 0; iport < logical_primitive_pb_graph_node->num_output_ports; ++iport) {
+    for (int ipin = 0; ipin < logical_primitive_pb_graph_node->num_output_pins[iport]; ++ipin) {
+       t_pb_graph_pin* sink_pin = &(logical_primitive_pb_graph_node->output_pins[iport][ipin]);
 
        /* Port must exist in the module graph */
-       ModulePortId sink_module_port_id = module_manager.find_module_port(pb_module, generate_pb_type_port_name(sink_pin->port));
+       ModulePortId sink_module_port_id = module_manager.find_module_port(pb_module, generate_pb_type_port_name(physical_pb_type, sink_pin->port));
        VTR_ASSERT(true == module_manager.valid_module_port_id(pb_module, sink_module_port_id));
        BasicPort sink_port = module_manager.module_port(pb_module, sink_module_port_id);
        /* Set the correct pin number of the port */
@@ -350,7 +368,7 @@ void print_pnr_sdc_constrain_primitive_pb_graph_node(const std::string& sdc_dir,
          t_pb_graph_pin* src_pin = sink_pin->input_edges[iedge]->input_pins[0];
 
          /* Port must exist in the module graph */
-         ModulePortId src_module_port_id = module_manager.find_module_port(pb_module, generate_pb_type_port_name(src_pin->port));
+         ModulePortId src_module_port_id = module_manager.find_module_port(pb_module, generate_pb_type_port_name(physical_pb_type, src_pin->port));
          VTR_ASSERT(true == module_manager.valid_module_port_id(pb_module, src_module_port_id));
          BasicPort src_port = module_manager.module_port(pb_module, src_module_port_id);
          /* Set the correct pin number of the port */

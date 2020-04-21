@@ -1325,13 +1325,27 @@ bool is_core_grid_on_given_border_side(const vtr::Point<size_t>& device_size,
  * The name convention is 
  * <pb_type_name>_<port_name>
  ********************************************************************/
-std::string generate_pb_type_port_name(t_port* pb_type_port) {
+std::string generate_pb_type_port_name(t_pb_type* pb_type,
+                                       t_port* pb_type_port) {
   std::string port_name;
   
-  port_name = std::string(pb_type_port->parent_pb_type->name) + std::string("_") + std::string(pb_type_port->name);
+  port_name = std::string(pb_type->name) + std::string("_") + std::string(pb_type_port->name);
    
   return port_name;
 }
+
+/*********************************************************************
+ * Generate the port name of a Verilog module describing a pb_type
+ * The name convention is 
+ * <pb_type_name>_<port_name>
+ *  
+ * This is a wrapper on the generate_pb_type_port_name() function
+ * which can infer the parent_pb_type
+ ********************************************************************/
+std::string generate_pb_type_port_name(t_port* pb_type_port) {
+  return generate_pb_type_port_name(pb_type_port->parent_pb_type, pb_type_port);
+}
+
 
 /*********************************************************************
  * Generate the global I/O port name of a Verilog module
