@@ -311,16 +311,19 @@ void print_pnr_sdc_constrain_primitive_pb_graph_node(const std::string& sdc_dir,
    */
   t_pb_type* primitive_pb_type = primitive_pb_graph_node->pb_type;
   if (LUT_CLASS == primitive_pb_type->class_type) {
-    primitive_pb_type = find_mode_child_pb_type(&(primitive_pb_type->modes[VPR_PB_TYPE_LUT_MODE]),
-                                                primitive_pb_type->name);
-    VTR_ASSERT(nullptr != primitive_pb_type);
+    VTR_ASSERT(VPR_PB_TYPE_LUT_MODE < primitive_pb_type->num_modes);
+    VTR_ASSERT(1 == primitive_pb_type->modes[VPR_PB_TYPE_LUT_MODE].num_pb_type_children);
+    primitive_pb_type = &(primitive_pb_type->modes[VPR_PB_TYPE_LUT_MODE].pb_type_children[0]);
     logical_primitive_pb_graph_node = primitive_pb_graph_node->child_pb_graph_nodes[VPR_PB_TYPE_LUT_MODE][0];
+    VTR_ASSERT(nullptr != logical_primitive_pb_graph_node);
   } else if (MEMORY_CLASS == primitive_pb_type->class_type) {
     VTR_ASSERT(1 == primitive_pb_type->num_modes);
     VTR_ASSERT(1 == primitive_pb_type->modes[0].num_pb_type_children);
     primitive_pb_type = &(primitive_pb_type->modes[0].pb_type_children[0]);
     logical_primitive_pb_graph_node = primitive_pb_graph_node->child_pb_graph_nodes[0][0];
   }
+  VTR_ASSERT(nullptr != primitive_pb_type);
+  VTR_ASSERT(nullptr != logical_primitive_pb_graph_node);
 
   /* We can directly return if there is no timing annotation defined */
   if (0 == primitive_pb_type->num_annotations) {
