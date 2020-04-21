@@ -356,7 +356,14 @@ void print_pnr_sdc_constrain_cb_timing(const std::string& sdc_dir,
 
     /* Connection block routing segment ids for each track */
     RRSegmentId segment_id = rr_gsb.get_chan_node_segment(rr_gsb.get_cb_chan_side(cb_type), itrack);
-    float routing_segment_delay = rr_graph.get_segment(segment_id).Rmetal;
+
+    /* Computing the delay of the routing segment
+     * Here we just assume a simple 1-level RC delay model 
+     * TODO: Should consider multi-level RC delay models
+     *       where the number of levels are defined by users
+     */
+    float routing_segment_delay = rr_graph.get_segment(segment_id).Rmetal
+                                * rr_graph.get_segment(segment_id).Cmetal;
 
     /* If we have a zero-delay path to contrain, we will skip unless users want so */
     if ( (false == constrain_zero_delay_paths) 
