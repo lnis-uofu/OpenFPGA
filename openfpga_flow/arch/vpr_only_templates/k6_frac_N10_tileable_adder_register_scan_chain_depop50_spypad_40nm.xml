@@ -135,6 +135,51 @@
         <loc side="bottom">clb.cout clb.cout_copy clb.sc_out clb.regout clb.I2[9:0] clb.I3[9:0] clb.O[19:10]</loc>
       </pinlocations>
     </tile>
+    <!-- Each CLB tile with spypads includes a Configurable Logic Block (CLB) with spypads
+         Each input of the tile can be driven by 15% of routing tracks
+         Each output of the tile can drive 10% of routing tracks
+      -->
+    <tile name="clb_spypad" area="53894">
+      <equivalent_sites>
+        <site pb_type="clb_spypad"/>
+      </equivalent_sites>
+      <input name="I0" num_pins="10" equivalent="full"/>
+      <input name="I1" num_pins="10" equivalent="full"/>
+      <input name="I2" num_pins="10" equivalent="full"/>
+      <input name="I3" num_pins="10" equivalent="full"/>
+      <input name="sc_in" num_pins="1"/>
+      <input name="cin" num_pins="1"/>
+      <input name="cin_trick" num_pins="1"/>
+      <input name="regin" num_pins="1"/>
+      <output name="O" num_pins="20" equivalent="none"/>
+      <output name="sc_out" num_pins="1"/>
+      <output name="cout" num_pins="1"/>
+      <output name="cout_copy" num_pins="1"/>
+      <output name="regout" num_pins="1"/>
+      <clock name="clk" num_pins="1"/>
+      <!-- Each input of the tile can be driven by 15% of routing tracks
+           Each output of the tile can drive 10% of routing tracks
+           There are four pins (cin, cout, sc_in, sc_out) has not connection 
+           to routing tracks. There are directed wired from/to adjacent CLBs
+        -->
+      <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10">
+        <fc_override port_name="cin" fc_type="frac" fc_val="0"/>
+        <fc_override port_name="cout" fc_type="frac" fc_val="0"/>
+        <fc_override port_name="sc_in" fc_type="frac" fc_val="0"/>
+        <fc_override port_name="sc_out" fc_type="frac" fc_val="0"/>
+      </fc>
+      <!-- Highly recommand to customize pin location when direct connection is used!!! -->
+      <!-- To ensure best tileable routing architecture (minimize the number of unique SBs
+           We keep all the pins that touch routing architecture on the right and bottom sides of the tile
+           Top side pins are mainly for direct connections
+        -->
+      <pinlocations pattern="custom">
+        <loc side="left"></loc>
+        <loc side="top">clb_spypad.sc_in clb_spypad.cin clb_spypad.cin_trick clb_spypad.regin clb_spypad.clk</loc>
+        <loc side="right">clb_spypad.I0[9:0] clb_spypad.I1[9:0] clb_spypad.O[9:0]</loc>
+        <loc side="bottom">clb_spypad.cout clb_spypad.cout_copy clb_spypad.sc_out clb_spypad.regout clb_spypad.I2[9:0] clb_spypad.I3[9:0] clb_spypad.O[19:10]</loc>
+      </pinlocations>
+    </tile>
   </tiles>
   <!-- ODIN II specific config ends -->
   <!-- Physical descriptions begin -->
@@ -153,6 +198,8 @@
       <corners type="EMPTY" priority="101"/>
       <!--Fill with 'clb'-->
       <fill type="clb" priority="10"/>
+      <!-- Use the clb with spypad at [1,1] by setting a higher priority -->
+      <single type="clb_spypad" x="1" y="1" priority="11"/>
     </fixed_layout>
     <!-- /auto_layout -->
   </layout>
@@ -676,5 +723,820 @@
       </interconnect>
     </pb_type>
     <!-- Define general purpose logic block (CLB) ends -->
+    <!-- Define multi-mode Configurable Logic Block (CLB) with spypads begin -->
+    <!-- Technical highlight:
+         K6_frac_N10_I40_chain_shiftreg_depop50
+         - K6_frac: Each Logic Element (LE) contains a fracturable 6 LUT,
+                    which can operate as one 6-LUT or two 5-LUTs or four 4-LUTs 
+                    In addition to 6-LUT, each LE also includes two Flip-Flops
+         - N10: every CLB consists of 10 LEs and a local routing architecture
+         - I40: every CLB has 40 inputs
+         - chain: a hard adder chain across all the LEs in a CLB
+                  The inputs of adder are driven by 4-LUTs.
+                  The sumout of adder can optional drive an LE output or a Flip-Flop
+                  The carry-out of adder will drive the carry-in of the next adder in the chain
+         - shiftreg: Flip-flops inside CLB can be configured as shift registers.
+                     The organization is similar the hard adder chain except it is programmable
+         - depop50: every local routing multiplexer accesses to 50% of the CLB inputs
+         - spypads: spypads are added to LUT outputs in the first fle (fle[0]) 
+      -->
+    <pb_type name="clb_spypad">
+      <input name="I0" num_pins="10" equivalent="full"/>
+      <input name="I1" num_pins="10" equivalent="full"/>
+      <input name="I2" num_pins="10" equivalent="full"/>
+      <input name="I3" num_pins="10" equivalent="full"/>
+      <input name="sc_in" num_pins="1"/>
+      <input name="cin" num_pins="1"/>
+      <input name="cin_trick" num_pins="1"/>
+      <input name="regin" num_pins="1"/>
+      <output name="O" num_pins="20" equivalent="none"/>
+      <output name="sc_out" num_pins="1"/>
+      <output name="cout" num_pins="1"/>
+      <output name="cout_copy" num_pins="1"/>
+      <output name="regout" num_pins="1"/>
+      <clock name="clk" num_pins="1"/>
+
+      <!-- Describe fracturable logic element -->
+      <pb_type name="fle" num_pb="9">
+        <input name="in" num_pins="6"/>
+        <input name="cin" num_pins="1"/>
+        <input name="sc_in" num_pins="1"/>
+        <input name="regin" num_pins="1"/>
+        <output name="out" num_pins="2"/>
+        <output name="cout" num_pins="1"/>
+        <output name="sc_out" num_pins="1"/>
+        <output name="regout" num_pins="1"/>
+        <clock name="clk" num_pins="1"/>
+
+        <!-- Describe physical mode begins -->
+        <mode name="physical" packable="false">
+          <pb_type name="frac_logic" num_pb="1">
+            <input name="in" num_pins="6"/>
+            <input name="cin" num_pins="1"/>
+            <input name="regin" num_pins="1"/>
+            <input name="regchain" num_pins="1"/>
+            <output name="out" num_pins="2"/>
+            <output name="cout" num_pins="1"/>
+            <pb_type name="frac_lut6" blif_model=".subckt frac_lut6" num_pb="1">
+              <input name="in" num_pins="6"/>
+              <output name="lut4_out" num_pins="4"/>
+              <output name="lut5_out" num_pins="2"/>
+              <output name="lut6_out" num_pins="1"/>
+            </pb_type>
+            <pb_type name="adder_phy" blif_model=".subckt adder" num_pb="2">
+              <input name="a" num_pins="1"/>
+              <input name="b" num_pins="1"/>
+              <input name="cin" num_pins="1"/>
+              <output name="cout" num_pins="1"/>
+              <output name="sumout" num_pins="1"/>
+              <delay_constant max="0.3e-9" in_port="adder_phy.a" out_port="adder_phy.sumout"/>
+              <delay_constant max="0.3e-9" in_port="adder_phy.b" out_port="adder_phy.sumout"/>
+              <delay_constant max="0.3e-9" in_port="adder_phy.cin" out_port="adder_phy.sumout"/>
+              <delay_constant max="0.3e-9" in_port="adder_phy.a" out_port="adder_phy.cout"/>
+              <delay_constant max="0.3e-9" in_port="adder_phy.b" out_port="adder_phy.cout"/>
+              <delay_constant max="0.3e-9" in_port="adder_phy.cin" out_port="adder_phy.cout"/>
+            </pb_type>
+            <interconnect>
+              <direct name="direct_fraclut_in" input="frac_logic.in[5:0]" output="frac_lut6.in[5:0]"/>
+              <direct name="direct_cin" input="frac_logic.cin" output="adder_phy[0].cin"/>
+              <direct name="direct_carry" input="adder_phy[0].cout" output="adder_phy[1].cin"/>
+              <direct name="direct_cout" input="adder_phy[1].cout" output="frac_logic.cout"/>
+              <direct name="direct_lut4carry0" input="frac_lut6.lut4_out[0]" output="adder_phy[0].a"/>
+              <direct name="direct_lut4carry1" input="frac_lut6.lut4_out[1]" output="adder_phy[0].b"/>
+              <direct name="direct_lut4carry2" input="frac_lut6.lut4_out[2]" output="adder_phy[1].a"/>
+              <direct name="direct_lut4carry3" input="frac_lut6.lut4_out[3]" output="adder_phy[1].b"/>
+              <mux name="mux1" input="adder_phy[0].sumout frac_lut6.lut5_out[0] frac_logic.regin" output="frac_logic.out[0]">
+              </mux>
+              <mux name="mux2" input="adder_phy[1].sumout frac_lut6.lut5_out[1] frac_lut6.lut6_out[0] frac_logic.regchain[0]" output="frac_logic.out[1]">
+              </mux>
+            </interconnect>
+          </pb_type>
+          <pb_type name="ff_phy" blif_model=".subckt scff" num_pb="2">
+            <input name="D" num_pins="1"/>
+            <input name="D_chain" num_pins="1"/>
+            <output name="Q" num_pins="1"/>
+            <clock name="clk" num_pins="1"/>
+            <T_setup value="66e-12" port="ff_phy.D" clock="clk"/>
+            <T_setup value="66e-12" port="ff_phy.D_chain" clock="clk"/>
+            <T_clock_to_Q max="124e-12" port="ff_phy.Q" clock="clk"/>
+          </pb_type>
+          <interconnect>
+            <complete name="direct_clk" input="fle.clk" output="ff_phy[1:0].clk"/>
+            <direct name="direct_in" input="fle.in[5:0]" output="frac_logic.in[5:0]"/>
+            <direct name="direct_regin" input="fle.regin" output="frac_logic.regin"/>
+            <direct name="direct_regchain" input="ff_phy[0].Q" output="frac_logic.regchain"/>
+            <direct name="direct_regout" input="ff_phy[1].Q" output="fle.regout"/>
+            <direct name="direct_cin" input="fle.cin" output="frac_logic.cin"/>
+            <direct name="direct_cout" input="frac_logic.cout" output="fle.cout"/>
+            <direct name="direct_frac_out1" input="frac_logic.out[0]" output="ff_phy[0].D"/>
+            <direct name="direct_frac_out2" input="frac_logic.out[1]" output="ff_phy[1].D"/>
+            <direct name="direct_fle_scin" input="fle.sc_in" output="ff_phy[0].D_chain"/>
+            <direct name="direct_fle_sc_chain" input="ff_phy[0].Q" output="ff_phy[1].D_chain"/>
+            <direct name="direct_fle_scout" input="ff_phy[1].Q" output="fle.sc_out"/>
+            <mux name="mux1" input="ff_phy[0].Q frac_logic.out[0]" output="fle.out[0]">
+            </mux>
+            <mux name="mux2" input="ff_phy[1].Q frac_logic.out[1]" output="fle.out[1]">
+            </mux>
+          </interconnect>
+        </mode>
+        <!-- Define physical mode begins -->
+        <!-- Define n2_lut5 mode begins -->
+        <mode name="n2_lut5" packable="true">
+          <pb_type name="lut5inter" num_pb="1">
+            <input name="in" num_pins="5"/>
+            <input name="cin" num_pins="1"/>
+            <output name="out" num_pins="2"/>
+            <output name="cout" num_pins="1"/>
+            <clock name="clk" num_pins="1"/>
+            <pb_type name="ble5" num_pb="2">
+              <input name="in" num_pins="5"/>
+              <input name="cin" num_pins="1"/>
+              <output name="out" num_pins="1"/>
+              <output name="cout" num_pins="1"/>
+              <clock name="clk" num_pins="1"/>
+              <mode name="blut5">
+                <pb_type name="flut5" num_pb="1">
+                  <input name="in" num_pins="5"/>
+                  <output name="out" num_pins="1"/>
+                  <clock name="clk" num_pins="1"/>
+                  <!-- Regular LUT mode -->
+                  <pb_type name="lut5" blif_model=".names" num_pb="1" class="lut">
+                    <input name="in" num_pins="5" port_class="lut_in"/>
+                    <output name="out" num_pins="1" port_class="lut_out"/>
+                    <!-- LUT timing using delay matrix -->
+                    <delay_matrix type="max" in_port="lut5.in" out_port="lut5.out">
+                        202e-12
+                        202e-12
+                        202e-12
+                        202e-12
+                        202e-12
+                    </delay_matrix>
+                  </pb_type>
+
+                  <pb_type name="ff" blif_model=".latch" num_pb="1" class="flipflop">
+                    <input name="D" num_pins="1" port_class="D"/>
+                    <output name="Q" num_pins="1" port_class="Q"/>
+                    <clock name="clk" num_pins="1" port_class="clock"/>
+                    <T_setup value="66e-12" port="ff.D" clock="clk"/>
+                    <T_clock_to_Q max="124e-12" port="ff.Q" clock="clk"/>
+                  </pb_type>
+                  <interconnect>
+                    <direct name="direct1" input="flut5.in" output="lut5.in"/>
+                    <direct name="direct2" input="lut5.out" output="ff.D">
+                      <pack_pattern name="ble5" in_port="lut5.out" out_port="ff.D"/>
+                    </direct>
+                    <direct name="direct3" input="flut5.clk" output="ff.clk"/>
+                    <mux name="mux1" input="ff.Q lut5.out" output="flut5.out">
+                      <delay_constant max="25e-12" in_port="lut5.out" out_port="flut5.out" />
+                      <delay_constant max="45e-12" in_port="ff.Q" out_port="flut5.out" />
+                    </mux>
+                  </interconnect>
+                </pb_type>
+                <interconnect>
+                  <direct name="direct1" input="ble5.in" output="flut5.in"/>
+                  <direct name="direct2" input="ble5.clk" output="flut5.clk"/>
+                  <direct name="direct3" input="flut5.out" output="ble5.out"/>
+                </interconnect>
+              </mode>
+              <mode name="arithmetic">
+                <pb_type name="arithmetic" num_pb="1">
+                  <input name="in" num_pins="4"/>
+                  <input name="cin" num_pins="1"/>
+                  <output name="out" num_pins="1"/>
+                  <output name="cout" num_pins="1"/>
+                  <clock name="clk" num_pins="1"/>
+                  <!-- Special dual-LUT mode that drives adder only -->
+                  <pb_type name="lut4" blif_model=".names" num_pb="2" class="lut">
+                    <input name="in" num_pins="4" port_class="lut_in"/>
+                    <output name="out" num_pins="1" port_class="lut_out"/>
+                    <!-- LUT timing using delay matrix -->
+                    <delay_matrix type="max" in_port="lut4.in" out_port="lut4.out">
+                        180e-12
+                        180e-12
+                        180e-12
+                        180e-12
+                    </delay_matrix>
+                  </pb_type>
+                  <pb_type name="adder" blif_model=".subckt adder" num_pb="1">
+                    <input name="a" num_pins="1"/>
+                    <input name="b" num_pins="1"/>
+                    <input name="cin" num_pins="1"/>
+                    <output name="cout" num_pins="1"/>
+                    <output name="sumout" num_pins="1"/>
+                    <delay_constant max="0.3e-9" in_port="adder.a" out_port="adder.sumout"/>
+                    <delay_constant max="0.3e-9" in_port="adder.b" out_port="adder.sumout"/>
+                    <delay_constant max="0.3e-9" in_port="adder.cin" out_port="adder.sumout"/>
+                    <delay_constant max="0.3e-9" in_port="adder.a" out_port="adder.cout"/>
+                    <delay_constant max="0.3e-9" in_port="adder.b" out_port="adder.cout"/>
+                    <delay_constant max="0.3e-9" in_port="adder.cin" out_port="adder.cout"/>
+                  </pb_type>
+                  <pb_type name="ff" blif_model=".latch" num_pb="1" class="flipflop">
+                    <input name="D" num_pins="1" port_class="D"/>
+                    <output name="Q" num_pins="1" port_class="Q"/>
+                    <clock name="clk" num_pins="1" port_class="clock"/>
+                    <T_setup value="66e-12" port="ff.D" clock="clk"/>
+                    <T_clock_to_Q max="124e-12" port="ff.Q" clock="clk"/>
+                  </pb_type>
+                  <interconnect>
+                    <direct name="clock" input="arithmetic.clk" output="ff.clk"/>
+                    <direct name="lut_in1" input="arithmetic.in[3:0]" output="lut4[0:0].in[3:0]"/>
+                    <direct name="lut_in2" input="arithmetic.in[3:0]" output="lut4[1:1].in[3:0]"/>
+                    <direct name="lut_to_add1" input="lut4[0:0].out" output="adder.a">
+                    </direct>
+                    <direct name="lut_to_add2" input="lut4[1:1].out" output="adder.b">
+                    </direct>
+                    <direct name="add_to_ff" input="adder.sumout" output="ff.D">
+                      <pack_pattern name="chain" in_port="adder.sumout" out_port="ff.D"/>
+                    </direct>
+                    <direct name="carry_in" input="arithmetic.cin" output="adder.cin">
+                      <pack_pattern name="chain" in_port="arithmetic.cin" out_port="adder.cin"/>
+                    </direct>
+                    <direct name="carry_out" input="adder.cout" output="arithmetic.cout">
+                      <pack_pattern name="chain" in_port="adder.cout" out_port="arithmetic.cout"/>
+                    </direct>
+                    <mux name="sumout" input="ff.Q adder.sumout" output="arithmetic.out">
+                      <delay_constant max="25e-12" in_port="adder.sumout" out_port="arithmetic.out"/>
+                      <delay_constant max="45e-12" in_port="ff.Q" out_port="arithmetic.out" />
+                    </mux>
+                  </interconnect>
+                </pb_type>
+
+                <interconnect>
+                  <direct name="direct1" input="ble5.in[3:0]" output="arithmetic.in"/>
+                  <direct name="carry_in" input="ble5.cin" output="arithmetic.cin">
+                    <!--pack_pattern name="chain" in_port="ble5.cin" out_port="arithmetic.cin"/-->
+                  </direct>
+                  <direct name="carry_out" input="arithmetic.cout" output="ble5.cout">
+                    <!--pack_pattern name="chain" in_port="arithmetic.cout" out_port="ble5.cout"/-->
+                  </direct>
+                  <direct name="direct2" input="ble5.clk" output="arithmetic.clk"/>
+                  <direct name="direct3" input="arithmetic.out" output="ble5.out"/>
+                </interconnect>
+              </mode>
+            </pb_type>
+            <interconnect>
+              <direct name="direct1" input="lut5inter.in" output="ble5[0:0].in"/>
+              <direct name="direct2" input="lut5inter.in" output="ble5[1:1].in"/>
+              <direct name="direct3" input="ble5[1:0].out" output="lut5inter.out"/>
+              <direct name="carry_in" input="lut5inter.cin" output="ble5[0:0].cin">
+                <!--pack_pattern name="chain" in_port="lut5inter.cin" out_port="ble5[0:0].cin"/-->
+              </direct>
+              <direct name="carry_out" input="ble5[1:1].cout" output="lut5inter.cout">
+                <!--pack_pattern name="chain" in_port="ble5[1:1].cout" out_port="lut5inter.cout"/-->
+              </direct>
+              <direct name="carry_link" input="ble5[0:0].cout" output="ble5[1:1].cin">
+                <!--pack_pattern name="chain" in_port="ble5[0:0].cout" out_port="ble5[1:1].cout"/-->
+              </direct>
+              <complete name="complete1" input="lut5inter.clk" output="ble5[1:0].clk"/>
+            </interconnect>
+          </pb_type>
+          <interconnect>
+            <direct name="direct1" input="fle.in[4:0]" output="lut5inter.in"/>
+            <direct name="direct2" input="lut5inter.out" output="fle.out"/>
+            <direct name="direct3" input="fle.clk" output="lut5inter.clk"/>
+            <direct name="carry_in" input="fle.cin" output="lut5inter.cin">
+              <!--pack_pattern name="chain" in_port="fle.cin" out_port="lut5inter.cin"/-->
+            </direct>
+            <direct name="carry_out" input="lut5inter.cout" output="fle.cout">
+              <!--pack_pattern name="chain" in_port="lut5inter.cout" out_port="fle.cout"/-->
+            </direct>
+          </interconnect>
+        </mode>
+        <!-- Define n2_lut5 mode ends -->
+        <mode name="n1_lut6">
+          <pb_type name="ble6" num_pb="1">
+            <input name="in" num_pins="6"/>
+            <output name="out" num_pins="1"/>
+            <clock name="clk" num_pins="1"/>
+            <pb_type name="lut6" blif_model=".names" num_pb="1" class="lut">
+              <input name="in" num_pins="6" port_class="lut_in"/>
+              <output name="out" num_pins="1" port_class="lut_out"/>
+              <!-- LUT timing using delay matrix -->
+              <delay_matrix type="max" in_port="lut6.in" out_port="lut6.out">
+                  229e-12
+                  229e-12
+                  229e-12
+                  229e-12
+                  229e-12
+                  229e-12
+              </delay_matrix>
+            </pb_type>
+            <pb_type name="ff" blif_model=".latch" num_pb="1" class="flipflop">
+              <input name="D" num_pins="1" port_class="D"/>
+              <output name="Q" num_pins="1" port_class="Q"/>
+              <clock name="clk" num_pins="1" port_class="clock"/>
+              <T_setup value="66e-12" port="ff.D" clock="clk"/>
+              <T_clock_to_Q max="124e-12" port="ff.Q" clock="clk"/>
+            </pb_type>
+
+            <interconnect>
+              <direct name="direct1" input="ble6.in" output="lut6[0:0].in"/>
+              <direct name="direct2" input="lut6.out" output="ff.D">
+                <pack_pattern name="ble6" in_port="lut6.out" out_port="ff.D"/>
+              </direct>
+              <direct name="direct3" input="ble6.clk" output="ff.clk"/>
+              <mux name="mux1" input="ff.Q lut6.out" output="ble6.out">
+                <delay_constant max="25e-12" in_port="lut6.out" out_port="ble6.out" />
+                <delay_constant max="45e-12" in_port="ff.Q" out_port="ble6.out" />
+              </mux>
+            </interconnect>
+          </pb_type>
+          <interconnect>
+            <direct name="direct1" input="fle.in" output="ble6.in"/>
+            <direct name="direct2" input="ble6.out" output="fle.out[1:1]"/>
+            <direct name="direct3" input="fle.clk" output="ble6.clk"/>
+          </interconnect>
+        </mode>
+        <!-- Define n1_lut6 mode ends -->
+        <!-- Define shift register mode begins -->
+        <mode name="shift_register">
+          <pb_type name="ble_shift" num_pb="1">
+            <input name="in" num_pins="1"/>
+            <output name="out" num_pins="2"/>
+            <output name="regout" num_pins="1"/>
+            <clock name="clk" num_pins="1"/>
+            <pb_type name="ff" blif_model=".subckt shift" num_pb="2" class="flipflop">
+              <input name="D" num_pins="1" port_class="D"/>
+              <output name="Q" num_pins="1" port_class="Q"/>
+              <clock name="clk" num_pins="1" port_class="clock"/>
+              <T_setup value="66e-12" port="ff.D" clock="clk"/>
+              <T_clock_to_Q max="124e-12" port="ff.Q" clock="clk"/>
+            </pb_type>
+            <interconnect>
+              <direct name="direct1" input="ble_shift.in" output="ff[0].D"/>
+              <direct name="direct2" input="ff[0].Q" output="ff[1].D">
+                <!--pack_pattern name="ble_shift" in_port="ff[0].Q" out_port="ff[1].D"/-->
+              </direct>
+              <direct name="out1" input="ff[0].Q" output="ble_shift.out[0]"/>
+              <direct name="out2" input="ff[1].Q" output="ble_shift.out[1]"/>
+              <direct name="direct_regout" input="ff[1].Q" output="ble_shift.regout"/>
+              <complete name="direct3" input="ble_shift.clk" output="ff[1:0].clk"/>
+            </interconnect>
+          </pb_type>
+          <interconnect>
+            <direct name="direct1" input="fle.regin" output="ble_shift.in"/>
+            <direct name="direct2" input="ble_shift.out" output="fle.out"/>
+            <direct name="direct3" input="fle.clk" output="ble_shift.clk"/>
+            <direct name="direct4" input="ble_shift.regout" output="fle.regout"/>
+          </interconnect>
+        </mode>
+       <!-- Define shift_register mode end -->
+      </pb_type>
+
+      <!-- Describe fracturable logic element with spy outputs -->
+      <pb_type name="fle_spypad" num_pb="1">
+        <input name="in" num_pins="6"/>
+        <input name="cin" num_pins="1"/>
+        <input name="sc_in" num_pins="1"/>
+        <input name="regin" num_pins="1"/>
+        <output name="out" num_pins="2"/>
+        <output name="cout" num_pins="1"/>
+        <output name="sc_out" num_pins="1"/>
+        <output name="regout" num_pins="1"/>
+        <clock name="clk" num_pins="1"/>
+
+        <!-- Describe physical mode begins -->
+        <mode name="physical" packable="false">
+          <pb_type name="frac_logic" num_pb="1">
+            <input name="in" num_pins="6"/>
+            <input name="cin" num_pins="1"/>
+            <input name="regin" num_pins="1"/>
+            <input name="regchain" num_pins="1"/>
+            <output name="out" num_pins="2"/>
+            <output name="cout" num_pins="1"/>
+            <pb_type name="frac_lut6" blif_model=".subckt frac_lut6" num_pb="1">
+              <input name="in" num_pins="6"/>
+              <output name="lut4_out" num_pins="4"/>
+              <output name="lut5_out" num_pins="2"/>
+              <output name="lut6_out" num_pins="1"/>
+            </pb_type>
+            <pb_type name="adder_phy" blif_model=".subckt adder" num_pb="2">
+              <input name="a" num_pins="1"/>
+              <input name="b" num_pins="1"/>
+              <input name="cin" num_pins="1"/>
+              <output name="cout" num_pins="1"/>
+              <output name="sumout" num_pins="1"/>
+              <delay_constant max="0.3e-9" in_port="adder_phy.a" out_port="adder_phy.sumout"/>
+              <delay_constant max="0.3e-9" in_port="adder_phy.b" out_port="adder_phy.sumout"/>
+              <delay_constant max="0.3e-9" in_port="adder_phy.cin" out_port="adder_phy.sumout"/>
+              <delay_constant max="0.3e-9" in_port="adder_phy.a" out_port="adder_phy.cout"/>
+              <delay_constant max="0.3e-9" in_port="adder_phy.b" out_port="adder_phy.cout"/>
+              <delay_constant max="0.3e-9" in_port="adder_phy.cin" out_port="adder_phy.cout"/>
+            </pb_type>
+            <interconnect>
+              <direct name="direct_fraclut_in" input="frac_logic.in[5:0]" output="frac_lut6.in[5:0]"/>
+              <direct name="direct_cin" input="frac_logic.cin" output="adder_phy[0].cin"/>
+              <direct name="direct_carry" input="adder_phy[0].cout" output="adder_phy[1].cin"/>
+              <direct name="direct_cout" input="adder_phy[1].cout" output="frac_logic.cout"/>
+              <direct name="direct_lut4carry0" input="frac_lut6.lut4_out[0]" output="adder_phy[0].a"/>
+              <direct name="direct_lut4carry1" input="frac_lut6.lut4_out[1]" output="adder_phy[0].b"/>
+              <direct name="direct_lut4carry2" input="frac_lut6.lut4_out[2]" output="adder_phy[1].a"/>
+              <direct name="direct_lut4carry3" input="frac_lut6.lut4_out[3]" output="adder_phy[1].b"/>
+              <mux name="mux1" input="adder_phy[0].sumout frac_lut6.lut5_out[0] frac_logic.regin" output="frac_logic.out[0]">
+              </mux>
+              <mux name="mux2" input="adder_phy[1].sumout frac_lut6.lut5_out[1] frac_lut6.lut6_out[0] frac_logic.regchain[0]" output="frac_logic.out[1]">
+              </mux>
+            </interconnect>
+          </pb_type>
+          <pb_type name="ff_phy" blif_model=".subckt scff" num_pb="2">
+            <input name="D" num_pins="1"/>
+            <input name="D_chain" num_pins="1"/>
+            <output name="Q" num_pins="1"/>
+            <clock name="clk" num_pins="1"/>
+            <T_setup value="66e-12" port="ff_phy.D" clock="clk"/>
+            <T_setup value="66e-12" port="ff_phy.D_chain" clock="clk"/>
+            <T_clock_to_Q max="124e-12" port="ff_phy.Q" clock="clk"/>
+          </pb_type>
+          <interconnect>
+            <complete name="direct_clk" input="fle_spypad.clk" output="ff_phy[1:0].clk"/>
+            <direct name="direct_in" input="fle_spypad.in[5:0]" output="frac_logic.in[5:0]"/>
+            <direct name="direct_regin" input="fle_spypad.regin" output="frac_logic.regin"/>
+            <direct name="direct_regchain" input="ff_phy[0].Q" output="frac_logic.regchain"/>
+            <direct name="direct_regout" input="ff_phy[1].Q" output="fle_spypad.regout"/>
+            <direct name="direct_cin" input="fle_spypad.cin" output="frac_logic.cin"/>
+            <direct name="direct_cout" input="frac_logic.cout" output="fle_spypad.cout"/>
+            <direct name="direct_frac_out1" input="frac_logic.out[0]" output="ff_phy[0].D"/>
+            <direct name="direct_frac_out2" input="frac_logic.out[1]" output="ff_phy[1].D"/>
+            <direct name="direct_fle_scin" input="fle_spypad.sc_in" output="ff_phy[0].D_chain"/>
+            <direct name="direct_fle_sc_chain" input="ff_phy[0].Q" output="ff_phy[1].D_chain"/>
+            <direct name="direct_fle_scout" input="ff_phy[1].Q" output="fle_spypad.sc_out"/>
+            <mux name="mux1" input="ff_phy[0].Q frac_logic.out[0]" output="fle_spypad.out[0]">
+            </mux>
+            <mux name="mux2" input="ff_phy[1].Q frac_logic.out[1]" output="fle_spypad.out[1]">
+            </mux>
+          </interconnect>
+        </mode>
+        <!-- Define physical mode begins -->
+        <!-- Define n2_lut5 mode begins -->
+        <mode name="n2_lut5" packable="true">
+          <pb_type name="lut5inter" num_pb="1">
+            <input name="in" num_pins="5"/>
+            <input name="cin" num_pins="1"/>
+            <output name="out" num_pins="2"/>
+            <output name="cout" num_pins="1"/>
+            <clock name="clk" num_pins="1"/>
+            <pb_type name="ble5" num_pb="2">
+              <input name="in" num_pins="5"/>
+              <input name="cin" num_pins="1"/>
+              <output name="out" num_pins="1"/>
+              <output name="cout" num_pins="1"/>
+              <clock name="clk" num_pins="1"/>
+              <mode name="blut5">
+                <pb_type name="flut5" num_pb="1">
+                  <input name="in" num_pins="5"/>
+                  <output name="out" num_pins="1"/>
+                  <clock name="clk" num_pins="1"/>
+                  <!-- Regular LUT mode -->
+                  <pb_type name="lut5" blif_model=".names" num_pb="1" class="lut">
+                    <input name="in" num_pins="5" port_class="lut_in"/>
+                    <output name="out" num_pins="1" port_class="lut_out"/>
+                    <!-- LUT timing using delay matrix -->
+                    <delay_matrix type="max" in_port="lut5.in" out_port="lut5.out">
+                        202e-12
+                        202e-12
+                        202e-12
+                        202e-12
+                        202e-12
+                    </delay_matrix>
+                  </pb_type>
+
+                  <pb_type name="ff" blif_model=".latch" num_pb="1" class="flipflop">
+                    <input name="D" num_pins="1" port_class="D"/>
+                    <output name="Q" num_pins="1" port_class="Q"/>
+                    <clock name="clk" num_pins="1" port_class="clock"/>
+                    <T_setup value="66e-12" port="ff.D" clock="clk"/>
+                    <T_clock_to_Q max="124e-12" port="ff.Q" clock="clk"/>
+                  </pb_type>
+                  <interconnect>
+                    <direct name="direct1" input="flut5.in" output="lut5.in"/>
+                    <direct name="direct2" input="lut5.out" output="ff.D">
+                      <pack_pattern name="ble5" in_port="lut5.out" out_port="ff.D"/>
+                    </direct>
+                    <direct name="direct3" input="flut5.clk" output="ff.clk"/>
+                    <mux name="mux1" input="ff.Q lut5.out" output="flut5.out">
+                      <delay_constant max="25e-12" in_port="lut5.out" out_port="flut5.out" />
+                      <delay_constant max="45e-12" in_port="ff.Q" out_port="flut5.out" />
+                    </mux>
+                  </interconnect>
+                </pb_type>
+                <interconnect>
+                  <direct name="direct1" input="ble5.in" output="flut5.in"/>
+                  <direct name="direct2" input="ble5.clk" output="flut5.clk"/>
+                  <direct name="direct3" input="flut5.out" output="ble5.out"/>
+                </interconnect>
+              </mode>
+              <mode name="arithmetic">
+                <pb_type name="arithmetic" num_pb="1">
+                  <input name="in" num_pins="4"/>
+                  <input name="cin" num_pins="1"/>
+                  <output name="out" num_pins="1"/>
+                  <output name="cout" num_pins="1"/>
+                  <clock name="clk" num_pins="1"/>
+                  <!-- Special dual-LUT mode that drives adder only -->
+                  <pb_type name="lut4" blif_model=".names" num_pb="2" class="lut">
+                    <input name="in" num_pins="4" port_class="lut_in"/>
+                    <output name="out" num_pins="1" port_class="lut_out"/>
+                    <!-- LUT timing using delay matrix -->
+                    <delay_matrix type="max" in_port="lut4.in" out_port="lut4.out">
+                        180e-12
+                        180e-12
+                        180e-12
+                        180e-12
+                    </delay_matrix>
+                  </pb_type>
+                  <pb_type name="adder" blif_model=".subckt adder" num_pb="1">
+                    <input name="a" num_pins="1"/>
+                    <input name="b" num_pins="1"/>
+                    <input name="cin" num_pins="1"/>
+                    <output name="cout" num_pins="1"/>
+                    <output name="sumout" num_pins="1"/>
+                    <delay_constant max="0.3e-9" in_port="adder.a" out_port="adder.sumout"/>
+                    <delay_constant max="0.3e-9" in_port="adder.b" out_port="adder.sumout"/>
+                    <delay_constant max="0.3e-9" in_port="adder.cin" out_port="adder.sumout"/>
+                    <delay_constant max="0.3e-9" in_port="adder.a" out_port="adder.cout"/>
+                    <delay_constant max="0.3e-9" in_port="adder.b" out_port="adder.cout"/>
+                    <delay_constant max="0.3e-9" in_port="adder.cin" out_port="adder.cout"/>
+                  </pb_type>
+                  <pb_type name="ff" blif_model=".latch" num_pb="1" class="flipflop">
+                    <input name="D" num_pins="1" port_class="D"/>
+                    <output name="Q" num_pins="1" port_class="Q"/>
+                    <clock name="clk" num_pins="1" port_class="clock"/>
+                    <T_setup value="66e-12" port="ff.D" clock="clk"/>
+                    <T_clock_to_Q max="124e-12" port="ff.Q" clock="clk"/>
+                  </pb_type>
+                  <interconnect>
+                    <direct name="clock" input="arithmetic.clk" output="ff.clk"/>
+                    <direct name="lut_in1" input="arithmetic.in[3:0]" output="lut4[0:0].in[3:0]"/>
+                    <direct name="lut_in2" input="arithmetic.in[3:0]" output="lut4[1:1].in[3:0]"/>
+                    <direct name="lut_to_add1" input="lut4[0:0].out" output="adder.a">
+                    </direct>
+                    <direct name="lut_to_add2" input="lut4[1:1].out" output="adder.b">
+                    </direct>
+                    <direct name="add_to_ff" input="adder.sumout" output="ff.D">
+                      <pack_pattern name="chain" in_port="adder.sumout" out_port="ff.D"/>
+                    </direct>
+                    <direct name="carry_in" input="arithmetic.cin" output="adder.cin">
+                      <pack_pattern name="chain" in_port="arithmetic.cin" out_port="adder.cin"/>
+                    </direct>
+                    <direct name="carry_out" input="adder.cout" output="arithmetic.cout">
+                      <pack_pattern name="chain" in_port="adder.cout" out_port="arithmetic.cout"/>
+                    </direct>
+                    <mux name="sumout" input="ff.Q adder.sumout" output="arithmetic.out">
+                      <delay_constant max="25e-12" in_port="adder.sumout" out_port="arithmetic.out"/>
+                      <delay_constant max="45e-12" in_port="ff.Q" out_port="arithmetic.out" />
+                    </mux>
+                  </interconnect>
+                </pb_type>
+
+                <interconnect>
+                  <direct name="direct1" input="ble5.in[3:0]" output="arithmetic.in"/>
+                  <direct name="carry_in" input="ble5.cin" output="arithmetic.cin">
+                    <!--pack_pattern name="chain" in_port="ble5.cin" out_port="arithmetic.cin"/-->
+                  </direct>
+                  <direct name="carry_out" input="arithmetic.cout" output="ble5.cout">
+                    <!--pack_pattern name="chain" in_port="arithmetic.cout" out_port="ble5.cout"/-->
+                  </direct>
+                  <direct name="direct2" input="ble5.clk" output="arithmetic.clk"/>
+                  <direct name="direct3" input="arithmetic.out" output="ble5.out"/>
+                </interconnect>
+              </mode>
+            </pb_type>
+            <interconnect>
+              <direct name="direct1" input="lut5inter.in" output="ble5[0:0].in"/>
+              <direct name="direct2" input="lut5inter.in" output="ble5[1:1].in"/>
+              <direct name="direct3" input="ble5[1:0].out" output="lut5inter.out"/>
+              <direct name="carry_in" input="lut5inter.cin" output="ble5[0:0].cin">
+                <!--pack_pattern name="chain" in_port="lut5inter.cin" out_port="ble5[0:0].cin"/-->
+              </direct>
+              <direct name="carry_out" input="ble5[1:1].cout" output="lut5inter.cout">
+                <!--pack_pattern name="chain" in_port="ble5[1:1].cout" out_port="lut5inter.cout"/-->
+              </direct>
+              <direct name="carry_link" input="ble5[0:0].cout" output="ble5[1:1].cin">
+                <!--pack_pattern name="chain" in_port="ble5[0:0].cout" out_port="ble5[1:1].cout"/-->
+              </direct>
+              <complete name="complete1" input="lut5inter.clk" output="ble5[1:0].clk"/>
+            </interconnect>
+          </pb_type>
+          <interconnect>
+            <direct name="direct1" input="fle_spypad.in[4:0]" output="lut5inter.in"/>
+            <direct name="direct2" input="lut5inter.out" output="fle_spypad.out"/>
+            <direct name="direct3" input="fle_spypad.clk" output="lut5inter.clk"/>
+            <direct name="carry_in" input="fle_spypad.cin" output="lut5inter.cin">
+              <!--pack_pattern name="chain" in_port="fle.cin" out_port="lut5inter.cin"/-->
+            </direct>
+            <direct name="carry_out" input="lut5inter.cout" output="fle_spypad.cout">
+              <!--pack_pattern name="chain" in_port="lut5inter.cout" out_port="fle.cout"/-->
+            </direct>
+          </interconnect>
+        </mode>
+        <!-- Define n2_lut5 mode ends -->
+        <mode name="n1_lut6">
+          <pb_type name="ble6" num_pb="1">
+            <input name="in" num_pins="6"/>
+            <output name="out" num_pins="1"/>
+            <clock name="clk" num_pins="1"/>
+            <pb_type name="lut6" blif_model=".names" num_pb="1" class="lut">
+              <input name="in" num_pins="6" port_class="lut_in"/>
+              <output name="out" num_pins="1" port_class="lut_out"/>
+              <!-- LUT timing using delay matrix -->
+              <delay_matrix type="max" in_port="lut6.in" out_port="lut6.out">
+                  229e-12
+                  229e-12
+                  229e-12
+                  229e-12
+                  229e-12
+                  229e-12
+              </delay_matrix>
+            </pb_type>
+            <pb_type name="ff" blif_model=".latch" num_pb="1" class="flipflop">
+              <input name="D" num_pins="1" port_class="D"/>
+              <output name="Q" num_pins="1" port_class="Q"/>
+              <clock name="clk" num_pins="1" port_class="clock"/>
+              <T_setup value="66e-12" port="ff.D" clock="clk"/>
+              <T_clock_to_Q max="124e-12" port="ff.Q" clock="clk"/>
+            </pb_type>
+
+            <interconnect>
+              <direct name="direct1" input="ble6.in" output="lut6[0:0].in"/>
+              <direct name="direct2" input="lut6.out" output="ff.D">
+                <pack_pattern name="ble6" in_port="lut6.out" out_port="ff.D"/>
+              </direct>
+              <direct name="direct3" input="ble6.clk" output="ff.clk"/>
+              <mux name="mux1" input="ff.Q lut6.out" output="ble6.out">
+                <delay_constant max="25e-12" in_port="lut6.out" out_port="ble6.out" />
+                <delay_constant max="45e-12" in_port="ff.Q" out_port="ble6.out" />
+              </mux>
+            </interconnect>
+          </pb_type>
+          <interconnect>
+            <direct name="direct1" input="fle_spypad.in" output="ble6.in"/>
+            <direct name="direct2" input="ble6.out" output="fle_spypad.out[1:1]"/>
+            <direct name="direct3" input="fle_spypad.clk" output="ble6.clk"/>
+          </interconnect>
+        </mode>
+        <!-- Define n1_lut6 mode ends -->
+        <!-- Define shift register mode begins -->
+        <mode name="shift_register">
+          <pb_type name="ble_shift" num_pb="1">
+            <input name="in" num_pins="1"/>
+            <output name="out" num_pins="2"/>
+            <output name="regout" num_pins="1"/>
+            <clock name="clk" num_pins="1"/>
+            <pb_type name="ff" blif_model=".subckt shift" num_pb="2" class="flipflop">
+              <input name="D" num_pins="1" port_class="D"/>
+              <output name="Q" num_pins="1" port_class="Q"/>
+              <clock name="clk" num_pins="1" port_class="clock"/>
+              <T_setup value="66e-12" port="ff.D" clock="clk"/>
+              <T_clock_to_Q max="124e-12" port="ff.Q" clock="clk"/>
+            </pb_type>
+            <interconnect>
+              <direct name="direct1" input="ble_shift.in" output="ff[0].D"/>
+              <direct name="direct2" input="ff[0].Q" output="ff[1].D">
+                <!--pack_pattern name="ble_shift" in_port="ff[0].Q" out_port="ff[1].D"/-->
+              </direct>
+              <direct name="out1" input="ff[0].Q" output="ble_shift.out[0]"/>
+              <direct name="out2" input="ff[1].Q" output="ble_shift.out[1]"/>
+              <direct name="direct_regout" input="ff[1].Q" output="ble_shift.regout"/>
+              <complete name="direct3" input="ble_shift.clk" output="ff[1:0].clk"/>
+            </interconnect>
+          </pb_type>
+          <interconnect>
+            <direct name="direct1" input="fle_spypad.regin" output="ble_shift.in"/>
+            <direct name="direct2" input="ble_shift.out" output="fle_spypad.out"/>
+            <direct name="direct3" input="fle_spypad.clk" output="ble_shift.clk"/>
+            <direct name="direct4" input="ble_shift.regout" output="fle_spypad.regout"/>
+          </interconnect>
+        </mode>
+       <!-- Define shift_register mode end -->
+      </pb_type>
+
+      <interconnect>
+        <complete name="crossbar0" input="clb_spypad.I2 clb_spypad.I3 fle[8:0].out fle_spypad.out" output="fle[8:0].in[0]">
+          <delay_constant max="190e-12" in_port="clb_spypad.I2 clb_spypad.I3" out_port="fle[8:0].in[0]" />
+          <delay_constant max="190e-12" in_port="fle[8:0].out" out_port="fle[8:0].in[0]" />
+          <delay_constant max="190e-12" in_port="fle_spypad.out" out_port="fle[8:0].in[0]" />
+        </complete>
+        <complete name="crossbar0_spyfle" input="clb_spypad.I2 clb_spypad.I3 fle[8:0].out fle_spypad.out" output="fle_spypad.in[0]">
+          <delay_constant max="190e-12" in_port="clb_spypad.I2 clb_spypad.I3" out_port="fle_spypad.in[0]" />
+          <delay_constant max="190e-12" in_port="fle[8:0].out" out_port="fle_spypad.in[0]" />
+          <delay_constant max="190e-12" in_port="fle_spypad.out" out_port="fle_spypad.in[0]" />
+        </complete>
+
+        <complete name="crossbar1" input="clb_spypad.I1 clb_spypad.I2 fle[8:0].out fle_spypad.out" output="fle[8:0].in[1]">
+          <delay_constant max="190e-12" in_port="clb_spypad.I1 clb_spypad.I2" out_port="fle[8:0].in[1]" />
+          <delay_constant max="190e-12" in_port="fle[8:0].out" out_port="fle[8:0].in[1]" />
+          <delay_constant max="190e-12" in_port="fle_spypad.out" out_port="fle[8:0].in[1]" />
+        </complete>
+        <complete name="crossbar1_spyfle" input="clb_spypad.I1 clb_spypad.I2 fle[8:0].out fle_spypad.out" output="fle_spypad.in[1]">
+          <delay_constant max="190e-12" in_port="clb_spypad.I1 clb_spypad.I2" out_port="fle_spypad.in[1]" />
+          <delay_constant max="190e-12" in_port="fle[8:0].out" out_port="fle_spypad.in[1]" />
+          <delay_constant max="190e-12" in_port="fle_spypad.out" out_port="fle_spypad.in[1]" />
+        </complete>
+
+        <complete name="crossbar2" input="clb_spypad.I0 clb_spypad.I1 fle[8:0].out fle_spypad.out" output="fle[8:0].in[2]">
+          <delay_constant max="190e-12" in_port="clb_spypad.I0 clb_spypad.I1" out_port="fle[8:0].in[2]" />
+          <delay_constant max="190e-12" in_port="fle[8:0].out" out_port="fle[8:0].in[2]" />
+          <delay_constant max="190e-12" in_port="fle_spypad.out" out_port="fle[8:0].in[2]" />
+        </complete>
+        <complete name="crossbar2_spyfle" input="clb_spypad.I0 clb_spypad.I1 fle[8:0].out fle_spypad.out" output="fle_spypad.in[2]">
+          <delay_constant max="190e-12" in_port="clb_spypad.I0 clb_spypad.I1" out_port="fle_spypad.in[2]" />
+          <delay_constant max="190e-12" in_port="fle[8:0].out" out_port="fle_spypad.in[2]" />
+          <delay_constant max="190e-12" in_port="fle_spypad.out" out_port="fle_spypad.in[2]" />
+        </complete>
+
+        <complete name="crossbar3" input="clb_spypad.I1 clb_spypad.I3 fle[8:0].out fle_spypad.out" output="fle[8:0].in[3]">
+          <delay_constant max="190e-12" in_port="clb_spypad.I1 clb_spypad.I3" out_port="fle[8:0].in[3]" />
+          <delay_constant max="190e-12" in_port="fle[8:0].out" out_port="fle[8:0].in[3]" />
+          <delay_constant max="190e-12" in_port="fle_spypad.out" out_port="fle[8:0].in[3]" />
+        </complete>
+        <complete name="crossbar3_spyfle" input="clb_spypad.I1 clb_spypad.I3 fle[8:0].out fle_spypad.out" output="fle_spypad.in[3]">
+          <delay_constant max="190e-12" in_port="clb_spypad.I1 clb_spypad.I3" out_port="fle_spypad.in[3]" />
+          <delay_constant max="190e-12" in_port="fle[8:0].out" out_port="fle_spypad.in[3]" />
+          <delay_constant max="190e-12" in_port="fle_spypad.out" out_port="fle_spypad.in[3]" />
+        </complete>
+
+        <complete name="crossbar4" input="clb_spypad.I0 clb_spypad.I2 fle[8:0].out fle_spypad.out" output="fle[8:0].in[4]">
+          <delay_constant max="190e-12" in_port="clb_spypad.I0 clb_spypad.I2" out_port="fle[8:0].in[4]" />
+          <delay_constant max="190e-12" in_port="fle[8:0].out" out_port="fle[8:0].in[4]" />
+          <delay_constant max="190e-12" in_port="fle_spypad.out" out_port="fle[8:0].in[4]" />
+        </complete>
+        <complete name="crossbar4_spyfle" input="clb_spypad.I0 clb_spypad.I2 fle[8:0].out fle_spypad.out" output="fle_spypad.in[4]">
+          <delay_constant max="190e-12" in_port="clb_spypad.I0 clb_spypad.I2" out_port="fle_spypad.in[4]" />
+          <delay_constant max="190e-12" in_port="fle[8:0].out" out_port="fle_spypad.in[4]" />
+          <delay_constant max="190e-12" in_port="fle_spypad.out" out_port="fle_spypad.in[4]" />
+        </complete>
+
+        <complete name="crossbar5" input="clb_spypad.I0 clb_spypad.I3 fle[8:0].out fle_spypad.out" output="fle[8:0].in[5]">
+          <delay_constant max="190e-12" in_port="clb_spypad.I0 clb_spypad.I3" out_port="fle[8:0].in[5]" />
+          <delay_constant max="190e-12" in_port="fle[8:0].out" out_port="fle[8:0].in[5]" />
+          <delay_constant max="190e-12" in_port="fle_spypad.out" out_port="fle[8:0].in[5]" />
+        </complete>
+        <complete name="crossbar5_spyfle" input="clb_spypad.I0 clb_spypad.I3 fle[8:0].out fle_spypad.out" output="fle_spypad.in[5]">
+          <delay_constant max="190e-12" in_port="clb_spypad.I0 clb_spypad.I3" out_port="fle_spypad.in[5]" />
+          <delay_constant max="190e-12" in_port="fle[8:0].out" out_port="fle_spypad.in[5]" />
+          <delay_constant max="190e-12" in_port="fle_spypad.out" out_port="fle_spypad.in[5]" />
+        </complete>
+
+        <complete name="clks" input="clb_spypad.clk" output="fle[8:0].clk">
+        </complete>
+        <complete name="clks_spyfle" input="clb_spypad.clk" output="fle_spypad.clk">
+        </complete>
+        <complete name="carry_in" input="clb_spypad.cin clb_spypad.cin_trick fle[8:0].out fle_spypad.out" output="fle_spypad.cin">
+          <!-- Put all inter-block carry chain delay on this one edge -->
+          <!--delay_constant max="0.15e-9" in_port="clb.cin clb.cin_trick" out_port="fle[0:0].cin"/-->
+          <pack_pattern name="chain" in_port="clb_spypad.cin" out_port="fle_spypad.cin"/>
+          <!--pack_pattern name="chain" in_port="clb.cin_trick" out_port="fle[0:0].cin"/-->
+        </complete>
+
+        <!--direct name="carry_in" input="clb.cin" output="fle[0:0].cin">
+          <pack_pattern name="chain" in_port="clb.cin" out_port="fle[0:0].cin"/>
+        </direct-->
+        <direct name="clbouts1_spyfle" input="fle_spypad.out[0:0]" output="clb_spypad.O[0:0]"/>
+        <direct name="clbouts2_spyfle" input="fle_spypad.out[1:1]" output="clb_spypad.O[10:10]"/>
+        <direct name="clbouts1" input="fle[8:0].out[0:0]" output="clb_spypad.O[9:1]"/>
+        <direct name="clbouts2" input="fle[8:0].out[1:1]" output="clb_spypad.O[19:11]"/>
+        <direct name="cout_copy" input="fle[8:8].cout" output="clb_spypad.cout_copy"/>
+
+        <!-- Shift register links -->
+        <direct name="regin" input="clb_spypad.regin" output="fle_spypad.regin">
+          <!-- Put all inter-block carry chain delay on this one edge -->
+          <delay_constant max="0.15e-9" in_port="clb_spypad.regin" out_port="fle_spypad.regin"/>
+          <pack_pattern name="chain" in_port="clb_spypad.regin" out_port="fle_spypad.regin"/>
+        </direct>
+        <direct name="regout" input="fle[8:8].regout" output="clb_spypad.regout">
+          <pack_pattern name="chain" in_port="fle[8:8].regout" out_port="clb_spypad.regout"/>
+        </direct>
+        <direct name="reg_link_spyfle" input="fle_spypad.regout" output="fle[0:0].regin">
+          <pack_pattern name="chain" in_port="fle_spypad.regout" out_port="fle[0:0].regin"/>
+        </direct>
+        <direct name="reg_link" input="fle[7:0].regout" output="fle[8:1].regin">
+          <pack_pattern name="chain" in_port="fle[7:0].regout" out_port="fle[8:1].regin"/>
+        </direct>
+
+        <!-- Carry chain links -->
+        <direct name="carry_out" input="fle[8:8].cout" output="clb_spypad.cout">
+          <pack_pattern name="chain" in_port="fle[8:8].cout" out_port="clb_spypad.cout"/>
+        </direct>
+        <direct name="carry_link_spyfle" input="fle_spypad.cout" output="fle[0:0].cin">
+          <pack_pattern name="chain" in_port="fle_spypad.cout" out_port="fle[0:0].cin"/>
+        </direct>
+        <direct name="carry_link" input="fle[7:0].cout" output="fle[8:1].cin">
+          <pack_pattern name="chain" in_port="fle[7:0].cout" out_port="fle[8:1].cin"/>
+        </direct>
+
+        <!-- Scan chain links: Do NOT use pack patterns here.
+                               They are testing elements and are NOT dealed by packers -->
+        <direct name="sc_in" input="clb_spypad.sc_in" output="fle_spypad.sc_in">
+        </direct>
+        <direct name="sc_out" input="fle[8:8].sc_out" output="clb_spypad.sc_out">
+        </direct>
+        <direct name="sc_link_spyfle" input="fle_spypad.sc_out" output="fle[0:0].sc_in">
+        </direct>
+        <direct name="sc_link" input="fle[7:0].sc_out" output="fle[8:1].sc_in">
+        </direct>
+      </interconnect>
+    </pb_type>
+    <!-- Define general purpose logic block (CLB) ends -->
+
   </complexblocklist>
 </architecture>
