@@ -324,6 +324,12 @@ void rec_update_physical_pb_from_operating_pb(PhysicalPb& phy_pb,
         /* The following code is inspired by output_cluster.cpp */
         bool is_used = false;
         t_pb_type* child_pb_type = &(mapped_mode->pb_type_children[ipb]);
+           
+        /* Bypass non-primitive pb_type, we care only the LUT pb_type */
+        if (false == is_primitive_pb_type(child_pb_type)) {
+          continue;
+        }
+
         int port_index = 0;
         t_pb_graph_node* child_pb_graph_node = &(pb_graph_node->child_pb_graph_nodes[op_pb->mode][ipb][jpb]);
 
