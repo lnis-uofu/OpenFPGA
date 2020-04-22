@@ -1001,7 +1001,7 @@ void MuxGraph::build_onelevel_mux_graph(const size_t& mux_size,
 void MuxGraph::add_fracturable_outputs(const CircuitLibrary& circuit_lib, 
                                        const CircuitModelId& circuit_model) {
   /* Iterate over output ports */
-  for (const auto& port : circuit_lib.model_ports_by_type(circuit_model, CIRCUIT_MODEL_PORT_OUTPUT, true)) {
+  for (const auto& port : circuit_lib.model_ports_by_type(circuit_model, CIRCUIT_MODEL_PORT_OUTPUT, false)) {
     /* Get the fracturable_level */
     size_t frac_level = circuit_lib.port_lut_frac_level(port);
     /* Bypass invalid frac_level */

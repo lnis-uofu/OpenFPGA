@@ -163,16 +163,36 @@ void add_primitive_module_fpga_global_io_port(ModuleManager& module_manager,
   BasicPort logic_io_port = module_manager.module_port(logic_module, logic_io_port_id);
   VTR_ASSERT(logic_io_port.get_width() == module_port.get_width());
 
-  /* Wire the GPIO port form primitive_module to the logic module!*/
+  /* Wire the GPIO port from primitive_module to the logic module!*/
   for (size_t pin_id = 0; pin_id < module_port.pins().size(); ++pin_id) {      
-    ModuleNetId net = module_manager.create_module_net(primitive_module);
     if ( (ModuleManager::MODULE_GPIO_PORT == module_io_port_type)
       || (ModuleManager::MODULE_GPIN_PORT == module_io_port_type) ) {
-      module_manager.add_module_net_source(primitive_module, net, primitive_module, 0, primitive_io_port_id, module_port.pins()[pin_id]);
+      bool net_exist = true;
+      /* If the source port has already a net to drive, we just update the net sinks */
+      ModuleNetId net = module_manager.module_instance_port_net(primitive_module, primitive_module, 0, primitive_io_port_id, module_port.pins()[pin_id]);
+      if (net == ModuleNetId::INVALID()) {
+        net_exist = false;
+        net = module_manager.create_module_net(primitive_module);
+      }
+
+      if (false == net_exist) {
+        module_manager.add_module_net_source(primitive_module, net, primitive_module, 0, primitive_io_port_id, module_port.pins()[pin_id]);
+      }
       module_manager.add_module_net_sink(primitive_module, net, logic_module, logic_instance_id, logic_io_port_id, logic_io_port.pins()[pin_id]);
     } else {
+      bool net_exist = true;
+      /* If the source port has already a net to drive, we just update the net sinks */
+      ModuleNetId net = module_manager.module_instance_port_net(primitive_module, logic_module, logic_instance_id, logic_io_port_id, logic_io_port.pins()[pin_id]);
+      if (net == ModuleNetId::INVALID()) {
+        net_exist = false;
+        net = module_manager.create_module_net(primitive_module);
+      }
+
       VTR_ASSERT(ModuleManager::MODULE_GPOUT_PORT == module_io_port_type);
-      module_manager.add_module_net_source(primitive_module, net, logic_module, logic_instance_id, logic_io_port_id, logic_io_port.pins()[pin_id]);
+
+      if (false == net_exist) {
+        module_manager.add_module_net_source(primitive_module, net, logic_module, logic_instance_id, logic_io_port_id, logic_io_port.pins()[pin_id]);
+      }
       module_manager.add_module_net_sink(primitive_module, net, primitive_module, 0, primitive_io_port_id, module_port.pins()[pin_id]);
     }
   }

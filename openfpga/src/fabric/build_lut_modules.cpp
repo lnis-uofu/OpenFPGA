@@ -45,7 +45,7 @@ void build_lut_module(ModuleManager& module_manager,
   /* Get the input ports from the mux */
   std::vector<CircuitPortId> lut_input_ports = circuit_lib.model_ports_by_type(lut_model, CIRCUIT_MODEL_PORT_INPUT, true);
   /* Get the output ports from the mux */
-  std::vector<CircuitPortId> lut_output_ports = circuit_lib.model_ports_by_type(lut_model, CIRCUIT_MODEL_PORT_OUTPUT, true);
+  std::vector<CircuitPortId> lut_output_ports = circuit_lib.model_ports_by_type(lut_model, CIRCUIT_MODEL_PORT_OUTPUT, false);
 
   /* Classify SRAM ports into two categories: regular (not for mode select) and mode-select */
   std::vector<CircuitPortId> lut_regular_sram_ports = find_circuit_regular_sram_ports(circuit_lib, lut_model);
