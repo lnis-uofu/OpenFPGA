@@ -102,4 +102,7 @@ python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/flatten_routing --
 echo -e "Testing Verilog generation with duplicated grid output pins";
 python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/duplicated_grid_pin --debug --show_thread_logs
 
+echo -e "Testing Verilog generation with spy output pads";
+python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/spypad --debug --show_thread_logs
+
 end_section "OpenFPGA.TaskTun"
