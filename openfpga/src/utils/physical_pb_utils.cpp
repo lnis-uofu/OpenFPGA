@@ -132,6 +132,16 @@ void update_primitive_physical_pb_pin_atom_net(PhysicalPb& phy_pb,
     t_pb_graph_pin* physical_pb_graph_pin = device_annotation.physical_pb_graph_pin(pb_graph_pin);
     VTR_ASSERT(nullptr != physical_pb_graph_pin);
 
+    /* Print info to help debug 
+    bool verbose = true;
+    VTR_LOGV(verbose,
+             "\nSynchronize net '%lu' to physical pb_graph_pin '%s.%s[%d]'\n",
+             size_t(atom_net),
+             pb_graph_pin->parent_node->pb_type->name,
+             pb_graph_pin->port->name,
+             pb_graph_pin->pin_number);
+     */
+
     /* Check if the pin has been mapped to a net.
      * If yes, the atom net must be the same 
      */
@@ -155,6 +165,7 @@ void synchronize_primitive_physical_pb_atom_nets(PhysicalPb& phy_pb,
                                                  const AtomBlockId& atom_blk,
                                                  const VprDeviceAnnotation& device_annotation) {
   /* Iterate over all the ports: input, output and clock */
+
   for (int iport = 0; iport < pb_graph_node->num_input_ports; ++iport) {
     for (int ipin = 0; ipin < pb_graph_node->num_input_pins[iport]; ++ipin) {
       /* Port exists (some LUTs may have no input and hence no port in the atom netlist) */
@@ -220,13 +231,54 @@ void synchronize_primitive_physical_pb_atom_nets(PhysicalPb& phy_pb,
 }
 
 /************************************************************************
+ * Reach this function, the primitive pb should be 
+ * - linked to a LUT pb_type
+ * - operating in the wire mode of a LUT
+ *
+ * Note: this function will not check the prequistics here
+ *       Users must be responsible for this!!!
+ *
+ * This function will find the physical pb_graph_pin for each output 
+ * of the pb_graph node and mark in the physical_pb database
+ * as driven by an wired LUT
+ ***********************************************************************/
+static 
+void mark_physical_pb_wired_lut_outputs(PhysicalPb& phy_pb, 
+                                        const PhysicalPbId& primitive_pb,
+                                        const t_pb_graph_node* pb_graph_node,
+                                        const VprDeviceAnnotation& device_annotation,
+                                        const bool& verbose) {
+
+  for (int iport = 0; iport < pb_graph_node->num_output_ports; ++iport) {
+    for (int ipin = 0; ipin < pb_graph_node->num_output_pins[iport]; ++ipin) {
+      t_pb_graph_pin* pb_graph_pin = &(pb_graph_node->output_pins[iport][ipin]);
+
+      /* Find the physical pb_graph_pin */
+      t_pb_graph_pin* physical_pb_graph_pin = device_annotation.physical_pb_graph_pin(pb_graph_pin);
+      VTR_ASSERT(nullptr != physical_pb_graph_pin);
+
+      /* Print debug info */
+      VTR_LOGV(verbose,
+               "Mark physical pb_graph pin '%s.%s[%d]' as wire LUT output\n",
+               physical_pb_graph_pin->parent_node->pb_type->name,
+               physical_pb_graph_pin->port->name,
+               physical_pb_graph_pin->pin_number);
+
+      /* Label the pins in physical_pb as driven by wired LUT*/
+      phy_pb.set_wire_lut_output(primitive_pb, physical_pb_graph_pin, true);
+    }
+  }
+}
+
+/************************************************************************
  * Synchronize mapping results from an operating pb to a physical pb
  ***********************************************************************/
 void rec_update_physical_pb_from_operating_pb(PhysicalPb& phy_pb, 
                                               const t_pb* op_pb,
                                               const t_pb_routes& pb_route,
                                               const AtomContext& atom_ctx,
-                                              const VprDeviceAnnotation& device_annotation) {
+                                              const VprDeviceAnnotation& device_annotation,
+                                              const bool& verbose) {
   t_pb_graph_node* pb_graph_node = op_pb->pb_graph_node;
   t_pb_type* pb_type = pb_graph_node->pb_type;
 
@@ -265,7 +317,55 @@ void rec_update_physical_pb_from_operating_pb(PhysicalPb& phy_pb,
                                                  &(op_pb->child_pbs[ipb][jpb]),
                                                  pb_route,
                                                  atom_ctx,
-                                                 device_annotation);
+                                                 device_annotation,
+                                                 verbose);
+      } else {
+        /* Some pb may be used just in routing purpose, find out the output nets  */
+        /* The following code is inspired by output_cluster.cpp */
+        bool is_used = false;
+        t_pb_type* child_pb_type = &(mapped_mode->pb_type_children[ipb]);
+           
+        /* Bypass non-primitive pb_type, we care only the LUT pb_type */
+        if (false == is_primitive_pb_type(child_pb_type)) {
+          continue;
+        }
+
+        int port_index = 0;
+        t_pb_graph_node* child_pb_graph_node = &(pb_graph_node->child_pb_graph_nodes[op_pb->mode][ipb][jpb]);
+
+        for (int k = 0; k < child_pb_type->num_ports && !is_used; k++) {
+          if (OUT_PORT == child_pb_type->ports[k].type) {
+            for (int m = 0; m < child_pb_type->ports[k].num_pins; m++) {
+              int node_index = child_pb_graph_node->output_pins[port_index][m].pin_count_in_cluster;
+              if (pb_route.count(node_index) && pb_route[node_index].atom_net_id) {
+                is_used = true;
+                break;
+              }
+            }
+            port_index++;
+          }
+        }
+        /* Identify output pb_graph_pin that is driven by a wired LUT
+         * Without this function, physical Look-Up Table build-up will cause errors
+         * and bitstream will be incorrect!!!
+         */
+        if (true == is_used) {
+          VTR_ASSERT(LUT_CLASS == child_pb_type->class_type);
+
+          t_pb_graph_node* physical_pb_graph_node = device_annotation.physical_pb_graph_node(child_pb_graph_node);
+          VTR_ASSERT(nullptr != physical_pb_graph_node);
+          /* Find the physical pb */
+          const PhysicalPbId& physical_pb = phy_pb.find_pb(physical_pb_graph_node);
+          VTR_ASSERT(true == phy_pb.valid_pb_id(physical_pb));
+
+          /* Set the mode bits */
+          phy_pb.set_mode_bits(physical_pb, device_annotation.pb_type_mode_bits(child_pb_type));
+
+          mark_physical_pb_wired_lut_outputs(phy_pb, physical_pb,
+                                             child_pb_graph_node,
+                                             device_annotation,
+                                             verbose);
+        }
       }
     }
   }

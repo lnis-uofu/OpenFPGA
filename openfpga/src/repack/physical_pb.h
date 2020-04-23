@@ -50,6 +50,8 @@ class PhysicalPb {
     std::vector<AtomBlockId> atom_blocks(const PhysicalPbId& pb) const;
     AtomNetId pb_graph_pin_atom_net(const PhysicalPbId& pb,
                                     const t_pb_graph_pin* pb_graph_pin) const;
+    bool is_wire_lut_output(const PhysicalPbId& pb,
+                            const t_pb_graph_pin* pb_graph_pin) const;
     std::map<const t_pb_graph_pin*, AtomNetlist::TruthTable> truth_tables(const PhysicalPbId& pb) const;
     std::vector<size_t> mode_bits(const PhysicalPbId& pb) const;
   public: /* Public mutators */
@@ -67,6 +69,9 @@ class PhysicalPb {
     void set_pb_graph_pin_atom_net(const PhysicalPbId& pb,
                                    const t_pb_graph_pin* pb_graph_pin,
                                    const AtomNetId& atom_net);
+    void set_wire_lut_output(const PhysicalPbId& pb,
+                             const t_pb_graph_pin* pb_graph_pin,
+                             const bool& wire_lut_output);
   public: /* Public validators/invalidators */
     bool valid_pb_id(const PhysicalPbId& pb_id) const;
     bool empty() const;
@@ -76,6 +81,7 @@ class PhysicalPb {
     vtr::vector<PhysicalPbId, std::string> names_;
     vtr::vector<PhysicalPbId, std::vector<AtomBlockId>> atom_blocks_;
     vtr::vector<PhysicalPbId, std::map<const t_pb_graph_pin*, AtomNetId>> pin_atom_nets_;
+    vtr::vector<PhysicalPbId, std::map<const t_pb_graph_pin*, bool>> wire_lut_outputs_;
 
     /* Child pbs are organized as [0..num_child_pb_types-1][0..child_pb_type->num_pb-1] */
     vtr::vector<PhysicalPbId, std::map<const t_pb_type*, std::vector<PhysicalPbId>>> child_pbs_;

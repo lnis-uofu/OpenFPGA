@@ -334,6 +334,52 @@ void print_pnr_sdc_constrain_cb_timing(const std::string& sdc_dir,
   /* Generate the descriptions*/
   print_sdc_file_header(fp, std::string("Constrain timing of Connection Block " + cb_module_name + " for PnR"));
 
+  /* Contrain each routing track inside the connection block */
+  for (size_t itrack = 0; itrack < rr_gsb.get_cb_chan_width(cb_type); ++itrack) {
+    /* Create a port description for the input */
+    std::string input_port_name = generate_cb_module_track_port_name(cb_type,
+                                                                     itrack,  
+                                                                     IN_PORT);
+    ModulePortId input_port_id = module_manager.find_module_port(cb_module, input_port_name);
+    BasicPort input_port = module_manager.module_port(cb_module, input_port_id);
+
+    /* Create a port description for the output */
+    std::string output_port_name = generate_cb_module_track_port_name(cb_type,
+                                                                      itrack,  
+                                                                      OUT_PORT);
+    ModulePortId output_port_id = module_manager.find_module_port(cb_module, output_port_name);
+    BasicPort output_port = module_manager.module_port(cb_module, output_port_id);
+
+    /* Ensure port size matching */
+    VTR_ASSERT(1 == input_port.get_width());
+    VTR_ASSERT(input_port.get_width() == output_port.get_width());
+
+    /* Connection block routing segment ids for each track */
+    RRSegmentId segment_id = rr_gsb.get_chan_node_segment(rr_gsb.get_cb_chan_side(cb_type), itrack);
+
+    /* Computing the delay of the routing segment
+     * Here we just assume a simple 1-level RC delay model 
+     * TODO: Should consider multi-level RC delay models
+     *       where the number of levels are defined by users
+     */
+    float routing_segment_delay = rr_graph.get_segment(segment_id).Rmetal
+                                * rr_graph.get_segment(segment_id).Cmetal;
+
+    /* If we have a zero-delay path to contrain, we will skip unless users want so */
+    if ( (false == constrain_zero_delay_paths) 
+      && (0. == routing_segment_delay) ) {
+      continue;
+    }
+
+    /* Constrain a path with routing segment delay */
+    print_pnr_sdc_constrain_port2port_timing(fp,
+                                             module_manager, 
+                                             cb_module, input_port_id, 
+                                             cb_module, output_port_id,
+                                             routing_segment_delay);
+  }
+
+  /* Contrain each multiplexers inside the connection block */
   std::vector<enum e_side> cb_sides = rr_gsb.get_cb_ipin_sides(cb_type);
 
   for (size_t side = 0; side < cb_sides.size(); ++side) {

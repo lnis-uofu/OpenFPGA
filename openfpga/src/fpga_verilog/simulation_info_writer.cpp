@@ -12,6 +12,9 @@
 #include "vtr_assert.h"
 #include "vtr_time.h"
 
+/* Headers from openfpgautil library */
+#include "openfpga_digest.h"
+
 #include "simulation_utils.h"
 
 #include "verilog_constants.h"
@@ -33,6 +36,11 @@ void print_verilog_simulation_info(const std::string& ini_fname,
                                    const float& op_clock_freq) {
 
   std::string timer_message = std::string("Write exchangeable file containing simulation information '") + ini_fname + std::string("'");
+
+  std::string ini_dir_path = format_dir_path(find_path_dir_name(ini_fname));
+
+  /* Create directories */
+  create_directory(ini_dir_path);
 
   /* Start time count */
   vtr::ScopedStartFinishTimer timer(timer_message);

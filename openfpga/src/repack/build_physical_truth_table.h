@@ -20,7 +20,8 @@ void build_physical_lut_truth_tables(VprClusteringAnnotation& cluster_annotation
                                      const AtomContext& atom_ctx,
                                      const ClusteringContext& cluster_ctx,
                                      const VprDeviceAnnotation& device_annotation,
-                                     const CircuitLibrary& circuit_lib);
+                                     const CircuitLibrary& circuit_lib,
+                                     const bool& verbose);
 
 } /* end namespace openfpga */
 

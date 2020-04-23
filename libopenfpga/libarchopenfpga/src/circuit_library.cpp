@@ -777,7 +777,7 @@ std::vector<CircuitPortId> CircuitLibrary::model_ports_by_type(const CircuitMode
     if ( type != port_type(port_id) ) {
       continue; 
     }
-    /* We skip global ports if specified */
+    /* We skip global ports if specified. Note: I/O port should be kept */
     if ( (true == ignore_global_port)
       && (true == port_is_global(port_id)) ) {
       continue; 

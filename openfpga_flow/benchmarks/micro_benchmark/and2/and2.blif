@@ -1,4 +1,4 @@
-.model top
+.model and2
 .inputs a b
 .outputs c
 

@@ -11,14 +11,12 @@
 #include "openfpga_naming.h"
 
 #include "lut_utils.h"
+#include "pb_type_utils.h"
 #include "physical_pb.h"
 #include "build_physical_truth_table.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
-
-/* Mode 1 is the lut mode while mode 0 is the wire mode */
-constexpr int VPR_PB_TYPE_LUT_MODE = 1;
 
 /***************************************************************************************
  * Identify if LUT is used as wiring 
@@ -102,7 +100,8 @@ void build_physical_pb_lut_truth_tables(PhysicalPb& physical_pb,
                                         const PhysicalPbId& lut_pb_id,
                                         const AtomContext& atom_ctx,
                                         const VprDeviceAnnotation& device_annotation,
-                                        const CircuitLibrary& circuit_lib) {
+                                        const CircuitLibrary& circuit_lib,
+                                        const bool& verbose) {
   const t_pb_graph_node* pb_graph_node = physical_pb.pb_graph_node(lut_pb_id);
 
   CircuitModelId lut_model = device_annotation.pb_type_circuit_model(physical_pb.pb_graph_node(lut_pb_id)->pb_type);
@@ -125,19 +124,20 @@ void build_physical_pb_lut_truth_tables(PhysicalPb& physical_pb,
         continue;
       }
       /* Check if this is a LUT used as wiring */
-      if (true == is_wired_lut(input_nets, output_net)) {
-        AtomNetlist::TruthTable wire_tt = build_wired_lut_truth_table(input_nets.size(), std::find(input_nets.begin(), input_nets.end(), output_net) - input_nets.begin()); 
-        physical_pb.set_truth_table(lut_pb_id, output_pin, wire_tt);
-        continue;
+      AtomNetlist::TruthTable adapt_tt;
+      if (true == physical_pb.is_wire_lut_output(lut_pb_id, output_pin)) {
+        /* Double check: ensure that the output nets appear in the input net !!! */
+        VTR_ASSERT(true == is_wired_lut(input_nets, output_net));
+        adapt_tt = build_wired_lut_truth_table(input_nets.size(), std::find(input_nets.begin(), input_nets.end(), output_net) - input_nets.begin()); 
+      } else {
+        /* Find the truth table from atom block which drives the atom net */
+        const AtomBlockId& atom_blk = atom_ctx.nlist.net_driver_block(output_net); 
+        VTR_ASSERT(true == atom_ctx.nlist.valid_block_id(atom_blk));
+        const AtomNetlist::TruthTable& orig_tt = atom_ctx.nlist.block_truth_table(atom_blk);
+
+        std::vector<int> rotated_pin_map = generate_lut_rotated_input_pin_map(input_nets, atom_ctx, atom_blk, pb_graph_node);
+        adapt_tt = lut_truth_table_adaption(orig_tt, rotated_pin_map);
       }
-
-      /* Find the truth table from atom block which drives the atom net */
-      const AtomBlockId& atom_blk = atom_ctx.nlist.net_driver_block(output_net); 
-      VTR_ASSERT(true == atom_ctx.nlist.valid_block_id(atom_blk));
-      const AtomNetlist::TruthTable& orig_tt = atom_ctx.nlist.block_truth_table(atom_blk);
-
-      std::vector<int> rotated_pin_map = generate_lut_rotated_input_pin_map(input_nets, atom_ctx, atom_blk, pb_graph_node);
-      const AtomNetlist::TruthTable& adapt_tt = lut_truth_table_adaption(orig_tt, rotated_pin_map);
 
       /* Adapt the truth table for fracturable lut implementation and add to physical pb */
       CircuitPortId lut_model_output_port = device_annotation.pb_circuit_port(output_pin->port);
@@ -148,6 +148,29 @@ void build_physical_pb_lut_truth_tables(PhysicalPb& physical_pb,
       size_t lut_output_mask = circuit_lib.port_lut_output_mask(lut_model_output_port)[output_pin->pin_number];
       const AtomNetlist::TruthTable& frac_lut_tt = adapt_truth_table_for_frac_lut(lut_frac_level, lut_output_mask, adapt_tt);
       physical_pb.set_truth_table(lut_pb_id, output_pin, frac_lut_tt);
+
+      /* Print debug information */
+      VTR_LOGV(verbose, "Input nets: ");
+      for (const AtomNetId& net : input_nets) {
+        if (AtomNetId::INVALID() == net) {
+          VTR_LOGV(verbose, "unconn  ");
+        } else {
+          VTR_ASSERT(AtomNetId::INVALID() != net);
+          VTR_LOGV(verbose, "%s  ", atom_ctx.nlist.net_name(net).c_str());
+        }
+      }
+      VTR_LOGV(verbose, "\n");
+
+      VTR_ASSERT(AtomNetId::INVALID() != output_net);
+      VTR_LOGV(verbose, "Output net: %s\n", atom_ctx.nlist.net_name(output_net).c_str());
+
+      VTR_LOGV(verbose,
+               "Add following truth table to pb_graph_pin '%s[%d]'\n", 
+               output_pin->port->name, output_pin->pin_number);
+      for (const std::string& tt_line : truth_table_to_string(frac_lut_tt)) {
+        VTR_LOGV(verbose, "\t%s\n", tt_line.c_str());
+      }
+      VTR_LOGV(verbose, "\n");
     }
   }
 }
@@ -164,7 +187,8 @@ void build_physical_lut_truth_tables(VprClusteringAnnotation& cluster_annotation
                                      const AtomContext& atom_ctx,
                                      const ClusteringContext& cluster_ctx,
                                      const VprDeviceAnnotation& device_annotation,
-                                     const CircuitLibrary& circuit_lib) {
+                                     const CircuitLibrary& circuit_lib,
+                                     const bool& verbose) {
   vtr::ScopedStartFinishTimer timer("Build truth tables for physical LUTs");
 
   for (auto blk_id : cluster_ctx.clb_nlist.blocks()) {
@@ -178,7 +202,7 @@ void build_physical_lut_truth_tables(VprClusteringAnnotation& cluster_annotation
       }
     
       /* Reach here, we have a LUT to deal with. Find the truth tables that mapped to the LUT */
-      build_physical_pb_lut_truth_tables(physical_pb, primitive_pb, atom_ctx, device_annotation, circuit_lib);
+      build_physical_pb_lut_truth_tables(physical_pb, primitive_pb, atom_ctx, device_annotation, circuit_lib, verbose);
     }
   }
 }

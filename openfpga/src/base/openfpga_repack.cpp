@@ -37,7 +37,8 @@ int repack(OpenfpgaContext& openfpga_ctx,
                                   g_vpr_ctx.atom(),
                                   g_vpr_ctx.clustering(),
                                   openfpga_ctx.vpr_device_annotation(),
-                                  openfpga_ctx.arch().circuit_lib); 
+                                  openfpga_ctx.arch().circuit_lib,
+                                  cmd_context.option_enable(cmd, opt_verbose));
 
   /* TODO: should identify the error code from internal function execution */
   return CMD_EXEC_SUCCESS;

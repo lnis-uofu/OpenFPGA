@@ -473,6 +473,29 @@ std::vector<bool> build_frac_lut_bitstream(const CircuitLibrary& circuit_lib,
     VTR_ASSERT(bitstream_offset < lut_bitstream.size());
     VTR_ASSERT(bitstream_offset + length_of_temp_bitstream_to_copy <= lut_bitstream.size());
 
+    /* Print debug information 
+    bool verbose = true;
+    VTR_LOGV(verbose, "Full truth table\n");
+    for (const std::string& tt_line : truth_table_to_string(element.second)) {
+      VTR_LOGV(verbose, "\t%s\n", tt_line.c_str());
+    }
+    VTR_LOGV(verbose, "\n");
+
+    VTR_LOGV(verbose, "Bitstream (size = %ld)\n", temp_bitstream.size());
+    for (const bool& bit : temp_bitstream) {
+      if (true == bit) {
+        VTR_LOGV(verbose, "1");
+      } else {
+        VTR_ASSERT(false == bit);
+        VTR_LOGV(verbose, "0");
+      }
+    }
+    VTR_LOGV(verbose, "\n");
+
+    VTR_LOGV(verbose, "Bitstream offset = %d\n", bitstream_offset);
+    VTR_LOGV(verbose, "Bitstream length to be used = %d\n", length_of_temp_bitstream_to_copy);
+     */
+
     /* Copy to the segment of bitstream */
     for (size_t bit = bitstream_offset; bit < bitstream_offset + length_of_temp_bitstream_to_copy; ++bit) {
       lut_bitstream[bit] = temp_bitstream[bit];

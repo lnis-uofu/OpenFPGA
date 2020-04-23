@@ -238,6 +238,9 @@ bool is_core_grid_on_given_border_side(const vtr::Point<size_t>& device_size,
                                        const vtr::Point<size_t>& grid_coordinate,
                                        const e_side& border_side);
 
+std::string generate_pb_type_port_name(t_pb_type* pb_type,
+                                       t_port* pb_type_port);
+
 std::string generate_pb_type_port_name(t_port* pb_type_port);
 
 std::string generate_fpga_global_io_port_name(const std::string& prefix, 

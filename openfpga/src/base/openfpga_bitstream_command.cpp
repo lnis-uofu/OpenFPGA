@@ -76,6 +76,11 @@ ShellCommandId add_openfpga_fabric_bitstream_command(openfpga::Shell<OpenfpgaCon
                                                      const std::vector<ShellCommandId>& dependent_cmds) {
   Command shell_cmd("build_fabric_bitstream");
 
+  /* Add an option '--file' in short '-f'*/
+  CommandOptionId opt_file = shell_cmd.add_option("file", false, "file path to output the fabric bitstream to plain text file");
+  shell_cmd.set_option_short_name(opt_file, "f");
+  shell_cmd.set_option_require_value(opt_file, openfpga::OPT_STRING);
+
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Enable verbose output");
 

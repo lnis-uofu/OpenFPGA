@@ -1,5 +1,5 @@
-# Benchmark "top" written by ABC on Wed Mar 11 10:36:28 2020
-.model top
+# Benchmark "and2_latch" written by ABC on Wed Mar 11 10:36:28 2020
+.model and2_latch
 .inputs a b clk
 .outputs c d
 

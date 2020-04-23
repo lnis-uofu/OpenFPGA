@@ -1,10 +1,11 @@
-#ifndef BITSTREAM_WRITER_H
-#define BITSTREAM_WRITER_H
+#ifndef FABRIC_BITSTREAM_WRITER_H
+#define FABRIC_BITSTREAM_WRITER_H
 
 /********************************************************************
  * Include header files that are required by function declaration
  *******************************************************************/
 #include <string>
+#include <vector>
 #include "bitstream_manager.h"
 
 /********************************************************************
@@ -14,8 +15,9 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void write_arch_independent_bitstream_to_xml_file(const BitstreamManager& bitstream_manager,
-                                                  const std::string& fname);
+void write_fabric_bitstream_to_text_file(const BitstreamManager& bitstream_manager,
+                                         const std::vector<ConfigBitId>& fabric_bitstream,
+                                         const std::string& fname);
 
 } /* end namespace openfpga */
 

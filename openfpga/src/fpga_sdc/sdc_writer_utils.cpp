@@ -88,6 +88,38 @@ void print_pnr_sdc_constrain_max_delay(std::fstream& fp,
 }
 
 /********************************************************************
+ * Constrain a path between two ports of a module with a given minimum timing value
+ *******************************************************************/
+void print_pnr_sdc_constrain_min_delay(std::fstream& fp,
+                                       const std::string& src_instance_name,
+                                       const std::string& src_port_name,
+                                       const std::string& des_instance_name,
+                                       const std::string& des_port_name,
+                                       const float& delay) {
+  /* Validate file stream */
+  valid_file_stream(fp);
+
+  fp << "set_min_delay";
+
+  fp << " -from ";
+  if (!src_instance_name.empty()) {
+    fp << src_instance_name << "/";
+  }
+  fp << src_port_name;
+
+  fp << " -to ";
+ 
+  if (!des_instance_name.empty()) {
+    fp << des_instance_name << "/";
+  }
+  fp << des_port_name;
+
+  fp << " " << std::setprecision(10) << delay;
+
+  fp << std::endl;
+}
+
+/********************************************************************
  * Constrain a path between two ports of a module with a given timing value
  * Note: this function uses set_max_delay !!!
  *******************************************************************/

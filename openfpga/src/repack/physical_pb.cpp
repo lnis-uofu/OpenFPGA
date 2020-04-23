@@ -81,6 +81,17 @@ AtomNetId PhysicalPb::pb_graph_pin_atom_net(const PhysicalPbId& pb,
   return AtomNetId::INVALID();
 }
 
+bool PhysicalPb::is_wire_lut_output(const PhysicalPbId& pb,
+                                    const t_pb_graph_pin* pb_graph_pin) const {
+  VTR_ASSERT(true == valid_pb_id(pb));
+  if (wire_lut_outputs_[pb].find(pb_graph_pin) != wire_lut_outputs_[pb].end()) {
+    /* Find it, return the status */
+    return wire_lut_outputs_[pb].at(pb_graph_pin); 
+  }
+  /* Not found, return false */
+  return false;
+}
+
 std::map<const t_pb_graph_pin*, AtomNetlist::TruthTable> PhysicalPb::truth_tables(const PhysicalPbId& pb) const {
   VTR_ASSERT(true == valid_pb_id(pb));
   return truth_tables_[pb];
@@ -110,6 +121,7 @@ PhysicalPbId PhysicalPb::create_pb(const t_pb_graph_node* pb_graph_node) {
   pb_graph_nodes_.push_back(pb_graph_node);
   atom_blocks_.emplace_back();
   pin_atom_nets_.emplace_back();
+  wire_lut_outputs_.emplace_back();
 
   child_pbs_.emplace_back();
   parent_pbs_.emplace_back();
@@ -180,6 +192,18 @@ void PhysicalPb::set_pb_graph_pin_atom_net(const PhysicalPbId& pb,
   }
 
   pin_atom_nets_[pb][pb_graph_pin] = atom_net;
+}
+
+void PhysicalPb::set_wire_lut_output(const PhysicalPbId& pb,
+                                     const t_pb_graph_pin* pb_graph_pin,
+                                     const bool& wire_lut_output) {
+  VTR_ASSERT(true == valid_pb_id(pb)); 
+  if (wire_lut_outputs_[pb].end() != wire_lut_outputs_[pb].find(pb_graph_pin)) {
+    VTR_LOG_WARN("Overwrite pb_graph_pin '%s[%d]' status on wire LUT output\n",
+                 pb_graph_pin->port->name, pb_graph_pin->pin_number);
+  }
+
+  wire_lut_outputs_[pb][pb_graph_pin] = wire_lut_output;
 }
 
 /******************************************************************************

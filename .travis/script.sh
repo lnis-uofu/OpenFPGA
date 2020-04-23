@@ -51,6 +51,9 @@ echo -e "Testing OpenFPGA Shell";
 echo -e "Testing configuration chain of a K4N4 FPGA";
 python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/configuration_chain --debug --show_thread_logs
 
+echo -e "Testing Verilog generation for a single mode LUT6 FPGA using micro benchmarks";
+python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/single_mode --debug --show_thread_logs
+
 echo -e "Testing Verilog generation with simple fracturable LUT6 ";
 python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/frac_lut --debug --show_thread_logs
 
@@ -98,5 +101,8 @@ python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/flatten_routing --
 
 echo -e "Testing Verilog generation with duplicated grid output pins";
 python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/duplicated_grid_pin --debug --show_thread_logs
+
+echo -e "Testing Verilog generation with spy output pads";
+python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/spypad --debug --show_thread_logs
 
 end_section "OpenFPGA.TaskTun"

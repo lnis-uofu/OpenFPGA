@@ -849,7 +849,7 @@ vtr::vector<MuxOutputId, ModuleNetId> build_mux_module_output_buffers(ModuleMana
   vtr::vector<MuxOutputId, ModuleNetId> mux_output_nets(mux_graph.num_outputs(), ModuleNetId::INVALID());
 
   /* Get the output ports from the mux */
-  std::vector<CircuitPortId> mux_output_ports = circuit_lib.model_ports_by_type(mux_model, CIRCUIT_MODEL_PORT_OUTPUT, true);
+  std::vector<CircuitPortId> mux_output_ports = circuit_lib.model_ports_by_type(mux_model, CIRCUIT_MODEL_PORT_OUTPUT, false);
 
   /* Iterate over all the outputs in the MUX module */
   for (const auto& output_port : mux_output_ports) {
@@ -1098,7 +1098,7 @@ void build_cmos_mux_module(ModuleManager& module_manager,
   /* Get the input ports from the mux */
   std::vector<CircuitPortId> mux_input_ports = circuit_lib.model_ports_by_type(mux_model, CIRCUIT_MODEL_PORT_INPUT, true);
   /* Get the output ports from the mux */
-  std::vector<CircuitPortId> mux_output_ports = circuit_lib.model_ports_by_type(mux_model, CIRCUIT_MODEL_PORT_OUTPUT, true);
+  std::vector<CircuitPortId> mux_output_ports = circuit_lib.model_ports_by_type(mux_model, CIRCUIT_MODEL_PORT_OUTPUT, false);
   /* Get the sram ports from the mux 
    * Multiplexing structure does not mode_sram_ports, they are handled in LUT modules
    * Here we just bypass it.
