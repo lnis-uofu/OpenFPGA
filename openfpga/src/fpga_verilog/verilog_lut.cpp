@@ -30,7 +30,7 @@ namespace openfpga {
  * in the circuit library
  ********************************************************************/
 void print_verilog_submodule_luts(const ModuleManager& module_manager,
-                                  std::vector<std::string>& netlist_names,
+                                  NetlistManager& netlist_manager,
                                   const CircuitLibrary& circuit_lib,
                                   const std::string& verilog_dir,
                                   const std::string& submodule_dir,
@@ -70,7 +70,9 @@ void print_verilog_submodule_luts(const ModuleManager& module_manager,
   fp.close();
 
   /* Add fname to the netlist name list */
-  netlist_names.push_back(verilog_fname);
+  NetlistId nlist_id = netlist_manager.add_netlist(verilog_fname);
+  VTR_ASSERT(NetlistId::INVALID() != nlist_id);
+  netlist_manager.set_netlist_type(nlist_id, NetlistManager::SUBMODULE_NETLIST);
 
   VTR_LOG("Done\n");
 }

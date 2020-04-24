@@ -7,6 +7,7 @@
 #include <string>
 #include "circuit_library.h"
 #include "fabric_verilog_options.h"
+#include "netlist_manager.h"
 #include "verilog_testbench_options.h"
 
 /********************************************************************
@@ -16,7 +17,8 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void print_include_netlists(const std::string& src_dir,
+void print_include_netlists(const NetlistManager& netlist_manager,
+                            const std::string& src_dir,
                             const std::string& circuit_name,
                             const std::string& reference_benchmark_file,
                             const CircuitLibrary& circuit_lib);

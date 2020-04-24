@@ -32,6 +32,7 @@ namespace openfpga {
  * 6. Verilog template
  ********************************************************************/
 void print_verilog_submodule(ModuleManager& module_manager, 
+                             NetlistManager& netlist_manager,
                              const MuxLibrary& mux_lib,
                              const CircuitLibrary& circuit_lib, 
                              const std::string& verilog_dir, 
@@ -44,12 +45,8 @@ void print_verilog_submodule(ModuleManager& module_manager,
    */
   //add_user_defined_verilog_modules(module_manager, circuit_lib);
 
-  /* Create a vector to contain all the Verilog netlist names that have been generated in this function */
-  std::vector<std::string> netlist_names;
-
-
   print_verilog_submodule_essentials(const_cast<const ModuleManager&>(module_manager), 
-                                     netlist_names,
+                                     netlist_manager,
                                      verilog_dir, 
                                      submodule_dir,
                                      circuit_lib);
@@ -59,28 +56,28 @@ void print_verilog_submodule(ModuleManager& module_manager,
    *       because local decoders modules will be instanciated in the MUX modules 
    */
   print_verilog_submodule_mux_local_decoders(const_cast<const ModuleManager&>(module_manager),
-                                             netlist_names, 
+                                             netlist_manager, 
                                              mux_lib, circuit_lib, 
                                              verilog_dir, submodule_dir);
-  print_verilog_submodule_muxes(module_manager, netlist_names, mux_lib, circuit_lib,
+  print_verilog_submodule_muxes(module_manager, netlist_manager, mux_lib, circuit_lib,
                                 verilog_dir, submodule_dir,
                                 fpga_verilog_opts.explicit_port_mapping());
 
  
   /* LUTes */
   print_verilog_submodule_luts(const_cast<const ModuleManager&>(module_manager),
-                               netlist_names, circuit_lib,
+                               netlist_manager, circuit_lib,
                                verilog_dir, submodule_dir,
                                fpga_verilog_opts.explicit_port_mapping());
 
   /* Hard wires */
   print_verilog_submodule_wires(const_cast<const ModuleManager&>(module_manager),
-                                netlist_names, circuit_lib,
+                                netlist_manager, circuit_lib,
                                 verilog_dir, submodule_dir);
 
   /* 4. Memories */
   print_verilog_submodule_memories(const_cast<const ModuleManager&>(module_manager),
-                                   netlist_names,
+                                   netlist_manager,
                                    mux_lib, circuit_lib, 
                                    verilog_dir, submodule_dir,
                                    fpga_verilog_opts.explicit_port_mapping());
@@ -93,9 +90,11 @@ void print_verilog_submodule(ModuleManager& module_manager,
   }
 
   /* Create a header file to include all the subckts */
-  print_verilog_netlist_include_header_file(netlist_names,
+  /*
+  print_verilog_netlist_include_header_file(netlist_manager,
                                             submodule_dir.c_str(),
                                             SUBMODULE_VERILOG_FILE_NAME);
+   */
 }
 
 } /* end namespace openfpga */

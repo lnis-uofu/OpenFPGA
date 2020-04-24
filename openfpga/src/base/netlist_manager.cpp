@@ -74,6 +74,17 @@ NetlistId NetlistManager::find_module_netlist(const ModuleId& module) const {
   return module_netlist_map_.at(module);
 }
 
+std::vector<NetlistId> NetlistManager::netlists_by_type(const NetlistManager::e_netlist_type& netlist_type) const {
+  std::vector<NetlistId> nlists;
+
+  for (const NetlistId& nlist_id : netlist_ids_) {
+    if (netlist_type == netlist_types_[nlist_id]) {
+      nlists.push_back(nlist_id);
+    }
+  }
+
+  return nlists;
+}
 
 /* Find all the preprocessing flags that are included in a netlist */
 std::vector<std::string> NetlistManager::netlist_preprocessing_flags(const NetlistId& netlist) const {

@@ -58,6 +58,8 @@ class NetlistManager {
     std::string netlist_name(const NetlistId& netlist) const;
     /* Find a netlist by its name */
     NetlistId find_netlist(const std::string& netlist_name) const;
+    /* Find all the netlist in a given type */
+    std::vector<NetlistId> netlists_by_type(const e_netlist_type& netlist_type) const;
     /* Get the type of a netlist */
     e_netlist_type netlist_type(const NetlistId& netlist) const;
     /* Find if a module belongs to a netlist */

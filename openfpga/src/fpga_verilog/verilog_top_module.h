@@ -6,6 +6,7 @@
  *******************************************************************/
 #include <string>
 #include "module_manager.h"
+#include "netlist_manager.h"
 
 /********************************************************************
  * Function declaration
@@ -14,7 +15,8 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void print_verilog_top_module(const ModuleManager& module_manager,
+void print_verilog_top_module(NetlistManager& netlist_manager,
+                              const ModuleManager& module_manager,
                               const std::string& verilog_dir,
                               const bool& use_explicit_mapping);
 

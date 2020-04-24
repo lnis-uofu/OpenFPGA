@@ -34,7 +34,8 @@ namespace openfpga {
  * 4. Add module nets to connect datapath ports
  * 5. Add module nets/submodules to connect configuration ports
  *******************************************************************/
-void print_verilog_top_module(const ModuleManager& module_manager,
+void print_verilog_top_module(NetlistManager& netlist_manager,
+                              const ModuleManager& module_manager,
                               const std::string& verilog_dir,
                               const bool& use_explicit_mapping) {
   /* Create a module as the top-level fabric, and add it to the module manager */
@@ -68,6 +69,11 @@ void print_verilog_top_module(const ModuleManager& module_manager,
 
   /* Close file handler */
   fp.close();
+
+  /* Add fname to the netlist name list */
+  NetlistId nlist_id = netlist_manager.add_netlist(verilog_fname);
+  VTR_ASSERT(NetlistId::INVALID() != nlist_id);
+  netlist_manager.set_netlist_type(nlist_id, NetlistManager::TOP_MODULE_NETLIST);
 
   VTR_LOG("Done\n");
 }

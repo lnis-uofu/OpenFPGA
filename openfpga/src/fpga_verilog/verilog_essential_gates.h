@@ -6,6 +6,8 @@
  *******************************************************************/
 #include <string>
 #include "circuit_library.h"
+#include "module_manager.h"
+#include "netlist_manager.h"
 
 /********************************************************************
  * Function declaration
@@ -15,7 +17,7 @@
 namespace openfpga {
 
 void print_verilog_submodule_essentials(const ModuleManager& module_manager, 
-                                        std::vector<std::string>& netlist_names,
+                                        NetlistManager& netlist_manager,
                                         const std::string& verilog_dir, 
                                         const std::string& submodule_dir,
                                         const CircuitLibrary& circuit_lib);
