@@ -194,8 +194,8 @@ void rec_print_verilog_logical_tile(std::fstream& fp,
  * for the logical tile (pb_graph/pb_type) 
  *****************************************************************************/
 static 
-void print_verilog_logical_tile_netlist(const ModuleManager& module_manager,
-                                        std::vector<std::string>& netlist_names,
+void print_verilog_logical_tile_netlist(NetlistManager& netlist_manager,
+                                        const ModuleManager& module_manager,
                                         const VprDeviceAnnotation& device_annotation,
                                         const std::string& verilog_dir,
                                         const std::string& subckt_dir,
@@ -243,7 +243,9 @@ void print_verilog_logical_tile_netlist(const ModuleManager& module_manager,
   fp.close();
 
   /* Add fname to the netlist name list */
-  netlist_names.push_back(verilog_fname);
+  NetlistId nlist_id = netlist_manager.add_netlist(verilog_fname);
+  VTR_ASSERT(NetlistId::INVALID() != nlist_id);
+  netlist_manager.set_netlist_type(nlist_id, NetlistManager::LOGIC_BLOCK_NETLIST);
 
   VTR_LOG("Done\n");
   VTR_LOG("\n");
@@ -258,8 +260,8 @@ void print_verilog_logical_tile_netlist(const ModuleManager& module_manager,
  * the I/O block locates at.
  *****************************************************************************/
 static 
-void print_verilog_physical_tile_netlist(const ModuleManager& module_manager,
-                                         std::vector<std::string>& netlist_names,
+void print_verilog_physical_tile_netlist(NetlistManager& netlist_manager,
+                                         const ModuleManager& module_manager,
                                          const std::string& verilog_dir,
                                          const std::string& subckt_dir,
                                          t_physical_tile_type_ptr phy_block_type,
@@ -319,7 +321,9 @@ void print_verilog_physical_tile_netlist(const ModuleManager& module_manager,
   fp.close();
 
   /* Add fname to the netlist name list */
-  netlist_names.push_back(verilog_fname);
+  NetlistId nlist_id = netlist_manager.add_netlist(verilog_fname);
+  VTR_ASSERT(NetlistId::INVALID() != nlist_id);
+  netlist_manager.set_netlist_type(nlist_id, NetlistManager::LOGIC_BLOCK_NETLIST);
 
   VTR_LOG("Done\n");
 }
@@ -330,7 +334,8 @@ void print_verilog_physical_tile_netlist(const ModuleManager& module_manager,
  * 2. Only one module for each CLB (FILL_TYPE)
  * 3. Only one module for each heterogeneous block
  ****************************************************************************/
-void print_verilog_grids(const ModuleManager& module_manager,
+void print_verilog_grids(NetlistManager& netlist_manager,
+                         const ModuleManager& module_manager,
                          const DeviceContext& device_ctx,
                          const VprDeviceAnnotation& device_annotation,
                          const std::string& verilog_dir,
@@ -354,7 +359,8 @@ void print_verilog_grids(const ModuleManager& module_manager,
     if (nullptr == logical_tile.pb_graph_head) {
       continue;
     }
-    print_verilog_logical_tile_netlist(module_manager, netlist_names,
+    print_verilog_logical_tile_netlist(netlist_manager,
+                                       module_manager,
                                        device_annotation,
                                        verilog_dir, subckt_dir,
                                        logical_tile.pb_graph_head,
@@ -387,7 +393,8 @@ void print_verilog_grids(const ModuleManager& module_manager,
       std::set<e_side> io_type_sides = find_physical_io_tile_located_sides(device_ctx.grid,
                                                                            &physical_tile);
       for (const e_side& io_type_side : io_type_sides) {
-        print_verilog_physical_tile_netlist(module_manager, netlist_names,
+        print_verilog_physical_tile_netlist(netlist_manager,
+                                            module_manager,
                                             verilog_dir, subckt_dir, 
                                             &physical_tile,
                                             io_type_side,
@@ -396,7 +403,8 @@ void print_verilog_grids(const ModuleManager& module_manager,
       continue;
     } else {
       /* For CLB and heterogenenous blocks */
-      print_verilog_physical_tile_netlist(module_manager, netlist_names,
+      print_verilog_physical_tile_netlist(netlist_manager,
+                                          module_manager,
                                           verilog_dir, subckt_dir, 
                                           &physical_tile,
                                           NUM_SIDES,
@@ -408,6 +416,7 @@ void print_verilog_grids(const ModuleManager& module_manager,
   VTR_LOG("\n");
 
   /* Output a header file for all the logic blocks */
+  /*
   std::string grid_verilog_fname(LOGIC_BLOCK_VERILOG_FILE_NAME);
   VTR_LOG("Writing header file for grid Verilog modules '%s' ...",
           grid_verilog_fname.c_str());
@@ -415,6 +424,7 @@ void print_verilog_grids(const ModuleManager& module_manager,
                                             subckt_dir.c_str(),
                                             grid_verilog_fname.c_str());
   VTR_LOG("Done\n");
+   */
 }
 
 } /* end namespace openfpga */

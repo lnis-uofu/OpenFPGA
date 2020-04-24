@@ -7,6 +7,7 @@
 #include <string>
 #include "vpr_context.h"
 #include "module_manager.h"
+#include "netlist_manager.h"
 #include "vpr_device_annotation.h"
 
 /********************************************************************
@@ -16,7 +17,8 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void print_verilog_grids(const ModuleManager& module_manager,
+void print_verilog_grids(NetlistManager& netlist_manager,
+                         const ModuleManager& module_manager,
                          const DeviceContext& device_ctx,
                          const VprDeviceAnnotation& device_annotation,
                          const std::string& verilog_dir,

@@ -12,6 +12,7 @@
 #include "mux_library.h"
 #include "tile_direct.h"
 #include "module_manager.h"
+#include "netlist_manager.h"
 #include "openfpga_flow_manager.h"
 #include "bitstream_manager.h"
 #include "device_rr_gsb.h"
@@ -61,6 +62,7 @@ class OpenfpgaContext : public Context  {
     const std::vector<openfpga::ConfigBitId>& fabric_bitstream() const { return fabric_bitstream_; }
     const openfpga::IoLocationMap& io_location_map() const { return io_location_map_; }
     const std::unordered_map<AtomNetId, t_net_power>& net_activity() const { return net_activity_; }
+    const openfpga::NetlistManager& verilog_netlists() const { return verilog_netlists_; }
   public:  /* Public mutators */
     openfpga::Arch& mutable_arch() { return arch_; }
     openfpga::VprDeviceAnnotation& mutable_vpr_device_annotation() { return vpr_device_annotation_; }
@@ -77,6 +79,7 @@ class OpenfpgaContext : public Context  {
     std::vector<openfpga::ConfigBitId>& mutable_fabric_bitstream() { return fabric_bitstream_; }
     openfpga::IoLocationMap& mutable_io_location_map() { return io_location_map_; }
     std::unordered_map<AtomNetId, t_net_power>& mutable_net_activity() { return net_activity_; }
+    openfpga::NetlistManager& mutable_verilog_netlists() { return verilog_netlists_; }
   private: /* Internal data */
     /* Data structure to store information from read_openfpga_arch library */
     openfpga::Arch arch_;
@@ -112,6 +115,11 @@ class OpenfpgaContext : public Context  {
     /* Bitstream database */
     openfpga::BitstreamManager bitstream_manager_;
     std::vector<openfpga::ConfigBitId> fabric_bitstream_;
+
+    /* Netlist database 
+     * TODO: Each format should have an independent entry
+     */
+    openfpga::NetlistManager verilog_netlists_;
 
     /* Net activities of users' implementation */
     std::unordered_map<AtomNetId, t_net_power> net_activity_; 

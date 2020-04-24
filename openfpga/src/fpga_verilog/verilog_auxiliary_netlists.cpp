@@ -29,7 +29,8 @@ namespace openfpga {
  * and user-defined.
  * Some netlists are open to compile under specific preprocessing flags
  *******************************************************************/
-void print_include_netlists(const std::string& src_dir,
+void print_include_netlists(const NetlistManager& netlist_manager,
+                            const std::string& src_dir,
                             const std::string& circuit_name,
                             const std::string& reference_benchmark_file,
                             const CircuitLibrary& circuit_lib) {
@@ -55,24 +56,37 @@ void print_include_netlists(const std::string& src_dir,
   fp << std::endl;
 
   /* Include all the user-defined netlists */
+  print_verilog_comment(fp, std::string("------ Include user-defined netlists -----"));
   for (const std::string& user_defined_netlist : find_circuit_library_unique_verilog_netlists(circuit_lib)) {
     print_verilog_include_netlist(fp, user_defined_netlist);
   }
 
   /* Include all the primitive modules */
-  print_verilog_include_netlist(fp, src_dir + std::string(DEFAULT_SUBMODULE_DIR_NAME) + std::string(SUBMODULE_VERILOG_FILE_NAME));
+  print_verilog_comment(fp, std::string("------ Include primitive module netlists -----"));
+  for (const NetlistId& nlist_id : netlist_manager.netlists_by_type(NetlistManager::SUBMODULE_NETLIST)) {
+    print_verilog_include_netlist(fp, netlist_manager.netlist_name(nlist_id));
+  }
   fp << std::endl;
 
   /* Include all the CLB, heterogeneous block modules */
-  print_verilog_include_netlist(fp, src_dir  + std::string(DEFAULT_LB_DIR_NAME) + std::string(LOGIC_BLOCK_VERILOG_FILE_NAME));
+  print_verilog_comment(fp, std::string("------ Include logic block netlists -----"));
+  for (const NetlistId& nlist_id : netlist_manager.netlists_by_type(NetlistManager::LOGIC_BLOCK_NETLIST)) {
+    print_verilog_include_netlist(fp, netlist_manager.netlist_name(nlist_id));
+  }
   fp << std::endl;
 
   /* Include all the routing architecture modules */
-  print_verilog_include_netlist(fp, src_dir + std::string(DEFAULT_RR_DIR_NAME) + std::string(ROUTING_VERILOG_FILE_NAME));
+  print_verilog_comment(fp, std::string("------ Include routing module netlists -----"));
+  for (const NetlistId& nlist_id : netlist_manager.netlists_by_type(NetlistManager::ROUTING_MODULE_NETLIST)) {
+    print_verilog_include_netlist(fp, netlist_manager.netlist_name(nlist_id));
+  }
   fp << std::endl;
 
   /* Include FPGA top module */
-  print_verilog_include_netlist(fp, src_dir + generate_fpga_top_netlist_name(std::string(VERILOG_NETLIST_FILE_POSTFIX)));
+  print_verilog_comment(fp, std::string("------ Include fabric top-level netlists -----"));
+  for (const NetlistId& nlist_id : netlist_manager.netlists_by_type(NetlistManager::TOP_MODULE_NETLIST)) {
+    print_verilog_include_netlist(fp, netlist_manager.netlist_name(nlist_id));
+  }
   fp << std::endl;
 
   /* Include reference benchmark netlist only when auto-check flag is enabled */

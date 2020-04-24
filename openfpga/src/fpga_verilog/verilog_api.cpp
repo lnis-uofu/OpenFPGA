@@ -51,6 +51,7 @@ namespace openfpga {
  * We should think clearly about how to handle them for both Verilog and SPICE generators!
  ********************************************************************/
 void fpga_fabric_verilog(ModuleManager& module_manager,
+                         NetlistManager& netlist_manager,
                          const CircuitLibrary& circuit_lib,
                          const MuxLibrary& mux_lib,
                          const DeviceContext& device_ctx, 
@@ -88,33 +89,38 @@ void fpga_fabric_verilog(ModuleManager& module_manager,
    * the module manager.
    * Without the modules in the module manager, core logic generation is not possible!!!
    */
-  print_verilog_submodule(module_manager, mux_lib, circuit_lib,
+  print_verilog_submodule(module_manager, netlist_manager,
+                          mux_lib, circuit_lib,
                           src_dir_path, submodule_dir_path, 
                           options);
 
   /* Generate routing blocks */
   if (true == options.compress_routing()) {
-    print_verilog_unique_routing_modules(const_cast<const ModuleManager&>(module_manager),
+    print_verilog_unique_routing_modules(netlist_manager,
+                                         const_cast<const ModuleManager&>(module_manager),
                                          device_rr_gsb,  
                                          src_dir_path, rr_dir_path,
                                          options.explicit_port_mapping());
   } else {
     VTR_ASSERT(false == options.compress_routing());
-    print_verilog_flatten_routing_modules(const_cast<const ModuleManager&>(module_manager),
+    print_verilog_flatten_routing_modules(netlist_manager,
+                                          const_cast<const ModuleManager&>(module_manager),
                                           device_rr_gsb, 
                                           src_dir_path, rr_dir_path,
                                           options.explicit_port_mapping());
   }
 
   /* Generate grids */
-  print_verilog_grids(const_cast<const ModuleManager&>(module_manager),
+  print_verilog_grids(netlist_manager,
+                      const_cast<const ModuleManager&>(module_manager),
                       device_ctx, device_annotation, 
                       src_dir_path, lb_dir_path,
                       options.explicit_port_mapping(),
                       options.verbose_output());
 
   /* Generate FPGA fabric */
-  print_verilog_top_module(const_cast<const ModuleManager&>(module_manager), 
+  print_verilog_top_module(netlist_manager,
+                           const_cast<const ModuleManager&>(module_manager), 
                            src_dir_path,
                            options.explicit_port_mapping());
 
@@ -134,7 +140,8 @@ void fpga_fabric_verilog(ModuleManager& module_manager,
  *    This testbench is created for quick verification and formal verification purpose.
  *  - Verilog netlist including preprocessing flags and all the Verilog netlists that have been generated
  ********************************************************************/
-void fpga_verilog_testbench(const ModuleManager& module_manager,
+void fpga_verilog_testbench(const NetlistManager& netlist_manager,
+                            const ModuleManager& module_manager,
                             const BitstreamManager& bitstream_manager, 
                             const std::vector<ConfigBitId>& fabric_bitstream, 
                             const AtomContext& atom_ctx, 
@@ -219,7 +226,8 @@ void fpga_verilog_testbench(const ModuleManager& module_manager,
   }
 
   /* Generate a Verilog file including all the netlists that have been generated */
-  print_include_netlists(src_dir_path,
+  print_include_netlists(netlist_manager,
+                         src_dir_path,
                          netlist_name,
                          options.reference_benchmark_file_path(),
                          circuit_lib);

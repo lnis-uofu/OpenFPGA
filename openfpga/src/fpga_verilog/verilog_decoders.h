@@ -12,6 +12,7 @@
 #include "mux_graph.h"
 #include "mux_library.h"
 #include "module_manager.h"
+#include "netlist_manager.h"
 
 /********************************************************************
  * Function declaration
@@ -21,7 +22,7 @@
 namespace openfpga {
 
 void print_verilog_submodule_mux_local_decoders(const ModuleManager& module_manager,
-                                                std::vector<std::string>& netlist_names,
+                                                NetlistManager& netlist_manager,
                                                 const MuxLibrary& mux_lib,
                                                 const CircuitLibrary& circuit_lib,
                                                 const std::string& verilog_dir,

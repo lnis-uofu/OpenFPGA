@@ -97,7 +97,7 @@ void print_verilog_mux_memory_module(const ModuleManager& module_manager,
  * memory-bank organization for the memories.
  ********************************************************************/
 void print_verilog_submodule_memories(const ModuleManager& module_manager,
-                                      std::vector<std::string>& netlist_names,
+                                      NetlistManager& netlist_manager,
                                       const MuxLibrary& mux_lib,
                                       const CircuitLibrary& circuit_lib,
                                       const std::string& verilog_dir,
@@ -187,7 +187,9 @@ void print_verilog_submodule_memories(const ModuleManager& module_manager,
   fp.close();
 
   /* Add fname to the netlist name list */
-  netlist_names.push_back(verilog_fname);
+  NetlistId nlist_id = netlist_manager.add_netlist(verilog_fname);
+  VTR_ASSERT(NetlistId::INVALID() != nlist_id);
+  netlist_manager.set_netlist_type(nlist_id, NetlistManager::SUBMODULE_NETLIST);
 
   VTR_LOG("Done\n");
 }

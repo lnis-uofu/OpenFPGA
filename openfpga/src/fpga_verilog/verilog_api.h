@@ -12,6 +12,7 @@
 #include "vpr_context.h"
 #include "vpr_device_annotation.h"
 #include "device_rr_gsb.h"
+#include "netlist_manager.h"
 #include "module_manager.h"
 #include "bitstream_manager.h"
 #include "simulation_setting.h"
@@ -28,6 +29,7 @@
 namespace openfpga {
 
 void fpga_fabric_verilog(ModuleManager& module_manager,
+                         NetlistManager& netlist_manager,
                          const CircuitLibrary& circuit_lib,
                          const MuxLibrary& mux_lib,
                          const DeviceContext& device_ctx, 
@@ -35,7 +37,8 @@ void fpga_fabric_verilog(ModuleManager& module_manager,
                          const DeviceRRGSB& device_rr_gsb,
                          const FabricVerilogOption& options);
 
-void fpga_verilog_testbench(const ModuleManager& module_manager,
+void fpga_verilog_testbench(const NetlistManager& netlist_manager,
+                            const ModuleManager& module_manager,
                             const BitstreamManager& bitstream_manager, 
                             const std::vector<ConfigBitId>& fabric_bitstream, 
                             const AtomContext& atom_ctx, 
