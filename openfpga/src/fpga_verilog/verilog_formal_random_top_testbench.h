@@ -17,7 +17,6 @@ namespace openfpga {
 
 void print_verilog_random_top_testbench(const std::string& circuit_name,
                                         const std::string& verilog_fname,
-                                        const std::string& verilog_dir,
                                         const AtomContext& atom_ctx,
                                         const VprNetlistAnnotation& netlist_annotation,
                                         const SimulationSetting& simulation_parameters);

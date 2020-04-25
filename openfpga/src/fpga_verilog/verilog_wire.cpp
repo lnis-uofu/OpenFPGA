@@ -95,7 +95,6 @@ void print_verilog_wire_module(const ModuleManager& module_manager,
 void print_verilog_submodule_wires(const ModuleManager& module_manager,
                                    NetlistManager& netlist_manager,
                                    const CircuitLibrary& circuit_lib,
-                                   const std::string& verilog_dir,
                                    const std::string& submodule_dir) {
   std::string verilog_fname(submodule_dir + std::string(WIRES_VERILOG_FILE_NAME));
 
@@ -110,8 +109,6 @@ void print_verilog_submodule_wires(const ModuleManager& module_manager,
           verilog_fname.c_str()); 
 
   print_verilog_file_header(fp, "Wires"); 
-
-  print_verilog_include_defines_preproc_file(fp, verilog_dir);
 
   /* Print Verilog models for regular wires*/
   print_verilog_comment(fp, std::string("----- BEGIN Verilog modules for regular wires -----"));

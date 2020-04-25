@@ -197,7 +197,6 @@ static
 void print_verilog_logical_tile_netlist(NetlistManager& netlist_manager,
                                         const ModuleManager& module_manager,
                                         const VprDeviceAnnotation& device_annotation,
-                                        const std::string& verilog_dir,
                                         const std::string& subckt_dir,
                                         t_pb_graph_node* pb_graph_head,
                                         const bool& use_explicit_mapping,
@@ -219,9 +218,6 @@ void print_verilog_logical_tile_netlist(NetlistManager& netlist_manager,
   check_file_stream(verilog_fname.c_str(), fp);
 
   print_verilog_file_header(fp, std::string("Verilog modules for logical tile: " + std::string(pb_graph_head->pb_type->name) + "]")); 
-
-  /* Print preprocessing flags */
-  print_verilog_include_defines_preproc_file(fp, verilog_dir);
 
   /* Print Verilog modules for all the pb_types/pb_graph_nodes
    * use a Depth-First Search Algorithm to print the sub-modules 
@@ -262,7 +258,6 @@ void print_verilog_logical_tile_netlist(NetlistManager& netlist_manager,
 static 
 void print_verilog_physical_tile_netlist(NetlistManager& netlist_manager,
                                          const ModuleManager& module_manager,
-                                         const std::string& verilog_dir,
                                          const std::string& subckt_dir,
                                          t_physical_tile_type_ptr phy_block_type,
                                          const e_side& border_side,
@@ -300,9 +295,6 @@ void print_verilog_physical_tile_netlist(NetlistManager& netlist_manager,
 
   print_verilog_file_header(fp, std::string("Verilog modules for physical tile: " + std::string(phy_block_type->name) + "]")); 
 
-  /* Print preprocessing flags */
-  print_verilog_include_defines_preproc_file(fp, verilog_dir);
-
   /* Create a Verilog Module for the top-level physical block, and add to module manager */
   std::string grid_module_name = generate_grid_block_module_name(std::string(GRID_VERILOG_FILE_NAME_PREFIX), std::string(phy_block_type->name), is_io_type(phy_block_type), border_side);
   ModuleId grid_module = module_manager.find_module(grid_module_name); 
@@ -338,7 +330,6 @@ void print_verilog_grids(NetlistManager& netlist_manager,
                          const ModuleManager& module_manager,
                          const DeviceContext& device_ctx,
                          const VprDeviceAnnotation& device_annotation,
-                         const std::string& verilog_dir,
                          const std::string& subckt_dir,
                          const bool& use_explicit_mapping,
                          const bool& verbose) {
@@ -362,7 +353,7 @@ void print_verilog_grids(NetlistManager& netlist_manager,
     print_verilog_logical_tile_netlist(netlist_manager,
                                        module_manager,
                                        device_annotation,
-                                       verilog_dir, subckt_dir,
+                                       subckt_dir,
                                        logical_tile.pb_graph_head,
                                        use_explicit_mapping,
                                        verbose);
@@ -395,7 +386,7 @@ void print_verilog_grids(NetlistManager& netlist_manager,
       for (const e_side& io_type_side : io_type_sides) {
         print_verilog_physical_tile_netlist(netlist_manager,
                                             module_manager,
-                                            verilog_dir, subckt_dir, 
+                                            subckt_dir, 
                                             &physical_tile,
                                             io_type_side,
                                             use_explicit_mapping);
@@ -405,7 +396,7 @@ void print_verilog_grids(NetlistManager& netlist_manager,
       /* For CLB and heterogenenous blocks */
       print_verilog_physical_tile_netlist(netlist_manager,
                                           module_manager,
-                                          verilog_dir, subckt_dir, 
+                                          subckt_dir, 
                                           &physical_tile,
                                           NUM_SIDES,
                                           use_explicit_mapping);

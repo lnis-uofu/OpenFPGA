@@ -25,7 +25,6 @@ void print_verilog_submodule_mux_local_decoders(const ModuleManager& module_mana
                                                 NetlistManager& netlist_manager,
                                                 const MuxLibrary& mux_lib,
                                                 const CircuitLibrary& circuit_lib,
-                                                const std::string& verilog_dir,
                                                 const std::string& submodule_dir);
 
 } /* end namespace openfpga */

@@ -21,7 +21,6 @@ void print_verilog_grids(NetlistManager& netlist_manager,
                          const ModuleManager& module_manager,
                          const DeviceContext& device_ctx,
                          const VprDeviceAnnotation& device_annotation,
-                         const std::string& verilog_dir,
                          const std::string& subckt_dir,
                          const bool& use_explicit_mapping,
                          const bool& verbose);
