@@ -165,7 +165,6 @@ void print_verilog_submodule_mux_local_decoders(const ModuleManager& module_mana
                                                 NetlistManager& netlist_manager,
                                                 const MuxLibrary& mux_lib,
                                                 const CircuitLibrary& circuit_lib,
-                                                const std::string& verilog_dir,
                                                 const std::string& submodule_dir) {
   std::string verilog_fname(submodule_dir + std::string(LOCAL_ENCODER_VERILOG_FILE_NAME));
 
@@ -180,8 +179,6 @@ void print_verilog_submodule_mux_local_decoders(const ModuleManager& module_mana
           verilog_fname.c_str()); 
 
   print_verilog_file_header(fp, "Local Decoders for Multiplexers"); 
-
-  print_verilog_include_defines_preproc_file(fp, verilog_dir);
 
   /* Create a library for local encoders with different sizes */
   DecoderLibrary decoder_lib;

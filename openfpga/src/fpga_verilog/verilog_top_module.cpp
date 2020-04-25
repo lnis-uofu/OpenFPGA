@@ -58,9 +58,6 @@ void print_verilog_top_module(NetlistManager& netlist_manager,
 
   print_verilog_file_header(fp, std::string("Top-level Verilog module for FPGA")); 
 
-  /* Print preprocessing flags */
-  print_verilog_include_defines_preproc_file(fp, verilog_dir);
-
   /* Write the module content in Verilog format */
   write_verilog_module_to_file(fp, module_manager, top_module, use_explicit_mapping);
 

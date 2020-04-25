@@ -33,7 +33,6 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
                                  const VprNetlistAnnotation& netlist_annotation, 
                                  const std::string& circuit_name,
                                  const std::string& verilog_fname,
-                                 const std::string& verilog_dir,
                                  const SimulationSetting& simulation_parameters);
 
 } /* end namespace openfpga */

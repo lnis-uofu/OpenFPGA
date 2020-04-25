@@ -527,7 +527,6 @@ void print_verilog_constant_generator_module(const ModuleManager& module_manager
  ***********************************************/
 void print_verilog_submodule_essentials(const ModuleManager& module_manager, 
                                         NetlistManager& netlist_manager,
-                                        const std::string& verilog_dir, 
                                         const std::string& submodule_dir,
                                         const CircuitLibrary& circuit_lib) {
   /* TODO: remove .bak when this part is completed and tested */
@@ -545,8 +544,6 @@ void print_verilog_submodule_essentials(const ModuleManager& module_manager,
           verilog_fname.c_str()); 
 
   print_verilog_file_header(fp, "Essential gates"); 
-
-  print_verilog_include_defines_preproc_file(fp, verilog_dir);
 
   /* Print constant generators */
   /* VDD */

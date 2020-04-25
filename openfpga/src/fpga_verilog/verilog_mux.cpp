@@ -1227,7 +1227,6 @@ void print_verilog_submodule_muxes(ModuleManager& module_manager,
                                    NetlistManager& netlist_manager,
                                    const MuxLibrary& mux_lib,
                                    const CircuitLibrary& circuit_lib,
-                                   const std::string& verilog_dir,
                                    const std::string& submodule_dir,
                                    const bool& use_explicit_port_map) {
 
@@ -1245,8 +1244,6 @@ void print_verilog_submodule_muxes(ModuleManager& module_manager,
 
   print_verilog_file_header(fp, "Multiplexers"); 
 
-  print_verilog_include_defines_preproc_file(fp, verilog_dir);
-  
   /* Generate basis sub-circuit for unique branches shared by the multiplexers */
   for (auto mux : mux_lib.muxes()) {
     const MuxGraph& mux_graph = mux_lib.mux_graph(mux);

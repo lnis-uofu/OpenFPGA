@@ -77,7 +77,6 @@ namespace openfpga {
 static 
 void print_verilog_routing_connection_box_unique_module(NetlistManager& netlist_manager,
                                                         const ModuleManager& module_manager, 
-                                                        const std::string& verilog_dir, 
                                                         const std::string& subckt_dir, 
                                                         const RRGSB& rr_gsb,
                                                         const t_rr_type& cb_type,
@@ -93,9 +92,6 @@ void print_verilog_routing_connection_box_unique_module(NetlistManager& netlist_
   check_file_stream(verilog_fname.c_str(), fp);
 
   print_verilog_file_header(fp, std::string("Verilog modules for Unique Connection Blocks[" + std::to_string(rr_gsb.get_cb_x(cb_type)) + "]["+ std::to_string(rr_gsb.get_cb_y(cb_type)) + "]")); 
-
-  /* Print preprocessing flags */
-  print_verilog_include_defines_preproc_file(fp, verilog_dir);
 
   /* Create a Verilog Module based on the circuit model, and add to module manager */
   ModuleId cb_module = module_manager.find_module(generate_connection_block_module_name(cb_type, gsb_coordinate)); 
@@ -182,7 +178,6 @@ void print_verilog_routing_connection_box_unique_module(NetlistManager& netlist_
 static 
 void print_verilog_routing_switch_box_unique_module(NetlistManager& netlist_manager,
                                                     const ModuleManager& module_manager, 
-                                                    const std::string& verilog_dir, 
                                                     const std::string& subckt_dir, 
                                                     const RRGSB& rr_gsb,
                                                     const bool& use_explicit_port_map) {
@@ -197,9 +192,6 @@ void print_verilog_routing_switch_box_unique_module(NetlistManager& netlist_mana
   check_file_stream(verilog_fname.c_str(), fp);
 
   print_verilog_file_header(fp, std::string("Verilog modules for Unique Switch Blocks[" + std::to_string(rr_gsb.get_sb_x()) + "]["+ std::to_string(rr_gsb.get_sb_y()) + "]")); 
-
-  /* Print preprocessing flags */
-  print_verilog_include_defines_preproc_file(fp, verilog_dir);
 
   /* Create a Verilog Module based on the circuit model, and add to module manager */
   ModuleId sb_module = module_manager.find_module(generate_switch_block_module_name(gsb_coordinate)); 
@@ -225,7 +217,6 @@ static
 void print_verilog_flatten_connection_block_modules(NetlistManager& netlist_manager,
                                                     const ModuleManager& module_manager, 
                                                     const DeviceRRGSB& device_rr_gsb,
-                                                    const std::string& verilog_dir,
                                                     const std::string& subckt_dir,
                                                     const t_rr_type& cb_type,
                                                     const bool& use_explicit_port_map) {
@@ -244,7 +235,6 @@ void print_verilog_flatten_connection_block_modules(NetlistManager& netlist_mana
       }
       print_verilog_routing_connection_box_unique_module(netlist_manager, 
                                                          module_manager,
-                                                         verilog_dir,
                                                          subckt_dir, 
                                                          rr_gsb, cb_type,  
                                                          use_explicit_port_map);
@@ -264,7 +254,6 @@ void print_verilog_flatten_connection_block_modules(NetlistManager& netlist_mana
 void print_verilog_flatten_routing_modules(NetlistManager& netlist_manager,
                                            const ModuleManager& module_manager,
                                            const DeviceRRGSB& device_rr_gsb,
-                                           const std::string& verilog_dir,
                                            const std::string& subckt_dir,
                                            const bool& use_explicit_port_map) {
   /* Create a vector to contain all the Verilog netlist names that have been generated in this function */
@@ -281,16 +270,15 @@ void print_verilog_flatten_routing_modules(NetlistManager& netlist_manager,
       }
       print_verilog_routing_switch_box_unique_module(netlist_manager,
                                                      module_manager, 
-                                                     verilog_dir,
                                                      subckt_dir, 
                                                      rr_gsb, 
                                                      use_explicit_port_map);
     }
   }
 
-  print_verilog_flatten_connection_block_modules(netlist_manager, module_manager, device_rr_gsb, verilog_dir, subckt_dir, CHANX, use_explicit_port_map);
+  print_verilog_flatten_connection_block_modules(netlist_manager, module_manager, device_rr_gsb, subckt_dir, CHANX, use_explicit_port_map);
 
-  print_verilog_flatten_connection_block_modules(netlist_manager, module_manager, device_rr_gsb, verilog_dir, subckt_dir, CHANY, use_explicit_port_map);
+  print_verilog_flatten_connection_block_modules(netlist_manager, module_manager, device_rr_gsb, subckt_dir, CHANY, use_explicit_port_map);
 
   /*
   VTR_LOG("Writing header file for routing submodules '%s'...",
@@ -317,7 +305,6 @@ void print_verilog_flatten_routing_modules(NetlistManager& netlist_manager,
 void print_verilog_unique_routing_modules(NetlistManager& netlist_manager,
                                           const ModuleManager& module_manager,
                                           const DeviceRRGSB& device_rr_gsb,
-                                          const std::string& verilog_dir,
                                           const std::string& subckt_dir,
                                           const bool& use_explicit_port_map) {
   /* Create a vector to contain all the Verilog netlist names that have been generated in this function */
@@ -328,7 +315,6 @@ void print_verilog_unique_routing_modules(NetlistManager& netlist_manager,
     const RRGSB& unique_mirror = device_rr_gsb.get_sb_unique_module(isb);
     print_verilog_routing_switch_box_unique_module(netlist_manager,
                                                    module_manager,
-                                                   verilog_dir,
                                                    subckt_dir, 
                                                    unique_mirror, 
                                                    use_explicit_port_map);
@@ -340,7 +326,6 @@ void print_verilog_unique_routing_modules(NetlistManager& netlist_manager,
 
     print_verilog_routing_connection_box_unique_module(netlist_manager,
                                                        module_manager,
-                                                       verilog_dir,
                                                        subckt_dir, 
                                                        unique_mirror, CHANX,  
                                                        use_explicit_port_map);
@@ -352,7 +337,6 @@ void print_verilog_unique_routing_modules(NetlistManager& netlist_manager,
 
     print_verilog_routing_connection_box_unique_module(netlist_manager, 
                                                        module_manager,
-                                                       verilog_dir,
                                                        subckt_dir, 
                                                        unique_mirror, CHANY,  
                                                        use_explicit_port_map);
