@@ -104,7 +104,7 @@ def main():
         logfile_path = os.path.join(gc["task_dir"],
                                     taskname, task_run, "modelsim_run.log")
         resultfile_path = os.path.join(gc["task_dir"],
-                                    taskname, task_run, "modelsim_result.csv")
+                                       taskname, task_run, "modelsim_result.csv")
         logfilefh = logging.FileHandler(logfile_path, "w")
         logfilefh.setFormatter(logging.Formatter(FILE_LOG_FORMAT))
         logger.addHandler(logfilefh)
@@ -129,7 +129,8 @@ def main():
                         task_ini_files.append(INIfile)
         logger.info(f"Found {len(task_ini_files)} INI files")
         results = create_tcl_script(task_ini_files)
-        collect_result(resultfile_path, results)
+        if args.run_sim:
+            collect_result(resultfile_path, results)
 
 
 def clean_up_and_exit(msg):
@@ -168,7 +169,21 @@ def create_tcl_script(files):
 
         config["MODELSIM_PROJ_NAME"] = args.modelsim_proj_name
         config["MODELSIM_INI"] = args.modelsim_ini
-
+        config["VERILOG_PATH"] = os.path.join(
+            os.getcwd(), config["VERILOG_PATH"])
+        IncludeFile = os.path.join(
+            os.getcwd(),
+            config["VERILOG_PATH"],
+            config["VERILOG_FILE2"])
+        IncludeFileResolved = os.path.join(
+            os.getcwd(),
+            config["VERILOG_PATH"],
+            config["VERILOG_FILE2"].replace(".v", "_resolved.v"))
+        with open(IncludeFileResolved, "w") as fpw:
+            with open(IncludeFile, "r") as fp:
+                for eachline in fp.readlines():
+                    eachline = eachline.replace("./SRC", "../../../SRC/")
+                    fpw.write(eachline)
         # Modify the variables in config file here
         config["TOP_TB"] = os.path.splitext(config["TOP_TB"])[0]
 
@@ -193,13 +208,13 @@ def create_tcl_script(files):
             "ini_file": eachFile,
             "modelsim_run_dir": args.modelsim_run_dir,
             "runsim_filename": runsim_filename,
-            "run_complete" :False,
+            "run_complete": False,
             "status": False,
-            "finished" : True,
-            "starttime" : 0,
-            "endtime" : 0,
+            "finished": True,
+            "starttime": 0,
+            "endtime": 0,
             "Errors": 0,
-            "Warnings" : 0
+            "Warnings": 0
         })
     # Execute modelsim
     if args.run_sim:
@@ -229,7 +244,7 @@ def run_modelsim_thread(s, eachJob, job_list):
         thread_name = threading.currentThread().getName()
         eachJob["starttime"] = time.time()
         eachJob["Errors"] = 0
-        eachJob["Warnings"]= 0
+        eachJob["Warnings"] = 0
         try:
             logfile = "%s_modelsim.log" % thread_name
             eachJob["logfile"] = "<task_dir>" + \
@@ -248,7 +263,8 @@ def run_modelsim_thread(s, eachJob, job_list):
                 for line in process.stdout:
                     if "Errors" in line:
                         logger.info(line.strip())
-                        e,w = re.match("# .*: ([0-9].*), .*: ([0-9].*)", line).groups()
+                        e, w = re.match(
+                            "# .*: ([0-9].*), .*: ([0-9].*)", line).groups()
                         eachJob["Errors"] += int(e)
                         eachJob["Warnings"] += int(w)
                     sys.stdout.buffer.flush()
@@ -275,8 +291,10 @@ def run_modelsim_thread(s, eachJob, job_list):
         no_of_finished_job = sum([not eachJ["finished"] for eachJ in job_list])
         logger.info("***** %d runs pending *****" % (no_of_finished_job))
 
+
 def collect_result(result_file, result_obj):
-    colnames = ["status", "Errors", "Warnings", "run_complete", "exectime", "finished", "logfile"]
+    colnames = ["status", "Errors", "Warnings",
+                "run_complete", "exectime", "finished", "logfile"]
     if len(result_obj):
         with open(result_file, 'w', newline='') as csvfile:
             writer = csv.DictWriter(
@@ -285,10 +303,11 @@ def collect_result(result_file, result_obj):
             for eachResult in result_obj:
                 writer.writerow(eachResult)
     logger.info("= = = ="*10)
-    passed_jobs = [ each["status"] for each in result_obj ]
+    passed_jobs = [each["status"] for each in result_obj]
     logger.info(f"Passed Jobs %d/%d", len(passed_jobs), len(result_obj))
     logger.info(f"Result file stored at {result_file}")
     logger.info("= = = ="*10)
+
 
 if __name__ == "__main__":
     if args.debug:
