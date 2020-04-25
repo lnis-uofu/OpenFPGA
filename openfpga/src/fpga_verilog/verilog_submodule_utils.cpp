@@ -207,7 +207,6 @@ void print_one_verilog_template_module(const ModuleManager& module_manager,
  ********************************************************************/
 void print_verilog_submodule_templates(const ModuleManager& module_manager,
                                        const CircuitLibrary& circuit_lib,
-                                       const std::string& verilog_dir,
                                        const std::string& submodule_dir) {
   std::string verilog_fname(submodule_dir + USER_DEFINED_TEMPLATE_VERILOG_FILE_NAME);
 
@@ -222,8 +221,6 @@ void print_verilog_submodule_templates(const ModuleManager& module_manager,
           verilog_fname.c_str()); 
 
   print_verilog_file_header(fp, "Template for user-defined Verilog modules"); 
-
-  print_verilog_include_defines_preproc_file(fp, verilog_dir);
 
   /* Output essential models*/
   for (const auto& model : circuit_lib.models()) {

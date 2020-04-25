@@ -29,7 +29,6 @@ void add_user_defined_verilog_modules(ModuleManager& module_manager,
 
 void print_verilog_submodule_templates(const ModuleManager& module_manager,
                                        const CircuitLibrary& circuit_lib,
-                                       const std::string& verilog_dir,
                                        const std::string& submodule_dir);
 
 } /* end namespace openfpga */

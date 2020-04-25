@@ -91,7 +91,7 @@ void fpga_fabric_verilog(ModuleManager& module_manager,
    */
   print_verilog_submodule(module_manager, netlist_manager,
                           mux_lib, circuit_lib,
-                          src_dir_path, submodule_dir_path, 
+                          submodule_dir_path, 
                           options);
 
   /* Generate routing blocks */
@@ -99,14 +99,14 @@ void fpga_fabric_verilog(ModuleManager& module_manager,
     print_verilog_unique_routing_modules(netlist_manager,
                                          const_cast<const ModuleManager&>(module_manager),
                                          device_rr_gsb,  
-                                         src_dir_path, rr_dir_path,
+                                         rr_dir_path,
                                          options.explicit_port_mapping());
   } else {
     VTR_ASSERT(false == options.compress_routing());
     print_verilog_flatten_routing_modules(netlist_manager,
                                           const_cast<const ModuleManager&>(module_manager),
                                           device_rr_gsb, 
-                                          src_dir_path, rr_dir_path,
+                                          rr_dir_path,
                                           options.explicit_port_mapping());
   }
 
@@ -114,7 +114,7 @@ void fpga_fabric_verilog(ModuleManager& module_manager,
   print_verilog_grids(netlist_manager,
                       const_cast<const ModuleManager&>(module_manager),
                       device_ctx, device_annotation, 
-                      src_dir_path, lb_dir_path,
+                      lb_dir_path,
                       options.explicit_port_mapping(),
                       options.verbose_output());
 
@@ -180,8 +180,7 @@ void fpga_verilog_testbench(const NetlistManager& netlist_manager,
                                        atom_ctx, place_ctx, io_location_map,
                                        netlist_annotation,
                                        netlist_name,
-                                       formal_verification_top_netlist_file_path,
-                                       src_dir_path);
+                                       formal_verification_top_netlist_file_path);
   }
 
   if (true == options.print_preconfig_top_testbench()) {
@@ -190,7 +189,6 @@ void fpga_verilog_testbench(const NetlistManager& netlist_manager,
                                                + std::string(RANDOM_TOP_TESTBENCH_VERILOG_FILE_POSTFIX);
     print_verilog_random_top_testbench(netlist_name,
                                        random_top_testbench_file_path, 
-                                       src_dir_path,
                                        atom_ctx,  
                                        netlist_annotation,
                                        simulation_setting);
@@ -208,7 +206,6 @@ void fpga_verilog_testbench(const NetlistManager& netlist_manager,
                                 netlist_annotation,
                                 netlist_name,
                                 top_testbench_file_path,
-                                src_dir_path,
                                 simulation_setting);
   }
  

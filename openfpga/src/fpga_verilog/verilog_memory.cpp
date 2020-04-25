@@ -100,7 +100,6 @@ void print_verilog_submodule_memories(const ModuleManager& module_manager,
                                       NetlistManager& netlist_manager,
                                       const MuxLibrary& mux_lib,
                                       const CircuitLibrary& circuit_lib,
-                                      const std::string& verilog_dir,
                                       const std::string& submodule_dir,
                                       const bool& use_explicit_port_map) {
   /* Plug in with the mux subckt */
@@ -118,8 +117,6 @@ void print_verilog_submodule_memories(const ModuleManager& module_manager,
 
   print_verilog_file_header(fp, "Memories used in FPGA"); 
 
-  print_verilog_include_defines_preproc_file(fp, verilog_dir);
-  
   /* Create the memory circuits for the multiplexer */
   for (auto mux : mux_lib.muxes()) {
     const MuxGraph& mux_graph = mux_lib.mux_graph(mux);

@@ -183,7 +183,6 @@ void print_verilog_random_testbench_fpga_instance(std::fstream& fp,
  ********************************************************************/
 void print_verilog_random_top_testbench(const std::string& circuit_name,
                                         const std::string& verilog_fname,
-                                        const std::string& verilog_dir,
                                         const AtomContext& atom_ctx,
                                         const VprNetlistAnnotation& netlist_annotation,
                                         const SimulationSetting& simulation_parameters) {
@@ -202,11 +201,6 @@ void print_verilog_random_top_testbench(const std::string& circuit_name,
   /* Generate a brief description on the Verilog file*/
   std::string title = std::string("FPGA Verilog Testbench for Formal Top-level netlist of Design: ") + circuit_name;
   print_verilog_file_header(fp, title); 
-
-  /* Print preprocessing flags and external netlists */
-  print_verilog_include_defines_preproc_file(fp, verilog_dir);
-
-  print_verilog_include_netlist(fp, std::string(verilog_dir + std::string(DEFINES_VERILOG_SIMULATION_FILE_NAME)));  
 
   /* Preparation: find all the clock ports */
   std::vector<std::string> clock_port_names = find_atom_netlist_clock_port_names(atom_ctx.nlist, netlist_annotation);

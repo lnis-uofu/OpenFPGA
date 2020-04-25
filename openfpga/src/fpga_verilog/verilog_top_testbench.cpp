@@ -799,7 +799,6 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
                                  const VprNetlistAnnotation& netlist_annotation,
                                  const std::string& circuit_name,
                                  const std::string& verilog_fname,
-                                 const std::string& verilog_dir,
                                  const SimulationSetting& simulation_parameters) {
 
   std::string timer_message = std::string("Write autocheck testbench for FPGA top-level Verilog netlist for '") + circuit_name + std::string("'");
@@ -817,9 +816,6 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
   /* Generate a brief description on the Verilog file*/
   std::string title = std::string("FPGA Verilog Testbench for Top-level netlist of Design: ") + circuit_name;
   print_verilog_file_header(fp, title); 
-
-  /* Print preprocessing flags and external netlists */
-  print_verilog_include_defines_preproc_file(fp, verilog_dir);
 
   /* Find the top_module */
   ModuleId top_module = module_manager.find_module(generate_fpga_top_module_name());

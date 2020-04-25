@@ -385,8 +385,7 @@ void print_verilog_preconfig_top_module(const ModuleManager& module_manager,
                                         const IoLocationMap& io_location_map,
                                         const VprNetlistAnnotation& netlist_annotation, 
                                         const std::string& circuit_name,
-                                        const std::string& verilog_fname,
-                                        const std::string& verilog_dir) {
+                                        const std::string& verilog_fname) {
   std::string timer_message = std::string("Write pre-configured FPGA top-level Verilog netlist for design '") + circuit_name + std::string("'");
 
   /* Start time count */
@@ -402,11 +401,6 @@ void print_verilog_preconfig_top_module(const ModuleManager& module_manager,
   /* Generate a brief description on the Verilog file*/
   std::string title = std::string("Verilog netlist for pre-configured FPGA fabric by design: ") + circuit_name;
   print_verilog_file_header(fp, title); 
-
-  /* Print preprocessing flags and external netlists */
-  print_verilog_include_defines_preproc_file(fp, verilog_dir);
-
-  print_verilog_include_netlist(fp, std::string(verilog_dir + std::string(DEFINES_VERILOG_SIMULATION_FILE_NAME)));  
 
   /* Print module declaration and ports */
   print_verilog_preconfig_top_module_ports(fp, circuit_name, atom_ctx, netlist_annotation);
