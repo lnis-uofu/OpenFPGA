@@ -182,7 +182,7 @@ def create_tcl_script(files):
         with open(IncludeFileResolved, "w") as fpw:
             with open(IncludeFile, "r") as fp:
                 for eachline in fp.readlines():
-                    eachline = eachline.replace("./SRC", "../../../SRC/")
+                    eachline = eachline.replace("\"./", "\"../../../")
                     fpw.write(eachline)
         # Modify the variables in config file here
         config["TOP_TB"] = os.path.splitext(config["TOP_TB"])[0]
