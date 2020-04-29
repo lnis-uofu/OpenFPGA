@@ -105,4 +105,10 @@ python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/duplicated_grid_pi
 echo -e "Testing Verilog generation with spy output pads";
 python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/spypad --debug --show_thread_logs
 
+# Verify MCNC big20 benchmark suite with ModelSim 
+# Please make sure you have ModelSim installed in the environment
+# Otherwise, it will fail
+#python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/mcnc_big20 --debug --show_thread_logs --maxthreads 20
+#python3 openfpga_flow/scripts/run_modelsim.py openfpga_shell/mcnc_big20 --run_sim 
+
 end_section "OpenFPGA.TaskTun"
