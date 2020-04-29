@@ -1,0 +1,32 @@
+# Run VPR for the 'and' design
+#--write_rr_graph example_rr_graph.xml
+vpr ${VPR_ARCH_FILE} ${VPR_TESTBENCH_BLIF} --clock_modeling route
+
+# Read OpenFPGA architecture definition
+read_openfpga_arch -f ${OPENFPGA_ARCH_FILE}
+
+# Annotate the OpenFPGA architecture to VPR data base
+# to debug use --verbose options
+link_openfpga_arch --activity_file ${ACTIVITY_FILE} --sort_gsb_chan_node_in_edges
+
+# Check and correct any naming conflicts in the BLIF netlist
+check_netlist_naming_conflict --fix --report ./netlist_renaming.xml
+
+# Build the module graph
+#  - Enabled compression on routing architecture modules
+#  - Enable pin duplication on grid modules
+build_fabric --compress_routing #--verbose
+
+# Write the Verilog netlist for FPGA fabric
+#  - Enable the use of explicit port mapping in Verilog netlist
+write_fabric_verilog --file ./SRC --explicit_port_mapping --include_timing --include_signal_init --support_icarus_simulator --print_user_defined_template --verbose
+
+# Write the SDC files for PnR backend
+#  - Turn on every options here
+write_pnr_sdc --file ./SDC
+
+# Finish and exit OpenFPGA
+exit
+
+# Note :
+# To run verification at the end of the flow maintain source in ./SRC directory
