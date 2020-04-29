@@ -17,6 +17,10 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
+void print_fabric_include_netlist(const NetlistManager& netlist_manager,
+                                  const std::string& src_dir,
+                                  const CircuitLibrary& circuit_lib);
+
 void print_include_netlists(const NetlistManager& netlist_manager,
                             const std::string& src_dir,
                             const std::string& circuit_name,
