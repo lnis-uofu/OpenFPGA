@@ -124,12 +124,16 @@ void fpga_fabric_verilog(ModuleManager& module_manager,
                            src_dir_path,
                            options.explicit_port_mapping());
 
+  /* Generate an netlist including all the fabric-related netlists */
+  print_fabric_include_netlist(const_cast<const NetlistManager&>(netlist_manager),
+                               src_dir_path,
+                               circuit_lib);
+
   /* Given a brief stats on how many Verilog modules have been written to files */
   VTR_LOGV(options.verbose_output(), 
            "Written %lu Verilog modules in total\n", 
            module_manager.num_modules());  
 }
-
 
 /********************************************************************
  * A top-level function of FPGA-Verilog which focuses on fabric Verilog generation
