@@ -1,0 +1,20 @@
+Left,,,,,,Right,,,,,,Top,,,,,,Bottom,,,,,,,,,,
+Side,Pin,Number,Remark,Cell,,Side,Pin,Number,Remark,Cell,,Side,Pin,Number,Remark,Cell,,Side,Pin,Number,Remark,Cell,,,,,,
+1,7,1,DVSS,PDVSS_18_18_NT_DR,,2,7,1,DVSS,PDVSS_18_18_NT_DR,,3,7,1,DVSS,PDVSS_18_18_NT_DR,,4,7,1,DVSS,PDVSS_18_18_NT_DR,,Code,Name,Instance,Count,
+1,6,2,DVDD,PDVDD_18_18_NT_DR,,2,6,2,DVDD,PDVDD_18_18_NT_DR,,3,6,2,DVDD,PDVDD_18_18_NT_DR,,4,6,2,DVDD,PDVDD_18_18_NT_DR,,1,Global Port In,PINCNP_18_18_NT_DR,7,9
+1,1,3,Reset,PINCNP_18_18_NT_DR,,2,1,3,prog_clk,PINCNP_18_18_NT_DR,,3,1,3,sc_head,PINCNP_18_18_NT_DR,,4,1,3,ccff_head,PINCNP_18_18_NT_DR,,2,GPIO,PBIDIR_18_18_NT_DR,8,32
+1,2,4,GPIO1,PBIDIR_18_18_NT_DR,,2,2,4,GPIO4,PBIDIR_18_18_NT_DR,,3,2,4,GPIO7,PBIDIR_18_18_NT_DR,,4,2,4,GPIO2,PBIDIR_18_18_NT_DR,,3,SPY,PBIDIR_18_18_NT_DR,0,11
+1,1,5,clk,PINCNP_18_18_NT_DR,,2,8,5,PVDDTIE,PDVDDTIE_18_18_NT_DR,,3,8,5,PVDDTIE,PDVDDTIE_18_18_NT_DR,,4,8,5,PVDDTIE,PDVDDTIE_18_18_NT_DR,,4,VDD,PVDD_08_08_NT_DR,4,
+1,2,6,GPIO0,PBIDIR_18_18_NT_DR,,2,2,6,GPIO5,PBIDIR_18_18_NT_DR,,3,2,6,GPIO6,PBIDIR_18_18_NT_DR,,4,2,6,GPIO3,PBIDIR_18_18_NT_DR,,5,VSS,PVSS_08_08_NT_DR,4,
+1,1,7,Test_en,PINCNP_18_18_NT_DR,,2,1,7,pReset,PINCNP_18_18_NT_DR,,3,9,7,ccff_tail,PBIDIR_18_18_NT_DR,,4,9,7,sc_tail,PBIDIR_18_18_NT_DR,,6,DVDD,PDVDD_18_18_NT_DR,4,
+1,4,8,VDD,PVDD_08_08_NT_DR,,2,4,8,VDD,PVDD_08_08_NT_DR,,3,4,8,VDD,PVDD_08_08_NT_DR,,4,4,8,VDD,PVDD_08_08_NT_DR,,7,DVSS,PDVSS_18_18_NT_DR,4,
+1,5,9,VSS,PVSS_08_08_NT_DR,,2,5,9,VSS,PVSS_08_08_NT_DR,,3,5,9,VSS,PVSS_08_08_NT_DR,,4,5,9,VSS,PVSS_08_08_NT_DR,,8,PVDDTIE,PDVDDTIE_18_18_NT_DR,3,
+,,,,,,,,,,,,,,,,,,,,,,,,9,Global Port Out,PBIDIR_18_18_NT_DR,2,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,36,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,"Things to Edit
+1. Add respective numbers in the Pin column
+2. Add pin name in pi name column (case inensetive will be converted to lower case all the time)
+3. GPIO array is represented as GPIOxx  
+4. Orientation will be taken care by the script",,,,

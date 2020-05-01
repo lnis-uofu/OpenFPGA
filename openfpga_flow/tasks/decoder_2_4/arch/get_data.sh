@@ -1,0 +1,2 @@
+#!/bin/bash
+wget –no-check-certificate -q -O - 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQoLR2KbvU9BOF6PszjTtIrrY7nrb8GlHMlqC_VAjFgGrTF5ToGgPvfDRY-Pj0GjgamkaIglq7kTX7q/pub?gid=85930648&single=true&output=csv' > pin_map.csv

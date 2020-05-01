@@ -1,0 +1,29 @@
+.model test_mode_low
+.inputs a b clk
+.outputs out_0 out_1 out_2 out_3
+
+.subckt shift D=a clk=clk Q=pipe_a_0
+.subckt shift D=pipe_a_0 clk=clk Q=pipe_a_1
+.subckt shift D=b clk=clk Q=pipe_b_0
+.subckt shift D=pipe_b_0 clk=clk Q=pipe_b_1
+
+.latch sum_0 pipe_sum_0 re clk 0
+.latch sum_2 pipe_sum_1 re clk 0
+.latch sum_4 pipe_sum_2 re clk 0
+.latch sum_6 pipe_sum_3 re clk 0
+
+.subckt adder a=pipe_a_0 b=pipe_b_0 cin=sum_7 cout=sum_1 sumout=sum_0
+.subckt adder a=pipe_sum_0 b=pipe_sum_2 cin=sum_1 cout=sum_3 sumout=sum_2
+.subckt adder a=pipe_sum_1 b=pipe_sum_3 cin=sum_3 cout=sum_5 sumout=sum_4
+.subckt adder a=pipe_sum_2 b=pipe_sum_0 cin=sum_5 cout=sum_7 sumout=sum_6
+
+.names pipe_sum_0 out_0
+1 1
+.names pipe_sum_1 out_1
+1 1
+.names pipe_sum_2 out_2
+1 1
+.names pipe_sum_3 out_3
+1 1
+
+.end
