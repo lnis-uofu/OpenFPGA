@@ -1,0 +1,13 @@
+# Benchmark "decoder_2_4" written by ABC on Fri May  1 15:36:33 2020 
+.model decoder_2_4 
+.inputs in0 in1  
+.outputs out0 out1 out2 out3  
+.names in0 in1 out0 
+00 1 
+.names in1 in0 out1 
+01 1 
+.names in0 in1 out2 
+01 1 
+.names in0 in1 out3 
+11 1 
+.end 
