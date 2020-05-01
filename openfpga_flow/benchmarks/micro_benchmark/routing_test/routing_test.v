@@ -1,5 +1,5 @@
 
-module routing_test(IN0,IN1,IN2,OUT0,OUT1,OUT2,clk);
+module routing_test(IN0,IN1,IN2, clk, OUT0,OUT1,OUT2);
 
 input wire IN0,IN1,IN2,clk;
 
