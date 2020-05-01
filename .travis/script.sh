@@ -90,6 +90,9 @@ python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/mux_design/tree_st
 echo -e "Testing Verilog generation with routing mutliplexers implemented by standard cell MUX2";
 python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/mux_design/stdcell_mux2 --debug --show_thread_logs
 
+echo -e "Testing Verilog generation with routing mutliplexers implemented by local encoders";
+python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/mux_design/local_encoder --debug --show_thread_logs
+
 echo -e "Testing Verilog generation with behavioral description";
 python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/behavioral_verilog --debug --show_thread_logs
 
