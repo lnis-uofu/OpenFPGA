@@ -108,13 +108,17 @@ void print_verilog_top_random_testbench_benchmark_instance(std::fstream& fp,
   /* Do NOT use explicit port mapping here: 
    * VPR added a prefix of "out_" to the output ports of input benchmark
    */
+  std::vector<std::string> prefix_to_remove;
+  prefix_to_remove.push_back(std::string(VPR_BENCHMARK_OUT_PORT_PREFIX));
+  prefix_to_remove.push_back(std::string(OPENFPGA_BENCHMARK_OUT_PORT_PREFIX));
   print_verilog_testbench_benchmark_instance(fp, reference_verilog_top_name,
                                              std::string(BENCHMARK_INSTANCE_NAME),
                                              std::string(),
                                              std::string(),
+                                             prefix_to_remove,
                                              std::string(BENCHMARK_PORT_POSTFIX),
                                              atom_ctx, netlist_annotation,
-                                             false);
+                                             true);
 
   print_verilog_comment(fp, std::string("----- End reference Benchmark Instanication -------"));
 
@@ -146,6 +150,7 @@ void print_verilog_random_testbench_fpga_instance(std::fstream& fp,
                                              std::string(FPGA_INSTANCE_NAME),
                                              std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX),
                                              std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX),
+                                             std::vector<std::string>(),
                                              std::string(FPGA_PORT_POSTFIX),
                                              atom_ctx, netlist_annotation,
                                              true);

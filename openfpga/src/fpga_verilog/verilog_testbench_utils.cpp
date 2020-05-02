@@ -57,6 +57,7 @@ void print_verilog_testbench_benchmark_instance(std::fstream& fp,
                                                 const std::string& instance_name,
                                                 const std::string& module_input_port_postfix,
                                                 const std::string& module_output_port_postfix,
+                                                const std::vector<std::string>& output_port_prefix_to_remove,
                                                 const std::string& output_port_postfix,
                                                 const AtomContext& atom_ctx,
                                                 const VprNetlistAnnotation& netlist_annotation,
@@ -97,8 +98,21 @@ void print_verilog_testbench_benchmark_instance(std::fstream& fp,
     } else {
       VTR_ASSERT_SAFE(AtomBlockType::OUTPAD == atom_ctx.nlist.block_type(atom_blk));
       fp << "\t\t";
+      /* Note that VPR added a prefix "out_" or "out:" to the name of output blocks
+       * We can remove this when specified through input argument 
+       */
+      std::string output_block_name = block_name;
+      for (const std::string& prefix_to_remove : output_port_prefix_to_remove) {
+        if (!prefix_to_remove.empty()) {
+          if (0 == output_block_name.find(prefix_to_remove)) {
+            output_block_name.erase(0, prefix_to_remove.length());
+            break;
+          }
+        }
+      }
+
       if (true == use_explicit_port_map) {
-        fp << "." << block_name << module_output_port_postfix << "(";
+        fp << "." << output_block_name << module_output_port_postfix << "(";
       }
       fp << block_name << output_port_postfix;
       if (true == use_explicit_port_map) {

@@ -458,13 +458,17 @@ void print_verilog_top_testbench_benchmark_instance(std::fstream& fp,
   /* Do NOT use explicit port mapping here: 
    * VPR added a prefix of "out_" to the output ports of input benchmark
    */
+  std::vector<std::string> prefix_to_remove;
+  prefix_to_remove.push_back(std::string(VPR_BENCHMARK_OUT_PORT_PREFIX));
+  prefix_to_remove.push_back(std::string(OPENFPGA_BENCHMARK_OUT_PORT_PREFIX));
   print_verilog_testbench_benchmark_instance(fp, reference_verilog_top_name,
                                              std::string(TOP_TESTBENCH_REFERENCE_INSTANCE_NAME),
                                              std::string(),
                                              std::string(),
+                                             prefix_to_remove,
                                              std::string(TOP_TESTBENCH_REFERENCE_OUTPUT_POSTFIX),
                                              atom_ctx, netlist_annotation,
-                                             false);
+                                             true);
 
   print_verilog_comment(fp, std::string("----- End reference Benchmark Instanication -------"));
 
