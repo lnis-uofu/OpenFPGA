@@ -284,6 +284,11 @@ void print_pnr_sdc_compact_routing_disable_switch_block_outputs(const std::strin
   /* Build unique switch block modules */
   for (size_t isb = 0; isb < device_rr_gsb.get_num_sb_unique_module(); ++isb) {
     const RRGSB& rr_gsb = device_rr_gsb.get_sb_unique_module(isb);
+
+    if (false == rr_gsb.is_sb_exist()) {
+      continue;
+    }
+
     vtr::Point<size_t> gsb_coordinate(rr_gsb.get_sb_x(), rr_gsb.get_sb_y());
     std::string sb_module_name = generate_switch_block_module_name(gsb_coordinate); 
 
