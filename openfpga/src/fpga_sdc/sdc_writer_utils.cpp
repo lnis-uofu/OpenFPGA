@@ -5,6 +5,9 @@
 #include <ctime>
 #include <iomanip>
 
+/* Headers from vtrutil library */
+#include "vtr_assert.h"
+
 /* Headers from openfpgautil library */
 #include "openfpga_digest.h"
 
@@ -46,10 +49,21 @@ std::string generate_sdc_port(const BasicPort& port) {
   /* Only connection require a format of <port_name>[<lsb>:<msb>]
    * others require a format of <port_type> [<lsb>:<msb>] <port_name> 
    */
-  /* When LSB == MSB, we can use a simplified format <port_type>[<lsb>]*/
-  if ( 1 == port.get_width()) {
-    size_str = "[" + std::to_string(port.get_lsb()) + "]";
+  /* When LSB == MSB, we can use a simplified format 
+   * If LSB != 0, we need to give explicit pin number
+   *   <port_type>[<lsb>]
+   * Otherwise, we can keep a compact format
+   *   <port_type>
+   */
+  if (1 == port.get_width()) {
+    if (0 != port.get_lsb()) {
+      size_str = "[" + std::to_string(port.get_lsb()) + "]";
+    } else {
+      VTR_ASSERT(0 == port.get_lsb());
+      size_str.clear();
+    }
   }
+
   sdc_line = port.get_name() + size_str;
 
   return sdc_line;

@@ -3,6 +3,9 @@
  * fabric using SDC commands
  *******************************************************************/
 
+/* Headers from vtrutil library */
+#include "vtr_assert.h"
+
 /* Headers from openfpgautil library */
 #include "openfpga_digest.h"
 
@@ -26,17 +29,30 @@ void rec_print_pnr_sdc_disable_configurable_memory_module_output(std::fstream& f
                                                                  const ModuleId& parent_module,
                                                                  const std::string& parent_module_path) {
 
+  /* Keep tracking multiple-instanced-blocks (MIB) 
+   * if they should be skipped as the unique module has been visited already
+   */
+  std::map<ModuleId, bool> skip_mib;
   /* For each configurable child, we will go one level down in priority */
   for (size_t child_index = 0; child_index < module_manager.configurable_children(parent_module).size(); ++child_index) {
     std::string child_module_path = parent_module_path;
     ModuleId child_module_id = module_manager.configurable_children(parent_module)[child_index];
     size_t child_instance_id = module_manager.configurable_child_instances(parent_module)[child_index];
     if (true == module_manager.instance_name(parent_module, child_module_id, child_instance_id).empty()) {
+      if (0 < skip_mib.count(child_module_id)) {
+        VTR_ASSERT(skip_mib.at(child_module_id) = true);
+        continue;
+      }
       /* Give a default name <module_name>_<instance_id>_ */
       child_module_path += module_manager.module_name(child_module_id); 
       child_module_path += "_";
-      child_module_path += std::to_string(child_instance_id);
+      child_module_path += "*";
+      //child_module_path += std::to_string(child_instance_id);
       child_module_path += "_";
+      /* If we use wild card to disable all the other instance
+       * So we can skip later if there is no specific instance name 
+       */
+      skip_mib[child_module_id] = true;
     } else {
       child_module_path += module_manager.instance_name(parent_module, child_module_id, child_instance_id);
     }
