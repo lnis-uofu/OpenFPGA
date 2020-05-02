@@ -176,6 +176,8 @@ FPGA-SDC
   
   - ``--file`` or ``-f`` Specify the output directory for SDC files
 
+  - ``--flatten_names`` Use flatten names (no wildcards) in SDC files
+
   - ``--constrain_global_port`` Constrain all the global ports of FPGA fabric.
 
   - ``--constrain_non_clock_global_port`` Constrain all the non-clock global ports as clocks ports of FPGA fabric
@@ -205,3 +207,5 @@ FPGA-SDC
   Write the SDC to run timing analysis for a mapped FPGA fabric
 
   - ``--file`` or ``-f`` Specify the output directory for SDC files
+  
+  - ``--flatten_names`` Use flatten names (no wildcards) in SDC files
