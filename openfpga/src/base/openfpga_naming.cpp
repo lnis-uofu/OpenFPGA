@@ -31,6 +31,20 @@ std::string generate_instance_name(const std::string& instance_name,
 }
 
 /************************************************
+ * A generic function to generate the instance name
+ * in the following format:
+ * <instance_name>_<id>_
+ * This is mainly used by module manager to give a default
+ * name for each instance when outputting the module
+ * in Verilog/SPICE format
+ ***********************************************/
+std::string generate_instance_wildcard_name(const std::string& instance_name,
+                                            const std::string& wildcard_str) {
+  return instance_name + std::string("_") + wildcard_str + std::string("_");
+}
+
+
+/************************************************
  * Generate the node name for a multiplexing structure 
  * Case 1 : If there is an intermediate buffer followed by,
  *          the node name will be mux_l<node_level>_in_buf

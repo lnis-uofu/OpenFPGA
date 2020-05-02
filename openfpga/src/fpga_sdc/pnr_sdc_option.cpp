@@ -11,6 +11,7 @@ namespace openfpga {
  ********************************************************************/
 PnrSdcOption::PnrSdcOption(const std::string& sdc_dir) {
   sdc_dir_ = sdc_dir;
+  flatten_names_ = false;
   constrain_global_port_ = false;
   constrain_non_clock_global_port_ = false;
   constrain_grid_ = false;
@@ -27,6 +28,10 @@ PnrSdcOption::PnrSdcOption(const std::string& sdc_dir) {
  ********************************************************************/
 std::string PnrSdcOption::sdc_dir() const {
   return sdc_dir_;
+}
+
+bool PnrSdcOption::flatten_names() const {
+  return flatten_names_;
 }
 
 bool PnrSdcOption::generate_sdc_pnr() const {
@@ -80,6 +85,10 @@ bool PnrSdcOption::constrain_zero_delay_paths() const {
  ********************************************************************/
 void PnrSdcOption::set_sdc_dir(const std::string& sdc_dir) {
   sdc_dir_ = sdc_dir;
+}
+
+void PnrSdcOption::set_flatten_names(const bool& flatten_names) {
+  flatten_names_ = flatten_names;
 }
 
 void PnrSdcOption::set_generate_sdc_pnr(const bool& generate_sdc_pnr) {

@@ -264,7 +264,7 @@ void print_analysis_sdc(const AnalysisSdcOption& option,
                                           openfpga_ctx.arch().circuit_lib, global_ports);
 
   /* Disable the timing for configuration cells */ 
-  rec_print_pnr_sdc_disable_configurable_memory_module_output(fp, 
+  rec_print_pnr_sdc_disable_configurable_memory_module_output(fp, option.flatten_names(), 
                                                               openfpga_ctx.module_graph(), top_module, 
                                                               format_dir_path(openfpga_ctx.module_graph().module_name(top_module)));
 

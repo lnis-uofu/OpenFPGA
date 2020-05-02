@@ -43,6 +43,7 @@ namespace openfpga {
  *******************************************************************/
 static 
 void print_pnr_sdc_constrain_configurable_memory_outputs(const std::string& sdc_dir,
+                                                         const bool& flatten_names,
                                                          const ModuleManager& module_manager,
                                                          const ModuleId& top_module) {
 
@@ -63,7 +64,8 @@ void print_pnr_sdc_constrain_configurable_memory_outputs(const std::string& sdc_
   print_sdc_file_header(fp, std::string("Disable configurable memory outputs for PnR"));
 
   /* Go recursively in the module manager, starting from the top-level module: instance id of the top-level module is 0 by default */
-  rec_print_pnr_sdc_disable_configurable_memory_module_output(fp, module_manager, top_module, 
+  rec_print_pnr_sdc_disable_configurable_memory_module_output(fp, flatten_names,
+                                                              module_manager, top_module, 
                                                               format_dir_path(module_manager.module_name(top_module)));
 
   /* Close file handler */
@@ -266,7 +268,7 @@ void print_pnr_sdc(const PnrSdcOption& sdc_options,
 
   /* Output Design Constraints to disable outputs of memory cells */
   if (true == sdc_options.constrain_configurable_memory_outputs()) {
-    print_pnr_sdc_constrain_configurable_memory_outputs(sdc_options.sdc_dir(), module_manager, top_module); 
+    print_pnr_sdc_constrain_configurable_memory_outputs(sdc_options.sdc_dir(), sdc_options.flatten_names(), module_manager, top_module); 
   } 
 
   /* Break loops from Multiplexer Output */

@@ -29,6 +29,7 @@ int write_pnr_sdc(OpenfpgaContext& openfpga_ctx,
                   const Command& cmd, const CommandContext& cmd_context) {
 
   CommandOptionId opt_output_dir = cmd.option("file");
+  CommandOptionId opt_flatten_names = cmd.option("flatten_names");
   CommandOptionId opt_constrain_global_port = cmd.option("constrain_global_port");
   CommandOptionId opt_constrain_non_clock_global_port = cmd.option("constrain_non_clock_global_port");
   CommandOptionId opt_constrain_grid = cmd.option("constrain_grid");
@@ -49,6 +50,7 @@ int write_pnr_sdc(OpenfpgaContext& openfpga_ctx,
 
   PnrSdcOption options(sdc_dir_path);
 
+  options.set_flatten_names(cmd_context.option_enable(cmd, opt_flatten_names));
   options.set_constrain_global_port(cmd_context.option_enable(cmd, opt_constrain_global_port));
   options.set_constrain_non_clock_global_port(cmd_context.option_enable(cmd, opt_constrain_non_clock_global_port));
   options.set_constrain_grid(cmd_context.option_enable(cmd, opt_constrain_grid));
@@ -95,6 +97,7 @@ int write_analysis_sdc(OpenfpgaContext& openfpga_ctx,
                        const Command& cmd, const CommandContext& cmd_context) {
 
   CommandOptionId opt_output_dir = cmd.option("file");
+  CommandOptionId opt_flatten_names = cmd.option("flatten_names");
 
   /* This is an intermediate data structure which is designed to modularize the FPGA-SDC
    * Keep it independent from any other outside data structures
@@ -106,6 +109,7 @@ int write_analysis_sdc(OpenfpgaContext& openfpga_ctx,
 
   AnalysisSdcOption options(sdc_dir_path);
   options.set_generate_sdc_analysis(true);
+  options.set_flatten_names(cmd_context.option_enable(cmd, opt_flatten_names));
 
   /* Collect global ports from the circuit library:
    * TODO: should we place this in the OpenFPGA context?

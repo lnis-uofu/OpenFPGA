@@ -26,6 +26,9 @@ ShellCommandId add_openfpga_write_pnr_sdc_command(openfpga::Shell<OpenfpgaContex
   shell_cmd.set_option_short_name(output_opt, "f");
   shell_cmd.set_option_require_value(output_opt, openfpga::OPT_STRING);
 
+  /* Add an option '--flatten_name' */
+  shell_cmd.add_option("flatten_names", false, "Use flatten names to compress SDC file size");
+
   /* Add an option '--constrain_global_port' */
   shell_cmd.add_option("constrain_global_port", false, "Constrain all the global ports of FPGA fabric");
 
@@ -85,6 +88,9 @@ ShellCommandId add_openfpga_write_analysis_sdc_command(openfpga::Shell<OpenfpgaC
 
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Enable verbose output");
+
+  /* Add an option '--flatten_name' */
+  shell_cmd.add_option("flatten_names", false, "Use flatten names to compress SDC file size");
   
   /* Add command 'write_fabric_verilog' to the Shell */
   ShellCommandId shell_cmd_id = shell.add_command(shell_cmd, "generate SDC files for timing analysis a PnRed FPGA fabric mapped by a benchmark");

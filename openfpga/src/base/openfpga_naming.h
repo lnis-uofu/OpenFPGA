@@ -26,6 +26,9 @@ namespace openfpga {
 std::string generate_instance_name(const std::string& instance_name,
                                    const size_t& instance_id);
 
+std::string generate_instance_wildcard_name(const std::string& instance_name,
+                                            const std::string& wildcard_str);
+
 std::string generate_mux_node_name(const size_t& node_level, 
                                    const bool& add_buffer_postfix);
 
