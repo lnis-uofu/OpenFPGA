@@ -30,6 +30,7 @@ int write_pnr_sdc(OpenfpgaContext& openfpga_ctx,
 
   CommandOptionId opt_output_dir = cmd.option("file");
   CommandOptionId opt_flatten_names = cmd.option("flatten_names");
+  CommandOptionId opt_hierarchical = cmd.option("hierarchical");
   CommandOptionId opt_constrain_global_port = cmd.option("constrain_global_port");
   CommandOptionId opt_constrain_non_clock_global_port = cmd.option("constrain_non_clock_global_port");
   CommandOptionId opt_constrain_grid = cmd.option("constrain_grid");
@@ -51,6 +52,7 @@ int write_pnr_sdc(OpenfpgaContext& openfpga_ctx,
   PnrSdcOption options(sdc_dir_path);
 
   options.set_flatten_names(cmd_context.option_enable(cmd, opt_flatten_names));
+  options.set_hierarchical(cmd_context.option_enable(cmd, opt_hierarchical));
   options.set_constrain_global_port(cmd_context.option_enable(cmd, opt_constrain_global_port));
   options.set_constrain_non_clock_global_port(cmd_context.option_enable(cmd, opt_constrain_non_clock_global_port));
   options.set_constrain_grid(cmd_context.option_enable(cmd, opt_constrain_grid));

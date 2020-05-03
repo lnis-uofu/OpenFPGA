@@ -28,6 +28,13 @@ void print_pnr_sdc_constrain_max_delay(std::fstream& fp,
                                        const std::string& des_port_name,
                                        const float& delay);
 
+void print_pnr_sdc_regexp_constrain_max_delay(std::fstream& fp,
+                                              const std::string& src_instance_name,
+                                              const std::string& src_port_name,
+                                              const std::string& des_instance_name,
+                                              const std::string& des_port_name,
+                                              const float& delay);
+
 void print_pnr_sdc_constrain_min_delay(std::fstream& fp,
                                        const std::string& src_instance_name,
                                        const std::string& src_port_name,

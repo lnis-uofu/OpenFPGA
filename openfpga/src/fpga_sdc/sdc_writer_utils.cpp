@@ -102,6 +102,46 @@ void print_pnr_sdc_constrain_max_delay(std::fstream& fp,
 }
 
 /********************************************************************
+ * Constrain a path between two ports of a module with a given maximum timing value
+ * This function use regular expression and get_pins which are 
+ * from open-source SDC 2.1 format
+ *******************************************************************/
+void print_pnr_sdc_regexp_constrain_max_delay(std::fstream& fp,
+                                              const std::string& src_instance_name,
+                                              const std::string& src_port_name,
+                                              const std::string& des_instance_name,
+                                              const std::string& des_port_name,
+                                              const float& delay) {
+  /* Validate file stream */
+  valid_file_stream(fp);
+
+  fp << "set_max_delay";
+
+  fp << " -from ";
+  fp << "[get_pins -regexp \"";
+  if (!src_instance_name.empty()) {
+    fp << src_instance_name << "/";
+  }
+  fp << src_port_name;
+
+  fp << "\"]";
+
+  fp << " -to ";
+  fp << "[get_pins -regexp \"";
+ 
+  if (!des_instance_name.empty()) {
+    fp << des_instance_name << "/";
+  }
+  fp << des_port_name;
+
+  fp << "\"]";
+
+  fp << " " << std::setprecision(10) << delay;
+
+  fp << std::endl;
+}
+
+/********************************************************************
  * Constrain a path between two ports of a module with a given minimum timing value
  *******************************************************************/
 void print_pnr_sdc_constrain_min_delay(std::fstream& fp,

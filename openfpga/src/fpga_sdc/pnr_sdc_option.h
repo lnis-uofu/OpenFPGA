@@ -17,6 +17,7 @@ class PnrSdcOption {
   public: /* Public accessors */
     std::string sdc_dir() const;
     bool flatten_names() const;
+    bool hierarchical() const;
     bool generate_sdc_pnr() const;
     bool constrain_global_port() const;
     bool constrain_non_clock_global_port() const;
@@ -30,6 +31,7 @@ class PnrSdcOption {
   public: /* Public mutators */
     void set_sdc_dir(const std::string& sdc_dir);
     void set_flatten_names(const bool& flatten_names);
+    void set_hierarchical(const bool& hierarchical);
     void set_generate_sdc_pnr(const bool& generate_sdc_pnr);
     void set_constrain_global_port(const bool& constrain_global_port);
     void set_constrain_non_clock_global_port(const bool& constrain_non_clock_global_port);
@@ -43,6 +45,7 @@ class PnrSdcOption {
   private: /* Internal data */
     std::string sdc_dir_;
     bool flatten_names_;
+    bool hierarchical_;
     bool constrain_global_port_; 
     bool constrain_non_clock_global_port_; 
     bool constrain_grid_; 

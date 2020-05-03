@@ -11,6 +11,7 @@ namespace openfpga {
  ********************************************************************/
 PnrSdcOption::PnrSdcOption(const std::string& sdc_dir) {
   sdc_dir_ = sdc_dir;
+  hierarchical_ = false;
   flatten_names_ = false;
   constrain_global_port_ = false;
   constrain_non_clock_global_port_ = false;
@@ -32,6 +33,10 @@ std::string PnrSdcOption::sdc_dir() const {
 
 bool PnrSdcOption::flatten_names() const {
   return flatten_names_;
+}
+
+bool PnrSdcOption::hierarchical() const {
+  return hierarchical_;
 }
 
 bool PnrSdcOption::generate_sdc_pnr() const {
@@ -89,6 +94,10 @@ void PnrSdcOption::set_sdc_dir(const std::string& sdc_dir) {
 
 void PnrSdcOption::set_flatten_names(const bool& flatten_names) {
   flatten_names_ = flatten_names;
+}
+
+void PnrSdcOption::set_hierarchical(const bool& hierarchical) {
+  hierarchical_ = hierarchical;
 }
 
 void PnrSdcOption::set_generate_sdc_pnr(const bool& generate_sdc_pnr) {
