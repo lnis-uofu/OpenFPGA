@@ -29,6 +29,7 @@
 #include "sdc_writer_naming.h"
 #include "sdc_writer_utils.h"
 #include "sdc_memory_utils.h"
+#include "sdc_mux_utils.h"
 #include "pnr_sdc_global_port.h"
 #include "pnr_sdc_routing_writer.h"
 #include "pnr_sdc_grid_writer.h"
@@ -80,9 +81,11 @@ void print_pnr_sdc_constrain_configurable_memory_outputs(const std::string& sdc_
  *******************************************************************/
 static 
 void print_sdc_disable_routing_multiplexer_outputs(const std::string& sdc_dir,
+                                                   const bool& flatten_names,
                                                    const MuxLibrary& mux_lib,
                                                    const CircuitLibrary& circuit_lib,
-                                                   const ModuleManager& module_manager) {
+                                                   const ModuleManager& module_manager,
+                                                   const ModuleId& top_module) {
   /* Create the file name for Verilog netlist */
   std::string sdc_fname(sdc_dir + std::string(SDC_DISABLE_MUX_OUTPUTS_FILE_NAME));
 
@@ -112,16 +115,22 @@ void print_sdc_disable_routing_multiplexer_outputs(const std::string& sdc_dir,
     std::string mux_module_name = generate_mux_subckt_name(circuit_lib, mux_model, 
                                                            find_mux_num_datapath_inputs(circuit_lib, mux_model, mux_graph.num_inputs()), 
                                                            std::string(""));
+
     /* Find the module name in module manager */
     ModuleId mux_module = module_manager.find_module(mux_module_name);
     VTR_ASSERT(true == module_manager.valid_module_id(mux_module));
-     
-    /* Disable the timing for the output ports */ 
-    for (const BasicPort& output_port : module_manager.module_ports_by_type(mux_module, ModuleManager::MODULE_OUTPUT_PORT)) {
-      fp << "set_disable_timing [get_pins -filter \"name =~ " << output_port.get_name() << "*\" ";
-      fp << "-of [get_cells -hier -filter \"ref_lib_cell_name == " << mux_module_name << "\"]]" << std::endl;
-      fp << std::endl;
-    }
+
+    /* Go recursively in the module manager, 
+     * starting from the top-level module: instance id of the top-level module is 0 by default 
+     * Disable all the outputs of child modules that matches the mux_module id
+     */
+    rec_print_pnr_sdc_disable_routing_multiplexer_outputs(fp,
+                                                          flatten_names,
+                                                          module_manager,
+                                                          top_module,
+                                                          mux_module,
+                                                          format_dir_path(module_manager.module_name(top_module)));
+
   }
 
   /* Close file handler */
@@ -398,14 +407,19 @@ void print_pnr_sdc(const PnrSdcOption& sdc_options,
 
   /* Output Design Constraints to disable outputs of memory cells */
   if (true == sdc_options.constrain_configurable_memory_outputs()) {
-    print_pnr_sdc_constrain_configurable_memory_outputs(sdc_options.sdc_dir(), sdc_options.flatten_names(), module_manager, top_module); 
+    print_pnr_sdc_constrain_configurable_memory_outputs(sdc_options.sdc_dir(),
+                                                        sdc_options.flatten_names(),
+                                                        module_manager,
+                                                        top_module); 
   } 
 
   /* Break loops from Multiplexer Output */
   if (true == sdc_options.constrain_routing_multiplexer_outputs()) {
     print_sdc_disable_routing_multiplexer_outputs(sdc_options.sdc_dir(),
+                                                  sdc_options.flatten_names(),
                                                   mux_lib, circuit_lib,
-                                                  module_manager);
+                                                  module_manager,
+                                                  top_module);
   }
 
   /* Break loops from any SB output */
