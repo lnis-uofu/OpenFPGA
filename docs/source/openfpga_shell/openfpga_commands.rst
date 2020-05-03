@@ -176,6 +176,8 @@ FPGA-SDC
   
   - ``--file`` or ``-f`` Specify the output directory for SDC files
 
+  - ``--hierarchical`` Output SDC files without full path in hierarchy
+
   - ``--flatten_names`` Use flatten names (no wildcards) in SDC files
 
   - ``--constrain_global_port`` Constrain all the global ports of FPGA fabric.
