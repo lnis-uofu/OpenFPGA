@@ -34,13 +34,17 @@ void print_pnr_sdc_compact_routing_constrain_sb_timing(const std::string& sdc_di
                                                        const bool& constrain_zero_delay_paths);
 
 void print_pnr_sdc_flatten_routing_constrain_cb_timing(const std::string& sdc_dir,
+                                                       const bool& hierarchical,
                                                        const ModuleManager& module_manager, 
+                                                       const ModuleId& top_module,
                                                        const RRGraph& rr_graph,
                                                        const DeviceRRGSB& device_rr_gsb,
                                                        const bool& constrain_zero_delay_paths);
 
 void print_pnr_sdc_compact_routing_constrain_cb_timing(const std::string& sdc_dir,
+                                                       const bool& hierarchical,
                                                        const ModuleManager& module_manager,
+                                                       const ModuleId& top_module,
                                                        const RRGraph& rr_graph,
                                                        const DeviceRRGSB& device_rr_gsb,
                                                        const bool& constrain_zero_delay_paths);
