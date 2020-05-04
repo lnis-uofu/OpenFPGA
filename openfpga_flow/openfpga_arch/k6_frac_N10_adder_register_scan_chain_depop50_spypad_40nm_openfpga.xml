@@ -339,9 +339,9 @@
 </openfpga_architecture>
 <openfpga_simulation_setting>
   <clock_setting>
-    <!--operating frequency="auto" num_cycles="auto" slack="0.2"/-->
-    <operating frequency="200e6" num_cycles="auto" slack="0.2"/>
-    <programming frequency="10e6"/>
+    <operating frequency="auto" num_cycles="auto" slack="0.2"/>
+    <!--operating frequency="200e6" num_cycles="auto" slack="0.2"/-->
+    <programming frequency="100e6"/>
   </clock_setting>
   <simulator_option>
     <operating_condition temperature="25"/>
