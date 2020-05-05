@@ -17,6 +17,10 @@ check_netlist_naming_conflict --fix --report ./netlist_renaming.xml
 #  - Enable pin duplication on grid modules
 build_fabric --compress_routing #--verbose
 
+# Write the fabric hierarchy of module graph to a file
+# This is used by hierarchical PnR flows
+write_fabric_hierarchy --file ./fabric_hierarchy.txt
+
 # Write the Verilog netlist for FPGA fabric
 #  - Enable the use of explicit port mapping in Verilog netlist
 write_fabric_verilog --file ./SRC --explicit_port_mapping --include_timing --include_signal_init --support_icarus_simulator --print_user_defined_template --verbose

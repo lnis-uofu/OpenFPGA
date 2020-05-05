@@ -23,6 +23,10 @@ lut_truth_table_fixup
 #  - Enable pin duplication on grid modules
 build_fabric --compress_routing #--verbose
 
+# Write the fabric hierarchy of module graph to a file
+# This is used by hierarchical PnR flows
+write_fabric_hierarchy --file ./fabric_hierarchy.txt
+
 # Repack the netlist to physical pbs
 # This must be done before bitstream generator and testbench generation
 # Strongly recommend it is done after all the fix-up have been applied
