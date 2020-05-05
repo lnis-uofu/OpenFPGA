@@ -120,6 +120,9 @@ python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/generate_fabric --
 echo -e "Testing Verilog testbench generation only";
 python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/generate_testbench --debug --show_thread_logs
 
+echo -e "Testing SDC generation with time units";
+python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/sdc_time_unit --debug --show_thread_logs
+
 # Verify MCNC big20 benchmark suite with ModelSim 
 # Please make sure you have ModelSim installed in the environment
 # Otherwise, it will fail
