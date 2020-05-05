@@ -11,6 +11,7 @@
 #include "device_rr_gsb.h"
 #include "device_rr_gsb_utils.h"
 #include "build_device_module.h"
+#include "fabric_hierarchy_writer.h"
 #include "openfpga_build_fabric.h"
 
 /* Include global variables of VPR */
@@ -84,5 +85,29 @@ int build_fabric(OpenfpgaContext& openfpga_ctx,
   /* TODO: should identify the error code from internal function execution */
   return CMD_EXEC_SUCCESS;
 } 
+
+/********************************************************************
+ * Build the module graph for FPGA device
+ *******************************************************************/
+int write_fabric_hierarchy(const OpenfpgaContext& openfpga_ctx,
+                           const Command& cmd, const CommandContext& cmd_context) { 
+
+  CommandOptionId opt_verbose = cmd.option("verbose");
+
+  /* Check the option '--file' is enabled or not 
+   * Actually, it must be enabled as the shell interface will check 
+   * before reaching this fuction
+   */
+  CommandOptionId opt_file = cmd.option("file");
+  VTR_ASSERT(true == cmd_context.option_enable(cmd, opt_file));
+  VTR_ASSERT(false == cmd_context.option_value(cmd, opt_file).empty());
+
+  std::string hie_file_name = cmd_context.option_value(cmd, opt_file);
+
+  /* Write hierarchy to a file */
+  return write_fabric_hierarchy_to_text_file(openfpga_ctx.module_graph(),
+                                             hie_file_name,
+                                             cmd_context.option_enable(cmd, opt_verbose));
+}
 
 } /* end namespace openfpga */

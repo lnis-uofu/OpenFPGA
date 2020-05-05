@@ -235,4 +235,20 @@ void create_directory(const std::string& dir_path, const bool& recursive) {
   }
 }
 
+/******************************************************************** 
+ * Write a number of space to a file 
+ ********************************************************************/
+bool write_space_to_file(std::fstream& fp,
+                         const size_t& num_space) {
+  if (false == valid_file_stream(fp)) {
+    return false;
+  }
+
+  for (size_t i = 0; i < num_space; ++i) {
+    fp << " ";
+  }
+
+  return true;
+}
+
 } /* namespace openfpga ends */
