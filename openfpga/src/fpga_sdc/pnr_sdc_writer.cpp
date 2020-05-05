@@ -30,6 +30,7 @@
 #include "sdc_writer_utils.h"
 #include "sdc_memory_utils.h"
 #include "sdc_mux_utils.h"
+#include "sdc_hierarchy_writer.h"
 #include "pnr_sdc_global_port.h"
 #include "pnr_sdc_routing_writer.h"
 #include "pnr_sdc_grid_writer.h"
@@ -462,6 +463,15 @@ void print_pnr_sdc(const PnrSdcOption& sdc_options,
     }
   }
 
+  /* Output hierachy to plain text file */
+  if ( (true == sdc_options.output_hierarchy())
+    && (true == compact_routing_hierarchy) ) {
+    print_pnr_sdc_routing_sb_hierarchy(sdc_options.sdc_dir(),
+                                       module_manager,
+                                       top_module,
+                                       device_rr_gsb);
+  }
+
   /* Output routing constraints for Connection Blocks */
   if (true == sdc_options.constrain_cb()) {
     if (true == compact_routing_hierarchy) {
@@ -484,6 +494,22 @@ void print_pnr_sdc(const PnrSdcOption& sdc_options,
                                                         device_rr_gsb,
                                                         sdc_options.constrain_zero_delay_paths());
     }
+  }
+
+  /* Output hierachy to plain text file */
+  if ( (true == sdc_options.output_hierarchy())
+    && (true == compact_routing_hierarchy) ) {
+    print_pnr_sdc_routing_cb_hierarchy(sdc_options.sdc_dir(),
+                                       module_manager,
+                                       top_module,
+                                       CHANX,
+                                       device_rr_gsb);
+
+    print_pnr_sdc_routing_cb_hierarchy(sdc_options.sdc_dir(),
+                                       module_manager,
+                                       top_module,
+                                       CHANY,
+                                       device_rr_gsb);
   }
 
   /* Output Timing constraints for Programmable blocks */

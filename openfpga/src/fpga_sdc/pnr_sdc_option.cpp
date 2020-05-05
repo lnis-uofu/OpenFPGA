@@ -44,6 +44,10 @@ float PnrSdcOption::time_unit() const {
   return time_unit_;
 }
 
+bool PnrSdcOption::output_hierarchy() const {
+  return output_hierarchy_;
+}
+
 bool PnrSdcOption::generate_sdc_pnr() const {
   return constrain_global_port_ 
       || constrain_grid_
@@ -107,6 +111,10 @@ void PnrSdcOption::set_hierarchical(const bool& hierarchical) {
 
 void PnrSdcOption::set_time_unit(const float& time_unit) {
   time_unit_ = time_unit;
+}
+
+void PnrSdcOption::set_output_hierarchy(const bool& output_hierarchy) {
+  output_hierarchy_ = output_hierarchy;
 }
 
 void PnrSdcOption::set_generate_sdc_pnr(const bool& generate_sdc_pnr) {
