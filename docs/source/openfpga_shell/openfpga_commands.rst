@@ -108,6 +108,8 @@ Setup OpenFPGA
   
   - ``--file`` or ``-f`` Specify the file name to write the hierarchy. 
 
+  - ``--depth`` Specify at which depth of the fabric module graph should the writer stop outputting. The root module start from depth 0. For example, if you want a two-level hierarchy, you should specify depth as 1. 
+
   - ``--verbose`` Show verbose log
 
   .. note:: This file is designed for hierarchical PnR flow, which requires the tree of Multiple-Instanced-Blocks (MIBs).
