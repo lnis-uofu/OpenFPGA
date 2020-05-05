@@ -37,6 +37,7 @@ namespace openfpga {
  *******************************************************************/
 static 
 void print_analysis_sdc_io_delays(std::fstream& fp,
+                                  const float& time_unit,
                                   const AtomContext& atom_ctx,
                                   const PlacementContext& place_ctx,
                                   const VprNetlistAnnotation& netlist_annotation,
@@ -74,8 +75,8 @@ void print_analysis_sdc_io_delays(std::fstream& fp,
     /* Reach here, it means a clock port and we need print constraints */
     fp << "create_clock ";
     fp << generate_sdc_port(operating_clock_port);
-    fp << " -period " << std::setprecision(10) << critical_path_delay;
-    fp << " -waveform {0 " << std::setprecision(10) << critical_path_delay / 2 << "}";
+    fp << " -period " << std::setprecision(10) << critical_path_delay / time_unit;
+    fp << " -waveform {0 " << std::setprecision(10) << critical_path_delay / (2 * time_unit) << "}";
     fp << std::endl;
 
     /* Add an empty line as a splitter */
@@ -130,11 +131,11 @@ void print_analysis_sdc_io_delays(std::fstream& fp,
        */
       if (AtomBlockType::INPAD == atom_ctx.nlist.block_type(atom_blk)) {
         print_sdc_set_port_input_delay(fp, module_mapped_io_port,
-                                       operating_clock_ports[0], critical_path_delay);
+                                       operating_clock_ports[0], critical_path_delay / time_unit);
       } else {
         VTR_ASSERT(AtomBlockType::OUTPAD == atom_ctx.nlist.block_type(atom_blk));
         print_sdc_set_port_output_delay(fp, module_mapped_io_port,
-                                        operating_clock_ports[0], critical_path_delay);
+                                        operating_clock_ports[0], critical_path_delay / time_unit);
       }
 
       /* Mark this I/O has been used/wired */
@@ -251,7 +252,7 @@ void print_analysis_sdc(const AnalysisSdcOption& option,
   VTR_ASSERT(true == openfpga_ctx.module_graph().valid_module_id(top_module));
 
   /* Create clock and set I/O ports with input/output delays */
-  print_analysis_sdc_io_delays(fp,
+  print_analysis_sdc_io_delays(fp, option.time_unit(),
                                vpr_ctx.atom(), vpr_ctx.placement(),
                                openfpga_ctx.vpr_netlist_annotation(), openfpga_ctx.io_location_map(),
                                openfpga_ctx.module_graph(), top_module, 

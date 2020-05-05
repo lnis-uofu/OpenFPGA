@@ -13,6 +13,7 @@ PnrSdcOption::PnrSdcOption(const std::string& sdc_dir) {
   sdc_dir_ = sdc_dir;
   hierarchical_ = false;
   flatten_names_ = false;
+  time_unit_ = 1.;
   constrain_global_port_ = false;
   constrain_non_clock_global_port_ = false;
   constrain_grid_ = false;
@@ -37,6 +38,10 @@ bool PnrSdcOption::flatten_names() const {
 
 bool PnrSdcOption::hierarchical() const {
   return hierarchical_;
+}
+
+float PnrSdcOption::time_unit() const {
+  return time_unit_;
 }
 
 bool PnrSdcOption::generate_sdc_pnr() const {
@@ -98,6 +103,10 @@ void PnrSdcOption::set_flatten_names(const bool& flatten_names) {
 
 void PnrSdcOption::set_hierarchical(const bool& hierarchical) {
   hierarchical_ = hierarchical;
+}
+
+void PnrSdcOption::set_time_unit(const float& time_unit) {
+  time_unit_ = time_unit;
 }
 
 void PnrSdcOption::set_generate_sdc_pnr(const bool& generate_sdc_pnr) {

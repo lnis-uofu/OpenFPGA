@@ -442,6 +442,7 @@ void print_pnr_sdc(const PnrSdcOption& sdc_options,
   if (true == sdc_options.constrain_sb()) {
     if (true == compact_routing_hierarchy) {
       print_pnr_sdc_compact_routing_constrain_sb_timing(sdc_options.sdc_dir(),
+                                                        sdc_options.time_unit(),
                                                         sdc_options.hierarchical(),
                                                         module_manager,
                                                         top_module,
@@ -451,6 +452,7 @@ void print_pnr_sdc(const PnrSdcOption& sdc_options,
     } else {
 	  VTR_ASSERT_SAFE (false == compact_routing_hierarchy);
       print_pnr_sdc_flatten_routing_constrain_sb_timing(sdc_options.sdc_dir(),
+                                                        sdc_options.time_unit(),
                                                         sdc_options.hierarchical(),
                                                         module_manager,
                                                         top_module,
@@ -464,6 +466,7 @@ void print_pnr_sdc(const PnrSdcOption& sdc_options,
   if (true == sdc_options.constrain_cb()) {
     if (true == compact_routing_hierarchy) {
       print_pnr_sdc_compact_routing_constrain_cb_timing(sdc_options.sdc_dir(),
+                                                        sdc_options.time_unit(),
                                                         sdc_options.hierarchical(),
                                                         module_manager,
                                                         top_module,
@@ -473,6 +476,7 @@ void print_pnr_sdc(const PnrSdcOption& sdc_options,
     } else {
 	  VTR_ASSERT_SAFE (false == compact_routing_hierarchy);
       print_pnr_sdc_flatten_routing_constrain_cb_timing(sdc_options.sdc_dir(),
+                                                        sdc_options.time_unit(),
                                                         sdc_options.hierarchical(),
                                                         module_manager, 
                                                         top_module,
@@ -485,6 +489,7 @@ void print_pnr_sdc(const PnrSdcOption& sdc_options,
   /* Output Timing constraints for Programmable blocks */
   if (true == sdc_options.constrain_grid()) {
     print_pnr_sdc_constrain_grid_timing(sdc_options.sdc_dir(),
+                                        sdc_options.time_unit(),
                                         device_ctx,
                                         device_annotation,
                                         module_manager,

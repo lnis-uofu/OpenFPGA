@@ -19,6 +19,9 @@ namespace openfpga {
 void print_sdc_file_header(std::fstream& fp,
                            const std::string& usage);
 
+void print_sdc_timescale(std::fstream& fp,
+                         const std::string& timescale);
+
 std::string generate_sdc_port(const BasicPort& port);
 
 void print_pnr_sdc_constrain_max_delay(std::fstream& fp,

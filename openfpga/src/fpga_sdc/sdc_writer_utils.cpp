@@ -39,6 +39,21 @@ void print_sdc_file_header(std::fstream& fp,
 }
 
 /********************************************************************
+ * Write a timescale definition in SDC file 
+ *******************************************************************/
+void print_sdc_timescale(std::fstream& fp,
+                         const std::string& timescale) {
+
+  valid_file_stream(fp);
+
+  fp << "#############################################" << std::endl;
+  fp << "#\tDefine time unit " << std::endl;
+  fp << "#############################################" << std::endl;
+  fp << "set_units -time " << timescale << std::endl;
+  fp << std::endl;
+}
+
+/********************************************************************
  * Write a port in SDC format
  *******************************************************************/
 std::string generate_sdc_port(const BasicPort& port) {

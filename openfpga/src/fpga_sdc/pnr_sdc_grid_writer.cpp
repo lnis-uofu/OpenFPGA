@@ -16,6 +16,7 @@
 #include "vtr_time.h"
 
 /* Headers from openfpgautil library */
+#include "openfpga_scale.h"
 #include "openfpga_port.h"
 #include "openfpga_digest.h"
 #include "openfpga_side_manager.h"
@@ -43,6 +44,7 @@ namespace openfpga {
  *******************************************************************/
 static 
 void print_pnr_sdc_constrain_pb_pin_interc_timing(std::fstream& fp,
+                                                  const float& time_unit,
                                                   const ModuleManager& module_manager,
                                                   const ModuleId& parent_module,
                                                   t_pb_graph_pin* des_pb_graph_pin,
@@ -151,7 +153,7 @@ void print_pnr_sdc_constrain_pb_pin_interc_timing(std::fstream& fp,
                                       generate_sdc_port(src_port),
                                       des_instance_name, 
                                       generate_sdc_port(des_port),
-                                      des_pb_graph_pin->input_edges[iedge]->delay_max);
+                                      des_pb_graph_pin->input_edges[iedge]->delay_max / time_unit);
   }
 }
 
@@ -161,6 +163,7 @@ void print_pnr_sdc_constrain_pb_pin_interc_timing(std::fstream& fp,
  *******************************************************************/
 static 
 void print_pnr_sdc_constrain_pb_interc_timing(std::fstream& fp,
+                                              const float& time_unit,
                                               const ModuleManager& module_manager,
                                               const ModuleId& parent_module,
                                               t_pb_graph_node* des_pb_graph_node,
@@ -176,7 +179,8 @@ void print_pnr_sdc_constrain_pb_interc_timing(std::fstream& fp,
       for (int ipin = 0; ipin < des_pb_graph_node->num_input_pins[iport]; ++ipin) {
         /* If this is a idle block, we set 0 to the selected edge*/
         /* Get the selected edge of current pin*/
-        print_pnr_sdc_constrain_pb_pin_interc_timing(fp, 
+        print_pnr_sdc_constrain_pb_pin_interc_timing(fp,
+                                                     time_unit, 
                                                      module_manager, parent_module, 
                                                      &(des_pb_graph_node->input_pins[iport][ipin]),
                                                      physical_mode,
@@ -189,6 +193,7 @@ void print_pnr_sdc_constrain_pb_interc_timing(std::fstream& fp,
     for (int iport = 0; iport < des_pb_graph_node->num_output_ports; ++iport) {
       for (int ipin = 0; ipin < des_pb_graph_node->num_output_pins[iport]; ++ipin) {
         print_pnr_sdc_constrain_pb_pin_interc_timing(fp,
+                                                     time_unit, 
                                                      module_manager, parent_module, 
                                                      &(des_pb_graph_node->output_pins[iport][ipin]),
                                                      physical_mode,
@@ -217,6 +222,7 @@ void print_pnr_sdc_constrain_pb_interc_timing(std::fstream& fp,
  *******************************************************************/
 static 
 void print_pnr_sdc_constrain_pb_graph_node_timing(const std::string& sdc_dir,
+                                                  const float& time_unit,
                                                   const ModuleManager& module_manager,
                                                   t_pb_graph_node* parent_pb_graph_node,
                                                   t_mode* physical_mode,
@@ -242,6 +248,9 @@ void print_pnr_sdc_constrain_pb_graph_node_timing(const std::string& sdc_dir,
   /* Generate the descriptions*/
   print_sdc_file_header(fp, std::string("Timing constraints for Grid " + pb_module_name + " in PnR"));
 
+  /* Print time unit for the SDC file */
+  print_sdc_timescale(fp, time_unit_to_string(time_unit));
+
   /* We check output_pins of cur_pb_graph_node and its the input_edges
    * Built the interconnections between outputs of cur_pb_graph_node and outputs of child_pb_graph_node
    *   child_pb_graph_node.output_pins -----------------> cur_pb_graph_node.outpins
@@ -250,6 +259,7 @@ void print_pnr_sdc_constrain_pb_graph_node_timing(const std::string& sdc_dir,
    *                         input_pins,   edges,       output_pins
    */ 
   print_pnr_sdc_constrain_pb_interc_timing(fp,
+                                           time_unit,
                                            module_manager, pb_module,
                                            parent_pb_graph_node, 
                                            CIRCUIT_PB_PORT_OUTPUT,
@@ -268,6 +278,7 @@ void print_pnr_sdc_constrain_pb_graph_node_timing(const std::string& sdc_dir,
       t_pb_graph_node* child_pb_graph_node = &(parent_pb_graph_node->child_pb_graph_nodes[physical_mode->index][ipb][jpb]);
       /* For each child_pb_graph_node input pins*/
       print_pnr_sdc_constrain_pb_interc_timing(fp,
+                                               time_unit,
                                                module_manager, pb_module,
                                                child_pb_graph_node, 
                                                CIRCUIT_PB_PORT_INPUT,
@@ -291,6 +302,7 @@ void print_pnr_sdc_constrain_pb_graph_node_timing(const std::string& sdc_dir,
  *******************************************************************/
 static 
 void print_pnr_sdc_constrain_primitive_pb_graph_node(const std::string& sdc_dir,
+                                                     const float& time_unit,
                                                      const ModuleManager& module_manager,
                                                      t_pb_graph_node* primitive_pb_graph_node,
                                                      const bool& constrain_zero_delay_paths) {
@@ -350,6 +362,9 @@ void print_pnr_sdc_constrain_primitive_pb_graph_node(const std::string& sdc_dir,
   /* Generate the descriptions*/
   print_sdc_file_header(fp, std::string("Timing constraints for Grid " + pb_module_name + " in PnR"));
 
+  /* Print time unit for the SDC file */
+  print_sdc_timescale(fp, time_unit_to_string(time_unit));
+
   /* We traverse the pb_graph pins where we can find pin-to-pin timing annotation
    * We walk through output pins here, build timing constraints by pair each output to input
    * Clock pins are not walked through because they will be handled by clock tree synthesis
@@ -387,7 +402,7 @@ void print_pnr_sdc_constrain_primitive_pb_graph_node(const std::string& sdc_dir,
                                              generate_sdc_port(src_port),
                                              pb_module_name, 
                                              generate_sdc_port(sink_port),
-                                             tmax);
+                                             tmax / time_unit);
          }
 
          /* Find min delay between src and sink pin */
@@ -400,7 +415,7 @@ void print_pnr_sdc_constrain_primitive_pb_graph_node(const std::string& sdc_dir,
                                              generate_sdc_port(src_port),
                                              pb_module_name, 
                                              generate_sdc_port(sink_port),
-                                             tmin);
+                                             tmin / time_unit);
         } 
       }
     }
@@ -417,6 +432,7 @@ void print_pnr_sdc_constrain_primitive_pb_graph_node(const std::string& sdc_dir,
  *******************************************************************/
 static 
 void rec_print_pnr_sdc_constrain_pb_graph_timing(const std::string& sdc_dir,
+                                                 const float& time_unit,
                                                  const ModuleManager& module_manager,
                                                  const VprDeviceAnnotation& device_annotation,
                                                  t_pb_graph_node* parent_pb_graph_node,
@@ -433,7 +449,9 @@ void rec_print_pnr_sdc_constrain_pb_graph_timing(const std::string& sdc_dir,
 
   /* Constrain the primitive node if a timing matrix is defined */
   if (true == is_primitive_pb_type(parent_pb_type)) {
-    print_pnr_sdc_constrain_primitive_pb_graph_node(sdc_dir, module_manager,
+    print_pnr_sdc_constrain_primitive_pb_graph_node(sdc_dir,
+                                                    time_unit,
+                                                    module_manager,
                                                     parent_pb_graph_node,
                                                     constrain_zero_delay_paths);
     return;
@@ -446,6 +464,7 @@ void rec_print_pnr_sdc_constrain_pb_graph_timing(const std::string& sdc_dir,
 
   /* Write a SDC file for this pb_type */
   print_pnr_sdc_constrain_pb_graph_node_timing(sdc_dir,
+                                               time_unit,
                                                module_manager,
                                                parent_pb_graph_node,
                                                physical_mode,
@@ -455,7 +474,9 @@ void rec_print_pnr_sdc_constrain_pb_graph_timing(const std::string& sdc_dir,
    * Note that we assume a full hierarchical P&R, we will only visit pb_graph_node of unique pb_type 
    */
   for (int ipb = 0; ipb < physical_mode->num_pb_type_children; ++ipb) {
-    rec_print_pnr_sdc_constrain_pb_graph_timing(sdc_dir, module_manager, 
+    rec_print_pnr_sdc_constrain_pb_graph_timing(sdc_dir,
+                                                time_unit, 
+                                                module_manager, 
                                                 device_annotation,
                                                 &(parent_pb_graph_node->child_pb_graph_nodes[physical_mode->index][ipb][0]),
                                                 constrain_zero_delay_paths);
@@ -466,6 +487,7 @@ void rec_print_pnr_sdc_constrain_pb_graph_timing(const std::string& sdc_dir,
  * Top-level function to print timing constraints for pb_types
  *******************************************************************/
 void print_pnr_sdc_constrain_grid_timing(const std::string& sdc_dir,
+                                         const float& time_unit,
                                          const DeviceContext& device_ctx,
                                          const VprDeviceAnnotation& device_annotation,
                                          const ModuleManager& module_manager,
@@ -485,7 +507,8 @@ void print_pnr_sdc_constrain_grid_timing(const std::string& sdc_dir,
         continue;
       }
       /* Special for I/O block, generate one module for each border side */
-      rec_print_pnr_sdc_constrain_pb_graph_timing(sdc_dir, module_manager, 
+      rec_print_pnr_sdc_constrain_pb_graph_timing(sdc_dir, time_unit,
+                                                  module_manager, 
                                                   device_annotation,
                                                   pb_graph_head,
                                                   constrain_zero_delay_paths);

@@ -32,6 +32,10 @@ ShellCommandId add_openfpga_write_pnr_sdc_command(openfpga::Shell<OpenfpgaContex
   /* Add an option '--hierarchical' */
   shell_cmd.add_option("hierarchical", false, "Output SDC files hierachically (without full path in hierarchy)");
 
+  /* Add an option '--time_unit' */
+  CommandOptionId time_unit_opt = shell_cmd.add_option("time_unit", false, "Specify the time unit in SDC files. Acceptable is [a|f|p|n|u|m|kM]s");
+  shell_cmd.set_option_require_value(time_unit_opt, openfpga::OPT_STRING);
+
   /* Add an option '--constrain_global_port' */
   shell_cmd.add_option("constrain_global_port", false, "Constrain all the global ports of FPGA fabric");
 
@@ -94,6 +98,10 @@ ShellCommandId add_openfpga_write_analysis_sdc_command(openfpga::Shell<OpenfpgaC
 
   /* Add an option '--flatten_name' */
   shell_cmd.add_option("flatten_names", false, "Use flatten names (no wildcards) in SDC files");
+
+  /* Add an option '--time_unit' */
+  CommandOptionId time_unit_opt = shell_cmd.add_option("time_unit", false, "Specify the time unit in SDC files. Acceptable is [a|f|p|n|u|m|kM]s");
+  shell_cmd.set_option_require_value(time_unit_opt, openfpga::OPT_STRING);
 
   /* Add command 'write_fabric_verilog' to the Shell */
   ShellCommandId shell_cmd_id = shell.add_command(shell_cmd, "generate SDC files for timing analysis a PnRed FPGA fabric mapped by a benchmark");

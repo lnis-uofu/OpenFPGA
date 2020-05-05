@@ -9,6 +9,7 @@
 #include "command_exit_codes.h"
 
 /* Headers from openfpgautil library */
+#include "openfpga_scale.h"
 #include "openfpga_digest.h"
 
 #include "circuit_library_utils.h"
@@ -31,6 +32,7 @@ int write_pnr_sdc(OpenfpgaContext& openfpga_ctx,
   CommandOptionId opt_output_dir = cmd.option("file");
   CommandOptionId opt_flatten_names = cmd.option("flatten_names");
   CommandOptionId opt_hierarchical = cmd.option("hierarchical");
+  CommandOptionId opt_time_unit = cmd.option("time_unit");
   CommandOptionId opt_constrain_global_port = cmd.option("constrain_global_port");
   CommandOptionId opt_constrain_non_clock_global_port = cmd.option("constrain_non_clock_global_port");
   CommandOptionId opt_constrain_grid = cmd.option("constrain_grid");
@@ -53,6 +55,11 @@ int write_pnr_sdc(OpenfpgaContext& openfpga_ctx,
 
   options.set_flatten_names(cmd_context.option_enable(cmd, opt_flatten_names));
   options.set_hierarchical(cmd_context.option_enable(cmd, opt_hierarchical));
+  
+  if (true == cmd_context.option_enable(cmd, opt_time_unit)) {
+    options.set_time_unit(string_to_time_unit(cmd_context.option_value(cmd, opt_time_unit)));
+  }
+
   options.set_constrain_global_port(cmd_context.option_enable(cmd, opt_constrain_global_port));
   options.set_constrain_non_clock_global_port(cmd_context.option_enable(cmd, opt_constrain_non_clock_global_port));
   options.set_constrain_grid(cmd_context.option_enable(cmd, opt_constrain_grid));
@@ -100,6 +107,7 @@ int write_analysis_sdc(OpenfpgaContext& openfpga_ctx,
 
   CommandOptionId opt_output_dir = cmd.option("file");
   CommandOptionId opt_flatten_names = cmd.option("flatten_names");
+  CommandOptionId opt_time_unit = cmd.option("time_unit");
 
   /* This is an intermediate data structure which is designed to modularize the FPGA-SDC
    * Keep it independent from any other outside data structures
@@ -112,6 +120,10 @@ int write_analysis_sdc(OpenfpgaContext& openfpga_ctx,
   AnalysisSdcOption options(sdc_dir_path);
   options.set_generate_sdc_analysis(true);
   options.set_flatten_names(cmd_context.option_enable(cmd, opt_flatten_names));
+
+  if (true == cmd_context.option_enable(cmd, opt_time_unit)) {
+    options.set_time_unit(string_to_time_unit(cmd_context.option_value(cmd, opt_time_unit)));
+  }
 
   /* Collect global ports from the circuit library:
    * TODO: should we place this in the OpenFPGA context?
