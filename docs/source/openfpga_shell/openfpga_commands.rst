@@ -180,6 +180,8 @@ FPGA-SDC
 
   - ``--flatten_names`` Use flatten names (no wildcards) in SDC files
 
+  - ``--time_unit`` Specify a time unit to be used in SDC files. Acceptable values are string: ``as`` | ``fs`` | ``ps`` | ``ns`` | ``us`` | ``ms`` | ``ks`` | ``Ms``. By default, we will consider second (``s``).
+
   - ``--constrain_global_port`` Constrain all the global ports of FPGA fabric.
 
   - ``--constrain_non_clock_global_port`` Constrain all the non-clock global ports as clocks ports of FPGA fabric
@@ -211,3 +213,5 @@ FPGA-SDC
   - ``--file`` or ``-f`` Specify the output directory for SDC files
   
   - ``--flatten_names`` Use flatten names (no wildcards) in SDC files
+
+  - ``--time_unit`` Specify a time unit to be used in SDC files. Acceptable values are string: ``as`` | ``fs`` | ``ps`` | ``ns`` | ``us`` | ``ms`` | ``ks`` | ``Ms``. By default, we will consider second (``s``).
