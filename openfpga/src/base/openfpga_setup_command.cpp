@@ -255,6 +255,10 @@ ShellCommandId add_openfpga_write_fabric_hierarchy_command(openfpga::Shell<Openf
   shell_cmd.set_option_short_name(opt_file, "f");
   shell_cmd.set_option_require_value(opt_file, openfpga::OPT_STRING);
 
+  /* Add an option '--depth' */
+  CommandOptionId opt_depth = shell_cmd.add_option("depth", false, "Specify the depth of hierarchy to which the writer should stop");
+  shell_cmd.set_option_require_value(opt_depth, openfpga::OPT_INT);
+
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Show verbose outputs");
 

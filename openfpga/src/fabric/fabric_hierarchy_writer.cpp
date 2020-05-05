@@ -24,17 +24,23 @@ namespace openfpga {
  ***************************************************************************************/
 static 
 int rec_output_module_hierarchy_to_text_file(std::fstream& fp,
-                                             const size_t& hie_depth,
+                                             const size_t& hie_depth_to_stop,
+                                             const size_t& current_hie_depth,
                                              const ModuleManager& module_manager,  
                                              const ModuleId& parent_module,
                                              const bool& verbose) {
+  /* Stop if hierarchy depth is beyond the stop line */
+  if (hie_depth_to_stop < current_hie_depth) {
+    return 0;
+  }
+
   if (false == valid_file_stream(fp)) {
     return 2;
   }
 
   /* Iterate over all the child module */
   for (const ModuleId& child_module : module_manager.child_modules(parent_module)) {
-    if (false == write_space_to_file(fp, hie_depth)) {
+    if (false == write_space_to_file(fp, current_hie_depth)) {
       return 2;
     }
 
@@ -50,7 +56,8 @@ int rec_output_module_hierarchy_to_text_file(std::fstream& fp,
 
     /* Go to next level */
     int status = rec_output_module_hierarchy_to_text_file(fp,
-                                                          hie_depth + 1, /* Increment the depth for the next level */
+                                                          hie_depth_to_stop,
+                                                          current_hie_depth + 1, /* Increment the depth for the next level */
                                                           module_manager,
                                                           child_module,
                                                           verbose);
@@ -76,6 +83,7 @@ int rec_output_module_hierarchy_to_text_file(std::fstream& fp,
  ***************************************************************************************/
 int write_fabric_hierarchy_to_text_file(const ModuleManager& module_manager,
                                         const std::string& fname,
+                                        const size_t& hie_depth_to_stop,
                                         const bool& verbose) {
   std::string timer_message = std::string("Write fabric hierarchy to plain-text file '") + fname + std::string("'");
 
@@ -111,10 +119,15 @@ int write_fabric_hierarchy_to_text_file(const ModuleManager& module_manager,
   /* Record current depth of module: top module is the root with 0 depth */
   size_t hie_depth = 0;
 
+  if (hie_depth_to_stop < hie_depth) {
+    return 0;
+  }
+
   fp << top_module_name << "\n";
 
   /* Visit child module recursively and output the hierarchy */
   int err_code = rec_output_module_hierarchy_to_text_file(fp,
+                                                          hie_depth_to_stop,
                                                           hie_depth + 1, /* Start with level 1 */
                                                           module_manager,  
                                                           top_module,

@@ -102,11 +102,25 @@ int write_fabric_hierarchy(const OpenfpgaContext& openfpga_ctx,
   VTR_ASSERT(true == cmd_context.option_enable(cmd, opt_file));
   VTR_ASSERT(false == cmd_context.option_value(cmd, opt_file).empty());
 
+  /* Default depth requirement, will not stop until the leaf */
+  int depth = -1;
+  CommandOptionId opt_depth = cmd.option("depth");
+  if (true == cmd_context.option_enable(cmd, opt_depth)) {
+    depth = std::atoi(cmd_context.option_value(cmd, opt_depth).c_str());
+    /* Error out if we have negative depth */
+    if (0 > depth) {
+      VTR_LOG_ERROR("Invalid depth '%d' which should be 0 or a positive number!\n",
+                    depth);
+      return CMD_EXEC_FATAL_ERROR; 
+    }
+  }
+
   std::string hie_file_name = cmd_context.option_value(cmd, opt_file);
 
   /* Write hierarchy to a file */
   return write_fabric_hierarchy_to_text_file(openfpga_ctx.module_graph(),
                                              hie_file_name,
+                                             size_t(depth),
                                              cmd_context.option_enable(cmd, opt_verbose));
 }
 
