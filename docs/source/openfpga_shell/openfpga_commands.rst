@@ -102,6 +102,15 @@ Setup OpenFPGA
 
   .. note:: This is a must-run command before launching FPGA-Verilog, FPGA-Bitstream, FPGA-SDC and FPGA-SPICE
 
+.. option:: write_fabric_hierarchy
+
+  Write the hierarchy of FPGA fabric graph to a plain-text file
+  
+  - ``--file`` or ``-f`` Specify the file name to write the hierarchy. 
+
+  - ``--verbose`` Show verbose log
+
+  .. note:: This file is designed for hierarchical PnR flow, which requires the tree of Multiple-Instanced-Blocks (MIBs).
   
 FPGA-Bitstream
 ~~~~~~~~~~~~~~
@@ -181,6 +190,10 @@ FPGA-SDC
   - ``--flatten_names`` Use flatten names (no wildcards) in SDC files
 
   - ``--time_unit`` Specify a time unit to be used in SDC files. Acceptable values are string: ``as`` | ``fs`` | ``ps`` | ``ns`` | ``us`` | ``ms`` | ``ks`` | ``Ms``. By default, we will consider second (``s``).
+
+  - ``--output_hierarchy`` Output hierarchy of Multiple-Instance-Blocks(MIBs) to plain text file. This is applied to constrain timing for grids, Switch Blocks and Connection Blocks. 
+
+    .. note:: Valid only when ``compress_routing`` is enabled in ``build_fabric``
 
   - ``--constrain_global_port`` Constrain all the global ports of FPGA fabric.
 
