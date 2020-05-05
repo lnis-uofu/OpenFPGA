@@ -36,7 +36,7 @@ ShellCommandId add_openfpga_write_pnr_sdc_command(openfpga::Shell<OpenfpgaContex
   shell_cmd.add_option("output_hierarchy", false, "Output hierachy of Multiple-Instance-Blocks (MIBs) to plain text file. This is applied to constrain timing for grid, SBs and CBs");
 
   /* Add an option '--time_unit' */
-  CommandOptionId time_unit_opt = shell_cmd.add_option("time_unit", false, "Specify the time unit in SDC files. Acceptable is [a|f|p|n|u|m|kM]s");
+  CommandOptionId time_unit_opt = shell_cmd.add_option("time_unit", false, "Specify the time unit in SDC files. Acceptable is [a|f|p|n|u|m|k|M]s");
   shell_cmd.set_option_require_value(time_unit_opt, openfpga::OPT_STRING);
 
   /* Add an option '--constrain_global_port' */
