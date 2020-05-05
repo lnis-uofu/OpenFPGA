@@ -101,12 +101,12 @@ void print_pnr_sdc_constrain_sb_mux_timing(std::fstream& fp,
     }
     /* Constrain a path */
     if (false == hierarchical) {
-      print_pnr_sdc_regexp_constrain_max_delay(fp,
-                                               module_path,
-                                               generate_sdc_port(module_manager.module_port(sb_module, module_input_port)),
-                                               module_path,
-                                               generate_sdc_port(module_manager.module_port(sb_module, module_output_port)),
-                                               switch_delays[module_input_port] / time_unit);
+      print_pnr_sdc_constrain_max_delay(fp,
+                                        module_path,
+                                        generate_sdc_port(module_manager.module_port(sb_module, module_input_port)),
+                                        module_path,
+                                        generate_sdc_port(module_manager.module_port(sb_module, module_output_port)),
+                                        switch_delays[module_input_port] / time_unit);
 
     } else {
       VTR_ASSERT_SAFE(true == hierarchical);
@@ -222,13 +222,7 @@ void print_pnr_sdc_flatten_routing_constrain_sb_timing(const std::string& sdc_di
       ModuleId sb_module = module_manager.find_module(sb_instance_name);
       VTR_ASSERT(true == module_manager.valid_module_id(sb_module));
 
-      std::string module_path = root_path
-                              + std::string("\\/")
-                              + std::string("(");
-
-      /* Find all the instances in the top-level module */
-      module_path += sb_instance_name;
-      module_path += std::string(")") + std::string("\\");
+      std::string module_path = format_dir_path(root_path) + sb_instance_name;
 
       print_pnr_sdc_constrain_sb_timing(sdc_dir,
                                         time_unit,
@@ -275,22 +269,7 @@ void print_pnr_sdc_compact_routing_constrain_sb_timing(const std::string& sdc_di
     ModuleId sb_module = module_manager.find_module(sb_module_name);
     VTR_ASSERT(true == module_manager.valid_module_id(sb_module));
     
-    std::string module_path = root_path
-                            + std::string("\\/")
-                            + std::string("(");
-
-    /* Find all the instances in the top-level module */
-    bool first_element = true;
-    for (const size_t& instance_id : module_manager.child_module_instances(top_module, sb_module)) {
-      std::string sb_instance_name = module_manager.instance_name(top_module, sb_module, instance_id);
-      if (false == first_element) {
-        module_path += std::string("|");
-      }
-      module_path += sb_instance_name;
-      first_element = false;
-    }
-
-    module_path += std::string(")") + std::string("\\");
+    std::string module_path = format_dir_path(root_path) + sb_module_name;
 
     print_pnr_sdc_constrain_sb_timing(sdc_dir,
                                       time_unit,
@@ -388,12 +367,12 @@ void print_pnr_sdc_constrain_cb_mux_timing(std::fstream& fp,
                                                switch_delays[module_input_port] / time_unit);
     } else {
       VTR_ASSERT_SAFE(false == hierarchical);
-      print_pnr_sdc_regexp_constrain_max_delay(fp,
-                                               std::string(module_path),
-                                               generate_sdc_port(module_manager.module_port(cb_module, module_input_port)),
-                                               std::string(module_path),
-                                               generate_sdc_port(module_manager.module_port(cb_module, module_output_port)),
-                                               switch_delays[module_input_port] / time_unit);
+      print_pnr_sdc_constrain_max_delay(fp,
+                                        std::string(module_path),
+                                        generate_sdc_port(module_manager.module_port(cb_module, module_input_port)),
+                                        std::string(module_path),
+                                        generate_sdc_port(module_manager.module_port(cb_module, module_output_port)),
+                                        switch_delays[module_input_port] / time_unit);
 
     }
   }
@@ -482,12 +461,12 @@ void print_pnr_sdc_constrain_cb_timing(const std::string& sdc_dir,
                                                routing_segment_delay / time_unit);
     } else {
       VTR_ASSERT_SAFE(false == hierarchical);
-      print_pnr_sdc_regexp_constrain_max_delay(fp,
-                                               std::string(module_path),
-                                               generate_sdc_port(module_manager.module_port(cb_module, input_port_id)),
-                                               std::string(module_path),
-                                               generate_sdc_port(module_manager.module_port(cb_module, output_port_id)),
-                                               routing_segment_delay / time_unit);
+      print_pnr_sdc_constrain_max_delay(fp,
+                                        std::string(module_path),
+                                        generate_sdc_port(module_manager.module_port(cb_module, input_port_id)),
+                                        std::string(module_path),
+                                        generate_sdc_port(module_manager.module_port(cb_module, output_port_id)),
+                                        routing_segment_delay / time_unit);
     }
   }
 
@@ -551,13 +530,7 @@ void print_pnr_sdc_flatten_routing_constrain_cb_timing(const std::string& sdc_di
       ModuleId cb_module = module_manager.find_module(cb_instance_name);
       VTR_ASSERT(true == module_manager.valid_module_id(cb_module));
 
-      std::string module_path = root_path
-                              + std::string("\\/")
-                              + std::string("(");
-
-      /* Find all the instances in the top-level module */
-      module_path += cb_instance_name;
-      module_path += std::string(")") + std::string("\\");
+      std::string module_path = format_dir_path(root_path) + cb_instance_name;
 
       print_pnr_sdc_constrain_cb_timing(sdc_dir,
                                         time_unit,
@@ -636,22 +609,7 @@ void print_pnr_sdc_compact_routing_constrain_cb_timing(const std::string& sdc_di
     ModuleId cb_module = module_manager.find_module(cb_module_name);
     VTR_ASSERT(true == module_manager.valid_module_id(cb_module));
 
-    std::string module_path = root_path
-                            + std::string("\\/")
-                            + std::string("(");
-
-    /* Find all the instances in the top-level module */
-    bool first_element = true;
-    for (const size_t& instance_id : module_manager.child_module_instances(top_module, cb_module)) {
-      std::string cb_instance_name = module_manager.instance_name(top_module, cb_module, instance_id);
-      if (false == first_element) {
-        module_path += std::string("|");
-      }
-      module_path += cb_instance_name;
-      first_element = false;
-    }
-
-    module_path += std::string(")") + std::string("\\");
+    std::string module_path = format_dir_path(root_path) + cb_module_name;
 
     print_pnr_sdc_constrain_cb_timing(sdc_dir,
                                       time_unit,
@@ -676,22 +634,7 @@ void print_pnr_sdc_compact_routing_constrain_cb_timing(const std::string& sdc_di
     ModuleId cb_module = module_manager.find_module(cb_module_name);
     VTR_ASSERT(true == module_manager.valid_module_id(cb_module));
 
-    std::string module_path = root_path
-                            + std::string("\\/")
-                            + std::string("(");
-
-    /* Find all the instances in the top-level module */
-    bool first_element = true;
-    for (const size_t& instance_id : module_manager.child_module_instances(top_module, cb_module)) {
-      std::string cb_instance_name = module_manager.instance_name(top_module, cb_module, instance_id);
-      if (false == first_element) {
-        module_path += std::string("|");
-      }
-      module_path += cb_instance_name;
-      first_element = false;
-    }
-
-    module_path += std::string(")") + std::string("\\");
+    std::string module_path = format_dir_path(root_path) + cb_module_name;
 
     print_pnr_sdc_constrain_cb_timing(sdc_dir,
                                       time_unit,
