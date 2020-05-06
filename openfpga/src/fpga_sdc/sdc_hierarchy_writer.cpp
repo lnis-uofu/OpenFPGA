@@ -183,6 +183,7 @@ void print_pnr_sdc_routing_cb_hierarchy(const std::string& sdc_dir,
  *******************************************************************/
 static 
 void rec_print_pnr_sdc_grid_pb_graph_hierarchy(std::fstream& fp,
+                                               const size_t& depth,
                                                const ModuleManager& module_manager,
                                                const ModuleId& parent_pb_module,
                                                const VprDeviceAnnotation& device_annotation,
@@ -200,26 +201,26 @@ void rec_print_pnr_sdc_grid_pb_graph_hierarchy(std::fstream& fp,
   /* Get the pb_type */
   t_pb_type* parent_pb_type = parent_pb_graph_node->pb_type;
 
-  if (true == is_primitive_pb_type(parent_pb_type)) {
-    return;
-  }
-
   std::string pb_module_name = generate_physical_block_module_name(parent_pb_type);
 
   /* Find the pb module in module manager */
   ModuleId pb_module = module_manager.find_module(pb_module_name);
   VTR_ASSERT(true == module_manager.valid_module_id(pb_module));
 
+  write_space_to_file(fp, depth * 2);
   fp << "- " << pb_module_name << "\n";
 
   /* Go through all the instance */
   for (const size_t& instance_id : module_manager.child_module_instances(parent_pb_module, pb_module)) {
     std::string child_instance_name = module_manager.instance_name(parent_pb_module, pb_module, instance_id);
+    write_space_to_file(fp, depth * 2);
     fp << "  ";
     fp << "- " << child_instance_name << "\n";  
   } 
 
-  fp << "\n";
+  if (true == is_primitive_pb_type(parent_pb_type)) {
+    return;
+  }
 
   /* Note we only go through the graph through the physical modes. 
    * which we build the modules 
@@ -230,11 +231,14 @@ void rec_print_pnr_sdc_grid_pb_graph_hierarchy(std::fstream& fp,
    * Note that we assume a full hierarchical P&R, we will only visit pb_graph_node of unique pb_type 
    */
   for (int ipb = 0; ipb < physical_mode->num_pb_type_children; ++ipb) {
-    rec_print_pnr_sdc_grid_pb_graph_hierarchy(fp,
-                                              module_manager, 
-                                              pb_module,
-                                              device_annotation,
-                                              &(parent_pb_graph_node->child_pb_graph_nodes[physical_mode->index][ipb][0]));
+    for (int jpb = 0; jpb < physical_mode->pb_type_children[ipb].num_pb; ++jpb) {
+      rec_print_pnr_sdc_grid_pb_graph_hierarchy(fp,
+                                                depth + 2,
+                                                module_manager, 
+                                                pb_module,
+                                                device_annotation,
+                                                &(parent_pb_graph_node->child_pb_graph_nodes[physical_mode->index][ipb][jpb]));
+    }
   }
 }
 
@@ -324,15 +328,16 @@ void print_pnr_sdc_grid_hierarchy(const std::string& sdc_dir,
           std::string grid_instance_name = module_manager.instance_name(top_module, grid_module, instance_id);
           fp << "  ";
           fp << "- " << grid_instance_name << "\n";  
-        } 
 
+          rec_print_pnr_sdc_grid_pb_graph_hierarchy(fp,
+                                                    2,
+                                                    module_manager, 
+                                                    grid_module, 
+                                                    device_annotation,
+                                                    pb_graph_head);
+        } 
         fp << "\n";
 
-        rec_print_pnr_sdc_grid_pb_graph_hierarchy(fp,
-                                                  module_manager, 
-                                                  grid_module, 
-                                                  device_annotation,
-                                                  pb_graph_head);
       }
     } else {
       /* For CLB and heterogenenous blocks */
@@ -351,15 +356,17 @@ void print_pnr_sdc_grid_hierarchy(const std::string& sdc_dir,
         std::string grid_instance_name = module_manager.instance_name(top_module, grid_module, instance_id);
         fp << "  ";
         fp << "- " << grid_instance_name << "\n";  
+
+        rec_print_pnr_sdc_grid_pb_graph_hierarchy(fp,
+                                                  2,
+                                                  module_manager, 
+                                                  grid_module, 
+                                                  device_annotation,
+                                                  pb_graph_head);
       } 
 
       fp << "\n";
 
-      rec_print_pnr_sdc_grid_pb_graph_hierarchy(fp,
-                                                module_manager, 
-                                                grid_module, 
-                                                device_annotation,
-                                                pb_graph_head);
     }
   }
 
