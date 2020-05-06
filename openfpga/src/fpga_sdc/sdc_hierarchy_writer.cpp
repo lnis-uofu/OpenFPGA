@@ -157,13 +157,13 @@ void print_pnr_sdc_routing_cb_hierarchy(const std::string& sdc_dir,
     /* Create the file name for SDC */
     std::string sdc_fname(sdc_dir + generate_connection_block_module_name(cb_type, gsb_coordinate) + std::string(SDC_FILE_NAME_POSTFIX));
 
-    fp << "- " << cb_module_name << "\n";
+    fp << "- " << cb_module_name << ":" << "\n";
 
     /* Go through all the instance */
     for (const size_t& instance_id : module_manager.child_module_instances(top_module, cb_module)) {
       std::string cb_instance_name = module_manager.instance_name(top_module, cb_module, instance_id);
       fp << "  ";
-      fp << "- " << cb_instance_name << ":" << "\n";  
+      fp << "- " << cb_instance_name << "\n";  
     } 
 
     fp << "\n";
