@@ -40,7 +40,7 @@ int rec_output_module_hierarchy_to_text_file(std::fstream& fp,
 
   /* Iterate over all the child module */
   for (const ModuleId& child_module : module_manager.child_modules(parent_module)) {
-    if (false == write_space_to_file(fp, current_hie_depth)) {
+    if (false == write_space_to_file(fp, current_hie_depth * 2)) {
       return 2;
     }
 
@@ -51,7 +51,16 @@ int rec_output_module_hierarchy_to_text_file(std::fstream& fp,
       return 1;
     }
 
+    fp << "- ";
     fp << module_manager.module_name(child_module);
+
+    /* If this is the leaf node, we leave a new line 
+     * Otherwise, we will leave a ':' to be compatible to YAML file format 
+     */
+    if ( (0 != module_manager.child_modules(child_module).size())
+      && (hie_depth_to_stop >= current_hie_depth + 1) ) {
+      fp << ":";
+    }
     fp << "\n";
 
     /* Go to next level */
@@ -123,7 +132,7 @@ int write_fabric_hierarchy_to_text_file(const ModuleManager& module_manager,
     return 0;
   }
 
-  fp << top_module_name << "\n";
+  fp << top_module_name << ":" << "\n";
 
   /* Visit child module recursively and output the hierarchy */
   int err_code = rec_output_module_hierarchy_to_text_file(fp,

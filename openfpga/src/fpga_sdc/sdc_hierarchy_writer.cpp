@@ -79,7 +79,7 @@ void print_pnr_sdc_routing_sb_hierarchy(const std::string& sdc_dir,
     /* Create the file name for SDC */
     std::string sdc_fname(sdc_dir + generate_switch_block_module_name(gsb_coordinate) + std::string(SDC_FILE_NAME_POSTFIX));
 
-    fp << "- " << sb_module_name << "\n";
+    fp << "- " << sb_module_name << ":" << "\n";
 
     /* Go through all the instance */
     for (const size_t& instance_id : module_manager.child_module_instances(top_module, sb_module)) {
@@ -163,7 +163,7 @@ void print_pnr_sdc_routing_cb_hierarchy(const std::string& sdc_dir,
     for (const size_t& instance_id : module_manager.child_module_instances(top_module, cb_module)) {
       std::string cb_instance_name = module_manager.instance_name(top_module, cb_module, instance_id);
       fp << "  ";
-      fp << "- " << cb_instance_name << "\n";  
+      fp << "- " << cb_instance_name << ":" << "\n";  
     } 
 
     fp << "\n";
@@ -208,18 +208,21 @@ void rec_print_pnr_sdc_grid_pb_graph_hierarchy(std::fstream& fp,
   VTR_ASSERT(true == module_manager.valid_module_id(pb_module));
 
   write_space_to_file(fp, depth * 2);
-  fp << "- " << pb_module_name << "\n";
+  fp << "- " << pb_module_name << ":" << "\n";
 
   /* Go through all the instance */
   for (const size_t& instance_id : module_manager.child_module_instances(parent_pb_module, pb_module)) {
     std::string child_instance_name = module_manager.instance_name(parent_pb_module, pb_module, instance_id);
     write_space_to_file(fp, depth * 2);
     fp << "  ";
-    fp << "- " << child_instance_name << "\n";  
+    fp << "- " << child_instance_name;  
 
     if (true == is_primitive_pb_type(parent_pb_type)) {
+      fp << "\n";
       return;
     }
+     
+    fp << ":" << "\n";
 
     /* Note we only go through the graph through the physical modes. 
      * which we build the modules 
@@ -321,13 +324,13 @@ void print_pnr_sdc_grid_hierarchy(const std::string& sdc_dir,
         ModuleId grid_module = module_manager.find_module(grid_module_name);
         VTR_ASSERT(true == module_manager.valid_module_id(grid_module));
 
-        fp << "- " << grid_module_name << "\n";
+        fp << "- " << grid_module_name << ":" << "\n";
 
         /* Go through all the instance */
         for (const size_t& instance_id : module_manager.child_module_instances(top_module, grid_module)) {
           std::string grid_instance_name = module_manager.instance_name(top_module, grid_module, instance_id);
           fp << "  ";
-          fp << "- " << grid_instance_name << "\n";  
+          fp << "- " << grid_instance_name << ":" << "\n";  
 
           rec_print_pnr_sdc_grid_pb_graph_hierarchy(fp,
                                                     2,
@@ -349,13 +352,13 @@ void print_pnr_sdc_grid_hierarchy(const std::string& sdc_dir,
       ModuleId grid_module = module_manager.find_module(grid_module_name);
       VTR_ASSERT(true == module_manager.valid_module_id(grid_module));
 
-      fp << "- " << grid_module_name << "\n";
+      fp << "- " << grid_module_name << ":" << "\n";
 
       /* Go through all the instance */
       for (const size_t& instance_id : module_manager.child_module_instances(top_module, grid_module)) {
         std::string grid_instance_name = module_manager.instance_name(top_module, grid_module, instance_id);
         fp << "  ";
-        fp << "- " << grid_instance_name << "\n";  
+        fp << "- " << grid_instance_name << ":" << "\n";  
 
         rec_print_pnr_sdc_grid_pb_graph_hierarchy(fp,
                                                   2,
