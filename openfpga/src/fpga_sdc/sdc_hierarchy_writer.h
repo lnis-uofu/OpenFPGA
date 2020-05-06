@@ -25,6 +25,13 @@ void print_pnr_sdc_routing_cb_hierarchy(const std::string& sdc_dir,
                                         const t_rr_type& cb_type,
                                         const DeviceRRGSB& device_rr_gsb);
 
+void print_pnr_sdc_grid_hierarchy(const std::string& sdc_dir,
+                                  const DeviceContext& device_ctx,
+                                  const VprDeviceAnnotation& device_annotation,
+                                  const ModuleManager& module_manager,
+                                  const ModuleId& top_module);
+
+
 } /* end namespace openfpga */
 
 #endif

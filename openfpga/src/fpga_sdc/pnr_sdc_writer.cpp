@@ -464,7 +464,8 @@ void print_pnr_sdc(const PnrSdcOption& sdc_options,
   }
 
   /* Output hierachy to plain text file */
-  if ( (true == sdc_options.output_hierarchy())
+  if ( (true == sdc_options.constrain_sb())
+    && (true == sdc_options.output_hierarchy())
     && (true == compact_routing_hierarchy) ) {
     print_pnr_sdc_routing_sb_hierarchy(sdc_options.sdc_dir(),
                                        module_manager,
@@ -497,7 +498,8 @@ void print_pnr_sdc(const PnrSdcOption& sdc_options,
   }
 
   /* Output hierachy to plain text file */
-  if ( (true == sdc_options.output_hierarchy())
+  if ( (true == sdc_options.constrain_cb())
+    && (true == sdc_options.output_hierarchy())
     && (true == compact_routing_hierarchy) ) {
     print_pnr_sdc_routing_cb_hierarchy(sdc_options.sdc_dir(),
                                        module_manager,
@@ -516,10 +518,22 @@ void print_pnr_sdc(const PnrSdcOption& sdc_options,
   if (true == sdc_options.constrain_grid()) {
     print_pnr_sdc_constrain_grid_timing(sdc_options.sdc_dir(),
                                         sdc_options.time_unit(),
+                                        sdc_options.hierarchical(),
                                         device_ctx,
                                         device_annotation,
                                         module_manager,
+                                        top_module,
                                         sdc_options.constrain_zero_delay_paths());
+  }
+
+  if ( (true == sdc_options.constrain_grid())
+    && (true == sdc_options.output_hierarchy()) ) {
+    print_pnr_sdc_grid_hierarchy(sdc_options.sdc_dir(),
+                                 device_ctx,
+                                 device_annotation,
+                                 module_manager,
+                                 top_module);
+
   }
 }
 
