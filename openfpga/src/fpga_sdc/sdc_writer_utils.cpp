@@ -71,12 +71,7 @@ std::string generate_sdc_port(const BasicPort& port) {
    *   <port_type>
    */
   if (1 == port.get_width()) {
-    if (0 != port.get_lsb()) {
-      size_str = "[" + std::to_string(port.get_lsb()) + "]";
-    } else {
-      VTR_ASSERT(0 == port.get_lsb());
-      size_str.clear();
-    }
+    size_str = "[" + std::to_string(port.get_lsb()) + "]";
   }
 
   sdc_line = port.get_name() + size_str;

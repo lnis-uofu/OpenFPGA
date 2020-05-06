@@ -100,12 +100,9 @@ void rec_print_pnr_sdc_disable_configurable_memory_module_output(std::fstream& f
 
   /* Disable timing for each output port of this module */
   for (const BasicPort& output_port : module_manager.module_ports_by_type(parent_module, ModuleManager::MODULE_OUTPUT_PORT)) {
-    for (const size_t& pin : output_port.pins()) {
-      BasicPort output_pin(output_port.get_name(), pin, pin);
-      fp << "set_disable_timing ";
-      fp << parent_module_path << generate_sdc_port(output_pin);
-      fp << std::endl;
-    }
+    fp << "set_disable_timing ";
+    fp << parent_module_path << output_port.get_name();
+    fp << std::endl;
   }
 }
 
