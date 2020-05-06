@@ -96,7 +96,6 @@ void print_pnr_sdc_constrain_pb_pin_interc_timing(std::fstream& fp,
      */
     std::string src_instance_name; 
     if (parent_module != src_module) {
-      src_instance_name = module_manager.module_name(parent_module) + std::string("/"); 
       /* Instance id is actually the placement index */
       size_t instance_id = src_pb_graph_node->placement_index;
       if (true == module_manager.instance_name(parent_module, src_module, instance_id).empty()) {  
@@ -126,7 +125,6 @@ void print_pnr_sdc_constrain_pb_pin_interc_timing(std::fstream& fp,
      */
     std::string des_instance_name; 
     if (parent_module != des_module) {
-      des_instance_name = module_manager.module_name(parent_module) + std::string("/"); 
       /* Instance id is actually the placement index */
       size_t instance_id = des_pb_graph_node->placement_index;
       if (true == module_manager.instance_name(parent_module, des_module, instance_id).empty()) {  
