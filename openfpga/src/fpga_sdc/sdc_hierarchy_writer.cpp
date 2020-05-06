@@ -216,30 +216,30 @@ void rec_print_pnr_sdc_grid_pb_graph_hierarchy(std::fstream& fp,
     write_space_to_file(fp, depth * 2);
     fp << "  ";
     fp << "- " << child_instance_name << "\n";  
-  } 
 
-  if (true == is_primitive_pb_type(parent_pb_type)) {
-    return;
-  }
-
-  /* Note we only go through the graph through the physical modes. 
-   * which we build the modules 
-   */
-  t_mode* physical_mode = device_annotation.physical_mode(parent_pb_type);  
-
-  /* Go recursively to the lower level in the pb_graph
-   * Note that we assume a full hierarchical P&R, we will only visit pb_graph_node of unique pb_type 
-   */
-  for (int ipb = 0; ipb < physical_mode->num_pb_type_children; ++ipb) {
-    for (int jpb = 0; jpb < physical_mode->pb_type_children[ipb].num_pb; ++jpb) {
-      rec_print_pnr_sdc_grid_pb_graph_hierarchy(fp,
-                                                depth + 2,
-                                                module_manager, 
-                                                pb_module,
-                                                device_annotation,
-                                                &(parent_pb_graph_node->child_pb_graph_nodes[physical_mode->index][ipb][jpb]));
+    if (true == is_primitive_pb_type(parent_pb_type)) {
+      return;
     }
-  }
+
+    /* Note we only go through the graph through the physical modes. 
+     * which we build the modules 
+     */
+    t_mode* physical_mode = device_annotation.physical_mode(parent_pb_type);  
+
+    /* Go recursively to the lower level in the pb_graph
+     * Note that we assume a full hierarchical P&R, we will only visit pb_graph_node of unique pb_type 
+     */
+    for (int ipb = 0; ipb < physical_mode->num_pb_type_children; ++ipb) {
+      for (int jpb = 0; jpb < physical_mode->pb_type_children[ipb].num_pb; ++jpb) {
+        rec_print_pnr_sdc_grid_pb_graph_hierarchy(fp,
+                                                  depth + 2,
+                                                  module_manager, 
+                                                  pb_module,
+                                                  device_annotation,
+                                                  &(parent_pb_graph_node->child_pb_graph_nodes[physical_mode->index][ipb][jpb]));
+      }
+    }
+  } 
 }
 
 
