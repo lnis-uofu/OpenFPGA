@@ -94,7 +94,7 @@ void print_pnr_sdc_constrain_pb_pin_interc_timing(std::fstream& fp,
      * If des module is not the parent module, it is a child module.
      * We should find the instance id 
      */
-    std::string src_instance_name = src_module_name; 
+    std::string src_instance_name; 
     if (parent_module != src_module) {
       src_instance_name = module_manager.module_name(parent_module) + std::string("/"); 
       /* Instance id is actually the placement index */
@@ -124,7 +124,7 @@ void print_pnr_sdc_constrain_pb_pin_interc_timing(std::fstream& fp,
      * If des module is not the parent module, it is a child module.
      * We should find the instance id 
      */
-    std::string des_instance_name = des_module_name; 
+    std::string des_instance_name; 
     if (parent_module != des_module) {
       des_instance_name = module_manager.module_name(parent_module) + std::string("/"); 
       /* Instance id is actually the placement index */
@@ -152,12 +152,18 @@ void print_pnr_sdc_constrain_pb_pin_interc_timing(std::fstream& fp,
     /* Give full path if hierarchical is not enabled */
     std::string src_module_path = src_instance_name;
     if (false == hierarchical) {
+      if (true == src_instance_name.empty()) {
+        src_instance_name = generate_instance_name(src_module_name, 0);
+      }
       src_module_path = module_path + src_instance_name;
     }
 
     std::string des_module_path = des_instance_name;
     if (false == hierarchical) {
-      src_module_path = module_path + des_instance_name;
+      if (true == des_instance_name.empty()) {
+        des_instance_name = generate_instance_name(des_module_name, 0);
+      }
+      des_module_path = module_path + des_instance_name;
     }
 
     /* Print a SDC timing constraint */
