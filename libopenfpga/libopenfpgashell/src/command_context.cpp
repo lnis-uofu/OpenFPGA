@@ -66,4 +66,9 @@ void CommandContext::set_option_value(const Command& command,
   option_values_[option_id] = value;
 }
 
+void CommandContext::reset() {
+  std::fill(option_enabled_.begin(), option_enabled_.end(), false);
+  std::fill(option_values_.begin(), option_values_.end(), std::string());
+}
+
 } /* End namespace openfpga */

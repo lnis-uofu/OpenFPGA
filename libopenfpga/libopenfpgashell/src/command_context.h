@@ -43,6 +43,8 @@ class CommandContext {
                     const CommandOptionId& option_id, const bool& status);
     void set_option_value(const Command& command,
                           const CommandOptionId& option_id, const std::string& value);
+    /* Reset the command context to initial state */
+    void reset();
   private: /* Internal data */  
     /* Identify if the option is enabled or not */
     vtr::vector<CommandOptionId, bool> option_enabled_;  
