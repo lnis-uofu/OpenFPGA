@@ -83,8 +83,7 @@ int write_verilog_testbench(OpenfpgaContext& openfpga_ctx,
   options.set_print_simulation_ini(cmd_context.option_value(cmd, opt_print_simulation_ini));
   options.set_verbose_output(cmd_context.option_enable(cmd, opt_verbose));
   
-  fpga_verilog_testbench(openfpga_ctx.verilog_netlists(),
-                         openfpga_ctx.module_graph(),
+  fpga_verilog_testbench(openfpga_ctx.module_graph(),
                          openfpga_ctx.bitstream_manager(),
                          openfpga_ctx.fabric_bitstream(),
                          g_vpr_ctx.atom(),

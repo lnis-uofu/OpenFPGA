@@ -37,8 +37,7 @@ void fpga_fabric_verilog(ModuleManager& module_manager,
                          const DeviceRRGSB& device_rr_gsb,
                          const FabricVerilogOption& options);
 
-void fpga_verilog_testbench(const NetlistManager& netlist_manager,
-                            const ModuleManager& module_manager,
+void fpga_verilog_testbench(const ModuleManager& module_manager,
                             const BitstreamManager& bitstream_manager, 
                             const std::vector<ConfigBitId>& fabric_bitstream, 
                             const AtomContext& atom_ctx, 

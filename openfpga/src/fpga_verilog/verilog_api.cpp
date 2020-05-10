@@ -144,8 +144,7 @@ void fpga_fabric_verilog(ModuleManager& module_manager,
  *    This testbench is created for quick verification and formal verification purpose.
  *  - Verilog netlist including preprocessing flags and all the Verilog netlists that have been generated
  ********************************************************************/
-void fpga_verilog_testbench(const NetlistManager& netlist_manager,
-                            const ModuleManager& module_manager,
+void fpga_verilog_testbench(const ModuleManager& module_manager,
                             const BitstreamManager& bitstream_manager, 
                             const std::vector<ConfigBitId>& fabric_bitstream, 
                             const AtomContext& atom_ctx, 
@@ -227,11 +226,9 @@ void fpga_verilog_testbench(const NetlistManager& netlist_manager,
   }
 
   /* Generate a Verilog file including all the netlists that have been generated */
-  print_include_netlists(netlist_manager,
-                         src_dir_path,
+  print_include_netlists(src_dir_path,
                          netlist_name,
-                         options.reference_benchmark_file_path(),
-                         circuit_lib);
+                         options.reference_benchmark_file_path());
 
 }
 
