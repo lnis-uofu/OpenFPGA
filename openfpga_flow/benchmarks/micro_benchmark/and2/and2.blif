@@ -1,8 +1,7 @@
-.model and2
-.inputs a b
-.outputs c
-
-.names a b c
-11 1
-
-.end
+# Benchmark "and2" written by ABC on Mon May 11 10:59:06 2020 
+.model and2 
+.inputs a b  
+.outputs c  
+.names a b c 
+11 1 
+.end 
