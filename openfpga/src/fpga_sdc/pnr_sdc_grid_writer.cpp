@@ -397,34 +397,34 @@ void print_pnr_sdc_constrain_primitive_pb_graph_node(const std::string& sdc_dir,
   print_sdc_timescale(fp, time_unit_to_string(time_unit));
 
   /* We traverse the pb_graph pins where we can find pin-to-pin timing annotation
-   * We walk through output pins here, build timing constraints by pair each output to input
+   * We walk through input pins here, build timing constraints by pair each input to output
+   * Because VPR keeps all the timing values in pin_timing data structure instead of pb_graph_pin edges
    * Clock pins are not walked through because they will be handled by clock tree synthesis
    */
-  for (int iport = 0; iport < logical_primitive_pb_graph_node->num_output_ports; ++iport) {
-    for (int ipin = 0; ipin < logical_primitive_pb_graph_node->num_output_pins[iport]; ++ipin) {
-       t_pb_graph_pin* sink_pin = &(logical_primitive_pb_graph_node->output_pins[iport][ipin]);
+  for (int iport = 0; iport < logical_primitive_pb_graph_node->num_input_ports; ++iport) {
+    for (int ipin = 0; ipin < logical_primitive_pb_graph_node->num_input_pins[iport]; ++ipin) {
+       t_pb_graph_pin* src_pin = &(logical_primitive_pb_graph_node->input_pins[iport][ipin]);
 
        /* Port must exist in the module graph */
-       ModulePortId sink_module_port_id = module_manager.find_module_port(pb_module, generate_pb_type_port_name(physical_pb_type, sink_pin->port));
-       VTR_ASSERT(true == module_manager.valid_module_port_id(pb_module, sink_module_port_id));
-       BasicPort sink_port = module_manager.module_port(pb_module, sink_module_port_id);
+       ModulePortId src_module_port_id = module_manager.find_module_port(pb_module, generate_pb_type_port_name(physical_pb_type, src_pin->port));
+       VTR_ASSERT(true == module_manager.valid_module_port_id(pb_module, src_module_port_id));
+       BasicPort src_port = module_manager.module_port(pb_module, src_module_port_id);
        /* Set the correct pin number of the port */
-       sink_port.set_width(sink_pin->pin_number, sink_pin->pin_number);
+       src_port.set_width(src_pin->pin_number, src_pin->pin_number);
 
        /* Find all the sink pin from this source pb_graph_pin */
-       for (int iedge = 0; iedge < sink_pin->num_input_edges; ++iedge) {
-         VTR_ASSERT(1 == sink_pin->input_edges[iedge]->num_input_pins);
-         t_pb_graph_pin* src_pin = sink_pin->input_edges[iedge]->input_pins[0];
+       for (int itiming = 0; itiming < src_pin->num_pin_timing; ++itiming) { 
+         t_pb_graph_pin* sink_pin = src_pin->pin_timing[itiming];
 
          /* Port must exist in the module graph */
-         ModulePortId src_module_port_id = module_manager.find_module_port(pb_module, generate_pb_type_port_name(physical_pb_type, src_pin->port));
-         VTR_ASSERT(true == module_manager.valid_module_port_id(pb_module, src_module_port_id));
-         BasicPort src_port = module_manager.module_port(pb_module, src_module_port_id);
+         ModulePortId sink_module_port_id = module_manager.find_module_port(pb_module, generate_pb_type_port_name(physical_pb_type, sink_pin->port));
+         VTR_ASSERT(true == module_manager.valid_module_port_id(pb_module, sink_module_port_id));
+         BasicPort sink_port = module_manager.module_port(pb_module, sink_module_port_id);
          /* Set the correct pin number of the port */
-         src_port.set_width(src_pin->pin_number, src_pin->pin_number);
+         sink_port.set_width(sink_pin->pin_number, sink_pin->pin_number);
 
          /* Find max delay between src and sink pin */
-         float tmax = sink_pin->input_edges[iedge]->delay_max;
+         float tmax = src_pin->pin_timing_del_max[itiming];
 
          /* Generate module path in hierarchy depending if the hierarchical is enabled */
          std::string module_hie_path = pb_module_name;
@@ -434,7 +434,7 @@ void print_pnr_sdc_constrain_primitive_pb_graph_node(const std::string& sdc_dir,
 
          /* If the delay is zero, constrain only when user wants it */
          if ( (true == constrain_zero_delay_paths)
-           || (0. == tmax) ) {
+           || (0. != tmax) ) {
            print_pnr_sdc_constrain_max_delay(fp, 
                                              module_hie_path, 
                                              generate_sdc_port(src_port),
@@ -444,10 +444,10 @@ void print_pnr_sdc_constrain_primitive_pb_graph_node(const std::string& sdc_dir,
          }
 
          /* Find min delay between src and sink pin */
-         float tmin = sink_pin->input_edges[iedge]->delay_min;
+         float tmin = src_pin->pin_timing_del_min[itiming];
          /* If the delay is zero, constrain only when user wants it */
          if ( (true == constrain_zero_delay_paths)
-           || (0. == tmin) ) {
+           || (0. != tmin) ) {
            print_pnr_sdc_constrain_min_delay(fp, 
                                              module_hie_path, 
                                              generate_sdc_port(src_port),
