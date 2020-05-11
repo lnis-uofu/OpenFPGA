@@ -1,70 +1,35 @@
-# Benchmark "test_mode_low" written by ABC on Mon May 11 11:00:52 2020 
-.model test_mode_low 
-.inputs a b clk  
-.outputs out1 out2 out3 out4  
- 
-.latch n16 out1 re clk 0 
-.latch n20 out2 re clk 0 
-.latch n24 out3 re clk 0 
-.latch n28 out4 re clk 0 
-.latch n31 pipe_b[0] re clk 0 
-.latch n35 pipe_b[1] re clk 0 
-.latch n39 pipe_a[0] re clk 0 
-.latch n43 pipe_a[1] re clk 0 
- 
-.names pipe_b[1] out4 pipe_a[1] out3 out1 n20 
--0001 1 
--0010 1 
--1100 1 
--1111 1 
-0-001 1 
-0-010 1 
-00-01 1 
-00-10 1 
-1-100 1 
-1-111 1 
-11-00 1 
-11-11 1 
-.names pipe_b[1] out4 out3 pipe_a[1] out1 out2 n24 
--0-001 1 
--00-01 1 
--000-1 1 
--01-10 1 
--1-111 1 
--10-00 1 
--11-11 1 
--111-1 1 
-0-0111 1 
-0-1101 1 
-01-000 1 
-0100-0 1 
-1-0011 1 
-1-1001 1 
-10-110 1 
-1011-0 1 
-.names pipe_b[1] pipe_a[1] out2 out4 out3 out1 n28 
----111 1 
---0001 1 
---0010 1 
---1-11 1 
---1100 1 
--0-001 1 
--0-010 1 
-0--001 1 
-0--010 1 
-000-01 1 
-000-10 1 
-.names pipe_b[1] out4 pipe_a[1] n16 
-001 1 
-010 1 
-100 1 
-111 1 
-.names b n31 
-1 1 
-.names pipe_b[0] n35 
-1 1 
-.names a n39 
-1 1 
-.names pipe_a[0] n43 
-1 1 
-.end 
+.model test_mode_low
+.inputs a b clk
+.outputs out_0 out_1 out_2 out_3
+
+#.subckt shift D=a clk=clk Q=pipe_a_0
+#.subckt shift D=pipe_a_0 clk=clk Q=pipe_a_1
+#.subckt shift D=b clk=clk Q=pipe_b_0
+#.subckt shift D=pipe_b_0 clk=clk Q=pipe_b_1
+
+
+.latch a pipe_a_0 re clk 0
+.latch pipe_a_0 pipe_a_1 re clk 0
+.latch b pipe_b_0 re clk 0
+.latch pipe_b_0 pipe_b_1 re clk 0
+
+.latch sum_0 pipe_sum_0 re clk 0
+.latch sum_2 pipe_sum_1 re clk 0
+.latch sum_4 pipe_sum_2 re clk 0
+.latch sum_6 pipe_sum_3 re clk 0
+
+.subckt adder a=pipe_a_1 b=pipe_b_1 cin=pipe_sum_3 cout=sum_1 sumout=sum_0
+.subckt adder a=pipe_sum_0 b=pipe_sum_2 cin=sum_1 cout=sum_3 sumout=sum_2
+.subckt adder a=pipe_sum_1 b=pipe_sum_3 cin=sum_3 cout=sum_5 sumout=sum_4
+.subckt adder a=pipe_sum_2 b=pipe_sum_0 cin=sum_5 cout=sum_7 sumout=sum_6
+
+.names pipe_sum_0 out_0
+1 1
+.names pipe_sum_1 out_1
+1 1
+.names pipe_sum_2 out_2
+1 1
+.names pipe_sum_3 out_3
+1 1
+
+.end
