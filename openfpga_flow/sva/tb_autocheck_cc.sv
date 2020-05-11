@@ -82,7 +82,7 @@ initial
 	end
 always //wait(~greset)
 	begin
-		#2.5	op_clock_reg[0] = ~op_clock_reg[0];
+		#50	op_clock_reg[0] = ~op_clock_reg[0];
 	end
 
 // ----- End raw operating clock signal generation -----

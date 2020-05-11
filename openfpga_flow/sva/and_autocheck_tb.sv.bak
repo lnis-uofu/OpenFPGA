@@ -1,14 +1,14 @@
 //-------------------------------------------
 //	FPGA Synthesizable Verilog Netlist
-//	Description: FPGA Verilog Testbench for Top-level netlist of Design: test_mode_low
+//	Description: FPGA Verilog Testbench for Top-level netlist of Design: and2
 //	Author: Xifan TANG
 //	Organization: University of Utah
-//	Date: Mon May 11 11:25:39 2020
+//	Date: Mon May 11 11:03:56 2020
 //-------------------------------------------
 //----- Time scale -----
 `timescale 1ns / 1ps
 `define AUTOCHECKED_SIMULATION
-module test_mode_low_autocheck_top_tb;
+module and2_autocheck_top_tb;
 // ----- Local wires for global ports of FPGA fabric -----
 wire [0:0] pReset;
 wire [0:0] prog_clk;
@@ -64,24 +64,15 @@ wire [0:0] ccff_tail;
 	reg [0:0] b;
 
 // ----- FPGA fabric outputs -------
-	wire [0:0] out_out_0_fpga;
-	wire [0:0] out_out_1_fpga;
-	wire [0:0] out_out_2_fpga;
-	wire [0:0] out_out_3_fpga;
+	wire [0:0] out_c_fpga;
 
 `ifdef AUTOCHECKED_SIMULATION
 
 // ----- Benchmark outputs -------
-	wire [0:0] out_out_0_benchmark;
-	wire [0:0] out_out_1_benchmark;
-	wire [0:0] out_out_2_benchmark;
-	wire [0:0] out_out_3_benchmark;
+	wire [0:0] out_c_benchmark;
 
 // ----- Output vectors checking flags -------
-	reg [0:0] out_out_0_flag;
-	reg [0:0] out_out_1_flag;
-	reg [0:0] out_out_2_flag;
-	reg [0:0] out_out_3_flag;
+	reg [0:0] out_c_flag;
 
 `endif
 
@@ -118,7 +109,7 @@ initial
 	end
 always wait(~greset)
 	begin
-		#200	op_clock_reg[0] = ~op_clock_reg[0];
+		#200 op_clock_reg[0] = ~op_clock_reg[0];
 	end
 
 // ----- End raw operating clock signal generation -----
@@ -169,6 +160,8 @@ initial
 	assign Test_en[0] = 1'b0;
 // ----- End connecting global ports of FPGA fabric to stimuli -----
 // ----- FPGA top-level module to be capsulated -----
+
+
 	fpga_top FPGA_DUT (
 		.pReset_pad(pReset[0]),
 		.prog_clk_pad(prog_clk[0]),
@@ -195,7 +188,7 @@ initial
 		.ccff_head_pad(ccff_head[0]),
 		.ccff_tail_pad(ccff_tail[0]));
 
-  bind fpga_top inv_checker #(.enable_assertions(1), // Write 0 to disable assertions, 1 for enabling them.
+ bind fpga_top inv_checker #(.enable_assertions(1), // Write 0 to disable assertions, 1 for enabling them.
 				 .BS_LGT(8387),		// Bitstream length
 				 .FF_n(80))		// Number of flipflop in all 4 clbs
 				 sva_checker  
@@ -255,32 +248,24 @@ initial
 // ----- Link BLIF Benchmark I/Os to FPGA I/Os -----
 // ----- Blif Benchmark input a is mapped to FPGA IOPAD gfpga_pad_GPIO_Y[5] -----
 	assign gfpga_pad_GPIO_Y[5] = a[0];
-// ----- Blif Benchmark input b is mapped to FPGA IOPAD gfpga_pad_GPIO_Y[6] -----
-	assign gfpga_pad_GPIO_Y[6] = b[0];
-// ----- Blif Benchmark input clk is mapped to FPGA IOPAD gfpga_pad_GPIO_Y[7] -----
-	assign gfpga_pad_GPIO_Y[7] = clk[0];
-// ----- Blif Benchmark output out_out_0 is mapped to FPGA IOPAD gfpga_pad_GPIO_Y[3] -----
-	assign out_out_0_fpga[0] = gfpga_pad_GPIO_Y[3];
-// ----- Blif Benchmark output out_out_1 is mapped to FPGA IOPAD gfpga_pad_GPIO_Y[1] -----
-	assign out_out_1_fpga[0] = gfpga_pad_GPIO_Y[1];
-// ----- Blif Benchmark output out_out_2 is mapped to FPGA IOPAD gfpga_pad_GPIO_Y[2] -----
-	assign out_out_2_fpga[0] = gfpga_pad_GPIO_Y[2];
-// ----- Blif Benchmark output out_out_3 is mapped to FPGA IOPAD gfpga_pad_GPIO_Y[0] -----
-	assign out_out_3_fpga[0] = gfpga_pad_GPIO_Y[0];
+// ----- Blif Benchmark input b is mapped to FPGA IOPAD gfpga_pad_GPIO_Y[3] -----
+	assign gfpga_pad_GPIO_Y[3] = b[0];
+// ----- Blif Benchmark output out_c is mapped to FPGA IOPAD gfpga_pad_GPIO_Y[2] -----
+	assign out_c_fpga[0] = gfpga_pad_GPIO_Y[2];
 
 // ----- Wire unused FPGA I/Os to constants -----
+	assign gfpga_pad_GPIO_Y[0] = 1'b0;
+	assign gfpga_pad_GPIO_Y[1] = 1'b0;
 	assign gfpga_pad_GPIO_Y[4] = 1'b0;
+	assign gfpga_pad_GPIO_Y[6] = 1'b0;
+	assign gfpga_pad_GPIO_Y[7] = 1'b0;
 
 `ifdef AUTOCHECKED_SIMULATION
 // ----- Reference Benchmark Instanication -------
-	test_mode_low REF_DUT(
+	top REF_DUT(
 		a,
 		b,
-		clk,
-		out_out_0_benchmark,
-		out_out_1_benchmark,
-		out_out_2_benchmark,
-		out_out_3_benchmark	);
+		out_c_benchmark	);
 // ----- End reference Benchmark Instanication -------
 
 `endif
@@ -2023,8 +2008,6 @@ initial
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
@@ -2050,7 +2033,6 @@ initial
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
@@ -2093,24 +2075,18 @@ initial
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
@@ -2140,14 +2116,10 @@ initial
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
@@ -2156,12 +2128,7 @@ initial
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
@@ -2174,10 +2141,6 @@ initial
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
@@ -2414,15 +2377,10 @@ initial
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
@@ -2430,41 +2388,20 @@ initial
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
@@ -2473,131 +2410,67 @@ initial
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
@@ -2615,54 +2488,241 @@ initial
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
@@ -3049,8 +3109,6 @@ initial
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
@@ -3113,57 +3171,21 @@ initial
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
@@ -3172,20 +3194,13 @@ initial
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
@@ -3218,18 +3233,11 @@ initial
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
@@ -3253,7 +3261,6 @@ initial
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
@@ -3261,6 +3268,7 @@ initial
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
@@ -3279,24 +3287,12 @@ initial
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
@@ -3503,7 +3499,6 @@ initial
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
@@ -3560,8 +3555,6 @@ initial
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
@@ -3579,8 +3572,6 @@ initial
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
@@ -3662,8 +3653,10 @@ initial
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
@@ -3763,6 +3756,7 @@ initial
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
@@ -3775,7 +3769,6 @@ initial
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
@@ -3803,19 +3796,14 @@ initial
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
@@ -3835,11 +3823,9 @@ initial
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
@@ -3867,18 +3853,10 @@ initial
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
@@ -3926,9 +3904,10 @@ initial
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
@@ -3937,6 +3916,12 @@ initial
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
@@ -4248,9 +4233,6 @@ initial
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
@@ -4315,21 +4297,16 @@ initial
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
@@ -4351,10 +4328,18 @@ initial
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
@@ -4987,13 +4972,6 @@ initial
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
@@ -5023,7 +5001,7 @@ initial
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
@@ -5059,6 +5037,7 @@ initial
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
@@ -5089,7 +5068,12 @@ initial
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
@@ -5108,11 +5092,7 @@ initial
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
@@ -5147,6 +5127,7 @@ initial
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
@@ -5182,6 +5163,7 @@ initial
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
@@ -5217,6 +5199,7 @@ initial
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
@@ -5240,6 +5223,9 @@ initial
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
@@ -5304,7 +5290,6 @@ initial
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
@@ -5430,7 +5415,6 @@ initial
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
@@ -5463,6 +5447,7 @@ initial
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
@@ -5534,7 +5519,6 @@ initial
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
@@ -5638,6 +5622,7 @@ initial
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b0);
@@ -7149,9 +7134,6 @@ initial
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
@@ -7188,6 +7170,9 @@ initial
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
@@ -7197,6 +7182,9 @@ initial
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
@@ -7610,32 +7598,22 @@ initial
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
@@ -7800,9 +7778,7 @@ initial
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
@@ -7939,7 +7915,6 @@ initial
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
@@ -7964,7 +7939,6 @@ initial
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
@@ -7989,7 +7963,6 @@ initial
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
@@ -8055,7 +8028,6 @@ initial
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
@@ -8074,12 +8046,8 @@ initial
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
@@ -8091,8 +8059,6 @@ initial
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
@@ -8427,7 +8393,6 @@ initial
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
@@ -8436,15 +8401,8 @@ initial
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
-		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
@@ -8491,6 +8449,7 @@ initial
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
@@ -8498,9 +8457,7 @@ initial
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
@@ -8518,8 +8475,18 @@ initial
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
@@ -8538,8 +8505,8 @@ initial
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
@@ -8558,8 +8525,8 @@ initial
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
@@ -8578,8 +8545,8 @@ initial
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
@@ -8598,8 +8565,8 @@ initial
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
@@ -8638,8 +8605,8 @@ initial
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
@@ -8658,8 +8625,8 @@ initial
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
@@ -8678,12 +8645,30 @@ initial
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
-		prog_cycle_task(1'b0);
+		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b1);
+		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b0);
 		prog_cycle_task(1'b1);
 		prog_cycle_task(1'b1);
@@ -8696,10 +8681,7 @@ initial
 		a <= 1'b0;
 		b <= 1'b0;
 
-		out_out_0_flag[0] <= 1'b0;
-		out_out_1_flag[0] <= 1'b0;
-		out_out_2_flag[0] <= 1'b0;
-		out_out_3_flag[0] <= 1'b0;
+		out_c_flag[0] <= 1'b0;
 	end
 
 // ----- Input Stimulus -------
@@ -8713,58 +8695,22 @@ initial
 // ----- Skip the first falling edge of clock, it is for initialization -------
 	reg [0:0] sim_start;
 
-	always@(negedge clk[0]) begin
+	always@(negedge op_clock[0]) begin
 		if (1'b1 == sim_start[0]) begin
 			sim_start[0] <= ~sim_start[0];
 		end else begin
-			if(!(out_out_0_fpga === out_out_0_benchmark) && !(out_out_0_benchmark === 1'bx)) begin
-				out_out_0_flag <= 1'b1;
+			if(!(out_c_fpga === out_c_benchmark) && !(out_c_benchmark === 1'bx)) begin
+				out_c_flag <= 1'b1;
 			end else begin
-				out_out_0_flag<= 1'b0;
-			end
-			if(!(out_out_1_fpga === out_out_1_benchmark) && !(out_out_1_benchmark === 1'bx)) begin
-				out_out_1_flag <= 1'b1;
-			end else begin
-				out_out_1_flag<= 1'b0;
-			end
-			if(!(out_out_2_fpga === out_out_2_benchmark) && !(out_out_2_benchmark === 1'bx)) begin
-				out_out_2_flag <= 1'b1;
-			end else begin
-				out_out_2_flag<= 1'b0;
-			end
-			if(!(out_out_3_fpga === out_out_3_benchmark) && !(out_out_3_benchmark === 1'bx)) begin
-				out_out_3_flag <= 1'b1;
-			end else begin
-				out_out_3_flag<= 1'b0;
+				out_c_flag<= 1'b0;
 			end
 		end
 	end
 
-	always@(posedge out_out_0_flag) begin
-		if(out_out_0_flag) begin
+	always@(posedge out_c_flag) begin
+		if(out_c_flag) begin
 			nb_error = nb_error + 1;
-			$display("Mismatch on out_out_0_fpga at time = %t", $realtime);
-		end
-	end
-
-	always@(posedge out_out_1_flag) begin
-		if(out_out_1_flag) begin
-			nb_error = nb_error + 1;
-			$display("Mismatch on out_out_1_fpga at time = %t", $realtime);
-		end
-	end
-
-	always@(posedge out_out_2_flag) begin
-		if(out_out_2_flag) begin
-			nb_error = nb_error + 1;
-			$display("Mismatch on out_out_2_fpga at time = %t", $realtime);
-		end
-	end
-
-	always@(posedge out_out_3_flag) begin
-		if(out_out_3_flag) begin
-			nb_error = nb_error + 1;
-			$display("Mismatch on out_out_3_fpga at time = %t", $realtime);
+			$display("Mismatch on out_c_fpga at time = %t", $realtime);
 		end
 	end
 
@@ -8773,8 +8719,8 @@ initial
 `ifdef ICARUS_SIMULATOR
 // ----- Begin Icarus requirement -------
 	initial begin
-		$dumpfile("test_mode_low_formal.vcd");
-		$dumpvars(1, test_mode_low_autocheck_top_tb);
+		$dumpfile("and2_formal.vcd");
+		$dumpvars(1, and2_autocheck_top_tb);
 	end
 `endif
 // ----- END Icarus requirement -------
@@ -8784,7 +8730,7 @@ initial begin
 	$timeformat(-9, 2, "ns", 20);
 	$display("Simulation start");
 // ----- Can be changed by the user for his/her need -------
-	#83902500
+	#839035
 	if(nb_error == 0) begin
 		$display("Simulation Succeed");
 	end else begin
@@ -8794,5 +8740,5 @@ initial begin
 end
 
 endmodule
-// ----- END Verilog module for test_mode_low_autocheck_top_tb -----
+// ----- END Verilog module for and2_autocheck_top_tb -----
 

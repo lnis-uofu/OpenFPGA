@@ -7,7 +7,7 @@
 //-------------------------------------------
 //----- Time scale -----
 `timescale 1ns / 1ps
-`define AUTOCHECKED_SIMULATION
+
 module test_mode_low_autocheck_top_tb;
 // ----- Local wires for global ports of FPGA fabric -----
 wire [0:0] pReset;
@@ -36,25 +36,6 @@ reg [0:0] prog_reset;
 reg [0:0] prog_set;
 reg [0:0] greset;
 reg [0:0] gset;
-
-// ---- Spypads ----
-wire [0:0] lut4_out_0;
-wire [0:0] lut4_out_1;
-wire [0:0] lut4_out_2;
-wire [0:0] lut4_out_3;
-wire [0:0] lut5_out_0;
-wire [0:0] lut5_out_1;
-wire [0:0] lut6_out_0;
-reg [0:0] sc_head;
-wire [0:0] sc_tail;
-wire [0:0] cc_spypad_0;
-wire [0:0] cc_spypad_1;
-wire [0:0] cc_spypad_2;
-wire [0:0] sc_spypad_0;
-wire [0:0] shiftreg_spypad_0;
-wire [0:0] cout_spypad_0;
-wire [0:0] perf_spypad_0;
-
 // ---- Configuration-chain head -----
 reg [0:0] ccff_head;
 // ---- Configuration-chain tail -----
@@ -103,7 +84,7 @@ initial
 	end
 always
 	begin
-		#200.00000381	prog_clock_reg[0] = ~prog_clock_reg[0];
+		#50.00000381	prog_clock_reg[0] = ~prog_clock_reg[0];
 	end
 
 // ----- End raw programming clock signal generation -----
@@ -118,7 +99,7 @@ initial
 	end
 always wait(~greset)
 	begin
-		#200	op_clock_reg[0] = ~op_clock_reg[0];
+		#2.5	op_clock_reg[0] = ~op_clock_reg[0];
 	end
 
 // ----- End raw operating clock signal generation -----
@@ -170,87 +151,20 @@ initial
 // ----- End connecting global ports of FPGA fabric to stimuli -----
 // ----- FPGA top-level module to be capsulated -----
 	fpga_top FPGA_DUT (
-		.pReset_pad(pReset[0]),
-		.prog_clk_pad(prog_clk[0]),
-		.Reset_pad(Reset[0]),
-		.Test_en_pad(Test_en[0]),
-		.clk_pad(clk[0]),
-  		.lut4_out_0_pad(lut4_out_0[0]),
-  		.lut4_out_1_pad(lut4_out_1[0]),
-  		.lut4_out_2_pad(lut4_out_2[0]),
-  		.lut4_out_3_pad(lut4_out_3[0]),
-  		.lut5_out_0_pad(lut5_out_0[0]),
-  		.lut5_out_1_pad(lut5_out_1[0]),
-  		.lut6_out_0_pad(lut6_out_0[0]),
-  		.sc_head_pad(sc_head[0]),
-  		.sc_tail_pad(sc_tail[0]),
-  		.cc_spypad_0_pad(cc_spypad_0[0]),
-  		.cc_spypad_1_pad(cc_spypad_1[0]),
-  		.cc_spypad_2_pad(cc_spypad_2[0]),
-  		.sc_spypad_0_pad(sc_spypad_0[0]),
-  		.shiftreg_spypad_0_pad(shiftreg_spypad_0[0]),
- 		.cout_spypad_0_pad(cout_spypad_0[0]),
-  		.perf_spypad_0_pad(perf_spypad_0[0]),
-		.gpio_pad(gfpga_pad_GPIO_Y[0:7]),
-		.ccff_head_pad(ccff_head[0]),
-		.ccff_tail_pad(ccff_tail[0]));
-
-  bind fpga_top inv_checker #(.enable_assertions(1), // Write 0 to disable assertions, 1 for enabling them.
-				 .BS_LGT(8387),		// Bitstream length
-				 .FF_n(80))		// Number of flipflop in all 4 clbs
-				 sva_checker  
-					(	.pReset(pReset_pad),
-						.Reset(Reset_pad),
-						.prog_clk(prog_clk_pad),
-						.clk(clk_pad),
-						.Test_en(Test_en_pad),
-						.lut4_out_0(lut4_out_0[0]),
-				  		.lut4_out_1(lut4_out_1[0]),
-				  		.lut4_out_2(lut4_out_2[0]),
-				  		.lut4_out_3(lut4_out_3[0]),
-				  		.lut5_out_0(lut5_out_0[0]),
-				  		.lut5_out_1(lut5_out_1[0]),
-				  		.lut6_out_0(lut6_out_0[0]),
-				  		.cc_spypad_0(cc_spypad_0[0]),
-				  		.cc_spypad_1(cc_spypad_1[0]),
-				  		.cc_spypad_2(cc_spypad_2[0]),
-				  		.sc_spypad_0(sc_spypad_0[0]),
-				  		.shiftreg_spypad_0(shiftreg_spypad_0[0]),
-				 		.cout_spypad_0(cout_spypad_0[0]),
-				  		.perf_spypad_0(perf_spypad_0[0]),
-						.ccff_head(ccff_head_pad),
-    						.ccff_tail_gbot_1_0(fpga_core_uut.grid_io_bottom_1_0.ccff_tail),
-   						.ccff_head_gbot_2_0(fpga_core_uut.grid_io_bottom_2_0.ccff_head),
-    						.ccff_head_gright_3_1(fpga_core_uut.grid_io_right_3_1.ccff_head),
-   						.ccff_head_gright_3_2(fpga_core_uut.grid_io_right_3_2.ccff_head),
-   						.ccff_tail_gright_3_2(fpga_core_uut.grid_io_right_3_2.ccff_tail),
-  						.ccff_head_sb_2_2(fpga_core_uut.sb_2__2_.ccff_head),
-   						.ccff_tail_sb_2_2(fpga_core_uut.sb_2__2_.ccff_tail),
-   						.ccff_head_cbx_2_2(fpga_core_uut.cbx_2__2_.ccff_head),
-   						.ccff_head_g11(fpga_core_uut.grid_clb_1_1.ccff_head),
-   						.ccff_head_g21(fpga_core_uut.grid_clb_2_1.ccff_head),
-   						.ccff_head_g22(fpga_core_uut.grid_clb_2_2.ccff_head),
-   						.ccff_head_g12(fpga_core_uut.grid_clb_1_2.ccff_head),
-						.sc_head(sc_head_pad),
-						.sc_tail(sc_tail_pad),
-						.sc_tail_clb_1_2(fpga_core_uut.grid_clb_1_2.top_width_0_height_0__pin_40_),
-						.sc_tail_clb_1_1(fpga_core_uut.grid_clb_1_1.top_width_0_height_0__pin_40_),
-						.sc_tail_clb_2_2(fpga_core_uut.grid_clb_2_2.top_width_0_height_0__pin_40_),
-						.sc_tail_clb_2_1(fpga_core_uut.grid_clb_2_1.top_width_0_height_0__pin_40_),
-						.cc_spypad_1_ref(fpga_core_uut.grid_io_left_0_1.ccff_tail),
-						.cc_spypad_2_ref(fpga_core_uut.grid_clb_1_1.ccff_tail),
-						.cout_spypad_0_ref(fpga_core_uut.grid_clb_1_1.bottom_width_0_height_0__pin_65_),
-						.lut4_out_0_ref(fpga_core_uut.grid_clb_1_1.gfpga_pad_frac_lut6_spypad_lut4_spy[0]),
-						.lut4_out_1_ref(fpga_core_uut.grid_clb_1_1.gfpga_pad_frac_lut6_spypad_lut4_spy[1]),
-						.lut4_out_2_ref(fpga_core_uut.grid_clb_1_1.gfpga_pad_frac_lut6_spypad_lut4_spy[2]),
-						.lut4_out_3_ref(fpga_core_uut.grid_clb_1_1.gfpga_pad_frac_lut6_spypad_lut4_spy[3]),
-						.lut5_out_0_ref(fpga_core_uut.grid_clb_1_1.gfpga_pad_frac_lut6_spypad_lut5_spy[0]),
-						.lut5_out_1_ref(fpga_core_uut.grid_clb_1_1.gfpga_pad_frac_lut6_spypad_lut5_spy[1]),
-						.lut6_out_0_ref(fpga_core_uut.grid_clb_1_1.gfpga_pad_frac_lut6_spypad_lut6_spy[0]),
-						.perf_spypad_0_ref(fpga_core_uut.grid_clb_1_1.top_width_0_height_0__pin_68_),
-						.sc_spypad_0_ref(fpga_core_uut.grid_clb_1_1.bottom_width_0_height_0__pin_64_),
-						.shiftreg_spypad_0_ref(fpga_core_uut.grid_clb_1_1.bottom_width_0_height_0__pin_67_lower),
-						.ccff_tail(ccff_tail_pad));
+		.pReset(pReset[0]),
+		.prog_clk(prog_clk[0]),
+		.Reset(Reset[0]),
+		.Test_en(Test_en[0]),
+		.clk(clk[0]),
+		.gfpga_pad_frac_lut6_spypad_lut4_spy(gfpga_pad_frac_lut6_spypad_lut4_spy[0:15]),
+		.gfpga_pad_frac_lut6_spypad_lut5_spy(gfpga_pad_frac_lut6_spypad_lut5_spy[0:7]),
+		.gfpga_pad_frac_lut6_spypad_lut6_spy(gfpga_pad_frac_lut6_spypad_lut6_spy[0:3]),
+		.gfpga_pad_GPIO_A(gfpga_pad_GPIO_A[0:7]),
+		.gfpga_pad_GPIO_IE(gfpga_pad_GPIO_IE[0:7]),
+		.gfpga_pad_GPIO_OE(gfpga_pad_GPIO_OE[0:7]),
+		.gfpga_pad_GPIO_Y(gfpga_pad_GPIO_Y[0:7]),
+		.ccff_head(ccff_head[0]),
+		.ccff_tail(ccff_tail[0]));
 
 // ----- Link BLIF Benchmark I/Os to FPGA I/Os -----
 // ----- Blif Benchmark input a is mapped to FPGA IOPAD gfpga_pad_GPIO_Y[5] -----
@@ -8784,7 +8698,7 @@ initial begin
 	$timeformat(-9, 2, "ns", 20);
 	$display("Simulation start");
 // ----- Can be changed by the user for his/her need -------
-	#83902500
+	#839025
 	if(nb_error == 0) begin
 		$display("Simulation Succeed");
 	end else begin

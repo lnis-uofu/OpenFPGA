@@ -134,11 +134,11 @@ always @(posedge(pReset))
     Grid2_2to1_2:	`assert_prog_clk( ccff_head_g22 |-> ##1773 ccff_head_g12 )  
 
 // Scan chain path checker
-    SC_TEST: 		`assert_sc( sc_head  |-> ##FF_n sc_tail)
-    First_sc: 		`assert_sc( sc_head == sc_tail_clb_1_2)
-    Second_sc: 		`assert_sc( sc_head  |-> ##(FF_n/4) sc_tail_clb_1_1)
-    Third_sc: 		`assert_sc( sc_head  |-> ##(FF_n/2) sc_tail_clb_2_2)
-    Fourth_sc: 		`assert_sc( sc_head  |-> ##(3*FF_n/4) sc_tail_clb_2_1)
+    SC_TEST: 		`assert_clk( sc_head  |-> ##FF_n sc_tail)
+    First_sc: 		`assert_clk( sc_head == sc_tail_clb_1_2)
+    Second_sc: 		`assert_clk( sc_head  |-> ##(FF_n/4) sc_tail_clb_1_1)
+    Third_sc: 		`assert_clk( sc_head  |-> ##(FF_n/2) sc_tail_clb_2_2)
+    Fourth_sc: 		`assert_clk( sc_head  |-> ##(3*FF_n/4) sc_tail_clb_2_1)
 
 // Spypad assertions 
    ccff_head_top:	`assert_prog_clk(ccff_head |-> ##1 cc_spypad_0)
