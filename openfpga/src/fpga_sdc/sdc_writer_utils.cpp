@@ -95,14 +95,14 @@ void print_pnr_sdc_constrain_max_delay(std::fstream& fp,
 
   fp << " -from ";
   if (!src_instance_name.empty()) {
-    fp << src_instance_name << "/";
+    fp << format_dir_path(src_instance_name);
   }
   fp << src_port_name;
 
   fp << " -to ";
  
   if (!des_instance_name.empty()) {
-    fp << des_instance_name << "/";
+    fp << format_dir_path(des_instance_name);
   }
   fp << des_port_name;
 
@@ -130,7 +130,7 @@ void print_pnr_sdc_regexp_constrain_max_delay(std::fstream& fp,
   fp << " -from ";
   fp << "[get_pins -regexp \"";
   if (!src_instance_name.empty()) {
-    fp << src_instance_name << "/";
+    fp << format_dir_path(src_instance_name);
   }
   fp << src_port_name;
 
@@ -140,7 +140,7 @@ void print_pnr_sdc_regexp_constrain_max_delay(std::fstream& fp,
   fp << "[get_pins -regexp \"";
  
   if (!des_instance_name.empty()) {
-    fp << des_instance_name << "/";
+    fp << format_dir_path(des_instance_name);
   }
   fp << des_port_name;
 
@@ -167,14 +167,14 @@ void print_pnr_sdc_constrain_min_delay(std::fstream& fp,
 
   fp << " -from ";
   if (!src_instance_name.empty()) {
-    fp << src_instance_name << "/";
+    fp << format_dir_path(src_instance_name);
   }
   fp << src_port_name;
 
   fp << " -to ";
  
   if (!des_instance_name.empty()) {
-    fp << des_instance_name << "/";
+    fp << format_dir_path(des_instance_name);
   }
   fp << des_port_name;
 

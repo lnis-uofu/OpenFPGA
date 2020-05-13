@@ -15,6 +15,7 @@
 #include "circuit_library_utils.h"
 #include "pnr_sdc_writer.h"
 #include "analysis_sdc_writer.h"
+#include "configuration_chain_sdc_writer.h"
 #include "openfpga_sdc.h"
 
 /* Include global variables of VPR */
@@ -101,6 +102,41 @@ int write_pnr_sdc(OpenfpgaContext& openfpga_ctx,
   /* TODO: should identify the error code from internal function execution */
   return CMD_EXEC_SUCCESS;
 } 
+
+/********************************************************************
+ * A wrapper function to call the PnR SDC generator on configuration chain 
+ * of FPGA-SDC
+ *******************************************************************/
+int write_configuration_chain_sdc(const OpenfpgaContext& openfpga_ctx,
+                                  const Command& cmd, const CommandContext& cmd_context) {
+  /* If the configuration protocol is not a configuration chain, we will not write anything */
+  if (CONFIG_MEM_SCAN_CHAIN != openfpga_ctx.arch().config_protocol.type()) {
+    VTR_LOGF_ERROR(__FILE__, __LINE__,
+                   "Configuration protocol is %s. Expected %s to write SDC!\n",
+                   CONFIG_PROTOCOL_TYPE_STRING[openfpga_ctx.arch().config_protocol.type()],
+                   CONFIG_PROTOCOL_TYPE_STRING[CONFIG_MEM_SCAN_CHAIN]);
+    return CMD_EXEC_FATAL_ERROR;
+  }
+
+  /* Get command options */
+  CommandOptionId opt_output_dir = cmd.option("file");
+  CommandOptionId opt_time_unit = cmd.option("time_unit");
+  CommandOptionId opt_min_delay = cmd.option("min_delay");
+  CommandOptionId opt_max_delay = cmd.option("max_delay");
+
+  std::string sdc_dir_path = format_dir_path(cmd_context.option_value(cmd, opt_output_dir));
+
+  float time_unit = string_to_time_unit(cmd_context.option_value(cmd, opt_time_unit));
+
+  /* Write the SDC for configuration chain */
+  print_pnr_sdc_constrain_configurable_chain(cmd_context.option_value(cmd, opt_output_dir),
+                                             time_unit,
+                                             std::stof(cmd_context.option_value(cmd, opt_max_delay)),
+                                             std::stof(cmd_context.option_value(cmd, opt_min_delay)),
+                                             openfpga_ctx.module_graph());
+
+  return CMD_EXEC_SUCCESS;
+}
 
 /********************************************************************
  * A wrapper function to call the analysis SDC generator of FPGA-SDC

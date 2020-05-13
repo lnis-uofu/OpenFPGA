@@ -18,6 +18,9 @@ namespace openfpga {
 int write_pnr_sdc(OpenfpgaContext& openfpga_ctx,
                   const Command& cmd, const CommandContext& cmd_context); 
 
+int write_configuration_chain_sdc(const OpenfpgaContext& openfpga_ctx,
+                                  const Command& cmd, const CommandContext& cmd_context);
+
 int write_analysis_sdc(OpenfpgaContext& openfpga_ctx,
                        const Command& cmd, const CommandContext& cmd_context);
 
