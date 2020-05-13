@@ -101,16 +101,16 @@ void rec_print_pnr_sdc_constrain_configurable_chain(std::fstream& fp,
       for (const BasicPort& input_port : module_manager.module_ports_by_type(parent_module, ModuleManager::MODULE_INPUT_PORT)) {
         print_pnr_sdc_constrain_max_delay(fp, 
                                           previous_module_path, 
-                                          generate_sdc_port(output_port),
+                                          output_port.get_name(),
                                           parent_module_path, 
-                                          generate_sdc_port(input_port),
+                                          input_port.get_name(),
                                           tmax);
 
         print_pnr_sdc_constrain_min_delay(fp, 
                                           previous_module_path, 
-                                          generate_sdc_port(output_port),
+                                          output_port.get_name(),
                                           parent_module_path, 
-                                          generate_sdc_port(input_port),
+                                          input_port.get_name(),
                                           tmin);
       }
       
