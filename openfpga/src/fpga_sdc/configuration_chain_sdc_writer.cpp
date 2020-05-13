@@ -162,7 +162,7 @@ void print_pnr_sdc_constrain_configurable_chain(const std::string& sdc_fname,
   std::string previous_module_path;
   ModuleId previous_module = ModuleId::INVALID();
   rec_print_pnr_sdc_constrain_configurable_chain(fp,
-                                                 max_delay/time_unit, min_delay/time_unit, 
+                                                 max_delay, min_delay, 
                                                  module_manager, top_module, 
                                                  format_dir_path(module_manager.module_name(top_module)),
                                                  previous_module_path,
