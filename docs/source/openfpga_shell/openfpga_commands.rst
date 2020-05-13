@@ -221,6 +221,23 @@ FPGA-SDC
   
   - ``--verbose`` Enable verbose output
 
+.. option:: write_configuration_chain_sdc
+ 
+  Write the SDC file to constrain the timing for configuration chain. The timing constraints will always start from the first output (Q) of a Configuration Chain Flip-flop (CCFF) and ends at the inputs of the next CCFF in the chain. Note that Qb of CCFF will not be constrained!
+
+  - ``--file`` or ``-f`` Specify the output SDC file
+
+  - ``--time_unit`` Specify a time unit to be used in SDC files. Acceptable values are string: ``as`` | ``fs`` | ``ps`` | ``ns`` | ``us`` | ``ms`` | ``ks`` | ``Ms``. By default, we will consider second (``s``).
+
+  
+  - ``--max_delay`` Specify the maximum delay to be used. The timing value should follow the time unit defined in this command.
+
+  - ``--min_delay`` Specify the minimum delay to be used. The timing value should follow the time unit defined in this command.
+
+  .. note::
+     Only applicable when configuration chain is used as configuration protocol
+
+
 .. option:: write_analysis_sdc
 
   Write the SDC to run timing analysis for a mapped FPGA fabric
