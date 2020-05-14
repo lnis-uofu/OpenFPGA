@@ -25,6 +25,8 @@
 
 #include "openfpga_naming.h"
 
+#include "circuit_library_utils.h"
+
 #include "sdc_writer_naming.h"
 #include "sdc_writer_utils.h"
 #include "sdc_mux_utils.h"
@@ -76,8 +78,9 @@ int print_sdc_disable_non_mux_circuit_configure_ports(std::fstream& fp,
      * starting from the top-level module: instance id of the top-level module is 0 by default 
      * Disable all the outputs of child modules that matches the mux_module id
      */
-    for (const CircuitPortId& sram_port : circuit_lib.model_ports_by_type(model, CIRCUIT_MODEL_PORT_SRAM)) {
+    for (const CircuitPortId& sram_port : find_circuit_mode_select_sram_ports(circuit_lib, model)) {
       const std::string& sram_port_name = circuit_lib.port_lib_name(sram_port);
+      VTR_ASSERT(true == module_manager.valid_module_port_id(programmable_module, module_manager.find_module_port(programmable_module, sram_port_name)));
       if (CMD_EXEC_FATAL_ERROR == 
             rec_print_sdc_disable_timing_for_module_ports(fp,
                                                           flatten_names,

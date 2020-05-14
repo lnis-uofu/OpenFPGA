@@ -17,6 +17,7 @@
 #include "openfpga_naming.h"
 
 #include "mux_utils.h"
+#include "circuit_library_utils.h"
 
 #include "sdc_writer_naming.h"
 #include "sdc_writer_utils.h"
@@ -127,8 +128,8 @@ int print_sdc_disable_routing_multiplexer_configure_ports(std::fstream& fp,
      * starting from the top-level module: instance id of the top-level module is 0 by default 
      * Disable all the outputs of child modules that matches the mux_module id
      */
-    for (const CircuitPortId& mux_sram_port : circuit_lib.model_ports_by_type(mux_model, CIRCUIT_MODEL_PORT_SRAM)) {
-      const std::string& mux_sram_port_name = circuit_lib.port_prefix(mux_sram_port);
+    for (const CircuitPortId& mux_sram_port : find_circuit_regular_sram_ports(circuit_lib, mux_model)) {
+      const std::string& mux_sram_port_name = circuit_lib.port_lib_name(mux_sram_port);
       VTR_ASSERT(true == module_manager.valid_module_port_id(mux_module, module_manager.find_module_port(mux_module, mux_sram_port_name)));
       if (CMD_EXEC_FATAL_ERROR == 
             rec_print_sdc_disable_timing_for_module_ports(fp,
@@ -141,7 +142,7 @@ int print_sdc_disable_routing_multiplexer_configure_ports(std::fstream& fp,
         return CMD_EXEC_FATAL_ERROR;
       }
 
-      const std::string& mux_sram_inv_port_name = circuit_lib.port_prefix(mux_sram_port) + "_inv";
+      const std::string& mux_sram_inv_port_name = circuit_lib.port_lib_name(mux_sram_port) + "_inv";
       VTR_ASSERT(true == module_manager.valid_module_port_id(mux_module, module_manager.find_module_port(mux_module, mux_sram_inv_port_name)));
       if (CMD_EXEC_FATAL_ERROR == 
             rec_print_sdc_disable_timing_for_module_ports(fp,
