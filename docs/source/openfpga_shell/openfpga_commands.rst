@@ -237,6 +237,13 @@ FPGA-SDC
   .. note::
      Only applicable when configuration chain is used as configuration protocol
 
+.. option:: write_sdc_disable_timing_configure_ports
+
+  Write the SDC file to disable timing for configure ports of programmable modules. The SDC aims to break the combinational loops across FPGAs and avoid false path timing to be visible to timing analyzers
+
+  - ``--file`` or ``-f`` Specify the output SDC file
+
+  - ``--flatten_names`` Use flatten names (no wildcards) in SDC files
 
 .. option:: write_analysis_sdc
 
