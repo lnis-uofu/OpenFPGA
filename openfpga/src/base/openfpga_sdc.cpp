@@ -16,6 +16,7 @@
 #include "pnr_sdc_writer.h"
 #include "analysis_sdc_writer.h"
 #include "configuration_chain_sdc_writer.h"
+#include "configure_port_sdc_writer.h"
 #include "openfpga_sdc.h"
 
 /* Include global variables of VPR */
@@ -134,6 +135,32 @@ int write_configuration_chain_sdc(const OpenfpgaContext& openfpga_ctx,
                                              std::stof(cmd_context.option_value(cmd, opt_max_delay)),
                                              std::stof(cmd_context.option_value(cmd, opt_min_delay)),
                                              openfpga_ctx.module_graph());
+
+  return CMD_EXEC_SUCCESS;
+}
+
+/********************************************************************
+ * A wrapper function to call the PnR SDC generator on routing multiplexers
+ * of FPGA-SDC
+ *******************************************************************/
+int write_sdc_disable_timing_configure_ports(const OpenfpgaContext& openfpga_ctx,
+                                             const Command& cmd, const CommandContext& cmd_context) {
+
+  /* Get command options */
+  CommandOptionId opt_output_dir = cmd.option("file");
+  CommandOptionId opt_flatten_names = cmd.option("flatten_names");
+
+  std::string sdc_dir_path = format_dir_path(cmd_context.option_value(cmd, opt_output_dir));
+
+  /* Write the SDC for configuration chain */
+  if (CMD_EXEC_FATAL_ERROR == 
+        print_sdc_disable_timing_configure_ports(cmd_context.option_value(cmd, opt_output_dir),
+                                                 cmd_context.option_enable(cmd, opt_flatten_names),
+                                                 openfpga_ctx.mux_lib(),
+                                                 openfpga_ctx.arch().circuit_lib,
+                                                 openfpga_ctx.module_graph())) {
+    return CMD_EXEC_FATAL_ERROR;
+  }
 
   return CMD_EXEC_SUCCESS;
 }

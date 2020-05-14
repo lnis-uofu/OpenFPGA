@@ -4,12 +4,16 @@
 #include <chrono>
 #include <ctime>
 #include <iomanip>
+#include <map>
 
 /* Headers from vtrutil library */
 #include "vtr_assert.h"
 
 /* Headers from openfpgautil library */
 #include "openfpga_digest.h"
+#include "openfpga_wildcard_string.h"
+
+#include "openfpga_naming.h"
 
 #include "sdc_writer_utils.h"
 
@@ -293,6 +297,113 @@ void print_sdc_set_port_output_delay(std::fstream& fp,
   fp << generate_sdc_port(port);
 
   fp << std::endl;
+}
+
+/********************************************************************
+ * Print SDC commands to disable a given port of modules
+ * in a given module id 
+ * This function will be executed in a recursive way, 
+ * using a Depth-First Search (DFS) strategy
+ * It will iterate over all the configurable children under each module
+ * and print a SDC command to disable its outputs
+ *
+ * Return code:
+ *   0: success
+ *   1: fatal error occurred
+ *
+ * Note:
+ *   - When flatten_names is true
+ *     this function will not apply any wildcard to names
+ *   - When flatten_names is false
+ *     It will straightforwardly output the instance name and port name
+ *     This function will try to apply wildcard to names
+ *     so that SDC file size can be minimal 
+ *******************************************************************/
+int rec_print_sdc_disable_timing_for_module_ports(std::fstream& fp, 
+                                                  const bool& flatten_names,
+                                                  const ModuleManager& module_manager, 
+                                                  const ModuleId& parent_module,
+                                                  const ModuleId& module_to_disable,
+                                                  const std::string& parent_module_path,
+                                                  const std::string& disable_port_name) {
+
+  if (false == valid_file_stream(fp)) {
+    return 1;
+  }
+
+  /* Build wildcard names for the instance names of multiple-instanced-blocks (MIB) 
+   * We will find all the instance names and see there are common prefix 
+   * If so, we can use wildcards
+   */
+  std::map<ModuleId, std::vector<std::string>> wildcard_names;
+
+  /* For each child, we will go one level down in priority */
+  for (const ModuleId& child_module : module_manager.child_modules(parent_module)) {
+
+    /* Iterate over the child instances*/
+    for (const size_t& child_instance : module_manager.child_module_instances(parent_module, child_module)) {
+      std::string child_module_path = parent_module_path;
+
+      std::string child_instance_name;
+      if (true == module_manager.instance_name(parent_module, child_module, child_instance).empty()) {
+        child_instance_name = generate_instance_name(module_manager.module_name(child_module), child_instance);
+      } else {
+        child_instance_name = module_manager.instance_name(parent_module, child_module, child_instance);
+      }
+
+      if (false == flatten_names) { 
+        /* Try to adapt to a wildcard name: replace all the numbers with a wildcard character '*' */
+        WildCardString wildcard_str(child_instance_name); 
+        /* If the wildcard name is already in the list, we can skip this
+         * Otherwise, we have to 
+         *   - output this instance 
+         *   - record the wildcard name in the map 
+         */
+        if ( (0 < wildcard_names.count(child_module)) 
+          && (wildcard_names.at(child_module).end() != std::find(wildcard_names.at(child_module).begin(),
+                                                                 wildcard_names.at(child_module).end(),
+                                                                 wildcard_str.data())) ) {
+          continue;
+        }
+
+        child_module_path += wildcard_str.data();
+ 
+        wildcard_names[child_module].push_back(wildcard_str.data());
+      } else {
+        child_module_path += child_instance_name;
+      }
+      
+      child_module_path = format_dir_path(child_module_path);
+
+      /* If this is NOT the MUX module we want, we go recursively */
+      if (module_to_disable != child_module) {
+        int status = rec_print_sdc_disable_timing_for_module_ports(fp, flatten_names,
+                                                                   module_manager, 
+                                                                   child_module, 
+                                                                   module_to_disable,
+                                                                   child_module_path,
+                                                                   disable_port_name);
+        if (1 == status) {
+          return 1; /* FATAL ERRORS */
+        }
+        continue;
+      }
+
+      /* Validate file stream */
+      valid_file_stream(fp);
+
+      /* Reach here, this is the MUX module we want, disable the outputs */
+      ModulePortId port_to_disable = module_manager.find_module_port(module_to_disable, disable_port_name);
+      if (ModulePortId::INVALID() == port_to_disable) {
+        return 1; /* FATAL ERRORS */
+      }
+      fp << "set_disable_timing ";
+      fp << child_module_path << module_manager.module_port(module_to_disable, port_to_disable).get_name();
+      fp << std::endl;
+    }
+  }
+
+  return 0; /* Success */
 }
 
 } /* end namespace openfpga */

@@ -120,6 +120,36 @@ ShellCommandId add_openfpga_write_configuration_chain_sdc_command(openfpga::Shel
 }
 
 /********************************************************************
+ * - Add a command to Shell environment: generate PnR SDC for configure ports
+ * - Add associated options 
+ * - Add command dependency
+ *******************************************************************/
+static 
+ShellCommandId add_openfpga_write_sdc_disable_timing_configure_ports_command(openfpga::Shell<OpenfpgaContext>& shell,
+                                                                             const ShellCommandClassId& cmd_class_id,
+                                                                             const std::vector<ShellCommandId>& dependent_cmds) {
+  Command shell_cmd("write_sdc_disable_timing_configure_ports");
+
+  /* Add an option '--file' in short '-f'*/
+  CommandOptionId output_opt = shell_cmd.add_option("file", true, "Specify the output directory");
+  shell_cmd.set_option_short_name(output_opt, "f");
+  shell_cmd.set_option_require_value(output_opt, openfpga::OPT_STRING);
+
+  /* Add an option '--flatten_name' */
+  shell_cmd.add_option("flatten_names", false, "Use flatten names (no wildcards) in SDC files");
+
+  /* Add command 'write_configuration_chain_sdc' to the Shell */
+  ShellCommandId shell_cmd_id = shell.add_command(shell_cmd, "generate SDC files to disable timing for configure ports across FPGA fabric");
+  shell.set_command_class(shell_cmd_id, cmd_class_id);
+  shell.set_command_const_execute_function(shell_cmd_id, write_sdc_disable_timing_configure_ports);
+
+  /* Add command dependency to the Shell */
+  shell.set_command_dependency(shell_cmd_id, dependent_cmds);
+
+  return shell_cmd_id;
+}
+
+/********************************************************************
  * - Add a command to Shell environment: generate PnR SDC 
  * - Add associated options 
  * - Add command dependency
@@ -182,6 +212,16 @@ void add_openfpga_sdc_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   add_openfpga_write_configuration_chain_sdc_command(shell,
                                                      openfpga_sdc_cmd_class,
                                                      cc_sdc_cmd_dependency);
+
+  /******************************** 
+   * Command 'write_sdc_disable_timing_configure_ports' 
+   */
+  /* The 'write_sdc_disable_timing_configure_ports' command should NOT be executed before 'build_fabric' */
+  std::vector<ShellCommandId> config_port_sdc_cmd_dependency;
+  config_port_sdc_cmd_dependency.push_back(build_fabric_id);
+  add_openfpga_write_sdc_disable_timing_configure_ports_command(shell,
+                                                                openfpga_sdc_cmd_class,
+                                                                config_port_sdc_cmd_dependency);
 
   /******************************** 
    * Command 'write_analysis_sdc' 

@@ -74,6 +74,14 @@ void print_sdc_set_port_output_delay(std::fstream& fp,
                                      const BasicPort& clock_port,
                                      const float& delay);
 
+int rec_print_sdc_disable_timing_for_module_ports(std::fstream& fp, 
+                                                  const bool& flatten_names,
+                                                  const ModuleManager& module_manager, 
+                                                  const ModuleId& parent_module,
+                                                  const ModuleId& module_to_disable,
+                                                  const std::string& parent_module_path,
+                                                  const std::string& disable_port_name);
+
 } /* end namespace openfpga */
 
 #endif

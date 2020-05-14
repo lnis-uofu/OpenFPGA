@@ -58,6 +58,9 @@ write_pnr_sdc --file ./SDC
 # Write SDC to constrain timing of configuration chain
 write_configuration_chain_sdc --file ./SDC/ccff_timing.sdc --time_unit ns --max_delay 5 --min_delay 2.5
 
+# Write SDC to disable timing for configure ports
+write_sdc_disable_timing_configure_ports --file ./SDC/disable_configure_ports.sdc
+
 # Write the SDC to run timing analysis for a mapped FPGA fabric
 write_analysis_sdc --file ./SDC_analysis
 

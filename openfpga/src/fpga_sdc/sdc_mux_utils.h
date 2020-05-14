@@ -6,6 +6,8 @@
  *******************************************************************/
 #include <fstream>
 #include <string>
+#include "mux_library.h"
+#include "circuit_library.h"
 #include "module_manager.h"
 
 /********************************************************************
@@ -15,12 +17,19 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void rec_print_pnr_sdc_disable_routing_multiplexer_outputs(std::fstream& fp, 
-                                                           const bool& flatten_names,
-                                                           const ModuleManager& module_manager, 
-                                                           const ModuleId& parent_module,
-                                                           const ModuleId& mux_module,
-                                                           const std::string& parent_module_path);
+void print_sdc_disable_routing_multiplexer_outputs(const std::string& sdc_dir,
+                                                   const bool& flatten_names,
+                                                   const MuxLibrary& mux_lib,
+                                                   const CircuitLibrary& circuit_lib,
+                                                   const ModuleManager& module_manager,
+                                                   const ModuleId& top_module);
+
+int print_sdc_disable_routing_multiplexer_configure_ports(std::fstream& fp,
+                                                          const bool& flatten_names,
+                                                          const MuxLibrary& mux_lib,
+                                                          const CircuitLibrary& circuit_lib,
+                                                          const ModuleManager& module_manager,
+                                                          const ModuleId& top_module);
 
 
 } /* end namespace openfpga */

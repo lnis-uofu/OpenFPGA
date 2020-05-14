@@ -78,69 +78,6 @@ void print_pnr_sdc_constrain_configurable_memory_outputs(const std::string& sdc_
 /********************************************************************
  * Break combinational loops in FPGA fabric, which mainly come from 
  * loops of multiplexers.
- * To handle this, we disable the timing at outputs of routing multiplexers
- *******************************************************************/
-static 
-void print_sdc_disable_routing_multiplexer_outputs(const std::string& sdc_dir,
-                                                   const bool& flatten_names,
-                                                   const MuxLibrary& mux_lib,
-                                                   const CircuitLibrary& circuit_lib,
-                                                   const ModuleManager& module_manager,
-                                                   const ModuleId& top_module) {
-  /* Create the file name for Verilog netlist */
-  std::string sdc_fname(sdc_dir + std::string(SDC_DISABLE_MUX_OUTPUTS_FILE_NAME));
-
-  /* Start time count */
-  std::string timer_message = std::string("Write SDC to disable routing multiplexer outputs for P&R flow '") + sdc_fname + std::string("'");
-  vtr::ScopedStartFinishTimer timer(timer_message);
-
-  /* Create the file stream */
-  std::fstream fp;
-  fp.open(sdc_fname, std::fstream::out | std::fstream::trunc);
-
-  check_file_stream(sdc_fname.c_str(), fp);
-
-  /* Generate the descriptions*/
-  print_sdc_file_header(fp, std::string("Disable routing multiplexer outputs for PnR"));
-
-  /* Iterate over the MUX modules */
-  for (const MuxId& mux_id : mux_lib.muxes()) {
-    const CircuitModelId& mux_model = mux_lib.mux_circuit_model(mux_id);
-    
-    /* Skip LUTs, we only care about multiplexers here */
-    if (CIRCUIT_MODEL_MUX != circuit_lib.model_type(mux_model)) {
-      continue;
-    }
-
-    const MuxGraph& mux_graph = mux_lib.mux_graph(mux_id);
-    std::string mux_module_name = generate_mux_subckt_name(circuit_lib, mux_model, 
-                                                           find_mux_num_datapath_inputs(circuit_lib, mux_model, mux_graph.num_inputs()), 
-                                                           std::string(""));
-
-    /* Find the module name in module manager */
-    ModuleId mux_module = module_manager.find_module(mux_module_name);
-    VTR_ASSERT(true == module_manager.valid_module_id(mux_module));
-
-    /* Go recursively in the module manager, 
-     * starting from the top-level module: instance id of the top-level module is 0 by default 
-     * Disable all the outputs of child modules that matches the mux_module id
-     */
-    rec_print_pnr_sdc_disable_routing_multiplexer_outputs(fp,
-                                                          flatten_names,
-                                                          module_manager,
-                                                          top_module,
-                                                          mux_module,
-                                                          format_dir_path(module_manager.module_name(top_module)));
-
-  }
-
-  /* Close file handler */
-  fp.close();
-}
-
-/********************************************************************
- * Break combinational loops in FPGA fabric, which mainly come from 
- * loops of multiplexers.
  * To handle this, we disable the timing at outputs of Switch blocks
  * This function is designed for flatten routing hierarchy
  *******************************************************************/
