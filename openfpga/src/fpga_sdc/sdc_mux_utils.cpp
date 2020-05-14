@@ -52,10 +52,10 @@ void rec_print_pnr_sdc_disable_routing_multiplexer_outputs(std::fstream& fp,
   /* For each child, we will go one level down in priority */
   for (const ModuleId& child_module : module_manager.child_modules(parent_module)) {
 
-    std::string child_module_path = parent_module_path;
-
     /* Iterate over the child instances*/
     for (const size_t& child_instance : module_manager.child_module_instances(parent_module, child_module)) {
+      std::string child_module_path = parent_module_path;
+
       std::string child_instance_name;
       if (true == module_manager.instance_name(parent_module, child_module, child_instance).empty()) {
         child_instance_name = generate_instance_name(module_manager.module_name(child_module), child_instance);
