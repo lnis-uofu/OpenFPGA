@@ -72,7 +72,7 @@ ShellCommandId add_openfpga_write_pnr_sdc_command(openfpga::Shell<OpenfpgaContex
   /* Add command 'write_fabric_verilog' to the Shell */
   ShellCommandId shell_cmd_id = shell.add_command(shell_cmd, "generate SDC files to constrain the backend flow for FPGA fabric");
   shell.set_command_class(shell_cmd_id, cmd_class_id);
-  shell.set_command_execute_function(shell_cmd_id, write_pnr_sdc);
+  shell.set_command_const_execute_function(shell_cmd_id, write_pnr_sdc);
 
   /* Add command dependency to the Shell */
   shell.set_command_dependency(shell_cmd_id, dependent_cmds);
@@ -178,7 +178,7 @@ ShellCommandId add_openfpga_write_analysis_sdc_command(openfpga::Shell<OpenfpgaC
   /* Add command 'write_fabric_verilog' to the Shell */
   ShellCommandId shell_cmd_id = shell.add_command(shell_cmd, "generate SDC files for timing analysis a PnRed FPGA fabric mapped by a benchmark");
   shell.set_command_class(shell_cmd_id, cmd_class_id);
-  shell.set_command_execute_function(shell_cmd_id, write_analysis_sdc);
+  shell.set_command_const_execute_function(shell_cmd_id, write_analysis_sdc);
 
   /* Add command dependency to the Shell */
   shell.set_command_dependency(shell_cmd_id, dependent_cmds);

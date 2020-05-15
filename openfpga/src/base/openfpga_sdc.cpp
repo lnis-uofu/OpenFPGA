@@ -28,7 +28,7 @@ namespace openfpga {
 /********************************************************************
  * A wrapper function to call the PnR SDC generator of FPGA-SDC
  *******************************************************************/
-int write_pnr_sdc(OpenfpgaContext& openfpga_ctx,
+int write_pnr_sdc(const OpenfpgaContext& openfpga_ctx,
                   const Command& cmd, const CommandContext& cmd_context) {
 
   CommandOptionId opt_output_dir = cmd.option("file");
@@ -168,7 +168,7 @@ int write_sdc_disable_timing_configure_ports(const OpenfpgaContext& openfpga_ctx
 /********************************************************************
  * A wrapper function to call the analysis SDC generator of FPGA-SDC
  *******************************************************************/
-int write_analysis_sdc(OpenfpgaContext& openfpga_ctx,
+int write_analysis_sdc(const OpenfpgaContext& openfpga_ctx,
                        const Command& cmd, const CommandContext& cmd_context) {
 
   CommandOptionId opt_output_dir = cmd.option("file");
