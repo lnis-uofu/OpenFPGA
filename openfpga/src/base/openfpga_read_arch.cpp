@@ -46,9 +46,10 @@ int read_arch(OpenfpgaContext& openfpga_context,
    * 2. Technology library (TODO)
    * 3. Simulation settings (TODO)
    */
-  check_circuit_library(openfpga_context.arch().circuit_lib);
+  if (false == check_circuit_library(openfpga_context.arch().circuit_lib)) {
+    return CMD_EXEC_FATAL_ERROR;
+  }
 
-  /* TODO: should identify the error code from internal function execution */
   return CMD_EXEC_SUCCESS;
 } 
 

@@ -43,6 +43,6 @@ size_t check_sram_circuit_model_ports(const CircuitLibrary& circuit_lib,
                                       const CircuitModelId& circuit_model,
                                       const bool& check_blwl);
 
-void check_circuit_library(const CircuitLibrary& circuit_lib);
+bool check_circuit_library(const CircuitLibrary& circuit_lib);
 
 #endif
