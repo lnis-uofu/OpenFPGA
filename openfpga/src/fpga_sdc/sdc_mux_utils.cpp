@@ -14,6 +14,7 @@
 /* Headers from openfpgautil library */
 #include "openfpga_digest.h"
 
+#include "openfpga_reserved_words.h"
 #include "openfpga_naming.h"
 
 #include "mux_utils.h"
@@ -147,7 +148,7 @@ int print_sdc_disable_routing_multiplexer_configure_ports(std::fstream& fp,
         return CMD_EXEC_FATAL_ERROR;
       }
 
-      const std::string& mux_sram_inv_port_name = circuit_lib.port_lib_name(mux_sram_port) + "_inv";
+      const std::string& mux_sram_inv_port_name = circuit_lib.port_lib_name(mux_sram_port) + INV_PORT_POSTFIX;
       VTR_ASSERT(true == module_manager.valid_module_port_id(mux_module, module_manager.find_module_port(mux_module, mux_sram_inv_port_name)));
       if (CMD_EXEC_FATAL_ERROR == 
             rec_print_sdc_disable_timing_for_module_ports(fp,

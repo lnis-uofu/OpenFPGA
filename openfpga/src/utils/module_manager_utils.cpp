@@ -13,6 +13,7 @@
 /* Headers from openfpgautil library */
 #include "openfpga_port.h"
 
+#include "openfpga_reserved_words.h"
 #include "openfpga_naming.h"
 #include "memory_utils.h"
 #include "pb_type_utils.h"
@@ -612,11 +613,11 @@ void add_module_nets_between_logic_and_memory_sram_bus(ModuleManager& module_man
   std::vector<std::string> logic_model_sramb_port_names;
   /* Regular sram port goes first */
   for (CircuitPortId regular_sram_port : find_circuit_regular_sram_ports(circuit_lib, logic_model)) {
-    logic_model_sramb_port_names.push_back(circuit_lib.port_prefix(regular_sram_port) + std::string("_inv"));
+    logic_model_sramb_port_names.push_back(circuit_lib.port_prefix(regular_sram_port) + std::string(INV_PORT_POSTFIX));
   }
   /* Mode-select sram port goes first */
   for (CircuitPortId mode_select_sram_port : find_circuit_mode_select_sram_ports(circuit_lib, logic_model)) {
-    logic_model_sramb_port_names.push_back(circuit_lib.port_prefix(mode_select_sram_port) + std::string("_inv"));
+    logic_model_sramb_port_names.push_back(circuit_lib.port_prefix(mode_select_sram_port) + std::string(INV_PORT_POSTFIX));
   }
   /* Find the port ids in the memory */
   std::vector<ModulePortId> logic_module_sramb_port_ids;

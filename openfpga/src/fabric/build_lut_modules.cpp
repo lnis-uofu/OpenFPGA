@@ -10,6 +10,7 @@
 #include "vtr_log.h"
 #include "vtr_time.h"
 
+#include "openfpga_reserved_words.h"
 #include "openfpga_naming.h"
 #include "circuit_library_utils.h"
 #include "module_manager.h"
@@ -106,7 +107,7 @@ void build_lut_module(ModuleManager& module_manager,
   for (const auto& port : lut_regular_sram_ports) {
     BasicPort mem_port(circuit_lib.port_prefix(port), circuit_lib.port_size(port));
     module_manager.add_port(lut_module, mem_port, ModuleManager::MODULE_INPUT_PORT);
-    BasicPort mem_inv_port(std::string(circuit_lib.port_prefix(port) + "_inv"), circuit_lib.port_size(port));
+    BasicPort mem_inv_port(std::string(circuit_lib.port_prefix(port) + INV_PORT_POSTFIX), circuit_lib.port_size(port));
     module_manager.add_port(lut_module, mem_inv_port, ModuleManager::MODULE_INPUT_PORT);
   }
 
@@ -114,7 +115,7 @@ void build_lut_module(ModuleManager& module_manager,
   for (const auto& port : lut_mode_select_sram_ports) {
     BasicPort mem_port(circuit_lib.port_prefix(port), circuit_lib.port_size(port));
     module_manager.add_port(lut_module, mem_port, ModuleManager::MODULE_INPUT_PORT);
-    BasicPort mem_inv_port(std::string(circuit_lib.port_prefix(port) + "_inv"), circuit_lib.port_size(port));
+    BasicPort mem_inv_port(std::string(circuit_lib.port_prefix(port) + INV_PORT_POSTFIX), circuit_lib.port_size(port));
     module_manager.add_port(lut_module, mem_inv_port, ModuleManager::MODULE_INPUT_PORT);
   }
 
@@ -336,7 +337,7 @@ void build_lut_module(ModuleManager& module_manager,
     module_manager.add_module_net_sink(lut_module, lut_mux_sram_nets[pin], lut_mux_module, lut_mux_instance, lut_mux_sram_port_id, pin);
   } 
 
-  ModulePortId lut_mux_sram_inv_port_id = module_manager.find_module_port(lut_mux_module, std::string(circuit_lib.port_prefix(lut_regular_sram_ports[0]) + "_inv"));
+  ModulePortId lut_mux_sram_inv_port_id = module_manager.find_module_port(lut_mux_module, std::string(circuit_lib.port_prefix(lut_regular_sram_ports[0]) + INV_PORT_POSTFIX));
   BasicPort lut_mux_sram_inv_port = module_manager.module_port(lut_mux_module, lut_mux_sram_inv_port_id);
   VTR_ASSERT(lut_mux_sram_inv_port.get_width() == lut_mux_sram_inv_nets.size());
   /* Wire the port to lut_mux_sram_net */

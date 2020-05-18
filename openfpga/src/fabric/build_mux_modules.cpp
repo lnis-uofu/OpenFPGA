@@ -977,7 +977,7 @@ void build_mux_module_local_encoders_and_memory_nets(ModuleManager& module_manag
     /* Add mem and mem_inv nets here */
     size_t mem_inv_net_cnt = 0;
     for (const auto& port : mux_sram_ports) {
-      ModulePortId mem_inv_port_id = module_manager.find_module_port(mux_module, std::string(circuit_lib.port_prefix(port) + "_inv"));
+      ModulePortId mem_inv_port_id = module_manager.find_module_port(mux_module, std::string(circuit_lib.port_prefix(port) + INV_PORT_POSTFIX));
       BasicPort mem_inv_port = module_manager.module_port(mux_module, mem_inv_port_id);
       for (const size_t& pin : mem_inv_port.pins()) {
         MuxMemId mem_id = MuxMemId(mem_inv_net_cnt);
@@ -998,7 +998,7 @@ void build_mux_module_local_encoders_and_memory_nets(ModuleManager& module_manag
 
   /* Local port to record the LSB and MSB of each level, here, we deposite (0, 0) */
   ModulePortId mux_module_sram_port_id = module_manager.find_module_port(mux_module, circuit_lib.port_prefix(mux_sram_ports[0]));
-  ModulePortId mux_module_sram_inv_port_id = module_manager.find_module_port(mux_module, circuit_lib.port_prefix(mux_sram_ports[0]) + "_inv");
+  ModulePortId mux_module_sram_inv_port_id = module_manager.find_module_port(mux_module, circuit_lib.port_prefix(mux_sram_ports[0]) + INV_PORT_POSTFIX);
   BasicPort lvl_addr_port(circuit_lib.port_prefix(mux_sram_ports[0]), 0);
   BasicPort lvl_data_port(decoder_data_port.get_name(), 0);
   BasicPort lvl_data_inv_port(decoder_data_inv_port.get_name(), 0);
@@ -1181,7 +1181,7 @@ void build_cmos_mux_module(ModuleManager& module_manager,
   for (const auto& port : mux_sram_ports) {
     BasicPort mem_port(circuit_lib.port_prefix(port), num_mems);
     module_manager.add_port(mux_module, mem_port, ModuleManager::MODULE_INPUT_PORT);
-    BasicPort mem_inv_port(std::string(circuit_lib.port_prefix(port) + "_inv"), num_mems);
+    BasicPort mem_inv_port(std::string(circuit_lib.port_prefix(port) + INV_PORT_POSTFIX), num_mems);
     module_manager.add_port(mux_module, mem_inv_port, ModuleManager::MODULE_INPUT_PORT);
     /* Update counter */
     sram_port_cnt++;

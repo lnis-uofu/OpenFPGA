@@ -23,6 +23,7 @@
 #include "openfpga_port.h"
 #include "openfpga_digest.h"
 
+#include "openfpga_reserved_words.h"
 #include "openfpga_naming.h"
 
 #include "circuit_library_utils.h"
@@ -87,7 +88,7 @@ int print_sdc_disable_lut_configure_ports(std::fstream& fp,
         return CMD_EXEC_FATAL_ERROR;
       }
 
-      const std::string& sram_inv_port_name = circuit_lib.port_lib_name(sram_port) + "_inv";
+      const std::string& sram_inv_port_name = circuit_lib.port_lib_name(sram_port) + INV_PORT_POSTFIX;
       VTR_ASSERT(true == module_manager.valid_module_port_id(programmable_module, module_manager.find_module_port(programmable_module, sram_inv_port_name)));
       if (CMD_EXEC_FATAL_ERROR == 
             rec_print_sdc_disable_timing_for_module_ports(fp,

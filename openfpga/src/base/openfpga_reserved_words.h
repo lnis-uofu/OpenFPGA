@@ -30,6 +30,9 @@ constexpr char* GRID_MUX_INSTANCE_PREFIX = "mux_";
 constexpr char* SWITCH_BLOCK_MUX_INSTANCE_PREFIX = "mux_"; 
 constexpr char* CONNECTION_BLOCK_MUX_INSTANCE_PREFIX = "mux_"; 
 
+/* Inverted port naming */
+constexpr char* INV_PORT_POSTFIX = "_inv";
+
 /* Bitstream file strings */
 constexpr char* BITSTREAM_XML_FILE_NAME_POSTFIX = "_bitstream.xml";
 
