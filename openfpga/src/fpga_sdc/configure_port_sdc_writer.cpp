@@ -37,6 +37,76 @@ namespace openfpga {
 
 /********************************************************************
  * Break combinational loops in FPGA fabric, which mainly come from 
+ * Look-Up Table programmable modules
+ * To handle this, we disable the timing at configuration ports
+ *
+ * Return code:
+ *   0: success
+ *   1: fatal error occurred
+ *******************************************************************/
+static 
+int print_sdc_disable_lut_configure_ports(std::fstream& fp,
+                                          const bool& flatten_names,
+                                          const CircuitLibrary& circuit_lib,
+                                          const ModuleManager& module_manager,
+                                          const ModuleId& top_module) {
+
+  if (false == valid_file_stream(fp)) {
+    return CMD_EXEC_FATAL_ERROR;
+  }
+
+  /* Iterate over the MUX modules */
+  for (const CircuitModelId& model : circuit_lib.models()) {
+    
+    /* Only care LUTs */
+    if (CIRCUIT_MODEL_LUT != circuit_lib.model_type(model)) {
+      continue;
+    }
+
+    std::string programmable_module_name = circuit_lib.model_name(model);
+
+    /* Find the module name in module manager */
+    ModuleId programmable_module = module_manager.find_module(programmable_module_name);
+    VTR_ASSERT(true == module_manager.valid_module_id(programmable_module));
+
+    /* Go recursively in the module manager, 
+     * starting from the top-level module: instance id of the top-level module is 0 by default 
+     * Disable all the outputs of child modules that matches the mux_module id
+     */
+    for (const CircuitPortId& sram_port : circuit_lib.model_ports_by_type(model, CIRCUIT_MODEL_PORT_SRAM)) {
+      const std::string& sram_port_name = circuit_lib.port_lib_name(sram_port);
+      VTR_ASSERT(true == module_manager.valid_module_port_id(programmable_module, module_manager.find_module_port(programmable_module, sram_port_name)));
+      if (CMD_EXEC_FATAL_ERROR == 
+            rec_print_sdc_disable_timing_for_module_ports(fp,
+                                                          flatten_names,
+                                                          module_manager,
+                                                          top_module,
+                                                          programmable_module,
+                                                          format_dir_path(module_manager.module_name(top_module)),
+                                                          sram_port_name)) {
+        return CMD_EXEC_FATAL_ERROR;
+      }
+
+      const std::string& sram_inv_port_name = circuit_lib.port_lib_name(sram_port) + "_inv";
+      VTR_ASSERT(true == module_manager.valid_module_port_id(programmable_module, module_manager.find_module_port(programmable_module, sram_inv_port_name)));
+      if (CMD_EXEC_FATAL_ERROR == 
+            rec_print_sdc_disable_timing_for_module_ports(fp,
+                                                          flatten_names,
+                                                          module_manager,
+                                                          top_module,
+                                                          programmable_module,
+                                                          format_dir_path(module_manager.module_name(top_module)),
+                                                          sram_inv_port_name)) {
+        return CMD_EXEC_FATAL_ERROR;
+      }
+    }
+  }
+
+  return CMD_EXEC_SUCCESS;
+}
+
+/********************************************************************
+ * Break combinational loops in FPGA fabric, which mainly come from 
  * non-MUX programmable modules
  * To handle this, we disable the timing at configuration ports
  *
@@ -60,6 +130,11 @@ int print_sdc_disable_non_mux_circuit_configure_ports(std::fstream& fp,
     
     /* Skip MUXes, they are handled in another function */
     if (CIRCUIT_MODEL_MUX == circuit_lib.model_type(model)) {
+      continue;
+    }
+
+    /* Skip LUTs, they are handled in another function */
+    if (CIRCUIT_MODEL_LUT == circuit_lib.model_type(model)) {
       continue;
     }
 
@@ -128,6 +203,18 @@ int print_sdc_disable_timing_configure_ports(const std::string& sdc_fname,
   std::string top_module_name = generate_fpga_top_module_name();
   ModuleId top_module = module_manager.find_module(top_module_name);
   VTR_ASSERT(true == module_manager.valid_module_id(top_module));
+
+  /* Disable timing for the configure ports of all the Look-Up Tables */
+  VTR_LOG("Write disable timing for Look-Up Tables...");
+  if (CMD_EXEC_FATAL_ERROR == print_sdc_disable_lut_configure_ports(fp,
+                                                                    flatten_names,
+                                                                    circuit_lib,
+                                                                    module_manager,
+                                                                    top_module)) {
+    VTR_LOG("Fatal errors occurred\n");
+    return CMD_EXEC_FATAL_ERROR;
+  }
+  VTR_LOG("Done\n");
  
   /* Disable timing for the configure ports of all the routing multiplexer */
   VTR_LOG("Write disable timing for routing multiplexers...");

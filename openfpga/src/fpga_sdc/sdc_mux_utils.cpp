@@ -114,6 +114,11 @@ int print_sdc_disable_routing_multiplexer_configure_ports(std::fstream& fp,
   /* Iterate over the MUX modules */
   for (const MuxId& mux_id : mux_lib.muxes()) {
     const CircuitModelId& mux_model = mux_lib.mux_circuit_model(mux_id);
+
+    /* Skip LUTs, we only care about multiplexers here */
+    if (CIRCUIT_MODEL_MUX != circuit_lib.model_type(mux_model)) {
+      continue;
+    }
     
     const MuxGraph& mux_graph = mux_lib.mux_graph(mux_id);
     std::string mux_module_name = generate_mux_subckt_name(circuit_lib, mux_model, 
