@@ -183,7 +183,8 @@ int print_sdc_disable_timing_configure_ports(const std::string& sdc_fname,
                                              const bool& flatten_names,
                                              const MuxLibrary& mux_lib,
                                              const CircuitLibrary& circuit_lib,
-                                             const ModuleManager& module_manager) {
+                                             const ModuleManager& module_manager,
+                                             const bool& verbose) {
   /* Create the directory */
   create_directory(find_path_dir_name(sdc_fname));
 
@@ -205,41 +206,44 @@ int print_sdc_disable_timing_configure_ports(const std::string& sdc_fname,
   VTR_ASSERT(true == module_manager.valid_module_id(top_module));
 
   /* Disable timing for the configure ports of all the Look-Up Tables */
-  VTR_LOG("Write disable timing for Look-Up Tables...");
+  VTR_LOGV(verbose, "Write disable timing for Look-Up Tables...");
   if (CMD_EXEC_FATAL_ERROR == print_sdc_disable_lut_configure_ports(fp,
                                                                     flatten_names,
                                                                     circuit_lib,
                                                                     module_manager,
                                                                     top_module)) {
-    VTR_LOG("Fatal errors occurred\n");
+    VTR_LOGF_ERROR(__FILE__, __LINE__, 
+                   "Fatal errors occurred\n");
     return CMD_EXEC_FATAL_ERROR;
   }
-  VTR_LOG("Done\n");
+  VTR_LOGV(verbose, "Done\n");
  
   /* Disable timing for the configure ports of all the routing multiplexer */
-  VTR_LOG("Write disable timing for routing multiplexers...");
+  VTR_LOGV(verbose, "Write disable timing for routing multiplexers...");
   if (CMD_EXEC_FATAL_ERROR == print_sdc_disable_routing_multiplexer_configure_ports(fp,
                                                                                     flatten_names,
                                                                                     mux_lib,
                                                                                     circuit_lib,
                                                                                     module_manager,
                                                                                     top_module)) {
-    VTR_LOG("Fatal errors occurred\n");
+    VTR_LOGF_ERROR(__FILE__, __LINE__, 
+                   "Fatal errors occurred\n");
     return CMD_EXEC_FATAL_ERROR;
   }
-  VTR_LOG("Done\n");
+  VTR_LOGV(verbose, "Done\n");
 
   /* Disable timing for the other programmable circuit models */
-  VTR_LOG("Write disable timing for other programmable modules...");
+  VTR_LOGV(verbose, "Write disable timing for other programmable modules...");
   if (CMD_EXEC_FATAL_ERROR == print_sdc_disable_non_mux_circuit_configure_ports(fp,
                                                                                 flatten_names,
                                                                                 circuit_lib,
                                                                                 module_manager,
                                                                                 top_module)) {
-    VTR_LOG("Fatal errors occurred\n");
+    VTR_LOGF_ERROR(__FILE__, __LINE__, 
+                   "Fatal errors occurred\n");
     return CMD_EXEC_FATAL_ERROR;
   }
-  VTR_LOG("Done\n");
+  VTR_LOGV(verbose, "Done\n");
 
   /* Close file handler */
   fp.close();

@@ -138,6 +138,9 @@ ShellCommandId add_openfpga_write_sdc_disable_timing_configure_ports_command(ope
   /* Add an option '--flatten_name' */
   shell_cmd.add_option("flatten_names", false, "Use flatten names (no wildcards) in SDC files");
 
+  /* Add an option '--verbose' */
+  shell_cmd.add_option("verbose", false, "Enable verbose outputs");
+
   /* Add command 'write_configuration_chain_sdc' to the Shell */
   ShellCommandId shell_cmd_id = shell.add_command(shell_cmd, "generate SDC files to disable timing for configure ports across FPGA fabric");
   shell.set_command_class(shell_cmd_id, cmd_class_id);

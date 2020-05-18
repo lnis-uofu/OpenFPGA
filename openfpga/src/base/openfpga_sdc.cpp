@@ -149,6 +149,7 @@ int write_sdc_disable_timing_configure_ports(const OpenfpgaContext& openfpga_ctx
   /* Get command options */
   CommandOptionId opt_output_dir = cmd.option("file");
   CommandOptionId opt_flatten_names = cmd.option("flatten_names");
+  CommandOptionId opt_verbose = cmd.option("verbose");
 
   std::string sdc_dir_path = format_dir_path(cmd_context.option_value(cmd, opt_output_dir));
 
@@ -158,7 +159,8 @@ int write_sdc_disable_timing_configure_ports(const OpenfpgaContext& openfpga_ctx
                                                  cmd_context.option_enable(cmd, opt_flatten_names),
                                                  openfpga_ctx.mux_lib(),
                                                  openfpga_ctx.arch().circuit_lib,
-                                                 openfpga_ctx.module_graph())) {
+                                                 openfpga_ctx.module_graph(),
+                                                 cmd_context.option_enable(cmd, opt_verbose))) {
     return CMD_EXEC_FATAL_ERROR;
   }
 
