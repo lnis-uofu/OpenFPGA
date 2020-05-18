@@ -245,6 +245,8 @@ FPGA-SDC
 
   - ``--flatten_names`` Use flatten names (no wildcards) in SDC files
 
+  - ``--verbose`` Show verbose log
+
 .. option:: write_analysis_sdc
 
   Write the SDC to run timing analysis for a mapped FPGA fabric
