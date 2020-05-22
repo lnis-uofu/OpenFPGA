@@ -29,7 +29,8 @@ void print_verilog_preconfig_top_module(const ModuleManager& module_manager,
                                         const IoLocationMap& io_location_map,
                                         const VprNetlistAnnotation& netlist_annotation, 
                                         const std::string& circuit_name,
-                                        const std::string& verilog_fname);
+                                        const std::string& verilog_fname,
+                                        const bool& explicit_port_mapping);
 
 } /* end namespace openfpga */
 

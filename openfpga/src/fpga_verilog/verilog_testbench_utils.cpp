@@ -30,7 +30,8 @@ namespace openfpga {
 void print_verilog_testbench_fpga_instance(std::fstream& fp,
                                            const ModuleManager& module_manager,
                                            const ModuleId& top_module,
-                                           const std::string& top_instance_name) {
+                                           const std::string& top_instance_name,
+                                           const bool& explicit_port_mapping) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -43,7 +44,8 @@ void print_verilog_testbench_fpga_instance(std::fstream& fp,
   /* Use explicit port mapping for a clean instanciation */
   print_verilog_module_instance(fp, module_manager, top_module, 
                                 top_instance_name, 
-                                port2port_name_map, true); 
+                                port2port_name_map,
+                                explicit_port_mapping); 
 
   /* Add an empty line as a splitter */
   fp << std::endl;

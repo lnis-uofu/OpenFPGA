@@ -19,6 +19,7 @@ VerilogTestbenchOption::VerilogTestbenchOption() {
   print_formal_verification_top_netlist_ = false;
   print_top_testbench_ = false;
   simulation_ini_path_.clear();
+  explicit_port_mapping_ = false;
   verbose_output_ = false;
 }
 
@@ -51,6 +52,10 @@ bool VerilogTestbenchOption::print_simulation_ini() const {
 
 std::string VerilogTestbenchOption::simulation_ini_path() const {
   return simulation_ini_path_;
+}
+
+bool VerilogTestbenchOption::explicit_port_mapping() const {
+  return explicit_port_mapping_;
 }
 
 bool VerilogTestbenchOption::verbose_output() const {
@@ -95,6 +100,10 @@ void VerilogTestbenchOption::set_print_top_testbench(const bool& enabled) {
 
 void VerilogTestbenchOption::set_print_simulation_ini(const std::string& simulation_ini_path) {
   simulation_ini_path_ = simulation_ini_path;
+}
+
+void VerilogTestbenchOption::set_explicit_port_mapping(const bool& enabled) {
+  explicit_port_mapping_ = enabled;
 }
 
 void VerilogTestbenchOption::set_verbose_output(const bool& enabled) {

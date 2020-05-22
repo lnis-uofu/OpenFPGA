@@ -183,7 +183,8 @@ void fpga_verilog_testbench(const ModuleManager& module_manager,
                                        atom_ctx, place_ctx, io_location_map,
                                        netlist_annotation,
                                        netlist_name,
-                                       formal_verification_top_netlist_file_path);
+                                       formal_verification_top_netlist_file_path,
+                                       options.explicit_port_mapping());
   }
 
   if (true == options.print_preconfig_top_testbench()) {
@@ -194,7 +195,8 @@ void fpga_verilog_testbench(const ModuleManager& module_manager,
                                        random_top_testbench_file_path, 
                                        atom_ctx,  
                                        netlist_annotation,
-                                       simulation_setting);
+                                       simulation_setting,
+                                       options.explicit_port_mapping());
   }
 
   /* Generate full testbench for verification, including configuration phase and operating phase */
@@ -209,7 +211,8 @@ void fpga_verilog_testbench(const ModuleManager& module_manager,
                                 netlist_annotation,
                                 netlist_name,
                                 top_testbench_file_path,
-                                simulation_setting);
+                                simulation_setting,
+                                options.explicit_port_mapping());
   }
  
   /* Generate exchangeable files which contains simulation settings */

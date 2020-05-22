@@ -89,6 +89,9 @@ ShellCommandId add_openfpga_write_verilog_testbench_command(openfpga::Shell<Open
   CommandOptionId sim_ini_opt = shell_cmd.add_option("print_simulation_ini", false, "Generate a .ini file as an exchangeable file to enable HDL simulations");
   shell_cmd.set_option_require_value(sim_ini_opt, openfpga::OPT_STRING);
 
+  /* Add an option '--explicit_port_mapping' */
+  shell_cmd.add_option("explicit_port_mapping", false, "Use explicit port mapping in Verilog netlists");
+
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Enable verbose output");
   

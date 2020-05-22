@@ -446,7 +446,8 @@ static
 void print_verilog_top_testbench_benchmark_instance(std::fstream& fp, 
                                                     const std::string& reference_verilog_top_name,
                                                     const AtomContext& atom_ctx,
-                                                    const VprNetlistAnnotation& netlist_annotation) {
+                                                    const VprNetlistAnnotation& netlist_annotation,
+                                                    const bool& explicit_port_mapping) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -468,7 +469,7 @@ void print_verilog_top_testbench_benchmark_instance(std::fstream& fp,
                                              prefix_to_remove,
                                              std::string(TOP_TESTBENCH_REFERENCE_OUTPUT_POSTFIX),
                                              atom_ctx, netlist_annotation,
-                                             true);
+                                             explicit_port_mapping);
 
   print_verilog_comment(fp, std::string("----- End reference Benchmark Instanication -------"));
 
@@ -803,7 +804,8 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
                                  const VprNetlistAnnotation& netlist_annotation,
                                  const std::string& circuit_name,
                                  const std::string& verilog_fname,
-                                 const SimulationSetting& simulation_parameters) {
+                                 const SimulationSetting& simulation_parameters,
+                                 const bool& explicit_port_mapping) {
 
   std::string timer_message = std::string("Write autocheck testbench for FPGA top-level Verilog netlist for '") + circuit_name + std::string("'");
 
@@ -856,7 +858,8 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
 
   /* Instanciate FPGA top-level module */
   print_verilog_testbench_fpga_instance(fp, module_manager, top_module, 
-                                        std::string(TOP_TESTBENCH_FPGA_INSTANCE_NAME)); 
+                                        std::string(TOP_TESTBENCH_FPGA_INSTANCE_NAME),
+                                        explicit_port_mapping); 
   
   /* Connect I/Os to benchmark I/Os or constant driver */
   print_verilog_testbench_connect_fpga_ios(fp, module_manager, top_module,
@@ -870,7 +873,8 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
   print_verilog_top_testbench_benchmark_instance(fp, 
                                                  circuit_name,
                                                  atom_ctx,
-                                                 netlist_annotation);
+                                                 netlist_annotation,
+                                                 explicit_port_mapping); 
 
   /* Print tasks used for loading bitstreams */
   print_verilog_top_testbench_load_bitstream_task(fp, sram_orgz_type);
