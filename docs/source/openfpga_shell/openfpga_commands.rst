@@ -150,7 +150,7 @@ FPGA-Verilog
 
   - ``--file`` or ``-f`` Specify the output directory for the Verilog netlists
 
-  - ``--explict_port_mapping`` Use explict port mapping when writing the Verilog netlists
+  - ``--explicit_port_mapping`` Use explicit port mapping when writing the Verilog netlists
 
   - ``--include_timing`` Output timing information to Verilog netlists for primitive modules
  
@@ -177,6 +177,8 @@ FPGA-Verilog
   - ``--print_preconfig_top_testbench`` Enable pre-configured top-level testbench which is a fast verification skipping programming phase
 
   - ``--print_simulation_ini`` Output an exchangeable simulation ini file, which is needed only when you need to interface different HDL simulators using openfpga flow-run scripts
+
+  - ``--explicit_port_mapping`` Use explicit port mapping when writing the Verilog netlists
 
 FPGA-SDC
 ~~~~~~~~
