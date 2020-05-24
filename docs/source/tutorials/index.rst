@@ -1,5 +1,5 @@
 .. _tutorials:
-   Getting Started
+   Tutorials
  
 .. toctree::
    :maxdepth: 2
@@ -7,12 +7,3 @@
    compile
 
    eda_flow
-
-   run_fpga_flow
-
-   run_fpga_task
-
-   
-  
-
-   

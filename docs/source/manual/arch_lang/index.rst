@@ -1,5 +1,8 @@
+OpenFPGA Architecture Description
+---------------------------------
+
 .. _arch_lang:
-   Extended FPGA Architecture Description Language
+   OpenFPGA Architecture Description
  
 .. toctree::
    :maxdepth: 2

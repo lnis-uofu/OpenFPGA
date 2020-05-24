@@ -13,27 +13,15 @@ Welcome to OpenFPGA's documentation!
 
 .. toctree::
    :maxdepth: 2
-   :caption: Getting Started
+   :caption: Tutorials
 
    tutorials/index
 
 .. toctree::
    :maxdepth: 2
-   :caption: Architecture Description Language
+   :caption: User Manual
 
-   arch_lang/index
-
-.. toctree::
-   :maxdepth: 2
-   :caption: OpenFPGA Tools
-
-   openfpga_shell/index
-
-   fpga_spice/index
-
-   fpga_verilog/index
-
-   fpga_bitstream/index
+   manual/index
 
 .. toctree::
    :maxdepth: 2
