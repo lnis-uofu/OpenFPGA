@@ -1,5 +1,5 @@
-OpenFPGA Interface
-------------------
+OpenFPGA Shell
+--------------
 
 .. _openfpga_shell:
    OpenFPGA Shell
