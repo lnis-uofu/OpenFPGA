@@ -140,6 +140,8 @@ FPGA-Bitstream
   - ``--file`` or ``-f`` Output the fabric bitstream to an plain text file (only 0 or 1)
 
   - ``--verbose`` Show verbose log
+
+.. _openfpga_verilog_commands:
   
 FPGA-Verilog
 ~~~~~~~~~~~~

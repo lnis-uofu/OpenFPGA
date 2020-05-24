@@ -7,7 +7,7 @@ FPGA-Verilog
 .. toctree::
    :maxdepth: 2
   
-   file_organization
+   fabric_netlist
  
    func_verify
 
