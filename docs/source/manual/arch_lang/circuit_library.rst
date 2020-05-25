@@ -339,7 +339,7 @@ These inputs are widely seen in FPGAs, such as clock ports, which are shared bet
 
 The global inouts are short wired across different instances. 
 
-:numref:`fig_global_ioput_ports` shows an example on how the global inouts are wired inside FPGA fabric.
+:numref:`fig_global_inout_ports` shows an example on how the global inouts are wired inside FPGA fabric.
 
 .. _fig_global_inout_ports:
 

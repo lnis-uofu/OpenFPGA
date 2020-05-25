@@ -7,3 +7,5 @@
    compile
 
    eda_flow
+
+   design_flow/index

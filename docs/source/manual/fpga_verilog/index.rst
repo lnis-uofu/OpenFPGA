@@ -10,7 +10,3 @@ FPGA-Verilog
    fabric_netlist
  
    testbench
-
-   sc_flow
-   
-   
