@@ -9,7 +9,7 @@ FPGA-Verilog
   
    fabric_netlist
  
-   func_verify
+   testbench
 
    sc_flow
    
