@@ -1,3 +1,5 @@
+.. _fpga_verilog_testbench:
+
 Testbench
 ---------
 
