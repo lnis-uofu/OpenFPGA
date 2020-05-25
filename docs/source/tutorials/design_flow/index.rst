@@ -7,4 +7,4 @@ Design Flows
 .. toctree::
    :maxdepth: 2
 
-   sc_flow
+   verilog_to_gds2

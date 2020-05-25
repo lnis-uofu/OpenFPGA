@@ -1,4 +1,4 @@
-From Verilog to Layout
+From Verilog to GDSII
 ~~~~~~~~~~~~~~~~~~~~~~
 
 The generated Verilog code can be used through a semi-custom design flow to generate the layout.
