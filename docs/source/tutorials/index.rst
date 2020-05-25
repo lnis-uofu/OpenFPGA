@@ -9,3 +9,5 @@
    eda_flow
 
    design_flow/index
+
+   arch_modeling/index
