@@ -76,8 +76,9 @@ int build_fabric(OpenfpgaContext& openfpga_ctx,
   VTR_LOG("\n");
 
   openfpga_ctx.mutable_module_graph() = build_device_module_graph(openfpga_ctx.mutable_io_location_map(),
-                                                                  g_vpr_ctx.device(),
+                                                                  openfpga_ctx.mutable_decoder_lib(),
                                                                   const_cast<const OpenfpgaContext&>(openfpga_ctx),
+                                                                  g_vpr_ctx.device(),
                                                                   cmd_context.option_enable(cmd, opt_compress_routing),
                                                                   cmd_context.option_enable(cmd, opt_duplicate_grid_pin),
                                                                   cmd_context.option_enable(cmd, opt_verbose));

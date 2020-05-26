@@ -15,8 +15,9 @@
 namespace openfpga {
 
 ModuleManager build_device_module_graph(IoLocationMap& io_location_map,
-                                        const DeviceContext& vpr_device_ctx,
+                                        DecoderLibrary& decoder_lib,
                                         const OpenfpgaContext& openfpga_ctx,
+                                        const DeviceContext& vpr_device_ctx,
                                         const bool& compress_routing,
                                         const bool& duplicate_grid_pin,
                                         const bool& verbose);

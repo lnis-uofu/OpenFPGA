@@ -10,6 +10,7 @@
 #include "vpr_placement_annotation.h"
 #include "vpr_routing_annotation.h"
 #include "mux_library.h"
+#include "decoder_library.h"
 #include "tile_direct.h"
 #include "module_manager.h"
 #include "netlist_manager.h"
@@ -55,6 +56,7 @@ class OpenfpgaContext : public Context  {
     const openfpga::VprRoutingAnnotation& vpr_routing_annotation() const { return vpr_routing_annotation_; }
     const openfpga::DeviceRRGSB& device_rr_gsb() const { return device_rr_gsb_; }
     const openfpga::MuxLibrary& mux_lib() const { return mux_lib_; }
+    const openfpga::DecoderLibrary& decoder_lib() const { return decoder_lib_; }
     const openfpga::TileDirect& tile_direct() const { return tile_direct_; }
     const openfpga::ModuleManager& module_graph() const { return module_graph_; }
     const openfpga::FlowManager& flow_manager() const { return flow_manager_; }
@@ -72,6 +74,7 @@ class OpenfpgaContext : public Context  {
     openfpga::VprRoutingAnnotation& mutable_vpr_routing_annotation() { return vpr_routing_annotation_; }
     openfpga::DeviceRRGSB& mutable_device_rr_gsb() { return device_rr_gsb_; }
     openfpga::MuxLibrary& mutable_mux_lib() { return mux_lib_; }
+    openfpga::DecoderLibrary& mutable_decoder_lib() { return decoder_lib_; }
     openfpga::TileDirect& mutable_tile_direct() { return tile_direct_; }
     openfpga::ModuleManager& mutable_module_graph() { return module_graph_; }
     openfpga::FlowManager& mutable_flow_manager() { return flow_manager_; }
@@ -104,6 +107,9 @@ class OpenfpgaContext : public Context  {
     
     /* Library of physical implmentation of routing multiplexers */
     openfpga::MuxLibrary mux_lib_;
+
+    /* Library of physical implmentation of decoders */
+    openfpga::DecoderLibrary decoder_lib_;
 
     /* Inner/inter-column/row tile direct connections */
     openfpga::TileDirect tile_direct_;

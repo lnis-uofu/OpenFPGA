@@ -15,12 +15,14 @@
 #include "mux_graph.h"
 #include "module_manager.h"
 #include "circuit_library_utils.h"
+#include "decoder_library_utils.h"
 #include "module_manager_utils.h"
 #include "mux_utils.h"
 
 #include "openfpga_reserved_words.h"
 #include "openfpga_naming.h"
 
+#include "build_decoder_modules.h"
 #include "build_memory_modules.h"
 
 /* begin namespace openfpga */
@@ -553,6 +555,178 @@ void build_memory_bank_module(ModuleManager& module_manager,
   add_module_global_ports_from_child_modules(module_manager, mem_module);
 }
 
+/*********************************************************************
+ * Frame-based Memory organization
+ *
+ *              EN      Address    Data
+ *               |         |         |
+ *               v         v         v
+ *      +------------------------------------+
+ *      |           Address Decoder          |
+ *      +------------------------------------+
+ *          |            |               |
+ *          v            v               v
+ *      +-------+    +-------+       +-------+
+ *      | SRAM  |    | SRAM  |  ...  | SRAM  |
+ *      |  [0]  |    |  [1]  |       | [N-1] |
+ *      +-------+    +-------+       +-------+
+ *          |            |      ...      |
+ *          v            v               v
+ *      +------------------------------------+
+ *      |   Multiplexer Configuration port   |
+ *
+ ********************************************************************/
+static 
+void build_frame_memory_module(ModuleManager& module_manager,
+                               DecoderLibrary& frame_decoder_lib,
+                               const CircuitLibrary& circuit_lib,
+                               const std::string& module_name,
+                               const CircuitModelId& sram_model,
+                               const size_t& num_mems) {
+
+  /* Get the global ports required by the SRAM */
+  std::vector<enum e_circuit_model_port_type> global_port_types;
+  global_port_types.push_back(CIRCUIT_MODEL_PORT_CLOCK);
+  global_port_types.push_back(CIRCUIT_MODEL_PORT_INPUT);
+  std::vector<CircuitPortId> sram_global_ports = circuit_lib.model_global_ports_by_type(sram_model, global_port_types, true, false);
+  /* Get the input ports from the SRAM */
+  std::vector<CircuitPortId> sram_input_ports = circuit_lib.model_ports_by_type(sram_model, CIRCUIT_MODEL_PORT_INPUT, true);
+  /* A SRAM cell with BL/WL should not have any input */
+  VTR_ASSERT( 0 == sram_input_ports.size() );
+
+  /* Get the output ports from the SRAM */
+  std::vector<CircuitPortId> sram_output_ports = circuit_lib.model_ports_by_type(sram_model, CIRCUIT_MODEL_PORT_OUTPUT, true);
+
+  /* Get the BL/WL ports from the SRAM 
+   * Here, we consider that the WL port will be EN signal of a SRAM
+   * and the BL port will be the data_in signal of a SRAM  
+   */
+  std::vector<CircuitPortId> sram_bl_ports  = circuit_lib.model_ports_by_type(sram_model, CIRCUIT_MODEL_PORT_BL, true);
+  std::vector<CircuitPortId> sram_blb_ports = circuit_lib.model_ports_by_type(sram_model, CIRCUIT_MODEL_PORT_BLB, true);
+  std::vector<CircuitPortId> sram_wl_ports  = circuit_lib.model_ports_by_type(sram_model, CIRCUIT_MODEL_PORT_WL, true);
+  std::vector<CircuitPortId> sram_wlb_ports = circuit_lib.model_ports_by_type(sram_model, CIRCUIT_MODEL_PORT_WLB, true);
+
+  /* We do NOT expect any BLB port here!!!
+   * TODO: to suppor this, we need an inverter circuit model to be specified by users !!!  
+   */
+  VTR_ASSERT(1 == sram_bl_ports.size());
+  VTR_ASSERT(1 == circuit_lib.port_size(sram_bl_ports[0]));
+  VTR_ASSERT(1 == sram_wl_ports.size());
+  VTR_ASSERT(1 == circuit_lib.port_size(sram_wl_ports[0]));
+  VTR_ASSERT(0 == sram_blb_ports.size());
+
+  /* Create a module and add to the module manager */
+  ModuleId mem_module = module_manager.add_module(module_name); 
+  VTR_ASSERT(true == module_manager.valid_module_id(mem_module));
+
+  /* Find the specification of the decoder:
+   * Size of address port and data input 
+   */
+  size_t addr_size = find_mux_local_decoder_addr_size(num_mems);
+  /* Data input should match the WL (data_in) of a SRAM */
+  size_t data_size = num_mems * circuit_lib.port_size(sram_bl_ports[0]); 
+  bool use_data_inv = (0 < sram_blb_ports.size()); 
+ 
+  /* Search the decoder library
+   * If we find one, we use the module.
+   * Otherwise, we create one and add it to the decoder library
+   */
+  DecoderId decoder_id = frame_decoder_lib.find_decoder(addr_size, data_size, true, true, use_data_inv);
+  if (DecoderId::INVALID() == decoder_id) {
+    decoder_id = frame_decoder_lib.add_decoder(addr_size, data_size, true, true, use_data_inv);
+  }
+  VTR_ASSERT(DecoderId::INVALID() != decoder_id);
+
+  /* Create a module if not existed yet */
+  std::string decoder_module_name = generate_frame_memory_decoder_subckt_name(addr_size, data_size);
+  ModuleId decoder_module = module_manager.find_module(decoder_module_name);
+  if (ModuleId::INVALID() == decoder_module) {
+    decoder_module = build_frame_memory_decoder_module(module_manager,
+                                                       frame_decoder_lib,
+                                                       decoder_id);
+  }
+  VTR_ASSERT(ModuleId::INVALID() != decoder_module);
+  
+  /* Add module ports */
+  /* Input: Enable port */
+  BasicPort en_port(std::string(DECODER_ENABLE_PORT_NAME), 1);
+  ModulePortId mem_en_port = module_manager.add_port(mem_module, en_port, ModuleManager::MODULE_INPUT_PORT);
+
+  /* Input: Address port */
+  BasicPort addr_port(std::string(DECODER_ADDRESS_PORT_NAME), addr_size);
+  ModulePortId mem_addr_port = module_manager.add_port(mem_module, addr_port, ModuleManager::MODULE_INPUT_PORT);
+
+  /* Input: Data port */
+  BasicPort data_port(std::string(DECODER_DATA_PORT_NAME), data_size);
+  ModulePortId mem_data_port = module_manager.add_port(mem_module, data_port, ModuleManager::MODULE_INPUT_PORT);
+
+  /* Add each output port: port width should match the number of memories */
+  for (const auto& port : sram_output_ports) {
+    BasicPort output_port(circuit_lib.port_prefix(port), num_mems * circuit_lib.port_size(port));
+    module_manager.add_port(mem_module, output_port, ModuleManager::MODULE_OUTPUT_PORT);
+  }
+
+  /* Instanciate the decoder module here */
+  VTR_ASSERT(0 == module_manager.num_instance(mem_module, decoder_module));
+  module_manager.add_child_module(mem_module, decoder_module);
+
+  /* Find the sram module in the module manager */
+  ModuleId sram_mem_module = module_manager.find_module(circuit_lib.model_name(sram_model));
+
+  /* Build module nets */
+  /* Wire enable port to decoder enable port */
+  ModulePortId decoder_en_port = module_manager.find_module_port(decoder_module, std::string(DECODER_ENABLE_PORT_NAME));
+  add_module_bus_nets(module_manager, mem_module,
+                      mem_module, 0, mem_en_port,
+                      decoder_module, 0, decoder_en_port);
+
+  /* Wire address port to decoder address port */
+  ModulePortId decoder_addr_port = module_manager.find_module_port(decoder_module, std::string(DECODER_ADDRESS_PORT_NAME));
+  add_module_bus_nets(module_manager, mem_module,
+                      mem_module, 0, mem_addr_port,
+                      decoder_module, 0, decoder_addr_port);
+
+  /* Instanciate each submodule */
+  for (size_t i = 0; i < num_mems; ++i) {
+    /* Memory seed module instanciation */
+    size_t sram_instance = module_manager.num_instance(mem_module, sram_mem_module);
+    module_manager.add_child_module(mem_module, sram_mem_module);
+
+    /* Wire data_in port to SRAM BL port */
+    ModulePortId sram_bl_port = module_manager.find_module_port(sram_mem_module, circuit_lib.port_lib_name(sram_bl_ports[0]));
+    add_module_bus_nets(module_manager, mem_module,
+                        mem_module, 0, mem_data_port,
+                        sram_mem_module, sram_instance, sram_bl_port);
+
+    /* Wire decoder data_out port to sram WL ports */
+    ModulePortId sram_wl_port = module_manager.find_module_port(sram_mem_module, circuit_lib.port_lib_name(sram_wl_ports[0]));
+    ModulePortId decoder_data_port = module_manager.find_module_port(decoder_module, std::string(DECODER_DATA_PORT_NAME));
+    ModuleNetId wl_net = module_manager.create_module_net(mem_module);
+    /* Source node of the input net is the input of memory module */
+    module_manager.add_module_net_source(mem_module, wl_net, decoder_module, 0, decoder_data_port, sram_instance);
+    module_manager.add_module_net_sink(mem_module, wl_net, sram_mem_module, sram_instance, sram_wl_port, 0);
+
+    /* Optional: Wire decoder data_out inverted port to sram WLB ports */
+    if (true == use_data_inv) {
+      ModulePortId sram_wlb_port = module_manager.find_module_port(sram_mem_module, circuit_lib.port_lib_name(sram_wlb_ports[0]));
+      ModulePortId decoder_data_inv_port = module_manager.find_module_port(decoder_module, std::string(DECODER_DATA_INV_PORT_NAME));
+      ModuleNetId wlb_net = module_manager.create_module_net(mem_module);
+      /* Source node of the input net is the input of memory module */
+      module_manager.add_module_net_source(mem_module, wlb_net, decoder_module, 0, decoder_data_inv_port, sram_instance);
+      module_manager.add_module_net_sink(mem_module, wlb_net, sram_mem_module, sram_instance, sram_wlb_port, 0);
+    }
+
+    /* Wire inputs of parent module to outputs of child modules */
+    add_module_output_nets_to_mem_modules(module_manager, mem_module, circuit_lib, sram_output_ports, sram_mem_module, i, sram_instance);
+  }
+
+  /* Add global ports to the pb_module:
+   * This is a much easier job after adding sub modules (instances), 
+   * we just need to find all the global ports from the child modules and build a list of it
+   */
+  add_module_global_ports_from_child_modules(module_manager, mem_module);
+}
+
 
 /*********************************************************************
  * Generate Verilog modules for the memories that are used
@@ -566,6 +740,7 @@ void build_memory_bank_module(ModuleManager& module_manager,
  ********************************************************************/
 static 
 void build_memory_module(ModuleManager& module_manager,
+                         DecoderLibrary& arch_decoder_lib,
                          const CircuitLibrary& circuit_lib,
                          const e_config_protocol_type& sram_orgz_type,
                          const std::string& module_name,
@@ -574,7 +749,7 @@ void build_memory_module(ModuleManager& module_manager,
   switch (sram_orgz_type) {
   case CONFIG_MEM_STANDALONE:
     build_memory_standalone_module(module_manager, circuit_lib, 
-                                           module_name, sram_model, num_mems);
+                                   module_name, sram_model, num_mems);
     break;
   case CONFIG_MEM_SCAN_CHAIN:
     build_memory_chain_module(module_manager, circuit_lib,  
@@ -584,8 +759,13 @@ void build_memory_module(ModuleManager& module_manager,
     build_memory_bank_module(module_manager, circuit_lib,
                              module_name, sram_model, num_mems);
     break;
+  case CONFIG_MEM_FRAME_BASED:
+    build_frame_memory_module(module_manager, arch_decoder_lib, circuit_lib,
+                              module_name, sram_model, num_mems);
+    break;
   default:
-    VTR_LOGF_ERROR(__FILE__, __LINE__, "Invalid SRAM organization!\n");
+    VTR_LOGF_ERROR(__FILE__, __LINE__,
+                   "Invalid configurable memory organization!\n");
     exit(1);
   }
 }
@@ -606,6 +786,7 @@ void build_memory_module(ModuleManager& module_manager,
  ********************************************************************/
 static 
 void build_mux_memory_module(ModuleManager& module_manager,
+                             DecoderLibrary& arch_decoder_lib,
                              const CircuitLibrary& circuit_lib,
                              const e_config_protocol_type& sram_orgz_type,
                              const CircuitModelId& mux_model,
@@ -626,7 +807,8 @@ void build_mux_memory_module(ModuleManager& module_manager,
     std::vector<CircuitModelId> sram_models = find_circuit_sram_models(circuit_lib, mux_model);
     VTR_ASSERT( 1 == sram_models.size() );
 
-    build_memory_module(module_manager, circuit_lib, sram_orgz_type, module_name, sram_models[0], num_config_bits);
+    build_memory_module(module_manager, arch_decoder_lib,
+                        circuit_lib, sram_orgz_type, module_name, sram_models[0], num_config_bits);
     break;
   }
   case CIRCUIT_MODEL_DESIGN_RRAM:
@@ -659,6 +841,7 @@ void build_mux_memory_module(ModuleManager& module_manager,
  * memory-bank organization for the memories.
  ********************************************************************/
 void build_memory_modules(ModuleManager& module_manager,
+                          DecoderLibrary& arch_decoder_lib,
                           const MuxLibrary& mux_lib,
                           const CircuitLibrary& circuit_lib,
                           const e_config_protocol_type& sram_orgz_type) {
@@ -676,7 +859,8 @@ void build_memory_modules(ModuleManager& module_manager,
       continue;
     }
     /* Create a Verilog module for the memories used by the multiplexer */
-    build_mux_memory_module(module_manager, circuit_lib, sram_orgz_type, mux_model, mux_graph);
+    build_mux_memory_module(module_manager, arch_decoder_lib, 
+                            circuit_lib, sram_orgz_type, mux_model, mux_graph);
   }
 
   /* Create the memory circuits for non-MUX circuit models.
@@ -708,7 +892,8 @@ void build_memory_modules(ModuleManager& module_manager,
     std::string module_name = generate_memory_module_name(circuit_lib, model, sram_models[0], std::string(MEMORY_MODULE_POSTFIX));
 
     /* Create a Verilog module for the memories used by the circuit model */
-    build_memory_module(module_manager, circuit_lib, sram_orgz_type, module_name, sram_models[0], num_mems);
+    build_memory_module(module_manager, arch_decoder_lib, 
+                        circuit_lib, sram_orgz_type, module_name, sram_models[0], num_mems);
   }
 }
 

@@ -27,8 +27,9 @@ namespace openfpga {
  * for a FPGA fabric
  *******************************************************************/
 ModuleManager build_device_module_graph(IoLocationMap& io_location_map,
-                                        const DeviceContext& vpr_device_ctx,
+                                        DecoderLibrary& decoder_lib,
                                         const OpenfpgaContext& openfpga_ctx,
+                                        const DeviceContext& vpr_device_ctx,
                                         const bool& compress_routing,
                                         const bool& duplicate_grid_pin,
                                         const bool& verbose) {
@@ -66,7 +67,9 @@ ModuleManager build_device_module_graph(IoLocationMap& io_location_map,
   build_wire_modules(module_manager, openfpga_ctx.arch().circuit_lib);
 
   /* Build memory modules */
-  build_memory_modules(module_manager, openfpga_ctx.mux_lib(), 
+  build_memory_modules(module_manager,
+                       decoder_lib,
+                       openfpga_ctx.mux_lib(), 
                        openfpga_ctx.arch().circuit_lib,
                        openfpga_ctx.arch().config_protocol.type());
 

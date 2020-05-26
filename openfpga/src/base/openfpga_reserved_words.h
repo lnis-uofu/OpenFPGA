@@ -30,6 +30,12 @@ constexpr char* GRID_MUX_INSTANCE_PREFIX = "mux_";
 constexpr char* SWITCH_BLOCK_MUX_INSTANCE_PREFIX = "mux_"; 
 constexpr char* CONNECTION_BLOCK_MUX_INSTANCE_PREFIX = "mux_"; 
 
+/* Decoder naming constant strings */
+constexpr char* DECODER_ENABLE_PORT_NAME = "enable";
+constexpr char* DECODER_ADDRESS_PORT_NAME = "address";
+constexpr char* DECODER_DATA_PORT_NAME = "data";
+constexpr char* DECODER_DATA_INV_PORT_NAME = "data_inv";
+
 /* Inverted port naming */
 constexpr char* INV_PORT_POSTFIX = "_inv";
 

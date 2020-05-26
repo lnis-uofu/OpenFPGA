@@ -1227,6 +1227,66 @@ size_t find_module_num_config_bits_from_child_modules(ModuleManager& module_mana
   return num_config_bits;
 }
 
+/********************************************************************
+ * Add a bus of nets to a module (cur_module_id)
+ * Note: 
+ * - both src and des module should exist in the module manager
+ * - src_module should be the cur_module or a child of it
+ * - des_module should be the cur_module or a child of it
+ * - src_instance should be valid and des_instance should be valid as well
+ * - src port size should match the des port size
+ *******************************************************************/
+void add_module_bus_nets(ModuleManager& module_manager,
+                         const ModuleId& cur_module_id,
+                         const ModuleId& src_module_id,
+                         const size_t& src_instance_id,
+                         const ModulePortId& src_module_port_id,
+                         const ModuleId& des_module_id,
+                         const size_t& des_instance_id,
+                         const ModulePortId& des_module_port_id) {
+
+  VTR_ASSERT(true == module_manager.valid_module_id(cur_module_id));
+  VTR_ASSERT(true == module_manager.valid_module_id(src_module_id));
+  VTR_ASSERT(true == module_manager.valid_module_id(des_module_id));
+
+  VTR_ASSERT(true == module_manager.valid_module_port_id(src_module_id, src_module_port_id));
+  VTR_ASSERT(true == module_manager.valid_module_port_id(des_module_id, des_module_port_id));
+
+  if (src_module_id == cur_module_id) {
+    VTR_ASSERT(0 == src_instance_id);
+  } else {
+    VTR_ASSERT(src_instance_id < module_manager.num_instance(cur_module_id, src_module_id));
+  }
+
+  if (des_module_id == cur_module_id) {
+    VTR_ASSERT(0 == des_instance_id);
+  } else {
+    VTR_ASSERT(des_instance_id < module_manager.num_instance(cur_module_id, des_module_id));
+  }
+
+  const BasicPort& src_port = module_manager.module_port(src_module_id, src_module_port_id);
+  const BasicPort& des_port = module_manager.module_port(des_module_id, des_module_port_id);
+
+  if (src_port.get_width() != des_port.get_width()) {
+    VTR_LOGF_ERROR(__FILE__, __LINE__,
+                   "Unmatched port size: src_port is %lu while des_port is %lu!\n");
+    exit(1);
+  }
+
+  /* Create a net for each pin */
+  for (size_t pin_id = 0; pin_id < src_port.pins().size(); ++pin_id) {
+    ModuleNetId net = module_manager.module_instance_port_net(cur_module_id,
+                                                              src_module_id, src_instance_id, 
+                                                              src_module_port_id, src_port.pins()[pin_id]);
+    if (ModuleNetId::INVALID() == net) { 
+      net = module_manager.create_module_net(cur_module_id);
+    }
+    /* Configure the net source */
+    module_manager.add_module_net_source(cur_module_id, net, src_module_id, src_instance_id, src_module_port_id, src_port.pins()[pin_id]);
+    /* Configure the net sink */
+    module_manager.add_module_net_sink(cur_module_id, net, des_module_id, des_instance_id, des_module_port_id, des_port.pins()[pin_id]);
+  }
+}
 
 /********************************************************************
  * TODO:
