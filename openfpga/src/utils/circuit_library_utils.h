@@ -38,6 +38,10 @@ std::vector<CircuitPortId> find_circuit_library_global_ports(const CircuitLibrar
 
 std::vector<std::string> find_circuit_library_unique_verilog_netlists(const CircuitLibrary& circuit_lib);
 
+bool check_configurable_memory_circuit_model(const e_config_protocol_type& config_protocol_type,
+                                             const CircuitLibrary& circuit_lib,
+                                             const CircuitModelId& config_mem_circuit_model);
+
 } /* end namespace openfpga */
 
 #endif

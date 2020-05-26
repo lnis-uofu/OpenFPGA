@@ -11,6 +11,7 @@
 #include "vtr_assert.h"
 #include "vtr_log.h"
 
+#include "check_circuit_library.h"
 #include "circuit_library_utils.h"
 
 /* begin namespace openfpga */
@@ -224,6 +225,42 @@ std::vector<std::string> find_circuit_library_unique_verilog_netlists(const Circ
   }
 
  return netlists;
+}
+
+/************************************************************************
+ * Advanced check if the circuit model of configurable memory
+ * satisfy the needs of configuration protocol
+ * - Configuration chain -based: we check if we have a CCFF model
+ * - Frame -based: we check if we have a SRAM model which has BL and WL
+ * 
+ ***********************************************************************/
+bool check_configurable_memory_circuit_model(const e_config_protocol_type& config_protocol_type,
+                                             const CircuitLibrary& circuit_lib,
+                                             const CircuitModelId& config_mem_circuit_model) {
+  size_t num_err = 0;
+
+  switch (config_protocol_type) {
+  case CONFIG_MEM_SCAN_CHAIN:   
+    num_err = check_ccff_circuit_model_ports(circuit_lib,
+                                             config_mem_circuit_model);
+    break;
+  case CONFIG_MEM_STANDALONE: 
+  case CONFIG_MEM_MEMORY_BANK:  
+  case CONFIG_MEM_FRAME_BASED:  
+    num_err = check_sram_circuit_model_ports(circuit_lib,
+                                             config_mem_circuit_model,
+                                             true);
+    
+    break;
+  default:
+    VTR_LOGF_ERROR(__FILE__, __LINE__,
+                   "Invalid type of configuration protocol!\n");
+    return false;
+  }
+  
+  VTR_LOG("Found %ld errors when checking configurable memory circuit models!\n",
+          num_err);
+  return (0 == num_err);
 }
 
 } /* end namespace openfpga */

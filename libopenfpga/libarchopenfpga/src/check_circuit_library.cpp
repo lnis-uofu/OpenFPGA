@@ -552,3 +552,4 @@ bool check_circuit_library(const CircuitLibrary& circuit_lib) {
 
   return true;
 }
+
