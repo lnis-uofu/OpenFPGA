@@ -34,6 +34,7 @@ namespace openfpga {
 void print_verilog_submodule(ModuleManager& module_manager, 
                              NetlistManager& netlist_manager,
                              const MuxLibrary& mux_lib,
+                             const DecoderLibrary& decoder_lib,
                              const CircuitLibrary& circuit_lib, 
                              const std::string& submodule_dir, 
                              const FabricVerilogOption& fpga_verilog_opts) {
@@ -48,6 +49,12 @@ void print_verilog_submodule(ModuleManager& module_manager,
                                      netlist_manager,
                                      submodule_dir,
                                      circuit_lib);
+
+  /* Decoders for architecture */
+  print_verilog_submodule_arch_decoders(const_cast<const ModuleManager&>(module_manager),
+                                        netlist_manager, 
+                                        decoder_lib, 
+                                        submodule_dir);
 
   /* Routing multiplexers */
   /* NOTE: local decoders generation must go before the MUX generation!!! 

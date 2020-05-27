@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 #include "mux_library.h"
+#include "decoder_library.h"
 #include "circuit_library.h"
 #include "vpr_context.h"
 #include "vpr_device_annotation.h"
@@ -32,6 +33,7 @@ void fpga_fabric_verilog(ModuleManager& module_manager,
                          NetlistManager& netlist_manager,
                          const CircuitLibrary& circuit_lib,
                          const MuxLibrary& mux_lib,
+                         const DecoderLibrary& decoder_lib,
                          const DeviceContext& device_ctx, 
                          const VprDeviceAnnotation& device_annotation, 
                          const DeviceRRGSB& device_rr_gsb,

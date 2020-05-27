@@ -54,6 +54,7 @@ void fpga_fabric_verilog(ModuleManager& module_manager,
                          NetlistManager& netlist_manager,
                          const CircuitLibrary& circuit_lib,
                          const MuxLibrary& mux_lib,
+                         const DecoderLibrary& decoder_lib,
                          const DeviceContext& device_ctx, 
                          const VprDeviceAnnotation& device_annotation, 
                          const DeviceRRGSB& device_rr_gsb,
@@ -90,7 +91,7 @@ void fpga_fabric_verilog(ModuleManager& module_manager,
    * Without the modules in the module manager, core logic generation is not possible!!!
    */
   print_verilog_submodule(module_manager, netlist_manager,
-                          mux_lib, circuit_lib,
+                          mux_lib, decoder_lib, circuit_lib,
                           submodule_dir_path, 
                           options);
 
