@@ -770,6 +770,58 @@ void add_module_nets_cmos_memory_chain_config_bus(ModuleManager& module_manager,
 }
 
 /********************************************************************
+ * This function will create nets for the following types of connections:
+ *  - Connect the enable signal to the EN of memory module
+ *  - Connect the address port to the address port of memory module
+ *  - Connect the data_in (Din) to the data_in of the memory module
+ *
+ *       EN      ADDR      DATA_IN
+ *        |        |          |
+ *        v        v          v                              
+ *   +-----------------------------+
+ *   |        Memory Module        |
+ *   |           [0]               |
+ *   |                             |
+ *   +-----------------------------+
+ *
+ * Note:
+ *  - This function is ONLY applicable to single configurable child case!!!
+ *
+ *********************************************************************/
+static 
+void add_module_nets_cmos_memory_frame_short_config_bus(ModuleManager& module_manager,
+                                                        const ModuleId& parent_module) {
+  std::vector<ModuleId> configurable_children = module_manager.configurable_children(parent_module);
+
+  VTR_ASSERT(1 == configurable_children.size());
+  ModuleId child_module = configurable_children[0]; 
+
+  /* Connect the enable (EN) port of the parent module
+   * to the EN port of memory module
+   */
+  ModulePortId parent_en_port = module_manager.find_module_port(parent_module, std::string(DECODER_ENABLE_PORT_NAME));
+  ModulePortId child_en_port = module_manager.find_module_port(child_module, std::string(DECODER_ENABLE_PORT_NAME));
+  add_module_bus_nets(module_manager, parent_module,
+                      parent_module, 0, parent_en_port,
+                      child_module, 0, child_en_port);
+
+  /* Connect the address port of the parent module to the child module address port */
+  ModulePortId parent_addr_port = module_manager.find_module_port(parent_module, std::string(DECODER_ADDRESS_PORT_NAME));
+  ModulePortId child_addr_port = module_manager.find_module_port(child_module, std::string(DECODER_ADDRESS_PORT_NAME));
+  add_module_bus_nets(module_manager, parent_module,
+                      parent_module, 0, parent_addr_port,
+                      child_module, 0, child_addr_port);
+
+  /* Connect the data_in (Din) of parent module to the data_in of the memory module
+   */
+  ModulePortId parent_din_port = module_manager.find_module_port(parent_module, std::string(DECODER_DATA_IN_PORT_NAME));
+  ModulePortId child_din_port = module_manager.find_module_port(child_module, std::string(DECODER_DATA_IN_PORT_NAME));
+  add_module_bus_nets(module_manager, parent_module,
+                      parent_module, 0, parent_din_port,
+                      child_module, 0, child_din_port);
+}
+
+/********************************************************************
  * This function will 
  * - Add a frame decoder to the parent module 
  *   - If the decoder exists in the library, we use the module
@@ -811,11 +863,13 @@ void add_module_nets_cmos_memory_chain_config_bus(ModuleManager& module_manager,
  *  - X is the port size of address port of the parent module
  *  - the address port of child memory modules may be smaller than 
  *    X - log(N)/log2. In such case, we will drop the MSBs until it fit
+ *  - This function is only applicable to 2+ configurable children!!!
  *
  *********************************************************************/
-void add_module_nets_cmos_memory_frame_config_bus(ModuleManager& module_manager,
-                                                  DecoderLibrary& decoder_lib,
-                                                  const ModuleId& parent_module) {
+static 
+void add_module_nets_cmos_memory_frame_decoder_config_bus(ModuleManager& module_manager,
+                                                          DecoderLibrary& decoder_lib,
+                                                          const ModuleId& parent_module) {
   std::vector<ModuleId> configurable_children = module_manager.configurable_children(parent_module);
 
   /* Find the decoder specification */
@@ -885,7 +939,7 @@ void add_module_nets_cmos_memory_frame_config_bus(ModuleManager& module_manager,
   /* Connect the address port of the parent module to the address port of configurable children
    * Note that we only connect to the last few bits of address port
    */
-  for (size_t mem_index = 0; mem_index < module_manager.configurable_children(parent_module).size(); ++mem_index) {
+  for (size_t mem_index = 0; mem_index < configurable_children.size(); ++mem_index) {
     ModuleId child_module = module_manager.configurable_children(parent_module)[mem_index]; 
     ModulePortId child_addr_port = module_manager.find_module_port(child_module, std::string(DECODER_ADDRESS_PORT_NAME));
     BasicPort child_addr_port_info = module_manager.module_port(child_module, child_addr_port);
@@ -915,7 +969,7 @@ void add_module_nets_cmos_memory_frame_config_bus(ModuleManager& module_manager,
    */
   ModulePortId parent_din_port = module_manager.find_module_port(parent_module, std::string(DECODER_DATA_IN_PORT_NAME));
   for (size_t mem_index = 0; mem_index < module_manager.configurable_children(parent_module).size(); ++mem_index) {
-    ModuleId child_module = module_manager.configurable_children(parent_module)[mem_index]; 
+    ModuleId child_module = configurable_children[mem_index]; 
     ModulePortId child_din_port = module_manager.find_module_port(child_module, std::string(DECODER_DATA_IN_PORT_NAME));
     add_module_bus_nets(module_manager, parent_module,
                         parent_module, 0, parent_din_port,
@@ -927,9 +981,9 @@ void add_module_nets_cmos_memory_frame_config_bus(ModuleManager& module_manager,
    */
   ModulePortId decoder_dout_port = module_manager.find_module_port(decoder_module, std::string(DECODER_DATA_OUT_PORT_NAME));
   BasicPort decoder_dout_port_info = module_manager.module_port(decoder_module, decoder_dout_port);
-  VTR_ASSERT(decoder_dout_port_info.get_width() == module_manager.configurable_children(parent_module).size());
-  for (size_t mem_index = 0; mem_index < module_manager.configurable_children(parent_module).size(); ++mem_index) {
-    ModuleId child_module = module_manager.configurable_children(parent_module)[mem_index]; 
+  VTR_ASSERT(decoder_dout_port_info.get_width() == configurable_children.size());
+  for (size_t mem_index = 0; mem_index < configurable_children.size(); ++mem_index) {
+    ModuleId child_module = configurable_children[mem_index]; 
     ModulePortId child_en_port = module_manager.find_module_port(child_module, std::string(DECODER_ENABLE_PORT_NAME));
     BasicPort child_en_port_info = module_manager.module_port(child_module, child_en_port);
     for (size_t ipin = 0; ipin < child_en_port_info.get_width(); ++ipin) {
@@ -955,6 +1009,29 @@ void add_module_nets_cmos_memory_frame_config_bus(ModuleManager& module_manager,
 
   /* Add the decoder as the last configurable children */
   module_manager.add_configurable_child(parent_module, decoder_module, 0);
+}
+
+/*********************************************************************
+ * Top-level function to add nets for frame-based memories
+ * Add nets depending on the need
+ * - If there is no configurable child, return directly.
+ * - If there is only one configurable child, short wire the EN, ADDR and DATA_IN to it
+ * - If there are more than two configurable childern, add a decoder and build interconnection
+ *   between it and the children 
+ **********************************************************************/
+void add_module_nets_cmos_memory_frame_config_bus(ModuleManager& module_manager,
+                                                  DecoderLibrary& decoder_lib,
+                                                  const ModuleId& parent_module) {
+  if (0 == module_manager.configurable_children(parent_module).size()) {
+    return; 
+  }
+  
+  if (1 == module_manager.configurable_children(parent_module).size()) {
+    add_module_nets_cmos_memory_frame_short_config_bus(module_manager, parent_module);
+  } else {
+    VTR_ASSERT (1 < module_manager.configurable_children(parent_module).size());
+    add_module_nets_cmos_memory_frame_decoder_config_bus(module_manager, decoder_lib, parent_module);
+  }
 }
 
 /*********************************************************************
@@ -1457,7 +1534,12 @@ size_t find_module_num_config_bits_from_child_modules(ModuleManager& module_mana
       num_config_bits = std::max((int)temp_num_config_bits, (int)num_config_bits);
     } 
 
-    num_config_bits += find_mux_local_decoder_addr_size(module_manager.configurable_children(module_id).size());
+    /* If there are more than 2 configurable children, we need a decoder
+     * Otherwise, we can just short wire the address port to the children
+     */
+    if (1 < module_manager.configurable_children(module_id).size()) {
+      num_config_bits += find_mux_local_decoder_addr_size(module_manager.configurable_children(module_id).size());
+    }
 
     break;
   }

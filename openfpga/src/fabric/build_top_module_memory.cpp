@@ -423,7 +423,6 @@ void add_top_module_nets_cmos_memory_config_bus(ModuleManager& module_manager,
     /* TODO: */
     break;
   case CONFIG_MEM_FRAME_BASED:
-    /* TODO: */
     add_module_nets_cmos_memory_frame_config_bus(module_manager, decoder_lib, parent_module);
     break;
   default:
