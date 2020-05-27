@@ -421,6 +421,9 @@ void add_top_module_nets_cmos_memory_config_bus(ModuleManager& module_manager,
   case CONFIG_MEM_MEMORY_BANK:
     /* TODO: */
     break;
+  case CONFIG_MEM_FRAME_BASED:
+    /* TODO: */
+    break;
   default:
     VTR_LOGF_ERROR(__FILE__, __LINE__,
                    "Invalid type of SRAM organization!\n");

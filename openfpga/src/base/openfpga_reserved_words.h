@@ -33,8 +33,9 @@ constexpr char* CONNECTION_BLOCK_MUX_INSTANCE_PREFIX = "mux_";
 /* Decoder naming constant strings */
 constexpr char* DECODER_ENABLE_PORT_NAME = "enable";
 constexpr char* DECODER_ADDRESS_PORT_NAME = "address";
-constexpr char* DECODER_DATA_PORT_NAME = "data";
-constexpr char* DECODER_DATA_INV_PORT_NAME = "data_inv";
+constexpr char* DECODER_DATA_IN_PORT_NAME = "data_in";
+constexpr char* DECODER_DATA_OUT_PORT_NAME = "data_out";
+constexpr char* DECODER_DATA_OUT_INV_PORT_NAME = "data_out_inv";
 
 /* Inverted port naming */
 constexpr char* INV_PORT_POSTFIX = "_inv";

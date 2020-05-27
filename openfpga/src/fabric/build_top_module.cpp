@@ -361,6 +361,13 @@ void build_top_module(ModuleManager& module_manager,
    */
   add_module_gpio_ports_from_child_modules(module_manager, top_module);
 
+  /* Organize the list of memory modules and instances */
+  organize_top_module_memory_modules(module_manager, top_module, 
+                                     circuit_lib, sram_orgz_type, sram_model,
+                                     grids, grid_instance_ids, 
+                                     device_rr_gsb, sb_instance_ids, cb_instance_ids,
+                                     compact_routing_hierarchy);
+
   /* Add shared SRAM ports from the sub-modules under this Verilog module
    * This is a much easier job after adding sub modules (instances), 
    * we just need to find all the I/O ports from the child modules and build a list of it
@@ -378,13 +385,6 @@ void build_top_module(ModuleManager& module_manager,
   if (0 < module_num_config_bits) {
     add_sram_ports_to_module_manager(module_manager, top_module, circuit_lib, sram_model, sram_orgz_type, module_num_config_bits);
   }
-
-  /* Organize the list of memory modules and instances */
-  organize_top_module_memory_modules(module_manager, top_module, 
-                                     circuit_lib, sram_orgz_type, sram_model,
-                                     grids, grid_instance_ids, 
-                                     device_rr_gsb, sb_instance_ids, cb_instance_ids,
-                                     compact_routing_hierarchy);
 
   /* Add module nets to connect memory cells inside
    * This is a one-shot addition that covers all the memory modules in this pb module!

@@ -657,7 +657,7 @@ void build_frame_memory_module(ModuleManager& module_manager,
   ModulePortId mem_addr_port = module_manager.add_port(mem_module, addr_port, ModuleManager::MODULE_INPUT_PORT);
 
   /* Input: Data port */
-  BasicPort data_port(std::string(DECODER_DATA_PORT_NAME), data_size);
+  BasicPort data_port(std::string(DECODER_DATA_IN_PORT_NAME), data_size);
   ModulePortId mem_data_port = module_manager.add_port(mem_module, data_port, ModuleManager::MODULE_INPUT_PORT);
 
   /* Add each output port: port width should match the number of memories */
@@ -700,7 +700,7 @@ void build_frame_memory_module(ModuleManager& module_manager,
 
     /* Wire decoder data_out port to sram WL ports */
     ModulePortId sram_wl_port = module_manager.find_module_port(sram_mem_module, circuit_lib.port_lib_name(sram_wl_ports[0]));
-    ModulePortId decoder_data_port = module_manager.find_module_port(decoder_module, std::string(DECODER_DATA_PORT_NAME));
+    ModulePortId decoder_data_port = module_manager.find_module_port(decoder_module, std::string(DECODER_DATA_OUT_PORT_NAME));
     ModuleNetId wl_net = module_manager.create_module_net(mem_module);
     /* Source node of the input net is the input of memory module */
     module_manager.add_module_net_source(mem_module, wl_net, decoder_module, 0, decoder_data_port, sram_instance);
@@ -709,7 +709,7 @@ void build_frame_memory_module(ModuleManager& module_manager,
     /* Optional: Wire decoder data_out inverted port to sram WLB ports */
     if (true == use_data_inv) {
       ModulePortId sram_wlb_port = module_manager.find_module_port(sram_mem_module, circuit_lib.port_lib_name(sram_wlb_ports[0]));
-      ModulePortId decoder_data_inv_port = module_manager.find_module_port(decoder_module, std::string(DECODER_DATA_INV_PORT_NAME));
+      ModulePortId decoder_data_inv_port = module_manager.find_module_port(decoder_module, std::string(DECODER_DATA_OUT_INV_PORT_NAME));
       ModuleNetId wlb_net = module_manager.create_module_net(mem_module);
       /* Source node of the input net is the input of memory module */
       module_manager.add_module_net_source(mem_module, wlb_net, decoder_module, 0, decoder_data_inv_port, sram_instance);

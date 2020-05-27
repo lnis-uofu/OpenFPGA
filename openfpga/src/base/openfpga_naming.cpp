@@ -798,8 +798,23 @@ std::string generate_sram_port_name(const e_config_protocol_type& sram_orgz_type
       port_name = std::string("wlb"); 
     }
     break;
+  case CONFIG_MEM_FRAME_BASED:
+    /* Only one input port is required, which is the address port
+     *
+     *        EN         ADDR      DATA_IN
+     *         |          |           |
+     *         v          v           v
+     *     +---------------------------------+
+     *     |       Frame decoder             |
+     *     +---------------------------------+
+     *
+     */
+    VTR_ASSERT(port_type == CIRCUIT_MODEL_PORT_INPUT);
+    port_name = std::string(DECODER_ADDRESS_PORT_NAME); 
+    break;
   default:
-    VTR_LOG_ERROR("Invalid type of SRAM organization !\n");
+    VTR_LOGF_ERROR(__FILE__, __LINE__,
+                   "Invalid type of SRAM organization !\n");
     exit(1);
   }
 

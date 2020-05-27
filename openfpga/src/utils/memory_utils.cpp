@@ -337,6 +337,10 @@ std::vector<std::string> generate_sram_port_names(const CircuitLibrary& circuit_
     }
     break;
   }
+  case CONFIG_MEM_FRAME_BASED: {
+    model_port_types.push_back(CIRCUIT_MODEL_PORT_INPUT);
+    break;
+  }
   default:
     VTR_LOG_ERROR("Invalid type of SRAM organization !\n");
     exit(1);

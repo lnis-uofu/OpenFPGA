@@ -18,7 +18,9 @@
 #include "memory_utils.h"
 #include "pb_type_utils.h"
 
+#include "build_decoder_modules.h"
 #include "circuit_library_utils.h"
+#include "decoder_library_utils.h"
 #include "module_manager_utils.h"
 
 /* begin namespace openfpga */
@@ -173,6 +175,11 @@ void add_formal_verification_sram_ports_to_module_manager(ModuleManager& module_
  *    The other two ports are optional: BLB and WLB
  *    Note that the constraints are correletated to the checking rules 
  *    in check_circuit_library()
+ * 4. Frame-based memory:
+ *    - An Enable signal
+ *    - An address port, whose size depends on the number of config bits 
+ *      and the maximum size of address ports of configurable children
+ *    - An data_in port (single-bit)
  ********************************************************************/
 void add_sram_ports_to_module_manager(ModuleManager& module_manager, 
                                       const ModuleId& module_id,
@@ -212,6 +219,18 @@ void add_sram_ports_to_module_manager(ModuleManager& module_manager,
       }
       port_counter++;
     }
+    break;
+  }
+  case CONFIG_MEM_FRAME_BASED: { 
+    BasicPort en_port(std::string(DECODER_ENABLE_PORT_NAME), 1);
+    module_manager.add_port(module_id, en_port, ModuleManager::MODULE_INPUT_PORT);
+
+    BasicPort addr_port(std::string(DECODER_ADDRESS_PORT_NAME), num_config_bits);
+    module_manager.add_port(module_id, addr_port, ModuleManager::MODULE_INPUT_PORT);
+
+    BasicPort din_port(std::string(DECODER_DATA_IN_PORT_NAME), 1);
+    module_manager.add_port(module_id, din_port, ModuleManager::MODULE_INPUT_PORT);
+
     break;
   }
   default:
@@ -750,6 +769,194 @@ void add_module_nets_cmos_memory_chain_config_bus(ModuleManager& module_manager,
   }
 }
 
+/********************************************************************
+ * This function will 
+ * - Add a frame decoder to the parent module 
+ *   - If the decoder exists in the library, we use the module
+ *   - If the decoder does not exist, we create a new module and use it
+ * - create nets for the following types of connections:
+ *   - Connect the EN signal, first few bits of address of parent module 
+ *     to the frame decoder inputs
+ *   - Connect the enable (EN) port of memory modules under the parent module
+ *     to the frame decoder outputs
+ *   - Connect the data_in (Din) of parent module to the data_in of the all
+ *     the memory modules
+ *
+ *       EN      ADDR[X - 1: X - log(N)/log2]
+ *        |        |
+ *        v        v                                        
+ *  +--------------------------------------------+
+ *  |             Frame-based decoder            |
+ *  |                                            |
+ *  |                Data out                    |
+ *  +--------------------------------------------+
+ *                     |
+ *       +-------------+--------------------+
+ *       |             |                    |  
+ *   Din |         Din |                Din |  
+ *    |  |          |  |                 |  |
+ *    v  v          v  v                 v  v
+ *  +--------+    +--------+            +--------+
+ *  | Memory |    | Memory |    ...     | Memory |
+ *  | Module |    | Module |            | Module |
+ *  |   [0]  |    |   [1]  |            |  [N-1] |             
+ *  +--------+    +--------+            +--------+
+ *       ^             ^                    ^
+ *       |             |                    |
+ *       +-------------+--------------------+
+ *                     |
+ *                  ADDR[X - log(N)/log2 - 1: 0]
+ *
+ * Note:
+ *  - X is the port size of address port of the parent module
+ *  - the address port of child memory modules may be smaller than 
+ *    X - log(N)/log2. In such case, we will drop the MSBs until it fit
+ *
+ *********************************************************************/
+void add_module_nets_cmos_memory_frame_config_bus(ModuleManager& module_manager,
+                                                  DecoderLibrary& decoder_lib,
+                                                  const ModuleId& parent_module) {
+  std::vector<ModuleId> configurable_children = module_manager.configurable_children(parent_module);
+
+  /* Find the decoder specification */
+  size_t addr_size = find_mux_local_decoder_addr_size(configurable_children.size());
+  /* Data input should match the WL (data_in) of a SRAM */
+  size_t data_size = configurable_children.size(); 
+
+  /* Search the decoder library and try to find one 
+   * If not found, create a new module and add it to the module manager 
+   */
+  DecoderId decoder_id = decoder_lib.find_decoder(addr_size, data_size, true, true, false);
+  if (DecoderId::INVALID() == decoder_id) {
+    decoder_id = decoder_lib.add_decoder(addr_size, data_size, true, true, false);
+  }
+  VTR_ASSERT(DecoderId::INVALID() != decoder_id);
+
+  /* Create a module if not existed yet */
+  std::string decoder_module_name = generate_frame_memory_decoder_subckt_name(addr_size, data_size);
+  ModuleId decoder_module = module_manager.find_module(decoder_module_name);
+  if (ModuleId::INVALID() == decoder_module) {
+    decoder_module = build_frame_memory_decoder_module(module_manager,
+                                                       decoder_lib,
+                                                       decoder_id);
+  }
+  VTR_ASSERT(ModuleId::INVALID() != decoder_module);
+
+  /* Instanciate the decoder module here */
+  VTR_ASSERT(0 == module_manager.num_instance(parent_module, decoder_module));
+  module_manager.add_child_module(parent_module, decoder_module);
+
+  /* Connect the enable (EN) port of memory modules under the parent module
+   * to the frame decoder inputs
+   */
+  ModulePortId parent_en_port = module_manager.find_module_port(parent_module, std::string(DECODER_ENABLE_PORT_NAME));
+  ModulePortId decoder_en_port = module_manager.find_module_port(decoder_module, std::string(DECODER_ENABLE_PORT_NAME));
+  add_module_bus_nets(module_manager, parent_module,
+                      parent_module, 0, parent_en_port,
+                      decoder_module, 0, decoder_en_port);
+
+  /* Connect the address port of the parent module to the frame decoder address port
+   * Note that we only connect to the first few bits of address port
+   */
+  ModulePortId parent_addr_port = module_manager.find_module_port(parent_module, std::string(DECODER_ADDRESS_PORT_NAME));
+  ModulePortId decoder_addr_port = module_manager.find_module_port(decoder_module, std::string(DECODER_ADDRESS_PORT_NAME));
+  BasicPort parent_addr_port_info = module_manager.module_port(parent_module, parent_addr_port);
+  BasicPort decoder_addr_port_info = module_manager.module_port(decoder_module, decoder_addr_port);
+  for (size_t ipin = 0; ipin < decoder_addr_port_info.get_width(); ++ipin) {
+    ModuleNetId net = module_manager.module_instance_port_net(parent_module,
+                                                              parent_module, 0, 
+                                                              parent_addr_port,
+                                                              parent_addr_port_info.get_msb() - ipin);
+    if (ModuleNetId::INVALID() == net) { 
+      net = module_manager.create_module_net(parent_module);
+      /* Configure the net source */
+      module_manager.add_module_net_source(parent_module, net,
+                                           parent_module, 0,
+                                           parent_addr_port,
+                                           parent_addr_port_info.get_msb() - ipin);
+    }
+    /* Configure the net sink */
+    module_manager.add_module_net_sink(parent_module, net,
+                                       decoder_module, 0,
+                                       decoder_addr_port,
+                                       decoder_addr_port_info.get_msb() - ipin);
+  } 
+
+  /* Connect the address port of the parent module to the address port of configurable children
+   * Note that we only connect to the last few bits of address port
+   */
+  for (size_t mem_index = 0; mem_index < module_manager.configurable_children(parent_module).size(); ++mem_index) {
+    ModuleId child_module = module_manager.configurable_children(parent_module)[mem_index]; 
+    ModulePortId child_addr_port = module_manager.find_module_port(child_module, std::string(DECODER_ADDRESS_PORT_NAME));
+    BasicPort child_addr_port_info = module_manager.module_port(child_module, child_addr_port);
+    for (size_t ipin = 0; ipin < child_addr_port_info.get_width(); ++ipin) {
+      ModuleNetId net = module_manager.module_instance_port_net(parent_module,
+                                                                parent_module, 0, 
+                                                                parent_addr_port,
+                                                                parent_addr_port_info.get_lsb() + ipin);
+      if (ModuleNetId::INVALID() == net) { 
+        net = module_manager.create_module_net(parent_module);
+        /* Configure the net source */
+        module_manager.add_module_net_source(parent_module, net,
+                                             parent_module, 0,
+                                             parent_addr_port,
+                                             parent_addr_port_info.get_lsb() + ipin);
+      }
+      /* Configure the net sink */
+      module_manager.add_module_net_sink(parent_module, net,
+                                         child_module, 0,
+                                         child_addr_port,
+                                         child_addr_port_info.get_lsb() + ipin);
+    }
+  }
+
+  /* Connect the data_in (Din) of parent module to the data_in of the all
+   * the memory modules
+   */
+  ModulePortId parent_din_port = module_manager.find_module_port(parent_module, std::string(DECODER_DATA_IN_PORT_NAME));
+  for (size_t mem_index = 0; mem_index < module_manager.configurable_children(parent_module).size(); ++mem_index) {
+    ModuleId child_module = module_manager.configurable_children(parent_module)[mem_index]; 
+    ModulePortId child_din_port = module_manager.find_module_port(child_module, std::string(DECODER_DATA_IN_PORT_NAME));
+    add_module_bus_nets(module_manager, parent_module,
+                        parent_module, 0, parent_din_port,
+                        child_module, 0, child_din_port);
+  }
+
+  /* Connect the data_out port of the decoder module 
+   * to the enable port of configurable children
+   */
+  ModulePortId decoder_dout_port = module_manager.find_module_port(decoder_module, std::string(DECODER_DATA_OUT_PORT_NAME));
+  BasicPort decoder_dout_port_info = module_manager.module_port(decoder_module, decoder_dout_port);
+  VTR_ASSERT(decoder_dout_port_info.get_width() == module_manager.configurable_children(parent_module).size());
+  for (size_t mem_index = 0; mem_index < module_manager.configurable_children(parent_module).size(); ++mem_index) {
+    ModuleId child_module = module_manager.configurable_children(parent_module)[mem_index]; 
+    ModulePortId child_en_port = module_manager.find_module_port(child_module, std::string(DECODER_ENABLE_PORT_NAME));
+    BasicPort child_en_port_info = module_manager.module_port(child_module, child_en_port);
+    for (size_t ipin = 0; ipin < child_en_port_info.get_width(); ++ipin) {
+      ModuleNetId net = module_manager.module_instance_port_net(parent_module,
+                                                                decoder_module, 0, 
+                                                                decoder_dout_port,
+                                                                decoder_dout_port_info.pins()[mem_index]);
+      if (ModuleNetId::INVALID() == net) { 
+        net = module_manager.create_module_net(parent_module);
+        /* Configure the net source */
+        module_manager.add_module_net_source(parent_module, net,
+                                             decoder_module, 0,
+                                             decoder_dout_port,
+                                             decoder_dout_port_info.pins()[mem_index]);
+      }
+      /* Configure the net sink */
+      module_manager.add_module_net_sink(parent_module, net,
+                                         child_module, 0,
+                                         child_en_port,
+                                         child_en_port_info.pins()[ipin]);
+    }
+  }
+
+  /* Add the decoder as the last configurable children */
+  module_manager.add_configurable_child(parent_module, decoder_module, 0);
+}
+
 /*********************************************************************
  * Add the port-to-port connection between all the memory modules 
  * and their parent module
@@ -796,6 +1003,7 @@ void add_module_nets_cmos_memory_chain_config_bus(ModuleManager& module_manager,
  **********************************************************************/
 static 
 void add_module_nets_cmos_memory_config_bus(ModuleManager& module_manager,
+                                            DecoderLibrary& decoder_lib,
                                             const ModuleId& parent_module,
                                             const e_config_protocol_type& sram_orgz_type) {
   switch (sram_orgz_type) {
@@ -808,6 +1016,10 @@ void add_module_nets_cmos_memory_config_bus(ModuleManager& module_manager,
   }
   case CONFIG_MEM_MEMORY_BANK:
     /* TODO: */
+    break;
+  case CONFIG_MEM_FRAME_BASED:
+    /* TODO: */
+    add_module_nets_cmos_memory_frame_config_bus(module_manager, decoder_lib, parent_module);
     break;
   default:
     VTR_LOG_ERROR("Invalid type of SRAM organization!\n");
@@ -871,12 +1083,14 @@ void add_module_nets_cmos_memory_config_bus(ModuleManager& module_manager,
  * and its child module (logic_module and memory_module) is created! 
  *******************************************************************/
 void add_module_nets_memory_config_bus(ModuleManager& module_manager,
+                                       DecoderLibrary& decoder_lib,
                                        const ModuleId& parent_module,
                                        const e_config_protocol_type& sram_orgz_type, 
                                        const e_circuit_model_design_tech& mem_tech) {
   switch (mem_tech) {
   case CIRCUIT_MODEL_DESIGN_CMOS:
-    add_module_nets_cmos_memory_config_bus(module_manager, parent_module, 
+    add_module_nets_cmos_memory_config_bus(module_manager, decoder_lib,
+                                           parent_module, 
                                            sram_orgz_type);
     break;
   case CIRCUIT_MODEL_DESIGN_RRAM:
@@ -1219,10 +1433,38 @@ size_t find_module_num_config_bits_from_child_modules(ModuleManager& module_mana
                                                       const e_config_protocol_type& sram_orgz_type) {
   size_t num_config_bits = 0;
 
-  /* Iterate over the child modules */
-  for (const ModuleId& child : module_manager.child_modules(module_id)) {
-    num_config_bits += find_module_num_config_bits(module_manager, child, circuit_lib, sram_model, sram_orgz_type);
-  } 
+  switch (sram_orgz_type) {
+  case CONFIG_MEM_STANDALONE: 
+  case CONFIG_MEM_SCAN_CHAIN: 
+  case CONFIG_MEM_MEMORY_BANK: {
+    /* For scan-chain, standalone and memory bank configuration protocol
+     * The number of configuration bits is the sum of configuration bits 
+     * per configurable children 
+     */
+    for (const ModuleId& child : module_manager.configurable_children(module_id)) {
+      num_config_bits += find_module_num_config_bits(module_manager, child, circuit_lib, sram_model, sram_orgz_type);
+    } 
+    break;
+  }
+  case CONFIG_MEM_FRAME_BASED: {
+    /* For frame-based configuration protocol
+     * The number of configuration bits is the sum of
+     * - the maximum of configuration bits among configurable children
+     * - and the number of configurable children
+     */
+    for (const ModuleId& child : module_manager.configurable_children(module_id)) {
+      size_t temp_num_config_bits = find_module_num_config_bits(module_manager, child, circuit_lib, sram_model, sram_orgz_type);
+      num_config_bits = std::max((int)temp_num_config_bits, (int)num_config_bits);
+    } 
+
+    num_config_bits += find_mux_local_decoder_addr_size(module_manager.configurable_children(module_id).size());
+
+    break;
+  }
+  default:
+    VTR_LOG_ERROR("Invalid type of SRAM organization !\n");
+    exit(1);
+  }
 
   return num_config_bits;
 }
@@ -1280,9 +1522,9 @@ void add_module_bus_nets(ModuleManager& module_manager,
                                                               src_module_port_id, src_port.pins()[pin_id]);
     if (ModuleNetId::INVALID() == net) { 
       net = module_manager.create_module_net(cur_module_id);
+      /* Configure the net source */
+      module_manager.add_module_net_source(cur_module_id, net, src_module_id, src_instance_id, src_module_port_id, src_port.pins()[pin_id]);
     }
-    /* Configure the net source */
-    module_manager.add_module_net_source(cur_module_id, net, src_module_id, src_instance_id, src_module_port_id, src_port.pins()[pin_id]);
     /* Configure the net sink */
     module_manager.add_module_net_sink(cur_module_id, net, des_module_id, des_instance_id, des_module_port_id, des_port.pins()[pin_id]);
   }

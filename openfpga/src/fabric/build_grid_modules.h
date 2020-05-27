@@ -8,6 +8,7 @@
 #include "vpr_device_annotation.h"
 #include "module_manager.h"
 #include "mux_library.h"
+#include "decoder_library.h"
 
 /********************************************************************
  * Function declaration
@@ -17,6 +18,7 @@
 namespace openfpga {
 
 void build_grid_modules(ModuleManager& module_manager,
+                        DecoderLibrary& decoder_lib,
                         const DeviceContext& device_ctx,
                         const VprDeviceAnnotation& device_annotation,
                         const CircuitLibrary& circuit_lib,

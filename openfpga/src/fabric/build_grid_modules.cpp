@@ -226,6 +226,7 @@ void add_primitive_module_fpga_global_io_port(ModuleManager& module_manager,
  *******************************************************************/
 static 
 void build_primitive_block_module(ModuleManager& module_manager,
+                                  DecoderLibrary& decoder_lib,
                                   const VprDeviceAnnotation& device_annotation,
                                   const CircuitLibrary& circuit_lib,
                                   const e_config_protocol_type& sram_orgz_type,
@@ -314,7 +315,7 @@ void build_primitive_block_module(ModuleManager& module_manager,
    * This is a one-shot addition that covers all the memory modules in this primitive module!
    */
   if (0 < module_manager.configurable_children(primitive_module).size()) {
-    add_module_nets_memory_config_bus(module_manager, primitive_module, 
+    add_module_nets_memory_config_bus(module_manager, decoder_lib, primitive_module, 
                                       sram_orgz_type, circuit_lib.design_tech_type(sram_model));
   }
 
@@ -799,6 +800,7 @@ void add_module_pb_graph_interc(ModuleManager& module_manager,
  *******************************************************************/
 static 
 void rec_build_logical_tile_modules(ModuleManager& module_manager,
+                                    DecoderLibrary& decoder_lib,
                                     const VprDeviceAnnotation& device_annotation,
                                     const CircuitLibrary& circuit_lib,
                                     const MuxLibrary& mux_lib,
@@ -821,7 +823,8 @@ void rec_build_logical_tile_modules(ModuleManager& module_manager,
   if (false == is_primitive_pb_type(physical_pb_type)) { 
     for (int ipb = 0; ipb < physical_mode->num_pb_type_children; ++ipb) {
       /* Go recursive to visit the children */
-      rec_build_logical_tile_modules(module_manager, device_annotation,
+      rec_build_logical_tile_modules(module_manager, decoder_lib,
+                                     device_annotation,
                                      circuit_lib, mux_lib, 
                                      sram_orgz_type, sram_model, 
                                      &(physical_pb_graph_node->child_pb_graph_nodes[physical_mode->index][ipb][0]),
@@ -831,7 +834,8 @@ void rec_build_logical_tile_modules(ModuleManager& module_manager,
 
   /* For leaf node, a primitive Verilog module will be generated */
   if (true == is_primitive_pb_type(physical_pb_type)) { 
-    build_primitive_block_module(module_manager, device_annotation,
+    build_primitive_block_module(module_manager, decoder_lib,
+                                 device_annotation,
                                  circuit_lib,
                                  sram_orgz_type, sram_model, 
                                  physical_pb_graph_node,
@@ -938,7 +942,7 @@ void rec_build_logical_tile_modules(ModuleManager& module_manager,
    * This is a one-shot addition that covers all the memory modules in this pb module!
    */
   if (0 < module_manager.configurable_children(pb_module).size()) {
-    add_module_nets_memory_config_bus(module_manager, pb_module, 
+    add_module_nets_memory_config_bus(module_manager, decoder_lib, pb_module, 
                                       sram_orgz_type, circuit_lib.design_tech_type(sram_model));
   }
 
@@ -955,6 +959,7 @@ void rec_build_logical_tile_modules(ModuleManager& module_manager,
  *****************************************************************************/
 static 
 void build_physical_tile_module(ModuleManager& module_manager,
+                                DecoderLibrary& decoder_lib,
                                 const CircuitLibrary& circuit_lib,
                                 const e_config_protocol_type& sram_orgz_type,
                                 const CircuitModelId& sram_model,
@@ -1094,7 +1099,7 @@ void build_physical_tile_module(ModuleManager& module_manager,
    * This is a one-shot addition that covers all the memory modules in this pb module!
    */
   if (0 < module_manager.configurable_children(grid_module).size()) {
-    add_module_nets_memory_config_bus(module_manager, grid_module, 
+    add_module_nets_memory_config_bus(module_manager, decoder_lib, grid_module, 
                                       sram_orgz_type, circuit_lib.design_tech_type(sram_model));
   }
 
@@ -1114,6 +1119,7 @@ void build_physical_tile_module(ModuleManager& module_manager,
  *   - Only one module for each heterogeneous block
  ****************************************************************************/
 void build_grid_modules(ModuleManager& module_manager,
+                        DecoderLibrary& decoder_lib,
                         const DeviceContext& device_ctx,
                         const VprDeviceAnnotation& device_annotation,
                         const CircuitLibrary& circuit_lib,
@@ -1140,8 +1146,9 @@ void build_grid_modules(ModuleManager& module_manager,
     if (nullptr == logical_tile.pb_graph_head) {
       continue;
     }
-    rec_build_logical_tile_modules(module_manager, device_annotation,
-                                   circuit_lib, mux_lib, 
+    rec_build_logical_tile_modules(module_manager, decoder_lib,
+                                   device_annotation,
+                                   circuit_lib, mux_lib,
                                    sram_orgz_type, sram_model, 
                                    logical_tile.pb_graph_head,
                                    verbose);
@@ -1169,7 +1176,8 @@ void build_grid_modules(ModuleManager& module_manager,
       std::set<e_side> io_type_sides = find_physical_io_tile_located_sides(device_ctx.grid,
                                                                            &physical_tile);
       for (const e_side& io_type_side : io_type_sides) {
-        build_physical_tile_module(module_manager, circuit_lib,
+        build_physical_tile_module(module_manager, decoder_lib,
+                                   circuit_lib,
                                    sram_orgz_type, sram_model,
                                    &physical_tile,
                                    io_type_side,
@@ -1178,7 +1186,8 @@ void build_grid_modules(ModuleManager& module_manager,
       } 
     } else {
       /* For CLB and heterogenenous blocks */
-      build_physical_tile_module(module_manager, circuit_lib,
+      build_physical_tile_module(module_manager, decoder_lib,
+                                 circuit_lib, 
                                  sram_orgz_type, sram_model,
                                  &physical_tile,
                                  NUM_SIDES,

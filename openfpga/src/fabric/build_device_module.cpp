@@ -74,7 +74,9 @@ ModuleManager build_device_module_graph(IoLocationMap& io_location_map,
                        openfpga_ctx.arch().config_protocol.type());
 
   /* Build grid and programmable block modules */
-  build_grid_modules(module_manager, vpr_device_ctx,
+  build_grid_modules(module_manager,
+                     decoder_lib,
+                     vpr_device_ctx,
                      openfpga_ctx.vpr_device_annotation(),
                      openfpga_ctx.arch().circuit_lib,
                      openfpga_ctx.mux_lib(),
@@ -83,6 +85,7 @@ ModuleManager build_device_module_graph(IoLocationMap& io_location_map,
 
   if (true == compress_routing) {
     build_unique_routing_modules(module_manager,
+                                 decoder_lib,
                                  vpr_device_ctx,
                                  openfpga_ctx.vpr_device_annotation(),
                                  openfpga_ctx.device_rr_gsb(),
@@ -92,6 +95,7 @@ ModuleManager build_device_module_graph(IoLocationMap& io_location_map,
   } else {
     VTR_ASSERT_SAFE(false == compress_routing);
     build_flatten_routing_modules(module_manager,
+                                  decoder_lib,
                                   vpr_device_ctx,
                                   openfpga_ctx.vpr_device_annotation(),
                                   openfpga_ctx.device_rr_gsb(),

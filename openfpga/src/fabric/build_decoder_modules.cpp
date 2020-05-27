@@ -58,7 +58,7 @@ ModuleId build_frame_memory_decoder_module(ModuleManager& module_manager,
   BasicPort addr_port(std::string(DECODER_ADDRESS_PORT_NAME), addr_size);
   module_manager.add_port(module_id, addr_port, ModuleManager::MODULE_INPUT_PORT);
   /* Add each output port */
-  BasicPort data_port(std::string(DECODER_DATA_PORT_NAME), data_size);
+  BasicPort data_port(std::string(DECODER_DATA_OUT_PORT_NAME), data_size);
   module_manager.add_port(module_id, data_port, ModuleManager::MODULE_OUTPUT_PORT);
 
   /* Data port is registered. It should be outputted as 
@@ -67,7 +67,7 @@ ModuleId build_frame_memory_decoder_module(ModuleManager& module_manager,
   module_manager.set_port_is_register(module_id, data_port.get_name(), true);
   /* Add data_in port */
   if (true == decoder_lib.use_data_inv_port(decoder)) {
-    BasicPort data_inv_port(std::string(DECODER_DATA_INV_PORT_NAME), data_size);
+    BasicPort data_inv_port(std::string(DECODER_DATA_OUT_INV_PORT_NAME), data_size);
     module_manager.add_port(module_id, data_inv_port, ModuleManager::MODULE_OUTPUT_PORT);
   }
 

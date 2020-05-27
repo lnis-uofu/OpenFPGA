@@ -20,6 +20,7 @@
 #include "circuit_types.h"
 #include "circuit_library.h"
 
+#include "decoder_library.h"
 #include "module_manager.h"
 #include "vpr_device_annotation.h"
 
@@ -94,7 +95,12 @@ void add_module_nets_cmos_memory_chain_config_bus(ModuleManager& module_manager,
                                                   const ModuleId& parent_module,
                                                   const e_config_protocol_type& sram_orgz_type);
 
+void add_module_nets_cmos_memory_frame_config_bus(ModuleManager& module_manager,
+                                                  DecoderLibrary& decoder_lib,
+                                                  const ModuleId& parent_module);
+
 void add_module_nets_memory_config_bus(ModuleManager& module_manager,
+                                       DecoderLibrary& decoder_lib,
                                        const ModuleId& parent_module,
                                        const e_config_protocol_type& sram_orgz_type, 
                                        const e_circuit_model_design_tech& mem_tech);
