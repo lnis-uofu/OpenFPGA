@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 #include "bitstream_manager.h"
+#include "fabric_bitstream.h"
 
 /********************************************************************
  * Function declaration
@@ -16,7 +17,7 @@
 namespace openfpga {
 
 void write_fabric_bitstream_to_text_file(const BitstreamManager& bitstream_manager,
-                                         const std::vector<ConfigBitId>& fabric_bitstream,
+                                         const FabricBitstream& fabric_bitstream,
                                          const std::string& fname);
 
 } /* end namespace openfpga */

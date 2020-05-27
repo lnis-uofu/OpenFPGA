@@ -28,11 +28,11 @@ namespace openfpga {
  * in the configurable_children) and configurable_child_instances() of each module of module manager 
  *******************************************************************/
 static 
-void rec_build_module_fabric_dependent_bitstream(const BitstreamManager& bitstream_manager,
-                                                 const ConfigBlockId& parent_block,
-                                                 const ModuleManager& module_manager,
-                                                 const ModuleId& parent_module,
-                                                 std::vector<ConfigBitId>& fabric_bitstream) {
+void rec_build_module_fabric_dependent_chain_bitstream(const BitstreamManager& bitstream_manager,
+                                                       const ConfigBlockId& parent_block,
+                                                       const ModuleManager& module_manager,
+                                                       const ModuleId& parent_module,
+                                                       FabricBitstream& fabric_bitstream) {
 
   /* Depth-first search: if we have any children in the parent_block, 
    * we dive to the next level first! 
@@ -51,9 +51,9 @@ void rec_build_module_fabric_dependent_bitstream(const BitstreamManager& bitstre
       VTR_ASSERT(true == bitstream_manager.valid_block_id(child_block));
 
       /* Go recursively */
-      rec_build_module_fabric_dependent_bitstream(bitstream_manager, child_block,
-                                                  module_manager, child_module,
-                                                  fabric_bitstream);
+      rec_build_module_fabric_dependent_chain_bitstream(bitstream_manager, child_block,
+                                                        module_manager, child_module,
+                                                        fabric_bitstream);
     }
     /* Ensure that there should be no configuration bits in the parent block */
     VTR_ASSERT(0 == bitstream_manager.block_bits(parent_block).size());
@@ -64,45 +64,47 @@ void rec_build_module_fabric_dependent_bitstream(const BitstreamManager& bitstre
    * And then, we can return
    */
   for (const ConfigBitId& config_bit : bitstream_manager.block_bits(parent_block)) {
-    fabric_bitstream.push_back(config_bit);
+    fabric_bitstream.add_bit(config_bit);
   }
 }
 
 /********************************************************************
- * A top-level function re-organizes the bitstream for a specific 
- * FPGA fabric, where configuration bits are organized in the sequence
- * that can be directly loaded to the FPGA configuration protocol.
- * Support:
- * 1. Configuration chain
- * 2. Memory decoders
- * This function does NOT modify the bitstream database
- * Instead, it builds a vector of ids for configuration bits in bitstream manager
- *
- * This function can be called ONLY after the function build_device_bitstream() 
- * Note that this function does NOT decode bitstreams from circuit implementation
- * It was done in the function build_device_bitstream() 
+ * Main function to build a fabric-dependent bitstream
+ * by considering the configuration protocol types 
  *******************************************************************/
-std::vector<ConfigBitId> build_fabric_dependent_bitstream(const BitstreamManager& bitstream_manager,
-                                                          const ModuleManager& module_manager,
-                                                          const bool& verbose) {
-  std::vector<ConfigBitId> fabric_bitstream; 
+static 
+void build_module_fabric_dependent_bitstream(const ConfigProtocol& config_protocol,
+                                             const BitstreamManager& bitstream_manager,
+                                             const ConfigBlockId& top_block,
+                                             const ModuleManager& module_manager,
+                                             const ModuleId& top_module,
+                                             FabricBitstream& fabric_bitstream) {
 
-  vtr::ScopedStartFinishTimer timer("\nBuild fabric dependent bitstream\n");
-
-  /* Get the top module name in module manager, which is our starting point */
-  std::string top_module_name = generate_fpga_top_module_name();
-  ModuleId top_module = module_manager.find_module(top_module_name);
-  VTR_ASSERT(true == module_manager.valid_module_id(top_module));
-
-  /* Find the top block in bitstream manager, which has not parents */
-  std::vector<ConfigBlockId> top_block = find_bitstream_manager_top_blocks(bitstream_manager);
-  /* Make sure we have only 1 top block and its name matches the top module */
-  VTR_ASSERT(1 == top_block.size());
-  VTR_ASSERT(0 == top_module_name.compare(bitstream_manager.block_name(top_block[0])));
-
-  rec_build_module_fabric_dependent_bitstream(bitstream_manager, top_block[0],
-                                              module_manager, top_module, 
-                                              fabric_bitstream);
+  switch (config_protocol.type()) {
+  case CONFIG_MEM_STANDALONE: {
+    rec_build_module_fabric_dependent_chain_bitstream(bitstream_manager, top_block,
+                                                      module_manager, top_module, 
+                                                      fabric_bitstream);
+    break;
+  }
+  case CONFIG_MEM_SCAN_CHAIN: { 
+    rec_build_module_fabric_dependent_chain_bitstream(bitstream_manager, top_block,
+                                                      module_manager, top_module, 
+                                                      fabric_bitstream);
+    fabric_bitstream.reverse();
+    break;
+  }
+  case CONFIG_MEM_MEMORY_BANK: { 
+    break;
+  }
+  case CONFIG_MEM_FRAME_BASED: {
+    break;
+  }
+  default:
+    VTR_LOGF_ERROR(__FILE__, __LINE__,
+                   "Invalid SRAM organization.\n");
+    exit(1);
+  }
 
   /* Time-consuming sanity check: Uncomment these codes only for debugging!!!
    * Check which configuration bits are not touched 
@@ -124,11 +126,50 @@ std::vector<ConfigBitId> build_fabric_dependent_bitstream(const BitstreamManager
    */
 
   /* Ensure our fabric bitstream is in the same size as device bistream */
-  VTR_ASSERT(bitstream_manager.bits().size() == fabric_bitstream.size());
+  VTR_ASSERT(bitstream_manager.bits().size() == fabric_bitstream.bits().size());
+}
+
+/********************************************************************
+ * A top-level function re-organizes the bitstream for a specific 
+ * FPGA fabric, where configuration bits are organized in the sequence
+ * that can be directly loaded to the FPGA configuration protocol.
+ * Support:
+ * 1. Configuration chain
+ * 2. Memory decoders
+ * This function does NOT modify the bitstream database
+ * Instead, it builds a vector of ids for configuration bits in bitstream manager
+ *
+ * This function can be called ONLY after the function build_device_bitstream() 
+ * Note that this function does NOT decode bitstreams from circuit implementation
+ * It was done in the function build_device_bitstream() 
+ *******************************************************************/
+FabricBitstream build_fabric_dependent_bitstream(const BitstreamManager& bitstream_manager,
+                                                 const ModuleManager& module_manager,
+                                                 const ConfigProtocol& config_protocol,
+                                                 const bool& verbose) {
+  FabricBitstream fabric_bitstream; 
+
+  vtr::ScopedStartFinishTimer timer("\nBuild fabric dependent bitstream\n");
+
+  /* Get the top module name in module manager, which is our starting point */
+  std::string top_module_name = generate_fpga_top_module_name();
+  ModuleId top_module = module_manager.find_module(top_module_name);
+  VTR_ASSERT(true == module_manager.valid_module_id(top_module));
+
+  /* Find the top block in bitstream manager, which has not parents */
+  std::vector<ConfigBlockId> top_block = find_bitstream_manager_top_blocks(bitstream_manager);
+  /* Make sure we have only 1 top block and its name matches the top module */
+  VTR_ASSERT(1 == top_block.size());
+  VTR_ASSERT(0 == top_module_name.compare(bitstream_manager.block_name(top_block[0])));
+
+  build_module_fabric_dependent_bitstream(config_protocol,
+                                          bitstream_manager, top_block[0],
+                                          module_manager, top_module, 
+                                          fabric_bitstream);
 
   VTR_LOGV(verbose,
            "Built %lu configuration bits for fabric\n",
-           fabric_bitstream.size());
+           fabric_bitstream.bits().size());
 
   return fabric_bitstream;
 }

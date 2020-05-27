@@ -694,7 +694,7 @@ void print_verilog_top_testbench_generic_stimulus(std::fstream& fp,
 static 
 void print_verilog_top_testbench_configuration_chain_bitstream(std::fstream& fp,
                                                                const BitstreamManager& bitstream_manager,
-                                                               const std::vector<ConfigBitId>& fabric_bitstream) {
+                                                               const FabricBitstream& fabric_bitstream) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -720,11 +720,9 @@ void print_verilog_top_testbench_configuration_chain_bitstream(std::fstream& fp,
   /* Attention: the configuration chain protcol requires the last configuration bit is fed first
    * We will visit the fabric bitstream in a reverse way  
    */
-  std::vector<ConfigBitId> cc_bitstream = fabric_bitstream;
-  std::reverse(cc_bitstream.begin(), cc_bitstream.end());
-  for (const ConfigBitId& bit_id : cc_bitstream) {
+  for (const FabricBitId& bit_id : fabric_bitstream.bits()) {
     fp << "\t\t" << std::string(TOP_TESTBENCH_CC_PROG_TASK_NAME);
-    fp << "(1'b" << (size_t)bitstream_manager.bit_value(bit_id) << ");" << std::endl;
+    fp << "(1'b" << (size_t)bitstream_manager.bit_value(fabric_bitstream.config_bit(bit_id)) << ");" << std::endl;
   }
 
   /* Raise the flag of configuration done when bitstream loading is complete */
@@ -753,7 +751,7 @@ static
 void print_verilog_top_testbench_bitstream(std::fstream& fp,
                                            const e_config_protocol_type& sram_orgz_type,
                                            const BitstreamManager& bitstream_manager,
-                                           const std::vector<ConfigBitId>& fabric_bitstream) {
+                                           const FabricBitstream& fabric_bitstream) {
   /* Branch on the type of configuration protocol */
   switch (sram_orgz_type) {
   case CONFIG_MEM_STANDALONE:
@@ -794,7 +792,7 @@ void print_verilog_top_testbench_bitstream(std::fstream& fp,
  *******************************************************************/
 void print_verilog_top_testbench(const ModuleManager& module_manager,
                                  const BitstreamManager& bitstream_manager,
-                                 const std::vector<ConfigBitId>& fabric_bitstream,
+                                 const FabricBitstream& fabric_bitstream,
                                  const e_config_protocol_type& sram_orgz_type,
                                  const CircuitLibrary& circuit_lib,
                                  const std::vector<CircuitPortId>& global_ports,
@@ -842,7 +840,7 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
    * by traversing the linked-list and count the number of SRAM=1 or BL=1&WL=1 in it.
    * We plus 1 additional config clock cycle here because we need to reset everything during the first clock cycle
    */
-  size_t num_config_clock_cycles = 1 + fabric_bitstream.size();
+  size_t num_config_clock_cycles = 1 + fabric_bitstream.bits().size();
 
   /* Generate stimuli for general control signals */
   print_verilog_top_testbench_generic_stimulus(fp,

@@ -31,14 +31,14 @@ namespace openfpga {
  *     in this file
  *******************************************************************/
 void write_fabric_bitstream_to_text_file(const BitstreamManager& bitstream_manager,
-                                         const std::vector<ConfigBitId>& fabric_bitstream,
+                                         const FabricBitstream& fabric_bitstream,
                                          const std::string& fname) {
   /* Ensure that we have a valid file name */
   if (true == fname.empty()) {
     VTR_LOG_ERROR("Received empty file name to output bitstream!\n\tPlease specify a valid file name.\n");
   }
 
-  std::string timer_message = std::string("Write ") + std::to_string(fabric_bitstream.size()) + std::string(" fabric bitstream into plain text file '") + fname + std::string("'");
+  std::string timer_message = std::string("Write ") + std::to_string(fabric_bitstream.bits().size()) + std::string(" fabric bitstream into plain text file '") + fname + std::string("'");
   vtr::ScopedStartFinishTimer timer(timer_message);
 
   /* Create the file stream */
@@ -48,8 +48,8 @@ void write_fabric_bitstream_to_text_file(const BitstreamManager& bitstream_manag
   check_file_stream(fname.c_str(), fp);
 
   /* Put down pure 0|1 bitstream here */
-  for (const ConfigBitId& fabric_bit : fabric_bitstream) {
-    fp << bitstream_manager.bit_value(fabric_bit);
+  for (const FabricBitId& fabric_bit : fabric_bitstream.bits()) {
+    fp << bitstream_manager.bit_value(fabric_bitstream.config_bit(fabric_bit));
   }
   /* Print an end to the file here */
   fp << std::endl;

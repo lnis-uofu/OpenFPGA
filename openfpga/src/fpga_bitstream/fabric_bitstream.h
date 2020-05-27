@@ -67,6 +67,11 @@ class FabricBitstream {
     void set_bit_din(const FabricBitId& bit_id,
                      const bool& din);
 
+    /* Reverse bit sequence of the fabric bitstream
+     * This is required by configuration chain protocol 
+     */
+    void reverse();
+
   public:  /* Public Validators */
     bool valid_bit_id(const FabricBitId& bit_id) const;
 

@@ -16,6 +16,7 @@
 #include "netlist_manager.h"
 #include "openfpga_flow_manager.h"
 #include "bitstream_manager.h"
+#include "fabric_bitstream.h"
 #include "device_rr_gsb.h"
 #include "io_location_map.h"
 
@@ -61,7 +62,7 @@ class OpenfpgaContext : public Context  {
     const openfpga::ModuleManager& module_graph() const { return module_graph_; }
     const openfpga::FlowManager& flow_manager() const { return flow_manager_; }
     const openfpga::BitstreamManager& bitstream_manager() const { return bitstream_manager_; }
-    const std::vector<openfpga::ConfigBitId>& fabric_bitstream() const { return fabric_bitstream_; }
+    const openfpga::FabricBitstream& fabric_bitstream() const { return fabric_bitstream_; }
     const openfpga::IoLocationMap& io_location_map() const { return io_location_map_; }
     const std::unordered_map<AtomNetId, t_net_power>& net_activity() const { return net_activity_; }
     const openfpga::NetlistManager& verilog_netlists() const { return verilog_netlists_; }
@@ -79,7 +80,7 @@ class OpenfpgaContext : public Context  {
     openfpga::ModuleManager& mutable_module_graph() { return module_graph_; }
     openfpga::FlowManager& mutable_flow_manager() { return flow_manager_; }
     openfpga::BitstreamManager& mutable_bitstream_manager() { return bitstream_manager_; }
-    std::vector<openfpga::ConfigBitId>& mutable_fabric_bitstream() { return fabric_bitstream_; }
+    openfpga::FabricBitstream& mutable_fabric_bitstream() { return fabric_bitstream_; }
     openfpga::IoLocationMap& mutable_io_location_map() { return io_location_map_; }
     std::unordered_map<AtomNetId, t_net_power>& mutable_net_activity() { return net_activity_; }
     openfpga::NetlistManager& mutable_verilog_netlists() { return verilog_netlists_; }
@@ -120,7 +121,7 @@ class OpenfpgaContext : public Context  {
 
     /* Bitstream database */
     openfpga::BitstreamManager bitstream_manager_;
-    std::vector<openfpga::ConfigBitId> fabric_bitstream_;
+    openfpga::FabricBitstream fabric_bitstream_;
 
     /* Netlist database 
      * TODO: Each format should have an independent entry

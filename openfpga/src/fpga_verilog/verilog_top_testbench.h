@@ -8,6 +8,7 @@
 #include <vector>
 #include "module_manager.h"
 #include "bitstream_manager.h"
+#include "fabric_bitstream.h"
 #include "circuit_library.h"
 #include "vpr_context.h"
 #include "io_location_map.h"
@@ -23,7 +24,7 @@ namespace openfpga {
 
 void print_verilog_top_testbench(const ModuleManager& module_manager,
                                  const BitstreamManager& bitstream_manager,
-                                 const std::vector<ConfigBitId>& fabric_bitstream,
+                                 const FabricBitstream& fabric_bitstream,
                                  const e_config_protocol_type& sram_orgz_type,
                                  const CircuitLibrary& circuit_lib,
                                  const std::vector<CircuitPortId>& global_ports,

@@ -147,7 +147,7 @@ void fpga_fabric_verilog(ModuleManager& module_manager,
  ********************************************************************/
 void fpga_verilog_testbench(const ModuleManager& module_manager,
                             const BitstreamManager& bitstream_manager, 
-                            const std::vector<ConfigBitId>& fabric_bitstream, 
+                            const FabricBitstream& fabric_bitstream, 
                             const AtomContext& atom_ctx, 
                             const PlacementContext& place_ctx, 
                             const IoLocationMap& io_location_map,

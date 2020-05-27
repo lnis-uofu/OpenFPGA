@@ -56,15 +56,21 @@ FabricBitId FabricBitstream::add_bit(const ConfigBitId& config_bit_id) {
 }
 
 void FabricBitstream::set_bit_address(const FabricBitId& bit_id,
-                                             const std::vector<bool>& address) {
+                                      const std::vector<bool>& address) {
   VTR_ASSERT(true == valid_bit_id(bit_id));
   bit_addresses_[bit_id] = address;
 }
 
 void FabricBitstream::set_bit_din(const FabricBitId& bit_id,
-                                         const bool& din) {
+                                  const bool& din) {
   VTR_ASSERT(true == valid_bit_id(bit_id));
   bit_dins_[bit_id] = din;
+}
+
+void FabricBitstream::reverse() {
+  std::reverse(config_bit_ids_.begin(), config_bit_ids_.end());
+  std::reverse(bit_addresses_.begin(), bit_addresses_.end());
+  std::reverse(bit_dins_.begin(), bit_dins_.end());
 }
 
 /******************************************************************************
