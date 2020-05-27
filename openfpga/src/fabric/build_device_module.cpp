@@ -105,7 +105,9 @@ ModuleManager build_device_module_graph(IoLocationMap& io_location_map,
   }
 
   /* Build FPGA fabric top-level module */
-  build_top_module(module_manager, io_location_map,
+  build_top_module(module_manager,
+                   io_location_map,
+                   decoder_lib,
                    openfpga_ctx.arch().circuit_lib, 
                    vpr_device_ctx.grid,
                    vpr_device_ctx.rr_graph,

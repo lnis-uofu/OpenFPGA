@@ -11,6 +11,7 @@
 #include "rr_graph_obj.h"
 #include "device_rr_gsb.h"
 #include "circuit_library.h"
+#include "decoder_library.h"
 #include "tile_direct.h"
 #include "arch_direct.h"
 #include "module_manager.h"
@@ -25,6 +26,7 @@ namespace openfpga {
 
 void build_top_module(ModuleManager& module_manager,
                       IoLocationMap& io_location_map,
+                      DecoderLibrary& decoder_lib,
                       const CircuitLibrary& circuit_lib,
                       const DeviceGrid& grids,
                       const RRGraph& rr_graph,

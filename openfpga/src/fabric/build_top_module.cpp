@@ -311,6 +311,7 @@ vtr::Matrix<size_t> add_top_module_connection_block_instances(ModuleManager& mod
  *******************************************************************/
 void build_top_module(ModuleManager& module_manager,
                       IoLocationMap& io_location_map,
+                      DecoderLibrary& decoder_lib,
                       const CircuitLibrary& circuit_lib,
                       const DeviceGrid& grids,
                       const RRGraph& rr_graph,
@@ -390,7 +391,8 @@ void build_top_module(ModuleManager& module_manager,
    * This is a one-shot addition that covers all the memory modules in this pb module!
    */
   if (0 < module_manager.configurable_children(top_module).size()) {
-    add_top_module_nets_memory_config_bus(module_manager, top_module, 
+    add_top_module_nets_memory_config_bus(module_manager, decoder_lib,
+                                          top_module, 
                                           sram_orgz_type, circuit_lib.design_tech_type(sram_model));
   }
 }

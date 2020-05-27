@@ -408,6 +408,7 @@ void organize_top_module_memory_modules(ModuleManager& module_manager,
  **********************************************************************/
 static 
 void add_top_module_nets_cmos_memory_config_bus(ModuleManager& module_manager,
+                                                DecoderLibrary& decoder_lib,
                                                 const ModuleId& parent_module,
                                                 const e_config_protocol_type& sram_orgz_type) {
   switch (sram_orgz_type) {
@@ -423,6 +424,7 @@ void add_top_module_nets_cmos_memory_config_bus(ModuleManager& module_manager,
     break;
   case CONFIG_MEM_FRAME_BASED:
     /* TODO: */
+    add_module_nets_cmos_memory_frame_config_bus(module_manager, decoder_lib, parent_module);
     break;
   default:
     VTR_LOGF_ERROR(__FILE__, __LINE__,
@@ -464,12 +466,14 @@ void add_top_module_nets_cmos_memory_config_bus(ModuleManager& module_manager,
  * and its child module (logic_module and memory_module) is created! 
  *******************************************************************/
 void add_top_module_nets_memory_config_bus(ModuleManager& module_manager,
+                                           DecoderLibrary& decoder_lib,
                                            const ModuleId& parent_module,
                                            const e_config_protocol_type& sram_orgz_type, 
                                            const e_circuit_model_design_tech& mem_tech) {
   switch (mem_tech) {
   case CIRCUIT_MODEL_DESIGN_CMOS:
-    add_top_module_nets_cmos_memory_config_bus(module_manager, parent_module, 
+    add_top_module_nets_cmos_memory_config_bus(module_manager, decoder_lib,
+                                               parent_module, 
                                                sram_orgz_type);
     break;
   case CIRCUIT_MODEL_DESIGN_RRAM:
