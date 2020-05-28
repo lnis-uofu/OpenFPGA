@@ -270,7 +270,7 @@ void build_primitive_block_module(ModuleManager& module_manager,
   }
 
   /* Regular (independent) SRAM ports */
-  size_t num_config_bits = find_circuit_num_config_bits(circuit_lib, primitive_model);
+  size_t num_config_bits = find_circuit_num_config_bits(sram_orgz_type, circuit_lib, primitive_model);
   if (0 < num_config_bits) {
     add_sram_ports_to_module_manager(module_manager, primitive_module,
                                      circuit_lib, sram_model, sram_orgz_type,

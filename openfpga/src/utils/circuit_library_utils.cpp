@@ -12,6 +12,7 @@
 #include "vtr_log.h"
 
 #include "check_circuit_library.h"
+#include "decoder_library_utils.h"
 #include "circuit_library_utils.h"
 
 /* begin namespace openfpga */
@@ -161,7 +162,8 @@ size_t find_circuit_num_shared_config_bits(const CircuitLibrary& circuit_lib,
  * for a multiplexer, because the multiplexer size is determined during 
  * the FPGA architecture generation (NOT during the XML parsing). 
  *******************************************************************/
-size_t find_circuit_num_config_bits(const CircuitLibrary& circuit_lib,
+size_t find_circuit_num_config_bits(const e_config_protocol_type& config_protocol_type,
+                                    const CircuitLibrary& circuit_lib,
                                     const CircuitModelId& circuit_model) {
   size_t num_config_bits = 0;
 
@@ -169,6 +171,27 @@ size_t find_circuit_num_config_bits(const CircuitLibrary& circuit_lib,
   for (auto sram_port : sram_ports) {
     num_config_bits += circuit_lib.port_size(sram_port); 
   } 
+
+  switch (config_protocol_type) {
+  case CONFIG_MEM_STANDALONE: 
+  case CONFIG_MEM_SCAN_CHAIN: 
+  case CONFIG_MEM_MEMORY_BANK: {
+    break;
+  }
+  case CONFIG_MEM_FRAME_BASED: {
+    /* For frame-based configuration protocol
+     * The number of configuration bits is the address size
+     */
+    if (0 < num_config_bits) {
+      num_config_bits = find_mux_local_decoder_addr_size(num_config_bits);
+    }
+    break;
+  }
+  default:
+    VTR_LOGF_ERROR(__FILE__, __LINE__,
+                   "Invalid type of SRAM organization !\n");
+    exit(1);
+  }
 
   return num_config_bits;
 }
