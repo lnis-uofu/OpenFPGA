@@ -552,8 +552,10 @@ void print_verilog_top_testbench_load_bitstream_task_configuration_chain(std::fs
   fp << "\tbegin" << std::endl;
   fp << "\t\t@(negedge " << generate_verilog_port(VERILOG_PORT_CONKT, prog_clock_port) << ");" << std::endl;
   fp << "\t\t\t"; 
-  print_verilog_wire_connection(fp, cc_head_port, cc_head_value, false);
-  fp << std::endl;
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, cc_head_port);
+  fp << " = "; 
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, cc_head_value);
+  fp << ";" << std::endl;
 
   fp << "\tend" << std::endl;
   fp << "endtask" << std::endl;
@@ -607,11 +609,17 @@ void print_verilog_top_testbench_load_bitstream_task_frame_decoder(std::fstream&
   fp << "\t\t@(posedge " << generate_verilog_port(VERILOG_PORT_CONKT, prog_clock_port) << ");" << std::endl;
 
   fp << "\t\t\t"; 
-  print_verilog_wire_connection(fp, addr_port, addr_value, false);
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, addr_port);
+  fp << " = "; 
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, addr_value);
+  fp << ";" << std::endl;
   fp << std::endl;
 
   fp << "\t\t\t"; 
-  print_verilog_wire_connection(fp, din_port, din_value, false);
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, din_port);
+  fp << " = "; 
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, din_value);
+  fp << ";" << std::endl;
   fp << std::endl;
 
   fp << "\tend" << std::endl;
