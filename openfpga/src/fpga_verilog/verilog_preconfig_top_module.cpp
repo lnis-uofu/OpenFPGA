@@ -206,7 +206,7 @@ void print_verilog_preconfig_top_module_assign_bitstream(std::fstream& fp,
     bit_hierarchy_path += std::string(".");
 
     /* Find the bit index in the parent block */
-    BasicPort config_data_port(bit_hierarchy_path + generate_configuration_chain_data_out_name(),
+    BasicPort config_data_port(bit_hierarchy_path + generate_configurable_memory_data_out_name(),
                                bitstream_manager.block_bits(config_block_id).size());
 
     /* Wire it to the configuration bit: access both data out and data outb ports */
@@ -239,7 +239,7 @@ void print_verilog_preconfig_top_module_assign_bitstream(std::fstream& fp,
     bit_hierarchy_path += std::string(".");
 
     /* Find the bit index in the parent block */
-    BasicPort config_datab_port(bit_hierarchy_path + generate_configuration_chain_inverted_data_out_name(),
+    BasicPort config_datab_port(bit_hierarchy_path + generate_configurable_memory_inverted_data_out_name(),
                                 bitstream_manager.block_bits(config_block_id).size());
 
     std::vector<size_t> config_datab_values;
@@ -290,10 +290,10 @@ void print_verilog_preconfig_top_module_deposit_bitstream(std::fstream& fp,
     bit_hierarchy_path += std::string(".");
 
     /* Find the bit index in the parent block */
-    BasicPort config_data_port(bit_hierarchy_path + generate_configuration_chain_data_out_name(),
+    BasicPort config_data_port(bit_hierarchy_path + generate_configurable_memory_data_out_name(),
                                bitstream_manager.block_bits(config_block_id).size());
 
-    BasicPort config_datab_port(bit_hierarchy_path + generate_configuration_chain_inverted_data_out_name(),
+    BasicPort config_datab_port(bit_hierarchy_path + generate_configurable_memory_inverted_data_out_name(),
                                bitstream_manager.block_bits(config_block_id).size());
 
     /* Wire it to the configuration bit: access both data out and data outb ports */

@@ -687,18 +687,18 @@ std::string generate_configuration_chain_tail_name() {
 }
 
 /*********************************************************************
- * Generate the memory output port name of a configuration chain
+ * Generate the memory output port name of a configurable memory
  * TODO: This could be replaced as a constexpr string
  *********************************************************************/
-std::string generate_configuration_chain_data_out_name() {
+std::string generate_configurable_memory_data_out_name() {
   return std::string("mem_out");
 }
 
 /*********************************************************************
- * Generate the inverted memory output port name of a configuration chain
+ * Generate the inverted memory output port name of a configurable memory
  * TODO: This could be replaced as a constexpr string
  *********************************************************************/
-std::string generate_configuration_chain_inverted_data_out_name() {
+std::string generate_configurable_memory_inverted_data_out_name() {
   return std::string("mem_outb");
 }
 

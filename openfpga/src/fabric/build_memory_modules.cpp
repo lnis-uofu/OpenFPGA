@@ -396,10 +396,10 @@ void build_memory_chain_module(ModuleManager& module_manager,
   for (size_t iport = 0; iport < sram_output_ports.size(); ++iport) {
     std::string port_name;
     if (0 == iport) {
-      port_name = generate_configuration_chain_data_out_name();
+      port_name = generate_configurable_memory_data_out_name();
     } else {
       VTR_ASSERT( 1 == iport);
-      port_name = generate_configuration_chain_inverted_data_out_name();
+      port_name = generate_configurable_memory_inverted_data_out_name();
     }
     BasicPort output_port(port_name, num_mems);
     module_manager.add_port(mem_module, output_port, ModuleManager::MODULE_OUTPUT_PORT);
@@ -421,10 +421,10 @@ void build_memory_chain_module(ModuleManager& module_manager,
     for (size_t iport = 0; iport < sram_output_ports.size(); ++iport) {
       std::string port_name;
       if (0 == iport) {
-        port_name = generate_configuration_chain_data_out_name();
+        port_name = generate_configurable_memory_data_out_name();
       } else {
         VTR_ASSERT( 1 == iport);
-        port_name = generate_configuration_chain_inverted_data_out_name();
+        port_name = generate_configurable_memory_inverted_data_out_name();
       }
       std::vector<ModuleNetId> output_nets = add_module_output_nets_to_chain_mem_modules(module_manager, mem_module, 
                                                                                          port_name, circuit_lib, sram_output_ports[iport],
@@ -657,12 +657,22 @@ void build_frame_memory_module(ModuleManager& module_manager,
   ModulePortId mem_addr_port = module_manager.add_port(mem_module, addr_port, ModuleManager::MODULE_INPUT_PORT);
 
   /* Input: Data port */
-  BasicPort data_port(std::string(DECODER_DATA_IN_PORT_NAME), data_size);
+  BasicPort data_port(std::string(DECODER_DATA_IN_PORT_NAME), 1);
   ModulePortId mem_data_port = module_manager.add_port(mem_module, data_port, ModuleManager::MODULE_INPUT_PORT);
 
+  /* Should have only 1 or 2 output port */
+  VTR_ASSERT( (1 == sram_output_ports.size()) || ( 2 == sram_output_ports.size()) );
+
   /* Add each output port: port width should match the number of memories */
-  for (const auto& port : sram_output_ports) {
-    BasicPort output_port(circuit_lib.port_prefix(port), num_mems * circuit_lib.port_size(port));
+  for (size_t iport = 0; iport < sram_output_ports.size(); ++iport) {
+    std::string port_name;
+    if (0 == iport) {
+      port_name = generate_configurable_memory_data_out_name();
+    } else {
+      VTR_ASSERT( 1 == iport);
+      port_name = generate_configurable_memory_inverted_data_out_name();
+    }
+    BasicPort output_port(port_name, num_mems);
     module_manager.add_port(mem_module, output_port, ModuleManager::MODULE_OUTPUT_PORT);
   }
 
@@ -717,7 +727,19 @@ void build_frame_memory_module(ModuleManager& module_manager,
     }
 
     /* Wire inputs of parent module to outputs of child modules */
-    add_module_output_nets_to_mem_modules(module_manager, mem_module, circuit_lib, sram_output_ports, sram_mem_module, i, sram_instance);
+    for (size_t iport = 0; iport < sram_output_ports.size(); ++iport) {
+      std::string port_name;
+      if (0 == iport) {
+        port_name = generate_configurable_memory_data_out_name();
+      } else {
+        VTR_ASSERT( 1 == iport);
+        port_name = generate_configurable_memory_inverted_data_out_name();
+      }
+
+      add_module_output_nets_to_chain_mem_modules(module_manager, mem_module, 
+                                                  port_name, circuit_lib, sram_output_ports[iport],
+                                                  sram_mem_module, i, sram_instance);
+    }
   }
 
   /* Add global ports to the pb_module:
@@ -726,7 +748,6 @@ void build_frame_memory_module(ModuleManager& module_manager,
    */
   add_module_global_ports_from_child_modules(module_manager, mem_module);
 }
-
 
 /*********************************************************************
  * Generate Verilog modules for the memories that are used
@@ -818,8 +839,9 @@ void build_mux_memory_module(ModuleManager& module_manager,
      */ 
     break;
   default:
-    VTR_LOGF_ERROR(__FILE__, __LINE__, "Invalid design technology of multiplexer '%s'\n",
-                  circuit_lib.model_name(mux_model).c_str()); 
+    VTR_LOGF_ERROR(__FILE__, __LINE__,
+                   "Invalid design technology of multiplexer '%s'\n",
+                   circuit_lib.model_name(mux_model).c_str()); 
     exit(1);
   }
 }

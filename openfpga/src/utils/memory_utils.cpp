@@ -70,8 +70,8 @@ std::map<std::string, BasicPort> generate_cmos_mem_module_port2port_map(const Ba
 
     /* Link the SRAM output ports of the memory module */ 
     VTR_ASSERT( 2 == mem_output_bus_ports.size() );
-    port2port_name_map[generate_configuration_chain_data_out_name()] = mem_output_bus_ports[0];
-    port2port_name_map[generate_configuration_chain_inverted_data_out_name()] = mem_output_bus_ports[1];
+    port2port_name_map[generate_configurable_memory_data_out_name()] = mem_output_bus_ports[0];
+    port2port_name_map[generate_configurable_memory_inverted_data_out_name()] = mem_output_bus_ports[1];
     break;
   }
   case CONFIG_MEM_MEMORY_BANK:
@@ -127,15 +127,16 @@ std::map<std::string, BasicPort> generate_rram_mem_module_port2port_map(const Ba
 
     /* Link the SRAM output ports of the memory module */ 
     VTR_ASSERT( 2 == mem_output_bus_ports.size() );
-    port2port_name_map[generate_configuration_chain_data_out_name()] = mem_output_bus_ports[0];
-    port2port_name_map[generate_configuration_chain_inverted_data_out_name()] = mem_output_bus_ports[1];
+    port2port_name_map[generate_configurable_memory_data_out_name()] = mem_output_bus_ports[0];
+    port2port_name_map[generate_configurable_memory_inverted_data_out_name()] = mem_output_bus_ports[1];
     break;
   }
   case CONFIG_MEM_MEMORY_BANK:
     /* TODO: link BL/WL/Reserved Ports to the inputs of a memory module */
     break;
   default:
-    VTR_LOG_ERROR("Invalid type of SRAM organization!\n");
+    VTR_LOGF_ERROR(__FILE__, __LINE__,
+                   "Invalid type of SRAM organization!\n");
     exit(1);
   }
 
@@ -342,7 +343,8 @@ std::vector<std::string> generate_sram_port_names(const CircuitLibrary& circuit_
     break;
   }
   default:
-    VTR_LOG_ERROR("Invalid type of SRAM organization !\n");
+    VTR_LOGF_ERROR(__FILE__, __LINE__,
+                   "Invalid type of SRAM organization !\n");
     exit(1);
   }
 
@@ -378,8 +380,11 @@ size_t generate_sram_port_size(const e_config_protocol_type sram_orgz_type,
     break;
   case CONFIG_MEM_MEMORY_BANK:
     break;
+  case CONFIG_MEM_FRAME_BASED:
+    break;
   default:
-    VTR_LOG_ERROR("Invalid type of SRAM organization !\n");
+    VTR_LOGF_ERROR(__FILE__, __LINE__,
+                   "Invalid type of SRAM organization!\n");
     exit(1);
   }
 

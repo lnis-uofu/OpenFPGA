@@ -143,7 +143,8 @@ size_t find_circuit_num_shared_config_bits(const CircuitLibrary& circuit_lib,
        num_shared_config_bits = std::max((int)num_shared_config_bits, (int)find_rram_circuit_num_shared_config_bits(circuit_lib, sram_model, sram_orgz_type));
        break;
     default:
-      VTR_LOG_ERROR("Invalid design technology for SRAM model!\n");
+      VTR_LOGF_ERROR(__FILE__, __LINE__,
+                     "Invalid design technology for SRAM model!\n");
       exit(1);
     }
   } 

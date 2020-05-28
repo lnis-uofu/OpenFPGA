@@ -76,7 +76,7 @@ void build_switch_block_mux_bitstream(BitstreamManager& bitstream_manager,
   std::string mem_module_name = generate_mux_subckt_name(circuit_lib, mux_model, datapath_mux_size, std::string(MEMORY_MODULE_POSTFIX)); 
   ModuleId mux_mem_module = module_manager.find_module(mem_module_name); 
   VTR_ASSERT (true == module_manager.valid_module_id(mux_mem_module));
-  ModulePortId mux_mem_out_port_id = module_manager.find_module_port(mux_mem_module, generate_configuration_chain_data_out_name());
+  ModulePortId mux_mem_out_port_id = module_manager.find_module_port(mux_mem_module, generate_configurable_memory_data_out_name());
   VTR_ASSERT(mux_bitstream.size() == module_manager.module_port(mux_mem_module, mux_mem_out_port_id).get_width());
 
   /* Add the bistream to the bitstream manager */
@@ -230,7 +230,7 @@ void build_connection_block_mux_bitstream(BitstreamManager& bitstream_manager,
   std::string mem_module_name = generate_mux_subckt_name(circuit_lib, mux_model, datapath_mux_size, std::string(MEMORY_MODULE_POSTFIX)); 
   ModuleId mux_mem_module = module_manager.find_module(mem_module_name); 
   VTR_ASSERT (true == module_manager.valid_module_id(mux_mem_module));
-  ModulePortId mux_mem_out_port_id = module_manager.find_module_port(mux_mem_module, generate_configuration_chain_data_out_name());
+  ModulePortId mux_mem_out_port_id = module_manager.find_module_port(mux_mem_module, generate_configurable_memory_data_out_name());
   VTR_ASSERT(mux_bitstream.size() == module_manager.module_port(mux_mem_module, mux_mem_out_port_id).get_width());
 
   /* Add the bistream to the bitstream manager */

@@ -135,9 +135,11 @@ size_t check_one_circuit_model_port_size_required(const CircuitLibrary& circuit_
   size_t num_err = 0;
 
   if (port_size_to_check != circuit_lib.port_size(circuit_port)) {
-    VTR_LOG_ERROR(circuit_lib.model_name(circuit_model).c_str(), 
+    VTR_LOG_ERROR("Expect circuit model %s to have %d %s ports but only see %d!\n",
+                  circuit_lib.model_name(circuit_model).c_str(), 
+                  port_size_to_check,
                   CIRCUIT_MODEL_PORT_TYPE_STRING[size_t(circuit_lib.port_type(circuit_port))],
-                  port_size_to_check);
+                  circuit_lib.port_size(circuit_port));
     /* Incremental the counter for errors */
     num_err++;
   }
@@ -282,7 +284,7 @@ size_t check_sram_circuit_model_ports(const CircuitLibrary& circuit_lib,
   /* Check if we has 1 output with size 2 */
   num_err += check_one_circuit_model_port_type_and_size_required(circuit_lib, circuit_model, 
                                                                  CIRCUIT_MODEL_PORT_OUTPUT,
-                                                                 2, 2, false);
+                                                                 2, 1, false);
   /* basic check finished here */
   if (false == check_blwl) {
     return num_err;

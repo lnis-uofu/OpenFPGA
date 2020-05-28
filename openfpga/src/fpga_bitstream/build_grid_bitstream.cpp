@@ -98,7 +98,7 @@ void build_primitive_bitstream(BitstreamManager& bitstream_manager,
   std::string mem_block_name = generate_memory_module_name(circuit_lib, primitive_model, sram_models[0], std::string(MEMORY_MODULE_POSTFIX));
   ModuleId mem_module = module_manager.find_module(mem_block_name);
   VTR_ASSERT (true == module_manager.valid_module_id(mem_module));
-  ModulePortId mem_out_port_id = module_manager.find_module_port(mem_module, generate_configuration_chain_data_out_name());
+  ModulePortId mem_out_port_id = module_manager.find_module_port(mem_module, generate_configurable_memory_data_out_name());
   VTR_ASSERT(mode_select_bitstream.size() == module_manager.module_port(mem_module, mem_out_port_id).get_width());
 
   /* Create a block for the bitstream which corresponds to the memory module associated to the LUT */
@@ -194,7 +194,7 @@ void build_physical_block_pin_interc_bitstream(BitstreamManager& bitstream_manag
     std::string mem_module_name = generate_mux_subckt_name(circuit_lib, mux_model, datapath_mux_size, std::string(MEMORY_MODULE_POSTFIX)); 
     ModuleId mux_mem_module = module_manager.find_module(mem_module_name); 
     VTR_ASSERT (true == module_manager.valid_module_id(mux_mem_module));
-    ModulePortId mux_mem_out_port_id = module_manager.find_module_port(mux_mem_module, generate_configuration_chain_data_out_name());
+    ModulePortId mux_mem_out_port_id = module_manager.find_module_port(mux_mem_module, generate_configurable_memory_data_out_name());
     VTR_ASSERT(mux_bitstream.size() == module_manager.module_port(mux_mem_module, mux_mem_out_port_id).get_width());
   
     /* Add the bistream to the bitstream manager */
@@ -424,7 +424,7 @@ void build_lut_bitstream(BitstreamManager& bitstream_manager,
   std::string mem_block_name = generate_memory_module_name(circuit_lib, lut_model, sram_models[0], std::string(MEMORY_MODULE_POSTFIX));
   ModuleId mem_module = module_manager.find_module(mem_block_name);
   VTR_ASSERT (true == module_manager.valid_module_id(mem_module));
-  ModulePortId mem_out_port_id = module_manager.find_module_port(mem_module, generate_configuration_chain_data_out_name());
+  ModulePortId mem_out_port_id = module_manager.find_module_port(mem_module, generate_configurable_memory_data_out_name());
   VTR_ASSERT(lut_bitstream.size() == module_manager.module_port(mem_module, mem_out_port_id).get_width());
 
   /* Create a block for the bitstream which corresponds to the memory module associated to the LUT */

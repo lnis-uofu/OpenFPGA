@@ -234,7 +234,8 @@ void add_sram_ports_to_module_manager(ModuleManager& module_manager,
     break;
   }
   default:
-    VTR_LOG_ERROR("Invalid type of SRAM organization !\n");
+    VTR_LOGF_ERROR(__FILE__, __LINE__,
+                   "Invalid type of SRAM organization !\n");
     exit(1);
   }
 }
@@ -613,8 +614,8 @@ void add_module_nets_between_logic_and_memory_sram_bus(ModuleManager& module_man
   }
 
   /* Get the SRAM port name of memory model */
-  /* TODO: this should be a constant expression and it should be the same for all the memory module! */
-  std::string memory_model_sram_port_name = generate_configuration_chain_data_out_name();
+  /* This should be a constant expression and it should be the same for all the memory module! */
+  std::string memory_model_sram_port_name = generate_configurable_memory_data_out_name();
   /* Find the corresponding ports in memory module */ 
   ModulePortId mem_module_sram_port_id = module_manager.find_module_port(memory_module, memory_model_sram_port_name);
 
@@ -649,7 +650,7 @@ void add_module_nets_between_logic_and_memory_sram_bus(ModuleManager& module_man
   }
 
   /* Get the SRAM port name of memory model */
-  std::string memory_model_sramb_port_name = generate_configuration_chain_inverted_data_out_name();
+  std::string memory_model_sramb_port_name = generate_configurable_memory_inverted_data_out_name();
   /* Find the corresponding ports in memory module */ 
   ModulePortId mem_module_sramb_port_id = module_manager.find_module_port(memory_module, memory_model_sramb_port_name);
 
@@ -1099,7 +1100,8 @@ void add_module_nets_cmos_memory_config_bus(ModuleManager& module_manager,
     add_module_nets_cmos_memory_frame_config_bus(module_manager, decoder_lib, parent_module);
     break;
   default:
-    VTR_LOG_ERROR("Invalid type of SRAM organization!\n");
+    VTR_LOGF_ERROR(__FILE__, __LINE__,
+                   "Invalid type of SRAM organization!\n");
     exit(1);
   }
 }
@@ -1174,7 +1176,8 @@ void add_module_nets_memory_config_bus(ModuleManager& module_manager,
     /* TODO: */
     break;
   default:
-    VTR_LOG_ERROR("Invalid type of memory design technology !\n");
+    VTR_LOGF_ERROR(__FILE__, __LINE__,
+                   "Invalid type of memory design technology!\n");
     exit(1);
   }
 }
@@ -1593,7 +1596,11 @@ void add_module_bus_nets(ModuleManager& module_manager,
 
   if (src_port.get_width() != des_port.get_width()) {
     VTR_LOGF_ERROR(__FILE__, __LINE__,
-                   "Unmatched port size: src_port is %lu while des_port is %lu!\n");
+                   "Unmatched port size: src_port %s is %lu while des_port %s is %lu!\n",
+                   src_port.get_name().c_str(),
+                   src_port.get_width(),
+                   des_port.get_name().c_str(),
+                   des_port.get_width());
     exit(1);
   }
 

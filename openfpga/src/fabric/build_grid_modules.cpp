@@ -414,7 +414,8 @@ void add_module_pb_graph_pin2pin_net(ModuleManager& module_manager,
     module_manager.add_module_net_sink(pb_module, pin2pin_net, pin_pb_type_module, pin_pb_type_instance, pin_module_port_id, pin_module_pin_id);
     break;
   default:
-    VTR_LOGF_ERROR(__FILE__, __LINE__, "Invalid pin-to-pin interconnection type!\n");
+    VTR_LOGF_ERROR(__FILE__, __LINE__,
+                   "Invalid pin-to-pin interconnection type!\n");
     exit(1);
   }
 }
@@ -598,8 +599,9 @@ void add_module_pb_graph_pin_interc(ModuleManager& module_manager,
     break;
   }
   default:
-    VTR_LOGF_ERROR(__FILE__, __LINE__, "Invalid interconnection type for %s [at Architecture XML LINE%d]!\n",
-                  cur_interc->name, cur_interc->line_num);
+    VTR_LOGF_ERROR(__FILE__, __LINE__,
+                   "Invalid interconnection type for %s [at Architecture XML LINE%d]!\n",
+                   cur_interc->name, cur_interc->line_num);
     exit(1);
   }
 }
@@ -686,7 +688,8 @@ void add_module_pb_graph_port_interc(ModuleManager& module_manager,
     break;
   }
   default:
-    VTR_LOGF_ERROR(__FILE__, __LINE__, "Invalid pb port type!\n");
+    VTR_LOGF_ERROR(__FILE__, __LINE__,
+                   "Invalid pb port type!\n");
     exit(1);
   }
 }
