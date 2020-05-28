@@ -701,6 +701,7 @@ void build_frame_memory_module(ModuleManager& module_manager,
     /* Memory seed module instanciation */
     size_t sram_instance = module_manager.num_instance(mem_module, sram_mem_module);
     module_manager.add_child_module(mem_module, sram_mem_module);
+    module_manager.add_configurable_child(mem_module, sram_mem_module, sram_instance);
 
     /* Wire data_in port to SRAM BL port */
     ModulePortId sram_bl_port = module_manager.find_module_port(sram_mem_module, circuit_lib.port_lib_name(sram_bl_ports[0]));
@@ -747,6 +748,9 @@ void build_frame_memory_module(ModuleManager& module_manager,
    * we just need to find all the global ports from the child modules and build a list of it
    */
   add_module_global_ports_from_child_modules(module_manager, mem_module);
+
+  /* Add the decoder as the last configurable children */
+  module_manager.add_configurable_child(mem_module, decoder_module, 0);
 }
 
 /*********************************************************************

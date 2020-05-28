@@ -79,7 +79,7 @@ void rec_build_module_fabric_dependent_chain_bitstream(const BitstreamManager& b
  * in a recursive way, following a Depth-First Search (DFS) strategy
  * For each configuration child, we use its instance name as a key to spot the 
  * configuration bits in bitstream manager.
- * Note that it is guarentee that the instance name in module manager is 
+ * Note that it is guarenteed that the instance name in module manager is 
  * consistent with the block names in bitstream manager
  * We use this link to reorganize the bitstream in the sequence of memories as we stored
  * in the configurable_children() and configurable_child_instances() of each module of module manager 
@@ -112,16 +112,21 @@ void rec_build_module_fabric_dependent_frame_bitstream(const BitstreamManager& b
     const ModuleId& parent_module = parent_modules.back();
 
     size_t num_configurable_children = module_manager.configurable_children(parent_modules.back()).size();
-
+ 
+    size_t max_child_addr_code_size = 0;
     bool add_addr_code = true;
     ModuleId decoder_module = ModuleId::INVALID();
 
     /* Early exit if there is no configurable children */
     if (0 == num_configurable_children) {
+      /* Ensure that there should be no configuration bits in the parent block */
+      VTR_ASSERT(0 == bitstream_manager.block_bits(parent_block).size());
       return;
     }
 
-    /* For only 1 configurable child, there is not frame decoder need, we can pass on addr code directly */
+    /* For only 1 configurable child,
+     * there is no frame decoder here, we can pass on addr code directly
+     */
     if (1 == num_configurable_children) {
       add_addr_code = false;
     } else {
@@ -132,10 +137,18 @@ void rec_build_module_fabric_dependent_frame_bitstream(const BitstreamManager& b
       VTR_ASSERT(2 < num_configurable_children);
       num_configurable_children--;
       decoder_module = module_manager.configurable_children(parent_module).back();
+
+      /* The address code size is the max. of address port of all the configurable children */
+      for (size_t child_id = 0; child_id < num_configurable_children; ++child_id) {
+        ModuleId child_module = module_manager.configurable_children(parent_module)[child_id]; 
+        const ModulePortId& child_addr_port_id = module_manager.find_module_port(child_module, std::string(DECODER_ADDRESS_PORT_NAME));
+        const BasicPort& child_addr_port = module_manager.module_port(child_module, child_addr_port_id);
+        max_child_addr_code_size = std::max((int)child_addr_port.get_width(), (int)max_child_addr_code_size);
+      } 
     }
 
     for (size_t child_id = 0; child_id < num_configurable_children; ++child_id) {
-      ModuleId child_module = module_manager.configurable_children(parent_modules.back())[child_id]; 
+      ModuleId child_module = module_manager.configurable_children(parent_module)[child_id]; 
       size_t child_instance = module_manager.configurable_child_instances(parent_module)[child_id]; 
       /* Get the instance name and ensure it is not empty */
       std::string instance_name = module_manager.instance_name(parent_module, child_module, child_instance);
@@ -161,7 +174,46 @@ void rec_build_module_fabric_dependent_frame_bitstream(const BitstreamManager& b
         const ModulePortId& decoder_addr_port_id = module_manager.find_module_port(decoder_module, std::string(DECODER_ADDRESS_PORT_NAME));
         const BasicPort& decoder_addr_port = module_manager.module_port(decoder_module, decoder_addr_port_id);
         std::vector<size_t> addr_bits_vec = itobin_vec(child_id, decoder_addr_port.get_width());
-        child_addr_code.insert(child_addr_code.end(), addr_bits_vec.begin(), addr_bits_vec.end());
+
+        child_addr_code.insert(child_addr_code.begin(), addr_bits_vec.begin(), addr_bits_vec.end());
+
+        /* Note that the address port size of the child module may be smaller than the maximum
+         * of other child modules at this level.
+         * We will add dummy '0's to the head of addr_bit_vec.
+         *
+         * For example:
+         *  Decoder is the decoder to access all the child modules
+         *  whose address is decoded by the addr_bits_vec
+         *  The child modules may use part of the address lines,
+         *  we should add dummy '0' to fill the gap
+         *
+         *  Addr_code for child[0]: '000' + addr_bits_vec
+         *  Addr_code for child[1]: '0'  + addr_bits_vec 
+         *  Addr_code for child[2]: addr_bits_vec 
+         *
+         *                   Addr[6:8]
+         *                     |
+         *                     v
+         *  +-------------------------------------------+
+         *  |            Decoder Module                 |
+         *  +-------------------------------------------+
+         *   
+         *     Addr[0:2]       Addr[0:4]        Addr[0:5]
+         *        |                |               |
+         *        v                v               v
+         * +-----------+  +-------------+  +------------+
+         * | Child[0]  |  |  Child[1]   |  |  Child[2]  |
+         * +-----------+  +-------------+  +------------+
+         *
+         * Child[2] has the maximum address lines among the children
+         *
+         */
+        const ModulePortId& child_addr_port_id = module_manager.find_module_port(child_module, std::string(DECODER_ADDRESS_PORT_NAME));
+        const BasicPort& child_addr_port = module_manager.module_port(child_module, child_addr_port_id);
+        if (0 < max_child_addr_code_size - child_addr_port.get_width()) {
+          std::vector<size_t> dummy_codes(max_child_addr_code_size - child_addr_port.get_width(), 0);
+          child_addr_code.insert(child_addr_code.begin(), dummy_codes.begin(), dummy_codes.end());
+        }
       }
 
       /* Go recursively */
@@ -172,17 +224,36 @@ void rec_build_module_fabric_dependent_frame_bitstream(const BitstreamManager& b
     }
     /* Ensure that there should be no configuration bits in the parent block */
     VTR_ASSERT(0 == bitstream_manager.block_bits(parent_block).size());
+   
+    return;
   }
 
   /* Note that, reach here, it means that this is a leaf node. 
-   * We add the configuration bits to the fabric_bitstream,
-   * And then, we can return
+   * A leaf node (a memory module) always has a decoder inside
+   * which is the last of configurable children.
+   * We will find the address bit and add it to addr_code
+   * Then we can add the configuration bits to the fabric_bitstream.
    */
-  for (const ConfigBitId& config_bit : bitstream_manager.block_bits(parent_blocks.back())) {
+  if (!(1 < module_manager.configurable_children(parent_modules.back()).size()))
+  VTR_ASSERT(1 < module_manager.configurable_children(parent_modules.back()).size());
+  ModuleId decoder_module = module_manager.configurable_children(parent_modules.back()).back();
+  /* Find the address port from the decoder module */
+  const ModulePortId& decoder_addr_port_id = module_manager.find_module_port(decoder_module, std::string(DECODER_ADDRESS_PORT_NAME));
+  const BasicPort& decoder_addr_port = module_manager.module_port(decoder_module, decoder_addr_port_id);
+
+  for (size_t ibit = 0; ibit < bitstream_manager.block_bits(parent_blocks.back()).size(); ++ibit) {
+    
+    ConfigBitId config_bit = bitstream_manager.block_bits(parent_blocks.back())[ibit];
+    std::vector<size_t> addr_bits_vec = itobin_vec(ibit, decoder_addr_port.get_width());
+
+    std::vector<size_t> child_addr_code = addr_code;
+
+    child_addr_code.insert(child_addr_code.begin(), addr_bits_vec.begin(), addr_bits_vec.end());
+
     const FabricBitId& fabric_bit = fabric_bitstream.add_bit(config_bit);
 
     /* Set address */
-    fabric_bitstream.set_bit_address(fabric_bit, addr_code);
+    fabric_bitstream.set_bit_address(fabric_bit, child_addr_code);
     
     /* Set data input */
     fabric_bitstream.set_bit_din(fabric_bit, bitstream_manager.bit_value(config_bit));

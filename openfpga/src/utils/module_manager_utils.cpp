@@ -941,7 +941,8 @@ void add_module_nets_cmos_memory_frame_decoder_config_bus(ModuleManager& module_
    * Note that we only connect to the last few bits of address port
    */
   for (size_t mem_index = 0; mem_index < configurable_children.size(); ++mem_index) {
-    ModuleId child_module = module_manager.configurable_children(parent_module)[mem_index]; 
+    ModuleId child_module = configurable_children[mem_index]; 
+    size_t child_instance = module_manager.configurable_child_instances(parent_module)[mem_index];
     ModulePortId child_addr_port = module_manager.find_module_port(child_module, std::string(DECODER_ADDRESS_PORT_NAME));
     BasicPort child_addr_port_info = module_manager.module_port(child_module, child_addr_port);
     for (size_t ipin = 0; ipin < child_addr_port_info.get_width(); ++ipin) {
@@ -959,7 +960,7 @@ void add_module_nets_cmos_memory_frame_decoder_config_bus(ModuleManager& module_
       }
       /* Configure the net sink */
       module_manager.add_module_net_sink(parent_module, net,
-                                         child_module, 0,
+                                         child_module, child_instance,
                                          child_addr_port,
                                          child_addr_port_info.get_lsb() + ipin);
     }
@@ -969,12 +970,13 @@ void add_module_nets_cmos_memory_frame_decoder_config_bus(ModuleManager& module_
    * the memory modules
    */
   ModulePortId parent_din_port = module_manager.find_module_port(parent_module, std::string(DECODER_DATA_IN_PORT_NAME));
-  for (size_t mem_index = 0; mem_index < module_manager.configurable_children(parent_module).size(); ++mem_index) {
+  for (size_t mem_index = 0; mem_index < configurable_children.size(); ++mem_index) {
     ModuleId child_module = configurable_children[mem_index]; 
+    size_t child_instance = module_manager.configurable_child_instances(parent_module)[mem_index];
     ModulePortId child_din_port = module_manager.find_module_port(child_module, std::string(DECODER_DATA_IN_PORT_NAME));
     add_module_bus_nets(module_manager, parent_module,
                         parent_module, 0, parent_din_port,
-                        child_module, 0, child_din_port);
+                        child_module, child_instance, child_din_port);
   }
 
   /* Connect the data_out port of the decoder module 
@@ -985,6 +987,7 @@ void add_module_nets_cmos_memory_frame_decoder_config_bus(ModuleManager& module_
   VTR_ASSERT(decoder_dout_port_info.get_width() == configurable_children.size());
   for (size_t mem_index = 0; mem_index < configurable_children.size(); ++mem_index) {
     ModuleId child_module = configurable_children[mem_index]; 
+    size_t child_instance = module_manager.configurable_child_instances(parent_module)[mem_index];
     ModulePortId child_en_port = module_manager.find_module_port(child_module, std::string(DECODER_ENABLE_PORT_NAME));
     BasicPort child_en_port_info = module_manager.module_port(child_module, child_en_port);
     for (size_t ipin = 0; ipin < child_en_port_info.get_width(); ++ipin) {
@@ -1002,7 +1005,7 @@ void add_module_nets_cmos_memory_frame_decoder_config_bus(ModuleManager& module_
       }
       /* Configure the net sink */
       module_manager.add_module_net_sink(parent_module, net,
-                                         child_module, 0,
+                                         child_module, child_instance,
                                          child_en_port,
                                          child_en_port_info.pins()[ipin]);
     }
