@@ -52,7 +52,7 @@ class FabricBitstream {
     ConfigBitId config_bit(const FabricBitId& bit_id) const;
 
     /* Find the address of bitstream */
-    std::vector<bool> bit_address(const FabricBitId& bit_id) const;
+    std::vector<size_t> bit_address(const FabricBitId& bit_id) const;
 
     /* Find the data-in of bitstream */
     bool bit_din(const FabricBitId& bit_id) const;
@@ -62,7 +62,7 @@ class FabricBitstream {
     FabricBitId add_bit(const ConfigBitId& config_bit_id);
 
     void set_bit_address(const FabricBitId& bit_id,
-                         const std::vector<bool>& address);
+                         const std::vector<size_t>& address);
 
     void set_bit_din(const FabricBitId& bit_id,
                      const bool& din);
@@ -84,7 +84,7 @@ class FabricBitstream {
      * Here we store the binary format of the address, which can be loaded
      * to the configuration protocol directly 
      */
-    vtr::vector<FabricBitId, std::vector<bool>> bit_addresses_;
+    vtr::vector<FabricBitId, std::vector<size_t>> bit_addresses_;
 
     /* Data input (Din) bits: this is designed for memory decoders */
     vtr::vector<FabricBitId, bool> bit_dins_;

@@ -101,7 +101,7 @@ void rec_build_module_fabric_dependent_frame_bitstream(const BitstreamManager& b
                                                        const std::vector<ConfigBlockId>& parent_blocks,
                                                        const ModuleManager& module_manager,
                                                        const std::vector<ModuleId>& parent_modules,
-                                                       const std::vector<bool>& addr_code,
+                                                       const std::vector<size_t>& addr_code,
                                                        FabricBitstream& fabric_bitstream) {
 
   /* Depth-first search: if we have any children in the parent_block, 
@@ -154,17 +154,14 @@ void rec_build_module_fabric_dependent_frame_bitstream(const BitstreamManager& b
       child_modules.push_back(child_module);
 
       /* Set address, apply binary conversion from the first to the last element in the address list */
-      std::vector<bool> child_addr_code = addr_code;
+      std::vector<size_t> child_addr_code = addr_code;
 
       if (true == add_addr_code) { 
         /* Find the address port from the decoder module */
         const ModulePortId& decoder_addr_port_id = module_manager.find_module_port(decoder_module, std::string(DECODER_ADDRESS_PORT_NAME));
         const BasicPort& decoder_addr_port = module_manager.module_port(decoder_module, decoder_addr_port_id);
         std::vector<size_t> addr_bits_vec = itobin_vec(child_id, decoder_addr_port.get_width());
-        for (const size_t& bit : addr_bits_vec) {
-          VTR_ASSERT((0 == bit) || (1 == bit));
-          child_addr_code.push_back(bit);
-        }
+        child_addr_code.insert(child_addr_code.end(), addr_bits_vec.begin(), addr_bits_vec.end());
       }
 
       /* Go recursively */
@@ -226,7 +223,7 @@ void build_module_fabric_dependent_bitstream(const ConfigProtocol& config_protoc
                                                       std::vector<ConfigBlockId>(1, top_block),
                                                       module_manager,
                                                       std::vector<ModuleId>(1, top_module),
-                                                      std::vector<bool>(),
+                                                      std::vector<size_t>(),
                                                       fabric_bitstream);
     break;
   }

@@ -41,7 +41,7 @@ constexpr char* TOP_TESTBENCH_FPGA_OUTPUT_POSTFIX = "_fpga";
 
 constexpr char* TOP_TESTBENCH_CHECKFLAG_PORT_POSTFIX = "_flag";
 
-constexpr char* TOP_TESTBENCH_CC_PROG_TASK_NAME = "prog_cycle_task";
+constexpr char* TOP_TESTBENCH_PROG_TASK_NAME = "prog_cycle_task";
 
 constexpr char* TOP_TESTBENCH_SIM_START_PORT_NAME = "sim_start";
 
@@ -80,11 +80,48 @@ void print_verilog_top_testbench_config_chain_port(std::fstream& fp) {
 }
 
 /********************************************************************
+ * Print local wires for frame-based decoder protocols
+ *******************************************************************/
+static 
+void print_verilog_top_testbench_frame_decoder_port(std::fstream& fp,
+                                                    const ModuleManager& module_manager,
+                                                    const ModuleId& top_module) {
+  /* Validate the file stream */
+  valid_file_stream(fp);
+
+  /* Print the address port for the frame-based decoder here */
+  print_verilog_comment(fp, std::string("---- Address port for frame-based decoder -----"));
+  ModulePortId addr_port_id = module_manager.find_module_port(top_module,
+                                                              std::string(DECODER_ADDRESS_PORT_NAME));
+  BasicPort addr_port = module_manager.module_port(top_module, addr_port_id);
+
+  fp << generate_verilog_port(VERILOG_PORT_REG, addr_port) << ";" << std::endl;
+
+  /* Print the data-input port for the frame-based decoder here */
+  print_verilog_comment(fp, std::string("---- Data input port for frame-based decoder -----"));
+  ModulePortId din_port_id = module_manager.find_module_port(top_module,
+                                                             std::string(DECODER_DATA_IN_PORT_NAME));
+  BasicPort din_port = module_manager.module_port(top_module, din_port_id);
+  fp << generate_verilog_port(VERILOG_PORT_WIRE, din_port) << ";" << std::endl;
+
+  /* Wire the programming clock to the enable signal */
+  print_verilog_comment(fp, std::string("---- Wire enable port of frame-based decoder to programming clock -----"));
+  ModulePortId en_port_id = module_manager.find_module_port(top_module,
+                                                            std::string(DECODER_ENABLE_PORT_NAME));
+  BasicPort en_port = module_manager.module_port(top_module, en_port_id);
+  BasicPort prog_clock_port(std::string(TOP_TB_PROG_CLOCK_PORT_NAME), 1);
+
+  print_verilog_wire_connection(fp, en_port, prog_clock_port, false);
+}
+
+/********************************************************************
  * Print local wires for different types of configuration protocols
  *******************************************************************/
 static 
 void print_verilog_top_testbench_config_protocol_port(std::fstream& fp,
-                                                      const e_config_protocol_type& sram_orgz_type) {
+                                                      const e_config_protocol_type& sram_orgz_type,
+                                                      const ModuleManager& module_manager,
+                                                      const ModuleId& top_module) {
   switch(sram_orgz_type) {
   case CONFIG_MEM_STANDALONE:
     /* TODO */
@@ -94,6 +131,9 @@ void print_verilog_top_testbench_config_protocol_port(std::fstream& fp,
     break;
   case CONFIG_MEM_MEMORY_BANK:
     /* TODO */
+    break;
+  case CONFIG_MEM_FRAME_BASED:
+    print_verilog_top_testbench_frame_decoder_port(fp, module_manager, top_module);
     break;
   default:
     VTR_LOGF_ERROR(__FILE__, __LINE__,
@@ -398,7 +438,8 @@ void print_verilog_top_testbench_ports(std::fstream& fp,
   fp << generate_verilog_port(VERILOG_PORT_REG, set_port) << ";" << std::endl;
 
   /* Configuration ports depend on the organization of SRAMs */
-  print_verilog_top_testbench_config_protocol_port(fp, sram_orgz_type);
+  print_verilog_top_testbench_config_protocol_port(fp, sram_orgz_type,
+                                                   module_manager, top_module);
 
   /* Create a clock port if the benchmark have one but not in the default name! 
    * We will wire the clock directly to the operating clock directly
@@ -506,15 +547,72 @@ void print_verilog_top_testbench_load_bitstream_task_configuration_chain(std::fs
    * It aims at avoid racing the programming clock (scan-chain data changes at the rising edge). 
    */
   print_verilog_comment(fp, std::string("----- Task: input values during a programming clock cycle -----"));
-  fp << "task " << std::string(TOP_TESTBENCH_CC_PROG_TASK_NAME) << ";" << std::endl;
+  fp << "task " << std::string(TOP_TESTBENCH_PROG_TASK_NAME) << ";" << std::endl;
   fp << generate_verilog_port(VERILOG_PORT_INPUT, cc_head_value) << ";" << std::endl;
   fp << "\tbegin" << std::endl;
   fp << "\t\t@(negedge " << generate_verilog_port(VERILOG_PORT_CONKT, prog_clock_port) << ");" << std::endl;
   fp << "\t\t\t"; 
-  fp << generate_verilog_port(VERILOG_PORT_CONKT, cc_head_port);
-  fp << " = ";
-  fp << generate_verilog_port(VERILOG_PORT_CONKT, cc_head_value);
-  fp << ";" << std::endl;
+  print_verilog_wire_connection(fp, cc_head_port, cc_head_value, false);
+  fp << std::endl;
+
+  fp << "\tend" << std::endl;
+  fp << "endtask" << std::endl;
+
+  /* Add an empty line as splitter */
+  fp << std::endl;
+}
+
+/********************************************************************
+ * Print tasks (processes) in Verilog format, 
+ * which is very useful in generating stimuli for each clock cycle 
+ * This function is tuned for frame-based memory manipulation: 
+ * During each programming cycle, we feed
+ * - an address to the address port of top module
+ * - a data input to the din port of top module
+ *******************************************************************/
+static 
+void print_verilog_top_testbench_load_bitstream_task_frame_decoder(std::fstream& fp,
+                                                                   const ModuleManager& module_manager,
+                                                                   const ModuleId& top_module) {
+
+  /* Validate the file stream */
+  valid_file_stream(fp);
+
+  BasicPort prog_clock_port(std::string(TOP_TB_PROG_CLOCK_PORT_NAME), 1);
+
+  ModulePortId addr_port_id = module_manager.find_module_port(top_module,
+                                                              std::string(DECODER_ADDRESS_PORT_NAME));
+  BasicPort addr_port = module_manager.module_port(top_module, addr_port_id);
+  BasicPort addr_value = addr_port;
+  addr_value.set_name(std::string(DECODER_ADDRESS_PORT_NAME) + std::string("_val"));
+
+  ModulePortId din_port_id = module_manager.find_module_port(top_module,
+                                                             std::string(DECODER_DATA_IN_PORT_NAME));
+  BasicPort din_port = module_manager.module_port(top_module, din_port_id);
+  BasicPort din_value = din_port;
+  din_value.set_name(std::string(DECODER_DATA_IN_PORT_NAME) + std::string("_val"));
+
+  /* Add an empty line as splitter */
+  fp << std::endl;
+
+  /* Feed the address and data input at each rising edge of programming clock 
+   * As the enable signal is wired to the programming clock, we should synchronize
+   * address and data with the enable signal
+   */
+  print_verilog_comment(fp, std::string("----- Task: address and data values during a programming clock cycle -----"));
+  fp << "task " << std::string(TOP_TESTBENCH_PROG_TASK_NAME) << ";" << std::endl;
+  fp << generate_verilog_port(VERILOG_PORT_INPUT, addr_value) << ";" << std::endl;
+  fp << generate_verilog_port(VERILOG_PORT_INPUT, din_value) << ";" << std::endl;
+  fp << "\tbegin" << std::endl;
+  fp << "\t\t@(posedge " << generate_verilog_port(VERILOG_PORT_CONKT, prog_clock_port) << ");" << std::endl;
+
+  fp << "\t\t\t"; 
+  print_verilog_wire_connection(fp, addr_port, addr_value, false);
+  fp << std::endl;
+
+  fp << "\t\t\t"; 
+  print_verilog_wire_connection(fp, din_port, din_value, false);
+  fp << std::endl;
 
   fp << "\tend" << std::endl;
   fp << "endtask" << std::endl;
@@ -528,7 +626,9 @@ void print_verilog_top_testbench_load_bitstream_task_configuration_chain(std::fs
  *******************************************************************/
 static 
 void print_verilog_top_testbench_load_bitstream_task(std::fstream& fp,
-                                                     const e_config_protocol_type& sram_orgz_type) {
+                                                     const e_config_protocol_type& sram_orgz_type,
+                                                     const ModuleManager& module_manager,
+                                                     const ModuleId& top_module) {
   switch (sram_orgz_type) {
   case CONFIG_MEM_STANDALONE:
     break;
@@ -539,6 +639,11 @@ void print_verilog_top_testbench_load_bitstream_task(std::fstream& fp,
     /* TODO: 
     dump_verilog_top_testbench_stimuli_serial_version_tasks_memory_bank(cur_sram_orgz_info, fp);
      */
+    break;
+  case CONFIG_MEM_FRAME_BASED:
+    print_verilog_top_testbench_load_bitstream_task_frame_decoder(fp,
+                                                                  module_manager,
+                                                                  top_module);
     break;
   default:
     VTR_LOGF_ERROR(__FILE__, __LINE__,
@@ -721,8 +826,88 @@ void print_verilog_top_testbench_configuration_chain_bitstream(std::fstream& fp,
    * We will visit the fabric bitstream in a reverse way  
    */
   for (const FabricBitId& bit_id : fabric_bitstream.bits()) {
-    fp << "\t\t" << std::string(TOP_TESTBENCH_CC_PROG_TASK_NAME);
+    fp << "\t\t" << std::string(TOP_TESTBENCH_PROG_TASK_NAME);
     fp << "(1'b" << (size_t)bitstream_manager.bit_value(fabric_bitstream.config_bit(bit_id)) << ");" << std::endl;
+  }
+
+  /* Raise the flag of configuration done when bitstream loading is complete */
+  BasicPort prog_clock_port(std::string(TOP_TB_PROG_CLOCK_PORT_NAME), 1);
+  fp << "\t\t@(negedge " << generate_verilog_port(VERILOG_PORT_CONKT, prog_clock_port) << ");" << std::endl;
+  
+  BasicPort config_done_port(std::string(TOP_TB_CONFIG_DONE_PORT_NAME), 1);
+  fp << "\t\t\t";
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, config_done_port);
+  fp << " <= ";
+  std::vector<size_t> config_done_enable_values(config_done_port.get_width(), 1);
+  fp << generate_verilog_constant_values(config_done_enable_values);
+  fp << ";" << std::endl;
+
+  fp << "\tend" << std::endl;
+  print_verilog_comment(fp, "----- End bitstream loading during configuration phase -----");
+}
+
+/********************************************************************
+ * Print stimulus for a FPGA fabric with a frame-based configuration protocol 
+ * where configuration bits are programming in serial (one by one)
+ *
+ * We will use the programming task function created before
+ *******************************************************************/
+static 
+void print_verilog_top_testbench_frame_decoder_bitstream(std::fstream& fp,
+                                                         const ModuleManager& module_manager,
+                                                         const ModuleId& top_module,
+                                                         const FabricBitstream& fabric_bitstream) {
+  /* Validate the file stream */
+  valid_file_stream(fp);
+
+  /* Feed addresss and data input pair one by one 
+   * Note: the first cycle is reserved for programming reset
+   * We should give dummy values 
+   */
+  ModulePortId addr_port_id = module_manager.find_module_port(top_module,
+                                                              std::string(DECODER_ADDRESS_PORT_NAME));
+  BasicPort addr_port = module_manager.module_port(top_module, addr_port_id);
+  std::vector<size_t> initial_addr_values(addr_port.get_width(), 0);
+
+  ModulePortId din_port_id = module_manager.find_module_port(top_module,
+                                                             std::string(DECODER_DATA_IN_PORT_NAME));
+  BasicPort din_port = module_manager.module_port(top_module, din_port_id);
+  std::vector<size_t> initial_din_values(din_port.get_width(), 0);
+
+  print_verilog_comment(fp, "----- Begin bitstream loading during configuration phase -----");
+  fp << "initial" << std::endl;
+  fp << "\tbegin" << std::endl;
+  print_verilog_comment(fp, "----- Address port default input -----");
+  fp << "\t\t";
+  fp << generate_verilog_port_constant_values(addr_port, initial_addr_values);
+  fp << ";";
+
+  print_verilog_comment(fp, "----- Data-input port default input -----");
+  fp << "\t\t";
+  fp << generate_verilog_port_constant_values(din_port, initial_din_values);
+  fp << ";";
+
+  fp << std::endl;
+
+  /* Attention: the configuration chain protcol requires the last configuration bit is fed first
+   * We will visit the fabric bitstream in a reverse way  
+   */
+  for (const FabricBitId& bit_id : fabric_bitstream.bits()) {
+    fp << "\t\t" << std::string(TOP_TESTBENCH_PROG_TASK_NAME);
+    fp << "(" << addr_port.get_width() << "'b";
+    VTR_ASSERT(addr_port.get_width() == fabric_bitstream.bit_address(bit_id).size());
+    for (const size_t& addr_bit : fabric_bitstream.bit_address(bit_id)) {
+      fp << addr_bit; 
+    }
+    fp << ", ";
+    fp <<"1'b";
+    if (true == fabric_bitstream.bit_din(bit_id)) {
+      fp << "1";
+    } else {
+      VTR_ASSERT(false == fabric_bitstream.bit_din(bit_id));
+      fp << "0";
+    }
+    fp << ");" << std::endl;
   }
 
   /* Raise the flag of configuration done when bitstream loading is complete */
@@ -750,6 +935,8 @@ void print_verilog_top_testbench_configuration_chain_bitstream(std::fstream& fp,
 static 
 void print_verilog_top_testbench_bitstream(std::fstream& fp,
                                            const e_config_protocol_type& sram_orgz_type,
+                                           const ModuleManager& module_manager,
+                                           const ModuleId& top_module,
                                            const BitstreamManager& bitstream_manager,
                                            const FabricBitstream& fabric_bitstream) {
   /* Branch on the type of configuration protocol */
@@ -762,6 +949,11 @@ void print_verilog_top_testbench_bitstream(std::fstream& fp,
     break;
   case CONFIG_MEM_MEMORY_BANK:
     /* TODO */
+    break;
+  case CONFIG_MEM_FRAME_BASED:
+    print_verilog_top_testbench_frame_decoder_bitstream(fp,
+                                                        module_manager, top_module,
+                                                        fabric_bitstream);
     break;
   default: 
     VTR_LOGF_ERROR(__FILE__, __LINE__,
@@ -875,10 +1067,13 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
                                                  explicit_port_mapping); 
 
   /* Print tasks used for loading bitstreams */
-  print_verilog_top_testbench_load_bitstream_task(fp, sram_orgz_type);
+  print_verilog_top_testbench_load_bitstream_task(fp,
+                                                  sram_orgz_type,
+                                                  module_manager, top_module);
 
   /* load bitstream to FPGA fabric in a configuration phase */
   print_verilog_top_testbench_bitstream(fp, sram_orgz_type,
+                                        module_manager, top_module,
                                         bitstream_manager, fabric_bitstream);
 
   /* Add stimuli for reset, set, clock and iopad signals */

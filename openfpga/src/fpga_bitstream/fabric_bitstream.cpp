@@ -27,7 +27,7 @@ ConfigBitId FabricBitstream::config_bit(const FabricBitId& bit_id) const {
   return config_bit_ids_[bit_id];
 }
 
-std::vector<bool> FabricBitstream::bit_address(const FabricBitId& bit_id) const {
+std::vector<size_t> FabricBitstream::bit_address(const FabricBitId& bit_id) const {
   /* Ensure a valid id */
   VTR_ASSERT(true == valid_bit_id(bit_id));
 
@@ -56,7 +56,7 @@ FabricBitId FabricBitstream::add_bit(const ConfigBitId& config_bit_id) {
 }
 
 void FabricBitstream::set_bit_address(const FabricBitId& bit_id,
-                                      const std::vector<bool>& address) {
+                                      const std::vector<size_t>& address) {
   VTR_ASSERT(true == valid_bit_id(bit_id));
   bit_addresses_[bit_id] = address;
 }
