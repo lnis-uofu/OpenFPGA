@@ -240,7 +240,62 @@ Template
 
 .. note:: The information of input and output buffer should be clearly specified according to the customized Verilog/SPICE netlist! The existence of input/output buffers will influence the decision in creating testbenches, which may leads to larger errors in power analysis.
 
-.. note:: The support SRAM modules should have a BL and a WL when the memory-bank-style configuration circuit is declared. Note that the WL should be the write/read enable signal, while BL is the data input.
+SRAM with BL/WL
+```````````````
+.. _fig_sram_blwl:
+
+.. figure:: ./figures/sram_blwl.png
+   :scale: 100%
+
+   An example of a SRAM with Bit-Line (BL) and Word-Line (WL) control signals
+
+The following XML codes describes the SRAM cell shown in :numref:`fig_sram_blwl`.
+
+.. code-block:: xml
+
+  <circuit_model type="sram" name="sram_blwl" prefix="sram_blwl" verilog_netlist="sram.v" spice_netlist="sram.sp"/>
+    <design_technology type="cmos"/>
+    <input_buffer exist="false"/>
+    <output_buffer exist="false"/>
+    <port type="bl" prefix="bl" size="1"/>
+    <port type="blb" prefix="blb" size="1"/>
+    <port type="wl" prefix="wl" size="1"/>
+    <port type="output" prefix="out" size="1"/>
+    <port type="output" prefix="outb" size="1"/>
+  </circuit_model>
+
+.. note:: OpenFPGA always assume that a ``WL`` port should be the write/read enable signal, while a ``BL`` port is the data input.
+
+.. note:: When the ``memory_bank`` type of configuration procotol is specified, SRAM modules should have a BL and a WL.
+
+Configurable Latch
+``````````````````
+
+.. _fig_config_latch:
+
+.. figure:: ./figures/config_latch.png
+   :scale: 100%
+
+   An example of a SRAM-based configurable latch with Bit-Line (BL) and Word-Line (WL) control signals
+
+The following XML codes describes the configurable latch shown in :numref:`fig_config_latch`.
+
+.. code-block:: xml
+
+  <circuit_model type="sram" name="config_latch" prefix="config_latch" verilog_netlist="sram.v" spice_netlist="sram.sp"/>
+    <design_technology type="cmos"/>
+    <input_buffer exist="false"/>
+    <output_buffer exist="false"/>
+    <port type="clock" prefix="clk" size="1"/>
+    <port type="bl" prefix="bl" size="1"/>
+    <port type="wl" prefix="wl" size="1"/>
+    <port type="output" prefix="out" size="1"/>
+    <port type="output" prefix="outb" size="1"/>
+  </circuit_model>
+
+.. note:: OpenFPGA always assume that a ``WL`` port should be the write/read enable signal, while a ``BL`` port is the data input.
+
+.. note:: When the ``frame_based`` type of configuration procotol is specified, the configurable latch or a SRAM with ``BL`` and ``WL`` should be specified.
 
 Logic gates
 ~~~~~~~~~~~

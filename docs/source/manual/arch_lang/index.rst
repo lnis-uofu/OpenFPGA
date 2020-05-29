@@ -11,6 +11,8 @@ OpenFPGA Architecture Description
 
    addon_vpr_syntax
 
+   config_protocol
+
    direct_interconnect 
    
    simulation_setting
