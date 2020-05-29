@@ -299,10 +299,13 @@ void print_verilog_arch_decoder_module(std::fstream& fp,
    * data_inv = ~data_inv
    */
   if (1 == data_size) {
-    fp << "always@(" << generate_verilog_port(VERILOG_PORT_CONKT, addr_port) << ") begin" << std::endl;
+    fp << "always@(" << generate_verilog_port(VERILOG_PORT_CONKT, addr_port);
+    fp << " or " << generate_verilog_port(VERILOG_PORT_CONKT, enable_port);
+    fp << ") begin" << std::endl;
     fp << "\tif (" << generate_verilog_port(VERILOG_PORT_CONKT, enable_port) << " == 1'b1) begin" << std::endl;
-    fp << "\t\t" << generate_verilog_port(VERILOG_PORT_CONKT, data_port);
-    fp << " = " << generate_verilog_port(VERILOG_PORT_CONKT, addr_port) << ";" << std::endl;
+    fp << "\t\t" << generate_verilog_port_constant_values(data_port, std::vector<size_t>(1, 1)) << ";" << std::endl; 
+    fp << "\t" << "end else begin" << std::endl;
+    fp << "\t\t" << generate_verilog_port_constant_values(data_port, std::vector<size_t>(1, 0)) << ";" << std::endl; 
     fp << "\t" << "end" << std::endl;
     fp << "end" << std::endl;
 
@@ -335,7 +338,9 @@ void print_verilog_arch_decoder_module(std::fstream& fp,
    * The rest of addr codes 3'b110, 3'b111 will be decoded to data=8'b0_0000;
    */
 
-  fp << "always@(" << generate_verilog_port(VERILOG_PORT_CONKT, addr_port) << ") begin" << std::endl;
+  fp << "always@(" << generate_verilog_port(VERILOG_PORT_CONKT, addr_port);
+  fp << " or " << generate_verilog_port(VERILOG_PORT_CONKT, enable_port);
+  fp << ") begin" << std::endl;
   fp << "\tif (" << generate_verilog_port(VERILOG_PORT_CONKT, enable_port) << " == 1'b1) begin" << std::endl;
   fp << "\t\t" << "case (" << generate_verilog_port(VERILOG_PORT_CONKT, addr_port) << ")" << std::endl;
   /* Create a string for addr and data */
@@ -345,18 +350,21 @@ void print_verilog_arch_decoder_module(std::fstream& fp,
     fp << generate_verilog_port_constant_values(data_port, ito1hot_vec(i, data_size)); 
     fp << ";" << std::endl;
   }
-  /* Different from the MUX encoders, architecture decoders will output all-zero by default!!! */
-  fp << "\t\t\t" << "default : ";
+  /* Different from MUX decoder, we assign default values which is all zero */
+  fp << "\t\t\t" << "default"; 
+  fp << " : ";
   fp << generate_verilog_port_constant_values(data_port, ito1hot_vec(data_size, data_size)); 
   fp << ";" << std::endl;
+
   fp << "\t\t" << "endcase" << std::endl;
   fp << "\t" << "end" << std::endl;
-  
-  /* If not enabled, we output all-zero */
-  fp << "\t" << "else begin" << std::endl;
-  fp << "\t\t" << generate_verilog_port_constant_values(data_port, ito1hot_vec(data_size, data_size)) << ";"<< std::endl; 
-  fp << "\t" << "end" << std::endl;
 
+  /* If enable is not active, we should give all zero */
+  fp << "\t" << "else begin" << std::endl;
+  fp << "\t\t" << generate_verilog_port_constant_values(data_port, ito1hot_vec(data_size, data_size)); 
+  fp << ";" << std::endl;
+  fp << "\t" << "end" << std::endl;
+  
   fp << "end" << std::endl;
 
   if (true == decoder_lib.use_data_inv_port(decoder)) {
