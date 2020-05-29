@@ -104,15 +104,15 @@ void print_verilog_top_testbench_frame_decoder_port(std::fstream& fp,
   BasicPort din_port = module_manager.module_port(top_module, din_port_id);
   fp << generate_verilog_port(VERILOG_PORT_REG, din_port) << ";" << std::endl;
 
-  /* Wire the programming clock to the enable signal */
-  print_verilog_comment(fp, std::string("---- Wire enable port of frame-based decoder to programming clock -----"));
+  /* Wire the INVERTED programming clock to the enable signal !!! */
+  print_verilog_comment(fp, std::string("---- Wire enable port of frame-based decoder to inverted programming clock -----"));
   ModulePortId en_port_id = module_manager.find_module_port(top_module,
                                                             std::string(DECODER_ENABLE_PORT_NAME));
   BasicPort en_port = module_manager.module_port(top_module, en_port_id);
   BasicPort prog_clock_port(std::string(TOP_TB_PROG_CLOCK_PORT_NAME), 1);
 
   fp << generate_verilog_port(VERILOG_PORT_WIRE, en_port) << ";" << std::endl;
-  print_verilog_wire_connection(fp, en_port, prog_clock_port, false);
+  print_verilog_wire_connection(fp, en_port, prog_clock_port, true);
 }
 
 /********************************************************************
@@ -581,7 +581,9 @@ void print_verilog_top_testbench_load_bitstream_task_frame_decoder(std::fstream&
   /* Validate the file stream */
   valid_file_stream(fp);
 
-  BasicPort prog_clock_port(std::string(TOP_TB_PROG_CLOCK_PORT_NAME), 1);
+  ModulePortId en_port_id = module_manager.find_module_port(top_module,
+                                                            std::string(DECODER_ENABLE_PORT_NAME));
+  BasicPort en_port = module_manager.module_port(top_module, en_port_id);
 
   ModulePortId addr_port_id = module_manager.find_module_port(top_module,
                                                               std::string(DECODER_ADDRESS_PORT_NAME));
@@ -602,12 +604,12 @@ void print_verilog_top_testbench_load_bitstream_task_frame_decoder(std::fstream&
    * As the enable signal is wired to the programming clock, we should synchronize
    * address and data with the enable signal
    */
-  print_verilog_comment(fp, std::string("----- Task: address and data values during a programming clock cycle -----"));
+  print_verilog_comment(fp, std::string("----- Task: assign address and data values at rising edge of enable signal -----"));
   fp << "task " << std::string(TOP_TESTBENCH_PROG_TASK_NAME) << ";" << std::endl;
   fp << generate_verilog_port(VERILOG_PORT_INPUT, addr_value) << ";" << std::endl;
   fp << generate_verilog_port(VERILOG_PORT_INPUT, din_value) << ";" << std::endl;
   fp << "\tbegin" << std::endl;
-  fp << "\t\t@(negedge " << generate_verilog_port(VERILOG_PORT_CONKT, prog_clock_port) << ");" << std::endl;
+  fp << "\t\t@(posedge " << generate_verilog_port(VERILOG_PORT_CONKT, en_port) << ");" << std::endl;
 
   fp << "\t\t\t"; 
   fp << generate_verilog_port(VERILOG_PORT_CONKT, addr_port);
@@ -918,6 +920,17 @@ void print_verilog_top_testbench_frame_decoder_bitstream(std::fstream& fp,
     }
     fp << ");" << std::endl;
   }
+
+  /* Disable the address and din */
+  fp << "\t\t" << std::string(TOP_TESTBENCH_PROG_TASK_NAME);
+  fp << "(" << addr_port.get_width() << "'b";
+  std::vector<size_t> all_zero_addr(addr_port.get_width(), 0);
+  for (const size_t& addr_bit : all_zero_addr) {
+    fp << addr_bit; 
+  }
+  fp << ", ";
+  fp <<"1'b0";
+  fp << ");" << std::endl;
 
   /* Raise the flag of configuration done when bitstream loading is complete */
   BasicPort prog_clock_port(std::string(TOP_TB_PROG_CLOCK_PORT_NAME), 1);
