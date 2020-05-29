@@ -102,7 +102,7 @@ void print_verilog_top_testbench_frame_decoder_port(std::fstream& fp,
   ModulePortId din_port_id = module_manager.find_module_port(top_module,
                                                              std::string(DECODER_DATA_IN_PORT_NAME));
   BasicPort din_port = module_manager.module_port(top_module, din_port_id);
-  fp << generate_verilog_port(VERILOG_PORT_WIRE, din_port) << ";" << std::endl;
+  fp << generate_verilog_port(VERILOG_PORT_REG, din_port) << ";" << std::endl;
 
   /* Wire the programming clock to the enable signal */
   print_verilog_comment(fp, std::string("---- Wire enable port of frame-based decoder to programming clock -----"));
@@ -111,6 +111,7 @@ void print_verilog_top_testbench_frame_decoder_port(std::fstream& fp,
   BasicPort en_port = module_manager.module_port(top_module, en_port_id);
   BasicPort prog_clock_port(std::string(TOP_TB_PROG_CLOCK_PORT_NAME), 1);
 
+  fp << generate_verilog_port(VERILOG_PORT_WIRE, en_port) << ";" << std::endl;
   print_verilog_wire_connection(fp, en_port, prog_clock_port, false);
 }
 

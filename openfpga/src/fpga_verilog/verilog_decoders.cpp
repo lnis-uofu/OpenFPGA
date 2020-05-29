@@ -299,7 +299,12 @@ void print_verilog_arch_decoder_module(std::fstream& fp,
    * data_inv = ~data_inv
    */
   if (1 == data_size) {
+    fp << "always@(" << generate_verilog_port(VERILOG_PORT_CONKT, addr_port) << ") begin" << std::endl;
+    fp << "\tif (" << generate_verilog_port(VERILOG_PORT_CONKT, enable_port) << " == 1'b1) begin" << std::endl;
+    fp << "\t";
     print_verilog_wire_connection(fp, data_port, addr_port, false);
+    fp << "\t" << "end" << std::endl;
+    fp << "end" << std::endl;
 
     /* Depend on if the inverted data output port is needed or not */
     if (true == decoder_lib.use_data_inv_port(decoder)) {
