@@ -598,7 +598,7 @@ void print_verilog_top_testbench_load_bitstream_task_frame_decoder(std::fstream&
   /* Add an empty line as splitter */
   fp << std::endl;
 
-  /* Feed the address and data input at each rising edge of programming clock 
+  /* Feed the address and data input at each falling edge of programming clock 
    * As the enable signal is wired to the programming clock, we should synchronize
    * address and data with the enable signal
    */
@@ -607,7 +607,7 @@ void print_verilog_top_testbench_load_bitstream_task_frame_decoder(std::fstream&
   fp << generate_verilog_port(VERILOG_PORT_INPUT, addr_value) << ";" << std::endl;
   fp << generate_verilog_port(VERILOG_PORT_INPUT, din_value) << ";" << std::endl;
   fp << "\tbegin" << std::endl;
-  fp << "\t\t@(posedge " << generate_verilog_port(VERILOG_PORT_CONKT, prog_clock_port) << ");" << std::endl;
+  fp << "\t\t@(negedge " << generate_verilog_port(VERILOG_PORT_CONKT, prog_clock_port) << ");" << std::endl;
 
   fp << "\t\t\t"; 
   fp << generate_verilog_port(VERILOG_PORT_CONKT, addr_port);
