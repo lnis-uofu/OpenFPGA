@@ -413,14 +413,17 @@ void add_top_module_nets_cmos_memory_config_bus(ModuleManager& module_manager,
                                                 const e_config_protocol_type& sram_orgz_type) {
   switch (sram_orgz_type) {
   case CONFIG_MEM_STANDALONE:
-    /* Nothing to do */
+    add_module_nets_cmos_flatten_memory_config_bus(module_manager, parent_module,
+                                                   sram_orgz_type, CIRCUIT_MODEL_PORT_BL);
+    add_module_nets_cmos_flatten_memory_config_bus(module_manager, parent_module,
+                                                   sram_orgz_type, CIRCUIT_MODEL_PORT_WL);
     break;
   case CONFIG_MEM_SCAN_CHAIN: {
     add_module_nets_cmos_memory_chain_config_bus(module_manager, parent_module, CONFIG_MEM_SCAN_CHAIN);
     break;
   }
   case CONFIG_MEM_MEMORY_BANK:
-    /* TODO: */
+    /* TODO */
     break;
   case CONFIG_MEM_FRAME_BASED:
     add_module_nets_cmos_memory_frame_config_bus(module_manager, decoder_lib, parent_module);
