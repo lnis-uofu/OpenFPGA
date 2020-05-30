@@ -505,12 +505,17 @@ size_t calculate_num_config_clock_cycles(const e_config_protocol_type& sram_orgz
   case CONFIG_MEM_FRAME_BASED: {
     /* For fast configuration, we will skip all the zero data points */
     if (true == fast_configuration) {
+      size_t full_num_config_clock_cycles = num_config_clock_cycles;
       num_config_clock_cycles = 1;
       for (const FabricBitId& bit_id : fabric_bitstream.bits()) {
         if (true == fabric_bitstream.bit_din(bit_id)) {
           num_config_clock_cycles++;
         }
       }
+      VTR_LOG("Fast configuration reduces number of configuration clock cycles from %lu to %lu (compression_rate = %f%)\n",
+              full_num_config_clock_cycles,
+              num_config_clock_cycles,
+              100. * ((float)num_config_clock_cycles / (float)full_num_config_clock_cycles - 1.));
     }
     break;
   }
@@ -519,6 +524,9 @@ size_t calculate_num_config_clock_cycles(const e_config_protocol_type& sram_orgz
                    "Invalid SRAM organization type!\n");
     exit(1);
   }
+
+  VTR_LOG("Will use %ld configuration clock cycles to top testbench\n",
+          num_config_clock_cycles);
 
   return num_config_clock_cycles;
 }
