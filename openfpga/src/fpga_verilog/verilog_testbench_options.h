@@ -24,6 +24,7 @@ class VerilogTestbenchOption {
   public: /* Public accessors */
     std::string output_directory() const;
     std::string reference_benchmark_file_path() const;
+    bool fast_configuration() const;
     bool print_formal_verification_top_netlist() const;
     bool print_preconfig_top_testbench() const;
     bool print_top_testbench() const;
@@ -44,6 +45,7 @@ class VerilogTestbenchOption {
     void set_print_formal_verification_top_netlist(const bool& enabled);
     /* The preconfig top testbench generation can be enabled only when formal verification top netlist is enabled */
     void set_print_preconfig_top_testbench(const bool& enabled);
+    void set_fast_configuration(const bool& enabled);
     void set_print_top_testbench(const bool& enabled);
     void set_print_simulation_ini(const std::string& simulation_ini_path);
     void set_explicit_port_mapping(const bool& enabled);
@@ -51,6 +53,7 @@ class VerilogTestbenchOption {
   private: /* Internal Data */
     std::string output_directory_;
     std::string reference_benchmark_file_path_;
+    bool fast_configuration_;
     bool print_formal_verification_top_netlist_;
     bool print_preconfig_top_testbench_;
     bool print_top_testbench_;

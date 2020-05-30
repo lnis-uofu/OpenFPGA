@@ -213,6 +213,7 @@ void fpga_verilog_testbench(const ModuleManager& module_manager,
                                 netlist_name,
                                 top_testbench_file_path,
                                 simulation_setting,
+                                options.fast_configuration(),
                                 options.explicit_port_mapping());
   }
  

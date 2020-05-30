@@ -46,6 +46,10 @@ bool VerilogTestbenchOption::print_top_testbench() const {
   return print_top_testbench_;
 }
 
+bool VerilogTestbenchOption::fast_configuration() const {
+  return fast_configuration_;
+}
+
 bool VerilogTestbenchOption::print_simulation_ini() const {
   return !simulation_ini_path_.empty();
 }
@@ -80,6 +84,10 @@ void VerilogTestbenchOption::set_reference_benchmark_file_path(const std::string
  
 void VerilogTestbenchOption::set_print_formal_verification_top_netlist(const bool& enabled) {
   print_formal_verification_top_netlist_ = enabled;
+}
+
+void VerilogTestbenchOption::set_fast_configuration(const bool& enabled) {
+  fast_configuration_ = enabled;
 }
 
 void VerilogTestbenchOption::set_print_preconfig_top_testbench(const bool& enabled) {

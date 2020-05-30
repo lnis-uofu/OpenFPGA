@@ -482,6 +482,48 @@ void print_verilog_top_testbench_ports(std::fstream& fp,
 }
 
 /********************************************************************
+ * Estimate the number of configuration clock cycles 
+ * by traversing the linked-list and count the number of SRAM=1 or BL=1&WL=1 in it.
+ * We plus 1 additional config clock cycle here because we need to reset everything during the first clock cycle
+ * If we consider fast configuration, the number of clock cycles will be 
+ * the number of non-zero data points in the fabric bitstream
+ * Note that this will not applicable to configuration chain!!!
+ *******************************************************************/
+static 
+size_t calculate_num_config_clock_cycles(const e_config_protocol_type& sram_orgz_type,
+                                         const bool& fast_configuration,
+                                         const FabricBitstream& fabric_bitstream) {
+  size_t num_config_clock_cycles = 1 + fabric_bitstream.bits().size();
+
+  /* Branch on the type of configuration protocol */
+  switch (sram_orgz_type) {
+  case CONFIG_MEM_STANDALONE:
+  case CONFIG_MEM_SCAN_CHAIN:
+  case CONFIG_MEM_MEMORY_BANK:
+    /* TODO */
+    break;
+  case CONFIG_MEM_FRAME_BASED: {
+    /* For fast configuration, we will skip all the zero data points */
+    if (true == fast_configuration) {
+      num_config_clock_cycles = 1;
+      for (const FabricBitId& bit_id : fabric_bitstream.bits()) {
+        if (true == fabric_bitstream.bit_din(bit_id)) {
+          num_config_clock_cycles++;
+        }
+      }
+    }
+    break;
+  }
+  default: 
+    VTR_LOGF_ERROR(__FILE__, __LINE__,
+                   "Invalid SRAM organization type!\n");
+    exit(1);
+  }
+
+  return num_config_clock_cycles;
+}
+
+/********************************************************************
  * Instanciate the input benchmark module
  *******************************************************************/
 static
@@ -865,6 +907,7 @@ void print_verilog_top_testbench_configuration_chain_bitstream(std::fstream& fp,
  *******************************************************************/
 static 
 void print_verilog_top_testbench_frame_decoder_bitstream(std::fstream& fp,
+                                                         const bool& fast_configuration,
                                                          const ModuleManager& module_manager,
                                                          const ModuleId& top_module,
                                                          const FabricBitstream& fabric_bitstream) {
@@ -904,6 +947,12 @@ void print_verilog_top_testbench_frame_decoder_bitstream(std::fstream& fp,
    * We will visit the fabric bitstream in a reverse way  
    */
   for (const FabricBitId& bit_id : fabric_bitstream.bits()) {
+    /* When fast configuration is enabled, we skip zero data_in values */
+    if ((true == fast_configuration)
+      && (false == fabric_bitstream.bit_din(bit_id))) {
+      continue;
+    }
+
     fp << "\t\t" << std::string(TOP_TESTBENCH_PROG_TASK_NAME);
     fp << "(" << addr_port.get_width() << "'b";
     VTR_ASSERT(addr_port.get_width() == fabric_bitstream.bit_address(bit_id).size());
@@ -957,6 +1006,7 @@ void print_verilog_top_testbench_frame_decoder_bitstream(std::fstream& fp,
 static 
 void print_verilog_top_testbench_bitstream(std::fstream& fp,
                                            const e_config_protocol_type& sram_orgz_type,
+                                           const bool& fast_configuration,
                                            const ModuleManager& module_manager,
                                            const ModuleId& top_module,
                                            const BitstreamManager& bitstream_manager,
@@ -973,7 +1023,7 @@ void print_verilog_top_testbench_bitstream(std::fstream& fp,
     /* TODO */
     break;
   case CONFIG_MEM_FRAME_BASED:
-    print_verilog_top_testbench_frame_decoder_bitstream(fp,
+    print_verilog_top_testbench_frame_decoder_bitstream(fp, fast_configuration,
                                                         module_manager, top_module,
                                                         fabric_bitstream);
     break;
@@ -1017,6 +1067,7 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
                                  const std::string& circuit_name,
                                  const std::string& verilog_fname,
                                  const SimulationSetting& simulation_parameters,
+                                 const bool& fast_configuration,
                                  const bool& explicit_port_mapping) {
 
   std::string timer_message = std::string("Write autocheck testbench for FPGA top-level Verilog netlist for '") + circuit_name + std::string("'");
@@ -1050,11 +1101,10 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
   /* Find the clock period */
   float prog_clock_period = (1./simulation_parameters.programming_clock_frequency());
   float op_clock_period = (1./simulation_parameters.operating_clock_frequency());
-  /* Estimate the number of configuration clock cycles 
-   * by traversing the linked-list and count the number of SRAM=1 or BL=1&WL=1 in it.
-   * We plus 1 additional config clock cycle here because we need to reset everything during the first clock cycle
-   */
-  size_t num_config_clock_cycles = 1 + fabric_bitstream.bits().size();
+  /* Estimate the number of configuration clock cycles */ 
+  size_t num_config_clock_cycles = calculate_num_config_clock_cycles(sram_orgz_type,
+                                                                     fast_configuration,
+                                                                     fabric_bitstream);
 
   /* Generate stimuli for general control signals */
   print_verilog_top_testbench_generic_stimulus(fp,
@@ -1095,6 +1145,7 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
 
   /* load bitstream to FPGA fabric in a configuration phase */
   print_verilog_top_testbench_bitstream(fp, sram_orgz_type,
+                                        fast_configuration,
                                         module_manager, top_module,
                                         bitstream_manager, fabric_bitstream);
 

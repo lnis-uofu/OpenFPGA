@@ -79,6 +79,9 @@ ShellCommandId add_openfpga_write_verilog_testbench_command(openfpga::Shell<Open
   /* Add an option '--print_top_testbench' */
   shell_cmd.add_option("print_top_testbench", false, "Generate a full testbench for top-level fabric module with autocheck capability");
 
+  /* Add an option '--fast_configuration' */
+  shell_cmd.add_option("fast_configuration", false, "Reduce the period of configuration by skip zero data points");
+
   /* Add an option '--print_formal_verification_top_netlist' */
   shell_cmd.add_option("print_formal_verification_top_netlist", false, "Generate a top-level module which can be used in formal verification");
 

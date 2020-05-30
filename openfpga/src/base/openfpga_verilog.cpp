@@ -67,6 +67,7 @@ int write_verilog_testbench(OpenfpgaContext& openfpga_ctx,
   CommandOptionId opt_output_dir = cmd.option("file");
   CommandOptionId opt_reference_benchmark = cmd.option("reference_benchmark_file_path");
   CommandOptionId opt_print_top_testbench = cmd.option("print_top_testbench");
+  CommandOptionId opt_fast_configuration = cmd.option("fast_configuration");
   CommandOptionId opt_print_formal_verification_top_netlist = cmd.option("print_formal_verification_top_netlist");
   CommandOptionId opt_print_preconfig_top_testbench = cmd.option("print_preconfig_top_testbench");
   CommandOptionId opt_print_simulation_ini = cmd.option("print_simulation_ini");
@@ -81,6 +82,7 @@ int write_verilog_testbench(OpenfpgaContext& openfpga_ctx,
   options.set_reference_benchmark_file_path(cmd_context.option_value(cmd, opt_reference_benchmark));
   options.set_print_formal_verification_top_netlist(cmd_context.option_enable(cmd, opt_print_formal_verification_top_netlist));
   options.set_print_preconfig_top_testbench(cmd_context.option_enable(cmd, opt_print_preconfig_top_testbench));
+  options.set_fast_configuration(cmd_context.option_enable(cmd, opt_fast_configuration));
   options.set_print_top_testbench(cmd_context.option_enable(cmd, opt_print_top_testbench));
   options.set_print_simulation_ini(cmd_context.option_value(cmd, opt_print_simulation_ini));
   options.set_explicit_port_mapping(cmd_context.option_enable(cmd, opt_explicit_port_mapping));
