@@ -34,6 +34,13 @@ void organize_top_module_memory_modules(ModuleManager& module_manager,
                                         const std::map<t_rr_type, vtr::Matrix<size_t>>& cb_instance_ids,
                                         const bool& compact_routing_hierarchy);
 
+void add_top_module_sram_ports(ModuleManager& module_manager, 
+                               const ModuleId& module_id,
+                               const CircuitLibrary& circuit_lib,
+                               const CircuitModelId& sram_model,
+                               const e_config_protocol_type sram_orgz_type,
+                               const size_t& num_config_bits);
+
 void add_top_module_nets_memory_config_bus(ModuleManager& module_manager,
                                            DecoderLibrary& decoder_lib,
                                            const ModuleId& parent_module,

@@ -39,6 +39,45 @@ size_t find_mux_local_decoder_addr_size(const size_t& data_size) {
 }
 
 /***************************************************************************************
+ * Find the size of address lines for a memory decoder to access a memory array
+ *                   Addr lines 
+ *                   | | ... | 
+ *                   v v     v
+ *                 +-----------+
+ *                /    Local    \
+ *               /    Decoder    \
+ *              +-----------------+
+ *                | | | ... | | |
+ *                v v v     v v v
+ *                   Data outputs
+ *
+ *          +------+  +------+      +------+
+ *          | SRAM |  | SRAM |  ... | SRAM |
+ *          | [0]  |  | [1]  |      |  [i] |
+ *          +------+  +------+      +------+
+ *
+ *          +------+  +------+      +------+
+ *          | SRAM |  | SRAM |  ... | SRAM |
+ *          | [i+1]|  | [i+2]|      |[2i-1]|
+ *          +------+  +------+      +------+
+ *
+ *            ...       ...            ...
+ *
+ *          +------+  +------+      +------+
+ *          | SRAM |  | SRAM |  ... | SRAM |
+ *          | [x]  |  | [x+1]|      |  [N] |
+ *          +------+  +------+      +------+
+ *
+ *  Due to the shared lines in the array, 
+ *  each memory decoder (BL or WL) will access sqrt(N) control lins (BL or WL)
+ *  Then we can use the function for mux local encoder to compute the address size 
+ *               
+ ***************************************************************************************/
+size_t find_memory_decoder_addr_size(const size_t& num_mems) {
+  return find_mux_local_decoder_addr_size((size_t)std::ceil(std::sqrt((float)num_mems)));
+}
+
+/***************************************************************************************
  * Try to find if the decoder already exists in the library, 
  * If there is no such decoder, add it to the library 
  ***************************************************************************************/

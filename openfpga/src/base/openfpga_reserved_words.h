@@ -38,6 +38,8 @@ constexpr char* DECODER_ADDRESS_PORT_NAME = "address";
 constexpr char* DECODER_DATA_IN_PORT_NAME = "data_in";
 constexpr char* DECODER_DATA_OUT_PORT_NAME = "data_out";
 constexpr char* DECODER_DATA_OUT_INV_PORT_NAME = "data_out_inv";
+constexpr char* DECODER_BL_ADDRESS_PORT_NAME = "bl_address";
+constexpr char* DECODER_WL_ADDRESS_PORT_NAME = "wl_address";
 
 /* Inverted port naming */
 constexpr char* INV_PORT_POSTFIX = "_inv";

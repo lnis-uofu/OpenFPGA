@@ -163,7 +163,7 @@ void add_formal_verification_sram_ports_to_module_manager(ModuleManager& module_
  * The type and names of added ports strongly depend on the 
  * organization of SRAMs.
  * 1. Standalone SRAMs: 
- *    two ports will be added, which are regular output and inverted output 
+ *    two ports will be added, which are BL and WL 
  * 2. Scan-chain Flip-flops:
  *    two ports will be added, which are the head of scan-chain 
  *    and the tail of scan-chain

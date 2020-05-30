@@ -384,7 +384,9 @@ void build_top_module(ModuleManager& module_manager,
    */
   size_t module_num_config_bits = find_module_num_config_bits_from_child_modules(module_manager, top_module, circuit_lib, sram_model, sram_orgz_type); 
   if (0 < module_num_config_bits) {
-    add_sram_ports_to_module_manager(module_manager, top_module, circuit_lib, sram_model, sram_orgz_type, module_num_config_bits);
+    add_top_module_sram_ports(module_manager, top_module,
+                              circuit_lib, sram_model,
+                              sram_orgz_type, module_num_config_bits);
   }
 
   /* Add module nets to connect memory cells inside

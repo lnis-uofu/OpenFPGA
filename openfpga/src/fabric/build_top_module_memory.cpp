@@ -13,6 +13,8 @@
 #include "openfpga_reserved_words.h"
 #include "openfpga_naming.h"
 
+#include "memory_utils.h"
+#include "decoder_library_utils.h"
 #include "module_manager_utils.h"
 #include "build_top_module_memory.h"
 
@@ -358,6 +360,104 @@ void organize_top_module_memory_modules(ModuleManager& module_manager,
                                             device_rr_gsb, sb_instance_ids, cb_instance_ids,
                                             compact_routing_hierarchy,
                                             core_coord, NUM_SIDES);
+  }
+}
+
+/********************************************************************
+ * Add a list of ports that are used for SRAM configuration to the FPGA 
+ * top-level module
+ * The type and names of added ports strongly depend on the 
+ * organization of SRAMs.
+ * 1. Standalone SRAMs: 
+ *    two ports will be added, which are BL and WL 
+ * 2. Scan-chain Flip-flops:
+ *    two ports will be added, which are the head of scan-chain 
+ *    and the tail of scan-chain
+ *    IMPORTANT: the port size will be forced to 1 in this case 
+ *               because the head and tail are both 1-bit ports!!!
+ * 3. Memory decoders:
+ *    - An enable signal
+ *    - A BL address port
+ *    - A WL address port
+ *    - A data-in port for the BL decoder
+ * 4. Frame-based memory:
+ *    - An Enable signal
+ *    - An address port, whose size depends on the number of config bits 
+ *      and the maximum size of address ports of configurable children
+ *    - An data_in port (single-bit)
+ ********************************************************************/
+void add_top_module_sram_ports(ModuleManager& module_manager, 
+                               const ModuleId& module_id,
+                               const CircuitLibrary& circuit_lib,
+                               const CircuitModelId& sram_model,
+                               const e_config_protocol_type sram_orgz_type,
+                               const size_t& num_config_bits) {
+  std::vector<std::string> sram_port_names = generate_sram_port_names(circuit_lib, sram_model, sram_orgz_type);
+  size_t sram_port_size = generate_sram_port_size(sram_orgz_type, num_config_bits); 
+
+  /* Add ports to the module manager */
+  switch (sram_orgz_type) {
+  case CONFIG_MEM_STANDALONE: { 
+    for (const std::string& sram_port_name : sram_port_names) {
+      /* Add generated ports to the ModuleManager */
+      BasicPort sram_port(sram_port_name, sram_port_size);
+      module_manager.add_port(module_id, sram_port, ModuleManager::MODULE_INPUT_PORT);
+    }
+    break;
+  }
+  case CONFIG_MEM_MEMORY_BANK: {
+    BasicPort en_port(std::string(DECODER_ENABLE_PORT_NAME), 1);
+    module_manager.add_port(module_id, en_port, ModuleManager::MODULE_INPUT_PORT);
+
+    size_t bl_addr_size = find_memory_decoder_addr_size(num_config_bits);
+    BasicPort bl_addr_port(std::string(DECODER_BL_ADDRESS_PORT_NAME), bl_addr_size);
+    module_manager.add_port(module_id, bl_addr_port, ModuleManager::MODULE_INPUT_PORT);
+
+    size_t wl_addr_size = find_memory_decoder_addr_size(num_config_bits);
+    BasicPort wl_addr_port(std::string(DECODER_WL_ADDRESS_PORT_NAME), wl_addr_size);
+    module_manager.add_port(module_id, wl_addr_port, ModuleManager::MODULE_INPUT_PORT);
+
+    BasicPort din_port(std::string(DECODER_DATA_IN_PORT_NAME), 1);
+    module_manager.add_port(module_id, din_port, ModuleManager::MODULE_INPUT_PORT);
+
+    break;
+  }
+  case CONFIG_MEM_SCAN_CHAIN: { 
+    /* Note that configuration chain tail is an output while head is an input 
+     * IMPORTANT: this is co-designed with function generate_sram_port_names()
+     * If the return vector is changed, the following codes MUST be adapted!
+     */
+    VTR_ASSERT(2 == sram_port_names.size());
+    size_t port_counter = 0;
+    for (const std::string& sram_port_name : sram_port_names) {
+      /* Add generated ports to the ModuleManager */
+      BasicPort sram_port(sram_port_name, sram_port_size);
+      if (0 == port_counter) { 
+        module_manager.add_port(module_id, sram_port, ModuleManager::MODULE_INPUT_PORT);
+      } else {
+        VTR_ASSERT(1 == port_counter);
+        module_manager.add_port(module_id, sram_port, ModuleManager::MODULE_OUTPUT_PORT);
+      }
+      port_counter++;
+    }
+    break;
+  }
+  case CONFIG_MEM_FRAME_BASED: { 
+    BasicPort en_port(std::string(DECODER_ENABLE_PORT_NAME), 1);
+    module_manager.add_port(module_id, en_port, ModuleManager::MODULE_INPUT_PORT);
+
+    BasicPort addr_port(std::string(DECODER_ADDRESS_PORT_NAME), num_config_bits);
+    module_manager.add_port(module_id, addr_port, ModuleManager::MODULE_INPUT_PORT);
+
+    BasicPort din_port(std::string(DECODER_DATA_IN_PORT_NAME), 1);
+    module_manager.add_port(module_id, din_port, ModuleManager::MODULE_INPUT_PORT);
+
+    break;
+  }
+  default:
+    VTR_LOGF_ERROR(__FILE__, __LINE__,
+                   "Invalid type of SRAM organization !\n");
+    exit(1);
   }
 }
 
