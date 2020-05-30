@@ -91,6 +91,11 @@ void add_module_nets_between_logic_and_memory_sram_bus(ModuleManager& module_man
                                                        const CircuitLibrary& circuit_lib,
                                                        const CircuitModelId& logic_model);
 
+void add_module_nets_cmos_flatten_memory_config_bus(ModuleManager& module_manager,
+                                                    const ModuleId& parent_module,
+                                                    const e_config_protocol_type& sram_orgz_type,
+                                                    const e_circuit_model_port_type& config_port_type);
+
 void add_module_nets_cmos_memory_chain_config_bus(ModuleManager& module_manager,
                                                   const ModuleId& parent_module,
                                                   const e_config_protocol_type& sram_orgz_type);
@@ -134,6 +139,13 @@ size_t find_module_num_config_bits_from_child_modules(ModuleManager& module_mana
                                                       const CircuitLibrary& circuit_lib,
                                                       const CircuitModelId& sram_model,
                                                       const e_config_protocol_type& sram_orgz_type);
+
+ModuleNetId create_module_source_pin_net(ModuleManager& module_manager,
+                                         const ModuleId& cur_module_id,
+                                         const ModuleId& src_module_id,
+                                         const size_t& src_instance_id,
+                                         const ModulePortId& src_module_port_id,
+                                         const size_t& src_pin_id);
 
 void add_module_bus_nets(ModuleManager& module_manager,
                          const ModuleId& cur_module_id,

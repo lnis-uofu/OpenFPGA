@@ -744,19 +744,6 @@ std::string generate_sram_port_name(const e_config_protocol_type& sram_orgz_type
   std::string port_name;
 
   switch (sram_orgz_type) {
-  case CONFIG_MEM_STANDALONE: {
-    /* Two types of ports are available:  
-     * (1) Regular output of a SRAM, enabled by port type of INPUT
-     * (2) Inverted output of a SRAM, enabled by port type of OUTPUT
-     */
-    if (CIRCUIT_MODEL_PORT_INPUT == port_type) {
-      port_name = std::string("mem_out"); 
-    } else {
-      VTR_ASSERT( CIRCUIT_MODEL_PORT_OUTPUT == port_type );
-      port_name = std::string("mem_outb"); 
-    }
-    break;
-  }
   case CONFIG_MEM_SCAN_CHAIN:
     /* Two types of ports are available:  
      * (1) Head of a chain of Configuration-chain Flip-Flops (CCFFs), enabled by port type of INPUT
@@ -772,30 +759,25 @@ std::string generate_sram_port_name(const e_config_protocol_type& sram_orgz_type
       port_name = std::string("ccff_tail"); 
     }
     break;
+  case CONFIG_MEM_STANDALONE:
   case CONFIG_MEM_MEMORY_BANK:
-    /* Four types of ports are available:  
+    /* Two types of ports are available:  
      * (1) Bit Lines (BLs) of a SRAM cell, enabled by port type of BL
      * (2) Word Lines (WLs) of a SRAM cell, enabled by port type of WL
-     * (3) Inverted Bit Lines (BLBs) of a SRAM cell, enabled by port type of BLB
-     * (4) Inverted Word Lines (WLBs) of a SRAM cell, enabled by port type of WLB
      *
-     *           BL BLB WL WLB    BL BLB WL WLB    BL BLB WL WLB
-     *          [0] [0] [0] [0]  [1] [1] [1] [1]  [i] [i] [i] [i]
-     *            ^  ^  ^  ^       ^  ^  ^  ^       ^  ^  ^  ^
-     *            |  |  |  |       |  |  |  |       |  |  |  |
+     *           BL     WL        BL     WL        BL     WL    
+     *          [0]     [0]      [1]     [1]      [i]     [i]    
+     *            ^     ^          ^     ^          ^     ^    
+     *            |     |          |     |          |     |    
      *           +----------+     +----------+     +----------+
      *           |   SRAM   |     |   SRAM   | ... |   SRAM   |         
      *           +----------+     +----------+     +----------+
      */
     if (CIRCUIT_MODEL_PORT_BL == port_type) {
-      port_name = std::string("bl"); 
-    } else if (CIRCUIT_MODEL_PORT_WL == port_type) {
-      port_name = std::string("wl"); 
-    } else if (CIRCUIT_MODEL_PORT_BLB == port_type) {
-      port_name = std::string("blb"); 
+      port_name = std::string(MEMORY_BL_PORT_NAME); 
     } else {
-      VTR_ASSERT( CIRCUIT_MODEL_PORT_WLB == port_type );
-      port_name = std::string("wlb"); 
+      VTR_ASSERT( CIRCUIT_MODEL_PORT_WL == port_type );
+      port_name = std::string(MEMORY_WL_PORT_NAME); 
     }
     break;
   case CONFIG_MEM_FRAME_BASED:

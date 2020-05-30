@@ -314,20 +314,15 @@ std::vector<std::string> generate_sram_port_names(const CircuitLibrary& circuit_
   std::vector<e_circuit_model_port_type> model_port_types; 
 
   switch (sram_orgz_type) {
-  case CONFIG_MEM_STANDALONE: 
-    model_port_types.push_back(CIRCUIT_MODEL_PORT_INPUT);
-    model_port_types.push_back(CIRCUIT_MODEL_PORT_OUTPUT);
-    break;
   case CONFIG_MEM_SCAN_CHAIN: 
     model_port_types.push_back(CIRCUIT_MODEL_PORT_INPUT);
     model_port_types.push_back(CIRCUIT_MODEL_PORT_OUTPUT);
     break;
+  case CONFIG_MEM_STANDALONE: 
   case CONFIG_MEM_MEMORY_BANK: {
     std::vector<e_circuit_model_port_type> ports_to_search;
     ports_to_search.push_back(CIRCUIT_MODEL_PORT_BL);
     ports_to_search.push_back(CIRCUIT_MODEL_PORT_WL);
-    ports_to_search.push_back(CIRCUIT_MODEL_PORT_BLB);
-    ports_to_search.push_back(CIRCUIT_MODEL_PORT_WLB);
     /* Try to find a BL/WL/BLB/WLB port and update the port types/module port types to be added */
     for (const auto& port_to_search : ports_to_search) {
       std::vector<CircuitPortId> found_port = circuit_lib.model_ports_by_type(sram_model, port_to_search);
