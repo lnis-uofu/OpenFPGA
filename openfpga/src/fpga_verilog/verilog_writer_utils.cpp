@@ -644,12 +644,38 @@ std::string generate_verilog_local_wire(const BasicPort& output_port,
 /********************************************************************
  * Generate a string for a constant value in Verilog format:
  *  <#.of bits>'b<binary numbers>
+ *
+ * Optimization: short_constant
+ *   When this switch is turned on, we will generate short version
+ *   for all-zero/all-one vectors
+ *   {<length>{1'b<zero/one>}}
  *******************************************************************/
-std::string generate_verilog_constant_values(const std::vector<size_t>& const_values) {
-  std::string str = std::to_string(const_values.size());
-  str += "'b";
-  for (const auto& val : const_values) {
-    str += std::to_string(val);
+std::string generate_verilog_constant_values(const std::vector<size_t>& const_values,
+                                             const bool& short_constant) {
+  VTR_ASSERT(!const_values.empty());
+
+  bool same_values = true;
+  size_t first_val = const_values.back();
+  if (true == short_constant) {
+    for (const auto& val : const_values) {
+      if (first_val != val) {
+        same_values = false;
+        break;
+      }
+    }
+  }
+
+  std::string str;
+
+  if ( (true == short_constant) 
+    && (true == same_values) ) {
+    str = "{" + std::to_string(const_values.size()) + "{1'b" + std::to_string(first_val) + "}}";
+  } else {
+    str = std::to_string(const_values.size());
+    str += "'b";
+    for (const auto& val : const_values) {
+      str += std::to_string(val);
+    }
   }
   return str;
 }

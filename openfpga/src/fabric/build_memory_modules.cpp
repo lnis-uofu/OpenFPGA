@@ -61,7 +61,7 @@ void add_module_input_nets_to_mem_modules(ModuleManager& module_manager,
     module_manager.add_module_net_source(mem_module, net, mem_module, 0, src_port_id, src_pin_id);
   }
 
-  for (size_t pin_id = 0; pin_id < module_manager.module_port(mem_module, sink_port_id).pins().size(); ++pin_id) {
+  for (size_t pin_id = 0; pin_id < module_manager.module_port(child_module, sink_port_id).pins().size(); ++pin_id) {
     /* Sink node of the input net is the input of sram module */
     size_t sink_pin_id = module_manager.module_port(child_module, sink_port_id).pins()[pin_id];
     module_manager.add_module_net_sink(mem_module, net, child_module, child_instance, sink_port_id, sink_pin_id);
@@ -328,7 +328,7 @@ void build_memory_flatten_module(ModuleManager& module_manager,
   BasicPort bl_port(std::string(MEMORY_BL_PORT_NAME), num_mems);
   ModulePortId mem_bl_port = module_manager.add_port(mem_module, bl_port, ModuleManager::MODULE_INPUT_PORT);
 
-  BasicPort wl_port(std::string(MEMORY_BL_PORT_NAME), num_mems);
+  BasicPort wl_port(std::string(MEMORY_WL_PORT_NAME), num_mems);
   ModulePortId mem_wl_port = module_manager.add_port(mem_module, wl_port, ModuleManager::MODULE_INPUT_PORT);
 
   /* Add each output port: port width should match the number of memories */

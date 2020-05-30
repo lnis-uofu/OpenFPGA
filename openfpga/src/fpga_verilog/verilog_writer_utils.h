@@ -96,7 +96,8 @@ BasicPort generate_verilog_bus_port(const std::vector<BasicPort>& input_ports,
 std::string generate_verilog_local_wire(const BasicPort& output_port,
                                         const std::vector<BasicPort>& input_ports);
 
-std::string generate_verilog_constant_values(const std::vector<size_t>& const_values);
+std::string generate_verilog_constant_values(const std::vector<size_t>& const_values,
+                                             const bool& short_constant = false);
 
 std::string generate_verilog_port_constant_values(const BasicPort& output_port,
                                                   const std::vector<size_t>& const_values);

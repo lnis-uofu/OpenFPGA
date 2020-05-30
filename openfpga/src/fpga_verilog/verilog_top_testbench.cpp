@@ -913,27 +913,27 @@ void print_verilog_top_testbench_vanilla_bitstream(std::fstream& fp,
   print_verilog_comment(fp, "----- Configuration chain default input -----");
   fp << "\t\t";
   fp << generate_verilog_port_constant_values(bl_port, initial_bl_values);
-  fp << ";";
+  fp << ";" << std::endl;
   fp << "\t\t";
   fp << generate_verilog_port_constant_values(wl_port, initial_wl_values);
-  fp << ";";
+  fp << ";" << std::endl;
 
   fp << std::endl;
 
-  fp << "\t\t@(negedge " << generate_verilog_port(VERILOG_PORT_CONKT, prog_clock_port) << ");" << std::endl;
-  fp << "\t\t\t"; 
+  fp << "\t\t@(negedge " << generate_verilog_port(VERILOG_PORT_CONKT, prog_clock_port) << ") begin" << std::endl;
 
   /* Enable all the WLs */
   std::vector<size_t> enabled_wl_values(wl_port.get_width(), 1);
-  fp << generate_verilog_port(VERILOG_PORT_CONKT, wl_port);
-  fp << " = "; 
+  fp << "\t\t\t"; 
   fp << generate_verilog_port_constant_values(wl_port, enabled_wl_values);
+  fp << ";" << std::endl;
 
   size_t ibit = 0;
   for (const FabricBitId& bit_id : fabric_bitstream.bits()) {
     BasicPort cur_bl_port(bl_port);
     cur_bl_port.set_width(ibit, ibit);
 
+    fp << "\t\t\t"; 
     fp << generate_verilog_port(VERILOG_PORT_CONKT, cur_bl_port);
     fp << " = "; 
     fp << "1'b" << (size_t)bitstream_manager.bit_value(fabric_bitstream.config_bit(bit_id));
@@ -942,14 +942,14 @@ void print_verilog_top_testbench_vanilla_bitstream(std::fstream& fp,
     ibit++;
   }
 
-  fp << "\tend" << std::endl;
+  fp << "\t\tend" << std::endl;
 
   /* Disable all the WLs */
   fp << "\t\t@(negedge " << generate_verilog_port(VERILOG_PORT_CONKT, prog_clock_port) << ");" << std::endl;
-  fp << generate_verilog_port(VERILOG_PORT_CONKT, wl_port);
-  fp << " = "; 
-  fp << generate_verilog_port_constant_values(wl_port, initial_wl_values);
+
   fp << "\t\t\t"; 
+  fp << generate_verilog_port_constant_values(wl_port, initial_wl_values);
+  fp << ";" << std::endl;
 
   /* Raise the flag of configuration done when bitstream loading is complete */
   fp << "\t\t@(negedge " << generate_verilog_port(VERILOG_PORT_CONKT, prog_clock_port) << ");" << std::endl;
@@ -965,7 +965,6 @@ void print_verilog_top_testbench_vanilla_bitstream(std::fstream& fp,
   fp << "\tend" << std::endl;
   print_verilog_comment(fp, "----- End bitstream loading during configuration phase -----");
 }
-
 
 /********************************************************************
  * Print stimulus for a FPGA fabric with a configuration chain protocol 
