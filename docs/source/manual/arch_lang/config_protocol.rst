@@ -35,6 +35,7 @@ Template
 .. option:: circuit_model_name="<string>"
 
   Specify the name of circuit model to be used as configurable memory.
+
   - ``scan_chain`` requires a circuit model type of ``ccff``
   - ``frame_based`` requires a circuit model type of ``sram``
   - ``memory_bank`` requires a circuit model type of ``sram``
