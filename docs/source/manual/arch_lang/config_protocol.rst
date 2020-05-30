@@ -107,7 +107,7 @@ It will use the circuit model defined in :numref:`fig_sram_blwl`.
 .. code-block:: xml
 
   <configuration_protocol>
-    <organization type="memory_bank" circuit_model_name="sram"/>
+    <organization type="memory_bank" circuit_model_name="sram_blwl"/>
   </configuration_protocol>
 
 .. _fig_sram:
@@ -122,5 +122,29 @@ It will use the circuit model defined in :numref:`fig_sram_blwl`.
 
 Standalone SRAM Example
 ~~~~~~~~~~~~~~~~~~~~~~~
+In the standalone configuration protocol, every memory cell of the core logic of a FPGA fabric can be directly accessed at the top-level module, as illustrated in :numref:`fig_vanilla_config_protocol`.
 
-.. warning:: TO BE CONSTRUCTED
+.. _fig_vanilla_config_protocol:
+
+.. figure:: figures/vanilla_config_protocol.png
+   :scale: 30%
+   :alt: map to buried treasure
+ 
+   Vanilla (standalone) memory organization in a hierarchical view
+
+The following XML code shows an example where we use the circuit model defined in :numref:`fig_sram_blwl`.
+
+.. code-block:: xml
+
+  <configuration_protocol>
+    <organization type="standalone" circuit_model_name="sram_blwl"/>
+  </configuration_protocol>
+
+.. note:: The standalone protocol does require a memory cell to have 
+
+  -  two outputs (one regular and another inverted)
+  -  a Bit-Line input to load the data
+  -  a Word-Line input to enable data write 
+
+.. warning:: This is a vanilla configuration method, which allow users to build their own configuration protocol on top of it. 
+
