@@ -23,6 +23,8 @@ constexpr char* GRID_MEM_INSTANCE_PREFIX = "mem_";
 constexpr char* SWITCH_BLOCK_MEM_INSTANCE_PREFIX = "mem_"; 
 constexpr char* CONNECTION_BLOCK_MEM_INSTANCE_PREFIX = "mem_"; 
 constexpr char* MEMORY_MODULE_POSTFIX = "_mem";
+constexpr char* MEMORY_BL_PORT_NAME = "bl";
+constexpr char* MEMORY_WL_PORT_NAME = "wl";
 
 /* Multiplexer naming constant strings */
 constexpr char* MUX_BASIS_MODULE_POSTFIX = "_basis";

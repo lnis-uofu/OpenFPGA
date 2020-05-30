@@ -40,59 +40,31 @@ namespace openfpga {
 static 
 void add_module_input_nets_to_mem_modules(ModuleManager& module_manager,
                                           const ModuleId& mem_module,
+                                          const ModulePortId& module_port,
                                           const CircuitLibrary& circuit_lib,
-                                          const std::vector<CircuitPortId>& circuit_ports,
+                                          const CircuitPortId& circuit_port,
                                           const ModuleId& child_module,
                                           const size_t& child_index,
                                           const size_t& child_instance) {
   /* Wire inputs of parent module to inputs of child modules */
-  for (const auto& port : circuit_ports) {
-    ModulePortId src_port_id = module_manager.find_module_port(mem_module, circuit_lib.port_prefix(port));
-    ModulePortId sink_port_id = module_manager.find_module_port(child_module, circuit_lib.port_prefix(port));
-    for (size_t pin_id = 0; pin_id < module_manager.module_port(mem_module, sink_port_id).pins().size(); ++pin_id) {
-      ModuleNetId net = module_manager.create_module_net(mem_module);
-      /* Source pin is shifted by the number of memories */
-      size_t src_pin_id = child_index * circuit_lib.port_size(port) + module_manager.module_port(mem_module, src_port_id).pins()[pin_id];
-      /* Source node of the input net is the input of memory module */
-      module_manager.add_module_net_source(mem_module, net, mem_module, 0, src_port_id, src_pin_id);
-      /* Sink node of the input net is the input of sram module */
-      size_t sink_pin_id = module_manager.module_port(child_module, sink_port_id).pins()[pin_id];
-      module_manager.add_module_net_sink(mem_module, net, child_module, child_instance, sink_port_id, sink_pin_id);
-    }
-  }
-}
+  ModulePortId src_port_id = module_port;
+  ModulePortId sink_port_id = module_manager.find_module_port(child_module, circuit_lib.port_prefix(circuit_port));
 
-/*********************************************************************
- * Add module nets to connect an output port of a memory module to 
- * an output port of its child module
- * Restriction: this function is really designed for memory modules
- * 1. It assumes that output port name of child module is the same as memory module
- * 2. It assumes exact pin-to-pin mapping: 
- *     j-th pin of output port of the i-th child module is wired to the j + i*W -th
- *     pin of output port of the memory module, where W is the size of port 
- ********************************************************************/
-static 
-void add_module_output_nets_to_mem_modules(ModuleManager& module_manager,
-                                           const ModuleId& mem_module,
-                                           const CircuitLibrary& circuit_lib,
-                                           const std::vector<CircuitPortId>& circuit_ports,
-                                           const ModuleId& child_module,
-                                           const size_t& child_index,
-                                           const size_t& child_instance) {
-  /* Wire inputs of parent module to inputs of child modules */
-  for (const auto& port : circuit_ports) {
-    ModulePortId src_port_id = module_manager.find_module_port(child_module, circuit_lib.port_prefix(port));
-    ModulePortId sink_port_id = module_manager.find_module_port(mem_module, circuit_lib.port_prefix(port));
-    for (size_t pin_id = 0; pin_id < module_manager.module_port(child_module, src_port_id).pins().size(); ++pin_id) {
-      ModuleNetId net = module_manager.create_module_net(mem_module);
-      /* Source pin is shifted by the number of memories */
-      size_t src_pin_id = module_manager.module_port(child_module, src_port_id).pins()[pin_id];
-      /* Source node of the input net is the input of memory module */
-      module_manager.add_module_net_source(mem_module, net, child_module, child_instance, src_port_id, src_pin_id);
-      /* Sink node of the input net is the input of sram module */
-      size_t sink_pin_id = child_index * circuit_lib.port_size(port) + module_manager.module_port(mem_module, sink_port_id).pins()[pin_id];
-      module_manager.add_module_net_sink(mem_module, net, mem_module, 0, sink_port_id, sink_pin_id);
-    }
+  /* Source pin is shifted by the number of memories */
+  size_t src_pin_id = module_manager.module_port(mem_module, src_port_id).pins()[child_index];
+
+  ModuleNetId net = module_manager.module_instance_port_net(mem_module,
+                                                            mem_module, 0, 
+                                                            src_port_id, src_pin_id);
+  if (ModuleNetId::INVALID() == net) { 
+    net = module_manager.create_module_net(mem_module);
+    module_manager.add_module_net_source(mem_module, net, mem_module, 0, src_port_id, src_pin_id);
+  }
+
+  for (size_t pin_id = 0; pin_id < module_manager.module_port(mem_module, sink_port_id).pins().size(); ++pin_id) {
+    /* Sink node of the input net is the input of sram module */
+    size_t sink_pin_id = module_manager.module_port(child_module, sink_port_id).pins()[pin_id];
+    module_manager.add_module_net_sink(mem_module, net, child_module, child_instance, sink_port_id, sink_pin_id);
   }
 }
 
@@ -137,6 +109,38 @@ std::vector<ModuleNetId> add_module_output_nets_to_chain_mem_modules(ModuleManag
   }
 
   return module_nets;
+}
+
+/*********************************************************************
+ * Add module nets to connect an output port of a memory module to 
+ * an output port of its child module
+ * Restriction: this function is really designed for memory modules
+ * 1. It assumes that output port name of child module is the same as memory module
+ * 2. It assumes exact pin-to-pin mapping: 
+ *     j-th pin of output port of the i-th child module is wired to the j + i*W -th
+ *     pin of output port of the memory module, where W is the size of port 
+ ********************************************************************/
+static 
+void add_module_output_nets_to_mem_modules(ModuleManager& module_manager,
+                                           const ModuleId& mem_module,
+                                           const CircuitLibrary& circuit_lib,
+                                           const std::vector<CircuitPortId>& sram_output_ports,
+                                           const ModuleId& child_module,
+                                           const size_t& child_index,
+                                           const size_t& child_instance) {
+
+  for (size_t iport = 0; iport < sram_output_ports.size(); ++iport) {
+    std::string port_name;
+    if (0 == iport) {
+      port_name = generate_configurable_memory_data_out_name();
+    } else {
+      VTR_ASSERT( 1 == iport);
+      port_name = generate_configurable_memory_inverted_data_out_name();
+    }
+    add_module_output_nets_to_chain_mem_modules(module_manager, mem_module, 
+                                                port_name, circuit_lib, sram_output_ports[iport],
+                                                child_module, child_index, child_instance);
+  }
 }
 
 /********************************************************************
@@ -273,9 +277,14 @@ void add_module_nets_to_cmos_memory_chain_module(ModuleManager& module_manager,
 }
 
 /*********************************************************************
- * Flat memory modules 
+ * Flatten memory organization
  *
- *        in[0]        in[1]           in[N]
+ *           Bit lines(BL/BLB) Word lines (WL/WLB)
+ *               |               |
+ *               v               v
+ *      +------------------------------------+
+ *      |   Memory Module Configuration port |
+ *      +------------------------------------+
  *          |            |               |
  *          v            v               v
  *      +-------+    +-------+       +-------+
@@ -289,33 +298,49 @@ void add_module_nets_to_cmos_memory_chain_module(ModuleManager& module_manager,
  *
  ********************************************************************/
 static 
-void build_memory_standalone_module(ModuleManager& module_manager,
-                                    const CircuitLibrary& circuit_lib,
-                                    const std::string& module_name,
-                                    const CircuitModelId& sram_model,
-                                    const size_t& num_mems) {
+void build_memory_flatten_module(ModuleManager& module_manager,
+                                 const CircuitLibrary& circuit_lib,
+                                 const std::string& module_name,
+                                 const CircuitModelId& sram_model,
+                                 const size_t& num_mems) {
   /* Get the global ports required by the SRAM */
   std::vector<enum e_circuit_model_port_type> global_port_types;
   global_port_types.push_back(CIRCUIT_MODEL_PORT_CLOCK);
   global_port_types.push_back(CIRCUIT_MODEL_PORT_INPUT);
   std::vector<CircuitPortId> sram_global_ports = circuit_lib.model_global_ports_by_type(sram_model, global_port_types, true, false);
-  /* Get the input ports from the SRAM */
-  std::vector<CircuitPortId> sram_input_ports = circuit_lib.model_ports_by_type(sram_model, CIRCUIT_MODEL_PORT_INPUT, true);
+  /* Get the BL/WL ports from the SRAM */
+  std::vector<CircuitPortId> sram_bl_ports = circuit_lib.model_ports_by_type(sram_model, CIRCUIT_MODEL_PORT_BL, true);
+  std::vector<CircuitPortId> sram_wl_ports = circuit_lib.model_ports_by_type(sram_model, CIRCUIT_MODEL_PORT_WL, true);
   /* Get the output ports from the SRAM */
   std::vector<CircuitPortId> sram_output_ports = circuit_lib.model_ports_by_type(sram_model, CIRCUIT_MODEL_PORT_OUTPUT, true);
+
+  /* Ensure that we have only 1 BL, 1 WL and 2 output ports*/
+  VTR_ASSERT(1 == sram_bl_ports.size());
+  VTR_ASSERT(1 == sram_wl_ports.size());
+  VTR_ASSERT(2 == sram_output_ports.size());
 
   /* Create a module and add to the module manager */
   ModuleId mem_module = module_manager.add_module(module_name); 
   VTR_ASSERT(true == module_manager.valid_module_id(mem_module));
   
-  /* Add each input port */
-  for (const auto& port : sram_input_ports) {
-    BasicPort input_port(circuit_lib.port_prefix(port), num_mems);
-    module_manager.add_port(mem_module, input_port, ModuleManager::MODULE_INPUT_PORT);
-  }
+  /* Add module ports */
+  /* Input: BL port */
+  BasicPort bl_port(std::string(MEMORY_BL_PORT_NAME), num_mems);
+  ModulePortId mem_bl_port = module_manager.add_port(mem_module, bl_port, ModuleManager::MODULE_INPUT_PORT);
+
+  BasicPort wl_port(std::string(MEMORY_BL_PORT_NAME), num_mems);
+  ModulePortId mem_wl_port = module_manager.add_port(mem_module, wl_port, ModuleManager::MODULE_INPUT_PORT);
+
   /* Add each output port: port width should match the number of memories */
-  for (const auto& port : sram_output_ports) {
-    BasicPort output_port(circuit_lib.port_prefix(port), num_mems);
+  for (size_t iport = 0; iport < sram_output_ports.size(); ++iport) {
+    std::string port_name;
+    if (0 == iport) {
+      port_name = generate_configurable_memory_data_out_name();
+    } else {
+      VTR_ASSERT( 1 == iport);
+      port_name = generate_configurable_memory_inverted_data_out_name();
+    }
+    BasicPort output_port(port_name, num_mems);
     module_manager.add_port(mem_module, output_port, ModuleManager::MODULE_OUTPUT_PORT);
   }
 
@@ -330,8 +355,13 @@ void build_memory_standalone_module(ModuleManager& module_manager,
 
     /* Build module nets */
     /* Wire inputs of parent module to inputs of child modules */
-    add_module_input_nets_to_mem_modules(module_manager, mem_module, circuit_lib, sram_input_ports, sram_mem_module, i, sram_mem_instance);
-    /* Wire inputs of parent module to outputs of child modules */
+    for (const CircuitPortId& port : sram_bl_ports) {
+      add_module_input_nets_to_mem_modules(module_manager, mem_module, mem_bl_port, circuit_lib, port, sram_mem_module, i, sram_mem_instance);
+    }
+    for (const CircuitPortId& port : sram_wl_ports) {
+      add_module_input_nets_to_mem_modules(module_manager, mem_module, mem_wl_port, circuit_lib, port, sram_mem_module, i, sram_mem_instance);
+    }
+    /* Wire outputs of child module to outputs of parent module */
     add_module_output_nets_to_mem_modules(module_manager, mem_module, circuit_lib, sram_output_ports, sram_mem_module, i, sram_mem_instance);
   }
 
@@ -440,113 +470,6 @@ void build_memory_chain_module(ModuleManager& module_manager,
   add_module_nets_to_cmos_memory_chain_module(module_manager, mem_module, mem_output_nets, 
                                               circuit_lib, sram_input_ports[0], sram_output_ports[0]);
 
-
-  /* Add global ports to the pb_module:
-   * This is a much easier job after adding sub modules (instances), 
-   * we just need to find all the global ports from the child modules and build a list of it
-   */
-  add_module_global_ports_from_child_modules(module_manager, mem_module);
-}
-
-/*********************************************************************
- * Memory bank organization
- *
- *           Bit lines(BL/BLB) Word lines (WL/WLB)
- *               |               |
- *               v               v
- *      +------------------------------------+
- *      |   Memory Module Configuration port |
- *      +------------------------------------+
- *          |            |               |
- *          v            v               v
- *      +-------+    +-------+       +-------+
- *      | SRAM  |    | SRAM  |  ...  | SRAM  |
- *      |  [0]  |    |  [1]  |       | [N-1] |
- *      +-------+    +-------+       +-------+
- *          |            |      ...      |
- *          v            v               v
- *      +------------------------------------+
- *      |   Multiplexer Configuration port   |
- *
- ********************************************************************/
-static 
-void build_memory_bank_module(ModuleManager& module_manager,
-                              const CircuitLibrary& circuit_lib,
-                              const std::string& module_name,
-                              const CircuitModelId& sram_model,
-                              const size_t& num_mems) {
-  /* Get the global ports required by the SRAM */
-  std::vector<enum e_circuit_model_port_type> global_port_types;
-  global_port_types.push_back(CIRCUIT_MODEL_PORT_CLOCK);
-  global_port_types.push_back(CIRCUIT_MODEL_PORT_INPUT);
-  std::vector<CircuitPortId> sram_global_ports = circuit_lib.model_global_ports_by_type(sram_model, global_port_types, true, false);
-  /* Get the input ports from the SRAM */
-  std::vector<CircuitPortId> sram_input_ports = circuit_lib.model_ports_by_type(sram_model, CIRCUIT_MODEL_PORT_INPUT, true);
-  /* A SRAM cell with BL/WL should not have any input */
-  VTR_ASSERT( 0 == sram_input_ports.size() );
-  /* Get the output ports from the SRAM */
-  std::vector<CircuitPortId> sram_output_ports = circuit_lib.model_ports_by_type(sram_model, CIRCUIT_MODEL_PORT_OUTPUT, true);
-  /* Get the BL/WL ports from the SRAM */
-  std::vector<CircuitPortId> sram_bl_ports  = circuit_lib.model_ports_by_type(sram_model, CIRCUIT_MODEL_PORT_BL, true);
-  std::vector<CircuitPortId> sram_blb_ports = circuit_lib.model_ports_by_type(sram_model, CIRCUIT_MODEL_PORT_BLB, true);
-  std::vector<CircuitPortId> sram_wl_ports  = circuit_lib.model_ports_by_type(sram_model, CIRCUIT_MODEL_PORT_WL, true);
-  std::vector<CircuitPortId> sram_wlb_ports = circuit_lib.model_ports_by_type(sram_model, CIRCUIT_MODEL_PORT_WLB, true);
-
-  /* Create a module and add to the module manager */
-  ModuleId mem_module = module_manager.add_module(module_name); 
-  VTR_ASSERT(true == module_manager.valid_module_id(mem_module));
-  
-  /* Add module ports: the ports come from the SRAM modules */
-  /* Add each input port */
-  for (const auto& port : sram_input_ports) {
-    BasicPort input_port(circuit_lib.port_prefix(port), num_mems * circuit_lib.port_size(port));
-    module_manager.add_port(mem_module, input_port, ModuleManager::MODULE_INPUT_PORT);
-  }
-  /* Add each output port: port width should match the number of memories */
-  for (const auto& port : sram_output_ports) {
-    BasicPort output_port(circuit_lib.port_prefix(port), num_mems * circuit_lib.port_size(port));
-    module_manager.add_port(mem_module, output_port, ModuleManager::MODULE_OUTPUT_PORT);
-  }
-  /* Add each output port: port width should match the number of memories */
-  for (const auto& port : sram_bl_ports) {
-    BasicPort bl_port(circuit_lib.port_prefix(port), num_mems * circuit_lib.port_size(port));
-    module_manager.add_port(mem_module, bl_port, ModuleManager::MODULE_INPUT_PORT);
-  }
-  for (const auto& port : sram_blb_ports) {
-    BasicPort blb_port(circuit_lib.port_prefix(port), num_mems * circuit_lib.port_size(port));
-    module_manager.add_port(mem_module, blb_port, ModuleManager::MODULE_INPUT_PORT);
-  }
-  for (const auto& port : sram_wl_ports) {
-    BasicPort wl_port(circuit_lib.port_prefix(port), num_mems * circuit_lib.port_size(port));
-    module_manager.add_port(mem_module, wl_port, ModuleManager::MODULE_INPUT_PORT);
-  }
-  for (const auto& port : sram_wlb_ports) {
-    BasicPort wlb_port(circuit_lib.port_prefix(port), num_mems * circuit_lib.port_size(port));
-    module_manager.add_port(mem_module, wlb_port, ModuleManager::MODULE_INPUT_PORT);
-  }
-
-  /* Find the sram module in the module manager */
-  ModuleId sram_mem_module = module_manager.find_module(circuit_lib.model_name(sram_model));
-
-  /* Instanciate each submodule */
-  for (size_t i = 0; i < num_mems; ++i) {
-    /* Memory seed module instanciation */
-    size_t sram_instance = module_manager.num_instance(mem_module, sram_mem_module);
-    module_manager.add_child_module(mem_module, sram_mem_module);
-
-    /* Build module nets */
-    /* Wire inputs of parent module to inputs of child modules */
-    add_module_input_nets_to_mem_modules(module_manager, mem_module, circuit_lib, sram_input_ports, sram_mem_module, i, sram_instance);
-    /* Wire inputs of parent module to outputs of child modules */
-    add_module_output_nets_to_mem_modules(module_manager, mem_module, circuit_lib, sram_output_ports, sram_mem_module, i, sram_instance);
-    /* Wire BL/WLs of parent module to BL/WLs of child modules */
-    add_module_input_nets_to_mem_modules(module_manager, mem_module, circuit_lib, sram_bl_ports, sram_mem_module, i, sram_instance);
-    add_module_input_nets_to_mem_modules(module_manager, mem_module, circuit_lib, sram_blb_ports, sram_mem_module, i, sram_instance);
-    add_module_input_nets_to_mem_modules(module_manager, mem_module, circuit_lib, sram_wl_ports, sram_mem_module, i, sram_instance);
-    add_module_input_nets_to_mem_modules(module_manager, mem_module, circuit_lib, sram_wlb_ports, sram_mem_module, i, sram_instance);
-  }
-
-  /* TODO: if a local memory decoder is required, instanciate it here */
 
   /* Add global ports to the pb_module:
    * This is a much easier job after adding sub modules (instances), 
@@ -773,16 +696,13 @@ void build_memory_module(ModuleManager& module_manager,
                          const size_t& num_mems) {
   switch (sram_orgz_type) {
   case CONFIG_MEM_STANDALONE:
-    build_memory_standalone_module(module_manager, circuit_lib, 
-                                   module_name, sram_model, num_mems);
+  case CONFIG_MEM_MEMORY_BANK:
+    build_memory_flatten_module(module_manager, circuit_lib, 
+                                module_name, sram_model, num_mems);
     break;
   case CONFIG_MEM_SCAN_CHAIN:
     build_memory_chain_module(module_manager, circuit_lib,  
                               module_name, sram_model, num_mems);
-    break;
-  case CONFIG_MEM_MEMORY_BANK:
-    build_memory_bank_module(module_manager, circuit_lib,
-                             module_name, sram_model, num_mems);
     break;
   case CONFIG_MEM_FRAME_BASED:
     build_frame_memory_module(module_manager, arch_decoder_lib, circuit_lib,
