@@ -15,6 +15,7 @@
 #include "openfpga_reserved_words.h"
 #include "openfpga_naming.h"
 
+#include "decoder_library_utils.h"
 #include "bitstream_manager_utils.h"
 #include "build_fabric_bitstream.h"
 
@@ -70,6 +71,90 @@ void rec_build_module_fabric_dependent_chain_bitstream(const BitstreamManager& b
    */
   for (const ConfigBitId& config_bit : bitstream_manager.block_bits(parent_block)) {
     fabric_bitstream.add_bit(config_bit);
+  }
+}
+
+/********************************************************************
+ * This function aims to build a bitstream for memory-bank protocol
+ * It will walk through all the configurable children under a module
+ * in a recursive way, following a Depth-First Search (DFS) strategy
+ * For each configuration child, we use its instance name as a key to spot the 
+ * configuration bits in bitstream manager.
+ * Note that it is guarentee that the instance name in module manager is 
+ * consistent with the block names in bitstream manager
+ * We use this link to reorganize the bitstream in the sequence of memories as we stored
+ * in the configurable_children() and configurable_child_instances() of each module of module manager 
+ *
+ * In such configuration organization, each memory cell has an unique index.
+ * Using this index, we can infer the address codes for both BL and WL decoders.
+ * Note that, we must get the number of BLs and WLs before using this function!
+ *******************************************************************/
+static 
+void rec_build_module_fabric_dependent_memory_bank_bitstream(const BitstreamManager& bitstream_manager,
+                                                             const ConfigBlockId& parent_block,
+                                                             const ModuleManager& module_manager,
+                                                             const ModuleId& parent_module,
+                                                             const size_t& bl_addr_size,
+                                                             const size_t& wl_addr_size,
+                                                             const size_t& num_bls,
+                                                             const size_t& num_wls, 
+                                                             size_t& cur_mem_index,
+                                                             FabricBitstream& fabric_bitstream) {
+
+  /* Depth-first search: if we have any children in the parent_block, 
+   * we dive to the next level first! 
+   */
+  if (0 < bitstream_manager.block_children(parent_block).size()) {
+    for (size_t child_id = 0; child_id < module_manager.configurable_children(parent_module).size(); ++child_id) {
+      ModuleId child_module = module_manager.configurable_children(parent_module)[child_id]; 
+      size_t child_instance = module_manager.configurable_child_instances(parent_module)[child_id]; 
+      /* Get the instance name and ensure it is not empty */
+      std::string instance_name = module_manager.instance_name(parent_module, child_module, child_instance);
+       
+      /* Find the child block that matches the instance name! */ 
+      ConfigBlockId child_block = bitstream_manager.find_child_block(parent_block, instance_name); 
+      /* We must have one valid block id! */
+      if (true != bitstream_manager.valid_block_id(child_block))
+      VTR_ASSERT(true == bitstream_manager.valid_block_id(child_block));
+
+      /* Go recursively */
+      rec_build_module_fabric_dependent_memory_bank_bitstream(bitstream_manager, child_block,
+                                                              module_manager, child_module,
+                                                              bl_addr_size, wl_addr_size,
+                                                              num_bls, num_wls,
+                                                              cur_mem_index,
+                                                              fabric_bitstream);
+    }
+    /* Ensure that there should be no configuration bits in the parent block */
+    VTR_ASSERT(0 == bitstream_manager.block_bits(parent_block).size());
+  }
+
+  /* Note that, reach here, it means that this is a leaf node. 
+   * We add the configuration bits to the fabric_bitstream,
+   * And then, we can return
+   */
+  for (const ConfigBitId& config_bit : bitstream_manager.block_bits(parent_block)) {
+    FabricBitId fabric_bit = fabric_bitstream.add_bit(config_bit);
+  
+    /* Find BL address */
+    size_t cur_bl_index = cur_mem_index / num_bls;
+    std::vector<size_t> bl_addr_bits_vec = itobin_vec(cur_bl_index, bl_addr_size);
+
+    /* Find WL address */
+    size_t cur_wl_index = cur_mem_index % num_wls;
+    std::vector<size_t> wl_addr_bits_vec = itobin_vec(cur_wl_index, wl_addr_size);
+
+    /* Set BL address */
+    fabric_bitstream.set_bit_bl_address(fabric_bit, bl_addr_bits_vec);
+
+    /* Set WL address */
+    fabric_bitstream.set_bit_wl_address(fabric_bit, wl_addr_bits_vec);
+    
+    /* Set data input */
+    fabric_bitstream.set_bit_din(fabric_bit, bitstream_manager.bit_value(config_bit));
+
+    /* Increase the memory index */
+    cur_mem_index++;
   }
 }
 
@@ -287,6 +372,23 @@ void build_module_fabric_dependent_bitstream(const ConfigProtocol& config_protoc
     break;
   }
   case CONFIG_MEM_MEMORY_BANK: { 
+    size_t cur_mem_index = 0;
+    /* Find BL address port size */
+    ModulePortId bl_addr_port = module_manager.find_module_port(top_module, std::string(MEMORY_BL_PORT_NAME));
+    BasicPort bl_addr_port_info = module_manager.module_port(top_module, bl_addr_port);
+    size_t num_bls = find_memory_decoder_data_size(bl_addr_port_info.get_width()); 
+
+    /* Find WL address port size */
+    ModulePortId wl_addr_port = module_manager.find_module_port(top_module, std::string(MEMORY_WL_PORT_NAME));
+    BasicPort wl_addr_port_info = module_manager.module_port(top_module, wl_addr_port);
+    size_t num_wls = find_memory_decoder_data_size(wl_addr_port_info.get_width()); 
+
+    rec_build_module_fabric_dependent_memory_bank_bitstream(bitstream_manager, top_block,
+                                                            module_manager, top_module, 
+                                                            bl_addr_port_info.get_width(),
+                                                            wl_addr_port_info.get_width(),
+                                                            num_bls, num_wls,
+                                                            cur_mem_index, fabric_bitstream);
     break;
   }
   case CONFIG_MEM_FRAME_BASED: {

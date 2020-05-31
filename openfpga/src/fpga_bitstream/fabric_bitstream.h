@@ -13,11 +13,11 @@
  * By using the link between ArchBitstreamManager and FabricBitstream, 
  * we can build a sequence of configuration bits to fit different configuration protocols.
  *
- *     +----------------------+                 +--------------------------+
- *     |                      |   ConfigBitId   |                          |
+ *     +----------------------+                 +-------------------+
+ *     |                      |   ConfigBitId   |                   |
  *     | ArchBitstreamManager |---------------->|  FabricBitstream  |
- *     |                      |                 |                          |   
- *     +----------------------+                 +--------------------------+ 
+ *     |                      |                 |                   |   
+ *     +----------------------+                 +-------------------+ 
  *
  * Restrictions:
  * 1. Each block inside BitstreamManager should have only 1 parent block 
@@ -53,6 +53,8 @@ class FabricBitstream {
 
     /* Find the address of bitstream */
     std::vector<size_t> bit_address(const FabricBitId& bit_id) const;
+    std::vector<size_t> bit_bl_address(const FabricBitId& bit_id) const;
+    std::vector<size_t> bit_wl_address(const FabricBitId& bit_id) const;
 
     /* Find the data-in of bitstream */
     bool bit_din(const FabricBitId& bit_id) const;
@@ -63,6 +65,12 @@ class FabricBitstream {
 
     void set_bit_address(const FabricBitId& bit_id,
                          const std::vector<size_t>& address);
+
+    void set_bit_bl_address(const FabricBitId& bit_id,
+                            const std::vector<size_t>& address);
+
+    void set_bit_wl_address(const FabricBitId& bit_id,
+                            const std::vector<size_t>& address);
 
     void set_bit_din(const FabricBitId& bit_id,
                      const bool& din);
@@ -83,8 +91,10 @@ class FabricBitstream {
     /* Address bits: this is designed for memory decoders
      * Here we store the binary format of the address, which can be loaded
      * to the configuration protocol directly 
+     *
+     * We use a 2-element array, as we may have a BL address and a WL address
      */
-    vtr::vector<FabricBitId, std::vector<size_t>> bit_addresses_;
+    vtr::vector<FabricBitId, std::array<std::vector<size_t>, 2>> bit_addresses_;
 
     /* Data input (Din) bits: this is designed for memory decoders */
     vtr::vector<FabricBitId, bool> bit_dins_;
