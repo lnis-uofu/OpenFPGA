@@ -2,6 +2,8 @@
  * This file includes functions that are used to organize memories 
  * in the top module of FPGA fabric
  *******************************************************************/
+#include <cmath>
+
 /* Headers from vtrutil library */
 #include "vtr_assert.h"
 #include "vtr_log.h"
@@ -652,7 +654,7 @@ void add_top_module_nets_cmos_memory_bank_config_bus(ModuleManager& module_manag
       /* Find the BL decoder data index: 
        * It should be the residual when divided by the number of BLs
        */
-      size_t bl_pin_id = cur_bl_index / num_bls;
+      size_t bl_pin_id = std::floor(cur_bl_index / num_bls);
 
       /* Create net */
       ModuleNetId net = create_module_source_pin_net(module_manager, top_module,

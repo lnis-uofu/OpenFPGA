@@ -2,6 +2,7 @@
  * This file includes functions to build fabric dependent bitstream
  *******************************************************************/
 #include <string>
+#include <cmath>
 #include <algorithm>
 
 /* Headers from vtrutil library */
@@ -115,6 +116,13 @@ void rec_build_module_fabric_dependent_memory_bank_bitstream(const BitstreamMana
       num_configurable_children -= 2;
     }
 
+    /* Early exit if there is no configurable children */
+    if (0 == num_configurable_children) {
+      /* Ensure that there should be no configuration bits in the parent block */
+      VTR_ASSERT(0 == bitstream_manager.block_bits(parent_block).size());
+      return;
+    }
+
     for (size_t child_id = 0; child_id < num_configurable_children; ++child_id) {
       ModuleId child_module = configurable_children[child_id]; 
       size_t child_instance = module_manager.configurable_child_instances(parent_module)[child_id]; 
@@ -137,6 +145,8 @@ void rec_build_module_fabric_dependent_memory_bank_bitstream(const BitstreamMana
     }
     /* Ensure that there should be no configuration bits in the parent block */
     VTR_ASSERT(0 == bitstream_manager.block_bits(parent_block).size());
+
+    return;
   }
 
   /* Note that, reach here, it means that this is a leaf node. 
@@ -147,7 +157,7 @@ void rec_build_module_fabric_dependent_memory_bank_bitstream(const BitstreamMana
     FabricBitId fabric_bit = fabric_bitstream.add_bit(config_bit);
   
     /* Find BL address */
-    size_t cur_bl_index = cur_mem_index / num_bls;
+    size_t cur_bl_index = std::floor(cur_mem_index / num_bls);
     std::vector<size_t> bl_addr_bits_vec = itobin_vec(cur_bl_index, bl_addr_size);
 
     /* Find WL address */

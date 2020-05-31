@@ -503,7 +503,9 @@ void print_verilog_arch_decoder_with_data_in_module(std::fstream& fp,
   /* Different from MUX decoder, we assign default values which is all zero */
   fp << "\t\t\t" << "default"; 
   fp << " : ";
-  fp << generate_verilog_port_constant_values(data_port, ito1hot_vec(data_size, data_size)); 
+  fp << "\t\t" << generate_verilog_port(VERILOG_PORT_CONKT, data_port); 
+  fp << " = ";
+  fp << high_res_str;
   fp << ";" << std::endl;
 
   fp << "\t\t" << "endcase" << std::endl;
@@ -511,7 +513,9 @@ void print_verilog_arch_decoder_with_data_in_module(std::fstream& fp,
 
   /* If enable is not active, we should give all zero */
   fp << "\t" << "else begin" << std::endl;
-  fp << "\t\t" << generate_verilog_port_constant_values(data_port, ito1hot_vec(data_size, data_size)); 
+  fp << "\t\t" << generate_verilog_port(VERILOG_PORT_CONKT, data_port); 
+  fp << " = ";
+  fp << high_res_str;
   fp << ";" << std::endl;
   fp << "\t" << "end" << std::endl;
   

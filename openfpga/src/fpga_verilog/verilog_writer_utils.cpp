@@ -517,31 +517,27 @@ std::vector<BasicPort> combine_verilog_ports(const std::vector<BasicPort>& ports
     if (&port == &ports[0]) {
       continue;
     } 
-    /* Identify if the port name can be potentially merged: if the port name is already in the merged port list, it may be merged */
-    bool merged = false;
-    for (auto& merged_port : merged_ports) {
-      if (false == port.mergeable(merged_port)) {
-        /* Unable to merge, Go to next */
-        continue;
-      }
-      /* May be merged, check LSB of port and MSB of merged_port */
-      if (merged_port.get_msb() + 1 != port.get_lsb()) {
-        /* Unable to merge, Go to next */
-        continue;
-      } 
-      /* Reach here, we should merge the ports,
-       * LSB of merged_port remains the same,
-       * MSB of merged_port will be updated 
-       * to the MSB of port 
-       */
-      merged_port.set_msb(port.get_msb());
-      merged = true;
-      break;
-    }
-    if (false == merged) {
+    /* Identify if the port name can be potentially merged: 
+     * if the port can be merged to the last port in the list, it may be merged
+     */
+    if (false == port.mergeable(merged_ports.back())) {
       /* Unable to merge, add the port to merged port list */
       merged_ports.push_back(port);
+      continue;
     }
+    /* May be merged, check LSB of port and MSB of merged_port */
+    if (merged_ports.back().get_msb() + 1 != port.get_lsb()) {
+      /* Unable to merge, add the port to merged port list */
+      merged_ports.push_back(port);
+      continue;
+    } 
+    /* Reach here, we should merge the ports,
+     * LSB of merged_port remains the same,
+     * MSB of merged_port will be updated 
+     * to the MSB of port 
+     */
+    BasicPort& port_to_merge = merged_ports.back();
+    port_to_merge.set_msb(port.get_msb());
   }
 
   return merged_ports;
