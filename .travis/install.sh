@@ -33,6 +33,7 @@ set -e
 #  echo ${PATH}
 #fi
 iverilog -V
+vvp -V
 #cd -
 
 

@@ -58,8 +58,8 @@ python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/full_testbench/fas
 python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/preconfig_testbench/configuration_frame --debug --show_thread_logs
 
 echo -e "Testing memory bank configuration protocol of a K4N4 FPGA";
-python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/full_testbench/memory_bank --debug --show_thread_logs
-python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/full_testbench/fast_memory_bank --debug --show_thread_logs
+#python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/full_testbench/memory_bank --debug --show_thread_logs
+#python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/full_testbench/fast_memory_bank --debug --show_thread_logs
 python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/preconfig_testbench/memory_bank --debug --show_thread_logs
 
 
