@@ -1245,25 +1245,6 @@ void print_verilog_top_testbench_memory_bank_bitstream(std::fstream& fp,
     fp << ");" << std::endl;
   }
 
-  /* Disable the address and din */
-  fp << "\t\t" << std::string(TOP_TESTBENCH_PROG_TASK_NAME);
-  fp << "(" << bl_addr_port.get_width() << "'b";
-  std::vector<size_t> all_zero_bl_addr(bl_addr_port.get_width(), 0);
-  for (const size_t& addr_bit : all_zero_bl_addr) {
-    fp << addr_bit; 
-  }
-
-  fp << ", ";
-  fp << wl_addr_port.get_width() << "'b";
-  std::vector<size_t> all_zero_wl_addr(wl_addr_port.get_width(), 0);
-  for (const size_t& addr_bit : all_zero_wl_addr) {
-    fp << addr_bit; 
-  }
-
-  fp << ", ";
-  fp <<"1'b0";
-  fp << ");" << std::endl;
-
   /* Raise the flag of configuration done when bitstream loading is complete */
   BasicPort prog_clock_port(std::string(TOP_TB_PROG_CLOCK_PORT_NAME), 1);
   fp << "\t\t@(negedge " << generate_verilog_port(VERILOG_PORT_CONKT, prog_clock_port) << ");" << std::endl;

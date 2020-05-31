@@ -395,7 +395,8 @@ void build_top_module(ModuleManager& module_manager,
   if (0 < module_manager.configurable_children(top_module).size()) {
     add_top_module_nets_memory_config_bus(module_manager, decoder_lib,
                                           top_module, 
-                                          sram_orgz_type, circuit_lib.design_tech_type(sram_model));
+                                          sram_orgz_type, circuit_lib.design_tech_type(sram_model),
+                                          module_num_config_bits);
   }
 }
 

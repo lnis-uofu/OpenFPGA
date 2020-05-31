@@ -93,6 +93,7 @@ static
 void rec_build_module_fabric_dependent_memory_bank_bitstream(const BitstreamManager& bitstream_manager,
                                                              const ConfigBlockId& parent_block,
                                                              const ModuleManager& module_manager,
+                                                             const ModuleId& top_module,
                                                              const ModuleId& parent_module,
                                                              const size_t& bl_addr_size,
                                                              const size_t& wl_addr_size,
@@ -105,8 +106,17 @@ void rec_build_module_fabric_dependent_memory_bank_bitstream(const BitstreamMana
    * we dive to the next level first! 
    */
   if (0 < bitstream_manager.block_children(parent_block).size()) {
-    for (size_t child_id = 0; child_id < module_manager.configurable_children(parent_module).size(); ++child_id) {
-      ModuleId child_module = module_manager.configurable_children(parent_module)[child_id]; 
+    /* For top module, we will skip the two decoders at the end of the configurable children list */
+    std::vector<ModuleId> configurable_children = module_manager.configurable_children(parent_module);
+
+    size_t num_configurable_children = configurable_children.size();
+    if (parent_module == top_module) {
+      VTR_ASSERT(2 <= configurable_children.size()); 
+      num_configurable_children -= 2;
+    }
+
+    for (size_t child_id = 0; child_id < num_configurable_children; ++child_id) {
+      ModuleId child_module = configurable_children[child_id]; 
       size_t child_instance = module_manager.configurable_child_instances(parent_module)[child_id]; 
       /* Get the instance name and ensure it is not empty */
       std::string instance_name = module_manager.instance_name(parent_module, child_module, child_instance);
@@ -114,12 +124,12 @@ void rec_build_module_fabric_dependent_memory_bank_bitstream(const BitstreamMana
       /* Find the child block that matches the instance name! */ 
       ConfigBlockId child_block = bitstream_manager.find_child_block(parent_block, instance_name); 
       /* We must have one valid block id! */
-      if (true != bitstream_manager.valid_block_id(child_block))
+      if (true != bitstream_manager.valid_block_id(child_block)) 
       VTR_ASSERT(true == bitstream_manager.valid_block_id(child_block));
 
       /* Go recursively */
       rec_build_module_fabric_dependent_memory_bank_bitstream(bitstream_manager, child_block,
-                                                              module_manager, child_module,
+                                                              module_manager, top_module, child_module,
                                                               bl_addr_size, wl_addr_size,
                                                               num_bls, num_wls,
                                                               cur_mem_index,
@@ -376,18 +386,31 @@ void build_module_fabric_dependent_bitstream(const ConfigProtocol& config_protoc
     /* Find BL address port size */
     ModulePortId bl_addr_port = module_manager.find_module_port(top_module, std::string(DECODER_BL_ADDRESS_PORT_NAME));
     BasicPort bl_addr_port_info = module_manager.module_port(top_module, bl_addr_port);
-    size_t num_bls = find_memory_decoder_data_size(bl_addr_port_info.get_width()); 
 
     /* Find WL address port size */
     ModulePortId wl_addr_port = module_manager.find_module_port(top_module, std::string(DECODER_WL_ADDRESS_PORT_NAME));
     BasicPort wl_addr_port_info = module_manager.module_port(top_module, wl_addr_port);
-    size_t num_wls = find_memory_decoder_data_size(wl_addr_port_info.get_width()); 
+
+    /* Find BL and WL decoders which are the last two configurable children*/
+    std::vector<ModuleId> configurable_children = module_manager.configurable_children(top_module);
+    VTR_ASSERT(2 <= configurable_children.size()); 
+    ModuleId bl_decoder_module = configurable_children[configurable_children.size() - 2];
+    VTR_ASSERT(0 == module_manager.configurable_child_instances(top_module)[configurable_children.size() - 2]);
+    ModuleId wl_decoder_module = configurable_children[configurable_children.size() - 1];
+    VTR_ASSERT(0 == module_manager.configurable_child_instances(top_module)[configurable_children.size() - 1]);
+
+    ModulePortId bl_port = module_manager.find_module_port(bl_decoder_module, std::string(DECODER_DATA_OUT_PORT_NAME));
+    BasicPort bl_port_info = module_manager.module_port(bl_decoder_module, bl_port);
+
+    ModulePortId wl_port = module_manager.find_module_port(wl_decoder_module, std::string(DECODER_DATA_OUT_PORT_NAME));
+    BasicPort wl_port_info = module_manager.module_port(wl_decoder_module, wl_port);
 
     rec_build_module_fabric_dependent_memory_bank_bitstream(bitstream_manager, top_block,
-                                                            module_manager, top_module, 
+                                                            module_manager, top_module, top_module, 
                                                             bl_addr_port_info.get_width(),
                                                             wl_addr_port_info.get_width(),
-                                                            num_bls, num_wls,
+                                                            bl_port_info.get_width(),
+                                                            wl_port_info.get_width(),
                                                             cur_mem_index, fabric_bitstream);
     break;
   }

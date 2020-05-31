@@ -510,7 +510,8 @@ void add_top_module_sram_ports(ModuleManager& module_manager,
 static 
 void add_top_module_nets_cmos_memory_bank_config_bus(ModuleManager& module_manager,
                                                      DecoderLibrary& decoder_lib,
-                                                     const ModuleId& top_module) {
+                                                     const ModuleId& top_module,
+                                                     const size_t& num_config_bits) {
   /* Find Enable port from the top-level module */ 
   ModulePortId en_port = module_manager.find_module_port(top_module, std::string(DECODER_ENABLE_PORT_NAME));
   BasicPort en_port_info = module_manager.module_port(top_module, en_port);
@@ -529,8 +530,8 @@ void add_top_module_nets_cmos_memory_bank_config_bus(ModuleManager& module_manag
   /* Find the number of BLs and WLs required to access each memory bit */
   size_t bl_addr_size = bl_addr_port_info.get_width();
   size_t wl_addr_size = wl_addr_port_info.get_width();
-  size_t num_bls = find_memory_decoder_data_size(bl_addr_size);
-  size_t num_wls = find_memory_decoder_data_size(wl_addr_size);
+  size_t num_bls = find_memory_decoder_data_size(num_config_bits);
+  size_t num_wls = find_memory_decoder_data_size(num_config_bits);
   
   /* Add the BL decoder module 
    * Search the decoder library
@@ -704,6 +705,12 @@ void add_top_module_nets_cmos_memory_bank_config_bus(ModuleManager& module_manag
       cur_wl_index++;
     }
   }
+
+  /* Add the BL and WL decoders to the end of configurable children list
+   * Note: this MUST be done after adding all the module nets to other regular configurable children
+   */
+  module_manager.add_configurable_child(top_module, bl_decoder_module, 0);
+  module_manager.add_configurable_child(top_module, wl_decoder_module, 0);
 }
 
 /*********************************************************************
@@ -754,7 +761,8 @@ static
 void add_top_module_nets_cmos_memory_config_bus(ModuleManager& module_manager,
                                                 DecoderLibrary& decoder_lib,
                                                 const ModuleId& parent_module,
-                                                const e_config_protocol_type& sram_orgz_type) {
+                                                const e_config_protocol_type& sram_orgz_type,
+                                                const size_t& num_config_bits) {
   switch (sram_orgz_type) {
   case CONFIG_MEM_STANDALONE:
     add_module_nets_cmos_flatten_memory_config_bus(module_manager, parent_module,
@@ -767,8 +775,7 @@ void add_top_module_nets_cmos_memory_config_bus(ModuleManager& module_manager,
     break;
   }
   case CONFIG_MEM_MEMORY_BANK:
-    /* TODO */
-    add_top_module_nets_cmos_memory_bank_config_bus(module_manager, decoder_lib, parent_module);
+    add_top_module_nets_cmos_memory_bank_config_bus(module_manager, decoder_lib, parent_module, num_config_bits);
     break;
   case CONFIG_MEM_FRAME_BASED:
     add_module_nets_cmos_memory_frame_config_bus(module_manager, decoder_lib, parent_module);
@@ -816,12 +823,14 @@ void add_top_module_nets_memory_config_bus(ModuleManager& module_manager,
                                            DecoderLibrary& decoder_lib,
                                            const ModuleId& parent_module,
                                            const e_config_protocol_type& sram_orgz_type, 
-                                           const e_circuit_model_design_tech& mem_tech) {
+                                           const e_circuit_model_design_tech& mem_tech,
+                                           const size_t& num_config_bits) {
   switch (mem_tech) {
   case CIRCUIT_MODEL_DESIGN_CMOS:
     add_top_module_nets_cmos_memory_config_bus(module_manager, decoder_lib,
                                                parent_module, 
-                                               sram_orgz_type);
+                                               sram_orgz_type,
+                                               num_config_bits);
     break;
   case CIRCUIT_MODEL_DESIGN_RRAM:
     /* TODO: */

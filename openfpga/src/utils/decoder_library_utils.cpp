@@ -74,11 +74,16 @@ size_t find_mux_local_decoder_addr_size(const size_t& data_size) {
  *               
  ***************************************************************************************/
 size_t find_memory_decoder_addr_size(const size_t& num_mems) {
-  return find_mux_local_decoder_addr_size((size_t)std::ceil(std::sqrt((float)num_mems)));
+  return find_mux_local_decoder_addr_size(find_memory_decoder_data_size(num_mems));
 }
 
-size_t find_memory_decoder_data_size(const size_t& num_addr) {
-  return (size_t)std::pow(2., num_addr);
+/***************************************************************************************
+ * Find the size of data lines (BLs and WLs) for a memory decoder to access a memory array
+ * As the memory cells are organized in an array with shared bit lines and word lines,
+ * the number of data lines will be a square root of the number of memory cells.
+ ***************************************************************************************/
+size_t find_memory_decoder_data_size(const size_t& num_mems) {
+  return (size_t)std::ceil(std::sqrt((float)num_mems));
 }
 
 /***************************************************************************************

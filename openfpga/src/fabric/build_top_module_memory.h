@@ -45,7 +45,8 @@ void add_top_module_nets_memory_config_bus(ModuleManager& module_manager,
                                            DecoderLibrary& decoder_lib,
                                            const ModuleId& parent_module,
                                            const e_config_protocol_type& sram_orgz_type, 
-                                           const e_circuit_model_design_tech& mem_tech);
+                                           const e_circuit_model_design_tech& mem_tech,
+                                           const size_t& num_config_bits);
 
 } /* end namespace openfpga */
 
