@@ -32,7 +32,7 @@ set -e
 #  export PATH=${DEPS_DIR}/iverilog-10_3/bin:${PATH}
 #  echo ${PATH}
 #fi
-#iverilog -V
+iverilog -V
 #cd -
 
 
