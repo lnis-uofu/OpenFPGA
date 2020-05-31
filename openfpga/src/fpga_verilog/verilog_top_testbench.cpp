@@ -104,6 +104,51 @@ void print_verilog_top_testbench_config_chain_port(std::fstream& fp) {
 }
 
 /********************************************************************
+ * Print local wires for memory bank configuration protocols
+ *******************************************************************/
+static 
+void print_verilog_top_testbench_memory_bank_port(std::fstream& fp,
+                                                  const ModuleManager& module_manager,
+                                                  const ModuleId& top_module) {
+  /* Validate the file stream */
+  valid_file_stream(fp);
+
+  /* Print the address port for the Bit-Line decoder here */
+  print_verilog_comment(fp, std::string("---- Address port for Bit-Line decoder -----"));
+  ModulePortId bl_addr_port_id = module_manager.find_module_port(top_module,
+                                                                 std::string(MEMORY_BL_PORT_NAME));
+  BasicPort bl_addr_port = module_manager.module_port(top_module, bl_addr_port_id);
+
+  fp << generate_verilog_port(VERILOG_PORT_REG, bl_addr_port) << ";" << std::endl;
+
+  /* Print the address port for the Word-Line decoder here */
+  print_verilog_comment(fp, std::string("---- Address port for Word-Line decoder -----"));
+  ModulePortId wl_addr_port_id = module_manager.find_module_port(top_module,
+                                                                 std::string(MEMORY_WL_PORT_NAME));
+  BasicPort wl_addr_port = module_manager.module_port(top_module, wl_addr_port_id);
+
+  fp << generate_verilog_port(VERILOG_PORT_REG, wl_addr_port) << ";" << std::endl;
+
+  /* Print the data-input port for the frame-based decoder here */
+  print_verilog_comment(fp, std::string("---- Data input port for frame-based decoder -----"));
+  ModulePortId din_port_id = module_manager.find_module_port(top_module,
+                                                             std::string(DECODER_DATA_IN_PORT_NAME));
+  BasicPort din_port = module_manager.module_port(top_module, din_port_id);
+  fp << generate_verilog_port(VERILOG_PORT_REG, din_port) << ";" << std::endl;
+
+  /* Wire the INVERTED programming clock to the enable signal !!! */
+  print_verilog_comment(fp, std::string("---- Wire enable port of frame-based decoder to inverted programming clock -----"));
+  ModulePortId en_port_id = module_manager.find_module_port(top_module,
+                                                            std::string(DECODER_ENABLE_PORT_NAME));
+  BasicPort en_port = module_manager.module_port(top_module, en_port_id);
+  BasicPort prog_clock_port(std::string(TOP_TB_PROG_CLOCK_PORT_NAME), 1);
+
+  fp << generate_verilog_port(VERILOG_PORT_WIRE, en_port) << ";" << std::endl;
+  print_verilog_wire_connection(fp, en_port, prog_clock_port, true);
+}
+
+
+/********************************************************************
  * Print local wires for frame-based decoder protocols
  *******************************************************************/
 static 
@@ -155,7 +200,7 @@ void print_verilog_top_testbench_config_protocol_port(std::fstream& fp,
     print_verilog_top_testbench_config_chain_port(fp);
     break;
   case CONFIG_MEM_MEMORY_BANK:
-    /* TODO */
+    print_verilog_top_testbench_memory_bank_port(fp, module_manager, top_module);
     break;
   case CONFIG_MEM_FRAME_BASED:
     print_verilog_top_testbench_frame_decoder_port(fp, module_manager, top_module);
@@ -528,9 +573,9 @@ size_t calculate_num_config_clock_cycles(const e_config_protocol_type& sram_orgz
     num_config_clock_cycles = 2;
     break;
   case CONFIG_MEM_SCAN_CHAIN:
-  case CONFIG_MEM_MEMORY_BANK:
-    /* TODO */
+    /* Fast configuraiton is not applicable to configuration chain protocol*/
     break;
+  case CONFIG_MEM_MEMORY_BANK:
   case CONFIG_MEM_FRAME_BASED: {
     /* For fast configuration, we will skip all the zero data points */
     if (true == fast_configuration) {
@@ -647,6 +692,89 @@ void print_verilog_top_testbench_load_bitstream_task_configuration_chain(std::fs
 /********************************************************************
  * Print tasks (processes) in Verilog format, 
  * which is very useful in generating stimuli for each clock cycle 
+ * This function is tuned for memory bank manipulation: 
+ * During each programming cycle, we feed
+ * - an address to the BL address port of top module
+ * - an address to the WL address port of top module
+ * - a data input to the din port of top module
+ *******************************************************************/
+static 
+void print_verilog_top_testbench_load_bitstream_task_memory_bank(std::fstream& fp,
+                                                                 const ModuleManager& module_manager,
+                                                                 const ModuleId& top_module) {
+
+  /* Validate the file stream */
+  valid_file_stream(fp);
+
+  ModulePortId en_port_id = module_manager.find_module_port(top_module,
+                                                            std::string(DECODER_ENABLE_PORT_NAME));
+  BasicPort en_port = module_manager.module_port(top_module, en_port_id);
+
+  ModulePortId bl_addr_port_id = module_manager.find_module_port(top_module,
+                                                                 std::string(MEMORY_BL_PORT_NAME));
+  BasicPort bl_addr_port = module_manager.module_port(top_module, bl_addr_port_id);
+  BasicPort bl_addr_value = bl_addr_port;
+  bl_addr_value.set_name(std::string(MEMORY_BL_PORT_NAME) + std::string("_val"));
+
+  ModulePortId wl_addr_port_id = module_manager.find_module_port(top_module,
+                                                                 std::string(MEMORY_WL_PORT_NAME));
+  BasicPort wl_addr_port = module_manager.module_port(top_module, wl_addr_port_id);
+  BasicPort wl_addr_value = wl_addr_port;
+  wl_addr_value.set_name(std::string(MEMORY_WL_PORT_NAME) + std::string("_val"));
+
+  ModulePortId din_port_id = module_manager.find_module_port(top_module,
+                                                             std::string(DECODER_DATA_IN_PORT_NAME));
+  BasicPort din_port = module_manager.module_port(top_module, din_port_id);
+  BasicPort din_value = din_port;
+  din_value.set_name(std::string(DECODER_DATA_IN_PORT_NAME) + std::string("_val"));
+
+  /* Add an empty line as splitter */
+  fp << std::endl;
+
+  /* Feed the address and data input at each falling edge of programming clock 
+   * As the enable signal is wired to the programming clock, we should synchronize
+   * address and data with the enable signal
+   */
+  print_verilog_comment(fp, std::string("----- Task: assign BL and WL address, and data values at rising edge of enable signal -----"));
+  fp << "task " << std::string(TOP_TESTBENCH_PROG_TASK_NAME) << ";" << std::endl;
+  fp << generate_verilog_port(VERILOG_PORT_INPUT, bl_addr_value) << ";" << std::endl;
+  fp << generate_verilog_port(VERILOG_PORT_INPUT, wl_addr_value) << ";" << std::endl;
+  fp << generate_verilog_port(VERILOG_PORT_INPUT, din_value) << ";" << std::endl;
+  fp << "\tbegin" << std::endl;
+  fp << "\t\t@(posedge " << generate_verilog_port(VERILOG_PORT_CONKT, en_port) << ");" << std::endl;
+
+  fp << "\t\t\t"; 
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, bl_addr_port);
+  fp << " = "; 
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, bl_addr_value);
+  fp << ";" << std::endl;
+  fp << std::endl;
+
+  fp << "\t\t\t"; 
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, wl_addr_port);
+  fp << " = "; 
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, wl_addr_value);
+  fp << ";" << std::endl;
+  fp << std::endl;
+
+  fp << "\t\t\t"; 
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, din_port);
+  fp << " = "; 
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, din_value);
+  fp << ";" << std::endl;
+  fp << std::endl;
+
+  fp << "\tend" << std::endl;
+  fp << "endtask" << std::endl;
+
+  /* Add an empty line as splitter */
+  fp << std::endl;
+}
+
+
+/********************************************************************
+ * Print tasks (processes) in Verilog format, 
+ * which is very useful in generating stimuli for each clock cycle 
  * This function is tuned for frame-based memory manipulation: 
  * During each programming cycle, we feed
  * - an address to the address port of top module
@@ -727,9 +855,9 @@ void print_verilog_top_testbench_load_bitstream_task(std::fstream& fp,
     print_verilog_top_testbench_load_bitstream_task_configuration_chain(fp);
     break;
   case CONFIG_MEM_MEMORY_BANK:
-    /* TODO: 
-    dump_verilog_top_testbench_stimuli_serial_version_tasks_memory_bank(cur_sram_orgz_info, fp);
-     */
+    print_verilog_top_testbench_load_bitstream_task_memory_bank(fp,
+                                                                module_manager,
+                                                                top_module);
     break;
   case CONFIG_MEM_FRAME_BASED:
     print_verilog_top_testbench_load_bitstream_task_frame_decoder(fp,
@@ -1029,6 +1157,126 @@ void print_verilog_top_testbench_configuration_chain_bitstream(std::fstream& fp,
 }
 
 /********************************************************************
+ * Print stimulus for a FPGA fabric with a memory bank configuration protocol 
+ * where configuration bits are programming in serial (one by one)
+ *
+ * We will use the programming task function created before
+ *******************************************************************/
+static 
+void print_verilog_top_testbench_memory_bank_bitstream(std::fstream& fp,
+                                                       const bool& fast_configuration,
+                                                       const ModuleManager& module_manager,
+                                                       const ModuleId& top_module,
+                                                       const FabricBitstream& fabric_bitstream) {
+  /* Validate the file stream */
+  valid_file_stream(fp);
+
+  /* Feed addresss and data input pair one by one 
+   * Note: the first cycle is reserved for programming reset
+   * We should give dummy values 
+   */
+  ModulePortId bl_addr_port_id = module_manager.find_module_port(top_module,
+                                                                 std::string(MEMORY_BL_PORT_NAME));
+  BasicPort bl_addr_port = module_manager.module_port(top_module, bl_addr_port_id);
+  std::vector<size_t> initial_bl_addr_values(bl_addr_port.get_width(), 0);
+
+  ModulePortId wl_addr_port_id = module_manager.find_module_port(top_module,
+                                                                 std::string(MEMORY_WL_PORT_NAME));
+  BasicPort wl_addr_port = module_manager.module_port(top_module, wl_addr_port_id);
+  std::vector<size_t> initial_wl_addr_values(wl_addr_port.get_width(), 0);
+
+  ModulePortId din_port_id = module_manager.find_module_port(top_module,
+                                                             std::string(DECODER_DATA_IN_PORT_NAME));
+  BasicPort din_port = module_manager.module_port(top_module, din_port_id);
+  std::vector<size_t> initial_din_values(din_port.get_width(), 0);
+
+  print_verilog_comment(fp, "----- Begin bitstream loading during configuration phase -----");
+  fp << "initial" << std::endl;
+  fp << "\tbegin" << std::endl;
+  print_verilog_comment(fp, "----- Address port default input -----");
+  fp << "\t\t";
+  fp << generate_verilog_port_constant_values(bl_addr_port, initial_bl_addr_values);
+  fp << generate_verilog_port_constant_values(wl_addr_port, initial_wl_addr_values);
+  fp << ";";
+
+  print_verilog_comment(fp, "----- Data-input port default input -----");
+  fp << "\t\t";
+  fp << generate_verilog_port_constant_values(din_port, initial_din_values);
+  fp << ";";
+
+  fp << std::endl;
+
+  /* Attention: the configuration chain protcol requires the last configuration bit is fed first
+   * We will visit the fabric bitstream in a reverse way  
+   */
+  for (const FabricBitId& bit_id : fabric_bitstream.bits()) {
+    /* When fast configuration is enabled, we skip zero data_in values */
+    if ((true == fast_configuration)
+      && (false == fabric_bitstream.bit_din(bit_id))) {
+      continue;
+    }
+
+    fp << "\t\t" << std::string(TOP_TESTBENCH_PROG_TASK_NAME);
+    fp << "(" << bl_addr_port.get_width() << "'b";
+    VTR_ASSERT(bl_addr_port.get_width() == fabric_bitstream.bit_bl_address(bit_id).size());
+    for (const size_t& addr_bit : fabric_bitstream.bit_bl_address(bit_id)) {
+      fp << addr_bit; 
+    }
+
+    fp << ", ";
+    fp << wl_addr_port.get_width() << "'b";
+    VTR_ASSERT(wl_addr_port.get_width() == fabric_bitstream.bit_wl_address(bit_id).size());
+    for (const size_t& addr_bit : fabric_bitstream.bit_wl_address(bit_id)) {
+      fp << addr_bit; 
+    }
+
+    fp << ", ";
+    fp <<"1'b";
+    if (true == fabric_bitstream.bit_din(bit_id)) {
+      fp << "1";
+    } else {
+      VTR_ASSERT(false == fabric_bitstream.bit_din(bit_id));
+      fp << "0";
+    }
+    fp << ");" << std::endl;
+  }
+
+  /* Disable the address and din */
+  fp << "\t\t" << std::string(TOP_TESTBENCH_PROG_TASK_NAME);
+  fp << "(" << bl_addr_port.get_width() << "'b";
+  std::vector<size_t> all_zero_bl_addr(bl_addr_port.get_width(), 0);
+  for (const size_t& addr_bit : all_zero_bl_addr) {
+    fp << addr_bit; 
+  }
+
+  fp << ", ";
+  fp << wl_addr_port.get_width() << "'b";
+  std::vector<size_t> all_zero_wl_addr(wl_addr_port.get_width(), 0);
+  for (const size_t& addr_bit : all_zero_wl_addr) {
+    fp << addr_bit; 
+  }
+
+  fp << ", ";
+  fp <<"1'b0";
+  fp << ");" << std::endl;
+
+  /* Raise the flag of configuration done when bitstream loading is complete */
+  BasicPort prog_clock_port(std::string(TOP_TB_PROG_CLOCK_PORT_NAME), 1);
+  fp << "\t\t@(negedge " << generate_verilog_port(VERILOG_PORT_CONKT, prog_clock_port) << ");" << std::endl;
+  
+  BasicPort config_done_port(std::string(TOP_TB_CONFIG_DONE_PORT_NAME), 1);
+  fp << "\t\t\t";
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, config_done_port);
+  fp << " <= ";
+  std::vector<size_t> config_done_enable_values(config_done_port.get_width(), 1);
+  fp << generate_verilog_constant_values(config_done_enable_values);
+  fp << ";" << std::endl;
+
+  fp << "\tend" << std::endl;
+  print_verilog_comment(fp, "----- End bitstream loading during configuration phase -----");
+}
+
+/********************************************************************
  * Print stimulus for a FPGA fabric with a frame-based configuration protocol 
  * where configuration bits are programming in serial (one by one)
  *
@@ -1151,7 +1399,9 @@ void print_verilog_top_testbench_bitstream(std::fstream& fp,
     print_verilog_top_testbench_configuration_chain_bitstream(fp, bitstream_manager, fabric_bitstream);
     break;
   case CONFIG_MEM_MEMORY_BANK:
-    /* TODO */
+    print_verilog_top_testbench_memory_bank_bitstream(fp, fast_configuration,
+                                                      module_manager, top_module,
+                                                      fabric_bitstream);
     break;
   case CONFIG_MEM_FRAME_BASED:
     print_verilog_top_testbench_frame_decoder_bitstream(fp, fast_configuration,
