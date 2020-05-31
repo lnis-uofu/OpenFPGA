@@ -77,6 +77,10 @@ size_t find_memory_decoder_addr_size(const size_t& num_mems) {
   return find_mux_local_decoder_addr_size((size_t)std::ceil(std::sqrt((float)num_mems)));
 }
 
+size_t find_memory_decoder_data_size(const size_t& num_addr) {
+  return (size_t)std::pow(2., num_addr);
+}
+
 /***************************************************************************************
  * Try to find if the decoder already exists in the library, 
  * If there is no such decoder, add it to the library 

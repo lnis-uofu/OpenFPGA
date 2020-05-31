@@ -53,6 +53,12 @@ std::string generate_mux_local_decoder_subckt_name(const size_t& addr_size,
 std::string generate_frame_memory_decoder_subckt_name(const size_t& addr_size, 
                                                       const size_t& data_size);
 
+std::string generate_bl_memory_decoder_subckt_name(const size_t& addr_size, 
+                                                   const size_t& data_size);
+
+std::string generate_wl_memory_decoder_subckt_name(const size_t& addr_size, 
+                                                   const size_t& data_size);
+
 std::string generate_segment_wire_subckt_name(const std::string& wire_model_name, 
                                               const size_t& segment_id); 
 

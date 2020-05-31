@@ -16,6 +16,7 @@
 #include "memory_utils.h"
 #include "decoder_library_utils.h"
 #include "module_manager_utils.h"
+#include "build_decoder_modules.h"
 #include "build_top_module_memory.h"
 
 /* begin namespace openfpga */
@@ -461,6 +462,249 @@ void add_top_module_sram_ports(ModuleManager& module_manager,
   }
 }
 
+/*********************************************************************
+ * Top-level function to add nets for memory banks
+ * - Find the number of BLs and WLs required
+ * - Create BL and WL decoders, and add them to decoder library
+ * - Create nets to connect from top-level module inputs to inputs of decoders
+ * - Create nets to connect from outputs of decoders to BL/WL of configurable children
+ *
+ *                            WL_enable  WL address 
+ *                               |           |
+ *                               v           v
+ *                           +-----------------------------------------------+
+ *                           |     Word Line Decoder                         |
+ *                           +-----------------------------------------------+
+ *               +---------+    |             |                   | 
+ *  BL           |         |    |             |                   |
+ *  enable  ---->|         |-----------+--------------+----  ...  |------+--> BL[0]
+ *               |         |    |      |      |       |           |      |
+ *               |         |    |      v      |       v           |      v
+ *               | Bit     |    |   +------+  |   +------+        |  +------+
+ *  BL           | Line    |    +-->| SRAM |  +-->| SRAM |        +->| SRAM |
+ *  address ---->| Decoder |    |   | [0]  |  |   |  [1] |   ...  |  |  [i] |
+ *               |         |    |   +------+  |   +------+        |  +------+
+ *               |         |    |             |                   |
+ *               |         |-----------+--------------+----  ---  | -----+--> BL[1]
+ *               |         |    |      |      |       |           |      |
+ *               |         |    |      v      |       v           |      v
+ *               |         |    |   +------+  |   +------+        |  +------+
+ *               |         |    +-->| SRAM |  |   | SRAM |        +->| SRAM |
+ *               |         |    |   | [x]  |  |   | [x+1]|   ...  |  | [x+i]|
+ *               |         |    |   +------+  |   +------+        |  +------+
+ *               |         |    |                                 |
+ *               |         |    |     ...    ...    ...           |    ...
+ *               |         |    |             |                   |
+ *               |         |-----------+--------------+----  ---  | -----+--> BL[y]
+ *               |         |    |      |      |       |           |      |
+ *               |         |    |      v      |       v           |      v
+ *               |         |    |   +------+  |   +------+        |  +------+
+ *               |         |    +-->| SRAM |  +-->| SRAM |        +->| SRAM |
+ *               |         |    |   | [y]  |  |   |[y+1] |   ...  |  |[y+i] |
+ *               |         |    |   +------+  |   +------+        |  +------+
+ *  BL           |         |    v             v                   v
+ *  data_in ---->|         |  WL[0]          WL[1]              WL[i]
+ *               +---------+
+ *
+ **********************************************************************/
+static 
+void add_top_module_nets_cmos_memory_bank_config_bus(ModuleManager& module_manager,
+                                                     DecoderLibrary& decoder_lib,
+                                                     const ModuleId& top_module) {
+  /* Find Enable port from the top-level module */ 
+  ModulePortId en_port = module_manager.find_module_port(top_module, std::string(DECODER_ENABLE_PORT_NAME));
+  BasicPort en_port_info = module_manager.module_port(top_module, en_port);
+
+  /* Find data-in port from the top-level module */ 
+  ModulePortId din_port = module_manager.find_module_port(top_module, std::string(DECODER_DATA_IN_PORT_NAME));
+  BasicPort din_port_info = module_manager.module_port(top_module, din_port);
+
+  /* Find BL and WL address port from the top-level module */ 
+  ModulePortId bl_addr_port = module_manager.find_module_port(top_module, std::string(DECODER_BL_ADDRESS_PORT_NAME));
+  BasicPort bl_addr_port_info = module_manager.module_port(top_module, bl_addr_port);
+
+  ModulePortId wl_addr_port = module_manager.find_module_port(top_module, std::string(DECODER_WL_ADDRESS_PORT_NAME));
+  BasicPort wl_addr_port_info = module_manager.module_port(top_module, wl_addr_port);
+
+  /* Find the number of BLs and WLs required to access each memory bit */
+  size_t bl_addr_size = bl_addr_port_info.get_width();
+  size_t wl_addr_size = wl_addr_port_info.get_width();
+  size_t num_bls = find_memory_decoder_data_size(bl_addr_size);
+  size_t num_wls = find_memory_decoder_data_size(wl_addr_size);
+  
+  /* Add the BL decoder module 
+   * Search the decoder library
+   * If we find one, we use the module.
+   * Otherwise, we create one and add it to the decoder library
+   */
+  DecoderId bl_decoder_id = decoder_lib.find_decoder(bl_addr_size, num_bls,
+                                                     true, true, false);
+  if (DecoderId::INVALID() == bl_decoder_id) {
+    bl_decoder_id = decoder_lib.add_decoder(bl_addr_size, num_bls, true, true, false);
+  }
+  VTR_ASSERT(DecoderId::INVALID() != bl_decoder_id);
+
+  /* Create a module if not existed yet */
+  std::string bl_decoder_module_name = generate_bl_memory_decoder_subckt_name(bl_addr_size, num_bls);
+  ModuleId bl_decoder_module = module_manager.find_module(bl_decoder_module_name);
+  if (ModuleId::INVALID() == bl_decoder_module) {
+    /* BL decoder has the same ports as the frame-based decoders
+     * We reuse it here
+     */
+    bl_decoder_module = build_bl_memory_decoder_module(module_manager,
+                                                       decoder_lib,
+                                                       bl_decoder_id);
+  }
+  VTR_ASSERT(ModuleId::INVALID() != bl_decoder_module);
+  VTR_ASSERT(0 == module_manager.num_instance(top_module, bl_decoder_module));
+  module_manager.add_child_module(top_module, bl_decoder_module);
+
+  /* Add the WL decoder module 
+   * Search the decoder library
+   * If we find one, we use the module.
+   * Otherwise, we create one and add it to the decoder library
+   */
+  DecoderId wl_decoder_id = decoder_lib.find_decoder(wl_addr_size, num_wls,
+                                                     true, false, false);
+  if (DecoderId::INVALID() == wl_decoder_id) {
+    wl_decoder_id = decoder_lib.add_decoder(wl_addr_size, num_wls, true, false, false);
+  }
+  VTR_ASSERT(DecoderId::INVALID() != wl_decoder_id);
+
+  /* Create a module if not existed yet */
+  std::string wl_decoder_module_name = generate_bl_memory_decoder_subckt_name(wl_addr_size, num_wls);
+  ModuleId wl_decoder_module = module_manager.find_module(wl_decoder_module_name);
+  if (ModuleId::INVALID() == wl_decoder_module) {
+    /* BL decoder has the same ports as the frame-based decoders
+     * We reuse it here
+     */
+    wl_decoder_module = build_wl_memory_decoder_module(module_manager,
+                                                       decoder_lib,
+                                                       wl_decoder_id);
+  }
+  VTR_ASSERT(ModuleId::INVALID() != wl_decoder_module);
+  VTR_ASSERT(0 == module_manager.num_instance(top_module, wl_decoder_module));
+  module_manager.add_child_module(top_module, wl_decoder_module);
+
+  /* Add module nets from the top module to BL decoder's inputs */
+  ModulePortId bl_decoder_en_port = module_manager.find_module_port(bl_decoder_module, std::string(DECODER_ENABLE_PORT_NAME));
+  BasicPort bl_decoder_en_port_info = module_manager.module_port(bl_decoder_module, bl_decoder_en_port);
+
+  ModulePortId bl_decoder_addr_port = module_manager.find_module_port(bl_decoder_module, std::string(DECODER_ADDRESS_PORT_NAME));
+  BasicPort bl_decoder_addr_port_info = module_manager.module_port(bl_decoder_module, bl_decoder_addr_port);
+
+  ModulePortId bl_decoder_din_port = module_manager.find_module_port(bl_decoder_module, std::string(DECODER_DATA_IN_PORT_NAME));
+  BasicPort bl_decoder_din_port_info = module_manager.module_port(bl_decoder_module, bl_decoder_din_port);
+
+  /* Top module Enable port -> BL Decoder Enable port */
+  add_module_bus_nets(module_manager,
+                      top_module,
+                      top_module, 0, en_port,
+                      bl_decoder_module, 0, bl_decoder_en_port);
+
+  /* Top module Address port -> BL Decoder Address port */
+  add_module_bus_nets(module_manager,
+                      top_module,
+                      top_module, 0, bl_addr_port,
+                      bl_decoder_module, 0, bl_decoder_addr_port);
+
+  /* Top module data_in port -> BL Decoder data_in port */
+  add_module_bus_nets(module_manager,
+                      top_module,
+                      top_module, 0, din_port,
+                      bl_decoder_module, 0, bl_decoder_din_port);
+
+  /* Add module nets from the top module to WL decoder's inputs */
+  ModulePortId wl_decoder_en_port = module_manager.find_module_port(wl_decoder_module, std::string(DECODER_ENABLE_PORT_NAME));
+  BasicPort wl_decoder_en_port_info = module_manager.module_port(wl_decoder_module, wl_decoder_en_port);
+
+  ModulePortId wl_decoder_addr_port = module_manager.find_module_port(wl_decoder_module, std::string(DECODER_ADDRESS_PORT_NAME));
+  BasicPort wl_decoder_addr_port_info = module_manager.module_port(wl_decoder_module, bl_decoder_addr_port);
+
+  /* Top module Enable port -> WL Decoder Enable port */
+  add_module_bus_nets(module_manager,
+                      top_module,
+                      top_module, 0, en_port,
+                      wl_decoder_module, 0, wl_decoder_en_port);
+
+  /* Top module Address port -> WL Decoder Address port */
+  add_module_bus_nets(module_manager,
+                      top_module,
+                      top_module, 0, wl_addr_port,
+                      wl_decoder_module, 0, wl_decoder_addr_port);
+
+  /* Add nets from BL data out to each configurable child */
+  size_t cur_bl_index = 0;
+
+  ModulePortId bl_decoder_dout_port = module_manager.find_module_port(bl_decoder_module, std::string(DECODER_DATA_OUT_PORT_NAME));
+  BasicPort bl_decoder_dout_port_info = module_manager.module_port(bl_decoder_module, bl_decoder_dout_port);
+
+  for (size_t child_id = 0; child_id < module_manager.configurable_children(top_module).size(); ++child_id) {
+    ModuleId child_module = module_manager.configurable_children(top_module)[child_id];
+    size_t child_instance = module_manager.configurable_child_instances(top_module)[child_id];
+
+    /* Find the BL port */
+    ModulePortId child_bl_port = module_manager.find_module_port(child_module, std::string(MEMORY_BL_PORT_NAME));
+    BasicPort child_bl_port_info = module_manager.module_port(child_module, child_bl_port);
+
+    for (const size_t& sink_bl_pin : child_bl_port_info.pins()) {
+      /* Find the BL decoder data index: 
+       * It should be the residual when divided by the number of BLs
+       */
+      size_t bl_pin_id = cur_bl_index / num_bls;
+
+      /* Create net */
+      ModuleNetId net = create_module_source_pin_net(module_manager, top_module,
+                                                     bl_decoder_module, 0,
+                                                     bl_decoder_dout_port,
+                                                     bl_decoder_dout_port_info.pins()[bl_pin_id]);
+      VTR_ASSERT(ModuleNetId::INVALID() != net);
+
+      /* Add net sink */
+      module_manager.add_module_net_sink(top_module, net,
+                                         child_module, child_instance, child_bl_port, sink_bl_pin);
+
+      /* Increment the BL index */
+      cur_bl_index++;
+    }
+  }
+
+  /* Add nets from WL data out to each configurable child */
+  size_t cur_wl_index = 0;
+
+  ModulePortId wl_decoder_dout_port = module_manager.find_module_port(wl_decoder_module, std::string(DECODER_DATA_OUT_PORT_NAME));
+  BasicPort wl_decoder_dout_port_info = module_manager.module_port(wl_decoder_module, wl_decoder_dout_port);
+
+  for (size_t child_id = 0; child_id < module_manager.configurable_children(top_module).size(); ++child_id) {
+    ModuleId child_module = module_manager.configurable_children(top_module)[child_id];
+    size_t child_instance = module_manager.configurable_child_instances(top_module)[child_id];
+
+    /* Find the WL port */
+    ModulePortId child_wl_port = module_manager.find_module_port(child_module, std::string(MEMORY_WL_PORT_NAME));
+    BasicPort child_wl_port_info = module_manager.module_port(child_module, child_wl_port);
+
+    for (const size_t& sink_wl_pin : child_wl_port_info.pins()) {
+      /* Find the BL decoder data index: 
+       * It should be the residual when divided by the number of BLs
+       */
+      size_t wl_pin_id = cur_wl_index % num_wls;
+
+      /* Create net */
+      ModuleNetId net = create_module_source_pin_net(module_manager, top_module,
+                                                     wl_decoder_module, 0,
+                                                     wl_decoder_dout_port,
+                                                     wl_decoder_dout_port_info.pins()[wl_pin_id]);
+      VTR_ASSERT(ModuleNetId::INVALID() != net);
+
+      /* Add net sink */
+      module_manager.add_module_net_sink(top_module, net,
+                                         child_module, child_instance, child_wl_port, sink_wl_pin);
+
+      /* Increment the WL index */
+      cur_wl_index++;
+    }
+  }
+}
 
 /*********************************************************************
  * Add the port-to-port connection between all the memory modules 
@@ -524,6 +768,7 @@ void add_top_module_nets_cmos_memory_config_bus(ModuleManager& module_manager,
   }
   case CONFIG_MEM_MEMORY_BANK:
     /* TODO */
+    add_top_module_nets_cmos_memory_bank_config_bus(module_manager, decoder_lib, parent_module);
     break;
   case CONFIG_MEM_FRAME_BASED:
     add_module_nets_cmos_memory_frame_config_bus(module_manager, decoder_lib, parent_module);

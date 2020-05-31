@@ -20,6 +20,14 @@ ModuleId build_frame_memory_decoder_module(ModuleManager& module_manager,
                                            const DecoderLibrary& decoder_lib,
                                            const DecoderId& decoder);
 
+ModuleId build_bl_memory_decoder_module(ModuleManager& module_manager,
+                                        const DecoderLibrary& decoder_lib,
+                                        const DecoderId& decoder);
+
+ModuleId build_wl_memory_decoder_module(ModuleManager& module_manager,
+                                        const DecoderLibrary& decoder_lib,
+                                        const DecoderId& decoder);
+
 void build_mux_local_decoder_modules(ModuleManager& module_manager,
                                      const MuxLibrary& mux_lib,
                                      const CircuitLibrary& circuit_lib);
