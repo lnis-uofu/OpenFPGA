@@ -484,7 +484,10 @@ void print_verilog_arch_decoder_with_data_in_module(std::fstream& fp,
   fp << ") begin" << std::endl;
 
   fp << "\tif (" << generate_verilog_port(VERILOG_PORT_CONKT, enable_port) << " == 1'b1) begin" << std::endl;
-  fp << "\t\t" << generate_verilog_port_constant_values(data_port, ito1hot_vec(data_size, data_size)); 
+  fp << "\t\t" << generate_verilog_port(VERILOG_PORT_CONKT, data_port); 
+  fp << " = ";
+  std::string high_res_str = "{" + std::to_string(data_port.get_width()) + "{1'bz}}";
+  fp << high_res_str;
   fp << ";" << std::endl;
   fp << "\t\t" << "case (" << generate_verilog_port(VERILOG_PORT_CONKT, addr_port) << ")" << std::endl;
   /* Create a string for addr and data */

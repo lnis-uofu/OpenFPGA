@@ -508,7 +508,6 @@ bool check_circuit_library(const CircuitLibrary& circuit_lib) {
 
   /* 6. SRAM must have at least an input and an output ports*/
   std::vector<enum e_circuit_model_port_type> sram_port_types_required;
-  sram_port_types_required.push_back(CIRCUIT_MODEL_PORT_INPUT);
   sram_port_types_required.push_back(CIRCUIT_MODEL_PORT_OUTPUT);
 
   num_err += check_circuit_model_port_required(circuit_lib, CIRCUIT_MODEL_SRAM, sram_port_types_required);
