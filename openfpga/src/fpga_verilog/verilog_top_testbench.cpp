@@ -116,7 +116,7 @@ void print_verilog_top_testbench_memory_bank_port(std::fstream& fp,
   /* Print the address port for the Bit-Line decoder here */
   print_verilog_comment(fp, std::string("---- Address port for Bit-Line decoder -----"));
   ModulePortId bl_addr_port_id = module_manager.find_module_port(top_module,
-                                                                 std::string(MEMORY_BL_PORT_NAME));
+                                                                 std::string(DECODER_BL_ADDRESS_PORT_NAME));
   BasicPort bl_addr_port = module_manager.module_port(top_module, bl_addr_port_id);
 
   fp << generate_verilog_port(VERILOG_PORT_REG, bl_addr_port) << ";" << std::endl;
@@ -124,7 +124,7 @@ void print_verilog_top_testbench_memory_bank_port(std::fstream& fp,
   /* Print the address port for the Word-Line decoder here */
   print_verilog_comment(fp, std::string("---- Address port for Word-Line decoder -----"));
   ModulePortId wl_addr_port_id = module_manager.find_module_port(top_module,
-                                                                 std::string(MEMORY_WL_PORT_NAME));
+                                                                 std::string(DECODER_WL_ADDRESS_PORT_NAME));
   BasicPort wl_addr_port = module_manager.module_port(top_module, wl_addr_port_id);
 
   fp << generate_verilog_port(VERILOG_PORT_REG, wl_addr_port) << ";" << std::endl;
@@ -711,13 +711,13 @@ void print_verilog_top_testbench_load_bitstream_task_memory_bank(std::fstream& f
   BasicPort en_port = module_manager.module_port(top_module, en_port_id);
 
   ModulePortId bl_addr_port_id = module_manager.find_module_port(top_module,
-                                                                 std::string(MEMORY_BL_PORT_NAME));
+                                                                 std::string(DECODER_BL_ADDRESS_PORT_NAME));
   BasicPort bl_addr_port = module_manager.module_port(top_module, bl_addr_port_id);
   BasicPort bl_addr_value = bl_addr_port;
   bl_addr_value.set_name(std::string(MEMORY_BL_PORT_NAME) + std::string("_val"));
 
   ModulePortId wl_addr_port_id = module_manager.find_module_port(top_module,
-                                                                 std::string(MEMORY_WL_PORT_NAME));
+                                                                 std::string(DECODER_WL_ADDRESS_PORT_NAME));
   BasicPort wl_addr_port = module_manager.module_port(top_module, wl_addr_port_id);
   BasicPort wl_addr_value = wl_addr_port;
   wl_addr_value.set_name(std::string(MEMORY_WL_PORT_NAME) + std::string("_val"));
@@ -1176,12 +1176,12 @@ void print_verilog_top_testbench_memory_bank_bitstream(std::fstream& fp,
    * We should give dummy values 
    */
   ModulePortId bl_addr_port_id = module_manager.find_module_port(top_module,
-                                                                 std::string(MEMORY_BL_PORT_NAME));
+                                                                 std::string(DECODER_BL_ADDRESS_PORT_NAME));
   BasicPort bl_addr_port = module_manager.module_port(top_module, bl_addr_port_id);
   std::vector<size_t> initial_bl_addr_values(bl_addr_port.get_width(), 0);
 
   ModulePortId wl_addr_port_id = module_manager.find_module_port(top_module,
-                                                                 std::string(MEMORY_WL_PORT_NAME));
+                                                                 std::string(DECODER_WL_ADDRESS_PORT_NAME));
   BasicPort wl_addr_port = module_manager.module_port(top_module, wl_addr_port_id);
   std::vector<size_t> initial_wl_addr_values(wl_addr_port.get_width(), 0);
 
@@ -1196,8 +1196,12 @@ void print_verilog_top_testbench_memory_bank_bitstream(std::fstream& fp,
   print_verilog_comment(fp, "----- Address port default input -----");
   fp << "\t\t";
   fp << generate_verilog_port_constant_values(bl_addr_port, initial_bl_addr_values);
+  fp << ";";
+  fp << std::endl;
+
   fp << generate_verilog_port_constant_values(wl_addr_port, initial_wl_addr_values);
   fp << ";";
+  fp << std::endl;
 
   print_verilog_comment(fp, "----- Data-input port default input -----");
   fp << "\t\t";
@@ -1312,6 +1316,7 @@ void print_verilog_top_testbench_frame_decoder_bitstream(std::fstream& fp,
   fp << "\t\t";
   fp << generate_verilog_port_constant_values(addr_port, initial_addr_values);
   fp << ";";
+  fp << std::endl;
 
   print_verilog_comment(fp, "----- Data-input port default input -----");
   fp << "\t\t";

@@ -45,7 +45,7 @@ ModuleId build_frame_memory_decoder_module(ModuleManager& module_manager,
   size_t data_size = decoder_lib.data_size(decoder);
 
   /* Create a name for the local encoder */
-  std::string module_name = generate_frame_memory_decoder_subckt_name(addr_size, data_size);
+  std::string module_name = generate_memory_decoder_subckt_name(addr_size, data_size);
 
   /* Create a Verilog Module based on the circuit model, and add to module manager */
   ModuleId module_id = module_manager.add_module(module_name); 
@@ -100,7 +100,7 @@ ModuleId build_bl_memory_decoder_module(ModuleManager& module_manager,
   size_t data_size = decoder_lib.data_size(decoder);
 
   /* Create a name for the local encoder */
-  std::string module_name = generate_bl_memory_decoder_subckt_name(addr_size, data_size);
+  std::string module_name = generate_memory_decoder_with_data_in_subckt_name(addr_size, data_size);
 
   /* Create a Verilog Module based on the circuit model, and add to module manager */
   ModuleId module_id = module_manager.add_module(module_name); 
@@ -158,7 +158,7 @@ ModuleId build_wl_memory_decoder_module(ModuleManager& module_manager,
   size_t data_size = decoder_lib.data_size(decoder);
 
   /* Create a name for the local encoder */
-  std::string module_name = generate_wl_memory_decoder_subckt_name(addr_size, data_size);
+  std::string module_name = generate_memory_decoder_subckt_name(addr_size, data_size);
 
   /* Create a Verilog Module based on the circuit model, and add to module manager */
   ModuleId module_id = module_manager.add_module(module_name); 

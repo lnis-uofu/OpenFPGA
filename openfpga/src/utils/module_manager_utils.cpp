@@ -960,14 +960,14 @@ void add_module_nets_cmos_memory_frame_decoder_config_bus(ModuleManager& module_
   /* Search the decoder library and try to find one 
    * If not found, create a new module and add it to the module manager 
    */
-  DecoderId decoder_id = decoder_lib.find_decoder(addr_size, data_size, true, true, false);
+  DecoderId decoder_id = decoder_lib.find_decoder(addr_size, data_size, true, false, false);
   if (DecoderId::INVALID() == decoder_id) {
-    decoder_id = decoder_lib.add_decoder(addr_size, data_size, true, true, false);
+    decoder_id = decoder_lib.add_decoder(addr_size, data_size, true, false, false);
   }
   VTR_ASSERT(DecoderId::INVALID() != decoder_id);
 
   /* Create a module if not existed yet */
-  std::string decoder_module_name = generate_frame_memory_decoder_subckt_name(addr_size, data_size);
+  std::string decoder_module_name = generate_memory_decoder_subckt_name(addr_size, data_size);
   ModuleId decoder_module = module_manager.find_module(decoder_module_name);
   if (ModuleId::INVALID() == decoder_module) {
     decoder_module = build_frame_memory_decoder_module(module_manager,

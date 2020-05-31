@@ -545,7 +545,7 @@ void add_top_module_nets_cmos_memory_bank_config_bus(ModuleManager& module_manag
   VTR_ASSERT(DecoderId::INVALID() != bl_decoder_id);
 
   /* Create a module if not existed yet */
-  std::string bl_decoder_module_name = generate_bl_memory_decoder_subckt_name(bl_addr_size, num_bls);
+  std::string bl_decoder_module_name = generate_memory_decoder_with_data_in_subckt_name(bl_addr_size, num_bls);
   ModuleId bl_decoder_module = module_manager.find_module(bl_decoder_module_name);
   if (ModuleId::INVALID() == bl_decoder_module) {
     /* BL decoder has the same ports as the frame-based decoders
@@ -572,7 +572,7 @@ void add_top_module_nets_cmos_memory_bank_config_bus(ModuleManager& module_manag
   VTR_ASSERT(DecoderId::INVALID() != wl_decoder_id);
 
   /* Create a module if not existed yet */
-  std::string wl_decoder_module_name = generate_bl_memory_decoder_subckt_name(wl_addr_size, num_wls);
+  std::string wl_decoder_module_name = generate_memory_decoder_subckt_name(wl_addr_size, num_wls);
   ModuleId wl_decoder_module = module_manager.find_module(wl_decoder_module_name);
   if (ModuleId::INVALID() == wl_decoder_module) {
     /* BL decoder has the same ports as the frame-based decoders

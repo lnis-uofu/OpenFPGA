@@ -262,7 +262,7 @@ void print_verilog_arch_decoder_module(std::fstream& fp,
   VTR_ASSERT(true == valid_file_stream(fp));
 
   /* Create a name for the decoder */
-  std::string module_name = generate_frame_memory_decoder_subckt_name(addr_size, data_size);
+  std::string module_name = generate_memory_decoder_subckt_name(addr_size, data_size);
 
   /* Create a Verilog Module based on the circuit model, and add to module manager */
   ModuleId module_id = module_manager.find_module(module_name); 
@@ -378,6 +378,132 @@ void print_verilog_arch_decoder_module(std::fstream& fp,
 }
 
 /***************************************************************************************
+ * Create a Verilog module for a decoder with data_in used as a configuration protocol 
+ * in FPGA architecture
+ *
+ *                     Address
+ *                   | | ... | 
+ *                   v v     v
+ *                 +-----------+
+ *        Enable->/             \<-data_in
+ *               /    Decoder    \
+ *              +-----------------+
+ *                | | | ... | | |
+ *                v v v     v v v
+ *                    Data output
+ *
+ *  The outputs are assumes to be one-hot codes (at most only one '1' exist)
+ *  Only the data output at the address bit will show data_in
+ *
+ *  The decoder has an enable signal which is active at logic '1'. 
+ *  When activated, the decoder will output decoding results to the data output port
+ *  Otherwise, the data output port will be always all-zero
+ ***************************************************************************************/
+static 
+void print_verilog_arch_decoder_with_data_in_module(std::fstream& fp, 
+                                                    const ModuleManager& module_manager,
+                                                    const DecoderLibrary& decoder_lib,
+                                                    const DecoderId& decoder) {
+  /* Get the number of inputs */
+  size_t addr_size = decoder_lib.addr_size(decoder);
+  size_t data_size = decoder_lib.data_size(decoder);
+  VTR_ASSERT(true == decoder_lib.use_data_in(decoder));
+
+  /* Validate the FILE handler */
+  VTR_ASSERT(true == valid_file_stream(fp));
+
+  /* Create a name for the decoder */
+  std::string module_name = generate_memory_decoder_with_data_in_subckt_name(addr_size, data_size);
+
+  /* Create a Verilog Module based on the circuit model, and add to module manager */
+  ModuleId module_id = module_manager.find_module(module_name); 
+  VTR_ASSERT(true == module_manager.valid_module_id(module_id));
+  /* Find module ports */
+  /* Enable port */
+  ModulePortId enable_port_id = module_manager.find_module_port(module_id, std::string(DECODER_ENABLE_PORT_NAME));
+  BasicPort enable_port = module_manager.module_port(module_id, enable_port_id);
+  /* Address port */
+  ModulePortId addr_port_id = module_manager.find_module_port(module_id, std::string(DECODER_ADDRESS_PORT_NAME));
+  BasicPort addr_port = module_manager.module_port(module_id, addr_port_id);
+  /* Find data-in port*/
+  ModulePortId din_port_id = module_manager.find_module_port(module_id, std::string(DECODER_DATA_IN_PORT_NAME));
+  BasicPort din_port = module_manager.module_port(module_id, din_port_id);
+  /* Find each output port */
+  ModulePortId data_port_id = module_manager.find_module_port(module_id, std::string(DECODER_DATA_OUT_PORT_NAME));
+  BasicPort data_port = module_manager.module_port(module_id, data_port_id);
+  /* Data port is registered. It should be outputted as 
+   *   output reg [lsb:msb] data 
+   */
+  BasicPort data_inv_port(std::string(DECODER_DATA_OUT_INV_PORT_NAME), data_size);
+  if (true == decoder_lib.use_data_inv_port(decoder)) {
+    ModulePortId data_inv_port_id = module_manager.find_module_port(module_id, std::string(DECODER_DATA_OUT_INV_PORT_NAME));
+    data_inv_port = module_manager.module_port(module_id, data_inv_port_id);
+  }
+
+  /* dump module definition + ports */
+  print_verilog_module_declaration(fp, module_manager, module_id);
+  /* Finish dumping ports */
+
+  print_verilog_comment(fp, std::string("----- BEGIN Verilog codes for Decoder convert " + std::to_string(addr_size) + "-bit addr to " + std::to_string(data_size) + "-bit data -----"));
+
+  /* Print the truth table of this decoder */
+  /* Internal logics */
+  /* Early exit: Corner case for data size = 1 the logic is very simple:
+   * data = addr;  
+   * data_inv = ~data_inv
+   */
+  if (1 == data_size) {
+    fp << "always@(" << generate_verilog_port(VERILOG_PORT_CONKT, addr_port);
+    fp << " or " << generate_verilog_port(VERILOG_PORT_CONKT, enable_port);
+    fp << ") begin" << std::endl;
+    fp << "\tif (" << generate_verilog_port(VERILOG_PORT_CONKT, enable_port) << " == 1'b1) begin" << std::endl;
+    fp << "\t\t" << generate_verilog_port(VERILOG_PORT_CONKT, din_port) << ";" << std::endl; 
+    fp << "\t" << "end else begin" << std::endl;
+    fp << "\t\t" << generate_verilog_port_constant_values(data_port, std::vector<size_t>(1, 0)) << ";" << std::endl; 
+    fp << "\t" << "end" << std::endl;
+    fp << "end" << std::endl;
+
+    /* Depend on if the inverted data output port is needed or not */
+    if (true == decoder_lib.use_data_inv_port(decoder)) {
+      print_verilog_wire_connection(fp, data_inv_port, addr_port, true);
+    }
+
+    print_verilog_comment(fp, std::string("----- END Verilog codes for Decoder convert " + std::to_string(addr_size) + "-bit addr to " + std::to_string(data_size) + "-bit data -----"));
+
+    /* Put an end to the Verilog module */
+    print_verilog_module_end(fp, module_name);
+    return;
+  }
+
+  /* Only the selected data output bit will be set to the value of data_in, 
+   * other data output bits will be '0'
+   */
+  fp << "always@(" << generate_verilog_port(VERILOG_PORT_CONKT, addr_port);
+  fp << ", " << generate_verilog_port(VERILOG_PORT_CONKT, enable_port);
+  fp << ", " << generate_verilog_port(VERILOG_PORT_CONKT, din_port);
+  fp << ") begin" << std::endl;
+
+  fp << "\t" << generate_verilog_port_constant_values(data_port, ito1hot_vec(data_size, data_size)) << ";" << std::endl; 
+
+  fp << "\tif (" << generate_verilog_port(VERILOG_PORT_CONKT, enable_port) << " == 1'b1) begin" << std::endl;
+  fp << "\t\t" << data_port.get_name().c_str() << "[" << addr_port.get_name().c_str() << "]";
+  fp << " = " << generate_verilog_port(VERILOG_PORT_CONKT, din_port) << ";" << std::endl;
+
+  fp << "\t" << "end" << std::endl;
+
+  fp << "end" << std::endl;
+
+  if (true == decoder_lib.use_data_inv_port(decoder)) {
+    print_verilog_wire_connection(fp, data_inv_port, data_port, true);
+  }
+  
+  print_verilog_comment(fp, std::string("----- END Verilog codes for Decoder convert " + std::to_string(addr_size) + "-bit addr to " + std::to_string(data_size) + "-bit data -----"));
+
+  /* Put an end to the Verilog module */
+  print_verilog_module_end(fp, module_name);
+}
+
+/***************************************************************************************
  * This function will generate all the unique Verilog modules of decoders for 
  * configuration protocols in a FPGA fabric
  * It will generate these decoder Verilog modules using behavioral description.
@@ -407,7 +533,11 @@ void print_verilog_submodule_arch_decoders(const ModuleManager& module_manager,
 
   /* Generate Verilog modules for the found unique local encoders */
   for (const auto& decoder : decoder_lib.decoders()) {
-    print_verilog_arch_decoder_module(fp, module_manager, decoder_lib, decoder);
+    if (true == decoder_lib.use_data_in(decoder)) {
+      print_verilog_arch_decoder_with_data_in_module(fp, module_manager, decoder_lib, decoder);
+    } else {
+      print_verilog_arch_decoder_module(fp, module_manager, decoder_lib, decoder);
+    }
   }
 
   /* Close the file stream */

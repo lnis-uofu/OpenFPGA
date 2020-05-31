@@ -146,23 +146,9 @@ std::string generate_mux_local_decoder_subckt_name(const size_t& addr_size,
  * Generate the module name of a decoder
  * for frame-based memories
  ***********************************************/
-std::string generate_frame_memory_decoder_subckt_name(const size_t& addr_size, 
-                                                      const size_t& data_size) {
-  std::string subckt_name = "frame_decoder";
-  subckt_name += std::to_string(addr_size);
-  subckt_name += "to";
-  subckt_name += std::to_string(data_size);
-
-  return subckt_name;
-} 
-
-/************************************************
- * Generate the module name of a bit-line decoder
- * for memories
- ***********************************************/
-std::string generate_bl_memory_decoder_subckt_name(const size_t& addr_size, 
-                                                   const size_t& data_size) {
-  std::string subckt_name = "bl_decoder";
+std::string generate_memory_decoder_subckt_name(const size_t& addr_size, 
+                                                const size_t& data_size) {
+  std::string subckt_name = "decoder";
   subckt_name += std::to_string(addr_size);
   subckt_name += "to";
   subckt_name += std::to_string(data_size);
@@ -174,9 +160,9 @@ std::string generate_bl_memory_decoder_subckt_name(const size_t& addr_size,
  * Generate the module name of a word-line decoder
  * for memories
  ***********************************************/
-std::string generate_wl_memory_decoder_subckt_name(const size_t& addr_size, 
-                                                   const size_t& data_size) {
-  std::string subckt_name = "wl_decoder";
+std::string generate_memory_decoder_with_data_in_subckt_name(const size_t& addr_size, 
+                                                             const size_t& data_size) {
+  std::string subckt_name = "decoder_with_data_in_";
   subckt_name += std::to_string(addr_size);
   subckt_name += "to";
   subckt_name += std::to_string(data_size);

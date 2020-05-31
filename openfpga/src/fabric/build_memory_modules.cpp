@@ -554,14 +554,14 @@ void build_frame_memory_module(ModuleManager& module_manager,
    * If we find one, we use the module.
    * Otherwise, we create one and add it to the decoder library
    */
-  DecoderId decoder_id = frame_decoder_lib.find_decoder(addr_size, data_size, true, true, use_data_inv);
+  DecoderId decoder_id = frame_decoder_lib.find_decoder(addr_size, data_size, true, false, use_data_inv);
   if (DecoderId::INVALID() == decoder_id) {
-    decoder_id = frame_decoder_lib.add_decoder(addr_size, data_size, true, true, use_data_inv);
+    decoder_id = frame_decoder_lib.add_decoder(addr_size, data_size, true, false, use_data_inv);
   }
   VTR_ASSERT(DecoderId::INVALID() != decoder_id);
 
   /* Create a module if not existed yet */
-  std::string decoder_module_name = generate_frame_memory_decoder_subckt_name(addr_size, data_size);
+  std::string decoder_module_name = generate_memory_decoder_subckt_name(addr_size, data_size);
   ModuleId decoder_module = module_manager.find_module(decoder_module_name);
   if (ModuleId::INVALID() == decoder_module) {
     decoder_module = build_frame_memory_decoder_module(module_manager,

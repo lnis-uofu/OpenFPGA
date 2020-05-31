@@ -374,12 +374,12 @@ void build_module_fabric_dependent_bitstream(const ConfigProtocol& config_protoc
   case CONFIG_MEM_MEMORY_BANK: { 
     size_t cur_mem_index = 0;
     /* Find BL address port size */
-    ModulePortId bl_addr_port = module_manager.find_module_port(top_module, std::string(MEMORY_BL_PORT_NAME));
+    ModulePortId bl_addr_port = module_manager.find_module_port(top_module, std::string(DECODER_BL_ADDRESS_PORT_NAME));
     BasicPort bl_addr_port_info = module_manager.module_port(top_module, bl_addr_port);
     size_t num_bls = find_memory_decoder_data_size(bl_addr_port_info.get_width()); 
 
     /* Find WL address port size */
-    ModulePortId wl_addr_port = module_manager.find_module_port(top_module, std::string(MEMORY_WL_PORT_NAME));
+    ModulePortId wl_addr_port = module_manager.find_module_port(top_module, std::string(DECODER_WL_ADDRESS_PORT_NAME));
     BasicPort wl_addr_port_info = module_manager.module_port(top_module, wl_addr_port);
     size_t num_wls = find_memory_decoder_data_size(wl_addr_port_info.get_width()); 
 
