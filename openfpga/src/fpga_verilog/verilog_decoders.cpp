@@ -483,15 +483,37 @@ void print_verilog_arch_decoder_with_data_in_module(std::fstream& fp,
   fp << ", " << generate_verilog_port(VERILOG_PORT_CONKT, din_port);
   fp << ") begin" << std::endl;
 
-  fp << "\t" << generate_verilog_port_constant_values(data_port, ito1hot_vec(data_size, data_size)) << ";" << std::endl; 
-
   fp << "\tif (" << generate_verilog_port(VERILOG_PORT_CONKT, enable_port) << " == 1'b1) begin" << std::endl;
-  fp << "\t\t" << data_port.get_name().c_str() << "[" << addr_port.get_name().c_str() << "]";
-  fp << " = " << generate_verilog_port(VERILOG_PORT_CONKT, din_port) << ";" << std::endl;
+  fp << "\t\t" << generate_verilog_port_constant_values(data_port, ito1hot_vec(data_size, data_size)); 
+  fp << ";" << std::endl;
+  fp << "\t\t" << "case (" << generate_verilog_port(VERILOG_PORT_CONKT, addr_port) << ")" << std::endl;
+  /* Create a string for addr and data */
+  for (size_t i = 0; i < data_size; ++i) {
+    BasicPort cur_data_port(data_port.get_name(), i, i);
+    fp << "\t\t\t" << generate_verilog_constant_values(itobin_vec(i, addr_size)); 
+    fp << " : ";
+    fp << generate_verilog_port(VERILOG_PORT_CONKT, cur_data_port); 
+    fp << " = ";
+    fp << generate_verilog_port(VERILOG_PORT_CONKT, din_port); 
+    fp << ";" << std::endl;
+  }
+  /* Different from MUX decoder, we assign default values which is all zero */
+  fp << "\t\t\t" << "default"; 
+  fp << " : ";
+  fp << generate_verilog_port_constant_values(data_port, ito1hot_vec(data_size, data_size)); 
+  fp << ";" << std::endl;
 
+  fp << "\t\t" << "endcase" << std::endl;
   fp << "\t" << "end" << std::endl;
 
+  /* If enable is not active, we should give all zero */
+  fp << "\t" << "else begin" << std::endl;
+  fp << "\t\t" << generate_verilog_port_constant_values(data_port, ito1hot_vec(data_size, data_size)); 
+  fp << ";" << std::endl;
+  fp << "\t" << "end" << std::endl;
+  
   fp << "end" << std::endl;
+
 
   if (true == decoder_lib.use_data_inv_port(decoder)) {
     print_verilog_wire_connection(fp, data_inv_port, data_port, true);
