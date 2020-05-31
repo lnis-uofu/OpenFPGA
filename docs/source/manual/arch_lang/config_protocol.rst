@@ -100,6 +100,8 @@ When the decoder of sub block, e.g., the LUT, is enabled, each memory cells can 
   -  a Bit-Line input to load the data
   -  a Word-Line input to enable data write 
 
+.. warning:: Please do NOT add inverted Bit-Line and Word-Line inputs. It is not supported yet!
+
 Memory bank Example
 ~~~~~~~~~~~~~~~~~~~
 The following XML code describes a memory-bank circuitry to configure the core logic of FPGA, as illustrated in :numref:`fig_sram`.
@@ -119,7 +121,13 @@ It will use the circuit model defined in :numref:`fig_sram_blwl`.
  
    Example of a memory organization using memory decoders 
 
-.. warning:: THIS IS STILL UNDER CONSTRUCTION
+.. note:: Memory-bank decoders does require a memory cell to have 
+
+  -  two outputs (one regular and another inverted)
+  -  a Bit-Line input to load the data
+  -  a Word-Line input to enable data write 
+
+.. warning:: Please do NOT add inverted Bit-Line and Word-Line inputs. It is not supported yet!
 
 Standalone SRAM Example
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -146,6 +154,8 @@ The following XML code shows an example where we use the circuit model defined i
   -  two outputs (one regular and another inverted)
   -  a Bit-Line input to load the data
   -  a Word-Line input to enable data write 
+
+.. warning:: Please do NOT add inverted Bit-Line and Word-Line inputs. It is not supported yet!
 
 .. warning:: This is a vanilla configuration method, which allow users to build their own configuration protocol on top of it. 
 
