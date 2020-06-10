@@ -96,7 +96,7 @@ int write_verilog_testbench(OpenfpgaContext& openfpga_ctx,
                          openfpga_ctx.io_location_map(),
                          openfpga_ctx.vpr_netlist_annotation(),
                          openfpga_ctx.arch().circuit_lib,
-                         openfpga_ctx.arch().sim_setting,
+                         openfpga_ctx.simulation_setting(),
                          openfpga_ctx.arch().config_protocol.type(),
                          options);
 

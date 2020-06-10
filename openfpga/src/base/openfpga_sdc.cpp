@@ -88,8 +88,8 @@ int write_pnr_sdc(const OpenfpgaContext& openfpga_ctx,
   /* Execute only when sdc is enabled */
   if (true == options.generate_sdc_pnr()) { 
     print_pnr_sdc(options,
-                  1./openfpga_ctx.arch().sim_setting.programming_clock_frequency(),
-                  1./openfpga_ctx.arch().sim_setting.operating_clock_frequency(),
+                  1./openfpga_ctx.simulation_setting().programming_clock_frequency(),
+                  1./openfpga_ctx.simulation_setting().operating_clock_frequency(),
                   g_vpr_ctx.device(),
                   openfpga_ctx.vpr_device_annotation(),
                   openfpga_ctx.device_rr_gsb(),
@@ -200,7 +200,7 @@ int write_analysis_sdc(const OpenfpgaContext& openfpga_ctx,
 
   if (true == options.generate_sdc_analysis()) {
     print_analysis_sdc(options,
-                       1./openfpga_ctx.arch().sim_setting.operating_clock_frequency(),
+                       1./openfpga_ctx.simulation_setting().operating_clock_frequency(),
                        g_vpr_ctx, 
                        openfpga_ctx,
                        global_ports,

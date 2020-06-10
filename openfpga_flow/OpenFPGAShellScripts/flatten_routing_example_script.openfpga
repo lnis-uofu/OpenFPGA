@@ -5,6 +5,9 @@ vpr ${VPR_ARCH_FILE} ${VPR_TESTBENCH_BLIF} --clock_modeling route
 # Read OpenFPGA architecture definition
 read_openfpga_arch -f ${OPENFPGA_ARCH_FILE}
 
+# Read OpenFPGA simulation settings
+#read_openfpga_simulation_setting -f OPENFPGA_SIM_SETTING_FILE
+
 # Annotate the OpenFPGA architecture to VPR data base
 # to debug use --verbose options
 link_openfpga_arch --activity_file ${ACTIVITY_FILE}
