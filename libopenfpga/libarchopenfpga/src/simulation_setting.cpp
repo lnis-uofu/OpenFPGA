@@ -2,6 +2,9 @@
 
 #include "simulation_setting.h"
 
+/* namespace openfpga begins */
+namespace openfpga {
+
 /************************************************************************
  * Member functions for class SimulationSetting
  ***********************************************************************/
@@ -208,3 +211,5 @@ void SimulationSetting::set_stimuli_input_slew(const e_sim_signal_type& signal_t
 bool SimulationSetting::valid_signal_threshold(const float& threshold) const {
   return (0. < threshold) && (threshold < 1);
 }
+
+} /* namespace openfpga ends */

@@ -40,7 +40,7 @@ e_sim_accuracy_type string_to_sim_accuracy_type(const std::string& type_string) 
 static 
 void read_xml_clock_setting(pugi::xml_node& xml_clock_setting,
                             const pugiutil::loc_data& loc_data,
-                            SimulationSetting& sim_setting) {
+                            openfpga::SimulationSetting& sim_setting) {
   /* Parse operating clock setting */
   pugi::xml_node xml_operating_clock_setting = get_single_child(xml_clock_setting, "operating", loc_data);
 
@@ -73,7 +73,7 @@ void read_xml_clock_setting(pugi::xml_node& xml_clock_setting,
 static 
 void read_xml_simulator_option(pugi::xml_node& xml_sim_option,
                                const pugiutil::loc_data& loc_data,
-                               SimulationSetting& sim_setting) {
+                               openfpga::SimulationSetting& sim_setting) {
 
   pugi::xml_node xml_operating_condition = get_single_child(xml_sim_option, "operating_condition", loc_data);
   sim_setting.set_simulation_temperature(get_attribute(xml_operating_condition, "temperature", loc_data).as_float(0.));
@@ -119,7 +119,7 @@ void read_xml_simulator_option(pugi::xml_node& xml_sim_option,
 static 
 void read_xml_monte_carlo(pugi::xml_node& xml_mc,
                           const pugiutil::loc_data& loc_data,
-                          SimulationSetting& sim_setting) {
+                          openfpga::SimulationSetting& sim_setting) {
   sim_setting.set_monte_carlo_simulation_points(get_attribute(xml_mc, "num_simulation_points", loc_data).as_int(0));
 }
 
@@ -129,7 +129,7 @@ void read_xml_monte_carlo(pugi::xml_node& xml_mc,
 static 
 void read_xml_measurement_setting(pugi::xml_node& xml_measurement,
                                   const pugiutil::loc_data& loc_data,
-                                  SimulationSetting& sim_setting) {
+                                  openfpga::SimulationSetting& sim_setting) {
   pugi::xml_node xml_slew = get_single_child(xml_measurement, "slew", loc_data);
   pugi::xml_node xml_slew_rise = get_single_child(xml_slew, "rise", loc_data);
   sim_setting.set_measure_slew_upper_threshold(SIM_SIGNAL_RISE, get_attribute(xml_slew_rise, "upper_thres_pct", loc_data).as_float(0.));
@@ -155,7 +155,7 @@ void read_xml_measurement_setting(pugi::xml_node& xml_measurement,
 static 
 void read_xml_stimulus_clock(pugi::xml_node& xml_stimuli_clock,
                              const pugiutil::loc_data& loc_data,
-                             SimulationSetting& sim_setting,
+                             openfpga::SimulationSetting& sim_setting,
                              const e_sim_signal_type& signal_type) {
   /* Find the type of accuracy */
   const char* type_attr = get_attribute(xml_stimuli_clock, "slew_type", loc_data).value();
@@ -188,7 +188,7 @@ void read_xml_stimulus_clock(pugi::xml_node& xml_stimuli_clock,
 static 
 void read_xml_stimulus_input(pugi::xml_node& xml_stimuli_input,
                              const pugiutil::loc_data& loc_data,
-                             SimulationSetting& sim_setting,
+                             openfpga::SimulationSetting& sim_setting,
                              const e_sim_signal_type& signal_type) {
   /* Find the type of accuracy */
   const char* type_attr = get_attribute(xml_stimuli_input, "slew_type", loc_data).value();
@@ -221,7 +221,7 @@ void read_xml_stimulus_input(pugi::xml_node& xml_stimuli_input,
 static 
 void read_xml_stimulus(pugi::xml_node& xml_stimulus,
                        const pugiutil::loc_data& loc_data,
-                       SimulationSetting& sim_setting) {
+                       openfpga::SimulationSetting& sim_setting) {
   pugi::xml_node xml_clock = get_single_child(xml_stimulus, "clock", loc_data);
   pugi::xml_node xml_clock_rise = get_single_child(xml_clock, "rise", loc_data);
   read_xml_stimulus_clock(xml_clock_rise, loc_data, sim_setting, SIM_SIGNAL_RISE);
@@ -240,9 +240,9 @@ void read_xml_stimulus(pugi::xml_node& xml_stimulus,
 /********************************************************************
  * Parse XML codes about <openfpga_simulation_setting> to an object of technology library
  *******************************************************************/
-SimulationSetting read_xml_simulation_setting(pugi::xml_node& Node,
-                                              const pugiutil::loc_data& loc_data) {
-  SimulationSetting sim_setting;
+openfpga::SimulationSetting read_xml_simulation_setting(pugi::xml_node& Node,
+                                                        const pugiutil::loc_data& loc_data) {
+  openfpga::SimulationSetting sim_setting;
 
   /* Parse clock settings */
   pugi::xml_node xml_clock_setting = get_single_child(Node, "clock_setting", loc_data);
