@@ -65,6 +65,55 @@ ShellCommandId add_openfpga_write_arch_command(openfpga::Shell<OpenfpgaContext>&
 }
 
 /********************************************************************
+ * - Add a command to Shell environment: read_openfpga_simulation_setting
+ * - Add associated options 
+ * - Add command dependency
+ *******************************************************************/
+static 
+ShellCommandId add_openfpga_read_simulation_setting_command(openfpga::Shell<OpenfpgaContext>& shell,
+                                                            const ShellCommandClassId& cmd_class_id) {
+  Command shell_cmd("read_openfpga_simulation_setting");
+
+  /* Add an option '--file' in short '-f'*/
+  CommandOptionId opt_file = shell_cmd.add_option("file", true, "file path to the simulation setting XML");
+  shell_cmd.set_option_short_name(opt_file, "f");
+  shell_cmd.set_option_require_value(opt_file, openfpga::OPT_STRING);
+
+  /* Add command 'read_openfpga_arch' to the Shell */
+  ShellCommandId shell_cmd_id = shell.add_command(shell_cmd, "read OpenFPGA simulation setting file");
+  shell.set_command_class(shell_cmd_id, cmd_class_id);
+  shell.set_command_execute_function(shell_cmd_id, read_simulation_setting);
+
+  return shell_cmd_id;
+}
+
+/********************************************************************
+ * - Add a command to Shell environment: write_openfpga_simulation_setting
+ * - Add associated options 
+ * - Add command dependency
+ *******************************************************************/
+static 
+ShellCommandId add_openfpga_write_simulation_setting_command(openfpga::Shell<OpenfpgaContext>& shell,
+                                                             const ShellCommandClassId& cmd_class_id,
+                                                             const std::vector<ShellCommandId>& dependent_cmds) {
+  Command shell_cmd("write_openfpga_simulation_setting");
+  /* Add an option '--file' in short '-f'*/
+  CommandOptionId opt_file = shell_cmd.add_option("file", true, "file path to the simulation setting XML");
+  shell_cmd.set_option_short_name(opt_file, "f");
+  shell_cmd.set_option_require_value(opt_file, openfpga::OPT_STRING);
+
+  /* Add command 'write_openfpga_arch' to the Shell */
+  ShellCommandId shell_cmd_id = shell.add_command(shell_cmd, "write OpenFPGA simulation setting file");
+  shell.set_command_class(shell_cmd_id, cmd_class_id);
+  shell.set_command_const_execute_function(shell_cmd_id, write_simulation_setting);
+
+  /* Add command dependency to the Shell */
+  shell.set_command_dependency(shell_cmd_id, dependent_cmds);
+
+  return shell_cmd_id;
+}
+
+/********************************************************************
  * - Add a command to Shell environment: link_openfpga_arch
  * - Add associated options 
  * - Add command dependency
@@ -296,15 +345,32 @@ void add_openfpga_setup_commands(openfpga::Shell<OpenfpgaContext>& shell) {
                                   write_arch_dependent_cmds);
 
   /******************************** 
+   * Command 'read_openfpga_simulation_setting' 
+   */
+  ShellCommandId read_sim_setting_cmd_id = add_openfpga_read_simulation_setting_command(shell,
+                                                                                        openfpga_setup_cmd_class);
+
+  /******************************** 
+   * Command 'write_openfpga_simulation_setting' 
+   */
+  /* The 'write_openfpga_simulation_setting' command should NOT be executed before 'read_openfpga_simulation_setting' */
+  std::vector<ShellCommandId> write_sim_setting_dependent_cmds(1, read_sim_setting_cmd_id);
+  add_openfpga_write_simulation_setting_command(shell,
+                                                openfpga_setup_cmd_class,
+                                                write_sim_setting_dependent_cmds);
+
+  /******************************** 
    * Command 'link_openfpga_arch' 
    */
   /* The 'link_openfpga_arch' command should NOT be executed before 'vpr' */
   std::vector<ShellCommandId> link_arch_dependent_cmds;
   link_arch_dependent_cmds.push_back(read_arch_cmd_id);
+  link_arch_dependent_cmds.push_back(read_sim_setting_cmd_id);
   link_arch_dependent_cmds.push_back(vpr_cmd_id);
   ShellCommandId link_arch_cmd_id = add_openfpga_link_arch_command(shell,
                                                                    openfpga_setup_cmd_class,
                                                                    link_arch_dependent_cmds);
+
   /******************************** 
    * Command 'write_gsb' 
    */

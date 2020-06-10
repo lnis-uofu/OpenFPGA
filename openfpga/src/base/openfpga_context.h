@@ -50,6 +50,7 @@
 class OpenfpgaContext : public Context  {
   public:  /* Public accessors */
     const openfpga::Arch& arch() const { return arch_; }
+    const openfpga::SimulationSetting& simulation_setting() const { return sim_setting_; }
     const openfpga::VprDeviceAnnotation& vpr_device_annotation() const { return vpr_device_annotation_; }
     const openfpga::VprNetlistAnnotation& vpr_netlist_annotation() const { return vpr_netlist_annotation_; }
     const openfpga::VprClusteringAnnotation& vpr_clustering_annotation() const { return vpr_clustering_annotation_; }
@@ -68,6 +69,7 @@ class OpenfpgaContext : public Context  {
     const openfpga::NetlistManager& verilog_netlists() const { return verilog_netlists_; }
   public:  /* Public mutators */
     openfpga::Arch& mutable_arch() { return arch_; }
+    openfpga::SimulationSetting& mutable_simulation_setting() { return sim_setting_; }
     openfpga::VprDeviceAnnotation& mutable_vpr_device_annotation() { return vpr_device_annotation_; }
     openfpga::VprNetlistAnnotation& mutable_vpr_netlist_annotation() { return vpr_netlist_annotation_; }
     openfpga::VprClusteringAnnotation& mutable_vpr_clustering_annotation() { return vpr_clustering_annotation_; }
@@ -87,6 +89,7 @@ class OpenfpgaContext : public Context  {
   private: /* Internal data */
     /* Data structure to store information from read_openfpga_arch library */
     openfpga::Arch arch_;
+    openfpga::SimulationSetting sim_setting_;
 
     /* Annotation to pb_type of VPR */
     openfpga::VprDeviceAnnotation vpr_device_annotation_;
