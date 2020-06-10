@@ -89,7 +89,6 @@ if (VPR_USE_EZGL STREQUAL "on")
         ${RESOURCE_LIST}
     )
 
-
     add_custom_target(
       resource ALL
       DEPENDS
