@@ -150,7 +150,7 @@ int link_arch(OpenfpgaContext& openfpga_ctx,
   /* OVERWRITE the simulation setting in openfpga context from the arch
    * TODO: This will be removed when openfpga flow is updated  
    */
-  openfpga_ctx.mutable_simulation_setting() = openfpga_ctx.mutable_arch().sim_setting;
+  //openfpga_ctx.mutable_simulation_setting() = openfpga_ctx.mutable_arch().sim_setting;
   annotate_simulation_setting(g_vpr_ctx.atom(),
                               openfpga_ctx.net_activity(),
                               openfpga_ctx.mutable_simulation_setting());

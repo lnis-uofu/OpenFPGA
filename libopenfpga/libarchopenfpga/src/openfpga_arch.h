@@ -29,9 +29,6 @@ struct Arch {
   /* Technology devices */
   TechnologyLibrary tech_lib;
 
-  /* Simulation settings */
-  SimulationSetting sim_setting;
-
   /* Configuration protocol settings */
   ConfigProtocol config_protocol;
 

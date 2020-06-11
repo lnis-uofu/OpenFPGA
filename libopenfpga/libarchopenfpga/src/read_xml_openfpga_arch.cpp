@@ -100,12 +100,6 @@ openfpga::Arch read_xml_openfpga_arch(const char* arch_file_name) {
     /* Parse the pb_type annotation */
     openfpga_arch.pb_type_annotations = read_xml_pb_type_annotations(xml_openfpga_arch, loc_data);
 
-    /* Second node should be <openfpga_simulation_setting> */
-    auto xml_simulation_settings = get_single_child(doc, "openfpga_simulation_setting", loc_data); 
-
-    /* Parse simulation settings to data structure */
-    openfpga_arch.sim_setting = read_xml_simulation_setting(xml_simulation_settings, loc_data);
-
   } catch (pugiutil::XmlError& e) {
     archfpga_throw(arch_file_name, e.line(),
                    "%s", e.what());

@@ -366,8 +366,8 @@ void add_openfpga_setup_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   std::vector<ShellCommandId> link_arch_dependent_cmds;
   link_arch_dependent_cmds.push_back(read_arch_cmd_id);
   /* TODO: This will be uncommented when openfpga flow script is updated
-   * link_arch_dependent_cmds.push_back(read_sim_setting_cmd_id);
    */
+  link_arch_dependent_cmds.push_back(read_sim_setting_cmd_id);
   link_arch_dependent_cmds.push_back(vpr_cmd_id);
   ShellCommandId link_arch_cmd_id = add_openfpga_link_arch_command(shell,
                                                                    openfpga_setup_cmd_class,
