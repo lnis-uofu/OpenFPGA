@@ -355,6 +355,8 @@ def create_run_command(curr_job_dir, archfile, benchmark_obj, param, task_conf):
                     task_gc.get("openfpga_shell_template")]
         command += ["--openfpga_arch_file",
                     task_gc.get("openfpga_arch_file")]
+        command += ["--openfpga_sim_setting_file",
+                    task_gc.get("openfpga_sim_setting_file")]
 
     if benchmark_obj.get("activity_file"):
         command += ["--activity_file", benchmark_obj.get("activity_file")]
