@@ -28,7 +28,7 @@ Setup OpenFPGA
 
 .. option:: read_openfpga_arch
 
-  Read the XML architecture file required by OpenFPGA
+  Read the XML file about architecture description (see details in :ref:`arch_generality`)
 
   - ``--file`` or ``-f`` Specify the file name 
 
@@ -37,6 +37,22 @@ Setup OpenFPGA
 .. option:: write_openfpga_arch
 
   Write the OpenFPGA XML architecture file to a file
+
+  - ``--file`` or ``-f`` Specify the file name 
+
+  - ``--verbose`` Show verbose log
+
+.. option:: read_openfpga_simulation_setting
+
+  Read the XML file about simulation settings (see details in :ref:`simulation_setting`)
+
+  - ``--file`` or ``-f`` Specify the file name 
+
+  - ``--verbose`` Show verbose log
+
+.. option:: write_openfpga_simulation_setting
+
+  Write the OpenFPGA XML simulation settings to a file
 
   - ``--file`` or ``-f`` Specify the file name 
 
