@@ -274,11 +274,11 @@ ShellCommandId add_openfpga_build_fabric_command(openfpga::Shell<OpenfpgaContext
   shell_cmd.add_option("duplicate_grid_pin", false, "Duplicate the pins on the same side of a grid");
 
   /* Add an option '--load_fabric_key' */
-  CommandOptionId opt_load_fkey = shell_cmd.add_option("load_fabric_key", true, "load the fabric key from the given file");
+  CommandOptionId opt_load_fkey = shell_cmd.add_option("load_fabric_key", false, "load the fabric key from the given file");
   shell_cmd.set_option_require_value(opt_load_fkey, openfpga::OPT_STRING);
 
   /* Add an option '--write_fabric_key' */
-  CommandOptionId opt_write_fkey = shell_cmd.add_option("write_fabric_key", true, "output current fabric key to a file");
+  CommandOptionId opt_write_fkey = shell_cmd.add_option("write_fabric_key", false, "output current fabric key to a file");
   shell_cmd.set_option_require_value(opt_write_fkey, openfpga::OPT_STRING);
 
   /* Add an option '--generate_random_fabric_key' */
